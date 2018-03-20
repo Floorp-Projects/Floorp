@@ -1171,118 +1171,6 @@ if (false) {
 
 /***/ }),
 /* 9 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-// @flow
-
-const { isDevelopment } = __webpack_require__(13);
-const { Services, PrefsHelper } = __webpack_require__(70);
-
-const prefsSchemaVersion = "1.0.3";
-
-const pref = Services.pref;
-
-if (isDevelopment()) {
-  pref("devtools.debugger.auto-pretty-print", true);
-  pref("devtools.source-map.client-service.enabled", true);
-  pref("devtools.debugger.pause-on-exceptions", false);
-  pref("devtools.debugger.ignore-caught-exceptions", false);
-  pref("devtools.debugger.call-stack-visible", true);
-  pref("devtools.debugger.scopes-visible", true);
-  pref("devtools.debugger.workers-visible", true);
-  pref("devtools.debugger.expressions-visible", true);
-  pref("devtools.debugger.breakpoints-visible", true);
-  pref("devtools.debugger.start-panel-collapsed", false);
-  pref("devtools.debugger.end-panel-collapsed", false);
-  pref("devtools.debugger.tabs", "[]");
-  pref("devtools.debugger.ui.framework-grouping-on", true);
-  pref("devtools.debugger.pending-selected-location", "{}");
-  pref("devtools.debugger.pending-breakpoints", "{}");
-  pref("devtools.debugger.expressions", "[]");
-  pref("devtools.debugger.file-search-case-sensitive", false);
-  pref("devtools.debugger.file-search-whole-word", false);
-  pref("devtools.debugger.file-search-regex-match", false);
-  pref("devtools.debugger.project-directory-root", "");
-  pref("devtools.debugger.prefs-schema-version", "1.0.1");
-  pref("devtools.debugger.features.workers", true);
-  pref("devtools.debugger.features.async-stepping", true);
-  pref("devtools.debugger.features.wasm", true);
-  pref("devtools.debugger.features.shortcuts", true);
-  pref("devtools.debugger.features.root", true);
-  pref("devtools.debugger.features.column-breakpoints", false);
-  pref("devtools.debugger.features.chrome-scopes", false);
-  pref("devtools.debugger.features.map-scopes", true);
-  pref("devtools.debugger.features.breakpoints-dropdown", true);
-  pref("devtools.debugger.features.remove-command-bar-options", true);
-  pref("devtools.debugger.features.code-coverage", false);
-  pref("devtools.debugger.features.event-listeners", false);
-  pref("devtools.debugger.features.code-folding", false);
-  pref("devtools.debugger.features.outline", true);
-  pref("devtools.debugger.features.column-breakpoints", true);
-  pref("devtools.debugger.features.replay", true);
-}
-
-const prefs = new PrefsHelper("devtools", {
-  autoPrettyPrint: ["Bool", "debugger.auto-pretty-print"],
-  clientSourceMapsEnabled: ["Bool", "source-map.client-service.enabled"],
-  pauseOnExceptions: ["Bool", "debugger.pause-on-exceptions"],
-  ignoreCaughtExceptions: ["Bool", "debugger.ignore-caught-exceptions"],
-  callStackVisible: ["Bool", "debugger.call-stack-visible"],
-  scopesVisible: ["Bool", "debugger.scopes-visible"],
-  workersVisible: ["Bool", "debugger.workers-visible"],
-  breakpointsVisible: ["Bool", "debugger.breakpoints-visible"],
-  expressionsVisible: ["Bool", "debugger.expressions-visible"],
-  startPanelCollapsed: ["Bool", "debugger.start-panel-collapsed"],
-  endPanelCollapsed: ["Bool", "debugger.end-panel-collapsed"],
-  frameworkGroupingOn: ["Bool", "debugger.ui.framework-grouping-on"],
-  tabs: ["Json", "debugger.tabs", []],
-  pendingSelectedLocation: ["Json", "debugger.pending-selected-location", {}],
-  pendingBreakpoints: ["Json", "debugger.pending-breakpoints", {}],
-  expressions: ["Json", "debugger.expressions", []],
-  fileSearchCaseSensitive: ["Bool", "debugger.file-search-case-sensitive"],
-  fileSearchWholeWord: ["Bool", "debugger.file-search-whole-word"],
-  fileSearchRegexMatch: ["Bool", "debugger.file-search-regex-match"],
-  debuggerPrefsSchemaVersion: ["Char", "debugger.prefs-schema-version"],
-  projectDirectoryRoot: ["Char", "debugger.project-directory-root", ""]
-});
-/* harmony export (immutable) */ __webpack_exports__["prefs"] = prefs;
-
-
-const features = new PrefsHelper("devtools.debugger.features", {
-  asyncStepping: ["Bool", "async-stepping"],
-  wasm: ["Bool", "wasm"],
-  shortcuts: ["Bool", "shortcuts"],
-  root: ["Bool", "root"],
-  columnBreakpoints: ["Bool", "column-breakpoints"],
-  chromeScopes: ["Bool", "chrome-scopes"],
-  mapScopes: ["Bool", "map-scopes"],
-  breakpointsDropdown: ["Bool", "breakpoints-dropdown"],
-  removeCommandBarOptions: ["Bool", "remove-command-bar-options"],
-  workers: ["Bool", "workers"],
-  codeCoverage: ["Bool", "code-coverage"],
-  eventListeners: ["Bool", "event-listeners"],
-  outline: ["Bool", "outline"],
-  codeFolding: ["Bool", "code-folding"],
-  replay: ["Bool", "replay"]
-});
-/* harmony export (immutable) */ __webpack_exports__["features"] = features;
-
-
-if (prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
-  // clear pending Breakpoints
-  prefs.pendingBreakpoints = {};
-  prefs.debuggerPrefsSchemaVersion = prefsSchemaVersion;
-}
-
-
-/***/ }),
-/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1412,7 +1300,7 @@ function getPrettySourceURL(url) {
  * @static
  */
 function getRawSourceURL(url) {
-  return url.replace(/:formatted$/, "");
+  return url ? url.replace(/:formatted$/, "") : url;
 }
 
 function resolveFileURL(url, transformUrl = initialUrl => initialUrl) {
@@ -1590,6 +1478,118 @@ function isLoading(source) {
 }
 
 /***/ }),
+/* 10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// @flow
+
+const { isDevelopment } = __webpack_require__(13);
+const { Services, PrefsHelper } = __webpack_require__(70);
+
+const prefsSchemaVersion = "1.0.3";
+
+const pref = Services.pref;
+
+if (isDevelopment()) {
+  pref("devtools.debugger.auto-pretty-print", true);
+  pref("devtools.source-map.client-service.enabled", true);
+  pref("devtools.debugger.pause-on-exceptions", false);
+  pref("devtools.debugger.ignore-caught-exceptions", false);
+  pref("devtools.debugger.call-stack-visible", true);
+  pref("devtools.debugger.scopes-visible", true);
+  pref("devtools.debugger.workers-visible", true);
+  pref("devtools.debugger.expressions-visible", true);
+  pref("devtools.debugger.breakpoints-visible", true);
+  pref("devtools.debugger.start-panel-collapsed", false);
+  pref("devtools.debugger.end-panel-collapsed", false);
+  pref("devtools.debugger.tabs", "[]");
+  pref("devtools.debugger.ui.framework-grouping-on", true);
+  pref("devtools.debugger.pending-selected-location", "{}");
+  pref("devtools.debugger.pending-breakpoints", "{}");
+  pref("devtools.debugger.expressions", "[]");
+  pref("devtools.debugger.file-search-case-sensitive", false);
+  pref("devtools.debugger.file-search-whole-word", false);
+  pref("devtools.debugger.file-search-regex-match", false);
+  pref("devtools.debugger.project-directory-root", "");
+  pref("devtools.debugger.prefs-schema-version", "1.0.1");
+  pref("devtools.debugger.features.workers", true);
+  pref("devtools.debugger.features.async-stepping", true);
+  pref("devtools.debugger.features.wasm", true);
+  pref("devtools.debugger.features.shortcuts", true);
+  pref("devtools.debugger.features.root", true);
+  pref("devtools.debugger.features.column-breakpoints", false);
+  pref("devtools.debugger.features.chrome-scopes", false);
+  pref("devtools.debugger.features.map-scopes", true);
+  pref("devtools.debugger.features.breakpoints-dropdown", true);
+  pref("devtools.debugger.features.remove-command-bar-options", true);
+  pref("devtools.debugger.features.code-coverage", false);
+  pref("devtools.debugger.features.event-listeners", false);
+  pref("devtools.debugger.features.code-folding", false);
+  pref("devtools.debugger.features.outline", true);
+  pref("devtools.debugger.features.column-breakpoints", true);
+  pref("devtools.debugger.features.replay", true);
+}
+
+const prefs = new PrefsHelper("devtools", {
+  autoPrettyPrint: ["Bool", "debugger.auto-pretty-print"],
+  clientSourceMapsEnabled: ["Bool", "source-map.client-service.enabled"],
+  pauseOnExceptions: ["Bool", "debugger.pause-on-exceptions"],
+  ignoreCaughtExceptions: ["Bool", "debugger.ignore-caught-exceptions"],
+  callStackVisible: ["Bool", "debugger.call-stack-visible"],
+  scopesVisible: ["Bool", "debugger.scopes-visible"],
+  workersVisible: ["Bool", "debugger.workers-visible"],
+  breakpointsVisible: ["Bool", "debugger.breakpoints-visible"],
+  expressionsVisible: ["Bool", "debugger.expressions-visible"],
+  startPanelCollapsed: ["Bool", "debugger.start-panel-collapsed"],
+  endPanelCollapsed: ["Bool", "debugger.end-panel-collapsed"],
+  frameworkGroupingOn: ["Bool", "debugger.ui.framework-grouping-on"],
+  tabs: ["Json", "debugger.tabs", []],
+  pendingSelectedLocation: ["Json", "debugger.pending-selected-location", {}],
+  pendingBreakpoints: ["Json", "debugger.pending-breakpoints", {}],
+  expressions: ["Json", "debugger.expressions", []],
+  fileSearchCaseSensitive: ["Bool", "debugger.file-search-case-sensitive"],
+  fileSearchWholeWord: ["Bool", "debugger.file-search-whole-word"],
+  fileSearchRegexMatch: ["Bool", "debugger.file-search-regex-match"],
+  debuggerPrefsSchemaVersion: ["Char", "debugger.prefs-schema-version"],
+  projectDirectoryRoot: ["Char", "debugger.project-directory-root", ""]
+});
+/* harmony export (immutable) */ __webpack_exports__["prefs"] = prefs;
+
+
+const features = new PrefsHelper("devtools.debugger.features", {
+  asyncStepping: ["Bool", "async-stepping"],
+  wasm: ["Bool", "wasm"],
+  shortcuts: ["Bool", "shortcuts"],
+  root: ["Bool", "root"],
+  columnBreakpoints: ["Bool", "column-breakpoints"],
+  chromeScopes: ["Bool", "chrome-scopes"],
+  mapScopes: ["Bool", "map-scopes"],
+  breakpointsDropdown: ["Bool", "breakpoints-dropdown"],
+  removeCommandBarOptions: ["Bool", "remove-command-bar-options"],
+  workers: ["Bool", "workers"],
+  codeCoverage: ["Bool", "code-coverage"],
+  eventListeners: ["Bool", "event-listeners"],
+  outline: ["Bool", "outline"],
+  codeFolding: ["Bool", "code-folding"],
+  replay: ["Bool", "replay"]
+});
+/* harmony export (immutable) */ __webpack_exports__["features"] = features;
+
+
+if (prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
+  // clear pending Breakpoints
+  prefs.pendingBreakpoints = {};
+  prefs.debuggerPrefsSchemaVersion = prefsSchemaVersion;
+}
+
+
+/***/ }),
 /* 11 */
 /***/ (function(module, exports) {
 
@@ -1762,7 +1762,7 @@ exports.clearLineClass = clearLineClass;
 exports.getTextForLine = getTextForLine;
 exports.getCursorLine = getCursorLine;
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _wasm = __webpack_require__(105);
 
@@ -7288,11 +7288,11 @@ var _makeRecord = __webpack_require__(24);
 
 var _makeRecord2 = _interopRequireDefault(_makeRecord);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _devtoolsSourceMap = __webpack_require__(12);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -7896,7 +7896,7 @@ var _assert = __webpack_require__(103);
 
 var _assert2 = _interopRequireDefault(_assert);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -8049,7 +8049,7 @@ exports.getRelativePath = getRelativePath;
 
 var _url = __webpack_require__(100);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8921,7 +8921,7 @@ exports.collapseFrames = collapseFrames;
 
 var _utils = __webpack_require__(72);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _lodash = __webpack_require__(11);
 
@@ -10043,7 +10043,7 @@ var _commands = __webpack_require__(391);
 
 var _events = __webpack_require__(410);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 let DebuggerClient; /* This Source Code Form is subject to the terms of the Mozilla Public
                      * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10317,7 +10317,7 @@ var _reselect = __webpack_require__(48);
 
 var _devtoolsSourceMap = __webpack_require__(12);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 var _sources = __webpack_require__(32);
 
@@ -10792,7 +10792,7 @@ var _parser = __webpack_require__(27);
 
 var parser = _interopRequireWildcard(_parser);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _defer = __webpack_require__(429);
 
@@ -10910,7 +10910,7 @@ var _selectors = __webpack_require__(1);
 
 var _ui = __webpack_require__(154);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 function setContextMenu(type, event) {
   return ({ dispatch }) => {
@@ -15998,7 +15998,7 @@ var _makeRecord = __webpack_require__(24);
 
 var _makeRecord2 = _interopRequireDefault(_makeRecord);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -16606,7 +16606,7 @@ var _parser = __webpack_require__(27);
 
 var _breakpoints = __webpack_require__(59);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 /**
  * Debugger commands like stepOver, stepIn, stepUp
@@ -16855,7 +16855,7 @@ var _prettyPrint = __webpack_require__(222);
 
 var _parser = __webpack_require__(27);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _loadSourceText = __webpack_require__(76);
 
@@ -17813,7 +17813,8 @@ class SearchInput extends _react.Component {
       query,
       selectedItemId,
       showErrorEmoji,
-      size
+      size,
+      summaryMsg
     } = this.props;
 
     const inputProps = {
@@ -17845,6 +17846,11 @@ class SearchInput extends _react.Component {
       },
       this.renderSvg(),
       _react2.default.createElement("input", inputProps),
+      summaryMsg && _react2.default.createElement(
+        "div",
+        { className: "summary" },
+        summaryMsg
+      ),
       this.renderNav(),
       _react2.default.createElement(_Close2.default, { handleClick: handleClose, buttonClass: size })
     );
@@ -19658,7 +19664,7 @@ var _lodash = __webpack_require__(11);
 
 var _reselect = __webpack_require__(48);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -19852,7 +19858,7 @@ var _makeRecord2 = _interopRequireDefault(_makeRecord);
 
 var _breakpoint = __webpack_require__(41);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -20002,7 +20008,7 @@ var _makeRecord = __webpack_require__(24);
 
 var _makeRecord2 = _interopRequireDefault(_makeRecord);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -20521,7 +20527,7 @@ exports.formatSources = formatSources;
 
 var _utils = __webpack_require__(72);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 const MODIFIERS = exports.MODIFIERS = {
   "@": "functions",
@@ -20815,7 +20821,7 @@ var _App = __webpack_require__(423);
 
 var _App2 = _interopRequireDefault(_App);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -20894,7 +20900,7 @@ exports.prettyPrint = prettyPrint;
 
 var _devtoolsUtils = __webpack_require__(28);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _assert = __webpack_require__(103);
 
@@ -21226,7 +21232,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.showLoading = exports.showErrorMessage = exports.showSourceText = exports.clearEditor = exports.updateDocument = exports.updateLineNumberFormat = exports.clearDocuments = exports.removeDocument = exports.hasDocument = exports.setDocument = exports.getDocument = undefined;
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _wasm = __webpack_require__(105);
 
@@ -23294,7 +23300,7 @@ var _Svg2 = _interopRequireDefault(_Svg);
 
 var _frame = __webpack_require__(58);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _FrameMenu = __webpack_require__(249);
 
@@ -23594,7 +23600,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -30051,7 +30057,7 @@ var _chrome = __webpack_require__(411);
 
 var chrome = _interopRequireWildcard(_chrome);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 var _dbg = __webpack_require__(414);
 
@@ -32387,7 +32393,7 @@ var _sourceQueue = __webpack_require__(156);
 
 var _sourceQueue2 = _interopRequireDefault(_sourceQueue);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -32801,7 +32807,7 @@ var _timings = __webpack_require__(415);
 
 var timings = _interopRequireWildcard(_timings);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -33379,7 +33385,7 @@ var _reactRedux = __webpack_require__(4);
 
 var _redux = __webpack_require__(8);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 var _actions = __webpack_require__(7);
 
@@ -34081,7 +34087,7 @@ var _locColumn = __webpack_require__(226);
 
 var _findGeneratedBindingFromPosition = __webpack_require__(430);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 var _log = __webpack_require__(431);
 
@@ -34646,7 +34652,7 @@ exports.setInScopeLines = setInScopeLines;
 
 var _selectors = __webpack_require__(1);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _lodash = __webpack_require__(11);
 
@@ -34715,7 +34721,7 @@ var _prettyPrint = __webpack_require__(162);
 
 var _sources = __webpack_require__(34);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _selectors = __webpack_require__(1);
 
@@ -34912,9 +34918,9 @@ var _tabs = __webpack_require__(227);
 
 var _loadSourceText = __webpack_require__(76);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _location = __webpack_require__(442);
 
@@ -35384,7 +35390,7 @@ var _sourceEditor = __webpack_require__(229);
 
 var _sourceEditor2 = _interopRequireDefault(_sourceEditor);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -35416,7 +35422,9 @@ function createEditor() {
       // Override code mirror keymap to avoid conflicts with split console.
       Esc: false,
       "Cmd-F": false,
-      "Cmd-G": false
+      "Ctrl-F": false,
+      "Cmd-G": false,
+      "Ctrl-G": false
     }
   });
 }
@@ -36049,7 +36057,7 @@ var _search = __webpack_require__(157);
 
 var _selectors = __webpack_require__(1);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _sources = __webpack_require__(34);
 
@@ -39721,7 +39729,7 @@ var _actions2 = _interopRequireDefault(_actions);
 
 var _selectors = __webpack_require__(1);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 __webpack_require__(551);
 
@@ -40041,13 +40049,26 @@ var _Svg2 = _interopRequireDefault(_Svg);
 
 var _sourcesTree = __webpack_require__(235);
 
+var _source = __webpack_require__(9);
+
 var _clipboard = __webpack_require__(80);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// Actions
+// Utils
+
+
+// Components
+
+
+// Selectors
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+// Dependencies
 class SourcesTree extends _react.Component {
 
   constructor(props) {
@@ -40095,7 +40116,7 @@ class SourcesTree extends _react.Component {
     }
 
     if (nextProps.selectedSource && nextProps.selectedSource != selectedSource) {
-      const highlightItems = (0, _sourcesTree.getDirectories)(nextProps.selectedSource.get("url"), sourceTree);
+      const highlightItems = (0, _sourcesTree.getDirectories)((0, _source.getRawSourceURL)(nextProps.selectedSource.get("url")), sourceTree);
 
       return this.setState({ highlightItems });
     }
@@ -40175,18 +40196,7 @@ class SourcesTree extends _react.Component {
   }
 }
 
-// Utils
-
-
-// Components
-
-
-// Selectors
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-// Dependencies
+// Actions
 
 var _initialiseProps = function () {
   this.focusItem = item => {
@@ -40387,11 +40397,11 @@ var _classnames2 = _interopRequireDefault(_classnames);
 
 var _devtoolsLaunchpad = __webpack_require__(60);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _devtoolsConfig = __webpack_require__(13);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 var _indentation = __webpack_require__(104);
 
@@ -40982,9 +40992,9 @@ var _classnames = __webpack_require__(6);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _sources = __webpack_require__(32);
 
@@ -44721,7 +44731,7 @@ var _selectors = __webpack_require__(1);
 
 var _breakpoint = __webpack_require__(41);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -44794,7 +44804,7 @@ var _Svg2 = _interopRequireDefault(_Svg);
 
 var _editor = __webpack_require__(15);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -45301,7 +45311,7 @@ var _react = __webpack_require__(0);
 
 var _editor = __webpack_require__(15);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _pause = __webpack_require__(78);
 
@@ -45410,7 +45420,7 @@ var _editor = __webpack_require__(15);
 
 var _sourceDocuments = __webpack_require__(228);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _reactRedux = __webpack_require__(4);
 
@@ -45758,7 +45768,7 @@ var _astBreakpointLocation = __webpack_require__(148);
 
 var _editor = __webpack_require__(15);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _selectors = __webpack_require__(1);
 
@@ -46254,7 +46264,7 @@ var _Svg = __webpack_require__(22);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 var _Breakpoints = __webpack_require__(618);
 
@@ -46608,9 +46618,9 @@ var _Close2 = _interopRequireDefault(_Close);
 
 var _utils = __webpack_require__(72);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _selectors = __webpack_require__(1);
 
@@ -48024,7 +48034,7 @@ var _classnames = __webpack_require__(6);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-var _prefs = __webpack_require__(9);
+var _prefs = __webpack_require__(10);
 
 var _selectors = __webpack_require__(1);
 
@@ -49292,7 +49302,7 @@ var _ui = __webpack_require__(106);
 
 var _tabs = __webpack_require__(253);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _actions = __webpack_require__(7);
 
@@ -49508,7 +49518,7 @@ var _actions = __webpack_require__(7);
 
 var _actions2 = _interopRequireDefault(_actions);
 
-var _source = __webpack_require__(10);
+var _source = __webpack_require__(9);
 
 var _clipboard = __webpack_require__(80);
 
@@ -49659,12 +49669,13 @@ class Tab extends _react.PureComponent {
     );
   }
 }
-exports.default = (0, _reactRedux.connect)(state => {
+exports.default = (0, _reactRedux.connect)((state, props) => {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
+  const { source } = props;
   return {
     tabSources: (0, _selectors.getSourcesForTabs)(state),
     selectedSource: selectedSource,
-    sourceMetaData: (0, _selectors.getSourceMetaData)(state, selectedSource && selectedSource.get("id")),
+    sourceMetaData: (0, _selectors.getSourceMetaData)(state, source.get("id")),
     activeSearch: (0, _selectors.getActiveSearch)(state)
   };
 }, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Tab);
@@ -49738,19 +49749,14 @@ class QuickOpenModal extends _react.Component {
       this.props.closeQuickOpen();
     };
 
+    this.dropGoto = query => {
+      return query.split(":")[0];
+    };
+
     this.searchSources = query => {
-      if (query == "") {
-        const results = this.props.sources;
-        return this.setState({ results });
-      }
-      if (this.isGotoSourceQuery()) {
-        const [baseQuery] = query.split(":");
-        const results = filter(this.props.sources, baseQuery);
-        this.setState({ results });
-      } else {
-        const results = filter(this.props.sources, query);
-        this.setState({ results });
-      }
+      const { sources } = this.props;
+      const results = query == "" ? sources : filter(sources, this.dropGoto(query));
+      return this.setState({ results });
     };
 
     this.searchSymbols = query => {
@@ -50019,27 +50025,25 @@ class QuickOpenModal extends _react.Component {
     if (!enabled) {
       return null;
     }
-    const summaryMsg = L10N.getFormatStr("sourceSearch.resultsSummary1", this.getResultCount());
-    const showSummary = this.isSourcesQuery() || this.isSymbolSearch() || this.isShortcutQuery();
     const newResults = results && results.slice(0, 100);
     const items = this.highlightMatching(query, newResults || []);
     const expanded = !!items && items.length > 0;
     return _react2.default.createElement(
       _Modal2.default,
       { "in": enabled, handleClose: this.closeModal },
-      _react2.default.createElement(_SearchInput2.default, _extends({
+      _react2.default.createElement(_SearchInput2.default, {
         query: query,
         count: this.getResultCount(),
-        placeholder: L10N.getStr("sourceSearch.search")
-      }, showSummary === true ? { summaryMsg } : {}, {
+        placeholder: L10N.getStr("sourceSearch.search"),
+        summaryMsg: "",
         showErrorEmoji: this.shouldShowErrorEmoji(),
         onChange: this.onChange,
         onKeyDown: this.onKeyDown,
         handleClose: this.closeModal,
         hasPrefix: this.hasPrefix(),
         expanded: expanded,
-        selectedItemId: expanded ? items[selectedIndex].id : ""
-      })),
+        selectedItemId: expanded && items[selectedIndex] ? items[selectedIndex].id : ""
+      }),
       newResults && _react2.default.createElement(_ResultList2.default, _extends({
         key: "results",
         items: items,
