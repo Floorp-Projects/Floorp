@@ -2001,6 +2001,11 @@ nsNavHistory::ConstructQueryString(
     return NS_OK;
   }
 
+  // If the query is a tag query, the type is bookmarks.
+  if (!aQuery->Tags().IsEmpty()) {
+    aOptions->SetQueryType(nsNavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS);
+  }
+
   nsAutoCString conditions;
   nsCString queryClause;
   rv = QueryToSelectClause(aQuery, aOptions, &queryClause);
