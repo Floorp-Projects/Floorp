@@ -1,0 +1,28 @@
+How to add a new WebRender display item from a Gecko Display item, the general flow is to:
+
+(1) Force layout to create a new active layer for the gecko display item.
+(2) Plumb the data needed for the display item from content through WebRenderBridgeParent on the parent side.
+(3) From WebRenderBridgeParent, call out into bindings.rs and implement the appropriate WR calls.
+
+More detailed steps are:
+
+1) Force layout to create an active layer for the gecko display item.
+See http://searchfox.org/mozilla-central/source/layout/painting/nsDisplayList.h#1850
+
+For most items, we should just be creating a DisplayItemLayer. The DisplayItemLayer has a pointer to the nsDisplayItem. To layerize, just return an active layer for the current item.
+
+See https://hg.mozilla.org/projects/graphics/file/c8873c351679e4a394170cd899e8b5a5fb2a00e7/layout/painting/nsDisplayList.cpp#l4403
+
+Thus for most display items, it's just implementing:
+GetLayerState,
+BuildLayer (which should just call BuildDisplayItemLayer)
+CreateWebRenderCommands.
+
+2) When implementing CreateWebRenderCommands, take a look at the nsDisplayItem::Paint method and reproduce the logic in webrender display items.
+
+If you need to implement a new WebRender display item (generally shouldn't be needed):
+1) If you need to pipe in a new WR display item type, do it in WebRenderMessages.ipdl.
+2) If you need to add a custom IPC serialization mechanism, do it in WebRenderMessageUtils.h
+3) Add a new function in WebRender.h that will call out into webrender for a new WR display item.
+4) In WebRenderBridgeParent::ProcessWebRenderCommands, call out to the new function in (3).
+5) Fill out the function in (3) in bindings.rs to make webrender do the right thing.
