@@ -1230,6 +1230,7 @@ var gBrowserInit = {
       }
     }
 
+    new LightweightThemeConsumer(document);
     TabsInTitlebar.init();
   },
 
@@ -1361,7 +1362,6 @@ var gBrowserInit = {
     }
 
     // Misc. inits.
-    new LightweightThemeConsumer(document);
     TabletModeUpdater.init();
     CombinedStopReload.ensureInitialized();
     gPrivateBrowsingUI.init();
