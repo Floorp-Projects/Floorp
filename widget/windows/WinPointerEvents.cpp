@@ -11,6 +11,7 @@
 #include "WinPointerEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/dom/MouseEventBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -158,7 +159,7 @@ WinPointerInfo*
 WinPointerEvents::GetCachedPointerInfo(UINT aMsg, WPARAM aWParam)
 {
   if (!sLibraryHandle || !sPointerEventEnabled ||
-      MOUSE_INPUT_SOURCE() != nsIDOMMouseEvent::MOZ_SOURCE_PEN ||
+      MOUSE_INPUT_SOURCE() != dom::MouseEventBinding::MOZ_SOURCE_PEN ||
       ShouldFirePointerEventByWinPointerMessages()) {
     return nullptr;
   }

@@ -12,11 +12,9 @@ XPIDL_SOURCES += [
     'nsIDOMEvent.idl',
     'nsIDOMEventListener.idl',
     'nsIDOMEventTarget.idl',
-    'nsIDOMMouseEvent.idl',
     'nsIDOMNotifyPaintEvent.idl',
     'nsIDOMNSEvent.idl',
     'nsIDOMUIEvent.idl',
-    'nsIDOMWheelEvent.idl',
 ]
 
 XPIDL_MODULE = 'dom_events'

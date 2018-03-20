@@ -30,9 +30,9 @@ public:
   virtual nsresult Connect(EditorBase* aEditorBase) override;
 
 protected:
-  virtual nsresult MouseDown(nsIDOMMouseEvent* aMouseEvent) override;
-  virtual nsresult MouseUp(nsIDOMMouseEvent* aMouseEvent) override;
-  virtual nsresult MouseClick(nsIDOMMouseEvent* aMouseEvent) override;
+  virtual nsresult MouseDown(dom::MouseEvent* aMouseEvent) override;
+  virtual nsresult MouseUp(dom::MouseEvent* aMouseEvent) override;
+  virtual nsresult MouseClick(dom::MouseEvent* aMouseEvent) override;
 };
 
 } // namespace mozilla

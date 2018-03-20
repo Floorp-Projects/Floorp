@@ -7,7 +7,6 @@
 #include "mozilla/ipc/IOThreadChild.h"
 
 #include "ContentProcess.h"
-#include "ContentPrefs.h"
 #include "base/shared_memory.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Scheduler.h"
@@ -226,8 +225,8 @@ ContentProcess::Init(int aArgc, char* aArgv[])
     NS_ERROR("failed to map shared memory in the child");
     return false;
   }
-  Preferences::DeserializeEarlyPreferences(static_cast<char*>(shm.memory()),
-                                           prefsLen);
+  Preferences::DeserializePreferences(static_cast<char*>(shm.memory()),
+                                      prefsLen);
 
   Scheduler::SetPrefs(schedulerPrefs);
   mContent.Init(IOThreadChild::message_loop(),

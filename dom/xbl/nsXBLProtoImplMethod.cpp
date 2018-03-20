@@ -259,7 +259,8 @@ nsXBLProtoImplMethod::Write(nsIObjectOutputStream* aStream)
 }
 
 nsresult
-nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
+nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement,
+                                       const nsXBLPrototypeBinding& aProtoBinding)
 {
   MOZ_ASSERT(aBoundElement->IsElement());
   NS_PRECONDITION(IsCompiled(), "Can't execute uncompiled method");
@@ -300,8 +301,9 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
                            true);
   JSContext* cx = aes.cx();
   JS::AutoObjectVector scopeChain(cx);
-  if (!nsJSUtils::GetScopeChainForElement(cx, aBoundElement->AsElement(),
-                                          scopeChain)) {
+  if (!nsJSUtils::GetScopeChainForXBL(cx, aBoundElement->AsElement(),
+                                      aProtoBinding,
+                                      scopeChain)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   MOZ_ASSERT(scopeChain.length() != 0);

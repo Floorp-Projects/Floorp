@@ -13,6 +13,7 @@
 
 #include "nscore.h"
 #include "mozilla/dom/NodeInfo.h"
+#include "nsAtom.h"
 #include "nsCOMArray.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsGkAtoms.h"

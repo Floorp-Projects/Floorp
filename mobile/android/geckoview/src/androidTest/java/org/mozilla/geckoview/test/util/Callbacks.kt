@@ -26,7 +26,7 @@ class Callbacks private constructor() {
         override fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
         }
 
-        override fun onContextMenu(session: GeckoSession, screenX: Int, screenY: Int, uri: String, elementSrc: String) {
+        override fun onContextMenu(session: GeckoSession, screenX: Int, screenY: Int, uri: String, elementType: Int, elementSrc: String) {
         }
     }
 

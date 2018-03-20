@@ -48,7 +48,7 @@ function runTests() {
     is(receivePointerEvents, false, "Shouldn't dispatch pointer events in the system group");
     SimpleTest.finish();
   });
-  let source = SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE;
+  let source = MouseEvent.MOZ_SOURCE_MOUSE;
   synthesizeMouse(target, 5, 5, { type: "mousemove", inputSource: source },
                   iframe.contentWindow);
   synthesizeMouse(target, 5, 5, { type: "mousedown", inputSource: source },

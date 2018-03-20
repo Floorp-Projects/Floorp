@@ -13,6 +13,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "nsAString.h"
 #include "nsAlgorithm.h"
 #include "nsCOMPtr.h"
@@ -26,7 +27,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
@@ -80,7 +80,7 @@ ResizerMouseMotionListener::ResizerMouseMotionListener(HTMLEditor& aHTMLEditor)
 NS_IMETHODIMP
 ResizerMouseMotionListener::HandleEvent(nsIDOMEvent* aMouseEvent)
 {
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
   if (!mouseEvent) {
     //non-ui event passed in.  bad things.
     return NS_OK;
@@ -782,16 +782,15 @@ HTMLEditor::GetNewResizingHeight(int32_t aX,
 }
 
 nsresult
-HTMLEditor::OnMouseMove(nsIDOMMouseEvent* aMouseEvent)
+HTMLEditor::OnMouseMove(MouseEvent* aMouseEvent)
 {
   MOZ_ASSERT(aMouseEvent);
 
   if (mIsResizing) {
     // we are resizing and the mouse pointer's position has changed
     // we have to resdisplay the shadow
-    int32_t clientX, clientY;
-    aMouseEvent->GetClientX(&clientX);
-    aMouseEvent->GetClientY(&clientY);
+    int32_t clientX = aMouseEvent->ClientX();
+    int32_t clientY = aMouseEvent->ClientY();
 
     int32_t newX = GetNewResizingX(clientX, clientY);
     int32_t newY = GetNewResizingY(clientX, clientY);
@@ -811,9 +810,8 @@ HTMLEditor::OnMouseMove(nsIDOMMouseEvent* aMouseEvent)
   }
 
   if (mGrabberClicked) {
-    int32_t clientX, clientY;
-    aMouseEvent->GetClientX(&clientX);
-    aMouseEvent->GetClientY(&clientY);
+    int32_t clientX = aMouseEvent->ClientX();
+    int32_t clientY = aMouseEvent->ClientY();
 
     int32_t xThreshold =
       LookAndFeel::GetInt(LookAndFeel::eIntID_DragThresholdX, 1);
@@ -827,9 +825,8 @@ HTMLEditor::OnMouseMove(nsIDOMMouseEvent* aMouseEvent)
     }
   }
   if (mIsMoving) {
-    int32_t clientX, clientY;
-    aMouseEvent->GetClientX(&clientX);
-    aMouseEvent->GetClientY(&clientY);
+    int32_t clientX = aMouseEvent->ClientX();
+    int32_t clientY = aMouseEvent->ClientY();
 
     int32_t newX = mPositionedObjectX + clientX - mOriginalX;
     int32_t newY = mPositionedObjectY + clientY - mOriginalY;

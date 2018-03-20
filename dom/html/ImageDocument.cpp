@@ -6,8 +6,10 @@
 
 #include "ImageDocument.h"
 #include "mozilla/dom/DOMPrefs.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/ImageDocumentBinding.h"
 #include "mozilla/dom/HTMLImageElement.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "nsRect.h"
 #include "nsIImageLoadingContent.h"
 #include "nsGenericHTMLElement.h"
@@ -15,7 +17,6 @@
 #include "nsIDocumentInlines.h"
 #include "nsDOMTokenList.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIFrame.h"
 #include "nsGkAtoms.h"
@@ -38,7 +39,6 @@
 #include "nsThreadUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
 
@@ -636,14 +636,12 @@ ImageDocument::HandleEvent(nsIDOMEvent* aEvent)
     mShouldResize = true;
     if (mImageIsResized) {
       int32_t x = 0, y = 0;
-      nsCOMPtr<nsIDOMMouseEvent> event(do_QueryInterface(aEvent));
+      MouseEvent* event = aEvent->InternalDOMEvent()->AsMouseEvent();
       if (event) {
-        event->GetClientX(&x);
-        event->GetClientY(&y);
         RefPtr<HTMLImageElement> img =
           HTMLImageElement::FromContent(mImageContent);
-        x -= img->OffsetLeft();
-        y -= img->OffsetTop();
+        x = event->ClientX() - img->OffsetLeft();
+        y = event->ClientY() - img->OffsetTop();
       }
       mShouldResize = false;
       RestoreImageTo(x, y);
