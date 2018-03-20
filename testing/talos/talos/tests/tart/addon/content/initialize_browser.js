@@ -1,39 +1,34 @@
-<?xml version="1.0"?>
-<overlay id="Scrapper-Overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
-<script type="application/x-javascript" src="Profiler.js" />
-<script type="application/x-javascript" src="tart.js" />
-<script type="application/x-javascript">
-
-(function(){
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+function initializeBrowser(win) {
+  Services.scriptloader.loadSubScript("chrome://tart/content/Profiler.js", win);
+  Services.scriptloader.loadSubScript("chrome://tart/content/tart.js", win);
+  var prefs = Services.prefs;
 
   const TART_PREFIX = "tart@mozilla.org:";
 
   // "services" which the framescript can execute at the chrome process
   var proxiedServices = {
-    runTest: function(config, callback) {
-      (new Tart()).startTest(callback, config);
+    runTest(config, callback) {
+      (new win.Tart()).startTest(callback, config);
     },
 
-    setASAP: function() {
+    setASAP() {
       prefs.setIntPref("layout.frame_rate", 0);
       prefs.setIntPref("docshell.event_starvation_delay_hint", 1);
     },
 
-    unsetASAP: function() {
+    unsetASAP() {
       prefs.clearUserPref("layout.frame_rate");
       prefs.clearUserPref("docshell.event_starvation_delay_hint");
     },
 
-    toClipboard: function(text) {
+    toClipboard(text) {
       const gClipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"]
                                .getService(Ci.nsIClipboardHelper);
       gClipboardHelper.copyString(text);
     }
   };
 
-  var groupMM = window.getGroupMessageManager("browsers");
+  var groupMM = win.getGroupMessageManager("browsers");
   groupMM.loadFrameScript("chrome://tart/content/framescript.js", true);
 
   // listener/executor on the chrome process for tart.html
@@ -41,7 +36,7 @@
     function sendResult(result) {
       groupMM.broadcastAsyncMessage(TART_PREFIX + "chrome-exec-reply", {
         id: m.data.id,
-        result: result
+        result
       });
     }
 
@@ -56,7 +51,4 @@
       sendResult(service(command.data));
 
   });
-})();
-
-</script>
-</overlay>
+}
