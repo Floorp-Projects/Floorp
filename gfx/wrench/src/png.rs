@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use WindowWrapper;
+use {WindowWrapper, NotifierEvent};
 use image::png::PNGEncoder;
 use image::{self, ColorType, GenericImage};
 use std::fs::File;
@@ -77,7 +77,7 @@ pub fn png(
     surface: ReadSurface,
     window: &mut WindowWrapper,
     mut reader: YamlFrameReader,
-    rx: Receiver<()>,
+    rx: Receiver<NotifierEvent>,
 ) {
     reader.do_frame(wrench);
 

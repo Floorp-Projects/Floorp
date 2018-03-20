@@ -272,6 +272,6 @@ add_task(function* () {
 });
 
 // Record all containers that are created dynamically into elms object.
-function memorizeContainer(event, container) {
+function memorizeContainer(container) {
   elms[`container-${containerID++}`] = container;
 }

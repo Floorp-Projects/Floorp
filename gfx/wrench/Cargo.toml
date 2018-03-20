@@ -6,7 +6,7 @@ build = "build.rs"
 license = "MPL-2.0"
 
 [dependencies]
-base64 = "0.3"
+base64 = "0.6"
 bincode = "0.9"
 byteorder = "1.0"
 env_logger = { version = "0.5", optional = true }
@@ -14,7 +14,7 @@ euclid = "0.17"
 gleam = "0.4"
 glutin = "0.12"
 app_units = "0.6"
-image = "0.17"
+image = "0.18"
 clap = { version = "2", features = ["yaml"] }
 lazy_static = "1"
 log = "0.4"
@@ -38,6 +38,7 @@ headless = [ "osmesa-sys", "osmesa-src" ]
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.4.1"
+mozangle = {version = "0.1.5", features = ["egl"]}
 
 [target.'cfg(any(target_os = "linux", target_os = "macos"))'.dependencies]
 font-loader = "0.6"

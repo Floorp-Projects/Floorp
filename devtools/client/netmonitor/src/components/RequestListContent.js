@@ -80,12 +80,6 @@ class RequestListContent extends Component {
   }
 
   componentWillMount() {
-    const { connector, cloneSelectedRequest, openStatistics } = this.props;
-    this.contextMenu = new RequestListContextMenu({
-      connector,
-      cloneSelectedRequest,
-      openStatistics,
-    });
     this.tooltip = new HTMLTooltip(window.parent.document, { type: "arrow" });
     window.addEventListener("resize", this.onResize);
   }
@@ -244,6 +238,16 @@ class RequestListContent extends Component {
   onContextMenu(evt) {
     evt.preventDefault();
     let { selectedRequest, displayedRequests } = this.props;
+
+    if (!this.contextMenu) {
+      const { connector, cloneSelectedRequest, openStatistics } = this.props;
+      this.contextMenu = new RequestListContextMenu({
+        connector,
+        cloneSelectedRequest,
+        openStatistics,
+      });
+    }
+
     this.contextMenu.open(evt, selectedRequest, displayedRequests);
   }
 

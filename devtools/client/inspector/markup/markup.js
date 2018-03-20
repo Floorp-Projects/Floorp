@@ -1283,7 +1283,7 @@ MarkupView.prototype = {
     let parentContainer = this.getContainer(removedNode.parentNode());
     let childIndex = parentContainer.getChildContainers().indexOf(oldContainer);
 
-    let onMutations = this._removedNodeObserver = (e, mutations) => {
+    let onMutations = this._removedNodeObserver = mutations => {
       let isNodeRemovalMutation = false;
       for (let mutation of mutations) {
         let containsRemovedNode = mutation.removed &&

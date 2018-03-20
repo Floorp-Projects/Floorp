@@ -14,8 +14,10 @@ use internal_types::{RenderTargetInfo, SourceTexture, TextureUpdate, TextureUpda
 use profiler::{ResourceProfileCounter, TextureCacheProfileCounters};
 use render_backend::FrameId;
 use resource_cache::CacheItem;
+use std::cell::Cell;
 use std::cmp;
 use std::mem;
+use std::rc::Rc;
 
 // The fixed number of layers for the shared texture cache.
 // There is one array texture per image format, allocated lazily.
@@ -103,6 +105,8 @@ struct CacheEntry {
     filter: TextureFilter,
     // The actual device texture ID this is part of.
     texture_id: CacheTextureId,
+    // Optional notice when the entry is evicted from the cache.
+    eviction_notice: Option<EvictionNotice>,
 }
 
 impl CacheEntry {
@@ -124,6 +128,7 @@ impl CacheEntry {
             format,
             filter,
             uv_rect_handle: GpuCacheHandle::new(),
+            eviction_notice: None,
         }
     }
 
@@ -150,6 +155,12 @@ impl CacheEntry {
             image_source.write_gpu_blocks(&mut request);
         }
     }
+
+    fn evict(&self) {
+        if let Some(eviction_notice) = self.eviction_notice.as_ref() {
+            eviction_notice.notify();
+        }
+    }
 }
 
 type WeakCacheEntryHandle = WeakFreeListHandle<CacheEntry>;
@@ -170,6 +181,34 @@ pub struct TextureCacheHandle {
 impl TextureCacheHandle {
     pub fn new() -> Self {
         TextureCacheHandle { entry: None }
+    }
+}
+
+// An eviction notice is a shared condition useful for detecting
+// when a TextureCacheHandle gets evicted from the TextureCache.
+// It is optionally installed to the TextureCache when an update()
+// is scheduled. A single notice may be shared among any number of
+// TextureCacheHandle updates. The notice may then be subsequently
+// checked to see if any of the updates using it have been evicted.
+#[derive(Clone, Debug, Default)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct EvictionNotice {
+    evicted: Rc<Cell<bool>>,
+}
+
+impl EvictionNotice {
+    fn notify(&self) {
+        self.evicted.set(true);
+    }
+
+    pub fn check(&self) -> bool {
+        if self.evicted.get() {
+            self.evicted.set(false);
+            true
+        } else {
+            false
+        }
     }
 }
 
@@ -301,6 +340,7 @@ impl TextureCache {
         user_data: [f32; 3],
         mut dirty_rect: Option<DeviceUintRect>,
         gpu_cache: &mut GpuCache,
+        eviction_notice: Option<&EvictionNotice>,
     ) {
         // Determine if we need to allocate texture cache memory
         // for this item. We need to reallocate if any of the following
@@ -338,6 +378,9 @@ impl TextureCache {
         let entry = self.entries
             .get_opt_mut(handle.entry.as_ref().unwrap())
             .expect("BUG: handle must be valid now");
+
+        // Install the new eviction notice for this update, if applicable.
+        entry.eviction_notice = eviction_notice.cloned();
 
         // Invalidate the contents of the resource rect in the GPU cache.
         // This ensures that the update_gpu_cache below will add
@@ -498,6 +541,7 @@ impl TextureCache {
         // Free the selected items
         for handle in eviction_candidates {
             let entry = self.entries.free(handle);
+            entry.evict();
             self.free(entry);
         }
 
@@ -552,6 +596,7 @@ impl TextureCache {
                 retained_entries.push(handle);
             } else {
                 let entry = self.entries.free(handle);
+                entry.evict();
                 if let Some(region) = self.free(entry) {
                     found_matching_slab |= region.slab_size == needed_slab_size;
                     freed_complete_page |= region.is_empty();
@@ -1069,6 +1114,7 @@ impl TextureArray {
                 format: self.format,
                 filter: self.filter,
                 texture_id: self.texture_id.unwrap(),
+                eviction_notice: None,
             }
         })
     }

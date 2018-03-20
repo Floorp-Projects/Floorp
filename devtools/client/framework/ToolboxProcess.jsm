@@ -13,15 +13,15 @@ const { require, DevToolsLoader } = ChromeUtils.import("resource://devtools/shar
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Subprocess", "resource://gre/modules/Subprocess.jsm");
+ChromeUtils.defineModuleGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "Telemetry", function() {
   return require("devtools/client/shared/telemetry");
 });
 XPCOMUtils.defineLazyGetter(this, "EventEmitter", function() {
   return require("devtools/shared/event-emitter");
 });
-XPCOMUtils.defineLazyGetter(this, "system", function() {
-  return require("devtools/shared/system");
-});
+
 const promise = require("promise");
 const Services = require("Services");
 
@@ -289,7 +289,7 @@ BrowserToolboxProcess.prototype = {
     // well.
     //
     // As an approximation of "isLocalBuild", check for an unofficial build.
-    if (!system.constants.MOZILLA_OFFICIAL) {
+    if (!AppConstants.MOZILLA_OFFICIAL) {
       args.push("-purgecaches");
     }
 

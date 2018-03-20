@@ -27,6 +27,8 @@ extern crate image;
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
+#[cfg(target_os = "windows")]
+extern crate mozangle;
 #[cfg(feature = "headless")]
 extern crate osmesa_sys;
 extern crate ron;
@@ -37,8 +39,10 @@ extern crate time;
 extern crate webrender;
 extern crate yaml_rust;
 
+mod angle;
 mod binary_frame_reader;
 mod blob;
+mod egl;
 mod json_frame_writer;
 mod parse_function;
 mod perf;
@@ -159,6 +163,7 @@ impl HeadlessContext {
 
 pub enum WindowWrapper {
     Window(glutin::GlWindow, Rc<gl::Gl>),
+    Angle(glutin::Window, angle::Context, Rc<gl::Gl>),
     Headless(HeadlessContext, Rc<gl::Gl>),
 }
 
@@ -168,21 +173,26 @@ impl WindowWrapper {
     fn swap_buffers(&self) {
         match *self {
             WindowWrapper::Window(ref window, _) => window.swap_buffers().unwrap(),
+            WindowWrapper::Angle(_, ref context, _) => context.swap_buffers().unwrap(),
             WindowWrapper::Headless(_, _) => {}
         }
     }
 
     fn get_inner_size(&self) -> DeviceUintSize {
+        //HACK: `winit` needs to figure out its hidpi story...
+        #[cfg(target_os = "macos")]
+        fn inner_size(window: &glutin::Window) -> (u32, u32) {
+            let (w, h) = window.get_inner_size().unwrap();
+            let factor = window.hidpi_factor();
+            ((w as f32 * factor) as _, (h as f32 * factor) as _)
+        }
+        #[cfg(not(target_os = "macos"))]
+        fn inner_size(window: &glutin::Window) -> (u32, u32) {
+            window.get_inner_size().unwrap()
+        }
         let (w, h) = match *self {
-            //HACK: `winit` needs to figure out its hidpi story...
-            #[cfg(target_os = "macos")]
-            WindowWrapper::Window(ref window, _) => {
-                let (w, h) = window.get_inner_size().unwrap();
-                let factor = window.hidpi_factor();
-                ((w as f32 * factor) as _, (h as f32 * factor) as _)
-            },
-            #[cfg(not(target_os = "macos"))]
-            WindowWrapper::Window(ref window, _) => window.get_inner_size().unwrap(),
+            WindowWrapper::Window(ref window, _) => inner_size(window.window()),
+            WindowWrapper::Angle(ref window, ..) => inner_size(window),
             WindowWrapper::Headless(ref context, _) => (context.width, context.height),
         };
         DeviceUintSize::new(w, h)
@@ -191,6 +201,7 @@ impl WindowWrapper {
     fn hidpi_factor(&self) -> f32 {
         match *self {
             WindowWrapper::Window(ref window, _) => window.hidpi_factor(),
+            WindowWrapper::Angle(ref window, ..) => window.hidpi_factor(),
             WindowWrapper::Headless(_, _) => 1.0,
         }
     }
@@ -198,6 +209,7 @@ impl WindowWrapper {
     fn resize(&mut self, size: DeviceUintSize) {
         match *self {
             WindowWrapper::Window(ref mut window, _) => window.set_inner_size(size.width, size.height),
+            WindowWrapper::Angle(ref mut window, ..) => window.set_inner_size(size.width, size.height),
             WindowWrapper::Headless(_, _) => unimplemented!(), // requites Glutin update
         }
     }
@@ -205,19 +217,24 @@ impl WindowWrapper {
     fn set_title(&mut self, title: &str) {
         match *self {
             WindowWrapper::Window(ref window, _) => window.set_title(title),
+            WindowWrapper::Angle(ref window, ..) => window.set_title(title),
             WindowWrapper::Headless(_, _) => (),
         }
     }
 
     pub fn gl(&self) -> &gl::Gl {
         match *self {
-            WindowWrapper::Window(_, ref gl) | WindowWrapper::Headless(_, ref gl) => &**gl,
+            WindowWrapper::Window(_, ref gl) |
+            WindowWrapper::Angle(_, _, ref gl) |
+            WindowWrapper::Headless(_, ref gl) => &**gl,
         }
     }
 
     pub fn clone_gl(&self) -> Rc<gl::Gl> {
         match *self {
-            WindowWrapper::Window(_, ref gl) | WindowWrapper::Headless(_, ref gl) => gl.clone(),
+            WindowWrapper::Window(_, ref gl) |
+            WindowWrapper::Angle(_, _, ref gl) |
+            WindowWrapper::Headless(_, ref gl) => gl.clone(),
         }
     }
 }
@@ -227,6 +244,7 @@ fn make_window(
     dp_ratio: Option<f32>,
     vsync: bool,
     events_loop: &Option<glutin::EventsLoop>,
+    angle: bool,
 ) -> WindowWrapper {
     let wrapper = match *events_loop {
         Some(ref events_loop) => {
@@ -240,25 +258,37 @@ fn make_window(
                 .with_title("WRech")
                 .with_multitouch()
                 .with_dimensions(size.width, size.height);
-            let window = glutin::GlWindow::new(window_builder, context_builder, events_loop)
-                .unwrap();
 
-            unsafe {
-                window
-                    .make_current()
-                    .expect("unable to make context current!");
-            }
+            let init = |context: &glutin::GlContext| {
+                unsafe {
+                    context
+                        .make_current()
+                        .expect("unable to make context current!");
+                }
 
-            let gl = match window.get_api() {
-                glutin::Api::OpenGl => unsafe {
-                    gl::GlFns::load_with(|symbol| window.get_proc_address(symbol) as *const _)
-                },
-                glutin::Api::OpenGlEs => unsafe {
-                    gl::GlesFns::load_with(|symbol| window.get_proc_address(symbol) as *const _)
-                },
-                glutin::Api::WebGl => unimplemented!(),
+                match context.get_api() {
+                    glutin::Api::OpenGl => unsafe {
+                        gl::GlFns::load_with(|symbol| context.get_proc_address(symbol) as *const _)
+                    },
+                    glutin::Api::OpenGlEs => unsafe {
+                        gl::GlesFns::load_with(|symbol| context.get_proc_address(symbol) as *const _)
+                    },
+                    glutin::Api::WebGl => unimplemented!(),
+                }
             };
-            WindowWrapper::Window(window, gl)
+
+            if angle {
+                let (window, context) = angle::Context::with_window(
+                    window_builder, context_builder, events_loop
+                ).unwrap();
+                let gl = init(&context);
+                WindowWrapper::Angle(window, context, gl)
+            } else {
+                let window = glutin::GlWindow::new(window_builder, context_builder, events_loop)
+                    .unwrap();
+                let gl = init(&window);
+                WindowWrapper::Window(window, gl)
+            }
         }
         None => {
             let gl = match gl::GlType::default() {
@@ -293,8 +323,14 @@ fn make_window(
     wrapper
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum NotifierEvent {
+    WakeUp,
+    ShutDown,
+}
+
 struct Notifier {
-    tx: Sender<()>,
+    tx: Sender<NotifierEvent>,
 }
 
 // setup a notifier so we can wait for frames to be finished
@@ -306,7 +342,11 @@ impl RenderNotifier for Notifier {
     }
 
     fn wake_up(&self) {
-        self.tx.send(()).unwrap();
+        self.tx.send(NotifierEvent::WakeUp).unwrap();
+    }
+
+    fn shut_down(&self) {
+        self.tx.send(NotifierEvent::ShutDown).unwrap();
     }
 
     fn new_document_ready(&self, _: DocumentId, scrolled: bool, _composite_needed: bool) {
@@ -316,7 +356,7 @@ impl RenderNotifier for Notifier {
     }
 }
 
-fn create_notifier() -> (Box<RenderNotifier>, Receiver<()>) {
+fn create_notifier() -> (Box<RenderNotifier>, Receiver<NotifierEvent>) {
     let (tx, rx) = channel();
     (Box::new(Notifier { tx: tx }), rx)
 }
@@ -364,7 +404,9 @@ fn main() {
         Some(glutin::EventsLoop::new())
     };
 
-    let mut window = make_window(size, dp_ratio, args.is_present("vsync"), &events_loop);
+    let mut window = make_window(
+        size, dp_ratio, args.is_present("vsync"), &events_loop, args.is_present("angle"),
+    );
     let dp_ratio = dp_ratio.unwrap_or(window.hidpi_factor());
     let dim = window.get_inner_size();
 
@@ -420,17 +462,19 @@ fn main() {
             reftest_options.allow_max_difference = allow_max_diff.parse().unwrap_or(1);
             reftest_options.allow_num_differences = dim.width as usize * dim.height as usize;
         }
-        let num_failures = ReftestHarness::new(&mut wrench, &mut window, rx.unwrap())
+        let rx = rx.unwrap();
+        let num_failures = ReftestHarness::new(&mut wrench, &mut window, &rx)
             .run(base_manifest, specific_reftest, &reftest_options);
-        wrench.renderer.deinit();
+        wrench.shut_down(rx);
         // exit with an error code to fail on CI
         process::exit(num_failures as _);
     } else if let Some(_) = args.subcommand_matches("rawtest") {
+        let rx = rx.unwrap();
         {
-            let harness = RawtestHarness::new(&mut wrench, &mut window, rx.unwrap());
+            let harness = RawtestHarness::new(&mut wrench, &mut window, &rx);
             harness.run();
         }
-        wrench.renderer.deinit();
+        wrench.shut_down(rx);
         return;
     } else if let Some(subargs) = args.subcommand_matches("perf") {
         // Perf mode wants to benchmark the total cost of drawing
