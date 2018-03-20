@@ -5,10 +5,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/Telemetry.h"
 #include "nsIDocShell.h"
 #include "nsDOMMutationObserver.h"
+#if defined(XP_WIN)
+#include <processthreadsapi.h>  // for GetCurrentProcessId()
+#else
+#include <unistd.h> // for getpid()
+#endif // defined(XP_WIN)
 
 namespace mozilla {
 namespace dom {
@@ -60,6 +66,68 @@ DocGroup::~DocGroup()
 
   mTabGroup->mDocGroups.RemoveEntry(mKey);
 }
+
+#ifndef RELEASE_OR_BETA
+PerformanceInfo
+DocGroup::ReportPerformanceInfo()
+{
+  AssertIsOnMainThread();
+#if defined(XP_WIN)
+  uint32_t pid = GetCurrentProcessId();
+#else
+  uint32_t pid = getpid();
+#endif
+  uint64_t wid = 0;
+  uint64_t pwid = 0;
+  uint16_t count = 0;
+  uint64_t duration = 0;
+  nsCString host = NS_LITERAL_CSTRING("None");
+
+  for (const auto& document : *this) {
+    // grabbing the host name of the first document
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
+    MOZ_ASSERT(doc);
+    nsCOMPtr<nsIURI> docURI = doc->GetDocumentURI();
+    if (!docURI) {
+      continue;
+    }
+    docURI->GetHost(host);
+    wid = doc->OuterWindowID();
+
+    // getting the top window id - if not possible
+    // pwid gets the same value than wid
+    pwid = wid;
+    nsPIDOMWindowInner* win = doc->GetInnerWindow();
+    if (win) {
+      nsPIDOMWindowOuter* outer = win->GetOuterWindow();
+      if (outer) {
+        nsCOMPtr<nsPIDOMWindowOuter> top = outer->GetTop();
+        if (top) {
+          pwid = top->WindowID();
+        }
+      }
+    }
+  }
+
+  duration = mPerformanceCounter->GetExecutionDuration();
+  FallibleTArray<CategoryDispatch> items;
+
+  // now that we have the host and window ids, let's look at the perf counters
+  for (uint32_t index = 0; index < (uint32_t)TaskCategory::Count; index++) {
+    TaskCategory category = static_cast<TaskCategory>(index);
+    count = mPerformanceCounter->GetDispatchCount(DispatchCategory(category));
+    CategoryDispatch item = CategoryDispatch(index, count);
+    if (!items.AppendElement(item, fallible)) {
+      NS_ERROR("Could not complete the operation");
+      return PerformanceInfo(host, pid, wid, pwid, duration, false, items);
+    }
+  }
+
+  // setting back all counters to zero
+  mPerformanceCounter->ResetPerformanceCounters();
+  return PerformanceInfo(host, pid, wid, pwid, duration, false, items);
+}
+#endif
 
 nsresult
 DocGroup::Dispatch(TaskCategory aCategory,
