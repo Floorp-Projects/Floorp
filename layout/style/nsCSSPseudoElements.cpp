@@ -10,7 +10,6 @@
 
 #include "mozilla/ArrayUtils.h"
 
-#include "nsAtomListUtils.h"
 #include "nsStaticAtom.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsDOMString.h"
@@ -53,8 +52,7 @@ void nsCSSPseudoElements::AddRefAtoms()
 
 bool nsCSSPseudoElements::IsPseudoElement(nsAtom *aAtom)
 {
-  return nsAtomListUtils::IsMember(aAtom, sCSSPseudoElementAtomSetup,
-                                   ArrayLength(sCSSPseudoElementAtomSetup));
+  return nsStaticAtomUtils::IsMember(aAtom, sCSSPseudoElementAtomSetup);
 }
 
 /* static */ bool

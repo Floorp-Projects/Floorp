@@ -9,7 +9,6 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "nsCSSAnonBoxes.h"
-#include "nsAtomListUtils.h"
 #include "nsStaticAtom.h"
 
 using namespace mozilla;
@@ -47,8 +46,7 @@ void nsCSSAnonBoxes::AddRefAtoms()
 
 bool nsCSSAnonBoxes::IsAnonBox(nsAtom *aAtom)
 {
-  return nsAtomListUtils::IsMember(aAtom, sCSSAnonBoxAtomSetup,
-                                   ArrayLength(sCSSAnonBoxAtomSetup));
+  return nsStaticAtomUtils::IsMember(aAtom, sCSSAnonBoxAtomSetup);
 }
 
 #ifdef MOZ_XUL
