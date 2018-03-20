@@ -39,7 +39,6 @@ class nsITransferable;
 class nsIClipboard;
 class nsIDOMDocument;
 class nsIDOMElement;
-class nsIDOMMouseEvent;
 class nsILinkHandler;
 class nsTableWrapperFrame;
 class nsIDOMRange;

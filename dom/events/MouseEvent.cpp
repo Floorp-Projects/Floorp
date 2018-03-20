@@ -43,13 +43,6 @@ MouseEvent::MouseEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(MouseEvent, UIEvent)
-NS_IMPL_RELEASE_INHERITED(MouseEvent, UIEvent)
-
-NS_INTERFACE_MAP_BEGIN(MouseEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseEvent)
-NS_INTERFACE_MAP_END_INHERITING(UIEvent)
-
 void
 MouseEvent::InitMouseEvent(const nsAString& aType,
                            bool aCanBubble,

@@ -85,7 +85,7 @@ event.DoubleClickTracker = {
 /**
  * Sends a mouse event to given target.
  *
- * @param {nsIDOMMouseEvent} mouseEvent
+ * @param {MouseEvent} mouseEvent
  *     Event to send.
  * @param {(DOMElement|string)} target
  *     Target of event.  Can either be an element or the ID of an element.

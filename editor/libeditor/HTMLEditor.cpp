@@ -28,7 +28,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocumentInlines.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsISelectionController.h"
 #include "nsILinkHandler.h"
 #include "nsIInlineSpellChecker.h"
