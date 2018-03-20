@@ -349,6 +349,19 @@
    fun:_ZN7mozilla13ServoStyleSet38InvalidateStyleForDocumentStateChangesENS_11EventStatesE
 }
 
+# Issues triggered by enabling stylo-only.
+
+# Conditional jump or move depends on uninitialised value(s)
+#    at 0x104E7B44: nsFrame::ComputeSize(gfxContext*, mozilla::WritingMode, mozilla::LogicalSize const&, int, mozilla::LogicalSize const&, mozilla::LogicalSize const&, mozilla::LogicalSize const&, nsIFrame::ComputeSizeFlags) (nsFrame.cpp:5742)
+#    by 0x105A9865: nsSubDocumentFrame::ComputeSize(gfxContext*, mozilla::WritingMode, mozilla::LogicalSize const&, int, mozilla::LogicalSize const&, mozilla::LogicalSize const&, mozilla::LogicalSize const&, nsIFrame::ComputeSizeFlags) (nsSubDocumentFrame.cpp:778)
+#    by 0x10502714: nsFrame::BoxReflow(nsBoxLayoutState&, nsPresContext*, mozilla::ReflowOutput&, gfxContext*, int, int, int, int, bool) (nsFrame.cpp:10627)
+{
+  Bug 1447405 nsFrame::ComputeSize, March 2018
+  Memcheck:Cond
+  fun:_ZN7nsFrame11ComputeSizeEP10gfxContextN7mozilla11WritingModeERKNS2_11LogicalSizeEiS6_S6_S6_N8nsIFrame16ComputeSizeFlagsE
+}
+
+
 ###################################################
 #  For valgrind-mochitest ("tc-M-V [tier 2]") runs on taskcluster.
 #  See bug 1248365.
