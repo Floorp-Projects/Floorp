@@ -500,14 +500,6 @@ MouseEvent::MozInputSource() const
   return mEvent->AsMouseEventBase()->inputSource;
 }
 
-NS_IMETHODIMP
-MouseEvent::GetMozInputSource(uint16_t* aInputSource)
-{
-  NS_ENSURE_ARG_POINTER(aInputSource);
-  *aInputSource = MozInputSource();
-  return NS_OK;
-}
-
 } // namespace dom
 } // namespace mozilla
 
