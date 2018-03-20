@@ -16,7 +16,8 @@ from taskgraph.util.partials import (get_balrog_platform_name,
 from taskgraph.util.schema import validate_schema, Schema
 from taskgraph.util.scriptworker import (get_beetmover_bucket_scope,
                                          get_beetmover_action_scope,
-                                         get_phase)
+                                         get_phase,
+                                         get_worker_type_for_scope)
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import Any, Required, Optional
 
@@ -236,7 +237,7 @@ def make_task_description(config, jobs):
         task = {
             'label': label,
             'description': description,
-            'worker-type': 'scriptworker-prov-v1/beetmoverworker-v1',
+            'worker-type': get_worker_type_for_scope(config, bucket_scope),
             'scopes': [bucket_scope, action_scope],
             'dependencies': dependencies,
             'attributes': attributes,

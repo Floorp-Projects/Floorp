@@ -108,3 +108,8 @@ scriptworker:
             - 'project:releng:signing:cert:nightly-signing'
         'scriptworker-prov-v1/depsigning':
             - 'project:releng:signing:cert:dep-signing'
+        'scriptworker-prov-v1/beetmoverworker-v1':
+            - 'project:releng:beetmover:bucket:release'
+            - 'project:releng:beetmover:bucket:nightly'
+        'scriptworker-prov-v1/beetmoverworker-dev':
+            - 'project:releng:beetmover:bucket:dep'
