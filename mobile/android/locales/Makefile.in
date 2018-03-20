@@ -72,6 +72,7 @@ installers-%: IS_LANGUAGE_REPACK=1
 installers-%:
 	$(MAKE) clobber-stage
 	$(MAKE) libs-$*
+	$(MAKE) -C $(DEPTH)/mobile/android/base android_apks
 	$(MAKE) package-langpack-$*
 	$(MAKE) repackage-zip-$*
 	@echo 'repackaging done'
