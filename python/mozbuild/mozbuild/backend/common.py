@@ -208,6 +208,7 @@ class CommonBackend(BuildBackend):
         shared_libs = []
         static_libs = []
         objs = []
+        no_pgo_objs = []
 
         seen_objs = set()
         seen_libs = set()
@@ -217,6 +218,11 @@ class CommonBackend(BuildBackend):
                 if o not in seen_objs:
                     seen_objs.add(o)
                     objs.append(o)
+                    # This is slightly odd, buf for consistency with the
+                    # recursivemake backend we don't replace OBJ_SUFFIX if any
+                    # object in a library has `no_pgo` set.
+                    if lib.no_pgo_objs or lib.no_pgo:
+                        no_pgo_objs.append(o)
 
         def expand(lib, recurse_objs, system_libs):
             if isinstance(lib, StaticLibrary):
@@ -258,7 +264,7 @@ class CommonBackend(BuildBackend):
                 seen_libs.add(lib)
                 os_libs.append(lib)
 
-        return objs, shared_libs, os_libs, static_libs
+        return objs, no_pgo_objs, shared_libs, os_libs, static_libs
 
     def _make_list_file(self, objdir, objs, name):
         if not objs:
