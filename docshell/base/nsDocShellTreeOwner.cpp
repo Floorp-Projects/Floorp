@@ -30,9 +30,9 @@
 #include "nsIDOMElement.h"
 #include "Link.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/SVGTitleElement.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIFormControl.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIWebNavigation.h"
@@ -1187,7 +1187,7 @@ ChromeTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
 {
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
+  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
   if (!mouseEvent) {
     return NS_OK;
   }
@@ -1212,8 +1212,8 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
 
   mMouseClientX = newMouseX;
   mMouseClientY = newMouseY;
-  mouseEvent->GetScreenX(&mMouseScreenX);
-  mouseEvent->GetScreenY(&mMouseScreenY);
+  mMouseScreenX = mouseEvent->ScreenX(CallerType::System);
+  mMouseScreenY = mouseEvent->ScreenY(CallerType::System);
 
   if (mTooltipTimer) {
     mTooltipTimer->Cancel();
