@@ -45,12 +45,12 @@ class SummaryGraphPath extends PureComponent {
 
   componentDidMount() {
     // No need to set isStateUpdating state since paint sequence is finish here.
-    this.updateState(this.props.animation);
+    this.updateState(this.props);
   }
 
   componentWillReceiveProps(nextProps) {
     this.setState({ isStateUpdating: true });
-    this.updateState(nextProps.animation);
+    this.updateState(nextProps);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -150,12 +150,13 @@ class SummaryGraphPath extends PureComponent {
     return true;
   }
 
-  async updateState(animation) {
+  async updateState(props) {
     const {
+      animation,
       emitEventForTest,
       getAnimatedPropertyMap,
       timeScale,
-    } = this.props;
+    } = props;
 
     let animatedPropertyMap = null;
 
