@@ -311,6 +311,13 @@ typedef GenericFlingAnimation FlingAnimation;
  * the page. With this, web content can use passive key listeners and not have
  * keyboard APZ disabled.
  *
+ * \li\b apz.max_tap_time
+ * Maximum time for a touch on the screen and corresponding lift of the finger
+ * to be considered a tap. This also applies to double taps, except that it is
+ * used both for the interval between the first touchdown and first touchup,
+ * and for the interval between the first touchup and the second touchdown.\n
+ * Units: milliseconds.
+ *
  * \li\b apz.max_velocity_inches_per_ms
  * Maximum velocity.  Velocity will be capped at this value if a faster fling
  * occurs.  Negative values indicate unlimited velocity.\n

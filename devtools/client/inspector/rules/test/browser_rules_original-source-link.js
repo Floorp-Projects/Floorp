@@ -52,7 +52,7 @@ function* testClickingLink(toolbox, view) {
 function checkDisplayedStylesheet(toolbox) {
   let panel = toolbox.getCurrentPanel();
   return new Promise((resolve, reject) => {
-    panel.UI.on("editor-selected", (event, editor) => {
+    panel.UI.on("editor-selected", editor => {
       // The style editor selects the first sheet at first load before
       // selecting the desired sheet.
       if (editor.styleSheet.href.endsWith("scss")) {

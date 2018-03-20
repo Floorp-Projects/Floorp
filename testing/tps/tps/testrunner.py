@@ -64,7 +64,7 @@ class TPSTestRunner(object):
         'browser.warnOnQuit': False,
         # Allow installing extensions dropped into the profile folder
         'extensions.autoDisableScopes': 10,
-        'extensions.getAddons.get.url': 'http://127.0.0.1:4567/addons/api/%IDS%.xml',
+        'extensions.getAddons.get.url': 'http://127.0.0.1:4567/addons/api/%IDS%.json',
         # Our pretend addons server doesn't support metadata...
         'extensions.getAddons.cache.enabled': False,
         'extensions.install.requireSecureOrigin': False,

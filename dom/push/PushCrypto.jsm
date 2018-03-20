@@ -448,6 +448,7 @@ class OldSchemeDecoder extends Decoder {
 var AES128GCM_ENCODING = 'aes128gcm';
 var AES128GCM_KEY_INFO = UTF8.encode('Content-Encoding: aes128gcm\0');
 var AES128GCM_AUTH_INFO = UTF8.encode('WebPush: info\0');
+var AES128GCM_NONCE_INFO = UTF8.encode('Content-Encoding: nonce\0');
 
 class aes128gcmDecoder extends Decoder {
   /**
@@ -466,7 +467,7 @@ class aes128gcmDecoder extends Decoder {
     let prkKdf = new hkdf(this.salt, prk);
     return Promise.all([
       prkKdf.extract(AES128GCM_KEY_INFO, 16),
-      prkKdf.extract(concatArray([NONCE_INFO, new Uint8Array([0])]), 12)
+      prkKdf.extract(AES128GCM_NONCE_INFO, 12)
     ]);
   }
 
@@ -635,4 +636,137 @@ var PushCrypto = {
 
     return decoder.decode();
   },
+
+  /**
+   * Encrypts a payload suitable for using in a push message. The encryption
+   * is always done with a record size of 4096 and no padding.
+   *
+   * @throws {CryptoError} if encryption fails.
+   * @param {plaintext} Uint8Array The plaintext to encrypt.
+   * @param {receiverPublicKey} Uint8Array The public key of the recipient
+   *  of the message as a buffer.
+   * @param {receiverAuthSecret} Uint8Array The auth secret of the of the
+   *  message recipient as a buffer.
+   * @param {options} Object Encryption options, used for tests.
+   * @returns {ciphertext, encoding} The encrypted payload and encoding.
+   */
+  async encrypt(plaintext, receiverPublicKey, receiverAuthSecret, options={}) {
+    const encoding = options.encoding || AES128GCM_ENCODING;
+    // We only support one encoding type.
+    if (encoding != AES128GCM_ENCODING) {
+      throw new CryptoError(`Only ${AES128GCM_ENCODING} is supported`,
+                            BAD_ENCODING_HEADER);
+    }
+    // We typically use an ephemeral key for this message, but for testing
+    // purposes we allow it to be specified.
+    const senderKeyPair = options.senderKeyPair ||
+                          await crypto.subtle.generateKey(ECDH_KEY, true, ["deriveBits"]);
+    // allowing a salt to be specified is useful for tests.
+    const salt = options.salt || crypto.getRandomValues(new Uint8Array(16));
+    const rs = options.rs === undefined ? 4096 : options.rs;
+
+    const encoder = new aes128gcmEncoder(plaintext, receiverPublicKey,
+                                         receiverAuthSecret, senderKeyPair,
+                                         salt, rs);
+    return encoder.encode();
+  },
 };
+
+// A class for aes128gcm encryption - the only kind we support.
+class aes128gcmEncoder {
+  constructor(plaintext ,receiverPublicKey, receiverAuthSecret, senderKeyPair, salt, rs) {
+    this.receiverPublicKey = receiverPublicKey;
+    this.receiverAuthSecret = receiverAuthSecret;
+    this.senderKeyPair = senderKeyPair;
+    this.salt = salt;
+    this.rs = rs;
+    this.plaintext = plaintext;
+  }
+
+  async encode() {
+    const sharedSecret = await this.computeSharedSecret(this.receiverPublicKey,
+                                                        this.senderKeyPair.privateKey);
+
+    const rawSenderPublicKey = await crypto.subtle.exportKey("raw", this.senderKeyPair.publicKey);
+    const [gcmBits, nonce] = await this.deriveKeyAndNonce(sharedSecret,
+                                                          rawSenderPublicKey)
+
+    const contentEncryptionKey = await crypto.subtle.importKey("raw", gcmBits,
+                                                               "AES-GCM", false,
+                                                               ["encrypt"]);
+    const payloadHeader = this.createHeader(rawSenderPublicKey);
+
+    const ciphertextChunks = await this.encrypt(contentEncryptionKey, nonce);
+    return {ciphertext: concatArray([payloadHeader, ...ciphertextChunks]),
+            encoding: "aes128gcm"};
+  }
+
+  // Perform the actual encryption of the payload.
+  async encrypt(key, nonce) {
+    if (this.rs < 18) {
+      throw new CryptoError("recordsize is too small", BAD_RS_PARAM);
+    }
+
+    let chunks;
+    if (this.plaintext.byteLength === 0) {
+      // Send an authentication tag for empty messages.
+      chunks = [await crypto.subtle.encrypt({
+        name: "AES-GCM",
+        iv: generateNonce(nonce, 0)
+      }, key, new Uint8Array([2]))];
+    } else {
+      // Use specified recordsize, though we burn 1 for padding and 16 byte
+      // overhead.
+      let inChunks = chunkArray(this.plaintext, this.rs - 1 - 16);
+      chunks = await Promise.all(inChunks.map(async function (slice, index) {
+        let isLast = index == inChunks.length - 1;
+        let padding = new Uint8Array([isLast ? 2 : 1]);
+        let input = concatArray([slice, padding]);
+        return await crypto.subtle.encrypt({
+          name: "AES-GCM",
+          iv: generateNonce(nonce, index),
+        }, key, input);
+      }));
+    }
+    return chunks;
+  }
+
+  // Note: this is a dupe of aes128gcmDecoder.deriveKeyAndNonce, but tricky
+  // to rationalize without a larger refactor.
+  async deriveKeyAndNonce(sharedSecret, senderPublicKey) {
+    const authKdf = new hkdf(this.receiverAuthSecret, sharedSecret);
+    const authInfo = concatArray([AES128GCM_AUTH_INFO,
+                                 this.receiverPublicKey,
+                                 senderPublicKey]);
+    const prk = await authKdf.extract(authInfo, 32);
+    const prkKdf = new hkdf(this.salt, prk);
+    return Promise.all([
+      prkKdf.extract(AES128GCM_KEY_INFO, 16),
+      prkKdf.extract(AES128GCM_NONCE_INFO, 12),
+    ]);
+  }
+
+  // Note: this duplicates some of Decoder.computeSharedSecret, but the key
+  // management is slightly different.
+  async computeSharedSecret(receiverPublicKey, senderPrivateKey) {
+    const receiverPublicCryptoKey = await crypto.subtle.importKey("raw", receiverPublicKey,
+                                                                  ECDH_KEY, false, ["deriveBits"]);
+
+    return crypto.subtle.deriveBits({name: "ECDH", public: receiverPublicCryptoKey},
+                                    senderPrivateKey, 256);
+  }
+
+  // create aes128gcm's header.
+  createHeader(key) {
+    // layout is "salt|32-bit-int|8-bit-int|key"
+    if (key.byteLength != 65) {
+      throw new CryptoError("Invalid key length for header", BAD_DH_PARAM);
+    }
+    // the 2 ints
+    let ints = new Uint8Array(5);
+    let intsv = new DataView(ints.buffer);
+    intsv.setUint32(0, this.rs); // bigendian
+    intsv.setUint8(4, key.byteLength);
+    return concatArray([this.salt, ints, key]);
+  }
+}

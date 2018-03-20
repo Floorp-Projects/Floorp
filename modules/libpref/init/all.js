@@ -737,6 +737,7 @@ pref("apz.keyboard.passive-listeners", true);
 pref("apz.keyboard.enabled", false);
 pref("apz.keyboard.passive-listeners", false);
 #endif
+pref("apz.max_tap_time", 300);
 pref("apz.max_velocity_inches_per_ms", "-1.0");
 pref("apz.max_velocity_queue_size", 5);
 pref("apz.min_skate_speed", "1.0");

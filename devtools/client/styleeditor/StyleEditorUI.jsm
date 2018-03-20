@@ -11,7 +11,7 @@ const {loader, require} = ChromeUtils.import("resource://devtools/shared/Loader.
 const Services = require("Services");
 const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
 const {OS} = require("resource://gre/modules/osfile.jsm");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {
   getString,
@@ -433,12 +433,10 @@ StyleEditorUI.prototype = {
   /**
    * Forward any error from a stylesheet.
    *
-   * @param  {string} event
-   *         Event name
    * @param  {data} data
    *         The event data
    */
-  _onError: function(event, data) {
+  _onError: function(data) {
     this.emit("error", data);
   },
 
@@ -505,7 +503,7 @@ StyleEditorUI.prototype = {
       this._view.removeItem(editor.summary);
     } else {
       let self = this;
-      this.on("editor-added", function onAdd(event, added) {
+      this.on("editor-added", function onAdd(added) {
         if (editor == added) {
           self.off("editor-added", onAdd);
           self._view.removeItem(editor.summary);
@@ -745,7 +743,7 @@ StyleEditorUI.prototype = {
     }
 
     return new Promise(resolve => {
-      this.on("editor-added", function onAdd(e, selected) {
+      this.on("editor-added", function onAdd(selected) {
         if (selected == editor) {
           self.off("editor-added", onAdd);
           resolve(editor.summary);
@@ -762,7 +760,7 @@ StyleEditorUI.prototype = {
     }
 
     return new Promise(resolve => {
-      this.on("editor-added", function onAdd(e, selected) {
+      this.on("editor-added", function onAdd(selected) {
         if (selected == editor) {
           self.off("editor-added", onAdd);
           resolve(editor.details);

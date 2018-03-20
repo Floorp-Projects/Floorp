@@ -20,10 +20,10 @@ const BUILT_IN_SECTIONS = {
     id: "topstories",
     pref: {
       titleString: {id: "header_recommended_by", values: {provider: options.provider_name}},
-      descString: {id: options.provider_description || "pocket_description"},
+      descString: {id: options.provider_description || "prefs_topstories_description"},
       nestedPrefs: options.show_spocs ? [{
         name: "showSponsored",
-        titleString: {id: "settings_pane_topstories_options_sponsored"},
+        titleString: {id: "prefs_topstories_show_sponsored_label", values: {provider: options.provider_name}},
         icon: "icon-info"
       }] : []
     },
@@ -54,7 +54,7 @@ const BUILT_IN_SECTIONS = {
     id: "highlights",
     pref: {
       titleString: {id: "settings_pane_highlights_header"},
-      descString: {id: "settings_pane_highlights_body2"}
+      descString: {id: "prefs_highlights_description"}
     },
     shouldHidePref:  false,
     eventSource: "HIGHLIGHTS",

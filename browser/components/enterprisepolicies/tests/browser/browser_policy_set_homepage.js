@@ -157,13 +157,18 @@ add_task(async function homepage_test_locked() {
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     is(content.document.getElementById("browserStartupPage").disabled, true,
        "When homepage is locked, the startup page choice controls should be locked");
-    is(content.document.getElementById("browserHomePage").disabled, true,
-       "Homepage input should be disabled");
-    is(content.document.getElementById("useCurrent").disabled, true,
+  });
+  await BrowserTestUtils.loadURI(tab.linkedBrowser, "about:preferences#home");
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+    is(content.document.getElementById("homeMode").disabled, true,
+       "Homepage menulist should be disabled");
+    is(content.document.getElementById("homePageUrl").disabled, true,
+       "Homepage custom input should be disabled");
+    is(content.document.getElementById("useCurrentBtn").disabled, true,
        "\"Use Current Page\" button should be disabled");
-    is(content.document.getElementById("useBookmark").disabled, true,
+    is(content.document.getElementById("useBookmarkBtn").disabled, true,
        "\"Use Bookmark...\" button should be disabled");
-    is(content.document.getElementById("restoreDefaultHomePage").disabled, true,
+    is(content.document.getElementById("restoreDefaultHomePageBtn").disabled, true,
        "\"Restore to Default\" button should be disabled");
   });
   BrowserTestUtils.removeTab(tab);

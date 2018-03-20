@@ -299,10 +299,11 @@ RenderMinimap(ContainerT* aContainer,
   }
 
   LayerMetricsWrapper wrapper(aLayer, 0);
-  const FrameMetrics& fm = wrapper.Metrics();
-  if (!fm.IsScrollable()) {
+  if (!wrapper.GetApzc()) {
     return;
   }
+  const FrameMetrics& fm = wrapper.Metrics();
+  MOZ_ASSERT(fm.IsScrollable());
 
   ParentLayerPoint scrollOffset = aSampler->GetCurrentAsyncScrollOffset(wrapper);
 
@@ -461,7 +462,8 @@ RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
     if (sampler) {
       for (uint32_t i = layer->GetScrollMetadataCount(); i > 0; --i) {
         LayerMetricsWrapper wrapper(layer, i - 1);
-        if (wrapper.Metrics().IsScrollable()) {
+        if (wrapper.GetApzc()) {
+          MOZ_ASSERT(wrapper.Metrics().IsScrollable());
           // Since the composition bounds are in the parent layer's coordinates,
           // use the parent's effective transform rather than the layer's own.
           ParentLayerRect compositionBounds = wrapper.Metrics().GetCompositionBounds();

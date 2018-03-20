@@ -29,7 +29,7 @@ function createNew(ui, panelWindow) {
   info("Creating a new stylesheet now");
 
   return new Promise(resolve => {
-    ui.once("editor-added", (ev, editor) => {
+    ui.once("editor-added", editor => {
       editor.getSourceEditor().then(resolve);
     });
 

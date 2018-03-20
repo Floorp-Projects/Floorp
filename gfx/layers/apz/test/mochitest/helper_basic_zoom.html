@@ -16,7 +16,7 @@ function getResolution() {
 
 function* test(testDriver) {
   var initial_resolution = getResolution();
-  SimpleTest.ok(initial_resolution > 0,
+  ok(initial_resolution > 0,
       'The initial_resolution is ' + initial_resolution + ', which is some sane value');
 
   // This listener will trigger the test to continue once APZ is done with
@@ -45,7 +45,7 @@ function* test(testDriver) {
   // Flush state and get the resolution we're at now
   yield flushApzRepaints(testDriver);
   let final_resolution = getResolution();
-  SimpleTest.ok(final_resolution > initial_resolution, 'The final resolution (' + final_resolution + ') is greater after zooming in');
+  ok(final_resolution > initial_resolution, 'The final resolution (' + final_resolution + ') is greater after zooming in');
 }
 
 waitUntilApzStable()

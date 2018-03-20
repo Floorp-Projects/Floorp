@@ -77,7 +77,7 @@ public:
   virtual nsresult AddDtlsFingerprint(const std::string& algorithm,
                                       const std::vector<uint8_t>& value) override;
 
-  nsresult AddRtpExtension(std::vector<SdpExtmapAttributeList::Extmap>& extensions,
+  nsresult AddRtpExtension(JsepMediaType mediaType,
                            const std::string& extensionName,
                            SdpDirectionAttribute::Direction direction);
   virtual nsresult AddAudioRtpExtension(
@@ -86,6 +86,11 @@ public:
       SdpDirectionAttribute::Direction::kSendrecv) override;
 
   virtual nsresult AddVideoRtpExtension(
+      const std::string& extensionName,
+      SdpDirectionAttribute::Direction direction =
+      SdpDirectionAttribute::Direction::kSendrecv) override;
+
+  virtual nsresult AddAudioVideoRtpExtension(
       const std::string& extensionName,
       SdpDirectionAttribute::Direction direction =
       SdpDirectionAttribute::Direction::kSendrecv) override;
@@ -269,8 +274,7 @@ private:
   std::vector<JsepDtlsFingerprint> mDtlsFingerprints;
   uint64_t mSessionId;
   uint64_t mSessionVersion;
-  std::vector<SdpExtmapAttributeList::Extmap> mAudioRtpExtensions;
-  std::vector<SdpExtmapAttributeList::Extmap> mVideoRtpExtensions;
+  std::vector<JsepExtmapMediaType> mRtpExtensions;
   UniquePtr<JsepUuidGenerator> mUuidGen;
   std::string mDefaultRemoteStreamId;
   std::string mCNAME;

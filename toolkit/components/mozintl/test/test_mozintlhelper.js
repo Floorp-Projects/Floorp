@@ -37,6 +37,7 @@ function test_methods_presence(miHelper) {
   equal(miHelper.addGetDisplayNames instanceof Function, true);
   equal(miHelper.addGetLocaleInfo instanceof Function, true);
   equal(miHelper.addDateTimeFormatConstructor instanceof Function, true);
+  equal(miHelper.addRelativeTimeFormatConstructor instanceof Function, true);
 
   let x = {};
 
@@ -51,4 +52,7 @@ function test_methods_presence(miHelper) {
 
   miHelper.addDateTimeFormatConstructor(x);
   equal(x.DateTimeFormat instanceof Function, true);
+
+  miHelper.addRelativeTimeFormatConstructor(x);
+  equal(x.RelativeTimeFormat instanceof Function, true);
 }

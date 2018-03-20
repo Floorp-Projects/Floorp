@@ -124,11 +124,15 @@ async function fetchAllKeywords(info) {
   return entries;
 }
 
-async function openMirror(name) {
+async function openMirror(name, options = {}) {
   let path = OS.Path.join(OS.Constants.Path.profileDir, `${name}_buf.sqlite`);
   let buf = await SyncedBookmarksMirror.open({
     path,
-    recordTelemetryEvent() {},
+    recordTelemetryEvent(...args) {
+      if (options.recordTelemetryEvent) {
+        options.recordTelemetryEvent.call(this, ...args);
+      }
+    },
   });
   return buf;
 }

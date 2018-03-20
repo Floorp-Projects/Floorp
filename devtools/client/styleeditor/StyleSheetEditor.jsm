@@ -12,7 +12,7 @@ const Editor = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
 const {shortSource, prettifyCSS} = require("devtools/shared/inspector/css-logic");
 const Services = require("Services");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
 const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
@@ -401,11 +401,9 @@ StyleSheetEditor.prototype = {
   /**
    * Forward error event from stylesheet.
    *
-   * @param  {string} event
-   *         Event type
-   * @param  {string} errorCode
+   * @param  {Object} data: The parameters to customize the error message
    */
-  _onError: function(event, data) {
+  _onError: function(data) {
     this.emit("error", data);
   },
 
