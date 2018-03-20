@@ -13,10 +13,6 @@ endif
 ifeq ($(HOST_OS_ARCH)_$(OS_ARCH),Linux_Darwin)
 # Use the host compiler instead of the target compiler.
 CXX := $(HOST_CXX)
-# expandlibs doesn't know the distinction between host and target toolchains,
-# and on cross linux/darwin builds, the options to give to the linker for file
-# lists differ between both, so don't use file lists.
-EXPAND_MKSHLIB_ARGS :=
 endif
 
 # Use the default OS X deployment target to enable using the libc++ headers

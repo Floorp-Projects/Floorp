@@ -2,12 +2,7 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 SOURCES += [
-    'bar1.cc',
-    'bar2.cc',
-]
-
-DIRS += [
-    'bar_helper',
+    'bar_helper1.cpp',
 ]
 
 FINAL_LIBRARY = 'bar'
