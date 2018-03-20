@@ -88,6 +88,23 @@
           "items": {
             "type": "origin"
           }
+        },
+
+        "Default": {
+          "type": "boolean"
+        },
+
+        "AcceptThirdParty": {
+          "type": "string",
+          "enum": ["all", "none", "from-visited"]
+        },
+
+        "ExpireAtSessionEnd": {
+          "type": "boolean"
+        },
+
+        "Locked": {
+          "type": "boolean"
         }
       }
     },
@@ -276,6 +293,14 @@
           "items": {
             "type": "origin"
           }
+        },
+
+        "Default": {
+          "type": "boolean"
+        },
+
+        "Locked": {
+          "type": "boolean"
         }
       }
     },
@@ -322,11 +347,10 @@
       "description": "Don't create the default bookmarks bundled with Firefox, nor the Smart Bookmarks (Most Visited, Recent Tags). Note: this policy is only effective if used before the first run of the profile.",
       "first_available": "60.0",
 
-      "type": "boolean",
-      "enum": [true]
+      "type": "boolean"
     },
 
-    "Popups": {
+    "PopupBlocking": {
       "description": "Allow or deny popup usage.",
       "first_available": "60.0",
 
@@ -337,6 +361,14 @@
           "items": {
             "type": "origin"
           }
+        },
+
+        "Default": {
+          "type": "boolean"
+        },
+
+        "Locked": {
+          "type": "boolean"
         }
       }
     },
