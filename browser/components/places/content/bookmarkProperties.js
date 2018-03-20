@@ -53,8 +53,8 @@
  *     - "loadInSidebar"
  *     - "folderPicker" - hides both the tree and the menu.
  *
- * window.arguments[0].performed is set to true if any transaction has
- * been performed by the dialog.
+ * window.arguments[0].bookmarkGuid is set to the guid of the item, if the
+ * dialog is accepted.
  */
 
 /* import-globals-from editBookmark.js */
@@ -86,7 +86,6 @@ var BookmarkPropertiesPanel = {
 
   _action: null,
   _itemType: null,
-  _itemId: -1,
   _uri: null,
   _loadInSidebar: false,
   _title: "",
@@ -404,14 +403,15 @@ var BookmarkPropertiesPanel = {
     // We have to uninit the panel first, otherwise late changes could force it
     // to commit more transactions.
     gEditItemOverlay.uninitPanel(true);
-    window.arguments[0].performed = true;
+    if (this._node.bookmarkGuid) {
+      window.arguments[0].bookmarkGuid = this._node.bookmarkGuid;
+    }
   },
 
   onDialogCancel() {
     // We have to uninit the panel first, otherwise late changes could force it
     // to commit more transactions.
     gEditItemOverlay.uninitPanel(true);
-    window.arguments[0].performed = false;
   },
 
   /**
@@ -505,11 +505,9 @@ var BookmarkPropertiesPanel = {
       throw new Error(`unexpected value for _itemType:  ${this._itemType}`);
     }
 
-    this._itemGuid = itemGuid;
-    this._itemId = await PlacesUtils.promiseItemId(itemGuid);
     return Object.freeze({
-      itemId: this._itemId,
-      bookmarkGuid: this._itemGuid,
+      itemId: await PlacesUtils.promiseItemId(itemGuid),
+      bookmarkGuid: itemGuid,
       title: this._title,
       uri: this._uri ? this._uri.spec : "",
       type: this._itemType == BOOKMARK_ITEM ?
