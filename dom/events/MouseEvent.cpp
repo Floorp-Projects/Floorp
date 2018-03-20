@@ -98,34 +98,6 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
   }
 }
 
-NS_IMETHODIMP
-MouseEvent::InitMouseEvent(const nsAString& aType,
-                           bool aCanBubble,
-                           bool aCancelable,
-                           mozIDOMWindow* aView,
-                           int32_t aDetail,
-                           int32_t aScreenX,
-                           int32_t aScreenY,
-                           int32_t aClientX,
-                           int32_t aClientY,
-                           bool aCtrlKey,
-                           bool aAltKey,
-                           bool aShiftKey,
-                           bool aMetaKey,
-                           uint16_t aButton,
-                           nsIDOMEventTarget* aRelatedTarget)
-{
-  MouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable,
-                             nsGlobalWindowInner::Cast(aView), aDetail,
-                             aScreenX, aScreenY,
-                             aClientX, aClientY,
-                             aCtrlKey, aAltKey, aShiftKey,
-                             aMetaKey, aButton,
-                             static_cast<EventTarget *>(aRelatedTarget));
-
-  return NS_OK;
-}
-
 void
 MouseEvent::InitMouseEvent(const nsAString& aType,
                            bool aCanBubble,
@@ -244,14 +216,6 @@ MouseEvent::Button()
   }
 }
 
-NS_IMETHODIMP
-MouseEvent::GetButtons(uint16_t* aButtons)
-{
-  NS_ENSURE_ARG_POINTER(aButtons);
-  *aButtons = Buttons();
-  return NS_OK;
-}
-
 uint16_t
 MouseEvent::Buttons()
 {
@@ -266,14 +230,6 @@ MouseEvent::Buttons()
     default:
       MOZ_CRASH("Tried to get mouse buttons for non-mouse event!");
   }
-}
-
-NS_IMETHODIMP
-MouseEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
-{
-  NS_ENSURE_ARG_POINTER(aRelatedTarget);
-  *aRelatedTarget = GetRelatedTarget().take();
-  return NS_OK;
 }
 
 already_AddRefed<EventTarget>
@@ -304,24 +260,6 @@ MouseEvent::GetRegion(nsAString& aRegion)
   if (mouseEventBase) {
     aRegion = mouseEventBase->region;
   }
-}
-
-NS_IMETHODIMP
-MouseEvent::GetMozMovementX(int32_t* aMovementX)
-{
-  NS_ENSURE_ARG_POINTER(aMovementX);
-  *aMovementX = MovementX();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MouseEvent::GetMozMovementY(int32_t* aMovementY)
-{
-  NS_ENSURE_ARG_POINTER(aMovementY);
-  *aMovementY = MovementY();
-
-  return NS_OK;
 }
 
 int32_t
@@ -424,28 +362,10 @@ MouseEvent::MetaKey()
   return mEvent->AsInputEvent()->IsMeta();
 }
 
-NS_IMETHODIMP
-MouseEvent::GetModifierState(const nsAString& aKey,
-                                  bool* aState)
-{
-  NS_ENSURE_ARG_POINTER(aState);
-
-  *aState = GetModifierState(aKey);
-  return NS_OK;
-}
-
 float
 MouseEvent::MozPressure() const
 {
   return mEvent->AsMouseEventBase()->pressure;
-}
-
-NS_IMETHODIMP
-MouseEvent::GetMozPressure(float* aPressure)
-{
-  NS_ENSURE_ARG_POINTER(aPressure);
-  *aPressure = MozPressure();
-  return NS_OK;
 }
 
 bool
