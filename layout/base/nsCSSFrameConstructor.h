@@ -389,21 +389,7 @@ private:
                             nsIFrame*                      aNewFrame,
                             bool                           aAllowCounters = true);
 
-  already_AddRefed<nsStyleContext>
-  ResolveStyleContext(nsIFrame* aParentFrame,
-                      nsIContent* aContainer,
-                      nsIContent* aChild);
-
-  already_AddRefed<nsStyleContext>
-  ResolveStyleContext(nsIFrame* aParentFrame, nsIContent* aChild);
-
-  already_AddRefed<nsStyleContext>
-  ResolveStyleContext(const InsertionPoint& aInsertion, nsIContent* aChild);
-
-  already_AddRefed<nsStyleContext>
-  ResolveStyleContext(nsStyleContext* aParentStyleContext,
-                      nsIContent* aContent,
-                      Element* aOriginatingElementOrNull = nullptr);
+  already_AddRefed<nsStyleContext> ResolveStyleContext(nsIContent* aContent);
 
   // Add the frame construction items for the given aContent and aParentFrame
   // to the list.  This might add more than one item in some rare cases.
