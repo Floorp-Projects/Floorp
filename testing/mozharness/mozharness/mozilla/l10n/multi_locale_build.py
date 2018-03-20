@@ -83,14 +83,19 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
     def __init__(self, require_config_file=True):
         LocalesMixin.__init__(self)
         MercurialScript.__init__(self, config_options=self.config_options,
-                                 all_actions=['clobber', 'pull-build-source',
+                                 all_actions=['clobber',
+                                              'pull-build-source',
                                               'pull-locale-source',
-                                              'build', 'package-en-US',
+                                              'build',
+                                              'package-en-US',
                                               'upload-en-US',
                                               'backup-objdir',
                                               'restore-objdir',
-                                              'add-locales', 'package-multi',
-                                              'upload-multi', 'summary'],
+                                              'add-locales',
+                                              'android-assemble-app',
+                                              'package-multi',
+                                              'upload-multi',
+                                              'summary'],
                                  require_config_file=require_config_file)
 
     def query_l10n_env(self):
@@ -134,6 +139,16 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
                                  cwd=dirs['abs_mozilla_dir'],
                                  env=env, error_list=MakefileErrorList):
             self.fatal("Erroring out after the build failed.")
+
+    def android_assemble_app(self):
+        dirs = self.query_abs_dirs()
+
+        command = 'make -C mobile/android/base android_apks'
+        env = self.query_env()
+        if self._process_command(command=command,
+                                 cwd=dirs['abs_objdir'],
+                                 env=env, error_list=MakefileErrorList):
+            self.fatal("Erroring out after assembling Android APKs failed.")
 
     def add_locales(self):
         c = self.config
