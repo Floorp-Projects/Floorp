@@ -9,6 +9,9 @@ var gSearchResultsPane = {
   listSearchTooltips: new Set(),
   listSearchMenuitemIndicators: new Set(),
   searchInput: null,
+  // A map of DOM Elements to a string of keywords used in search
+  // XXX: We should invalidate this cache on `intl:app-locales-changed`
+  searchKeywords: new WeakMap(),
   inited: false,
 
   init() {
@@ -264,7 +267,7 @@ var gSearchResultsPane = {
 
         if (!child.classList.contains("header") &&
             !child.classList.contains("subcategory") &&
-            this.searchWithinNode(child, this.query)) {
+            await this.searchWithinNode(child, this.query)) {
           child.hidden = false;
           child.classList.remove("visually-hidden");
 
@@ -327,7 +330,7 @@ var gSearchResultsPane = {
    * @returns boolean
    *    Returns true when found in at least one childNode, false otherwise
    */
-  searchWithinNode(nodeObject, searchPhrase) {
+  async searchWithinNode(nodeObject, searchPhrase) {
     let matchesFound = false;
     if (nodeObject.childElementCount == 0 ||
         nodeObject.tagName == "label" ||
@@ -366,8 +369,20 @@ var gSearchResultsPane = {
       let valueResult = nodeObject.tagName !== "menuitem" ?
         this.queryMatchesContent(nodeObject.getAttribute("value"), searchPhrase) : false;
 
-      // Searching some elements, such as xul:button, buttons to open subdialogs.
-      let keywordsResult = this.queryMatchesContent(nodeObject.getAttribute("searchkeywords"), searchPhrase);
+      // Searching some elements, such as xul:button, buttons to open subdialogs
+      // using l10n ids.
+      let keywordsResult =
+        nodeObject.hasAttribute("search-l10n-ids") &&
+        await this.matchesSearchL10nIDs(nodeObject, searchPhrase);
+
+      if (!keywordsResult) {
+        // Searching some elements, such as xul:button, buttons to open subdialogs
+        // using searchkeywords attribute.
+        keywordsResult =
+          !keywordsResult &&
+          nodeObject.hasAttribute("searchkeywords") &&
+          this.queryMatchesContent(nodeObject.getAttribute("searchkeywords"), searchPhrase);
+      }
 
       // Creating tooltips for buttons
       if (keywordsResult && (nodeObject.tagName === "button" || nodeObject.tagName == "menulist")) {
@@ -398,12 +413,12 @@ var gSearchResultsPane = {
     if (nodeObject.tagName == "deck" && nodeObject.id != "historyPane") {
       let index = nodeObject.selectedIndex;
       if (index != -1) {
-        let result = this.searchChildNodeIfVisible(nodeObject, index, searchPhrase);
+        let result = await this.searchChildNodeIfVisible(nodeObject, index, searchPhrase);
         matchesFound = matchesFound || result;
       }
     } else {
       for (let i = 0; i < nodeObject.childNodes.length; i++) {
-        let result = this.searchChildNodeIfVisible(nodeObject, i, searchPhrase);
+        let result = await this.searchChildNodeIfVisible(nodeObject, i, searchPhrase);
         matchesFound = matchesFound || result;
       }
     }
@@ -421,16 +436,66 @@ var gSearchResultsPane = {
    * @returns boolean
    *    Returns true when found the specific childNode, false otherwise
    */
-  searchChildNodeIfVisible(nodeObject, index, searchPhrase) {
+  async searchChildNodeIfVisible(nodeObject, index, searchPhrase) {
     let result = false;
     if (!nodeObject.childNodes[index].hidden && nodeObject.getAttribute("data-hidden-from-search") !== "true") {
-      result = this.searchWithinNode(nodeObject.childNodes[index], searchPhrase);
+      result = await this.searchWithinNode(nodeObject.childNodes[index], searchPhrase);
       // Creating tooltips for menulist element
       if (result && nodeObject.tagName === "menulist") {
         this.listSearchTooltips.add(nodeObject);
       }
     }
     return result;
+  },
+
+  /**
+   * Search for a phrase in l10n messages associated with the element.
+   *
+   * @param Node nodeObject
+   *    The parent DOM Element
+   * @param String searchPhrase
+   * @returns boolean
+   *    true when the text content contains the query string else false
+   */
+  async matchesSearchL10nIDs(nodeObject, searchPhrase) {
+    if (!this.searchKeywords.has(nodeObject)) {
+      // The `search-l10n-ids` attribute is a comma-separated list of
+      // l10n ids. It may also uses a dot notation to specify an attribute
+      // of the message to be used.
+      //
+      // Example: "containers-add-button.label, user-context-personal"
+      //
+      // The result is an array of arrays of l10n ids and optionally attribute names.
+      //
+      // Example: [["containers-add-button", "label"], ["user-context-personal"]]
+      const refs = nodeObject.getAttribute("search-l10n-ids")
+        .split(",")
+        .map(s => s.trim().split(".")).filter(s => s[0].length > 0);
+
+      const messages = await document.l10n.formatMessages(refs.map(ref => [ref[0]]));
+
+      // Map the localized messages taking value or a selected attribute and
+      // building a string of concatenated translated strings out of it.
+      let keywords = messages.map((msg, i) => {
+        if (msg === null) {
+          console.warn(`Missing search l10n id "${refs[i][0]}"`);
+          return null;
+        }
+        if (refs[i][1]) {
+          let attr = msg.attrs.find(a => a.name === refs[i][1]);
+          if (attr) {
+            return attr.value;
+          }
+          return null;
+        }
+        return msg.value;
+      }).filter(keyword => keyword !== null).join(" ");
+
+      this.searchKeywords.set(nodeObject, keywords);
+      return this.queryMatchesContent(keywords, searchPhrase);
+    }
+
+    return this.queryMatchesContent(this.searchKeywords.get(nodeObject), searchPhrase);
   },
 
   /**
