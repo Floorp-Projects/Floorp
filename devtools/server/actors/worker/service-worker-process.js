@@ -6,6 +6,11 @@
 
 "use strict";
 
+/*
+ * Process script used to control service workers via a DevTools actor.
+ * Loaded into content processes by the service worker actors.
+ */
+
 let swm = Cc["@mozilla.org/serviceworkers/manager;1"]
   .getService(Ci.nsIServiceWorkerManager);
 
