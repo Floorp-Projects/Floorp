@@ -9,8 +9,7 @@
 flat varying int vGradientAddress;
 flat varying float vGradientRepeat;
 
-flat varying vec2 vStartCenter;
-flat varying vec2 vEndCenter;
+flat varying vec2 vCenter;
 flat varying float vStartRadius;
 flat varying float vEndRadius;
 
@@ -23,8 +22,8 @@ varying vec2 vLocalPos;
 #ifdef WR_VERTEX_SHADER
 
 struct RadialGradient {
-    vec4 start_end_center;
-    vec4 start_end_radius_ratio_xy_extend_mode;
+    vec4 center_start_end_radius;
+    vec4 ratio_xy_extend_mode;
 };
 
 RadialGradient fetch_radial_gradient(int address) {
@@ -43,23 +42,20 @@ void brush_vs(
 
     vPos = vi.local_pos - local_rect.p0;
 
-    vStartCenter = gradient.start_end_center.xy;
-    vEndCenter = gradient.start_end_center.zw;
-
-    vStartRadius = gradient.start_end_radius_ratio_xy_extend_mode.x;
-    vEndRadius = gradient.start_end_radius_ratio_xy_extend_mode.y;
+    vCenter = gradient.center_start_end_radius.xy;
+    vStartRadius = gradient.center_start_end_radius.z;
+    vEndRadius = gradient.center_start_end_radius.w;
 
     // Transform all coordinates by the y scale so the
     // fragment shader can work with circles
-    float ratio_xy = gradient.start_end_radius_ratio_xy_extend_mode.z;
+    float ratio_xy = gradient.ratio_xy_extend_mode.x;
     vPos.y *= ratio_xy;
-    vStartCenter.y *= ratio_xy;
-    vEndCenter.y *= ratio_xy;
+    vCenter.y *= ratio_xy;
 
     vGradientAddress = user_data.x;
 
     // Whether to repeat the gradient instead of clamping.
-    vGradientRepeat = float(int(gradient.start_end_radius_ratio_xy_extend_mode.w) != EXTEND_MODE_CLAMP);
+    vGradientRepeat = float(int(gradient.ratio_xy_extend_mode.y) != EXTEND_MODE_CLAMP);
 
 #ifdef WR_FEATURE_ALPHA_PASS
     vLocalPos = vi.local_pos;
@@ -69,14 +65,13 @@ void brush_vs(
 
 #ifdef WR_FRAGMENT_SHADER
 vec4 brush_fs() {
-    vec2 cd = vEndCenter - vStartCenter;
-    vec2 pd = vPos - vStartCenter;
+    vec2 pd = vPos - vCenter;
     float rd = vEndRadius - vStartRadius;
 
-    // Solve for t in length(t * cd - pd) = vStartRadius + t * rd
+    // Solve for t in length(t - pd) = vStartRadius + t * rd
     // using a quadratic equation in form of At^2 - 2Bt + C = 0
-    float A = dot(cd, cd) - rd * rd;
-    float B = dot(pd, cd) + vStartRadius * rd;
+    float A = -(rd * rd);
+    float B = vStartRadius * rd;
     float C = dot(pd, pd) - vStartRadius * vStartRadius;
 
     float offset;

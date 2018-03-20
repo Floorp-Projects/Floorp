@@ -45,6 +45,10 @@
     <hbox id="clientBox">
       <vbox id="leftBox" flex="1"/>
       <vbox id="rightBox" flex="1">
+        <label id="release" hidden="true">
+        <!-- This string is explicitly not translated -->
+          Extended Support Release
+        </label>
         <hbox align="baseline">
 #expand   <label id="version">__MOZ_APP_VERSION_DISPLAY__</label>
           <label id="releasenotes" class="text-link" hidden="true">&releaseNotes.link;</label>

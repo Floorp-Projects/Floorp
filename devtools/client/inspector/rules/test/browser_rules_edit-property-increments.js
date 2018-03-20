@@ -10,7 +10,7 @@
 // Bug 1275446 - This test happen to hit the default timeout on linux32
 requestLongerTimeout(2);
 
-loader.lazyRequireGetter(this, "system", "devtools/shared/system");
+loader.lazyRequireGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm", true);
 
 const TEST_URI = `
   <style>
@@ -294,7 +294,7 @@ function* testIncrement(editor, options, view) {
   }
 
   let smallIncrementKey = {ctrlKey: options.ctrl};
-  if (system.constants.platform === "macosx") {
+  if (AppConstants.platform === "macosx") {
     smallIncrementKey = {altKey: options.alt};
   }
 
@@ -313,7 +313,7 @@ function* testIncrement(editor, options, view) {
 }
 
 function getSmallIncrementKey() {
-  if (system.constants.platform === "macosx") {
+  if (AppConstants.platform === "macosx") {
     return { alt: true };
   }
   return { ctrl: true };
