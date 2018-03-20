@@ -143,9 +143,6 @@
 
           CustomizableUI.addListener(this);
           this._updateNewTabVisibility();
-
-          XPCOMUtils.defineLazyPreferenceGetter(this, "_closeTabByDblclick",
-            "browser.tabs.closeTabByDblclick", false);
         ]]>
       </constructor>
 
@@ -1692,7 +1689,6 @@
         ]]>
         </setter>
       </property>
-      <field name="_selectedOnFirstMouseDown">false</field>
 
       <property name="pinned" readonly="true">
         <getter>
@@ -1996,13 +1992,6 @@
 
       <handler event="mousedown" phase="capturing">
       <![CDATA[
-        let tabContainer = this.parentNode;
-        if (tabContainer._closeTabByDblclick &&
-            event.button == 0 &&
-            event.detail == 1) {
-          this._selectedOnFirstMouseDown = this.selected;
-        }
-
         if (this.selected) {
           this.style.MozUserFocus = "ignore";
         } else if (this.mOverCloseButton ||
@@ -2037,17 +2026,6 @@
         // for the one-close-button case
         if (event.originalTarget.getAttribute("anonid") == "close-button") {
           event.stopPropagation();
-        }
-
-        let tabContainer = this.parentNode;
-        if (tabContainer._closeTabByDblclick &&
-            this._selectedOnFirstMouseDown &&
-            this.selected &&
-            !this._overPlayingIcon) {
-          gBrowser.removeTab(this, {
-            animate: true,
-            byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE,
-          });
         }
       ]]></handler>
 
