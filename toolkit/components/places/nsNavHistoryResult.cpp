@@ -2347,9 +2347,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
     case QUERYUPDATE_HOST: {
       // For these simple yet common cases we can check the host ourselves
       // before doing the overhead of creating a new result node.
-      bool hasDomain;
-      mQuery->GetHasDomain(&hasDomain);
-      if (!hasDomain)
+      if (mQuery->Domain().IsVoid())
         return NS_OK;
 
       nsAutoCString host;

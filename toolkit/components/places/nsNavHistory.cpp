@@ -795,13 +795,11 @@ nsNavHistory::GetUpdateRequirements(const RefPtr<nsNavHistoryQuery>& aQuery,
                                     bool* aHasSearchTerms)
 {
   // first check if there are search terms
-  *aHasSearchTerms = false;
-  aQuery->GetHasSearchTerms(aHasSearchTerms);
+  bool hasSearchTerms = *aHasSearchTerms = !aQuery->SearchTerms().IsEmpty();
 
   bool nonTimeBasedItems = false;
   bool domainBasedItems = false;
 
-  bool hasSearchTerms = !aQuery->SearchTerms().IsEmpty();
   if (aQuery->Folders().Length() > 0 ||
       aQuery->OnlyBookmarked() ||
       aQuery->Tags().Length() > 0 ||
@@ -908,8 +906,7 @@ nsNavHistory::EvaluateQueryForNode(const RefPtr<nsNavHistoryQuery>& aQuery,
   }
 
   // --- domain/host matching ---
-  aQuery->GetHasDomain(&hasIt);
-  if (hasIt) {
+  if (!aQuery->Domain().IsVoid()) {
     if (!nodeUri) {
       // lazy creation of nodeUri, which might be checked for multiple queries
       if (NS_FAILED(NS_NewURI(getter_AddRefs(nodeUri), aNode->mURI)))
@@ -2177,8 +2174,7 @@ nsNavHistory::ConstructQueryString(
                sortingMode <= nsINavHistoryQueryOptions::SORT_BY_FRECENCY_DESCENDING,
                "Invalid sortingMode found while building query!");
 
-  bool hasSearchTerms = false;
-  aQuery->GetHasSearchTerms(&hasSearchTerms);
+  bool hasSearchTerms = !aQuery->SearchTerms().IsEmpty();
 
   nsAutoCString tagsSqlFragment;
   GetTagsSqlFragment(GetTagsFolder(),
@@ -3175,10 +3171,9 @@ nsNavHistory::QueryToSelectClause(const RefPtr<nsNavHistoryQuery>& aQuery,
   }
 
   // search terms
-  bool hasSearchTerms;
   int32_t searchBehavior = mozIPlacesAutoComplete::BEHAVIOR_HISTORY |
                            mozIPlacesAutoComplete::BEHAVIOR_BOOKMARK;
-  if (NS_SUCCEEDED(aQuery->GetHasSearchTerms(&hasSearchTerms)) && hasSearchTerms) {
+  if (!aQuery->SearchTerms().IsEmpty()) {
     // Re-use the autocomplete_match function.  Setting the behavior to match
     // history or typed history or bookmarks or open pages will match almost
     // everything.
@@ -3206,7 +3201,7 @@ nsNavHistory::QueryToSelectClause(const RefPtr<nsNavHistoryQuery>& aQuery,
           .Str("AND b.fk = h.id)");
 
   // domain
-  if (NS_SUCCEEDED(aQuery->GetHasDomain(&hasIt)) && hasIt) {
+  if (!aQuery->Domain().IsVoid()) {
     bool domainIsHost = false;
     aQuery->GetDomainIsHost(&domainIsHost);
     if (domainIsHost)
@@ -3218,14 +3213,13 @@ nsNavHistory::QueryToSelectClause(const RefPtr<nsNavHistoryQuery>& aQuery,
   }
 
   // URI
-  if (NS_SUCCEEDED(aQuery->GetHasUri(&hasIt)) && hasIt) {
+  if (aQuery->Uri()) {
     clause.Condition("h.url_hash = hash(").Param(":uri").Str(")")
           .Condition("h.url =").Param(":uri");
   }
 
   // annotation
-  aQuery->GetHasAnnotation(&hasIt);
-  if (hasIt) {
+  if (!aQuery->Annotation().IsEmpty()) {
     clause.Condition("");
     if (aQuery->AnnotationIsNot())
       clause.Str("NOT");
@@ -3345,7 +3339,7 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageBaseStatement* statement,
   }
 
   // search terms
-  if (NS_SUCCEEDED(aQuery->GetHasSearchTerms(&hasIt)) && hasIt) {
+  if (!aQuery->SearchTerms().IsEmpty()) {
     rv = statement->BindStringByName(NS_LITERAL_CSTRING("search_string"),
                                      aQuery->SearchTerms());
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3365,7 +3359,7 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageBaseStatement* statement,
   }
 
   // domain (see GetReversedHostname for more info on reversed host names)
-  if (NS_SUCCEEDED(aQuery->GetHasDomain(&hasIt)) && hasIt) {
+  if (!aQuery->Domain().IsVoid()) {
     nsString revDomain;
     GetReversedHostname(NS_ConvertUTF8toUTF16(aQuery->Domain()), revDomain);
 
@@ -4186,20 +4180,15 @@ GetSimpleBookmarksQueryFolder(const RefPtr<nsNavHistoryQuery>& aQuery,
     return 0;
 
   bool hasIt;
-  aQuery->GetHasBeginTime(&hasIt);
-  if (hasIt)
+  if (NS_SUCCEEDED(aQuery->GetHasBeginTime(&hasIt)) && hasIt)
     return 0;
-  aQuery->GetHasEndTime(&hasIt);
-  if (hasIt)
+  if (NS_SUCCEEDED(aQuery->GetHasEndTime(&hasIt)) && hasIt)
     return 0;
-  aQuery->GetHasDomain(&hasIt);
-  if (hasIt)
+  if (!aQuery->Domain().IsVoid())
     return 0;
-  aQuery->GetHasUri(&hasIt);
-  if (hasIt)
+  if (aQuery->Uri())
     return 0;
-  (void)aQuery->GetHasSearchTerms(&hasIt);
-  if (hasIt)
+  if (!aQuery->SearchTerms().IsEmpty())
     return 0;
   if (aQuery->Tags().Length() > 0)
     return 0;
@@ -4237,9 +4226,7 @@ void ParseSearchTermsFromQuery(const RefPtr<nsNavHistoryQuery>& aQuery,
                                nsTArray<nsString>* aTerms)
 {
   int32_t lastBegin = -1;
-  bool hasSearchTerms;
-  if (NS_SUCCEEDED(aQuery->GetHasSearchTerms(&hasSearchTerms)) &&
-      hasSearchTerms) {
+  if (!aQuery->SearchTerms().IsEmpty()) {
     const nsString& searchTerms = aQuery->SearchTerms();
     for (uint32_t j = 0; j < searchTerms.Length(); j++) {
       if (isQueryWhitespace(searchTerms[j]) ||
