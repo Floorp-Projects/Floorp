@@ -23,6 +23,7 @@
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
+#include "AsyncLogger.h"
 
 namespace mozilla {
 
@@ -471,6 +472,10 @@ public:
     return mDriver;
   }
 
+  AsyncLogger& TraceLogger() {
+    return mTraceLogger;
+  }
+
   /**
    * Effectively set the new driver, while we are switching.
    * It is only safe to call this at the very end of an iteration, when there
@@ -820,6 +825,7 @@ public:
   AudioMixer mMixer;
   const RefPtr<AbstractThread> mAbstractMainThread;
   RefPtr<SharedThreadPool> mThreadPool;
+  AsyncLogger mTraceLogger;
 
   // used to limit graph shutdown time
   // Only accessed on the main thread.
