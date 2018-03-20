@@ -1485,7 +1485,7 @@ nsCookieService::InitDBConn()
   mEndInitDBConn = mozilla::TimeStamp::Now();
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os && !mReadArray.IsEmpty()) {
+  if (os) {
     os->NotifyObservers(nullptr, "cookie-db-read", nullptr);
     mReadArray.Clear();
   }

@@ -2,19 +2,22 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+const HOSTNAME_DOMAIN = "browser_policy_clear_blocked_cookies.com";
+const ORIGIN_DOMAIN = "browser_policy_clear_blocked_cookies.org";
+
 add_task(async function setup() {
   const expiry = Date.now() + 24 * 60 * 60;
-  Services.cookies.add("example.com", "/", "secure", "true", true, false, false, expiry, {});
-  Services.cookies.add("example.com", "/", "insecure", "true", false, false, false, expiry, {});
-  Services.cookies.add("example.org", "/", "secure", "true", true, false, false, expiry, {});
-  Services.cookies.add("example.org", "/", "insecure", "true", false, false, false, expiry, {});
+  Services.cookies.add(HOSTNAME_DOMAIN, "/", "secure", "true", true, false, false, expiry, {});
+  Services.cookies.add(HOSTNAME_DOMAIN, "/", "insecure", "true", false, false, false, expiry, {});
+  Services.cookies.add(ORIGIN_DOMAIN, "/", "secure", "true", true, false, false, expiry, {});
+  Services.cookies.add(ORIGIN_DOMAIN, "/", "insecure", "true", false, false, false, expiry, {});
   Services.cookies.add("example.net", "/", "secure", "true", true, false, false, expiry, {});
   await setupPolicyEngineWithJson({
     "policies": {
       "Cookies": {
         "Block": [
-          "http://example.com",
-          "https://example.org:8080"
+          `http://${HOSTNAME_DOMAIN}`,
+          `https://${ORIGIN_DOMAIN}:8080`
         ]
       }
     }
@@ -37,8 +40,8 @@ function retrieve_all_cookies(host) {
 
 add_task(async function test_cookies_for_blocked_sites_cleared() {
   const cookies = {
-    hostname: retrieve_all_cookies("example.com"),
-    origin: retrieve_all_cookies("example.org"),
+    hostname: retrieve_all_cookies(HOSTNAME_DOMAIN),
+    origin: retrieve_all_cookies(ORIGIN_DOMAIN),
     keep: retrieve_all_cookies("example.net")
   };
   const expected = {
@@ -55,7 +58,7 @@ add_task(async function test_cookies_for_blocked_sites_cleared() {
 });
 
 add_task(function teardown() {
-  for (let host of ["example.com", "example.org", "example.net"]) {
+  for (let host of [HOSTNAME_DOMAIN, ORIGIN_DOMAIN, "example.net"]) {
     Services.cookies.removeCookiesWithOriginAttributes("{}", host);
   }
 });
