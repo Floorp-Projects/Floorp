@@ -227,14 +227,6 @@ MouseEvent::InitNSMouseEvent(const nsAString& aType,
   mouseEventBase->inputSource = aInputSource;
 }
 
-NS_IMETHODIMP
-MouseEvent::GetButton(int16_t* aButton)
-{
-  NS_ENSURE_ARG_POINTER(aButton);
-  *aButton = Button();
-  return NS_OK;
-}
-
 int16_t
 MouseEvent::Button()
 {

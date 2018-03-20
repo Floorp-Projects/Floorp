@@ -41,6 +41,7 @@
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/Selection.h"
 #include "mozInlineSpellWordUtil.h"
 #include "mozISpellI18NManager.h"
@@ -50,7 +51,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMEvent.h"
@@ -1854,14 +1854,12 @@ mozInlineSpellChecker::OnBlur(nsIDOMEvent* aEvent)
 nsresult
 mozInlineSpellChecker::OnMouseClick(nsIDOMEvent *aMouseEvent)
 {
-  nsCOMPtr<nsIDOMMouseEvent>mouseEvent = do_QueryInterface(aMouseEvent);
+  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
   NS_ENSURE_TRUE(mouseEvent, NS_OK);
 
   // ignore any errors from HandleNavigationEvent as we don't want to prevent
   // anyone else from seeing this event.
-  int16_t button;
-  mouseEvent->GetButton(&button);
-  HandleNavigationEvent(button != 0);
+  HandleNavigationEvent(mouseEvent->Button() != 0);
   return NS_OK;
 }
 
