@@ -22,7 +22,6 @@
 class nsIDOMEvent;
 class nsIContent;
 class nsIDOMUIEvent;
-class nsIDOMMouseEvent;
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
 class nsXBLPrototypeBinding;
@@ -35,6 +34,7 @@ namespace dom {
 class AutoJSAPI;
 class EventTarget;
 class KeyboardEvent;
+class MouseEvent;
 } // namespace dom
 
 namespace layers {
@@ -118,15 +118,7 @@ public:
                        uint32_t aCharCode,
                        const IgnoreModifierState& aIgnoreModifierState);
 
-  bool MouseEventMatched(nsIDOMMouseEvent* aMouseEvent);
-  inline bool MouseEventMatched(nsAtom* aEventType,
-                                  nsIDOMMouseEvent* aEvent)
-  {
-    if (!EventTypeEquals(aEventType)) {
-      return false;
-    }
-    return MouseEventMatched(aEvent);
-  }
+  bool MouseEventMatched(mozilla::dom::MouseEvent* aMouseEvent);
 
   already_AddRefed<mozilla::dom::Element> GetHandlerElement();
 

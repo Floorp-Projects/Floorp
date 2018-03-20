@@ -1564,14 +1564,8 @@ bool
 nsListControlFrame::IsLeftButton(nsIDOMEvent* aMouseEvent)
 {
   // only allow selection with the left button
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
-  if (mouseEvent) {
-    int16_t whichButton;
-    if (NS_SUCCEEDED(mouseEvent->GetButton(&whichButton))) {
-      return whichButton != 0?false:true;
-    }
-  }
-  return false;
+  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
+  return mouseEvent && mouseEvent->Button() == 0;
 }
 
 nscoord
