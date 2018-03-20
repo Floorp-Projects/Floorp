@@ -425,7 +425,6 @@ class Nursery
     ProfileTimes startTimes_;
     ProfileDurations profileDurations_;
     ProfileDurations totalDurations_;
-    uint64_t minorGcCount_;
 
     /*
      * This data is initialised only if the nursery is enabled and after at
