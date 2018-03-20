@@ -36,6 +36,7 @@ class nsSimpleURI
     , public nsIIPCSerializableURI
 {
 protected:
+    nsSimpleURI();
     virtual ~nsSimpleURI();
 
 public:
@@ -49,8 +50,6 @@ public:
     static already_AddRefed<nsSimpleURI> From(nsIURI* aURI);
 
     // nsSimpleURI methods:
-
-    nsSimpleURI();
 
     bool Equals(nsSimpleURI* aOther)
     {
