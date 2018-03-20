@@ -35,17 +35,26 @@ class SummaryGraphPath extends PureComponent {
     this.state = {
       // Duration which can display in one pixel.
       durationPerPixel: 0,
+      // To avoid rendering while the state is updating
+      // since we call an async function in updateState.
+      isStateUpdating: false,
       // List of keyframe which consists by only offset and easing.
       keyframesList: [],
     };
   }
 
   componentDidMount() {
+    // No need to set isStateUpdating state since paint sequence is finish here.
     this.updateState(this.props.animation);
   }
 
   componentWillReceiveProps(nextProps) {
+    this.setState({ isStateUpdating: true });
     this.updateState(nextProps.animation);
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return !nextState.isStateUpdating;
   }
 
   /**
@@ -165,7 +174,13 @@ class SummaryGraphPath extends PureComponent {
     const totalDuration = this.getTotalDuration(animation, timeScale);
     const durationPerPixel = totalDuration / thisEl.parentNode.clientWidth;
 
-    this.setState({ durationPerPixel, keyframesList });
+    this.setState(
+      {
+        durationPerPixel,
+        isStateUpdating: false,
+        keyframesList
+      }
+    );
 
     emitEventForTest("animation-summary-graph-rendered");
   }
