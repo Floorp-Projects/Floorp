@@ -1100,7 +1100,9 @@ var Impl = {
     }
 
     b("MEMORY_VSIZE", "vsize");
-    b("MEMORY_VSIZE_MAX_CONTIGUOUS", "vsizeMaxContiguous");
+    if (!Services.appinfo.is64Bit || AppConstants.platform !== "win") {
+      b("MEMORY_VSIZE_MAX_CONTIGUOUS", "vsizeMaxContiguous");
+    }
     b("MEMORY_RESIDENT_FAST", "residentFast");
     b("MEMORY_UNIQUE", "residentUnique");
     p("MEMORY_HEAP_OVERHEAD_FRACTION", "heapOverheadFraction");
