@@ -307,10 +307,8 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery *aQuery,
   }
 
   // search terms
-  query->GetHasSearchTerms(&hasIt);
-  if (hasIt) {
-    nsAutoString searchTerms;
-    query->GetSearchTerms(searchTerms);
+  if (!query->SearchTerms().IsEmpty()) {
+    const nsString& searchTerms = query->SearchTerms();
     nsCString escapedTerms;
     if (! NS_Escape(NS_ConvertUTF16toUTF8(searchTerms), escapedTerms,
                     url_XAlphas))
@@ -344,14 +342,11 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery *aQuery,
   // domain (+ is host), only call if hasDomain, which means non-IsVoid
   // this means we may get an empty string for the domain in the result,
   // which is valid
-  query->GetHasDomain(&hasIt);
-  if (hasIt) {
+  if (!query->Domain().IsVoid()) {
     AppendBoolKeyValueIfTrue(queryString,
                              NS_LITERAL_CSTRING(QUERYKEY_DOMAIN_IS_HOST),
                              query, &nsINavHistoryQuery::GetDomainIsHost);
-    nsAutoCString domain;
-    nsresult rv = query->GetDomain(domain);
-    NS_ENSURE_SUCCESS(rv, rv);
+    const nsCString& domain = query->Domain();
     nsCString escapedDomain;
     bool success = NS_Escape(domain, escapedDomain, url_XAlphas);
     NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
@@ -362,11 +357,8 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery *aQuery,
   }
 
   // uri
-  query->GetHasUri(&hasIt);
-  if (hasIt) {
-    nsCOMPtr<nsIURI> uri;
-    query->GetUri(getter_AddRefs(uri));
-    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE); // hasURI should tell is if invalid
+  if (query->Uri()) {
+    nsCOMPtr<nsIURI> uri = query->Uri();
     nsAutoCString uriSpec;
     nsresult rv = uri->GetSpec(uriSpec);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -380,17 +372,14 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery *aQuery,
   }
 
   // annotation
-  query->GetHasAnnotation(&hasIt);
-  if (hasIt) {
+  if (!query->Annotation().IsEmpty()) {
     AppendAmpersandIfNonempty(queryString);
-    bool annotationIsNot;
-    query->GetAnnotationIsNot(&annotationIsNot);
-    if (annotationIsNot)
+    if (query->AnnotationIsNot()) {
       queryString.AppendLiteral(QUERYKEY_NOTANNOTATION "=");
-    else
+    } else {
       queryString.AppendLiteral(QUERYKEY_ANNOTATION "=");
-    nsAutoCString annot;
-    query->GetAnnotation(annot);
+    }
+    const nsCString& annot = query->Annotation();
     nsAutoCString escaped;
     bool success = NS_Escape(annot, escaped, url_XAlphas);
     NS_ENSURE_TRUE(success, NS_ERROR_OUT_OF_MEMORY);
@@ -398,19 +387,16 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery *aQuery,
   }
 
   // folders
-  int64_t *folders = nullptr;
-  uint32_t folderCount = 0;
-  query->GetFolders(&folderCount, &folders);
-  for (uint32_t i = 0; i < folderCount; ++i) {
+  const nsTArray<int64_t>& folders = query->Folders();
+  for (uint32_t i = 0; i < folders.Length(); ++i) {
     AppendAmpersandIfNonempty(queryString);
     queryString += NS_LITERAL_CSTRING(QUERYKEY_FOLDER "=");
     nsresult rv = PlacesFolderConversion::AppendFolder(queryString, folders[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  free(folders);
 
   // tags
-  const nsTArray<nsString> &tags = query->Tags();
+  const nsTArray<nsString>& tags = query->Tags();
   for (uint32_t i = 0; i < tags.Length(); ++i) {
     nsAutoCString escapedTag;
     if (!NS_Escape(NS_ConvertUTF16toUTF8(tags[i]), escapedTag, url_XAlphas))
