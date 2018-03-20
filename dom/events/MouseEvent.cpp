@@ -332,14 +332,6 @@ MouseEvent::GetMozMovementY(int32_t* aMovementY)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-MouseEvent::GetScreenX(int32_t* aScreenX)
-{
-  NS_ENSURE_ARG_POINTER(aScreenX);
-  *aScreenX = ScreenX(CallerType::System);
-  return NS_OK;
-}
-
 int32_t
 MouseEvent::ScreenX(CallerType aCallerType)
 {
@@ -355,14 +347,6 @@ MouseEvent::ScreenX(CallerType aCallerType)
   }
 
   return Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint).x;
-}
-
-NS_IMETHODIMP
-MouseEvent::GetScreenY(int32_t* aScreenY)
-{
-  NS_ENSURE_ARG_POINTER(aScreenY);
-  *aScreenY = ScreenY(CallerType::System);
-  return NS_OK;
 }
 
 int32_t
