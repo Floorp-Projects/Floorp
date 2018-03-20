@@ -8,6 +8,8 @@
   <string name="feedback_erase">Историята на разглеждане е изчистена</string>
   <string name="search_hint">Търсене на %1$s</string>
   <string name="menu_share">Споделяне…</string>
+  <string name="menu_open_with_default_browser2">Отваряне в/във %1$s</string>
+  <string name="menu_open_with_a_browser2">Отваряне в…</string>
   <string name="menu_add_to_home_screen">Добавяне към екрана</string>
   <string name="menu_whats_new">Новото в това издание</string>
   <string name="menu_settings">Настройки</string>
@@ -15,6 +17,7 @@
   <string name="menu_help">Помощ</string>
   <string name="menu_rights">Вашите права</string>
   <string name="menu_trackers_blocked_title">Спрени проследявания</string>
+  <string name="menu_custom_tab_branding">С подкрепата на %1$s</string>
   <string name="share_dialog_title">Споделяне чрез</string>
   <string name="notification_erase_text">Изчистване историята на разглеждането</string>
   <string name="notification_action_open">Отваряне</string>
@@ -181,4 +184,11 @@
   <string name="your_rights_content3"><![CDATA["Не ви се предоставят права или лицензи за търговските марки на Mozilla Foundation или друга страна, включително Mozilla, Firefox или имената и емблемите на %1$s. Допълнителна информация може да бъде намерена "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1090;&#1091;&#1082;</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Достъпен е програмният код на %1$s под различни "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">&#1083;&#1080;&#1094;&#1077;&#1085;&#1079;&#1080;</a>" – безплатни и с отворен код."]]></string>
   <string name="your_rights_content5"><![CDATA["Също така %1$s използва блокиращ списък, осигуряван от Disconnect, Inc., като отделна и независима разработка  под условията на "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>", също достъпен "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">&#1090;&#1091;&#1082;</a>.]]></string>
+  <string name="gv_prompt_username_hint">Потребителско име</string>
+  <string name="gv_prompt_password_hint">Парола</string>
+  <string name="gv_prompt_clear">Изчистване</string>
+  <string name="security_popup_secure_connection">Защитена връзка</string>
+  <string name="security_popup_insecure_connection">Незащитена връзка</string>
+  <string name="security_popup_security_verified">Проверено от: %1$s</string>
+  <string name="site_security_icon_content_description">Защита на страницата</string>
 </resources>
