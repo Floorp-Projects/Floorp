@@ -151,7 +151,7 @@ HTMLEditor::InsertCell(nsIDOMElement* aDOMCell,
 
   // Don't let Rules System change the selection.
   AutoTransactionsConserveSelection dontChangeSelection(this);
-  return InsertNode(*newCell, pointToInsert.AsRaw());
+  return InsertNode(*newCell, pointToInsert);
 }
 
 nsresult

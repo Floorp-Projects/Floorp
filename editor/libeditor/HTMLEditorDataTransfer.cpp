@@ -142,7 +142,7 @@ HTMLEditor::LoadHTML(const nsAString& aInputString)
            documentFragment->GetFirstChild();
          contentToInsert;
          contentToInsert = documentFragment->GetFirstChild()) {
-      rv = InsertNode(*contentToInsert, pointToInsert.AsRaw());
+      rv = InsertNode(*contentToInsert, pointToInsert);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -362,8 +362,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     // Are we in a text node? If so, split it.
     if (pointToInsert.IsInTextNode()) {
       SplitNodeResult splitNodeResult =
-        SplitNodeDeep(*pointToInsert.GetContainerAsContent(),
-                      pointToInsert.AsRaw(),
+        SplitNodeDeep(*pointToInsert.GetContainerAsContent(), pointToInsert,
                       SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
@@ -452,7 +451,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
              firstChild = curNode->GetFirstChild()) {
           EditorDOMPoint insertedPoint =
             InsertNodeIntoProperAncestor(
-              *firstChild, pointToInsert.AsRaw(),
+              *firstChild, pointToInsert,
               SplitAtEdges::eDoNotCreateEmptyContainer);
           if (NS_WARN_IF(!insertedPoint.IsSet())) {
             break;
@@ -494,7 +493,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
             }
             EditorDOMPoint insertedPoint =
               InsertNodeIntoProperAncestor(
-                *firstChild, pointToInsert.AsRaw(),
+                *firstChild, pointToInsert,
                 SplitAtEdges::eDoNotCreateEmptyContainer);
             if (NS_WARN_IF(!insertedPoint.IsSet())) {
               break;
@@ -523,7 +522,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
              firstChild = curNode->GetFirstChild()) {
           EditorDOMPoint insertedPoint =
             InsertNodeIntoProperAncestor(
-              *firstChild, pointToInsert.AsRaw(),
+              *firstChild, pointToInsert,
               SplitAtEdges::eDoNotCreateEmptyContainer);
           if (NS_WARN_IF(!insertedPoint.IsSet())) {
             break;
@@ -542,7 +541,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
         // Try to insert.
         EditorDOMPoint insertedPoint =
           InsertNodeIntoProperAncestor(
-            *curNode->AsContent(), pointToInsert.AsRaw(),
+            *curNode->AsContent(), pointToInsert,
             SplitAtEdges::eDoNotCreateEmptyContainer);
         if (insertedPoint.IsSet()) {
           lastInsertNode = curNode->AsContent();
@@ -562,7 +561,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
           nsCOMPtr<nsINode> oldParent = content->GetParentNode();
           insertedPoint =
             InsertNodeIntoProperAncestor(
-              *content->GetParent(), pointToInsert.AsRaw(),
+              *content->GetParent(), pointToInsert,
               SplitAtEdges::eDoNotCreateEmptyContainer);
           if (insertedPoint.IsSet()) {
             insertedContextParent = oldParent;
