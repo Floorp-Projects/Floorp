@@ -21,6 +21,7 @@
 # to add or remove locales from releases.
 RELEASE_LOCALES = [
 	"am",
+	"an",
 	"ar",
 	"ast",
 	"az",
@@ -47,6 +48,7 @@ RELEASE_LOCALES = [
 	"fr",
 	"fy-NL",
 	"ga-IE",
+	"gu-IN",
 	"hi-IN",
 	"hr",
 	"hsb",
@@ -70,6 +72,7 @@ RELEASE_LOCALES = [
 	"ne-NP",
 	"nl",
 	"nn-NO",
+	"oc",
 	"pl",
 	"pt-BR",
 	"ro",
@@ -84,6 +87,7 @@ RELEASE_LOCALES = [
 	"th",
 	"tr",
 	"trs",
+	"tt",
 	"uk",
 	"ur",
 	"vi",
@@ -97,12 +101,8 @@ RELEASE_LOCALES = [
 # of other locales so that translators of not yet completed locales can
 # verify their work in progress.
 ADDITIONAL_SCREENSHOT_LOCALES = [
-	"an",
 	"anp",
-	"gu-IN",
 	"lt",
-	"oc",
-	"tt",
 	"wo"
 ]
 
