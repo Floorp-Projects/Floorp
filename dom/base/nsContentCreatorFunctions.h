@@ -16,6 +16,7 @@
  * (mozilla/content and mozilla/layout).
  */
 
+class nsAtom;
 class nsIContent;
 class nsIDocument;
 class imgRequestProxy;
