@@ -19,6 +19,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/HTMLFormElement.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/TabParent.h"
 
 #include "HTMLInputElement.h"
@@ -28,7 +29,6 @@
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsINode.h"
@@ -845,7 +845,7 @@ IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
   }
 
   InputContextAction::Cause cause =
-    aMouseEvent->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH ?
+    aMouseEvent->inputSource == MouseEventBinding::MOZ_SOURCE_TOUCH ?
       InputContextAction::CAUSE_TOUCH : InputContextAction::CAUSE_MOUSE;
 
   InputContextAction action(cause, InputContextAction::FOCUS_NOT_CHANGED);

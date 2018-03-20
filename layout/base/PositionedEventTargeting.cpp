@@ -10,6 +10,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
 #include "nsFontMetrics.h"
@@ -577,7 +578,7 @@ FindFrameTargetedByInputEvent(WidgetGUIEvent* aEvent,
   if (aEvent->mClass == eMouseEventClass &&
       prefs->mTouchOnly &&
       aEvent->AsMouseEvent()->inputSource !=
-        nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
+        MouseEventBinding::MOZ_SOURCE_TOUCH) {
     PET_LOG("Mouse input event is not from a touch source\n");
     return target;
   }

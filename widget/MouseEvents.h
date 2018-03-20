@@ -12,7 +12,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMMouseEvent.h"
 
 /******************************************************************************
  * nsDragDropEventStatus
@@ -124,7 +123,9 @@ protected:
     , buttons(0)
     , pressure(0)
     , hitCluster(false)
-    , inputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE)
+    // Including MouseEventBinding.h here leads to an include loop, so
+    // we have to hardcode MouseEventBinding::MOZ_SOURCE_MOUSE.
+    , inputSource(/* MouseEventBinding::MOZ_SOURCE_MOUSE = */ 1)
   {
   }
 
@@ -135,7 +136,9 @@ protected:
     , buttons(0)
     , pressure(0)
     , hitCluster(false)
-    , inputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE)
+    // Including MouseEventBinding.h here leads to an include loop, so
+    // we have to hardcode MouseEventBinding::MOZ_SOURCE_MOUSE.
+    , inputSource(/* MouseEventBinding::MOZ_SOURCE_MOUSE = */ 1)
  {
  }
 
@@ -180,7 +183,7 @@ public:
   // Touch near a cluster of links (true)
   bool hitCluster;
 
-  // Possible values at nsIDOMMouseEvent
+  // Possible values a in MouseEvent
   uint16_t inputSource;
 
   // ID of the canvas HitRegion

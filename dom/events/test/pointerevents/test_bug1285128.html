@@ -38,7 +38,7 @@ function runTests() {
   });
 
   synthesizeMouseAtCenter(target0, { type: "mousemove",
-                                     inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE,
+                                     inputSource: MouseEvent.MOZ_SOURCE_MOUSE,
                                      isWidgetEventSynthesized: true });
   synthesizeMouseAtCenter(target1, { type: "mousedown" });
   synthesizeMouseAtCenter(target1, { type: "mouseup" });

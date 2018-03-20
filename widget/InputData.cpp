@@ -5,6 +5,7 @@
 
 #include "InputData.h"
 
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/TextEvents.h"
@@ -272,7 +273,7 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
 
   event.mTime = mTime;
   event.button = WidgetMouseEvent::eLeftButton;
-  event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+  event.inputSource = MouseEventBinding::MOZ_SOURCE_TOUCH;
   event.mModifiers = modifiers;
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
   event.mFocusSequenceNumber = mFocusSequenceNumber;

@@ -18,6 +18,7 @@
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/dom/MouseEventBinding.h"
 
 using namespace mozilla;
 
@@ -173,7 +174,7 @@ nsTitleBarFrame::MouseClicked(WidgetMouseEvent* aEvent)
   bool isControl = false;
   bool isAlt = false;
   bool isMeta = false;
-  uint16_t inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
+  uint16_t inputSource = dom::MouseEventBinding::MOZ_SOURCE_UNKNOWN;
 
   if(aEvent) {
     isShift = aEvent->IsShift();

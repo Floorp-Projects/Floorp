@@ -30,6 +30,7 @@
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/FragmentOrElement.h"
 #include "mozilla/dom/MouseEvent.h"
+#include "mozilla/dom/MouseEventBinding.h"
 
 // for event firing in context menus
 #include "nsPresContext.h"
@@ -192,7 +193,7 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
   if (mIsContext) {
 #ifndef NS_CONTEXT_MENU_IS_MOUSEUP
     uint16_t inputSource = mouseEvent->MozInputSource();
-    bool isTouch = inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+    bool isTouch = inputSource == MouseEventBinding::MOZ_SOURCE_TOUCH;
     // If the context menu launches on mousedown,
     // we have to fire focus on the content we clicked on
     FireFocusOnTargetContent(targetNode, isTouch);

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/DragEvent.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/MouseEvents.h"
 #include "nsContentUtils.h"
 #include "prtime.h"
@@ -26,7 +27,7 @@ DragEvent::DragEvent(EventTarget* aOwner,
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
     mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
-    mEvent->AsMouseEvent()->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
+    mEvent->AsMouseEvent()->inputSource = MouseEventBinding::MOZ_SOURCE_UNKNOWN;
   }
 }
 

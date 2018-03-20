@@ -16,11 +16,4 @@
 [builtinclass, uuid(5bdab8d8-7933-4c5c-b6d1-ab34481237f7)]
 interface nsIDOMMouseEvent : nsIDOMUIEvent
 {
-  const unsigned short    MOZ_SOURCE_UNKNOWN    = 0;
-  const unsigned short    MOZ_SOURCE_MOUSE      = 1;
-  const unsigned short    MOZ_SOURCE_PEN        = 2;
-  const unsigned short    MOZ_SOURCE_ERASER     = 3;
-  const unsigned short    MOZ_SOURCE_CURSOR     = 4;
-  const unsigned short    MOZ_SOURCE_TOUCH      = 5;
-  const unsigned short    MOZ_SOURCE_KEYBOARD   = 6;
 };

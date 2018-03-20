@@ -105,6 +105,19 @@ function _EU_isAndroid(aWindow = window) {
 }
 
 function _EU_maybeWrap(o) {
+  // We're used in some contexts where there is no SpecialPowers and also in
+  // some where it exists but has no wrap() method.  And this is somewhat
+  // independent of whether window.Components is a thing...
+  var haveWrap = false;
+  try {
+    haveWrap = SpecialPowers.wrap != undefined;
+  } catch (e) {
+    // Just leave it false.
+  }
+  if (!haveWrap) {
+    // Not much we can do here.
+    return o;
+  }
   var c = Object.getOwnPropertyDescriptor(window, 'Components');
   return c.value && !c.writable ? o : SpecialPowers.wrap(o);
 }
@@ -418,15 +431,18 @@ function synthesizeMouseAtPoint(left, top, aEvent, aWindow = window)
     var modifiers = _parseModifiers(aEvent, aWindow);
     var pressure = ("pressure" in aEvent) ? aEvent.pressure : 0;
 
+    // aWindow might be cross-origin from us.
+    var MouseEvent = _EU_maybeWrap(aWindow).MouseEvent;
+
     // Default source to mouse.
     var inputSource = ("inputSource" in aEvent) ? aEvent.inputSource :
-                                                  _EU_Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE;
+                                                  MouseEvent.MOZ_SOURCE_MOUSE;
     // Compute a pointerId if needed.
     var id;
     if ("id" in aEvent) {
       id = aEvent.id;
     } else {
-      var isFromPen = inputSource === _EU_Ci.nsIDOMMouseEvent.MOZ_SOURCE_PEN;
+      var isFromPen = inputSource === MouseEvent.MOZ_SOURCE_PEN;
       id = isFromPen ? utils.DEFAULT_PEN_POINTER_ID :
                        utils.DEFAULT_MOUSE_POINTER_ID;
     }

@@ -89,7 +89,10 @@ var PointerRelay = { // jshint ignore:line
     if (Utils.MozBuildApp === "browser" && aEvent.view.top.isChromeWindow) {
       return;
     }
-    if (aEvent.mozInputSource === Ci.nsIDOMMouseEvent.MOZ_SOURCE_UNKNOWN ||
+    // aEvent might not be a mouse event here at all; don't do the
+    // mozInputSource check unless it is.
+    if (("mozInputSource" in aEvent &&
+         aEvent.mozInputSource === aEvent.MOZ_SOURCE_UNKNOWN) ||
         aEvent.isSynthesized) {
       // Ignore events that are scripted or clicks from the a11y API.
       return;
