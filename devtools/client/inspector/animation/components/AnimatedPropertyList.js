@@ -25,16 +25,29 @@ class AnimatedPropertyList extends PureComponent {
     super(props);
 
     this.state = {
-      animatedPropertyMap: null
+      // Map which is mapped property name and the keyframes.
+      animatedPropertyMap: null,
+      // Object which is mapped property name and the animation type
+      // such the "color", "discrete", "length" and so on.
+      animationTypes: null,
+      // To avoid rendering while the state is updating
+      // since we call an async function in updateState.
+      isStateUpdating: false,
     };
   }
 
   componentDidMount() {
-    this.updateKeyframesList(this.props.animation);
+    // No need to set isStateUpdating state since paint sequence is finish here.
+    this.updateState(this.props.animation);
   }
 
   componentWillReceiveProps(nextProps) {
-    this.updateKeyframesList(nextProps.animation);
+    this.setState({ isStateUpdating: true });
+    this.updateState(nextProps.animation);
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return !nextState.isStateUpdating;
   }
 
   getPropertyState(property) {
@@ -49,7 +62,7 @@ class AnimatedPropertyList extends PureComponent {
     return null;
   }
 
-  async updateKeyframesList(animation) {
+  async updateState(animation) {
     const {
       getAnimatedPropertyMap,
       emitEventForTest,
@@ -68,7 +81,14 @@ class AnimatedPropertyList extends PureComponent {
       return;
     }
 
-    this.setState({ animatedPropertyMap, animationTypes });
+    this.setState(
+      {
+        animatedPropertyMap,
+        animationTypes,
+        isStateUpdating: false
+      }
+    );
+
     emitEventForTest("animation-keyframes-rendered");
   }
 
