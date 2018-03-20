@@ -698,6 +698,7 @@ EditorSpellCheck::UninitSpellChecker()
   DeleteSuggestedWordList();
   mDictionaryList.Clear();
   mDictionaryIndex = 0;
+  mDictionaryFetcherGroup++;
   mSpellChecker = nullptr;
   return NS_OK;
 }
