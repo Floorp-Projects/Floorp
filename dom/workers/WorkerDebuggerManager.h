@@ -74,12 +74,6 @@ public:
   void
   UnregisterDebuggerMainThread(WorkerPrivate* aWorkerPrivate);
 
-  uint32_t
-  GetDebuggersLength() const;
-
-  WorkerDebugger*
-  GetDebuggerAt(uint32_t aIndex) const;
-
 private:
   virtual ~WorkerDebuggerManager();
 };
