@@ -90,7 +90,7 @@ StoreBuffer::clear()
     bufferGeneric.clear();
 
     for (ArenaCellSet* set = bufferWholeCell; set; set = set->next)
-        set->arena->bufferedCells() = nullptr;
+        set->arena->bufferedCells() = &ArenaCellSet::Empty;
     bufferWholeCell = nullptr;
 }
 
