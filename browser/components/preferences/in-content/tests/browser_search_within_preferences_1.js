@@ -142,6 +142,7 @@ add_task(async function search_with_nothing_found() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", { leaveOpen: true });
 
   let noResultsEl = gBrowser.contentDocument.querySelector("#no-results-message");
+  let sorryMsgQueryEl = gBrowser.contentDocument.getElementById("sorry-message-query");
 
   is_element_hidden(noResultsEl, "Should not be in search results yet");
 
@@ -158,6 +159,7 @@ add_task(async function search_with_nothing_found() {
   await searchCompletedPromise;
 
   is_element_visible(noResultsEl, "Should be in search results");
+  is(sorryMsgQueryEl.textContent, query, "sorry-message-query should contain the query");
 
   // Takes search off
   searchCompletedPromise = BrowserTestUtils.waitForEvent(
@@ -169,6 +171,7 @@ add_task(async function search_with_nothing_found() {
   await searchCompletedPromise;
 
   is_element_hidden(noResultsEl, "Should not be in search results");
+  is(sorryMsgQueryEl.textContent.length, 0, "sorry-message-query should be empty");
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
