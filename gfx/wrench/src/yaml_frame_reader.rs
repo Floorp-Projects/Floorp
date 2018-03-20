@@ -599,13 +599,10 @@ impl YamlFrameReader {
     }
 
     fn to_radial_gradient(&mut self, dl: &mut DisplayListBuilder, item: &Yaml) -> RadialGradient {
-        if item["start-center"].is_badvalue() {
-            let center = item["center"]
-                .as_point()
-                .expect("radial gradient must have start center");
-            let radius = item["radius"]
-                .as_size()
-                .expect("radial gradient must have start radius");
+        let center = item["center"].as_point().expect("radial gradient must have center");
+        let radius = item["radius"].as_size().expect("radial gradient must have a radius");
+
+        if item["start-radius"].is_badvalue() {
             let stops = item["stops"]
                 .as_vec()
                 .expect("radial gradient must have stops")
@@ -629,19 +626,12 @@ impl YamlFrameReader {
 
             dl.create_radial_gradient(center, radius, stops, extend_mode)
         } else {
-            let start_center = item["start-center"]
-                .as_point()
-                .expect("radial gradient must have start center");
             let start_radius = item["start-radius"]
                 .as_force_f32()
                 .expect("radial gradient must have start radius");
-            let end_center = item["end-center"]
-                .as_point()
-                .expect("radial gradient must have end center");
             let end_radius = item["end-radius"]
                 .as_force_f32()
                 .expect("radial gradient must have end radius");
-            let ratio_xy = item["ratio-xy"].as_force_f32().unwrap_or(1.0);
             let stops = item["stops"]
                 .as_vec()
                 .expect("radial gradient must have stops")
@@ -664,11 +654,10 @@ impl YamlFrameReader {
             };
 
             dl.create_complex_radial_gradient(
-                start_center,
+                center,
+                radius,
                 start_radius,
-                end_center,
                 end_radius,
-                ratio_xy,
                 stops,
                 extend_mode,
             )

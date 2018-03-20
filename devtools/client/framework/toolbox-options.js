@@ -11,7 +11,7 @@ const {gDevTools} = require("devtools/client/framework/devtools");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
-loader.lazyRequireGetter(this, "system", "devtools/shared/system");
+loader.lazyRequireGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm", true);
 
 exports.OptionsPanel = OptionsPanel;
 
@@ -310,7 +310,7 @@ OptionsPanel.prototype = {
    * Add common preferences enabled only on Nightly.
    */
   setupNightlyOptions: function() {
-    let isNightly = system.constants.NIGHTLY_BUILD;
+    let isNightly = AppConstants.NIGHTLY_BUILD;
     if (!isNightly) {
       return;
     }

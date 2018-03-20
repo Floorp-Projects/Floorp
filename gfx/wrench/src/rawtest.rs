@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use WindowWrapper;
+use {WindowWrapper, NotifierEvent};
 use blob;
 use euclid::{TypedRect, TypedSize2D, TypedPoint2D};
 use std::sync::Arc;
@@ -13,7 +13,7 @@ use wrench::Wrench;
 
 pub struct RawtestHarness<'a> {
     wrench: &'a mut Wrench,
-    rx: Receiver<()>,
+    rx: &'a Receiver<NotifierEvent>,
     window: &'a mut WindowWrapper,
 }
 
@@ -30,7 +30,7 @@ fn rect<T: Copy, U>(x: T, y: T, width: T, height: T) -> TypedRect<T, U> {
 }
 
 impl<'a> RawtestHarness<'a> {
-    pub fn new(wrench: &'a mut Wrench, window: &'a mut WindowWrapper, rx: Receiver<()>) -> Self {
+    pub fn new(wrench: &'a mut Wrench, window: &'a mut WindowWrapper, rx: &'a Receiver<NotifierEvent>) -> Self {
         RawtestHarness {
             wrench,
             rx,

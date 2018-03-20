@@ -2312,7 +2312,7 @@ DataChannelConnection::ReceiveCallback(struct socket* sock, void *data, size_t d
   ASSERT_WEBRTC(!NS_IsMainThread());
 
   if (!data) {
-    usrsctp_close(sock); // SCTP has finished shutting down
+    LOG(("ReceiveCallback: SCTP has finished shutting down"));
   } else {
     mLock.AssertCurrentThreadOwns();
     if (flags & MSG_NOTIFICATION) {

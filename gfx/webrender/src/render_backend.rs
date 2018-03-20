@@ -695,8 +695,9 @@ impl RenderBackend {
 
     pub fn run(&mut self, mut profile_counters: BackendProfileCounters) {
         let mut frame_counter: u32 = 0;
+        let mut keep_going = true;
 
-        loop {
+        while keep_going {
             profile_scope!("handle_msg");
 
             while let Ok(msg) = self.scene_rx.try_recv() {
@@ -740,7 +741,7 @@ impl RenderBackend {
                 }
             }
 
-            let keep_going = match self.api_rx.recv() {
+            keep_going = match self.api_rx.recv() {
                 Ok(msg) => {
                     if let Some(ref mut r) = self.recorder {
                         r.write_msg(frame_counter, &msg);
@@ -749,13 +750,10 @@ impl RenderBackend {
                 }
                 Err(..) => { false }
             };
-
-            if !keep_going {
-                let _ = self.scene_tx.send(SceneBuilderRequest::Stop);
-                self.notifier.shut_down();
-                break;
-            }
         }
+
+        let _ = self.scene_tx.send(SceneBuilderRequest::Stop);
+        self.notifier.shut_down();
     }
 
     fn process_api_msg(
@@ -965,14 +963,6 @@ impl RenderBackend {
 
         let doc = self.documents.get_mut(&document_id).unwrap();
 
-        if !doc.can_render() {
-            // TODO: this happens if we are building the first scene asynchronously and
-            // scroll at the same time. we should keep track of the fact that we skipped
-            // composition here and do it as soon as we receive the scene.
-            op.render = false;
-            op.composite = false;
-        }
-
         if transaction_msg.generate_frame {
             if let Some(ref mut ros) = doc.render_on_scroll {
                 *ros = true;
@@ -982,6 +972,14 @@ impl RenderBackend {
                 op.render = true;
                 op.composite = true;
             }
+        }
+
+        if !doc.can_render() {
+            // TODO: this happens if we are building the first scene asynchronously and
+            // scroll at the same time. we should keep track of the fact that we skipped
+            // composition here and do it as soon as we receive the scene.
+            op.render = false;
+            op.composite = false;
         }
 
         debug_assert!(op.render || !op.composite);
