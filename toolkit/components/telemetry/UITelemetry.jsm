@@ -8,6 +8,7 @@ var EXPORTED_SYMBOLS = [
   "UITelemetry",
 ];
 
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
@@ -23,6 +24,10 @@ var UITelemetry = {
 
   // Lazily decide whether telemetry is enabled.
   get enabled() {
+    if (AppConstants.platform != "android") {
+      return false;
+    }
+
     if (this._enabled !== undefined) {
       return this._enabled;
     }

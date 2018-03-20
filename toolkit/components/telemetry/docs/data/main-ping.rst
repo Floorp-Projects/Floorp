@@ -164,6 +164,8 @@ Only available in the extended set of measures, it contains a set of counters re
 
 UITelemetry
 ~~~~~~~~~~~
+As of Firefox 61 this section is no longer present.
+
 Only available in the extended set of measures. For more see :ref:`uitelemetry`.
 
 startupInterrupted
@@ -629,10 +631,6 @@ Structure:
       },
       ...
     }
-
-UITelemetry
------------
-See the ``UITelemetry data format`` documentation.
 
 slowSQL
 -------
