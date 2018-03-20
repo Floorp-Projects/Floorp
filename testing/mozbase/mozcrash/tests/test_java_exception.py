@@ -38,7 +38,7 @@ class TestJavaException(unittest.TestCase):
         """
         Test for an exception which should be caught
         """
-        self.assert_(mozcrash.check_for_java_exception(self.test_log, quiet=True))
+        self.assertEqual(1, mozcrash.check_for_java_exception(self.test_log, quiet=True))
 
     def test_truncated_exception(self):
         """
@@ -47,7 +47,7 @@ class TestJavaException(unittest.TestCase):
         """
         truncated_log = list(self.test_log)
         truncated_log[0], truncated_log[1] = truncated_log[1], truncated_log[0]
-        self.assert_(mozcrash.check_for_java_exception(truncated_log, quiet=True))
+        self.assertEqual(1, mozcrash.check_for_java_exception(truncated_log, quiet=True))
 
     def test_unchecked_exception(self):
         """
@@ -56,7 +56,7 @@ class TestJavaException(unittest.TestCase):
         passable_log = list(self.test_log)
         passable_log[0] = "01-30 20:15:41.937 E/GeckoAppShell( 1703):" \
                           " >>> NOT-SO-BAD EXCEPTION FROM THREAD 9 (\"GeckoBackgroundThread\")"
-        self.assert_(not mozcrash.check_for_java_exception(passable_log, quiet=True))
+        self.assertEqual(0, mozcrash.check_for_java_exception(passable_log, quiet=True))
 
 
 if __name__ == '__main__':

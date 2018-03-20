@@ -20,10 +20,10 @@ class TestCrash(CrashTestCase):
         """Test that no symbols path doesn't process the minidump."""
         self.create_minidump("test")
 
-        self.assert_(mozcrash.check_for_crashes(self.tempdir,
-                                                symbols_path=None,
-                                                stackwalk_binary=self.stackwalk,
-                                                quiet=True))
+        self.assertEqual(1, mozcrash.check_for_crashes(self.tempdir,
+                                                       symbols_path=None,
+                                                       stackwalk_binary=self.stackwalk,
+                                                       quiet=True))
 
     def test_symbol_path_url(self):
         """Test that passing a URL as symbols_path correctly fetches the URL."""
@@ -52,10 +52,10 @@ class TestCrash(CrashTestCase):
         symbol_url = urlparse.urlunsplit(('http', '%s:%d' % httpd.httpd.server_address,
                                           '/symbols', '', ''))
 
-        self.assert_(mozcrash.check_for_crashes(self.tempdir,
-                                                symbols_path=symbol_url,
-                                                stackwalk_binary=self.stackwalk,
-                                                quiet=True))
+        self.assertEqual(1, mozcrash.check_for_crashes(self.tempdir,
+                                                       symbols_path=symbol_url,
+                                                       stackwalk_binary=self.stackwalk,
+                                                       quiet=True))
         self.assertTrue(data["retrieved"])
 
 

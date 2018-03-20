@@ -17,9 +17,9 @@ class TestStackwalk(CrashTestCase):
         self.create_minidump("test.")
 
         os.environ['MINIDUMP_STACKWALK'] = self.stackwalk
-        self.assert_(mozcrash.check_for_crashes(self.tempdir,
-                                                symbols_path='symbols_path',
-                                                quiet=True))
+        self.assertEqual(1, mozcrash.check_for_crashes(self.tempdir,
+                                                       symbols_path='symbols_path',
+                                                       quiet=True))
         del os.environ['MINIDUMP_STACKWALK']
 
 

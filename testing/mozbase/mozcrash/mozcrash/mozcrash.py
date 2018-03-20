@@ -90,9 +90,6 @@ def check_for_crashes(dump_directory,
     crash_info = CrashInfo(dump_directory, symbols_path, dump_save_path=dump_save_path,
                            stackwalk_binary=stackwalk_binary)
 
-    if not crash_info.has_dumps:
-        return False
-
     crash_count = 0
     for info in crash_info:
         crash_count += 1
