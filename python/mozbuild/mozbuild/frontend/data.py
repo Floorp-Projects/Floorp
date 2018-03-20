@@ -487,6 +487,10 @@ class BaseProgram(Linkable):
     def __repr__(self):
         return '<%s: %s/%s>' % (type(self).__name__, self.relobjdir, self.program)
 
+    @property
+    def name(self):
+        return self.program
+
 
 class Program(BaseProgram):
     """Context derived container object for PROGRAM"""
@@ -600,6 +604,10 @@ class BaseLibrary(Linkable):
 
     def __repr__(self):
         return '<%s: %s/%s>' % (type(self).__name__, self.relobjdir, self.lib_name)
+
+    @property
+    def name(self):
+        return self.lib_name
 
 
 class Library(BaseLibrary):
