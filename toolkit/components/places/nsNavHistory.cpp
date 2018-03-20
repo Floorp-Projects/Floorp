@@ -763,89 +763,6 @@ nsNavHistory::NormalizeTime(uint32_t aRelative, PRTime aOffset)
   return ref + aOffset;
 }
 
-// nsNavHistory::GetUpdateRequirements
-//
-//    Returns conditions for query update.
-//
-//    QUERYUPDATE_TIME:
-//      This query is only limited by an inclusive time range on the first
-//      query object. The caller can quickly evaluate the time itself if it
-//      chooses. This is even simpler than "simple" below.
-//    QUERYUPDATE_SIMPLE:
-//      This query is evaluatable using EvaluateQueryForNode to do live
-//      updating.
-//    QUERYUPDATE_COMPLEX:
-//      This query is not evaluatable using EvaluateQueryForNode. When something
-//      happens that this query updates, you will need to re-run the query.
-//    QUERYUPDATE_COMPLEX_WITH_BOOKMARKS:
-//      A complex query that additionally has dependence on bookmarks. All
-//      bookmark-dependent queries fall under this category.
-//    QUERYUPDATE_MOBILEPREF:
-//      A complex query but only updates when the mobile preference changes.
-//    QUERYUPDATE_NONE:
-//      A query that never updates, e.g. the left-pane root query.
-//
-//    aHasSearchTerms will be set to true if the query has any dependence on
-//    keywords. When there is no dependence on keywords, we can handle title
-//    change operations as simple instead of complex.
-
-uint32_t
-nsNavHistory::GetUpdateRequirements(const RefPtr<nsNavHistoryQuery>& aQuery,
-                                    nsNavHistoryQueryOptions* aOptions,
-                                    bool* aHasSearchTerms)
-{
-  // first check if there are search terms
-  bool hasSearchTerms = *aHasSearchTerms = !aQuery->SearchTerms().IsEmpty();
-
-  bool nonTimeBasedItems = false;
-  bool domainBasedItems = false;
-
-  if (aQuery->Folders().Length() > 0 ||
-      aQuery->OnlyBookmarked() ||
-      aQuery->Tags().Length() > 0 ||
-      (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS &&
-        hasSearchTerms)) {
-    return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
-  }
-
-  // Note: we don't currently have any complex non-bookmarked items, but these
-  // are expected to be added. Put detection of these items here.
-  if (hasSearchTerms ||
-      !aQuery->Domain().IsVoid() ||
-      aQuery->Uri() != nullptr)
-    nonTimeBasedItems = true;
-
-  if (!aQuery->Domain().IsVoid())
-    domainBasedItems = true;
-
-  if (aOptions->ResultType() ==
-        nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
-      return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
-
-  if (aOptions->ResultType() ==
-        nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY)
-      return QUERYUPDATE_MOBILEPREF;
-
-  if (aOptions->ResultType() ==
-        nsINavHistoryQueryOptions::RESULTS_AS_LEFT_PANE_QUERY)
-      return QUERYUPDATE_NONE;
-
-  // Whenever there is a maximum number of results,
-  // and we are not a bookmark query we must requery. This
-  // is because we can't generally know if any given addition/change causes
-  // the item to be in the top N items in the database.
-  if (aOptions->MaxResults() > 0)
-    return QUERYUPDATE_COMPLEX;
-
-  if (domainBasedItems)
-    return QUERYUPDATE_HOST;
-  if (!nonTimeBasedItems)
-    return QUERYUPDATE_TIME;
-
-  return QUERYUPDATE_SIMPLE;
-}
-
-
 // nsNavHistory::EvaluateQueryForNode
 //
 //    This runs the node through the given query to see if satisfies the
@@ -1258,7 +1175,10 @@ nsNavHistory::ExecuteQuery(nsINavHistoryQuery *aQuery,
   if (!rootNode) {
     // Either this is not a folder shortcut, or is a broken one.  In both cases
     // just generate a query node.
-    rootNode = new nsNavHistoryQueryResultNode(EmptyCString(),
+    nsAutoCString queryUri;
+    nsresult rv = QueryToQueryString(query, options, queryUri);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rootNode = new nsNavHistoryQueryResultNode(EmptyCString(), 0, queryUri,
                                                query, options);
   }
 
@@ -3892,7 +3812,7 @@ nsNavHistory::QueryRowToResult(int64_t itemId,
     }
     else {
       // This is a regular query.
-      resultNode = new nsNavHistoryQueryResultNode(aTitle, aTime, queryObj, optionsObj);
+      resultNode = new nsNavHistoryQueryResultNode(aTitle, aTime, aURI, queryObj, optionsObj);
       resultNode->mItemId = itemId;
       resultNode->mBookmarkGuid = aBookmarkGuid;
     }
@@ -3903,7 +3823,7 @@ nsNavHistory::QueryRowToResult(int64_t itemId,
     // This is a broken query, that either did not parse or points to not
     // existing data.  We don't want to return failure since that will kill the
     // whole result.  Instead make a generic empty query node.
-    resultNode = new nsNavHistoryQueryResultNode(aTitle, aURI);
+    resultNode = new nsNavHistoryQueryResultNode(aTitle, 0, aURI, queryObj, optionsObj);
     resultNode->mItemId = itemId;
     resultNode->mBookmarkGuid = aBookmarkGuid;
     // This is a perf hack to generate an empty query that skips filtering.

@@ -12,11 +12,11 @@ const expectedRoots = [{
   guid: "downloads__v",
 }, {
   title: "TagsFolderTitle",
-  uri: `place:sort=${Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING}&type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY}&queryType=1`,
+  uri: `place:sort=${Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING}&type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY}`,
   guid: "tags_______v",
 }, {
   title: "OrganizerQueryAllBookmarks",
-  uri: `place:type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY}&queryType=1`,
+  uri: `place:type=${Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY}`,
   guid: "allbms_____v",
 }];
 
@@ -38,8 +38,8 @@ function assertExpectedChildren(root, expectedChildren) {
   Assert.equal(root.childCount, expectedChildren.length, "Should have the expected number of children.");
 
   for (let i = 0; i < root.childCount; i++) {
-    Assert.equal(root.getChild(i).uri, expectedChildren[i].uri,
-                 "Should have the correct uri for root ${i}");
+    Assert.ok(PlacesTestUtils.ComparePlacesURIs(root.getChild(i).uri, expectedChildren[i].uri),
+              "Should have the correct uri for root ${i}");
     Assert.equal(root.getChild(i).title, placesStrings.GetStringFromName(expectedChildren[i].title),
                  "Should have the correct title for root ${i}");
     Assert.equal(root.getChild(i).bookmarkGuid, expectedChildren[i].guid);

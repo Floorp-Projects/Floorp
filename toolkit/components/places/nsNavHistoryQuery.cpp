@@ -242,7 +242,6 @@ namespace PlacesFolderConversion {
   }
 } // namespace PlacesFolderConversion
 
-
 NS_IMETHODIMP
 nsNavHistory::QueryStringToQuery(const nsACString& aQueryString,
                                  nsINavHistoryQuery** _query,
@@ -277,10 +276,11 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery *aQuery,
   NS_ENSURE_ARG(aQuery);
   NS_ENSURE_ARG(aOptions);
 
-  nsCOMPtr<nsNavHistoryQueryOptions> options = do_QueryInterface(aOptions);
-  NS_ENSURE_TRUE(options, NS_ERROR_INVALID_ARG);
+  RefPtr<nsNavHistoryQuery> query = do_QueryObject(aQuery);
+  NS_ENSURE_STATE(query);
+  RefPtr<nsNavHistoryQueryOptions> options = do_QueryObject(aOptions);
+  NS_ENSURE_STATE(options);
 
-  nsCOMPtr<nsNavHistoryQuery> query = do_QueryObject(aQuery);
   nsAutoCString queryString;
   bool hasIt;
 
