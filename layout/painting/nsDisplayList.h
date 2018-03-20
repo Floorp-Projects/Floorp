@@ -3984,7 +3984,7 @@ protected:
   typedef class mozilla::layers::ImageContainer ImageContainer;
   typedef class mozilla::layers::ImageLayer ImageLayer;
 
-  bool CanBuildWebRenderDisplayItems(LayerManager* aManager);
+  bool CanBuildWebRenderDisplayItems(LayerManager* aManager, nsDisplayListBuilder* aBuilder);
   nsRect GetBoundsInternal(nsDisplayListBuilder* aBuilder,
                            nsIFrame* aFrameForBounds = nullptr);
 

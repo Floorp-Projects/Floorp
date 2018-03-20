@@ -4099,14 +4099,19 @@ nsDisplayBackgroundImage::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 bool
-nsDisplayBackgroundImage::CanBuildWebRenderDisplayItems(LayerManager* aManager)
+nsDisplayBackgroundImage::CanBuildWebRenderDisplayItems(LayerManager* aManager, nsDisplayListBuilder* aDisplayListBuilder)
 {
+  if (aDisplayListBuilder) {
+    mImageFlags = aDisplayListBuilder->GetBackgroundPaintFlags();
+  }
+
   return mBackgroundStyle->mImage.mLayers[mLayer].mClip != StyleGeometryBox::Text &&
          nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(aManager,
                                                                          *StyleFrame()->PresContext(),
                                                                          StyleFrame(),
                                                                          mBackgroundStyle,
-                                                                         mLayer);
+                                                                         mLayer,
+                                                                         mImageFlags);
 }
 
 bool
@@ -4117,13 +4122,10 @@ nsDisplayBackgroundImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilde
                                                   nsDisplayListBuilder* aDisplayListBuilder)
 {
   ContainerLayerParameters parameter;
-  if (!CanBuildWebRenderDisplayItems(aManager)) {
+  if (!CanBuildWebRenderDisplayItems(aManager, aDisplayListBuilder)) {
     return false;
   }
 
-  if (aDisplayListBuilder) {
-    mImageFlags = aDisplayListBuilder->GetBackgroundPaintFlags();
-  }
   CheckForBorderItem(this, mImageFlags);
   nsCSSRendering::PaintBGParams params =
     nsCSSRendering::PaintBGParams::ForSingleLayer(*StyleFrame()->PresContext(),
