@@ -58,7 +58,7 @@ protected:
     explicit nsStandardURL(bool aSupportsFileURL = false, bool aTrackURL = true);
 
 public:
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIURI
     NS_DECL_NSIURL
     NS_DECL_NSIFILEURL
