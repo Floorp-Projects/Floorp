@@ -80,6 +80,7 @@ gfxDWriteFont::gfxDWriteFont(const RefPtr<UnscaledFontDWrite>& aUnscaledFont,
     , mNeedsBold(aNeedsBold)
     , mUseSubpixelPositions(false)
     , mAllowManualShowGlyphs(true)
+    , mAzureScaledFontUsedClearType(false)
 {
     mFontFace = aUnscaledFont->GetFontFace();
 
@@ -666,6 +667,9 @@ gfxDWriteFont::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 already_AddRefed<ScaledFont>
 gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
 {
+    if (mAzureScaledFontUsedClearType != sUseClearType) {
+        mAzureScaledFont = nullptr;
+    }
     if (!mAzureScaledFont) {
         gfxDWriteFontEntry *fe =
             static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
@@ -694,6 +698,7 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
         if (!mAzureScaledFont) {
             return nullptr;
         }
+        mAzureScaledFontUsedClearType = sUseClearType;
     }
 
     if (aTarget->GetBackendType() == BackendType::CAIRO) {
