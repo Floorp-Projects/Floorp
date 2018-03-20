@@ -820,12 +820,9 @@ function checkAddonsSection(data, expectBrokenAddons, partialAddonsRecords) {
     checkActiveGMPlugin(activeGMPlugins[gmPlugin]);
   }
 
-  // Check the active Experiment
+  // Check that we don't send Experiment Telemetry
   let experiment = data.addons.activeExperiment;
-  if (Object.keys(experiment).length !== 0) {
-    Assert.ok(checkString(experiment.id));
-    Assert.ok(checkString(experiment.branch));
-  }
+  Assert.equal(Object.keys(experiment).length, 0);
 
   // Check persona
   Assert.ok(checkNullOrString(data.addons.persona));
