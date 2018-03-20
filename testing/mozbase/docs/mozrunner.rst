@@ -113,14 +113,14 @@ Using a device runner
 The previous examples used a GeckoRuntimeRunner. If you want to control a
 gecko process on a remote device, you need to use a DeviceRunner. The api is
 nearly identical except you don't pass in a binary, instead you create a device
-object. For example, for B2G (Firefox OS) emulators you might do:
+object. For example to run Firefox for Android on the emulator, you might do:
 
 .. code-block:: python
 
-    from mozrunner import B2GEmulatorRunner
+    from mozrunner import FennecEmulatorRunner
 
-    b2g_home = 'path/to/B2G'
-    runner = B2GEmulatorRunner(arch='arm', b2g_home=b2g_home)
+    avd_home = 'path/to/avd'
+    runner = FennecEmulatorRunner(app='org.mozilla.fennec', avd_home=avd_home)
     runner.start()
     runner.wait()
 
@@ -130,8 +130,8 @@ device independently of the gecko process.
 
 .. code-block:: python
 
-    runner.device.start() # launches the emulator (which also launches gecko)
-    runner.start()        # stops the gecko process, installs the profile, restarts the gecko process
+    runner.device.start() # launches the emulator
+    runner.start()        # stops the gecko process (if started), installs the profile, (re)starts the gecko process
 
 
 Runner API Documentation
@@ -170,8 +170,8 @@ Device
 .. autoclass:: mozrunner.devices.Device
    :members:
 
-Emulator
-~~~~~~~~
-.. autoclass:: mozrunner.devices.Emulator
+EmulatorAVD
+~~~~~~~~~~~
+.. autoclass:: mozrunner.devices.EmulatorAVD
    :show-inheritance:
    :members:
