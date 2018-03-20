@@ -221,7 +221,7 @@ public:
       return EditorRawDOMPoint();
     }
     if (mGivenSplitPoint.IsSet()) {
-      return mGivenSplitPoint.AsRaw();
+      return EditorRawDOMPoint(mGivenSplitPoint);
     }
     if (!mPreviousNode) {
       return EditorRawDOMPoint(mNextNode);

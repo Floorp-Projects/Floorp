@@ -17,19 +17,31 @@ namespace mozilla {
 
 using namespace dom;
 
+template already_AddRefed<SplitNodeTransaction>
+SplitNodeTransaction::Create(
+                        EditorBase& aEditorBase,
+                        const EditorDOMPoint& aStartOfRightNode);
+template already_AddRefed<SplitNodeTransaction>
+SplitNodeTransaction::Create(
+                        EditorBase& aEditorBase,
+                        const EditorRawDOMPoint& aStartOfRightNode);
+
 // static
+template<typename PT, typename CT>
 already_AddRefed<SplitNodeTransaction>
-SplitNodeTransaction::Create(EditorBase& aEditorBase,
-                             const EditorRawDOMPoint& aStartOfRightNode)
+SplitNodeTransaction::Create(
+                        EditorBase& aEditorBase,
+                        const EditorDOMPointBase<PT, CT>& aStartOfRightNode)
 {
   RefPtr<SplitNodeTransaction> transaction =
     new SplitNodeTransaction(aEditorBase, aStartOfRightNode);
   return transaction.forget();
 }
 
+template<typename PT, typename CT>
 SplitNodeTransaction::SplitNodeTransaction(
                         EditorBase& aEditorBase,
-                        const EditorRawDOMPoint& aStartOfRightNode)
+                        const EditorDOMPointBase<PT, CT>& aStartOfRightNode)
   : mEditorBase(&aEditorBase)
   , mStartOfRightNode(aStartOfRightNode)
 {
