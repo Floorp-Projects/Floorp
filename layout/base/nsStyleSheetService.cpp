@@ -7,9 +7,6 @@
 /* implementation of interface for managing user and user-agent style sheets */
 
 #include "nsStyleSheetService.h"
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/CSSStyleSheet.h"
-#endif
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PreloadedStyleSheet.h"
 #include "mozilla/StyleSheet.h"
@@ -177,9 +174,7 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI *aSheetURI,
     // that a Servo sheet was also loaded. In both cases, the new sheets are
     // the last sheets in m{Gecko,Servo}Sheets[aSheetType]
     bool servoSheetWasAdded = false;
-#ifdef MOZ_STYLO
     servoSheetWasAdded = nsLayoutUtils::StyloSupportedInCurrentProcess();
-#endif
 
     // Hold on to a copy of the registered PresShells.
     nsTArray<nsCOMPtr<nsIPresShell>> toNotify(mPresShells);
@@ -250,17 +245,7 @@ nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
   }
 
 
-#ifdef MOZ_OLD_STYLE
-  {
-    RefPtr<StyleSheet> geckoSheet;
-    nsresult rv = LoadSheet(aSheetURI, parsingMode, StyleBackendType::Gecko, &geckoSheet);
-    NS_ENSURE_SUCCESS(rv, rv);
-    MOZ_ASSERT(geckoSheet);
-    mGeckoSheets[aSheetType].AppendElement(geckoSheet);
-  }
-#endif
 
-#ifdef MOZ_STYLO
   if (nsLayoutUtils::StyloSupportedInCurrentProcess()) {
     RefPtr<StyleSheet> servoSheet;
     nsresult rv = LoadSheet(aSheetURI, parsingMode, StyleBackendType::Servo, &servoSheet);
@@ -268,7 +253,6 @@ nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
     MOZ_ASSERT(servoSheet);
     mServoSheets[aSheetType].AppendElement(servoSheet);
   }
-#endif
 
   return NS_OK;
 }
@@ -285,11 +269,7 @@ nsStyleSheetService::SheetRegistered(nsIURI *sheetURI,
 
   // Check to see if we have the sheet.
   StyleBackendType backendType =
-#ifdef MOZ_OLD_STYLE
-    StyleBackendType::Gecko;
-#else
     StyleBackendType::Servo;
-#endif
   *_retval = (FindSheetByURI(backendType, aSheetType, sheetURI) >= 0);
 
   return NS_OK;
@@ -385,15 +365,6 @@ nsStyleSheetService::UnregisterSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   // We have to search for Gecko and Servo sheets separately.
   int32_t foundIndex;
 
-#ifdef MOZ_OLD_STYLE
-  // Gecko first, which should always be present, if the old style system
-  // is enabled.
-  foundIndex = FindSheetByURI(StyleBackendType::Gecko, aSheetType, aSheetURI);
-  NS_ENSURE_TRUE(foundIndex >= 0, NS_ERROR_INVALID_ARG);
-
-  RefPtr<StyleSheet> geckoSheet = mGeckoSheets[aSheetType][foundIndex];
-  mGeckoSheets[aSheetType].RemoveElementAt(foundIndex);
-#endif
 
   // Now search for Servo, which may or may not be present.
   RefPtr<StyleSheet> servoSheet;
@@ -409,11 +380,7 @@ nsStyleSheetService::UnregisterSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   for (nsIPresShell* presShell : toNotify) {
     if (presShell->StyleSet()) {
       StyleSheet* sheet =
-#ifdef MOZ_OLD_STYLE
-        presShell->StyleSet()->IsGecko() ? geckoSheet : servoSheet;
-#else
         servoSheet;
-#endif
       if (sheet) {
         presShell->NotifyStyleSheetServiceSheetRemoved(sheet, aSheetType);
       }
@@ -473,9 +440,6 @@ nsStyleSheetService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
 {
   size_t n = aMallocSizeOf(this);
   for (auto* sheetArrays : {
-#ifdef MOZ_OLD_STYLE
-      &mGeckoSheets,
-#endif
       &mServoSheets,
     }) {
     for (auto& sheetArray : *sheetArrays) {

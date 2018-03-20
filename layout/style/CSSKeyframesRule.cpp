@@ -11,15 +11,6 @@
 namespace mozilla {
 namespace dom {
 
-#ifdef MOZ_OLD_STYLE
-/* virtual */ bool
-CSSKeyframesRule::UseForPresentation(nsPresContext* aPresContext,
-                                     nsMediaQueryResultCacheKey& aKey)
-{
-  MOZ_ASSERT_UNREACHABLE("should not be called");
-  return false;
-}
-#endif
 
 /* virtual */ JSObject*
 CSSKeyframesRule::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)

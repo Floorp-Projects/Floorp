@@ -7,9 +7,6 @@
 #ifndef mozilla_EffectSet_h
 #define mozilla_EffectSet_h
 
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/AnimValuesStyleRule.h"
-#endif
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedArray.h"
@@ -172,13 +169,6 @@ public:
 
   size_t Count() const { return mEffects.Count(); }
 
-#ifdef MOZ_OLD_STYLE
-  RefPtr<AnimValuesStyleRule>&
-  AnimationRule(EffectCompositor::CascadeLevel aCascadeLevel)
-  {
-    return mAnimationRule[aCascadeLevel];
-  }
-#endif
 
   const TimeStamp& LastTransformSyncTime() const
   {
@@ -216,17 +206,6 @@ private:
 
   OwningEffectSet mEffects;
 
-#ifdef MOZ_OLD_STYLE
-  // These style rules contain the style data for currently animating
-  // values.  They only match when styling with animation.  When we
-  // style without animation, we need to not use them so that we can
-  // detect any new changes; if necessary we restyle immediately
-  // afterwards with animation.
-  EnumeratedArray<EffectCompositor::CascadeLevel,
-                  EffectCompositor::CascadeLevel(
-                    EffectCompositor::kCascadeLevelCount),
-                  RefPtr<AnimValuesStyleRule>> mAnimationRule;
-#endif
 
   // Refresh driver timestamp from the moment when transform animations in this
   // effect set were last updated and sent to the compositor. This is used for

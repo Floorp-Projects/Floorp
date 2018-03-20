@@ -14,9 +14,6 @@
 #ifndef mozilla_GenericSpecifiedValuesInlines_h
 #define mozilla_GenericSpecifiedValuesInlines_h
 
-#ifdef MOZ_OLD_STYLE
-#include "nsRuleData.h"
-#endif
 #include "mozilla/GenericSpecifiedValues.h"
 #include "mozilla/ServoSpecifiedValues.h"
 
@@ -36,11 +33,7 @@ GenericSpecifiedValues::ShouldIgnoreColors() const
     return false;
   }
 
-#ifdef MOZ_OLD_STYLE
-  return !AsGecko()->mPresContext->UseDocumentColors();
-#else
   MOZ_CRASH("old style system disabled");
-#endif
 }
 
 bool
@@ -83,29 +76,11 @@ GenericSpecifiedValues::SetIdentAtomValueIfUnset(nsCSSPropertyID aId,
 void
 GenericSpecifiedValues::SetKeywordValue(nsCSSPropertyID aId, int32_t aValue)
 {
-#ifdef MOZ_OLD_STYLE
-  // there are some static asserts in MOZ_STYLO_FORWARD which
-  // won't work with the overloaded SetKeywordValue function,
-  // so we copy its expansion and use SetIntValue for decltype
-  // instead
-  static_assert(
-    !mozilla::IsSame<decltype(&MOZ_STYLO_THIS_TYPE::SetIntValue),
-                     decltype(&MOZ_STYLO_GECKO_TYPE::SetKeywordValue)>::value,
-    "Gecko subclass should define its own SetKeywordValue");
-  static_assert(
-    !mozilla::IsSame<decltype(&MOZ_STYLO_THIS_TYPE::SetIntValue),
-                     decltype(&MOZ_STYLO_SERVO_TYPE::SetKeywordValue)>::value,
-    "Servo subclass should define its own SetKeywordValue");
-#endif
 
   if (IsServo()) {
     return AsServo()->SetKeywordValue(aId, aValue);
   }
-#ifdef MOZ_OLD_STYLE
-  return AsGecko()->SetKeywordValue(aId, aValue);
-#else
   MOZ_CRASH("old style system disabled");
-#endif
 }
 
 void

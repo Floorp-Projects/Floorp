@@ -15,9 +15,6 @@
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StyleComplexColor.h"
 #include "nsCSSAnonBoxes.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsStyleSet.h"
-#endif
 
 class nsAtom;
 class nsPresContext;
@@ -56,13 +53,8 @@ extern "C" {
 class nsStyleContext
 {
 public:
-#ifdef MOZ_STYLO
   bool IsGecko() const { return !IsServo(); }
   bool IsServo() const { return (mBits & NS_STYLE_CONTEXT_IS_GECKO) == 0; }
-#else
-  bool IsGecko() const { return true; }
-  bool IsServo() const { return false; }
-#endif
   MOZ_DECL_STYLO_CONVERT_METHODS(mozilla::GeckoStyleContext, mozilla::ServoStyleContext);
 
   // These two methods are for use by ArenaRefPtr.
@@ -202,9 +194,6 @@ public:
     return mBits & GetBitForSID(aSID);
   }
 
-#ifdef MOZ_OLD_STYLE
-  inline nsRuleNode* RuleNode();
-#endif
   inline const ServoComputedData* ComputedData();
 
   void AddStyleBit(const uint64_t& aBit) { mBits |= aBit; }
@@ -353,13 +342,5 @@ protected:
 #endif
 };
 
-#ifdef MOZ_OLD_STYLE
-already_AddRefed<mozilla::GeckoStyleContext>
-NS_NewStyleContext(mozilla::GeckoStyleContext* aParentContext,
-                   nsAtom* aPseudoTag,
-                   mozilla::CSSPseudoElementType aPseudoType,
-                   nsRuleNode* aRuleNode,
-                   bool aSkipParentDisplayBasedStyleFixup);
-#endif
 
 #endif

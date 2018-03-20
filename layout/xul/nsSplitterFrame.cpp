@@ -29,9 +29,6 @@
 #include "nsIServiceManager.h"
 #include "nsContainerFrame.h"
 #include "nsContentCID.h"
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/GeckoStyleContext.h"
-#endif
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "nsLayoutUtils.h"
@@ -293,18 +290,7 @@ nsSplitterFrame::Init(nsIContent*       aContent,
         aContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                                        NS_LITERAL_STRING("vertical"), false);
         if (StyleContext()->IsGecko()) {
-#ifdef MOZ_OLD_STYLE
-          // FIXME(emilio): Even if we did this in Servo, this just won't
-          // work, and we'd need a specific "really re-resolve the style" API...
-          GeckoStyleContext* parentStyleContext =
-            StyleContext()->AsGecko()->GetParent();
-          RefPtr<nsStyleContext> newContext = PresContext()->StyleSet()->
-            ResolveStyleFor(aContent->AsElement(), parentStyleContext,
-                            LazyComputeBehavior::Allow);
-          SetStyleContextWithoutNotification(newContext);
-#else
           MOZ_CRASH("old style system disabled");
-#endif
         }
       }
     }
