@@ -5,7 +5,9 @@
 
 #include "InputData.h"
 
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/Touch.h"
+#include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/TextEvents.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
@@ -271,7 +273,7 @@ MultiTouchInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
 
   event.mTime = mTime;
   event.button = WidgetMouseEvent::eLeftButton;
-  event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+  event.inputSource = MouseEventBinding::MOZ_SOURCE_TOUCH;
   event.mModifiers = modifiers;
   event.mFlags.mHandledByAPZ = mHandledByAPZ;
   event.mFocusSequenceNumber = mFocusSequenceNumber;
@@ -544,7 +546,7 @@ PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
     RoundedToInt(ViewAs<LayoutDevicePixel>(mPanStartPoint,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
   wheelEvent.buttons = 0;
-  wheelEvent.mDeltaMode = nsIDOMWheelEvent::DOM_DELTA_PIXEL;
+  wheelEvent.mDeltaMode = WheelEventBinding::DOM_DELTA_PIXEL;
   wheelEvent.mMayHaveMomentum = true; // pan inputs may have momentum
   wheelEvent.mIsMomentum = IsMomentum();
   wheelEvent.mLineOrPageDeltaX = mLineOrPageDeltaX;
@@ -717,11 +719,11 @@ ScrollWheelInput::ScrollDeltaType
 ScrollWheelInput::DeltaTypeForDeltaMode(uint32_t aDeltaMode)
 {
   switch (aDeltaMode) {
-  case nsIDOMWheelEvent::DOM_DELTA_LINE:
+  case WheelEventBinding::DOM_DELTA_LINE:
     return SCROLLDELTA_LINE;
-  case nsIDOMWheelEvent::DOM_DELTA_PAGE:
+  case WheelEventBinding::DOM_DELTA_PAGE:
     return SCROLLDELTA_PAGE;
-  case nsIDOMWheelEvent::DOM_DELTA_PIXEL:
+  case WheelEventBinding::DOM_DELTA_PIXEL:
     return SCROLLDELTA_PIXEL;
   default:
     MOZ_CRASH();
@@ -734,12 +736,12 @@ ScrollWheelInput::DeltaModeForDeltaType(ScrollDeltaType aDeltaType)
 {
   switch (aDeltaType) {
   case ScrollWheelInput::SCROLLDELTA_LINE:
-    return nsIDOMWheelEvent::DOM_DELTA_LINE;
+    return WheelEventBinding::DOM_DELTA_LINE;
   case ScrollWheelInput::SCROLLDELTA_PAGE:
-    return nsIDOMWheelEvent::DOM_DELTA_PAGE;
+    return WheelEventBinding::DOM_DELTA_PAGE;
   case ScrollWheelInput::SCROLLDELTA_PIXEL:
   default:
-    return nsIDOMWheelEvent::DOM_DELTA_PIXEL;
+    return WheelEventBinding::DOM_DELTA_PIXEL;
   }
 }
 

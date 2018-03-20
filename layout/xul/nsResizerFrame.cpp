@@ -25,6 +25,7 @@
 #include "nsMenuPopupFrame.h"
 #include "nsIScreenManager.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "nsError.h"
 #include "nsICSSDeclaration.h"
 #include "nsStyledElement.h"
@@ -540,7 +541,7 @@ nsResizerFrame::MouseClicked(WidgetMouseEvent* aEvent)
   bool isControl = false;
   bool isAlt = false;
   bool isMeta = false;
-  uint16_t inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
+  uint16_t inputSource = MouseEventBinding::MOZ_SOURCE_UNKNOWN;
 
   if(aEvent) {
     isShift = aEvent->IsShift();

@@ -91,7 +91,7 @@ class nsCSSPseudoElements
   typedef mozilla::CSSEnabledState EnabledState;
 
 public:
-  static void AddRefAtoms();
+  static void RegisterStaticAtoms();
 
   static bool IsPseudoElement(nsAtom *aAtom);
 

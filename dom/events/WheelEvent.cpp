@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/WheelEvent.h"
 #include "mozilla/MouseEvents.h"
 #include "prtime.h"
@@ -25,14 +26,14 @@ WheelEvent::WheelEvent(EventTarget* aOwner,
     // device pixels.  However, JS contents need the delta values in CSS pixels.
     // We should store the value of mAppUnitsPerDevPixel here because
     // it might be changed by changing zoom or something.
-    if (aWheelEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
+    if (aWheelEvent->mDeltaMode == WheelEventBinding::DOM_DELTA_PIXEL) {
       mAppUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
     }
   } else {
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
     mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
-    mEvent->AsWheelEvent()->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
+    mEvent->AsWheelEvent()->inputSource = MouseEventBinding::MOZ_SOURCE_UNKNOWN;
   }
 }
 

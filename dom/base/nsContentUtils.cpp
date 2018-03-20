@@ -52,6 +52,7 @@
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/IDTracker.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/NodeBinding.h"
@@ -8694,8 +8695,8 @@ nsContentUtils::SendMouseEvent(const nsCOMPtr<nsIPresShell>& aPresShell,
     return NS_ERROR_FAILURE;
   }
 
-  if (aInputSourceArg == nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN) {
-    aInputSourceArg = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
+  if (aInputSourceArg == MouseEventBinding::MOZ_SOURCE_UNKNOWN) {
+    aInputSourceArg = MouseEventBinding::MOZ_SOURCE_MOUSE;
   }
 
   WidgetMouseEvent event(true, msg, widget,

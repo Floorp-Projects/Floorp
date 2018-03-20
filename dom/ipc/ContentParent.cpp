@@ -197,7 +197,6 @@
 
 #include "nsLayoutStylesheetCache.h"
 
-#include "ContentPrefs.h"
 #include "mozilla/Sprintf.h"
 
 #ifdef MOZ_WEBRTC
@@ -2009,7 +2008,7 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
 
   // Serialize the early prefs.
   nsAutoCStringN<1024> prefs;
-  Preferences::SerializeEarlyPreferences(prefs);
+  Preferences::SerializePreferences(prefs);
 
   // Set up the shared memory.
   base::SharedMemory shm;
@@ -2228,7 +2227,6 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
 
   XPCOMInitData xpcomInit;
 
-  Preferences::GetPreferences(&xpcomInit.prefs());
   nsCOMPtr<nsIIOService> io(do_GetIOService());
   MOZ_ASSERT(io, "No IO service?");
   DebugOnly<nsresult> rv = io->GetOffline(&xpcomInit.isOffline());
