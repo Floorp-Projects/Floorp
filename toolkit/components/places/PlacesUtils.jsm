@@ -329,6 +329,7 @@ var PlacesUtils = {
   POST_DATA_ANNO: "bookmarkProperties/POSTData",
   READ_ONLY_ANNO: "placesInternal/READ_ONLY",
   CHARSET_ANNO: "URIProperties/characterSet",
+  // Deprecated: This is only used for supporting import from older datasets.
   MOBILE_ROOT_ANNO: "mobile/bookmarksRoot",
 
   TOPIC_SHUTDOWN: "places-shutdown",

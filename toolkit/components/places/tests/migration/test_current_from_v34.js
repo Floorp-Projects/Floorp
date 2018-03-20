@@ -131,11 +131,4 @@ add_task(async function test_mobile_root() {
     "Thunderbird bookmark should be moved to new mobile root");
   equal(tbBmk.index, 1,
     "Thunderbird bookmark should be second child of new root");
-
-  let mobileRootId = await PlacesUtils.promiseItemId(
-    PlacesUtils.bookmarks.mobileGuid);
-  let annoItemIds = PlacesUtils.annotations.getItemsWithAnnotation(
-    PlacesUtils.MOBILE_ROOT_ANNO, {});
-  deepEqual(annoItemIds, [mobileRootId],
-    "Only mobile root should have mobile anno");
 });
