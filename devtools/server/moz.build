@@ -19,7 +19,6 @@ XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 DevToolsModules(
     'main.js',
-    'worker.js'
 )
 
 with Files('**'):

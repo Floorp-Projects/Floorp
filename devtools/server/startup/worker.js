@@ -7,6 +7,12 @@
 /* eslint-env mozilla/chrome-worker */
 /* global worker, loadSubScript, global */
 
+/*
+ * Worker debugger script that listens for requests to start a `DebuggerServer` for a
+ * worker in a process.  Loaded into a specific worker during
+ * `DebuggerServer.connectToWorker` which is called from the same process as the worker.
+ */
+
 // This function is used to do remote procedure calls from the worker to the
 // main thread. It is exposed as a built-in global to every module by the
 // worker loader. To make sure the worker loader can access it, it needs to be
