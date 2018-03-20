@@ -46,7 +46,6 @@
 #endif
 
 #include "nsUXThemeData.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIIdleServiceInternal.h"
 
 #include "IMMHandler.h"

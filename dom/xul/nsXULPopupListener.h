@@ -14,7 +14,6 @@
 
 #include "mozilla/dom/Element.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsCycleCollectionParticipant.h"
 

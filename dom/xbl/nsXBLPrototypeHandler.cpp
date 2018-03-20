@@ -741,8 +741,7 @@ nsXBLPrototypeHandler::MouseEventMatched(MouseEvent* aMouseEvent)
     return false;
   }
 
-  return ModifiersMatchMask(static_cast<nsIDOMMouseEvent*>(aMouseEvent),
-                            IgnoreModifierState());
+  return ModifiersMatchMask(aMouseEvent, IgnoreModifierState());
 }
 
 struct keyCodeData {
