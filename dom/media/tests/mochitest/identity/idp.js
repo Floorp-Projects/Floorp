@@ -56,6 +56,7 @@
     },
 
     _selectUsername: function(usernameHint) {
+      dump('_selectUsername: usernameHint(' + usernameHint + ')\n');
       var username = 'someone@' + this.domain;
       if (usernameHint) {
         var at = usernameHint.indexOf('@');
@@ -68,8 +69,9 @@
       return username;
     },
 
-    generateAssertion: function(payload, origin, usernameHint) {
-      dump('idp: generateAssertion(' + payload + ')\n');
+    generateAssertion: function(payload, origin, options) {
+      dump('idp: generateAssertion(' + payload + ', ' + origin + ', '
+           + JSON.stringify(options) + ')\n');
       var idpDetails = {
         domain: this.domain,
         protocol: this.protocol
@@ -80,7 +82,7 @@
       return this.borkResult({
         idp: idpDetails,
         assertion: JSON.stringify({
-          username: this._selectUsername(usernameHint),
+          username: this._selectUsername(options.usernameHint),
           contents: payload
         })
       });
