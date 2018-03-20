@@ -8,6 +8,8 @@
  * Communicates with privileged code via DOM Events.
  */
 
+/* import-globals-from log.js */
+
 "use strict";
 
 var paymentRequest = {
@@ -56,6 +58,7 @@ var paymentRequest = {
   },
 
   sendMessageToChrome(messageType, detail = {}) {
+    log.debug("sendMessageToChrome: ", messageType, detail);
     let event = new CustomEvent("paymentContentToChrome", {
       bubbles: true,
       detail: Object.assign({
@@ -67,6 +70,7 @@ var paymentRequest = {
 
   onChromeToContent({detail}) {
     let {messageType} = detail;
+    log.debug("onChromeToContent: ", messageType);
 
     switch (messageType) {
       case "responseSent": {
@@ -88,6 +92,7 @@ var paymentRequest = {
   },
 
   onPaymentRequestLoad(requestId) {
+    log.debug("onPaymentRequestLoad:", requestId);
     window.addEventListener("unload", this, {once: true});
     this.sendMessageToChrome("paymentDialogReady");
 
@@ -99,8 +104,10 @@ var paymentRequest = {
 
   async onShowPaymentRequest(detail) {
     // Handle getting called before the DOM is ready.
+    log.debug("onShowPaymentRequest:", detail);
     await this.domReadyPromise;
 
+    log.debug("onShowPaymentRequest: domReadyPromise resolved");
     document.querySelector("payment-dialog").setStateFromParent({
       request: detail.request,
       savedAddresses: detail.savedAddresses,
