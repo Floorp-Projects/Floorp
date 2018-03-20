@@ -96,9 +96,12 @@ nsViewSourceHandler::NewURI(const nsACString &aSpec,
 
     asciiSpec.Insert(VIEW_SOURCE ":", 0);
 
+    // We can't swap() from an RefPtr<nsSimpleNestedURI> to an nsIURI**,
+    // sadly.
+    RefPtr<nsSimpleNestedURI> ourURI = new nsSimpleNestedURI(innerURI);
+
     nsCOMPtr<nsIURI> uri;
-    rv = NS_MutateURI(new nsSimpleNestedURI::Mutator())
-           .Apply(NS_MutatorMethod(&nsINestedURIMutator::Init, innerURI))
+    rv = NS_MutateURI(ourURI)
            .SetSpec(asciiSpec)
            .Finalize(uri);
     if (NS_FAILED(rv)) {

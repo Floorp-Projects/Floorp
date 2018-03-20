@@ -1191,31 +1191,28 @@ nsJSProtocolHandler::NewURI(const nsACString &aSpec,
                             nsIURI *aBaseURI,
                             nsIURI **result)
 {
-    nsresult rv = NS_OK;
+    nsresult rv;
 
     // javascript: URLs (currently) have no additional structure beyond that
     // provided by standard URLs, so there is no "outer" object given to
     // CreateInstance.
 
-    NS_MutateURI mutator(new nsJSURI::Mutator());
-    nsCOMPtr<nsIURI> base(aBaseURI);
-    mutator.Apply(NS_MutatorMethod(&nsIJSURIMutator::SetBase, base));
+    nsCOMPtr<nsIURI> url = new nsJSURI(aBaseURI);
+    NS_MutateURI mutator(url);
     if (!aCharset || !nsCRT::strcasecmp("UTF-8", aCharset)) {
-        mutator.SetSpec(aSpec);
+      mutator.SetSpec(aSpec);
     } else {
-        nsAutoCString utf8Spec;
-        rv = EnsureUTF8Spec(PromiseFlatCString(aSpec), aCharset, utf8Spec);
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
+      nsAutoCString utf8Spec;
+      rv = EnsureUTF8Spec(PromiseFlatCString(aSpec), aCharset, utf8Spec);
+      if (NS_SUCCEEDED(rv)) {
         if (utf8Spec.IsEmpty()) {
-            mutator.SetSpec(aSpec);
+          mutator.SetSpec(aSpec);
         } else {
-            mutator.SetSpec(utf8Spec);
+          mutator.SetSpec(utf8Spec);
         }
+      }
     }
 
-    nsCOMPtr<nsIURI> url;
     rv = mutator.Finalize(url);
     if (NS_FAILED(rv)) {
         return rv;
@@ -1394,8 +1391,7 @@ nsJSURI::StartClone(mozilla::net::nsSimpleURI::RefHandlingEnum refHandlingMode,
 NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsJSURI::Mutator,
                                 nsIURISetters,
                                 nsIURIMutator,
-                                nsISerializable,
-                                nsIJSURIMutator)
+                                nsISerializable)
 
 NS_IMETHODIMP
 nsJSURI::Mutate(nsIURIMutator** aMutator)
