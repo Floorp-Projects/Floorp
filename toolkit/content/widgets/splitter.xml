@@ -8,16 +8,7 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="splitter" extends="xul:splitter">
-    <resources>
-      <stylesheet src="chrome://global/skin/splitter.css"/>
-    </resources>
-  </binding>
-
   <binding id="grippy" extends="xul:button">
-    <resources>
-      <stylesheet src="chrome://global/skin/splitter.css"/>
-    </resources>
     <handlers>
       <handler event="command">
         <![CDATA[

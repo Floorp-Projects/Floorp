@@ -83,25 +83,6 @@ awsy-stylo-sequential:
 ##
 # Limited test sets for specific platforms
 
-stylo-disabled-tests:
-    - cppunit
-    - crashtest
-    - reftest
-    - web-platform-tests
-    - web-platform-tests-reftests
-    - mochitest
-    - mochitest-a11y
-    - mochitest-browser-chrome
-    - browser-screenshots
-    - mochitest-chrome
-    - mochitest-clipboard
-    - mochitest-gpu
-    - mochitest-media
-    - mochitest-webgl
-
-reftest-stylo:
-    - reftest-stylo
-
 linux-qr-talos:
     - talos-chrome
     - talos-dromaeojs

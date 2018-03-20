@@ -692,10 +692,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             if 'qr' in platform:
                 env['MOZ_WEBRENDER'] = '1'
                 env['MOZ_ACCELERATED'] = '1'
-            if 'stylo' in platform and 'stylo_disabled' not in platform:
-                env['STYLO_FORCE_ENABLED'] = '1'
-            if 'stylo_disabled' in platform:
-                env['STYLO_FORCE_DISABLED'] = '1'
             if 'styloseq' in platform:
                 env['STYLO_THREADS'] = '1'
 

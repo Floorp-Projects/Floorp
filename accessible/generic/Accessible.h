@@ -649,7 +649,10 @@ public:
 
   bool IsTableRow() const { return HasGenericType(eTableRow); }
 
-  bool IsTextField() const { return mType == eHTMLTextFieldType; }
+  bool IsTextField() const { return mType == eHTMLTextFieldType ||
+                                    mType == eHTMLTextPasswordFieldType; }
+
+  bool IsPassword() const { return mType == eHTMLTextPasswordFieldType; }
 
   bool IsText() const { return mGenericTypes & eText; }
 

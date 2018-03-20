@@ -282,14 +282,16 @@ HTMLTextFieldAccessible::
   HTMLTextFieldAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   HyperTextAccessibleWrap(aContent, aDoc)
 {
-  mType = eHTMLTextFieldType;
+  mType = mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::password, eIgnoreCase) ?
+            eHTMLTextPasswordFieldType :
+            eHTMLTextFieldType;
 }
 
 role
 HTMLTextFieldAccessible::NativeRole()
 {
-  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                         nsGkAtoms::password, eIgnoreCase)) {
+  if (mType == eHTMLTextPasswordFieldType) {
     return roles::PASSWORD_TEXT;
   }
 

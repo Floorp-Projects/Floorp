@@ -54,7 +54,7 @@
 == alternates-order.html alternates-order-ref.html
 
 # check that font-specific values line up with @font-face feature settings
-skip-if((stylo||styloVsGecko)&&winWidget) == annotations.html annotations-ref.html
+skip-if(winWidget) == annotations.html annotations-ref.html # bug 1447257
 
 # font-variant subproperties
 # test for specific features being on and others off, based on prop values

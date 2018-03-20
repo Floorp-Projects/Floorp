@@ -69,8 +69,6 @@ def create_suite(name, node, data_path):
     }
     if 'STYLO_FORCE_ENABLED' in os.environ and os.environ['STYLO_FORCE_ENABLED']:
         suite['extraOptions'] = ["stylo"]
-    if 'STYLO_FORCE_DISABLED' in os.environ and os.environ['STYLO_FORCE_DISABLED']:
-        suite['extraOptions'] = ["stylo-disabled"]
     if 'STYLO_THREADS' in os.environ and os.environ['STYLO_THREADS'] == '1':
         suite['extraOptions'] = ["stylo-sequential"]
     update_checkpoint_paths(glob.glob(os.path.join(data_path, "memory-report*")))

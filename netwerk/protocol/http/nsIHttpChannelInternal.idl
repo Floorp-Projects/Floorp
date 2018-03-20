@@ -302,6 +302,9 @@ interface nsIHttpChannelInternal : nsISupports
     [noscript, notxpcom, nostdcall]
     void setCorsPreflightParameters(in StringArrayRef unsafeHeaders);
 
+    [noscript, notxpcom, nostdcall]
+    void setAltDataForChild(in boolean aIsForChild);
+
     /**
      * When set to true, the channel will not pop any authentication prompts up
      * to the user.  When provided or cached credentials lead to an

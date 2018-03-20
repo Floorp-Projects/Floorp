@@ -265,11 +265,6 @@ function InitAndStartRefTests()
     try {
         g.compareRetainedDisplayLists = prefs.getBoolPref("reftest.compareRetainedDisplayLists");
     } catch (e) {}
-#ifdef MOZ_STYLO
-    try {
-        g.compareStyloToGecko = prefs.getBoolPref("reftest.compareStyloToGecko");
-    } catch(e) {}
-#endif
 
 #ifdef MOZ_ENABLE_SKIA_PDF
     try {

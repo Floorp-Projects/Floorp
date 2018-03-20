@@ -263,6 +263,7 @@ public:
   NS_IMETHOD SetTopWindowURIIfUnknown(nsIURI *aTopWindowURI) override;
   NS_IMETHOD GetProxyURI(nsIURI **proxyURI) override;
   virtual void SetCorsPreflightParameters(const nsTArray<nsCString>& unsafeHeaders) override;
+  virtual void SetAltDataForChild(bool aIsForChild) override;
   NS_IMETHOD GetConnectionInfoHashKey(nsACString& aConnectionInfoHashKey) override;
   NS_IMETHOD GetIntegrityMetadata(nsAString& aIntegrityMetadata) override;
   NS_IMETHOD SetIntegrityMetadata(const nsAString& aIntegrityMetadata) override;
@@ -704,6 +705,9 @@ protected:
   // Holds the name of the alternative data type the channel returned.
   nsCString mAvailableCachedAltDataType;
   int64_t   mAltDataLength;
+  // This flag will be true if the consumer is requesting alt-data AND the
+  // consumer is in the child process.
+  bool mAltDataForChild;
 
   bool mForceMainDocumentChannel;
   Atomic<bool, ReleaseAcquire> mIsTrackingResource;
