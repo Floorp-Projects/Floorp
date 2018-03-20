@@ -30,19 +30,11 @@ class nsSimpleNestedURI : public nsSimpleURI,
                           public nsINestedURI
 {
 protected:
-    ~nsSimpleNestedURI() {}
-
-public:
-    // To be used by deserialization only.  Leaves this object in an
-    // uninitialized state that will throw on most accesses.
-    nsSimpleNestedURI()
-    {
-    }
-
-    // Constructor that should generally be used when constructing an object of
-    // this class with |operator new|.
+    nsSimpleNestedURI() = default;
     explicit nsSimpleNestedURI(nsIURI* innerURI);
 
+    ~nsSimpleNestedURI() = default;
+public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSINESTEDURI
 
@@ -78,6 +70,7 @@ public:
         : public nsIURIMutator
         , public BaseURIMutator<nsSimpleNestedURI>
         , public nsISerializable
+        , public nsINestedURIMutator
     {
         NS_DECL_ISUPPORTS
         NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
@@ -119,6 +112,13 @@ public:
                 NS_ADDREF(*aMutator = this);
             }
             return InitFromSpec(aSpec);
+        }
+
+        MOZ_MUST_USE NS_IMETHOD
+        Init(nsIURI* innerURI) override
+        {
+            mURI = new nsSimpleNestedURI(innerURI);
+            return NS_OK;
         }
 
         void ResetMutable()
