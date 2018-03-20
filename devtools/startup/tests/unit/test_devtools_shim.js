@@ -62,7 +62,7 @@ function test_register_unregister() {
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   DevToolsShim.register(createMockDevTools());
-  ok(DevToolsShim.isInitialized(), "DevTools are installed");
+  ok(DevToolsShim.isInitialized(), "DevTools are initialized");
 
   DevToolsShim.unregister();
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
