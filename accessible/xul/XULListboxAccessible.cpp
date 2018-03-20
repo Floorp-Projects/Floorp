@@ -276,9 +276,9 @@ XULListboxAccessible::SelectedCellCount()
   if (!selectedItems)
     return 0;
 
-  uint32_t selectedItemsCount = 0;
-  nsresult rv = selectedItems->GetLength(&selectedItemsCount);
-  NS_ENSURE_SUCCESS(rv, 0);
+  nsINodeList* list = nsINodeList::FromDOMNodeList(selectedItems);
+
+  uint32_t selectedItemsCount = list->Length();
 
   return selectedItemsCount * ColCount();
 }
@@ -326,15 +326,12 @@ XULListboxAccessible::SelectedCells(nsTArray<Accessible*>* aCells)
   control->GetSelectedItems(getter_AddRefs(selectedItems));
   if (!selectedItems)
     return;
+  nsINodeList* list = nsINodeList::FromDOMNodeList(selectedItems);
 
-  uint32_t selectedItemsCount = 0;
-  DebugOnly<nsresult> rv = selectedItems->GetLength(&selectedItemsCount);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "GetLength() Shouldn't fail!");
+  uint32_t selectedItemsCount = list->Length();
 
   for (uint32_t index = 0; index < selectedItemsCount; index++) {
-    nsCOMPtr<nsIDOMNode> itemNode;
-    selectedItems->Item(index, getter_AddRefs(itemNode));
-    nsCOMPtr<nsIContent> itemContent(do_QueryInterface(itemNode));
+    nsIContent* itemContent = list->Item(index);
     Accessible* item = mDoc->GetAccessible(itemContent);
 
     if (item) {
@@ -360,10 +357,9 @@ XULListboxAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells)
   control->GetSelectedItems(getter_AddRefs(selectedItems));
   if (!selectedItems)
     return;
+  nsINodeList* list = nsINodeList::FromDOMNodeList(selectedItems);
 
-  uint32_t selectedItemsCount = 0;
-  DebugOnly<nsresult> rv = selectedItems->GetLength(&selectedItemsCount);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "GetLength() Shouldn't fail!");
+  uint32_t selectedItemsCount = list->Length();
 
   uint32_t colCount = ColCount();
   aCells->SetCapacity(selectedItemsCount * colCount);
@@ -372,10 +368,9 @@ XULListboxAccessible::SelectedCellIndices(nsTArray<uint32_t>* aCells)
   for (uint32_t selItemsIdx = 0, cellsIdx = 0;
        selItemsIdx < selectedItemsCount; selItemsIdx++) {
 
-    nsCOMPtr<nsIDOMNode> itemNode;
-    selectedItems->Item(selItemsIdx, getter_AddRefs(itemNode));
+    nsIContent* itemContent = list->Item(selItemsIdx);
     nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
-      do_QueryInterface(itemNode);
+      do_QueryInterface(itemContent);
 
     if (item) {
       int32_t itemIdx = -1;
@@ -409,10 +404,9 @@ XULListboxAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows)
   control->GetSelectedItems(getter_AddRefs(selectedItems));
   if (!selectedItems)
     return;
+  nsINodeList* list = nsINodeList::FromDOMNodeList(selectedItems);
 
-  uint32_t rowCount = 0;
-  DebugOnly<nsresult> rv = selectedItems->GetLength(&rowCount);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "GetLength() Shouldn't fail!");
+  uint32_t rowCount = list->Length();
 
   if (!rowCount)
     return;
@@ -421,10 +415,9 @@ XULListboxAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows)
   aRows->AppendElements(rowCount);
 
   for (uint32_t rowIdx = 0; rowIdx < rowCount; rowIdx++) {
-    nsCOMPtr<nsIDOMNode> itemNode;
-    selectedItems->Item(rowIdx, getter_AddRefs(itemNode));
+    nsIContent* itemContent = list->Item(rowIdx);
     nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
-      do_QueryInterface(itemNode);
+      do_QueryInterface(itemContent);
 
     if (item) {
       int32_t itemIdx = -1;
