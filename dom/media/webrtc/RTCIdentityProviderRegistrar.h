@@ -40,7 +40,8 @@ public:
 
   already_AddRefed<Promise>
   GenerateAssertion(const nsAString& aContents, const nsAString& aOrigin,
-                    const Optional<nsAString>& aUsernameHint, ErrorResult& aRv);
+                    const RTCIdentityProviderOptions& aOptions,
+                    ErrorResult& aRv);
   already_AddRefed<Promise>
   ValidateAssertion(const nsAString& assertion, const nsAString& origin,
                     ErrorResult& aRv);
