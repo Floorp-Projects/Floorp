@@ -5098,37 +5098,50 @@ BaselineCompile(JSContext* cx, unsigned argc, Value* vp)
         forceDebug = ToBoolean(args[1]);
     }
 
-    if (script->hasBaselineScript()) {
-        if (forceDebug && !script->baselineScript()->hasDebugInstrumentation()) {
-            // There isn't an easy way to do this for a script that might be on
-            // stack right now. See js::jit::RecompileOnStackBaselineScriptsForDebugMode.
-            ReportUsageErrorASCII(cx, callee,
-                                  "unsupported case: recompiling script for debug mode");
-            return false;
+    const char* returnedStr = nullptr;
+    do {
+        AutoCompartment ac(cx, script);
+        if (script->hasBaselineScript()) {
+            if (forceDebug && !script->baselineScript()->hasDebugInstrumentation()) {
+                // There isn't an easy way to do this for a script that might be on
+                // stack right now. See js::jit::RecompileOnStackBaselineScriptsForDebugMode.
+                ReportUsageErrorASCII(cx, callee,
+                                      "unsupported case: recompiling script for debug mode");
+                return false;
+            }
+
+            args.rval().setUndefined();
+            return true;
         }
 
-        args.rval().setUndefined();
-        return true;
-    }
+        if (!jit::IsBaselineEnabled(cx)) {
+            returnedStr = "baseline disabled";
+            break;
+        }
+        if (!script->canBaselineCompile()) {
+            returnedStr = "can't compile";
+            break;
+        }
+        if (!cx->compartment()->ensureJitCompartmentExists(cx))
+            return false;
 
-    if (!jit::IsBaselineEnabled(cx))
-        return ReturnStringCopy(cx, args, "baseline disabled");
-    if (!script->canBaselineCompile())
-        return ReturnStringCopy(cx, args, "can't compile");
-    if (!cx->compartment()->ensureJitCompartmentExists(cx))
-        return false;
+        jit::MethodStatus status = jit::BaselineCompile(cx, script, forceDebug);
+        switch (status) {
+          case jit::Method_Error:
+            return false;
+          case jit::Method_CantCompile:
+            returnedStr = "can't compile";
+            break;
+          case jit::Method_Skipped:
+            returnedStr = "skipped";
+            break;
+          case jit::Method_Compiled:
+            args.rval().setUndefined();
+        }
+    } while(false);
 
-    jit::MethodStatus status = jit::BaselineCompile(cx, script, forceDebug);
-    switch (status) {
-      case jit::Method_Error:
-        return false;
-      case jit::Method_CantCompile:
-        return ReturnStringCopy(cx, args, "can't compile");
-      case jit::Method_Skipped:
-        return ReturnStringCopy(cx, args, "skipped");
-      case jit::Method_Compiled:
-        args.rval().setUndefined();
-    }
+    if (returnedStr)
+        return ReturnStringCopy(cx, args, returnedStr);
 
     return true;
 }

@@ -19,6 +19,7 @@ function debug(aMsg) {
   // dump(aMsg);
 }
 
+// Implements nsILoadURIDelegate.
 class GeckoViewNavigationContent extends GeckoViewContentModule {
   register() {
     debug("register");
