@@ -214,6 +214,7 @@ CONFIGS = defaultdict(lambda: {
             'BIN_SUFFIX': '.exe',
             'DLL_SUFFIX': '.so',
             'OBJ_SUFFIX': 'o',
+            'EXPAND_LIBS_LIST_STYLE': 'list',
         },
     },
 })
