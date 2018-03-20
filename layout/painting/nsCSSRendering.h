@@ -531,7 +531,8 @@ struct nsCSSRendering {
                                                               nsPresContext& aPresCtx,
                                                               nsIFrame *aFrame,
                                                               const nsStyleBackground* aBackgroundStyle,
-                                                              int32_t aLayer);
+                                                              int32_t aLayer,
+                                                              uint32_t aPaintFlags);
   static ImgDrawResult BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams& aParams,
                                                                  mozilla::wr::DisplayListBuilder& aBuilder,
                                                                  mozilla::wr::IpcResourceUpdateQueue& aResources,
