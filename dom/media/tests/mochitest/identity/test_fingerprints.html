@@ -16,7 +16,8 @@ function getIdentityAssertion(fpArray) {
   return sandbox.start()
     .then(idp => SpecialPowers.wrap(idp)
                    .generateAssertion(JSON.stringify({ fingerprint: fpArray }),
-                                      'https://example.com'))
+                                      'https://example.com',
+                                      {}))
     .then(assertion => {
       assertion = SpecialPowers.wrap(assertion);
       var assertionString = btoa(JSON.stringify(assertion));

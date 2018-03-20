@@ -21,6 +21,8 @@ function checkIdentity(assertion, identity) {
 }
 
 function getAssertion(t, instructions, userHint) {
+  dump('instructions: ' + instructions + '\n');
+  dump('userHint: ' + userHint + '\n');
   t.pcLocal.setIdentityProvider('example.com',
                                 { protocol: 'idp.js' + instructions,
                                   usernameHint: userHint });
