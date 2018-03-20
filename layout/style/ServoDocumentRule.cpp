@@ -42,17 +42,6 @@ ServoDocumentRule::Clone() const
   return nullptr;
 }
 
-#ifdef MOZ_OLD_STYLE
-/* virtual */ bool
-ServoDocumentRule::UseForPresentation(nsPresContext* aPresContext,
-                                      nsMediaQueryResultCacheKey& aKey)
-{
-  // GroupRule::UseForPresentation is only used in nsCSSRuleProcessor,
-  // so this should never be called.
-  MOZ_ASSERT_UNREACHABLE("Shouldn't be calling UseForPresentation");
-  return false;
-}
-#endif
 
 #ifdef DEBUG
 /* virtual */ void

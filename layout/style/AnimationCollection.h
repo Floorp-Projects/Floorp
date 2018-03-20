@@ -38,9 +38,6 @@ class AnimationCollection
   AnimationCollection(dom::Element* aElement, nsAtom* aElementProperty)
     : mElement(aElement)
     , mElementProperty(aElementProperty)
-#ifdef MOZ_OLD_STYLE
-    , mCheckGeneration(0)
-#endif
 #ifdef DEBUG
     , mCalledPropertyDtor(false)
 #endif
@@ -98,17 +95,6 @@ public:
 
   InfallibleTArray<RefPtr<AnimationType>> mAnimations;
 
-#ifdef MOZ_OLD_STYLE
-  // For CSS transitions only, we record the most recent generation
-  // for which we've done the transition update, so that we avoid doing
-  // it more than once per style change.
-  // (Note that we also store an animation generation on each EffectSet in
-  // order to track when we need to update animations on layers.)
-  uint64_t mCheckGeneration;
-
-  // Update mCheckGeneration to RestyleManager's count
-  void UpdateCheckGeneration(nsPresContext* aPresContext);
-#endif
 
 private:
   static nsAtom* GetPropertyAtomForPseudoType(

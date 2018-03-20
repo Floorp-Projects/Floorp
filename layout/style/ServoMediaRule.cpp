@@ -59,17 +59,6 @@ ServoMediaRule::Clone() const
   return nullptr;
 }
 
-#ifdef MOZ_OLD_STYLE
-/* virtual */ bool
-ServoMediaRule::UseForPresentation(nsPresContext* aPresContext,
-                                   nsMediaQueryResultCacheKey& aKey)
-{
-  // GroupRule::UseForPresentation is only used in nsCSSRuleProcessor,
-  // so this should never be called.
-  MOZ_ASSERT_UNREACHABLE("Shouldn't be calling UseForPresentation");
-  return false;
-}
-#endif
 
 /* virtual */ void
 ServoMediaRule::SetStyleSheet(StyleSheet* aSheet)

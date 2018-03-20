@@ -126,15 +126,6 @@ public:
 
   nsresult GetBindingImplementation(nsIContent* aContent, REFNSIID aIID, void** aResult);
 
-#ifdef MOZ_OLD_STYLE
-  // Style rule methods
-  nsresult WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
-                     ElementDependentRuleProcessorData* aData,
-                     bool* aCutOffInheritance);
-
-  void WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
-                    ElementDependentRuleProcessorData* aData);
-#endif
 
   // Do any processing that needs to happen as a result of a change in the
   // characteristics of the medium, and return whether this rule processor's

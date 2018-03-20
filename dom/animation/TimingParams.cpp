@@ -13,9 +13,6 @@
 #include "mozilla/ServoCSSParser.h"
 #include "nsCSSParser.h" // For nsCSSParser
 #include "nsIDocument.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsRuleNode.h"
-#endif
 
 namespace mozilla {
 
@@ -134,60 +131,7 @@ TimingParams::ParseEasing(const nsAString& aEasing,
     return Some(ComputedTimingFunction(timingFunction));
   }
 
-#ifdef MOZ_OLD_STYLE
-  nsCSSValue value;
-  nsCSSParser parser;
-  parser.ParseLonghandProperty(eCSSProperty_animation_timing_function,
-                               aEasing,
-                               aDocument->GetDocumentURI(),
-                               aDocument->GetDocumentURI(),
-                               aDocument->NodePrincipal(),
-                               value);
-
-  switch (value.GetUnit()) {
-    case eCSSUnit_List: {
-      const nsCSSValueList* list = value.GetListValue();
-      if (list->mNext) {
-        // don't support a list of timing functions
-        break;
-      }
-      switch (list->mValue.GetUnit()) {
-        case eCSSUnit_Enumerated:
-          // Return Nothing() if "linear" is passed in.
-          if (list->mValue.GetIntValue() ==
-              NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR) {
-            return Nothing();
-          }
-          MOZ_FALLTHROUGH;
-        case eCSSUnit_Cubic_Bezier:
-        case eCSSUnit_Function:
-        case eCSSUnit_Steps: {
-          nsTimingFunction timingFunction;
-          nsRuleNode::ComputeTimingFunction(list->mValue, timingFunction);
-          return Some(ComputedTimingFunction(timingFunction));
-        }
-        default:
-          MOZ_ASSERT_UNREACHABLE("unexpected animation-timing-function list "
-                                 "item unit");
-        break;
-      }
-      break;
-    }
-    case eCSSUnit_Inherit:
-    case eCSSUnit_Initial:
-    case eCSSUnit_Unset:
-    case eCSSUnit_TokenStream:
-    case eCSSUnit_Null:
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("unexpected animation-timing-function unit");
-      break;
-  }
-
-  aRv.ThrowTypeError<dom::MSG_INVALID_EASING_ERROR>(aEasing);
-#else
   MOZ_CRASH("old style system disabled");
-#endif
 
   return Nothing();
 }

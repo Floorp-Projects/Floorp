@@ -7,14 +7,6 @@
 #include "nsMappedAttributeElement.h"
 #include "nsIDocument.h"
 
-#ifdef MOZ_OLD_STYLE
-nsresult
-nsMappedAttributeElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
-{
-  mAttrsAndChildren.WalkMappedAttributeStyleRules(aRuleWalker);
-  return NS_OK;
-}
-#endif
 
 bool
 nsMappedAttributeElement::SetAndSwapMappedAttribute(nsAtom* aName,

@@ -2301,11 +2301,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
   // Content processes have no permission to access profile directory, so we
   // send the file URL instead.
   StyleBackendType backendType =
-#ifdef MOZ_OLD_STYLE
-    StyleBackendType::Gecko;
-#else
     StyleBackendType::Servo;
-#endif
   StyleSheet* ucs = nsLayoutStylesheetCache::For(backendType)->UserContentSheet();
   if (ucs) {
     SerializeURI(ucs->GetSheetURI(), xpcomInit.userContentSheetURL());

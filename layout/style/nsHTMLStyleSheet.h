@@ -15,10 +15,6 @@
 #include "nsColor.h"
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsIStyleRule.h"
-#include "nsIStyleRuleProcessor.h"
-#endif
 #include "PLDHashTable.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
@@ -29,41 +25,13 @@ class nsMappedAttributes;
 struct RawServoDeclarationBlock;
 
 class nsHTMLStyleSheet final
-#ifdef MOZ_OLD_STYLE
-  : public nsIStyleRuleProcessor
-#endif
 {
 public:
   explicit nsHTMLStyleSheet(nsIDocument* aDocument);
 
   void SetOwningDocument(nsIDocument* aDocument);
 
-#ifdef MOZ_OLD_STYLE
-  NS_DECL_ISUPPORTS
-
-  // nsIStyleRuleProcessor API
-  virtual void RulesMatching(ElementRuleProcessorData* aData) override;
-  virtual void RulesMatching(PseudoElementRuleProcessorData* aData) override;
-  virtual void RulesMatching(AnonBoxRuleProcessorData* aData) override;
-#ifdef MOZ_XUL
-  virtual void RulesMatching(XULTreeRuleProcessorData* aData) override;
-#endif
-  virtual nsRestyleHint HasStateDependentStyle(StateRuleProcessorData* aData) override;
-  virtual nsRestyleHint HasStateDependentStyle(PseudoElementStateRuleProcessorData* aData) override;
-  virtual bool HasDocumentStateDependentStyle(StateRuleProcessorData* aData) override;
-  virtual nsRestyleHint
-    HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                               mozilla::RestyleHintData& aRestyleHintDataResult) override;
-  virtual bool MediumFeaturesChanged(nsPresContext* aPresContext) override;
-  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-    const MOZ_MUST_OVERRIDE override;
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-    const MOZ_MUST_OVERRIDE override;
-
-  nsIStyleRule* LangRuleFor(const nsAtom* aLanguage);
-#else
   NS_INLINE_DECL_REFCOUNTING(nsHTMLStyleSheet)
-#endif
 
   size_t DOMSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -97,135 +65,26 @@ private:
 
   ~nsHTMLStyleSheet() {}
 
-#ifdef MOZ_OLD_STYLE
-  class HTMLColorRule;
-  friend class HTMLColorRule;
-  class HTMLColorRule final : public nsIStyleRule {
-  private:
-    ~HTMLColorRule() {}
-  public:
-    explicit HTMLColorRule(nscolor aColor)
-      : mColor(aColor)
-    {}
-
-    NS_DECL_ISUPPORTS
-
-    // nsIStyleRule interface
-    virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
-    virtual bool MightMapInheritedStyleData() override;
-    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
-                                               nsCSSValue* aValue) override;
-  #ifdef DEBUG
-    virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
-  #endif
-
-    nscolor mColor;
-  };
-
-  class GenericTableRule;
-  friend class GenericTableRule;
-  class GenericTableRule : public nsIStyleRule {
-  protected:
-    virtual ~GenericTableRule() {}
-  public:
-    GenericTableRule() {}
-
-    NS_DECL_ISUPPORTS
-
-    // nsIStyleRule interface
-    virtual void MapRuleInfoInto(nsRuleData* aRuleData) override = 0;
-    virtual bool MightMapInheritedStyleData() override = 0;
-    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
-                                               nsCSSValue* aValue) override = 0;
-  #ifdef DEBUG
-    virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
-  #endif
-  };
-
-  // this rule handles <th> inheritance
-  class TableTHRule;
-  friend class TableTHRule;
-  class TableTHRule final : public GenericTableRule {
-  public:
-    TableTHRule() {}
-
-    virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
-    virtual bool MightMapInheritedStyleData() override;
-    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
-                                               nsCSSValue* aValue) override;
-  };
-
-  // Rule to handle quirk table colors
-  class TableQuirkColorRule final : public GenericTableRule {
-  public:
-    TableQuirkColorRule() {}
-
-    virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
-    virtual bool MightMapInheritedStyleData() override;
-    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
-                                               nsCSSValue* aValue) override;
-  };
-#endif
 
   // Implementation of SetLink/VisitedLink/ActiveLinkColor
   nsresult ImplLinkColorSetter(
-#ifdef MOZ_OLD_STYLE
-      RefPtr<HTMLColorRule>& aRule,
-#endif
       RefPtr<RawServoDeclarationBlock>& aDecl,
       nscolor aColor);
 
 public: // for mLangRuleTable structures only
 
-#ifdef MOZ_OLD_STYLE
-  // Rule to handle xml:lang attributes, of which we have exactly one
-  // per language string, maintained in mLangRuleTable.
-  // We also create one extra rule for the "x-math" language string, used on
-  // <math> elements.
-  class LangRule final : public nsIStyleRule {
-  private:
-    ~LangRule() {}
-  public:
-    explicit LangRule(nsAtom* aLang) : mLang(aLang) {}
-
-    NS_DECL_ISUPPORTS
-
-    // nsIStyleRule interface
-    virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
-    virtual bool MightMapInheritedStyleData() override;
-    virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
-                                               nsCSSValue* aValue) override;
-  #ifdef DEBUG
-    virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
-  #endif
-
-    RefPtr<nsAtom> mLang;
-  };
-#endif
 
 private:
   nsIDocument*            mDocument;
-#ifdef MOZ_OLD_STYLE
-  RefPtr<HTMLColorRule> mLinkRule;
-  RefPtr<HTMLColorRule> mVisitedRule;
-  RefPtr<HTMLColorRule> mActiveRule;
-#endif
   RefPtr<RawServoDeclarationBlock> mServoUnvisitedLinkDecl;
   RefPtr<RawServoDeclarationBlock> mServoVisitedLinkDecl;
   RefPtr<RawServoDeclarationBlock> mServoActiveLinkDecl;
-#ifdef MOZ_OLD_STYLE
-  RefPtr<TableQuirkColorRule> mTableQuirkColorRule;
-  RefPtr<TableTHRule>   mTableTHRule;
-#endif
 
   PLDHashTable            mMappedAttrTable;
   // Whether or not the mapped attributes table
   // has been changed since the last call to
   // CalculateMappedServoDeclarations()
   bool                    mMappedAttrsDirty;
-#ifdef MOZ_OLD_STYLE
-  PLDHashTable            mLangRuleTable;
-#endif
 };
 
 #endif /* !defined(nsHTMLStyleSheet_h_) */

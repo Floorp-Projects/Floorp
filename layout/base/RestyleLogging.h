@@ -14,9 +14,6 @@
 #include "mozilla/AutoRestore.h"
 
 #ifdef DEBUG
-#ifdef MOZ_OLD_STYLE
-#define RESTYLE_LOGGING
-#endif
 #endif
 
 #ifdef RESTYLE_LOGGING

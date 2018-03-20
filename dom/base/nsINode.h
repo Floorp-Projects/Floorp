@@ -1043,11 +1043,7 @@ public:
    * Returns true if this is a node belonging to a document that uses the Servo
    * style system.
    */
-#ifdef MOZ_STYLO
   bool IsStyledByServo() const;
-#else
-  bool IsStyledByServo() const { return false; }
-#endif
 
   inline void UnsetRestyleFlagsIfGecko();
 
@@ -2083,11 +2079,7 @@ protected:
     if (IsStyledByServo()) {
       return aServoFunctor(ParseServoSelectorList(aSelectorString, aRv));
     }
-#ifdef MOZ_OLD_STYLE
-    return aGeckoFunctor(ParseSelectorList(aSelectorString, aRv));
-#else
     MOZ_CRASH("old style system disabled");
-#endif
   }
 
 public:

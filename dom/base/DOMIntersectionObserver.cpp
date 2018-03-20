@@ -121,28 +121,7 @@ DOMIntersectionObserver::SetRootMargin(const nsAString& aString)
                                                                &mRootMargin);
   }
 
-#ifdef MOZ_OLD_STYLE
-  // By not passing a CSS Loader object we make sure we don't parse in quirks
-  // mode so that pixel/percent and unit-less values will be differentiated.
-  nsCSSParser parser(nullptr);
-  nsCSSValue value;
-  if (!parser.ParseMarginString(aString, nullptr, 0, value, true)) {
-    return false;
-  }
-
-  mRootMargin = value.GetRectValue();
-
-  for (auto side : nsCSSRect::sides) {
-    nsCSSValue& value = mRootMargin.*side;
-    if (!(value.IsPixelLengthUnit() || value.IsPercentLengthUnit())) {
-      return false;
-    }
-  }
-
-  return true;
-#else
   MOZ_CRASH("old style system disabled");
-#endif
 }
 
 void
