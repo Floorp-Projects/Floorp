@@ -18,11 +18,11 @@ class TestSavePath(CrashTestCase):
         self.create_minidump("test")
 
     def check_for_saved_minidump_files(self, save_path=None):
-        self.assert_(mozcrash.check_for_crashes(self.tempdir,
-                                                symbols_path='symbols_path',
-                                                stackwalk_binary=self.stackwalk,
-                                                dump_save_path=save_path,
-                                                quiet=True))
+        self.assertEqual(1, mozcrash.check_for_crashes(self.tempdir,
+                                                       symbols_path='symbols_path',
+                                                       stackwalk_binary=self.stackwalk,
+                                                       dump_save_path=save_path,
+                                                       quiet=True))
         if save_path is None:
             save_path = os.environ.get('MINIDUMP_SAVE_PATH', None)
 
