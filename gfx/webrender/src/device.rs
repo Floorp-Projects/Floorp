@@ -931,22 +931,6 @@ impl Device {
         }
     }
 
-    //TODO: remove once the Angle workaround is no longer needed
-    pub fn reset_angle_sampler_metadata(&mut self, texture: &Texture) {
-        self.bind_texture(DEFAULT_TEXTURE, texture);
-        self.gl.tex_parameter_f(
-            texture.target,
-            gl::TEXTURE_BASE_LEVEL,
-            1.0 as _,
-        );
-        self.gl.draw_arrays(gl::TRIANGLES, 0, 1); // dummy draw
-        self.gl.tex_parameter_f(
-            texture.target,
-            gl::TEXTURE_BASE_LEVEL,
-            0.0 as _, // assumes 0.0 is the normal value for this texture
-        );
-    }
-
     pub fn create_texture(
         &mut self,
         target: TextureTarget,

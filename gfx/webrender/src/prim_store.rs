@@ -222,8 +222,7 @@ pub enum BrushKind {
         gradient_index: CachedGradientIndex,
         stops_range: ItemRange<GradientStop>,
         extend_mode: ExtendMode,
-        start_center: LayerPoint,
-        end_center: LayerPoint,
+        center: LayerPoint,
         start_radius: f32,
         end_radius: f32,
         ratio_xy: f32,
@@ -379,18 +378,18 @@ impl BrushPrimitive {
                     0.0,
                 ]);
             }
-            BrushKind::RadialGradient { start_center, end_center, start_radius, end_radius, ratio_xy, extend_mode, .. } => {
+            BrushKind::RadialGradient { center, start_radius, end_radius, ratio_xy, extend_mode, .. } => {
                 request.push([
-                    start_center.x,
-                    start_center.y,
-                    end_center.x,
-                    end_center.y,
-                ]);
-                request.push([
+                    center.x,
+                    center.y,
                     start_radius,
                     end_radius,
+                ]);
+                request.push([
                     ratio_xy,
                     pack_as_float(extend_mode as u32),
+                    0.,
+                    0.,
                 ]);
             }
         }

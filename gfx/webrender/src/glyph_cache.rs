@@ -2,38 +2,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DevicePoint, DeviceUintSize, GlyphKey};
+use api::GlyphKey;
 use glyph_rasterizer::{FontInstance, GlyphFormat};
 use internal_types::FastHashMap;
 use resource_cache::ResourceClassCache;
-use std::sync::Arc;
-use texture_cache::TextureCacheHandle;
+use texture_cache::{TextureCache, TextureCacheHandle, EvictionNotice};
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct GenericCachedGlyphInfo<D> {
+pub struct CachedGlyphInfo {
     pub texture_cache_handle: TextureCacheHandle,
-    pub glyph_bytes: D,
-    pub size: DeviceUintSize,
-    pub offset: DevicePoint,
-    pub scale: f32,
     pub format: GlyphFormat,
 }
 
-pub type CachedGlyphInfo = GenericCachedGlyphInfo<Arc<Vec<u8>>>;
-pub type GlyphKeyCache = ResourceClassCache<GlyphKey, Option<CachedGlyphInfo>>;
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum GlyphCacheEntry {
+    // A glyph that has been successfully rasterized.
+    Cached(CachedGlyphInfo),
+    // A glyph that should not be rasterized (i.e. a space).
+    Blank,
+    // A glyph that has been submitted to the font backend for rasterization,
+    // but is still pending a result.
+    Pending,
+}
 
-#[cfg(any(feature = "capture", feature = "replay"))]
-pub type PlainCachedGlyphInfo = GenericCachedGlyphInfo<String>;
-#[cfg(any(feature = "capture", feature = "replay"))]
-pub type PlainGlyphKeyCache = ResourceClassCache<GlyphKey, Option<PlainCachedGlyphInfo>>;
-#[cfg(feature = "capture")]
-pub type PlainGlyphCacheRef<'a> = FastHashMap<&'a FontInstance, PlainGlyphKeyCache>;
-#[cfg(feature = "replay")]
-pub type PlainGlyphCacheOwn = FastHashMap<FontInstance, PlainGlyphKeyCache>;
+pub type GlyphKeyCache = ResourceClassCache<GlyphKey, GlyphCacheEntry, EvictionNotice>;
 
+impl GlyphKeyCache {
+    pub fn eviction_notice(&self) -> &EvictionNotice {
+        &self.user_data
+    }
+}
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GlyphCache {
-    pub glyph_key_caches: FastHashMap<FontInstance, GlyphKeyCache>,
+    glyph_key_caches: FastHashMap<FontInstance, GlyphKeyCache>,
 }
 
 impl GlyphCache {
@@ -46,7 +51,7 @@ impl GlyphCache {
     pub fn get_glyph_key_cache_for_font_mut(&mut self, font: FontInstance) -> &mut GlyphKeyCache {
         self.glyph_key_caches
             .entry(font)
-            .or_insert(ResourceClassCache::new())
+            .or_insert_with(|| GlyphKeyCache::new())
     }
 
     pub fn get_glyph_key_cache_for_font(&self, font: &FontInstance) -> &GlyphKeyCache {
@@ -77,5 +82,37 @@ impl GlyphCache {
             let mut cache = self.glyph_key_caches.remove(&key).unwrap();
             cache.clear();
         }
+    }
+
+    // Clear out evicted entries from glyph key caches and, if possible,
+    // also remove entirely any subsequently empty glyph key caches.
+    fn clear_evicted(&mut self, texture_cache: &TextureCache) {
+        self.glyph_key_caches.retain(|_, cache| {
+            // Scan for any glyph key caches that have evictions.
+            if cache.eviction_notice().check() {
+                // If there are evictions, filter out any glyphs evicted from the
+                // texture cache from the glyph key cache.
+                let mut keep_cache = false;
+                cache.retain(|_, entry| {
+                    let keep_glyph = match *entry {
+                        GlyphCacheEntry::Cached(ref glyph) =>
+                            texture_cache.is_allocated(&glyph.texture_cache_handle),
+                        GlyphCacheEntry::Pending => true,
+                        // If the cache only has blank glyphs left, just get rid of it.
+                        GlyphCacheEntry::Blank => false,
+                    };
+                    keep_cache |= keep_glyph;
+                    keep_glyph
+                });
+                // Only keep the glyph key cache if it still has valid glyphs.
+                keep_cache
+            } else {
+                true
+            }
+        });
+    }
+
+    pub fn begin_frame(&mut self, texture_cache: &TextureCache) {
+        self.clear_evicted(texture_cache);
     }
 }
