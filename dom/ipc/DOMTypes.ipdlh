@@ -124,5 +124,43 @@ struct CreatedWindowInfo
   DimensionInfo dimensions;
 };
 
+
+/**
+ * PerformanceInfo is used to pass performance info stored
+ * in WorkerPrivate & DocGroup instances
+ *
+ * Each (host, pid, wid, pwid) is unique to a given DocGroup or
+ * Worker, and we collect the number of dispatches per Dispatch
+ * category and total execution duration.
+ *
+ * This IPDL struct reflects the data collected in Performance counters.
+ * see xpcom/threads/PerformanceCounter.h
+ */
+struct CategoryDispatch
+{
+  // DispatchCategory value
+  uint16_t category;
+  // Number of dispatch
+  uint16_t count;
+};
+
+struct PerformanceInfo
+{
+  // Host of the document, if any
+  nsCString host;
+  // process id
+  uint16_t pid;
+  // window id
+  uint64_t wid;
+  // "parent" window id
+  uint64_t pwid;
+  // Execution time in microseconds
+  uint64_t duration;
+  // True if the data is collected in a worker
+  bool worker;
+  // Counters per category. For workers, a single entry
+  CategoryDispatch[] items;
+};
+
 } // namespace dom
 } // namespace mozilla
