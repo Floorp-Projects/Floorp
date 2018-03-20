@@ -54,17 +54,17 @@ bool AeadCipher::AeadInner(bool decrypt, void *params, size_t param_length,
   return rv == SECSuccess;
 }
 
-bool AeadCipherAesGcm::Aead(bool decrypt, uint64_t seq, const uint8_t *in,
-                            size_t inlen, uint8_t *out, size_t *outlen,
-                            size_t maxlen) {
+bool AeadCipherAesGcm::Aead(bool decrypt, const uint8_t *hdr, size_t hdr_len,
+                            uint64_t seq, const uint8_t *in, size_t inlen,
+                            uint8_t *out, size_t *outlen, size_t maxlen) {
   CK_GCM_PARAMS aeadParams;
   unsigned char nonce[12];
 
   memset(&aeadParams, 0, sizeof(aeadParams));
   aeadParams.pIv = nonce;
   aeadParams.ulIvLen = sizeof(nonce);
-  aeadParams.pAAD = NULL;
-  aeadParams.ulAADLen = 0;
+  aeadParams.pAAD = const_cast<uint8_t *>(hdr);
+  aeadParams.ulAADLen = hdr_len;
   aeadParams.ulTagBits = 128;
 
   FormatNonce(seq, nonce);
@@ -72,7 +72,8 @@ bool AeadCipherAesGcm::Aead(bool decrypt, uint64_t seq, const uint8_t *in,
                    in, inlen, out, outlen, maxlen);
 }
 
-bool AeadCipherChacha20Poly1305::Aead(bool decrypt, uint64_t seq,
+bool AeadCipherChacha20Poly1305::Aead(bool decrypt, const uint8_t *hdr,
+                                      size_t hdr_len, uint64_t seq,
                                       const uint8_t *in, size_t inlen,
                                       uint8_t *out, size_t *outlen,
                                       size_t maxlen) {
@@ -82,8 +83,8 @@ bool AeadCipherChacha20Poly1305::Aead(bool decrypt, uint64_t seq,
   memset(&aeadParams, 0, sizeof(aeadParams));
   aeadParams.pNonce = nonce;
   aeadParams.ulNonceLen = sizeof(nonce);
-  aeadParams.pAAD = NULL;
-  aeadParams.ulAADLen = 0;
+  aeadParams.pAAD = const_cast<uint8_t *>(hdr);
+  aeadParams.ulAADLen = hdr_len;
   aeadParams.ulTagLen = 16;
 
   FormatNonce(seq, nonce);
@@ -114,10 +115,12 @@ bool TlsCipherSpec::Unprotect(const TlsRecordHeader &header,
   // Make space.
   plaintext->Allocate(ciphertext.len());
 
+  auto header_bytes = header.header();
   size_t len;
   bool ret =
-      aead_->Aead(true, header.sequence_number(), ciphertext.data(),
-                  ciphertext.len(), plaintext->data(), &len, plaintext->len());
+      aead_->Aead(true, header_bytes.data(), header_bytes.len(),
+                  header.sequence_number(), ciphertext.data(), ciphertext.len(),
+                  plaintext->data(), &len, plaintext->len());
   if (!ret) return false;
 
   plaintext->Truncate(len);
@@ -133,9 +136,13 @@ bool TlsCipherSpec::Protect(const TlsRecordHeader &header,
   ciphertext->Allocate(plaintext.len() +
                        32);  // Room for any plausible auth tag
   size_t len;
+
+  DataBuffer header_bytes;
+  (void)header.WriteHeader(&header_bytes, 0, plaintext.len() + 16);
   bool ret =
-      aead_->Aead(false, header.sequence_number(), plaintext.data(),
-                  plaintext.len(), ciphertext->data(), &len, ciphertext->len());
+      aead_->Aead(false, header_bytes.data(), header_bytes.len(),
+                  header.sequence_number(), plaintext.data(), plaintext.len(),
+                  ciphertext->data(), &len, ciphertext->len());
   if (!ret) return false;
   ciphertext->Truncate(len);
 

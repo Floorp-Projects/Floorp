@@ -46,6 +46,21 @@ bool TlsParser::Read(DataBuffer* val, size_t len) {
   return true;
 }
 
+bool TlsParser::ReadFromMark(DataBuffer* val, size_t len, size_t mark) {
+  auto saved = offset_;
+  offset_ = mark;
+
+  if (remaining() < len) {
+    offset_ = saved;
+    return false;
+  }
+
+  val->Assign(ptr(), len);
+
+  offset_ = saved;
+  return true;
+}
+
 bool TlsParser::ReadVariable(DataBuffer* val, size_t len_size) {
   uint32_t len;
   if (!Read(&len, len_size)) {

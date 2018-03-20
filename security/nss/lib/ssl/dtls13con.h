@@ -9,6 +9,10 @@
 #ifndef __dtls13con_h_
 #define __dtls13con_h_
 
+SECStatus dtls13_InsertCipherTextHeader(const sslSocket *ss,
+                                        ssl3CipherSpec *cwSpec,
+                                        sslBuffer *wrBuf,
+                                        PRBool *needsLength);
 SECStatus dtls13_RememberFragment(sslSocket *ss, PRCList *list,
                                   PRUint32 sequence, PRUint32 offset,
                                   PRUint32 length, DTLSEpoch epoch,
