@@ -16,7 +16,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
 #include "nsRefreshDriver.h"
-#include "nsRuleProcessorData.h"
 #include "nsCSSPropertyIDSet.h"
 #include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/EffectCompositor.h"
