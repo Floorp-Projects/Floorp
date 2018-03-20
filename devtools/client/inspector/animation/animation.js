@@ -51,6 +51,7 @@ class AnimationInspector {
     this.toggleElementPicker = this.toggleElementPicker.bind(this);
     this.update = this.update.bind(this);
     this.onAnimationsCurrentTimeUpdated = this.onAnimationsCurrentTimeUpdated.bind(this);
+    this.onAnimationsMutation = this.onAnimationsMutation.bind(this);
     this.onCurrentTimeTimerUpdated = this.onCurrentTimeTimerUpdated.bind(this);
     this.onElementPickerStarted = this.onElementPickerStarted.bind(this);
     this.onElementPickerStopped = this.onElementPickerStopped.bind(this);
@@ -137,6 +138,8 @@ class AnimationInspector {
     this.inspector.toolbox.on("inspector-sidebar-resized", this.onSidebarResized);
     this.inspector.toolbox.on("picker-started", this.onElementPickerStarted);
     this.inspector.toolbox.on("picker-stopped", this.onElementPickerStopped);
+
+    this.animationsFront.on("mutations", this.onAnimationsMutation);
   }
 
   destroy() {
@@ -145,6 +148,8 @@ class AnimationInspector {
     this.inspector.toolbox.off("inspector-sidebar-resized", this.onSidebarResized);
     this.inspector.toolbox.off("picker-started", this.onElementPickerStarted);
     this.inspector.toolbox.off("picker-stopped", this.onElementPickerStopped);
+
+    this.animationsFront.off("mutations", this.onAnimationsMutation);
 
     if (this.simulatedAnimation) {
       this.simulatedAnimation.cancel();
@@ -269,6 +274,21 @@ class AnimationInspector {
     } else {
       this.onAnimationsCurrentTimeUpdated(currentTime);
     }
+  }
+
+  onAnimationsMutation(changes) {
+    const animations = [...this.state.animations];
+
+    for (const {type, player: animation} of changes) {
+      if (type === "added") {
+        animations.push(animation);
+      } else if (type === "removed") {
+        const index = animations.indexOf(animation);
+        animations.splice(index, 1);
+      }
+    }
+
+    this.updateState(animations);
   }
 
   onElementPickerStarted() {
