@@ -262,7 +262,7 @@ var PlacesUIUtils = {
    *        Owner window for the new dialog.
    *
    * @see documentation at the top of bookmarkProperties.js
-   * @return true if any transaction has been performed, false otherwise.
+   * @return The guid of the item that was created or edited, undefined otherwise.
    */
   showBookmarkDialog(aInfo, aParentWindow) {
     // Preserve size attributes differently based on the fact the dialog has
@@ -289,16 +289,16 @@ var PlacesUIUtils = {
 
     aParentWindow.openDialog(dialogURL, "", features, aInfo);
 
-    let performed = ("performed" in aInfo && aInfo.performed);
+    let bookmarkGuid = ("bookmarkGuid" in aInfo && aInfo.bookmarkGuid) || undefined;
 
     batchBlockingDeferred.resolve();
 
-    if (!performed &&
+    if (!bookmarkGuid &&
         topUndoEntry != PlacesTransactions.topUndoEntry) {
       PlacesTransactions.undo().catch(Cu.reportError);
     }
 
-    return performed;
+    return bookmarkGuid;
   },
 
   /**
