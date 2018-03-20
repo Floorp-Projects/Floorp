@@ -504,6 +504,9 @@ class ArenaCellSet
     void check() const;
 
     // Sentinel object used for all empty sets.
+    //
+    // We use a sentinel because it simplifies the JIT code slightly as we can
+    // assume all arenas have a cell set.
     static ArenaCellSet Empty;
 
     static size_t getCellIndex(const TenuredCell* cell);
