@@ -173,6 +173,8 @@ public:
   mozilla::pkix::Input GetSCTListFromCertificate() const;
   mozilla::pkix::Input GetSCTListFromOCSPStapling() const;
 
+  bool GetIsErrorDueToDistrustedCAPolicy() const;
+
 private:
   enum EncodedResponseSource {
     ResponseIsFromNetwork = 1,
@@ -198,6 +200,7 @@ private:
   CertVerifier::SHA1Mode mSHA1Mode;
   NetscapeStepUpPolicy mNetscapeStepUpPolicy;
   DistrustedCAPolicy mDistrustedCAPolicy;
+  bool mSawDistrustedCAByPolicyError;
   const OriginAttributes& mOriginAttributes;
   UniqueCERTCertList& mBuiltChain; // non-owning
   PinningTelemetryInfo* mPinningTelemetryInfo;
