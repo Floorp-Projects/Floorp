@@ -64,21 +64,13 @@ public:
 
     bool IsGecko() const
     {
-#ifdef MOZ_OLD_STYLE
-      return !IsServo();
-#else
       return false;
-#endif
     }
 
     bool IsServo() const
     {
       MOZ_ASSERT(mValue, "StyleSetHandle null pointer dereference");
-#ifdef MOZ_STYLO
       return mValue & SERVO_BIT;
-#else
-      return false;
-#endif
     }
 
     StyleBackendType BackendType() const
@@ -87,13 +79,6 @@ public:
                          StyleBackendType::Servo;
     }
 
-#ifdef MOZ_OLD_STYLE
-    nsStyleSet* AsGecko()
-    {
-      MOZ_ASSERT(IsGecko());
-      return reinterpret_cast<nsStyleSet*>(mValue);
-    }
-#endif
 
     ServoStyleSet* AsServo()
     {
@@ -101,17 +86,8 @@ public:
       return reinterpret_cast<ServoStyleSet*>(mValue & ~SERVO_BIT);
     }
 
-#ifdef MOZ_OLD_STYLE
-    nsStyleSet* GetAsGecko() { return IsGecko() ? AsGecko() : nullptr; }
-#endif
     ServoStyleSet* GetAsServo() { return IsServo() ? AsServo() : nullptr; }
 
-#ifdef MOZ_OLD_STYLE
-    const nsStyleSet* AsGecko() const
-    {
-      return const_cast<Ptr*>(this)->AsGecko();
-    }
-#endif
 
     const ServoStyleSet* AsServo() const
     {
@@ -119,9 +95,6 @@ public:
       return const_cast<Ptr*>(this)->AsServo();
     }
 
-#ifdef MOZ_OLD_STYLE
-    const nsStyleSet* GetAsGecko() const { return IsGecko() ? AsGecko() : nullptr; }
-#endif
     const ServoStyleSet* GetAsServo() const { return IsServo() ? AsServo() : nullptr; }
 
     // These inline methods are defined in StyleSetHandleInlines.h.
@@ -238,16 +211,11 @@ public:
 
   StyleSetHandle& operator=(ServoStyleSet* aStyleSet)
   {
-#ifdef MOZ_STYLO
     MOZ_ASSERT(!(reinterpret_cast<uintptr_t>(aStyleSet) & SERVO_BIT),
                "least significant bit shouldn't be set; we use it for state");
     mPtr.mValue =
       aStyleSet ? (reinterpret_cast<uintptr_t>(aStyleSet) | SERVO_BIT) : 0;
     return *this;
-#else
-    MOZ_CRASH("should not have a ServoStyleSet object when MOZ_STYLO is "
-              "disabled");
-#endif
   }
 
   // Make StyleSetHandle usable in boolean contexts.

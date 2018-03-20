@@ -80,10 +80,6 @@ nsFirstLetterFrame::SetInitialChildList(ChildListID  aListID,
   for (nsIFrame* f : aChildList) {
     MOZ_ASSERT(f->GetParent() == this, "Unexpected parent");
     MOZ_ASSERT(f->IsTextFrame(), "We should not have kids that are containers!");
-#ifdef MOZ_OLD_STYLE
-    MOZ_ASSERT_IF(f->StyleContext()->IsGecko(),
-                  f->StyleContext()->AsGecko()->GetParent() == StyleContext());
-#endif
     nsLayoutUtils::MarkDescendantsDirty(f); // Drops cached textruns
   }
 

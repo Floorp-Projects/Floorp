@@ -454,12 +454,6 @@ public:
   virtual nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                               int32_t aModType) const;
 
-#ifdef MOZ_OLD_STYLE
-  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker)
-  {
-    return NS_OK;
-  }
-#endif
 
   inline Directionality GetDirectionality() const {
     if (HasFlag(NODE_HAS_DIRECTION_RTL)) {

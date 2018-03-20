@@ -33,9 +33,6 @@
 #include "nsMediaFeatures.h"
 #include "nsPrintfCString.h"
 #include "nsSMILAnimationController.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsStyleContext.h"
-#endif
 #include "nsXBLPrototypeBinding.h"
 #include "gfxUserFontSet.h"
 #include "nsBindingManager.h"

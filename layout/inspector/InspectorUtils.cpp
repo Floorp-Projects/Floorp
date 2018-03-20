@@ -19,11 +19,6 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIDOMDocument.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsRuleNode.h"
-#include "nsIStyleRule.h"
-#include "mozilla/css/StyleRule.h"
-#endif
 #include "nsIDOMWindow.h"
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
@@ -37,13 +32,7 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/Element.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsRuleWalker.h"
-#endif
 #include "nsCSSPseudoClasses.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsCSSRuleProcessor.h"
-#endif
 #include "mozilla/dom/CSSLexer.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -189,31 +178,7 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
 
 
   if (styleContext->IsGecko()) {
-#ifdef MOZ_OLD_STYLE
-    auto gecko = styleContext->AsGecko();
-    nsRuleNode* ruleNode = gecko->RuleNode();
-    if (!ruleNode) {
-      return;
-    }
-
-    AutoTArray<nsRuleNode*, 16> ruleNodes;
-    while (!ruleNode->IsRoot()) {
-      ruleNodes.AppendElement(ruleNode);
-      ruleNode = ruleNode->GetParent();
-    }
-
-    for (nsRuleNode* ruleNode : Reversed(ruleNodes)) {
-      RefPtr<Declaration> decl = do_QueryObject(ruleNode->GetRule());
-      if (decl) {
-        css::Rule* owningRule = decl->GetOwningRule();
-        if (owningRule) {
-          aResult.AppendElement(owningRule);
-        }
-      }
-    }
-#else
     MOZ_CRASH("old style system disabled");
-#endif
   } else {
     nsIDocument* doc = aElement.OwnerDoc();
     nsIPresShell* shell = doc->GetShell();
@@ -899,23 +864,11 @@ InspectorUtils::ColorToRGBA(GlobalObject& aGlobalObject,
 {
   nscolor color = NS_RGB(0, 0, 0);
 
-#ifdef MOZ_STYLO
   if (!ServoCSSParser::ComputeColor(nullptr, NS_RGB(0, 0, 0), aColorString,
                                     &color)) {
     aResult.SetNull();
     return;
   }
-#else
-  nsCSSParser cssParser;
-  nsCSSValue cssValue;
-
-  if (!cssParser.ParseColorString(aColorString, nullptr, 0, cssValue, true)) {
-    aResult.SetNull();
-    return;
-  }
-
-  nsRuleNode::ComputeColor(cssValue, nullptr, nullptr, color);
-#endif
 
   InspectorRGBATuple& tuple = aResult.SetValue();
   tuple.mR = NS_GET_R(color);
@@ -928,13 +881,7 @@ InspectorUtils::ColorToRGBA(GlobalObject& aGlobalObject,
 InspectorUtils::IsValidCSSColor(GlobalObject& aGlobalObject,
                                 const nsAString& aColorString)
 {
-#ifdef MOZ_STYLO
   return ServoCSSParser::IsValidCSSColor(aColorString);
-#else
-  nsCSSParser cssParser;
-  nsCSSValue cssValue;
-  return cssParser.ParseColorString(aColorString, nullptr, 0, cssValue, true);
-#endif
 }
 
 void
@@ -1154,16 +1101,6 @@ InspectorUtils::ParseStyleSheet(GlobalObject& aGlobalObject,
                                 const nsAString& aInput,
                                 ErrorResult& aRv)
 {
-#ifdef MOZ_OLD_STYLE
-  RefPtr<CSSStyleSheet> geckoSheet = do_QueryObject(&aSheet);
-  if (geckoSheet) {
-    nsresult rv = geckoSheet->ReparseSheet(aInput);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-    }
-    return;
-  }
-#endif
 
   RefPtr<ServoStyleSheet> servoSheet = do_QueryObject(&aSheet);
   if (servoSheet) {

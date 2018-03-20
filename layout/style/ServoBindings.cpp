@@ -19,10 +19,6 @@
 #include "nsCSSProps.h"
 #include "nsCSSParser.h"
 #include "nsCSSPseudoElements.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsCSSRuleProcessor.h"
-#include "nsCSSRules.h"
-#endif
 #include "nsContentUtils.h"
 #include "nsDOMTokenList.h"
 #include "nsDeviceContext.h"
@@ -56,9 +52,6 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventStates.h"
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/GeckoStyleContext.h"
-#endif
 #include "mozilla/Keyframe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
@@ -2706,14 +2699,6 @@ Gecko_SetJemallocThreadLocalArena(bool enabled)
 
 #undef STYLE_STRUCT
 
-#ifndef MOZ_STYLO
-#define SERVO_BINDING_FUNC(name_, return_, ...)                               \
-  return_ name_(__VA_ARGS__) {                                                \
-    MOZ_CRASH("stylo: shouldn't be calling " #name_ "in a non-stylo build");  \
-  }
-#include "ServoBindingList.h"
-#undef SERVO_BINDING_FUNC
-#endif
 
 ErrorReporter*
 Gecko_CreateCSSErrorReporter(ServoStyleSheet* sheet,

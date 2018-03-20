@@ -14,9 +14,6 @@
 
 #include "nsAttrAndChildArray.h"
 #include "nsMappedAttributeElement.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsIStyleRule.h"
-#endif
 #include "mozilla/Attributes.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/MemoryReporting.h"
@@ -25,9 +22,6 @@ class nsAtom;
 class nsHTMLStyleSheet;
 
 class nsMappedAttributes final
-#ifdef MOZ_OLD_STYLE
-  : public nsIStyleRule
-#endif
 {
 public:
   nsMappedAttributes(nsHTMLStyleSheet* aSheet,
@@ -37,11 +31,7 @@ public:
   void* operator new(size_t size, uint32_t aAttrCount = 1) CPP_THROW_NEW;
   nsMappedAttributes* Clone(bool aWillAddAttr);
 
-#ifdef MOZ_OLD_STYLE
-  NS_DECL_ISUPPORTS
-#else
   NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(nsMappedAttributes, LastRelease())
-#endif
 
   void SetAndSwapAttr(nsAtom* aAttrName, nsAttrValue& aValue,
                       bool* aValueWasSet);
@@ -99,16 +89,6 @@ public:
     mServoStyle = nullptr;
   }
 
-#ifdef MOZ_OLD_STYLE
-  // nsIStyleRule
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
-  virtual bool MightMapInheritedStyleData() override;
-  virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
-                                             nsCSSValue* aValue) override;
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
-#endif
-#endif
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 

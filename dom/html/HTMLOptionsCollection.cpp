@@ -26,9 +26,6 @@
 #include "nsIListControlFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsMappedAttributes.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsRuleData.h"
-#endif
 #include "nsServiceManagerUtils.h"
 #include "nsStyleConsts.h"
 #include "jsfriendapi.h"

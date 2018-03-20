@@ -359,13 +359,6 @@ public:
 
   int32_t GetType() const override;
 
-#ifdef MOZ_OLD_STYLE
-  CSSStyleSheet* GetStyleSheet() const
-  {
-    StyleSheet* sheet = Rule::GetStyleSheet();
-    return sheet ? sheet->AsGecko() : nullptr;
-  }
-#endif
 
   already_AddRefed<Rule> Clone() const override;
 

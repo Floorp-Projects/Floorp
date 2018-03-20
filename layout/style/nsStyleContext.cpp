@@ -23,11 +23,6 @@
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
 
-#ifdef MOZ_OLD_STYLE
-#include "nsStyleSet.h"
-#include "nsRuleNode.h"
-#include "mozilla/GeckoStyleContext.h"
-#endif
 #include "GeckoProfiler.h"
 #include "nsIDocument.h"
 #include "nsPrintfCString.h"
@@ -137,30 +132,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
   DebugOnly<uint32_t> structsFound = 0;
 
   if (IsGecko()) {
-#ifdef MOZ_OLD_STYLE
-    // CalcStyleDifference is always called on the main thread for Gecko
-    // style contexts.  This assertion helps the heap write static analysis.
-    MOZ_ASSERT(NS_IsMainThread());
-
-    // FIXME(heycam): We should just do the comparison in
-    // nsStyleVariables::CalcDifference, returning NeutralChange if there are
-    // any Variables differences.
-    const nsStyleVariables* thisVariables = PeekStyleVariables();
-    if (thisVariables) {
-      structsFound |= NS_STYLE_INHERIT_BIT(Variables);
-      const nsStyleVariables* otherVariables = aNewContext->StyleVariables();
-      if (thisVariables == otherVariables) {
-        *aSamePointerStructs |= NS_STYLE_INHERIT_BIT(Variables);
-        *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
-      } else if (thisVariables->mVariables == otherVariables->mVariables) {
-        *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
-      }
-    } else {
-      *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
-    }
-#else
     MOZ_CRASH("old style system disabled");
-#endif
   } else {
     if (aIgnoreVariables ||
         Servo_ComputedValues_EqualCustomProperties(
@@ -379,25 +351,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
 
 namespace mozilla {
 
-#ifdef MOZ_OLD_STYLE
-void
-GeckoStyleContext::EnsureSameStructsCached(nsStyleContext* aOldContext)
-{
-  // NOTE(emilio): We could do better here for stylo, where we only call
-  // Style##name_() because we need to run FinishStyle, but otherwise this
-  // is only a bitwise or.
-  //
-  // We could reduce the FFI traffic we do only doing it for structs that have
-  // non-trivial FinishStyle.
-
-#define STYLE_STRUCT(name_, checkdata_cb_)                                    \
-  if (aOldContext->PeekStyle##name_()) {                                      \
-    Style##name_();                                                           \
-  }
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-}
-#endif
 
 } // namespace mozilla
 
@@ -412,12 +365,7 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
   }
   str.Append(nsPrintfCString("%p(%d) parent=%p ",
                              (void*)this,
-#ifdef MOZ_OLD_STYLE
-                             IsGecko() ? AsGecko()->mRefCnt : 0,
-                             IsGecko() ? AsGecko()->GetParent() : nullptr
-#else
                              0, nullptr
-#endif
                              ));
   if (mPseudoTag) {
     nsAutoString  buffer;
@@ -429,55 +377,14 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
   if (IsServo()) {
     fprintf_stderr(out, "%s{ServoComputedData}\n", str.get());
   } else {
-#ifdef MOZ_OLD_STYLE
-    if (nsRuleNode* ruleNode = AsGecko()->RuleNode()) {
-      fprintf_stderr(out, "%s{\n", str.get());
-      str.Truncate();
-      while (ruleNode) {
-        nsIStyleRule *styleRule = ruleNode->GetRule();
-        if (styleRule) {
-          styleRule->List(out, aIndent + 1);
-        }
-        ruleNode = ruleNode->GetParent();
-      }
-      for (ix = aIndent; --ix >= 0; ) {
-        str.AppendLiteral("  ");
-      }
-      fprintf_stderr(out, "%s}\n", str.get());
-    } else {
-      fprintf_stderr(out, "%s{}\n", str.get());
-    }
-#else
     MOZ_CRASH("old style system disabled");
-#endif
   }
 
   if (aListDescendants) {
-#ifdef MOZ_OLD_STYLE
-    if (GeckoStyleContext* gecko = GetAsGecko()) {
-      gecko->ListDescendants(out, aIndent);
-    }
-#endif
   }
 }
 #endif
 
-#ifdef MOZ_OLD_STYLE
-already_AddRefed<GeckoStyleContext>
-NS_NewStyleContext(GeckoStyleContext* aParentContext,
-                   nsAtom* aPseudoTag,
-                   CSSPseudoElementType aPseudoType,
-                   nsRuleNode* aRuleNode,
-                   bool aSkipParentDisplayBasedStyleFixup)
-{
-  RefPtr<nsRuleNode> node = aRuleNode;
-  RefPtr<GeckoStyleContext> context =
-    new (aRuleNode->PresContext())
-    GeckoStyleContext(aParentContext, aPseudoTag, aPseudoType, node.forget(),
-                   aSkipParentDisplayBasedStyleFixup);
-  return context.forget();
-}
-#endif
 
 nsIPresShell*
 nsStyleContext::Arena()
@@ -597,20 +504,10 @@ nsStyleContext::LookupStruct(const nsACString& aName, nsStyleStructID& aResult)
 void
 nsStyleContext::FrameAddRef()
 {
-#ifdef MOZ_OLD_STYLE
-  if (auto gecko = GetAsGecko()) {
-    gecko->FrameAddRef();
-  }
-#endif
 }
 
 void
 nsStyleContext::FrameRelease()
 {
-#ifdef MOZ_OLD_STYLE
-  if (auto gecko = GetAsGecko()) {
-    gecko->FrameRelease();
-  }
-#endif
 }
 #endif

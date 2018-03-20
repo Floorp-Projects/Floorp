@@ -16,9 +16,6 @@
 
 #include "nsStyleContext.h"
 #include "mozilla/ServoStyleContext.h"
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/GeckoStyleContext.h"
-#endif
 #include "mozilla/ServoUtils.h"
 #include "mozilla/ServoBindings.h"
 
@@ -26,14 +23,6 @@ MOZ_DEFINE_STYLO_METHODS(nsStyleContext,
                          mozilla::GeckoStyleContext,
                          mozilla::ServoStyleContext);
 
-#ifdef MOZ_OLD_STYLE
-nsRuleNode*
-nsStyleContext::RuleNode()
-{
-  MOZ_RELEASE_ASSERT(IsGecko());
-  return AsGecko()->RuleNode();
-}
-#endif
 
 const ServoComputedData*
 nsStyleContext::ComputedData()
@@ -72,37 +61,8 @@ const nsStyle##name_ * nsStyleContext::PeekStyle##name_() {     \
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-#ifdef MOZ_OLD_STYLE
-#define DO_GET_STYLE_INHERITED_GECKO(name_, checkdata_cb_)          \
-  {                                                                 \
-    auto gecko = AsGecko();                                         \
-    const nsStyle##name_ * cachedData =                             \
-      static_cast<nsStyle##name_*>(                                 \
-        gecko->mCachedInheritedData                                 \
-        .mStyleStructs[eStyleStruct_##name_]);                      \
-    if (cachedData) /* Have it cached already, yay */               \
-      return cachedData;                                            \
-    if (!aComputeData) {                                            \
-      /* We always cache inherited structs on the context when we */\
-      /* compute them. */                                           \
-      return nullptr;                                               \
-    }                                                               \
-    /* Have the rulenode deal */                                    \
-    AUTO_CHECK_DEPENDENCY(gecko, eStyleStruct_##name_);             \
-    const nsStyle##name_ * newData =                                \
-      gecko->RuleNode()->                                           \
-        GetStyle##name_<aComputeData>(gecko, mBits);                \
-    /* always cache inherited data on the style context; the rule */\
-    /* node set the bit in mBits for us if needed. */               \
-    gecko->mCachedInheritedData                                     \
-      .mStyleStructs[eStyleStruct_##name_] =                        \
-      const_cast<nsStyle##name_ *>(newData);                        \
-    return newData;                                                 \
-  }
-#else
 #define DO_GET_STYLE_INHERITED_GECKO(name_, checkdata_cb_)          \
   MOZ_CRASH("old style system disabled");
-#endif
 
 // Helper functions for GetStyle* and PeekStyle*
 #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                         \
@@ -129,25 +89,8 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {                 \
   return data;                                                               \
 }
 
-#ifdef MOZ_OLD_STYLE
-#define DO_GET_STYLE_RESET_GECKO(name_, checkdata_cb_)                        \
-  {                                                                           \
-    auto gecko = AsGecko();                                                   \
-    if (gecko->mCachedResetData) {                                            \
-      const nsStyle##name_ * cachedData =                                     \
-        static_cast<nsStyle##name_*>(                                         \
-          gecko->mCachedResetData->mStyleStructs[eStyleStruct_##name_]);      \
-      if (cachedData) /* Have it cached already, yay */                       \
-        return cachedData;                                                    \
-    }                                                                         \
-    /* Have the rulenode deal */                                              \
-    AUTO_CHECK_DEPENDENCY(gecko, eStyleStruct_##name_);                       \
-    return gecko->RuleNode()->GetStyle##name_<aComputeData>(gecko);           \
-  }
-#else
 #define DO_GET_STYLE_RESET_GECKO(name_, checkdata_cb_)                        \
   MOZ_CRASH("old style system disabled");
-#endif
 
 #define STYLE_STRUCT_RESET(name_, checkdata_cb_)                              \
 template<bool aComputeData>                                                   \
@@ -193,16 +136,5 @@ nsStyleContext::StartBackgroundImageLoads()
   StyleBackground();
 }
 
-#ifdef MOZ_OLD_STYLE
-/* static */ already_AddRefed<mozilla::GeckoStyleContext>
-mozilla::GeckoStyleContext::TakeRef(
-  already_AddRefed<nsStyleContext> aStyleContext)
-{
-  auto* context = aStyleContext.take();
-  MOZ_ASSERT(context);
-
-  return already_AddRefed<mozilla::GeckoStyleContext>(context->AsGecko());
-}
-#endif
 
 #endif // nsStyleContextInlines_h

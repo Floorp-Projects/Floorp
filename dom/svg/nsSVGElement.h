@@ -112,10 +112,6 @@ public:
    */
   virtual void NodeInfoChanged(nsIDocument* aOldDoc) override;
 
-#ifdef MOZ_OLD_STYLE
-  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) override;
-  void WalkAnimatedContentStyleRules(nsRuleWalker* aRuleWalker);
-#endif
 
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 

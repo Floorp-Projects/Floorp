@@ -125,11 +125,6 @@ private:
   // Servo bits.
   UniquePtr<RawServoSourceSizeList> mServoSourceSizeList;
 
-#ifdef MOZ_OLD_STYLE
-  // Gecko bits.
-  nsTArray< nsAutoPtr<nsMediaQuery> > mSizeQueries;
-  nsTArray<nsCSSValue> mSizeValues;
-#endif
 };
 
 class ResponsiveImageCandidate {

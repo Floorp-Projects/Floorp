@@ -13,9 +13,6 @@
 #include "nsCOMPtr.h"
 #include "nsCSSRendering.h"
 #include "nsIPresShell.h"
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/GeckoStyleContext.h"
-#endif
 
 using namespace mozilla;
 
@@ -296,22 +293,6 @@ nsTableColGroupFrame::RemoveFrame(ChildListID     aListID,
       nsTableColFrame* nextCol;
       while (col && col->GetColType() == eColAnonymousCol) {
 #ifdef DEBUG
-#ifdef MOZ_OLD_STYLE
-        nsIFrame* providerFrame;
-        nsStyleContext* psc = colFrame->GetParentStyleContext(&providerFrame);
-        if (psc->IsGecko()) {
-          // This check code is useful only in Gecko-backed style system.
-          if (colFrame->StyleContext()->AsGecko()->GetParent() == psc->AsGecko()) {
-            NS_ASSERTION(col->StyleContext() == colFrame->StyleContext() &&
-                         col->GetContent() == colFrame->GetContent(),
-                         "How did that happen??");
-          }
-          // else colFrame is being removed because of a frame
-          // reconstruct on it, and its style context is still the old
-          // one, so we can't assert anything about how it compares to
-          // col's style context.
-        }
-#endif
 #endif
         nextCol = col->GetNextCol();
         RemoveFrame(kPrincipalList, col);

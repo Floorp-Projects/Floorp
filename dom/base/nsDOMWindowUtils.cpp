@@ -2842,43 +2842,7 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(nsIDOMElement* aElement,
     return NS_OK;
   }
 
-#ifdef MOZ_OLD_STYLE
-  StyleAnimationValue computedValue;
-  if (!StyleAnimationValue::ExtractComputedValue(propertyID,
-                                                 styleContext->AsGecko(),
-                                                 computedValue)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Note: ExtractComputedValue can return 'unset', 'initial', or 'inherit' in
-  // its "computedValue" outparam, even though these technically aren't valid
-  // computed values. (It has this behavior for discretely-animatable
-  // properties, e.g. 'align-content', when these keywords are explicitly
-  // specified or when there is no specified value.)  But we need to return a
-  // valid computed value -- these keywords won't do.  So we fall back to
-  // nsComputedDOMStyle in this case.
-  if (computedValue.GetUnit() == StyleAnimationValue::eUnit_DiscreteCSSValue &&
-      (computedValue.GetCSSValueValue()->GetUnit() == eCSSUnit_Unset ||
-       computedValue.GetCSSValueValue()->GetUnit() == eCSSUnit_Initial ||
-       computedValue.GetCSSValueValue()->GetUnit() == eCSSUnit_Inherit)) {
-    RefPtr<nsComputedDOMStyle> computedStyle =
-      NS_NewComputedDOMStyle(
-       element, aPseudoElement, shell,
-       nsComputedDOMStyle::StyleType::eAll,
-       nsComputedDOMStyle::AnimationFlag::eWithoutAnimation);
-    computedStyle->GetPropertyValue(propertyID, aResult);
-    return NS_OK;
-  }
-
-  DebugOnly<bool> uncomputeResult =
-    StyleAnimationValue::UncomputeValue(propertyID,
-                                        Move(computedValue), aResult);
-  MOZ_ASSERT(uncomputeResult,
-             "Unable to get specified value from computed value");
-  return NS_OK;
-#else
   MOZ_CRASH("old style system disabled");
-#endif
 }
 
 nsresult

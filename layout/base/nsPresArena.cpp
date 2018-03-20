@@ -12,9 +12,6 @@
 #include "mozilla/Poison.h"
 #include "nsDebug.h"
 #include "nsPrintfCString.h"
-#ifdef MOZ_OLD_STYLE
-#include "GeckoStyleContext.h"
-#endif
 #include "FrameLayerBuilder.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsStyleContext.h"

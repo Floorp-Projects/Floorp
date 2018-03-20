@@ -230,9 +230,6 @@
 #include "nsITextControlElement.h"
 #include "nsIDOMNSEditableElement.h"
 #include "nsIEditor.h"
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/css/StyleRule.h"
-#endif
 #include "nsIHttpChannelInternal.h"
 #include "nsISecurityConsoleMessage.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -1324,27 +1321,11 @@ nsIDocument::SelectorCache::SelectorList::Reset()
     }
   } else {
     if (mGecko) {
-#ifdef MOZ_OLD_STYLE
-      delete mGecko;
-      mGecko = nullptr;
-#else
       MOZ_CRASH("old style system disabled");
-#endif
     }
   }
 }
 
-#ifdef MOZ_OLD_STYLE
-// CacheList takes ownership of aSelectorList.
-void nsIDocument::SelectorCache::CacheList(const nsAString& aSelector,
-                                           mozilla::UniquePtr<nsCSSSelectorList>&& aSelectorList)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  SelectorCacheKey* key = new SelectorCacheKey(aSelector);
-  mTable.Put(key->mKey, SelectorList(Move(aSelectorList)));
-  AddObject(key);
-}
-#endif
 
 void nsIDocument::SelectorCache::CacheList(
   const nsAString& aSelector,
@@ -1955,9 +1936,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChannel)
-#ifdef MOZ_OLD_STYLE
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleAttrStyleSheet)
-#endif
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLayoutHistoryState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnloadBlocker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFirstBaseNodeWithHref)
@@ -3711,7 +3689,6 @@ nsIDocument::SetBaseURI(nsIURI* aURI)
 URLExtraData*
 nsIDocument::DefaultStyleAttrURLData()
 {
-#ifdef MOZ_STYLO
   MOZ_ASSERT(NS_IsMainThread());
   nsIURI* baseURI = GetDocBaseURI();
   nsIURI* docURI = GetDocumentURI();
@@ -3723,10 +3700,6 @@ nsIDocument::DefaultStyleAttrURLData()
     mCachedURLData = new URLExtraData(baseURI, docURI, principal);
   }
   return mCachedURLData;
-#else
-  MOZ_CRASH("Should not be called for non-stylo build");
-  return nullptr;
-#endif
 }
 
 void
@@ -12644,12 +12617,10 @@ nsIDocument::UpdateStyleBackendType()
   // Assume Gecko by default.
   mStyleBackendType = StyleBackendType::Gecko;
 
-#ifdef MOZ_STYLO
   if (nsLayoutUtils::StyloEnabled() &&
       nsLayoutUtils::ShouldUseStylo(NodePrincipal())) {
     mStyleBackendType = StyleBackendType::Servo;
   }
-#endif
 }
 
 void
