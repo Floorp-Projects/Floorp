@@ -361,5 +361,17 @@ WorkerDebuggerManager::UnregisterDebuggerMainThread(
   aWorkerPrivate->SetIsDebuggerRegistered(false);
 }
 
+uint32_t
+WorkerDebuggerManager::GetDebuggersLength() const
+{
+  return mDebuggers.Length();
+}
+
+WorkerDebugger*
+WorkerDebuggerManager::GetDebuggerAt(uint32_t aIndex) const
+{
+  return mDebuggers.SafeElementAt(aIndex, nullptr);
+}
+
 } // dom namespace
 } // mozilla namespace
