@@ -1042,12 +1042,12 @@ var MigrationUtils = Object.freeze({
     }, ex => Cu.reportError(ex));
   },
 
-  insertVisitsWrapper(places, options) {
-    this._importQuantities.history += places.length;
+  insertVisitsWrapper(pageInfos) {
+    this._importQuantities.history += pageInfos.length;
     if (gKeepUndoData) {
-      this._updateHistoryUndo(places);
+      this._updateHistoryUndo(pageInfos);
     }
-    return PlacesUtils.asyncHistory.updatePlaces(places, options, true);
+    return PlacesUtils.history.insertMany(pageInfos);
   },
 
   async insertLoginsWrapper(logins) {
@@ -1101,20 +1101,26 @@ var MigrationUtils = Object.freeze({
     return this._postProcessUndoData(undoData);
   },
 
-  _updateHistoryUndo(places) {
+  _updateHistoryUndo(pageInfos) {
     let visits = gUndoData.get("visits");
     let visitMap = new Map(visits.map(v => [v.url, v]));
-    for (let place of places) {
-      let visitCount = place.visits.length;
+    for (let pageInfo of pageInfos) {
+      let visitCount = pageInfo.visits.length;
       let first, last;
       if (visitCount > 1) {
-        let visitDates = place.visits.map(v => v.visitDate);
-        first = Math.min.apply(Math, visitDates);
-        last = Math.max.apply(Math, visitDates);
+        let dates = pageInfo.visits.map(v => v.date);
+        first = Math.min.apply(Math, dates);
+        last = Math.max.apply(Math, dates);
       } else {
-        first = last = place.visits[0].visitDate;
+        first = last = pageInfo.visits[0].date;
       }
-      let url = place.uri.spec;
+      let url = pageInfo.url;
+      if (url instanceof Ci.nsIURI) {
+        url = pageInfo.url.spec;
+      } else if (typeof url != "string") {
+        pageInfo.url.href;
+      }
+
       try {
         new URL(url);
       } catch (ex) {
