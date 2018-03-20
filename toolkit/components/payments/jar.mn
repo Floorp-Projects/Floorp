@@ -18,6 +18,7 @@ toolkit.jar:
     res/payments/debugging.css                        (res/debugging.css)
     res/payments/debugging.html                       (res/debugging.html)
     res/payments/debugging.js                         (res/debugging.js)
+    res/payments/log.js                               (res/log.js)
     res/payments/mixins/                              (res/mixins/*.js)
     res/payments/PaymentsStore.js                     (res/PaymentsStore.js)
     res/payments/vendor/                              (res/vendor/*)
