@@ -10,22 +10,20 @@ var EDITOR_TEXT = [
   "window.dispatchEvent(evt);"
 ].join("\n");
 
-function test()
-{
-  requestLongerTimeout(2);
-  waitForExplicitFinish();
+add_task(async function test() {
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, true);
 
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function () {
-    openScratchpad(runTests);
-  });
+  let url = "data:text/html,Scratchpad test for bug 740948";
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url);
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  gBrowser.loadURI("data:text/html,Scratchpad test for bug 740948");
-}
+  await new Promise((resolve) => openScratchpad(resolve));
+  await runTests();
 
-function runTests()
-{
+  Services.prefs.clearUserPref(DEVTOOLS_CHROME_ENABLED);
+});
+
+async function runTests() {
   let sp = gScratchpadWindow.Scratchpad;
   ok(sp, "Scratchpad object exists in new window");
 
@@ -52,20 +50,25 @@ function runTests()
   sp.setText(EDITOR_TEXT);
 
   let browser = gBrowser.selectedBrowser;
-
-  let deferred = defer();
-  browser.contentWindowAsCPOW.addEventListener("DOMWindowCreated", function () {
-    browser.contentWindowAsCPOW.addEventListener("foo", function () {
-      is(browser.contentWindow.document.body.innerHTML, "Modified text",
-        "After reloading, HTML is different.");
-
-      Services.prefs.clearUserPref(DEVTOOLS_CHROME_ENABLED);
-      deferred.resolve();
-    }, {capture: true, once: true});
-  }, {capture: true, once: true});
-
-  ok(browser.contentWindowAsCPOW.document.body.innerHTML !== "Modified text",
+  await ContentTask.spawn(browser, null, function() {
+    ok(content.document.body.innerHTML !== "Modified text",
       "Before reloading, HTML is intact.");
-  sp.reloadAndRun().then(deferred.promise).then(finish);
+  });
+
+  let reloaded = BrowserTestUtils.browserLoaded(browser);
+  sp.reloadAndRun();
+  await reloaded;
+
+  await ContentTask.spawn(browser, null, async function() {
+    // If `evt` is not defined, the scratchpad code has not run yet,
+    // so we need to await the "foo" event.
+    if (!content.wrappedJSObject.evt) {
+      await new Promise((resolve) => {
+        content.addEventListener("foo", resolve, {once: true});
+      });
+    }
+    is(content.document.body.innerHTML, "Modified text",
+      "After reloading, HTML is different.");
+  });
 }
 
