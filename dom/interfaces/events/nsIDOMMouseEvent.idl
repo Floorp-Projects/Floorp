@@ -16,9 +16,6 @@
 [builtinclass, uuid(5bdab8d8-7933-4c5c-b6d1-ab34481237f7)]
 interface nsIDOMMouseEvent : nsIDOMUIEvent
 {
-  readonly attribute long               screenX;
-  readonly attribute long               screenY;
-
   readonly attribute long               mozMovementX;
   readonly attribute long               mozMovementY;
 

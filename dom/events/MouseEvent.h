@@ -37,6 +37,11 @@ public:
     return MouseEventBinding::Wrap(aCx, this, aGivenProto);
   }
 
+  virtual MouseEvent* AsMouseEvent() override
+  {
+    return this;
+  }
+
   // Web IDL binding methods
   virtual uint32_t Which(CallerType aCallerType) override
   {
