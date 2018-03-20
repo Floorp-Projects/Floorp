@@ -13,7 +13,6 @@
 #include "mozilla/dom/DataTransfer.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIDOMWheelEvent.h"
 
 /******************************************************************************
  * nsDragDropEventStatus
@@ -503,7 +502,9 @@ private:
     , mDeltaZ(0.0)
     , mOverflowDeltaX(0.0)
     , mOverflowDeltaY(0.0)
-    , mDeltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
+    // Including WheelEventBinding.h here leads to an include loop, so
+    // we have to hardcode WheelEventBinding::DOM_DELTA_PIXEL.
+    , mDeltaMode(/* WheelEventBinding::DOM_DELTA_PIXEL = */ 0)
     , mLineOrPageDeltaX(0)
     , mLineOrPageDeltaY(0)
     , mScrollType(SCROLL_DEFAULT)
@@ -527,7 +528,9 @@ public:
     , mDeltaZ(0.0)
     , mOverflowDeltaX(0.0)
     , mOverflowDeltaY(0.0)
-    , mDeltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
+    // Including WheelEventBinding.h here leads to an include loop, so
+    // we have to hardcode WheelEventBinding::DOM_DELTA_PIXEL.
+    , mDeltaMode(/* WheelEventBinding::DOM_DELTA_PIXEL = */ 0)
     , mLineOrPageDeltaX(0)
     , mLineOrPageDeltaY(0)
     , mScrollType(SCROLL_DEFAULT)
@@ -583,7 +586,7 @@ public:
   double mOverflowDeltaX;
   double mOverflowDeltaY;
 
-  // Should be one of nsIDOMWheelEvent::DOM_DELTA_*
+  // Should be one of WheelEventBinding::DOM_DELTA_*
   uint32_t mDeltaMode;
 
   // If widget sets mLineOrPageDelta, EventStateManager will dispatch

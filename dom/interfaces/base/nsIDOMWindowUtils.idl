@@ -425,8 +425,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aDeltaX            deltaX value.
    * @param aDeltaY            deltaY value.
    * @param aDeltaZ            deltaZ value.
-   * @param aDeltaMode         deltaMode value which must be one of
-   *                           nsIDOMWheelEvent::DOM_DELTA_*.
+   * @param aDeltaMode         deltaMode value which must be one of the
+   *                           WheelEvent DOM_DELTA_* constants.
    * @param aModifiers         modifiers pressed, using constants defined as
    *                           MODIFIER_*
    * @param aLineOrPageDeltaX  If you set this value non-zero for
