@@ -855,13 +855,6 @@ class TestEmitterBasic(unittest.TestCase):
                     'support2': False,
                 },
             },
-            'metro.ini': {
-                'flavor': 'metro-chrome',
-                'installs': {
-                    'metro.ini': False,
-                    'test_metro.js': True,
-                },
-            },
             'mochitest.ini': {
                 'flavor': 'mochitest',
                 'installs': {
