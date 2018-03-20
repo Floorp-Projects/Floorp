@@ -17,6 +17,7 @@
 #include "mozilla/dom/Element.h"        // for Element
 #include "mozilla/dom/Event.h"          // for Event
 #include "mozilla/dom/EventTarget.h"    // for EventTarget
+#include "mozilla/dom/MouseEvent.h"     // for MouseEvent
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsCaret.h"                    // for nsCaret
@@ -423,7 +424,7 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       if (mMouseDownOrUpConsumedByIME) {
         return NS_OK;
       }
-      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+      MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
       return NS_WARN_IF(!mouseEvent) ? NS_OK : MouseDown(mouseEvent);
     }
     // mouseup
@@ -444,7 +445,7 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       if (mMouseDownOrUpConsumedByIME) {
         return NS_OK;
       }
-      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+      MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
       return NS_WARN_IF(!mouseEvent) ? NS_OK : MouseUp(mouseEvent);
     }
     // click
@@ -758,7 +759,7 @@ EditorEventListener::NotifyIMEOfMouseButtonEvent(
 }
 
 nsresult
-EditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
+EditorEventListener::MouseDown(MouseEvent* aMouseEvent)
 {
   // FYI: We don't need to check if it's already consumed here because
   //      we need to commit composition at mouse button operation.
