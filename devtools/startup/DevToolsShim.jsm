@@ -28,33 +28,16 @@ function removeItem(array, callback) {
 }
 
 /**
- * The DevToolsShim is a part of the DevTools go faster project, which moves the Firefox
- * DevTools outside of mozilla-central to an add-on. It aims to bridge the gap for
- * existing mozilla-central code that still needs to interact with DevTools (such as
- * web-extensions).
- *
  * DevToolsShim is a singleton that provides a set of helpers to interact with DevTools,
- * that work whether the DevTools addon is installed or not. It can be used to start
- * listening to events. As soon as a DevTools addon is installed the DevToolsShim will
- * forward all the requests received until then to the real DevTools instance.
+ * that work whether Devtools are enabled or not.
  *
- * DevToolsShim.isInstalled() can also be used to know if DevTools are currently
- * installed.
+ * It can be used to start listening to devtools events before DevTools are ready. As soon
+ * as DevTools are enabled, the DevToolsShim will forward all the requests received until
+ * then to the real DevTools instance.
  */
 this.DevToolsShim = {
   _gDevTools: null,
   listeners: [],
-
-  /**
-   * Check if DevTools are currently installed (but not necessarily initialized).
-   *
-   * @return {Boolean} true if DevTools are installed.
-   */
-  isInstalled: function() {
-    return Services.io.getProtocolHandler("resource")
-             .QueryInterface(Ci.nsIResProtocolHandler)
-             .hasSubstitution("devtools");
-  },
 
   /**
    * Returns true if DevTools are enabled for the current profile. If devtools are not
@@ -185,7 +168,7 @@ this.DevToolsShim = {
    *        needed if the element is nested in frames and not directly in the root
    *        document.
    * @return {Promise} a promise that resolves when the node is selected in the inspector
-   *         markup view or that resolves immediately if DevTools are not installed.
+   *         markup view or that resolves immediately if DevTools are not enabled.
    */
   inspectNode: function(tab, selectors) {
     if (!this.isEnabled()) {

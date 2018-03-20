@@ -10,8 +10,8 @@ JS_PREFERENCE_PP_FILES += [
     'devtools-startup-prefs.js',
 ]
 
-# Register the about:debugging page only for 'addon' and 'all' builds.
-if CONFIG['MOZ_DEVTOOLS'] != 'server':
+# Register the startup components only for 'all' builds.
+if CONFIG['MOZ_DEVTOOLS'] == 'all':
     EXTRA_COMPONENTS += [
         'aboutdebugging-registration.js',
         'aboutdebugging.manifest',
