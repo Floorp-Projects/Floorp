@@ -1036,9 +1036,8 @@ pref("dom.ipc.shims.enabledWarnings", false);
 //     everything, but will probably cause some functionality restrictions
 pref("dom.ipc.plugins.sandbox-level.default", 0);
 #if defined(_AMD64_)
-// The base sandbox level in nsPluginTag::InitSandboxLevel must be
-// updated to keep in sync with this value.
-pref("dom.ipc.plugins.sandbox-level.flash", 3);
+// The lines in PluginModuleParent.cpp should be changed in line with this.
+pref("dom.ipc.plugins.sandbox-level.flash", 2);
 #else
 pref("dom.ipc.plugins.sandbox-level.flash", 0);
 #endif
