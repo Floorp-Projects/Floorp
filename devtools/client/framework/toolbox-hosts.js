@@ -12,7 +12,7 @@ const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const {DOMHelpers} = require("resource://devtools/client/shared/DOMHelpers.jsm");
 
-loader.lazyRequireGetter(this, "system", "devtools/shared/system");
+loader.lazyRequireGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm", true);
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
 
 /* A host should always allow this much space for the page to be displayed.
@@ -295,7 +295,7 @@ WindowHost.prototype = {
       win.focus();
 
       let key;
-      if (system.constants.platform === "macosx") {
+      if (AppConstants.platform === "macosx") {
         key = win.document.getElementById("toolbox-key-toggle-osx");
       } else {
         key = win.document.getElementById("toolbox-key-toggle");

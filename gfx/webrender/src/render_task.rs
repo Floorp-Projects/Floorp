@@ -933,6 +933,7 @@ impl RenderTaskCache {
                 [0.0; 3],
                 None,
                 gpu_cache,
+                None,
             );
 
             // Get the allocation details in the texture cache, and store

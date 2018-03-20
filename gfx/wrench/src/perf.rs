@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use NotifierEvent;
 use WindowWrapper;
 use serde_json;
 use std::collections::{HashMap, HashSet};
@@ -123,11 +124,11 @@ impl Profile {
 pub struct PerfHarness<'a> {
     wrench: &'a mut Wrench,
     window: &'a mut WindowWrapper,
-    rx: Receiver<()>,
+    rx: Receiver<NotifierEvent>,
 }
 
 impl<'a> PerfHarness<'a> {
-    pub fn new(wrench: &'a mut Wrench, window: &'a mut WindowWrapper, rx: Receiver<()>) -> Self {
+    pub fn new(wrench: &'a mut Wrench, window: &'a mut WindowWrapper, rx: Receiver<NotifierEvent>) -> Self {
         PerfHarness { wrench, window, rx }
     }
 

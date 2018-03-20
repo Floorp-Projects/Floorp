@@ -905,11 +905,10 @@ impl YamlFrameWriter {
                             ];
                             yaml_node(&mut v, "width", f32_vec_yaml(&widths, true));
                             str_node(&mut v, "border-type", "radial-gradient");
-                            point_node(&mut v, "start-center", &details.gradient.start_center);
+                            point_node(&mut v, "center", &details.gradient.center);
+                            size_node(&mut v, "radius", &details.gradient.radius);
                             f32_node(&mut v, "start-radius", details.gradient.start_radius);
-                            point_node(&mut v, "end-center", &details.gradient.end_center);
                             f32_node(&mut v, "end-radius", details.gradient.end_radius);
-                            f32_node(&mut v, "ratio-xy", details.gradient.ratio_xy);
                             let mut stops = vec![];
                             for stop in display_list.get(base.gradient_stops()) {
                                 stops.push(Yaml::Real(stop.offset.to_string()));
@@ -961,11 +960,10 @@ impl YamlFrameWriter {
                 }
                 RadialGradient(item) => {
                     str_node(&mut v, "type", "radial-gradient");
-                    point_node(&mut v, "start-center", &item.gradient.start_center);
+                    point_node(&mut v, "center", &item.gradient.center);
+                    size_node(&mut v, "center", &item.gradient.radius);
                     f32_node(&mut v, "start-radius", item.gradient.start_radius);
-                    point_node(&mut v, "end-center", &item.gradient.end_center);
                     f32_node(&mut v, "end-radius", item.gradient.end_radius);
-                    f32_node(&mut v, "ratio-xy", item.gradient.ratio_xy);
                     size_node(&mut v, "tile-size", &item.tile_size);
                     size_node(&mut v, "tile-spacing", &item.tile_spacing);
                     let mut stops = vec![];
