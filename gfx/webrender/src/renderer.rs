@@ -35,7 +35,7 @@ use device::{ProgramCache, ReadPixelsFormat};
 use euclid::{rect, Transform3D};
 use frame_builder::FrameBuilderConfig;
 use gleam::gl;
-use glyph_rasterizer::GlyphFormat;
+use glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
 use gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use gpu_types::PrimitiveInstance;
 use internal_types::{SourceTexture, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
@@ -1309,9 +1309,6 @@ impl Renderer {
 
         let shaders = Shaders::new(&mut device, gl_type, &options)?;
 
-        let texture_cache = TextureCache::new(max_device_size);
-        let max_texture_size = texture_cache.max_texture_size();
-
         let backend_profile_counters = BackendProfileCounters::new();
 
         let dither_matrix_texture = if options.enable_dithering {
@@ -1489,11 +1486,7 @@ impl Renderer {
         let thread_listener_for_scene_builder = thread_listener.clone();
         let rb_thread_name = format!("WRRenderBackend#{}", options.renderer_id.unwrap_or(0));
         let scene_thread_name = format!("WRSceneBuilder#{}", options.renderer_id.unwrap_or(0));
-        let resource_cache = ResourceCache::new(
-            texture_cache,
-            workers,
-            blob_image_renderer,
-        )?;
+        let glyph_rasterizer = GlyphRasterizer::new(workers)?;
 
         let (scene_builder, scene_tx, scene_rx) = SceneBuilder::new(config, api_tx.clone());
         thread::Builder::new().name(scene_thread_name.clone()).spawn(move || {
@@ -1515,6 +1508,14 @@ impl Renderer {
             if let Some(ref thread_listener) = *thread_listener_for_render_backend {
                 thread_listener.thread_started(&rb_thread_name);
             }
+
+            let texture_cache = TextureCache::new(max_device_size);
+            let resource_cache = ResourceCache::new(
+                texture_cache,
+                glyph_rasterizer,
+                blob_image_renderer,
+            );
+
             let mut backend = RenderBackend::new(
                 api_rx,
                 payload_rx_for_backend,
@@ -1552,7 +1553,7 @@ impl Renderer {
             backend_profile_counters: BackendProfileCounters::new(),
             profile_counters: RendererProfileCounters::new(),
             profiler: Profiler::new(),
-            max_texture_size: max_texture_size,
+            max_texture_size: max_device_size,
             max_recorded_profiles: options.max_recorded_profiles,
             clear_color: options.clear_color,
             enable_clear_scissor: options.enable_clear_scissor,
@@ -2358,14 +2359,6 @@ impl Renderer {
         textures: &BatchTextures,
         stats: &mut RendererStats,
     ) {
-        // Work around Angle bug that forgets to update sampler metadata,
-        // by making the use of those samplers uniform across programs.
-        // https://github.com/servo/webrender/wiki/Driver-issues#texturesize-in-vertex-shaders
-        let work_around_angle_bug = cfg!(windows);
-        if work_around_angle_bug {
-            self.device.reset_angle_sampler_metadata(&self.texture_resolver.dummy_cache_texture);
-        }
-
         for i in 0 .. textures.colors.len() {
             self.texture_resolver.bind(
                 &textures.colors[i],

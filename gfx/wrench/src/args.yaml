@@ -44,6 +44,9 @@ args:
       short: h
       long: headless
       help: Enable headless rendering
+  - angle:
+      long: angle
+      help: Enable ANGLE rendering (on Windows only)
   - dp_ratio:
       short: p
       long: device-pixel-ratio

@@ -16,12 +16,13 @@ use ron_frame_writer::RonFrameWriter;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
+use std::sync::mpsc::Receiver;
 use time;
 use webrender;
 use webrender::api::*;
 use webrender::{DebugFlags, RendererStats};
 use yaml_frame_writer::YamlFrameWriterReceiver;
-use {WindowWrapper, BLACK_COLOR, WHITE_COLOR};
+use {WindowWrapper, NotifierEvent, BLACK_COLOR, WHITE_COLOR};
 
 // TODO(gw): This descriptor matches what we currently support for fonts
 //           but is quite a mess. We should at least document and
@@ -589,5 +590,19 @@ impl Wrench {
                 y += self.device_pixel_ratio * dr.line_height();
             }
         }
+    }
+
+    pub fn shut_down(self, rx: Receiver<NotifierEvent>) {
+        self.api.shut_down();
+
+        loop {
+            match rx.recv() {
+                Ok(NotifierEvent::ShutDown) => { break; }
+                Ok(_) => {}
+                Err(e) => { panic!("Did not shut down properly: {:?}.", e); }
+            }
+        }
+
+        self.renderer.deinit();
     }
 }
