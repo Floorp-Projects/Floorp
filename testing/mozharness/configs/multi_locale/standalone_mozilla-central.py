@@ -1,4 +1,3 @@
-
 import os
 # The name of the directory we'll pull our source into.
 BUILD_DIR = "mozilla-central"
@@ -11,6 +10,7 @@ REPO_PATH = "mozilla-central"
 L10N_REPO_PATH = "l10n-central"
 # Currently this is assumed to be a subdirectory of your build dir
 OBJDIR = "objdir-droid"
+# Set this to mobile/xul for XUL Fennec
 ANDROID_DIR = "mobile/android"
 # Absolute path to your mozconfig.
 # By default it looks at "./mozconfig"

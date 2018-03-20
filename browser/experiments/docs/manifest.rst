@@ -101,7 +101,7 @@ appName
    Array of application names this experiment should run on.
 
    An application name comes from ``nsIXULAppInfo.name``. It is a value
-   like ``Firefox`` or ``Fennec``.
+   like ``Firefox``, ``Fennec``, or `B2G`.
 
    The client should compare its application name against the members of
    this array. If a match is found, the experiment is applicable.
