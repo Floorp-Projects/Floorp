@@ -110,17 +110,17 @@ class AnimatedPropertyList extends PureComponent {
       {
         className: "animated-property-list"
       },
-      [...animatedPropertyMap.entries()].map(([property, values]) => {
-        const state = this.getPropertyState(property);
-        const type = animationTypes[property];
+      [...animatedPropertyMap.entries()].map(([name, keyframes]) => {
+        const state = this.getPropertyState(name);
+        const type = animationTypes[name];
         return AnimatedPropertyItem(
           {
             getComputedStyle,
-            property,
+            keyframes,
+            name,
             simulateAnimation,
             state,
             type,
-            values,
           }
         );
       })
