@@ -151,7 +151,7 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-class nsAnonymousContentList : public nsINodeList
+class nsAnonymousContentList final : public nsINodeList
 {
 public:
   explicit nsAnonymousContentList(nsIContent* aParent)
@@ -161,13 +161,12 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsAnonymousContentList)
-  // nsIDOMNodeList interface
-  NS_DECL_NSIDOMNODELIST
 
   // nsINodeList interface
   virtual int32_t IndexOf(nsIContent* aContent) override;
   virtual nsINode* GetParentObject() override { return mParent; }
   virtual nsIContent* Item(uint32_t aIndex) override;
+  uint32_t Length() override;
 
   virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
