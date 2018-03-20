@@ -217,8 +217,8 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
         if (window.getComputedStyle(document.body).position === "relative") {
           const docBoundingRect = document.documentElement.getBoundingClientRect();
           const bodyBoundingRect = document.body.getBoundingClientRect();
-          this.element.style.marginLeft = `-${bodyBoundingRect.right - docBoundingRect.right}px`;
-          this.element.style.marginTop = `-${bodyBoundingRect.bottom - docBoundingRect.bottom}px`;
+          this.element.style.marginLeft = `-${bodyBoundingRect.left - docBoundingRect.left}px`;
+          this.element.style.marginTop = `-${bodyBoundingRect.top - docBoundingRect.top}px`;
         }
       }
       if (force && visible) {

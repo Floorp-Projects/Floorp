@@ -886,10 +886,11 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
         if (RefPtr<APZSampler> sampler = mCompositorBridge->GetAPZSampler()) {
           for (uint32_t i = 0; i < layer->GetScrollMetadataCount(); i++) {
             LayerMetricsWrapper wrapper(layer, i);
-            const FrameMetrics& metrics = wrapper.Metrics();
-            if (!metrics.IsScrollable()) {
+            if (!wrapper.GetApzc()) {
               continue;
             }
+            const FrameMetrics& metrics = wrapper.Metrics();
+            MOZ_ASSERT(metrics.IsScrollable());
 
             hasAsyncTransform = true;
 
@@ -1069,10 +1070,11 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
 static bool
 LayerIsScrollbarTarget(const LayerMetricsWrapper& aTarget, Layer* aScrollbar)
 {
-  const FrameMetrics& metrics = aTarget.Metrics();
-  if (!metrics.IsScrollable()) {
+  if (!aTarget.GetApzc()) {
     return false;
   }
+  const FrameMetrics& metrics = aTarget.Metrics();
+  MOZ_ASSERT(metrics.IsScrollable());
   if (metrics.GetScrollId() != aScrollbar->GetScrollbarTargetContainerId()) {
     return false;
   }

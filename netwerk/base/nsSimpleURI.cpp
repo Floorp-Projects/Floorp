@@ -75,7 +75,14 @@ NS_INTERFACE_MAP_END
 // nsISerializable methods:
 
 NS_IMETHODIMP
-nsSimpleURI::Read(nsIObjectInputStream* aStream)
+nsSimpleURI::Read(nsIObjectInputStream *aStream)
+{
+    NS_NOTREACHED("Use nsIURIMutator.read() instead");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsSimpleURI::ReadPrivate(nsIObjectInputStream *aStream)
 {
     nsresult rv;
 
@@ -877,8 +884,11 @@ nsSimpleURI::SetQueryWithEncoding(const nsACString& aQuery,
     return SetQuery(aQuery);
 }
 
-NS_IMPL_ISUPPORTS(nsSimpleURI::Mutator, nsIURISetters, nsIURIMutator)
-
+// Queries this list of interfaces. If none match, it queries mURI.
+NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsSimpleURI::Mutator,
+                                nsIURISetters,
+                                nsIURIMutator,
+                                nsISerializable)
 
 NS_IMETHODIMP
 nsSimpleURI::Mutate(nsIURIMutator** aMutator)

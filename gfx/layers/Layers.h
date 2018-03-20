@@ -1798,10 +1798,13 @@ public:
   // and can be used anytime.
   // A layer has an APZC at index aIndex only-if GetFrameMetrics(aIndex).IsScrollable();
   // attempting to get an APZC for a non-scrollable metrics will return null.
-  // The reverse is also true (that if GetFrameMetrics(aIndex).IsScrollable()
-  // is true, then the layer will have an APZC), although that only holds on
+  // The reverse is also generally true (that if GetFrameMetrics(aIndex).IsScrollable()
+  // is true, then the layer will have an APZC). However, it only holds on the
   // the compositor-side layer tree, and only after the APZ code has had a chance
-  // to rebuild its internal hit-testing tree using the layer tree.
+  // to rebuild its internal hit-testing tree using the layer tree. Also, it may
+  // not hold in certain "exceptional" scenarios such as if the layer tree
+  // doesn't have a GeckoContentController registered for it, or if there is a
+  // malicious content process trying to trip up the compositor over IPC.
   // The aIndex for these functions must be less than GetScrollMetadataCount().
   void SetAsyncPanZoomController(uint32_t aIndex, AsyncPanZoomController *controller);
   AsyncPanZoomController* GetAsyncPanZoomController(uint32_t aIndex) const;

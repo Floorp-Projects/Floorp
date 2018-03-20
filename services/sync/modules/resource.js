@@ -191,13 +191,13 @@ Resource.prototype = {
     this._logResponse(response, method, data);
     this._processResponseHeaders(response);
 
-    // Changes below need to be processed in bug 1295510 that's why eslint is ignored
-    // eslint-disable-next-line no-new-wrappers
-    const ret   = new String(data);
-    ret.url     = response.url;
-    ret.status  = response.status;
-    ret.success = response.ok;
-    ret.headers = {};
+    const ret = {
+      data,
+      url: response.url,
+      status: response.status,
+      success: response.ok,
+      headers: {},
+    };
     for (const [k, v] of response.headers) {
       ret.headers[k] = v;
     }
@@ -207,13 +207,12 @@ Resource.prototype = {
     // actual fetch, so be warned!
     XPCOMUtils.defineLazyGetter(ret, "obj", () => {
       try {
-        return JSON.parse(ret);
+        return JSON.parse(ret.data);
       } catch (ex) {
         this._log.warn("Got exception parsing response body", ex);
         // Stringify to avoid possibly printing non-printable characters.
-        this._log.debug("Parse fail: Response body starts: \"" +
-                        JSON.stringify((ret + "").slice(0, 100)) +
-                        "\".");
+        this._log.debug("Parse fail: Response body starts",
+                        (ret.data + "").slice(0, 100));
         throw ex;
       }
     });

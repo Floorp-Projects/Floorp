@@ -11,7 +11,7 @@
   <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 function* test(testDriver) {
-  SimpleTest.ok(screen.height > 500, "Screen height must be at least 500 pixels for this test to work");
+  ok(screen.height > 500, "Screen height must be at least 500 pixels for this test to work");
 
   // This listener will trigger the test to continue once APZ is done with
   // processing the scroll.
@@ -30,7 +30,7 @@ function* test(testDriver) {
   // scroll position (it is stored in the callback transform instead). We check
   // this by checking the scroll offset.
   yield flushApzRepaints(testDriver);
-  SimpleTest.is(window.scrollY, 0, "Main-thread scroll position is still at 0");
+  is(window.scrollY, 0, "Main-thread scroll position is still at 0");
 
   // Scroll the iframe by 300px. Note that since the main-thread scroll position
   // is still 0, the subframe's getBoundingClientRect is going to be off by
@@ -53,12 +53,12 @@ function* test(testDriver) {
     if (('contentDescription' in lastPaint[scrollId]) &&
         (lastPaint[scrollId]['contentDescription'].includes('tall_html'))) {
       var dp = getPropertyAsRect(lastPaint, scrollId, 'criticalDisplayport');
-      SimpleTest.ok(dp.y <= 0, 'The critical displayport top should be less than or equal to zero to cover the visible part of the subframe; it is ' + dp.y);
-      SimpleTest.ok(dp.y + dp.h >= subframe.clientHeight, 'The critical displayport bottom should be greater than the clientHeight; it is ' + (dp.y + dp.h));
+      ok(dp.y <= 0, 'The critical displayport top should be less than or equal to zero to cover the visible part of the subframe; it is ' + dp.y);
+      ok(dp.y + dp.h >= subframe.clientHeight, 'The critical displayport bottom should be greater than the clientHeight; it is ' + (dp.y + dp.h));
       foundIt++;
     }
   }
-  SimpleTest.is(foundIt, 1, "Found exactly one critical displayport for the subframe we were interested in.");
+  is(foundIt, 1, "Found exactly one critical displayport for the subframe we were interested in.");
 }
 
 waitUntilApzStable()

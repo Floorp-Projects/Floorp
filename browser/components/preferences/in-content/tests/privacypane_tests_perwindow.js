@@ -298,7 +298,9 @@ function cache_preferences(win) {
 function reset_preferences(win) {
   let prefs = win.Preferences.getAll();
   for (let pref of prefs)
-    pref.value = gPrefCache.get(pref.name);
+    // Avoid assigning undefined, which means clearing a "user"/test pref value
+    if (gPrefCache.has(pref.name))
+      pref.value = gPrefCache.get(pref.name);
 }
 
 function run_test_subset(subset) {

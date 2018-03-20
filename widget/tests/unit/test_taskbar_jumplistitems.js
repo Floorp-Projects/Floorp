@@ -101,11 +101,6 @@ function test_hashes()
   uri1 = uri1.mutate().setSpec("https://www.123.com/").finalize();
   link.uri = uri1;
   Assert.equal(link.uriHash, "iSx6UH1a9enVPzUA9JZ42g==");
-
-  var uri3 = Cc["@mozilla.org/network/simple-uri;1"]
-            .createInstance(Ci.nsIURI);
-  link.uri = uri3;
-  Assert.equal(link.uriHash, "hTrpDwNRMkvXPqYV5kh1Fw==");
 }
 
 function test_links()

@@ -196,6 +196,15 @@ panelview[mainview] > .panel-header {
   display: none;
 }
 
+%ifdef NIGHTLY_BUILD
+@supports -moz-bool-pref("browser.tabs.hideThrobber") {
+  .tab-throbber,
+  .tab-throbber-fallback {
+    display: none;
+  }
+}
+%endif
+
 #tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned] {
   position: fixed !important;
   display: block; /* position:fixed already does this (bug 579776), but let's be explicit */

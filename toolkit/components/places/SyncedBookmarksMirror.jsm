@@ -70,6 +70,10 @@ XPCOMUtils.defineLazyGetter(this, "MirrorLog", () =>
   Log.repository.getLogger("Sync.Engine.Bookmarks.Mirror")
 );
 
+XPCOMUtils.defineLazyGetter(this, "UserContentRootsAsSqlList", () =>
+  PlacesUtils.bookmarks.userContentRoots.map(v => `'${v}'`).join(",")
+);
+
 // These can be removed once they're exposed in a central location (bug
 // 1375896).
 const DB_URL_LENGTH_MAX = 65536;
@@ -394,9 +398,13 @@ class SyncedBookmarksMirror {
       MirrorLog.debug("Building complete merged tree");
       let merger = new BookmarkMerger(localTree, newLocalContents,
                                       remoteTree, newRemoteContents);
-      let mergedRoot = await merger.merge();
-      for (let { value, extra } of merger.telemetryEvents) {
-        this.recordTelemetryEvent("mirror", "merge", value, extra);
+      let mergedRoot;
+      try {
+        mergedRoot = await merger.merge();
+      } finally {
+        for (let { value, extra } of merger.telemetryEvents) {
+          this.recordTelemetryEvent("mirror", "merge", value, extra);
+        }
       }
 
       if (MirrorLog.level <= Log.Level.Trace) {
@@ -510,8 +518,8 @@ class SyncedBookmarksMirror {
 
     let url = validateURL(record.bmkUri);
     if (!url) {
-      MirrorLog.trace("Ignoring bookmark ${guid} with invalid URL ${url}",
-                      { guid, url: record.bmkUri });
+      MirrorLog.warn("Ignoring bookmark ${guid} with invalid URL ${url}",
+                     { guid, url: record.bmkUri });
       this.recordTelemetryEvent("mirror", "ignore", "bookmark",
                                 { why: "url" });
       return;
@@ -567,8 +575,8 @@ class SyncedBookmarksMirror {
 
     let url = validateURL(record.bmkUri);
     if (!url) {
-      MirrorLog.trace("Ignoring query ${guid} with invalid URL ${url}",
-                      { guid, url: record.bmkUri });
+      MirrorLog.warn("Ignoring query ${guid} with invalid URL ${url}",
+                     { guid, url: record.bmkUri });
       this.recordTelemetryEvent("mirror", "ignore", "query",
                                 { why: "url" });
       return;
@@ -662,8 +670,8 @@ class SyncedBookmarksMirror {
 
     let feedURL = validateURL(record.feedUri);
     if (!feedURL) {
-      MirrorLog.trace("Ignoring livemark ${guid} with invalid feed URL ${url}",
-                      { guid, url: record.feedUri });
+      MirrorLog.warn("Ignoring livemark ${guid} with invalid feed URL ${url}",
+                     { guid, url: record.feedUri });
       this.recordTelemetryEvent("mirror", "ignore", "livemark",
                                 { why: "feed" });
       return;
@@ -871,8 +879,7 @@ class SyncedBookmarksMirror {
        WITH RECURSIVE
        syncedItems(id, syncChangeCounter) AS (
          SELECT b.id, b.syncChangeCounter FROM moz_bookmarks b
-         WHERE b.guid IN ('menu________', 'toolbar_____', 'unfiled_____',
-                          'mobile______')
+         WHERE b.guid IN (${UserContentRootsAsSqlList})
          UNION ALL
          SELECT b.id, b.syncChangeCounter FROM moz_bookmarks b
          JOIN syncedItems s ON b.parent = s.id
@@ -1019,7 +1026,7 @@ class SyncedBookmarksMirror {
       WITH RECURSIVE
       syncedItems(id, level) AS (
         SELECT b.id, 0 AS level FROM moz_bookmarks b
-        WHERE b.guid IN (:menuGuid, :toolbarGuid, :unfiledGuid, :mobileGuid)
+        WHERE b.guid IN (${UserContentRootsAsSqlList})
         UNION ALL
         SELECT b.id, s.level + 1 AS level FROM moz_bookmarks b
         JOIN syncedItems s ON s.id = b.parent
@@ -1048,11 +1055,7 @@ class SyncedBookmarksMirror {
       JOIN moz_bookmarks p ON p.id = b.parent
       JOIN syncedItems s ON s.id = b.id
       ORDER BY s.level, b.parent, b.position`,
-      { menuGuid: PlacesUtils.bookmarks.menuGuid,
-        toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
-        unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
-        mobileGuid: PlacesUtils.bookmarks.mobileGuid,
-        bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      { bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         queryKind: SyncedBookmarksMirror.KIND.QUERY,
         bookmarkKind: SyncedBookmarksMirror.KIND.BOOKMARK,
         folderType: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -1545,7 +1548,7 @@ class SyncedBookmarksMirror {
       WITH RECURSIVE
       syncedItems(id, level) AS (
         SELECT b.id, 0 AS level FROM moz_bookmarks b
-        WHERE b.guid IN (:menuGuid, :toolbarGuid, :unfiledGuid, :mobileGuid)
+        WHERE b.guid IN (${UserContentRootsAsSqlList})
         UNION ALL
         SELECT b.id, s.level + 1 AS level FROM moz_bookmarks b
         JOIN syncedItems s ON s.id = b.parent
@@ -1596,11 +1599,7 @@ class SyncedBookmarksMirror {
       LEFT JOIN itemsToWeaklyReupload w ON w.id = b.id
       WHERE b.syncChangeCounter >= 1 OR
             w.id NOT NULL`,
-      { menuGuid: PlacesUtils.bookmarks.menuGuid,
-        toolbarGuid: PlacesUtils.bookmarks.toolbarGuid,
-        unfiledGuid: PlacesUtils.bookmarks.unfiledGuid,
-        mobileGuid: PlacesUtils.bookmarks.mobileGuid,
-        bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      { bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         tagsGuid: PlacesUtils.bookmarks.tagsGuid,
         descriptionAnno: PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO,
         sidebarAnno: PlacesSyncUtils.bookmarks.SIDEBAR_ANNO,
@@ -1987,8 +1986,7 @@ async function initializeMirrorDatabase(db) {
 
 /**
  * Sets up the syncable roots. All items in the mirror should descend from these
- * roots. If we ever add new syncable roots to Places, this function should also
- * be updated to create them in the mirror.
+ * roots.
  *
  * @param {Sqlite.OpenedConnection} db
  *        The mirror database connection.
@@ -2001,27 +1999,15 @@ async function createMirrorRoots(db) {
     parentGuid: PlacesUtils.bookmarks.rootGuid,
     position: -1,
     needsMerge: false,
-  }, {
-    guid: PlacesUtils.bookmarks.menuGuid,
-    parentGuid: PlacesUtils.bookmarks.rootGuid,
-    position: 0,
-    needsMerge: true,
-  }, {
-    guid: PlacesUtils.bookmarks.toolbarGuid,
-    parentGuid: PlacesUtils.bookmarks.rootGuid,
-    position: 1,
-    needsMerge: true,
-  }, {
-    guid: PlacesUtils.bookmarks.unfiledGuid,
-    parentGuid: PlacesUtils.bookmarks.rootGuid,
-    position: 2,
-    needsMerge: true,
-  }, {
-    guid: PlacesUtils.bookmarks.mobileGuid,
-    parentGuid: PlacesUtils.bookmarks.rootGuid,
-    position: 3,
-    needsMerge: true,
-  }];
+  }, ...PlacesUtils.bookmarks.userContentRoots.map((guid, position) => {
+    return {
+      guid,
+      parentGuid: PlacesUtils.bookmarks.rootGuid,
+      position,
+      needsMerge: true,
+    };
+  })];
+
   for (let { guid, parentGuid, position, needsMerge } of syncableRoots) {
     await db.executeCached(`
       INSERT INTO items(guid, kind, needsMerge)
@@ -2690,13 +2676,13 @@ async function inflateTree(tree, pseudoTree, parentGuid) {
 
 /**
  * Content info for an item in the local or remote tree. This is used to dedupe
- * NEW local items to remote items that don't exist locally. See `contentsMatch`
+ * NEW local items to remote items that don't exist locally. See `makeDupeKey`
  * for how we determine if two items are dupes.
  */
 class BookmarkContent {
   constructor(title, urlHref, smartBookmarkName, position) {
     this.title = title;
-    this.url = urlHref ? new URL(urlHref) : null;
+    this.urlHref = urlHref;
     this.smartBookmarkName = smartBookmarkName;
     this.position = position;
   }
@@ -2708,11 +2694,46 @@ class BookmarkContent {
     let position = row.getResultByName("position");
     return new BookmarkContent(title, urlHref, smartBookmarkName, position);
   }
+}
 
-  hasSameURL(otherContent) {
-    return !!this.url == !!otherContent.url &&
-           this.url.href == otherContent.url.href;
+/**
+ * Builds a lookup key for a node and its content. This is used to match nodes
+ * with different GUIDs and similar content.
+ *
+ * - Bookmarks must have the same title and URL.
+ * - Smart bookmarks must have the same smart bookmark name. Other queries
+ *   must have the same title and query URL.
+ * - Folders and livemarks must have the same title.
+ * - Separators must have the same position within their parents.
+ *
+ * @param  {BookmarkNode} node
+ *         A local or remote node.
+ * @param  {BookmarkContent} content
+ *         Content info for the node.
+ * @return {String}
+ *         A map key that represents the node and its content.
+ */
+function makeDupeKey(node, content) {
+  switch (node.kind) {
+    case SyncedBookmarksMirror.KIND.BOOKMARK:
+      // We use `JSON.stringify([...])` instead of `[...].join(",")` to avoid
+      // escaping the `,` in titles and URLs.
+      return JSON.stringify([node.kind, content.title, content.urlHref]);
+
+    case SyncedBookmarksMirror.KIND.QUERY:
+      if (content.smartBookmarkName) {
+        return JSON.stringify([node.kind, content.smartBookmarkName]);
+      }
+      return JSON.stringify([node.kind, content.title, content.urlHref]);
+
+    case SyncedBookmarksMirror.KIND.FOLDER:
+    case SyncedBookmarksMirror.KIND.LIVEMARK:
+      return JSON.stringify([node.kind, content.title]);
+
+    case SyncedBookmarksMirror.KIND.SEPARATOR:
+      return JSON.stringify([node.kind, content.position]);
   }
+  return JSON.stringify([node.guid]);
 }
 
 /**
@@ -2916,6 +2937,45 @@ class BookmarkNode {
         yield* node.descendants();
       }
     }
+  }
+
+  /**
+   * Checks if remoteNode has a kind that's compatible with this *local* node.
+   * - Nodes with the same kind are always compatible.
+   * - Local folders are compatible with remote livemarks, but not vice-versa
+   *   (ie, remote folders are *not* compatible with local livemarks)
+   * - Bookmarks and queries are always compatible.
+   *
+   * @return {Boolean}
+   */
+  hasCompatibleKind(remoteNode) {
+    if (this.kind == remoteNode.kind) {
+      return true;
+    }
+    // bookmarks and queries are interchangable as simply changing the URL
+    // can cause it to flip kinds - and webextensions are able to change the
+    // URL of any bookmark.
+    if ((this.kind == SyncedBookmarksMirror.KIND.BOOKMARK &&
+         remoteNode.kind == SyncedBookmarksMirror.KIND.QUERY) ||
+        (this.kind == SyncedBookmarksMirror.KIND.QUERY &&
+         remoteNode.kind == SyncedBookmarksMirror.KIND.BOOKMARK)) {
+      return true;
+    }
+    // A local folder can become a livemark as the remote may have synced
+    // as a folder before the annotation was added. However, we don't allow
+    // a local livemark to "downgrade" to a folder.
+    // We allow merging local folders and remote livemarks because Places
+    // stores livemarks as empty folders with feed and site URL annotations.
+    // The livemarks service first inserts the folder, and *then* sets
+    // annotations. Since this isn't wrapped in a transaction, we might sync
+    // before the annotations are set, and upload a folder record instead
+    // of a livemark record (bug 632287), then replace the folder with a
+    // livemark on the next sync.
+    if (this.kind == SyncedBookmarksMirror.KIND.FOLDER &&
+        remoteNode.kind == SyncedBookmarksMirror.KIND.LIVEMARK) {
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -3246,6 +3306,7 @@ class BookmarkMerger {
     this.newLocalContents = newLocalContents;
     this.remoteTree = remoteTree;
     this.newRemoteContents = newRemoteContents;
+    this.matchingDupesByLocalParentNode = new Map();
     this.mergedGuids = new Set();
     this.deleteLocally = new Set();
     this.deleteRemotely = new Set();
@@ -3377,6 +3438,17 @@ class BookmarkMerger {
     let mergedNode = new MergedBookmarkNode(mergedGuid, localNode, remoteNode,
                                             mergeState);
 
+    if (!localNode.hasCompatibleKind(remoteNode)) {
+      MirrorLog.error("Merging local ${localNode} and remote ${remoteNode} " +
+                      "with different kinds", { localNode, remoteNode });
+      this.telemetryEvents.push({
+        value: "kind-mismatch",
+        extra: { local: "" + localNode.kind, remote: "" + remoteNode.kind },
+      });
+      throw new SyncedBookmarksMirror.ConsistencyError(
+        "Can't merge different item kinds");
+    }
+
     if (localNode.isFolder()) {
       if (remoteNode.isFolder()) {
         // Merging two folders, so we need to walk their children to handle
@@ -3386,41 +3458,13 @@ class BookmarkMerger {
         await this.mergeChildListsIntoMergedNode(mergedNode, localNode, remoteNode);
         return mergedNode;
       }
-
-      if (remoteNode.kind == SyncedBookmarksMirror.KIND.LIVEMARK) {
-        // We allow merging local folders and remote livemarks because Places
-        // stores livemarks as empty folders with feed and site URL annotations.
-        // The livemarks service first inserts the folder, and *then* sets
-        // annotations. Since this isn't wrapped in a transaction, we might sync
-        // before the annotations are set, and upload a folder record instead
-        // of a livemark record (bug 632287), then replace the folder with a
-        // livemark on the next sync.
-        MirrorLog.trace("Merging local folder ${localNode} and remote " +
-                        "livemark ${remoteNode}", { localNode, remoteNode });
-        this.telemetryEvents.push({
-          value: "kind",
-          extra: { local: "folder", remote: "folder" },
-        });
-        return mergedNode;
-      }
-
-      MirrorLog.error("Merging local folder ${localNode} and remote " +
-                      "non-folder ${remoteNode}", { localNode, remoteNode });
-      throw new SyncedBookmarksMirror.ConsistencyError(
-        "Can't merge folder and non-folder");
+      // Otherwise it must be a livemark, so fall through.
     }
-
-    if (localNode.kind == remoteNode.kind) {
-      // Merging two non-folders, so no need to walk children.
-      MirrorLog.trace("Merging non-folders ${localNode} and ${remoteNode}",
-                      { localNode, remoteNode });
-      return mergedNode;
-    }
-
-    MirrorLog.error("Merging local ${localNode} and remote ${remoteNode} " +
-                    "with different kinds", { localNode, remoteNode });
-    throw new SyncedBookmarksMirror.ConsistencyError(
-      "Can't merge different item kinds");
+    // Otherwise are compatible kinds of non-folder, so there's no need to
+    // walk children - just return the merged node.
+    MirrorLog.trace("Merging non-folders ${localNode} and ${remoteNode}",
+                    { localNode, remoteNode });
+    return mergedNode;
   }
 
   /**
@@ -3519,7 +3563,7 @@ class BookmarkMerger {
       // Remote child doesn't exist locally, either. Try to find a content
       // match in the containing folder, and dedupe the local item if we can.
       MirrorLog.trace("Remote child ${remoteChildNode} doesn't exist " +
-                      "locally; looking for content match",
+                      "locally; looking for local content match",
                       { remoteChildNode });
 
       let localChildNodeByContent = await this.findLocalNodeMatchingRemoteNode(
@@ -3535,12 +3579,13 @@ class BookmarkMerger {
     // Otherwise, the remote child exists in the local tree. Did it move?
     let localParentNode = this.localTree.parentNodeFor(localChildNode);
     if (!localParentNode) {
-      // Should never happen. The local tree must be complete.
+      // Should never happen. If a node in the local tree doesn't have a parent,
+      // we built the tree incorrectly.
       MirrorLog.error("Remote child ${remoteChildNode} exists locally as " +
                       "${localChildNode} without local parent",
                       { remoteChildNode, localChildNode });
-      throw new SyncedBookmarksMirror.ConsistencyError(
-        "Local child node is orphan");
+      throw new TypeError(
+        "Can't merge existing remote child without local parent");
     }
 
     MirrorLog.trace("Remote child ${remoteChildNode} exists locally in " +
@@ -3658,6 +3703,25 @@ class BookmarkMerger {
     // exists in the remote tree.
     let remoteChildNode = this.remoteTree.nodeForGuid(localChildNode.guid);
     if (!remoteChildNode) {
+      // Local child doesn't exist remotely, either. Try to find a content
+      // match in the containing folder, and dedupe the local item if we can.
+      MirrorLog.trace("Local child ${localChildNode} doesn't exist " +
+                      "remotely; looking for remote content match",
+                      { localChildNode });
+
+      let remoteChildNodeByContent = await this.findRemoteNodeMatchingLocalNode(
+        mergedNode, localChildNode);
+
+      if (remoteChildNodeByContent) {
+        // The local child has a remote content match, so take the remote GUID
+        // and merge.
+        let mergedChildNode = await this.mergeNode(
+          remoteChildNodeByContent.guid, localChildNode,
+          remoteChildNodeByContent);
+        mergedNode.mergedChildren.push(mergedChildNode);
+        return false;
+      }
+
       // The local child doesn't exist remotely, but we still need to walk
       // its children.
       let mergedChildNode = await this.mergeNode(localChildNode.guid, localChildNode,
@@ -3670,12 +3734,13 @@ class BookmarkMerger {
     // would have seen it when we walked the remote children.
     let remoteParentNode = this.remoteTree.parentNodeFor(remoteChildNode);
     if (!remoteParentNode) {
-      // Should never happen. The remote tree must be complete.
+      // Should never happen. If a node in the remote tree doesn't have a
+      // parent, we built the tree incorrectly.
       MirrorLog.error("Local child ${localChildNode} exists remotely as " +
                       "${remoteChildNode} without remote parent",
                       { localChildNode, remoteChildNode });
-      throw new SyncedBookmarksMirror.ConsistencyError(
-        "Remote child node is orphan");
+      throw new TypeError(
+        "Can't merge existing local child without remote parent");
     }
 
     MirrorLog.trace("Local child ${localChildNode} exists locally in " +
@@ -3900,9 +3965,10 @@ class BookmarkMerger {
       }
       let localParentNode = this.localTree.parentNodeFor(localNode);
       if (!localParentNode) {
-        // Should never happen. The local tree must be complete.
-        throw new SyncedBookmarksMirror.ConsistencyError(
-          "Can't check for structure changes of local orphan");
+        // Should never happen. If a node in the local tree doesn't have a
+        // parent, we built the tree incorrectly.
+        throw new TypeError(
+          "Can't check for structure changes without local parent");
       }
       if (localParentNode.guid != remoteParentNode.guid) {
         return BookmarkMerger.STRUCTURE.MOVED;
@@ -3977,9 +4043,10 @@ class BookmarkMerger {
       }
       let remoteParentNode = this.remoteTree.parentNodeFor(remoteNode);
       if (!remoteParentNode) {
-        // Should never happen. The remote tree must be complete.
-        throw new SyncedBookmarksMirror.ConsistencyError(
-          "Can't check for structure changes of remote orphan");
+        // Should never happen. If a node in the remote tree doesn't have a
+        // parent, we built the tree incorrectly.
+        throw new TypeError(
+          "Can't check for structure changes without remote parent");
       }
       if (remoteParentNode.guid != localParentNode.guid) {
         return BookmarkMerger.STRUCTURE.MOVED;
@@ -4110,66 +4177,194 @@ class BookmarkMerger {
   }
 
   /**
+   * Finds all children of a local folder with similar content as children of
+   * the corresponding remote folder. This is used to dedupe local items that
+   * haven't been uploaded yet, to remote items that don't exist locally.
+   *
+   * Recall that we match items by GUID as we walk down the tree. If a GUID on
+   * one side doesn't exist on the other, we fall back to a content match in
+   * the same folder.
+   *
+   * This method is called the first time that `findRemoteNodeMatchingLocalNode`
+   * merges a local child that doesn't exist remotely, and the first time that
+   * `findLocalNodeMatchingRemoteNode` merges a remote child that doesn't exist
+   * locally.
+   *
+   * Finding all possible dupes is O(m + n) in the worst case, where `m` is the
+   * number of local children, and `n` is the number of remote children. We
+   * cache matches in `matchingDupesByLocalParentNode`, so deduping all
+   * remaining children of the same folder, on both sides, only needs two O(1)
+   * map lookups per child.
+   *
+   * @param   {BookmarkNode} localParentNode
+   *          The local folder containing children to dedupe.
+   * @param   {BookmarkNode} remoteParentNode
+   *          The corresponding remote folder.
+   * @returns {Map.<BookmarkNode, BookmarkNode>}
+   *          A bidirectional map of local children to remote children, and
+   *          remote children to local children.
+   *          `findRemoteNodeMatchingLocalNode` looks up matching remote
+   *          children by local node. `findLocalNodeMatchingRemoteNode` looks up
+   *          local children by remote node.
+   */
+  async findAllMatchingDupesInFolders(localParentNode, remoteParentNode) {
+    let matches = new Map();
+    let dupeKeyToLocalNodes = new Map();
+
+    for await (let localChildNode of yieldingIterator(localParentNode.children)) {
+      let localChildContent = this.newLocalContents.get(localChildNode.guid);
+      if (!localChildContent) {
+        MirrorLog.trace("Not deduping local child ${localChildNode}; already " +
+                        "uploaded", { localChildNode });
+        continue;
+      }
+      let remoteChildNodeByGuid = this.remoteTree.nodeForGuid(
+        localChildNode.guid);
+      if (remoteChildNodeByGuid) {
+        MirrorLog.trace("Not deduping local child ${localChildNode}; already " +
+                        "exists remotely as ${remoteChildNodeByGuid}",
+                        { localChildNode, remoteChildNodeByGuid });
+        continue;
+      }
+      if (this.remoteTree.isDeleted(localChildNode.guid)) {
+        MirrorLog.trace("Not deduping local child ${localChildNode}; deleted " +
+                        "remotely", { localChildNode });
+        continue;
+      }
+      let dupeKey = makeDupeKey(localChildNode, localChildContent);
+      let localNodesForKey = dupeKeyToLocalNodes.get(dupeKey);
+      if (localNodesForKey) {
+        // Store matching local children in an array, in case multiple children
+        // have the same dupe key (for example, a toolbar containing multiple
+        // empty folders, as in bug 1213369).
+        localNodesForKey.push(localChildNode);
+      } else {
+        dupeKeyToLocalNodes.set(dupeKey, [localChildNode]);
+      }
+    }
+
+    for await (let remoteChildNode of yieldingIterator(remoteParentNode.children)) {
+      if (matches.has(remoteChildNode)) {
+        MirrorLog.trace("Not deduping remote child ${remoteChildNode}; " +
+                        "already deduped", { remoteChildNode });
+        continue;
+      }
+      let remoteChildContent = this.newRemoteContents.get(
+        remoteChildNode.guid);
+      if (!remoteChildContent) {
+        MirrorLog.trace("Not deduping remote child ${remoteChildNode}; " +
+                        "already merged", { remoteChildNode });
+        continue;
+      }
+      let dupeKey = makeDupeKey(remoteChildNode, remoteChildContent);
+      let localNodesForKey = dupeKeyToLocalNodes.get(dupeKey);
+      if (!localNodesForKey) {
+        MirrorLog.trace("Not deduping remote child ${remoteChildNode}; no " +
+                        "local content matches", { remoteChildNode });
+        continue;
+      }
+      let localChildNode = localNodesForKey.shift();
+      if (!localChildNode) {
+        MirrorLog.trace("Not deduping remote child ${remoteChildNode}; no " +
+                        "remaining local content matches", { remoteChildNode });
+        continue;
+      }
+      MirrorLog.trace("Deduping local child ${localChildNode} to remote " +
+                      "child ${remoteChildNode}", { localChildNode,
+                                                    remoteChildNode });
+      matches.set(localChildNode, remoteChildNode);
+      matches.set(remoteChildNode, localChildNode);
+    }
+    return matches;
+  }
+
+  /**
+   * Finds a remote node with a different GUID that matches the content of a
+   * local node. This is the inverse of `findLocalNodeMatchingRemoteNode`.
+   *
+   * @param  {MergedBookmarkNode} mergedNode
+   *         The merged folder node.
+   * @param  {BookmarkNode} localChildNode
+   *         The NEW local child node.
+   * @return {BookmarkNode?}
+   *         A matching unmerged remote child node, or `null` if there are no
+   *         matching remote items.
+   */
+  async findRemoteNodeMatchingLocalNode(mergedNode, localChildNode) {
+    let remoteParentNode = mergedNode.remoteNode;
+    if (!remoteParentNode) {
+      MirrorLog.trace("Merged node ${mergedNode} doesn't exist remotely; no " +
+                      "potential dupes for local child ${localChildNode}",
+                      { mergedNode, localChildNode });
+      return null;
+    }
+    let localParentNode = mergedNode.localNode;
+    if (!localParentNode) {
+      // Should never happen. Trying to find a remote content match for a
+      // child of a folder that doesn't exist locally is a coding error.
+      throw new TypeError(
+        "Can't find remote content match without local parent");
+    }
+    let matches = this.matchingDupesByLocalParentNode.get(localParentNode);
+    if (!matches) {
+      MirrorLog.trace("First local child ${localChildNode} doesn't exist " +
+                      "remotely; finding all matching dupes in local " +
+                      "${localParentNode} and remote ${remoteParentNode}",
+                      { localChildNode, localParentNode, remoteParentNode });
+      matches = await this.findAllMatchingDupesInFolders(localParentNode,
+                                                         remoteParentNode);
+      this.matchingDupesByLocalParentNode.set(localParentNode, matches);
+    }
+    let newRemoteNode = matches.get(localChildNode);
+    if (!newRemoteNode) {
+      return null;
+    }
+    this.telemetryEvents.push({ value: "dupe" });
+    return newRemoteNode;
+  }
+
+  /**
    * Finds a local node with a different GUID that matches the content of a
-   * remote node. This is used to dedupe local items that haven't been uploaded
-   * to remote items that don't exist locally.
+   * remote node. This is the inverse of `findRemoteNodeMatchingLocalNode`.
    *
    * @param  {MergedBookmarkNode} mergedNode
    *         The merged folder node.
    * @param  {BookmarkNode} remoteChildNode
-   *         The remote child node.
+   *         The unmerged remote child node.
    * @return {BookmarkNode?}
-   *         A matching local child node, or `null` if there are no matching
+   *         A matching NEW local child node, or `null` if there are no matching
    *         local items.
    */
   async findLocalNodeMatchingRemoteNode(mergedNode, remoteChildNode) {
     let localParentNode = mergedNode.localNode;
     if (!localParentNode) {
       MirrorLog.trace("Merged node ${mergedNode} doesn't exist locally; no " +
-                      "potential dupes for ${remoteChildNode}",
+                      "potential dupes for remote child ${remoteChildNode}",
                       { mergedNode, remoteChildNode });
       return null;
     }
-    let remoteChildContent = this.newRemoteContents.get(remoteChildNode.guid);
-    if (!remoteChildContent) {
-      // The node doesn't exist locally, but it's also flagged as merged in the
-      // mirror.
+    let remoteParentNode = mergedNode.remoteNode;
+    if (!remoteParentNode) {
+      // Should never happen. Trying to find a local content match for a
+      // child of a folder that doesn't exist remotely is a coding error.
+      throw new TypeError(
+        "Can't find local content match without remote parent");
+    }
+    let matches = this.matchingDupesByLocalParentNode.get(localParentNode);
+    if (!matches) {
+      MirrorLog.trace("First remote child ${remoteChildNode} doesn't exist " +
+                      "locally; finding all matching dupes in local " +
+                      "${localParentNode} and remote ${remoteParentNode}",
+                      { remoteChildNode, localParentNode, remoteParentNode });
+      matches = await this.findAllMatchingDupesInFolders(localParentNode,
+                                                         remoteParentNode);
+      this.matchingDupesByLocalParentNode.set(localParentNode, matches);
+    }
+    let newLocalNode = matches.get(remoteChildNode);
+    if (!newLocalNode) {
       return null;
     }
-    let newLocalNode = null;
-    for await (let localChildNode of yieldingIterator(localParentNode.children)) {
-      if (this.mergedGuids.has(localChildNode.guid)) {
-        MirrorLog.trace("Not deduping ${localChildNode}; already seen in " +
-                        "another folder", { localChildNode });
-        continue;
-      }
-      if (!this.newLocalContents.has(localChildNode.guid)) {
-        MirrorLog.trace("Not deduping ${localChildNode}; already uploaded",
-                        { localChildNode });
-        continue;
-      }
-      let remoteCandidate = this.remoteTree.nodeForGuid(localChildNode.guid);
-      if (remoteCandidate) {
-        MirrorLog.trace("Not deduping ${localChildNode}; already exists " +
-                        "remotely", { localChildNode });
-        continue;
-      }
-      if (this.remoteTree.isDeleted(localChildNode.guid)) {
-        MirrorLog.trace("Not deduping ${localChildNode}; deleted on server",
-                        { localChildNode });
-        continue;
-      }
-      let localChildContent = this.newLocalContents.get(localChildNode.guid);
-      if (!contentsMatch(localChildNode, localChildContent, remoteChildNode,
-                         remoteChildContent)) {
-        MirrorLog.trace("${localChildNode} is not a dupe of ${remoteChildNode}",
-                        { localChildNode, remoteChildNode });
-        continue;
-      }
-      this.telemetryEvents.push({ value: "dupe" });
-      newLocalNode = localChildNode;
-      break;
-    }
+    this.telemetryEvents.push({ value: "dupe" });
     return newLocalNode;
   }
 
@@ -4202,49 +4397,6 @@ BookmarkMerger.STRUCTURE = {
   MOVED: 2,
   DELETED: 3,
 };
-
-/**
- * Determines if two new local and remote nodes are of the same kind, and have
- * similar contents.
- *
- * - Bookmarks must have the same title and URL.
- * - Smart bookmarks must have the same smart bookmark name. Other queries
- *   must have the same title and query URL.
- * - Folders and livemarks must have the same title.
- * - Separators must have the same position within their parents.
- *
- * @param  {BookmarkNode} localNode
- * @param  {BookmarkContent} localContent
- * @param  {BookmarkNode} remoteNode
- * @param  {BookmarkContent} remoteContent
- * @return {Boolean}
- */
-function contentsMatch(localNode, localContent, remoteNode, remoteContent) {
-  if (localNode.kind != remoteNode.kind) {
-    return false;
-  }
-  switch (localNode.kind) {
-    case SyncedBookmarksMirror.KIND.BOOKMARK:
-      return localContent.title == remoteContent.title &&
-             localContent.hasSameURL(remoteContent);
-
-    case SyncedBookmarksMirror.KIND.QUERY:
-      if (localContent.smartBookmarkName || remoteContent.smartBookmarkName) {
-        return localContent.smartBookmarkName ==
-               remoteContent.smartBookmarkName;
-      }
-      return localContent.title == remoteContent.title &&
-             localContent.hasSameURL(remoteContent);
-
-    case SyncedBookmarksMirror.KIND.FOLDER:
-    case SyncedBookmarksMirror.KIND.LIVEMARK:
-      return localContent.title == remoteContent.title;
-
-    case SyncedBookmarksMirror.KIND.SEPARATOR:
-      return localContent.position == remoteContent.position;
-  }
-  return false;
-}
 
 /**
  * Records bookmark, annotation, and keyword observer notifications for all

@@ -26,17 +26,60 @@ findCodecId: function(sdp, format, offset = 0) {
 // consider m-sections, so a more generic version would need to
 // look at each m-section separately.
 findExtmapIds: function(sdp) {
-        var sdpExtmapIds = [];
-        extmapRegEx = /^a=extmap:([0-9+])/gm;
-        // must call exec on the regex to get each match in the string
-        while ((searchResults = extmapRegEx.exec(sdp))
-               !== null) {
-          // returned array has the matched text as the first item,
-          // and then one item for each capturing parenthesis that
-          // matched containing the text that was captured.
-          sdpExtmapIds.push(searchResults[1]);
-        }
+  var sdpExtmapIds = [];
+  extmapRegEx = /^a=extmap:([0-9+])/gm;
+  // must call exec on the regex to get each match in the string
+  while ((searchResults = extmapRegEx.exec(sdp))
+         !== null) {
+    // returned array has the matched text as the first item,
+    // and then one item for each capturing parenthesis that
+    // matched containing the text that was captured.
+    sdpExtmapIds.push(searchResults[1]);
+  }
   return sdpExtmapIds;
+},
+
+findExtmapIdsUrnsDirections: function(sdp) {
+  var sdpExtmap = [];
+  extmapRegEx = /^a=extmap:([0-9+])([A-Za-z/]*) ([A-Za-z0-9_:\-\/\.]+)/gm;
+  // must call exec on the regex to get each match in the string
+  while ((searchResults = extmapRegEx.exec(sdp))
+         !== null) {
+    // returned array has the matched text as the first item,
+    // and then one item for each capturing parenthesis that
+    // matched containing the text that was captured.
+    var idUrn = [];
+    idUrn.push(searchResults[1]);
+    idUrn.push(searchResults[3]);
+    idUrn.push(searchResults[2].slice(1));
+    sdpExtmap.push(idUrn);
+  }
+  return sdpExtmap;
+},
+
+verify_unique_extmap_ids: function(sdp) {
+  const sdpExtmapIds = sdputils.findExtmapIdsUrnsDirections(sdp);
+
+  return sdpExtmapIds.reduce(function(result, item, index) {
+    const [id, urn, dir] = item;
+    ok((!(id in result)) ||
+      ((result[id][0] === urn) && (result[id][1] === dir)),
+        "ID " + id + " is unique ID for " + urn + " and direction " + dir);
+    result[id] = [urn, dir];
+    return result;
+  }, {});
+},
+
+getMSections: function(sdp) {
+  return sdp.split(new RegExp('^m=', 'gm')).slice(1);
+},
+
+getAudioMSections: function(sdp) {
+  return this.getMSections(sdp).filter(section => section.startsWith('audio'))
+},
+
+getVideoMSections: function(sdp) {
+  return this.getMSections(sdp).filter(section => section.startsWith('video'))
 },
 
 checkSdpAfterEndOfTrickle: function(sdp, testOptions, label) {
