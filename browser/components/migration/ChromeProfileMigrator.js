@@ -273,22 +273,20 @@ async function GetHistoryResource(aProfileFolder) {
 
         let rows =
           await MigrationUtils.getRowsFromDBWithoutLocks(historyPath, "Chrome history", query);
-        let places = [];
+        let pageInfos = [];
         for (let row of rows) {
           try {
             // if having typed_count, we changes transition type to typed.
-            let transType = PlacesUtils.history.TRANSITION_LINK;
+            let transition = PlacesUtils.history.TRANSITIONS.LINK;
             if (row.getResultByName("typed_count") > 0)
-              transType = PlacesUtils.history.TRANSITION_TYPED;
+              transition = PlacesUtils.history.TRANSITIONS.TYPED;
 
-            places.push({
-              uri: NetUtil.newURI(row.getResultByName("url")),
+            pageInfos.push({
               title: row.getResultByName("title"),
+              url: new URL(row.getResultByName("url")),
               visits: [{
-                transitionType: transType,
-                visitDate: chromeTimeToDate(
-                             row.getResultByName(
-                               "last_visit_time")) * 1000,
+                transition,
+                date: chromeTimeToDate(row.getResultByName("last_visit_time")),
               }],
             });
           } catch (e) {
@@ -296,20 +294,8 @@ async function GetHistoryResource(aProfileFolder) {
           }
         }
 
-        if (places.length > 0) {
-          await new Promise((resolve, reject) => {
-            MigrationUtils.insertVisitsWrapper(places, {
-              ignoreErrors: true,
-              ignoreResults: true,
-              handleCompletion(updatedCount) {
-                if (updatedCount > 0) {
-                  resolve();
-                } else {
-                  reject(new Error("Couldn't add visits"));
-                }
-              },
-            });
-          });
+        if (pageInfos.length > 0) {
+          await MigrationUtils.insertVisitsWrapper(pageInfos);
         }
       })().then(() => { aCallback(true); },
               ex => {
