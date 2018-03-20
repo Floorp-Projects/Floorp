@@ -2053,8 +2053,7 @@ nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(LayerManager* aM
                                                                 nsPresContext& aPresCtx,
                                                                 nsIFrame *aFrame,
                                                                 const nsStyleBackground* aBackgroundStyle,
-                                                                int32_t aLayer,
-                                                                uint32_t aPaintFlags)
+                                                                int32_t aLayer)
 {
   if (!aBackgroundStyle) {
     return false;
@@ -2087,14 +2086,9 @@ nsCSSRendering::CanBuildWebRenderDisplayItemsForStyleImageLayer(LayerManager* aM
       return false;
     }
 
-    uint32_t imageFlags = imgIContainer::FLAG_NONE;
-    if (aPaintFlags & nsCSSRendering::PAINTBG_SYNC_DECODE_IMAGES) {
-      imageFlags |= imgIContainer::FLAG_SYNC_DECODE;
-    }
-
     nsCOMPtr<imgIContainer> srcImage;
     requestProxy->GetImage(getter_AddRefs(srcImage));
-    if (!srcImage || !srcImage->IsImageContainerAvailable(aManager, imageFlags)) {
+    if (!srcImage || !srcImage->IsImageContainerAvailable(aManager, imgIContainer::FLAG_NONE)) {
       return false;
     }
 

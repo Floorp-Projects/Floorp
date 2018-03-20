@@ -2074,6 +2074,34 @@ ContainerLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParen
 }
 
 void
+DisplayItemLayer::EndTransaction() {
+  mItem = nullptr;
+  mBuilder = nullptr;
+}
+
+void
+DisplayItemLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
+{
+  Layer::PrintInfo(aStream, aPrefix);
+  const char* type = "TYPE_UNKNOWN";
+  if (mItem) {
+    type = mItem->Name();
+  }
+
+  aStream << " [itype type=" << type << "]";
+}
+
+void
+DisplayItemLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
+{
+  Layer::DumpPacket(aPacket, aParent);
+  // Get this layer data
+  using namespace layerscope;
+  LayersPacket::Layer* layer = aPacket->mutable_layer(aPacket->layer_size()-1);
+  layer->set_type(LayersPacket::Layer::DisplayItemLayer);
+}
+
+void
 ColorLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   Layer::PrintInfo(aStream, aPrefix);
@@ -2342,6 +2370,22 @@ LayerManager::DumpPacket(layerscope::LayersPacket* aPacket)
   layer->set_ptr(reinterpret_cast<uint64_t>(this));
   // Layer Tree Root
   layer->set_parentptr(0);
+}
+
+void
+LayerManager::TrackDisplayItemLayer(RefPtr<DisplayItemLayer> aLayer)
+{
+  mDisplayItemLayers.AppendElement(aLayer);
+}
+
+void
+LayerManager::ClearDisplayItemLayers()
+{
+  for (uint32_t i = 0; i < mDisplayItemLayers.Length(); i++) {
+    mDisplayItemLayers[i]->EndTransaction();
+  }
+
+  mDisplayItemLayers.Clear();
 }
 
 /*static*/ bool

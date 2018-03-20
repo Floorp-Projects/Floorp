@@ -40,6 +40,12 @@ public:
       CalculateColumnRuleBounds(ToReferenceFrame());
   }
 
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters) override;
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerLayerParameters& aContainerParameters) override;
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue& aResources,
                                        const StackingContextHelper& aSc,
@@ -64,6 +70,34 @@ nsDisplayColumnRule::Paint(nsDisplayListBuilder* aBuilder,
   for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
     iter->DrawBorders();
   }
+}
+LayerState
+nsDisplayColumnRule::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters)
+{
+  if (!gfxPrefs::LayersAllowColumnRuleLayers()) {
+    return LAYER_NONE;
+  }
+  RefPtr<gfxContext> screenRefCtx = gfxContext::CreateOrNull(
+    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget().get());
+
+  static_cast<nsColumnSetFrame*>(mFrame)->
+    CreateBorderRenderers(mBorderRenderers, screenRefCtx, mVisibleRect, ToReferenceFrame());
+
+  if (mBorderRenderers.IsEmpty()) {
+    return LAYER_NONE;
+  }
+
+  return LAYER_ACTIVE;
+}
+
+already_AddRefed<nsDisplayItem::Layer>
+nsDisplayColumnRule::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                LayerManager* aManager,
+                                const ContainerLayerParameters& aContainerParameters)
+{
+  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
 }
 
 bool
