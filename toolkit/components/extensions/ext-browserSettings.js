@@ -105,16 +105,6 @@ ExtensionPreferencesManager.addSetting("cacheEnabled", {
   },
 });
 
-ExtensionPreferencesManager.addSetting("closeTabsByDoubleClick", {
-  prefNames: [
-    "browser.tabs.closeTabByDblclick",
-  ],
-
-  setCallback(value) {
-    return {[this.prefNames[0]]: value};
-  },
-});
-
 ExtensionPreferencesManager.addSetting("contextMenuShowEvent", {
   prefNames: [
     "ui.context_menus.after_mouseup",
@@ -231,11 +221,6 @@ this.browserSettings = class extends ExtensionAPI {
             return Services.prefs.getBoolPref("browser.cache.disk.enable") &&
               Services.prefs.getBoolPref("browser.cache.memory.enable");
           }),
-        closeTabsByDoubleClick: getSettingsAPI(
-          extension, "closeTabsByDoubleClick",
-          () => {
-            return Services.prefs.getBoolPref("browser.tabs.closeTabByDblclick");
-          }, undefined, false, ["android"]),
         contextMenuShowEvent: Object.assign(
           getSettingsAPI(
             extension, "contextMenuShowEvent",
