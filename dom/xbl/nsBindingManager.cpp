@@ -245,14 +245,6 @@ nsBindingManager::ResolveTag(nsIContent* aContent, int32_t* aNameSpaceID)
   return aContent->NodeInfo()->NameAtom();
 }
 
-nsresult
-nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent,
-                                       nsIDOMNodeList** aResult)
-{
-  NS_IF_ADDREF(*aResult = GetAnonymousNodesFor(aContent));
-  return NS_OK;
-}
-
 nsINodeList*
 nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent)
 {
