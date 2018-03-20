@@ -19,6 +19,7 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
+#include "mozilla/dom/WheelEventBinding.h"
 
 #include "nsArrayUtils.h"
 #include "nsExceptionHandler.h"
@@ -95,7 +96,6 @@
 
 #include "GeckoProfiler.h"
 
-#include "nsIDOMWheelEvent.h"
 #include "mozilla/layers/ChromeProcessController.h"
 #include "nsLayoutUtils.h"
 #include "InputData.h"
@@ -5220,8 +5220,8 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
     Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
 
   outWheelEvent->mDeltaMode =
-    usePreciseDeltas ? nsIDOMWheelEvent::DOM_DELTA_PIXEL
-                     : nsIDOMWheelEvent::DOM_DELTA_LINE;
+    usePreciseDeltas ? dom::WheelEventBinding::DOM_DELTA_PIXEL
+                     : dom::WheelEventBinding::DOM_DELTA_LINE;
   outWheelEvent->mIsMomentum = nsCocoaUtils::IsMomentumScrollEvent(aMouseEvent);
 }
 

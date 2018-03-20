@@ -14,6 +14,7 @@
 #include "mozilla/TextEvents.h"             // for WidgetKeyboardEvent
 #include "mozilla/TouchEvents.h"            // for WidgetTouchEvent
 #include "mozilla/WheelHandlingHelper.h"    // for AutoWheelDeltaAdjuster
+#include "mozilla/dom/WheelEventBinding.h"  // for WheelEvent constants
 
 namespace mozilla {
 namespace layers {
@@ -32,9 +33,9 @@ WillHandleMouseEvent(const WidgetMouseEventBase& aEvent)
 APZInputBridge::WillHandleWheelEvent(WidgetWheelEvent* aEvent)
 {
   return EventStateManager::WheelEventIsScrollAction(aEvent) &&
-         (aEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE ||
-          aEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL ||
-          aEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE);
+         (aEvent->mDeltaMode == dom::WheelEventBinding::DOM_DELTA_LINE ||
+          aEvent->mDeltaMode == dom::WheelEventBinding::DOM_DELTA_PIXEL ||
+          aEvent->mDeltaMode == dom::WheelEventBinding::DOM_DELTA_PAGE);
 }
 
 nsEventStatus
@@ -107,9 +108,9 @@ APZInputBridge::ReceiveInputEvent(
 
         ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
         if (gfxPrefs::SmoothScrollEnabled() &&
-            ((wheelEvent.mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE &&
+            ((wheelEvent.mDeltaMode == dom::WheelEventBinding::DOM_DELTA_LINE &&
               gfxPrefs::WheelSmoothScrollEnabled()) ||
-             (wheelEvent.mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PAGE &&
+             (wheelEvent.mDeltaMode == dom::WheelEventBinding::DOM_DELTA_PAGE &&
               gfxPrefs::PageSmoothScrollEnabled())))
         {
           scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
