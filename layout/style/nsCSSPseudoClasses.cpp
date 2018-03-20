@@ -122,10 +122,12 @@ nsCSSPseudoClasses::PseudoTypeToString(Type aType, nsAString& aString)
 /* static */ CSSPseudoClassType
 nsCSSPseudoClasses::GetPseudoType(nsAtom* aAtom, EnabledState aEnabledState)
 {
-  for (uint32_t i = 0; i < ArrayLength(sCSSPseudoClassAtomSetup); ++i) {
-    if (*sCSSPseudoClassAtomSetup[i].mAtomp == aAtom) {
-      Type type = Type(i);
-      return IsEnabled(type, aEnabledState) ? type : Type::NotPseudo;
+  Maybe<uint32_t> index =
+    nsStaticAtomUtils::Lookup(aAtom, sCSSPseudoClassAtomSetup);
+  if (index.isSome()) {
+    Type type = Type(*index);
+    if (IsEnabled(type, aEnabledState)) {
+      return type;
     }
   }
   return Type::NotPseudo;
