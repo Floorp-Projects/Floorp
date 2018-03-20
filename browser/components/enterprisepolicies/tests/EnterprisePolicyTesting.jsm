@@ -35,7 +35,6 @@ var EnterprisePolicyTesting = {
     let promise = new Promise(resolve => {
       Services.obs.addObserver(function observer() {
         Services.obs.removeObserver(observer, "EnterprisePolicies:AllPoliciesApplied");
-        dump(`bytesized: setupPolicyEngineWithJson resolving`);
         resolve();
       }, "EnterprisePolicies:AllPoliciesApplied");
     });
