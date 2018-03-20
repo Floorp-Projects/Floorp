@@ -52,8 +52,8 @@ if (isWorker) {
     Services.prefs.getBoolPref(VERBOSE_PREF);
 }
 
-const CONTENT_PROCESS_DBG_SERVER_SCRIPT =
-  "resource://devtools/server/content-process-debugger-server.js";
+const CONTENT_PROCESS_SERVER_STARTUP_SCRIPT =
+  "resource://devtools/server/startup/content-process.js";
 
 function loadSubScript(url) {
   try {
@@ -127,14 +127,14 @@ function ModuleAPI() {
   };
 }
 
-/** *
+/**
  * Public API
  */
 var DebuggerServer = {
   _listeners: [],
   _initialized: false,
-  // Flag to check if the content process debugger server script was already loaded.
-  _contentProcessScriptLoaded: false,
+  // Flag to check if the content process server startup script was already loaded.
+  _contentProcessServerStartupScriptLoaded: false,
   // Map of global actor names to actor constructors provided by extensions.
   globalActorFactories: {},
   // Map of tab actor names to actor constructors provided by extensions.
@@ -699,7 +699,11 @@ var DebuggerServer = {
     return this._onConnection(transport, prefix, true);
   },
 
-  connectToContent(connection, mm, onDestroy) {
+  /**
+   * Start a DevTools server in a content process (representing the entire process, not
+   * just a single frame) and add it as a child server for an active connection.
+   */
+  connectToContentProcess(connection, mm, onDestroy) {
     return new Promise(resolve => {
       let prefix = connection.allocID("content-process");
       let actor, childTransport;
@@ -719,21 +723,21 @@ var DebuggerServer = {
 
         connection.setForwarding(prefix, childTransport);
 
-        dumpn("establishing forwarding for process with prefix " + prefix);
+        dumpn(`Start forwarding for process with prefix ${prefix}`);
 
         actor = msg.json.actor;
 
         resolve(actor);
       });
 
-      // Load the content process debugger server script only once.
-      if (!this._contentProcessScriptLoaded) {
+      // Load the content process server startup script only once.
+      if (!this._contentProcessServerStartupScriptLoaded) {
         // Load the process script that will receive the debug:init-content-server message
-        Services.ppmm.loadProcessScript(CONTENT_PROCESS_DBG_SERVER_SCRIPT, true);
-        this._contentProcessScriptLoaded = true;
+        Services.ppmm.loadProcessScript(CONTENT_PROCESS_SERVER_STARTUP_SCRIPT, true);
+        this._contentProcessServerStartupScriptLoaded = true;
       }
 
-      // Send a message to the content process debugger server script to forward it the
+      // Send a message to the content process server startup script to forward it the
       // prefix.
       mm.sendAsyncMessage("debug:init-content-server", {
         prefix: prefix
@@ -1346,12 +1350,12 @@ var DebuggerServer = {
   },
 
   /**
-   * Called when DevTools are unloaded to remove the contend process server script for the
-   * list of scripts loaded for each new content process. Will also remove message
+   * Called when DevTools are unloaded to remove the contend process server startup script
+   * for the list of scripts loaded for each new content process. Will also remove message
    * listeners from already loaded scripts.
    */
   removeContentServerScript() {
-    Services.ppmm.removeDelayedProcessScript(CONTENT_PROCESS_DBG_SERVER_SCRIPT);
+    Services.ppmm.removeDelayedProcessScript(CONTENT_PROCESS_SERVER_STARTUP_SCRIPT);
     try {
       Services.ppmm.broadcastAsyncMessage("debug:close-content-server");
     } catch (e) {
