@@ -414,26 +414,10 @@ MouseEvent::AltKey()
   return mEvent->AsInputEvent()->IsAlt();
 }
 
-NS_IMETHODIMP
-MouseEvent::GetAltKey(bool* aIsDown)
-{
-  NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = AltKey();
-  return NS_OK;
-}
-
 bool
 MouseEvent::CtrlKey()
 {
   return mEvent->AsInputEvent()->IsControl();
-}
-
-NS_IMETHODIMP
-MouseEvent::GetCtrlKey(bool* aIsDown)
-{
-  NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = CtrlKey();
-  return NS_OK;
 }
 
 bool
@@ -442,26 +426,10 @@ MouseEvent::ShiftKey()
   return mEvent->AsInputEvent()->IsShift();
 }
 
-NS_IMETHODIMP
-MouseEvent::GetShiftKey(bool* aIsDown)
-{
-  NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = ShiftKey();
-  return NS_OK;
-}
-
 bool
 MouseEvent::MetaKey()
 {
   return mEvent->AsInputEvent()->IsMeta();
-}
-
-NS_IMETHODIMP
-MouseEvent::GetMetaKey(bool* aIsDown)
-{
-  NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = MetaKey();
-  return NS_OK;
 }
 
 NS_IMETHODIMP

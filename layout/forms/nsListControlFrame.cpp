@@ -846,15 +846,14 @@ bool
 nsListControlFrame::HandleListSelection(nsIDOMEvent* aEvent,
                                         int32_t aClickedIndex)
 {
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
-  bool isShift;
+  MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
   bool isControl;
 #ifdef XP_MACOSX
-  mouseEvent->GetMetaKey(&isControl);
+  isControl = mouseEvent->MetaKey();
 #else
-  mouseEvent->GetCtrlKey(&isControl);
+  isControl = mouseEvent->CtrlKey();
 #endif
-  mouseEvent->GetShiftKey(&isShift);
+  bool isShift = mouseEvent->ShiftKey();
   return PerformSelection(aClickedIndex, isShift, isControl); // might destroy us
 }
 
@@ -1931,13 +1930,13 @@ nsListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
       if (selectedIndex == mEndSelectionIndex) {
         return NS_OK;
       }
-      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
-      NS_ASSERTION(mouseEvent, "aMouseEvent is not an nsIDOMMouseEvent!");
+      MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
+      NS_ASSERTION(mouseEvent, "aMouseEvent is not a MouseEvent!");
       bool isControl;
 #ifdef XP_MACOSX
-      mouseEvent->GetMetaKey(&isControl);
+      isControl = mouseEvent->MetaKey();
 #else
-      mouseEvent->GetCtrlKey(&isControl);
+      isControl = mouseEvent->CtrlKey();
 #endif
       AutoWeakFrame weakFrame(this);
       // Turn SHIFT on when you are dragging, unless control is on.
