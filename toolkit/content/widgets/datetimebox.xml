@@ -16,6 +16,7 @@
    xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="date-input"
+           simpleScopeChain="true"
            extends="chrome://global/content/bindings/datetimebox.xml#datetime-input-base">
     <resources>
       <stylesheet src="chrome://global/content/textbox.css"/>
@@ -428,6 +429,7 @@
   </binding>
 
   <binding id="time-input"
+           simpleScopeChain="true"
            extends="chrome://global/content/bindings/datetimebox.xml#datetime-input-base">
     <resources>
       <stylesheet src="chrome://global/content/textbox.css"/>
@@ -1192,7 +1194,8 @@
     </implementation>
   </binding>
 
-  <binding id="datetime-input-base">
+  <binding id="datetime-input-base"
+           simpleScopeChain="true">
     <resources>
       <stylesheet src="chrome://global/content/textbox.css"/>
       <stylesheet src="chrome://global/skin/textbox.css"/>

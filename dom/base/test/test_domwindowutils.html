@@ -28,7 +28,7 @@ function test_sendMouseEventDefaults() {
 
     // Default value for optionals
     is(evt.mozPressure, 0, "check pressure");
-    is(evt.mozInputSource, SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE, "check input source");
+    is(evt.mozInputSource, MouseEvent.MOZ_SOURCE_MOUSE, "check input source");
     is(evt.isSynthesized, undefined, "check isSynthesized is undefined in content");
     is(SpecialPowers.wrap(evt).isSynthesized, true, "check isSynthesized is true from chrome");
     SimpleTest.executeSoon(next);
@@ -42,7 +42,7 @@ function test_sendMouseEventOptionals() {
   var x = 1, y = 2, button = 1, clickCount = 3,
       modifiers = SpecialPowers.Ci.nsIDOMNSEvent.SHIFT_MASK,
       pressure = 0.5,
-      source = SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_KEYBOARD;
+      source = MouseEvent.MOZ_SOURCE_KEYBOARD;
 
   window.addEventListener("mouseup", function(evt) {
     is(evt.mozInputSource, source, "explicit input source is valid");

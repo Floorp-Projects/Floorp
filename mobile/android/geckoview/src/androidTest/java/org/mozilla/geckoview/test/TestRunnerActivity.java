@@ -67,7 +67,7 @@ public class TestRunnerActivity extends Activity {
         }
 
         @Override
-        public void onContextMenu(GeckoSession session, int screenX, int screenY, String uri, String elementSrc) {
+        public void onContextMenu(GeckoSession session, int screenX, int screenY, String uri, int elementType, String elementSrc) {
 
         }
     };

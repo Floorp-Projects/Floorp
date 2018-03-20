@@ -120,6 +120,7 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding()
   mKeyHandlersRegistered(false),
   mChromeOnlyContent(false),
   mBindToUntrustedContent(false),
+  mSimpleScopeChain(false),
   mResources(nullptr),
   mBaseNameSpaceID(kNameSpaceID_None)
 {
@@ -242,6 +243,11 @@ nsXBLPrototypeBinding::SetBindingElement(Element* aElement)
   mBindToUntrustedContent = mBinding->AttrValueIs(kNameSpaceID_None,
                                                   nsGkAtoms::bindToUntrustedContent,
                                                   nsGkAtoms::_true, eCaseMatters);
+
+  // TODO(emilio): Should we imply mBindToUntrustedContent -> mSimpleScopeChain?
+  mSimpleScopeChain = mBinding->AttrValueIs(kNameSpaceID_None,
+                                            nsGkAtoms::simpleScopeChain,
+                                            nsGkAtoms::_true, eCaseMatters);
 }
 
 bool
@@ -282,7 +288,7 @@ nsXBLPrototypeBinding::BindingAttached(nsIContent* aBoundElement)
 {
   if (mImplementation && mImplementation->CompiledMembers() &&
       mImplementation->mConstructor)
-    return mImplementation->mConstructor->Execute(aBoundElement);
+    return mImplementation->mConstructor->Execute(aBoundElement, *this);
   return NS_OK;
 }
 
@@ -291,7 +297,7 @@ nsXBLPrototypeBinding::BindingDetached(nsIContent* aBoundElement)
 {
   if (mImplementation && mImplementation->CompiledMembers() &&
       mImplementation->mDestructor)
-    return mImplementation->mDestructor->Execute(aBoundElement);
+    return mImplementation->mDestructor->Execute(aBoundElement, *this);
   return NS_OK;
 }
 
@@ -854,6 +860,8 @@ nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
     (aFlags & XBLBinding_Serialize_ChromeOnlyContent) ? true : false;
   mBindToUntrustedContent =
     (aFlags & XBLBinding_Serialize_BindToUntrustedContent) ? true : false;
+  mSimpleScopeChain =
+    (aFlags & XBLBinding_Serialize_SimpleScopeChain) ? true : false;
 
   // nsXBLContentSink::ConstructBinding doesn't create a binding with an empty
   // id, so we don't here either.
@@ -1075,6 +1083,10 @@ nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream)
 
   if (mBindToUntrustedContent) {
     flags |= XBLBinding_Serialize_BindToUntrustedContent;
+  }
+
+  if (mSimpleScopeChain) {
+    flags |= XBLBinding_Serialize_SimpleScopeChain;
   }
 
   nsresult rv = aStream->Write8(flags);

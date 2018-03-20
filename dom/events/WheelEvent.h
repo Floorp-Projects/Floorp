@@ -23,9 +23,6 @@ public:
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(WheelEvent, MouseEvent)
 
-  // Forward to base class
-  NS_FORWARD_TO_MOUSEEVENT
-
   static
   already_AddRefed<WheelEvent> Constructor(const GlobalObject& aGlobal,
                                            const nsAString& aType,

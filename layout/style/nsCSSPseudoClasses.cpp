@@ -68,10 +68,10 @@ nsCSSPseudoClasses::kPseudoClassFlags[] = {
 /* static */ bool
 nsCSSPseudoClasses::sPseudoClassEnabled[] = {
   // If the pseudo class has any "ENABLED_IN" flag set, it is disabled by
-  // default. Note that, if a pseudo class has pref, whatever its default
-  // value is, it'll later be changed in nsCSSPseudoClasses::AddRefAtoms()
-  // If the pseudo class has "ENABLED_IN" flags but doesn't have a pref,
-  // it is an internal pseudo class which is disabled elsewhere.
+  // default. Note that, if a pseudo class has pref, whatever its default value
+  // is, it'll later be changed in nsCSSPseudoClasses::RegisterStaticAtoms() If
+  // the pseudo class has "ENABLED_IN" flags but doesn't have a pref, it is an
+  // internal pseudo class which is disabled elsewhere.
   #define IS_ENABLED_BY_DEFAULT(flags_) \
     (!((flags_) & CSS_PSEUDO_CLASS_ENABLED_MASK))
   #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
@@ -81,7 +81,7 @@ nsCSSPseudoClasses::sPseudoClassEnabled[] = {
   #undef IS_ENABLED_BY_DEFAULT
 };
 
-void nsCSSPseudoClasses::AddRefAtoms()
+void nsCSSPseudoClasses::RegisterStaticAtoms()
 {
   NS_RegisterStaticAtoms(sCSSPseudoClassAtomSetup);
 
@@ -122,10 +122,12 @@ nsCSSPseudoClasses::PseudoTypeToString(Type aType, nsAString& aString)
 /* static */ CSSPseudoClassType
 nsCSSPseudoClasses::GetPseudoType(nsAtom* aAtom, EnabledState aEnabledState)
 {
-  for (uint32_t i = 0; i < ArrayLength(sCSSPseudoClassAtomSetup); ++i) {
-    if (*sCSSPseudoClassAtomSetup[i].mAtomp == aAtom) {
-      Type type = Type(i);
-      return IsEnabled(type, aEnabledState) ? type : Type::NotPseudo;
+  Maybe<uint32_t> index =
+    nsStaticAtomUtils::Lookup(aAtom, sCSSPseudoClassAtomSetup);
+  if (index.isSome()) {
+    Type type = Type(*index);
+    if (IsEnabled(type, aEnabledState)) {
+      return type;
     }
   }
   return Type::NotPseudo;

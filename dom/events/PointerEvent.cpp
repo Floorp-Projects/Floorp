@@ -6,6 +6,7 @@
  *
  * Portions Copyright 2013 Microsoft Open Technologies, Inc. */
 
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/PointerEvent.h"
 #include "mozilla/dom/PointerEventBinding.h"
 #include "mozilla/MouseEvents.h"
@@ -31,7 +32,7 @@ PointerEvent::PointerEvent(EventTarget* aOwner,
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
     mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
-    mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
+    mouseEvent->inputSource = MouseEventBinding::MOZ_SOURCE_UNKNOWN;
   }
   // 5.2 Pointer Event types, for all pointer events, |detail| attribute SHOULD
   // be 0.
@@ -49,29 +50,29 @@ static uint16_t
 ConvertStringToPointerType(const nsAString& aPointerTypeArg)
 {
   if (aPointerTypeArg.EqualsLiteral("mouse")) {
-    return nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
+    return MouseEventBinding::MOZ_SOURCE_MOUSE;
   }
   if (aPointerTypeArg.EqualsLiteral("pen")) {
-    return nsIDOMMouseEvent::MOZ_SOURCE_PEN;
+    return MouseEventBinding::MOZ_SOURCE_PEN;
   }
   if (aPointerTypeArg.EqualsLiteral("touch")) {
-    return nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+    return MouseEventBinding::MOZ_SOURCE_TOUCH;
   }
 
-  return nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
+  return MouseEventBinding::MOZ_SOURCE_UNKNOWN;
 }
 
 void
 ConvertPointerTypeToString(uint16_t aPointerTypeSrc, nsAString& aPointerTypeDest)
 {
   switch (aPointerTypeSrc) {
-    case nsIDOMMouseEvent::MOZ_SOURCE_MOUSE:
+    case MouseEventBinding::MOZ_SOURCE_MOUSE:
       aPointerTypeDest.AssignLiteral("mouse");
       break;
-    case nsIDOMMouseEvent::MOZ_SOURCE_PEN:
+    case MouseEventBinding::MOZ_SOURCE_PEN:
       aPointerTypeDest.AssignLiteral("pen");
       break;
-    case nsIDOMMouseEvent::MOZ_SOURCE_TOUCH:
+    case MouseEventBinding::MOZ_SOURCE_TOUCH:
       aPointerTypeDest.AssignLiteral("touch");
       break;
     default:

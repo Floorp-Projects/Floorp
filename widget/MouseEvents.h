@@ -12,8 +12,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMMouseEvent.h"
-#include "nsIDOMWheelEvent.h"
 
 /******************************************************************************
  * nsDragDropEventStatus
@@ -125,7 +123,9 @@ protected:
     , buttons(0)
     , pressure(0)
     , hitCluster(false)
-    , inputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE)
+    // Including MouseEventBinding.h here leads to an include loop, so
+    // we have to hardcode MouseEventBinding::MOZ_SOURCE_MOUSE.
+    , inputSource(/* MouseEventBinding::MOZ_SOURCE_MOUSE = */ 1)
   {
   }
 
@@ -136,7 +136,9 @@ protected:
     , buttons(0)
     , pressure(0)
     , hitCluster(false)
-    , inputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE)
+    // Including MouseEventBinding.h here leads to an include loop, so
+    // we have to hardcode MouseEventBinding::MOZ_SOURCE_MOUSE.
+    , inputSource(/* MouseEventBinding::MOZ_SOURCE_MOUSE = */ 1)
  {
  }
 
@@ -181,7 +183,7 @@ public:
   // Touch near a cluster of links (true)
   bool hitCluster;
 
-  // Possible values at nsIDOMMouseEvent
+  // Possible values a in MouseEvent
   uint16_t inputSource;
 
   // ID of the canvas HitRegion
@@ -503,7 +505,9 @@ private:
     , mDeltaZ(0.0)
     , mOverflowDeltaX(0.0)
     , mOverflowDeltaY(0.0)
-    , mDeltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
+    // Including WheelEventBinding.h here leads to an include loop, so
+    // we have to hardcode WheelEventBinding::DOM_DELTA_PIXEL.
+    , mDeltaMode(/* WheelEventBinding::DOM_DELTA_PIXEL = */ 0)
     , mLineOrPageDeltaX(0)
     , mLineOrPageDeltaY(0)
     , mScrollType(SCROLL_DEFAULT)
@@ -527,7 +531,9 @@ public:
     , mDeltaZ(0.0)
     , mOverflowDeltaX(0.0)
     , mOverflowDeltaY(0.0)
-    , mDeltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
+    // Including WheelEventBinding.h here leads to an include loop, so
+    // we have to hardcode WheelEventBinding::DOM_DELTA_PIXEL.
+    , mDeltaMode(/* WheelEventBinding::DOM_DELTA_PIXEL = */ 0)
     , mLineOrPageDeltaX(0)
     , mLineOrPageDeltaY(0)
     , mScrollType(SCROLL_DEFAULT)
@@ -583,7 +589,7 @@ public:
   double mOverflowDeltaX;
   double mOverflowDeltaY;
 
-  // Should be one of nsIDOMWheelEvent::DOM_DELTA_*
+  // Should be one of WheelEventBinding::DOM_DELTA_*
   uint32_t mDeltaMode;
 
   // If widget sets mLineOrPageDelta, EventStateManager will dispatch

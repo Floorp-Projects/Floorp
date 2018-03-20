@@ -15,6 +15,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "nsCanvasFrame.h"
 #include "nsDocShell.h"
 #include "nsFocusManager.h"
@@ -537,7 +538,7 @@ AccessibleCaretEventHub::HandleTouchEvent(WidgetTouchEvent* aEvent)
                                        : mActiveTouchId);
   nsPoint point = GetTouchEventPosition(aEvent, id);
 
-  mManager->SetLastInputSource(nsIDOMMouseEvent::MOZ_SOURCE_TOUCH);
+  mManager->SetLastInputSource(MouseEventBinding::MOZ_SOURCE_TOUCH);
 
   switch (aEvent->mMessage) {
     case eTouchStart:
@@ -573,7 +574,7 @@ AccessibleCaretEventHub::HandleTouchEvent(WidgetTouchEvent* aEvent)
 nsEventStatus
 AccessibleCaretEventHub::HandleKeyboardEvent(WidgetKeyboardEvent* aEvent)
 {
-  mManager->SetLastInputSource(nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD);
+  mManager->SetLastInputSource(MouseEventBinding::MOZ_SOURCE_KEYBOARD);
 
   switch (aEvent->mMessage) {
     case eKeyUp:

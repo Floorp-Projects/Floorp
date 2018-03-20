@@ -10,12 +10,12 @@
 #include "nscore.h"
 #include "nsWinGesture.h"
 #include "nsUXThemeData.h"
-#include "nsIDOMWheelEvent.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
+#include "mozilla/dom/WheelEventBinding.h"
 
 #include <cmath>
 
@@ -399,7 +399,7 @@ nsWinGesture::PanDeltaToPixelScroll(WidgetWheelEvent& aWheelEvent)
   aWheelEvent.mLineOrPageDeltaX = aWheelEvent.mLineOrPageDeltaY = 0;
 
   aWheelEvent.mRefPoint = LayoutDeviceIntPoint(mPanRefPoint.x, mPanRefPoint.y);
-  aWheelEvent.mDeltaMode = nsIDOMWheelEvent::DOM_DELTA_PIXEL;
+  aWheelEvent.mDeltaMode = dom::WheelEventBinding::DOM_DELTA_PIXEL;
   aWheelEvent.mScrollType = WidgetWheelEvent::SCROLL_SYNCHRONOUSLY;
   aWheelEvent.mIsNoLineOrPageDelta = true;
 

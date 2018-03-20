@@ -16,19 +16,22 @@ typedef uint8_t XBLBindingSerializeDetails;
 
 // A version number to ensure we don't load cached data in a different
 // file format.
-#define XBLBinding_Serialize_Version 0x00000004
+#define XBLBinding_Serialize_Version 0x00000005
 
 // Set for the first binding in a document
-#define XBLBinding_Serialize_IsFirstBinding 1
+#define XBLBinding_Serialize_IsFirstBinding (1 << 0)
 
 // Set to indicate that nsXBLPrototypeBinding::mInheritStyle should be true
-#define XBLBinding_Serialize_InheritStyle 2
+#define XBLBinding_Serialize_InheritStyle (1 << 1)
 
 // Set to indicate that nsXBLPrototypeBinding::mChromeOnlyContent should be true
-#define XBLBinding_Serialize_ChromeOnlyContent 4
+#define XBLBinding_Serialize_ChromeOnlyContent (1 << 2)
 
 // Set to indicate that nsXBLPrototypeBinding::mBindToUntrustedContent should be true
-#define XBLBinding_Serialize_BindToUntrustedContent 8
+#define XBLBinding_Serialize_BindToUntrustedContent (1 << 3)
+
+// Set to indicate that nsXBLPrototypeBinding::mSimpleScopeChain should be true
+#define XBLBinding_Serialize_SimpleScopeChain (1 << 4)
 
 // Appears at the end of the serialized data to indicate that no more bindings
 // are present for this document.

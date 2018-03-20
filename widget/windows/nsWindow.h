@@ -30,6 +30,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "nsMargin.h"
 #include "nsRegionFwd.h"
 
@@ -45,7 +46,6 @@
 #endif
 
 #include "nsUXThemeData.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIIdleServiceInternal.h"
 
 #include "IMMHandler.h"
@@ -234,7 +234,7 @@ public:
                             int16_t aButton =
                               mozilla::WidgetMouseEvent::eLeftButton,
                             uint16_t aInputSource =
-                              nsIDOMMouseEvent::MOZ_SOURCE_MOUSE,
+                              mozilla::dom::MouseEventBinding::MOZ_SOURCE_MOUSE,
                             WinPointerInfo* aPointerInfo = nullptr);
   virtual bool            DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent,
                                               nsEventStatus& aStatus);

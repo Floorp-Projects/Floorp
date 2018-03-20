@@ -29,6 +29,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1095660
 
 </div>
 <pre id="test" style="-moz-binding: url(file_fieldScopeChain.xml#foo)">
+<form>
+  <input name="document">
+  <input type="text" id="input-test" style="-moz-binding: url(file_fieldScopeChain.xml#foo)">
+</form>
 </pre>
 </body>
 </html>

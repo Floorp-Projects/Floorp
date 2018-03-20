@@ -21,7 +21,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIPresShell.h"
 #include "nsFrameList.h"
 #include "nsHTMLParts.h"
@@ -40,6 +39,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/UniquePtr.h"
 #include "nsBindingManager.h"
@@ -625,15 +625,13 @@ nsresult
 nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   NS_ENSURE_TRUE(mOuter, NS_OK);
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
-  if (!mouseEvent)
+  dom::MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
+  if (!mouseEvent) {
     return NS_OK;
-
-  int16_t button = 0;
-  mouseEvent->GetButton(&button);
+  }
 
   // only if left button
-  if (button != 0)
+  if (mouseEvent->Button() != 0)
      return NS_OK;
 
   if (SplitterElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,

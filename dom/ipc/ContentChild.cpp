@@ -1185,8 +1185,6 @@ void
 ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
                         const mozilla::dom::ipc::StructuredCloneData& aInitialData)
 {
-  Preferences::SetLatePreferences(&aXPCOMInit.prefs());
-
   // Do this as early as possible to get the parent process to initialize the
   // background thread since we'll likely need database information very soon.
   BackgroundChild::Startup();

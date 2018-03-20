@@ -33,7 +33,7 @@ MouseEvent::MouseEvent(EventTarget* aOwner,
     mEventIsInternal = true;
     mEvent->mTime = PR_Now();
     mEvent->mRefPoint = LayoutDeviceIntPoint(0, 0);
-    mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
+    mouseEvent->inputSource = MouseEventBinding::MOZ_SOURCE_UNKNOWN;
   }
 
   if (mouseEvent) {
@@ -42,13 +42,6 @@ MouseEvent::MouseEvent(EventTarget* aOwner,
     mDetail = mouseEvent->mClickCount;
   }
 }
-
-NS_IMPL_ADDREF_INHERITED(MouseEvent, UIEvent)
-NS_IMPL_RELEASE_INHERITED(MouseEvent, UIEvent)
-
-NS_INTERFACE_MAP_BEGIN(MouseEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseEvent)
-NS_INTERFACE_MAP_END_INHERITING(UIEvent)
 
 void
 MouseEvent::InitMouseEvent(const nsAString& aType,
@@ -96,34 +89,6 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
     default:
        break;
   }
-}
-
-NS_IMETHODIMP
-MouseEvent::InitMouseEvent(const nsAString& aType,
-                           bool aCanBubble,
-                           bool aCancelable,
-                           mozIDOMWindow* aView,
-                           int32_t aDetail,
-                           int32_t aScreenX,
-                           int32_t aScreenY,
-                           int32_t aClientX,
-                           int32_t aClientY,
-                           bool aCtrlKey,
-                           bool aAltKey,
-                           bool aShiftKey,
-                           bool aMetaKey,
-                           uint16_t aButton,
-                           nsIDOMEventTarget* aRelatedTarget)
-{
-  MouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable,
-                             nsGlobalWindowInner::Cast(aView), aDetail,
-                             aScreenX, aScreenY,
-                             aClientX, aClientY,
-                             aCtrlKey, aAltKey, aShiftKey,
-                             aMetaKey, aButton,
-                             static_cast<EventTarget *>(aRelatedTarget));
-
-  return NS_OK;
 }
 
 void
@@ -227,14 +192,6 @@ MouseEvent::InitNSMouseEvent(const nsAString& aType,
   mouseEventBase->inputSource = aInputSource;
 }
 
-NS_IMETHODIMP
-MouseEvent::GetButton(int16_t* aButton)
-{
-  NS_ENSURE_ARG_POINTER(aButton);
-  *aButton = Button();
-  return NS_OK;
-}
-
 int16_t
 MouseEvent::Button()
 {
@@ -252,14 +209,6 @@ MouseEvent::Button()
   }
 }
 
-NS_IMETHODIMP
-MouseEvent::GetButtons(uint16_t* aButtons)
-{
-  NS_ENSURE_ARG_POINTER(aButtons);
-  *aButtons = Buttons();
-  return NS_OK;
-}
-
 uint16_t
 MouseEvent::Buttons()
 {
@@ -274,14 +223,6 @@ MouseEvent::Buttons()
     default:
       MOZ_CRASH("Tried to get mouse buttons for non-mouse event!");
   }
-}
-
-NS_IMETHODIMP
-MouseEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
-{
-  NS_ENSURE_ARG_POINTER(aRelatedTarget);
-  *aRelatedTarget = GetRelatedTarget().take();
-  return NS_OK;
 }
 
 already_AddRefed<EventTarget>
@@ -314,32 +255,6 @@ MouseEvent::GetRegion(nsAString& aRegion)
   }
 }
 
-NS_IMETHODIMP
-MouseEvent::GetMozMovementX(int32_t* aMovementX)
-{
-  NS_ENSURE_ARG_POINTER(aMovementX);
-  *aMovementX = MovementX();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MouseEvent::GetMozMovementY(int32_t* aMovementY)
-{
-  NS_ENSURE_ARG_POINTER(aMovementY);
-  *aMovementY = MovementY();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MouseEvent::GetScreenX(int32_t* aScreenX)
-{
-  NS_ENSURE_ARG_POINTER(aScreenX);
-  *aScreenX = ScreenX(CallerType::System);
-  return NS_OK;
-}
-
 int32_t
 MouseEvent::ScreenX(CallerType aCallerType)
 {
@@ -355,14 +270,6 @@ MouseEvent::ScreenX(CallerType aCallerType)
   }
 
   return Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint).x;
-}
-
-NS_IMETHODIMP
-MouseEvent::GetScreenY(int32_t* aScreenY)
-{
-  NS_ENSURE_ARG_POINTER(aScreenY);
-  *aScreenY = ScreenY(CallerType::System);
-  return NS_OK;
 }
 
 int32_t
@@ -382,15 +289,6 @@ MouseEvent::ScreenY(CallerType aCallerType)
   return Event::GetScreenCoords(mPresContext, mEvent, mEvent->mRefPoint).y;
 }
 
-
-NS_IMETHODIMP
-MouseEvent::GetClientX(int32_t* aClientX)
-{
-  NS_ENSURE_ARG_POINTER(aClientX);
-  *aClientX = ClientX();
-  return NS_OK;
-}
-
 int32_t
 MouseEvent::ClientX()
 {
@@ -400,14 +298,6 @@ MouseEvent::ClientX()
 
   return Event::GetClientCoords(mPresContext, mEvent, mEvent->mRefPoint,
                                 mClientPoint).x;
-}
-
-NS_IMETHODIMP
-MouseEvent::GetClientY(int32_t* aClientY)
-{
-  NS_ENSURE_ARG_POINTER(aClientY);
-  *aClientY = ClientY();
-  return NS_OK;
 }
 
 int32_t
@@ -447,26 +337,10 @@ MouseEvent::AltKey()
   return mEvent->AsInputEvent()->IsAlt();
 }
 
-NS_IMETHODIMP
-MouseEvent::GetAltKey(bool* aIsDown)
-{
-  NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = AltKey();
-  return NS_OK;
-}
-
 bool
 MouseEvent::CtrlKey()
 {
   return mEvent->AsInputEvent()->IsControl();
-}
-
-NS_IMETHODIMP
-MouseEvent::GetCtrlKey(bool* aIsDown)
-{
-  NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = CtrlKey();
-  return NS_OK;
 }
 
 bool
@@ -475,50 +349,16 @@ MouseEvent::ShiftKey()
   return mEvent->AsInputEvent()->IsShift();
 }
 
-NS_IMETHODIMP
-MouseEvent::GetShiftKey(bool* aIsDown)
-{
-  NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = ShiftKey();
-  return NS_OK;
-}
-
 bool
 MouseEvent::MetaKey()
 {
   return mEvent->AsInputEvent()->IsMeta();
 }
 
-NS_IMETHODIMP
-MouseEvent::GetMetaKey(bool* aIsDown)
-{
-  NS_ENSURE_ARG_POINTER(aIsDown);
-  *aIsDown = MetaKey();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MouseEvent::GetModifierState(const nsAString& aKey,
-                                  bool* aState)
-{
-  NS_ENSURE_ARG_POINTER(aState);
-
-  *aState = GetModifierState(aKey);
-  return NS_OK;
-}
-
 float
 MouseEvent::MozPressure() const
 {
   return mEvent->AsMouseEventBase()->pressure;
-}
-
-NS_IMETHODIMP
-MouseEvent::GetMozPressure(float* aPressure)
-{
-  NS_ENSURE_ARG_POINTER(aPressure);
-  *aPressure = MozPressure();
-  return NS_OK;
 }
 
 bool
@@ -531,14 +371,6 @@ uint16_t
 MouseEvent::MozInputSource() const
 {
   return mEvent->AsMouseEventBase()->inputSource;
-}
-
-NS_IMETHODIMP
-MouseEvent::GetMozInputSource(uint16_t* aInputSource)
-{
-  NS_ENSURE_ARG_POINTER(aInputSource);
-  *aInputSource = MozInputSource();
-  return NS_OK;
 }
 
 } // namespace dom
