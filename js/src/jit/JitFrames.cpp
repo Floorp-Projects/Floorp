@@ -498,24 +498,24 @@ HandleExceptionBaseline(JSContext* cx, const JSJitFrameIter& frame, ResumeFromEx
     if (cx->isExceptionPending()) {
         if (!cx->isClosingGenerator()) {
             switch (Debugger::onExceptionUnwind(cx, frame.baselineFrame())) {
-              case JSTRAP_ERROR:
+              case ResumeMode::Terminate:
                 // Uncatchable exception.
                 MOZ_ASSERT(!cx->isExceptionPending());
                 goto again;
 
-              case JSTRAP_CONTINUE:
-              case JSTRAP_THROW:
+              case ResumeMode::Continue:
+              case ResumeMode::Throw:
                 MOZ_ASSERT(cx->isExceptionPending());
                 break;
 
-              case JSTRAP_RETURN:
+              case ResumeMode::Return:
                 if (script->hasTrynotes())
                     CloseLiveIteratorsBaselineForUncatchableException(cx, frame, pc);
                 ForcedReturn(cx, frame, pc, rfe);
                 return;
 
               default:
-                MOZ_CRASH("Invalid trap status");
+                MOZ_CRASH("Invalid onExceptionUnwind resume mode");
             }
         }
 

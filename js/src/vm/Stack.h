@@ -109,25 +109,9 @@ namespace jit {
     class RematerializedFrame;
 } // namespace jit
 
-/*
- * Pointer to either a ScriptFrameIter::Data, an InterpreterFrame, or a Baseline
- * JIT frame.
- *
- * The Debugger may cache ScriptFrameIter::Data as a bookmark to reconstruct a
- * ScriptFrameIter without doing a full stack walk.
- *
- * There is no way to directly create such an AbstractFramePtr. To do so, the
- * user must call ScriptFrameIter::copyDataAsAbstractFramePtr().
- *
- * ScriptFrameIter::abstractFramePtr() will never return an AbstractFramePtr
- * that is in fact a ScriptFrameIter::Data.
- *
- * To recover a ScriptFrameIter settled at the location pointed to by an
- * AbstractFramePtr, use the THIS_FRAME_ITER macro in Debugger.cpp. As an
- * aside, no asScriptFrameIterData() is provided because C++ is stupid and
- * cannot forward declare inner classes.
+/**
+ * Pointer to a live JS or WASM stack frame.
  */
-
 class AbstractFramePtr
 {
     friend class FrameIter;
@@ -135,7 +119,6 @@ class AbstractFramePtr
     uintptr_t ptr_;
 
     enum {
-        Tag_ScriptFrameIterData = 0x0,
         Tag_InterpreterFrame = 0x1,
         Tag_BaselineFrame = 0x2,
         Tag_RematerializedFrame = 0x3,
@@ -179,9 +162,6 @@ class AbstractFramePtr
         return frame;
     }
 
-    bool isScriptFrameIterData() const {
-        return !!ptr_ && (ptr_ & TagMask) == Tag_ScriptFrameIterData;
-    }
     bool isInterpreterFrame() const {
         return (ptr_ & TagMask) == Tag_InterpreterFrame;
     }
@@ -285,7 +265,6 @@ class AbstractFramePtr
     inline HandleValue returnValue() const;
     inline void setReturnValue(const Value& rval) const;
 
-    friend void GDBTestInitAbstractFramePtr(AbstractFramePtr&, void*);
     friend void GDBTestInitAbstractFramePtr(AbstractFramePtr&, InterpreterFrame*);
     friend void GDBTestInitAbstractFramePtr(AbstractFramePtr&, jit::BaselineFrame*);
     friend void GDBTestInitAbstractFramePtr(AbstractFramePtr&, jit::RematerializedFrame*);
@@ -1237,6 +1216,34 @@ struct DefaultHasher<AbstractFramePtr> {
 //   that, if a frame's bit is set and the cache is not completely empty, the
 //   frame will have an entry. When the cache is flushed, it will be repopulated
 //   immediately with the new capture's frames.
+//
+// - When the Debugger API evaluates an expression in some frame (the 'target
+//   frame'), it's SpiderMonkey's convention that the target frame be treated as
+//   the parent of the eval frame. In reality, of course, the eval frame is
+//   pushed on the top of the stack like any other frame, but stack captures
+//   simply jump straight over the intervening frames, so that the '.parent'
+//   property of a SavedFrame for the eval is the SavedFrame for the target.
+//   This is arranged by giving the eval frame an 'evalInFramePrev` link
+//   pointing to the target, which an ordinary FrameIter will notice and
+//   respect.
+//
+//   If the LiveSavedFrameCache were presented with stack traversals that
+//   skipped frames in this way, it would cause havoc. First, with no debugger
+//   eval frames present, capture the stack, populating the cache. Then push a
+//   debugger eval frame and capture again; the skipped frames to appear to be
+//   absent from the stack. Now pop the debugger eval frame, and capture a third
+//   time: the no-longer-skipped frames seem to reappear on the stack, with
+//   their cached bits still set.
+//
+//   The LiveSavedFrameCache assumes that the stack it sees is used in a
+//   stack-like fashion: if a frame has its bit set, it has never left the
+//   stack. To support this assumption, when the cache is in use, we do not skip
+//   the frames between a debugger eval frame an its target; we always traverse
+//   the entire stack, invalidating and populating the cache in the usual way.
+//   Instead, when we construct a SavedFrame for a debugger eval frame, we
+//   select the appropriate parent at that point: rather than the next-older
+//   frame, we find the SavedFrame for the eval's target frame. The skip appears
+//   in the SavedFrame chains, even as the traversal covers all the frames.
 class LiveSavedFrameCache
 {
   public:
@@ -1264,8 +1271,17 @@ class LiveSavedFrameCache
         // for its frame. Otherwise, return Nothing.
         static inline mozilla::Maybe<FramePtr> create(const FrameIter& iter);
 
+        // Construct a FramePtr from an AbstractFramePtr. This always succeeds.
+        static inline FramePtr create(AbstractFramePtr abstractFramePtr);
+
         inline bool hasCachedSavedFrame() const;
         inline void setHasCachedSavedFrame();
+
+        // Return true if this FramePtr refers to an interpreter frame.
+        inline bool isInterpreterFrame() const { return ptr.is<InterpreterFrame*>(); }
+
+        // If this FramePtr is an interpreter frame, return a pointer to it.
+        inline InterpreterFrame& asInterpreterFrame() const { return *ptr.as<InterpreterFrame*>(); }
 
         bool operator==(const FramePtr& rhs) const { return rhs.ptr == this->ptr; }
         bool operator!=(const FramePtr& rhs) const { return !(rhs == *this); }
@@ -1347,6 +1363,11 @@ class LiveSavedFrameCache
     // compartment. In this case, the entire cache is flushed.
     void find(JSContext* cx, FramePtr& framePtr, const jsbytecode* pc,
               MutableHandleSavedFrame frame) const;
+
+    // Search the cache for a frame matching |framePtr|, without removing any
+    // entries. Return the matching saved frame, or nullptr if none is found.
+    // This is used for resolving |evalInFramePrev| links.
+    void findWithoutInvalidation(const FramePtr& framePtr, MutableHandleSavedFrame frame) const;
 
     // Push a cache entry mapping |framePtr| and |pc| to |savedFrame| on the top
     // of the cache's stack. You must insert entries for frames from oldest to
@@ -2155,7 +2176,6 @@ class FrameIter
     // -----------------------------------------------------------
 
     AbstractFramePtr abstractFramePtr() const;
-    AbstractFramePtr copyDataAsAbstractFramePtr() const;
     Data* copyData() const;
 
     // This can only be called when isInterp():

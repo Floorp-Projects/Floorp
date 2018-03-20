@@ -553,15 +553,15 @@ InvokeInterruptCallback(JSContext* cx)
             {
                 RootedValue rval(cx);
                 switch (Debugger::onSingleStep(cx, &rval)) {
-                  case JSTRAP_ERROR:
+                  case ResumeMode::Terminate:
                     return false;
-                  case JSTRAP_CONTINUE:
+                  case ResumeMode::Continue:
                     return true;
-                  case JSTRAP_RETURN:
+                  case ResumeMode::Return:
                     // See note in Debugger::propagateForcedReturn.
                     Debugger::propagateForcedReturn(cx, iter.abstractFramePtr(), rval);
                     return false;
-                  case JSTRAP_THROW:
+                  case ResumeMode::Throw:
                     cx->setPendingException(rval);
                     return false;
                   default:;

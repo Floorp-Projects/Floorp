@@ -144,7 +144,11 @@ struct TenureCount
 {
     ObjectGroup* group;
     int count;
-};
+
+    // ObjectGroups are never nursery-allocated, and TenureCounts are only used
+    // in minor GC (not compacting GC), so prevent the analysis from
+    // complaining about TenureCounts being held live across a minor GC.
+} JS_HAZ_NON_GC_POINTER;
 
 // Keep rough track of how many times we tenure objects in particular groups
 // during minor collections, using a fixed size hash for efficiency at the cost

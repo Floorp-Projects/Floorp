@@ -29,13 +29,11 @@ function debug(aMsg) {
 // Dispatches GeckoView:LocationChange to the GeckoView on location change when
 // active.
 // Implements nsIBrowserDOMWindow.
-// Implements nsILoadURIDelegate.
 class GeckoViewNavigation extends GeckoViewModule {
   init() {
-    this._frameScriptLoaded = false;
     this.window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = this;
 
-    this.eventDispatcher.registerListener(this, [
+    this.registerListener([
       "GeckoView:GoBack",
       "GeckoView:GoForward",
       "GeckoView:LoadUri",
@@ -226,11 +224,8 @@ class GeckoViewNavigation extends GeckoViewModule {
   register() {
     debug("register");
 
-    if (!this._frameScriptLoaded) {
-      this.messageManager.loadFrameScript(
-        "chrome://geckoview/content/GeckoViewNavigationContent.js", true);
-      this._frameScriptLoaded = true;
-    }
+    this.registerContent(
+      "chrome://geckoview/content/GeckoViewNavigationContent.js");
 
     let flags = Ci.nsIWebProgress.NOTIFY_LOCATION;
     this.progressFilter =

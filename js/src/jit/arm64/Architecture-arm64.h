@@ -285,7 +285,7 @@ class FloatRegisters
         float s;
         double d;
     };
-    enum Kind {
+    enum Kind : uint8_t {
         Double,
         Single
     };
@@ -453,8 +453,8 @@ struct FloatRegister
     uint32_t getRegisterDumpOffsetInBytes();
 
   public:
-    Code code_ : 8;
-    FloatRegisters::Kind k_ : 1;
+    Code code_;
+    FloatRegisters::Kind k_;
 };
 
 template <> inline FloatRegister::SetType

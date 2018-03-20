@@ -598,7 +598,7 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
       }
       bool isInvalidated = PaintItemByDrawTarget(aItem, dt, paintRect, offset, aDisplayListBuilder,
                                                  fallbackData->mBasicLayerManager, scale, highlight);
-      recorder->FlushItem(IntRect());
+      recorder->FlushItem(IntRect(0, 0, paintSize.width, paintSize.height));
       recorder->Finish();
 
       if (isInvalidated) {
