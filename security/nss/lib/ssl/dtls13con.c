@@ -11,6 +11,43 @@
 #include "sslimpl.h"
 #include "sslproto.h"
 
+SECStatus
+dtls13_InsertCipherTextHeader(const sslSocket *ss, ssl3CipherSpec *cwSpec,
+                              sslBuffer *wrBuf, PRBool *needsLength)
+{
+    PRUint32 seq;
+    SECStatus rv;
+
+    /* Avoid using short records for the handshake.  We pack multiple records
+     * into the one datagram for the handshake. */
+    if (ss->opt.enableDtlsShortHeader &&
+        cwSpec->epoch != TrafficKeyHandshake) {
+        *needsLength = PR_FALSE;
+        /* The short header is comprised of two octets in the form
+         * 0b001essssssssssss where 'e' is the low bit of the epoch and 's' is
+         * the low 12 bits of the sequence number. */
+        seq = 0x2000 |
+              (((uint64_t)cwSpec->epoch & 1) << 12) |
+              (cwSpec->nextSeqNum & 0xfff);
+        return sslBuffer_AppendNumber(wrBuf, seq, 2);
+    }
+
+    rv = sslBuffer_AppendNumber(wrBuf, content_application_data, 1);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+
+    /* The epoch and sequence number are encoded on 4 octets, with the epoch
+     * consuming the first two bits. */
+    seq = (((uint64_t)cwSpec->epoch & 3) << 30) | (cwSpec->nextSeqNum & 0x3fffffff);
+    rv = sslBuffer_AppendNumber(wrBuf, seq, 4);
+    if (rv != SECSuccess) {
+        return SECFailure;
+    }
+    *needsLength = PR_TRUE;
+    return SECSuccess;
+}
+
 /* DTLS 1.3 Record map for ACK processing.
  * This represents a single fragment, so a record which includes
  * multiple fragments will have one entry for each fragment on the

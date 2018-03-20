@@ -8,9 +8,6 @@
 #include "sslerr.h"
 #include "sslproto.h"
 
-// This is an internal header, used to get TLS_1_3_DRAFT_VERSION.
-#include "ssl3prot.h"
-
 #include <memory>
 
 #include "databuffer.h"
@@ -21,7 +18,6 @@
 
 namespace nss_test {
 
-static const uint8_t kD13 = TLS_1_3_DRAFT_VERSION;
 // This is a 1-RTT ClientHello with ECDHE.
 const static uint8_t kCannedTls13ClientHello[] = {
     0x01, 0x00, 0x00, 0xcf, 0x03, 0x03, 0x6c, 0xb3, 0x46, 0x81, 0xc8, 0x1a,
@@ -42,16 +38,7 @@ const static uint8_t kCannedTls13ClientHello[] = {
     0x1e, 0x04, 0x03, 0x05, 0x03, 0x06, 0x03, 0x02, 0x03, 0x08, 0x04, 0x08,
     0x05, 0x08, 0x06, 0x04, 0x01, 0x05, 0x01, 0x06, 0x01, 0x02, 0x01, 0x04,
     0x02, 0x05, 0x02, 0x06, 0x02, 0x02, 0x02};
-
-const static uint8_t kCannedTls13ServerHello[] = {
-    0x03, 0x03, 0x9c, 0xbc, 0x14, 0x9b, 0x0e, 0x2e, 0xfa, 0x0d, 0xf3,
-    0xf0, 0x5c, 0x70, 0x7a, 0xe0, 0xd1, 0x9b, 0x3e, 0x5a, 0x44, 0x6b,
-    0xdf, 0xe5, 0xc2, 0x28, 0x64, 0xf7, 0x00, 0xc1, 0x9c, 0x08, 0x76,
-    0x08, 0x00, 0x13, 0x01, 0x00, 0x00, 0x2e, 0x00, 0x33, 0x00, 0x24,
-    0x00, 0x1d, 0x00, 0x20, 0xc2, 0xcf, 0x23, 0x17, 0x64, 0x23, 0x03,
-    0xf0, 0xfb, 0x45, 0x98, 0x26, 0xd1, 0x65, 0x24, 0xa1, 0x6c, 0xa9,
-    0x80, 0x8f, 0x2c, 0xac, 0x0a, 0xea, 0x53, 0x3a, 0xcb, 0xe3, 0x08,
-    0x84, 0xae, 0x19, 0x00, 0x2b, 0x00, 0x02, 0x7f, kD13};
+static const size_t kFirstFragmentSize = 20;
 static const char *k0RttData = "ABCDEF";
 
 TEST_P(TlsAgentTest, EarlyFinished) {
@@ -74,8 +61,9 @@ TEST_P(TlsAgentTestClient13, CannedHello) {
   DataBuffer buffer;
   EnsureInit();
   DataBuffer server_hello;
-  MakeHandshakeMessage(kTlsHandshakeServerHello, kCannedTls13ServerHello,
-                       sizeof(kCannedTls13ServerHello), &server_hello);
+  auto sh = MakeCannedTls13ServerHello();
+  MakeHandshakeMessage(kTlsHandshakeServerHello, sh.data(), sh.len(),
+                       &server_hello);
   MakeRecord(kTlsHandshakeType, SSL_LIBRARY_VERSION_TLS_1_3,
              server_hello.data(), server_hello.len(), &buffer);
   ProcessMessage(buffer, TlsAgent::STATE_CONNECTING);
@@ -83,8 +71,9 @@ TEST_P(TlsAgentTestClient13, CannedHello) {
 
 TEST_P(TlsAgentTestClient13, EncryptedExtensionsInClear) {
   DataBuffer server_hello;
-  MakeHandshakeMessage(kTlsHandshakeServerHello, kCannedTls13ServerHello,
-                       sizeof(kCannedTls13ServerHello), &server_hello);
+  auto sh = MakeCannedTls13ServerHello();
+  MakeHandshakeMessage(kTlsHandshakeServerHello, sh.data(), sh.len(),
+                       &server_hello);
   DataBuffer encrypted_extensions;
   MakeHandshakeMessage(kTlsHandshakeEncryptedExtensions, nullptr, 0,
                        &encrypted_extensions, 1);
@@ -100,19 +89,21 @@ TEST_P(TlsAgentTestClient13, EncryptedExtensionsInClear) {
 
 TEST_F(TlsAgentStreamTestClient, EncryptedExtensionsInClearTwoPieces) {
   DataBuffer server_hello;
-  MakeHandshakeMessage(kTlsHandshakeServerHello, kCannedTls13ServerHello,
-                       sizeof(kCannedTls13ServerHello), &server_hello);
+  auto sh = MakeCannedTls13ServerHello();
+  MakeHandshakeMessage(kTlsHandshakeServerHello, sh.data(), sh.len(),
+                       &server_hello);
   DataBuffer encrypted_extensions;
   MakeHandshakeMessage(kTlsHandshakeEncryptedExtensions, nullptr, 0,
                        &encrypted_extensions, 1);
   server_hello.Append(encrypted_extensions);
   DataBuffer buffer;
   MakeRecord(kTlsHandshakeType, SSL_LIBRARY_VERSION_TLS_1_3,
-             server_hello.data(), 20, &buffer);
+             server_hello.data(), kFirstFragmentSize, &buffer);
 
   DataBuffer buffer2;
   MakeRecord(kTlsHandshakeType, SSL_LIBRARY_VERSION_TLS_1_3,
-             server_hello.data() + 20, server_hello.len() - 20, &buffer2);
+             server_hello.data() + kFirstFragmentSize,
+             server_hello.len() - kFirstFragmentSize, &buffer2);
 
   EnsureInit();
   agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
@@ -124,15 +115,15 @@ TEST_F(TlsAgentStreamTestClient, EncryptedExtensionsInClearTwoPieces) {
 }
 
 TEST_F(TlsAgentDgramTestClient, EncryptedExtensionsInClearTwoPieces) {
+  auto sh = MakeCannedTls13ServerHello();
   DataBuffer server_hello_frag1;
-  MakeHandshakeMessageFragment(
-      kTlsHandshakeServerHello, kCannedTls13ServerHello,
-      sizeof(kCannedTls13ServerHello), &server_hello_frag1, 0, 0, 20);
+  MakeHandshakeMessageFragment(kTlsHandshakeServerHello, sh.data(), sh.len(),
+                               &server_hello_frag1, 0, 0, kFirstFragmentSize);
   DataBuffer server_hello_frag2;
-  MakeHandshakeMessageFragment(
-      kTlsHandshakeServerHello, kCannedTls13ServerHello + 20,
-      sizeof(kCannedTls13ServerHello), &server_hello_frag2, 0, 20,
-      sizeof(kCannedTls13ServerHello) - 20);
+  MakeHandshakeMessageFragment(kTlsHandshakeServerHello,
+                               sh.data() + kFirstFragmentSize, sh.len(),
+                               &server_hello_frag2, 0, kFirstFragmentSize,
+                               sh.len() - kFirstFragmentSize);
   DataBuffer encrypted_extensions;
   MakeHandshakeMessage(kTlsHandshakeEncryptedExtensions, nullptr, 0,
                        &encrypted_extensions, 1);

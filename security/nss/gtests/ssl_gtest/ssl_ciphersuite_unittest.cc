@@ -166,8 +166,8 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
       case ssl_calg_seed:
         break;
     }
-    EXPECT_TRUE(false) << "No limit for " << csinfo_.cipherSuiteName;
-    return 1ULL < 48;
+    ADD_FAILURE() << "No limit for " << csinfo_.cipherSuiteName;
+    return 0;
   }
 
   uint64_t last_safe_write() const {
@@ -246,12 +246,13 @@ TEST_P(TlsCipherSuiteTest, ReadLimit) {
 
     client_->SendData(10, 10);
     server_->ReadBytes();  // This should be OK.
+    server_->ReadBytes();  // Read twice to flush any 1,N-1 record splitting.
   } else {
     // In TLS 1.3, reading or writing triggers a KeyUpdate.  That would mean
     // that the sequence numbers would reset and we wouldn't hit the limit.  So
-    // we move the sequence number to one less than the limit directly and don't
-    // test sending and receiving just before the limit.
-    uint64_t last = record_limit() - 1;
+    // move the sequence number to the limit directly and don't test sending and
+    // receiving just before the limit.
+    uint64_t last = record_limit();
     EXPECT_EQ(SECSuccess, SSLInt_AdvanceReadSeqNum(server_->ssl_fd(), last));
   }
 
