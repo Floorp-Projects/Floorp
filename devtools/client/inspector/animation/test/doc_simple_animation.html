@@ -92,6 +92,10 @@
       animation: compositor-notall 2s infinite;
     }
 
+    .longhand {
+      animation: longhand 10s infinite;
+    }
+
     @keyframes simple-animation {
       100% {
         transform: translateX(300px);
@@ -126,6 +130,17 @@
         transform: translate(100px);
       }
     }
+
+    @keyframes longhand {
+      from {
+        background: red;
+        padding: 0 0 0 10px;
+      }
+      to {
+        background: lime;
+        padding: 0 0 0 20px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -142,6 +157,7 @@
   <div class="ball" id="endDelayed"></div>
   <div class="ball compositor-all"></div>
   <div class="ball compositor-notall"></div>
+  <div class="ball longhand"></div>
   <script>
     /* globals KeyframeEffect, Animation */
     "use strict";
