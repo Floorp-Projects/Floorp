@@ -118,10 +118,10 @@ class SingleLinkedList
             return *this;
         }
 
-        bool operator!=(Iterator& other) const {
+        bool operator!=(const Iterator& other) const {
             return current_ != other.current_;
         }
-        bool operator==(Iterator& other) const {
+        bool operator==(const Iterator& other) const {
             return current_ == other.current_;
         }
     };
