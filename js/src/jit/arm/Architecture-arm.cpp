@@ -11,7 +11,9 @@
 #endif
 
 #include <fcntl.h>
-#include <unistd.h>
+#ifdef XP_UNIX
+#  include <unistd.h>
+#endif
 
 #include "jit/arm/Assembler-arm.h"
 #include "jit/RegisterSets.h"

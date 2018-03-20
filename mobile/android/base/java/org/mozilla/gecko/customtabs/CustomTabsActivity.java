@@ -605,17 +605,18 @@ public class CustomTabsActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onLoadRequest(final GeckoSession session, final String urlStr,
-                                 final int target) {
+    public void onLoadRequest(final GeckoSession session, final String urlStr,
+                                 final int target,
+                                 final GeckoSession.Response<Boolean> response) {
         if (target != GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
-            return false;
+            response.respond(false);
         }
 
         final Uri uri = Uri.parse(urlStr);
         if (uri == null) {
             // We can't handle this, so deny it.
             Log.w(LOGTAG, "Failed to parse URL for navigation: " + urlStr);
-            return true;
+            response.respond(true);
         }
 
         // Always use Fennec for these schemes.
@@ -640,7 +641,7 @@ public class CustomTabsActivity extends AppCompatActivity
             }
         }
 
-        return true;
+        response.respond(true);
     }
 
     @Override

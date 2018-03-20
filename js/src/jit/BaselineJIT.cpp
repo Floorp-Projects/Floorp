@@ -234,6 +234,7 @@ jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc)
 MethodStatus
 jit::BaselineCompile(JSContext* cx, JSScript* script, bool forceDebugInstrumentation)
 {
+    assertSameCompartment(cx, script);
     MOZ_ASSERT(!script->hasBaselineScript());
     MOZ_ASSERT(script->canBaselineCompile());
     MOZ_ASSERT(IsBaselineEnabled(cx));

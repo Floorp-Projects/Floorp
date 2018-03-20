@@ -448,8 +448,8 @@ class Reg
     // The "second register".
     uint32_t rm_ : 4;
     // Do we get another register for shifting.
-    bool rrs_ : 1;
-    ShiftType type_ : 2;
+    uint32_t rrs_ : 1;
+    uint32_t type_ : 2;
     // We'd like this to be a more sensible encoding, but that would need to be
     // a struct and that would not pack :(
     uint32_t shiftAmount_ : 5;
@@ -484,7 +484,7 @@ class Imm8mData
     // Throw in an extra bit that will be 1 if we can't encode this properly.
     // if we can encode it properly, a simple "|" will still suffice to meld it
     // into the instruction.
-    bool invalid_ : 1;
+    uint32_t invalid_ : 1;
 
   public:
     // Default constructor makes an invalid immediate.
@@ -604,7 +604,7 @@ class RIS
 
 class RRS
 {
-    bool mustZero_ : 1;
+    uint32_t mustZero_ : 1;
     // The register that holds the shift amount.
     uint32_t rs_ : 4;
 
@@ -632,7 +632,7 @@ class Operand2
     friend class InstALU;
 
     uint32_t oper_ : 31;
-    bool invalid_ : 1;
+    uint32_t invalid_ : 1;
 
   protected:
     explicit Operand2(datastore::Imm8mData base)
@@ -955,7 +955,7 @@ class VFPImm
         return data_;
     }
     bool isValid() const {
-        return data_ != -1U;
+        return data_ != (~0U);
     }
 };
 
@@ -1047,69 +1047,76 @@ class Operand
     };
 
   private:
-    Tag tag_ : 8;
+    uint32_t tag_ : 8;
     uint32_t reg_ : 5;
     int32_t offset_;
 
+  protected:
+    Operand(Tag tag, uint32_t regCode, int32_t offset)
+      : tag_(static_cast<uint32_t>(tag)),
+        reg_(regCode),
+        offset_(offset)
+    { }
+
   public:
     explicit Operand(Register reg)
-      : tag_(Tag::OP2), reg_(reg.code())
+      : Operand(Tag::OP2, reg.code(), 0)
     { }
 
     explicit Operand(FloatRegister freg)
-      : tag_(Tag::FOP), reg_(freg.code())
+      : Operand(Tag::FOP, freg.code(), 0)
     { }
 
     explicit Operand(Register base, Imm32 off)
-      : tag_(Tag::MEM), reg_(base.code()), offset_(off.value)
+      : Operand(Tag::MEM, base.code(), off.value)
     { }
 
     explicit Operand(Register base, int32_t off)
-      : tag_(Tag::MEM), reg_(base.code()), offset_(off)
+      : Operand(Tag::MEM, base.code(), off)
     { }
 
     explicit Operand(const Address& addr)
-      : tag_(Tag::MEM), reg_(addr.base.code()), offset_(addr.offset)
+      : Operand(Tag::MEM, addr.base.code(), addr.offset)
     { }
 
   public:
     Tag tag() const {
-        return tag_;
+        return static_cast<Tag>(tag_);
     }
 
     Operand2 toOp2() const {
-        MOZ_ASSERT(tag_ == Tag::OP2);
+        MOZ_ASSERT(tag() == Tag::OP2);
         return O2Reg(Register::FromCode(reg_));
     }
 
     Register toReg() const {
-        MOZ_ASSERT(tag_ == Tag::OP2);
+        MOZ_ASSERT(tag() == Tag::OP2);
         return Register::FromCode(reg_);
     }
 
     Address toAddress() const {
-        MOZ_ASSERT(tag_ == Tag::MEM);
+        MOZ_ASSERT(tag() == Tag::MEM);
         return Address(Register::FromCode(reg_), offset_);
     }
     int32_t disp() const {
-        MOZ_ASSERT(tag_ == Tag::MEM);
+        MOZ_ASSERT(tag() == Tag::MEM);
         return offset_;
     }
 
     int32_t base() const {
-        MOZ_ASSERT(tag_ == Tag::MEM);
+        MOZ_ASSERT(tag() == Tag::MEM);
         return reg_;
     }
     Register baseReg() const {
-        MOZ_ASSERT(tag_ == Tag::MEM);
+        MOZ_ASSERT(tag() == Tag::MEM);
         return Register::FromCode(reg_);
     }
     DTRAddr toDTRAddr() const {
-        MOZ_ASSERT(tag_ == Tag::MEM);
+        MOZ_ASSERT(tag() == Tag::MEM);
         return DTRAddr(baseReg(), DtrOffImm(offset_));
     }
     VFPAddr toVFPAddr() const {
-        MOZ_ASSERT(tag_ == Tag::MEM);
+        MOZ_ASSERT(tag() == Tag::MEM);
         return VFPAddr(baseReg(), VFPOffImm(offset_));
     }
 };
@@ -1143,7 +1150,7 @@ class Assembler : public AssemblerShared
 {
   public:
     // ARM conditional constants:
-    enum ARMCondition {
+    enum ARMCondition : uint32_t {
         EQ = 0x00000000, // Zero
         NE = 0x10000000, // Non-zero
         CS = 0x20000000,
@@ -1161,7 +1168,7 @@ class Assembler : public AssemblerShared
         AL = 0xe0000000
     };
 
-    enum Condition {
+    enum Condition : uint32_t {
         Equal = EQ,
         NotEqual = NE,
         Above = HI,
@@ -1200,7 +1207,7 @@ class Assembler : public AssemblerShared
     // ConditionFromDoubleCondition will complain.
     static const int DoubleConditionBitSpecial = 0x1;
 
-    enum DoubleCondition {
+    enum DoubleCondition : uint32_t {
         // These conditions will only evaluate to true if the comparison is
         // ordered - i.e. neither operand is NaN.
         DoubleOrdered = VFP_NotUnordered,

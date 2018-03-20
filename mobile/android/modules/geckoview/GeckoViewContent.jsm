@@ -19,25 +19,20 @@ function debug(aMsg) {
 
 class GeckoViewContent extends GeckoViewModule {
   init() {
-    this.frameScriptLoaded = false;
     this.eventDispatcher.registerListener(this, [
       "GeckoView:SetActive"
     ]);
   }
 
   register() {
-    if (!this.frameScriptLoaded) {
-      this.messageManager.loadFrameScript(
-        "chrome://geckoview/content/GeckoViewContent.js", true);
-      this.frameScriptLoaded = true;
-    }
+    this.registerContent("chrome://geckoview/content/GeckoViewContent.js");
 
     this.window.addEventListener("MozDOMFullScreen:Entered", this,
                                  /* capture */ true, /* untrusted */ false);
     this.window.addEventListener("MozDOMFullScreen:Exited", this,
                                  /* capture */ true, /* untrusted */ false);
 
-    this.eventDispatcher.registerListener(this, [
+    this.registerListener([
         "GeckoViewContent:ExitFullScreen",
         "GeckoView:ZoomToInput",
     ]);
@@ -75,11 +70,6 @@ class GeckoViewContent extends GeckoViewModule {
                                     /* capture */ true);
     this.window.removeEventListener("MozDOMFullScreen:Exited", this,
                                     /* capture */ true);
-
-    this.eventDispatcher.unregisterListener(this, [
-        "GeckoViewContent:ExitFullScreen",
-        "GeckoView:ZoomToInput",
-    ]);
 
     this.messageManager.removeMessageListener("GeckoView:DOMFullscreenExit", this);
     this.messageManager.removeMessageListener("GeckoView:DOMFullscreenRequest", this);

@@ -329,11 +329,11 @@ int32_t Instruction::ImmBranchMinBackwardOffset(ImmBranchRangeType range_type)
 {
   switch(range_type) {
     case TestBranchRangeType:
-      return -int32_t(1 << ImmTestBranch_width) / 2 * kInstructionSize;
+      return -int32_t(1 << ImmTestBranch_width) / int32_t(2 * kInstructionSize);
     case CondBranchRangeType:
-      return -int32_t(1 << ImmCondBranch_width) / 2 * kInstructionSize;
+      return -int32_t(1 << ImmCondBranch_width) / int32_t(2 * kInstructionSize);
     case UncondBranchRangeType:
-      return -int32_t(1 << ImmUncondBranch_width) / 2 * kInstructionSize;
+      return -int32_t(1 << ImmUncondBranch_width) / int32_t(2 * kInstructionSize);
     default:
       VIXL_UNREACHABLE();
       return 0;

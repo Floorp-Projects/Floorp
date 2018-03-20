@@ -38,6 +38,8 @@ public:
    */
   virtual void Flush() override { mFinalDT->Flush(); }
 
+  virtual void FlushItem(const IntRect &aBounds) override;
+
   /*
    * Draw a surface to the draw target. Possibly doing partial drawing or
    * applying scaling. No sampling happens outside the source.

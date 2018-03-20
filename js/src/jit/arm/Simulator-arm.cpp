@@ -872,7 +872,11 @@ ArmDebugger::debug()
 #endif
             } else if (strcmp(cmd, "gdb") == 0) {
                 printf("relinquishing control to gdb\n");
+#ifdef _MSC_VER
+                __debugbreak();
+#else
                 asm("int $3");
+#endif
                 printf("regaining control from gdb\n");
             } else if (strcmp(cmd, "break") == 0) {
                 if (argc == 2) {

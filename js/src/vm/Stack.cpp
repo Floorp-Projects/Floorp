@@ -856,7 +856,6 @@ FrameIter::operator++()
         MOZ_CRASH("Unexpected state");
       case INTERP:
         if (interpFrame()->isDebuggerEvalFrame() &&
-            interpFrame()->evalInFramePrev() &&
             data_.debuggerEvalOption_ == FOLLOW_DEBUGGER_EVAL_PREV_LINK)
         {
             AbstractFramePtr eifPrev = interpFrame()->evalInFramePrev();
@@ -891,15 +890,6 @@ FrameIter::copyData() const
     if (data && isIonScripted())
         data->ionInlineFrameNo_ = ionInlineFrames_.frameNo();
     return data;
-}
-
-AbstractFramePtr
-FrameIter::copyDataAsAbstractFramePtr() const
-{
-    AbstractFramePtr frame;
-    if (Data* data = copyData())
-        frame.ptr_ = uintptr_t(data);
-    return frame;
 }
 
 void*

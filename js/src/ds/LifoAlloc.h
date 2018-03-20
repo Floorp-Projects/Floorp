@@ -118,10 +118,10 @@ class SingleLinkedList
             return *this;
         }
 
-        bool operator!=(Iterator& other) const {
+        bool operator!=(const Iterator& other) const {
             return current_ != other.current_;
         }
-        bool operator==(Iterator& other) const {
+        bool operator==(const Iterator& other) const {
             return current_ == other.current_;
         }
     };
@@ -724,13 +724,14 @@ class LifoAlloc
 
     // Return true if the LifoAlloc does not currently contain any allocations.
     bool isEmpty() const {
-        return chunks_.empty() || !chunks_.last()->empty();
+        return chunks_.empty() ||
+               (chunks_.begin() == chunks_.last() && chunks_.last()->empty());
     }
 
     // Return the number of bytes remaining to allocate in the current chunk.
     // e.g. How many bytes we can allocate before needing a new block.
     size_t availableInCurrentChunk() const {
-        if (!chunks_.empty())
+        if (chunks_.empty())
             return 0;
         return chunks_.last()->unused();
     }

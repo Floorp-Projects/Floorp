@@ -32,11 +32,23 @@ StoreBuffer::GenericBuffer::trace(StoreBuffer* owner, JSTracer* trc)
     }
 }
 
+inline void
+StoreBuffer::checkEmpty() const
+{
+    MOZ_ASSERT(bufferVal.isEmpty());
+    MOZ_ASSERT(bufferCell.isEmpty());
+    MOZ_ASSERT(bufferSlot.isEmpty());
+    MOZ_ASSERT(bufferGeneric.isEmpty());
+    MOZ_ASSERT(!bufferWholeCell);
+}
+
 bool
 StoreBuffer::enable()
 {
     if (enabled_)
         return true;
+
+    checkEmpty();
 
     if (!bufferVal.init() ||
         !bufferCell.init() ||
@@ -53,6 +65,8 @@ StoreBuffer::enable()
 void
 StoreBuffer::disable()
 {
+    checkEmpty();
+
     if (!enabled_)
         return;
 
@@ -76,7 +90,7 @@ StoreBuffer::clear()
     bufferGeneric.clear();
 
     for (ArenaCellSet* set = bufferWholeCell; set; set = set->next)
-        set->arena->bufferedCells() = nullptr;
+        set->arena->bufferedCells() = &ArenaCellSet::Empty;
     bufferWholeCell = nullptr;
 }
 
@@ -110,11 +124,24 @@ StoreBuffer::addToWholeCellBuffer(ArenaCellSet* set)
     bufferWholeCell = set;
 }
 
-ArenaCellSet ArenaCellSet::Empty(nullptr);
+ArenaCellSet ArenaCellSet::Empty;
+
+ArenaCellSet::ArenaCellSet()
+  : arena(nullptr)
+  , next(nullptr)
+#ifdef DEBUG
+  , minorGCNumberAtCreation(0)
+#endif
+{}
 
 ArenaCellSet::ArenaCellSet(Arena* arena)
-  : arena(arena), next(nullptr)
+  : arena(arena)
+  , next(nullptr)
+#ifdef DEBUG
+  , minorGCNumberAtCreation(arena->zone->runtimeFromActiveCooperatingThread()->gc.minorGCCount())
+#endif
 {
+    MOZ_ASSERT(arena);
     bits.clear(false);
 }
 
@@ -122,11 +149,11 @@ ArenaCellSet*
 js::gc::AllocateWholeCellSet(Arena* arena)
 {
     Zone* zone = arena->zone;
-    if (!zone->group()->nursery().isEnabled())
+    Nursery& nursery = zone->group()->nursery();
+    if (!nursery.isEnabled())
         return nullptr;
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    Nursery& nursery = zone->group()->nursery();
     void* data = nursery.allocateBuffer(zone, sizeof(ArenaCellSet));
     if (!data)
         oomUnsafe.crash("Failed to allocate WholeCellSet");
