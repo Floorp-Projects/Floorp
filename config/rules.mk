@@ -100,28 +100,13 @@ endif # ENABLE_TESTS
 
 ifndef LIBRARY
 ifdef REAL_LIBRARY
-# Don't build actual static library if a shared library is also built
-ifdef FORCE_SHARED_LIB
-# ... except when we really want one
 ifdef NO_EXPAND_LIBS
 LIBRARY			:= $(REAL_LIBRARY)
 else
 LIBRARY			:= $(REAL_LIBRARY).$(LIBS_DESC_SUFFIX)
 endif
-else
-# Only build actual library if it is installed in DIST/lib
-ifeq (,$(DIST_INSTALL)$(NO_EXPAND_LIBS))
-LIBRARY			:= $(REAL_LIBRARY).$(LIBS_DESC_SUFFIX)
-else
-ifdef NO_EXPAND_LIBS
-LIBRARY			:= $(REAL_LIBRARY)
-else
-LIBRARY			:= $(REAL_LIBRARY) $(REAL_LIBRARY).$(LIBS_DESC_SUFFIX)
 endif
 endif
-endif
-endif # REAL_LIBRARY
-endif # LIBRARY
 
 ifndef HOST_LIBRARY
 ifdef HOST_LIBRARY_NAME
