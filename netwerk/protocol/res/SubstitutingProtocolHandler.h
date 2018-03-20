@@ -136,6 +136,11 @@ public:
     explicit Mutator() = default;
   private:
     virtual ~Mutator() = default;
+
+    SubstitutingURL* Create() override
+    {
+      return new SubstitutingURL();
+    }
   };
 
   NS_IMETHOD Mutate(nsIURIMutator** aMutator) override
