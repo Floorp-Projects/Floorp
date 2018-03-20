@@ -45,7 +45,7 @@ nsCSSPseudoElements::kPseudoElementFlags[] = {
 #undef CSS_PSEUDO_ELEMENT
 };
 
-void nsCSSPseudoElements::AddRefAtoms()
+void nsCSSPseudoElements::RegisterStaticAtoms()
 {
   NS_RegisterStaticAtoms(sCSSPseudoElementAtomSetup);
 }
