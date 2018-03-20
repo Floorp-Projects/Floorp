@@ -32,11 +32,6 @@ class BaseURIMutator
 // in order to avoid code duplication
 // Class type T should be the type of the class that implements nsIURI
 protected:
-  virtual T* Create()
-  {
-    return new T();
-  }
-
   MOZ_MUST_USE nsresult InitFromURI(T* aURI)
   {
     nsCOMPtr<nsIURI> clone;
@@ -50,7 +45,7 @@ protected:
 
   MOZ_MUST_USE nsresult InitFromInputStream(nsIObjectInputStream* aStream)
   {
-    RefPtr<T> uri = Create();
+    RefPtr<T> uri = new T();
     nsresult rv = uri->ReadPrivate(aStream);
     if (NS_FAILED(rv)) {
       return rv;
@@ -61,7 +56,7 @@ protected:
 
   MOZ_MUST_USE nsresult InitFromIPCParams(const mozilla::ipc::URIParams& aParams)
   {
-    RefPtr<T> uri = Create();
+    RefPtr<T> uri = new T();
     bool ret = uri->Deserialize(aParams);
     if (!ret) {
       return NS_ERROR_FAILURE;
@@ -78,7 +73,7 @@ protected:
       // This only works because all other Init methods create a new object
       mURI.swap(uri);
     } else {
-      uri = Create();
+      uri = new T();
     }
 
     rv = uri->SetSpecInternal(aSpec);

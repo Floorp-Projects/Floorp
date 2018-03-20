@@ -44,32 +44,3 @@ interface nsINestedURI : nsISupports
    */
   readonly attribute nsIURI innermostURI;
 };
-
-[scriptable, builtinclass, uuid(ca3d6c03-4eee-4271-a97a-d16c0a0b2c5c)]
-interface nsINestedURIMutator : nsISupports
-{
-  /*
-   *  - Creates a new URI with the given innerURI.
-   */
-  [must_use, noscript] void init(in nsIURI innerURI);
-};
-
-[scriptable, builtinclass, uuid(c6357a3b-c2bb-4b4b-9278-513377398a38)]
-interface nsINestedAboutURIMutator : nsISupports
-{
-  /*
-   *  - Creates a new URI with the given innerURI and base.
-   */
-  [must_use, noscript] void initWithBase(in nsIURI innerURI, in nsIURI baseURI);
-};
-
-[scriptable, builtinclass, uuid(3bd44535-08ea-478f-99b9-85fa1084e820)]
-interface nsIJSURIMutator : nsISupports
-{
-  /*
-   *  - Inits the URI by setting the base URI
-   *  - It is the caller's responsibility to also call SetSpec afterwards,
-   *    otherwise we will return an incomplete URI (with only a base)
-   */
-  [must_use, noscript] void setBase(in nsIURI aBaseURI);
-};
