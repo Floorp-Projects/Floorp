@@ -59,6 +59,91 @@
 // requested the node will switch to full refresh mode.
 #define MAX_BATCH_CHANGES_BEFORE_REFRESH 5
 
+using namespace mozilla;
+using namespace mozilla::places;
+
+namespace {
+
+/**
+ * Returns conditions for query update.
+ *    QUERYUPDATE_TIME:
+ *      This query is only limited by an inclusive time range on the first
+ *      query object. The caller can quickly evaluate the time itself if it
+ *      chooses. This is even simpler than "simple" below.
+ *    QUERYUPDATE_SIMPLE:
+ *      This query is evaluatable using EvaluateQueryForNode to do live
+ *      updating.
+ *    QUERYUPDATE_COMPLEX:
+ *      This query is not evaluatable using EvaluateQueryForNode. When something
+ *      happens that this query updates, you will need to re-run the query.
+ *    QUERYUPDATE_COMPLEX_WITH_BOOKMARKS:
+ *      A complex query that additionally has dependence on bookmarks. All
+ *      bookmark-dependent queries fall under this category.
+ *    QUERYUPDATE_MOBILEPREF:
+ *      A complex query but only updates when the mobile preference changes.
+ *    QUERYUPDATE_NONE:
+ *      A query that never updates, e.g. the left-pane root query.
+ *
+ *    aHasSearchTerms will be set to true if the query has any dependence on
+ *    keywords. When there is no dependence on keywords, we can handle title
+ *    change operations as simple instead of complex.
+ */
+uint32_t
+getUpdateRequirements(const RefPtr<nsNavHistoryQuery>& aQuery,
+                      const RefPtr<nsNavHistoryQueryOptions>& aOptions,
+                      bool* aHasSearchTerms)
+{
+  // first check if there are search terms
+  bool hasSearchTerms = *aHasSearchTerms = !aQuery->SearchTerms().IsEmpty();
+
+  bool nonTimeBasedItems = false;
+  bool domainBasedItems = false;
+
+  if (aQuery->Folders().Length() > 0 ||
+      aQuery->OnlyBookmarked() ||
+      aQuery->Tags().Length() > 0 ||
+      (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS &&
+        hasSearchTerms)) {
+    return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
+  }
+
+  // Note: we don't currently have any complex non-bookmarked items, but these
+  // are expected to be added. Put detection of these items here.
+  if (hasSearchTerms ||
+      !aQuery->Domain().IsVoid() ||
+      aQuery->Uri() != nullptr)
+    nonTimeBasedItems = true;
+
+  if (!aQuery->Domain().IsVoid())
+    domainBasedItems = true;
+
+  if (aOptions->ResultType() ==
+        nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
+      return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
+
+  if (aOptions->ResultType() ==
+        nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY)
+      return QUERYUPDATE_MOBILEPREF;
+
+  if (aOptions->ResultType() ==
+        nsINavHistoryQueryOptions::RESULTS_AS_LEFT_PANE_QUERY)
+      return QUERYUPDATE_NONE;
+
+  // Whenever there is a maximum number of results,
+  // and we are not a bookmark query we must requery. This
+  // is because we can't generally know if any given addition/change causes
+  // the item to be in the top N items in the database.
+  if (aOptions->MaxResults() > 0)
+    return QUERYUPDATE_COMPLEX;
+
+  if (domainBasedItems)
+    return QUERYUPDATE_HOST;
+  if (!nonTimeBasedItems)
+    return QUERYUPDATE_TIME;
+
+  return QUERYUPDATE_SIMPLE;
+}
+
 // Emulate string comparison (used for sorting) for PRTime and int.
 inline int32_t ComparePRTime(PRTime a, PRTime b)
 {
@@ -73,8 +158,7 @@ inline int32_t CompareIntegers(uint32_t a, uint32_t b)
   return a - b;
 }
 
-using namespace mozilla;
-using namespace mozilla::places;
+} // anonymous namespace
 
 NS_IMPL_CYCLE_COLLECTION(nsNavHistoryResultNode, mParent)
 
@@ -301,20 +385,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNavHistoryContainerResultNode)
   NS_INTERFACE_MAP_STATIC_AMBIGUOUS(nsNavHistoryContainerResultNode)
   NS_INTERFACE_MAP_ENTRY(nsINavHistoryContainerResultNode)
 NS_INTERFACE_MAP_END_INHERITING(nsNavHistoryResultNode)
-
-nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
-    const nsACString& aURI, const nsACString& aTitle, uint32_t aContainerType,
-    nsNavHistoryQueryOptions* aOptions) :
-  nsNavHistoryResultNode(aURI, aTitle, 0, 0),
-  mResult(nullptr),
-  mContainerType(aContainerType),
-  mExpanded(false),
-  mOptions(aOptions),
-  mAsyncCanceledState(NOT_CANCELED)
-{
-  MOZ_ASSERT(mOptions);
-  MOZ_ALWAYS_SUCCEEDS(mOptions->Clone(getter_AddRefs(mOriginalOptions)));
-}
 
 nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
     const nsACString& aURI, const nsACString& aTitle,
@@ -1690,55 +1760,20 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNavHistoryQueryResultNode,
                             nsINavHistoryQueryResultNode)
 
 nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
-    const nsACString& aTitle, const nsACString& aQueryURI) :
-  nsNavHistoryContainerResultNode(aQueryURI, aTitle,
-                                  nsNavHistoryResultNode::RESULT_TYPE_QUERY,
-                                  new nsNavHistoryQueryOptions()),
-  mLiveUpdate(QUERYUPDATE_COMPLEX_WITH_BOOKMARKS),
-  mHasSearchTerms(false),
-  mContentsValid(false),
-  mBatchChanges(0)
-{
-}
-
-nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
-    const nsACString& aTitle, const RefPtr<nsNavHistoryQuery>& aQuery,
-    nsNavHistoryQueryOptions* aOptions) :
-  nsNavHistoryContainerResultNode(EmptyCString(), aTitle,
-                                  nsNavHistoryResultNode::RESULT_TYPE_QUERY,
-                                  aOptions),
-  mQuery(aQuery),
-  mContentsValid(false),
-  mBatchChanges(0),
-  mTransitions(aQuery->Transitions())
-{
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ASSERTION(history, "History service missing");
-  if (history) {
-    mLiveUpdate = history->GetUpdateRequirements(mQuery, mOptions,
-                                                 &mHasSearchTerms);
-  }
-}
-
-nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
     const nsACString& aTitle,
     PRTime aTime,
+    const nsACString& aQueryURI,
     const RefPtr<nsNavHistoryQuery>& aQuery,
-    nsNavHistoryQueryOptions* aOptions) :
-  nsNavHistoryContainerResultNode(EmptyCString(), aTitle, aTime,
-                                  nsNavHistoryResultNode::RESULT_TYPE_QUERY,
-                                  aOptions),
+    const RefPtr<nsNavHistoryQueryOptions>& aOptions)
+  : nsNavHistoryContainerResultNode(aQueryURI, aTitle, aTime,
+                                    nsNavHistoryResultNode::RESULT_TYPE_QUERY,
+                                    aOptions),
   mQuery(aQuery),
+  mLiveUpdate(getUpdateRequirements(aQuery, aOptions, &mHasSearchTerms)),
   mContentsValid(false),
   mBatchChanges(0),
   mTransitions(aQuery->Transitions())
 {
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ASSERTION(history, "History service missing");
-  if (history) {
-    mLiveUpdate = history->GetUpdateRequirements(mQuery, mOptions,
-                                                 &mHasSearchTerms);
-  }
 }
 
 nsNavHistoryQueryResultNode::~nsNavHistoryQueryResultNode() {
@@ -1911,8 +1946,6 @@ nsNavHistoryQueryResultNode::GetHasChildren(bool* aHasChildren)
 NS_IMETHODIMP
 nsNavHistoryQueryResultNode::GetUri(nsACString& aURI)
 {
-  nsresult rv = VerifyQuerySerialized();
-  NS_ENSURE_SUCCESS(rv, rv);
   aURI = mURI;
   return NS_OK;
 }
@@ -1934,9 +1967,6 @@ nsNavHistoryQueryResultNode::GetTargetFolderGuid(nsACString& aGuid) {
 NS_IMETHODIMP
 nsNavHistoryQueryResultNode::GetQuery(nsINavHistoryQuery** _query)
 {
-  nsresult rv = VerifyQueryParsed();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsINavHistoryQuery> query = do_QueryInterface(mQuery);
   query.forget(_query);
   return NS_OK;
@@ -1958,77 +1988,23 @@ nsNavHistoryQueryResultNode::GetQueryOptions(nsINavHistoryQueryOptions** _option
 nsNavHistoryQueryOptions*
 nsNavHistoryQueryResultNode::Options()
 {
-  nsresult rv = VerifyQueryParsed();
-  if (NS_FAILED(rv))
-    return nullptr;
   MOZ_ASSERT(mOptions, "Options invalid, cannot generate from URI");
   return mOptions;
 }
 
-
-nsresult
-nsNavHistoryQueryResultNode::VerifyQueryParsed()
-{
-  if (mQuery) {
-    MOZ_ASSERT(mOriginalOptions && mOptions,
-               "A result with a parsed query must have options");
-    return NS_OK;
-  }
-  NS_ASSERTION(!mURI.IsEmpty(),
-               "Query nodes must have either a URI or query/options");
-
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-
-  nsCOMPtr<nsINavHistoryQuery> query;
-  nsCOMPtr<nsINavHistoryQueryOptions> options;
-  nsresult rv = history->QueryStringToQuery(mURI, getter_AddRefs(query),
-                                            getter_AddRefs(options));
-  NS_ENSURE_SUCCESS(rv, rv);
-  mOptions = do_QueryObject(options);
-  NS_ENSURE_STATE(mOptions);
-  mQuery = do_QueryObject(query);
-  NS_ENSURE_STATE(mQuery);
-  mLiveUpdate = history->GetUpdateRequirements(mQuery, mOptions,
-                                               &mHasSearchTerms);
-  return NS_OK;
-}
-
-
-nsresult
-nsNavHistoryQueryResultNode::VerifyQuerySerialized()
-{
-  if (!mURI.IsEmpty()) {
-    return NS_OK;
-  }
-  MOZ_ASSERT(mQuery && mOptions,
-             "Query nodes must have either a URI or query/options");
-
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  nsCOMPtr<nsINavHistoryQuery> query = do_QueryInterface(mQuery);
-  nsresult rv = history->QueryToQueryString(query, mOriginalOptions, mURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_STATE(!mURI.IsEmpty());
-  return NS_OK;
-}
-
-
 nsresult
 nsNavHistoryQueryResultNode::FillChildren()
 {
-  NS_ASSERTION(!mContentsValid,
-               "Don't call FillChildren when contents are valid");
-  NS_ASSERTION(mChildren.Count() == 0,
-               "We are trying to fill children when there already are some");
-
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+  MOZ_ASSERT(!mContentsValid,
+             "Don't call FillChildren when contents are valid");
+  MOZ_ASSERT(mChildren.Count() == 0,
+             "We are trying to fill children when there already are some");
+  NS_ENSURE_STATE(mQuery && mOptions);
 
   // get the results from the history service
-  nsresult rv = VerifyQueryParsed();
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = history->GetQueryResults(this, mQuery, mOptions, &mChildren);
+  nsNavHistory* history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv = history->GetQueryResults(this, mQuery, mOptions, &mChildren);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // it is important to call FillStats to fill in the parents on all
@@ -2937,7 +2913,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNavHistoryFolderResultNode,
 nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
     const nsACString& aTitle, nsNavHistoryQueryOptions* aOptions,
     int64_t aFolderId) :
-  nsNavHistoryContainerResultNode(EmptyCString(), aTitle,
+  nsNavHistoryContainerResultNode(EmptyCString(), aTitle, 0,
                                   nsNavHistoryResultNode::RESULT_TYPE_FOLDER,
                                   aOptions),
   mContentsValid(false),
@@ -3058,7 +3034,6 @@ nsNavHistoryFolderResultNode::GetUri(nsACString& aURI)
   nsresult rv = GetQuery(getter_AddRefs(query));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // make array of our 1 query
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
   rv = history->QueryToQueryString(query, mOriginalOptions, mURI);
@@ -3542,7 +3517,6 @@ nsNavHistoryFolderResultNode::OnItemAdded(int64_t aItemId,
   }
   else if (aItemType == nsINavBookmarksService::TYPE_SEPARATOR) {
     node = new nsNavHistorySeparatorResultNode();
-    NS_ENSURE_TRUE(node, NS_ERROR_OUT_OF_MEMORY);
     node->mItemId = aItemId;
     node->mBookmarkGuid = aGUID;
     node->mDateAdded = aDateAdded;

@@ -391,4 +391,26 @@ var PlacesTestUtils = Object.freeze({
       }
     );
   },
+
+  /**
+   * Compares 2 place: URLs ignoring the order of their params.
+   * @param url1 First URL to compare
+   * @param url2 Second URL to compare
+   * @return whether the URLs are the same
+   */
+  ComparePlacesURIs(url1, url2) {
+    url1 = url1 instanceof Ci.nsIURI ? url1.spec : new URL(url1);
+    if (url1.protocol != "place:")
+      throw new Error("Expected a place: uri, got " + url1.href);
+    url2 = url2 instanceof Ci.nsIURI ? url2.spec : new URL(url2);
+    if (url2.protocol != "place:")
+      throw new Error("Expected a place: uri, got " + url2.href);
+    let tokens1 = url1.pathname.split("&").sort().join("&");
+    let tokens2 = url2.pathname.split("&").sort().join("&");
+    if (tokens1 != tokens2) {
+      dump(`Failed comparison between:\n${tokens1}\n${tokens2}\n`);
+      return false;
+    }
+    return true;
+  },
 });
