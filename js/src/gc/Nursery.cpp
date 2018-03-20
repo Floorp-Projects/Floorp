@@ -126,7 +126,6 @@ js::Nursery::Nursery(JSRuntime* rt)
   , canAllocateStrings_(false)
   , reportTenurings_(0)
   , minorGCTriggerReason_(JS::gcreason::NO_REASON)
-  , minorGcCount_(0)
   , freeMallocedBuffersTask(nullptr)
 #ifdef JS_GC_ZEAL
   , lastCanary_(nullptr)
@@ -643,7 +642,9 @@ void
 js::Nursery::printTotalProfileTimes()
 {
     if (enableProfiling_) {
-        fprintf(stderr, "MinorGC TOTALS: %7" PRIu64 " collections:             ", minorGcCount_);
+        fprintf(stderr,
+                "MinorGC TOTALS: %7" PRIu64 " collections:             ",
+                runtime()->gc.minorGCCount());
         printProfileDurations(totalDurations_);
     }
 }
@@ -696,7 +697,6 @@ js::Nursery::collect(JS::gcreason::Reason reason)
         return;
 
     JSRuntime* rt = runtime();
-    rt->gc.incMinorGcNumber();
 
 #ifdef JS_GC_ZEAL
     if (rt->gc.hasZealMode(ZealMode::CheckNursery)) {
@@ -787,7 +787,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
         disable();
 
     endProfile(ProfileKey::Total);
-    minorGcCount_++;
+    rt->gc.incMinorGcNumber();
 
     TimeDuration totalTime = profileDurations_[ProfileKey::Total];
     rt->addTelemetry(JS_TELEMETRY_GC_MINOR_US, totalTime.ToMicroseconds());

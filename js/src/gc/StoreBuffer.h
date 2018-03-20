@@ -138,6 +138,10 @@ class StoreBuffer
             return stores_.sizeOfExcludingThis(mallocSizeOf);
         }
 
+        bool isEmpty() const {
+            return last_ == T() && (!stores_.initialized() || stores_.empty());
+        }
+
       private:
         MonoTypeBuffer& operator=(const MonoTypeBuffer& other) = delete;
     };
@@ -197,7 +201,7 @@ class StoreBuffer
             return storage_ ? storage_->sizeOfIncludingThis(mallocSizeOf) : 0;
         }
 
-        bool isEmpty() {
+        bool isEmpty() const {
             return !storage_ || storage_->isEmpty();
         }
 
@@ -401,6 +405,7 @@ class StoreBuffer
     }
 
     MOZ_MUST_USE bool enable();
+
     void disable();
     bool isEnabled() const { return enabled_; }
 
@@ -450,6 +455,8 @@ class StoreBuffer
     void addToWholeCellBuffer(ArenaCellSet* set);
 
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::GCSizes* sizes);
+
+    void checkEmpty() const;
 };
 
 // A set of cells in an arena used to implement the whole cell store buffer.
@@ -465,6 +472,15 @@ class ArenaCellSet
 
     // Bit vector for each possible cell start position.
     BitArray<MaxArenaCellIndex> bits;
+
+#ifdef DEBUG
+    // The minor GC number when this was created. This object should not survive
+    // past the next minor collection.
+    const uint64_t minorGCNumberAtCreation;
+#endif
+
+    // Construct the empty sentinel object.
+    ArenaCellSet();
 
   public:
     explicit ArenaCellSet(Arena* arena);
