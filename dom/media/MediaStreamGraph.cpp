@@ -32,6 +32,7 @@
 #include "mozilla/Unused.h"
 #include "mtransport/runnable_utils.h"
 #include "VideoUtils.h"
+#include "Tracing.h"
 
 #include "webaudio/blink/DenormalDisabler.h"
 #include "webaudio/blink/HRTFDatabaseLoader.h"
@@ -40,6 +41,8 @@ using namespace mozilla::layers;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::media;
+
+mozilla::AsyncLogger gMSGTraceLogger("MSGTracing");
 
 namespace mozilla {
 
@@ -68,6 +71,10 @@ MediaStreamGraphImpl::~MediaStreamGraphImpl()
              "All streams should have been destroyed by messages from the main thread");
   LOG(LogLevel::Debug, ("MediaStreamGraph %p destroyed", this));
   LOG(LogLevel::Debug, ("MediaStreamGraphImpl::~MediaStreamGraphImpl"));
+
+#ifdef TRACING
+  gMSGTraceLogger.Stop();
+#endif
 }
 
 void
@@ -3614,6 +3621,12 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
     } else {
       mDriver = new SystemClockDriver(this);
     }
+
+#ifdef TRACING
+    // This is a noop if the logger has not been enabled.
+    gMSGTraceLogger.Start();
+    gMSGTraceLogger.Log("[");
+#endif
   } else {
     mDriver = new OfflineClockDriver(this, MEDIA_GRAPH_TARGET_PERIOD_MS);
   }
