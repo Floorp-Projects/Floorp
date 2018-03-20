@@ -34,7 +34,6 @@
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMEvent.h"                // for nsIDOMEvent
 #include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
-#include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
 #include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIFocusManager.h"            // for nsIFocusManager
@@ -450,7 +449,7 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
     }
     // click
     case eMouseClick: {
-      nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+      MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
       NS_ENSURE_TRUE(mouseEvent, NS_OK);
       // If the preceding mousedown event or mouseup event was consumed,
       // editor shouldn't handle this click event.
@@ -636,7 +635,7 @@ EditorEventListener::KeyPress(WidgetKeyboardEvent* aKeyboardEvent)
 }
 
 nsresult
-EditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
+EditorEventListener::MouseClick(MouseEvent* aMouseEvent)
 {
   if (NS_WARN_IF(!aMouseEvent) || DetachedFromEditor()) {
     return NS_OK;
@@ -644,7 +643,7 @@ EditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
   // nothing to do if editor isn't editable or clicked on out of the editor.
   RefPtr<EditorBase> editorBase(mEditorBase);
   WidgetMouseEvent* clickEvent =
-    aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
+    aMouseEvent->WidgetEventPtr()->AsMouseEvent();
   if (editorBase->IsReadonly() || editorBase->IsDisabled() ||
       !editorBase->IsAcceptableInputEvent(clickEvent)) {
     return NS_OK;
@@ -681,12 +680,12 @@ EditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
 }
 
 nsresult
-EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
+EditorEventListener::HandleMiddleClickPaste(MouseEvent* aMouseEvent)
 {
   MOZ_ASSERT(aMouseEvent);
 
   WidgetMouseEvent* clickEvent =
-    aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
+    aMouseEvent->WidgetEventPtr()->AsMouseEvent();
   MOZ_ASSERT(!DetachedFromEditorOrDefaultPrevented(clickEvent));
 
   if (!Preferences::GetBool("middlemouse.paste", false)) {

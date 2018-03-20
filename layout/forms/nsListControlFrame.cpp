@@ -12,7 +12,6 @@
 #include "nsGkAtoms.h"
 #include "nsComboboxControlFrame.h"
 #include "nsIPresShell.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIXULRuntime.h"
 #include "nsFontMetrics.h"
 #include "nsIScrollableFrame.h"
@@ -1607,7 +1606,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 {
   NS_ASSERTION(aMouseEvent != nullptr, "aMouseEvent is null.");
 
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
   NS_ENSURE_TRUE(mouseEvent, NS_ERROR_FAILURE);
 
   UpdateInListState(aMouseEvent);
@@ -1891,7 +1890,7 @@ nsresult
 nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
 {
   NS_ASSERTION(aMouseEvent, "aMouseEvent is null.");
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  MouseEvent* mouseEvent = aMouseEvent->InternalDOMEvent()->AsMouseEvent();
   NS_ENSURE_TRUE(mouseEvent, NS_ERROR_FAILURE);
 
   UpdateInListState(aMouseEvent);

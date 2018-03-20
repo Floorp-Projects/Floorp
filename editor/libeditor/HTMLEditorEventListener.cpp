@@ -193,15 +193,13 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
 }
 
 nsresult
-HTMLEditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
+HTMLEditorEventListener::MouseClick(MouseEvent* aMouseEvent)
 {
   if (NS_WARN_IF(DetachedFromEditor())) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  nsresult rv = aMouseEvent->AsEvent()->GetTarget(getter_AddRefs(target));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMEventTarget> target = aMouseEvent->GetTarget();
   NS_ENSURE_TRUE(target, NS_ERROR_NULL_POINTER);
   nsCOMPtr<Element> element = do_QueryInterface(target);
   if (NS_WARN_IF(!element)) {

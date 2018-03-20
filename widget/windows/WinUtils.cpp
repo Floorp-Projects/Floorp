@@ -14,7 +14,6 @@
 #include "nsWindow.h"
 #include "nsWindowDefs.h"
 #include "KeyboardLayout.h"
-#include "nsIDOMMouseEvent.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/2D.h"
