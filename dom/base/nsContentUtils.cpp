@@ -5800,9 +5800,7 @@ nsContentUtils::GetWindowProviderForContentProcess()
 already_AddRefed<nsPIDOMWindowOuter>
 nsContentUtils::GetMostRecentNonPBWindow()
 {
-  nsCOMPtr<nsIWindowMediator> windowMediator =
-    do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
-  nsCOMPtr<nsIWindowMediator_44> wm = do_QueryInterface(windowMediator);
+  nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
 
   nsCOMPtr<mozIDOMWindowProxy> window;
   wm->GetMostRecentNonPBWindow(u"navigator:browser",

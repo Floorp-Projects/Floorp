@@ -266,7 +266,7 @@ load 1415663.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1415353.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1415021.html
 load 1418059.html
-skip-if(!stylo) test-pref(dom.animations-api.core.enabled,true) load 1418867.html
+test-pref(dom.animations-api.core.enabled,true) load 1418867.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1419554.html
 load 1426312.html
 load 1439793.html

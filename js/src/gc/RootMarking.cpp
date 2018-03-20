@@ -460,6 +460,7 @@ class BufferGrayRootsTracer final : public JS::CallbackTracer
     {}
 
     bool failed() const { return bufferingGrayRootsFailed; }
+    void setFailed() { bufferingGrayRootsFailed = true; }
 
 #ifdef DEBUG
     TracerKind getTracerKind() const override { return TracerKind::GrayBuffering; }
@@ -477,6 +478,9 @@ js::IsBufferGrayRootsTracer(JSTracer* trc)
 }
 #endif
 
+// A canary value used to check the gray buffer contents are valid.
+static Cell* const GrayBufferCanary = reinterpret_cast<Cell*>(0x47726179); // "Gray"
+
 void
 js::gc::GCRuntime::bufferGrayRoots()
 {
@@ -489,6 +493,12 @@ js::gc::GCRuntime::bufferGrayRoots()
     BufferGrayRootsTracer grayBufferer(rt);
     if (JSTraceDataOp op = grayRootTracer.op)
         (*op)(&grayBufferer, grayRootTracer.data);
+
+    // Push a canary value onto the end of the list.
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        if (!zone->gcGrayRoots().empty() && !zone->gcGrayRoots().append(GrayBufferCanary))
+            grayBufferer.setFailed();
+    }
 
     // Propagate the failure flag from the marker to the runtime.
     if (grayBufferer.failed()) {
@@ -531,8 +541,19 @@ GCRuntime::markBufferedGrayRoots(JS::Zone* zone)
     MOZ_ASSERT(grayBufferState == GrayBufferState::Okay);
     MOZ_ASSERT(zone->isGCMarkingGray() || zone->isGCCompacting());
 
-    for (auto cell : zone->gcGrayRoots())
+    auto& roots = zone->gcGrayRoots();
+    if (roots.empty())
+        return;
+
+    // Check for and remove canary value.
+    MOZ_RELEASE_ASSERT(roots.length() > 1);
+    MOZ_RELEASE_ASSERT(roots.back() == GrayBufferCanary);
+    roots.popBack();
+
+    for (auto cell : zone->gcGrayRoots()) {
+        MOZ_ASSERT(IsCellPointerValid(cell));
         TraceManuallyBarrieredGenericPointerEdge(&marker, &cell, "buffered gray root");
+    }
 }
 
 void

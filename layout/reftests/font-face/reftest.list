@@ -82,8 +82,8 @@ random-if(cocoaWidget) == sheet-set-switch-1.html sheet-set-switch-1-ref.html # 
 == insert-rule-1a.html insert-rule-1-ref.html
 == insert-rule-1b.html insert-rule-1-ref.html
 == delete-rule-1.html delete-rule-1-ref.html
-skip-if(styloVsGecko) == media-query-add-1.html media-query-add-1-ref.html # skip styloVsGecko for imperceptible pixel rounding differences between Stylo and Gecko
-skip-if(styloVsGecko) == media-query-remove-1.html media-query-remove-1-ref.html # skip styloVsGecko for imperceptible pixel rounding differences between Stylo and Gecko
+== media-query-add-1.html media-query-add-1-ref.html
+== media-query-remove-1.html media-query-remove-1-ref.html
 != media-query-add-1-ref.html media-query-remove-1-ref.html
 
 == ahem-metrics-1.html ahem-metrics-1-ref.html
