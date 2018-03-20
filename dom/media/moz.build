@@ -89,6 +89,7 @@ XPIDL_MODULE = 'dom_media'
 EXPORTS += [
     'ADTSDecoder.h',
     'ADTSDemuxer.h',
+    'AsyncLogger.h',
     'AudioBufferUtils.h',
     'AudioChannelFormat.h',
     'AudioCompactor.h',
@@ -153,6 +154,7 @@ EXPORTS += [
     'StreamTracks.h',
     'ThreadPoolCOMListener.h',
     'TimeUnits.h',
+    'Tracing.h',
     'TrackID.h',
     'TrackUnionStream.h',
     'VideoFrameContainer.h',
@@ -263,6 +265,7 @@ UNIFIED_SOURCES += [
     'TextTrackCueList.cpp',
     'TextTrackList.cpp',
     'TextTrackRegion.cpp',
+    'Tracing.cpp',
     'TrackUnionStream.cpp',
     'VideoFrameContainer.cpp',
     'VideoPlaybackQuality.cpp',
@@ -326,6 +329,7 @@ if CONFIG['MOZ_WEBRTC']:
     ]
 
 DEFINES['MOZILLA_INTERNAL_API'] = True
+DEFINES['TRACING'] = True
 
 if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
     DEFINES['MOZ_ANDROID_HLS_SUPPORT'] = True
