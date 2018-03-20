@@ -739,6 +739,7 @@ WebRenderCommandBuilder::RemoveUnusedAndResetWebRenderUserData()
 
       if (!userDataTable->Count()) {
         frame->RemoveProperty(WebRenderUserDataProperty::Key());
+        delete userDataTable;
       }
 
       if (data->GetType() == WebRenderUserData::UserDataType::eCanvas) {
