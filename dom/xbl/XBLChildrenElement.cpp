@@ -60,12 +60,11 @@ NS_INTERFACE_TABLE_HEAD(nsAnonymousContentList)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsAnonymousContentList)
 NS_INTERFACE_MAP_END
 
-NS_IMETHODIMP
-nsAnonymousContentList::GetLength(uint32_t* aLength)
+uint32_t
+nsAnonymousContentList::Length()
 {
   if (!mParent) {
-    *aLength = 0;
-    return NS_OK;
+    return 0;
   }
 
   uint32_t count = 0;
@@ -86,20 +85,7 @@ nsAnonymousContentList::GetLength(uint32_t* aLength)
     }
   }
 
-  *aLength = count;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAnonymousContentList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
-{
-  nsIContent* item = Item(aIndex);
-  if (!item) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return CallQueryInterface(item, aReturn);
+  return count;
 }
 
 nsIContent*
