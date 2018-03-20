@@ -66,27 +66,27 @@ namespace {
 
 /**
  * Returns conditions for query update.
- *    QUERYUPDATE_TIME:
- *      This query is only limited by an inclusive time range on the first
- *      query object. The caller can quickly evaluate the time itself if it
- *      chooses. This is even simpler than "simple" below.
- *    QUERYUPDATE_SIMPLE:
- *      This query is evaluatable using EvaluateQueryForNode to do live
- *      updating.
- *    QUERYUPDATE_COMPLEX:
- *      This query is not evaluatable using EvaluateQueryForNode. When something
- *      happens that this query updates, you will need to re-run the query.
- *    QUERYUPDATE_COMPLEX_WITH_BOOKMARKS:
- *      A complex query that additionally has dependence on bookmarks. All
- *      bookmark-dependent queries fall under this category.
- *    QUERYUPDATE_MOBILEPREF:
- *      A complex query but only updates when the mobile preference changes.
- *    QUERYUPDATE_NONE:
- *      A query that never updates, e.g. the left-pane root query.
+ *  QUERYUPDATE_TIME:
+ *    This query is only limited by an inclusive time range on the first
+ *    query object. The caller can quickly evaluate the time itself if it
+ *    chooses. This is even simpler than "simple" below.
+ *  QUERYUPDATE_SIMPLE:
+ *    This query is evaluatable using evaluateQueryForNode to do live
+ *    updating.
+ *  QUERYUPDATE_COMPLEX:
+ *    This query is not evaluatable using evaluateQueryForNode. When something
+ *    happens that this query updates, you will need to re-run the query.
+ *  QUERYUPDATE_COMPLEX_WITH_BOOKMARKS:
+ *    A complex query that additionally has dependence on bookmarks. All
+ *    bookmark-dependent queries fall under this category.
+ *  QUERYUPDATE_MOBILEPREF:
+ *    A complex query but only updates when the mobile preference changes.
+ *  QUERYUPDATE_NONE:
+ *    A query that never updates, e.g. the left-pane root query.
  *
- *    aHasSearchTerms will be set to true if the query has any dependence on
- *    keywords. When there is no dependence on keywords, we can handle title
- *    change operations as simple instead of complex.
+ *  aHasSearchTerms will be set to true if the query has any dependence on
+ *  keywords. When there is no dependence on keywords, we can handle title
+ *  change operations as simple instead of complex.
  */
 uint32_t
 getUpdateRequirements(const RefPtr<nsNavHistoryQuery>& aQuery,
@@ -142,6 +142,135 @@ getUpdateRequirements(const RefPtr<nsNavHistoryQuery>& aQuery,
     return QUERYUPDATE_TIME;
 
   return QUERYUPDATE_SIMPLE;
+}
+
+/**
+ * We might have interesting encodings and different case in the host name.
+ * This will convert that host name into an ASCII host name by sending it
+ * through the URI canonicalization. The result can be used for comparison
+ * with other ASCII host name strings.
+ */
+nsresult
+asciiHostNameFromHostString(const nsACString& aHostName,
+                                          nsACString& aAscii)
+{
+  aAscii.Truncate();
+  if (aHostName.IsEmpty()) {
+    return NS_OK;
+  }
+  // To properly generate a uri we must provide a protocol.
+  nsAutoCString fakeURL("http://");
+  fakeURL.Append(aHostName);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), fakeURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = uri->GetAsciiHost(aAscii);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+/**
+ * This runs the node through the given query to see if satisfies the
+ * query conditions. Not every query parameters are handled by this code,
+ * but we handle the most common ones so that performance is better.
+ * We assume that the time on the node is the time that we want to compare.
+ * This is not necessarily true because URL nodes have the last access time,
+ * which is not necessarily the same. However, since this is being called
+ * to update the list, we assume that the last access time is the current
+ * access time that we are being asked to compare so it works out.
+ * Returns true if node matches the query, false if not.
+ */
+bool
+evaluateQueryForNode(const RefPtr<nsNavHistoryQuery>& aQuery,
+                     const RefPtr<nsNavHistoryQueryOptions>& aOptions,
+                     const RefPtr<nsNavHistoryResultNode>& aNode)
+{
+  // Hidden
+  if (aNode->mHidden && !aOptions->IncludeHidden())
+    return false;
+
+  bool hasIt;
+  // Begin time
+  aQuery->GetHasBeginTime(&hasIt);
+  if (hasIt) {
+    PRTime beginTime = nsNavHistory::NormalizeTime(aQuery->BeginTimeReference(),
+                                                   aQuery->BeginTime());
+    if (aNode->mTime < beginTime)
+      return false;
+  }
+
+  // End time
+  aQuery->GetHasEndTime(&hasIt);
+  if (hasIt) {
+    PRTime endTime = nsNavHistory::NormalizeTime(aQuery->EndTimeReference(),
+                                                 aQuery->EndTime());
+    if (aNode->mTime > endTime)
+      return false;
+  }
+
+  // Search terms
+  if (!aQuery->SearchTerms().IsEmpty()) {
+    // we can use the existing filtering code, just give it our one object in
+    // an array.
+    nsCOMArray<nsNavHistoryResultNode> inputSet;
+    inputSet.AppendObject(aNode);
+    nsCOMArray<nsNavHistoryResultNode> filteredSet;
+    nsresult rv = nsNavHistory::FilterResultSet(nullptr, inputSet, &filteredSet, aQuery, aOptions);
+    if (NS_FAILED(rv))
+      return false;
+    if (!filteredSet.Count())
+      return false;
+  }
+
+  // Domain/host
+  if (!aQuery->Domain().IsVoid()) {
+    nsCOMPtr<nsIURI> nodeUri;
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(nodeUri), aNode->mURI)))
+      return false;
+    nsAutoCString asciiRequest;
+    if (NS_FAILED(asciiHostNameFromHostString(aQuery->Domain(), asciiRequest)))
+      return false;
+    if (aQuery->DomainIsHost()) {
+      nsAutoCString host;
+      if (NS_FAILED(nodeUri->GetAsciiHost(host)))
+        return false;
+
+      if (!asciiRequest.Equals(host))
+        return false;
+    }
+    // check domain names.
+    nsNavHistory* history = nsNavHistory::GetHistoryService();
+    if (!history)
+      return false;
+    nsAutoCString domain;
+    history->DomainNameFromURI(nodeUri, domain);
+    if (!asciiRequest.Equals(domain))
+      return false;
+  }
+
+  // URI
+  if (aQuery->Uri()) {
+    nsCOMPtr<nsIURI> nodeUri;
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(nodeUri), aNode->mURI)))
+      return false;
+     bool equals;
+    nsresult rv = aQuery->Uri()->Equals(nodeUri, &equals);
+    NS_ENSURE_SUCCESS(rv, false);
+    if (!equals)
+      return false;
+  }
+
+  // Transitions
+  const nsTArray<uint32_t>& transitions = aQuery->Transitions();
+  if (aNode->mTransitionType > 0 &&
+      transitions.Length() &&
+      !transitions.Contains(aNode->mTransitionType)) {
+    return false;
+  }
+
+  // If we ever make it to the bottom, that means it passed all the tests for
+  // the given query.
+  return true;
 }
 
 // Emulate string comparison (used for sorting) for PRTime and int.
@@ -2378,7 +2507,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
         return NS_OK;
       }
       addition->mTransitionType = aTransitionType;
-      if (!history->EvaluateQueryForNode(mQuery, mOptions, addition))
+      if (!evaluateQueryForNode(mQuery, mOptions, addition))
         return NS_OK; // don't need to include in our query
 
       if (mOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_VISIT) {
@@ -2480,7 +2609,7 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
       NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
       rv = history->URIToResultNode(aURI, mOptions, getter_AddRefs(node));
       NS_ENSURE_SUCCESS(rv, rv);
-      if (history->EvaluateQueryForNode(mQuery, mOptions, node)) {
+      if (evaluateQueryForNode(mQuery, mOptions, node)) {
         rv = InsertSortedChild(node);
         NS_ENSURE_SUCCESS(rv, rv);
       }
@@ -2495,7 +2624,7 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
 
       nsNavHistory* history = nsNavHistory::GetHistoryService();
       NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-      if (!history->EvaluateQueryForNode(mQuery, mOptions, node)) {
+      if (!evaluateQueryForNode(mQuery, mOptions, node)) {
         nsNavHistoryContainerResultNode* parent = node->mParent;
         // URI nodes should always have parents
         NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
@@ -2689,7 +2818,7 @@ nsNavHistoryQueryResultNode::NotifyIfTagsChanged(nsIURI* aURI)
     NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
     rv = history->URIToResultNode(aURI, mOptions, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
-    if (history->EvaluateQueryForNode(mQuery, mOptions, node)) {
+    if (evaluateQueryForNode(mQuery, mOptions, node)) {
       rv = InsertSortedChild(node);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -2705,7 +2834,7 @@ nsNavHistoryQueryResultNode::NotifyIfTagsChanged(nsIURI* aURI)
     // It's possible now this node does not respect anymore the conditions.
     // In such a case it should be removed.
     if (mHasSearchTerms &&
-        !history->EvaluateQueryForNode(mQuery, mOptions, node)) {
+        !evaluateQueryForNode(mQuery, mOptions, node)) {
       nsNavHistoryContainerResultNode* parent = node->mParent;
       // URI nodes should always have parents
       NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);

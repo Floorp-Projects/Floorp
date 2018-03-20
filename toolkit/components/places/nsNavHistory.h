@@ -297,12 +297,6 @@ public:
    */
   int32_t GetDaysOfHistory();
 
-  bool EvaluateQueryForNode(const RefPtr<nsNavHistoryQuery>& aQuery,
-                              nsNavHistoryQueryOptions* aOptions,
-                              nsNavHistoryResultNode* aNode);
-
-  static nsresult AsciiHostNameFromHostString(const nsACString& aHostName,
-                                              nsACString& aAscii);
   void DomainNameFromURI(nsIURI* aURI,
                          nsACString& aDomainName);
   static PRTime NormalizeTime(uint32_t aRelative, PRTime aOffset);
@@ -495,6 +489,13 @@ public:
   }
 #endif
 
+
+  static nsresult FilterResultSet(nsNavHistoryQueryResultNode *aParentNode,
+                                  const nsCOMArray<nsNavHistoryResultNode>& aSet,
+                                  nsCOMArray<nsNavHistoryResultNode>* aFiltered,
+                                  const RefPtr<nsNavHistoryQuery>& aQuery,
+                                  nsNavHistoryQueryOptions* aOptions);
+
 private:
   ~nsNavHistory();
 
@@ -553,12 +554,6 @@ protected:
                          nsCOMArray<nsNavHistoryResultNode>* aResults);
 
   void TitleForDomain(const nsCString& domain, nsACString& aTitle);
-
-  nsresult FilterResultSet(nsNavHistoryQueryResultNode *aParentNode,
-                           const nsCOMArray<nsNavHistoryResultNode>& aSet,
-                           nsCOMArray<nsNavHistoryResultNode>* aFiltered,
-                           const RefPtr<nsNavHistoryQuery>& aQuery,
-                           nsNavHistoryQueryOptions* aOptions);
 
   // observers
   nsMaybeWeakPtrArray<nsINavHistoryObserver> mObservers;

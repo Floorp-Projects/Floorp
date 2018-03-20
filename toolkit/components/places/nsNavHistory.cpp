@@ -763,145 +763,6 @@ nsNavHistory::NormalizeTime(uint32_t aRelative, PRTime aOffset)
   return ref + aOffset;
 }
 
-// nsNavHistory::EvaluateQueryForNode
-//
-//    This runs the node through the given query to see if satisfies the
-//    query conditions. Not every query parameters are handled by this code,
-//    but we handle the most common ones so that performance is better.
-//
-//    We assume that the time on the node is the time that we want to compare.
-//    This is not necessarily true because URL nodes have the last access time,
-//    which is not necessarily the same. However, since this is being called
-//    to update the list, we assume that the last access time is the current
-//    access time that we are being asked to compare so it works out.
-//
-//    Returns true if node matches the query, false if not.
-
-bool
-nsNavHistory::EvaluateQueryForNode(const RefPtr<nsNavHistoryQuery>& aQuery,
-                                   nsNavHistoryQueryOptions* aOptions,
-                                   nsNavHistoryResultNode* aNode)
-{
-  // lazily created from the node's string when we need to match URIs
-  nsCOMPtr<nsIURI> nodeUri;
-
-  // --- hidden ---
-  if (aNode->mHidden && !aOptions->IncludeHidden())
-    return false;
-
-  bool hasIt;
-  // --- begin time ---
-  aQuery->GetHasBeginTime(&hasIt);
-  if (hasIt) {
-    PRTime beginTime = NormalizeTime(aQuery->BeginTimeReference(),
-                                     aQuery->BeginTime());
-    if (aNode->mTime < beginTime)
-      return false;
-  }
-
-  // --- end time ---
-  aQuery->GetHasEndTime(&hasIt);
-  if (hasIt) {
-    PRTime endTime = NormalizeTime(aQuery->EndTimeReference(),
-                                   aQuery->EndTime());
-    if (aNode->mTime > endTime)
-      return false;
-  }
-
-  // --- search terms ---
-  if (!aQuery->SearchTerms().IsEmpty()) {
-    // we can use the existing filtering code, just give it our one object in
-    // an array.
-    nsCOMArray<nsNavHistoryResultNode> inputSet;
-    inputSet.AppendObject(aNode);
-    nsCOMArray<nsNavHistoryResultNode> filteredSet;
-    nsresult rv = FilterResultSet(nullptr, inputSet, &filteredSet, aQuery, aOptions);
-    if (NS_FAILED(rv))
-      return false;
-    if (!filteredSet.Count())
-      return false;
-  }
-
-  // --- domain/host matching ---
-  if (!aQuery->Domain().IsVoid()) {
-    if (!nodeUri) {
-      // lazy creation of nodeUri, which might be checked for multiple queries
-      if (NS_FAILED(NS_NewURI(getter_AddRefs(nodeUri), aNode->mURI)))
-        return false;
-    }
-    nsAutoCString asciiRequest;
-    if (NS_FAILED(AsciiHostNameFromHostString(aQuery->Domain(), asciiRequest)))
-      return false;
-
-    if (aQuery->DomainIsHost()) {
-      nsAutoCString host;
-      if (NS_FAILED(nodeUri->GetAsciiHost(host)))
-        return false;
-
-      if (!asciiRequest.Equals(host))
-        return false;
-    }
-    // check domain names
-    nsAutoCString domain;
-    DomainNameFromURI(nodeUri, domain);
-    if (!asciiRequest.Equals(domain))
-      return false;
-  }
-
-  // --- URI matching ---
-  if (aQuery->Uri()) {
-    if (!nodeUri) { // lazy creation of nodeUri
-      if (NS_FAILED(NS_NewURI(getter_AddRefs(nodeUri), aNode->mURI)))
-        return false;
-    }
-
-    bool equals;
-    nsresult rv = aQuery->Uri()->Equals(nodeUri, &equals);
-    NS_ENSURE_SUCCESS(rv, false);
-    if (!equals)
-      return false;
-  }
-
-  // Transitions matching.
-  const nsTArray<uint32_t>& transitions = aQuery->Transitions();
-  if (aNode->mTransitionType > 0 &&
-      transitions.Length() &&
-      !transitions.Contains(aNode->mTransitionType)) {
-    return false;
-  }
-
-  // If we ever make it to the bottom, that means it passed all the tests for
-  // the given query.
-  return true;
-}
-
-
-// nsNavHistory::AsciiHostNameFromHostString
-//
-//    We might have interesting encodings and different case in the host name.
-//    This will convert that host name into an ASCII host name by sending it
-//    through the URI canonicalization. The result can be used for comparison
-//    with other ASCII host name strings.
-nsresult // static
-nsNavHistory::AsciiHostNameFromHostString(const nsACString& aHostName,
-                                          nsACString& aAscii)
-{
-  aAscii.Truncate();
-  if (aHostName.IsEmpty()) {
-    return NS_OK;
-  }
-  // To properly generate a uri we must provide a protocol.
-  nsAutoCString fakeURL("http://");
-  fakeURL.Append(aHostName);
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), fakeURL);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = uri->GetAsciiHost(aAscii);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-
 // nsNavHistory::DomainNameFromURI
 //
 //    This does the www.mozilla.org -> mozilla.org and
@@ -3427,6 +3288,7 @@ nsNavHistory::GetTagsFolder()
 // Note:  changes to filtering in FilterResultSet()
 // may require changes to NeedToFilterResultSet()
 
+// static
 nsresult
 nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
                               const nsCOMArray<nsNavHistoryResultNode>& aSet,
@@ -3434,10 +3296,6 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
                               const RefPtr<nsNavHistoryQuery>& aQuery,
                               nsNavHistoryQueryOptions *aOptions)
 {
-  // get the bookmarks service
-  nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-
   // parse the search terms
   nsTArray<nsString> terms;
   ParseSearchTermsFromQuery(aQuery, &terms);
