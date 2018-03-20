@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=UTF-8
 
 from __future__ import absolute_import
 
@@ -39,6 +40,13 @@ def test_unchecked_exception(check_for_java_exception, test_log):
         " >>> NOT-SO-BAD EXCEPTION FROM THREAD 9 (\"GeckoBackgroundThread\")"
 
     assert 0 == check_for_java_exception(passable_log)
+
+
+def test_test_name_unicode(check_for_java_exception, test_log):
+    """Test that check_for_crashes can handle unicode in dump_directory."""
+    assert 1 == check_for_java_exception(test_log,
+                                         test_name=u"🍪",
+                                         quiet=False)
 
 
 if __name__ == '__main__':
