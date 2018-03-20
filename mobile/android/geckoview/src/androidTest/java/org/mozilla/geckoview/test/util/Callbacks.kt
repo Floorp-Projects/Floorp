@@ -40,8 +40,8 @@ class Callbacks private constructor() {
         override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
         }
 
-        override fun onLoadRequest(session: GeckoSession, uri: String, where: Int): Boolean {
-            return false;
+        override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, response: GeckoSession.Response<Boolean>) {
+            response.respond(false)
         }
 
         override fun onNewSession(session: GeckoSession, uri: String, response: GeckoSession.Response<GeckoSession>) {
