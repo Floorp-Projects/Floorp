@@ -78,17 +78,15 @@ nsCSSPseudoElements::IsCSS2PseudoElement(nsAtom *aAtom)
 /* static */ CSSPseudoElementType
 nsCSSPseudoElements::GetPseudoType(nsAtom *aAtom, EnabledState aEnabledState)
 {
-  for (CSSPseudoElementTypeBase i = 0;
-       i < ArrayLength(sCSSPseudoElementAtomSetup);
-       ++i) {
-    if (*sCSSPseudoElementAtomSetup[i].mAtomp == aAtom) {
-      auto type = static_cast<Type>(i);
-      // ::moz-placeholder is an alias for ::placeholder
-      if (type == CSSPseudoElementType::mozPlaceholder) {
-        type = CSSPseudoElementType::placeholder;
-      }
-      return IsEnabled(type, aEnabledState) ? type : Type::NotPseudo;
+  Maybe<uint32_t> index =
+    nsStaticAtomUtils::Lookup(aAtom, sCSSPseudoElementAtomSetup);
+  if (index.isSome()) {
+    auto type = static_cast<Type>(*index);
+    // ::moz-placeholder is an alias for ::placeholder
+    if (type == CSSPseudoElementType::mozPlaceholder) {
+      type = CSSPseudoElementType::placeholder;
     }
+    return IsEnabled(type, aEnabledState) ? type : Type::NotPseudo;
   }
 
   if (nsCSSAnonBoxes::IsAnonBox(aAtom)) {

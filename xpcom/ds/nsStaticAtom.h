@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include "nsAtom.h"
+#include "mozilla/Maybe.h"
 
 // The following macros are used to define static atoms, typically in
 // conjunction with a .h file that defines the names and values of the atoms.
@@ -129,21 +130,29 @@ NS_RegisterStaticAtoms(const nsStaticAtomSetup (&aSetup)[N])
 class nsStaticAtomUtils {
 public:
   template<uint32_t N>
+  static mozilla::Maybe<uint32_t> Lookup(nsAtom *aAtom,
+                                         const nsStaticAtomSetup (&aSetup)[N])
+  {
+    return Lookup(aAtom, aSetup, N);
+  }
+
+  template<uint32_t N>
   static bool IsMember(nsAtom *aAtom, const nsStaticAtomSetup (&aSetup)[N])
   {
-    return IsMember(aAtom, aSetup, N);
+    return Lookup(aAtom, aSetup, N).isSome();
   }
 
 private:
-  static bool IsMember(nsAtom* aAtom, const nsStaticAtomSetup* aSetup,
-                       uint32_t aCount)
+  static mozilla::Maybe<uint32_t> Lookup(nsAtom* aAtom,
+                                         const nsStaticAtomSetup* aSetup,
+                                         uint32_t aCount)
   {
     for (uint32_t i = 0; i < aCount; i++) {
       if (aAtom == *(aSetup[i].mAtomp)) {
-        return true;
+        return mozilla::Some(i);
       }
     }
-    return false;
+    return mozilla::Nothing();
   }
 };
 
