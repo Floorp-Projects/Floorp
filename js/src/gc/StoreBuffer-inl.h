@@ -42,7 +42,10 @@ inline void
 ArenaCellSet::putCell(size_t cellIndex)
 {
     MOZ_ASSERT(cellIndex < MaxArenaCellIndex);
+    MOZ_ASSERT(arena);
+
     bits.set(cellIndex);
+    check();
 }
 
 inline void
@@ -52,7 +55,12 @@ ArenaCellSet::check() const
     bool bitsZero = bits.isAllClear();
     MOZ_ASSERT(isEmpty() == bitsZero);
     MOZ_ASSERT(isEmpty() == !arena);
-    MOZ_ASSERT_IF(!isEmpty(), arena->bufferedCells() == this);
+    if (!isEmpty()) {
+        MOZ_ASSERT(IsCellPointerValid(arena));
+        MOZ_ASSERT(arena->bufferedCells() == this);
+        JSRuntime* runtime = arena->zone->runtimeFromActiveCooperatingThread();
+        MOZ_ASSERT(runtime->gc.minorGCCount() == minorGCNumberAtCreation);
+    }
 #endif
 }
 
