@@ -39,7 +39,7 @@ static const nsStaticAtomSetup sCSSAnonBoxAtomSetup[] = {
   #undef CSS_ANON_BOX
 };
 
-void nsCSSAnonBoxes::AddRefAtoms()
+void nsCSSAnonBoxes::RegisterStaticAtoms()
 {
   NS_RegisterStaticAtoms(sCSSAnonBoxAtomSetup);
 }
