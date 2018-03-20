@@ -42,4 +42,11 @@ interface mozIMozIntlHelper : nsISupports
    * This API should be used everywhere in the UI instead of regular Intl  API.
    */
   [implicit_jscontext] void addDateTimeFormatConstructor(in jsval intlObject);
+
+  /**
+   * Adds a RelativeTimeFormat constructor to the given object.  This function may only
+   * be called once within a realm/global object: calling it multiple times will
+   * throw.
+   */
+  [implicit_jscontext] void addRelativeTimeFormatConstructor(in jsval intlObject);
 };

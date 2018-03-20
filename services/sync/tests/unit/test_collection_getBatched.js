@@ -7,7 +7,7 @@ ChromeUtils.import("resource://services-sync/service.js");
 function recordRange(lim, offset, total) {
   let res = [];
   for (let i = offset; i < Math.min(lim + offset, total); ++i) {
-    res.push(JSON.stringify({ id: String(i), payload: "test:" + i }));
+    res.push({ id: String(i), payload: "test:" + i });
   }
   return res;
 }

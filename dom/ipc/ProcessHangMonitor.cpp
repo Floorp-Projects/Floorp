@@ -95,7 +95,13 @@ class HangMonitorChild
 
   void ClearHang();
   void ClearHangAsync();
-  void ClearForcePaint();
+  void ClearForcePaint(uint64_t aLayerObserverEpoch);
+
+  // MaybeStartForcePaint will notify the background hang monitor of activity
+  // if this is the first time calling it since ClearForcePaint. It should be
+  // callable from any thread, but you must be holding mMonitor if using it off
+  // the main thread, since it could race with ClearForcePaint.
+  void MaybeStartForcePaint();
 
   mozilla::ipc::IPCResult RecvTerminateScript(const bool& aTerminateGlobal) override;
   mozilla::ipc::IPCResult RecvBeginStartingDebugger() override;
@@ -141,6 +147,10 @@ class HangMonitorChild
 
   // This field is only accessed on the hang thread.
   bool mIPCOpen;
+
+  // Allows us to ensure we NotifyActivity only once, allowing
+  // either thread to do so.
+  Atomic<bool> mBHRMonitorActive;
 };
 
 Atomic<HangMonitorChild*> HangMonitorChild::sInstance;
@@ -422,10 +432,15 @@ HangMonitorChild::RecvForcePaint(const TabId& aTabId, const uint64_t& aLayerObse
 {
   MOZ_RELEASE_ASSERT(IsOnThread());
 
-  mForcePaintMonitor->NotifyActivity();
-
   {
     MonitorAutoLock lock(mMonitor);
+    // If we lose our race, and the main thread has already painted,
+    // the NotifyActivity call below would result in an indefinite
+    // hang, since it wouldn't have a matching NotifyWait()
+    if (mForcePaintEpoch >= aLayerObserverEpoch) {
+      return IPC_OK();
+    }
+    MaybeStartForcePaint();
     mForcePaint = true;
     mForcePaintTab = aTabId;
     mForcePaintEpoch = aLayerObserverEpoch;
@@ -437,12 +452,39 @@ HangMonitorChild::RecvForcePaint(const TabId& aTabId, const uint64_t& aLayerObse
 }
 
 void
-HangMonitorChild::ClearForcePaint()
+HangMonitorChild::MaybeStartForcePaint()
+{
+  if (!NS_IsMainThread()) {
+    mMonitor.AssertCurrentThreadOwns();
+  }
+
+  if (!mBHRMonitorActive.exchange(true)) {
+    mForcePaintMonitor->NotifyActivity();
+  }
+}
+
+void
+HangMonitorChild::ClearForcePaint(uint64_t aLayerObserverEpoch)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(XRE_IsContentProcess());
 
-  mForcePaintMonitor->NotifyWait();
+  {
+    MonitorAutoLock lock(mMonitor);
+    // Set the epoch, so that if the forcepaint loses its race, it
+    // knows it and can exit appropriately. However, ensure we don't
+    // overwrite an even newer mForcePaintEpoch which could have
+    // come in in a ForcePaint notification while we were painting.
+    if (aLayerObserverEpoch > mForcePaintEpoch) {
+      mForcePaintEpoch = aLayerObserverEpoch;
+    }
+    mForcePaintMonitor->NotifyWait();
+
+    // ClearForcePaint must be called on the main thread, and the
+    // hang monitor thread only sets this with mMonitor held, so there
+    // should be no risk of missing NotifyActivity calls here.
+    mBHRMonitorActive = false;
+  }
 }
 
 void
@@ -1357,12 +1399,23 @@ ProcessHangMonitor::ForcePaint(PProcessHangMonitorParent* aParent,
 }
 
 /* static */ void
-ProcessHangMonitor::ClearForcePaint()
+ProcessHangMonitor::ClearForcePaint(uint64_t aLayerObserverEpoch)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(XRE_IsContentProcess());
 
   if (HangMonitorChild* child = HangMonitorChild::Get()) {
-    child->ClearForcePaint();
+    child->ClearForcePaint(aLayerObserverEpoch);
+  }
+}
+
+/* static */ void
+ProcessHangMonitor::MaybeStartForcePaint()
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(XRE_IsContentProcess());
+
+  if (HangMonitorChild* child = HangMonitorChild::Get()) {
+    child->MaybeStartForcePaint();
   }
 }

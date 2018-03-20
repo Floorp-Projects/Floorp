@@ -177,7 +177,7 @@ add_task(async function test_proxy_auth_redirect() {
   let result = await res.get();
   Assert.ok(pacFetched);
   Assert.ok(fetched);
-  Assert.equal("This path exists", result);
+  Assert.equal("This path exists", result.data);
   pacFetched = fetched = false;
   uninstallFakePAC();
   await promiseStopServer(server);
@@ -256,7 +256,7 @@ add_task(async function test_get() {
   _("GET a non-password-protected resource");
   let res = new Resource(server.baseURI + "/open");
   let content = await res.get();
-  Assert.equal(content, "This path exists");
+  Assert.equal(content.data, "This path exists");
   Assert.equal(content.status, 200);
   Assert.ok(content.success);
 
@@ -264,8 +264,8 @@ add_task(async function test_get() {
   let resLogger = res._log;
   let dbg    = resLogger.debug;
   let debugMessages = [];
-  resLogger.debug = function(msg) {
-    debugMessages.push(msg);
+  resLogger.debug = function(msg, extra) {
+    debugMessages.push(`${msg}: ${JSON.stringify(extra)}`);
     dbg.call(this, msg);
   };
 
@@ -280,7 +280,7 @@ add_task(async function test_get() {
   Assert.ok(didThrow);
   Assert.equal(debugMessages.length, 1);
   Assert.equal(debugMessages[0],
-               "Parse fail: Response body starts: \"\"This path exists\"\".");
+               "Parse fail: Response body starts: \"This path exists\"");
   resLogger.debug = dbg;
 });
 
@@ -298,7 +298,7 @@ add_task(async function test_get_protected_fail() {
   _("GET a password protected resource (test that it'll fail w/o pass, no throw)");
   let res2 = new Resource(server.baseURI + "/protected");
   let content = await res2.get();
-  Assert.equal(content, "This path exists and is protected - failed");
+  Assert.equal(content.data, "This path exists and is protected - failed");
   Assert.equal(content.status, 401);
   Assert.ok(!content.success);
 });
@@ -313,7 +313,7 @@ add_task(async function test_get_protected_success() {
   res3.authenticator = auth;
   Assert.equal(res3.authenticator, auth);
   let content = await res3.get();
-  Assert.equal(content, "This path exists and is protected");
+  Assert.equal(content.data, "This path exists and is protected");
   Assert.equal(content.status, 200);
   Assert.ok(content.success);
 });
@@ -322,7 +322,7 @@ add_task(async function test_get_404() {
   _("GET a non-existent resource (test that it'll fail, but not throw)");
   let res4 = new Resource(server.baseURI + "/404");
   let content = await res4.get();
-  Assert.equal(content, "File not found");
+  Assert.equal(content.data, "File not found");
   Assert.equal(content.status, 404);
   Assert.ok(!content.success);
 
@@ -336,7 +336,7 @@ add_task(async function test_put_string() {
   _("PUT to a resource (string)");
   let res_upload = new Resource(server.baseURI + "/upload");
   let content = await res_upload.put(JSON.stringify(sample_data));
-  Assert.equal(content, "Valid data upload via PUT");
+  Assert.equal(content.data, "Valid data upload via PUT");
   Assert.equal(content.status, 200);
 });
 
@@ -344,7 +344,7 @@ add_task(async function test_put_object() {
   _("PUT to a resource (object)");
   let res_upload = new Resource(server.baseURI + "/upload");
   let content = await res_upload.put(sample_data);
-  Assert.equal(content, "Valid data upload via PUT");
+  Assert.equal(content.data, "Valid data upload via PUT");
   Assert.equal(content.status, 200);
 });
 
@@ -352,7 +352,7 @@ add_task(async function test_post_string() {
   _("POST to a resource (string)");
   let res_upload = new Resource(server.baseURI + "/upload");
   let content = await res_upload.post(JSON.stringify(sample_data));
-  Assert.equal(content, "Valid data upload via POST");
+  Assert.equal(content.data, "Valid data upload via POST");
   Assert.equal(content.status, 200);
 });
 
@@ -360,7 +360,7 @@ add_task(async function test_post_object() {
   _("POST to a resource (object)");
   let res_upload = new Resource(server.baseURI + "/upload");
   let content = await res_upload.post(sample_data);
-  Assert.equal(content, "Valid data upload via POST");
+  Assert.equal(content.data, "Valid data upload via POST");
   Assert.equal(content.status, 200);
 });
 
@@ -368,7 +368,7 @@ add_task(async function test_delete() {
   _("DELETE a resource");
   let res6 = new Resource(server.baseURI + "/delete");
   let content = await res6.delete();
-  Assert.equal(content, "This resource has been deleted");
+  Assert.equal(content.data, "This resource has been deleted");
   Assert.equal(content.status, 200);
 });
 
@@ -376,7 +376,7 @@ add_task(async function test_json_body() {
   _("JSON conversion of response body");
   let res7 = new Resource(server.baseURI + "/json");
   let content = await res7.get();
-  Assert.equal(content, JSON.stringify(sample_data));
+  Assert.equal(content.data, JSON.stringify(sample_data));
   Assert.equal(content.status, 200);
   Assert.equal(JSON.stringify(content.obj), JSON.stringify(sample_data));
 });
@@ -395,21 +395,21 @@ add_task(async function test_get_no_headers() {
   _("GET: no special request headers");
   let res_headers = new Resource(server.baseURI + "/headers");
   let content = await res_headers.get();
-  Assert.equal(content, "{}");
+  Assert.equal(content.data, "{}");
 });
 
 add_task(async function test_put_default_content_type() {
   _("PUT: Content-Type defaults to text/plain");
   let res_headers = new Resource(server.baseURI + "/headers");
   let content = await res_headers.put("data");
-  Assert.equal(content, JSON.stringify({"content-type": "text/plain"}));
+  Assert.equal(content.data, JSON.stringify({"content-type": "text/plain"}));
 });
 
 add_task(async function test_post_default_content_type() {
   _("POST: Content-Type defaults to text/plain");
   let res_headers = new Resource(server.baseURI + "/headers");
   let content = await res_headers.post("data");
-  Assert.equal(content, JSON.stringify({"content-type": "text/plain"}));
+  Assert.equal(content.data, JSON.stringify({"content-type": "text/plain"}));
 });
 
 add_task(async function test_setHeader() {
@@ -418,7 +418,7 @@ add_task(async function test_setHeader() {
   res_headers.setHeader("X-What-Is-Weave", "awesome");
   Assert.equal(res_headers.headers["x-what-is-weave"], "awesome");
   let content = await res_headers.get();
-  Assert.equal(content, JSON.stringify({"x-what-is-weave": "awesome"}));
+  Assert.equal(content.data, JSON.stringify({"x-what-is-weave": "awesome"}));
 });
 
 add_task(async function test_setHeader_overwrite() {
@@ -429,8 +429,8 @@ add_task(async function test_setHeader_overwrite() {
   Assert.equal(res_headers.headers["x-what-is-weave"], "more awesomer");
   Assert.equal(res_headers.headers["x-another-header"], "hello world");
   let content = await res_headers.get();
-  Assert.equal(content, JSON.stringify({"x-another-header": "hello world",
-                                        "x-what-is-weave": "more awesomer"}));
+  Assert.equal(content.data, JSON.stringify({"x-another-header": "hello world",
+                                             "x-what-is-weave": "more awesomer"}));
 });
 
 add_task(async function test_put_override_content_type() {
@@ -439,7 +439,7 @@ add_task(async function test_put_override_content_type() {
   res_headers.setHeader("Content-Type", "application/foobar");
   Assert.equal(res_headers.headers["content-type"], "application/foobar");
   let content = await res_headers.put("data");
-  Assert.equal(content, JSON.stringify({"content-type": "application/foobar"}));
+  Assert.equal(content.data, JSON.stringify({"content-type": "application/foobar"}));
 });
 
 add_task(async function test_post_override_content_type() {
@@ -447,7 +447,7 @@ add_task(async function test_post_override_content_type() {
   let res_headers = new Resource(server.baseURI + "/headers");
   res_headers.setHeader("Content-Type", "application/foobar");
   let content = await res_headers.post("data");
-  Assert.equal(content, JSON.stringify({"content-type": "application/foobar"}));
+  Assert.equal(content.data, JSON.stringify({"content-type": "application/foobar"}));
 });
 
 add_task(async function test_weave_backoff() {

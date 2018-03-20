@@ -58,6 +58,18 @@ enum JsepBundlePolicy {
   kBundleMaxBundle
 };
 
+enum JsepMediaType {
+  kNone = 0,
+  kAudio,
+  kVideo,
+  kAudioVideo
+};
+
+struct JsepExtmapMediaType {
+  JsepMediaType mMediaType;
+  SdpExtmapAttributeList::Extmap mExtmap;
+};
+
 class JsepSession
 {
 public:
@@ -102,6 +114,8 @@ public:
   virtual nsresult AddAudioRtpExtension(const std::string& extensionName,
                                         SdpDirectionAttribute::Direction direction) = 0;
   virtual nsresult AddVideoRtpExtension(const std::string& extensionName,
+                                        SdpDirectionAttribute::Direction direction) = 0;
+  virtual nsresult AddAudioVideoRtpExtension(const std::string& extensionName,
                                         SdpDirectionAttribute::Direction direction) = 0;
 
   // Kinda gross to be locking down the data structure type like this, but

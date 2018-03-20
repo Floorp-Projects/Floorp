@@ -659,7 +659,7 @@ class BookmarkRepairResponder extends CollectionRepairResponder {
     if (!itemsResponse.success) {
       throw new Error(`request for server IDs failed: ${itemsResponse.status}`);
     }
-    let existRemotely = new Set(JSON.parse(itemsResponse));
+    let existRemotely = new Set(itemsResponse.obj);
     // We need to be careful about handing the requested items:
     // * If the item exists locally but isn't in the tree of items we sync
     //   (eg, it might be a left-pane item or similar, we write a tombstone.

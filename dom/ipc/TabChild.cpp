@@ -2581,9 +2581,13 @@ TabChild::RecvRenderLayers(const bool& aEnabled, const uint64_t& aLayerObserverE
     // been a request to force paint. This is so that the BackgroundHangMonitor
     // for force painting can be made to wait again.
     if (aEnabled) {
-      ProcessHangMonitor::ClearForcePaint();
+      ProcessHangMonitor::ClearForcePaint(mLayerObserverEpoch);
     }
   });
+
+  if (aEnabled) {
+    ProcessHangMonitor::MaybeStartForcePaint();
+  }
 
   if (mCompositorOptions) {
     MOZ_ASSERT(mPuppetWidget);

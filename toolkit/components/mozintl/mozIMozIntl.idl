@@ -45,4 +45,5 @@ interface mozIMozIntl : nsISupports
   readonly attribute jsval NumberFormat;
   readonly attribute jsval Collator;
   readonly attribute jsval PluralRules;
+  readonly attribute jsval RelativeTimeFormat;
 };

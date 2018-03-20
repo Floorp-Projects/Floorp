@@ -138,6 +138,18 @@
           <label class="category-name" flex="1" data-l10n-id="pane-general-title"></label>
         </richlistitem>
 
+        <richlistitem id="category-home"
+                      class="category"
+                      value="paneHome"
+                      helpTopic="prefs-home"
+                      data-l10n-id="category-home"
+                      data-l10n-attrs="tooltiptext"
+                      align="center"
+                      hidden="false">
+          <image class="category-icon"/>
+          <label class="category-name" flex="1" data-l10n-id="pane-home-title"></label>
+        </richlistitem>
+
         <richlistitem id="category-search"
                       class="category"
                       value="paneSearch"
@@ -215,6 +227,7 @@
         <vbox id="mainPrefPane" class="prefpane prefwindow">
 #include searchResults.xul
 #include main.xul
+#include home.xul
 #include search.xul
 #include privacy.xul
 #include containers.xul

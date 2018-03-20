@@ -11,7 +11,11 @@ add_task(async function() {
  * Test for searching for the "Set Home Page" subdialog.
  */
 add_task(async function() {
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("paneHome", {leaveOpen: true});
+
+  // Set custom URL so bookmark button will be shown on the page (otherwise it is hidden)
+  await SpecialPowers.pushPrefEnv({"set": [["browser.startup.homepage", "about:robots"]]});
+
   await evaluateSearchResults("Set Home Page", "homepageGroup");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

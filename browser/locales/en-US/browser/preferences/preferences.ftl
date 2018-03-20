@@ -47,6 +47,10 @@ pane-general-title = General
 category-general =
     .tooltiptext = { pane-general-title }
 
+pane-home-title = Home
+category-home =
+    .tooltiptext = { pane-home-title }
+
 pane-search-title = Search
 category-search =
     .tooltiptext = { pane-search-title }
@@ -125,28 +129,6 @@ startup-prev-session =
 
 disable-extension =
     .label = Disable Extension
-
-home-page-header = Home page
-
-# This string has a special case for '1' and [other] (default). If necessary for
-# your language, you can add {$tabCount} to your translations and use the
-# standard CLDR forms, or only use the form for [other] if both strings should
-# be identical.
-use-current-pages =
-    .label =
-        { $tabCount ->
-            [1] Use Current Page
-           *[other] Use Current Pages
-        }
-    .accesskey = C
-
-choose-bookmark =
-    .label = Use Bookmark…
-    .accesskey = B
-
-restore-default =
-    .label = Restore to Default
-    .accesskey = R
 
 tabs-group-header = Tabs
 
@@ -378,6 +360,52 @@ network-proxy-connection-learn-more = Learn More
 network-proxy-connection-settings =
     .label = Settings…
     .accesskey = e
+
+## Home Section
+
+home-new-windows-tabs-header = New Windows and Tabs
+
+home-new-windows-tabs-description = Choose what you see when you open your homepage, new windows, and new tabs
+
+## Home Section - Home Page Customization
+
+home-homepage-mode-label = Homepage and new windows
+
+home-newtabs-mode-label = New tabs
+
+home-restore-defaults =
+    .label = Restore Defaults
+    .accesskey = R
+
+# "Firefox" should be treated as a brand and kept in English,
+# while "Home" and "(Default)" can be localized.
+home-mode-choice-default =
+    .label = Firefox Home (Default)
+
+home-mode-choice-custom =
+    .label = Custom URLs…
+
+home-mode-choice-blank =
+    .label = Blank Page
+
+home-homepage-custom-url =
+    .placeholder = Paste a URL…
+
+# This string has a special case for '1' and [other] (default). If necessary for
+# your language, you can add {$tabCount} to your translations and use the
+# standard CLDR forms, or only use the form for [other] if both strings should
+# be identical.
+use-current-pages =
+    .label =
+        { $tabCount ->
+            [1] Use Current Page
+           *[other] Use Current Pages
+        }
+    .accesskey = C
+
+choose-bookmark =
+    .label = Use Bookmark…
+    .accesskey = B
 
 ## Search Section
 

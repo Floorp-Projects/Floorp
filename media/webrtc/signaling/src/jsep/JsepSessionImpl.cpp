@@ -149,32 +149,37 @@ JsepSessionImpl::AddDtlsFingerprint(const std::string& algorithm,
 }
 
 nsresult
-JsepSessionImpl::AddRtpExtension(std::vector<SdpExtmapAttributeList::Extmap>& extensions,
+JsepSessionImpl::AddRtpExtension(JsepMediaType mediaType,
                                  const std::string& extensionName,
                                  SdpDirectionAttribute::Direction direction)
 {
   mLastError.clear();
 
-  if (extensions.size() + 1 > UINT16_MAX) {
+  if (mRtpExtensions.size() + 1 > UINT16_MAX) {
     JSEP_SET_ERROR("Too many rtp extensions have been added");
     return NS_ERROR_FAILURE;
   }
 
-  // Avoid adding duplicate entries
-  for (auto ext = extensions.begin(); ext != extensions.end(); ++ext) {
-    if (ext->direction == direction && ext->extensionname == extensionName) {
+  for (auto ext = mRtpExtensions.begin(); ext != mRtpExtensions.end(); ++ext) {
+    if (ext->mExtmap.direction == direction &&
+        ext->mExtmap.extensionname == extensionName) {
+      if (ext->mMediaType != mediaType) {
+        ext->mMediaType = JsepMediaType::kAudioVideo;
+      }
       return NS_OK;
     }
   }
 
-  SdpExtmapAttributeList::Extmap extmap =
-      { static_cast<uint16_t>(extensions.size() + 1),
+  JsepExtmapMediaType extMediaType =
+      { mediaType,
+        { static_cast<uint16_t>(mRtpExtensions.size() + 1),
         direction,
-        direction != SdpDirectionAttribute::kSendrecv, // do we want to specify direction?
+        // do we want to specify direction?
+        direction != SdpDirectionAttribute::kSendrecv,
         extensionName,
-        "" };
+        "" }};
 
-  extensions.push_back(extmap);
+  mRtpExtensions.push_back(extMediaType);
   return NS_OK;
 }
 
@@ -182,14 +187,27 @@ nsresult
 JsepSessionImpl::AddAudioRtpExtension(const std::string& extensionName,
                                       SdpDirectionAttribute::Direction direction)
 {
-  return AddRtpExtension(mAudioRtpExtensions, extensionName, direction);
+  return AddRtpExtension(JsepMediaType::kAudio,
+                         extensionName,
+                         direction);
 }
 
 nsresult
 JsepSessionImpl::AddVideoRtpExtension(const std::string& extensionName,
                                       SdpDirectionAttribute::Direction direction)
 {
-  return AddRtpExtension(mVideoRtpExtensions, extensionName, direction);
+  return AddRtpExtension(JsepMediaType::kVideo,
+                         extensionName,
+                         direction);
+}
+
+nsresult
+JsepSessionImpl::AddAudioVideoRtpExtension(const std::string& extensionName,
+                                           SdpDirectionAttribute::Direction direction)
+{
+  return AddRtpExtension(JsepMediaType::kAudioVideo,
+                         extensionName,
+                         direction);
 }
 
 nsresult
@@ -492,23 +510,31 @@ std::vector<SdpExtmapAttributeList::Extmap>
 JsepSessionImpl::GetRtpExtensions(const SdpMediaSection& msection)
 {
   std::vector<SdpExtmapAttributeList::Extmap> result;
+  JsepMediaType mediaType = JsepMediaType::kNone;
   switch (msection.GetMediaType()) {
     case SdpMediaSection::kAudio:
-      result = mAudioRtpExtensions;
+      mediaType = JsepMediaType::kAudio;
       break;
     case SdpMediaSection::kVideo:
-      result = mVideoRtpExtensions;
+      mediaType = JsepMediaType::kVideo;
       if (msection.GetAttributeList().HasAttribute(
             SdpAttribute::kRidAttribute)) {
         // We need RID support
         // TODO: Would it be worth checking that the direction is sane?
-        AddRtpExtension(result,
-                        webrtc::RtpExtension::kRtpStreamIdUri,
-                        SdpDirectionAttribute::kSendonly);
+        AddVideoRtpExtension(webrtc::RtpExtension::kRtpStreamIdUri,
+                             SdpDirectionAttribute::kSendonly);
       }
       break;
     default:
       ;
+  }
+  if (mediaType != JsepMediaType::kNone) {
+    for (auto ext = mRtpExtensions.begin(); ext != mRtpExtensions.end(); ++ext) {
+      if (ext->mMediaType == mediaType ||
+          ext->mMediaType == JsepMediaType::kAudioVideo) {
+        result.push_back(ext->mExtmap);
+      }
+    }
   }
   return result;
 }
@@ -2067,13 +2093,11 @@ JsepSessionImpl::SetupDefaultRtpExtensions()
                        SdpDirectionAttribute::Direction::kSendrecv);
   AddAudioRtpExtension(webrtc::RtpExtension::kCsrcAudioLevelUri,
                        SdpDirectionAttribute::Direction::kRecvonly);
-  AddAudioRtpExtension(webrtc::RtpExtension::kMIdUri,
-                       SdpDirectionAttribute::Direction::kSendrecv);
+  AddAudioVideoRtpExtension(webrtc::RtpExtension::kMIdUri,
+                            SdpDirectionAttribute::Direction::kSendrecv);
   AddVideoRtpExtension(webrtc::RtpExtension::kAbsSendTimeUri,
                        SdpDirectionAttribute::Direction::kSendrecv);
   AddVideoRtpExtension(webrtc::RtpExtension::kTimestampOffsetUri,
-                       SdpDirectionAttribute::Direction::kSendrecv);
-  AddVideoRtpExtension(webrtc::RtpExtension::kMIdUri,
                        SdpDirectionAttribute::Direction::kSendrecv);
 }
 

@@ -58,8 +58,5 @@ window.gActivityStreamPrerenderedState = {
       "order": 2,
       "initialized": false
     }
-  ],
-  "PreferencesPane": {
-    "visible": false
-  }
+  ]
 };

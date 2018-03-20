@@ -90,7 +90,7 @@ ServerWBO.prototype = {
   },
 
   get() {
-    return JSON.stringify(this, ["id", "modified", "payload"]);
+    return { id: this.id, modified: this.modified, payload: this.payload };
   },
 
   put(input) {
@@ -120,7 +120,7 @@ ServerWBO.prototype = {
       switch (request.method) {
         case "GET":
           if (self.payload) {
-            body = self.get();
+            body = JSON.stringify(self.get());
           } else {
             statusCode = 404;
             status = "Not Found";

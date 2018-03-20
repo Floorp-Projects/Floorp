@@ -1,13 +1,14 @@
 add_task(async function testSetHomepageUseCurrent() {
   is(gBrowser.currentURI.spec, "about:blank", "Test starts with about:blank open");
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home");
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("paneHome", {leaveOpen: true});
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = gBrowser.contentDocument;
-  is(gBrowser.currentURI.spec, "about:preferences#general",
-     "#general should be in the URI for about:preferences");
+  is(gBrowser.currentURI.spec, "about:preferences#home",
+     "#home should be in the URI for about:preferences");
   let oldHomepagePref = Services.prefs.getCharPref("browser.startup.homepage");
 
-  let useCurrent = doc.getElementById("useCurrent");
+  let useCurrent = doc.getElementById("useCurrentBtn");
   useCurrent.click();
 
   is(gBrowser.tabs.length, 3, "Three tabs should be open");

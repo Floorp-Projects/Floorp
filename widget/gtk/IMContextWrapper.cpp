@@ -339,13 +339,32 @@ IMContextWrapper::Init()
         G_CALLBACK(IMContextWrapper::OnStartCompositionCallback), this);
     g_signal_connect(mContext, "preedit_end",
         G_CALLBACK(IMContextWrapper::OnEndCompositionCallback), this);
-    nsDependentCString contextID;
+    nsDependentCSubstring im;
     const char* contextIDChar =
         gtk_im_multicontext_get_context_id(GTK_IM_MULTICONTEXT(mContext));
+    const char* xmodifiersChar = PR_GetEnv("XMODIFIERS");
     if (contextIDChar) {
-        contextID.Rebind(contextIDChar);
+        im.Rebind(contextIDChar, strlen(contextIDChar));
+        // If the context is XIM, actual engine must be specified with
+        // |XMODIFIERS=@im=foo|.
+        if (im.EqualsLiteral("xim") && xmodifiersChar) {
+            nsDependentCString xmodifiers(xmodifiersChar);
+            int32_t atIMValueStart = xmodifiers.Find("@im=") + 4;
+            if (atIMValueStart >= 4 &&
+                xmodifiers.Length() > static_cast<size_t>(atIMValueStart)) {
+                int32_t atIMValueEnd =
+                    xmodifiers.Find("@", false, atIMValueStart);
+                if (atIMValueEnd > atIMValueStart) {
+                    im.Rebind(xmodifiersChar + atIMValueStart,
+                              atIMValueEnd - atIMValueStart);
+                } else if (atIMValueEnd == kNotFound) {
+                    im.Rebind(xmodifiersChar + atIMValueStart,
+                              strlen(xmodifiersChar) - atIMValueStart);
+                }
+            }
+        }
     }
-    if (contextID.EqualsLiteral("ibus")) {
+    if (im.EqualsLiteral("ibus")) {
         mIMContextID = IMContextID::eIBus;
         mIsIMInAsyncKeyHandlingMode = !IsIBusInSyncMode();
         // Although ibus has key snooper mode, it's forcibly disabled on Firefox
@@ -354,7 +373,7 @@ IMContextWrapper::Init()
         // customized with env, IBUS_NO_SNOOPER_APPS, but we don't need to
         // support such rare cases for reducing maintenance cost.
         mIsKeySnooped = false;
-    } else if (contextID.EqualsLiteral("fcitx")) {
+    } else if (im.EqualsLiteral("fcitx")) {
         mIMContextID = IMContextID::eFcitx;
         mIsIMInAsyncKeyHandlingMode = !IsFcitxInSyncMode();
         // Although Fcitx has key snooper mode similar to ibus, it's also
@@ -363,7 +382,7 @@ IMContextWrapper::Init()
         // FCITX_NO_SNOOPER_APPS, but we don't need to support such rare cases
         // for reducing maintenance cost.
         mIsKeySnooped = false;
-    } else if (contextID.EqualsLiteral("uim")) {
+    } else if (im.EqualsLiteral("uim")) {
         mIMContextID = IMContextID::eUim;
         mIsIMInAsyncKeyHandlingMode = false;
         // We cannot know if uim uses key snooper since it's build option of
@@ -372,11 +391,11 @@ IMContextWrapper::Init()
         // preferred value.
         mIsKeySnooped =
             Preferences::GetBool("intl.ime.hack.uim.using_key_snooper", true);
-    } else if (contextID.EqualsLiteral("scim")) {
+    } else if (im.EqualsLiteral("scim")) {
         mIMContextID = IMContextID::eScim;
         mIsIMInAsyncKeyHandlingMode = false;
         mIsKeySnooped = false;
-    } else if (contextID.EqualsLiteral("iiim")) {
+    } else if (im.EqualsLiteral("iiim")) {
         mIMContextID = IMContextID::eIIIMF;
         mIsIMInAsyncKeyHandlingMode = false;
         mIsKeySnooped = false;
@@ -415,12 +434,13 @@ IMContextWrapper::Init()
     gtk_im_context_set_client_window(mDummyContext, gdkWindow);
 
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
-        ("0x%p Init(), mOwnerWindow=%p, mContext=%p (%s), "
+        ("0x%p Init(), mOwnerWindow=%p, mContext=%p (im=\"%s\"), "
          "mIsIMInAsyncKeyHandlingMode=%s, mIsKeySnooped=%s, "
-         "mSimpleContext=%p, mDummyContext=%p",
-         this, mOwnerWindow, mContext, contextID.get(),
+         "mSimpleContext=%p, mDummyContext=%p, contextIDChar=\"%s\", "
+         "xmodifiersChar=\"%s\"",
+         this, mOwnerWindow, mContext, nsAutoCString(im).get(),
          ToChar(mIsIMInAsyncKeyHandlingMode), ToChar(mIsKeySnooped),
-         mSimpleContext, mDummyContext));
+         mSimpleContext, mDummyContext, contextIDChar, xmodifiersChar));
 }
 
 IMContextWrapper::~IMContextWrapper()

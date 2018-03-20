@@ -5,6 +5,7 @@
 // Import globals from the files imported by the .xul files.
 /* import-globals-from subdialogs.js */
 /* import-globals-from main.js */
+/* import-globals-from home.js */
 /* import-globals-from search.js */
 /* import-globals-from containers.js */
 /* import-globals-from privacy.js */
@@ -52,6 +53,7 @@ function init_all() {
 
   gSubDialog.init();
   register_module("paneGeneral", gMainPane);
+  register_module("paneHome", gHomePane);
   register_module("paneSearch", gSearchPane);
   register_module("panePrivacy", gPrivacyPane);
   register_module("paneContainers", gContainersPane);
