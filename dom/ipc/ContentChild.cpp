@@ -43,8 +43,6 @@
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/URLClassifierChild.h"
-#include "mozilla/dom/WorkerDebugger.h"
-#include "mozilla/dom/WorkerDebuggerManager.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/psm/PSMContentListener.h"
@@ -80,9 +78,6 @@
 #include "imgLoader.h"
 #include "GMPServiceChild.h"
 #include "NullPrincipal.h"
-#include "nsIPerformanceMetrics.h"
-#include "nsISimpleEnumerator.h"
-#include "nsIWorkerDebuggerManager.h"
 
 #if !defined(XP_WIN)
 #include "mozilla/Omnijar.h"
@@ -1374,38 +1369,6 @@ ContentChild::GetResultForRenderingInitFailure(base::ProcessId aOtherPid)
   // the next ContentChild::RecvReinitRendering call.
   gfxCriticalNote << "Could not initialize rendering with GPU process";
   return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ContentChild::RecvRequestPerformanceMetrics()
-{
-#ifndef RELEASE_OR_BETA
-  // iterate on all WorkerDebugger
-  RefPtr<WorkerDebuggerManager> wdm = WorkerDebuggerManager::GetOrCreate();
-  if (NS_WARN_IF(!wdm)) {
-    return IPC_OK();
-  }
-
-  for (uint32_t index = 0; index < wdm->GetDebuggersLength(); index++) {
-    WorkerDebugger* debugger = wdm->GetDebuggerAt(index);
-    MOZ_ASSERT(debugger);
-    SendAddPerformanceMetrics(debugger->ReportPerformanceInfo());
-  }
-
-  // iterate on all DocGroup
-  nsTArray<RefPtr<TabChild>> tabs = TabChild::GetAll();
-  for (const auto& tabChild : tabs) {
-    TabGroup* tabGroup = tabChild->TabGroup();
-    for (auto iter = tabGroup->Iter(); !iter.Done(); iter.Next()) {
-        RefPtr<DocGroup> docGroup = iter.Get()->mDocGroup;
-        SendAddPerformanceMetrics(docGroup->ReportPerformanceInfo());
-    }
-  }
-  return IPC_OK();
-#endif
-#ifdef RELEASE_OR_BETA
-  return IPC_OK();
-#endif
 }
 
 mozilla::ipc::IPCResult
