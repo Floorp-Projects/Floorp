@@ -16,7 +16,6 @@ The current data collection possibilities include:
 * :doc:`histograms` can efficiently record multiple data points
 * ``environment`` data records information about the system and settings a session occurs in
 * :doc:`events` can record richer data on individual occurrences of specific actions
-* ``TelemetryLog`` allows collecting ordered event entries up to a limit of 1000 entries (note: this does not have supporting analysis tools)
 * :doc:`measuring elapsed time <measuring-time>`
 * :doc:`custom pings <custom-pings>`
 * :doc:`stack capture <stack-capture>` allow recording application call stacks
@@ -45,3 +44,8 @@ The current data collection possibilities include:
 Browser Usage Telemetry
 ~~~~~~~~~~~~~~~~~~~~~~~
 For more information, see :ref:`browserusagetelemetry`.
+
+Version History
+~~~~~~~~~~~~~~~
+
+- Firefox 61: Stopped reporting Telemetry Log items (`bug 1443614 <https://bugzilla.mozilla.org/show_bug.cgi?id=1443614>`_).
