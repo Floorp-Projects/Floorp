@@ -218,7 +218,9 @@ class BrowserErrorReporter {
       return;
     }
 
-     merge rev
+    const exceptionValue = {};
+    const requestBody = {
+      ...this.requestBodyTemplate,
       timestamp: new Date().toISOString().slice(0, -1), // Remove trailing "Z"
       project: Services.prefs.getCharPref(PREF_PROJECT_ID),
       exception: {
