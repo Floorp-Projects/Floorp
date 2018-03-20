@@ -427,9 +427,6 @@ class nsNavHistoryContainerResultNode : public nsNavHistoryResultNode,
 public:
   nsNavHistoryContainerResultNode(
     const nsACString& aURI, const nsACString& aTitle,
-    uint32_t aContainerType, nsNavHistoryQueryOptions* aOptions);
-  nsNavHistoryContainerResultNode(
-    const nsACString& aURI, const nsACString& aTitle,
     PRTime aTime, uint32_t aContainerType, nsNavHistoryQueryOptions* aOptions);
 
   virtual nsresult Refresh();
@@ -619,14 +616,10 @@ class nsNavHistoryQueryResultNode final : public nsNavHistoryContainerResultNode
 {
 public:
   nsNavHistoryQueryResultNode(const nsACString& aTitle,
-                              const nsACString& aQueryURI);
-  nsNavHistoryQueryResultNode(const nsACString& aTitle,
-                              const RefPtr<nsNavHistoryQuery>& aQuery,
-                              nsNavHistoryQueryOptions* aOptions);
-  nsNavHistoryQueryResultNode(const nsACString& aTitle,
                               PRTime aTime,
+                              const nsACString& aQueryURI,
                               const RefPtr<nsNavHistoryQuery>& aQuery,
-                              nsNavHistoryQueryOptions* aOptions);
+                              const RefPtr<nsNavHistoryQueryOptions>& aOptions);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_COMMON_RESULTNODE_TO_BASE
@@ -655,16 +648,9 @@ public:
   virtual void OnRemoving() override;
 
 public:
-  // This constructs lazily mURI from mQuery and mOptions.
-  // Either this or mQuery/mOptions should be valid.
-  nsresult VerifyQuerySerialized();
-
-  // This may be constructed lazily from mURI, call VerifyQueryParsed.
-  // Either this or mURI should be valid.
   RefPtr<nsNavHistoryQuery> mQuery;
   uint32_t mLiveUpdate; // one of QUERYUPDATE_* in nsNavHistory.h
   bool mHasSearchTerms;
-  nsresult VerifyQueryParsed();
 
   // safe options getter, ensures query is parsed
   nsNavHistoryQueryOptions* Options();
