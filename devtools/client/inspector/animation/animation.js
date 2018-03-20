@@ -50,6 +50,7 @@ class AnimationInspector {
       this.simulateAnimationForKeyframesProgressBar.bind(this);
     this.toggleElementPicker = this.toggleElementPicker.bind(this);
     this.update = this.update.bind(this);
+    this.onAnimationStateChanged = this.onAnimationStateChanged.bind(this);
     this.onAnimationsCurrentTimeUpdated = this.onAnimationsCurrentTimeUpdated.bind(this);
     this.onAnimationsMutation = this.onAnimationsMutation.bind(this);
     this.onCurrentTimeTimerUpdated = this.onCurrentTimeTimerUpdated.bind(this);
@@ -143,6 +144,7 @@ class AnimationInspector {
   }
 
   destroy() {
+    this.setAnimationStateChangedListenerEnabled(false);
     this.inspector.selection.off("new-node-front", this.update);
     this.inspector.sidebar.off("newanimationinspector-selected", this.onSidebarSelect);
     this.inspector.toolbox.off("inspector-sidebar-resized", this.onSidebarResized);
@@ -245,6 +247,11 @@ class AnimationInspector {
     return this.inspector && this.inspector.toolbox && this.inspector.sidebar &&
            this.inspector.toolbox.currentToolId === "inspector" &&
            this.inspector.sidebar.getCurrentTabID() === "newanimationinspector";
+  }
+
+  onAnimationStateChanged() {
+    // Simply update the animations since the state has already been updated.
+    this.updateState([...this.state.animations]);
   }
 
   /**
@@ -355,6 +362,10 @@ class AnimationInspector {
 
   async setAnimationsPlaybackRate(playbackRate) {
     const animations = this.state.animations;
+    // "changed" event on each animation will fire respectively when the playback
+    // rate changed. Since for each occurrence of event, change of UI is urged.
+    // To avoid this, disable the listeners once in order to not capture the event.
+    this.setAnimationStateChangedListenerEnabled(false);
 
     try {
       await this.animationsFront.setPlaybackRates(animations, playbackRate);
@@ -364,6 +375,8 @@ class AnimationInspector {
       // in the meantime.
       console.error(e);
       return;
+    } finally {
+      this.setAnimationStateChangedListenerEnabled(true);
     }
 
     await this.updateState([...animations]);
@@ -386,6 +399,25 @@ class AnimationInspector {
     }
 
     await this.updateState([...this.state.animations]);
+  }
+
+  /**
+   * Enable/disable the animation state change listener.
+   * If set true, observe "changed" event on current animations.
+   * Otherwise, quit observing the "changed" event.
+   *
+   * @param {Bool} isEnabled
+   */
+  setAnimationStateChangedListenerEnabled(isEnabled) {
+    if (isEnabled) {
+      for (const animation of this.state.animations) {
+        animation.on("changed", this.onAnimationStateChanged);
+      }
+    } else {
+      for (const animation of this.state.animations) {
+        animation.off("changed", this.onAnimationStateChanged);
+      }
+    }
   }
 
   setDetailVisibility(isVisible) {
@@ -527,6 +559,8 @@ class AnimationInspector {
     this.stopAnimationsCurrentTimeTimer();
 
     this.inspector.store.dispatch(updateAnimations(animations));
+
+    this.setAnimationStateChangedListenerEnabled(true);
 
     if (hasRunningAnimation(animations)) {
       this.startAnimationsCurrentTimeTimer();
