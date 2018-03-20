@@ -25,7 +25,7 @@ WheelEvent::WheelEvent(EventTarget* aOwner,
     // device pixels.  However, JS contents need the delta values in CSS pixels.
     // We should store the value of mAppUnitsPerDevPixel here because
     // it might be changed by changing zoom or something.
-    if (aWheelEvent->mDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
+    if (aWheelEvent->mDeltaMode == WheelEventBinding::DOM_DELTA_PIXEL) {
       mAppUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
     }
   } else {

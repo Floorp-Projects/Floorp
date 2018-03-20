@@ -32,7 +32,6 @@
 #include "nsIDOMScreen.h"
 #include "nsIDOMSerializer.h"
 #include "nsIDOMUIEvent.h"
-#include "nsIDOMWheelEvent.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsIFrameLoader.h"
@@ -86,7 +85,6 @@
 #include "mozilla/dom/TimeEventBinding.h"
 #include "mozilla/dom/TreeBoxObjectBinding.h"
 #include "mozilla/dom/UIEventBinding.h"
-#include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/dom/XMLDocumentBinding.h"
 #include "mozilla/dom/XMLSerializerBinding.h"
 #include "mozilla/dom/XULDocumentBinding.h"
@@ -176,7 +174,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsITreeBoxObject, TreeBoxObject),
   DEFINE_SHIM(UIEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIWebBrowserPersistable, FrameLoader),
-  DEFINE_SHIM(WheelEvent),
   DEFINE_SHIM(XMLDocument),
   DEFINE_SHIM(XULElement),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsISelection, Selection),
