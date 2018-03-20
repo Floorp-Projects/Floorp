@@ -59,7 +59,7 @@ class nsCSSPseudoClasses
   typedef mozilla::CSSEnabledState EnabledState;
 
 public:
-  static void AddRefAtoms();
+  static void RegisterStaticAtoms();
 
   static Type GetPseudoType(nsAtom* aAtom, EnabledState aEnabledState);
   static bool HasStringArg(Type aType);

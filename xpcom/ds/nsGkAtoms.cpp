@@ -21,7 +21,7 @@ static const nsStaticAtomSetup sGkAtomSetup[] = {
   #undef GK_ATOM
 };
 
-void nsGkAtoms::AddRefAtoms()
+void nsGkAtoms::RegisterStaticAtoms()
 {
   NS_RegisterStaticAtoms(sGkAtomSetup);
 }
