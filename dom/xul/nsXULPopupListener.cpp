@@ -29,6 +29,8 @@
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/FragmentOrElement.h"
+#include "mozilla/dom/MouseEvent.h"
+#include "mozilla/dom/MouseEventBinding.h"
 
 // for event firing in context menus
 #include "nsPresContext.h"
@@ -100,16 +102,14 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
        (eventType.EqualsLiteral("contextmenu") && mIsContext)))
     return NS_OK;
 
-  int16_t button;
-
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
+  MouseEvent* mouseEvent = aEvent->InternalDOMEvent()->AsMouseEvent();
   if (!mouseEvent) {
     //non-ui event passed in.  bad things.
     return NS_OK;
   }
 
   // Get the node that was clicked on.
-  EventTarget* target = mouseEvent->AsEvent()->InternalDOMEvent()->GetTarget();
+  EventTarget* target = mouseEvent->GetTarget();
   nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(target);
 
   if (!targetNode && mIsContext) {
@@ -134,15 +134,14 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   {
-    EventTarget* originalTarget = mouseEvent->AsEvent()->InternalDOMEvent()->GetOriginalTarget();
+    EventTarget* originalTarget = mouseEvent->GetOriginalTarget();
     nsCOMPtr<nsIContent> content = do_QueryInterface(originalTarget);
     if (content && EventStateManager::IsRemoteTarget(content)) {
       return NS_OK;
     }
   }
 
-  bool preventDefault;
-  mouseEvent->AsEvent()->GetDefaultPrevented(&preventDefault);
+  bool preventDefault = mouseEvent->DefaultPrevented();
   if (preventDefault && targetNode && mIsContext) {
     // Someone called preventDefault on a context menu.
     // Let's make sure they are allowed to do so.
@@ -193,9 +192,8 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
 
   if (mIsContext) {
 #ifndef NS_CONTEXT_MENU_IS_MOUSEUP
-    uint16_t inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
-    mouseEvent->GetMozInputSource(&inputSource);
-    bool isTouch = inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+    uint16_t inputSource = mouseEvent->MozInputSource();
+    bool isTouch = inputSource == MouseEventBinding::MOZ_SOURCE_TOUCH;
     // If the context menu launches on mousedown,
     // we have to fire focus on the content we clicked on
     FireFocusOnTargetContent(targetNode, isTouch);
@@ -203,14 +201,14 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
   }
   else {
     // Only open popups when the left mouse button is down.
-    mouseEvent->GetButton(&button);
-    if (button != 0)
+    if (mouseEvent->Button() != 0) {
       return NS_OK;
+    }
   }
 
   // Open the popup. LaunchPopup will call StopPropagation and PreventDefault
   // in the right situations.
-  LaunchPopup(aEvent, targetContent);
+  LaunchPopup(mouseEvent, targetContent);
 
   return NS_OK;
 }
@@ -328,7 +326,7 @@ GetImmediateChild(nsIContent* aContent, nsAtom *aTag)
 // the popup content in the document.
 //
 nsresult
-nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
+nsXULPopupListener::LaunchPopup(MouseEvent* aEvent, nsIContent* aTargetContent)
 {
   nsresult rv = NS_OK;
 
@@ -416,10 +414,8 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
                   false, true, false, aEvent);
   }
   else {
-    int32_t xPos = 0, yPos = 0;
-    nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
-    mouseEvent->GetScreenX(&xPos);
-    mouseEvent->GetScreenY(&yPos);
+    int32_t xPos = aEvent->ScreenX(CallerType::System);
+    int32_t yPos = aEvent->ScreenY(CallerType::System);
 
     pm->ShowPopupAtScreen(mPopupContent, xPos, yPos, mIsContext, aEvent);
   }

@@ -1032,6 +1032,25 @@ class TestRecursiveMakeBackend(BackendTester):
         # way to iterate the manifest.
         self.assertFalse('instrumentation/./not_packaged.java' in m)
 
+    def test_program_paths(self):
+        """PROGRAMs with various moz.build settings that change the destination should produce
+        the expected paths in backend.mk."""
+        env = self._consume('program-paths', RecursiveMakeBackend)
+
+        expected = [
+            ('dist-bin', '$(DEPTH)/dist/bin/dist-bin.prog'),
+            ('dist-subdir', '$(DEPTH)/dist/bin/foo/dist-subdir.prog'),
+            ('final-target', '$(DEPTH)/final/target/final-target.prog'),
+            ('not-installed', 'not-installed.prog'),
+        ]
+        prefix = 'PROGRAM = '
+        for (subdir, expected_program) in expected:
+            with open(os.path.join(env.topobjdir, subdir, 'backend.mk'), 'rb') as fh:
+                lines = fh.readlines()
+                program = [line.rstrip().split(prefix, 1)[1] for line in lines
+                           if line.startswith(prefix)][0]
+                self.assertEqual(program, expected_program)
+
 
 if __name__ == '__main__':
     main()

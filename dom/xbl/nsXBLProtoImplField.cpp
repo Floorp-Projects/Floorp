@@ -207,7 +207,7 @@ InstallXBLField(JSContext* cx,
   nsXBLProtoImplField* field = protoBinding->FindField(fieldName);
   MOZ_ASSERT(field);
 
-  nsresult rv = field->InstallField(thisObj, protoBinding->DocURI(), installed);
+  nsresult rv = field->InstallField(thisObj, *protoBinding, installed);
   if (NS_SUCCEEDED(rv)) {
     return true;
   }
@@ -372,7 +372,7 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
 
 nsresult
 nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
-                                  nsIURI* aBindingDocURI,
+                                  const nsXBLPrototypeBinding& aProtoBinding,
                                   bool* aDidInstall) const
 {
   NS_PRECONDITION(aBoundNode,
@@ -389,7 +389,7 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
   nsAutoMicroTask mt;
 
   nsAutoCString uriSpec;
-  nsresult rv = aBindingDocURI->GetSpec(uriSpec);
+  nsresult rv = aProtoBinding.DocURI()->GetSpec(uriSpec);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -432,7 +432,7 @@ nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
   JS::CompileOptions options(cx);
   options.setFileAndLine(uriSpec.get(), mLineNumber);
   JS::AutoObjectVector scopeChain(cx);
-  if (!nsJSUtils::GetScopeChainForElement(cx, boundElement, scopeChain)) {
+  if (!nsJSUtils::GetScopeChainForXBL(cx, boundElement, aProtoBinding, scopeChain)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   rv = NS_OK;

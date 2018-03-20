@@ -19,7 +19,7 @@ class nsICSSAnonBoxPseudo : public nsAtom {};
 class nsCSSAnonBoxes {
 public:
 
-  static void AddRefAtoms();
+  static void RegisterStaticAtoms();
 
   static bool IsAnonBox(nsAtom *aAtom);
 #ifdef MOZ_XUL

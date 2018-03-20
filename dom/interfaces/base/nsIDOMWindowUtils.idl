@@ -314,7 +314,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aIgnoreRootScrollFrame whether the event should ignore viewport bounds
    *                           during dispatch
    * @param aPressure touch input pressure: 0.0 -> 1.0
-   * @param aInputSourceArg input source, see nsIDOMMouseEvent for values,
+   * @param aInputSourceArg input source, see MouseEvent for values,
    *        defaults to mouse input.
    * @param aIsDOMEventSynthesized controls nsIDOMEvent.isSynthesized value
    *                               that helps identifying test related events,
@@ -425,8 +425,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aDeltaX            deltaX value.
    * @param aDeltaY            deltaY value.
    * @param aDeltaZ            deltaZ value.
-   * @param aDeltaMode         deltaMode value which must be one of
-   *                           nsIDOMWheelEvent::DOM_DELTA_*.
+   * @param aDeltaMode         deltaMode value which must be one of the
+   *                           WheelEvent DOM_DELTA_* constants.
    * @param aModifiers         modifiers pressed, using constants defined as
    *                           MODIFIER_*
    * @param aLineOrPageDeltaX  If you set this value non-zero for

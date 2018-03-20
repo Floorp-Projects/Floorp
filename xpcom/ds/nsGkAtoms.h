@@ -12,7 +12,7 @@
 class nsGkAtoms
 {
 public:
-  static void AddRefAtoms();
+  static void RegisterStaticAtoms();
 
   #define GK_ATOM(_name, _value) NS_STATIC_ATOM_DECL(_name)
   #include "nsGkAtomList.h"

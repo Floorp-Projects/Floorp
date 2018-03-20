@@ -14,8 +14,8 @@
 #include "nsWindow.h"
 #include "nsWindowDefs.h"
 #include "KeyboardLayout.h"
-#include "nsIDOMMouseEvent.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/HangMonitor.h"
@@ -1078,11 +1078,12 @@ WinUtils::GetNativeMessage(UINT aInternalMessage)
 uint16_t
 WinUtils::GetMouseInputSource()
 {
-  int32_t inputSource = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
+  int32_t inputSource = dom::MouseEventBinding::MOZ_SOURCE_MOUSE;
   LPARAM lParamExtraInfo = ::GetMessageExtraInfo();
   if ((lParamExtraInfo & TABLET_INK_SIGNATURE) == TABLET_INK_CHECK) {
     inputSource = (lParamExtraInfo & TABLET_INK_TOUCH) ?
-      nsIDOMMouseEvent::MOZ_SOURCE_TOUCH : nsIDOMMouseEvent::MOZ_SOURCE_PEN;
+      dom::MouseEventBinding::MOZ_SOURCE_TOUCH :
+      dom::MouseEventBinding::MOZ_SOURCE_PEN;
   }
   return static_cast<uint16_t>(inputSource);
 }

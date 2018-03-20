@@ -18,6 +18,7 @@
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/layers/RenderTrace.h"
@@ -601,7 +602,7 @@ public:
 
         ScreenPoint origin = ScreenPoint(aX, aY);
 
-        MouseInput input(mouseType, buttonType, nsIDOMMouseEvent::MOZ_SOURCE_MOUSE, ConvertButtons(buttons), origin, aTime, GetEventTimeStamp(aTime), GetModifiers(aMetaState));
+        MouseInput input(mouseType, buttonType, MouseEventBinding::MOZ_SOURCE_MOUSE, ConvertButtons(buttons), origin, aTime, GetEventTimeStamp(aTime), GetModifiers(aMetaState));
 
         ScrollableLayerGuid guid;
         uint64_t blockId;
@@ -2014,7 +2015,7 @@ nsWindow::DispatchHitTest(const WidgetTouchEvent& aEvent)
                                  WidgetMouseEvent::eReal);
         hittest.mRefPoint = aEvent.mTouches[0]->mRefPoint;
         hittest.mIgnoreRootScrollFrame = true;
-        hittest.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+        hittest.inputSource = MouseEventBinding::MOZ_SOURCE_TOUCH;
         nsEventStatus status;
         DispatchEvent(&hittest, status);
 

@@ -197,6 +197,14 @@ CONFIGS = defaultdict(lambda: {
             'BIN_SUFFIX': '',
         },
     },
+    'program-paths': {
+        'defines': {},
+        'non_global_defines': [],
+        'substs': {
+            'COMPILE_ENVIRONMENT': '1',
+            'BIN_SUFFIX': '.prog',
+        },
+    },
 })
 
 

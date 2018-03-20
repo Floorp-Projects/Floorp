@@ -155,6 +155,12 @@ union MaybePrefValue {
   null_t;
 };
 
+// This serialization form mirrors that used in mozilla::Pref in
+// Preferences.cpp. The two should be kept in sync, e.g. if something is added
+// to one it should also be added to the other.
+//
+// Note: there is no need to pass the isSticky attribute because that's an
+// immutable attribute obtained from file at startup.
 struct Pref {
   nsCString name;
   bool isLocked;
@@ -273,7 +279,6 @@ struct XPCOMInitData
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
     OptionalURIParams userContentSheetURL;
-    Pref[] prefs;
     GfxVarUpdate[] gfxNonDefaultVarUpdates;
     ContentDeviceData contentDeviceData;
     GfxInfoFeatureStatus[] gfxFeatureStatus;
