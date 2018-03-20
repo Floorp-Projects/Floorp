@@ -95,14 +95,12 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
   // XXX This should be easier to do!
   // But eDOMEvents_contextmenu and eContextMenu is not exposed in any event
   // interface :-(
-  int16_t buttonNumber;
-  nsresult rv = aMouseEvent->GetButton(&buttonNumber);
-  NS_ENSURE_SUCCESS(rv, rv);
+  int16_t buttonNumber = aMouseEvent->Button();
 
   bool isContextClick = buttonNumber == 2;
 
   int32_t clickCount;
-  rv = aMouseEvent->GetDetail(&clickCount);
+  nsresult rv = aMouseEvent->GetDetail(&clickCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMEventTarget> target = aMouseEvent->GetExplicitOriginalTarget();

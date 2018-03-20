@@ -19,7 +19,6 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
   readonly attribute long               mozMovementX;
   readonly attribute long               mozMovementY;
 
-  readonly attribute short              button;
   readonly attribute unsigned short     buttons;
   readonly attribute nsIDOMEventTarget  relatedTarget;
 

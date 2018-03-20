@@ -15,7 +15,6 @@
 #include "nsGlobalWindowCommands.h"
 #include "nsIContent.h"
 #include "nsAtom.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsNameSpaceManager.h"
 #include "nsIDocument.h"
 #include "nsIController.h"
@@ -50,6 +49,7 @@
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/layers/KeyboardMap.h"
 #include "xpcpublic.h"
@@ -728,22 +728,21 @@ nsXBLPrototypeHandler::KeyEventMatched(
 }
 
 bool
-nsXBLPrototypeHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
+nsXBLPrototypeHandler::MouseEventMatched(MouseEvent* aMouseEvent)
 {
   if (mDetail == -1 && mMisc == 0 && (mKeyMask & cAllModifiers) == 0)
     return true; // No filters set up. It's generic.
 
-  int16_t button;
-  aMouseEvent->GetButton(&button);
-  if (mDetail != -1 && (button != mDetail))
+  if (mDetail != -1 && (aMouseEvent->Button() != mDetail)) {
     return false;
+  }
 
-  int32_t clickcount;
-  aMouseEvent->GetDetail(&clickcount);
-  if (mMisc != 0 && (clickcount != mMisc))
+  if (mMisc != 0 && (aMouseEvent->Detail() != mMisc)) {
     return false;
+  }
 
-  return ModifiersMatchMask(aMouseEvent, IgnoreModifierState());
+  return ModifiersMatchMask(static_cast<nsIDOMMouseEvent*>(aMouseEvent),
+                            IgnoreModifierState());
 }
 
 struct keyCodeData {

@@ -7,7 +7,6 @@
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
@@ -64,7 +63,7 @@ nsXBLMouseEventHandler::~nsXBLMouseEventHandler()
 bool
 nsXBLMouseEventHandler::EventMatched(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aEvent));
+  MouseEvent* mouse = aEvent->InternalDOMEvent()->AsMouseEvent();
   return mouse && mProtoHandler->MouseEventMatched(mouse);
 }
 
