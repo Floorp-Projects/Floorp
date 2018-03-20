@@ -84,10 +84,10 @@ struct ModuleEnvironment
     NameInBytecodeVector      funcNames;
     CustomSectionVector       customSections;
 
-    explicit ModuleEnvironment(CompileMode mode = CompileMode::Once,
-                               Tier tier = Tier::Ion,
-                               DebugEnabled debug = DebugEnabled::False,
-                               Shareable sharedMemoryEnabled = Shareable::False,
+    explicit ModuleEnvironment(CompileMode mode,
+                               Tier tier,
+                               DebugEnabled debug,
+                               Shareable sharedMemoryEnabled,
                                ModuleKind kind = ModuleKind::Wasm)
       : debug(debug),
         kind(kind),
