@@ -8,7 +8,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-ft-font.c b/gfx/cairo/cairo/src/cairo-ft-
 +
 +/* This is the maximum font size we allow to be passed to FT_Set_Char_Size
 + */
-+#define MAX_FONT_SIZE 1000
++#define MAX_FONT_SIZE 2000
  
  /*
   * The simple 2x2 matrix is converted into separate scale and shape
