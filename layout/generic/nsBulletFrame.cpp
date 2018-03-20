@@ -631,6 +631,14 @@ public:
     return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
   }
 
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters) override;
+
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerLayerParameters& aParameters) override;
+
   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
                                        mozilla::wr::IpcResourceUpdateQueue&,
                                        const StackingContextHelper& aSc,
@@ -683,6 +691,56 @@ public:
 protected:
   Maybe<BulletRenderer> mBulletRenderer;
 };
+
+LayerState
+nsDisplayBullet::GetLayerState(nsDisplayListBuilder* aBuilder,
+                               LayerManager* aManager,
+                               const ContainerLayerParameters& aParameters)
+{
+  if (!ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowBulletLayers)) {
+    return LAYER_NONE;
+  }
+  RefPtr<gfxContext> screenRefCtx = gfxContext::CreateOrNull(
+    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget().get());
+
+  Maybe<BulletRenderer> br = static_cast<nsBulletFrame*>(mFrame)->
+    CreateBulletRenderer(*screenRefCtx, ToReferenceFrame());
+
+  if (!br) {
+    return LAYER_NONE;
+  }
+
+  if (br->IsImageType()) {
+    uint32_t flags = aBuilder->ShouldSyncDecodeImages()
+                   ? imgIContainer::FLAG_SYNC_DECODE
+                   : imgIContainer::FLAG_NONE;
+
+    if (!br->IsImageContainerAvailable(aManager, flags)) {
+      return LAYER_NONE;
+    }
+  }
+
+  if (br->IsTextType()) {
+    if (!br->BuildGlyphForText(this, mDisableSubpixelAA)) {
+      return LAYER_NONE;
+    }
+  }
+
+  mBulletRenderer = br;
+  return LAYER_ACTIVE;
+}
+
+already_AddRefed<layers::Layer>
+nsDisplayBullet::BuildLayer(nsDisplayListBuilder* aBuilder,
+                            LayerManager* aManager,
+                            const ContainerLayerParameters& aContainerParameters)
+{
+  if (!mBulletRenderer) {
+    return nullptr;
+  }
+
+  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
+}
 
 bool
 nsDisplayBullet::CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,

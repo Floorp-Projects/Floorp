@@ -13,7 +13,6 @@
 #include "MLGDevice.h"                  // for MLGSwapChain
 #include "RenderPassMLGPU.h"
 #include "RenderViewMLGPU.h"
-#include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Polygon.h"
 #include "mozilla/layers/BSPTree.h"
 #include "mozilla/layers/LayersHelpers.h"
@@ -152,7 +151,7 @@ FrameBuilder::ProcessContainerLayer(ContainerLayer* aContainer,
 
   // Diagnostic information for bug 1387467.
   if (!layer) {
-    gfxDevCrash(gfx::LogReason::InvalidLayerType) <<
+    gfxDevCrash(LogReason::InvalidLayerType) <<
       "Layer type is invalid: " << aContainer->Name();
     return false;
   }
@@ -181,7 +180,7 @@ FrameBuilder::ProcessContainerLayer(ContainerLayer* aContainer,
   // to be a full-fledged ContainerLayerMLGPU.
   ContainerLayerMLGPU* viewContainer = layer->AsContainerLayerMLGPU();
   if (!viewContainer) {
-    gfxDevCrash(gfx::LogReason::InvalidLayerType) <<
+    gfxDevCrash(LogReason::InvalidLayerType) <<
       "Container layer type is invalid: " << aContainer->Name();
     return false;
   }
