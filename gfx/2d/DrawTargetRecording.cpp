@@ -648,6 +648,24 @@ DrawTargetRecording::EnsurePathStored(const Path *aPath)
   return pathRecording.forget();
 }
 
+// This should only be called on the 'root' DrawTargetRecording.
+// Calling it on a child DrawTargetRecordings will cause confusion.
+void
+DrawTargetRecording::FlushItem(const IntRect &aBounds)
+{
+  mRecorder->FlushItem(aBounds);
+  // Reinitialize the recorder (FlushItem will write a new recording header)
+  // Tell the new recording about our draw target
+  // This code should match what happens in the DrawTargetRecording constructor.
+  mRecorder->RecordEvent(RecordedDrawTargetCreation(this,
+                                                    mFinalDT->GetBackendType(),
+                                                    mSize,
+                                                    mFinalDT->GetFormat(),
+                                                    false, nullptr));
+  // Add the current transform to the new recording
+  mRecorder->RecordEvent(RecordedSetTransform(this, DrawTarget::GetTransform()));
+}
+
 void
 DrawTargetRecording::EnsurePatternDependenciesStored(const Pattern &aPattern)
 {

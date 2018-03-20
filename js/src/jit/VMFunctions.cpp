@@ -822,22 +822,22 @@ DebugPrologue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool* mustRet
     *mustReturn = false;
 
     switch (Debugger::onEnterFrame(cx, frame)) {
-      case JSTRAP_CONTINUE:
+      case ResumeMode::Continue:
         return true;
 
-      case JSTRAP_RETURN:
+      case ResumeMode::Return:
         // The script is going to return immediately, so we have to call the
         // debug epilogue handler as well.
         MOZ_ASSERT(frame->hasReturnValue());
         *mustReturn = true;
         return jit::DebugEpilogue(cx, frame, pc, true);
 
-      case JSTRAP_THROW:
-      case JSTRAP_ERROR:
+      case ResumeMode::Throw:
+      case ResumeMode::Terminate:
         return false;
 
       default:
-        MOZ_CRASH("bad Debugger::onEnterFrame status");
+        MOZ_CRASH("bad Debugger::onEnterFrame resume mode");
     }
 }
 
@@ -1097,32 +1097,32 @@ HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr, bool* mus
     MOZ_ASSERT(script->stepModeEnabled() || script->hasBreakpointsAt(pc));
 
     RootedValue rval(cx);
-    JSTrapStatus status = JSTRAP_CONTINUE;
+    ResumeMode resumeMode = ResumeMode::Continue;
 
     if (script->stepModeEnabled())
-        status = Debugger::onSingleStep(cx, &rval);
+        resumeMode = Debugger::onSingleStep(cx, &rval);
 
-    if (status == JSTRAP_CONTINUE && script->hasBreakpointsAt(pc))
-        status = Debugger::onTrap(cx, &rval);
+    if (resumeMode == ResumeMode::Continue && script->hasBreakpointsAt(pc))
+        resumeMode = Debugger::onTrap(cx, &rval);
 
-    switch (status) {
-      case JSTRAP_CONTINUE:
+    switch (resumeMode) {
+      case ResumeMode::Continue:
         break;
 
-      case JSTRAP_ERROR:
+      case ResumeMode::Terminate:
         return false;
 
-      case JSTRAP_RETURN:
+      case ResumeMode::Return:
         *mustReturn = true;
         frame->setReturnValue(rval);
         return jit::DebugEpilogue(cx, frame, pc, true);
 
-      case JSTRAP_THROW:
+      case ResumeMode::Throw:
         cx->setPendingException(rval);
         return false;
 
       default:
-        MOZ_CRASH("Invalid trap status");
+        MOZ_CRASH("Invalid step/breakpoint resume mode");
     }
 
     return true;
@@ -1134,21 +1134,19 @@ OnDebuggerStatement(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool* m
     *mustReturn = false;
 
     switch (Debugger::onDebuggerStatement(cx, frame)) {
-      case JSTRAP_ERROR:
-        return false;
-
-      case JSTRAP_CONTINUE:
+      case ResumeMode::Continue:
         return true;
 
-      case JSTRAP_RETURN:
+      case ResumeMode::Return:
         *mustReturn = true;
         return jit::DebugEpilogue(cx, frame, pc, true);
 
-      case JSTRAP_THROW:
+      case ResumeMode::Throw:
+      case ResumeMode::Terminate:
         return false;
 
       default:
-        MOZ_CRASH("Invalid trap status");
+        MOZ_CRASH("Invalid OnDebuggerStatement resume mode");
     }
 }
 

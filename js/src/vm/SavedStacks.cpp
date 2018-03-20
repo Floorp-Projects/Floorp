@@ -140,7 +140,7 @@ LiveSavedFrameCache::find(JSContext* cx, FramePtr& framePtr, const jsbytecode* p
         // the cache. (If we purged the entire cache because its SavedFrames had
         // been captured for a different compartment, then we would have
         // returned early above.)
-        MOZ_ASSERT(!frames->empty());
+        MOZ_ALWAYS_TRUE(!frames->empty());
     }
 
     // The youngest valid frame may have run some code, so its current pc may
@@ -154,6 +154,24 @@ LiveSavedFrameCache::find(JSContext* cx, FramePtr& framePtr, const jsbytecode* p
     }
 
     frame.set(frames->back().savedFrame);
+}
+
+void
+LiveSavedFrameCache::findWithoutInvalidation(const FramePtr& framePtr,
+                                             MutableHandleSavedFrame frame) const
+{
+    MOZ_ASSERT(initialized());
+    MOZ_ASSERT(framePtr.hasCachedSavedFrame());
+
+    Key key(framePtr);
+    for (auto& entry : (*frames)) {
+        if (entry.key == key) {
+            frame.set(entry.savedFrame);
+            return;
+        }
+    }
+
+    frame.set(nullptr);
 }
 
 struct SavedFrame::Lookup {
@@ -1221,8 +1239,7 @@ SavedStacks::saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame,
     }
 
     AutoGeckoProfilerEntry pseudoFrame(cx, "js::SavedStacks::saveCurrentStack");
-    FrameIter iter(cx);
-    return insertFrames(cx, iter, frame, mozilla::Move(capture));
+    return insertFrames(cx, frame, mozilla::Move(capture));
 }
 
 bool
@@ -1323,7 +1340,7 @@ captureIsSatisfied(JSContext* cx, JSPrincipals* principals, const JSAtom* source
 }
 
 bool
-SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFrame frame,
+SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
                           JS::StackCapture&& capture)
 {
     // In order to look up a cached SavedFrame object, we need to have its parent
@@ -1348,6 +1365,25 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
     // the parent of the frames we have placed in stackChain. If we walk the
     // stack all the way to the end, this remains null.
     RootedSavedFrame parent(cx, nullptr);
+
+    // Choose the right frame iteration strategy to accomodate both
+    // evalInFramePrev links and the LiveSavedFrameCache. For background, see
+    // the LiveSavedFrameCache comments in Stack.h.
+    //
+    // If we're using the LiveSavedFrameCache, then don't handle evalInFramePrev
+    // links by skipping over the frames altogether; that violates the cache's
+    // assumptions. Instead, traverse the entire stack, but choose each
+    // SavedFrame's parent as directed by the evalInFramePrev link, if any.
+    //
+    // If we're not using the LiveSavedFrameCache, it's hard to recover the
+    // frame to which the evalInFramePrev link refers, so we just let FrameIter
+    // skip those frames. Then each SavedFrame's parent is simply the frame that
+    // follows it in the stackChain vector, even when it has an evalInFramePrev
+    // link.
+    FrameIter iter(cx,
+                   capture.is<JS::AllFrames>()
+                   ? FrameIter::IGNORE_DEBUGGER_EVAL_PREV_LINK
+                   : FrameIter::FOLLOW_DEBUGGER_EVAL_PREV_LINK);
 
     // Once we've seen one frame with its hasCachedSavedFrame bit set, all its
     // parents (that can be cached) ought to have it set too.
@@ -1472,6 +1508,17 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
     for (size_t i = stackChain->length(); i != 0; i--) {
         SavedFrame::HandleLookup lookup = stackChain[i-1];
         lookup->parent = frame;
+
+        // If necessary, adjust the parent of a debugger eval frame to point to
+        // the frame in whose scope the eval occurs - if we're using
+        // LiveSavedFrameCache. Otherwise, we simply ask the FrameIter to follow
+        // evalInFramePrev links, so that the parent is always the last frame we
+        // created.
+        if (capture.is<JS::AllFrames>() && lookup->framePtr) {
+            if (!checkForEvalInFramePrev(cx, lookup))
+                return false;
+        }
+
         frame.set(getOrCreateSavedFrame(cx, lookup));
         if (!frame)
             return false;
@@ -1548,6 +1595,59 @@ SavedStacks::adoptAsyncStack(JSContext* cx, MutableHandleSavedFrame asyncStack,
         stackChain->popBack();
     }
 
+    return true;
+}
+
+// Given a |lookup| for which we're about to construct a SavedFrame, if it
+// refers to a Debugger eval frame, adjust |lookup|'s parent to be the frame's
+// evalInFramePrev target.
+//
+// Debugger eval frames run code in the scope of some random older frame on the
+// stack (the 'target' frame). It is our custom to report the target as the
+// immediate parent of the eval frame. The LiveSavedFrameCache requires us not
+// to skip frames, so instead we walk the entire stack, and just give Debugger
+// eval frames the right parents as we encounter them.
+//
+// Call this function only if we are using the LiveSavedFrameCache; otherwise,
+// FrameIter has already taken care of getting us the right parent.
+bool
+SavedStacks::checkForEvalInFramePrev(JSContext* cx, SavedFrame::HandleLookup lookup)
+{
+    MOZ_ASSERT(lookup->framePtr);
+    if (!lookup->framePtr->isInterpreterFrame())
+        return true;
+
+    InterpreterFrame& interpreterFrame = lookup->framePtr->asInterpreterFrame();
+    if (!interpreterFrame.isDebuggerEvalFrame())
+        return true;
+
+    LiveSavedFrameCache::FramePtr target =
+        LiveSavedFrameCache::FramePtr::create(interpreterFrame.evalInFramePrev());
+
+    // If we're caching the frame to which |lookup| refers, then we should
+    // definitely have the target frame in the cache as well.
+    MOZ_ASSERT(target.hasCachedSavedFrame());
+
+    // Search the chain of activations for a LiveSavedFrameCache that has an
+    // entry for target.
+    RootedSavedFrame saved(cx, nullptr);
+    for (Activation* act = lookup->activation; act; act = act->prev()) {
+        // It's okay to force allocation of a cache here; we're about to put
+        // something in the top cache, and all the lower ones should exist
+        // already.
+        auto* cache = act->getLiveSavedFrameCache(cx);
+        if (!cache)
+            return false;
+
+        cache->findWithoutInvalidation(target, &saved);
+        if (saved)
+            break;
+    }
+
+    // Since |target| has its cached bit set, we should have found it.
+    MOZ_ALWAYS_TRUE(saved);
+
+    lookup->parent = saved;
     return true;
 }
 

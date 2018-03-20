@@ -552,34 +552,27 @@ simple_keyfile('Pocket API')
 
 # Servo integration
 # ==============================================================
-option('--enable-stylo', nargs='?', choices=('build', 'only'),
+option('--enable-stylo', nargs='?', choices=('build',),
        help='Include Stylo in the build.  "build" means to disable Stylo at ' +
-            'runtime, and "only" means to exclude the old style system from ' +
-            'the build.')
+            'runtime.')
 
 @depends('--enable-stylo', '--help')
 def stylo_config(value, _):
-    build_stylo = None
-    enable_stylo = None
-    old_style = True
-
     # If nothing is specified, default to building and enabling Stylo,
-    # and building the old style system.
-    if value.origin == 'default':
-        build_stylo = True
-        enable_stylo = True
-    elif len(value) and value[0] == 'build':
+    # and not building the old style system.
+    build_stylo = True
+    enable_stylo = True
+    old_style = None
+
+    if len(value) and value[0] == 'build':
         # Build but disable by request.
-        build_stylo = True
-    elif len(value) and value[0] == 'only':
-        # Disable the old style system.
-        build_stylo = True
-        enable_stylo = True
-        old_style = None
-    elif bool(value):
-        # Build and enable.
-        build_stylo = True
-        enable_stylo = True
+        enable_stylo = None
+        old_style = True
+    elif value.origin != 'default' and not bool(value):
+        # Disable stylo entirely.
+        old_style = True
+        build_stylo = None
+        enable_stylo = None
 
     return namespace(
         build = build_stylo,
