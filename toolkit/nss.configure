@@ -9,7 +9,7 @@
 # ==============================================================
 @depends(build_project, '--help')
 def dbm_default(build_project, _):
-    return build_project != 'mobile/android'
+    return build_project not in ('mobile/android', 'b2g', 'b2g/graphene')
 
 option('--enable-dbm', default=dbm_default, help='Enable building DBM')
 
