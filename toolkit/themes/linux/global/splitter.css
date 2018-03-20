@@ -50,16 +50,3 @@ splitter[orient="vertical"][state="collapsed"][substate="after"] {
 splitter[disabled="true"] {
   cursor: default !important;
 }
-
-/* ::::: splitter grippy ::::: */
-
-grippy {
-  cursor: pointer;
-  min-width: 4px;
-  min-height: 115px;
-}
-
-splitter[orient="vertical"] > grippy {
-  min-width: 115px;
-  min-height: 4px;
-}
