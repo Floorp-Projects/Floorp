@@ -193,3 +193,27 @@ for f in ['res/values/strings.xml',
         'locales/en-US/android_strings.dtd',
         'locales/en-US/sync_strings.dtd',
     ]
+
+# The recursive make backend treats the first output specially: it's passed as
+# an open FileAvoidWrite to the invoked script.  That doesn't work well with
+# the Gradle task that generates all of the outputs, so we add a dummy first
+# output.
+t = ('android_apks',
+     CONFIG['GRADLE_ANDROID_APP_APK'],
+     CONFIG['GRADLE_ANDROID_APP_ANDROIDTEST_APK'])
+
+GENERATED_FILES += [t]
+GENERATED_FILES[t].force = True
+GENERATED_FILES[t].script = '/mobile/android/gradle.py:assemble_app'
+GENERATED_FILES[t].inputs += [
+    '!AndroidManifest.xml',
+    '!generated/preprocessed/org/mozilla/gecko/AdjustConstants.java',
+    '!generated/preprocessed/org/mozilla/gecko/AppConstants.java',
+    '!generated/preprocessed/org/mozilla/gecko/MmaConstants.java',
+    # These all depend on AB_CD, which isn't captured in this definition.  Due
+    # to subtle RecursiveMake details, everything works out.  In the future we
+    # can try to express the APKs themselves as LOCALIZED_GENERATED_FILES.
+    '!res/raw/browsersearch.json',
+    '!res/raw/suggestedsites.json',
+    '!res/values/strings.xml',
+]
