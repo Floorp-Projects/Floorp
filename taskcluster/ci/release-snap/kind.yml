@@ -31,7 +31,7 @@ job-defaults:
       implementation: docker-worker
       os: linux
       max-run-time: 7200
-      docker-image: mozillareleases/firefox-snapcraft@sha256:107cc7a89d45ce6df30f44fe0dfd0b375b3ab443b75e92efc77c4f7bc5da8717
+      docker-image: {in-tree: firefox-snap}
       artifacts:
          - name: public/build
            type: directory
@@ -40,8 +40,6 @@ job-defaults:
          - /bin/bash
          - -cx
          - >
-           apt-get update &&
-           apt-get dist-upgrade -y &&
            curl -o scripts.tar.bz2 {config_params[head_repository]}/archive/{config_params[head_rev]}.tar.bz2/taskcluster/docker/firefox-snap/ &&
            mkdir scripts &&
            tar xvfj scripts.tar.bz2 -C scripts --strip-components 4 &&

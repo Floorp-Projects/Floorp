@@ -265,39 +265,6 @@ function getScreenDimensions() {
   return 11;
 }
 
-/**
- * Function for fetching OS CPU and returning
- * an enum for Telemetry.
- */
-function getOSCPU() {
-  if (oscpu.includes("NT 5.1") || oscpu.includes("NT 5.2")) {
-    return 0;
-  }
-  if (oscpu.includes("NT 6.0")) {
-    return 1;
-  }
-  if (oscpu.includes("NT 6.1")) {
-    return 2;
-  }
-  if (oscpu.includes("NT 6.2")) {
-    return 3;
-  }
-  if (oscpu.includes("NT 6.3")) {
-    return 4;
-  }
-  if (oscpu.includes("OS X")) {
-    return 5;
-  }
-  if (oscpu.includes("Linux")) {
-    return 6;
-  }
-  if (oscpu.includes("NT 10.")) {
-    return 7;
-  }
-  // Other OS.
-  return 12;
-}
-
 function getSetting(name) {
   let deferred = defer();
 
@@ -326,5 +293,3 @@ function getSetting(name) {
 exports.getSystemInfo = getSystemInfo;
 exports.getSetting = getSetting;
 exports.getScreenDimensions = getScreenDimensions;
-exports.getOSCPU = getOSCPU;
-exports.constants = AppConstants;

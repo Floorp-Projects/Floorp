@@ -44,7 +44,7 @@ module.exports = async function() {
 
   await new Promise(resolve => {
     let childListMutationsCounter = 0;
-    inspector.on("markupmutation", (evt, mutations) => {
+    inspector.on("markupmutation", mutations => {
       let childListMutations = mutations.filter(m => m.type === "childList");
       childListMutationsCounter += childListMutations.length;
       if (childListMutationsCounter === LIMIT) {
