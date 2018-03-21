@@ -905,7 +905,6 @@ nsHostObjectProtocolHandler::NewURI(const nsACString& aSpec,
          .Finalize(uri);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_TryToSetImmutable(uri);
   uri.forget(aResult);
 
   if (info && info->mObjectType == DataInfo::eBlobImpl) {
