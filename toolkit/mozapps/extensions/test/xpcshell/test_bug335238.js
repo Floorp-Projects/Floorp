@@ -6,7 +6,6 @@
 // Disables security checking our updates which haven't been signed
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
-ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 
 // This is the data we expect to see sent as part of the update url.
@@ -124,7 +123,7 @@ var updateListener = {
 
   onUpdateFinished() {
     if (--this.pendingCount == 0)
-      server.stop(do_test_finished);
+      do_test_finished();
   }
 };
 
@@ -147,12 +146,11 @@ function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
-  server = new HttpServer();
+  server = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
   server.registerPathHandler("/0", requestHandler);
   server.registerPathHandler("/1", requestHandler);
   server.registerPathHandler("/2", requestHandler);
   server.registerPathHandler("/3", requestHandler);
-  server.start(4444);
 
   Services.locale.setRequestedLocales(["en-US"]);
 

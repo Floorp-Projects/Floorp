@@ -62,10 +62,16 @@ const PLATFORM_NAMES = {
  * traces; see bug 1426482 for privacy review and server-side mitigation.
  */
 class BrowserErrorReporter {
-  constructor(fetchMethod = this._defaultFetch, chromeOnly = true) {
+  constructor(options = {}) {
     // Test arguments for mocks and changing behavior
-    this.fetch = fetchMethod;
-    this.chromeOnly = chromeOnly;
+    this.fetch = options.fetch || defaultFetch;
+    this.chromeOnly = options.chromeOnly !== undefined ? options.chromeOnly : true;
+    this.registerListener = (
+      options.registerListener || (() => Services.console.registerListener(this))
+    );
+    this.unregisterListener = (
+      options.unregisterListener || (() => Services.console.unregisterListener(this))
+    );
 
     // Values that don't change between error reports.
     this.requestBodyTemplate = {
@@ -120,7 +126,7 @@ class BrowserErrorReporter {
 
   init() {
     if (this.collectionEnabled) {
-      Services.console.registerListener(this);
+      this.registerListener();
 
       // Processing already-logged messages in case any errors occurred before
       // startup.
@@ -132,16 +138,16 @@ class BrowserErrorReporter {
 
   uninit() {
     try {
-      Services.console.unregisterListener(this);
+      this.unregisterListener();
     } catch (err) {} // It probably wasn't registered.
   }
 
   handleEnabledPrefChanged(prefName, previousValue, newValue) {
     if (newValue) {
-      Services.console.registerListener(this);
+      this.registerListener();
     } else {
       try {
-        Services.console.unregisterListener(this);
+        this.unregisterListener();
       } catch (err) {} // It probably wasn't registered.
     }
   }
@@ -165,60 +171,27 @@ class BrowserErrorReporter {
       return;
     }
 
-    const extensions = new Map();
-    for (let extension of WebExtensionPolicy.getActiveExtensions()) {
-      extensions.set(extension.mozExtensionHostname, extension);
-    }
-
-    // Replaces any instances of moz-extension:// URLs with internal UUIDs to use
-    // the add-on ID instead.
-    function mangleExtURL(string, anchored = true) {
-      let re = new RegExp(`${anchored ? "^" : ""}moz-extension://([^/]+)/`, "g");
-
-      return string.replace(re, (m0, m1) => {
-        let id = extensions.has(m1) ? extensions.get(m1).id : m1;
-        return `moz-extension://${id}/`;
-      });
-    }
-
-    // Parse the error type from the message if present (e.g. "TypeError: Whoops").
-    let errorMessage = message.errorMessage;
-    let errorName = "Error";
-    if (message.errorMessage.match(ERROR_PREFIX_RE)) {
-      const parts = message.errorMessage.split(":");
-      errorName = parts[0];
-      errorMessage = parts.slice(1).join(":").trim();
-    }
-
-    const frames = [];
-    let frame = message.stack;
-    // Avoid an infinite loop by limiting traces to 100 frames.
-    while (frame && frames.length < 100) {
-      const normalizedFrame = await this.normalizeStackFrame(frame);
-      normalizedFrame.module = mangleExtURL(normalizedFrame.module, false);
-      frames.push(normalizedFrame);
-      frame = frame.parent;
-    }
-    // Frames are sent in order from oldest to newest.
-    frames.reverse();
-
-    const requestBody = Object.assign({}, this.requestBodyTemplate, {
+    const exceptionValue = {};
+    const requestBody = {
+      ...this.requestBodyTemplate,
       timestamp: new Date().toISOString().slice(0, -1), // Remove trailing "Z"
       project: Services.prefs.getCharPref(PREF_PROJECT_ID),
       exception: {
-        values: [
-          {
-            type: errorName,
-            value: mangleExtURL(errorMessage),
-            module: message.sourceName,
-            stacktrace: {
-              frames,
-            }
-          },
-        ],
+        values: [exceptionValue],
       },
-      culprit: message.sourceName,
-    });
+      tags: {},
+    };
+
+    const transforms = [
+      addErrorMessage,
+      addStacktrace,
+      addModule,
+      mangleExtensionUrls,
+      tagExtensionErrors,
+    ];
+    for (const transform of transforms) {
+      await transform(message, exceptionValue, requestBody);
+    }
 
     const url = new URL(Services.prefs.getCharPref(PREF_SUBMIT_URL));
     url.searchParams.set("sentry_client", `${SDK_NAME}/${SDK_VERSION}`);
@@ -241,8 +214,36 @@ class BrowserErrorReporter {
       this.logger.warn(`Failed to send error: ${error}`);
     }
   }
+}
 
-  async normalizeStackFrame(frame) {
+function defaultFetch(...args) {
+  // Do not make network requests while running in automation
+  if (Cu.isInAutomation) {
+    return null;
+  }
+
+  return fetch(...args);
+}
+
+function addErrorMessage(message, exceptionValue) {
+  // Parse the error type from the message if present (e.g. "TypeError: Whoops").
+  let errorMessage = message.errorMessage;
+  let errorName = "Error";
+  if (message.errorMessage.match(ERROR_PREFIX_RE)) {
+    const parts = message.errorMessage.split(":");
+    errorName = parts[0];
+    errorMessage = parts.slice(1).join(":").trim();
+  }
+
+  exceptionValue.type = errorName;
+  exceptionValue.value = errorMessage;
+}
+
+async function addStacktrace(message, exceptionValue) {
+  const frames = [];
+  let frame = message.stack;
+  // Avoid an infinite loop by limiting traces to 100 frames.
+  while (frame && frames.length < 100) {
     const normalizedFrame = {
       function: frame.functionDisplayName,
       module: frame.source,
@@ -277,15 +278,49 @@ class BrowserErrorReporter {
       // do to recover in either case.
     }
 
-    return normalizedFrame;
+    frames.push(normalizedFrame);
+    frame = frame.parent;
+  }
+  // Frames are sent in order from oldest to newest.
+  frames.reverse();
+
+  exceptionValue.stacktrace = {frames};
+}
+
+function addModule(message, exceptionValue) {
+  exceptionValue.module = message.sourceName;
+}
+
+function mangleExtensionUrls(message, exceptionValue) {
+  const extensions = new Map();
+  for (let extension of WebExtensionPolicy.getActiveExtensions()) {
+    extensions.set(extension.mozExtensionHostname, extension);
   }
 
-  async _defaultFetch(...args) {
-    // Do not make network requests while running in automation
-    if (Cu.isInAutomation) {
-      return null;
+  // Replaces any instances of moz-extension:// URLs with internal UUIDs to use
+  // the add-on ID instead.
+  function mangleExtURL(string, anchored = true) {
+    if (!string) {
+      return string;
     }
 
-    return fetch(...args);
+    let re = new RegExp(`${anchored ? "^" : ""}moz-extension://([^/]+)/`, "g");
+
+    return string.replace(re, (m0, m1) => {
+      let id = extensions.has(m1) ? extensions.get(m1).id : m1;
+      return `moz-extension://${id}/`;
+    });
+  }
+
+  exceptionValue.value = mangleExtURL(exceptionValue.value, false);
+  exceptionValue.module = mangleExtURL(exceptionValue.module);
+  for (const frame of exceptionValue.stacktrace.frames) {
+    frame.module = mangleExtURL(frame.module);
+  }
+}
+
+function tagExtensionErrors(message, exceptionValue, requestBody) {
+  if (exceptionValue.module && exceptionValue.module.startsWith("moz-extension://")) {
+    requestBody.tags.isExtensionError = true;
   }
 }

@@ -1,0 +1,18 @@
+{
+  "addons": {
+    "compatmode-ignore@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "2"
+            }
+          },
+          "version": "2.0",
+          "update_link": "https://localhost:%PORT%/addons/test1.xpi"
+        }
+      ]
+    }
+  }
+}

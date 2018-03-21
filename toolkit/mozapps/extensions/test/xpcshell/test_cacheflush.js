@@ -118,7 +118,7 @@ function run_test_4() {
     gExpectedFile.append("addon2@tests.mozilla.org.xpi");
 
     a2.uninstall();
-    Assert.equal(gCacheFlushCount, 2);
+    Assert.equal(gCacheFlushCount, 1);
     gExpectedFile = null;
     gCacheFlushCount = 0;
 

@@ -123,6 +123,7 @@ class TlsParser {
   bool Read(uint32_t* val, size_t size);
   // Reads len bytes into dest buffer, overwriting it.
   bool Read(DataBuffer* dest, size_t len);
+  bool ReadFromMark(DataBuffer* val, size_t len, size_t mark);
   // Reads bytes into dest buffer, overwriting it.  The number of bytes is
   // determined by reading from len_size bytes from the stream first.
   bool ReadVariable(DataBuffer* dest, size_t len_size);

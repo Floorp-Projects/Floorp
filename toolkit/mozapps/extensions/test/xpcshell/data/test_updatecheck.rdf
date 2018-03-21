@@ -15,7 +15,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>https://localhost:4444/addons/test1.xpi</em:updateLink>
+                <em:updateLink>https://example.com/addons/test1.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -30,7 +30,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>2</em:minVersion>
                 <em:maxVersion>2</em:maxVersion>
-                <em:updateLink>https://localhost:4444/addons/test2.xpi</em:updateLink>
+                <em:updateLink>https://example.com/addons/test2.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -43,7 +43,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>https://localhost:4444/addons/test3.xpi</em:updateLink>
+                <em:updateLink>https://example.com/addons/test3.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -56,7 +56,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>2</em:maxVersion>
-                <em:updateLink>https://localhost:4444/addons/test2.xpi</em:updateLink>
+                <em:updateLink>https://example.com/addons/test2.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -71,7 +71,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>2</em:minVersion>
                 <em:maxVersion>2</em:maxVersion>
-                <em:updateLink>https://localhost:4444/addons/test4.xpi</em:updateLink>
+                <em:updateLink>https://example.com/addons/test4.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -94,7 +94,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -117,7 +117,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>2</em:maxVersion>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -143,7 +143,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -169,8 +169,8 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
-                <em:updateHash>sha1:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
+                <em:updateHash>sha256:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -196,7 +196,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>https://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>https://example.com/broken.xpi</em:updateLink>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -222,8 +222,8 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>https://localhost:4444/broken.xpi</em:updateLink>
-                <em:updateHash>sha1:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
+                <em:updateLink>https://example.com/broken.xpi</em:updateLink>
+                <em:updateHash>sha256:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -249,7 +249,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>http://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>http://example.com/broken.xpi</em:updateLink>
                 <em:updateHash>md2:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
               </RDF:Description>
             </em:targetApplication>
@@ -276,7 +276,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>https://localhost:4444/broken.xpi</em:updateLink>
+                <em:updateLink>https://example.com/broken.xpi</em:updateLink>
                 <em:updateHash>md2:78fc1d2887eda35b4ad2e3a0b60120ca271ce6e6</em:updateHash>
               </RDF:Description>
             </em:targetApplication>
@@ -309,7 +309,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>0.1</em:minVersion>
                 <em:maxVersion>0.2</em:maxVersion>
-                <em:updateLink>https://localhost:4444/addons/test1.xpi</em:updateLink>
+                <em:updateLink>https://example.com/addons/test1.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -322,7 +322,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>0.5</em:minVersion>
                 <em:maxVersion>0.6</em:maxVersion>
-                <em:updateLink>https://localhost:4444/addons/test2.xpi</em:updateLink>
+                <em:updateLink>https://example.com/addons/test2.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -336,7 +336,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>2</em:minVersion>
                 <em:maxVersion>3</em:maxVersion>
-                <em:updateLink>https://localhost:4444/addons/test3.xpi</em:updateLink>
+                <em:updateLink>https://example.com/addons/test3.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -358,7 +358,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>0.1</em:minVersion>
                 <em:maxVersion>0.2</em:maxVersion>
-                <em:updateLink>https://localhost:4444/addons/test1.xpi</em:updateLink>
+                <em:updateLink>https://example.com/addons/test1.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -372,7 +372,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>0.5</em:minVersion>
                 <em:maxVersion>0.6</em:maxVersion>
-                <em:updateLink>https://localhost:4444/addons/test2.xpi</em:updateLink>
+                <em:updateLink>https://example.com/addons/test2.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -386,7 +386,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>2</em:minVersion>
                 <em:maxVersion>3</em:maxVersion>
-                <em:updateLink>https://localhost:4444/addons/test3.xpi</em:updateLink>
+                <em:updateLink>https://example.com/addons/test3.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -408,7 +408,7 @@
                 <em:minVersion>0.1</em:minVersion>
                 <em:maxVersion>0.2</em:maxVersion>
                 <em:strictCompatibility>true</em:strictCompatibility>
-                <em:updateLink>https://localhost:4444/addons/test1.xpi</em:updateLink>
+                <em:updateLink>https://example.com/addons/test1.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>

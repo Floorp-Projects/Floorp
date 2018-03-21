@@ -205,7 +205,7 @@ static bool DoubleStrtod(Vector<const char> trimmed,
   // Note that the ARM simulator is compiled for 32bits. It therefore exhibits
   // the same problem.
   return false;
-#endif
+#else
   if (trimmed.length() <= kMaxExactDoubleIntegerDecimalDigits) {
     int read_digits;
     // The trimmed input fits into a double.
@@ -243,6 +243,7 @@ static bool DoubleStrtod(Vector<const char> trimmed,
     }
   }
   return false;
+#endif
 }
 
 

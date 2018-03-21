@@ -81,8 +81,9 @@ class CorrectMessageSeqAfterHrrFilter : public TlsRecordFilter {
     }
 
     DataBuffer buffer(record);
-    TlsRecordHeader new_header = {header.version(), header.content_type(),
-                                  header.sequence_number() + 1};
+    TlsRecordHeader new_header(header.variant(), header.version(),
+                               header.content_type(),
+                               header.sequence_number() + 1);
 
     // Correct message_seq.
     buffer.Write(4, 1U, 2);
@@ -567,6 +568,28 @@ void TriggerHelloRetryRequest(std::shared_ptr<TlsAgent>& client,
   client->Handshake();
   server->Handshake();
   EXPECT_EQ(1U, cb_called);
+  // Stop the callback from being called in future handshakes.
+  EXPECT_EQ(SECSuccess,
+            SSL_HelloRetryRequestCallback(server->ssl_fd(), nullptr, nullptr));
+}
+
+TEST_P(TlsConnectTls13, VersionNumbersAfterRetry) {
+  ConfigureSelfEncrypt();
+  EnsureTlsSetup();
+  auto r = MakeTlsFilter<TlsRecordRecorder>(client_);
+  TriggerHelloRetryRequest(client_, server_);
+  Handshake();
+  ASSERT_GT(r->count(), 1UL);
+  auto ch1 = r->record(0);
+  if (ch1.header.is_dtls()) {
+    ASSERT_EQ(SSL_LIBRARY_VERSION_TLS_1_1, ch1.header.version());
+  } else {
+    ASSERT_EQ(SSL_LIBRARY_VERSION_TLS_1_0, ch1.header.version());
+  }
+  auto ch2 = r->record(1);
+  ASSERT_EQ(SSL_LIBRARY_VERSION_TLS_1_2, ch2.header.version());
+
+  CheckConnected();
 }
 
 TEST_P(TlsConnectTls13, RetryStateless) {
@@ -577,6 +600,7 @@ TEST_P(TlsConnectTls13, RetryStateless) {
   MakeNewServer();
 
   Handshake();
+  CheckConnected();
   SendReceive();
 }
 
@@ -907,7 +931,10 @@ class HelloRetryRequestAgentTest : public TlsAgentTestClient {
 
     hrr_data.Allocate(len + 6);
     size_t i = 0;
-    i = hrr_data.Write(i, 0x0303, 2);
+    i = hrr_data.Write(i, variant_ == ssl_variant_datagram
+                              ? SSL_LIBRARY_VERSION_DTLS_1_2_WIRE
+                              : SSL_LIBRARY_VERSION_TLS_1_2,
+                       2);
     i = hrr_data.Write(i, ssl_hello_retry_random,
                        sizeof(ssl_hello_retry_random));
     i = hrr_data.Write(i, static_cast<uint32_t>(0), 1);  // session_id

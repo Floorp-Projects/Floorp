@@ -1,0 +1,17 @@
+{
+  "addons": {
+    "addon1@tests.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "2"
+            }
+          },
+          "version": "1"
+        }
+      ]
+    }
+  }
+}
