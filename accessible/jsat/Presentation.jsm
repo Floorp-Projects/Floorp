@@ -472,6 +472,169 @@ AndroidPresenter.prototype.noMove =
   };
 
 /**
+ * A B2G presenter for Gaia.
+ */
+function B2GPresenter() {}
+
+B2GPresenter.prototype = Object.create(Presenter.prototype);
+
+B2GPresenter.prototype.type = "B2G";
+
+B2GPresenter.prototype.keyboardEchoSetting =
+  new PrefCache("accessibility.accessfu.keyboard_echo");
+B2GPresenter.prototype.NO_ECHO = 0;
+B2GPresenter.prototype.CHARACTER_ECHO = 1;
+B2GPresenter.prototype.WORD_ECHO = 2;
+B2GPresenter.prototype.CHARACTER_AND_WORD_ECHO = 3;
+
+/**
+ * A pattern used for haptic feedback.
+ * @type {Array}
+ */
+B2GPresenter.prototype.PIVOT_CHANGE_HAPTIC_PATTERN = [40];
+
+/**
+ * Pivot move reasons.
+ * @type {Array}
+ */
+B2GPresenter.prototype.pivotChangedReasons = ["none", "next", "prev", "first",
+                                              "last", "text", "point"];
+
+B2GPresenter.prototype.pivotChanged =
+  function B2GPresenter_pivotChanged(aContext, aReason, aIsUserInput) {
+    if (!aContext.accessible) {
+      return null;
+    }
+
+    return {
+      type: this.type,
+      details: {
+        eventType: "vc-change",
+        data: UtteranceGenerator.genForContext(aContext),
+        options: {
+          pattern: this.PIVOT_CHANGE_HAPTIC_PATTERN,
+          isKey: Utils.isActivatableOnFingerUp(aContext.accessible),
+          reason: this.pivotChangedReasons[aReason],
+          isUserInput: aIsUserInput,
+          hints: aContext.interactionHints
+        }
+      }
+    };
+  };
+
+B2GPresenter.prototype.nameChanged =
+  function B2GPresenter_nameChanged(aAccessible, aIsPolite = true) {
+    return {
+      type: this.type,
+      details: {
+        eventType: "name-change",
+        data: aAccessible.name,
+        options: {enqueue: aIsPolite}
+      }
+    };
+  };
+
+B2GPresenter.prototype.valueChanged =
+  function B2GPresenter_valueChanged(aAccessible, aIsPolite = true) {
+
+    // the editable value changes are handled in the text changed presenter
+    if (Utils.getState(aAccessible).contains(States.EDITABLE)) {
+      return null;
+    }
+
+    return {
+      type: this.type,
+      details: {
+        eventType: "value-change",
+        data: aAccessible.value,
+        options: {enqueue: aIsPolite}
+      }
+    };
+  };
+
+B2GPresenter.prototype.textChanged = function B2GPresenter_textChanged(
+  aAccessible, aIsInserted, aStart, aLength, aText, aModifiedText) {
+    let echoSetting = this.keyboardEchoSetting.value;
+    let text = "";
+
+    if (echoSetting == this.CHARACTER_ECHO ||
+        echoSetting == this.CHARACTER_AND_WORD_ECHO) {
+      text = aModifiedText;
+    }
+
+    // add word if word boundary is added
+    if ((echoSetting == this.WORD_ECHO ||
+        echoSetting == this.CHARACTER_AND_WORD_ECHO) &&
+        aIsInserted && aLength === 1) {
+      let accText = aAccessible.QueryInterface(Ci.nsIAccessibleText);
+      let startBefore = {}, endBefore = {};
+      let startAfter = {}, endAfter = {};
+      accText.getTextBeforeOffset(aStart,
+        Ci.nsIAccessibleText.BOUNDARY_WORD_END, startBefore, endBefore);
+      let maybeWord = accText.getTextBeforeOffset(aStart + 1,
+        Ci.nsIAccessibleText.BOUNDARY_WORD_END, startAfter, endAfter);
+      if (endBefore.value !== endAfter.value) {
+        text += maybeWord;
+      }
+    }
+
+    return {
+      type: this.type,
+      details: {
+        eventType: "text-change",
+        data: text
+      }
+    };
+
+  };
+
+B2GPresenter.prototype.actionInvoked =
+  function B2GPresenter_actionInvoked(aObject, aActionName) {
+    return {
+      type: this.type,
+      details: {
+        eventType: "action",
+        data: UtteranceGenerator.genForAction(aObject, aActionName)
+      }
+    };
+  };
+
+B2GPresenter.prototype.liveRegion = function B2GPresenter_liveRegion(aContext,
+  aIsPolite, aIsHide, aModifiedText) {
+    return {
+      type: this.type,
+      details: {
+        eventType: "liveregion-change",
+        data: UtteranceGenerator.genForLiveRegion(aContext, aIsHide,
+          aModifiedText),
+        options: {enqueue: aIsPolite}
+      }
+    };
+  };
+
+B2GPresenter.prototype.announce =
+  function B2GPresenter_announce(aAnnouncement) {
+    return {
+      type: this.type,
+      details: {
+        eventType: "announcement",
+        data: aAnnouncement
+      }
+    };
+  };
+
+B2GPresenter.prototype.noMove =
+  function B2GPresenter_noMove(aMoveMethod) {
+    return {
+      type: this.type,
+      details: {
+        eventType: "no-move",
+        data: aMoveMethod
+      }
+    };
+  };
+
+/**
  * A braille presenter
  */
 function BraillePresenter() {}
@@ -513,7 +676,8 @@ var Presentation = { // jshint ignore:line
     delete this.presenters;
     let presenterMap = {
       "mobile/android": [VisualPresenter, AndroidPresenter],
-      "browser": [VisualPresenter, AndroidPresenter]
+      "b2g": [VisualPresenter, B2GPresenter],
+      "browser": [VisualPresenter, B2GPresenter, AndroidPresenter]
     };
     this.presenters = presenterMap[Utils.MozBuildApp].map(P => new P());
     return this.presenters;
