@@ -19,9 +19,6 @@
 #include "gfxUserFontSet.h"
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsCSSRules.h"
-#endif
 
 class nsIPrincipal;
 

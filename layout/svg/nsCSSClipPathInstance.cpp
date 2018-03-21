@@ -16,9 +16,6 @@
 #include "nsCSSRendering.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsRuleNode.h"
-#endif
 #include "nsSVGElement.h"
 #include "nsSVGUtils.h"
 #include "nsSVGViewBox.h"

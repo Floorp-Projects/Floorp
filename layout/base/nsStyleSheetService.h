@@ -85,19 +85,10 @@ private:
 
   mozilla::Array<SheetArray, 3>& Sheets(mozilla::StyleBackendType aType)
   {
-#ifdef MOZ_OLD_STYLE
-    if (aType == mozilla::StyleBackendType::Gecko) {
-      return mGeckoSheets;
-    }
-#else
     MOZ_ASSERT(aType == mozilla::StyleBackendType::Servo);
-#endif
     return mServoSheets;
   }
 
-#ifdef MOZ_OLD_STYLE
-  mozilla::Array<SheetArray, 3> mGeckoSheets;
-#endif
   mozilla::Array<SheetArray, 3> mServoSheets;
 
   // Registered PresShells that will be notified when sheets are added and

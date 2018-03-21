@@ -14,9 +14,6 @@
 #include "mozilla/WritingModes.h"
 #include "nsCSSCounterStyleRule.h"
 #include "nsString.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsStyleSet.h"
-#endif
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsUnicodeProperties.h"

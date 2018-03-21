@@ -9,6 +9,7 @@ add_task(async function() {
     "special-powers@mozilla.org",
     "mochikit@mozilla.org",
     "workerbootstrap-test@mozilla.org",
+    "worker-test@mozilla.org",
     "mozscreenshots@mozilla.org",
     "indexedDB-test@mozilla.org",
   ];

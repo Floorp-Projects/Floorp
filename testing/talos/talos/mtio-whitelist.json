@@ -123,7 +123,6 @@
  "{profile}\\extensions\\pageloader@mozilla.org\\plugins": {},
  "{profile}\\extensions\\pageloader@mozilla.org\\searchplugins": {},
  "{profile}\\extensions\\talos-powers@mozilla.org": {},
- "{profile}\\extensions\\talos-powers@mozilla.org\\bootstrap.js": {},
  "{profile}\\extensions\\talos-powers@mozilla.org\\chrome.manifest": {},
  "{profile}\\extensions\\talos-powers@mozilla.org\\chrome\\talos-powers-content.js": {},
  "{profile}\\extensions\\talos-powers@mozilla.org\\components\\talospowersservice.js": {},

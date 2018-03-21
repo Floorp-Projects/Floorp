@@ -100,20 +100,9 @@ public:
 
   void ReconstructDocElementHierarchy(InsertionKind);
 
-#ifdef MOZ_OLD_STYLE
-  // Create frames for content nodes that are marked as needing frames. This
-  // should be called before ProcessPendingRestyles.
-  // Note: It's the caller's responsibility to make sure to wrap a
-  // CreateNeededFrames call in a view update batch and a script blocker.
-  void CreateNeededFrames();
-#endif
 
 private:
 
-#ifdef MOZ_OLD_STYLE
-  void CreateNeededFrames(nsIContent* aContent,
-                          TreeMatchContext& aTreeMatchContext);
-#endif
 
   enum Operation {
     CONTENTAPPEND,
@@ -1865,16 +1854,6 @@ private:
                         PendingBinding*          aPendingBinding,
                         nsFrameItems&            aFrameItems);
 
-#ifdef MOZ_OLD_STYLE
-  /**
-   * ReResolve style for aElement then recreate frames if required.
-   * Do nothing for other types of style changes, except for undisplayed nodes
-   * (display:none/contents) which will have their style context updated in the
-   * frame manager undisplayed maps.
-   * @return null if frames were recreated, the new style context otherwise
-   */
-  nsStyleContext* MaybeRecreateFramesForElement(Element* aElement);
-#endif
 
   /**
    * Recreate frames for aContent.

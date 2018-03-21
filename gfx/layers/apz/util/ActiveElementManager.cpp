@@ -14,9 +14,6 @@
 #include "base/task.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsStyleSet.h"
-#endif
 
 #define AEM_LOG(...)
 // #define AEM_LOG(...) printf_stderr("AEM: " __VA_ARGS__)
