@@ -58,7 +58,7 @@ DetailsFrame::CheckValidMainSummary(const nsFrameList& aFrameList) const
 {
   for (nsIFrame* child : aFrameList) {
     HTMLSummaryElement* summary =
-      HTMLSummaryElement::FromContent(child->GetContent());
+      HTMLSummaryElement::FromNode(child->GetContent());
 
     if (child == aFrameList.FirstChild()) {
       if (summary && summary->IsMainSummary()) {
@@ -91,7 +91,7 @@ DetailsFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroy
 nsresult
 DetailsFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
-  auto* details = HTMLDetailsElement::FromContent(GetContent());
+  auto* details = HTMLDetailsElement::FromNode(GetContent());
   if (details->GetFirstSummary()) {
     return NS_OK;
   }

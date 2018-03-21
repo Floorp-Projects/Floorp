@@ -3893,7 +3893,7 @@ nsContentUtils::ContentIsDraggable(nsIContent* aContent)
 {
   MOZ_ASSERT(aContent);
 
-  if (auto htmlElement = nsGenericHTMLElement::FromContent(aContent)) {
+  if (auto htmlElement = nsGenericHTMLElement::FromNode(aContent)) {
     if (htmlElement->Draggable()) {
       return true;
     }

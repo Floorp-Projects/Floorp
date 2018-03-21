@@ -204,7 +204,7 @@ HTMLEditor::RefreshInlineTableEditingUI()
   }
 
   RefPtr<nsGenericHTMLElement> htmlElement =
-    nsGenericHTMLElement::FromContent(mInlineEditedCell);
+    nsGenericHTMLElement::FromNode(mInlineEditedCell);
   if (!htmlElement) {
     return NS_ERROR_NULL_POINTER;
   }

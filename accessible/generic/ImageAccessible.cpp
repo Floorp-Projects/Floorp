@@ -203,7 +203,7 @@ ImageAccessible::GetLongDescURI() const
            target->IsHTMLElement(nsGkAtoms::area)) &&
           target->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
         nsGenericHTMLElement* element =
-          nsGenericHTMLElement::FromContent(target);
+          nsGenericHTMLElement::FromNode(target);
 
         nsCOMPtr<nsIURI> uri;
         element->GetURIAttr(nsGkAtoms::href, nullptr, getter_AddRefs(uri));

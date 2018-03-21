@@ -1993,7 +1993,7 @@ EventStateManager::DetermineDragTargetAndDefaultData(nsPIDOMWindowOuter* aWindow
   // found, just use the clicked node.
   if (!*aSelection) {
     while (dragContent) {
-      if (auto htmlElement = nsGenericHTMLElement::FromContent(dragContent)) {
+      if (auto htmlElement = nsGenericHTMLElement::FromNode(dragContent)) {
         if (htmlElement->Draggable()) {
           break;
         }
@@ -5009,7 +5009,7 @@ static Element*
 GetLabelTarget(nsIContent* aPossibleLabel)
 {
   mozilla::dom::HTMLLabelElement* label =
-    mozilla::dom::HTMLLabelElement::FromContent(aPossibleLabel);
+    mozilla::dom::HTMLLabelElement::FromNode(aPossibleLabel);
   if (!label)
     return nullptr;
 

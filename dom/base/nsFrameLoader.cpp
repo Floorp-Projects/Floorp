@@ -573,7 +573,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
   // load iframe referrer attribute if enabled in preferences
   // per element referrer overrules document wide referrer if enabled
   net::ReferrerPolicy referrerPolicy = mOwnerContent->OwnerDoc()->GetReferrerPolicy();
-  HTMLIFrameElement* iframe = HTMLIFrameElement::FromContent(mOwnerContent);
+  HTMLIFrameElement* iframe = HTMLIFrameElement::FromNode(mOwnerContent);
   if (iframe) {
     net::ReferrerPolicy iframeReferrerPolicy = iframe->GetReferrerPolicyAsEnum();
     if (iframeReferrerPolicy != net::RP_Unset) {
@@ -2248,7 +2248,7 @@ nsFrameLoader::MaybeCreateDocShell()
   // Note: ApplySandboxFlags should be called after mDocShell->SetFrameType
   // because we need to get the correct presentation URL in ApplySandboxFlags.
   uint32_t sandboxFlags = 0;
-  HTMLIFrameElement* iframe = HTMLIFrameElement::FromContent(mOwnerContent);
+  HTMLIFrameElement* iframe = HTMLIFrameElement::FromNode(mOwnerContent);
   if (iframe) {
     sandboxFlags = iframe->GetSandboxFlags();
   }

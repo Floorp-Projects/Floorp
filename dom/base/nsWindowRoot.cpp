@@ -224,7 +224,7 @@ nsWindowRoot::GetControllers(bool aForVisibleWindow,
                                          getter_AddRefs(focusedWindow));
   if (focusedContent) {
 #ifdef MOZ_XUL
-    RefPtr<nsXULElement> xulElement = nsXULElement::FromContent(focusedContent);
+    RefPtr<nsXULElement> xulElement = nsXULElement::FromNode(focusedContent);
     if (xulElement) {
       ErrorResult rv;
       *aResult = xulElement->GetControllers(rv);
@@ -234,12 +234,12 @@ nsWindowRoot::GetControllers(bool aForVisibleWindow,
 #endif
 
     HTMLTextAreaElement* htmlTextArea =
-      HTMLTextAreaElement::FromContent(focusedContent);
+      HTMLTextAreaElement::FromNode(focusedContent);
     if (htmlTextArea)
       return htmlTextArea->GetControllers(aResult);
 
     HTMLInputElement* htmlInputElement =
-      HTMLInputElement::FromContent(focusedContent);
+      HTMLInputElement::FromNode(focusedContent);
     if (htmlInputElement)
       return htmlInputElement->GetControllers(aResult);
 

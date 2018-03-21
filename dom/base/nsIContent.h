@@ -1008,22 +1008,22 @@ inline nsIContent* nsINode::AsContent()
   return static_cast<nsIContent*>(this);
 }
 
-#define NS_IMPL_FROMCONTENT_HELPER(_class, _check)                             \
-  static _class* FromContent(nsINode* aContent)                                \
-  {                                                                            \
-    return aContent->_check ? static_cast<_class*>(aContent) : nullptr;        \
-  }                                                                            \
-  static const _class* FromContent(const nsINode* aContent)                    \
-  {                                                                            \
-    return aContent->_check ? static_cast<const _class*>(aContent) : nullptr;  \
-  }                                                                            \
-  static _class* FromContentOrNull(nsINode* aContent)                          \
-  {                                                                            \
-    return aContent ? FromContent(aContent) : nullptr;                         \
-  }                                                                            \
-  static const _class* FromContentOrNull(const nsINode* aContent)              \
-  {                                                                            \
-    return aContent ? FromContent(aContent) : nullptr;                         \
+#define NS_IMPL_FROMCONTENT_HELPER(_class, _check)                      \
+  static _class* FromNode(nsINode* aNode)                               \
+  {                                                                     \
+    return aNode->_check ? static_cast<_class*>(aNode) : nullptr;       \
+  }                                                                     \
+  static const _class* FromNode(const nsINode* aNode)                   \
+  {                                                                     \
+    return aNode->_check ? static_cast<const _class*>(aNode) : nullptr; \
+  }                                                                     \
+  static _class* FromNodeOrNull(nsINode* aNode)                         \
+  {                                                                     \
+    return aNode ? FromNode(aNode) : nullptr;                           \
+  }                                                                     \
+  static const _class* FromNodeOrNull(const nsINode* aNode)             \
+  {                                                                     \
+    return aNode ? FromNode(aNode) : nullptr;                           \
   }
 
 #define NS_IMPL_FROMCONTENT(_class, _nsid)                                     \

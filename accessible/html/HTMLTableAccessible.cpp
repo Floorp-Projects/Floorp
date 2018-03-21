@@ -480,7 +480,7 @@ HTMLTableAccessible::Caption() const
 void
 HTMLTableAccessible::Summary(nsString& aSummary)
 {
-  dom::HTMLTableElement* table = dom::HTMLTableElement::FromContent(mContent);
+  dom::HTMLTableElement* table = dom::HTMLTableElement::FromNode(mContent);
 
   if (table)
     table->GetSummary(aSummary);

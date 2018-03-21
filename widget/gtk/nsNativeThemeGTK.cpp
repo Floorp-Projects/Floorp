@@ -258,7 +258,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
       } else {
         if (aWidgetFlags) {
           *aWidgetFlags = 0;
-          HTMLInputElement* inputElt = HTMLInputElement::FromContent(aFrame->GetContent());
+          HTMLInputElement* inputElt = HTMLInputElement::FromNode(aFrame->GetContent());
           if (inputElt && inputElt->Checked())
             *aWidgetFlags |= MOZ_GTK_WIDGET_CHECKED;
 

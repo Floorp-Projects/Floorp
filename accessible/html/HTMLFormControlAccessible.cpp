@@ -81,7 +81,7 @@ HTMLCheckboxAccessible::NativeState()
   uint64_t state = LeafAccessible::NativeState();
 
   state |= states::CHECKABLE;
-  HTMLInputElement* input = HTMLInputElement::FromContent(mContent);
+  HTMLInputElement* input = HTMLInputElement::FromNode(mContent);
   if (!input)
     return state;
 
@@ -115,7 +115,7 @@ HTMLRadioButtonAccessible::NativeState()
 
   state |= states::CHECKABLE;
 
-  HTMLInputElement* input = HTMLInputElement::FromContent(mContent);
+  HTMLInputElement* input = HTMLInputElement::FromNode(mContent);
   if (input && input->Checked())
     state |= states::CHECKED;
 
@@ -345,13 +345,13 @@ HTMLTextFieldAccessible::Value(nsString& aValue)
   if (NativeState() & states::PROTECTED)    // Don't return password text!
     return;
 
-  HTMLTextAreaElement* textArea = HTMLTextAreaElement::FromContent(mContent);
+  HTMLTextAreaElement* textArea = HTMLTextAreaElement::FromNode(mContent);
   if (textArea) {
     textArea->GetValue(aValue);
     return;
   }
 
-  HTMLInputElement* input = HTMLInputElement::FromContent(mContent);
+  HTMLInputElement* input = HTMLInputElement::FromNode(mContent);
   if (input) {
     // Pass NonSystem as the caller type, to be safe.  We don't expect to have a
     // file input here.
@@ -392,7 +392,7 @@ HTMLTextFieldAccessible::NativeState()
   }
 
   // Is it an <input> or a <textarea> ?
-  HTMLInputElement* input = HTMLInputElement::FromContent(mContent);
+  HTMLInputElement* input = HTMLInputElement::FromNode(mContent);
   state |= input && input->IsSingleLineTextControl() ?
     states::SINGLE_LINE : states::MULTI_LINE;
 
@@ -557,8 +557,7 @@ HTMLSpinnerAccessible::Value(nsString& aValue)
 
   // Pass NonSystem as the caller type, to be safe.  We don't expect to have a
   // file input here.
-  HTMLInputElement::FromContent(mContent)->GetValue(aValue,
-                                                    CallerType::NonSystem);
+  HTMLInputElement::FromNode(mContent)->GetValue(aValue, CallerType::NonSystem);
 }
 
 double
@@ -568,7 +567,7 @@ HTMLSpinnerAccessible::MaxValue() const
   if (!IsNaN(value))
     return value;
 
-  return HTMLInputElement::FromContent(mContent)->GetMaximum().toDouble();
+  return HTMLInputElement::FromNode(mContent)->GetMaximum().toDouble();
 }
 
 
@@ -579,7 +578,7 @@ HTMLSpinnerAccessible::MinValue() const
   if (!IsNaN(value))
     return value;
 
-  return HTMLInputElement::FromContent(mContent)->GetMinimum().toDouble();
+  return HTMLInputElement::FromNode(mContent)->GetMinimum().toDouble();
 }
 
 double
@@ -589,7 +588,7 @@ HTMLSpinnerAccessible::Step() const
   if (!IsNaN(value))
     return value;
 
-  return HTMLInputElement::FromContent(mContent)->GetStep().toDouble();
+  return HTMLInputElement::FromNode(mContent)->GetStep().toDouble();
 }
 
 double
@@ -599,14 +598,14 @@ HTMLSpinnerAccessible::CurValue() const
   if (!IsNaN(value))
     return value;
 
-  return HTMLInputElement::FromContent(mContent)->GetValueAsDecimal().toDouble();
+  return HTMLInputElement::FromNode(mContent)->GetValueAsDecimal().toDouble();
 }
 
 bool
 HTMLSpinnerAccessible::SetCurValue(double aValue)
 {
   ErrorResult er;
-  HTMLInputElement::FromContent(mContent)->SetValueAsNumber(aValue, er);
+  HTMLInputElement::FromNode(mContent)->SetValueAsNumber(aValue, er);
   return !er.Failed();
 }
 
@@ -636,8 +635,8 @@ HTMLRangeAccessible::Value(nsString& aValue)
 
   // Pass NonSystem as the caller type, to be safe.  We don't expect to have a
   // file input here.
-  HTMLInputElement::FromContent(mContent)->GetValue(aValue,
-                                                    CallerType::NonSystem);
+  HTMLInputElement::FromNode(mContent)->GetValue(aValue,
+                                                 CallerType::NonSystem);
 }
 
 double
@@ -647,7 +646,7 @@ HTMLRangeAccessible::MaxValue() const
   if (!IsNaN(value))
     return value;
 
-  return HTMLInputElement::FromContent(mContent)->GetMaximum().toDouble();
+  return HTMLInputElement::FromNode(mContent)->GetMaximum().toDouble();
 }
 
 double
@@ -657,7 +656,7 @@ HTMLRangeAccessible::MinValue() const
   if (!IsNaN(value))
     return value;
 
-  return HTMLInputElement::FromContent(mContent)->GetMinimum().toDouble();
+  return HTMLInputElement::FromNode(mContent)->GetMinimum().toDouble();
 }
 
 double
@@ -667,7 +666,7 @@ HTMLRangeAccessible::Step() const
   if (!IsNaN(value))
     return value;
 
-  return HTMLInputElement::FromContent(mContent)->GetStep().toDouble();
+  return HTMLInputElement::FromNode(mContent)->GetStep().toDouble();
 }
 
 double
@@ -677,14 +676,14 @@ HTMLRangeAccessible::CurValue() const
   if (!IsNaN(value))
     return value;
 
-  return HTMLInputElement::FromContent(mContent)->GetValueAsDecimal().toDouble();
+  return HTMLInputElement::FromNode(mContent)->GetValueAsDecimal().toDouble();
 }
 
 bool
 HTMLRangeAccessible::SetCurValue(double aValue)
 {
   ErrorResult er;
-  HTMLInputElement::FromContent(mContent)->SetValueAsNumber(aValue, er);
+  HTMLInputElement::FromNode(mContent)->SetValueAsNumber(aValue, er);
   return !er.Failed();
 }
 

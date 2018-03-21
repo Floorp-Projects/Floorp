@@ -546,7 +546,7 @@ nsContentList::GetSupportedNames(nsTArray<nsString>& aNames)
       }
     }
 
-    nsGenericHTMLElement* el = nsGenericHTMLElement::FromContent(content);
+    nsGenericHTMLElement* el = nsGenericHTMLElement::FromNode(content);
     if (el) {
       // XXXbz should we be checking for particular tags here?  How
       // stable is this part of the spec?
