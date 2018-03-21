@@ -310,6 +310,13 @@ public:
                            nsHostResolver **resolver);
 
     /**
+     * Set (new) cache limits.
+     */
+    void SetCacheLimits(uint32_t maxCacheEntries, // zero disables cache
+                        uint32_t defaultCacheEntryLifetime, // seconds
+                        uint32_t defaultGracePeriod); // seconds
+
+    /**
      * puts the resolver in the shutdown state, which will cause any pending
      * callbacks to be detached.  any future calls to ResolveHost will fail.
      */
