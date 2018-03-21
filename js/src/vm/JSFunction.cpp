@@ -2198,14 +2198,42 @@ js::CloneSelfHostingIntrinsic(JSContext* cx, HandleFunction fun)
     return clone;
 }
 
+static JSAtom*
+SymbolToFunctionName(JSContext* cx, JS::Symbol* symbol, FunctionPrefixKind prefixKind)
+{
+    // Step 4.a.
+    JSAtom* desc = symbol->description();
+
+    // Step 4.b, no prefix fastpath.
+    if (!desc && prefixKind == FunctionPrefixKind::None)
+        return cx->names().empty;
+
+    // Step 5 (reordered).
+    StringBuffer sb(cx);
+    if (prefixKind == FunctionPrefixKind::Get) {
+        if (!sb.append("get "))
+            return nullptr;
+    } else if (prefixKind == FunctionPrefixKind::Set) {
+        if (!sb.append("set "))
+            return nullptr;
+    }
+
+    // Step 4.b.
+    if (desc) {
+        // Step 4.c.
+        if (!sb.append('[') || !sb.append(desc) || !sb.append(']'))
+            return nullptr;
+    }
+    return sb.finishAtom();
+}
+
 /*
  * Return an atom for use as the name of a builtin method with the given
  * property id.
  *
  * Function names are always strings. If id is the well-known @@iterator
  * symbol, this returns "[Symbol.iterator]".  If a prefix is supplied the final
- * name is |prefix + " " + name|. A prefix cannot be supplied if id is a
- * symbol value.
+ * name is |prefix + " " + name|.
  *
  * Implements steps 3-5 of 9.2.11 SetFunctionName in ES2016.
  */
@@ -2220,32 +2248,8 @@ js::IdToFunctionName(JSContext* cx, HandleId id,
     // Step 3 (implicit).
 
     // Step 4.
-    if (JSID_IS_SYMBOL(id)) {
-        // Step 4.a.
-        RootedAtom desc(cx, JSID_TO_SYMBOL(id)->description());
-
-        // Step 4.b, no prefix fastpath.
-        if (!desc && prefixKind == FunctionPrefixKind::None)
-            return cx->names().empty;
-
-        // Step 5 (reordered).
-        StringBuffer sb(cx);
-        if (prefixKind == FunctionPrefixKind::Get) {
-            if (!sb.append("get "))
-                return nullptr;
-        } else if (prefixKind == FunctionPrefixKind::Set) {
-            if (!sb.append("set "))
-                return nullptr;
-        }
-
-        // Step 4.b.
-        if (desc) {
-            // Step 4.c.
-            if (!sb.append('[') || !sb.append(desc) || !sb.append(']'))
-                return nullptr;
-        }
-        return sb.finishAtom();
-    }
+    if (JSID_IS_SYMBOL(id))
+        return SymbolToFunctionName(cx, JSID_TO_SYMBOL(id), prefixKind);
 
     RootedValue idv(cx, IdToValue(id));
     RootedAtom name(cx, ToAtom<CanGC>(cx, idv));
@@ -2284,23 +2288,22 @@ js::SetFunctionNameIfNoOwnName(JSContext* cx, HandleFunction fun, HandleValue na
 
     if (fun->isClassConstructor()) {
         // A class may have static 'name' method or accessor.
-        RootedId nameId(cx, NameToId(cx->names().name));
-        bool result;
-        if (!HasOwnProperty(cx, fun, nameId, &result))
-            return false;
-
-        if (result)
+        if (fun->contains(cx, cx->names().name))
             return true;
     } else {
         // Anonymous function shouldn't have own 'name' property at this point.
         MOZ_ASSERT(!fun->containsPure(cx->names().name));
     }
 
-    RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, name, &id))
-        return false;
-
-    RootedAtom funNameAtom(cx, IdToFunctionName(cx, id, prefixKind));
+    JSAtom* funNameAtom;
+    if (name.isSymbol()) {
+        funNameAtom = SymbolToFunctionName(cx, name.toSymbol(), prefixKind);
+    } else {
+        RootedAtom nameAtom(cx, ToAtom<CanGC>(cx, name));
+        if (!nameAtom)
+            return false;
+        funNameAtom = NameToFunctionName(cx, nameAtom, prefixKind);
+    }
     if (!funNameAtom)
         return false;
 
