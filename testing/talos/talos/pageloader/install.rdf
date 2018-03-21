@@ -5,6 +5,7 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>pageloader@mozilla.org</em:id>
     <em:version>1.0.32</em:version>
+    <em:bootstrap>true</em:bootstrap>
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>

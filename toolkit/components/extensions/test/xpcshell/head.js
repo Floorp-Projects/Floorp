@@ -15,15 +15,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
-  HttpServer: "resource://testing-common/httpd.js",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   PromiseTestUtils: "resource://testing-common/PromiseTestUtils.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
 });
-
-XPCOMUtils.defineLazyServiceGetter(this, "proxyService",
-                                   "@mozilla.org/network/protocol-proxy-service;1",
-                                   "nsIProtocolProxyService");
 
 // These values may be changed in later head files and tested in check_remote
 // below.
@@ -39,60 +34,10 @@ add_task(function check_remote() {
 
 ExtensionTestUtils.init(this);
 
-/**
- * Creates a new HttpServer for testing, and begins listening on the
- * specified port. Automatically shuts down the server when the test
- * unit ends.
- *
- * @param {object} [options = {}]
- * @param {integer} [options.port = -1]
- *        The port to listen on. If omitted, listen on a random
- *        port. The latter is the preferred behavior.
- * @param {sequence<string>?} [options.hosts = null]
- *        A set of hosts to accept connections to. Support for this is
- *        implemented using a proxy filter.
- *
- * @returns {HttpServer}
- */
-function createHttpServer({port = -1, hosts} = {}) {
-  let server = new HttpServer();
-  server.start(port);
-
-  if (hosts) {
-    hosts = new Set(hosts);
-    const serverHost = "localhost";
-    const serverPort = server.identity.primaryPort;
-
-    for (let host of hosts) {
-      server.identity.add("http", host, 80);
-    }
-
-    const proxyFilter = {
-      proxyInfo: proxyService.newProxyInfo("http", serverHost, serverPort, 0, 4096, null),
-
-      applyFilter(service, channel, defaultProxyInfo, callback) {
-        if (hosts.has(channel.URI.host)) {
-          callback.onProxyFilterResult(this.proxyInfo);
-        } else {
-          callback.onProxyFilterResult(defaultProxyInfo);
-        }
-      },
-    };
-
-    proxyService.registerChannelFilter(proxyFilter, 0);
-    registerCleanupFunction(() => {
-      proxyService.unregisterChannelFilter(proxyFilter);
-    });
-  }
-
-  registerCleanupFunction(() => {
-    return new Promise(resolve => {
-      server.stop(resolve);
-    });
-  });
-
-  return server;
-}
+var createHttpServer = (...args) => {
+  AddonTestUtils.maybeInit(this);
+  return AddonTestUtils.createHttpServer(...args);
+};
 
 if (AppConstants.platform === "android") {
   Services.io.offline = true;

@@ -127,7 +127,7 @@ const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
 
 // Properties that exist in the install manifest
 const PROP_METADATA      = ["id", "version", "type", "internalName", "updateURL",
-                            "updateKey", "optionsURL", "optionsType", "aboutURL",
+                            "optionsURL", "optionsType", "aboutURL",
                             "iconURL", "icon64URL"];
 const PROP_LOCALE_SINGLE = ["name", "description", "creator", "homepageURL"];
 const PROP_LOCALE_MULTI  = ["developers", "translators", "contributors"];
@@ -326,7 +326,6 @@ async function loadManifestFromWebManifest(aUri) {
   addon.bootstrap = true;
   addon.internalName = null;
   addon.updateURL = bss.update_url;
-  addon.updateKey = null;
   addon.optionsBrowserStyle = true;
   addon.optionsURL = null;
   addon.optionsType = null;
@@ -679,7 +678,6 @@ async function loadManifestFromRDF(aUri, aStream) {
   if (addon.type == "experiment") {
     addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
     addon.updateURL = null;
-    addon.updateKey = null;
   }
 
   // icons will be filled by the calling function
@@ -1393,6 +1391,18 @@ class AddonInstall {
   }
 
   /**
+   * Called during XPIProvider shutdown so that we can do any necessary
+   * pre-shutdown cleanup.
+   */
+  onShutdown() {
+    switch (this.state) {
+    case AddonManager.STATE_POSTPONED:
+      this.removeTemporaryFile();
+      break;
+    }
+  }
+
+  /**
    * Cancels installation of this add-on.
    *
    * Note this method is overridden to handle additional state in
@@ -1677,6 +1687,7 @@ class AddonInstall {
     if (!AddonManagerPrivate.callInstallListeners("onInstallStarted",
                                                   this.listeners, this.wrapper)) {
       this.state = AddonManager.STATE_DOWNLOADED;
+      this.removeTemporaryFile();
       XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onInstallCancelled",
                                                this.listeners, this.wrapper);
@@ -2642,8 +2653,7 @@ var UpdateChecker = function(aAddon, aListener, aReason, aAppVersion, aPlatformV
     aReason |= UPDATE_TYPE_NEWVERSION;
 
   let url = escapeAddonURI(aAddon, updateURL, aReason, aAppVersion);
-  this._parser = AddonUpdateChecker.checkForUpdates(aAddon.id, aAddon.updateKey,
-                                                    url, this);
+  this._parser = AddonUpdateChecker.checkForUpdates(aAddon.id, url, this);
 };
 
 UpdateChecker.prototype = {

@@ -51,7 +51,7 @@ function dataHandler(aRequest, aResponse) {
 }
 var testserver = new HttpServer();
 testserver.registerDirectory("/addons/", do_get_file("addons"));
-testserver.registerPathHandler("/data/test_update.rdf", dataHandler);
+testserver.registerPathHandler("/data/test_update.json", dataHandler);
 testserver.start(-1);
 gPort = testserver.identity.primaryPort;
 
@@ -59,7 +59,7 @@ gPort = testserver.identity.primaryPort;
 writeInstallRDFForExtension({
   id: "addon1@tests.mozilla.org",
   version: "1.0",
-  updateURL: "http://localhost:" + gPort + "/data/test_update.rdf",
+  updateURL: "http://localhost:" + gPort + "/data/test_update.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -89,7 +89,7 @@ add_task(async function cancel_during_check() {
   // Now complete the HTTP request
   let file = do_get_cwd();
   file.append("data");
-  file.append("test_update.rdf");
+  file.append("test_update.json");
   let data = loadFile(file);
   response.write(data);
   response.finish();
@@ -123,7 +123,7 @@ add_task(async function shutdown_during_check() {
   // Now complete the HTTP request
   let file = do_get_cwd();
   file.append("data");
-  file.append("test_update.rdf");
+  file.append("test_update.json");
   let data = loadFile(file);
   response.write(data);
   response.finish();

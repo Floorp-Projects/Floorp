@@ -22,6 +22,10 @@ ChromeUtils.defineModuleGetter(this, "DownloadPaths",
 ChromeUtils.defineModuleGetter(this, "FileUtils",
                                "resource://gre/modules/FileUtils.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "resProto",
+                                   "@mozilla.org/network/protocol;1?name=resource",
+                                   "nsISubstitutingProtocolHandler");
+
 do_get_profile();
 
 // ================================================
@@ -49,6 +53,9 @@ if (!extensionDir.exists()) {
   bootstrapURI = "jar:" + jarURI.spec + "!/bootstrap.js";
 }
 Components.manager.addBootstrappedManifestLocation(extensionDir);
+
+let resURI = Services.io.newURI("chrome/res/", null, Services.io.newURI(bootstrapURI));
+resProto.setSubstitution("formautofill", resURI);
 
 // Returns a reference to a temporary file that is guaranteed not to exist and
 // is cleaned up later. See FileTestUtils.getTempFile for details.

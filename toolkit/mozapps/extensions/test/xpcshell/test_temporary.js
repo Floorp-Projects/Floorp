@@ -272,6 +272,7 @@ add_task(async function() {
       Assert.equal(addon.type, "extension");
       Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
+      Services.obs.notifyObservers(target, "flush-cache-entry");
       target.remove(true);
     }
   }
@@ -321,6 +322,7 @@ add_task(async function test_samefile() {
   Assert.equal(addon.type, "extension");
   Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
+  Services.obs.notifyObservers(webext, "flush-cache-entry");
   webext.remove(false);
   webext = createTempWebExtensionFile({
     manifest: {

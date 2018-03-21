@@ -1699,14 +1699,19 @@ public class GeckoSession extends LayerSession
         public static final int TARGET_WINDOW_NEW = 2;
 
         /**
-         * A request to open an URI.
+         * A request to open an URI. This is called before each page load to
+         * allow custom behavior implementation.
+         * For example, this can be used to override the behavior of
+         * TAGET_WINDOW_NEW requests, which defaults to requesting a new
+         * GeckoSession via onNewSession.
+         *
          * @param session The GeckoSession that initiated the callback.
          * @param uri The URI to be loaded.
          * @param target The target where the window has requested to open. One of
          *               TARGET_WINDOW_*.
-         *
-         * @return Whether or not the load was handled. Returning false will allow Gecko
-         *         to continue the load as normal.
+         * @param response A response which will state whether or not the load
+         *                 was handled. If unhandled, Gecko will continue the
+         *                 load as normal.
          */
         void onLoadRequest(GeckoSession session, String uri,
                            @TargetWindow int target,
