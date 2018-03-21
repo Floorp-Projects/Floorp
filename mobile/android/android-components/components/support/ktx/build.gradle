@@ -25,11 +25,11 @@ android {
 }
 
 dependencies {
-    provided "org.jetbrains.kotlin:kotlin-stdlib:1.2.30"
+    provided "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     provided "com.android.support:support-compat:27.1.0"
 
-    testCompile "org.jetbrains.kotlin:kotlin-stdlib:1.2.30"
+    testCompile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     testCompile 'junit:junit:4.12'
     testCompile "org.robolectric:robolectric:3.7.1"
     testCompile 'org.mockito:mockito-core:2.12.0'
