@@ -102,7 +102,7 @@ class AstDecodeContext
        lifo(lifo),
        d(d),
        generateNames(generateNames),
-       env_(CompileMode::Once, Tier::Ion, DebugEnabled::False,
+       env_(CompileMode::Once, Tier::Ion, DebugEnabled::False, HasGcTypes::False,
             cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()
             ? Shareable::True
             : Shareable::False),
