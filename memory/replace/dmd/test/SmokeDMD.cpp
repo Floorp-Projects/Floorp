@@ -186,6 +186,7 @@ TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
   // Analyze 1: freed, irrelevant.
   // Analyze 2: freed, irrelevant.
   char* f1 = (char*) malloc(64);
+  UseItOrLoseIt(f1, aSeven);
   free(f1);
 
   // Analyze 1: ignored.
@@ -262,7 +263,9 @@ TestFull(const char* aTestName, int aNum, const char* aMode, int aSeven)
 
   // Do some allocations that will only show up in cumulative mode.
   for (int i = 0; i < 100; i++) {
-    free(malloc(128));
+    void* v = malloc(128);
+    UseItOrLoseIt(v, aSeven);
+    free(v);
   }
 
   if (aNum == 2) {
