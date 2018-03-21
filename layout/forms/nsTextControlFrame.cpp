@@ -421,7 +421,7 @@ nsTextControlFrame::ShouldInitializeEagerly() const
   }
 
   // So do input text controls with spellcheck=true
-  if (auto* htmlElement = nsGenericHTMLElement::FromContent(mContent)) {
+  if (auto* htmlElement = nsGenericHTMLElement::FromNode(mContent)) {
     if (htmlElement->Spellcheck()) {
       return true;
     }
@@ -1168,7 +1168,7 @@ nsTextControlFrame::GetText(nsString& aText)
     // There will be no line breaks so we can ignore the wrap property.
     txtCtrl->GetTextEditorValue(aText, true);
   } else {
-    HTMLTextAreaElement* textArea = HTMLTextAreaElement::FromContent(mContent);
+    HTMLTextAreaElement* textArea = HTMLTextAreaElement::FromNode(mContent);
     if (textArea) {
       textArea->GetValue(aText);
     }
@@ -1184,7 +1184,7 @@ nsTextControlFrame::GetMaxLength(int32_t* aSize)
 {
   *aSize = -1;
 
-  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromNode(mContent);
   if (content) {
     const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::maxlength);
     if (attr && attr->Type() == nsAttrValue::eInteger) {

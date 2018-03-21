@@ -149,7 +149,7 @@ public:
   bool IsContentEditable()
   {
     for (nsIContent* node = this; node; node = node->GetParent()) {
-      nsGenericHTMLElement* element = FromContent(node);
+      nsGenericHTMLElement* element = FromNode(node);
       if (element) {
         ContentEditableTristate value = element->GetContentEditableValue();
         if (value != eInherit) {

@@ -889,7 +889,7 @@ nsObjectLoadingContent::GetNestedParams(nsTArray<MozPluginParameter>& aParams)
     nsCOMPtr<nsIContent> parent = element->GetParent();
     RefPtr<HTMLObjectElement> objectElement;
     while (!objectElement && parent) {
-      objectElement = HTMLObjectElement::FromContent(parent);
+      objectElement = HTMLObjectElement::FromNode(parent);
       parent = parent->GetParent();
     }
 
@@ -2969,10 +2969,10 @@ nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
         aType = eFallbackAlternate;
       }
       if (thisIsObject) {
-        if (auto embed = HTMLEmbedElement::FromContent(child)) {
+        if (auto embed = HTMLEmbedElement::FromNode(child)) {
           embed->StartObjectLoad(true, true);
           skipChildDescendants = true;
-        } else if (auto object = HTMLObjectElement::FromContent(child)) {
+        } else if (auto object = HTMLObjectElement::FromNode(child)) {
           object->StartObjectLoad(true, true);
           skipChildDescendants = true;
         }
@@ -3802,7 +3802,7 @@ nsObjectLoadingContent::BlockEmbedOrObjectContentLoading()
     // If we have an ancestor that is an object with a source, it'll have an
     // associated displayed type. If that type is not null, don't load content
     // for the embed.
-    if (HTMLObjectElement* object = HTMLObjectElement::FromContent(parent)) {
+    if (HTMLObjectElement* object = HTMLObjectElement::FromNode(parent)) {
       uint32_t type = object->DisplayedType();
       if (type != eType_Null) {
         return true;
