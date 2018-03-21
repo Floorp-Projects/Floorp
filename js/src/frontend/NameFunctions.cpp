@@ -278,7 +278,11 @@ class NameResolver
         retAtom.set(buf.finishAtom());
         if (!retAtom)
             return false;
-        fun->setGuessedAtom(retAtom);
+
+        // Skip assigning the guessed name if the function has a (dynamically)
+        // computed inferred name.
+        if (!pn->isDirectRHSAnonFunction())
+            fun->setGuessedAtom(retAtom);
         return true;
     }
 
