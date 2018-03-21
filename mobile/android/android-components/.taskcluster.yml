@@ -33,7 +33,7 @@ tasks:
           && touch local.properties
           && git config advice.detachedHead false
           && git checkout {{event.head.sha}}
-          && ./gradlew --no-daemon clean assemble
+          && ./gradlew --no-daemon clean assemble test
     metadata:
       name: Android Components - Pull Request
       description: Building and testing Android components - triggered by a pull request.
