@@ -108,9 +108,6 @@ let propNameWhitelist = [
   // Bug 1441878
   {propName: "--theme-codemirror-gutter-background",
    isFromDevTools: true},
-  // Bug 1442300
-  {propName: "--in-content-category-background",
-   isFromDevTools: false},
   // These custom properties are retrieved directly from CSSOM
   // in videocontrols.xml to get pre-defined style instead of computed
   // dimensions, which is why they are not referenced by CSS.
