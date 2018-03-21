@@ -13,7 +13,7 @@ const InspectorUtils = require("InspectorUtils");
 const lazyContainer = {};
 
 loader.lazyRequireGetter(lazyContainer, "CssLogic",
-  "devtools/server/css-logic", true);
+  "devtools/server/actors/inspector/css-logic", true);
 exports.getComputedStyle = (node) =>
   lazyContainer.CssLogic.getComputedStyle(node);
 

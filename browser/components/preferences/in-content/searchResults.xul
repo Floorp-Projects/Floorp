@@ -5,11 +5,15 @@
 <hbox id="header-searchResults"
       class="subcategory"
       hidden="true"
+      data-hidden-from-search="true"
       data-category="paneSearchResults">
   <label class="header-name" flex="1" data-l10n-id="search-results-header" />
 </hbox>
 
-<groupbox class="no-results-message" data-category="paneSearchResults" hidden="true">
+<groupbox id="no-results-message"
+          data-hidden-from-search="true"
+          data-category="paneSearchResults"
+          hidden="true">
   <vbox class="no-results-container">
     <label id="sorry-message" data-l10n-id="search-results-sorry-message">
       <html:span id="sorry-message-query"/>

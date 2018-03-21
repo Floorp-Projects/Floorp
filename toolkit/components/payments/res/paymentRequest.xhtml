@@ -16,6 +16,7 @@
   <!ENTITY processingPaymentButton.label "Processing">
   <!ENTITY successPaymentButton.label    "Done">
   <!ENTITY failPaymentButton.label       "Fail">
+  <!ENTITY unknownPaymentButton.label    "Unknown">
   <!ENTITY orderDetailsLabel          "Order Details">
   <!ENTITY orderTotalLabel            "Total">
 ]>
@@ -32,6 +33,8 @@
   <link rel="stylesheet" href="containers/order-details.css"/>
 
   <script src="vendor/custom-elements.min.js"></script>
+
+  <script src="log.js"></script>
 
   <script src="PaymentsStore.js"></script>
 
@@ -97,6 +100,7 @@
                   data-initial-label="&approvePaymentButton.label;"
                   data-processing-label="&processingPaymentButton.label;"
                   data-fail-label="&failPaymentButton.label;"
+                  data-unknown-label="&unknownPaymentButton.label;"
                   data-success-label="&successPaymentButton.label;"></button>
         </footer>
       </section>

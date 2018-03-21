@@ -721,7 +721,7 @@ BrowserTabActor.prototype = {
       }
       this.exit();
     };
-    let connect = DebuggerServer.connectToChild(this._conn, this._browser, onDestroy);
+    let connect = DebuggerServer.connectToFrame(this._conn, this._browser, onDestroy);
     let form = await connect;
 
     this._form = form;

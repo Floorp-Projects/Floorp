@@ -43,49 +43,13 @@ chrome-%::
 	  res/raw$(AB_rCD)/browsersearch.json \
 	  AB_CD=$*
 
-gradle_dir := $(topobjdir)/gradle/build/mobile/android
-
-define gradle_command
-$(1): $(2)
-	@$$(TOUCH) $$@
-	$$(topsrcdir)/mach android assemble-app
-endef
-
-# .gradle.deps: $(generated_resources) $(generated_files) FORCE
-$(eval $(call gradle_command,.gradle.deps,$(generated_resources) $(generated_files) FORCE))
-
-GeneratedJNIWrappers.cpp GeneratedJNIWrappers.h GeneratedJNINatives.h : .gradle.deps
+GeneratedJNIWrappers.cpp GeneratedJNIWrappers.h GeneratedJNINatives.h : android_apks
 	$(REPORT_BUILD)
 
-FennecJNIWrappers.cpp FennecJNIWrappers.h FennecJNINatives.h: .gradle.deps
+FennecJNIWrappers.cpp FennecJNIWrappers.h FennecJNINatives.h: android_apks
 	$(REPORT_BUILD)
 
 include $(topsrcdir)/config/rules.mk
-
-gecko.ap_: .gradle.deps ;
-R.txt: .gradle.deps ;
-
-# This tom-foolery provides a target that forces a rebuild of
-# gecko.ap_.  This is used during packaging to ensure that resources
-# are fresh.  The alternative would be complicated.
-
-gecko-nodeps.ap_: .gradle.nodeps
-	cp $(GRADLE_ANDROID_APP_APK) $@
-
-gecko-nodeps/R.txt: .gradle.nodeps ;
-
-# The first of these rules is used during regular builds.  The second
-# writes an ap_ file that is only used during packaging.  It doesn't
-# write the normal ap_, or R.java, since we don't want the packaging
-# step to write anything that would make a further no-op build do
-# work.  See also toolkit/mozapps/installer/packager.mk.
-
-# It's not quite "no dependencies": nodeps means that it doesn't
-# depend on the generated resources that incorporate l10n, principally
-# strings.xml.
-
-# .gradle.nodeps: AndroidManifest.xml generated/preprocessed/org/mozilla/gecko/AppConstants.java ... FORCE
-$(eval $(call gradle_command,.gradle.nodeps,AndroidManifest.xml $(generated_files) FORCE))
 
 # Override the Java settings with some specific android settings
 include $(topsrcdir)/config/android-common.mk
@@ -119,9 +83,9 @@ $(ABS_DIST)/fennec/$(OMNIJAR_NAME): FORCE
 
 ifndef MOZILLA_OFFICIAL
 # Targets built very early during a Gradle build.  In automation,
-# these are built before Gradle is invoked by .gradle.deps and
-# gradle-targets is not made at all.  This is required to avoid
-# building gradle-targets with AB_CD=multi during multi-l10n builds.
+# these are built before Gradle is invoked, and gradle-targets is not
+# made at all.  This is required to avoid building gradle-targets with
+# AB_CD=multi during multi-l10n builds.
 gradle-targets: $(generated_resources) $(generated_files)
 
 # Local developers update omni.ja during their builds.  There's a

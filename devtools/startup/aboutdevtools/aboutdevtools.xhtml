@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html [
+<!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
+<!ENTITY % aboutdevtoolsDTD SYSTEM "chrome://devtools-startup/locale/aboutdevtools.dtd"> %aboutdevtoolsDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml" dir="&locale.dir;">
+<head>
+  <title>&aboutDevtools.headTitle;</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>a
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" type="text/css"/>
+  <link rel="stylesheet" href="chrome://devtools-startup/content/aboutdevtools/aboutdevtools.css"  type="text/css"/>
+  <link rel="stylesheet" href="chrome://devtools-startup/content/aboutdevtools/subscribe.css"  type="text/css"/>
+  <script type="application/javascript" src="chrome://devtools-startup/content/aboutdevtools/aboutdevtools.js"></script>
+  <script type="application/javascript" src="chrome://devtools-startup/content/aboutdevtools/subscribe.js"></script>
+</head>
+<body>
+  <div id="install-page" class="wrapper" hidden="true">
+    <div class="box">
+      <div class="left-pane" />
+      <div class="right-pane">
+        <h1 class="title" id="common-title" hidden="true">&aboutDevtools.enable.title;</h1>
+        <h1 class="title" id="inspect-title" hidden="true">&aboutDevtools.enable.inspectElementTitle;</h1>
+
+        <!-- Include all the possible message, hidden by default
+             as we can't lazily load localized strings from dtd -->
+        <p id="about-debugging-message" hidden="true">&aboutDevtools.enable.aboutDebuggingMessage;</p>
+        <p id="menu-message" hidden="true">&aboutDevtools.enable.menuMessage2;</p>
+        <p id="key-shortcut-message" hidden="true">&aboutDevtools.enable.keyShortcutMessage;</p>
+        <p id="inspect-element-message" hidden="true">&aboutDevtools.enable.inspectElementMessage;</p>
+
+        <p>&aboutDevtools.enable.commonMessage;</p>
+        <a class="external installpage-link" href="https://developer.mozilla.org/docs/Tools" target="_blank">&aboutDevtools.enable.learnMoreLink;</a>
+        <div class="buttons-container">
+          <button class="primary-button" id="install">&aboutDevtools.enable.enableButton;</button>
+          <button class="default-button" id="close">&aboutDevtools.enable.closeButton2;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- This page, hidden by default is displayed once the add-on is installed -->
+  <div id="welcome-page" class="wrapper" hidden="true">
+    <div class="box">
+      <div class="left-pane" />
+      <div class="right-pane">
+        <h1 class="title" >&aboutDevtools.welcome.title;</h1>
+        <!-- The welcome message is dynamically updated with a keyboard shortcut at
+             runtime and added in aboutdevtools.js -->
+        <p id="welcome-message"></p>
+
+        <!-- Form dedicated to the newsletter subscription -->
+        <div class="newsletter">
+          <h2 class="newsletter-title">&aboutDevtools.newsletter.title;</h2>
+          <p>&aboutDevtools.newsletter.message;</p>
+
+          <form id="newsletter-form" name="newsletter-form" action="https://www.mozilla.org/en-US/newsletter/" method="post">
+            <!-- "H" stands for the HTML format (->fmt). Alternative is T for text. -->
+            <input type="hidden" id="fmt" name="fmt" value="H" />
+            <!-- "app-dev" is the id of the Mozilla Developper newsletter -->
+            <input type="hidden" id="newsletters" name="newsletters" value="app-dev" />
+            <div id="newsletter-errors"></div>
+            <section id="newsletter-email" class="newsletter-form-section">
+              <input type="email" id="email" name="email" required="true" placeholder="&aboutDevtools.newsletter.email.placeholder;" />
+            </section>
+
+            <section id="newsletter-privacy" class="newsletter-form-section">
+              <input type="checkbox" id="privacy" name="privacy" required="true" />
+              <label for="privacy">&aboutDevtools.newsletter.privacy.label;</label>
+            </section>
+            <button type="submit" id="newsletter-submit" class="primary-button">&aboutDevtools.newsletter.subscribeButton;</button>
+          </form>
+          <div id="newsletter-thanks">
+            <h2 class="newsletter-title">&aboutDevtools.newsletter.thanks.title;</h2>
+            <p>&aboutDevtools.newsletter.thanks.message;</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="features">
+      <ul class="features-list">
+      </ul>
+    </div>
+
+    <footer>
+      <img class="dev-edition-logo"
+           src="chrome://devtools-startup/content/aboutdevtools/images/dev-edition-logo.svg"
+           alt="Firefox Developer Edition logo"/>
+      <div class="footer-message">
+        <h1 class="footer-message-title">&aboutDevtools.footer.title;</h1>
+        <p>&aboutDevtools.footer.message;</p>
+        <a class="external footer-link"
+           href="https://www.mozilla.org/firefox/developer/"
+           target="_blank">&aboutDevtools.footer.learnMoreLink;</a>
+      </div>
+    </footer>
+  </div>
+
+</body>
+</html>

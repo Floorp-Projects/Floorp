@@ -101,9 +101,9 @@ add_task(async function aes128gcm_simple() {
 // Variable record size tests
 add_task(async function aes128gcm_rs() {
   let [recvPublicKey, recvPrivateKey] = await PushCrypto.generateKeys();
-  let payload = "x".repeat(1024 * 10);
 
   for (let rs of [-1, 0, 1, 17]) {
+    let payload = "x".repeat(1024);
     info(`testing expected failure with rs=${rs}`);
     let message = new TextEncoder("utf-8").encode(payload);
     let authSecret = crypto.getRandomValues(new Uint8Array(16));
@@ -112,6 +112,7 @@ add_task(async function aes128gcm_rs() {
   }
   for (let rs of [18, 50, 1024, 4096, 16384]) {
     info(`testing expected success with rs=${rs}`);
+    let payload = "x".repeat(rs * 3);
     let message = new TextEncoder("utf-8").encode(payload);
     let authSecret = crypto.getRandomValues(new Uint8Array(16));
     let {ciphertext, encoding} = await PushCrypto.encrypt(message, recvPublicKey, authSecret, {rs});
@@ -130,8 +131,7 @@ add_task(async function aes128gcm_edgecases() {
   let [recvPublicKey, recvPrivateKey] = await PushCrypto.generateKeys();
 
   for (let size of [0, 4096-16, 4096-16-1, 4096-16+1,
-                    4095, 4096, 4097,
-                    1024*100]) {
+                    4095, 4096, 4097, 10240]) {
     info(`testing encryption of ${size} byte payload`);
     let message = new TextEncoder("utf-8").encode("x".repeat(size));
     let authSecret = crypto.getRandomValues(new Uint8Array(16));

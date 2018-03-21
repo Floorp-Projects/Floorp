@@ -7,7 +7,7 @@
 const {Cu} = require("chrome");
 const Services = require("Services");
 
-const {DevToolsShim} = require("chrome://devtools-shim/content/DevToolsShim.jsm");
+const {DevToolsShim} = require("chrome://devtools-startup/content/DevToolsShim.jsm");
 
 // Load gDevToolsBrowser toolbox lazily as they need gDevTools to be fully initialized
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
@@ -53,9 +53,8 @@ function DevTools() {
   // related events.
   this.registerDefaults();
 
-  // Register this new DevTools instance to Firefox. DevToolsShim is part of Firefox,
-  // integrating with all Firefox codebase and making the glue between code from
-  // mozilla-central and DevTools add-on on github
+  // Register this DevTools instance on the DevToolsShim, which is used by non-devtools
+  // code to interact with DevTools.
   DevToolsShim.register(this);
 }
 
@@ -655,8 +654,7 @@ DevTools.prototype = {
   },
 
   /**
-   * Either the DevTools Loader has been destroyed by the add-on contribution
-   * workflow, or firefox is shutting down.
+   * Either the DevTools Loader has been destroyed or firefox is shutting down.
 
    * @param {boolean} shuttingDown
    *        True if firefox is currently shutting down. We may prevent doing
@@ -664,8 +662,7 @@ DevTools.prototype = {
    *        cleaned up in order to be able to load devtools again.
    */
   destroy({ shuttingDown }) {
-    // Do not cleanup everything during firefox shutdown, but only when
-    // devtools are reloaded via the add-on contribution workflow.
+    // Do not cleanup everything during firefox shutdown.
     if (!shuttingDown) {
       for (let [, toolbox] of this._toolboxes) {
         toolbox.destroy();
@@ -685,7 +682,7 @@ DevTools.prototype = {
     // manager state on shutdown.
     if (!shuttingDown) {
       // Notify the DevToolsShim that DevTools are no longer available, particularly if
-      // the destroy was caused by disabling/removing the DevTools add-on.
+      // the destroy was caused by disabling/removing DevTools.
       DevToolsShim.unregister();
     }
 

@@ -14,6 +14,7 @@
 #include "mozilla/SystemGroup.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
@@ -686,8 +687,14 @@ IDBFactory::OpenInternal(JSContext* aCx,
 
   PersistenceType persistenceType;
 
-  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
-    // Chrome privilege always gets persistent storage.
+  bool isInternal = principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo;
+  if (!isInternal && principalInfo.type() == PrincipalInfo::TContentPrincipalInfo) {
+    nsCString origin = principalInfo.get_ContentPrincipalInfo().originNoSuffix();
+    isInternal = QuotaManager::IsOriginInternal(origin);
+  }
+
+  if (isInternal) {
+    // Chrome privilege and internal origins always get persistent storage.
     persistenceType = PERSISTENCE_TYPE_PERSISTENT;
   } else {
     persistenceType = PersistenceTypeFromStorage(aStorageType);

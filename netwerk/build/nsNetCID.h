@@ -71,8 +71,6 @@
 }
 
 // component implementing nsIURI, nsISerializable, and nsIClassInfo.
-#define NS_SIMPLEURI_CONTRACTID \
-    "@mozilla.org/network/simple-uri;1"
 #define NS_SIMPLEURI_CID                              \
 { /* e0da1d70-2f7b-11d3-8cd0-0060b0fc14a3 */          \
      0xe0da1d70,                                      \
@@ -129,8 +127,6 @@
 
 // component implementing nsIStandardURL, nsIURI, nsIURL, nsISerializable,
 // and nsIClassInfo.
-#define NS_STANDARDURL_CONTRACTID \
-    "@mozilla.org/network/standard-url;1"
 #define NS_STANDARDURL_CID                           \
 { /* de9472d0-8034-11d3-9399-00104ba0fd40 */         \
     0xde9472d0,                                      \

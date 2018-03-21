@@ -323,9 +323,7 @@ var TPS = {
                      " on tab " + JSON.stringify(tab));
       switch (action) {
         case ACTION_ADD:
-          await new Promise(resolve => {
-            BrowserTabs.Add(tab.uri, resolve);
-          });
+          await BrowserTabs.Add(tab.uri);
           break;
         case ACTION_VERIFY:
           Logger.AssertTrue(typeof(tab.profile) != "undefined",

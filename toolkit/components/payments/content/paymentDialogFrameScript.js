@@ -44,8 +44,25 @@ let PaymentFrameScript = {
     this.sendToContent(messageType, data);
   },
 
+  setupContentConsole() {
+    let privilegedLogger = content.window.console.createInstance({
+      maxLogLevelPref: "dom.payments.loglevel",
+      prefix: "paymentDialogContent",
+    });
+
+    let contentLogObject = Cu.waiveXrays(content).log;
+    for (let name of ["error", "warn", "info", "debug"]) {
+      Cu.exportFunction(privilegedLogger[name].bind(privilegedLogger), contentLogObject, {
+        defineAs: name,
+      });
+    }
+  },
+
   sendToChrome({detail}) {
     let {messageType} = detail;
+    if (messageType == "initializeRequest") {
+      this.setupContentConsole();
+    }
     this.log.debug("sendToChrome:", messageType, detail);
     this.sendMessageToChrome(messageType, detail);
   },

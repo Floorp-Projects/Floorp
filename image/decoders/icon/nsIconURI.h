@@ -30,10 +30,8 @@ public:
   NS_DECL_NSIIPCSERIALIZABLEURI
   NS_DECL_NSINESTEDURI
 
-  // nsMozIconURI
-  nsMozIconURI();
-
 protected:
+  nsMozIconURI();
   virtual ~nsMozIconURI();
   nsCOMPtr<nsIURL> mIconURL; // a URL that we want the icon for
   uint32_t mSize; // the # of pixels in a row that we want for this image.
