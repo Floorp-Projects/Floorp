@@ -9,13 +9,13 @@ requestLongerTimeout(2);
 // Test that the DOM element targets displayed in animation player widgets can
 // be used to highlight elements in the DOM and select them in the inspector.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {toolbox, inspector, panel} = yield openAnimationInspector();
+  let {toolbox, inspector, panel} = await openAnimationInspector();
 
   info("Select the simple animated node");
-  yield selectNodeAndWaitForAnimations(".animated", inspector);
+  await selectNodeAndWaitForAnimations(".animated", inspector);
 
   let targets = getAnimationTargetNodes(panel);
   // Arbitrary select the first one
@@ -28,7 +28,7 @@ add_task(function* () {
   let onHighlight = toolbox.once("node-highlight");
   EventUtils.synthesizeMouse(highlightingEl, 10, 5, {type: "mouseover"},
                              highlightingEl.ownerDocument.defaultView);
-  let nodeFront = yield onHighlight;
+  let nodeFront = await onHighlight;
 
   // Do not forget to mouseout, otherwise we get random mouseover event
   // when selecting another node, which triggers some requests in animation
@@ -47,7 +47,7 @@ add_task(function* () {
     "The highlighted node has the correct class");
 
   info("Select the body node in order to have the list of all animations");
-  yield selectNodeAndWaitForAnimations("body", inspector);
+  await selectNodeAndWaitForAnimations("body", inspector);
 
   targets = getAnimationTargetNodes(panel);
   targetNodeComponent = targets[0];
@@ -59,10 +59,10 @@ add_task(function* () {
   let nodeEl = targetNodeComponent.previewer.previewEl;
   EventUtils.sendMouseEvent({type: "click"}, nodeEl,
                             nodeEl.ownerDocument.defaultView);
-  yield onSelection;
+  await onSelection;
 
   is(inspector.selection.nodeFront, targetNodeComponent.previewer.nodeFront,
     "The selected node is the one stored on the animation widget");
 
-  yield onRendered;
+  await onRendered;
 });

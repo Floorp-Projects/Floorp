@@ -9,13 +9,13 @@ requestLongerTimeout(2);
 // Test that the panel shows an animation player when an animated node is
 // selected.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel} = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
+  let {inspector, panel} = await openAnimationInspector();
 
   info("Select node .animated and check that the panel is not empty");
-  let node = yield getNodeFront(".animated", inspector);
-  yield selectNodeAndWaitForAnimations(node, inspector);
+  let node = await getNodeFront(".animated", inspector);
+  await selectNodeAndWaitForAnimations(node, inspector);
 
   assertAnimationsDisplayed(panel, 1);
 });

@@ -5,13 +5,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!-- import-globals-from in-content/main.js -->
 
-<!DOCTYPE overlay [
-  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-  <!ENTITY % containersDTD SYSTEM "chrome://browser/locale/preferences/containers.dtd">
-  %brandDTD;
-  %containersDTD;
-]>
-
 <bindings id="handlerBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -71,16 +64,7 @@
           <xul:label flex="1" crop="end" xbl:inherits="xbl:text=containerName,highlightable"/>
         </xul:hbox>
         <xul:hbox flex="1" align="right">
-          <xul:button anonid="preferencesButton"
-                      label="&preferencesButton.label;"
-                      xbl:inherits="value=userContextId"
-                      oncommand="gContainersPane.onPreferenceCommand(event.originalTarget)">
-          </xul:button>
-          <xul:button anonid="removeButton"
-                      label="&removeButton.label;"
-                      xbl:inherits="value=userContextId"
-                      oncommand="gContainersPane.onRemoveCommand(event.originalTarget)">
-          </xul:button>
+          <children />
         </xul:hbox>
       </xul:hbox>
     </content>

@@ -12,10 +12,10 @@ requestLongerTimeout(2);
 // all have the same rate, or that it displays the empty value in case they
 // have mixed rates.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {panel, controller, inspector, toolbox} = yield openAnimationInspector();
+  let {panel, controller, inspector, toolbox} = await openAnimationInspector();
 
   // In this test, we disable the highlighter on purpose because of the way
   // events are simulated to select an option in the playbackRate <select>.
@@ -30,22 +30,22 @@ add_task(function* () {
   ok(select, "The rate selector exists");
 
   info("Change all of the current animations' rates to 0.5");
-  yield changeTimelinePlaybackRate(panel, .5);
+  await changeTimelinePlaybackRate(panel, .5);
   checkAllAnimationsRatesChanged(controller, select, .5);
 
   info("Select just one animated node and change its rate only");
-  yield selectNodeAndWaitForAnimations(".animated", inspector);
+  await selectNodeAndWaitForAnimations(".animated", inspector);
 
-  yield changeTimelinePlaybackRate(panel, 2);
+  await changeTimelinePlaybackRate(panel, 2);
   checkAllAnimationsRatesChanged(controller, select, 2);
 
   info("Select the <body> again, it should now have mixed-rates animations");
-  yield selectNodeAndWaitForAnimations("body", inspector);
+  await selectNodeAndWaitForAnimations("body", inspector);
 
   is(select.value, "", "The selected rate is empty");
 
   info("Change the rate for these mixed-rate animations");
-  yield changeTimelinePlaybackRate(panel, 1);
+  await changeTimelinePlaybackRate(panel, 1);
   checkAllAnimationsRatesChanged(controller, select, 1);
 });
 

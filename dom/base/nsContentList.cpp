@@ -87,29 +87,6 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsBaseContentList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(nsBaseContentList,
                                                    LastRelease())
 
-
-NS_IMETHODIMP
-nsBaseContentList::GetLength(uint32_t* aLength)
-{
-  *aLength = mElements.Length();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBaseContentList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
-{
-  nsISupports *tmp = Item(aIndex);
-
-  if (!tmp) {
-    *aReturn = nullptr;
-
-    return NS_OK;
-  }
-
-  return CallQueryInterface(tmp, aReturn);
-}
-
 nsIContent*
 nsBaseContentList::Item(uint32_t aIndex)
 {
@@ -159,21 +136,6 @@ JSObject*
 nsEmptyContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
   return HTMLCollectionBinding::Wrap(cx, this, aGivenProto);
-}
-
-NS_IMETHODIMP
-nsEmptyContentList::GetLength(uint32_t* aLength)
-{
-  *aLength = 0;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEmptyContentList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
-{
-  *aReturn = nullptr;
-  return NS_OK;
 }
 
 mozilla::dom::Element*
@@ -645,28 +607,6 @@ nsContentList::LastRelease()
     mRootNode = nullptr;
   }
   SetDirty();
-}
-
-NS_IMETHODIMP
-nsContentList::GetLength(uint32_t* aLength)
-{
-  *aLength = Length(true);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
-{
-  nsINode* node = Item(aIndex);
-
-  if (node) {
-    return CallQueryInterface(node, aReturn);
-  }
-
-  *aReturn = nullptr;
-
-  return NS_OK;
 }
 
 Element*

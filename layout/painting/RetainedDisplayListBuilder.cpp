@@ -199,7 +199,7 @@ void SwapAndRemove(nsTArray<T>& aArray, uint32_t aIndex)
     aArray[aIndex] = last;
   }
 
-  aArray.RemoveElementAt(aArray.Length() - 1);
+  aArray.RemoveLastElement();
 }
 
 static bool

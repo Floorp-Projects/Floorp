@@ -10,14 +10,14 @@
 <hbox hidden="true"
       class="container-header-links"
       data-category="paneContainers">
-  <label class="text-link" id="backContainersLink">&backLink2.label;</label>
+  <label class="text-link" id="backContainersLink" data-l10n-id="containers-back-link"/>
 </hbox>
 
 <hbox id="header-containers"
       class="header"
       hidden="true"
       data-category="paneContainers">
-  <label class="header-name" flex="1">&paneContainers.title;</label>
+  <label class="header-name" flex="1" data-l10n-id="containers-header"/>
 </hbox>
 
 <!-- Containers -->
@@ -31,7 +31,7 @@
   </vbox>
   <vbox>
     <hbox flex="1">
-      <button id="containersAdd" oncommand="gContainersPane.onAddButtonCommand();" accesskey="&addButton.accesskey;" label="&addButton.label;"/>
+      <button id="containersAdd" oncommand="gContainersPane.onAddButtonCommand();" data-l10n-id="containers-add-button"/>
     </hbox>
   </vbox>
 </groupbox>

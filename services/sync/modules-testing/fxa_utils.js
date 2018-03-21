@@ -27,9 +27,9 @@ var initializeIdentityWithTokenServerResponse = function(response) {
   MockRESTRequest.prototype = {
     _log: requestLog,
     setHeader() {},
-    get(callback) {
+    async get() {
       this.response = response;
-      callback.call(this);
+      return response;
     }
   };
   // The mocked TokenServer client which will get the response.

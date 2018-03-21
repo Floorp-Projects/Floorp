@@ -868,17 +868,13 @@ txMozillaXSLTProcessor::SetParameter(const nsAString& aNamespaceURI,
                 break;
             }
 
-            nsCOMPtr<nsIDOMNodeList> nodeList = do_QueryInterface(supports);
+            nsCOMPtr<nsINodeList> nodeList = do_QueryInterface(supports);
             if (nodeList) {
-                uint32_t length;
-                nodeList->GetLength(&length);
+                uint32_t length = nodeList->Length();
 
-                nsCOMPtr<nsIDOMNode> node;
                 uint32_t i;
                 for (i = 0; i < length; ++i) {
-                    nodeList->Item(i, getter_AddRefs(node));
-
-                    if (!nsContentUtils::CanCallerAccess(node)) {
+                    if (!nsContentUtils::CanCallerAccess(nodeList->Item(i))) {
                         return NS_ERROR_DOM_SECURITY_ERR;
                     }
                 }
@@ -1433,23 +1429,19 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
                 return xpathResult->GetExprResult(aResult);
             }
 
-            nsCOMPtr<nsIDOMNodeList> nodeList = do_QueryInterface(supports);
+            nsCOMPtr<nsINodeList> nodeList = do_QueryInterface(supports);
             if (nodeList) {
                 RefPtr<txNodeSet> nodeSet = new txNodeSet(nullptr);
                 if (!nodeSet) {
                     return NS_ERROR_OUT_OF_MEMORY;
                 }
 
-                uint32_t length;
-                nodeList->GetLength(&length);
+                uint32_t length = nodeList->Length();
 
-                nsCOMPtr<nsIDOMNode> node;
                 uint32_t i;
                 for (i = 0; i < length; ++i) {
-                    nodeList->Item(i, getter_AddRefs(node));
-
                     nsAutoPtr<txXPathNode> xpathNode(
-                        txXPathNativeNode::createXPathNode(node));
+                        txXPathNativeNode::createXPathNode(nodeList->Item(i)));
                     if (!xpathNode) {
                         return NS_ERROR_FAILURE;
                     }

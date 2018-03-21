@@ -12171,7 +12171,7 @@ DR_FrameTreeNode* DR_State::CreateTreeNode(nsIFrame*                aFrame,
   }
 
   if (lastLeaf && (lastLeaf == parentNode)) {
-    mFrameTreeLeaves.RemoveElementAt(mFrameTreeLeaves.Length() - 1);
+    mFrameTreeLeaves.RemoveLastElement();
   }
   mFrameTreeLeaves.AppendElement(newNode);
   mCount++;

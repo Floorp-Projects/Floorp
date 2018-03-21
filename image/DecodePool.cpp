@@ -227,8 +227,7 @@ private:
   {
     Work work;
     work.mType = Work::Type::TASK;
-    work.mTask = aQueue.LastElement().forget();
-    aQueue.RemoveElementAt(aQueue.Length() - 1);
+    work.mTask = aQueue.PopLastElement();
 
     return work;
   }

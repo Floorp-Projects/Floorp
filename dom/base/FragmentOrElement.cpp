@@ -477,25 +477,10 @@ nsAttrChildContentList::WrapObject(JSContext *cx,
   return NodeListBinding::Wrap(cx, this, aGivenProto);
 }
 
-NS_IMETHODIMP
-nsAttrChildContentList::GetLength(uint32_t* aLength)
+uint32_t
+nsAttrChildContentList::Length()
 {
-  *aLength = mNode ? mNode->GetChildCount() : 0;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAttrChildContentList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
-{
-  nsINode* node = Item(aIndex);
-  if (!node) {
-    *aReturn = nullptr;
-
-    return NS_OK;
-  }
-
-  return CallQueryInterface(node, aReturn);
+  return mNode ? mNode->GetChildCount() : 0;
 }
 
 nsIContent*
@@ -519,30 +504,16 @@ nsAttrChildContentList::IndexOf(nsIContent* aContent)
 }
 
 //----------------------------------------------------------------------
-NS_IMETHODIMP
-nsParentNodeChildContentList::GetLength(uint32_t* aLength)
+uint32_t
+nsParentNodeChildContentList::Length()
 {
   if (!mIsCacheValid && !ValidateCache()) {
-    *aLength = 0;
-    return NS_OK;
+    return 0;
   }
 
   MOZ_ASSERT(mIsCacheValid);
 
-  *aLength = mCachedChildArray.Length();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsParentNodeChildContentList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
-{
-  nsINode* node = Item(aIndex);
-  if (!node) {
-    *aReturn = nullptr;
-    return NS_OK;
-  }
-
-  return CallQueryInterface(node, aReturn);
+  return mCachedChildArray.Length();
 }
 
 nsIContent*

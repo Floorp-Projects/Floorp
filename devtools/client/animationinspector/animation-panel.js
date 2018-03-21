@@ -23,14 +23,14 @@ var AnimationsPanel = {
   UI_UPDATED_EVENT: "ui-updated",
   PANEL_INITIALIZED: "panel-initialized",
 
-  initialize: Task.async(function* () {
+  async initialize() {
     if (AnimationsController.destroyed) {
       console.warn("Could not initialize the animation-panel, controller " +
                    "was destroyed");
       return;
     }
     if (this.initialized) {
-      yield this.initialized;
+      await this.initialized;
       return;
     }
 
@@ -81,19 +81,19 @@ var AnimationsPanel = {
 
     this.startListeners();
 
-    yield this.refreshAnimationsUI();
+    await this.refreshAnimationsUI();
 
     resolver();
     this.emit(this.PANEL_INITIALIZED);
-  }),
+  },
 
-  destroy: Task.async(function* () {
+  async destroy() {
     if (!this.initialized) {
       return;
     }
 
     if (this.destroyed) {
-      yield this.destroyed;
+      await this.destroyed;
       return;
     }
 
@@ -118,7 +118,7 @@ var AnimationsPanel = {
     this.timelineCurrentTimeEl = this.rateSelectorEl = null;
 
     resolver();
-  }),
+  },
 
   startListeners: function() {
     AnimationsController.on(AnimationsController.PLAYERS_UPDATED_EVENT,
@@ -215,10 +215,10 @@ var AnimationsPanel = {
    * Toggle (pause/play) all animations in the current target
    * and update the UI the toggleAll button.
    */
-  toggleAll: Task.async(function* () {
+  async toggleAll() {
     this.toggleAllButtonEl.classList.toggle("paused");
-    yield AnimationsController.toggleAll();
-  }),
+    await AnimationsController.toggleAll();
+  },
 
   onTimelinePlayClicked: function() {
     this.playPauseTimeline().catch(console.error);
@@ -308,18 +308,18 @@ var AnimationsPanel = {
    * useful after the playState or currentTime has been changed and in case the
    * animations aren't auto-refreshing), and then refresh the UI.
    */
-  refreshAnimationsStateAndUI: Task.async(function* () {
+  async refreshAnimationsStateAndUI() {
     for (let player of AnimationsController.animationPlayers) {
-      yield player.refreshState();
+      await player.refreshState();
     }
-    yield this.refreshAnimationsUI();
-  }),
+    await this.refreshAnimationsUI();
+  },
 
   /**
    * Refresh the list of animations UI. This will empty the panel and re-render
    * the various components again.
    */
-  refreshAnimationsUI: Task.async(function* () {
+  async refreshAnimationsUI() {
     // Empty the whole panel first.
     this.togglePlayers(true);
 
@@ -342,7 +342,7 @@ var AnimationsPanel = {
     }
 
     this.emit(this.UI_UPDATED_EVENT);
-  })
+  }
 };
 
 EventEmitter.decorate(AnimationsPanel);

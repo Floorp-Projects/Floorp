@@ -170,7 +170,7 @@ gfxContext::Restore()
     mDT->PopClip();
   }
 
-  mStateStack.RemoveElementAt(mStateStack.Length() - 1);
+  mStateStack.RemoveLastElement();
 
   mDT = CurrentState().drawTarget;
 
@@ -609,7 +609,7 @@ gfxContext::PopClip()
 {
   MOZ_ASSERT(CurrentState().pushedClips.Length() > 0);
 
-  CurrentState().pushedClips.RemoveElementAt(CurrentState().pushedClips.Length() - 1);
+  CurrentState().pushedClips.RemoveLastElement();
   mDT->PopClip();
 }
 

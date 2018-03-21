@@ -4,7 +4,6 @@
 <em:id>bug848358@mozilla.org</em:id>
 <em:name>TART - Tab Animation regression Test</em:name>
 <em:version>1.6.2</em:version>
-<em:bootstrap>true</em:bootstrap>
 
 <em:targetApplication>
     <Description>
