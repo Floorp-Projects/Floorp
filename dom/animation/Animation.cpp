@@ -1657,13 +1657,6 @@ Animation::IsRunningOnCompositor() const
          mEffect->AsKeyframeEffect()->IsRunningOnCompositor();
 }
 
-#ifdef MOZ_OLD_STYLE
-template
-void
-Animation::ComposeStyle<RefPtr<AnimValuesStyleRule>&>(
-  RefPtr<AnimValuesStyleRule>& aAnimationRule,
-  const nsCSSPropertyIDSet& aPropertiesToSkip);
-#endif
 
 template
 void

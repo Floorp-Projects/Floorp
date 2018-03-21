@@ -818,6 +818,8 @@ SERVO_BINDING_FUNC(Servo_ParseFontShorthandForMatching, bool,
                    nsCSSValueBorrowedMut stretch,
                    nsCSSValueBorrowedMut weight);
 
+SERVO_BINDING_FUNC(Servo_Property_IsShorthand, bool,
+                   const nsACString* name, bool* found);
 
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \

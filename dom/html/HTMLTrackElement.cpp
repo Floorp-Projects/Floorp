@@ -35,9 +35,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsMappedAttributes.h"
 #include "nsNetUtil.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsRuleData.h"
-#endif
 #include "nsStyleConsts.h"
 #include "nsThreadUtils.h"
 #include "nsVideoFrame.h"

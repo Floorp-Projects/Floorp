@@ -389,9 +389,6 @@ public:
     virtual bool IsNodeOfType(uint32_t aFlags) const override;
     virtual bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override;
 
-#ifdef MOZ_OLD_STYLE
-    NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) override;
-#endif
     virtual nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                                 int32_t aModType) const override;
     NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
