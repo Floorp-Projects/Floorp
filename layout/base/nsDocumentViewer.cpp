@@ -2321,11 +2321,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
 
   StyleSetHandle styleSet;
   if (backendType == StyleBackendType::Gecko) {
-#ifdef MOZ_OLD_STYLE
-    styleSet = new nsStyleSet();
-#else
     MOZ_CRASH("old style system disabled");
-#endif
   } else {
     styleSet = new ServoStyleSet();
   }

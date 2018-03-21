@@ -583,13 +583,13 @@ def stylo_config(value, _):
 option('--disable-stylo-build-bindgen',
        help='Disable build-time bindgen for Stylo')
 
-@depends(stylo_config, '--enable-stylo-build-bindgen', '--enable-compile-environment')
-def building_stylo_bindgen(stylo_config, bindgen_enabled, compile_environment):
+@depends('--enable-stylo-build-bindgen', '--enable-compile-environment')
+def building_stylo_bindgen(bindgen_enabled, compile_environment):
     if not compile_environment:
         return False
     if not bindgen_enabled:
         return False
-    return stylo_config.build
+    return True
 
 # We support setting up the appropriate options for Stylo's build-time
 # bindings generation via setting LLVM_CONFIG or by providing explicit

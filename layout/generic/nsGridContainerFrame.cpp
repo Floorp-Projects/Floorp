@@ -29,9 +29,6 @@
 #include "nsIFrameInlines.h"
 #include "nsPresContext.h"
 #include "nsReadableUtils.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsRuleNode.h"
-#endif
 #include "nsStyleContext.h"
 #include "nsTableWrapperFrame.h"
 

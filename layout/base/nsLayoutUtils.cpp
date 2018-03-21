@@ -196,9 +196,7 @@ typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 /* static */ bool nsLayoutUtils::sInterruptibleReflowEnabled;
 /* static */ bool nsLayoutUtils::sSVGTransformBoxEnabled;
 /* static */ bool nsLayoutUtils::sTextCombineUprightDigitsEnabled;
-#ifdef MOZ_STYLO
 /* static */ bool nsLayoutUtils::sStyloEnabled;
-#endif
 /* static */ uint32_t nsLayoutUtils::sIdlePeriodDeadlineLimit;
 /* static */ uint32_t nsLayoutUtils::sQuiescentFramesBeforeIdlePeriod;
 
@@ -8279,20 +8277,7 @@ nsLayoutUtils::Initialize()
                                "svg.transform-box.enabled");
   Preferences::AddBoolVarCache(&sTextCombineUprightDigitsEnabled,
                                "layout.css.text-combine-upright-digits.enabled");
-#ifdef MOZ_STYLO
-#ifdef MOZ_OLD_STYLE
-  if (PR_GetEnv("STYLO_FORCE_ENABLED")) {
-    sStyloEnabled = true;
-  } else if (PR_GetEnv("STYLO_FORCE_DISABLED")) {
-    sStyloEnabled = false;
-  } else {
-    Preferences::AddBoolVarCache(&sStyloEnabled,
-                                 "layout.css.servo.enabled");
-  }
-#else
   sStyloEnabled = true;
-#endif
-#endif
 
   Preferences::AddUintVarCache(&sIdlePeriodDeadlineLimit,
                                "layout.idle_period.time_limit",
@@ -8325,21 +8310,10 @@ nsLayoutUtils::Shutdown()
   nsStyleList::Shutdown();
 }
 
-#ifdef MOZ_STYLO
 /* static */
 bool
 nsLayoutUtils::ShouldUseStylo(nsIPrincipal* aPrincipal)
 {
-#ifdef MOZ_OLD_STYLE
-  // Disable stylo for system principal because XUL hasn't been fully
-  // supported. Other principal aren't able to use XUL by default, and
-  // the back door to enable XUL is mostly just for testing, which means
-  // they don't matter, and we shouldn't respect them at the same time.
-  if (!StyloChromeEnabled() &&
-      nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    return false;
-  }
-#endif
   return true;
 }
 
@@ -8347,21 +8321,8 @@ nsLayoutUtils::ShouldUseStylo(nsIPrincipal* aPrincipal)
 bool
 nsLayoutUtils::StyloChromeEnabled()
 {
-#ifdef MOZ_OLD_STYLE
-  static bool sInitialized = false;
-  static bool sEnabled = false;
-  if (!sInitialized) {
-    // We intentionally don't allow dynamic toggling of this pref
-    // because it is rather risky to mix style backend in XUL.
-    sEnabled = Preferences::GetBool("layout.css.servo.chrome.enabled");
-    sInitialized = true;
-  }
-  return sEnabled;
-#else
   return true;
-#endif
 }
-#endif
 
 /* static */
 void

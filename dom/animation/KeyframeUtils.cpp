@@ -364,18 +364,8 @@ HasValidOffsets(const nsTArray<Keyframe>& aKeyframes);
 static void
 MarkAsComputeValuesFailureKey(PropertyValuePair& aPair);
 
-#ifdef MOZ_OLD_STYLE
-static bool
-IsComputeValuesFailureKey(const PropertyValuePair& aPair);
-#endif
 #endif
 
-#ifdef MOZ_OLD_STYLE
-static nsTArray<ComputedKeyframeValues>
-GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
-                          dom::Element* aElement,
-                          GeckoStyleContext* aStyleContext);
-#endif
 
 static nsTArray<ComputedKeyframeValues>
 GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
@@ -901,49 +891,7 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
     return result;
   }
 
-#ifdef MOZ_OLD_STYLE
-  nsCSSValue value;
-  if (!nsCSSProps::IsShorthand(aProperty)) {
-    aParser.ParseLonghandProperty(aProperty,
-                                  aStringValue,
-                                  aDocument->GetDocumentURI(),
-                                  aDocument->GetDocumentURI(),
-                                  aDocument->NodePrincipal(),
-                                  value);
-    if (value.GetUnit() == eCSSUnit_Null) {
-      // Invalid property value, so return Nothing.
-      ReportInvalidPropertyValueToConsole(aProperty, aStringValue, aDocument);
-      return result;
-    }
-  }
-
-  if (value.GetUnit() == eCSSUnit_Null) {
-    // If we have a shorthand, store the string value as a token stream.
-    nsCSSValueTokenStream* tokenStream = new nsCSSValueTokenStream;
-    tokenStream->mTokenStream = aStringValue;
-
-    // We are about to convert a null value to a token stream value but
-    // by leaving the mPropertyID as unknown, we will be able to
-    // distinguish between shorthand values and valid token stream values
-    // (e.g. values with variable references).
-    MOZ_ASSERT(tokenStream->mPropertyID == eCSSProperty_UNKNOWN,
-               "The property of a token stream should be initialized"
-               " to unknown");
-
-    // By leaving mShorthandPropertyID as unknown, we ensure that when
-    // we call nsCSSValue::AppendToString we get back the string stored
-    // in mTokenStream.
-    MOZ_ASSERT(tokenStream->mShorthandPropertyID == eCSSProperty_UNKNOWN,
-               "The shorthand property of a token stream should be initialized"
-               " to unknown");
-    value.SetTokenStreamValue(tokenStream);
-  }
-
-  result.emplace(aProperty, Move(value));
-  return result;
-#else
   MOZ_CRASH("old style system disabled");
-#endif
 }
 
 /**
@@ -988,113 +936,8 @@ MarkAsComputeValuesFailureKey(PropertyValuePair& aPair)
   aPair.mSimulateComputeValuesFailure = true;
 }
 
-#ifdef MOZ_OLD_STYLE
-/**
- * Returns true if |aPair| is a property-value pair on which we have
- * previously called MarkAsComputeValuesFailureKey (and hence we should
- * simulate failure when calling StyleAnimationValue::ComputeValues using its
- * value).
- *
- * @param aPair The property-value pair to test.
- * @return True if |aPair| represents a failure value.
- */
-static bool
-IsComputeValuesFailureKey(const PropertyValuePair& aPair)
-{
-  return nsCSSProps::IsShorthand(aPair.mProperty) &&
-         aPair.mSimulateComputeValuesFailure;
-}
-#endif
 #endif
 
-#ifdef MOZ_OLD_STYLE
-/**
- * Calculate the StyleAnimationValues of properties of each keyframe.
- * This involves expanding shorthand properties into longhand properties,
- * removing the duplicated properties for each keyframe, and creating an
- * array of |property:computed value| pairs for each keyframe.
- *
- * These computed values are used when computing the final set of
- * per-property animation values (see GetAnimationPropertiesFromKeyframes).
- *
- * @param aKeyframes The input keyframes.
- * @param aElement The context element.
- * @param aStyleContext The style context to use when computing values.
- * @return The set of ComputedKeyframeValues. The length will be the same as
- *   aFrames.
- */
-static nsTArray<ComputedKeyframeValues>
-GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
-                          dom::Element* aElement,
-                          GeckoStyleContext* aStyleContext)
-{
-  MOZ_ASSERT(aStyleContext);
-  MOZ_ASSERT(aElement);
-
-  const size_t len = aKeyframes.Length();
-  nsTArray<ComputedKeyframeValues> result(len);
-
-  for (const Keyframe& frame : aKeyframes) {
-    nsCSSPropertyIDSet propertiesOnThisKeyframe;
-    ComputedKeyframeValues* computedValues = result.AppendElement();
-    for (const PropertyValuePair& pair :
-           PropertyPriorityIterator(frame.mPropertyValues)) {
-      MOZ_ASSERT(!pair.mServoDeclarationBlock,
-                 "Animation values were parsed using Servo backend but target"
-                 " element is not using Servo backend?");
-
-      // Expand each value into the set of longhands and produce
-      // a KeyframeValueEntry for each value.
-      nsTArray<PropertyStyleAnimationValuePair> values;
-
-      // For shorthands, we store the string as a token stream so we need to
-      // extract that first.
-      if (nsCSSProps::IsShorthand(pair.mProperty)) {
-        nsCSSValueTokenStream* tokenStream = pair.mValue.GetTokenStreamValue();
-        if (!StyleAnimationValue::ComputeValues(pair.mProperty,
-              CSSEnabledState::eForAllContent, aElement, aStyleContext,
-              tokenStream->mTokenStream, /* aUseSVGMode */ false, values)) {
-          continue;
-        }
-
-#ifdef DEBUG
-        if (IsComputeValuesFailureKey(pair)) {
-          continue;
-        }
-#endif
-      } else if (pair.mValue.GetUnit() == eCSSUnit_Null) {
-        // An uninitialized nsCSSValue represents the underlying value which
-        // we represent as an uninitialized AnimationValue so we just leave
-        // neutralPair->mValue as-is.
-        PropertyStyleAnimationValuePair* neutralPair = values.AppendElement();
-        neutralPair->mProperty = pair.mProperty;
-      } else {
-        if (!StyleAnimationValue::ComputeValues(pair.mProperty,
-              CSSEnabledState::eForAllContent, aElement, aStyleContext,
-              pair.mValue, /* aUseSVGMode */ false, values)) {
-          continue;
-        }
-        MOZ_ASSERT(values.Length() == 1,
-                  "Longhand properties should produce a single"
-                  " StyleAnimationValue");
-      }
-
-      for (auto& value : values) {
-        // If we already got a value for this property on the keyframe,
-        // skip this one.
-        if (propertiesOnThisKeyframe.HasProperty(value.mProperty)) {
-          continue;
-        }
-        propertiesOnThisKeyframe.AddProperty(value.mProperty);
-        computedValues->AppendElement(Move(value));
-      }
-    }
-  }
-
-  MOZ_ASSERT(result.Length() == aKeyframes.Length(), "Array length mismatch");
-  return result;
-}
-#endif
 
 /**
  * The variation of the above function. This is for Servo backend.
@@ -1644,17 +1487,7 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
     for (const PropertyValuePair& pair : frame.mPropertyValues) {
       if (nsCSSProps::IsShorthand(pair.mProperty)) {
         if (styleBackend == StyleBackendType::Gecko) {
-#ifdef MOZ_OLD_STYLE
-          nsCSSValueTokenStream* tokenStream =
-            pair.mValue.GetTokenStreamValue();
-          nsCSSParser parser(aDocument->CSSLoader());
-          if (!parser.IsValueValidForProperty(pair.mProperty,
-                                              tokenStream->mTokenStream)) {
-            continue;
-          }
-#else
           MOZ_CRASH("old style system disabled");
-#endif
         }
 
         MOZ_ASSERT(styleBackend != StyleBackendType::Servo ||
@@ -1694,15 +1527,6 @@ DistributeRange(const Range<Keyframe>& aRange)
   }
 }
 
-#ifdef MOZ_OLD_STYLE
-template
-nsTArray<AnimationProperty>
-KeyframeUtils::GetAnimationPropertiesFromKeyframes(
-  const nsTArray<Keyframe>& aKeyframes,
-  dom::Element* aElement,
-  GeckoStyleContext* aStyle,
-  dom::CompositeOperation aEffectComposite);
-#endif
 
 template
 nsTArray<AnimationProperty>

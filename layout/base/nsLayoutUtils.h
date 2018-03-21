@@ -24,9 +24,6 @@
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsRuleNode.h"
-#endif
 #include "imgIContainer.h"
 #include "mozilla/gfx/2D.h"
 #include "Units.h"
@@ -2528,18 +2525,11 @@ public:
   // or disabled at compile-time. However, we provide the additional capability
   // to disable it dynamically in stylo-enabled builds via a pref.
   static bool StyloEnabled() {
-#if defined(MOZ_STYLO) && defined(MOZ_OLD_STYLE)
-    return sStyloEnabled && StyloSupportedInCurrentProcess();
-#elif defined(MOZ_STYLO)
     return true;
-#else
-    return false;
-#endif
   }
 
   // Whether Stylo should be allowed to be enabled in this process.
   static bool StyloSupportedInCurrentProcess() {
-#ifdef MOZ_STYLO
     if (XRE_IsContentProcess()) {
       return true;
     }
@@ -2552,17 +2542,14 @@ public:
       // Otherwise we only use stylo on non-e10s parent.
       return !XRE_IsE10sParentProcess();
     }
-#endif
     // Stylo is not enabled for any other process.
     MOZ_DIAGNOSTIC_ASSERT(false, "We should not be creating any document "
                           "in processes other than content and parent");
     return false;
   }
 
-#ifdef MOZ_STYLO
   // Whether Stylo should be used on chrome documents.
   static bool StyloChromeEnabled();
-#endif
 
   static uint32_t IdlePeriodDeadlineLimit() {
     return sIdlePeriodDeadlineLimit;
@@ -2592,16 +2579,10 @@ public:
   static void Initialize();
   static void Shutdown();
 
-#ifdef MOZ_STYLO
   /**
    * Return whether stylo should be used for a given document principal.
    */
   static bool ShouldUseStylo(nsIPrincipal* aPrincipal);
-#else
-  static bool ShouldUseStylo(nsIPrincipal* aPrincipal) {
-    return false;
-  }
-#endif
 
   /**
    * Register an imgIRequest object with a refresh driver.
@@ -3120,9 +3101,7 @@ private:
   static bool sInterruptibleReflowEnabled;
   static bool sSVGTransformBoxEnabled;
   static bool sTextCombineUprightDigitsEnabled;
-#ifdef MOZ_STYLO
   static bool sStyloEnabled;
-#endif
   static uint32_t sIdlePeriodDeadlineLimit;
   static uint32_t sQuiescentFramesBeforeIdlePeriod;
 
