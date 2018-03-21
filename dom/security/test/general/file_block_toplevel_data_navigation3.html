@@ -7,7 +7,10 @@
 <body>
 test3: performing data: URI navigation through win.loc.href<br/>
 <script>
-  window.location.href = "data:text/html,<body>toplevel data: URI navigations should be blocked</body>";
+  // postMessage will not be sent if data: URI is blocked
+  window.location.href = "data:text/html,<body><script>" +
+        "window.opener.postMessage('test3','*');<\/script>toplevel data: URI " +
+        "navigations should be blocked</body>";
 </script>
 </body>
 </html>
