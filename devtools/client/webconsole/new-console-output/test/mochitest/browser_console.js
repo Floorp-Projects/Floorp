@@ -3,8 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from head.js */
-
 // Test the basic features of the Browser Console.
 
 "use strict";
@@ -51,6 +49,7 @@ async function testMessages(hud) {
   expectUncaughtException();
 
   executeSoon(() => {
+    // eslint-disable-next-line no-undef
     foobarException();
   });
 

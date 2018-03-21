@@ -9,9 +9,9 @@ requestLongerTimeout(2);
 // Check that the timeline displays animations' duration, delay iteration
 // counts and iteration start in tooltips.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
-  let {panel, controller} = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
+  let {panel, controller} = await openAnimationInspector();
 
   info("Getting the animation element from the panel");
   let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;

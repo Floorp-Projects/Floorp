@@ -185,7 +185,7 @@ public:
 
   void
   PopClip() override {
-    mClipStack.RemoveElementAt(mClipStack.Length() - 1);
+    mClipStack.RemoveLastElement();
   }
 
   void

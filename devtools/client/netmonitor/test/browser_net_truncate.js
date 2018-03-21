@@ -6,10 +6,9 @@
 /**
  * Verifies that truncated response bodies still have the correct reported size.
  */
-
 add_task(async function() {
-  let { RESPONSE_BODY_LIMIT } = require("devtools/shared/webconsole/network-monitor");
-  let URL = EXAMPLE_URL + "sjs_truncate-test-server.sjs?limit=" + RESPONSE_BODY_LIMIT;
+  let limit = Services.prefs.getIntPref("devtools.netmonitor.responseBodyLimit");
+  let URL = EXAMPLE_URL + "sjs_truncate-test-server.sjs?limit=" + limit;
   let { monitor, tab } = await initNetMonitor(URL);
 
   info("Starting test... ");

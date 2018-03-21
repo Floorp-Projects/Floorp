@@ -7,14 +7,14 @@ requestLongerTimeout(2);
 
 // Test that the panel shows no animation data for invalid or not animated nodes
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel, window} = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
+  let {inspector, panel, window} = await openAnimationInspector();
   let {document} = window;
 
   info("Select node .still and check that the panel is empty");
-  let stillNode = yield getNodeFront(".still", inspector);
-  yield selectNodeAndWaitForAnimations(stillNode, inspector);
+  let stillNode = await getNodeFront(".still", inspector);
+  await selectNodeAndWaitForAnimations(stillNode, inspector);
 
   is(panel.animationsTimelineComponent.animations.length, 0,
      "No animation players stored in the timeline component for a still node");
@@ -25,8 +25,8 @@ add_task(function* () {
      "The correct error message is displayed");
 
   info("Select the comment text node and check that the panel is empty");
-  let commentNode = yield inspector.walker.previousSibling(stillNode);
-  yield selectNodeAndWaitForAnimations(commentNode, inspector);
+  let commentNode = await inspector.walker.previousSibling(stillNode);
+  await selectNodeAndWaitForAnimations(commentNode, inspector);
 
   is(panel.animationsTimelineComponent.animations.length, 0,
      "No animation players stored in the timeline component for a text node");

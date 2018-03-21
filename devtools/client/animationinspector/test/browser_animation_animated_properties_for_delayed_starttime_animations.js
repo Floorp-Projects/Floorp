@@ -8,13 +8,13 @@
 // We should check progress indicator working well even if the start time is not zero.
 // Also, check that there is no duplication display.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_delayed_starttime_animations.html");
-  const { panel } = yield openAnimationInspector();
-  yield setStyle(null, panel, "animation", "anim 100s", "#target2");
-  yield setStyle(null, panel, "animation", "anim 100s", "#target3");
-  yield setStyle(null, panel, "animation", "anim 100s", "#target4");
-  yield setStyle(null, panel, "animation", "anim 100s", "#target5");
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_delayed_starttime_animations.html");
+  const { panel } = await openAnimationInspector();
+  await setStyle(null, panel, "animation", "anim 100s", "#target2");
+  await setStyle(null, panel, "animation", "anim 100s", "#target3");
+  await setStyle(null, panel, "animation", "anim 100s", "#target4");
+  await setStyle(null, panel, "animation", "anim 100s", "#target5");
 
   const timelineComponent = panel.animationsTimelineComponent;
   const detailsComponent = timelineComponent.details;
@@ -23,7 +23,7 @@ add_task(function* () {
   is(headers.length, 1, "There should be only one header in the details panel");
 
   // Check indicator.
-  yield clickOnAnimation(panel, 1);
+  await clickOnAnimation(panel, 1);
   const progressIndicatorEl = detailsComponent.progressIndicatorEl;
   const startTime = detailsComponent.animation.state.previousStartTime;
   detailsComponent.indicateProgress(0);

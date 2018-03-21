@@ -1115,6 +1115,12 @@ pref("devtools.debugger.force-local", true);
 // Block tools from seeing / interacting with certified apps
 pref("devtools.debugger.forbid-certified-apps", true);
 
+// Limit for intercepted response bodies (1 MB)
+// Possible values:
+// 0 => the response body has no limit
+// n => represents max number of bytes stored
+pref("devtools.netmonitor.responseBodyLimit", 1048576);
+
 // DevTools default color unit
 pref("devtools.defaultColorUnit", "authored");
 

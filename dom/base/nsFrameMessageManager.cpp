@@ -1226,7 +1226,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         StructuredCloneData* data = aRetVal->AppendElement();
         data->Write(cx, rval, rv);
         if (NS_WARN_IF(rv.Failed())) {
-          aRetVal->RemoveElementAt(aRetVal->Length() - 1);
+          aRetVal->RemoveLastElement();
           nsString msg = aMessage + NS_LITERAL_STRING(": message reply cannot be cloned. Are you trying to send an XPCOM object?");
 
           nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));

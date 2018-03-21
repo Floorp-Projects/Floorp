@@ -462,3 +462,16 @@ search-keyword-warning-title = Duplicate Keyword
 #   $name (String) - Name of a search engine.
 search-keyword-warning-engine = You have chosen a keyword that is currently in use by “{ $name }”. Please select another.
 search-keyword-warning-bookmark = You have chosen a keyword that is currently in use by a bookmark. Please select another.
+
+## Containers Section
+
+containers-back-link = « Go Back
+containers-header = Container Tabs
+containers-add-button =
+    .label = Add New Container
+    .accesskey = A
+
+containers-preferences-button =
+    .label = Preferences
+containers-remove-button =
+    .label = Remove

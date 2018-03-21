@@ -748,7 +748,7 @@ VRSystemManagerPuppet::Enumerate()
     mPuppetHMDs.AppendElement(puppetDisplay);
   }
   while (mPuppetHMDs.Length() > mPuppetDisplayCount) {
-    mPuppetHMDs.RemoveElementAt(mPuppetHMDs.Length() - 1);
+    mPuppetHMDs.RemoveLastElement();
   }
 }
 

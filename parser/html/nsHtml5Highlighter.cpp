@@ -714,7 +714,7 @@ void
 nsHtml5Highlighter::Pop()
 {
   NS_PRECONDITION(mStack.Length() >= 2, "Popping when stack too short.");
-  mStack.RemoveElementAt(mStack.Length() - 1);
+  mStack.RemoveLastElement();
 }
 
 void

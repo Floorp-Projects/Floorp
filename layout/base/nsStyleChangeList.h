@@ -51,7 +51,7 @@ public:
   void PopChangesForContent(nsIContent* aContent)
   {
     while (!IsEmpty() && LastElement().mContent == aContent) {
-      RemoveElementAt(Length() - 1);
+      RemoveLastElement();
     }
   }
 

@@ -156,7 +156,7 @@ TimeoutManager::DestroyFiringId(uint32_t aFiringId)
 {
   MOZ_DIAGNOSTIC_ASSERT(!mFiringIdStack.IsEmpty());
   MOZ_DIAGNOSTIC_ASSERT(mFiringIdStack.LastElement() == aFiringId);
-  mFiringIdStack.RemoveElementAt(mFiringIdStack.Length() - 1);
+  mFiringIdStack.RemoveLastElement();
 }
 
 bool

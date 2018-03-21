@@ -1168,7 +1168,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
           }
           if (!face->mURI) {
             // if URI not valid, omit from src array
-            srcArray.RemoveElementAt(srcArray.Length() - 1);
+            srcArray.RemoveLastElement();
             NS_WARNING("null url in @font-face rule");
             continue;
           }

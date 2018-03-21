@@ -9,7 +9,7 @@ const { Cu } = require("chrome");
 const ObjectClient = require("devtools/shared/client/object-client");
 
 const defer = require("devtools/shared/defer");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
  * This object represents DOM panel. It's responsibility is to

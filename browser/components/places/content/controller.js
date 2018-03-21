@@ -707,23 +707,14 @@ PlacesController.prototype = {
     if (!ip)
       throw Cr.NS_ERROR_NOT_AVAILABLE;
 
-    let performed =
+    let bookmarkGuid =
       PlacesUIUtils.showBookmarkDialog({ action: "add",
                                          type: aType,
                                          defaultInsertionPoint: ip,
                                          hiddenRows: [ "folderPicker" ]
                                        }, window.top);
-    if (performed) {
-      // Select the new item.
-      // TODO (Bug 1425555): When we remove places transactions, we might be
-      // able to improve showBookmarkDialog to return the guid direct, and
-      // avoid the fetch.
-      let insertedNode = await PlacesUtils.bookmarks.fetch({
-        parentGuid: ip.guid,
-        index: await ip.getIndex()
-      });
-
-      this._view.selectItems([insertedNode.guid], false);
+    if (bookmarkGuid) {
+      this._view.selectItems([bookmarkGuid], false);
     }
   },
 

@@ -6138,8 +6138,7 @@ nsIDocument::GetAnonymousElementByAttribute(nsIContent* aElement,
   if (!nodeList)
     return nullptr;
 
-  uint32_t length = 0;
-  nodeList->GetLength(&length);
+  uint32_t length = nodeList->Length();
 
   bool universalMatch = aAttrValue.EqualsLiteral("*");
 

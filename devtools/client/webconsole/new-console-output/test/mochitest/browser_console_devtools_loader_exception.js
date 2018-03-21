@@ -3,8 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from head.js */
-
 // Check that exceptions from scripts loaded with the DevTools loader are
 // opened correctly in View Source from the Browser Console.
 

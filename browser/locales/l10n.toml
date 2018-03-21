@@ -148,6 +148,11 @@ locales = [
     reference = "devtools/startup/locales/en-US/**"
     l10n = "{l}devtools/startup/**"
 
+# for Firefox 60 and older and cross-channel
+[[paths]]
+    reference = "devtools/shim/locales/en-US/**"
+    l10n = "{l}devtools/shim/**"
+
 # Filters
 # The filters below are evaluated one after the other, in the given order.
 # Enter a combination of path as in the localization, key, and an action,

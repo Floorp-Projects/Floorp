@@ -3137,21 +3137,17 @@ Element::List(FILE* out, int32_t aIndent,
   // Note: not listing nsIAnonymousContentCreator-created content...
 
   nsBindingManager* bindingManager = document->BindingManager();
-  nsCOMPtr<nsIDOMNodeList> anonymousChildren;
-  bindingManager->GetAnonymousNodesFor(nonConstThis,
-                                       getter_AddRefs(anonymousChildren));
+  nsINodeList* anonymousChildren =
+    bindingManager->GetAnonymousNodesFor(nonConstThis);
 
   if (anonymousChildren) {
-    uint32_t length = 0;
-    anonymousChildren->GetLength(&length);
+    uint32_t length = anonymousChildren->Length();
 
     for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
     fputs("anonymous-children<\n", out);
 
     for (uint32_t i = 0; i < length; ++i) {
-      nsCOMPtr<nsIDOMNode> node;
-      anonymousChildren->Item(i, getter_AddRefs(node));
-      nsCOMPtr<nsIContent> child = do_QueryInterface(node);
+      nsIContent* child = anonymousChildren->Item(i);
       child->List(out, aIndent + 1);
     }
 
