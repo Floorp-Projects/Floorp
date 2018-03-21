@@ -6784,8 +6784,7 @@ private:
     while (AtEndOfNestedList() || ShouldFlattenNextItem()) {
       if (AtEndOfNestedList()) {
         // Pop the last item off the stack.
-        mNext = mStack.LastElement();
-        mStack.RemoveElementAt(mStack.Length() - 1);
+        mNext = mStack.PopLastElement();
         // We stored the item that was flattened, so advance to the next.
         mNext = mNext->GetAbove();
       } else {

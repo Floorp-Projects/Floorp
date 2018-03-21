@@ -8,29 +8,29 @@
 // Since this indicator works with the timeline, after selecting each animation,
 // click the timeline header to change the current time and check the change.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_multiple_property_types.html");
-  const { panel } = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_multiple_property_types.html");
+  const { panel } = await openAnimationInspector();
   const timelineComponent = panel.animationsTimelineComponent;
   const detailsComponent = timelineComponent.details;
 
   info("Click to select the animation");
-  yield clickOnAnimation(panel, 0);
+  await clickOnAnimation(panel, 0);
   let progressIndicatorEl = detailsComponent.progressIndicatorEl;
   ok(progressIndicatorEl, "The progress indicator should be exist");
-  yield clickOnTimelineHeader(panel, 0);
+  await clickOnTimelineHeader(panel, 0);
   is(progressIndicatorEl.style.left, "0%",
      "The left style of progress indicator element should be 0% at 0ms");
-  yield clickOnTimelineHeader(panel, 0.5);
+  await clickOnTimelineHeader(panel, 0.5);
   approximate(progressIndicatorEl.style.left, "50%",
               "The left style of progress indicator element should be "
               + "approximately 50% at 500ms");
-  yield clickOnTimelineHeader(panel, 1);
+  await clickOnTimelineHeader(panel, 1);
   is(progressIndicatorEl.style.left, "100%",
      "The left style of progress indicator element should be 100% at 1000ms");
 
   info("Click to select the steps animation");
-  yield clickOnAnimation(panel, 4);
+  await clickOnAnimation(panel, 4);
   // Re-get progressIndicatorEl since this element re-create
   // in case of select the animation.
   progressIndicatorEl = detailsComponent.progressIndicatorEl;
@@ -49,15 +49,15 @@ add_task(function* () {
   detailsComponent.indicateProgress(999);
   is(progressIndicatorEl.style.left, "50%",
      "The left style of progress indicator element should be 50% at 999ms");
-  yield clickOnTimelineHeader(panel, 1);
+  await clickOnTimelineHeader(panel, 1);
   is(progressIndicatorEl.style.left, "100%",
      "The left style of progress indicator element should be 100% at 1000ms");
 
   info("Change the playback rate");
-  yield changeTimelinePlaybackRate(panel, 2);
-  yield clickOnAnimation(panel, 0);
+  await changeTimelinePlaybackRate(panel, 2);
+  await clickOnAnimation(panel, 0);
   progressIndicatorEl = detailsComponent.progressIndicatorEl;
-  yield clickOnTimelineHeader(panel, 0);
+  await clickOnTimelineHeader(panel, 0);
   is(progressIndicatorEl.style.left, "0%",
      "The left style of progress indicator element should be 0% "
      + "at 0ms and playback rate 2");
@@ -71,10 +71,10 @@ add_task(function* () {
      + "at 500ms and playback rate 2");
 
   info("Check the progress indicator position after select another animation");
-  yield changeTimelinePlaybackRate(panel, 1);
-  yield clickOnTimelineHeader(panel, 0.5);
+  await changeTimelinePlaybackRate(panel, 1);
+  await clickOnTimelineHeader(panel, 0.5);
   const originalIndicatorPosition = progressIndicatorEl.style.left;
-  yield clickOnAnimation(panel, 1);
+  await clickOnAnimation(panel, 1);
   is(progressIndicatorEl.style.left, originalIndicatorPosition,
      "The animation time should be continued even if another animation selects");
 });

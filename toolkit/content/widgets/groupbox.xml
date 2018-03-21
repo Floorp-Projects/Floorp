@@ -9,14 +9,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="groupbox-base">
-    <resources>
-      <stylesheet src="chrome://global/skin/groupbox.css"/>
-    </resources>
-  </binding>
-
-  <binding id="groupbox"
-    extends="chrome://global/content/bindings/groupbox.xml#groupbox-base">
+  <binding id="groupbox">
     <content>
       <xul:hbox class="groupbox-title" align="center" pack="start">
         <children includes="caption"/>
@@ -28,10 +21,6 @@
   </binding>
 
   <binding id="caption" extends="chrome://global/content/bindings/general.xml#basetext">
-    <resources>
-      <stylesheet src="chrome://global/skin/groupbox.css"/>
-    </resources>
-    
     <content>
       <children>
         <xul:image class="caption-icon" xbl:inherits="src=image"/>

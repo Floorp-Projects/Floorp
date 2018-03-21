@@ -1449,8 +1449,7 @@ HTMLFormElement::RemoveElementFromTableInternal(
 
   list->RemoveElement(aChild);
 
-  uint32_t length = 0;
-  list->GetLength(&length);
+  uint32_t length = list->Length();
 
   if (!length) {
     // If the list is empty we remove if from our hash, this shouldn't
@@ -2189,8 +2188,7 @@ HTMLFormElement::GetNextRadioButton(const nsAString& aName,
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t numRadios;
-  radioGroup->GetLength(&numRadios);
+  uint32_t numRadios = radioGroup->Length();
   RefPtr<HTMLInputElement> radio;
 
   bool isRadio = false;
@@ -2260,15 +2258,13 @@ HTMLFormElement::WalkRadioGroup(const nsAString& aName,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNodeList> nodeList = do_QueryInterface(item);
+  nsCOMPtr<nsINodeList> nodeList = do_QueryInterface(item);
   if (!nodeList) {
     return NS_OK;
   }
-  uint32_t length = 0;
-  nodeList->GetLength(&length);
+  uint32_t length = nodeList->Length();
   for (uint32_t i = 0; i < length; i++) {
-    nsCOMPtr<nsIDOMNode> node;
-    nodeList->Item(i, getter_AddRefs(node));
+    nsIContent* node = nodeList->Item(i);
     nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(node);
     if (formControl && formControl->ControlType() == NS_FORM_INPUT_RADIO &&
         !aVisitor->Visit(formControl)) {

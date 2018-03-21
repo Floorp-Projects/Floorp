@@ -20,6 +20,8 @@ module.exports = {
   },
 
   "rules": {
+    // Allow non-camelcase so that run_test doesn't produce a warning.
+    "camelcase": "off",
     // Tests can always import anything.
     "mozilla/reject-some-requires": 0,
   },

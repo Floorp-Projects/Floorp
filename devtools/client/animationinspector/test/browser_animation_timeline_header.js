@@ -14,15 +14,15 @@ const {findOptimalTimeInterval, TimeScale} = require("devtools/client/animationi
 // animation-timeline.js
 const TIME_GRADUATION_MIN_SPACING = 40;
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
 
   // System scrollbar is enabled by default on our testing envionment and it
   // would shrink width of inspector and affect number of time-ticks causing
   // unexpected results. So, we set it wider to avoid this kind of edge case.
-  yield pushPref("devtools.toolsidebar-width.inspector", 350);
+  await pushPref("devtools.toolsidebar-width.inspector", 350);
 
-  let {panel} = yield openAnimationInspector();
+  let {panel} = await openAnimationInspector();
 
   let timeline = panel.animationsTimelineComponent;
   let headerEl = timeline.timeHeaderEl;

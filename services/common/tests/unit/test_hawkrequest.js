@@ -6,6 +6,7 @@
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://services-common/utils.js");
 ChromeUtils.import("resource://services-common/hawkrequest.js");
+ChromeUtils.import("resource://services-common/async.js");
 
 // https://github.com/mozilla/fxa-auth-server/wiki/onepw-protocol#wiki-use-session-certificatesign-etc
 var SESSION_KEYS = {
@@ -74,8 +75,7 @@ add_test(function test_intl_accept_language() {
   }
 });
 
-add_test(function test_hawk_authenticated_request() {
-  let onProgressCalled = false;
+add_task(async function test_hawk_authenticated_request() {
   let postData = {your: "data"};
 
   // An arbitrary date - Feb 2, 1971.  It ends in a bunch of zeroes to make our
@@ -122,23 +122,6 @@ add_test(function test_hawk_authenticated_request() {
     }
   });
 
-  function onProgress() {
-    onProgressCalled = true;
-  }
-
-  function onComplete(error) {
-    Assert.equal(200, this.response.status);
-    Assert.equal(this.response.body, "yay");
-    Assert.ok(onProgressCalled);
-
-    Services.prefs.resetUserPrefs();
-    let pref = Services.prefs.getComplexValue(
-      "intl.accept_languages", Ci.nsIPrefLocalizedString);
-    Assert.notEqual(acceptLanguage, pref.data);
-
-    server.stop(run_next_test);
-  }
-
   let url = server.baseURI + "/elysium";
   let extra = {
     now: localTime,
@@ -148,12 +131,21 @@ add_test(function test_hawk_authenticated_request() {
   let request = new HAWKAuthenticatedRESTRequest(url, credentials, extra);
 
   // Allow hawk._intl to respond to the language pref change
-  CommonUtils.nextTick(function() {
-    request.post(postData, onComplete, onProgress);
-  });
+  await Async.promiseYield();
+
+  await request.post(postData);
+  Assert.equal(200, request.response.status);
+  Assert.equal(request.response.body, "yay");
+
+  Services.prefs.resetUserPrefs();
+  let pref = Services.prefs.getComplexValue(
+    "intl.accept_languages", Ci.nsIPrefLocalizedString);
+  Assert.notEqual(acceptLanguage, pref.data);
+
+  await promiseStopServer(server);
 });
 
-add_test(function test_hawk_language_pref_changed() {
+add_task(async function test_hawk_language_pref_changed() {
   let languages = [
     "zu-NP",        // Nepalese dialect of Zulu
     "fa-CG",        // Congolese dialect of Farsi
@@ -185,29 +177,24 @@ add_test(function test_hawk_language_pref_changed() {
   // A new request should create the stateful object for tracking the current
   // language.
   request = new HAWKAuthenticatedRESTRequest(url, credentials);
-  CommonUtils.nextTick(testFirstLanguage);
 
-  function testFirstLanguage() {
-    Assert.equal(languages[0], request._intl.accept_languages);
+  // Wait for change to propagate
+  await Async.promiseYield();
+  Assert.equal(languages[0], request._intl.accept_languages);
 
-    // Change the language pref ...
-    setLanguage(languages[1]);
-    CommonUtils.nextTick(testRequest);
-  }
+  // Change the language pref ...
+  setLanguage(languages[1]);
 
-  function testRequest() {
-    // Change of language pref should be picked up, which we can see on the
-    // server by inspecting the request headers.
-    request = new HAWKAuthenticatedRESTRequest(url, credentials);
-    request.post({}, function(error) {
-      Assert.equal(null, error);
-      Assert.equal(200, this.response.status);
 
-      Services.prefs.resetUserPrefs();
+  await Async.promiseYield();
 
-      server.stop(run_next_test);
-    });
-  }
+  request = new HAWKAuthenticatedRESTRequest(url, credentials);
+  let response = await request.post({});
+
+  Assert.equal(200, response.status);
+  Services.prefs.resetUserPrefs();
+
+  await promiseStopServer(server);
 });
 
 add_task(function test_deriveHawkCredentials() {

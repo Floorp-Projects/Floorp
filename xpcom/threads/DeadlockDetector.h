@@ -347,7 +347,7 @@ public:
       if (GetDeductionChain_Helper(*it, aTarget, aChain)) {
         return true;
       }
-      aChain->RemoveElementAt(aChain->Length() - 1);
+      aChain->RemoveLastElement();
     }
     return false;
   }

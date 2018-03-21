@@ -257,7 +257,7 @@ ThreadEventQueue<InnerQueueT>::PopEventQueue(nsIEventTarget* aTarget)
     prevQueue->PutEvent(event.forget(), prio, lock);
   }
 
-  mNestedQueues.RemoveElementAt(mNestedQueues.Length() - 1);
+  mNestedQueues.RemoveLastElement();
 }
 
 template<class InnerQueueT>

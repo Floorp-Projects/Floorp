@@ -163,6 +163,9 @@ pref("devtools.netmonitor.visibleColumns",
   "[\"status\",\"method\",\"file\",\"domain\",\"cause\",\"type\",\"transferred\",\"contentSize\",\"waterfall\"]"
 );
 
+// Save request/response bodies yes/no.
+pref("devtools.netmonitor.saveRequestAndResponseBodies", true);
+
 // The default Network monitor HAR export setting
 pref("devtools.netmonitor.har.defaultLogDir", "");
 pref("devtools.netmonitor.har.defaultFileName", "Archive %date");

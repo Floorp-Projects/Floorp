@@ -97,10 +97,12 @@ linux64-qr/opt:
         - linux-qr-tests
         - linux-qr-talos
         - awsy
+        - web-platform-tests
 linux64-qr/debug:
     build-platform: linux64/debug
     test-sets:
         - linux-qr-tests
+        - web-platform-tests
 
 linux64-ccov/opt:
     build-platform: linux64-ccov/opt

@@ -6,6 +6,7 @@
   == Styles ported from XBL <resources>, loaded as UA styles in every XUL doc
   ======================================================================= */
 
+@import url("chrome://global/skin/groupbox.css");
 @import url("chrome://global/skin/menu.css");
 @import url("chrome://global/skin/toolbar.css");
 @import url("chrome://global/skin/splitter.css");

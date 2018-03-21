@@ -3,8 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from head.js */
-
 // Tests that errors still show up in the Web Console after a page reload.
 // See bug 580030: the error handler fails silently after page reload.
 // https://bugzilla.mozilla.org/show_bug.cgi?id=580030

@@ -3275,7 +3275,7 @@ struct AutoNestedPaintCount {
     gPaintCountStack->AppendElement(0);
   }
   ~AutoNestedPaintCount() {
-    gPaintCountStack->RemoveElementAt(gPaintCountStack->Length() - 1);
+    gPaintCountStack->RemoveLastElement();
   }
 };
 
@@ -5828,8 +5828,7 @@ nsLayoutUtils::MarkDescendantsDirty(nsIFrame *aSubtreeRoot)
   // dirty descendants, iterating over subtrees that may include
   // additional subtrees associated with placeholders
   do {
-    nsIFrame *subtreeRoot = subtrees.ElementAt(subtrees.Length() - 1);
-    subtrees.RemoveElementAt(subtrees.Length() - 1);
+    nsIFrame *subtreeRoot = subtrees.PopLastElement();
 
     // Mark all descendants dirty (using an nsTArray stack rather than
     // recursion).
@@ -5839,8 +5838,7 @@ nsLayoutUtils::MarkDescendantsDirty(nsIFrame *aSubtreeRoot)
     stack.AppendElement(subtreeRoot);
 
     do {
-      nsIFrame *f = stack.ElementAt(stack.Length() - 1);
-      stack.RemoveElementAt(stack.Length() - 1);
+      nsIFrame *f = stack.PopLastElement();
 
       f->MarkIntrinsicISizesDirty();
 
@@ -5872,8 +5870,7 @@ nsLayoutUtils::MarkIntrinsicISizesDirtyIfDependentOnBSize(nsIFrame* aFrame)
   stack.AppendElement(aFrame);
 
   do {
-    nsIFrame* f = stack.ElementAt(stack.Length() - 1);
-    stack.RemoveElementAt(stack.Length() - 1);
+    nsIFrame* f = stack.PopLastElement();
 
     if (!f->HasAnyStateBits(
         NS_FRAME_DESCENDANT_INTRINSIC_ISIZE_DEPENDS_ON_BSIZE)) {
