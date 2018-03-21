@@ -699,7 +699,7 @@ MOZ_MUST_USE bool
 EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
 
 MOZ_MUST_USE bool
-DecodeLocalEntries(Decoder& d, ModuleKind kind, ValTypeVector* locals);
+DecodeLocalEntries(Decoder& d, ModuleKind kind, HasGcTypes gcTypesEnabled, ValTypeVector* locals);
 
 // Returns whether the given [begin, end) prefix of a module's bytecode starts a
 // code section and, if so, returns the SectionRange of that code section.

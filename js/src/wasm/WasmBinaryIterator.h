@@ -41,20 +41,22 @@ enum class LabelKind : uint8_t
 // represents the type of a value produced by an unconditional branch.
 enum class StackType
 {
-    I32   = uint8_t(ValType::I32),
-    I64   = uint8_t(ValType::I64),
-    F32   = uint8_t(ValType::F32),
-    F64   = uint8_t(ValType::F64),
+    I32    = uint8_t(ValType::I32),
+    I64    = uint8_t(ValType::I64),
+    F32    = uint8_t(ValType::F32),
+    F64    = uint8_t(ValType::F64),
 
-    I8x16 = uint8_t(ValType::I8x16),
-    I16x8 = uint8_t(ValType::I16x8),
-    I32x4 = uint8_t(ValType::I32x4),
-    F32x4 = uint8_t(ValType::F32x4),
-    B8x16 = uint8_t(ValType::B8x16),
-    B16x8 = uint8_t(ValType::B16x8),
-    B32x4 = uint8_t(ValType::B32x4),
+    I8x16  = uint8_t(ValType::I8x16),
+    I16x8  = uint8_t(ValType::I16x8),
+    I32x4  = uint8_t(ValType::I32x4),
+    F32x4  = uint8_t(ValType::F32x4),
+    B8x16  = uint8_t(ValType::B8x16),
+    B16x8  = uint8_t(ValType::B16x8),
+    B32x4  = uint8_t(ValType::B32x4),
 
-    Any   = uint8_t(TypeCode::Limit)
+    AnyRef = uint8_t(ValType::AnyRef),
+
+    Any    = uint8_t(TypeCode::Limit),
 };
 
 static inline StackType
@@ -71,7 +73,49 @@ NonAnyToValType(StackType type)
 }
 
 static inline bool
-Unify(StackType one, StackType two, StackType* result)
+IsRefType(StackType st)
+{
+    return IsRefType(NonAnyToValType(st));
+}
+
+static inline bool
+IsSubtypeOf(StackType one, StackType two)
+{
+    MOZ_ASSERT(IsRefType(one));
+    MOZ_ASSERT(IsRefType(two));
+    return one == two || two == StackType::AnyRef;
+}
+
+static inline bool
+Unify(HasGcTypes gcTypesEnabled, StackType observed, StackType expected, StackType* result)
+{
+    if (MOZ_LIKELY(observed == expected)) {
+        *result = observed;
+        return true;
+    }
+
+    if (observed == StackType::Any) {
+        *result = expected;
+        return true;
+    }
+
+    if (expected == StackType::Any) {
+        *result = observed;
+        return true;
+    }
+
+    if (gcTypesEnabled == HasGcTypes::True && IsRefType(observed) && IsRefType(expected) &&
+        IsSubtypeOf(observed, expected))
+    {
+        *result = expected;
+        return true;
+    }
+
+    return false;
+}
+
+static inline bool
+Join(HasGcTypes gcTypesEnabled, StackType one, StackType two, StackType* result)
 {
     if (MOZ_LIKELY(one == two)) {
         *result = one;
@@ -85,6 +129,22 @@ Unify(StackType one, StackType two, StackType* result)
 
     if (two == StackType::Any) {
         *result = one;
+        return true;
+    }
+
+    if (gcTypesEnabled == HasGcTypes::True && IsRefType(one) && IsRefType(two)) {
+        if (IsSubtypeOf(two, one)) {
+            *result = one;
+            return true;
+        }
+
+        if (IsSubtypeOf(one, two)) {
+            *result = two;
+            return true;
+        }
+
+        // No subtyping relations between the two types.
+        *result = StackType::AnyRef;
         return true;
     }
 
@@ -113,7 +173,6 @@ enum class OpKind {
     BrIf,
     BrTable,
     Nop,
-    Nullary,
     Unary,
     Binary,
     Comparison,
@@ -159,6 +218,7 @@ enum class OpKind {
     SimdBooleanReduction,
     SimdShiftByScalar,
     SimdComparison,
+    RefNull,
 };
 
 // Return the OpKind for a given Op. This is used for sanity-checking that
@@ -534,6 +594,7 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readB8x16Const(I8x16* i8x16);
     MOZ_MUST_USE bool readB16x8Const(I16x8* i16x8);
     MOZ_MUST_USE bool readB32x4Const(I32x4* i32x4);
+    MOZ_MUST_USE bool readRefNull();
     MOZ_MUST_USE bool readCall(uint32_t* calleeIndex, ValueVector* argValues);
     MOZ_MUST_USE bool readCallIndirect(uint32_t* sigIndex, Value* callee, ValueVector* argValues);
     MOZ_MUST_USE bool readOldCallDirect(uint32_t numFuncImports, uint32_t* funcIndex,
@@ -731,7 +792,7 @@ OpIter<Policy>::popWithType(StackType expectedType, Value* value)
     TypeAndValue<Value> tv = valueStack_.popCopy();
 
     StackType _;
-    if (MOZ_UNLIKELY(!Unify(tv.type(), expectedType, &_)))
+    if (MOZ_UNLIKELY(!Unify(env_.gcTypesEnabled, tv.type(), expectedType, &_)))
         return typeMismatch(tv.type(), expectedType);
 
     *value = tv.value();
@@ -783,8 +844,11 @@ OpIter<Policy>::topWithType(ValType expectedType, Value* value)
 
     TypeAndValue<Value>& tv = valueStack_.back();
 
-    if (MOZ_UNLIKELY(!Unify(tv.type(), ToStackType(expectedType), &tv.typeRef())))
+    if (MOZ_UNLIKELY(!Unify(env_.gcTypesEnabled, tv.type(), ToStackType(expectedType),
+                            &tv.typeRef())))
+    {
         return typeMismatch(tv.type(), ToStackType(expectedType));
+    }
 
     *value = tv.value();
     return true;
@@ -846,6 +910,7 @@ OpIter<Policy>::readBlockType(ExprType* type)
     if (!d_.readBlockType(&unchecked))
         return fail("unable to read block signature");
 
+    bool known = false;
     switch (unchecked) {
       case uint8_t(ExprType::Void):
       case uint8_t(ExprType::I32):
@@ -859,10 +924,17 @@ OpIter<Policy>::readBlockType(ExprType* type)
       case uint8_t(ExprType::B8x16):
       case uint8_t(ExprType::B16x8):
       case uint8_t(ExprType::B32x4):
+        known = true;
         break;
-      default:
-        return fail("invalid inline block type");
+      case uint8_t(ExprType::AnyRef):
+        known = env_.gcTypesEnabled == HasGcTypes::True;
+        break;
+      case uint8_t(ExprType::Limit):
+        break;
     }
+
+    if (!known)
+        return fail("invalid inline block type");
 
     *type = ExprType(unchecked);
     return true;
@@ -1382,7 +1454,7 @@ OpIter<Policy>::readSelect(StackType* type, Value* trueValue, Value* falseValue,
     if (!popAnyType(&trueType, trueValue))
         return false;
 
-    if (!Unify(falseType, trueType, type))
+    if (!Join(env_.gcTypesEnabled, falseType, trueType, type))
         return fail("select operand types must match");
 
     infalliblePush(*type);
@@ -1593,6 +1665,17 @@ OpIter<Policy>::readB32x4Const(I32x4* i32x4)
 
     return readFixedI32x4(i32x4) &&
            push(ValType::B32x4);
+}
+
+template <typename Policy>
+inline bool
+OpIter<Policy>::readRefNull()
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::RefNull);
+    uint8_t valType;
+    if (!d_.readValType(&valType) || ValType(valType) != ValType::AnyRef)
+        return fail("unknown nullref type");
+    return push(StackType::AnyRef);
 }
 
 template <typename Policy>
