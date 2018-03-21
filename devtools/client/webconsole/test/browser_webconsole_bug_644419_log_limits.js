@@ -63,35 +63,39 @@ function testWebDevLimits() {
   });
 }
 
-function testWebDevLimits2() {
+async function testWebDevLimits2() {
   // Fill the log with Web Developer errors.
-  for (let i = 0; i < 11; i++) {
-    gBrowser.contentWindowAsCPOW.console.log("test message " + i);
-  }
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    for (let i = 0; i < 11; i++) {
+      content.console.log("test message " + i);
+    }
+  });
 
-  return waitForMessages({
+  await waitForMessages({
     webconsole: hud,
     messages: [{
       text: "test message 10",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
     }],
-  }).then(() => {
-    testLogEntry(outputNode, "test message 0", "first message is pruned",
-                 false, true);
-    findLogEntry("test message 1");
-    // Check if the sentinel entry is still there.
-    findLogEntry("bar is not defined");
-
-    Services.prefs.clearUserPref("devtools.hud.loglimit.console");
   });
+
+  testLogEntry(outputNode, "test message 0", "first message is pruned",
+               false, true);
+  findLogEntry("test message 1");
+  // Check if the sentinel entry is still there.
+  findLogEntry("bar is not defined");
+
+  Services.prefs.clearUserPref("devtools.hud.loglimit.console");
 }
 
-function testJsLimits() {
+async function testJsLimits() {
   Services.prefs.setIntPref("devtools.hud.loglimit.exception", 10);
 
   hud.jsterm.clearOutput();
-  gBrowser.contentWindowAsCPOW.console.log("testing JS limits");
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    content.console.log("testing JS limits");
+  });
 
   // Find the sentinel entry.
   return waitForMessages({
@@ -104,74 +108,81 @@ function testJsLimits() {
   });
 }
 
-function testJsLimits2() {
+async function testJsLimits2() {
   // Fill the log with JS errors.
-  let head = gBrowser.contentDocumentAsCPOW.getElementsByTagName("head")[0];
   for (let i = 0; i < 11; i++) {
-    let script = gBrowser.contentDocumentAsCPOW.createElement("script");
-    script.text = "fubar" + i + ".bogus(6);";
-
     if (!Services.appinfo.browserTabsRemoteAutostart) {
       expectUncaughtException();
     }
-    head.insertBefore(script, head.firstChild);
+    await ContentTask.spawn(gBrowser.selectedBrowser, i, function(idx) {
+      let head = content.document.getElementsByTagName("head")[0];
+      let script = content.document.createElement("script");
+      script.text = "fubar" + idx + ".bogus(6);";
+      head.insertBefore(script, head.firstChild);
+    });
   }
 
-  return waitForMessages({
+  await waitForMessages({
     webconsole: hud,
     messages: [{
       text: "fubar10 is not defined",
       category: CATEGORY_JS,
       severity: SEVERITY_ERROR,
     }],
-  }).then(() => {
-    testLogEntry(outputNode, "fubar0 is not defined", "first message is pruned",
-                 false, true);
-    findLogEntry("fubar1 is not defined");
-    // Check if the sentinel entry is still there.
-    findLogEntry("testing JS limits");
-
-    Services.prefs.clearUserPref("devtools.hud.loglimit.exception");
   });
+
+  testLogEntry(outputNode, "fubar0 is not defined", "first message is pruned",
+               false, true);
+  findLogEntry("fubar1 is not defined");
+  // Check if the sentinel entry is still there.
+  findLogEntry("testing JS limits");
+
+  Services.prefs.clearUserPref("devtools.hud.loglimit.exception");
 }
 
-var gCounter, gImage;
+var gCounter;
 
-function testNetLimits() {
+async function testNetLimits() {
   Services.prefs.setIntPref("devtools.hud.loglimit.network", 10);
 
   hud.jsterm.clearOutput();
-  gBrowser.contentWindowAsCPOW.console.log("testing Net limits");
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    content.console.log("testing Net limits");
+  });
 
   // Find the sentinel entry.
-  return waitForMessages({
+  await waitForMessages({
     webconsole: hud,
     messages: [{
       text: "testing Net limits",
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
     }],
-  }).then(() => {
-    // Fill the log with network messages.
-    gCounter = 0;
   });
+
+  // Fill the log with network messages.
+  gCounter = 0;
 }
 
-function loadImage() {
+async function loadImage() {
   if (gCounter < 11) {
-    let body = gBrowser.contentDocumentAsCPOW.getElementsByTagName("body")[0];
-    gImage && gImage.removeEventListener("load", loadImage, true);
-    gImage = gBrowser.contentDocumentAsCPOW.createElement("img");
-    gImage.src = "test-image.png?_fubar=" + gCounter;
-    body.insertBefore(gImage, body.firstChild);
-    gImage.addEventListener("load", loadImage, true);
+    await ContentTask.spawn(gBrowser.selectedBrowser, gCounter, function(counter) {
+      let body = content.document.getElementsByTagName("body")[0];
+      let gImage = content.document.createElement("img");
+      gImage.src = "test-image.png?_fubar=" + counter;
+      body.insertBefore(gImage, body.firstChild);
+      return new Promise(function(resolve) {
+        gImage.addEventListener("load", resolve, {once: true});
+      });
+    });
     gCounter++;
+    loadImage();
     return true;
   }
 
   is(gCounter, 11, "loaded 11 files");
 
-  return waitForMessages({
+  await waitForMessages({
     webconsole: hud,
     messages: [{
       text: "test-image.png",
@@ -179,22 +190,24 @@ function loadImage() {
       category: CATEGORY_NETWORK,
       severity: SEVERITY_LOG,
     }],
-  }).then(() => {
-    let msgs = outputNode.querySelectorAll(".message[category=network]");
-    is(msgs.length, 10, "number of network messages");
-    isnot(msgs[0].url.indexOf("fubar=1"), -1, "first network message");
-    isnot(msgs[1].url.indexOf("fubar=2"), -1, "second network message");
-    findLogEntry("testing Net limits");
-
-    Services.prefs.clearUserPref("devtools.hud.loglimit.network");
   });
+
+  let msgs = outputNode.querySelectorAll(".message[category=network]");
+  is(msgs.length, 10, "number of network messages");
+  isnot(msgs[0].url.indexOf("fubar=1"), -1, "first network message");
+  isnot(msgs[1].url.indexOf("fubar=2"), -1, "second network message");
+  findLogEntry("testing Net limits");
+
+  Services.prefs.clearUserPref("devtools.hud.loglimit.network");
 }
 
-function testCssLimits() {
+async function testCssLimits() {
   Services.prefs.setIntPref("devtools.hud.loglimit.cssparser", 10);
 
   hud.jsterm.clearOutput();
-  gBrowser.contentWindowAsCPOW.console.log("testing CSS limits");
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    content.console.log("testing CSS limits");
+  });
 
   // Find the sentinel entry.
   return waitForMessages({
@@ -207,29 +220,31 @@ function testCssLimits() {
   });
 }
 
-function testCssLimits2() {
+async function testCssLimits2() {
   // Fill the log with CSS errors.
-  let body = gBrowser.contentDocumentAsCPOW.getElementsByTagName("body")[0];
-  for (let i = 0; i < 11; i++) {
-    let div = gBrowser.contentDocumentAsCPOW.createElement("div");
-    div.setAttribute("style", "-moz-foobar" + i + ": 42;");
-    body.insertBefore(div, body.firstChild);
-  }
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    let body = content.document.getElementsByTagName("body")[0];
+    for (let i = 0; i < 11; i++) {
+      let div = content.document.createElement("div");
+      div.setAttribute("style", "-moz-foobar" + i + ": 42;");
+      body.insertBefore(div, body.firstChild);
+    }
+  });
 
-  return waitForMessages({
+  await waitForMessages({
     webconsole: hud,
     messages: [{
       text: "-moz-foobar10",
       category: CATEGORY_CSS,
       severity: SEVERITY_WARNING,
     }],
-  }).then(() => {
-    testLogEntry(outputNode, "Unknown property \u2018-moz-foobar0\u2019",
-                 "first message is pruned", false, true);
-    findLogEntry("Unknown property \u2018-moz-foobar1\u2019");
-    // Check if the sentinel entry is still there.
-    findLogEntry("testing CSS limits");
-
-    Services.prefs.clearUserPref("devtools.hud.loglimit.cssparser");
   });
+
+  testLogEntry(outputNode, "Unknown property \u2018-moz-foobar0\u2019",
+               "first message is pruned", false, true);
+  findLogEntry("Unknown property \u2018-moz-foobar1\u2019");
+  // Check if the sentinel entry is still there.
+  findLogEntry("testing CSS limits");
+
+  Services.prefs.clearUserPref("devtools.hud.loglimit.cssparser");
 }

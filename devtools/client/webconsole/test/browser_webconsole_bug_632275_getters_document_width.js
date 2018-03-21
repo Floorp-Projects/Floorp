@@ -16,32 +16,34 @@ function test() {
   });
 }
 
-function consoleOpened(hud) {
-  let doc = gBrowser.contentWindowAsCPOW.wrappedJSObject.document;
-  getterValue = doc.foobar._val;
+async function consoleOpened(hud) {
+  getterValue = await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    return content.wrappedJSObject.document.foobar._val;
+  });
   hud.jsterm.execute("console.dir(document)");
 
   let onOpen = onViewOpened.bind(null, hud);
   hud.jsterm.once("variablesview-fetched", onOpen);
 }
 
-function onViewOpened(hud, view) {
-  let doc = gBrowser.contentWindowAsCPOW.wrappedJSObject.document;
-
-  findVariableViewProperties(view, [
+async function onViewOpened(hud, view) {
+  await findVariableViewProperties(view, [
     { name: /^(width|height)$/, dontMatch: 1 },
     { name: "foobar._val", value: getterValue },
     { name: "foobar.val", isGetter: true },
-  ], { webconsole: hud }).then(function () {
-    is(doc.foobar._val, getterValue, "getter did not execute");
-    is(doc.foobar.val, getterValue + 1, "getter executed");
-    is(doc.foobar._val, getterValue + 1, "getter executed (recheck)");
+  ], { webconsole: hud });
 
-    let textContent = hud.outputNode.textContent;
-    is(textContent.indexOf("document.body.client"), -1,
-       "no document.width/height warning displayed");
-
-    getterValue = null;
-    finishTest();
+  await ContentTask.spawn(gBrowser.selectedBrowser, getterValue, function(value) {
+    let doc = content.wrappedJSObject.document;
+    is(doc.foobar._val, value, "getter did not execute");
+    is(doc.foobar.val, value + 1, "getter executed");
+    is(doc.foobar._val, value + 1, "getter executed (recheck)");
   });
+
+  let textContent = hud.outputNode.textContent;
+  is(textContent.indexOf("document.body.client"), -1,
+     "no document.width/height warning displayed");
+
+  getterValue = null;
+  finishTest();
 }
