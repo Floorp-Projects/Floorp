@@ -47,7 +47,7 @@ def add_command(config, tasks):
             for upstream in chunked.get("dependencies", {}).keys():
                 if 'update-verify-config' in upstream:
                     update_verify_config = "{}update-verify.cfg".format(
-                        get_taskcluster_artifact_prefix("<{}>".format(upstream))
+                        get_taskcluster_artifact_prefix(task, "<{}>".format(upstream))
                     )
             if not update_verify_config:
                 raise Exception("Couldn't find upate verify config")

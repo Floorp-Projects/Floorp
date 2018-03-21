@@ -88,7 +88,7 @@ def make_task_description(config, jobs):
         extra = {'funsize': {'partials': list()}}
         update_number = 1
         artifact_path = "{}{}".format(
-            get_taskcluster_artifact_prefix(signing_task_ref, locale=locale),
+            get_taskcluster_artifact_prefix(dep_job, signing_task_ref, locale=locale),
             'target.complete.mar'
         )
         for build in sorted(builds):
