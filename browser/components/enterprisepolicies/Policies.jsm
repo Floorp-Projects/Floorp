@@ -391,6 +391,24 @@ var Policies = {
   "FlashPlugin": {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("plugin:flash", param.Allow, param.Block);
+
+      const FLASH_NEVER_ACTIVATE = 0;
+      const FLASH_ASK_TO_ACTIVATE = 1;
+      const FLASH_ALWAYS_ACTIVATE = 2;
+
+      let flashPrefVal;
+      if (param.Default === undefined) {
+        flashPrefVal = FLASH_ASK_TO_ACTIVATE;
+      } else if (param.Default) {
+        flashPrefVal = FLASH_ALWAYS_ACTIVATE;
+      } else {
+        flashPrefVal = FLASH_NEVER_ACTIVATE;
+      }
+      if (param.Locked) {
+        setAndLockPref("plugin.state.flash", flashPrefVal);
+      } else if (param.Default !== undefined) {
+        setDefaultPref("plugin.state.flash", flashPrefVal);
+      }
     }
   },
 
