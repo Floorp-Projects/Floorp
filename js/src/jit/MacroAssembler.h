@@ -366,8 +366,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // This constructor should only be used when there is no JitContext active
     // (for example, Trampoline-$(ARCH).cpp and IonCaches.cpp).
-    explicit MacroAssembler(JSContext* cx, IonScript* ion = nullptr,
-                            JSScript* script = nullptr, jsbytecode* pc = nullptr);
+    explicit MacroAssembler(JSContext* cx);
 
     // wasm compilation handles its own JitContext-pushing
     struct WasmToken {};
