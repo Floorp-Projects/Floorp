@@ -27,10 +27,6 @@ const PREF_ALTERNATE_PATH     = "browser.policies.alternatePath";
 const MAGIC_TEST_ROOT_PREFIX  = "<test-root>";
 const PREF_TEST_ROOT          = "mochitest.testRoot";
 
-// This pref is meant to be temporary: it will only be used while we're
-// testing this feature without rolling it out officially. When the
-// policy engine is released, this pref should be removed.
-const PREF_ENABLED            = "browser.policies.enabled";
 const PREF_LOGLEVEL           = "browser.policies.loglevel";
 
 // To force disallowing enterprise-only policies during tests
@@ -81,11 +77,6 @@ EnterprisePoliciesManager.prototype = {
   _xpcom_factory: EnterprisePoliciesFactory,
 
   _initialize() {
-    if (!Services.prefs.getBoolPref(PREF_ENABLED, false)) {
-      this.status = Ci.nsIEnterprisePolicies.INACTIVE;
-      return;
-    }
-
     let provider = this._chooseProvider();
 
     if (!provider) {
