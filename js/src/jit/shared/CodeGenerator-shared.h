@@ -66,7 +66,7 @@ class CodeGeneratorShared : public LElementVisitor
     js::Vector<OutOfLineCode*, 0, SystemAllocPolicy> outOfLineCode_;
 
     MacroAssembler& ensureMasm(MacroAssembler* masm);
-    mozilla::Maybe<MacroAssembler> maybeMasm_;
+    mozilla::Maybe<IonHeapMacroAssembler> maybeMasm_;
 
   public:
     MacroAssembler& masm;

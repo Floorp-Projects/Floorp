@@ -4371,7 +4371,7 @@ wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
     TempAllocator alloc(&lifo);
     JitContext jitContext(&alloc);
     MOZ_ASSERT(IsCompilingWasm());
-    MacroAssembler masm(MacroAssembler::WasmToken(), alloc);
+    WasmMacroAssembler masm(alloc);
 
     // Swap in already-allocated empty vectors to avoid malloc/free.
     MOZ_ASSERT(code->empty());

@@ -1010,7 +1010,7 @@ wasm::GenerateImportFunctions(const ModuleEnvironment& env, const FuncImportVect
 {
     LifoAlloc lifo(STUBS_LIFO_DEFAULT_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
-    MacroAssembler masm(MacroAssembler::WasmToken(), alloc);
+    WasmMacroAssembler masm(alloc);
 
     for (uint32_t funcIndex = 0; funcIndex < imports.length(); funcIndex++) {
         const FuncImport& fi = imports[funcIndex];
@@ -1772,7 +1772,7 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
 {
     LifoAlloc lifo(STUBS_LIFO_DEFAULT_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
-    MacroAssembler masm(MacroAssembler::WasmToken(), alloc);
+    WasmMacroAssembler masm(alloc);
 
     // Swap in already-allocated empty vectors to avoid malloc/free.
     if (!code->swap(masm))
