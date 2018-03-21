@@ -86,7 +86,7 @@ ContentDispatchChooser.prototype =
         let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         let millis = dwu.millisSinceLastUserInput;
         if (millis < 0 || millis >= 1000) {
-          window.location.href = data.uri;
+          window.document.docShell.displayLoadError(Cr.NS_ERROR_UNKNOWN_PROTOCOL, aURI, null);
         } else {
           this._closeBlankWindow(window);
         }
