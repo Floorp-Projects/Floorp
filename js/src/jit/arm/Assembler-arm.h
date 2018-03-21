@@ -1764,6 +1764,14 @@ class Assembler : public AssemblerShared
     static void TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
     static void TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
 
+    void assertNoGCThings() const {
+#ifdef DEBUG
+        MOZ_ASSERT(dataRelocations_.length() == 0);
+        for (auto& j : jumps_)
+            MOZ_ASSERT(j.kind() == Relocation::HARDCODED);
+#endif
+    }
+
     static bool SupportsFloatingPoint() {
         return HasVFP();
     }

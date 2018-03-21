@@ -2650,6 +2650,9 @@ class MOZ_RAII WasmMacroAssembler : public MacroAssembler
     explicit WasmMacroAssembler(TempAllocator& alloc)
       : MacroAssembler(WasmToken(), alloc)
     {}
+    ~WasmMacroAssembler() {
+        assertNoGCThings();
+    }
 };
 
 // Heap-allocated MacroAssembler used for Ion off-thread code generation.
