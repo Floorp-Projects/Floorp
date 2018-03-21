@@ -9,20 +9,11 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 use std::cell::Cell;
 use raw_mutex::RawMutex;
-#[cfg(not(target_os = "emscripten"))]
-use thread_id;
 
 // Helper function to get a thread id
-#[cfg(not(target_os = "emscripten"))]
 fn get_thread_id() -> usize {
-    thread_id::get()
-}
-#[cfg(target_os = "emscripten")]
-fn get_thread_id() -> usize {
-    // pthread_self returns 0 on enscripten, but we use that as a
-    // reserved value to indicate an empty slot. We instead fall
-    // back to using the address of a thread-local variable, which
-    // is slightly slower but guaranteed to produce a non-zero value.
+    // The address of a thread-local variable is guaranteed to be unique to the
+    // current thread, and is also guaranteed to be non-zero.
     thread_local!(static KEY: u8 = unsafe { ::std::mem::uninitialized() });
     KEY.with(|x| x as *const _ as usize)
 }
@@ -59,10 +50,12 @@ impl RawReentrantMutex {
     fn lock_internal<F: FnOnce() -> bool>(&self, try_lock: F) -> bool {
         let id = get_thread_id();
         if self.owner.load(Ordering::Relaxed) == id {
-            self.lock_count.set(self.lock_count
-                .get()
-                .checked_add(1)
-                .expect("ReentrantMutex lock count overflow"));
+            self.lock_count.set(
+                self.lock_count
+                    .get()
+                    .checked_add(1)
+                    .expect("ReentrantMutex lock count overflow"),
+            );
         } else {
             if !try_lock() {
                 return false;
