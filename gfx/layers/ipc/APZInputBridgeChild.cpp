@@ -6,6 +6,8 @@
 
 #include "mozilla/layers/APZInputBridgeChild.h"
 
+#include "InputData.h" // for InputData, etc
+
 namespace mozilla {
 namespace layers {
 

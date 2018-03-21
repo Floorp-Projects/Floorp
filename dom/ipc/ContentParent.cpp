@@ -528,7 +528,7 @@ ScriptableCPInfo::GetTabCount(int32_t* aTabCount)
 }
 
 NS_IMETHODIMP
-ScriptableCPInfo::GetMessageManager(nsIMessageSender** aMessenger)
+ScriptableCPInfo::GetMessageManager(nsISupports** aMessenger)
 {
   *aMessenger = nullptr;
   if (!mContentParent) {

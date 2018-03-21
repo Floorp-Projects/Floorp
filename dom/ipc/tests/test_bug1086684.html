@@ -52,7 +52,8 @@
         test.next(msg.data.value);
       }
 
-      mm.addMessageListener("testBug1086684:childDone", testDone);
+      mm.addMessageListener("testBug1086684:childDone",
+                            SpecialPowers.wrapCallback(testDone));
 
       let blob = new Blob([]);
       let file = new File([blob], "helloworld.txt", { type: "text/plain" });

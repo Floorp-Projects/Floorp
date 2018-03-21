@@ -12,6 +12,7 @@
 
 class nsIEventTarget;
 class nsITimeoutHandler;
+class nsITimer;
 class nsGlobalWindowInner;
 
 namespace mozilla {

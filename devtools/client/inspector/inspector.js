@@ -137,10 +137,8 @@ function Inspector(toolbox) {
   this.onSidebarSelect = this.onSidebarSelect.bind(this);
   this.onSidebarShown = this.onSidebarShown.bind(this);
   this.onSidebarToggle = this.onSidebarToggle.bind(this);
-  this.onSplitRuleViewPrefChanged = this.onSplitRuleViewPrefChanged.bind(this);
 
   this._target.on("will-navigate", this._onBeforeNavigate);
-  this.prefsObserver.on(SPLIT_RULE_VIEW_PREF, this.onSplitRuleViewPrefChanged);
 }
 
 Inspector.prototype = {
@@ -581,13 +579,9 @@ Inspector.prototype = {
     this.sidebarSplitBox.setState({ width: splitSidebarWidth });
   },
 
-  onSidebarToggle: function() {
-    Services.prefs.setBoolPref(SPLIT_RULE_VIEW_PREF, !this.isSplitRuleViewEnabled);
-  },
-
-  async onSplitRuleViewPrefChanged() {
-    // Update the stored value of the split rule view preference since it changed.
-    this.isSplitRuleViewEnabled = Services.prefs.getBoolPref(SPLIT_RULE_VIEW_PREF);
+  async onSidebarToggle() {
+    this.isSplitRuleViewEnabled = !this.isSplitRuleViewEnabled;
+    Services.prefs.setBoolPref(SPLIT_RULE_VIEW_PREF, this.isSplitRuleViewEnabled);
 
     await this.setupToolbar();
     await this.addRuleView();
@@ -1278,7 +1272,6 @@ Inspector.prototype = {
 
     this.cancelUpdate();
 
-    this.prefsObserver.off(SPLIT_RULE_VIEW_PREF, this.onSplitRuleViewPrefChanged);
     this.target.off("will-navigate", this._onBeforeNavigate);
     this.target.off("thread-paused", this.updateDebuggerPausedWarning);
     this.target.off("thread-resumed", this.updateDebuggerPausedWarning);
@@ -1326,6 +1319,7 @@ Inspector.prototype = {
     this._toolbox = null;
     this.breadcrumbs = null;
     this.highlighters = null;
+    this.isSplitRuleViewEnabled = null;
     this.panelDoc = null;
     this.panelWin.inspector = null;
     this.panelWin = null;
