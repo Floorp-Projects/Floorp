@@ -30,7 +30,4 @@ add_task(async function test_policy_enable_tracking_protection_locked() {
   is(Services.prefs.getBoolPref("privacy.trackingprotection.enabled"), false, "Tracking protection has been disabled by default.");
   is(Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled"), false, "Tracking protection has been disabled by default in private browsing mode.");
   is(Services.prefs.prefIsLocked("privacy.trackingprotection.enabled"), true, "Tracking protection pref is locked.");
-
-  Services.prefs.unlockPref("privacy.trackingprotection.enabled");
-  Services.prefs.unlockPref("privacy.trackingprotection.pbmode.enabled");
 });
