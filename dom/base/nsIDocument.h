@@ -1737,13 +1737,24 @@ public:
     return mCSSLoader;
   }
 
-  mozilla::StyleBackendType GetStyleBackendType() const
-  {
-    return mozilla::StyleBackendType::Servo;
+  mozilla::StyleBackendType GetStyleBackendType() const {
+    MOZ_ASSERT(mStyleBackendType != mozilla::StyleBackendType::None,
+               "Not initialized yet");
+    return mStyleBackendType;
   }
 
-  bool IsStyledByServo() const
-  {
+  /**
+   * Documents generally decide their style backend type themselves, and
+   * this is only used for XBL documents to set their style backend type to
+   * their bounding document's.
+   */
+
+  /**
+   * Decide this document's own style backend type.
+   */
+  void UpdateStyleBackendType();
+
+  bool IsStyledByServo() const {
     return GetStyleBackendType() == mozilla::StyleBackendType::Servo;
   }
 
@@ -4213,6 +4224,10 @@ protected:
 
   // Our readyState
   ReadyState mReadyState;
+
+  // Whether this document has (or will have, once we have a pres shell) a
+  // Gecko- or Servo-backed style system.
+  mozilla::StyleBackendType mStyleBackendType;
 
 #ifdef MOZILLA_INTERNAL_API
   // Our visibility state
