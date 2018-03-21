@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "nsWeakReference.h"
