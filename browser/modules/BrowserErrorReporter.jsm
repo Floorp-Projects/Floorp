@@ -24,13 +24,6 @@ const PREF_SAMPLE_RATE = "browser.chrome.errorReporter.sampleRate";
 const PREF_SUBMIT_URL = "browser.chrome.errorReporter.submitUrl";
 const SDK_NAME = "firefox-error-reporter";
 const SDK_VERSION = "1.0.0";
-const TELEMETRY_ERROR_COLLECTED = "browser.errors.collected_count";
-const TELEMETRY_ERROR_COLLECTED_FILENAME = "browser.errors.collected_count_by_filename";
-const TELEMETRY_ERROR_COLLECTED_STACK = "browser.errors.collected_with_stack_count";
-const TELEMETRY_ERROR_REPORTED = "browser.errors.reported_success_count";
-const TELEMETRY_ERROR_REPORTED_FAIL = "browser.errors.reported_failure_count";
-const TELEMETRY_ERROR_SAMPLE_RATE = "browser.errors.sample_rate";
-
 
 // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsIScriptError#Categories
 const REPORTED_CATEGORIES = new Set([
@@ -51,13 +44,6 @@ const PLATFORM_NAMES = {
   macosx: "macOS",
   android: "Android",
 };
-
-// Filename URI regexes that we are okay with reporting to Telemetry. URIs not
-// matching these patterns may contain local file paths.
-const TELEMETRY_REPORTED_PATTERNS = new Set([
-  /^resource:\/\/(?:\/|gre)/,
-  /^chrome:\/\/(?:global|browser|devtools)/,
-]);
 
 /**
  * Collects nsIScriptError messages logged to the browser console and reports
@@ -118,13 +104,6 @@ class BrowserErrorReporter {
       false,
       this.handleEnabledPrefChanged.bind(this),
     );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "sampleRatePref",
-      PREF_SAMPLE_RATE,
-      "0.0",
-      this.handleSampleRatePrefChanged.bind(this),
-    );
   }
 
   /**
@@ -167,19 +146,6 @@ class BrowserErrorReporter {
     }
   }
 
-  handleSampleRatePrefChanged(prefName, previousValue, newValue) {
-    Services.telemetry.scalarSet(TELEMETRY_ERROR_SAMPLE_RATE, newValue);
-  }
-
-  shouldReportFilename(filename) {
-    for (const pattern of TELEMETRY_REPORTED_PATTERNS) {
-      if (filename.match(pattern)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   async observe(message) {
     try {
       message.QueryInterface(Ci.nsIScriptError);
@@ -193,21 +159,8 @@ class BrowserErrorReporter {
       return;
     }
 
-    // Record that we collected an error prior to applying the sample rate
-    Services.telemetry.scalarAdd(TELEMETRY_ERROR_COLLECTED, 1);
-    if (message.stack) {
-      Services.telemetry.scalarAdd(TELEMETRY_ERROR_COLLECTED_STACK, 1);
-    }
-    if (message.sourceName) {
-      let filename = "FILTERED";
-      if (this.shouldReportFilename(message.sourceName)) {
-        filename = message.sourceName;
-      }
-      Services.telemetry.keyedScalarAdd(TELEMETRY_ERROR_COLLECTED_FILENAME, filename.slice(0, 69), 1);
-    }
-
     // Sample the amount of errors we send out
-    const sampleRate = Number.parseFloat(this.sampleRatePref);
+    const sampleRate = Number.parseFloat(Services.prefs.getCharPref(PREF_SAMPLE_RATE));
     if (!Number.isFinite(sampleRate) || (Math.random() >= sampleRate)) {
       return;
     }
@@ -220,10 +173,6 @@ class BrowserErrorReporter {
     // Replaces any instances of moz-extension:// URLs with internal UUIDs to use
     // the add-on ID instead.
     function mangleExtURL(string, anchored = true) {
-      if (!string) {
-        return string;
-      }
-
       let re = new RegExp(`${anchored ? "^" : ""}moz-extension://([^/]+)/`, "g");
 
       return string.replace(re, (m0, m1) => {
@@ -287,10 +236,8 @@ class BrowserErrorReporter {
         referrer: "https://fake.mozilla.org",
         body: JSON.stringify(requestBody)
       });
-      Services.telemetry.scalarAdd(TELEMETRY_ERROR_REPORTED, 1);
       this.logger.debug("Sent error successfully.");
     } catch (error) {
-      Services.telemetry.scalarAdd(TELEMETRY_ERROR_REPORTED_FAIL, 1);
       this.logger.warn(`Failed to send error: ${error}`);
     }
   }
