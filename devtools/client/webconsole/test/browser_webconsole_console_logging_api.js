@@ -24,12 +24,12 @@ add_task(function* () {
 });
 
 function* testMethod(method, hud, outputNode) {
-  let console = gBrowser.contentWindowAsCPOW.console;
-
   hud.jsterm.clearOutput();
 
-  console[method]("foo-bar-baz");
-  console[method]("baar-baz");
+  yield ContentTask.spawn(gBrowser.selectedBrowser, method, function(method) {
+    content.console[method]("foo-bar-baz");
+    content.console[method]("baar-baz");
+  });
 
   yield waitForMessages({
     webconsole: hud,
@@ -50,7 +50,9 @@ function* testMethod(method, hud, outputNode) {
   // now toggle the current method off - make sure no visible message
   // TODO: move all filtering tests into a separate test file: see bug 608135
 
-  console[method]("foo-bar-baz");
+  yield ContentTask.spawn(gBrowser.selectedBrowser, method, function(method) {
+    content.console[method]("foo-bar-baz");
+  });
   yield waitForMessages({
     webconsole: hud,
     messages: [{
@@ -85,7 +87,9 @@ function* testMethod(method, hud, outputNode) {
   hud.jsterm.clearOutput();
 
   // test for multiple arguments.
-  console[method]("foo", "bar");
+  yield ContentTask.spawn(gBrowser.selectedBrowser, method, function(method) {
+    content.console[method]("foo", "bar");
+  });
 
   yield waitForMessages({
     webconsole: hud,

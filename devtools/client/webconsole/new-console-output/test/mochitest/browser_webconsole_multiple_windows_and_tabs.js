@@ -35,12 +35,14 @@ add_task(async function() {
   for (let tab of tabs) {
     // Open the console in tab${i}.
     let hud = await openConsole(tab);
-    let tabWindow = hud.target.tab.linkedBrowser.contentWindowAsCPOW;
+    let browser = hud.target.tab.linkedBrowser;
     let message = "message for tab " + tabs.indexOf(tab);
 
     // Log a message in the newly opened console.
     let onMessage = waitForMessage(hud, message);
-    tabWindow.console.log(message);
+    await ContentTask.spawn(browser, message, function(msg) {
+      content.console.log(msg);
+    });
     await onMessage;
   }
 

@@ -14,8 +14,10 @@ add_task(function* () {
   let hud = yield openConsole();
 
   function onReflowListenersReady() {
-    browser.contentDocumentAsCPOW.body.style.display = "none";
-    browser.contentDocumentAsCPOW.body.clientTop;
+    ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+      content.document.body.style.display = "none";
+      content.document.body.clientTop;
+    });
   }
 
   Services.prefs.setBoolPref("devtools.webconsole.filter.csslog", true);

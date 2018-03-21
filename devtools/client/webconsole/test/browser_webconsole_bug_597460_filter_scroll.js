@@ -22,12 +22,12 @@ add_task(function* () {
   Services.prefs.clearUserPref(PREF);
 });
 
-function consoleOpened(hud) {
-  let deferred = defer();
-
-  for (let i = 0; i < 200; i++) {
-    gBrowser.contentWindowAsCPOW.console.log("test message " + i);
-  }
+async function consoleOpened(hud) {
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    for (let i = 0; i < 200; i++) {
+      content.console.log("test message " + i);
+    }
+  });
 
   hud.setFilterState("network", false);
   hud.setFilterState("networkinfo", false);
@@ -35,7 +35,7 @@ function consoleOpened(hud) {
   hud.ui.filterBox.value = "test message";
   hud.ui.adjustVisibilityOnSearchStringChange();
 
-  waitForMessages({
+  await waitForMessages({
     webconsole: hud,
     messages: [{
       name: "console messages displayed",
@@ -43,20 +43,17 @@ function consoleOpened(hud) {
       category: CATEGORY_WEBDEV,
       severity: SEVERITY_LOG,
     }],
-  }).then(() => {
-    waitForMessages({
-      webconsole: hud,
-      messages: [{
-        text: "test-network.html",
-        category: CATEGORY_NETWORK,
-        severity: SEVERITY_LOG,
-      }],
-    }).then(deferred.resolve);
-
-    gBrowser.reload();
   });
-
-  return deferred.promise;
+  let promise = waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "test-network.html",
+      category: CATEGORY_NETWORK,
+      severity: SEVERITY_LOG,
+    }],
+  });
+  gBrowser.reload();
+  return promise;
 }
 
 function testScroll([result], hud) {
