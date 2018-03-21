@@ -8,7 +8,6 @@ var Services = require("Services");
 loader.lazyRequireGetter(this, "Utils", "devtools/client/webconsole/utils", true);
 loader.lazyRequireGetter(this, "extend", "devtools/shared/extend", true);
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
-loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
 loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "NewWebConsoleFrame", "devtools/client/webconsole/new-webconsole", true);
@@ -349,17 +348,6 @@ WebConsole.prototype = {
    */
   get jsterm() {
     return this.ui ? this.ui.jsterm : null;
-  },
-
-  /**
-   * The clear output button handler.
-   * @private
-   */
-  _onClearButton() {
-    if (this.target.isLocalTab) {
-      gDevToolsBrowser.getDeveloperToolbar(this.browserWindow)
-        .resetErrorsCount(this.target.tab);
-    }
   },
 
   /**

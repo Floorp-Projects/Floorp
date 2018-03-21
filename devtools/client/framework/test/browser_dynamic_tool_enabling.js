@@ -6,7 +6,6 @@
 // Tests that toggling prefs immediately (de)activates the relevant menuitem
 
 var gItemsToTest = {
-  "menu_devToolbar": "devtools.toolbar.enabled",
   "menu_browserToolbox": ["devtools.chrome.enabled", "devtools.debugger.remote-enabled"],
   "menu_devtools_connect": "devtools.debugger.remote-enabled",
 };
