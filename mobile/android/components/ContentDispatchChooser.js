@@ -85,7 +85,7 @@ ContentDispatchChooser.prototype =
         // we want to show the neterror page.
         let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         let millis = dwu.millisSinceLastUserInput;
-        if (millis > 0 && millis >= 1000) {
+        if (millis < 0 || millis >= 1000) {
           window.location.href = data.uri;
         } else {
           this._closeBlankWindow(window);
