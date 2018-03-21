@@ -4,12 +4,12 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
   <Description about="urn:mozilla:install-manifest">
-    <em:id>quitter@mozilla.org</em:id>
-    <em:version>2016.03.10</em:version>
+    <em:name>WorkerTest</em:name>
+    <em:description>Worker functions for use in testing.</em:description>
+    <em:creator>Mozilla</em:creator>
+    <em:version>2016.03.09</em:version>
+    <em:id>worker-test@mozilla.org</em:id>
     <em:type>2</em:type>
-
-    <!-- Target Application this extension can install into,
-         with minimum and maximum supported versions. -->
     <em:targetApplication>
       <Description>
         <!-- Firefox -->
@@ -26,10 +26,5 @@
         <em:maxVersion>*</em:maxVersion>
       </Description>
     </em:targetApplication>
-
-    <!-- Front End MetaData -->
-    <em:name>Quitter</em:name>
-    <em:description>Adds a quit method that content pages can use to quit the application.</em:description>
-    <em:creator>Mozilla</em:creator>
   </Description>
 </RDF>

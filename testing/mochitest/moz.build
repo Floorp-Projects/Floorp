@@ -19,7 +19,9 @@ USE_EXTENSION_MANIFEST = True
 
 FINAL_TARGET_PP_FILES += ['install.rdf']
 
-FINAL_TARGET_FILES += ['bootstrap.js']
+if CONFIG['OS_TARGET'] != 'Android':
+    DEFINES['MOCHITEST_BOOTSTRAP'] = True
+    FINAL_TARGET_FILES += ['bootstrap.js']
 
 MOCHITEST_MANIFESTS += [
     'tests/MochiKit-1.4.2/tests/mochitest.ini',
