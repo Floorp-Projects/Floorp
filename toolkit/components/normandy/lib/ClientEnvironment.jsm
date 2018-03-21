@@ -20,6 +20,7 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(this, "Utils", "resource://normandy/lib/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "Addons", "resource://normandy/lib/Addons.jsm");
+ChromeUtils.defineModuleGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm");
 
 const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
@@ -124,7 +125,7 @@ var ClientEnvironment = {
     });
 
     XPCOMUtils.defineLazyGetter(environment, "version", () => {
-      return Services.appinfo.version;
+      return AppConstants.MOZ_APP_VERSION_DISPLAY;
     });
 
     XPCOMUtils.defineLazyGetter(environment, "channel", () => {
