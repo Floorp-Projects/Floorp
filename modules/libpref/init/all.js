@@ -5918,6 +5918,21 @@ pref("dom.webkitBlink.filesystem.enabled", true);
 
 pref("media.block-autoplay-until-in-foreground", true);
 
+// Is Stylo CSS support built and enabled?
+// Only define these prefs if Stylo support is actually built in.
+#ifdef MOZ_STYLO
+#ifdef MOZ_STYLO_ENABLE
+pref("layout.css.servo.enabled", true);
+#else
+pref("layout.css.servo.enabled", false);
+#endif
+// Whether Stylo is enabled for chrome document?
+// If Stylo is not enabled, this pref doesn't take any effect.
+// Note that this pref is only read once when requested. Changing it
+// at runtime may have no effect.
+pref("layout.css.servo.chrome.enabled", true);
+#endif
+
 // TODO: Bug 1324406: Treat 'data:' documents as unique, opaque origins
 // If true, data: URIs will be treated as unique opaque origins, hence will use
 // a NullPrincipal as the security context.

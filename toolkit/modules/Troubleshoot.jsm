@@ -16,6 +16,9 @@ try {
 } catch (e) {
 }
 
+const env = Cc["@mozilla.org/process/environment;1"]
+              .getService(Ci.nsIEnvironment);
+
 // We use a preferences whitelist to make sure we only show preferences that
 // are useful for support and won't compromise the user's privacy.  Note that
 // entries are *prefixes*: for example, "accessibility." applies to all prefs
@@ -64,6 +67,7 @@ const PREFS_WHITELIST = [
   "keyword.",
   "layers.",
   "layout.css.dpi",
+  "layout.css.servo.",
   "layout.display-list.",
   "media.",
   "mousewheel.",
@@ -218,6 +222,33 @@ var dataProviders = {
       data.autoStartStatus = e10sStatus.data;
     } catch (e) {
       data.autoStartStatus = -1;
+    }
+
+    data.styloBuild = AppConstants.MOZ_STYLO;
+    data.styloDefault = Services.prefs.getDefaultBranch(null)
+                                .getBoolPref("layout.css.servo.enabled", false);
+    data.styloResult = false;
+    // Perhaps a bit redundant in places, but this is easier to compare with the
+    // the real check in `nsLayoutUtils.cpp` to ensure they test the same way.
+    if (AppConstants.MOZ_STYLO) {
+      if (env.get("STYLO_FORCE_ENABLED")) {
+        data.styloResult = true;
+      } else if (env.get("STYLO_FORCE_DISABLED")) {
+        data.styloResult = false;
+      } else {
+        data.styloResult =
+          Services.prefs.getBoolPref("layout.css.servo.enabled", false);
+      }
+    }
+    data.styloChromeDefault =
+      Services.prefs.getDefaultBranch(null)
+              .getBoolPref("layout.css.servo.chrome.enabled", false);
+    data.styloChromeResult = false;
+    if (data.styloResult) {
+      let winUtils = Services.wm.getMostRecentWindow("").
+                     QueryInterface(Ci.nsIInterfaceRequestor).
+                     getInterface(Ci.nsIDOMWindowUtils);
+      data.styloChromeResult = winUtils.isStyledByServo;
     }
 
     if (Services.policies) {

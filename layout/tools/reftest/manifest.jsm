@@ -482,8 +482,21 @@ let retainedDisplayListsEnabled = prefs.getBoolPref("layout.display-list.retain"
 sandbox.retainedDisplayLists = retainedDisplayListsEnabled && !g.compareRetainedDisplayLists;
 sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
 
-// TODO(emilio): Remove the remaining reftest expectations that mention stylo.
-sandbox.stylo = true;
+#ifdef MOZ_STYLO
+    let styloEnabled = false;
+    // Perhaps a bit redundant in places, but this is easier to compare with the
+    // the real check in `nsLayoutUtils.cpp` to ensure they test the same way.
+    if (env.get("STYLO_FORCE_ENABLED")) {
+        styloEnabled = true;
+    } else if (env.get("STYLO_FORCE_DISABLED")) {
+        styloEnabled = false;
+    } else {
+        styloEnabled = prefs.getBoolPref("layout.css.servo.enabled", false);
+    }
+    sandbox.stylo = styloEnabled;
+#else
+    sandbox.stylo = false;
+#endif
 
     sandbox.skiaPdf = false;
 
