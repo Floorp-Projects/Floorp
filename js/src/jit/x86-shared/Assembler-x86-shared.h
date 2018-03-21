@@ -395,9 +395,6 @@ class AssemblerX86Shared : public AssemblerShared
 
     static void TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
 
-    // MacroAssemblers hold onto gcthings, so they are traced by the GC.
-    void trace(JSTracer* trc);
-
     bool oom() const {
         return AssemblerShared::oom() ||
                masm.oom() ||

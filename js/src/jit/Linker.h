@@ -32,15 +32,6 @@ class Linker
     explicit Linker(MacroAssembler& masm)
       : masm(masm)
     {
-        MOZ_ASSERT(masm.isRooted());
-        masm.finish();
-    }
-
-    // If the macro assembler isn't rooted then care must be taken as it often
-    // contains GC pointers.
-    Linker(MacroAssembler& masm, JS::AutoRequireNoGC& nogc)
-      : masm(masm)
-    {
         masm.finish();
     }
 

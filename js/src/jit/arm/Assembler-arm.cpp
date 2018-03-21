@@ -810,9 +810,8 @@ Assembler::GetPointer(uint8_t* instPtr)
     return ret;
 }
 
-template<class Iter>
 const uint32_t*
-Assembler::GetPtr32Target(Iter start, Register* dest, RelocStyle* style)
+Assembler::GetPtr32Target(InstructionIterator start, Register* dest, RelocStyle* style)
 {
     Instruction* load1 = start.cur();
     Instruction* load2 = start.next();
@@ -877,9 +876,8 @@ Assembler::TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReade
     }
 }
 
-template <class Iter>
 static void
-TraceOneDataRelocation(JSTracer* trc, Iter iter)
+TraceOneDataRelocation(JSTracer* trc, InstructionIterator iter)
 {
     Register dest;
     Assembler::RelocStyle rs;
@@ -901,30 +899,14 @@ TraceOneDataRelocation(JSTracer* trc, Iter iter)
     }
 }
 
-static void
-TraceDataRelocations(JSTracer* trc, uint8_t* buffer, CompactBufferReader& reader)
+/* static */ void
+Assembler::TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader)
 {
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
-        InstructionIterator iter((Instruction*)(buffer + offset));
+        InstructionIterator iter((Instruction*)(code->raw() + offset));
         TraceOneDataRelocation(trc, iter);
     }
-}
-
-static void
-TraceDataRelocations(JSTracer* trc, ARMBuffer* buffer, CompactBufferReader& reader)
-{
-    while (reader.more()) {
-        BufferOffset offset(reader.readUnsigned());
-        BufferInstructionIterator iter(offset, buffer);
-        TraceOneDataRelocation(trc, iter);
-    }
-}
-
-void
-Assembler::TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader)
-{
-    ::TraceDataRelocations(trc, code->raw(), reader);
 }
 
 void
@@ -939,24 +921,6 @@ Assembler::copyDataRelocationTable(uint8_t* dest)
 {
     if (dataRelocations_.length())
         memcpy(dest, dataRelocations_.buffer(), dataRelocations_.length());
-}
-
-void
-Assembler::trace(JSTracer* trc)
-{
-    for (size_t i = 0; i < jumps_.length(); i++) {
-        RelativePatch& rp = jumps_[i];
-        if (rp.kind() == Relocation::JITCODE) {
-            JitCode* code = JitCode::FromExecutable((uint8_t*)rp.target());
-            TraceManuallyBarrieredEdge(trc, &code, "masmrel32");
-            MOZ_ASSERT(code == JitCode::FromExecutable((uint8_t*)rp.target()));
-        }
-    }
-
-    if (dataRelocations_.length()) {
-        CompactBufferReader reader(dataRelocations_);
-        ::TraceDataRelocations(trc, &m_buffer, reader);
-    }
 }
 
 void
