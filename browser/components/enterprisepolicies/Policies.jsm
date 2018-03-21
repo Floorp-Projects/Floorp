@@ -473,9 +473,19 @@ var Policies = {
     }
   },
 
-  "Popups": {
+  "PopupBlocking": {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("popup", param.Allow, null);
+
+      if (param.Locked) {
+        let blockValue = true;
+        if (param.Default !== undefined && !param.Default) {
+          blockValue = false;
+        }
+        setAndLockPref("dom.disable_open_during_load", blockValue);
+      } else if (param.Default !== undefined) {
+        setDefaultPref("dom.disable_open_during_load", !!param.Default);
+      }
     }
   },
 
