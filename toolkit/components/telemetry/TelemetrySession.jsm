@@ -758,6 +758,7 @@ var Impl = {
     if (!Utils.isContentProcess && Telemetry.canRecordExtended) {
       try {
         ret.addonManager = AddonManagerPrivate.getSimpleMeasures();
+        ret.UITelemetry = UITelemetry.getSimpleMeasures();
       } catch (ex) {}
     }
 

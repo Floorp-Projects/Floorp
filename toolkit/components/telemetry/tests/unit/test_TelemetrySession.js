@@ -2111,7 +2111,7 @@ add_task(async function test_pingExtendedStats() {
   Assert.ok(!("addonManager" in ping.payload.simpleMeasurements),
             "addonManager must not be sent if the extended set is off.");
   Assert.ok(!("UITelemetry" in ping.payload.simpleMeasurements),
-            "UITelemetry must not be sent.");
+            "UITelemetry must not be sent if the extended set is off.");
 
   // Restore the preference.
   Telemetry.canRecordExtended = true;
@@ -2129,8 +2129,8 @@ add_task(async function test_pingExtendedStats() {
 
   Assert.ok("addonManager" in ping.payload.simpleMeasurements,
             "addonManager must be sent if the extended set is on.");
-  Assert.ok(!("UITelemetry" in ping.payload.simpleMeasurements),
-            "UITelemetry must not be sent.");
+  Assert.ok("UITelemetry" in ping.payload.simpleMeasurements,
+            "UITelemetry must be sent if the extended set is on.");
 
   await TelemetryController.testShutdown();
 });
