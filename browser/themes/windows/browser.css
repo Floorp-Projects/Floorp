@@ -956,17 +956,6 @@ notification[value="translation"] {
 %include ../shared/ctrlTab.inc.css
 %include ../shared/plugin-doorhanger.inc.css
 
-/* Error counter */
-
-#developer-toolbar-toolbox-button[error-count]:before {
-  color: #FDF3DE;
-  min-width: 16px;
-  text-shadow: none;
-  background-image: linear-gradient(#B4211B, #8A1915);
-  border-radius: 1px;
-  margin-inline-end: 5px;
-}
-
 /* Customization mode */
 
 %include ../shared/customizableui/customizeMode.inc.css
