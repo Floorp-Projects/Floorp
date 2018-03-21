@@ -27,16 +27,17 @@ function test() {
     yield hud.target.once("navigate");
     info("target navigated");
 
-    let button = gBrowser.contentDocumentAsCPOW.querySelector("button");
-    ok(button, "button found");
-
     // On e10s, the exception is triggered in child process
     // and is ignored by test harness
     if (!Services.appinfo.browserTabsRemoteAutostart) {
       expectUncaughtException();
     }
 
-    EventUtils.sendMouseEvent({type: "click"}, button, gBrowser.contentWindowAsCPOW);
+    yield ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+      let button = content.document.querySelector("button");
+      ok(button, "button found");
+      button.click();
+    });
 
     yield waitForMessages({
       webconsole: hud,

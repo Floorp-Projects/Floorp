@@ -46,7 +46,9 @@ add_task(function* testCopy() {
                   [obj.toSource(), JSON.stringify(obj, null, "  ")],
     [
       "$('#" + ID + "')",
-      gBrowser.contentDocumentAsCPOW.getElementById(ID).outerHTML
+      yield ContentTask.spawn(gBrowser.selectedBrowser, ID, function(id) {
+        return content.document.getElementById(id).outerHTML;
+      })
     ]
   ];
   for (let [source, reference] of samples) {
