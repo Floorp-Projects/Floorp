@@ -7,15 +7,15 @@
 // Test that the controller provides the document.timeline currentTime (at least
 // the last known version since new animations were added).
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
-  let {panel, controller} = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
+  let {panel, controller} = await openAnimationInspector();
 
   ok(controller.documentCurrentTime, "The documentCurrentTime getter exists");
   checkDocumentTimeIsCorrect(controller);
   let time1 = controller.documentCurrentTime;
 
-  yield startNewAnimation(controller, panel);
+  await startNewAnimation(controller, panel);
   checkDocumentTimeIsCorrect(controller);
   let time2 = controller.documentCurrentTime;
   ok(time2 > time1, "The new documentCurrentTime is higher than the old one");
@@ -30,18 +30,18 @@ function checkDocumentTimeIsCorrect(controller) {
      "The documentCurrentTime is correct");
 }
 
-function* startNewAnimation(controller, panel) {
+async function startNewAnimation(controller, panel) {
   info("Add a new animation to the page and check the time again");
   let onPlayerAdded = controller.once(controller.PLAYERS_UPDATED_EVENT);
   let onRendered = waitForAnimationTimelineRendering(panel);
 
-  yield executeInContent("devtools:test:setAttribute", {
+  await executeInContent("devtools:test:setAttribute", {
     selector: ".still",
     attributeName: "class",
     attributeValue: "ball still short"
   });
 
-  yield onPlayerAdded;
-  yield onRendered;
-  yield waitForAllAnimationTargets(panel);
+  await onPlayerAdded;
+  await onRendered;
+  await waitForAllAnimationTargets(panel);
 }

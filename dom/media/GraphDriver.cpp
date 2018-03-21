@@ -493,6 +493,8 @@ AsyncCubebTask::Run()
       LOG(LogLevel::Debug,
           ("AsyncCubebOperation::INIT driver=%p", mDriver.get()));
       if (!mDriver->Init()) {
+        LOG(LogLevel::Warning,
+            ("AsyncCubebOperation::INIT failed for driver=%p", mDriver.get()));
         return NS_ERROR_FAILURE;
       }
       mDriver->CompleteAudioContextOperations(mOperation);
@@ -591,10 +593,13 @@ AudioCallbackDriver::Init()
   cubeb* cubebContext = CubebUtils::GetCubebContext();
   if (!cubebContext) {
     NS_WARNING("Could not get cubeb context.");
+    LOG(LogLevel::Warning, ("%s: Could not get cubeb context", __func__));
     if (!mFromFallback) {
       CubebUtils::ReportCubebStreamInitFailure(true);
     }
-    return false;
+    MonitorAutoLock lock(GraphImpl()->GetMonitor());
+    FallbackToSystemClockDriver();
+    return true;
   }
 
   cubeb_stream_params output;

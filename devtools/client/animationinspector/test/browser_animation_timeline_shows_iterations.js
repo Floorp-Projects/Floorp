@@ -9,12 +9,12 @@ requestLongerTimeout(2);
 // Check that the timeline is displays as many iteration elements as there are
 // iterations in an animation.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel} = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
+  let {inspector, panel} = await openAnimationInspector();
 
   info("Selecting the test node");
-  yield selectNodeAndWaitForAnimations(".delayed", inspector);
+  await selectNodeAndWaitForAnimations(".delayed", inspector);
 
   info("Getting the animation element from the panel");
   const timelineComponent = panel.animationsTimelineComponent;
@@ -33,7 +33,7 @@ add_task(function* () {
      + " that have infinity class");
 
   info("Selecting another test node with an infinite animation");
-  yield selectNodeAndWaitForAnimations(".animated", inspector);
+  await selectNodeAndWaitForAnimations(".animated", inspector);
 
   info("Getting the animation element from the panel again");
   animation = timelineEl.querySelector(".time-block");

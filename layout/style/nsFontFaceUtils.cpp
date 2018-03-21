@@ -115,16 +115,14 @@ nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
   // check descendants, iterating over subtrees that may include
   // additional subtrees associated with placeholders
   do {
-    nsIFrame* subtreeRoot = subtrees.ElementAt(subtrees.Length() - 1);
-    subtrees.RemoveElementAt(subtrees.Length() - 1);
+    nsIFrame* subtreeRoot = subtrees.PopLastElement();
 
     // Check all descendants to see if they use the font
     AutoTArray<nsIFrame*, 32> stack;
     stack.AppendElement(subtreeRoot);
 
     do {
-      nsIFrame* f = stack.ElementAt(stack.Length() - 1);
-      stack.RemoveElementAt(stack.Length() - 1);
+      nsIFrame* f = stack.PopLastElement();
 
       // if this frame uses the font, mark its descendants dirty
       // and skip checking its children

@@ -18,6 +18,4 @@
 [uuid(450cf0ba-de90-4f86-85bf-e10cc8b8713f)]
 interface nsIDOMNodeList : nsISupports
 {
-  nsIDOMNode    item(in unsigned long index);
-  readonly attribute unsigned long          length;
 };

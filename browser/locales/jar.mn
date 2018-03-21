@@ -65,8 +65,6 @@
     locale/browser/preferences/clearSiteData.properties     (%chrome/browser/preferences/clearSiteData.properties)
     locale/browser/preferences/colors.dtd             (%chrome/browser/preferences/colors.dtd)
     locale/browser/preferences/connection.dtd         (%chrome/browser/preferences/connection.dtd)
-    locale/browser/preferences/containers.dtd         (%chrome/browser/preferences/containers.dtd)
-    locale/browser/preferences/containers.properties     (%chrome/browser/preferences/containers.properties)
     locale/browser/preferences/content.dtd            (%chrome/browser/preferences/content.dtd)
     locale/browser/preferences/cookies.dtd            (%chrome/browser/preferences/cookies.dtd)
     locale/browser/preferences/fonts.dtd              (%chrome/browser/preferences/fonts.dtd)
