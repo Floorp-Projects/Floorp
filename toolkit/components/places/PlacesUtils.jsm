@@ -323,7 +323,6 @@ var PlacesUtils = {
   // Used to track the action that populated the clipboard.
   TYPE_X_MOZ_PLACE_ACTION: "text/x-moz-place-action",
 
-  EXCLUDE_FROM_BACKUP_ANNO: "places/excludeFromBackup",
   LMANNO_FEEDURI: "livemark/feedURI",
   LMANNO_SITEURI: "livemark/siteURI",
   POST_DATA_ANNO: "bookmarkProperties/POSTData",

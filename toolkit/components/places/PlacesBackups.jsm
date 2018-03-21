@@ -69,29 +69,6 @@ function getBackupFileForSameDate(aFilename) {
   })();
 }
 
-/**
- * Returns the top-level bookmark folders ids and guids.
- *
- * @return {Promise} Resolve with an array of objects containing id and guid
- *                   when the query is complete.
- */
-async function getTopLevelFolderIds() {
-  let db =  await PlacesUtils.promiseDBConnection();
-  let rows = await db.execute(
-    "SELECT id, guid FROM moz_bookmarks WHERE parent = :parentId",
-    { parentId: PlacesUtils.placesRootId }
-  );
-
-  let guids = [];
-  for (let row of rows) {
-    guids.push({
-      id: row.getResultByName("id"),
-      guid: row.getResultByName("guid")
-    });
-  }
-  return guids;
-}
-
 var PlacesBackups = {
   /**
    * Matches the backup filename:
@@ -244,8 +221,6 @@ var PlacesBackups = {
 
   /**
    * Serializes bookmarks using JSON, and writes to the supplied file.
-   * Note: any item that should not be backed up must be annotated with
-   *       "places/excludeFromBackup".
    *
    * @param aFilePath
    *        OS.File path for the "bookmarks.json" file to be created.
@@ -303,8 +278,6 @@ var PlacesBackups = {
   /**
    * Creates a dated backup in <profile>/bookmarkbackups.
    * Stores the bookmarks using a lz4 compressed JSON file.
-   * Note: any item that should not be backed up must be annotated with
-   *       "places/excludeFromBackup".
    *
    * @param [optional] int aMaxBackups
    *                       The maximum number of backups to keep.  If set to 0
@@ -416,9 +389,7 @@ var PlacesBackups = {
 
   /**
    * Gets a bookmarks tree representation usable to create backups in different
-   * file formats.  The root or the tree is PlacesUtils.placesRootId.
-   * Items annotated with PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO and all of their
-   * descendants are excluded.
+   * file formats.  The root or the tree is PlacesUtils.bookmarks.rootGuid.
    *
    * @return an object representing a tree with the places root as its root.
    *         Each bookmark is represented by an object having these properties:
@@ -443,10 +414,6 @@ var PlacesBackups = {
   async getBookmarksTree() {
     let startTime = Date.now();
     let root = await PlacesUtils.promiseBookmarksTree(PlacesUtils.bookmarks.rootGuid, {
-      excludeItemsCallback: aItem => {
-        return aItem.annos &&
-          aItem.annos.find(a => a.name == PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
-      },
       includeItemIds: true
     });
 
@@ -458,44 +425,5 @@ var PlacesBackups = {
       Cu.reportError("Unable to report telemetry.");
     }
     return [root, root.itemsCount];
-  },
-
-  /**
-   * Wrapper for PlacesUtils.bookmarks.eraseEverything that removes non-default
-   * roots.
-   *
-   * Note that default roots are preserved, only their children will be removed.
-   *
-   * TODO Ideally we wouldn't need to worry about non-default roots. However,
-   * until bug 1310299 is fixed, we still need to manage them.
-   *
-   * @param {Object} [options={}]
-   *        Additional options. Currently supports the following properties:
-   *         - source: The change source, forwarded to all bookmark observers.
-   *           Defaults to nsINavBookmarksService::SOURCE_DEFAULT.
-   *
-   * @return {Promise} resolved when the removal is complete.
-   * @resolves once the removal is complete.
-   */
-  async eraseEverythingIncludingUserRoots(options = {}) {
-    if (!options.source) {
-      options.source = PlacesUtils.bookmarks.SOURCES.DEFAULT;
-    }
-
-    let excludeItems =
-      PlacesUtils.annotations.getItemsWithAnnotation(PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
-
-    let rootFolderChildren = await getTopLevelFolderIds();
-
-    // We only need to do top-level roots here.
-    for (let child of rootFolderChildren) {
-      if (!PlacesUtils.bookmarks.userContentRoots.includes(child.guid) &&
-          child.guid != PlacesUtils.bookmarks.tagsGuid &&
-          !excludeItems.includes(child.id)) {
-       await PlacesUtils.bookmarks.remove(child.guid, {source: options.source});
-      }
-    }
-
-    return PlacesUtils.bookmarks.eraseEverything(options);
   },
 };

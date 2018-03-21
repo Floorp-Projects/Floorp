@@ -71,8 +71,6 @@ var BookmarkJSONUtils = Object.freeze({
 
   /**
    * Restores bookmarks and tags from a JSON file.
-   * @note any item annotated with "places/excludeFromBackup" won't be removed
-   *       before executing the restore.
    *
    * @param aFilePath
    *        OS.File path string of bookmarks in JSON or JSONlz4 format to be restored.
@@ -248,7 +246,7 @@ BookmarkImporter.prototype = {
 
     // If we're replacing, then erase existing bookmarks first.
     if (this._replace) {
-      await PlacesBackups.eraseEverythingIncludingUserRoots({ source: this._source });
+      await PlacesUtils.bookmarks.eraseEverything({ source: this._source });
     }
 
     let folderIdToGuidMap = {};
