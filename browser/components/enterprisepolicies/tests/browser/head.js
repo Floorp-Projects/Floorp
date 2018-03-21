@@ -14,6 +14,14 @@ async function setupPolicyEngineWithJson(json, customSchema) {
   return EnterprisePolicyTesting.setupPolicyEngineWithJson(json, customSchema);
 }
 
+function checkLockedPref(prefName, prefValue) {
+  EnterprisePolicyTesting.checkPolicyPref(prefName, prefValue, true);
+}
+
+function checkUnlockedPref(prefName, prefValue) {
+  EnterprisePolicyTesting.checkPolicyPref(prefName, prefValue, false);
+}
+
 add_task(async function policies_headjs_startWithCleanSlate() {
   if (Services.policies.status != Ci.nsIEnterprisePolicies.INACTIVE) {
     await setupPolicyEngineWithJson("");

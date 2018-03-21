@@ -4,8 +4,10 @@
 
 "use strict";
 
+ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://testing-common/Assert.jsm");
 ChromeUtils.defineModuleGetter(this, "FileTestUtils",
                                "resource://testing-common/FileTestUtils.jsm");
 
@@ -47,6 +49,14 @@ this.EnterprisePolicyTesting = {
 
     Services.obs.notifyObservers(null, "EnterprisePolicies:Restart");
     return promise;
+  },
+
+  checkPolicyPref(prefName, expectedValue, expectedLockedness) {
+    if (expectedLockedness !== undefined) {
+      Assert.equal(Preferences.locked(prefName), expectedLockedness, `Pref ${prefName} is correctly locked/unlocked`);
+    }
+
+    Assert.equal(Preferences.get(prefName), expectedValue, `Pref ${prefName} has the correct value`);
   },
 
   resetRunOnceState: function resetRunOnceState() {
