@@ -228,6 +228,10 @@
           }
         }
 
+        // We should lock the orientation if we are already in
+        // fullscreen and were reattached because of bug 718107.
+        this.updateOrientationState(this.isVideoInFullScreen());
+
         if (this.isAudioOnly) {
           this.clickToPlay.hidden = true;
         }
@@ -1100,13 +1104,33 @@
         }
       },
 
+      // XXX This should be the place where we update the control states and
+      // screen orientation upon entering/leaving fullscreen.
+      // Sadly because of bug 718107 as soon as this function exits
+      // the attached binding gets destructored and a new binding is then created.
+      // We therefore don't do anything here and leave it to the new binding to
+      // set state correctly from its constructor.
+      /*
       onFullscreenChange() {
+        // Constructor and destructor will lock/unlock the orientation exactly
+        // once. Doing so here again will cause the videocontrols to
+        // lock-unlock-lock the orientation when entering the fullscreen.
         this.updateOrientationState(this.isVideoInFullScreen());
+
+        // This is already broken by bug 718107 (controls will be hidden
+        // as soon as the video enters fullscreen).
+        // We can think about restoring the behavior here once the bug is
+        // fixed, or we could simply acknowledge the current behavior
+        // after-the-fact and try not to fix this.
         if (this.isVideoInFullScreen()) {
           Utils._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
         }
+
+        // Constructor will handle this correctly on the new DOM content in
+        // the new binding.
         this.setFullscreenButtonState();
       },
+      */
 
       updateOrientationState(lock) {
         if (!this.video.mozOrientationLockEnabled) {
@@ -1707,9 +1731,9 @@
 
         addListener(this.videocontrols, "resizevideocontrols", this.adjustControlSize);
         addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
-        addListener(this.video.ownerDocument, "mozfullscreenchange", this.onFullscreenChange);
         addListener(this.controlBar, "transitionend", this.onControlBarTransitioned);
-        addListener(this.video.ownerDocument, "fullscreenchange", this.onFullscreenChange);
+        // See comment at onFullscreenChange on bug 718107.
+        // addListener(this.video.ownerDocument, "fullscreenchange", this.onFullscreenChange);
         addListener(this.video, "keypress", this.keyHandler, {capture: true});
         // Prevent any click event within media controls from dispatching through to video.
         addListener(this.videocontrols, "click", function(event) {
