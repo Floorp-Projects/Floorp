@@ -16,7 +16,7 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-track-sizing-001.html grid-track-sizing-001-ref.html
 == grid-track-sizing-002.html grid-track-sizing-002-ref.html
 == grid-abspos-items-001.html grid-abspos-items-001-ref.html
-== grid-abspos-items-002.html grid-abspos-items-002-ref.html
+fuzzy(180,3) == grid-abspos-items-002.html grid-abspos-items-002-ref.html # flattening differences
 == grid-abspos-items-003.html grid-abspos-items-003-ref.html
 == grid-abspos-items-004.html grid-abspos-items-004-ref.html
 == grid-abspos-items-005.html grid-abspos-items-005-ref.html
