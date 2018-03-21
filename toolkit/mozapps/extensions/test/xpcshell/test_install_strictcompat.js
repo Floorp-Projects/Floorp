@@ -32,7 +32,7 @@ function run_test() {
   AddonManager.addAddonListener(AddonListener);
 
   // Create and configure the HTTP server.
-  testserver = new HttpServer();
+  testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
   testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.registerDirectory("/data/", do_get_file("data"));
   testserver.registerPathHandler("/redirect", function(aRequest, aResponse) {
@@ -40,14 +40,13 @@ function run_test() {
     let url = aRequest.host + ":" + aRequest.port + aRequest.queryString;
     aResponse.setHeader("Location", "http://" + url);
   });
-  testserver.start(4444);
 
   do_test_pending();
   run_test_1();
 }
 
 function end_test() {
-  testserver.stop(do_test_finished);
+  do_test_finished();
 }
 
 // Checks that an install from a local file proceeds as expected
@@ -188,7 +187,7 @@ function run_test_2(aAddon) {
   restartManager();
   do_check_not_in_crash_annotation(id, version);
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://example.com/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     Assert.notEqual(install, null);
     Assert.equal(install.version, "1.0");
@@ -271,7 +270,7 @@ function check_test_3(aInstall) {
         Assert.ok(do_get_addon("test_install2_1").exists());
         do_check_in_crash_annotation(a2.id, a2.version);
         Assert.equal(a2.sourceURI.spec,
-                     "http://localhost:4444/addons/test_install2_1.xpi");
+                     "http://example.com/addons/test_install2_1.xpi");
 
         let difference = a2.installDate.getTime() - updateDate;
         if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
@@ -295,7 +294,7 @@ function run_test_4() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install2_2.xpi";
+  let url = "http://example.com/addons/test_install2_2.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 
@@ -373,7 +372,7 @@ function check_test_5(install) {
           Assert.ok(do_get_addon("test_install2_2").exists());
           do_check_in_crash_annotation(a2.id, a2.version);
           Assert.equal(a2.sourceURI.spec,
-                       "http://localhost:4444/addons/test_install2_2.xpi");
+                       "http://example.com/addons/test_install2_2.xpi");
 
           Assert.equal(a2.installDate.getTime(), gInstallDate);
           // Update date should be later (or the same if this test is too fast)
@@ -395,7 +394,7 @@ function run_test_6() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install3.xpi";
+  let url = "http://example.com/addons/test_install3.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 
@@ -515,7 +514,7 @@ function run_test_9() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install3.xpi";
+  let url = "http://example.com/addons/test_install3.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 
@@ -564,7 +563,7 @@ function run_test_10() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install3.xpi";
+  let url = "http://example.com/addons/test_install3.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 
@@ -638,7 +637,7 @@ function run_test_13() {
       "onNewInstall"
     ]);
 
-    let url = "http://localhost:4444/addons/test_install2_2.xpi";
+    let url = "http://example.com/addons/test_install2_2.xpi";
     AddonManager.getInstallForURL(url, function(install) {
       ensure_test_completed();
 
@@ -722,7 +721,7 @@ function run_test_14() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://example.com/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 
@@ -772,7 +771,7 @@ function run_test_15() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://example.com/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 
@@ -809,7 +808,7 @@ function check_test_15(install) {
 function run_test_16() {
   restartManager();
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://example.com/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallStarted() {
@@ -825,7 +824,7 @@ function run_test_16() {
           Assert.ok(a2.userDisabled);
           Assert.ok(!a2.isActive);
 
-          let url_2 = "http://localhost:4444/addons/test_install2_2.xpi";
+          let url_2 = "http://example.com/addons/test_install2_2.xpi";
           AddonManager.getInstallForURL(url_2, function(aInstall_2) {
             aInstall_2.addListener({
               onInstallEnded() {
@@ -858,7 +857,7 @@ function run_test_16() {
 function run_test_17() {
   restartManager();
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://example.com/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded() {
@@ -871,7 +870,7 @@ function run_test_17() {
           Assert.ok(!a2.userDisabled);
           Assert.ok(a2.isActive);
 
-          let url_2 = "http://localhost:4444/addons/test_install2_2.xpi";
+          let url_2 = "http://example.com/addons/test_install2_2.xpi";
           AddonManager.getInstallForURL(url_2, function(aInstall_2) {
             aInstall_2.addListener({
               onInstallStarted() {
@@ -907,7 +906,7 @@ function run_test_17() {
 function run_test_18() {
   restartManager();
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://example.com/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallStarted() {
@@ -923,7 +922,7 @@ function run_test_18() {
           Assert.ok(a2.userDisabled);
           Assert.ok(!a2.isActive);
 
-          let url_2 = "http://localhost:4444/addons/test_install2_2.xpi";
+          let url_2 = "http://example.com/addons/test_install2_2.xpi";
           AddonManager.getInstallForURL(url_2, function(aInstall_2) {
             aInstall_2.addListener({
               onInstallStarted() {
@@ -962,13 +961,13 @@ function run_test_18_1() {
 
   Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS,
-                             "http://localhost:4444/data/test_install_addons.json");
+                             "http://example.com/data/test_install_addons.json");
   Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES,
-                             "http://localhost:4444/data/test_install_compat.json");
+                             "http://example.com/data/test_install_compat.json");
 
   Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", false);
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://example.com/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded(unused, aAddon) {
@@ -996,7 +995,7 @@ function run_test_19() {
   restartManager();
   Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", true);
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://example.com/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded(unused, aAddon) {
@@ -1022,7 +1021,7 @@ function run_test_19() {
 function run_test_20() {
   restartManager();
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://example.com/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded(unused, aAddon) {
@@ -1068,7 +1067,7 @@ function run_test_21() {
         "onInstallEnded",
       ], check_test_21);
 
-      let url = "http://localhost:4444/addons/test_install2_1.xpi";
+      let url = "http://example.com/addons/test_install2_1.xpi";
       AddonManager.getInstallForURL(url, function(aInstall) {
         aInstall.install();
       }, "application/x-xpinstall");
@@ -1109,7 +1108,7 @@ function run_test_22() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install3.xpi";
+  let url = "http://example.com/addons/test_install3.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     ensure_test_completed();
 
@@ -1170,7 +1169,7 @@ function run_test_23() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install3.xpi";
+  let url = "http://example.com/addons/test_install3.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     ensure_test_completed();
 
@@ -1231,7 +1230,7 @@ function run_test_24() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install3.xpi";
+  let url = "http://example.com/addons/test_install3.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     ensure_test_completed();
 
@@ -1295,7 +1294,7 @@ function run_test_26() {
                               aStringData) {
       aChannel.QueryInterface(AM_Ci.nsIChannel);
       // Wait for the final event for the redirected URL
-      if (aChannel.URI.spec != "http://localhost:4444/addons/test_install1.xpi" ||
+      if (aChannel.URI.spec != "http://example.com/addons/test_install1.xpi" ||
           aType != AM_Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION ||
           aSubtype != AM_Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE)
         return;
@@ -1309,7 +1308,7 @@ function run_test_26() {
     }
   });
 
-  let url = "http://localhost:4444/redirect?/addons/test_install1.xpi";
+  let url = "http://example.com/redirect?/addons/test_install1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onDownloadProgress(aDownloadProgressInstall) {
@@ -1329,7 +1328,7 @@ function run_test_27() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install3.xpi";
+  let url = "http://example.com/addons/test_install3.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     ensure_test_completed();
 

@@ -31,14 +31,17 @@ XPCOMUtils.defineLazyGetter(this, "Management", () => {
   return Management;
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
-                                   "@mozilla.org/addons/addon-manager-startup;1",
-                                   "amIAddonManagerStartup");
-XPCOMUtils.defineLazyServiceGetter(this, "rdfService",
-                                   "@mozilla.org/rdf/rdf-service;1", "nsIRDFService");
-XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
-                                   "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
+ChromeUtils.defineModuleGetter(this, "FileTestUtils",
+                               "resource://testing-common/FileTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "HttpServer",
+                               "resource://testing-common/httpd.js");
 
+XPCOMUtils.defineLazyServiceGetters(this, {
+  aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
+  proxyService: ["@mozilla.org/network/protocol-proxy-service;1", "nsIProtocolProxyService"],
+  rdfService: ["@mozilla.org/rdf/rdf-service;1", "nsIRDFService"],
+  uuidGen: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
+});
 
 XPCOMUtils.defineLazyGetter(this, "AppInfo", () => {
   let AppInfo = {};
@@ -215,7 +218,16 @@ var AddonTestUtils = {
   usePrivilegedSignatures: true,
   overrideEntry: null,
 
+  maybeInit(testScope) {
+    if (this.testScope != testScope) {
+      this.init(testScope);
+    }
+  },
+
   init(testScope) {
+    if (this.testScope === testScope) {
+      return;
+    }
     this.testScope = testScope;
 
     // Get the profile directory for tests to use.
@@ -295,12 +307,27 @@ var AddonTestUtils = {
     testScope.registerCleanupFunction(() => {
       this.cleanupTempXPIs();
 
+      let ignoreEntries = new Set();
+      {
+        // FileTestUtils lazily creates a directory to hold the temporary files
+        // it creates. If that directory exists, ignore it.
+        let {value} = Object.getOwnPropertyDescriptor(FileTestUtils,
+                                                      "_globalTemporaryDirectory");
+        if (value) {
+          ignoreEntries.add(value.leafName);
+        }
+      }
+
       // Check that the temporary directory is empty
       var dirEntries = this.tempDir.directoryEntries
                            .QueryInterface(Ci.nsIDirectoryEnumerator);
       var entries = [];
-      while (dirEntries.hasMoreElements())
-        entries.push(dirEntries.nextFile.leafName);
+      while (dirEntries.hasMoreElements()) {
+        let {leafName} = dirEntries.nextFile;
+        if (!ignoreEntries.has(leafName)) {
+          entries.push(leafName);
+        }
+      }
       if (entries.length)
         throw new Error(`Found unexpected files in temporary directory: ${entries.join(", ")}`);
 
@@ -362,6 +389,63 @@ var AddonTestUtils = {
         Cu.reportError(e);
       }
     });
+  },
+
+  /**
+   * Creates a new HttpServer for testing, and begins listening on the
+   * specified port. Automatically shuts down the server when the test
+   * unit ends.
+   *
+   * @param {object} [options = {}]
+   *        The options object.
+   * @param {integer} [options.port = -1]
+   *        The port to listen on. If omitted, listen on a random
+   *        port. The latter is the preferred behavior.
+   * @param {sequence<string>?} [options.hosts = null]
+   *        A set of hosts to accept connections to. Support for this is
+   *        implemented using a proxy filter.
+   *
+   * @returns {HttpServer}
+   *        The HTTP server instance.
+   */
+  createHttpServer({port = -1, hosts} = {}) {
+    let server = new HttpServer();
+    server.start(port);
+
+    if (hosts) {
+      hosts = new Set(hosts);
+      const serverHost = "localhost";
+      const serverPort = server.identity.primaryPort;
+
+      for (let host of hosts) {
+        server.identity.add("http", host, 80);
+      }
+
+      const proxyFilter = {
+        proxyInfo: proxyService.newProxyInfo("http", serverHost, serverPort, 0, 4096, null),
+
+        applyFilter(service, channel, defaultProxyInfo, callback) {
+          if (hosts.has(channel.URI.host)) {
+            callback.onProxyFilterResult(this.proxyInfo);
+          } else {
+            callback.onProxyFilterResult(defaultProxyInfo);
+          }
+        },
+      };
+
+      proxyService.registerChannelFilter(proxyFilter, 0);
+      this.testScope.registerCleanupFunction(() => {
+        proxyService.unregisterChannelFilter(proxyFilter);
+      });
+    }
+
+    this.testScope.registerCleanupFunction(() => {
+      return new Promise(resolve => {
+        server.stop(resolve);
+      });
+    });
+
+    return server;
   },
 
   info(msg) {
@@ -726,7 +810,7 @@ var AddonTestUtils = {
 
     rdf += '<Description about="urn:mozilla:install-manifest">\n';
 
-    let props = ["id", "version", "type", "internalName", "updateURL", "updateKey",
+    let props = ["id", "version", "type", "internalName", "updateURL",
                  "optionsURL", "optionsType", "aboutURL", "iconURL", "icon64URL",
                  "skinnable", "bootstrap", "unpack", "strictCompatibility",
                  "hasEmbeddedWebExtension"];
@@ -1054,6 +1138,16 @@ var AddonTestUtils = {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider]),
     };
     Services.dirsvc.registerProvider(dirProvider);
+
+    try {
+      Services.dirsvc.undefine(key);
+    } catch (e) {
+      // This throws if the key is not already registered, but that
+      // doesn't matter.
+      if (e.result != Cr.NS_ERROR_FAILURE) {
+        throw e;
+      }
+    }
   },
 
   /**

@@ -185,8 +185,6 @@ const APPID_TO_TOPIC = {
   "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}": "sessionstore-windows-restored",
   // Thunderbird
   "{3550f703-e582-4d05-9a08-453d09bdfdc6}": "mail-startup-done",
-  // Instantbird
-  "{33cb9019-c295-46dd-be21-8c4936574bee}": "xul-window-visible",
 };
 
 // A var is used for the delay so tests can set a smaller value.
@@ -1624,7 +1622,6 @@ UpdateService.prototype = {
         // intentional fallthrough
       case "sessionstore-windows-restored":
       case "mail-startup-done":
-      case "xul-window-visible":
         if (Services.appinfo.ID in APPID_TO_TOPIC) {
           Services.obs.removeObserver(this,
                                       APPID_TO_TOPIC[Services.appinfo.ID]);

@@ -577,6 +577,7 @@ function test_newChannel_with_options()
   checkEqualToIOSChannel(NetUtil.newChannel({
     uri,
     loadingPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER,
   }));
 
@@ -598,17 +599,22 @@ function test_newChannel_with_wrong_options()
   }, /requires a single object argument/);
 
   Assert.throws(() => {
-    NetUtil.newChannel({});
+    NetUtil.newChannel({ loadUsingSystemPrincipal: true });
   }, /requires the 'uri' property/);
 
   Assert.throws(() => {
-    NetUtil.newChannel({ uri });
+    NetUtil.newChannel({ uri, loadingNode: true });
+  }, /requires the 'securityFlags'/);
+
+  Assert.throws(() => {
+    NetUtil.newChannel({ uri, securityFlags: 0 });
   }, /requires at least one of the 'loadingNode'/);
 
   Assert.throws(() => {
     NetUtil.newChannel({
       uri,
       loadingPrincipal: systemPrincipal,
+      securityFlags: 0,
     });
   }, /requires the 'contentPolicyType'/);
 
@@ -855,7 +861,7 @@ function test_readInputStreamToString_invalid_sequence()
   test_readInputStreamToString_too_many_bytes,
   test_readInputStreamToString_with_charset,
   test_readInputStreamToString_invalid_sequence,
-].forEach(add_test);
+].forEach(f => add_test(f));
 var index = 0;
 
 function run_test()

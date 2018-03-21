@@ -905,9 +905,9 @@ ToLowerCase(JSContext* cx, JSLinearString* str)
         // We don't need extra special casing checks in the loop below,
         // because U+0130 LATIN CAPITAL LETTER I WITH DOT ABOVE and U+03A3
         // GREEK CAPITAL LETTER SIGMA already have simple lower case mappings.
-        MOZ_ASSERT(unicode::CanLowerCase(unicode::LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE),
+        MOZ_ASSERT(unicode::ChangesWhenLowerCased(unicode::LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE),
                    "U+0130 has a simple lower case mapping");
-        MOZ_ASSERT(unicode::CanLowerCase(unicode::GREEK_CAPITAL_LETTER_SIGMA),
+        MOZ_ASSERT(unicode::ChangesWhenLowerCased(unicode::GREEK_CAPITAL_LETTER_SIGMA),
                    "U+03A3 has a simple lower case mapping");
 
         // One element Latin-1 strings can be directly retrieved from the
@@ -930,7 +930,7 @@ ToLowerCase(JSContext* cx, JSLinearString* str)
                 if (unicode::IsLeadSurrogate(c) && i + 1 < length) {
                     CharT trail = chars[i + 1];
                     if (unicode::IsTrailSurrogate(trail)) {
-                        if (unicode::CanLowerCaseNonBMP(c, trail))
+                        if (unicode::ChangesWhenLowerCasedNonBMP(c, trail))
                             break;
 
                         i++;
@@ -938,7 +938,7 @@ ToLowerCase(JSContext* cx, JSLinearString* str)
                     }
                 }
             }
-            if (unicode::CanLowerCase(c))
+            if (unicode::ChangesWhenLowerCased(c))
                 break;
         }
 
@@ -1114,24 +1114,24 @@ js::str_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp)
 #endif // EXPOSE_INTL_API
 
 static inline bool
-CanUpperCaseSpecialCasing(Latin1Char charCode)
+ToUpperCaseHasSpecialCasing(Latin1Char charCode)
 {
-    // Handle U+00DF LATIN SMALL LETTER SHARP S inline, all other Latin-1
-    // characters don't have special casing rules.
-    MOZ_ASSERT_IF(charCode != unicode::LATIN_SMALL_LETTER_SHARP_S,
-                  !unicode::CanUpperCaseSpecialCasing(charCode));
+    // U+00DF LATIN SMALL LETTER SHARP S is the only Latin-1 code point with
+    // special casing rules, so detect it inline.
+    bool hasUpperCaseSpecialCasing = charCode == unicode::LATIN_SMALL_LETTER_SHARP_S;
+    MOZ_ASSERT(hasUpperCaseSpecialCasing == unicode::ChangesWhenUpperCasedSpecialCasing(charCode));
 
-    return charCode == unicode::LATIN_SMALL_LETTER_SHARP_S;
+    return hasUpperCaseSpecialCasing;
 }
 
 static inline bool
-CanUpperCaseSpecialCasing(char16_t charCode)
+ToUpperCaseHasSpecialCasing(char16_t charCode)
 {
-    return unicode::CanUpperCaseSpecialCasing(charCode);
+    return unicode::ChangesWhenUpperCasedSpecialCasing(charCode);
 }
 
 static inline size_t
-LengthUpperCaseSpecialCasing(Latin1Char charCode)
+ToUpperCaseLengthSpecialCasing(Latin1Char charCode)
 {
     // U+00DF LATIN SMALL LETTER SHARP S is uppercased to two 'S'.
     MOZ_ASSERT(charCode == unicode::LATIN_SMALL_LETTER_SHARP_S);
@@ -1140,15 +1140,15 @@ LengthUpperCaseSpecialCasing(Latin1Char charCode)
 }
 
 static inline size_t
-LengthUpperCaseSpecialCasing(char16_t charCode)
+ToUpperCaseLengthSpecialCasing(char16_t charCode)
 {
-    MOZ_ASSERT(::CanUpperCaseSpecialCasing(charCode));
+    MOZ_ASSERT(ToUpperCaseHasSpecialCasing(charCode));
 
     return unicode::LengthUpperCaseSpecialCasing(charCode);
 }
 
 static inline void
-AppendUpperCaseSpecialCasing(char16_t charCode, Latin1Char* elements, size_t* index)
+ToUpperCaseAppendUpperCaseSpecialCasing(char16_t charCode, Latin1Char* elements, size_t* index)
 {
     // U+00DF LATIN SMALL LETTER SHARP S is uppercased to two 'S'.
     MOZ_ASSERT(charCode == unicode::LATIN_SMALL_LETTER_SHARP_S);
@@ -1159,7 +1159,7 @@ AppendUpperCaseSpecialCasing(char16_t charCode, Latin1Char* elements, size_t* in
 }
 
 static inline void
-AppendUpperCaseSpecialCasing(char16_t charCode, char16_t* elements, size_t* index)
+ToUpperCaseAppendUpperCaseSpecialCasing(char16_t charCode, char16_t* elements, size_t* index)
 {
     unicode::AppendUpperCaseSpecialCasing(charCode, elements, index);
 }
@@ -1191,12 +1191,12 @@ ToUpperCaseImpl(DestChar* destChars, const SrcChar* srcChars, size_t startIndex,
             }
         }
 
-        if (MOZ_UNLIKELY(c > 0x7f && ::CanUpperCaseSpecialCasing(static_cast<SrcChar>(c)))) {
+        if (MOZ_UNLIKELY(c > 0x7f && ToUpperCaseHasSpecialCasing(static_cast<SrcChar>(c)))) {
             // Return if the output buffer is too small.
             if (srcLength == destLength)
                 return i;
 
-            ::AppendUpperCaseSpecialCasing(c, destChars, &j);
+            ToUpperCaseAppendUpperCaseSpecialCasing(c, destChars, &j);
             continue;
         }
 
@@ -1226,8 +1226,8 @@ ToUpperCaseLength(const CharT* chars, size_t startIndex, size_t length)
     for (size_t i = startIndex; i < length; i++) {
         char16_t c = chars[i];
 
-        if (c > 0x7f && ::CanUpperCaseSpecialCasing(static_cast<CharT>(c)))
-            upperLength += ::LengthUpperCaseSpecialCasing(static_cast<CharT>(c)) - 1;
+        if (c > 0x7f && ToUpperCaseHasSpecialCasing(static_cast<CharT>(c)))
+            upperLength += ToUpperCaseLengthSpecialCasing(static_cast<CharT>(c)) - 1;
     }
     return upperLength;
 }
@@ -1307,7 +1307,7 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
                 }
 
                 MOZ_ASSERT(unicode::ToUpperCase(c) > JSString::MAX_LATIN1_CHAR ||
-                           ::CanUpperCaseSpecialCasing(c));
+                           ToUpperCaseHasSpecialCasing(c));
             }
         }
 
@@ -1319,7 +1319,7 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
                 if (unicode::IsLeadSurrogate(c) && i + 1 < length) {
                     CharT trail = chars[i + 1];
                     if (unicode::IsTrailSurrogate(trail)) {
-                        if (unicode::CanUpperCaseNonBMP(c, trail))
+                        if (unicode::ChangesWhenUpperCasedNonBMP(c, trail))
                             break;
 
                         i++;
@@ -1327,9 +1327,9 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
                     }
                 }
             }
-            if (unicode::CanUpperCase(c))
+            if (unicode::ChangesWhenUpperCased(c))
                 break;
-            if (MOZ_UNLIKELY(c > 0x7f && ::CanUpperCaseSpecialCasing(c)))
+            if (MOZ_UNLIKELY(c > 0x7f && ToUpperCaseHasSpecialCasing(c)))
                 break;
         }
 

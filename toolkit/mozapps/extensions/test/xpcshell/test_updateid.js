@@ -31,12 +31,12 @@ function promiseInstallUpdate(install) {
 }
 
 // Create and configure the HTTP server.
-let testserver = createHttpServer(4444);
+let testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 testserver.registerDirectory("/data/", do_get_file("data"));
 testserver.registerDirectory("/addons/", do_get_file("addons"));
 
 function run_test() {
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
   startupManager();
   run_next_test();
 }

@@ -677,7 +677,11 @@ var ExtensionTestUtils = {
 
 
     scope.registerCleanupFunction(() => {
-      tmpD.remove(true);
+      try {
+        tmpD.remove(true);
+      } catch (e) {
+        Cu.reportError(e);
+      }
       Services.dirsvc.unregisterProvider(dirProvider);
 
       this.currentScope = null;

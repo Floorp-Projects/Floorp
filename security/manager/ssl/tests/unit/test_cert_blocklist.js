@@ -353,8 +353,8 @@ function run_test() {
   });
 
   // blocklist load is async so we must use add_test from here
-  add_task(function* () {
-    yield fetch_blocklist();
+  add_task(function () {
+    return fetch_blocklist();
   });
 
   add_test(function() {

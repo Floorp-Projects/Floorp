@@ -174,6 +174,8 @@ public:
     void SchedulePaintIfDeviceReset() override;
     void CheckForContentOnlyDeviceReset();
 
+    bool AllowOpenGLCanvas() override;
+
     mozilla::gfx::BackendType GetContentBackendFor(mozilla::layers::LayersBackend aLayers) override;
 
     mozilla::gfx::BackendType GetPreferredCanvasBackend() override;

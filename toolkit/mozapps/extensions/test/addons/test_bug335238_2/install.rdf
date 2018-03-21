@@ -24,7 +24,7 @@
     </em:requires>
     
     <em:name>Bug 335238</em:name>
-    <em:updateURL>http://localhost:4444/1?id=%ITEM_ID%&amp;version=%ITEM_VERSION%&amp;maxAppVersion=%ITEM_MAXAPPVERSION%&amp;status=%ITEM_STATUS%&amp;appId=%APP_ID%&amp;appVersion=%APP_VERSION%&amp;appOs=%APP_OS%&amp;appAbi=%APP_ABI%&amp;locale=%APP_LOCALE%&amp;reqVersion=%REQ_VERSION%</em:updateURL>
+    <em:updateURL>http://example.com/1?id=%ITEM_ID%&amp;version=%ITEM_VERSION%&amp;maxAppVersion=%ITEM_MAXAPPVERSION%&amp;status=%ITEM_STATUS%&amp;appId=%APP_ID%&amp;appVersion=%APP_VERSION%&amp;appOs=%APP_OS%&amp;appAbi=%APP_ABI%&amp;locale=%APP_LOCALE%&amp;reqVersion=%REQ_VERSION%</em:updateURL>
     
   </Description>      
 </RDF>
