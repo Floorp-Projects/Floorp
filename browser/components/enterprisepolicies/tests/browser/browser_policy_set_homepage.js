@@ -10,7 +10,6 @@ const TOUCHED_PREFS = {
   "pref.browser.homepage.disable_button.current_page": "Bool",
   "pref.browser.homepage.disable_button.bookmark_page": "Bool",
   "pref.browser.homepage.disable_button.restore_default": "Bool",
-  "browser.policies.runOncePerModification.setHomepage": "String",
 };
 let ORIGINAL_PREF_VALUE = {};
 

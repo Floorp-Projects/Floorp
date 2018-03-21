@@ -26,4 +26,6 @@ registerCleanupFunction(async function policies_headjs_finishWithCleanSlate() {
     await setupPolicyEngineWithJson("");
   }
   is(Services.policies.status, Ci.nsIEnterprisePolicies.INACTIVE, "Engine is inactive at the end of the test");
+
+  EnterprisePolicyTesting.resetRunOnceState();
 });
