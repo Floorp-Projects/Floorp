@@ -184,10 +184,8 @@ class FirefoxDataProvider {
       }, 0);
 
       requestPostData.postData.text = postData;
-      payload.requestPostData = {
-        ...requestPostData,
-        uploadHeaders: { headers, headersSize }
-      };
+      payload.requestPostData = Object.assign({}, requestPostData);
+      payload.requestHeadersFromUploadStream = { headers, headersSize };
     }
     return payload;
   }
@@ -542,7 +540,7 @@ class FirefoxDataProvider {
       requestPostData: response
     });
     emit(EVENTS.RECEIVED_REQUEST_POST_DATA, response.from);
-    return payload.requestPostData;
+    return payload;
   }
 
   /**
