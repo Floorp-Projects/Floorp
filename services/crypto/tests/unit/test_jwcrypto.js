@@ -271,4 +271,4 @@ var TESTS = [
 
 TESTS = TESTS.concat([test_rsa, test_dsa]);
 
-TESTS.forEach(add_test);
+TESTS.forEach(f => add_test(f));

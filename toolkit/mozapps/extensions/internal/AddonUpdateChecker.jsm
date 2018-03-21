@@ -12,13 +12,7 @@
 var EXPORTED_SYMBOLS = [ "AddonUpdateChecker" ];
 
 const TIMEOUT               = 60 * 1000;
-const PREFIX_NS_RDF         = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-const PREFIX_NS_EM          = "http://www.mozilla.org/2004/em-rdf#";
-const PREFIX_ITEM           = "urn:mozilla:item:";
-const PREFIX_EXTENSION      = "urn:mozilla:extension:";
-const PREFIX_THEME          = "urn:mozilla:theme:";
 const TOOLKIT_ID            = "toolkit@mozilla.org";
-const XMLURI_PARSE_ERROR    = "http://www.mozilla.org/newlayout/xml/parsererror.xml";
 
 const PREF_UPDATE_REQUIREBUILTINCERTS = "extensions.update.requireBuiltInCerts";
 
@@ -33,6 +27,8 @@ ChromeUtils.defineModuleGetter(this, "AddonRepository",
                                "resource://gre/modules/addons/AddonRepository.jsm");
 ChromeUtils.defineModuleGetter(this, "ServiceRequest",
                                "resource://gre/modules/ServiceRequest.jsm");
+ChromeUtils.defineModuleGetter(this, "UpdateRDFConverter",
+                               "resource://gre/modules/addons/UpdateRDFConverter.jsm");
 
 
 // Shared code for suppressing bad cert dialogs.
@@ -42,173 +38,12 @@ XPCOMUtils.defineLazyGetter(this, "CertUtils", function() {
   return certUtils;
 });
 
-var gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
-           getService(Ci.nsIRDFService);
-
 ChromeUtils.import("resource://gre/modules/Log.jsm");
 const LOGGER_ID = "addons.update-checker";
 
 // Create a new logger for use by the Addons Update Checker
 // (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
-
-/**
- * A serialisation method for RDF data that produces an identical string
- * for matching RDF graphs.
- * The serialisation is not complete, only assertions stemming from a given
- * resource are included, multiple references to the same resource are not
- * permitted, and the RDF prolog and epilog are not included.
- * RDF Blob and Date literals are not supported.
- */
-function RDFSerializer() {
-  this.cUtils = Cc["@mozilla.org/rdf/container-utils;1"].
-                getService(Ci.nsIRDFContainerUtils);
-  this.resources = [];
-}
-
-RDFSerializer.prototype = {
-  INDENT: "  ",      // The indent used for pretty-printing
-  resources: null,   // Array of the resources that have been found
-
-  /**
-   * Escapes characters from a string that should not appear in XML.
-   *
-   * @param  aString
-   *         The string to be escaped
-   * @return a string with all characters invalid in XML character data
-   *         converted to entity references.
-   */
-  escapeEntities(aString) {
-    aString = aString.replace(/&/g, "&amp;");
-    aString = aString.replace(/</g, "&lt;");
-    aString = aString.replace(/>/g, "&gt;");
-    return aString.replace(/"/g, "&quot;");
-  },
-
-  /**
-   * Serializes all the elements of an RDF container.
-   *
-   * @param  aDs
-   *         The RDF datasource
-   * @param  aContainer
-   *         The RDF container to output the child elements of
-   * @param  aIndent
-   *         The current level of indent for pretty-printing
-   * @return a string containing the serialized elements.
-   */
-  serializeContainerItems(aDs, aContainer, aIndent) {
-    var result = "";
-    var items = aContainer.GetElements();
-    while (items.hasMoreElements()) {
-      var item = items.getNext().QueryInterface(Ci.nsIRDFResource);
-      result += aIndent + "<RDF:li>\n";
-      result += this.serializeResource(aDs, item, aIndent + this.INDENT);
-      result += aIndent + "</RDF:li>\n";
-    }
-    return result;
-  },
-
-  /**
-   * Serializes all em:* (see EM_NS) properties of an RDF resource except for
-   * the em:signature property. As this serialization is to be compared against
-   * the manifest signature it cannot contain the em:signature property itself.
-   *
-   * @param  aDs
-   *         The RDF datasource
-   * @param  aResource
-   *         The RDF resource that contains the properties to serialize
-   * @param  aIndent
-   *         The current level of indent for pretty-printing
-   * @return a string containing the serialized properties.
-   * @throws if the resource contains a property that cannot be serialized
-   */
-  serializeResourceProperties(aDs, aResource, aIndent) {
-    var result = "";
-    var items = [];
-    var arcs = aDs.ArcLabelsOut(aResource);
-    while (arcs.hasMoreElements()) {
-      var arc = arcs.getNext().QueryInterface(Ci.nsIRDFResource);
-      if (arc.ValueUTF8.substring(0, PREFIX_NS_EM.length) != PREFIX_NS_EM)
-        continue;
-      var prop = arc.ValueUTF8.substring(PREFIX_NS_EM.length);
-      if (prop == "signature")
-        continue;
-
-      var targets = aDs.GetTargets(aResource, arc, true);
-      while (targets.hasMoreElements()) {
-        var target = targets.getNext();
-        if (target instanceof Ci.nsIRDFResource) {
-          var item = aIndent + "<em:" + prop + ">\n";
-          item += this.serializeResource(aDs, target, aIndent + this.INDENT);
-          item += aIndent + "</em:" + prop + ">\n";
-          items.push(item);
-        } else if (target instanceof Ci.nsIRDFLiteral) {
-          items.push(aIndent + "<em:" + prop + ">" +
-                     this.escapeEntities(target.Value) + "</em:" + prop + ">\n");
-        } else if (target instanceof Ci.nsIRDFInt) {
-          items.push(aIndent + "<em:" + prop + " NC:parseType=\"Integer\">" +
-                     target.Value + "</em:" + prop + ">\n");
-        } else {
-          throw Components.Exception("Cannot serialize unknown literal type");
-        }
-      }
-    }
-    items.sort();
-    result += items.join("");
-    return result;
-  },
-
-  /**
-   * Recursively serializes an RDF resource and all resources it links to.
-   * This will only output EM_NS properties and will ignore any em:signature
-   * property.
-   *
-   * @param  aDs
-   *         The RDF datasource
-   * @param  aResource
-   *         The RDF resource to serialize
-   * @param  aIndent
-   *         The current level of indent for pretty-printing. If undefined no
-   *         indent will be added
-   * @return a string containing the serialized resource.
-   * @throws if the RDF data contains multiple references to the same resource.
-   */
-  serializeResource(aDs, aResource, aIndent) {
-    if (this.resources.includes(aResource) ) {
-      // We cannot output multiple references to the same resource.
-      throw Components.Exception("Cannot serialize multiple references to " + aResource.Value);
-    }
-    if (aIndent === undefined)
-      aIndent = "";
-
-    this.resources.push(aResource);
-    var container = null;
-    var type = "Description";
-    if (this.cUtils.IsSeq(aDs, aResource)) {
-      type = "Seq";
-      container = this.cUtils.MakeSeq(aDs, aResource);
-    } else if (this.cUtils.IsAlt(aDs, aResource)) {
-      type = "Alt";
-      container = this.cUtils.MakeAlt(aDs, aResource);
-    } else if (this.cUtils.IsBag(aDs, aResource)) {
-      type = "Bag";
-      container = this.cUtils.MakeBag(aDs, aResource);
-    }
-
-    var result = aIndent + "<RDF:" + type;
-    if (!gRDF.IsAnonymousResource(aResource))
-      result += " about=\"" + this.escapeEntities(aResource.ValueUTF8) + "\"";
-    result += ">\n";
-
-    if (container)
-      result += this.serializeContainerItems(aDs, container, aIndent + this.INDENT);
-
-    result += this.serializeResourceProperties(aDs, aResource, aIndent + this.INDENT);
-
-    result += aIndent + "</RDF:" + type + ">\n";
-    return result;
-  }
-};
 
 /**
  * Sanitizes the update URL in an update item, as returned by
@@ -253,178 +88,10 @@ function sanitizeUpdateURL(aUpdate, aRequest, aHashPattern, aHashString) {
 }
 
 /**
- * Parses an RDF style update manifest into an array of update objects.
- *
- * @param  aId
- *         The ID of the add-on being checked for updates
- * @param  aUpdateKey
- *         An optional update key for the add-on
- * @param  aRequest
- *         The XMLHttpRequest that has retrieved the update manifest
- * @param  aManifestData
- *         The pre-parsed manifest, as a bare XML DOM document
- * @return an array of update objects
- * @throws if the update manifest is invalid in any way
- */
-function parseRDFManifest(aId, aUpdateKey, aRequest, aManifestData) {
-  if (aManifestData.documentElement.namespaceURI != PREFIX_NS_RDF) {
-    throw Components.Exception("Update manifest had an unrecognised namespace: " +
-                               aManifestData.documentElement.namespaceURI);
-  }
-
-  function EM_R(aProp) {
-    return gRDF.GetResource(PREFIX_NS_EM + aProp);
-  }
-
-  function getValue(aLiteral) {
-    if (aLiteral instanceof Ci.nsIRDFLiteral)
-      return aLiteral.Value;
-    if (aLiteral instanceof Ci.nsIRDFResource)
-      return aLiteral.Value;
-    if (aLiteral instanceof Ci.nsIRDFInt)
-      return aLiteral.Value;
-    return null;
-  }
-
-  function getProperty(aDs, aSource, aProperty) {
-    return getValue(aDs.GetTarget(aSource, EM_R(aProperty), true));
-  }
-
-  function getBooleanProperty(aDs, aSource, aProperty) {
-    let propValue = aDs.GetTarget(aSource, EM_R(aProperty), true);
-    if (!propValue)
-      return undefined;
-    return getValue(propValue) == "true";
-  }
-
-  function getRequiredProperty(aDs, aSource, aProperty) {
-    let value = getProperty(aDs, aSource, aProperty);
-    if (!value)
-      throw Components.Exception("Update manifest is missing a required " + aProperty + " property.");
-    return value;
-  }
-
-  let rdfParser = Cc["@mozilla.org/rdf/xml-parser;1"].
-                  createInstance(Ci.nsIRDFXMLParser);
-  let ds = Cc["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].
-           createInstance(Ci.nsIRDFDataSource);
-  rdfParser.parseString(ds, aRequest.channel.URI, aRequest.responseText);
-
-  // Differentiating between add-on types is deprecated
-  let extensionRes = gRDF.GetResource(PREFIX_EXTENSION + aId);
-  let themeRes = gRDF.GetResource(PREFIX_THEME + aId);
-  let itemRes = gRDF.GetResource(PREFIX_ITEM + aId);
-  let addonRes;
-  if (ds.ArcLabelsOut(extensionRes).hasMoreElements())
-    addonRes = extensionRes;
-  else if (ds.ArcLabelsOut(themeRes).hasMoreElements())
-    addonRes = themeRes;
-  else
-    addonRes = itemRes;
-
-  // If we have an update key then the update manifest must be signed
-  if (aUpdateKey) {
-    let signature = getProperty(ds, addonRes, "signature");
-    if (!signature)
-      throw Components.Exception("Update manifest for " + aId + " does not contain a required signature");
-    let serializer = new RDFSerializer();
-    let updateString = null;
-
-    try {
-      updateString = serializer.serializeResource(ds, addonRes);
-    } catch (e) {
-      throw Components.Exception("Failed to generate signed string for " + aId + ". Serializer threw " + e,
-                                 e.result);
-    }
-
-    let result = false;
-
-    try {
-      let verifier = Cc["@mozilla.org/security/datasignatureverifier;1"].
-                     getService(Ci.nsIDataSignatureVerifier);
-      result = verifier.verifyData(updateString, signature, aUpdateKey);
-    } catch (e) {
-      throw Components.Exception("The signature or updateKey for " + aId + " is malformed." +
-                                 "Verifier threw " + e, e.result);
-    }
-
-    if (!result)
-      throw Components.Exception("The signature for " + aId + " was not created by the add-on's updateKey");
-  }
-
-  let updates = ds.GetTarget(addonRes, EM_R("updates"), true);
-
-  // A missing updates property doesn't count as a failure, just as no avialable
-  // update information
-  if (!updates) {
-    logger.warn("Update manifest for " + aId + " did not contain an updates property");
-    return [];
-  }
-
-  if (!(updates instanceof Ci.nsIRDFResource))
-    throw Components.Exception("Missing updates property for " + addonRes.Value);
-
-  let cu = Cc["@mozilla.org/rdf/container-utils;1"].
-           getService(Ci.nsIRDFContainerUtils);
-  if (!cu.IsContainer(ds, updates))
-    throw Components.Exception("Updates property was not an RDF container");
-
-  let results = [];
-  let ctr = Cc["@mozilla.org/rdf/container;1"].
-            createInstance(Ci.nsIRDFContainer);
-  ctr.Init(ds, updates);
-  let items = ctr.GetElements();
-  while (items.hasMoreElements()) {
-    let item = items.getNext().QueryInterface(Ci.nsIRDFResource);
-    let version = getProperty(ds, item, "version");
-    if (!version) {
-      logger.warn("Update manifest is missing a required version property.");
-      continue;
-    }
-
-    logger.debug("Found an update entry for " + aId + " version " + version);
-
-    let targetApps = ds.GetTargets(item, EM_R("targetApplication"), true);
-    while (targetApps.hasMoreElements()) {
-      let targetApp = targetApps.getNext().QueryInterface(Ci.nsIRDFResource);
-
-      let appEntry = {};
-      try {
-        appEntry.id = getRequiredProperty(ds, targetApp, "id");
-        appEntry.minVersion = getRequiredProperty(ds, targetApp, "minVersion");
-        appEntry.maxVersion = getRequiredProperty(ds, targetApp, "maxVersion");
-      } catch (e) {
-        logger.warn(e);
-        continue;
-      }
-
-      let result = {
-        id: aId,
-        version,
-        updateURL: getProperty(ds, targetApp, "updateLink"),
-        updateHash: getProperty(ds, targetApp, "updateHash"),
-        updateInfoURL: getProperty(ds, targetApp, "updateInfoURL"),
-        strictCompatibility: !!getBooleanProperty(ds, targetApp, "strictCompatibility"),
-        targetApplications: [appEntry]
-      };
-
-      // The JSON update protocol requires an SHA-2 hash. RDF still
-      // supports SHA-1, for compatibility reasons.
-      sanitizeUpdateURL(result, aRequest, /^sha/, "sha1 or stronger");
-
-      results.push(result);
-    }
-  }
-  return results;
-}
-
-/**
  * Parses an JSON update manifest into an array of update objects.
  *
  * @param  aId
  *         The ID of the add-on being checked for updates
- * @param  aUpdateKey
- *         An optional update key for the add-on
  * @param  aRequest
  *         The XMLHttpRequest that has retrieved the update manifest
  * @param  aManifestData
@@ -432,10 +99,7 @@ function parseRDFManifest(aId, aUpdateKey, aRequest, aManifestData) {
  * @return an array of update objects
  * @throws if the update manifest is invalid in any way
  */
-function parseJSONManifest(aId, aUpdateKey, aRequest, aManifestData) {
-  if (aUpdateKey)
-    throw Components.Exception("Update keys are not supported for JSON update manifests");
-
+function parseJSONManifest(aId, aRequest, aManifestData) {
   let TYPE_CHECK = {
     "array": val => Array.isArray(val),
     "object": val => val && typeof val == "object" && !Array.isArray(val),
@@ -530,6 +194,16 @@ function parseJSONManifest(aId, aUpdateKey, aRequest, aManifestData) {
       appEntry.maxVersion = getProperty(app, "advisory_max_version", "string");
     }
 
+    // Add an app entry for the current API ID, too, so that it overrides any
+    // existing app-specific entries, which would take priority over the toolkit
+    // entry.
+    //
+    // Note: This currently only has any effect on legacy extensions (mainly
+    // those used in tests), since WebExtensions cannot yet specify app-specific
+    // compatibility ranges.
+    result.targetApplications.push(Object.assign({}, appEntry,
+                                                 {id: Services.appinfo.ID}));
+
     // The JSON update protocol requires an SHA-2 hash. RDF still
     // supports SHA-1, for compatibility reasons.
     sanitizeUpdateURL(result, aRequest, /^sha(256|512):/, "sha256 or sha512");
@@ -545,16 +219,13 @@ function parseJSONManifest(aId, aUpdateKey, aRequest, aManifestData) {
  *
  * @param  aId
  *         The ID of the add-on being checked for updates
- * @param  aUpdateKey
- *         An optional update key for the add-on
  * @param  aUrl
  *         The URL of the update manifest
  * @param  aObserver
  *         An observer to pass results to
  */
-function UpdateParser(aId, aUpdateKey, aUrl, aObserver) {
+function UpdateParser(aId, aUrl, aObserver) {
   this.id = aId;
-  this.updateKey = aUpdateKey;
   this.observer = aObserver;
   this.url = aUrl;
 
@@ -582,7 +253,6 @@ function UpdateParser(aId, aUpdateKey, aUrl, aObserver) {
 
 UpdateParser.prototype = {
   id: null,
-  updateKey: null,
   observer: null,
   request: null,
   url: null,
@@ -621,22 +291,16 @@ UpdateParser.prototype = {
 
     // Detect the manifest type by first attempting to parse it as
     // JSON, and falling back to parsing it as XML if that fails.
-    let parser;
+    let json;
     try {
-      try {
-        let json = JSON.parse(request.responseText);
+      let data = request.responseText;
+      if (data.startsWith("<?xml")) {
+        logger.warn(`${this.url}: RDF update manifests are deprecated, ` +
+                    "and support will soon be removed");
 
-        parser = () => parseJSONManifest(this.id, this.updateKey, request, json);
-      } catch (e) {
-        if (!(e instanceof SyntaxError))
-          throw e;
-        let domParser = Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
-        let xml = domParser.parseFromString(request.responseText, "text/xml");
-
-        if (xml.documentElement.namespaceURI == XMLURI_PARSE_ERROR)
-          throw new Error("Update manifest was not valid XML or JSON");
-
-        parser = () => parseRDFManifest(this.id, this.updateKey, request, xml);
+        json = UpdateRDFConverter.convertToJSON(request);
+      } else {
+        json = JSON.parse(data);
       }
     } catch (e) {
       logger.warn("onUpdateCheckComplete failed to determine manifest type");
@@ -646,7 +310,7 @@ UpdateParser.prototype = {
 
     let results;
     try {
-      results = parser();
+      results = parseJSONManifest(this.id, request, json);
     } catch (e) {
       logger.warn("onUpdateCheckComplete failed to parse update manifest", e);
       this.notifyError(AddonManager.ERROR_PARSE_ERROR);
@@ -868,8 +532,6 @@ var AddonUpdateChecker = {
    *
    * @param  aId
    *         The ID of the add-on being checked for updates
-   * @param  aUpdateKey
-   *         An optional update key for the add-on
    * @param  aUrl
    *         The URL of the add-on's update manifest
    * @param  aObserver
@@ -877,7 +539,7 @@ var AddonUpdateChecker = {
    * @return UpdateParser so that the caller can use UpdateParser.cancel() to shut
    *         down in-progress update requests
    */
-  checkForUpdates(aId, aUpdateKey, aUrl, aObserver) {
-    return new UpdateParser(aId, aUpdateKey, aUrl, aObserver);
+  checkForUpdates(aId, aUrl, aObserver) {
+    return new UpdateParser(aId, aUrl, aObserver);
   }
 };

@@ -65,6 +65,7 @@ function getId(tab) {
 }
 
 async function check(extension, tab, expected, msg) {
+  await promiseAnimationFrame();
   let widgetId = makeWidgetId(extension.id);
   let pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(widgetId);
   is(gBrowser.selectedTab, tab, `tab ${tab.linkedBrowser.currentURI.spec} is selected`);

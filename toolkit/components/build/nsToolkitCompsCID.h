@@ -86,9 +86,6 @@
 #define NS_ADDONCONTENTPOLICY_CONTRACTID \
   "@mozilla.org/addons/content-policy;1"
 
-#define NS_ADDONPATHSERVICE_CONTRACTID \
-    "@mozilla.org/addon-path-service;1"
-
 /////////////////////////////////////////////////////////////////////////////
 
 #define ALERT_NOTIFICATION_CID \
@@ -183,9 +180,6 @@
 
 #define NS_ADDONCONTENTPOLICY_CID \
 { 0xc26a8241, 0xecf4, 0x4aed, { 0x9f, 0x3c, 0xf1, 0xf5, 0xc7, 0x13, 0xb9, 0xa5 } }
-
-#define NS_ADDON_PATH_SERVICE_CID \
-{ 0xa39f39d0, 0xdfb6, 0x11e3, { 0x8b, 0x68, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
 
 #define NS_ADDON_POLICY_SERVICE_CID \
 { 0x562de129, 0x8338, 0x482c, { 0xbb, 0x96, 0xa1, 0xff, 0x09, 0xee, 0x53, 0xcc } }

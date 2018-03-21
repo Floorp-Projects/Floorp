@@ -41,7 +41,7 @@ mapFile("/data/test_delay_updates_defer.json", testserver);
 mapFile("/data/test_no_update.json", testserver);
 testserver.registerDirectory("/addons/", do_get_file("addons"));
 
-createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
 
 // add-on registers upgrade listener, and ignores update.
 add_task(async function delay_updates_ignore() {
