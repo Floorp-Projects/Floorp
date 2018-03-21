@@ -30,7 +30,7 @@ const reqShared = require.context("raw!devtools/shared/locales/",
                                   true, /^.*\.properties$/);
 const reqClient = require.context("raw!devtools/client/locales/",
                                   true, /^.*\.properties$/);
-const reqShim = require.context("raw!devtools/shim/locales/",
+const reqStartup = require.context("raw!devtools/startup/locales/",
                                   true, /^.*\.properties$/);
 const reqGlobal = require.context("raw!toolkit/locales/",
                                   true, /^.*\.properties$/);
@@ -74,8 +74,8 @@ function getProperties(url) {
       reqFn = reqGlobal;
     } else if (/^devtools\/shared/.test(url)) {
       reqFn = reqShared;
-    } else if (/^devtools\/shim/.test(url)) {
-      reqFn = reqShim;
+    } else if (/^devtools\/startup/.test(url)) {
+      reqFn = reqStartup;
     } else {
       reqFn = reqClient;
     }

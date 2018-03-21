@@ -192,6 +192,7 @@
 #include "nsHostObjectProtocolHandler.h"
 #include "nsICaptivePortalService.h"
 #include "nsIObjectLoadingContent.h"
+#include "nsPerformanceMetrics.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -3327,6 +3328,44 @@ ContentParent::RecvFinishMemoryReport(const uint32_t& aGeneration)
     mMemoryReportRequest = nullptr;
   }
   return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvAddPerformanceMetrics(const PerformanceInfo& aMetrics)
+{
+#ifndef RELEASE_OR_BETA
+  // converting the data we get from a child as a notification
+  if (aMetrics.items().IsEmpty()) {
+      return IPC_OK();
+  }
+
+  nsCOMPtr<nsIMutableArray> xpItems = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (NS_WARN_IF(!xpItems)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  for (uint32_t i = 0; i<aMetrics.items().Length(); i++) {
+       const CategoryDispatch& entry = aMetrics.items()[i];
+       nsCOMPtr<nsIPerformanceMetricsDispatchCategory> item =
+           new PerformanceMetricsDispatchCategory(entry.category(),
+                                                  entry.count());
+       xpItems->AppendElement(item);
+  }
+
+  nsCOMPtr<nsIPerformanceMetricsData> data =
+      new PerformanceMetricsData(aMetrics.pid(), aMetrics.wid(), aMetrics.pwid(),
+                                 aMetrics.host(), aMetrics.duration(),
+                                 aMetrics.worker(), xpItems);
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (!obs) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  obs->NotifyObservers(data, "performance-metrics", nullptr);
+  return IPC_OK();
+#endif
+#ifdef RELEASE_OR_BETA
+  return IPC_OK();
+#endif
 }
 
 PCycleCollectWithLogsParent*

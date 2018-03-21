@@ -48,10 +48,10 @@ function runTests() {
       });
       ok(!pageResult, "no content.foobarBug636725");
     },
-    then: function() {
-      is(gBrowser.contentWindowAsCPOW.wrappedJSObject.foobarBug636725, "aloha",
+    then: () => ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+      is(content.wrappedJSObject.foobarBug636725, "aloha",
          "content.foobarBug636725 has been set");
-    }
+    }),
   }, {
     method: "run",
     prepare: function() {

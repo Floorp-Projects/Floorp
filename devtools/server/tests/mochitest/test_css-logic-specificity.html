@@ -14,7 +14,7 @@ Test that css-logic calculates CSS specificity properly
 
   window.onload = function() {
     const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-    const {CssLogic, CssSelector} = require("devtools/server/css-logic");
+    const {CssLogic, CssSelector} = require("devtools/server/actors/inspector/css-logic");
     const InspectorUtils = SpecialPowers.InspectorUtils;
 
     const TEST_DATA = [

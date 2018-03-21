@@ -325,12 +325,26 @@ public:
   // Prefix increment only, to encourage good habits.
   void operator++()
   {
+    if (NS_WARN_IF(counter == std::numeric_limits<uint32_t>::max())) {
+      return;
+    }
     ++counter;
   }
 
   // Chaining doesn't make any sense, don't return anything.
   void operator+=(int increment)
   {
+    if (NS_WARN_IF(increment > 0 &&
+                   static_cast<uint32_t>(increment) >
+                     (std::numeric_limits<uint32_t>::max() - counter))) {
+      counter = std::numeric_limits<uint32_t>::max();
+      return;
+    }
+    if (NS_WARN_IF(increment < 0 &&
+                   static_cast<uint32_t>(-increment) > counter)) {
+      counter = std::numeric_limits<uint32_t>::min();
+      return;
+    }
     counter += increment;
   }
 
@@ -354,12 +368,28 @@ public:
   }
 
   // Prefix increment only, to encourage good habits.
-  void operator++() {
+  void operator++()
+  {
+    if (NS_WARN_IF(counter == std::numeric_limits<uint32_t>::max())) {
+      return;
+    }
     ++counter;
   }
 
   // Chaining doesn't make any sense, don't return anything.
-  void operator+=(int increment) {
+  void operator+=(int increment)
+  {
+    if (NS_WARN_IF(increment > 0 &&
+                   static_cast<uint32_t>(increment) >
+                     (std::numeric_limits<uint32_t>::max() - counter))) {
+      counter = std::numeric_limits<uint32_t>::max();
+      return;
+    }
+    if (NS_WARN_IF(increment < 0 &&
+                   static_cast<uint32_t>(-increment) > counter)) {
+      counter = std::numeric_limits<uint32_t>::min();
+      return;
+    }
     counter += increment;
   }
 

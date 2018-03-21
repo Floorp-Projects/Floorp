@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_workers_WorkerDebugger_h
 #define mozilla_dom_workers_WorkerDebugger_h
 
+#include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "nsIWorkerDebugger.h"
 
@@ -42,6 +43,15 @@ public:
   void
   ReportErrorToDebugger(const nsAString& aFilename, uint32_t aLineno,
                         const nsAString& aMessage);
+
+#ifndef RELEASE_OR_BETA
+  /*
+   * Sends back a PerformanceInfo struct from the counters
+   * in mWorkerPrivate. Counters are reset to zero after this call.
+   */
+  PerformanceInfo
+  ReportPerformanceInfo();
+#endif
 
 private:
   virtual

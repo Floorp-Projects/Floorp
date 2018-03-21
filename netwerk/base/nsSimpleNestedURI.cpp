@@ -197,7 +197,8 @@ nsSimpleNestedURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsSimpleNestedURI::Mutator,
                                 nsIURISetters,
                                 nsIURIMutator,
-                                nsISerializable)
+                                nsISerializable,
+                                nsINestedURIMutator)
 
 NS_IMETHODIMP
 nsSimpleNestedURI::Mutate(nsIURIMutator** aMutator)

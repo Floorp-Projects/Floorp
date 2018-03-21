@@ -578,8 +578,15 @@ class RecursiveMakeBackend(CommonBackend):
                     backend_file.write('%s: %s ;\n' % (output, first_output))
                 backend_file.write('GARBAGE += %s\n' % output)
             backend_file.write('EXTRA_MDDEPEND_FILES += %s\n' % dep_file)
+
+            force = ''
+            if obj.force:
+                force = ' FORCE'
+            elif obj.localized:
+                force = ' $(if $(IS_LANGUAGE_REPACK),FORCE)'
+
             if obj.script:
-                backend_file.write("""{output}: {script}{inputs}{backend}{repack_force}
+                backend_file.write("""{output}: {script}{inputs}{backend}{force}
 \t$(REPORT_BUILD)
 \t$(call py_action,file_generate,{locale}{script} {method} {output} $(MDDEPDIR)/{dep_file}{inputs}{flags})
 
@@ -592,7 +599,7 @@ class RecursiveMakeBackend(CommonBackend):
            # so standard mtime dependencies won't work properly when the build is re-run
            # with a different locale as input. IS_LANGUAGE_REPACK will reliably be set
            # in this situation, so simply force the generation to run in that case.
-           repack_force=' $(if $(IS_LANGUAGE_REPACK),FORCE)' if obj.localized else '',
+           force=force,
            locale='--locale=$(AB_CD) ' if obj.localized else '',
            script=obj.script,
            method=obj.method))

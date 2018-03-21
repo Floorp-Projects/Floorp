@@ -156,7 +156,7 @@ devtools/shared/webconsole/test/test_*.html
 
 # Ignore devtools preferences files
 devtools/client/preferences/**
-devtools/shim/devtools-startup-prefs.js
+devtools/startup/devtools-startup-prefs.js
 
 # Ignore devtools third-party libs
 devtools/shared/jsbeautify/*

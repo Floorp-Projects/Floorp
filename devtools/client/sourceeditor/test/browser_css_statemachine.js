@@ -54,17 +54,10 @@ const TEST_URI = "data:text/html;charset=UTF-8," + encodeURIComponent(
    " </html>"
   ].join("\n"));
 
-var doc = null;
-function test() {
-  waitForExplicitFinish();
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_URI);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
-    doc = gBrowser.contentDocumentAsCPOW;
-    runTests();
-  });
-}
+add_task(async function test() {
+  let tab = await addTab(TEST_URI);
+  let browser = tab.linkedBrowser;
 
-function runTests() {
   let completer = new CSSCompleter({
     cssProperties: getClientCssProperties()
   });
@@ -88,12 +81,15 @@ function runTests() {
     return false;
   };
 
-  let progress = doc.getElementById("progress");
-  let progressDiv = doc.querySelector("#progress > div");
   let i = 0;
   for (let testcase of tests) {
-    progress.dataset.progress = ++i;
-    progressDiv.style.width = 100 * i / tests.length + "%";
+    ++i;
+    await ContentTask.spawn(browser, [i, tests.length], function([idx, len]) {
+      let progress = content.document.getElementById("progress");
+      let progressDiv = content.document.querySelector("#progress > div");
+      progress.dataset.progress = idx;
+      progressDiv.style.width = 100 * idx / len + "%";
+    });
     completer.resolveState(limit(source, testcase[0]),
                            {line: testcase[0][0], ch: testcase[0][1]});
     if (checkState(testcase[1])) {
@@ -103,9 +99,11 @@ function runTests() {
          "but found [" + completer.state + ", " + completer.selectorState +
          ", " + completer.completing + ", " +
          (completer.propertyName || completer.selector) + "].");
-      progress.classList.add("failed");
+      await ContentTask.spawn(browser, null, function() {
+        let progress = content.document.getElementById("progress");
+        progress.classList.add("failed");
+      });
     }
   }
   gBrowser.removeCurrentTab();
-  finish();
-}
+});
