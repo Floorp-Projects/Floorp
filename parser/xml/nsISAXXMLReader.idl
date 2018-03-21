@@ -61,24 +61,6 @@ interface nsISAXXMLReader : nsIStreamListener {
    * handler immediately.
    */
   attribute nsISAXErrorHandler errorHandler;
-
-  /**
-   * @param str The UTF16 string to be parsed
-   * @param contentType The content type of the string (see parseFromStream)
-   */
-  void parseFromString(in AString str, in string contentType);
-
-  /**
-   * @param stream The byte stream whose contents are parsed
-   * @param charset The character set that was used to encode the byte
-   *                stream. NULL if not specified.
-   * @param contentType The content type of the string - either text/xml,
-   *                    application/xml, or application/xhtml+xml.
-   *                    Must not be NULL.
-   */
-  void parseFromStream(in nsIInputStream stream,
-                       in string charset,
-                       in string contentType);
   
   /**
    * Begin an asynchronous parse. This method initializes the parser,
