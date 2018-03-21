@@ -615,6 +615,7 @@ nsWindow::nsWindow(bool aIsChildWindow)
   mDestroyCalled        = false;
   mHasTaskbarIconBeenCreated = false;
   mMouseTransparent     = false;
+  mDelayedFocus         = false;
   mPickerDisplayCount   = 0;
   mWindowType           = eWindowType_child;
   mBorderStyle          = eBorderStyle_default;
@@ -1620,6 +1621,10 @@ nsWindow::Show(bool bState)
       if (!wasVisible && (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog)) {
         // when a toplevel window or dialog is shown, initialize the UI state
         ::SendMessageW(mWnd, WM_CHANGEUISTATE, MAKEWPARAM(UIS_INITIALIZE, UISF_HIDEFOCUS | UISF_HIDEACCEL), 0);
+      }
+      if (mDelayedFocus) {
+        mDelayedFocus = false;
+        ::SendMessageW(mWnd, WM_SETFOCUS, 0, 0);
       }
     } else {
       // Clear contents to avoid ghosting of old content if we display
@@ -5997,6 +6002,10 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     break;
 
     case WM_SETFOCUS:
+      if (!mIsVisible) {
+        mDelayedFocus = true;
+        break;
+      }
       // If previous focused window isn't ours, it must have received the
       // redirected message.  So, we should forget it.
       if (!WinUtils::IsOurProcessWindow(HWND(wParam))) {
