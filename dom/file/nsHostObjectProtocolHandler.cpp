@@ -76,9 +76,6 @@ struct DataInfo
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCString mStack;
 
-  // WeakReferences of nsHostObjectURI objects.
-  nsTArray<nsWeakPtr> mURIs;
-
   // When a blobURL is revoked, we keep it alive for RELEASING_TIMER
   // milliseconds in order to support pending operations such as navigation,
   // download and so on.
@@ -123,7 +120,7 @@ GetDataInfo(const nsACString& aUri, bool aAlsoIfRevoked = false)
 }
 
 static DataInfo*
-GetDataInfoFromURI(nsIURI* aURI)
+GetDataInfoFromURI(nsIURI* aURI, bool aAlsoIfRevoked = false)
 {
   if (!aURI) {
     return nullptr;
@@ -135,7 +132,7 @@ GetDataInfoFromURI(nsIURI* aURI)
     return nullptr;
   }
 
-  return GetDataInfo(spec);
+  return GetDataInfo(spec, aAlsoIfRevoked);
 }
 
 // Memory reporting for the hash table.
@@ -540,13 +537,6 @@ private:
 
     MOZ_ASSERT(info->mRevoked);
 
-    for (uint32_t i = 0; i < info->mURIs.Length(); ++i) {
-      nsCOMPtr<nsIURI> uri = do_QueryReferent(info->mURIs[i]);
-      if (uri) {
-        static_cast<nsHostObjectURI*>(uri.get())->ForgetBlobImpl();
-      }
-    }
-
     gDataTable->Remove(mURI);
     if (gDataTable->Count() == 0) {
       delete gDataTable;
@@ -900,16 +890,11 @@ nsHostObjectProtocolHandler::NewURI(const nsACString& aSpec,
   nsCOMPtr<nsIURI> uri;
   rv = NS_MutateURI(new nsHostObjectURI::Mutator())
          .SetSpec(aSpec)
-         .Apply(NS_MutatorMethod(&nsIBlobURIMutator::SetBlobImpl, blob))
          .Apply(NS_MutatorMethod(&nsIPrincipalURIMutator::SetPrincipal, principal))
          .Finalize(uri);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uri.forget(aResult);
-
-  if (info && info->mObjectType == DataInfo::eBlobImpl) {
-    info->mURIs.AppendElement(do_GetWeakReference(*aResult));
-  }
 
   return NS_OK;
 }
@@ -921,14 +906,8 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
 {
   *result = nullptr;
 
-  nsCOMPtr<nsIURIWithBlobImpl> uriBlobImpl = do_QueryInterface(uri);
-  if (!uriBlobImpl) {
-    return NS_ERROR_DOM_BAD_URI;
-  }
-
-  nsCOMPtr<nsISupports> tmp;
-  MOZ_ALWAYS_SUCCEEDS(uriBlobImpl->GetBlobImpl(getter_AddRefs(tmp)));
-  nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(tmp);
+  RefPtr<BlobImpl> blobImpl;
+  NS_GetBlobForBlobURI(uri, getter_AddRefs(blobImpl), true);
   if (!blobImpl) {
     return NS_ERROR_DOM_BAD_URI;
   }
@@ -941,6 +920,10 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv = uriPrinc->GetPrincipal(getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!principal) {
+    return NS_ERROR_DOM_BAD_URI;
+  }
 
 #ifdef DEBUG
   // Info can be null, in case this blob URL has been revoked already.
@@ -1042,24 +1025,12 @@ nsFontTableProtocolHandler::GetScheme(nsACString &result)
   return NS_OK;
 }
 
-/* static */ void
-nsHostObjectProtocolHandler::StoreClonedURI(const nsACString& aSpec,
-                                            nsIURI* aURI)
-{
-  MOZ_ASSERT(aURI);
-
-  DataInfo* info = GetDataInfo(aSpec);
-  if (info) {
-    info->mURIs.AppendElement(do_GetWeakReference(aURI));
-  }
-}
-
 nsresult
-NS_GetBlobForBlobURI(nsIURI* aURI, BlobImpl** aBlob)
+NS_GetBlobForBlobURI(nsIURI* aURI, BlobImpl** aBlob, bool aAlsoIfRevoked)
 {
   *aBlob = nullptr;
 
-  DataInfo* info = GetDataInfoFromURI(aURI);
+  DataInfo* info = GetDataInfoFromURI(aURI, aAlsoIfRevoked);
   if (!info || info->mObjectType != DataInfo::eBlobImpl) {
     return NS_ERROR_DOM_BAD_URI;
   }

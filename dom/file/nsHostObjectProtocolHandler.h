@@ -88,9 +88,6 @@ public:
   GetAllBlobURLEntries(nsTArray<mozilla::dom::BlobURLRegistrationData>& aRegistrations,
                        mozilla::dom::ContentParent* aCP);
 
-  // This is for nsHostObjectURI.
-  static void StoreClonedURI(const nsACString& aSpec, nsIURI* aURI);
-
 protected:
   virtual ~nsHostObjectProtocolHandler() {}
 
@@ -133,7 +130,7 @@ inline bool IsFontTableURI(nsIURI* aUri)
 }
 
 extern nsresult
-NS_GetBlobForBlobURI(nsIURI* aURI, mozilla::dom::BlobImpl** aBlob);
+NS_GetBlobForBlobURI(nsIURI* aURI, mozilla::dom::BlobImpl** aBlob, bool aAlsoIfRevoked = false);
 
 extern nsresult
 NS_GetBlobForBlobURISpec(const nsACString& aSpec, mozilla::dom::BlobImpl** aBlob);
