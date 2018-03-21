@@ -2092,36 +2092,38 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
   // save the requested state
   mLastSizeMode = mSizeMode;
   nsBaseWidget::SetSizeMode(aMode);
+
+  int mode;
+  switch (aMode) {
+    case nsSizeMode_Fullscreen :
+      mode = SW_SHOW;
+      break;
+
+    case nsSizeMode_Maximized :
+      mode = SW_MAXIMIZE;
+      break;
+
+    case nsSizeMode_Minimized :
+      mode = SW_MINIMIZE;
+      break;
+
+    default :
+      mode = SW_RESTORE;
+  }
+
+  // Don't call ::ShowWindow if we're trying to "restore" a window that is
+  // already in a normal state.  Prevents a bug where snapping to one side
+  // of the screen and then minimizing would cause Windows to forget our
+  // window's correct restored position/size.
+  if(!(GetCurrentShowCmd(mWnd) == SW_SHOWNORMAL && mode == SW_RESTORE)) {
+    ::ShowWindow(mWnd, mode);
+  }
+
   if (mIsVisible) {
-    int mode;
-
-    switch (aMode) {
-      case nsSizeMode_Fullscreen :
-        mode = SW_SHOW;
-        break;
-
-      case nsSizeMode_Maximized :
-        mode = SW_MAXIMIZE;
-        break;
-
-      case nsSizeMode_Minimized :
-        mode = SW_MINIMIZE;
-        break;
-
-      default :
-        mode = SW_RESTORE;
-    }
-
-    // Don't call ::ShowWindow if we're trying to "restore" a window that is
-    // already in a normal state.  Prevents a bug where snapping to one side
-    // of the screen and then minimizing would cause Windows to forget our
-    // window's correct restored position/size.
-    if(!(GetCurrentShowCmd(mWnd) == SW_SHOWNORMAL && mode == SW_RESTORE)) {
-      ::ShowWindow(mWnd, mode);
-    }
     // we activate here to ensure that the right child window is focused
-    if (mode == SW_MAXIMIZE || mode == SW_SHOW)
+    if (mode == SW_MAXIMIZE || mode == SW_SHOW) {
       DispatchFocusToTopLevelWindow(true);
+    }
   }
 }
 
