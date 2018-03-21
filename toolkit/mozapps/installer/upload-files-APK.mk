@@ -19,8 +19,6 @@ ROOT_FILES := \
   removed-files \
   $(NULL)
 
-GECKO_APP_AP_PATH = $(topobjdir)/mobile/android/base
-
 ifdef ENABLE_TESTS
 INNER_ROBOCOP_PACKAGE=true
 ifeq ($(MOZ_BUILD_APP),mobile/android)
@@ -59,11 +57,9 @@ OMNIJAR_NAME := $(notdir $(OMNIJAR_NAME))
 PKG_SUFFIX = .apk
 
 INNER_FENNEC_PACKAGE = \
-  $(MAKE) -C $(GECKO_APP_AP_PATH) gecko-nodeps.ap_ && \
   $(PYTHON) -m mozbuild.action.package_fennec_apk \
     --verbose \
-    --inputs \
-      $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ \
+    --inputs $(GRADLE_ANDROID_APP_APK) \
     --omnijar $(MOZ_PKG_DIR)/$(OMNIJAR_NAME) \
     --lib-dirs $(MOZ_PKG_DIR)/lib \
     --assets-dirs $(MOZ_PKG_DIR)/assets \
@@ -80,12 +76,11 @@ package_fennec = \
 # Re-packaging only replaces Android resources and the omnijar before
 # (re-)signing.
 repackage_fennec = \
-  $(MAKE) -C $(GECKO_APP_AP_PATH) gecko-nodeps.ap_ && \
   $(PYTHON) -m mozbuild.action.package_fennec_apk \
     --verbose \
     --inputs \
       $(UNPACKAGE) \
-      $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ \
+      $(GRADLE_ANDROID_APP_APK) \
     --omnijar $(MOZ_PKG_DIR)/$(OMNIJAR_NAME) \
     --output $(PACKAGE:.apk=-unsigned-unaligned.apk) && \
   $(call RELEASE_SIGN_ANDROID_APK,$(PACKAGE:.apk=-unsigned-unaligned.apk),$(PACKAGE))

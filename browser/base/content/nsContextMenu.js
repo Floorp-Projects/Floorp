@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginManagerContextMenu: "resource://gre/modules/LoginManagerContextMenu.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
-  DevToolsShim: "chrome://devtools-shim/content/DevToolsShim.jsm",
+  DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
 

@@ -116,8 +116,9 @@ function loadMochitest(e) {
   WindowListener.setupWindow(win);
   Services.wm.addListener(WindowListener);
 
-  let overlay = "chrome://mochikit/content/browser-test-overlay.xul";
-  win.document.loadOverlay(overlay, null);
+  Services.scriptloader.loadSubScript("chrome://mochikit/content/chrome-harness.js", win);
+  Services.scriptloader.loadSubScript("chrome://mochikit/content/mochitest-e10s-utils.js", win);
+  Services.scriptloader.loadSubScript("chrome://mochikit/content/browser-test.js", win);
 }
 
 function startup(data, reason) {

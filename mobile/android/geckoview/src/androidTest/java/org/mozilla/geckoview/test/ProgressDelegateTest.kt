@@ -51,6 +51,36 @@ class ProgressDelegateTest : BaseSessionTest() {
         })
     }
 
+    fun loadExpectNetError(testUri: String) {
+        sessionRule.session.loadUri(testUri);
+        sessionRule.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate, Callbacks.NavigationDelegate {
+            @AssertCalled(count = 2)
+            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int): Boolean {
+                if (sessionRule.currentCall.counter == 1) {
+                    assertThat("URI should be " + testUri, uri, equalTo(testUri));
+                } else {
+                    assertThat("URI should be about:neterror", uri, startsWith("about:neterror"));
+                }
+                return false
+            }
+
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("Load should fail", success, equalTo(false))
+            }
+        })
+    }
+
+    @Test fun loadUnknownHost() {
+        loadExpectNetError("http://does.not.exist.mozilla.org/")
+    }
+
+    @Test fun loadBadPort() {
+        loadExpectNetError("http://localhost:1/")
+    }
+
     @Test fun multipleLoads() {
         sessionRule.session.loadUri(INVALID_URI)
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)

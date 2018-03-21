@@ -60,8 +60,69 @@ add_task(async function() {
   EventUtils.sendString(query);
   await searchCompletedPromise;
 
-  let noResultsEl = gBrowser.contentDocument.querySelector(".no-results-message");
+  let noResultsEl = gBrowser.contentDocument.querySelector("#no-results-message");
   is_element_visible(noResultsEl, "Should be reporting no results");
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+
+/**
+ * Test that we search using `search-l10n-ids`.
+ *
+ * The test uses element `browserContainersSettings` and
+ * l10n id `language-and-appearance-header` and expects the element
+ * to be matched on the first word from the l10n id value ("Language" in en-US).
+ */
+add_task(async function() {
+  let l10nId = "language-and-appearance-header";
+
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+
+  // First, lets make sure that the element is not matched without
+  // `search-l10n-ids`.
+  {
+    let searchInput = gBrowser.contentDocument.getElementById("searchInput");
+    let bcsElem = gBrowser.contentDocument.getElementById("browserContainersSettings");
+
+    is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
+      "Search input should be focused when visiting preferences");
+
+    ok(!bcsElem.getAttribute("search-l10n-ids").includes(l10nId),
+      "browserContainersSettings element should not contain the l10n id here.");
+
+    let query = "Language";
+    let searchCompletedPromise = BrowserTestUtils.waitForEvent(
+        gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == query);
+    EventUtils.sendString(query);
+    await searchCompletedPromise;
+
+    is_element_hidden(bcsElem, "browserContainersSettings should not be in search results");
+  }
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  // Now, let's add the l10n id to the element and perform the same search again.
+
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+
+  {
+    let searchInput = gBrowser.contentDocument.getElementById("searchInput");
+
+    is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
+      "Search input should be focused when visiting preferences");
+
+    let bcsElem = gBrowser.contentDocument.getElementById("browserContainersSettings");
+    bcsElem.setAttribute("search-l10n-ids", l10nId);
+
+    let query = "Language";
+    let searchCompletedPromise = BrowserTestUtils.waitForEvent(
+        gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == query);
+    EventUtils.sendString(query);
+    await searchCompletedPromise;
+
+    is_element_visible(bcsElem, "browserContainersSettings should be in search results");
+  }
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

@@ -24,8 +24,7 @@ function test()
   gBrowser.loadURI("data:text/html,test context switch in Scratchpad tab 1");
 }
 
-function runTests()
-{
+async function runTests() {
   sp = gScratchpadWindow.Scratchpad;
 
   let contentMenu = gScratchpadWindow.document.getElementById("sp-menu-content");
@@ -52,36 +51,39 @@ function runTests()
 
   sp.setText("window.foosbug653108 = 'aloha';");
 
-  ok(!gBrowser.contentWindowAsCPOW.wrappedJSObject.foosbug653108,
-     "no content.foosbug653108");
-
-  sp.run().then(function () {
-    is(gBrowser.contentWindowAsCPOW.wrappedJSObject.foosbug653108, "aloha",
-       "content.foosbug653108 has been set");
-
-    gBrowser.tabContainer.addEventListener("TabSelect", runTests2, true);
-    gBrowser.selectedTab = tab1;
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    ok(!content.wrappedJSObject.foosbug653108, "no content.foosbug653108");
   });
+
+  await sp.run();
+
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    is(content.wrappedJSObject.foosbug653108, "aloha",
+      "content.foosbug653108 has been set");
+  });
+
+  gBrowser.tabContainer.addEventListener("TabSelect", runTests2, true);
+  gBrowser.selectedTab = tab1;
 }
 
-function runTests2() {
+async function runTests2() {
   gBrowser.tabContainer.removeEventListener("TabSelect", runTests2, true);
 
   ok(!window.foosbug653108, "no window.foosbug653108");
 
   sp.setText("window.foosbug653108");
-  sp.run().then(function ([, , result]) {
-    isnot(result, "aloha", "window.foosbug653108 is not aloha");
+  let [, , result] = await sp.run();
+  isnot(result, "aloha", "window.foosbug653108 is not aloha");
 
-    sp.setText("window.foosbug653108 = 'ahoyhoy';");
-    sp.run().then(function () {
-      is(gBrowser.contentWindowAsCPOW.wrappedJSObject.foosbug653108, "ahoyhoy",
-         "content.foosbug653108 has been set 2");
-
-      BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(runTests3);
-      gBrowser.loadURI("data:text/html,test context switch in Scratchpad location 2");
-    });
+  sp.setText("window.foosbug653108 = 'ahoyhoy';");
+  await sp.run();
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    is(content.wrappedJSObject.foosbug653108, "ahoyhoy",
+      "content.foosbug653108 has been set 2");
   });
+
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(runTests3);
+  gBrowser.loadURI("data:text/html,test context switch in Scratchpad location 2");
 }
 
 function runTests3() {

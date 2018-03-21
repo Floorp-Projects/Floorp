@@ -15,6 +15,7 @@
 #include "nsJSUtils.h"
 #include "xpcprivate.h"
 #include "WorkerPrivate.h"
+#include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "WorkerScope.h"
 #include "jsapi.h"

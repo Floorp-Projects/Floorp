@@ -1,0 +1,49 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-*/
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+/*
+ * nsIPerformanceMetricsData is used to store performance data collected
+ * in all content processes by nsThread and nsWorkerThread.
+ *
+ * Each (host, category, pid, wid, pwid) is unique to a given DocGroup or
+ * Worker, and we collect the number of dispatches and execution duration.
+ *
+ * This XPCOM interface reflects the data collected in Performance counters.
+ * see xpcom/threads/PerformanceCounter.h
+ */
+[scriptable, builtinclass, uuid(1f9a58c9-be37-4463-8996-c7f5b9a5bef8)]
+interface nsIPerformanceMetricsDispatchCategory : nsISupports
+{
+  // DispatchCategory value
+  readonly attribute unsigned long category;
+  // Number of dispatch.
+  readonly attribute unsigned long count;
+};
+
+
+[scriptable, builtinclass, uuid(02b0cdc6-4be2-4154-a8a9-e8d462073200)]
+interface nsIPerformanceMetricsData : nsISupports
+{
+  // Host of the document, if any
+  readonly attribute AUTF8String host;
+  // process id
+  readonly attribute unsigned long pid;
+  // window id
+  readonly attribute unsigned long long wid;
+  // "parent" window id
+  readonly attribute unsigned long long pwid;
+  // Execution time in microseconds
+  readonly attribute unsigned long long duration;
+  // True if the data is collected in a worker
+  readonly attribute bool worker;
+  // Dispatch Category counters
+  readonly attribute nsIArray items;
+};
+
+

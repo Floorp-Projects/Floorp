@@ -1343,6 +1343,7 @@ or run without that action (ie: --no-{action})"
             'multi_locale/android-mozharness-build.json',
             '--pull-locale-source',
             '--add-locales',
+            '--android-assemble-app',
             '--package-multi',
             '--summary',
         ]

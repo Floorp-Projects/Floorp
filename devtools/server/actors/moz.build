@@ -5,11 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
+    'canvas',
     'emulation',
     'highlighters',
     'inspector',
     'utils',
     'webconsole',
+    'worker',
 ]
 
 DevToolsModules(

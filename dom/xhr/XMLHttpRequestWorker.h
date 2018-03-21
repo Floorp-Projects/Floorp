@@ -10,6 +10,7 @@
 #include "XMLHttpRequest.h"
 #include "XMLHttpRequestString.h"
 #include "mozilla/dom/TypedArray.h"
+#include "mozilla/dom/WorkerHolder.h"
 
 namespace mozilla {
 namespace dom {
@@ -17,9 +18,10 @@ namespace dom {
 class Proxy;
 class SendRunnable;
 class DOMString;
-class StrongWorkerRef;
+class WorkerPrivate;
 
-class XMLHttpRequestWorker final : public XMLHttpRequest
+class XMLHttpRequestWorker final : public XMLHttpRequest,
+                                   public WorkerHolder
 {
 public:
   struct StateData
@@ -46,13 +48,14 @@ public:
 
 private:
   RefPtr<XMLHttpRequestUpload> mUpload;
-  RefPtr<StrongWorkerRef> mWorkerRef;
+  WorkerPrivate* mWorkerPrivate;
   RefPtr<Proxy> mProxy;
   XMLHttpRequestResponseType mResponseType;
   StateData mStateData;
 
   uint32_t mTimeout;
 
+  bool mRooted;
   bool mBackgroundRequest;
   bool mWithCredentials;
   bool mCanceled;
@@ -73,6 +76,9 @@ public:
 
   void
   Unpin();
+
+  bool
+  Notify(WorkerStatus aStatus) override;
 
   virtual uint16_t
   ReadyState() const override
@@ -245,8 +251,7 @@ public:
   }
 
   void
-  UpdateState(JSContext* aCx, const StateData& aStateData,
-              bool aUseCachedArrayBufferResponse);
+  UpdateState(const StateData& aStateData, bool aUseCachedArrayBufferResponse);
 
   void
   NullResponseText()
@@ -273,11 +278,11 @@ public:
   bool
   SendInProgress() const
   {
-    return !!mWorkerRef;
+    return mRooted;
   }
 
 private:
-  XMLHttpRequestWorker();
+  explicit XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate);
   ~XMLHttpRequestWorker();
 
   enum ReleaseType { Default, XHRIsGoingAway, WorkerIsGoingAway };
@@ -285,14 +290,14 @@ private:
   void
   ReleaseProxy(ReleaseType aType = Default);
 
-  bool
-  MaybePin();
+  void
+  MaybePin(ErrorResult& aRv);
 
   void
   MaybeDispatchPrematureAbortEvents(ErrorResult& aRv);
 
   void
-  DispatchPrematureAbortEvent(EventTarget* aTarget, Proxy* aProxy,
+  DispatchPrematureAbortEvent(EventTarget* aTarget,
                               const nsAString& aEventType, bool aUploadTarget,
                               ErrorResult& aRv);
 

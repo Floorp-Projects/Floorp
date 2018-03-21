@@ -161,7 +161,9 @@ public:
 
   static void CleanupGlobalData()
   {
-    cubeb_device_collection_destroy(CubebUtils::GetCubebContext(), &mDevices);
+    if (mDevices.device) {
+      cubeb_device_collection_destroy(CubebUtils::GetCubebContext(), &mDevices);
+    }
     delete mDeviceIndexes;
     mDeviceIndexes = nullptr;
     delete mDeviceNames;
