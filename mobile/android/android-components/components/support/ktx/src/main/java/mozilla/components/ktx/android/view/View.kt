@@ -21,7 +21,7 @@ val View.layoutDirection: Int
  * Is the horizontal layout direction of this view from Right to Left?
  */
 val View.isRTL: Boolean
-     get() = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL
+    get() = layoutDirection == ViewCompat.LAYOUT_DIRECTION_RTL
 
 /**
  * Is the horizontal layout direction of this view from Left to Right?

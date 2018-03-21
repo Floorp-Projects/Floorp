@@ -27,7 +27,6 @@ class SafeBundle(private val bundle: Bundle) {
             Log.w(LOGTAG, "Couldn't get bundle items.", e)
             return null
         }
-
     }
 
     fun <T : Parcelable> getParcelable(name: String): T? {
@@ -40,7 +39,6 @@ class SafeBundle(private val bundle: Bundle) {
             Log.w(LOGTAG, "Couldn't get bundle items.", e)
             return null
         }
-
     }
 
     companion object {

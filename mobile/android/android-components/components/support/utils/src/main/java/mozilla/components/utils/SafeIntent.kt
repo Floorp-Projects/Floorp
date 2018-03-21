@@ -30,7 +30,6 @@ class SafeIntent(val unsafe: Intent) {
                 Log.w(LOGTAG, "Couldn't get intent extras.", e)
                 return null
             }
-
         }
 
     val action: String?
@@ -50,7 +49,6 @@ class SafeIntent(val unsafe: Intent) {
                 Log.w(LOGTAG, "Couldn't get intent data string.", e)
                 return null
             }
-
         }
 
     val data: Uri?
@@ -64,7 +62,6 @@ class SafeIntent(val unsafe: Intent) {
                 Log.w(LOGTAG, "Couldn't get intent data.", e)
                 return null
             }
-
         }
 
     val categories: Set<String>?
@@ -78,7 +75,6 @@ class SafeIntent(val unsafe: Intent) {
                 Log.w(LOGTAG, "Couldn't get intent categories.", e)
                 return null
             }
-
         }
 
     val isLauncherIntent: Boolean
@@ -97,7 +93,6 @@ class SafeIntent(val unsafe: Intent) {
             Log.w(LOGTAG, "Couldn't determine if intent had an extra.", e)
             return false
         }
-
     }
 
     fun getBooleanExtra(name: String, defaultValue: Boolean): Boolean {
@@ -110,7 +105,6 @@ class SafeIntent(val unsafe: Intent) {
             Log.w(LOGTAG, "Couldn't get intent extras.", e)
             return defaultValue
         }
-
     }
 
     fun getIntExtra(name: String, defaultValue: Int): Int {
@@ -123,7 +117,6 @@ class SafeIntent(val unsafe: Intent) {
             Log.w(LOGTAG, "Couldn't get intent extras.", e)
             return defaultValue
         }
-
     }
 
     fun getStringExtra(name: String): String? {
@@ -136,7 +129,6 @@ class SafeIntent(val unsafe: Intent) {
             Log.w(LOGTAG, "Couldn't get intent extras.", e)
             return null
         }
-
     }
 
     fun getBundleExtra(name: String): SafeBundle? {
@@ -154,7 +146,6 @@ class SafeIntent(val unsafe: Intent) {
             Log.w(LOGTAG, "Couldn't get intent extras.", e)
             return null
         }
-
     }
 
     fun getCharSequenceExtra(name: String): CharSequence? {
@@ -167,7 +158,6 @@ class SafeIntent(val unsafe: Intent) {
             Log.w(LOGTAG, "Couldn't get intent extras.", e)
             return null
         }
-
     }
 
     fun <T : Parcelable> getParcelableExtra(name: String): T? {
@@ -180,7 +170,6 @@ class SafeIntent(val unsafe: Intent) {
             Log.w(LOGTAG, "Couldn't get intent extras.", e)
             return null
         }
-
     }
 
     fun <T : Parcelable> getParcelableArrayListExtra(name: String): ArrayList<T>? {
@@ -193,7 +182,6 @@ class SafeIntent(val unsafe: Intent) {
             Log.w(LOGTAG, "Couldn't get intent extras.", e)
             return null
         }
-
     }
 
     fun getStringArrayListExtra(name: String): ArrayList<String>? {
@@ -206,7 +194,6 @@ class SafeIntent(val unsafe: Intent) {
             Log.w(LOGTAG, "Couldn't get intent data string.", e)
             return null
         }
-
     }
 
     companion object {

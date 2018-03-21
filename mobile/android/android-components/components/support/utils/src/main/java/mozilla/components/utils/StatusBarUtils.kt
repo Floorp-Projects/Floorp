@@ -5,7 +5,6 @@
 package mozilla.components.utils
 
 import android.view.View
-import android.view.WindowInsets
 
 object StatusBarUtils {
     private var statusBarSize = -1

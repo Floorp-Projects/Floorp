@@ -12,8 +12,8 @@ object ErrorPages {
      * Enum containing all supported error types that we can display an error page for.
      */
     enum class ErrorType(
-            @StringRes val titleRes: Int,
-            @StringRes val messageRes: Int
+        @StringRes val titleRes: Int,
+        @StringRes val messageRes: Int
     ) {
         GENERIC(
                 R.string.error_generic_title,
@@ -90,7 +90,7 @@ object ErrorPages {
     /**
      * Load and generate error page for the given error type.
      */
-    fun createErrorPage(context: Context, errorType: ErrorType) : String {
+    fun createErrorPage(context: Context, errorType: ErrorType): String {
         val css = context.resources.openRawResource(R.raw.errorpage_style).bufferedReader().use {
             it.readText()
         }

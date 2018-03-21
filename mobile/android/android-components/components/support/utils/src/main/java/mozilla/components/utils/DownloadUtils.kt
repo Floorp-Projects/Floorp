@@ -180,5 +180,4 @@ object DownloadUtils {
 
         return stream.toString(encoding)
     }
-
 }

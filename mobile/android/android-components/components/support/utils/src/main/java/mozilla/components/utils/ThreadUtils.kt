@@ -7,7 +7,6 @@ package mozilla.components.utils
 import android.os.Handler
 import android.os.Looper
 
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 object ThreadUtils {
