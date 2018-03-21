@@ -241,21 +241,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
   public:
-    class AutoRooter : public JS::AutoGCRooter
-    {
-        MacroAssembler* masm_;
-
-      public:
-        AutoRooter(JSContext* cx, MacroAssembler* masm)
-          : JS::AutoGCRooter(cx, IONMASM),
-            masm_(masm)
-        { }
-
-        MacroAssembler* masm() const {
-            return masm_;
-        }
-    };
-
     /*
      * Base class for creating a branch.
      */
@@ -327,7 +312,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         void emit(MacroAssembler& masm);
     };
 
-    mozilla::Maybe<AutoRooter> autoRooter_;
     mozilla::Maybe<JitContext> jitContext_;
     mozilla::Maybe<AutoJitContextAlloc> alloc_;
 
@@ -345,11 +329,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         emitProfilingInstrumentation_(false)
     {
         JitContext* jcx = GetJitContext();
-        JSContext* cx = jcx->cx;
-        if (cx)
-            constructRoot(cx);
 
         if (!jcx->temp) {
+            JSContext* cx = jcx->cx;
             MOZ_ASSERT(cx);
             alloc_.emplace(cx);
         }
@@ -393,16 +375,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
   public:
-#ifdef DEBUG
-    bool isRooted() const {
-        return autoRooter_.isSome();
-    }
-#endif
-
-    void constructRoot(JSContext* cx) {
-        autoRooter_.emplace(cx, this);
-    }
-
     MoveResolver& moveResolver() {
         return moveResolver_;
     }

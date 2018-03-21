@@ -10302,7 +10302,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
         js_free(ionScript);
     });
 
-    Linker linker(masm, nogc);
+    Linker linker(masm);
     AutoFlushICache afc("IonLink");
     JitCode* code = linker.newCode(cx, CodeKind::Ion, !patchableBackedges_.empty());
     if (!code)
