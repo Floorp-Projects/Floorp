@@ -1246,19 +1246,6 @@ FeedProcessor.prototype = {
   },
 
   // Parsing functions
-  parseFromStream: function FP_parseFromStream(stream, uri) {
-    this._init(uri);
-    this._reader.parseFromStream(stream, null, stream.available(),
-                                 "application/xml");
-    this._reader = null;
-  },
-
-  parseFromString: function FP_parseFromString(inputString, uri) {
-    this._init(uri);
-    this._reader.parseFromString(inputString, "application/xml");
-    this._reader = null;
-  },
-
   parseAsync: function FP_parseAsync(requestObserver, uri) {
     this._init(uri);
     this._reader.parseAsync(requestObserver);
