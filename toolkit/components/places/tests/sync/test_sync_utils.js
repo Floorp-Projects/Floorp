@@ -89,13 +89,6 @@ var populateTree = async function populate(parentGuid, ...items) {
         throw new Error(`Unsupported item type: ${item.type}`);
     }
 
-    if (item.exclude) {
-      let itemId = await PlacesUtils.promiseItemId(guid);
-      PlacesUtils.annotations.setItemAnnotation(
-        itemId, PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO, "Don't back this up", 0,
-        PlacesUtils.annotations.EXPIRE_NEVER);
-    }
-
     guids[item.title] = guid;
   }
 

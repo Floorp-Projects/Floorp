@@ -280,22 +280,10 @@ add_task(async function test_cswc_serverUnexpected() {
     "guid": "dddddddddddd",
     "title": "",
     "id": 2000,
-    "annos": [{
-      "name": "places/excludeFromBackup",
-      "flags": 0,
-      "expires": 4,
-      "value": 1
-    }],
     "type": "text/x-moz-place-container",
     "children": [{
       "guid": "eeeeeeeeeeee",
       "title": "History",
-      "annos": [{
-        "name": "places/excludeFromBackup",
-        "flags": 0,
-        "expires": 4,
-        "value": 1
-      }],
       "type": "text/x-moz-place",
       "uri": "place:type=3&sort=4"
     }]
