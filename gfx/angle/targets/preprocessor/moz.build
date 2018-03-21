@@ -46,7 +46,7 @@ LOCAL_INCLUDES += [
     '../../checkout/src/',
     '../../checkout/src/common/third_party/base/',
 ]
-#
+
 #CXXFLAGS += [
 #    '/bigobj',
 #    '/d2FastFail',
@@ -122,7 +122,7 @@ USE_LIBS += [
 DIRS += [
     '../angle_common',
 ]
-#
+
 #LDFLAGS += [
 #    '/DEBUG',
 #    '/WX',
