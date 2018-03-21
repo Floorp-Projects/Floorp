@@ -218,15 +218,15 @@ checkout_dir.mkdir(exist_ok=True)
 def sortedi(x):
     return sorted(x, key=str.lower)
 
-def append_arr(dest, name, vals):
+def append_arr(dest, name, vals, indent=0):
     if not vals:
         return
 
-    dest.append('')
-    dest.append('{} += ['.format(name))
+    dest.append('{}{} += ['.format(' '*4*indent, name))
     for x in sortedi(vals):
-        dest.append("    '{}',".format(x))
-    dest.append(']')
+        dest.append("{}'{}',".format(' '*4*(indent+1), x))
+    dest.append('{}]'.format(' '*4*indent))
+    dest.append('')
     return
 
 INCLUDE_REGEX = re.compile('# *include *"(.+)"')
@@ -395,8 +395,8 @@ def export_target(root):
     target_dir.mkdir(exist_ok=True)
 
     lines = COMMON_HEADER[:]
-
     lines.append('')
+
     for x in sorted(set(accum_desc['defines'])):
         try:
             (k, v) = x.split('=', 1)
@@ -410,6 +410,7 @@ def export_target(root):
             lines.append(line)
         except KeyError:
             print('[{}] Unrecognized define: {}'.format(name, k))
+    lines.append('')
 
     cxxflags = set(accum_desc['cflags'] + accum_desc['cflags_cc'])
 
@@ -418,8 +419,7 @@ def export_target(root):
             assert x.startswith('//'), x
             yield '../../checkout/' + x[2:]
 
-    sources = []
-    sources_by_os_arch = {}
+    sources_by_config = {}
     extras = dict()
     for x in fixup_paths(accum_desc['sources']):
         (b, e) = x.rsplit('.', 1)
@@ -427,13 +427,16 @@ def export_target(root):
             continue
         elif e in ['cpp', 'cc']:
             if b.endswith('_win'):
-                sources_by_os_arch.setdefault('WINNT', []).append(x)
+                config = "CONFIG['OS_ARCH'] == 'WINNT'"
             elif b.endswith('_linux'):
-                sources_by_os_arch.setdefault('Linux', []).append(x)
+                # Include these on BSDs too.
+                config = "CONFIG['OS_ARCH'] not in ('Darwin', 'WINNT')"
             elif b.endswith('_mac'):
-                sources_by_os_arch.setdefault('Darwin', []).append(x)
+                config = "CONFIG['OS_ARCH'] == 'Darwin'"
             else:
-                sources.append(x)
+                config = '' # None can't compare against str.
+
+            sources_by_config.setdefault(config, []).append(x)
             continue
         elif e == 'rc':
             assert 'RCFILE' not in extras
@@ -452,20 +455,22 @@ def export_target(root):
     def append_arr_commented(dest, name, src):
         lines = []
         append_arr(lines, name, src)
-        lines = map(lambda x: '#' + x, lines)
+        def comment(x):
+            if x:
+                x = '#' + x
+            return x
+        lines = map(comment, lines)
         dest += lines
 
     append_arr(lines, 'LOCAL_INCLUDES', fixup_paths(accum_desc['include_dirs']))
     append_arr_commented(lines, 'CXXFLAGS', cxxflags)
-    append_arr(lines, 'SOURCES', sources)
 
-    for (os_arch,v) in sorted_items(sources_by_os_arch):
-        lines += [
-            "if CONFIG['OS_ARCH'] == '{}':".format(os_arch),
-            "    SOURCES += [",
-        ]
-        lines += ("{}'{}',".format(' '*8, x) for x in sorted(set(v)))
-        lines += ["    ]"]
+    for (config,v) in sorted_items(sources_by_config):
+        indent = 0
+        if config:
+            lines.append("if {}:".format(config))
+            indent = 1
+        append_arr(lines, 'SOURCES', v, indent=indent)
 
     append_arr(lines, 'USE_LIBS', use_libs)
     append_arr(lines, 'DIRS', ['../' + x for x in use_libs])
@@ -477,9 +482,9 @@ def export_target(root):
 
     lib_type = root['type']
     if lib_type == 'shared_library':
-        lines.append("\nGeckoSharedLibrary('{}', linkage=None)".format(name))
+        lines.append("GeckoSharedLibrary('{}', linkage=None)".format(name))
     elif lib_type == 'static_library':
-        lines.append("\nLibrary('{}')".format(name))
+        lines.append("Library('{}')".format(name))
     else:
         assert False, lib_type
 

@@ -49,7 +49,7 @@ LOCAL_INCLUDES += [
     '../../checkout/src/',
     '../../checkout/src/common/third_party/base/',
 ]
-#
+
 #CXXFLAGS += [
 #    '/bigobj',
 #    '/d2FastFail',
@@ -141,7 +141,7 @@ OS_LIBS += [
     'winspool',
     'ws2_32',
 ]
-#
+
 #LDFLAGS += [
 #    '/DEBUG',
 #    '/DYNAMICBASE:NO',
@@ -155,7 +155,7 @@ OS_LIBS += [
 #    '/SUBSYSTEM:CONSOLE,5.02',
 #    '/WX',
 #]
+
 DEFFILE = SRCDIR + '/../../checkout/src/libEGL/libEGL.def'
 RCFILE = '../../checkout/src/libEGL/libEGL.rc'
-
 GeckoSharedLibrary('libEGL', linkage=None)

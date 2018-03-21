@@ -52,7 +52,7 @@ LOCAL_INCLUDES += [
     '../../checkout/src/',
     '../../checkout/src/common/third_party/base/',
 ]
-#
+
 #CXXFLAGS += [
 #    '/bigobj',
 #    '/d2FastFail',
@@ -274,7 +274,7 @@ OS_LIBS += [
     'dxguid',
     'setupapi',
 ]
-#
+
 #LDFLAGS += [
 #    '/DEBUG',
 #    '/WX',
