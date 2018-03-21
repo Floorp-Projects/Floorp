@@ -615,7 +615,6 @@ nsWindow::nsWindow(bool aIsChildWindow)
   mDestroyCalled        = false;
   mHasTaskbarIconBeenCreated = false;
   mMouseTransparent     = false;
-  mDelayedFocus         = false;
   mPickerDisplayCount   = 0;
   mWindowType           = eWindowType_child;
   mBorderStyle          = eBorderStyle_default;
@@ -1622,10 +1621,6 @@ nsWindow::Show(bool bState)
         // when a toplevel window or dialog is shown, initialize the UI state
         ::SendMessageW(mWnd, WM_CHANGEUISTATE, MAKEWPARAM(UIS_INITIALIZE, UISF_HIDEFOCUS | UISF_HIDEACCEL), 0);
       }
-      if (mDelayedFocus) {
-        mDelayedFocus = false;
-        ::SendMessageW(mWnd, WM_SETFOCUS, 0, 0);
-      }
     } else {
       // Clear contents to avoid ghosting of old content if we display
       // this window again.
@@ -2097,38 +2092,36 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
   // save the requested state
   mLastSizeMode = mSizeMode;
   nsBaseWidget::SetSizeMode(aMode);
-
-  int mode;
-  switch (aMode) {
-    case nsSizeMode_Fullscreen :
-      mode = SW_SHOW;
-      break;
-
-    case nsSizeMode_Maximized :
-      mode = SW_MAXIMIZE;
-      break;
-
-    case nsSizeMode_Minimized :
-      mode = SW_MINIMIZE;
-      break;
-
-    default :
-      mode = SW_RESTORE;
-  }
-
-  // Don't call ::ShowWindow if we're trying to "restore" a window that is
-  // already in a normal state.  Prevents a bug where snapping to one side
-  // of the screen and then minimizing would cause Windows to forget our
-  // window's correct restored position/size.
-  if(!(GetCurrentShowCmd(mWnd) == SW_SHOWNORMAL && mode == SW_RESTORE)) {
-    ::ShowWindow(mWnd, mode);
-  }
-
   if (mIsVisible) {
-    // we activate here to ensure that the right child window is focused
-    if (mode == SW_MAXIMIZE || mode == SW_SHOW) {
-      DispatchFocusToTopLevelWindow(true);
+    int mode;
+
+    switch (aMode) {
+      case nsSizeMode_Fullscreen :
+        mode = SW_SHOW;
+        break;
+
+      case nsSizeMode_Maximized :
+        mode = SW_MAXIMIZE;
+        break;
+
+      case nsSizeMode_Minimized :
+        mode = SW_MINIMIZE;
+        break;
+
+      default :
+        mode = SW_RESTORE;
     }
+
+    // Don't call ::ShowWindow if we're trying to "restore" a window that is
+    // already in a normal state.  Prevents a bug where snapping to one side
+    // of the screen and then minimizing would cause Windows to forget our
+    // window's correct restored position/size.
+    if(!(GetCurrentShowCmd(mWnd) == SW_SHOWNORMAL && mode == SW_RESTORE)) {
+      ::ShowWindow(mWnd, mode);
+    }
+    // we activate here to ensure that the right child window is focused
+    if (mode == SW_MAXIMIZE || mode == SW_SHOW)
+      DispatchFocusToTopLevelWindow(true);
   }
 }
 
@@ -6002,10 +5995,6 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     break;
 
     case WM_SETFOCUS:
-      if (!mIsVisible) {
-        mDelayedFocus = true;
-        break;
-      }
       // If previous focused window isn't ours, it must have received the
       // redirected message.  So, we should forget it.
       if (!WinUtils::IsOurProcessWindow(HWND(wParam))) {
