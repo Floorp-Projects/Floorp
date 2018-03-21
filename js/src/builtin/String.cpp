@@ -1614,17 +1614,18 @@ js::str_normalize(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    int32_t spanLength = unorm2_spanQuickCheckYes(normalizer,
-                                                  srcChars.begin().get(), srcChars.length(),
-                                                  &status);
+    int32_t spanLengthInt = unorm2_spanQuickCheckYes(normalizer,
+                                                     srcChars.begin().get(), srcChars.length(),
+                                                     &status);
     if (U_FAILURE(status)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
     }
-    MOZ_ASSERT(0 <= spanLength && size_t(spanLength) <= srcChars.length());
+    MOZ_ASSERT(0 <= spanLengthInt && size_t(spanLengthInt) <= srcChars.length());
+    size_t spanLength = size_t(spanLengthInt);
 
     // Return if the input string is already normalized.
-    if (size_t(spanLength) == srcChars.length()) {
+    if (spanLength == srcChars.length()) {
         // Step 7.
         args.rval().setString(str);
         return true;
@@ -1638,33 +1639,21 @@ js::str_normalize(JSContext* cx, unsigned argc, Value* vp)
 
     // Copy the already normalized prefix.
     if (spanLength > 0)
-        PodCopy(chars.begin(), srcChars.begin().get(), size_t(spanLength));
+        PodCopy(chars.begin(), srcChars.begin().get(), spanLength);
 
-    mozilla::RangedPtr<const char16_t> remainingStart = srcChars.begin() + spanLength;
-    size_t remainingLength = srcChars.length() - size_t(spanLength);
+    int32_t size =
+        intl::CallICU(cx, [normalizer, &srcChars, spanLength](UChar* chars, uint32_t size,
+                                                              UErrorCode* status)
+        {
+            mozilla::RangedPtr<const char16_t> remainingStart = srcChars.begin() + spanLength;
+            size_t remainingLength = srcChars.length() - spanLength;
 
-    int32_t size = unorm2_normalizeSecondAndAppend(normalizer,
-                                                   chars.begin(), spanLength, chars.length(),
-                                                   remainingStart.get(), remainingLength, &status);
-    if (status == U_BUFFER_OVERFLOW_ERROR) {
-        MOZ_ASSERT(size >= 0);
-        if (!chars.resize(size))
-            return false;
-        status = U_ZERO_ERROR;
-#ifdef DEBUG
-        int32_t finalSize =
-#endif
-        unorm2_normalizeSecondAndAppend(normalizer,
-                                        chars.begin(), spanLength, chars.length(),
-                                        remainingStart.get(), remainingLength, &status);
-        MOZ_ASSERT_IF(!U_FAILURE(status), size == finalSize);
-    }
-    if (U_FAILURE(status)) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+            return unorm2_normalizeSecondAndAppend(normalizer, chars, spanLength, size,
+                                                   remainingStart.get(), remainingLength, status);
+        }, chars);
+    if (size < 0)
         return false;
-    }
 
-    MOZ_ASSERT(size >= 0);
     JSString* ns = NewStringCopyN<CanGC>(cx, chars.begin(), size);
     if (!ns)
         return false;
