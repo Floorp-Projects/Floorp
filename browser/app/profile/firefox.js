@@ -1736,10 +1736,6 @@ pref("browser.chrome.errorReporter.logLevel", "Error");
 pref("browser.chrome.errorReporter.infoURL",
      "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/nightly-error-collection");
 
-#ifdef EARLY_BETA_OR_EARLIER
-pref("browser.policies.enabled", true);
-#endif
-
 // Normandy client preferences
 pref("app.normandy.api_url", "https://normandy.cdn.mozilla.net/api/v1");
 pref("app.normandy.dev_mode", false);
