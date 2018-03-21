@@ -4,18 +4,27 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_COMPONENTS += [
-    'QuitterObserver.js',
+XPIDL_SOURCES += [
+    'nsIWorkerTest.idl',
 ]
 
-XPI_NAME = 'quitter'
+XPIDL_MODULE = 'WorkerTest'
+
+EXTRA_COMPONENTS += [
+    'WorkerTest.js',
+    'WorkerTest.manifest',
+]
+
+XPI_NAME = 'worker'
 
 JAR_MANIFESTS += ['jar.mn']
-
 USE_EXTENSION_MANIFEST = True
 NO_JS_MANIFEST = True
 
 FINAL_TARGET_FILES += [
-    'chrome.manifest',
     'install.rdf',
+]
+
+TEST_HARNESS_FILES.testing.mochitest.extensions += [
+    'worker-test@mozilla.org.xpi',
 ]
