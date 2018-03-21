@@ -2,6 +2,7 @@
 
 buildscript {
     ext.kotlin_version = '1.2.30'
+    ext.compileSdkVersion = 27
 
     repositories {
         google()

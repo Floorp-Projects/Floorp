@@ -5,12 +5,11 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion rootProject.ext.compileSdkVersion
 
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 27
-
     }
 
     buildTypes {
