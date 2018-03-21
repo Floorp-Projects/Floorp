@@ -199,6 +199,7 @@
                          closemenu="none">
             <observes element="sync-status" attribute="syncstatus"/>
             <observes element="sync-status" attribute="tooltiptext"/>
+            <observes element="sync-status" attribute="onmouseover"/>
           </toolbarbutton>
         </toolbaritem>
         <toolbarseparator class="sync-ui-item"/>

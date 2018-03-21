@@ -167,7 +167,7 @@
     <!-- A broadcaster of a number of attributes suitable for "sync now" UI -
         A 'syncstatus' attribute is set while actively syncing, and the label
         attribute which changes from "sync now" to "syncing" etc. -->
-    <broadcaster id="sync-status"/>
+    <broadcaster id="sync-status" onmouseover="gSync.refreshSyncButtonsTooltip();"/>
     <!-- broadcasters of the "hidden" attribute to reflect setup state for
          menus -->
     <broadcaster id="sync-setup-state" hidden="true"/>

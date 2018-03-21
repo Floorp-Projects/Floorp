@@ -418,18 +418,6 @@ CREATE_PRECOMPLETE_CMD = $(PYTHON) $(abspath $(MOZILLA_DIR)/config/createprecomp
 # MDDEPDIR is the subdirectory where dependency files are stored
 MDDEPDIR := .deps
 
-EXPAND_LIBS_EXEC = $(PYTHON) $(MOZILLA_DIR)/config/expandlibs_exec.py
-EXPAND_LIBS_GEN = $(PYTHON) $(MOZILLA_DIR)/config/expandlibs_gen.py
-EXPAND_AR = $(EXPAND_LIBS_EXEC) --extract -- $(AR)
-EXPAND_CC = $(EXPAND_LIBS_EXEC) --uselist -- $(CC)
-EXPAND_CCC = $(EXPAND_LIBS_EXEC) --uselist -- $(CCC)
-EXPAND_LINK = $(EXPAND_LIBS_EXEC) --uselist -- $(LINKER)
-EXPAND_MKSHLIB_ARGS = --uselist
-ifdef SYMBOL_ORDER
-EXPAND_MKSHLIB_ARGS += --symbol-order $(SYMBOL_ORDER)
-endif
-EXPAND_MKSHLIB = $(EXPAND_LIBS_EXEC) $(EXPAND_MKSHLIB_ARGS) -- $(MKSHLIB)
-
 # $(call CHECK_SYMBOLS,lib,PREFIX,dep_name,test)
 # Checks that the given `lib` doesn't contain dependency on symbols with a
 # version starting with `PREFIX`_ and matching the `test`. `dep_name` is only
@@ -486,15 +474,18 @@ endef
 # this file
 OBJ_SUFFIX := $(_OBJ_SUFFIX)
 
+OBJS_VAR_SUFFIX := OBJS
+
 # PGO builds with GCC build objects with instrumentation in a first pass,
 # then objects optimized, without instrumentation, in a second pass. If
 # we overwrite the objects from the first pass with those from the second,
 # we end up not getting instrumentation data for better optimization on
 # incremental builds. As a consequence, we use a different object suffix
 # for the first pass.
-ifndef NO_PROFILE_GUIDED_OPTIMIZE
 ifdef MOZ_PROFILE_GENERATE
 ifdef GNU_CC
+OBJS_VAR_SUFFIX := PGO_OBJS
+ifndef NO_PROFILE_GUIDED_OPTIMIZE
 OBJ_SUFFIX := i_o
 endif
 endif

@@ -13,11 +13,9 @@
 #include "nsIClassInfo.h"
 #include "nsIPrincipal.h"
 #include "nsISerializable.h"
-#include "nsIURIWithBlobImpl.h"
 #include "nsIURIWithPrincipal.h"
 #include "nsSimpleURI.h"
 #include "nsIIPCSerializableURI.h"
-#include "nsWeakReference.h"
 
 
 /**
@@ -28,23 +26,20 @@
 class nsHostObjectURI final
   : public mozilla::net::nsSimpleURI
   , public nsIURIWithPrincipal
-  , public nsIURIWithBlobImpl
-  , public nsSupportsWeakReference
 {
 private:
-  nsHostObjectURI(nsIPrincipal* aPrincipal,
-                  mozilla::dom::BlobImpl* aBlobImpl)
+  explicit nsHostObjectURI(nsIPrincipal* aPrincipal)
     : mozilla::net::nsSimpleURI()
     , mPrincipal(aPrincipal)
-    , mBlobImpl(aBlobImpl)
   {}
 
   // For use only from deserialization
-  nsHostObjectURI() : mozilla::net::nsSimpleURI() {}
+  explicit nsHostObjectURI()
+    : mozilla::net::nsSimpleURI()
+  {}
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIURIWITHBLOBIMPL
   NS_DECL_NSIURIWITHPRINCIPAL
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
@@ -69,10 +64,7 @@ public:
 
   NS_IMETHOD Mutate(nsIURIMutator * *_retval) override;
 
-  void ForgetBlobImpl();
-
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  RefPtr<mozilla::dom::BlobImpl> mBlobImpl;
 
 protected:
   virtual ~nsHostObjectURI() {}
@@ -84,7 +76,6 @@ public:
   class Mutator final
     : public nsIURIMutator
     , public BaseURIMutator<nsHostObjectURI>
-    , public nsIBlobURIMutator
     , public nsIPrincipalURIMutator
     , public nsISerializable
   {
@@ -102,16 +93,6 @@ public:
     Read(nsIObjectInputStream* aStream) override
     {
         return InitFromInputStream(aStream);
-    }
-
-    MOZ_MUST_USE NS_IMETHOD
-    SetBlobImpl(mozilla::dom::BlobImpl *aBlobImpl) override
-    {
-        if (!mURI) {
-            return NS_ERROR_NULL_POINTER;
-        }
-        mURI->mBlobImpl = aBlobImpl;
-        return NS_OK;
     }
 
     MOZ_MUST_USE NS_IMETHOD

@@ -205,6 +205,18 @@ CONFIGS = defaultdict(lambda: {
             'BIN_SUFFIX': '.prog',
         },
     },
+    'linkage': {
+        'defines': {},
+        'non_global_defines': [],
+        'substs': {
+            'COMPILE_ENVIRONMENT': '1',
+            'LIB_SUFFIX': 'a',
+            'BIN_SUFFIX': '.exe',
+            'DLL_SUFFIX': '.so',
+            'OBJ_SUFFIX': 'o',
+            'EXPAND_LIBS_LIST_STYLE': 'list',
+        },
+    },
 })
 
 

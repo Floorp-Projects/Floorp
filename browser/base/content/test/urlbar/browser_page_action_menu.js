@@ -328,7 +328,7 @@ add_task(async function sendToDevice_syncNotReady_configured() {
               clientId: client.id,
               label: client.name,
               clientType: client.type,
-              tooltiptext: gSync.formatLastSyncDate(lastModifiedFixture * 1000)
+              tooltiptext: gSync.formatLastSyncDate(new Date(lastModifiedFixture * 1000))
             },
           });
         }
