@@ -9,7 +9,7 @@ package org.mozilla.geckoview;
 import org.mozilla.gecko.AndroidGamepadManager;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
-import org.mozilla.gecko.gfx.NativePanZoomController;
+import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.gfx.GeckoDisplay;
 import org.mozilla.gecko.InputMethods;
 
@@ -259,7 +259,7 @@ public class GeckoView extends FrameLayout {
         return mSession.getSettings();
     }
 
-    public NativePanZoomController getPanZoomController() {
+    public PanZoomController getPanZoomController() {
         return mSession.getPanZoomController();
     }
 

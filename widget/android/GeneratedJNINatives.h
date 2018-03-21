@@ -444,33 +444,33 @@ const JNINativeMethod LayerSession::Compositor::Natives<Impl>::methods[] = {
 };
 
 template<class Impl>
-class NativePanZoomController::Natives : public mozilla::jni::NativeImpl<NativePanZoomController, Impl>
+class PanZoomController::Natives : public mozilla::jni::NativeImpl<PanZoomController, Impl>
 {
 public:
     static const JNINativeMethod methods[5];
 };
 
 template<class Impl>
-const JNINativeMethod NativePanZoomController::Natives<Impl>::methods[] = {
+const JNINativeMethod PanZoomController::Natives<Impl>::methods[] = {
 
-    mozilla::jni::MakeNativeMethod<NativePanZoomController::DisposeNative_t>(
-            mozilla::jni::NativeStub<NativePanZoomController::DisposeNative_t, Impl>
+    mozilla::jni::MakeNativeMethod<PanZoomController::DisposeNative_t>(
+            mozilla::jni::NativeStub<PanZoomController::DisposeNative_t, Impl>
             ::template Wrap<&Impl::DisposeNative>),
 
-    mozilla::jni::MakeNativeMethod<NativePanZoomController::HandleMotionEvent_t>(
-            mozilla::jni::NativeStub<NativePanZoomController::HandleMotionEvent_t, Impl>
+    mozilla::jni::MakeNativeMethod<PanZoomController::HandleMotionEvent_t>(
+            mozilla::jni::NativeStub<PanZoomController::HandleMotionEvent_t, Impl>
             ::template Wrap<&Impl::HandleMotionEvent>),
 
-    mozilla::jni::MakeNativeMethod<NativePanZoomController::HandleMouseEvent_t>(
-            mozilla::jni::NativeStub<NativePanZoomController::HandleMouseEvent_t, Impl>
+    mozilla::jni::MakeNativeMethod<PanZoomController::HandleMouseEvent_t>(
+            mozilla::jni::NativeStub<PanZoomController::HandleMouseEvent_t, Impl>
             ::template Wrap<&Impl::HandleMouseEvent>),
 
-    mozilla::jni::MakeNativeMethod<NativePanZoomController::HandleScrollEvent_t>(
-            mozilla::jni::NativeStub<NativePanZoomController::HandleScrollEvent_t, Impl>
+    mozilla::jni::MakeNativeMethod<PanZoomController::HandleScrollEvent_t>(
+            mozilla::jni::NativeStub<PanZoomController::HandleScrollEvent_t, Impl>
             ::template Wrap<&Impl::HandleScrollEvent>),
 
-    mozilla::jni::MakeNativeMethod<NativePanZoomController::SetIsLongpressEnabled_t>(
-            mozilla::jni::NativeStub<NativePanZoomController::SetIsLongpressEnabled_t, Impl>
+    mozilla::jni::MakeNativeMethod<PanZoomController::SetIsLongpressEnabled_t>(
+            mozilla::jni::NativeStub<PanZoomController::SetIsLongpressEnabled_t, Impl>
             ::template Wrap<&Impl::SetIsLongpressEnabled>)
 };
 
