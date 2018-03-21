@@ -1865,6 +1865,17 @@ nsHostResolver::ThreadFunc(void *arg)
     LOG(("DNS lookup thread - queue empty, thread finished.\n"));
 }
 
+void
+nsHostResolver::SetCacheLimits(uint32_t aMaxCacheEntries,
+                               uint32_t aDefaultCacheEntryLifetime,
+                               uint32_t aDefaultGracePeriod)
+{
+    MutexAutoLock lock(mLock);
+    mMaxCacheEntries = aMaxCacheEntries;
+    mDefaultCacheLifetime = aDefaultCacheEntryLifetime;
+    mDefaultGracePeriod = aDefaultGracePeriod;
+}
+
 nsresult
 nsHostResolver::Create(uint32_t maxCacheEntries,
                        uint32_t defaultCacheEntryLifetime,
