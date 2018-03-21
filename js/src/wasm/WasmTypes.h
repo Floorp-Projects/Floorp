@@ -450,6 +450,12 @@ enum class Shareable
     True
 };
 
+enum class HasGcTypes
+{
+    False,
+    True
+};
+
 // The Val class represents a single WebAssembly value of a given value type,
 // mostly for the purpose of numeric literals and initializers. A Val does not
 // directly map to a JS value since there is not (currently) a precise

@@ -400,6 +400,7 @@ struct MetadataCacheablePod
 {
     ModuleKind            kind;
     MemoryUsage           memoryUsage;
+    HasGcTypes            temporaryHasGcTypes;
     uint32_t              minMemoryLength;
     uint32_t              globalDataLength;
     Maybe<uint32_t>       maxMemoryLength;
@@ -408,6 +409,7 @@ struct MetadataCacheablePod
     explicit MetadataCacheablePod(ModuleKind kind)
       : kind(kind),
         memoryUsage(MemoryUsage::None),
+        temporaryHasGcTypes(HasGcTypes::False),
         minMemoryLength(0),
         globalDataLength(0)
     {}
