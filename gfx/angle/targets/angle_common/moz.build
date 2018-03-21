@@ -47,7 +47,7 @@ LOCAL_INCLUDES += [
     '../../checkout/src/',
     '../../checkout/src/common/third_party/base/',
 ]
-#
+
 #CXXFLAGS += [
 #    '/bigobj',
 #    '/d2FastFail',
@@ -118,19 +118,22 @@ SOURCES += [
     '../../checkout/src/common/uniform_type_info_autogen.cpp',
     '../../checkout/src/common/utilities.cpp',
 ]
+
 if CONFIG['OS_ARCH'] == 'Darwin':
     SOURCES += [
         '../../checkout/src/common/system_utils_mac.cpp',
     ]
-if CONFIG['OS_ARCH'] == 'Linux':
-    SOURCES += [
-        '../../checkout/src/common/system_utils_linux.cpp',
-    ]
+
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         '../../checkout/src/common/system_utils_win.cpp',
     ]
-#
+
+if CONFIG['OS_ARCH'] not in ('Darwin', 'WINNT'):
+    SOURCES += [
+        '../../checkout/src/common/system_utils_linux.cpp',
+    ]
+
 #LDFLAGS += [
 #    '/DEBUG',
 #    '/WX',
