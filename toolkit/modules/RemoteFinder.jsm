@@ -328,3 +328,9 @@ RemoteFinderListener.prototype = {
     }
   }
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(RemoteFinder, "_typeAheadLinksOnly",
+  "accessibility.typeaheadfind.linksonly");
+XPCOMUtils.defineLazyPreferenceGetter(RemoteFinder, "_findAsYouType",
+  "accessibility.typeaheadfind");
+
