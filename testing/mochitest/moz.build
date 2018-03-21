@@ -42,6 +42,7 @@ TEST_HARNESS_FILES.testing.mochitest += [
     '/netwerk/test/httpserver/httpd.js',
     'bisection.py',
     'browser-harness.xul',
+    'browser-test-overlay.xul',
     'browser-test.js',
     'chrome-harness.js',
     'chunkifyTests.js',
@@ -62,11 +63,6 @@ TEST_HARNESS_FILES.testing.mochitest += [
     'server.js',
     'start_desktop.js',
 ]
-
-if CONFIG['OS_TARGET'] == 'Android':
-    TEST_HARNESS_FILES.testing.mochitest += [
-        'RemoteMochitestStartup.js',
-    ]
 
 TEST_HARNESS_FILES.testing.mochitest.embed += [
     'embed/Xm5i5kbIXzc',
