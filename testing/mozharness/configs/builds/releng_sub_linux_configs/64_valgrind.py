@@ -9,7 +9,6 @@ config = {
         #'update',
     ],
     'stage_platform': 'linux64-valgrind',
-    'build_type': 'valgrind',
     'enable_signing': False,
     'perfherder_extra_options': ['valgrind'],
     #### 64 bit build specific #####
