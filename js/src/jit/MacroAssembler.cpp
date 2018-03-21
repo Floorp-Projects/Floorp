@@ -2803,8 +2803,7 @@ MacroAssembler::alignJitStackBasedOnNArgs(uint32_t nargs)
 
 // ===============================================================
 
-MacroAssembler::MacroAssembler(JSContext* cx, IonScript* ion,
-                               JSScript* script, jsbytecode* pc)
+MacroAssembler::MacroAssembler(JSContext* cx)
   : framePushed_(0),
 #ifdef DEBUG
     inCall_(false),
@@ -2822,11 +2821,6 @@ MacroAssembler::MacroAssembler(JSContext* cx, IonScript* ion,
     initWithAllocator();
     armbuffer_.id = GetJitContext()->getNextAssemblerId();
 #endif
-    if (ion) {
-        setFramePushed(ion->frameSize());
-        if (pc && cx->runtime()->geckoProfiler().enabled())
-            enableProfilingInstrumentation();
-    }
 }
 
 bool
