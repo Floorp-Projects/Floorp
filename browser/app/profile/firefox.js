@@ -260,7 +260,12 @@ pref("browser.startup.homepage",            "chrome://branding/locale/browsercon
 pref("browser.startup.firstrunSkipsHomepage", true);
 
 // Show an about:blank window as early as possible for quick startup feedback.
+#ifdef XP_MACOSX
+// Disabled on Mac because the bouncing dock icon already provides feedback.
 pref("browser.startup.blankWindow", false);
+#else
+pref("browser.startup.blankWindow", true);
+#endif
 
 pref("browser.slowStartup.notificationDisabled", false);
 pref("browser.slowStartup.timeThreshold", 20000);
