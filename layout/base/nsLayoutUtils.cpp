@@ -196,7 +196,6 @@ typedef nsStyleTransformMatrix::TransformReferenceBox TransformReferenceBox;
 /* static */ bool nsLayoutUtils::sInterruptibleReflowEnabled;
 /* static */ bool nsLayoutUtils::sSVGTransformBoxEnabled;
 /* static */ bool nsLayoutUtils::sTextCombineUprightDigitsEnabled;
-/* static */ bool nsLayoutUtils::sStyloEnabled;
 /* static */ uint32_t nsLayoutUtils::sIdlePeriodDeadlineLimit;
 /* static */ uint32_t nsLayoutUtils::sQuiescentFramesBeforeIdlePeriod;
 
@@ -8280,8 +8279,6 @@ nsLayoutUtils::Initialize()
                                "svg.transform-box.enabled");
   Preferences::AddBoolVarCache(&sTextCombineUprightDigitsEnabled,
                                "layout.css.text-combine-upright-digits.enabled");
-  sStyloEnabled = true;
-
   Preferences::AddUintVarCache(&sIdlePeriodDeadlineLimit,
                                "layout.idle_period.time_limit",
                                DEFAULT_IDLE_PERIOD_TIME_LIMIT);
@@ -8311,20 +8308,6 @@ nsLayoutUtils::Shutdown()
 
   // so the cached initial quotes array doesn't appear to be a leak
   nsStyleList::Shutdown();
-}
-
-/* static */
-bool
-nsLayoutUtils::ShouldUseStylo(nsIPrincipal* aPrincipal)
-{
-  return true;
-}
-
-/* static */
-bool
-nsLayoutUtils::StyloChromeEnabled()
-{
-  return true;
 }
 
 /* static */
