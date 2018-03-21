@@ -13,9 +13,6 @@ pref("devtools.devedition.promo.url", "https://www.mozilla.org/firefox/developer
   pref("devtools.devedition.promo.enabled", false);
 #endif
 
-// Developer toolbar preferences
-pref("devtools.toolbar.enabled", true);
-
 // Enable DevTools WebIDE by default
 pref("devtools.webide.enabled", true);
 
