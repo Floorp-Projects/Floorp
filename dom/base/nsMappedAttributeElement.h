@@ -39,9 +39,6 @@ public:
   static void MapNoAttributesInto(const nsMappedAttributes* aAttributes,
                                   mozilla::GenericSpecifiedValues* aGenericData);
 
-#ifdef MOZ_OLD_STYLE
-  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) override;
-#endif
   virtual bool SetAndSwapMappedAttribute(nsAtom* aName,
                                          nsAttrValue& aValue,
                                          bool* aValueWasSet,

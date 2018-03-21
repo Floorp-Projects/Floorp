@@ -132,65 +132,6 @@ CompositorAnimationStorage::SetAnimations(uint64_t aId, const AnimationArray& aV
   mAnimations.Put(aId, value);
 }
 
-#ifndef MOZ_STYLO
-static StyleAnimationValue
-SampleValue(double aPortion, const layers::Animation& aAnimation,
-            const AnimationPropertySegment&& aSegment,
-            const StyleAnimationValue& aLastValue,
-            uint64_t aCurrentIteration,
-            const StyleAnimationValue& aUnderlyingValue)
-{
-  NS_ASSERTION(aSegment.mFromValue.mGecko.IsNull() ||
-               aSegment.mToValue.mGecko.IsNull() ||
-               aSegment.mFromValue.mGecko.GetUnit() ==
-                 aSegment.mToValue.mGecko.GetUnit(),
-               "Must have same unit");
-
-  StyleAnimationValue startValue =
-    dom::KeyframeEffectReadOnly::CompositeValue(aAnimation.property(),
-                                                aSegment.mFromValue.mGecko,
-                                                aUnderlyingValue,
-                                                aSegment.mFromComposite);
-  StyleAnimationValue endValue =
-    dom::KeyframeEffectReadOnly::CompositeValue(aAnimation.property(),
-                                                aSegment.mToValue.mGecko,
-                                                aUnderlyingValue,
-                                                aSegment.mToComposite);
-
-  // Iteration composition for accumulate
-  if (static_cast<dom::IterationCompositeOperation>
-        (aAnimation.iterationComposite()) ==
-          dom::IterationCompositeOperation::Accumulate &&
-      aCurrentIteration > 0) {
-    // FIXME: Bug 1293492: Add a utility function to calculate both of
-    // below StyleAnimationValues.
-    startValue =
-      StyleAnimationValue::Accumulate(aAnimation.property(),
-                                      aLastValue.IsNull()
-                                        ? aUnderlyingValue
-                                        : aLastValue,
-                                      Move(startValue),
-                                      aCurrentIteration);
-    endValue =
-      StyleAnimationValue::Accumulate(aAnimation.property(),
-                                      aLastValue.IsNull()
-                                        ? aUnderlyingValue
-                                        : aLastValue,
-                                      Move(endValue),
-                                      aCurrentIteration);
-  }
-
-  StyleAnimationValue interpolatedValue;
-  // This should never fail because we only pass transform and opacity values
-  // to the compositor and they should never fail to interpolate.
-  DebugOnly<bool> uncomputeResult =
-    StyleAnimationValue::Interpolate(aAnimation.property(),
-                                     startValue, endValue,
-                                     aPortion, interpolatedValue);
-  MOZ_ASSERT(uncomputeResult, "could not uncompute value");
-  return interpolatedValue;
-}
-#endif
 
 bool
 AnimationHelper::SampleAnimationForEachNode(
@@ -278,7 +219,6 @@ AnimationHelper::SampleAnimationForEachNode(
       static_cast<dom::CompositeOperation>(segment->endComposite());
 
     // interpolate the property
-#ifdef MOZ_STYLO
     dom::IterationCompositeOperation iterCompositeOperation =
         static_cast<dom::IterationCompositeOperation>(
           animation.iterationComposite());
@@ -291,17 +231,6 @@ AnimationHelper::SampleAnimationForEachNode(
         iterCompositeOperation,
         portion,
         computedTiming.mCurrentIteration).Consume();
-#elif MOZ_OLD_STYLE
-    aAnimationValue.mGecko =
-      SampleValue(portion,
-                  animation,
-                  Move(animSegment),
-                  animData.mEndValues.LastElement().mGecko,
-                  computedTiming.mCurrentIteration,
-                  aAnimationValue.mGecko);
-#else
-    MOZ_CRASH("old style system disabled");
-#endif
     aHasInEffectAnimations = true;
   }
 
@@ -480,11 +409,7 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
 static AnimationValue
 ToAnimationValue(const Animatable& aAnimatable)
 {
-#ifdef MOZ_STYLO
   StyleBackendType backend = StyleBackendType::Servo;
-#else
-  StyleBackendType backend = StyleBackendType::Gecko;
-#endif
   AnimationValue result;
 
   switch (aAnimatable.type()) {

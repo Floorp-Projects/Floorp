@@ -9,9 +9,6 @@
 #include "gfxFontConstants.h"
 #include "gfxFontSrcPrincipal.h"
 #include "gfxFontSrcURI.h"
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/css/Declaration.h"
-#endif
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/FontFaceSetBinding.h"
 #include "mozilla/dom/FontFaceSetIterator.h"
@@ -50,9 +47,6 @@
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsStyleSet.h"
-#endif
 #include "nsUTF8Utils.h"
 #include "nsDOMNavigationTiming.h"
 #include "StylePrefs.h"
@@ -227,62 +221,7 @@ FontFaceSet::ParseFontShorthandForMatching(
     return;
   }
 
-#ifdef MOZ_OLD_STYLE
-  // Parse aFont as a 'font' property value.
-  RefPtr<Declaration> declaration = new Declaration;
-  declaration->InitializeEmpty();
-
-  bool changed = false;
-  nsCSSParser parser;
-  parser.ParseProperty(eCSSProperty_font,
-                       aFont,
-                       mDocument->GetDocumentURI(),
-                       mDocument->GetDocumentURI(),
-                       mDocument->NodePrincipal(),
-                       declaration,
-                       &changed,
-                       /* aIsImportant */ false);
-
-  // All of the properties we are interested in should have been set at once.
-  MOZ_ASSERT(changed == (declaration->HasProperty(eCSSProperty_font_family) &&
-                         declaration->HasProperty(eCSSProperty_font_style) &&
-                         declaration->HasProperty(eCSSProperty_font_weight) &&
-                         declaration->HasProperty(eCSSProperty_font_stretch)));
-
-  if (!changed) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return;
-  }
-
-  nsCSSCompressedDataBlock* data = declaration->GetNormalBlock();
-  MOZ_ASSERT(!declaration->GetImportantBlock());
-
-  const nsCSSValue* family = data->ValueFor(eCSSProperty_font_family);
-  if (family->GetUnit() != eCSSUnit_FontFamilyList) {
-    // We got inherit, initial, unset, a system font, or a token stream.
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return;
-  }
-
-  aFamilyList = family->GetFontFamilyListValue();
-
-  int32_t weight = data->ValueFor(eCSSProperty_font_weight)->GetIntValue();
-
-  // Resolve relative font weights against the initial of font-weight
-  // (normal, which is equivalent to 400).
-  if (weight == NS_STYLE_FONT_WEIGHT_BOLDER) {
-    weight = NS_FONT_WEIGHT_BOLD;
-  } else if (weight == NS_STYLE_FONT_WEIGHT_LIGHTER) {
-    weight = NS_FONT_WEIGHT_THIN;
-  }
-
-  aWeight = weight;
-
-  aStretch = data->ValueFor(eCSSProperty_font_stretch)->GetIntValue();
-  aStyle = data->ValueFor(eCSSProperty_font_style)->GetIntValue();
-#else
   MOZ_CRASH("old style system disabled");
-#endif
 }
 
 static bool

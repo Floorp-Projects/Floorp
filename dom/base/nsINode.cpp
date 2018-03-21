@@ -25,9 +25,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TimeStamp.h"
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/css/StyleRule.h"
-#endif
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
@@ -87,9 +84,6 @@
 #include "nsPIBoxObject.h"
 #include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsRuleProcessorData.h"
-#endif
 #include "nsString.h"
 #include "nsStyleConsts.h"
 #include "nsSVGUtils.h"
@@ -99,9 +93,6 @@
 #include "nsXBLPrototypeBinding.h"
 #include "mozilla/Preferences.h"
 #include "xpcpublic.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsCSSRuleProcessor.h"
-#endif
 #include "nsCSSParser.h"
 #include "HTMLLegendElement.h"
 #include "nsWrapperCacheInlines.h"
@@ -2526,96 +2517,9 @@ nsINode::ParseServoSelectorList(
   return selectorList;
 }
 
-#ifdef MOZ_OLD_STYLE
-nsCSSSelectorList*
-nsINode::ParseSelectorList(const nsAString& aSelectorString,
-                           ErrorResult& aRv)
-{
-  nsIDocument* doc = OwnerDoc();
-  nsIDocument::SelectorCache& cache =
-    doc->GetSelectorCache(mozilla::StyleBackendType::Gecko);
-  nsIDocument::SelectorCache::SelectorList* list =
-    cache.GetList(aSelectorString);
-  if (list) {
-    if (!*list) {
-      // Invalid selector.
-      aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR,
-        NS_LITERAL_CSTRING("'") + NS_ConvertUTF16toUTF8(aSelectorString) +
-        NS_LITERAL_CSTRING("' is not a valid selector")
-      );
-      return nullptr;
-    }
-
-    return list->AsGecko();
-  }
-
-  nsCSSParser parser(doc->CSSLoader());
-
-  nsCSSSelectorList* selectorList = nullptr;
-  aRv = parser.ParseSelectorString(aSelectorString,
-                                   doc->GetDocumentURI(),
-                                   0, // XXXbz get the line number!
-                                   &selectorList);
-  if (aRv.Failed()) {
-    // We hit this for syntax errors, which are quite common, so don't
-    // use NS_ENSURE_SUCCESS.  (For example, jQuery has an extended set
-    // of selectors, but it sees if we can parse them first.)
-    MOZ_ASSERT(aRv.ErrorCodeIs(NS_ERROR_DOM_SYNTAX_ERR),
-               "Unexpected error, so cached version won't return it");
-
-    // Change the error message to match above.
-    aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR,
-      NS_LITERAL_CSTRING("'") + NS_ConvertUTF16toUTF8(aSelectorString) +
-      NS_LITERAL_CSTRING("' is not a valid selector")
-    );
-
-    cache.CacheList(aSelectorString, UniquePtr<nsCSSSelectorList>());
-    return nullptr;
-  }
-
-  // Filter out pseudo-element selectors from selectorList
-  nsCSSSelectorList** slot = &selectorList;
-  do {
-    nsCSSSelectorList* cur = *slot;
-    if (cur->mSelectors->IsPseudoElement()) {
-      *slot = cur->mNext;
-      cur->mNext = nullptr;
-      delete cur;
-    } else {
-      slot = &cur->mNext;
-    }
-  } while (*slot);
-
-  if (selectorList) {
-    NS_ASSERTION(selectorList->mSelectors,
-                 "How can we not have any selectors?");
-    cache.CacheList(aSelectorString, UniquePtr<nsCSSSelectorList>(selectorList));
-  } else {
-    // This is the "only pseudo-element selectors" case, which is
-    // not common, so just don't worry about caching it.  That way a
-    // null cached value can always indicate an invalid selector.
-  }
-
-  return selectorList;
-}
-
-static void
-AddScopeElements(TreeMatchContext& aMatchContext,
-                 nsINode* aMatchContextNode)
-{
-  if (aMatchContextNode->IsElement()) {
-    aMatchContext.SetHasSpecifiedScope();
-    aMatchContext.AddScopeElement(aMatchContextNode->AsElement());
-  }
-}
-#endif
 
 namespace {
 struct SelectorMatchInfo {
-#ifdef MOZ_OLD_STYLE
-  nsCSSSelectorList* const mSelectorList;
-  TreeMatchContext& mMatchContext;
-#endif
 };
 } // namespace
 
@@ -2652,11 +2556,6 @@ FindMatchingElementsWithId(const nsAString& aId, nsINode* aRoot,
       // We have an element with the right id and it's a strict descendant
       // of aRoot.  Make sure it really matches the selector.
       if (!aMatchInfo
-#ifdef MOZ_OLD_STYLE
-          || nsCSSRuleProcessor::SelectorListMatches(element,
-                                                     aMatchInfo->mMatchContext,
-                                                     aMatchInfo->mSelectorList)
-#endif
       ) {
         aList.AppendElement(element);
         if (onlyFirstMatch) {
@@ -2667,67 +2566,6 @@ FindMatchingElementsWithId(const nsAString& aId, nsINode* aRoot,
   }
 }
 
-#ifdef MOZ_OLD_STYLE
-// Actually find elements matching aSelectorList (which must not be
-// null) and which are descendants of aRoot and put them in aList.  If
-// onlyFirstMatch, then stop once the first one is found.
-template<bool onlyFirstMatch, class Collector, class T>
-MOZ_ALWAYS_INLINE static void
-FindMatchingElements(nsINode* aRoot, nsCSSSelectorList* aSelectorList, T &aList,
-                     ErrorResult& aRv)
-{
-  nsIDocument* doc = aRoot->OwnerDoc();
-
-  TreeMatchContext matchingContext(false, nsRuleWalker::eRelevantLinkUnvisited,
-                                   doc, TreeMatchContext::eNeverMatchVisited);
-  AddScopeElements(matchingContext, aRoot);
-
-  // Fast-path selectors involving IDs.  We can only do this if aRoot
-  // is in the document and the document is not in quirks mode, since
-  // ID selectors are case-insensitive in quirks mode.  Also, only do
-  // this if aSelectorList only has one selector, because otherwise
-  // ordering the elements correctly is a pain.
-  NS_ASSERTION(aRoot->IsElement() || aRoot->IsNodeOfType(nsINode::eDOCUMENT) ||
-               !aRoot->IsInUncomposedDoc(),
-               "The optimization below to check ContentIsDescendantOf only for "
-               "elements depends on aRoot being either an element or a "
-               "document if it's in the document.");
-  if (aRoot->IsInUncomposedDoc() &&
-      doc->GetCompatibilityMode() != eCompatibility_NavQuirks &&
-      !aSelectorList->mNext &&
-      aSelectorList->mSelectors->mIDList) {
-    nsAtom* id = aSelectorList->mSelectors->mIDList->mAtom;
-    SelectorMatchInfo info = { aSelectorList, matchingContext };
-    FindMatchingElementsWithId<onlyFirstMatch, T>(nsDependentAtomString(id),
-                                                  aRoot, &info, aList);
-    return;
-  }
-
-  Collector results;
-  for (nsIContent* cur = aRoot->GetFirstChild();
-       cur;
-       cur = cur->GetNextNode(aRoot)) {
-    if (cur->IsElement() &&
-        nsCSSRuleProcessor::SelectorListMatches(cur->AsElement(),
-                                                matchingContext,
-                                                aSelectorList)) {
-      if (onlyFirstMatch) {
-        aList.AppendElement(cur->AsElement());
-        return;
-      }
-      results.AppendElement(cur->AsElement());
-    }
-  }
-
-  const uint32_t len = results.Length();
-  if (len) {
-    aList.SetCapacity(len);
-    for (uint32_t i = 0; i < len; ++i) {
-      aList.AppendElement(results.ElementAt(i));
-    }
-  }
-}
-#endif
 
 struct ElementHolder {
   ElementHolder() : mElement(nullptr) {}
@@ -2757,18 +2595,7 @@ nsINode::QuerySelector(const nsAString& aSelector, ErrorResult& aResult)
           Servo_SelectorList_QueryFirst(this, aList, useInvalidation));
     },
     [&](nsCSSSelectorList* aList) -> Element* {
-#ifdef MOZ_OLD_STYLE
-      if (!aList) {
-        // Either we failed (and aResult already has the exception), or this
-        // is a pseudo-element-only selector that matches nothing.
-        return nullptr;
-      }
-      ElementHolder holder;
-      FindMatchingElements<true, ElementHolder>(this, aList, holder, aResult);
-      return holder.mElement;
-#else
       MOZ_CRASH("old style system disabled");
-#endif
     }
   );
 }
@@ -2790,15 +2617,7 @@ nsINode::QuerySelectorAll(const nsAString& aSelector, ErrorResult& aResult)
         this, aList, contentList.get(), useInvalidation);
     },
     [&](nsCSSSelectorList* aList) {
-#ifdef MOZ_OLD_STYLE
-      if (!aList) {
-        return;
-      }
-      FindMatchingElements<false, AutoTArray<Element*, 128>>(
-        this, aList, *contentList, aResult);
-#else
       MOZ_CRASH("old style system disabled");
-#endif
     }
   );
 
@@ -2935,13 +2754,11 @@ nsINode::IsNodeApzAwareInternal() const
   return EventTarget::IsApzAware();
 }
 
-#ifdef MOZ_STYLO
 bool
 nsINode::IsStyledByServo() const
 {
   return OwnerDoc()->IsStyledByServo();
 }
-#endif
 
 DocGroup*
 nsINode::GetDocGroup() const

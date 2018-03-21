@@ -22,7 +22,6 @@ using namespace mozilla::net;
 #define SETPROPERTY_REPETITIONS (1000 * 1000)
 #define GETPROPERTY_REPETITIONS (1000 * 1000)
 
-#ifdef MOZ_STYLO
 
 static void ServoParsingBench() {
   auto css = AsBytes(MakeStringSpan(EXAMPLE_STYLESHEET));
@@ -48,33 +47,10 @@ static void ServoParsingBench() {
 
 MOZ_GTEST_BENCH(Stylo, Servo_StyleSheet_FromUTF8Bytes_Bench, ServoParsingBench);
 
-#endif
 
 
-#ifdef MOZ_OLD_STYLE
-
-static void GeckoParsingBench() {
-  // Don’t use NS_LITERAL_STRING to work around
-  // "fatal error C1091: compiler limit: string exceeds 65535 bytes in length"
-  // https://msdn.microsoft.com/en-us/library/f27ch0t1.aspx
-  NS_ConvertUTF8toUTF16 css(NS_LITERAL_CSTRING(EXAMPLE_STYLESHEET));
-
-  RefPtr<nsIURI> uri = NullPrincipalURI::Create();
-  for (int i = 0; i < PARSING_REPETITIONS; i++) {
-    RefPtr<CSSStyleSheet> stylesheet = new CSSStyleSheet(
-      eAuthorSheetFeatures, CORS_NONE, RP_No_Referrer);
-    stylesheet->SetURIs(uri, uri, uri);
-    stylesheet->SetComplete();
-    ASSERT_EQ(stylesheet->ReparseSheet(css), NS_OK);
-  }
-}
-
-MOZ_GTEST_BENCH(Stylo, Gecko_nsCSSParser_ParseSheet_Bench, GeckoParsingBench);
-
-#endif
 
 
-#ifdef MOZ_STYLO
 
 static void ServoSetPropertyByIdBench(const nsACString& css) {
   RefPtr<RawServoDeclarationBlock> block = Servo_DeclarationBlock_CreateEmpty().Consume();
@@ -137,4 +113,3 @@ static void ServoGetPropertyValueById() {
 MOZ_GTEST_BENCH(Stylo, Servo_DeclarationBlock_GetPropertyById_Bench, ServoGetPropertyValueById);
 
 
-#endif

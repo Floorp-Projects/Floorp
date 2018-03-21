@@ -45,10 +45,6 @@
 #include "mozilla/Sprintf.h"
 #include "nsLayoutUtils.h"
 #include "LayoutLogging.h"
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/GeckoStyleContext.h"
-#include "mozilla/GeckoRestyleManager.h"
-#endif
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
 #include "nsInlineFrame.h"
@@ -785,18 +781,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
     // because what matters is whether the new style (not the old)
     // specifies CSS transitions.
     if (presContext->RestyleManager()->IsGecko()) {
-#ifdef MOZ_OLD_STYLE
-      // stylo: ServoRestyleManager does not handle transitions yet, and when
-      // it does it probably won't need to track reframed style contexts to
-      // initiate transitions correctly.
-      GeckoRestyleManager::ReframingStyleContexts* rsc =
-        presContext->RestyleManager()->AsGecko()->GetReframingStyleContexts();
-      if (rsc) {
-        rsc->Put(mContent, mStyleContext->AsGecko());
-      }
-#else
       MOZ_CRASH("old style system disabled");
-#endif
     }
   }
 
@@ -7808,20 +7793,6 @@ nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) con
       pseudoTag->ToString(atomString);
       aTo += nsPrintfCString("%s", NS_LossyConvertUTF16toASCII(atomString).get());
     }
-#ifdef MOZ_OLD_STYLE
-    if (auto* geckoContext = mStyleContext->GetAsGecko()) {
-      if (!geckoContext->GetParent() ||
-          (GetParent() && GetParent()->StyleContext() != geckoContext->GetParent())) {
-        aTo += nsPrintfCString("^%p", geckoContext->GetParent());
-        if (geckoContext->GetParent()) {
-          aTo += nsPrintfCString("^%p", geckoContext->GetParent()->GetParent());
-          if (geckoContext->GetParent()->GetParent()) {
-            aTo += nsPrintfCString("^%p", geckoContext->GetParent()->GetParent()->GetParent());
-          }
-        }
-      }
-    }
-#endif
   }
   aTo += "]";
 }

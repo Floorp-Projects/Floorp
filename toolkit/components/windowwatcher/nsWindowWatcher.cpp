@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-//#define USEWEAKREFS // (haven't quite figured that out yet)
-
 #include "nsWindowWatcher.h"
 #include "nsAutoWindowStateHelper.h"
 
@@ -72,10 +70,6 @@
 #include "nsIXULBrowserWindow.h"
 #include "nsGlobalWindow.h"
 
-#ifdef USEWEAKREFS
-#include "nsIWeakReference.h"
-#endif
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -91,11 +85,7 @@ struct nsWatcherWindowEntry
   nsWatcherWindowEntry(mozIDOMWindowProxy* aWindow, nsIWebBrowserChrome* aChrome)
     : mChrome(nullptr)
   {
-#ifdef USEWEAKREFS
-    mWindow = do_GetWeakReference(aWindow);
-#else
     mWindow = aWindow;
-#endif
     nsCOMPtr<nsISupportsWeakReference> supportsweak(do_QueryInterface(aChrome));
     if (supportsweak) {
       supportsweak->GetWeakReference(getter_AddRefs(mChromeWeak));
@@ -111,11 +101,7 @@ struct nsWatcherWindowEntry
   void Unlink();
   void ReferenceSelf();
 
-#ifdef USEWEAKREFS
-  nsCOMPtr<nsIWeakReference> mWindow;
-#else // still not an owning ref
   mozIDOMWindowProxy* mWindow;
-#endif
   nsIWebBrowserChrome* mChrome;
   nsWeakPtr mChromeWeak;
   // each struct is in a circular, doubly-linked list
@@ -221,23 +207,10 @@ nsWatcherWindowEnumerator::GetNext(nsISupports** aResult)
 
   *aResult = nullptr;
 
-#ifdef USEWEAKREFS
-  while (mCurrentPosition) {
-    CallQueryReferent(mCurrentPosition->mWindow, aResult);
-    if (*aResult) {
-      mCurrentPosition = FindNext();
-      break;
-    } else { // window is gone!
-      mWindowWatcher->RemoveWindow(mCurrentPosition);
-    }
-  }
-  NS_IF_ADDREF(*aResult);
-#else
   if (mCurrentPosition) {
     CallQueryInterface(mCurrentPosition->mWindow, aResult);
     mCurrentPosition = FindNext();
   }
-#endif
   return NS_OK;
 }
 
@@ -1525,29 +1498,9 @@ nsWindowWatcher::FindWindowEntry(mozIDOMWindowProxy* aWindow)
   // find the corresponding nsWatcherWindowEntry
   nsWatcherWindowEntry* info;
   nsWatcherWindowEntry* listEnd;
-#ifdef USEWEAKREFS
-  nsresult rv;
-  bool found;
-#endif
 
   info = mOldestWindow;
   listEnd = 0;
-#ifdef USEWEAKREFS
-  rv = NS_OK;
-  found = false;
-  while (info != listEnd && NS_SUCCEEDED(rv)) {
-    nsCOMPtr<mozIDOMWindowProxy> infoWindow(do_QueryReferent(info->mWindow));
-    if (!infoWindow) { // clean up dangling reference, while we're here
-      rv = RemoveWindow(info);
-    } else if (infoWindow.get() == aWindow) {
-      return info;
-    }
-
-    info = info->mYounger;
-    listEnd = mOldestWindow;
-  }
-  return 0;
-#else
   while (info != listEnd) {
     if (info->mWindow == aWindow) {
       return info;
@@ -1556,7 +1509,6 @@ nsWindowWatcher::FindWindowEntry(mozIDOMWindowProxy* aWindow)
     listEnd = mOldestWindow;
   }
   return 0;
-#endif
 }
 
 nsresult
@@ -1582,16 +1534,8 @@ nsWindowWatcher::RemoveWindow(nsWatcherWindowEntry* aInfo)
   // send notifications.
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-#ifdef USEWEAKREFS
-    nsCOMPtr<nsISupports> domwin(do_QueryReferent(aInfo->mWindow));
-    if (domwin) {
-      os->NotifyObservers(domwin, "domwindowclosed", 0);
-    }
-    // else bummer. since the window is gone, there's nothing to notify with.
-#else
     nsCOMPtr<nsISupports> domwin(do_QueryInterface(aInfo->mWindow));
     os->NotifyObservers(domwin, "domwindowclosed", 0);
-#endif
   }
 
   delete aInfo;

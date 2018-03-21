@@ -7,9 +7,6 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsTArray.h"
 #include "nsString.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsIStyleRuleProcessor.h"
-#endif
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
@@ -28,13 +25,7 @@
 #include "nsGkAtoms.h"
 #include "nsStyleContext.h"
 #include "nsXBLPrototypeBinding.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsCSSRuleProcessor.h"
-#endif
 #include "nsContentUtils.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsStyleSet.h"
-#endif
 #include "nsIScriptSecurityManager.h"
 
 using namespace mozilla;
@@ -192,11 +183,7 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
   if (mPendingSheets == 0) {
     // All stylesheets are loaded.
     if (aSheet->IsGecko()) {
-#ifdef MOZ_OLD_STYLE
-      mResources->GatherRuleProcessor();
-#else
       MOZ_CRASH("old style system disabled");
-#endif
     } else {
       mResources->ComputeServoStyles(
         *mBoundDocument->GetShell()->StyleSet()->AsServo());

@@ -13,11 +13,6 @@
 
 #include "nsCSSParser.h"
 #include "nsCSSProps.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsMediaList.h"
-#include "nsRuleNode.h"
-#include "nsRuleData.h"
-#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -251,17 +246,7 @@ ResponsiveImageSelector::SetSizesFromDescriptor(const nsAString & aSizes)
     return !!mServoSourceSizeList;
   }
 
-#ifdef MOZ_OLD_STYLE
-  nsCSSParser cssParser;
-
-  mSizeQueries.Clear();
-  mSizeValues.Clear();
-
-  return cssParser.ParseSourceSizeList(aSizes, nullptr, 0,
-                                       mSizeQueries, mSizeValues);
-#else
   MOZ_CRASH("old style system disabled");
-#endif
 }
 
 void
@@ -464,30 +449,7 @@ ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(double *aWidth)
     effectiveWidth = presShell->StyleSet()->AsServo()->EvaluateSourceSizeList(
       mServoSourceSizeList.get());
   } else {
-#ifdef MOZ_OLD_STYLE
-    unsigned int numSizes = mSizeQueries.Length();
-    MOZ_ASSERT(numSizes == mSizeValues.Length(),
-               "mSizeValues length differs from mSizeQueries");
-
-    unsigned int i;
-    for (i = 0; i < numSizes; i++) {
-      if (mSizeQueries[i]->Matches(pctx, nullptr)) {
-        break;
-      }
-    }
-
-    if (i == numSizes) {
-      // No match defaults to 100% viewport
-      nsCSSValue defaultWidth(100.0f, eCSSUnit_ViewportWidth);
-      effectiveWidth = nsRuleNode::CalcLengthWithInitialFont(pctx,
-                                                             defaultWidth);
-    } else {
-      effectiveWidth = nsRuleNode::CalcLengthWithInitialFont(pctx,
-                                                             mSizeValues[i]);
-    }
-#else
     MOZ_CRASH("old style system disabled");
-#endif
   }
 
   *aWidth = nsPresContext::AppUnitsToDoubleCSSPixels(std::max(effectiveWidth, 0));

@@ -1,0 +1,23 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(10f8ebdf-1373-4640-9c34-53dee99f526f)]
+interface nsIWorkerTestCallback : nsISupports
+{
+  void onmessage(in DOMString data);
+  void onerror(in DOMString data);
+};
+
+[scriptable, uuid(887a0614-a0f0-4c0e-80e0-cf31e6d4e286)]
+interface nsIWorkerTest : nsISupports
+{
+  void postMessage(in DOMString data);
+  void terminate();
+
+  attribute nsIWorkerTestCallback callback;
+};

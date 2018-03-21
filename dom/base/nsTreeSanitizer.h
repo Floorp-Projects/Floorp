@@ -5,9 +5,6 @@
 #ifndef nsTreeSanitizer_h_
 #define nsTreeSanitizer_h_
 
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/css/StyleRule.h"
-#endif
 #include "nsIPrincipal.h"
 #include "mozilla/dom/Element.h"
 
