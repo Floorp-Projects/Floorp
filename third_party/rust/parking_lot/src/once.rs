@@ -5,15 +5,19 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
+use std::sync::atomic::{fence, Ordering};
 #[cfg(feature = "nightly")]
-use std::sync::atomic::{AtomicU8, ATOMIC_U8_INIT, Ordering, fence};
+use std::sync::atomic::{ATOMIC_U8_INIT, AtomicU8};
 #[cfg(feature = "nightly")]
 type U8 = u8;
 #[cfg(not(feature = "nightly"))]
-use stable::{AtomicU8, ATOMIC_U8_INIT, Ordering, fence};
+use std::sync::atomic::AtomicUsize as AtomicU8;
+#[cfg(not(feature = "nightly"))]
+use std::sync::atomic::ATOMIC_USIZE_INIT as ATOMIC_U8_INIT;
 #[cfg(not(feature = "nightly"))]
 type U8 = usize;
 use std::mem;
+use std::fmt;
 use parking_lot_core::{self, SpinWait, DEFAULT_PARK_TOKEN, DEFAULT_UNPARK_TOKEN};
 use util::UncheckedOptionExt;
 
@@ -95,14 +99,14 @@ impl Once {
     #[cfg(feature = "nightly")]
     #[inline]
     pub const fn new() -> Once {
-        Once(AtomicU8::new(0))
+        Once(ATOMIC_U8_INIT)
     }
 
     /// Creates a new `Once` value.
     #[cfg(not(feature = "nightly"))]
     #[inline]
     pub fn new() -> Once {
-        Once(AtomicU8::new(0))
+        Once(ATOMIC_U8_INIT)
     }
 
     /// Returns the current state of this `Once`.
@@ -171,7 +175,8 @@ impl Once {
     /// `call_once` to also panic.
     #[inline]
     pub fn call_once<F>(&self, f: F)
-        where F: FnOnce()
+    where
+        F: FnOnce(),
     {
         if self.0.load(Ordering::Acquire) == DONE_BIT {
             return;
@@ -192,15 +197,17 @@ impl Once {
     /// not).
     #[inline]
     pub fn call_once_force<F>(&self, f: F)
-        where F: FnOnce(OnceState)
+    where
+        F: FnOnce(OnceState),
     {
         if self.0.load(Ordering::Acquire) == DONE_BIT {
             return;
         }
 
         let mut f = Some(f);
-        self.call_once_slow(true,
-                            &mut |state| unsafe { f.take().unchecked_unwrap()(state) });
+        self.call_once_slow(true, &mut |state| unsafe {
+            f.take().unchecked_unwrap()(state)
+        });
     }
 
     // This is a non-generic function to reduce the monomorphization cost of
@@ -239,11 +246,12 @@ impl Once {
             // We also clear the poison bit since we are going to try running
             // the closure again.
             if state & LOCKED_BIT == 0 {
-                match self.0
-                    .compare_exchange_weak(state,
-                                           (state | LOCKED_BIT) & !POISON_BIT,
-                                           Ordering::Acquire,
-                                           Ordering::Relaxed) {
+                match self.0.compare_exchange_weak(
+                    state,
+                    (state | LOCKED_BIT) & !POISON_BIT,
+                    Ordering::Acquire,
+                    Ordering::Relaxed,
+                ) {
                     Ok(_) => break,
                     Err(x) => state = x,
                 }
@@ -258,10 +266,12 @@ impl Once {
 
             // Set the parked bit
             if state & PARKED_BIT == 0 {
-                if let Err(x) = self.0.compare_exchange_weak(state,
-                                                             state | PARKED_BIT,
-                                                             Ordering::Relaxed,
-                                                             Ordering::Relaxed) {
+                if let Err(x) = self.0.compare_exchange_weak(
+                    state,
+                    state | PARKED_BIT,
+                    Ordering::Relaxed,
+                    Ordering::Relaxed,
+                ) {
                     state = x;
                     continue;
                 }
@@ -274,12 +284,14 @@ impl Once {
                 let validate = || self.0.load(Ordering::Relaxed) == LOCKED_BIT | PARKED_BIT;
                 let before_sleep = || {};
                 let timed_out = |_, _| unreachable!();
-                parking_lot_core::park(addr,
-                                       validate,
-                                       before_sleep,
-                                       timed_out,
-                                       DEFAULT_PARK_TOKEN,
-                                       None);
+                parking_lot_core::park(
+                    addr,
+                    validate,
+                    before_sleep,
+                    timed_out,
+                    DEFAULT_PARK_TOKEN,
+                    None,
+                );
             }
 
             // Loop back and check if the done bit was set
@@ -328,6 +340,12 @@ impl Default for Once {
     #[inline]
     fn default() -> Once {
         Once::new()
+    }
+}
+
+impl fmt::Debug for Once {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Once {{ state: {:?} }}", &self.state())
     }
 }
 
@@ -391,11 +409,15 @@ mod tests {
         static O: Once = ONCE_INIT;
 
         // poison the once
-        let t = panic::catch_unwind(|| { O.call_once(|| panic!()); });
+        let t = panic::catch_unwind(|| {
+            O.call_once(|| panic!());
+        });
         assert!(t.is_err());
 
         // poisoning propagates
-        let t = panic::catch_unwind(|| { O.call_once(|| {}); });
+        let t = panic::catch_unwind(|| {
+            O.call_once(|| {});
+        });
         assert!(t.is_err());
 
         // we can subvert poisoning, however
@@ -416,7 +438,9 @@ mod tests {
         static O: Once = ONCE_INIT;
 
         // poison the once
-        let t = panic::catch_unwind(|| { O.call_once(|| panic!()); });
+        let t = panic::catch_unwind(|| {
+            O.call_once(|| panic!());
+        });
         assert!(t.is_err());
 
         // make sure someone's waiting inside the once via a force
@@ -435,7 +459,9 @@ mod tests {
         // put another waiter on the once
         let t2 = thread::spawn(|| {
             let mut called = false;
-            O.call_once(|| { called = true; });
+            O.call_once(|| {
+                called = true;
+            });
             assert!(!called);
         });
 
@@ -443,6 +469,5 @@ mod tests {
 
         assert!(t1.join().is_ok());
         assert!(t2.join().is_ok());
-
     }
 }

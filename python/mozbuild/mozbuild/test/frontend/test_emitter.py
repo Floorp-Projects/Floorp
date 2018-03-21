@@ -673,6 +673,10 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(objs[4].program, 'test_program1.prog')
         self.assertEqual(objs[5].program, 'test_program2.prog')
 
+        self.assertEqual(objs[3].name, 'test_program.prog')
+        self.assertEqual(objs[4].name, 'test_program1.prog')
+        self.assertEqual(objs[5].name, 'test_program2.prog')
+
         self.assertEqual(objs[4].objs,
                          [mozpath.join(reader.config.topobjdir,
                                        'test_program1.%s' %
@@ -1200,9 +1204,15 @@ class TestEmitterBasic(unittest.TestCase):
         for obj in self.read_topsrcdir(reader):
             if isinstance(obj, SharedLibrary):
                 if obj.basename == 'cxx_shared':
+                    self.assertEquals(obj.name, '%scxx_shared%s' %
+                                      (reader.config.dll_prefix,
+                                       reader.config.dll_suffix))
                     self.assertTrue(obj.cxx_link)
                     got_results += 1
                 elif obj.basename == 'just_c_shared':
+                    self.assertEquals(obj.name, '%sjust_c_shared%s' %
+                                      (reader.config.dll_prefix,
+                                       reader.config.dll_suffix))
                     self.assertFalse(obj.cxx_link)
                     got_results += 1
         self.assertEqual(got_results, 2)
