@@ -346,6 +346,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: end;
 }
 
 .network-monitor .stack-trace .frame-link-source-inner,

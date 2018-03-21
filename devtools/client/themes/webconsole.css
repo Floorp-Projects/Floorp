@@ -131,6 +131,7 @@ a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: end;
 }
 
 .stack-trace .frame-link-source-inner,
@@ -141,7 +142,6 @@ a {
 }
 
 .stack-trace .frame-link-function-display-name {
-  max-width: 50%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -776,7 +776,6 @@ a.learn-more-link.webconsole-learn-more-link {
   --warning-color: var(--yellow-80);
   --warning-background-color: #FFFBD5;
   --console-output-color: var(--grey-90);
-  --attachment-border-color: var(--theme-content-color1);
   --repeat-bubble-background-color: var(--theme-highlight-blue);
 }
 
@@ -786,7 +785,6 @@ a.learn-more-link.webconsole-learn-more-link {
   --warning-color: #FCE19F;
   --warning-background-color: #44391F;
   --console-output-color: white;
-  --attachment-border-color: var(--theme-body-color);
   --repeat-bubble-background-color: var(--blue-60);
 }
 
@@ -1108,10 +1106,10 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 /* Stacktraces */
-.webconsole-output-wrapper  .stacktrace {
-  border: 1px solid var(--attachment-border-color);
-  border-radius: 2px;
+.webconsole-output-wrapper .stacktrace {
+  border: none;
   margin-block-end: var(--attachment-margin-block-end);
+  padding: 0 0 0 4px;
 }
 
 .theme-dark .webconsole-output-wrapper .message.error .stacktrace,
