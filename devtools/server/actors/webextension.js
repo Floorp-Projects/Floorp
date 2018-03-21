@@ -47,7 +47,7 @@ const FALLBACK_DOC_MESSAGE = "Your addon does not have any document opened yet."
  *        The connection to the client.
  * @param {nsIMessageSender} chromeGlobal.
  *        The chromeGlobal where this actor has been injected by the
- *        DebuggerServer.connectToChild method.
+ *        DebuggerServer.connectToFrame method.
  * @param {string} prefix
  *        the custom RDP prefix to use.
  * @param {string} addonId

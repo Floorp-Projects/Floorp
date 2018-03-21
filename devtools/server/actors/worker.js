@@ -242,7 +242,7 @@ let ServiceWorkerActor = protocol.ActorClassWithSpec(serviceWorkerSpec, {
   },
 });
 
-// Lazily load the service-worker-child.js process script only once.
+// Lazily load the service-worker-process.js process script only once.
 let _serviceWorkerProcessScriptLoaded = false;
 
 let ServiceWorkerRegistrationActor =
@@ -351,7 +351,7 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
   start() {
     if (!_serviceWorkerProcessScriptLoaded) {
       Services.ppmm.loadProcessScript(
-        "resource://devtools/server/service-worker-child.js", true);
+        "resource://devtools/server/actors/worker/service-worker-process.js", true);
       _serviceWorkerProcessScriptLoaded = true;
     }
 

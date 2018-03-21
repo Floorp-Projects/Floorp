@@ -433,7 +433,8 @@ class TupOnly(CommonBackend, PartialBackend):
         for i, (path, files) in enumerate(obj.files.walk()):
             for f in files:
                 self._preprocess(backend_file, f.full_path,
-                                 destdir=mozpath.join(self.environment.topobjdir, obj.install_target, path))
+                                 destdir=mozpath.join(self.environment.topobjdir, obj.install_target, path),
+                                 target=f.target_basename)
 
     def _process_computed_flags(self, obj, backend_file):
         for var, flags in obj.get_flags():
@@ -495,16 +496,18 @@ class TupOnly(CommonBackend, PartialBackend):
         for m in manager.chrome_manifests:
             self._manifest_entries[m].add('manifest components/interfaces.manifest')
 
-    def _preprocess(self, backend_file, input_file, destdir=None):
+    def _preprocess(self, backend_file, input_file, destdir=None, target=None):
+        if target is None:
+            target = mozpath.basename(input_file)
         # .css files use '%' as the preprocessor marker, which must be scaped as
         # '%%' in the Tupfile.
-        marker = '%%' if input_file.endswith('.css') else '#'
+        marker = '%%' if target.endswith('.css') else '#'
 
         cmd = self._py_action('preprocessor')
         cmd.extend([shell_quote(d) for d in backend_file.defines])
         cmd.extend(['$(ACDEFINES)', '%f', '-o', '%o', '--marker=%s' % marker])
 
-        base_input = mozpath.basename(input_file)
+        base_input = mozpath.basename(target)
         if base_input.endswith('.in'):
             base_input = mozpath.splitext(base_input)[0]
         output = mozpath.join(destdir, base_input) if destdir else base_input

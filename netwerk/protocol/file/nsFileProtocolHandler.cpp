@@ -167,8 +167,6 @@ nsFileProtocolHandler::NewURI(const nsACString &spec,
                               nsIURI *aBaseURI,
                               nsIURI **result)
 {
-    nsCOMPtr<nsIURI> url = new nsStandardURL(true);
-
     nsAutoCString buf(spec);
 #if defined(XP_WIN)
     buf.Truncate();
@@ -178,7 +176,8 @@ nsFileProtocolHandler::NewURI(const nsACString &spec,
 #endif
 
     nsCOMPtr<nsIURI> base(aBaseURI);
-    return NS_MutateURI(url)
+    return NS_MutateURI(new nsStandardURL::Mutator())
+      .Apply(NS_MutatorMethod(&nsIFileURLMutator::MarkFileURL))
       .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
                               nsIStandardURL::URLTYPE_NO_AUTHORITY,
                               -1, buf, charset, base, nullptr))
@@ -257,12 +256,7 @@ nsFileProtocolHandler::NewFileURIMutator(nsIFile *aFile, nsIURIMutator **aResult
     NS_ENSURE_ARG_POINTER(aFile);
     nsresult rv;
 
-    nsCOMPtr<nsIURI> url = new nsStandardURL(true);
-    nsCOMPtr<nsIURIMutator> mutator;
-    rv = url->Mutate(getter_AddRefs(mutator));
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
+    nsCOMPtr<nsIURIMutator> mutator = new nsStandardURL::Mutator();
     nsCOMPtr<nsIFileURLMutator> fileMutator = do_QueryInterface(mutator, &rv);
     if (NS_FAILED(rv)) {
         return rv;
