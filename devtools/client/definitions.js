@@ -449,6 +449,7 @@ Tools.application = {
   id: "application",
   ordinal: 15,
   visibilityswitch: "devtools.application.enabled",
+  icon: "chrome://devtools/skin/images/tool-application.svg",
   url: "chrome://devtools/content/application/index.html",
   label: "Application",
   panelLabel: "Application",

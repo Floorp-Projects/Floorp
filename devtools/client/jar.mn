@@ -223,6 +223,7 @@ devtools.jar:
     skin/images/tool-memory.svg (themes/images/tool-memory.svg)
     skin/images/tool-dom.svg (themes/images/tool-dom.svg)
     skin/images/tool-accessibility.svg (themes/images/tool-accessibility.svg)
+    skin/images/tool-application.svg (themes/images/tool-application.svg)
     skin/images/close.svg (themes/images/close.svg)
     skin/images/clear.svg (themes/images/clear.svg)
     skin/images/vview-delete.png (themes/images/vview-delete.png)
