@@ -8,7 +8,6 @@ config = {
         # 'update',
     ],
     'stage_platform': 'linux64-asan-debug',
-    'build_type': 'asan-debug',
     'debug_build': True,
     'enable_signing': False,
     #### 64 bit build specific #####

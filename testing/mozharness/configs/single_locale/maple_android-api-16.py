@@ -49,7 +49,6 @@ config = {
     "upload_branch": "%s-android-api-16" % BRANCH,
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
     "platform": "android",
-    "build_type": "api-16-opt",
 
     # Balrog
     "build_target": "Android_arm-eabi-gcc3",
