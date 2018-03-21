@@ -24,6 +24,7 @@ SOURCES += [
     'AccessibleHandler.cpp',
     'AccessibleHandlerControl.cpp',
     'HandlerRelation.cpp',
+    'HandlerTextLeaf.cpp',
 ]
 
 GENERATED_FILES += [
