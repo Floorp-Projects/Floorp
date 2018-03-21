@@ -25,7 +25,7 @@ class BuiltinCommands(object):
     @Command('mach-commands', category='misc',
              description='List all mach commands.')
     def commands(self):
-        print("\n".join(self.command_keys))
+        print("\n".join(sorted(self.command_keys)))
 
     @Command('mach-debug-commands', category='misc',
              description='Show info about available mach commands.')
