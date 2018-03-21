@@ -47,7 +47,7 @@ dependencies {
     if (mozconfig.substs.MOZ_ANDROID_MMA) {
         implementation "com.android.support:appcompat-v7:$support_library_version"
         implementation "com.android.support:support-annotations:$support_library_version"
-        implementation "com.google.android.gms:play-services-gcm:${mozconfig.substs.ANDROID_GOOGLE_PLAY_SERVICES_VERSION}"
+        implementation "com.google.android.gms:play-services-gcm:$google_play_services_version"
     }
 }
 
