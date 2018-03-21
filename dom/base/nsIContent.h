@@ -1008,20 +1008,30 @@ inline nsIContent* nsINode::AsContent()
   return static_cast<nsIContent*>(this);
 }
 
+// Some checks are faster to do on nsIContent or Element than on
+// nsINode, so spit out FromNode versions taking those types too.
 #define NS_IMPL_FROMNODE_HELPER(_class, _check)                         \
-  static _class* FromNode(nsINode* aNode)                               \
+  template<typename ArgType>                                            \
+  static _class* FromNode(ArgType&& aNode)                              \
   {                                                                     \
-    return aNode->_check ? static_cast<_class*>(aNode) : nullptr;       \
+    /* We need the double-cast in case aNode is a smartptr.  Those */   \
+    /* can cast to superclasses of the type they're templated on, */    \
+    /* but not directly to subclasses.  */                              \
+    return aNode->_check ?                                              \
+      static_cast<_class*>(static_cast<nsINode*>(aNode)) : nullptr;     \
   }                                                                     \
-  static const _class* FromNode(const nsINode* aNode)                   \
-  {                                                                     \
-    return aNode->_check ? static_cast<const _class*>(aNode) : nullptr; \
-  }                                                                     \
-  static _class* FromNodeOrNull(nsINode* aNode)                         \
+  template<typename ArgType>                                            \
+  static _class* FromNodeOrNull(ArgType&& aNode)                        \
   {                                                                     \
     return aNode ? FromNode(aNode) : nullptr;                           \
   }                                                                     \
-  static const _class* FromNodeOrNull(const nsINode* aNode)             \
+  template<typename ArgType>                                            \
+  static const _class* FromNode(const ArgType* aNode)                   \
+  {                                                                     \
+    return aNode->_check ? static_cast<const _class*>(aNode) : nullptr; \
+  }                                                                     \
+  template<typename ArgType>                                            \
+  static const _class* FromNodeOrNull(const ArgType* aNode)             \
   {                                                                     \
     return aNode ? FromNode(aNode) : nullptr;                           \
   }
