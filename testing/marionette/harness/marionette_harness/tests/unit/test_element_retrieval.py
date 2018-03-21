@@ -42,9 +42,6 @@ class_html = inline("<p class='foo bar'>", doctype="html")
 class_xhtml = inline('<p class="foo bar"></p>', doctype="xhtml")
 name_html = inline("<p name=foo>", doctype="html")
 name_xhtml = inline('<p name="foo"></p>', doctype="xhtml")
-link_html = inline("<p><a href=#>foo bar</a>", doctype="html")
-link_html_with_trailing_space = inline("<p><a href=#>a link with a trailing space </a>")
-link_xhtml = inline('<p><a href="#">foo bar</a></p>', doctype="xhtml")
 
 
 class TestFindElementHTML(MarionetteTestCase):
@@ -99,27 +96,6 @@ class TestFindElementHTML(MarionetteTestCase):
     def test_invalid_css_selector_should_throw(self):
         with self.assertRaises(InvalidSelectorException):
             self.marionette.find_element(By.CSS_SELECTOR, "#")
-
-    def test_link_text(self):
-        self.marionette.navigate(link_html)
-        el = self.marionette.execute_script("return document.querySelector('a')")
-        found = self.marionette.find_element(By.LINK_TEXT, "foo bar")
-        self.assertIsInstance(found, HTMLElement)
-        self.assertEqual(el, found)
-
-    def test_link_text_with_trailing_space(self):
-        self.marionette.navigate(link_html_with_trailing_space)
-        el = self.marionette.execute_script("return document.querySelector('a')")
-        found = self.marionette.find_element(By.LINK_TEXT, "a link with a trailing space")
-        self.assertIsInstance(found, HTMLElement)
-        self.assertEqual(el, found)
-
-    def test_partial_link_text(self):
-        self.marionette.navigate(link_html)
-        el = self.marionette.execute_script("return document.querySelector('a')")
-        found = self.marionette.find_element(By.PARTIAL_LINK_TEXT, "foo")
-        self.assertIsInstance(found, HTMLElement)
-        self.assertEqual(el, found)
 
     def test_xpath(self):
         self.marionette.navigate(id_html)
@@ -264,20 +240,6 @@ class TestFindElementXHTML(MarionetteTestCase):
         self.assertIsInstance(found, HTMLElement)
         self.assertEqual(el, found)
 
-    def test_link_text(self):
-        self.marionette.navigate(link_xhtml)
-        el = self.marionette.execute_script("return document.querySelector('a')")
-        found = self.marionette.find_element(By.LINK_TEXT, "foo bar")
-        self.assertIsInstance(found, HTMLElement)
-        self.assertEqual(el, found)
-
-    def test_partial_link_text(self):
-        self.marionette.navigate(link_xhtml)
-        el = self.marionette.execute_script("return document.querySelector('a')")
-        found = self.marionette.find_element(By.PARTIAL_LINK_TEXT, "foo")
-        self.assertIsInstance(found, HTMLElement)
-        self.assertEqual(el, found)
-
     def test_xpath(self):
         self.marionette.navigate(id_xhtml)
         el = self.marionette.execute_script("return document.querySelector('#foo')")
@@ -346,28 +308,6 @@ class TestFindElementsHTML(MarionetteTestCase):
     def test_invalid_css_selector_should_throw(self):
         with self.assertRaises(InvalidSelectorException):
             self.marionette.find_elements(By.CSS_SELECTOR, "#")
-
-    def test_link_text(self):
-        self.marionette.navigate(link_html)
-        els = self.marionette.execute_script("return document.querySelectorAll('a')")
-        found = self.marionette.find_elements(By.LINK_TEXT, "foo bar")
-        self.assertItemsIsInstance(found, HTMLElement)
-        self.assertSequenceEqual(els, found)
-
-    def test_link_text_with_trailing_space(self):
-        self.marionette.navigate(link_html_with_trailing_space)
-        els = self.marionette.execute_script("return document.querySelectorAll('a')")
-        found = self.marionette.find_elements(By.LINK_TEXT, "a link with a trailing space")
-        self.assertItemsIsInstance(found, HTMLElement)
-        self.assertSequenceEqual(els, found)
-
-
-    def test_partial_link_text(self):
-        self.marionette.navigate(link_html)
-        els = self.marionette.execute_script("return document.querySelectorAll('a')")
-        found = self.marionette.find_elements(By.PARTIAL_LINK_TEXT, "foo")
-        self.assertItemsIsInstance(found, HTMLElement)
-        self.assertSequenceEqual(els, found)
 
     def test_xpath(self):
         self.marionette.navigate(children_html)
@@ -452,20 +392,6 @@ class TestFindElementsXHTML(MarionetteTestCase):
         self.marionette.navigate(children_xhtml)
         els = self.marionette.execute_script("return document.querySelectorAll('p')")
         found = self.marionette.find_elements(By.CSS_SELECTOR, "p")
-        self.assertItemsIsInstance(found, HTMLElement)
-        self.assertSequenceEqual(els, found)
-
-    def test_link_text(self):
-        self.marionette.navigate(link_xhtml)
-        els = self.marionette.execute_script("return document.querySelectorAll('a')")
-        found = self.marionette.find_elements(By.LINK_TEXT, "foo bar")
-        self.assertItemsIsInstance(found, HTMLElement)
-        self.assertSequenceEqual(els, found)
-
-    def test_partial_link_text(self):
-        self.marionette.navigate(link_xhtml)
-        els = self.marionette.execute_script("return document.querySelectorAll('a')")
-        found = self.marionette.find_elements(By.PARTIAL_LINK_TEXT, "foo")
         self.assertItemsIsInstance(found, HTMLElement)
         self.assertSequenceEqual(els, found)
 

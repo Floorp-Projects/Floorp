@@ -27,8 +27,12 @@ from mozbuild.frontend.data import (
     FinalTargetFiles,
     GeneratedSources,
     GnProjectData,
+    HostLibrary,
+    HostRustLibrary,
     IPDLCollection,
+    RustLibrary,
     SharedLibrary,
+    StaticLibrary,
     UnifiedSources,
     XPIDLFile,
     WebIDLCollection,
@@ -40,7 +44,10 @@ from mozbuild.jar import (
 from mozbuild.preprocessor import Preprocessor
 from mozpack.chrome.manifest import parse_manifest_line
 
-from mozbuild.util import group_unified_files
+from mozbuild.util import (
+    group_unified_files,
+    mkdir,
+)
 
 class XPIDLManager(object):
     """Helps manage XPCOM IDLs in the context of the build system."""
@@ -195,6 +202,93 @@ class CommonBackend(BuildBackend):
                 'sources': sorted(self._generated_sources),
             }
             json.dump(d, fh, sort_keys=True, indent=4)
+
+    def _expand_libs(self, input_bin):
+        os_libs = []
+        shared_libs = []
+        static_libs = []
+        objs = []
+        no_pgo_objs = []
+
+        seen_objs = set()
+        seen_libs = set()
+
+        def add_objs(lib):
+            for o in lib.objs:
+                if o not in seen_objs:
+                    seen_objs.add(o)
+                    objs.append(o)
+                    # This is slightly odd, buf for consistency with the
+                    # recursivemake backend we don't replace OBJ_SUFFIX if any
+                    # object in a library has `no_pgo` set.
+                    if lib.no_pgo_objs or lib.no_pgo:
+                        no_pgo_objs.append(o)
+
+        def expand(lib, recurse_objs, system_libs):
+            if isinstance(lib, StaticLibrary):
+                if lib.no_expand_lib:
+                    static_libs.append(lib)
+                    recurse_objs = False
+                elif recurse_objs:
+                    add_objs(lib)
+
+                for l in lib.linked_libraries:
+                    expand(l, recurse_objs, system_libs)
+
+                if system_libs:
+                    for l in lib.linked_system_libs:
+                        if l not in seen_libs:
+                            seen_libs.add(l)
+                            os_libs.append(l)
+
+            elif isinstance(lib, SharedLibrary):
+                if lib not in seen_libs:
+                    seen_libs.add(lib)
+                    shared_libs.append(lib)
+
+        add_objs(input_bin)
+
+        system_libs = not isinstance(input_bin, StaticLibrary)
+        for lib in input_bin.linked_libraries:
+            if isinstance(lib, RustLibrary):
+                continue
+            elif isinstance(lib, StaticLibrary):
+                expand(lib, True, system_libs)
+            elif isinstance(lib, SharedLibrary):
+                if lib not in seen_libs:
+                    seen_libs.add(lib)
+                    shared_libs.append(lib)
+
+        for lib in input_bin.linked_system_libs:
+            if lib not in seen_libs:
+                seen_libs.add(lib)
+                os_libs.append(lib)
+
+        return objs, no_pgo_objs, shared_libs, os_libs, static_libs
+
+    def _make_list_file(self, objdir, objs, name):
+        if not objs:
+            return None
+        list_style = self.environment.substs.get('EXPAND_LIBS_LIST_STYLE')
+        list_file_path = mozpath.join(objdir, name)
+        objs = [os.path.relpath(o, objdir) for o in objs]
+        if list_style == 'linkerscript':
+            ref = list_file_path
+            content = '\n'.join('INPUT("%s")' % o for o in objs)
+        elif list_style == 'filelist':
+            ref = "-Wl,-filelist," + list_file_path
+            content = '\n'.join(objs)
+        elif list_style == 'list':
+            ref = "@" + list_file_path
+            content = '\n'.join(objs)
+        else:
+            return None
+
+        mkdir(objdir)
+        with self._write_file(list_file_path) as fh:
+            fh.write(content)
+
+        return ref
 
     def _handle_generated_sources(self, files):
         self._generated_sources.update(mozpath.relpath(f, self.environment.topobjdir) for f in files)

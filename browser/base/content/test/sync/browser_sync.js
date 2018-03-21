@@ -134,21 +134,6 @@ add_task(async function test_ui_state_loginFailed() {
   checkMenuBarItem("sync-reauthitem");
 });
 
-add_task(async function test_FormatLastSyncDateNow() {
-  let now = new Date();
-  let nowString = gSync.formatLastSyncDate(now);
-  is(nowString, "Last sync: " + now.toLocaleDateString(undefined, {weekday: "long", hour: "numeric", minute: "numeric"}),
-     "The date is correctly formatted");
-});
-
-add_task(async function test_FormatLastSyncDateMonthAgo() {
-  let monthAgo = new Date();
-  monthAgo.setMonth(monthAgo.getMonth() - 1);
-  let monthAgoString = gSync.formatLastSyncDate(monthAgo);
-  is(monthAgoString, "Last sync: " + monthAgo.toLocaleDateString(undefined, {month: "long", day: "numeric"}),
-     "The date is correctly formatted");
-});
-
 function checkPanelUIStatusBar({label, tooltip, fxastatus, avatarURL, syncing, syncNowTooltip}) {
   let labelNode = document.getElementById("appMenu-fxa-label");
   let tooltipNode = document.getElementById("appMenu-fxa-status");

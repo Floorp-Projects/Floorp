@@ -388,7 +388,7 @@ var gSync = {
     for (let client of clients) {
       const type = client.formfactor && client.formfactor.includes("tablet") ?
                    "tablet" : client.type;
-      addTargetDevice(client.id, client.name, type, client.serverLastModified * 1000);
+      addTargetDevice(client.id, client.name, type, new Date(client.serverLastModified * 1000));
     }
 
     // "Send to All Devices" menu item
@@ -591,6 +591,11 @@ var gSync = {
     }
   },
 
+  refreshSyncButtonsTooltip() {
+    const state = UIState.get();
+    this.updateSyncButtonsTooltip(state);
+  },
+
   /* Update the tooltip for the sync-status broadcaster (which will update the
      Sync Toolbar button and the Sync spinner in the FxA hamburger area.)
      If Sync is configured, the tooltip is when the last sync occurred,
@@ -628,32 +633,17 @@ var gSync = {
     }
   },
 
-  get withinLastWeekFormat() {
-    delete this.withinLastWeekFormat;
-    return this.withinLastWeekFormat = new Intl.DateTimeFormat(undefined,
-      {weekday: "long", hour: "numeric", minute: "numeric"});
-  },
-
-  get oneWeekOrOlderFormat() {
-    delete this.oneWeekOrOlderFormat;
-    return this.oneWeekOrOlderFormat = new Intl.DateTimeFormat(undefined,
-      {month: "long", day: "numeric"});
+  get relativeTimeFormat() {
+    delete this.relativeTimeFormat;
+    return this.relativeTimeFormat = new Services.intl.RelativeTimeFormat(undefined, {style: "short"});
   },
 
   formatLastSyncDate(date) {
-    let sixDaysAgo = (() => {
-      let tempDate = new Date();
-      tempDate.setDate(tempDate.getDate() - 6);
-      tempDate.setHours(0, 0, 0, 0);
-      return tempDate;
-    })();
-
-    // It may be confusing for the user to see "Last Sync: Monday" when the last
-    // sync was indeed a Monday, but 3 weeks ago.
-    let dateFormat = date < sixDaysAgo ? this.oneWeekOrOlderFormat : this.withinLastWeekFormat;
-
-    let lastSyncDateString = dateFormat.format(date);
-    return this.syncStrings.formatStringFromName("lastSync2.label", [lastSyncDateString], 1);
+    if (!date) { // Date can be null before the first sync!
+      return null;
+    }
+    const relativeDateStr = this.relativeTimeFormat.formatBestUnit(date);
+    return this.syncStrings.formatStringFromName("lastSync2.label", [relativeDateStr], 1);
   },
 
   onClientsSynced() {

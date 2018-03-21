@@ -266,12 +266,17 @@ var Policies = {
 
   "EnableTrackingProtection": {
     onBeforeUIStartup(manager, param) {
-      if (param.Locked) {
-        setAndLockPref("privacy.trackingprotection.enabled", param.Value);
-        setAndLockPref("privacy.trackingprotection.pbmode.enabled", param.Value);
+      if (param.Value) {
+        if (param.Locked) {
+          setAndLockPref("privacy.trackingprotection.enabled", true);
+          setAndLockPref("privacy.trackingprotection.pbmode.enabled", true);
+        } else {
+          setDefaultPref("privacy.trackingprotection.enabled", true);
+          setDefaultPref("privacy.trackingprotection.pbmode.enabled", true);
+        }
       } else {
-        setDefaultPref("privacy.trackingprotection.enabled", param.Value);
-        setDefaultPref("privacy.trackingprotection.pbmode.enabled", param.Value);
+        setAndLockPref("privacy.trackingprotection.enabled", false);
+        setAndLockPref("privacy.trackingprotection.pbmode.enabled", false);
       }
     }
   },
