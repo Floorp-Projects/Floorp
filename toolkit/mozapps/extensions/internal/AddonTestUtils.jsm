@@ -225,6 +225,9 @@ var AddonTestUtils = {
   },
 
   init(testScope) {
+    if (this.testScope === testScope) {
+      return;
+    }
     this.testScope = testScope;
 
     // Get the profile directory for tests to use.
