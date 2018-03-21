@@ -9809,7 +9809,7 @@ js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo
         ValTypeVector locals;
         if (!locals.appendAll(env.funcSigs[func.index]->args()))
             return false;
-        if (!DecodeLocalEntries(d, env.kind, &locals))
+        if (!DecodeLocalEntries(d, env.kind, env.gcTypesEnabled, &locals))
             return false;
 
         // One-pass baseline compilation.

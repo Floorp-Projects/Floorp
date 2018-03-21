@@ -62,6 +62,9 @@ enum class TypeCode
     // A function pointer with any signature
     AnyFunc                              = 0x70,  // SLEB128(-0x10)
 
+    // A reference to any type.
+    AnyRef                               = 0x6f,
+
     // Type constructor for function types
     Func                                 = 0x60,  // SLEB128(-0x20)
 
@@ -77,6 +80,8 @@ enum class ValType
     I64                                  = uint8_t(TypeCode::I64),
     F32                                  = uint8_t(TypeCode::F32),
     F64                                  = uint8_t(TypeCode::F64),
+
+    AnyRef                               = uint8_t(TypeCode::AnyRef),
 
     // ------------------------------------------------------------------------
     // The rest of these types are currently only emitted internally when
@@ -322,6 +327,10 @@ enum class Op
     I64Extend16S                         = 0xc3,
     I64Extend32S                         = 0xc4,
 #endif
+
+    // GC ops
+    RefNull                              = 0xd0,
+    RefIsNull                            = 0xd1,
 
     FirstPrefix                          = 0xfc,
     NumericPrefix                        = 0xfc,
