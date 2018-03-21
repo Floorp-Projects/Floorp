@@ -12,22 +12,6 @@ module.exports = {
     "reportError": true,
     "require": true,
   },
-  "overrides": [{
-    // XXX Bug 1230193. We're still working on enabling no-undef for these test
-    // directories.
-    "files": [
-      "client/memory/test/**",
-      "server/tests/browser/**",
-      "server/tests/mochitest/**",
-      "server/tests/unit/**",
-      "shared/heapsnapshot/tests/unit/**",
-      "shared/tests/unit/**",
-      "shared/webconsole/test/**",
-    ],
-    "rules": {
-      "no-undef": "off",
-    }
-  }],
   "rules": {
     // These are the rules that have been configured so far to match the
     // devtools coding style.

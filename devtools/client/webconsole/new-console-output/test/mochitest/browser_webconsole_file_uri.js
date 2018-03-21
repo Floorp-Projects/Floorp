@@ -5,9 +5,6 @@
 
 "use strict";
 
-// XXX Remove this when the file is migrated to the new frontend.
-/* eslint-disable no-undef */
-
 // See Bug 595223.
 
 const PREF = "devtools.webconsole.persistlog";

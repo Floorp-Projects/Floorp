@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // When strings containing URLs are entered into the webconsole,
 // ensure that the output can be clicked to open those URLs.
 // This test only check that clicking on a link works as expected,
