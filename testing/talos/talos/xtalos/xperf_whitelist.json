@@ -275,12 +275,6 @@
     "minbytes": 0,
     "maxbytes": 512
   },
-  "{profile}\\extensions\\pageloader@mozilla.org\\bootstrap.js": {
-    "mincount": 0,
-    "maxcount": 6,
-    "minbytes": 0,
-    "maxbytes": 30000
-  },
   "{profile}\\extensions\\pageloader@mozilla.org\\chrome.manifest": {
     "mincount": 2,
     "maxcount": 2,
@@ -334,12 +328,6 @@
     "maxcount": 2,
     "minbytes": 0,
     "maxbytes": 8192
-  },
-  "{profile}\\extensions\\talos-powers@mozilla.org\\bootstrap.js": {
-    "mincount": 0,
-    "maxcount": 6,
-    "minbytes": 0,
-    "maxbytes": 30000
   },
   "{profile}\\extensions\\talos-powers@mozilla.org\\chrome.manifest": {
     "mincount": 2,
