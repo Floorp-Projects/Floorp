@@ -1,0 +1,46 @@
+{
+  "addons": {
+    "ab-CD@dictionaries.addons.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "2.0",
+          "update_link": "http://localhost:%PORT%/addons/test_dictionary_3.xpi"
+        }
+      ]
+    },
+    "gh@dictionaries.addons.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "2.0",
+          "update_link": "http://localhost:%PORT%/addons/test_dictionary_5.xpi"
+        }
+      ]
+    },
+    "ef@dictionaries.addons.mozilla.org": {
+      "updates": [
+        {
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "advisory_max_version": "1"
+            }
+          },
+          "version": "2.0",
+          "update_link": "http://localhost:%PORT%/addons/test_dictionary_4.xpi"
+        }
+      ]
+    }
+  }
+}

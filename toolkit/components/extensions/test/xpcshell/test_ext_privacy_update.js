@@ -26,7 +26,7 @@ AddonTestUtils.init(this);
 // Allow for unsigned addons.
 AddonTestUtils.overrideCertDB();
 
-createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
 
 add_task(async function test_privacy_update() {
   // Create a object to hold the values to which we will initialize the prefs.

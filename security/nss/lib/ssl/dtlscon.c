@@ -776,7 +776,7 @@ dtls_FragmentHandshake(sslSocket *ss, DTLSQueuedMessage *msg)
         rv = dtls13_RememberFragment(ss, &ss->ssl3.hs.dtlsSentHandshake,
                                      msgSeq, fragmentOffset, fragmentLen,
                                      msg->cwSpec->epoch,
-                                     msg->cwSpec->seqNum);
+                                     msg->cwSpec->nextSeqNum);
         if (rv != SECSuccess) {
             return SECFailure;
         }
@@ -1319,6 +1319,107 @@ DTLS_GetHandshakeTimeout(PRFileDesc *socket, PRIntervalTime *timeout)
     return SECSuccess;
 }
 
+PRBool
+dtls_IsLongHeader(SSL3ProtocolVersion version, PRUint8 firstOctet)
+{
+#ifndef UNSAFE_FUZZER_MODE
+    return version < SSL_LIBRARY_VERSION_TLS_1_3 ||
+           firstOctet == content_handshake ||
+           firstOctet == content_ack ||
+           firstOctet == content_alert;
+#else
+    return PR_TRUE;
+#endif
+}
+
+DTLSEpoch
+dtls_ReadEpoch(const ssl3CipherSpec *crSpec, const PRUint8 *hdr)
+{
+    DTLSEpoch epoch;
+    DTLSEpoch maxEpoch;
+    DTLSEpoch partial;
+
+    if (dtls_IsLongHeader(crSpec->version, hdr[0])) {
+        return ((DTLSEpoch)hdr[3] << 8) | hdr[4];
+    }
+
+    /* A lot of how we recover the epoch here will depend on how we plan to
+     * manage KeyUpdate.  In the case that we decide to install a new read spec
+     * as a KeyUpdate is handled, crSpec will always be the highest epoch we can
+     * possibly receive.  That makes this easier to manage. */
+    if ((hdr[0] & 0xe0) == 0x20) {
+        /* Use crSpec->epoch, or crSpec->epoch - 1 if the last bit differs. */
+        if (((hdr[0] >> 4) & 1) == (crSpec->epoch & 1)) {
+            return crSpec->epoch;
+        }
+        return crSpec->epoch - 1;
+    }
+
+    /* dtls_GatherData should ensure that this works. */
+    PORT_Assert(hdr[0] == content_application_data);
+
+    /* This uses the same method as is used to recover the sequence number in
+     * dtls_ReadSequenceNumber, except that the maximum value is set to the
+     * current epoch. */
+    partial = hdr[1] >> 6;
+    maxEpoch = PR_MAX(crSpec->epoch, 3);
+    epoch = (maxEpoch & 0xfffc) | partial;
+    if (partial > (maxEpoch & 0x03)) {
+        epoch -= 4;
+    }
+    return epoch;
+}
+
+static sslSequenceNumber
+dtls_ReadSequenceNumber(const ssl3CipherSpec *spec, const PRUint8 *hdr)
+{
+    sslSequenceNumber cap;
+    sslSequenceNumber partial;
+    sslSequenceNumber seqNum;
+    sslSequenceNumber mask;
+
+    if (dtls_IsLongHeader(spec->version, hdr[0])) {
+        static const unsigned int seqNumOffset = 5; /* type, version, epoch */
+        static const unsigned int seqNumLength = 6;
+        sslReader r = SSL_READER(hdr + seqNumOffset, seqNumLength);
+        (void)sslRead_ReadNumber(&r, seqNumLength, &seqNum);
+        return seqNum;
+    }
+
+    /* Only the least significant bits of the sequence number is available here.
+     * This recovers the value based on the next expected sequence number.
+     *
+     * This works by determining the maximum possible sequence number, which is
+     * half the range of possible values above the expected next value (the
+     * expected next value is in |spec->seqNum|).  Then, the last part of the
+     * sequence number is replaced.  If that causes the value to exceed the
+     * maximum, subtract an entire range.
+     */
+    if ((hdr[0] & 0xe0) == 0x20) {
+        /* A 12-bit sequence number. */
+        cap = spec->nextSeqNum + (1ULL << 11);
+        partial = (((sslSequenceNumber)hdr[0] & 0xf) << 8) |
+                  (sslSequenceNumber)hdr[1];
+        mask = (1ULL << 12) - 1;
+    } else {
+        /* A 30-bit sequence number. */
+        cap = spec->nextSeqNum + (1ULL << 29);
+        partial = (((sslSequenceNumber)hdr[1] & 0x3f) << 24) |
+                  ((sslSequenceNumber)hdr[2] << 16) |
+                  ((sslSequenceNumber)hdr[3] << 8) |
+                  (sslSequenceNumber)hdr[4];
+        mask = (1ULL << 30) - 1;
+    }
+    seqNum = (cap & ~mask) | partial;
+    /* The second check prevents the value from underflowing if we get a large
+     * gap at the start of a connection, where this subtraction would cause the
+     * sequence number to wrap to near UINT64_MAX. */
+    if ((partial > (cap & mask)) && (seqNum > mask)) {
+        seqNum -= mask + 1;
+    }
+    return seqNum;
+}
+
 /*
  * DTLS relevance checks:
  * Note that this code currently ignores all out-of-epoch packets,
@@ -1336,7 +1437,7 @@ dtls_IsRelevant(sslSocket *ss, const ssl3CipherSpec *spec,
                 const SSL3Ciphertext *cText,
                 sslSequenceNumber *seqNumOut)
 {
-    sslSequenceNumber seqNum = cText->seq_num & RECORD_SEQ_MASK;
+    sslSequenceNumber seqNum = dtls_ReadSequenceNumber(spec, cText->hdr);
     if (dtls_RecordGetRecvd(&spec->recvdRecords, seqNum) != 0) {
         SSL_TRC(10, ("%d: SSL3[%d]: dtls_IsRelevant, rejecting "
                      "potentially replayed packet",

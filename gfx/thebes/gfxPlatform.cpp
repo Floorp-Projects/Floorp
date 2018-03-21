@@ -1386,7 +1386,8 @@ bool gfxPlatform::AllowOpenGLCanvas()
   // so we let content process always assume correct compositor backend.
   // The callers have to do the right thing.
   bool correctBackend = !XRE_IsParentProcess() ||
-    ((mCompositorBackend == LayersBackend::LAYERS_OPENGL) &&
+    ((mCompositorBackend == LayersBackend::LAYERS_OPENGL ||
+      mCompositorBackend == LayersBackend::LAYERS_WR) &&
      (GetContentBackendFor(mCompositorBackend) == BackendType::SKIA));
 
   if (gfxPrefs::CanvasAzureAccelerated() && correctBackend) {

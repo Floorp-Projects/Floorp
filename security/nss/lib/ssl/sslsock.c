@@ -81,7 +81,8 @@ static sslOptions ssl_defaults = {
     .enableSignedCertTimestamps = PR_FALSE,
     .requireDHENamedGroups = PR_FALSE,
     .enable0RttData = PR_FALSE,
-    .enableTls13CompatMode = PR_FALSE
+    .enableTls13CompatMode = PR_FALSE,
+    .enableDtlsShortHeader = PR_FALSE
 };
 
 /*
@@ -807,6 +808,10 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRIntn val)
             ss->opt.enableTls13CompatMode = val;
             break;
 
+        case SSL_ENABLE_DTLS_SHORT_HEADER:
+            ss->opt.enableDtlsShortHeader = val;
+            break;
+
         default:
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
             rv = SECFailure;
@@ -943,6 +948,9 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRIntn *pVal)
         case SSL_ENABLE_TLS13_COMPAT_MODE:
             val = ss->opt.enableTls13CompatMode;
             break;
+        case SSL_ENABLE_DTLS_SHORT_HEADER:
+            val = ss->opt.enableDtlsShortHeader;
+            break;
         default:
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
             rv = SECFailure;
@@ -1062,6 +1070,9 @@ SSL_OptionGetDefault(PRInt32 which, PRIntn *pVal)
             break;
         case SSL_ENABLE_TLS13_COMPAT_MODE:
             val = ssl_defaults.enableTls13CompatMode;
+            break;
+        case SSL_ENABLE_DTLS_SHORT_HEADER:
+            val = ssl_defaults.enableDtlsShortHeader;
             break;
         default:
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -1244,6 +1255,10 @@ SSL_OptionSetDefault(PRInt32 which, PRIntn val)
 
         case SSL_ENABLE_TLS13_COMPAT_MODE:
             ssl_defaults.enableTls13CompatMode = val;
+            break;
+
+        case SSL_ENABLE_DTLS_SHORT_HEADER:
+            ssl_defaults.enableDtlsShortHeader = val;
             break;
 
         default:

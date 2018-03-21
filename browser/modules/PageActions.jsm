@@ -32,6 +32,11 @@ const ACTION_ID_BUILT_IN_SEPARATOR = "builtInSeparator";
 const PREF_PERSISTED_ACTIONS = "browser.pageActions.persistedActions";
 const PERSISTED_ACTIONS_CURRENT_VERSION = 1;
 
+// Escapes the given raw URL string, and returns an equivalent CSS url()
+// value for it.
+function escapeCSSURL(url) {
+  return `url("${url.replace(/[\\\s"]/g, encodeURIComponent)}")`;
+}
 
 var PageActions = {
   /**
@@ -617,6 +622,29 @@ function Action(options) {
   if (this._subview) {
     this._subview = new Subview(options.subview);
   }
+
+  /**
+   * A cache of the pre-computed CSS variable values for a given icon
+   * URLs object, as passed to _createIconProperties.
+   */
+  this._iconProperties = new WeakMap();
+
+  /**
+   * The global values for the action properties.
+   */
+  this._globalProps = {
+    disabled: this._disabled,
+    iconURL: this._iconURL,
+    iconProps: this._createIconProperties(this._iconURL),
+    title: this._title,
+    tooltip: this._tooltip,
+  };
+
+  /**
+   * A mapping of window-specific action property objects, each of which
+   * derives from the _globalProps object.
+   */
+  this._windowProps = new WeakMap();
 }
 
 Action.prototype = {
@@ -661,7 +689,7 @@ Action.prototype = {
    * The action's disabled state (bool, nonnull)
    */
   getDisabled(browserWindow = null) {
-    return !!this._getProperty("disabled", browserWindow);
+    return !!this._getProperties(browserWindow).disabled;
   },
   setDisabled(value, browserWindow = null) {
     return this._setProperty("disabled", !!value, browserWindow);
@@ -672,17 +700,49 @@ Action.prototype = {
    * (string or object, nullable)
    */
   getIconURL(browserWindow = null) {
-    return this._getProperty("iconURL", browserWindow);
+    return this._getProperties(browserWindow).iconURL;
   },
   setIconURL(value, browserWindow = null) {
-    return this._setProperty("iconURL", value, browserWindow);
+    let props = this._getProperties(browserWindow, !!browserWindow);
+    props.iconURL = value;
+    props.iconProps = this._createIconProperties(value);
+
+    this._updateProperty("iconURL", props.iconProps, browserWindow);
+    return value;
+  },
+
+  /**
+   * The set of CSS variables which define the action's icons in various
+   * sizes. This is generated automatically from the iconURL property.
+   */
+  getIconProperties(browserWindow = null) {
+    return this._getProperties(browserWindow).iconProps;
+  },
+
+  _createIconProperties(urls) {
+    if (urls && typeof urls == "object") {
+      let props = this._iconProperties.get(urls);
+      if (!props) {
+        props = Object.freeze({
+          "--pageAction-image-16px": escapeCSSURL(this._iconURLForSize(urls, 16)),
+          "--pageAction-image-32px": escapeCSSURL(this._iconURLForSize(urls, 32)),
+        });
+        this._iconProperties.set(urls, props);
+      }
+      return props;
+    }
+
+    return Object.freeze({
+      "--pageAction-image-16px": null,
+      "--pageAction-image-32px": urls ? escapeCSSURL(urls) : null,
+    });
   },
 
   /**
    * The action's title (string, nonnull)
    */
   getTitle(browserWindow = null) {
-    return this._getProperty("title", browserWindow);
+    return this._getProperties(browserWindow).title;
   },
   setTitle(value, browserWindow = null) {
     return this._setProperty("title", value, browserWindow);
@@ -692,7 +752,7 @@ Action.prototype = {
    * The action's tooltip (string, nullable)
    */
   getTooltip(browserWindow = null) {
-    return this._getProperty("tooltip", browserWindow);
+    return this._getProperties(browserWindow).tooltip;
   },
   setTooltip(value, browserWindow = null) {
     return this._setProperty("tooltip", value, browserWindow);
@@ -710,56 +770,45 @@ Action.prototype = {
    *         globally.
    */
   _setProperty(name, value, browserWindow) {
-    if (!browserWindow) {
-      // Set the global state.
-      this[`_${name}`] = value;
-    } else {
-      // Set the per-window state.
-      let props = this._propertiesByBrowserWindow.get(browserWindow);
-      if (!props) {
-        props = {};
-        this._propertiesByBrowserWindow.set(browserWindow, props);
-      }
-      props[name] = value;
-    }
-    // This may be called before the action has been added.
-    if (PageActions.actionForID(this.id)) {
-      for (let bpa of allBrowserPageActions(browserWindow)) {
-        bpa.updateAction(this, name);
-      }
-    }
+    let props = this._getProperties(browserWindow, !!browserWindow);
+    props[name] = value;
+
+    this._updateProperty(name, value, browserWindow);
     return value;
   },
 
-  /**
-   * Gets a property, optionally for a particular browser window.
-   *
-   * @param  name (string, required)
-   *         The (non-underscored) name of the property.
-   * @param  browserWindow (DOM window, optional)
-   *         If given, then the property will be fetched from this window's
-   *         state.  If the property does not exist in the window's state, or if
-   *         no window is given, then the global value is returned.
-   * @return The property value.
-   */
-  _getProperty(name, browserWindow) {
-    if (browserWindow) {
-      // Try the per-window state.
-      let props = this._propertiesByBrowserWindow.get(browserWindow);
-      if (props && name in props) {
-        return props[name];
+  _updateProperty(name, value, browserWindow) {
+    // This may be called before the action has been added.
+    if (PageActions.actionForID(this.id)) {
+      for (let bpa of allBrowserPageActions(browserWindow)) {
+        bpa.updateAction(this, name, value);
       }
     }
-    // Fall back to the global state.
-    return this[`_${name}`];
   },
 
-  // maps browser windows => object with properties for that window
-  get _propertiesByBrowserWindow() {
-    if (!this.__propertiesByBrowserWindow) {
-      this.__propertiesByBrowserWindow = new WeakMap();
+  /**
+   * Returns the properties object for the given window, if it exists,
+   * or the global properties object if no window-specific properties
+   * exist.
+   *
+   * @param {Window?} window
+   *        The window for which to return the properties object, or
+   *        null to return the global properties object.
+   * @param {bool} [forceWindowSpecific = false]
+   *        If true, always returns a window-specific properties object.
+   *        If a properties object does not exist for the given window,
+   *        one is created and cached.
+   * @returns {object}
+   */
+  _getProperties(window, forceWindowSpecific = false) {
+    let props = window && this._windowProps.get(window);
+
+    if (!props && forceWindowSpecific) {
+      props = Object.create(this._globalProps);
+      this._windowProps.set(window, props);
     }
-    return this.__propertiesByBrowserWindow;
+
+    return props || this._globalProps;
   },
 
   /**
@@ -813,23 +862,31 @@ Action.prototype = {
       return iconURL;
     }
     if (typeof(iconURL) == "object") {
-      // This case is copied from ExtensionParent.jsm so that our image logic is
-      // the same, so that WebExtensions page action tests that deal with icons
-      // pass.
-      let bestSize = null;
-      if (iconURL[preferredSize]) {
-        bestSize = preferredSize;
-      } else if (iconURL[2 * preferredSize]) {
-        bestSize = 2 * preferredSize;
-      } else {
-        let sizes = Object.keys(iconURL)
-                          .map(key => parseInt(key, 10))
-                          .sort((a, b) => a - b);
-        bestSize = sizes.find(candidate => candidate > preferredSize) || sizes.pop();
-      }
-      return iconURL[bestSize];
+      return this._iconURLForSize(iconURL, preferredSize);
     }
     return null;
+  },
+
+  /**
+   * Selects the best matching icon from the given URLs object for the
+   * given preferred size, as described in {@see iconURLForSize}.
+   */
+  _iconURLForSize(urls, preferredSize) {
+    // This case is copied from ExtensionParent.jsm so that our image logic is
+    // the same, so that WebExtensions page action tests that deal with icons
+    // pass.
+    let bestSize = null;
+    if (urls[preferredSize]) {
+      bestSize = preferredSize;
+    } else if (urls[2 * preferredSize]) {
+      bestSize = 2 * preferredSize;
+    } else {
+      let sizes = Object.keys(urls)
+                        .map(key => parseInt(key, 10))
+                        .sort((a, b) => a - b);
+      bestSize = sizes.find(candidate => candidate > preferredSize) || sizes.pop();
+    }
+    return urls[bestSize];
   },
 
   /**

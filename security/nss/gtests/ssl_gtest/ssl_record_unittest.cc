@@ -168,6 +168,29 @@ TEST_F(TlsConnectStreamTls13, TooLargeRecord) {
   EXPECT_EQ(SSL_ERROR_RECORD_OVERFLOW_ALERT, PORT_GetError());
 }
 
+class ShortHeaderChecker : public PacketFilter {
+ public:
+  PacketFilter::Action Filter(const DataBuffer& input, DataBuffer* output) {
+    // The first octet should be 0b001xxxxx.
+    EXPECT_EQ(1, input.data()[0] >> 5);
+    return KEEP;
+  }
+};
+
+TEST_F(TlsConnectDatagram13, ShortHeadersClient) {
+  Connect();
+  client_->SetOption(SSL_ENABLE_DTLS_SHORT_HEADER, PR_TRUE);
+  client_->SetFilter(std::make_shared<ShortHeaderChecker>());
+  SendReceive();
+}
+
+TEST_F(TlsConnectDatagram13, ShortHeadersServer) {
+  Connect();
+  server_->SetOption(SSL_ENABLE_DTLS_SHORT_HEADER, PR_TRUE);
+  server_->SetFilter(std::make_shared<ShortHeaderChecker>());
+  SendReceive();
+}
+
 const static size_t kContentSizesArr[] = {
     1, kMacSize - 1, kMacSize, 30, 31, 32, 36, 256, 257, 287, 288};
 

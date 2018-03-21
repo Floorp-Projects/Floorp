@@ -23,8 +23,9 @@ class AeadCipher {
   virtual ~AeadCipher();
 
   bool Init(PK11SymKey *key, const uint8_t *iv);
-  virtual bool Aead(bool decrypt, uint64_t seq, const uint8_t *in, size_t inlen,
-                    uint8_t *out, size_t *outlen, size_t maxlen) = 0;
+  virtual bool Aead(bool decrypt, const uint8_t *hdr, size_t hdr_len,
+                    uint64_t seq, const uint8_t *in, size_t inlen, uint8_t *out,
+                    size_t *outlen, size_t maxlen) = 0;
 
  protected:
   void FormatNonce(uint64_t seq, uint8_t *nonce);
@@ -42,8 +43,9 @@ class AeadCipherChacha20Poly1305 : public AeadCipher {
   AeadCipherChacha20Poly1305() : AeadCipher(CKM_NSS_CHACHA20_POLY1305) {}
 
  protected:
-  bool Aead(bool decrypt, uint64_t seq, const uint8_t *in, size_t inlen,
-            uint8_t *out, size_t *outlen, size_t maxlen);
+  bool Aead(bool decrypt, const uint8_t *hdr, size_t hdr_len, uint64_t seq,
+            const uint8_t *in, size_t inlen, uint8_t *out, size_t *outlen,
+            size_t maxlen);
 };
 
 class AeadCipherAesGcm : public AeadCipher {
@@ -51,8 +53,9 @@ class AeadCipherAesGcm : public AeadCipher {
   AeadCipherAesGcm() : AeadCipher(CKM_AES_GCM) {}
 
  protected:
-  bool Aead(bool decrypt, uint64_t seq, const uint8_t *in, size_t inlen,
-            uint8_t *out, size_t *outlen, size_t maxlen);
+  bool Aead(bool decrypt, const uint8_t *hdr, size_t hdr_len, uint64_t seq,
+            const uint8_t *in, size_t inlen, uint8_t *out, size_t *outlen,
+            size_t maxlen);
 };
 
 // Our analog of ssl3CipherSpec

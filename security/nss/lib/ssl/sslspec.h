@@ -162,7 +162,9 @@ struct ssl3CipherSpecStr {
 
     DTLSEpoch epoch;
     const char *phase;
-    sslSequenceNumber seqNum;
+
+    /* The next sequence number to be sent or received. */
+    sslSequenceNumber nextSeqNum;
     DTLSRecvdRecords recvdRecords;
 
     /* The number of 0-RTT bytes that can be sent or received in TLS 1.3. This

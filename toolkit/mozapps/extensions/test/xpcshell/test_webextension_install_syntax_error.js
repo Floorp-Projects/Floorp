@@ -38,6 +38,7 @@ add_task(async function install_xpi() {
   let install2 = await AddonManager.getInstallForFile(xpi2);
   Assert.notEqual(install2.error, AddonManager.ERROR_CORRUPT_FILE);
 
+  xpi1.remove(false);
 });
 
 function run_test() {

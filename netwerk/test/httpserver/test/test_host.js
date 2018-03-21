@@ -232,7 +232,7 @@ function checkPrimariesThrow(id)
   }
   catch (e)
   {
-    threw = e === Cr.NS_ERROR_NOT_INITIALIZED;
+    threw = e.result === Cr.NS_ERROR_NOT_INITIALIZED;
   }
   Assert.ok(threw);
 
@@ -243,7 +243,7 @@ function checkPrimariesThrow(id)
   }
   catch (e)
   {
-    threw = e === Cr.NS_ERROR_NOT_INITIALIZED;
+    threw = e.result === Cr.NS_ERROR_NOT_INITIALIZED;
   }
   Assert.ok(threw);
 
@@ -254,7 +254,7 @@ function checkPrimariesThrow(id)
   }
   catch (e)
   {
-    threw = e === Cr.NS_ERROR_NOT_INITIALIZED;
+    threw = e.result === Cr.NS_ERROR_NOT_INITIALIZED;
   }
   Assert.ok(threw);
 }

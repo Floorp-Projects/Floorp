@@ -8,8 +8,8 @@ ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
 
 var gServer;
 
-const PORT      = 4444;
-const BASE_URL  = "http://localhost:" + PORT;
+const HOST      = "example.com";
+const BASE_URL  = "http://example.com";
 
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_CACHE_TYPES   = "extensions.getAddons.cache.types";
@@ -439,7 +439,7 @@ add_task(async function setup() {
   await promiseInstallAllFiles(ADDON_FILES);
   await promiseRestartManager();
 
-  gServer = createHttpServer(PORT);
+  gServer = AddonTestUtils.createHttpServer({hosts: [HOST]});
   gServer.registerDirectory("/data/", do_get_file("data"));
 });
 

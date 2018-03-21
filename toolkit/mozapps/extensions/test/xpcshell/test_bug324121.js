@@ -6,8 +6,6 @@
 // Disables security checking our updates which haven't been signed
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
-// Get the HTTP server.
-ChromeUtils.import("resource://testing-common/httpd.js");
 var testserver;
 
 var gItemsNotChecked = [];
@@ -129,9 +127,8 @@ function run_test() {
   const dataDir = do_get_file("data");
 
   // Create and configure the HTTP server.
-  testserver = new HttpServer();
+  testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
   testserver.registerDirectory("/data/", dataDir);
-  testserver.start(4444);
 
   startupManager();
 
@@ -171,5 +168,5 @@ function run_test() {
 
 function test_complete() {
   Assert.equal(gItemsNotChecked.length, 0);
-  testserver.stop(do_test_finished);
+  do_test_finished();
 }

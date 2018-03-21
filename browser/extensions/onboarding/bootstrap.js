@@ -13,6 +13,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UIState: "resource://services-sync/UIState.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "resProto",
+                                   "@mozilla.org/network/protocol;1?name=resource",
+                                   "nsISubstitutingProtocolHandler");
+
+const RESOURCE_HOST = "onboarding";
+
 const {PREF_STRING, PREF_BOOL, PREF_INT} = Ci.nsIPrefBranch;
 
 const BROWSER_READY_NOTIFICATION = "browser-delayed-startup-finished";
@@ -197,6 +203,10 @@ function install(aData, aReason) {}
 function uninstall(aData, aReason) {}
 
 function startup(aData, aReason) {
+  resProto.setSubstitutionWithFlags(RESOURCE_HOST,
+                                    Services.io.newURI("chrome/content/", null, aData.resourceURI),
+                                    resProto.ALLOW_CONTENT_ACCESS);
+
   // Cache startup data which contains stuff like the version number, etc.
   // so we can use it when we init the telemetry
   startupData = aData;
@@ -211,6 +221,8 @@ function startup(aData, aReason) {
 }
 
 function shutdown(aData, aReason) {
+  resProto.setSubstitution(RESOURCE_HOST, null);
+
   startupData = null;
   // Stop waiting for browser to be ready
   if (waitingForBrowserReady) {

@@ -462,28 +462,36 @@ var BrowserPageActions = {
    * @param  propertyName (string, optional)
    *         The name of the property to update.  If not given, then DOM nodes
    *         will be updated to reflect the current values of all properties.
+   * @param  value (optional)
+   *         If a property name is passed, this argument may contain its
+   *         current value, in order to prevent a further look-up.
    */
-  updateAction(action, propertyName = null) {
-    let propertyNames = propertyName ? [propertyName] : [
-      "iconURL",
-      "title",
-      "tooltip",
-    ];
-    for (let name of propertyNames) {
-      let upper = name[0].toUpperCase() + name.substr(1);
-      this[`_updateAction${upper}`](action);
+  updateAction(action, propertyName = null, value) {
+    if (propertyName) {
+      this[this._updateMethods[propertyName]](action, value);
+    } else {
+      for (let name of ["iconURL", "title", "tooltip"]) {
+        this[this._updateMethods[name]](action, value);
+      }
     }
   },
 
-  _updateActionDisabled(action) {
-    this._updateActionDisabledInPanel(action);
+  _updateMethods: {
+    disabled: "_updateActionDisabled",
+    iconURL: "_updateActionIconURL",
+    title: "_updateActionTitle",
+    tooltip: "_updateActionTooltip",
+  },
+
+  _updateActionDisabled(action, disabled) {
+    this._updateActionDisabledInPanel(action, disabled);
     this.placeActionInUrlbar(action);
   },
 
-  _updateActionDisabledInPanel(action) {
+  _updateActionDisabledInPanel(action, disabled = action.getDisabled(window)) {
     let panelButton = this.panelButtonNodeForActionID(action.id);
     if (panelButton) {
-      if (action.getDisabled(window)) {
+      if (disabled) {
         panelButton.setAttribute("disabled", "true");
       } else {
         panelButton.removeAttribute("disabled");
@@ -491,26 +499,21 @@ var BrowserPageActions = {
     }
   },
 
-  _updateActionIconURL(action) {
-    let nodes = [
-      this.panelButtonNodeForActionID(action.id),
-      this.urlbarButtonNodeForActionID(action.id),
-    ].filter(n => !!n);
-    for (let node of nodes) {
-      for (let size of [16, 32]) {
-        let url = action.iconURLForSize(size, window);
-        let prop = `--pageAction-image-${size}px`;
-        if (url) {
-          node.style.setProperty(prop, `url("${url}")`);
-        } else {
-          node.style.removeProperty(prop);
-        }
+  _updateActionIconURL(action, properties = action.getIconProperties(window)) {
+    let panelButton = this.panelButtonNodeForActionID(action.id);
+    let urlbarButton = this.urlbarButtonNodeForActionID(action.id);
+
+    for (let [prop, value] of Object.entries(properties)) {
+      if (panelButton) {
+        panelButton.style.setProperty(prop, value);
+      }
+      if (urlbarButton) {
+        urlbarButton.style.setProperty(prop, value);
       }
     }
   },
 
-  _updateActionTitle(action) {
-    let title = action.getTitle(window);
+  _updateActionTitle(action, title = action.getTitle(window)) {
     if (!title) {
       // `title` is a required action property, but the bookmark action's is an
       // empty string since its actual title is set via
@@ -518,25 +521,28 @@ var BrowserPageActions = {
       // return is to ignore that empty title.
       return;
     }
-    let attrNamesByNodeFnName = {
-      panelButtonNodeForActionID: "label",
-      urlbarButtonNodeForActionID: "aria-label",
-    };
-    for (let [fnName, attrName] of Object.entries(attrNamesByNodeFnName)) {
-      let node = this[fnName](action.id);
-      if (node) {
-        node.setAttribute(attrName, title);
-      }
+    let panelButton = this.panelButtonNodeForActionID(action.id);
+    if (panelButton) {
+      panelButton.setAttribute("label", title);
     }
-    // tooltiptext falls back to the title, so update it, too.
-    this._updateActionTooltip(action);
+
+    let urlbarButton = this.urlbarButtonNodeForActionID(action.id);
+    if (urlbarButton) {
+      urlbarButton.setAttribute("aria-label", title);
+
+      // tooltiptext falls back to the title, so update it, too.
+      this._updateActionTooltip(action, undefined, title, urlbarButton);
+    }
   },
 
-  _updateActionTooltip(action) {
-    let node = this.urlbarButtonNodeForActionID(action.id);
+  _updateActionTooltip(action, tooltip = action.getTooltip(window),
+                       title,
+                       node = this.urlbarButtonNodeForActionID(action.id)) {
     if (node) {
-      let tooltip = action.getTooltip(window) || action.getTitle(window);
-      node.setAttribute("tooltiptext", tooltip);
+      if (!tooltip && title === undefined) {
+        title = action.getTitle(window);
+      }
+      node.setAttribute("tooltiptext", tooltip || title);
     }
   },
 

@@ -66,7 +66,8 @@ TEST_P(TlsConnectDatagramPre13, DropServerSecondFlightThrice) {
   Connect();
 }
 
-class TlsDropDatagram13 : public TlsConnectDatagram13 {
+class TlsDropDatagram13 : public TlsConnectDatagram13,
+                          public ::testing::WithParamInterface<bool> {
  public:
   TlsDropDatagram13()
       : client_filters_(),
@@ -77,6 +78,9 @@ class TlsDropDatagram13 : public TlsConnectDatagram13 {
   void SetUp() override {
     TlsConnectDatagram13::SetUp();
     ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
+    int short_header = GetParam() ? PR_TRUE : PR_FALSE;
+    client_->SetOption(SSL_ENABLE_DTLS_SHORT_HEADER, short_header);
+    server_->SetOption(SSL_ENABLE_DTLS_SHORT_HEADER, short_header);
     SetFilters();
   }
 
@@ -186,7 +190,7 @@ class TlsDropDatagram13 : public TlsConnectDatagram13 {
 // to the client upon receiving the client Finished.
 // Dropping complete first and second flights does not produce
 // ACKs
-TEST_F(TlsDropDatagram13, DropClientFirstFlightOnce) {
+TEST_P(TlsDropDatagram13, DropClientFirstFlightOnce) {
   client_filters_.drop_->Reset({0});
   StartConnect();
   client_->Handshake();
@@ -195,7 +199,7 @@ TEST_F(TlsDropDatagram13, DropClientFirstFlightOnce) {
   CheckAcks(server_filters_, 0, {0x0002000000000000ULL});
 }
 
-TEST_F(TlsDropDatagram13, DropServerFirstFlightOnce) {
+TEST_P(TlsDropDatagram13, DropServerFirstFlightOnce) {
   server_filters_.drop_->Reset(0xff);
   StartConnect();
   client_->Handshake();
@@ -209,7 +213,7 @@ TEST_F(TlsDropDatagram13, DropServerFirstFlightOnce) {
 // Dropping the server's first record also does not produce
 // an ACK because the next record is ignored.
 // TODO(ekr@rtfm.com): We should generate an empty ACK.
-TEST_F(TlsDropDatagram13, DropServerFirstRecordOnce) {
+TEST_P(TlsDropDatagram13, DropServerFirstRecordOnce) {
   server_filters_.drop_->Reset({0});
   StartConnect();
   client_->Handshake();
@@ -221,7 +225,7 @@ TEST_F(TlsDropDatagram13, DropServerFirstRecordOnce) {
 
 // Dropping the second packet of the server's flight should
 // produce an ACK.
-TEST_F(TlsDropDatagram13, DropServerSecondRecordOnce) {
+TEST_P(TlsDropDatagram13, DropServerSecondRecordOnce) {
   server_filters_.drop_->Reset({1});
   StartConnect();
   client_->Handshake();
@@ -235,7 +239,7 @@ TEST_F(TlsDropDatagram13, DropServerSecondRecordOnce) {
 
 // Drop the server ACK and verify that the client retransmits
 // the ClientHello.
-TEST_F(TlsDropDatagram13, DropServerAckOnce) {
+TEST_P(TlsDropDatagram13, DropServerAckOnce) {
   StartConnect();
   client_->Handshake();
   server_->Handshake();
@@ -263,7 +267,7 @@ TEST_F(TlsDropDatagram13, DropServerAckOnce) {
 }
 
 // Drop the client certificate verify.
-TEST_F(TlsDropDatagram13, DropClientCertVerify) {
+TEST_P(TlsDropDatagram13, DropClientCertVerify) {
   StartConnect();
   client_->SetupClientAuth();
   server_->RequestClientAuth(true);
@@ -284,7 +288,7 @@ TEST_F(TlsDropDatagram13, DropClientCertVerify) {
 }
 
 // Shrink the MTU down so that certs get split and drop the first piece.
-TEST_F(TlsDropDatagram13, DropFirstHalfOfServerCertificate) {
+TEST_P(TlsDropDatagram13, DropFirstHalfOfServerCertificate) {
   server_filters_.drop_->Reset({2});
   StartConnect();
   ShrinkPostServerHelloMtu();
@@ -311,7 +315,7 @@ TEST_F(TlsDropDatagram13, DropFirstHalfOfServerCertificate) {
 }
 
 // Shrink the MTU down so that certs get split and drop the second piece.
-TEST_F(TlsDropDatagram13, DropSecondHalfOfServerCertificate) {
+TEST_P(TlsDropDatagram13, DropSecondHalfOfServerCertificate) {
   server_filters_.drop_->Reset({3});
   StartConnect();
   ShrinkPostServerHelloMtu();
@@ -524,11 +528,11 @@ class TlsFragmentationAndRecoveryTest : public TlsDropDatagram13 {
   size_t cert_len_;
 };
 
-TEST_F(TlsFragmentationAndRecoveryTest, DropFirstHalf) { RunTest(0); }
+TEST_P(TlsFragmentationAndRecoveryTest, DropFirstHalf) { RunTest(0); }
 
-TEST_F(TlsFragmentationAndRecoveryTest, DropSecondHalf) { RunTest(1); }
+TEST_P(TlsFragmentationAndRecoveryTest, DropSecondHalf) { RunTest(1); }
 
-TEST_F(TlsDropDatagram13, NoDropsDuringZeroRtt) {
+TEST_P(TlsDropDatagram13, NoDropsDuringZeroRtt) {
   SetupForZeroRtt();
   SetFilters();
   std::cerr << "Starting second handshake" << std::endl;
@@ -546,7 +550,7 @@ TEST_F(TlsDropDatagram13, NoDropsDuringZeroRtt) {
              0x0002000000000000ULL});  // Finished
 }
 
-TEST_F(TlsDropDatagram13, DropEEDuringZeroRtt) {
+TEST_P(TlsDropDatagram13, DropEEDuringZeroRtt) {
   SetupForZeroRtt();
   SetFilters();
   std::cerr << "Starting second handshake" << std::endl;
@@ -591,7 +595,7 @@ class TlsReorderDatagram13 : public TlsDropDatagram13 {
 
 // Reorder the server records so that EE comes at the end
 // of the flight and will still produce an ACK.
-TEST_F(TlsDropDatagram13, ReorderServerEE) {
+TEST_P(TlsDropDatagram13, ReorderServerEE) {
   server_filters_.drop_->Reset({1});
   StartConnect();
   client_->Handshake();
@@ -647,7 +651,7 @@ class TlsSendCipherSpecCapturer {
   std::vector<std::shared_ptr<TlsCipherSpec>> send_cipher_specs_;
 };
 
-TEST_F(TlsDropDatagram13, SendOutOfOrderAppWithHandshakeKey) {
+TEST_P(TlsDropDatagram13, SendOutOfOrderAppWithHandshakeKey) {
   StartConnect();
   TlsSendCipherSpecCapturer capturer(client_);
   client_->Handshake();
@@ -662,9 +666,9 @@ TEST_F(TlsDropDatagram13, SendOutOfOrderAppWithHandshakeKey) {
   auto spec = capturer.spec(0);
   ASSERT_NE(nullptr, spec.get());
   ASSERT_EQ(2, spec->epoch());
-  ASSERT_TRUE(client_->SendEncryptedRecord(
-      spec, SSL_LIBRARY_VERSION_DTLS_1_2_WIRE, 0x0002000000000002,
-      kTlsApplicationDataType, DataBuffer(buf, sizeof(buf))));
+  ASSERT_TRUE(client_->SendEncryptedRecord(spec, 0x0002000000000002,
+                                           kTlsApplicationDataType,
+                                           DataBuffer(buf, sizeof(buf))));
 
   // Now have the server consume the bogus message.
   server_->ExpectSendAlert(illegal_parameter, kTlsAlertFatal);
@@ -673,7 +677,7 @@ TEST_F(TlsDropDatagram13, SendOutOfOrderAppWithHandshakeKey) {
   EXPECT_EQ(SSL_ERROR_RX_UNKNOWN_RECORD_TYPE, PORT_GetError());
 }
 
-TEST_F(TlsDropDatagram13, SendOutOfOrderHsNonsenseWithHandshakeKey) {
+TEST_P(TlsDropDatagram13, SendOutOfOrderHsNonsenseWithHandshakeKey) {
   StartConnect();
   TlsSendCipherSpecCapturer capturer(client_);
   client_->Handshake();
@@ -688,9 +692,9 @@ TEST_F(TlsDropDatagram13, SendOutOfOrderHsNonsenseWithHandshakeKey) {
   auto spec = capturer.spec(0);
   ASSERT_NE(nullptr, spec.get());
   ASSERT_EQ(2, spec->epoch());
-  ASSERT_TRUE(client_->SendEncryptedRecord(
-      spec, SSL_LIBRARY_VERSION_DTLS_1_2_WIRE, 0x0002000000000002,
-      kTlsHandshakeType, DataBuffer(buf, sizeof(buf))));
+  ASSERT_TRUE(client_->SendEncryptedRecord(spec, 0x0002000000000002,
+                                           kTlsHandshakeType,
+                                           DataBuffer(buf, sizeof(buf))));
   server_->Handshake();
   EXPECT_EQ(2UL, server_filters_.ack_->count());
   // The server acknowledges client Finished twice.
@@ -700,7 +704,7 @@ TEST_F(TlsDropDatagram13, SendOutOfOrderHsNonsenseWithHandshakeKey) {
 
 // Shrink the MTU down so that certs get split and then swap the first and
 // second pieces of the server certificate.
-TEST_F(TlsReorderDatagram13, ReorderServerCertificate) {
+TEST_P(TlsReorderDatagram13, ReorderServerCertificate) {
   StartConnect();
   ShrinkPostServerHelloMtu();
   client_->Handshake();
@@ -722,7 +726,7 @@ TEST_F(TlsReorderDatagram13, ReorderServerCertificate) {
   CheckAcks(server_filters_, 0, {0x0002000000000000ULL});
 }
 
-TEST_F(TlsReorderDatagram13, DataAfterEOEDDuringZeroRtt) {
+TEST_P(TlsReorderDatagram13, DataAfterEOEDDuringZeroRtt) {
   SetupForZeroRtt();
   SetFilters();
   std::cerr << "Starting second handshake" << std::endl;
@@ -761,7 +765,7 @@ TEST_F(TlsReorderDatagram13, DataAfterEOEDDuringZeroRtt) {
   EXPECT_EQ(PR_WOULD_BLOCK_ERROR, PORT_GetError());
 }
 
-TEST_F(TlsReorderDatagram13, DataAfterFinDuringZeroRtt) {
+TEST_P(TlsReorderDatagram13, DataAfterFinDuringZeroRtt) {
   SetupForZeroRtt();
   SetFilters();
   std::cerr << "Starting second handshake" << std::endl;
@@ -812,12 +816,17 @@ static void GetCipherAndLimit(uint16_t version, uint16_t* cipher,
     *cipher = TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256;
     *limit = (1ULL << 48) - 1;
   } else {
+    // This test probably isn't especially useful for TLS 1.3, which has a much
+    // shorter sequence number encoding.  That space can probably be searched in
+    // a reasonable amount of time.
     *cipher = TLS_CHACHA20_POLY1305_SHA256;
-    *limit = (1ULL << 48) - 1;
+    // Assume that we are starting with an expected sequence number of 0.
+    *limit = (1ULL << 29) - 1;
   }
 }
 
 // This simulates a huge number of drops on one side.
+// See Bug 12965514 where a large gap was handled very inefficiently.
 TEST_P(TlsConnectDatagram, MissLotsOfPackets) {
   uint16_t cipher;
   uint64_t limit;
@@ -831,6 +840,17 @@ TEST_P(TlsConnectDatagram, MissLotsOfPackets) {
   // Note that the limit for ChaCha is 2^48-1.
   EXPECT_EQ(SECSuccess,
             SSLInt_AdvanceWriteSeqNum(client_->ssl_fd(), limit - 10));
+  SendReceive();
+}
+
+// Send a sequence number of 0xfffffffd and it should be interpreted as that
+// (and not -3 or UINT64_MAX - 2).
+TEST_F(TlsConnectDatagram13, UnderflowSequenceNumber) {
+  Connect();
+  // This is only valid if short headers are disabled.
+  client_->SetOption(SSL_ENABLE_DTLS_SHORT_HEADER, PR_FALSE);
+  EXPECT_EQ(SECSuccess,
+            SSLInt_AdvanceWriteSeqNum(client_->ssl_fd(), (1ULL << 30) - 3));
   SendReceive();
 }
 
@@ -865,5 +885,11 @@ INSTANTIATE_TEST_CASE_P(Datagram12Plus, TlsConnectDatagram12Plus,
                         TlsConnectTestBase::kTlsV12Plus);
 INSTANTIATE_TEST_CASE_P(DatagramPre13, TlsConnectDatagramPre13,
                         TlsConnectTestBase::kTlsV11V12);
+INSTANTIATE_TEST_CASE_P(DatagramDrop13, TlsDropDatagram13,
+                        ::testing::Values(true, false));
+INSTANTIATE_TEST_CASE_P(DatagramReorder13, TlsReorderDatagram13,
+                        ::testing::Values(true, false));
+INSTANTIATE_TEST_CASE_P(DatagramFragment13, TlsFragmentationAndRecoveryTest,
+                        ::testing::Values(true, false));
 
 }  // namespace nss_test

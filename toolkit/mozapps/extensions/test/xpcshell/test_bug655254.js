@@ -17,7 +17,7 @@ ChromeUtils.import("resource://testing-common/httpd.js");
 var testserver = new HttpServer();
 testserver.start(-1);
 gPort = testserver.identity.primaryPort;
-mapFile("/data/test_bug655254.rdf", testserver);
+mapFile("/data/test_bug655254.json", testserver);
 
 var userDir = gProfD.clone();
 userDir.append("extensions2");
@@ -40,7 +40,7 @@ var addon1 = {
   id: "addon1@tests.mozilla.org",
   version: "1.0",
   name: "Test 1",
-  updateURL: "http://localhost:" + gPort + "/data/test_bug655254.rdf",
+  updateURL: "http://localhost:" + gPort + "/data/test_bug655254.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",

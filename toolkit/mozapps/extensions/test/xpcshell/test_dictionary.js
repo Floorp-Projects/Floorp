@@ -29,7 +29,7 @@ gPort = testserver.identity.primaryPort;
 
 // register files with server
 testserver.registerDirectory("/addons/", do_get_file("addons"));
-mapFile("/data/test_dictionary.rdf", testserver);
+mapFile("/data/test_dictionary.json", testserver);
 
 /**
  * This object is both a factory and an mozISpellCheckingEngine implementation (so, it
@@ -669,7 +669,7 @@ function run_test_27() {
   writeInstallRDFForExtension({
     id: "ab-CD@dictionaries.addons.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:" + gPort + "/data/test_dictionary.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_dictionary.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -715,7 +715,7 @@ function run_test_28() {
     id: "ef@dictionaries.addons.mozilla.org",
     version: "1.0",
     type: "64",
-    updateURL: "http://localhost:" + gPort + "/data/test_dictionary.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_dictionary.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -761,7 +761,7 @@ function run_test_29() {
     id: "gh@dictionaries.addons.mozilla.org",
     version: "1.0",
     type: "64",
-    updateURL: "http://localhost:" + gPort + "/data/test_dictionary.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_dictionary.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",

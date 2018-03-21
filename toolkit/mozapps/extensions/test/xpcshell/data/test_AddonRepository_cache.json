@@ -15,38 +15,38 @@
                     {
                         "platform": "all",
                         "size": 9,
-                        "url": "http://localhost:4444/repo/1/install.xpi"
+                        "url": "http://example.com/repo/1/install.xpi"
                     }
                 ]
             },
             "authors": [
                 {
                     "name": "Repo Add-on 1 - Creator",
-                    "url": "http://localhost:4444/repo/1/creator.html"
+                    "url": "http://example.com/repo/1/creator.html"
                 },
                 {
                     "name": "Repo Add-on 1 - First Developer",
-                    "url": "http://localhost:4444/repo/1/firstDeveloper.html"
+                    "url": "http://example.com/repo/1/firstDeveloper.html"
                 },
                 {
                     "name": "Repo Add-on 1 - Second Developer",
-                    "url": "http://localhost:4444/repo/1/secondDeveloper.html"
+                    "url": "http://example.com/repo/1/secondDeveloper.html"
                 }
             ],
             "summary": "Repo Add-on 1 - Description<br>Second line",
             "description": "<p>Repo Add-on 1 - Full Description &amp; some extra</p>",
             "icons": {
-              "32": "http://localhost/repo/1/icon.png"
+              "32": "http://example.com/repo/1/icon.png"
             },
             "ratings": {
                 "count": 1234,
                 "text_count": 1111,
                 "average": 1
             },
-            "homepage": "http://localhost/repo/1/homepage.html",
-            "support_url": "http://localhost/repo/1/support.html",
-            "contributions_url": "http://localhost/repo/1/meetDevelopers.html",
-            "ratings_url": "http://localhost/repo/1/review.html",
+            "homepage": "http://example.com/repo/1/homepage.html",
+            "support_url": "http://example.com/repo/1/support.html",
+            "contributions_url": "http://example.com/repo/1/meetDevelopers.html",
+            "ratings_url": "http://example.com/repo/1/review.html",
             "weekly_downloads": 3331,
             "last_updated": "1970-01-01T00:00:09Z"
         },
@@ -60,38 +60,38 @@
                     {
                         "platform": "all",
                         "size": 9,
-                        "url": "http://localhost:4444/repo/2/install.xpi"
+                        "url": "http://example.com/repo/2/install.xpi"
                     }
                 ]
             },
             "authors": [
                 {
                     "name": "Repo Add-on 2 - Creator",
-                    "url": "http://localhost:4444/repo/2/creator.html"
+                    "url": "http://example.com/repo/2/creator.html"
                 },
                 {
                     "name": "Repo Add-on 2 - First Developer",
-                    "url": "http://localhost:4444/repo/2/firstDeveloper.html"
+                    "url": "http://example.com/repo/2/firstDeveloper.html"
                 },
                 {
                     "name": "Repo Add-on 2 - Second Developer",
-                    "url": "http://localhost:4444/repo/2/secondDeveloper.html"
+                    "url": "http://example.com/repo/2/secondDeveloper.html"
                 }
             ],
             "summary": "Repo Add-on 2 - Description",
             "description": "Repo Add-on 2 - Full Description",
             "icons": {
-              "32": "http://localhost/repo/2/icon.png"
+              "32": "http://example.com/repo/2/icon.png"
             },
             "previews": [
                 {
-                    "image_url": "http://localhost:4444/repo/2/firstFull.png",
-                    "thumbnail_url": "http://localhost:4444/repo/2/firstThumbnail.png",
+                    "image_url": "http://example.com/repo/2/firstFull.png",
+                    "thumbnail_url": "http://example.com/repo/2/firstThumbnail.png",
                     "caption": "Repo Add-on 2 - First Caption"
                 },
                 {
-                    "image_url": "http://localhost:4444/repo/2/secondFull.png",
-                    "thumbnail_url": "http://localhost:4444/repo/2/secondThumbnail.png",
+                    "image_url": "http://example.com/repo/2/secondFull.png",
+                    "thumbnail_url": "http://example.com/repo/2/secondThumbnail.png",
                     "caption": "Repo Add-on 2 - Second Caption"
                 }
             ],
@@ -100,10 +100,10 @@
                 "text_count": 1112,
                 "average": 2
             },
-            "homepage": "http://localhost/repo/2/homepage.html",
-            "support_url": "http://localhost/repo/2/support.html",
-            "contributions_url": "http://localhost/repo/2/meetDevelopers.html",
-            "ratings_url": "http://localhost/repo/2/review.html",
+            "homepage": "http://example.com/repo/2/homepage.html",
+            "support_url": "http://example.com/repo/2/support.html",
+            "contributions_url": "http://example.com/repo/2/meetDevelopers.html",
+            "ratings_url": "http://example.com/repo/2/review.html",
             "weekly_downloads": 3332,
             "last_updated": "1970-01-01T00:00:09Z"
         },
@@ -115,17 +115,17 @@
                 "version": "2.3"
             },
             "icons": {
-              "32": "http://localhost/repo/3/icon.png"
+              "32": "http://example.com/repo/3/icon.png"
             },
             "previews": [
                 {
-                    "image_url": "http://localhost:4444/repo/3/firstFull.png",
-                    "thumbnail_url": "http://localhost:4444/repo/3/firstThumbnail.png",
+                    "image_url": "http://example.com/repo/3/firstFull.png",
+                    "thumbnail_url": "http://example.com/repo/3/firstThumbnail.png",
                     "caption": "Repo Add-on 3 - First Caption"
                 },
                 {
-                    "image_url": "http://localhost:4444/repo/3/secondFull.png",
-                    "thumbnail_url": "http://localhost:4444/repo/3/secondThumbnail.png",
+                    "image_url": "http://example.com/repo/3/secondFull.png",
+                    "thumbnail_url": "http://example.com/repo/3/secondThumbnail.png",
                     "caption": "Repo Add-on 3 - Second Caption"
                 }
             ]

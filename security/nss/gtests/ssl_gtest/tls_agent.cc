@@ -44,6 +44,16 @@ const std::string TlsAgent::kServerEcdhRsa = "ecdh_rsa";
 const std::string TlsAgent::kServerEcdhEcdsa = "ecdh_ecdsa";
 const std::string TlsAgent::kServerDsa = "dsa";
 
+static const uint8_t kCannedTls13ServerHello[] = {
+    0x03, 0x03, 0x9c, 0xbc, 0x14, 0x9b, 0x0e, 0x2e, 0xfa, 0x0d, 0xf3,
+    0xf0, 0x5c, 0x70, 0x7a, 0xe0, 0xd1, 0x9b, 0x3e, 0x5a, 0x44, 0x6b,
+    0xdf, 0xe5, 0xc2, 0x28, 0x64, 0xf7, 0x00, 0xc1, 0x9c, 0x08, 0x76,
+    0x08, 0x00, 0x13, 0x01, 0x00, 0x00, 0x2e, 0x00, 0x33, 0x00, 0x24,
+    0x00, 0x1d, 0x00, 0x20, 0xc2, 0xcf, 0x23, 0x17, 0x64, 0x23, 0x03,
+    0xf0, 0xfb, 0x45, 0x98, 0x26, 0xd1, 0x65, 0x24, 0xa1, 0x6c, 0xa9,
+    0x80, 0x8f, 0x2c, 0xac, 0x0a, 0xea, 0x53, 0x3a, 0xcb, 0xe3, 0x08,
+    0x84, 0xae, 0x19, 0x00, 0x2b, 0x00, 0x02, 0x7f, kD13};
+
 TlsAgent::TlsAgent(const std::string& nm, Role rl, SSLProtocolVariant var)
     : name_(nm),
       variant_(var),
@@ -947,12 +957,13 @@ void TlsAgent::SendBuffer(const DataBuffer& buf) {
 }
 
 bool TlsAgent::SendEncryptedRecord(const std::shared_ptr<TlsCipherSpec>& spec,
-                                   uint16_t wireVersion, uint64_t seq,
-                                   uint8_t ct, const DataBuffer& buf) {
-  LOGV("Writing " << buf.len() << " bytes");
-  // Ensure we are a TLS 1.3 cipher agent.
+                                   uint64_t seq, uint8_t ct,
+                                   const DataBuffer& buf) {
+  LOGV("Encrypting " << buf.len() << " bytes");
+  // Ensure that we are doing TLS 1.3.
   EXPECT_GE(expected_version_, SSL_LIBRARY_VERSION_TLS_1_3);
-  TlsRecordHeader header(wireVersion, kTlsApplicationDataType, seq);
+  TlsRecordHeader header(variant_, expected_version_, kTlsApplicationDataType,
+                         seq);
   DataBuffer padded = buf;
   padded.Write(padded.len(), ct, 1);
   DataBuffer ciphertext;
@@ -1074,15 +1085,20 @@ void TlsAgentTestBase::ProcessMessage(const DataBuffer& buffer,
 void TlsAgentTestBase::MakeRecord(SSLProtocolVariant variant, uint8_t type,
                                   uint16_t version, const uint8_t* buf,
                                   size_t len, DataBuffer* out,
-                                  uint64_t seq_num) {
+                                  uint64_t sequence_number) {
   size_t index = 0;
   index = out->Write(index, type, 1);
   if (variant == ssl_variant_stream) {
     index = out->Write(index, version, 2);
+  } else if (version >= SSL_LIBRARY_VERSION_TLS_1_3 &&
+             type == kTlsApplicationDataType) {
+    uint32_t epoch = (sequence_number >> 48) & 0x3;
+    uint32_t seqno = sequence_number & ((1ULL << 30) - 1);
+    index = out->Write(index, (epoch << 30) | seqno, 4);
   } else {
     index = out->Write(index, TlsVersionToDtlsVersion(version), 2);
-    index = out->Write(index, seq_num >> 32, 4);
-    index = out->Write(index, seq_num & PR_UINT32_MAX, 4);
+    index = out->Write(index, sequence_number >> 32, 4);
+    index = out->Write(index, sequence_number & PR_UINT32_MAX, 4);
   }
   index = out->Write(index, len, 2);
   out->Write(index, buf, len);
@@ -1138,6 +1154,14 @@ void TlsAgentTestBase::MakeTrivialHandshakeRecord(uint8_t hs_type,
   for (size_t i = 0; i < hs_len; ++i) {
     index = out->Write(index, 1, 1);
   }
+}
+
+DataBuffer TlsAgentTestBase::MakeCannedTls13ServerHello() {
+  DataBuffer sh(kCannedTls13ServerHello, sizeof(kCannedTls13ServerHello));
+  if (variant_ == ssl_variant_datagram) {
+    sh.Write(0, SSL_LIBRARY_VERSION_DTLS_1_2_WIRE, 2);
+  }
+  return sh;
 }
 
 }  // namespace nss_test
