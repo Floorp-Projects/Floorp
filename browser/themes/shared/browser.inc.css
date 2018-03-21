@@ -139,3 +139,9 @@
 }
 
 /* End private browsing and accessibility indicators */
+
+/* Force background for datepicker popup to white so themes don't override it */
+#DateTimePickerPanel[active="true"] > .panel-arrowcontainer > .panel-arrowbox,
+#DateTimePickerPanel[active="true"] > .panel-arrowcontainer > .panel-arrowcontent {
+  --arrowpanel-background: #fff;
+}
