@@ -6,8 +6,6 @@
 // Browser components
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// include ':components:browser:errorpages'
-
 include ':browser-errorpages'
 project(':browser-errorpages').projectDir = new File(rootDir, 'components/browser/errorpages')
 
