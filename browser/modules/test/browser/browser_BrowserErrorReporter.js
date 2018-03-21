@@ -16,12 +16,6 @@ const PREF_PROJECT_ID = "browser.chrome.errorReporter.projectId";
 const PREF_PUBLIC_KEY = "browser.chrome.errorReporter.publicKey";
 const PREF_SAMPLE_RATE = "browser.chrome.errorReporter.sampleRate";
 const PREF_SUBMIT_URL = "browser.chrome.errorReporter.submitUrl";
-const TELEMETRY_ERROR_COLLECTED = "browser.errors.collected_count";
-const TELEMETRY_ERROR_COLLECTED_FILENAME = "browser.errors.collected_count_by_filename";
-const TELEMETRY_ERROR_COLLECTED_STACK = "browser.errors.collected_with_stack_count";
-const TELEMETRY_ERROR_REPORTED = "browser.errors.reported_success_count";
-const TELEMETRY_ERROR_REPORTED_FAIL = "browser.errors.reported_failure_count";
-const TELEMETRY_ERROR_SAMPLE_RATE = "browser.errors.sample_rate";
 
 function createScriptError(options = {}) {
   const scriptError = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
@@ -92,12 +86,6 @@ function fetchCallForMessage(fetchSpy, message) {
 function fetchPassedError(fetchSpy, message) {
   return fetchCallForMessage(fetchSpy, message) !== null;
 }
-
-add_task(async function testSetup() {
-  const canRecordExtended = Services.telemetry.canRecordExtended;
-  Services.telemetry.canRecordExtended = true;
-  registerCleanupFunction(() => Services.telemetry.canRecordExtended = canRecordExtended);
-});
 
 add_task(async function testInitPrefDisabled() {
   const fetchSpy = sinon.spy();
@@ -459,140 +447,5 @@ add_task(async function testAddonIDMangle() {
 
   await extension.unload();
   reporter.uninit();
-  resetConsole();
-});
-
-add_task(async function testScalars() {
-  const fetchStub = sinon.stub();
-  const reporter = new BrowserErrorReporter(fetchStub);
-  await SpecialPowers.pushPrefEnv({set: [
-    [PREF_ENABLED, true],
-    [PREF_SAMPLE_RATE, "1.0"],
-  ]});
-
-  Services.telemetry.clearScalars();
-
-  const messages = [
-    createScriptError({message: "No name"}),
-    createScriptError({message: "Also no name", sourceName: "resource://gre/modules/Foo.jsm"}),
-    createScriptError({message: "More no name", sourceName: "resource://gre/modules/Bar.jsm"}),
-    createScriptError({message: "Yeah sures", sourceName: "unsafe://gre/modules/Bar.jsm"}),
-    createScriptError({
-      message: "long",
-      sourceName: "resource://gre/modules/long/long/long/long/long/long/long/long/long/long/",
-    }),
-    {message: "Not a scripterror instance."},
-
-    // No easy way to create an nsIScriptError with a stack, so let's pretend.
-    Object.create(
-      createScriptError({message: "Whatever"}),
-      {stack: {value: new Error().stack}},
-    ),
-  ];
-
-  // Use observe to avoid errors from other code messing up our counts.
-  for (const message of messages) {
-    await reporter.observe(message);
-  }
-
-  await SpecialPowers.pushPrefEnv({set: [[PREF_SAMPLE_RATE, "0.0"]]});
-  await reporter.observe(createScriptError({message: "Additionally no name"}));
-
-  await SpecialPowers.pushPrefEnv({set: [[PREF_SAMPLE_RATE, "1.0"]]});
-  fetchStub.throws(new Error("Could not report"));
-  await reporter.observe(createScriptError({message: "Maybe name?"}));
-
-  const optin = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
-  const scalars = Services.telemetry.snapshotScalars(optin, false).parent;
-  is(
-    scalars[TELEMETRY_ERROR_COLLECTED],
-    8,
-    `${TELEMETRY_ERROR_COLLECTED} is incremented when an error is collected.`,
-  );
-  is(
-    scalars[TELEMETRY_ERROR_SAMPLE_RATE],
-    "1.0",
-    `${TELEMETRY_ERROR_SAMPLE_RATE} contains the last sample rate used.`,
-  );
-  is(
-    scalars[TELEMETRY_ERROR_REPORTED],
-    6,
-    `${TELEMETRY_ERROR_REPORTED} is incremented when an error is reported.`,
-  );
-  is(
-    scalars[TELEMETRY_ERROR_REPORTED_FAIL],
-    1,
-    `${TELEMETRY_ERROR_REPORTED_FAIL} is incremented when an error fails to be reported.`,
-  );
-  is(
-    scalars[TELEMETRY_ERROR_COLLECTED_STACK],
-    1,
-    `${TELEMETRY_ERROR_REPORTED_FAIL} is incremented when an error with a stack trace is collected.`,
-  );
-
-  const keyedScalars = Services.telemetry.snapshotKeyedScalars(optin, false).parent;
-  Assert.deepEqual(
-    keyedScalars[TELEMETRY_ERROR_COLLECTED_FILENAME],
-    {
-      "FILTERED": 1,
-      "resource://gre/modules/Foo.jsm": 1,
-      "resource://gre/modules/Bar.jsm": 1,
-      // Cut off at 70-character limit
-      "resource://gre/modules/long/long/long/long/long/long/long/long/long/l": 1,
-    },
-    `${TELEMETRY_ERROR_COLLECTED_FILENAME} is incremented when an error is collected.`,
-  );
-
-  resetConsole();
-});
-
-add_task(async function testCollectedFilenameScalar() {
-  const fetchStub = sinon.stub();
-  const reporter = new BrowserErrorReporter(fetchStub);
-  await SpecialPowers.pushPrefEnv({set: [
-    [PREF_ENABLED, true],
-    [PREF_SAMPLE_RATE, "1.0"],
-  ]});
-
-  const testCases = [
-    ["chrome://unknown/module.jsm", false],
-    ["resource://unknown/module.jsm", false],
-    ["unknown://unknown/module.jsm", false],
-
-    ["resource://gre/modules/Foo.jsm", true],
-    ["resource:///modules/Foo.jsm", true],
-    ["chrome://global/Foo.jsm", true],
-    ["chrome://browser/Foo.jsm", true],
-    ["chrome://devtools/Foo.jsm", true],
-  ];
-
-  for (const [filename, shouldMatch] of testCases) {
-    Services.telemetry.clearScalars();
-
-    // Use observe to avoid errors from other code messing up our counts.
-    await reporter.observe(createScriptError({
-      message: "Fine",
-      sourceName: filename,
-    }));
-
-    const keyedScalars = (
-      Services.telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false).parent
-    );
-
-    let matched = null;
-    if (shouldMatch) {
-      matched = keyedScalars[TELEMETRY_ERROR_COLLECTED_FILENAME][filename] === 1;
-    } else {
-      matched = keyedScalars[TELEMETRY_ERROR_COLLECTED_FILENAME].FILTERED === 1;
-    }
-
-    ok(
-      matched,
-      shouldMatch
-        ? `${TELEMETRY_ERROR_COLLECTED_FILENAME} logs a key for ${filename}.`
-        : `${TELEMETRY_ERROR_COLLECTED_FILENAME} logs a FILTERED key for ${filename}.`,
-    );
-  }
-
   resetConsole();
 });
