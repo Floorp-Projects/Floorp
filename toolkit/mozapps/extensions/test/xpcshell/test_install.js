@@ -2,16 +2,111 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// This verifies that add-ons can be installed from XPI files
-// install.rdf size, icon.png, icon64.png size
-const ADDON1_SIZE = 705 + 16 + 16;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 
-var testserver;
+var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 var gInstallDate;
+
+// This verifies that add-ons can be installed from XPI files
+// install.rdf size, icon.png, icon64.png size
+const ADDON1_SIZE = 612;
+
+const ADDONS = {
+  test_install1: {
+    "install.rdf": {
+      id: "addon1@tests.mozilla.org",
+      version: "1.0",
+      name: "Test 1",
+      description: "Test Description",
+      bootstrap: true,
+
+      targetApplications: [{
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1"}],
+    },
+    "icon.png": "Fake icon image",
+    "icon64.png": "Fake icon image",
+  },
+  test_install2_1: {
+    "install.rdf": {
+      id: "addon2@tests.mozilla.org",
+      version: "2.0",
+      name: "Real Test 2",
+      description: "Test Description",
+      bootstrap: true,
+
+      targetApplications: [{
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1"}],
+
+    },
+    "icon.png": "Fake icon image",
+  },
+  test_install2_2: {
+    "install.rdf": {
+      id: "addon2@tests.mozilla.org",
+      version: "3.0",
+      name: "Real Test 3",
+      description: "Test Description",
+      bootstrap: true,
+
+      targetApplications: [{
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1"}],
+    },
+  },
+  test_install3: {
+    "install.rdf": {
+      id: "addon3@tests.mozilla.org",
+      version: "1.0",
+      name: "Real Test 4",
+      description: "Test Description",
+      bootstrap: true,
+
+      updateURL: "http://example.com/data/test_install.rdf",
+
+      targetApplications: [{
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "0",
+          maxVersion: "0"}],
+    },
+  },
+  test_install6: {
+    "install.rdf": {
+      id: "addon6@tests.mozilla.org",
+      version: "1.0",
+      name: "Addon Test 6",
+      description: "Test Description",
+      bootstrap: true,
+
+      targetApplications: [{
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1"}],
+    },
+  },
+  test_install7: {
+    "install.rdf": {
+      type: "32",
+    },
+  },
+};
+
+const XPIS = {};
+
+for (let [name, files] of Object.entries(ADDONS)) {
+  XPIS[name] = AddonTestUtils.createTempXPIFile(files);
+  testserver.registerFile(`/addons/${name}.xpi`, XPIS[name]);
+}
+
+const ZipReader = Components.Constructor(
+  "@mozilla.org/libjar/zip-reader;1", "nsIZipReader",
+  "open");
 
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
@@ -20,10 +115,11 @@ Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-function run_test() {
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  startupManager();
+  await promiseStartupManager();
+
   // Make sure we only register once despite multiple calls
   AddonManager.addInstallListener(InstallListener);
   AddonManager.addAddonListener(AddonListener);
@@ -31,462 +127,403 @@ function run_test() {
   AddonManager.addAddonListener(AddonListener);
 
   // Create and configure the HTTP server.
-  testserver = new HttpServer();
-  testserver.registerDirectory("/addons/", do_get_file("addons"));
   testserver.registerDirectory("/data/", do_get_file("data"));
   testserver.registerPathHandler("/redirect", function(aRequest, aResponse) {
     aResponse.setStatusLine(null, 301, "Moved Permanently");
     let url = aRequest.host + ":" + aRequest.port + aRequest.queryString;
     aResponse.setHeader("Location", "http://" + url);
   });
-  testserver.start(-1);
   gPort = testserver.identity.primaryPort;
-
-  do_test_pending();
-  run_test_1();
-}
-
-function end_test() {
-  testserver.stop(do_test_finished);
-}
+});
 
 // Checks that an install from a local file proceeds as expected
-function run_test_1() {
+add_task(async function test_1() {
   prepare_test({ }, [
     "onNewInstall"
   ]);
 
-  AddonManager.getInstallForFile(do_get_addon("test_install1"), function(install) {
-    ensure_test_completed();
-
-    Assert.notEqual(install, null);
-    Assert.equal(install.type, "extension");
-    Assert.equal(install.version, "1.0");
-    Assert.equal(install.name, "Test 1");
-    Assert.equal(install.state, AddonManager.STATE_DOWNLOADED);
-    Assert.ok(install.addon.hasResource("install.rdf"));
-    Assert.notEqual(install.addon.syncGUID, null);
-    Assert.equal(install.addon.install, install);
-    Assert.equal(install.addon.size, ADDON1_SIZE);
-    Assert.ok(hasFlag(install.addon.operationsRequiringRestart,
-                      AddonManager.OP_NEEDS_RESTART_INSTALL));
-    let file = do_get_addon("test_install1");
-    let uri = Services.io.newFileURI(file).spec;
-    Assert.equal(install.addon.getResourceURI("install.rdf").spec, "jar:" + uri + "!/install.rdf");
-    Assert.equal(install.addon.iconURL, "jar:" + uri + "!/icon.png");
-    Assert.equal(install.addon.icon64URL, "jar:" + uri + "!/icon64.png");
-    Assert.equal(install.iconURL, null);
-
-    Assert.equal(install.sourceURI.spec, uri);
-    Assert.equal(install.addon.sourceURI.spec, uri);
-
-    AddonManager.getAllInstalls(function(activeInstalls) {
-      Assert.equal(activeInstalls.length, 1);
-      Assert.equal(activeInstalls[0], install);
-
-      AddonManager.getInstallsByTypes(["foo"], function(fooInstalls) {
-        Assert.equal(fooInstalls.length, 0);
-
-        AddonManager.getInstallsByTypes(["extension"], function(extensionInstalls) {
-          Assert.equal(extensionInstalls.length, 1);
-          Assert.equal(extensionInstalls[0], install);
-
-          prepare_test({
-            "addon1@tests.mozilla.org": [
-              "onInstalling"
-            ]
-          }, [
-            "onInstallStarted",
-            "onInstallEnded",
-          ], function() {
-            check_test_1(install.addon.syncGUID);
-          });
-          install.install();
-        });
-      });
-    });
-  });
-}
-
-function check_test_1(installSyncGUID) {
+  let install = await AddonManager.getInstallForFile(XPIS.test_install1);
   ensure_test_completed();
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(olda1) {
-    Assert.equal(olda1, null);
 
-    AddonManager.getAddonsWithOperationsByTypes(null, callback_soon(async function(pendingAddons) {
-      Assert.equal(pendingAddons.length, 1);
-      Assert.equal(pendingAddons[0].id, "addon1@tests.mozilla.org");
-      let uri = NetUtil.newURI(pendingAddons[0].iconURL);
-      if (uri instanceof AM_Ci.nsIJARURI) {
-        let jarURI = uri.QueryInterface(AM_Ci.nsIJARURI);
-        let archiveURI = jarURI.JARFile;
-        let archiveFile = archiveURI.QueryInterface(AM_Ci.nsIFileURL).file;
-        let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
-                        createInstance(Ci.nsIZipReader);
-        try {
-          zipReader.open(archiveFile);
-          Assert.ok(zipReader.hasEntry(jarURI.JAREntry));
-        } finally {
-          zipReader.close();
-        }
-      } else {
-        let iconFile = uri.QueryInterface(AM_Ci.nsIFileURL).file;
-        Assert.ok(iconFile.exists());
-        // Make the iconFile predictably old.
-        iconFile.lastModifiedTime = Date.now() - MAKE_FILE_OLD_DIFFERENCE;
-      }
+  notEqual(install, null);
+  equal(install.type, "extension");
+  equal(install.version, "1.0");
+  equal(install.name, "Test 1");
+  equal(install.state, AddonManager.STATE_DOWNLOADED);
+  ok(install.addon.hasResource("install.rdf"));
+  notEqual(install.addon.syncGUID, null);
+  equal(install.addon.install, install);
+  equal(install.addon.size, ADDON1_SIZE);
+  let file = XPIS.test_install1;
+  let uri = Services.io.newFileURI(file).spec;
+  equal(install.addon.getResourceURI("install.rdf").spec, "jar:" + uri + "!/install.rdf");
+  equal(install.addon.iconURL, "jar:" + uri + "!/icon.png");
+  equal(install.addon.icon64URL, "jar:" + uri + "!/icon64.png");
+  equal(install.iconURL, null);
 
-      // Make the pending install have a sensible date
-      let updateDate = Date.now();
-      let extURI = pendingAddons[0].getResourceURI("");
-      let ext = extURI.QueryInterface(AM_Ci.nsIFileURL).file;
-      setExtensionModifiedTime(ext, updateDate);
+  equal(install.sourceURI.spec, uri);
+  equal(install.addon.sourceURI.spec, uri);
 
-      // The pending add-on cannot be disabled or enabled.
-      Assert.ok(!hasFlag(pendingAddons[0].permissions, AddonManager.PERM_CAN_ENABLE));
-      Assert.ok(!hasFlag(pendingAddons[0].permissions, AddonManager.PERM_CAN_DISABLE));
+  let activeInstalls = await AddonManager.getAllInstalls();
+  equal(activeInstalls.length, 1);
+  equal(activeInstalls[0], install);
 
-      await promiseRestartManager();
+  let fooInstalls = await AddonManager.getInstallsByTypes(["foo"]);
+  equal(fooInstalls.length, 0);
 
-      AddonManager.getAllInstalls(function(activeInstalls) {
-        Assert.equal(activeInstalls, 0);
+  let extensionInstalls = await AddonManager.getInstallsByTypes(["extension"]);
+  equal(extensionInstalls.length, 1);
+  equal(extensionInstalls[0], install);
 
-        AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
-          Assert.notEqual(a1, null);
-          Assert.notEqual(a1.syncGUID, null);
-          Assert.ok(a1.syncGUID.length >= 9);
-          Assert.equal(a1.syncGUID, installSyncGUID);
-          Assert.equal(a1.type, "extension");
-          Assert.equal(a1.version, "1.0");
-          Assert.equal(a1.name, "Test 1");
-          Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
-          Assert.ok(do_get_addon("test_install1").exists());
-          do_check_in_crash_annotation(a1.id, a1.version);
-          Assert.equal(a1.size, ADDON1_SIZE);
-          Assert.ok(!a1.foreignInstall);
-
-          Assert.equal(a1.sourceURI.spec,
-                       Services.io.newFileURI(do_get_addon("test_install1")).spec);
-          let difference = a1.installDate.getTime() - updateDate;
-          if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
-            do_throw("Add-on install time was out by " + difference + "ms");
-
-          difference = a1.updateDate.getTime() - updateDate;
-          if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
-            do_throw("Add-on update time was out by " + difference + "ms");
-
-          Assert.ok(a1.hasResource("install.rdf"));
-          Assert.ok(!a1.hasResource("foo.bar"));
-
-          let uri2 = do_get_addon_root_uri(profileDir, "addon1@tests.mozilla.org");
-          Assert.equal(a1.getResourceURI("install.rdf").spec, uri2 + "install.rdf");
-          Assert.equal(a1.iconURL, uri2 + "icon.png");
-          Assert.equal(a1.icon64URL, uri2 + "icon64.png");
-
-          // Ensure that extension bundle (or icon if unpacked) has updated
-          // lastModifiedDate.
-          let testURI = a1.getResourceURI(TEST_UNPACKED ? "icon.png" : "");
-          let testFile = testURI.QueryInterface(Ci.nsIFileURL).file;
-          Assert.ok(testFile.exists());
-          difference = testFile.lastModifiedTime - Date.now();
-          Assert.ok(Math.abs(difference) < MAX_TIME_DIFFERENCE);
-
-          a1.uninstall();
-          let { id, version } = a1;
-          restartManager();
-          do_check_not_in_crash_annotation(id, version);
-
-          executeSoon(run_test_2);
-        }));
-      });
-    }));
-  });
-}
-
-// Tests that an install from a url downloads.
-function run_test_2() {
-  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
-  AddonManager.getInstallForURL(url, function(install) {
-    Assert.notEqual(install, null);
-    Assert.equal(install.version, "1.0");
-    Assert.equal(install.name, "Test 2");
-    Assert.equal(install.state, AddonManager.STATE_AVAILABLE);
-    Assert.equal(install.iconURL, null);
-    Assert.equal(install.sourceURI.spec, url);
-
-    AddonManager.getAllInstalls(function(activeInstalls) {
-      Assert.equal(activeInstalls.length, 1);
-      Assert.equal(activeInstalls[0], install);
-
-      prepare_test({}, [
-        "onDownloadStarted",
-        "onDownloadEnded",
-      ], check_test_2);
-
-      install.addListener({
-        onDownloadProgress() {
-          executeSoon(function() {
-            Cu.forceGC();
-          });
-        }
-      });
-
-      install.install();
+  let installSyncGUID = await new Promise(resolve => {
+    prepare_test({
+      "addon1@tests.mozilla.org": [
+        ["onInstalling", false],
+        "onInstalled",
+      ]
+    }, [
+      "onInstallStarted",
+      "onInstallEnded",
+    ], () => {
+      resolve(install.addon.syncGUID);
     });
-  }, "application/x-xpinstall", null, "Test 2", null, "1.0");
-}
+    install.install();
+  });
 
-function check_test_2(install) {
   ensure_test_completed();
-  Assert.equal(install.version, "2.0");
-  Assert.equal(install.name, "Real Test 2");
-  Assert.equal(install.state, AddonManager.STATE_DOWNLOADED);
-  Assert.equal(install.addon.install, install);
-  Assert.ok(hasFlag(install.addon.operationsRequiringRestart,
-                    AddonManager.OP_NEEDS_RESTART_INSTALL));
-  Assert.equal(install.iconURL, null);
 
-  // Pause the install here and start it again in run_test_3
-  executeSoon(function() { run_test_3(install); });
-  return false;
-}
+  let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  ok(addon);
 
-// Tests that the downloaded XPI installs ok
-function run_test_3(install) {
-  prepare_test({
-    "addon2@tests.mozilla.org": [
-      "onInstalling"
-    ]
-  }, [
-    "onInstallStarted",
-    "onInstallEnded",
-  ], check_test_3);
-  install.install();
-}
+  let pendingAddons = await AddonManager.getAddonsWithOperationsByTypes(null);
+  equal(pendingAddons.length, 0);
 
-function check_test_3(aInstall) {
+  uri = NetUtil.newURI(addon.iconURL);
+  if (uri instanceof Ci.nsIJARURI) {
+    let archiveURI = uri.JARFile;
+    let archiveFile = archiveURI.QueryInterface(Ci.nsIFileURL).file;
+    let zipReader = new ZipReader(archiveFile);
+    try {
+      ok(zipReader.hasEntry(uri.JAREntry));
+    } finally {
+      zipReader.close();
+    }
+  } else {
+    let iconFile = uri.QueryInterface(Ci.nsIFileURL).file;
+    ok(iconFile.exists());
+    // Make the iconFile predictably old.
+    iconFile.lastModifiedTime = Date.now() - MAKE_FILE_OLD_DIFFERENCE;
+  }
+
   // Make the pending install have a sensible date
   let updateDate = Date.now();
-  let extURI = aInstall.addon.getResourceURI("");
-  let ext = extURI.QueryInterface(AM_Ci.nsIFileURL).file;
+  let extURI = addon.getResourceURI("");
+  let ext = extURI.QueryInterface(Ci.nsIFileURL).file;
+  setExtensionModifiedTime(ext, updateDate);
+
+  ok(!hasFlag(addon.permissions, AddonManager.PERM_CAN_ENABLE));
+  ok(hasFlag(addon.permissions, AddonManager.PERM_CAN_DISABLE));
+
+  await promiseRestartManager();
+
+  activeInstalls = await AddonManager.getAllInstalls();
+  equal(activeInstalls, 0);
+
+  let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  notEqual(a1, null);
+  notEqual(a1.syncGUID, null);
+  ok(a1.syncGUID.length >= 9);
+  equal(a1.syncGUID, installSyncGUID);
+  equal(a1.type, "extension");
+  equal(a1.version, "1.0");
+  equal(a1.name, "Test 1");
+  ok(isExtensionInBootstrappedList(profileDir, a1.id));
+  ok(XPIS.test_install1.exists());
+  do_check_in_crash_annotation(a1.id, a1.version);
+  equal(a1.size, ADDON1_SIZE);
+  ok(!a1.foreignInstall);
+
+  equal(a1.sourceURI.spec,
+        Services.io.newFileURI(XPIS.test_install1).spec);
+  let difference = a1.installDate.getTime() - updateDate;
+  if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
+    do_throw("Add-on install time was out by " + difference + "ms");
+
+  difference = a1.updateDate.getTime() - updateDate;
+  if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
+    do_throw("Add-on update time was out by " + difference + "ms");
+
+  ok(a1.hasResource("install.rdf"));
+  ok(!a1.hasResource("foo.bar"));
+
+  let uri2 = do_get_addon_root_uri(profileDir, "addon1@tests.mozilla.org");
+  equal(a1.getResourceURI("install.rdf").spec, uri2 + "install.rdf");
+  equal(a1.iconURL, uri2 + "icon.png");
+  equal(a1.icon64URL, uri2 + "icon64.png");
+
+  // Ensure that extension bundle (or icon if unpacked) has updated
+  // lastModifiedDate.
+  let testURI = a1.getResourceURI(TEST_UNPACKED ? "icon.png" : "");
+  let testFile = testURI.QueryInterface(Ci.nsIFileURL).file;
+  ok(testFile.exists());
+  difference = testFile.lastModifiedTime - Date.now();
+  ok(Math.abs(difference) < MAX_TIME_DIFFERENCE);
+
+  a1.uninstall();
+  let { id, version } = a1;
+  await promiseRestartManager();
+  do_check_not_in_crash_annotation(id, version);
+});
+
+// Tests that an install from a url downloads.
+add_task(async function test_2() {
+  let url = "http://example.com/addons/test_install2_1.xpi";
+  let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", null, "Test 2", null, "1.0");
+  notEqual(install, null);
+  equal(install.version, "1.0");
+  equal(install.name, "Test 2");
+  equal(install.state, AddonManager.STATE_AVAILABLE);
+  equal(install.iconURL, null);
+  equal(install.sourceURI.spec, url);
+
+  let activeInstalls = await AddonManager.getAllInstalls();
+  equal(activeInstalls.length, 1);
+  equal(activeInstalls[0], install);
+
+  install = await new Promise(resolve => {
+    prepare_test({}, [
+      "onDownloadStarted",
+      "onDownloadEnded",
+    ], install1 => {
+      resolve(install1);
+      return false;
+    });
+
+    install.addListener({
+      onDownloadProgress() {
+        executeSoon(function() {
+          Cu.forceGC();
+        });
+      }
+    });
+
+    install.install();
+  });
+
+  ensure_test_completed();
+  equal(install.version, "2.0");
+  equal(install.name, "Real Test 2");
+  equal(install.state, AddonManager.STATE_DOWNLOADED);
+  equal(install.addon.install, install);
+  equal(install.iconURL, null);
+
+  install = await new Promise(resolve => {
+    prepare_test({
+      "addon2@tests.mozilla.org": [
+        ["onInstalling", false],
+        "onInstalled"
+      ]
+    }, [
+      "onInstallStarted",
+      "onInstallEnded",
+    ], resolve);
+    install.install();
+  });
+
+  // Make the pending install have a sensible date
+  let updateDate = Date.now();
+  let extURI = install.addon.getResourceURI("");
+  let ext = extURI.QueryInterface(Ci.nsIFileURL).file;
   setExtensionModifiedTime(ext, updateDate);
 
   ensure_test_completed();
-  AddonManager.getAddonByID("addon2@tests.mozilla.org", callback_soon(async function(olda2) {
-    Assert.equal(olda2, null);
-    await promiseRestartManager();
+  let olda2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+  ok(olda2);
 
-    AddonManager.getAllInstalls(function(installs) {
-      Assert.equal(installs, 0);
+  await promiseRestartManager();
 
-      AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-        Assert.notEqual(a2, null);
-        Assert.notEqual(a2.syncGUID, null);
-        Assert.equal(a2.type, "extension");
-        Assert.equal(a2.version, "2.0");
-        Assert.equal(a2.name, "Real Test 2");
-        Assert.ok(isExtensionInAddonsList(profileDir, a2.id));
-        Assert.ok(do_get_addon("test_install2_1").exists());
-        do_check_in_crash_annotation(a2.id, a2.version);
-        Assert.equal(a2.sourceURI.spec,
-                     "http://localhost:" + gPort + "/addons/test_install2_1.xpi");
+  let installs = await AddonManager.getAllInstalls();
+  equal(installs, 0);
 
-        let difference = a2.installDate.getTime() - updateDate;
-        if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
-          do_throw("Add-on install time was out by " + difference + "ms");
+  let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+  notEqual(a2, null);
+  notEqual(a2.syncGUID, null);
+  equal(a2.type, "extension");
+  equal(a2.version, "2.0");
+  equal(a2.name, "Real Test 2");
+  ok(isExtensionInBootstrappedList(profileDir, a2.id));
+  ok(XPIS.test_install2_1.exists());
+  do_check_in_crash_annotation(a2.id, a2.version);
+  equal(a2.sourceURI.spec,
+               "http://example.com/addons/test_install2_1.xpi");
 
-        difference = a2.updateDate.getTime() - updateDate;
-        if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
-          do_throw("Add-on update time was out by " + difference + "ms");
+  let difference = a2.installDate.getTime() - updateDate;
+  if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
+    do_throw("Add-on install time was out by " + difference + "ms");
 
-        gInstallDate = a2.installDate.getTime();
+  difference = a2.updateDate.getTime() - updateDate;
+  if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
+    do_throw("Add-on update time was out by " + difference + "ms");
 
-        run_test_4();
-      });
-    });
-  }));
-}
+  gInstallDate = a2.installDate.getTime();
+});
 
 // Tests that installing a new version of an existing add-on works
-function run_test_4() {
+add_task(async function test_4() {
   prepare_test({ }, [
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
-  AddonManager.getInstallForURL(url, function(install) {
-    ensure_test_completed();
+  let url = "http://example.com/addons/test_install2_2.xpi";
+  let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", null, "Test 3", null, "3.0");
+  ensure_test_completed();
 
-    Assert.notEqual(install, null);
-    Assert.equal(install.version, "3.0");
-    Assert.equal(install.name, "Test 3");
-    Assert.equal(install.state, AddonManager.STATE_AVAILABLE);
+  notEqual(install, null);
+  equal(install.version, "3.0");
+  equal(install.name, "Test 3");
+  equal(install.state, AddonManager.STATE_AVAILABLE);
 
-    AddonManager.getAllInstalls(function(activeInstalls) {
-      Assert.equal(activeInstalls.length, 1);
-      Assert.equal(activeInstalls[0], install);
-      Assert.equal(install.existingAddon, null);
+  let activeInstalls = await AddonManager.getAllInstalls();
+  equal(activeInstalls.length, 1);
+  equal(activeInstalls[0], install);
+  equal(install.existingAddon, null);
 
-      prepare_test({}, [
-        "onDownloadStarted",
-        "onDownloadEnded",
-      ], check_test_4);
-      install.install();
+  install = await new Promise(resolve => {
+    prepare_test({}, [
+      "onDownloadStarted",
+      "onDownloadEnded",
+    ], install1 => {
+      resolve(install1);
+      return false;
     });
-  }, "application/x-xpinstall", null, "Test 3", null, "3.0");
-}
-
-function check_test_4(install) {
-  ensure_test_completed();
-
-  Assert.equal(install.version, "3.0");
-  Assert.equal(install.name, "Real Test 3");
-  Assert.equal(install.state, AddonManager.STATE_DOWNLOADED);
-  Assert.ok(install.existingAddon);
-  Assert.equal(install.existingAddon.id, "addon2@tests.mozilla.org");
-  Assert.equal(install.addon.install, install);
-  Assert.ok(hasFlag(install.addon.operationsRequiringRestart,
-                    AddonManager.OP_NEEDS_RESTART_INSTALL));
-
-  run_test_5();
-  // Installation will continue when there is nothing returned.
-}
-
-// Continue installing the new version
-function run_test_5() {
-  prepare_test({
-    "addon2@tests.mozilla.org": [
-      "onInstalling"
-    ]
-  }, [
-    "onInstallStarted",
-    "onInstallEnded",
-  ], check_test_5);
-}
-
-function check_test_5(install) {
-  ensure_test_completed();
-
-  Assert.equal(install.existingAddon.pendingUpgrade.install, install);
-
-  AddonManager.getAddonByID("addon2@tests.mozilla.org", function(olda2) {
-    Assert.notEqual(olda2, null);
-    Assert.ok(hasFlag(olda2.pendingOperations, AddonManager.PENDING_UPGRADE));
-
-    AddonManager.getInstallsByTypes(null, callback_soon(function(installs) {
-      Assert.equal(installs.length, 1);
-      Assert.equal(installs[0].addon, olda2.pendingUpgrade);
-      restartManager();
-
-      AddonManager.getInstallsByTypes(null, function(installs2) {
-        Assert.equal(installs2.length, 0);
-
-        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-          Assert.notEqual(a2, null);
-          Assert.equal(a2.type, "extension");
-          Assert.equal(a2.version, "3.0");
-          Assert.equal(a2.name, "Real Test 3");
-          Assert.ok(a2.isActive);
-          Assert.ok(isExtensionInAddonsList(profileDir, a2.id));
-          Assert.ok(do_get_addon("test_install2_2").exists());
-          do_check_in_crash_annotation(a2.id, a2.version);
-          Assert.equal(a2.sourceURI.spec,
-                       "http://localhost:" + gPort + "/addons/test_install2_2.xpi");
-          Assert.ok(!a2.foreignInstall);
-
-          Assert.equal(a2.installDate.getTime(), gInstallDate);
-          // Update date should be later (or the same if this test is too fast)
-          Assert.ok(a2.installDate <= a2.updateDate);
-
-          a2.uninstall();
-          executeSoon(run_test_6);
-        });
-      });
-    }));
+    install.install();
   });
-}
+
+  ensure_test_completed();
+
+  equal(install.version, "3.0");
+  equal(install.name, "Real Test 3");
+  equal(install.state, AddonManager.STATE_DOWNLOADED);
+  ok(install.existingAddon);
+  equal(install.existingAddon.id, "addon2@tests.mozilla.org");
+  equal(install.addon.install, install);
+
+  // Installation will continue when there is nothing returned.
+  install = await new Promise(resolve => {
+    prepare_test({
+      "addon2@tests.mozilla.org": [
+        ["onInstalling", false],
+        "onInstalled",
+      ]
+    }, [
+      "onInstallStarted",
+      "onInstallEnded",
+    ], resolve);
+    install.install();
+  });
+
+  ensure_test_completed();
+
+  await promiseRestartManager();
+
+  let installs2 = await AddonManager.getInstallsByTypes(null);
+  equal(installs2.length, 0);
+
+  let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+  notEqual(a2, null);
+  equal(a2.type, "extension");
+  equal(a2.version, "3.0");
+  equal(a2.name, "Real Test 3");
+  ok(a2.isActive);
+  ok(isExtensionInBootstrappedList(profileDir, a2.id));
+  ok(XPIS.test_install2_2.exists());
+  do_check_in_crash_annotation(a2.id, a2.version);
+  equal(a2.sourceURI.spec,
+               "http://example.com/addons/test_install2_2.xpi");
+  ok(!a2.foreignInstall);
+
+  equal(a2.installDate.getTime(), gInstallDate);
+  // Update date should be later (or the same if this test is too fast)
+  ok(a2.installDate <= a2.updateDate);
+
+  a2.uninstall();
+});
 
 // Tests that an install that requires a compatibility update works
-function run_test_6() {
-  restartManager();
+add_task(async function test_6() {
+  await promiseRestartManager();
 
   prepare_test({ }, [
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:" + gPort + "/addons/test_install3.xpi";
-  AddonManager.getInstallForURL(url, function(install) {
-    ensure_test_completed();
-
-    Assert.notEqual(install, null);
-    Assert.equal(install.version, "1.0");
-    Assert.equal(install.name, "Real Test 4");
-    Assert.equal(install.state, AddonManager.STATE_AVAILABLE);
-
-    AddonManager.getInstallsByTypes(null, function(activeInstalls) {
-      Assert.equal(activeInstalls.length, 1);
-      Assert.equal(activeInstalls[0], install);
-
-      prepare_test({}, [
-        "onDownloadStarted",
-        "onDownloadEnded",
-      ], check_test_6);
-      install.install();
-    });
-  }, "application/x-xpinstall", null, "Real Test 4", null, "1.0");
-}
-
-function check_test_6(install) {
+  let url = "http://example.com/addons/test_install3.xpi";
+  let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", null, "Real Test 4", null, "1.0");
   ensure_test_completed();
-  Assert.equal(install.version, "1.0");
-  Assert.equal(install.name, "Real Test 4");
-  Assert.equal(install.state, AddonManager.STATE_DOWNLOADED);
-  Assert.equal(install.existingAddon, null);
-  Assert.ok(!install.addon.appDisabled);
-  run_test_7();
-  return true;
-}
 
-// Continue the install
-function run_test_7() {
-  prepare_test({
-    "addon3@tests.mozilla.org": [
-      "onInstalling"
-    ]
-  }, [
-    "onInstallStarted",
-    "onInstallEnded",
-  ], check_test_7);
-}
+  notEqual(install, null);
+  equal(install.version, "1.0");
+  equal(install.name, "Real Test 4");
+  equal(install.state, AddonManager.STATE_AVAILABLE);
 
-function check_test_7() {
-  ensure_test_completed();
-  AddonManager.getAddonByID("addon3@tests.mozilla.org", callback_soon(async function(olda3) {
-    Assert.equal(olda3, null);
-    await promiseRestartManager();
+  let activeInstalls = await AddonManager.getInstallsByTypes(null);
+  equal(activeInstalls.length, 1);
+  equal(activeInstalls[0], install);
 
-    AddonManager.getAllInstalls(function(installs) {
-      Assert.equal(installs, 0);
-
-      AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
-        Assert.notEqual(a3, null);
-        Assert.notEqual(a3.syncGUID, null);
-        Assert.equal(a3.type, "extension");
-        Assert.equal(a3.version, "1.0");
-        Assert.equal(a3.name, "Real Test 4");
-        Assert.ok(a3.isActive);
-        Assert.ok(!a3.appDisabled);
-        Assert.ok(isExtensionInAddonsList(profileDir, a3.id));
-        Assert.ok(do_get_addon("test_install3").exists());
-        a3.uninstall();
-        executeSoon(run_test_8);
-      });
+  install = await new Promise(resolve => {
+    prepare_test({}, [
+      "onDownloadStarted",
+      "onDownloadEnded",
+    ], install1 => {
+      resolve(install1);
+      return false;
     });
-  }));
-}
+    install.install();
+  });
 
-function run_test_8() {
-  restartManager();
+  ensure_test_completed();
+  equal(install.version, "1.0");
+  equal(install.name, "Real Test 4");
+  equal(install.state, AddonManager.STATE_DOWNLOADED);
+  equal(install.existingAddon, null);
+  ok(!install.addon.appDisabled);
+
+  // Continue the install
+  await new Promise(resolve => {
+    prepare_test({
+      "addon3@tests.mozilla.org": [
+        ["onInstalling", false],
+        "onInstalled",
+      ]
+    }, [
+      "onInstallStarted",
+      "onInstallEnded",
+    ], resolve);
+    install.install();
+  });
+
+  ensure_test_completed();
+
+  await promiseRestartManager();
+
+  let installs = await AddonManager.getAllInstalls();
+  equal(installs, 0);
+
+  let a3 = await AddonManager.getAddonByID("addon3@tests.mozilla.org");
+  notEqual(a3, null);
+  notEqual(a3.syncGUID, null);
+  equal(a3.type, "extension");
+  equal(a3.version, "1.0");
+  equal(a3.name, "Real Test 4");
+  ok(a3.isActive);
+  ok(!a3.appDisabled);
+  ok(isExtensionInBootstrappedList(profileDir, a3.id));
+  ok(XPIS.test_install3.exists());
+  a3.uninstall();
+});
+
+add_task(async function test_8() {
+  await promiseRestartManager();
 
   AddonManager.addInstallListener(InstallListener);
   AddonManager.addAddonListener(AddonListener);
@@ -495,324 +532,156 @@ function run_test_8() {
     "onNewInstall"
   ]);
 
-  AddonManager.getInstallForFile(do_get_addon("test_install3"), function(install) {
-    Assert.ok(install.addon.isCompatible);
+  let install = await AddonManager.getInstallForFile(XPIS.test_install3);
+  ok(install.addon.isCompatible);
 
+  await new Promise(resolve => {
     prepare_test({
       "addon3@tests.mozilla.org": [
-        "onInstalling"
+        ["onInstalling", false],
+        "onInstalled",
       ]
     }, [
       "onInstallStarted",
       "onInstallEnded",
-    ], callback_soon(check_test_8));
+    ], resolve);
     install.install();
   });
-}
 
-async function check_test_8() {
   await promiseRestartManager();
 
-  AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
-    Assert.notEqual(a3, null);
-    Assert.notEqual(a3.syncGUID, null);
-    Assert.equal(a3.type, "extension");
-    Assert.equal(a3.version, "1.0");
-    Assert.equal(a3.name, "Real Test 4");
-    Assert.ok(a3.isActive);
-    Assert.ok(!a3.appDisabled);
-    Assert.ok(isExtensionInAddonsList(profileDir, a3.id));
-    Assert.ok(do_get_addon("test_install3").exists());
-    a3.uninstall();
-    executeSoon(run_test_9);
-  });
-}
+  let a3 = await AddonManager.getAddonByID("addon3@tests.mozilla.org");
+  notEqual(a3, null);
+  notEqual(a3.syncGUID, null);
+  equal(a3.type, "extension");
+  equal(a3.version, "1.0");
+  equal(a3.name, "Real Test 4");
+  ok(a3.isActive);
+  ok(!a3.appDisabled);
+  ok(isExtensionInBootstrappedList(profileDir, a3.id));
+  ok(XPIS.test_install3.exists());
+  a3.uninstall();
+});
 
 // Test that after cancelling a download it is removed from the active installs
-function run_test_9() {
-  restartManager();
+add_task(async function test_9() {
+  await promiseRestartManager();
 
   prepare_test({ }, [
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:" + gPort + "/addons/test_install3.xpi";
-  AddonManager.getInstallForURL(url, function(install) {
-    ensure_test_completed();
+  let url = "http://example.com/addons/test_install3.xpi";
+  let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", null, "Real Test 4", null, "1.0");
+  ensure_test_completed();
 
-    Assert.notEqual(install, null);
-    Assert.equal(install.version, "1.0");
-    Assert.equal(install.name, "Real Test 4");
-    Assert.equal(install.state, AddonManager.STATE_AVAILABLE);
+  notEqual(install, null);
+  equal(install.version, "1.0");
+  equal(install.name, "Real Test 4");
+  equal(install.state, AddonManager.STATE_AVAILABLE);
 
-    AddonManager.getInstallsByTypes(null, function(activeInstalls) {
-      Assert.equal(activeInstalls.length, 1);
-      Assert.equal(activeInstalls[0], install);
+  let activeInstalls = await AddonManager.getInstallsByTypes(null);
+  equal(activeInstalls.length, 1);
+  equal(activeInstalls[0], install);
 
+  install = await new Promise(resolve => {
+    prepare_test({}, [
+      "onDownloadStarted",
+      "onDownloadEnded",
+    ], () => {
       prepare_test({}, [
-        "onDownloadStarted",
-        "onDownloadEnded",
-      ], check_test_9);
-      install.install();
+        "onDownloadCancelled"
+      ], resolve);
+
+      install.cancel();
     });
-  }, "application/x-xpinstall", null, "Real Test 4", null, "1.0");
-}
 
-function check_test_9(install) {
-  prepare_test({}, [
-    "onDownloadCancelled"
-  ], function() {
-    let file = install.file;
-
-    // Allow the file removal to complete
-    executeSoon(function() {
-      AddonManager.getAllInstalls(function(activeInstalls) {
-        Assert.equal(activeInstalls.length, 0);
-        Assert.ok(!file.exists());
-
-        run_test_10();
-      });
-    });
+    install.install();
   });
 
-  install.cancel();
-}
+  let file = install.file;
 
-// Tests that after cancelling a pending install it is removed from the active
-// installs
-function run_test_10() {
-  prepare_test({ }, [
-    "onNewInstall"
-  ]);
-
-  let url = "http://localhost:" + gPort + "/addons/test_install3.xpi";
-  AddonManager.getInstallForURL(url, function(install) {
-    ensure_test_completed();
-
-    Assert.notEqual(install, null);
-    Assert.equal(install.version, "1.0");
-    Assert.equal(install.name, "Real Test 4");
-    Assert.equal(install.state, AddonManager.STATE_AVAILABLE);
-
-    AddonManager.getInstallsByTypes(null, function(activeInstalls) {
-      Assert.equal(activeInstalls.length, 1);
-      Assert.equal(activeInstalls[0], install);
-
-      prepare_test({
-        "addon3@tests.mozilla.org": [
-          "onInstalling"
-        ]
-      }, [
-        "onDownloadStarted",
-        "onDownloadEnded",
-        "onInstallStarted",
-        "onInstallEnded"
-      ], check_test_10);
-      install.install();
-    });
-  }, "application/x-xpinstall", null, "Real Test 4", null, "1.0");
-}
-
-function check_test_10(install) {
-  prepare_test({
-    "addon3@tests.mozilla.org": [
-      "onOperationCancelled"
-    ]
-  }, [
-    "onInstallCancelled"
-  ]);
-
-  install.cancel();
-
-  ensure_test_completed();
-
-  AddonManager.getAllInstalls(callback_soon(function(activeInstalls) {
-    Assert.equal(activeInstalls.length, 0);
-
-    restartManager();
-
-    // Check that the install did not complete
-    AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
-      Assert.equal(a3, null);
-
-      executeSoon(run_test_11);
-    });
-  }));
-}
-
-function run_test_11() {
-  // Tests 11 and 12 were removed, to avoid churn of renumbering,
-  // just jump ahead to 13 here
-  run_test_13();
-}
-
-
-// Tests that cancelling an upgrade leaves the original add-on's pendingOperations
-// correct
-function run_test_13() {
-  restartManager();
-
-  installAllFiles([do_get_addon("test_install2_1")], function() {
-    restartManager();
-
-    prepare_test({ }, [
-      "onNewInstall"
-    ]);
-
-    let url = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
-    AddonManager.getInstallForURL(url, function(install) {
-      ensure_test_completed();
-
-      Assert.notEqual(install, null);
-      Assert.equal(install.version, "3.0");
-      Assert.equal(install.name, "Test 3");
-      Assert.equal(install.state, AddonManager.STATE_AVAILABLE);
-
-      AddonManager.getAllInstalls(function(activeInstalls) {
-        Assert.equal(activeInstalls.length, 1);
-        Assert.equal(activeInstalls[0], install);
-        Assert.equal(install.existingAddon, null);
-
-        prepare_test({
-          "addon2@tests.mozilla.org": [
-            "onInstalling"
-          ]
-        }, [
-          "onDownloadStarted",
-          "onDownloadEnded",
-          "onInstallStarted",
-          "onInstallEnded",
-        ], check_test_13);
-        install.install();
-      });
-    }, "application/x-xpinstall", null, "Test 3", null, "3.0");
-  });
-}
-
-function check_test_13(install) {
-  ensure_test_completed();
-
-  Assert.equal(install.version, "3.0");
-  Assert.equal(install.name, "Real Test 3");
-  Assert.equal(install.state, AddonManager.STATE_INSTALLED);
-  Assert.notEqual(install.existingAddon, null);
-  Assert.equal(install.existingAddon.id, "addon2@tests.mozilla.org");
-  Assert.equal(install.addon.install, install);
-
-  AddonManager.getAddonByID("addon2@tests.mozilla.org", callback_soon(function(olda2) {
-    Assert.notEqual(olda2, null);
-    Assert.ok(hasFlag(olda2.pendingOperations, AddonManager.PENDING_UPGRADE));
-    Assert.equal(olda2.pendingUpgrade, install.addon);
-
-    Assert.ok(hasFlag(install.addon.pendingOperations,
-                      AddonManager.PENDING_INSTALL));
-
-    prepare_test({
-      "addon2@tests.mozilla.org": [
-        "onOperationCancelled"
-      ]
-    }, [
-      "onInstallCancelled",
-    ]);
-
-    install.cancel();
-
-    Assert.ok(!hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
-
-    Assert.ok(!hasFlag(olda2.pendingOperations, AddonManager.PENDING_UPGRADE));
-    Assert.equal(olda2.pendingUpgrade, null);
-
-    restartManager();
-
-    // Check that the upgrade did not complete
-    AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-      Assert.equal(a2.version, "2.0");
-
-      a2.uninstall();
-
-      executeSoon(run_test_14);
-    });
-  }));
-}
+  // Allow the file removal to complete
+  activeInstalls = await AddonManager.getAllInstalls();
+  equal(activeInstalls.length, 0);
+  ok(!file.exists());
+});
 
 // Check that cancelling the install from onDownloadStarted actually cancels it
-function run_test_14() {
-  restartManager();
+add_task(async function test_14() {
+  await promiseRestartManager();
 
   prepare_test({ }, [
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
-  AddonManager.getInstallForURL(url, function(install) {
-    ensure_test_completed();
+  let url = "http://example.com/addons/test_install2_1.xpi";
+  let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+  ensure_test_completed();
 
-    Assert.equal(install.file, null);
+  equal(install.file, null);
 
+  install = await new Promise(resolve => {
     prepare_test({ }, [
       "onDownloadStarted"
-    ], check_test_14);
+    ], resolve);
     install.install();
-  }, "application/x-xpinstall");
-}
-
-function check_test_14(install) {
-  prepare_test({ }, [
-    "onDownloadCancelled"
-  ], function() {
-    let file = install.file;
-
-    install.addListener({
-      onDownloadProgress() {
-        do_throw("Download should not have continued");
-      },
-      onDownloadEnded() {
-        do_throw("Download should not have continued");
-      }
-    });
-
-    // Allow the listener to return to see if it continues downloading. The
-    // The listener only really tests if we give it time to see progress, the
-    // file check isn't ideal either
-    executeSoon(function() {
-      Assert.ok(!file.exists());
-
-      run_test_15();
-    });
   });
 
   // Wait for the channel to be ready to cancel
   executeSoon(function() {
     install.cancel();
   });
-}
+
+  await new Promise(resolve => {
+    prepare_test({ }, [
+      "onDownloadCancelled"
+    ], resolve);
+  });
+
+  let file = install.file;
+
+  install.addListener({
+    onDownloadProgress() {
+      do_throw("Download should not have continued");
+    },
+    onDownloadEnded() {
+      do_throw("Download should not have continued");
+    }
+  });
+
+  // Allow the listener to return to see if it continues downloading. The
+  // The listener only really tests if we give it time to see progress, the
+  // file check isn't ideal either
+  ok(!file.exists());
+});
 
 // Checks that cancelling the install from onDownloadEnded actually cancels it
-function run_test_15() {
+add_task(async function test_15() {
   prepare_test({ }, [
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
-  AddonManager.getInstallForURL(url, function(install) {
-    ensure_test_completed();
+  let url = "http://example.com/addons/test_install2_1.xpi";
+  let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+  ensure_test_completed();
 
-    Assert.equal(install.file, null);
+  equal(install.file, null);
 
+  await new Promise(resolve => {
     prepare_test({ }, [
       "onDownloadStarted",
       "onDownloadEnded"
-    ], check_test_15);
+    ], () => {
+      prepare_test({ }, [
+        "onDownloadCancelled"
+      ]);
+
+      install.cancel();
+      resolve();
+    });
     install.install();
-  }, "application/x-xpinstall");
-}
-
-function check_test_15(install) {
-  prepare_test({ }, [
-    "onDownloadCancelled"
-  ]);
-
-  install.cancel();
+  });
 
   ensure_test_completed();
 
@@ -821,517 +690,436 @@ function check_test_15(install) {
       do_throw("Install should not have continued");
     }
   });
-
-  // Allow the listener to return to see if it starts installing
-  executeSoon(run_test_16);
-}
+});
 
 // Verify that the userDisabled value carries over to the upgrade by default
-function run_test_16() {
-  restartManager();
+add_task(async function test_16() {
+  await promiseRestartManager();
 
-  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
-  AddonManager.getInstallForURL(url, function(aInstall) {
+  let url = "http://example.com/addons/test_install2_1.xpi";
+  let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+  await new Promise(resolve => {
     aInstall.addListener({
       onInstallStarted() {
-        Assert.ok(!aInstall.addon.userDisabled);
+        ok(!aInstall.addon.userDisabled);
         aInstall.addon.userDisabled = true;
       },
 
       onInstallEnded() {
-       executeSoon(function install2_1_ended() {
-        restartManager();
-
-        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-          Assert.ok(a2.userDisabled);
-          Assert.ok(!a2.isActive);
-
-          let url_2 = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
-          AddonManager.getInstallForURL(url_2, function(aInstall_2) {
-            aInstall_2.addListener({
-              onInstallEnded() {
-               executeSoon(function install2_2_ended() {
-                Assert.ok(aInstall_2.addon.userDisabled);
-
-                restartManager();
-
-                AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2_2) {
-                  Assert.ok(a2_2.userDisabled);
-                  Assert.ok(!a2_2.isActive);
-
-                  a2_2.uninstall();
-                  executeSoon(run_test_17);
-                });
-               });
-              }
-            });
-            aInstall_2.install();
-          }, "application/x-xpinstall");
-        });
-       });
+        resolve();
       }
     });
     aInstall.install();
-  }, "application/x-xpinstall");
-}
+  });
+
+  await promiseRestartManager();
+
+  let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+  ok(a2.userDisabled);
+  ok(!a2.isActive);
+
+  let url_2 = "http://example.com/addons/test_install2_2.xpi";
+  let aInstall_2 = await AddonManager.getInstallForURL(url_2, null, "application/x-xpinstall");
+  await new Promise(resolve => {
+    aInstall_2.addListener({
+      onInstallEnded() {
+        resolve();
+      }
+    });
+    aInstall_2.install();
+  });
+
+  ok(aInstall_2.addon.userDisabled);
+
+  await promiseRestartManager();
+
+  let a2_2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+  ok(a2_2.userDisabled);
+  ok(!a2_2.isActive);
+
+  a2_2.uninstall();
+});
 
 // Verify that changing the userDisabled value before onInstallEnded works
-function run_test_17() {
-  restartManager();
+add_task(async function test_17() {
+  await promiseRestartManager();
 
-  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
-  AddonManager.getInstallForURL(url, function(aInstall) {
+  let url = "http://example.com/addons/test_install2_1.xpi";
+  let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+  await new Promise(resolve => {
     aInstall.addListener({
       onInstallEnded() {
-       executeSoon(function install2_1_ended2() {
-        Assert.ok(!aInstall.addon.userDisabled);
-
-        restartManager();
-
-        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-          Assert.ok(!a2.userDisabled);
-          Assert.ok(a2.isActive);
-
-          let url_2 = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
-          AddonManager.getInstallForURL(url_2, function(aInstall_2) {
-            aInstall_2.addListener({
-              onInstallStarted() {
-                Assert.ok(!aInstall_2.addon.userDisabled);
-                aInstall_2.addon.userDisabled = true;
-              },
-
-              onInstallEnded() {
-               executeSoon(function install2_2_ended2() {
-                restartManager();
-
-                AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2_2) {
-                  Assert.ok(a2_2.userDisabled);
-                  Assert.ok(!a2_2.isActive);
-
-                  a2_2.uninstall();
-                  executeSoon(run_test_18);
-                });
-               });
-              }
-            });
-            aInstall_2.install();
-          }, "application/x-xpinstall");
-        });
-       });
+        resolve();
       }
     });
     aInstall.install();
-  }, "application/x-xpinstall");
-}
+  });
+
+  ok(!aInstall.addon.userDisabled);
+
+  await promiseRestartManager();
+
+  let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+  ok(!a2.userDisabled);
+  ok(a2.isActive);
+
+  let url_2 = "http://example.com/addons/test_install2_2.xpi";
+  let aInstall_2 = await AddonManager.getInstallForURL(url_2, null, "application/x-xpinstall");
+
+  await new Promise(resolve => {
+    aInstall_2.addListener({
+      onInstallStarted() {
+        ok(!aInstall_2.addon.userDisabled);
+        aInstall_2.addon.userDisabled = true;
+      },
+
+      onInstallEnded() {
+        resolve();
+      }
+    });
+    aInstall_2.install();
+  });
+  await promiseRestartManager();
+
+  let a2_2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+  ok(a2_2.userDisabled);
+  ok(!a2_2.isActive);
+
+  a2_2.uninstall();
+});
 
 // Verify that changing the userDisabled value before onInstallEnded works
-function run_test_18() {
-  restartManager();
+add_task(async function test_18() {
+  await promiseRestartManager();
 
-  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
-  AddonManager.getInstallForURL(url, function(aInstall) {
+  let url = "http://example.com/addons/test_install2_1.xpi";
+  let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+  await new Promise(resolve => {
     aInstall.addListener({
       onInstallStarted() {
-        Assert.ok(!aInstall.addon.userDisabled);
+        ok(!aInstall.addon.userDisabled);
         aInstall.addon.userDisabled = true;
       },
 
       onInstallEnded() {
-       executeSoon(function install_2_1_ended3() {
-        restartManager();
-
-        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-          Assert.ok(a2.userDisabled);
-          Assert.ok(!a2.isActive);
-
-          let url_2 = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
-          AddonManager.getInstallForURL(url_2, function(aInstall_2) {
-            aInstall_2.addListener({
-              onInstallStarted() {
-                Assert.ok(aInstall_2.addon.userDisabled);
-                aInstall_2.addon.userDisabled = false;
-              },
-
-              onInstallEnded() {
-               executeSoon(function install_2_2_ended3() {
-                restartManager();
-
-                AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2_2) {
-                  Assert.ok(!a2_2.userDisabled);
-                  Assert.ok(a2_2.isActive);
-
-                  a2_2.uninstall();
-                  executeSoon(run_test_18_1);
-                });
-               });
-              }
-            });
-            aInstall_2.install();
-          }, "application/x-xpinstall");
-        });
-       });
+        resolve();
       }
     });
     aInstall.install();
-  }, "application/x-xpinstall");
-}
+  });
+
+  await promiseRestartManager();
+
+  let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+  ok(a2.userDisabled);
+  ok(!a2.isActive);
+
+  let url_2 = "http://example.com/addons/test_install2_2.xpi";
+  let aInstall_2 = await AddonManager.getInstallForURL(url_2, null, "application/x-xpinstall");
+  await new Promise(resolve => {
+    aInstall_2.addListener({
+      onInstallStarted() {
+        ok(aInstall_2.addon.userDisabled);
+        aInstall_2.addon.userDisabled = false;
+      },
+
+      onInstallEnded() {
+        resolve();
+      }
+    });
+    aInstall_2.install();
+  });
+
+  await promiseRestartManager();
+
+  let a2_2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+  ok(!a2_2.userDisabled);
+  ok(a2_2.isActive);
+
+  a2_2.uninstall();
+});
 
 
 // Checks that metadata is not stored if the pref is set to false
-function run_test_18_1() {
-  restartManager();
+add_task(async function test_18_1() {
+  await promiseRestartManager();
 
   Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS,
-                             "http://localhost:" + gPort + "/data/test_install_addons.json");
+                             "http://example.com/data/test_install_addons.json");
   Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES,
-                             "http://localhost:" + gPort + "/data/test_install_compat.json");
+                             "http://example.com/data/test_install_compat.json");
 
   Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", false);
 
-  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
-  AddonManager.getInstallForURL(url, function(aInstall) {
+  let url = "http://example.com/addons/test_install2_1.xpi";
+  let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+
+  let addon = await new Promise(resolve => {
     aInstall.addListener({
       onInstallEnded(unused, aAddon) {
-       executeSoon(function test18_1_install_ended() {
-        Assert.notEqual(aAddon.fullDescription, "Repository description");
-
-        restartManager();
-
-        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-          Assert.notEqual(a2.fullDescription, "Repository description");
-
-          a2.uninstall();
-          executeSoon(run_test_19);
-        });
-       });
+        resolve(aAddon);
       }
     });
     aInstall.install();
-  }, "application/x-xpinstall");
-}
+  });
+
+  notEqual(addon.fullDescription, "Repository description");
+
+  await promiseRestartManager();
+
+  let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+  notEqual(a2.fullDescription, "Repository description");
+
+  a2.uninstall();
+});
 
 // Checks that metadata is downloaded for new installs and is visible before and
 // after restart
-function run_test_19() {
-  restartManager();
+add_task(async function test_19() {
+  await promiseRestartManager();
   Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", true);
 
-  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
-  AddonManager.getInstallForURL(url, function(aInstall) {
+  let url = "http://example.com/addons/test_install2_1.xpi";
+  let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+  await new Promise(resolve => {
     aInstall.addListener({
       onInstallEnded(unused, aAddon) {
-       executeSoon(function test19_install_ended() {
-        Assert.equal(aAddon.fullDescription, "Repository description");
-
-        restartManager();
-
-        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-          Assert.equal(a2.fullDescription, "Repository description");
-
-          a2.uninstall();
-          executeSoon(run_test_20);
-        });
-       });
+        resolve(aAddon);
       }
     });
     aInstall.install();
-  }, "application/x-xpinstall");
-}
+  });
+
+  let a1 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+  equal(a1.fullDescription, "Repository description");
+
+  await promiseRestartManager();
+
+  let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+  equal(a2.fullDescription, "Repository description");
+
+  a2.uninstall();
+});
 
 // Do the same again to make sure it works when the data is already in the cache
-function run_test_20() {
-  restartManager();
+add_task(async function test_20() {
+  await promiseRestartManager();
 
-  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
-  AddonManager.getInstallForURL(url, function(aInstall) {
+  let url = "http://example.com/addons/test_install2_1.xpi";
+  let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+  await new Promise(resolve => {
     aInstall.addListener({
       onInstallEnded(unused, aAddon) {
-       executeSoon(function test20_install_ended() {
-        Assert.equal(aAddon.fullDescription, "Repository description");
-
-        restartManager();
-
-        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-          Assert.equal(a2.fullDescription, "Repository description");
-
-          a2.uninstall();
-          executeSoon(run_test_21);
-        });
-       });
+        resolve(aAddon);
       }
     });
     aInstall.install();
-  }, "application/x-xpinstall");
-}
-
-// Verify that installing an add-on that is already pending install cancels the
-// first install
-function run_test_21() {
-  restartManager();
-  Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", false);
-
-  installAllFiles([do_get_addon("test_install2_1")], function() {
-    AddonManager.getAllInstalls(function(aInstalls) {
-      Assert.equal(aInstalls.length, 1);
-
-      prepare_test({
-        "addon2@tests.mozilla.org": [
-          "onOperationCancelled",
-          "onInstalling"
-        ]
-      }, [
-        "onNewInstall",
-        "onDownloadStarted",
-        "onDownloadEnded",
-        "onInstallStarted",
-        "onInstallCancelled",
-        "onInstallEnded",
-      ], check_test_21);
-
-      let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
-      AddonManager.getInstallForURL(url, function(aInstall) {
-        aInstall.install();
-      }, "application/x-xpinstall");
-    });
   });
-}
 
-function check_test_21(aInstall) {
-  AddonManager.getAllInstalls(callback_soon(function(aInstalls) {
-    Assert.equal(aInstalls.length, 1);
-    Assert.equal(aInstalls[0], aInstall);
+  let a1 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+  equal(a1.fullDescription, "Repository description");
 
-    prepare_test({
-      "addon2@tests.mozilla.org": [
-        "onOperationCancelled"
-      ]
-    }, [
-      "onInstallCancelled",
-    ]);
+  await promiseRestartManager();
 
-    aInstall.cancel();
+  let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
+  equal(a2.fullDescription, "Repository description");
 
-    ensure_test_completed();
-
-    restartManager();
-
-    AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-      Assert.equal(a2, null);
-
-      run_test_22();
-    });
-  }));
-}
+  a2.uninstall();
+});
 
 // Tests that an install can be restarted after being cancelled
-function run_test_22() {
+add_task(async function test_22() {
   prepare_test({ }, [
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:" + gPort + "/addons/test_install3.xpi";
-  AddonManager.getInstallForURL(url, function(aInstall) {
-    ensure_test_completed();
+  let url = "http://example.com/addons/test_install3.xpi";
+  let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+  ensure_test_completed();
 
-    Assert.notEqual(aInstall, null);
-    Assert.equal(aInstall.state, AddonManager.STATE_AVAILABLE);
+  notEqual(aInstall, null);
+  equal(aInstall.state, AddonManager.STATE_AVAILABLE);
 
+  let install = await new Promise(resolve => {
     prepare_test({}, [
       "onDownloadStarted",
       "onDownloadEnded",
-    ], check_test_22);
+    ], install1 => {
+      prepare_test({}, [
+        "onDownloadCancelled"
+      ]);
+      aInstall.cancel();
+      resolve(install1);
+    });
     aInstall.install();
-  }, "application/x-xpinstall");
-}
-
-function check_test_22(aInstall) {
-  prepare_test({}, [
-    "onDownloadCancelled"
-  ]);
-
-  aInstall.cancel();
+  });
 
   ensure_test_completed();
 
-  prepare_test({
-    "addon3@tests.mozilla.org": [
-      "onInstalling"
-    ]
-  }, [
-    "onDownloadStarted",
-    "onDownloadEnded",
-    "onInstallStarted",
-    "onInstallEnded"
-  ], finish_test_22);
+  await new Promise(resolve => {
+    prepare_test({
+      "addon3@tests.mozilla.org": [
+        ["onInstalling", false],
+        "onInstalled"
+      ]
+    }, [
+      "onDownloadStarted",
+      "onDownloadEnded",
+      "onInstallStarted",
+      "onInstallEnded"
+    ], resolve);
 
-  aInstall.install();
-}
-
-function finish_test_22(aInstall) {
-  prepare_test({
-    "addon3@tests.mozilla.org": [
-      "onOperationCancelled"
-    ]
-  }, [
-    "onInstallCancelled"
-  ]);
-
-  aInstall.cancel();
+    install.install();
+  });
 
   ensure_test_completed();
 
-  run_test_23();
-}
+  AddonManager.removeAddonListener(AddonListener);
+  install.addon.uninstall();
+});
 
 // Tests that an install can be restarted after being cancelled when a hash
 // was provided
-function run_test_23() {
+add_task(async function test_23() {
   prepare_test({ }, [
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:" + gPort + "/addons/test_install3.xpi";
-  AddonManager.getInstallForURL(url, function(aInstall) {
-    ensure_test_completed();
+  let url = "http://example.com/addons/test_install3.xpi";
+  let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", do_get_file_hash(XPIS.test_install3));
 
-    Assert.notEqual(aInstall, null);
-    Assert.equal(aInstall.state, AddonManager.STATE_AVAILABLE);
+  ensure_test_completed();
 
+  notEqual(install, null);
+  equal(install.state, AddonManager.STATE_AVAILABLE);
+
+  await new Promise(resolve => {
     prepare_test({}, [
       "onDownloadStarted",
       "onDownloadEnded",
-    ], check_test_23);
-    aInstall.install();
-  }, "application/x-xpinstall", do_get_addon_hash("test_install3"));
-}
+    ], () => {
+      prepare_test({}, [
+        "onDownloadCancelled"
+      ]);
 
-function check_test_23(aInstall) {
-  prepare_test({}, [
+      install.cancel();
+      resolve();
+    });
+    install.install();
+  });
+
+  ensure_test_completed();
+
+  await new Promise(resolve => {
+    prepare_test({
+      "addon3@tests.mozilla.org": [
+        ["onInstalling", false],
+        "onInstalled",
+      ]
+    }, [
+      "onDownloadStarted",
+      "onDownloadEnded",
+      "onInstallStarted",
+      "onInstallEnded"
+    ], resolve);
+
+    install.install();
+  });
+
+  ensure_test_completed();
+
+  AddonManager.removeAddonListener(AddonListener);
+  install.addon.uninstall();
+});
+
+// Tests that an install with a bad hash can be restarted after it fails, though
+// it will only fail again
+add_task(async function test_24() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://example.com/addons/test_install3.xpi";
+  let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", "sha1:foo");
+  ensure_test_completed();
+
+  notEqual(aInstall, null);
+  equal(aInstall.state, AddonManager.STATE_AVAILABLE);
+
+  let install = await new Promise(resolve => {
+    prepare_test({}, [
+      "onDownloadStarted",
+      "onDownloadFailed",
+    ], resolve);
+    aInstall.install();
+  });
+
+  await new Promise(resolve => {
+    prepare_test({ }, [
+      "onDownloadStarted",
+      "onDownloadFailed"
+    ], resolve);
+
+    install.install();
+  });
+});
+
+// Tests that installs with a hash for a local file work
+add_task(async function test_25() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = Services.io.newFileURI(XPIS.test_install3).spec;
+  let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", do_get_file_hash(XPIS.test_install3));
+  ensure_test_completed();
+
+  notEqual(aInstall, null);
+  equal(aInstall.state, AddonManager.STATE_DOWNLOADED);
+  equal(aInstall.error, 0);
+
+  prepare_test({ }, [
     "onDownloadCancelled"
   ]);
 
   aInstall.cancel();
 
   ensure_test_completed();
+});
 
-  prepare_test({
-    "addon3@tests.mozilla.org": [
-      "onInstalling"
-    ]
-  }, [
-    "onDownloadStarted",
-    "onDownloadEnded",
-    "onInstallStarted",
-    "onInstallEnded"
-  ], finish_test_23);
-
-  aInstall.install();
-}
-
-function finish_test_23(aInstall) {
-  prepare_test({
-    "addon3@tests.mozilla.org": [
-      "onOperationCancelled"
-    ]
-  }, [
-    "onInstallCancelled"
-  ]);
-
-  aInstall.cancel();
-
-  ensure_test_completed();
-
-  run_test_24();
-}
-
-// Tests that an install with a bad hash can be restarted after it fails, though
-// it will only fail again
-function run_test_24() {
-  prepare_test({ }, [
-    "onNewInstall"
-  ]);
-
-  let url = "http://localhost:" + gPort + "/addons/test_install3.xpi";
-  AddonManager.getInstallForURL(url, function(aInstall) {
-    ensure_test_completed();
-
-    Assert.notEqual(aInstall, null);
-    Assert.equal(aInstall.state, AddonManager.STATE_AVAILABLE);
-
-    prepare_test({}, [
-      "onDownloadStarted",
-      "onDownloadFailed",
-    ], check_test_24);
-    aInstall.install();
-  }, "application/x-xpinstall", "sha1:foo");
-}
-
-function check_test_24(aInstall) {
-  prepare_test({ }, [
-    "onDownloadStarted",
-    "onDownloadFailed"
-  ], run_test_25);
-
-  aInstall.install();
-}
-
-// Tests that installs with a hash for a local file work
-function run_test_25() {
-  prepare_test({ }, [
-    "onNewInstall"
-  ]);
-
-  let url = Services.io.newFileURI(do_get_addon("test_install3")).spec;
-  AddonManager.getInstallForURL(url, function(aInstall) {
-    ensure_test_completed();
-
-    Assert.notEqual(aInstall, null);
-    Assert.equal(aInstall.state, AddonManager.STATE_DOWNLOADED);
-    Assert.equal(aInstall.error, 0);
-
-    prepare_test({ }, [
-      "onDownloadCancelled"
-    ]);
-
-    aInstall.cancel();
-
-    ensure_test_completed();
-
-    run_test_26();
-  }, "application/x-xpinstall", do_get_addon_hash("test_install3"));
-}
-
-function run_test_26() {
+add_task(async function test_26() {
   prepare_test({ }, [
     "onNewInstall",
     "onDownloadStarted",
     "onDownloadCancelled"
   ]);
 
-  let observerService = AM_Cc["@mozilla.org/network/http-activity-distributor;1"].
-                        getService(AM_Ci.nsIHttpActivityDistributor);
-  observerService.addObserver({
-    observeActivity(aChannel, aType, aSubtype, aTimestamp, aSizeData,
-                              aStringData) {
-      aChannel.QueryInterface(AM_Ci.nsIChannel);
-      // Wait for the final event for the redirected URL
-      if (aChannel.URI.spec != "http://localhost:" + gPort + "/addons/test_install1.xpi" ||
-          aType != AM_Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION ||
-          aSubtype != AM_Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE)
-        return;
+  let url = "http://example.com/redirect?/addons/test_install1.xpi";
+  let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
 
-      // Request should have been cancelled
-      Assert.equal(aChannel.status, Cr.NS_BINDING_ABORTED);
+  await new Promise(resolve => {
+    let observerService = Cc["@mozilla.org/network/http-activity-distributor;1"].
+                          getService(Ci.nsIHttpActivityDistributor);
+    observerService.addObserver({
+      observeActivity(aChannel, aType, aSubtype, aTimestamp, aSizeData,
+                                aStringData) {
+        aChannel.QueryInterface(Ci.nsIChannel);
+        // Wait for the final event for the redirected URL
+        if (aChannel.URI.spec != "http://example.com/addons/test_install1.xpi" ||
+            aType != Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION ||
+            aSubtype != Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE)
+          return;
 
-      observerService.removeObserver(this);
+        // Request should have been cancelled
+        equal(aChannel.status, Cr.NS_BINDING_ABORTED);
 
-      run_test_27();
-    }
-  });
+        observerService.removeObserver(this);
 
-  let url = "http://localhost:" + gPort + "/redirect?/addons/test_install1.xpi";
-  AddonManager.getInstallForURL(url, function(aInstall) {
+        resolve();
+      }
+    });
+
     aInstall.addListener({
       onDownloadProgress(aDownloadProgressInstall) {
         aDownloadProgressInstall.cancel();
@@ -1339,150 +1127,122 @@ function run_test_26() {
     });
 
     aInstall.install();
-  }, "application/x-xpinstall");
-}
+  });
+});
 
 
 // Tests that an install can be restarted during onDownloadCancelled after being
 // cancelled in mid-download
-function run_test_27() {
+add_task(async function test_27() {
   prepare_test({ }, [
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:" + gPort + "/addons/test_install3.xpi";
-  AddonManager.getInstallForURL(url, function(aInstall) {
-    ensure_test_completed();
+  let url = "http://example.com/addons/test_install3.xpi";
+  let aInstall = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
+  ensure_test_completed();
 
-    Assert.notEqual(aInstall, null);
-    Assert.equal(aInstall.state, AddonManager.STATE_AVAILABLE);
+  notEqual(aInstall, null);
+  equal(aInstall.state, AddonManager.STATE_AVAILABLE);
 
-    aInstall.addListener({
-      onDownloadProgress() {
-        aInstall.removeListener(this);
-        aInstall.cancel();
-      }
-    });
+  aInstall.addListener({
+    onDownloadProgress() {
+      aInstall.removeListener(this);
+      aInstall.cancel();
+    }
+  });
 
+  let install = await new Promise(resolve => {
     prepare_test({}, [
       "onDownloadStarted",
       "onDownloadCancelled",
-    ], check_test_27);
+    ], resolve);
     aInstall.install();
-  }, "application/x-xpinstall");
-}
+  });
 
-function check_test_27(aInstall) {
-  prepare_test({
-    "addon3@tests.mozilla.org": [
-      "onInstalling"
-    ]
-  }, [
-    "onDownloadStarted",
-    "onDownloadEnded",
-    "onInstallStarted",
-    "onInstallEnded"
-  ], finish_test_27);
+  install = await new Promise(resolve => {
+    prepare_test({
+      "addon3@tests.mozilla.org": [
+        ["onInstalling", false],
+        "onInstalled",
+      ]
+    }, [
+      "onDownloadStarted",
+      "onDownloadEnded",
+      "onInstallStarted",
+      "onInstallEnded"
+    ], resolve);
 
-  let file = aInstall.file;
-  aInstall.install();
-  Assert.notEqual(file.path, aInstall.file.path);
-  Assert.ok(!file.exists());
-}
-
-function finish_test_27(aInstall) {
-  prepare_test({
-    "addon3@tests.mozilla.org": [
-      "onOperationCancelled"
-    ]
-  }, [
-    "onInstallCancelled"
-  ]);
-
-  aInstall.cancel();
+    let file = install.file;
+    install.install();
+    notEqual(file.path, install.file.path);
+    ok(!file.exists());
+  });
 
   ensure_test_completed();
 
-  run_test_29();
-}
+  AddonManager.removeAddonListener(AddonListener);
+  install.addon.uninstall();
+});
 
 // Tests that an install with a matching compatibility override has appDisabled
 // set correctly.
-function run_test_29() {
+add_task(async function test_29() {
   Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
 
   prepare_test({ }, [
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:" + gPort + "/addons/test_install6.xpi";
-  AddonManager.getInstallForURL(url, function(install) {
-    ensure_test_completed();
+  let url = "http://example.com/addons/test_install6.xpi";
+  let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall", null, "Addon Test 6", null, "1.0");
+  ensure_test_completed();
 
-    Assert.notEqual(install, null);
-    Assert.equal(install.version, "1.0");
-    Assert.equal(install.name, "Addon Test 6");
-    Assert.equal(install.state, AddonManager.STATE_AVAILABLE);
+  notEqual(install, null);
+  equal(install.version, "1.0");
+  equal(install.name, "Addon Test 6");
+  equal(install.state, AddonManager.STATE_AVAILABLE);
 
-    AddonManager.getInstallsByTypes(null, function(activeInstalls) {
-      Assert.equal(activeInstalls.length, 1);
-      Assert.equal(activeInstalls[0], install);
+  let activeInstalls = await AddonManager.getInstallsByTypes(null);
+  equal(activeInstalls.length, 1);
+  equal(activeInstalls[0], install);
 
-      prepare_test({}, [
-        "onDownloadStarted",
-        "onDownloadEnded"
-      ], check_test_29);
-      install.install();
+  install = await new Promise(resolve => {
+    prepare_test({}, [
+      "onDownloadStarted",
+      "onDownloadEnded"
+    ], install2 => {
+      resolve(install2);
+      return false;
     });
-  }, "application/x-xpinstall", null, "Addon Test 6", null, "1.0");
-}
+    install.install();
+  });
 
-function check_test_29(install) {
   // ensure_test_completed();
-  Assert.equal(install.state, AddonManager.STATE_DOWNLOADED);
-  Assert.notEqual(install.addon, null);
-  Assert.ok(!install.addon.isCompatible);
-  Assert.ok(install.addon.appDisabled);
+  equal(install.state, AddonManager.STATE_DOWNLOADED);
+  notEqual(install.addon, null);
+  ok(!install.addon.isCompatible);
+  ok(install.addon.appDisabled);
 
-  prepare_test({}, [
-    "onDownloadCancelled"
-  ], run_test_30);
-  install.cancel();
-  return false;
-}
+  await new Promise(resolve => {
+    prepare_test({}, [
+      "onDownloadCancelled"
+    ], resolve);
+    install.cancel();
+  });
+});
 
 // Tests that a multi-package XPI with no add-ons inside shows up as a
 // corrupt file
-function run_test_30() {
+add_task(async function test_30() {
   prepare_test({ }, [
     "onNewInstall"
   ]);
 
-  AddonManager.getInstallForFile(do_get_addon("test_install7"), function(install) {
-    ensure_test_completed();
+  let install = await AddonManager.getInstallForFile(XPIS.test_install7);
+  ensure_test_completed();
 
-    Assert.notEqual(install, null);
-    Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
-    Assert.equal(install.error, AddonManager.ERROR_CORRUPT_FILE);
-
-    run_test_31();
-  });
-}
-
-// Tests that a multi-package XPI with no valid add-ons inside shows up as a
-// corrupt file
-function run_test_31() {
-  prepare_test({ }, [
-    "onNewInstall"
-  ]);
-
-  AddonManager.getInstallForFile(do_get_addon("test_install8"), function(install) {
-    ensure_test_completed();
-
-    Assert.notEqual(install, null);
-    Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
-    Assert.equal(install.error, AddonManager.ERROR_CORRUPT_FILE);
-
-    end_test();
-  });
-}
+  notEqual(install, null);
+  equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
+  equal(install.error, AddonManager.ERROR_CORRUPT_FILE);
+});
