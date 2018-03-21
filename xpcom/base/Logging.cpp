@@ -178,6 +178,7 @@ public:
     , mMainThread(PR_GetCurrentThread())
     , mSetFromEnv(false)
     , mAddTimestamp(false)
+    , mIsRaw(false)
     , mIsSync(false)
     , mRotate(0)
     , mInitialized(false)
@@ -206,6 +207,7 @@ public:
     bool shouldAppend = false;
     bool addTimestamp = false;
     bool isSync = false;
+    bool isRaw = false;
     int32_t rotate = 0;
     const char* modules = PR_GetEnv("MOZ_LOG");
     if (!modules || !modules[0]) {
@@ -226,7 +228,7 @@ public:
     // Need to capture `this` since `sLogModuleManager` is not set until after
     // initialization is complete.
     NSPRLogModulesParser(modules,
-        [this, &shouldAppend, &addTimestamp, &isSync, &rotate]
+        [this, &shouldAppend, &addTimestamp, &isSync, &isRaw, &rotate]
             (const char* aName, LogLevel aLevel, int32_t aValue) mutable {
           if (strcmp(aName, "append") == 0) {
             shouldAppend = true;
@@ -234,6 +236,8 @@ public:
             addTimestamp = true;
           } else if (strcmp(aName, "sync") == 0) {
             isSync = true;
+          } else if (strcmp(aName, "raw") == 0) {
+            isRaw = true;
           } else if (strcmp(aName, "rotate") == 0) {
             rotate = (aValue << 20) / kRotateFilesNumber;
           } else {
@@ -244,6 +248,7 @@ public:
     // Rotate implies timestamp to make the files readable
     mAddTimestamp = addTimestamp || rotate > 0;
     mIsSync = isSync;
+    mIsRaw = isRaw;
     mRotate = rotate;
 
     if (rotate > 0 && shouldAppend) {
@@ -439,10 +444,14 @@ public:
     }
 
     if (!mAddTimestamp) {
-      fprintf_stderr(out,
-                     "[%ld:%s]: %s/%s %s%s",
-                     pid, currentThreadName, ToLogStr(aLevel),
-                     aName, buffToWrite, newline);
+      if (!mIsRaw) {
+        fprintf_stderr(out,
+                      "[%ld:%s]: %s/%s %s%s",
+                      pid, currentThreadName, ToLogStr(aLevel),
+                      aName, buffToWrite, newline);
+      } else {
+        fprintf_stderr(out, "%s%s", buffToWrite, newline);
+      }
     } else {
       PRExplodedTime now;
       PR_ExplodeTime(PR_Now(), PR_GMTParameters, &now);
@@ -523,6 +532,7 @@ private:
   PRThread *mMainThread;
   bool mSetFromEnv;
   Atomic<bool, Relaxed> mAddTimestamp;
+  Atomic<bool, Relaxed> mIsRaw;
   Atomic<bool, Relaxed> mIsSync;
   int32_t mRotate;
   bool mInitialized;
