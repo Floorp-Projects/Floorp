@@ -17,6 +17,7 @@ tasks:
           - pull_request.edited
           - pull_request.synchronize
           - pull_request.reopened
+          - push
     payload:
       maxRunTime: 3600
       deadline: "{{ '2 hours' | $fromNow }}"
