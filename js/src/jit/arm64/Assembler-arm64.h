@@ -181,7 +181,6 @@ class Assembler : public vixl::Assembler
     bool appendRawCode(const uint8_t* code, size_t numBytes);
     bool reserve(size_t size);
     bool swapBuffer(wasm::Bytes& bytes);
-    void trace(JSTracer* trc);
 
     // Emit the jump table, returning the BufferOffset to the first entry in the table.
     BufferOffset emitExtendedJumpTable();
@@ -334,9 +333,6 @@ class Assembler : public vixl::Assembler
 
     static void TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
     static void TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
-
-    static void FixupNurseryObjects(JSContext* cx, JitCode* code, CompactBufferReader& reader,
-                                    const ObjectVector& nurseryObjects);
 
   public:
     // A Jump table entry is 2 instructions, with 8 bytes of raw data
