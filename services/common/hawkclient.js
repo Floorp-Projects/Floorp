@@ -99,11 +99,6 @@ var HawkClient = function(host) {
 this.HawkClient.prototype = {
 
   /*
-   * A boolean for feature detection.
-   */
-  willUTF8EncodeRequests: HAWKAuthenticatedRESTRequest.prototype.willUTF8EncodeObjectRequests,
-
-  /*
    * Construct an error message for a response.  Private.
    *
    * @param restResponse
@@ -201,93 +196,11 @@ this.HawkClient.prototype = {
    *        as JSON and contains an 'error' property, the promise will be
    *        rejected with this JSON-parsed response.
    */
-  request(path, method, credentials = null, payloadObj = {}, extraHeaders = {},
-                    retryOK = true) {
+  async request(path, method, credentials = null, payloadObj = {}, extraHeaders = {},
+                retryOK = true) {
     method = method.toLowerCase();
 
-    let deferred = PromiseUtils.defer();
     let uri = this.host + path;
-    let self = this;
-
-    function _onComplete(error) {
-      // |error| can be either a normal caught error or an explicitly created
-      // Components.Exception() error. Log it now as it might not end up
-      // correctly in the logs by the time it's passed through _constructError.
-      if (error) {
-        log.warn("hawk request error", error);
-      }
-      // If there's no response there's nothing else to do.
-      if (!this.response) {
-        deferred.reject(error);
-        return;
-      }
-      let restResponse = this.response;
-      let status = restResponse.status;
-
-      log.debug("(Response) " + path + ": code: " + status +
-                " - Status text: " + restResponse.statusText);
-      if (logPII) {
-        log.debug("Response text: " + restResponse.body);
-      }
-
-      // All responses may have backoff headers, which are a server-side safety
-      // valve to allow slowing down clients without hurting performance.
-      self._maybeNotifyBackoff(restResponse, "x-weave-backoff");
-      self._maybeNotifyBackoff(restResponse, "x-backoff");
-
-      if (error) {
-        // When things really blow up, reconstruct an error object that follows
-        // the general format of the server on error responses.
-        deferred.reject(self._constructError(restResponse, error));
-        return;
-      }
-
-      self._updateClockOffset(restResponse.headers.date);
-
-      if (status === 401 && retryOK && !("retry-after" in restResponse.headers)) {
-        // Retry once if we were rejected due to a bad timestamp.
-        // Clock offset is adjusted already in the top of this function.
-        log.debug("Received 401 for " + path + ": retrying");
-        deferred.resolve(self.request(path, method, credentials, payloadObj, extraHeaders, false));
-        return;
-      }
-
-      // If the server returned a json error message, use it in the rejection
-      // of the promise.
-      //
-      // In the case of a 401, in which we are probably being rejected for a
-      // bad timestamp, retry exactly once, during which time clock offset will
-      // be adjusted.
-
-      let jsonResponse = {};
-      try {
-        jsonResponse = JSON.parse(restResponse.body);
-      } catch (notJSON) {}
-
-      let okResponse = (200 <= status && status < 300);
-      if (!okResponse || jsonResponse.error) {
-        if (jsonResponse.error) {
-          deferred.reject(jsonResponse);
-        } else {
-          deferred.reject(self._constructError(restResponse, "Request failed"));
-        }
-        return;
-      }
-      // It's up to the caller to know how to decode the response.
-      // We just return the whole response.
-      deferred.resolve(this.response);
-    }
-
-    function onComplete(error) {
-      try {
-        // |this| is the RESTRequest object and we need to ensure _onComplete
-        // gets the same one.
-        _onComplete.call(this, error);
-      } catch (ex) {
-        log.error("Unhandled exception processing response", ex);
-        deferred.reject(ex);
-      }
-    }
 
     let extra = {
       now: this.now(),
@@ -296,18 +209,71 @@ this.HawkClient.prototype = {
     };
 
     let request = this.newHAWKAuthenticatedRESTRequest(uri, credentials, extra);
-    try {
-      if (method == "post" || method == "put" || method == "patch") {
-        request[method](payloadObj, onComplete);
-      } else {
-        request[method](onComplete);
-      }
-    } catch (ex) {
-      log.error("Failed to make hawk request", ex);
-      deferred.reject(ex);
+    let error;
+    let restResponse = await request[method](payloadObj).catch(e => {
+      // Keep a reference to the error, log a message about it, and return the
+      // response anyway.
+      error = e;
+      log.warn("hawk request error", error);
+      return request.response;
+    });
+
+    // This shouldn't happen anymore, but it's not exactly difficult to handle.
+    if (!restResponse) {
+      throw error;
     }
 
-    return deferred.promise;
+    let status = restResponse.status;
+
+    log.debug("(Response) " + path + ": code: " + status +
+              " - Status text: " + restResponse.statusText);
+    if (logPII) {
+      log.debug("Response text", restResponse.body);
+    }
+
+    // All responses may have backoff headers, which are a server-side safety
+    // valve to allow slowing down clients without hurting performance.
+    this._maybeNotifyBackoff(restResponse, "x-weave-backoff");
+    this._maybeNotifyBackoff(restResponse, "x-backoff");
+
+    if (error) {
+      // When things really blow up, reconstruct an error object that follows
+      // the general format of the server on error responses.
+      throw this._constructError(restResponse, error);
+    }
+
+    this._updateClockOffset(restResponse.headers.date);
+
+    if (status === 401 && retryOK && !("retry-after" in restResponse.headers)) {
+      // Retry once if we were rejected due to a bad timestamp.
+      // Clock offset is adjusted already in the top of this function.
+      log.debug("Received 401 for " + path + ": retrying");
+      return this.request(path, method, credentials, payloadObj, extraHeaders, false);
+    }
+
+    // If the server returned a json error message, use it in the rejection
+    // of the promise.
+    //
+    // In the case of a 401, in which we are probably being rejected for a
+    // bad timestamp, retry exactly once, during which time clock offset will
+    // be adjusted.
+
+    let jsonResponse = {};
+    try {
+      jsonResponse = JSON.parse(restResponse.body);
+    } catch (notJSON) {}
+
+    let okResponse = (200 <= status && status < 300);
+    if (!okResponse || jsonResponse.error) {
+      if (jsonResponse.error) {
+        throw jsonResponse;
+      }
+      throw this._constructError(restResponse, "Request failed");
+    }
+
+    // It's up to the caller to know how to decode the response.
+    // We just return the whole response.
+    return restResponse;
   },
 
   /*

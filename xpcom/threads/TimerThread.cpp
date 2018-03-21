@@ -739,7 +739,7 @@ TimerThread::RemoveFirstTimerInternal()
   mMonitor.AssertCurrentThreadOwns();
   MOZ_ASSERT(!mTimers.IsEmpty());
   std::pop_heap(mTimers.begin(), mTimers.end(), Entry::UniquePtrLessThan);
-  mTimers.RemoveElementAt(mTimers.Length() - 1);
+  mTimers.RemoveLastElement();
 }
 
 already_AddRefed<nsTimerImpl>

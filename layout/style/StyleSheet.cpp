@@ -586,6 +586,8 @@ StyleSheet::RuleChanged(css::Rule* aRule)
   }
 }
 
+#undef NOTIFY
+
 nsresult
 StyleSheet::InsertRuleIntoGroup(const nsAString& aRule,
                                 css::GroupRule* aGroup,

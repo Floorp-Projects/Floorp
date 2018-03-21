@@ -149,10 +149,9 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
   if (Service.isLoggedIn) {
     _("Making request to " + url + " which should 401");
     let request = new RESTRequest(url);
-    request.get(function() {
-      Assert.equal(request.response.status, 401);
-      CommonUtils.nextTick(onwards);
-    });
+    await request.get();
+    Assert.equal(request.response.status, 401);
+    CommonUtils.nextTick(onwards);
   } else {
     _("Skipping preliminary validation check for a 401 as we aren't logged in");
     CommonUtils.nextTick(onwards);

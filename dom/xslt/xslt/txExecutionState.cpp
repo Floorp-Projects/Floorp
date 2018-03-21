@@ -396,7 +396,7 @@ void
 txExecutionState::popTemplateRule()
 {
     NS_PRECONDITION(!mTemplateRules.IsEmpty(), "No rules to pop");
-    mTemplateRules.RemoveElementAt(mTemplateRules.Length() - 1);
+    mTemplateRules.RemoveLastElement();
 }
 
 txIEvalContext*
@@ -534,8 +534,7 @@ already_AddRefed<txParameterMap>
 txExecutionState::popParamMap()
 {
     RefPtr<txParameterMap> oldParams = mTemplateParams.forget();
-    mTemplateParams = mParamStack.LastElement();
-    mParamStack.RemoveElementAt(mParamStack.Length() - 1);
+    mTemplateParams = mParamStack.PopLastElement();
 
     return oldParams.forget();
 }

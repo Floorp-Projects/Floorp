@@ -8,16 +8,16 @@ requestLongerTimeout(2);
 
 // Check the text content and width of name label.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel} = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
+  let {inspector, panel} = await openAnimationInspector();
 
   info("Selecting 'simple-animation' animation which is running on compositor");
-  yield selectNodeAndWaitForAnimations(".animated", inspector);
+  await selectNodeAndWaitForAnimations(".animated", inspector);
   checkNameLabel(panel.animationsTimelineComponent.rootWrapperEl, "simple-animation");
 
   info("Selecting 'no-compositor' animation which is not running on compositor");
-  yield selectNodeAndWaitForAnimations(".no-compositor", inspector);
+  await selectNodeAndWaitForAnimations(".no-compositor", inspector);
   checkNameLabel(panel.animationsTimelineComponent.rootWrapperEl, "no-compositor");
 });
 

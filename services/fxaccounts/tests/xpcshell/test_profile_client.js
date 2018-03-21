@@ -25,9 +25,9 @@ let mockResponse = function(response) {
           Request.ifNoneMatchSet = true;
         }
       },
-      get() {
+      async get() {
         this.response = response;
-        this.onComplete();
+        return this.response;
       }
     };
   };
@@ -60,8 +60,8 @@ let mockResponseError = function(error) {
   return function() {
     return {
       setHeader() {},
-      get() {
-        this.onComplete(error);
+      async get() {
+        throw error;
       }
     };
   };
@@ -222,10 +222,10 @@ add_test(function server401ResponseThenSuccess() {
           Assert.equal(value, "Bearer " + lastToken);
         }
       },
-      get() {
+      async get() {
         this.response = responses[numRequests];
         ++numRequests;
-        this.onComplete();
+        return this.response;
       }
     };
   };
@@ -286,10 +286,10 @@ add_test(function server401ResponsePersists() {
           Assert.equal(value, "Bearer " + lastToken);
         }
       },
-      get() {
+      async get() {
         this.response = response;
         ++numRequests;
-        this.onComplete();
+        return this.response;
       }
     };
   };

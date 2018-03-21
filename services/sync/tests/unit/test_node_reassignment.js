@@ -79,13 +79,9 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
   Service.identity._tokenServerClient = mockTSC;
 
   // Make sure that it works!
-  await new Promise(res => {
-    let request = new RESTRequest(url);
-    request.get(function() {
-      Assert.equal(request.response.status, 401);
-      res();
-    });
-  });
+  let request = new RESTRequest(url);
+  let response = await request.get();
+  Assert.equal(response.status, 401);
 
   function onFirstSync() {
     _("First sync completed.");

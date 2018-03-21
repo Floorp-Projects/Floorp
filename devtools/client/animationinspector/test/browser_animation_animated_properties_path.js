@@ -332,16 +332,16 @@ const TEST_CASES = [
   }
 ];
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_multiple_property_types.html");
-  const {panel} = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_multiple_property_types.html");
+  const {panel} = await openAnimationInspector();
   const timelineComponent = panel.animationsTimelineComponent;
   const detailEl = timelineComponent.details.containerEl;
   const hasClosePath = true;
 
   for (let i = 0; i < TEST_CASES.length; i++) {
     info(`Click to select the animation[${ i }]`);
-    yield clickOnAnimation(panel, i);
+    await clickOnAnimation(panel, i);
     const timeBlock = getAnimationTimeBlocks(panel)[0];
     const state = timeBlock.animation.state;
     const properties = TEST_CASES[i];

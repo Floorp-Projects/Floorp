@@ -23,9 +23,9 @@ var mockResponse = function(response) {
   return function() {
     return {
       setHeader() {},
-      post() {
+      async post() {
         this.response = response;
-        this.onComplete();
+        return response;
       }
     };
   };
@@ -41,8 +41,8 @@ var mockResponseError = function(error) {
   return function() {
     return {
       setHeader() {},
-      post() {
-        this.onComplete(error);
+      async post() {
+        throw error;
       }
     };
   };
@@ -115,7 +115,7 @@ add_test(function parseErrorResponse() {
     });
 });
 
-add_test(function serverErrorResponse() {
+add_task(async function serverErrorResponse() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   let response = {
     status: 400,
@@ -134,7 +134,7 @@ add_test(function serverErrorResponse() {
     });
 });
 
-add_test(function networkErrorResponse() {
+add_task(async function networkErrorResponse() {
   let client = new FxAccountsOAuthGrantClient({
     serverURL: "https://domain.dummy",
     client_id: "abc123"

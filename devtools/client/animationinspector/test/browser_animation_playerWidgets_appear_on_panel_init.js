@@ -9,10 +9,10 @@
 
 const { ANIMATION_TYPES } = require("devtools/server/actors/animation");
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_multiple_animation_types.html");
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_multiple_animation_types.html");
 
-  let {panel} = yield openAnimationInspector();
+  let {panel} = await openAnimationInspector();
   is(panel.animationsTimelineComponent.animations.length, 3,
     "Three animations are handled by the timeline after init");
   assertAnimationsDisplayed(panel, 3,

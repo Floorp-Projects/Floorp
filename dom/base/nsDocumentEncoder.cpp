@@ -823,7 +823,7 @@ nsDocumentEncoder::SerializeRangeContextEnd(nsAString& aString)
       break;
   }
 
-  mRangeContexts.RemoveElementAt(mRangeContexts.Length() - 1);
+  mRangeContexts.RemoveLastElement();
   return rv;
 }
 

@@ -13,20 +13,20 @@ requestLongerTimeout(2);
 // reset to 0, and that the scrubber stops moving and is positioned to the
 // start.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {panel, controller} = yield openAnimationInspector();
+  let {panel, controller} = await openAnimationInspector();
   let players = controller.animationPlayers;
   let btn = panel.rewindTimelineButtonEl;
 
   ok(btn, "The rewind button exists");
 
   info("Click on the button to rewind all timeline animations");
-  yield clickTimelineRewindButton(panel);
+  await clickTimelineRewindButton(panel);
 
   info("Check that the scrubber has stopped moving");
-  yield assertScrubberMoving(panel, false);
+  await assertScrubberMoving(panel, false);
 
   ok(players.every(({state}) => state.currentTime === 0),
      "All animations' currentTimes have been set to 0");
@@ -34,16 +34,16 @@ add_task(function* () {
      "All animations have been paused");
 
   info("Play the animations again");
-  yield clickTimelinePlayPauseButton(panel);
+  await clickTimelinePlayPauseButton(panel);
 
   info("And pause them after a short while");
-  yield new Promise(r => setTimeout(r, 200));
+  await new Promise(r => setTimeout(r, 200));
 
   info("Check that rewinding when animations are paused works too");
-  yield clickTimelineRewindButton(panel);
+  await clickTimelineRewindButton(panel);
 
   info("Check that the scrubber has stopped moving");
-  yield assertScrubberMoving(panel, false);
+  await assertScrubberMoving(panel, false);
 
   ok(players.every(({state}) => state.currentTime === 0),
      "All animations' currentTimes have been set to 0");

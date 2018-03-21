@@ -12,10 +12,10 @@ requestLongerTimeout(2);
 // state.
 // Finally, also check that the scrubber can be moved using the scrubber handle.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
 
-  let {panel} = yield openAnimationInspector();
+  let {panel} = await openAnimationInspector();
   let timeline = panel.animationsTimelineComponent;
   let {win, timeHeaderEl, scrubberEl, scrubberHandleEl} = timeline;
   let playTimelineButtonEl = panel.playTimelineButtonEl;
@@ -24,14 +24,14 @@ add_task(function* () {
      "The timeline play button is in its playing state by default");
 
   info("Mousedown in the header to move the scrubber");
-  yield synthesizeInHeaderAndWaitForChange(timeline, 50, 1, "mousedown");
+  await synthesizeInHeaderAndWaitForChange(timeline, 50, 1, "mousedown");
   checkScrubberIsAt(scrubberEl, timeHeaderEl, 50);
 
   ok(playTimelineButtonEl.classList.contains("paused"),
      "The timeline play button is in its paused state after mousedown");
 
   info("Continue moving the mouse and verify that the scrubber tracks it");
-  yield synthesizeInHeaderAndWaitForChange(timeline, 100, 1, "mousemove");
+  await synthesizeInHeaderAndWaitForChange(timeline, 100, 1, "mousemove");
   checkScrubberIsAt(scrubberEl, timeHeaderEl, 100);
 
   ok(playTimelineButtonEl.classList.contains("paused"),
@@ -47,20 +47,20 @@ add_task(function* () {
   EventUtils.synthesizeMouse(scrubberHandleEl, 1, 20, {type: "mousedown"}, win);
   EventUtils.synthesizeMouse(timeHeaderEl, 0, 0, {type: "mousemove"}, win);
   EventUtils.synthesizeMouse(timeHeaderEl, 0, 0, {type: "mouseup"}, win);
-  yield onDataChanged;
+  await onDataChanged;
 
   checkScrubberIsAt(scrubberEl, timeHeaderEl, 0);
 
   // Wait for promise of setCurrentTimes if setCurrentTimes is running.
   if (panel.setCurrentTimeAllPromise) {
-    yield panel.setCurrentTimeAllPromise;
+    await panel.setCurrentTimeAllPromise;
   }
 });
 
-function* synthesizeInHeaderAndWaitForChange(timeline, x, y, type) {
+async function synthesizeInHeaderAndWaitForChange(timeline, x, y, type) {
   let onDataChanged = timeline.once("timeline-data-changed");
   EventUtils.synthesizeMouse(timeline.timeHeaderEl, x, y, {type}, timeline.win);
-  yield onDataChanged;
+  await onDataChanged;
 }
 
 function getPositionPercentage(pos, headerEl) {

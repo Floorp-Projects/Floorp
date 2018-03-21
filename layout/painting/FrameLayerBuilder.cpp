@@ -421,6 +421,7 @@ FrameLayerBuilder::DestroyDisplayItemDataFor(nsIFrame* aFrame)
 {
   RemoveFrameFromLayerManager(aFrame, aFrame->DisplayItemData());
   aFrame->DisplayItemData().Clear();
+  aFrame->DeleteProperty(WebRenderUserDataProperty::Key());
 }
 
 /**

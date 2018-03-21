@@ -8,23 +8,23 @@ requestLongerTimeout(2);
 
 // Test that a page navigation resets the state of the global toggle button.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel} = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
+  let {inspector, panel} = await openAnimationInspector();
 
   info("Select the non-animated test node");
-  yield selectNodeAndWaitForAnimations(".still", inspector);
+  await selectNodeAndWaitForAnimations(".still", inspector);
 
   ok(!panel.toggleAllButtonEl.classList.contains("paused"),
     "The toggle button is in its running state by default");
 
   info("Toggle all animations, so that they pause");
-  yield panel.toggleAll();
+  await panel.toggleAll();
   ok(panel.toggleAllButtonEl.classList.contains("paused"),
     "The toggle button now is in its paused state");
 
   info("Reloading the page");
-  yield reloadTab(inspector);
+  await reloadTab(inspector);
 
   ok(!panel.toggleAllButtonEl.classList.contains("paused"),
     "The toggle button is back in its running state");
