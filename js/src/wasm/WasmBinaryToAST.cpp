@@ -1824,7 +1824,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
     if (!locals.appendAll(sig->args()))
         return false;
 
-    if (!DecodeLocalEntries(c.d, ModuleKind::Wasm, &locals))
+    if (!DecodeLocalEntries(c.d, ModuleKind::Wasm, c.env().gcTypesEnabled, &locals))
         return false;
 
     AstDecodeOpIter iter(c.env(), c.d);

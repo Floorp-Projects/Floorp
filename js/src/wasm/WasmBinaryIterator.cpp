@@ -177,6 +177,7 @@ wasm::Classify(OpBytes op)
       case Op::F64ConvertUI64:
       case Op::F64ReinterpretI64:
       case Op::F64PromoteF32:
+      case Op::RefIsNull:
 #ifdef ENABLE_WASM_SIGNEXTEND_OPS
       case Op::I32Extend8S:
       case Op::I32Extend16S:
@@ -240,6 +241,8 @@ wasm::Classify(OpBytes op)
         return OpKind::CurrentMemory;
       case Op::GrowMemory:
         return OpKind::GrowMemory;
+      case Op::RefNull:
+        return OpKind::RefNull;
       case Op::NumericPrefix: {
 #ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
           switch (NumericOp(op.b1)) {
