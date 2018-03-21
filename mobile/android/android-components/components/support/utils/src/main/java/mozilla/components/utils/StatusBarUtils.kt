@@ -1,0 +1,28 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package mozilla.components.utils
+
+import android.view.View
+import android.view.WindowInsets
+
+object StatusBarUtils {
+    private var statusBarSize = -1
+
+    /**
+     * Determine the height of the status bar asynchronously.
+     */
+    fun getStatusBarHeight(view: View, block: (Int) -> Unit) {
+        if (statusBarSize > 0) {
+            block(statusBarSize)
+        } else {
+            view.setOnApplyWindowInsetsListener { _, insets ->
+                statusBarSize = insets.systemWindowInsetTop
+                block(statusBarSize)
+                view.setOnApplyWindowInsetsListener(null)
+                insets
+            }
+        }
+    }
+}

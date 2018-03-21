@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 27
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 27
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    publishNonDefault true
+}
+
+dependencies {
+    provided "org.jetbrains.kotlin:kotlin-stdlib:1.2.30"
+
+    provided "com.android.support:support-compat:27.1.0"
+
+    testCompile "org.jetbrains.kotlin:kotlin-stdlib:1.2.30"
+    testCompile 'junit:junit:4.12'
+    testCompile "org.robolectric:robolectric:3.7.1"
+    testCompile 'org.mockito:mockito-core:2.12.0'
+}
+
+apply from: '../../../publish.gradle'
+def packageName = 'ktx'
+def description = 'A set of Kotlin extensions.'
+ext.configurePublish(packageName, description)
