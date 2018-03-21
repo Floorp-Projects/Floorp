@@ -441,8 +441,7 @@ element.findByXPathAll = function* (document, startNode, expression) {
  *     Sequence of link elements which text is <var>s</var>.
  */
 element.findByLinkText = function(startNode, linkText) {
-  return filterLinks(startNode,
-                     link => atom.getElementText(link).trim() === linkText);
+  return filterLinks(startNode, link => link.text.trim() === linkText);
 };
 
 /**
@@ -459,8 +458,7 @@ element.findByLinkText = function(startNode, linkText) {
  *     <var>linkText</var>.
  */
 element.findByPartialLinkText = function(startNode, linkText) {
-  return filterLinks(startNode,
-                     link => atom.getElementText(link).includes(linkText));
+  return filterLinks(startNode, link => link.text.includes(linkText));
 };
 
 /**
@@ -553,7 +551,7 @@ function findElement(strategy, selector, document, startNode = undefined) {
 
     case element.Strategy.LinkText:
       for (let link of startNode.getElementsByTagName("a")) {
-        if (atom.getElementText(link).trim() === selector) {
+        if (link.text.trim() === selector) {
           return link;
         }
       }
@@ -561,7 +559,7 @@ function findElement(strategy, selector, document, startNode = undefined) {
 
     case element.Strategy.PartialLinkText:
       for (let link of startNode.getElementsByTagName("a")) {
-        if (atom.getElementText(link).includes(selector)) {
+        if (link.text.includes(selector)) {
           return link;
         }
       }
