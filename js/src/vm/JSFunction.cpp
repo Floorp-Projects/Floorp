@@ -590,7 +590,7 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
         if (!fun->isInterpreted())
             return xdr->fail(JS::TranscodeResult_Failure_NotInterpretedFun);
 
-        if (fun->explicitName() || fun->hasCompileTimeName() || fun->hasGuessedAtom())
+        if (fun->explicitName() || fun->hasInferredName() || fun->hasGuessedAtom())
             firstword |= HasAtom;
 
         if (fun->isGenerator() || fun->isAsync())
@@ -1327,12 +1327,8 @@ JSFunction::getUnresolvedName(JSContext* cx, HandleFunction fun, MutableHandleAt
     MOZ_ASSERT(!IsInternalFunctionObject(*fun));
     MOZ_ASSERT(!fun->hasResolvedName());
 
-    JSAtom* name = fun->explicitOrCompileTimeName();
+    JSAtom* name = fun->explicitOrInferredName();
     if (fun->isClassConstructor()) {
-        // It's impossible to have an empty named class expression. We use
-        // empty as a sentinel when creating default class constructors.
-        MOZ_ASSERT(name != cx->names().empty);
-
         // Unnamed class expressions should not get a .name property at all.
         if (name)
             v.set(name);
@@ -2307,9 +2303,8 @@ js::SetFunctionNameIfNoOwnName(JSContext* cx, HandleFunction fun, HandleValue na
     if (!funNameAtom)
         return false;
 
-    RootedValue funNameVal(cx, StringValue(funNameAtom));
-    if (!NativeDefineDataProperty(cx, fun, cx->names().name, funNameVal, JSPROP_READONLY))
-        return false;
+    MOZ_ASSERT(!fun->hasResolvedName());
+    fun->setInferredName(funNameAtom);
 
     return true;
 }
