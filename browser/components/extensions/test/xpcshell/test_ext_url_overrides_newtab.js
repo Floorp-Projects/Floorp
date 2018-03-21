@@ -28,7 +28,7 @@ const {
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 
-createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
 
 function awaitEvent(eventName) {
   return new Promise(resolve => {
