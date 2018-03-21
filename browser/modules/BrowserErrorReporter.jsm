@@ -24,13 +24,6 @@ const PREF_SAMPLE_RATE = "browser.chrome.errorReporter.sampleRate";
 const PREF_SUBMIT_URL = "browser.chrome.errorReporter.submitUrl";
 const SDK_NAME = "firefox-error-reporter";
 const SDK_VERSION = "1.0.0";
-const TELEMETRY_ERROR_COLLECTED = "browser.errors.collected_count";
-const TELEMETRY_ERROR_COLLECTED_FILENAME = "browser.errors.collected_count_by_filename";
-const TELEMETRY_ERROR_COLLECTED_STACK = "browser.errors.collected_with_stack_count";
-const TELEMETRY_ERROR_REPORTED = "browser.errors.reported_success_count";
-const TELEMETRY_ERROR_REPORTED_FAIL = "browser.errors.reported_failure_count";
-const TELEMETRY_ERROR_SAMPLE_RATE = "browser.errors.sample_rate";
-
 
 // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsIScriptError#Categories
 const REPORTED_CATEGORIES = new Set([
@@ -52,13 +45,6 @@ const PLATFORM_NAMES = {
   android: "Android",
 };
 
-// Filename URI regexes that we are okay with reporting to Telemetry. URIs not
-// matching these patterns may contain local file paths.
-const TELEMETRY_REPORTED_PATTERNS = new Set([
-  /^resource:\/\/(?:\/|gre)/,
-  /^chrome:\/\/(?:global|browser|devtools)/,
-]);
-
 /**
  * Collects nsIScriptError messages logged to the browser console and reports
  * them to a remotely-hosted error collection service.
@@ -76,16 +62,10 @@ const TELEMETRY_REPORTED_PATTERNS = new Set([
  * traces; see bug 1426482 for privacy review and server-side mitigation.
  */
 class BrowserErrorReporter {
-  constructor(options = {}) {
+  constructor(fetchMethod = this._defaultFetch, chromeOnly = true) {
     // Test arguments for mocks and changing behavior
-    this.fetch = options.fetch || defaultFetch;
-    this.chromeOnly = options.chromeOnly !== undefined ? options.chromeOnly : true;
-    this.registerListener = (
-      options.registerListener || (() => Services.console.registerListener(this))
-    );
-    this.unregisterListener = (
-      options.unregisterListener || (() => Services.console.unregisterListener(this))
-    );
+    this.fetch = fetchMethod;
+    this.chromeOnly = chromeOnly;
 
     // Values that don't change between error reports.
     this.requestBodyTemplate = {
@@ -124,13 +104,6 @@ class BrowserErrorReporter {
       false,
       this.handleEnabledPrefChanged.bind(this),
     );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "sampleRatePref",
-      PREF_SAMPLE_RATE,
-      "0.0",
-      this.handleSampleRatePrefChanged.bind(this),
-    );
   }
 
   /**
@@ -147,7 +120,7 @@ class BrowserErrorReporter {
 
   init() {
     if (this.collectionEnabled) {
-      this.registerListener();
+      Services.console.registerListener(this);
 
       // Processing already-logged messages in case any errors occurred before
       // startup.
@@ -159,31 +132,18 @@ class BrowserErrorReporter {
 
   uninit() {
     try {
-      this.unregisterListener();
+      Services.console.unregisterListener(this);
     } catch (err) {} // It probably wasn't registered.
   }
 
   handleEnabledPrefChanged(prefName, previousValue, newValue) {
     if (newValue) {
-      this.registerListener();
+      Services.console.registerListener(this);
     } else {
       try {
-        this.unregisterListener();
+        Services.console.unregisterListener(this);
       } catch (err) {} // It probably wasn't registered.
     }
-  }
-
-  handleSampleRatePrefChanged(prefName, previousValue, newValue) {
-    Services.telemetry.scalarSet(TELEMETRY_ERROR_SAMPLE_RATE, newValue);
-  }
-
-  shouldReportFilename(filename) {
-    for (const pattern of TELEMETRY_REPORTED_PATTERNS) {
-      if (filename.match(pattern)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   async observe(message) {
@@ -199,44 +159,66 @@ class BrowserErrorReporter {
       return;
     }
 
-    // Record that we collected an error prior to applying the sample rate
-    Services.telemetry.scalarAdd(TELEMETRY_ERROR_COLLECTED, 1);
-    if (message.stack) {
-      Services.telemetry.scalarAdd(TELEMETRY_ERROR_COLLECTED_STACK, 1);
-    }
-    if (message.sourceName) {
-      let filename = "FILTERED";
-      if (this.shouldReportFilename(message.sourceName)) {
-        filename = message.sourceName;
-      }
-      Services.telemetry.keyedScalarAdd(TELEMETRY_ERROR_COLLECTED_FILENAME, filename.slice(0, 69), 1);
-    }
-
     // Sample the amount of errors we send out
-    const sampleRate = Number.parseFloat(this.sampleRatePref);
+    const sampleRate = Number.parseFloat(Services.prefs.getCharPref(PREF_SAMPLE_RATE));
     if (!Number.isFinite(sampleRate) || (Math.random() >= sampleRate)) {
       return;
     }
 
-     merge rev
+    const extensions = new Map();
+    for (let extension of WebExtensionPolicy.getActiveExtensions()) {
+      extensions.set(extension.mozExtensionHostname, extension);
+    }
+
+    // Replaces any instances of moz-extension:// URLs with internal UUIDs to use
+    // the add-on ID instead.
+    function mangleExtURL(string, anchored = true) {
+      let re = new RegExp(`${anchored ? "^" : ""}moz-extension://([^/]+)/`, "g");
+
+      return string.replace(re, (m0, m1) => {
+        let id = extensions.has(m1) ? extensions.get(m1).id : m1;
+        return `moz-extension://${id}/`;
+      });
+    }
+
+    // Parse the error type from the message if present (e.g. "TypeError: Whoops").
+    let errorMessage = message.errorMessage;
+    let errorName = "Error";
+    if (message.errorMessage.match(ERROR_PREFIX_RE)) {
+      const parts = message.errorMessage.split(":");
+      errorName = parts[0];
+      errorMessage = parts.slice(1).join(":").trim();
+    }
+
+    const frames = [];
+    let frame = message.stack;
+    // Avoid an infinite loop by limiting traces to 100 frames.
+    while (frame && frames.length < 100) {
+      const normalizedFrame = await this.normalizeStackFrame(frame);
+      normalizedFrame.module = mangleExtURL(normalizedFrame.module, false);
+      frames.push(normalizedFrame);
+      frame = frame.parent;
+    }
+    // Frames are sent in order from oldest to newest.
+    frames.reverse();
+
+    const requestBody = Object.assign({}, this.requestBodyTemplate, {
       timestamp: new Date().toISOString().slice(0, -1), // Remove trailing "Z"
       project: Services.prefs.getCharPref(PREF_PROJECT_ID),
       exception: {
-        values: [exceptionValue],
+        values: [
+          {
+            type: errorName,
+            value: mangleExtURL(errorMessage),
+            module: message.sourceName,
+            stacktrace: {
+              frames,
+            }
+          },
+        ],
       },
-      tags: {},
-    };
-
-    const transforms = [
-      addErrorMessage,
-      addStacktrace,
-      addModule,
-      mangleExtensionUrls,
-      tagExtensionErrors,
-    ];
-    for (const transform of transforms) {
-      await transform(message, exceptionValue, requestBody);
-    }
+      culprit: message.sourceName,
+    });
 
     const url = new URL(Services.prefs.getCharPref(PREF_SUBMIT_URL));
     url.searchParams.set("sentry_client", `${SDK_NAME}/${SDK_VERSION}`);
@@ -254,43 +236,13 @@ class BrowserErrorReporter {
         referrer: "https://fake.mozilla.org",
         body: JSON.stringify(requestBody)
       });
-      Services.telemetry.scalarAdd(TELEMETRY_ERROR_REPORTED, 1);
       this.logger.debug("Sent error successfully.");
     } catch (error) {
-      Services.telemetry.scalarAdd(TELEMETRY_ERROR_REPORTED_FAIL, 1);
       this.logger.warn(`Failed to send error: ${error}`);
     }
   }
-}
 
-function defaultFetch(...args) {
-  // Do not make network requests while running in automation
-  if (Cu.isInAutomation) {
-    return null;
-  }
-
-  return fetch(...args);
-}
-
-function addErrorMessage(message, exceptionValue) {
-  // Parse the error type from the message if present (e.g. "TypeError: Whoops").
-  let errorMessage = message.errorMessage;
-  let errorName = "Error";
-  if (message.errorMessage.match(ERROR_PREFIX_RE)) {
-    const parts = message.errorMessage.split(":");
-    errorName = parts[0];
-    errorMessage = parts.slice(1).join(":").trim();
-  }
-
-  exceptionValue.type = errorName;
-  exceptionValue.value = errorMessage;
-}
-
-async function addStacktrace(message, exceptionValue) {
-  const frames = [];
-  let frame = message.stack;
-  // Avoid an infinite loop by limiting traces to 100 frames.
-  while (frame && frames.length < 100) {
+  async normalizeStackFrame(frame) {
     const normalizedFrame = {
       function: frame.functionDisplayName,
       module: frame.source,
@@ -325,49 +277,15 @@ async function addStacktrace(message, exceptionValue) {
       // do to recover in either case.
     }
 
-    frames.push(normalizedFrame);
-    frame = frame.parent;
-  }
-  // Frames are sent in order from oldest to newest.
-  frames.reverse();
-
-  exceptionValue.stacktrace = {frames};
-}
-
-function addModule(message, exceptionValue) {
-  exceptionValue.module = message.sourceName;
-}
-
-function mangleExtensionUrls(message, exceptionValue) {
-  const extensions = new Map();
-  for (let extension of WebExtensionPolicy.getActiveExtensions()) {
-    extensions.set(extension.mozExtensionHostname, extension);
+    return normalizedFrame;
   }
 
-  // Replaces any instances of moz-extension:// URLs with internal UUIDs to use
-  // the add-on ID instead.
-  function mangleExtURL(string, anchored = true) {
-    if (!string) {
-      return string;
+  async _defaultFetch(...args) {
+    // Do not make network requests while running in automation
+    if (Cu.isInAutomation) {
+      return null;
     }
 
-    let re = new RegExp(`${anchored ? "^" : ""}moz-extension://([^/]+)/`, "g");
-
-    return string.replace(re, (m0, m1) => {
-      let id = extensions.has(m1) ? extensions.get(m1).id : m1;
-      return `moz-extension://${id}/`;
-    });
-  }
-
-  exceptionValue.value = mangleExtURL(exceptionValue.value, false);
-  exceptionValue.module = mangleExtURL(exceptionValue.module);
-  for (const frame of exceptionValue.stacktrace.frames) {
-    frame.module = mangleExtURL(frame.module);
-  }
-}
-
-function tagExtensionErrors(message, exceptionValue, requestBody) {
-  if (exceptionValue.module && exceptionValue.module.startsWith("moz-extension://")) {
-    requestBody.tags.isExtensionError = true;
+    return fetch(...args);
   }
 }
