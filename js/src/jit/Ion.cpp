@@ -251,7 +251,7 @@ JitRuntime::initialize(JSContext* cx, AutoLockForExclusiveAccess& lock)
     if (!functionWrappers_ || !functionWrappers_->init())
         return false;
 
-    MacroAssembler masm;
+    StackMacroAssembler masm;
 
     Label bailoutTail;
     JitSpew(JitSpew_Codegen, "# Emitting bailout tail stub");

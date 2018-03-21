@@ -335,7 +335,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Labels for handling exceptions and failures.
     NonAssertingLabel failureLabel_;
 
-  public:
+  protected:
+    // Constructors are protected. Use one of the derived classes!
     MacroAssembler()
       : framePushed_(0),
 #ifdef DEBUG
@@ -391,6 +392,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
+  public:
 #ifdef DEBUG
     bool isRooted() const {
         return autoRooter_.isSome();
@@ -2695,6 +2697,42 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     Vector<JSObject*, 0, SystemAllocPolicy> pendingObjectReadBarriers_;
     Vector<ObjectGroup*, 0, SystemAllocPolicy> pendingObjectGroupReadBarriers_;
+};
+
+// StackMacroAssembler checks no GC will happen while it's on the stack.
+class MOZ_RAII StackMacroAssembler : public MacroAssembler
+{
+    JS::AutoCheckCannotGC nogc;
+
+  public:
+    StackMacroAssembler()
+      : MacroAssembler()
+    {}
+    explicit StackMacroAssembler(JSContext* cx)
+      : MacroAssembler(cx)
+    {}
+};
+
+// WasmMacroAssembler does not contain GC pointers, so it doesn't need the no-GC
+// checking StackMacroAssembler has.
+class MOZ_RAII WasmMacroAssembler : public MacroAssembler
+{
+  public:
+    explicit WasmMacroAssembler(TempAllocator& alloc)
+      : MacroAssembler(WasmToken(), alloc)
+    {}
+};
+
+// Heap-allocated MacroAssembler used for Ion off-thread code generation.
+// GC cancels off-thread compilations.
+class IonHeapMacroAssembler : public MacroAssembler
+{
+  public:
+    IonHeapMacroAssembler()
+      : MacroAssembler()
+    {
+        MOZ_ASSERT(CurrentThreadIsIonCompiling());
+    }
 };
 
 //{{{ check_macroassembler_style
