@@ -436,51 +436,19 @@ var gXPInstallObserver = {
       showNotification();
       break; }
     case "addon-install-complete": {
-      let needsRestart = installInfo.installs.some(function(i) {
-        return i.addon.pendingOperations != AddonManager.PENDING_NONE;
-      });
-
       let secondaryActions = null;
       let numAddons = installInfo.installs.length;
 
-      if (needsRestart) {
-        notificationID = "addon-install-restart";
-        if (numAddons == 1) {
-          messageString = gNavigatorBundle.getFormattedString("addonInstalledNeedsRestart",
-                                                              [installInfo.installs[0].name, brandShortName]);
-        } else {
-          messageString = gNavigatorBundle.getString("addonsGenericInstalledNeedsRestart");
-          messageString = PluralForm.get(numAddons, messageString);
-          messageString = messageString.replace("#1", numAddons);
-          messageString = messageString.replace("#2", brandShortName);
-        }
-        action = {
-          label: gNavigatorBundle.getString("addonInstallRestartButton"),
-          accessKey: gNavigatorBundle.getString("addonInstallRestartButton.accesskey"),
-          callback() {
-            BrowserUtils.restartApplication();
-          }
-        };
-        secondaryActions = [{
-          label: gNavigatorBundle.getString("addonInstallRestartIgnoreButton"),
-          accessKey: gNavigatorBundle.getString("addonInstallRestartIgnoreButton.accesskey"),
-          callback: () => {},
-        }];
+      if (numAddons == 1) {
+        messageString = gNavigatorBundle.getFormattedString("addonInstalled",
+                                                            [installInfo.installs[0].name]);
       } else {
-        if (numAddons == 1) {
-          messageString = gNavigatorBundle.getFormattedString("addonInstalled",
-                                                              [installInfo.installs[0].name]);
-        } else {
-          messageString = gNavigatorBundle.getString("addonsGenericInstalled");
-          messageString = PluralForm.get(numAddons, messageString);
-          messageString = messageString.replace("#1", numAddons);
-        }
-        action = null;
+        messageString = gNavigatorBundle.getString("addonsGenericInstalled");
+        messageString = PluralForm.get(numAddons, messageString);
+        messageString = messageString.replace("#1", numAddons);
       }
+      action = null;
 
-      // Remove notification on dismissal, since it's possible to cancel the
-      // install through the addons manager UI, making the "restart" prompt
-      // irrelevant.
       options.removeOnDismissal = true;
       options.persistent = false;
 
@@ -669,31 +637,6 @@ var LightWeightThemeWebInstaller = {
 
   _install(newLWTheme, notify) {
     let listener = {
-      onEnabling(aAddon, aRequiresRestart) {
-        if (!aRequiresRestart) {
-          return;
-        }
-
-        let messageString = gNavigatorBundle.getFormattedString("lwthemeNeedsRestart.message",
-          [aAddon.name], 1);
-
-        let action = {
-          label: gNavigatorBundle.getString("lwthemeNeedsRestart.button"),
-          accessKey: gNavigatorBundle.getString("lwthemeNeedsRestart.accesskey"),
-          callback() {
-            BrowserUtils.restartApplication();
-          }
-        };
-
-        let options = {
-          persistent: true
-        };
-
-        PopupNotifications.show(gBrowser.selectedBrowser, "addon-theme-change",
-                                messageString, "addons-notification-icon",
-                                action, null, options);
-      },
-
       onEnabled(aAddon) {
         if (notify) {
           ExtensionsUI.showInstallNotification(gBrowser.selectedBrowser, newLWTheme);
