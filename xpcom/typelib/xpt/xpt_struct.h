@@ -14,6 +14,7 @@
 
 #include "nsID.h"
 #include <stdint.h>
+#include "mozilla/Assertions.h"
 
 /*
  * Originally, I was going to have structures that exactly matched the on-disk
@@ -194,39 +195,36 @@ struct XPTTypeDescriptor {
     return mPrefix.TagPart();
   }
 
+  uint8_t ArgNum() const {
+    MOZ_ASSERT(Tag() == TD_INTERFACE_IS_TYPE ||
+               Tag() == TD_PSTRING_SIZE_IS ||
+               Tag() == TD_PWSTRING_SIZE_IS ||
+               Tag() == TD_ARRAY);
+    return mData1;
+  }
+
+  const XPTTypeDescriptor* ArrayElementType(const XPTInterfaceDescriptor* aDescriptor) const {
+    MOZ_ASSERT(Tag() == TD_ARRAY);
+    return &aDescriptor->mAdditionalTypes[mData2];
+  }
+
+  // We store the 16-bit iface value as two 8-bit values in order to
+  // avoid 16-bit alignment requirements for XPTTypeDescriptor, which
+  // reduces its size and also the size of XPTParamDescriptor.
+  uint16_t InterfaceIndex() const {
+    MOZ_ASSERT(Tag() == TD_INTERFACE_TYPE);
+    return (mData1 << 8) | mData2;
+  }
+
   XPTTypeDescriptorPrefix mPrefix;
 
-  // The memory layout here doesn't exactly match (for the appropriate types)
-  // the on-disk format. This is to save memory.
-  union {
-    // Used for TD_INTERFACE_IS_TYPE.
-    struct {
-      uint8_t mArgNum;
-    } mInterfaceIs;
-
-    // Used for TD_PSTRING_SIZE_IS, TD_PWSTRING_SIZE_IS.
-    struct {
-      uint8_t mArgNum;
-      //uint8_t mArgNum2;         // Present on disk, omitted here.
-    } mPStringIs;
-
-    // Used for TD_ARRAY.
-    struct {
-      uint8_t mArgNum;
-      //uint8_t mArgNum2;         // Present on disk, omitted here.
-      uint8_t mAdditionalType;    // uint16_t on disk, uint8_t here;
-                                  // in practice it never exceeds 20.
-    } mArray;
-
-    // Used for TD_INTERFACE_TYPE.
-    struct {
-      // We store the 16-bit iface value as two 8-bit values in order to
-      // avoid 16-bit alignment requirements for XPTTypeDescriptor, which
-      // reduces its size and also the size of XPTParamDescriptor.
-      uint8_t mIfaceHi8;
-      uint8_t mIfaceLo8;
-    } mIface;
-  } u;
+  // The data for the different variants is stored in these two data fields.
+  // These should only be accessed via the getter methods above, which will
+  // assert if the tag is invalid. The memory layout here doesn't exactly match
+  // the on-disk format. This is to save memory. Some fields for some cases are
+  // smaller than they are on disk or omitted entirely.
+  uint8_t mData1;
+  uint8_t mData2;
 };
 
 /*

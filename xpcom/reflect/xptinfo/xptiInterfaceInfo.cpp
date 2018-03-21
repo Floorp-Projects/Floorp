@@ -301,15 +301,14 @@ xptiInterfaceEntry::GetInterfaceIndexForParam(uint16_t methodIndex,
     const XPTTypeDescriptor *td = &param->mType;
 
     while (td->Tag() == TD_ARRAY) {
-        td = &mDescriptor->mAdditionalTypes[td->u.mArray.mAdditionalType];
+        td = td->ArrayElementType(mDescriptor);
     }
 
     if (td->Tag() != TD_INTERFACE_TYPE) {
         NS_ERROR("not an interface");
         return NS_ERROR_INVALID_ARG;
     }
-
-    *interfaceIndex = (td->u.mIface.mIfaceHi8 << 8) | td->u.mIface.mIfaceLo8;
+    *interfaceIndex = td->InterfaceIndex();
     return NS_OK;
 }
 
@@ -436,15 +435,13 @@ xptiInterfaceEntry::GetTypeInArray(const nsXPTParamInfo* param,
     NS_ASSERTION(IsFullyResolved(), "bad state");
 
     const XPTTypeDescriptor *td = &param->mType;
-    const XPTTypeDescriptor *additional_types =
-                mDescriptor->mAdditionalTypes;
 
     for (uint16_t i = 0; i < dimension; i++) {
         if (td->Tag() != TD_ARRAY) {
             NS_ERROR("bad dimension");
             return NS_ERROR_INVALID_ARG;
         }
-        td = &additional_types[td->u.mArray.mAdditionalType];
+        td = td->ArrayElementType(mDescriptor);
     }
 
     *type = td;
@@ -518,11 +515,9 @@ xptiInterfaceEntry::GetSizeIsArgNumberForParam(uint16_t methodIndex,
     // verify that this is a type that has size_is
     switch (td->Tag()) {
       case TD_ARRAY:
-        *argnum = td->u.mArray.mArgNum;
-        break;
       case TD_PSTRING_SIZE_IS:
       case TD_PWSTRING_SIZE_IS:
-        *argnum = td->u.mPStringIs.mArgNum;
+        *argnum = td->ArgNum();
         break;
       default:
         NS_ERROR("not a size_is");
@@ -554,7 +549,7 @@ xptiInterfaceEntry::GetInterfaceIsArgNumberForParam(uint16_t methodIndex,
     const XPTTypeDescriptor *td = &param->mType;
 
     while (td->Tag() == TD_ARRAY) {
-        td = &mDescriptor->mAdditionalTypes[td->u.mArray.mAdditionalType];
+        td = td->ArrayElementType(mDescriptor);
     }
 
     if (td->Tag() != TD_INTERFACE_IS_TYPE) {
@@ -562,7 +557,7 @@ xptiInterfaceEntry::GetInterfaceIsArgNumberForParam(uint16_t methodIndex,
         return NS_ERROR_INVALID_ARG;
     }
 
-    *argnum = td->u.mInterfaceIs.mArgNum;
+    *argnum = td->ArgNum();
     return NS_OK;
 }
 
