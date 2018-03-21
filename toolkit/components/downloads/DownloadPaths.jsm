@@ -72,6 +72,7 @@ var DownloadPaths = {
                          .replace(/"/g, "'");
     }
     return leafName.replace(/[\\/]+/g, "_")
+                   .replace(/[\u200e\u200f\u202a-\u202e]/g, "")
                    .replace(gConvertToSpaceRegExp, " ")
                    .replace(/^[\s\u180e.]+|[\s\u180e.]+$/g, "");
   },
