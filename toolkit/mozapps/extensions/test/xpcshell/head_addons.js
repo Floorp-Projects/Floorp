@@ -884,6 +884,13 @@ function writeInstallRDFForExtension(aData, aDir, aId, aExtraFile) {
   return writeInstallRDFToXPI(aData, aDir, aId, aExtraFile);
 }
 
+function promiseWriteInstallRDFForExtension(aData, aDir, aId, aExtraFile) {
+  if (TEST_UNPACKED) {
+    return promiseWriteInstallRDFToDir(aData, aDir, aId, aExtraFile);
+  }
+  return promiseWriteInstallRDFToXPI(aData, aDir, aId, aExtraFile);
+}
+
 /**
  * Writes a manifest.json manifest into an extension using the properties passed
  * in a JS object.
