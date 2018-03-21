@@ -53,7 +53,7 @@ function parentFrameScript(mm) {
   let finishedTestingBlob = false;
   let finishedTestingSlice = false;
 
-  mm.addMessageListener(messageName, function(message) {
+  mm.addMessageListener(messageName, SpecialPowers.wrapCallback(function(message) {
     if ("blob" in message.data) {
       is(receivedBlob, false, "Have not yet received Blob");
       is(receivedSlice, false, "Have not yet received Slice");
@@ -64,7 +64,7 @@ function parentFrameScript(mm) {
 
       let blob = message.data.blob;
 
-      ok(blob instanceof Blob, "Received a Blob");
+      ok(SpecialPowers.call_Instanceof(blob, Blob), "Received a Blob");
       is(blob.size, blobText.length, "Blob has correct size");
       is(blob.type, blobType, "Blob has correct type");
 
@@ -73,7 +73,7 @@ function parentFrameScript(mm) {
                               blob.size,
                               blobType);
 
-      ok(slice instanceof Blob, "Slice returned a Blob");
+      ok(SpecialPowers.call_Instanceof(slice, Blob), "Slice returned a Blob");
       is(slice.size,
           blobData[blobData.length - 1].length,
           "Slice has correct size");
@@ -91,7 +91,7 @@ function parentFrameScript(mm) {
           SimpleTest.finish();
         }
       };
-      reader.readAsText(slice);
+      SpecialPowers.wrap(reader).readAsText(slice);
 
       return;
     }
@@ -105,7 +105,7 @@ function parentFrameScript(mm) {
 
       let slice = message.data.slice;
 
-      ok(slice instanceof Blob, "Received a Blob for slice");
+      ok(SpecialPowers.call_Instanceof(slice, Blob), "Received a Blob for slice");
       is(slice.size, sliceText.length, "Slice has correct size");
       is(slice.type, blobType, "Slice has correct type");
 
@@ -115,7 +115,7 @@ function parentFrameScript(mm) {
 
         let slice2 = slice.slice(1, 2, blobType);
 
-        ok(slice2 instanceof Blob, "Slice returned a Blob");
+        ok(SpecialPowers.call_Instanceof(slice2, Blob), "Slice returned a Blob");
         is(slice2.size, 1, "Slice has correct size");
         is(slice2.type, blobType, "Slice has correct type");
 
@@ -129,15 +129,15 @@ function parentFrameScript(mm) {
             SimpleTest.finish();
           }
         };
-        reader2.readAsText(slice2);
+        SpecialPowers.wrap(reader2).readAsText(slice2);
       };
-      reader.readAsText(slice);
+      SpecialPowers.wrap(reader).readAsText(slice);
 
       return;
     }
 
     ok(false, "Received a bad message: " + JSON.stringify(message.data));
-  });
+  }));
 
   mm.loadFrameScript("data:,(" + childFrameScript.toString() + ")();",
                       false);

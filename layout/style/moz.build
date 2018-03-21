@@ -56,7 +56,6 @@ EXPORTS += [
     'nsICSSLoaderObserver.h',
     'nsLayoutStylesheetCache.h',
     'nsMediaFeatures.h',
-    'nsRuleProcessorData.h',
     'nsStyleAutoArray.h',
     'nsStyleConsts.h',
     'nsStyleContext.h',

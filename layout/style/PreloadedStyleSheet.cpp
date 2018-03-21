@@ -85,13 +85,10 @@ PreloadedStyleSheet::Preload()
   // fetching the URL again, but for the usage patterns of this API this is
   // unlikely, and it doesn't seem worth trying to store the contents of the URL
   // and duplicating a bunch of css::Loader's logic.
-  auto type = nsLayoutUtils::StyloEnabled() ? StyleBackendType::Servo
-                                            : StyleBackendType::Gecko;
-
   mLoaded = true;
 
   StyleSheet* sheet;
-  return GetSheet(type, &sheet);
+  return GetSheet(StyleBackendType::Servo, &sheet);
 }
 
 NS_IMPL_ISUPPORTS(PreloadedStyleSheet::StylesheetPreloadObserver,
@@ -120,17 +117,10 @@ PreloadedStyleSheet::PreloadAsync(NotNull<dom::Promise*> aPromise)
 {
   MOZ_DIAGNOSTIC_ASSERT(!mLoaded);
 
-  // As with the Preload() method, we can't be sure that the sheet will only be
-  // used with the backend that we're preloading it for now. If it's used with
-  // a different backend later, it will be synchronously loaded for that
-  // backend the first time it's used.
-  auto type = nsLayoutUtils::StyloEnabled() ? StyleBackendType::Servo
-                                            : StyleBackendType::Gecko;
+  RefPtr<StyleSheet>& sheet = mServo;
 
-  RefPtr<StyleSheet>& sheet =
-    type == StyleBackendType::Gecko ? mGecko : mServo;
-
-  RefPtr<css::Loader> loader = new css::Loader(type, nullptr);
+  RefPtr<css::Loader> loader =
+    new css::Loader(StyleBackendType::Servo, nullptr);
 
   RefPtr<StylesheetPreloadObserver> obs =
     new StylesheetPreloadObserver(aPromise, this);

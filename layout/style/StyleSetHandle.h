@@ -30,7 +30,6 @@ class nsStyleContext;
 class nsStyleSet;
 class nsPresContext;
 class gfxFontFeatureValueSet;
-struct TreeMatchContext;
 
 namespace mozilla {
 
@@ -117,13 +116,16 @@ public:
                     nsStyleContext* aParentContext,
                     LazyComputeBehavior aMayCompute);
     inline already_AddRefed<nsStyleContext>
-    ResolveStyleFor(dom::Element* aElement,
-                    nsStyleContext* aParentContext,
-                    LazyComputeBehavior aMayCompute,
-                    TreeMatchContext* aTreeMatchContext);
+    ResolveStyleFor(dom::Element* aElement, LazyComputeBehavior aMayCompute);
+
+    // TODO(emilio): This might be nicer (albeit a bit slower) if we just grab
+    // the style from the parent in ServoStyleSet.
+    //
+    // It may be faster if we account not having to pass it around in
+    // nsCSSFrameConstructor though.
     inline already_AddRefed<nsStyleContext>
-    ResolveStyleForText(nsIContent* aTextNode,
-                        nsStyleContext* aParentContext);
+    ResolveStyleForText(nsIContent* aTextNode, nsStyleContext* aParentContext);
+
     inline already_AddRefed<nsStyleContext>
     ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext);
     inline already_AddRefed<nsStyleContext>
@@ -175,9 +177,7 @@ public:
                             nsStyleContext* aParentContext);
     inline already_AddRefed<nsStyleContext>
     ProbePseudoElementStyle(dom::Element* aParentElement,
-                            mozilla::CSSPseudoElementType aType,
-                            nsStyleContext* aParentContext,
-                            TreeMatchContext* aTreeMatchContext);
+                            mozilla::CSSPseudoElementType aType);
     inline void RootStyleContextAdded();
     inline void RootStyleContextRemoved();
 

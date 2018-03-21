@@ -26,7 +26,6 @@ class nsIWidget;
 namespace mozilla {
 namespace layers {
 
-class DisplayItemLayer;
 class ImageFactory;
 class ImageLayer;
 class PaintLayerContext;
@@ -117,7 +116,6 @@ public:
   virtual already_AddRefed<ColorLayer> CreateColorLayer() override;
   virtual already_AddRefed<BorderLayer> CreateBorderLayer() override;
   virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer() override;
-  virtual already_AddRefed<DisplayItemLayer> CreateDisplayItemLayer() override;
   virtual ImageFactory *GetImageFactory();
 
   virtual LayersBackend GetBackendType() override { return LayersBackend::LAYERS_BASIC; }

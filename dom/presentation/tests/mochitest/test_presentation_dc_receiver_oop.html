@@ -130,7 +130,7 @@ function setup() {
     var mm = SpecialPowers.getBrowserFrameMessageManager(receiverIframe);
     mm.addMessageListener('check-navigator', function checknavigatorHandler(aSuccess) {
       mm.removeMessageListener('check-navigator', checknavigatorHandler);
-      ok(aSuccess.data.data, "buildDataChannel get correct window object");
+      ok(SpecialPowers.wrap(aSuccess).data.data, "buildDataChannel get correct window object");
     });
 
     mm.addMessageListener('data-transport-notification-enabled', function dataTransportNotificationEnabledHandler() {
@@ -140,7 +140,7 @@ function setup() {
 
     mm.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
       mm.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
-      is(aReason.data.data, SpecialPowers.Cr.NS_OK, "The data transport should be closed normally.");
+      is(SpecialPowers.wrap(aReason).data.data, SpecialPowers.Cr.NS_OK, "The data transport should be closed normally.");
     });
 
     aResolve();

@@ -1391,14 +1391,6 @@ ServoStyleSet::CompatibilityModeChanged()
   SetStylistStyleSheetsDirty();
 }
 
-already_AddRefed<ServoStyleContext>
-ServoStyleSet::ResolveServoStyle(Element* aElement)
-{
-  RefPtr<ServoStyleContext> result =
-    Servo_ResolveStyle(aElement, mRawSet.get()).Consume();
-  return result.forget();
-}
-
 void
 ServoStyleSet::ClearNonInheritingStyleContexts()
 {

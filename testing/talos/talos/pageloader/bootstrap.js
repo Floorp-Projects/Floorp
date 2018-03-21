@@ -40,32 +40,42 @@
 // This only implements nsICommandLineHandler, since it needs
 // to handle multiple arguments.
 
-const TP_CMDLINE_CONTRACTID     = "@mozilla.org/commandlinehandler/general-startup;1?type=tp";
-const TP_CMDLINE_CLSID          = Components.ID("{8AF052F5-8EFE-4359-8266-E16498A82E8B}");
-const CATMAN_CONTRACTID         = "@mozilla.org/categorymanager;1";
-const nsISupports               = Ci.nsISupports;
-
-const nsICategoryManager        = Ci.nsICategoryManager;
-const nsICommandLine            = Ci.nsICommandLine;
-const nsICommandLineHandler     = Ci.nsICommandLineHandler;
-const nsIComponentRegistrar     = Ci.nsIComponentRegistrar;
-const nsISupportsString         = Ci.nsISupportsString;
-const nsIWindowWatcher          = Ci.nsIWindowWatcher;
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function PageLoaderCmdLineHandler() {}
-PageLoaderCmdLineHandler.prototype =
+XPCOMUtils.defineLazyServiceGetter(this, "categoryManager",
+                                   "@mozilla.org/categorymanager;1",
+                                   "nsICategoryManager");
+
+const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+
+const CATMAN_CONTRACTID         = "@mozilla.org/categorymanager;1";
+
+const CATEGORY_NAME = "command-line-handler";
+const CATEGORY_ENTRY = "m-tp";
+
+function PageLoaderCmdLine() {}
+PageLoaderCmdLine.prototype =
 {
-  /* nsISupports */
-  QueryInterface: function handler_QI(iid) {
-    if (iid.equals(nsISupports))
-      return this;
+  factory: XPCOMUtils._getFactory(PageLoaderCmdLine),
+  classDescription: "Loads pages. Tests them.",
+  classID:          Components.ID("{8AF052F5-8EFE-4359-8266-E16498A82E8B}"),
+  contractID:       "@mozilla.org/commandlinehandler/general-startup;1?type=tp",
+  QueryInterface:   XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
 
-    if (nsICommandLineHandler && iid.equals(nsICommandLineHandler))
-      return this;
+  register() {
+    Cm.registerFactory(this.classID, this.classDescription,
+                       this.contractID, this.factory);
 
-    throw Cr.NS_ERROR_NO_INTERFACE;
+    categoryManager.addCategoryEntry(CATEGORY_NAME, CATEGORY_ENTRY,
+                                     this.contractID, false, true);
+  },
+
+  unregister() {
+    categoryManager.deleteCategoryEntry(CATEGORY_NAME, CATEGORY_ENTRY,
+                                        this.contractID, false);
+
+    Cm.unregisterFactory(this.classID, this.factory);
   },
 
   /* nsICommandLineHandler */
@@ -93,62 +103,13 @@ PageLoaderCmdLineHandler.prototype =
   },
 };
 
-
-var PageLoaderCmdLineFactory =
-{
-  createInstance(outer, iid) {
-    if (outer != null) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    }
-
-    return new PageLoaderCmdLineHandler().QueryInterface(iid);
-  }
-};
-
-function NSGetFactory(cid) {
-  if (!cid.equals(TP_CMDLINE_CLSID))
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-
-  return PageLoaderCmdLineFactory;
+function startup(data, reason) {
+  PageLoaderCmdLine.prototype.register();
 }
 
-var PageLoaderCmdLineModule =
-{
-  registerSelf(compMgr, fileSpec, location, type) {
-    compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
-
-    compMgr.registerFactoryLocation(TP_CMDLINE_CLSID,
-                                    "PageLoader CommandLine Service",
-                                    TP_CMDLINE_CONTRACTID,
-                                    fileSpec,
-                                    location,
-                                    type);
-
-    var catman = Cc[CATMAN_CONTRACTID].getService(nsICategoryManager);
-    catman.addCategoryEntry("command-line-handler",
-                            "m-tp",
-                            TP_CMDLINE_CONTRACTID, true, true);
-  },
-
-  unregisterSelf(compMgr, fileSpec, location) {
-    compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
-
-    compMgr.unregisterFactoryLocation(TP_CMDLINE_CLSID, fileSpec);
-    var catman = Cc[CATMAN_CONTRACTID].getService(nsICategoryManager);
-    catman.deleteCategoryEntry("command-line-handler",
-                               "m-tp", true);
-  },
-
-  getClassObject(compMgr, cid, iid) {
-    return NSGetFactory(cid);
-  },
-
-  canUnload(compMgr) {
-    return true;
-  }
-};
-
-
-function NSGetModule(compMgr, fileSpec) {
-  return PageLoaderCmdLineModule;
+function shutdown(data, reason) {
+  PageLoaderCmdLine.prototype.unregister();
 }
+
+function install(data, reason) {}
+function uninstall(data, reason) {}

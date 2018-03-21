@@ -21,7 +21,7 @@ class BaselineCompilerShared
     JSContext* cx;
     JSScript* script;
     jsbytecode* pc;
-    MacroAssembler masm;
+    StackMacroAssembler masm;
     bool ionCompileable_;
     bool compileDebugInstrumentation_;
 
