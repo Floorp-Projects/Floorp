@@ -172,8 +172,11 @@ var testData = [
   },
 ];
 
-function sendKeys(aKeys) {
+function sendKeys(aKeys, aElem) {
   for (let i = 0; i < aKeys.length; i++) {
+    // Force layout flush between keys to ensure focus is correct.
+    // This shouldn't be necessary; bug 1450219 tracks this.
+    aElem.clientTop;
     let key = aKeys[i];
     if (key.startsWith("KEY_")) {
       synthesizeKey(key);
@@ -189,7 +192,7 @@ function test() {
   for (let { keys, initialVal, expectedVal } of testData) {
     elem.focus();
     elem.value = initialVal;
-    sendKeys(keys);
+    sendKeys(keys, elem);
     is(elem.value, expectedVal,
        "Test with " + keys + ", result should be " + expectedVal);
     elem.value = "";
