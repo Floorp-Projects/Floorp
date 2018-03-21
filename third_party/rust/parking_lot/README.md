@@ -47,22 +47,25 @@ in the Rust standard library:
    library versions of those types.
 7. `RwLock` takes advantage of hardware lock elision on processors that
    support it, which can lead to huge performance wins with many readers.
-8. `MutexGuard` (and the `RwLock` equivalents) is `Send`, which means it can
-   be unlocked by a different thread than the one that locked it.
-9. `RwLock` uses a task-fair locking policy, which avoids reader and writer
+8. `RwLock` uses a task-fair locking policy, which avoids reader and writer
    starvation, whereas the standard library version makes no guarantees.
-10. `Condvar` is guaranteed not to produce spurious wakeups. A thread will
+9. `Condvar` is guaranteed not to produce spurious wakeups. A thread will
     only be woken up if it timed out or it was woken up by a notification.
-11. `Condvar::notify_all` will only wake up a single thread and requeue the
+10. `Condvar::notify_all` will only wake up a single thread and requeue the
     rest to wait on the associated `Mutex`. This avoids a thundering herd
     problem where all threads try to acquire the lock at the same time.
-12. `RwLock` supports atomically downgrading a write lock into a read lock.
-13. `Mutex` and `RwLock` allow raw unlocking without a RAII guard object.
-14. `Mutex<()>` and `RwLock<()>` allow raw locking without a RAII guard
+11. `RwLock` supports atomically downgrading a write lock into a read lock.
+12. `Mutex` and `RwLock` allow raw unlocking without a RAII guard object.
+13. `Mutex<()>` and `RwLock<()>` allow raw locking without a RAII guard
     object.
-15. `Mutex` and `RwLock` support [eventual fairness](https://trac.webkit.org/changeset/203350)
+14. `Mutex` and `RwLock` support [eventual fairness](https://trac.webkit.org/changeset/203350)
     which allows them to be fair on average without sacrificing performance.
-16. A `ReentrantMutex` type which supports recursive locking.
+15. A `ReentrantMutex` type which supports recursive locking.
+16. An *experimental* deadlock detector that works for `Mutex`,
+    `RwLock` and `ReentrantMutex`. This feature is disabled by default and
+    can be enabled via the `deadlock_detection` feature.
+17. `RwLock` supports atomically upgrading an "upgradable" read lock into a
+    write lock.
 
 ## The parking lot
 
@@ -87,13 +90,16 @@ There are a few restrictions when using this library on stable Rust:
 - Slightly less efficient code may be generated for `compare_exchange`
   operations. This should not affect architectures like x86 though.
 
+To enable nightly-only functionality, you need to enable the `nightly` feature
+in Cargo (see below).
+
 ## Usage
 
 Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-parking_lot = "0.4"
+parking_lot = "0.5"
 ```
 
 and this to your crate root:
@@ -106,8 +112,11 @@ To enable nightly-only features, add this to your `Cargo.toml` instead:
 
 ```toml
 [dependencies]
-parking_lot = {version = "0.4", features = ["nightly"]}
+parking_lot = {version = "0.5", features = ["nightly"]}
 ```
+
+The experimental deadlock detector can be enabled with the
+`deadlock_detection` Cargo feature.
 
 The core parking lot API is provided by the `parking_lot_core` crate. It is
 separate from the synchronization primitives in the `parking_lot` crate so that

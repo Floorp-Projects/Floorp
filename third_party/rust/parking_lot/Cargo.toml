@@ -12,7 +12,7 @@
 
 [package]
 name = "parking_lot"
-version = "0.4.4"
+version = "0.5.4"
 authors = ["Amanieu d'Antras <amanieu@gmail.com>"]
 description = "More compact and efficient implementations of the standard synchronization primitives."
 documentation = "https://amanieu.github.io/parking_lot/parking_lot/index.html"
@@ -27,10 +27,9 @@ optional = true
 [dependencies.parking_lot_core]
 version = "0.2"
 [dev-dependencies.rand]
-version = "0.3"
+version = "0.4"
 
 [features]
+deadlock_detection = ["parking_lot_core/deadlock_detection"]
 default = ["owning_ref"]
 nightly = ["parking_lot_core/nightly"]
-[target."cfg(not(target_os = \"emscripten\"))".dependencies.thread-id]
-version = "3.0"

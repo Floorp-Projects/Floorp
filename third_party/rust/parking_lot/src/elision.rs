@@ -5,32 +5,33 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-#[cfg(feature = "nightly")]
 use std::sync::atomic::AtomicUsize;
-#[cfg(not(feature = "nightly"))]
-use stable::AtomicUsize;
 
 // Extension trait to add lock elision primitives to atomic types
 pub trait AtomicElisionExt {
     type IntType;
 
     // Perform a compare_exchange and start a transaction
-    fn elision_acquire(&self,
-                       current: Self::IntType,
-                       new: Self::IntType)
-                       -> Result<Self::IntType, Self::IntType>;
+    fn elision_acquire(
+        &self,
+        current: Self::IntType,
+        new: Self::IntType,
+    ) -> Result<Self::IntType, Self::IntType>;
     // Perform a compare_exchange and end a transaction
-    fn elision_release(&self,
-                       current: Self::IntType,
-                       new: Self::IntType)
-                       -> Result<Self::IntType, Self::IntType>;
+    fn elision_release(
+        &self,
+        current: Self::IntType,
+        new: Self::IntType,
+    ) -> Result<Self::IntType, Self::IntType>;
 }
 
 // Indicates whether the target architecture supports lock elision
 #[inline]
 pub fn have_elision() -> bool {
-    cfg!(all(feature = "nightly",
-             any(target_arch = "x86", target_arch = "x86_64")))
+    cfg!(all(
+        feature = "nightly",
+        any(target_arch = "x86", target_arch = "x86_64"),
+    ))
 }
 
 // This implementation is never actually called because it is guarded by
@@ -63,7 +64,11 @@ impl AtomicElisionExt for AtomicUsize {
                  : "r" (new), "{eax}" (current)
                  : "memory"
                  : "volatile");
-            if prev == current { Ok(prev) } else { Err(prev) }
+            if prev == current {
+                Ok(prev)
+            } else {
+                Err(prev)
+            }
         }
     }
 
@@ -76,12 +81,55 @@ impl AtomicElisionExt for AtomicUsize {
                  : "r" (new), "{eax}" (current)
                  : "memory"
                  : "volatile");
-            if prev == current { Ok(prev) } else { Err(prev) }
+            if prev == current {
+                Ok(prev)
+            } else {
+                Err(prev)
+            }
         }
     }
 }
 
-#[cfg(all(feature = "nightly", target_arch = "x86_64"))]
+#[cfg(all(feature = "nightly", target_arch = "x86_64", target_pointer_width = "32"))]
+impl AtomicElisionExt for AtomicUsize {
+    type IntType = usize;
+
+    #[inline]
+    fn elision_acquire(&self, current: usize, new: usize) -> Result<usize, usize> {
+        unsafe {
+            let prev: usize;
+            asm!("xacquire; lock; cmpxchgl $2, $1"
+                 : "={rax}" (prev), "+*m" (self)
+                 : "r" (new), "{rax}" (current)
+                 : "memory"
+                 : "volatile");
+            if prev == current {
+                Ok(prev)
+            } else {
+                Err(prev)
+            }
+        }
+    }
+
+    #[inline]
+    fn elision_release(&self, current: usize, new: usize) -> Result<usize, usize> {
+        unsafe {
+            let prev: usize;
+            asm!("xrelease; lock; cmpxchgl $2, $1"
+                 : "={rax}" (prev), "+*m" (self)
+                 : "r" (new), "{rax}" (current)
+                 : "memory"
+                 : "volatile");
+            if prev == current {
+                Ok(prev)
+            } else {
+                Err(prev)
+            }
+        }
+    }
+}
+
+#[cfg(all(feature = "nightly", target_arch = "x86_64", target_pointer_width = "64"))]
 impl AtomicElisionExt for AtomicUsize {
     type IntType = usize;
 
@@ -94,7 +142,11 @@ impl AtomicElisionExt for AtomicUsize {
                  : "r" (new), "{rax}" (current)
                  : "memory"
                  : "volatile");
-            if prev == current { Ok(prev) } else { Err(prev) }
+            if prev == current {
+                Ok(prev)
+            } else {
+                Err(prev)
+            }
         }
     }
 
@@ -107,7 +159,11 @@ impl AtomicElisionExt for AtomicUsize {
                  : "r" (new), "{rax}" (current)
                  : "memory"
                  : "volatile");
-            if prev == current { Ok(prev) } else { Err(prev) }
+            if prev == current {
+                Ok(prev)
+            } else {
+                Err(prev)
+            }
         }
     }
 }
