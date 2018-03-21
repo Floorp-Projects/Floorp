@@ -3,9 +3,14 @@
 
 "use strict";
 
-let { Policies, setAndLockPref } = ChromeUtils.import("resource:///modules/policies/Policies.jsm", {});
+let {
+  Policies,
+  setAndLockPref,
+  setDefaultPref,
+} = ChromeUtils.import("resource:///modules/policies/Policies.jsm", {});
 
 add_task(async function test_API_directly() {
+  await setupPolicyEngineWithJson("");
   setAndLockPref("policies.test.boolPref", true);
   checkLockedPref("policies.test.boolPref", true);
 
@@ -103,4 +108,36 @@ add_task(async function test_API_through_policies() {
   delete Policies.bool_policy;
   delete Policies.int_policy;
   delete Policies.string_policy;
+});
+
+add_task(async function test_pref_tracker() {
+  // Tests the test harness functionality that tracks usage of
+  // the setAndLockPref and setDefualtPref APIs.
+
+  let defaults = Services.prefs.getDefaultBranch("");
+
+  // Test prefs that had a default value and got changed to another
+  defaults.setIntPref("test1.pref1", 10);
+  defaults.setStringPref("test1.pref2", "test");
+
+  setAndLockPref("test1.pref1", 20);
+  setDefaultPref("test1.pref2", "NEW VALUE");
+
+  PoliciesPrefTracker.restoreDefaultValues();
+
+  is(Services.prefs.getIntPref("test1.pref1"), 10, "Expected value for test1.pref1");
+  is(Services.prefs.getStringPref("test1.pref2"), "test", "Expected value for test1.pref2");
+  is(Services.prefs.prefIsLocked("test1.pref1"), false, "test1.pref1 got unlocked");
+
+  // Test a pref that had a default value and a user value
+  defaults.setIntPref("test2.pref1", 10);
+  Services.prefs.setIntPref("test2.pref1", 20);
+
+  setAndLockPref("test2.pref1", 20);
+
+  PoliciesPrefTracker.restoreDefaultValues();
+
+  is(Services.prefs.getIntPref("test2.pref1"), 20, "Correct user value");
+  is(defaults.getIntPref("test2.pref1"), 10, "Correct default value");
+  is(Services.prefs.prefIsLocked("test2.pref1"), false, "felipe pref is not locked");
 });

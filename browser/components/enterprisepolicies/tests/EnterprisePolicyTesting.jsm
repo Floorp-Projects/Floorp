@@ -11,9 +11,9 @@ ChromeUtils.import("resource://testing-common/Assert.jsm");
 ChromeUtils.defineModuleGetter(this, "FileTestUtils",
                                "resource://testing-common/FileTestUtils.jsm");
 
-this.EXPORTED_SYMBOLS = ["EnterprisePolicyTesting"];
+var EXPORTED_SYMBOLS = ["EnterprisePolicyTesting", "PoliciesPrefTracker"];
 
-this.EnterprisePolicyTesting = {
+var EnterprisePolicyTesting = {
   // |json| must be an object representing the desired policy configuration, OR a
   // path to the JSON file containing the policy configuration.
   setupPolicyEngineWithJson: async function setupPolicyEngineWithJson(json, customSchema) {
@@ -70,5 +70,80 @@ this.EnterprisePolicyTesting = {
           Services.prefs.clearUserPref(key);
       }
     }
+  },
+};
+
+/**
+ * This helper will track prefs that have been changed
+ * by the policy engine through the setAndLockPref and
+ * setDefaultPref APIs (from Policies.jsm) and make sure
+ * that they are restored to their original values when
+ * the test ends or another test case restarts the engine.
+ */
+var PoliciesPrefTracker = {
+  _originalFunc: null,
+  _originalValues: new Map(),
+
+  start() {
+    let PoliciesBackstage = ChromeUtils.import("resource:///modules/policies/Policies.jsm", {});
+    this._originalFunc = PoliciesBackstage.setDefaultPref;
+    PoliciesBackstage.setDefaultPref = this.hoistedSetDefaultPref.bind(this);
+  },
+
+  stop() {
+    this.restoreDefaultValues();
+
+    let PoliciesBackstage = ChromeUtils.import("resource:///modules/policies/Policies.jsm", {});
+    PoliciesBackstage.setDefaultPref = this._originalFunc;
+    this._originalFunc = null;
+  },
+
+  hoistedSetDefaultPref(prefName, prefValue) {
+    // If this pref is seen multiple times, the very first
+    // value seen is the one that is actually the default.
+    if (!this._originalValues.has(prefName)) {
+      let defaults = new Preferences({defaultBranch: true});
+      let stored = {};
+
+      if (defaults.has(prefName)) {
+        stored.originalDefaultValue = defaults.get(prefName);
+      }
+
+      if (Preferences.isSet(prefName) &&
+          Preferences.get(prefName) == prefValue) {
+        // If a user value exists, and we're changing the default
+        // value to be th same as the user value, that will cause
+        // the user value to be dropped. In that case, let's also
+        // store it to ensure that we restore everything correctly.
+        stored.originalUserValue = Preferences.get(prefName);
+      }
+
+      this._originalValues.set(prefName, stored);
+    }
+
+    // Now that we've stored the original values, call the
+    // original setDefaultPref function.
+    this._originalFunc(prefName, prefValue);
+  },
+
+  restoreDefaultValues() {
+    let defaults = new Preferences({defaultBranch: true});
+
+    for (let [prefName, stored] of this._originalValues) {
+      // If a pref was used through setDefaultPref instead
+      // of setAndLockPref, it wasn't locked, but calling
+      // unlockPref is harmless
+      Preferences.unlock(prefName);
+
+      if (stored.originalDefaultValue) {
+        defaults.set(prefName, stored.originalDefaultValue);
+      }
+
+      if (stored.originalUserValue) {
+        Preferences.set(prefName, stored.originalUserValue);
+      }
+    }
+
+    this._originalValues.clear();
   },
 };
