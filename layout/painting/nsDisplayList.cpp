@@ -6641,6 +6641,20 @@ nsDisplayOpacity::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 void
+nsDisplayOpacity::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                            const nsDisplayItemGeometry* aGeometry,
+                                            nsRegion* aInvalidRegion) const
+{
+  const nsDisplayOpacityGeometry* geometry =
+    static_cast<const nsDisplayOpacityGeometry*>(aGeometry);
+
+  bool snap;
+  if (mOpacity != geometry->mOpacity) {
+    aInvalidRegion->Or(GetBounds(aBuilder, &snap), geometry->mBounds);
+  }
+}
+
+void
 nsDisplayOpacity::WriteDebugInfo(std::stringstream& aStream)
 {
   aStream << " (opacity " << mOpacity << ")";
