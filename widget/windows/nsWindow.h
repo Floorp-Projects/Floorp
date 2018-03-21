@@ -546,7 +546,6 @@ protected:
   bool                  mMousePresent;
   bool                  mDestroyCalled;
   bool                  mOpeningAnimationSuppressed;
-  bool                  mDelayedFocus;
   uint32_t              mBlurSuppressLevel;
   DWORD_PTR             mOldStyle;
   DWORD_PTR             mOldExStyle;
