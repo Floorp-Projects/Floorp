@@ -165,7 +165,7 @@ class NameResolver
               case ParseNodeKind::Colon:
               case ParseNodeKind::Shorthand:
                 /*
-                 * Record the ParseNodeKind::Colon/SHORTHAND but skip the
+                 * Record the ParseNodeKind::Colon/Shorthand but skip the
                  * ParseNodeKind::Object so we're not flagged as a
                  * contributor.
                  */
@@ -356,9 +356,8 @@ class NameResolver
      */
     bool resolve(ParseNode* const cur, HandleAtom prefixArg = nullptr) {
         RootedAtom prefix(cx, prefixArg);
-        if (cur == nullptr)
-            return true;
 
+        MOZ_ASSERT(cur != nullptr);
         MOZ_ASSERT(cur->isArity(PN_CODE) == (cur->isKind(ParseNodeKind::Function) ||
                                              cur->isKind(ParseNodeKind::Module)));
         if (cur->isKind(ParseNodeKind::Function)) {
@@ -542,9 +541,9 @@ class NameResolver
           case ParseNodeKind::ExportFrom:
           case ParseNodeKind::ExportDefault:
             MOZ_ASSERT(cur->isArity(PN_BINARY));
-            // The left halves of these nodes don't contain any unconstrained
-            // expressions, but it's very hard to assert this to safely rely on
-            // it.  So recur anyway.
+            // The left halves of Import and ExportFrom don't contain any
+            // unconstrained expressions, but it's very hard to assert this to
+            // safely rely on it. So recur anyway.
             if (!resolve(cur->pn_left, prefix))
                 return false;
             MOZ_ASSERT_IF(!cur->isKind(ParseNodeKind::ExportDefault),
@@ -571,12 +570,9 @@ class NameResolver
           case ParseNodeKind::ForIn:
           case ParseNodeKind::ForOf:
             MOZ_ASSERT(cur->isArity(PN_TERNARY));
-            if (ParseNode* decl = cur->pn_kid1) {
-                if (!resolve(decl, prefix))
-                    return false;
-            }
-            if (!resolve(cur->pn_kid2, prefix))
+            if (!resolve(cur->pn_kid1, prefix))
                 return false;
+            MOZ_ASSERT(!cur->pn_kid2);
             if (!resolve(cur->pn_kid3, prefix))
                 return false;
             break;
@@ -662,8 +658,8 @@ class NameResolver
           case ParseNodeKind::Catch:
             MOZ_ASSERT(cur->isArity(PN_BINARY));
             if (cur->pn_left) {
-              if (!resolve(cur->pn_left, prefix))
-                  return false;
+                if (!resolve(cur->pn_left, prefix))
+                    return false;
             }
             if (!resolve(cur->pn_right, prefix))
                 return false;
@@ -782,8 +778,10 @@ class NameResolver
 
           case ParseNodeKind::Name:
             MOZ_ASSERT(cur->isArity(PN_NAME));
-            if (!resolve(cur->expr(), prefix))
-                return false;
+            if (ParseNode* init = cur->expr()) {
+                if (!resolve(init, prefix))
+                    return false;
+            }
             break;
 
           case ParseNodeKind::LexicalScope:
@@ -795,8 +793,10 @@ class NameResolver
           case ParseNodeKind::Function:
           case ParseNodeKind::Module:
             MOZ_ASSERT(cur->isArity(PN_CODE));
-            if (!resolve(cur->pn_body, prefix))
-                return false;
+            if (ParseNode* body = cur->pn_body) {
+                if (!resolve(body, prefix))
+                    return false;
+            }
             break;
 
           // Kinds that should be handled by parent node resolution.
