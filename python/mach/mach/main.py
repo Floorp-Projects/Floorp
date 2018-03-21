@@ -44,7 +44,7 @@ fundamental problem with a loaded module.
 
 Please consider filing a bug against mach by going to the URL:
 
-    https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=mach
+    https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox%20Build%20System&component=Mach%20Core
 
 '''.lstrip()
 
