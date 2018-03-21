@@ -4,9 +4,15 @@
 
 "use strict";
 
-const {EnterprisePolicyTesting} = ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm", {});
+const {
+  EnterprisePolicyTesting,
+  PoliciesPrefTracker,
+} = ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm", {});
+
+PoliciesPrefTracker.start();
 
 async function setupPolicyEngineWithJson(json, customSchema) {
+  PoliciesPrefTracker.restoreDefaultValues();
   if (typeof(json) != "object") {
     let filePath = getTestFilePath(json ? json : "non-existing-file.json");
     return EnterprisePolicyTesting.setupPolicyEngineWithJson(filePath, customSchema);
@@ -36,4 +42,5 @@ registerCleanupFunction(async function policies_headjs_finishWithCleanSlate() {
   is(Services.policies.status, Ci.nsIEnterprisePolicies.INACTIVE, "Engine is inactive at the end of the test");
 
   EnterprisePolicyTesting.resetRunOnceState();
+  PoliciesPrefTracker.stop();
 });

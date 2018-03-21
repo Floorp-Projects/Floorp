@@ -2,35 +2,12 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-// Prefs that will be touched by the test and need to be reset when the test
-// cleans up.
-const TOUCHED_PREFS = {
-  "browser.startup.homepage": "String",
-  "browser.startup.page": "Int",
-  "pref.browser.homepage.disable_button.current_page": "Bool",
-  "pref.browser.homepage.disable_button.bookmark_page": "Bool",
-  "pref.browser.homepage.disable_button.restore_default": "Bool",
-};
-let ORIGINAL_PREF_VALUE = {};
-
-add_task(function read_original_pref_values() {
-  for (let pref in TOUCHED_PREFS) {
-    let prefType = TOUCHED_PREFS[pref];
-    ORIGINAL_PREF_VALUE[pref] =
-      Services.prefs[`get${prefType}Pref`](pref, undefined);
-  }
-});
 registerCleanupFunction(function restore_pref_values() {
-  let defaults = Services.prefs.getDefaultBranch("");
-  for (let pref in TOUCHED_PREFS) {
-    Services.prefs.unlockPref(pref);
-    Services.prefs.clearUserPref(pref);
-    let originalValue = ORIGINAL_PREF_VALUE[pref];
-    let prefType = TOUCHED_PREFS[pref];
-    if (originalValue !== undefined) {
-      defaults[`set${prefType}Pref`](pref, originalValue);
-    }
-  }
+  // These two prefs are set as user prefs in case the "Locked"
+  // option from this policy was not used. In this case, it won't
+  // be tracked nor restored by the PoliciesPrefTracker.
+  Services.prefs.clearUserPref("browser.startup.homepage");
+  Services.prefs.clearUserPref("browser.startup.page");
 });
 
 add_task(async function homepage_test_simple() {
