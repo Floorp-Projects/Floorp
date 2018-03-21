@@ -504,7 +504,7 @@ ICStubCompiler::getStubCode()
 
     // Compile new stubcode.
     JitContext jctx(cx, nullptr);
-    MacroAssembler masm;
+    StackMacroAssembler masm;
 #ifndef JS_USE_LINK_REGISTER
     // The first value contains the return addres,
     // which we pull into ICTailCallReg for tail calls.
@@ -2759,7 +2759,7 @@ static JitCode*
 GenerateNewObjectWithTemplateCode(JSContext* cx, JSObject* templateObject)
 {
     JitContext jctx(cx, nullptr);
-    MacroAssembler masm;
+    StackMacroAssembler masm;
 #ifdef JS_CODEGEN_ARM
     masm.setSecondScratchReg(BaselineSecondScratchReg);
 #endif

@@ -81,7 +81,7 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
 
     JitContext jitContext(cx, nullptr);
 
-    MacroAssembler masm;
+    StackMacroAssembler masm;
 
     Register propertiesReg, newKindReg;
 #ifdef JS_CODEGEN_X86

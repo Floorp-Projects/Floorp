@@ -1915,7 +1915,7 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
     MOZ_ASSERT(ObjectElements::VALUES_PER_HEADER + RegExpObject::MaxPairCount ==
                gc::GetGCKindSlots(templateObject->asTenured().getAllocKind()));
 
-    MacroAssembler masm(cx);
+    StackMacroAssembler masm(cx);
 
     // The InputOutputData is placed above the return address on the stack.
     size_t inputOutputDataStartOffset = sizeof(void*);
@@ -2221,7 +2221,7 @@ JitCompartment::generateRegExpSearcherStub(JSContext* cx)
     Register temp2 = regs.takeAny();
     Register temp3 = regs.takeAny();
 
-    MacroAssembler masm(cx);
+    StackMacroAssembler masm(cx);
 
     // The InputOutputData is placed above the return address on the stack.
     size_t inputOutputDataStartOffset = sizeof(void*);
@@ -2360,7 +2360,7 @@ JitCompartment::generateRegExpTesterStub(JSContext* cx)
     Register lastIndex = RegExpTesterLastIndexReg;
     Register result = ReturnReg;
 
-    MacroAssembler masm(cx);
+    StackMacroAssembler masm(cx);
 
 #ifdef JS_USE_LINK_REGISTER
     masm.pushReturnAddress();
@@ -8390,7 +8390,7 @@ CodeGenerator::visitSubstr(LSubstr* lir)
 JitCode*
 JitCompartment::generateStringConcatStub(JSContext* cx)
 {
-    MacroAssembler masm(cx);
+    StackMacroAssembler masm(cx);
 
     Register lhs = CallTempReg0;
     Register rhs = CallTempReg1;
