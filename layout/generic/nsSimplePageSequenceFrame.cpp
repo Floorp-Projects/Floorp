@@ -460,7 +460,7 @@ GetPrintCanvasElementsInFrame(nsIFrame* aFrame,
       // If there is a canvasFrame, try to get actual canvas element.
       if (canvasFrame) {
         HTMLCanvasElement* canvas =
-          HTMLCanvasElement::FromContentOrNull(canvasFrame->GetContent());
+          HTMLCanvasElement::FromNodeOrNull(canvasFrame->GetContent());
         if (canvas && canvas->GetMozPrintCallback()) {
           aArr->AppendElement(canvas);
           continue;

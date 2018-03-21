@@ -619,7 +619,7 @@ ShadowRoot::ContentInserted(nsIContent* aChild)
 
   // If parent's root is a shadow root, and parent is a slot whose assigned
   // nodes is the empty list, then run signal a slot change for parent.
-  HTMLSlotElement* slot = HTMLSlotElement::FromContentOrNull(aChild->GetParent());
+  HTMLSlotElement* slot = HTMLSlotElement::FromNodeOrNull(aChild->GetParent());
   if (slot && slot->GetContainingShadow() == this &&
       slot->AssignedNodes().IsEmpty()) {
     slot->EnqueueSlotChangeEvent();
@@ -655,7 +655,7 @@ ShadowRoot::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
 
   // If parent's root is a shadow root, and parent is a slot whose assigned
   // nodes is the empty list, then run signal a slot change for parent.
-  HTMLSlotElement* slot = HTMLSlotElement::FromContentOrNull(aChild->GetParent());
+  HTMLSlotElement* slot = HTMLSlotElement::FromNodeOrNull(aChild->GetParent());
   if (slot && slot->GetContainingShadow() == this &&
       slot->AssignedNodes().IsEmpty()) {
     slot->EnqueueSlotChangeEvent();

@@ -280,7 +280,7 @@ nsXMLContentSink::DidBuildModel(bool aTerminated)
     for (nsIContent* child = mDocument->GetFirstChild();
          child;
          child = child->GetNextSibling()) {
-      if (auto pi = ProcessingInstruction::FromContent(child)) {
+      if (auto pi = ProcessingInstruction::FromNode(child)) {
         CheckXSLTParamPI(pi, mXSLTProcessor, mDocument);
       }
       else if (child->IsElement()) {

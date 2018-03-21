@@ -1610,7 +1610,7 @@ nsGenericHTMLElement::GetContextMenu() const
     //XXXsmaug How should this work in Shadow DOM?
     nsIDocument* doc = GetUncomposedDoc();
     if (doc) {
-      return HTMLMenuElement::FromContentOrNull(doc->GetElementById(value));
+      return HTMLMenuElement::FromNodeOrNull(doc->GetElementById(value));
     }
   }
   return nullptr;
@@ -1626,7 +1626,7 @@ nsGenericHTMLElement::IsLabelable() const
 nsGenericHTMLElement::MatchLabelsElement(Element* aElement, int32_t aNamespaceID,
                                          nsAtom* aAtom, void* aData)
 {
-  HTMLLabelElement* element = HTMLLabelElement::FromContent(aElement);
+  HTMLLabelElement* element = HTMLLabelElement::FromNode(aElement);
   return element && element->GetControl() == aData;
 }
 
@@ -2338,7 +2338,7 @@ nsGenericHTMLFormElement::UpdateFieldSet(bool aNotify)
   for (parent = GetParent(); parent && parent != bindingParent;
        prev = parent, parent = parent->GetParent()) {
     HTMLFieldSetElement* fieldset =
-      HTMLFieldSetElement::FromContent(parent);
+      HTMLFieldSetElement::FromNode(parent);
     if (fieldset &&
         (!prev || fieldset->GetFirstLegend() != prev)) {
       if (mFieldSet == fieldset) {
@@ -2406,7 +2406,7 @@ nsGenericHTMLFormElement::UpdateRequiredState(bool aIsRequired, bool aNotify)
              "This should be called only on types that @required applies");
 
 #ifdef DEBUG
-  HTMLInputElement* input = HTMLInputElement::FromContent(this);
+  HTMLInputElement* input = HTMLInputElement::FromNode(this);
   if (input) {
     MOZ_ASSERT(input->DoesRequiredApply(),
                "This should be called only on input types that @required applies");
@@ -2637,7 +2637,7 @@ void
 nsGenericHTMLElement::SyncEditorsOnSubtree(nsIContent* content)
 {
   /* Sync this node */
-  nsGenericHTMLElement* element = FromContent(content);
+  nsGenericHTMLElement* element = FromNode(content);
   if (element) {
     RefPtr<TextEditor> textEditor = element->GetAssociatedEditor();
     if (textEditor) {

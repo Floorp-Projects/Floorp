@@ -2397,7 +2397,7 @@ void HTMLMediaElement::LoadFromSourceChildren()
         return;
       }
     }
-    HTMLSourceElement *childSrc = HTMLSourceElement::FromContent(child);
+    HTMLSourceElement *childSrc = HTMLSourceElement::FromNode(child);
     LOG(LogLevel::Debug, ("%p Trying load from <source>=%s type=%s", this,
       NS_ConvertUTF16toUTF8(src).get(), NS_ConvertUTF16toUTF8(type).get()));
 
@@ -4511,7 +4511,7 @@ HTMLMediaElement::ReportTelemetry()
 
   FrameStatisticsData data;
 
-  if (HTMLVideoElement* vid = HTMLVideoElement::FromContentOrNull(this)) {
+  if (HTMLVideoElement* vid = HTMLVideoElement::FromNodeOrNull(this)) {
     FrameStatistics* stats = vid->GetFrameStatistics();
     if (stats) {
       data = stats->GetFrameStatisticsData();

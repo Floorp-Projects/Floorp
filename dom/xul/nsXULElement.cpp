@@ -177,7 +177,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, mozilla::dom::NodeInfo *
     NS_NewXULElement(getter_AddRefs(baseElement), ni.forget(), dom::FROM_PARSER_NETWORK);
 
     if (baseElement) {
-        nsXULElement* element = FromContent(baseElement);
+        nsXULElement* element = FromNode(baseElement);
 
         if (aPrototype->mHasIdAttribute) {
             element->SetHasID();
@@ -577,7 +577,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
     }
 
     bool focused = false;
-    nsXULElement* elm = FromContent(content);
+    nsXULElement* elm = FromNode(content);
     if (elm) {
         // Define behavior for each type of XUL element.
         if (!content->IsXULElement(nsGkAtoms::toolbarbutton)) {
@@ -870,7 +870,7 @@ nsXULElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
       if (!controlElement)
         GetParentTree(getter_AddRefs(controlElement));
       nsCOMPtr<nsIContent> controlContent(do_QueryInterface(controlElement));
-      RefPtr<nsXULElement> xulElement = FromContentOrNull(controlContent);
+      RefPtr<nsXULElement> xulElement = FromNodeOrNull(controlContent);
 
       nsCOMPtr<nsIDOMElement> oldKidElem = do_QueryInterface(oldKid);
       if (xulElement && oldKidElem) {
@@ -964,7 +964,7 @@ nsXULElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
       if (!controlElement)
         GetParentTree(getter_AddRefs(controlElement));
       nsCOMPtr<nsIContent> controlContent(do_QueryInterface(controlElement));
-      RefPtr<nsXULElement> xulElement = FromContentOrNull(controlContent);
+      RefPtr<nsXULElement> xulElement = FromNodeOrNull(controlContent);
 
       nsCOMPtr<nsIDOMElement> oldKidElem = do_QueryInterface(aKid);
       if (xulElement && oldKidElem) {

@@ -2015,7 +2015,7 @@ nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
       }
       status = (*aHref != nullptr);
 
-      RefPtr<HTMLAnchorElement> anchor = HTMLAnchorElement::FromContent(content);
+      RefPtr<HTMLAnchorElement> anchor = HTMLAnchorElement::FromNode(content);
       if (anchor) {
         anchor->GetTarget(aTarget);
       }

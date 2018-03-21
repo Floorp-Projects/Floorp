@@ -1036,7 +1036,7 @@ CSSIntSize
 nsSubDocumentFrame::GetMarginAttributes()
 {
   CSSIntSize result(-1, -1);
-  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromNode(mContent);
   if (content) {
     const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::marginwidth);
     if (attr && attr->Type() == nsAttrValue::eInteger)
