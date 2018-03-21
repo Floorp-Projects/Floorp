@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Tests that warnings about ineffective iframe sandboxing are logged to the
 // web console when necessary (and not otherwise). See Bug 752559.
 

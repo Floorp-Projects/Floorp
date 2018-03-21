@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Test that makes sure messages are not considered repeated when console.log()
 // is invoked with different objects, see bug 865288.
 

@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Check that Ctrl-W closes the Browser Console and that Ctrl-W closes the
 // current tab when using the Web Console - bug 871156.
 

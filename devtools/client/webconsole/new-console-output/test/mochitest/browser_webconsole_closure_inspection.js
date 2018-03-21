@@ -3,8 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// XXX Remove this when the file is migrated to the new frontend.
-/* eslint-disable no-undef */
+/* import-globals-from head.js */
 
 // Check that inspecting a closure in the variables view sidebar works when
 // execution is paused.

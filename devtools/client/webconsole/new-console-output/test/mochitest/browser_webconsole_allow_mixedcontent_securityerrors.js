@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // The test loads a web page with mixed active and display content
 // on it while the "block mixed content" settings are _off_.
 // It then checks that the loading mixed content warning messages

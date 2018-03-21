@@ -2,19 +2,18 @@
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* import-globals-from ../../../../shared/test/shared-head.js */
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 
 "use strict";
 
 // Import helpers registering the test-actor in remote targets
-/* globals registerTestActor, getTestActor, Task, openToolboxForTab, gBrowser */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/test-actor-registry.js",
   this);
 
 // shared-head.js handles imports, constants, and utility functions
 // Load the shared-head file first.
-/* import-globals-from ../../../../shared/test/shared-head.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/shared/test/shared-head.js",
   this);
