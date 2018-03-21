@@ -879,8 +879,7 @@ protected:
   {
     NS_ASSERTION(mCurrentKeyEvents.Length() > 0,
                  "RemoveCurrentKeyEvent() is called unexpectedly");
-    KeyEventState* keyEvent = GetCurrentKeyEvent();
-    mCurrentKeyEvents.RemoveElementAt(mCurrentKeyEvents.Length() - 1);
+    KeyEventState* keyEvent = mCurrentKeyEvents.PopLastElement();
     if (keyEvent == &mFirstKeyEvent) {
       keyEvent->Clear();
     } else {

@@ -9,13 +9,13 @@ requestLongerTimeout(2);
 // Test that when animations displayed in the timeline are running on the
 // compositor, they get a special icon and information in the tooltip.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel} = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_simple_animation.html");
+  let {inspector, panel} = await openAnimationInspector();
   let timeline = panel.animationsTimelineComponent;
 
   info("Select a test node we know has an animation running on the compositor");
-  yield selectNodeAndWaitForAnimations(".compositor-all", inspector);
+  await selectNodeAndWaitForAnimations(".compositor-all", inspector);
 
   let animationEl = timeline.animationsEl.querySelector(".animation");
   ok(animationEl.classList.contains("fast-track"),
@@ -25,7 +25,7 @@ add_task(function* () {
      "The animation element has the right tooltip content");
 
   info("Select a node we know doesn't have an animation on the compositor");
-  yield selectNodeAndWaitForAnimations(".no-compositor", inspector);
+  await selectNodeAndWaitForAnimations(".no-compositor", inspector);
 
   animationEl = timeline.animationsEl.querySelector(".animation");
   ok(!animationEl.classList.contains("fast-track"),
@@ -39,7 +39,7 @@ add_task(function* () {
 
   info("Select a node we know has animation on the compositor and not on the" +
        " compositor");
-  yield selectNodeAndWaitForAnimations(".compositor-notall", inspector);
+  await selectNodeAndWaitForAnimations(".compositor-notall", inspector);
 
   animationEl = timeline.animationsEl.querySelector(".animation");
   ok(animationEl.classList.contains("fast-track"),

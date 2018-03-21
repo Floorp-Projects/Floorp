@@ -3,8 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from head.js */
-
 // Test that user input that is not submitted in the command line input is not
 // lost after navigating in history.
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=817834

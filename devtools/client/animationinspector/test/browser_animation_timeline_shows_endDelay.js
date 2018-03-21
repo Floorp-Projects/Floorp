@@ -11,15 +11,15 @@ requestLongerTimeout(2);
 // Also check that negative endDelays do not overflow the UI, and are shown
 // like positive endDelays.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_end_delay.html");
-  let {inspector, panel} = yield openAnimationInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_end_delay.html");
+  let {inspector, panel} = await openAnimationInspector();
 
   let selectors = ["#target1", "#target2", "#target3", "#target4"];
   for (let i = 0; i < selectors.length; i++) {
     let selector = selectors[i];
-    yield selectNode(selector, inspector);
-    yield waitForAnimationSelecting(panel);
+    await selectNode(selector, inspector);
+    await waitForAnimationSelecting(panel);
     let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
     let animationEl = timelineEl.querySelector(".animation");
     checkEndDelayAndName(animationEl);

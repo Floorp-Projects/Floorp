@@ -8282,8 +8282,7 @@ nsHttpChannel::OnRedirectVerifyCallback(nsresult result)
     for (uint32_t i = mRedirectFuncStack.Length(); i > 0;) {
         --i;
         // Pop the last function pushed to the stack
-        nsContinueRedirectionFunc func = mRedirectFuncStack[i];
-        mRedirectFuncStack.RemoveElementAt(mRedirectFuncStack.Length() - 1);
+        nsContinueRedirectionFunc func = mRedirectFuncStack.PopLastElement();
 
         // Call it with the result we got from the callback or the deeper
         // function call.

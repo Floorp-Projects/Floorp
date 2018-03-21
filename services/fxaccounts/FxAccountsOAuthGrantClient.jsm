@@ -136,65 +136,56 @@ this.FxAccountsOAuthGrantClient.prototype = {
    *         Rejects: {FxAccountsOAuthGrantClientError} Profile client error.
    * @private
    */
-  _createRequest(path, method = "POST", params) {
-    return new Promise((resolve, reject) => {
-      let profileDataUrl = this.serverURL + path;
-      let request = new this._Request(profileDataUrl);
-      method = method.toUpperCase();
+  async _createRequest(path, method = "POST", params) {
+    let profileDataUrl = this.serverURL + path;
+    let request = new this._Request(profileDataUrl);
+    method = method.toUpperCase();
 
-      request.setHeader("Accept", "application/json");
-      request.setHeader("Content-Type", "application/json");
+    request.setHeader("Accept", "application/json");
+    request.setHeader("Content-Type", "application/json");
 
-      request.onComplete = function(error) {
-        if (error) {
-          reject(new FxAccountsOAuthGrantClientError({
-            error: ERROR_NETWORK,
-            errno: ERRNO_NETWORK,
-            message: error.toString(),
-          }));
-          return;
-        }
+    if (method != "POST") {
+      throw new FxAccountsOAuthGrantClientError({
+        error: ERROR_NETWORK,
+        errno: ERRNO_NETWORK,
+        code: ERROR_CODE_METHOD_NOT_ALLOWED,
+        message: ERROR_MSG_METHOD_NOT_ALLOWED,
+      });
+    }
 
-        let body = null;
-        try {
-          body = JSON.parse(request.response.body);
-        } catch (e) {
-          reject(new FxAccountsOAuthGrantClientError({
-            error: ERROR_PARSE,
-            errno: ERRNO_PARSE,
-            code: request.response.status,
-            message: request.response.body,
-          }));
-          return;
-        }
+    try {
+      await request.post(params);
+    } catch (error) {
+      throw new FxAccountsOAuthGrantClientError({
+        error: ERROR_NETWORK,
+        errno: ERRNO_NETWORK,
+        message: error.toString(),
+      });
+    }
 
-        // "response.success" means status code is 200
-        if (request.response.success) {
-          resolve(body);
-          return;
-        }
+    let body = null;
+    try {
+      body = JSON.parse(request.response.body);
+    } catch (e) {
+      throw new FxAccountsOAuthGrantClientError({
+        error: ERROR_PARSE,
+        errno: ERRNO_PARSE,
+        code: request.response.status,
+        message: request.response.body,
+      });
+    }
 
-        if (typeof body.errno === "number") {
-          // Offset oauth server errnos to avoid conflict with other FxA server errnos
-          body.errno += OAUTH_SERVER_ERRNO_OFFSET;
-        } else if (body.errno) {
-          body.errno = ERRNO_UNKNOWN_ERROR;
-        }
-        reject(new FxAccountsOAuthGrantClientError(body));
-      };
+    if (request.response.success) {
+      return body;
+    }
 
-      if (method === "POST") {
-        request.post(params);
-      } else {
-        // method not supported
-        reject(new FxAccountsOAuthGrantClientError({
-          error: ERROR_NETWORK,
-          errno: ERRNO_NETWORK,
-          code: ERROR_CODE_METHOD_NOT_ALLOWED,
-          message: ERROR_MSG_METHOD_NOT_ALLOWED,
-        }));
-      }
-    });
+    if (typeof body.errno === "number") {
+      // Offset oauth server errnos to avoid conflict with other FxA server errnos
+      body.errno += OAUTH_SERVER_ERRNO_OFFSET;
+    } else if (body.errno) {
+      body.errno = ERRNO_UNKNOWN_ERROR;
+    }
+    throw new FxAccountsOAuthGrantClientError(body);
   },
 
 };

@@ -11,10 +11,10 @@
 // of which may have a different rate than others. Those that have had their
 // rate changed have a delay = delay/rate and a duration = duration/rate.
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_modify_playbackRate.html");
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_modify_playbackRate.html");
 
-  let {panel} = yield openAnimationInspector();
+  let {panel} = await openAnimationInspector();
 
   let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
 

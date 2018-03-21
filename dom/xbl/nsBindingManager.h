@@ -26,7 +26,6 @@
 struct ElementDependentRuleProcessorData;
 class nsIXPConnectWrappedJS;
 class nsAtom;
-class nsIDOMNodeList;
 class nsIDocument;
 class nsIURI;
 class nsXBLDocumentInfo;
@@ -90,7 +89,6 @@ public:
    * <children> tags directly as kids of <content>.  This will only end up
    * returning a non-null list for nodes which have a binding attached.
    */
-  nsresult GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
   nsINodeList* GetAnonymousNodesFor(nsIContent* aContent);
 
   nsresult ClearBinding(mozilla::dom::Element* aElement);
