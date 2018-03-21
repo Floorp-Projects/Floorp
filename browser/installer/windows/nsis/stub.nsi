@@ -549,14 +549,30 @@ Function .onUserAbort
   ${NSD_KillTimer} ClearBlurb
 
   ${If} "$IsDownloadFinished" != ""
-    Call DisplayDownloadError
+    ; Go ahead and cancel the download so it doesn't keep running while this
+    ; prompt is up. We'll resume it if the user decides to continue.
+    InetBgDL::Get /RESET /END
+
+    ${ShowTaskDialog} $(STUB_CANCEL_PROMPT_HEADING) \
+                      $(STUB_CANCEL_PROMPT_MESSAGE) \
+                      $(STUB_CANCEL_PROMPT_BUTTON_CONTINUE) \
+                      $(STUB_CANCEL_PROMPT_BUTTON_EXIT)
+    Pop $0
+    ${If} $0 == 1002
+      ; The cancel button was clicked
+      Call LaunchHelpPage
+      Call SendPing
+    ${Else}
+      ; Either the continue button was clicked or the dialog was dismissed
+      Call StartDownload
+    ${EndIf}
   ${Else}
     Call SendPing
   ${EndIf}
 
-  ; Aborting the abort will allow SendPing which is called by
-  ; DisplayDownloadError to hide the installer window and close the installer
-  ; after it sends the metrics ping.
+  ; Aborting the abort will allow SendPing to hide the installer window and
+  ; close the installer after it sends the metrics ping, or allow us to just go
+  ; back to installing if that's what the user selected.
   Abort
 FunctionEnd
 
@@ -1685,22 +1701,23 @@ Function DisplayDownloadError
   ; value to the total value.
   ${ITBL3SetProgressValue} "100" "100"
   ${ITBL3SetProgressState} "${TBPF_ERROR}"
+
   MessageBox MB_OKCANCEL|MB_ICONSTOP "$(ERROR_DOWNLOAD_CONT)" IDCANCEL +2 IDOK +1
-  StrCpy $OpenedDownloadPage "1" ; Already initialized to 0
-
-  ${If} "$OpenedDownloadPage" == "1"
-    ClearErrors
-    ${GetParameters} $0
-    ${GetOptions} "$0" "/UAC:" $1
-    ${If} ${Errors}
-      Call OpenManualDownloadURL
-    ${Else}
-      GetFunctionAddress $0 OpenManualDownloadURL
-      UAC::ExecCodeSegment $0
-    ${EndIf}
-  ${EndIf}
-
+  Call LaunchHelpPage
   Call SendPing
+FunctionEnd
+
+Function LaunchHelpPage
+  StrCpy $OpenedDownloadPage "1" ; Already initialized to 0
+  ClearErrors
+  ${GetParameters} $0
+  ${GetOptions} "$0" "/UAC:" $1
+  ${If} ${Errors}
+    Call OpenManualDownloadURL
+  ${Else}
+    GetFunctionAddress $0 OpenManualDownloadURL
+    UAC::ExecCodeSegment $0
+  ${EndIf}
 FunctionEnd
 
 Function OpenManualDownloadURL
