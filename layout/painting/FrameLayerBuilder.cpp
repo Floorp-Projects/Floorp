@@ -55,6 +55,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <list>
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
@@ -117,6 +118,99 @@ static inline MaskLayerImageCache* GetMaskLayerImageCache()
 
   return gMaskLayerImageCache;
 }
+
+struct DisplayItemEntry {
+  DisplayItemEntry(nsDisplayItem* aItem,
+                   DisplayItemEntryType aType)
+    : mItem(aItem)
+    , mType(aType)
+  {}
+
+  nsDisplayItem* mItem;
+  DisplayItemEntryType mType;
+};
+
+class FLBDisplayItemIterator : protected FlattenedDisplayItemIterator
+{
+public:
+  FLBDisplayItemIterator(nsDisplayListBuilder* aBuilder,
+                         nsDisplayList* aList,
+                         ContainerState* aState)
+    : FlattenedDisplayItemIterator(aBuilder, aList, false)
+    , mState(aState)
+  {
+    MOZ_ASSERT(mState);
+    ResolveFlattening();
+  }
+
+  DisplayItemEntry GetNextEntry()
+  {
+    if (!mMarkers.empty()) {
+      DisplayItemEntry entry = mMarkers.front();
+      mMarkers.pop_front();
+      return entry;
+    }
+
+    nsDisplayItem* next = GetNext();
+    return DisplayItemEntry { next, DisplayItemEntryType::ITEM };
+  }
+
+  nsDisplayItem* GetNext()
+  {
+    // This function is only supposed to be called if there are no markers set.
+    // Breaking this invariant can potentially break effect flattening and/or
+    // display item merging.
+    MOZ_ASSERT(mMarkers.empty());
+
+    return FlattenedDisplayItemIterator::GetNext();
+  }
+
+  bool HasNext() const
+  {
+    return FlattenedDisplayItemIterator::HasNext() || !mMarkers.empty();
+  }
+
+  nsDisplayItem* PeekNext()
+  {
+    return mNext;
+  }
+
+private:
+  bool ShouldFlattenNextItem() const override;
+
+  void StartNested(nsDisplayItem* aItem) override
+  {
+    if (aItem->GetType() == DisplayItemType::TYPE_OPACITY) {
+      nsDisplayOpacity* opacity = static_cast<nsDisplayOpacity*> (aItem);
+
+      if (opacity->OpacityAppliedToChildren()) {
+        // If the opacity was already applied to children, there is no need to
+        // emit opacity markers.
+        return;
+      }
+
+      mMarkers.emplace_back(aItem, DisplayItemEntryType::PUSH_OPACITY);
+      mActiveMarkers.AppendElement(aItem);
+    }
+  }
+
+  void EndNested(nsDisplayItem* aItem) override
+  {
+    if (mActiveMarkers.IsEmpty() || mActiveMarkers.LastElement() != aItem) {
+      // Do not emit an end marker if this item did not emit a start marker.
+      return;
+    }
+
+    if (aItem->GetType() == DisplayItemType::TYPE_OPACITY) {
+      mMarkers.emplace_back(aItem, DisplayItemEntryType::POP_OPACITY);
+      mActiveMarkers.RemoveLastElement();
+    }
+  }
+
+  std::list<DisplayItemEntry> mMarkers;
+  AutoTArray<nsDisplayItem*, 4> mActiveMarkers;
+  ContainerState* mState;
+};
 
 DisplayItemData::DisplayItemData(LayerManagerData* aParent, uint32_t aKey,
                                  Layer* aLayer, nsIFrame* aFrame)
@@ -1214,6 +1308,7 @@ public:
 
 protected:
   friend class PaintedLayerData;
+  friend class FLBDisplayItemIterator;
 
   LayerManager::PaintedLayerCreationHint
     GetLayerCreationHint(AnimatedGeometryRoot* aAnimatedGeometryRoot);
@@ -1476,6 +1571,43 @@ protected:
   AnimatedGeometryRoot* mLastDisplayPortAGR;
   nsRect mLastDisplayPortRect;
 };
+
+bool
+FLBDisplayItemIterator::ShouldFlattenNextItem() const
+{
+  if (!mNext) {
+    return false;
+  }
+
+  if (!mNext->ShouldFlattenAway(mBuilder)) {
+    return false;
+  }
+
+  if (mNext->GetType() == DisplayItemType::TYPE_OPACITY) {
+    nsDisplayOpacity* opacity = static_cast<nsDisplayOpacity*>(mNext);
+
+    if (opacity->OpacityAppliedToChildren()) {
+      // This is the previous opacity flattening path, where the opacity has
+      // been applied to children.
+      return true;
+    }
+
+    if (!mState->mManager->IsWidgetLayerManager()) {
+      // Do not flatten opacity inside an inactive layer tree.
+      return false;
+    }
+
+    LayerState layerState = mNext->GetLayerState(mState->mBuilder,
+                                                 mState->mManager,
+                                                 mState->mParameters);
+
+    // Do not flatten opacity if child display items require an active layer.
+    return (layerState == LayerState::LAYER_NONE ||
+            layerState == LayerState::LAYER_INACTIVE);
+  }
+
+  return true;
+}
 
 class PaintedDisplayItemLayerUserData : public LayerUserData
 {
