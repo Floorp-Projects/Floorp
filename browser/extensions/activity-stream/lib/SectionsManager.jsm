@@ -61,7 +61,6 @@ const BUILT_IN_SECTIONS = {
     icon: "highlights",
     title: {id: "header_highlights"},
     maxRows: 3,
-    availableLinkMenuOptions: ["CheckBookmarkOrArchive", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "CheckDeleteHistoryOrEmpty"],
     emptyState: {
       message: {id: "highlights_empty_state"},
       icon: "highlights"
@@ -72,7 +71,12 @@ const BUILT_IN_SECTIONS = {
 
 const SectionsManager = {
   ACTIONS_TO_PROXY: ["WEBEXT_CLICK", "WEBEXT_DISMISS"],
-  CONTEXT_MENU_PREFS: {"SaveToPocket": "extensions.pocket.enabled"},
+  CONTEXT_MENU_PREFS: {"CheckSavedToPocket": "extensions.pocket.enabled"},
+  CONTEXT_MENU_OPTIONS_FOR_HIGHLIGHT_TYPES: {
+    history: ["CheckBookmark", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"],
+    bookmark: ["CheckBookmark", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"],
+    pocket: ["ArchiveFromPocket", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"]
+  },
   initialized: false,
   sections: new Map(),
   init(prefs = {}) {
@@ -121,7 +125,7 @@ const SectionsManager = {
     this.addSection(section.id, Object.assign(section, {options}));
   },
   addSection(id, options) {
-    this.updateLinkMenuOptions(options);
+    this.updateLinkMenuOptions(options, id);
     this.sections.set(id, options);
     this.emit(this.ADD_SECTION, id, options);
   },
@@ -141,7 +145,7 @@ const SectionsManager = {
     this.sections.forEach((section, id) => this.updateSection(id, section, true));
   },
   updateSection(id, options, shouldBroadcast) {
-    this.updateLinkMenuOptions(options);
+    this.updateLinkMenuOptions(options, id);
     if (this.sections.has(id)) {
       const optionsWithDedupe = Object.assign({}, options, {dedupeConfigurations: this._dedupeConfiguration});
       this.sections.set(id, Object.assign(this.sections.get(id), options));
@@ -185,11 +189,41 @@ const SectionsManager = {
    * to false.
    *
    * @param options section options
+   * @param id      section ID
    */
-  updateLinkMenuOptions(options) {
+  updateLinkMenuOptions(options, id) {
     if (options.availableLinkMenuOptions) {
       options.contextMenuOptions = options.availableLinkMenuOptions.filter(
         o => !this.CONTEXT_MENU_PREFS[o] || Services.prefs.getBoolPref(this.CONTEXT_MENU_PREFS[o]));
+    }
+
+    // Once we have rows, we can give each card it's own context menu based on it's type.
+    // We only want to do this for highlights because those have different data types.
+    // All other sections (built by the web extension API) will have the same context menu per section
+    if (options.rows && id === "highlights") {
+      this._addCardTypeLinkMenuOptions(options.rows);
+    }
+  },
+
+  /**
+   * Sets each card in highlights' context menu options based on the card's type.
+   * (See types.js for a list of types)
+   *
+   * @param rows section rows containing a type for each card
+   */
+  _addCardTypeLinkMenuOptions(rows) {
+    for (let card of rows) {
+      if (!this.CONTEXT_MENU_OPTIONS_FOR_HIGHLIGHT_TYPES[card.type]) {
+        Cu.reportError(`No context menu for highlight type ${card.type} is configured`);
+      } else {
+        card.contextMenuOptions = this.CONTEXT_MENU_OPTIONS_FOR_HIGHLIGHT_TYPES[card.type];
+
+        // Remove any options that shouldn't be there based on CONTEXT_MENU_PREFS.
+        // For example: If the Pocket extension is disabled, we should remove the CheckSavedToPocket option
+        // for each card that has it
+        card.contextMenuOptions = card.contextMenuOptions.filter(
+          o => !this.CONTEXT_MENU_PREFS[o] || Services.prefs.getBoolPref(this.CONTEXT_MENU_PREFS[o]));
+      }
     }
   },
 

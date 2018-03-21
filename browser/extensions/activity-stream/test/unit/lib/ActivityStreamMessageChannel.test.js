@@ -91,13 +91,15 @@ describe("ActivityStreamMessageChannel", () => {
           url: "about:monkeys",
           loaded: false,
           portID: "inited",
-          simulated: true
+          simulated: true,
+          browser: {getAttribute: () => "preloaded"}
         });
         RPmessagePorts.push({
           url: "about:sheep",
           loaded: true,
           portID: "loaded",
-          simulated: true
+          simulated: true,
+          browser: {getAttribute: () => "preloaded"}
         });
 
         mm.simulateMessagesForExistingTabs();
@@ -105,12 +107,17 @@ describe("ActivityStreamMessageChannel", () => {
         assert.calledWith(mm.onActionFromContent.firstCall, {type: at.NEW_TAB_INIT, data: RPmessagePorts[0]});
         assert.calledWith(mm.onActionFromContent.secondCall, {type: at.NEW_TAB_INIT, data: RPmessagePorts[1]});
       });
-      it("should simluate load for loaded ports", () => {
-        RPmessagePorts.push({loaded: true, portID: "foo"});
+      it("should simulate load for loaded ports", () => {
+        RPmessagePorts.push({loaded: true, portID: "foo", browser: {getAttribute: () => "preloaded"}});
 
         mm.simulateMessagesForExistingTabs();
 
         assert.calledWith(mm.onActionFromContent, {type: at.NEW_TAB_LOAD}, "foo");
+      });
+      it("should set renderLayers on preloaded browsers after load", () => {
+        RPmessagePorts.push({loaded: true, portID: "foo", browser: {getAttribute: () => "preloaded"}});
+        mm.simulateMessagesForExistingTabs();
+        assert.equal(RPmessagePorts[0].browser.renderLayers, true);
       });
     });
     describe("#destroyChannel", () => {
@@ -212,7 +219,7 @@ describe("ActivityStreamMessageChannel", () => {
     });
     describe("#onNewTabLoad", () => {
       it("should dispatch a NEW_TAB_LOAD action", () => {
-        const t = {portID: "foo"};
+        const t = {portID: "foo", browser: {getAttribute: () => "preloaded"}};
         sinon.stub(mm, "onActionFromContent");
         mm.onNewTabLoad({target: t});
         assert.calledWith(mm.onActionFromContent, {type: at.NEW_TAB_LOAD}, "foo");
