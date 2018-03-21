@@ -153,11 +153,23 @@ this.ActivityStreamMessageChannel = class ActivityStreamMessageChannel {
   getPreloadedBrowser() {
     let preloadedPorts = [];
     for (let port of this.channel.messagePorts) {
-      if (port.browser.getAttribute("preloadedState") === "preloaded") {
+      if (this.isPreloadedBrowser(port.browser)) {
         preloadedPorts.push(port);
       }
     }
     return preloadedPorts.length ? preloadedPorts : null;
+  }
+
+  /**
+   * isPreloadedBrowser - Returns true if the passed browser has been preloaded
+   *                      for faster rendering of new tabs.
+   *
+   * @param {<browser>} A <browser> to check.
+   * @return {bool} True if the browser is preloaded.
+   *                      if there aren't any preloaded browsers
+   */
+  isPreloadedBrowser(browser) {
+    return browser.getAttribute("preloadedState") === "preloaded";
   }
 
   /**
@@ -220,6 +232,15 @@ this.ActivityStreamMessageChannel = class ActivityStreamMessageChannel {
    * @param  {obj} msg The messsage from a page that was just loaded
    */
   onNewTabLoad(msg) {
+    let {browser} = msg.target;
+    if (this.isPreloadedBrowser(browser)) {
+      // As a perceived performance optimization, if this loaded Activity Stream
+      // happens to be a preloaded browser, have it render its layers to the
+      // compositor now to increase the odds that by the time we switch to
+      // the tab, the layers are already ready to present to the user.
+      browser.renderLayers = true;
+    }
+
     this.onActionFromContent({type: at.NEW_TAB_LOAD}, msg.target.portID);
   }
 
