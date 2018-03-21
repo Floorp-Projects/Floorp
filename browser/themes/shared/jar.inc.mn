@@ -18,7 +18,6 @@
   skin/classic/browser/addons/addon-install-downloading.svg    (../shared/addons/addon-install-downloading.svg)
   skin/classic/browser/addons/addon-install-error.svg          (../shared/addons/addon-install-error.svg)
   skin/classic/browser/addons/addon-install-installed.svg      (../shared/addons/addon-install-installed.svg)
-  skin/classic/browser/addons/addon-install-restart.svg        (../shared/addons/addon-install-restart.svg)
   skin/classic/browser/addons/addon-install-warning.svg        (../shared/addons/addon-install-warning.svg)
   skin/classic/browser/controlcenter/conn-not-secure.svg       (../shared/controlcenter/conn-not-secure.svg)
   skin/classic/browser/controlcenter/connection.svg            (../shared/controlcenter/connection.svg)
