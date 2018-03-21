@@ -63,7 +63,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMPL_FROMCONTENT(nsGenericHTMLElement, kNameSpaceID_XHTML)
+  NS_IMPL_FROMNODE(nsGenericHTMLElement, kNameSpaceID_XHTML)
 
   // From Element
   nsresult CopyInnerTo(mozilla::dom::Element* aDest, bool aPreallocateChildren);

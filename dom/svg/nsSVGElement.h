@@ -130,7 +130,7 @@ public:
 
   NS_DECL_NSIDOMELEMENT
 
-  NS_IMPL_FROMCONTENT(nsSVGElement, kNameSpaceID_SVG)
+  NS_IMPL_FROMNODE(nsSVGElement, kNameSpaceID_SVG)
 
   // Gets the element that establishes the rectangular viewport against which
   // we should resolve percentage lengths (our "coordinate context"). Returns

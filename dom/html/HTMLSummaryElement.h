@@ -28,7 +28,7 @@ public:
   {
   }
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLSummaryElement, summary)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLSummaryElement, summary)
 
   nsresult Clone(NodeInfo* aNodeInfo, nsINode** aResult,
                  bool aPreallocateChildren) const override;
