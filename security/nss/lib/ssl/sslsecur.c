@@ -791,7 +791,7 @@ tls13_CheckKeyUpdate(sslSocket *ss, CipherSpecDirection dir)
         spec = ss->ssl3.cwSpec;
         margin = spec->cipherDef->max_records / 4;
     }
-    seqNum = spec->seqNum;
+    seqNum = spec->nextSeqNum;
     keyUpdate = seqNum > spec->cipherDef->max_records - margin;
     ssl_ReleaseSpecReadLock(ss);
     if (!keyUpdate) {

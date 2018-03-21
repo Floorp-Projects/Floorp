@@ -52,7 +52,7 @@ const KEY_APP_TEMPORARY               = "app-temporary";
 
 // Properties to save in JSON file
 const PROP_JSON_FIELDS = ["id", "syncGUID", "location", "version", "type",
-                          "internalName", "updateURL", "updateKey", "optionsURL",
+                          "internalName", "updateURL", "optionsURL",
                           "optionsType", "optionsBrowserStyle", "aboutURL",
                           "defaultLocale", "visible", "active", "userDisabled",
                           "appDisabled", "pendingUninstall", "installDate",

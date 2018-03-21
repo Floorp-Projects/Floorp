@@ -32,7 +32,7 @@ AddonTestUtils.init(this);
 // Allow for unsigned addons.
 AddonTestUtils.overrideCertDB();
 
-createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
 
 add_task(async function test_url_overrides_newtab_update() {
   const EXTENSION_ID = "test_url_overrides_update@tests.mozilla.org";

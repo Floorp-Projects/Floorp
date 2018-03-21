@@ -7,7 +7,7 @@ var testserver = new HttpServer();
 testserver.start(-1);
 gPort = testserver.identity.primaryPort;
 
-var gTestURL = "http://127.0.0.1:" + gPort + "/update.rdf?itemID=%ITEM_ID%&custom1=%CUSTOM1%&custom2=%CUSTOM2%";
+var gTestURL = "http://127.0.0.1:" + gPort + "/update.json?itemID=%ITEM_ID%&custom1=%CUSTOM1%&custom2=%CUSTOM2%";
 var gExpectedQuery = "itemID=test@mozilla.org&custom1=custom_parameter_1&custom2=custom_parameter_2";
 var gSeenExpectedURL = false;
 
@@ -38,7 +38,7 @@ function initTest() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
   // Configure the HTTP server.
-  testserver.registerPathHandler("/update.rdf", function(aRequest, aResponse) {
+  testserver.registerPathHandler("/update.json", function(aRequest, aResponse) {
     gSeenExpectedURL = aRequest.queryString == gExpectedQuery;
     aResponse.setStatusLine(null, 404, "Not Found");
   });

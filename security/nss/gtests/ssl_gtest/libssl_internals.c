@@ -237,22 +237,23 @@ SECStatus SSLInt_AdvanceReadSeqNum(PRFileDesc *fd, PRUint64 to) {
   if (!ss) {
     return SECFailure;
   }
-  if (to >= RECORD_SEQ_MAX) {
+  if (to > RECORD_SEQ_MAX) {
     PORT_SetError(SEC_ERROR_INVALID_ARGS);
     return SECFailure;
   }
   ssl_GetSpecWriteLock(ss);
   spec = ss->ssl3.crSpec;
-  spec->seqNum = to;
+  spec->nextSeqNum = to;
 
   /* For DTLS, we need to fix the record sequence number.  For this, we can just
    * scrub the entire structure on the assumption that the new sequence number
    * is far enough past the last received sequence number. */
-  if (spec->seqNum <= spec->recvdRecords.right + DTLS_RECVD_RECORDS_WINDOW) {
+  if (spec->nextSeqNum <=
+      spec->recvdRecords.right + DTLS_RECVD_RECORDS_WINDOW) {
     PORT_SetError(SEC_ERROR_INVALID_ARGS);
     return SECFailure;
   }
-  dtls_RecordSetRecvd(&spec->recvdRecords, spec->seqNum);
+  dtls_RecordSetRecvd(&spec->recvdRecords, spec->nextSeqNum - 1);
 
   ssl_ReleaseSpecWriteLock(ss);
   return SECSuccess;
@@ -270,7 +271,7 @@ SECStatus SSLInt_AdvanceWriteSeqNum(PRFileDesc *fd, PRUint64 to) {
     return SECFailure;
   }
   ssl_GetSpecWriteLock(ss);
-  ss->ssl3.cwSpec->seqNum = to;
+  ss->ssl3.cwSpec->nextSeqNum = to;
   ssl_ReleaseSpecWriteLock(ss);
   return SECSuccess;
 }
@@ -284,7 +285,7 @@ SECStatus SSLInt_AdvanceWriteSeqByAWindow(PRFileDesc *fd, PRInt32 extra) {
     return SECFailure;
   }
   ssl_GetSpecReadLock(ss);
-  to = ss->ssl3.cwSpec->seqNum + DTLS_RECVD_RECORDS_WINDOW + extra;
+  to = ss->ssl3.cwSpec->nextSeqNum + DTLS_RECVD_RECORDS_WINDOW + extra;
   ssl_ReleaseSpecReadLock(ss);
   return SSLInt_AdvanceWriteSeqNum(fd, to);
 }

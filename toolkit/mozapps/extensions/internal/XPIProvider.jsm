@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
-  ChromeManifestParser: "resource://gre/modules/ChromeManifestParser.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   Langpack: "resource://gre/modules/Extension.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
@@ -45,8 +44,6 @@ const {nsIBlocklistService} = Ci;
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   Blocklist: ["@mozilla.org/extensions/blocklist;1", "nsIBlocklistService"],
-  ChromeRegistry: ["@mozilla.org/chrome/chrome-registry;1", "nsIChromeRegistry"],
-  ResProtocolHandler: ["@mozilla.org/network/protocol;1?name=resource", "nsIResProtocolHandler"],
   AddonPolicyService: ["@mozilla.org/addons/policy-service;1", "nsIAddonPolicyService"],
   aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
 });
@@ -1909,66 +1906,6 @@ var XPIProvider = {
   },
 
   /**
-   * Resolve a URI back to physical file.
-   *
-   * Of course, this works only for URIs pointing to local resources.
-   *
-   * @param  aURI
-   *         URI to resolve
-   * @return
-   *         resolved nsIFileURL
-   */
-  _resolveURIToFile(aURI) {
-    switch (aURI.scheme) {
-      case "jar":
-      case "file":
-        if (aURI instanceof Ci.nsIJARURI) {
-          return this._resolveURIToFile(aURI.JARFile);
-        }
-        return aURI;
-
-      case "chrome":
-        aURI = ChromeRegistry.convertChromeURL(aURI);
-        return this._resolveURIToFile(aURI);
-
-      case "resource":
-        aURI = Services.io.newURI(ResProtocolHandler.resolveURI(aURI));
-        return this._resolveURIToFile(aURI);
-
-      case "view-source":
-        aURI = Services.io.newURI(aURI.pathQueryRef);
-        return this._resolveURIToFile(aURI);
-
-      case "about":
-        if (aURI.spec == "about:blank") {
-          // Do not attempt to map about:blank
-          return null;
-        }
-
-        let chan;
-        try {
-          chan = NetUtil.newChannel({
-            uri: aURI,
-            loadUsingSystemPrincipal: true
-          });
-        } catch (ex) {
-          return null;
-        }
-        // Avoid looping
-        if (chan.URI.equals(aURI)) {
-          return null;
-        }
-        // We want to clone the channel URI to avoid accidentially keeping
-        // unnecessary references to the channel or implementation details
-        // around.
-        return this._resolveURIToFile(chan.URI.clone());
-
-      default:
-        return null;
-    }
-  },
-
-  /**
    * Starts the XPI provider initializes the install locations and prefs.
    *
    * @param  aAppChanged
@@ -2325,6 +2262,12 @@ var XPIProvider = {
 
     this.activeAddons.clear();
     this.allAppGlobal = true;
+
+    for (let install of this.installs) {
+      if (install.onShutdown()) {
+        install.onShutdown();
+      }
+    }
 
     // If there are pending operations then we must update the list of active
     // add-ons
@@ -4380,13 +4323,6 @@ var XPIProvider = {
       if (CHROME_TYPES.has(aAddon.type) && aMethod == "shutdown" && aReason != BOOTSTRAP_REASONS.APP_SHUTDOWN) {
         logger.debug("Removing manifest for " + aFile.path);
         Components.manager.removeBootstrappedManifestLocation(aFile);
-
-        let manifest = getURIForResourceInFile(aFile, "chrome.manifest");
-        for (let line of ChromeManifestParser.parseSync(manifest)) {
-          if (line.type == "resource") {
-            ResProtocolHandler.setSubstitution(line.args[0], null);
-          }
-        }
       }
       this.setTelemetry(aAddon.id, aMethod + "_MS", new Date() - timeStart);
     }
@@ -4840,8 +4776,7 @@ AddonInternal.prototype = {
   },
 
   get providesUpdatesSecurely() {
-    return !!(this.updateKey || !this.updateURL ||
-              this.updateURL.substring(0, 6) == "https:");
+    return !this.updateURL || this.updateURL.startsWith("https:");
   },
 
   get isCorrectlySigned() {

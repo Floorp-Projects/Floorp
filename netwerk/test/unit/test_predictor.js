@@ -598,7 +598,7 @@ function unregisterObserver() {
 }
 
 function run_test_real() {
-  tests.forEach(add_test);
+  tests.forEach(f => add_test(f));
   do_get_profile();
 
   Services.prefs.setBoolPref("network.predictor.enabled", true);

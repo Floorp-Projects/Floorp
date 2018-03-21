@@ -1438,7 +1438,8 @@ CanvasRenderingContext2D::AllowOpenGLCanvas() const
   // HTMLCanvasElement::GetCompositorBackendType would return LAYERS_NONE
   // as well, so it wouldn't help much.
 
-  return (mCompositorBackend == LayersBackend::LAYERS_OPENGL) &&
+  return (mCompositorBackend == LayersBackend::LAYERS_OPENGL ||
+          mCompositorBackend == LayersBackend::LAYERS_WR) &&
     gfxPlatform::GetPlatform()->AllowOpenGLCanvas();
 }
 

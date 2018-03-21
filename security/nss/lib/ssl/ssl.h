@@ -254,6 +254,17 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
  * no effect for a server. This setting is ignored for DTLS. */
 #define SSL_ENABLE_TLS13_COMPAT_MODE 35
 
+/* Enables the sending of DTLS records using the short (two octet) record
+ * header.  Only do this if there are 2^10 or fewer packets in flight at a time;
+ * using this with a larger number of packets in flight could mean that packets
+ * are dropped if there is reordering.
+ *
+ * This applies to TLS 1.3 only.  This is not a parameter that is negotiated
+ * during the TLS handshake. Unlike other socket options, this option can be
+ * changed after a handshake is complete.
+ */
+#define SSL_ENABLE_DTLS_SHORT_HEADER 36
+
 #ifdef SSL_DEPRECATED_FUNCTION
 /* Old deprecated function names */
 SSL_IMPORT SECStatus SSL_Enable(PRFileDesc *fd, int option, PRIntn on);

@@ -296,12 +296,17 @@ class DoubleToStringConverter {
   // should be at least kBase10MaximalLength + 1 characters long.
   static const MFBT_DATA int kBase10MaximalLength = 17;
 
-  // Converts the given double 'v' to ascii. 'v' must not be NaN, +Infinity, or
-  // -Infinity. In SHORTEST_SINGLE-mode this restriction also applies to 'v'
-  // after it has been casted to a single-precision float. That is, in this
-  // mode static_cast<float>(v) must not be NaN, +Infinity or -Infinity.
+  // Converts the given double 'v' to digit characters. 'v' must not be NaN,
+  // +Infinity, or -Infinity. In SHORTEST_SINGLE-mode this restriction also
+  // applies to 'v' after it has been casted to a single-precision float. That
+  // is, in this mode static_cast<float>(v) must not be NaN, +Infinity or
+  // -Infinity.
   //
   // The result should be interpreted as buffer * 10^(point-length).
+  //
+  // The digits are written to the buffer in the platform's charset, which is
+  // often UTF-8 (with ASCII-range digits) but may be another charset, such
+  // as EBCDIC.
   //
   // The output depends on the given mode:
   //  - SHORTEST: produce the least amount of digits for which the internal
@@ -376,7 +381,7 @@ class DoubleToStringConverter {
   const int max_leading_padding_zeroes_in_precision_mode_;
   const int max_trailing_padding_zeroes_in_precision_mode_;
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(DoubleToStringConverter);
+  DC_DISALLOW_IMPLICIT_CONSTRUCTORS(DoubleToStringConverter);
 };
 
 
@@ -540,7 +545,7 @@ class StringToDoubleConverter {
                       bool read_as_double,
                       int* processed_characters_count) const;
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(StringToDoubleConverter);
+  DC_DISALLOW_IMPLICIT_CONSTRUCTORS(StringToDoubleConverter);
 };
 
 }  // namespace double_conversion
