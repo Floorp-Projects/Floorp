@@ -2,7 +2,7 @@
 args = [
     "-x", "c++", "-std=c++14", "-fno-sized-deallocation",
     "-DTRACING=1", "-DIMPL_LIBXUL", "-DMOZ_STYLO_BINDINGS=1",
-    "-DMOZILLA_INTERNAL_API", "-DRUST_BINDGEN", "-DMOZ_STYLO"
+    "-DMOZILLA_INTERNAL_API", "-DRUST_BINDGEN"
 ]
 "family=unix" = ["-DOS_POSIX=1"]
 "os=solaris" = ["-DOS_SOLARIS=1"]

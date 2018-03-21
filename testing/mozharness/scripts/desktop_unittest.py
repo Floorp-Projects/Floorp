@@ -163,12 +163,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "default": False,
             "help": "Forcibly enable single thread traversal in Stylo with STYLO_THREADS=1"}
          ],
-        [["--enable-stylo"], {
-            "action": "store_true",
-            "dest": "enable_stylo",
-            "default": False,
-            "help": "Run tests with Stylo enabled"}
-         ],
         [["--enable-webrender"], {
             "action": "store_true",
             "dest": "enable_webrender",
