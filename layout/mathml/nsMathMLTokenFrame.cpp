@@ -8,9 +8,6 @@
 #include "nsPresContext.h"
 #include "nsContentUtils.h"
 #include "nsTextFrame.h"
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/GeckoRestyleManager.h"
-#endif
 #include <algorithm>
 
 using namespace mozilla;

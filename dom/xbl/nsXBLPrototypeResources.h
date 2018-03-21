@@ -67,16 +67,6 @@ public:
 
   void AppendStyleSheetsTo(nsTArray<mozilla::StyleSheet*>& aResult) const;
 
-#ifdef MOZ_OLD_STYLE
-  /**
-   * Recreates mRuleProcessor to represent the current list of style sheets
-   * stored in mStyleSheetList.  (Named GatherRuleProcessor to parallel
-   * nsStyleSet::GatherRuleProcessors.)
-   */
-  void GatherRuleProcessor();
-
-  nsCSSRuleProcessor* GetRuleProcessor() const { return mRuleProcessor; }
-#endif
 
   const RawServoAuthorStyles* GetServoStyles() const
   {
@@ -104,10 +94,6 @@ private:
   // mServoStyles.
   nsTArray<RefPtr<mozilla::StyleSheet>> mStyleSheetList;
 
-#ifdef MOZ_OLD_STYLE
-  // The list of stylesheets converted to a rule processor.
-  RefPtr<nsCSSRuleProcessor> mRuleProcessor;
-#endif
 
   // The result of cascading the XBL style sheets like mRuleProcessor, but
   // for the Servo style backend.

@@ -23,10 +23,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   already_AddRefed<css::Rule> Clone() const override;
-#ifdef MOZ_OLD_STYLE
-  bool UseForPresentation(nsPresContext* aPresContext,
-                          nsMediaQueryResultCacheKey& aKey) final;
-#endif
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif

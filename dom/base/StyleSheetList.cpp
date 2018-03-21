@@ -6,9 +6,6 @@
 
 #include "mozilla/dom/StyleSheetList.h"
 
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/CSSStyleSheet.h"
-#endif
 #include "mozilla/dom/StyleSheetListBinding.h"
 
 namespace mozilla {

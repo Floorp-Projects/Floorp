@@ -5816,17 +5816,20 @@ void
 nsContentUtils::WarnScriptWasIgnored(nsIDocument* aDocument)
 {
   nsAutoString msg;
+  bool privateBrowsing = false;
+
   if (aDocument) {
     nsCOMPtr<nsIURI> uri = aDocument->GetDocumentURI();
     if (uri) {
       msg.Append(NS_ConvertUTF8toUTF16(uri->GetSpecOrDefault()));
       msg.AppendLiteral(" : ");
     }
+    privateBrowsing =
+      !!aDocument->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId;
   }
-  msg.AppendLiteral("Unable to run script because scripts are blocked internally.");
 
-  LogSimpleConsoleError(msg, "DOM",
-                        !!aDocument->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId);
+  msg.AppendLiteral("Unable to run script because scripts are blocked internally.");
+  LogSimpleConsoleError(msg, "DOM", privateBrowsing);
 }
 
 /* static */

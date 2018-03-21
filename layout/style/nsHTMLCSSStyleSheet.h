@@ -15,9 +15,6 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "nsDataHashtable.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsIStyleRuleProcessor.h"
-#endif
 
 class nsRuleWalker;
 struct MiscContainer;
@@ -30,48 +27,11 @@ class Element;
 } // namespace mozilla
 
 class nsHTMLCSSStyleSheet final
-#ifdef MOZ_OLD_STYLE
-  : public nsIStyleRuleProcessor
-#endif
 {
 public:
   nsHTMLCSSStyleSheet();
 
-#ifdef MOZ_OLD_STYLE
-  NS_DECL_ISUPPORTS
-
-  // nsIStyleRuleProcessor
-  virtual void RulesMatching(ElementRuleProcessorData* aData) override;
-  virtual void RulesMatching(PseudoElementRuleProcessorData* aData) override;
-  virtual void RulesMatching(AnonBoxRuleProcessorData* aData) override;
-#ifdef MOZ_XUL
-  virtual void RulesMatching(XULTreeRuleProcessorData* aData) override;
-#endif
-  virtual nsRestyleHint HasStateDependentStyle(StateRuleProcessorData* aData) override;
-  virtual nsRestyleHint HasStateDependentStyle(PseudoElementStateRuleProcessorData* aData) override;
-  virtual bool HasDocumentStateDependentStyle(StateRuleProcessorData* aData) override;
-  virtual nsRestyleHint
-    HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                               mozilla::RestyleHintData& aRestyleHintDataResult) override;
-  virtual bool MediumFeaturesChanged(nsPresContext* aPresContext) override;
-  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-    const MOZ_MUST_OVERRIDE override;
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-    const MOZ_MUST_OVERRIDE override;
-
-  // Variants of RulesMatching method above that is specific to this
-  // rule processor.
-  void ElementRulesMatching(nsPresContext* aPresContext,
-                            mozilla::dom::Element* aElement,
-                            nsRuleWalker* aRuleWalker);
-  // aPseudoElement here is the content node for the pseudo-element, not
-  // its corresponding real element.
-  void PseudoElementRulesMatching(mozilla::dom::Element* aPseudoElement,
-                                  mozilla::CSSPseudoElementType aPseudoType,
-                                  nsRuleWalker* aRuleWalker);
-#else
   NS_INLINE_DECL_REFCOUNTING(nsHTMLCSSStyleSheet)
-#endif
 
   void CacheStyleAttr(const nsAString& aSerialized, MiscContainer* aValue);
   void EvictStyleAttr(const nsAString& aSerialized, MiscContainer* aValue);
