@@ -1297,7 +1297,9 @@ class XPIState {
 
     this.version = aDBAddon.version;
     this.type = aDBAddon.type;
-    this.startupData = aDBAddon.startupData;
+    if (aDBAddon.startupData) {
+      this.startupData = aDBAddon.startupData;
+    }
 
     this.bootstrapped = !!aDBAddon.bootstrap;
     if (this.bootstrapped) {
@@ -3448,6 +3450,23 @@ var XPIProvider = {
       AddonManagerPrivate.notifyAddonChanged(addon.id, addon.type, false);
 
     return addon.wrapper;
+  },
+
+  /**
+   * Sets startupData for the given addon.  The provided data will be stored
+   * in addonsStartup.json so it is available early during browser startup.
+   * Note that this file is read synchronously at startup, so startupData
+   * should be used with care.
+   *
+   * @param {string} aID
+   *         The id of the addon to save startup data for.
+   * @param {any} aData
+   *        The data to store.  Must be JSON serializable.
+   */
+  setStartupData(aID, aData) {
+    let state = XPIStates.findAddon(aID);
+    state.startupData = aData;
+    XPIStates.save();
   },
 
   /**
