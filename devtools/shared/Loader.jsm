@@ -47,7 +47,7 @@ BuiltinProvider.prototype = {
       // used in the source tree.
       "devtools/client/locales": "chrome://devtools/locale",
       "devtools/shared/locales": "chrome://devtools-shared/locale",
-      "devtools/shim/locales": "chrome://devtools-shim/locale",
+      "devtools/startup/locales": "chrome://devtools-startup/locale",
       "toolkit/locales": "chrome://global/locale",
     };
     // When creating a Loader invisible to the Debugger, we have to ensure

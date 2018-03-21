@@ -59,19 +59,18 @@ public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_THIS_JARURI_IMPL_CID)
 
     // nsJARURI
-    nsJARURI();
-
-    nsresult Init(const char *charsetHint);
     nsresult FormatSpec(const nsACString &entryPath, nsACString &result,
                         bool aIncludeScheme = true);
     nsresult CreateEntryURL(const nsACString& entryFilename,
                             const char* charset,
                             nsIURL** url);
-    nsresult SetSpecWithBase(const nsACString& aSpec, nsIURI* aBaseURL);
 
 protected:
+    nsJARURI();
     virtual ~nsJARURI();
     nsresult SetJAREntry(const nsACString &entryPath);
+    nsresult Init(const char *charsetHint);
+    nsresult SetSpecWithBase(const nsACString& aSpec, nsIURI* aBaseURL);
 
     // enum used in a few places to specify how .ref attribute should be handled
     enum RefHandlingEnum {
@@ -126,6 +125,7 @@ public:
         , public BaseURIMutator<nsJARURI>
         , public nsIURLMutator
         , public nsISerializable
+        , public nsIJARURIMutator
     {
         NS_DECL_ISUPPORTS
         NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
@@ -142,6 +142,30 @@ public:
         Read(nsIObjectInputStream* aStream) override
         {
             return InitFromInputStream(aStream);
+        }
+
+        NS_IMETHOD
+        SetSpecBaseCharset(const nsACString& aSpec,
+                           nsIURI* aBaseURI,
+                           const char* aCharset) override
+        {
+            RefPtr<nsJARURI> uri;
+            if (mURI) {
+                mURI.swap(uri);
+            } else {
+                uri = new nsJARURI();
+            }
+
+            nsresult rv = uri->Init(aCharset);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            rv = uri->SetSpecWithBase(aSpec, aBaseURI);
+            if (NS_FAILED(rv)) {
+                return rv;
+            }
+
+            mURI.swap(uri);
+            return NS_OK;
         }
 
         explicit Mutator() { }

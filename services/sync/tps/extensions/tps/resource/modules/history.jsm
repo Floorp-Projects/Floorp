@@ -23,9 +23,10 @@ var DumpHistory = async function TPS_History__DumpHistory() {
   for (var i = 0; i < root.childCount; i++) {
     let node = root.getChild(i);
     let uri = node.uri;
+    let guid = await PlacesSyncUtils.history.fetchGuidForURL(uri).catch(() => "?".repeat(12));
     let curvisits = await PlacesSyncUtils.history.fetchVisitsForURL(uri);
     for (var visit of curvisits) {
-      Logger.logInfo("URI: " + uri + ", type=" + visit.type + ", date=" + visit.date, true);
+      Logger.logInfo(`GUID: ${guid}, URI: ${uri}, type=${visit.type}, date=${visit.date}`, true);
     }
   }
   root.containerOpen = false;

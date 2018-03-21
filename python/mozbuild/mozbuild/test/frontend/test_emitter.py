@@ -452,7 +452,6 @@ class TestEmitterBasic(unittest.TestCase):
                           'AS_DASH_C_FLAG': ''})
         self.maxDiff = maxDiff
 
-
     def test_generated_files(self):
         reader = self.reader('generated-files')
         objs = self.read_topsrcdir(reader)
@@ -461,6 +460,7 @@ class TestEmitterBasic(unittest.TestCase):
         for o in objs:
             self.assertIsInstance(o, GeneratedFile)
             self.assertFalse(o.localized)
+            self.assertFalse(o.force)
 
         expected = ['bar.c', 'foo.c', ('xpidllex.py', 'xpidlyacc.py'), ]
         for o, f in zip(objs, expected):
@@ -469,6 +469,15 @@ class TestEmitterBasic(unittest.TestCase):
             self.assertEqual(o.script, None)
             self.assertEqual(o.method, None)
             self.assertEqual(o.inputs, [])
+
+    def test_generated_files_force(self):
+        reader = self.reader('generated-files-force')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 3)
+        for o in objs:
+            self.assertIsInstance(o, GeneratedFile)
+            self.assertEqual(o.force, 'bar.c' in o.outputs)
 
     def test_localized_generated_files(self):
         reader = self.reader('localized-generated-files')
@@ -486,6 +495,16 @@ class TestEmitterBasic(unittest.TestCase):
             self.assertEqual(o.script, None)
             self.assertEqual(o.method, None)
             self.assertEqual(o.inputs, [])
+
+    def test_localized_generated_files_force(self):
+        reader = self.reader('localized-generated-files-force')
+        objs = self.read_topsrcdir(reader)
+
+        self.assertEqual(len(objs), 2)
+        for o in objs:
+            self.assertIsInstance(o, GeneratedFile)
+            self.assertTrue(o.localized)
+            self.assertEqual(o.force, 'abc.ini' in o.outputs)
 
     def test_localized_files_from_generated(self):
         """Test that using LOCALIZED_GENERATED_FILES and then putting the output in
