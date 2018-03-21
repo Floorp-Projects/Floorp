@@ -209,6 +209,7 @@ enum class AstExprKind
     Load,
     Nop,
     Pop,
+    RefNull,
     Return,
     SetGlobal,
     SetLocal,
@@ -1162,6 +1163,19 @@ class AstExtraConversionOperator final : public AstExpr
     AstExpr* operand() const { return operand_; }
 };
 #endif
+
+class AstRefNull final : public AstExpr
+{
+    ValType refType_;
+  public:
+    static const AstExprKind Kind = AstExprKind::RefNull;
+    explicit AstRefNull(ValType refType)
+      : AstExpr(Kind, ExprType::Limit), refType_(refType)
+    {}
+    ValType refType() const {
+        return refType_;
+    }
+};
 
 // This is an artificial AST node which can fill operand slots in an AST
 // constructed from parsing or decoding stack-machine code that doesn't have
