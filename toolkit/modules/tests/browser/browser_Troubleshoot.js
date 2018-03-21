@@ -144,21 +144,6 @@ const SNAPSHOT_SCHEMA = {
         maxContentProcesses: {
           type: "number",
         },
-        styloBuild: {
-          type: "boolean",
-        },
-        styloDefault: {
-          type: "boolean",
-        },
-        styloResult: {
-          type: "boolean",
-        },
-        styloChromeDefault: {
-          type: "boolean",
-        },
-        styloChromeResult: {
-          type: "boolean",
-        },
         policiesStatus: {
           type: "number",
         },
