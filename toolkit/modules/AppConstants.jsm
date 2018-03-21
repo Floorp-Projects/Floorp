@@ -333,6 +333,4 @@ this.AppConstants = Object.freeze({
 #else
     false,
 #endif
-
-  MOZ_STYLO: true,
 });
