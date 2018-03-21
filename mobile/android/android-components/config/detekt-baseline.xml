@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <Blacklist timestamp="1521663963552"></Blacklist>
+  <Whitelist timestamp="1521663963552">
+    <ID>ComplexMethod:DownloadUtils.kt$DownloadUtils$ @JvmStatic fun guessFileName(contentDisposition: String?, url: String?, mimeType: String?): String</ID>
+    <ID>ComplexMethod:ErrorPages.kt$ErrorPages$ fun mapWebViewErrorCodeToErrorType(errorCode: Int): ErrorType</ID>
+    <ID>EmptyCatchBlock:DownloadUtils.kt$DownloadUtils${ }</ID>
+    <ID>MagicNumber:Bitmap.kt$100</ID>
+    <ID>MagicNumber:ColorUtils.kt$ColorUtils$0.114</ID>
+    <ID>MagicNumber:ColorUtils.kt$ColorUtils$0.299</ID>
+    <ID>MagicNumber:ColorUtils.kt$ColorUtils$0.587</ID>
+    <ID>MagicNumber:ColorUtils.kt$ColorUtils$186</ID>
+    <ID>MagicNumber:DownloadUtils.kt$DownloadUtils$16</ID>
+    <ID>MagicNumber:DownloadUtils.kt$DownloadUtils$3</ID>
+    <ID>MagicNumber:DownloadUtils.kt$DownloadUtils$4</ID>
+    <ID>MaxLineLength:ErrorPages.kt$.ErrorPages.kt</ID>
+    <ID>MaxLineLength:SafeIntent.kt$mozilla.components.utils.SafeIntent.kt</ID>
+    <ID>MaxLineLength:WebURLFinder.kt$mozilla.components.utils.WebURLFinder.kt</ID>
+    <ID>NestedBlockDepth:DownloadUtils.kt$DownloadUtils$ @JvmStatic fun guessFileName(contentDisposition: String?, url: String?, mimeType: String?): String</ID>
+    <ID>ReturnCount:DownloadUtils.kt$DownloadUtils$private fun parseContentDisposition(contentDisposition: String): String?</ID>
+    <ID>ReturnCount:SafeBundle.kt$SafeBundle$fun &lt;T : Parcelable&gt; getParcelable(name: String): T?</ID>
+    <ID>ReturnCount:SafeBundle.kt$SafeBundle$fun getString(name: String): String?</ID>
+    <ID>ReturnCount:SafeIntent.kt$SafeIntent$fun &lt;T : Parcelable&gt; getParcelableArrayListExtra(name: String): ArrayList&lt;T&gt;?</ID>
+    <ID>ReturnCount:SafeIntent.kt$SafeIntent$fun &lt;T : Parcelable&gt; getParcelableExtra(name: String): T?</ID>
+    <ID>ReturnCount:SafeIntent.kt$SafeIntent$fun getBooleanExtra(name: String, defaultValue: Boolean): Boolean</ID>
+    <ID>ReturnCount:SafeIntent.kt$SafeIntent$fun getBundleExtra(name: String): SafeBundle?</ID>
+    <ID>ReturnCount:SafeIntent.kt$SafeIntent$fun getCharSequenceExtra(name: String): CharSequence?</ID>
+    <ID>ReturnCount:SafeIntent.kt$SafeIntent$fun getIntExtra(name: String, defaultValue: Int): Int</ID>
+    <ID>ReturnCount:SafeIntent.kt$SafeIntent$fun getStringArrayListExtra(name: String): ArrayList&lt;String&gt;?</ID>
+    <ID>ReturnCount:SafeIntent.kt$SafeIntent$fun getStringExtra(name: String): String?</ID>
+    <ID>ReturnCount:SafeIntent.kt$SafeIntent$fun hasExtra(name: String): Boolean</ID>
+    <ID>TooGenericExceptionCaught:SafeBundle.kt$SafeBundle$e: RuntimeException</ID>
+    <ID>TooGenericExceptionCaught:SafeIntent.kt$SafeIntent$e: RuntimeException</ID>
+    <ID>TooGenericExceptionCaught:WebURLFinder.kt$WebURLFinder.Companion$e: Exception</ID>
+    <ID>TopLevelPropertyNaming:Char.kt$/** * A series of dots (typically three, such as "…") that usually indicates an intentional omission of * a word, sentence, or whole section from a text without altering its original meaning. */ val Char.Companion.ELLIPSIS: Char get() = '…'</ID>
+  </Whitelist>
+</SmellBaseline>
