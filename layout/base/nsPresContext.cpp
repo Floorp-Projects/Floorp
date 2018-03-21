@@ -38,20 +38,11 @@
 #include "nsThreadUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsViewManager.h"
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/GeckoRestyleManager.h"
-#endif
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
 #include "SurfaceCacheUtils.h"
 #include "nsMediaFeatures.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsRuleNode.h"
-#endif
 #include "gfxPlatform.h"
-#ifdef MOZ_OLD_STYLE
-#include "nsCSSRules.h"
-#endif
 #include "nsFontFaceLoader.h"
 #include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/EffectCompositor.h"
@@ -126,35 +117,6 @@ public:
   nsPresContext* mPresContext;
 };
 
-#ifdef MOZ_OLD_STYLE
-
-namespace {
-
-class CharSetChangingRunnable : public Runnable
-{
-public:
-  CharSetChangingRunnable(nsPresContext* aPresContext,
-                          NotNull<const Encoding*> aCharSet)
-    : Runnable("CharSetChangingRunnable"),
-      mPresContext(aPresContext),
-      mCharSet(aCharSet)
-  {
-  }
-
-  NS_IMETHOD Run() override
-  {
-    mPresContext->DoChangeCharSet(mCharSet);
-    return NS_OK;
-  }
-
-private:
-  RefPtr<nsPresContext> mPresContext;
-  NotNull<const Encoding*> mCharSet;
-};
-
-} // namespace
-
-#endif
 
 nscolor
 nsPresContext::MakeColorPref(const nsString& aColor)
@@ -167,24 +129,13 @@ nsPresContext::MakeColorPref(const nsString& aColor)
     : nullptr;
 
   bool useServoParser =
-#ifdef MOZ_OLD_STYLE
-    servoStyleSet;
-#else
     true;
-#endif
 
   if (useServoParser) {
     ok = ServoCSSParser::ComputeColor(servoStyleSet, NS_RGB(0, 0, 0), aColor,
                                       &result);
   } else {
-#ifdef MOZ_OLD_STYLE
-    nsCSSParser parser;
-    nsCSSValue value;
-    ok = parser.ParseColorString(aColor, nullptr, 0, value) &&
-         nsRuleNode::ComputeColor(value, this, nullptr, result);
-#else
     MOZ_CRASH("old style system disabled");
-#endif
   }
 
   if (!ok) {
@@ -1030,11 +981,7 @@ nsPresContext::AttachShell(nsIPresShell* aShell, StyleBackendType aBackendType)
   if (aBackendType == StyleBackendType::Servo) {
     mRestyleManager = new ServoRestyleManager(this);
   } else {
-#ifdef MOZ_OLD_STYLE
-    mRestyleManager = new GeckoRestyleManager(this);
-#else
     MOZ_CRASH("old style system disabled");
-#endif
   }
 
   // Since CounterStyleManager is also the name of a method of
@@ -1169,14 +1116,6 @@ nsPresContext::UpdateCharSet(NotNull<const Encoding*> aCharSet)
 void
 nsPresContext::DispatchCharSetChange(NotNull<const Encoding*> aEncoding)
 {
-#ifdef MOZ_OLD_STYLE
-  if (!Document()->IsStyledByServo()) {
-    RefPtr<CharSetChangingRunnable> runnable =
-      new CharSetChangingRunnable(this, aEncoding);
-    Document()->Dispatch(TaskCategory::Other, runnable.forget());
-    return;
-  }
-#endif
   // In Servo RebuildAllStyleData is async, so no need to do the runnable dance.
   DoChangeCharSet(aEncoding);
 }
@@ -2076,11 +2015,7 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
   mUsesRootEMUnits = false;
   mUsesExChUnits = false;
   if (mShell->StyleSet()->IsGecko()) {
-#ifdef MOZ_OLD_STYLE
-    mShell->StyleSet()->AsGecko()->SetUsesViewportUnits(false);
-#else
     MOZ_CRASH("old style system disabled");
-#endif
   }
 
   // TODO(emilio): It's unclear to me why would these three calls below be
@@ -2276,15 +2211,7 @@ nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
                                        uint32_t aRuleTypeMask) const
 {
   if (aFrame->StyleContext()->IsGecko()) {
-#ifdef MOZ_OLD_STYLE
-    auto* geckoStyleContext = aFrame->StyleContext()->AsGecko();
-    return
-      nsRuleNode::HasAuthorSpecifiedRules(geckoStyleContext,
-                                          aRuleTypeMask,
-                                          UseDocumentColors());
-#else
     MOZ_CRASH("old style system disabled");
-#endif
   }
   Element* elem = aFrame->GetContent()->AsElement();
 

@@ -133,9 +133,6 @@ public:
   bool HasStyleSheets() const;
   void AppendStyleSheetsTo(nsTArray<mozilla::StyleSheet*>& aResult) const;
 
-#ifdef MOZ_OLD_STYLE
-  nsIStyleRuleProcessor* GetRuleProcessor();
-#endif
 
   const RawServoAuthorStyles* GetServoStyles() const
   {

@@ -1522,12 +1522,7 @@ public:
             mServo = aOther.mServo;
             aOther.mServo = nullptr;
           } else {
-#ifdef MOZ_OLD_STYLE
-            mGecko = aOther.mGecko;
-            aOther.mGecko = nullptr;
-#else
             MOZ_CRASH("old style system disabled");
-#endif
           }
           return *this;
         }
@@ -1539,12 +1534,6 @@ public:
           , mServo(aList.release())
         {}
 
-#ifdef MOZ_OLD_STYLE
-        explicit SelectorList(mozilla::UniquePtr<nsCSSSelectorList>&& aList)
-          : mIsServo(false)
-          , mGecko(aList.release())
-        {}
-#endif
 
         ~SelectorList() {
           Reset();
@@ -3875,10 +3864,8 @@ protected:
   nsCOMPtr<nsIURI> mDocumentBaseURI;
   nsCOMPtr<nsIURI> mChromeXHRDocBaseURI;
 
-#ifdef MOZ_STYLO
   // A lazily-constructed URL data for style system to resolve URL value.
   RefPtr<mozilla::URLExtraData> mCachedURLData;
-#endif
 
   nsWeakPtr mDocumentLoadGroup;
 

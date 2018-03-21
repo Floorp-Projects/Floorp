@@ -78,9 +78,6 @@
 #include "LayersLogging.h"
 #include "FrameLayerBuilder.h"
 #include "mozilla/EventStateManager.h"
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/GeckoRestyleManager.h"
-#endif
 #include "nsCaret.h"
 #include "nsISelection.h"
 #include "nsDOMTokenList.h"
@@ -179,11 +176,7 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
   }
 
   GeckoStyleContext* contextIfGecko =
-#ifdef MOZ_OLD_STYLE
-    aContext ? aContext->GetAsGecko() : nullptr;
-#else
     nullptr;
-#endif
 
   for (const nsCSSValueList* curr = aList; curr; curr = curr->mNext) {
     const nsCSSValue& currElem = curr->mValue;
@@ -487,13 +480,7 @@ SetAnimatable(nsCSSPropertyID aProperty,
         Servo_AnimationValue_GetTransform(aAnimationValue.mServo, &list);
         AddTransformFunctions(list, aFrame, aRefBox, aAnimatable);
       } else {
-#ifdef MOZ_OLD_STYLE
-        nsCSSValueSharedList* list =
-          aAnimationValue.mGecko.GetCSSValueSharedListValue();
-        AddTransformFunctions(list, aFrame, aRefBox, aAnimatable);
-#else
         MOZ_CRASH("old style system disabled");
-#endif
       }
       break;
     }

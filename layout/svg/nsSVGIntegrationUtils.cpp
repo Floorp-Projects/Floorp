@@ -28,9 +28,6 @@
 #include "mozilla/gfx/Point.h"
 #include "nsCSSRendering.h"
 #include "mozilla/Unused.h"
-#ifdef MOZ_OLD_STYLE
-#include "mozilla/GeckoRestyleManager.h"
-#endif
 
 using namespace mozilla;
 using namespace mozilla::layers;
