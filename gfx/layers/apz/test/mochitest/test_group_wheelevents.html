@@ -26,7 +26,7 @@ var prefs = [
 var scrollbar_prefs = prefs.slice();  // make a copy
 scrollbar_prefs.push(["layout.scrollbars.always-layerize-track", true]);
 
-// For helper_scroll_overscroll_behavior, we need to set the APZ content
+// For helper_overscroll_behavior_bug1425573, we need to set the APZ content
 // response timeout to 0, so we exercise the fallback codepath.
 var timeout_prefs = prefs.slice();  // make a copy
 timeout_prefs.push(["apz.content_response_timeout", 0]);
@@ -34,11 +34,12 @@ timeout_prefs.push(["apz.content_response_timeout", 0]);
 var subtests = [
   {'file': 'helper_scroll_on_position_fixed.html', 'prefs': prefs},
   {'file': 'helper_bug1271432.html', 'prefs': prefs},
+  {'file': 'helper_overscroll_behavior_bug1425573.html', 'prefs': timeout_prefs},
+  {'file': 'helper_overscroll_behavior_bug1425603.html', 'prefs': prefs},
   {'file': 'helper_scroll_inactive_perspective.html', 'prefs': prefs},
   {'file': 'helper_scroll_inactive_zindex.html', 'prefs': prefs},
   {'file': 'helper_scroll_over_scrollbar.html', 'prefs': scrollbar_prefs},
   {'file': 'helper_scroll_tables_perspective.html', 'prefs': prefs},
-  {'file': 'helper_scroll_overscroll_behavior.html', 'prefs': timeout_prefs},
 ];
 
 if (isApzEnabled()) {
