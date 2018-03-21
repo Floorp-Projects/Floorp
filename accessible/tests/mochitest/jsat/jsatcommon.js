@@ -534,8 +534,11 @@ ExpectedMessage.prototype.ignore = function(aMessage) {
   return aMessage.name !== this.name;
 };
 
-function ExpectedPresent(aAndroid, aOptions) {
+function ExpectedPresent(aB2g, aAndroid, aOptions) {
   ExpectedMessage.call(this, "AccessFu:Present", aOptions);
+  if (aB2g) {
+    this.json.b2g = aB2g;
+  }
 
   if (aAndroid) {
     this.json.android = aAndroid;
@@ -547,7 +550,7 @@ ExpectedPresent.prototype = Object.create(ExpectedMessage.prototype);
 ExpectedPresent.prototype.is = function(aReceived, aInfo) {
   var received = this.extract_presenters(aReceived);
 
-  for (var presenter of ["android"]) {
+  for (var presenter of ["b2g", "android"]) {
     if (!this.options["no_" + presenter]) {
       var todo = this.options.todo || this.options[presenter + "_todo"];
       SimpleTest[todo ? "todo" : "ok"].apply(
@@ -602,6 +605,8 @@ function ExpectedCursorTextChange(aSpeech, aStartOffset, aEndOffset, aOptions) {
     toIndex: aEndOffset
   }], aOptions);
 
+  // bug 980509
+  this.options.b2g_todo = true;
 }
 
 ExpectedCursorTextChange.prototype =
