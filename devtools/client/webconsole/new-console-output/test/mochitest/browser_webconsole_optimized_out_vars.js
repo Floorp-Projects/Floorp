@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Check that inspecting an optimized out variable works when execution is
 // paused.
 

@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Test that the Open URL in new Tab menu item is displayed for network logs and works as
 // expected.
 

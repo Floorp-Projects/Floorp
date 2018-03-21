@@ -3,7 +3,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Map Control + A to Select All, In the web console input
+
+/* import-globals-from head.js */
 
 "use strict";
 

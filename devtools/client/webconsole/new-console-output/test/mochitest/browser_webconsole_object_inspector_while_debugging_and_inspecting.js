@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head.js */
+
 // Test that makes sure web console eval works while the js debugger paused the
 // page, and while the inspector is active. See bug 886137.
 
