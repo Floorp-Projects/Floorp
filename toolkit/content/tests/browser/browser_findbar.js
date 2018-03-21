@@ -161,7 +161,7 @@ add_task(async function test_reinitialization_at_remoteness_change() {
  * Ensure that the initial typed characters aren't lost immediately after
  * opening the find bar.
  */
-add_task(async function() {
+add_task(async function e10sLostKeys() {
   // This test only makes sence in e10s evironment.
   if (!gMultiProcessBrowser) {
     info("Skipping this test because of non-e10s environment.");
@@ -169,7 +169,6 @@ add_task(async function() {
   }
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE_URI);
-  let browser = tab.linkedBrowser;
 
   ok(!gFindBarInitialized, "findbar isn't initialized yet");
 
@@ -177,21 +176,19 @@ add_task(async function() {
   let findBar = gFindBar;
   let initialValue = findBar._findField.value;
 
-  await EventUtils.synthesizeAndWaitKey("f", { accelKey: true }, window, null,
-                                        () => {
+  await EventUtils.synthesizeAndWaitKey("f", { accelKey: true }, window, null, () => {
+    // We can't afford to wait for the promise to resolve, by then the
+    // find bar is visible and focused, so sending characters to the
+    // content browser wouldn't work.
     isnot(document.activeElement, findBar._findField.inputField,
       "findbar is not yet focused");
+    EventUtils.synthesizeKey("a");
+    EventUtils.synthesizeKey("b");
+    EventUtils.synthesizeKey("c");
+    is(findBar._findField.value, initialValue, "still has initial find query");
   });
 
-  let promises = [
-    BrowserTestUtils.sendChar("a", browser),
-    BrowserTestUtils.sendChar("b", browser),
-    BrowserTestUtils.sendChar("c", browser)
-  ];
-
-  is(findBar._findField.value, initialValue, "still has initial find query");
-
-  await Promise.all(promises);
+  await BrowserTestUtils.waitForCondition(() => findBar._findField.value.length == 3);
   is(document.activeElement, findBar._findField.inputField,
     "findbar is now focused");
   is(findBar._findField.value, "abc", "abc fully entered as find query");
