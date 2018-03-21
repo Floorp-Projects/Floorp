@@ -136,7 +136,6 @@ class Test_get_browser_config(object):
                 'xperf_path',
                 'error_filename',
                 'no_upload_results',
-                'disable_stylo',
                 'stylothreads',
                 'subtests']
 
