@@ -16,6 +16,7 @@
    * Run a test to verify the use of LoopbackTone as audio input.
    */
   scriptsReady.then(() => runTestWhenReady(async () => {
+    let audioDevice = SpecialPowers.getCharPref("media.audio_loopback_dev", "");
     if (!audioDevice) {
       todo(false, "No loopback device set by framework. Try --use-test-media-devices");
       return Promise.resolve();
