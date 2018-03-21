@@ -12,6 +12,7 @@
 
 #include "AccessibleHandler.h"
 #include "AccessibleHandlerControl.h"
+#include "HandlerChildEnumerator.h"
 #include "HandlerRelation.h"
 
 #include "Factory.h"
@@ -403,6 +404,13 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
   if (aIid == IID_IProvideClassInfo) {
     RefPtr<IProvideClassInfo> clsInfo(this);
     clsInfo.forget(aOutInterface);
+    return S_OK;
+  }
+
+  if (aIid == IID_IEnumVARIANT && mCachedData.mGeckoBackChannel) {
+    RefPtr<IEnumVARIANT> childEnum(
+      new HandlerChildEnumerator(this, mCachedData.mGeckoBackChannel));
+    childEnum.forget(aOutInterface);
     return S_OK;
   }
 
