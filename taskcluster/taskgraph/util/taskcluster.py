@@ -17,7 +17,7 @@ from requests.adapters import HTTPAdapter
 from taskgraph.task import Task
 
 _TC_ARTIFACT_LOCATION = \
-        'https://queue.taskcluster.net/v1/task/{task_id}/artifacts/public/build/{postfix}'
+        'https://queue.taskcluster.net/v1/task/{task_id}/artifacts/{artifact_prefix}/{postfix}'
 
 logger = logging.getLogger(__name__)
 
@@ -209,8 +209,12 @@ def purge_cache(provisioner_id, worker_type, cache_name, use_proxy=False):
         _do_request(purge_cache_url, json={'cacheName': cache_name})
 
 
-def get_taskcluster_artifact_prefix(task_id, postfix='', locale=None):
+def get_taskcluster_artifact_prefix(task, task_id, postfix='', locale=None):
     if locale:
         postfix = '{}/{}'.format(locale, postfix)
 
-    return _TC_ARTIFACT_LOCATION.format(task_id=task_id, postfix=postfix)
+    artifact_prefix = get_artifact_prefix(task)
+
+    return _TC_ARTIFACT_LOCATION.format(
+        task_id=task_id, postfix=postfix, artifact_prefix=artifact_prefix
+    )
