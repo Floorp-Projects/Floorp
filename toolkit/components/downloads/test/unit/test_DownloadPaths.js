@@ -77,6 +77,10 @@ add_task(async function test_sanitize() {
   testSanitize("..", "");
   testSanitize(" ", "");
   testSanitize(" . ", "");
+
+  // Stripping of BIDI formatting characters.
+  testSanitize("\u200e \u202b\u202c\u202d\u202etest\x7f\u200f", "test");
+  testSanitize("AB\x7f\u202a\x7f\u202a\x7fCD", "AB CD");
 });
 
 add_task(async function test_splitBaseNameAndExtension() {
