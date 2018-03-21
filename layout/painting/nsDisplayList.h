@@ -5250,12 +5250,18 @@ public:
                    nsDisplayList* aList,
                    const ActiveScrolledRoot* aActiveScrolledRoot,
                    bool aForEventsAndPluginsOnly);
+
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
                    const nsDisplayOpacity& aOther)
     : nsDisplayWrapList(aBuilder, aOther)
     , mOpacity(aOther.mOpacity)
     , mForEventsAndPluginsOnly(aOther.mForEventsAndPluginsOnly)
-  {}
+    , mOpacityAppliedToChildren(false)
+  {
+    // We should not try to merge flattened opacities.
+    MOZ_ASSERT(!aOther.mOpacityAppliedToChildren);
+  }
+
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOpacity();
 #endif
@@ -5264,6 +5270,7 @@ public:
   {
     nsDisplayItem::RestoreState();
     mOpacity = mState.mOpacity;
+    mOpacityAppliedToChildren = false;
   }
 
   virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
@@ -5312,6 +5319,12 @@ public:
                             const DisplayItemClipChain* aClip) override;
   virtual bool CanApplyOpacity() const override;
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override;
+
+  /**
+   * Returns true if ShouldFlattenAway() applied opacity to children.
+   */
+  bool OpacityAppliedToChildren() const { return mOpacityAppliedToChildren; }
+
   static bool NeedsActiveLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
   NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
@@ -5327,8 +5340,11 @@ public:
   float GetOpacity() { return mOpacity; }
 
 private:
+  bool ApplyOpacityToChildren(nsDisplayListBuilder* aBuilder);
+
   float mOpacity;
   bool mForEventsAndPluginsOnly;
+  bool mOpacityAppliedToChildren;
 
   struct {
     float mOpacity;
