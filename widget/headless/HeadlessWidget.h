@@ -106,7 +106,7 @@ public:
     // Headless widgets have no title, so just ignore it.
     return NS_OK;
   }
-  virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin &margins) {
+  virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin &margins) override {
     // Headless widgets have no chrome margins, so just ignore the call.
     return NS_OK;
   }
