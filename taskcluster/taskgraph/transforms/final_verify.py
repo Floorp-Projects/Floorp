@@ -25,7 +25,7 @@ def add_command(config, tasks):
             if 'update-verify-config' in upstream:
                 final_verify_configs.append(
                     "{}update-verify.cfg".format(
-                        get_taskcluster_artifact_prefix("<{}>".format(upstream))
+                        get_taskcluster_artifact_prefix(task, "<{}>".format(upstream))
                     )
                 )
         task["worker"]["command"] = [
