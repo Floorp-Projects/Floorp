@@ -51,7 +51,7 @@ function assertInvalidHeader(fieldName, fieldValue, headers)
   }
   catch (e)
   {
-    if (e !== Cr.NS_ERROR_INVALID_ARG)
+    if (e.result !== Cr.NS_ERROR_INVALID_ARG)
       do_throw("Unexpected exception thrown: " + e);
   }
 }
@@ -121,7 +121,7 @@ function testGetHeader()
   }
   catch (e)
   {
-    if (e !== Cr.NS_ERROR_INVALID_ARG)
+    if (e.result !== Cr.NS_ERROR_INVALID_ARG)
       do_throw("headers.getHeader(':') must throw invalid arg");
   }
 
@@ -132,7 +132,7 @@ function testGetHeader()
   }
   catch (e)
   {
-    if (e !== Cr.NS_ERROR_NOT_AVAILABLE)
+    if (e.result !== Cr.NS_ERROR_NOT_AVAILABLE)
       do_throw("shouldn't be a header named 'valid' in headers!");
   }
 }
@@ -183,7 +183,7 @@ function testHasHeader()
   }
   catch (e)
   {
-    if (e !== Cr.NS_ERROR_INVALID_ARG)
+    if (e.result !== Cr.NS_ERROR_INVALID_ARG)
       do_throw(".hasHeader for an invalid name should throw");
   }
 }
