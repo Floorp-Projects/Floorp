@@ -60,6 +60,7 @@ struct ModuleEnvironment
     const ModuleKind          kind;
     const CompileMode         mode;
     const Shareable           sharedMemoryEnabled;
+    const HasGcTypes          gcTypesEnabled;
     const Tier                tier;
 
     // Module fields decoded from the module environment (or initialized while
@@ -87,12 +88,14 @@ struct ModuleEnvironment
     explicit ModuleEnvironment(CompileMode mode,
                                Tier tier,
                                DebugEnabled debug,
+                               HasGcTypes hasGcTypes,
                                Shareable sharedMemoryEnabled,
                                ModuleKind kind = ModuleKind::Wasm)
       : debug(debug),
         kind(kind),
         mode(mode),
         sharedMemoryEnabled(sharedMemoryEnabled),
+        gcTypesEnabled(hasGcTypes),
         tier(tier),
         memoryUsage(MemoryUsage::None),
         minMemoryLength(0)
