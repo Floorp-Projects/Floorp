@@ -321,31 +321,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
   protected:
     // Constructors are protected. Use one of the derived classes!
-    MacroAssembler()
-      : framePushed_(0),
-#ifdef DEBUG
-        inCall_(false),
-#endif
-        emitProfilingInstrumentation_(false)
-    {
-        JitContext* jcx = GetJitContext();
-
-        if (!jcx->temp) {
-            JSContext* cx = jcx->cx;
-            MOZ_ASSERT(cx);
-            alloc_.emplace(cx);
-        }
-
-        moveResolver_.setAllocator(*jcx->temp);
-
-#if defined(JS_CODEGEN_ARM)
-        initWithAllocator();
-        m_buffer.id = jcx->getNextAssemblerId();
-#elif defined(JS_CODEGEN_ARM64)
-        initWithAllocator();
-        armbuffer_.id = jcx->getNextAssemblerId();
-#endif
-    }
+    MacroAssembler();
 
     // This constructor should only be used when there is no JitContext active
     // (for example, Trampoline-$(ARCH).cpp and IonCaches.cpp).
@@ -353,26 +329,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // wasm compilation handles its own JitContext-pushing
     struct WasmToken {};
-    explicit MacroAssembler(WasmToken, TempAllocator& alloc)
-      : framePushed_(0),
-#ifdef DEBUG
-        inCall_(false),
-#endif
-        emitProfilingInstrumentation_(false)
-    {
-        moveResolver_.setAllocator(alloc);
-
-#if defined(JS_CODEGEN_ARM)
-        initWithAllocator();
-        m_buffer.id = 0;
-#elif defined(JS_CODEGEN_ARM64)
-        initWithAllocator();
-        // Stubs + builtins + the baseline compiler all require the native SP,
-        // not the PSP.
-        SetStackPointer64(sp);
-        armbuffer_.id = 0;
-#endif
-    }
+    explicit MacroAssembler(WasmToken, TempAllocator& alloc);
 
   public:
     MoveResolver& moveResolver() {
