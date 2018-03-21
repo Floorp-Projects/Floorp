@@ -116,9 +116,6 @@ imply_option('MOZ_SERVICES_HEALTHREPORT', True)
 imply_option('MOZ_ANDROID_HISTORY', True)
 imply_option('--enable-small-chunk-size', True)
 
-set_config('ANDROID_SUPPORT_LIBRARY_VERSION', '23.4.0')
-add_old_configure_assignment('ANDROID_SUPPORT_LIBRARY_VERSION', '23.4.0')
-
 @depends(target)
 def check_target(target):
     if target.os != 'Android':
