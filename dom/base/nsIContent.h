@@ -1008,7 +1008,7 @@ inline nsIContent* nsINode::AsContent()
   return static_cast<nsIContent*>(this);
 }
 
-#define NS_IMPL_FROMCONTENT_HELPER(_class, _check)                      \
+#define NS_IMPL_FROMNODE_HELPER(_class, _check)                         \
   static _class* FromNode(nsINode* aNode)                               \
   {                                                                     \
     return aNode->_check ? static_cast<_class*>(aNode) : nullptr;       \
@@ -1026,13 +1026,13 @@ inline nsIContent* nsINode::AsContent()
     return aNode ? FromNode(aNode) : nullptr;                           \
   }
 
-#define NS_IMPL_FROMCONTENT(_class, _nsid)                                     \
-  NS_IMPL_FROMCONTENT_HELPER(_class, IsInNamespace(_nsid))
+#define NS_IMPL_FROMNODE(_class, _nsid)                                     \
+  NS_IMPL_FROMNODE_HELPER(_class, IsInNamespace(_nsid))
 
-#define NS_IMPL_FROMCONTENT_WITH_TAG(_class, _nsid, _tag)                      \
-  NS_IMPL_FROMCONTENT_HELPER(_class, NodeInfo()->Equals(nsGkAtoms::_tag, _nsid))
+#define NS_IMPL_FROMNODE_WITH_TAG(_class, _nsid, _tag)                      \
+  NS_IMPL_FROMNODE_HELPER(_class, NodeInfo()->Equals(nsGkAtoms::_tag, _nsid))
 
-#define NS_IMPL_FROMCONTENT_HTML_WITH_TAG(_class, _tag)                        \
-  NS_IMPL_FROMCONTENT_WITH_TAG(_class, kNameSpaceID_XHTML, _tag)
+#define NS_IMPL_FROMNODE_HTML_WITH_TAG(_class, _tag)                        \
+  NS_IMPL_FROMNODE_WITH_TAG(_class, kNameSpaceID_XHTML, _tag)
 
 #endif /* nsIContent_h___ */

@@ -89,7 +89,7 @@ public:
     SetFlags(NS_MAYBE_MODIFIED_FREQUENTLY);
   }
 
-  NS_IMPL_FROMCONTENT_HELPER(CharacterData, IsCharacterData())
+  NS_IMPL_FROMNODE_HELPER(CharacterData, IsCharacterData())
 
   virtual void GetNodeValueInternal(nsAString& aNodeValue) override;
   virtual void SetNodeValueInternal(const nsAString& aNodeValue,

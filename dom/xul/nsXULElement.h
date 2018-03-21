@@ -350,7 +350,7 @@ public:
     Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument,
            bool aIsScriptable, bool aIsRoot, mozilla::dom::Element** aResult);
 
-    NS_IMPL_FROMCONTENT(nsXULElement, kNameSpaceID_XUL)
+    NS_IMPL_FROMNODE(nsXULElement, kNameSpaceID_XUL)
 
     // nsISupports
     NS_DECL_ISUPPORTS_INHERITED
