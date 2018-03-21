@@ -80,7 +80,7 @@ function runTests() {
   Services.obs.addObserver(onParent, "test:setupParent");
 
   // Instanciate e10s machinery and call setupInChild
-  DebuggerServer.connectToChild(conn, iframe).then(actor => {
+  DebuggerServer.connectToFrame(conn, iframe).then(actor => {
     DebuggerServer.setupInChild({
       module: "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/setup-in-child.js",
       setupChild: "setupChild",

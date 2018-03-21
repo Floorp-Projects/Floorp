@@ -17,6 +17,11 @@
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
+#if defined(XP_WIN)
+#include <processthreadsapi.h>  // for GetCurrentProcessId()
+#else
+#include <unistd.h> // for getpid()
+#endif // defined(XP_WIN)
 
 namespace mozilla {
 namespace dom {
@@ -471,6 +476,44 @@ WorkerDebugger::ReportErrorToDebuggerOnMainThread(const nsAString& aFilename,
   WorkerErrorReport::LogErrorToConsole(report, 0);
 }
 
+#ifndef RELEASE_OR_BETA
+PerformanceInfo
+WorkerDebugger::ReportPerformanceInfo()
+{
+  AssertIsOnMainThread();
+#if defined(XP_WIN)
+  uint32_t pid = GetCurrentProcessId();
+#else
+  uint32_t pid = getpid();
+#endif
+  uint64_t wid = mWorkerPrivate->WindowID();
+  uint64_t pwid = wid;
+  nsPIDOMWindowInner* win = mWorkerPrivate->GetWindow();
+  if (win) {
+    nsPIDOMWindowOuter* outer = win->GetOuterWindow();
+    if (outer) {
+      nsCOMPtr<nsPIDOMWindowOuter> top = outer->GetTop();
+      if (top) {
+        pwid = top->WindowID();
+      }
+    }
+  }
+  RefPtr<PerformanceCounter> perf = mWorkerPrivate->GetPerformanceCounter();
+  uint16_t count =  perf->GetTotalDispatchCount();
+  uint64_t duration = perf->GetExecutionDuration();
+  RefPtr<nsIURI> uri = mWorkerPrivate->GetResolvedScriptURI();
+  CategoryDispatch item = CategoryDispatch(DispatchCategory::Worker.GetValue(), count);
+  FallibleTArray<CategoryDispatch> items;
+  if (!items.AppendElement(item, fallible)) {
+    NS_ERROR("Could not complete the operation");
+    return PerformanceInfo(uri->GetSpecOrDefault(), pid, wid, pwid, duration,
+                           true, items);
+  }
+  perf->ResetPerformanceCounters();
+  return PerformanceInfo(uri->GetSpecOrDefault(), pid, wid, pwid, duration,
+                         true, items);
+}
+#endif
 
 } // dom namespace
 } // mozilla namespace

@@ -524,7 +524,7 @@ RootActor.prototype = {
     this._parameters.processList.onListChanged = null;
   },
 
-  onGetProcess: function(request) {
+  async onGetProcess(request) {
     if (!DebuggerServer.allowChromeProcess) {
       return { error: "forbidden",
                message: "You are not allowed to debug chrome." };
@@ -559,10 +559,9 @@ RootActor.prototype = {
     let onDestroy = () => {
       this._processActors.delete(id);
     };
-    return DebuggerServer.connectToContent(this.conn, mm, onDestroy).then(formResult => {
-      this._processActors.set(id, formResult);
-      return { form: formResult };
-    });
+    form = await DebuggerServer.connectToContentProcess(this.conn, mm, onDestroy);
+    this._processActors.set(id, form);
+    return { form };
   },
 
   /* This is not in the spec, but it's used by tests. */

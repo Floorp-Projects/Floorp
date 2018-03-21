@@ -123,6 +123,10 @@ namespace ChromeUtils {
   void clearRecentJSDevError();
 #endif // NIGHTLY_BUILD
 
+#ifndef RELEASE_OR_BETA
+  void requestPerformanceMetrics();
+#endif
+
   /**
    * IF YOU ADD NEW METHODS HERE, MAKE SURE THEY ARE THREAD-SAFE.
    */

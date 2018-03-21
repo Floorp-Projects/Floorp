@@ -448,7 +448,7 @@ MessageManagerTunnel.prototype = {
 
   OUTER_TO_INNER_FRAME_SCRIPTS: [
     // DevTools server for OOP frames
-    "resource://devtools/server/child.js"
+    "resource://devtools/server/startup/frame.js"
   ],
 
   get outer() {

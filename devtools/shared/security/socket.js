@@ -17,7 +17,7 @@ var defer = require("devtools/shared/defer");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn, dumpv } = DevToolsUtils;
 loader.lazyRequireGetter(this, "WebSocketServer",
-  "devtools/server/websocket-server");
+  "devtools/server/socket/websocket-server");
 loader.lazyRequireGetter(this, "DebuggerTransport",
   "devtools/shared/transport/transport", true);
 loader.lazyRequireGetter(this, "WebSocketDebuggerTransport",

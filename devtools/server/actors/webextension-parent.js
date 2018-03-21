@@ -161,7 +161,7 @@ ProxyChildActor.prototype = {
 
     this._browser = await ExtensionParent.DebugUtils.getExtensionProcessBrowser(this);
 
-    this._form = await DebuggerServer.connectToChild(this._conn, this._browser, onDestroy,
+    this._form = await DebuggerServer.connectToFrame(this._conn, this._browser, onDestroy,
                                                      {addonId: this.addonId});
 
     this._childActorID = this._form.actor;

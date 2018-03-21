@@ -418,6 +418,36 @@ class TestRecursiveMakeBackend(BackendTester):
         self.maxDiff = None
         self.assertEqual(lines, expected)
 
+    def test_generated_files_force(self):
+        """Ensure GENERATED_FILES with .force is handled properly."""
+        env = self._consume('generated-files-force', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = [
+            'export:: bar.c',
+            'GARBAGE += bar.c',
+            'EXTRA_MDDEPEND_FILES += bar.c.pp',
+            'bar.c: %s/generate-bar.py FORCE' % env.topsrcdir,
+            '$(REPORT_BUILD)',
+            '$(call py_action,file_generate,%s/generate-bar.py baz bar.c $(MDDEPDIR)/bar.c.pp)' % env.topsrcdir,
+            '',
+            'export:: foo.c',
+            'GARBAGE += foo.c',
+            'EXTRA_MDDEPEND_FILES += foo.c.pp',
+            'foo.c: %s/generate-foo.py $(srcdir)/foo-data' % (env.topsrcdir),
+            '$(REPORT_BUILD)',
+            '$(call py_action,file_generate,%s/generate-foo.py main foo.c $(MDDEPDIR)/foo.c.pp $(srcdir)/foo-data)' % (env.topsrcdir),
+            '',
+            'export:: quux.c',
+            'GARBAGE += quux.c',
+            'EXTRA_MDDEPEND_FILES += quux.c.pp',
+        ]
+
+        self.maxDiff = None
+        self.assertEqual(lines, expected)
+
     def test_localized_generated_files(self):
         """Ensure LOCALIZED_GENERATED_FILES is handled properly."""
         env = self._consume('localized-generated-files', RecursiveMakeBackend)
@@ -437,6 +467,33 @@ class TestRecursiveMakeBackend(BackendTester):
             'LOCALIZED_FILES_0_DEST = $(FINAL_TARGET)/',
             'LOCALIZED_FILES_0_TARGET := libs',
             'INSTALL_TARGETS += LOCALIZED_FILES_0',
+        ]
+
+        self.maxDiff = None
+        self.assertEqual(lines, expected)
+
+    def test_localized_generated_files_force(self):
+        """Ensure LOCALIZED_GENERATED_FILES with .force is handled properly."""
+        env = self._consume('localized-generated-files-force', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = [
+            'libs:: foo.xyz',
+            'GARBAGE += foo.xyz',
+            'EXTRA_MDDEPEND_FILES += foo.xyz.pp',
+            'foo.xyz: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input $(if $(IS_LANGUAGE_REPACK),FORCE)' % env.topsrcdir,
+            '$(REPORT_BUILD)',
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main foo.xyz $(MDDEPDIR)/foo.xyz.pp $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,
+            '',
+            'libs:: abc.xyz',
+            'GARBAGE += abc.xyz',
+            'EXTRA_MDDEPEND_FILES += abc.xyz.pp',
+            'abc.xyz: %s/generate-foo.py $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input FORCE' % env.topsrcdir,
+            '$(REPORT_BUILD)',
+            '$(call py_action,file_generate,--locale=$(AB_CD) %s/generate-foo.py main abc.xyz $(MDDEPDIR)/abc.xyz.pp $(call MERGE_FILE,localized-input) $(srcdir)/non-localized-input)' % env.topsrcdir,
+            '',
         ]
 
         self.maxDiff = None

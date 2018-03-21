@@ -12,7 +12,7 @@ const { getStringifiableFragments } =
   require("devtools/server/actors/utils/css-grid-utils");
 
 loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants");
-loader.lazyRequireGetter(this, "CssLogic", "devtools/server/css-logic", true);
+loader.lazyRequireGetter(this, "CssLogic", "devtools/server/actors/inspector/css-logic", true);
 
 /**
  * Set of actors the expose the CSS layout information to the devtools protocol clients.

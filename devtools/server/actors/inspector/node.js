@@ -25,8 +25,8 @@ loader.lazyRequireGetter(this, "isAnonymous", "devtools/shared/layout/utils", tr
 loader.lazyRequireGetter(this, "InspectorActorUtils", "devtools/server/actors/inspector/utils");
 loader.lazyRequireGetter(this, "LongStringActor", "devtools/server/actors/string", true);
 loader.lazyRequireGetter(this, "getFontPreviewData", "devtools/server/actors/styles", true);
-loader.lazyRequireGetter(this, "CssLogic", "devtools/server/css-logic", true);
-loader.lazyRequireGetter(this, "EventParsers", "devtools/server/event-parsers", true);
+loader.lazyRequireGetter(this, "CssLogic", "devtools/server/actors/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "EventParsers", "devtools/server/actors/inspector/event-parsers", true);
 
 const EventEmitter = require("devtools/shared/event-emitter");
 

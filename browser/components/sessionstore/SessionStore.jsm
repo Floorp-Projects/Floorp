@@ -165,7 +165,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  DevToolsShim: "chrome://devtools-shim/content/DevToolsShim.jsm",
+  DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
   GlobalState: "resource:///modules/sessionstore/GlobalState.jsm",
   PrivacyFilter: "resource:///modules/sessionstore/PrivacyFilter.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
