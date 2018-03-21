@@ -24,6 +24,8 @@ const EXPECTED_APPMENU_OPEN_REFLOWS = [
       "adjustArrowPosition@chrome://global/content/bindings/popup.xml",
       "onxblpopuppositioned@chrome://global/content/bindings/popup.xml",
     ],
+
+    maxCount: 3, // This number should only ever go down - never up.
   },
 
   {
