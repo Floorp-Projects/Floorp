@@ -1345,46 +1345,46 @@ auto LayerSession::Compositor::UpdateRootFrameMetrics(float a0, float a1, float 
     return mozilla::jni::Method<UpdateRootFrameMetrics_t>::Call(Compositor::mCtx, nullptr, a0, a1, a2);
 }
 
-const char NativePanZoomController::name[] =
-        "org/mozilla/gecko/gfx/NativePanZoomController";
+const char PanZoomController::name[] =
+        "org/mozilla/gecko/gfx/PanZoomController";
 
-constexpr char NativePanZoomController::DisposeNative_t::name[];
-constexpr char NativePanZoomController::DisposeNative_t::signature[];
+constexpr char PanZoomController::DisposeNative_t::name[];
+constexpr char PanZoomController::DisposeNative_t::signature[];
 
-constexpr char NativePanZoomController::HandleMotionEvent_t::name[];
-constexpr char NativePanZoomController::HandleMotionEvent_t::signature[];
+constexpr char PanZoomController::HandleMotionEvent_t::name[];
+constexpr char PanZoomController::HandleMotionEvent_t::signature[];
 
-constexpr char NativePanZoomController::HandleMouseEvent_t::name[];
-constexpr char NativePanZoomController::HandleMouseEvent_t::signature[];
+constexpr char PanZoomController::HandleMouseEvent_t::name[];
+constexpr char PanZoomController::HandleMouseEvent_t::signature[];
 
-constexpr char NativePanZoomController::HandleScrollEvent_t::name[];
-constexpr char NativePanZoomController::HandleScrollEvent_t::signature[];
+constexpr char PanZoomController::HandleScrollEvent_t::name[];
+constexpr char PanZoomController::HandleScrollEvent_t::signature[];
 
-constexpr char NativePanZoomController::SetIsLongpressEnabled_t::name[];
-constexpr char NativePanZoomController::SetIsLongpressEnabled_t::signature[];
+constexpr char PanZoomController::SetIsLongpressEnabled_t::name[];
+constexpr char PanZoomController::SetIsLongpressEnabled_t::signature[];
 
-constexpr char NativePanZoomController::SetAttached_t::name[];
-constexpr char NativePanZoomController::SetAttached_t::signature[];
+constexpr char PanZoomController::SetAttached_t::name[];
+constexpr char PanZoomController::SetAttached_t::signature[];
 
-auto NativePanZoomController::SetAttached(bool a0) const -> void
+auto PanZoomController::SetAttached(bool a0) const -> void
 {
-    return mozilla::jni::Method<SetAttached_t>::Call(NativePanZoomController::mCtx, nullptr, a0);
+    return mozilla::jni::Method<SetAttached_t>::Call(PanZoomController::mCtx, nullptr, a0);
 }
 
-constexpr char NativePanZoomController::SynthesizeNativeMouseEvent_t::name[];
-constexpr char NativePanZoomController::SynthesizeNativeMouseEvent_t::signature[];
+constexpr char PanZoomController::SynthesizeNativeMouseEvent_t::name[];
+constexpr char PanZoomController::SynthesizeNativeMouseEvent_t::signature[];
 
-auto NativePanZoomController::SynthesizeNativeMouseEvent(int32_t a0, int32_t a1, int32_t a2) const -> void
+auto PanZoomController::SynthesizeNativeMouseEvent(int32_t a0, int32_t a1, int32_t a2) const -> void
 {
-    return mozilla::jni::Method<SynthesizeNativeMouseEvent_t>::Call(NativePanZoomController::mCtx, nullptr, a0, a1, a2);
+    return mozilla::jni::Method<SynthesizeNativeMouseEvent_t>::Call(PanZoomController::mCtx, nullptr, a0, a1, a2);
 }
 
-constexpr char NativePanZoomController::SynthesizeNativeTouchPoint_t::name[];
-constexpr char NativePanZoomController::SynthesizeNativeTouchPoint_t::signature[];
+constexpr char PanZoomController::SynthesizeNativeTouchPoint_t::name[];
+constexpr char PanZoomController::SynthesizeNativeTouchPoint_t::signature[];
 
-auto NativePanZoomController::SynthesizeNativeTouchPoint(int32_t a0, int32_t a1, int32_t a2, int32_t a3, double a4, int32_t a5) const -> void
+auto PanZoomController::SynthesizeNativeTouchPoint(int32_t a0, int32_t a1, int32_t a2, int32_t a3, double a4, int32_t a5) const -> void
 {
-    return mozilla::jni::Method<SynthesizeNativeTouchPoint_t>::Call(NativePanZoomController::mCtx, nullptr, a0, a1, a2, a3, a4, a5);
+    return mozilla::jni::Method<SynthesizeNativeTouchPoint_t>::Call(PanZoomController::mCtx, nullptr, a0, a1, a2, a3, a4, a5);
 }
 
 const char StackScroller::name[] =
