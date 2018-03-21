@@ -1364,10 +1364,11 @@ bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
     auto* piWindow = nsPIDOMWindowOuter::From(ourWindow);
     piWindow->SetFullScreen(true);
   } else {
-    // For maximized windows, ignore the XUL size attributes, as setting the
-    // size would set the window back to the normal sizemode.
+    // For maximized windows, ignore the XUL size and position attributes,
+    // as setting them would set the window back to normal sizemode.
     if (sizeMode == nsSizeMode_Maximized) {
       mIgnoreXULSize = true;
+      mIgnoreXULPosition = true;
     }
     mWindow->SetSizeMode(sizeMode);
   }
