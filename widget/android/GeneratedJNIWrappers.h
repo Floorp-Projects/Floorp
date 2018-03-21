@@ -3751,7 +3751,7 @@ public:
                 mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "attachNPZC";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/gfx/NativePanZoomController;)V";
+                "(Lorg/mozilla/gecko/gfx/PanZoomController;)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -4154,15 +4154,15 @@ public:
     template<class Impl> class Natives;
 };
 
-class NativePanZoomController : public mozilla::jni::ObjectBase<NativePanZoomController>
+class PanZoomController : public mozilla::jni::ObjectBase<PanZoomController>
 {
 public:
     static const char name[];
 
-    explicit NativePanZoomController(const Context& ctx) : ObjectBase<NativePanZoomController>(ctx) {}
+    explicit PanZoomController(const Context& ctx) : ObjectBase<PanZoomController>(ctx) {}
 
     struct DisposeNative_t {
-        typedef NativePanZoomController Owner;
+        typedef PanZoomController Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<> Args;
@@ -4179,7 +4179,7 @@ public:
     };
 
     struct HandleMotionEvent_t {
-        typedef NativePanZoomController Owner;
+        typedef PanZoomController Owner;
         typedef bool ReturnType;
         typedef bool SetterType;
         typedef mozilla::jni::Args<
@@ -4207,7 +4207,7 @@ public:
     };
 
     struct HandleMouseEvent_t {
-        typedef NativePanZoomController Owner;
+        typedef PanZoomController Owner;
         typedef bool ReturnType;
         typedef bool SetterType;
         typedef mozilla::jni::Args<
@@ -4230,7 +4230,7 @@ public:
     };
 
     struct HandleScrollEvent_t {
-        typedef NativePanZoomController Owner;
+        typedef PanZoomController Owner;
         typedef bool ReturnType;
         typedef bool SetterType;
         typedef mozilla::jni::Args<
@@ -4253,7 +4253,7 @@ public:
     };
 
     struct SetIsLongpressEnabled_t {
-        typedef NativePanZoomController Owner;
+        typedef PanZoomController Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
@@ -4271,7 +4271,7 @@ public:
     };
 
     struct SetAttached_t {
-        typedef NativePanZoomController Owner;
+        typedef PanZoomController Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
@@ -4291,7 +4291,7 @@ public:
     auto SetAttached(bool) const -> void;
 
     struct SynthesizeNativeMouseEvent_t {
-        typedef NativePanZoomController Owner;
+        typedef PanZoomController Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
@@ -4313,7 +4313,7 @@ public:
     auto SynthesizeNativeMouseEvent(int32_t, int32_t, int32_t) const -> void;
 
     struct SynthesizeNativeTouchPoint_t {
-        typedef NativePanZoomController Owner;
+        typedef PanZoomController Owner;
         typedef void ReturnType;
         typedef void SetterType;
         typedef mozilla::jni::Args<
