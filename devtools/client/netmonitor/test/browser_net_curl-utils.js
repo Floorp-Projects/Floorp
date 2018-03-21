@@ -258,7 +258,7 @@ async function createCurlData(selected, getLongString, requestData) {
     data.headers.push({ name: name, value: text });
   }
 
-  let requestPostData = await requestData(id, "requestPostData");
+  let { requestPostData } = await requestData(id, "requestPostData");
   // Fetch the request payload.
   if (requestPostData) {
     let postData = requestPostData.postData.text;
