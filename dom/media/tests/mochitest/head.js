@@ -12,22 +12,31 @@ let WANT_FAKE_AUDIO = true;
 // Specifies if we want fake video streams for this run
 let WANT_FAKE_VIDEO = true;
 let TEST_AUDIO_FREQ = 1000;
-let audioDevice = SpecialPowers.getCharPref("media.audio_loopback_dev", "");
-if (audioDevice) {
-  WANT_FAKE_AUDIO = false;
-  // It will be updated to 440 when/if DefaultLoopbackTone is instantiated.
-  TEST_AUDIO_FREQ = -1;
-  dump("TEST DEVICES: Got loopback audio: " + audioDevice + "\n");
-} else {
-  dump("TEST DEVICES: No test device found in media.audio_loopback_dev, using fake audio streams.\n");
+
+/**
+ * Reads the current values of preferences affecting fake and loopback devices
+ * and sets the WANT_FAKE_AUDIO and WANT_FAKE_VIDEO gloabals appropriately.
+*/
+function updateConfigFromFakeAndLoopbackPrefs() {
+  let audioDevice = SpecialPowers.getCharPref("media.audio_loopback_dev", "");
+  if (audioDevice) {
+    WANT_FAKE_AUDIO = false;
+    dump("TEST DEVICES: Got loopback audio: " + audioDevice + "\n");
+  } else {
+    WANT_FAKE_AUDIO = true;
+    dump("TEST DEVICES: No test device found in media.audio_loopback_dev, using fake audio streams.\n");
+  }
+  let videoDevice = SpecialPowers.getCharPref("media.video_loopback_dev", "");
+  if (videoDevice) {
+    WANT_FAKE_VIDEO = false;
+    dump("TEST DEVICES: Got loopback video: " + videoDevice + "\n");
+  } else {
+    WANT_FAKE_VIDEO = true;
+    dump("TEST DEVICES: No test device found in media.video_loopback_dev, using fake video streams.\n");
+  }
 }
-let videoDevice = SpecialPowers.getCharPref("media.video_loopback_dev", "");
-if (videoDevice) {
-  WANT_FAKE_VIDEO = false;
-  dump("TEST DEVICES: Got loopback video: " + videoDevice + "\n");
-} else {
-  dump("TEST DEVICES: No test device found in media.video_loopback_dev, using fake video streams.\n");
-}
+
+updateConfigFromFakeAndLoopbackPrefs();
 
 /**
  *  Global flag to skip LoopbackTone
@@ -354,6 +363,8 @@ function createMediaElementForTrack(track, idPrefix) {
  *        The constraints for this mozGetUserMedia callback
  */
 function getUserMedia(constraints) {
+  // Tests may have changed the values of prefs, so recheck
+  updateConfigFromFakeAndLoopbackPrefs();
   if (!WANT_FAKE_AUDIO
       && !constraints.fake
       && constraints.audio
@@ -370,6 +381,9 @@ function getUserMedia(constraints) {
                                         , {echoCancellation: false}
                                         , {noiseSuppression: false}
                                         , constraints.audio);
+  } else {
+    // Fake device configured, ensure our test freq is correct.
+    TEST_AUDIO_FREQ = 1000;
   }
   info("Call getUserMedia for " + JSON.stringify(constraints));
   return navigator.mediaDevices.getUserMedia(constraints)
