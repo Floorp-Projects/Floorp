@@ -936,7 +936,7 @@ wasm::EnsureBuiltinThunksInitialized()
 
     LifoAlloc lifo(BUILTIN_THUNK_LIFO_SIZE);
     TempAllocator tempAlloc(&lifo);
-    MacroAssembler masm(MacroAssembler::WasmToken(), tempAlloc);
+    WasmMacroAssembler masm(tempAlloc);
 
     for (auto sym : MakeEnumeratedRange(SymbolicAddress::Limit)) {
         if (!NeedsBuiltinThunk(sym)) {

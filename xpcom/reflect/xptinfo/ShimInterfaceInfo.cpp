@@ -35,6 +35,7 @@
 #include "nsIDOMXULElement.h"
 #include "nsIFrameLoader.h"
 #include "nsIListBoxObject.h"
+#include "nsIMessageManager.h"
 #include "nsISelection.h"
 #include "nsITreeBoxObject.h"
 #include "nsIWebBrowserPersistable.h"
@@ -64,6 +65,7 @@
 #include "mozilla/dom/ListBoxObjectBinding.h"
 #include "mozilla/dom/MediaListBinding.h"
 #include "mozilla/dom/MessageEventBinding.h"
+#include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/NodeListBinding.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/NotifyPaintEventBinding.h"
@@ -143,6 +145,7 @@ struct ComponentsInterfaceShimEntry {
 
 const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
 {
+  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIContentFrameMessageManager, ContentFrameMessageManager),
   DEFINE_SHIM(CustomEvent),
   DEFINE_SHIM(DOMCursor),
   DEFINE_SHIM(DOMException),
@@ -156,6 +159,7 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMGeoPositionError, PositionError),
   DEFINE_SHIM(HTMLInputElement),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIListBoxObject, ListBoxObject),
+  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIMessageSender, MessageSender),
   DEFINE_SHIM(NodeList),
   DEFINE_SHIM(Node),
   DEFINE_SHIM(NotifyPaintEvent),

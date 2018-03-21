@@ -36,6 +36,7 @@ WEBIDL_FILES = [
     'InspectorUtils.webidl',
     'MatchGlob.webidl',
     'MatchPattern.webidl',
+    'MessageManager.webidl',
     'MozStorageAsyncStatementParams.webidl',
     'MozStorageStatementParams.webidl',
     'MozStorageStatementRow.webidl',

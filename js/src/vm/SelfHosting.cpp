@@ -480,10 +480,10 @@ intrinsic_MakeDefaultConstructor(JSContext* cx, unsigned argc, Value* vp)
 
     // Because self-hosting code does not allow top-level lexicals,
     // class constructors are class expressions in top-level vars.
-    // Because of this, we give them a guessed atom. Since they
+    // Because of this, we give them an inferred atom. Since they
     // will always be cloned, and given an explicit atom, instead
     // overrule that.
-    ctor->clearGuessedAtom();
+    ctor->clearInferredName();
 
     args.rval().setUndefined();
     return true;

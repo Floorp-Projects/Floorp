@@ -2521,36 +2521,6 @@ public:
     return sTextCombineUprightDigitsEnabled;
   }
 
-  // Stylo (the Servo backend for Gecko's style system) is generally enabled
-  // or disabled at compile-time. However, we provide the additional capability
-  // to disable it dynamically in stylo-enabled builds via a pref.
-  static bool StyloEnabled() {
-    return true;
-  }
-
-  // Whether Stylo should be allowed to be enabled in this process.
-  static bool StyloSupportedInCurrentProcess() {
-    if (XRE_IsContentProcess()) {
-      return true;
-    }
-    if (XRE_IsParentProcess()) {
-      // If Stylo is enabled for chrome document, we use it in all
-      // parent processes, regardless of whether it's e10s parent.
-      if (StyloChromeEnabled()) {
-        return true;
-      }
-      // Otherwise we only use stylo on non-e10s parent.
-      return !XRE_IsE10sParentProcess();
-    }
-    // Stylo is not enabled for any other process.
-    MOZ_DIAGNOSTIC_ASSERT(false, "We should not be creating any document "
-                          "in processes other than content and parent");
-    return false;
-  }
-
-  // Whether Stylo should be used on chrome documents.
-  static bool StyloChromeEnabled();
-
   static uint32_t IdlePeriodDeadlineLimit() {
     return sIdlePeriodDeadlineLimit;
   }
@@ -2578,11 +2548,6 @@ public:
 
   static void Initialize();
   static void Shutdown();
-
-  /**
-   * Return whether stylo should be used for a given document principal.
-   */
-  static bool ShouldUseStylo(nsIPrincipal* aPrincipal);
 
   /**
    * Register an imgIRequest object with a refresh driver.
@@ -3101,7 +3066,6 @@ private:
   static bool sInterruptibleReflowEnabled;
   static bool sSVGTransformBoxEnabled;
   static bool sTextCombineUprightDigitsEnabled;
-  static bool sStyloEnabled;
   static uint32_t sIdlePeriodDeadlineLimit;
   static uint32_t sQuiescentFramesBeforeIdlePeriod;
 

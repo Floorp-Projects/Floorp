@@ -39,15 +39,14 @@ AssemblerX86Shared::copyDataRelocationTable(uint8_t* dest)
         memcpy(dest, dataRelocations_.buffer(), dataRelocations_.length());
 }
 
-static void
-TraceDataRelocations(JSTracer* trc, CompactBufferReader& reader,
-                     uint8_t* buffer, size_t bufferSize)
+/* static */ void
+AssemblerX86Shared::TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader)
 {
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
-        MOZ_ASSERT(offset >= sizeof(void*) && offset <= bufferSize);
+        MOZ_ASSERT(offset >= sizeof(void*) && offset <= code->instructionsSize());
 
-        uint8_t* src = buffer + offset;
+        uint8_t* src = code->raw() + offset;
         void* data = X86Encoding::GetPointer(src);
 
 #ifdef JS_PUNBOX64
@@ -72,29 +71,6 @@ TraceDataRelocations(JSTracer* trc, CompactBufferReader& reader,
         TraceManuallyBarrieredGenericPointerEdge(trc, &cell, "jit-masm-ptr");
         if (cell != data)
             X86Encoding::SetPointer(src, cell);
-    }
-}
-
-void
-AssemblerX86Shared::TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader)
-{
-    ::TraceDataRelocations(trc, reader, code->raw(), code->instructionsSize());
-}
-
-void
-AssemblerX86Shared::trace(JSTracer* trc)
-{
-    for (size_t i = 0; i < jumps_.length(); i++) {
-        RelativePatch& rp = jumps_[i];
-        if (rp.kind == Relocation::JITCODE) {
-            JitCode* code = JitCode::FromExecutable((uint8_t*)rp.target);
-            TraceManuallyBarrieredEdge(trc, &code, "masmrel32");
-            MOZ_ASSERT(code == JitCode::FromExecutable((uint8_t*)rp.target));
-        }
-    }
-    if (dataRelocations_.length()) {
-        CompactBufferReader reader(dataRelocations_);
-        ::TraceDataRelocations(trc, reader, masm.data(), masm.size());
     }
 }
 

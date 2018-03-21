@@ -70,9 +70,9 @@ class JSFunction : public js::NativeObject
                                        function-statement) */
         SELF_HOSTED      = 0x0080,  /* function is self-hosted builtin and must not be
                                        decompilable nor constructible. */
-        HAS_COMPILE_TIME_NAME = 0x0100, /* function had no explicit name, but a
-                                           name was set by SetFunctionName
-                                           at compile time */
+        HAS_INFERRED_NAME = 0x0100, /* function had no explicit name, but a name was
+                                       set by SetFunctionName at compile time or
+                                       SetFunctionNameIfNoOwnName at runtime. */
         INTERPRETED_LAZY = 0x0200,  /* function is interpreted but doesn't have a script yet */
         RESOLVED_LENGTH  = 0x0400,  /* f.length has been resolved (see fun_resolve). */
         RESOLVED_NAME    = 0x0800,  /* f.name has been resolved (see fun_resolve). */
@@ -106,8 +106,7 @@ class JSFunction : public js::NativeObject
         INTERPRETED_GENERATOR_OR_ASYNC = INTERPRETED,
         NO_XDR_FLAGS = RESOLVED_LENGTH | RESOLVED_NAME,
 
-        STABLE_ACROSS_CLONES = CONSTRUCTOR | LAMBDA | SELF_HOSTED | HAS_COMPILE_TIME_NAME |
-                               FUNCTION_KIND_MASK
+        STABLE_ACROSS_CLONES = CONSTRUCTOR | LAMBDA | SELF_HOSTED | FUNCTION_KIND_MASK
     };
 
     static_assert((INTERPRETED | INTERPRETED_LAZY) == js::JS_FUNCTION_INTERPRETED_BITS,
@@ -205,7 +204,7 @@ class JSFunction : public js::NativeObject
 
     /* Possible attributes of an interpreted function: */
     bool isBoundFunction()          const { return flags() & BOUND_FUN; }
-    bool hasCompileTimeName()       const { return flags() & HAS_COMPILE_TIME_NAME; }
+    bool hasInferredName()          const { return flags() & HAS_INFERRED_NAME; }
     bool hasGuessedAtom()           const {
         static_assert(HAS_GUESSED_ATOM == HAS_BOUND_FUNCTION_NAME_PREFIX,
                       "HAS_GUESSED_ATOM is unused for bound functions");
@@ -259,7 +258,7 @@ class JSFunction : public js::NativeObject
     }
 
     bool isNamedLambda() const {
-        return isLambda() && displayAtom() && !hasCompileTimeName() && !hasGuessedAtom();
+        return isLambda() && displayAtom() && !hasInferredName() && !hasGuessedAtom();
     }
 
     bool hasLexicalThis() const {
@@ -346,9 +345,9 @@ class JSFunction : public js::NativeObject
                                   js::MutableHandleAtom v);
 
     JSAtom* explicitName() const {
-        return (hasCompileTimeName() || hasGuessedAtom()) ? nullptr : atom_.get();
+        return (hasInferredName() || hasGuessedAtom()) ? nullptr : atom_.get();
     }
-    JSAtom* explicitOrCompileTimeName() const {
+    JSAtom* explicitOrInferredName() const {
         return hasGuessedAtom() ? nullptr : atom_.get();
     }
 
@@ -366,16 +365,21 @@ class JSFunction : public js::NativeObject
         return atom_;
     }
 
-    void setCompileTimeName(JSAtom* atom) {
+    void setInferredName(JSAtom* atom) {
         MOZ_ASSERT(!atom_);
         MOZ_ASSERT(atom);
         MOZ_ASSERT(!hasGuessedAtom());
-        MOZ_ASSERT(!isClassConstructor());
         setAtom(atom);
-        flags_ |= HAS_COMPILE_TIME_NAME;
+        flags_ |= HAS_INFERRED_NAME;
     }
-    JSAtom* compileTimeName() const {
-        MOZ_ASSERT(hasCompileTimeName());
+    void clearInferredName() {
+        MOZ_ASSERT(hasInferredName());
+        MOZ_ASSERT(atom_);
+        setAtom(nullptr);
+        flags_ &= ~HAS_INFERRED_NAME;
+    }
+    JSAtom* inferredName() const {
+        MOZ_ASSERT(hasInferredName());
         MOZ_ASSERT(atom_);
         return atom_;
     }
@@ -383,7 +387,7 @@ class JSFunction : public js::NativeObject
     void setGuessedAtom(JSAtom* atom) {
         MOZ_ASSERT(!atom_);
         MOZ_ASSERT(atom);
-        MOZ_ASSERT(!hasCompileTimeName());
+        MOZ_ASSERT(!hasInferredName());
         MOZ_ASSERT(!hasGuessedAtom());
         MOZ_ASSERT(!isBoundFunction());
         setAtom(atom);

@@ -14,12 +14,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   var didRunAsync = false;
   var didRunLocal = false;
 
-  var global = Cc["@mozilla.org/globalmessagemanager;1"]
-                 .getService(Components.interfaces.nsIMessageBroadcaster);
-  var ppm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
-              .getService(Components.interfaces.nsIMessageBroadcaster);
-  var cpm = Cc["@mozilla.org/childprocessmessagemanager;1"]
-              .getService(Components.interfaces.nsISyncMessageSender);
+  var global = Cc["@mozilla.org/globalmessagemanager;1"].getService();
+  var ppm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
+  var cpm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService();
 
   ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 

@@ -88,20 +88,6 @@ StyleSetHandle::Ptr::ResolveStyleFor(dom::Element* aElement,
 }
 
 already_AddRefed<nsStyleContext>
-StyleSetHandle::Ptr::ResolveStyleFor(dom::Element* aElement,
-                                     nsStyleContext* aParentContext,
-                                     LazyComputeBehavior aMayCompute,
-                                     TreeMatchContext* aTreeMatchContext)
-{
-  if (IsGecko()) {
-    MOZ_CRASH("old style system disabled");
-  }
-
-  auto* parent = aParentContext ? aParentContext->AsServo() : nullptr;
-  return AsServo()->ResolveStyleFor(aElement, parent, aMayCompute);
-}
-
-already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ResolveStyleForText(nsIContent* aTextNode,
                                          nsStyleContext* aParentContext)
 {
@@ -293,20 +279,6 @@ StyleSetHandle::Ptr::ProbePseudoElementStyle(dom::Element* aParentElement,
                                              nsStyleContext* aParentContext)
 {
   FORWARD_WITH_PARENT(ProbePseudoElementStyle, aParentContext, (aParentElement, aType, parent));
-}
-
-already_AddRefed<nsStyleContext>
-StyleSetHandle::Ptr::ProbePseudoElementStyle(dom::Element* aParentElement,
-                                             CSSPseudoElementType aType,
-                                             nsStyleContext* aParentContext,
-                                             TreeMatchContext* aTreeMatchContext)
-{
-  if (IsGecko()) {
-    MOZ_CRASH("old style system disabled");
-  }
-
-  auto* parent = aParentContext ? aParentContext->AsServo() : nullptr;
-  return AsServo()->ProbePseudoElementStyle(aParentElement, aType, parent);
 }
 
 void

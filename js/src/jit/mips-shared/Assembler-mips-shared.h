@@ -911,6 +911,14 @@ class AssemblerMIPSShared : public AssemblerShared
         }
     }
 
+    void assertNoGCThings() const {
+#ifdef DEBUG
+        MOZ_ASSERT(dataRelocations_.length() == 0);
+        for (auto& j : jumps_)
+            MOZ_ASSERT(j.kind == Relocation::HARDCODED);
+#endif
+    }
+
   public:
     bool oom() const;
 

@@ -83,7 +83,8 @@ def build_dict(config, env=os.environ):
     d['datareporting'] = bool(substs.get('MOZ_DATA_REPORTING'))
     d['healthreport'] = substs.get('MOZ_SERVICES_HEALTHREPORT') == '1'
     d['sync'] = substs.get('MOZ_SERVICES_SYNC') == '1'
-    d['stylo'] = substs.get('MOZ_STYLO_ENABLE') == '1'
+    # FIXME(emilio): We need to update a lot of WPT expectations before removing this.
+    d['stylo'] = True
     d['asan'] = substs.get('MOZ_ASAN') == '1'
     d['tsan'] = substs.get('MOZ_TSAN') == '1'
     d['ubsan'] = substs.get('MOZ_UBSAN') == '1'

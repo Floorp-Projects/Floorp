@@ -168,8 +168,7 @@ public:
   // contexts for such content nodes, when text-combine-upright is not
   // present.  However, not doing any rule matching for them is a first step.)
   already_AddRefed<ServoStyleContext>
-  ResolveStyleForText(nsIContent* aTextNode,
-                      ServoStyleContext* aParentContext);
+  ResolveStyleForText(nsIContent* aTextNode, ServoStyleContext* aParentContext);
 
   // Get a style context for a first-letter continuation (which no rules will
   // match).
@@ -344,7 +343,10 @@ public:
    *
    * FIXME(emilio): Is there a point in this after bug 1367904?
    */
-  already_AddRefed<ServoStyleContext> ResolveServoStyle(dom::Element* aElement);
+  already_AddRefed<ServoStyleContext> ResolveServoStyle(dom::Element* aElement)
+  {
+    return Servo_ResolveStyle(aElement, mRawSet.get()).Consume();
+  }
 
   bool GetKeyframesForName(nsAtom* aName,
                            const nsTimingFunction& aTimingFunction,

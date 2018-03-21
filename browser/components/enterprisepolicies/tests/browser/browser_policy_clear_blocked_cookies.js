@@ -3,7 +3,6 @@
 "use strict";
 
 add_task(async function setup() {
-  EnterprisePolicyTesting.resetRunOnceState();
   const expiry = Date.now() + 24 * 60 * 60;
   Services.cookies.add("example.com", "/", "secure", "true", true, false, false, expiry, {});
   Services.cookies.add("example.com", "/", "insecure", "true", false, false, false, expiry, {});
@@ -59,5 +58,4 @@ add_task(function teardown() {
   for (let host of ["example.com", "example.org", "example.net"]) {
     Services.cookies.removeCookiesWithOriginAttributes("{}", host);
   }
-  EnterprisePolicyTesting.resetRunOnceState();
 });
