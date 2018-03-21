@@ -15,122 +15,12 @@
           xmlns:svg="http://www.w3.org/2000/svg"
           xmlns:html="http://www.w3.org/1999/xhtml">
 
-<binding id="suppressChangeEvent"
-         extends="chrome://global/content/bindings/scale.xml#scale">
-<implementation implements="nsIXBLAccessible">
-  <!-- nsIXBLAccessible -->
-  <property name="accessibleName" readonly="true">
-    <getter>
-      var currTime = this.positionValue;
-      var totalTime = this.durationValue;
-
-      return this.scrubberNameFormat
-                 .replace(/#1/, currTime)
-                 .replace(/#2/, totalTime);
-    </getter>
-  </property>
-
-  <constructor>
-    <![CDATA[
-    /* eslint-disable no-multi-spaces */
-    this.scrubberNameFormat = ]]>"&scrubberScale.nameFormat;"<![CDATA[;
-    /* eslint-enable no-multi-spaces */
-    this.positionValue = "";
-    this.durationValue = "";
-    this.valueBar = null;
-    this.isDragging = false;
-    this.isPausedByDragging = false;
-
-    this.type = this.getAttribute("class");
-    this.Utils = document.getBindingParent(this.parentNode).Utils;
-    this.valueBar = this.Utils.progressBar;
-    ]]>
-  </constructor>
-
-  <method name="valueChanged">
-    <parameter name="which"/>
-    <parameter name="newValue"/>
-    <parameter name="userChanged"/>
-    <body>
-      <![CDATA[
-      // This method is a copy of the base binding's valueChanged(), except that it does
-      // not dispatch a |change| event (to avoid exposing the event to web content), and
-      // just calls the videocontrol's seekToPosition() method directly.
-      switch (which) {
-        case "curpos":
-          // Update the time shown in the thumb.
-          this.positionValue = this.Utils.formatTime(newValue, this.Utils.showHours);
-          this.Utils.positionLabel.setAttribute("value", this.positionValue);
-          // Update the value bar to match the thumb position.
-          let percent = newValue / this.max;
-          if (!isNaN(percent) && percent != Infinity) {
-            this.valueBar.value = Math.round(percent * 10000); // has max=10000
-          } else {
-            this.valueBar.removeAttribute("value");
-          }
-
-          // The value of userChanged is true when changing the position with the mouse,
-          // but not when pressing an arrow key. However, the base binding sets
-          // ._userChanged in its keypress handlers, so we just need to check both.
-          if (!userChanged && !this._userChanged) {
-            return;
-          }
-          this.setAttribute("value", newValue);
-          this.Utils.seekToPosition(newValue);
-          break;
-
-        case "minpos":
-          this.setAttribute("min", newValue);
-          break;
-
-        case "maxpos":
-          // Update the value bar to match the thumb position.
-          this.valueBar.value = Math.round(this.value / newValue * 10000); // has max=10000
-          this.setAttribute("max", newValue);
-          break;
-      }
-      ]]>
-    </body>
-  </method>
-
-  <method name="dragStateChanged">
-    <parameter name="isDragging"/>
-    <body>
-      <![CDATA[
-      this.Utils.log("--- dragStateChanged: " + isDragging + " ---");
-      this.isDragging = isDragging;
-      if (this.isPausedByDragging && !isDragging) {
-        // After the drag ends, resume playing.
-        this.Utils.video.play();
-        this.isPausedByDragging = false;
-      }
-      ]]>
-    </body>
-  </method>
-
-  <method name="pauseVideoDuringDragging">
-    <body>
-      <![CDATA[
-      if (this.isDragging &&
-         !this.Utils.video.paused && !this.isPausedByDragging) {
-        this.isPausedByDragging = true;
-        this.Utils.video.pause();
-      }
-      ]]>
-    </body>
-  </method>
-
-</implementation>
-</binding>
-
 <binding id="videoControls">
   <resources>
-    <stylesheet src="chrome://global/content/bindings/videocontrols.css"/>
     <stylesheet src="chrome://global/skin/media/videocontrols.css"/>
   </resources>
 
-  <xbl:content xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/1999/xhtml" class="mediaControlsFrame">
+  <xbl:content xmlns="http://www.w3.org/1999/xhtml" class="mediaControlsFrame">
     <div anonid="controlsContainer" class="controlsContainer" role="none">
       <div anonid="statusOverlay" class="statusOverlay stackItem" hidden="true">
         <div anonid="statusIcon" class="statusIcon"></div>
@@ -191,7 +81,6 @@
 
   <constructor>
     <![CDATA[
-    this.isTouchControls = false;
     this.randomID = 0;
 
     this.Utils = {
@@ -807,10 +696,6 @@
       },
 
       initPositionDurationBox() {
-        if (this.videocontrols.isTouchControls) {
-          return;
-        }
-
         const positionTextNode = Array.prototype.find.call(
           this.positionDurationBox.childNodes, (n) => !!~n.textContent.search("#1"));
         const durationSpan = this.durationSpan;
@@ -851,15 +736,11 @@
 
         // Format the duration as "h:mm:ss" or "m:ss"
         let timeString = isInfinite ? "" : this.formatTime(duration);
-        if (this.videocontrols.isTouchControls) {
-          this.durationLabel.setAttribute("value", timeString);
-        } else {
-          this.positionDurationBox.duration = timeString;
+        this.positionDurationBox.duration = timeString;
 
-          if (this.showHours) {
-            this.positionDurationBox.modifier = "long";
-            this.durationSpan.modifier = "long";
-          }
+        if (this.showHours) {
+          this.positionDurationBox.modifier = "long";
+          this.durationSpan.modifier = "long";
         }
 
         // "durationValue" property is used by scale binding to
@@ -903,10 +784,6 @@
       },
 
       updateScrubberProgress() {
-        if (this.videocontrols.isTouchControls) {
-          return;
-        }
-
         const positionPercent = this.scrubber.value / this.scrubber.max * 100;
 
         if (!isNaN(positionPercent) && positionPercent != Infinity) {
@@ -942,12 +819,8 @@
         let positionTime = this.formatTime(currentTime, this.showHours);
 
         this.scrubber.value = currentTime;
-        if (this.videocontrols.isTouchControls) {
-          this.positionLabel.setAttribute("value", positionTime);
-        } else {
-          this.positionDurationBox.position = positionTime;
-          this.updateScrubberProgress();
-        }
+        this.positionDurationBox.position = positionTime;
+        this.updateScrubberProgress();
       },
 
       showBuffered() {
@@ -1110,11 +983,7 @@
           // so our dependent state (eg, timestamp in the thumb) will be stale.
           // As a workaround, update it manually when it first becomes unhidden.
           if (element.hidden) {
-            if (this.videocontrols.isTouchControls) {
-              this.scrubber.valueChanged("curpos", this.video.currentTime * 1000, false);
-            } else {
-              this.scrubber.value = this.video.currentTime * 1000;
-            }
+            this.scrubber.value = this.video.currentTime * 1000;
           }
         }
 
@@ -1158,9 +1027,6 @@
           return;
         }
 
-        if (this.videocontrols.isTouchControls) {
-          this.scrubber.dragStateChanged(false);
-        }
         element.hidden = true;
       },
 
@@ -1470,7 +1336,7 @@
       },
 
       get isClosedCaptionAvailable() {
-        return this.overlayableTextTracks.length && !this.videocontrols.isTouchControls;
+        return this.overlayableTextTracks.length;
       },
 
       get overlayableTextTracks() {
@@ -1652,10 +1518,6 @@
       controlBarMinHeight: 40,
       controlBarMinVisibleHeight: 28,
       adjustControlSize() {
-        if (this.videocontrols.isTouchControls) {
-          return;
-        }
-
         const minControlBarPaddingWidth = 18;
 
         this.fullscreenButton.isWanted = !this.controlBar.hasAttribute("fullscreen-unavailable");
@@ -1793,10 +1655,8 @@
           this.volumeStack
         ];
 
-        // XXX controlsContainer is a desktop only element. To determine whether
-        // isTouchControls or not during the whole initialization process, get
-        // this state overridden here.
-        this.videocontrols.isTouchControls = !this.controlsContainer;
+        this.videocontrols.isTouchControls =
+          navigator.appVersion.includes("Android");
         this.isAudioOnly = (this.video instanceof HTMLAudioElement);
         this.setupInitialState();
         this.setupNewLoadState();
@@ -1837,8 +1697,13 @@
         addListener(this.fullscreenButton, "click", this.toggleFullscreen);
         addListener(this.playButton, "click", this.clickToPlayClickHandler);
         addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
-        addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
-        addListener(this.controlsSpacer, "dblclick", this.toggleFullscreen);
+
+        // On touch videocontrols, tapping controlsSpacer should show/hide
+        // the control bar, instead of playing the video or toggle fullscreen.
+        if (!this.videocontrols.isTouchControls) {
+          addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
+          addListener(this.controlsSpacer, "dblclick", this.toggleFullscreen);
+        }
 
         addListener(this.videocontrols, "resizevideocontrols", this.adjustControlSize);
         addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
@@ -1854,126 +1719,25 @@
           event.preventDefault(); // prevent dragging of controls image (bug 517114)
         });
 
-        if (!this.videocontrols.isTouchControls) {
-          addListener(this.scrubber, "input", this.onScrubberInput);
-          addListener(this.scrubber, "change", this.onScrubberChange);
-          // add mouseup listener additionally to handle the case that `change` event
-          // isn't fired when the input value before/after dragging are the same. (bug 1328061)
-          addListener(this.scrubber, "mouseup", this.onScrubberChange);
-          addListener(this.volumeControl, "input", this.updateVolume);
-          addListener(this.video.textTracks, "addtrack", this.onTextTrackAdd);
-          addListener(this.video.textTracks, "removetrack", this.onTextTrackRemove);
-          addListener(this.video.textTracks, "change", this.setClosedCaptionButtonState);
-        }
+        addListener(this.scrubber, "input", this.onScrubberInput);
+        addListener(this.scrubber, "change", this.onScrubberChange);
+        // add mouseup listener additionally to handle the case that `change` event
+        // isn't fired when the input value before/after dragging are the same. (bug 1328061)
+        addListener(this.scrubber, "mouseup", this.onScrubberChange);
+        addListener(this.volumeControl, "input", this.updateVolume);
+        addListener(this.video.textTracks, "addtrack", this.onTextTrackAdd);
+        addListener(this.video.textTracks, "removetrack", this.onTextTrackRemove);
+        addListener(this.video.textTracks, "change", this.setClosedCaptionButtonState);
 
         this.log("--- videocontrols initialized ---");
       }
     };
 
-    this.Utils.init(this);
-    ]]>
-  </constructor>
-  <destructor>
-    <![CDATA[
-    this.Utils.terminateEventListeners();
-    this.Utils.updateOrientationState(false);
-    // randomID used to be a <field>, which meant that the XBL machinery
-    // undefined the property when the element was unbound. The code in
-    // this file actually depends on this, so now that randomID is an
-    // expando, we need to make sure to explicitly delete it.
-    delete this.randomID;
-    ]]>
-  </destructor>
-
-  </implementation>
-
-  <handlers>
-    <handler event="mouseover">
-      if (!this.isTouchControls) {
-        this.Utils.onMouseInOut(event);
-      }
-    </handler>
-    <handler event="mouseout">
-      if (!this.isTouchControls) {
-        this.Utils.onMouseInOut(event);
-      }
-    </handler>
-    <handler event="mousemove">
-      if (!this.isTouchControls) {
-        this.Utils.onMouseMove(event);
-      }
-    </handler>
-  </handlers>
-</binding>
-
-<binding id="touchControls" extends="chrome://global/content/bindings/videocontrols.xml#videoControls">
-
-  <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="mediaControlsFrame">
-    <stack flex="1">
-      <vbox anonid="statusOverlay" flex="1" class="statusOverlay" hidden="true">
-        <box anonid="statusIcon" class="statusIcon"/>
-        <label class="errorLabel" anonid="errorAborted">&error.aborted;</label>
-        <label class="errorLabel" anonid="errorNetwork">&error.network;</label>
-        <label class="errorLabel" anonid="errorDecode">&error.decode;</label>
-        <label class="errorLabel" anonid="errorSrcNotSupported">&error.srcNotSupported;</label>
-        <label class="errorLabel" anonid="errorNoSource">&error.noSource2;</label>
-        <label class="errorLabel" anonid="errorGeneric">&error.generic;</label>
-      </vbox>
-
-      <vbox anonid="controlsOverlay" class="controlsOverlay">
-        <spacer anonid="controlsSpacer" class="controlsSpacer" flex="1"/>
-        <box flex="1" hidden="true">
-          <box anonid="clickToPlay" class="clickToPlay" hidden="true" flex="1"/>
-          <vbox anonid="textTrackList" class="textTrackList" hidden="true" offlabel="&closedCaption.off;"></vbox>
-        </box>
-        <vbox anonid="controlBar" class="controlBar" hidden="true">
-          <hbox class="buttonsBar">
-            <button anonid="playButton"
-                    class="playButton"
-                    playlabel="&playButton.playLabel;"
-                    pauselabel="&playButton.pauseLabel;"/>
-            <label anonid="positionLabel" class="positionLabel" role="presentation"/>
-            <stack anonid="scrubberStack" class="scrubberStack">
-              <box class="backgroundBar"/>
-              <progressmeter class="flexibleBar" value="100"/>
-              <progressmeter anonid="bufferBar" class="bufferBar"/>
-              <progressmeter anonid="progressBar" class="progressBar" max="10000"/>
-              <scale anonid="scrubber" class="scrubber" movetoclick="true"/>
-            </stack>
-            <label anonid="durationLabel" class="durationLabel" role="presentation"/>
-            <button anonid="muteButton"
-                    class="muteButton"
-                    mutelabel="&muteButton.muteLabel;"
-                    unmutelabel="&muteButton.unmuteLabel;"/>
-            <stack anonid="volumeStack" class="volumeStack">
-              <box anonid="volumeBackground" class="volumeBackground"/>
-              <box anonid="volumeForeground" class="volumeForeground"/>
-              <scale anonid="volumeControl" class="volumeControl" movetoclick="true"/>
-            </stack>
-            <button anonid="castingButton" class="castingButton" hidden="true"
-                    aria-label="&castingButton.castingLabel;"/>
-            <button anonid="closedCaptionButton" class="closedCaptionButton" hidden="true"/>
-            <button anonid="fullscreenButton"
-                    class="fullscreenButton"
-                    enterfullscreenlabel="&fullscreenButton.enterfullscreenlabel;"
-                    exitfullscreenlabel="&fullscreenButton.exitfullscreenlabel;"/>
-          </hbox>
-        </vbox>
-      </vbox>
-    </stack>
-  </xbl:content>
-
-  <implementation>
-  <constructor>
-    <![CDATA[
-    this.isTouchControls = true;
     this.TouchUtils = {
       videocontrols: null,
       video: null,
       controlsTimer: null,
       controlsTimeout: 5000,
-      positionLabel: null,
-      castingButton: null,
 
       get Utils() {
         return this.videocontrols.Utils;
@@ -2053,47 +1817,12 @@
         }
       },
 
-      isVideoCasting() {
-        return this.video.mozIsCasting;
-      },
-
-      updateCasting(eventDetail) {
-        let castingData = JSON.parse(eventDetail);
-        if ("allow" in castingData) {
-          this.video.mozAllowCasting = !!castingData.allow;
-        }
-
-        if ("active" in castingData) {
-          this.video.mozIsCasting = !!castingData.active;
-        }
-        this.setCastButtonState();
-      },
-
-      startCasting() {
-        this.videocontrols.dispatchEvent(new CustomEvent("VideoBindingCast"));
-      },
-
-      setCastButtonState() {
-        if (this.isAudioOnly || !this.video.mozAllowCasting) {
-          this.castingButton.hidden = true;
-          return;
-        }
-
-        if (this.video.mozIsCasting) {
-          this.castingButton.setAttribute("active", "true");
-        } else {
-          this.castingButton.removeAttribute("active");
-        }
-
-        this.castingButton.hidden = false;
-      },
-
       init(binding) {
         this.videocontrols = binding;
         this.video = binding.parentNode;
 
         let self = this;
-        this.Utils.playButton.addEventListener("command", function() {
+        this.Utils.playButton.addEventListener("click", function() {
           if (!self.video.paused) {
             self.delayHideControls(0);
           } else {
@@ -2108,17 +1837,14 @@
         });
         this.Utils.muteButton.addEventListener("click", function() { self.delayHideControls(self.controlsTimeout); });
 
-        this.castingButton = document.getAnonymousElementByAttribute(binding, "anonid", "castingButton");
-        this.castingButton.addEventListener("command", function() {
-          self.startCasting();
-        });
-
-        this.video.addEventListener("media-videoCasting", function(e) {
-          if (!e.isTrusted) {
-            return;
+        this.Utils.controlsSpacer.addEventListener("mouseup", function(event) {
+          if (event.originalTarget == self.Utils.controlsSpacer) {
+            if (self.firstShow) {
+              self.Utils.video.play();
+            }
+            self.toggleControls();
           }
-          self.updateCasting(e.detail);
-        }, false, true);
+        });
 
         // The first time the controls appear we want to just display
         // a play button that does not fade away. The firstShow property
@@ -2141,14 +1867,21 @@
       }
     };
 
-    this.TouchUtils.init(this);
+    this.Utils.init(this);
+    if (this.isTouchControls) {
+      this.TouchUtils.init(this);
+    }
     this.dispatchEvent(new CustomEvent("VideoBindingAttached"));
     ]]>
   </constructor>
   <destructor>
     <![CDATA[
-    // XBL destructors don't appear to be inherited properly, so we need
-    // to do this here in addition to the videoControls destructor. :-(
+    this.Utils.terminateEventListeners();
+    this.Utils.updateOrientationState(false);
+    // randomID used to be a <field>, which meant that the XBL machinery
+    // undefined the property when the element was unbound. The code in
+    // this file actually depends on this, so now that randomID is an
+    // expando, we need to make sure to explicitly delete it.
     delete this.randomID;
     ]]>
   </destructor>
@@ -2156,22 +1889,28 @@
   </implementation>
 
   <handlers>
-    <handler event="mouseup">
-      if (event.originalTarget.nodeName == "vbox") {
-        if (this.TouchUtils.firstShow) {
-          this.Utils.video.play();
-        }
-        this.TouchUtils.toggleControls();
+    <handler event="mouseover">
+      if (!this.isTouchControls) {
+        this.Utils.onMouseInOut(event);
+      }
+    </handler>
+    <handler event="mouseout">
+      if (!this.isTouchControls) {
+        this.Utils.onMouseInOut(event);
+      }
+    </handler>
+    <handler event="mousemove">
+      if (!this.isTouchControls) {
+        this.Utils.onMouseMove(event);
       }
     </handler>
   </handlers>
-
 </binding>
 
 <binding id="noControls">
 
   <resources>
-    <stylesheet src="chrome://global/skin/media/videocontrols-html.css"/>
+    <stylesheet src="chrome://global/skin/media/videocontrols.css"/>
   </resources>
 
   <xbl:content xmlns="http://www.w3.org/1999/xhtml" class="mediaControlsFrame">

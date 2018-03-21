@@ -264,11 +264,6 @@ select:disabled > button {
   padding-block-end: 1px;
 }
 
-/* -moz-touch-enabled? media elements */
-:-moz-any(video, audio) > xul|videocontrols {
-  -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#touchControls");
-}
-
 /* display click to play when autoplay is blocked for videos */
 video:not([controls]) > xul|videocontrols {
   visibility: visible;
