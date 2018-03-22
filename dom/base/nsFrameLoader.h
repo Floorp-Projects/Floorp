@@ -123,6 +123,7 @@ public:
   void LoadFrame(bool aOriginalSrc);
 
   void LoadURI(nsIURI* aURI, bool aOriginalSrc, mozilla::ErrorResult& aRv);
+  nsresult LoadURI(nsIURI* aURI, bool aOriginalSrc);
 
   /**
    * Triggers a load of the given URI.
