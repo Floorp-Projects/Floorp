@@ -17,6 +17,9 @@ const { DownloadUtils } = ChromeUtils.import("resource://gre/modules/DownloadUti
 const { SiteDataManager } = ChromeUtils.import("resource:///modules/SiteDataManager.jsm", {});
 const { OfflineAppCacheHelper } = ChromeUtils.import("resource:///modules/offlineAppCache.jsm", {});
 
+ChromeUtils.defineModuleGetter(this, "SiteDataTestUtils",
+                               "resource://testing-common/SiteDataTestUtils.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager", "@mozilla.org/serviceworkers/manager;1", "nsIServiceWorkerManager");
 
 function promiseSiteDataManagerSitesUpdated() {
@@ -186,14 +189,6 @@ const mockSiteDataManager = {
     this._SiteDataManager._removeQuotaUsage = this._originalRemoveQuotaUsage;
   }
 };
-
-function getQuotaUsage(origin) {
-  return new Promise(resolve => {
-    let uri = NetUtil.newURI(origin);
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-    Services.qms.getUsageForPrincipal(principal, request => resolve(request.result.usage));
-  });
-}
 
 function promiseCookiesCleared() {
   return TestUtils.topicObserved("cookie-changed", (subj, data) => {
