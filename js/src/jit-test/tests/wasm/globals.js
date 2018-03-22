@@ -317,36 +317,67 @@ if (typeof WebAssembly.Global === "function") {
     assertEq((new WebAssembly.Global({type: "i32", value: 3.14})).value, 3);
     assertEq((new WebAssembly.Global({type: "f32", value: { valueOf: () => 33.5 }})).value, 33.5);
 
-    // Misc internal conversions
-    let g = new WebAssembly.Global({type: "i32", value: 42});
+    // Nothing special about NaN, it coerces just fine
+    assertEq((new WebAssembly.Global({type: "i32", value: NaN})).value, 0);
 
-    // @@toPrimitive
-    assertEq(g - 5, 37);
-    assertEq(String(g), "42");
+    {
+	// "value" is enumerable
+	let x = new WebAssembly.Global({type: "i32"});
+	let s = "";
+	for ( let i in x )
+	    s = s + i + ",";
+	assertEq(s, "value,");
+    }
 
-    // @@toStringTag
-    assertEq(g.toString(), "[object WebAssembly.Global]");
+    // "value" is defined on the prototype, not on the object
+    assertEq("value" in WebAssembly.Global.prototype, true);
 
-    // An exported global should appear as a WebAssembly.Global instance:
-    let i =
-	new WebAssembly.Instance(
-	    new WebAssembly.Module(
-		wasmTextToBinary(`(module (global (export "g") i32 (i32.const 42)))`)));
+    // Can't set the value of an immutable global
+    assertErrorMessage(() => (new WebAssembly.Global({type: "i32"})).value = 10,
+		       TypeError,
+		       /can't set value of immutable global/);
 
-    assertEq(typeof i.exports.g, "object");
-    assertEq(i.exports.g instanceof WebAssembly.Global, true);
+    {
+	// Misc internal conversions
+	let g = new WebAssembly.Global({type: "i32", value: 42});
 
-    // An exported global can be imported into another instance even if
-    // it is an object:
-    let j =
-	new WebAssembly.Instance(
-	    new WebAssembly.Module(
-		wasmTextToBinary(`(module
-				   (global (import "" "g") i32)
-				   (func (export "f") (result i32)
-				    (get_global 0)))`)),
-	    { "": { "g": i.exports.g }});
+	// valueOf
+	assertEq(g - 5, 37);
 
-    // And when it is then accessed it has the right value:
-    assertEq(j.exports.f(), 42);
+	// @@toStringTag
+	assertEq(g.toString(), "[object WebAssembly.Global]");
+    }
+
+    {
+	// An exported global should appear as a WebAssembly.Global instance:
+	let i =
+	    new WebAssembly.Instance(
+		new WebAssembly.Module(
+		    wasmTextToBinary(`(module (global (export "g") i32 (i32.const 42)))`)));
+
+	assertEq(typeof i.exports.g, "object");
+	assertEq(i.exports.g instanceof WebAssembly.Global, true);
+
+	// An exported global can be imported into another instance even if
+	// it is an object:
+	let j =
+	    new WebAssembly.Instance(
+		new WebAssembly.Module(
+		    wasmTextToBinary(`(module
+				       (global (import "" "g") i32)
+				       (func (export "f") (result i32)
+					(get_global 0)))`)),
+		{ "": { "g": i.exports.g }});
+
+	// And when it is then accessed it has the right value:
+	assertEq(j.exports.f(), 42);
+    }
+
+    // TEST THIS LAST
+
+    // "value" is deletable
+    assertEq(delete WebAssembly.Global.prototype.value, true);
+    assertEq("value" in WebAssembly.Global.prototype, false);
+
+    // ADD NO MORE TESTS HERE!
 }

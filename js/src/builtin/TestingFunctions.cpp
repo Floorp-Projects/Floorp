@@ -4990,24 +4990,6 @@ SetTimeResolution(JSContext* cx, unsigned argc, Value* vp)
    return true;
 }
 
-static bool
-EnableExpressionClosures(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    JS::ContextOptionsRef(cx).setExpressionClosures(true);
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
-DisableExpressionClosures(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    JS::ContextOptionsRef(cx).setExpressionClosures(false);
-    args.rval().setUndefined();
-    return true;
-}
-
 JSScript*
 js::TestingFunctionArgumentToScript(JSContext* cx,
                                     HandleValue v,
@@ -5780,14 +5762,6 @@ gc::ZealModeHelpText),
 "setTimeResolution(resolution, jitter)",
 "  Enables time clamping and jittering. Specify a time resolution in\n"
 "  microseconds and whether or not to jitter\n"),
-
-    JS_FN_HELP("enableExpressionClosures", EnableExpressionClosures, 0, 0,
-"enableExpressionClosures()",
-"  Enables the deprecated, non-standard expression closures.\n"),
-
-    JS_FN_HELP("disableExpressionClosures", DisableExpressionClosures, 0, 0,
-"disableExpressionClosures()",
-"  Disables the deprecated, non-standard expression closures.\n"),
 
     JS_FN_HELP("baselineCompile", BaselineCompile, 2, 0,
 "baselineCompile([fun/code], forceDebugInstrumentation=false)",

@@ -18,6 +18,7 @@ UNIFIED_SOURCES += [
 ]
 
 DEFINES['EXPORT_JS_API'] = True
+DEFINES['ENABLE_WASM_GLOBAL'] = True
 
 # Also set in ../moz.build
 DEFINES['ENABLE_SHARED_ARRAY_BUFFER'] = True
