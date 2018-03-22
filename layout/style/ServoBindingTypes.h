@@ -28,7 +28,7 @@ struct RustString;
 
 namespace mozilla {
 class ServoElementSnapshot;
-class ServoStyleContext;
+class ComputedStyle;
 struct StyleAnimation;
 struct URLExtraData;
 namespace dom {
@@ -113,14 +113,14 @@ typedef mozilla::dom::StyleChildrenIterator RawGeckoStyleChildrenIterator;
 #include "mozilla/ServoArcTypeList.h"
 #undef SERVO_ARC_TYPE
 
-typedef mozilla::ServoStyleContext const* ServoStyleContextBorrowed;
-typedef mozilla::ServoStyleContext const* ServoStyleContextBorrowedOrNull;
+typedef mozilla::ComputedStyle const* ComputedStyleBorrowed;
+typedef mozilla::ComputedStyle const* ComputedStyleBorrowedOrNull;
 typedef ServoComputedData const* ServoComputedDataBorrowed;
 
-struct MOZ_MUST_USE_TYPE ServoStyleContextStrong
+struct MOZ_MUST_USE_TYPE ComputedStyleStrong
 {
-  mozilla::ServoStyleContext* mPtr;
-  already_AddRefed<mozilla::ServoStyleContext> Consume();
+  mozilla::ComputedStyle* mPtr;
+  already_AddRefed<mozilla::ComputedStyle> Consume();
 };
 
 #define DECL_OWNED_REF_TYPE_FOR(type_)    \

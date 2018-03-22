@@ -17,16 +17,16 @@
 #include "nsISupportsImpl.h"
 
 class nsIGlobalObject;
-class nsStyleContext;
 class nsPresContext;
 class nsCSSPropertyIDSet;
 
 namespace mozilla {
+class ComputedStyle;
 enum class CSSPseudoElementType : uint8_t;
-class GeckoStyleContext;
+class GeckoComputedStyle;
 struct Keyframe;
 struct StyleTransition;
-class ServoStyleContext;
+class ComputedStyle;
 } // namespace mozilla
 
 /*****************************************************************************
@@ -322,8 +322,8 @@ public:
   bool UpdateTransitions(
     mozilla::dom::Element *aElement,
     mozilla::CSSPseudoElementType aPseudoType,
-    const mozilla::ServoStyleContext* aOldStyle,
-    const mozilla::ServoStyleContext* aNewStyle);
+    const mozilla::ComputedStyle* aOldStyle,
+    const mozilla::ComputedStyle* aNewStyle);
 
 
 protected:

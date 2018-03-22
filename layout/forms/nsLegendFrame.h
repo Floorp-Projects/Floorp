@@ -16,8 +16,8 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsLegendFrame)
 
-  explicit nsLegendFrame(nsStyleContext* aContext)
-    : nsBlockFrame(aContext, kClassID)
+  explicit nsLegendFrame(ComputedStyle* aStyle)
+    : nsBlockFrame(aStyle, kClassID)
   {}
 
   virtual void Reflow(nsPresContext* aPresContext,

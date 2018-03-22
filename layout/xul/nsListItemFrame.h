@@ -8,7 +8,7 @@
 #include "nsGridRowLeafFrame.h"
 
 nsIFrame* NS_NewListItemFrame(nsIPresShell* aPresShell,
-                              nsStyleContext *aContext);
+                              ComputedStyle* aStyle);
 
 class nsListItemFrame final : public nsGridRowLeafFrame
 {
@@ -16,7 +16,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsListItemFrame)
 
   friend nsIFrame* NS_NewListItemFrame(nsIPresShell* aPresShell,
-                                       nsStyleContext *aContext);
+                                       ComputedStyle* aStyle);
 
   // overridden so that children of listitems don't handle mouse events,
   // unless allowevents="true" is specified on the listitem
@@ -26,7 +26,7 @@ public:
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aState) override;
 
 protected:
-  explicit nsListItemFrame(nsStyleContext *aContext,
+  explicit nsListItemFrame(ComputedStyle* aStyle,
                            bool aIsRoot = false,
                            nsBoxLayout* aLayoutManager = nullptr);
   virtual ~nsListItemFrame();

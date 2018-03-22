@@ -109,7 +109,7 @@ SVGFEDropShadowElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
 
   nsIFrame* frame = GetPrimaryFrame();
   if (frame) {
-    nsStyleContext* style = frame->StyleContext();
+    ComputedStyle* style = frame->Style();
     Color color(Color::FromABGR(style->StyleSVGReset()->mFloodColor));
     color.a *= style->StyleSVGReset()->mFloodOpacity;
     descr.Attributes().Set(eDropShadowColor, color);

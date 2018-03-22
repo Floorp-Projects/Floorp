@@ -13,7 +13,7 @@
 #include "nsTableColFrame.h"
 #include "nsTableRowFrame.h"
 #include "nsTableRowGroupFrame.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsCSSRendering.h"
@@ -72,10 +72,10 @@ public:
   }
 };
 
-nsTableCellFrame::nsTableCellFrame(nsStyleContext* aContext,
+nsTableCellFrame::nsTableCellFrame(ComputedStyle* aStyle,
                                    nsTableFrame* aTableFrame,
                                    ClassID aID)
-  : nsContainerFrame(aContext, aID)
+  : nsContainerFrame(aStyle, aID)
   , mDesiredSize(aTableFrame->GetWritingMode())
 {
   mColIndex = 0;
@@ -228,16 +228,16 @@ nsTableCellFrame::AttributeChanged(int32_t         aNameSpaceID,
 }
 
 /* virtual */ void
-nsTableCellFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+nsTableCellFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
 {
-  nsContainerFrame::DidSetStyleContext(aOldStyleContext);
+  nsContainerFrame::DidSetComputedStyle(aOldComputedStyle);
 
-  if (!aOldStyleContext) //avoid this on init
+  if (!aOldComputedStyle) //avoid this on init
     return;
 
   nsTableFrame* tableFrame = GetTableFrame();
   if (tableFrame->IsBorderCollapse() &&
-      tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
+      tableFrame->BCRecalcNeeded(aOldComputedStyle, Style())) {
     uint32_t colIndex = ColIndex();
     uint32_t rowIndex = RowIndex();
     // row span needs to be clamped as we do not create rows in the cellmap
@@ -718,7 +718,7 @@ nsTableCellFrame::GetRowSpan()
   int32_t rowSpan=1;
 
   // Don't look at the content's rowspan if we're a pseudo cell
-  if (!StyleContext()->GetPseudo()) {
+  if (!Style()->GetPseudo()) {
     dom::Element* elem = mContent->AsElement();
     const nsAttrValue* attr = elem->GetParsedAttr(nsGkAtoms::rowspan);
     // Note that we don't need to check the tag name, because only table cells
@@ -737,7 +737,7 @@ nsTableCellFrame::GetColSpan()
   int32_t colSpan=1;
 
   // Don't look at the content's colspan if we're a pseudo cell
-  if (!StyleContext()->GetPseudo()) {
+  if (!Style()->GetPseudo()) {
     dom::Element* elem = mContent->AsElement();
     const nsAttrValue* attr = elem->GetParsedAttr(
       MOZ_UNLIKELY(elem->IsMathMLElement()) ? nsGkAtoms::columnspan_
@@ -1050,13 +1050,13 @@ nsTableCellFrame::GetCellIndexes(int32_t &aRowIndex, int32_t &aColIndex)
 
 nsTableCellFrame*
 NS_NewTableCellFrame(nsIPresShell*   aPresShell,
-                     nsStyleContext* aContext,
+                     ComputedStyle* aStyle,
                      nsTableFrame* aTableFrame)
 {
   if (aTableFrame->IsBorderCollapse())
-    return new (aPresShell) nsBCTableCellFrame(aContext, aTableFrame);
+    return new (aPresShell) nsBCTableCellFrame(aStyle, aTableFrame);
   else
-    return new (aPresShell) nsTableCellFrame(aContext, aTableFrame);
+    return new (aPresShell) nsTableCellFrame(aStyle, aTableFrame);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBCTableCellFrame)
@@ -1086,9 +1086,9 @@ nsTableCellFrame::GetFrameName(nsAString& aResult) const
 
 // nsBCTableCellFrame
 
-nsBCTableCellFrame::nsBCTableCellFrame(nsStyleContext* aContext,
+nsBCTableCellFrame::nsBCTableCellFrame(ComputedStyle* aStyle,
                                        nsTableFrame* aTableFrame)
-  : nsTableCellFrame(aContext, aTableFrame, kClassID)
+  : nsTableCellFrame(aStyle, aTableFrame, kClassID)
 {
   mBStartBorder = mIEndBorder = mBEndBorder = mIStartBorder = 0;
 }
@@ -1194,6 +1194,6 @@ nsBCTableCellFrame::PaintBackground(gfxContext&          aRenderingContext,
                                                 aDirtyRect,
                                                 rect, this,
                                                 aFlags);
-  return nsCSSRendering::PaintStyleImageLayerWithSC(params, aRenderingContext, StyleContext(),
+  return nsCSSRendering::PaintStyleImageLayerWithSC(params, aRenderingContext, Style(),
                                                     myBorder);
 }

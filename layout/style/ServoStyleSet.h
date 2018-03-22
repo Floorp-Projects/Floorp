@@ -37,7 +37,7 @@ class ServoRestyleManager;
 class ServoStyleSheet;
 struct Keyframe;
 class ServoElementSnapshotTable;
-class ServoStyleContext;
+class ComputedStyle;
 class ServoStyleRuleMap;
 } // namespace mozilla
 class nsCSSCounterStyleRule;
@@ -155,84 +155,84 @@ public:
   void BeginUpdate();
   nsresult EndUpdate();
 
-  already_AddRefed<ServoStyleContext>
+  already_AddRefed<ComputedStyle>
   ResolveStyleFor(dom::Element* aElement,
-                  ServoStyleContext* aParentContext,
+                  ComputedStyle* aParentContext,
                   LazyComputeBehavior aMayCompute);
 
-  // Get a style context for a text node (which no rules will match).
+  // Get a CopmutedStyle for a text node (which no rules will match).
   //
-  // The returned style context will have nsCSSAnonBoxes::mozText as its pseudo.
+  // The returned ComputedStyle will have nsCSSAnonBoxes::mozText as its pseudo.
   //
   // (Perhaps mozText should go away and we shouldn't even create style
   // contexts for such content nodes, when text-combine-upright is not
   // present.  However, not doing any rule matching for them is a first step.)
-  already_AddRefed<ServoStyleContext>
-  ResolveStyleForText(nsIContent* aTextNode, ServoStyleContext* aParentContext);
+  already_AddRefed<ComputedStyle>
+  ResolveStyleForText(nsIContent* aTextNode, ComputedStyle* aParentContext);
 
-  // Get a style context for a first-letter continuation (which no rules will
+  // Get a ComputedStyle for a first-letter continuation (which no rules will
   // match).
   //
-  // The returned style context will have
+  // The returned ComputedStyle will have
   // nsCSSAnonBoxes::firstLetterContinuation as its pseudo.
   //
   // (Perhaps nsCSSAnonBoxes::firstLetterContinuation should go away and we
-  // shouldn't even create style contexts for such frames.  However, not doing
+  // shouldn't even create ComputedStyles for such frames.  However, not doing
   // any rule matching for them is a first step.  And right now we do use this
-  // style context for some things)
-  already_AddRefed<ServoStyleContext>
-  ResolveStyleForFirstLetterContinuation(ServoStyleContext* aParentContext);
+  // ComputedStyle for some things)
+  already_AddRefed<ComputedStyle>
+  ResolveStyleForFirstLetterContinuation(ComputedStyle* aParentContext);
 
-  // Get a style context for a placeholder frame (which no rules will match).
+  // Get a ComputedStyle for a placeholder frame (which no rules will match).
   //
-  // The returned style context will have nsCSSAnonBoxes::oofPlaceholder as
+  // The returned ComputedStyle will have nsCSSAnonBoxes::oofPlaceholder as
   // its pseudo.
   //
   // (Perhaps nsCSSAnonBoxes::oofPaceholder should go away and we shouldn't even
-  // create style contexts for placeholders.  However, not doing any rule
+  // create ComputedStyle for placeholders.  However, not doing any rule
   // matching for them is a first step.)
-  already_AddRefed<ServoStyleContext>
+  already_AddRefed<ComputedStyle>
   ResolveStyleForPlaceholder();
 
-  // Get a style context for a pseudo-element.  aParentElement must be
+  // Get a ComputedStyle for a pseudo-element.  aParentElement must be
   // non-null.  aPseudoID is the CSSPseudoElementType for the
   // pseudo-element.  aPseudoElement must be non-null if the pseudo-element
   // type is one that allows user action pseudo-classes after it or allows
   // style attributes; otherwise, it is ignored.
-  already_AddRefed<ServoStyleContext>
+  already_AddRefed<ComputedStyle>
   ResolvePseudoElementStyle(dom::Element* aOriginatingElement,
                             CSSPseudoElementType aType,
-                            ServoStyleContext* aParentContext,
+                            ComputedStyle* aParentContext,
                             dom::Element* aPseudoElement);
 
   // Resolves style for a (possibly-pseudo) Element without assuming that the
   // style has been resolved. If the element was unstyled and a new style
   // context was resolved, it is not stored in the DOM. (That is, the element
   // remains unstyled.)
-  already_AddRefed<ServoStyleContext>
+  already_AddRefed<ComputedStyle>
   ResolveStyleLazily(dom::Element* aElement,
                      CSSPseudoElementType aPseudoType,
                      StyleRuleInclusion aRules =
                        StyleRuleInclusion::All);
 
-  // Get a style context for an anonymous box.  aPseudoTag is the pseudo-tag to
+  // Get a ComputedStyle for an anonymous box.  aPseudoTag is the pseudo-tag to
   // use and must be non-null.  It must be an anon box, and must be one that
   // inherits style from the given aParentContext.
-  already_AddRefed<ServoStyleContext>
+  already_AddRefed<ComputedStyle>
   ResolveInheritingAnonymousBoxStyle(nsAtom* aPseudoTag,
-                                     ServoStyleContext* aParentContext);
+                                     ComputedStyle* aParentContext);
 
-  // Get a style context for an anonymous box that does not inherit style from
+  // Get a ComputedStyle for an anonymous box that does not inherit style from
   // anything.  aPseudoTag is the pseudo-tag to use and must be non-null.  It
   // must be an anon box, and must be a non-inheriting one.
-  already_AddRefed<ServoStyleContext>
+  already_AddRefed<ComputedStyle>
   ResolveNonInheritingAnonymousBoxStyle(nsAtom* aPseudoTag);
 
 #ifdef MOZ_XUL
-  already_AddRefed<ServoStyleContext>
+  already_AddRefed<ComputedStyle>
   ResolveXULTreePseudoStyle(dom::Element* aParentElement,
                             nsICSSAnonBoxPseudo* aPseudoTag,
-                            ServoStyleContext* aParentContext,
+                            ComputedStyle* aParentContext,
                             const AtomArray& aInputWord);
 #endif
 
@@ -262,10 +262,10 @@ public:
   nsresult AddDocStyleSheet(ServoStyleSheet* aSheet, nsIDocument* aDocument);
 
   // check whether there is ::before/::after style for an element
-  already_AddRefed<ServoStyleContext>
+  already_AddRefed<ComputedStyle>
   ProbePseudoElementStyle(dom::Element* aOriginatingElement,
                           CSSPseudoElementType aType,
-                          ServoStyleContext* aParentContext);
+                          ComputedStyle* aParentContext);
 
   /**
    * Performs a Servo traversal to compute style for all dirty nodes in the
@@ -325,7 +325,7 @@ public:
    * Clears any cached style data that may depend on all sorts of computed
    * values.
    *
-   * Right now this clears the non-inheriting style context cache, and resets
+   * Right now this clears the non-inheriting ComputedStyle cache, and resets
    * the default computed values.
    *
    * This does _not_, however, clear the stylist.
@@ -339,11 +339,11 @@ public:
 
   /**
    * Resolve style for the given element, and return it as a
-   * ServoStyleContext.
+   * ComputedStyle.
    *
    * FIXME(emilio): Is there a point in this after bug 1367904?
    */
-  already_AddRefed<ServoStyleContext> ResolveServoStyle(dom::Element* aElement)
+  already_AddRefed<ComputedStyle> ResolveServoStyle(dom::Element* aElement)
   {
     return Servo_ResolveStyle(aElement, mRawSet.get()).Consume();
   }
@@ -355,12 +355,12 @@ public:
   nsTArray<ComputedKeyframeValues>
   GetComputedKeyframeValuesFor(const nsTArray<Keyframe>& aKeyframes,
                                dom::Element* aElement,
-                               const ServoStyleContext* aContext);
+                               const mozilla::ComputedStyle* aStyle);
 
   void
   GetAnimationValues(RawServoDeclarationBlock* aDeclarations,
                      dom::Element* aElement,
-                     const ServoStyleContext* aContext,
+                     const mozilla::ComputedStyle* aStyle,
                      nsTArray<RefPtr<RawServoAnimationValue>>& aAnimationValues);
 
   bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
@@ -370,38 +370,40 @@ public:
   // Get all the currently-active font feature values set.
   already_AddRefed<gfxFontFeatureValueSet> BuildFontFeatureValueSet();
 
-  already_AddRefed<ServoStyleContext>
+  already_AddRefed<ComputedStyle>
   GetBaseContextForElement(dom::Element* aElement,
                            nsPresContext* aPresContext,
-                           const ServoStyleContext* aStyle);
+                           const ComputedStyle* aStyle);
 
-  // Get a style context that represents |aStyle|, but as though
-  // it additionally matched the rules of the newly added |aAnimaitonaValue|.
-  // We use this function to temporarily generate a ServoStyleContext for
+  // Get a ComputedStyle that represents |aStyle|, but as though it additionally
+  // matched the rules of the newly added |aAnimaitonaValue|.
+  //
+  // We use this function to temporarily generate a ComputedStyle for
   // calculating the cumulative change hints.
+  //
   // This must hold:
   //   The additional rules must be appropriate for the transition
   //   level of the cascade, which is the highest level of the cascade.
   //   (This is the case for one current caller, the cover rule used
   //   for CSS transitions.)
   // Note: |aElement| should be the generated element if it is pseudo.
-  already_AddRefed<ServoStyleContext>
+  already_AddRefed<ComputedStyle>
   ResolveServoStyleByAddingAnimation(dom::Element* aElement,
-                                     const ServoStyleContext* aStyle,
+                                     const ComputedStyle* aStyle,
                                      RawServoAnimationValue* aAnimationValue);
   /**
    * Resolve style for a given declaration block with/without the parent style.
    * If the parent style is not specified, the document default computed values
    * is used.
    */
-  already_AddRefed<ServoStyleContext>
-  ResolveForDeclarations(const ServoStyleContext* aParentOrNull,
+  already_AddRefed<ComputedStyle>
+  ResolveForDeclarations(const ComputedStyle* aParentOrNull,
                          RawServoDeclarationBlockBorrowed aDeclarations);
 
   already_AddRefed<RawServoAnimationValue>
   ComputeAnimationValue(dom::Element* aElement,
                         RawServoDeclarationBlock* aDeclaration,
-                        const ServoStyleContext* aContext);
+                        const mozilla::ComputedStyle* aStyle);
 
   void AppendTask(PostTraversalTask aTask)
   {
@@ -458,19 +460,19 @@ public:
   bool HasDocumentStateDependency(EventStates aState) const;
 
   /**
-   * Get a new style context that uses the same rules as the given style context
+   * Get a new ComputedStyle that uses the same rules as the given ComputedStyle
    * but has a different parent.
    *
-   * aElement is non-null if this is a style context for a frame whose mContent
-   * is an element and which has no pseudo on its style context (so it's the
+   * aElement is non-null if this is a ComputedStyle for a frame whose mContent
+   * is an element and which has no pseudo on its ComputedStyle (so it's the
    * actual style for the element being passed).
    */
-  already_AddRefed<ServoStyleContext>
-  ReparentStyleContext(ServoStyleContext* aStyleContext,
-                       ServoStyleContext* aNewParent,
-                       ServoStyleContext* aNewParentIgnoringFirstLine,
-                       ServoStyleContext* aNewLayoutParent,
-                       Element* aElement);
+  already_AddRefed<ComputedStyle>
+  ReparentComputedStyle(ComputedStyle* aComputedStyle,
+                        ComputedStyle* aNewParent,
+                        ComputedStyle* aNewParentIgnoringFirstLine,
+                        ComputedStyle* aNewLayoutParent,
+                        Element* aElement);
 
 private:
   friend class AutoSetInServoTraversal;
@@ -492,13 +494,13 @@ private:
   void ResolveMappedAttrDeclarationBlocks();
 
   /**
-   * Clear our cached mNonInheritingStyleContexts.
+   * Clear our cached mNonInheritingComputedStyles.
    *
-   * We do this when we want to make sure those style contexts won't live too
+   * We do this when we want to make sure those ComputedStyles won't live too
    * long (e.g. when rebuilding all style data or when shutting down the style
    * set).
    */
-  void ClearNonInheritingStyleContexts();
+  void ClearNonInheritingComputedStyles();
 
   /**
    * Perform processes that we should do before traversing.
@@ -538,7 +540,7 @@ private:
    */
   void UpdateStylist();
 
-  already_AddRefed<ServoStyleContext>
+  already_AddRefed<ComputedStyle>
     ResolveStyleLazilyInternal(dom::Element* aElement,
                                CSSPseudoElementType aPseudoType,
                                StyleRuleInclusion aRules =
@@ -585,11 +587,11 @@ private:
 
   bool mNeedsRestyleAfterEnsureUniqueInner;
 
-  // Stores pointers to our cached style contexts for non-inheriting anonymous
+  // Stores pointers to our cached ComputedStyles for non-inheriting anonymous
   // boxes.
   EnumeratedArray<nsCSSAnonBoxes::NonInheriting,
                   nsCSSAnonBoxes::NonInheriting::_Count,
-                  RefPtr<ServoStyleContext>> mNonInheritingStyleContexts;
+                  RefPtr<ComputedStyle>> mNonInheritingComputedStyles;
 
   // Tasks to perform after a traversal, back on the main thread.
   //

@@ -30,15 +30,15 @@ using mozilla::dom::Element;
 using mozilla::dom::HTMLMeterElement;
 
 nsIFrame*
-NS_NewMeterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMeterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsMeterFrame(aContext);
+  return new (aPresShell) nsMeterFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMeterFrame)
 
-nsMeterFrame::nsMeterFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, kClassID)
+nsMeterFrame::nsMeterFrame(ComputedStyle* aStyle)
+  : nsContainerFrame(aStyle, kClassID)
   , mBarDiv(nullptr)
 {
 }

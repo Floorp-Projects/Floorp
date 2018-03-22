@@ -20,11 +20,11 @@
 class nsIContent;
 class nsIDocument;
 class nsIFrame;
-class nsStyleContext;
 class nsStyleCoord;
 class nsSVGElement;
 
 namespace mozilla {
+class ComputedStyle;
 class nsSVGAnimatedTransformList;
 class SVGAnimatedPreserveAspectRatio;
 class SVGContextPaint;
@@ -75,6 +75,7 @@ enum SVGTransformTypes {
 class SVGContentUtils
 {
 public:
+  typedef mozilla::ComputedStyle ComputedStyle;
   typedef mozilla::gfx::Float Float;
   typedef mozilla::gfx::Matrix Matrix;
   typedef mozilla::gfx::Rect Rect;
@@ -155,13 +156,13 @@ public:
    */
   static void GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
                                nsSVGElement* aElement,
-                               nsStyleContext* aStyleContext,
+                               ComputedStyle* aComputedStyle,
                                mozilla::SVGContextPaint* aContextPaint,
                                StrokeOptionFlags aFlags = eAllStrokeOptions);
 
   /**
    * Returns the current computed value of the CSS property 'stroke-width' for
-   * the given element. aStyleContext may be provided as an optimization.
+   * the given element. aComputedStyle may be provided as an optimization.
    * aContextPaint is also optional.
    *
    * Note that this function does NOT take account of the value of the 'stroke'
@@ -169,7 +170,7 @@ public:
    * "0", respectively.
    */
   static Float GetStrokeWidth(nsSVGElement* aElement,
-                              nsStyleContext* aStyleContext,
+                              ComputedStyle* aComputedStyle,
                               mozilla::SVGContextPaint* aContextPaint);
 
   /*
@@ -181,7 +182,7 @@ public:
    */
   static float GetFontSize(mozilla::dom::Element *aElement);
   static float GetFontSize(nsIFrame *aFrame);
-  static float GetFontSize(nsStyleContext *aStyleContext);
+  static float GetFontSize(ComputedStyle *aComputedStyle);
   /*
    * Get the number of CSS px (user units) per ex (i.e. the x-height in user
    * units) for an nsIContent
@@ -191,7 +192,7 @@ public:
    */
   static float GetFontXHeight(mozilla::dom::Element *aElement);
   static float GetFontXHeight(nsIFrame *aFrame);
-  static float GetFontXHeight(nsStyleContext *aStyleContext);
+  static float GetFontXHeight(ComputedStyle *aComputedStyle);
 
   /*
    * Report a localized error message to the error console.

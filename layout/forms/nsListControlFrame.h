@@ -53,7 +53,7 @@ public:
   typedef mozilla::dom::HTMLOptionElement HTMLOptionElement;
 
   friend nsContainerFrame* NS_NewListControlFrame(nsIPresShell* aPresShell,
-                                                  nsStyleContext* aContext);
+                                                  ComputedStyle* aStyle);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsListControlFrame)
@@ -310,7 +310,7 @@ protected:
    */
   virtual void ResetList(bool aAllowScrolling);
 
-  explicit nsListControlFrame(nsStyleContext* aContext);
+  explicit nsListControlFrame(ComputedStyle* aStyle);
   virtual ~nsListControlFrame();
 
   /**

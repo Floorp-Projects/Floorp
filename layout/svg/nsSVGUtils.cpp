@@ -1430,11 +1430,11 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 // ----------------------------------------------------------------------
 
 /* static */ nscolor
-nsSVGUtils::GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
+nsSVGUtils::GetFallbackOrPaintColor(ComputedStyle *aComputedStyle,
                                     nsStyleSVGPaint nsStyleSVG::*aFillOrStroke)
 {
-  const nsStyleSVGPaint &paint = aStyleContext->StyleSVG()->*aFillOrStroke;
-  nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
+  const nsStyleSVGPaint &paint = aComputedStyle->StyleSVG()->*aFillOrStroke;
+  ComputedStyle *styleIfVisited = aComputedStyle->GetStyleIfVisited();
   nscolor color;
   switch (paint.Type()) {
     case eStyleSVGPaintType_Server:
@@ -1463,8 +1463,8 @@ nsSVGUtils::GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
     if (paintIfVisited.Type() == eStyleSVGPaintType_Color &&
         paint.Type() == eStyleSVGPaintType_Color) {
       nscolor colors[2] = { color, paintIfVisited.GetColor() };
-      return nsStyleContext::CombineVisitedColors(
-               colors, aStyleContext->RelevantLinkVisited());
+      return ComputedStyle::CombineVisitedColors(
+               colors, aComputedStyle->RelevantLinkVisited());
     }
   }
   return color;
@@ -1540,7 +1540,7 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
   // On failure, use the fallback colour in case we have an
   // objectBoundingBox where the width or height of the object is zero.
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
-  Color color(Color::FromABGR(GetFallbackOrPaintColor(aFrame->StyleContext(),
+  Color color(Color::FromABGR(GetFallbackOrPaintColor(aFrame->Style(),
                                                       &nsStyleSVG::mFill)));
   color.a *= fillOpacity;
   aOutPattern->InitColorPattern(ToDeviceColor(color));
@@ -1616,7 +1616,7 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
   // On failure, use the fallback colour in case we have an
   // objectBoundingBox where the width or height of the object is zero.
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
-  Color color(Color::FromABGR(GetFallbackOrPaintColor(aFrame->StyleContext(),
+  Color color(Color::FromABGR(GetFallbackOrPaintColor(aFrame->Style(),
                                                       &nsStyleSVG::mStroke)));
   color.a *= strokeOpacity;
   aOutPattern->InitColorPattern(ToDeviceColor(color));
@@ -1685,7 +1685,7 @@ nsSVGUtils::SetupStrokeGeometry(nsIFrame* aFrame,
   SVGContentUtils::AutoStrokeOptions strokeOptions;
   SVGContentUtils::GetStrokeOptions(
     &strokeOptions, static_cast<nsSVGElement*>(aFrame->GetContent()),
-    aFrame->StyleContext(), aContextPaint);
+    aFrame->Style(), aContextPaint);
 
   if (strokeOptions.mLineWidth <= 0) {
     return;

@@ -90,7 +90,7 @@ public:
       return mRefCnt;
     }
     ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsStyleContext", sizeof(nsStyleContext));
+    NS_LOG_ADDREF(this, mRefCnt, "ComputedStyle", sizeof(ComputedStyle));
     return mRefCnt;
   }
 
@@ -100,7 +100,7 @@ public:
       return mRefCnt;
     }
     --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "nsStyleContext");
+    NS_LOG_RELEASE(this, mRefCnt, "ComputedStyle");
     if (mRefCnt == 0) {
       Destroy();
       return 0;

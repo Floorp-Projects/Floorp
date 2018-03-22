@@ -1175,8 +1175,8 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
     if (wasCurrentColor && mCanvasElement) {
       // Otherwise, get the value of the color property, flushing style
       // if necessary.
-      RefPtr<nsStyleContext> canvasStyle =
-        nsComputedDOMStyle::GetStyleContext(mCanvasElement, nullptr);
+      RefPtr<ComputedStyle> canvasStyle =
+        nsComputedDOMStyle::GetComputedStyle(mCanvasElement, nullptr);
       if (canvasStyle) {
         *aColor = canvasStyle->StyleColor()->mColor;
       }
@@ -1955,8 +1955,8 @@ CanvasRenderingContext2D::ClearTarget()
 
   // For vertical writing-mode, unless text-orientation is sideways,
   // we'll modify the initial value of textBaseline to 'middle'.
-  RefPtr<nsStyleContext> canvasStyle =
-    nsComputedDOMStyle::GetStyleContext(mCanvasElement, nullptr);
+  RefPtr<ComputedStyle> canvasStyle =
+    nsComputedDOMStyle::GetComputedStyle(mCanvasElement, nullptr);
   if (canvasStyle) {
     WritingMode wm(canvasStyle);
     if (wm.IsVertical() && !wm.IsSideways()) {
@@ -2683,7 +2683,7 @@ CreateFontDeclarationForServo(const nsAString& aFont,
   return CreateDeclarationForServo(eCSSProperty_font, aFont, aDocument);
 }
 
-static already_AddRefed<ServoStyleContext>
+static already_AddRefed<ComputedStyle>
 GetFontStyleForServo(Element* aElement, const nsAString& aFont,
                      nsIPresShell* aPresShell,
                      nsAString& aOutUsedFont,
@@ -2708,11 +2708,11 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
 
   ServoStyleSet* styleSet = aPresShell->StyleSet()->AsServo();
 
-  RefPtr<nsStyleContext> parentStyle;
+  RefPtr<ComputedStyle> parentStyle;
   // have to get a parent style context for inherit-like relative
   // values (2em, bolder, etc.)
   if (aElement && aElement->IsInComposedDoc()) {
-    parentStyle = nsComputedDOMStyle::GetStyleContext(aElement, nullptr);
+    parentStyle = nsComputedDOMStyle::GetComputedStyle(aElement, nullptr);
     if (!parentStyle) {
       // The flush killed the shell, so we couldn't get any meaningful style
       // back.
@@ -2735,7 +2735,7 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
              "We should have returned an error above if the presshell is "
              "being destroyed.");
 
-  RefPtr<ServoStyleContext> sc =
+  RefPtr<ComputedStyle> sc =
     styleSet->ResolveForDeclarations(parentStyle->AsServo(), declarations);
 
   // The font getter is required to be reserialized based on what we
@@ -2754,9 +2754,9 @@ CreateFilterDeclarationForServo(const nsAString& aFilter,
   return CreateDeclarationForServo(eCSSProperty_filter, aFilter, aDocument);
 }
 
-static already_AddRefed<ServoStyleContext>
+static already_AddRefed<ComputedStyle>
 ResolveFilterStyleForServo(const nsAString& aFilterString,
-                           const ServoStyleContext* aParentStyle,
+                           const ComputedStyle* aParentStyle,
                            nsIPresShell* aPresShell,
                            ErrorResult& aError)
 {
@@ -2777,7 +2777,7 @@ ResolveFilterStyleForServo(const nsAString& aFilterString,
   }
 
   ServoStyleSet* styleSet = aPresShell->StyleSet()->AsServo();
-  RefPtr<ServoStyleContext> computedValues =
+  RefPtr<ComputedStyle> computedValues =
     styleSet->ResolveForDeclarations(aParentStyle, declarations);
 
   return computedValues.forget();
@@ -2809,7 +2809,7 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
   // For stylo
   MOZ_ASSERT(presShell->StyleSet()->IsServo());
 
-  RefPtr<ServoStyleContext> parentStyle =
+  RefPtr<ComputedStyle> parentStyle =
     GetFontStyleForServo(mCanvasElement,
                          GetFont(),
                          presShell,
@@ -2819,7 +2819,7 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
     return false;
   }
 
-  RefPtr<ServoStyleContext> computedValues =
+  RefPtr<ComputedStyle> computedValues =
     ResolveFilterStyleForServo(aString,
                                parentStyle,
                                presShell,
@@ -3735,7 +3735,7 @@ CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
     return false;
   }
 
-  RefPtr<nsStyleContext> sc;
+  RefPtr<ComputedStyle> sc;
   nsString usedFont;
   if (presShell->StyleSet()->IsServo()) {
     sc =
@@ -4305,11 +4305,11 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   // for now, default to ltr if not in doc
   bool isRTL = false;
 
-  RefPtr<nsStyleContext> canvasStyle;
+  RefPtr<ComputedStyle> canvasStyle;
   if (mCanvasElement && mCanvasElement->IsInComposedDoc()) {
     // try to find the closest context
     canvasStyle =
-      nsComputedDOMStyle::GetStyleContext(mCanvasElement, nullptr);
+      nsComputedDOMStyle::GetComputedStyle(mCanvasElement, nullptr);
     if (!canvasStyle) {
       return NS_ERROR_FAILURE;
     }

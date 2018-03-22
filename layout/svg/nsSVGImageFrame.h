@@ -54,11 +54,11 @@ class nsSVGImageFrame final
   , public nsIReflowCallback
 {
   friend nsIFrame*
-  NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  NS_NewSVGImageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
 protected:
-  explicit nsSVGImageFrame(nsStyleContext* aContext)
-    : SVGGeometryFrame(aContext, kClassID)
+  explicit nsSVGImageFrame(ComputedStyle* aStyle)
+    : SVGGeometryFrame(aStyle, kClassID)
     , mReflowCallbackPosted(false)
     , mForceSyncDecoding(false)
   {
