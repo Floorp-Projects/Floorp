@@ -61,13 +61,6 @@ struct ScreenConfiguration {
   uint32_t pixelDepth;
 };
 
-struct SystemTimezoneChangeInformation {
-  // These timezone offsets are relative to UTC in minutes and
-  // have already taken daylight saving time (DST) into account.
-  int32_t oldTimezoneOffsetMinutes;
-  int32_t newTimezoneOffsetMinutes;
-};
-
 } // namespace hal
 
 namespace hal_sandbox {
@@ -81,8 +74,6 @@ child:
     async NotifyWakeLockChange(WakeLockInformation aWakeLockInfo);
     async NotifyScreenConfigurationChange(ScreenConfiguration aScreenOrientation);
     async NotifySwitchChange(SwitchEvent aEvent);
-    async NotifySystemClockChange(int64_t aClockDeltaMS); 
-    async NotifySystemTimezoneChange(SystemTimezoneChangeInformation aSystemTimezoneChangeInfo); 
 
 parent:
     async Vibrate(uint32_t[] pattern, uint64_t[] id, PBrowser browser);
@@ -97,12 +88,6 @@ parent:
     async DisableNetworkNotifications();
     sync GetCurrentNetworkInformation()
       returns (NetworkInformation aNetworkInfo);
-
-    async AdjustSystemClock(int64_t aDeltaMilliseconds);
-    async EnableSystemClockChangeNotifications();
-    async DisableSystemClockChangeNotifications();
-    async EnableSystemTimezoneChangeNotifications();
-    async DisableSystemTimezoneChangeNotifications();
 
     async ModifyWakeLock(nsString aTopic,
                          WakeLockControl aLockAdjust,
