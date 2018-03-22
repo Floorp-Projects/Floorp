@@ -333,6 +333,48 @@ async function addDummyHistoryEntries(searchStr = "") {
   });
 }
 
+
+/**
+ * Async utility function to capture a screenshot of each painted frame.
+ *
+ * @param testPromise (Promise)
+ *        A promise that is resolved when the data collection should stop.
+ *
+ * @param win (browser window, optional)
+ *        The browser window to monitor. Defaults to the current window.
+ *
+ * @return An array of screenshots
+ */
+async function recordFrames(testPromise, win = window) {
+  let canvas = win.document.createElementNS("http://www.w3.org/1999/xhtml",
+                                            "canvas");
+  canvas.mozOpaque = true;
+  let ctx = canvas.getContext("2d", {alpha: false, willReadFrequently: true});
+
+  let frames = [];
+
+  let afterPaintListener = event => {
+    let width, height;
+    canvas.width = width = win.innerWidth;
+    canvas.height = height = win.innerHeight;
+    ctx.drawWindow(win, 0, 0, width, height, "white",
+                   ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_VIEW |
+                   ctx.DRAWWINDOW_ASYNC_DECODE_IMAGES |
+                   ctx.DRAWWINDOW_USE_WIDGET_LAYERS);
+    frames.push({data: Cu.cloneInto(ctx.getImageData(0, 0, width, height).data, {}),
+                 width, height});
+  };
+  win.addEventListener("MozAfterPaint", afterPaintListener);
+
+  try {
+    await testPromise;
+  } finally {
+    win.removeEventListener("MozAfterPaint", afterPaintListener);
+  }
+
+  return frames;
+}
+
 function compareFrames(frame, previousFrame) {
   // Accessing the Math global is expensive as the test executes in a
   // non-syntactic scope. Accessing it as a lexical variable is enough
@@ -438,6 +480,76 @@ function dumpFrame({data, width, height}) {
 }
 
 /**
+ * Utility function to report unexpected changed areas on screen.
+ *
+ * @param frames (Array)
+ *        An array of frames captured by recordFrames.
+ *
+ * @param expectations (Object)
+ *        An Object indicating which changes on screen are expected.
+ *        If can contain the following optional fields:
+ *         - filter: a function used to exclude changed rects that are expected.
+ *            It takes the following parameters:
+ *             - rects: an array of changed rects
+ *             - frame: the current frame
+ *             - previousFrame: the previous frame
+ *            It returns an array of rects. This array is typically a copy of
+ *            the rects parameter, from which identified expected changes have
+ *            been excluded.
+ *         - exceptions: an array of objects describing known flicker bugs.
+ *           Example:
+ *             exceptions: [
+ *               {name: "bug 1nnnnnn - the foo icon shouldn't flicker",
+ *                condition: r => r.w == 14 && r.y1 == 0 && ... }
+ *               },
+ *               {name: "bug ...
+ *             ]
+ */
+function reportUnexpectedFlicker(frames, expectations) {
+  let unexpectedRects = 0;
+  for (let i = 1; i < frames.length; ++i) {
+    let frame = frames[i], previousFrame = frames[i - 1];
+    let rects = compareFrames(frame, previousFrame);
+    if (!rects.length) {
+      info("ignoring identical frame");
+      continue;
+    }
+
+    if (expectations.filter) {
+      rects = expectations.filter(rects, frame, previousFrame);
+    }
+
+    for (let rect of rects) {
+      rects = rects.filter(rect => {
+        let rectText = `${rect.toSource()}, window width: ${frame.width}`;
+        for (let e of (expectations.exceptions || [])) {
+          if (e.condition(rect)) {
+            todo(false, e.name + ", " + rectText);
+            return false;
+          }
+        }
+
+        ok(false, "unexpected changed rect: " + rectText);
+        return true;
+      });
+    }
+
+    if (!rects.length)
+      continue;
+
+    // Before dumping a frame with unexpected differences for the first time,
+    // ensure at least one previous frame has been logged so that it's possible
+    // to see the differences when examining the log.
+    if (!unexpectedRects) {
+      dumpFrame(previousFrame);
+    }
+    unexpectedRects += rects.length;
+    dumpFrame(frame);
+  }
+  is(unexpectedRects, 0, "should have 0 unknown flickering areas");
+}
+
+/**
  * This is the main function that performance tests in this folder will call.
  *
  * The general idea is that individual tests provide a test function (testFn)
@@ -456,6 +568,9 @@ function dumpFrame({data, width, height}) {
  *        It can contain the following fields:
  *         - expectedReflows: an array of expected reflow stacks.
  *           (see the comment above reportUnexpectedReflows for an example)
+ *         - frames: an object setting expectations for what will change
+ *           on screen during the test, and the known flicker bugs.
+ *           (see the comment above reportUnexpectedFlicker for an example)
  */
 async function withPerfObserver(testFn, exceptions = {}, win = window) {
   let resolveFn, rejectFn;
@@ -465,10 +580,14 @@ async function withPerfObserver(testFn, exceptions = {}, win = window) {
   });
 
   let promiseReflows = recordReflows(promiseTestDone, win);
+  let promiseFrames = recordFrames(promiseTestDone, win);
 
   testFn().then(resolveFn, rejectFn);
   await promiseTestDone;
 
   let reflows = await promiseReflows;
   reportUnexpectedReflows(reflows, exceptions.expectedReflows);
+
+  let frames = await promiseFrames;
+  reportUnexpectedFlicker(frames, exceptions.frames);
 }
