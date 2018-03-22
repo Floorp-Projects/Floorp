@@ -2942,10 +2942,8 @@ nsGlobalWindowInner::GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aName
     // two codepaths.  The ones coming from the WebIDLGlobalNameHash will end up
     // in the DefineConstructor function in BindingUtils, which always defines
     // things as non-enumerable.  The ones coming from the script namespace
-    // manager get defined by nsDOMClassInfo::PostCreatePrototype calling
-    // ResolvePrototype and using the resulting descriptot to define the
-    // property.  ResolvePrototype always passes 0 to the FillPropertyDescriptor
-    // for the property attributes, so all those are non-enumerable as well.
+    // manager get defined by our resolve hook using FillPropertyDescriptor with
+    // 0 for the property attributes, so non-enumerable as well.
     //
     // So in the aEnumerableOnly case we have nothing to do.
     return;
@@ -2978,17 +2976,14 @@ nsGlobalWindowInner::GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aName
 
     for (auto i = nameSpaceManager->GlobalNameIter(); !i.Done(); i.Next()) {
       const GlobalNameMapEntry* entry = i.Get();
-      if (nsWindowSH::NameStructEnabled(aCx, this, entry->mKey,
-                                        entry->mGlobalName)) {
-        // Just append all of these; even if they get deleted our resolve hook
-        // just goes ahead and recreates them.
-        JSString* str = JS_AtomizeUCStringN(aCx,
-                                            entry->mKey.BeginReading(),
-                                            entry->mKey.Length());
-        if (!str || !aNames.append(NON_INTEGER_ATOM_TO_JSID(str))) {
-          aRv.NoteJSContextException(aCx);
-          return;
-        }
+      // Just append all of these; even if they get deleted our resolve hook
+      // just goes ahead and recreates them.
+      JSString* str = JS_AtomizeUCStringN(aCx,
+                                          entry->mKey.BeginReading(),
+                                          entry->mKey.Length());
+      if (!str || !aNames.append(NON_INTEGER_ATOM_TO_JSID(str))) {
+        aRv.NoteJSContextException(aCx);
+        return;
       }
     }
   }

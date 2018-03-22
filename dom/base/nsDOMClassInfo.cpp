@@ -119,17 +119,6 @@ LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
                      nsPIDOMWindowInner *win,
                      JS::MutableHandle<JS::PropertyDescriptor> desc);
 
-// static
-bool
-nsWindowSH::NameStructEnabled(JSContext* aCx, nsGlobalWindowInner *aWin,
-                              const nsAString& aName,
-                              const nsGlobalNameStruct& aNameStruct)
-{
-  // DOMConstructor is special: creating its proto does not actually define it
-  // as a property on the global.  So we don't want to expose its name either.
-  return !aName.EqualsLiteral("DOMConstructor");
-}
-
 #ifdef RELEASE_OR_BETA
 #define USE_CONTROLLERS_SHIM
 #endif
