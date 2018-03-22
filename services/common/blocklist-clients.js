@@ -168,4 +168,3 @@ function initialize() {
   });
   PinningBlocklistClient.on("change", updatePinningList);
 }
-
