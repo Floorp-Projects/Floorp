@@ -777,6 +777,18 @@ protected:
           return;
         }
         nOrigBytes += len;
+      } else if (origBytes[nOrigBytes] == 0x0f &&
+                 (origBytes[nOrigBytes + 1] == 0x10 ||
+                  origBytes[nOrigBytes + 1] == 0x11)) {
+        // SSE: movups xmm, xmm/m128
+        //      movups xmm/m128, xmm
+        nOrigBytes += 2;
+        int len = CountModRmSib(origBytes + nOrigBytes);
+        if (len < 0) {
+          MOZ_ASSERT_UNREACHABLE("Unrecognized MOV opcode sequence");
+          return;
+        }
+        nOrigBytes += len;
       } else if (origBytes[nOrigBytes] == 0xA1) {
         // MOV eax, [seg:offset]
         nOrigBytes += 5;
