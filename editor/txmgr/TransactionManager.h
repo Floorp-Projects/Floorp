@@ -36,6 +36,15 @@ public:
   already_AddRefed<nsITransaction> PeekUndoStack();
   already_AddRefed<nsITransaction> PeekRedoStack();
 
+  size_t NumberOfUndoItems() const
+  {
+    return mUndoStack.GetSize();
+  }
+  size_t NumberOfRedoItems() const
+  {
+    return mRedoStack.GetSize();
+  }
+
   nsresult WillDoNotify(nsITransaction* aTransaction, bool* aInterrupt);
   nsresult DidDoNotify(nsITransaction* aTransaction, nsresult aExecuteResult);
   nsresult WillUndoNotify(nsITransaction* aTransaction, bool* aInterrupt);
@@ -69,5 +78,11 @@ private:
 };
 
 } // namespace mozilla
+
+mozilla::TransactionManager*
+nsITransactionManager::AsTransactionManager()
+{
+  return static_cast<mozilla::TransactionManager*>(this);
+}
 
 #endif // #ifndef mozilla_TransactionManager_h

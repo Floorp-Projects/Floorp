@@ -172,10 +172,7 @@ public:
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mTextEditor);
 
-    bool canUndo;
-    DebugOnly<nsresult> rv = mTextEditor->CanUndo(&mPreviousEnabled, &canUndo);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
+    mPreviousEnabled = mTextEditor->IsUndoRedoEnabled();
     mTextEditor->EnableUndo(false);
   }
 
@@ -987,8 +984,8 @@ TextInputListener::OnEditActionHandled()
   RefPtr<TextEditor> textEditor = frame->GetTextEditor();
 
   // Get the number of undo / redo items
-  int32_t numUndoItems = textEditor->NumberOfUndoItems();
-  int32_t numRedoItems = textEditor->NumberOfRedoItems();
+  size_t numUndoItems = textEditor->NumberOfUndoItems();
+  size_t numRedoItems = textEditor->NumberOfRedoItems();
   if ((numUndoItems && !mHadUndoItems) || (!numUndoItems && mHadUndoItems) ||
       (numRedoItems && !mHadRedoItems) || (!numRedoItems && mHadRedoItems)) {
     // Modify the menu if undo or redo items are different

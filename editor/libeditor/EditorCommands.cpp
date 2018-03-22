@@ -68,8 +68,8 @@ UndoCommand::IsCommandEnabled(const char* aCommandName,
   if (!textEditor->IsSelectionEditable()) {
     return NS_OK;
   }
-  bool isEnabled = false;
-  return editor->CanUndo(&isEnabled, aIsEnabled);
+  *aIsEnabled = textEditor->CanUndo();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -127,8 +127,8 @@ RedoCommand::IsCommandEnabled(const char* aCommandName,
   if (!textEditor->IsSelectionEditable()) {
     return NS_OK;
   }
-  bool isEnabled = false;
-  return editor->CanRedo(&isEnabled, aIsEnabled);
+  *aIsEnabled = textEditor->CanRedo();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
