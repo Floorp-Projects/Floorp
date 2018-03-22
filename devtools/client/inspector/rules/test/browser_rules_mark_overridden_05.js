@@ -16,14 +16,14 @@ const TEST_URI = `
   <div id='testid' class='testclass'>Styled Node</div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#testid", inspector);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
+  await selectNode("#testid", inspector);
 
   let rule = getRuleViewRuleEditor(view, 1).rule;
 
-  yield addProperty(view, 1, "background-color", "red");
+  await addProperty(view, 1, "background-color", "red");
 
   let firstProp = rule.textProps[0];
   let secondProp = rule.textProps[1];

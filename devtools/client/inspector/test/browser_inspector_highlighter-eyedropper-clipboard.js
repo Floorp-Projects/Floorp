@@ -9,8 +9,8 @@ const HIGHLIGHTER_TYPE = "EyeDropper";
 const ID = "eye-dropper-";
 const TEST_URI = "data:text/html;charset=utf-8,<style>html{background:red}</style>";
 
-add_task(function* () {
-  let helper = yield openInspectorForURL(TEST_URI)
+add_task(async function() {
+  let helper = await openInspectorForURL(TEST_URI)
                .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
   helper.prefix = ID;
 
@@ -18,20 +18,20 @@ add_task(function* () {
        waitForElementAttributeSet, waitForElementAttributeRemoved} = helper;
 
   info("Show the eyedropper with the copyOnSelect option");
-  yield show("html", {copyOnSelect: true});
+  await show("html", {copyOnSelect: true});
 
   info("Make sure to wait until the eyedropper is done taking a screenshot of the page");
-  yield waitForElementAttributeSet("root", "drawn", helper);
+  await waitForElementAttributeSet("root", "drawn", helper);
 
-  yield waitForClipboardPromise(() => {
+  await waitForClipboardPromise(() => {
     info("Activate the eyedropper so the background color is copied");
     EventUtils.synthesizeKey("KEY_Enter");
   }, "#ff0000");
 
   ok(true, "The clipboard contains the right value");
 
-  yield waitForElementAttributeRemoved("root", "drawn", helper);
-  yield waitForElementAttributeSet("root", "hidden", helper);
+  await waitForElementAttributeRemoved("root", "drawn", helper);
+  await waitForElementAttributeSet("root", "hidden", helper);
   ok(true, "The eyedropper is now hidden");
 
   finalize();

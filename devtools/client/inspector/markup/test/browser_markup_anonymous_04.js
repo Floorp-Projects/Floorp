@@ -9,22 +9,22 @@
 const TEST_URL = URL_ROOT + "doc_markup_anonymous.html";
 const PREF = "devtools.inspector.showAllAnonymousContent";
 
-add_task(function* () {
+add_task(async function() {
   Services.prefs.setBoolPref(PREF, true);
 
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+  let {inspector} = await openInspectorForURL(TEST_URL);
 
-  let native = yield getNodeFront("#native", inspector);
+  let native = await getNodeFront("#native", inspector);
 
   // Markup looks like: <div><video controls /></div>
-  let nativeChildren = yield inspector.walker.children(native);
+  let nativeChildren = await inspector.walker.children(native);
   is(nativeChildren.nodes.length, 1, "Children returned from walker");
 
   info("Checking the video element");
   let video = nativeChildren.nodes[0];
   ok(!video.isAnonymous, "<video> is not anonymous");
 
-  let videoChildren = yield inspector.walker.children(video);
+  let videoChildren = await inspector.walker.children(video);
   is(videoChildren.nodes.length, 3, "<video> has native anonymous children");
 
   for (let node of videoChildren.nodes) {
@@ -32,6 +32,6 @@ add_task(function* () {
     ok(!node._form.isXBLAnonymous, "Child is not XBL anonymous");
     ok(!node._form.isShadowAnonymous, "Child is not shadow anonymous");
     ok(node._form.isNativeAnonymous, "Child is native anonymous");
-    yield isEditingMenuDisabled(node, inspector);
+    await isEditingMenuDisabled(node, inspector);
   }
 });

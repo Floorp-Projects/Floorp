@@ -8,8 +8,8 @@
 // the user keyboard action. In this case markup tree container must receive
 // keyboard focus so that further interactions continue within the markup tree.
 
-add_task(function* () {
-  let { inspector } = yield openInspectorForURL(
+add_task(async function() {
+  let { inspector } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
   let markup = inspector.markup;
   let doc = markup.doc;
@@ -17,10 +17,10 @@ add_task(function* () {
 
   is(doc.activeElement, doc.body, "Keyboard focus by default is on document body");
 
-  yield selectNode("span", inspector, "test");
+  await selectNode("span", inspector, "test");
   is(doc.activeElement, doc.body, "Keyboard focus remains on document body.");
 
-  yield selectNode("h1", inspector, "test-keyboard");
+  await selectNode("h1", inspector, "test-keyboard");
   is(doc.activeElement, rootContainer.elt,
     "Keyboard focus must be on the markup tree conainer.");
 });

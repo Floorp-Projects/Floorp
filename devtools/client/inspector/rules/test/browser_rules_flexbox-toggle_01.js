@@ -18,12 +18,12 @@ const TEST_URI = `
 
 const HIGHLIGHTER_TYPE = "FlexboxHighlighter";
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
   let {highlighters} = view;
 
-  yield selectNode("#flex", inspector);
+  await selectNode("#flex", inspector);
   let container = getRuleViewProperty(view, "#flex", "display").valueSpan;
   let flexboxToggle = container.querySelector(".ruleview-flex");
 
@@ -38,7 +38,7 @@ add_task(function* () {
   info("Toggling ON the flexbox highlighter from the rule-view.");
   let onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
   flexboxToggle.click();
-  yield onHighlighterShown;
+  await onHighlighterShown;
 
   info("Checking the flexbox highlighter is created and toggle button is active in " +
     "the rule-view.");
@@ -51,7 +51,7 @@ add_task(function* () {
   info("Toggling OFF the flexbox highlighter from the rule-view.");
   let onHighlighterHidden = highlighters.once("flexbox-highlighter-hidden");
   flexboxToggle.click();
-  yield onHighlighterHidden;
+  await onHighlighterHidden;
 
   info("Checking the flexbox highlighter is not shown and toggle button is not active " +
     "in the rule-view.");

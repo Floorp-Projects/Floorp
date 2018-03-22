@@ -15,13 +15,13 @@ const TEST_URI = `
   <div id='testid'>Styled Node</div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#testid", inspector);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
+  await selectNode("#testid", inspector);
 
   info("Test creating a new property and escaping");
-  yield addProperty(view, 1, "color", "red", "VK_ESCAPE", false);
+  await addProperty(view, 1, "color", "red", "VK_ESCAPE", false);
 
   is(view.styleDocument.activeElement, view.styleDocument.body,
     "Correct element has focus");

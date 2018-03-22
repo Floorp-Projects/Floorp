@@ -24,12 +24,12 @@ const TEST_URI = `
 
 const HIGHLIGHTER_TYPE = "CssGridHighlighter";
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
   let highlighters = view.highlighters;
 
-  yield selectNode("#grid", inspector);
+  await selectNode("#grid", inspector);
   let container = getRuleViewProperty(view, "#grid", "display").valueSpan;
   let gridToggle = container.querySelector(".ruleview-grid");
   let overriddenContainer = getRuleViewProperty(view, "div, ul", "display").valueSpan;
@@ -47,7 +47,7 @@ add_task(function* () {
   info("Toggling ON the CSS grid highlighter from the overridden rule in the rule-view.");
   let onHighlighterShown = highlighters.once("grid-highlighter-shown");
   overriddenGridToggle.click();
-  yield onHighlighterShown;
+  await onHighlighterShown;
 
   info("Checking the CSS grid highlighter is created and toggle buttons are active in " +
     "the rule-view.");
@@ -62,7 +62,7 @@ add_task(function* () {
     "rule-view.");
   let onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
   gridToggle.click();
-  yield onHighlighterHidden;
+  await onHighlighterHidden;
 
   info("Checking the CSS grid highlighter is not shown and toggle buttons are not " +
     "active in the rule-view.");
