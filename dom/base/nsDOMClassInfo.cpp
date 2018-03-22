@@ -1340,6 +1340,9 @@ nsWindowSH::GlobalResolve(nsGlobalWindowInner *aWin, JSContext *cx,
   nsresult rv = NS_OK;
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+    // The only eTypeClassConstructor struct left is DOMConstructor.
+    MOZ_ASSERT(name.EqualsLiteral("DOMConstructor"));
+
     // Create the XPConnect prototype for our classinfo, PostCreateProto will
     // set up the prototype chain.  This will go ahead and define things on the
     // actual window's global.
@@ -1349,21 +1352,9 @@ nsWindowSH::GlobalResolve(nsGlobalWindowInner *aWin, JSContext *cx,
     NS_ENSURE_SUCCESS(rv, rv);
     MOZ_ASSERT(dot_prototype);
 
-    bool isXray = xpc::WrapperFactory::IsXrayWrapper(obj);
-    MOZ_ASSERT_IF(obj != aWin->GetGlobalJSObject(), isXray);
-    if (!isXray) {
-      // GetXPCProto already defined the property for us
-      FillPropertyDescriptor(desc, obj, JS::UndefinedValue(), false);
-      return NS_OK;
-    }
-
-    // This is the Xray case.  Look up the constructor object for this
-    // prototype.
-    return ResolvePrototype(nsDOMClassInfo::sXPConnect, aWin, cx, obj,
-                            class_name,
-                            &sClassInfoData[name_struct->mDOMClassInfoID],
-                            name_struct, nameSpaceManager, dot_prototype,
-                            desc);
+    // GetXPCProto already defined the property for us if needed.
+    FillPropertyDescriptor(desc, obj, JS::UndefinedValue(), false);
+    return NS_OK;
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeProperty) {
