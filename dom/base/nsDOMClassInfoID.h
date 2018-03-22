@@ -16,9 +16,6 @@
 
 enum nsDOMClassInfoID
 {
-  eDOMClassInfo_DOMPrototype_id,
-  eDOMClassInfo_DOMConstructor_id,
-
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

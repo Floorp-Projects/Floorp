@@ -57,7 +57,6 @@
 // DOM base includes
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMConstructor.h"
 
 // DOM core includes
 #include "nsError.h"
@@ -124,38 +123,6 @@ using namespace mozilla::dom;
 
 #define NS_DEFINE_CLASSINFO_DATA(_class, _helper, _flags)                     \
   NS_DEFINE_CLASSINFO_DATA_HELPER(_class, _helper, _flags)
-
-// This list of NS_DEFINE_CLASSINFO_DATA macros is what gives the DOM
-// classes their correct behavior when used through XPConnect. The
-// arguments that are passed to NS_DEFINE_CLASSINFO_DATA are
-//
-// 1. Class name as it should appear in JavaScript, this name is also
-//    used to find the id of the class in nsDOMClassInfo
-//    (i.e. e<classname>_id)
-// 2. Scriptable helper class
-// 3. nsIClassInfo/nsIXPCScriptable flags (i.e. for GetScriptableFlags)
-
-static nsDOMClassInfoData sClassInfoData[] = {
-  // These bits are about to go away; they're unused and it doesn't
-  // matter what helper is used for them.
-  NS_DEFINE_CLASSINFO_DATA(DOMPrototype, nsDOMGenericSH,
-                           DOM_BASE_SCRIPTABLE_FLAGS |
-                           XPC_SCRIPTABLE_WANT_PRECREATE |
-                           XPC_SCRIPTABLE_WANT_RESOLVE |
-                           XPC_SCRIPTABLE_WANT_HASINSTANCE |
-                           XPC_SCRIPTABLE_DONT_ENUM_QUERY_INTERFACE)
-  NS_DEFINE_CLASSINFO_DATA(DOMConstructor, nsDOMGenericSH,
-                           DOM_BASE_SCRIPTABLE_FLAGS |
-                           XPC_SCRIPTABLE_WANT_PRECREATE |
-                           XPC_SCRIPTABLE_WANT_RESOLVE |
-                           XPC_SCRIPTABLE_WANT_HASINSTANCE |
-                           XPC_SCRIPTABLE_WANT_CALL |
-                           XPC_SCRIPTABLE_WANT_CONSTRUCT |
-                           XPC_SCRIPTABLE_DONT_ENUM_QUERY_INTERFACE)
-
-  // Misc Core related classes
-
-};
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nullptr;
 bool nsDOMClassInfo::sIsInitialized = false;
@@ -293,49 +260,8 @@ nsDOMClassInfo::Init()
   nsCOMPtr<nsIXPCFunctionThisTranslator> elt = new nsEventListenerThisTranslator();
   sXPConnect->SetFunctionThisTranslator(NS_GET_IID(nsIDOMEventListener), elt);
 
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DOMPrototype, nsIDOMDOMConstructor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMConstructor)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(DOMConstructor, nsIDOMDOMConstructor)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMConstructor)
-  DOM_CLASSINFO_MAP_END
-
-  static_assert(MOZ_ARRAY_LENGTH(sClassInfoData) == eDOMClassInfoIDCount,
-                "The number of items in sClassInfoData doesn't match the "
-                "number of nsIDOMClassInfo ID's, this is bad! Fix it!");
-
-#ifdef DEBUG
-  for (size_t i = 0; i < eDOMClassInfoIDCount; i++) {
-    if (!sClassInfoData[i].mConstructorFptr ||
-        sClassInfoData[i].mDebugID != i) {
-      MOZ_CRASH("Class info data out of sync, you forgot to update "
-                "nsDOMClassInfo.h and nsDOMClassInfo.cpp! Fix this, "
-                "mozilla will not work without this fixed!");
-    }
-  }
-
-  for (size_t i = 0; i < eDOMClassInfoIDCount; i++) {
-    if (!sClassInfoData[i].mInterfaces) {
-      MOZ_CRASH("Class info data without an interface list! Fix this, "
-                "mozilla will not work without this fixed!");
-     }
-   }
-#endif
-
   // Initialize static JSString's
   DefineStaticJSVals();
-
-  int32_t i;
-
-  for (i = 0; i < eDOMClassInfoIDCount; ++i) {
-    if (i == eDOMClassInfo_DOMPrototype_id) {
-      continue;
-    }
-
-    nsDOMClassInfoData& data = sClassInfoData[i];
-    nameSpaceManager->RegisterClassName(data.mClass.name, i, &data.mNameUTF16);
-  }
 
   sIsInitialized = true;
 
@@ -551,39 +477,13 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
 nsIClassInfo *
 NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID)
 {
-  if (aID >= eDOMClassInfoIDCount) {
-    NS_ERROR("Bad ID!");
-
-    return nullptr;
-  }
-
-  nsresult rv = RegisterDOMNames();
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  if (!sClassInfoData[aID].mCachedClassInfo) {
-    nsDOMClassInfoData& data = sClassInfoData[aID];
-
-    data.mCachedClassInfo = data.mConstructorFptr(&data);
-    NS_ENSURE_TRUE(data.mCachedClassInfo, nullptr);
-
-    NS_ADDREF(data.mCachedClassInfo);
-  }
-
-  return sClassInfoData[aID].mCachedClassInfo;
+  return nullptr;
 }
 
 // static
 void
 nsDOMClassInfo::ShutDown()
 {
-  if (sClassInfoData[0].mConstructorFptr) {
-    uint32_t i;
-
-    for (i = 0; i < eDOMClassInfoIDCount; i++) {
-      NS_IF_RELEASE(sClassInfoData[i].mCachedClassInfo);
-    }
-  }
-
   sConstructor_id     = JSID_VOID;
   sWrappedJSObject_id = JSID_VOID;
 
