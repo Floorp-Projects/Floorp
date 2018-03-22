@@ -108,7 +108,6 @@ const LEGACY_NON_RESTARTLESS_TESTS = new Set([
   "test_filepointer.js",
   "test_invalid_install_rdf.js",
   "test_locale.js",
-  "test_manifest.js",
   "test_onPropertyChanged_appDisabled.js",
   "test_proxies.js",
   "test_safemode.js",
