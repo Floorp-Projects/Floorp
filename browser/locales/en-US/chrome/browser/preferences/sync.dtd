@@ -73,7 +73,7 @@ both, to better adapt this sentence to their language.
 <!ENTITY resendVerification.label     "Resend Verification">
 <!ENTITY resendVerification.accesskey "d">
 <!ENTITY removeAccount.label          "Remove Account">
-<!ENTITY removeAccount.accesskey      "p">
+<!ENTITY removeAccount.accesskey      "R">
 
 <!ENTITY signedOut.caption            "Take Your Web With You">
 <!ENTITY signedOut.description        "Synchronize your bookmarks, history, tabs, passwords, add-ons, and preferences across all your devices.">
