@@ -109,8 +109,8 @@ var RecordingsView = {
    * before the tool is loaded) or imported. In normal manual recording cases,
    * this will also be fired.
    */
-  _onNewRecording: function(_, recording) {
-    this._onRecordingStateChange(_, null, recording);
+  _onNewRecording: function(recording) {
+    this._onRecordingStateChange(null, recording);
   },
 
   /**
@@ -121,7 +121,7 @@ var RecordingsView = {
    * @param RecordingModel recording
    *        Model of the recording that was started.
    */
-  _onRecordingStateChange: function(_, state, recording) {
+  _onRecordingStateChange: function(state, recording) {
     const { recordings, labels } = this._listState;
 
     if (!recordings.includes(recording)) {
@@ -148,7 +148,7 @@ var RecordingsView = {
   /**
    * Clears out all non-console recordings.
    */
-  _onRecordingDeleted: function(_, recording) {
+  _onRecordingDeleted: function(recording) {
     const { recordings } = this._listState;
     const index = recordings.indexOf(recording);
     if (index === -1) {
@@ -186,7 +186,7 @@ var RecordingsView = {
     }});
   },
 
-  _onRecordingExported: function(_, recording, file) {
+  _onRecordingExported: function(recording, file) {
     if (recording.isConsole()) {
       return;
     }

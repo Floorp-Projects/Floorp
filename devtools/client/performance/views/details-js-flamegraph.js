@@ -114,7 +114,7 @@ var JsFlameGraphView = extend(DetailsSubview, {
   /**
    * Called when `devtools.theme` changes.
    */
-  _onThemeChanged: function(_, theme) {
+  _onThemeChanged: function(theme) {
     this.graph.setTheme(theme);
     this.graph.refresh({ force: true });
   },
