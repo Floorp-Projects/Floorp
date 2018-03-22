@@ -121,7 +121,7 @@ public:
     return GetWrapper();
   }
 
-  already_AddRefed<nsIFrameLoader> GetFrameLoader();
+  already_AddRefed<nsFrameLoader> GetFrameLoader();
 
 protected:
   virtual ~nsInProcessTabChildGlobal();

@@ -2572,8 +2572,7 @@ void
 nsObjectLoadingContent::Traverse(nsObjectLoadingContent *tmp,
                                  nsCycleCollectionTraversalCallback &cb)
 {
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mFrameLoader");
-  cb.NoteXPCOMChild(static_cast<nsIFrameLoader*>(tmp->mFrameLoader));
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameLoader);
 }
 
 void

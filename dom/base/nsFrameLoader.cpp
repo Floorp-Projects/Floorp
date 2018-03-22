@@ -152,13 +152,12 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFrameLoader)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIFrameLoader)
   if (aIID.Equals(NS_GET_IID(nsFrameLoader))) {
       // We want to end up with a pointer that can then be reinterpret_cast
       // from nsISupports* to nsFrameLoader* and end up with |this|.
       foundInterface = reinterpret_cast<nsISupports*>(this);
   } else
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFrameLoader)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserPersistable)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersistable)
 NS_INTERFACE_MAP_END
 
@@ -979,7 +978,7 @@ nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
 
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
-      os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
+      os->NotifyObservers(ToSupports(this),
                           "remote-browser-shown", nullptr);
     }
   } else {
@@ -2257,7 +2256,7 @@ nsFrameLoader::MaybeCreateDocShell()
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
+    os->NotifyObservers(ToSupports(this),
                         "inprocess-browser-shown", nullptr);
   }
 
@@ -2785,17 +2784,16 @@ nsFrameLoader::ActivateFrameEvent(const nsAString& aType, bool aCapture, ErrorRe
 }
 
 nsresult
-nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
+nsFrameLoader::CreateStaticClone(nsFrameLoader* aDest)
 {
-  nsFrameLoader* dest = static_cast<nsFrameLoader*>(aDest);
-  dest->MaybeCreateDocShell();
-  NS_ENSURE_STATE(dest->mDocShell);
+  aDest->MaybeCreateDocShell();
+  NS_ENSURE_STATE(aDest->mDocShell);
 
-  nsCOMPtr<nsIDocument> kungFuDeathGrip = dest->mDocShell->GetDocument();
+  nsCOMPtr<nsIDocument> kungFuDeathGrip = aDest->mDocShell->GetDocument();
   Unused << kungFuDeathGrip;
 
   nsCOMPtr<nsIContentViewer> viewer;
-  dest->mDocShell->GetContentViewer(getter_AddRefs(viewer));
+  aDest->mDocShell->GetContentViewer(getter_AddRefs(viewer));
   NS_ENSURE_STATE(viewer);
 
   nsIDocShell* origDocShell = GetDocShell(IgnoreErrors());
@@ -2804,7 +2802,7 @@ nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
   nsCOMPtr<nsIDocument> doc = origDocShell->GetDocument();
   NS_ENSURE_STATE(doc);
 
-  nsCOMPtr<nsIDocument> clonedDoc = doc->CreateStaticClone(dest->mDocShell);
+  nsCOMPtr<nsIDocument> clonedDoc = doc->CreateStaticClone(aDest->mDocShell);
 
   viewer->SetDocument(clonedDoc);
   return NS_OK;
