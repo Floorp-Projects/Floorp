@@ -316,17 +316,6 @@ var listener = {
 
 Services.console.registerListener(listener);
 
-function check_except(func) {
-  try {
-    func();
-  } catch (e) {
-    Assert.ok(true);
-    return;
-  }
-  dumpn("Should have thrown an exception: " + func.toString());
-  Assert.ok(false);
-}
-
 function testGlobal(name) {
   let sandbox = Cu.Sandbox(Cc["@mozilla.org/systemprincipal;1"]
                            .createInstance(Ci.nsIPrincipal));
