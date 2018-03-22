@@ -57,7 +57,7 @@ void BackgroundSdrEncryptStrings(const nsTArray<nsCString>& plaintexts,
                                aPromise->MaybeResolve(cipherTexts);
                              }
                            }));
-  NS_DispatchToMainThread(runnable);
+  NS_DispatchToMainThread(runnable.forget());
 }
 
 nsresult
