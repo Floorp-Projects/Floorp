@@ -80,10 +80,6 @@ const LEGACY_NON_RESTARTLESS_TESTS = new Set([
   "test_bug397778.js",
   "test_bug425657.js",
   "test_bug455906.js",
-  "test_bug470377_1.js",
-  "test_bug470377_2.js",
-  "test_bug470377_3.js",
-  "test_bug470377_4.js",
   "test_signed_verify.js",
 ]);
 
