@@ -2040,31 +2040,22 @@ WebrtcVideoConduit::ReceivedRTPPacket(const void* data, int len, uint32_t ssrc)
     // We can't just do this here; it has to happen on MainThread :-(
     // We also don't want to drop the packet, nor stall this thread, so we hold
     // the packet (and any following) for inserting once the SSRC is set.
-    if (mRecvSsrcSetInProgress || mRecvSSRC != ssrc) {
-      // capture packet for insertion after ssrc is set -- do this before
-      // sending the runnable, since it may pull from this.  Since it
-      // dispatches back to us, it's less critial to do this here, but doesn't
-      // hurt.
-      UniquePtr<QueuedPacket> packet((QueuedPacket*) malloc(sizeof(QueuedPacket) + len-1));
-      packet->mLen = len;
-      memcpy(packet->mData, data, len);
-      CSFLogDebug(LOGTAG, "queuing packet: seq# %u, Len %d ",
-                  (uint16_t)ntohs(((uint16_t*) packet->mData)[1]), packet->mLen);
-      if (mRecvSsrcSetInProgress) {
-        mQueuedPackets.AppendElement(std::move(packet));
-        return kMediaConduitNoError;
-      }
+    if (mRtpPacketQueue.IsQueueActive()) {
+      mRtpPacketQueue.Enqueue(data, len);
+      return kMediaConduitNoError;
+    }
+
+    if (mRecvSSRC != ssrc) {
       // a new switch needs to be done
       // any queued packets are from a previous switch that hasn't completed
       // yet; drop them and only process the latest SSRC
-      mQueuedPackets.Clear();
-      mQueuedPackets.AppendElement(std::move(packet));
+      mRtpPacketQueue.Clear();
+      mRtpPacketQueue.Enqueue(data, len);
 
       CSFLogDebug(LOGTAG, "%s: switching from SSRC %u to %u", __FUNCTION__,
                   static_cast<uint32_t>(mRecvSSRC), ssrc);
       // we "switch" here immediately, but buffer until the queue is released
       mRecvSSRC = ssrc;
-      mRecvSsrcSetInProgress = true;
 
       // Ensure lamba captures refs
       NS_DispatchToMainThread(NS_NewRunnableFunction(
@@ -2087,19 +2078,7 @@ WebrtcVideoConduit::ReceivedRTPPacket(const void* data, int len, uint32_t ssrc)
                 // this is an intermediate switch; another is in-flight
                 return;
               }
-              // SSRC is set; insert queued packets
-              for (auto& packet : mQueuedPackets) {
-                CSFLogDebug(LOGTAG, "Inserting queued packets: seq# %u, Len %d ",
-                            (uint16_t)ntohs(((uint16_t*) packet->mData)[1]), packet->mLen);
-
-                if (DeliverPacket(packet->mData, packet->mLen) != kMediaConduitNoError) {
-                  CSFLogError(LOGTAG, "%s RTP Processing Failed", __FUNCTION__);
-                  // Keep delivering and then clear the queue
-                }
-              }
-              mQueuedPackets.Clear();
-              // we don't leave inprogress until there are no changes in-flight
-              mRecvSsrcSetInProgress = false;
+              self->mRtpPacketQueue.DequeueAll(self);
             }));
         }));
       return kMediaConduitNoError;
