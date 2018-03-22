@@ -75,14 +75,14 @@ ServiceWorkerContainer::ServiceWorkerContainer(nsIGlobalObject* aGlobal)
 
 ServiceWorkerContainer::~ServiceWorkerContainer()
 {
-  RemoveReadyPromise();
+  mReadyPromiseHolder.DisconnectIfExists();
 }
 
 void
 ServiceWorkerContainer::DisconnectFromOwner()
 {
   mControllerWorker = nullptr;
-  RemoveReadyPromise();
+  mReadyPromiseHolder.DisconnectIfExists();
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
@@ -96,22 +96,6 @@ ServiceWorkerContainer::ControllerChanged(ErrorResult& aRv)
   }
   mControllerWorker = go->GetOrCreateServiceWorker(go->GetController().ref());
   aRv = DispatchTrustedEvent(NS_LITERAL_STRING("controllerchange"));
-}
-
-void
-ServiceWorkerContainer::RemoveReadyPromise()
-{
-  mReadyPromiseHolder.DisconnectIfExists();
-  if (nsCOMPtr<nsPIDOMWindowInner> window = GetOwner()) {
-    nsCOMPtr<nsIServiceWorkerManager> swm =
-      mozilla::services::GetServiceWorkerManager();
-    if (!swm) {
-      // If the browser is shutting down, we don't need to remove the promise.
-      return;
-    }
-
-    swm->RemoveReadyPromise(window);
-  }
 }
 
 JSObject*

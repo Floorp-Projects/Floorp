@@ -73,8 +73,6 @@ private:
 
   ~ServiceWorkerContainer();
 
-  void RemoveReadyPromise();
-
   // This only changes when a worker hijacks everything in its scope by calling
   // claim.
   RefPtr<ServiceWorker> mControllerWorker;
