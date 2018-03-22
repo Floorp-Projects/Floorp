@@ -2442,7 +2442,6 @@ EmitTruncate(FunctionCompiler& f, ValType operandType, ValType resultType,
     return true;
 }
 
-#ifdef ENABLE_WASM_SIGNEXTEND_OPS
 static bool
 EmitSignExtend(FunctionCompiler& f, uint32_t srcSize, uint32_t targetSize)
 {
@@ -2454,7 +2453,6 @@ EmitSignExtend(FunctionCompiler& f, uint32_t srcSize, uint32_t targetSize)
     f.iter().setResult(f.signExtend(input, srcSize, targetSize));
     return true;
 }
-#endif
 
 static bool
 EmitExtendI32(FunctionCompiler& f, bool isUnsigned)
@@ -4064,7 +4062,6 @@ EmitBodyExprs(FunctionCompiler& f)
             return f.iter().unrecognizedOpcode(&op);
 
           // Sign extensions
-#ifdef ENABLE_WASM_SIGNEXTEND_OPS
           case uint16_t(Op::I32Extend8S):
             CHECK(EmitSignExtend(f, 1, 4));
           case uint16_t(Op::I32Extend16S):
@@ -4075,7 +4072,6 @@ EmitBodyExprs(FunctionCompiler& f)
             CHECK(EmitSignExtend(f, 2, 8));
           case uint16_t(Op::I64Extend32S):
             CHECK(EmitSignExtend(f, 4, 8));
-#endif
 
           // Miscellaneous operations
           case uint16_t(Op::MiscPrefix): {
