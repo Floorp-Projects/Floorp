@@ -108,6 +108,8 @@
 #define LMANNO_SITEURI "livemark/siteURI"
 
 #define MOBILE_ROOT_GUID "mobile______"
+// This is no longer used & obsolete except for during migration.
+// Note: it may still be found in older places databases.
 #define MOBILE_ROOT_ANNO "mobile/bookmarksRoot"
 
 // We use a fixed title for the mobile root to avoid marking the database as
@@ -2216,55 +2218,6 @@ Database::CreateMobileRoot()
 
   int64_t rootId;
   rv = findIdStmt->GetInt64(0, &rootId);
-  if (NS_FAILED(rv)) return -1;
-
-  // Set the mobile bookmarks anno on the new root, so that Sync code on an
-  // older channel can still find it in case of a downgrade. This can be
-  // removed in bug 1306445.
-  nsCOMPtr<mozIStorageStatement> addAnnoNameStmt;
-  rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT OR IGNORE INTO moz_anno_attributes (name) VALUES (:anno_name)"
-  ), getter_AddRefs(addAnnoNameStmt));
-  if (NS_FAILED(rv)) return -1;
-  mozStorageStatementScoper addAnnoNameScoper(addAnnoNameStmt);
-
-  rv = addAnnoNameStmt->BindUTF8StringByName(
-    NS_LITERAL_CSTRING("anno_name"), NS_LITERAL_CSTRING(MOBILE_ROOT_ANNO));
-  if (NS_FAILED(rv)) return -1;
-  rv = addAnnoNameStmt->Execute();
-  if (NS_FAILED(rv)) return -1;
-
-  nsCOMPtr<mozIStorageStatement> addAnnoStmt;
-  rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT OR IGNORE INTO moz_items_annos "
-      "(id, item_id, anno_attribute_id, content, flags, "
-       "expiration, type, dateAdded, lastModified) "
-    "SELECT "
-      "(SELECT a.id FROM moz_items_annos a "
-       "WHERE a.anno_attribute_id = n.id AND "
-             "a.item_id = :root_id), "
-      ":root_id, n.id, 1, 0, :expiration, :type, :timestamp, :timestamp "
-    "FROM moz_anno_attributes n WHERE name = :anno_name"
-  ), getter_AddRefs(addAnnoStmt));
-  if (NS_FAILED(rv)) return -1;
-  mozStorageStatementScoper addAnnoScoper(addAnnoStmt);
-
-  rv = addAnnoStmt->BindInt64ByName(NS_LITERAL_CSTRING("root_id"), rootId);
-  if (NS_FAILED(rv)) return -1;
-  rv = addAnnoStmt->BindUTF8StringByName(
-    NS_LITERAL_CSTRING("anno_name"), NS_LITERAL_CSTRING(MOBILE_ROOT_ANNO));
-  if (NS_FAILED(rv)) return -1;
-  rv = addAnnoStmt->BindInt32ByName(NS_LITERAL_CSTRING("expiration"),
-                                    nsIAnnotationService::EXPIRE_NEVER);
-  if (NS_FAILED(rv)) return -1;
-  rv = addAnnoStmt->BindInt32ByName(NS_LITERAL_CSTRING("type"),
-                                    nsIAnnotationService::TYPE_INT32);
-  if (NS_FAILED(rv)) return -1;
-  rv = addAnnoStmt->BindInt32ByName(NS_LITERAL_CSTRING("timestamp"),
-                                    RoundedPRNow());
-  if (NS_FAILED(rv)) return -1;
-
-  rv = addAnnoStmt->Execute();
   if (NS_FAILED(rv)) return -1;
 
   return rootId;

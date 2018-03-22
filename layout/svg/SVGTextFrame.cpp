@@ -3042,7 +3042,7 @@ SVGTextDrawPathCallbacks::StrokeGeometry()
         RefPtr<Path> path = mContext.GetPath();
         SVGContentUtils::AutoStrokeOptions strokeOptions;
         SVGContentUtils::GetStrokeOptions(&strokeOptions, svgOwner,
-                                          mFrame->StyleContext(),
+                                          mFrame->Style(),
                                           /*aContextPaint*/ nullptr);
         DrawOptions drawOptions;
         drawOptions.mAntialiasMode =
@@ -3154,9 +3154,9 @@ NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
 // Implementation
 
 nsIFrame*
-NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewSVGTextFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) SVGTextFrame(aContext);
+  return new (aPresShell) SVGTextFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGTextFrame)
@@ -3227,10 +3227,10 @@ SVGTextFrame::AttributeChanged(int32_t aNameSpaceID,
 }
 
 void
-SVGTextFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+SVGTextFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
 {
   if (mState & NS_FRAME_IS_NONDISPLAY) {
-    // We need this DidSetStyleContext override to handle cases like this:
+    // We need this DidSetComputedStyle override to handle cases like this:
     //
     //   <defs>
     //     <g>
@@ -3246,7 +3246,7 @@ SVGTextFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     // nsSVGDisplayContainerFrame::ReflowSVG, we would find the non-display
     // <defs> container and then call ReflowSVGNonDisplayText on it.  If we do
     // not actually reflow the parent of the <defs>, then without this
-    // DidSetStyleContext we would (a) not cause the <text>'s anonymous block
+    // DidSetComputedStyle we would (a) not cause the <text>'s anonymous block
     // child to be reflowed when it is next painted, and (b) not cause the
     // <text> to be repainted anyway since the user of the <mask> would not
     // know it needs to be repainted.

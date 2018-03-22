@@ -636,6 +636,7 @@ CreateNewBinaryDetectorFactory(nsISupports *aOuter, REFNSIID aIID, void **aResul
 // Net module startup hook
 static nsresult nsNetStartup()
 {
+    mozilla::net::nsStandardURL::InitGlobalObjects();
     return NS_OK;
 }
 

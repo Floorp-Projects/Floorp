@@ -223,12 +223,12 @@ PlacesController.prototype = {
       this.remove("Remove Selection").catch(Cu.reportError);
       break;
     case "placesCmd_deleteDataHost":
-      var host;
+      let host;
       if (PlacesUtils.nodeIsHost(this._view.selectedNode)) {
-        var queries = this._view.selectedNode.getQueries();
-        host = queries[0].domain;
-      } else
+        host = this._view.selectedNode.query.domain;
+      } else {
         host = Services.io.newURI(this._view.selectedNode.uri).host;
+      }
       let {ForgetAboutSite} = ChromeUtils.import("resource://gre/modules/ForgetAboutSite.jsm", {});
       ForgetAboutSite.removeDataFromDomain(host)
                      .catch(Cu.reportError);
@@ -910,7 +910,7 @@ PlacesController.prototype = {
       PlacesUtils.history.removePagesFromHost(aContainerNode.title, true);
     } else if (PlacesUtils.nodeIsDay(aContainerNode)) {
       // Day container.
-      let query = aContainerNode.getQueries()[0];
+      let query = aContainerNode.query;
       let beginTime = query.beginTime;
       let endTime = query.endTime;
       if (!query || !beginTime || !endTime)

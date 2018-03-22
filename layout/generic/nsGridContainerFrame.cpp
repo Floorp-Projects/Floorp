@@ -12,6 +12,7 @@
 #include <functional>
 #include <limits>
 #include "gfxContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "mozilla/CSSAlignUtils.h"
 #include "mozilla/CSSOrderAwareFrameIterator.h"
 #include "mozilla/dom/GridBinding.h"
@@ -29,7 +30,6 @@
 #include "nsIFrameInlines.h"
 #include "nsPresContext.h"
 #include "nsReadableUtils.h"
-#include "nsStyleContext.h"
 #include "nsTableWrapperFrame.h"
 
 using namespace mozilla;
@@ -2656,9 +2656,9 @@ NS_IMPL_FRAMEARENA_HELPERS(nsGridContainerFrame)
 
 nsContainerFrame*
 NS_NewGridContainerFrame(nsIPresShell* aPresShell,
-                         nsStyleContext* aContext)
+                         ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsGridContainerFrame(aContext);
+  return new (aPresShell) nsGridContainerFrame(aStyle);
 }
 
 
@@ -4019,7 +4019,7 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
   nsTArray<ItemBaselineData> firstBaselineItems;
   nsTArray<ItemBaselineData> lastBaselineItems;
   WritingMode wm = aState.mWM;
-  nsStyleContext* containerSC = aState.mFrame->StyleContext();
+  ComputedStyle* containerSC = aState.mFrame->Style();
   CSSOrderAwareFrameIterator& iter = aState.mIter;
   iter.Reset();
   for (; !iter.AtEnd(); iter.Next()) {
@@ -5054,7 +5054,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
                                         nsReflowStatus&        aStatus)
 {
   nsPresContext* pc = PresContext();
-  nsStyleContext* containerSC = StyleContext();
+  ComputedStyle* containerSC = Style();
   WritingMode wm = aState.mReflowInput->GetWritingMode();
   LogicalMargin pad(aState.mReflowInput->ComputedLogicalPadding());
   const LogicalPoint padStart(wm, pad.IStart(wm), pad.BStart(wm));
@@ -5142,8 +5142,8 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   if (aGridItemInfo) {
     // Clamp during reflow if we're stretching in that axis.
     auto* pos = aChild->StylePosition();
-    auto j = pos->UsedJustifySelf(StyleContext());
-    auto a = pos->UsedAlignSelf(StyleContext());
+    auto j = pos->UsedJustifySelf(Style());
+    auto a = pos->UsedAlignSelf(Style());
     bool stretch[2];
     stretch[eLogicalAxisInline] = j == NS_STYLE_JUSTIFY_NORMAL ||
                                   j == NS_STYLE_JUSTIFY_STRETCH;
@@ -5207,7 +5207,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     if (!childRI.mStyleMargin->HasBlockAxisAuto(childWM) &&
         childRI.mStylePosition->BSize(childWM).GetUnit() == eStyleUnit_Auto) {
       auto blockAxisAlignment =
-        childRI.mStylePosition->UsedAlignSelf(StyleContext());
+        childRI.mStylePosition->UsedAlignSelf(Style());
       if (blockAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
           blockAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
         stretch = true;
@@ -6623,8 +6623,8 @@ nsGridContainerFrame::CSSAlignmentForAbsPosChild(const ReflowInput& aChildRI,
              "This method should only be called for abspos children");
 
   uint16_t alignment = (aLogicalAxis == eLogicalAxisInline) ?
-    aChildRI.mStylePosition->UsedJustifySelf(StyleContext()) :
-    aChildRI.mStylePosition->UsedAlignSelf(StyleContext());
+    aChildRI.mStylePosition->UsedJustifySelf(Style()) :
+    aChildRI.mStylePosition->UsedAlignSelf(Style());
 
   // XXX strip off <overflow-position> bits until we implement it
   // (bug 1311892)

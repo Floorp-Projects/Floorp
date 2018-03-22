@@ -23,7 +23,7 @@ class nsMathMLmunderoverFrame final
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmunderoverFrame)
 
-  friend nsIFrame* NS_NewMathMLmunderoverFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsIFrame* NS_NewMathMLmunderoverFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
   nsresult Place(DrawTarget* aDrawTarget,
                  bool aPlaceOrigin,
@@ -49,8 +49,8 @@ public:
   void ReflowCallbackCanceled() override;
 
 protected:
-  explicit nsMathMLmunderoverFrame(nsStyleContext* aContext)
-    : nsMathMLContainerFrame(aContext, kClassID)
+  explicit nsMathMLmunderoverFrame(ComputedStyle* aStyle)
+    : nsMathMLContainerFrame(aStyle, kClassID)
     , mIncrementUnder(false)
     , mIncrementOver(false)
   {}

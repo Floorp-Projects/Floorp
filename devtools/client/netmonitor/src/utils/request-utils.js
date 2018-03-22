@@ -476,10 +476,7 @@ function processNetworkUpdates(request = {}) {
           result.totalTime = request.totalTime;
           break;
         case "requestPostData":
-          result.requestHeadersFromUploadStream = {
-            headers: [],
-            headersSize: 0,
-          };
+          result.requestHeadersFromUploadStream = value.uploadHeaders;
           break;
       }
     }

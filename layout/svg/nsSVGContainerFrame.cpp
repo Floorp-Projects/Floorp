@@ -32,10 +32,10 @@ NS_QUERYFRAME_TAIL_INHERITING(nsSVGContainerFrame)
 
 nsIFrame*
 NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
-                        nsStyleContext* aContext)
+                        ComputedStyle* aStyle)
 {
   nsIFrame* frame =
-    new (aPresShell) nsSVGContainerFrame(aContext, nsSVGContainerFrame::kClassID);
+    new (aPresShell) nsSVGContainerFrame(aStyle, nsSVGContainerFrame::kClassID);
   // If we were called directly, then the frame is for a <defs> or
   // an unknown element type. In both cases we prevent the content
   // from displaying directly.

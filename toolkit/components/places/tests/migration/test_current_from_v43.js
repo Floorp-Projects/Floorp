@@ -185,18 +185,6 @@ add_task(async function test_no_orphan_annotations() {
     `Should have no orphan annotation attributes.`);
 });
 
-add_task(async function test_mobile_bookmarks_root_still_exists() {
-  let db = await PlacesUtils.promiseDBConnection();
-
-  let rows = await db.execute(`
-    SELECT id FROM moz_anno_attributes
-    WHERE name = 'mobile/bookmarksRoot'
-  `);
-
-  Assert.equal(rows.length, 1,
-    "Mobile bookmarks root annotation should still exist");
-});
-
 add_task(async function test_no_orphan_keywords() {
   let db = await PlacesUtils.promiseDBConnection();
 

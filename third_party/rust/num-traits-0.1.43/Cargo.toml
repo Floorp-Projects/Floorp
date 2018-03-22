@@ -12,14 +12,18 @@
 
 [package]
 name = "num-traits"
-version = "0.1.41"
+version = "0.1.43"
 authors = ["The Rust Project Developers"]
 description = "Numeric traits for generic mathematics"
-homepage = "https://github.com/rust-num/num"
-documentation = "http://rust-num.github.io/num"
+homepage = "https://github.com/rust-num/num-traits"
+documentation = "https://docs.rs/num-traits"
+readme = "README.md"
 keywords = ["mathematics", "numerics"]
 categories = ["algorithms", "science"]
 license = "MIT/Apache-2.0"
-repository = "https://github.com/rust-num/num"
+repository = "https://github.com/rust-num/num-traits"
 
-[dependencies]
+[lib]
+doctest = false
+[dependencies.num-traits]
+version = "0.2.0"

@@ -2264,17 +2264,17 @@ nsLayoutUtils::GetScrolledRect(nsIFrame* aScrolledFrame,
 //static
 bool
 nsLayoutUtils::HasPseudoStyle(nsIContent* aContent,
-                              nsStyleContext* aStyleContext,
+                              ComputedStyle* aComputedStyle,
                               CSSPseudoElementType aPseudoElement,
                               nsPresContext* aPresContext)
 {
   NS_PRECONDITION(aPresContext, "Must have a prescontext");
 
-  RefPtr<nsStyleContext> pseudoContext;
+  RefPtr<ComputedStyle> pseudoContext;
   if (aContent) {
     pseudoContext = aPresContext->StyleSet()->
       ProbePseudoElementStyle(aContent->AsElement(), aPseudoElement,
-                              aStyleContext);
+                              aComputedStyle);
   }
   return pseudoContext != nullptr;
 }
@@ -4205,7 +4205,7 @@ void
 nsLayoutUtils::AddBoxesForFrame(nsIFrame* aFrame,
                                 nsLayoutUtils::BoxCallback* aCallback)
 {
-  nsAtom* pseudoType = aFrame->StyleContext()->GetPseudo();
+  nsAtom* pseudoType = aFrame->Style()->GetPseudo();
 
   if (pseudoType == nsCSSAnonBoxes::tableWrapper) {
     AddBoxesForFrame(aFrame->PrincipalChildList().FirstChild(), aCallback);
@@ -4239,7 +4239,7 @@ nsIFrame*
 nsLayoutUtils::GetFirstNonAnonymousFrame(nsIFrame* aFrame)
 {
   while (aFrame) {
-    nsAtom* pseudoType = aFrame->StyleContext()->GetPseudo();
+    nsAtom* pseudoType = aFrame->Style()->GetPseudo();
 
     if (pseudoType == nsCSSAnonBoxes::tableWrapper) {
       nsIFrame* f = GetFirstNonAnonymousFrame(aFrame->PrincipalChildList().FirstChild());
@@ -4684,7 +4684,7 @@ nsLayoutUtils::ComputeObjectDestRect(const nsRect& aConstraintRect,
 already_AddRefed<nsFontMetrics>
 nsLayoutUtils::GetFontMetricsForFrame(const nsIFrame* aFrame, float aInflation)
 {
-  nsStyleContext* styleContext = aFrame->StyleContext();
+  ComputedStyle* styleContext = aFrame->Style();
   uint8_t variantWidth = NS_FONT_VARIANT_WIDTH_NORMAL;
   if (styleContext->IsTextCombined()) {
     MOZ_ASSERT(aFrame->IsTextFrame());
@@ -4698,18 +4698,18 @@ nsLayoutUtils::GetFontMetricsForFrame(const nsIFrame* aFrame, float aInflation)
       variantWidth = NS_FONT_VARIANT_WIDTH_QUARTER;
     }
   }
-  return GetFontMetricsForStyleContext(styleContext, aInflation, variantWidth);
+  return GetFontMetricsForComputedStyle(styleContext, aInflation, variantWidth);
 }
 
 already_AddRefed<nsFontMetrics>
-nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
+nsLayoutUtils::GetFontMetricsForComputedStyle(ComputedStyle* aComputedStyle,
                                              float aInflation,
                                              uint8_t aVariantWidth)
 {
-  nsPresContext* pc = aStyleContext->PresContext();
+  nsPresContext* pc = aComputedStyle->PresContext();
 
-  WritingMode wm(aStyleContext);
-  const nsStyleFont* styleFont = aStyleContext->StyleFont();
+  WritingMode wm(aComputedStyle);
+  const nsStyleFont* styleFont = aComputedStyle->StyleFont();
   nsFontMetrics::Params params;
   params.language = styleFont->mLanguage;
   params.explicitLanguage = styleFont->mExplicitLanguage;
@@ -6128,7 +6128,7 @@ nsLayoutUtils::AppUnitWidthOfStringBidi(const char16_t* aString,
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
     nsBidiLevel level =
-      nsBidiPresUtils::BidiLevelFromStyle(aFrame->StyleContext());
+      nsBidiPresUtils::BidiLevelFromStyle(aFrame->Style());
     return nsBidiPresUtils::MeasureTextWidth(aString, aLength, level,
                                              presContext, aContext,
                                              aFontMetrics);
@@ -6192,33 +6192,33 @@ nsLayoutUtils::AppUnitBoundsOfString(const char16_t* aString,
 void
 nsLayoutUtils::DrawString(const nsIFrame*     aFrame,
                           nsFontMetrics&      aFontMetrics,
-                          gfxContext* aContext,
+                          gfxContext*         aContext,
                           const char16_t*     aString,
                           int32_t             aLength,
                           nsPoint             aPoint,
-                          nsStyleContext*     aStyleContext,
+                          ComputedStyle*      aComputedStyle,
                           DrawStringFlags     aFlags)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  // If caller didn't pass a style context, use the frame's.
-  if (!aStyleContext) {
-    aStyleContext = aFrame->StyleContext();
+  // If caller didn't pass a style, use the frame's.
+  if (!aComputedStyle) {
+    aComputedStyle = aFrame->Style();
   }
 
   if (aFlags & DrawStringFlags::eForceHorizontal) {
     aFontMetrics.SetVertical(false);
   } else {
-    aFontMetrics.SetVertical(WritingMode(aStyleContext).IsVertical());
+    aFontMetrics.SetVertical(WritingMode(aComputedStyle).IsVertical());
   }
 
   aFontMetrics.SetTextOrientation(
-    aStyleContext->StyleVisibility()->mTextOrientation);
+    aComputedStyle->StyleVisibility()->mTextOrientation);
 
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
     nsBidiLevel level =
-      nsBidiPresUtils::BidiLevelFromStyle(aStyleContext);
+      nsBidiPresUtils::BidiLevelFromStyle(aComputedStyle);
     rv = nsBidiPresUtils::RenderText(aString, aLength, level,
                                      presContext, *aContext,
                                      aContext->GetDrawTarget(), aFontMetrics,
@@ -6590,11 +6590,11 @@ SamplingFilter
 nsLayoutUtils::GetSamplingFilterForFrame(nsIFrame* aForFrame)
 {
   SamplingFilter defaultFilter = SamplingFilter::GOOD;
-  nsStyleContext *sc;
+  ComputedStyle *sc;
   if (nsCSSRendering::IsCanvasFrame(aForFrame)) {
     nsCSSRendering::FindBackground(aForFrame, &sc);
   } else {
-    sc = aForFrame->StyleContext();
+    sc = aForFrame->Style();
   }
 
   switch (sc->StyleVisibility()->mImageRendering) {
@@ -7301,7 +7301,7 @@ nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
 
 /* static */ ImgDrawResult
 nsLayoutUtils::DrawImage(gfxContext&         aContext,
-                         nsStyleContext*     aStyleContext,
+                         ComputedStyle*     aComputedStyle,
                          nsPresContext*      aPresContext,
                          imgIContainer*      aImage,
                          const SamplingFilter aSamplingFilter,
@@ -7313,7 +7313,7 @@ nsLayoutUtils::DrawImage(gfxContext&         aContext,
                          float               aOpacity)
 {
   Maybe<SVGImageContext> svgContext;
-  SVGImageContext::MaybeStoreContextPaint(svgContext, aStyleContext, aImage);
+  SVGImageContext::MaybeStoreContextPaint(svgContext, aComputedStyle, aImage);
 
   return DrawImageInternal(aContext, aPresContext, aImage,
                            aSamplingFilter, aDest, aFill, aAnchor,
@@ -7445,7 +7445,7 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
     return eTransparencyOpaque;
   }
 
-  nsStyleContext* bgSC;
+  ComputedStyle* bgSC;
   if (!nsCSSRendering::FindBackground(aBackgroundFrame, &bgSC)) {
     return eTransparencyTransparent;
   }
@@ -7522,7 +7522,7 @@ nsLayoutUtils::GetReferenceFrame(nsIFrame* aFrame)
 }
 
 /* static */ gfx::ShapedTextFlags
-nsLayoutUtils::GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
+nsLayoutUtils::GetTextRunFlagsForStyle(ComputedStyle* aComputedStyle,
                                        const nsStyleFont* aStyleFont,
                                        const nsStyleText* aStyleText,
                                        nscoord aLetterSpacing)
@@ -7535,33 +7535,33 @@ nsLayoutUtils::GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
   if (aStyleText->mControlCharacterVisibility == NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN) {
     result |= gfx::ShapedTextFlags::TEXT_HIDE_CONTROL_CHARACTERS;
   }
-  switch (aStyleContext->StyleText()->mTextRendering) {
+  switch (aComputedStyle->StyleText()->mTextRendering) {
   case NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED:
     result |= gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED;
     break;
   case NS_STYLE_TEXT_RENDERING_AUTO:
     if (aStyleFont->mFont.size <
-        aStyleContext->PresContext()->GetAutoQualityMinFontSize()) {
+        aComputedStyle->PresContext()->GetAutoQualityMinFontSize()) {
       result |= gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED;
     }
     break;
   default:
     break;
   }
-  return result | GetTextRunOrientFlagsForStyle(aStyleContext);
+  return result | GetTextRunOrientFlagsForStyle(aComputedStyle);
 }
 
 /* static */ gfx::ShapedTextFlags
-nsLayoutUtils::GetTextRunOrientFlagsForStyle(nsStyleContext* aStyleContext)
+nsLayoutUtils::GetTextRunOrientFlagsForStyle(ComputedStyle* aComputedStyle)
 {
-  uint8_t writingMode = aStyleContext->StyleVisibility()->mWritingMode;
+  uint8_t writingMode = aComputedStyle->StyleVisibility()->mWritingMode;
   switch (writingMode) {
   case NS_STYLE_WRITING_MODE_HORIZONTAL_TB:
     return gfx::ShapedTextFlags::TEXT_ORIENT_HORIZONTAL;
 
   case NS_STYLE_WRITING_MODE_VERTICAL_LR:
   case NS_STYLE_WRITING_MODE_VERTICAL_RL:
-    switch (aStyleContext->StyleVisibility()->mTextOrientation) {
+    switch (aComputedStyle->StyleVisibility()->mTextOrientation) {
     case NS_STYLE_TEXT_ORIENTATION_MIXED:
       return gfx::ShapedTextFlags::TEXT_ORIENT_VERTICAL_MIXED;
     case NS_STYLE_TEXT_ORIENTATION_UPRIGHT:
@@ -9478,7 +9478,7 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
       metadata.SetBackgroundColor(Color::FromABGR(
         presShell->GetCanvasBackground()));
     } else {
-      nsStyleContext* backgroundStyle;
+      ComputedStyle* backgroundStyle;
       if (nsCSSRendering::FindBackground(aScrollFrame, &backgroundStyle)) {
         nscolor backgroundColor = backgroundStyle->
           StyleBackground()->BackgroundColor(backgroundStyle);

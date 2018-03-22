@@ -166,7 +166,7 @@ MakeCSSAngle(const nsCSSValue& aValue)
 }
 
 static void AddTransformFunctions(const nsCSSValueList* aList,
-                                  nsStyleContext* aContext,
+                                  mozilla::ComputedStyle* aStyle,
                                   nsPresContext* aPresContext,
                                   TransformReferenceBox& aRefBox,
                                   InfallibleTArray<TransformFunction>& aFunctions)
@@ -175,15 +175,11 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
     return;
   }
 
-  GeckoStyleContext* contextIfGecko =
-    nullptr;
-
   for (const nsCSSValueList* curr = aList; curr; curr = curr->mNext) {
     const nsCSSValue& currElem = curr->mValue;
     NS_ASSERTION(currElem.GetUnit() == eCSSUnit_Function,
                  "Stream should consist solely of functions!");
     nsCSSValue::Array* array = currElem.GetArrayValue();
-    RuleNodeCacheConditions conditions;
     switch (nsStyleTransformMatrix::TransformFunctionOf(array)) {
       case eCSSKeyword_rotatex:
       {
@@ -255,7 +251,7 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
       case eCSSKeyword_translatex:
       {
         double x = nsStyleTransformMatrix::ProcessTranslatePart(
-          array->Item(1), contextIfGecko, aPresContext, conditions,
+          array->Item(1),
           &aRefBox, &TransformReferenceBox::Width);
         aFunctions.AppendElement(Translation(x, 0, 0));
         break;
@@ -263,7 +259,7 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
       case eCSSKeyword_translatey:
       {
         double y = nsStyleTransformMatrix::ProcessTranslatePart(
-          array->Item(1), contextIfGecko, aPresContext, conditions,
+          array->Item(1),
           &aRefBox, &TransformReferenceBox::Height);
         aFunctions.AppendElement(Translation(0, y, 0));
         break;
@@ -271,7 +267,7 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
       case eCSSKeyword_translatez:
       {
         double z = nsStyleTransformMatrix::ProcessTranslatePart(
-          array->Item(1), contextIfGecko, aPresContext, conditions,
+          array->Item(1),
           nullptr);
         aFunctions.AppendElement(Translation(0, 0, z));
         break;
@@ -279,13 +275,13 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
       case eCSSKeyword_translate:
       {
         double x = nsStyleTransformMatrix::ProcessTranslatePart(
-          array->Item(1), contextIfGecko, aPresContext, conditions,
+          array->Item(1),
           &aRefBox, &TransformReferenceBox::Width);
         // translate(x) is shorthand for translate(x, 0)
         double y = 0;
         if (array->Count() == 3) {
            y = nsStyleTransformMatrix::ProcessTranslatePart(
-            array->Item(2), contextIfGecko, aPresContext, conditions,
+            array->Item(2),
             &aRefBox, &TransformReferenceBox::Height);
         }
         aFunctions.AppendElement(Translation(x, y, 0));
@@ -294,13 +290,13 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
       case eCSSKeyword_translate3d:
       {
         double x = nsStyleTransformMatrix::ProcessTranslatePart(
-          array->Item(1), contextIfGecko, aPresContext, conditions,
+          array->Item(1),
           &aRefBox, &TransformReferenceBox::Width);
         double y = nsStyleTransformMatrix::ProcessTranslatePart(
-          array->Item(2), contextIfGecko, aPresContext, conditions,
+          array->Item(2),
           &aRefBox, &TransformReferenceBox::Height);
         double z = nsStyleTransformMatrix::ProcessTranslatePart(
-          array->Item(3), contextIfGecko, aPresContext, conditions,
+          array->Item(3),
           nullptr);
 
         aFunctions.AppendElement(Translation(x, y, z));
@@ -344,11 +340,9 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
         matrix._32 = 0;
         matrix._33 = 1;
         matrix._34 = 0;
-        matrix._41 = ProcessTranslatePart(array->Item(5), contextIfGecko,
-                                          aPresContext, conditions,
+        matrix._41 = ProcessTranslatePart(array->Item(5),
                                           &aRefBox, &TransformReferenceBox::Width);
-        matrix._42 = ProcessTranslatePart(array->Item(6), contextIfGecko,
-                                          aPresContext, conditions,
+        matrix._42 = ProcessTranslatePart(array->Item(6),
                                           &aRefBox, &TransformReferenceBox::Height);
         matrix._43 = 0;
         matrix._44 = 1;
@@ -370,14 +364,11 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
         matrix._32 = array->Item(10).GetFloatValue();
         matrix._33 = array->Item(11).GetFloatValue();
         matrix._34 = array->Item(12).GetFloatValue();
-        matrix._41 = ProcessTranslatePart(array->Item(13), contextIfGecko,
-                                          aPresContext, conditions,
+        matrix._41 = ProcessTranslatePart(array->Item(13),
                                           &aRefBox, &TransformReferenceBox::Width);
-        matrix._42 = ProcessTranslatePart(array->Item(14), contextIfGecko,
-                                          aPresContext, conditions,
+        matrix._42 = ProcessTranslatePart(array->Item(14),
                                           &aRefBox, &TransformReferenceBox::Height);
-        matrix._43 = ProcessTranslatePart(array->Item(15), contextIfGecko,
-                                          aPresContext, conditions,
+        matrix._43 = ProcessTranslatePart(array->Item(15),
                                           &aRefBox, nullptr);
         matrix._44 = array->Item(16).GetFloatValue();
         aFunctions.AppendElement(TransformMatrix(matrix));
@@ -388,9 +379,6 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
         bool dummy;
         Matrix4x4 matrix;
         nsStyleTransformMatrix::ProcessInterpolateMatrix(matrix, array,
-                                                         contextIfGecko,
-                                                         aPresContext,
-                                                         conditions,
                                                          aRefBox,
                                                          &dummy);
         aFunctions.AppendElement(TransformMatrix(matrix));
@@ -401,9 +389,6 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
         bool dummy;
         Matrix4x4 matrix;
         nsStyleTransformMatrix::ProcessAccumulateMatrix(matrix, array,
-                                                        contextIfGecko,
-                                                        aPresContext,
-                                                        conditions,
                                                         aRefBox,
                                                         &dummy);
         aFunctions.AppendElement(TransformMatrix(matrix));
@@ -428,7 +413,7 @@ AddTransformFunctions(const nsCSSValueSharedList* aList,
 {
   MOZ_ASSERT(aList->mHead);
   AddTransformFunctions(aList->mHead,
-                        aFrame->StyleContext(),
+                        aFrame->Style(),
                         aFrame->PresContext(),
                         aRefBox,
                         aAnimatable.get_ArrayOfTransformFunction());
@@ -3545,7 +3530,7 @@ nsDisplayBackgroundImage::~nsDisplayBackgroundImage()
   }
 }
 
-static nsIFrame* GetBackgroundStyleContextFrame(nsIFrame* aFrame)
+static nsIFrame* GetBackgroundComputedStyleFrame(nsIFrame* aFrame)
 {
   nsIFrame* f;
   if (!nsCSSRendering::FindBackgroundFrame(aFrame, &f)) {
@@ -3630,11 +3615,11 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                                                      const nsRect& aBackgroundRect,
                                                      nsDisplayList* aList,
                                                      bool aAllowWillPaintBorderOptimization,
-                                                     nsStyleContext* aStyleContext,
+                                                     ComputedStyle* aComputedStyle,
                                                      const nsRect& aBackgroundOriginRect,
                                                      nsIFrame* aSecondaryReferenceFrame)
 {
-  nsStyleContext* bgSC = aStyleContext;
+  ComputedStyle* bgSC = aComputedStyle;
   const nsStyleBackground* bg = nullptr;
   nsRect bgRect = aBackgroundRect + aBuilder->ToReferenceFrame(aFrame);
   nsRect bgOriginRect = bgRect;
@@ -3646,9 +3631,9 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   nsIFrame* dependentFrame = nullptr;
   if (!isThemed) {
     if (!bgSC) {
-      dependentFrame = GetBackgroundStyleContextFrame(aFrame);
+      dependentFrame = GetBackgroundComputedStyleFrame(aFrame);
       if (dependentFrame) {
-        bgSC = dependentFrame->StyleContext();
+        bgSC = dependentFrame->Style();
         if (dependentFrame == aFrame) {
           dependentFrame = nullptr;
         }
@@ -4927,7 +4912,7 @@ nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder,
   nsCSSRendering::PaintOutline(mFrame->PresContext(), *aCtx, mFrame,
                                mVisibleRect,
                                nsRect(offset, mFrame->GetSize()),
-                               mFrame->StyleContext());
+                               mFrame->Style());
 }
 
 bool
@@ -4939,7 +4924,7 @@ nsDisplayOutline::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
 {
   ContainerLayerParameters parameter;
 
-  uint8_t outlineStyle = mFrame->StyleContext()->StyleOutline()->mOutlineStyle;
+  uint8_t outlineStyle = mFrame->Style()->StyleOutline()->mOutlineStyle;
   if (outlineStyle == NS_STYLE_BORDER_STYLE_AUTO && nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
       nsITheme* theme = mFrame->PresContext()->GetTheme();
       if (theme && theme->ThemeSupportsWidget(mFrame->PresContext(), mFrame,
@@ -4955,7 +4940,7 @@ nsDisplayOutline::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
                                                    nullptr, mFrame,
                                                    mVisibleRect,
                                                    nsRect(offset, mFrame->GetSize()),
-                                                   mFrame->StyleContext());
+                                                   mFrame->Style());
 
   if (!borderRenderer) {
     return false;
@@ -5452,7 +5437,7 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
                                          mFrame,
                                          nsRect(),
                                          nsRect(offset, mFrame->GetSize()),
-                                         mFrame->StyleContext(),
+                                         mFrame->Style(),
                                          &mBorderIsEmpty,
                                          mFrame->GetSkipSides());
 
@@ -5678,7 +5663,7 @@ nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
     nsCSSRendering::PaintBorder(mFrame->PresContext(), *aCtx, mFrame,
                                 mVisibleRect,
                                 nsRect(offset, mFrame->GetSize()),
-                                mFrame->StyleContext(),
+                                mFrame->Style(),
                                 flags,
                                 mFrame->GetSkipSides());
 
@@ -8156,7 +8141,6 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
   }
 
   /* Get the matrix, then change its basis to factor in the origin. */
-  RuleNodeCacheConditions dummy;
   bool dummyBool;
   Matrix4x4 result;
   // Call IsSVGTransformed() regardless of the value of
@@ -8169,9 +8153,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
   /* Transformed frames always have a transform, or are preserving 3d (and might still have perspective!) */
   if (aProperties.mTransformList) {
     result = nsStyleTransformMatrix::ReadTransforms(aProperties.mTransformList->mHead,
-                                                    frame ? frame->StyleContext() : nullptr,
-                                                    frame ? frame->PresContext() : nullptr,
-                                                    dummy, refBox, aAppUnitsPerPixel,
+                                                    refBox, aAppUnitsPerPixel,
                                                     &dummyBool);
   } else if (hasSVGTransforms) {
     // Correct the translation components for zoom:

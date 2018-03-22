@@ -19,7 +19,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsPageContentFrame)
 
   friend nsPageContentFrame* NS_NewPageContentFrame(nsIPresShell* aPresShell,
-                                                    nsStyleContext* aContext);
+                                                    ComputedStyle* aStyle);
   friend class nsPageFrame;
 
   // nsIFrame
@@ -49,8 +49,8 @@ public:
 #endif
 
 protected:
-  explicit nsPageContentFrame(nsStyleContext* aContext)
-    : ViewportFrame(aContext, kClassID)
+  explicit nsPageContentFrame(ComputedStyle* aStyle)
+    : ViewportFrame(aStyle, kClassID)
   {}
 
   nsSharedPageData*         mPD;

@@ -8,7 +8,7 @@
 
 #include "nsFirstLetterFrame.h"
 #include "nsPresContext.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "nsIContent.h"
 #include "nsLineLayout.h"
 #include "nsGkAtoms.h"
@@ -24,9 +24,9 @@ using namespace mozilla;
 using namespace mozilla::layout;
 
 nsFirstLetterFrame*
-NS_NewFirstLetterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewFirstLetterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsFirstLetterFrame(aContext);
+  return new (aPresShell) nsFirstLetterFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsFirstLetterFrame)
@@ -55,17 +55,17 @@ nsFirstLetterFrame::Init(nsIContent*       aContent,
                          nsContainerFrame* aParent,
                          nsIFrame*         aPrevInFlow)
 {
-  RefPtr<nsStyleContext> newSC;
+  RefPtr<ComputedStyle> newSC;
   if (aPrevInFlow) {
     // Get proper style context for ourselves.  We're creating the frame
     // that represents everything *except* the first letter, so just create
     // a style context that inherits from our style parent, with no extra rules.
     nsIFrame* styleParent =
       CorrectStyleParentFrame(aParent, nsCSSPseudoElements::firstLetter);
-    nsStyleContext* parentStyleContext = styleParent->StyleContext();
+    ComputedStyle* parentComputedStyle = styleParent->Style();
     newSC = PresContext()->StyleSet()->
-      ResolveStyleForFirstLetterContinuation(parentStyleContext);
-    SetStyleContextWithoutNotification(newSC);
+      ResolveStyleForFirstLetterContinuation(parentComputedStyle);
+    SetComputedStyleWithoutNotification(newSC);
   }
 
   nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
@@ -238,7 +238,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     bool          pushedFrame;
 
     ll->SetInFirstLetter(
-      mStyleContext->GetPseudo() == nsCSSPseudoElements::firstLetter);
+      mComputedStyle->GetPseudo() == nsCSSPseudoElements::firstLetter);
     ll->BeginSpan(this, &aReflowInput, bp.IStart(wm),
                   availSize.ISize(wm), &mBaseline);
     ll->ReflowFrame(kid, aReflowStatus, &kidMetrics, pushedFrame);
@@ -249,7 +249,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     aMetrics.ISize(lineWM) = ll->EndSpan(this) + bp.IStartEnd(wm);
     ll->SetInFirstLetter(false);
 
-    if (mStyleContext->StyleTextReset()->mInitialLetterSize != 0.0f) {
+    if (mComputedStyle->StyleTextReset()->mInitialLetterSize != 0.0f) {
       aMetrics.SetBlockStartAscent(kidMetrics.BlockStartAscent() +
                                    bp.BStart(wm));
       aMetrics.BSize(lineWM) = kidMetrics.BSize(lineWM) + bp.BStartEnd(wm);
@@ -327,11 +327,11 @@ nsFirstLetterFrame::CreateContinuationForFloatingParent(nsPresContext* aPresCont
   // Note that getting parent frame's style context is different from getting
   // this frame's style context's parent in the presence of ::first-line,
   // which we do want the continuation to inherit from.
-  nsStyleContext* parentSC = parent->StyleContext();
+  ComputedStyle* parentSC = parent->Style();
   if (parentSC) {
-    RefPtr<nsStyleContext> newSC;
+    RefPtr<ComputedStyle> newSC;
     newSC = presShell->StyleSet()->ResolveStyleForFirstLetterContinuation(parentSC);
-    continuation->SetStyleContext(newSC);
+    continuation->SetComputedStyle(newSC);
     nsLayoutUtils::MarkDescendantsDirty(continuation);
   }
 
@@ -381,20 +381,20 @@ nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext)
     if (kidContent) {
       NS_ASSERTION(kidContent->IsNodeOfType(nsINode::eTEXT),
                    "should contain only text nodes");
-      nsStyleContext* parentSC;
+      ComputedStyle* parentSC;
       if (prevInFlow) {
         // This is for the rest of the content not in the first-letter.
         nsIFrame* styleParent =
           CorrectStyleParentFrame(GetParent(),
                                   nsCSSPseudoElements::firstLetter);
-        parentSC = styleParent->StyleContext();
+        parentSC = styleParent->Style();
       } else {
         // And this for the first-letter style.
-        parentSC = mStyleContext;
+        parentSC = mComputedStyle;
       }
-      RefPtr<nsStyleContext> sc =
+      RefPtr<ComputedStyle> sc =
         aPresContext->StyleSet()->ResolveStyleForText(kidContent, parentSC);
-      kid->SetStyleContext(sc);
+      kid->SetComputedStyle(sc);
       nsLayoutUtils::MarkDescendantsDirty(kid);
     }
   }

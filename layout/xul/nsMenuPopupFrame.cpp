@@ -9,7 +9,7 @@
 #include "nsIContent.h"
 #include "nsAtom.h"
 #include "nsPresContext.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "nsCSSRendering.h"
 #include "nsNameSpaceManager.h"
 #include "nsViewManager.h"
@@ -82,9 +82,9 @@ const char* kPrefIncrementalSearchTimeout =
 // Wrapper for creating a new menu popup container
 //
 nsIFrame*
-NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMenuPopupFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsMenuPopupFrame(aContext);
+  return new (aPresShell) nsMenuPopupFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMenuPopupFrame)
@@ -96,8 +96,8 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 //
 // nsMenuPopupFrame ctor
 //
-nsMenuPopupFrame::nsMenuPopupFrame(nsStyleContext* aContext)
-  : nsBoxFrame(aContext, kClassID)
+nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle)
+  : nsBoxFrame(aStyle, kClassID)
   , mCurrentMenu(nullptr)
   , mView(nullptr)
   , mPrefSize(-1, -1)

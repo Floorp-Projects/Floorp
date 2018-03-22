@@ -45,10 +45,6 @@ const SHADERS: &[Shader] = &[
         name: "cs_blur",
         features: CACHE_FEATURES,
     },
-    Shader {
-        name: "cs_text_run",
-        features: CACHE_FEATURES,
-    },
     // Prim shaders
     Shader {
         name: "ps_border_corner",

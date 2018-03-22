@@ -107,17 +107,17 @@ GetOverflowChange(const nsRect& aCurScrolledRect, const nsRect& aPrevScrolledRec
 //----------nsHTMLScrollFrame-------------------------------------------
 
 nsHTMLScrollFrame*
-NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, bool aIsRoot)
+NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle, bool aIsRoot)
 {
-  return new (aPresShell) nsHTMLScrollFrame(aContext, aIsRoot);
+  return new (aPresShell) nsHTMLScrollFrame(aStyle, aIsRoot);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLScrollFrame)
 
-nsHTMLScrollFrame::nsHTMLScrollFrame(nsStyleContext* aContext,
+nsHTMLScrollFrame::nsHTMLScrollFrame(ComputedStyle* aStyle,
                                      nsIFrame::ClassID aID,
                                      bool aIsRoot)
-  : nsContainerFrame(aContext, aID)
+  : nsContainerFrame(aStyle, aID)
   , mHelper(ALLOW_THIS_IN_INITIALIZER_LIST(this), aIsRoot)
 {
 }
@@ -1166,19 +1166,19 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 //----------nsXULScrollFrame-------------------------------------------
 
 nsXULScrollFrame*
-NS_NewXULScrollFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
+NS_NewXULScrollFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle,
                      bool aIsRoot, bool aClipAllDescendants)
 {
-  return new (aPresShell) nsXULScrollFrame(aContext, aIsRoot,
+  return new (aPresShell) nsXULScrollFrame(aStyle, aIsRoot,
                                            aClipAllDescendants);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsXULScrollFrame)
 
-nsXULScrollFrame::nsXULScrollFrame(nsStyleContext* aContext,
+nsXULScrollFrame::nsXULScrollFrame(ComputedStyle* aStyle,
                                    bool aIsRoot,
                                    bool aClipAllDescendants)
-  : nsBoxFrame(aContext, kClassID, aIsRoot)
+  : nsBoxFrame(aStyle, kClassID, aIsRoot)
   , mHelper(ALLOW_THIS_IN_INITIALIZER_LIST(this), aIsRoot)
 {
   SetXULLayoutManager(nullptr);

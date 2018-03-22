@@ -15,9 +15,9 @@
 //
 
 nsIFrame*
-NS_NewMathMLmspaceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMathMLmspaceFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsMathMLmspaceFrame(aContext);
+  return new (aPresShell) nsMathMLmspaceFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmspaceFrame)
@@ -49,7 +49,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
   if (!value.IsEmpty()) {
     ParseNumericValue(value, &mWidth,
                       nsMathMLElement::PARSE_ALLOW_NEGATIVE,
-                      aPresContext, mStyleContext, fontSizeInflation);
+                      aPresContext, mComputedStyle, fontSizeInflation);
   }
 
   // height
@@ -66,7 +66,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::height, value);
   if (!value.IsEmpty()) {
     ParseNumericValue(value, &mHeight, 0,
-                      aPresContext, mStyleContext, fontSizeInflation);
+                      aPresContext, mComputedStyle, fontSizeInflation);
   }
 
   // depth
@@ -83,7 +83,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::depth_, value);
   if (!value.IsEmpty()) {
     ParseNumericValue(value, &mDepth, 0,
-                      aPresContext, mStyleContext, fontSizeInflation);
+                      aPresContext, mComputedStyle, fontSizeInflation);
   }
 }
 

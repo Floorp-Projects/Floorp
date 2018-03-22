@@ -17,8 +17,6 @@ ChromeUtils.defineModuleGetter(this, "PropertyListUtils",
                                "resource://gre/modules/PropertyListUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "NetUtil",
-                               "resource://gre/modules/NetUtil.jsm");
 ChromeUtils.defineModuleGetter(this, "FormHistory",
                                "resource://gre/modules/FormHistory.jsm");
 
@@ -193,9 +191,9 @@ History.prototype = {
       // reference date of NSDate.
       let date = new Date("1 January 2001, GMT");
       date.setMilliseconds(asDouble * 1000);
-      return date * 1000;
+      return date;
     }
-    return 0;
+    return new Date();
   },
 
   migrate: function H_migrate(aCallback) {
@@ -206,38 +204,42 @@ History.prototype = {
         if (!aDict.has("WebHistoryDates"))
           throw new Error("Unexpected history-property list format");
 
-        // Safari's History file contains only top-level urls.  It does not
-        // distinguish between typed urls and linked urls.
-        let transType = PlacesUtils.history.TRANSITION_LINK;
-
-        let places = [];
+        let pageInfos = [];
         let entries = aDict.get("WebHistoryDates");
+        let failedOnce = false;
         for (let entry of entries) {
           if (entry.has("lastVisitedDate")) {
-            let visitDate = this._parseCocoaDate(entry.get("lastVisitedDate"));
+            let date = this._parseCocoaDate(entry.get("lastVisitedDate"));
             try {
-              places.push({ uri: NetUtil.newURI(entry.get("")),
-                            title: entry.get("title"),
-                            visits: [{ transitionType: transType,
-                                       visitDate }] });
+              pageInfos.push({
+                url: new URL(entry.get("")),
+                title: entry.get("title"),
+                visits: [{
+                  // Safari's History file contains only top-level urls.  It does not
+                  // distinguish between typed urls and linked urls.
+                  transition: PlacesUtils.history.TRANSITIONS.LINK,
+                  date,
+                }],
+              });
             } catch (ex) {
               // Safari's History file may contain malformed URIs which
               // will be ignored.
               Cu.reportError(ex);
+              failedOnce = true;
             }
           }
         }
-        if (places.length > 0) {
-          MigrationUtils.insertVisitsWrapper(places, {
-            ignoreErrors: true,
-            ignoreResults: true,
-            handleCompletion(updatedCount) {
-              aCallback(updatedCount > 0);
-            },
-          });
-        } else {
-          aCallback(false);
+        if (pageInfos.length == 0) {
+          // If we failed at least once, then we didn't succeed in importing,
+          // otherwise we didn't actually have anything to import, so we'll
+          // report it as a success.
+          aCallback(!failedOnce);
+          return;
         }
+
+        MigrationUtils.insertVisitsWrapper(pageInfos).then(
+          () => aCallback(true),
+          () => aCallback(false));
       } catch (ex) {
         Cu.reportError(ex);
         aCallback(false);

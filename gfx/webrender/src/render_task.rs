@@ -11,7 +11,6 @@ use device::TextureFilter;
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use gpu_types::{ImageSource, PictureType, RasterizationSpace};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
-use picture::ContentOrigin;
 use prim_store::{PrimitiveIndex, ImageCacheKey};
 #[cfg(feature = "debugger")]
 use print_tree::{PrintTreePrinter};
@@ -167,7 +166,7 @@ pub struct ClipRegionTask {
 pub struct PictureTask {
     pub prim_index: PrimitiveIndex,
     pub target_kind: RenderTargetKind,
-    pub content_origin: ContentOrigin,
+    pub content_origin: DeviceIntPoint,
     pub color: PremultipliedColorF,
     pub pic_type: PictureType,
     pub uv_rect_handle: GpuCacheHandle,
@@ -259,7 +258,7 @@ impl RenderTask {
         location: RenderTaskLocation,
         prim_index: PrimitiveIndex,
         target_kind: RenderTargetKind,
-        content_origin: ContentOrigin,
+        content_origin: DeviceIntPoint,
         color: PremultipliedColorF,
         clear_mode: ClearMode,
         children: Vec<RenderTaskId>,
@@ -528,19 +527,11 @@ impl RenderTask {
             RenderTaskKind::Picture(ref task) => {
                 (
                     // Note: has to match `PICTURE_TYPE_*` in shaders
-                    // TODO(gw): Instead of using the sign of the picture
-                    //           type here, we should consider encoding it
-                    //           as a set of flags that get casted here
-                    //           and in the shader. This is a bit tidier
-                    //           and allows for future expansion of flags.
-                    match task.content_origin {
-                        ContentOrigin::Local(point) => [
-                            point.x, point.y, task.pic_type as u32 as f32,
-                        ],
-                        ContentOrigin::Screen(point) => [
-                            point.x as f32, point.y as f32, -(task.pic_type as u32 as f32),
-                        ],
-                    },
+                    [
+                        task.content_origin.x as f32,
+                        task.content_origin.y as f32,
+                        task.pic_type as u32 as f32,
+                    ],
                     task.color.to_array()
                 )
             }
@@ -921,6 +912,7 @@ impl RenderTaskCache {
                 size.height as u32,
                 image_format,
                 is_opaque,
+                false,
             );
 
             // Allocate space in the texture cache, but don't supply

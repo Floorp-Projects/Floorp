@@ -21,9 +21,9 @@ class nsSVGForeignObjectFrame : public nsContainerFrame
                               , public nsSVGDisplayableFrame
 {
   friend nsContainerFrame*
-  NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 protected:
-  explicit nsSVGForeignObjectFrame(nsStyleContext* aContext);
+  explicit nsSVGForeignObjectFrame(ComputedStyle* aStyle);
 
 public:
   NS_DECL_QUERYFRAME

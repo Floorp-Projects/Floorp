@@ -19,13 +19,13 @@
 class nsPresContext;
 class nsListScrollSmoother;
 nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
-                                 nsStyleContext* aContext);
+                                 mozilla::ComputedStyle* aStyle);
 
 class nsListBoxBodyFrame final : public nsBoxFrame,
                                  public nsIScrollbarMediator,
                                  public nsIReflowCallback
 {
-  nsListBoxBodyFrame(nsStyleContext* aContext,
+  nsListBoxBodyFrame(ComputedStyle* aStyle,
                      nsBoxLayout* aLayoutManager);
   virtual ~nsListBoxBodyFrame();
 
@@ -43,7 +43,7 @@ public:
   nsresult GetIndexOfItem(nsIDOMElement *aItem, int32_t *aResult);
 
   friend nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
-                                          nsStyleContext* aContext);
+                                          ComputedStyle* aStyle);
 
   // nsIFrame
   virtual void Init(nsIContent*       aContent,

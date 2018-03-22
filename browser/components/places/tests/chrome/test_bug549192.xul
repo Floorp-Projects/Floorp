@@ -90,7 +90,7 @@
         let query = PlacesUtils.history.getNewQuery();
         let opts = PlacesUtils.history.getNewQueryOptions();
         opts.sortingMode = opts.SORT_BY_DATE_DESCENDING;
-        let queryURI = PlacesUtils.history.queriesToQueryString([query], 1, opts);
+        let queryURI = PlacesUtils.history.queryToQueryString(query, opts);
 
         // Setup the places tree contents.
         var tree = document.getElementById("tree");

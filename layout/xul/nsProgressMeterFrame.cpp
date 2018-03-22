@@ -64,9 +64,9 @@ nsReflowFrameRunnable::Run()
 // Creates a new Toolbar frame and returns it
 //
 nsIFrame*
-NS_NewProgressMeterFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewProgressMeterFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsProgressMeterFrame(aContext);
+  return new (aPresShell) nsProgressMeterFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsProgressMeterFrame)

@@ -28,15 +28,15 @@ using namespace mozilla;
 // Creates a new TitleBar frame and returns it
 //
 nsIFrame*
-NS_NewTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewTitleBarFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsTitleBarFrame(aContext);
+  return new (aPresShell) nsTitleBarFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTitleBarFrame)
 
-nsTitleBarFrame::nsTitleBarFrame(nsStyleContext* aContext, ClassID aID)
-  : nsBoxFrame(aContext, aID, false)
+nsTitleBarFrame::nsTitleBarFrame(ComputedStyle* aStyle, ClassID aID)
+  : nsBoxFrame(aStyle, aID, false)
 {
   mTrackingMouseMove = false;
   UpdateMouseThrough();

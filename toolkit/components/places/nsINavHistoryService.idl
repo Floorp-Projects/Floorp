@@ -328,11 +328,10 @@ interface nsINavHistoryContainerResultNode : nsINavHistoryResultNode
 interface nsINavHistoryQueryResultNode : nsINavHistoryContainerResultNode
 {
   /**
-   * Get the queries which build this node's children.
+   * Get the query which builds this node's children.
    * Only valid for RESULT_TYPE_QUERY nodes.
    */
-  void getQueries([optional] out unsigned long queryCount,
-                  [retval,array,size_is(queryCount)] out nsINavHistoryQuery queries);
+  readonly attribute nsINavHistoryQuery query;
 
   /**
    * Get the options which group this node's children.
@@ -941,9 +940,6 @@ interface nsINavHistoryQuery : nsISupports
    * will return an array of strings sorted ascending in lexicographical order.
    * The array may be empty in either case.  Duplicate tags may be specified
    * when setting the attribute, but the getter returns only unique tags.
-   *
-   * To search for items that are tagged with any given tags rather than all,
-   * multiple queries may be passed to nsINavHistoryService.executeQueries().
    */
   attribute nsIVariant tags;
 
@@ -1343,34 +1339,18 @@ interface nsINavHistoryService : nsISupports
                                    in nsINavHistoryQueryOptions options);
 
   /**
-   * Executes an array of queries. All of the query objects are ORed
-   * together. Within a query, all the terms are ANDed together as in
-   * executeQuery. See executeQuery()
+   * Converts a query URI-like string to a query object.
    */
-  nsINavHistoryResult executeQueries(
-    [array,size_is(aQueryCount)] in nsINavHistoryQuery aQueries,
-    in unsigned long aQueryCount,
-    in nsINavHistoryQueryOptions options);
-
-  /**
-   * Converts a query URI-like string to an array of actual query objects for
-   * use to executeQueries(). The output query array may be empty if there is
-   * no information. However, there will always be an options structure returned
-   * (if nothing is defined, it will just have the default values).
-   */
-  void queryStringToQueries(in AUTF8String aQueryString,
-    [array, size_is(aResultCount)] out nsINavHistoryQuery aQueries,
-    out unsigned long aResultCount,
-    out nsINavHistoryQueryOptions options);
+  void queryStringToQuery(in AUTF8String aQueryString,
+                          out nsINavHistoryQuery aQuery,
+                          out nsINavHistoryQueryOptions options);
 
   /**
    * Converts a query into an equivalent string that can be persisted. Inverse
-   * of queryStringToQueries()
+   * of queryStringToQuery()
    */
-  AUTF8String queriesToQueryString(
-    [array, size_is(aQueryCount)] in nsINavHistoryQuery aQueries,
-    in unsigned long aQueryCount,
-    in nsINavHistoryQueryOptions options);
+  AUTF8String queryToQueryString(in nsINavHistoryQuery aQuery,
+                                 in nsINavHistoryQueryOptions options);
 
   /**
    * Adds a history observer. If ownsWeak is false, the history service will

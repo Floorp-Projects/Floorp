@@ -37,11 +37,11 @@
 #include "nsLayoutUtils.h"
 #include "nsQueryFrame.h"
 #include "nsString.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "nsStyleStruct.h"
 #include "Visibility.h"
 #include "nsChangeHint.h"
-#include "nsStyleContextInlines.h"
+#include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/gfx/MatrixFwd.h"
 #include "nsDisplayItemTypes.h"
@@ -585,6 +585,7 @@ public:
   using ReflowOutput = mozilla::ReflowOutput;
   using Visibility = mozilla::Visibility;
 
+  typedef mozilla::ComputedStyle ComputedStyle;
   typedef mozilla::FrameProperties FrameProperties;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
@@ -607,7 +608,7 @@ public:
   explicit nsIFrame(ClassID aID)
     : mRect()
     , mContent(nullptr)
-    , mStyleContext(nullptr)
+    , mComputedStyle(nullptr)
     , mParent(nullptr)
     , mNextSibling(nullptr)
     , mPrevSibling(nullptr)
@@ -634,7 +635,7 @@ public:
   }
 
   nsPresContext* PresContext() const {
-    return StyleContext()->PresContext();
+    return Style()->PresContext();
   }
 
   nsIPresShell* PresShell() const {
@@ -787,48 +788,36 @@ public:
   virtual void AdjustOffsetsForBidi(int32_t aStart, int32_t aEnd) {}
 
   /**
-   * Get the style context associated with this frame.
+   * Get the style associated with this frame.
    */
-  nsStyleContext* StyleContext() const { return mStyleContext; }
-  void SetStyleContext(nsStyleContext* aContext)
+  ComputedStyle* Style() const { return mComputedStyle; }
+  void SetComputedStyle(ComputedStyle* aStyle)
   {
-    if (aContext != mStyleContext) {
-      RefPtr<nsStyleContext> oldStyleContext = mStyleContext.forget();
-      mStyleContext = aContext;
-#ifdef DEBUG
-      aContext->FrameAddRef();
-#endif
-      DidSetStyleContext(oldStyleContext);
-#ifdef DEBUG
-      oldStyleContext->FrameRelease();
-#endif
+    if (aStyle != mComputedStyle) {
+      RefPtr<ComputedStyle> oldComputedStyle = mComputedStyle.forget();
+      mComputedStyle = aStyle;
+      DidSetComputedStyle(oldComputedStyle);
     }
   }
 
   /**
-   * SetStyleContextWithoutNotification is for changes to the style
+   * SetComputedStyleWithoutNotification is for changes to the style
    * context that should suppress style change processing, in other
    * words, those that aren't really changes.  This generally means only
    * changes that happen during frame construction.
    */
-  void SetStyleContextWithoutNotification(nsStyleContext* aContext)
+  void SetComputedStyleWithoutNotification(ComputedStyle* aStyle)
   {
-    if (aContext != mStyleContext) {
-#ifdef DEBUG
-      mStyleContext->FrameRelease();
-#endif
-      mStyleContext = aContext;
-#ifdef DEBUG
-      mStyleContext->FrameAddRef();
-#endif
+    if (aStyle != mComputedStyle) {
+      mComputedStyle = aStyle;
     }
   }
 
   // Style post processing hook
-  // Attention: the old style context is the one we're forgetting,
+  // Attention: the old style is the one we're forgetting,
   // and hence possibly completely bogus for GetStyle* purposes.
   // Use PeekStyleData instead.
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) = 0;
+  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) = 0;
 
   /**
    * Define typesafe getter functions for each style struct by
@@ -845,8 +834,8 @@ public:
    */
   #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
     const nsStyle##name_ * Style##name_ () const MOZ_NONNULL_RETURN {         \
-      NS_ASSERTION(mStyleContext, "No style context found!");                 \
-      return mStyleContext->Style##name_ ();                                  \
+      NS_ASSERTION(mComputedStyle, "No style found!");                 \
+      return mComputedStyle->Style##name_ ();                                  \
     }                                                                         \
     const nsStyle##name_ * Style##name_##WithOptionalParam(                   \
                              const nsStyle##name_ * aStyleStruct) const       \
@@ -860,25 +849,29 @@ public:
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
 
-  /** Also forward GetVisitedDependentColor to the style context */
+  /** Also forward GetVisitedDependentColor to the style */
   template<typename T, typename S>
   nscolor GetVisitedDependentColor(T S::* aField)
-    { return mStyleContext->GetVisitedDependentColor(aField); }
+    { return mComputedStyle->GetVisitedDependentColor(aField); }
 
   /**
-   * These methods are to access any additional style contexts that
-   * the frame may be holding. These are contexts that are children
-   * of the frame's primary context and are NOT used as style contexts
-   * for any child frames. These contexts also MUST NOT have any child
-   * contexts whatsoever. If you need to insert style contexts into the
-   * style tree, then you should create pseudo element frames to own them
-   * The indicies must be consecutive and implementations MUST return an
-   * NS_ERROR_INVALID_ARG if asked for an index that is out of range.
+   * These methods are to access any additional ComputedStyles that
+   * the frame may be holding.
+   *
+   * These are styles that are children of the frame's primary style and are NOT
+   * used as styles for any child frames.
+   *
+   * These contexts also MUST NOT have any child styles whatsoever. If you need
+   * to insert styles into the style tree, then you should create pseudo element
+   * frames to own them.
+   *
+   * The indicies must be consecutive and implementations MUST return null if
+   * asked for an index that is out of range.
    */
-  virtual nsStyleContext* GetAdditionalStyleContext(int32_t aIndex) const = 0;
+  virtual ComputedStyle* GetAdditionalComputedStyle(int32_t aIndex) const = 0;
 
-  virtual void SetAdditionalStyleContext(int32_t aIndex,
-                                         nsStyleContext* aStyleContext) = 0;
+  virtual void SetAdditionalComputedStyle(int32_t aIndex,
+                                          ComputedStyle* aComputedStyle) = 0;
 
   /**
    * Accessor functions for geometric parent.
@@ -3340,33 +3333,34 @@ public:
 #endif
 
   /**
-   * Get the frame whose style context should be the parent of this
-   * frame's style context (i.e., provide the parent style context).
+   * Get the frame whose style should be the parent of this frame's style (i.e.,
+   * provide the parent style).
+   *
    * This frame must either be an ancestor of this frame or a child.  If
    * this returns a child frame, then the child frame must be sure to
    * return a grandparent or higher!  Furthermore, if a child frame is
    * returned it must have the same GetContent() as this frame.
    *
    * @param aProviderFrame (out) the frame associated with the returned value
-   *     or nullptr if the style context is for display:contents content.
-   * @return The style context that should be the parent of this frame's
-   *         style context.  Null is permitted, and means that this frame's
-   *         style context should be the root of the style context tree.
+   *     or nullptr if the style is for display:contents content.
+   * @return The style that should be the parent of this frame's style. Null is
+   *         permitted, and means that this frame's style should be the root of
+   *         the style tree.
    */
-  virtual nsStyleContext* GetParentStyleContext(nsIFrame** aProviderFrame) const = 0;
+  virtual ComputedStyle* GetParentComputedStyle(nsIFrame** aProviderFrame) const = 0;
 
   /**
-   * Called by ServoRestyleManager to update the style contexts of anonymous
-   * boxes directly associtated with this frame.
+   * Called by ServoRestyleManager to update the style of anonymous boxes
+   * directly associated with this frame.
    *
-   * The passed-in ServoRestyleState can be used to create new style contexts
-   * as needed, as well as posting changes to the change list.
+   * The passed-in ServoRestyleState can be used to create new ComputedStyles as
+   * needed, as well as posting changes to the change list.
    *
    * It's guaranteed to already have a change in it for this frame and this
    * frame's content.
    *
-   * This function will be called after this frame's style context has already
-   * been updated.  This function will only be called on frames which have the
+   * This function will be called after this frame's style has already been
+   * updated.  This function will only be called on frames which have the
    * NS_FRAME_OWNS_ANON_BOXES bit set.
    */
   void UpdateStyleOfOwnedAnonBoxes(mozilla::ServoRestyleState& aRestyleState)
@@ -3394,20 +3388,20 @@ public:
   // A helper both for UpdateStyleOfChildAnonBox, and to update frame-backed
   // pseudo-elements in ServoRestyleManager.
   //
-  // This gets a style context that will be the new style context for
-  // `aChildFrame`, and takes care of updating it, calling CalcStyleDifference,
-  // and adding to the change list as appropriate.
+  // This gets a ComputedStyle that will be the new style for `aChildFrame`, and
+  // takes care of updating it, calling CalcStyleDifference, and adding to the
+  // change list as appropriate.
   //
-  // If aContinuationStyleContext is not Nothing, it should be used for
-  // continuations instead of aNewStyleContext.  In either case, changehints are
-  // only computed based on aNewStyleContext.
+  // If aContinuationComputedStyle is not Nothing, it should be used for
+  // continuations instead of aNewComputedStyle.  In either case, changehints
+  // are only computed based on aNewComputedStyle.
   //
   // Returns the generated change hint for the frame.
   static nsChangeHint UpdateStyleOfOwnedChildFrame(
     nsIFrame* aChildFrame,
-    nsStyleContext* aNewStyleContext,
+    ComputedStyle* aNewComputedStyle,
     mozilla::ServoRestyleState& aRestyleState,
-    const Maybe<nsStyleContext*>& aContinuationStyleContext = Nothing());
+    const Maybe<ComputedStyle*>& aContinuationComputedStyle = Nothing());
 
   struct OwnedAnonBox
   {
@@ -4171,7 +4165,7 @@ protected:
   // Members
   nsRect                 mRect;
   nsCOMPtr<nsIContent>   mContent;
-  RefPtr<nsStyleContext> mStyleContext;
+  RefPtr<ComputedStyle> mComputedStyle;
 private:
   nsContainerFrame* mParent;
   nsIFrame*        mNextSibling;  // doubly-linked list of frames
