@@ -192,9 +192,12 @@ function run_test() {
   protocol.types.getType("array:array:array:number");
   protocol.types.getType("array:array:array:number");
 
-  check_except(() => protocol.types.getType("unknown"));
-  check_except(() => protocol.types.getType("array:unknown"));
-  check_except(() => protocol.types.getType("unknown:number"));
+  Assert.throws(() => protocol.types.getType("unknown"),
+    /Unknown type:/, "Should throw for unknown type");
+  Assert.throws(() => protocol.types.getType("array:unknown"),
+    /Unknown type:/, "Should throw for unknown type");
+  Assert.throws(() => protocol.types.getType("unknown:number"),
+    /Unknown collection type:/, "Should throw for unknown collection type");
   let trace = connectPipeTracing();
   let client = new DebuggerClient(trace);
   let rootClient;
@@ -218,10 +221,9 @@ function run_test() {
       trace.expectReceive({"value": 1, "from": "<actorid>"});
       Assert.equal(ret, 1);
     }).then(() => {
-      // Missing argument should throw an exception
-      check_except(() => {
-        rootClient.simpleArgs(5);
-      });
+      Assert.throws(() => rootClient.simpleArgs(5),
+        /undefined passed where a value is required/,
+        "Should throw if simpleArgs is missing an argument.");
 
       return rootClient.simpleArgs(5, 10);
     }).then(ret => {
