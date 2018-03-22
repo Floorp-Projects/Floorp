@@ -9,11 +9,44 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1303704
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    #scrollable {
+      height: 100px;
+      width: 300px;
+      overflow-y: scroll;
+      margin-bottom: 50px;
+      scroll-behavior: auto;
+    }
+  </style>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1303704">Mozilla Bug 1303704</a>
 <p id="display"></p>
 <a id="link1" href="http://www.google.com">Link 1</a>
+<div id="scrollable">
+<pre>
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+scroll
+</pre>
+</div>
 <script type="text/javascript">
 
 /** Test for Bug 1303704 **/
@@ -36,7 +69,6 @@ function runTests() {
 
   link1.addEventListener("click", (e) => {
     e.preventDefault();
-    SimpleTest.finish();
   });
 
   synthesizeMouseAtCenter(link1, { type: "mousedown",
@@ -45,6 +77,40 @@ function runTests() {
                                    inputSource: MouseEvent.MOZ_SOURCE_MOUSE });
   synthesizeMouseAtCenter(link1, { type: "mouseup",
                                    inputSource: MouseEvent.MOZ_SOURCE_MOUSE });
+
+  if (navigator.userAgent.includes("Android") ||
+      navigator.userAgent.includes("Mac")) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var scrollable = document.getElementById("scrollable");
+  scrollable.addEventListener('pointerdown', function(ev) {
+    ev.preventDefault();
+  });
+  is(scrollable.scrollTop, 0,
+     "Scrollable element shouldn't be scrolled initially");
+  var rect = scrollable.getBoundingClientRect();
+  var offsetX = rect.width - 4;
+  var offsetY = rect.height - 4
+  synthesizeMouse(scrollable, offsetX, offsetY,
+                  { type: "mousedown",
+                    inputSource: MouseEvent.MOZ_SOURCE_MOUSE });
+
+  synthesizeMouse(scrollable, offsetX, offsetY,
+                  { type: "mousemove",
+                    inputSource: MouseEvent.MOZ_SOURCE_MOUSE });
+
+  synthesizeMouse(scrollable, offsetX, offsetY,
+                  { type: "mouseup",
+                    inputSource: MouseEvent.MOZ_SOURCE_MOUSE });
+  requestAnimationFrame(function() {
+    setTimeout(function() {
+      isnot(scrollable.scrollTop, 0,
+            "Scrollable element should have been scrolled.");
+      SimpleTest.finish();
+    });
+  });
 }
 
 SimpleTest.waitForFocus(() => {
