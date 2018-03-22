@@ -25,12 +25,63 @@ function dirtyFrame(win) {
 }
 
 /**
- * Async utility function for ensuring that no unexpected uninterruptible
- * reflows occur during some period of time in a window.
+ * Async utility function to collect the stacks of uninterruptible reflows
+ * occuring during some period of time in a window.
  *
- * @param testFn (async function)
- *        The async function that will exercise the browser activity that is
- *        being tested for reflows.
+ * @param testPromise (Promise)
+ *        A promise that is resolved when the data collection should stop.
+ *
+ * @param win (browser window, optional)
+ *        The browser window to monitor. Defaults to the current window.
+ *
+ * @return An array of reflow stacks
+ */
+async function recordReflows(testPromise, win = window) {
+  // Collect all reflow stacks, we'll process them later.
+  let reflows = [];
+
+  let observer = {
+    reflow(start, end) {
+      // Gather information about the current code path.
+      reflows.push(new Error().stack);
+
+      // Just in case, dirty the frame now that we've reflowed.
+      dirtyFrame(win);
+    },
+
+    reflowInterruptible(start, end) {
+      // Interruptible reflows are the reflows caused by the refresh
+      // driver ticking. These are fine.
+    },
+
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIReflowObserver,
+                                           Ci.nsISupportsWeakReference])
+  };
+
+  let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShell);
+  docShell.addWeakReflowObserver(observer);
+
+  let dirtyFrameFn = dirtyFrame.bind(null, win);
+  Services.els.addListenerForAllEvents(win, dirtyFrameFn, true);
+
+  try {
+    dirtyFrame(win);
+    await testPromise;
+  } finally {
+    Services.els.removeListenerForAllEvents(win, dirtyFrameFn, true);
+    docShell.removeWeakReflowObserver(observer);
+  }
+
+  return reflows;
+}
+
+/**
+ * Utility function to report unexpected reflows.
+ *
+ * @param reflows (Array)
+ *        An array of reflow stacks returned by recordReflows.
  *
  * @param expectedReflows (Array, optional)
  *        An Array of Objects representing reflows.
@@ -70,115 +121,75 @@ function dirtyFrame(win) {
  *        Order of the reflows doesn't matter. Expected reflows that aren't seen
  *        will cause an assertion failure. When this argument is not passed,
  *        it defaults to the empty Array, meaning no reflows are expected.
- * @param window (browser window, optional)
- *        The browser window to monitor. Defaults to the current window.
  */
-async function withReflowObserver(testFn, expectedReflows = [], win = window) {
-  // Collect all reflow stacks, we'll process them later.
-  let reflows = [];
+function reportUnexpectedReflows(reflows, expectedReflows = []) {
+  let knownReflows = expectedReflows.map(r => {
+    return {stack: r.stack, path: r.stack.join("|"),
+            count: 0, maxCount: r.maxCount || 1,
+            actualStacks: new Map()};
+  });
+  let unexpectedReflows = new Map();
+  for (let stack of reflows) {
+    let path =
+      stack.split("\n").slice(1) // the first frame which is our test code.
+           .map(line => line.replace(/:\d+:\d+$/, "")) // strip line numbers.
+           .join("|");
 
-  let observer = {
-    reflow(start, end) {
-      // Gather information about the current code path.
-      reflows.push(new Error().stack);
-
-      // Just in case, dirty the frame now that we've reflowed.
-      dirtyFrame(win);
-    },
-
-    reflowInterruptible(start, end) {
-      // Interruptible reflows are the reflows caused by the refresh
-      // driver ticking. These are fine.
-    },
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIReflowObserver,
-                                           Ci.nsISupportsWeakReference])
-  };
-
-  let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShell);
-  docShell.addWeakReflowObserver(observer);
-
-  let dirtyFrameFn = dirtyFrame.bind(null, win);
-  Services.els.addListenerForAllEvents(win, dirtyFrameFn, true);
-
-  try {
-    dirtyFrame(win);
-    await testFn();
-  } finally {
-    let knownReflows = expectedReflows.map(r => {
-      return {stack: r.stack, path: r.stack.join("|"),
-              count: 0, maxCount: r.maxCount || 1,
-              actualStacks: new Map()};
-    });
-    let unexpectedReflows = new Map();
-    for (let stack of reflows) {
-      let path =
-        stack.split("\n").slice(1) // the first frame which is our test code.
-             .map(line => line.replace(/:\d+:\d+$/, "")) // strip line numbers.
-             .join("|");
-
-      // Stack trace is empty. Reflow was triggered by native code, which
-      // we ignore.
-      if (path === "") {
-        continue;
-      }
-
-      // synthesizeKey from EventUtils.js causes us to reflow. That's the test
-      // harness and we don't care about that, so we'll filter that out.
-      if (path.startsWith("synthesizeKey@chrome://mochikit/content/tests/SimpleTest/EventUtils.js")) {
-        continue;
-      }
-
-      let index = knownReflows.findIndex(reflow => path.startsWith(reflow.path));
-      if (index != -1) {
-        let reflow = knownReflows[index];
-        ++reflow.count;
-        reflow.actualStacks.set(stack, (reflow.actualStacks.get(stack) || 0) + 1);
-      } else {
-        unexpectedReflows.set(stack, (unexpectedReflows.get(stack) || 0) + 1);
-      }
+    // Stack trace is empty. Reflow was triggered by native code, which
+    // we ignore.
+    if (path === "") {
+      continue;
     }
 
-    let formatStack = stack =>
-      stack.split("\n").slice(1).map(frame => "  " + frame).join("\n");
-    for (let reflow of knownReflows) {
-      let firstFrame = reflow.stack[0];
-      if (!reflow.count) {
-        Assert.ok(false,
-                  `Unused expected reflow at ${firstFrame}:\nStack:\n` +
-                  reflow.stack.map(frame => "  " + frame).join("\n") + "\n" +
-                  "This is probably a good thing - just remove it from the whitelist.");
-      } else {
-        if (reflow.count > reflow.maxCount) {
-          Assert.ok(false,
-                    `reflow at ${firstFrame} was encountered ${reflow.count} times,\n` +
-                    `it was expected to happen up to ${reflow.maxCount} times.`);
-
-        } else {
-          todo(false, `known reflow at ${firstFrame} was encountered ${reflow.count} times`);
-        }
-        for (let [stack, count] of reflow.actualStacks) {
-          info("Full stack" + (count > 1 ? ` (hit ${count} times)` : "") + ":\n" +
-               formatStack(stack));
-        }
-      }
+    // synthesizeKey from EventUtils.js causes us to reflow. That's the test
+    // harness and we don't care about that, so we'll filter that out.
+    if (path.startsWith("synthesizeKey@chrome://mochikit/content/tests/SimpleTest/EventUtils.js")) {
+      continue;
     }
 
-    for (let [stack, count] of unexpectedReflows) {
-      let location = stack.split("\n")[1].replace(/:\d+:\d+$/, "");
-      Assert.ok(false,
-                `unexpected reflow at ${location} hit ${count} times\n` +
-                "Stack:\n" +
-                formatStack(stack));
+    let index = knownReflows.findIndex(reflow => path.startsWith(reflow.path));
+    if (index != -1) {
+      let reflow = knownReflows[index];
+      ++reflow.count;
+      reflow.actualStacks.set(stack, (reflow.actualStacks.get(stack) || 0) + 1);
+    } else {
+      unexpectedReflows.set(stack, (unexpectedReflows.get(stack) || 0) + 1);
     }
-    Assert.ok(!unexpectedReflows.size,
-              unexpectedReflows.size + " unexpected reflows");
-
-    Services.els.removeListenerForAllEvents(win, dirtyFrameFn, true);
-    docShell.removeWeakReflowObserver(observer);
   }
+
+  let formatStack = stack =>
+    stack.split("\n").slice(1).map(frame => "  " + frame).join("\n");
+  for (let reflow of knownReflows) {
+    let firstFrame = reflow.stack[0];
+    if (!reflow.count) {
+      Assert.ok(false,
+                `Unused expected reflow at ${firstFrame}:\nStack:\n` +
+                reflow.stack.map(frame => "  " + frame).join("\n") + "\n" +
+                "This is probably a good thing - just remove it from the whitelist.");
+    } else {
+      if (reflow.count > reflow.maxCount) {
+        Assert.ok(false,
+                  `reflow at ${firstFrame} was encountered ${reflow.count} times,\n` +
+                  `it was expected to happen up to ${reflow.maxCount} times.`);
+      } else {
+        todo(false, `known reflow at ${firstFrame} was encountered ${reflow.count} times`);
+      }
+      for (let [stack, count] of reflow.actualStacks) {
+        info("Full stack" + (count > 1 ? ` (hit ${count} times)` : "") + ":\n" +
+             formatStack(stack));
+      }
+    }
+  }
+
+  for (let [stack, count] of unexpectedReflows) {
+    let location = stack.split("\n")[1].replace(/:\d+:\d+$/, "");
+    Assert.ok(false,
+              `unexpected reflow at ${location} hit ${count} times\n` +
+              "Stack:\n" +
+              formatStack(stack));
+  }
+  Assert.ok(!unexpectedReflows.size,
+            unexpectedReflows.size + " unexpected reflows");
 }
 
 async function ensureNoPreloadedBrowser(win = window) {
@@ -424,4 +435,40 @@ function dumpFrame({data, width, height}) {
         .putImageData(new ImageData(data, width, height), 0, 0);
 
   info(canvas.toDataURL());
+}
+
+/**
+ * This is the main function that performance tests in this folder will call.
+ *
+ * The general idea is that individual tests provide a test function (testFn)
+ * that will perform some user interactions we care about (eg. open a tab), and
+ * this withPerfObserver function takes care of setting up and removing the
+ * observers and listener we need to detect common performance issues.
+ *
+ * Once testFn is done, withPerfObserver will analyse the collected data and
+ * report anything unexpected.
+ *
+ * @param testFn (async function)
+ *        An async function that exercises some part of the browser UI.
+ *
+ * @param exceptions (object, optional)
+ *        An Array of Objects representing expectations and known issues.
+ *        It can contain the following fields:
+ *         - expectedReflows: an array of expected reflow stacks.
+ *           (see the comment above reportUnexpectedReflows for an example)
+ */
+async function withPerfObserver(testFn, exceptions = {}, win = window) {
+  let resolveFn, rejectFn;
+  let promiseTestDone = new Promise((resolve, reject) => {
+    resolveFn = resolve;
+    rejectFn = reject;
+  });
+
+  let promiseReflows = recordReflows(promiseTestDone, win);
+
+  testFn().then(resolveFn, rejectFn);
+  await promiseTestDone;
+
+  let reflows = await promiseReflows;
+  reportUnexpectedReflows(reflows, exceptions.expectedReflows);
 }

@@ -30,13 +30,13 @@ add_task(async function() {
   await ensureNoPreloadedBrowser();
 
   // Add a reflow observer and open a new tab.
-  await withReflowObserver(async function() {
+  await withPerfObserver(async function() {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
     BrowserOpenTab();
     await BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "transitionend",
         false, e => e.propertyName === "max-width");
     await switchDone;
-  }, EXPECTED_REFLOWS);
+  }, {expectedReflows: EXPECTED_REFLOWS});
 
   let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);

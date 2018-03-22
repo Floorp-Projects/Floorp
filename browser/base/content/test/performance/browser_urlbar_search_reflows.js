@@ -196,10 +196,10 @@ add_task(async function() {
   };
 
   info("First opening");
-  await withReflowObserver(testFn, EXPECTED_REFLOWS_FIRST_OPEN, win);
+  await withPerfObserver(testFn, {expectedReflows: EXPECTED_REFLOWS_FIRST_OPEN}, win);
 
   info("Second opening");
-  await withReflowObserver(testFn, EXPECTED_REFLOWS_SECOND_OPEN, win);
+  await withPerfObserver(testFn, {expectedReflows: EXPECTED_REFLOWS_SECOND_OPEN}, win);
 
   await BrowserTestUtils.closeWindow(win);
 });

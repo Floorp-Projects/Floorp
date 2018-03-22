@@ -127,7 +127,7 @@ add_task(async function() {
   URLBar.focus();
   URLBar.value = "";
 
-  await withReflowObserver(async function() {
+  await withPerfObserver(async function() {
     let oldInvalidate = popup.invalidate.bind(popup);
     let oldResultsAdded = popup.onResultsAdded.bind(popup);
 
@@ -157,7 +157,7 @@ add_task(async function() {
     let hiddenPromise = BrowserTestUtils.waitForEvent(URLBar.popup, "popuphidden");
     EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
     await hiddenPromise;
-  }, EXPECTED_REFLOWS_FIRST_OPEN, win);
+  }, {expectedReflows: EXPECTED_REFLOWS_FIRST_OPEN}, win);
 
   await BrowserTestUtils.closeWindow(win);
 });
