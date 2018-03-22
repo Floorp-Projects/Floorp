@@ -41,36 +41,15 @@ public:
 
     nsIClassInfo* GetClassInfo()
     {
-        if (mXPCClassInfo)
-          return mXPCClassInfo;
         if (!mClassInfo)
             mClassInfo = do_QueryInterface(mObject);
         return mClassInfo;
-    }
-    nsXPCClassInfo* GetXPCClassInfo()
-    {
-        if (!mXPCClassInfo) {
-            CallQueryInterface(mObject, getter_AddRefs(mXPCClassInfo));
-        }
-        return mXPCClassInfo;
-    }
-
-    already_AddRefed<nsXPCClassInfo> forgetXPCClassInfo()
-    {
-        GetXPCClassInfo();
-
-        return mXPCClassInfo.forget();
     }
 
     // We assert that we can reach an nsIXPCScriptable somehow.
     uint32_t GetScriptableFlags()
     {
-        // Try getting an nsXPCClassInfo - this handles DOM scriptable helpers.
-        nsCOMPtr<nsIXPCScriptable> sinfo = GetXPCClassInfo();
-
-        // If that didn't work, try just QI-ing. This handles BackstagePass.
-        if (!sinfo)
-            sinfo = do_QueryInterface(mObject);
+        nsCOMPtr<nsIXPCScriptable> sinfo = do_QueryInterface(mObject);
 
         // We should have something by now.
         MOZ_ASSERT(sinfo);
@@ -92,7 +71,6 @@ private:
                                 "(see bug 565742)") mObject;
     nsWrapperCache*          mCache;
     nsCOMPtr<nsIClassInfo>   mClassInfo;
-    RefPtr<nsXPCClassInfo> mXPCClassInfo;
 };
 
 #endif
