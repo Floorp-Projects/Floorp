@@ -110,6 +110,7 @@ enum class ImageBitmapFormat : uint8_t;
 class IdleRequest;
 class IdleRequestCallback;
 class IncrementalRunnable;
+class InstallTriggerImpl;
 class IntlUtils;
 class Location;
 class MediaQueryList;
@@ -989,6 +990,8 @@ public:
 
   bool ShouldReportForServiceWorkerScope(const nsAString& aScope);
 
+  already_AddRefed<mozilla::dom::InstallTriggerImpl> GetInstallTrigger();
+
   void UpdateTopInnerWindow();
 
   virtual bool IsInSyncOperation() override
@@ -1387,6 +1390,7 @@ protected:
   // forward declared here means that ~nsGlobalWindow wouldn't compile because
   // it wouldn't see the ~External function's declaration.
   nsCOMPtr<nsISupports>         mExternal;
+  RefPtr<mozilla::dom::InstallTriggerImpl> mInstallTrigger;
 
   RefPtr<mozilla::dom::Storage> mLocalStorage;
   RefPtr<mozilla::dom::Storage> mSessionStorage;
