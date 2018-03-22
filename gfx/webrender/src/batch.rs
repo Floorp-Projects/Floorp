@@ -4,7 +4,7 @@
 
 use api::{AlphaType, DeviceIntRect, DeviceIntSize, LayerToWorldScale};
 use api::{DeviceUintRect, DeviceUintPoint, DeviceUintSize, ExternalImageType, FilterOp, ImageRendering, LayerRect};
-use api::{DeviceIntPoint, LayerPoint, SubpixelDirection, YuvColorSpace, YuvFormat};
+use api::{DeviceIntPoint, SubpixelDirection, YuvColorSpace, YuvFormat};
 use api::{LayerToWorldTransform, WorldPixel};
 use border::{BorderCornerInstance, BorderCornerSide, BorderEdgeKind};
 use clip::{ClipSource, ClipStore, ClipWorkItem};
@@ -16,7 +16,7 @@ use gpu_types::{BrushFlags, BrushInstance, ClipChainRectIndex};
 use gpu_types::{ClipMaskInstance, ClipScrollNodeIndex, RasterizationSpace};
 use gpu_types::{CompositePrimitiveInstance, PrimitiveInstance, SimplePrimitiveInstance};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
-use picture::{ContentOrigin, PictureCompositeMode, PictureKind, PicturePrimitive};
+use picture::{PictureCompositeMode, PictureKind, PicturePrimitive};
 use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{CachedGradient, ImageSource, PrimitiveIndex, PrimitiveKind, PrimitiveMetadata, PrimitiveStore};
 use prim_store::{BrushPrimitive, BrushKind, DeferredResolve, EdgeAaSegmentMask, PictureIndex, PrimitiveRun};
@@ -356,7 +356,6 @@ impl PrimitiveBatch {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct AlphaBatchContainer {
-    pub text_run_cache_prims: FastHashMap<SourceTexture, Vec<PrimitiveInstance>>,
     pub opaque_batches: Vec<PrimitiveBatch>,
     pub alpha_batches: Vec<PrimitiveBatch>,
     pub target_rect: Option<DeviceIntRect>,
@@ -365,7 +364,6 @@ pub struct AlphaBatchContainer {
 impl AlphaBatchContainer {
     pub fn new(target_rect: Option<DeviceIntRect>) -> AlphaBatchContainer {
         AlphaBatchContainer {
-            text_run_cache_prims: FastHashMap::default(),
             opaque_batches: Vec::new(),
             alpha_batches: Vec::new(),
             target_rect,
@@ -373,13 +371,6 @@ impl AlphaBatchContainer {
     }
 
     fn merge(&mut self, builder: AlphaBatchBuilder) {
-        for (key, value) in builder.text_run_cache_prims {
-            self.text_run_cache_prims
-                .entry(key)
-                .or_insert(vec![])
-                .extend(value);
-        }
-
         for other_batch in builder.batch_list.opaque_batch_list.batches {
             let batch_index = self.opaque_batches.iter().position(|batch| {
                 batch.key.is_compatible_with(&other_batch.key)
@@ -420,7 +411,6 @@ impl AlphaBatchContainer {
 /// Encapsulates the logic of building batches for items that are blended.
 pub struct AlphaBatchBuilder {
     pub batch_list: BatchList,
-    pub text_run_cache_prims: FastHashMap<SourceTexture, Vec<PrimitiveInstance>>,
     glyph_fetch_buffer: Vec<GlyphFetchResult>,
     target_rect: DeviceIntRect,
 }
@@ -433,7 +423,6 @@ impl AlphaBatchBuilder {
         AlphaBatchBuilder {
             batch_list: BatchList::new(screen_size),
             glyph_fetch_buffer: Vec::new(),
-            text_run_cache_prims: FastHashMap::default(),
             target_rect,
         }
     }
@@ -456,7 +445,6 @@ impl AlphaBatchBuilder {
                 alpha_batches: self.batch_list.alpha_batch_list.batches,
                 opaque_batches: self.batch_list.opaque_batch_list.batches,
                 target_rect: Some(self.target_rect),
-                text_run_cache_prims: self.text_run_cache_prims,
             })
         }
     }
@@ -500,7 +488,6 @@ impl AlphaBatchBuilder {
                 task_address,
                 deferred_resolves,
                 &mut splitter,
-                pic,
                 content_origin,
             );
         }
@@ -560,26 +547,13 @@ impl AlphaBatchBuilder {
         task_address: RenderTaskAddress,
         deferred_resolves: &mut Vec<DeferredResolve>,
         splitter: &mut BspSplitter<f64, WorldPixel>,
-        pic: &PicturePrimitive,
-        content_origin: ContentOrigin,
+        content_origin: DeviceIntPoint,
     ) {
         for i in 0 .. run.count {
             let prim_index = PrimitiveIndex(run.base_prim_index.0 + i);
-
             let metadata = &ctx.prim_store.cpu_metadata[prim_index.0];
 
-            // Now that we walk the primitive runs in order to add
-            // items to batches, we need to check if they are
-            // visible here.
-            // We currently only support culling on normal (Image)
-            // picture types.
-            // TODO(gw): Support culling on shadow image types.
-            let is_image = match pic.kind {
-                PictureKind::Image { .. } => true,
-                PictureKind::TextShadow { .. } => false,
-            };
-
-            if !is_image || metadata.screen_rect.is_some() {
+            if metadata.screen_rect.is_some() {
                 self.add_prim_to_batch(
                     metadata.clip_chain_rect_index,
                     scroll_id,
@@ -592,7 +566,6 @@ impl AlphaBatchBuilder {
                     deferred_resolves,
                     splitter,
                     content_origin,
-                    pic,
                 );
             }
         }
@@ -614,8 +587,7 @@ impl AlphaBatchBuilder {
         task_address: RenderTaskAddress,
         deferred_resolves: &mut Vec<DeferredResolve>,
         splitter: &mut BspSplitter<f64, WorldPixel>,
-        content_origin: ContentOrigin,
-        pic: &PicturePrimitive,
+        content_origin: DeviceIntPoint,
     ) {
         let z = prim_index.0 as i32;
         let prim_metadata = ctx.prim_store.get_metadata(prim_index);
@@ -625,30 +597,14 @@ impl AlphaBatchBuilder {
         //           the scroll node...
         let transform_kind = scroll_node.transform.transform_kind();
 
-        let task_relative_bounding_rect = match content_origin {
-            ContentOrigin::Screen(point) => {
-                // translate by content-origin
-                let screen_rect = prim_metadata.screen_rect.expect("bug");
-                DeviceIntRect::new(
-                    DeviceIntPoint::new(
-                        screen_rect.unclipped.origin.x - point.x,
-                        screen_rect.unclipped.origin.y - point.y,
-                    ),
-                    screen_rect.unclipped.size,
-                )
-            }
-            ContentOrigin::Local(point) => {
-                // scale local rect by device pixel ratio
-                let content_rect = LayerRect::new(
-                    LayerPoint::new(
-                        prim_metadata.local_rect.origin.x - point.x,
-                        prim_metadata.local_rect.origin.y - point.y,
-                    ),
-                    prim_metadata.local_rect.size,
-                );
-                (content_rect * LayerToWorldScale::new(1.0) * ctx.device_pixel_scale).round().to_i32()
-            }
-        };
+        let screen_rect = prim_metadata.screen_rect.expect("bug");
+        let task_relative_bounding_rect = DeviceIntRect::new(
+            DeviceIntPoint::new(
+                screen_rect.unclipped.origin.x - content_origin.x,
+                screen_rect.unclipped.origin.y - content_origin.y,
+            ),
+            screen_rect.unclipped.size,
+        );
 
         let prim_cache_address = gpu_cache.get_address(&prim_metadata.gpu_location);
         let no_textures = BatchTextures::no_texture();
@@ -709,11 +665,11 @@ impl AlphaBatchBuilder {
                                             z,
                                             segment_index: 0,
                                             edge_flags: EdgeAaSegmentMask::empty(),
-                                            brush_flags: BrushFlags::PERSPECTIVE_INTERPOLATION,
+                                            brush_flags: BrushFlags::empty(),
                                             user_data: [
                                                 uv_rect_address,
                                                 BrushImageSourceKind::Color as i32,
-                                                RasterizationSpace::Local as i32,
+                                                RasterizationSpace::Screen as i32,
                                             ],
                                         };
                                         batch.push(PrimitiveInstance::from(instance));
@@ -1136,27 +1092,14 @@ impl AlphaBatchBuilder {
             PrimitiveKind::TextRun => {
                 let text_cpu =
                     &ctx.prim_store.cpu_text_runs[prim_metadata.cpu_prim_index.0];
-                let is_shadow = match pic.kind {
-                    PictureKind::TextShadow { .. } => true,
-                    PictureKind::Image { .. } => false,
-                };
-
-                // TODO(gw): It probably makes sense to base this decision on the content
-                //           origin field in the future (once that's configurable).
-                let font_transform = if is_shadow {
-                    None
-                } else {
-                    Some(scroll_node.transform)
-                };
 
                 let font = text_cpu.get_font(
                     ctx.device_pixel_scale,
-                    font_transform,
+                    Some(scroll_node.transform),
                 );
 
                 let glyph_fetch_buffer = &mut self.glyph_fetch_buffer;
                 let batch_list = &mut self.batch_list;
-                let text_run_cache_prims = &mut self.text_run_cache_prims;
 
                 ctx.resource_cache.fetch_glyphs(
                     font,
@@ -1177,44 +1120,38 @@ impl AlphaBatchBuilder {
                             _ => text_cpu.font.subpx_dir.limit_by(text_cpu.font.render_mode),
                         };
 
-                        let batch = if is_shadow {
-                            text_run_cache_prims
-                                .entry(texture_id)
-                                .or_insert(Vec::new())
-                        } else {
-                            let textures = BatchTextures {
-                                colors: [
-                                    texture_id,
-                                    SourceTexture::Invalid,
-                                    SourceTexture::Invalid,
-                                ],
-                            };
-
-                            let kind = BatchKind::Transformable(
-                                transform_kind,
-                                TransformBatchKind::TextRun(glyph_format),
-                            );
-
-                            let blend_mode = match glyph_format {
-                                GlyphFormat::Subpixel |
-                                GlyphFormat::TransformedSubpixel => {
-                                    if text_cpu.font.bg_color.a != 0 {
-                                        BlendMode::SubpixelWithBgColor
-                                    } else if ctx.use_dual_source_blending {
-                                        BlendMode::SubpixelDualSource
-                                    } else {
-                                        BlendMode::SubpixelConstantTextColor(text_cpu.font.color.into())
-                                    }
-                                }
-                                GlyphFormat::Alpha |
-                                GlyphFormat::TransformedAlpha |
-                                GlyphFormat::Bitmap |
-                                GlyphFormat::ColorBitmap => BlendMode::PremultipliedAlpha,
-                            };
-
-                            let key = BatchKey::new(kind, blend_mode, textures);
-                            batch_list.get_suitable_batch(key, &task_relative_bounding_rect)
+                        let textures = BatchTextures {
+                            colors: [
+                                texture_id,
+                                SourceTexture::Invalid,
+                                SourceTexture::Invalid,
+                            ],
                         };
+
+                        let kind = BatchKind::Transformable(
+                            transform_kind,
+                            TransformBatchKind::TextRun(glyph_format),
+                        );
+
+                        let blend_mode = match glyph_format {
+                            GlyphFormat::Subpixel |
+                            GlyphFormat::TransformedSubpixel => {
+                                if text_cpu.font.bg_color.a != 0 {
+                                    BlendMode::SubpixelWithBgColor
+                                } else if ctx.use_dual_source_blending {
+                                    BlendMode::SubpixelDualSource
+                                } else {
+                                    BlendMode::SubpixelConstantTextColor(text_cpu.font.color.into())
+                                }
+                            }
+                            GlyphFormat::Alpha |
+                            GlyphFormat::TransformedAlpha |
+                            GlyphFormat::Bitmap |
+                            GlyphFormat::ColorBitmap => BlendMode::PremultipliedAlpha,
+                        };
+
+                        let key = BatchKey::new(kind, blend_mode, textures);
+                        let batch = batch_list.get_suitable_batch(key, &task_relative_bounding_rect);
 
                         for glyph in glyphs {
                             batch.push(base_instance.build(

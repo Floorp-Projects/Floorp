@@ -65,6 +65,7 @@ struct Slot<T> {
 pub struct FreeList<T> {
     slots: Vec<Slot<T>>,
     free_list_head: Option<u32>,
+    active_count: usize,
 }
 
 pub enum UpsertResult<T> {
@@ -77,6 +78,7 @@ impl<T> FreeList<T> {
         FreeList {
             slots: Vec::new(),
             free_list_head: None,
+            active_count: 0,
         }
     }
 
@@ -84,6 +86,7 @@ impl<T> FreeList<T> {
         FreeList {
             slots: recycle_vec(self.slots),
             free_list_head: None,
+            active_count: 0,
         }
     }
 
@@ -131,6 +134,8 @@ impl<T> FreeList<T> {
     }
 
     pub fn insert(&mut self, item: T) -> FreeListHandle<T> {
+        self.active_count += 1;
+
         match self.free_list_head {
             Some(free_index) => {
                 let slot = &mut self.slots[free_index as usize];
@@ -166,10 +171,15 @@ impl<T> FreeList<T> {
     }
 
     pub fn free(&mut self, id: FreeListHandle<T>) -> T {
+        self.active_count -= 1;
         let slot = &mut self.slots[id.index as usize];
         slot.next = self.free_list_head;
         slot.epoch = Epoch(slot.epoch.0 + 1);
         self.free_list_head = Some(id.index);
         slot.value.take().unwrap()
+    }
+
+    pub fn len(&self) -> usize {
+        self.active_count
     }
 }
