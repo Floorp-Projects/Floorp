@@ -1231,6 +1231,8 @@ var gBrowserInit = {
     }
 
     new LightweightThemeConsumer(document);
+    CompactTheme.init();
+
     TabsInTitlebar.init();
 
     if (window.matchMedia("(-moz-os-version: windows-win8)").matches &&
@@ -1330,7 +1332,6 @@ var gBrowserInit = {
     LanguageDetectionListener.init();
     BrowserOnClick.init();
     FeedHandler.init();
-    CompactTheme.init();
     AboutCapabilitiesListener.init();
     TrackingProtection.init();
     CaptivePortalWatcher.init();
