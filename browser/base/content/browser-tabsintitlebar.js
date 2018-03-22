@@ -42,6 +42,8 @@ var TabsInTitlebar = {
 
     addEventListener("resolutionchange", this, false);
 
+    gDragSpaceObserver.init();
+
     this._update(true, true);
   },
 
@@ -277,6 +279,7 @@ var TabsInTitlebar = {
     Services.prefs.removeObserver(this._prefName, this);
     this._menuObserver.disconnect();
     CustomizableUI.removeListener(this);
+    gDragSpaceObserver.uninit();
   }
 };
 
@@ -303,3 +306,35 @@ function onTitlebarMaxClick() {
   else
     window.maximize();
 }
+
+// Adds additional drag space to the window by listening to
+// the corresponding preference.
+var gDragSpaceObserver = {
+  pref: "browser.tabs.extraDragSpace",
+
+  init() {
+    this.update();
+    Services.prefs.addObserver(this.pref, this);
+  },
+
+  uninit() {
+    Services.prefs.removeObserver(this.pref, this);
+  },
+
+  observe(aSubject, aTopic, aPrefName) {
+    if (aTopic != "nsPref:changed" || aPrefName != this.pref) {
+      return;
+    }
+
+    this.update();
+  },
+
+  update() {
+    if (Services.prefs.getBoolPref(this.pref)) {
+      document.documentElement.setAttribute("extradragspace", "true");
+    } else {
+      document.documentElement.removeAttribute("extradragspace");
+    }
+    TabsInTitlebar.updateAppearance(true);
+  },
+};
