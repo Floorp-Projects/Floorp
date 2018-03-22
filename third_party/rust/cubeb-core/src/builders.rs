@@ -117,24 +117,27 @@ mod tests {
             ) );
 
         check!(
-            Undefined,
-            DualMono,
-            DualMonoLfe,
-            Mono,
-            MonoLfe,
-            Stereo,
-            StereoLfe,
-            Layout3F,
-            Layout3FLfe,
-            Layout2F1,
-            Layout2F1Lfe,
-            Layout3F1,
-            Layout3F1Lfe,
-            Layout2F2,
-            Layout2F2Lfe,
-            Layout3F2,
-            Layout3F3RLfe,
-            Layout3F4Lfe
+            UNDEFINED,
+            MONO,
+            MONO_LFE,
+            STEREO,
+            STEREO_LFE,
+            _3F,
+            _3F_LFE,
+            _2F1,
+            _2F1_LFE,
+            _3F1,
+            _3F1_LFE,
+            _2F2,
+            _2F2_LFE,
+            QUAD,
+            QUAD_LFE,
+            _3F2,
+            _3F2_LFE,
+            _3F2_BACK,
+            _3F2_LFE_BACK,
+            _3F3R_LFE,
+            _3F4_LFE
         );
     }
 
@@ -210,25 +213,27 @@ mod tests {
                 )*
             ) );
 
-        check!(Undefined => CUBEB_LAYOUT_UNDEFINED,
-               DualMono => CUBEB_LAYOUT_DUAL_MONO,
-               DualMonoLfe => CUBEB_LAYOUT_DUAL_MONO_LFE,
-               Mono => CUBEB_LAYOUT_MONO,
-               MonoLfe => CUBEB_LAYOUT_MONO_LFE,
-               Stereo => CUBEB_LAYOUT_STEREO,
-               StereoLfe => CUBEB_LAYOUT_STEREO_LFE,
-               Layout3F => CUBEB_LAYOUT_3F,
-               Layout3FLfe => CUBEB_LAYOUT_3F_LFE,
-               Layout2F1 => CUBEB_LAYOUT_2F1,
-               Layout2F1Lfe => CUBEB_LAYOUT_2F1_LFE,
-               Layout3F1 => CUBEB_LAYOUT_3F1,
-               Layout3F1Lfe => CUBEB_LAYOUT_3F1_LFE,
-               Layout2F2 => CUBEB_LAYOUT_2F2,
-               Layout2F2Lfe => CUBEB_LAYOUT_2F2_LFE,
-               Layout3F2 => CUBEB_LAYOUT_3F2,
-               Layout3F2Lfe => CUBEB_LAYOUT_3F2_LFE,
-               Layout3F3RLfe => CUBEB_LAYOUT_3F3R_LFE,
-               Layout3F4Lfe => CUBEB_LAYOUT_3F4_LFE);
+        check!(UNDEFINED => CUBEB_LAYOUT_UNDEFINED,
+               MONO => CUBEB_LAYOUT_MONO,
+               MONO_LFE => CUBEB_LAYOUT_MONO_LFE,
+               STEREO => CUBEB_LAYOUT_STEREO,
+               STEREO_LFE => CUBEB_LAYOUT_STEREO_LFE,
+               _3F => CUBEB_LAYOUT_3F,
+               _3F_LFE => CUBEB_LAYOUT_3F_LFE,
+               _2F1 => CUBEB_LAYOUT_2F1,
+               _2F1_LFE=> CUBEB_LAYOUT_2F1_LFE,
+               _3F1 => CUBEB_LAYOUT_3F1,
+               _3F1_LFE =>  CUBEB_LAYOUT_3F1_LFE,
+               _2F2 => CUBEB_LAYOUT_2F2,
+               _2F2_LFE => CUBEB_LAYOUT_2F2_LFE,
+               QUAD => CUBEB_LAYOUT_QUAD,
+               QUAD_LFE => CUBEB_LAYOUT_QUAD_LFE,
+               _3F2 => CUBEB_LAYOUT_3F2,
+               _3F2_LFE => CUBEB_LAYOUT_3F2_LFE,
+               _3F2_BACK => CUBEB_LAYOUT_3F2_BACK,
+               _3F2_LFE_BACK => CUBEB_LAYOUT_3F2_LFE_BACK,
+               _3F3R_LFE => CUBEB_LAYOUT_3F3R_LFE,
+               _3F4_LFE => CUBEB_LAYOUT_3F4_LFE);
     }
 
     #[test]

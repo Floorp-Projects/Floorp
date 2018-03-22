@@ -1358,7 +1358,6 @@ static struct cubeb_ops const alsa_ops = {
   .get_max_channel_count = alsa_get_max_channel_count,
   .get_min_latency = alsa_get_min_latency,
   .get_preferred_sample_rate = alsa_get_preferred_sample_rate,
-  .get_preferred_channel_layout = NULL,
   .enumerate_devices = alsa_enumerate_devices,
   .device_collection_destroy = alsa_device_collection_destroy,
   .destroy = alsa_destroy,
