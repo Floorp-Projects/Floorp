@@ -70,7 +70,8 @@ add_test(function successfulResponse() {
   let response = {
     success: true,
     status: STATUS_SUCCESS,
-    body: "{\"access_token\":\"http://example.com/image.jpeg\",\"id\":\"0d5c1a89b8c54580b8e3e8adadae864a\"}",
+    body: JSON.stringify({access_token: "http://example.com/image.jpeg",
+                          id: "0d5c1a89b8c54580b8e3e8adadae864a"})
   };
 
   client._Request = new mockResponse(response);
@@ -88,7 +89,7 @@ add_test(function successfulDestroy() {
   let response = {
     success: true,
     status: STATUS_SUCCESS,
-    body: "{}",
+    body: JSON.stringify({}),
   };
 
   client._Request = new mockResponse(response);
@@ -119,7 +120,8 @@ add_task(async function serverErrorResponse() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   let response = {
     status: 400,
-    body: "{ \"code\": 400, \"errno\": 104, \"error\": \"Bad Request\", \"message\": \"Unauthorized\", \"reason\": \"Invalid fxa assertion\" }",
+    body: JSON.stringify({code: 400, errno: 104, error: "Bad Request",
+                          message: "Unauthorized", reason: "Invalid fxa assertion"}),
   };
 
   client._Request = new mockResponse(response);
@@ -183,7 +185,8 @@ add_test(function incorrectErrno() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   let response = {
     status: 400,
-    body: "{ \"code\": 400, \"errno\": \"bad errno\", \"error\": \"Bad Request\", \"message\": \"Unauthorized\", \"reason\": \"Invalid fxa assertion\" }",
+    body: JSON.stringify({code: 400, errno: "bad errno", error: "Bad Request",
+                          message: "Unauthorized", reason: "Invalid fxa assertion"}),
   };
 
   client._Request = new mockResponse(response);

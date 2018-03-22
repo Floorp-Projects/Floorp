@@ -1479,7 +1479,6 @@ function getTestUser(name) {
   return {
     email: name + "@example.com",
     uid: "1ad7f502-4cc7-4ec1-a209-071fd2fae348",
-    deviceId: name + "'s device id",
     sessionToken: name + "'s session token",
     keyFetchToken: name + "'s keyfetch token",
     unwrapBKey: expandHex("44"),
