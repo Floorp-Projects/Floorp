@@ -80,7 +80,6 @@ const LEGACY_NON_RESTARTLESS_TESTS = new Set([
   "test_XPIStates.js",
   "test_backgroundupdate.js",
   "test_bad_json.js",
-  "test_badschema.js",
   "test_blocklist_metadata_filters.js",
   "test_blocklist_prefs.js",
   "test_blocklist_regexp.js",
