@@ -170,7 +170,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener,
   , mRemoteBrowser(nullptr)
   , mChildID(0)
   , mJSPluginID(aJSPluginID)
-  , mEventMode(EVENT_MODE_NORMAL_DISPATCH)
+  , mEventMode(FrameLoaderBinding::EVENT_MODE_NORMAL_DISPATCH)
   , mBrowserChangingProcessBlockers(nullptr)
   , mDepthTooGreat(false)
   , mIsTopLevelContent(false)
@@ -2506,20 +2506,6 @@ nsFrameLoader::LazyHeight() const
   }
 
   return lazyHeight;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetEventMode(uint32_t* aEventMode)
-{
-  *aEventMode = mEventMode;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::SetEventMode(uint32_t aEventMode)
-{
-  mEventMode = aEventMode;
-  return NS_OK;
 }
 
 void
