@@ -1842,7 +1842,9 @@ BrowserGlue.prototype = {
 
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 67;
+    // Use an increasing number to keep track of the current migration state.
+    // Completely unrelated to the current Firefox release number.
+    const UI_VERSION = 68;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2196,6 +2198,12 @@ BrowserGlue.prototype = {
       if (Services.prefs.getCharPref("devtools.theme") == "firebug") {
         Services.prefs.setCharPref("devtools.theme", "light");
       }
+    }
+
+    if (currentUIVersion < 68) {
+      // Remove blocklists legacy storage, now relying on IndexedDB.
+      OS.File.remove(OS.Path.join(OS.Constants.Path.profileDir,
+                                  "kinto.sqlite"), {ignoreAbsent: true});
     }
 
     // Update the migration version.

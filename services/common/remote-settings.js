@@ -15,8 +15,6 @@ ChromeUtils.defineModuleGetter(this, "Kinto",
                                "resource://services-common/kinto-offline-client.js");
 ChromeUtils.defineModuleGetter(this, "KintoHttpClient",
                                "resource://services-common/kinto-http-client.js");
-ChromeUtils.defineModuleGetter(this, "FirefoxAdapter",
-                               "resource://services-common/kinto-storage-adapter.js");
 ChromeUtils.defineModuleGetter(this, "CanonicalJSON",
                                "resource://gre/modules/CanonicalJSON.jsm");
 ChromeUtils.defineModuleGetter(this, "UptakeTelemetry",
@@ -37,11 +35,6 @@ const PREF_SETTINGS_LOAD_DUMP          = "services.settings.load_dump";
 const TELEMETRY_HISTOGRAM_KEY = "settings-changes-monitoring";
 
 const INVALID_SIGNATURE = "Invalid content/signature";
-
-// This was the default path in earlier versions of
-// FirefoxAdapter, so for backwards compatibility we maintain this
-// filename, even though it isn't descriptive of who is using it.
-const KINTO_STORAGE_PATH = "kinto.sqlite";
 
 
 function mergeChanges(collection, localRecords, changes) {
@@ -167,28 +160,13 @@ class RemoteSettingsClient {
    *
    * @param {callback} function           the async function to execute with the open SQlite connection.
    * @param {Object}   options            additional advanced options.
-   * @param {string}   options.bucket     override bucket name of client (default: this.bucketName)
-   * @param {string}   options.collection override collection name of client (default: this.collectionName)
-   * @param {string}   options.path       override default Sqlite path (default: kinto.sqlite)
    * @param {string}   options.hooks      hooks to execute on synchronization (see Kinto.js docs)
    */
-  async openCollection(callback, options = {}) {
-    const { bucket = this.bucketName, path = KINTO_STORAGE_PATH } = options;
+  async openCollection(options = {}) {
     if (!this._kinto) {
-      this._kinto = new Kinto({bucket, adapter: FirefoxAdapter});
+      this._kinto = new Kinto({ bucket: this.bucketName, adapter: Kinto.adapters.IDB });
     }
-    let sqliteHandle;
-    try {
-      sqliteHandle = await FirefoxAdapter.openConnection({path});
-      const colOptions = Object.assign({adapterOptions: {sqliteHandle}}, options);
-      const {collection: collectionName = this.collectionName} = options;
-      const collection = this._kinto.collection(collectionName, colOptions);
-      return await callback(collection);
-    } finally {
-      if (sqliteHandle) {
-        await sqliteHandle.close();
-      }
-    }
+    return this._kinto.collection(this.collectionName, options);
   }
 
   /**
@@ -202,24 +180,23 @@ class RemoteSettingsClient {
   async get(options = {}) {
     // In Bug 1451031, we will do some jexl filtering to limit the list items
     // whose target is matched.
-    const { filters, order } = options;
-    return this.openCollection(async c => {
-      const { data } = await c.list({ filters, order });
-      return data;
-    });
+    const { filters = {}, order } = options;
+    const c = await this.openCollection();
+    const { data } = await c.list({ filters, order });
+    return data;
   }
 
   /**
    * Synchronize from Kinto server, if necessary.
    *
-   * @param {int}  lastModified     the lastModified date (on the server) for
-                                    the remote collection.
-   * @param {Date} serverTime       the current date return by the server.
-   * @param {Object} options        additional advanced options.
-   * @param {bool} options.loadDump load initial dump from disk on first sync (default: true)
-   * @return {Promise}              which rejects on sync or process failure.
+   * @param {int}  lastModified       the lastModified date (on the server) for
+                                      the remote collection.
+   * @param {Date}   serverTime       the current date return by the server.
+   * @param {Object} options          additional advanced options.
+   * @param {bool}   options.loadDump load initial dump from disk on first sync (default: true)
+   * @return {Promise}                which rejects on sync or process failure.
    */
-  async maybeSync(lastModified, serverTime, options = {loadDump: true}) {
+  async maybeSync(lastModified, serverTime, options = { loadDump: true }) {
     const {loadDump} = options;
     const remote = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
     const verifySignature = Services.prefs.getBoolPref(PREF_SETTINGS_VERIFY_SIGNATURE, true);
@@ -237,98 +214,97 @@ class RemoteSettingsClient {
 
     let reportStatus = null;
     try {
-      return await this.openCollection(async (collection) => {
-        // Synchronize remote data into a local Sqlite DB.
-        let collectionLastModified = await collection.db.getLastModified();
+      const collection = await this.openCollection(colOptions);
+      // Synchronize remote data into a local Sqlite DB.
+      let collectionLastModified = await collection.db.getLastModified();
 
-        // If there is no data currently in the collection, attempt to import
-        // initial data from the application defaults.
-        // This allows to avoid synchronizing the whole collection content on
-        // cold start.
-        if (!collectionLastModified && loadDump) {
-          try {
-            const initialData = await this._loadDumpFile();
-            await collection.loadDump(initialData.data);
-            collectionLastModified = await collection.db.getLastModified();
-          } catch (e) {
-            // Report but go-on.
-            Cu.reportError(e);
-          }
-        }
-
-        // If the data is up to date, there's no need to sync. We still need
-        // to record the fact that a check happened.
-        if (lastModified <= collectionLastModified) {
-          this._updateLastCheck(serverTime);
-          reportStatus = UptakeTelemetry.STATUS.UP_TO_DATE;
-          return;
-        }
-
-        // Fetch changes from server.
+      // If there is no data currently in the collection, attempt to import
+      // initial data from the application defaults.
+      // This allows to avoid synchronizing the whole collection content on
+      // cold start.
+      if (!collectionLastModified && loadDump) {
         try {
-          // Server changes have priority during synchronization.
-          const strategy = Kinto.syncStrategy.SERVER_WINS;
-          const { ok } = await collection.sync({remote, strategy});
-          if (!ok) {
-            // Some synchronization conflicts occured.
-            reportStatus = UptakeTelemetry.STATUS.CONFLICT_ERROR;
-            throw new Error("Sync failed");
-          }
+          const initialData = await this._loadDumpFile();
+          await collection.loadDump(initialData.data);
+          collectionLastModified = await collection.db.getLastModified();
         } catch (e) {
-          if (e.message == INVALID_SIGNATURE) {
-            // Signature verification failed during synchronzation.
-            reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
-            // if sync fails with a signature error, it's likely that our
-            // local data has been modified in some way.
-            // We will attempt to fix this by retrieving the whole
-            // remote collection.
-            const payload = await fetchRemoteCollection(remote, collection);
-            try {
-              await this._validateCollectionSignature(remote, payload, collection, {ignoreLocal: true});
-            } catch (e) {
-              reportStatus = UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR;
-              throw e;
-            }
-            // if the signature is good (we haven't thrown), and the remote
-            // last_modified is newer than the local last_modified, replace the
-            // local data
-            const localLastModified = await collection.db.getLastModified();
-            if (payload.last_modified >= localLastModified) {
-              await collection.clear();
-              await collection.loadDump(payload.data);
-            }
-          } else {
-            // The sync has thrown, it can be a network or a general error.
-            if (/NetworkError/.test(e.message)) {
-              reportStatus = UptakeTelemetry.STATUS.NETWORK_ERROR;
-            } else if (/Backoff/.test(e.message)) {
-              reportStatus = UptakeTelemetry.STATUS.BACKOFF;
-            } else {
-              reportStatus = UptakeTelemetry.STATUS.SYNC_ERROR;
-            }
+          // Report but go-on.
+          Cu.reportError(e);
+        }
+      }
+
+      // If the data is up to date, there's no need to sync. We still need
+      // to record the fact that a check happened.
+      if (lastModified <= collectionLastModified) {
+        this._updateLastCheck(serverTime);
+        reportStatus = UptakeTelemetry.STATUS.UP_TO_DATE;
+        return;
+      }
+
+      // Fetch changes from server.
+      try {
+        // Server changes have priority during synchronization.
+        const strategy = Kinto.syncStrategy.SERVER_WINS;
+        const { ok } = await collection.sync({remote, strategy});
+        if (!ok) {
+          // Some synchronization conflicts occured.
+          reportStatus = UptakeTelemetry.STATUS.CONFLICT_ERROR;
+          throw new Error("Sync failed");
+        }
+      } catch (e) {
+        if (e.message == INVALID_SIGNATURE) {
+          // Signature verification failed during synchronzation.
+          reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
+          // if sync fails with a signature error, it's likely that our
+          // local data has been modified in some way.
+          // We will attempt to fix this by retrieving the whole
+          // remote collection.
+          const payload = await fetchRemoteCollection(remote, collection);
+          try {
+            await this._validateCollectionSignature(remote, payload, collection, {ignoreLocal: true});
+          } catch (e) {
+            reportStatus = UptakeTelemetry.STATUS.SIGNATURE_RETRY_ERROR;
             throw e;
           }
-        }
-        // Read local collection of records.
-        const { data } = await collection.list();
-
-        // Handle the obtained records (ie. apply locally).
-        try {
-          // Execute callbacks in order and sequentially.
-          // If one fails everything fails.
-          const callbacks = this._callbacks.get("change");
-          for (const cb of callbacks) {
-            await cb({ data });
+          // if the signature is good (we haven't thrown), and the remote
+          // last_modified is newer than the local last_modified, replace the
+          // local data
+          const localLastModified = await collection.db.getLastModified();
+          if (payload.last_modified >= localLastModified) {
+            await collection.clear();
+            await collection.loadDump(payload.data);
           }
-        } catch (e) {
-          reportStatus = UptakeTelemetry.STATUS.APPLY_ERROR;
+        } else {
+          // The sync has thrown, it can be a network or a general error.
+          if (/NetworkError/.test(e.message)) {
+            reportStatus = UptakeTelemetry.STATUS.NETWORK_ERROR;
+          } else if (/Backoff/.test(e.message)) {
+            reportStatus = UptakeTelemetry.STATUS.BACKOFF;
+          } else {
+            reportStatus = UptakeTelemetry.STATUS.SYNC_ERROR;
+          }
           throw e;
         }
+      }
+      // Read local collection of records.
+      const { data } = await collection.list();
 
-        // Track last update.
-        this._updateLastCheck(serverTime);
+      // Handle the obtained records (ie. apply locally).
+      try {
+        // Execute callbacks in order and sequentially.
+        // If one fails everything fails.
+        const callbacks = this._callbacks.get("change");
+        for (const cb of callbacks) {
+          await cb({ data });
+        }
+      } catch (e) {
+        reportStatus = UptakeTelemetry.STATUS.APPLY_ERROR;
+        throw e;
+      }
 
-      }, colOptions);
+      // Track last update.
+      this._updateLastCheck(serverTime);
+
     } catch (e) {
       // No specific error was tracked, mark it as unknown.
       if (reportStatus === null) {

@@ -28,9 +28,8 @@ async function clear_state() {
     Services.prefs.clearUserPref(client.lastCheckTimePref);
 
     // Clear local DB.
-    await client.openCollection(async (collection) => {
-      await collection.clear();
-    });
+    const collection = await client.openCollection();
+    await collection.clear();
 
     // Remove JSON dumps folders in profile dir.
     const dumpFile = OS.Path.join(OS.Constants.Path.profileDir, client.filename);
@@ -113,7 +112,7 @@ add_task(clear_state);
 add_task(async function test_records_obtained_from_server_are_stored_in_db() {
   for (let {client} of gBlocklistClients) {
     // Test an empty db populates
-    await client.maybeSync(2000, Date.now(), {loadDump: false});
+    await client.maybeSync(2000, Date.now(), { loadDump: false });
 
     // Open the collection, verify it's been populated:
     // Our test data has a single record; it should be in the local collection
@@ -127,12 +126,11 @@ add_task(async function test_records_changes_are_overwritten_by_server_changes()
   const {client} = gBlocklistClients[0];
 
   // Create some local conflicting data, and make sure it syncs without error.
-  await client.openCollection(async (collection) => {
-    await collection.create({
-      "versionRange": [],
-      "id": "9d500963-d80e-3a91-6e74-66f3811b99cc"
-    }, { useRecordId: true });
-  });
+  const collection = await client.openCollection();
+  await collection.create({
+    "versionRange": [],
+    "id": "9d500963-d80e-3a91-6e74-66f3811b99cc"
+  }, { useRecordId: true });
   await client.maybeSync(2000, Date.now(), {loadDump: false});
 });
 add_task(clear_state);
@@ -257,9 +255,8 @@ add_task(async function test_telemetry_reports_if_sync_fails() {
   const {client} = gBlocklistClients[0];
   const serverTime = Date.now();
 
-  await client.openCollection(async (collection) => {
-    await collection.db.saveLastModified(9999);
-  });
+  const collection = await client.openCollection();
+  await collection.db.saveLastModified(9999);
 
   const startHistogram = getUptakeTelemetrySnapshot(client.identifier);
 
