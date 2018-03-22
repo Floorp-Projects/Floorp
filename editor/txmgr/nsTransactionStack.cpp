@@ -3,17 +3,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsTransactionStack.h"
+
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsUtils.h"
-#include "nsTransactionItem.h"
-#include "nsTransactionStack.h"
 #include "nscore.h"
+#include "TransactionItem.h"
 
-class nsTransactionStackDeallocator : public nsDequeFunctor {
+using namespace mozilla;
+
+class nsTransactionStackDeallocator final : public nsDequeFunctor
+{
   virtual void operator()(void* aObject) override
   {
-    RefPtr<nsTransactionItem> releaseMe = dont_AddRef(static_cast<nsTransactionItem*>(aObject));
+    RefPtr<TransactionItem> releaseMe =
+      dont_AddRef(static_cast<TransactionItem*>(aObject));
   }
 };
 
@@ -29,20 +34,20 @@ nsTransactionStack::~nsTransactionStack()
 }
 
 void
-nsTransactionStack::Push(nsTransactionItem* aTransactionItem)
+nsTransactionStack::Push(TransactionItem* aTransactionItem)
 {
   if (!aTransactionItem) {
     return;
   }
 
-  RefPtr<nsTransactionItem> item(aTransactionItem);
+  RefPtr<TransactionItem> item(aTransactionItem);
   Push(item.forget());
 }
 
 void
-nsTransactionStack::Push(already_AddRefed<nsTransactionItem> aTransactionItem)
+nsTransactionStack::Push(already_AddRefed<TransactionItem> aTransactionItem)
 {
-  RefPtr<nsTransactionItem> item(aTransactionItem);
+  RefPtr<TransactionItem> item(aTransactionItem);
   if (!item) {
     return;
   }
@@ -50,38 +55,38 @@ nsTransactionStack::Push(already_AddRefed<nsTransactionItem> aTransactionItem)
   nsDeque::Push(item.forget().take());
 }
 
-already_AddRefed<nsTransactionItem>
+already_AddRefed<TransactionItem>
 nsTransactionStack::Pop()
 {
-  RefPtr<nsTransactionItem> item =
-    dont_AddRef(static_cast<nsTransactionItem*>(nsDeque::Pop()));
+  RefPtr<TransactionItem> item =
+    dont_AddRef(static_cast<TransactionItem*>(nsDeque::Pop()));
   return item.forget();
 }
 
-already_AddRefed<nsTransactionItem>
+already_AddRefed<TransactionItem>
 nsTransactionStack::PopBottom()
 {
-  RefPtr<nsTransactionItem> item =
-    dont_AddRef(static_cast<nsTransactionItem*>(nsDeque::PopFront()));
+  RefPtr<TransactionItem> item =
+    dont_AddRef(static_cast<TransactionItem*>(nsDeque::PopFront()));
   return item.forget();
 }
 
-already_AddRefed<nsTransactionItem>
+already_AddRefed<TransactionItem>
 nsTransactionStack::Peek()
 {
-  RefPtr<nsTransactionItem> item =
-    static_cast<nsTransactionItem*>(nsDeque::Peek());
+  RefPtr<TransactionItem> item =
+    static_cast<TransactionItem*>(nsDeque::Peek());
   return item.forget();
 }
 
-already_AddRefed<nsTransactionItem>
+already_AddRefed<TransactionItem>
 nsTransactionStack::GetItem(int32_t aIndex)
 {
   if (aIndex < 0 || aIndex >= static_cast<int32_t>(nsDeque::GetSize())) {
     return nullptr;
   }
-  RefPtr<nsTransactionItem> item =
-    static_cast<nsTransactionItem*>(nsDeque::ObjectAt(aIndex));
+  RefPtr<TransactionItem> item =
+    static_cast<TransactionItem*>(nsDeque::ObjectAt(aIndex));
   return item.forget();
 }
 
@@ -89,7 +94,7 @@ void
 nsTransactionStack::Clear()
 {
   while (GetSize() != 0) {
-    RefPtr<nsTransactionItem> item =
+    RefPtr<TransactionItem> item =
       mType == FOR_UNDO ? Pop() : PopBottom();
   }
 }
@@ -97,12 +102,13 @@ nsTransactionStack::Clear()
 void
 nsTransactionStack::DoTraverse(nsCycleCollectionTraversalCallback &cb)
 {
-  int32_t size = GetSize();
-  for (int32_t i = 0; i < size; ++i) {
-    nsTransactionItem* item = static_cast<nsTransactionItem*>(nsDeque::ObjectAt(i));
+  size_t size = GetSize();
+  for (size_t i = 0; i < size; ++i) {
+    TransactionItem* item = static_cast<TransactionItem*>(nsDeque::ObjectAt(i));
     if (item) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "transaction stack mDeque[i]");
-      cb.NoteNativeChild(item, NS_CYCLE_COLLECTION_PARTICIPANT(nsTransactionItem));
+      cb.NoteNativeChild(item,
+                         NS_CYCLE_COLLECTION_PARTICIPANT(TransactionItem));
     }
   }
 }
