@@ -266,58 +266,6 @@ CutPrefix(const char *aName) {
   return aName;
 }
 
-// static
-nsresult
-nsDOMClassInfo::RegisterClassProtos(int32_t aClassInfoID)
-{
-  nsScriptNameSpaceManager *nameSpaceManager = GetNameSpaceManager();
-  NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
-  bool found_old;
-
-  const nsIID *primary_iid = sClassInfoData[aClassInfoID].mProtoChainInterface;
-
-  if (!primary_iid || primary_iid == &NS_GET_IID(nsISupports)) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIInterfaceInfoManager>
-    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
-  NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
-
-  nsCOMPtr<nsIInterfaceInfo> if_info;
-  bool first = true;
-
-  iim->GetInfoForIID(primary_iid, getter_AddRefs(if_info));
-
-  while (if_info) {
-    const nsIID *iid = nullptr;
-
-    if_info->GetIIDShared(&iid);
-    NS_ENSURE_TRUE(iid, NS_ERROR_UNEXPECTED);
-
-    if (iid->Equals(NS_GET_IID(nsISupports))) {
-      break;
-    }
-
-    const char *name = nullptr;
-    if_info->GetNameShared(&name);
-    NS_ENSURE_TRUE(name, NS_ERROR_UNEXPECTED);
-
-    nameSpaceManager->RegisterClassProto(CutPrefix(name), iid, &found_old);
-
-    if (first) {
-      first = false;
-    } else if (found_old) {
-      break;
-    }
-
-    nsCOMPtr<nsIInterfaceInfo> tmp(if_info);
-    tmp->GetParent(getter_AddRefs(if_info));
-  }
-
-  return NS_OK;
-}
-
 #define _DOM_CLASSINFO_MAP_BEGIN(_class, _ifptr, _has_class_if)               \
   {                                                                           \
     nsDOMClassInfoData &d = sClassInfoData[eDOMClassInfo_##_class##_id];      \
@@ -422,10 +370,6 @@ nsDOMClassInfo::Init()
 
     nsDOMClassInfoData& data = sClassInfoData[i];
     nameSpaceManager->RegisterClassName(data.mClass.name, i, &data.mNameUTF16);
-  }
-
-  for (i = 0; i < eDOMClassInfoIDCount; ++i) {
-    RegisterClassProtos(i);
   }
 
   sIsInitialized = true;

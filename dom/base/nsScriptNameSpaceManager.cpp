@@ -227,30 +227,6 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
 }
 
 nsresult
-nsScriptNameSpaceManager::RegisterClassProto(const char *aClassName,
-                                             const nsIID *aConstructorProtoIID,
-                                             bool *aFoundOld)
-{
-  NS_ENSURE_ARG_POINTER(aConstructorProtoIID);
-
-  *aFoundOld = false;
-
-  nsGlobalNameStruct *s = AddToHash(aClassName);
-  NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
-
-  if (s->mType != nsGlobalNameStruct::eTypeNotInitialized) {
-    *aFoundOld = true;
-
-    return NS_OK;
-  }
-
-  s->mType = nsGlobalNameStruct::eTypeClassProto;
-  s->mIID = *aConstructorProtoIID;
-
-  return NS_OK;
-}
-
-nsresult
 nsScriptNameSpaceManager::OperateCategoryEntryHash(nsICategoryManager* aCategoryManager,
                                                    const char* aCategory,
                                                    nsISupports* aEntry,
