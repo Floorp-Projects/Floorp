@@ -177,7 +177,7 @@
   <string name="dialog_opentab_action_open">გახსნა</string>
   <string name="notification_browsing_session_channel_name">პირადი დათვალიერების რეჟიმი</string>
   <string name="notification_browsing_session_channel_description">შეტყობინებები საშუალებას გაძლევთ, ერთი შეხებით გაასუფთავოთ მონაცემები %1$s-ში. პროგრამის გახსნა, აღარ დაგჭირდებათ.</string>
-  <string name="tabs_tray_action_erase">ისტორიის გაუსფთავება</string>
+  <string name="tabs_tray_action_erase">ისტორიის გასუფთავება</string>
   <string name="download_firefox">ჩამოტვირთეთ Firefox</string>
   <string name="your_rights_content1">%1$s არის უფასო და ღია წყაროს მქონე პროგრამა, შექმნილი Mozilla-სა და სხვა მოხალისეების მიერ.</string>
   <string name="your_rights_content2"><![CDATA["%1$s ვრცელდება "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Mozilla Public License</a>" ლიცენზიით და სხვა ღია წყაროს ლიცენზიებით."]]></string>
