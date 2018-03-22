@@ -20,6 +20,7 @@ namespace jit {
     _(GuardIsObject)                      \
     _(GuardIsNullOrUndefined)             \
     _(GuardIsObjectOrNull)                \
+    _(GuardIsBoolean)                     \
     _(GuardIsString)                      \
     _(GuardIsSymbol)                      \
     _(GuardIsNumber)                      \
