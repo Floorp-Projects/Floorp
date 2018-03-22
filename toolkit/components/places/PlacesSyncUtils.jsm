@@ -857,6 +857,7 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
         let skippedCount = 0;
         let weakCount = 0;
         let updateParams = [];
+        let tombstoneGuidsToRemove = [];
 
         for (let recordId in changeRecords) {
           // Validate change records to catch coding errors.
@@ -884,29 +885,36 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
           }
 
           let guid = BookmarkSyncUtils.recordIdToGuid(recordId);
-          updateParams.push({
-            guid,
-            syncChangeDelta: changeRecord.counter,
-            syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
-          });
+          if (changeRecord.tombstone) {
+            tombstoneGuidsToRemove.push(guid);
+          } else {
+            updateParams.push({
+              guid,
+              syncChangeDelta: changeRecord.counter,
+              syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+            });
+          }
         }
 
         // Reduce the change counter and update the sync status for
         // reconciled and uploaded items. If the bookmark was updated
         // during the sync, its change counter will still be > 0 for the
         // next sync.
-        if (updateParams.length) {
+        if (updateParams.length || tombstoneGuidsToRemove.length) {
           await db.executeTransaction(async function() {
-            await db.executeCached(`
-              UPDATE moz_bookmarks
-              SET syncChangeCounter = MAX(syncChangeCounter - :syncChangeDelta, 0),
-                  syncStatus = :syncStatus
-              WHERE guid = :guid`,
-              updateParams);
-
-            // Unconditionally delete tombstones, in case the GUID exists in
-            // `moz_bookmarks` and `moz_bookmarks_deleted` (bug 1405563).
-            let tombstoneGuidsToRemove = updateParams.map(({ guid }) => guid);
+            if (updateParams.length) {
+              await db.executeCached(`
+                UPDATE moz_bookmarks
+                SET syncChangeCounter = MAX(syncChangeCounter - :syncChangeDelta, 0),
+                    syncStatus = :syncStatus
+                WHERE guid = :guid`,
+                updateParams);
+              // and if there are *both* bookmarks and tombstones for these
+              // items, we nuke the tombstones.
+              // This should be unlikely, but bad if it happens.
+              let dupedGuids = updateParams.map(({ guid }) => guid);
+              await removeUndeletedTombstones(db, dupedGuids);
+            }
             await removeTombstones(db, tombstoneGuidsToRemove);
           });
         }
@@ -2537,6 +2545,22 @@ var removeTombstones = function(db, guids) {
     WHERE guid IN (${guids.map(guid => JSON.stringify(guid)).join(",")})`);
 };
 
+/**
+ * Removes tombstones for successfully synced items where the specified GUID
+ * exists in *both* the bookmarks and tombstones tables.
+ *
+ * @return {Promise}
+ */
+var removeUndeletedTombstones = function(db, guids) {
+  if (!guids.length) {
+    return Promise.resolve();
+  }
+  // sqlite can't join in a DELETE, so we use a subquery.
+  return db.execute(`
+    DELETE FROM moz_bookmarks_deleted
+    WHERE guid IN (${guids.map(guid => JSON.stringify(guid)).join(",")})
+    AND guid IN (SELECT guid from moz_bookmarks)`);
+};
 /**
  * Sends a bookmarks notification through the given observers.
  *
