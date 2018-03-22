@@ -39,7 +39,7 @@ nsInProcessTabChildGlobal::DoSendBlockingMessage(JSContext* aCx,
   if (mChromeMessageManager) {
     SameProcessCpowHolder cpows(JS::RootingContext::get(aCx), aCpows);
     RefPtr<nsFrameMessageManager> mm = mChromeMessageManager;
-    nsCOMPtr<nsIFrameLoader> fl = GetFrameLoader();
+    RefPtr<nsFrameLoader> fl = GetFrameLoader();
     mm->ReceiveMessage(mOwner, fl, aMessage, true, &aData, &cpows, aPrincipal,
                        aRetVal);
   }
@@ -59,7 +59,7 @@ public:
 
   virtual nsresult HandleMessage() override
   {
-    nsCOMPtr<nsIFrameLoader> fl = mTabChild->GetFrameLoader();
+    RefPtr<nsFrameLoader> fl = mTabChild->GetFrameLoader();
     ReceiveMessage(mTabChild->mOwner, fl, mTabChild->mChromeMessageManager);
     return NS_OK;
   }
@@ -189,7 +189,7 @@ nsInProcessTabChildGlobal::WrapGlobalObject(JSContext* aCx,
 }
 
 void
-nsInProcessTabChildGlobal::CacheFrameLoader(nsIFrameLoader* aFrameLoader)
+nsInProcessTabChildGlobal::CacheFrameLoader(nsFrameLoader* aFrameLoader)
 {
   mFrameLoader = aFrameLoader;
 }
@@ -382,11 +382,11 @@ nsInProcessTabChildGlobal::LoadFrameScript(const nsAString& aURL, bool aRunInGlo
   mLoadingScript = tmp;
 }
 
-already_AddRefed<nsIFrameLoader>
+already_AddRefed<nsFrameLoader>
 nsInProcessTabChildGlobal::GetFrameLoader()
 {
   nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(mOwner);
-  nsCOMPtr<nsIFrameLoader> fl = owner ? owner->GetFrameLoader() : nullptr;
+  RefPtr<nsFrameLoader> fl = owner ? owner->GetFrameLoader() : nullptr;
   if (!fl) {
     fl = mFrameLoader;
   }

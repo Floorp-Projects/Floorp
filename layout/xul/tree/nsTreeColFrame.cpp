@@ -170,7 +170,7 @@ nsTreeColFrame::GetTreeBoxObject()
   if (parent) {
     nsIContent* grandParent = parent->GetParent();
     RefPtr<nsXULElement> treeElement =
-      nsXULElement::FromContentOrNull(grandParent);
+      nsXULElement::FromNodeOrNull(grandParent);
     if (treeElement) {
       nsCOMPtr<nsIBoxObject> boxObject =
         treeElement->GetBoxObject(IgnoreErrors());

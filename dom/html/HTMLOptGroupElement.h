@@ -19,7 +19,7 @@ class HTMLOptGroupElement final : public nsGenericHTMLElement
 public:
   explicit HTMLOptGroupElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLOptGroupElement, optgroup)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLOptGroupElement, optgroup)
 
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLOptGroupElement,

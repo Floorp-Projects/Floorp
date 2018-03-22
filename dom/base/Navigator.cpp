@@ -75,8 +75,6 @@
 #include "nsIDOMGlobalPropertyInitializer.h"
 #include "nsJSUtils.h"
 
-#include "nsScriptNameSpaceManager.h"
-
 #include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/Promise.h"
 

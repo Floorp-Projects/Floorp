@@ -139,7 +139,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLMediaElement,
                                            nsGenericHTMLElement)
-  NS_IMPL_FROMCONTENT_HELPER(HTMLMediaElement,
+  NS_IMPL_FROMNODE_HELPER(HTMLMediaElement,
                              IsAnyOfHTMLElements(nsGkAtoms::video,
                                                  nsGkAtoms::audio))
 

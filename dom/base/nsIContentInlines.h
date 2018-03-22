@@ -95,7 +95,7 @@ GetFlattenedTreeParentNode(const nsINode* aNode)
   }
 
   if (parentAsContent->IsInShadowTree()) {
-    if (auto* slot = mozilla::dom::HTMLSlotElement::FromContent(parentAsContent)) {
+    if (auto* slot = mozilla::dom::HTMLSlotElement::FromNode(parentAsContent)) {
       // If the assigned nodes list is empty, we're fallback content which is
       // active, otherwise we are not part of the flat tree.
       return slot->AssignedNodes().IsEmpty()

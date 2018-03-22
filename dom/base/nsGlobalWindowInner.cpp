@@ -17,6 +17,7 @@
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
+#include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/Storage.h"
@@ -51,7 +52,6 @@
 #include "nsIScriptTimeoutHandler.h"
 #include "nsITimeoutHandler.h"
 #include "nsIController.h"
-#include "nsScriptNameSpaceManager.h"
 #include "nsISlowScriptDebug.h"
 #include "nsWindowMemoryReporter.h"
 #include "nsWindowSizes.h"
@@ -69,7 +69,6 @@
 #include "js/Wrapper.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsReadableUtils.h"
-#include "nsDOMClassInfo.h"
 #include "nsJSEnvironment.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"
@@ -239,6 +238,7 @@
 #include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
+#include "mozilla/dom/InstallTriggerBinding.h"
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
@@ -1220,6 +1220,7 @@ nsGlobalWindowInner::CleanUp()
   mPaintWorklet = nullptr;
 
   mExternal = nullptr;
+  mInstallTrigger = nullptr;
 
   mPerformance = nullptr;
 
@@ -1523,6 +1524,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioWorklet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPaintWorklet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExternal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInstallTrigger)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIntlUtils)
 
   tmp->TraverseHostObjectURIs(cb);
@@ -1607,6 +1609,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioWorklet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPaintWorklet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExternal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInstallTrigger)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIntlUtils)
 
   tmp->UnlinkHostObjectURIs();
@@ -2450,6 +2453,24 @@ nsGlobalWindowInner::ShouldReportForServiceWorkerScope(const nsAString& aScope)
   return result;
 }
 
+already_AddRefed<InstallTriggerImpl>
+nsGlobalWindowInner::GetInstallTrigger()
+{
+  if (!mInstallTrigger) {
+    JS::Rooted<JSObject*> jsImplObj(RootingCx());
+    ErrorResult rv;
+    ConstructJSImplementation("@mozilla.org/addons/installtrigger;1", this,
+                              &jsImplObj, rv);
+    if (rv.Failed()) {
+      rv.SuppressException();
+      return nullptr;
+    }
+    mInstallTrigger = new InstallTriggerImpl(jsImplObj, this);
+  }
+
+  return do_AddRef(mInstallTrigger);
+}
+
 nsGlobalWindowInner::CallState
 nsGlobalWindowInner::ShouldReportForServiceWorkerScopeInternal(const nsACString& aScope,
                                                                bool* aResultOut)
@@ -2867,6 +2888,120 @@ nsGlobalWindowInner::IndexedGetter(uint32_t aIndex)
   FORWARD_TO_OUTER(IndexedGetterOuter, (aIndex), nullptr);
 }
 
+namespace {
+
+struct InterfaceShimEntry {
+  const char *geckoName;
+  const char *domName;
+};
+
+} // anonymous namespace
+
+// We add shims from Components.interfaces.nsIDOMFoo to window.Foo for each
+// interface that has interface constants that sites might be getting off
+// of Ci.
+const InterfaceShimEntry kInterfaceShimMap[] =
+{ { "nsIXMLHttpRequest", "XMLHttpRequest" },
+  { "nsIDOMDOMException", "DOMException" },
+  { "nsIDOMNode", "Node" },
+  { "nsIDOMCSSPrimitiveValue", "CSSPrimitiveValue" },
+  { "nsIDOMCSSRule", "CSSRule" },
+  { "nsIDOMCSSValue", "CSSValue" },
+  { "nsIDOMEvent", "Event" },
+  { "nsIDOMNSEvent", "Event" },
+  { "nsIDOMKeyEvent", "KeyEvent" },
+  { "nsIDOMMouseEvent", "MouseEvent" },
+  { "nsIDOMMouseScrollEvent", "MouseScrollEvent" },
+  { "nsIDOMMutationEvent", "MutationEvent" },
+  { "nsIDOMSimpleGestureEvent", "SimpleGestureEvent" },
+  { "nsIDOMUIEvent", "UIEvent" },
+  { "nsIDOMHTMLMediaElement", "HTMLMediaElement" },
+  { "nsIDOMOfflineResourceList", "OfflineResourceList" },
+  { "nsIDOMRange", "Range" },
+  { "nsIDOMSVGLength", "SVGLength" },
+  // Think about whether Ci.nsINodeFilter can just go away for websites!
+  { "nsIDOMNodeFilter", "NodeFilter" },
+  { "nsIDOMXPathResult", "XPathResult" } };
+
+bool
+nsGlobalWindowInner::ResolveComponentsShim(
+  JSContext *aCx,
+  JS::Handle<JSObject*> aGlobal,
+  JS::MutableHandle<JS::PropertyDescriptor> aDesc)
+{
+  // Keep track of how often this happens.
+  Telemetry::Accumulate(Telemetry::COMPONENTS_SHIM_ACCESSED_BY_CONTENT, true);
+
+  // Warn once.
+  nsCOMPtr<nsIDocument> doc = GetExtantDoc();
+  if (doc) {
+    doc->WarnOnceAbout(nsIDocument::eComponents, /* asError = */ true);
+  }
+
+  // Create a fake Components object.
+  AssertSameCompartment(aCx, aGlobal);
+  JS::Rooted<JSObject*> components(aCx, JS_NewPlainObject(aCx));
+  if (NS_WARN_IF(!components)) {
+    return false;
+  }
+
+  // Create a fake interfaces object.
+  JS::Rooted<JSObject*> interfaces(aCx, JS_NewPlainObject(aCx));
+  if (NS_WARN_IF(!interfaces)) {
+    return false;
+  }
+  bool ok =
+    JS_DefineProperty(aCx, components, "interfaces", interfaces,
+                      JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
+  if (NS_WARN_IF(!ok)) {
+    return false;
+  }
+
+  // Define a bunch of shims from the Ci.nsIDOMFoo to window.Foo for DOM
+  // interfaces with constants.
+  for (uint32_t i = 0; i < ArrayLength(kInterfaceShimMap); ++i) {
+
+    // Grab the names from the table.
+    const char *geckoName = kInterfaceShimMap[i].geckoName;
+    const char *domName = kInterfaceShimMap[i].domName;
+
+    // Look up the appopriate interface object on the global.
+    JS::Rooted<JS::Value> v(aCx, JS::UndefinedValue());
+    ok = JS_GetProperty(aCx, aGlobal, domName, &v);
+    if (NS_WARN_IF(!ok)) {
+      return false;
+    }
+    if (!v.isObject()) {
+      NS_WARNING("Unable to find interface object on global");
+      continue;
+    }
+
+    // Define the shim on the interfaces object.
+    ok = JS_DefineProperty(aCx, interfaces, geckoName, v,
+                           JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
+    if (NS_WARN_IF(!ok)) {
+      return false;
+    }
+  }
+
+  FillPropertyDescriptor(aDesc, aGlobal, JS::ObjectValue(*components), false);
+
+  return true;
+}
+
+#ifdef RELEASE_OR_BETA
+#define USE_CONTROLLERS_SHIM
+#endif
+
+#ifdef USE_CONTROLLERS_SHIM
+static const JSClass ControllersShimClass = {
+    "Controllers", 0
+};
+static const JSClass XULControllersShimClass = {
+    "XULControllers", 0
+};
+#endif
+
 bool
 nsGlobalWindowInner::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
                                JS::Handle<jsid> aId,
@@ -2888,10 +3023,43 @@ nsGlobalWindowInner::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
     return true;
   }
 
-  nsresult rv = nsWindowSH::GlobalResolve(this, aCx, aObj, aId, aDesc);
-  if (NS_FAILED(rv)) {
-    return Throw(aCx, rv);
+  // We support a cut-down Components.interfaces in case websites are
+  // using Components.interfaces.nsIFoo.CONSTANT_NAME for the ones
+  // that have constants.
+  if (aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_COMPONENTS)) {
+    return ResolveComponentsShim(aCx, aObj, aDesc);
   }
+
+  // We also support a "window.controllers" thing; apparently some
+  // sites use it for browser-sniffing.  See bug 1010577.
+#ifdef USE_CONTROLLERS_SHIM
+  // Note: We use |aObj| rather than |this| to get the principal here, because
+  // this is called during Window setup when the Document isn't necessarily
+  // hooked up yet.
+  if ((aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_CONTROLLERS) ||
+       aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_CONTROLLERS_CLASS)) &&
+      !xpc::IsXrayWrapper(aObj) &&
+      !nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(aObj)))
+  {
+    if (GetExtantDoc()) {
+      GetExtantDoc()->WarnOnceAbout(nsIDocument::eWindow_Cc_ontrollers);
+    }
+    const JSClass* clazz;
+    if (aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_CONTROLLERS)) {
+      clazz = &XULControllersShimClass;
+    } else {
+      clazz = &ControllersShimClass;
+    }
+    MOZ_ASSERT(JS_IsGlobalObject(aObj));
+    JS::Rooted<JSObject*> shim(cx, JS_NewObject(cx, clazz));
+    if (NS_WARN_IF(!shim)) {
+      return false;
+    }
+    FillPropertyDescriptor(aDesc, aObj, JS::ObjectValue(*shim),
+                           /* readOnly = */ false);
+    return true;
+  }
+#endif
 
   return true;
 }
@@ -2917,20 +3085,7 @@ nsGlobalWindowInner::MayResolve(jsid aId)
     return true;
   }
 
-  if (WebIDLGlobalNameHash::MayResolve(aId)) {
-    return true;
-  }
-
-  nsScriptNameSpaceManager *nameSpaceManager = PeekNameSpaceManager();
-  if (!nameSpaceManager) {
-    // Really shouldn't happen.  Fail safe.
-    return true;
-  }
-
-  nsAutoString name;
-  AssignJSFlatString(name, JSID_TO_FLAT_STRING(aId));
-
-  return nameSpaceManager->LookupName(name);
+  return WebIDLGlobalNameHash::MayResolve(aId);
 }
 
 void
@@ -2942,10 +3097,8 @@ nsGlobalWindowInner::GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aName
     // two codepaths.  The ones coming from the WebIDLGlobalNameHash will end up
     // in the DefineConstructor function in BindingUtils, which always defines
     // things as non-enumerable.  The ones coming from the script namespace
-    // manager get defined by nsDOMClassInfo::PostCreatePrototype calling
-    // ResolvePrototype and using the resulting descriptot to define the
-    // property.  ResolvePrototype always passes 0 to the FillPropertyDescriptor
-    // for the property attributes, so all those are non-enumerable as well.
+    // manager get defined by our resolve hook using FillPropertyDescriptor with
+    // 0 for the property attributes, so non-enumerable as well.
     //
     // So in the aEnumerableOnly case we have nothing to do.
     return;
@@ -2954,43 +3107,24 @@ nsGlobalWindowInner::GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aName
   // "Components" is marked as enumerable but only resolved on demand :-/.
   //aNames.AppendElement(NS_LITERAL_STRING("Components"));
 
-  nsScriptNameSpaceManager* nameSpaceManager = GetNameSpaceManager();
-  if (nameSpaceManager) {
-    JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
+  JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
 
-    // There are actually two ways we can get called here: For normal
-    // enumeration or for Xray enumeration.  In the latter case, we want to
-    // return all possible WebIDL names, because we don't really support
-    // deleting these names off our Xray; trying to resolve them will just make
-    // them come back.  In the former case, we want to avoid returning deleted
-    // names.  But the JS engine already knows about the non-deleted
-    // already-resolved names, so we can just return the so-far-unresolved ones.
-    //
-    // We can tell which case we're in by whether aCx is in our wrapper's
-    // compartment.  If not, we're in the Xray case.
-    WebIDLGlobalNameHash::NameType nameType =
-      js::IsObjectInContextCompartment(wrapper, aCx) ?
-        WebIDLGlobalNameHash::UnresolvedNamesOnly :
-        WebIDLGlobalNameHash::AllNames;
-    if (!WebIDLGlobalNameHash::GetNames(aCx, wrapper, nameType, aNames)) {
-      aRv.NoteJSContextException(aCx);
-    }
-
-    for (auto i = nameSpaceManager->GlobalNameIter(); !i.Done(); i.Next()) {
-      const GlobalNameMapEntry* entry = i.Get();
-      if (nsWindowSH::NameStructEnabled(aCx, this, entry->mKey,
-                                        entry->mGlobalName)) {
-        // Just append all of these; even if they get deleted our resolve hook
-        // just goes ahead and recreates them.
-        JSString* str = JS_AtomizeUCStringN(aCx,
-                                            entry->mKey.BeginReading(),
-                                            entry->mKey.Length());
-        if (!str || !aNames.append(NON_INTEGER_ATOM_TO_JSID(str))) {
-          aRv.NoteJSContextException(aCx);
-          return;
-        }
-      }
-    }
+  // There are actually two ways we can get called here: For normal
+  // enumeration or for Xray enumeration.  In the latter case, we want to
+  // return all possible WebIDL names, because we don't really support
+  // deleting these names off our Xray; trying to resolve them will just make
+  // them come back.  In the former case, we want to avoid returning deleted
+  // names.  But the JS engine already knows about the non-deleted
+  // already-resolved names, so we can just return the so-far-unresolved ones.
+  //
+  // We can tell which case we're in by whether aCx is in our wrapper's
+  // compartment.  If not, we're in the Xray case.
+  WebIDLGlobalNameHash::NameType nameType =
+    js::IsObjectInContextCompartment(wrapper, aCx) ?
+      WebIDLGlobalNameHash::UnresolvedNamesOnly :
+      WebIDLGlobalNameHash::AllNames;
+  if (!WebIDLGlobalNameHash::GetNames(aCx, wrapper, nameType, aNames)) {
+    aRv.NoteJSContextException(aCx);
   }
 }
 
@@ -7707,8 +7841,7 @@ nsGlobalWindowInner::GetExternal(ErrorResult& aRv)
 {
 #ifdef HAVE_SIDEBAR
   if (!mExternal) {
-    AutoJSContext cx;
-    JS::Rooted<JSObject*> jsImplObj(cx);
+    JS::Rooted<JSObject*> jsImplObj(RootingCx());
     ConstructJSImplementation("@mozilla.org/sidebar;1", this, &jsImplObj, aRv);
     if (aRv.Failed()) {
       return nullptr;

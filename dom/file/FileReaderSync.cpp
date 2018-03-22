@@ -15,7 +15,6 @@
 #include "nsCExternalHandlerService.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
-#include "nsDOMClassInfoID.h"
 #include "nsError.h"
 #include "nsIConverterInputStream.h"
 #include "nsIInputStream.h"

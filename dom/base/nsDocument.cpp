@@ -4710,7 +4710,7 @@ static void
 CheckIfContainsEMEContent(nsISupports* aSupports, void* aContainsEME)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
-  if (auto mediaElem = HTMLMediaElement::FromContentOrNull(content)) {
+  if (auto mediaElem = HTMLMediaElement::FromNodeOrNull(content)) {
     bool* contains = static_cast<bool*>(aContainsEME);
     if (mediaElem->GetMediaKeys()) {
       *contains = true;
@@ -4731,7 +4731,7 @@ static void
 CheckIfContainsMSEContent(nsISupports* aSupports, void* aContainsMSE)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
-  if (auto mediaElem = HTMLMediaElement::FromContentOrNull(content)) {
+  if (auto mediaElem = HTMLMediaElement::FromNodeOrNull(content)) {
     bool* contains = static_cast<bool*>(aContainsMSE);
     RefPtr<MediaSource> ms = mediaElem->GetMozMediaSourceObject();
     if (ms) {
@@ -4753,7 +4753,7 @@ static void
 NotifyActivityChanged(nsISupports *aSupports, void *aUnused)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
-  if (auto mediaElem = HTMLMediaElement::FromContentOrNull(content)) {
+  if (auto mediaElem = HTMLMediaElement::FromNodeOrNull(content)) {
     mediaElem->NotifyOwnerDocumentActivityChanged();
   }
   nsCOMPtr<nsIObjectLoadingContent> objectLoadingContent(do_QueryInterface(aSupports));
@@ -8051,7 +8051,7 @@ nsIDocument::Sanitize()
   for (uint32_t i = 0; i < length; ++i) {
     NS_ASSERTION(nodes->Item(i), "null item in node list!");
 
-    RefPtr<HTMLInputElement> input = HTMLInputElement::FromContentOrNull(nodes->Item(i));
+    RefPtr<HTMLInputElement> input = HTMLInputElement::FromNodeOrNull(nodes->Item(i));
     if (!input)
       continue;
 
@@ -8078,7 +8078,7 @@ nsIDocument::Sanitize()
   for (uint32_t i = 0; i < length; ++i) {
     NS_ASSERTION(nodes->Item(i), "null item in nodelist");
 
-    HTMLFormElement* form = HTMLFormElement::FromContent(nodes->Item(i));
+    HTMLFormElement* form = HTMLFormElement::FromNode(nodes->Item(i));
     if (!form)
       continue;
 
@@ -10068,7 +10068,7 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
   if (nodeIsAnonymous) {
     node = ptFrame->GetContent();
     nsIContent* nonanon = node->FindFirstNonChromeOnlyAccessContent();
-    HTMLTextAreaElement* textArea = HTMLTextAreaElement::FromContent(nonanon);
+    HTMLTextAreaElement* textArea = HTMLTextAreaElement::FromNode(nonanon);
     nsITextControlFrame* textFrame = do_QueryFrame(nonanon->GetPrimaryFrame());
     nsNumberControlFrame* numberFrame = do_QueryFrame(nonanon->GetPrimaryFrame());
     if (textFrame || numberFrame) {

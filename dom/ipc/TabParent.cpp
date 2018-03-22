@@ -460,7 +460,7 @@ TabParent::ActorDestroy(ActorDestroyReason why)
     frameLoader->DestroyComplete();
 
     if (why == AbnormalShutdown && os) {
-      os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, frameLoader),
+      os->NotifyObservers(ToSupports(frameLoader),
                           "oop-frameloader-crashed", nullptr);
       nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(frameElement);
       if (owner) {
@@ -2329,14 +2329,6 @@ TabParent::GetFrom(nsFrameLoader* aFrameLoader)
   }
   PBrowserParent* remoteBrowser = aFrameLoader->GetRemoteBrowser();
   return static_cast<TabParent*>(remoteBrowser);
-}
-
-/*static*/ TabParent*
-TabParent::GetFrom(nsIFrameLoader* aFrameLoader)
-{
-  if (!aFrameLoader)
-    return nullptr;
-  return GetFrom(static_cast<nsFrameLoader*>(aFrameLoader));
 }
 
 /*static*/ TabParent*

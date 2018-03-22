@@ -31,7 +31,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLLinkElement,
                                            nsGenericHTMLElement)
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLLinkElement, link);
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLLinkElement, link);
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
   void LinkAdded();

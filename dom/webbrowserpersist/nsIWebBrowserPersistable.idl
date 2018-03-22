@@ -17,7 +17,7 @@ interface nsIWebBrowserPersistDocumentReceiver;
  *
  * Warning: this is currently implemented only by nsFrameLoader, and
  * may change in the future to become more frame-loader-specific or be
- * merged into nsIFrameLoader.  See bug 1101100 comment #34.
+ * merged into nsFrameLoader.  See bug 1101100 comment #34.
  *
  * @see nsIWebBrowserPersistDocumentReceiver
  * @see nsIWebBrowserPersistDocument

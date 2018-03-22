@@ -107,7 +107,7 @@ MakeAnonButton(nsIDocument* aDoc, const char* labelKey,
   // Make sure access key and tab order for the element actually redirect to the
   // file picking button.
   RefPtr<HTMLButtonElement> buttonElement =
-    HTMLButtonElement::FromContentOrNull(button);
+    HTMLButtonElement::FromNodeOrNull(button);
 
   if (!aAccessKey.IsEmpty()) {
     buttonElement->SetAccessKey(aAccessKey, IgnoreErrors());
@@ -126,7 +126,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   nsCOMPtr<nsIDocument> doc = mContent->GetComposedDoc();
 
-  RefPtr<HTMLInputElement> fileContent = HTMLInputElement::FromContentOrNull(mContent);
+  RefPtr<HTMLInputElement> fileContent = HTMLInputElement::FromNodeOrNull(mContent);
 
   // The access key is transferred to the "Choose files..." button only. In
   // effect that access key allows access to the control via that button, then
@@ -153,7 +153,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   // Update the displayed text to reflect the current element's value.
   nsAutoString value;
-  HTMLInputElement::FromContent(mContent)->GetDisplayFileName(value);
+  HTMLInputElement::FromNode(mContent)->GetDisplayFileName(value);
   UpdateDisplayedValue(value, false);
 
   if (!aElements.AppendElement(mTextContent)) {
@@ -254,7 +254,7 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
 
 
   RefPtr<HTMLInputElement> inputElement =
-    HTMLInputElement::FromContent(mFrame->GetContent());
+    HTMLInputElement::FromNode(mFrame->GetContent());
   bool supportsMultiple =
     inputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
   if (!CanDropTheseFiles(dataTransfer, supportsMultiple)) {
@@ -347,7 +347,7 @@ nsFileControlFrame::DnDListener::GetBlobImplForWebkitDirectory(FileList* aFileLi
   *aBlobImpl = nullptr;
 
   HTMLInputElement* inputElement =
-    HTMLInputElement::FromContent(mFrame->GetContent());
+    HTMLInputElement::FromNode(mFrame->GetContent());
   bool webkitDirPicker =
     DOMPrefs::WebkitBlinkDirectoryPickerEnabled() &&
     inputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory);

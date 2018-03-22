@@ -42,7 +42,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   friend class HTMLFormControlsCollection;
 
 public:
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLFormElement, form)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLFormElement, form)
 
   explicit HTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 

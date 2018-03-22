@@ -48,7 +48,6 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
-#include "nsDOMClassInfoID.h"
 
 #include "nsPresContext.h"
 #include "nsIPresShell.h"

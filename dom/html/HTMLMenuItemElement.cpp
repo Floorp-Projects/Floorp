@@ -284,7 +284,7 @@ HTMLMenuItemElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
     uint8_t oldType = NS_MENUITEM_TYPE(aVisitor.mItemFlags);
 
     nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
-    RefPtr<HTMLMenuItemElement> selectedRadio = HTMLMenuItemElement::FromContentOrNull(content);
+    RefPtr<HTMLMenuItemElement> selectedRadio = HTMLMenuItemElement::FromNodeOrNull(content);
     if (selectedRadio) {
       selectedRadio->SetChecked(true);
       if (mType != CMD_TYPE_RADIO) {
@@ -416,7 +416,7 @@ HTMLMenuItemElement::WalkRadioGroup(Visitor* aVisitor)
   for (nsIContent* cur = parent->GetFirstChild();
        cur;
        cur = cur->GetNextSibling()) {
-    HTMLMenuItemElement* menuitem = HTMLMenuItemElement::FromContent(cur);
+    HTMLMenuItemElement* menuitem = HTMLMenuItemElement::FromNode(cur);
 
     if (!menuitem || menuitem->GetType() != CMD_TYPE_RADIO) {
       continue;

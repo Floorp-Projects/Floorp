@@ -448,7 +448,7 @@ ResourceReader::OnWalkDOMNode(nsIDOMNode* aNode)
     }
 
     // Fixup xml-stylesheet processing instructions
-    if (auto nodeAsPI = dom::ProcessingInstruction::FromContent(content)) {
+    if (auto nodeAsPI = dom::ProcessingInstruction::FromNode(content)) {
         nsAutoString target;
         nodeAsPI->GetTarget(target);
         if (target.EqualsLiteral("xml-stylesheet")) {
@@ -510,7 +510,7 @@ ResourceReader::OnWalkDOMNode(nsIDOMNode* aNode)
         return OnWalkAttribute(aNode, "data");
     }
 
-    if (auto nodeAsLink = dom::HTMLLinkElement::FromContent(content)) {
+    if (auto nodeAsLink = dom::HTMLLinkElement::FromNode(content)) {
         // Test if the link has a rel value indicating it to be a stylesheet
         nsAutoString linkRel;
         nodeAsLink->GetRel(linkRel);
@@ -558,7 +558,7 @@ ResourceReader::OnWalkDOMNode(nsIDOMNode* aNode)
         return OnWalkSubframe(aNode);
     }
 
-    auto nodeAsInput = dom::HTMLInputElement::FromContent(content);
+    auto nodeAsInput = dom::HTMLInputElement::FromNode(content);
     if (nodeAsInput) {
         return OnWalkAttribute(aNode, "src");
     }
@@ -879,7 +879,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
 
     // Fixup xml-stylesheet processing instructions
     if (auto nodeAsPI =
-          dom::ProcessingInstruction::FromContent(aNodeIn->AsContent())) {
+          dom::ProcessingInstruction::FromNode(aNodeIn)) {
         nsAutoString target;
         nodeAsPI->GetTarget(target);
         if (target.EqualsLiteral("xml-stylesheet"))
@@ -927,7 +927,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
     }
 
     // Fix up href and file links in the elements
-    RefPtr<dom::HTMLAnchorElement> nodeAsAnchor = dom::HTMLAnchorElement::FromContent(content);
+    RefPtr<dom::HTMLAnchorElement> nodeAsAnchor = dom::HTMLAnchorElement::FromNode(content);
     if (nodeAsAnchor) {
         nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
@@ -936,7 +936,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
         return rv;
     }
 
-    RefPtr<dom::HTMLAreaElement> nodeAsArea = dom::HTMLAreaElement::FromContent(content);
+    RefPtr<dom::HTMLAreaElement> nodeAsArea = dom::HTMLAreaElement::FromNode(content);
     if (nodeAsArea) {
         nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
@@ -1087,7 +1087,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
     }
 
     RefPtr<dom::HTMLInputElement> nodeAsInput =
-        dom::HTMLInputElement::FromContentOrNull(content);
+        dom::HTMLInputElement::FromNodeOrNull(content);
     if (nodeAsInput) {
         nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
@@ -1104,7 +1104,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
             NS_NAMED_LITERAL_STRING(valueAttr, "value");
             // Update element node attributes with user-entered form state
             RefPtr<dom::HTMLInputElement> outElt =
-                dom::HTMLInputElement::FromContent((*aNodeOut)->AsContent());
+                dom::HTMLInputElement::FromNode((*aNodeOut)->AsContent());
             nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(*aNodeOut);
             switch (formControl->ControlType()) {
                 case NS_FORM_INPUT_EMAIL:
@@ -1139,7 +1139,7 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
         return rv;
     }
 
-    dom::HTMLTextAreaElement* nodeAsTextArea = dom::HTMLTextAreaElement::FromContent(content);
+    dom::HTMLTextAreaElement* nodeAsTextArea = dom::HTMLTextAreaElement::FromNode(content);
     if (nodeAsTextArea) {
         nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
@@ -1154,12 +1154,12 @@ PersistNodeFixup::FixupNode(nsINode* aNodeIn,
         return rv;
     }
 
-    dom::HTMLOptionElement* nodeAsOption = dom::HTMLOptionElement::FromContent(content);
+    dom::HTMLOptionElement* nodeAsOption = dom::HTMLOptionElement::FromNode(content);
     if (nodeAsOption) {
         nsresult rv = GetNodeToFixup(aNodeIn, aNodeOut);
         if (NS_SUCCEEDED(rv) && *aNodeOut) {
             dom::HTMLOptionElement* outElt =
-                dom::HTMLOptionElement::FromContent((*aNodeOut)->AsContent());
+                dom::HTMLOptionElement::FromNode((*aNodeOut)->AsContent());
             bool selected = nodeAsOption->Selected();
             outElt->SetDefaultSelected(selected, IgnoreErrors());
         }

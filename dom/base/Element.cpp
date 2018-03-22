@@ -1537,7 +1537,7 @@ Element::GetElementsByMatching(nsElementMatchFunc aFunc,
 static uint32_t
 EditableInclusiveDescendantCount(nsIContent* aContent)
 {
-  auto htmlElem = nsGenericHTMLElement::FromContent(aContent);
+  auto htmlElem = nsGenericHTMLElement::FromNode(aContent);
   if (htmlElem) {
     return htmlElem->EditableInclusiveDescendantCount();
   }
@@ -1577,7 +1577,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
 #ifdef MOZ_XUL
   // First set the binding parent
-  nsXULElement* xulElem = nsXULElement::FromContent(this);
+  nsXULElement* xulElem = nsXULElement::FromNode(this);
   if (xulElem) {
     xulElem->SetXULBindingParent(aBindingParent);
   }
@@ -1979,7 +1979,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   bool clearBindingParent = true;
 
 #ifdef MOZ_XUL
-  if (nsXULElement* xulElem = nsXULElement::FromContent(this)) {;
+  if (nsXULElement* xulElem = nsXULElement::FromNode(this)) {;
     xulElem->SetXULBindingParent(nullptr);
     clearBindingParent = false;
   }

@@ -196,7 +196,7 @@ nsCheckboxRadioFrame::HandleEvent(nsPresContext* aPresContext,
 void
 nsCheckboxRadioFrame::GetCurrentCheckState(bool* aState)
 {
-  HTMLInputElement* inputElement = HTMLInputElement::FromContent(mContent);
+  HTMLInputElement* inputElement = HTMLInputElement::FromNode(mContent);
   if (inputElement) {
     *aState = inputElement->Checked();
   }

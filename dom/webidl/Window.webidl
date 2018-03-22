@@ -348,6 +348,14 @@ partial interface Window {
    */
   [ChromeOnly]
   boolean shouldReportForServiceWorkerScope(USVString aScope);
+
+  /**
+   * InstallTrigger is used for extension installs.  Ideally it would
+   * be something like a WebIDL namespace, but we don't support
+   * JS-implemented static things yet.  See bug 863952.
+   */
+  [Replaceable]
+  readonly attribute InstallTriggerImpl? InstallTrigger;
 };
 
 Window implements TouchEventHandlers;
