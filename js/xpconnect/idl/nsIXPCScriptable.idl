@@ -129,36 +129,3 @@ interface nsIXPCScriptable : nsISupports
     #undef GET_IT
 %}
 };
-
-%{ C++
-
-#include "nsAutoPtr.h"
-
-#define NS_XPCCLASSINFO_IID \
-{ 0x43b67f01, 0xd4ce, 0x4b82, \
- { 0xb3, 0xf8, 0xeb, 0xf2, 0x13, 0x60, 0xfb, 0x7e } }
-
-class NS_NO_VTABLE nsXPCClassInfo : public nsIClassInfo,
-                                    public nsIXPCScriptable
-{
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_XPCCLASSINFO_IID)
-
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() override = 0;
-  NS_IMETHOD_(MozExternalRefCountType) Release() override = 0;
-
-  virtual void PreserveWrapper(nsISupports *aNative) = 0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCClassInfo, NS_XPCCLASSINFO_IID)
-
-inline
-nsresult
-CallQueryInterface(nsISupports* aSourcePtr,
-                   RefPtrGetterAddRefs<nsXPCClassInfo> aDestPtr)
-{
-  return CallQueryInterface(aSourcePtr,
-                            static_cast<nsXPCClassInfo**>(aDestPtr));
-}
-
-%}
