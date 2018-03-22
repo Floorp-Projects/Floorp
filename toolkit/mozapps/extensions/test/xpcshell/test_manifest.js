@@ -11,6 +11,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon1@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       aboutURL: "chrome://test/content/about.xul",
       iconURL: "chrome://test/skin/icon.png",
       icon64URL: "chrome://test/skin/icon64.png",
@@ -66,6 +67,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon2@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       updateURL: "https://www.foo.com",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
@@ -88,6 +90,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon3@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       updateURL: "http://www.foo.com",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
@@ -110,6 +113,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon4@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       updateURL: "http://www.foo.com",
       updateKey: "foo",
       targetApplications: [{
@@ -133,6 +137,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon5@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
@@ -153,6 +158,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon6@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "0",
@@ -173,6 +179,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon7@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "0",
@@ -193,6 +200,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon8@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1.1",
@@ -213,6 +221,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon9@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       targetApplications: [{
         id: "toolkit@mozilla.org",
         minVersion: "1.9.2",
@@ -233,6 +242,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon10@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       targetApplications: [{
         id: "toolkit@mozilla.org",
         minVersion: "1.9.2.1",
@@ -253,6 +263,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon11@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       targetApplications: [{
         id: "toolkit@mozilla.org",
         minVersion: "1.9",
@@ -273,6 +284,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon12@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       targetApplications: [{
         id: "toolkit@mozilla.org",
         minVersion: "1.9",
@@ -293,6 +305,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon13@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       targetApplications: [{
         id: "toolkit@mozilla.org",
         minVersion: "1.9",
@@ -317,6 +330,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon14@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       targetApplications: [{
         id: "toolkit@mozilla.org",
         minVersion: "1.9",
@@ -341,6 +355,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon15@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       updateKey: "foo",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
@@ -363,6 +378,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon16@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       updateKey: "foo",
       updateURL: "https://www.foo.com",
       targetApplications: [{
@@ -386,6 +402,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon17@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       optionsURL: "chrome://test/content/options.xul",
       optionsType: "2",
       targetApplications: [{
@@ -404,6 +421,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon18@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
@@ -427,6 +445,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon19@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       optionsType: "99",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
@@ -443,6 +462,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon20@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       optionsURL: "chrome://test/content/options.xul",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
@@ -467,6 +487,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon21@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       optionsType: "3",
       optionsURL: "chrome://test/content/options.xul",
       targetApplications: [{
@@ -491,6 +512,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon22@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       optionsType: "2",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
@@ -508,6 +530,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon23@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       optionsType: "2",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
@@ -526,6 +549,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon24@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
@@ -545,6 +569,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon25@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       optionsType: "3",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
@@ -564,6 +589,7 @@ const ADDONS = [
     "install.rdf": {
       id: "addon26@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       optionsType: "4",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
@@ -584,6 +610,7 @@ const ADDONS = [
     "install.rdf": {
       id: "tp-addon1@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       name: "Test 1",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
@@ -604,6 +631,7 @@ const ADDONS = [
     "install.rdf": {
       id: "tp-addon2@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       name: "Test 2",
       targetPlatforms: [
         "XPCShell",
@@ -629,6 +657,7 @@ const ADDONS = [
     "install.rdf": {
       id: "tp-addon3@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       name: "Test 3",
       targetPlatforms: [
         "WINNT",
@@ -653,6 +682,7 @@ const ADDONS = [
     "install.rdf": {
       id: "tp-addon4@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       name: "Test 4",
       targetPlatforms: [
         "WINNT_noarch-spidermonkey",
@@ -678,6 +708,7 @@ const ADDONS = [
     "install.rdf": {
       id: "tp-addon5@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       name: "Test 5",
       targetPlatforms: [
         "XPCShell",
