@@ -689,11 +689,10 @@ txEXSLTFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 }
 
 #ifdef TX_TO_STRING
-nsresult
-txEXSLTFunctionCall::getNameAtom(nsAtom **aAtom)
+void
+txEXSLTFunctionCall::appendName(nsAString& aDest)
 {
-    NS_ADDREF(*aAtom = *descriptTable[mType].mName);
-    return NS_OK;
+    aDest.Append((*descriptTable[mType].mName)->GetUTF16String());
 }
 #endif
 
