@@ -174,6 +174,43 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id)
       APPEND_DEVICE(0x0126); /* IntelSandyBridge_6 */
       APPEND_DEVICE(0x010a); /* IntelSandyBridge_7 */
       break;
+    case IntelHDGraphicsToHaswell:
+      APPEND_DEVICE(0x0402); /* IntelHaswell_GT1_1 */
+      APPEND_DEVICE(0x0406); /* IntelHaswell_GT1_2 */
+      APPEND_DEVICE(0x040A); /* IntelHaswell_GT1_3 */
+      APPEND_DEVICE(0x040B); /* IntelHaswell_GT1_4 */
+      APPEND_DEVICE(0x040E); /* IntelHaswell_GT1_5 */
+      APPEND_DEVICE(0x0A02); /* IntelHaswell_GT1_6 */
+      APPEND_DEVICE(0x0A06); /* IntelHaswell_GT1_7 */
+      APPEND_DEVICE(0x0A0A); /* IntelHaswell_GT1_8 */
+      APPEND_DEVICE(0x0A0B); /* IntelHaswell_GT1_9 */
+      APPEND_DEVICE(0x0A0E); /* IntelHaswell_GT1_10 */
+      APPEND_DEVICE(0x0412); /* IntelHaswell_GT2_1 */
+      APPEND_DEVICE(0x0416); /* IntelHaswell_GT2_2 */
+      APPEND_DEVICE(0x041A); /* IntelHaswell_GT2_3 */
+      APPEND_DEVICE(0x041B); /* IntelHaswell_GT2_4 */
+      APPEND_DEVICE(0x041E); /* IntelHaswell_GT2_5 */
+      APPEND_DEVICE(0x0A12); /* IntelHaswell_GT2_6 */
+      APPEND_DEVICE(0x0A16); /* IntelHaswell_GT2_7 */
+      APPEND_DEVICE(0x0A1A); /* IntelHaswell_GT2_8 */
+      APPEND_DEVICE(0x0A1B); /* IntelHaswell_GT2_9 */
+      APPEND_DEVICE(0x0A1E); /* IntelHaswell_GT2_10 */
+      APPEND_DEVICE(0x0422); /* IntelHaswell_GT3_1 */
+      APPEND_DEVICE(0x0426); /* IntelHaswell_GT3_2 */
+      APPEND_DEVICE(0x042A); /* IntelHaswell_GT3_3 */
+      APPEND_DEVICE(0x042B); /* IntelHaswell_GT3_4 */
+      APPEND_DEVICE(0x042E); /* IntelHaswell_GT3_5 */
+      APPEND_DEVICE(0x0A22); /* IntelHaswell_GT3_6 */
+      APPEND_DEVICE(0x0A26); /* IntelHaswell_GT3_7 */
+      APPEND_DEVICE(0x0A2A); /* IntelHaswell_GT3_8 */
+      APPEND_DEVICE(0x0A2B); /* IntelHaswell_GT3_9 */
+      APPEND_DEVICE(0x0A2E); /* IntelHaswell_GT3_10 */
+      APPEND_DEVICE(0x0D22); /* IntelHaswell_GT3e_1 */
+      APPEND_DEVICE(0x0D26); /* IntelHaswell_GT3e_2 */
+      APPEND_DEVICE(0x0D2A); /* IntelHaswell_GT3e_3 */
+      APPEND_DEVICE(0x0D2B); /* IntelHaswell_GT3e_4 */
+      APPEND_DEVICE(0x0D2E); /* IntelHaswell_GT3e_5 */
+      break;
     case IntelHD3000:
       APPEND_DEVICE(0x0126);
       break;
