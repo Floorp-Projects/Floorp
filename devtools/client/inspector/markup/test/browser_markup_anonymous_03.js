@@ -9,13 +9,13 @@
 // of elements should be working.
 const TEST_URL = URL_ROOT + "doc_markup_anonymous.html";
 
-add_task(function* () {
+add_task(async function() {
   Services.prefs.setBoolPref("dom.webcomponents.shadowdom.enabled", true);
 
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+  let {inspector} = await openInspectorForURL(TEST_URL);
 
-  let shadow = yield getNodeFront("#shadow", inspector.markup);
-  let children = yield inspector.walker.children(shadow);
+  let shadow = await getNodeFront("#shadow", inspector.markup);
+  let children = await inspector.walker.children(shadow);
 
   // Bug 1441535.
   todo_is(shadow.numChildren, 3, "Children of the shadow root are counted");
@@ -23,13 +23,13 @@ add_task(function* () {
 
   info("Checking the ::before pseudo element");
   let before = children.nodes[0];
-  yield isEditingMenuDisabled(before, inspector);
+  await isEditingMenuDisabled(before, inspector);
 
   info("Checking the <h3> shadow element");
   let shadowChild1 = children.nodes[1];
-  yield isEditingMenuDisabled(shadowChild1, inspector);
+  await isEditingMenuDisabled(shadowChild1, inspector);
 
   info("Checking the <select> shadow element");
   let shadowChild2 = children.nodes[2];
-  yield isEditingMenuDisabled(shadowChild2, inspector);
+  await isEditingMenuDisabled(shadowChild2, inspector);
 });

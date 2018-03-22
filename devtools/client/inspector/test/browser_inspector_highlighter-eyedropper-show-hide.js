@@ -8,35 +8,35 @@
 const HIGHLIGHTER_TYPE = "EyeDropper";
 const ID = "eye-dropper-";
 
-add_task(function* () {
-  let helper = yield openInspectorForURL("data:text/html;charset=utf-8,eye-dropper test")
+add_task(async function() {
+  let helper = await openInspectorForURL("data:text/html;charset=utf-8,eye-dropper test")
                .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
   helper.prefix = ID;
 
-  yield isInitiallyHidden(helper);
-  yield canBeShownAndHidden(helper);
+  await isInitiallyHidden(helper);
+  await canBeShownAndHidden(helper);
 
   helper.finalize();
 });
 
-function* isInitiallyHidden({isElementHidden}) {
+async function isInitiallyHidden({isElementHidden}) {
   info("Checking that the eyedropper is hidden by default");
 
-  let hidden = yield isElementHidden("root");
+  let hidden = await isElementHidden("root");
   ok(hidden, "The eyedropper is hidden by default");
 }
 
-function* canBeShownAndHidden({show, hide, isElementHidden, getElementAttribute}) {
+async function canBeShownAndHidden({show, hide, isElementHidden, getElementAttribute}) {
   info("Asking to show and hide the highlighter actually works");
 
-  yield show("html");
-  let hidden = yield isElementHidden("root");
+  await show("html");
+  let hidden = await isElementHidden("root");
   ok(!hidden, "The eyedropper is now shown");
 
-  let style = yield getElementAttribute("root", "style");
+  let style = await getElementAttribute("root", "style");
   is(style, "top:100px;left:100px;", "The eyedropper is correctly positioned");
 
-  yield hide();
-  hidden = yield isElementHidden("root");
+  await hide();
+  hidden = await isElementHidden("root");
   ok(hidden, "The eyedropper is now hidden again");
 }

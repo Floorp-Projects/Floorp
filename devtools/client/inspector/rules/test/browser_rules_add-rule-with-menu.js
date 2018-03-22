@@ -8,16 +8,16 @@
 
 const TEST_URI = '<div id="testid">Test Node</div>';
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
 
-  yield selectNode("#testid", inspector);
-  yield addNewRuleFromContextMenu(inspector, view);
-  yield testNewRule(view);
+  await selectNode("#testid", inspector);
+  await addNewRuleFromContextMenu(inspector, view);
+  await testNewRule(view);
 });
 
-function* addNewRuleFromContextMenu(inspector, view) {
+async function addNewRuleFromContextMenu(inspector, view) {
   info("Waiting for context menu to be shown");
 
   let allMenuItems = openStyleContextMenuAndGetAllItems(view, view.element);
@@ -29,10 +29,10 @@ function* addNewRuleFromContextMenu(inspector, view) {
   info("Adding the new rule and expecting a ruleview-changed event");
   let onRuleViewChanged = view.once("ruleview-changed");
   menuitemAddRule.click();
-  yield onRuleViewChanged;
+  await onRuleViewChanged;
 }
 
-function* testNewRule(view) {
+function testNewRule(view) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let editor = ruleEditor.selectorText.ownerDocument.activeElement;
   is(editor.value, "#testid", "Selector editor value is as expected");

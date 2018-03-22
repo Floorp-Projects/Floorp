@@ -24,34 +24,34 @@ const TEST_URI = `
   <span>HELLO WORLD</span>
 `;
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL("data:text/html;charset=utf-8," +
+add_task(async function() {
+  let {inspector} = await openInspectorForURL("data:text/html;charset=utf-8," +
     encodeURIComponent(TEST_URI));
 
   info("Check the display node is shown and the value of #grid.");
-  yield selectNode("#grid", inspector);
-  let gridContainer = yield getContainerForSelector("#grid", inspector);
+  await selectNode("#grid", inspector);
+  let gridContainer = await getContainerForSelector("#grid", inspector);
   let gridDisplayNode = gridContainer.elt.querySelector(".markupview-display");
   is(gridDisplayNode.textContent, "grid", "Got the correct display type for #grid.");
   is(gridDisplayNode.style.display, "inline-block", "#grid display node is shown.");
 
   info("Check the display node is shown and the value of #flex.");
-  yield selectNode("#flex", inspector);
-  let flexContainer = yield getContainerForSelector("#flex", inspector);
+  await selectNode("#flex", inspector);
+  let flexContainer = await getContainerForSelector("#flex", inspector);
   let flexDisplayNode = flexContainer.elt.querySelector(".markupview-display");
   is(flexDisplayNode.textContent, "flex", "Got the correct display type for #flex");
   is(flexDisplayNode.style.display, "inline-block", "#flex display node is shown.");
 
   info("Check the display node is shown and the value of #block.");
-  yield selectNode("#block", inspector);
-  let blockContainer = yield getContainerForSelector("#block", inspector);
+  await selectNode("#block", inspector);
+  let blockContainer = await getContainerForSelector("#block", inspector);
   let blockDisplayNode = blockContainer.elt.querySelector(".markupview-display");
   is(blockDisplayNode.textContent, "block", "Got the correct display type for #block");
   is(blockDisplayNode.style.display, "none", "#block display node is hidden.");
 
   info("Check the display node is shown and the value of span.");
-  yield selectNode("span", inspector);
-  let spanContainer = yield getContainerForSelector("span", inspector);
+  await selectNode("span", inspector);
+  let spanContainer = await getContainerForSelector("span", inspector);
   let spanDisplayNode = spanContainer.elt.querySelector(".markupview-display");
   is(spanDisplayNode.textContent, "inline", "Got the correct display type for #span");
   is(spanDisplayNode.style.display, "none", "span display node is hidden.");

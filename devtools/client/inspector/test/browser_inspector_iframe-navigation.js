@@ -10,11 +10,11 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "<p>bug 699308 - test iframe navigation</p>" +
   "<iframe src='data:text/html;charset=utf-8,hello world'></iframe>";
 
-add_task(function* () {
-  let { toolbox, testActor } = yield openInspectorForURL(TEST_URI);
+add_task(async function() {
+  let { toolbox, testActor } = await openInspectorForURL(TEST_URI);
 
   info("Starting element picker.");
-  yield startPicker(toolbox);
+  await startPicker(toolbox);
 
   info("Waiting for highlighter to activate.");
   let highlighterShowing = toolbox.once("highlighter-ready");
@@ -24,20 +24,20 @@ add_task(function* () {
     x: 1,
     y: 1
   });
-  yield highlighterShowing;
+  await highlighterShowing;
 
-  let isVisible = yield testActor.isHighlighting();
+  let isVisible = await testActor.isHighlighting();
   ok(isVisible, "Inspector is highlighting.");
 
-  yield testActor.reloadFrame("iframe");
+  await testActor.reloadFrame("iframe");
   info("Frame reloaded. Reloading again.");
 
-  yield testActor.reloadFrame("iframe");
+  await testActor.reloadFrame("iframe");
   info("Frame reloaded twice.");
 
-  isVisible = yield testActor.isHighlighting();
+  isVisible = await testActor.isHighlighting();
   ok(isVisible, "Inspector is highlighting after iframe nav.");
 
   info("Stopping element picker.");
-  yield toolbox.highlighterUtils.stopPicker();
+  await toolbox.highlighterUtils.stopPicker();
 });

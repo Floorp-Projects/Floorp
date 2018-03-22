@@ -232,18 +232,18 @@ registerCleanupFunction(() => {
   clipboard = null;
 });
 
-add_task(function* () {
-  let { inspector } = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let { inspector } = await openInspectorForURL(TEST_URL);
   for (let test of TEST_CASES) {
     let { desc, disabled, selector, attributeTrigger } = test;
 
     info(`Test ${desc}`);
     setupClipboard(test.clipboardData, test.clipboardDataType);
 
-    let front = yield getNodeFrontForSelector(selector, inspector);
+    let front = await getNodeFrontForSelector(selector, inspector);
 
     info("Selecting the specified node.");
-    yield selectNode(front, inspector);
+    await selectNode(front, inspector);
 
     info("Simulating context menu click on the selected node container.");
     let nodeFrontContainer = getContainerForNodeFront(front, inspector);
@@ -270,14 +270,14 @@ add_task(function* () {
  * A helper that fetches a front for a node that matches the given selector or
  * doctype node if the selector is falsy.
  */
-function* getNodeFrontForSelector(selector, inspector) {
+async function getNodeFrontForSelector(selector, inspector) {
   if (selector) {
     info("Retrieving front for selector " + selector);
     return getNodeFront(selector, inspector);
   }
 
   info("Retrieving front for doctype node");
-  let {nodes} = yield inspector.walker.children(inspector.walker.rootNode);
+  let {nodes} = await inspector.walker.children(inspector.walker.rootNode);
   return nodes[0];
 }
 

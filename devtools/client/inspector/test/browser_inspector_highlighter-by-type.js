@@ -9,58 +9,58 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,custom highlighters";
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(TEST_URL);
 
-  yield onlyOneInstanceOfMainHighlighter(inspector);
-  yield manyInstancesOfCustomHighlighters(inspector);
-  yield showHideMethodsAreAvailable(inspector);
-  yield unknownHighlighterTypeShouldntBeAccepted(inspector);
+  await onlyOneInstanceOfMainHighlighter(inspector);
+  await manyInstancesOfCustomHighlighters(inspector);
+  await showHideMethodsAreAvailable(inspector);
+  await unknownHighlighterTypeShouldntBeAccepted(inspector);
 });
 
-function* onlyOneInstanceOfMainHighlighter({inspector}) {
+async function onlyOneInstanceOfMainHighlighter({inspector}) {
   info("Check that the inspector always sends back the same main highlighter");
 
-  let h1 = yield inspector.getHighlighter(false);
-  let h2 = yield inspector.getHighlighter(false);
+  let h1 = await inspector.getHighlighter(false);
+  let h2 = await inspector.getHighlighter(false);
   is(h1, h2, "The same highlighter front was returned");
 
   is(h1.typeName, "highlighter", "The right front type was returned");
 }
 
-function* manyInstancesOfCustomHighlighters({inspector}) {
-  let h1 = yield inspector.getHighlighterByType("BoxModelHighlighter");
-  let h2 = yield inspector.getHighlighterByType("BoxModelHighlighter");
+async function manyInstancesOfCustomHighlighters({inspector}) {
+  let h1 = await inspector.getHighlighterByType("BoxModelHighlighter");
+  let h2 = await inspector.getHighlighterByType("BoxModelHighlighter");
   ok(h1 !== h2, "getHighlighterByType returns new instances every time (1)");
 
-  let h3 = yield inspector.getHighlighterByType("CssTransformHighlighter");
-  let h4 = yield inspector.getHighlighterByType("CssTransformHighlighter");
+  let h3 = await inspector.getHighlighterByType("CssTransformHighlighter");
+  let h4 = await inspector.getHighlighterByType("CssTransformHighlighter");
   ok(h3 !== h4, "getHighlighterByType returns new instances every time (2)");
   ok(h3 !== h1 && h3 !== h2,
     "getHighlighterByType returns new instances every time (3)");
   ok(h4 !== h1 && h4 !== h2,
     "getHighlighterByType returns new instances every time (4)");
 
-  yield h1.finalize();
-  yield h2.finalize();
-  yield h3.finalize();
-  yield h4.finalize();
+  await h1.finalize();
+  await h2.finalize();
+  await h3.finalize();
+  await h4.finalize();
 }
 
-function* showHideMethodsAreAvailable({inspector}) {
-  let h1 = yield inspector.getHighlighterByType("BoxModelHighlighter");
-  let h2 = yield inspector.getHighlighterByType("CssTransformHighlighter");
+async function showHideMethodsAreAvailable({inspector}) {
+  let h1 = await inspector.getHighlighterByType("BoxModelHighlighter");
+  let h2 = await inspector.getHighlighterByType("CssTransformHighlighter");
 
   ok("show" in h1, "Show method is present on the front API");
   ok("show" in h2, "Show method is present on the front API");
   ok("hide" in h1, "Hide method is present on the front API");
   ok("hide" in h2, "Hide method is present on the front API");
 
-  yield h1.finalize();
-  yield h2.finalize();
+  await h1.finalize();
+  await h2.finalize();
 }
 
-function* unknownHighlighterTypeShouldntBeAccepted({inspector}) {
-  let h = yield inspector.getHighlighterByType("whatever");
+async function unknownHighlighterTypeShouldntBeAccepted({inspector}) {
+  let h = await inspector.getHighlighterByType("whatever");
   ok(!h, "No highlighter was returned for the invalid type");
 }

@@ -14,40 +14,40 @@ const ID = "rulers-highlighter-";
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
 
-add_task(function* () {
-  let { inspector, testActor } = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let { inspector, testActor } = await openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
 
-  let highlighter = yield front.getHighlighterByType("RulersHighlighter");
+  let highlighter = await front.getHighlighterByType("RulersHighlighter");
 
-  yield isShown(highlighter, inspector, testActor);
-  yield hasRightLabelsContent(highlighter, inspector, testActor);
-  yield resizeInspector(highlighter, inspector, testActor);
-  yield hasRightLabelsContent(highlighter, inspector, testActor);
+  await isShown(highlighter, inspector, testActor);
+  await hasRightLabelsContent(highlighter, inspector, testActor);
+  await resizeInspector(highlighter, inspector, testActor);
+  await hasRightLabelsContent(highlighter, inspector, testActor);
 
-  yield highlighter.finalize();
+  await highlighter.finalize();
 });
 
-function* isShown(highlighterFront, inspector, testActor) {
+async function isShown(highlighterFront, inspector, testActor) {
   info("Checking that the viewport infobar is displayed");
   // the rulers doesn't need any node, but as highligher it seems mandatory
   // ones, so the body is given
-  let body = yield getNodeFront("body", inspector);
-  yield highlighterFront.show(body);
+  let body = await getNodeFront("body", inspector);
+  await highlighterFront.show(body);
 
-  let hidden = yield testActor.getHighlighterNodeAttribute(
+  let hidden = await testActor.getHighlighterNodeAttribute(
     `${ID}viewport-infobar-container`, "hidden", highlighterFront);
 
   isnot(hidden, "true", "viewport infobar is visible after show");
 }
 
-function* hasRightLabelsContent(highlighterFront, inspector, testActor) {
+async function hasRightLabelsContent(highlighterFront, inspector, testActor) {
   info("Checking the rulers dimension tooltip have the proper text");
 
-  let dimensionText = yield testActor.getHighlighterNodeTextContent(
+  let dimensionText = await testActor.getHighlighterNodeTextContent(
     `${ID}viewport-infobar-container`, highlighterFront);
 
-  let windowDimensions = yield testActor.getWindowDimensions();
+  let windowDimensions = await testActor.getWindowDimensions();
   let windowHeight = Math.round(windowDimensions.height);
   let windowWidth = Math.round(windowDimensions.width);
   let windowText = windowHeight + "px \u00D7 " + windowWidth + "px";
@@ -55,8 +55,8 @@ function* hasRightLabelsContent(highlighterFront, inspector, testActor) {
   is(dimensionText, windowText, "Dimension text was created successfully");
 }
 
-function* resizeInspector(highlighterFront, inspector, testActor) {
+async function resizeInspector(highlighterFront, inspector, testActor) {
   info("Docking the toolbox to the side of the browser to change the window size");
   let toolbox = inspector.toolbox;
-  yield toolbox.switchHost(Toolbox.HostType.SIDE);
+  await toolbox.switchHost(Toolbox.HostType.SIDE);
 }

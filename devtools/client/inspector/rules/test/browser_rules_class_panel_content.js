@@ -42,11 +42,11 @@ const TEST_ARRAY = [{
   expectedClasses: ["class1", "class2", "class3"]
 }];
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8,<div>");
-  let {testActor, inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8,<div>");
+  let {testActor, inspector, view} = await openRuleView();
 
-  yield selectNode("div", inspector);
+  await selectNode("div", inspector);
 
   info("Open the class panel");
   view.showClassPanel();
@@ -54,8 +54,8 @@ add_task(function* () {
   for (let {inputClassName, expectedClasses} of TEST_ARRAY) {
     info(`Apply the '${inputClassName}' className to the node`);
     const onMutation = inspector.once("markupmutation");
-    yield testActor.setAttribute("div", "class", inputClassName);
-    yield onMutation;
+    await testActor.setAttribute("div", "class", inputClassName);
+    await onMutation;
 
     info("Check the content of the class panel");
     checkClassPanelContent(view, expectedClasses.map(name => {
