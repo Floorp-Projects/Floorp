@@ -8,7 +8,6 @@ config = {
 #        'update',
     ],
     'stage_platform': 'win64-add-on-devel',
-    'build_type': 'add-on-devel',
     #### 64 bit build specific #####
     'env': {
         'BINSCOPE': 'C:/Program Files (x86)/Microsoft/SDL BinScope/BinScope.exe',

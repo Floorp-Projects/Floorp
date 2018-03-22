@@ -440,6 +440,10 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   background-color: var(--animation-even-background-color);
 }
 
+.animated-property-item.unchanged {
+  opacity: 0.6;
+}
+
 /* Animated Property Name */
 .animated-property-name {
   align-items: center;

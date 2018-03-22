@@ -22,7 +22,6 @@ config = {
     "tools_repo": "https://hg.mozilla.org/build/tools",
     "platform": "android",
     "is_release_or_beta": True,
-    "build_type": "api-16-opt",
     "build_target": "Android_arm-eabi-gcc3",
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",

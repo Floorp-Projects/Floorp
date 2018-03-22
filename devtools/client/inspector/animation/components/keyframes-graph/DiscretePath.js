@@ -12,7 +12,7 @@ const ComputedStylePath = require("./ComputedStylePath");
 class DiscretePath extends ComputedStylePath {
   static get propTypes() {
     return {
-      property: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
     };
   }
 
@@ -27,18 +27,18 @@ class DiscretePath extends ComputedStylePath {
   }
 
   getPropertyName() {
-    return this.props.property;
+    return this.props.name;
   }
 
   getPropertyValue(keyframe) {
     return keyframe.value;
   }
 
-  propToState({ property, getComputedStyle, values }) {
+  propToState({ getComputedStyle, keyframes, name }) {
     const discreteValues = [];
 
-    for (const keyframe of values) {
-      const style = getComputedStyle(property, { [property]: keyframe.value });
+    for (const keyframe of keyframes) {
+      const style = getComputedStyle(name, { [name]: keyframe.value });
 
       if (!discreteValues.includes(style)) {
         discreteValues.push(style);

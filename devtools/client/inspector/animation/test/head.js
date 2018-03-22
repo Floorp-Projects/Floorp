@@ -329,6 +329,24 @@ const sendSpaceKeyEvent = async function(animationInspector, panel) {
 };
 
 /**
+ * Set a node class attribute to the given selector.
+ *
+ * @param {AnimationInspector} animationInspector
+ * @param {String} selector
+ * @param {String} cls
+ *        e.g. ".ball.still"
+ */
+const setClassAttribute = async function(animationInspector, selector, cls) {
+  const options = {
+    attributeName: "class",
+    attributeValue: cls,
+    selector,
+  };
+  await executeInContent("devtools:test:setAttribute", options);
+  await waitForSummaryAndDetail(animationInspector);
+};
+
+/**
  * Set the sidebar width by given parameter.
  *
  * @param {String} width
@@ -341,6 +359,27 @@ const setSidebarWidth = async function(width, inspector) {
   const onUpdated = inspector.toolbox.once("inspector-sidebar-resized");
   inspector.splitBox.setState({ width });
   await onUpdated;
+};
+
+/**
+ * Set a new style property declaration to the node for the given selector.
+ *
+ * @param {AnimationInspector} animationInspector
+ * @param {String} selector
+ * @param {String} propertyName
+ *        e.g. "animationDuration"
+ * @param {String} propertyValue
+ *        e.g. "5.5s"
+ */
+const setStyle = async function(animationInspector,
+                                selector, propertyName, propertyValue) {
+  const options = {
+    propertyName,
+    propertyValue,
+    selector,
+  };
+  await executeInContent("devtools:test:setStyle", options);
+  await waitForSummaryAndDetail(animationInspector);
 };
 
 /**

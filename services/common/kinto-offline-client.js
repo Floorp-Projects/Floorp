@@ -33,7 +33,7 @@ const global = this;
 var EXPORTED_SYMBOLS = ["Kinto"];
 
 /*
- * Version 11.0.0 - 1dbc5fb
+ * Version 11.1.0 - 91f9229
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Kinto = f()}})(function(){var define,module,exports;return (function(){function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s}return e})()({1:[function(require,module,exports){
@@ -62,12 +62,20 @@ var _KintoBase = require("../src/KintoBase");
 
 var _KintoBase2 = _interopRequireDefault(_KintoBase);
 
+var _base = require("../src/adapters/base");
+
+var _base2 = _interopRequireDefault(_base);
+
+var _IDB = require("../src/adapters/IDB");
+
+var _IDB2 = _interopRequireDefault(_IDB);
+
 var _utils = require("../src/utils");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
-Cu.importGlobalProperties(["fetch"]);
+Cu.importGlobalProperties(["fetch", "indexedDB"]);
 const { EventEmitter } = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm", {});
 const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
@@ -75,11 +83,19 @@ const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUU
 const { KintoHttpClient } = ChromeUtils.import("resource://services-common/kinto-http-client.js");
 
 class Kinto extends _KintoBase2.default {
+  static get adapters() {
+    return {
+      BaseAdapter: _base2.default,
+      IDB: _IDB2.default
+    };
+  }
+
   constructor(options = {}) {
     const events = {};
     EventEmitter.decorate(events);
 
     const defaults = {
+      adapter: _IDB2.default,
       events,
       ApiClass: KintoHttpClient
     };
@@ -104,7 +120,7 @@ if (typeof module === "object") {
   module.exports = Kinto;
 }
 
-},{"../src/KintoBase":3,"../src/utils":7}],2:[function(require,module,exports){
+},{"../src/KintoBase":3,"../src/adapters/IDB":4,"../src/adapters/base":5,"../src/utils":7}],2:[function(require,module,exports){
 
 },{}],3:[function(require,module,exports){
 "use strict";
@@ -514,8 +530,8 @@ class IDB extends _base2.default {
    *   transaction.delete(3);
    *   return "foo";
    * })
-   *   .catch(console.error);
-   *   .then(console.log); // => "foo"
+   *   .catch(console.error.bind(console));
+   *   .then(console.log.bind(console)); // => "foo"
    *
    * @override
    * @param  {Function} callback The operation description callback.
@@ -1395,6 +1411,19 @@ class Collection {
   }
 
   /**
+   * Same as {@link Collection#deleteAll}, but wrapped in its own transaction, execulding the parameter.
+   *
+   * @return {Promise}
+   */
+  async deleteAll() {
+    const { data } = await this.list({}, { includeDeleted: false });
+    const recordIds = data.map(record => record.id);
+    return this.execute(transaction => {
+      return transaction.deleteAll(recordIds);
+    }, { preloadIds: recordIds });
+  }
+
+  /**
    * The same as {@link CollectionTransaction#deleteAny}, but wrapped
    * in its own transaction.
    *
@@ -1679,6 +1708,8 @@ class Collection {
       since: options.lastModified ? `${options.lastModified}` : undefined,
       headers: options.headers,
       retry: options.retry,
+      // Fetch every page by default (FIXME: option to limit pages, see #277)
+      pages: Infinity,
       filters
     });
     // last_modified is the ETag header value (string).
@@ -2117,6 +2148,23 @@ class CollectionTransaction {
   }
 
   /**
+   * Soft delete all records from the local database.
+   *
+   * @param  {Array} ids        Array of non-deleted Record Ids.
+   * @return {Object}
+   */
+  deleteAll(ids) {
+    const existingRecords = [];
+    ids.forEach(id => {
+      existingRecords.push(this.adapterTransaction.get(id));
+      this.delete(id);
+    });
+
+    this._queueEvent("deleteAll", { data: existingRecords });
+    return { data: existingRecords, permissions: {} };
+  }
+
+  /**
    * Deletes a record from the local database, if any exists.
    * Otherwise, do nothing.
    *
@@ -2378,7 +2426,7 @@ function deepEqual(a, b) {
   if (Object.keys(a).length !== Object.keys(b).length) {
     return false;
   }
-  for (let k in a) {
+  for (const k in a) {
     if (!deepEqual(a[k], b[k])) {
       return false;
     }

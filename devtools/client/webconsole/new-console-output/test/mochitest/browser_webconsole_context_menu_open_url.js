@@ -55,7 +55,7 @@ add_task(async function() {
   openUrlItem.click();
   await hideContextMenu(hud);
   let newTab = await tabLoaded;
-  let newTabHref = newTab.linkedBrowser._contentWindow.location.href;
+  let newTabHref = newTab.linkedBrowser.currentURI.spec;
   is(newTabHref, TEST_URI, "Tab was opened with the expected URL");
 
   info("Remove the new tab and select the previous tab back");

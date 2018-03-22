@@ -49,14 +49,12 @@
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
-#include "nsIDOMNode.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "FrameLayerBuilder.h"
-#include "nsISelectionController.h"
-#include "nsISelection.h"
+#include "mozilla/dom/Selection.h"
 #include "nsIURIMutator.h"
 
 #include "imgIContainer.h"
@@ -64,7 +62,7 @@
 #include "imgRequestProxy.h"
 
 #include "nsCSSFrameConstructor.h"
-#include "nsIDOMRange.h"
+#include "nsRange.h"
 
 #include "nsError.h"
 #include "nsBidiUtils.h"
@@ -94,9 +92,6 @@ using namespace mozilla::layers;
 #define ICON_SIZE        (16)
 #define ICON_PADDING     (3)
 #define ALT_BORDER_WIDTH (1)
-
-//we must add hooks soon
-#define IMAGE_EDITOR_CHECK 1
 
 // Default alignment value (so we can tell an unset value from a set value)
 #define ALIGN_UNSET uint8_t(-1)
@@ -1897,62 +1892,33 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 bool
 nsImageFrame::ShouldDisplaySelection()
 {
-  // XXX what on EARTH is this code for?
-  nsresult result;
   nsPresContext* presContext = PresContext();
   int16_t displaySelection = presContext->PresShell()->GetSelectionFlags();
   if (!(displaySelection & nsISelectionDisplay::DISPLAY_IMAGES))
     return false;//no need to check the blue border, we cannot be drawn selected
-//insert hook here for image selection drawing
-#if IMAGE_EDITOR_CHECK
-  //check to see if this frame is in an editor context
-  //isEditor check. this needs to be changed to have better way to check
+
+  // If the image is the only selected node, don't draw the selection overlay.
+  // This can happen when selecting an image in contenteditable context.
   if (displaySelection == nsISelectionDisplay::DISPLAY_ALL)
   {
-    nsCOMPtr<nsISelectionController> selCon;
-    result = GetSelectionController(presContext, getter_AddRefs(selCon));
-    if (NS_SUCCEEDED(result) && selCon)
+    const nsFrameSelection* frameSelection = GetConstFrameSelection();
+    if (frameSelection)
     {
-      nsCOMPtr<nsISelection> selection;
-      result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-      if (NS_SUCCEEDED(result) && selection)
+      const Selection* selection = frameSelection->GetSelection(SelectionType::eNormal);
+      if (selection && selection->RangeCount() == 1)
       {
-        int32_t rangeCount;
-        selection->GetRangeCount(&rangeCount);
-        if (rangeCount == 1) //if not one then let code drop to nsFrame::Paint
-        {
-          nsCOMPtr<nsIContent> parentContent = mContent->GetParent();
-          if (parentContent)
-          {
-            int32_t thisOffset = parentContent->ComputeIndexOf(mContent);
-            nsCOMPtr<nsIDOMNode> parentNode = do_QueryInterface(parentContent);
-            nsCOMPtr<nsIDOMNode> rangeNode;
-            uint32_t rangeOffset;
-            nsCOMPtr<nsIDOMRange> range;
-            selection->GetRangeAt(0,getter_AddRefs(range));
-            if (range)
-            {
-              range->GetStartContainer(getter_AddRefs(rangeNode));
-              range->GetStartOffset(&rangeOffset);
-
-              if (parentNode && rangeNode && rangeNode == parentNode &&
-                  static_cast<int32_t>(rangeOffset) == thisOffset) {
-                range->GetEndContainer(getter_AddRefs(rangeNode));
-                range->GetEndOffset(&rangeOffset);
-                // +1 since that would mean this whole content is selected only
-                if (rangeNode == parentNode &&
-                    static_cast<int32_t>(rangeOffset) == thisOffset + 1) {
-                  // Do not allow nsFrame do draw any further selection
-                  return false;
-                }
-              }
-            }
-          }
+        nsINode* parent = mContent->GetParent();
+        int32_t thisOffset = parent->ComputeIndexOf(mContent);
+        nsRange* range = selection->GetRangeAt(0);
+        if (range->GetStartContainer() == parent &&
+            range->GetEndContainer() == parent &&
+            static_cast<int32_t>(range->StartOffset()) == thisOffset &&
+            static_cast<int32_t>(range->EndOffset()) == thisOffset + 1) {
+          return false;
         }
       }
     }
   }
-#endif
   return true;
 }
 
