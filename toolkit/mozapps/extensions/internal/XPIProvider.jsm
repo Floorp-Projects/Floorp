@@ -5001,22 +5001,6 @@ AddonInternal.prototype = {
   },
 
   /**
-   * getDataDirectory tries to execute the callback with two arguments:
-   * 1) the path of the data directory within the profile,
-   * 2) any exception generated from trying to build it.
-   */
-  getDataDirectory(callback) {
-    let parentPath = OS.Path.join(OS.Constants.Path.profileDir, "extension-data");
-    let dirPath = OS.Path.join(parentPath, this.id);
-
-    (async function() {
-      await OS.File.makeDir(parentPath, {ignoreExisting: true});
-      await OS.File.makeDir(dirPath, {ignoreExisting: true});
-    })().then(() => callback(dirPath, null),
-            e => callback(dirPath, e));
-  },
-
-  /**
    * toJSON is called by JSON.stringify in order to create a filtered version
    * of this object to be serialized to a JSON file. A new object is returned
    * with copies of all non-private properties. Functions, getters and setters
@@ -5636,8 +5620,7 @@ function defineAddonWrapperProperty(name, getter) {
  "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
  "softDisabled", "skinnable", "size", "foreignInstall",
  "strictCompatibility", "updateURL", "dependencies",
- "getDataDirectory", "signedState",
- "isCorrectlySigned"].forEach(function(aProp) {
+ "signedState", "isCorrectlySigned"].forEach(function(aProp) {
    defineAddonWrapperProperty(aProp, function() {
      let addon = addonFor(this);
      return (aProp in addon) ? addon[aProp] : undefined;

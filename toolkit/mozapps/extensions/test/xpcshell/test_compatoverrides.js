@@ -196,6 +196,7 @@ var addon1 = {
   id: "addon1@tests.mozilla.org",
   version: "1.0",
   name: "Test addon 1",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -208,6 +209,7 @@ var addon2 = {
   id: "addon2@tests.mozilla.org",
   version: "1.0",
   name: "Test addon 2",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -220,6 +222,7 @@ var addon3 = {
   id: "addon3@tests.mozilla.org",
   version: "1.0",
   name: "Test addon 3",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -232,6 +235,7 @@ var addon4 = {
   id: "addon4@tests.mozilla.org",
   version: "1.0",
   name: "Test addon 4",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "0.1",
@@ -244,6 +248,7 @@ var addon5 = {
   id: "addon5@tests.mozilla.org",
   version: "1.0",
   name: "Test addon 5",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -256,6 +261,7 @@ var addon6 = {
   id: "addon6@tests.mozilla.org",
   version: "1.0",
   name: "Test addon 6",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -268,6 +274,7 @@ var addon7 = {
   id: "addon7@tests.mozilla.org",
   version: "1.0",
   name: "Test addon 7",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -280,6 +287,7 @@ var addon8 = {
   id: "addon8@tests.mozilla.org",
   version: "1.0",
   name: "Test addon 8",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -292,6 +300,7 @@ var addon9 = {
   id: "addon9@tests.mozilla.org",
   version: "1.0",
   name: "Test addon 9",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",

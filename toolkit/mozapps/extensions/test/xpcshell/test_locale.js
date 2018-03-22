@@ -22,7 +22,8 @@ function run_test_1() {
 
     prepare_test({
       "addon1@tests.mozilla.org": [
-        "onInstalling"
+        ["onInstalling", false],
+        ["onInstalled", false],
       ]
     }, [
       "onInstallStarted",

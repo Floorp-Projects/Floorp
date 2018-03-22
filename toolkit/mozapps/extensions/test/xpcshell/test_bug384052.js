@@ -55,6 +55,7 @@ function initTest() {
     id: "test@mozilla.org",
     version: "1.0",
     name: "Test extension",
+    bootstrap: true,
     updateURL: gTestURL,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
