@@ -15,12 +15,13 @@
 #include "MediaConduitInterface.h"
 #include "MediaEngineWrapper.h"
 #include "RunningStat.h"
+#include "RtpPacketQueue.h"
 #include "runnable_utils.h"
 
 // conflicts with #include of scoped_ptr.h
 #undef FF
 // Video Engine Includes
-#include "webrtc/call.h"
+#include "webrtc/call/call.h"
 #include "webrtc/common_types.h"
 #ifdef FF
 #undef FF // Avoid name collision between scoped_ptr.h and nsCRTGlue.h.
@@ -464,7 +465,7 @@ private:
   std::unique_ptr<webrtc::VideoEncoder> CreateEncoder(webrtc::VideoCodecType aType,
                                                       bool enable_simulcast);
 
-  MediaConduitErrorCode DeliverPacket(const void *data, int len);
+  MediaConduitErrorCode DeliverPacket(const void *data, int len) override;
 
   bool RequiresNewSendStream(const VideoCodecConfig& newConfig) const;
 
@@ -609,20 +610,11 @@ private:
   // Accessed only on mStsThread.
   bool mWaitingForInitialSsrc = true;
 
-  // The runnable to set the SSRC is in-flight; queue packets until it's done.
-  // Accessed only on mStsThread.
-  bool mRecvSsrcSetInProgress = false;
-
   // Accessed during configuration/signaling (main),
   // and when receiving packets (sts).
   Atomic<uint32_t> mRecvSSRC; // this can change during a stream!
 
-  struct QueuedPacket {
-    int mLen;
-    uint8_t mData[1];
-  };
-  // Accessed only on mStsThread.
-  nsTArray<UniquePtr<QueuedPacket>> mQueuedPackets;
+  RtpPacketQueue mRtpPacketQueue;
 
   // The lifetime of these codecs are maintained by the VideoConduit instance.
   // They are passed to the webrtc::VideoSendStream or VideoReceiveStream,
