@@ -14,7 +14,7 @@
 
 #include "nsIDocShell.h"
 #include "nsStringFwd.h"
-#include "nsIFrameLoader.h"
+#include "nsIFrameLoaderOwner.h"
 #include "nsPoint.h"
 #include "nsSize.h"
 #include "nsWrapperCache.h"

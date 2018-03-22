@@ -14,7 +14,7 @@
 #include "nsFrameLoader.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMEventListener.h"
-#include "nsIFrameLoader.h"
+#include "nsIFrameLoaderOwner.h"
 #include "nsIMozBrowserFrame.h"
 
 class nsXULElement;
