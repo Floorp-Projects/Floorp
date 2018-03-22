@@ -793,7 +793,7 @@ nsNativeTheme::IsDarkBackground(nsIFrame* aFrame)
       frame = bodyFrame;
     }
   }
-  nsStyleContext* bgSC = nullptr;
+  ComputedStyle* bgSC = nullptr;
   if (!nsCSSRendering::FindBackground(frame, &bgSC) ||
       bgSC->StyleBackground()->IsTransparent(bgSC)) {
     nsIFrame* backgroundFrame = nsCSSRendering::FindNonTransparentBackgroundFrame(frame, true);

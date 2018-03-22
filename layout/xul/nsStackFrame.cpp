@@ -12,7 +12,7 @@
 //
 
 #include "nsStackFrame.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
@@ -23,15 +23,15 @@
 #include "nsDisplayList.h"
 
 nsIFrame*
-NS_NewStackFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewStackFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsStackFrame(aContext);
+  return new (aPresShell) nsStackFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsStackFrame)
 
-nsStackFrame::nsStackFrame(nsStyleContext* aContext):
-  nsBoxFrame(aContext, kClassID)
+nsStackFrame::nsStackFrame(ComputedStyle* aStyle):
+  nsBoxFrame(aStyle, kClassID)
 {
   nsCOMPtr<nsBoxLayout> layout;
   NS_NewStackLayout(layout);

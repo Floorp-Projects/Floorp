@@ -19,10 +19,10 @@ using namespace mozilla;
 class nsSVGAFrame : public nsSVGDisplayContainerFrame
 {
   friend nsIFrame*
-  NS_NewSVGAFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  NS_NewSVGAFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 protected:
-  explicit nsSVGAFrame(nsStyleContext* aContext)
-    : nsSVGDisplayContainerFrame(aContext, kClassID)
+  explicit nsSVGAFrame(ComputedStyle* aStyle)
+    : nsSVGDisplayContainerFrame(aStyle, kClassID)
   {}
 
 public:
@@ -51,9 +51,9 @@ public:
 // Implementation
 
 nsIFrame*
-NS_NewSVGAFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewSVGAFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsSVGAFrame(aContext);
+  return new (aPresShell) nsSVGAFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGAFrame)

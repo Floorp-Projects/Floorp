@@ -18,7 +18,6 @@ class nsDisplayList;
 class nsDisplayListBuilder;
 class nsPresContext;
 struct nsRect;
-class nsStyleContext;
 
 
 #define NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX  0
@@ -26,6 +25,7 @@ class nsStyleContext;
 
 class nsButtonFrameRenderer {
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
+  typedef mozilla::ComputedStyle ComputedStyle;
 
 public:
 
@@ -67,18 +67,16 @@ public:
 
   void GetButtonInnerFocusRect(const nsRect& aRect, nsRect& aResult);
 
-  nsStyleContext* GetStyleContext(int32_t aIndex) const;
-  void SetStyleContext(int32_t aIndex, nsStyleContext* aStyleContext);
+  ComputedStyle* GetComputedStyle(int32_t aIndex) const;
+  void SetComputedStyle(int32_t aIndex, ComputedStyle* aComputedStyle);
   void ReResolveStyles(nsPresContext* aPresContext);
 
   nsIFrame* GetFrame();
 
-protected:
-
 private:
 
   // cached style for optional inner focus outline (used on Windows).
-  RefPtr<nsStyleContext> mInnerFocusStyle;
+  RefPtr<ComputedStyle> mInnerFocusStyle;
 
   nsFrame* mFrame;
 };

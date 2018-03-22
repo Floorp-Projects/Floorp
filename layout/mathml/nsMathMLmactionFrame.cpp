@@ -61,9 +61,9 @@ GetActionType(nsIContent* aContent)
 }
 
 nsIFrame*
-NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsMathMLmactionFrame(aContext);
+  return new (aPresShell) nsMathMLmactionFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmactionFrame)

@@ -714,7 +714,7 @@ public:
   typedef mozilla::CSSIntPoint CSSIntPoint;
   typedef mozilla::ScrollReflowInput ScrollReflowInput;
   friend nsHTMLScrollFrame* NS_NewHTMLScrollFrame(nsIPresShell* aPresShell,
-                                                  nsStyleContext* aContext,
+                                                  ComputedStyle* aStyle,
                                                   bool aIsRoot);
 
   NS_DECL_QUERYFRAME
@@ -1103,11 +1103,11 @@ public:
 #endif
 
 protected:
-  nsHTMLScrollFrame(nsStyleContext* aContext, bool aIsRoot)
-    : nsHTMLScrollFrame(aContext, kClassID, aIsRoot)
+  nsHTMLScrollFrame(ComputedStyle* aStyle, bool aIsRoot)
+    : nsHTMLScrollFrame(aStyle, kClassID, aIsRoot)
   {}
 
-  nsHTMLScrollFrame(nsStyleContext* aContext,
+  nsHTMLScrollFrame(ComputedStyle* aStyle,
                     nsIFrame::ClassID aID,
                     bool aIsRoot);
   void SetSuppressScrollbarUpdate(bool aSuppress) {
@@ -1158,7 +1158,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsXULScrollFrame)
 
   friend nsXULScrollFrame* NS_NewXULScrollFrame(nsIPresShell* aPresShell,
-                                                nsStyleContext* aContext,
+                                                ComputedStyle* aStyle,
                                                 bool aIsRoot,
                                                 bool aClipAllDescendants);
 
@@ -1552,7 +1552,7 @@ public:
 #endif
 
 protected:
-  nsXULScrollFrame(nsStyleContext* aContext, bool aIsRoot,
+  nsXULScrollFrame(ComputedStyle* aStyle, bool aIsRoot,
                    bool aClipAllDescendants);
 
   void ClampAndSetBounds(nsBoxLayoutState& aState,

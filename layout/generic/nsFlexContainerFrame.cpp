@@ -14,7 +14,7 @@
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "mozilla/CSSOrderAwareFrameIterator.h"
 #include "mozilla/Logging.h"
 #include <algorithm>
@@ -165,7 +165,7 @@ static nsIFrame*
 GetFirstNonAnonBoxDescendant(nsIFrame* aFrame)
 {
   while (aFrame) {
-    nsAtom* pseudoTag = aFrame->StyleContext()->GetPseudo();
+    nsAtom* pseudoTag = aFrame->Style()->GetPseudo();
 
     // If aFrame isn't an anonymous container, then it'll do.
     if (!pseudoTag ||                                 // No pseudotag.
@@ -1158,7 +1158,7 @@ nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
     } else {
       // Single-line, or multi-line but the (one) line stretches to fill
       // container. Respect align-self.
-      alignment = aChildRI.mStylePosition->UsedAlignSelf(StyleContext());
+      alignment = aChildRI.mStylePosition->UsedAlignSelf(Style());
       // XXX strip off <overflow-position> bits until we implement it
       // (bug 1311892)
       alignment &= ~NS_STYLE_ALIGN_FLAG_BITS;
@@ -1837,7 +1837,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
     mAlignSelf = ConvertLegacyStyleToAlignItems(containerStyleXUL);
   } else {
     mAlignSelf = aFlexItemReflowInput.mStylePosition->UsedAlignSelf(
-                   containerRS->mFrame->StyleContext());
+                   containerRS->mFrame->Style());
     if (MOZ_LIKELY(mAlignSelf == NS_STYLE_ALIGN_NORMAL)) {
       mAlignSelf = NS_STYLE_ALIGN_STRETCH;
     }
@@ -2243,9 +2243,9 @@ NS_IMPL_FRAMEARENA_HELPERS(nsFlexContainerFrame)
 
 nsContainerFrame*
 NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
-                         nsStyleContext* aContext)
+                         ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsFlexContainerFrame(aContext);
+  return new (aPresShell) nsFlexContainerFrame(aStyle);
 }
 
 //----------------------------------------------------------------------
@@ -2266,7 +2266,7 @@ nsFlexContainerFrame::Init(nsIContent*       aContent,
 {
   nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
-  const nsStyleDisplay* styleDisp = StyleContext()->StyleDisplay();
+  const nsStyleDisplay* styleDisp = Style()->StyleDisplay();
 
   // Figure out if we should set a frame state bit to indicate that this frame
   // represents a legacy -webkit-{inline-}box or -moz-{inline-}box container.
@@ -2278,14 +2278,14 @@ nsFlexContainerFrame::Init(nsIContent*       aContent,
   // flex-flavored display value. So in that case, check the parent frame to
   // find out if we're legacy.
   if (!isLegacyBox && styleDisp->mDisplay == mozilla::StyleDisplay::Block) {
-    nsStyleContext* parentStyleContext = GetParent()->StyleContext();
-    NS_ASSERTION(parentStyleContext &&
-                 (mStyleContext->GetPseudo() == nsCSSAnonBoxes::buttonContent ||
-                  mStyleContext->GetPseudo() == nsCSSAnonBoxes::scrolledContent),
+    ComputedStyle* parentComputedStyle = GetParent()->Style();
+    NS_ASSERTION(parentComputedStyle &&
+                 (mComputedStyle->GetPseudo() == nsCSSAnonBoxes::buttonContent ||
+                  mComputedStyle->GetPseudo() == nsCSSAnonBoxes::scrolledContent),
                  "The only way a nsFlexContainerFrame can have 'display:block' "
                  "should be if it's the inner part of a scrollable or button "
                  "element");
-    isLegacyBox = IsDisplayValueLegacyBox(parentStyleContext->StyleDisplay());
+    isLegacyBox = IsDisplayValueLegacyBox(parentComputedStyle->StyleDisplay());
   }
 
   if (isLegacyBox) {
@@ -3675,7 +3675,7 @@ nsFlexContainerFrame::ShouldUseMozBoxCollapseBehavior(
 
   // Check our parent's display value, if we're an anonymous box (with a
   // potentially-untrustworthy display value):
-  auto pseudoType = StyleContext()->GetPseudo();
+  auto pseudoType = Style()->GetPseudo();
   if (pseudoType == nsCSSAnonBoxes::scrolledContent ||
       pseudoType == nsCSSAnonBoxes::buttonContent) {
     const nsStyleDisplay* disp = GetParent()->StyleDisplay();

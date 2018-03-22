@@ -12,7 +12,6 @@
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsStyleContext.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsDisplayList.h"
@@ -1340,7 +1339,7 @@ GetInterFrameSpacingFor(int32_t         aScriptLevel,
       prevFrameType, childFrameType, &fromFrameType, &carrySpace);
     if (aChildFrame == childFrame) {
       // get thinspace
-      nsStyleContext* parentContext = aParentFrame->StyleContext();
+      ComputedStyle* parentContext = aParentFrame->Style();
       nscoord thinSpace = GetThinSpace(parentContext->StyleFont());
       // we are done
       return space * thinSpace;
@@ -1547,9 +1546,9 @@ nsMathMLContainerFrame::ReportInvalidChildError(nsAtom* aChildTag)
 //==========================
 
 nsContainerFrame*
-NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  auto newFrame = new (aPresShell) nsMathMLmathBlockFrame(aContext);
+  auto newFrame = new (aPresShell) nsMathMLmathBlockFrame(aStyle);
   newFrame->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
   return newFrame;
 }
@@ -1561,9 +1560,9 @@ NS_QUERYFRAME_HEAD(nsMathMLmathBlockFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 nsContainerFrame*
-NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsMathMLmathInlineFrame(aContext);
+  return new (aPresShell) nsMathMLmathInlineFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmathInlineFrame)

@@ -15,7 +15,7 @@
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "gfxContext.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "nsIContent.h"
 #include "nsNameSpaceManager.h"
 #include "nsBoxLayoutState.h"
@@ -61,9 +61,9 @@ bool nsTextBoxFrame::gInsertSeparatorBeforeAccessKey = false;
 bool nsTextBoxFrame::gInsertSeparatorPrefInitialized = false;
 
 nsIFrame*
-NS_NewTextBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewTextBoxFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-    return new (aPresShell) nsTextBoxFrame(aContext);
+    return new (aPresShell) nsTextBoxFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTextBoxFrame)
@@ -99,8 +99,8 @@ nsTextBoxFrame::AttributeChanged(int32_t         aNameSpaceID,
     return NS_OK;
 }
 
-nsTextBoxFrame::nsTextBoxFrame(nsStyleContext* aContext)
-  : nsLeafBoxFrame(aContext, kClassID)
+nsTextBoxFrame::nsTextBoxFrame(ComputedStyle* aStyle)
+  : nsLeafBoxFrame(aStyle, kClassID)
   , mAccessKeyInfo(nullptr)
   , mCropType(CropRight)
   , mAscent(0)
@@ -417,7 +417,7 @@ nsTextBoxFrame::DrawText(gfxContext&         aRenderingContext,
 
     nsIFrame* f = this;
     do {  // find decoration colors
-      nsStyleContext* context = f->StyleContext();
+      ComputedStyle* context = f->Style();
       if (!context->HasTextDecorationLines()) {
         break;
       }
@@ -533,7 +533,7 @@ nsTextBoxFrame::DrawText(gfxContext&         aRenderingContext,
 
     if (mState & NS_FRAME_IS_BIDI) {
       presContext->SetBidiEnabled();
-      nsBidiLevel level = nsBidiPresUtils::BidiLevelFromStyle(StyleContext());
+      nsBidiLevel level = nsBidiPresUtils::BidiLevelFromStyle(Style());
       if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
           // We let the RenderText function calculate the mnemonic's
           // underline position for us.
@@ -956,14 +956,14 @@ nsTextBoxFrame::RecomputeTitle()
 }
 
 void
-nsTextBoxFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+nsTextBoxFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
 {
-  if (!aOldStyleContext) {
+  if (!aOldComputedStyle) {
     // We're just being initialized
     return;
   }
 
-  const nsStyleText* oldTextStyle = aOldStyleContext->PeekStyleText();
+  const nsStyleText* oldTextStyle = aOldComputedStyle->PeekStyleText();
   // We should really have oldTextStyle here, since we asked for our
   // nsStyleText during Init(), but if it's not there for some reason
   // just assume the worst and recompute mTitle.

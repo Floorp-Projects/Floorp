@@ -10,13 +10,13 @@
 #include "nsRubyTextContainerFrame.h"
 #include "nsRubyBaseFrame.h"
 #include "nsRubyTextFrame.h"
+#include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/WritingModes.h"
 #include "nsLayoutUtils.h"
 #include "nsLineLayout.h"
 #include "nsPresContext.h"
-#include "nsStyleContext.h"
 #include "nsStyleStructInlines.h"
 #include "nsTextFrame.h"
 #include "RubyUtils.h"
@@ -37,9 +37,9 @@ NS_IMPL_FRAMEARENA_HELPERS(nsRubyBaseContainerFrame)
 
 nsContainerFrame*
 NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
-                             nsStyleContext* aContext)
+                             ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsRubyBaseContainerFrame(aContext);
+  return new (aPresShell) nsRubyBaseContainerFrame(aStyle);
 }
 
 
@@ -106,7 +106,7 @@ GetIsLineBreakAllowed(nsIFrame* aFrame, bool aIsLineBreakable,
                       bool* aAllowInitialLineBreak, bool* aAllowLineBreak)
 {
   nsIFrame* parent = aFrame->GetParent();
-  bool lineBreakSuppressed = parent->StyleContext()->ShouldSuppressLineBreak();
+  bool lineBreakSuppressed = parent->Style()->ShouldSuppressLineBreak();
   // Allow line break between ruby bases when white-space allows,
   // we are not inside a nested ruby, and there is no span.
   bool allowLineBreak = !lineBreakSuppressed &&

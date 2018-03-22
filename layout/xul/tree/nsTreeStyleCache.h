@@ -12,7 +12,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsRefPtrHashtable.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 
 class nsTreeStyleCache
 {
@@ -34,11 +34,12 @@ public:
     mNextState = 0;
   }
 
-  nsStyleContext* GetStyleContext(nsPresContext* aPresContext,
-                                  nsIContent* aContent,
-                                  nsStyleContext* aContext,
-                                  nsICSSAnonBoxPseudo* aPseudoElement,
-                                  const mozilla::AtomArray& aInputWord);
+  mozilla::ComputedStyle* GetComputedStyle(
+      nsPresContext* aPresContext,
+      nsIContent* aContent,
+      mozilla::ComputedStyle* aStyle,
+      nsICSSAnonBoxPseudo* aPseudoElement,
+      const mozilla::AtomArray& aInputWord);
 
 protected:
   typedef uint32_t DFAState;
@@ -75,8 +76,8 @@ protected:
 
   // The cache of all active style contexts.  This is a hash from
   // a final state in the DFA, Sf, to the resultant style context.
-  typedef nsRefPtrHashtable<nsUint32HashKey, nsStyleContext> StyleContextCache;
-  nsAutoPtr<StyleContextCache> mCache;
+  typedef nsRefPtrHashtable<nsUint32HashKey, mozilla::ComputedStyle> ComputedStyleCache;
+  nsAutoPtr<ComputedStyleCache> mCache;
 
   // An integer counter that is used when we need to make new states in the
   // DFA.

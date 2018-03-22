@@ -17,7 +17,7 @@
  * @return a newly allocated nsRubyBaseContainerFrame (infallible)
  */
 nsContainerFrame* NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
-                                               nsStyleContext* aContext);
+                                               mozilla::ComputedStyle* aStyle);
 
 class nsRubyBaseContainerFrame final : public nsContainerFrame
 {
@@ -63,10 +63,10 @@ public:
 protected:
   friend nsContainerFrame*
     NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
-                                 nsStyleContext* aContext);
+                                 ComputedStyle* aStyle);
 
-  explicit nsRubyBaseContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, kClassID)
+  explicit nsRubyBaseContainerFrame(ComputedStyle* aStyle)
+    : nsContainerFrame(aStyle, kClassID)
   {}
 
   struct RubyReflowInput;

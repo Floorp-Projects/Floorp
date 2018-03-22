@@ -25,7 +25,8 @@ class WebRenderCanvasData;
 class nsPresContext;
 class nsDisplayItem;
 
-nsIFrame* NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame* NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell,
+                                mozilla::ComputedStyle* aStyle);
 
 class nsHTMLCanvasFrame final : public nsContainerFrame
 {
@@ -39,8 +40,8 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsHTMLCanvasFrame)
 
-  explicit nsHTMLCanvasFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, kClassID)
+  explicit nsHTMLCanvasFrame(ComputedStyle* aStyle)
+    : nsContainerFrame(aStyle, kClassID)
     , mBorderPadding(GetWritingMode())
   {}
 

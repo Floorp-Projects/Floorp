@@ -21,13 +21,13 @@ using mozilla::dom::HTMLInputElement;
 //#define FCF_NOISY
 
 nsCheckboxRadioFrame*
-NS_NewCheckboxRadioFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewCheckboxRadioFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsCheckboxRadioFrame(aContext);
+  return new (aPresShell) nsCheckboxRadioFrame(aStyle);
 }
 
-nsCheckboxRadioFrame::nsCheckboxRadioFrame(nsStyleContext* aContext)
-  : nsAtomicContainerFrame(aContext, kClassID)
+nsCheckboxRadioFrame::nsCheckboxRadioFrame(ComputedStyle* aStyle)
+  : nsAtomicContainerFrame(aStyle, kClassID)
 {
 }
 

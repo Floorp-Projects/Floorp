@@ -13,6 +13,7 @@
 
 #include "gfxContext.h"
 
+#include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
@@ -31,7 +32,6 @@
 #include "nsFrameManager.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsStyleContext.h"
 #include "nsHTMLParts.h"
 #include "nsGkAtoms.h"
 #include "nsGenericHTMLElement.h"
@@ -299,16 +299,16 @@ NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BlockEndEdgeOfChildrenProperty, nscoord)
 //----------------------------------------------------------------------
 
 nsBlockFrame*
-NS_NewBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewBlockFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsBlockFrame(aContext);
+  return new (aPresShell) nsBlockFrame(aStyle);
 }
 
 nsBlockFrame*
 NS_NewBlockFormattingContext(nsIPresShell* aPresShell,
-                             nsStyleContext* aStyleContext)
+                             ComputedStyle* aComputedStyle)
 {
-  nsBlockFrame* blockFrame = NS_NewBlockFrame(aPresShell, aStyleContext);
+  nsBlockFrame* blockFrame = NS_NewBlockFrame(aPresShell, aComputedStyle);
   blockFrame->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
   return blockFrame;
 }
@@ -533,7 +533,7 @@ nsBlockFrame::GetCaretBaseline() const
   RefPtr<nsFontMetrics> fm =
     nsLayoutUtils::GetFontMetricsForFrame(this, inflation);
   nscoord lineHeight =
-    ReflowInput::CalcLineHeight(GetContent(), StyleContext(),
+    ReflowInput::CalcLineHeight(GetContent(), Style(),
                                       contentRect.height, inflation);
   const WritingMode wm = GetWritingMode();
   return nsLayoutUtils::GetCenteredFontBaseline(fm, lineHeight,
@@ -879,7 +879,7 @@ nsRect
 nsBlockFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const
 {
   // be conservative
-  if (StyleContext()->HasTextDecorationLines()) {
+  if (Style()->HasTextDecorationLines()) {
     return GetVisualOverflowRect();
   }
   return ComputeSimpleTightBounds(aDrawTarget);
@@ -5595,8 +5595,8 @@ nsBlockFrame::UpdateFirstLetterStyle(ServoRestyleState& aRestyleState)
   nsIFrame* styleParent =
     CorrectStyleParentFrame(inFlowFrame->GetParent(),
                             nsCSSPseudoElements::firstLetter);
-  ServoStyleContext* parentStyle = styleParent->StyleContext()->AsServo();
-  RefPtr<nsStyleContext> firstLetterStyle =
+  ComputedStyle* parentStyle = styleParent->Style()->AsServo();
+  RefPtr<ComputedStyle> firstLetterStyle =
     aRestyleState.StyleSet()
                  .ResolvePseudoElementStyle(mContent->AsElement(),
                                             CSSPseudoElementType::firstLetter,
@@ -5604,7 +5604,7 @@ nsBlockFrame::UpdateFirstLetterStyle(ServoRestyleState& aRestyleState)
                                             nullptr);
   // Note that we don't need to worry about changehints for the continuation
   // styles: those will be handled by the styleParent already.
-  RefPtr<nsStyleContext> continuationStyle =
+  RefPtr<ComputedStyle> continuationStyle =
     aRestyleState.StyleSet().ResolveStyleForFirstLetterContinuation(parentStyle);
   UpdateStyleOfOwnedChildFrame(letterFrame, firstLetterStyle, aRestyleState,
                                Some(continuationStyle.get()));
@@ -5613,10 +5613,10 @@ nsBlockFrame::UpdateFirstLetterStyle(ServoRestyleState& aRestyleState)
   // We don't need to compute a changehint for this, though, since any changes
   // to it are handled by the first-letter anyway.
   nsIFrame* textFrame = letterFrame->PrincipalChildList().FirstChild();
-  RefPtr<nsStyleContext> firstTextStyle =
+  RefPtr<ComputedStyle> firstTextStyle =
     aRestyleState.StyleSet().ResolveStyleForText(textFrame->GetContent(),
                                                  firstLetterStyle->AsServo());
-  textFrame->SetStyleContext(firstTextStyle);
+  textFrame->SetComputedStyle(firstTextStyle);
 
   // We don't need to update style for textFrame's continuations: it's already
   // set up to inherit from parentStyle, which is what we want.
@@ -7005,11 +7005,11 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
     // the anonymous block in {ib} splits do NOT get first-letter frames.
     // Note that NS_BLOCK_HAS_FIRST_LETTER_STYLE gets set on all continuations
     // of the block.
-    nsAtom *pseudo = StyleContext()->GetPseudo();
+    nsAtom *pseudo = Style()->GetPseudo();
     bool haveFirstLetterStyle =
       (!pseudo ||
        (pseudo == nsCSSAnonBoxes::cellContent &&
-        GetParent()->StyleContext()->GetPseudo() == nullptr) ||
+        GetParent()->Style()->GetPseudo() == nullptr) ||
        pseudo == nsCSSAnonBoxes::fieldsetContent ||
        pseudo == nsCSSAnonBoxes::buttonContent ||
        pseudo == nsCSSAnonBoxes::columnContent ||
@@ -7018,7 +7018,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
        pseudo == nsCSSAnonBoxes::mozSVGText) &&
       !IsComboboxControlFrame() &&
       !IsFrameOfType(eMathML) &&
-      RefPtr<nsStyleContext>(GetFirstLetterStyle(PresContext())) != nullptr;
+      RefPtr<ComputedStyle>(GetFirstLetterStyle(PresContext())) != nullptr;
     NS_ASSERTION(haveFirstLetterStyle ==
                  ((mState & NS_BLOCK_HAS_FIRST_LETTER_STYLE) != 0),
                  "NS_BLOCK_HAS_FIRST_LETTER_STYLE state out of sync");
@@ -7071,7 +7071,7 @@ nsBlockFrame::CreateBulletFrameForListItem(bool aCreateBulletList,
     CSSPseudoElementType::mozListBullet :
     CSSPseudoElementType::mozListNumber;
 
-  RefPtr<nsStyleContext> kidSC = ResolveBulletStyle(pseudoType,
+  RefPtr<ComputedStyle> kidSC = ResolveBulletStyle(pseudoType,
                                                     shell->StyleSet());
 
   // Create bullet frame
@@ -7513,8 +7513,8 @@ nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState)
   }
 
   if (nsBulletFrame* bullet = GetBullet()) {
-    CSSPseudoElementType type = bullet->StyleContext()->GetPseudoType();
-    RefPtr<nsStyleContext> newBulletStyle =
+    CSSPseudoElementType type = bullet->Style()->GetPseudoType();
+    RefPtr<ComputedStyle> newBulletStyle =
       ResolveBulletStyle(type, &aRestyleState.StyleSet());
     UpdateStyleOfOwnedChildFrame(bullet, newBulletStyle, aRestyleState);
   }
@@ -7524,8 +7524,8 @@ nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState)
       CorrectStyleParentFrame(firstLineFrame->GetParent(),
                               nsCSSPseudoElements::firstLine);
 
-    ServoStyleContext* parentStyle = styleParent->StyleContext()->AsServo();
-    RefPtr<ServoStyleContext> firstLineStyle =
+    ComputedStyle* parentStyle = styleParent->Style()->AsServo();
+    RefPtr<ComputedStyle> firstLineStyle =
       aRestyleState.StyleSet()
                    .ResolvePseudoElementStyle(mContent->AsElement(),
                                               CSSPseudoElementType::firstLine,
@@ -7534,7 +7534,7 @@ nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState)
 
     // FIXME(bz): Can we make first-line continuations be non-inheriting anon
     // boxes?
-    RefPtr<ServoStyleContext> continuationStyle = aRestyleState.StyleSet().
+    RefPtr<ComputedStyle> continuationStyle = aRestyleState.StyleSet().
       ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozLineFrame,
                                          parentStyle);
 
@@ -7546,19 +7546,19 @@ nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState)
     // them are handled by the first-line anyway.
     ServoRestyleManager* manager = PresContext()->RestyleManager()->AsServo();
     for (nsIFrame* kid : firstLineFrame->PrincipalChildList()) {
-      manager->ReparentStyleContext(kid);
+      manager->ReparentComputedStyle(kid);
     }
   }
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<ComputedStyle>
 nsBlockFrame::ResolveBulletStyle(CSSPseudoElementType aType,
                                  StyleSetHandle aStyleSet)
 {
-  nsStyleContext* parentStyle =
+  ComputedStyle* parentStyle =
     CorrectStyleParentFrame(this,
                             nsCSSPseudoElements::GetPseudoAtom(aType))->
-    StyleContext();
+    Style();
 
   return aStyleSet->ResolvePseudoElementStyle(mContent->AsElement(), aType,
                                               parentStyle, nullptr);
@@ -7753,12 +7753,12 @@ nsBlockFrame::GetDepth() const
   return depth;
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<ComputedStyle>
 nsBlockFrame::GetFirstLetterStyle(nsPresContext* aPresContext)
 {
   return aPresContext->StyleSet()->
     ProbePseudoElementStyle(mContent->AsElement(),
                             CSSPseudoElementType::firstLetter,
-                            mStyleContext);
+                            mComputedStyle);
 }
 #endif
