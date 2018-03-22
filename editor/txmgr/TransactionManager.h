@@ -36,6 +36,9 @@ public:
   already_AddRefed<nsITransaction> PeekUndoStack();
   already_AddRefed<nsITransaction> PeekRedoStack();
 
+  nsresult Undo();
+  nsresult Redo();
+
   size_t NumberOfUndoItems() const
   {
     return mUndoStack.GetSize();

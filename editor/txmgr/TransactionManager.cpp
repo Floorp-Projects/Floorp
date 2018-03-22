@@ -89,9 +89,16 @@ TransactionManager::DoTransaction(nsITransaction* aTransaction)
 NS_IMETHODIMP
 TransactionManager::UndoTransaction()
 {
-  // It is illegal to call UndoTransaction() while the transaction manager is
-  // executing a  transaction's DoTransaction() method! If this happens,
-  // the UndoTransaction() request is ignored, and we return NS_ERROR_FAILURE.
+  return Undo();
+}
+
+nsresult
+TransactionManager::Undo()
+{
+  // It's possible to be called Undo() again while the transaction manager is
+  // executing a transaction's DoTransaction() method.  If this happens,
+  // the Undo() request is ignored, and we return NS_ERROR_FAILURE.  This
+  // may occur if a mutation event listener calls document.execCommand("undo").
   if (!mDoStack.IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
@@ -104,9 +111,9 @@ TransactionManager::UndoTransaction()
     return NS_OK;
   }
 
-  nsCOMPtr<nsITransaction> t = transactionItem->GetTransaction();
+  nsCOMPtr<nsITransaction> transaction = transactionItem->GetTransaction();
   bool doInterrupt = false;
-  nsresult rv = WillUndoNotify(t, &doInterrupt);
+  nsresult rv = WillUndoNotify(transaction, &doInterrupt);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -120,7 +127,7 @@ TransactionManager::UndoTransaction()
     mRedoStack.Push(transactionItem.forget());
   }
 
-  nsresult rv2 = DidUndoNotify(t, rv);
+  nsresult rv2 = DidUndoNotify(transaction, rv);
   if (NS_SUCCEEDED(rv)) {
     rv = rv2;
   }
@@ -133,9 +140,16 @@ TransactionManager::UndoTransaction()
 NS_IMETHODIMP
 TransactionManager::RedoTransaction()
 {
-  // It is illegal to call RedoTransaction() while the transaction manager is
-  // executing a  transaction's DoTransaction() method! If this happens,
-  // the RedoTransaction() request is ignored, and we return NS_ERROR_FAILURE.
+  return Redo();
+}
+
+nsresult
+TransactionManager::Redo()
+{
+  // It's possible to be called Redo() again while the transaction manager is
+  // executing a transaction's DoTransaction() method.  If this happens,
+  // the Redo() request is ignored, and we return NS_ERROR_FAILURE.  This
+  // may occur if a mutation event listener calls document.execCommand("redo").
   if (!mDoStack.IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
