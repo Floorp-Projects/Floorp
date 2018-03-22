@@ -5624,7 +5624,7 @@ nsFrame::ComputeSize(gfxContext*         aRenderingContext,
   // This bool only gets set (and used) if isFlexItem is true.
   // It indicates (for flex items) whether we're using their flex-basis for the
   // item's own ISize property vs. for its BSize property.
-  bool usingFlexBasisForISize;
+  bool usingFlexBasisForISize = false;
   if (isFlexItem) {
     // Flex items use their "flex-basis" property in place of their main-size
     // property (e.g. "width") for sizing purposes, *unless* they have
@@ -5870,7 +5870,7 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(gfxContext*          aRenderingConte
   // This bool only gets set (and used) if isFlexItem is true.
   // It indicates (for flex items) whether we're using their flex-basis for the
   // item's own ISize property vs. for its BSize property.
-  bool usingFlexBasisForISize;
+  bool usingFlexBasisForISize = false;
   Maybe<nsStyleCoord> imposedMainSizeStyleCoord;
 
   // If this is a flex item, and we're measuring its cross size after flexing

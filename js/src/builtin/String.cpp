@@ -1059,14 +1059,24 @@ js::intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp)
     static_assert(JSString::MAX_LENGTH < INT32_MAX / 3,
                   "Case conversion doesn't overflow int32_t indices");
 
-    JSString* str =
-        intl::CallICU(cx, [&input, locale](UChar* chars, int32_t size, UErrorCode* status) {
-            return u_strToLower(chars, size, input.begin().get(), input.length(), locale, status);
-        });
-    if (!str)
+    static const size_t INLINE_CAPACITY = js::intl::INITIAL_CHAR_BUFFER_SIZE;
+
+    Vector<char16_t, INLINE_CAPACITY> chars(cx);
+    if (!chars.resize(Max(INLINE_CAPACITY, input.length())))
         return false;
 
-    args.rval().setString(str);
+    int32_t size =
+        intl::CallICU(cx, [&input, locale](UChar* chars, int32_t size, UErrorCode* status) {
+            return u_strToLower(chars, size, input.begin().get(), input.length(), locale, status);
+        }, chars);
+    if (size < 0)
+        return false;
+
+    JSString* result = NewStringCopyN<CanGC>(cx, chars.begin(), size);
+    if (!result)
+        return false;
+
+    args.rval().setString(result);
     return true;
 }
 
@@ -1447,14 +1457,24 @@ js::intl_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp)
     static_assert(JSString::MAX_LENGTH < INT32_MAX / 3,
                   "Case conversion doesn't overflow int32_t indices");
 
-    JSString* str =
-        intl::CallICU(cx, [&input, locale](UChar* chars, int32_t size, UErrorCode* status) {
-            return u_strToUpper(chars, size, input.begin().get(), input.length(), locale, status);
-        });
-    if (!str)
+    static const size_t INLINE_CAPACITY = js::intl::INITIAL_CHAR_BUFFER_SIZE;
+
+    Vector<char16_t, INLINE_CAPACITY> chars(cx);
+    if (!chars.resize(Max(INLINE_CAPACITY, input.length())))
         return false;
 
-    args.rval().setString(str);
+    int32_t size =
+        intl::CallICU(cx, [&input, locale](UChar* chars, int32_t size, UErrorCode* status) {
+            return u_strToUpper(chars, size, input.begin().get(), input.length(), locale, status);
+        }, chars);
+    if (size < 0)
+        return false;
+
+    JSString* result = NewStringCopyN<CanGC>(cx, chars.begin(), size);
+    if (!result)
+        return false;
+
+    args.rval().setString(result);
     return true;
 }
 
@@ -1631,7 +1651,7 @@ js::str_normalize(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    static const size_t INLINE_CAPACITY = 32;
+    static const size_t INLINE_CAPACITY = js::intl::INITIAL_CHAR_BUFFER_SIZE;
 
     Vector<char16_t, INLINE_CAPACITY> chars(cx);
     if (!chars.resize(Max(INLINE_CAPACITY, srcChars.length())))
