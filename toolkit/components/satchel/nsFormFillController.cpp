@@ -310,7 +310,7 @@ nsFormFillController::MarkAsLoginManagerField(nsIDOMHTMLInputElement *aInput)
     nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
     if (focusedContent == node) {
       if (!mFocusedInput) {
-        MaybeStartControllingInput(HTMLInputElement::FromContent(node));
+        MaybeStartControllingInput(HTMLInputElement::FromNode(node));
       }
     }
   }
@@ -349,7 +349,7 @@ nsFormFillController::MarkAsAutofillField(nsIDOMHTMLInputElement *aInput)
   if (fm) {
     nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
     if (focusedContent == node) {
-      MaybeStartControllingInput(HTMLInputElement::FromContent(node));
+      MaybeStartControllingInput(HTMLInputElement::FromNode(node));
     }
   }
 
@@ -1032,7 +1032,7 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIContent> input = do_QueryInterface(
     aEvent->InternalDOMEvent()->GetTarget());
-  MaybeStartControllingInput(HTMLInputElement::FromContentOrNull(input));
+  MaybeStartControllingInput(HTMLInputElement::FromNodeOrNull(input));
 
   // Bail if we didn't start controlling the input.
   if (!mFocusedInput) {

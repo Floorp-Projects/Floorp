@@ -341,7 +341,7 @@ var AccessFu = {
       case "inprocess-browser-shown":
       {
         // Ignore notifications that aren't from a Browser
-        let frameLoader = aSubject.QueryInterface(Ci.nsIFrameLoader);
+        let frameLoader = aSubject;
         if (!frameLoader.ownerIsMozBrowserFrame) {
           return;
         }

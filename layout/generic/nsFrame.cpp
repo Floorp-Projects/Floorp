@@ -6553,7 +6553,7 @@ nsIFrame::IsContentDisabled() const
     return true;
   }
 
-  auto* element = nsGenericHTMLElement::FromContentOrNull(GetContent());
+  auto* element = nsGenericHTMLElement::FromNodeOrNull(GetContent());
   return element && element->IsDisabled();
 }
 

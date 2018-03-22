@@ -9,7 +9,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "nsPresContext.h"
-#include "nsDOMClassInfoID.h"
 #include "nsError.h"
 #include "nsIDOMEvent.h"
 #include "nsQueryContentEventResult.h"
@@ -1480,8 +1479,8 @@ nsDOMWindowUtils::CompareCanvases(nsISupports *aCanvas1,
 
   nsCOMPtr<nsIContent> contentCanvas1 = do_QueryInterface(aCanvas1);
   nsCOMPtr<nsIContent> contentCanvas2 = do_QueryInterface(aCanvas2);
-  auto canvas1 = HTMLCanvasElement::FromContentOrNull(contentCanvas1);
-  auto canvas2 = HTMLCanvasElement::FromContentOrNull(contentCanvas2);
+  auto canvas1 = HTMLCanvasElement::FromNodeOrNull(contentCanvas1);
+  auto canvas2 = HTMLCanvasElement::FromNodeOrNull(contentCanvas2);
 
   if (!canvas1 || !canvas2) {
     return NS_ERROR_FAILURE;
@@ -4167,7 +4166,7 @@ nsDOMWindowUtils::ForceUseCounterFlush(nsIDOMNode *aNode)
   }
 
   if (nsCOMPtr<nsIContent> content = do_QueryInterface(aNode)) {
-    if (HTMLImageElement* img = HTMLImageElement::FromContent(content)) {
+    if (HTMLImageElement* img = HTMLImageElement::FromNode(content)) {
       img->FlushUseCounters();
       return NS_OK;
     }

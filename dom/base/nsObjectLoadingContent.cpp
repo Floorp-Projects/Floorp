@@ -582,8 +582,9 @@ nsObjectLoadingContent::SetupDocShell(nsIURI* aRecursionCheckURI)
   if (aRecursionCheckURI) {
     nsresult rv = mFrameLoader->CheckForRecursiveLoad(aRecursionCheckURI);
     if (NS_SUCCEEDED(rv)) {
-      rv = mFrameLoader->GetDocShell(getter_AddRefs(docShell));
-      if (NS_FAILED(rv)) {
+      IgnoredErrorResult result;
+      docShell = mFrameLoader->GetDocShell(result);
+      if (result.Failed()) {
         NS_NOTREACHED("Could not get DocShell from mFrameLoader?");
       }
     } else {
@@ -889,7 +890,7 @@ nsObjectLoadingContent::GetNestedParams(nsTArray<MozPluginParameter>& aParams)
     nsCOMPtr<nsIContent> parent = element->GetParent();
     RefPtr<HTMLObjectElement> objectElement;
     while (!objectElement && parent) {
-      objectElement = HTMLObjectElement::FromContent(parent);
+      objectElement = HTMLObjectElement::FromNode(parent);
       parent = parent->GetParent();
     }
 
@@ -1122,13 +1123,6 @@ nsObjectLoadingContent::OnDataAvailable(nsIRequest *aRequest,
 }
 
 // nsIFrameLoaderOwner
-NS_IMETHODIMP
-nsObjectLoadingContent::GetFrameLoaderXPCOM(nsIFrameLoader** aFrameLoader)
-{
-  NS_IF_ADDREF(*aFrameLoader = mFrameLoader);
-  return NS_OK;
-}
-
 NS_IMETHODIMP_(already_AddRefed<nsFrameLoader>)
 nsObjectLoadingContent::GetFrameLoader()
 {
@@ -1143,7 +1137,7 @@ nsObjectLoadingContent::PresetOpenerWindow(mozIDOMWindowProxy* aWindow, mozilla:
 }
 
 void
-nsObjectLoadingContent::InternalSetFrameLoader(nsIFrameLoader* aNewFrameLoader)
+nsObjectLoadingContent::InternalSetFrameLoader(nsFrameLoader* aNewFrameLoader)
 {
   MOZ_CRASH("You shouldn't be calling this function, it doesn't make any sense on this type.");
 }
@@ -2578,8 +2572,7 @@ void
 nsObjectLoadingContent::Traverse(nsObjectLoadingContent *tmp,
                                  nsCycleCollectionTraversalCallback &cb)
 {
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mFrameLoader");
-  cb.NoteXPCOMChild(static_cast<nsIFrameLoader*>(tmp->mFrameLoader));
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameLoader);
 }
 
 void
@@ -2969,10 +2962,10 @@ nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
         aType = eFallbackAlternate;
       }
       if (thisIsObject) {
-        if (auto embed = HTMLEmbedElement::FromContent(child)) {
+        if (auto embed = HTMLEmbedElement::FromNode(child)) {
           embed->StartObjectLoad(true, true);
           skipChildDescendants = true;
-        } else if (auto object = HTMLObjectElement::FromContent(child)) {
+        } else if (auto object = HTMLObjectElement::FromNode(child)) {
           object->StartObjectLoad(true, true);
           skipChildDescendants = true;
         }
@@ -3802,7 +3795,7 @@ nsObjectLoadingContent::BlockEmbedOrObjectContentLoading()
     // If we have an ancestor that is an object with a source, it'll have an
     // associated displayed type. If that type is not null, don't load content
     // for the embed.
-    if (HTMLObjectElement* object = HTMLObjectElement::FromContent(parent)) {
+    if (HTMLObjectElement* object = HTMLObjectElement::FromNode(parent)) {
       uint32_t type = object->DisplayedType();
       if (type != eType_Null) {
         return true;

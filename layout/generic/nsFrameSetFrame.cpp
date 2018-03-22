@@ -227,7 +227,7 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
   nscolor borderColor = GetBorderColor();
 
   // Get the rows= cols= data
-  HTMLFrameSetElement* ourContent = HTMLFrameSetElement::FromContent(mContent);
+  HTMLFrameSetElement* ourContent = HTMLFrameSetElement::FromNode(mContent);
   NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
   const nsFramesetSpec* rowSpecs = nullptr;
   const nsFramesetSpec* colSpecs = nullptr;
@@ -542,7 +542,7 @@ int32_t nsHTMLFramesetFrame::GetBorderWidth(nsPresContext* aPresContext,
   if (frameborder == eFrameborder_No) {
     return 0;
   }
-  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromNode(mContent);
 
   if (content) {
     const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::border);
@@ -736,7 +736,7 @@ nsFrameborder GetFrameBorderHelper(nsGenericHTMLElement* aContent)
 nsFrameborder nsHTMLFramesetFrame::GetFrameBorder()
 {
   nsFrameborder result = eFrameborder_Notset;
-  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromNode(mContent);
 
   if (content) {
     result = GetFrameBorderHelper(content);
@@ -751,7 +751,7 @@ nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(nsIContent* aContent)
 {
   nsFrameborder result = eFrameborder_Notset;
 
-  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(aContent);
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromNode(aContent);
 
   if (content) {
     result = GetFrameBorderHelper(content);
@@ -764,7 +764,7 @@ nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(nsIContent* aContent)
 
 nscolor nsHTMLFramesetFrame::GetBorderColor()
 {
-  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromNode(mContent);
 
   if (content) {
     const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::bordercolor);
@@ -781,7 +781,7 @@ nscolor nsHTMLFramesetFrame::GetBorderColor()
 
 nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent)
 {
-  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(aContent);
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromNode(aContent);
 
   if (content) {
     const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::bordercolor);
@@ -839,7 +839,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
   height -= (mNumRows - 1) * borderWidth;
   if (height < 0) height = 0;
 
-  HTMLFrameSetElement* ourContent = HTMLFrameSetElement::FromContent(mContent);
+  HTMLFrameSetElement* ourContent = HTMLFrameSetElement::FromNode(mContent);
   NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
   const nsFramesetSpec* rowSpecs = nullptr;
   const nsFramesetSpec* colSpecs = nullptr;
@@ -1257,7 +1257,7 @@ nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
     if (change != 0) {
       // Recompute the specs from the new sizes.
       nscoord width = mRect.width - (mNumCols - 1) * GetBorderWidth(aPresContext, true);
-      HTMLFrameSetElement* ourContent = HTMLFrameSetElement::FromContent(mContent);
+      HTMLFrameSetElement* ourContent = HTMLFrameSetElement::FromNode(mContent);
       NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
       const nsFramesetSpec* colSpecs = nullptr;
       ourContent->GetColSpec(&mNumCols, &colSpecs);
@@ -1282,7 +1282,7 @@ nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
     if (change != 0) {
       // Recompute the specs from the new sizes.
       nscoord height = mRect.height - (mNumRows - 1) * GetBorderWidth(aPresContext, true);
-      HTMLFrameSetElement* ourContent = HTMLFrameSetElement::FromContent(mContent);
+      HTMLFrameSetElement* ourContent = HTMLFrameSetElement::FromNode(mContent);
       NS_ASSERTION(ourContent, "Someone gave us a broken frameset element!");
       const nsFramesetSpec* rowSpecs = nullptr;
       ourContent->GetRowSpec(&mNumRows, &rowSpecs);

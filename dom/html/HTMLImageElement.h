@@ -49,7 +49,7 @@ public:
   // EventTarget
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLImageElement, img)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLImageElement, img)
 
   // override from nsImageLoadingContent
   CORSMode GetCORSMode() override;

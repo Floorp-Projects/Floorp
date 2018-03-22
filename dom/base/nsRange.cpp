@@ -2288,7 +2288,7 @@ nsRange::CutContents(DocumentFragment** aFragment)
     // XXX_kin: We need to also handle ProcessingInstruction
     // XXX_kin: according to the spec.
 
-    if (auto charData = CharacterData::FromContent(node)) {
+    if (auto charData = CharacterData::FromNode(node)) {
       uint32_t dataLength = 0;
 
       if (node == startContainer) {
@@ -2725,7 +2725,7 @@ nsRange::CloneContents(ErrorResult& aRv)
     // XXX_kin: We need to also handle ProcessingInstruction
     // XXX_kin: according to the spec.
 
-    if (auto charData = CharacterData::FromContent(clone))
+    if (auto charData = CharacterData::FromNode(clone))
     {
       if (node == mEnd.Container()) {
         // We only need the data before mEndOffset, so get rid of any
