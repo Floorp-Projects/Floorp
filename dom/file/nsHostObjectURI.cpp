@@ -22,9 +22,7 @@ NS_IMPL_ADDREF_INHERITED(nsHostObjectURI, mozilla::net::nsSimpleURI)
 NS_IMPL_RELEASE_INHERITED(nsHostObjectURI, mozilla::net::nsSimpleURI)
 
 NS_INTERFACE_MAP_BEGIN(nsHostObjectURI)
-  NS_INTERFACE_MAP_ENTRY(nsIURIWithBlobImpl)
   NS_INTERFACE_MAP_ENTRY(nsIURIWithPrincipal)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   if (aIID.Equals(kHOSTOBJECTURICID))
     foundInterface = static_cast<nsIURI*>(this);
   else if (aIID.Equals(kThisSimpleURIImplementationCID)) {
@@ -36,16 +34,6 @@ NS_INTERFACE_MAP_BEGIN(nsHostObjectURI)
   }
   else
 NS_INTERFACE_MAP_END_INHERITING(mozilla::net::nsSimpleURI)
-
-// nsIURIWithBlobImpl methods:
-
-NS_IMETHODIMP
-nsHostObjectURI::GetBlobImpl(nsISupports** aBlobImpl)
-{
-  RefPtr<mozilla::dom::BlobImpl> blobImpl(mBlobImpl);
-  blobImpl.forget(aBlobImpl);
-  return NS_OK;
-}
 
 // nsIURIWithPrincipal methods:
 
@@ -149,10 +137,6 @@ nsHostObjectURI::Deserialize(const mozilla::ipc::URIParams& aParams)
     return false;
   }
 
-  // If this fails, we still want to complete the operation. Probably this
-  // blobURL has been revoked in the meantime.
-  NS_GetBlobForBlobURI(this, getter_AddRefs(mBlobImpl));
-
   return true;
 }
 
@@ -185,9 +169,6 @@ nsHostObjectURI::CloneInternal(mozilla::net::nsSimpleURI::RefHandlingEnum aRefHa
   nsHostObjectURI* u = static_cast<nsHostObjectURI*>(simpleClone.get());
 
   u->mPrincipal = mPrincipal;
-  u->mBlobImpl = mBlobImpl;
-
-  nsHostObjectProtocolHandler::StoreClonedURI(newRef, simpleClone);
 
   simpleClone.forget(aClone);
   return NS_OK;
@@ -216,10 +197,6 @@ nsHostObjectURI::EqualsInternal(nsIURI* aOther,
     return NS_OK;
   }
 
-  // Compare the piece of additional member data that we add to base class,
-  // but we cannot compare BlobImpl. This should not be a problem, because we
-  // don't support changing the underlying mBlobImpl.
-
   if (mPrincipal && otherUri->mPrincipal) {
     // Both of us have mPrincipals. Compare them.
     return mPrincipal->Equals(otherUri->mPrincipal, aResult);
@@ -233,7 +210,6 @@ nsHostObjectURI::EqualsInternal(nsIURI* aOther,
 NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsHostObjectURI::Mutator,
                                 nsIURISetters,
                                 nsIURIMutator,
-                                nsIBlobURIMutator,
                                 nsIPrincipalURIMutator,
                                 nsISerializable)
 
@@ -304,11 +280,4 @@ nsHostObjectURI::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
   *aClassIDNoAlloc = kHOSTOBJECTURICID;
   return NS_OK;
-}
-
-void
-nsHostObjectURI::ForgetBlobImpl()
-{
-  MOZ_ASSERT(mBlobImpl);
-  mBlobImpl = nullptr;
 }

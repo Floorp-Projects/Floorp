@@ -1050,6 +1050,73 @@ class TestRecursiveMakeBackend(BackendTester):
             for line in lines:
                 self.assertNotIn('LIB_IS_C_ONLY', line)
 
+    def test_linkage(self):
+        env = self._consume('linkage', RecursiveMakeBackend)
+        expected_linkage = {
+            'prog': {
+                'SHARED_LIBS': ['$(DEPTH)/prog/qux/qux.so',
+                                '$(DEPTH)/shared/baz.so'],
+                'STATIC_LIBS': ['$(DEPTH)/real/foo.a'],
+                'OS_LIBS': ['-lfoo', '-lbaz', '-lbar'],
+            },
+            'shared': {
+                'OS_LIBS': ['-lfoo'],
+                'SHARED_LIBS': ['$(DEPTH)/prog/qux/qux.so'],
+                'STATIC_LIBS': [],
+            },
+            'static': {
+                'STATIC_LIBS': ['$(DEPTH)/real/foo.a'],
+                'OS_LIBS': ['-lbar'],
+                'SHARED_LIBS': ['$(DEPTH)/prog/qux/qux.so'],
+            },
+            'real': {
+                'STATIC_LIBS': [],
+                'SHARED_LIBS': ['$(DEPTH)/prog/qux/qux.so'],
+                'OS_LIBS': ['-lbaz'],
+            }
+        }
+        actual_linkage = {}
+        for name in expected_linkage.keys():
+            with open(os.path.join(env.topobjdir, name, 'backend.mk'), 'rb') as fh:
+                actual_linkage[name] = [line.rstrip() for line in fh.readlines()]
+        for name in expected_linkage:
+            for var in expected_linkage[name]:
+                for val in expected_linkage[name][var]:
+                    line = '%s += %s' % (var, val)
+                    self.assertIn(line,
+                                  actual_linkage[name])
+                    actual_linkage[name].remove(line)
+                for line in actual_linkage[name]:
+                    self.assertNotIn('%s +=' % var, line)
+
+    def test_list_files(self):
+        env = self._consume('linkage', RecursiveMakeBackend)
+        expected_list_files = {
+            'prog/MyProgram_exe.list': [
+                '../static/bar/bar1.o',
+                '../static/bar/bar2.o',
+                '../static/bar/bar_helper/bar_helper1.o',
+            ],
+            'shared/baz_so.list': [
+                'baz/baz1.o',
+            ],
+        }
+        actual_list_files = {}
+        for name in expected_list_files.keys():
+            with open(os.path.join(env.topobjdir, name), 'rb') as fh:
+                actual_list_files[name] = [mozpath.normsep(line.rstrip())
+                                           for line in fh.readlines()]
+        for name in expected_list_files:
+            self.assertEqual(actual_list_files[name],
+                             expected_list_files[name])
+
+        # We don't produce a list file for a shared library composed only of
+        # object files in its directory, but instead list them in a variable.
+        with open(os.path.join(env.topobjdir, 'prog', 'qux', 'backend.mk'), 'rb') as fh:
+            lines = [line.rstrip() for line in fh.readlines()]
+
+        self.assertIn('qux.so_OBJS := qux1.o', lines)
+
     def test_jar_manifests(self):
         env = self._consume('jar-manifests', RecursiveMakeBackend)
 

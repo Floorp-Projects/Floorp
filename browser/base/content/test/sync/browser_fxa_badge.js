@@ -22,6 +22,7 @@ add_task(async function test_signedin_no_badge() {
 
   UIState.get = () => ({
     status: UIState.STATUS_SIGNED_IN,
+    lastSync: new Date(),
     email: "foo@bar.com"
   });
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
