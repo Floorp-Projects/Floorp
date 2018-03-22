@@ -15,16 +15,11 @@
 #include "js/Id.h"
 #include "nsIXPConnect.h"
 
-struct nsGlobalNameStruct;
 class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
 
-class nsWindowSH;
-
 class nsDOMClassInfo
 {
-  friend class nsWindowSH;
-
 public:
   static nsresult Init();
   static void ShutDown();
@@ -44,10 +39,6 @@ protected:
 
   friend class nsGlobalWindowInner;
   friend class nsGlobalWindowOuter;
-public:
-  static bool NameStructEnabled(JSContext* aCx, nsGlobalWindowInner *aWin,
-                                const nsAString& aName,
-                                const nsGlobalNameStruct& aNameStruct);
 };
 
 
