@@ -70,7 +70,6 @@ var publicProperties = [
   "setSignedInUser",
   "signOut",
   "updateDeviceRegistration",
-  "deleteDeviceRegistration",
   "updateUserAccountData",
   "whenVerified",
 ];
@@ -119,36 +118,30 @@ AccountState.prototype = {
         new Error("Verification aborted; Another user signing in"));
       this.whenVerifiedDeferred = null;
     }
-
     if (this.whenKeysReadyDeferred) {
       this.whenKeysReadyDeferred.reject(
         new Error("Verification aborted; Another user signing in"));
       this.whenKeysReadyDeferred = null;
     }
-
-    this.cert = null;
-    this.keyPair = null;
-    this.oauthTokens = null;
-    // Avoid finalizing the storageManager multiple times (ie, .signOut()
-    // followed by .abort())
-    if (!this.storageManager) {
-      return Promise.resolve();
-    }
-    let storageManager = this.storageManager;
-    this.storageManager = null;
-    return storageManager.finalize();
+    return this.signOut();
   },
 
   // Clobber all cached data and write that empty data to storage.
-  signOut() {
+  async signOut() {
     this.cert = null;
     this.keyPair = null;
     this.oauthTokens = null;
-    let storageManager = this.storageManager;
+
+    // Avoid finalizing the storageManager multiple times (ie, .signOut()
+    // followed by .abort())
+    if (!this.storageManager) {
+      return;
+    }
+    const storageManager = this.storageManager;
     this.storageManager = null;
-    return storageManager.deleteAccountData().then(() => {
-      return storageManager.finalize();
-    });
+
+    await storageManager.deleteAccountData();
+    await storageManager.finalize();
   },
 
   // Get user account data. Optionally specify explicit field names to fetch
@@ -572,7 +565,7 @@ FxAccountsInternal.prototype = {
     log.debug("setSignedInUser - aborting any existing flows");
     const signedInUser = await this.getSignedInUser();
     if (signedInUser) {
-      await this.deleteDeviceRegistration(signedInUser.sessionToken, signedInUser.deviceId);
+      await this._signOutServer(signedInUser.sessionToken, signedInUser.oauthTokens);
     }
     await this.abortExistingFlow();
     let currentAccountState = this.currentAccountState = this.newAccountState(
@@ -719,7 +712,7 @@ FxAccountsInternal.prototype = {
   /*
    * Reset state such that any previous flow is canceled.
    */
-  abortExistingFlow: function abortExistingFlow() {
+  abortExistingFlow() {
     if (this.currentTimer) {
       log.debug("Polling aborted; Another user signing in");
       clearTimeout(this.currentTimer);
@@ -769,94 +762,74 @@ FxAccountsInternal.prototype = {
   },
 
   _destroyAllOAuthTokens(tokenInfos) {
+    if (!tokenInfos) {
+      return Promise.resolve();
+    }
     // let's just destroy them all in parallel...
     let promises = [];
-    for (let tokenInfo of Object.values(tokenInfos || {})) {
+    for (let tokenInfo of Object.values(tokenInfos)) {
       promises.push(this._destroyOAuthToken(tokenInfo));
     }
     return Promise.all(promises);
   },
 
-  signOut: function signOut(localOnly) {
-    let currentState = this.currentAccountState;
+  async signOut(localOnly) {
     let sessionToken;
     let tokensToRevoke;
-    let deviceId;
-    return currentState.getUserAccountData().then(data => {
-      // Save the session token, tokens to revoke and the
-      // device id for use in the call to signOut below.
-      if (data) {
-        sessionToken = data.sessionToken;
-        tokensToRevoke = data.oauthTokens;
-        deviceId = data.deviceId;
-      }
-      return this._signOutLocal();
-    }).then(() => {
-      // FxAccountsManager calls here, then does its own call
-      // to FxAccountsClient.signOut().
-      if (!localOnly) {
-        // Wrap this in a promise so *any* errors in signOut won't
-        // block the local sign out. This is *not* returned.
-        Promise.resolve().then(() => {
-          // This can happen in the background and shouldn't block
-          // the user from signing out. The server must tolerate
-          // clients just disappearing, so this call should be best effort.
-          if (sessionToken) {
-            return this._signOutServer(sessionToken, deviceId);
-          }
-          log.warn("Missing session token; skipping remote sign out");
-          return null;
-        }).catch(err => {
-          log.error("Error during remote sign out of Firefox Accounts", err);
-        }).then(() => {
-          return this._destroyAllOAuthTokens(tokensToRevoke);
-        }).catch(err => {
-          log.error("Error during destruction of oauth tokens during signout", err);
-        }).then(() => {
-          FxAccountsConfig.resetConfigURLs();
-          // just for testing - notifications are cheap when no observers.
-          return this.notifyObservers("testhelper-fxa-signout-complete");
-        });
-      } else {
-        // We want to do this either way -- but if we're signing out remotely we
-        // need to wait until we destroy the oauth tokens if we want that to succeed.
-        FxAccountsConfig.resetConfigURLs();
-      }
-    }).then(() => {
-      return this.notifyObservers(ONLOGOUT_NOTIFICATION);
-    });
-  },
-
-  /**
-   * This function should be called in conjunction with a server-side
-   * signOut via FxAccountsClient.
-   */
-  _signOutLocal: function signOutLocal() {
-    let currentAccountState = this.currentAccountState;
-    return currentAccountState.signOut().then(() => {
-      // this "aborts" this.currentAccountState but doesn't make a new one.
-      return this.abortExistingFlow();
-    }).then(() => {
-      this.currentAccountState = this.newAccountState();
-      return this.currentAccountState.promiseInitialized;
-    });
-  },
-
-  _signOutServer(sessionToken, deviceId) {
-    // For now we assume the service being logged out from is Sync, so
-    // we must tell the server to either destroy the device or sign out
-    // (if no device exists). We might need to revisit this when this
-    // FxA code is used in a context that isn't Sync.
-
-    const options = { service: "sync" };
-
-    if (deviceId) {
-      log.debug("destroying device, session and unsubscribing from FxA push");
-      return this.deleteDeviceRegistration(sessionToken, deviceId);
+    const data = await this.currentAccountState.getUserAccountData();
+    // Save the sessionToken, tokens before resetting them in _signOutLocal().
+    if (data) {
+      sessionToken = data.sessionToken;
+      tokensToRevoke = data.oauthTokens;
     }
+    await this._signOutLocal();
+    if (!localOnly) {
+      // Do this in the background so *any* slow request won't
+      // block the local sign out.
+      Services.tm.dispatchToMainThread(async () => {
+        await this._signOutServer(sessionToken, tokensToRevoke);
+        FxAccountsConfig.resetConfigURLs();
+        this.notifyObservers("testhelper-fxa-signout-complete");
+      });
+    } else {
+      // We want to do this either way -- but if we're signing out remotely we
+      // need to wait until we destroy the oauth tokens if we want that to succeed.
+      FxAccountsConfig.resetConfigURLs();
+    }
+    return this.notifyObservers(ONLOGOUT_NOTIFICATION);
+  },
 
-    log.debug("destroying session");
-    return this.fxAccountsClient.signOut(sessionToken, options);
+  async _signOutLocal() {
+    await this.currentAccountState.signOut();
+    // this "aborts" this.currentAccountState but doesn't make a new one.
+    await this.abortExistingFlow();
+    this.currentAccountState = this.newAccountState();
+    return this.currentAccountState.promiseInitialized;
+  },
+
+  async _signOutServer(sessionToken, tokensToRevoke) {
+    log.debug("Unsubscribing from FxA push.");
+    try {
+      await this.fxaPushService.unsubscribe();
+    } catch (err) {
+      log.error("Could not unsubscribe from push.", err);
+    }
+    if (sessionToken) {
+      log.debug("Destroying session and device.");
+      try {
+        await this.fxAccountsClient.signOut(sessionToken, {service: "sync"});
+      } catch (err) {
+        log.error("Error during remote sign out of Firefox Accounts", err);
+      }
+    } else {
+      log.warn("Missing session token; skipping remote sign out");
+    }
+    log.debug("Destroying all OAuth tokens.");
+    try {
+      await this._destroyAllOAuthTokens(tokensToRevoke);
+    } catch (err) {
+      log.error("Error during destruction of oauth tokens during signout", err);
+    }
   },
 
   /**
@@ -1584,31 +1557,6 @@ FxAccountsInternal.prototype = {
       }
       return null;
     }).catch(error => this._logErrorAndResetDeviceRegistrationVersion(error));
-  },
-
-  // Delete the Push Subscription and the device registration on the auth server.
-  // Returns a promise that always resolves, never rejects.
-  async deleteDeviceRegistration(sessionToken, deviceId) {
-    try {
-      // Allow tests to skip device registration because it makes remote requests to the auth server.
-      if (Services.prefs.getBoolPref("identity.fxaccounts.skipDeviceRegistration")) {
-        return Promise.resolve();
-      }
-    } catch (ignore) {}
-
-    try {
-      await this.fxaPushService.unsubscribe();
-      if (sessionToken && deviceId) {
-        await this.fxAccountsClient.signOutAndDestroyDevice(sessionToken, deviceId);
-      }
-      await this.currentAccountState.updateUserAccountData({
-        deviceId: null,
-        deviceRegistrationVersion: null
-      });
-    } catch (err) {
-      log.error("Could not delete the device registration", err);
-    }
-    return Promise.resolve();
   },
 
   async handleDeviceDisconnection(deviceId) {

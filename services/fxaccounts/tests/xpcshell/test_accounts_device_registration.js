@@ -78,7 +78,7 @@ function MockFxAccountsClient(device) {
 
   this.registerDevice = (st, name, type) => Promise.resolve({ id: deviceId, name });
   this.updateDevice = (st, id, name) => Promise.resolve({ id, name });
-  this.signOutAndDestroyDevice = () => Promise.resolve({});
+  this.signOut = () => Promise.resolve({});
   this.getDeviceList = (st) =>
     Promise.resolve([
       { id: deviceId, name: deviceName, type: deviceType, isCurrentDevice: st === sessionToken }
@@ -284,38 +284,6 @@ add_task(async function test_updateDeviceRegistration_with_unknown_device_error(
 
   Assert.equal(null, data.deviceId);
   Assert.equal(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
-});
-
-add_task(async function test_deleteDeviceRegistration() {
-  const credentials = getTestUser("pb");
-  const fxa = new MockFxAccounts({ name: "my device" });
-  await fxa.internal.setSignedInUser(credentials);
-
-  const state = fxa.internal.currentAccountState;
-  let data = await state.getUserAccountData();
-  Assert.equal(data.deviceId, credentials.deviceId);
-  Assert.equal(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
-
-  const spy = {
-    signOutAndDestroyDevice: { count: 0, args: [] }
-  };
-  const client = fxa.internal.fxAccountsClient;
-  client.signOutAndDestroyDevice = function() {
-    spy.signOutAndDestroyDevice.count += 1;
-    spy.signOutAndDestroyDevice.args.push(arguments);
-    return Promise.resolve({});
-  };
-  await fxa.deleteDeviceRegistration(credentials.sessionToken, credentials.deviceId);
-
-  Assert.equal(spy.signOutAndDestroyDevice.count, 1);
-  Assert.equal(spy.signOutAndDestroyDevice.args[0].length, 2);
-  Assert.equal(spy.signOutAndDestroyDevice.args[0][0], credentials.sessionToken);
-  Assert.equal(spy.signOutAndDestroyDevice.args[0][1], credentials.deviceId);
-
-  data = await state.getUserAccountData();
-
-  Assert.ok(!data.deviceId);
-  Assert.ok(!data.deviceRegistrationVersion);
 });
 
 add_task(async function test_updateDeviceRegistration_with_device_session_conflict_error() {
