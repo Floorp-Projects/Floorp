@@ -12,5 +12,4 @@ override chrome://testOverride/content file:///test1/override
 manifest loaded.manifest
 
 # Failure Cases
-overlay   chrome://test1/content/overlay.xul   chrome://test1/content/test1.xul
 style     chrome://test1/content/style.xul     chrome://test1/content/test1.css

@@ -7,7 +7,6 @@ http://creativecommons.org/licenses/publicdomain/
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="background-color: green">
   <?xml-stylesheet href="test010.css" type="text/css"?>
-  <?xul-overlay href="test010-overlay.xul" ?>
   <script>
   function assert(x, msg) {
     if(!x) {
@@ -20,7 +19,6 @@ http://creativecommons.org/licenses/publicdomain/
     assert(document.firstChild.id == "main", "nothing in prolog");
     var winEl = document.documentElement;
     assert(winEl.childNodes[0].nodeName == "xml-stylesheet", "xml-stylesheet PI is in the correct place");
-    assert(winEl.childNodes[1].nodeName == "xul-overlay", "xul-overlay PI is in the correct place");
   } catch(e) {
     dump(e);
     assert(false, e);
