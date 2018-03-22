@@ -29,7 +29,6 @@
 
 class nsGlobalWindowInner;
 class nsIPrincipal;
-class nsScriptNameSpaceManager;
 class nsIHandleReportCallback;
 
 namespace mozilla {

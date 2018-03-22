@@ -51,7 +51,6 @@
 #include "nsIScriptTimeoutHandler.h"
 #include "nsITimeoutHandler.h"
 #include "nsIController.h"
-#include "nsScriptNameSpaceManager.h"
 #include "nsISlowScriptDebug.h"
 #include "nsWindowMemoryReporter.h"
 #include "nsWindowSizes.h"
@@ -2939,20 +2938,7 @@ nsGlobalWindowInner::MayResolve(jsid aId)
     return true;
   }
 
-  if (WebIDLGlobalNameHash::MayResolve(aId)) {
-    return true;
-  }
-
-  nsScriptNameSpaceManager *nameSpaceManager = PeekNameSpaceManager();
-  if (!nameSpaceManager) {
-    // Really shouldn't happen.  Fail safe.
-    return true;
-  }
-
-  nsAutoString name;
-  AssignJSFlatString(name, JSID_TO_FLAT_STRING(aId));
-
-  return nameSpaceManager->LookupName(name);
+  return WebIDLGlobalNameHash::MayResolve(aId);
 }
 
 void
@@ -2974,40 +2960,24 @@ nsGlobalWindowInner::GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aName
   // "Components" is marked as enumerable but only resolved on demand :-/.
   //aNames.AppendElement(NS_LITERAL_STRING("Components"));
 
-  nsScriptNameSpaceManager* nameSpaceManager = GetNameSpaceManager();
-  if (nameSpaceManager) {
-    JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
+  JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
 
-    // There are actually two ways we can get called here: For normal
-    // enumeration or for Xray enumeration.  In the latter case, we want to
-    // return all possible WebIDL names, because we don't really support
-    // deleting these names off our Xray; trying to resolve them will just make
-    // them come back.  In the former case, we want to avoid returning deleted
-    // names.  But the JS engine already knows about the non-deleted
-    // already-resolved names, so we can just return the so-far-unresolved ones.
-    //
-    // We can tell which case we're in by whether aCx is in our wrapper's
-    // compartment.  If not, we're in the Xray case.
-    WebIDLGlobalNameHash::NameType nameType =
-      js::IsObjectInContextCompartment(wrapper, aCx) ?
-        WebIDLGlobalNameHash::UnresolvedNamesOnly :
-        WebIDLGlobalNameHash::AllNames;
-    if (!WebIDLGlobalNameHash::GetNames(aCx, wrapper, nameType, aNames)) {
-      aRv.NoteJSContextException(aCx);
-    }
-
-    for (auto i = nameSpaceManager->GlobalNameIter(); !i.Done(); i.Next()) {
-      const GlobalNameMapEntry* entry = i.Get();
-      // Just append all of these; even if they get deleted our resolve hook
-      // just goes ahead and recreates them.
-      JSString* str = JS_AtomizeUCStringN(aCx,
-                                          entry->mKey.BeginReading(),
-                                          entry->mKey.Length());
-      if (!str || !aNames.append(NON_INTEGER_ATOM_TO_JSID(str))) {
-        aRv.NoteJSContextException(aCx);
-        return;
-      }
-    }
+  // There are actually two ways we can get called here: For normal
+  // enumeration or for Xray enumeration.  In the latter case, we want to
+  // return all possible WebIDL names, because we don't really support
+  // deleting these names off our Xray; trying to resolve them will just make
+  // them come back.  In the former case, we want to avoid returning deleted
+  // names.  But the JS engine already knows about the non-deleted
+  // already-resolved names, so we can just return the so-far-unresolved ones.
+  //
+  // We can tell which case we're in by whether aCx is in our wrapper's
+  // compartment.  If not, we're in the Xray case.
+  WebIDLGlobalNameHash::NameType nameType =
+    js::IsObjectInContextCompartment(wrapper, aCx) ?
+      WebIDLGlobalNameHash::UnresolvedNamesOnly :
+      WebIDLGlobalNameHash::AllNames;
+  if (!WebIDLGlobalNameHash::GetNames(aCx, wrapper, nameType, aNames)) {
+    aRv.NoteJSContextException(aCx);
   }
 }
 
