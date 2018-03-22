@@ -85,7 +85,8 @@ class Locale {
              mLanguage.Equals(aOther.mLanguage) &&
              mScript.Equals(aOther.mScript) &&
              mRegion.Equals(aOther.mRegion) &&
-             mVariants == aOther.mVariants;
+             mVariants == aOther.mVariants &&
+             mPrivateUse == aOther.mPrivateUse;
     }
 
   private:
@@ -93,6 +94,7 @@ class Locale {
     nsAutoCStringN<4> mScript;
     nsAutoCStringN<2> mRegion;
     nsTArray<nsCString> mVariants;
+    nsTArray<nsCString> mPrivateUse;
     bool mIsValid = true;
 };
 
