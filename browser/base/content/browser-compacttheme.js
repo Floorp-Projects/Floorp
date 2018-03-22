@@ -3,15 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Listeners for the compact theme.  This adds an extra stylesheet
- * to browser.xul if a pref is set and no other themes are applied.
+ * Enables compacttheme.css when needed.
  */
 var CompactTheme = {
-  styleSheetLocation: "chrome://browser/skin/compacttheme.css",
-  styleSheet: null,
+  get styleSheet() {
+    delete this.styleSheet;
+    for (let styleSheet of document.styleSheets) {
+      if (styleSheet.href == "chrome://browser/skin/compacttheme.css") {
+        this.styleSheet = styleSheet;
+        break;
+      }
+    }
+    return this.styleSheet;
+  },
 
   get isStyleSheetEnabled() {
-    return this.styleSheet && !this.styleSheet.sheet.disabled;
+    return this.styleSheet && !this.styleSheet.disabled;
   },
 
   get isThemeCurrentlyApplied() {
@@ -27,14 +34,6 @@ var CompactTheme = {
     if (this.isThemeCurrentlyApplied) {
       this._toggleStyleSheet(true);
     }
-  },
-
-  createStyleSheet() {
-    let styleSheetAttr = `href="${this.styleSheetLocation}" type="text/css"`;
-    this.styleSheet = document.createProcessingInstruction(
-      "xml-stylesheet", styleSheetAttr);
-    document.insertBefore(this.styleSheet, document.documentElement);
-    this.styleSheet.sheet.disabled = true;
   },
 
   observe(subject, topic, data) {
@@ -56,14 +55,9 @@ var CompactTheme = {
   _toggleStyleSheet(enabled) {
     let wasEnabled = this.isStyleSheetEnabled;
     if (enabled) {
-      // The stylesheet may not have been created yet if it wasn't
-      // needed on initial load.  Make it now.
-      if (!this.styleSheet) {
-        this.createStyleSheet();
-      }
-      this.styleSheet.sheet.disabled = false;
+      this.styleSheet.disabled = false;
     } else if (!enabled && wasEnabled) {
-      this.styleSheet.sheet.disabled = true;
+      this.styleSheet.disabled = true;
     }
   },
 
@@ -72,10 +66,3 @@ var CompactTheme = {
     this.styleSheet = null;
   }
 };
-
-// If the compact theme is going to be applied in gBrowserInit.onLoad,
-// then preload it now.  This prevents a flash of unstyled content where the
-// normal theme is applied while the compact theme stylesheet is loading.
-if (this != Services.appShell.hiddenDOMWindow && CompactTheme.isThemeCurrentlyApplied) {
-  CompactTheme.createStyleSheet();
-}
