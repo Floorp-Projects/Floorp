@@ -87,7 +87,6 @@ const LEGACY_NON_RESTARTLESS_TESTS = new Set([
   "test_bug655254.js",
   "test_signed_verify.js",
   "test_syncGUID.js",
-  "test_upgrade.js",
 ]);
 
 if (LEGACY_NON_RESTARTLESS_TESTS.has(_TEST_FILE[0].replace(/.*\//, ""))) {
