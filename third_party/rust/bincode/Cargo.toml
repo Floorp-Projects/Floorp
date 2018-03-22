@@ -12,22 +12,24 @@
 
 [package]
 name = "bincode"
-version = "0.9.1"
+version = "1.0.0"
 authors = ["Ty Overby <ty@pre-alpha.com>", "Francesco Mazzoli <f@mazzo.li>", "David Tolnay <dtolnay@gmail.com>", "Daniel Griffen"]
-exclude = ["./logo.png"]
+exclude = ["logo.png", "tests/*", "examples/*", ".gitignore", ".travis.yml", "changelist.org"]
 publish = true
 description = "A binary serialization / deserialization strategy that uses Serde for transforming structs into bytes and vice versa!"
 documentation = "https://docs.rs/bincode"
+readme = "./readme.md"
 keywords = ["binary", "encode", "decode", "serialize", "deserialize"]
+categories = ["network-programming"]
 license = "MIT"
 repository = "https://github.com/TyOverby/bincode"
 [dependencies.byteorder]
-version = "1.0.0"
+version = "1.2.0"
 
 [dependencies.serde]
-version = "1.*.*"
+version = "^1.0.27"
 [dev-dependencies.serde_bytes]
-version = "0.10.*"
+version = "^0.10.3"
 
 [dev-dependencies.serde_derive]
-version = "1.*.*"
+version = "^1.0.27"

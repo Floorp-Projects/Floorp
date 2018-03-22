@@ -10,13 +10,13 @@
 
 #include "nscore.h"
 #include "nsIPresShell.h"
-#include "nsStyleContext.h"
 #include "nsCOMPtr.h"
 #include "plhash.h"
 #include "nsPlaceholderFrame.h"
 #include "nsGkAtoms.h"
 #include "nsILayoutHistoryState.h"
 #include "nsPresState.h"
+#include "mozilla/ComputedStyle.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/UndisplayedNode.h"
 #include "nsIDocument.h"
@@ -41,10 +41,10 @@ using namespace mozilla::dom;
 
 /**
  * The undisplayed map is a class that maps a parent content node to the
- * undisplayed content children, and their style contexts.
+ * undisplayed content children, and their ComputedStyles.
  *
- * The linked list of nodes holds strong references to the style contexts and
- * the content.
+ * The linked list of nodes holds strong references to the ComputedStyle and the
+ * content.
  */
 class nsFrameManager::UndisplayedMap :
   private nsClassHashtable<nsPtrHashKey<nsIContent>,
@@ -60,7 +60,7 @@ public:
 
   void AddNodeFor(nsIContent* aParentContent,
                   nsIContent* aChild,
-                  nsStyleContext* aStyle);
+                  ComputedStyle* aStyle);
 
   void RemoveNodeFor(nsIContent* aParentContent, UndisplayedNode* aNode);
 
@@ -135,8 +135,8 @@ nsFrameManager::ParentForUndisplayedMap(const nsIContent* aContent)
   return parent;
 }
 
-/* static */ nsStyleContext*
-nsFrameManager::GetStyleContextInMap(UndisplayedMap* aMap,
+/* static */ ComputedStyle*
+nsFrameManager::GetComputedStyleInMap(UndisplayedMap* aMap,
                                      const nsIContent* aContent)
 {
   UndisplayedNode* node = GetUndisplayedNodeInMapFor(aMap, aContent);
@@ -181,19 +181,19 @@ nsFrameManager::GetAllRegisteredDisplayNoneStylesIn(nsIContent* aParentContent)
 }
 
 /* static */ void
-nsFrameManager::SetStyleContextInMap(UndisplayedMap* aMap,
+nsFrameManager::SetComputedStyleInMap(UndisplayedMap* aMap,
                                      nsIContent* aContent,
-                                     nsStyleContext* aStyleContext)
+                                     ComputedStyle* aComputedStyle)
 {
-  MOZ_ASSERT(!aStyleContext->GetPseudo(),
+  MOZ_ASSERT(!aComputedStyle->GetPseudo(),
              "Should only have actual elements here");
 
 #if defined(DEBUG_UNDISPLAYED_MAP) || defined(DEBUG_DISPLAY_BOX_CONTENTS_MAP)
   static int i = 0;
-  printf("SetStyleContextInMap(%d): p=%p \n", i++, (void *)aContent);
+  printf("SetComputedStyleInMap(%d): p=%p \n", i++, (void *)aContent);
 #endif
 
-  MOZ_ASSERT(!GetStyleContextInMap(aMap, aContent),
+  MOZ_ASSERT(!GetComputedStyleInMap(aMap, aContent),
              "Already have an entry for aContent");
 
   // This function is an entry point into UndisplayedMap handling code, so the
@@ -204,7 +204,7 @@ nsFrameManager::SetStyleContextInMap(UndisplayedMap* aMap,
   MOZ_ASSERT(parent || !aContent->GetParent(), "no non-elements");
 
 #ifdef DEBUG
-  nsIPresShell* shell = aStyleContext->PresContext()->PresShell();
+  nsIPresShell* shell = aComputedStyle->PresContext()->PresShell();
   NS_ASSERTION(parent || (shell && shell->GetDocument() &&
                           shell->GetDocument()->GetRootElement() == aContent),
                "undisplayed content must have a parent, unless it's the root "
@@ -220,29 +220,29 @@ nsFrameManager::SetStyleContextInMap(UndisplayedMap* aMap,
     parent->SetMayHaveChildrenWithLayoutBoxesDisabled();
   }
 
-  aMap->AddNodeFor(parent, aContent, aStyleContext);
+  aMap->AddNodeFor(parent, aContent, aComputedStyle);
 }
 
 void
 nsFrameManager::RegisterDisplayNoneStyleFor(nsIContent* aContent,
-                                            nsStyleContext* aStyleContext)
+                                            ComputedStyle* aComputedStyle)
 {
   if (!mDisplayNoneMap) {
     mDisplayNoneMap = new UndisplayedMap;
   }
-  SetStyleContextInMap(mDisplayNoneMap, aContent, aStyleContext);
+  SetComputedStyleInMap(mDisplayNoneMap, aContent, aComputedStyle);
 }
 
 /* static */ void
-nsFrameManager::ChangeStyleContextInMap(UndisplayedMap* aMap,
+nsFrameManager::ChangeComputedStyleInMap(UndisplayedMap* aMap,
                                         nsIContent* aContent,
-                                        nsStyleContext* aStyleContext)
+                                        ComputedStyle* aComputedStyle)
 {
   MOZ_ASSERT(aMap, "expecting a map");
 
 #if defined(DEBUG_UNDISPLAYED_MAP) || defined(DEBUG_DISPLAY_BOX_CONTENTS_MAP)
    static int i = 0;
-   printf("ChangeStyleContextInMap(%d): p=%p \n", i++, (void *)aContent);
+   printf("ChangeComputedStyleInMap(%d): p=%p \n", i++, (void *)aContent);
 #endif
 
   // This function is an entry point into UndisplayedMap handling code, so the
@@ -255,7 +255,7 @@ nsFrameManager::ChangeStyleContextInMap(UndisplayedMap* aMap,
   for (UndisplayedNode* node = aMap->GetFirstNode(parent);
        node; node = node->getNext()) {
     if (node->mContent == aContent) {
-      node->mStyle = aStyleContext;
+      node->mStyle = aComputedStyle;
       return;
     }
   }
@@ -385,12 +385,12 @@ nsFrameManager::ClearAllMapsFor(nsIContent* aParentContent)
 
 void
 nsFrameManager::RegisterDisplayContentsStyleFor(nsIContent* aContent,
-                                                nsStyleContext* aStyleContext)
+                                                ComputedStyle* aComputedStyle)
 {
   if (!mDisplayContentsMap) {
     mDisplayContentsMap = new UndisplayedMap;
   }
-  SetStyleContextInMap(mDisplayContentsMap, aContent, aStyleContext);
+  SetComputedStyleInMap(mDisplayContentsMap, aContent, aComputedStyle);
 }
 
 UndisplayedNode*
@@ -797,7 +797,7 @@ nsFrameManager::UndisplayedMap::AppendNodeFor(UndisplayedNode* aNode,
 void
 nsFrameManager::UndisplayedMap::AddNodeFor(nsIContent* aParentContent,
                                            nsIContent* aChild,
-                                           nsStyleContext* aStyle)
+                                           ComputedStyle* aStyle)
 {
   UndisplayedNode*  node = new UndisplayedNode(aChild, aStyle);
   AppendNodeFor(node, aParentContent);
@@ -855,7 +855,7 @@ AddSizeOfIncludingThis(nsWindowSizes& aSizes, bool aIsServo) const
     }
     for (const UndisplayedNode* node = list->getFirst();
           node; node = node->getNext()) {
-      ServoStyleContext* sc = node->mStyle->AsServo();
+      ComputedStyle* sc = node->mStyle->AsServo();
       if (!aSizes.mState.HaveSeenPtr(sc)) {
         sc->AddSizeOfIncludingThis(
           staleSizes, &aSizes.mLayoutComputedValuesStale);

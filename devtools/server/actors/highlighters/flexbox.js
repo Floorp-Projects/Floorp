@@ -5,6 +5,7 @@
 "use strict";
 
 const { AutoRefreshHighlighter } = require("./auto-refresh");
+const { apply } = require("devtools/shared/layout/dom-matrix-2d");
 const {
   CANVAS_SIZE,
   DEFAULT_COLOR,
@@ -363,6 +364,13 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
     let { bounds } = this.currentQuads.content[0];
     drawRect(this.ctx, 0, 0, bounds.width, bounds.height, this.currentMatrix);
+
+    // Find current angle of outer flex element by measuring the angle of two arbitrary
+    // points, then rotate canvas, so the hash pattern stays 45deg to the boundary.
+    let p1 = apply(this.currentMatrix, [0, 0]);
+    let p2 = apply(this.currentMatrix, [1, 0]);
+    let angleRad = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
+    this.ctx.rotate(angleRad);
 
     this.ctx.fill();
     this.ctx.stroke();

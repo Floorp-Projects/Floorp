@@ -1146,7 +1146,7 @@ ApplyRenderingChangeToTree(nsIPresShell* aPresShell,
   if (aChange & nsChangeHint_RepaintFrame) {
     // If the frame's background is propagated to an ancestor, walk up to
     // that ancestor and apply the RepaintFrame change hint to it.
-    nsStyleContext* bgSC;
+    ComputedStyle* bgSC;
     nsIFrame* propagatedFrame = aFrame;
     while (!nsCSSRendering::FindBackground(propagatedFrame, &bgSC)) {
       propagatedFrame = propagatedFrame->GetParent();
@@ -1782,8 +1782,8 @@ RestyleManager::AddLayerChangesForAnimation(nsIFrame* aFrame,
       // If we have a transform layer but don't have any transform style, we
       // probably just removed the transform but haven't destroyed the layer
       // yet. In this case we will add the appropriate change hint
-      // (nsChangeHint_UpdateContainingBlock) when we compare style contexts
-      // so we can skip adding any change hint here. (If we *were* to add
+      // (nsChangeHint_UpdateContainingBlock) when we compare styles so we can
+      // skip adding any change hint here. (If we *were* to add
       // nsChangeHint_UpdateTransformLayer, ApplyRenderingChangeToTree would
       // complain that we're updating a transform layer without a transform).
       if (layerInfo.mLayerType == DisplayItemType::TYPE_TRANSFORM &&

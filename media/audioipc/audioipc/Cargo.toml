@@ -1,6 +1,6 @@
 [package]
 name = "audioipc"
-version = "0.2.1"
+version = "0.2.2"
 authors = [
         "Matthew Gregan <kinetik@flim.org>",
         "Dan Glastonbury <dan.glastonbury@gmail.com>"
@@ -9,7 +9,7 @@ description = "Remote Cubeb IPC"
 
 [dependencies]
 cubeb = "0.4"
-bincode = "0.9"
+bincode = "1.0"
 bytes = "0.4"
 futures = "0.1.18"
 iovec = "0.1"

@@ -297,7 +297,7 @@ add_task(async function test_execute() {
   info("verify that removing an annotation updates the last modified date");
   info("lastModified3 = " + lastModified3);
   info("lastModified4 = " + lastModified4);
-  Assert.ok(lastModified4 > lastModified3);
+  Assert.ok(is_time_ordered(lastModified3, lastModified4));
 
   Assert.equal(annoObserver.PAGE_lastRemoved_URI, testURI.spec);
   Assert.equal(annoObserver.PAGE_lastRemoved_AnnoName, int32Key);

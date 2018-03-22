@@ -232,7 +232,7 @@ def main(*args, **kwargs):
 
         module = __import__('__main__')
         args.extend([
-            '--verbose',
+            '-vv',
             '-p', 'mozlog.pytest_mozlog.plugin',
             '-p', 'no:cacheprovider',
             module.__file__,

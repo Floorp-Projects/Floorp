@@ -411,17 +411,17 @@ DoTypeDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
         uint16_t iface;
         if (!XPT_Do16(cursor, &iface))
             return false;
-        td->u.mIface.mIfaceHi8 = (iface >> 8) & 0xff;
-        td->u.mIface.mIfaceLo8 = iface & 0xff;
+        td->mData1 = (iface >> 8) & 0xff;
+        td->mData2 = iface & 0xff;
         break;
       case TD_INTERFACE_IS_TYPE:
-        if (!XPT_Do8(cursor, &td->u.mInterfaceIs.mArgNum))
+        if (!XPT_Do8(cursor, &td->mData1))
             return false;
         break;
       case TD_ARRAY: {
         // argnum2 appears in the on-disk format but it isn't used.
         uint8_t argnum2 = 0;
-        if (!XPT_Do8(cursor, &td->u.mArray.mArgNum) ||
+        if (!XPT_Do8(cursor, &td->mData1) ||
             !XPT_Do8(cursor, &argnum2))
             return false;
 
@@ -430,7 +430,7 @@ DoTypeDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
             return false;
         if (!InterfaceDescriptorAddType(arena, id, &elementTypeDescriptor))
             return false;
-        td->u.mArray.mAdditionalType = id->mNumAdditionalTypes - 1;
+        td->mData2 = id->mNumAdditionalTypes - 1;
 
         break;
       }
@@ -438,7 +438,7 @@ DoTypeDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
       case TD_PWSTRING_SIZE_IS: {
         // argnum2 appears in the on-disk format but it isn't used.
         uint8_t argnum2 = 0;
-        if (!XPT_Do8(cursor, &td->u.mPStringIs.mArgNum) ||
+        if (!XPT_Do8(cursor, &td->mData1) ||
             !XPT_Do8(cursor, &argnum2))
             return false;
         break;

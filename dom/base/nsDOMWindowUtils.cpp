@@ -2726,8 +2726,8 @@ nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContext(element, nullptr);
+  RefPtr<ComputedStyle> styleContext =
+    nsComputedDOMStyle::GetComputedStyle(element, nullptr);
   *aResult = v1.ComputeDistance(property, v2, styleContext);
   return NS_OK;
 }
@@ -2824,24 +2824,20 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(nsIDOMElement* aElement,
   }
 
   RefPtr<nsAtom> pseudo = nsCSSPseudoElements::GetPseudoAtom(aPseudoElement);
-  RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetUnanimatedStyleContextNoFlush(element, pseudo);
+  RefPtr<ComputedStyle> styleContext =
+    nsComputedDOMStyle::GetUnanimatedComputedStyleNoFlush(element, pseudo);
   if (!styleContext) {
     return NS_ERROR_FAILURE;
   }
 
-  if (styleContext->IsServo()) {
-    RefPtr<RawServoAnimationValue> value =
-      Servo_ComputedValues_ExtractAnimationValue(styleContext->AsServo(),
-                                                 propertyID).Consume();
-    if (!value) {
-      return NS_ERROR_FAILURE;
-    }
-    Servo_AnimationValue_Serialize(value, propertyID, &aResult);
-    return NS_OK;
+  RefPtr<RawServoAnimationValue> value =
+    Servo_ComputedValues_ExtractAnimationValue(styleContext->AsServo(),
+                                               propertyID).Consume();
+  if (!value) {
+    return NS_ERROR_FAILURE;
   }
-
-  MOZ_CRASH("old style system disabled");
+  Servo_AnimationValue_Serialize(value, propertyID, &aResult);
+  return NS_OK;
 }
 
 nsresult

@@ -20,12 +20,10 @@
 #include <limits>
 
 class nsIFrame;
-class nsStyleContext;
 class nsPresContext;
 struct gfxQuaternion;
 struct nsRect;
 namespace mozilla {
-class GeckoStyleContext;
 class RuleNodeCacheConditions;
 } // namespace mozilla
 
@@ -159,53 +157,36 @@ namespace nsStyleTransformMatrix {
   void SetIdentityMatrix(nsCSSValue::Array* aMatrix);
 
   float ProcessTranslatePart(const nsCSSValue& aValue,
-                             mozilla::GeckoStyleContext* aContext,
-                             nsPresContext* aPresContext,
-                             mozilla::RuleNodeCacheConditions& aConditions,
                              TransformReferenceBox* aRefBox,
                              TransformReferenceBox::DimensionGetter aDimensionGetter = nullptr);
 
   void
   ProcessInterpolateMatrix(mozilla::gfx::Matrix4x4& aMatrix,
                            const nsCSSValue::Array* aData,
-                           mozilla::GeckoStyleContext* aContext,
-                           nsPresContext* aPresContext,
-                           mozilla::RuleNodeCacheConditions& aConditions,
                            TransformReferenceBox& aBounds,
                            bool* aContains3dTransform);
 
   void
   ProcessAccumulateMatrix(mozilla::gfx::Matrix4x4& aMatrix,
                           const nsCSSValue::Array* aData,
-                          mozilla::GeckoStyleContext* aContext,
-                          nsPresContext* aPresContext,
-                          mozilla::RuleNodeCacheConditions& aConditions,
                           TransformReferenceBox& aBounds,
                           bool* aContains3dTransform);
+
 
   /**
    * Given an nsCSSValueList containing -moz-transform functions,
    * returns a matrix containing the value of those functions.
    *
    * @param aData The nsCSSValueList containing the transform functions
-   * @param aContext The style context, used for unit conversion.
-   * @param aPresContext The presentation context, used for unit conversion.
-   * @param aConditions Set to uncachable (by calling SetUncacheable()) if the
-   *   result cannot be cached in the rule tree, otherwise untouched.
    * @param aBounds The frame's bounding rectangle.
    * @param aAppUnitsPerMatrixUnit The number of app units per device pixel.
    * @param aContains3dTransform [out] Set to true if aList contains at least
    *   one 3d transform function (as defined in the CSS transforms
    *   specification), false otherwise.
    *
-   * aContext and aPresContext may be null if all of the (non-percent)
-   * length values in aData are already known to have been converted to
    * eCSSUnit_Pixel (as they are in an StyleAnimationValue)
    */
   mozilla::gfx::Matrix4x4 ReadTransforms(const nsCSSValueList* aList,
-                                         nsStyleContext* aContext,
-                                         nsPresContext* aPresContext,
-                                         mozilla::RuleNodeCacheConditions& aConditions,
                                          TransformReferenceBox& aBounds,
                                          float aAppUnitsPerMatrixUnit,
                                          bool* aContains3dTransform);

@@ -24,7 +24,6 @@ class DrawTarget;
 
 class gfxContext;
 class gfxPattern;
-class nsStyleContext;
 
 /**
  * RAII class used to temporarily set and remove the
@@ -57,8 +56,8 @@ class nsSVGPaintServerFrame : public nsSVGContainerFrame
 protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
-  nsSVGPaintServerFrame(nsStyleContext* aContext, ClassID aID)
-    : nsSVGContainerFrame(aContext, aID)
+  nsSVGPaintServerFrame(ComputedStyle* aStyle, ClassID aID)
+    : nsSVGContainerFrame(aStyle, aID)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }

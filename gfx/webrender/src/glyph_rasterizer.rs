@@ -521,6 +521,7 @@ impl GlyphRasterizer {
                                 stride: None,
                                 format: ImageFormat::BGRA8,
                                 is_opaque: false,
+                                allow_mipmaps: false,
                                 offset: 0,
                             },
                             TextureFilter::Linear,

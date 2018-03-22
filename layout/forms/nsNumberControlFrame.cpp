@@ -35,9 +35,9 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsIFrame*
-NS_NewNumberControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewNumberControlFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsNumberControlFrame(aContext);
+  return new (aPresShell) nsNumberControlFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsNumberControlFrame)
@@ -48,8 +48,8 @@ NS_QUERYFRAME_HEAD(nsNumberControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
-nsNumberControlFrame::nsNumberControlFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, kClassID)
+nsNumberControlFrame::nsNumberControlFrame(ComputedStyle* aStyle)
+  : nsContainerFrame(aStyle, kClassID)
   , mHandlingInputEvent(false)
 {
 }

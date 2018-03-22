@@ -104,7 +104,7 @@ fn generate_checkerboard_image(
     }
 
     (
-        ImageDescriptor::new(width, height, ImageFormat::BGRA8, true),
+        ImageDescriptor::new(width, height, ImageFormat::BGRA8, true, false),
         ImageData::new(pixels),
     )
 }
@@ -122,7 +122,7 @@ fn generate_xy_gradient_image(w: u32, h: u32) -> (ImageDescriptor, ImageData) {
     }
 
     (
-        ImageDescriptor::new(w, h, ImageFormat::BGRA8, true),
+        ImageDescriptor::new(w, h, ImageFormat::BGRA8, true, false),
         ImageData::new(pixels),
     )
 }
@@ -152,7 +152,7 @@ fn generate_solid_color_image(
     }
 
     (
-        ImageDescriptor::new(w, h, ImageFormat::BGRA8, a == 255),
+        ImageDescriptor::new(w, h, ImageFormat::BGRA8, a == 255, false),
         ImageData::new(pixels),
     )
 }
@@ -200,6 +200,7 @@ pub struct YamlFrameReader {
     fonts: HashMap<FontDescriptor, FontKey>,
     font_instances: HashMap<(FontKey, Au, FontInstanceFlags), FontInstanceKey>,
     font_render_mode: Option<FontRenderMode>,
+    allow_mipmaps: bool,
 
     /// A HashMap that allows specifying a numeric id for clip and clip chains in YAML
     /// and having each of those ids correspond to a unique ClipId.
@@ -224,6 +225,7 @@ impl YamlFrameReader {
             font_render_mode: None,
             image_map: HashMap::new(),
             clip_id_map: HashMap::new(),
+            allow_mipmaps: false,
         }
     }
 
@@ -415,6 +417,7 @@ impl YamlFrameReader {
                     image_dims.1,
                     format,
                     is_image_opaque(format, &bytes[..]),
+                    self.allow_mipmaps,
                 );
                 let data = ImageData::new(bytes);
                 (descriptor, data)
@@ -516,6 +519,10 @@ impl YamlFrameReader {
             })
     }
 
+    pub fn allow_mipmaps(&mut self, allow_mipmaps: bool) {
+        self.allow_mipmaps = allow_mipmaps;
+    }
+
     pub fn set_font_render_mode(&mut self, render_mode: Option<FontRenderMode>) {
         self.font_render_mode = render_mode;
     }
@@ -601,67 +608,28 @@ impl YamlFrameReader {
     fn to_radial_gradient(&mut self, dl: &mut DisplayListBuilder, item: &Yaml) -> RadialGradient {
         let center = item["center"].as_point().expect("radial gradient must have center");
         let radius = item["radius"].as_size().expect("radial gradient must have a radius");
-
-        if item["start-radius"].is_badvalue() {
-            let stops = item["stops"]
-                .as_vec()
-                .expect("radial gradient must have stops")
-                .chunks(2)
-                .map(|chunk| {
-                    GradientStop {
-                        offset: chunk[0]
-                            .as_force_f32()
-                            .expect("gradient stop offset is not f32"),
-                        color: chunk[1]
-                            .as_colorf()
-                            .expect("gradient stop color is not color"),
-                    }
-                })
-                .collect::<Vec<_>>();
-            let extend_mode = if item["repeat"].as_bool().unwrap_or(false) {
-                ExtendMode::Repeat
-            } else {
-                ExtendMode::Clamp
-            };
-
-            dl.create_radial_gradient(center, radius, stops, extend_mode)
+        let stops = item["stops"]
+            .as_vec()
+            .expect("radial gradient must have stops")
+            .chunks(2)
+            .map(|chunk| {
+                GradientStop {
+                    offset: chunk[0]
+                        .as_force_f32()
+                        .expect("gradient stop offset is not f32"),
+                    color: chunk[1]
+                        .as_colorf()
+                        .expect("gradient stop color is not color"),
+                }
+            })
+            .collect::<Vec<_>>();
+        let extend_mode = if item["repeat"].as_bool().unwrap_or(false) {
+            ExtendMode::Repeat
         } else {
-            let start_radius = item["start-radius"]
-                .as_force_f32()
-                .expect("radial gradient must have start radius");
-            let end_radius = item["end-radius"]
-                .as_force_f32()
-                .expect("radial gradient must have end radius");
-            let stops = item["stops"]
-                .as_vec()
-                .expect("radial gradient must have stops")
-                .chunks(2)
-                .map(|chunk| {
-                    GradientStop {
-                        offset: chunk[0]
-                            .as_force_f32()
-                            .expect("gradient stop offset is not f32"),
-                        color: chunk[1]
-                            .as_colorf()
-                            .expect("gradient stop color is not color"),
-                    }
-                })
-                .collect::<Vec<_>>();
-            let extend_mode = if item["repeat"].as_bool().unwrap_or(false) {
-                ExtendMode::Repeat
-            } else {
-                ExtendMode::Clamp
-            };
+            ExtendMode::Clamp
+        };
 
-            dl.create_complex_radial_gradient(
-                center,
-                radius,
-                start_radius,
-                end_radius,
-                stops,
-                extend_mode,
-            )
-        }
+        dl.create_radial_gradient(center, radius, stops, extend_mode)
     }
 
     fn handle_rect(
@@ -1439,11 +1407,6 @@ impl YamlFrameReader {
         yaml: &Yaml,
         info: &mut LayoutPrimitiveInfo,
     ) {
-        let rect = yaml["bounds"]
-            .as_rect()
-            .expect("Text shadows require bounds");
-        info.rect = rect;
-        info.clip_rect = rect;
         let blur_radius = yaml["blur-radius"].as_f32().unwrap_or(0.0);
         let offset = yaml["offset"].as_vector().unwrap_or(LayoutVector2D::zero());
         let color = yaml["color"].as_colorf().unwrap_or(*BLACK_COLOR);

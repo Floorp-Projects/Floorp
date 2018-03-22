@@ -75,8 +75,8 @@ public:
   static void RemoveFromFlow(nsIFrame* aFrame);
 
 protected:
-  nsSplittableFrame(nsStyleContext* aContext, ClassID aID)
-    : nsFrame(aContext, aID)
+  nsSplittableFrame(ComputedStyle* aStyle, ClassID aID)
+    : nsFrame(aStyle, aID)
     , mPrevContinuation(nullptr)
     , mNextContinuation(nullptr)
   {}

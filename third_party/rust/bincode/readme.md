@@ -3,7 +3,7 @@
 <img align="right" src="./logo.png" />
 
 [![Build Status](https://travis-ci.org/TyOverby/bincode.svg)](https://travis-ci.org/TyOverby/bincode)
-[![](http://meritbadge.herokuapp.com/bincode)](https://crates.io/crates/bincode)
+[![](https://meritbadge.herokuapp.com/bincode)](https://crates.io/crates/bincode)
 [![](https://img.shields.io/badge/license-MIT-blue.svg)](http://opensource.org/licenses/MIT)
 
 A compact encoder / decoder pair that uses a binary zero-fluff encoding scheme.

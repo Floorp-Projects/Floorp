@@ -15,7 +15,7 @@
 struct JSContext;
 class JSObject;
 class nsIDocument;
-class nsStyleContext;
+class ComputedStyle;
 struct RawServoDeclarationBlock;
 
 namespace mozilla {
@@ -81,7 +81,7 @@ public:
    *
    * @param aKeyframes The input keyframes.
    * @param aElement The context element.
-   * @param aStyleType The |ServoStyleContext| or |GeckoStyleContext| to use
+   * @param aStyleType The |ComputedStyle| or |GeckoComputedStyle| to use
    *   when computing values.
    * @param aEffectComposite The composite operation specified on the effect.
    *   For any keyframes in |aKeyframes| that do not specify a composite

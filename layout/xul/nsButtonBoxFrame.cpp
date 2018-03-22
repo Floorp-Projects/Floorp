@@ -53,15 +53,15 @@ nsButtonBoxFrame::nsButtonBoxListener::HandleEvent(nsIDOMEvent* aEvent)
 // Creates a new Button frame and returns it
 //
 nsIFrame*
-NS_NewButtonBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewButtonBoxFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsButtonBoxFrame(aContext);
+  return new (aPresShell) nsButtonBoxFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsButtonBoxFrame)
 
-nsButtonBoxFrame::nsButtonBoxFrame(nsStyleContext* aContext, ClassID aID) :
-  nsBoxFrame(aContext, aID, false),
+nsButtonBoxFrame::nsButtonBoxFrame(ComputedStyle* aStyle, ClassID aID) :
+  nsBoxFrame(aStyle, aID, false),
   mButtonBoxListener(nullptr),
   mIsHandlingKeyEvent(false)
 {

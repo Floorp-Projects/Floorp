@@ -25,7 +25,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsDeckFrame)
 
   friend nsIFrame* NS_NewDeckFrame(nsIPresShell* aPresShell,
-                                   nsStyleContext* aContext);
+                                   ComputedStyle* aStyle);
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
                                     nsAtom*        aAttribute,
@@ -53,7 +53,7 @@ public:
   }
 #endif
 
-  explicit nsDeckFrame(nsStyleContext* aContext);
+  explicit nsDeckFrame(ComputedStyle* aStyle);
 
   nsIFrame* GetSelectedBox();
 
