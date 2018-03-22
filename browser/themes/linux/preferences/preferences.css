@@ -52,36 +52,6 @@
   margin: 0px 3px 6px 3px !important;
 }
 
-/* Cookies Manager */
-#cookiesChildren::-moz-tree-image(domainCol) {
-  width: 16px;
-  height: 16px;
-  margin: 0 2px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-#linksOpenInBox {
-  margin-top: 5px;
-}
-
-#advancedPrefs {
-  margin-left: 0;
-  margin-right: 0;
-}
-
-#cookiesChildren::-moz-tree-image(domainCol, container) {
-  list-style-image: url("moz-icon://stock/gtk-directory?size=menu");
-}
-
-#cookieInfoBox {
-  border: 1px solid ThreeDShadow;
-  border-radius: 0px;
-  margin: 4px;
-  padding: 0px;
-}
-
 /* bottom-most box containing a groupbox in a prefpane. Prevents the bottom
    of the groupbox from being cutoff */
 .bottomBox {
