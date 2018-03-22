@@ -5,7 +5,7 @@
 
 //! `Encoder`s and `Decoder`s from items to/from `BytesMut` buffers.
 
-use bincode::{self, deserialize, serialize_into, serialized_size, Bounded};
+use bincode::{self, deserialize, serialized_size};
 use bytes::{BufMut, ByteOrder, BytesMut, LittleEndian};
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
@@ -154,7 +154,7 @@ where
 
     fn encode(&mut self, item: Self::In, buf: &mut BytesMut) -> io::Result<()> {
         trace!("Attempting to encode");
-        let encoded_len = serialized_size(&item);
+        let encoded_len = serialized_size(&item).unwrap();
         if encoded_len > 8 * 1024 {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
@@ -166,8 +166,9 @@ where
 
         buf.put_u16::<LittleEndian>(encoded_len as u16);
 
-        if let Err(e) =
-            serialize_into::<_, Self::In, _>(&mut buf.writer(), &item, Bounded(encoded_len))
+        if let Err(e) = bincode::config()
+            .limit(encoded_len)
+            .serialize_into::<_, Self::In>(&mut buf.writer(), &item)
         {
             match *e {
                 bincode::ErrorKind::Io(e) => return Err(e),
