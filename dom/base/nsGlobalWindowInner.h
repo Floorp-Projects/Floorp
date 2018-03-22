@@ -1269,6 +1269,10 @@ private:
   // Fire the JS engine's onNewGlobalObject hook.  Only used on inner windows.
   void FireOnNewGlobalObject();
 
+  // Helper for resolving the components shim.
+  bool ResolveComponentsShim(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                             JS::MutableHandle<JS::PropertyDescriptor> aDesc);
+
   // nsPIDOMWindow{Inner,Outer} should be able to see these helper methods.
   friend class nsPIDOMWindowInner;
   friend class nsPIDOMWindowOuter;
