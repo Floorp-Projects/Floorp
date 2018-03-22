@@ -9,7 +9,10 @@
 #include "nsDeque.h"
 
 class nsCycleCollectionTraversalCallback;
-class nsTransactionItem;
+
+namespace mozilla {
+class TransactionItem;
+} // namespace mozilla
 
 class nsTransactionStack : private nsDeque
 {
@@ -19,12 +22,12 @@ public:
   explicit nsTransactionStack(Type aType);
   ~nsTransactionStack();
 
-  void Push(nsTransactionItem *aTransactionItem);
-  void Push(already_AddRefed<nsTransactionItem> aTransactionItem);
-  already_AddRefed<nsTransactionItem> Pop();
-  already_AddRefed<nsTransactionItem> PopBottom();
-  already_AddRefed<nsTransactionItem> Peek();
-  already_AddRefed<nsTransactionItem> GetItem(int32_t aIndex);
+  void Push(mozilla::TransactionItem* aTransactionItem);
+  void Push(already_AddRefed<mozilla::TransactionItem> aTransactionItem);
+  already_AddRefed<mozilla::TransactionItem> Pop();
+  already_AddRefed<mozilla::TransactionItem> PopBottom();
+  already_AddRefed<mozilla::TransactionItem> Peek();
+  already_AddRefed<mozilla::TransactionItem> GetItem(int32_t aIndex);
   void Clear();
   int32_t GetSize() const { return static_cast<int32_t>(nsDeque::GetSize()); }
   bool IsEmpty() const { return GetSize() == 0; }

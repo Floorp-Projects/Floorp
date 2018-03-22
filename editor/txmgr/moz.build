@@ -23,8 +23,8 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
-    'nsTransactionItem.cpp',
     'nsTransactionStack.cpp',
+    'TransactionItem.cpp',
     'TransactionManager.cpp',
     'TransactionManagerFactory.cpp',
 ]
