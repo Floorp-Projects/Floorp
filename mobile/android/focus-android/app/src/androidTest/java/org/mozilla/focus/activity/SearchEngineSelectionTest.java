@@ -22,7 +22,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.helpers.TestHelper;
 
-import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.helpers.TestHelper.waitingTime;
@@ -69,9 +68,6 @@ public class SearchEngineSelectionTest {
         UiObject googleWebView = TestHelper.mDevice.findObject(new UiSelector()
                 .description("mozilla focus - Google Search")
                 .className("android.webkit.WebView"));
-        UiObject yahooWebView = TestHelper.mDevice.findObject(new UiSelector()
-                .description("mozilla focus - - Yahoo Search Results")
-                .className("android.webkit.WebView"));
 
         /* Go to Settings and select the Search Engine */
         assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
@@ -87,8 +83,6 @@ public class SearchEngineSelectionTest {
 
         UiObject GoogleSelection = SearchEngineList.getChildByText(new UiSelector()
                 .className(RadioButton.class), "Google");
-        UiObject YahooSelection = SearchEngineList.getChildByText(new UiSelector()
-                .className(RadioButton.class), "Yahoo");
 
         GoogleSelection.waitForExists(waitingTime);
         GoogleSelection.click();
@@ -130,18 +124,6 @@ public class SearchEngineSelectionTest {
         assertTrue (TestHelper.browserURLbar.getText().contains("mozilla"));
         assertTrue (TestHelper.browserURLbar.getText().contains("focus"));
 
-        // Now let's change the search engine back to Yahoo
-        TestHelper.menuButton.perform(click());
-        TestHelper.browserViewSettingsMenuItem.click();
-        TestHelper.settingsHeading.waitForExists(waitingTime);
-        assertTrue(searchName.getText().equals("Google"));
-        SearchEngineSelection.click();
-        YahooSelection.waitForExists(waitingTime);
-        YahooSelection.click();
-        TestHelper.pressBackKey();
-        assertTrue(searchName.getText().equals("Yahoo"));
-        TestHelper.pressBackKey();
-
          /* Now do another search */
         TestHelper.browserURLbar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
@@ -154,8 +136,6 @@ public class SearchEngineSelectionTest {
         TestHelper.hint.click();
 
         /* Browser shows google search webview*/
-        yahooWebView.waitForExists(waitingTime);
-        assertTrue (TestHelper.browserURLbar.getText().contains("yahoo"));
         assertTrue (TestHelper.browserURLbar.getText().contains("mozilla"));
         assertTrue (TestHelper.browserURLbar.getText().contains("focus"));
 

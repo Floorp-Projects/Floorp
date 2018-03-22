@@ -1,14 +1,12 @@
 {
   "gd": [
     "google",
-    "yahoo-en-GB",
     "duckduckgo",
     "faclair-beag",
     "wikipedia-gd"
   ],
   "gl": [
     "google",
-    "yahoo-es",
     "amazondotcom",
     "duckduckgo",
     "twitter",
@@ -16,7 +14,6 @@
   ],
   "en-GB": [
     "google",
-    "yahoo-en-GB",
     "amazon-en-GB",
     "duckduckgo",
     "qwant",
@@ -25,7 +22,6 @@
   ],
   "lo": [
     "google",
-    "yahoo",
     "duckduckgo",
     "twitter",
     "wikipedia-lo"
@@ -59,7 +55,6 @@
   ],
   "te": [
     "google",
-    "yahoo-in",
     "amazon-in",
     "duckduckgo",
     "wikipedia-te",
@@ -67,7 +62,6 @@
   ],
   "ta": [
     "google",
-    "yahoo-in",
     "amazon-in",
     "duckduckgo",
     "wikipedia-ta",
@@ -82,7 +76,6 @@
   ],
   "bn-IN": [
     "google",
-    "yahoo-in",
     "amazondotcom",
     "duckduckgo",
     "rediff",
@@ -97,7 +90,6 @@
   ],
   "de": [
     "google",
-    "yahoo-de",
     "amazon-de",
     "duckduckgo",
     "qwant",
@@ -113,7 +105,6 @@
   ],
   "pt-BR": [
     "google",
-    "yahoo-br",
     "duckduckgo",
     "twitter",
     "wikipedia-br"
@@ -123,8 +114,7 @@
     "google-nocodes",
     "be.wikipedia.org",
     "duckduckgo",
-    "tut.by",
-    "yahoo"
+    "tut.by"
   ],
   "nb-NO": [
     "google",
@@ -135,7 +125,6 @@
   ],
   "gu-IN": [
     "google",
-    "yahoo-in",
     "amazon-in",
     "duckduckgo",
     "wikipedia-gu"
@@ -145,12 +134,10 @@
     "google-nocodes",
     "be.wikipedia.org",
     "duckduckgo",
-    "tut.by",
-    "yahoo"
+    "tut.by"
   ],
   "uz": [
     "google",
-    "yahoo",
     "amazondotcom",
     "duckduckgo",
     "twitter",
@@ -166,7 +153,6 @@
   ],
   "es-CL": [
     "google",
-    "yahoo-cl",
     "drae",
     "duckduckgo",
     "mercadolibre-cl",
@@ -178,8 +164,7 @@
     "google-nocodes",
     "be.wikipedia.org",
     "duckduckgo",
-    "tut.by",
-    "yahoo"
+    "tut.by"
   ],
   "el": [
     "google",
@@ -190,7 +175,6 @@
   ],
   "eo": [
     "google",
-    "yahoo",
     "duckduckgo",
     "reta-vortaro",
     "twitter",
@@ -199,14 +183,12 @@
   "kk-RU": [
     "yandex",
     "google-nocodes",
-    "yahoo",
     "duckduckgo",
     "twitter",
     "wikipedia-kk"
   ],
   "eu": [
     "google",
-    "yahoo-es",
     "duckduckgo",
     "elebila",
     "wikipedia-eu"
@@ -235,14 +217,12 @@
   "kk-BY": [
     "yandex",
     "google-nocodes",
-    "yahoo",
     "duckduckgo",
     "twitter",
     "wikipedia-kk"
   ],
   "rm": [
     "google",
-    "yahoo-ch",
     "duckduckgo",
     "leo_ende_de",
     "pledarigrond",
@@ -256,7 +236,6 @@
   ],
   "dsb": [
     "google",
-    "yahoo-de",
     "amazon-de",
     "duckduckgo",
     "twitter",
@@ -264,7 +243,6 @@
   ],
   "hsb": [
     "google",
-    "yahoo-de",
     "amazon-de",
     "duckduckgo",
     "twitter",
@@ -275,12 +253,10 @@
     "be.wikipedia.org",
     "duckduckgo",
     "tut.by",
-    "yahoo",
     "yandex.by"
   ],
   "ms": [
     "google",
-    "yahoo",
     "amazondotcom",
     "duckduckgo",
     "twitter",
@@ -289,14 +265,12 @@
   "kk-KZ": [
     "yandex",
     "google-nocodes",
-    "yahoo",
     "duckduckgo",
     "twitter",
     "wikipedia-kk"
   ],
   "mr": [
     "google",
-    "yahoo-in",
     "amazon-in",
     "duckduckgo",
     "rediff",
@@ -311,7 +285,6 @@
   ],
   "br": [
     "google",
-    "yahoo-france",
     "duckduckgo",
     "twitter",
     "wikipedia-br"
@@ -372,7 +345,6 @@
   ],
   "or": [
     "google",
-    "yahoo-in",
     "amazon-in",
     "duckduckgo",
     "wikipedia-or",
@@ -383,8 +355,7 @@
     "google-nocodes",
     "be.wikipedia.org",
     "duckduckgo",
-    "tut.by",
-    "yahoo"
+    "tut.by"
   ],
   "ca": [
     "google",
@@ -396,14 +367,12 @@
   "kk-TR": [
     "yandex",
     "google-nocodes",
-    "yahoo",
     "duckduckgo",
     "twitter",
     "wikipedia-kk"
   ],
   "cy": [
     "google",
-    "yahoo-en-GB",
     "amazon-en-GB",
     "duckduckgo",
     "wikipedia-cy"
@@ -419,7 +388,6 @@
   ],
   "en-CA": [
     "google",
-    "yahoo",
     "amazondotcom",
     "duckduckgo",
     "twitter",
@@ -427,7 +395,6 @@
   ],
   "hi-IN": [
     "google",
-    "yahoo-in",
     "amazon-in",
     "duckduckgo",
     "twitter",
@@ -448,7 +415,6 @@
   ],
   "hr": [
     "google",
-    "yahoo",
     "amazon-en-GB",
     "duckduckgo",
     "twitter",
@@ -456,7 +422,6 @@
   ],
   "en-US": [
     "google",
-    "yahoo",
     "amazondotcom",
     "duckduckgo",
     "twitter",
@@ -483,7 +448,6 @@
   ],
   "default": [
     "google",
-    "yahoo",
     "amazondotcom",
     "duckduckgo",
     "twitter",
@@ -491,14 +455,12 @@
   ],
   "ml": [
     "google",
-    "yahoo-in",
     "duckduckgo",
     "twitter",
     "wikipedia-ml"
   ],
   "ur": [
     "google",
-    "yahoo-in",
     "amazon-in",
     "duckduckgo",
     "twitter",
@@ -526,7 +488,6 @@
   ],
   "hy-AM": [
     "google",
-    "yahoo",
     "amazondotcom",
     "duckduckgo",
     "list-am",
@@ -541,7 +502,6 @@
   ],
   "my": [
     "google",
-    "yahoo",
     "amazondotcom",
     "duckduckgo",
     "twitter",
@@ -549,7 +509,6 @@
   ],
   "is": [
     "google",
-    "yahoo",
     "amazondotcom",
     "duckduckgo",
     "leit-is",
@@ -562,8 +521,6 @@
     "wikipedia-it"
   ],
   "as": [
-    "google",
-    "yahoo-in",
     "google",
     "amazon-in",
     "duckduckgo",
@@ -597,21 +554,18 @@
   ],
   "es-ES": [
     "google",
-    "yahoo-es",
     "duckduckgo",
     "twitter",
     "wikipedia-es"
   ],
   "id": [
     "google",
-    "yahoo-id",
     "duckduckgo",
     "twitter",
     "wikipedia-id"
   ],
   "sr": [
     "google",
-    "yahoo",
     "duckduckgo",
     "twitter",
     "wikipedia-sr"
@@ -638,7 +592,6 @@
   ],
   "fr": [
     "google",
-    "yahoo-france",
     "duckduckgo",
     "qwant",
     "twitter",
@@ -647,12 +600,10 @@
   "fa": [
     "google",
     "duckduckgo",
-    "wikipedia-fa",
-    "yahoo"
+    "wikipedia-fa"
   ],
   "ff": [
     "google",
-    "yahoo-france",
     "amazon-france",
     "duckduckgo",
     "wikipedia-fr"
@@ -661,7 +612,6 @@
     "google",
     "twitter",
     "wikipedia-fi",
-    "yahoo-fi",
     "amazondotcom",
     "duckduckgo"
   ],
@@ -674,7 +624,6 @@
   ],
   "ka": [
     "google",
-    "yahoo",
     "amazondotcom",
     "duckduckgo",
     "wikipedia-ka"
@@ -682,7 +631,6 @@
   "kk": [
     "yandex",
     "google",
-    "yahoo",
     "duckduckgo",
     "twitter",
     "wikipedia-kk"
@@ -694,7 +642,6 @@
   ],
   "sq": [
     "google",
-    "yahoo",
     "amazon-en-GB",
     "duckduckgo",
     "twitter",
@@ -710,7 +657,6 @@
   ],
   "kn": [
     "google",
-    "yahoo-in",
     "amazon-in",
     "duckduckgo",
     "twitter",
@@ -719,7 +665,6 @@
   ],
   "es-MX": [
     "google",
-    "yahoo-mx",
     "amazondotcom",
     "duckduckgo",
     "mercadolibre-mx",
