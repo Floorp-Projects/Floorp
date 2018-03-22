@@ -175,7 +175,8 @@ js::InitMallocAllocator()
 void
 js::ShutDownMallocAllocator()
 {
-    moz_dispose_arena(MallocArena);
+    // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
+    // moz_dispose_arena(MallocArena);
 }
 
 JS_PUBLIC_API(void)
