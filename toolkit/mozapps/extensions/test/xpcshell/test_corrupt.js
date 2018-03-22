@@ -17,61 +17,13 @@ Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 
 const ADDONS = {
-  // Will be enabled
-  "addon1@tests.mozilla.org": {
-    "install.rdf": {
-      id: "addon1@tests.mozilla.org",
-      version: "1.0",
-      name: "Test 1",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "2",
-        maxVersion: "2"
-      }]
-    },
-    desiredState: {
-      isActive: true,
-      userDisabled: false,
-      appDisabled: false,
-      pendingOperations: 0,
-    },
-    // Should be correctly recovered
-    afterCorruption: {},
-    afterSecondRestart: {},
-  },
-
-  // Will be disabled
-  "addon2@tests.mozilla.org": {
-    "install.rdf": {
-      id: "addon2@tests.mozilla.org",
-      version: "1.0",
-      name: "Test 2",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "2",
-        maxVersion: "2"
-      }]
-    },
-    initialState: {
-      userDisabled: true,
-    },
-    desiredState: {
-      isActive: false,
-      userDisabled: true,
-      appDisabled: false,
-      pendingOperations: 0,
-    },
-    // Should be correctly recovered
-    afterCorruption: {},
-    afterSecondRestart: {},
-  },
-
   // Will get a compatibility update and stay enabled
   "addon3@tests.mozilla.org": {
     "install.rdf": {
       id: "addon3@tests.mozilla.org",
       version: "1.0",
       name: "Test 3",
+      bootstrap: true,
       updateURL: "http://example.com/data/test_corrupt.json",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
@@ -98,6 +50,7 @@ const ADDONS = {
       id: "addon4@tests.mozilla.org",
       version: "1.0",
       name: "Test 4",
+      bootstrap: true,
       updateURL: "http://example.com/data/test_corrupt.json",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
@@ -129,6 +82,7 @@ const ADDONS = {
       id: "addon5@tests.mozilla.org",
       version: "1.0",
       name: "Test 5",
+      bootstrap: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
