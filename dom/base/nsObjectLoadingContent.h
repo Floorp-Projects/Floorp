@@ -23,7 +23,7 @@
 #include "nsIRunnable.h"
 #include "nsIThreadInternal.h"
 #include "nsIFrame.h"
-#include "nsIFrameLoader.h"
+#include "nsIFrameLoaderOwner.h"
 
 class nsAsyncInstantiateEvent;
 class nsStopPluginRunnable;

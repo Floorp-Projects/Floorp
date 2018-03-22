@@ -9,7 +9,6 @@
 #include "mozilla/dom/BlobSet.h"
 #include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/UnionTypes.h"
-#include "nsDOMClassInfoID.h"
 #include "nsIMultiplexInputStream.h"
 #include "nsRFPService.h"
 #include "nsStringStream.h"

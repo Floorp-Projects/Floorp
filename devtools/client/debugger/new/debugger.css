@@ -1375,7 +1375,7 @@ html[dir="rtl"] .arrow svg,
   position: relative;
 }
 
-.outline .outline-pane-info {
+.outline-pane-info {
   width: 100%;
   font-style: italic;
   text-align: center;

@@ -3083,7 +3083,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
   nsStyleContext* const styleContext = aItem.mStyleContext;
 
   // Construct a frame-based listbox or combobox
-  dom::HTMLSelectElement* sel = dom::HTMLSelectElement::FromContent(content);
+  dom::HTMLSelectElement* sel = dom::HTMLSelectElement::FromNode(content);
   MOZ_ASSERT(sel);
   if (sel->IsCombobox()) {
     // Construct a frame-based combo box.
@@ -5776,12 +5776,12 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   // to things that are not roots of native anonymous subtrees (except for
   // ::before and ::after); we always want to create "internal" anonymous
   // content.
-  auto* details = HTMLDetailsElement::FromContentOrNull(parent);
+  auto* details = HTMLDetailsElement::FromNodeOrNull(parent);
   if (details && !details->Open() &&
       (!aContent->IsRootOfNativeAnonymousSubtree() ||
        aContent->IsGeneratedContentContainerForBefore() ||
        aContent->IsGeneratedContentContainerForAfter())) {
-    auto* summary = HTMLSummaryElement::FromContentOrNull(aContent);
+    auto* summary = HTMLSummaryElement::FromNodeOrNull(aContent);
     if (!summary || !summary->IsMainSummary()) {
       SetAsUndisplayedContent(aState, aItems, aContent, styleContext,
                               isGeneratedContent);
@@ -5928,7 +5928,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 
   FrameConstructionItem* item = nullptr;
   if (details && details->Open()) {
-    auto* summary = HTMLSummaryElement::FromContentOrNull(aContent);
+    auto* summary = HTMLSummaryElement::FromNodeOrNull(aContent);
     if (summary && summary->IsMainSummary()) {
       // If details is open, the main summary needs to be rendered as if it is
       // the first child, so add the item to the front of the item list.
@@ -6814,7 +6814,7 @@ MaybeGetListBoxBodyFrame(nsIContent* aContainer, nsIContent* aChild)
 
   if (IsXULListBox(aContainer) &&
       aChild->IsXULElement(nsGkAtoms::listitem)) {
-    RefPtr<nsXULElement> xulElement = nsXULElement::FromContent(aContainer);
+    RefPtr<nsXULElement> xulElement = nsXULElement::FromNode(aContainer);
     nsCOMPtr<nsIBoxObject> boxObject = xulElement->GetBoxObject(IgnoreErrors());
     nsCOMPtr<nsPIListBoxObject> listBoxObject = do_QueryInterface(boxObject);
     if (listBoxObject) {
@@ -9033,7 +9033,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame)
 
   if (parent && parent->IsDetailsFrame()) {
     HTMLSummaryElement* summary =
-      HTMLSummaryElement::FromContent(aFrame->GetContent());
+      HTMLSummaryElement::FromNode(aFrame->GetContent());
     DetailsFrame* detailsFrame = static_cast<DetailsFrame*>(parent);
 
     // Unlike adding summary element cases, we need to check children of the

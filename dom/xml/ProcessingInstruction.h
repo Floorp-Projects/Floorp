@@ -45,7 +45,7 @@ public:
     aTarget = NodeName();
   }
 
-  NS_IMPL_FROMCONTENT_HELPER(ProcessingInstruction, IsProcessingInstruction())
+  NS_IMPL_FROMNODE_HELPER(ProcessingInstruction, IsProcessingInstruction())
 
 protected:
   virtual ~ProcessingInstruction();

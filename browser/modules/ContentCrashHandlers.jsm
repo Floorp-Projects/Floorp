@@ -160,8 +160,6 @@ var TabCrashHandler = {
         break;
       }
       case "oop-frameloader-crashed": {
-        aSubject.QueryInterface(Ci.nsIFrameLoader);
-
         let browser = aSubject.ownerElement;
         if (!browser) {
           return;

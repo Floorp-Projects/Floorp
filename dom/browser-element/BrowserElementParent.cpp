@@ -284,8 +284,7 @@ BrowserElementParent::OpenWindowInProcess(nsPIDOMWindowOuter* aOpenerWindow,
   RefPtr<nsFrameLoader> frameLoader = popupFrameElement->GetFrameLoader();
   NS_ENSURE_TRUE(frameLoader, BrowserElementParent::OPEN_WINDOW_IGNORED);
 
-  nsCOMPtr<nsIDocShell> docshell;
-  frameLoader->GetDocShell(getter_AddRefs(docshell));
+  nsCOMPtr<nsIDocShell> docshell = frameLoader->GetDocShell(IgnoreErrors());
   NS_ENSURE_TRUE(docshell, BrowserElementParent::OPEN_WINDOW_IGNORED);
 
   nsCOMPtr<nsPIDOMWindowOuter> window = docshell->GetWindow();

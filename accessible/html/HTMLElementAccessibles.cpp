@@ -68,7 +68,7 @@ HTMLLabelAccessible::RelationByType(RelationType aType)
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType == RelationType::LABEL_FOR) {
-    dom::HTMLLabelElement* label = dom::HTMLLabelElement::FromContent(mContent);
+    dom::HTMLLabelElement* label = dom::HTMLLabelElement::FromNode(mContent);
     rel.AppendTarget(mDoc, label->GetControl());
   }
 
@@ -139,7 +139,7 @@ HTMLSummaryAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
     return;
   }
 
-  dom::HTMLSummaryElement* summary = dom::HTMLSummaryElement::FromContent(mContent);
+  dom::HTMLSummaryElement* summary = dom::HTMLSummaryElement::FromNode(mContent);
   if (!summary) {
     return;
   }
@@ -171,7 +171,7 @@ HTMLSummaryAccessible::NativeState()
 {
   uint64_t state = HyperTextAccessibleWrap::NativeState();
 
-  dom::HTMLSummaryElement* summary = dom::HTMLSummaryElement::FromContent(mContent);
+  dom::HTMLSummaryElement* summary = dom::HTMLSummaryElement::FromNode(mContent);
   if (!summary) {
     return state;
   }

@@ -338,7 +338,7 @@ HTMLEditUtils::IsLink(nsINode* aNode)
     return false;
   }
 
-  RefPtr<HTMLAnchorElement> anchor = HTMLAnchorElement::FromContentOrNull(aNode->AsContent());
+  RefPtr<HTMLAnchorElement> anchor = HTMLAnchorElement::FromNodeOrNull(aNode->AsContent());
   if (!anchor) {
     return false;
   }

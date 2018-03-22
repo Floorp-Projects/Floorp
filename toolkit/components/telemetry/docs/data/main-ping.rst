@@ -64,7 +64,7 @@ Structure:
       chromeHangs: {...},
       threadHangStats: [...], // obsolete in firefox 57, use the 'bhr' ping
       capturedStacks: {...},
-      log: [...],
+      log: [...], // obsolete in firefox 61, use Event Telemetry or Scalars
       webrtc: {...},
       gc: {...},
       fileIOReports: {...},
@@ -394,6 +394,8 @@ Structure:
 
 log
 ---
+As of Firefox 61 this section is no longer present, use :ref:`eventtelemetry` or :doc:`../collection/scalars`.
+
 This section contains a log of important or unusual events reported through Telemetry.
 
 Structure:

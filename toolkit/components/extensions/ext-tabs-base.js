@@ -290,7 +290,7 @@ class TabBase {
   }
 
   /**
-   * @property {nsIFrameLoader} browser
+   * @property {FrameLoader} frameLoader
    *        Returns the frameloader for the given tab.
    *        @readonly
    */

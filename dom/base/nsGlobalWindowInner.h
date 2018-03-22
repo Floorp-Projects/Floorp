@@ -110,6 +110,7 @@ enum class ImageBitmapFormat : uint8_t;
 class IdleRequest;
 class IdleRequestCallback;
 class IncrementalRunnable;
+class InstallTriggerImpl;
 class IntlUtils;
 class Location;
 class MediaQueryList;
@@ -989,6 +990,8 @@ public:
 
   bool ShouldReportForServiceWorkerScope(const nsAString& aScope);
 
+  already_AddRefed<mozilla::dom::InstallTriggerImpl> GetInstallTrigger();
+
   void UpdateTopInnerWindow();
 
   virtual bool IsInSyncOperation() override
@@ -1266,6 +1269,10 @@ private:
   // Fire the JS engine's onNewGlobalObject hook.  Only used on inner windows.
   void FireOnNewGlobalObject();
 
+  // Helper for resolving the components shim.
+  bool ResolveComponentsShim(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                             JS::MutableHandle<JS::PropertyDescriptor> aDesc);
+
   // nsPIDOMWindow{Inner,Outer} should be able to see these helper methods.
   friend class nsPIDOMWindowInner;
   friend class nsPIDOMWindowOuter;
@@ -1387,6 +1394,7 @@ protected:
   // forward declared here means that ~nsGlobalWindow wouldn't compile because
   // it wouldn't see the ~External function's declaration.
   nsCOMPtr<nsISupports>         mExternal;
+  RefPtr<mozilla::dom::InstallTriggerImpl> mInstallTrigger;
 
   RefPtr<mozilla::dom::Storage> mLocalStorage;
   RefPtr<mozilla::dom::Storage> mSessionStorage;

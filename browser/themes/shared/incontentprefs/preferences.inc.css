@@ -9,10 +9,6 @@
   -moz-user-select: text;
 }
 
-:root {
-  --in-content-category-background: #fafafc;
-}
-
 .main-content {
   padding-top: 0;
 }

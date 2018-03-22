@@ -59,7 +59,7 @@ int32_t
 nsLegendFrame::GetLogicalAlign(WritingMode aCBWM)
 {
   int32_t intValue = NS_STYLE_TEXT_ALIGN_START;
-  nsGenericHTMLElement* content = nsGenericHTMLElement::FromContent(mContent);
+  nsGenericHTMLElement* content = nsGenericHTMLElement::FromNode(mContent);
   if (content) {
     const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::align);
     if (attr && attr->Type() == nsAttrValue::eEnum) {

@@ -311,7 +311,7 @@ public:
   NS_IMETHOD Run() override
   {
     if (mNumber->AsElement()->State().HasState(NS_EVENT_STATE_FOCUS)) {
-      HTMLInputElement::FromContent(mTextField)->Focus(IgnoreErrors());
+      HTMLInputElement::FromNode(mTextField)->Focus(IgnoreErrors());
     }
 
     return NS_OK;
@@ -386,8 +386,8 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
                       NS_LITERAL_STRING("text"), PR_FALSE);
 
-  HTMLInputElement* content = HTMLInputElement::FromContent(mContent);
-  HTMLInputElement* textField = HTMLInputElement::FromContent(mTextField);
+  HTMLInputElement* content = HTMLInputElement::FromNode(mContent);
+  HTMLInputElement* textField = HTMLInputElement::FromNode(mTextField);
 
   // Initialize the text field value:
   nsAutoString value;
@@ -465,7 +465,7 @@ nsNumberControlFrame::SetFormProperty(nsAtom* aName, const nsAString& aValue)
 HTMLInputElement*
 nsNumberControlFrame::GetAnonTextControl()
 {
-  return mTextField ? HTMLInputElement::FromContent(mTextField) : nullptr;
+  return HTMLInputElement::FromNode(mTextField);
 }
 
 /* static */ nsNumberControlFrame*
@@ -569,14 +569,14 @@ nsNumberControlFrame::SpinnerStateChanged() const
 bool
 nsNumberControlFrame::SpinnerUpButtonIsDepressed() const
 {
-  return HTMLInputElement::FromContent(mContent)->
+  return HTMLInputElement::FromNode(mContent)->
            NumberSpinnerUpButtonIsDepressed();
 }
 
 bool
 nsNumberControlFrame::SpinnerDownButtonIsDepressed() const
 {
-  return HTMLInputElement::FromContent(mContent)->
+  return HTMLInputElement::FromNode(mContent)->
            NumberSpinnerDownButtonIsDepressed();
 }
 
@@ -595,7 +595,7 @@ nsNumberControlFrame::HandleFocusEvent(WidgetEvent* aEvent)
 {
   if (aEvent->mOriginalTarget != mTextField) {
     // Move focus to our text field
-    RefPtr<HTMLInputElement> textField = HTMLInputElement::FromContent(mTextField);
+    RefPtr<HTMLInputElement> textField = HTMLInputElement::FromNode(mTextField);
     textField->Focus(IgnoreErrors());
   }
 }
@@ -603,7 +603,7 @@ nsNumberControlFrame::HandleFocusEvent(WidgetEvent* aEvent)
 void
 nsNumberControlFrame::HandleSelectCall()
 {
-  RefPtr<HTMLInputElement> textField = HTMLInputElement::FromContent(mTextField);
+  RefPtr<HTMLInputElement> textField = HTMLInputElement::FromNode(mTextField);
   textField->Select();
 }
 
@@ -677,9 +677,9 @@ nsNumberControlFrame::SetValueOfAnonTextControl(const nsAString& aValue)
   // Pass NonSystem as the caller type; this should work fine for actual number
   // inputs, and be safe in case our input has a type we don't expect for some
   // reason.
-  HTMLInputElement::FromContent(mTextField)->SetValue(localizedValue,
-                                                      CallerType::NonSystem,
-                                                      IgnoreErrors());
+  HTMLInputElement::FromNode(mTextField)->SetValue(localizedValue,
+                                                   CallerType::NonSystem,
+                                                   IgnoreErrors());
 }
 
 void
@@ -690,7 +690,7 @@ nsNumberControlFrame::GetValueOfAnonTextControl(nsAString& aValue)
     return;
   }
 
-  HTMLInputElement::FromContent(mTextField)->GetValue(aValue, CallerType::System);
+  HTMLInputElement::FromNode(mTextField)->GetValue(aValue, CallerType::System);
 
   // Here we need to de-localize any number typed in by the user. That is, we
   // need to convert it from the number format of the user's language, region,
@@ -741,7 +741,7 @@ nsNumberControlFrame::AnonTextControlIsEmpty()
     return true;
   }
   nsAutoString value;
-  HTMLInputElement::FromContent(mTextField)->GetValue(value, CallerType::System);
+  HTMLInputElement::FromNode(mTextField)->GetValue(value, CallerType::System);
   return value.IsEmpty();
 }
 
