@@ -13,15 +13,12 @@ let GOOD = [
 if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
   GOOD.push(
     ["signed_bootstrap_2.xpi", AddonManager.SIGNEDSTATE_SIGNED],
-    ["signed_nonbootstrap_2.xpi", AddonManager.SIGNEDSTATE_SIGNED],
   );
 }
 
 const BAD = [
   ["unsigned_bootstrap_2.xpi", AddonManager.SIGNEDSTATE_MISSING],
   ["signed_bootstrap_badid_2.xpi", AddonManager.SIGNEDSTATE_BROKEN],
-  ["unsigned_nonbootstrap_2.xpi", AddonManager.SIGNEDSTATE_MISSING],
-  ["signed_nonbootstrap_badid_2.xpi", AddonManager.SIGNEDSTATE_BROKEN],
 ];
 const ID = "test@tests.mozilla.org";
 
