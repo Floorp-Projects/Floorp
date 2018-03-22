@@ -2388,6 +2388,51 @@ add_task(async function test_pushChanges() {
   await PlacesSyncUtils.bookmarks.reset();
 });
 
+add_task(async function test_changes_between_pull_and_push() {
+  await ignoreChangedRoots();
+
+  info("Populate test bookmarks");
+  let guids = await populateTree(PlacesUtils.bookmarks.menuGuid, {
+    kind: "bookmark",
+    title: "bmk",
+    url: "https://example.info",
+  });
+
+  info("Update sync statuses");
+  await PlacesTestUtils.setBookmarkSyncFields({
+    guid: guids.bmk,
+    syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
+    syncChangeCounter: 1,
+  });
+
+  info("Pull changes");
+  let changes = await PlacesSyncUtils.bookmarks.pullChanges();
+  Assert.equal(changes[guids.bmk].counter, 1);
+  Assert.equal(changes[guids.bmk].tombstone, false);
+
+  // delete the bookmark.
+  await PlacesUtils.bookmarks.remove(guids.bmk);
+
+  info("Push changes");
+  await PlacesSyncUtils.bookmarks.pushChanges(changes);
+
+  // we should have a tombstone.
+  let ts = await PlacesTestUtils.fetchSyncTombstones();
+  Assert.equal(ts.length, 1);
+  Assert.equal(ts[0].guid, guids.bmk);
+
+  // there should be no record for the item we deleted.
+  Assert.strictEqual(await PlacesUtils.bookmarks.fetch(guids.bmk), null);
+
+  // and re-fetching changes should list it as a tombstone.
+  changes = await PlacesSyncUtils.bookmarks.pullChanges();
+  Assert.equal(changes[guids.bmk].counter, 1);
+  Assert.equal(changes[guids.bmk].tombstone, true);
+
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
+
 add_task(async function test_touch() {
   await ignoreChangedRoots();
 
