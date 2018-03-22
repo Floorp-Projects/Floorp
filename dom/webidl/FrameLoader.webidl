@@ -37,6 +37,7 @@ interface FrameLoader {
    * Loads the specified URI in this frame. Behaves identically to loadFrame,
    * except that this method allows specifying the URI to load.
    */
+  // XXXbz Should this even be exposed to JS?
   [Throws]
   void loadURI(URI aURI, optional boolean originalSrc = false);
 

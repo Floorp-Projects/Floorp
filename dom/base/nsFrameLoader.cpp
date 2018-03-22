@@ -321,7 +321,7 @@ nsFrameLoader::LoadURI(nsIURI* aURI, bool aOriginalSrc, ErrorResult& aRv)
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrameLoader::LoadURI(nsIURI* aURI, bool aOriginalSrc)
 {
   return LoadURI(aURI, nullptr, aOriginalSrc);
