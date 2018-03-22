@@ -41,6 +41,7 @@ const ADDONS = {
     id: "hardblock@tests.mozilla.org",
     version: "1.0",
     name: "Hardblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -50,6 +51,7 @@ const ADDONS = {
     id: "hardblock@tests.mozilla.org",
     version: "2.0",
     name: "Hardblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -59,6 +61,7 @@ const ADDONS = {
     id: "hardblock@tests.mozilla.org",
     version: "3.0",
     name: "Hardblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -68,6 +71,7 @@ const ADDONS = {
     id: "regexpblock@tests.mozilla.org",
     version: "1.0",
     name: "RegExp-blocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -77,6 +81,7 @@ const ADDONS = {
     id: "regexpblock@tests.mozilla.org",
     version: "2.0",
     name: "RegExp-blocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -86,6 +91,7 @@ const ADDONS = {
     id: "regexpblock@tests.mozilla.org",
     version: "3.0",
     name: "RegExp-blocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -95,6 +101,7 @@ const ADDONS = {
     id: "softblock1@tests.mozilla.org",
     version: "1.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -104,6 +111,7 @@ const ADDONS = {
     id: "softblock1@tests.mozilla.org",
     version: "2.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -113,6 +121,7 @@ const ADDONS = {
     id: "softblock1@tests.mozilla.org",
     version: "3.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -122,6 +131,7 @@ const ADDONS = {
     id: "softblock2@tests.mozilla.org",
     version: "1.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -131,6 +141,7 @@ const ADDONS = {
     id: "softblock2@tests.mozilla.org",
     version: "2.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -140,6 +151,7 @@ const ADDONS = {
     id: "softblock2@tests.mozilla.org",
     version: "3.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -149,6 +161,7 @@ const ADDONS = {
     id: "softblock3@tests.mozilla.org",
     version: "1.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -158,6 +171,7 @@ const ADDONS = {
     id: "softblock3@tests.mozilla.org",
     version: "2.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -167,6 +181,7 @@ const ADDONS = {
     id: "softblock3@tests.mozilla.org",
     version: "3.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -176,6 +191,7 @@ const ADDONS = {
     id: "softblock4@tests.mozilla.org",
     version: "1.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -185,6 +201,7 @@ const ADDONS = {
     id: "softblock4@tests.mozilla.org",
     version: "2.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -194,6 +211,7 @@ const ADDONS = {
     id: "softblock4@tests.mozilla.org",
     version: "3.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -203,6 +221,7 @@ const ADDONS = {
     id: "softblock5@tests.mozilla.org",
     version: "1.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     internalName: "test/1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -213,6 +232,7 @@ const ADDONS = {
     id: "softblock5@tests.mozilla.org",
     version: "2.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     internalName: "test/1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -223,6 +243,7 @@ const ADDONS = {
     id: "softblock5@tests.mozilla.org",
     version: "3.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     internalName: "test/1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -242,6 +263,7 @@ var softblock1_1 = {
   id: "softblock1@tests.mozilla.org",
   version: "1.0",
   name: "Softblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update1.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -254,6 +276,7 @@ var softblock1_2 = {
   id: "softblock1@tests.mozilla.org",
   version: "2.0",
   name: "Softblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update2.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -266,6 +289,7 @@ var softblock1_3 = {
   id: "softblock1@tests.mozilla.org",
   version: "3.0",
   name: "Softblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update3.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -278,6 +302,7 @@ var softblock2_1 = {
   id: "softblock2@tests.mozilla.org",
   version: "1.0",
   name: "Softblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update1.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -290,6 +315,7 @@ var softblock2_2 = {
   id: "softblock2@tests.mozilla.org",
   version: "2.0",
   name: "Softblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update2.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -302,6 +328,7 @@ var softblock2_3 = {
   id: "softblock2@tests.mozilla.org",
   version: "3.0",
   name: "Softblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update3.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -314,6 +341,7 @@ var softblock3_1 = {
   id: "softblock3@tests.mozilla.org",
   version: "1.0",
   name: "Softblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update1.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -326,6 +354,7 @@ var softblock3_2 = {
   id: "softblock3@tests.mozilla.org",
   version: "2.0",
   name: "Softblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update2.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -338,6 +367,7 @@ var softblock3_3 = {
   id: "softblock3@tests.mozilla.org",
   version: "3.0",
   name: "Softblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update3.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -350,6 +380,7 @@ var softblock4_1 = {
   id: "softblock4@tests.mozilla.org",
   version: "1.0",
   name: "Softblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update1.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -362,6 +393,7 @@ var softblock4_2 = {
   id: "softblock4@tests.mozilla.org",
   version: "2.0",
   name: "Softblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update2.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -374,6 +406,7 @@ var softblock4_3 = {
   id: "softblock4@tests.mozilla.org",
   version: "3.0",
   name: "Softblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update3.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -386,6 +419,7 @@ var hardblock_1 = {
   id: "hardblock@tests.mozilla.org",
   version: "1.0",
   name: "Hardblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update1.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -398,6 +432,7 @@ var hardblock_2 = {
   id: "hardblock@tests.mozilla.org",
   version: "2.0",
   name: "Hardblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update2.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -410,6 +445,7 @@ var hardblock_3 = {
   id: "hardblock@tests.mozilla.org",
   version: "3.0",
   name: "Hardblocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update3.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -422,6 +458,7 @@ var regexpblock_1 = {
   id: "regexpblock@tests.mozilla.org",
   version: "1.0",
   name: "RegExp-blocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update1.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -434,6 +471,7 @@ var regexpblock_2 = {
   id: "regexpblock@tests.mozilla.org",
   version: "2.0",
   name: "RegExp-blocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update2.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -446,6 +484,7 @@ var regexpblock_3 = {
   id: "regexpblock@tests.mozilla.org",
   version: "3.0",
   name: "RegExp-blocked add-on",
+  bootstrap: true,
   updateURL: "http://example.com/data/blocklistchange/addon_update3.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
