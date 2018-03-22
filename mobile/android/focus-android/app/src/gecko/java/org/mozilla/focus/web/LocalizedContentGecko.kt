@@ -6,7 +6,6 @@ package org.mozilla.focus.web
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.support.v4.util.ArrayMap
 import android.view.View
 
@@ -15,9 +14,6 @@ import org.mozilla.focus.locale.Locales
 import org.mozilla.focus.utils.HtmlLoader
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.geckoview.GeckoSession
-
-import java.io.File
-import java.io.PrintWriter
 
 object LocalizedContentGecko {
     // We can't use "about:" because webview silently swallows about: pages, hence we use
@@ -54,7 +50,8 @@ object LocalizedContentGecko {
         var aboutVersion = ""
         try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            aboutVersion = String.format("%s (Build #%s)", packageInfo.versionName, packageInfo.versionCode)
+            aboutVersion = String.format("%s (Build #%s)", packageInfo.versionName,
+                packageInfo.versionCode)
         } catch (e: PackageManager.NameNotFoundException) {
             // Nothing to do if we can't find the package name.
         }
@@ -70,11 +67,9 @@ object LocalizedContentGecko {
         putLayoutDirectionIntoMap(substitutionMap, context)
 
         val data = HtmlLoader.loadResourceFile(context, R.raw.about, substitutionMap)
-        val path = context.filesDir
-        val file = File(path, "about.html")
-        writeDataToFile(file, data)
-
-        geckoSession.loadUri(Uri.fromFile(file))
+        geckoSession.loadData(
+            data.toByteArray(Charsets.UTF_8), "text/html",
+            "resource://android/resources/raw/about.html")
     }
 
     /**
@@ -92,31 +87,26 @@ object LocalizedContentGecko {
         val content2 = resources.getString(R.string.your_rights_content2, appName, mplUrl)
         substitutionMap["%your-rights-content2%"] = content2
 
-        val content3 = resources.getString(R.string.your_rights_content3, appName, trademarkPolicyUrl)
+        val content3 = resources.getString(R.string.your_rights_content3, appName,
+            trademarkPolicyUrl)
         substitutionMap["%your-rights-content3%"] = content3
 
         val content4 = resources.getString(R.string.your_rights_content4, appName, licensesUrl)
         substitutionMap["%your-rights-content4%"] = content4
 
-        val content5 = resources.getString(R.string.your_rights_content5, appName, gplUrl, trackingProtectionUrl)
+        val content5 = resources.getString(R.string.your_rights_content5, appName, gplUrl,
+            trackingProtectionUrl)
         substitutionMap["%your-rights-content5%"] = content5
 
         putLayoutDirectionIntoMap(substitutionMap, context)
 
         val data = HtmlLoader.loadResourceFile(context, R.raw.rights, substitutionMap)
-        val path = context.filesDir
-        val file = File(path, "rights.html")
-
-        writeDataToFile(file, data)
-
-        geckoSession.loadUri(Uri.fromFile(file))
+        geckoSession.loadData(data.toByteArray(Charsets.UTF_8), "text/html",
+            "resource://android/resources/raw/rights.html")
     }
 
-    private fun writeDataToFile(file: File, data: String) {
-        PrintWriter(file).use({ out -> out.println(data) })
-    }
-
-    private fun putLayoutDirectionIntoMap(substitutionMap: ArrayMap<String, String>, context: Context) {
+    private fun putLayoutDirectionIntoMap(substitutionMap: ArrayMap<String, String>,
+                                          context: Context) {
         val layoutDirection = context.resources.configuration.layoutDirection
 
         val direction = when (layoutDirection) {

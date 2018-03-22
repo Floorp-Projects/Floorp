@@ -310,15 +310,21 @@ repositories {
         //   https://tools.taskcluster.net/index/gecko.v2.mozilla-central.nightly
 
         // ARM GeckoView builds
-        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${geckoview_nightly_version}.latest.mobile.android-api-16-opt/artifacts/public/android/maven"
+        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly" +
+                ".${geckoview_nightly_date}.revision.${geckoview_revision}.mobile" +
+                ".android-api-16-opt/artifacts/public/android/maven"
     }
     maven {
         // x86 GeckoView builds
-        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${geckoview_nightly_version}.latest.mobile.android-x86-opt/artifacts/public/android/maven"
+        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly" +
+                ".${geckoview_nightly_date}.revision.${geckoview_revision}.mobile" +
+                ".android-x86-opt/artifacts/public/android/maven"
     }
     maven {
         // aarch64 builds
-        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${geckoview_nightly_version}.latest.mobile.android-aarch64-opt/artifacts/public/android/maven"
+        url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly" +
+                ".${geckoview_nightly_date}.revision.${geckoview_revision}.mobile" +
+                ".android-aarch64-opt/artifacts/public/android/maven"
     }
 }
 
@@ -350,9 +356,9 @@ dependencies {
     // What I actually want to define here is geckoArmCompile and geckoX86Compile. But gradle doesn't
     // allow me to define dependencies for such a flavor combination. However as we are not building
     // WebView + (ARM / x86) flavor combinations this should be good enough for now.
-    armImplementation "org.mozilla:geckoview-nightly-armeabi-v7a:61.0a1"
-    x86Implementation "org.mozilla:geckoview-nightly-x86:61.0a1"
-    aarch64Implementation "org.mozilla:geckoview-nightly-arm64-v8a:61.0a1"
+    armCompile "org.mozilla:geckoview-nightly-armeabi-v7a:${geckoview_nightly_version}"
+    x86Compile "org.mozilla:geckoview-nightly-x86:${geckoview_nightly_version}"
+    aarch64Compile "org.mozilla:geckoview-nightly-arm64-v8a:${geckoview_nightly_version}"
 
     testImplementation 'junit:junit:4.12'
     testImplementation "org.robolectric:robolectric:3.7.1"

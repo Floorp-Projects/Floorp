@@ -9,16 +9,20 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import org.mozilla.focus.session.Session;
+import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.utils.UrlUtils;
-import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.GeckoRuntime;
+import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 
@@ -26,13 +30,19 @@ import org.mozilla.geckoview.GeckoSessionSettings;
  * WebViewProvider implementation for creating a Gecko based implementation of IWebView.
  */
 public class WebViewProvider {
+    private static GeckoRuntime geckoRuntime;
+
     public static void preload(final Context context) {
-        GeckoSession.preload(context);
+        if (geckoRuntime == null) {
+            Log.v("CreateRunTime", "here");
+            final GeckoRuntimeSettings geckoRuntimeSettings = new GeckoRuntimeSettings();
+            geckoRuntimeSettings.setUseContentProcessHint(true);
+            geckoRuntime = GeckoRuntime.create(context, geckoRuntimeSettings);
+        }
     }
 
     public static View create(Context context, AttributeSet attrs) {
-        final GeckoView geckoView = new GeckoWebView(context, attrs);
-        return geckoView;
+        return new GeckoWebView(context, attrs);
     }
 
     public static void performCleanup(final Context context) {
@@ -44,6 +54,7 @@ public class WebViewProvider {
     }
 
     public static class GeckoWebView extends NestedGeckoView implements IWebView, SharedPreferences.OnSharedPreferenceChangeListener {
+        private static final String TAG = "GeckoWebView";
         private Callback callback;
         private String currentUrl = "about:blank";
         private boolean canGoBack;
@@ -55,8 +66,15 @@ public class WebViewProvider {
         public GeckoWebView(Context context, AttributeSet attrs) {
             super(context, attrs);
 
+            if (geckoRuntime == null) {
+                Log.v("CreateRunTime", "here");
+                final GeckoRuntimeSettings geckoRuntimeSettings = new GeckoRuntimeSettings();
+                geckoRuntimeSettings.setUseContentProcessHint(true);
+                geckoRuntime = GeckoRuntime.create(getContext(), geckoRuntimeSettings);
+            }
+
             final GeckoSessionSettings settings = new GeckoSessionSettings();
-            settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
+            settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, true);
             settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true);
 
             geckoSession = new GeckoSession(settings);
@@ -71,7 +89,7 @@ public class WebViewProvider {
             geckoSession.setNavigationDelegate(createNavigationDelegate());
             geckoSession.setTrackingProtectionDelegate(createTrackingProtectionDelegate());
             geckoSession.setPromptDelegate(createPromptDelegate());
-            setSession(geckoSession);
+            setSession(geckoSession, geckoRuntime);
         }
 
         @Override
@@ -197,14 +215,33 @@ public class WebViewProvider {
                 public void onContextMenu(GeckoSession session, int screenX, int screenY, String uri, @ElementType int elementType, String elementSrc) {
                     if (elementSrc != null && uri != null) {
                         callback.onLongPress(new HitTarget(true, uri, true, elementSrc));
-                    } else if (elementSrc != null) {
-                        if (elementSrc.endsWith("jpg") || elementSrc.endsWith("gif") ||
-                                elementSrc.endsWith("tif") || elementSrc.endsWith("bmp") ||
-                                elementSrc.endsWith("png")) {
-                            callback.onLongPress(new HitTarget(false, null, true, elementSrc));
-                        }
+                    } else if (elementSrc != null && elementType == ELEMENT_TYPE_IMAGE) {
+                        callback.onLongPress(new HitTarget(false, null, true, elementSrc));
                     } else if (uri != null) {
                         callback.onLongPress(new HitTarget(true, uri, false, null));
+                    }
+                }
+
+                @Override
+                public void onExternalResponse(GeckoSession session, GeckoSession.WebResponseInfo response) {
+                    if (!AppConstants.supportsDownloadingFiles()) {
+                        return;
+                    }
+
+                    final String scheme = Uri.parse(response.uri).getScheme();
+                    if (scheme == null || (!scheme.equals("http") && !scheme.equals("https"))) {
+                        // We are ignoring everything that is not http or https. This is a limitation of
+                        // Android's download manager. There's no reason to show a download dialog for
+                        // something we can't download anyways.
+                        Log.w(TAG, "Ignoring download from non http(s) URL: " + response.uri);
+                        return;
+                    }
+
+                    if (callback != null) {
+                        final Download download = new Download(response.uri, "Mozilla/5.0 (Android 8.1.0; Mobile; rv:60.0) Gecko/60.0 Firefox/60.0",
+                                response.filename, response.contentType, response.contentLength,
+                                Environment.DIRECTORY_DOWNLOADS);
+                        callback.onDownloadStart(download);
                     }
                 }
 
@@ -269,26 +306,32 @@ public class WebViewProvider {
                 }
 
                 @Override
-                public boolean onLoadRequest(GeckoSession session, String uri, @TargetWindow int target) {
+                public void onLoadRequest(GeckoSession session, String uri, int target, GeckoSession.Response<Boolean> response) {
                     // If this is trying to load in a new tab, just load it in the current one
                     if (target == GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
                         geckoSession.loadUri(uri);
-                        return true;
+                        response.respond(true);
                     }
 
                     // Check if we should handle an internal link
                     if (LocalizedContentGecko.INSTANCE.handleInternalContent(uri, session, getContext())) {
-                        return true;
+                        response.respond(true);
                     }
 
                     // Check if we should handle an external link
                     final Uri urlToURI = Uri.parse(uri);
-                    if (!UrlUtils.isSupportedProtocol(urlToURI.getScheme()) && callback != null) {
-                        return IntentUtils.handleExternalUri(getContext(), GeckoWebView.this, uri);
+                    if (!UrlUtils.isSupportedProtocol(urlToURI.getScheme()) && callback != null &&
+                            IntentUtils.handleExternalUri(getContext(), GeckoWebView.this, uri)) {
+                        response.respond(true);
+                    }
+
+                    if (uri.equals("about:neterror") || uri.equals("about:certerror")) {
+                        // TODO: Error Page Handling
+                        response.respond(true);
                     }
 
                     // Otherwise allow the load to continue normally
-                    return false;
+                    response.respond(false);
                 }
 
                 @Override
