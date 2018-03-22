@@ -56,13 +56,6 @@ interface FrameLoader {
   void addProcessChangeBlockingPromise(Promise<any> aPromise);
 
   /**
-   * Destroy the frame loader and everything inside it. This will
-   * clear the weak owner content reference.
-   */
-  [Throws]
-  void destroy();
-
-  /**
    * Find out whether the loader's frame is at too great a depth in
    * the frame tree.  This can be used to decide what operations may
    * or may not be allowed on the loader's docshell.

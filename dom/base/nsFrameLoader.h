@@ -133,7 +133,11 @@ public:
 
   void AddProcessChangeBlockingPromise(mozilla::dom::Promise& aPromise, mozilla::ErrorResult& aRv);
 
-  void Destroy(mozilla::ErrorResult& aRv);
+  /**
+   * Destroy the frame loader and everything inside it. This will
+   * clear the weak owner content reference.
+   */
+  void Destroy();
 
   void ActivateRemoteFrame(mozilla::ErrorResult& aRv);
 

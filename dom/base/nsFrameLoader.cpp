@@ -1670,19 +1670,9 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
 }
 
 void
-nsFrameLoader::Destroy(ErrorResult& aRv)
-{
-  nsresult rv = Destroy();
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
-NS_IMETHODIMP
 nsFrameLoader::Destroy()
 {
   StartDestroy();
-  return NS_OK;
 }
 
 class nsFrameLoaderDestroyRunnable : public Runnable
