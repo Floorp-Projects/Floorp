@@ -21,16 +21,13 @@ tasks:
     payload:
       maxRunTime: 3600
       deadline: "{{ '2 hours' | $fromNow }}"
-      image: 'alvrme/alpine-android'
+      image: 'mozillamobile/android-components:1.0'
       command:
         - /bin/bash
         - '--login'
         - '-cx'
         - >-
-          apk add --no-cache git
-          && git clone {{ event.head.repo.url }}
-          && cd android-components
-          && touch local.properties
+          git fetch {{ event.head.repo.url }} {{ event.head.repo.branch }}
           && git config advice.detachedHead false
           && git checkout {{event.head.sha}}
           && ./gradlew --no-daemon clean assemble test detektCheck ktlint lint
