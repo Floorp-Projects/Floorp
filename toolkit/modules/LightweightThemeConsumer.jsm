@@ -35,13 +35,13 @@ const toolkitVariableMap = [
       return `rgba(${r}, ${g}, ${b}, ${a})` || "black";
     }
   }],
-  ["--arrowpanel-background", {
+  ["--lwt-arrowpanel-background", {
     lwtProperty: "popup"
   }],
-  ["--arrowpanel-color", {
+  ["--lwt-arrowpanel-color", {
     lwtProperty: "popup_text"
   }],
-  ["--arrowpanel-border-color", {
+  ["--lwt-arrowpanel-border-color", {
     lwtProperty: "popup_border"
   }],
 ];

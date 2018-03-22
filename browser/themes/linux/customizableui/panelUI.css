@@ -6,9 +6,9 @@
 
 #BMB_bookmarksPopup menupopup {
   -moz-appearance: none;
-  background: var(--arrowpanel-background);
-  color: var(--arrowpanel-color);
-  border: 1px solid var(--arrowpanel-border-color);
+  background: var(--lwt-arrowpanel-background, var(--arrowpanel-background));
+  color: var(--lwt-arrowpanel-color, var(--arrowpanel-color));
+  border: 1px solid var(--lwt-arrowpanel-border-color, var(--arrowpanel-border-color));
   margin-top: -6px;
   padding-top: 1px;
 }
