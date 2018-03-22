@@ -16,11 +16,11 @@ const TEST_URI = `
     height:100px">
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel} = yield openLayoutView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, boxmodel} = await openLayoutView();
 
-  yield selectNode("#mydiv", inspector);
+  await selectNode("#mydiv", inspector);
   let editPositionButton = boxmodel.document.querySelector(".layout-geometry-editor");
 
   ok(isNodeVisible(editPositionButton), "Edit Position button is visible initially");
@@ -37,7 +37,7 @@ add_task(function* () {
   EventUtils.synthesizeKey("8", {}, boxmodel.document.defaultView);
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
-  yield onUpdate;
+  await onUpdate;
   editPositionButton = boxmodel.document.querySelector(".layout-geometry-editor");
   ok(isNodeVisible(editPositionButton),
     "Edit Position button is still visible after layout change");

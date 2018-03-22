@@ -8,19 +8,19 @@
 
 const TEST_URI = "<h1 style='font: 24px serif'></h1>";
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view, testActor} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view, testActor} = await openRuleView();
 
   info("Test autocompletion popup is hidden after page navigation");
 
   info("Selecting the test node");
-  yield selectNode("h1", inspector);
+  await selectNode("h1", inspector);
 
   info("Focusing the css property editable field");
   let propertyName = view.styleDocument
     .querySelectorAll(".ruleview-propertyname")[0];
-  let editor = yield focusEditableField(view, propertyName);
+  let editor = await focusEditableField(view, propertyName);
 
   info("Pressing key VK_DOWN");
   let onSuggest = once(editor.input, "keypress");
@@ -29,13 +29,13 @@ add_task(function* () {
   EventUtils.synthesizeKey("VK_DOWN", {}, view.styleWindow);
 
   info("Waiting for autocomplete popup to be displayed");
-  yield onSuggest;
-  yield onPopupOpened;
+  await onSuggest;
+  await onPopupOpened;
 
   ok(view.popup && view.popup.isOpen, "Popup should be opened");
 
   info("Reloading the page");
-  yield reloadPage(inspector, testActor);
+  await reloadPage(inspector, testActor);
 
   ok(!(view.popup && view.popup.isOpen), "Popup should be closed");
 });

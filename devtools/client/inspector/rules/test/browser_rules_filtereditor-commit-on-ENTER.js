@@ -7,9 +7,9 @@
 
 const TEST_URL = URL_ROOT + "doc_filter.html";
 
-add_task(function* () {
-  yield addTab(TEST_URL);
-  let {view} = yield openRuleView();
+add_task(async function() {
+  await addTab(TEST_URL);
+  let {view} = await openRuleView();
 
   info("Get the filter swatch element");
   let swatch = getRuleViewProperty(view, "body", "filter").valueSpan
@@ -21,7 +21,7 @@ add_task(function* () {
   // the rule-view to refresh. So we must wait for the ruleview-changed event.
   let onRuleViewChanged = view.once("ruleview-changed");
   swatch.click();
-  yield onRuleViewChanged;
+  await onRuleViewChanged;
 
   info("Get the cssfilter widget instance");
   let filterTooltip = view.tooltips.getTooltip("filterEditor");
@@ -30,16 +30,16 @@ add_task(function* () {
   info("Set a new value in the cssfilter widget");
   onRuleViewChanged = view.once("ruleview-changed");
   widget.setCssValue("blur(2px)");
-  yield waitForComputedStyleProperty("body", null, "filter", "blur(2px)");
-  yield onRuleViewChanged;
+  await waitForComputedStyleProperty("body", null, "filter", "blur(2px)");
+  await onRuleViewChanged;
   ok(true, "Changes previewed on the element");
 
   info("Press RETURN to commit changes");
   // Pressing return in the cssfilter tooltip triggeres 2 ruleview-changed
   onRuleViewChanged = waitForNEvents(view, "ruleview-changed", 2);
   EventUtils.sendKey("RETURN", widget.styleWindow);
-  yield onRuleViewChanged;
+  await onRuleViewChanged;
 
-  is((yield getComputedStyleProperty("body", null, "filter")), "blur(2px)",
+  is((await getComputedStyleProperty("body", null, "filter")), "blur(2px)",
      "The elemenet's filter was kept after RETURN");
 });

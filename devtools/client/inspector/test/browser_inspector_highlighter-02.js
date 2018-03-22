@@ -10,30 +10,30 @@
 
 const TEST_URI = URL_ROOT + "doc_inspector_highlighter.html";
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URI);
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(TEST_URI);
 
   info("Selecting the simple, non-transformed DIV");
-  yield selectAndHighlightNode("#simple-div", inspector);
+  await selectAndHighlightNode("#simple-div", inspector);
 
-  let isVisible = yield testActor.isHighlighting();
+  let isVisible = await testActor.isHighlighting();
   ok(isVisible, "The highlighter is shown");
-  ok((yield testActor.assertHighlightedNode("#simple-div")),
+  ok((await testActor.assertHighlightedNode("#simple-div")),
     "The highlighter's outline corresponds to the simple div");
-  yield testActor.isNodeCorrectlyHighlighted("#simple-div", is, "non-zoomed");
+  await testActor.isNodeCorrectlyHighlighted("#simple-div", is, "non-zoomed");
 
   info("Selecting the rotated DIV");
-  yield selectAndHighlightNode("#rotated-div", inspector);
+  await selectAndHighlightNode("#rotated-div", inspector);
 
-  isVisible = yield testActor.isHighlighting();
+  isVisible = await testActor.isHighlighting();
   ok(isVisible, "The highlighter is shown");
-  yield testActor.isNodeCorrectlyHighlighted("#rotated-div", is, "rotated");
+  await testActor.isNodeCorrectlyHighlighted("#rotated-div", is, "rotated");
 
   info("Selecting the zero width height DIV");
-  yield selectAndHighlightNode("#widthHeightZero-div", inspector);
+  await selectAndHighlightNode("#widthHeightZero-div", inspector);
 
-  isVisible = yield testActor.isHighlighting();
+  isVisible = await testActor.isHighlighting();
   ok(isVisible, "The highlighter is shown");
-  yield testActor.isNodeCorrectlyHighlighted("#widthHeightZero-div", is,
+  await testActor.isNodeCorrectlyHighlighted("#widthHeightZero-div", is,
                                              "zero width height");
 });

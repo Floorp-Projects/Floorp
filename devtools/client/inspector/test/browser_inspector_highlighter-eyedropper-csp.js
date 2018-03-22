@@ -9,22 +9,22 @@ const HIGHLIGHTER_TYPE = "EyeDropper";
 const ID = "eye-dropper-";
 const TEST_URI = URL_ROOT + "doc_inspector_csp.html";
 
-add_task(function* () {
-  let helper = yield openInspectorForURL(TEST_URI)
+add_task(async function() {
+  let helper = await openInspectorForURL(TEST_URI)
                .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
   helper.prefix = ID;
   let {show, hide, finalize, isElementHidden, waitForElementAttributeSet} = helper;
 
   info("Try to display the eyedropper");
-  yield show("html");
+  await show("html");
 
-  let hidden = yield isElementHidden("root");
+  let hidden = await isElementHidden("root");
   ok(!hidden, "The eyedropper is now shown");
 
   info("Wait until the eyedropper is done taking a screenshot of the page");
-  yield waitForElementAttributeSet("root", "drawn", helper);
+  await waitForElementAttributeSet("root", "drawn", helper);
   ok(true, "The image data was retrieved successfully from the window");
 
-  yield hide();
+  await hide();
   finalize();
 });

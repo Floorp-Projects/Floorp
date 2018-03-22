@@ -11,13 +11,13 @@ const classname = "this-long-class-attribute-should-be-displayed " +
                   "AAAAAAAAAAAA-BBBBBBBBBBBBB-CCCCCCCCCCCCC-DDDDDDDDDDDDDD-EEEEEEEEEEEEE";
 const TEST_URL = `data:text/html;charset=utf8, <div class="${classname}"></div>`;
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(TEST_URL);
 
-  yield selectNode("div", inspector);
-  yield clickContainer("div", inspector);
+  await selectNode("div", inspector);
+  await clickContainer("div", inspector);
 
-  let container = yield focusNode("div", inspector);
+  let container = await focusNode("div", inspector);
   ok(container && container.editor, "The markup-container was found");
 
   info("Listening for the markupmutation event");
@@ -37,5 +37,5 @@ add_task(function* () {
   EventUtils.sendKey("return", inspector.panelWin);
 
   info("Wait for the markup-mutation event");
-  yield nodeMutated;
+  await nodeMutated;
 });

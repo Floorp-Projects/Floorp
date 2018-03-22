@@ -15,20 +15,20 @@ const TEST_URI =
   </style>
   <div id="div1"></div>`;
 
-add_task(function* () {
+add_task(async function() {
   // Make sure the toolbox is tall enough to have empty space below the
   // boxmodel-container.
-  yield pushPref("devtools.toolbox.footer.height", 500);
+  await pushPref("devtools.toolbox.footer.height", 500);
 
-  yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel} = yield openLayoutView();
+  await addTab("data:text/html," + encodeURIComponent(TEST_URI));
+  let {inspector, boxmodel} = await openLayoutView();
 
-  yield selectNode("#div1", inspector);
-  yield testClickingOutsideEditor(boxmodel);
-  yield testClickingBelowContainer(boxmodel);
+  await selectNode("#div1", inspector);
+  await testClickingOutsideEditor(boxmodel);
+  await testClickingBelowContainer(boxmodel);
 });
 
-function* testClickingOutsideEditor(boxmodel) {
+async function testClickingOutsideEditor(boxmodel) {
   info("Test that clicking outside the editor blurs it");
   let span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-top > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
@@ -42,13 +42,13 @@ function* testClickingOutsideEditor(boxmodel) {
   let rect = editor.getBoundingClientRect();
   EventUtils.synthesizeMouse(editor, rect.width + 10, rect.height / 2, {},
     boxmodel.document.defaultView);
-  yield onBlur;
+  await onBlur;
 
   is(boxmodel.document.querySelector(".styleinspector-propertyeditor"), null,
     "Inplace editor has been removed.");
 }
 
-function* testClickingBelowContainer(boxmodel) {
+async function testClickingBelowContainer(boxmodel) {
   info("Test that clicking below the box-model container blurs it");
   let span = boxmodel.document.querySelector(".boxmodel-margin.boxmodel-top > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
@@ -67,7 +67,7 @@ function* testClickingBelowContainer(boxmodel) {
     bounds.left + 10,
     bounds.top + bounds.height + 10,
     {}, boxmodel.document.defaultView);
-  yield onBlur;
+  await onBlur;
 
   is(boxmodel.document.querySelector(".styleinspector-propertyeditor"), null,
     "Inplace editor has been removed.");

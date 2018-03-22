@@ -20,17 +20,17 @@ const TEST_URL = "data:text/html," +
   "</body>" +
   "</html>";
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(TEST_URL);
 
   inspector.markup._frame.focus();
 
-  yield selectNode("#d1", inspector);
+  await selectNode("#d1", inspector);
 
   info("Open the HTML editor on node #d1");
   let onHtmlEditorCreated = once(inspector.markup, "begin-editing");
   EventUtils.sendKey("F2", inspector.markup._frame.contentWindow);
-  yield onHtmlEditorCreated;
+  await onHtmlEditorCreated;
 
   ok(inspector.markup.htmlEditor._visible, "HTML Editor is visible");
   is(inspector.markup.htmlEditor.editor.getText(), DIV1_HTML,
@@ -39,15 +39,15 @@ add_task(function* () {
   info("Hide the HTML editor for #d1");
   let onEditorHidden = once(inspector.markup.htmlEditor, "popuphidden");
   EventUtils.sendKey("ESCAPE", inspector.markup.htmlEditor.doc.defaultView);
-  yield onEditorHidden;
+  await onEditorHidden;
   ok(!inspector.markup.htmlEditor._visible, "HTML Editor is not visible");
 
-  yield selectNode("#d2", inspector);
+  await selectNode("#d2", inspector);
 
   info("Open the HTML editor on node #d2");
   onHtmlEditorCreated = once(inspector.markup, "begin-editing");
   EventUtils.sendKey("F2", inspector.markup._frame.contentWindow);
-  yield onHtmlEditorCreated;
+  await onHtmlEditorCreated;
 
   ok(inspector.markup.htmlEditor._visible, "HTML Editor is visible");
   is(inspector.markup.htmlEditor.editor.getText(), DIV2_HTML,
@@ -68,6 +68,6 @@ add_task(function* () {
   info("Hide the HTML editor for #d2");
   onEditorHidden = once(inspector.markup.htmlEditor, "popuphidden");
   EventUtils.sendKey("ESCAPE", inspector.markup.htmlEditor.doc.defaultView);
-  yield onEditorHidden;
+  await onEditorHidden;
   ok(!inspector.markup.htmlEditor._visible, "HTML Editor is not visible");
 });

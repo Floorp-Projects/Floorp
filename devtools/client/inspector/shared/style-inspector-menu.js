@@ -7,7 +7,6 @@
 "use strict";
 
 const Services = require("Services");
-const {Task} = require("devtools/shared/task");
 
 const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
@@ -373,7 +372,7 @@ StyleInspectorMenu.prototype = {
    * Retrieve the image data for the selected image url and copy it to the
    * clipboard
    */
-  _onCopyImageDataUrl: Task.async(function* () {
+  async _onCopyImageDataUrl() {
     if (!this._clickedNodeInfo) {
       return;
     }
@@ -382,15 +381,15 @@ StyleInspectorMenu.prototype = {
     try {
       let inspectorFront = this.inspector.inspector;
       let imageUrl = this._clickedNodeInfo.value.url;
-      let data = yield inspectorFront.getImageDataFromURL(imageUrl);
-      message = yield data.data.string();
+      let data = await inspectorFront.getImageDataFromURL(imageUrl);
+      message = await data.data.string();
     } catch (e) {
       message =
         STYLE_INSPECTOR_L10N.getStr("styleinspector.copyImageDataUrlError");
     }
 
     clipboardHelper.copyString(message);
-  }),
+  },
 
   /**
    * Add a new rule to the current element.
