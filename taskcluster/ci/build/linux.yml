@@ -205,7 +205,7 @@ linux64-base-toolchains/opt:
         need-xvfb: true
     toolchains:
         - linux64-clang-3.9
-        - linux64-gcc-4.9
+        - linux64-gcc-6
         - linux64-rust-1.24
         - linux64-sccache
 
@@ -235,7 +235,7 @@ linux64-base-toolchains/debug:
         need-xvfb: true
     toolchains:
         - linux64-clang-3.9
-        - linux64-gcc-4.9
+        - linux64-gcc-6
         - linux64-rust-1.24
         - linux64-sccache
 
