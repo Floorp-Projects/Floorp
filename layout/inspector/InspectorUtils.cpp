@@ -168,9 +168,9 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
     pseudoElt = NS_Atomize(aPseudo);
   }
 
-  RefPtr<ComputedStyle> styleContext =
+  RefPtr<ComputedStyle> computedStyle =
     GetCleanComputedStyleForElement(&aElement, pseudoElt);
-  if (!styleContext) {
+  if (!computedStyle) {
     // This can fail for elements that are not in the document or
     // if the document they're in doesn't have a presshell.  Bail out.
     return;
@@ -183,7 +183,7 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
     return;
   }
 
-  ComputedStyle* servo = styleContext->AsServo();
+  ComputedStyle* servo = computedStyle->AsServo();
   nsTArray<const RawServoStyleRule*> rawRuleList;
   Servo_ComputedValues_GetStyleRuleList(servo, &rawRuleList);
 
@@ -967,9 +967,7 @@ InspectorUtils::GetCleanComputedStyleForElement(dom::Element* aElement,
 
   presContext->EnsureSafeToHandOutCSSRules();
 
-  RefPtr<ComputedStyle> styleContext =
-    nsComputedDOMStyle::GetComputedStyle(aElement, aPseudo);
-  return styleContext.forget();
+  return nsComputedDOMStyle::GetComputedStyle(aElement, aPseudo);
 }
 
 /* static */ void
