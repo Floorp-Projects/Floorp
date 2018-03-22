@@ -51,7 +51,7 @@ public:
 
   nsresult Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData);
 
-  friend nsIFrame* NS_NewImageBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsIFrame* NS_NewImageBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
@@ -61,7 +61,7 @@ public:
                                     nsAtom* aAttribute,
                                     int32_t aModType) override;
 
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
+  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
@@ -109,7 +109,7 @@ public:
   nsRect GetDestRect(const nsPoint& aOffset, Maybe<nsPoint>& aAnchorPoint);
 
 protected:
-  explicit nsImageBoxFrame(nsStyleContext* aContext);
+  explicit nsImageBoxFrame(ComputedStyle* aStyle);
 
   virtual void GetImageSize();
 

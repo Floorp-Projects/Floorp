@@ -17,13 +17,13 @@
 #include "nsIDocumentObserver.h"
 #include "imgILoader.h"
 #include "imgRequestProxy.h"
+#include "mozilla/ComputedStyle.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/css/Loader.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsGkAtoms.h"
-#include "nsStyleContext.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
@@ -258,7 +258,7 @@ nsXBLResourceLoader::NotifyBoundElements()
           nsIFrame* childFrame = content->GetPrimaryFrame();
           if (!childFrame) {
             // Check if it's in the display:none or display:contents maps.
-            nsStyleContext* sc =
+            ComputedStyle* sc =
               shell->FrameConstructor()->GetDisplayNoneStyleFor(content);
 
             if (!sc) {

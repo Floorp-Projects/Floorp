@@ -34,8 +34,8 @@ class nsCanvasFrame final : public nsContainerFrame,
                             public nsIAnonymousContentCreator
 {
 public:
-  explicit nsCanvasFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, kClassID)
+  explicit nsCanvasFrame(ComputedStyle* aStyle)
+    : nsContainerFrame(aStyle, kClassID)
     , mDoPaintFocus(false)
     , mAddedScrollPositionListener(false)
   {}

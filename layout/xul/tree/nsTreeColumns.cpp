@@ -10,7 +10,7 @@
 #include "nsIBoxObject.h"
 #include "nsTreeColumns.h"
 #include "nsTreeUtils.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "nsContentUtils.h"
 #include "nsTreeBodyFrame.h"
 #include "mozilla/dom/Element.h"

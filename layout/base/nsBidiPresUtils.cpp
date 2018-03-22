@@ -74,29 +74,29 @@ IsIsolateControl(char16_t aChar)
   return aChar == kLRI || aChar == kRLI || aChar == kFSI;
 }
 
-// Given a style context, return any bidi control character necessary to
+// Given a ComputedStyle, return any bidi control character necessary to
 // implement style properties that override directionality (i.e. if it has
 // unicode-bidi:bidi-override, or text-orientation:upright in vertical
 // writing mode) when applying the bidi algorithm.
 //
 // Returns 0 if no override control character is implied by this style.
 static char16_t
-GetBidiOverride(nsStyleContext* aStyleContext)
+GetBidiOverride(ComputedStyle* aComputedStyle)
 {
-  const nsStyleVisibility* vis = aStyleContext->StyleVisibility();
+  const nsStyleVisibility* vis = aComputedStyle->StyleVisibility();
   if ((vis->mWritingMode == NS_STYLE_WRITING_MODE_VERTICAL_RL ||
        vis->mWritingMode == NS_STYLE_WRITING_MODE_VERTICAL_LR) &&
       vis->mTextOrientation == NS_STYLE_TEXT_ORIENTATION_UPRIGHT) {
     return kLRO;
   }
-  const nsStyleTextReset* text = aStyleContext->StyleTextReset();
+  const nsStyleTextReset* text = aComputedStyle->StyleTextReset();
   if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_BIDI_OVERRIDE) {
     return NS_STYLE_DIRECTION_RTL == vis->mDirection ? kRLO : kLRO;
   }
   return 0;
 }
 
-// Given a style context, return any bidi control character necessary to
+// Given a ComputedStyle, return any bidi control character necessary to
 // implement style properties that affect bidi resolution (i.e. if it
 // has unicode-bidiembed, isolate, or plaintext) when applying the bidi
 // algorithm.
@@ -107,10 +107,10 @@ GetBidiOverride(nsStyleContext* aStyleContext)
 // because in the case of unicode-bidi:isolate-override we need both
 // FSI and LRO/RLO.
 static char16_t
-GetBidiControl(nsStyleContext* aStyleContext)
+GetBidiControl(ComputedStyle* aComputedStyle)
 {
-  const nsStyleVisibility* vis = aStyleContext->StyleVisibility();
-  const nsStyleTextReset* text = aStyleContext->StyleTextReset();
+  const nsStyleVisibility* vis = aComputedStyle->StyleVisibility();
+  const nsStyleTextReset* text = aComputedStyle->StyleTextReset();
   if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_EMBED) {
     return NS_STYLE_DIRECTION_RTL == vis->mDirection ? kRLE : kLRE;
   }
@@ -153,7 +153,7 @@ struct MOZ_STACK_CLASS BidiParagraphData
     : mPresContext(aBlockFrame->PresContext())
     , mIsVisual(mPresContext->IsVisualMode())
     , mRequiresBidi(false)
-    , mParaLevel(nsBidiPresUtils::BidiLevelFromStyle(aBlockFrame->StyleContext()))
+    , mParaLevel(nsBidiPresUtils::BidiLevelFromStyle(aBlockFrame->Style()))
     , mPrevContent(nullptr)
 #ifdef DEBUG
     , mCurrentBlock(aBlockFrame)
@@ -710,7 +710,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
   // values of unicode-bidi property are redundant on block elements.
   // unicode-bidi:plaintext on a block element is handled by block frame
   // via using nsIFrame::GetWritingMode(nsIFrame*).
-  char16_t ch = GetBidiOverride(aBlockFrame->StyleContext());
+  char16_t ch = GetBidiOverride(aBlockFrame->Style());
   if (ch != 0) {
     bpd.PushBidiControl(ch);
     bpd.mRequiresBidi = true;
@@ -1080,13 +1080,13 @@ nsBidiPresUtils::TraverseFrames(nsBlockInFlowLineIterator* aLineIter,
       }
     }
 
-    auto DifferentBidiValues = [](nsStyleContext* aSC1, nsIFrame* aFrame2) {
-      nsStyleContext* sc2 = aFrame2->StyleContext();
+    auto DifferentBidiValues = [](ComputedStyle* aSC1, nsIFrame* aFrame2) {
+      ComputedStyle* sc2 = aFrame2->Style();
       return GetBidiControl(aSC1) != GetBidiControl(sc2) ||
              GetBidiOverride(aSC1) != GetBidiOverride(sc2);
     };
 
-    nsStyleContext* sc = frame->StyleContext();
+    ComputedStyle* sc = frame->Style();
     nsIFrame* nextContinuation = frame->GetNextContinuation();
     nsIFrame* prevContinuation = frame->GetPrevContinuation();
     bool isLastFrame = !nextContinuation ||
@@ -1313,7 +1313,7 @@ nsBidiPresUtils::ChildListMayRequireBidi(nsIFrame*    aFirstChild,
     }
 
     // If unicode-bidi properties are present, we should do bidi resolution.
-    nsStyleContext* sc = frame->StyleContext();
+    ComputedStyle* sc = frame->Style();
     if (GetBidiControl(sc) || GetBidiOverride(sc)) {
       return true;
     }
@@ -2377,14 +2377,14 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(const char16_t*       a
 
 /* static */
 nsBidiLevel
-nsBidiPresUtils::BidiLevelFromStyle(nsStyleContext* aStyleContext)
+nsBidiPresUtils::BidiLevelFromStyle(ComputedStyle* aComputedStyle)
 {
-  if (aStyleContext->StyleTextReset()->mUnicodeBidi &
+  if (aComputedStyle->StyleTextReset()->mUnicodeBidi &
       NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
     return NSBIDI_DEFAULT_LTR;
   }
 
-  if (aStyleContext->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+  if (aComputedStyle->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
     return NSBIDI_RTL;
   }
 

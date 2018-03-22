@@ -20,7 +20,7 @@ class nsImageControlFrame : public nsImageFrame,
                             public nsIFormControlFrame
 {
 public:
-  explicit nsImageControlFrame(nsStyleContext* aContext);
+  explicit nsImageControlFrame(ComputedStyle* aStyle);
   ~nsImageControlFrame();
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
@@ -58,8 +58,8 @@ public:
                                    const nsAString& aValue) override;
 };
 
-nsImageControlFrame::nsImageControlFrame(nsStyleContext* aContext)
-  : nsImageFrame(aContext, kClassID)
+nsImageControlFrame::nsImageControlFrame(ComputedStyle* aStyle)
+  : nsImageFrame(aStyle, kClassID)
 {
 }
 
@@ -77,9 +77,9 @@ nsImageControlFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPost
 }
 
 nsIFrame*
-NS_NewImageControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewImageControlFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsImageControlFrame(aContext);
+  return new (aPresShell) nsImageControlFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsImageControlFrame)

@@ -225,9 +225,9 @@ public:
 
 
 nsIFrame*
-NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsHTMLCanvasFrame(aContext);
+  return new (aPresShell) nsHTMLCanvasFrame(aStyle);
 }
 
 NS_QUERYFRAME_HEAD(nsHTMLCanvasFrame)

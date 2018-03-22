@@ -21,8 +21,8 @@ class nsSVGViewportFrame
   , public nsISVGSVGFrame
 {
 protected:
-  nsSVGViewportFrame(nsStyleContext* aContext, nsIFrame::ClassID aID)
-    : nsSVGDisplayContainerFrame(aContext, aID)
+  nsSVGViewportFrame(ComputedStyle* aStyle, nsIFrame::ClassID aID)
+    : nsSVGDisplayContainerFrame(aStyle, aID)
   {
   }
 public:

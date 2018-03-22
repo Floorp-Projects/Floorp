@@ -15,7 +15,7 @@ class nsWindowSizes;
 
 namespace mozilla {
 
-class ServoStyleContext;
+class ComputedStyle;
 
 // Cache of anonymous box and lazy pseudo styles that inherit from a given style.
 //
@@ -26,8 +26,8 @@ class ServoStyleContext;
 class CachedInheritingStyles
 {
 public:
-  void Insert(ServoStyleContext* aStyle);
-  ServoStyleContext* Lookup(nsAtom* aPseudoTag) const;
+  void Insert(ComputedStyle* aStyle);
+  ComputedStyle* Lookup(nsAtom* aPseudoTag) const;
 
   CachedInheritingStyles() : mBits(0) {}
   ~CachedInheritingStyles()
@@ -35,7 +35,7 @@ public:
     if (IsIndirect()) {
       delete AsIndirect();
     } else if (!IsEmpty()) {
-      RefPtr<ServoStyleContext> ref = dont_AddRef(AsDirect());
+      RefPtr<ComputedStyle> ref = dont_AddRef(AsDirect());
     }
   }
 
@@ -43,15 +43,15 @@ public:
 
 private:
   // See bug 1429126 comment 1 for the choice of four here.
-  typedef AutoTArray<RefPtr<ServoStyleContext>, 4> IndirectCache;
+  typedef AutoTArray<RefPtr<ComputedStyle>, 4> IndirectCache;
 
   bool IsEmpty() const { return !mBits; }
   bool IsIndirect() const { return (mBits & 1); }
 
-  ServoStyleContext* AsDirect() const
+  ComputedStyle* AsDirect() const
   {
     MOZ_ASSERT(!IsIndirect());
-    return reinterpret_cast<ServoStyleContext*>(mBits);
+    return reinterpret_cast<ComputedStyle*>(mBits);
   }
 
   IndirectCache* AsIndirect() const

@@ -545,8 +545,8 @@ public:
 #endif
 
 protected:
-  nsContainerFrame(nsStyleContext* aContext, ClassID aID)
-    : nsSplittableFrame(aContext, aID)
+  nsContainerFrame(ComputedStyle* aStyle, ClassID aID)
+    : nsSplittableFrame(aStyle, aID)
   {}
 
   ~nsContainerFrame();

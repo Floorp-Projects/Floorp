@@ -18,7 +18,7 @@ class nsFieldSetFrame final : public nsContainerFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsFieldSetFrame)
 
-  explicit nsFieldSetFrame(nsStyleContext* aContext);
+  explicit nsFieldSetFrame(ComputedStyle* aStyle);
 
   nscoord
     GetIntrinsicISize(gfxContext* aRenderingContext,

@@ -16,7 +16,7 @@
  * @return a newly allocated nsRubyBaseFrame (infallible)
  */
 nsContainerFrame* NS_NewRubyBaseFrame(nsIPresShell* aPresShell,
-                                      nsStyleContext* aContext);
+                                      mozilla::ComputedStyle* aStyle);
 
 class nsRubyBaseFrame final : public nsRubyContentFrame
 {
@@ -30,9 +30,9 @@ public:
 
 protected:
   friend nsContainerFrame* NS_NewRubyBaseFrame(nsIPresShell* aPresShell,
-                                               nsStyleContext* aContext);
-  explicit nsRubyBaseFrame(nsStyleContext* aContext)
-    : nsRubyContentFrame(aContext, kClassID)
+                                               ComputedStyle* aStyle);
+  explicit nsRubyBaseFrame(ComputedStyle* aStyle)
+    : nsRubyContentFrame(aStyle, kClassID)
   {}
 };
 

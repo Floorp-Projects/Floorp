@@ -8,7 +8,7 @@
 #include "nsTreeColFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "nsNameSpaceManager.h"
 #include "nsIBoxObject.h"
 #include "mozilla/ErrorResult.h"
@@ -26,9 +26,9 @@
 // Creates a new col frame
 //
 nsIFrame*
-NS_NewTreeColFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewTreeColFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsTreeColFrame(aContext);
+  return new (aPresShell) nsTreeColFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTreeColFrame)

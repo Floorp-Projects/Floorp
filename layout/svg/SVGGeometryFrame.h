@@ -28,14 +28,13 @@ class nsDisplaySVGGeometry;
 class nsAtom;
 class nsIFrame;
 class nsIPresShell;
-class nsStyleContext;
 class nsSVGMarkerFrame;
 class nsSVGMarkerProperty;
 
 struct nsRect;
 
 nsIFrame*
-NS_NewSVGGeometryFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+NS_NewSVGGeometryFrame(nsIPresShell* aPresShell, mozilla::ComputedStyle* aStyle);
 
 namespace mozilla {
 
@@ -45,19 +44,19 @@ class SVGGeometryFrame : public nsFrame
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
   friend nsIFrame*
-  ::NS_NewSVGGeometryFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  ::NS_NewSVGGeometryFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
   friend class ::nsDisplaySVGGeometry;
 
 protected:
-  SVGGeometryFrame(nsStyleContext* aContext, nsIFrame::ClassID aID)
-    : nsFrame(aContext, aID)
+  SVGGeometryFrame(ComputedStyle* aStyle, nsIFrame::ClassID aID)
+    : nsFrame(aStyle, aID)
   {
      AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_MAY_BE_TRANSFORMED);
   }
 
-  explicit SVGGeometryFrame(nsStyleContext* aContext)
-    : SVGGeometryFrame(aContext, kClassID)
+  explicit SVGGeometryFrame(ComputedStyle* aStyle)
+    : SVGGeometryFrame(aStyle, kClassID)
   {}
 
 public:
@@ -78,7 +77,7 @@ public:
                                      nsAtom*        aAttribute,
                                      int32_t         aModType) override;
 
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
+  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 
   virtual bool IsSVGTransformed(Matrix *aOwnTransforms = nullptr,
                                 Matrix *aFromParentTransforms = nullptr) const override;

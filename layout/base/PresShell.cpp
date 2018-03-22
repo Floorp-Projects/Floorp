@@ -1341,11 +1341,11 @@ PresShell::Destroy()
   //   (b) before the mPresContext->DetachShell() below, so
   //       that when we clear the ArenaRefPtrs they'll still be able to
   //       get back to this PresShell to deregister themselves (e.g. note
-  //       how nsStyleContext::Arena returns the PresShell got from its
+  //       how ComputedStyle::Arena returns the PresShell got from its
   //       rule node's nsPresContext, which would return null if we'd already
   //       called mPresContext->DetachShell()), and
   //   (c) before the mStyleSet->BeginShutdown() call just below, so that
-  //       the nsStyleContexts don't complain they're being destroyed later
+  //       the ComputedStyles don't complain they're being destroyed later
   //       than the rule tree is.
   mFrameArena.ClearArenaRefPtrs();
 
@@ -5363,7 +5363,7 @@ void PresShell::UpdateCanvasBackground()
   // cache of that color.
   nsIFrame* rootStyleFrame = FrameConstructor()->GetRootElementStyleFrame();
   if (rootStyleFrame) {
-    nsStyleContext* bgStyle =
+    ComputedStyle* bgStyle =
       nsCSSRendering::FindRootFrameBackground(rootStyleFrame);
     // XXX We should really be passing the canvasframe, not the root element
     // style frame but we don't have access to the canvasframe here. It isn't
@@ -9080,7 +9080,7 @@ PresShell::WindowSizeMoveDone()
 
 #ifdef MOZ_XUL
 /*
- * It's better to add stuff to the |DidSetStyleContext| method of the
+ * It's better to add stuff to the |DidSetComputedStyle| method of the
  * relevant frames than adding it here.  These methods should (ideally,
  * anyway) go away.
  */
@@ -9717,11 +9717,11 @@ PresShell::VerifyIncrementalReflow()
 
 // Layout debugging hooks
 void
-PresShell::ListStyleContexts(FILE *out, int32_t aIndent)
+PresShell::ListComputedStyles(FILE *out, int32_t aIndent)
 {
   nsIFrame* rootFrame = GetRootFrame();
   if (rootFrame) {
-    rootFrame->StyleContext()->List(out, aIndent);
+    rootFrame->Style()->List(out, aIndent);
   }
 
   // The root element's frame's style context is the root of a separate tree.
@@ -9729,7 +9729,7 @@ PresShell::ListStyleContexts(FILE *out, int32_t aIndent)
   if (rootElement) {
     nsIFrame* rootElementFrame = rootElement->GetPrimaryFrame();
     if (rootElementFrame) {
-      rootElementFrame->StyleContext()->List(out, aIndent);
+      rootElementFrame->Style()->List(out, aIndent);
     }
   }
 }
