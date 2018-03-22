@@ -9,7 +9,7 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 
-class nsPIDOMWindowInner;
+class nsIGlobalWindow;
 
 namespace mozilla {
 namespace dom {
@@ -31,7 +31,8 @@ public:
 
   static bool IsEnabled(JSContext* aCx, JSObject* aGlobal);
 
-  explicit ServiceWorkerContainer(nsPIDOMWindowInner* aWindow);
+  static already_AddRefed<ServiceWorkerContainer>
+  Create(nsIGlobalObject* aGlobal);
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -67,6 +68,8 @@ public:
   ControllerChanged(ErrorResult& aRv);
 
 private:
+  explicit ServiceWorkerContainer(nsIGlobalObject* aGlobal);
+
   ~ServiceWorkerContainer();
 
   void RemoveReadyPromise();
