@@ -56,6 +56,9 @@ namespace jit {
     _(DoubleSubResult)                    \
     _(Int32AddResult)                     \
     _(Int32SubResult)                     \
+    _(Int32BitOrResult)                   \
+    _(Int32BitXorResult)                  \
+    _(Int32BitAndResult)                  \
     _(Int32NegationResult)                \
     _(Int32NotResult)                     \
     _(DoubleNegationResult)               \
