@@ -107,10 +107,8 @@ class AsyncTabSwitcher {
     // removed from the set upon MozAfterPaint.
     this.maybeVisibleTabs = new Set([tabbrowser.selectedTab]);
 
-    // This holds onto the set of tabs that we've been asked to warm up.
-    // This is used only for Telemetry and logging, and (in order to not
-    // over-complicate the async tab switcher any further) has nothing to do
-    // with how warmed tabs are loaded and unloaded.
+    // This holds onto the set of tabs that we've been asked to warm up,
+    // and tabs are evicted once they're done loading or are unloaded.
     this.warmingTabs = new WeakSet();
 
     this.STATE_UNLOADED = 0;
@@ -842,16 +840,21 @@ class AsyncTabSwitcher {
       return false;
     }
 
-    // Similarly, if the tab is already in STATE_LOADING or
-    // STATE_LOADED somehow, there's no point in trying to
-    // warm it up.
-    let state = this.getTabState(tab);
-    if (state === this.STATE_LOADING ||
-      state === this.STATE_LOADED) {
-      return false;
+    return true;
+  }
+
+  shouldWarmTab(tab) {
+    if (this.canWarmTab(tab)) {
+      // Tabs that are already in STATE_LOADING or STATE_LOADED
+      // have no need to be warmed up.
+      let state = this.getTabState(tab);
+      if (state === this.STATE_UNLOADING ||
+          state === this.STATE_UNLOADED) {
+        return true;
+      }
     }
 
-    return true;
+    return false;
   }
 
   unwarmTab(tab) {
@@ -859,7 +862,7 @@ class AsyncTabSwitcher {
   }
 
   warmupTab(tab) {
-    if (!this.canWarmTab(tab)) {
+    if (!this.shouldWarmTab(tab)) {
       return;
     }
 
@@ -880,15 +883,21 @@ class AsyncTabSwitcher {
     if (this.tabbrowser.tabWarmingEnabled) {
       let warmingState = "disqualified";
 
-      if (this.warmingTabs.has(tab)) {
+      if (this.canWarmTab(tab)) {
         let tabState = this.getTabState(tab);
         if (tabState == this.STATE_LOADING) {
           warmingState = "stillLoading";
         } else if (tabState == this.STATE_LOADED) {
           warmingState = "loaded";
+        } else if (tabState == this.STATE_UNLOADING ||
+                   tabState == this.STATE_UNLOADED) {
+          // At this point, if the tab's browser was being inserted
+          // lazily, we never had a chance to warm it up, and unfortunately
+          // there's no great way to detect that case. Those cases will
+          // end up in the "notWarmed" bucket, along with legitimate cases
+          // where tabs could have been warmed but weren't.
+          warmingState = "notWarmed";
         }
-      } else if (this.canWarmTab(tab)) {
-        warmingState = "notWarmed";
       }
 
       Services.telemetry

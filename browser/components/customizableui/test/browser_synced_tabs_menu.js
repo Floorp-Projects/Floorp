@@ -159,7 +159,8 @@ add_task(async function() {
 
 // Test the Connect Another Device button
 add_task(async function() {
-  gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, email: "foo@bar.com" });
+  gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, email: "foo@bar.com",
+                      lastSync: new Date() });
 
   let button = document.getElementById("PanelUI-remotetabs-connect-device-button");
   ok(button, "found the button");
@@ -178,7 +179,8 @@ add_task(async function() {
 
 // Test the "Sync Now" button
 add_task(async function() {
-  gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, email: "foo@bar.com" });
+  gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, email: "foo@bar.com",
+                      lastSync: new Date() });
 
   await document.getElementById("nav-bar").overflowable.show();
   let tabsUpdatedPromise = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");
@@ -341,7 +343,8 @@ add_task(async function() {
     ]);
   };
 
-  gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, email: "foo@bar.com" });
+  gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, lastSync: new Date(),
+                      email: "foo@bar.com" });
 
   await document.getElementById("nav-bar").overflowable.show();
   let tabsUpdatedPromise = promiseObserverNotified("synced-tabs-menu:test:tabs-updated");

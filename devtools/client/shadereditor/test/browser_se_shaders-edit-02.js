@@ -21,7 +21,7 @@ async function ifWebGLSupported() {
 
 
   vsEditor.replaceText("vec3", { line: 7, ch: 22 }, { line: 7, ch: 26 });
-  let [, error] = await onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  let error = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
 
   ok(error,
     "The new vertex shader source was compiled with errors.");
@@ -42,7 +42,7 @@ async function ifWebGLSupported() {
 
 
   fsEditor.replaceText("vec4", { line: 2, ch: 14 }, { line: 2, ch: 18 });
-  [, error] = await onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  error = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
 
   ok(error,
     "The new fragment shader source was compiled with errors.");
@@ -61,11 +61,11 @@ async function ifWebGLSupported() {
   await ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
 
   vsEditor.replaceText("vec4", { line: 7, ch: 22 }, { line: 7, ch: 26 });
-  [, error] = await onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  error = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
   ok(!error, "The new vertex shader source was compiled successfully.");
 
   fsEditor.replaceText("vec3", { line: 2, ch: 14 }, { line: 2, ch: 18 });
-  [, error] = await onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  error = await panel.panelWin.once(EVENTS.SHADER_COMPILED);
   ok(!error, "The new fragment shader source was compiled successfully.");
 
   await ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);

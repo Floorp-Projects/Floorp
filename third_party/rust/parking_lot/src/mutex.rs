@@ -50,7 +50,6 @@ use owning_ref::StableAddress;
 /// - No poisoning, the lock is released normally on panic.
 /// - Only requires 1 byte of space, whereas the standard library boxes the
 ///   `Mutex` due to platform limitations.
-/// - A `MutexGuard` can be sent to another thread and unlocked there.
 /// - Can be statically constructed (requires the `const_fn` nightly feature).
 /// - Does not require any drop glue when dropped.
 /// - Inline fast path for the uncontended case.
@@ -99,8 +98,8 @@ pub struct Mutex<T: ?Sized> {
     data: UnsafeCell<T>,
 }
 
-unsafe impl<T: Send> Send for Mutex<T> {}
-unsafe impl<T: Send> Sync for Mutex<T> {}
+unsafe impl<T: ?Sized + Send> Send for Mutex<T> {}
+unsafe impl<T: ?Sized + Send> Sync for Mutex<T> {}
 
 /// An RAII implementation of a "scoped lock" of a mutex. When this structure is
 /// dropped (falls out of scope), the lock will be unlocked.
@@ -109,9 +108,12 @@ unsafe impl<T: Send> Sync for Mutex<T> {}
 /// `Deref` and `DerefMut` implementations.
 #[must_use]
 pub struct MutexGuard<'a, T: ?Sized + 'a> {
-    mutex: &'a Mutex<T>,
+    raw: &'a RawMutex,
+    data: *mut T,
     marker: PhantomData<&'a mut T>,
 }
+
+unsafe impl<'a, T: ?Sized + Sync + 'a> Sync for MutexGuard<'a, T> {}
 
 impl<T> Mutex<T> {
     /// Creates a new mutex in an unlocked state ready for use.
@@ -142,6 +144,15 @@ impl<T> Mutex<T> {
 }
 
 impl<T: ?Sized> Mutex<T> {
+    #[inline]
+    fn guard(&self) -> MutexGuard<T> {
+        MutexGuard {
+            raw: &self.raw,
+            data: self.data.get(),
+            marker: PhantomData,
+        }
+    }
+
     /// Acquires a mutex, blocking the current thread until it is able to do so.
     ///
     /// This function will block the local thread until it is available to acquire
@@ -154,10 +165,7 @@ impl<T: ?Sized> Mutex<T> {
     #[inline]
     pub fn lock(&self) -> MutexGuard<T> {
         self.raw.lock();
-        MutexGuard {
-            mutex: self,
-            marker: PhantomData,
-        }
+        self.guard()
     }
 
     /// Attempts to acquire this lock.
@@ -170,10 +178,7 @@ impl<T: ?Sized> Mutex<T> {
     #[inline]
     pub fn try_lock(&self) -> Option<MutexGuard<T>> {
         if self.raw.try_lock() {
-            Some(MutexGuard {
-                mutex: self,
-                marker: PhantomData,
-            })
+            Some(self.guard())
         } else {
             None
         }
@@ -187,10 +192,7 @@ impl<T: ?Sized> Mutex<T> {
     #[inline]
     pub fn try_lock_for(&self, timeout: Duration) -> Option<MutexGuard<T>> {
         if self.raw.try_lock_for(timeout) {
-            Some(MutexGuard {
-                mutex: self,
-                marker: PhantomData,
-            })
+            Some(self.guard())
         } else {
             None
         }
@@ -204,10 +206,7 @@ impl<T: ?Sized> Mutex<T> {
     #[inline]
     pub fn try_lock_until(&self, timeout: Instant) -> Option<MutexGuard<T>> {
         if self.raw.try_lock_until(timeout) {
-            Some(MutexGuard {
-                mutex: self,
-                marker: PhantomData,
-            })
+            Some(self.guard())
         } else {
             None
         }
@@ -300,8 +299,31 @@ impl<'a, T: ?Sized + 'a> MutexGuard<'a, T> {
     /// using this method instead of dropping the `MutexGuard` normally.
     #[inline]
     pub fn unlock_fair(self) {
-        self.mutex.raw.unlock(true);
+        self.raw.unlock(true);
         mem::forget(self);
+    }
+
+    /// Make a new `MutexGuard` for a component of the locked data.
+    ///
+    /// This operation cannot fail as the `MutexGuard` passed
+    /// in already locked the mutex.
+    ///
+    /// This is an associated function that needs to be
+    /// used as `MutexGuard::map(...)`. A method would interfere with methods of
+    /// the same name on the contents of the locked data.
+    #[inline]
+    pub fn map<U: ?Sized, F>(orig: Self, f: F) -> MutexGuard<'a, U>
+    where
+        F: FnOnce(&mut T) -> &mut U,
+    {
+        let raw = orig.raw;
+        let data = f(unsafe { &mut *orig.data });
+        mem::forget(orig);
+        MutexGuard {
+            raw,
+            data,
+            marker: PhantomData,
+        }
     }
 }
 
@@ -309,21 +331,21 @@ impl<'a, T: ?Sized + 'a> Deref for MutexGuard<'a, T> {
     type Target = T;
     #[inline]
     fn deref(&self) -> &T {
-        unsafe { &*self.mutex.data.get() }
+        unsafe { &*self.data }
     }
 }
 
 impl<'a, T: ?Sized + 'a> DerefMut for MutexGuard<'a, T> {
     #[inline]
     fn deref_mut(&mut self) -> &mut T {
-        unsafe { &mut *self.mutex.data.get() }
+        unsafe { &mut *self.data }
     }
 }
 
 impl<'a, T: ?Sized + 'a> Drop for MutexGuard<'a, T> {
     #[inline]
     fn drop(&mut self) {
-        self.mutex.raw.unlock(false);
+        self.raw.unlock(false);
     }
 }
 
@@ -332,8 +354,8 @@ unsafe impl<'a, T: ?Sized> StableAddress for MutexGuard<'a, T> {}
 
 // Helper function used by Condvar, not publicly exported
 #[inline]
-pub fn guard_lock<'a, T: ?Sized>(guard: &MutexGuard<'a, T>) -> &'a RawMutex {
-    &guard.mutex.raw
+pub(crate) fn guard_lock<'a, T: ?Sized>(guard: &MutexGuard<'a, T>) -> &'a RawMutex {
+    &guard.raw
 }
 
 #[cfg(test)]
@@ -342,7 +364,7 @@ mod tests {
     use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::thread;
-    use {Mutex, Condvar};
+    use {Condvar, Mutex};
 
     struct Packet<T>(Arc<(Mutex<T>, Condvar)>);
 
@@ -476,18 +498,17 @@ mod tests {
         let arc = Arc::new(Mutex::new(1));
         let arc2 = arc.clone();
         let _ = thread::spawn(move || -> () {
-                struct Unwinder {
-                    i: Arc<Mutex<i32>>,
+            struct Unwinder {
+                i: Arc<Mutex<i32>>,
+            }
+            impl Drop for Unwinder {
+                fn drop(&mut self) {
+                    *self.i.lock() += 1;
                 }
-                impl Drop for Unwinder {
-                    fn drop(&mut self) {
-                        *self.i.lock() += 1;
-                    }
-                }
-                let _u = Unwinder { i: arc2 };
-                panic!();
-            })
-            .join();
+            }
+            let _u = Unwinder { i: arc2 };
+            panic!();
+        }).join();
         let lock = arc.lock();
         assert_eq!(*lock, 2);
     }
@@ -505,10 +526,10 @@ mod tests {
     }
 
     #[test]
-    fn test_mutexguard_send() {
-        fn send<T: Send>(_: T) {}
+    fn test_mutexguard_sync() {
+        fn sync<T: Sync>(_: T) {}
 
         let mutex = Mutex::new(());
-        send(mutex.lock());
+        sync(mutex.lock());
     }
 }

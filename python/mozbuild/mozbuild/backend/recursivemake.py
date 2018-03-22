@@ -1324,16 +1324,6 @@ class RecursiveMakeBackend(CommonBackend):
             self.environment.topobjdir), obj.KIND)
 
     def _process_linked_libraries(self, obj, backend_file):
-        def write_shared_and_system_libs(lib):
-            for l in lib.linked_libraries:
-                if isinstance(l, (StaticLibrary, RustLibrary)):
-                    write_shared_and_system_libs(l)
-                else:
-                    backend_file.write_once('SHARED_LIBS += %s/%s\n'
-                        % (pretty_relpath(l), l.import_name))
-            for l in lib.linked_system_libs:
-                backend_file.write_once('OS_LIBS += %s\n' % l)
-
         def pretty_relpath(lib):
             return '$(DEPTH)/%s' % mozpath.relpath(lib.objdir, topobjdir)
 
@@ -1342,48 +1332,94 @@ class RecursiveMakeBackend(CommonBackend):
         build_target = self._build_target_for_obj(obj)
         self._compile_graph[build_target]
 
+        objs, no_pgo_objs, shared_libs, os_libs, static_libs = self._expand_libs(obj)
+
+        if obj.KIND == 'target':
+            obj_target = obj.name
+            if isinstance(obj, Program):
+                obj_target = self._pretty_path(obj.output_path, backend_file)
+
+            is_unit_test = isinstance(obj, BaseProgram) and obj.is_unit_test
+            profile_gen_objs = []
+
+            if (self.environment.substs.get('MOZ_PGO') and
+                self.environment.substs.get('GNU_CC')):
+                # We use a different OBJ_SUFFIX for the profile generate phase on
+                # linux. These get picked up via OBJS_VAR_SUFFIX in config.mk.
+                if not is_unit_test and not isinstance(obj, SimpleProgram):
+                    profile_gen_objs = [o if o in no_pgo_objs else '%s.%s' %
+                                        (mozpath.splitext(o)[0], 'i_o') for o in objs]
+
+            def write_obj_deps(target, objs_ref, pgo_objs_ref):
+                if pgo_objs_ref:
+                    backend_file.write('ifdef MOZ_PROFILE_GENERATE\n')
+                    backend_file.write('%s: %s\n' % (target, pgo_objs_ref))
+                    backend_file.write('else\n')
+                    backend_file.write('%s: %s\n' % (target, objs_ref))
+                    backend_file.write('endif\n')
+                else:
+                    backend_file.write('%s: %s\n' % (target, objs_ref))
+
+            objs_ref = ' \\\n    '.join(os.path.relpath(o, obj.objdir)
+                                        for o in objs)
+            pgo_objs_ref = ' \\\n    '.join(os.path.relpath(o, obj.objdir)
+                                            for o in profile_gen_objs)
+            # Don't bother with a list file if we're only linking objects built
+            # in this directory or building a real static library. This
+            # accommodates clang-plugin, where we would otherwise pass an
+            # incorrect list file format to the host compiler as well as when
+            # creating an archive with AR, which doesn't understand list files.
+            if (objs == obj.objs and not isinstance(obj, StaticLibrary) or
+              isinstance(obj, StaticLibrary) and obj.no_expand_lib):
+                backend_file.write_once('%s_OBJS := %s\n' % (obj.name,
+                                                             objs_ref))
+                if profile_gen_objs:
+                    backend_file.write_once('%s_PGO_OBJS := %s\n' % (obj.name,
+                                                                     pgo_objs_ref))
+                write_obj_deps(obj_target, objs_ref, pgo_objs_ref)
+            elif not isinstance(obj, StaticLibrary):
+                list_file_path = '%s.list' % obj.name.replace('.', '_')
+                list_file_ref = self._make_list_file(obj.objdir, objs,
+                                                     list_file_path)
+                backend_file.write_once('%s_OBJS := %s\n' %
+                                        (obj.name, list_file_ref))
+                backend_file.write_once('%s: %s\n' % (obj_target, list_file_path))
+                if profile_gen_objs:
+                    pgo_list_file_path = '%s_pgo.list' % obj.name.replace('.', '_')
+                    pgo_list_file_ref = self._make_list_file(obj.objdir,
+                                                             profile_gen_objs,
+                                                             pgo_list_file_path)
+                    backend_file.write_once('%s_PGO_OBJS := %s\n' %
+                                            (obj.name, pgo_list_file_ref))
+                    backend_file.write_once('%s: %s\n' % (obj_target,
+                                                          pgo_list_file_path))
+                write_obj_deps(obj_target, objs_ref, pgo_objs_ref)
+
+        for lib in shared_libs:
+            backend_file.write_once('SHARED_LIBS += %s/%s\n' %
+                                    (pretty_relpath(lib), lib.import_name))
+        for lib in static_libs:
+            backend_file.write_once('STATIC_LIBS += %s/%s\n' %
+                                    (pretty_relpath(lib), lib.import_name))
+        for lib in os_libs:
+            if obj.KIND == 'target':
+                backend_file.write_once('OS_LIBS += %s\n' % lib)
+            else:
+                backend_file.write_once('HOST_EXTRA_LIBS += %s\n' % lib)
+
         for lib in obj.linked_libraries:
             if not isinstance(lib, ExternalLibrary):
                 self._compile_graph[build_target].add(
                     self._build_target_for_obj(lib))
-            relpath = pretty_relpath(lib)
-            if isinstance(obj, Library):
-                if isinstance(lib, RustLibrary):
-                    # We don't need to do anything here; we will handle
-                    # linkage for any RustLibrary elsewhere.
-                    continue
-                elif isinstance(lib, StaticLibrary):
-                    backend_file.write_once('STATIC_LIBS += %s/%s\n'
-                                        % (relpath, lib.import_name))
-                    if isinstance(obj, SharedLibrary):
-                        write_shared_and_system_libs(lib)
-                elif isinstance(obj, SharedLibrary):
-                    backend_file.write_once('SHARED_LIBS += %s/%s\n'
-                                        % (relpath, lib.import_name))
-            elif isinstance(obj, (Program, SimpleProgram)):
-                if isinstance(lib, StaticLibrary):
-                    backend_file.write_once('STATIC_LIBS += %s/%s\n'
-                                        % (relpath, lib.import_name))
-                    write_shared_and_system_libs(lib)
-                else:
-                    backend_file.write_once('SHARED_LIBS += %s/%s\n'
-                                        % (relpath, lib.import_name))
-            elif isinstance(obj, (HostLibrary, HostProgram, HostSimpleProgram)):
-                assert isinstance(lib, (HostLibrary, HostRustLibrary))
-                backend_file.write_once('HOST_LIBS += %s/%s\n'
-                                   % (relpath, lib.import_name))
+            if isinstance(lib, (HostLibrary, HostRustLibrary)):
+                backend_file.write_once('HOST_LIBS += %s/%s\n' %
+                                        (pretty_relpath(lib), lib.import_name))
 
         # We have to link any Rust libraries after all intermediate static
         # libraries have been listed to ensure that the Rust libraries are
         # searched after the C/C++ objects that might reference Rust symbols.
         if isinstance(obj, SharedLibrary):
             self._process_rust_libraries(obj, backend_file, pretty_relpath)
-
-        for lib in obj.linked_system_libs:
-            if obj.KIND == 'target':
-                backend_file.write_once('OS_LIBS += %s\n' % lib)
-            else:
-                backend_file.write_once('HOST_EXTRA_LIBS += %s\n' % lib)
 
         # Process library-based defines
         self._process_defines(obj.lib_defines, backend_file)
