@@ -97,7 +97,7 @@ public:
   nsIDocShell* GetExistingDocShell() { return mDocShell; }
   mozilla::dom::EventTarget* GetTabChildGlobalAsEventTarget();
   nsresult CreateStaticClone(nsIFrameLoader* aDest);
-
+  nsresult UpdatePositionAndSize(nsSubDocumentFrame *aIFrame);
 
   // WebIDL methods
 
@@ -143,7 +143,7 @@ public:
                           bool aCapture,
                           mozilla::ErrorResult& aRv);
 
-  void RequestNotifyAfterRemotePaint(mozilla::ErrorResult& aRv);
+  void RequestNotifyAfterRemotePaint();
 
   void RequestFrameLoaderClose(mozilla::ErrorResult& aRv);
 
@@ -173,8 +173,10 @@ public:
   uint64_t ChildID() const { return mChildID; }
 
   bool ClampScrollPosition() const { return mClampScrollPosition; }
+  void SetClampScrollPosition(bool aClamp);
 
   bool ClipSubdocument() const { return mClipSubdocument; }
+  void SetClipSubdocument(bool aClip);
 
   bool DepthTooGreat() const { return mDepthTooGreat; }
 

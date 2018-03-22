@@ -448,27 +448,6 @@ nsFrameLoader::AddProcessChangeBlockingPromise(Promise& aPromise, ErrorResult& a
   }
 }
 
-NS_IMETHODIMP
-nsFrameLoader::AddProcessChangeBlockingPromise(js::Handle<js::Value> aPromise,
-                                               JSContext* aCx)
-{
-  nsCOMPtr<nsIGlobalObject> go = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
-  if (!go) {
-    return NS_ERROR_FAILURE;
-  }
-  ErrorResult rv;
-  RefPtr<Promise> promise = Promise::Resolve(go, aCx, aPromise, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  AddProcessChangeBlockingPromise(*promise, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-  return NS_OK;
-}
-
 nsresult
 nsFrameLoader::ReallyStartLoading()
 {
@@ -2478,7 +2457,7 @@ nsFrameLoader::GetWindowDimensions(nsIntRect& aRect)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame *aIFrame)
 {
   if (IsRemoteFrame()) {
@@ -2542,13 +2521,6 @@ nsFrameLoader::LazyWidth() const
   return lazyWidth;
 }
 
-NS_IMETHODIMP
-nsFrameLoader::GetLazyWidth(uint32_t* aLazyWidth)
-{
-  *aLazyWidth = LazyWidth();
-  return NS_OK;
-}
-
 uint32_t
 nsFrameLoader::LazyHeight() const
 {
@@ -2560,13 +2532,6 @@ nsFrameLoader::LazyHeight() const
   }
 
   return lazyHeight;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetLazyHeight(uint32_t* aLazyHeight)
-{
-  *aLazyHeight = LazyHeight();
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2583,14 +2548,7 @@ nsFrameLoader::SetEventMode(uint32_t aEventMode)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFrameLoader::GetClipSubdocument(bool* aResult)
-{
-  *aResult = mClipSubdocument;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 nsFrameLoader::SetClipSubdocument(bool aClip)
 {
   mClipSubdocument = aClip;
@@ -2612,17 +2570,9 @@ nsFrameLoader::SetClipSubdocument(bool aClip)
       }
     }
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFrameLoader::GetClampScrollPosition(bool* aResult)
-{
-  *aResult = mClampScrollPosition;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 nsFrameLoader::SetClampScrollPosition(bool aClamp)
 {
   mClampScrollPosition = aClamp;
@@ -2642,7 +2592,6 @@ nsFrameLoader::SetClampScrollPosition(bool aClamp)
       }
     }
   }
-  return NS_OK;
 }
 
 static
@@ -2842,37 +2791,23 @@ nsFrameLoader::GetCurrentRenderFrame() const
 void
 nsFrameLoader::ActivateRemoteFrame(ErrorResult& aRv)
 {
-  nsresult rv = ActivateRemoteFrame();
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  if (!mRemoteBrowser) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
   }
-}
 
-NS_IMETHODIMP
-nsFrameLoader::ActivateRemoteFrame() {
-  if (mRemoteBrowser) {
-    mRemoteBrowser->Activate();
-    return NS_OK;
-  }
-  return NS_ERROR_UNEXPECTED;
+  mRemoteBrowser->Activate();
 }
 
 void
 nsFrameLoader::DeactivateRemoteFrame(ErrorResult& aRv)
 {
-  nsresult rv = DeactivateRemoteFrame();
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  if (!mRemoteBrowser) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
   }
-}
 
-NS_IMETHODIMP
-nsFrameLoader::DeactivateRemoteFrame() {
-  if (mRemoteBrowser) {
-    mRemoteBrowser->Deactivate();
-    return NS_OK;
-  }
-  return NS_ERROR_UNEXPECTED;
+  mRemoteBrowser->Deactivate();
 }
 
 void
@@ -2885,48 +2820,28 @@ nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType,
                                           bool aIgnoreRootScrollFrame,
                                           ErrorResult& aRv)
 {
-  nsresult rv = SendCrossProcessMouseEvent(aType, aX, aY, aButton, aClickCount, aModifiers, aIgnoreRootScrollFrame);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  if (!mRemoteBrowser) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
-}
 
-NS_IMETHODIMP
-nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType,
-                                          float aX,
-                                          float aY,
-                                          int32_t aButton,
-                                          int32_t aClickCount,
-                                          int32_t aModifiers,
-                                          bool aIgnoreRootScrollFrame)
-{
-  if (mRemoteBrowser) {
-    mRemoteBrowser->SendMouseEvent(aType, aX, aY, aButton,
-                                   aClickCount, aModifiers,
-                                   aIgnoreRootScrollFrame);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  mRemoteBrowser->SendMouseEvent(aType, aX, aY, aButton,
+                                 aClickCount, aModifiers,
+                                 aIgnoreRootScrollFrame);
 }
 
 void
 nsFrameLoader::ActivateFrameEvent(const nsAString& aType, bool aCapture, ErrorResult& aRv)
 {
-  nsresult rv = ActivateFrameEvent(aType, aCapture);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  if (!mRemoteBrowser) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
-}
 
-NS_IMETHODIMP
-nsFrameLoader::ActivateFrameEvent(const nsAString& aType,
-                                  bool aCapture)
-{
-  if (mRemoteBrowser) {
-    return mRemoteBrowser->SendActivateFrameEvent(nsString(aType), aCapture) ?
-      NS_OK : NS_ERROR_NOT_AVAILABLE;
+  bool ok = mRemoteBrowser->SendActivateFrameEvent(nsString(aType), aCapture);
+  if (!ok) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
   }
-  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -3048,21 +2963,8 @@ nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
 already_AddRefed<nsIMessageSender>
 nsFrameLoader::GetMessageManager()
 {
-  nsCOMPtr<nsIMessageSender> messageManager;
-  MOZ_ALWAYS_SUCCEEDS(GetMessageManager(getter_AddRefs(messageManager)));
-  return messageManager.forget();
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetMessageManager(nsIMessageSender** aManager)
-{
   EnsureMessageManager();
-  if (mMessageManager) {
-    RefPtr<nsFrameMessageManager> mm(mMessageManager);
-    mm.forget(aManager);
-    return NS_OK;
-  }
-  return NS_OK;
+  return do_AddRef(mMessageManager);
 }
 
 nsresult
@@ -3144,23 +3046,7 @@ nsFrameLoader::GetTabChildGlobalAsEventTarget()
 already_AddRefed<Element>
 nsFrameLoader::GetOwnerElement()
 {
-  nsCOMPtr<Element> element = do_QueryInterface(mOwnerContent);
-  return element.forget();
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetOwnerElement(nsIDOMElement **aElement)
-{
-  nsCOMPtr<nsIDOMElement> ownerElement = do_QueryInterface(mOwnerContent);
-  ownerElement.forget(aElement);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetChildID(uint64_t* aChildID)
-{
-  *aChildID = mChildID;
-  return NS_OK;
+  return do_AddRef(mOwnerContent);
 }
 
 void
@@ -3279,44 +3165,28 @@ nsFrameLoader::AttributeChanged(mozilla::dom::Element* aElement,
  * Send the RequestNotifyAfterRemotePaint message to the current Tab.
  */
 void
-nsFrameLoader::RequestNotifyAfterRemotePaint(ErrorResult& aRv)
-{
-  nsresult rv = RequestNotifyAfterRemotePaint();
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
-NS_IMETHODIMP
 nsFrameLoader::RequestNotifyAfterRemotePaint()
 {
   // If remote browsing (e10s), handle this with the TabParent.
   if (mRemoteBrowser) {
     Unused << mRemoteBrowser->SendRequestNotifyAfterRemotePaint();
   }
-
-  return NS_OK;
 }
 
 void
 nsFrameLoader::RequestFrameLoaderClose(ErrorResult& aRv)
 {
-  nsresult rv = RequestFrameLoaderClose();
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
-NS_IMETHODIMP
-nsFrameLoader::RequestFrameLoaderClose()
-{
   nsCOMPtr<nsIBrowser> browser = do_QueryInterface(mOwnerContent);
   if (NS_WARN_IF(!browser)) {
     // OwnerElement other than nsIBrowser is not supported yet.
-    return NS_ERROR_NOT_IMPLEMENTED;
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return;
   }
 
-  return browser->CloseBrowser();
+  nsresult rv = browser->CloseBrowser();
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
 }
 
 void
@@ -3337,17 +3207,6 @@ nsFrameLoader::Print(uint64_t aOuterWindowID,
                      nsIWebProgressListener* aProgressListener,
                      ErrorResult& aRv)
 {
-  nsresult rv = Print(aOuterWindowID, aPrintSettings, aProgressListener);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
-NS_IMETHODIMP
-nsFrameLoader::Print(uint64_t aOuterWindowID,
-                     nsIPrintSettings* aPrintSettings,
-                     nsIWebProgressListener* aProgressListener)
-{
 #if defined(NS_PRINTING)
   if (mRemoteBrowser) {
     RefPtr<embedding::PrintingParent> printingParent =
@@ -3357,28 +3216,37 @@ nsFrameLoader::Print(uint64_t aOuterWindowID,
     nsresult rv = printingParent->SerializeAndEnsureRemotePrintJob(
       aPrintSettings, aProgressListener, nullptr, &printData);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      aRv.Throw(rv);
+      return;
     }
 
     bool success = mRemoteBrowser->SendPrint(aOuterWindowID, printData);
-    return success ? NS_OK : NS_ERROR_FAILURE;
+    if (!success) {
+      aRv.Throw(NS_ERROR_FAILURE);
+    }
+    return;
   }
 
   nsGlobalWindowOuter* outerWindow =
     nsGlobalWindowOuter::GetOuterWindowWithId(aOuterWindowID);
   if (NS_WARN_IF(!outerWindow)) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
 
   nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint =
     do_GetInterface(outerWindow->AsOuter());
   if (NS_WARN_IF(!webBrowserPrint)) {
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
 
-  return webBrowserPrint->Print(aPrintSettings, aProgressListener);
+  nsresult rv = webBrowserPrint->Print(aPrintSettings, aProgressListener);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
 #endif
-  return NS_OK;
 }
 
 already_AddRefed<nsITabParent>
@@ -3399,14 +3267,6 @@ already_AddRefed<nsILoadContext>
 nsFrameLoader::LoadContext()
 {
   nsCOMPtr<nsILoadContext> loadContext;
-  MOZ_ALWAYS_SUCCEEDS(GetLoadContext(getter_AddRefs(loadContext)));
-  return loadContext.forget();
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetLoadContext(nsILoadContext** aLoadContext)
-{
-  nsCOMPtr<nsILoadContext> loadContext;
   if (IsRemoteFrame() &&
       (mRemoteBrowser || TryRemoteBrowser())) {
     loadContext = mRemoteBrowser->GetLoadContext();
@@ -3415,8 +3275,7 @@ nsFrameLoader::GetLoadContext(nsILoadContext** aLoadContext)
     GetDocShell(getter_AddRefs(docShell));
     loadContext = do_GetInterface(docShell);
   }
-  loadContext.forget(aLoadContext);
-  return NS_OK;
+  return loadContext.forget();
 }
 
 void
@@ -3606,13 +3465,6 @@ nsFrameLoader::PopulateUserContextIdFromAttribute(OriginAttributes& aAttr)
     }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetIsDead(bool* aIsDead)
-{
-  *aIsDead = mDestroyCalled;
   return NS_OK;
 }
 

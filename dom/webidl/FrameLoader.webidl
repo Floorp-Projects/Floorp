@@ -110,7 +110,6 @@ interface FrameLoader {
    * received by the Compositor, a MozAfterRemoteFrame event be sent
    * to the window.
    */
-  [Throws]
   void requestNotifyAfterRemotePaint();
 
   /**
