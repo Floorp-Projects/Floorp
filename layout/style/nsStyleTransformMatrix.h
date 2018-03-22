@@ -23,9 +23,6 @@ class nsIFrame;
 class nsPresContext;
 struct gfxQuaternion;
 struct nsRect;
-namespace mozilla {
-class RuleNodeCacheConditions;
-} // namespace mozilla
 
 /**
  * A helper to generate gfxMatrixes from css transform functions.
