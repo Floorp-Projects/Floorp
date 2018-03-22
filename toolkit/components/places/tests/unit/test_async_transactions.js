@@ -1859,3 +1859,67 @@ add_task(async function test_remove_multiple() {
   await PT.clearTransactionsHistory();
   observer.reset();
 });
+
+add_task(async function test_renameTag() {
+  let url = "http://test.edit.keyword/";
+  await PT.Tag({ url, tags: ["t1", "t2"] }).transact();
+  ensureTagsForURI(url, ["t1", "t2"]);
+
+  // Create bookmark queries that point to the modified tag.
+  let bm1 = await PlacesUtils.bookmarks.insert({
+    url: "place:tag=t2",
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+  });
+  let bm2 = await PlacesUtils.bookmarks.insert({
+    url: "place:tag=t2&sort=1",
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+  });
+  // This points to 2 tags, and as such won't be touched.
+  let bm3 = await PlacesUtils.bookmarks.insert({
+    url: "place:tag=t2&tag=t1",
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid
+  });
+
+  await PT.RenameTag({ oldTag: "t2", tag: "t3" }).transact();
+  ensureTagsForURI(url, ["t1", "t3"]);
+  Assert.equal((await PlacesUtils.bookmarks.fetch(bm1.guid)).url.href, "place:tag=t3",
+               "The fitst bookmark has been updated");
+  Assert.equal((await PlacesUtils.bookmarks.fetch(bm2.guid)).url.href, "place:tag=t3&sort=1",
+               "The second bookmark has been updated");
+  Assert.equal((await PlacesUtils.bookmarks.fetch(bm3.guid)).url.href, "place:tag=t3&tag=t1",
+               "The third bookmark has been updated");
+
+  await PT.undo();
+  ensureTagsForURI(url, ["t1", "t2"]);
+  Assert.equal((await PlacesUtils.bookmarks.fetch(bm1.guid)).url.href, "place:tag=t2",
+               "The fitst bookmark has been restored");
+  Assert.equal((await PlacesUtils.bookmarks.fetch(bm2.guid)).url.href, "place:tag=t2&sort=1",
+               "The second bookmark has been restored");
+  Assert.equal((await PlacesUtils.bookmarks.fetch(bm3.guid)).url.href, "place:tag=t2&tag=t1",
+               "The third bookmark has been restored");
+
+  await PT.redo();
+  ensureTagsForURI(url, ["t1", "t3"]);
+  Assert.equal((await PlacesUtils.bookmarks.fetch(bm1.guid)).url.href, "place:tag=t3",
+               "The fitst bookmark has been updated");
+  Assert.equal((await PlacesUtils.bookmarks.fetch(bm2.guid)).url.href, "place:tag=t3&sort=1",
+               "The second bookmark has been updated");
+  Assert.equal((await PlacesUtils.bookmarks.fetch(bm3.guid)).url.href, "place:tag=t3&tag=t1",
+               "The third bookmark has been updated");
+
+  await PT.undo();
+  ensureTagsForURI(url, ["t1", "t2"]);
+  Assert.equal((await PlacesUtils.bookmarks.fetch(bm1.guid)).url.href, "place:tag=t2",
+               "The fitst bookmark has been restored");
+  Assert.equal((await PlacesUtils.bookmarks.fetch(bm2.guid)).url.href, "place:tag=t2&sort=1",
+               "The second bookmark has been restored");
+  Assert.equal((await PlacesUtils.bookmarks.fetch(bm3.guid)).url.href, "place:tag=t2&tag=t1",
+               "The third bookmark has been restored");
+
+  await PT.undo();
+  ensureTagsForURI(url, []);
+
+  await PT.clearTransactionsHistory();
+  ensureUndoState();
+  await PlacesUtils.bookmarks.eraseEverything();
+});

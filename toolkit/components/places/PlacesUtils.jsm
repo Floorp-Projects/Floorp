@@ -782,9 +782,20 @@ var PlacesUtils = {
    * @returns true if the node is a tag container, false otherwise
    */
   nodeIsTagQuery: function PU_nodeIsTagQuery(aNode) {
-    return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY &&
-           asQuery(aNode).queryOptions.resultType ==
-             Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS;
+    if (aNode.type != Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY)
+      return false;
+    // Direct child of RESULTS_AS_TAG_QUERY.
+    let parent = aNode.parent;
+    if (parent && PlacesUtils.asQuery(parent).queryOptions.resultType ==
+                    Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY)
+      return true;
+    // We must also support the right pane of the Library, when the tag query
+    // is the root node. Unfortunately this is also valid for any tag query
+    // selected in the left pane that is not a direct child of RESULTS_AS_TAG_QUERY.
+    if (!parent && aNode == aNode.parentResult.root &&
+        PlacesUtils.asQuery(aNode).query.tags.length == 1)
+      return true;
+    return false;
   },
 
   /**
@@ -822,15 +833,8 @@ var PlacesUtils = {
    * node.itemId, but for folder-shortcuts that's node.folderItemId.
    */
   getConcreteItemId: function PU_getConcreteItemId(aNode) {
-    if (aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT)
-      return asQuery(aNode).folderItemId;
-    else if (PlacesUtils.nodeIsTagQuery(aNode)) {
-      // RESULTS_AS_TAG_CONTENTS queries are similar to folder shortcuts
-      // so we can still get the concrete itemId for them.
-      let folders = aNode.query.getFolders();
-      return folders[0];
-    }
-    return aNode.itemId;
+    return aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT ?
+             asQuery(aNode).folderItemId : aNode.itemId;
   },
 
   /**
