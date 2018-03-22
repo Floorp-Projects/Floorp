@@ -128,14 +128,6 @@
   list-style-image: url(images/debugger-step-out.svg);
 }
 
-#calls-slider {
-  padding-inline-end: 24px;
-}
-
-#calls-slider .scale-slider {
-  margin: 0;
-}
-
 #debugging-toolbar-sizer-button {
   /* This button's only purpose in life is to make the
      container .devtools-toolbar have the right height. */

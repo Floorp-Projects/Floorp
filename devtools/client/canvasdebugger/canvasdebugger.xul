@@ -106,9 +106,6 @@
             <toolbarbutton id="debugging-toolbar-sizer-button"
                            class="devtools-toolbarbutton"
                            label=""/>
-            <scale id="calls-slider"
-                   movetoclick="true"
-                   flex="100"/>
             <textbox id="calls-searchbox"
                      class="devtools-filterinput"
                      placeholder="&canvasDebuggerUI.searchboxPlaceholder;"
