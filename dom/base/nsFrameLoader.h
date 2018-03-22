@@ -172,6 +172,10 @@ public:
   already_AddRefed<nsIMessageSender> GetMessageManager();
 
   uint32_t EventMode() const { return mEventMode; }
+  void SetEventMode(uint32_t aEventMode)
+  {
+    mEventMode = aEventMode;
+  }
 
   already_AddRefed<Element> GetOwnerElement();
 
@@ -464,7 +468,7 @@ private:
 
   int32_t mJSPluginID;
 
-  // See nsIFrameLoader.idl. EVENT_MODE_NORMAL_DISPATCH automatically
+  // See FrameLoader.webidl. EVENT_MODE_NORMAL_DISPATCH automatically
   // forwards some input events to out-of-process content.
   uint32_t mEventMode;
 
