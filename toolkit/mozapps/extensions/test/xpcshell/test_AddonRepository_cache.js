@@ -25,6 +25,7 @@ const ADDONS = [
     "install.rdf": {
       id: "test_AddonRepository_1@tests.mozilla.org",
       version: "1.1",
+      bootstrap: true,
 
       name: "XPI Add-on 1",
       description: "XPI Add-on 1 - Description",
@@ -52,6 +53,7 @@ const ADDONS = [
       type: 4,
       internalName: "test2/1.0",
       version: "1.2",
+      bootstrap: true,
       name: "XPI Add-on 2",
 
       targetApplications: [{
@@ -66,6 +68,7 @@ const ADDONS = [
       type: "4",
       internalName: "test3/1.0",
       version: "1.3",
+      bootstrap: true,
       name: "XPI Add-on 3",
 
       targetApplications: [{
