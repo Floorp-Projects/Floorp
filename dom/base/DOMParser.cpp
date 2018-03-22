@@ -346,7 +346,7 @@ DOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
       // Don't give DOMParsers the system principal.  Use a null
       // principal instead.
       mOriginalPrincipalWasSystem = true;
-      mPrincipal = NullPrincipal::Create();
+      mPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
 
       if (!mDocumentURI) {
         rv = mPrincipal->GetURI(getter_AddRefs(mDocumentURI));
@@ -457,7 +457,7 @@ DOMParser::SetUpDocument(DocumentFlavor aFlavor, nsIDOMDocument** aResult)
     NS_ENSURE_TRUE(!mAttemptedInit, NS_ERROR_NOT_INITIALIZED);
     AttemptedInitMarker marker(&mAttemptedInit);
 
-    nsCOMPtr<nsIPrincipal> prin = NullPrincipal::Create();
+    nsCOMPtr<nsIPrincipal> prin = NullPrincipal::CreateWithoutOriginAttributes();
     rv = Init(prin, nullptr, nullptr, scriptHandlingObject);
     NS_ENSURE_SUCCESS(rv, rv);
   }

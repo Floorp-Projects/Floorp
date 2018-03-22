@@ -240,7 +240,7 @@ StyleSheet::SetEnabled(bool aEnabled)
 StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
                                ReferrerPolicy aReferrerPolicy,
                                const dom::SRIMetadata& aIntegrity)
-  : mPrincipal(NullPrincipal::Create())
+  : mPrincipal(NullPrincipal::CreateWithoutOriginAttributes())
   , mCORSMode(aCORSMode)
   , mReferrerPolicy(aReferrerPolicy)
   , mIntegrity(aIntegrity)
