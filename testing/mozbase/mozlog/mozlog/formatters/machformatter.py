@@ -23,7 +23,8 @@ def format_seconds(total):
 class MachFormatter(base.BaseFormatter):
 
     def __init__(self, start_time=None, write_interval=False, write_times=True,
-                 terminal=None, disable_colors=False, summary_on_shutdown=False, **kwargs):
+                 terminal=None, disable_colors=False, summary_on_shutdown=False,
+                 verbose=False, **kwargs):
         super(MachFormatter, self).__init__(**kwargs)
 
         if start_time is None:
@@ -36,7 +37,7 @@ class MachFormatter(base.BaseFormatter):
         self.has_unexpected = {}
         self.last_time = None
         self.term = Terminal(disable_styling=disable_colors)
-        self.verbose = False
+        self.verbose = verbose
         self._known_pids = set()
 
         self.summary = SummaryHandler()
@@ -83,11 +84,27 @@ class MachFormatter(base.BaseFormatter):
         return "\n".join(rv)
 
     def _format_expected(self, status, expected):
-        color = self.term.red
-        if expected in ("PASS", "OK"):
-            return color(status)
+        if status == expected:
+            color = self.term.green
+            if expected not in ("PASS", "OK"):
+                color = self.term.yellow
+                status = "EXPECTED-%s" % status
+        else:
+            color = self.term.red
+            if status in ("PASS", "OK"):
+                status = "UNEXPECTED-%s" % status
+        return color(status)
 
-        return color("%s expected %s" % (status, expected))
+    def _format_status(self, test, data):
+        name = data.get("subtest", test)
+        rv = "%s %s" % (self._format_expected(
+            data["status"], data.get("expected", data["status"])), name)
+        if 'message' in data:
+            rv += " - %s" % data['message']
+
+        if 'stack' in data:
+            rv += "\n%s\n" % self.term.dim(data['stack'].strip('\n'))
+        return rv
 
     def _format_suite_summary(self, suite, summary):
         count = summary['counts']
@@ -130,25 +147,21 @@ class MachFormatter(base.BaseFormatter):
         if not any(count[key]["unexpected"] for key in ('test', 'subtest', 'assert')):
             rv.append(self.term.green("OK"))
         else:
-            heading = "Unexpected Logs"
-            rv.extend(["", heading, "-" * len(heading)])
+            heading = "Unexpected Results"
+            rv.extend(["", self.term.yellow(heading), self.term.yellow("-" * len(heading))])
             if count['subtest']['count']:
                 for test_id, results in logs.items():
                     test = self._get_file_name(test_id)
-                    rv.append(test)
+                    rv.append(self.term.bold(test))
                     for data in results:
-                        name = data.get("subtest", "[Parent]")
-                        rv.append("  %s %s" % (self._format_expected(
-                                             data["status"], data["expected"]), name))
+                        rv.append("  %s" % self._format_status(test, data).rstrip())
             else:
                 for test_id, results in logs.items():
                     test = self._get_file_name(test_id)
-                    rv.append(test)
                     assert len(results) == 1
                     data = results[0]
                     assert "subtest" not in data
-                    rv.append("  %s %s" % (self._format_expected(
-                                           data["status"], data["expected"]), test))
+                    rv.append(self._format_status(test, data).rstrip())
 
         return "\n".join(rv)
 
@@ -158,13 +171,6 @@ class MachFormatter(base.BaseFormatter):
 
     def test_end(self, data):
         subtests = self._get_subtest_data(data)
-
-        message = data.get("message", "")
-        if "stack" in data:
-            stack = data["stack"]
-            if stack and stack[-1] != "\n":
-                stack += "\n"
-            message = stack + message
 
         if "expected" in data:
             parent_unexpected = True
@@ -188,21 +194,20 @@ class MachFormatter(base.BaseFormatter):
 
         unexpected = self.summary.current["unexpected_logs"].get(data["test"])
         if unexpected:
-            rv += "\n"
             if len(unexpected) == 1 and parent_unexpected:
-                rv += "%s" % unexpected[0].get("message", "")
-            else:
-                for data in unexpected:
-                    name = data.get("subtest", "[Parent]")
-                    expected_str = "Expected %s, got %s" % (data["expected"], data["status"])
-                    rv += "%s\n" % (
-                        "\n".join([name, "-" * len(name), expected_str, data.get("message", "")]))
-                rv = rv[:-1]
+                message = unexpected[0].get("message", "")
+                if message:
+                    rv += " - %s" % message
+            elif not self.verbose:
+                rv += "\n"
+                for d in unexpected:
+                    rv += self._format_status(data['test'], d)
 
         if "expected" not in data and not bool(subtests['unexpected']):
             color = self.term.green
         else:
             color = self.term.red
+
         action = color(data['action'].upper())
         return "%s: %s" % (action, rv)
 
@@ -219,27 +224,13 @@ class MachFormatter(base.BaseFormatter):
             self.status_buffer[test] = {"count": 0, "unexpected": 0, "pass": 0}
         self.status_buffer[test]["count"] += 1
 
-        message = data.get("message", "")
-        if "stack" in data:
-            if message:
-                message += "\n"
-            message += data["stack"]
-
         if data["status"] == "PASS":
             self.status_buffer[test]["pass"] += 1
 
-        rv = None
-        status, subtest = data["status"], data["subtest"]
-        unexpected = "expected" in data
-        if self.verbose:
-            status = (self.term.red if unexpected else self.term.green)(status)
-            rv = " ".join([subtest, status, message])
-
-        if unexpected:
+        if 'expected' in data:
             self.status_buffer[test]["unexpected"] += 1
-        if rv:
-            action = self.term.yellow(data['action'].upper())
-            return "%s: %s" % (action, rv)
+        if self.verbose:
+            return self._format_status(test, data).rstrip('\n')
 
     def assertion_count(self, data):
         if data["min_expected"] <= data["count"] <= data["max_expected"]:

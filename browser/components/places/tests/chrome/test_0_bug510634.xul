@@ -54,8 +54,7 @@
       tree.selectItems([PlacesUtils.virtualAllBookmarksGuid]);
       PlacesUtils.asContainer(tree.selectedNode).containerOpen = true;
       is(tree.selectedNode.uri,
-         "place:type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY +
-         "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS,
+         "place:type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY,
          "Opened All Bookmarks");
 
       const topLevelGuids = [

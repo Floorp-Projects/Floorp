@@ -268,9 +268,8 @@ HarBuilder.prototype = {
     let requestHeadersFromUploadStream;
 
     if (!requestPostData && this._options.requestData) {
-      let payload = await this._options.requestData(file.id, "requestPostData");
-      requestPostData = payload.requestPostData;
-      requestHeadersFromUploadStream = payload.requestHeadersFromUploadStream;
+      requestPostData = await this._options.requestData(file.id, "requestPostData");
+      requestHeadersFromUploadStream = requestPostData.uploadHeaders;
     }
 
     if (!requestPostData.postData.text) {

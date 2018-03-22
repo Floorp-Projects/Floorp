@@ -18,9 +18,9 @@ class nsIFrame;
 class nsILayoutHistoryState;
 class nsIPresShell;
 class nsPlaceholderFrame;
-class nsStyleContext;
 class nsWindowSizes;
 namespace mozilla {
+class ComputedStyle;
 struct UndisplayedNode;
 }
 
@@ -35,6 +35,7 @@ struct UndisplayedNode;
  */
 class nsFrameManager
 {
+  typedef mozilla::ComputedStyle ComputedStyle;
   typedef mozilla::layout::FrameChildListID ChildListID;
   typedef mozilla::UndisplayedNode UndisplayedNode;
 
@@ -73,72 +74,73 @@ public:
 
 
   // display:none and display:contents content does not get an nsIFrame.  To
-  // enable the style context for such content to be obtained we store the
-  // contexts in a couple of hash tables.  The following methods provide the
-  // API that's used to set, reset, obtain and clear these style contexts.
+  // enable the style for such content to be obtained we store them in a
+  // couple of hash tables.  The following methods provide the API that's used
+  // to set, reset, obtain and clear these styles.
+  //
+  // FIXME(stylo-everywhere): This should go away now.
 
   /**
-   * Register the style context for the display:none content, aContent.
+   * Register the style for the display:none content, aContent.
    */
   void RegisterDisplayNoneStyleFor(nsIContent* aContent,
-                                   nsStyleContext* aStyleContext);
+                                   ComputedStyle* aComputedStyle);
 
   /**
-   * Register the style context for the display:contents content, aContent.
+   * Register the style for the display:contents content, aContent.
    */
   void RegisterDisplayContentsStyleFor(nsIContent* aContent,
-                                       nsStyleContext* aStyleContext);
+                                       ComputedStyle* aComputedStyle);
 
   /**
-   * Change the style context for the display:none content, aContent.
+   * Change the style for the display:none content, aContent.
    */
   void ChangeRegisteredDisplayNoneStyleFor(nsIContent* aContent,
-                                           nsStyleContext* aStyleContext)
+                                           ComputedStyle* aComputedStyle)
   {
-    ChangeStyleContextInMap(mDisplayNoneMap, aContent, aStyleContext);
+    ChangeComputedStyleInMap(mDisplayNoneMap, aContent, aComputedStyle);
   }
 
   /**
-   * Change the style context for the display:contents content, aContent.
+   * Change the style for the display:contents content, aContent.
    */
   void ChangeRegisteredDisplayContentsStyleFor(nsIContent* aContent,
-                                               nsStyleContext* aStyleContext)
+                                               ComputedStyle* aComputedStyle)
   {
-    ChangeStyleContextInMap(mDisplayContentsMap, aContent, aStyleContext);
+    ChangeComputedStyleInMap(mDisplayContentsMap, aContent, aComputedStyle);
   }
 
   /**
-   * Get the style context for the display:none content, aContent, if any.
+   * Get the style for the display:none content, aContent, if any.
    */
-  nsStyleContext* GetDisplayNoneStyleFor(const nsIContent* aContent)
+  ComputedStyle* GetDisplayNoneStyleFor(const nsIContent* aContent)
   {
     if (!mDisplayNoneMap) {
       return nullptr;
     }
-    return GetStyleContextInMap(mDisplayNoneMap, aContent);
+    return GetComputedStyleInMap(mDisplayNoneMap, aContent);
   }
 
   /**
-   * Get the style context for the display:contents content, aContent, if any.
+   * Get the style for the display:contents content, aContent, if any.
    */
-  nsStyleContext* GetDisplayContentsStyleFor(const nsIContent* aContent)
+  ComputedStyle* GetDisplayContentsStyleFor(const nsIContent* aContent)
   {
     if (!mDisplayContentsMap) {
       return nullptr;
     }
-    return GetStyleContextInMap(mDisplayContentsMap, aContent);
+    return GetComputedStyleInMap(mDisplayContentsMap, aContent);
   }
 
   /**
-   * Return the linked list of UndisplayedNodes that contain the style contexts
-   * that have been registered for the display:none children of
-   * aParentContent.
+   * Return the linked list of UndisplayedNodes that contain the styles that
+   * been registered for the display:none children of aParentContent.
    */
   UndisplayedNode*
   GetAllRegisteredDisplayNoneStylesIn(nsIContent* aParentContent);
 
   /**
-   * Return the linked list of UndisplayedNodes that contain the style contexts
+   * Return the linked list of UndisplayedNodes that contain the styles
    * that have been registered for the display:contents children of
    * aParentContent.
    */
@@ -146,17 +148,17 @@ public:
   GetAllRegisteredDisplayContentsStylesIn(nsIContent* aParentContent);
 
   /**
-   * Unregister the style context for the display:none content, aContent,
-   * if any.  If found, then this method also unregisters the style contexts
-   * for any display:contents and display:none descendants of aContent.
+   * Unregister the style for the display:none content, aContent, if
+   * any.  If found, then this method also unregisters the styles for any
+   * display:contents and display:none descendants of aContent.
    */
   void UnregisterDisplayNoneStyleFor(nsIContent* aContent,
                                      nsIContent* aParentContent);
 
   /**
-   * Unregister the style context for the display:contents content, aContent,
-   * if any.  If found, then this method also unregisters the style contexts
-   * for any display:contents and display:none descendants of aContent.
+   * Unregister the style for the display:contents content, aContent, if any.
+   * If found, then this method also unregisters the style for any
+   * display:contents and display:none descendants of aContent.
    */
   void UnregisterDisplayContentsStyleFor(nsIContent* aContent,
                                          nsIContent* aParentContent);
@@ -211,18 +213,21 @@ protected:
 
   void ClearAllMapsFor(nsIContent* aParentContent);
 
-  static nsStyleContext* GetStyleContextInMap(UndisplayedMap* aMap,
+  static ComputedStyle* GetComputedStyleInMap(UndisplayedMap* aMap,
                                               const nsIContent* aContent);
   static UndisplayedNode* GetUndisplayedNodeInMapFor(UndisplayedMap* aMap,
                                                      const nsIContent* aContent);
   static UndisplayedNode* GetAllUndisplayedNodesInMapFor(UndisplayedMap* aMap,
                                                          nsIContent* aParentContent);
-  static void SetStyleContextInMap(UndisplayedMap* aMap,
-                                   nsIContent* aContent,
-                                   nsStyleContext* aStyleContext);
-  static void ChangeStyleContextInMap(UndisplayedMap* aMap,
-                                      nsIContent* aContent,
-                                      nsStyleContext* aStyleContext);
+  static void SetComputedStyleInMap(
+      UndisplayedMap* aMap,
+      nsIContent* aContent,
+      ComputedStyle* aComputedStyle);
+
+  static void ChangeComputedStyleInMap(
+      UndisplayedMap* aMap,
+      nsIContent* aContent,
+      ComputedStyle* aComputedStyle);
 
   // weak link, because the pres shell owns us
   nsIPresShell* MOZ_NON_OWNING_REF mPresShell;

@@ -54,7 +54,7 @@ namespace mozilla {
   enum class UpdateAnimationsTasks : uint8_t;
   struct LangGroupFontPrefs;
   class SeenPtrs;
-  class ServoStyleContext;
+  class ComputedStyle;
   class ServoStyleSheet;
   class ServoElementSnapshotTable;
 }
@@ -162,11 +162,11 @@ RawGeckoElementBorrowedOrNull Gecko_GetBeforeOrAfterPseudo(RawGeckoElementBorrow
 nsTArray<nsIContent*>* Gecko_GetAnonymousContentForElement(RawGeckoElementBorrowed element);
 void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* anon_content);
 
-void Gecko_ServoStyleContext_Init(mozilla::ServoStyleContext* context,
-                                  ServoStyleContextBorrowedOrNull parent_context,
-                                  RawGeckoPresContextBorrowed pres_context, ServoComputedDataBorrowed values,
-                                  mozilla::CSSPseudoElementType pseudo_type, nsAtom* pseudo_tag);
-void Gecko_ServoStyleContext_Destroy(mozilla::ServoStyleContext* context);
+void Gecko_ComputedStyle_Init(mozilla::ComputedStyle* context,
+                              ComputedStyleBorrowedOrNull parent_context,
+                              RawGeckoPresContextBorrowed pres_context, ServoComputedDataBorrowed values,
+                              mozilla::CSSPseudoElementType pseudo_type, nsAtom* pseudo_tag);
+void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle* context);
 
 // By default, Servo walks the DOM by traversing the siblings of the DOM-view
 // first child. This generally works, but misses anonymous children, which we
@@ -259,8 +259,8 @@ void Gecko_CopyAnimationNames(RawGeckoStyleAnimationListBorrowedMut aDest,
 void Gecko_SetAnimationName(mozilla::StyleAnimation* aStyleAnimation,
                             nsAtom* aAtom);
 void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElementOrPseudo,
-                            ServoStyleContextBorrowedOrNull aOldComputedValues,
-                            ServoStyleContextBorrowedOrNull aComputedValues,
+                            ComputedStyleBorrowedOrNull aOldComputedValues,
+                            ComputedStyleBorrowedOrNull aComputedValues,
                             mozilla::UpdateAnimationsTasks aTasks);
 bool Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElementOrPseudo);
 bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElementOrPseudo);
@@ -404,8 +404,8 @@ mozilla::CSSPseudoElementType Gecko_GetImplementedPseudo(RawGeckoElementBorrowed
 // We'd like to return `nsChangeHint` here, but bindgen bitfield enums don't
 // work as return values with the Linux 32-bit ABI at the moment because
 // they wrap the value in a struct.
-uint32_t Gecko_CalcStyleDifference(ServoStyleContextBorrowed old_style,
-                                   ServoStyleContextBorrowed new_style,
+uint32_t Gecko_CalcStyleDifference(ComputedStyleBorrowed old_style,
+                                   ComputedStyleBorrowed new_style,
                                    bool* any_style_changed,
                                    bool* reset_only_changed);
 

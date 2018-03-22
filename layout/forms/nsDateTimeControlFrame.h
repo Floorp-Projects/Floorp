@@ -32,11 +32,11 @@ class nsDateTimeControlFrame final : public nsContainerFrame,
 {
   typedef mozilla::dom::DateTimeValue DateTimeValue;
 
-  explicit nsDateTimeControlFrame(nsStyleContext* aContext);
+  explicit nsDateTimeControlFrame(ComputedStyle* aStyle);
 
 public:
   friend nsIFrame* NS_NewDateTimeControlFrame(nsIPresShell* aPresShell,
-                                              nsStyleContext* aContext);
+                                              ComputedStyle* aStyle);
 
   void ContentStatesChanged(mozilla::EventStates aStates) override;
   void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;

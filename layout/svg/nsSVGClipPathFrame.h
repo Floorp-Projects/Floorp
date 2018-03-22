@@ -18,15 +18,15 @@ class nsSVGDisplayableFrame;
 class nsSVGClipPathFrame final : public nsSVGContainerFrame
 {
   friend nsIFrame*
-  NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
   typedef mozilla::gfx::Matrix Matrix;
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
 protected:
-  explicit nsSVGClipPathFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext, kClassID)
+  explicit nsSVGClipPathFrame(ComputedStyle* aStyle)
+    : nsSVGContainerFrame(aStyle, kClassID)
     , mIsBeingProcessed(false)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ApiMsg, FrameMsg, SceneMsg};
-use bincode::{serialize, Infinite};
+use bincode::serialize;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::any::TypeId;
 use std::fmt::Debug;
@@ -49,7 +49,7 @@ impl BinaryRecorder {
 impl ApiRecordingReceiver for BinaryRecorder {
     fn write_msg(&mut self, _: u32, msg: &ApiMsg) {
         if should_record_msg(msg) {
-            let buf = serialize(msg, Infinite).unwrap();
+            let buf = serialize(msg).unwrap();
             self.write_length_and_data(&buf);
         }
     }

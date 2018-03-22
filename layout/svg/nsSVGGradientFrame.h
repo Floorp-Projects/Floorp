@@ -18,9 +18,7 @@
 class gfxPattern;
 class nsAtom;
 class nsIContent;
-class nsIFrame;
 class nsIPresShell;
-class nsStyleContext;
 
 namespace mozilla {
 class nsSVGAnimatedTransformList;
@@ -40,7 +38,7 @@ class nsSVGGradientFrame : public nsSVGPaintServerFrame
   typedef mozilla::gfx::ExtendMode ExtendMode;
 
 protected:
-  nsSVGGradientFrame(nsStyleContext* aContext, ClassID aID);
+  nsSVGGradientFrame(ComputedStyle* aStyle, ClassID aID);
 
 public:
   NS_DECL_ABSTRACT_FRAME(nsSVGGradientFrame)
@@ -124,10 +122,10 @@ private:
 class nsSVGLinearGradientFrame : public nsSVGGradientFrame
 {
   friend nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
-                                                nsStyleContext* aContext);
+                                                ComputedStyle* aStyle);
 protected:
-  explicit nsSVGLinearGradientFrame(nsStyleContext* aContext)
-    : nsSVGGradientFrame(aContext, kClassID)
+  explicit nsSVGLinearGradientFrame(ComputedStyle* aStyle)
+    : nsSVGGradientFrame(aStyle, kClassID)
   {}
 
 public:
@@ -166,10 +164,10 @@ protected:
 class nsSVGRadialGradientFrame : public nsSVGGradientFrame
 {
   friend nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell,
-                                                nsStyleContext* aContext);
+                                                ComputedStyle* aStyle);
 protected:
-  explicit nsSVGRadialGradientFrame(nsStyleContext* aContext)
-    : nsSVGGradientFrame(aContext, kClassID)
+  explicit nsSVGRadialGradientFrame(ComputedStyle* aStyle)
+    : nsSVGGradientFrame(aStyle, kClassID)
   {}
 
 public:

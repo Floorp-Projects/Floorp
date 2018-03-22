@@ -30,7 +30,7 @@ class BRFrame final : public nsFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS(BRFrame)
 
-  friend nsIFrame* ::NS_NewBRFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsIFrame* ::NS_NewBRFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
   ContentOffsets CalcContentOffsetsFromFramePoint(const nsPoint& aPoint) override;
 
@@ -66,8 +66,8 @@ public:
 #endif
 
 protected:
-  explicit BRFrame(nsStyleContext* aContext)
-    : nsFrame(aContext, kClassID)
+  explicit BRFrame(ComputedStyle* aStyle)
+    : nsFrame(aStyle, kClassID)
     , mAscent(NS_INTRINSIC_WIDTH_UNKNOWN)
   {}
 
@@ -79,9 +79,9 @@ protected:
 } // namespace mozilla
 
 nsIFrame*
-NS_NewBRFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewBRFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) BRFrame(aContext);
+  return new (aPresShell) BRFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(BRFrame)
@@ -116,7 +116,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
   // own, because we may have custom "display" value that makes our
   // ShouldSuppressLineBreak() return false.
   nsLineLayout* ll = aReflowInput.mLineLayout;
-  if (ll && !GetParent()->StyleContext()->ShouldSuppressLineBreak()) {
+  if (ll && !GetParent()->Style()->ShouldSuppressLineBreak()) {
     // Note that the compatibility mode check excludes AlmostStandards
     // mode, since this is the inline box model.  See bug 161691.
     if ( ll->LineIsEmpty() ||
@@ -179,7 +179,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
 BRFrame::AddInlineMinISize(gfxContext *aRenderingContext,
                            nsIFrame::InlineMinISizeData *aData)
 {
-  if (!GetParent()->StyleContext()->ShouldSuppressLineBreak()) {
+  if (!GetParent()->Style()->ShouldSuppressLineBreak()) {
     aData->ForceBreak();
   }
 }
@@ -188,7 +188,7 @@ BRFrame::AddInlineMinISize(gfxContext *aRenderingContext,
 BRFrame::AddInlinePrefISize(gfxContext *aRenderingContext,
                             nsIFrame::InlinePrefISizeData *aData)
 {
-  if (!GetParent()->StyleContext()->ShouldSuppressLineBreak()) {
+  if (!GetParent()->Style()->ShouldSuppressLineBreak()) {
     // Match the 1 appunit width assigned in the Reflow method above
     aData->mCurrentLine += 1;
     aData->ForceBreak();

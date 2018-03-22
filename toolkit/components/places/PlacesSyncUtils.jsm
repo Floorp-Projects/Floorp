@@ -382,7 +382,6 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   DESCRIPTION_ANNO: "bookmarkProperties/description",
   SIDEBAR_ANNO: "bookmarkProperties/loadInSidebar",
   SYNC_PARENT_ANNO: "sync/parent",
-  SYNC_MOBILE_ROOT_ANNO: "mobile/bookmarksRoot",
 
   SYNC_ID_META_KEY: "sync/bookmarks/syncId",
   LAST_SYNC_META_KEY: "sync/bookmarks/lastSync",

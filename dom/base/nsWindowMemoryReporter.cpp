@@ -442,7 +442,7 @@ CollectWindowReports(nsGlobalWindowInner *aWindow,
   REPORT_SIZE("/layout/rule-nodes", mArenaSizes.mRuleNodes,
               "Memory used by CSS rule nodes within a window.");
 
-  REPORT_SIZE("/layout/style-contexts", mArenaSizes.mStyleContexts,
+  REPORT_SIZE("/layout/style-contexts", mArenaSizes.mComputedStyles,
               "Memory used by style contexts within a window.");
 
   // There are many different kinds of style structs, but it is likely that
@@ -708,7 +708,7 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
          "This is the sum of all windows' 'layout/rule-nodes' numbers.");
 
   REPORT("window-objects/layout/style-contexts",
-         windowTotalSizes.mArenaSizes.mStyleContexts,
+         windowTotalSizes.mArenaSizes.mComputedStyles,
          "This is the sum of all windows' 'layout/style-contexts' numbers.");
 
   size_t geckoStyleTotal = 0;
