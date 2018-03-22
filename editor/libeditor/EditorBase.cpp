@@ -828,43 +828,17 @@ EditorBase::EnableUndo(bool aEnable)
 NS_IMETHODIMP
 EditorBase::GetNumberOfUndoItems(int32_t* aNumItems)
 {
-  *aNumItems = NumberOfUndoItems();
-  return *aNumItems >= 0 ? NS_OK : NS_ERROR_FAILURE;
-}
-
-int32_t
-EditorBase::NumberOfUndoItems() const
-{
-  if (!mTransactionManager) {
-    return 0;
-  }
-  int32_t numItems = 0;
-  nsresult rv = mTransactionManager->GetNumberOfUndoItems(&numItems);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return -1;
-  }
-  return numItems;
+  *aNumItems = static_cast<int32_t>(NumberOfUndoItems());
+  MOZ_ASSERT(*aNumItems >= 0);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 EditorBase::GetNumberOfRedoItems(int32_t* aNumItems)
 {
-  *aNumItems = NumberOfRedoItems();
-  return *aNumItems >= 0 ? NS_OK : NS_ERROR_FAILURE;
-}
-
-int32_t
-EditorBase::NumberOfRedoItems() const
-{
-  if (!mTransactionManager) {
-    return 0;
-  }
-  int32_t numItems = 0;
-  nsresult rv = mTransactionManager->GetNumberOfRedoItems(&numItems);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return -1;
-  }
-  return numItems;
+  *aNumItems = static_cast<int32_t>(NumberOfRedoItems());
+  MOZ_ASSERT(*aNumItems >= 0);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -894,9 +868,9 @@ EditorBase::Undo(uint32_t aCount)
 {
   ForceCompositionEnd();
 
-  bool hasTransactionManager, hasTransaction = false;
-  CanUndo(&hasTransactionManager, &hasTransaction);
-  NS_ENSURE_TRUE(hasTransaction, NS_OK);
+  if (!CanUndo()) {
+    return NS_OK;
+  }
 
   AutoRules beginRulesSniffing(this, EditAction::undo, nsIEditor::eNone);
 
@@ -919,24 +893,20 @@ NS_IMETHODIMP
 EditorBase::CanUndo(bool* aIsEnabled,
                     bool* aCanUndo)
 {
-  NS_ENSURE_TRUE(aIsEnabled && aCanUndo, NS_ERROR_NULL_POINTER);
-  *aIsEnabled = !!mTransactionManager;
-  if (*aIsEnabled) {
-    int32_t numTxns = 0;
-    mTransactionManager->GetNumberOfUndoItems(&numTxns);
-    *aCanUndo = !!numTxns;
-  } else {
-    *aCanUndo = false;
+  if (NS_WARN_IF(!aIsEnabled) || NS_WARN_IF(!aCanUndo)) {
+    return NS_ERROR_INVALID_ARG;
   }
+  *aCanUndo = CanUndo();
+  *aIsEnabled = IsUndoRedoEnabled();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 EditorBase::Redo(uint32_t aCount)
 {
-  bool hasTransactionManager, hasTransaction = false;
-  CanRedo(&hasTransactionManager, &hasTransaction);
-  NS_ENSURE_TRUE(hasTransaction, NS_OK);
+  if (!CanRedo()) {
+    return NS_OK;
+  }
 
   AutoRules beginRulesSniffing(this, EditAction::redo, nsIEditor::eNone);
 
@@ -958,16 +928,11 @@ EditorBase::Redo(uint32_t aCount)
 NS_IMETHODIMP
 EditorBase::CanRedo(bool* aIsEnabled, bool* aCanRedo)
 {
-  NS_ENSURE_TRUE(aIsEnabled && aCanRedo, NS_ERROR_NULL_POINTER);
-
-  *aIsEnabled = !!mTransactionManager;
-  if (*aIsEnabled) {
-    int32_t numTxns = 0;
-    mTransactionManager->GetNumberOfRedoItems(&numTxns);
-    *aCanRedo = !!numTxns;
-  } else {
-    *aCanRedo = false;
+  if (NS_WARN_IF(!aIsEnabled) || NS_WARN_IF(!aCanRedo)) {
+    return NS_ERROR_INVALID_ARG;
   }
+  *aCanRedo = CanRedo();
+  *aIsEnabled = IsUndoRedoEnabled();
   return NS_OK;
 }
 

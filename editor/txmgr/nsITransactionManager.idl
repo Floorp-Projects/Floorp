@@ -7,6 +7,12 @@
 #include "nsITransaction.idl"
 #include "nsITransactionListener.idl"
 
+%{C++
+namespace mozilla {
+class TransactionManager;
+} // namespace mozilla
+%}
+
 /**
  * The nsITransactionManager interface.
  * <P>
@@ -143,6 +149,16 @@ interface nsITransactionManager : nsISupports
    * @param aListener the lister to remove.
    */
   void RemoveListener(in nsITransactionListener aListener);
+
+%{C++
+  /**
+   * AsTransactionManager() returns a pointer to TransactionManager class.
+   *
+   * In order to avoid circular dependency issues, this method is defined
+   * in mozilla/TransactionManager.h.  Consumers need to #include that header.
+   */
+  inline mozilla::TransactionManager* AsTransactionManager();
+%}
 };
 
 %{ C++
