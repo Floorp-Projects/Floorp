@@ -232,7 +232,10 @@ function isCorrectlySigned(aAddon) {
 }
 
 function isDisabledUnsigned(addon) {
-  return AddonSettings.REQUIRE_SIGNING && !isCorrectlySigned(addon);
+  let signingRequired = (addon.type == "locale") ?
+                        AddonSettings.LANGPACKS_REQUIRE_SIGNING :
+                        AddonSettings.REQUIRE_SIGNING;
+  return signingRequired && !isCorrectlySigned(addon);
 }
 
 function isLegacyExtension(addon) {
@@ -2506,7 +2509,7 @@ var gListView = {
         return;
 
       let showLegacyInfo = false;
-      if (!legacyExtensionsEnabled) {
+      if (!legacyExtensionsEnabled && aType != "locale") {
         let preLen = aAddonsList.length;
         aAddonsList = aAddonsList.filter(addon => !isLegacyExtension(addon) &&
                                                   !isDisabledUnsigned(addon));
@@ -2561,12 +2564,11 @@ var gListView = {
   filterDisabledUnsigned(aFilter = true) {
     let foundDisabledUnsigned = false;
 
-    if (AddonSettings.REQUIRE_SIGNING) {
-      for (let item of this._listBox.childNodes) {
-        if (!isCorrectlySigned(item.mAddon))
-          foundDisabledUnsigned = true;
-        else
-          item.hidden = aFilter;
+    for (let item of this._listBox.childNodes) {
+      if (isDisabledUnsigned(item.mAddon)) {
+        foundDisabledUnsigned = true;
+      } else {
+        item.hidden = aFilter;
       }
     }
 
