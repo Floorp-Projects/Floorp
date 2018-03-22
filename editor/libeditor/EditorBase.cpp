@@ -866,27 +866,7 @@ EditorBase::GetTransactionManager() const
 NS_IMETHODIMP
 EditorBase::Undo(uint32_t aCount)
 {
-  ForceCompositionEnd();
-
-  if (!CanUndo()) {
-    return NS_OK;
-  }
-
-  AutoRules beginRulesSniffing(this, EditAction::undo, nsIEditor::eNone);
-
-  if (!mTransactionManager) {
-    return NS_OK;
-  }
-
-  RefPtr<TransactionManager> transactionManager(mTransactionManager);
-  for (uint32_t i = 0; i < aCount; ++i) {
-    nsresult rv = transactionManager->UndoTransaction();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    DoAfterUndoTransaction();
-  }
-
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -904,25 +884,7 @@ EditorBase::CanUndo(bool* aIsEnabled,
 NS_IMETHODIMP
 EditorBase::Redo(uint32_t aCount)
 {
-  if (!CanRedo()) {
-    return NS_OK;
-  }
-
-  AutoRules beginRulesSniffing(this, EditAction::redo, nsIEditor::eNone);
-
-  if (!mTransactionManager) {
-    return NS_OK;
-  }
-
-  RefPtr<TransactionManager> transactionManager(mTransactionManager);
-  for (uint32_t i = 0; i < aCount; ++i) {
-    nsresult rv = transactionManager->RedoTransaction();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    DoAfterRedoTransaction();
-  }
-
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
