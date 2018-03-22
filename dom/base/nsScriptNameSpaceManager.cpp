@@ -169,9 +169,6 @@ nsScriptNameSpaceManager::Init()
   rv = FillHash(cm, JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = FillHash(cm, JAVASCRIPT_GLOBAL_PRIVILEGED_PROPERTY_CATEGORY);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Initial filling of the has table has been done.
   // Now, listen for changes.
   nsCOMPtr<nsIObserverService> serv =
@@ -269,8 +266,7 @@ nsScriptNameSpaceManager::OperateCategoryEntryHash(nsICategoryManager* aCategory
   // Observe() but this way, we have only one place to update and this is
   // not performance sensitive.
   nsGlobalNameStruct::nametype type;
-  if (strcmp(aCategory, JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY) == 0 ||
-      strcmp(aCategory, JAVASCRIPT_GLOBAL_PRIVILEGED_PROPERTY_CATEGORY) == 0) {
+  if (strcmp(aCategory, JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY) == 0) {
     type = nsGlobalNameStruct::eTypeProperty;
   } else {
     return NS_OK;
@@ -331,8 +327,7 @@ nsScriptNameSpaceManager::OperateCategoryEntryHash(nsICategoryManager* aCategory
   if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
     s->mType = type;
     s->mCID = cid;
-    s->mChromeOnly =
-      strcmp(aCategory, JAVASCRIPT_GLOBAL_PRIVILEGED_PROPERTY_CATEGORY) == 0;
+    s->mChromeOnly = false;
   } else {
     NS_WARNING("Global script name not overwritten!");
   }
