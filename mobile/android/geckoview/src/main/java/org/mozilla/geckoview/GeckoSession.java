@@ -7,7 +7,6 @@
 package org.mozilla.geckoview;
 
 import java.net.URLConnection;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
@@ -909,11 +908,25 @@ public class GeckoSession extends LayerSession
      *                 which case the type is guessed.
      */
     public void loadString(@NonNull final String data, @Nullable final String mimeType) {
+        loadString(data, mimeType, null);
+    }
+
+    /**
+     * Load the specified String data. Internally this is converted to a data URI.
+     *
+     * @param data a String representing the data
+     * @param mimeType the mime type of the data, e.g. "text/plain". Maybe be null, in
+     *                 which case the type is guessed.
+     * @param baseUri  the base URI of the document. Relative paths will be resolved from here.
+     *
+     */
+    public void loadString(@NonNull final String data, @Nullable final String mimeType,
+                           @Nullable final String baseUri) {
         if (data == null) {
             throw new IllegalArgumentException("data cannot be null");
         }
 
-        loadData(data.getBytes(Charset.forName("utf-8")), mimeType);
+        loadUri(createDataUri(data, mimeType), null, baseUri, LOAD_FLAGS_NONE);
     }
 
     /**
@@ -951,8 +964,8 @@ public class GeckoSession extends LayerSession
      * @return a URI String
      */
     public static String createDataUri(@NonNull final byte[] bytes, @Nullable final String mimeType) {
-        return String.format("data:%s,%s", mimeType != null ? mimeType : "",
-                             Base64.encodeToString(bytes, Base64.URL_SAFE | Base64.NO_WRAP));
+        return String.format("data:%s;base64,%s", mimeType != null ? mimeType : "",
+                             Base64.encodeToString(bytes, Base64.NO_WRAP));
     }
 
     /**
@@ -962,7 +975,7 @@ public class GeckoSession extends LayerSession
      * @return a URI String
      */
     public static String createDataUri(@NonNull final String data, @Nullable final String mimeType) {
-        return createDataUri(data.getBytes(Charset.forName("utf-8")), mimeType);
+        return String.format("data:%s,%s", mimeType != null ? mimeType : "", data);
     }
 
     /**
