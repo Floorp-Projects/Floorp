@@ -1800,25 +1800,8 @@ class TabManagerBase {
    * @returns {Iterator<TabBase>}
    */
   * query(queryInfo = null, context = null) {
-    function* candidates(window) {
-      if (queryInfo) {
-        let {active, index} = queryInfo;
-        if (active === true) {
-          yield window.activeTab;
-          return;
-        }
-        if (index != null) {
-          let nativeTabs = window.window.gBrowser.tabs;
-          if (index >= 0 && index < nativeTabs.length) {
-            yield window.extension.tabManager.getWrapper(nativeTabs[index]);
-          }
-          return;
-        }
-      }
-      yield* window.getTabs();
-    }
     for (let window of this.extension.windowManager.query(queryInfo, context)) {
-      for (let tab of candidates(window)) {
+      for (let tab of window.getTabs()) {
         if (!queryInfo || tab.matches(queryInfo)) {
           yield tab;
         }
@@ -1918,27 +1901,7 @@ class WindowManagerBase {
    * @returns {Iterator<WindowBase>}
    */
   * query(queryInfo = null, context = null) {
-    function* candidates(windowManager) {
-      if (queryInfo) {
-        let {currentWindow, windowId} = queryInfo;
-        if (currentWindow === true && windowId == null) {
-          windowId = WINDOW_ID_CURRENT;
-        }
-        if (windowId != null) {
-          try {
-            yield windowManager.get(windowId, context);
-          } catch (error) {
-            // Ignore "Invalid window ID" errors
-            if (!(error instanceof ExtensionError)) {
-              throw error;
-            }
-          }
-          return;
-        }
-      }
-      yield* windowManager.getAll();
-    }
-    for (let window of candidates(this)) {
+    for (let window of this.getAll()) {
       if (!queryInfo || window.matches(queryInfo, context)) {
         yield window;
       }
