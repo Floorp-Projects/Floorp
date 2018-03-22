@@ -574,6 +574,13 @@ nsContentUtils::Init()
   NS_ENSURE_TRUE(sNameSpaceManager, NS_ERROR_OUT_OF_MEMORY);
 
   sXPConnect = nsXPConnect::XPConnect();
+  // We hold a strong ref to sXPConnect to ensure that it does not go away until
+  // nsLayoutStatics::Shutdown is happening.  Otherwise ~nsXPConnect can be
+  // triggered by xpcModuleDtor late in shutdown and cause crashes due to
+  // various stuff already being torn down by then.  Note that this means that
+  // we are effectively making sure that if we leak nsLayoutStatics then we also
+  // leak nsXPConnect.
+  NS_ADDREF(sXPConnect);
 
   sSecurityManager = nsScriptSecurityManager::GetScriptSecurityManager();
   if(!sSecurityManager)
@@ -2092,7 +2099,7 @@ nsContentUtils::Shutdown()
 
   NS_IF_RELEASE(sStringBundleService);
   NS_IF_RELEASE(sConsoleService);
-  sXPConnect = nullptr;
+  NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecurityManager);
   NS_IF_RELEASE(sSystemPrincipal);
   NS_IF_RELEASE(sNullSubjectPrincipal);
