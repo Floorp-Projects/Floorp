@@ -8,7 +8,6 @@
 #define nsDOMClassInfo_h___
 
 #include "mozilla/Attributes.h"
-#include "nsDOMClassInfoID.h"
 #include "nsIXPCScriptable.h"
 #include "nsIScriptGlobalObject.h"
 #include "js/Class.h"

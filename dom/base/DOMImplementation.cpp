@@ -10,7 +10,6 @@
 #include "mozilla/dom/DOMImplementationBinding.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
-#include "nsDOMClassInfoID.h"
 #include "nsIDOMDocument.h"
 #include "mozilla/dom/DocumentType.h"
 #include "nsTextNode.h"
