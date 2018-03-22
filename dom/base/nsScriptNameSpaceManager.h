@@ -24,11 +24,9 @@ struct nsGlobalNameStruct
   enum nametype {
     eTypeNotInitialized,
     eTypeProperty,
-    eTypeClassConstructor,
   } mType;
 
   union {
-    int32_t mDOMClassInfoID; // eTypeClassConstructor
     nsCID mCID; // eTypeProperty
   };
 };
