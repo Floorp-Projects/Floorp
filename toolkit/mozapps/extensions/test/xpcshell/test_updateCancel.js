@@ -59,6 +59,7 @@ gPort = testserver.identity.primaryPort;
 writeInstallRDFForExtension({
   id: "addon1@tests.mozilla.org",
   version: "1.0",
+  bootstrap: true,
   updateURL: "http://localhost:" + gPort + "/data/test_update.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",

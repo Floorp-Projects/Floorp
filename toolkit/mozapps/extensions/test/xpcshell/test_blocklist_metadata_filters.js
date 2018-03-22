@@ -78,6 +78,7 @@ function run_test() {
     id: "block1@tests.mozilla.org",
     version: "1.0",
     name: "Mozilla Corp.",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -90,6 +91,7 @@ function run_test() {
     id: "block2@tests.mozilla.org",
     version: "1.0",
     name: "Moz-addon",
+    bootstrap: true,
     creator: "Dangerous",
     homepageURL: "www.extension.dangerous.com",
     updateURL: "www.extension.dangerous.com/update.rdf",
@@ -106,6 +108,7 @@ function run_test() {
     id: "block3@tests.mozilla.org",
     version: "1.0",
     name: "Moz-addon",
+    bootstrap: true,
     creator: "Dangerous",
     homepageURL: "www.extensions.dangerous.com",
     updateURL: "www.extension.dangerous.com/update.rdf",

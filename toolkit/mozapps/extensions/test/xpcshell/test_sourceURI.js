@@ -15,6 +15,7 @@ var addon = {
   id: "addon@tests.mozilla.org",
   version: "1.0",
   name: "Test",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",

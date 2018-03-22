@@ -90,6 +90,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_1@tests.mozilla.org",
     name: "extension 1",
+    bootstrap: true,
     version: "1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -102,6 +103,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_2@tests.mozilla.org",
     name: "extension 2",
+    bootstrap: true,
     version: "1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -113,6 +115,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_3a@tests.mozilla.org",
     name: "extension 3a",
+    bootstrap: true,
     version: "1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -124,6 +127,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_3b@tests.mozilla.org",
     name: "extension 3b",
+    bootstrap: true,
     version: "2.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -135,6 +139,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_4@tests.mozilla.org",
     name: "extension 4",
+    bootstrap: true,
     version: "1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -146,6 +151,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_5@tests.mozilla.org",
     name: "extension 5",
+    bootstrap: true,
     version: "1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -157,6 +163,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_6@tests.mozilla.org",
     name: "extension 6",
+    bootstrap: true,
     version: "1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -168,6 +175,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_7@tests.mozilla.org",
     name: "extension 7",
+    bootstrap: true,
     version: "1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -179,6 +187,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_8@tests.mozilla.org",
     name: "extension 8",
+    bootstrap: true,
     version: "1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -190,6 +199,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_9@tests.mozilla.org",
     name: "extension 9",
+    bootstrap: true,
     version: "1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -201,6 +211,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_10@tests.mozilla.org",
     name: "extension 10",
+    bootstrap: true,
     version: "1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -212,6 +223,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_11@tests.mozilla.org",
     name: "extension 11",
+    bootstrap: true,
     version: "1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -223,6 +235,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_12@tests.mozilla.org",
     name: "extension 12",
+    bootstrap: true,
     version: "1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -234,6 +247,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_13@tests.mozilla.org",
     name: "extension 13",
+    bootstrap: true,
     version: "1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -245,6 +259,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "test_bug393285_14@tests.mozilla.org",
     name: "extension 14",
+    bootstrap: true,
     version: "1.0",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",

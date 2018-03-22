@@ -56,6 +56,7 @@ function run_test_2() {
     id: "addon1@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:" + gPort + "/data/test_backgroundupdate.json",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -68,6 +69,7 @@ function run_test_2() {
     id: "addon2@tests.mozilla.org",
     version: "1.0",
     updateURL: "http://localhost:" + gPort + "/data/test_backgroundupdate.json",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -79,6 +81,7 @@ function run_test_2() {
   writeInstallRDFForExtension({
     id: "addon3@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
