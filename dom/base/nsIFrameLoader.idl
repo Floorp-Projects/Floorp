@@ -21,12 +21,6 @@ interface nsIWebProgressListener;
 interface nsIFrameLoader : nsISupports
 {
   /**
-   * Get this frame loader's TabParent, if it has a remote frame.  Otherwise,
-   * returns null.
-   */
-  readonly attribute nsITabParent tabParent;
-
-  /**
    * Start loading the frame. This method figures out what to load
    * from the owner content in the frame loader.
    */

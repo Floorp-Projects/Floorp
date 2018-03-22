@@ -3238,14 +3238,6 @@ nsFrameLoader::GetTabParent()
   return do_AddRef(mRemoteBrowser);
 }
 
-NS_IMETHODIMP
-nsFrameLoader::GetTabParent(nsITabParent** aTabParent)
-{
-  nsCOMPtr<nsITabParent> tp = mRemoteBrowser;
-  tp.forget(aTabParent);
-  return NS_OK;
-}
-
 already_AddRefed<nsILoadContext>
 nsFrameLoader::LoadContext()
 {
