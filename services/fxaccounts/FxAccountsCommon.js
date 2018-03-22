@@ -213,7 +213,7 @@ exports.DERIVED_KEYS_NAMES = ["kSync", "kXCS", "kExtSync", "kExtKbHash"];
 // See bug 1013064 comments 23-25 for why the sessionToken is "safe"
 exports.FXA_PWDMGR_PLAINTEXT_FIELDS = new Set(
   ["email", "verified", "authAt", "sessionToken", "uid", "oauthTokens", "profile",
-  "deviceId", "deviceRegistrationVersion", "profileCache"]);
+  "device", "profileCache"]);
 
 // Fields we store in secure storage if it exists.
 exports.FXA_PWDMGR_SECURE_FIELDS = new Set(
@@ -226,7 +226,7 @@ exports.FXA_PWDMGR_MEMORY_FIELDS = new Set(
 // A whitelist of fields that remain in storage when the user needs to
 // reauthenticate. All other fields will be removed.
 exports.FXA_PWDMGR_REAUTH_WHITELIST = new Set(
-  ["email", "uid", "profile", "deviceId", "deviceRegistrationVersion", "verified"]);
+  ["email", "uid", "profile", "device", "verified"]);
 
 // The pseudo-host we use in the login manager
 exports.FXA_PWDMGR_HOST = "chrome://FirefoxAccounts";
