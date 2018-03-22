@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsTransactionItem_h__
-#define nsTransactionItem_h__
+#ifndef TransactionItem_h
+#define TransactionItem_h
 
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
@@ -16,32 +16,27 @@ class nsITransaction;
 class nsTransactionStack;
 
 namespace mozilla {
+
 class TransactionManager;
-} // namespace mozilla
 
-class nsTransactionItem final
+class TransactionItem final
 {
-  nsCOMArray<nsISupports>  mData;
-  nsCOMPtr<nsITransaction> mTransaction;
-  nsTransactionStack      *mUndoStack;
-  nsTransactionStack      *mRedoStack;
-
 public:
-  explicit nsTransactionItem(nsITransaction* aTransaction);
+  explicit TransactionItem(nsITransaction* aTransaction);
   NS_METHOD_(MozExternalRefCountType) AddRef();
   NS_METHOD_(MozExternalRefCountType) Release();
 
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTransactionItem)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(TransactionItem)
 
-  nsresult AddChild(nsTransactionItem* aTransactionItem);
+  nsresult AddChild(TransactionItem* aTransactionItem);
   already_AddRefed<nsITransaction> GetTransaction();
   nsresult GetIsBatch(bool *aIsBatch);
   nsresult GetNumberOfChildren(int32_t *aNumChildren);
-  nsresult GetChild(int32_t aIndex, nsTransactionItem** aChild);
+  nsresult GetChild(int32_t aIndex, TransactionItem** aChild);
 
   nsresult DoTransaction();
-  nsresult UndoTransaction(mozilla::TransactionManager* aTransactionManager);
-  nsresult RedoTransaction(mozilla::TransactionManager* aTransactionManager);
+  nsresult UndoTransaction(TransactionManager* aTransactionManager);
+  nsresult RedoTransaction(TransactionManager* aTransactionManager);
 
   nsCOMArray<nsISupports>& GetData()
   {
@@ -49,24 +44,28 @@ public:
   }
 
 private:
-  nsresult UndoChildren(mozilla::TransactionManager* aTransactionManager);
-  nsresult RedoChildren(mozilla::TransactionManager* aTransactionManager);
+  nsresult UndoChildren(TransactionManager* aTransactionManager);
+  nsresult RedoChildren(TransactionManager* aTransactionManager);
 
-  nsresult
-  RecoverFromUndoError(mozilla::TransactionManager* aTransactionManager);
-  nsresult
-  RecoverFromRedoError(mozilla::TransactionManager* aTransactionManager);
+  nsresult RecoverFromUndoError(TransactionManager* aTransactionManager);
+  nsresult RecoverFromRedoError(TransactionManager* aTransactionManager);
 
   nsresult GetNumberOfUndoItems(int32_t* aNumItems);
   nsresult GetNumberOfRedoItems(int32_t* aNumItems);
 
   void CleanUp();
 
-protected:
-  ~nsTransactionItem();
+  ~TransactionItem();
 
   nsCycleCollectingAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
+
+  nsCOMArray<nsISupports> mData;
+  nsCOMPtr<nsITransaction> mTransaction;
+  nsTransactionStack* mUndoStack;
+  nsTransactionStack* mRedoStack;
 };
 
-#endif // nsTransactionItem_h__
+} // namespace mozilla
+
+#endif // #ifndef TransactionItem_h
