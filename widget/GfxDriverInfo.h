@@ -86,6 +86,7 @@ enum DeviceFamily {
   IntelGMAX3000,
   IntelGMAX4500HD,
   IntelHDGraphicsToSandyBridge,
+  IntelHDGraphicsToHaswell,
   IntelHD3000,
   IntelMobileHDGraphics,
   NvidiaBlockD3D9Layers,

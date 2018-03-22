@@ -150,7 +150,7 @@ public:
   explicit HTMLSelectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                              FromParser aFromParser = NOT_FROM_PARSER);
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLSelectElement, select)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLSelectElement, select)
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -420,7 +420,7 @@ public:
     // If item index is out of range, insert to last.
     // (since beforeElement becomes null, it is inserted to last)
     nsIContent* beforeContent = mOptions->GetElementAt(aIndex);
-    return Add(aElement, nsGenericHTMLElement::FromContentOrNull(beforeContent),
+    return Add(aElement, nsGenericHTMLElement::FromNodeOrNull(beforeContent),
                aError);
   }
 

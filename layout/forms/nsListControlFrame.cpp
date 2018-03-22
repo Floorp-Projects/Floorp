@@ -237,7 +237,7 @@ void nsListControlFrame::PaintFocus(DrawTarget* aDrawTarget, nsPoint aPt)
   fRect += aPt;
 
   bool lastItemIsSelected = false;
-  HTMLOptionElement* domOpt = HTMLOptionElement::FromContentOrNull(focusedContent);
+  HTMLOptionElement* domOpt = HTMLOptionElement::FromNodeOrNull(focusedContent);
   if (domOpt) {
     lastItemIsSelected = domOpt->Selected();
   }
@@ -283,7 +283,7 @@ GetMaxOptionBSize(nsIFrame* aContainer, WritingMode aWM)
   nscoord result = 0;
   for (nsIFrame* option : aContainer->PrincipalChildList()) {
     nscoord optionBSize;
-    if (HTMLOptGroupElement::FromContent(option->GetContent())) {
+    if (HTMLOptGroupElement::FromNode(option->GetContent())) {
       // An optgroup; drill through any scroll frame and recurse.  |frame| might
       // be null here though if |option| is an anonymous leaf frame of some sort.
       auto frame = option->GetContentInsertionFrame();
@@ -753,7 +753,7 @@ CountOptionsAndOptgroups(nsIFrame* aFrame)
         ++count;
       } else {
         RefPtr<HTMLOptGroupElement> optgroup =
-          HTMLOptGroupElement::FromContent(content);
+          HTMLOptGroupElement::FromNode(content);
         if (optgroup) {
           nsAutoString label;
           optgroup->GetLabel(label);
@@ -1004,7 +1004,7 @@ dom::HTMLOptionsCollection*
 nsListControlFrame::GetOptions() const
 {
   dom::HTMLSelectElement* select =
-    dom::HTMLSelectElement::FromContentOrNull(mContent);
+    dom::HTMLSelectElement::FromNodeOrNull(mContent);
   NS_ENSURE_TRUE(select, nullptr);
 
   return select->Options();
@@ -1014,7 +1014,7 @@ dom::HTMLOptionElement*
 nsListControlFrame::GetOption(uint32_t aIndex) const
 {
   dom::HTMLSelectElement* select =
-    dom::HTMLSelectElement::FromContentOrNull(mContent);
+    dom::HTMLSelectElement::FromNodeOrNull(mContent);
   NS_ENSURE_TRUE(select, nullptr);
 
   return select->Item(aIndex);
@@ -1050,7 +1050,7 @@ nsListControlFrame::ResetList(bool aAllowScrolling)
     // Scroll to the selected index
     int32_t indexToSelect = kNothingSelected;
 
-    HTMLSelectElement* selectElement = HTMLSelectElement::FromContent(mContent);
+    HTMLSelectElement* selectElement = HTMLSelectElement::FromNode(mContent);
     if (selectElement) {
       indexToSelect = selectElement->SelectedIndex();
       AutoWeakFrame weakFrame(this);
@@ -1108,7 +1108,7 @@ int32_t
 nsListControlFrame::GetSelectedIndex()
 {
   dom::HTMLSelectElement* select =
-    dom::HTMLSelectElement::FromContentOrNull(mContent);
+    dom::HTMLSelectElement::FromNodeOrNull(mContent);
   return select->SelectedIndex();
 }
 
@@ -1133,7 +1133,7 @@ nsListControlFrame::GetNonDisabledOptionFrom(int32_t aFromIndex,
                                              int32_t* aFoundIndex)
 {
   RefPtr<dom::HTMLSelectElement> selectElement =
-    dom::HTMLSelectElement::FromContent(mContent);
+    dom::HTMLSelectElement::FromNode(mContent);
 
   const uint32_t length = selectElement->Length();
   for (uint32_t i = std::max(aFromIndex, 0); i < length; ++i) {
@@ -1285,7 +1285,7 @@ nsListControlFrame::SetOptionsSelectedFromFrame(int32_t aStartIndex,
                                                 bool aClearAll)
 {
   RefPtr<dom::HTMLSelectElement> selectElement =
-    dom::HTMLSelectElement::FromContent(mContent);
+    dom::HTMLSelectElement::FromNode(mContent);
 
   uint32_t mask = dom::HTMLSelectElement::NOTIFY;
   if (mForceSelection) {
@@ -1309,7 +1309,7 @@ nsListControlFrame::ToggleOptionSelectedFromFrame(int32_t aIndex)
   NS_ENSURE_TRUE(option, false);
 
   RefPtr<dom::HTMLSelectElement> selectElement =
-    dom::HTMLSelectElement::FromContent(mContent);
+    dom::HTMLSelectElement::FromNode(mContent);
 
   uint32_t mask = dom::HTMLSelectElement::NOTIFY;
   if (!option->Selected()) {
@@ -1549,7 +1549,7 @@ nsresult
 nsListControlFrame::IsOptionDisabled(int32_t anIndex, bool &aIsDisabled)
 {
   RefPtr<dom::HTMLSelectElement> sel =
-    dom::HTMLSelectElement::FromContent(mContent);
+    dom::HTMLSelectElement::FromNode(mContent);
   if (sel) {
     sel->IsOptionDisabled(anIndex, &aIsDisabled);
     return NS_OK;
@@ -1584,7 +1584,7 @@ nsListControlFrame::CalcIntrinsicBSize(nscoord aBSizeOfARow,
                   "Shouldn't be in dropdown mode when we call this");
 
   dom::HTMLSelectElement* select =
-    dom::HTMLSelectElement::FromContentOrNull(mContent);
+    dom::HTMLSelectElement::FromNodeOrNull(mContent);
   if (select) {
     mNumDisplayRows = select->Size();
   } else {
@@ -1764,7 +1764,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
          PresContext()->EventStateManager()->GetEventTargetContent(nullptr);
        content && !option;
        content = content->GetParent()) {
-    option = dom::HTMLOptionElement::FromContent(content);
+    option = dom::HTMLOptionElement::FromNode(content);
   }
 
   if (option) {
@@ -1848,7 +1848,7 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
         nsCOMPtr<nsIDOMEventTarget> etarget;
         aMouseEvent->GetTarget(getter_AddRefs(etarget));
         nsCOMPtr<nsIContent> econtent = do_QueryInterface(etarget);
-        HTMLOptionElement* option = HTMLOptionElement::FromContentOrNull(econtent);
+        HTMLOptionElement* option = HTMLOptionElement::FromNodeOrNull(econtent);
         if (option) {
           return NS_OK;
         }

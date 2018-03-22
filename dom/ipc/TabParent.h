@@ -35,7 +35,6 @@
 #include "nsIWidget.h"
 
 class nsFrameLoader;
-class nsIFrameLoader;
 class nsIContent;
 class nsIPrincipal;
 class nsIURI;
@@ -501,8 +500,6 @@ public:
                              const uint32_t& aContentPolicyType);
 
   static TabParent* GetFrom(nsFrameLoader* aFrameLoader);
-
-  static TabParent* GetFrom(nsIFrameLoader* aFrameLoader);
 
   static TabParent* GetFrom(nsITabParent* aTabParent);
 

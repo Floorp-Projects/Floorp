@@ -1030,7 +1030,7 @@ public:
 
 nsresult
 nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
-                                      nsIFrameLoader* aTargetFrameLoader,
+                                      nsFrameLoader* aTargetFrameLoader,
                                       const nsAString& aMessage,
                                       bool aIsSync,
                                       StructuredCloneData* aCloneData,
@@ -1044,7 +1044,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
 nsresult
 nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
-                                      nsIFrameLoader* aTargetFrameLoader,
+                                      nsFrameLoader* aTargetFrameLoader,
                                       bool aTargetClosed,
                                       const nsAString& aMessage,
                                       bool aIsSync,
@@ -1157,7 +1157,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       argument.mSync = aIsSync;
       argument.mTarget = aTarget;
       if (aTargetFrameLoader) {
-        argument.mTargetFrameLoader.Construct(aTargetFrameLoader);
+        argument.mTargetFrameLoader.Construct(*aTargetFrameLoader);
       }
 
       JS::Rooted<JS::Value> thisValue(cx, JS::UndefinedValue());
@@ -2190,7 +2190,7 @@ nsSameProcessAsyncMessageBase::Init(const nsAString& aMessage,
 
 void
 nsSameProcessAsyncMessageBase::ReceiveMessage(nsISupports* aTarget,
-                                              nsIFrameLoader* aTargetFrameLoader,
+                                              nsFrameLoader* aTargetFrameLoader,
                                               nsFrameMessageManager* aManager)
 {
   // Make sure that we have called Init() and it has succeeded.

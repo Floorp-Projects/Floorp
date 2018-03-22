@@ -64,6 +64,7 @@
 #include "nsNodeUtils.h"
 #include "nsDocument.h"
 #include "nsAttrValueOrString.h"
+#include "nsQueryObject.h"
 #ifdef MOZ_XUL
 #include "nsXULElement.h"
 #endif /* MOZ_XUL */
@@ -73,6 +74,7 @@
 #endif
 
 #include "nsBindingManager.h"
+#include "nsFrameLoader.h"
 #include "nsXBLBinding.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIBoxObject.h"
@@ -746,9 +748,9 @@ FragmentOrElement::nsExtendedDOMSlots::nsExtendedDOMSlots() = default;
 
 FragmentOrElement::nsExtendedDOMSlots::~nsExtendedDOMSlots()
 {
-  nsCOMPtr<nsIFrameLoader> frameLoader = do_QueryInterface(mFrameLoaderOrOpener);
+  RefPtr<nsFrameLoader> frameLoader = do_QueryObject(mFrameLoaderOrOpener);
   if (frameLoader) {
-    static_cast<nsFrameLoader*>(frameLoader.get())->Destroy();
+    frameLoader->Destroy();
   }
 }
 
@@ -767,10 +769,9 @@ FragmentOrElement::nsExtendedDOMSlots::Unlink()
     mCustomElementData->Unlink();
     mCustomElementData = nullptr;
   }
-  nsCOMPtr<nsIFrameLoader> frameLoader =
-    do_QueryInterface(mFrameLoaderOrOpener);
+  RefPtr<nsFrameLoader> frameLoader = do_QueryObject(mFrameLoaderOrOpener);
   if (frameLoader) {
-    static_cast<nsFrameLoader*>(frameLoader.get())->Destroy();
+    frameLoader->Destroy();
   }
   mFrameLoaderOrOpener = nullptr;
 }

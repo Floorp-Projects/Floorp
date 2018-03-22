@@ -177,7 +177,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, mozilla::dom::NodeInfo *
     NS_NewXULElement(getter_AddRefs(baseElement), ni.forget(), dom::FROM_PARSER_NETWORK);
 
     if (baseElement) {
-        nsXULElement* element = FromContent(baseElement);
+        nsXULElement* element = FromNode(baseElement);
 
         if (aPrototype->mHasIdAttribute) {
             element->SetHasID();
@@ -577,7 +577,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
     }
 
     bool focused = false;
-    nsXULElement* elm = FromContent(content);
+    nsXULElement* elm = FromNode(content);
     if (elm) {
         // Define behavior for each type of XUL element.
         if (!content->IsXULElement(nsGkAtoms::toolbarbutton)) {
@@ -870,7 +870,7 @@ nsXULElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
       if (!controlElement)
         GetParentTree(getter_AddRefs(controlElement));
       nsCOMPtr<nsIContent> controlContent(do_QueryInterface(controlElement));
-      RefPtr<nsXULElement> xulElement = FromContentOrNull(controlContent);
+      RefPtr<nsXULElement> xulElement = FromNodeOrNull(controlContent);
 
       nsCOMPtr<nsIDOMElement> oldKidElem = do_QueryInterface(oldKid);
       if (xulElement && oldKidElem) {
@@ -964,7 +964,7 @@ nsXULElement::RemoveChildNode(nsIContent* aKid, bool aNotify)
       if (!controlElement)
         GetParentTree(getter_AddRefs(controlElement));
       nsCOMPtr<nsIContent> controlContent(do_QueryInterface(controlElement));
-      RefPtr<nsXULElement> xulElement = FromContentOrNull(controlContent);
+      RefPtr<nsXULElement> xulElement = FromNodeOrNull(controlContent);
 
       nsCOMPtr<nsIDOMElement> oldKidElem = do_QueryInterface(aKid);
       if (xulElement && oldKidElem) {
@@ -1497,20 +1497,20 @@ nsXULElement::GetBoxObject(ErrorResult& rv)
     return OwnerDoc()->GetBoxObjectFor(this, rv);
 }
 
-nsresult
+void
 nsXULElement::LoadSrc()
 {
     // Allow frame loader only on objects for which a container box object
     // can be obtained.
     if (!IsAnyOfXULElements(nsGkAtoms::browser, nsGkAtoms::editor,
                             nsGkAtoms::iframe)) {
-        return NS_OK;
+        return;
     }
     if (!IsInUncomposedDoc() ||
         !OwnerDoc()->GetRootElement() ||
         OwnerDoc()->GetRootElement()->
             NodeInfo()->Equals(nsGkAtoms::overlay, kNameSpaceID_XUL)) {
-        return NS_OK;
+        return;
     }
     RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
     if (!frameLoader) {
@@ -1531,22 +1531,17 @@ nsXULElement::LoadSrc()
         // Usually xul elements are used in chrome, which doesn't have
         // session history at all.
         frameLoader = nsFrameLoader::Create(this, opener, false);
-        slots->mFrameLoaderOrOpener = static_cast<nsIFrameLoader*>(frameLoader);
-        NS_ENSURE_TRUE(frameLoader, NS_OK);
+        slots->mFrameLoaderOrOpener = ToSupports(frameLoader);
+        if (NS_WARN_IF(!frameLoader)) {
+            return;
+        }
 
         (new AsyncEventDispatcher(this,
                                   NS_LITERAL_STRING("XULFrameLoaderCreated"),
                                   /* aBubbles */ true))->RunDOMEventWhenSafe();
     }
 
-    return frameLoader->LoadFrame(false);
-}
-
-nsresult
-nsXULElement::GetFrameLoaderXPCOM(nsIFrameLoader **aFrameLoader)
-{
-    *aFrameLoader = GetFrameLoader().take();
-    return NS_OK;
+    frameLoader->LoadFrame(false);
 }
 
 already_AddRefed<nsFrameLoader>
@@ -1556,8 +1551,8 @@ nsXULElement::GetFrameLoader()
     if (!slots)
         return nullptr;
 
-    nsCOMPtr<nsIFrameLoader> loader = do_QueryInterface(slots->mFrameLoaderOrOpener);
-    return already_AddRefed<nsFrameLoader>(static_cast<nsFrameLoader*>(loader.forget().take()));
+    RefPtr<nsFrameLoader> loader = do_QueryObject(slots->mFrameLoaderOrOpener);
+    return loader.forget();
 }
 
 void
@@ -1570,12 +1565,12 @@ nsXULElement::PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv)
 }
 
 void
-nsXULElement::InternalSetFrameLoader(nsIFrameLoader* aNewFrameLoader)
+nsXULElement::InternalSetFrameLoader(nsFrameLoader* aNewFrameLoader)
 {
     nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
     MOZ_ASSERT(slots);
 
-    slots->mFrameLoaderOrOpener = aNewFrameLoader;
+    slots->mFrameLoaderOrOpener = ToSupports(aNewFrameLoader);
 }
 
 void

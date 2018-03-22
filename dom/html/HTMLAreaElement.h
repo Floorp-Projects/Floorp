@@ -35,7 +35,7 @@ public:
 
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLAreaElement, area)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLAreaElement, area)
 
   virtual int32_t TabIndexDefault() override;
 

@@ -142,7 +142,7 @@ HTMLOptGroupElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       // disabled attribute. We should make sure their state is updated.
       for (nsIContent* child = nsINode::GetFirstChild(); child;
            child = child->GetNextSibling()) {
-        if (auto optElement = HTMLOptionElement::FromContent(child)) {
+        if (auto optElement = HTMLOptionElement::FromNode(child)) {
           optElement->OptGroupDisabledChanged(true);
         }
       }

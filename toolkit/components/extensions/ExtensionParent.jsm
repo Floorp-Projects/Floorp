@@ -995,7 +995,7 @@ class HiddenXULWindow {
    * @param {Object} xulAttributes
    *        An object that contains the xul attributes to set of the newly
    *        created browser XUL element.
-   * @param {nsIFrameLoader} [groupFrameLoader]
+   * @param {FrameLoader} [groupFrameLoader]
    *        The frame loader to load this browser into the same process
    *        and tab group as.
    *

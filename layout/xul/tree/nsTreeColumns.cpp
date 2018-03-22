@@ -11,7 +11,6 @@
 #include "nsTreeColumns.h"
 #include "nsTreeUtils.h"
 #include "nsStyleContext.h"
-#include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
 #include "nsTreeBodyFrame.h"
 #include "mozilla/dom/Element.h"

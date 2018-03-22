@@ -9,8 +9,12 @@ interface mozIDOMWindowProxy;
 interface nsIDocShell;
 interface nsIContent;
 interface nsIEventTarget;
-interface nsIFrameLoader;
 interface nsIPrincipal;
+interface nsFrameLoader;
+
+// We define a "native" type for nsFrameLoader so that the rust xpidl
+// codegen doesn't try to do anything with it.
+native nativeFrameLoader(nsFrameLoader*);
 
 /**
  * Message managers provide a way for chrome-privileged JS code to
@@ -417,7 +421,7 @@ interface nsIContentFrameMessageManager : nsIMessageManagerGlobal
 interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
 {
   [notxpcom] nsIContent getOwnerContent();
-  [notxpcom] void cacheFrameLoader(in nsIFrameLoader aFrameLoader);
+  [notxpcom] void cacheFrameLoader(in nativeFrameLoader aFrameLoader);
 };
 
 [uuid(6d12e467-2446-46db-9965-e4e93cb87ca5)]

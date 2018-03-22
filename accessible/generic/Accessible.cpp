@@ -645,7 +645,7 @@ Accessible::RelativeBounds(nsIFrame** aBoundingFrame) const
       if (canvasFrame) {
         *aBoundingFrame = canvasFrame;
         dom::HTMLCanvasElement *canvas =
-          dom::HTMLCanvasElement::FromContent(canvasFrame->GetContent());
+          dom::HTMLCanvasElement::FromNode(canvasFrame->GetContent());
 
         // get the bounding rect of the hit region
         nsRect bounds;
@@ -1067,7 +1067,7 @@ Accessible::NativeAttributes()
   nsAccUtils::SetAccAttr(attributes, nsGkAtoms::tag, tagName);
 
   // Expose draggable object attribute.
-  if (auto htmlElement = nsGenericHTMLElement::FromContent(mContent)) {
+  if (auto htmlElement = nsGenericHTMLElement::FromNode(mContent)) {
     if (htmlElement->Draggable()) {
       nsAccUtils::SetAccAttr(attributes, nsGkAtoms::draggable,
                              NS_LITERAL_STRING("true"));

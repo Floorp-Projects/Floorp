@@ -29,7 +29,7 @@ public:
            bool aSelected,
            ErrorResult& aError);
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLOptionElement, option)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLOptionElement, option)
 
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLOptionElement, nsGenericHTMLElement)

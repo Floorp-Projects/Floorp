@@ -16,7 +16,6 @@ XPIDL_SOURCES += [
     'nsIContentProcess.idl',
     'nsIContentURIGrouper.idl',
     'nsIDOMChromeWindow.idl',
-    'nsIDOMConstructor.idl',
     'nsIDOMGlobalPropertyInitializer.idl',
     'nsIDOMScreen.idl',
     'nsIDOMWindow.idl',

@@ -37,7 +37,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLAnchorElement,
                                            nsGenericHTMLElement)
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLAnchorElement, a);
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLAnchorElement, a);
 
   virtual int32_t TabIndexDefault() override;
   virtual bool Draggable() const override;

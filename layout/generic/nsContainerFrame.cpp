@@ -1834,7 +1834,7 @@ nsContainerFrame::RenumberList()
     increment = 1;
   }
 
-  nsGenericHTMLElement* hc = nsGenericHTMLElement::FromContent(mContent);
+  nsGenericHTMLElement* hc = nsGenericHTMLElement::FromNode(mContent);
   // Must be non-null, since FrameStartsCounterScope only returns true
   // for HTML elements.
   MOZ_ASSERT(hc, "How is mContent not HTML?");
@@ -1878,7 +1878,7 @@ nsContainerFrame::RenumberFrameAndDescendants(int32_t* aOrdinal,
 
   // Do not renumber list for summary elements.
   HTMLSummaryElement* summary =
-    HTMLSummaryElement::FromContent(kid->GetContent());
+    HTMLSummaryElement::FromNode(kid->GetContent());
   if (summary && summary->IsMainSummary()) {
     return false;
   }

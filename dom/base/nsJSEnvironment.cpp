@@ -53,7 +53,6 @@
 #include "nsIObjectOutputStream.h"
 #include "WrapperFactory.h"
 #include "nsGlobalWindow.h"
-#include "nsScriptNameSpaceManager.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MainThreadIdlePeriod.h"
 #include "mozilla/StaticPtr.h"
@@ -199,7 +198,6 @@ static bool sNeedsFullGC = false;
 static bool sNeedsGCAfterCC = false;
 static bool sIncrementalCC = false;
 static int32_t sActiveIntersliceGCBudget = 5; // ms;
-static nsScriptNameSpaceManager *gNameSpaceManager;
 
 static PRTime sFirstCollectionTime;
 
@@ -2467,7 +2465,6 @@ mozilla::dom::StartupJSEnvironment()
   sNeedsFullCC = false;
   sNeedsFullGC = true;
   sNeedsGCAfterCC = false;
-  gNameSpaceManager = nullptr;
   sIsInitialized = false;
   sDidShutdown = false;
   sShuttingDown = false;
@@ -2805,35 +2802,10 @@ nsJSContext::EnsureStatics()
   sIsInitialized = true;
 }
 
-nsScriptNameSpaceManager*
-mozilla::dom::GetNameSpaceManager()
-{
-  if (sDidShutdown)
-    return nullptr;
-
-  if (!gNameSpaceManager) {
-    gNameSpaceManager = new nsScriptNameSpaceManager;
-    NS_ADDREF(gNameSpaceManager);
-
-    nsresult rv = gNameSpaceManager->Init();
-    NS_ENSURE_SUCCESS(rv, nullptr);
-  }
-
-  return gNameSpaceManager;
-}
-
-nsScriptNameSpaceManager*
-mozilla::dom::PeekNameSpaceManager()
-{
-  return gNameSpaceManager;
-}
-
 void
 mozilla::dom::ShutdownJSEnvironment()
 {
   KillTimers();
-
-  NS_IF_RELEASE(gNameSpaceManager);
 
   sShuttingDown = true;
   sDidShutdown = true;

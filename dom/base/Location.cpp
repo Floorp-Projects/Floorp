@@ -24,7 +24,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsError.h"
-#include "nsDOMClassInfoID.h"
 #include "nsReadableUtils.h"
 #include "nsITextToSubURI.h"
 #include "nsJSUtils.h"

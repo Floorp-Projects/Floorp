@@ -93,7 +93,7 @@ nsColorControlFrame::UpdateColor()
   // Get the color from the "value" property of our content; it will return the
   // default color (through the sanitization algorithm) if the value is empty.
   nsAutoString color;
-  HTMLInputElement* elt = HTMLInputElement::FromContent(mContent);
+  HTMLInputElement* elt = HTMLInputElement::FromNode(mContent);
   elt->GetValue(color, CallerType::System);
 
   if (color.IsEmpty()) {

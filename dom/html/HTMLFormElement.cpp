@@ -1624,11 +1624,11 @@ HTMLFormElement::GetActionURL(nsIURI** aActionURL,
                  "The originating element must be a submit form control!");
 #endif // DEBUG
 
-    HTMLInputElement* inputElement = HTMLInputElement::FromContent(aOriginatingElement);
+    HTMLInputElement* inputElement = HTMLInputElement::FromNode(aOriginatingElement);
     if (inputElement) {
       inputElement->GetFormAction(action);
     } else {
-      auto buttonElement = HTMLButtonElement::FromContent(aOriginatingElement);
+      auto buttonElement = HTMLButtonElement::FromNode(aOriginatingElement);
       if (buttonElement) {
         buttonElement->GetFormAction(action);
       } else {
@@ -2201,7 +2201,7 @@ HTMLFormElement::GetNextRadioButton(const nsAString& aName,
     else if (++index >= (int32_t)numRadios) {
       index = 0;
     }
-    radio = HTMLInputElement::FromContentOrNull(radioGroup->Item(index));
+    radio = HTMLInputElement::FromNodeOrNull(radioGroup->Item(index));
     isRadio = radio && radio->ControlType() == NS_FORM_INPUT_RADIO;
     if (!isRadio) {
       continue;

@@ -3167,7 +3167,7 @@ function createPendingBreakpoint(bp) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.replaceOriginalVariableName = exports.getFramework = exports.hasSyntaxError = exports.clearSources = exports.setSource = exports.hasSource = exports.getEmptyLines = exports.isInvalidPauseLocation = exports.getNextStep = exports.clearASTs = exports.clearScopes = exports.clearSymbols = exports.findOutOfScopeLocations = exports.getScopes = exports.getSymbols = exports.getClosestExpression = exports.stopParserWorker = exports.startParserWorker = undefined;
+exports.replaceOriginalVariableName = exports.getPausePoints = exports.getFramework = exports.hasSyntaxError = exports.clearSources = exports.setSource = exports.hasSource = exports.isInvalidPauseLocation = exports.getNextStep = exports.clearASTs = exports.clearScopes = exports.clearSymbols = exports.findOutOfScopeLocations = exports.getScopes = exports.getSymbols = exports.getClosestExpression = exports.stopParserWorker = exports.startParserWorker = undefined;
 
 var _devtoolsUtils = __webpack_require__(1363);
 
@@ -3188,12 +3188,12 @@ const clearScopes = exports.clearScopes = dispatcher.task("clearScopes");
 const clearASTs = exports.clearASTs = dispatcher.task("clearASTs");
 const getNextStep = exports.getNextStep = dispatcher.task("getNextStep");
 const isInvalidPauseLocation = exports.isInvalidPauseLocation = dispatcher.task("isInvalidPauseLocation");
-const getEmptyLines = exports.getEmptyLines = dispatcher.task("getEmptyLines");
 const hasSource = exports.hasSource = dispatcher.task("hasSource");
 const setSource = exports.setSource = dispatcher.task("setSource");
 const clearSources = exports.clearSources = dispatcher.task("clearSources");
 const hasSyntaxError = exports.hasSyntaxError = dispatcher.task("hasSyntaxError");
 const getFramework = exports.getFramework = dispatcher.task("getFramework");
+const getPausePoints = exports.getPausePoints = dispatcher.task("getPausePoints");
 const replaceOriginalVariableName = exports.replaceOriginalVariableName = dispatcher.task("replaceOriginalVariableName");
 
 /***/ }),
@@ -4783,6 +4783,7 @@ exports.hasSymbols = hasSymbols;
 exports.isSymbolsLoading = isSymbolsLoading;
 exports.isEmptyLineInSource = isEmptyLineInSource;
 exports.getEmptyLines = getEmptyLines;
+exports.getPausePoints = getPausePoints;
 exports.getOutOfScopeLocations = getOutOfScopeLocations;
 exports.getPreview = getPreview;
 exports.getSourceMetaData = getSourceMetaData;
@@ -4797,6 +4798,8 @@ var _makeRecord = __webpack_require__(1361);
 
 var _makeRecord2 = _interopRequireDefault(_makeRecord);
 
+var _ast = __webpack_require__(1638);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
@@ -4808,6 +4811,7 @@ function initialASTState() {
     outOfScopeLocations: null,
     inScopeLines: null,
     preview: null,
+    pausePoints: I.Map(),
     sourceMetaData: I.Map()
   })();
 }
@@ -4822,10 +4826,13 @@ function update(state = initialASTState(), action) {
         }
         return state.setIn(["symbols", source.id], action.value);
       }
-    case "SET_EMPTY_LINES":
+
+    case "SET_PAUSE_POINTS":
       {
-        const { source, emptyLines } = action;
-        return state.setIn(["emptyLines", source.id], emptyLines);
+        const { source, pausePoints } = action;
+        const emptyLines = (0, _ast.findEmptyLines)(source, pausePoints);
+
+        return state.setIn(["pausePoints", source.id], pausePoints).setIn(["emptyLines", source.id], emptyLines);
       }
 
     case "OUT_OF_SCOPE_LOCATIONS":
@@ -4911,15 +4918,23 @@ function isSymbolsLoading(state, source) {
 
 function isEmptyLineInSource(state, line, selectedSource) {
   const emptyLines = getEmptyLines(state, selectedSource);
-  return emptyLines.includes(line);
+  return emptyLines && emptyLines.includes(line);
 }
 
 function getEmptyLines(state, source) {
   if (!source) {
-    return [];
+    return null;
   }
 
-  return state.ast.getIn(["emptyLines", source.id]) || [];
+  return state.ast.getIn(["emptyLines", source.id]);
+}
+
+function getPausePoints(state, source) {
+  if (!source) {
+    return null;
+  }
+
+  return state.ast.getIn(["pausePoints", source.id]);
 }
 
 function getOutOfScopeLocations(state) {
@@ -6328,8 +6343,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.setSourceMetaData = setSourceMetaData;
 exports.setSymbols = setSymbols;
-exports.setEmptyLines = setEmptyLines;
 exports.setOutOfScopeLocations = setOutOfScopeLocations;
+exports.setPausePoints = setPausePoints;
 
 var _selectors = __webpack_require__(3590);
 
@@ -6384,30 +6399,8 @@ function setSymbols(sourceId) {
       [_promise.PROMISE]: (0, _parser.getSymbols)(source.id)
     });
 
-    dispatch(setEmptyLines(sourceId));
-    dispatch(setSourceMetaData(sourceId));
-  };
-}
-
-function setEmptyLines(sourceId) {
-  return async ({ dispatch, getState }) => {
-    const sourceRecord = (0, _selectors.getSource)(getState(), sourceId);
-    if (!sourceRecord) {
-      return;
-    }
-
-    const source = sourceRecord.toJS();
-    if (!source.text || source.isWasm) {
-      return;
-    }
-
-    const emptyLines = await (0, _parser.getEmptyLines)(source.id);
-
-    dispatch({
-      type: "SET_EMPTY_LINES",
-      source,
-      emptyLines
-    });
+    await dispatch(setPausePoints(sourceId));
+    await dispatch(setSourceMetaData(sourceId));
   };
 }
 
@@ -6431,6 +6424,27 @@ function setOutOfScopeLocations() {
     });
 
     dispatch((0, _setInScopeLines.setInScopeLines)());
+  };
+}
+
+function setPausePoints(sourceId) {
+  return async ({ dispatch, getState }) => {
+    const sourceRecord = (0, _selectors.getSource)(getState(), sourceId);
+    if (!sourceRecord) {
+      return;
+    }
+
+    const source = sourceRecord.toJS();
+    if (!source.text || source.isWasm) {
+      return;
+    }
+
+    const pausePoints = await (0, _parser.getPausePoints)(source.id);
+    dispatch({
+      type: "SET_PAUSE_POINTS",
+      source,
+      pausePoints
+    });
   };
 }
 
@@ -12209,22 +12223,18 @@ var _prefs = __webpack_require__(226);
 
 var _dbg = __webpack_require__(2246);
 
-var _devtoolsConfig = __webpack_require__(1355);
-
 var _bootstrap = __webpack_require__(1430);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function loadFromPrefs(actions) {
   const { pauseOnExceptions, ignoreCaughtExceptions } = _prefs.prefs;
   if (pauseOnExceptions || ignoreCaughtExceptions) {
     return actions.pauseOnExceptions(pauseOnExceptions, ignoreCaughtExceptions);
   }
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function getClient(connection) {
   const { tab: { clientType } } = connection;
@@ -12248,14 +12258,12 @@ async function onConnect(connection, { services, toolboxActions }) {
   await client.onConnect(connection, actions);
   await loadFromPrefs(actions);
 
-  if (!(0, _devtoolsConfig.isFirefoxPanel)()) {
-    (0, _dbg.setupHelper)({
-      store,
-      actions,
-      selectors,
-      client: client.clientCommands
-    });
-  }
+  (0, _dbg.setupHelper)({
+    store,
+    actions,
+    selectors,
+    client: client.clientCommands
+  });
 
   (0, _bootstrap.bootstrapApp)(store);
   return { store, actions, selectors, client: commands };
@@ -13472,6 +13480,10 @@ var _actions2 = _interopRequireDefault(_actions);
 
 var _ShortcutsModal = __webpack_require__(1535);
 
+var _VisibilityHandler = __webpack_require__(3611);
+
+var _VisibilityHandler2 = _interopRequireDefault(_VisibilityHandler);
+
 var _selectors = __webpack_require__(3590);
 
 var _devtoolsModules = __webpack_require__(1376);
@@ -13520,9 +13532,11 @@ var _QuickOpenModal2 = _interopRequireDefault(_QuickOpenModal);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const shortcuts = new _devtoolsModules.KeyShortcuts({ window }); /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                  * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const shortcuts = new _devtoolsModules.KeyShortcuts({ window });
 
 const { appinfo } = _devtoolsModules.Services;
 
@@ -13722,14 +13736,18 @@ class App extends _react.Component {
   render() {
     const { quickOpenEnabled } = this.props;
     return _react2.default.createElement(
-      "div",
-      { className: "debugger" },
-      this.renderLayout(),
-      quickOpenEnabled === true && _react2.default.createElement(_QuickOpenModal2.default, {
-        shortcutsModalEnabled: this.state.shortcutsModalEnabled,
-        toggleShortcutsModal: () => this.toggleShortcutsModal()
-      }),
-      this.renderShortcutsModal()
+      _VisibilityHandler2.default,
+      null,
+      _react2.default.createElement(
+        "div",
+        { className: "debugger" },
+        this.renderLayout(),
+        quickOpenEnabled === true && _react2.default.createElement(_QuickOpenModal2.default, {
+          shortcutsModalEnabled: this.state.shortcutsModalEnabled,
+          toggleShortcutsModal: () => this.toggleShortcutsModal()
+        }),
+        this.renderShortcutsModal()
+      )
     );
   }
 }
@@ -16793,7 +16811,10 @@ class Outline extends _react.Component {
   }
 
   render() {
-    const { symbols } = this.props;
+    const { symbols, selectedSource } = this.props;
+    if (!selectedSource) {
+      return this.renderPlaceholder();
+    }
     if (!symbols || symbols.loading) {
       return this.renderLoading();
     }
@@ -22509,7 +22530,7 @@ class GutterContextMenuComponent extends _react.Component {
     const line = (0, _editor.lineAtHeight)(props.editor, sourceId, event);
     const breakpoint = nextProps.breakpoints.find(bp => bp.location.line === line);
 
-    if (props.emptyLines.includes(line)) {
+    if (props.emptyLines && props.emptyLines.includes(line)) {
       return;
     }
 
@@ -22529,7 +22550,7 @@ exports.default = (0, _reactRedux.connect)(state => {
     breakpoints: (0, _selectors.getVisibleBreakpoints)(state),
     isPaused: (0, _selectors.isPaused)(state),
     contextMenu: (0, _selectors.getContextMenu)(state),
-    emptyLines: selectedSource ? (0, _selectors.getEmptyLines)(state, selectedSource.toJS()) : []
+    emptyLines: (0, _selectors.getEmptyLines)(state, selectedSource.toJS())
   };
 }, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(GutterContextMenuComponent);
 
@@ -26901,9 +26922,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.findBestMatchExpression = findBestMatchExpression;
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+exports.findEmptyLines = findEmptyLines;
+
+var _lodash = __webpack_require__(2);
 
 function findBestMatchExpression(symbols, tokenPos) {
   const { memberExpressions, identifiers } = symbols;
@@ -26916,7 +26937,25 @@ function findBestMatchExpression(symbols, tokenPos) {
     }
 
     return found;
-  }, {});
+  }, null);
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function findEmptyLines(selectedSource, pausePoints) {
+  if (!pausePoints || !selectedSource) {
+    return [];
+  }
+
+  const breakpoints = pausePoints.filter(point => point.types.breakpoint);
+  const breakpointLines = breakpoints.map(point => point.location.line);
+
+  if (!selectedSource.text) {
+    return [];
+  }
+  const lineCount = selectedSource.text.split("\n").length;
+  const sourceLines = (0, _lodash.range)(1, lineCount);
+  return (0, _lodash.without)(sourceLines, ...breakpointLines);
 }
 
 /***/ }),
@@ -27902,6 +27941,18 @@ class QuickOpenModal extends _react.Component {
       });
     };
 
+    this.renderLoading = () => {
+      const { symbolsLoading } = this.props;
+
+      if ((this.isFunctionQuery() || this.isVariableQuery()) && symbolsLoading) {
+        return _react2.default.createElement(
+          "div",
+          { className: "loading-indicator" },
+          L10N.getStr("loadingText")
+        );
+      }
+    };
+
     this.state = { results: null, selectedIndex: 0 };
   }
 
@@ -27943,7 +27994,7 @@ class QuickOpenModal extends _react.Component {
   }
 
   render() {
-    const { enabled, query, symbols } = this.props;
+    const { enabled, query } = this.props;
     const { selectedIndex, results } = this.state;
 
     if (!enabled) {
@@ -27967,11 +28018,7 @@ class QuickOpenModal extends _react.Component {
         expanded: expanded,
         selectedItemId: expanded && items[selectedIndex] ? items[selectedIndex].id : ""
       }),
-      !symbols || symbols.functions.length == 0 && _react2.default.createElement(
-        "div",
-        { className: "loading-indicator" },
-        L10N.getStr("loadingText")
-      ),
+      this.renderLoading(),
       newResults && _react2.default.createElement(_ResultList2.default, _extends({
         key: "results",
         items: items,
@@ -27988,16 +28035,13 @@ exports.QuickOpenModal = QuickOpenModal; /* istanbul ignore next: ignoring testi
 
 function mapStateToProps(state) {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
-  let symbols = null;
-  if (selectedSource != null) {
-    symbols = (0, _selectors.getSymbols)(state, selectedSource.toJS());
-  }
 
   return {
     enabled: (0, _selectors.getQuickOpenEnabled)(state),
     sources: (0, _quickOpen.formatSources)((0, _selectors.getSources)(state)),
     selectedSource,
-    symbols: (0, _quickOpen.formatSymbols)(symbols),
+    symbols: (0, _quickOpen.formatSymbols)((0, _selectors.getSymbols)(state, selectedSource)),
+    symbolsLoading: (0, _selectors.isSymbolsLoading)(state, selectedSource),
     query: (0, _selectors.getQuickOpenQuery)(state),
     searchType: (0, _selectors.getQuickOpenType)(state),
     tabs: (0, _selectors.getTabs)(state).toArray()
@@ -28576,7 +28620,7 @@ exports.log = log;
 
 var _devtoolsConfig = __webpack_require__(1355);
 
-const blacklist = ["SET_POPUP_OBJECT_PROPERTIES", "SET_SYMBOLS", "OUT_OF_SCOPE_LOCATIONS", "MAP_SCOPES", "ADD_SCOPES", "IN_SCOPE_LINES", "SET_EMPTY_LINES"];
+const blacklist = ["SET_POPUP_OBJECT_PROPERTIES", "SET_PAUSE_POINTS", "SET_SYMBOLS", "OUT_OF_SCOPE_LOCATIONS", "MAP_SCOPES", "ADD_SCOPES", "IN_SCOPE_LINES", "SET_EMPTY_LINES"];
 
 function cloneAction(action) {
   action = action || {};
@@ -31493,7 +31537,7 @@ function togglePrettyPrint(sourceId) {
 
     await dispatch((0, _breakpoints.remapBreakpoints)(sourceId));
     await dispatch((0, _pause.mapFrames)());
-    await dispatch((0, _ast.setEmptyLines)(newPrettySource.id));
+    await dispatch((0, _ast.setPausePoints)(newPrettySource.id));
     await dispatch((0, _ast.setSymbols)(newPrettySource.id));
 
     return dispatch((0, _sources.selectLocation)(_extends({}, options.location, { sourceId: newPrettySource.id })));
@@ -34212,6 +34256,8 @@ var timings = _interopRequireWildcard(_timings);
 
 var _prefs = __webpack_require__(226);
 
+var _devtoolsConfig = __webpack_require__(1355);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function findSource(dbg, url) {
@@ -34264,12 +34310,14 @@ function setupHelper(obj) {
 
   window.dbg = dbg;
 
-  console.group("Development Notes");
-  const baseUrl = "https://devtools-html.github.io/debugger.html";
-  const localDevelopmentUrl = `${baseUrl}/docs/dbg.html`;
-  console.log("Debugging Tips", localDevelopmentUrl);
-  console.log("dbg", window.dbg);
-  console.groupEnd();
+  if ((0, _devtoolsConfig.isDevelopment)()) {
+    console.group("Development Notes");
+    const baseUrl = "https://devtools-html.github.io/debugger.html";
+    const localDevelopmentUrl = `${baseUrl}/docs/dbg.html`;
+    console.log("Debugging Tips", localDevelopmentUrl);
+    console.log("dbg", window.dbg);
+    console.groupEnd();
+  }
 }
 
 /***/ }),
@@ -37858,6 +37906,75 @@ function formatCopyName(frame) {
 
   return `${displayName} (${fileName}#${frameLocation})`;
 }
+
+/***/ }),
+
+/***/ 3611:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _propTypes = __webpack_require__(20);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _react = __webpack_require__(0);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * Helper class to disable panel rendering when it is in background.
+ *
+ * Toolbox code hides the iframes when switching to another panel
+ * and triggers `visibilitychange` events.
+ *
+ * See devtools/client/framework/toolbox.js:setIframeVisible().
+ */
+
+class VisibilityHandler extends _react.Component {
+  static get propTypes() {
+    return {
+      children: _propTypes2.default.element.isRequired
+    };
+  }
+
+  constructor(props) {
+    super(props);
+    this.isVisible = true;
+    this.onVisibilityChange = this.onVisibilityChange.bind(this);
+  }
+
+  componentDidMount() {
+    window.addEventListener("visibilitychange", this.onVisibilityChange);
+  }
+
+  shouldComponentUpdate() {
+    return document.visibilityState == "visible";
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("visibilitychange", this.onVisibilityChange);
+  }
+
+  onVisibilityChange() {
+    this.isVisible = false;
+    if (document.visibilityState == "visible") {
+      this.isVisible = true;
+    }
+    this.forceUpdate();
+  }
+
+  render() {
+    return this.isVisible ? this.props.children : null;
+  }
+}
+
+module.exports = VisibilityHandler;
 
 /***/ }),
 

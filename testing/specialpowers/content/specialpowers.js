@@ -197,7 +197,6 @@ SpecialPowers.prototype.nestedFrameSetup = function() {
   Services.obs.addObserver(function onRemoteBrowserShown(subject, topic, data) {
     let frameLoader = subject;
     // get a ref to the app <iframe>
-    frameLoader.QueryInterface(Ci.nsIFrameLoader);
     let frame = frameLoader.ownerElement;
     let frameId = frame.getAttribute("id");
     if (frameId === "nested-parent-frame") {

@@ -33,7 +33,6 @@
 #include "nsIDOMUIEvent.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMXULElement.h"
-#include "nsIFrameLoader.h"
 #include "nsIListBoxObject.h"
 #include "nsIMessageManager.h"
 #include "nsISelection.h"
@@ -155,7 +154,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(Element),
   DEFINE_SHIM(Event),
   DEFINE_SHIM(EventTarget),
-  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIFrameLoader, FrameLoader),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMGeoPositionError, PositionError),
   DEFINE_SHIM(HTMLInputElement),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIListBoxObject, ListBoxObject),
