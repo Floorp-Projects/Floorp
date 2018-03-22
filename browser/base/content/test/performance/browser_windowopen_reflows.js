@@ -68,4 +68,3 @@ add_task(async function() {
 
   await BrowserTestUtils.closeWindow(win);
 });
-
