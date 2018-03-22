@@ -547,7 +547,15 @@ add_task(async function test_move_into_parent_sibling() {
 });
 
 add_task(async function test_complex_move_with_additions() {
-  let buf = await openMirror("complex_move_with_additions");
+  let mergeTelemetryEvents = [];
+  let buf = await openMirror("complex_move_with_additions", {
+    recordTelemetryEvent(object, method, value, extra) {
+      equal(object, "mirror", "Wrong object for telemetry event");
+      if (method == "merge") {
+        mergeTelemetryEvents.push({ value, extra });
+      }
+    },
+  });
 
   info("Set up mirror: Menu > A > (B C)");
   await PlacesUtils.bookmarks.insertTree({
@@ -627,6 +635,10 @@ add_task(async function test_complex_move_with_additions() {
   let observer = expectBookmarkChangeNotifications();
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+  deepEqual(mergeTelemetryEvents, [{
+    value: "structure",
+    extra: { new: "1" },
+  }], "Should record telemetry with structure change counts");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {

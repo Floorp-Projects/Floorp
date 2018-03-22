@@ -60,6 +60,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Async: "resource://services-common/async.js",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   Log: "resource://gre/modules/Log.jsm",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
@@ -308,50 +309,82 @@ class SyncedBookmarksMirror {
    */
   async store(records, { needsMerge = true } = {}) {
     let options = { needsMerge };
-    await this.db.executeBeforeShutdown(
-      "SyncedBookmarksMirror: store",
-      db => db.executeTransaction(async () => {
-        for await (let record of yieldingIterator(records)) {
-          switch (record.type) {
-            case "bookmark":
-              MirrorLog.trace("Storing bookmark in mirror", record.cleartext);
-              await this.storeRemoteBookmark(record, options);
-              continue;
-
-            case "query":
-              MirrorLog.trace("Storing query in mirror", record.cleartext);
-              await this.storeRemoteQuery(record, options);
-              continue;
-
-            case "folder":
-              MirrorLog.trace("Storing folder in mirror", record.cleartext);
-              await this.storeRemoteFolder(record, options);
-              continue;
-
-            case "livemark":
-              MirrorLog.trace("Storing livemark in mirror", record.cleartext);
-              await this.storeRemoteLivemark(record, options);
-              continue;
-
-            case "separator":
-              MirrorLog.trace("Storing separator in mirror", record.cleartext);
-              await this.storeRemoteSeparator(record, options);
-              continue;
-
-            default:
-              if (record.deleted) {
-                MirrorLog.trace("Storing tombstone in mirror",
-                                record.cleartext);
-                await this.storeRemoteTombstone(record, options);
+    let ignoreCounts = {
+      bookmark: { id: 0, url: 0 },
+      query: { id: 0, url: 0 },
+      folder: { id: 0, root: 0 },
+      child: { id: 0, },
+      livemark: { id: 0, feed: 0 },
+      separator: { id: 0 },
+      tombstone: { id: 0, root: 0 },
+    };
+    let extraTelemetryEvents = [];
+    try {
+      await this.db.executeBeforeShutdown(
+        "SyncedBookmarksMirror: store",
+        db => db.executeTransaction(async () => {
+          for await (let record of yieldingIterator(records)) {
+            switch (record.type) {
+              case "bookmark":
+                MirrorLog.trace("Storing bookmark in mirror", record);
+                await this.storeRemoteBookmark(record, ignoreCounts, options);
                 continue;
-              }
+
+              case "query":
+                MirrorLog.trace("Storing query in mirror", record);
+                await this.storeRemoteQuery(record, ignoreCounts, options);
+                continue;
+
+              case "folder":
+                MirrorLog.trace("Storing folder in mirror", record);
+                await this.storeRemoteFolder(record, ignoreCounts, options);
+                continue;
+
+              case "livemark":
+                MirrorLog.trace("Storing livemark in mirror", record);
+                await this.storeRemoteLivemark(record, ignoreCounts, options);
+                continue;
+
+              case "separator":
+                MirrorLog.trace("Storing separator in mirror", record);
+                await this.storeRemoteSeparator(record, ignoreCounts, options);
+                continue;
+
+              default:
+                if (record.deleted) {
+                  MirrorLog.trace("Storing tombstone in mirror", record);
+                  await this.storeRemoteTombstone(record, ignoreCounts,
+                                                  options);
+                  continue;
+                }
+            }
+            MirrorLog.warn("Ignoring record with unknown type", record.type);
+            extraTelemetryEvents.push({
+              method: "ignore",
+              value: "unknown-kind",
+              extra: { kind: record.type },
+            });
           }
-          MirrorLog.warn("Ignoring record with unknown type", record.type);
-          this.recordTelemetryEvent("mirror", "ignore", "unknown",
-                                    { why: "kind" });
         }
-      })
-    );
+      ));
+    } finally {
+      for (let { method, value, extra } of extraTelemetryEvents) {
+        this.recordTelemetryEvent("mirror", method, value, extra);
+      }
+      for (let kind in ignoreCounts) {
+        let reasons = ignoreCounts[kind];
+        let extra = {};
+        for (let reason in reasons) {
+          let count = reasons[reason];
+          if (count > 0) {
+            extra[reason] = String(count);
+          }
+        }
+        if (!ObjectUtils.isEmpty(extra)) {
+          this.recordTelemetryEvent("mirror", "ignore", kind, extra);
+        }
+      }
+    }
   }
 
   /**
@@ -455,7 +488,7 @@ class SyncedBookmarksMirror {
       try {
         mergedRoot = await merger.merge();
       } finally {
-        for (let { value, extra } of merger.telemetryEvents) {
+        for (let { value, extra } of merger.summarizeTelemetryEvents()) {
           this.recordTelemetryEvent("mirror", "merge", value, extra);
         }
       }
@@ -549,12 +582,11 @@ class SyncedBookmarksMirror {
     return rows.map(row => row.getResultByName("guid"));
   }
 
-  async storeRemoteBookmark(record, { needsMerge }) {
+  async storeRemoteBookmark(record, ignoreCounts, { needsMerge }) {
     let guid = validateGuid(record.id);
     if (!guid) {
       MirrorLog.warn("Ignoring bookmark with invalid ID", record.id);
-      this.recordTelemetryEvent("mirror", "ignore", "bookmark",
-                                { why: "id" });
+      ignoreCounts.bookmark.id++;
       return;
     }
 
@@ -562,8 +594,7 @@ class SyncedBookmarksMirror {
     if (!url) {
       MirrorLog.warn("Ignoring bookmark ${guid} with invalid URL ${url}",
                      { guid, url: record.bmkUri });
-      this.recordTelemetryEvent("mirror", "ignore", "bookmark",
-                                { why: "url" });
+      ignoreCounts.bookmark.url++;
       return;
     }
 
@@ -606,12 +637,11 @@ class SyncedBookmarksMirror {
     }
   }
 
-  async storeRemoteQuery(record, { needsMerge }) {
+  async storeRemoteQuery(record, ignoreCounts, { needsMerge }) {
     let guid = validateGuid(record.id);
     if (!guid) {
       MirrorLog.warn("Ignoring query with invalid ID", record.id);
-      this.recordTelemetryEvent("mirror", "ignore", "query",
-                                { why: "id" });
+      ignoreCounts.query.id++;
       return;
     }
 
@@ -619,8 +649,7 @@ class SyncedBookmarksMirror {
     if (!url) {
       MirrorLog.warn("Ignoring query ${guid} with invalid URL ${url}",
                      { guid, url: record.bmkUri });
-      this.recordTelemetryEvent("mirror", "ignore", "query",
-                                { why: "url" });
+      ignoreCounts.query.url++;
       return;
     }
 
@@ -649,20 +678,17 @@ class SyncedBookmarksMirror {
         url: url.href, description, smartBookmarkName });
   }
 
-  async storeRemoteFolder(record, { needsMerge }) {
+  async storeRemoteFolder(record, ignoreCounts, { needsMerge }) {
     let guid = validateGuid(record.id);
     if (!guid) {
       MirrorLog.warn("Ignoring folder with invalid ID", record.id);
-      this.recordTelemetryEvent("mirror", "ignore", "folder",
-                                { why: "id" });
+      ignoreCounts.folder.id++;
       return;
     }
     if (guid == PlacesUtils.bookmarks.rootGuid) {
       // The Places root shouldn't be synced at all.
       MirrorLog.warn("Ignoring Places root record", record);
-      this.recordTelemetryEvent("mirror", "ignore", "folder",
-                                { why: "root" });
-      return;
+      ignoreCounts.folder.root++;
     }
 
     let serverModified = determineServerModified(record);
@@ -689,8 +715,7 @@ class SyncedBookmarksMirror {
           MirrorLog.warn("Ignoring child of folder ${parentGuid} with " +
                          "invalid ID ${childRecordId}", { parentGuid: guid,
                                                           childRecordId });
-          this.recordTelemetryEvent("mirror", "ignore", "child",
-                                    { why: "id" });
+          ignoreCounts.child.id++;
           continue;
         }
         await this.db.executeCached(`
@@ -713,12 +738,11 @@ class SyncedBookmarksMirror {
       }
   }
 
-  async storeRemoteLivemark(record, { needsMerge }) {
+  async storeRemoteLivemark(record, ignoreCounts, { needsMerge }) {
     let guid = validateGuid(record.id);
     if (!guid) {
       MirrorLog.warn("Ignoring livemark with invalid ID", record.id);
-      this.recordTelemetryEvent("mirror", "ignore", "livemark",
-                                { why: "id" });
+      ignoreCounts.livemark.id++;
       return;
     }
 
@@ -726,8 +750,7 @@ class SyncedBookmarksMirror {
     if (!feedURL) {
       MirrorLog.warn("Ignoring livemark ${guid} with invalid feed URL ${url}",
                      { guid, url: record.feedUri });
-      this.recordTelemetryEvent("mirror", "ignore", "livemark",
-                                { why: "feed" });
+      ignoreCounts.livemark.feed++;
       return;
     }
 
@@ -748,12 +771,11 @@ class SyncedBookmarksMirror {
         siteURL: siteURL ? siteURL.href : null });
   }
 
-  async storeRemoteSeparator(record, { needsMerge }) {
+  async storeRemoteSeparator(record, ignoreCounts, { needsMerge }) {
     let guid = validateGuid(record.id);
     if (!guid) {
       MirrorLog.warn("Ignoring separator with invalid ID", record.id);
-      this.recordTelemetryEvent("mirror", "ignore", "separator",
-                                { why: "id" });
+      ignoreCounts.separator.id++;
       return;
     }
 
@@ -769,19 +791,17 @@ class SyncedBookmarksMirror {
         dateAdded });
   }
 
-  async storeRemoteTombstone(record, { needsMerge }) {
+  async storeRemoteTombstone(record, ignoreCounts, { needsMerge }) {
     let guid = validateGuid(record.id);
     if (!guid) {
       MirrorLog.warn("Ignoring tombstone with invalid ID", record.id);
-      this.recordTelemetryEvent("mirror", "ignore", "tombstone",
-                                { why: "id" });
+      ignoreCounts.tombstone.id++;
       return;
     }
 
     if (PlacesUtils.bookmarks.userContentRoots.includes(guid)) {
       MirrorLog.warn("Ignoring tombstone for syncable root", guid);
-      this.recordTelemetryEvent("mirror", "ignore", "tombstone",
-                                { why: "root" });
+      ignoreCounts.tombstone.root++;
       return;
     }
 
@@ -3385,7 +3405,34 @@ class BookmarkMerger {
     this.mergedGuids = new Set();
     this.deleteLocally = new Set();
     this.deleteRemotely = new Set();
-    this.telemetryEvents = [];
+    this.structureCounts = {
+      new: 0,
+      remoteItemDel: 0,
+      localFolderDel: 0,
+      localItemDel: 0,
+      remoteFolderDel: 0,
+    };
+    this.dupeCount = 0;
+    this.extraTelemetryEvents = [];
+  }
+
+  summarizeTelemetryEvents() {
+    let events = [...this.extraTelemetryEvents];
+    if (this.dupeCount > 0) {
+      events.push({ value: "dupes",
+                    extra: { count: String(this.dupeCount) } });
+    }
+    let structureExtra = {};
+    for (let key in this.structureCounts) {
+      let count = this.structureCounts[key];
+      if (count > 0) {
+        structureExtra[key] = String(count);
+      }
+    }
+    if (!ObjectUtils.isEmpty(structureExtra)) {
+      events.push({ value: "structure", extra: structureExtra });
+    }
+    return events;
   }
 
   async merge() {
@@ -3521,9 +3568,10 @@ class BookmarkMerger {
     if (!localNode.hasCompatibleKind(remoteNode)) {
       MirrorLog.error("Merging local ${localNode} and remote ${remoteNode} " +
                       "with different kinds", { localNode, remoteNode });
-      this.telemetryEvents.push({
+      this.extraTelemetryEvents.push({
         value: "kind-mismatch",
-        extra: { local: "" + localNode.kind, remote: "" + remoteNode.kind },
+        extra: { local: localNode.kindToString().toLowerCase(),
+                 remote: remoteNode.kindToString().toLowerCase() },
       });
       throw new SyncedBookmarksMirror.ConsistencyError(
         "Can't merge different item kinds");
@@ -3957,10 +4005,7 @@ class BookmarkMerger {
                                                  newStructureNode);
       MirrorLog.trace("Merge state for ${mergedNode} has new structure " +
                       "${newMergeState}", { mergedNode, newMergeState });
-      this.telemetryEvents.push({
-        value: "structure",
-        extra: { type: "new" },
-      });
+      this.structureCounts.new++;
       mergedNode.mergeState = newMergeState;
     }
   }
@@ -4063,10 +4108,7 @@ class BookmarkMerger {
         MirrorLog.trace("Remote non-folder ${remoteNode} deleted locally " +
                         "and changed remotely; taking remote change",
                         { remoteNode });
-        this.telemetryEvents.push({
-          value: "structure",
-          extra: { type: "delete", kind: "item", prefer: "remote" },
-        });
+        this.structureCounts.remoteItemDel++;
         return BookmarkMerger.STRUCTURE.UNCHANGED;
       }
       // For folders, we always take the local deletion and relocate remotely
@@ -4076,10 +4118,7 @@ class BookmarkMerger {
       MirrorLog.trace("Remote folder ${remoteNode} deleted locally " +
                       "and changed remotely; taking local deletion",
                       { remoteNode });
-      this.telemetryEvents.push({
-        value: "structure",
-        extra: { type: "delete", kind: "folder", prefer: "local" },
-      });
+      this.structureCounts.localFolderDel++;
     } else {
       MirrorLog.trace("Remote node ${remoteNode} deleted locally and not " +
                        "changed remotely; taking local deletion",
@@ -4138,18 +4177,12 @@ class BookmarkMerger {
       if (!localNode.isFolder()) {
         MirrorLog.trace("Local non-folder ${localNode} deleted remotely and " +
                         "changed locally; taking local change", { localNode });
-        this.telemetryEvents.push({
-          value: "structure",
-          extra: { type: "delete", kind: "item", prefer: "local" },
-        });
+        this.structureCounts.localItemDel++;
         return BookmarkMerger.STRUCTURE.UNCHANGED;
       }
       MirrorLog.trace("Local folder ${localNode} deleted remotely and " +
                       "changed locally; taking remote deletion", { localNode });
-      this.telemetryEvents.push({
-        value: "structure",
-        extra: { type: "delete", kind: "folder", prefer: "remote" },
-      });
+      this.structureCounts.remoteFolderDel++;
     } else {
       MirrorLog.trace("Local node ${localNode} deleted remotely and not " +
                       "changed locally; taking remote deletion", { localNode });
@@ -4399,7 +4432,7 @@ class BookmarkMerger {
     if (!newRemoteNode) {
       return null;
     }
-    this.telemetryEvents.push({ value: "dupe" });
+    this.dupeCount++;
     return newRemoteNode;
   }
 
@@ -4444,7 +4477,7 @@ class BookmarkMerger {
     if (!newLocalNode) {
       return null;
     }
-    this.telemetryEvents.push({ value: "dupe" });
+    this.dupeCount++;
     return newLocalNode;
   }
 
