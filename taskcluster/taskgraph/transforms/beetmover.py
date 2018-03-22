@@ -453,10 +453,16 @@ def craft_release_properties(config, job):
     else:
         build_platform = build_platform.replace('-source', '')
 
-    app_name = 'Fennec' if 'android' in job['label'] or 'fennec' in job['label'] else 'Firefox'
+    # XXX This should be explicitly set via build attributes or something
+    if 'android' in job['label'] or 'fennec' in job['label']:
+        app_name = 'Fennec'
+    elif config.graph_config['trust-domain'] == 'comm':
+        app_name = 'Thunderbird'
+    else:
+        # XXX Even DevEdition is called Firefox
+        app_name = 'Firefox'
 
     return {
-        # XXX Even DevEdition is called Firefox
         'app-name': app_name,
         'app-version': str(params['app_version']),
         'branch': params['project'],
