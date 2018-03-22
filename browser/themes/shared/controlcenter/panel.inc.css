@@ -414,7 +414,7 @@ description#identity-popup-content-verifier,
 }
 
 .identity-popup-permission-remove-button:not(:-moz-focusring):hover > .button-box > .button-icon {
-  fill: var(--arrowpanel-background);
+  fill: var(--lwt-arrowpanel-background, var(--arrowpanel-background));
 }
 
 .identity-popup-permission-remove-button:not(:-moz-focusring):hover:active {
