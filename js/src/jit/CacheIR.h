@@ -182,6 +182,7 @@ extern const char* CacheKindNames[];
     _(GuardIsObject)                      \
     _(GuardIsObjectOrNull)                \
     _(GuardIsNullOrUndefined)             \
+    _(GuardIsBoolean)                     \
     _(GuardIsString)                      \
     _(GuardIsSymbol)                      \
     _(GuardIsNumber)                      \
@@ -544,6 +545,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     ObjOperandId guardIsObject(ValOperandId val) {
         writeOpWithOperandId(CacheOp::GuardIsObject, val);
         return ObjOperandId(val.id());
+    }
+    Int32OperandId guardIsBoolean(ValOperandId val) {
+        Int32OperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::GuardIsBoolean, val);
+        writeOperandId(res);
+        return res;
     }
     StringOperandId guardIsString(ValOperandId val) {
         writeOpWithOperandId(CacheOp::GuardIsString, val);
@@ -1809,6 +1816,7 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator
 
     bool tryAttachInt32();
     bool tryAttachDouble();
+    bool tryAttachBooleanWithInt32();
 
   public:
     BinaryArithIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode,
