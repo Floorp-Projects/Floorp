@@ -6,21 +6,6 @@
 #include "nsISupports.idl"
 
 interface nsFrameLoader;
-interface nsIDocShell;
-interface nsIURI;
-interface nsIFrame;
-interface nsIMessageSender;
-interface nsIVariant;
-interface nsIDOMElement;
-interface nsITabParent;
-interface nsILoadContext;
-interface nsIPrintSettings;
-interface nsIWebProgressListener;
-
-[builtinclass, uuid(1645af04-1bc7-4363-8f2c-eb9679220ab1)]
-interface nsIFrameLoader : nsISupports
-{
-};
 
 %{C++
 class nsFrameLoader;

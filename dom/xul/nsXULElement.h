@@ -29,17 +29,13 @@
 #include "nsStringFwd.h"
 #include "nsStyledElement.h"
 #include "nsIFrameLoader.h"
-#include "nsFrameLoader.h" // Needed because we return an
-                           // already_AddRefed<nsFrameLoader> where bindings
-                           // want an already_AddRefed<nsIFrameLoader> and hence
-                           // bindings need to know that the former can cast to
-                           // the latter.
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/FromParser.h"
 
 class nsIDocument;
+class nsFrameLoader;
 class nsXULPrototypeDocument;
 
 class nsIObjectInputStream;

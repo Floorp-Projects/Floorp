@@ -1030,7 +1030,7 @@ public:
 
 nsresult
 nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
-                                      nsIFrameLoader* aTargetFrameLoader,
+                                      nsFrameLoader* aTargetFrameLoader,
                                       const nsAString& aMessage,
                                       bool aIsSync,
                                       StructuredCloneData* aCloneData,
@@ -1044,7 +1044,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
 nsresult
 nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
-                                      nsIFrameLoader* aTargetFrameLoader,
+                                      nsFrameLoader* aTargetFrameLoader,
                                       bool aTargetClosed,
                                       const nsAString& aMessage,
                                       bool aIsSync,
@@ -2190,7 +2190,7 @@ nsSameProcessAsyncMessageBase::Init(const nsAString& aMessage,
 
 void
 nsSameProcessAsyncMessageBase::ReceiveMessage(nsISupports* aTarget,
-                                              nsIFrameLoader* aTargetFrameLoader,
+                                              nsFrameLoader* aTargetFrameLoader,
                                               nsFrameMessageManager* aManager)
 {
   // Make sure that we have called Init() and it has succeeded.

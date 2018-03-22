@@ -1531,7 +1531,7 @@ nsXULElement::LoadSrc()
         // Usually xul elements are used in chrome, which doesn't have
         // session history at all.
         frameLoader = nsFrameLoader::Create(this, opener, false);
-        slots->mFrameLoaderOrOpener = static_cast<nsIFrameLoader*>(frameLoader);
+        slots->mFrameLoaderOrOpener = ToSupports(frameLoader);
         if (NS_WARN_IF(!frameLoader)) {
             return;
         }
@@ -1551,8 +1551,8 @@ nsXULElement::GetFrameLoader()
     if (!slots)
         return nullptr;
 
-    nsCOMPtr<nsIFrameLoader> loader = do_QueryInterface(slots->mFrameLoaderOrOpener);
-    return already_AddRefed<nsFrameLoader>(static_cast<nsFrameLoader*>(loader.forget().take()));
+    RefPtr<nsFrameLoader> loader = do_QueryObject(slots->mFrameLoaderOrOpener);
+    return loader.forget();
 }
 
 void
