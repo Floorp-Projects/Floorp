@@ -427,7 +427,7 @@ nsGenericHTMLFrameElement::CopyInnerTo(Element* aDest,
     nsFrameLoader* fl = nsFrameLoader::Create(dest, nullptr, false);
     NS_ENSURE_STATE(fl);
     dest->mFrameLoader = fl;
-    static_cast<nsFrameLoader*>(mFrameLoader.get())->CreateStaticClone(fl);
+    mFrameLoader->CreateStaticClone(fl);
   }
 
   return rv;
