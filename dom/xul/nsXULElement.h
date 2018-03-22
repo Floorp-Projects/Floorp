@@ -400,7 +400,6 @@ public:
                            bool aPreallocateChildren) const override;
     virtual mozilla::EventStates IntrinsicState() const override;
 
-    nsresult GetFrameLoaderXPCOM(nsIFrameLoader** aFrameLoader);
     void PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv);
 
     virtual void RecompileScriptEventListeners() override;
