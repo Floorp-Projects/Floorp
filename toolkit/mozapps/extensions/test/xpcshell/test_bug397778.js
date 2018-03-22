@@ -3,8 +3,64 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const ADDON = "test_bug397778";
 const ID = "bug397778@tests.mozilla.org";
+
+const ADDON = {
+  id: "bug397778@tests.mozilla.org",
+  version: "1.0",
+  name: "Fallback Name",
+  description: "Fallback Description",
+  bootstrap: true,
+
+  targetApplications: [{
+    id: "xpcshell@tests.mozilla.org",
+    minVersion: "1",
+    maxVersion: "1"}],
+
+  localized: [
+    {
+      locale: ["fr"],
+      name: "fr Name",
+      description: "fr Description",
+    },
+    {
+      locale: ["de-DE"],
+      name: "de-DE Name",
+    },
+    {
+      locale: ["es-ES"],
+      name: "es-ES Name",
+      description: "es-ES Description",
+    },
+    {
+      locale: ["zh-TW"],
+      name: "zh-TW Name",
+      description: "zh-TW Description",
+    },
+    {
+      locale: ["zh-CN"],
+      name: "zh-CN Name",
+      description: "zh-CN Description",
+    },
+    {
+      locale: ["en-GB"],
+      name: "en-GB Name",
+      description: "en-GB Description",
+    },
+    {
+      locale: ["en"],
+      name: "en Name",
+      description: "en Description",
+    },
+    {
+      locale: ["en-CA"],
+      name: "en-CA Name",
+      description: "en-CA Description",
+    },
+  ],
+};
+
+const XPI = createTempXPIFile(ADDON);
 
 function run_test() {
   // Setup for test
@@ -14,7 +70,7 @@ function run_test() {
 
   // Install test add-on
   startupManager();
-  installAllFiles([do_get_addon(ADDON)], function() {
+  installAllFiles([XPI], function() {
     restartManager();
 
     run_test_1();
