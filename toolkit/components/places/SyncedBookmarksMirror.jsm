@@ -3019,12 +3019,12 @@ class BookmarkNode {
    *
    * @return {String} A string in the form of
    *         "bookmarkAAAA (Bookmark; Age = 1.234s; Unmerged)", where "Bookmark"
-   *         is the kind, "Age = 1.234s" indicates the age, and "Unmerged"
-   *         (which may not be present) indicates that the node needs to be
-   *         merged.
+   *         is the kind, "Age = 1.234s" indicates the age in seconds, and
+   *         "Unmerged" (which may not be present) indicates that the node
+   *         needs to be merged.
    */
   toString() {
-    let info = `${this.kindToString()}; ${this.age.toFixed(3)}s `;
+    let info = `${this.kindToString()}; Age = ${this.age.toFixed(3)}s`;
     if (this.needsMerge) {
       info += "; Unmerged";
     }
@@ -3141,8 +3141,7 @@ class BookmarkTree {
   }
 
   /**
-   * Generates an ASCII art representation of the complete tree. Deleted GUIDs
-   * are prefixed with "~".
+   * Generates an ASCII art representation of the complete tree.
    *
    * @return {String}
    */
@@ -4397,20 +4396,19 @@ class BookmarkMerger {
   }
 
   /**
-   * Returns an array of local ("L: ~bookmarkAAAA, ~bookmarkBBBB") and remote
-   * ("R: ~bookmarkCCCC, ~bookmarkDDDD") deletions for logging.
+   * Returns an array of local and remote deletions for logging.
    *
    * @return {String[]}
    */
   deletionsToStrings() {
     let infos = [];
     if (this.deleteLocally.size) {
-      infos.push("L: " + Array.from(this.deleteLocally,
-        guid => `~${guid}`).join(", "));
+      infos.push("Delete Locally: " + Array.from(this.deleteLocally).join(
+        ", "));
     }
     if (this.deleteRemotely.size) {
-      infos.push("R: " + Array.from(this.deleteRemotely,
-        guid => `~${guid}`).join(", "));
+      infos.push("Delete Remotely: " + Array.from(this.deleteRemotely).join(
+        ", "));
     }
     return infos;
   }
