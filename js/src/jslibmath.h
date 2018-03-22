@@ -28,23 +28,6 @@
 #define js_copysign copysign
 #endif
 
-/* Consistency wrapper for platform deviations in fmod() */
-static inline double
-js_fmod(double d, double d2)
-{
-#ifdef XP_WIN
-    /*
-     * Workaround MS fmod bug where 42 % (1/0) => NaN, not 42.
-     * Workaround MS fmod bug where -0 % -N => 0, not -0.
-     */
-    if ((mozilla::IsFinite(d) && mozilla::IsInfinite(d2)) ||
-        (d == 0 && mozilla::IsFinite(d2))) {
-        return d;
-    }
-#endif
-    return fmod(d, d2);
-}
-
 namespace js {
 
 inline double
@@ -52,13 +35,8 @@ NumberDiv(double a, double b)
 {
     AutoUnsafeCallWithABI unsafe;
     if (b == 0) {
-        if (a == 0 || mozilla::IsNaN(a)
-#ifdef XP_WIN
-            || mozilla::IsNaN(b) /* XXX MSVC miscompiles such that (NaN == 0) */
-#endif
-        )
+        if (a == 0 || mozilla::IsNaN(a))
             return JS::GenericNaN();
-
         if (mozilla::IsNegative(a) != mozilla::IsNegative(b))
             return mozilla::NegativeInfinity<double>();
         return mozilla::PositiveInfinity<double>();
@@ -73,7 +51,7 @@ NumberMod(double a, double b)
     AutoUnsafeCallWithABI unsafe;
     if (b == 0)
         return JS::GenericNaN();
-    return js_fmod(a, b);
+    return fmod(a, b);
 }
 
 } // namespace js

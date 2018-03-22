@@ -1102,14 +1102,6 @@ function test_syntax(postfixes, check_error, ignore_opts) {
 
   // ==== Legacy ====
 
-  // Expression closures
-
-  enableExpressionClosures();
-  test("function f() 1 ");
-  test("function f() 1; ");
-  test("(function () 1 ");
-  test("(function () 1); ");
-
   // ==== asm.js ====
 
   test("(function() { 'use asm'; ");

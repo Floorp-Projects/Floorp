@@ -2154,13 +2154,14 @@ WasmGlobalObject::valueSetter(JSContext* cx, unsigned argc, Value* vp)
 
 const JSPropertySpec WasmGlobalObject::properties[] =
 {
-    JS_PSGS("value", WasmGlobalObject::valueGetter, WasmGlobalObject::valueSetter, 0),
+    JS_PSGS("value", WasmGlobalObject::valueGetter, WasmGlobalObject::valueSetter,
+            JSPROP_ENUMERATE),
     JS_PS_END
 };
 
 const JSFunctionSpec WasmGlobalObject::methods[] =
 {
-    JS_SYM_FN(toPrimitive, WasmGlobalObject::valueGetter, 1, JSPROP_READONLY),
+    JS_FN(js_valueOf_str, WasmGlobalObject::valueGetter, 0, 0),
     JS_FS_END
 };
 
