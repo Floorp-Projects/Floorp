@@ -181,13 +181,13 @@ function run_test() {
   });
   DebuggerServer.init();
 
-  check_except(() => {
-    let badActor = ActorClassWithSpec({}, {
-      missing: preEvent("missing-event", function() {
+  Assert.throws(() => {
+    let badActor = protocol.ActorClassWithSpec({}, {
+      missing: protocol.preEvent("missing-event", function() {
       })
     });
     void badActor;
-  });
+  }, /Actor specification must have a typeName member/);
 
   protocol.types.getType("array:array:array:number");
   protocol.types.getType("array:array:array:number");

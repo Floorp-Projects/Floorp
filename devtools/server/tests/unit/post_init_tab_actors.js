@@ -3,6 +3,9 @@
 
 "use strict";
 
+// Uses the same scope as test_add_actors.js
+/* import-globals-from head_dbg.js */
+
 function PostInitTabActor(connection) {}
 
 PostInitTabActor.prototype = {
