@@ -116,7 +116,11 @@ public:
 
   already_AddRefed<nsILoadContext> LoadContext();
 
-  void LoadFrame(bool aOriginalSrc, mozilla::ErrorResult& aRv);
+  /**
+   * Start loading the frame. This method figures out what to load
+   * from the owner content in the frame loader.
+   */
+  void LoadFrame(bool aOriginalSrc);
 
   void LoadURI(nsIURI* aURI, bool aOriginalSrc, mozilla::ErrorResult& aRv);
 

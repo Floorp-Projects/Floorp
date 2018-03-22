@@ -34,13 +34,6 @@ interface FrameLoader {
   readonly attribute LoadContext loadContext;
 
   /**
-   * Start loading the frame. This method figures out what to load
-   * from the owner content in the frame loader.
-   */
-  [Throws]
-  void loadFrame(optional boolean originalSrc = false);
-
-  /**
    * Loads the specified URI in this frame. Behaves identically to loadFrame,
    * except that this method allows specifying the URI to load.
    */

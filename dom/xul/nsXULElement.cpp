@@ -1497,20 +1497,20 @@ nsXULElement::GetBoxObject(ErrorResult& rv)
     return OwnerDoc()->GetBoxObjectFor(this, rv);
 }
 
-nsresult
+void
 nsXULElement::LoadSrc()
 {
     // Allow frame loader only on objects for which a container box object
     // can be obtained.
     if (!IsAnyOfXULElements(nsGkAtoms::browser, nsGkAtoms::editor,
                             nsGkAtoms::iframe)) {
-        return NS_OK;
+        return;
     }
     if (!IsInUncomposedDoc() ||
         !OwnerDoc()->GetRootElement() ||
         OwnerDoc()->GetRootElement()->
             NodeInfo()->Equals(nsGkAtoms::overlay, kNameSpaceID_XUL)) {
-        return NS_OK;
+        return;
     }
     RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
     if (!frameLoader) {
@@ -1532,14 +1532,16 @@ nsXULElement::LoadSrc()
         // session history at all.
         frameLoader = nsFrameLoader::Create(this, opener, false);
         slots->mFrameLoaderOrOpener = static_cast<nsIFrameLoader*>(frameLoader);
-        NS_ENSURE_TRUE(frameLoader, NS_OK);
+        if (NS_WARN_IF(!frameLoader)) {
+            return;
+        }
 
         (new AsyncEventDispatcher(this,
                                   NS_LITERAL_STRING("XULFrameLoaderCreated"),
                                   /* aBubbles */ true))->RunDOMEventWhenSafe();
     }
 
-    return frameLoader->LoadFrame(false);
+    frameLoader->LoadFrame(false);
 }
 
 nsresult

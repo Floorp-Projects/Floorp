@@ -106,7 +106,7 @@ protected:
   // This doesn't really ensure a frame loader in all cases, only when
   // it makes sense.
   void EnsureFrameLoader();
-  nsresult LoadSrc();
+  void LoadSrc();
   nsIDocument* GetContentDocument(nsIPrincipal& aSubjectPrincipal);
   nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
   already_AddRefed<nsPIDOMWindowOuter> GetContentWindow();
