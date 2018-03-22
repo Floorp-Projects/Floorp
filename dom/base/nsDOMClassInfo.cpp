@@ -47,9 +47,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Telemetry.h"
 
-// Window scriptable helper includes
-#include "nsScriptNameSpaceManager.h"
-
 // DOM base includes
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
@@ -170,65 +167,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindowInner *aWin, JSContext *cx,
   }
 #endif
 
-  nsScriptNameSpaceManager *nameSpaceManager = GetNameSpaceManager();
-  NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
-
-  // Note - Our only caller is nsGlobalWindow::DoResolve, which checks that
-  // JSID_IS_STRING(id) is true.
-  nsAutoJSString name;
-  if (!name.init(cx, JSID_TO_STRING(id))) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  const char16_t *class_name = nullptr;
-  const nsGlobalNameStruct *name_struct =
-    nameSpaceManager->LookupName(name, &class_name);
-
-  if (!name_struct) {
-    return NS_OK;
-  }
-
-  // The class_name had better match our name
-  MOZ_ASSERT(name.Equals(class_name));
-
-  NS_ENSURE_TRUE(class_name, NS_ERROR_UNEXPECTED);
-
-  nsresult rv = NS_OK;
-
-  if (name_struct->mType == nsGlobalNameStruct::eTypeProperty) {
-    // Before defining a global property, check for a named subframe of the
-    // same name. If it exists, we don't want to shadow it.
-    if (nsCOMPtr<nsPIDOMWindowOuter> childWin = aWin->GetChildWindow(name)) {
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsISupports> native(do_CreateInstance(name_struct->mCID, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    JS::Rooted<JS::Value> prop_val(cx, JS::UndefinedValue()); // Property value.
-
-    nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
-    if (gpi) {
-      rv = gpi->Init(aWin->AsInner(), &prop_val);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    if (prop_val.isPrimitive() && !prop_val.isNull()) {
-      rv = nsContentUtils::WrapNative(cx, native, &prop_val, true);
-    }
-
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!JS_WrapValue(cx, &prop_val)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    FillPropertyDescriptor(desc, obj, prop_val, false);
-
-    return NS_OK;
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 struct InterfaceShimEntry {
