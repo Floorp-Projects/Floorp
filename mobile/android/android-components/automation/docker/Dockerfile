@@ -76,8 +76,5 @@ RUN git clone $PROJECT_REPOSITORY
 
 WORKDIR /build/android-components
 
-# Workaround - See issue #17
-RUN touch local.properties
-
 RUN ./gradlew --no-daemon assemble test detektCheck ktlint
 
