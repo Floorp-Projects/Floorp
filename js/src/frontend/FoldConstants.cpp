@@ -1010,18 +1010,13 @@ ComputeBinary(ParseNodeKind kind, double left, double right)
         return left * right;
 
     if (kind == ParseNodeKind::Mod)
-        return right == 0 ? GenericNaN() : js_fmod(left, right);
+        return right == 0 ? GenericNaN() : fmod(left, right);
 
     if (kind == ParseNodeKind::Ursh)
         return ToUint32(left) >> (ToUint32(right) & 31);
 
     if (kind == ParseNodeKind::Div) {
         if (right == 0) {
-#if defined(XP_WIN)
-            /* XXX MSVC miscompiles such that (NaN == 0) */
-            if (IsNaN(right))
-                return GenericNaN();
-#endif
             if (left == 0 || IsNaN(left))
                 return GenericNaN();
             if (IsNegative(left) != IsNegative(right))

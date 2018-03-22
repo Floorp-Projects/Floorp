@@ -2413,24 +2413,18 @@ DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame, ICTypeMonitor_Fallbac
         return true;
     }
 
-    // Note: ideally we would merge this if-else statement with the one below,
-    // but that triggers an MSVC 2015 compiler bug. See bug 1363054.
     StackTypeSet* types;
     uint32_t argument;
-    if (stub->monitorsArgument(&argument))
-        types = TypeScript::ArgTypes(script, argument);
-    else if (stub->monitorsThis())
-        types = TypeScript::ThisTypes(script);
-    else
-        types = TypeScript::BytecodeTypes(script, pc);
-
     if (stub->monitorsArgument(&argument)) {
         MOZ_ASSERT(pc == script->code());
+        types = TypeScript::ArgTypes(script, argument);
         TypeScript::SetArgument(cx, script, argument, value);
     } else if (stub->monitorsThis()) {
         MOZ_ASSERT(pc == script->code());
+        types = TypeScript::ThisTypes(script);
         TypeScript::SetThis(cx, script, value);
     } else {
+        types = TypeScript::BytecodeTypes(script, pc);
         TypeScript::Monitor(cx, script, pc, types, value);
     }
 
