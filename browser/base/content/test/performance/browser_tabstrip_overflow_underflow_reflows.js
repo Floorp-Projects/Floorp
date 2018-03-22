@@ -39,7 +39,7 @@ add_task(async function() {
 
   await createTabs(TAB_COUNT_FOR_OVERFLOW);
 
-  await withReflowObserver(async function(dirtyFrame) {
+  await withReflowObserver(async function() {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
     BrowserOpenTab();
     await BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "transitionend",
@@ -55,7 +55,7 @@ add_task(async function() {
 
   // Now test that opening and closing a tab while overflowed doesn't cause
   // us to reflow.
-  await withReflowObserver(async function(dirtyFrame) {
+  await withReflowObserver(async function() {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
     BrowserOpenTab();
     await switchDone;
@@ -64,7 +64,7 @@ add_task(async function() {
     });
   }, [], window);
 
-  await withReflowObserver(async function(dirtyFrame) {
+  await withReflowObserver(async function() {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
     BrowserTestUtils.removeTab(gBrowser.selectedTab, { animate: true });
     await switchDone;
@@ -82,7 +82,7 @@ add_task(async function() {
             "First tab should be partially scrolled out of view.");
 
   // Now switch to the first tab. We shouldn't flush layout at all.
-  await withReflowObserver(async function(dirtyFrame) {
+  await withReflowObserver(async function() {
     let firstTab = gBrowser.tabContainer.firstChild;
     await BrowserTestUtils.switchTab(gBrowser, firstTab);
     await BrowserTestUtils.waitForCondition(() => {
