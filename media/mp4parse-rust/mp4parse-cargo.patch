@@ -28,7 +28,7 @@ diff --git a/media/libstagefright/binding/mp4parse_capi/Cargo.toml b/media/libst
 index a30e045..a965f06 100644
 --- a/media/libstagefright/binding/mp4parse_capi/Cargo.toml
 +++ b/media/libstagefright/binding/mp4parse_capi/Cargo.toml
-@@ -18,22 +18,13 @@
+@@ -18,23 +18,16 @@
    "*.mp4",
  ]
  
@@ -38,7 +38,6 @@ index a30e045..a965f06 100644
  
  [dependencies]
  byteorder = "1.2.1"
--env_logger = "0.5.3"
  log = "0.4"
  
  # To enable fallible memory allocation, add 'features = ["mp4parse_fallible"]'
@@ -46,10 +45,13 @@ index a30e045..a965f06 100644
 -mp4parse = {version = "0.10.0", path = "../mp4parse"}
 +mp4parse = {version = "0.10.0", path = "../mp4parse", features = ["mp4parse_fallible"]}
  num-traits = "0.2.0"
+ 
+ [dev-dependencies]
+ env_logger = "0.5.3"
 -
 -[build-dependencies]
--cbindgen = "0.4.3"
+-cbindgen = "0.5.2"
 -
 -[features]
 -fuzz = ["mp4parse/fuzz"]
--
+
