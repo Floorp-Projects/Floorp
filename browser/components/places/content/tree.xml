@@ -83,8 +83,8 @@
           // We do not yet support searching into grouped queries or into
           // tag containers, so we must fall to the default case.
           if (PlacesUtils.nodeIsHistoryContainer(queryNode) ||
+              PlacesUtils.nodeIsTagQuery(queryNode) ||
               options.resultType == options.RESULTS_AS_TAG_QUERY ||
-              options.resultType == options.RESULTS_AS_TAG_CONTENTS ||
               options.resultType == options.RESULTS_AS_ROOTS_QUERY)
             options.resultType = options.RESULTS_AS_URI;
 
@@ -528,13 +528,8 @@
           if (this.controller.disallowInsertion(container))
             return null;
 
-          // TODO (Bug 1160193): properly support dropping on a tag root.
-          let tagName = null;
-          if (PlacesUtils.nodeIsTagQuery(container)) {
-            tagName = container.title;
-            if (!tagName)
-              return null;
-          }
+          let tagName = PlacesUtils.nodeIsTagQuery(container) ?
+                          PlacesUtils.asQuery(container).query.tags[0] : null;
 
           return new PlacesInsertionPoint({
             parentId: PlacesUtils.getConcreteItemId(container),

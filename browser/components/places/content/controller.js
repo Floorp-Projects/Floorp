@@ -175,7 +175,8 @@ PlacesController.prototype = {
                  Ci.nsINavHistoryQueryOptions.SORT_BY_NONE;
     case "placesCmd_show:info": {
       let selectedNode = this._view.selectedNode;
-      return selectedNode && PlacesUtils.getConcreteItemId(selectedNode) != -1;
+      return selectedNode && (PlacesUtils.nodeIsTagQuery(selectedNode) ||
+                              PlacesUtils.getConcreteItemId(selectedNode) != -1);
     }
     case "placesCmd_reload": {
       // Livemark containers
@@ -807,18 +808,27 @@ PlacesController.prototype = {
       if (PlacesUtils.nodeIsTagQuery(node.parent)) {
         // This is a uri node inside a tag container.  It needs a special
         // untag transaction.
-        let tag = node.parent.title;
+        let tag = node.parent.title || "";
         if (!tag) {
-          // TODO: Bug 1432405 Try using getConcreteItemGuid.
-          let tagItemId = PlacesUtils.getConcreteItemId(node.parent);
-          let tagGuid = await PlacesUtils.promiseItemGuid(tagItemId);
-          tag = (await PlacesUtils.bookmarks.fetch(tagGuid)).title;
+          // The parent may be the root node, that doesn't have a title.
+          // Until we fix bug 1293445, we have two ways to get tags:
+          if (node.parent.queryOptions.resultType ==
+                Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS) {
+            // Get the tag using the bookmarks API.
+            let tagItemId = PlacesUtils.getConcreteItemId(node.parent);
+            let tagGuid = await PlacesUtils.promiseItemGuid(tagItemId);
+            tag = (await PlacesUtils.bookmarks.fetch(tagGuid)).title;
+          } else {
+            // Extract the tag from the query itself.
+            tag = node.parent.query.tags[0];
+          }
         }
         transactions.push(PlacesTransactions.Untag({ urls: [node.uri], tag }));
-      } else if (PlacesUtils.nodeIsTagQuery(node) && node.parent &&
-               PlacesUtils.nodeIsQuery(node.parent) &&
-               PlacesUtils.asQuery(node.parent).queryOptions.resultType ==
-                 Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY) {
+      } else if (PlacesUtils.nodeIsTagQuery(node) &&
+                 node.parent &&
+                 PlacesUtils.nodeIsQuery(node.parent) &&
+                 PlacesUtils.asQuery(node.parent).queryOptions.resultType ==
+                   Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY) {
         // This is a tag container.
         // Untag all URIs tagged with this tag only if the tag container is
         // child of the "Tags" query in the library, in all other places we
@@ -827,16 +837,16 @@ PlacesController.prototype = {
         let URIs = PlacesUtils.tagging.getURIsForTag(tag);
         transactions.push(PlacesTransactions.Untag({ tag, urls: URIs }));
       } else if (PlacesUtils.nodeIsURI(node) &&
-               PlacesUtils.nodeIsQuery(node.parent) &&
-               PlacesUtils.asQuery(node.parent).queryOptions.queryType ==
-                 Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY) {
+                 PlacesUtils.nodeIsQuery(node.parent) &&
+                 PlacesUtils.asQuery(node.parent).queryOptions.queryType ==
+                   Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY) {
         // This is a uri node inside an history query.
         PlacesUtils.history.remove(node.uri).catch(Cu.reportError);
         // History deletes are not undoable, so we don't have a transaction.
       } else if (node.itemId == -1 &&
-               PlacesUtils.nodeIsQuery(node) &&
-               PlacesUtils.asQuery(node).queryOptions.queryType ==
-                 Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY) {
+                 PlacesUtils.nodeIsQuery(node) &&
+                 PlacesUtils.asQuery(node).queryOptions.queryType ==
+                   Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY) {
         // This is a dynamically generated history query, like queries
         // grouped by site, time or both.  Dynamically generated queries don't
         // have an itemId even if they are descendants of a bookmark.

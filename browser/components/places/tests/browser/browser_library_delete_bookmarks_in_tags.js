@@ -36,8 +36,8 @@ add_task(async function test_tags() {
     children,
   });
 
-  for (let i = 0; i < uris.length; i++) {
-    PlacesUtils.tagging.tagURI(uris[i], ["test"]);
+  for (let uri of uris) {
+    PlacesUtils.tagging.tagURI(uri, ["test"]);
   }
 
   let library = await promiseLibrary();
