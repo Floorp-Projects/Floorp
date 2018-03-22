@@ -13,7 +13,7 @@ def migrate(ctx):
 
     ctx.add_transforms(
         'browser/browser/preferences/preferences.ftl',
-        'browser/locales/en-US/browser/preferences/preferences.ftl',
+        'browser/browser/preferences/preferences.ftl',
         [
             FTL.Message(
                 id=FTL.Identifier('do-not-track-description'),

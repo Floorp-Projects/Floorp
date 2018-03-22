@@ -13,7 +13,7 @@ def migrate(ctx):
 
     ctx.add_transforms(
         'browser/browser/branding/sync-brand.ftl',
-        'browser/locales/en-US/browser/branding/sync-brand.ftl',
+        'browser/browser/branding/sync-brand.ftl',
         [
             FTL.Term(
                 id=FTL.Identifier('-sync-brand-short-name'),
