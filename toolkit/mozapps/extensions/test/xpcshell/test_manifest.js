@@ -575,6 +575,127 @@ const ADDONS = [
     extraFiles: {"options.xul": ""},
     expected: null,
   },
+
+
+  // Tests compatibility based on target platforms.
+
+  // No targetPlatforms so should be compatible
+  {
+    "install.rdf": {
+      id: "tp-addon1@tests.mozilla.org",
+      version: "1.0",
+      name: "Test 1",
+      targetApplications: [{
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "1",
+        maxVersion: "1"
+      }]
+    },
+
+    expected: {
+      appDisabled: false,
+      isPlatformCompatible: true,
+      isActive: true,
+    },
+  },
+
+  // Matches the OS
+  {
+    "install.rdf": {
+      id: "tp-addon2@tests.mozilla.org",
+      version: "1.0",
+      name: "Test 2",
+      targetPlatforms: [
+        "XPCShell",
+        "WINNT_x86",
+        "XPCShell"
+      ],
+      targetApplications: [{
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "1",
+        maxVersion: "1"
+      }]
+    },
+
+    expected: {
+      appDisabled: false,
+      isPlatformCompatible: true,
+      isActive: true,
+    },
+  },
+
+  // Matches the OS and ABI
+  {
+    "install.rdf": {
+      id: "tp-addon3@tests.mozilla.org",
+      version: "1.0",
+      name: "Test 3",
+      targetPlatforms: [
+        "WINNT",
+        "XPCShell_noarch-spidermonkey"
+      ],
+      targetApplications: [{
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "1",
+        maxVersion: "1"
+      }]
+    },
+
+    expected: {
+      appDisabled: false,
+      isPlatformCompatible: true,
+      isActive: true,
+    },
+  },
+
+  // Doesn't match
+  {
+    "install.rdf": {
+      id: "tp-addon4@tests.mozilla.org",
+      version: "1.0",
+      name: "Test 4",
+      targetPlatforms: [
+        "WINNT_noarch-spidermonkey",
+        "Darwin",
+        "WINNT_noarch-spidermonkey"
+      ],
+      targetApplications: [{
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "1",
+        maxVersion: "1"
+      }]
+    },
+
+    expected: {
+      appDisabled: true,
+      isPlatformCompatible: false,
+      isActive: false,
+    },
+  },
+
+  // Matches the OS but since a different entry specifies ABI this doesn't match.
+  {
+    "install.rdf": {
+      id: "tp-addon5@tests.mozilla.org",
+      version: "1.0",
+      name: "Test 5",
+      targetPlatforms: [
+        "XPCShell",
+        "XPCShell_foo"
+      ],
+      targetApplications: [{
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "1",
+        maxVersion: "1"
+      }]
+    },
+
+    expected: {
+      appDisabled: true,
+      isPlatformCompatible: false,
+      isActive: false,
+    },
+  },
 ];
 
 const IDS = ADDONS.map(a => a["install.rdf"].id);
