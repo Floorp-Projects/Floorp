@@ -10,7 +10,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"

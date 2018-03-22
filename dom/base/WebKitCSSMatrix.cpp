@@ -10,7 +10,6 @@
 #include "mozilla/dom/WebKitCSSMatrixBinding.h"
 #include "mozilla/Preferences.h"
 #include "nsPresContext.h"
-#include "RuleNodeCacheConditions.h"
 #include "nsGlobalWindowInner.h"
 
 namespace mozilla {

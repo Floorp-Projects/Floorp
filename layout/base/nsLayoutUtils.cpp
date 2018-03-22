@@ -115,7 +115,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"

@@ -12,7 +12,6 @@
 #include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/ServoCSSParser.h"
 #include "nsCSSParser.h"
 #include "nsGlobalWindowInner.h"
