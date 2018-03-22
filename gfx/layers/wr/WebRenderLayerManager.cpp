@@ -326,8 +326,6 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
 
   MakeSnapshotIfRequired(size);
   mNeedsComposite = false;
-
-  ClearDisplayItemLayers();
 }
 
 void

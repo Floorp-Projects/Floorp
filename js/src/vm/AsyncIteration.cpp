@@ -83,8 +83,8 @@ js::WrapAsyncGeneratorWithProto(JSContext* cx, HandleFunction unwrapped, HandleO
     if (!wrapped)
         return nullptr;
 
-    if (unwrapped->hasCompileTimeName())
-        wrapped->setCompileTimeName(unwrapped->compileTimeName());
+    if (unwrapped->hasInferredName())
+        wrapped->setInferredName(unwrapped->inferredName());
 
     // Link them to each other to make GetWrappedAsyncGenerator and
     // GetUnwrappedAsyncGenerator work.

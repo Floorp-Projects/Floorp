@@ -1143,14 +1143,17 @@ public:
   public:
     TracksAvailableCallback(MediaManager* aManager,
                             const nsMainThreadPtrHandle<nsIDOMGetUserMediaSuccessCallback>& aSuccess,
-                            uint64_t aWindowID,
+                            const RefPtr<GetUserMediaWindowListener>& aWindowListener,
                             DOMMediaStream* aStream)
-      : mWindowID(aWindowID), mOnSuccess(aSuccess), mManager(aManager),
-        mStream(aStream) {}
+      : mWindowListener(aWindowListener),
+        mOnSuccess(aSuccess),
+        mManager(aManager),
+        mStream(aStream)
+    {}
     void NotifyTracksAvailable(DOMMediaStream* aStream) override
     {
-      // We're in the main thread, so no worries here.
-      if (!(mManager->IsWindowStillActive(mWindowID))) {
+      // We're on the main thread, so no worries here.
+      if (!mManager->IsWindowListenerStillActive(mWindowListener)) {
         return;
       }
 
@@ -1163,7 +1166,7 @@ public:
       LOG(("Returning success for getUserMedia()"));
       mOnSuccess->OnSuccess(aStream);
     }
-    uint64_t mWindowID;
+    RefPtr<GetUserMediaWindowListener> mWindowListener;
     nsMainThreadPtrHandle<nsIDOMGetUserMediaSuccessCallback> mOnSuccess;
     RefPtr<MediaManager> mManager;
     // Keep the DOMMediaStream alive until the NotifyTracksAvailable callback
@@ -1187,10 +1190,8 @@ public:
 
     // We're on main-thread, and the windowlist can only
     // be invalidated from the main-thread (see OnNavigation)
-    GetUserMediaWindowListener* listener =
-      mManager->GetWindowListener(mWindowID);
-    if (!listener || !window || !window->GetExtantDoc()) {
-      // This window is no longer live.  mListener has already been removed
+    if (!mManager->IsWindowListenerStillActive(mWindowListener)) {
+      // This window is no longer live. mListener has already been removed.
       return NS_OK;
     }
 
@@ -1421,7 +1422,7 @@ public:
         MakeAndAddRef<Callback>(
           new TracksAvailableCallback(mManager,
                                       mOnSuccess,
-                                      mWindowID,
+                                      mWindowListener,
                                       domStream))));
 
     // Dispatch to the media thread to ask it to start the sources,
@@ -3261,6 +3262,13 @@ MediaManager::RemoveWindowID(uint64_t aWindowId)
   obs->NotifyObservers(nullptr, "recording-window-ended", data.get());
   LOG(("Sent recording-window-ended for window %" PRIu64 " (outer %" PRIu64 ")",
        aWindowId, outerID));
+}
+
+bool
+MediaManager::IsWindowListenerStillActive(GetUserMediaWindowListener* aListener)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aListener);
+  return aListener && aListener == GetWindowListener(aListener->WindowID());
 }
 
 void

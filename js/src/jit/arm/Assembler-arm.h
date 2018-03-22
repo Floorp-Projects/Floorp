@@ -1143,6 +1143,33 @@ PatchBackedge(CodeLocationJump& jump_, CodeLocationLabel label, JitZoneGroup::Ba
     PatchJump(jump_, label);
 }
 
+class InstructionIterator
+{
+  private:
+    Instruction* inst_;
+
+  public:
+    explicit InstructionIterator(Instruction* inst)
+      : inst_(inst)
+    {
+        maybeSkipAutomaticInstructions();
+    }
+
+    // Advances to the next intentionally-inserted instruction.
+    Instruction* next();
+
+    // Advances past any automatically-inserted instructions.
+    Instruction* maybeSkipAutomaticInstructions();
+
+    Instruction* cur() const {
+        return inst_;
+    }
+
+  protected:
+    // Advances past the given number of instruction-length bytes.
+    inline void advanceRaw(ptrdiff_t instructions = 1);
+};
+
 class Assembler;
 typedef js::jit::AssemblerBufferWithConstantPools<1024, 4, Instruction, Assembler> ARMBuffer;
 
@@ -1342,8 +1369,6 @@ class Assembler : public AssemblerShared
 
     static DoubleCondition InvertCondition(DoubleCondition cond);
 
-    // MacroAssemblers hold onto gcthings, so they are traced by the GC.
-    void trace(JSTracer* trc);
     void writeRelocation(BufferOffset src) {
         jumpRelocations_.writeUnsigned(src.getOffset());
     }
@@ -1376,8 +1401,8 @@ class Assembler : public AssemblerShared
     static const uint32_t* GetCF32Target(Iter* iter);
 
     static uintptr_t GetPointer(uint8_t*);
-    template <class Iter>
-    static const uint32_t* GetPtr32Target(Iter iter, Register* dest = nullptr, RelocStyle* rs = nullptr);
+    static const uint32_t* GetPtr32Target(InstructionIterator iter, Register* dest = nullptr,
+                                          RelocStyle* rs = nullptr);
 
     bool oom() const;
 
@@ -1739,6 +1764,14 @@ class Assembler : public AssemblerShared
     static void TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
     static void TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
 
+    void assertNoGCThings() const {
+#ifdef DEBUG
+        MOZ_ASSERT(dataRelocations_.length() == 0);
+        for (auto& j : jumps_)
+            MOZ_ASSERT(j.kind() == Relocation::HARDCODED);
+#endif
+    }
+
     static bool SupportsFloatingPoint() {
         return HasVFP();
     }
@@ -2016,6 +2049,12 @@ class Instruction
 // Make sure that it is the right size.
 JS_STATIC_ASSERT(sizeof(Instruction) == 4);
 
+inline void
+InstructionIterator::advanceRaw(ptrdiff_t instructions)
+{
+    inst_ = inst_ + instructions;
+}
+
 // Data Transfer Instructions.
 class InstDTR : public Instruction
 {
@@ -2254,41 +2293,6 @@ class InstMOV : public InstALU
   public:
     static bool IsTHIS (const Instruction& i);
     static InstMOV* AsTHIS (const Instruction& i);
-};
-
-class InstructionIterator
-{
-  private:
-    Instruction* inst_;
-
-  public:
-    explicit InstructionIterator(Instruction* inst)
-      : inst_(inst)
-    {
-        maybeSkipAutomaticInstructions();
-    }
-
-    // Advances to the next intentionally-inserted instruction.
-    Instruction* next();
-
-    // Advances past any automatically-inserted instructions.
-    Instruction* maybeSkipAutomaticInstructions();
-
-    Instruction* cur() const {
-        return inst_;
-    }
-
-  protected:
-    // Advances past the given number of instruction-length bytes.
-    void advanceRaw(ptrdiff_t instructions = 1) {
-        inst_ = inst_ + instructions;
-    }
-
-    // Look ahead, including automatically-inserted instructions
-    // and PoolHeaders.
-    Instruction* peekRaw(ptrdiff_t instructions = 1) const {
-        return inst_ + instructions;
-    }
 };
 
 // Compile-time iterator over instructions, with a safe interface that

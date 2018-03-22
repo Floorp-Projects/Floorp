@@ -251,7 +251,7 @@ JitRuntime::initialize(JSContext* cx, AutoLockForExclusiveAccess& lock)
     if (!functionWrappers_ || !functionWrappers_->init())
         return false;
 
-    MacroAssembler masm;
+    StackMacroAssembler masm;
 
     Label bailoutTail;
     JitSpew(JitSpew_Codegen, "# Emitting bailout tail stub");
@@ -575,12 +575,6 @@ LinkBackgroundCodeGen(JSContext* cx, IonBuilder* builder)
         return false;
 
     JitContext jctx(cx, &builder->alloc());
-
-    // Root the assembler until the builder is finished below. As it was
-    // constructed off thread, the assembler has not been rooted previously,
-    // though any GC activity would discard the builder.
-    MacroAssembler::AutoRooter masm(cx, &codegen->masm);
-
     return LinkCodeGen(cx, builder, codegen);
 }
 

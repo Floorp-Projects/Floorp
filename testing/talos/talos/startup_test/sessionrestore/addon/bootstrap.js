@@ -16,23 +16,13 @@ ChromeUtils.defineModuleGetter(this, "StartupPerformance",
   "resource:///modules/sessionstore/StartupPerformance.jsm");
 
 // Observer Service topics.
-const STARTUP_TOPIC = "profile-after-change";
 const WINDOW_READY_TOPIC = "browser-delayed-startup-finished";
 
 // Process Message Manager topics.
 const MSG_REQUEST = "session-restore-test?duration";
 const MSG_PROVIDE = "session-restore-test:duration";
 
-function nsSessionRestoreTalosTest() { }
-
-nsSessionRestoreTalosTest.prototype = {
-  classID: Components.ID("{716346e5-0c45-4aa2-b601-da36f3c74bd8}"),
-
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(nsSessionRestoreTalosTest),
-
-  // ////////////////////////////////////////////////////////////////////////////
-  // // nsISupports
-
+const sessionRestoreTest = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
   // ////////////////////////////////////////////////////////////////////////////
@@ -40,9 +30,6 @@ nsSessionRestoreTalosTest.prototype = {
 
   observe: function DS_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case STARTUP_TOPIC:
-        this.init();
-        break;
       case StartupPerformance.RESTORED_TOPIC:
         this.onReady(true);
         break;
@@ -147,7 +134,11 @@ nsSessionRestoreTalosTest.prototype = {
   }
 };
 
-// //////////////////////////////////////////////////////////////////////////////
-// // Module
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsSessionRestoreTalosTest]);
+function startup(data, reason) {
+  sessionRestoreTest.init();
+}
+
+function shutdown(data, reason) {}
+function install(data, reason) {}
+function uninstall(data, reason) {}

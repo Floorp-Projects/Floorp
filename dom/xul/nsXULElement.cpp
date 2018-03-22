@@ -2368,17 +2368,11 @@ nsXULPrototypeElement::SetAttrAt(uint32_t aPos, const nsAString& aValue,
         // TODO: If we implement Content Security Policy for chrome documents
         // as has been discussed, the CSP should be checked here to see if
         // inline styles are allowed to be applied.
-
-        RefPtr<DeclarationBlock> declaration;
-        if (nsLayoutUtils::StyloEnabled() &&
-            nsLayoutUtils::ShouldUseStylo(principal)) {
-          RefPtr<URLExtraData> data =
-            new URLExtraData(aDocumentURI, aDocumentURI, principal);
-          declaration = ServoDeclarationBlock::FromCssText(
-              aValue, data, eCompatibility_FullStandards, nullptr);
-        } else {
-          MOZ_CRASH("old style system disabled");
-        }
+        RefPtr<URLExtraData> data =
+          new URLExtraData(aDocumentURI, aDocumentURI, principal);
+        RefPtr<DeclarationBlock> declaration =
+          ServoDeclarationBlock::FromCssText(
+            aValue, data, eCompatibility_FullStandards, nullptr);
         if (declaration) {
             mAttributes[aPos].mValue.SetTo(declaration.forget(), &aValue);
 

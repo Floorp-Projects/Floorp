@@ -123,7 +123,6 @@
 #include "nsSVGUtils.h"
 
 #include "nsRefreshDriver.h"
-#include "nsRuleProcessorData.h"
 #include "nsTextNode.h"
 #include "ActiveLayerTracker.h"
 #include "nsIPresShellInlines.h"
@@ -334,18 +333,6 @@ static int32_t FFWC_doSibling=0;
 static int32_t FFWC_recursions=0;
 static int32_t FFWC_nextInFlows=0;
 #endif
-
-
-// Define this dummy class so there are fewer call sites to change when the old
-// style system code is compiled out.
-class TreeMatchContextHolder
-{
-public:
-  explicit TreeMatchContextHolder(nsIDocument* aDocument) {}
-  bool Exists() const { return false; }
-  operator TreeMatchContext*() { return nullptr; }
-  TreeMatchContext* operator->() { MOZ_CRASH("old style system disabled"); }
-};
 
 
 // Returns true if aFrame is an anonymous flex/grid item.
@@ -840,34 +827,21 @@ public:
 
   nsCOMArray<nsIContent>    mGeneratedTextNodesWithInitializer;
 
-  // Selector matching context for. This is null when we're using the Servo style
-  // system.
-  TreeMatchContext*         mTreeMatchContext;
-
   // Constructor
   // Use the passed-in history state.
-  //
-  // aTreeMatchContext is null when we're using the Servo style system.
   nsFrameConstructorState(
     nsIPresShell* aPresShell,
-    TreeMatchContext* aTreeMatchContext,
     nsContainerFrame* aFixedContainingBlock,
     nsContainerFrame* aAbsoluteContainingBlock,
     nsContainerFrame* aFloatContainingBlock,
     already_AddRefed<nsILayoutHistoryState> aHistoryState);
   // Get the history state from the pres context's pres shell.
   nsFrameConstructorState(nsIPresShell* aPresShell,
-                          TreeMatchContext* aTreeMatchContext,
                           nsContainerFrame* aFixedContainingBlock,
                           nsContainerFrame* aAbsoluteContainingBlock,
                           nsContainerFrame* aFloatContainingBlock);
 
   ~nsFrameConstructorState();
-
-  bool HasAncestorFilter()
-  {
-    return false;
-  }
 
   // Function to push the existing absolute containing block state and
   // create a new scope. Code that uses this function should get matching
@@ -1014,24 +988,8 @@ protected:
   PendingBinding* mCurrentPendingBindingInsertionPoint;
 };
 
-
-namespace mozilla {
-
-class AutoDisplayContentsAncestorPusher
-{
-public:
-  AutoDisplayContentsAncestorPusher(TreeMatchContext& aTreeMatchContext,
-                                    nsPresContext* aPresContext,
-                                    nsIContent* aParent) {}
-  bool IsEmpty() const { return false; }
-};
-
-} // namespace mozilla
-
-
 nsFrameConstructorState::nsFrameConstructorState(
   nsIPresShell* aPresShell,
-  TreeMatchContext* aTreeMatchContext,
   nsContainerFrame* aFixedContainingBlock,
   nsContainerFrame* aAbsoluteContainingBlock,
   nsContainerFrame* aFloatContainingBlock,
@@ -1058,7 +1016,6 @@ nsFrameConstructorState::nsFrameConstructorState(
     mFixedPosIsAbsPos(aFixedContainingBlock == aAbsoluteContainingBlock),
     mHavePendingPopupgroup(false),
     mCreatingExtraFrames(false),
-    mTreeMatchContext(aTreeMatchContext),
     mCurrentPendingBindingInsertionPoint(nullptr)
 {
 #ifdef MOZ_XUL
@@ -1071,12 +1028,10 @@ nsFrameConstructorState::nsFrameConstructorState(
 }
 
 nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
-                                                 TreeMatchContext* aTreeMatchContext,
                                                  nsContainerFrame* aFixedContainingBlock,
                                                  nsContainerFrame* aAbsoluteContainingBlock,
                                                  nsContainerFrame* aFloatContainingBlock)
   : nsFrameConstructorState(aPresShell,
-                            aTreeMatchContext,
                             aFixedContainingBlock,
                             aAbsoluteContainingBlock,
                             aFloatContainingBlock,
@@ -1884,10 +1839,8 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   // Probe for the existence of the pseudo-element
   RefPtr<nsStyleContext> pseudoStyleContext;
   pseudoStyleContext =
-    styleSet->ProbePseudoElementStyle(aParentContent,
-                                      aPseudoElement,
-                                      aStyleContext,
-                                      aState.mTreeMatchContext);
+    styleSet->ProbePseudoElementStyle(aParentContent, aPseudoElement,
+                                      aStyleContext);
   if (!pseudoStyleContext)
     return;
 
@@ -2478,15 +2431,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   SetUpDocElementContainingBlock(aDocElement);
 
   NS_ASSERTION(mDocElementContainingBlock, "Should have parent by now");
-
-  TreeMatchContextHolder matchContext(mDocument);
-  // Initialize the ancestor filter with null for now; we'll push
-  // aDocElement once we finish resolving style for it.
-  if (matchContext.Exists()) {
-    matchContext->InitAncestors(nullptr);
-  }
   nsFrameConstructorState state(mPresShell,
-                                matchContext,
                                 GetAbsoluteContainingBlock(mDocElementContainingBlock, FIXED_POS),
                                 nullptr,
                                 nullptr, do_AddRef(aFrameState));
@@ -2514,13 +2459,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     }
   }
 
-  // FIXME: Should this use ResolveStyleContext?  (The calls in this
-  // function are the only case in nsCSSFrameConstructor where we don't
-  // do so for the construction of a style context for an element.)
   RefPtr<nsStyleContext> styleContext =
-    mPresShell->StyleSet()->ResolveStyleFor(aDocElement,
-                                            nullptr,
-                                            LazyComputeBehavior::Assert);
+    mPresShell->StyleSet()->AsServo()->ResolveServoStyle(aDocElement);
 
   const nsStyleDisplay* display = styleContext->StyleDisplay();
 
@@ -2552,11 +2492,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     }
 
     if (resolveStyle) {
-      // FIXME: Should this use ResolveStyleContext?  (The calls in this
-      // function are the only case in nsCSSFrameConstructor where we don't do
-      // so for the construction of a style context for an element.)
-      styleContext = mPresShell->StyleSet()->ResolveStyleFor(
-          aDocElement, nullptr, LazyComputeBehavior::Assert);
+      styleContext =
+        mPresShell->StyleSet()->AsServo()->ResolveServoStyle(aDocElement);
       display = styleContext->StyleDisplay();
     }
   }
@@ -2572,9 +2509,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     RegisterDisplayNoneStyleFor(aDocElement, styleContext);
     return nullptr;
   }
-
-  TreeMatchContext::AutoAncestorPusher ancestorPusher(state.mTreeMatchContext);
-  ancestorPusher.PushAncestor(aDocElement);
 
   // Make sure to start any background image loads for the root element now.
   styleContext->StartBackgroundImageLoads();
@@ -2929,8 +2863,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
   RefPtr<nsStyleContext> rootPseudoStyle;
   // we must create a state because if the scrollbars are GFX it needs the
   // state to build the scrollbar frames.
-  TreeMatchContextHolder matchContext(mDocument);
-  nsFrameConstructorState state(mPresShell, matchContext, nullptr, nullptr, nullptr);
+  nsFrameConstructorState state(mPresShell, nullptr, nullptr, nullptr);
 
   // Start off with the viewport as parent; we'll adjust it as needed.
   nsContainerFrame* parentFrame = viewportFrame;
@@ -3940,45 +3873,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   }
 
   nsIContent* const content = aItem.mContent;
-  nsIContent* parent = content->GetParent();
-
-  // Push display:contents ancestors.
-  Maybe<AutoDisplayContentsAncestorPusher> adcp;
-  if (aState.mTreeMatchContext) {
-    adcp.emplace(*aState.mTreeMatchContext, aState.mPresContext, parent);
-  } else {
-    MOZ_ASSERT(content->IsStyledByServo());
-  }
-
-  // Get the parent of the content and check if it is a XBL children element.
-  // Push the children element as an ancestor here because it does
-  // not have a frame and would not otherwise be pushed as an ancestor. It is
-  // necessary to do so in order to correctly handle style resolution on
-  // descendants.  (If !adcp.IsEmpty() then it was already pushed by
-  // AutoDisplayContentsAncestorPusher above.)
-  TreeMatchContext::AutoAncestorPusher
-    insertionPointPusher(aState.mTreeMatchContext);
-  if (adcp.isSome() && adcp->IsEmpty() && parent &&
-      parent->IsActiveChildrenElement()) {
-    if (aState.HasAncestorFilter()) {
-      insertionPointPusher.PushAncestor(parent);
-    }
-  }
-
-  // Push the content as a style ancestor now, so we don't have to do
-  // it in our various full-constructor functions.  In particular,
-  // since a number of full-constructor functions don't actually call
-  // ProcessChildren in some cases (e.g. for CSS anonymous table boxes
-  // or for situations where only anonymouse children are having
-  // frames constructed), this is the best place to bottleneck the
-  // pushing of the content instead of having to do it in multiple
-  // places.
-  TreeMatchContext::AutoAncestorPusher
-    ancestorPusher(aState.mTreeMatchContext);
-  if (aState.HasAncestorFilter()) {
-    ancestorPusher.PushAncestor(content);
-  }
-
   nsIFrame* newFrame;
   nsIFrame* primaryFrame;
   nsStyleContext* const styleContext = aItem.mStyleContext;
@@ -4708,11 +4602,6 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
   DebugOnly<nsresult> rv = GetAnonymousContent(aContent, gfxScrollFrame, scrollNAC);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (scrollNAC.Length() > 0) {
-    TreeMatchContext::AutoAncestorPusher ancestorPusher(aState.mTreeMatchContext);
-    if (aState.HasAncestorFilter()) {
-      ancestorPusher.PushAncestor(aContent->AsElement());
-    }
-
     AutoFrameConstructionItemList items(this);
     AddFCItemsForAnonymousContent(aState, gfxScrollFrame, scrollNAC, items);
     ConstructFramesFromItemList(aState, items, gfxScrollFrame,
@@ -5132,109 +5021,34 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
 }
 
 already_AddRefed<nsStyleContext>
-nsCSSFrameConstructor::ResolveStyleContext(nsIFrame*         aParentFrame,
-                                           nsIContent*       aContainer,
-                                           nsIContent*       aChild,
-                                           nsFrameConstructorState* aState)
+nsCSSFrameConstructor::ResolveStyleContext(nsIContent* aContent)
 {
-  MOZ_ASSERT(aContainer, "Must have parent here");
-  // XXX uncomment when bug 1089223 is fixed:
-  // MOZ_ASSERT(aContainer == aChild->GetFlattenedTreeParent());
-  nsStyleContext* parentStyleContext = GetDisplayContentsStyleFor(aContainer);
-  if (MOZ_LIKELY(!parentStyleContext)) {
-    aParentFrame = nsFrame::CorrectStyleParentFrame(aParentFrame, nullptr);
-    if (aParentFrame) {
-      MOZ_ASSERT(aParentFrame->GetContent() == aContainer);
-      // Resolve the style context based on the content object and the parent
-      // style context
-      parentStyleContext = aParentFrame->StyleContext();
-    } else {
-      // Perhaps aParentFrame is a canvasFrame and we're replicating
-      // fixed-pos frames.
-      // XXX should we create a way to tell ConstructFrame which style
-      // context to use, and pass it the style context for the
-      // previous page's fixed-pos frame?
-    }
-  }
+  ServoStyleSet* styleSet = mPresShell->StyleSet()->AsServo();
 
-  return ResolveStyleContext(parentStyleContext, aChild, aState);
-}
-
-already_AddRefed<nsStyleContext>
-nsCSSFrameConstructor::ResolveStyleContext(nsIFrame*          aParentFrame,
-                                           nsIContent*              aChild,
-                                           nsFrameConstructorState* aState)
-{
-  return ResolveStyleContext(aParentFrame, aChild->GetFlattenedTreeParent(), aChild, aState);
-}
-
-already_AddRefed<nsStyleContext>
-nsCSSFrameConstructor::ResolveStyleContext(const InsertionPoint&    aInsertion,
-                                           nsIContent*              aChild,
-                                           nsFrameConstructorState* aState)
-{
-  return ResolveStyleContext(aInsertion.mParentFrame, aInsertion.mContainer,
-                             aChild, aState);
-}
-
-already_AddRefed<nsStyleContext>
-nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
-                                           nsIContent* aContent,
-                                           nsFrameConstructorState* aState,
-                                           Element* aOriginatingElementOrNull)
-{
-  StyleSetHandle styleSet = mPresShell->StyleSet();
-
-  RefPtr<nsStyleContext> result;
   if (aContent->IsElement()) {
-    auto pseudoType = aContent->AsElement()->GetPseudoElementType();
-    if (pseudoType == CSSPseudoElementType::NotPseudo) {
-      MOZ_ASSERT(!aOriginatingElementOrNull);
-      if (aState) {
-        result = styleSet->ResolveStyleFor(aContent->AsElement(),
-                                           aParentStyleContext,
-                                           LazyComputeBehavior::Assert,
-                                           aState->mTreeMatchContext);
-      } else {
-        result = styleSet->ResolveStyleFor(aContent->AsElement(),
-                                           aParentStyleContext,
-                                           LazyComputeBehavior::Assert);
-      }
-    } else {
-      MOZ_ASSERT(aContent->IsInNativeAnonymousSubtree());
-      if (!aOriginatingElementOrNull) {
-        // For pseudo-implementing NAC created by JS using the ChromeOnly
-        // document.createElement(..., { pseudo: ... }) API, we find the
-        // originating element by lookup the tree until we find a non-NAC
-        // ancestor.  (These are the correct semantics for C++-generated pseudo-
-        // implementing NAC as well, but for those cases we already have a
-        // correct originating element passed in.)
-        MOZ_ASSERT(nsCSSPseudoElements::PseudoElementIsJSCreatedNAC(pseudoType));
-        aOriginatingElementOrNull =
-          nsContentUtils::GetClosestNonNativeAnonymousAncestor(aContent->AsElement());
-      }
-      MOZ_ASSERT(aOriginatingElementOrNull);
-      result = styleSet->ResolvePseudoElementStyle(aOriginatingElementOrNull,
-                                                   pseudoType,
-                                                   aParentStyleContext,
-                                                   aContent->AsElement());
-    }
-  } else {
-    MOZ_ASSERT(!aOriginatingElementOrNull);
-    NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
-                 "shouldn't waste time creating style contexts for "
-                 "comments and processing instructions");
-    result = styleSet->ResolveStyleForText(aContent, aParentStyleContext);
+    return styleSet->ResolveServoStyle(aContent->AsElement());
   }
 
-  // ServoRestyleManager does not handle transitions yet, and when it does
-  // it probably won't need to track reframed style contexts to start
-  // transitions correctly.
-  if (RestyleManager()->IsGecko()) {
-    MOZ_CRASH("old style system disabled");
-  }
+  MOZ_ASSERT(aContent->IsNodeOfType(nsINode::eTEXT),
+             "shouldn't waste time creating style contexts for "
+             "comments and processing instructions");
 
-  return result.forget();
+  Element* parent = aContent->GetFlattenedTreeParentElement();
+  MOZ_ASSERT(parent, "Text out of the flattened tree?");
+
+  // FIXME(emilio): We can't use ResolveServoStyle properly because this text
+  // node can come from non-lazy frame construction, in which case the style we
+  // inherit from can indeed be out-of-date. After an eventual XBL removal, this
+  // can go. Note that this is not a correctness issue, since we'll restyle
+  // later in any case.
+  //
+  // Also, this probably doesn't need to be a strong ref...
+  //
+  // Do NOT add new callers to this function in this file, ever, or I'll find
+  // out.
+  RefPtr<ServoStyleContext> parentStyle =
+    Servo_Element_GetPrimaryComputedValues(parent).Consume();
+  return styleSet->ResolveStyleForText(aContent, parentStyle);
 }
 
 // MathML Mod - RBS
@@ -5826,8 +5640,7 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
   if (!ShouldCreateItemsForChild(aState, aContent, parentFrame)) {
     return;
   }
-  RefPtr<nsStyleContext> styleContext =
-    ResolveStyleContext(aInsertion, aContent, &aState);
+  RefPtr<nsStyleContext> styleContext = ResolveStyleContext(aContent);
   DoAddFrameConstructionItems(aState, aContent, styleContext,
                               aSuppressWhiteSpaceOptimizations, parentFrame,
                               nullptr, aItems);
@@ -6084,11 +5897,6 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
                                                                     styleContext);
     }
 
-    TreeMatchContext::AutoAncestorPusher ancestorPusher(aState.mTreeMatchContext);
-    if (aState.HasAncestorFilter()) {
-      ancestorPusher.PushAncestor(aContent->AsElement());
-    }
-
     if (aParentFrame) {
       aParentFrame->AddStateBits(NS_FRAME_MAY_HAVE_GENERATED_CONTENT);
     }
@@ -6102,22 +5910,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
         continue;
       }
 
-      // Get the parent of the content and check if it is a XBL children element
-      // (if the content is a children element then parent != aContent because the
-      // FlattenedChildIterator will transitively iterate through <xbl:children>
-      // for default content). Push the children element as an ancestor here because
-      // it does not have a frame and would not otherwise be pushed as an ancestor.
-      nsIContent* parent = child->GetParent();
-      MOZ_ASSERT(parent, "Parent must be non-null because we are iterating children.");
-      TreeMatchContext::AutoAncestorPusher ancestorPusher(aState.mTreeMatchContext);
-      if (parent != aContent && parent->IsElement()) {
-        if (aState.HasAncestorFilter()) {
-          ancestorPusher.PushAncestor(parent->AsElement());
-        }
-      }
-
-      RefPtr<nsStyleContext> childContext =
-        ResolveStyleContext(styleContext, child, &aState);
+      RefPtr<nsStyleContext> childContext = ResolveStyleContext(child);
       DoAddFrameConstructionItems(aState, child, childContext,
                                   aSuppressWhiteSpaceOptimizations,
                                   aParentFrame, aAnonChildren, aItems);
@@ -6660,25 +6453,14 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
       LayoutFrameType::Menu == parentType) {
     // if we haven't already, construct a style context to find the display type of aContent
     if (UNSET_DISPLAY == aDisplay) {
-      nsIFrame* styleParent;
-      aSibling->GetParentStyleContext(&styleParent);
-      if (!styleParent) {
-        styleParent = aSibling->GetParent();
-      }
-      if (!styleParent) {
-        NS_NOTREACHED("Shouldn't happen");
-        return false;
-      }
       if (aContent->IsNodeOfType(nsINode::eCOMMENT) ||
           aContent->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION)) {
         // Comments and processing instructions never have frames, so we
         // should not try to generate style contexts for them.
         return false;
       }
-      // XXXbz when this code is killed, the state argument to
-      // ResolveStyleContext can be made non-optional.
-      RefPtr<nsStyleContext> styleContext =
-        ResolveStyleContext(styleParent, aContent, nullptr);
+      // FIXME(emilio): This is buggy some times, see bug 1424656.
+      RefPtr<nsStyleContext> styleContext = ResolveStyleContext(aContent);
       const nsStyleDisplay* display = styleContext->StyleDisplay();
       aDisplay = display->mDisplay;
     }
@@ -7226,7 +7008,7 @@ nsCSSFrameConstructor::IssueSingleInsertNofications(nsIContent* aContainer,
 
     // Call ContentRangeInserted with this node.
     ContentRangeInserted(aContainer, child, child->GetNextSibling(),
-                         mTempFrameTreeState, InsertionKind::Sync, nullptr);
+                         mTempFrameTreeState, InsertionKind::Sync);
   }
 }
 
@@ -7362,11 +7144,8 @@ nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
 void
 nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
                                        nsIContent* aFirstNewContent,
-                                       InsertionKind aInsertionKind,
-                                       TreeMatchContext* aProvidedTreeMatchContext)
+                                       InsertionKind aInsertionKind)
 {
-  MOZ_ASSERT(!aProvidedTreeMatchContext ||
-             aInsertionKind == InsertionKind::Sync);
   MOZ_ASSERT(aInsertionKind == InsertionKind::Sync ||
              !RestyleManager()->IsInStyleRefresh());
 
@@ -7533,18 +7312,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   }
 
   // Create some new frames
-  //
-  // We use the provided tree match context, or create a new one on the fly
-  // otherwise.
-  Maybe<TreeMatchContext> matchContext;
-  if (!aProvidedTreeMatchContext && !aContainer->IsStyledByServo()) {
-    // We use GetParentElementCrossingShadowRoot to handle the case where
-    // aContainer is a ShadowRoot.
-    matchContext.emplace(mDocument, TreeMatchContext::ForFrameConstruction);
-    matchContext->InitAncestors(aFirstNewContent->GetParentElementCrossingShadowRoot());
-  }
   nsFrameConstructorState state(mPresShell,
-                                matchContext.ptrOr(aProvidedTreeMatchContext),
                                 GetAbsoluteContainingBlock(parentFrame, FIXED_POS),
                                 GetAbsoluteContainingBlock(parentFrame, ABS_POS),
                                 containingBlock);
@@ -7763,11 +7531,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
                                             nsIContent* aStartChild,
                                             nsIContent* aEndChild,
                                             nsILayoutHistoryState* aFrameState,
-                                            InsertionKind aInsertionKind,
-                                            TreeMatchContext* aProvidedTreeMatchContext)
+                                            InsertionKind aInsertionKind)
 {
-  MOZ_ASSERT(!aProvidedTreeMatchContext ||
-             aInsertionKind == InsertionKind::Sync);
   MOZ_ASSERT(aInsertionKind == InsertionKind::Sync ||
              !RestyleManager()->IsInStyleRefresh());
 
@@ -8010,15 +7775,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     return;
   }
 
-  Maybe<TreeMatchContext> matchContext;
-  if (!aProvidedTreeMatchContext && !aContainer->IsStyledByServo()) {
-    // We use GetParentElementCrossingShadowRoot to handle the case where
-    // aContainer is a ShadowRoot.
-    matchContext.emplace(mDocument, TreeMatchContext::ForFrameConstruction);
-    matchContext->InitAncestors(aStartChild->GetParentElementCrossingShadowRoot());
-  }
   nsFrameConstructorState state(mPresShell,
-                                matchContext.ptrOr(aProvidedTreeMatchContext),
                                 GetAbsoluteContainingBlock(insertion.mParentFrame, FIXED_POS),
                                 GetAbsoluteContainingBlock(insertion.mParentFrame, ABS_POS),
                                 GetFloatContainingBlock(insertion.mParentFrame),
@@ -8840,9 +8597,7 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell*     aPresShell,
       nsTableRowGroupFrame*   headerFooterFrame;
       nsFrameItems            childItems;
 
-      TreeMatchContextHolder matchContext(mDocument);
       nsFrameConstructorState state(mPresShell,
-                                    matchContext,
                                     GetAbsoluteContainingBlock(newFrame, FIXED_POS),
                                     GetAbsoluteContainingBlock(newFrame, ABS_POS),
                                     nullptr);
@@ -9115,9 +8870,7 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
   // This should not normally be possible (because fixed-pos elements should
   // be absolute containers) but fixed-pos tables currently aren't abs-pos
   // containers.
-  TreeMatchContextHolder matchContext(mDocument);
   nsFrameConstructorState state(mPresShell,
-                                matchContext,
                                 aParentFrame,
                                 nullptr,
                                 mRootElementFrame);
@@ -9591,8 +9344,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
         // because the frames will already have been built.
         ContentRangeInserted(container, aContent, aContent->GetNextSibling(),
                              mTempFrameTreeState,
-                             aInsertionKind,
-                             nullptr);
+                             aInsertionKind);
       }
     }
   }
@@ -10581,116 +10333,12 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
                !content->IsNodeOfType(nsINode::ePROCESSING_INSTRUCTION),
                "Why is someone creating garbage anonymous content");
 
-    RefPtr<nsStyleContext> styleContext;
-    Maybe<TreeMatchContext::AutoParentDisplayBasedStyleFixupSkipper>
-      parentDisplayBasedStyleFixupSkipper;
-    MOZ_ASSERT(aState.mTreeMatchContext || content->IsStyledByServo());
-    if (aState.mTreeMatchContext) {
-      parentDisplayBasedStyleFixupSkipper.emplace(*aState.mTreeMatchContext);
-    }
-
     // Make sure we eagerly performed the servo cascade when the anonymous
     // nodes were created.
     MOZ_ASSERT(!content->IsStyledByServo() || !content->IsElement() ||
                content->AsElement()->HasServoData());
 
-    // Determine whether this NAC is pseudo-implementing.
-    nsAtom* pseudo = nullptr;
-    if (content->IsElement()) {
-      auto pseudoType = content->AsElement()->GetPseudoElementType();
-      if (pseudoType != CSSPseudoElementType::NotPseudo) {
-        pseudo = nsCSSPseudoElements::GetPseudoAtom(pseudoType);
-      }
-    }
-
-    // Determine the appropriate parent style for this NAC, and if the NAC
-    // implements a pseudo-element, the appropriate originating element
-    // (that is to say, the element to the left of the ::pseudo-element in
-    // the selector). This is all rather tricky, and merits some discussion.
-    //
-    // First, it's important to note that author stylesheets generally do not
-    // apply to elements in native-anonymous subtrees. The exceptions to
-    // this are web-exposed pseudo-elements, where authors can style the
-    // pseudo-implementing NAC if the originating element is not itself in a NAC
-    // subtree.
-    //
-    // For this reason, it's very important that we avoid using a style parent
-    // that is inside a NAC subtree together with an originating element that
-    // is not inside a NAC subtree, since that would allow authors to
-    // explicitly inherit styles from internal elements, potentially making
-    // the NAC hierarchy observable. To ensure this, and generally simplify
-    // things, we always set the originating element to the style parent.
-    //
-    // As a consequence of the above, all web-exposed pseudo-elements (which,
-    // by definition, must have a content-accessible originating element) must
-    // also inherit style from that same content-accessible element. To avoid
-    // unintuitive behavior differences between NAC elements that do and don't
-    // correspond to web-exposed pseudo-elements, we follow this protocol for
-    // all NAC, pseudo-implementing or not.
-    //
-    // However, things get tricky with the <video> element, where we have a
-    // bunch of XBL-generated anonymous content descending from a native-
-    // anonymous XULElement. The XBL elements inherit style from their
-    // flattened tree parent, because that's how XBL works. But then we need
-    // to figure out what to do when one of those anonymous XBL elements
-    // (like an <input> element) generates its own (possibly pseudo-element-
-    // implementing) NAC.
-    //
-    // In this case, we inherit style from the XBL-generated NAC-creating
-    // element, rather than the <video> element. There are a number of good
-    // reasons for this. First, inheriting from the great-grandparent while
-    // the parent inherits from the grandparent would be bizarre at best.
-    // Second, exposing pseudo-elements from elements within our particular
-    // XBL implementation would allow content styles to (un)intentionally
-    // alter the video controls, which would be very bad. Third, our UA
-    // stylesheets have selectors like:
-    //
-    // input[type=range][orient=horizontal]::-moz-range-track
-    //
-    // and we need to make sure that the originating element is the <input>,
-    // not the <video>, because that's where the |orient| attribute lives.
-    //
-    // The upshot of all of this is that, to find the style parent (and
-    // originating element, if applicable), we walk up our parent chain to the
-    // first element that is not itself NAC (distinct from whether it happens
-    // to be in a NAC subtree).
-    //
-    // The one exception to all of this is scrollbar content, which we parent
-    // directly to the scrollframe. This is because the special-snowflake
-    // construction of scroll frames doesn't result in the placeholder frame
-    // being constructed until later, which means that GetInFlowParent() doesn't
-    // work right in the case of out-of-flow scrollframes.
-    //
-    // To implement all this, we need to pass the correct parent style context
-    // here because SetPrimaryFrame() may not have been called on the content
-    // yet and thus ResolveStyleContext can't find it otherwise.
-    //
-    // We don't need to worry about display:contents here, because such
-    // elements don't get a frame and thus can't generate NAC. But we do need
-    // to worry about anonymous boxes, which CorrectStyleParentFrame handles
-    // for us.
-    nsIFrame* inheritFrame = aFrame;
-    if (!content->IsNativeScrollbarContent()) {
-      while (inheritFrame->GetContent()->IsNativeAnonymous()) {
-        inheritFrame = inheritFrame->GetInFlowParent();
-      }
-    }
-
-    nsIFrame* styleParentFrame =
-      nsFrame::CorrectStyleParentFrame(inheritFrame, pseudo);
-    // The only way we can not have a style parent now is if inheritFrame is the
-    // canvas frame and we're the NAC parent for all the things added via
-    // nsIDocument::InsertAnonymousContent.
-    MOZ_ASSERT(styleParentFrame || inheritFrame->IsCanvasFrame());
-    // And that anonymous div has no pseudo.
-    MOZ_ASSERT(styleParentFrame || !pseudo);
-
-    Element* originating =
-      pseudo ? styleParentFrame->GetContent()->AsElement() : nullptr;
-    nsStyleContext* parentStyle =
-      styleParentFrame ? styleParentFrame->StyleContext() : nullptr;
-    styleContext =
-      ResolveStyleContext(parentStyle, content, &aState, originating);
+    RefPtr<nsStyleContext> styleContext = ResolveStyleContext(content);
 
     nsTArray<nsIAnonymousContentCreator::ContentInfo>* anonChildren = nullptr;
     if (!aAnonymousItems[i].mChildren.IsEmpty()) {
@@ -10808,15 +10456,6 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
       NS_WARNING("ProcessChildren max depth exceeded");
     }
 
-    // Don't blockify 'display' in ApplyStyleFixups unless aFrame really is
-    // a flex/grid container frame, not just has display:flex/grid.
-    Maybe<TreeMatchContext::AutoParentDisplayBasedStyleFixupSkipper>
-      parentDisplayBasedStyleFixupSkipper;
-    MOZ_ASSERT(aState.mTreeMatchContext || aContent->IsStyledByServo());
-    if (!isFlexOrGridContainer && aState.mTreeMatchContext) {
-      parentDisplayBasedStyleFixupSkipper.emplace(*aState.mTreeMatchContext);
-    }
-
     InsertionPoint insertion(aFrame, nullptr);
     FlattenedChildIterator iter(aContent);
     for (nsIContent* child = iter.GetNextChild(); child; child = iter.GetNextChild()) {
@@ -10826,15 +10465,15 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
       // for default content). Push the children element as an ancestor here because
       // it does not have a frame and would not otherwise be pushed as an ancestor.
       insertion.mContainer = aContent;
+
+
+      // FIXME(emilio): This code can go away, child->GetFlattenedTreeParent()
+      // is always aContent, wtf.
       nsIContent* parent = child->GetParent();
       MOZ_ASSERT(parent, "Parent must be non-null because we are iterating children.");
-      TreeMatchContext::AutoAncestorPusher ancestorPusher(aState.mTreeMatchContext);
       if (parent != aContent && parent->IsElement()) {
         insertion.mContainer = child->GetFlattenedTreeParent();
         MOZ_ASSERT(insertion.mContainer == GetInsertionPoint(child).mContainer);
-        if (aState.HasAncestorFilter()) {
-          ancestorPusher.PushAncestor(parent->AsElement());
-        }
       }
 
       // Frame construction item construction should not post
@@ -11282,9 +10921,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
 
     NS_ASSERTION(aBlockContinuation == GetFloatContainingBlock(aParentFrame),
                  "Containing block is confused");
-    TreeMatchContextHolder matchContext(mDocument);
     nsFrameConstructorState state(mPresShell,
-                                  matchContext,
                                   GetAbsoluteContainingBlock(aParentFrame, FIXED_POS),
                                   GetAbsoluteContainingBlock(aParentFrame, ABS_POS),
                                   aBlockContinuation);
@@ -11669,21 +11306,15 @@ nsCSSFrameConstructor::CreateListBoxContent(nsContainerFrame*      aParentFrame,
 {
 #ifdef MOZ_XUL
   // Construct a new frame
-  if (nullptr != aParentFrame) {
+  if (aParentFrame) {
     nsFrameItems            frameItems;
-    TreeMatchContextHolder matchContext(mDocument);
     nsFrameConstructorState state(mPresShell,
-                                  matchContext,
                                   GetAbsoluteContainingBlock(aParentFrame, FIXED_POS),
                                   GetAbsoluteContainingBlock(aParentFrame, ABS_POS),
                                   GetFloatContainingBlock(aParentFrame),
                                   do_AddRef(mTempFrameTreeState));
 
-    // If we ever initialize the ancestor filter on |state|, make sure
-    // to push the right parent!
-
-    RefPtr<nsStyleContext> styleContext;
-    styleContext = ResolveStyleContext(aParentFrame, aChild, &state);
+    RefPtr<nsStyleContext> styleContext = ResolveStyleContext(aChild);
 
     // Pre-check for display "none" - only if we find that, do we create
     // any frame at all
@@ -12019,11 +11650,6 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
   nsStyleContext* const parentStyleContext = aParentItem.mStyleContext;
   nsIContent* const parentContent = aParentItem.mContent;
 
-  TreeMatchContext::AutoAncestorPusher ancestorPusher(aState.mTreeMatchContext);
-  if (aState.HasAncestorFilter()) {
-    ancestorPusher.PushAncestor(parentContent->AsElement());
-  }
-
   if (!aItemIsWithinSVGText) {
     // Probe for generated content before
     CreateGeneratedContentItem(aState, nullptr, parentContent->AsElement(),
@@ -12050,20 +11676,6 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
     // Use the content tree child list:
     FlattenedChildIterator iter(parentContent);
     for (nsIContent* content = iter.GetNextChild(); content; content = iter.GetNextChild()) {
-      // Get the parent of the content and check if it is a XBL children element
-      // (if the content is a children element then contentParent != parentContent because the
-      // FlattenedChildIterator will transitively iterate through <xbl:children>
-      // for default content). Push the children element as an ancestor here because
-      // it does not have a frame and would not otherwise be pushed as an ancestor.
-      nsIContent* contentParent = content->GetParent();
-      MOZ_ASSERT(contentParent, "Parent must be non-null because we are iterating children.");
-      TreeMatchContext::AutoAncestorPusher insertionPointPusher(aState.mTreeMatchContext);
-      if (contentParent != parentContent && contentParent->IsElement()) {
-        if (aState.HasAncestorFilter()) {
-          insertionPointPusher.PushAncestor(contentParent->AsElement());
-        }
-      }
-
       // Manually check for comments/PIs, since we don't have a frame to pass to
       // AddFrameConstructionItems.  We know our parent is a non-replaced inline,
       // so there is no need to do the NeedFrameFor check.
@@ -12079,8 +11691,7 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
       // ProcessChildren and for the same reason.
       content->UnsetRestyleFlagsIfGecko();
 
-      RefPtr<nsStyleContext> childContext =
-        ResolveStyleContext(parentStyleContext, content, &aState);
+      RefPtr<nsStyleContext> childContext = ResolveStyleContext(content);
 
       AddFrameConstructionItemsInternal(aState, content, nullptr,
                                         content->NodeInfo()->NameAtom(),
@@ -12543,8 +12154,7 @@ nsCSSFrameConstructor::GenerateChildFrames(nsContainerFrame* aFrame)
   {
     nsAutoScriptBlocker scriptBlocker;
     nsFrameItems childItems;
-    TreeMatchContextHolder matchContext(mDocument);
-    nsFrameConstructorState state(mPresShell, matchContext, nullptr, nullptr, nullptr);
+    nsFrameConstructorState state(mPresShell, nullptr, nullptr, nullptr);
     // We don't have a parent frame with a pending binding constructor here,
     // so no need to worry about ordering of the kids' constructors with it.
     // Pass null for the PendingBinding.

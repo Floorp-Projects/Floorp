@@ -117,13 +117,13 @@ function parentFrameScript(mm) {
   function* testSteps() {
     let slice = yield undefined;
 
-    ok(slice instanceof Blob, "Received a Blob");
+    ok(SpecialPowers.call_Instanceof(slice, Blob), "Received a Blob");
     is(slice.size, sliceText.length, "Slice has correct size");
     is(slice.type, blobType, "Slice has correct type");
 
     let reader = new FileReader();
     reader.onload = grabAndContinue;
-    reader.readAsText(slice);
+    SpecialPowers.wrap(reader).readAsText(slice);
     yield undefined;
 
     is(reader.result, sliceText, "Slice has correct data");
@@ -133,7 +133,7 @@ function parentFrameScript(mm) {
   let testGenerator = testSteps();
   testGenerator.next();
 
-  mm.addMessageListener(messageName, function(message) {
+  mm.addMessageListener(messageName, SpecialPowers.wrapCallback(function(message) {
     let data = message.data;
     switch (data.op) {
       case "info": {
@@ -156,7 +156,7 @@ function parentFrameScript(mm) {
         SimpleTest.finish();
       }
     }
-  });
+  }));
 
   mm.loadFrameScript("data:,(" + childFrameScript.toString() + ")();",
                       false);

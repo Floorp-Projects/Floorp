@@ -8,6 +8,7 @@
 #define mozilla_dom_ProcessGlobal_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/MessageManagerGlobal.h"
 #include "nsCOMPtr.h"
 #include "nsFrameMessageManager.h"
 #include "nsIScriptContext.h"
@@ -25,18 +26,26 @@ namespace mozilla {
 namespace dom {
 
 class ProcessGlobal :
-  public nsMessageManagerScriptExecutor,
   public nsIContentProcessMessageManager,
+  public nsMessageManagerScriptExecutor,
   public nsIGlobalObject,
   public nsIScriptObjectPrincipal,
   public nsSupportsWeakReference,
-  public mozilla::dom::ipc::MessageManagerCallback,
+  public ipc::MessageManagerCallback,
+  public MessageManagerGlobal,
   public nsWrapperCache
 {
 public:
   explicit ProcessGlobal(nsFrameMessageManager* aMessageManager);
 
-  using mozilla::dom::ipc::MessageManagerCallback::GetProcessMessageManager;
+  bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                 JS::Handle<jsid> aId,
+                 JS::MutableHandle<JS::PropertyDescriptor> aDesc);
+  static bool MayResolve(jsid aId);
+  void GetOwnPropertyNames(JSContext* aCx, JS::AutoIdVector& aNames,
+                           bool aEnumerableOnly, ErrorResult& aRv);
+
+  using ipc::MessageManagerCallback::GetProcessMessageManager;
 
   bool Init();
 
@@ -44,6 +53,41 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ProcessGlobal, nsIContentProcessMessageManager)
+
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override
+  {
+    MOZ_CRASH("We should never get here!");
+  }
+  virtual bool WrapGlobalObject(JSContext* aCx,
+                                JS::CompartmentOptions& aOptions,
+                                JS::MutableHandle<JSObject*> aReflector) override;
+
+  using MessageManagerGlobal::AddMessageListener;
+  using MessageManagerGlobal::RemoveMessageListener;
+  using MessageManagerGlobal::AddWeakMessageListener;
+  using MessageManagerGlobal::RemoveWeakMessageListener;
+  using MessageManagerGlobal::SendAsyncMessage;
+  using MessageManagerGlobal::GetProcessMessageManager;
+  using MessageManagerGlobal::GetRemoteType;
+  using MessageManagerGlobal::SendSyncMessage;
+  using MessageManagerGlobal::SendRpcMessage;
+  using MessageManagerGlobal::Dump;
+  using MessageManagerGlobal::PrivateNoteIntentionalCrash;
+  using MessageManagerGlobal::Atob;
+  using MessageManagerGlobal::Btoa;
+
+  // ContentProcessMessageManager
+  void GetInitialProcessData(JSContext* aCx,
+                             JS::MutableHandle<JS::Value> aInitialProcessData,
+                             ErrorResult& aError)
+  {
+    if (!mMessageManager) {
+      aError.Throw(NS_ERROR_NULL_POINTER);
+      return;
+    }
+    mMessageManager->GetInitialProcessData(aCx, aInitialProcessData, aError);
+  }
 
   NS_FORWARD_SAFE_NSIMESSAGELISTENERMANAGER(mMessageManager)
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
@@ -55,14 +99,9 @@ public:
 
   virtual JSObject* GetGlobalJSObject() override
   {
-    return mGlobal;
+    return GetWrapper();
   }
   virtual nsIPrincipal* GetPrincipal() override { return mPrincipal; }
-
-  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override
-  {
-    MOZ_CRASH("ProcessGlobal doesn't use DOM bindings!");
-  }
 
   void SetInitialProcessData(JS::HandleValue aInitialData);
 
@@ -71,7 +110,6 @@ protected:
 
 private:
   bool mInitialized;
-  RefPtr<nsFrameMessageManager> mMessageManager;
 };
 
 } // namespace dom

@@ -1577,6 +1577,11 @@ nsWindow::Show(bool bState)
         // speed up the initial paint after show for
         // top level windows:
         syncInvalidate = true;
+
+        // Set the cursor before showing the window to avoid the default wait
+        // cursor.
+        SetCursor(eCursor_standard);
+
         switch (mSizeMode) {
           case nsSizeMode_Fullscreen:
             ::ShowWindow(mWnd, SW_SHOW);

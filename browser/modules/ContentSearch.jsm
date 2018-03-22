@@ -489,9 +489,7 @@ var ContentSearch = {
   },
 
   _broadcast(type, data) {
-    Cc["@mozilla.org/globalmessagemanager;1"].
-      getService(Ci.nsIMessageListenerManager).
-      broadcastAsyncMessage(...this._msgArgs(type, data));
+    Services.mm.broadcastAsyncMessage(...this._msgArgs(type, data));
   },
 
   _msgArgs(type, data) {
