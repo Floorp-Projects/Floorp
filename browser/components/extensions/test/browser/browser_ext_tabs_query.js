@@ -40,6 +40,11 @@ add_task(async function() {
 
         browser.test.assertEq(tabs[0].title, "Gort! Klaatu barada nikto!", "tab 0 title correct");
 
+        browser.test.assertThrows(
+          () => browser.tabs.query({index: -1}),
+          /-1 is too small \(must be at least 0\)/,
+          "tab indices must be non-negative");
+
         browser.test.notifyPass("tabs.query");
       });
     },
