@@ -75,8 +75,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
 
 // Whitelist existing tests that still use non-restartless extensions.
 const LEGACY_NON_RESTARTLESS_TESTS = new Set([
-  "test_AddonRepository.js",
-  "test_AddonRepository_cache.js",
   "test_blocklistchange.js",
   "test_bug335238.js",
   "test_bug397778.js",
