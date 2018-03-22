@@ -70,14 +70,13 @@ add_task(async function test_something() {
   // Restore server pref.
   Services.prefs.setCharPref("services.settings.server", dummyServerURL);
 
-  await OneCRLBlocklistClient.openCollection(async (collection) => {
-    // clear the collection, save a non-zero lastModified so we don't do
-    // import of initial data when we sync again.
-    await collection.clear();
-    // a lastModified value of 1000 means we get a remote collection with a
-    // single record
-    await collection.db.saveLastModified(1000);
-  });
+  // clear the collection, save a non-zero lastModified so we don't do
+  // import of initial data when we sync again.
+  const collection = await OneCRLBlocklistClient.openCollection();
+  await collection.clear();
+  // a lastModified value of 1000 means we get a remote collection with a
+  // single record
+  await collection.db.saveLastModified(1000);
 
   await OneCRLBlocklistClient.maybeSync(2000, Date.now());
 
