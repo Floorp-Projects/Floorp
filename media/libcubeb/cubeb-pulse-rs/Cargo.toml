@@ -1,6 +1,6 @@
 [package]
 name = "cubeb-pulse"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
 description = "Cubeb backed for PulseAudio written in Rust"
 
@@ -11,7 +11,7 @@ pulse-dlopen = ["pulse-ffi/dlopen"]
 crate-type = ["staticlib", "rlib"]
 
 [dependencies]
-cubeb-backend = "0.4"
+cubeb-backend = "0.5"
 pulse-ffi = { path = "pulse-ffi" }
 pulse = { path = "pulse-rs" }
 semver = "^0.6"
