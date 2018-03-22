@@ -1900,13 +1900,6 @@ nsFrameLoader::DestroyComplete()
   mChildMessageManager = nullptr;
 }
 
-NS_IMETHODIMP
-nsFrameLoader::GetDepthTooGreat(bool* aDepthTooGreat)
-{
-  *aDepthTooGreat = mDepthTooGreat;
-  return NS_OK;
-}
-
 void
 nsFrameLoader::SetOwnerContent(Element* aContent)
 {
