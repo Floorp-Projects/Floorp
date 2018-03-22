@@ -25,7 +25,7 @@ const ADDON = {
     },
     {
       locale: ["de-DE"],
-      name: "de-DE Name",
+      name: "Deutsches W\u00f6rterbuch",
     },
     {
       locale: ["es-ES"],
@@ -103,7 +103,7 @@ function run_test_2() {
 
   AddonManager.getAddonByID(ID, function(addon) {
     Assert.notEqual(addon, null);
-    Assert.equal(addon.name, "de-DE Name");
+    Assert.equal(addon.name, "Deutsches W\u00f6rterbuch");
     Assert.equal(addon.description, null);
 
     executeSoon(run_test_3);
@@ -117,7 +117,7 @@ function run_test_3() {
 
   AddonManager.getAddonByID(ID, function(addon) {
     Assert.notEqual(addon, null);
-    Assert.equal(addon.name, "de-DE Name");
+    Assert.equal(addon.name, "Deutsches W\u00f6rterbuch");
     Assert.equal(addon.description, null);
 
     executeSoon(run_test_4);
