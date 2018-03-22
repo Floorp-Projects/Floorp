@@ -175,37 +175,4 @@ public:
   NS_DECL_NSIXPCFUNCTIONTHISTRANSLATOR
 };
 
-class nsDOMConstructorSH : public nsDOMGenericSH
-{
-protected:
-  explicit nsDOMConstructorSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
-  {
-  }
-
-public:
-  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
-                       JSObject *globalObj, JSObject **parentObj) override;
-  NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto) override
-  {
-    return NS_OK;
-  }
-  NS_IMETHOD Resolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                     JSObject *obj, jsid id, bool *resolvedp,
-                     bool *_retval) override;
-  NS_IMETHOD Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                  JSObject *obj, const JS::CallArgs &args, bool *_retval) override;
-
-  NS_IMETHOD Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                       JSObject *obj, const JS::CallArgs &args, bool *_retval) override;
-
-  NS_IMETHOD HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, JS::Handle<JS::Value> val, bool *bp,
-                         bool *_retval) override;
-
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsDOMConstructorSH(aData);
-  }
-};
-
 #endif /* nsDOMClassInfo_h___ */
