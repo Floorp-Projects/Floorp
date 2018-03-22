@@ -7,7 +7,4 @@
 #ifndef nsIScriptNameSpaceManager_h__
 #define nsIScriptNameSpaceManager_h__
 
-#define JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY \
-  "JavaScript-global-property"
-
 #endif /* nsIScriptNameSpaceManager_h__ */
