@@ -63,3 +63,73 @@ splitter[orient="vertical"][state="collapsed"][substate="after"] {
 splitter[disabled="true"] {
   cursor: default !important;
 }
+
+/* ::::: splitter grippy ::::: */
+
+grippy {
+  cursor: pointer;
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+  min-width: 4px;
+  min-height: 115px;
+  background-color: transparent;
+  background-repeat: no-repeat;
+}
+
+grippy:hover {
+  background-color: ThreeDHighlight;
+}
+
+splitter[orient="vertical"] > grippy {
+  border-top: none;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: none;
+  border-left: 1px solid ThreeDShadow;;
+  min-width: 115px;
+  min-height: 4px;
+}
+
+/* ..... normal state ..... */
+
+/* vertical grippies */
+splitter[collapse="before"] > grippy,
+splitter[collapse="after"] > grippy:-moz-locale-dir(rtl) {
+  background-image: url("chrome://global/skin/splitter/grip-left.gif");
+}
+
+splitter[collapse="after"] > grippy,
+splitter[collapse="before"] > grippy:-moz-locale-dir(rtl) {
+  background-image: url("chrome://global/skin/splitter/grip-right.gif");
+}
+
+/* horizontal grippies */
+splitter[collapse="before"][orient="vertical"] > grippy {
+  background-image: url("chrome://global/skin/splitter/grip-top.gif");
+}
+
+splitter[collapse="after"][orient="vertical"] > grippy {
+  background-image: url("chrome://global/skin/splitter/grip-bottom.gif");
+}
+
+/* ..... collapsed state ..... */
+
+/* vertical grippies */
+splitter[collapse="before"][state="collapsed"] > grippy,
+splitter[collapse="after"][state="collapsed"] > grippy:-moz-locale-dir(rtl) {
+  background-image: url("chrome://global/skin/splitter/grip-right.gif");
+}
+
+splitter[collapse="after"][state="collapsed"] > grippy,
+splitter[collapse="before"][state="collapsed"] > grippy:-moz-locale-dir(rtl) {
+  background-image: url("chrome://global/skin/splitter/grip-left.gif");
+}
+
+/* horizontal grippies */
+splitter[collapse="before"][state="collapsed"][orient="vertical"] > grippy {
+  background-image: url("chrome://global/skin/splitter/grip-bottom.gif");
+}
+
+splitter[collapse="after"][state="collapsed"][orient="vertical"] > grippy {
+  background-image: url("chrome://global/skin/splitter/grip-top.gif");
+}
+
