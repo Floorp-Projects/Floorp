@@ -170,6 +170,10 @@ public:
 
   virtual uint64_t CodecPluginID() override { return 0; }
   virtual void SetPCHandle(const std::string& aPCHandle) override {}
+  MediaConduitErrorCode DeliverPacket(const void *data, int len) override
+  {
+    return kMediaConduitNoError;
+  }
 
   virtual void DeleteStreams() override {}
 
