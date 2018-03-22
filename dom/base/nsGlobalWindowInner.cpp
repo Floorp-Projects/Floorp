@@ -239,6 +239,7 @@
 #include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
+#include "mozilla/dom/InstallTriggerBinding.h"
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
@@ -1220,6 +1221,7 @@ nsGlobalWindowInner::CleanUp()
   mPaintWorklet = nullptr;
 
   mExternal = nullptr;
+  mInstallTrigger = nullptr;
 
   mPerformance = nullptr;
 
@@ -1523,6 +1525,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioWorklet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPaintWorklet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExternal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInstallTrigger)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIntlUtils)
 
   tmp->TraverseHostObjectURIs(cb);
@@ -1607,6 +1610,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioWorklet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPaintWorklet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExternal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInstallTrigger)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIntlUtils)
 
   tmp->UnlinkHostObjectURIs();
@@ -2448,6 +2452,24 @@ nsGlobalWindowInner::ShouldReportForServiceWorkerScope(const nsAString& aScope)
   topInner->ShouldReportForServiceWorkerScopeInternal(NS_ConvertUTF16toUTF8(aScope),
                                                       &result);
   return result;
+}
+
+already_AddRefed<InstallTriggerImpl>
+nsGlobalWindowInner::GetInstallTrigger()
+{
+  if (!mInstallTrigger) {
+    JS::Rooted<JSObject*> jsImplObj(RootingCx());
+    ErrorResult rv;
+    ConstructJSImplementation("@mozilla.org/addons/installtrigger;1", this,
+                              &jsImplObj, rv);
+    if (rv.Failed()) {
+      rv.SuppressException();
+      return nullptr;
+    }
+    mInstallTrigger = new InstallTriggerImpl(jsImplObj, this);
+  }
+
+  return do_AddRef(mInstallTrigger);
 }
 
 nsGlobalWindowInner::CallState
@@ -7702,8 +7724,7 @@ nsGlobalWindowInner::GetExternal(ErrorResult& aRv)
 {
 #ifdef HAVE_SIDEBAR
   if (!mExternal) {
-    AutoJSContext cx;
-    JS::Rooted<JSObject*> jsImplObj(cx);
+    JS::Rooted<JSObject*> jsImplObj(RootingCx());
     ConstructJSImplementation("@mozilla.org/sidebar;1", this, &jsImplObj, aRv);
     if (aRv.Failed()) {
       return nullptr;
