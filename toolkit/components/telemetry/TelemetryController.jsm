@@ -263,34 +263,6 @@ var TelemetryController = Object.freeze({
   },
 
   /**
-   * Write a ping to a specified location on the disk. Does not add the ping to the
-   * pending pings.
-   *
-   * @param {String} aType The type of the ping.
-   * @param {Object} aPayload The actual data payload for the ping.
-   * @param {String} aFilePath The path to save the ping to.
-   * @param {Object} [aOptions] Options object.
-   * @param {Boolean} [aOptions.addClientId=false] true if the ping should contain the client
-   *                  id, false otherwise.
-   * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
-   *                  environment data.
-   * @param {Boolean} [aOptions.overwrite=false] true overwrites a ping with the same name,
-   *                  if found.
-   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   *
-   * @returns {Promise} A promise that resolves with the ping id when the ping is saved to
-   *                    disk.
-   */
-  savePing(aType, aPayload, aFilePath, aOptions = {}) {
-    let options = aOptions;
-    options.addClientId = aOptions.addClientId || false;
-    options.addEnvironment = aOptions.addEnvironment || false;
-    options.overwrite = aOptions.overwrite || false;
-
-    return Impl.savePing(aType, aPayload, aFilePath, options);
-  },
-
-  /**
    * Allows waiting for TelemetryControllers delayed initialization to complete.
    * The returned promise is guaranteed to resolve before TelemetryController is shutting down.
    * @return {Promise} Resolved when delayed TelemetryController initialization completed.
@@ -542,32 +514,6 @@ var Impl = {
       archivePromise,
     ];
     return Promise.all(promises).then(() => pingData.id);
-  },
-
-  /**
-   * Write a ping to a specified location on the disk. Does not add the ping to the
-   * pending pings.
-   *
-   * @param {String} aType The type of the ping.
-   * @param {Object} aPayload The actual data payload for the ping.
-   * @param {String} aFilePath The path to save the ping to.
-   * @param {Object} aOptions Options object.
-   * @param {Boolean} aOptions.addClientId true if the ping should contain the client id,
-   *                  false otherwise.
-   * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
-   *                  environment data.
-   * @param {Boolean} aOptions.overwrite true overwrites a ping with the same name, if found.
-   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
-   *
-   * @returns {Promise} A promise that resolves with the ping id when the ping is saved to
-   *                    disk.
-   */
-  savePing: function savePing(aType, aPayload, aFilePath, aOptions) {
-    this._log.trace("savePing - Type " + aType + ", File Path " + aFilePath +
-                    ", aOptions " + JSON.stringify(aOptions));
-    let pingData = this.assemblePing(aType, aPayload, aOptions);
-    return TelemetryStorage.savePingToFile(pingData, aFilePath, aOptions.overwrite)
-                        .then(() => pingData.id);
   },
 
   /**
