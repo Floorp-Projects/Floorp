@@ -572,7 +572,28 @@ IonBinaryArithIC::update(JSContext* cx, HandleScript outerScript, IonBinaryArith
         if (!SubValues(cx, &lhsCopy, &rhsCopy, ret))
             return false;
         break;
-      default:
+      case JSOP_BITOR: {
+        int32_t result;
+        if (!BitOr(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_BITXOR: {
+        int32_t result;
+        if (!BitXor(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+      case JSOP_BITAND: {
+        int32_t result;
+        if (!BitAnd(cx, lhs, rhs, &result))
+            return false;
+        ret.setInt32(result);
+        break;
+      }
+     default:
         MOZ_CRASH("Unhandled binary arith op");
     }
 
