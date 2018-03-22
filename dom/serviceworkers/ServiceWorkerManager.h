@@ -86,7 +86,6 @@ class ServiceWorkerManager final
   : public nsIServiceWorkerManager
   , public nsIObserver
 {
-  friend class GetReadyPromiseRunnable;
   friend class GetRegistrationsRunnable;
   friend class GetRegistrationRunnable;
   friend class ServiceWorkerJob;
@@ -437,26 +436,6 @@ private:
 
   void
   UpdateClientControllers(ServiceWorkerRegistrationInfo* aRegistration);
-
-  void
-  StorePendingReadyPromise(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
-                           Promise* aPromise);
-
-  bool
-  CheckReadyPromise(nsPIDOMWindowInner* aWindow, nsIURI* aURI,
-                    Promise* aPromise);
-
-  struct PendingReadyPromise final
-  {
-    PendingReadyPromise(nsIURI* aURI, Promise* aPromise)
-      : mURI(aURI), mPromise(aPromise)
-    {}
-
-    nsCOMPtr<nsIURI> mURI;
-    RefPtr<Promise> mPromise;
-  };
-
-  nsClassHashtable<nsISupportsHashKey, PendingReadyPromise> mPendingReadyPromises;
 
   void
   MaybeRemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration);

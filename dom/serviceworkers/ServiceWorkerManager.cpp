@@ -1206,47 +1206,6 @@ ServiceWorkerManager::GetRegistration(mozIDOMWindow* aWindow,
   return NS_DispatchToCurrentThread(runnable);
 }
 
-class GetReadyPromiseRunnable final : public Runnable
-{
-  nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  RefPtr<Promise> mPromise;
-
-public:
-  GetReadyPromiseRunnable(nsPIDOMWindowInner* aWindow, Promise* aPromise)
-    : Runnable("dom::ServiceWorkerManager::GetReadyPromiseRunnable")
-    , mWindow(aWindow)
-    , mPromise(aPromise)
-  {}
-
-  NS_IMETHOD
-  Run() override
-  {
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (!swm) {
-      mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
-      return NS_OK;
-    }
-
-    nsIDocument* doc = mWindow->GetExtantDoc();
-    if (!doc) {
-      mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIURI> docURI = doc->GetDocumentURI();
-    if (!docURI) {
-      mPromise->MaybeReject(NS_ERROR_UNEXPECTED);
-      return NS_OK;
-    }
-
-    if (!swm->CheckReadyPromise(mWindow, docURI, mPromise)) {
-      swm->StorePendingReadyPromise(mWindow, docURI, mPromise);
-    }
-
-    return NS_OK;
-  }
-};
-
 NS_IMETHODIMP
 ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
                                     const nsACString& aScope,
@@ -1372,69 +1331,6 @@ ServiceWorkerManager::SendNotificationCloseEvent(const nsACString& aOriginSuffix
                                aBody, aTag, aIcon, aData, aBehavior);
 }
 
-NS_IMETHODIMP
-ServiceWorkerManager::GetReadyPromise(mozIDOMWindow* aWindow,
-                                      nsISupports** aPromise)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (NS_WARN_IF(!aWindow)) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
-  }
-
-  auto* window = nsPIDOMWindowInner::From(aWindow);
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Don't allow service workers to register when the *document* is chrome for
-  // now.
-  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(doc->NodePrincipal()));
-
-  MOZ_ASSERT(!mPendingReadyPromises.Contains(window));
-
-  ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(window->AsGlobal(), result);
-  if (result.Failed()) {
-    return result.StealNSResult();
-  }
-
-  nsCOMPtr<nsIRunnable> runnable =
-    new GetReadyPromiseRunnable(window, promise);
-  promise.forget(aPromise);
-  return NS_DispatchToCurrentThread(runnable);
-}
-
-NS_IMETHODIMP
-ServiceWorkerManager::RemoveReadyPromise(mozIDOMWindow* aWindow)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindow);
-
-  if (!aWindow) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mPendingReadyPromises.Remove(aWindow);
-  return NS_OK;
-}
-
-void
-ServiceWorkerManager::StorePendingReadyPromise(nsPIDOMWindowInner* aWindow,
-                                               nsIURI* aURI,
-                                               Promise* aPromise)
-{
-  PendingReadyPromise* data;
-
-  // We should not have 2 pending promises for the same window.
-  MOZ_ASSERT(!mPendingReadyPromises.Get(aWindow, &data));
-
-  data = new PendingReadyPromise(aURI, aPromise);
-  mPendingReadyPromises.Put(aWindow, data);
-}
-
 RefPtr<ServiceWorkerRegistrationPromise>
 ServiceWorkerManager::WhenReady(const ClientInfo& aClientInfo)
 {
@@ -1472,17 +1368,6 @@ ServiceWorkerManager::WhenReady(const ClientInfo& aClientInfo)
 void
 ServiceWorkerManager::CheckPendingReadyPromises()
 {
-  for (auto iter = mPendingReadyPromises.Iter(); !iter.Done(); iter.Next()) {
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(iter.Key());
-    MOZ_ASSERT(window);
-
-    nsAutoPtr<PendingReadyPromise>& pendingReadyPromise = iter.Data();
-    if (CheckReadyPromise(window, pendingReadyPromise->mURI,
-                          pendingReadyPromise->mPromise)) {
-      iter.Remove();
-    }
-  }
-
   nsTArray<UniquePtr<PendingReadyData>> pendingReadyList;
   mPendingReadyList.SwapElements(pendingReadyList);
   for (uint32_t i = 0; i < pendingReadyList.Length(); ++i) {
@@ -1497,32 +1382,6 @@ ServiceWorkerManager::CheckPendingReadyPromises()
       mPendingReadyList.AppendElement(Move(prd));
     }
   }
-}
-
-bool
-ServiceWorkerManager::CheckReadyPromise(nsPIDOMWindowInner* aWindow,
-                                        nsIURI* aURI, Promise* aPromise)
-{
-  MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(aURI);
-
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
-  MOZ_ASSERT(doc);
-
-  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
-  MOZ_ASSERT(principal);
-
-  RefPtr<ServiceWorkerRegistrationInfo> registration =
-    GetServiceWorkerRegistrationInfo(principal, aURI);
-
-  if (registration && registration->GetActive()) {
-    RefPtr<ServiceWorkerRegistration> swr =
-      aWindow->AsGlobal()->GetOrCreateServiceWorkerRegistration(registration->Descriptor());
-    aPromise->MaybeResolve(swr);
-    return true;
-  }
-
-  return false;
 }
 
 void
