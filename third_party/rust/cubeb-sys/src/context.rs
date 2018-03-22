@@ -4,7 +4,6 @@
 // accompanying file LICENSE for details.
 
 use callbacks::{cubeb_data_callback, cubeb_state_callback};
-use channel::cubeb_channel_layout;
 use device::cubeb_devid;
 use std::os::raw::{c_char, c_int, c_uint, c_void};
 use stream::{cubeb_stream, cubeb_stream_params};
@@ -25,10 +24,6 @@ extern "C" {
         latency_frames: *mut c_uint,
     ) -> c_int;
     pub fn cubeb_get_preferred_sample_rate(context: *mut cubeb, rate: *mut c_uint) -> c_int;
-    pub fn cubeb_get_preferred_channel_layout(
-        context: *mut cubeb,
-        layout: *mut cubeb_channel_layout,
-    ) -> c_int;
     pub fn cubeb_destroy(context: *mut cubeb);
     pub fn cubeb_stream_init(
         context: *mut cubeb,
