@@ -22,10 +22,11 @@
 #include "nsCSSRenderingBorders.h"
 
 class gfxContext;
-class nsStyleContext;
 class nsPresContext;
 
 namespace mozilla {
+
+class ComputedStyle;
 
 namespace gfx {
 struct Color;
@@ -179,13 +180,13 @@ struct nsCSSRendering {
                                 nsIFrame* aForFrame,
                                 const nsRect& aDirtyRect,
                                 const nsRect& aBorderArea,
-                                nsStyleContext* aStyleContext,
+                                mozilla::ComputedStyle* aComputedStyle,
                                 mozilla::PaintBorderFlags aFlags,
                                 Sides aSkipSides = Sides());
 
   /**
    * Like PaintBorder, but taking an nsStyleBorder argument instead of
-   * getting it from aStyleContext. aSkipSides says which sides to skip
+   * getting it from aComputedStyle. aSkipSides says which sides to skip
    * when rendering, the default is to skip none.
    */
   static ImgDrawResult PaintBorderWithStyleBorder(nsPresContext* aPresContext,
@@ -194,7 +195,7 @@ struct nsCSSRendering {
                                                const nsRect& aDirtyRect,
                                                const nsRect& aBorderArea,
                                                const nsStyleBorder& aBorderStyle,
-                                               nsStyleContext* aStyleContext,
+                                               mozilla::ComputedStyle* aComputedStyle,
                                                mozilla::PaintBorderFlags aFlags,
                                                Sides aSkipSides = Sides());
 
@@ -204,7 +205,7 @@ struct nsCSSRendering {
                        nsIFrame* aForFrame,
                        const nsRect& aDirtyRect,
                        const nsRect& aBorderArea,
-                       nsStyleContext* aStyleContext,
+                       mozilla::ComputedStyle* aComputedStyle,
                        bool* aOutBorderIsEmpty,
                        Sides aSkipSides = Sides());
 
@@ -215,7 +216,7 @@ struct nsCSSRendering {
                                       const nsRect& aDirtyRect,
                                       const nsRect& aBorderArea,
                                       const nsStyleBorder& aBorderStyle,
-                                      nsStyleContext* aStyleContext,
+                                      mozilla::ComputedStyle* aComputedStyle,
                                       bool* aOutBorderIsEmpty,
                                       Sides aSkipSides = Sides());
 
@@ -225,7 +226,7 @@ struct nsCSSRendering {
                                  nsIFrame* aForFrame,
                                  const nsRect& aDirtyRect,
                                  const nsRect& aBorderArea,
-                                 nsStyleContext* aStyleContext);
+                                 mozilla::ComputedStyle* aComputedStyle);
 
 
   static bool CreateWebRenderCommandsForBorder(nsDisplayItem* aItem,
@@ -246,7 +247,7 @@ struct nsCSSRendering {
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
                           const nsRect& aBorderArea,
-                          nsStyleContext* aStyleContext);
+                          mozilla::ComputedStyle* aComputedStyle);
 
   /**
    * Render keyboard focus on an element.
@@ -301,7 +302,7 @@ struct nsCSSRendering {
    * @return true if there is some meaningful background.
    */
   static bool FindBackground(nsIFrame* aForFrame,
-                             nsStyleContext** aBackgroundSC);
+                             mozilla::ComputedStyle** aBackgroundSC);
   static bool FindBackgroundFrame(nsIFrame* aForFrame,
                                   nsIFrame** aBackgroundFrame);
 
@@ -310,7 +311,7 @@ struct nsCSSRendering {
    * (returned from nsCSSFrameConstructor::GetRootElementStyleFrame())
    * and there is always some meaningful background returned.
    */
-  static nsStyleContext* FindRootFrameBackground(nsIFrame* aForFrame);
+  static mozilla::ComputedStyle* FindRootFrameBackground(nsIFrame* aForFrame);
 
   /**
    * Returns background style information for the canvas.
@@ -337,10 +338,10 @@ struct nsCSSRendering {
     return aForFrame;
   }
 
-  static nsStyleContext*
+  static mozilla::ComputedStyle*
   FindCanvasBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame)
   {
-    return FindCanvasBackgroundFrame(aForFrame, aRootElementFrame)->StyleContext();
+    return FindCanvasBackgroundFrame(aForFrame, aRootElementFrame)->Style();
   }
 
   /**
@@ -361,7 +362,7 @@ struct nsCSSRendering {
    */
   static nscolor
   DetermineBackgroundColor(nsPresContext* aPresContext,
-                           nsStyleContext* aStyleContext,
+                           mozilla::ComputedStyle* aComputedStyle,
                            nsIFrame* aFrame,
                            bool& aDrawBackgroundImage,
                            bool& aDrawBackgroundColor);
@@ -524,7 +525,7 @@ struct nsCSSRendering {
    */
   static ImgDrawResult PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
                                                gfxContext& aRenderingCtx,
-                                               nsStyleContext *mBackgroundSC,
+                                               mozilla::ComputedStyle *mBackgroundSC,
                                                const nsStyleBorder& aBorder);
 
   static bool CanBuildWebRenderDisplayItemsForStyleImageLayer(LayerManager* aManager,
@@ -546,7 +547,7 @@ struct nsCSSRendering {
                                                                        const mozilla::layers::StackingContextHelper& aSc,
                                                                        mozilla::layers::WebRenderLayerManager* aManager,
                                                                        nsDisplayItem* aItem,
-                                                                       nsStyleContext *mBackgroundSC,
+                                                                       mozilla::ComputedStyle *mBackgroundSC,
                                                                        const nsStyleBorder& aBorder);
 
   /**

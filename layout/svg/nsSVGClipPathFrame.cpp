@@ -27,9 +27,9 @@ using namespace mozilla::image;
 // Implementation
 
 nsIFrame*
-NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsSVGClipPathFrame(aContext);
+  return new (aPresShell) nsSVGClipPathFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGClipPathFrame)

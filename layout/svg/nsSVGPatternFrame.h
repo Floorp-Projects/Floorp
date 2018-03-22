@@ -36,9 +36,9 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsSVGPatternFrame)
 
   friend nsIFrame* NS_NewSVGPatternFrame(nsIPresShell* aPresShell,
-                                         nsStyleContext* aContext);
+                                         ComputedStyle* aStyle);
 
-  explicit nsSVGPatternFrame(nsStyleContext* aContext);
+  explicit nsSVGPatternFrame(ComputedStyle* aStyle);
 
   // nsSVGPaintServerFrame methods:
   virtual already_AddRefed<gfxPattern>

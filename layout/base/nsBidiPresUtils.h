@@ -25,12 +25,12 @@ class nsIFrame;
 class nsBlockFrame;
 class nsPresContext;
 class nsBlockInFlowLineIterator;
-class nsStyleContext;
 struct nsSize;
 template<class T> class nsTHashtable;
 namespace mozilla {
-  class WritingMode;
-  class LogicalMargin;
+class ComputedStyle;
+class LogicalMargin;
+class WritingMode;
 } // namespace mozilla
 
 /**
@@ -371,7 +371,7 @@ public:
    * Otherwise returns NSBIDI_LTR or NSBIDI_RTL depending on the value of
    * |direction|
    */
-  static nsBidiLevel BidiLevelFromStyle(nsStyleContext* aStyleContext);
+  static nsBidiLevel BidiLevelFromStyle(mozilla::ComputedStyle* aComputedStyle);
 
 private:
   static nsresult

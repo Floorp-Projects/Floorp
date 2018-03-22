@@ -20,7 +20,6 @@ class gfxContext;
 class nsFrameList;
 class nsIContent;
 class nsIPresShell;
-class nsStyleContext;
 
 struct nsRect;
 
@@ -39,10 +38,10 @@ struct nsRect;
 class nsSVGContainerFrame : public nsContainerFrame
 {
   friend nsIFrame* NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
-                                           nsStyleContext* aContext);
+                                           ComputedStyle* aStyle);
 protected:
-  nsSVGContainerFrame(nsStyleContext* aContext, ClassID aID)
-    : nsContainerFrame(aContext, aID)
+  nsSVGContainerFrame(ComputedStyle* aStyle, ClassID aID)
+    : nsContainerFrame(aStyle, aID)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT);
   }
@@ -110,8 +109,8 @@ class nsSVGDisplayContainerFrame : public nsSVGContainerFrame,
                                    public nsSVGDisplayableFrame
 {
 protected:
-  nsSVGDisplayContainerFrame(nsStyleContext* aContext, nsIFrame::ClassID aID)
-    : nsSVGContainerFrame(aContext, aID)
+  nsSVGDisplayContainerFrame(ComputedStyle* aStyle, nsIFrame::ClassID aID)
+    : nsSVGContainerFrame(aStyle, aID)
   {
      AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
   }

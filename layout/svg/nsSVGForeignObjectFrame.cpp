@@ -31,16 +31,15 @@ using namespace mozilla::image;
 // Implementation
 
 nsContainerFrame*
-NS_NewSVGForeignObjectFrame(nsIPresShell   *aPresShell,
-                            nsStyleContext *aContext)
+NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsSVGForeignObjectFrame(aContext);
+  return new (aPresShell) nsSVGForeignObjectFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGForeignObjectFrame)
 
-nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, kClassID)
+nsSVGForeignObjectFrame::nsSVGForeignObjectFrame(ComputedStyle* aStyle)
+  : nsContainerFrame(aStyle, kClassID)
   , mInReflow(false)
 {
   AddStateBits(NS_FRAME_REFLOW_ROOT | NS_FRAME_MAY_BE_TRANSFORMED |

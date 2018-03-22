@@ -18,7 +18,7 @@ class LogicalPoint;
 } // namespace mozilla
 
 nsContainerFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
-                                           nsStyleContext* aContext);
+                                           mozilla::ComputedStyle* aStyle);
 
 /**
  * These structures are used to capture data during reflow to be
@@ -97,7 +97,7 @@ public:
 
   // Factory method:
   friend nsContainerFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
-                                                    nsStyleContext* aContext);
+                                                    ComputedStyle* aStyle);
 
   // Forward-decls of helper classes
   class FlexItem;
@@ -199,8 +199,8 @@ public:
 
 protected:
   // Protected constructor & destructor
-  explicit nsFlexContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, kClassID)
+  explicit nsFlexContainerFrame(ComputedStyle* aStyle)
+    : nsContainerFrame(aStyle, kClassID)
     , mBaselineFromLastReflow(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mLastBaselineFromLastReflow(NS_INTRINSIC_WIDTH_UNKNOWN)
   {}

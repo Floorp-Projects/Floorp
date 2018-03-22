@@ -142,14 +142,14 @@ struct ServoRuleNode {
 };
 
 
-class ServoStyleContext;
+class ComputedStyle;
 
 struct ServoVisitedStyle {
   // This is actually a strong reference
   // but ServoComputedData's destructor is
   // managed by the Rust code so we just use a
   // regular pointer
-  ServoStyleContext* mPtr;
+  ComputedStyle* mPtr;
 };
 
 template <typename T>
@@ -210,7 +210,7 @@ struct ServoComputedDataForgotten
  */
 class ServoComputedData
 {
-  friend class mozilla::ServoStyleContext;
+  friend class mozilla::ComputedStyle;
 
 public:
   // Constructs via memcpy.  Will not move out of aValue.

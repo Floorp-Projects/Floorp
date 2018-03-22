@@ -8,9 +8,9 @@
 #include "nsSVGInnerSVGFrame.h"
 
 nsIFrame*
-NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsSVGInnerSVGFrame(aContext);
+  return new (aPresShell) nsSVGInnerSVGFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGInnerSVGFrame)

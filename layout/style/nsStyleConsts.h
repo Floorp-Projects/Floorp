@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* constants used in the style struct data provided by nsStyleContext */
+/* constants used in the style struct data provided by ComputedStyle */
 
 #ifndef nsStyleConsts_h___
 #define nsStyleConsts_h___
@@ -14,7 +14,7 @@
 #include "gfxFontConstants.h"
 #include "X11UndefineNone.h"
 
-// XXX fold this into nsStyleContext and group by nsStyleXXX struct
+// XXX fold this into ComputedStyle and group by nsStyleXXX struct
 
 namespace mozilla {
 

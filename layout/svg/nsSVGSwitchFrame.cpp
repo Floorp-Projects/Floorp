@@ -17,10 +17,10 @@ using namespace mozilla::image;
 class nsSVGSwitchFrame final : public nsSVGGFrame
 {
   friend nsIFrame*
-  NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 protected:
-  explicit nsSVGSwitchFrame(nsStyleContext* aContext)
-    : nsSVGGFrame(aContext, kClassID)
+  explicit nsSVGSwitchFrame(ComputedStyle* aStyle)
+    : nsSVGGFrame(aStyle, kClassID)
   {}
 
 public:
@@ -60,9 +60,9 @@ private:
 // Implementation
 
 nsIFrame*
-NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsSVGSwitchFrame(aContext);
+  return new (aPresShell) nsSVGSwitchFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGSwitchFrame)

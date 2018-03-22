@@ -36,7 +36,8 @@ namespace mozilla {
 class ServoRestyleState
 {
 public:
-  ServoRestyleState(ServoStyleSet& aStyleSet, nsStyleChangeList& aChangeList,
+  ServoRestyleState(ServoStyleSet& aStyleSet,
+                    nsStyleChangeList& aChangeList,
                     nsTArray<nsIFrame*>& aPendingWrapperRestyles)
     : mStyleSet(aStyleSet)
     , mChangeList(aChangeList)
@@ -228,12 +229,12 @@ public:
 
   // This is only used to reparent things when moving them in/out of the
   // ::first-line.  Once we get rid of the Gecko style system, we should rename
-  // this method accordingly (e.g. to ReparentStyleContextForFirstLine).
-  nsresult ReparentStyleContext(nsIFrame* aFrame);
+  // this method accordingly (e.g. to ReparentComputedStyleForFirstLine).
+  nsresult ReparentComputedStyle(nsIFrame* aFrame);
 
 private:
   /**
-   * Reparent the descendants of aFrame.  This is used by ReparentStyleContext
+   * Reparent the descendants of aFrame.  This is used by ReparentComputedStyle
    * and shouldn't be called by anyone else.  aProviderChild, if non-null, is a
    * child that was the style parent for aFrame and hence shouldn't be
    * reparented.
@@ -292,7 +293,7 @@ private:
    * element or any descendant or sibling.
    */
   bool ProcessPostTraversal(Element* aElement,
-                            ServoStyleContext* aParentContext,
+                            ComputedStyle* aParentContext,
                             ServoRestyleState& aRestyleState,
                             ServoPostTraversalFlags aFlags);
 
@@ -319,10 +320,9 @@ private:
 
   void DoProcessPendingRestyles(ServoTraversalFlags aFlags);
 
-  // Function to do the actual (recursive) work of ReparentStyleContext, once we
+  // Function to do the actual (recursive) work of ReparentComputedStyle, once we
   // have asserted the invariants that only hold on the initial call.
-  void DoReparentStyleContext(nsIFrame* aFrame,
-                              ServoStyleSet& aStyleSet);
+  void DoReparentComputedStyle(nsIFrame* aFrame, ServoStyleSet& aStyleSet);
 
   // We use a separate data structure from nsStyleChangeList because we need a
   // frame to create nsStyleChangeList entries, and the primary frame may not be

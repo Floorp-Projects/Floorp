@@ -15,9 +15,9 @@ class nsTitleBarFrame : public nsBoxFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsTitleBarFrame)
 
-  friend nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
-  explicit nsTitleBarFrame(nsStyleContext* aContext, ClassID = kClassID);
+  explicit nsTitleBarFrame(ComputedStyle* aStyle, ClassID = kClassID);
 
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                            const nsDisplayListSet& aLists) override;

@@ -23,9 +23,9 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsIFrame*
-NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewSVGFilterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsSVGFilterFrame(aContext);
+  return new (aPresShell) nsSVGFilterFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGFilterFrame)

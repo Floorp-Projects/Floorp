@@ -70,7 +70,7 @@
 <!ENTITY ldb.dumpViews.accesskey "V">
 <!ENTITY ldb.dumpStyleSheets.label "Style Sheets">
 <!ENTITY ldb.dumpStyleSheets.accesskey "S">
-<!ENTITY ldb.dumpStyleContexts.label "Style Contexts">
-<!ENTITY ldb.dumpStyleContexts.accesskey "x">
+<!ENTITY ldb.dumpComputedStyles.label "Style Contexts">
+<!ENTITY ldb.dumpComputedStyles.accesskey "x">
 <!ENTITY ldb.dumpReflowStats.label "Reflow Statistics">
 <!ENTITY ldb.dumpReflowStats.accesskey "R">
