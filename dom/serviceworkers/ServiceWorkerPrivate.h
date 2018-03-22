@@ -121,8 +121,8 @@ public:
   SendFetchEvent(nsIInterceptedChannel* aChannel, nsILoadGroup* aLoadGroup,
                  const nsAString& aClientId, bool aIsReload);
 
-  void
-  StoreISupports(nsISupports* aSupports);
+  bool
+  MaybeStoreISupports(nsISupports* aSupports);
 
   void
   RemoveISupports(nsISupports* aSupports);
