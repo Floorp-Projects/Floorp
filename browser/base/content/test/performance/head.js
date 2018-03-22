@@ -63,7 +63,11 @@ async function recordReflows(testPromise, win = window) {
                     .QueryInterface(Ci.nsIDocShell);
   docShell.addWeakReflowObserver(observer);
 
-  let dirtyFrameFn = dirtyFrame.bind(null, win);
+  let dirtyFrameFn = event => {
+    if (event.type != "MozAfterPaint") {
+      dirtyFrame(win);
+    }
+  };
   Services.els.addListenerForAllEvents(win, dirtyFrameFn, true);
 
   try {
