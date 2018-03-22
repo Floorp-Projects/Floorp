@@ -3,15 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsTransactionItem.h"
+
 #include "mozilla/mozalloc.h"
+#include "mozilla/TransactionManager.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsISupportsImpl.h"
 #include "nsITransaction.h"
-#include "nsTransactionItem.h"
-#include "nsTransactionManager.h"
 #include "nsTransactionStack.h"
+
+using namespace mozilla;
 
 nsTransactionItem::nsTransactionItem(nsITransaction *aTransaction)
     : mTransaction(aTransaction), mUndoStack(0), mRedoStack(0)
@@ -159,11 +162,11 @@ nsTransactionItem::DoTransaction()
 }
 
 nsresult
-nsTransactionItem::UndoTransaction(nsTransactionManager *aTxMgr)
+nsTransactionItem::UndoTransaction(TransactionManager* aTransactionManager)
 {
-  nsresult rv = UndoChildren(aTxMgr);
+  nsresult rv = UndoChildren(aTransactionManager);
   if (NS_FAILED(rv)) {
-    RecoverFromUndoError(aTxMgr);
+    RecoverFromUndoError(aTransactionManager);
     return rv;
   }
 
@@ -173,7 +176,7 @@ nsTransactionItem::UndoTransaction(nsTransactionManager *aTxMgr)
 
   rv = mTransaction->UndoTransaction();
   if (NS_FAILED(rv)) {
-    RecoverFromUndoError(aTxMgr);
+    RecoverFromUndoError(aTransactionManager);
     return rv;
   }
 
@@ -181,7 +184,7 @@ nsTransactionItem::UndoTransaction(nsTransactionManager *aTxMgr)
 }
 
 nsresult
-nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
+nsTransactionItem::UndoChildren(TransactionManager* aTransactionManager)
 {
   if (mUndoStack) {
     if (!mRedoStack && mUndoStack) {
@@ -200,7 +203,7 @@ nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
 
       nsCOMPtr<nsITransaction> t = item->GetTransaction();
       bool doInterrupt = false;
-      rv = aTxMgr->WillUndoNotify(t, &doInterrupt);
+      rv = aTransactionManager->WillUndoNotify(t, &doInterrupt);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -208,13 +211,13 @@ nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
         return NS_OK;
       }
 
-      rv = item->UndoTransaction(aTxMgr);
+      rv = item->UndoTransaction(aTransactionManager);
       if (NS_SUCCEEDED(rv)) {
         item = mUndoStack->Pop();
         mRedoStack->Push(item.forget());
       }
 
-      nsresult rv2 = aTxMgr->DidUndoNotify(t, rv);
+      nsresult rv2 = aTransactionManager->DidUndoNotify(t, rv);
       if (NS_SUCCEEDED(rv)) {
         rv = rv2;
       }
@@ -229,7 +232,7 @@ nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
 }
 
 nsresult
-nsTransactionItem::RedoTransaction(nsTransactionManager *aTxMgr)
+nsTransactionItem::RedoTransaction(TransactionManager* aTransactionManager)
 {
   nsCOMPtr<nsITransaction> transaction(mTransaction);
   if (transaction) {
@@ -237,9 +240,9 @@ nsTransactionItem::RedoTransaction(nsTransactionManager *aTxMgr)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsresult rv = RedoChildren(aTxMgr);
+  nsresult rv = RedoChildren(aTransactionManager);
   if (NS_FAILED(rv)) {
-    RecoverFromRedoError(aTxMgr);
+    RecoverFromRedoError(aTransactionManager);
     return rv;
   }
 
@@ -247,7 +250,7 @@ nsTransactionItem::RedoTransaction(nsTransactionManager *aTxMgr)
 }
 
 nsresult
-nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
+nsTransactionItem::RedoChildren(TransactionManager* aTransactionManager)
 {
   if (!mRedoStack) {
     return NS_OK;
@@ -265,7 +268,7 @@ nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
 
     nsCOMPtr<nsITransaction> t = item->GetTransaction();
     bool doInterrupt = false;
-    rv = aTxMgr->WillRedoNotify(t, &doInterrupt);
+    rv = aTransactionManager->WillRedoNotify(t, &doInterrupt);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -273,14 +276,14 @@ nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
       return NS_OK;
     }
 
-    rv = item->RedoTransaction(aTxMgr);
+    rv = item->RedoTransaction(aTransactionManager);
     if (NS_SUCCEEDED(rv)) {
       item = mRedoStack->Pop();
       mUndoStack->Push(item.forget());
     }
 
     // XXX Shouldn't this DidRedoNotify()? (bug 1311626)
-    nsresult rv2 = aTxMgr->DidUndoNotify(t, rv);
+    nsresult rv2 = aTransactionManager->DidUndoNotify(t, rv);
     if (NS_SUCCEEDED(rv)) {
       rv = rv2;
     }
@@ -320,22 +323,22 @@ nsTransactionItem::GetNumberOfRedoItems(int32_t *aNumItems)
 }
 
 nsresult
-nsTransactionItem::RecoverFromUndoError(nsTransactionManager *aTxMgr)
+nsTransactionItem::RecoverFromUndoError(TransactionManager* aTransactionManager)
 {
   // If this method gets called, we never got to the point where we
   // successfully called UndoTransaction() for the transaction item itself.
   // Just redo any children that successfully called undo!
-  return RedoChildren(aTxMgr);
+  return RedoChildren(aTransactionManager);
 }
 
 nsresult
-nsTransactionItem::RecoverFromRedoError(nsTransactionManager *aTxMgr)
+nsTransactionItem::RecoverFromRedoError(TransactionManager* aTransactionManager)
 {
   // If this method gets called, we already successfully called
   // RedoTransaction() for the transaction item itself. Undo all
   // the children that successfully called RedoTransaction(),
   // then undo the transaction item itself.
-  nsresult rv = UndoChildren(aTxMgr);
+  nsresult rv = UndoChildren(aTransactionManager);
   if (NS_FAILED(rv)) {
     return rv;
   }

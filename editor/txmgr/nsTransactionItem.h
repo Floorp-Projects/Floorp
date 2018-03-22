@@ -13,8 +13,11 @@
 #include "nscore.h"
 
 class nsITransaction;
-class nsTransactionManager;
 class nsTransactionStack;
+
+namespace mozilla {
+class TransactionManager;
+} // namespace mozilla
 
 class nsTransactionItem final
 {
@@ -24,22 +27,21 @@ class nsTransactionItem final
   nsTransactionStack      *mRedoStack;
 
 public:
-
-  explicit nsTransactionItem(nsITransaction *aTransaction);
+  explicit nsTransactionItem(nsITransaction* aTransaction);
   NS_METHOD_(MozExternalRefCountType) AddRef();
   NS_METHOD_(MozExternalRefCountType) Release();
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTransactionItem)
 
-  virtual nsresult AddChild(nsTransactionItem *aTransactionItem);
+  nsresult AddChild(nsTransactionItem* aTransactionItem);
   already_AddRefed<nsITransaction> GetTransaction();
-  virtual nsresult GetIsBatch(bool *aIsBatch);
-  virtual nsresult GetNumberOfChildren(int32_t *aNumChildren);
-  virtual nsresult GetChild(int32_t aIndex, nsTransactionItem **aChild);
+  nsresult GetIsBatch(bool *aIsBatch);
+  nsresult GetNumberOfChildren(int32_t *aNumChildren);
+  nsresult GetChild(int32_t aIndex, nsTransactionItem** aChild);
 
-  virtual nsresult DoTransaction(void);
-  virtual nsresult UndoTransaction(nsTransactionManager *aTxMgr);
-  virtual nsresult RedoTransaction(nsTransactionManager *aTxMgr);
+  nsresult DoTransaction();
+  nsresult UndoTransaction(mozilla::TransactionManager* aTransactionManager);
+  nsresult RedoTransaction(mozilla::TransactionManager* aTransactionManager);
 
   nsCOMArray<nsISupports>& GetData()
   {
@@ -47,19 +49,21 @@ public:
   }
 
 private:
+  nsresult UndoChildren(mozilla::TransactionManager* aTransactionManager);
+  nsresult RedoChildren(mozilla::TransactionManager* aTransactionManager);
 
-  virtual nsresult UndoChildren(nsTransactionManager *aTxMgr);
-  virtual nsresult RedoChildren(nsTransactionManager *aTxMgr);
+  nsresult
+  RecoverFromUndoError(mozilla::TransactionManager* aTransactionManager);
+  nsresult
+  RecoverFromRedoError(mozilla::TransactionManager* aTransactionManager);
 
-  virtual nsresult RecoverFromUndoError(nsTransactionManager *aTxMgr);
-  virtual nsresult RecoverFromRedoError(nsTransactionManager *aTxMgr);
-
-  virtual nsresult GetNumberOfUndoItems(int32_t *aNumItems);
-  virtual nsresult GetNumberOfRedoItems(int32_t *aNumItems);
+  nsresult GetNumberOfUndoItems(int32_t* aNumItems);
+  nsresult GetNumberOfRedoItems(int32_t* aNumItems);
 
   void CleanUp();
+
 protected:
-  virtual ~nsTransactionItem();
+  ~nsTransactionItem();
 
   nsCycleCollectingAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD

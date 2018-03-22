@@ -1,0 +1,73 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_TransactionManager_h
+#define mozilla_TransactionManager_h
+
+#include "nsCOMArray.h"
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsTransactionStack.h"
+#include "nsISupportsImpl.h"
+#include "nsITransactionManager.h"
+#include "nsTransactionStack.h"
+#include "nsWeakReference.h"
+#include "nscore.h"
+
+class nsITransaction;
+class nsITransactionListener;
+
+namespace mozilla {
+
+class TransactionManager final : public nsITransactionManager
+                               , public nsSupportsWeakReference
+{
+public:
+  explicit TransactionManager(int32_t aMaxTransactionCount = -1);
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(TransactionManager,
+                                           nsITransactionManager)
+
+  NS_DECL_NSITRANSACTIONMANAGER
+
+  already_AddRefed<nsITransaction> PeekUndoStack();
+  already_AddRefed<nsITransaction> PeekRedoStack();
+
+  nsresult WillDoNotify(nsITransaction* aTransaction, bool* aInterrupt);
+  nsresult DidDoNotify(nsITransaction* aTransaction, nsresult aExecuteResult);
+  nsresult WillUndoNotify(nsITransaction* aTransaction, bool* aInterrupt);
+  nsresult DidUndoNotify(nsITransaction* aTransaction, nsresult aUndoResult);
+  nsresult WillRedoNotify(nsITransaction* aTransaction, bool *aInterrupt);
+  nsresult DidRedoNotify(nsITransaction* aTransaction, nsresult aRedoResult);
+  nsresult WillBeginBatchNotify(bool* aInterrupt);
+  nsresult DidBeginBatchNotify(nsresult aResult);
+  nsresult WillEndBatchNotify(bool* aInterrupt);
+  nsresult DidEndBatchNotify(nsresult aResult);
+  nsresult WillMergeNotify(nsITransaction* aTop,
+                           nsITransaction* aTransaction,
+                           bool* aInterrupt);
+  nsresult DidMergeNotify(nsITransaction* aTop,
+                          nsITransaction* aTransaction,
+                          bool aDidMerge,
+                          nsresult aMergeResult);
+
+private:
+  virtual ~TransactionManager() = default;
+
+  nsresult BeginTransaction(nsITransaction* aTransaction,
+                            nsISupports* aData);
+  nsresult EndTransaction(bool aAllowEmpty);
+
+  int32_t                mMaxTransactionCount;
+  nsTransactionStack     mDoStack;
+  nsTransactionStack     mUndoStack;
+  nsTransactionStack     mRedoStack;
+  nsCOMArray<nsITransactionListener> mListeners;
+};
+
+} // namespace mozilla
+
+#endif // #ifndef mozilla_TransactionManager_h
