@@ -83,6 +83,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__src_mod10__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__src_mod11__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__src_mod12__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__src_optimized_out__ = __webpack_require__(13);
 
 
 
@@ -97,6 +98,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 
+
+
+Object(__WEBPACK_IMPORTED_MODULE_12__src_optimized_out__["a" /* default */])();
 
 function root() {
   console.log("pause here", root);
@@ -227,6 +231,14 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "aNamed", function() { return aNamed; });
 /* harmony default export */ __webpack_exports__["default"] = ("a-default3");
 var aNamed = "a-named3";
+
+/***/ }),
+/* 13 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = optimizedOut;
+function optimizedOut() {}
 
 /***/ })
 /******/ ]);
