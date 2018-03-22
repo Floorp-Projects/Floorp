@@ -2261,12 +2261,8 @@ NS_IMETHODIMP
 nsXULWindow::BeforeStartLayout()
 {
   ApplyChromeFlags();
-  // FIXME(emilio): Until we fix bug 1446264, just behind a hidden pref for
-  // local testing and debugging.
-  if (Preferences::GetBool("xul.size_window_before_layout")) {
-    SyncAttributesToWidget();
-    SizeShell();
-  }
+  SyncAttributesToWidget();
+  SizeShell();
   return NS_OK;
 }
 
