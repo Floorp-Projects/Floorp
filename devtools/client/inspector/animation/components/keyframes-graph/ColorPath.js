@@ -32,13 +32,13 @@ class ColorPath extends ComputedStylePath {
     return keyframe.value;
   }
 
-  propToState({ values }) {
+  propToState({ keyframes }) {
     const maxObject = { distance: 0 };
 
-    for (let i = 0; i < values.length - 1; i++) {
-      const value1 = getRGBA(values[i].value);
-      for (let j = i + 1; j < values.length; j++) {
-        const value2 = getRGBA(values[j].value);
+    for (let i = 0; i < keyframes.length - 1; i++) {
+      const value1 = getRGBA(keyframes[i].value);
+      for (let j = i + 1; j < keyframes.length; j++) {
+        const value2 = getRGBA(keyframes[j].value);
         const distance = getRGBADistance(value1, value2);
 
         if (maxObject.distance >= distance) {
@@ -71,15 +71,15 @@ class ColorPath extends ComputedStylePath {
     const {
       easingHintStrokeWidth,
       graphHeight,
+      keyframes,
       totalDuration,
-      values,
     } = this.props;
 
     const hints = [];
 
-    for (let i = 0; i < values.length - 1; i++) {
-      const startKeyframe = values[i];
-      const endKeyframe = values[i + 1];
+    for (let i = 0; i < keyframes.length - 1; i++) {
+      const startKeyframe = keyframes[i];
+      const endKeyframe = keyframes[i + 1];
       const startTime = startKeyframe.offset * totalDuration;
       const endTime = endKeyframe.offset * totalDuration;
 

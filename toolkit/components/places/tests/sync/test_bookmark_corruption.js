@@ -1,6 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+async function getCountOfBookmarkRows(db) {
+  let queryRows = await db.execute("SELECT COUNT(*) FROM moz_bookmarks");
+  Assert.equal(queryRows.length, 1);
+  return queryRows[0].getResultByIndex(0);
+}
+
 add_task(async function test_missing_children() {
   let buf = await openMirror("missing_childen");
 
@@ -792,8 +798,97 @@ add_task(async function test_tombstone_as_child() {
   // `children`.
 });
 
+// See what happens when a left-pane root and a left-pane query are on the server
 add_task(async function test_left_pane_root() {
-  // TODO (Bug 1433182): Add a left pane root to the mirror.
+  let buf = await openMirror("lpr");
+
+  let initialTree = await fetchLocalTree(PlacesUtils.bookmarks.rootGuid);
+
+  // This test is expected to not touch bookmarks at all, and if it did
+  // happen to create a new item that's not under our syncable roots, then
+  // just checking the result of fetchLocalTree wouldn't pick that up - so
+  // as an additional safety check, count how many bookmark rows exist.
+  let numRows = await getCountOfBookmarkRows(buf.db);
+
+  // Add a left pane root, a left-pane query and a left-pane folder to the
+  // mirror, all correctly parented.
+  // Because we can determine this is a complete tree that's outside our
+  // syncable trees, we expect none of them to be applied.
+  await buf.store(shuffle([{
+    id: "folderLEFTPR",
+    type: "folder",
+    parentid: "places",
+    title: "",
+    children: ["folderLEFTPQ", "folderLEFTPF"],
+  }, {
+    id: "folderLEFTPQ",
+    type: "query",
+    parentid: "folderLEFTPR",
+    title: "Some query",
+    bmkUri: "place:folder=SOMETHING",
+  }, {
+    id: "folderLEFTPF",
+    type: "folder",
+    parentid: "folderLEFTPR",
+    title: "All Bookmarks",
+    children: ["folderLEFTPC"],
+  }, {
+    id: "folderLEFTPC",
+    type: "query",
+    parentid: "folderLEFTPF",
+    title: "A query under 'All Bookmarks'",
+    bmkUri: "place:folder=SOMETHING_ELSE",
+  }], { needsMerge: true }));
+
+  await buf.apply();
+
+  // should have ignored everything.
+  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, initialTree);
+
+  // and a check we didn't write *any* items to the places database, even
+  // outside of our user roots.
+  Assert.equal(await getCountOfBookmarkRows(buf.db), numRows);
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
+
+// See what happens when a left-pane query (without the left-pane root) is on
+// the server
+add_task(async function test_left_pane_query() {
+  let buf = await openMirror("lpq");
+
+  let initialTree = await fetchLocalTree(PlacesUtils.bookmarks.rootGuid);
+
+  // This test is expected to not touch bookmarks at all, and if it did
+  // happen to create a new item that's not under our syncable roots, then
+  // just checking the result of fetchLocalTree wouldn't pick that up - so
+  // as an additional safety check, count how many bookmark rows exist.
+  let numRows = await getCountOfBookmarkRows(buf.db);
+
+  // Add the left pane root and left-pane folders to the mirror, correctly parented.
+  // We should not apply it because we made a policy decision to not apply
+  // orphaned queries (bug 1433182)
+  await buf.store([{
+    id: "folderLEFTPQ",
+    type: "query",
+    parentid: "folderLEFTPR",
+    title: "Some query",
+    bmkUri: "place:folder=SOMETHING",
+  }], { needsMerge: true });
+
+  await buf.apply();
+
+  // should have ignored everything.
+  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, initialTree);
+
+  // and further check we didn't apply it as mis-rooted.
+  Assert.equal(await getCountOfBookmarkRows(buf.db), numRows);
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(async function test_partial_cycle() {

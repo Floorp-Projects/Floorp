@@ -8,7 +8,6 @@ config = {
         # 'update',
     ],
     'stage_platform': 'linux64-fuzzing-asan',
-    'build_type': 'asan',
     'enable_signing': False,
     #### 64 bit build specific #####
     'env': {

@@ -54,7 +54,7 @@ function inspectChangeRecords(changeRecords) {
   return results;
 }
 
-async function assertLocalTree(rootGuid, expected, message) {
+async function fetchLocalTree(rootGuid) {
   function bookmarkNodeToInfo(node) {
     let { guid, index, title, typeCode: type } = node;
     let itemInfo = { guid, index, title, type };
@@ -82,7 +82,11 @@ async function assertLocalTree(rootGuid, expected, message) {
     return itemInfo;
   }
   let root = await PlacesUtils.promiseBookmarksTree(rootGuid);
-  let actual = bookmarkNodeToInfo(root);
+  return bookmarkNodeToInfo(root);
+}
+
+async function assertLocalTree(rootGuid, expected, message) {
+  let actual = await fetchLocalTree(rootGuid);
   if (!ObjectUtils.deepEqual(actual, expected)) {
     info(`Expected structure for ${rootGuid}: ${JSON.stringify(expected)}`);
     info(`Actual structure for ${rootGuid}: ${JSON.stringify(actual)}`);

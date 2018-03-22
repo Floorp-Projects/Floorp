@@ -11,14 +11,14 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 class AnimatedPropertyName extends PureComponent {
   static get propTypes() {
     return {
-      property: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
       state: PropTypes.oneOfType([null, PropTypes.object]).isRequired,
     };
   }
 
   render() {
     const {
-      property,
+      name,
       state,
     } = this.props;
 
@@ -31,7 +31,7 @@ class AnimatedPropertyName extends PureComponent {
       },
       dom.span(
         {},
-        property
+        name
       )
     );
   }

@@ -15,36 +15,36 @@ class KeyframesGraph extends PureComponent {
   static get propTypes() {
     return {
       getComputedStyle: PropTypes.func.isRequired,
-      property: PropTypes.string.isRequired,
+      keyframes: PropTypes.array.isRequired,
+      name: PropTypes.string.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       type: PropTypes.string.isRequired,
-      values: PropTypes.array.isRequired,
     };
   }
 
   render() {
     const {
       getComputedStyle,
-      property,
+      keyframes,
+      name,
       simulateAnimation,
       type,
-      values,
     } = this.props;
 
     return dom.div(
       {
-        className: `keyframes-graph ${ property }`
+        className: `keyframes-graph ${ name }`
       },
       KeyframesGraphPath(
         {
           getComputedStyle,
-          property,
+          keyframes,
+          name,
           simulateAnimation,
           type,
-          values,
         }
       ),
-      KeyframeMarkerList({ values })
+      KeyframeMarkerList({ keyframes })
     );
   }
 }
