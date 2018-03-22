@@ -14,9 +14,6 @@
 #include "js/Id.h"
 #include "nsIXPConnect.h"
 
-class nsGlobalWindowInner;
-class nsGlobalWindowOuter;
-
 class nsDOMClassInfo
 {
 public:
@@ -26,20 +23,6 @@ public:
 protected:
   static bool sIsInitialized;
 };
-
-// A place to hang some static methods that we should really consider
-// moving to be nsGlobalWindow member methods.  See bug 1062418.
-class nsWindowSH
-{
-protected:
-  static nsresult GlobalResolve(nsGlobalWindowInner *aWin, JSContext *cx,
-                                JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                                JS::MutableHandle<JS::PropertyDescriptor> desc);
-
-  friend class nsGlobalWindowInner;
-  friend class nsGlobalWindowOuter;
-};
-
 
 // Event handler 'this' translator class, this is called by XPConnect
 // when a "function interface" (nsIDOMEventListener) is called, this

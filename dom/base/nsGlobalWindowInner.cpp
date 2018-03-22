@@ -17,6 +17,7 @@
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
+#include "mozilla/dom/DOMJSProxyHandler.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/Storage.h"
@@ -68,7 +69,6 @@
 #include "js/Wrapper.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsReadableUtils.h"
-#include "nsDOMClassInfo.h"
 #include "nsJSEnvironment.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"
@@ -2888,6 +2888,109 @@ nsGlobalWindowInner::IndexedGetter(uint32_t aIndex)
   FORWARD_TO_OUTER(IndexedGetterOuter, (aIndex), nullptr);
 }
 
+namespace {
+
+struct InterfaceShimEntry {
+  const char *geckoName;
+  const char *domName;
+};
+
+} // anonymous namespace
+
+// We add shims from Components.interfaces.nsIDOMFoo to window.Foo for each
+// interface that has interface constants that sites might be getting off
+// of Ci.
+const InterfaceShimEntry kInterfaceShimMap[] =
+{ { "nsIXMLHttpRequest", "XMLHttpRequest" },
+  { "nsIDOMDOMException", "DOMException" },
+  { "nsIDOMNode", "Node" },
+  { "nsIDOMCSSPrimitiveValue", "CSSPrimitiveValue" },
+  { "nsIDOMCSSRule", "CSSRule" },
+  { "nsIDOMCSSValue", "CSSValue" },
+  { "nsIDOMEvent", "Event" },
+  { "nsIDOMNSEvent", "Event" },
+  { "nsIDOMKeyEvent", "KeyEvent" },
+  { "nsIDOMMouseEvent", "MouseEvent" },
+  { "nsIDOMMouseScrollEvent", "MouseScrollEvent" },
+  { "nsIDOMMutationEvent", "MutationEvent" },
+  { "nsIDOMSimpleGestureEvent", "SimpleGestureEvent" },
+  { "nsIDOMUIEvent", "UIEvent" },
+  { "nsIDOMHTMLMediaElement", "HTMLMediaElement" },
+  { "nsIDOMOfflineResourceList", "OfflineResourceList" },
+  { "nsIDOMRange", "Range" },
+  { "nsIDOMSVGLength", "SVGLength" },
+  // Think about whether Ci.nsINodeFilter can just go away for websites!
+  { "nsIDOMNodeFilter", "NodeFilter" },
+  { "nsIDOMXPathResult", "XPathResult" } };
+
+static nsresult
+LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
+                     nsPIDOMWindowInner *win,
+                     JS::MutableHandle<JS::PropertyDescriptor> desc)
+{
+  // Keep track of how often this happens.
+  Telemetry::Accumulate(Telemetry::COMPONENTS_SHIM_ACCESSED_BY_CONTENT, true);
+
+  // Warn once.
+  nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
+  if (doc) {
+    doc->WarnOnceAbout(nsIDocument::eComponents, /* asError = */ true);
+  }
+
+  // Create a fake Components object.
+  AssertSameCompartment(cx, global);
+  JS::Rooted<JSObject*> components(cx, JS_NewPlainObject(cx));
+  NS_ENSURE_TRUE(components, NS_ERROR_OUT_OF_MEMORY);
+
+  // Create a fake interfaces object.
+  JS::Rooted<JSObject*> interfaces(cx, JS_NewPlainObject(cx));
+  NS_ENSURE_TRUE(interfaces, NS_ERROR_OUT_OF_MEMORY);
+  bool ok =
+    JS_DefineProperty(cx, components, "interfaces", interfaces,
+                      JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
+  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+
+  // Define a bunch of shims from the Ci.nsIDOMFoo to window.Foo for DOM
+  // interfaces with constants.
+  for (uint32_t i = 0; i < ArrayLength(kInterfaceShimMap); ++i) {
+
+    // Grab the names from the table.
+    const char *geckoName = kInterfaceShimMap[i].geckoName;
+    const char *domName = kInterfaceShimMap[i].domName;
+
+    // Look up the appopriate interface object on the global.
+    JS::Rooted<JS::Value> v(cx, JS::UndefinedValue());
+    ok = JS_GetProperty(cx, global, domName, &v);
+    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+    if (!v.isObject()) {
+      NS_WARNING("Unable to find interface object on global");
+      continue;
+    }
+
+    // Define the shim on the interfaces object.
+    ok = JS_DefineProperty(cx, interfaces, geckoName, v,
+                           JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
+    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  FillPropertyDescriptor(desc, global, JS::ObjectValue(*components), false);
+
+  return NS_OK;
+}
+
+#ifdef RELEASE_OR_BETA
+#define USE_CONTROLLERS_SHIM
+#endif
+
+#ifdef USE_CONTROLLERS_SHIM
+static const JSClass ControllersShimClass = {
+    "Controllers", 0
+};
+static const JSClass XULControllersShimClass = {
+    "XULControllers", 0
+};
+#endif
+
 bool
 nsGlobalWindowInner::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
                                JS::Handle<jsid> aId,
@@ -2909,10 +3012,42 @@ nsGlobalWindowInner::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
     return true;
   }
 
-  nsresult rv = nsWindowSH::GlobalResolve(this, aCx, aObj, aId, aDesc);
-  if (NS_FAILED(rv)) {
-    return Throw(aCx, rv);
+  if (aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_COMPONENTS)) {
+    nsresult rv = LookupComponentsShim(aCx, aObj, this, aDesc);
+    if (NS_FAILED(rv)) {
+      return Throw(aCx, rv);
+    }
+    return true;
   }
+
+#ifdef USE_CONTROLLERS_SHIM
+  // Note: We use |aObj| rather than |this| to get the principal here, because
+  // this is called during Window setup when the Document isn't necessarily
+  // hooked up yet.
+  if ((aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_CONTROLLERS) ||
+       aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_CONTROLLERS_CLASS)) &&
+      !xpc::IsXrayWrapper(aObj) &&
+      !nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(aObj)))
+  {
+    if (GetExtantDoc()) {
+      GetExtantDoc()->WarnOnceAbout(nsIDocument::eWindow_Cc_ontrollers);
+    }
+    const JSClass* clazz;
+    if (aId == XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_CONTROLLERS)) {
+      clazz = &XULControllersShimClass;
+    } else {
+      clazz = &ControllersShimClass;
+    }
+    MOZ_ASSERT(JS_IsGlobalObject(aObj));
+    JS::Rooted<JSObject*> shim(cx, JS_NewObject(cx, clazz));
+    if (NS_WARN_IF(!shim)) {
+      return Throw(aCx, NS_ERROR_OUT_OF_MEMORY);
+    }
+    FillPropertyDescriptor(aDesc, aObj, JS::ObjectValue(*shim),
+                           /* readOnly = */ false);
+    return true;
+  }
+#endif
 
   return true;
 }
