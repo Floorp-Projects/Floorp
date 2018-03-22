@@ -215,7 +215,7 @@ nsGNOMEShellService::IsDefaultBrowser(bool aStartupCheck,
 
   if (IsRunningAsASnap()) {
     const gchar *argv[] = { "xdg-settings", "check", "default-web-browser",
-                            "firefox_firefox.desktop", nullptr };
+                            "firefox.desktop", nullptr };
     GSpawnFlags flags = static_cast<GSpawnFlags>(G_SPAWN_SEARCH_PATH |
                                                  G_SPAWN_STDERR_TO_DEV_NULL);
     gchar *output = nullptr;
@@ -287,7 +287,7 @@ nsGNOMEShellService::SetDefaultBrowser(bool aClaimAllTypes,
 
   if (IsRunningAsASnap()) {
     const gchar *argv[] = { "xdg-settings", "set", "default-web-browser",
-                            "firefox_firefox.desktop", nullptr };
+                            "firefox.desktop", nullptr };
     GSpawnFlags flags = static_cast<GSpawnFlags>(G_SPAWN_SEARCH_PATH |
                                                  G_SPAWN_STDOUT_TO_DEV_NULL |
                                                  G_SPAWN_STDERR_TO_DEV_NULL);

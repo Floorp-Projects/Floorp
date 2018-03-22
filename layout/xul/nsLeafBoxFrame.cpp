@@ -16,7 +16,7 @@
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "nsIContent.h"
 #include "nsNameSpaceManager.h"
 #include "nsBoxLayoutState.h"
@@ -34,9 +34,9 @@ using namespace mozilla;
 // Creates a new Toolbar frame and returns it
 //
 nsIFrame*
-NS_NewLeafBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewLeafBoxFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsLeafBoxFrame(aContext);
+  return new (aPresShell) nsLeafBoxFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsLeafBoxFrame)

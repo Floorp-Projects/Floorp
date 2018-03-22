@@ -12,7 +12,7 @@
 #include "nsAtom.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "nsCSSRendering.h"
 #include "nsNameSpaceManager.h"
 #include "nsMenuPopupFrame.h"
@@ -153,17 +153,17 @@ protected:
 // Wrappers for creating a new menu popup container
 //
 nsIFrame*
-NS_NewMenuFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMenuFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  nsMenuFrame* it = new (aPresShell) nsMenuFrame(aContext);
+  nsMenuFrame* it = new (aPresShell) nsMenuFrame(aStyle);
   it->SetIsMenu(true);
   return it;
 }
 
 nsIFrame*
-NS_NewMenuItemFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMenuItemFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  nsMenuFrame* it = new (aPresShell) nsMenuFrame(aContext);
+  nsMenuFrame* it = new (aPresShell) nsMenuFrame(aStyle);
   it->SetIsMenu(false);
   return it;
 }
@@ -174,8 +174,8 @@ NS_QUERYFRAME_HEAD(nsMenuFrame)
   NS_QUERYFRAME_ENTRY(nsMenuFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
-nsMenuFrame::nsMenuFrame(nsStyleContext* aContext)
-  : nsBoxFrame(aContext, kClassID)
+nsMenuFrame::nsMenuFrame(ComputedStyle* aStyle)
+  : nsBoxFrame(aStyle, kClassID)
   , mIsMenu(false)
   , mChecked(false)
   , mIgnoreAccelTextChange(false)

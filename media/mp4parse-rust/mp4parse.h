@@ -105,7 +105,7 @@ typedef struct {
 } Mp4parseTrackVideoInfo;
 
 typedef struct {
-  intptr_t (*read)(uint8_t*, size_t, void*);
+  intptr_t (*read)(uint8_t*, uintptr_t, void*);
   void *userdata;
 } Mp4parseIo;
 

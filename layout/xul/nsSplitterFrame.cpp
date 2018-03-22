@@ -24,7 +24,7 @@
 #include "nsIPresShell.h"
 #include "nsFrameList.h"
 #include "nsHTMLParts.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "nsBoxLayoutState.h"
 #include "nsIServiceManager.h"
 #include "nsContainerFrame.h"
@@ -200,15 +200,15 @@ nsSplitterFrameInner::GetState()
 // Creates a new Toolbar frame and returns it
 //
 nsIFrame*
-NS_NewSplitterFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewSplitterFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsSplitterFrame(aContext);
+  return new (aPresShell) nsSplitterFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSplitterFrame)
 
-nsSplitterFrame::nsSplitterFrame(nsStyleContext* aContext)
-: nsBoxFrame(aContext, kClassID),
+nsSplitterFrame::nsSplitterFrame(ComputedStyle* aStyle)
+: nsBoxFrame(aStyle, kClassID),
   mInner(0)
 {
 }
@@ -289,9 +289,6 @@ nsSplitterFrame::Init(nsIContent*       aContent,
                                            nsGkAtoms::orient)) {
         aContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                                        NS_LITERAL_STRING("vertical"), false);
-        if (StyleContext()->IsGecko()) {
-          MOZ_CRASH("old style system disabled");
-        }
       }
     }
   }

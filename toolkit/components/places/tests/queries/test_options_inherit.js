@@ -86,7 +86,7 @@ async function test_query(opts, expectedRootCc, expectedFolderCc, expectedQueryC
 function checkURIOptions(uri) {
   info("Checking options for uri " + uri);
   let folderOptions = { };
-  PlacesUtils.history.queryStringToQueries(uri, {}, {}, folderOptions);
+  PlacesUtils.history.queryStringToQuery(uri, {}, folderOptions);
   folderOptions = folderOptions.value;
   Assert.equal(folderOptions.excludeItems, false, "ExcludeItems should not be changed");
   Assert.equal(folderOptions.excludeQueries, false, "ExcludeQueries should not be changed");

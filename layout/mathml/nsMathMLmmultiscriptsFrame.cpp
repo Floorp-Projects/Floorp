@@ -21,9 +21,9 @@ using mozilla::WritingMode;
 //
 
 nsIFrame*
-NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsMathMLmmultiscriptsFrame(aContext);
+  return new (aPresShell) nsMathMLmmultiscriptsFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmmultiscriptsFrame)
@@ -116,7 +116,7 @@ nsMathMLmmultiscriptsFrame::Place(DrawTarget*          aDrawTarget,
     mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::subscriptshift_, value);
     if (!value.IsEmpty()) {
       ParseNumericValue(value, &subScriptShift, 0, PresContext(),
-                        mStyleContext, fontSizeInflation);
+                        mComputedStyle, fontSizeInflation);
     }
   }
   // superscriptshift
@@ -134,7 +134,7 @@ nsMathMLmmultiscriptsFrame::Place(DrawTarget*          aDrawTarget,
     mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::superscriptshift_, value);
     if (!value.IsEmpty()) {
       ParseNumericValue(value, &supScriptShift, 0, PresContext(),
-                        mStyleContext, fontSizeInflation);
+                        mComputedStyle, fontSizeInflation);
     }
   }
   return PlaceMultiScript(PresContext(), aDrawTarget, aPlaceOrigin,

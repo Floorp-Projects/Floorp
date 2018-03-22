@@ -23,7 +23,9 @@ SOURCES += [
     '!HandlerData_p.c',
     'AccessibleHandler.cpp',
     'AccessibleHandlerControl.cpp',
+    'HandlerChildEnumerator.cpp',
     'HandlerRelation.cpp',
+    'HandlerTextLeaf.cpp',
 ]
 
 GENERATED_FILES += [

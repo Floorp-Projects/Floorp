@@ -16,11 +16,6 @@ pref-page =
            *[other] Preferences
         }
 
-# This string is currently used only in Firefox 60 and will be removed when not
-# needed for x-channel. See bug 1445686 for details.
-search-input =
-    .style = width: 15.4em
-
 # This is used to determine the width of the search field in about:preferences,
 # in order to make the entire placeholder string visible
 #

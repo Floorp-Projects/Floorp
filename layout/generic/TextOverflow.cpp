@@ -57,7 +57,7 @@ GetEllipsisTextRun(nsIFrame* aFrame)
   LazyReferenceRenderingDrawTargetGetterFromFrame lazyRefDrawTargetGetter(aFrame);
   return fm->GetThebesFontGroup()->GetEllipsisTextRun(
     aFrame->PresContext()->AppUnitsPerDevPixel(),
-    nsLayoutUtils::GetTextRunOrientFlagsForStyle(aFrame->StyleContext()),
+    nsLayoutUtils::GetTextRunOrientFlagsForStyle(aFrame->Style()),
     lazyRefDrawTargetGetter);
 }
 
@@ -102,7 +102,7 @@ IsInlineAxisOverflowVisible(nsIFrame* aFrame)
                   "expected a block frame");
 
   nsIFrame* f = aFrame;
-  while (f && f->StyleContext()->IsAnonBox() && !f->IsScrollFrame()) {
+  while (f && f->Style()->IsAnonBox() && !f->IsScrollFrame()) {
     f = f->GetParent();
   }
   if (!f) {
@@ -328,7 +328,7 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
 {
 #ifdef MOZ_XUL
   if (!mScrollableFrame) {
-    nsAtom* pseudoType = aBlockFrame->StyleContext()->GetPseudo();
+    nsAtom* pseudoType = aBlockFrame->Style()->GetPseudo();
     if (pseudoType == nsCSSAnonBoxes::mozXULAnonymousBlock) {
       mScrollableFrame =
         nsLayoutUtils::GetScrollableFrameFor(aBlockFrame->GetParent());

@@ -139,7 +139,7 @@ has been added or removed or that style has changed.</Body>
 
 <Body>The first step is to resolve style information for the content element.
 This process creates a style context that is stored in the frame (see
-nsIStyleContext).</Body>
+nsIComputedStyle).</Body>
 
 <Body>Once style is resolved construction rules are used to decide the type of
 frame to create. First we look at the element's tag and special case some

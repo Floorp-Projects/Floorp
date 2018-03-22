@@ -40,15 +40,15 @@ static const uint8_t kArrowHeadSize = 10;
 static const uint8_t kPhasorangleWidth = 8;
 
 nsIFrame*
-NS_NewMathMLmencloseFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMathMLmencloseFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsMathMLmencloseFrame(aContext);
+  return new (aPresShell) nsMathMLmencloseFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmencloseFrame)
 
-nsMathMLmencloseFrame::nsMathMLmencloseFrame(nsStyleContext* aContext, ClassID aID) :
-  nsMathMLContainerFrame(aContext, aID),
+nsMathMLmencloseFrame::nsMathMLmencloseFrame(ComputedStyle* aStyle, ClassID aID) :
+  nsMathMLContainerFrame(aStyle, aID),
   mRuleThickness(0), mRadicalRuleThickness(0),
   mLongDivCharIndex(-1), mRadicalCharIndex(-1), mContentWidth(0)
 {
@@ -66,7 +66,7 @@ nsresult nsMathMLmencloseFrame::AllocateMathMLChar(nsMencloseNotation mask)
     return NS_OK;
 
   // No need to track the style context given to our MathML chars.
-  // The Style System will use Get/SetAdditionalStyleContext() to keep it
+  // The Style System will use Get/SetAdditionalComputedStyle() to keep it
   // up-to-date if dynamic changes arise.
   uint32_t i = mMathMLChar.Length();
   nsAutoString Char;
@@ -84,7 +84,7 @@ nsresult nsMathMLmencloseFrame::AllocateMathMLChar(nsMencloseNotation mask)
 
   nsPresContext *presContext = PresContext();
   mMathMLChar[i].SetData(Char);
-  ResolveMathMLCharStyle(presContext, mContent, mStyleContext, &mMathMLChar[i]);
+  ResolveMathMLCharStyle(presContext, mContent, mComputedStyle, &mMathMLChar[i]);
 
   return NS_OK;
 }
@@ -728,23 +728,23 @@ nsMathMLmencloseFrame::AttributeChanged(int32_t         aNameSpaceID,
 //////////////////
 // the Style System will use these to pass the proper style context to our
 // MathMLChar
-nsStyleContext*
-nsMathMLmencloseFrame::GetAdditionalStyleContext(int32_t aIndex) const
+ComputedStyle*
+nsMathMLmencloseFrame::GetAdditionalComputedStyle(int32_t aIndex) const
 {
   int32_t len = mMathMLChar.Length();
   if (aIndex >= 0 && aIndex < len)
-    return mMathMLChar[aIndex].GetStyleContext();
+    return mMathMLChar[aIndex].GetComputedStyle();
   else
     return nullptr;
 }
 
 void
-nsMathMLmencloseFrame::SetAdditionalStyleContext(int32_t          aIndex,
-                                                 nsStyleContext*  aStyleContext)
+nsMathMLmencloseFrame::SetAdditionalComputedStyle(int32_t          aIndex,
+                                                 ComputedStyle*  aComputedStyle)
 {
   int32_t len = mMathMLChar.Length();
   if (aIndex >= 0 && aIndex < len)
-    mMathMLChar[aIndex].SetStyleContext(aStyleContext);
+    mMathMLChar[aIndex].SetComputedStyle(aComputedStyle);
 }
 
 class nsDisplayNotation : public nsDisplayItem

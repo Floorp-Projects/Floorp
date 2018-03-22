@@ -36,28 +36,8 @@ async function addBookmarks() {
     await PlacesUtils.bookmarks.insert({
       url, parentGuid: PlacesUtils.bookmarks.menuGuid
     });
+    Assert.ok(await PlacesUtils.bookmarks.fetch({ url }), "Url is bookmarked");
   }
-  checkBookmarksExist();
-}
-
-/**
- * Checks that all of the bookmarks created for |uris| exist.  It works by
- * creating one query per URI and then ORing all the queries.  The number of
- * results returned should be uris.length.
- */
-function checkBookmarksExist() {
-  let hs = PlacesUtils.history;
-  let queries = uris.map(function(u) {
-    let q = hs.getNewQuery();
-    q.uri = uri(u);
-    return q;
-  });
-  let options = hs.getNewQueryOptions();
-  options.queryType = options.QUERY_TYPE_BOOKMARKS;
-  let root = hs.executeQueries(queries, uris.length, options).root;
-  root.containerOpen = true;
-  Assert.equal(root.childCount, uris.length);
-  root.containerOpen = false;
 }
 
 /**

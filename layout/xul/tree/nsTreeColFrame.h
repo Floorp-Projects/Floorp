@@ -10,15 +10,15 @@
 class nsITreeBoxObject;
 
 nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell,
-                             nsStyleContext* aContext);
+                             ComputedStyle* aStyle);
 
 class nsTreeColFrame final : public nsBoxFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsTreeColFrame)
 
-  explicit nsTreeColFrame(nsStyleContext* aContext):
-    nsBoxFrame(aContext, kClassID) {}
+  explicit nsTreeColFrame(ComputedStyle* aStyle):
+    nsBoxFrame(aStyle, kClassID) {}
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
@@ -37,7 +37,7 @@ public:
                             bool aRemoveOverflowArea = false) override;
 
   friend nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell,
-                                      nsStyleContext* aContext);
+                                      ComputedStyle* aStyle);
 
 protected:
   virtual ~nsTreeColFrame();

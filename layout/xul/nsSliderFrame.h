@@ -18,7 +18,7 @@
 class nsITimer;
 class nsSliderFrame;
 
-nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
 class nsSliderMediator final : public nsIDOMEventListener
 {
@@ -46,7 +46,7 @@ public:
 
   friend class nsSliderMediator;
 
-  explicit nsSliderFrame(nsStyleContext* aContext);
+  explicit nsSliderFrame(ComputedStyle* aStyle);
   virtual ~nsSliderFrame();
 
 #ifdef DEBUG_FRAME_DUMP

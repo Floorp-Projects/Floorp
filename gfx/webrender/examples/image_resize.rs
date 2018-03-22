@@ -101,7 +101,7 @@ impl Example for App {
                 let mut updates = ResourceUpdates::new();
                 updates.update_image(
                     self.image_key,
-                    ImageDescriptor::new(64, 64, ImageFormat::BGRA8, true),
+                    ImageDescriptor::new(64, 64, ImageFormat::BGRA8, true, false),
                     ImageData::new(image_data),
                     None,
                 );

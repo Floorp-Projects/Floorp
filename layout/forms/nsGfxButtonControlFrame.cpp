@@ -15,15 +15,15 @@
 
 using namespace mozilla;
 
-nsGfxButtonControlFrame::nsGfxButtonControlFrame(nsStyleContext* aContext)
-  : nsHTMLButtonControlFrame(aContext, kClassID)
+nsGfxButtonControlFrame::nsGfxButtonControlFrame(ComputedStyle* aStyle)
+  : nsHTMLButtonControlFrame(aStyle, kClassID)
 {
 }
 
 nsContainerFrame*
-NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsGfxButtonControlFrame(aContext);
+  return new (aPresShell) nsGfxButtonControlFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsGfxButtonControlFrame)

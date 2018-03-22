@@ -267,6 +267,7 @@ impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
             format: self.format,
             is_opaque: self.is_opaque,
             offset: 0,
+            allow_mipmaps: false,
         }
     }
 }
@@ -670,6 +671,9 @@ impl ThreadListener for GeckoProfilerThreadListener {
         unsafe {
             gecko_profiler_unregister_thread();
         }
+    }
+
+    fn new_render_backend_thread(&self, _renderer_id: Option<u64>) {
     }
 }
 

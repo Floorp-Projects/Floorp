@@ -11,16 +11,18 @@
 // <msqrt> -- form a radical - implementation
 //
 
+using namespace mozilla;
+
 nsIFrame*
-NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsMathMLmsqrtFrame(aContext);
+  return new (aPresShell) nsMathMLmsqrtFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmsqrtFrame)
 
-nsMathMLmsqrtFrame::nsMathMLmsqrtFrame(nsStyleContext* aContext) :
-  nsMathMLmencloseFrame(aContext, kClassID)
+nsMathMLmsqrtFrame::nsMathMLmsqrtFrame(ComputedStyle* aStyle) :
+  nsMathMLmencloseFrame(aStyle, kClassID)
 {
 }
 
