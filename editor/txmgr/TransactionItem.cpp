@@ -7,12 +7,12 @@
 
 #include "mozilla/mozalloc.h"
 #include "mozilla/TransactionManager.h"
+#include "mozilla/TransactionStack.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsISupportsImpl.h"
 #include "nsITransaction.h"
-#include "nsTransactionStack.h"
 
 namespace mozilla {
 
@@ -72,7 +72,7 @@ TransactionItem::AddChild(TransactionItem* aTransactionItem)
   NS_ENSURE_TRUE(aTransactionItem, NS_ERROR_NULL_POINTER);
 
   if (!mUndoStack) {
-    mUndoStack = new nsTransactionStack(nsTransactionStack::FOR_UNDO);
+    mUndoStack = new TransactionStack(TransactionStack::FOR_UNDO);
   }
 
   mUndoStack->Push(aTransactionItem);
@@ -191,7 +191,7 @@ TransactionItem::UndoChildren(TransactionManager* aTransactionManager)
 {
   if (mUndoStack) {
     if (!mRedoStack && mUndoStack) {
-      mRedoStack = new nsTransactionStack(nsTransactionStack::FOR_REDO);
+      mRedoStack = new TransactionStack(TransactionStack::FOR_REDO);
     }
 
     /* Undo all of the transaction items children! */

@@ -13,11 +13,11 @@
 #include "nscore.h"
 
 class nsITransaction;
-class nsTransactionStack;
 
 namespace mozilla {
 
 class TransactionManager;
+class TransactionStack;
 
 class TransactionItem final
 {
@@ -62,8 +62,8 @@ private:
 
   nsCOMArray<nsISupports> mData;
   nsCOMPtr<nsITransaction> mTransaction;
-  nsTransactionStack* mUndoStack;
-  nsTransactionStack* mRedoStack;
+  TransactionStack* mUndoStack;
+  TransactionStack* mRedoStack;
 };
 
 } // namespace mozilla
