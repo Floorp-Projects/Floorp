@@ -39,13 +39,6 @@ interface nsIFrameLoader : nsISupports
   void destroy();
 
   /**
-   * Find out whether the loader's frame is at too great a depth in
-   * the frame tree.  This can be used to decide what operations may
-   * or may not be allowed on the loader's docshell.
-   */
-  readonly attribute boolean depthTooGreat;
-
-  /**
    * The default event mode automatically forwards the events
    * handled in EventStateManager::HandleCrossProcessEvent to
    * the child content process when these events are targeted to
