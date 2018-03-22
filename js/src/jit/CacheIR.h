@@ -292,7 +292,9 @@ extern const char* CacheKindNames[];
     _(LoadInstanceOfObjectResult)         \
     _(LoadTypeOfObjectResult)             \
     _(DoubleAddResult)                    \
+    _(DoubleSubResult)                    \
     _(Int32AddResult)                     \
+    _(Int32SubResult)                     \
     _(Int32NotResult)                     \
     _(Int32NegationResult)                \
     _(DoubleNegationResult)               \
@@ -996,8 +998,16 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::DoubleAddResult, lhsId);
         writeOperandId(rhsId);
     }
+    void doubleSubResult(ValOperandId lhsId, ValOperandId rhsId) {
+        writeOpWithOperandId(CacheOp::DoubleSubResult, lhsId);
+        writeOperandId(rhsId);
+    }
     void int32AddResult(Int32OperandId lhs, Int32OperandId rhs) {
         writeOpWithOperandId(CacheOp::Int32AddResult, lhs);
+        writeOperandId(rhs);
+    }
+    void int32SubResult(Int32OperandId lhs, Int32OperandId rhs) {
+        writeOpWithOperandId(CacheOp::Int32SubResult, lhs);
         writeOperandId(rhs);
     }
     void int32NotResult(Int32OperandId id) {

@@ -5116,7 +5116,7 @@ BinaryArithIRGenerator::tryAttachStub()
 bool
 BinaryArithIRGenerator::tryAttachDouble()
 {
-    if (op_ != JSOP_ADD)
+    if (op_ != JSOP_ADD && op_ != JSOP_SUB)
         return false;
 
     if (!lhs_.isDouble() || !rhs_.isDouble() || !res_.isDouble())
@@ -5136,6 +5136,10 @@ BinaryArithIRGenerator::tryAttachDouble()
         writer.doubleAddResult(lhsId, rhsId);
         trackAttached("BinaryArith.Double.Add");
         break;
+      case JSOP_SUB:
+        writer.doubleSubResult(lhsId, rhsId);
+        trackAttached("BinaryArith.Double.Sub");
+        break;
       default:
         MOZ_CRASH("Unhandled Op");
     }
@@ -5146,7 +5150,7 @@ BinaryArithIRGenerator::tryAttachDouble()
 bool
 BinaryArithIRGenerator::tryAttachInt32()
 {
-    if (op_ != JSOP_ADD)
+    if (op_ != JSOP_ADD && op_ != JSOP_SUB)
         return false;
 
     if (!lhs_.isInt32() || !rhs_.isInt32())
@@ -5162,6 +5166,10 @@ BinaryArithIRGenerator::tryAttachInt32()
       case JSOP_ADD:
         writer.int32AddResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.Int32.Add");
+        break;
+      case JSOP_SUB:
+        writer.int32SubResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.Sub");
         break;
       default:
         MOZ_CRASH("Unhandled op in tryAttachInt32");
