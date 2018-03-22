@@ -94,7 +94,11 @@ void brush_vs(
 
             // Set the clip bounds to a value that won't have any
             // effect for local space images.
+#ifdef WR_FEATURE_TEXTURE_RECT
+            vUvClipBounds = vec4(0.0, 0.0, vec2(textureSize(sColor0)));
+#else
             vUvClipBounds = vec4(0.0, 0.0, 1.0, 1.0);
+#endif
             break;
         }
     }

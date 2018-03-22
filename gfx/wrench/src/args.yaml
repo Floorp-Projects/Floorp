@@ -17,10 +17,6 @@ args:
       long: zoom
       help: Set zoom factor
       takes_value: true
-  - debug:
-      short: d
-      long: debug
-      help: Enable debug renderer
   - shaders:
       long: shaders
       help: Override path for shaders

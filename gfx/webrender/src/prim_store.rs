@@ -1107,11 +1107,7 @@ impl PrimitiveStore {
             PrimitiveKind::TextRun => {
                 let text = &mut self.cpu_text_runs[metadata.cpu_prim_index.0];
                 // The transform only makes sense for screen space rasterization
-                let transform = if pic_context.draw_text_transformed {
-                    Some(prim_run_context.scroll_node.world_content_transform.into())
-                } else {
-                    None
-                };
+                let transform = Some(prim_run_context.scroll_node.world_content_transform.into());
                 text.prepare_for_render(
                     frame_state.resource_cache,
                     frame_context.device_pixel_scale,
@@ -1715,8 +1711,7 @@ impl PrimitiveStore {
         let (prim_kind, cpu_prim_index) = {
             let metadata = &self.cpu_metadata[prim_index.0];
 
-            if pic_context.perform_culling &&
-               !metadata.is_backface_visible &&
+            if !metadata.is_backface_visible &&
                prim_run_context.scroll_node.world_content_transform.is_backface_visible() {
                 return None;
             }
@@ -1738,7 +1733,7 @@ impl PrimitiveStore {
                         return None;
                     }
 
-                    let (draw_text_transformed, original_reference_frame_index) = match pic.kind {
+                    let (apply_local_clip_rect, original_reference_frame_index) = match pic.kind {
                         PictureKind::Image { reference_frame_index, composite_mode, .. } => {
                             may_need_clip_mask = composite_mode.is_some();
                             (true, Some(reference_frame_index))
@@ -1761,12 +1756,11 @@ impl PrimitiveStore {
 
                     PictureContext {
                         pipeline_id: pic.pipeline_id,
-                        perform_culling: pic.cull_children,
                         prim_runs: mem::replace(&mut pic.runs, Vec::new()),
                         original_reference_frame_index,
                         display_list,
-                        draw_text_transformed,
                         inv_world_transform,
+                        apply_local_clip_rect,
                     }
                 };
 
@@ -1797,8 +1791,7 @@ impl PrimitiveStore {
             let local_rect = metadata.local_clip_rect.intersection(&metadata.local_rect);
             let local_rect = match local_rect {
                 Some(local_rect) => local_rect,
-                None if pic_context.perform_culling => return None,
-                None => LayerRect::zero(),
+                None => return None,
             };
 
             let screen_bounding_rect = calculate_screen_bounding_rect(
@@ -1816,7 +1809,7 @@ impl PrimitiveStore {
                     }
                 });
 
-            if metadata.screen_rect.is_none() && pic_context.perform_culling {
+            if metadata.screen_rect.is_none() {
                 return None;
             }
 
@@ -1825,7 +1818,7 @@ impl PrimitiveStore {
             (local_rect, screen_bounding_rect)
         };
 
-        if pic_context.perform_culling && may_need_clip_mask && !self.update_clip_task(
+        if may_need_clip_mask && !self.update_clip_task(
             prim_index,
             prim_run_context,
             &unclipped_device_rect,
@@ -1880,16 +1873,14 @@ impl PrimitiveStore {
                 .clip_scroll_tree
                 .get_clip_chain(run.clip_and_scroll.clip_chain_index);
 
-            if pic_context.perform_culling {
-                if !scroll_node.invertible {
-                    debug!("{:?} {:?}: position not invertible", run.base_prim_index, pic_context.pipeline_id);
-                    continue;
-                }
+            if !scroll_node.invertible {
+                debug!("{:?} {:?}: position not invertible", run.base_prim_index, pic_context.pipeline_id);
+                continue;
+            }
 
-                if clip_chain.combined_outer_screen_rect.is_empty() {
-                    debug!("{:?} {:?}: clipped out", run.base_prim_index, pic_context.pipeline_id);
-                    continue;
-                }
+            if clip_chain.combined_outer_screen_rect.is_empty() {
+                debug!("{:?} {:?}: clipped out", run.base_prim_index, pic_context.pipeline_id);
+                continue;
             }
 
             let parent_relative_transform = pic_context
@@ -1910,9 +1901,10 @@ impl PrimitiveStore {
                         })
                 });
 
-            let clip_chain_rect = match pic_context.perform_culling {
-                true => get_local_clip_rect_for_nodes(scroll_node, clip_chain),
-                false => None,
+            let clip_chain_rect = if pic_context.apply_local_clip_rect {
+                get_local_clip_rect_for_nodes(scroll_node, clip_chain)
+            } else {
+                None
             };
 
             let clip_chain_rect_index = match clip_chain_rect {
