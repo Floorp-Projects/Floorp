@@ -25,13 +25,11 @@ struct nsGlobalNameStruct
     eTypeNotInitialized,
     eTypeProperty,
     eTypeClassConstructor,
-    eTypeClassProto,
   } mType;
 
   union {
     int32_t mDOMClassInfoID; // eTypeClassConstructor
-    nsIID mIID; // eTypeClassProto
-    nsCID mCID; // All other types
+    nsCID mCID; // eTypeProperty
   };
 };
 
