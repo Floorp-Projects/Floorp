@@ -1,3 +1,10 @@
+onfetch = function(e) {
+  if (/\/clientId$/.test(e.request.url)) {
+    e.respondWith(new Response(e.clientId));
+    return;
+  }
+}
+
 onmessage = function(e) {
   dump("MatchAllPropertiesWorker:" + e.data + "\n");
   self.clients.matchAll().then(function(res) {
