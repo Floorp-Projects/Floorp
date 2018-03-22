@@ -118,7 +118,6 @@ const LEGACY_NON_RESTARTLESS_TESTS = new Set([
   "test_sourceURI.js",
   "test_strictcompatibility.js",
   "test_syncGUID.js",
-  "test_targetPlatforms.js",
   "test_updateCancel.js",
   "test_update_compatmode.js",
   "test_upgrade.js",
