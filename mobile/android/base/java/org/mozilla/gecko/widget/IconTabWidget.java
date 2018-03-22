@@ -19,7 +19,6 @@ import android.widget.TextView;
 public class IconTabWidget extends TabWidget {
     OnTabChangedListener mListener;
     private final int mButtonLayoutId;
-    private final boolean mIsIcon;
 
     public static interface OnTabChangedListener {
         public void onTabChanged(int tabIndex);
@@ -30,7 +29,6 @@ public class IconTabWidget extends TabWidget {
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.IconTabWidget);
         mButtonLayoutId = a.getResourceId(R.styleable.IconTabWidget_android_layout, 0);
-        mIsIcon = (a.getInt(R.styleable.IconTabWidget_display, 0x00) == 0x00);
         a.recycle();
 
         if (mButtonLayoutId == 0) {
@@ -40,12 +38,9 @@ public class IconTabWidget extends TabWidget {
 
     public View addTab(final int imageResId, final int stringResId) {
         View button = LayoutInflater.from(getContext()).inflate(mButtonLayoutId, this, false);
-        if (mIsIcon) {
-            ((ImageButton) button).setImageResource(imageResId);
-            button.setContentDescription(getContext().getString(stringResId));
-        } else {
-            ((TextView) button).setText(getContext().getString(stringResId));
-        }
+
+        ((ImageButton) button).setImageResource(imageResId);
+        button.setContentDescription(getContext().getString(stringResId));
 
         addView(button);
         button.setOnClickListener(new TabClickListener(getTabCount() - 1));
@@ -77,13 +72,11 @@ public class IconTabWidget extends TabWidget {
 
     /**
      * Fetch the Drawable icon corresponding to the given panel.
+     *
      * @param panel to fetch icon for.
      * @return Drawable instance, or null if no icon is being displayed, or the icon does not exist.
      */
     public Drawable getIconDrawable(int index) {
-        if (!mIsIcon) {
-            return null;
-        }
         // We can have multiple views in the tabs panel for each child. This finds the
         // first view corresponding to the given tab. This varies by Android
         // version. The first view should always be our ImageButton, but let's
@@ -96,9 +89,6 @@ public class IconTabWidget extends TabWidget {
     }
 
     public void setIconDrawable(int index, int resource) {
-        if (!mIsIcon) {
-            return;
-        }
         // We can have multiple views in the tabs panel for each child. This finds the
         // first view corresponding to the given tab. This varies by Android
         // version. The first view should always be our ImageButton, but let's
