@@ -26,6 +26,7 @@
 #include "nsStyleUtil.h"
 #include "nsIDocument.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 using mozilla::StyleAnimationValue;
 
@@ -495,7 +496,7 @@ static ServoAnimationValues
 ValueFromStringHelper(nsCSSPropertyID aPropID,
                       Element* aTargetElement,
                       nsPresContext* aPresContext,
-                      nsStyleContext* aStyleContext,
+                      ComputedStyle* aComputedStyle,
                       const nsAString& aString)
 {
   ServoAnimationValues result;
@@ -519,7 +520,7 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
   // Compute value
   aPresContext->StyleSet()->AsServo()->GetAnimationValues(servoDeclarationBlock,
                                                           aTargetElement,
-                                                          aStyleContext->AsServo(),
+                                                          aComputedStyle->AsServo(),
                                                           result);
 
   return result;
@@ -549,30 +550,25 @@ nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
     return;
   }
 
-  RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContext(aTargetElement, nullptr);
+  RefPtr<ComputedStyle> styleContext =
+    nsComputedDOMStyle::GetComputedStyle(aTargetElement, nullptr);
   if (!styleContext) {
     return;
   }
 
-  if (styleContext->IsServo()) {
-    ServoAnimationValues parsedValues =
-      ValueFromStringHelper(aPropID, aTargetElement, presContext,
-                            styleContext, aString);
-    if (aIsContextSensitive) {
-      // FIXME: Bug 1358955 - detect context-sensitive values and set this value
-      // appropriately.
-      *aIsContextSensitive = false;
-    }
-
-    if (!parsedValues.IsEmpty()) {
-      sSingleton.Init(aValue);
-      aValue.mU.mPtr = new ValueWrapper(aPropID, Move(parsedValues));
-    }
-    return;
+  ServoAnimationValues parsedValues =
+    ValueFromStringHelper(aPropID, aTargetElement, presContext,
+                          styleContext, aString);
+  if (aIsContextSensitive) {
+    // FIXME: Bug 1358955 - detect context-sensitive values and set this value
+    // appropriately.
+    *aIsContextSensitive = false;
   }
 
-    MOZ_CRASH("old style system disabled");
+  if (!parsedValues.IsEmpty()) {
+    sSingleton.Init(aValue);
+    aValue.mU.mPtr = new ValueWrapper(aPropID, Move(parsedValues));
+  }
 }
 
 // static

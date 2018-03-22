@@ -19,13 +19,13 @@ class nsMathMLmrootFrame : public nsMathMLContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmrootFrame)
 
-  friend nsIFrame* NS_NewMathMLmrootFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsIFrame* NS_NewMathMLmrootFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
   virtual void
-  SetAdditionalStyleContext(int32_t          aIndex,
-                            nsStyleContext*  aStyleContext) override;
-  virtual nsStyleContext*
-  GetAdditionalStyleContext(int32_t aIndex) const override;
+  SetAdditionalComputedStyle(int32_t          aIndex,
+                            ComputedStyle*  aComputedStyle) override;
+  virtual ComputedStyle*
+  GetAdditionalComputedStyle(int32_t aIndex) const override;
 
   virtual void
   Init(nsIContent*       aContent,
@@ -61,7 +61,7 @@ public:
   }
 
 protected:
-  explicit nsMathMLmrootFrame(nsStyleContext* aContext);
+  explicit nsMathMLmrootFrame(ComputedStyle* aStyle);
   virtual ~nsMathMLmrootFrame();
 
   nsMathMLChar mSqrChar;

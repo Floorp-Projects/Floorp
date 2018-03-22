@@ -17,7 +17,6 @@ class nsAtom;
 class nsIContent;
 class nsIFrame;
 class nsIPresShell;
-class nsStyleContext;
 class nsSVGLength2;
 
 struct nsRect;
@@ -31,10 +30,10 @@ class SVGFilterElement;
 class nsSVGFilterFrame : public nsSVGContainerFrame
 {
   friend nsIFrame*
-  NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  NS_NewSVGFilterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 protected:
-  explicit nsSVGFilterFrame(nsStyleContext* aContext)
-    : nsSVGContainerFrame(aContext, kClassID)
+  explicit nsSVGFilterFrame(ComputedStyle* aStyle)
+    : nsSVGContainerFrame(aStyle, kClassID)
     , mLoopFlag(false)
     , mNoHRefURI(false)
   {

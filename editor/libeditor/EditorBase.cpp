@@ -28,6 +28,7 @@
 #include "StyleSheetTransactions.h"     // for AddStyleSheetTransaction, etc.
 #include "TextEditUtils.h"              // for TextEditUtils
 #include "mozilla/CheckedInt.h"         // for CheckedInt
+#include "mozilla/ComputedStyle.h"      // for ComputedStyle
 #include "mozilla/EditAction.h"         // for EditAction
 #include "mozilla/EditorDOMPoint.h"     // for EditorDOMPoint
 #include "mozilla/EditorSpellCheck.h"   // for EditorSpellCheck
@@ -103,7 +104,6 @@
 #include "nsString.h"                   // for nsAutoString, nsString, etc.
 #include "nsStringFwd.h"                // for nsString
 #include "nsStyleConsts.h"              // for NS_STYLE_DIRECTION_RTL, etc.
-#include "nsStyleContext.h"             // for nsStyleContext
 #include "nsStyleStruct.h"              // for nsStyleDisplay, nsStyleText, etc.
 #include "nsStyleStructFwd.h"           // for nsIFrame::StyleUIReset, etc.
 #include "nsTextNode.h"                 // for nsTextNode
@@ -4109,13 +4109,13 @@ EditorBase::IsPreformatted(nsIDOMNode* aNode,
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   // Look at the node (and its parent if it's not an element), and grab its style context
-  RefPtr<nsStyleContext> elementStyle;
+  RefPtr<ComputedStyle> elementStyle;
   if (!content->IsElement()) {
     content = content->GetParent();
   }
   if (content && content->IsElement()) {
     elementStyle =
-      nsComputedDOMStyle::GetStyleContextNoFlush(content->AsElement(), nullptr);
+      nsComputedDOMStyle::GetComputedStyleNoFlush(content->AsElement(), nullptr);
   }
 
   if (!elementStyle) {

@@ -9,16 +9,16 @@
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsPresContext.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
 #include "nsIRootBox.h"
 #include "nsMenuPopupFrame.h"
 
 nsIFrame*
-NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewPopupSetFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsPopupSetFrame(aContext);
+  return new (aPresShell) nsPopupSetFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPopupSetFrame)

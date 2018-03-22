@@ -12,9 +12,9 @@
 // nsSVGGenericContainerFrame Implementation
 
 nsIFrame*
-NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsSVGGenericContainerFrame(aContext);
+  return new (aPresShell) nsSVGGenericContainerFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGGenericContainerFrame)

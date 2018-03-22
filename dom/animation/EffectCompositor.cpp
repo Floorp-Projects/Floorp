@@ -17,6 +17,7 @@
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/RestyleManager.h"
@@ -33,7 +34,6 @@
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
 #include "nsLayoutUtils.h"
-#include "nsStyleContextInlines.h"
 #include "nsTArray.h"
 #include "PendingAnimationTracker.h"
 
@@ -167,14 +167,11 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
   Maybe<NonOwningAnimationTarget> pseudoElement =
     EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
   if (pseudoElement) {
-    StyleBackendType backend =
-      aFrame->StyleContext()->IsServo()
-      ? StyleBackendType::Servo
-      : StyleBackendType::Gecko;
+    StyleBackendType backend = StyleBackendType::Servo;
     EffectCompositor::MaybeUpdateCascadeResults(backend,
                                                 pseudoElement->mElement,
                                                 pseudoElement->mPseudoType,
-                                                aFrame->StyleContext());
+                                                aFrame->Style());
   }
 
   if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
@@ -550,7 +547,7 @@ EffectCompositor::ClearIsRunningOnCompositor(const nsIFrame *aFrame,
 EffectCompositor::MaybeUpdateCascadeResults(StyleBackendType aBackendType,
                                             Element* aElement,
                                             CSSPseudoElementType aPseudoType,
-                                            nsStyleContext* aStyleContext)
+                                            ComputedStyle* aComputedStyle)
 {
   EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
   if (!effects || !effects->CascadeNeedsUpdate()) {
@@ -558,7 +555,7 @@ EffectCompositor::MaybeUpdateCascadeResults(StyleBackendType aBackendType,
   }
 
   UpdateCascadeResults(aBackendType, *effects, aElement, aPseudoType,
-                       aStyleContext);
+                       aComputedStyle);
 
   MOZ_ASSERT(!effects->CascadeNeedsUpdate(), "Failed to update cascade state");
 }
@@ -570,7 +567,7 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
   Maybe<NonOwningAnimationTarget> result;
 
   CSSPseudoElementType pseudoType =
-    aFrame->StyleContext()->GetPseudoType();
+    aFrame->Style()->GetPseudoType();
 
   if (pseudoType != CSSPseudoElementType::NotPseudo &&
       pseudoType != CSSPseudoElementType::before &&
@@ -606,7 +603,7 @@ EffectCompositor::GetOverriddenProperties(StyleBackendType aBackendType,
                                           EffectSet& aEffectSet,
                                           Element* aElement,
                                           CSSPseudoElementType aPseudoType,
-                                          nsStyleContext* aStyleContext)
+                                          ComputedStyle* aComputedStyle)
 {
   MOZ_ASSERT(aBackendType != StyleBackendType::Servo || aElement,
              "Should have an element to get style data from if we are using"
@@ -615,7 +612,7 @@ EffectCompositor::GetOverriddenProperties(StyleBackendType aBackendType,
   nsCSSPropertyIDSet result;
 
   Element* elementToRestyle = GetElementToRestyle(aElement, aPseudoType);
-  if (aBackendType == StyleBackendType::Gecko && !aStyleContext) {
+  if (aBackendType == StyleBackendType::Gecko && !aComputedStyle) {
     MOZ_CRASH("old style system disabled");
   } else if (aBackendType == StyleBackendType::Servo && !elementToRestyle) {
     return result;
@@ -667,7 +664,7 @@ EffectCompositor::UpdateCascadeResults(StyleBackendType aBackendType,
                                        EffectSet& aEffectSet,
                                        Element* aElement,
                                        CSSPseudoElementType aPseudoType,
-                                       nsStyleContext* aStyleContext)
+                                       ComputedStyle* aComputedStyle)
 {
   MOZ_ASSERT(EffectSet::GetEffectSet(aElement, aPseudoType) == &aEffectSet,
              "Effect set should correspond to the specified (pseudo-)element");
@@ -692,7 +689,7 @@ EffectCompositor::UpdateCascadeResults(StyleBackendType aBackendType,
     GetOverriddenProperties(aBackendType,
                             aEffectSet,
                             aElement, aPseudoType,
-                            aStyleContext);
+                            aComputedStyle);
 
   // Returns a bitset the represents which properties from
   // LayerAnimationInfo::sRecords are present in |aPropertySet|.
@@ -1032,7 +1029,7 @@ EffectCompositor::PreTraverse(dom::Element* aElement,
 template
 void
 EffectCompositor::UpdateEffectProperties(
-  const ServoStyleContext* aStyleContext,
+  const ComputedStyle* aComputedStyle,
   Element* aElement,
   CSSPseudoElementType aPseudoType);
 
