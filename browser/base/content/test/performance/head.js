@@ -246,6 +246,23 @@ async function prepareSettledWindow() {
   return win;
 }
 
+// Use this function to avoid catching a reflow related to calling focus on the
+// urlbar and changed rects for its dropmarker when opening new tabs.
+async function ensureFocusedUrlbar() {
+  // The switchingtabs attribute prevents the historydropmarker opacity
+  // transition, so if we expect a transitionend event when this attribute
+  // is set, we wait forever. (it's removed off a MozAfterPaint event listener)
+  await BrowserTestUtils.waitForCondition(() =>
+    !gURLBar.hasAttribute("switchingtabs"));
+
+  let dropmarker = document.getAnonymousElementByAttribute(gURLBar, "anonid",
+                                                           "historydropmarker");
+  let opacityPromise = BrowserTestUtils.waitForEvent(dropmarker, "transitionend",
+                                                     false, e => e.propertyName === "opacity");
+  gURLBar.focus();
+  await opacityPromise;
+}
+
 /**
  * Calculate and return how many additional tabs can be fit into the
  * tabstrip without causing it to overflow.
@@ -366,6 +383,11 @@ async function recordFrames(testPromise, win = window) {
   };
   win.addEventListener("MozAfterPaint", afterPaintListener);
 
+  // If the test is using an existing window, capture a frame immediately.
+  if (win.document.readyState == "complete") {
+    afterPaintListener();
+  }
+
   try {
     await testPromise;
   } finally {
@@ -375,6 +397,9 @@ async function recordFrames(testPromise, win = window) {
   return frames;
 }
 
+// How many identical pixels to accept between 2 rects when deciding to merge
+// them.
+const kMaxEmptyPixels = 3;
 function compareFrames(frame, previousFrame) {
   // Accessing the Math global is expensive as the test executes in a
   // non-syntactic scope. Accessing it as a lexical variable is enough
@@ -430,13 +455,12 @@ function compareFrames(frame, previousFrame) {
   rects.reverse();
 
   // The following code block merges rects that are close to each other
-  // (less than maxEmptyPixels away).
+  // (less than kMaxEmptyPixels away).
   // This is needed to avoid having a rect for each letter when a label moves.
-  const maxEmptyPixels = 3;
   let areRectsContiguous = function(r1, r2) {
-    return r1.y2 >= r2.y1 - 1 - maxEmptyPixels &&
-           r2.x1 - 1 - maxEmptyPixels <= r1.x2 &&
-           r2.x2 >= r1.x1 - 1 - maxEmptyPixels;
+    return r1.y2 >= r2.y1 - 1 - kMaxEmptyPixels &&
+           r2.x1 - 1 - kMaxEmptyPixels <= r1.x2 &&
+           r2.x2 >= r1.x1 - 1 - kMaxEmptyPixels;
   };
   let hasMergedRects;
   do {
@@ -460,8 +484,8 @@ function compareFrames(frame, previousFrame) {
 
   // For convenience, pre-compute the width and height of each rect.
   rects.forEach(r => {
-    r.w = r.x2 - r.x1;
-    r.h = r.y2 - r.y1;
+    r.w = r.x2 - r.x1 + 1;
+    r.h = r.y2 - r.y1 + 1;
   });
 
   return rects;
@@ -519,20 +543,18 @@ function reportUnexpectedFlicker(frames, expectations) {
       rects = expectations.filter(rects, frame, previousFrame);
     }
 
-    for (let rect of rects) {
-      rects = rects.filter(rect => {
-        let rectText = `${rect.toSource()}, window width: ${frame.width}`;
-        for (let e of (expectations.exceptions || [])) {
-          if (e.condition(rect)) {
-            todo(false, e.name + ", " + rectText);
-            return false;
-          }
+    rects = rects.filter(rect => {
+      let rectText = `${rect.toSource()}, window width: ${frame.width}`;
+      for (let e of (expectations.exceptions || [])) {
+        if (e.condition(rect)) {
+          todo(false, e.name + ", " + rectText);
+          return false;
         }
+      }
 
-        ok(false, "unexpected changed rect: " + rectText);
-        return true;
-      });
-    }
+      ok(false, "unexpected changed rect: " + rectText);
+      return true;
+    });
 
     if (!rects.length)
       continue;
