@@ -14,6 +14,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "gTabWarmingEnabled",
+  "browser.tabs.remote.warmup.enabled");
+XPCOMUtils.defineLazyPreferenceGetter(this, "gTabWarmingMax",
+  "browser.tabs.remote.warmup.maxTabs");
+XPCOMUtils.defineLazyPreferenceGetter(this, "gTabWarmingUnloadDelayMs",
+  "browser.tabs.remote.warmup.unloadDelayMs");
+
 /**
  * The tab switcher is responsible for asynchronously switching
  * tabs in e10s. It waits until the new tab is ready (i.e., the
@@ -601,7 +608,7 @@ class AsyncTabSwitcher {
 
     this.maybeFinishTabSwitch();
 
-    if (numWarming > this.tabbrowser.tabWarmingMax) {
+    if (numWarming > gTabWarmingMax) {
       this.logState("Hit tabWarmingMax");
       if (this.unloadTimer) {
         this.clearTimer(this.unloadTimer);
@@ -821,7 +828,7 @@ class AsyncTabSwitcher {
   }
 
   canWarmTab(tab) {
-    if (!this.tabbrowser.tabWarmingEnabled) {
+    if (!gTabWarmingEnabled) {
       return false;
     }
 
@@ -870,8 +877,7 @@ class AsyncTabSwitcher {
 
     this.warmingTabs.add(tab);
     this.setTabState(tab, this.STATE_LOADING);
-    this.suppressDisplayPortAndQueueUnload(tab,
-      this.tabbrowser.tabWarmingUnloadDelay);
+    this.suppressDisplayPortAndQueueUnload(tab, gTabWarmingUnloadDelayMs);
   }
 
   // Called when the user asks to switch to a given tab.
@@ -880,7 +886,7 @@ class AsyncTabSwitcher {
       return;
     }
 
-    if (this.tabbrowser.tabWarmingEnabled) {
+    if (gTabWarmingEnabled) {
       let warmingState = "disqualified";
 
       if (this.canWarmTab(tab)) {

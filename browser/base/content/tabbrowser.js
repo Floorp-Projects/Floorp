@@ -59,15 +59,9 @@ window._gBrowser = {
     messageManager.addMessageListener("Findbar:Keypress", this);
 
     XPCOMUtils.defineLazyPreferenceGetter(this, "animationsEnabled",
-      "toolkit.cosmeticAnimations.enabled", true);
+      "toolkit.cosmeticAnimations.enabled");
     XPCOMUtils.defineLazyPreferenceGetter(this, "schedulePressureDefaultCount",
-      "browser.schedulePressure.defaultCount", 3);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "tabWarmingEnabled",
-      "browser.tabs.remote.warmup.enabled", false);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "tabWarmingMax",
-      "browser.tabs.remote.warmup.maxTabs", 3);
-    XPCOMUtils.defineLazyPreferenceGetter(this, "tabWarmingUnloadDelay" /* ms */,
-      "browser.tabs.remote.warmup.unloadDelayMs", 2000);
+      "browser.schedulePressure.defaultCount");
 
     this._setupEventListeners();
   },
