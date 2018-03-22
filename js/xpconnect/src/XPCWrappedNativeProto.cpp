@@ -56,14 +56,9 @@ XPCWrappedNativeProto::Init(nsIXPCScriptable* scriptable,
     AutoJSContext cx;
     mScriptable = scriptable;
 
-    const js::Class* jsclazz =
-        (mScriptable && mScriptable->AllowPropModsToPrototype())
-        ? &XPC_WN_ModsAllowed_Proto_JSClass
-        : &XPC_WN_NoMods_Proto_JSClass;
-
     JS::RootedObject global(cx, mScope->GetGlobalJSObject());
     JS::RootedObject proto(cx, JS_GetObjectPrototype(cx, global));
-    mJSProtoObject = JS_NewObjectWithUniqueType(cx, js::Jsvalify(jsclazz),
+    mJSProtoObject = JS_NewObjectWithUniqueType(cx, js::Jsvalify(&XPC_WN_Proto_JSClass),
                                                 proto);
 
     bool success = !!mJSProtoObject;
