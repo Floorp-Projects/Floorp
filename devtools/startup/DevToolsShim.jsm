@@ -153,7 +153,7 @@ this.DevToolsShim = {
       return;
     }
 
-    this.initDevTools();
+    this.initDevTools("SessionRestore");
     this._gDevTools.restoreDevToolsSession(session);
   },
 
