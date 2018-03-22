@@ -14,7 +14,6 @@
 #include "nsPresContext.h"
 #include "nsSVGUtils.h"
 #include "nsCSSKeywords.h"
-#include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "gfxMatrix.h"
