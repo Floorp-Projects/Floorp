@@ -6,10 +6,6 @@
 
 #include "mozilla/ArrayUtils.h"
 
-#ifdef XP_WIN
-#undef GetClassName
-#endif
-
 // JavaScript includes
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -89,87 +85,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-// NOTE: DEFAULT_SCRIPTABLE_FLAGS and DOM_DEFAULT_SCRIPTABLE_FLAGS
-//       are defined in nsIDOMClassInfo.h.
-
-#define DOMCLASSINFO_STANDARD_FLAGS                                           \
-  (nsIClassInfo::MAIN_THREAD_ONLY |                                           \
-   nsIClassInfo::DOM_OBJECT       |                                           \
-   nsIClassInfo::SINGLETON_CLASSINFO)
-
-
-#ifdef DEBUG
-#define NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                \
-    eDOMClassInfo_##_class##_id,
-#else
-#define NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                \
-  // nothing
-#endif
-
-#define NS_DEFINE_CLASSINFO_DATA_HELPER(_class, _helper, _flags)              \
-  { nullptr,                                                                  \
-    XPC_MAKE_CLASS_OPS(_flags),                                               \
-    XPC_MAKE_CLASS(#_class, _flags,                                           \
-                   &sClassInfoData[eDOMClassInfo_##_class##_id].mClassOps),   \
-    _helper::doCreate,                                                        \
-    nullptr,                                                                  \
-    nullptr,                                                                  \
-    nullptr,                                                                  \
-    _flags,                                                                   \
-    true,                                                                     \
-    false,                                                                    \
-    NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                    \
-  },
-
-#define NS_DEFINE_CLASSINFO_DATA(_class, _helper, _flags)                     \
-  NS_DEFINE_CLASSINFO_DATA_HELPER(_class, _helper, _flags)
-
-nsIXPConnect *nsDOMClassInfo::sXPConnect = nullptr;
 bool nsDOMClassInfo::sIsInitialized = false;
-
-
-jsid nsDOMClassInfo::sConstructor_id     = JSID_VOID;
-jsid nsDOMClassInfo::sWrappedJSObject_id = JSID_VOID;
-
-// Helper to handle torn-down inner windows.
-static inline nsresult
-SetParentToWindow(nsGlobalWindowInner *win, JSObject **parent)
-{
-  MOZ_ASSERT(win);
-  *parent = win->FastGetGlobalJSObject();
-
-  if (MOZ_UNLIKELY(!*parent)) {
-    // The inner window has been torn down. The scope is dying, so don't create
-    // any new wrappers.
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
-nsresult
-nsDOMClassInfo::DefineStaticJSVals()
-{
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(xpc::UnprivilegedJunkScope())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  JSContext* cx = jsapi.cx();
-
-#define SET_JSID_TO_STRING(_id, _cx, _str)                              \
-  if (JSString *str = ::JS_AtomizeAndPinString(_cx, _str))                             \
-      _id = INTERNED_STRING_TO_JSID(_cx, str);                                \
-  else                                                                        \
-      return NS_ERROR_OUT_OF_MEMORY;
-
-  SET_JSID_TO_STRING(sConstructor_id,     cx, "constructor");
-  SET_JSID_TO_STRING(sWrappedJSObject_id, cx, "wrappedJSObject");
-
-  return NS_OK;
-}
-
-static const JSClass sDOMConstructorProtoClass = {
-  "DOM Constructor.prototype", 0
-};
 
 // static
 nsresult
@@ -183,16 +99,8 @@ nsDOMClassInfo::Init()
 
   NS_ENSURE_TRUE(!sIsInitialized, NS_ERROR_ALREADY_INITIALIZED);
 
-  nsScriptNameSpaceManager *nameSpaceManager = GetNameSpaceManager();
-  NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
-
-  NS_ADDREF(sXPConnect = nsContentUtils::XPConnect());
-
   nsCOMPtr<nsIXPCFunctionThisTranslator> elt = new nsEventListenerThisTranslator();
-  sXPConnect->SetFunctionThisTranslator(NS_GET_IID(nsIDOMEventListener), elt);
-
-  // Initialize static JSString's
-  DefineStaticJSVals();
+  nsContentUtils::XPConnect()->SetFunctionThisTranslator(NS_GET_IID(nsIDOMEventListener), elt);
 
   sIsInitialized = true;
 
@@ -203,10 +111,6 @@ nsDOMClassInfo::Init()
 void
 nsDOMClassInfo::ShutDown()
 {
-  sConstructor_id     = JSID_VOID;
-  sWrappedJSObject_id = JSID_VOID;
-
-  NS_IF_RELEASE(sXPConnect);
   sIsInitialized = false;
 }
 
