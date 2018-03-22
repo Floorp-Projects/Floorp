@@ -113,7 +113,6 @@ function MockFxAccountsClient() {
   this.signCertificate = function() { throw new Error("no"); };
 
   this.signOut = () => Promise.resolve();
-  this.signOutAndDestroyDevice = () => Promise.resolve({});
 
   FxAccountsClient.apply(this);
 }
@@ -227,10 +226,10 @@ add_task(async function test_get_signed_in_user_initially_unset() {
   Assert.equal(result, null);
 });
 
-add_task(async function test_set_signed_in_user_deletes_previous_device() {
-  _("Check setSignedInUser tries to delete a previous registered device");
+add_task(async function test_set_signed_in_user_signs_out_previous_account() {
+  _("Check setSignedInUser signs out the previous account.");
   let account = MakeFxAccounts();
-  let deleteDeviceRegistrationCalled = false;
+  let signOutServerCalled = false;
   let credentials = {
     email: "foo@example.com",
     uid: "1234@lcip.org",
@@ -244,13 +243,13 @@ add_task(async function test_set_signed_in_user_deletes_previous_device() {
   };
   await account.setSignedInUser(credentials);
 
-  account.internal.deleteDeviceRegistration = () => {
-    deleteDeviceRegistrationCalled = true;
+  account.internal._signOutServer = () => {
+    signOutServerCalled = true;
     return Promise.resolve(true);
   };
 
   await account.setSignedInUser(credentials);
-  Assert.ok(deleteDeviceRegistrationCalled);
+  Assert.ok(signOutServerCalled);
 });
 
 add_task(async function test_update_account_data() {
@@ -1077,123 +1076,6 @@ add_test(function test_resend_email() {
       });
     });
   });
-});
-
-add_task(async function test_sign_out_with_device() {
-  const fxa = new MockFxAccounts();
-
-  const credentials = getTestUser("alice");
-  await fxa.internal.setSignedInUser(credentials);
-
-  const user = await fxa.internal.getUserAccountData();
-  Assert.ok(user);
-  Object.keys(credentials).forEach(key => Assert.equal(credentials[key], user[key]));
-
-  const spy = {
-    signOut: { count: 0 },
-    deleteDeviceRegistration: { count: 0, args: [] }
-  };
-  const client = fxa.internal.fxAccountsClient;
-  client.signOut = function() {
-    spy.signOut.count += 1;
-    return Promise.resolve();
-  };
-  fxa.internal.deleteDeviceRegistration = function() {
-    spy.deleteDeviceRegistration.count += 1;
-    spy.deleteDeviceRegistration.args.push(arguments);
-    return Promise.resolve();
-  };
-
-  const promise = new Promise(resolve => {
-    makeObserver(ONLOGOUT_NOTIFICATION, () => {
-      log.debug("test_sign_out_with_device observed onlogout");
-      // user should be undefined after sign out
-      fxa.internal.getUserAccountData().then(user2 => {
-        Assert.equal(user2, null);
-        Assert.equal(spy.signOut.count, 0);
-        Assert.equal(spy.deleteDeviceRegistration.count, 1);
-        Assert.equal(spy.deleteDeviceRegistration.args[0].length, 2);
-        Assert.equal(spy.deleteDeviceRegistration.args[0][0], credentials.sessionToken);
-        Assert.equal(spy.deleteDeviceRegistration.args[0][1], credentials.deviceId);
-        resolve();
-      });
-    });
-  });
-
-  await fxa.signOut();
-
-  await promise;
-});
-
-add_task(async function test_sign_out_without_device() {
-  const fxa = new MockFxAccounts();
-
-  const credentials = getTestUser("alice");
-  delete credentials.deviceId;
-  await fxa.internal.setSignedInUser(credentials);
-
-  await fxa.internal.getUserAccountData();
-
-  const spy = {
-    signOut: { count: 0, args: [] },
-    deleteDeviceRegistration: { count: 0 }
-  };
-  const client = fxa.internal.fxAccountsClient;
-  client.signOut = function() {
-    spy.signOut.count += 1;
-    spy.signOut.args.push(arguments);
-    return Promise.resolve();
-  };
-  fxa.internal.deleteDeviceRegistration = function() {
-    spy.deleteDeviceRegistration.count += 1;
-    return Promise.resolve();
-  };
-
-  const promise = new Promise(resolve => {
-    makeObserver(ONLOGOUT_NOTIFICATION, () => {
-      log.debug("test_sign_out_without_device observed onlogout");
-      // user should be undefined after sign out
-      fxa.internal.getUserAccountData().then(user2 => {
-        Assert.equal(user2, null);
-        Assert.equal(spy.signOut.count, 1);
-        Assert.equal(spy.signOut.args[0].length, 2);
-        Assert.equal(spy.signOut.args[0][0], credentials.sessionToken);
-        Assert.ok(spy.signOut.args[0][1]);
-        Assert.equal(spy.signOut.args[0][1].service, "sync");
-        Assert.equal(spy.deleteDeviceRegistration.count, 0);
-        resolve();
-      });
-    });
-  });
-
-  await fxa.signOut();
-
-  await promise;
-});
-
-add_task(async function test_sign_out_with_remote_error() {
-  let fxa = new MockFxAccounts();
-  let remoteSignOutCalled = false;
-  // Force remote sign out to trigger an error
-  fxa.internal.deleteDeviceRegistration = function() {
-    remoteSignOutCalled = true;
-    throw new Error("Remote sign out error");
-  };
-  let promiseLogout = new Promise(resolve => {
-    makeObserver(ONLOGOUT_NOTIFICATION, function() {
-      log.debug("test_sign_out_with_remote_error observed onlogout");
-      resolve();
-    });
-  });
-
-  let jane = getTestUser("jane");
-  await fxa.setSignedInUser(jane);
-  await fxa.signOut();
-  await promiseLogout;
-
-  let user = await fxa.internal.getUserAccountData();
-  Assert.equal(user, null);
-  Assert.ok(remoteSignOutCalled);
 });
 
 add_test(function test_getOAuthToken() {
