@@ -15,7 +15,7 @@ use winapi::{LPFILETIME, ULONG};
 use winapi::S_FALSE;
 use winapi::BSTR;
 use winapi::LPCOLESTR;
-use winapi::{CLSCTX_ALL, CoCreateInstance};
+use winapi::{CoCreateInstance, CLSCTX_ALL};
 use winapi::LPSAFEARRAY;
 use winapi::{IUnknown, IUnknownVtbl};
 use winapi::{HRESULT, LCID, LPCWSTR, PULONGLONG};
@@ -155,7 +155,7 @@ interface ISetupHelper(ISetupHelperVtbl): IUnknown(IUnknownVtbl) {
 }}
 
 DEFINE_GUID!{CLSID_SetupConfiguration,
-    0x177f0c4a, 0x1cd3, 0x4de7, 0xa3, 0x2c, 0x71, 0xdb, 0xbb, 0x9f, 0xa3, 0x6d}
+0x177f0c4a, 0x1cd3, 0x4de7, 0xa3, 0x2c, 0x71, 0xdb, 0xbb, 0x9f, 0xa3, 0x6d}
 
 // Safe wrapper around the COM interfaces
 pub struct SetupConfiguration(ComPtr<ISetupConfiguration>);
@@ -163,31 +163,44 @@ pub struct SetupConfiguration(ComPtr<ISetupConfiguration>);
 impl SetupConfiguration {
     pub fn new() -> Result<SetupConfiguration, i32> {
         let mut obj = null_mut();
-        let err = unsafe { CoCreateInstance(
-            &CLSID_SetupConfiguration, null_mut(), CLSCTX_ALL,
-            &ISetupConfiguration::uuidof(), &mut obj,
-        ) };
-        if err < 0 { return Err(err); }
+        let err = unsafe {
+            CoCreateInstance(
+                &CLSID_SetupConfiguration,
+                null_mut(),
+                CLSCTX_ALL,
+                &ISetupConfiguration::uuidof(),
+                &mut obj,
+            )
+        };
+        if err < 0 {
+            return Err(err);
+        }
         let obj = unsafe { ComPtr::from_raw(obj as *mut ISetupConfiguration) };
         Ok(SetupConfiguration(obj))
     }
     pub fn get_instance_for_current_process(&self) -> Result<SetupInstance, i32> {
         let mut obj = null_mut();
         let err = unsafe { self.0.GetInstanceForCurrentProcess(&mut obj) };
-        if err < 0 { return Err(err); }
+        if err < 0 {
+            return Err(err);
+        }
         Ok(unsafe { SetupInstance::from_raw(obj) })
     }
     pub fn enum_instances(&self) -> Result<EnumSetupInstances, i32> {
         let mut obj = null_mut();
         let err = unsafe { self.0.EnumInstances(&mut obj) };
-        if err < 0 { return Err(err); }
+        if err < 0 {
+            return Err(err);
+        }
         Ok(unsafe { EnumSetupInstances::from_raw(obj) })
     }
     pub fn enum_all_instances(&self) -> Result<EnumSetupInstances, i32> {
         let mut obj = null_mut();
         let this = try!(self.0.cast::<ISetupConfiguration2>());
         let err = unsafe { this.EnumAllInstances(&mut obj) };
-        if err < 0 { return Err(err); }
+        if err < 0 {
+            return Err(err);
+        }
         Ok(unsafe { EnumSetupInstances::from_raw(obj) })
     }
 }
@@ -202,28 +215,36 @@ impl SetupInstance {
         let mut s = null_mut();
         let err = unsafe { self.0.GetInstanceId(&mut s) };
         let bstr = unsafe { BStr::from_raw(s) };
-        if err < 0 { return Err(err); }
+        if err < 0 {
+            return Err(err);
+        }
         Ok(bstr.to_osstring())
     }
     pub fn installation_name(&self) -> Result<OsString, i32> {
         let mut s = null_mut();
         let err = unsafe { self.0.GetInstallationName(&mut s) };
         let bstr = unsafe { BStr::from_raw(s) };
-        if err < 0 { return Err(err); }
+        if err < 0 {
+            return Err(err);
+        }
         Ok(bstr.to_osstring())
     }
     pub fn installation_path(&self) -> Result<OsString, i32> {
         let mut s = null_mut();
         let err = unsafe { self.0.GetInstallationPath(&mut s) };
         let bstr = unsafe { BStr::from_raw(s) };
-        if err < 0 { return Err(err); }
+        if err < 0 {
+            return Err(err);
+        }
         Ok(bstr.to_osstring())
     }
     pub fn installation_version(&self) -> Result<OsString, i32> {
         let mut s = null_mut();
         let err = unsafe { self.0.GetInstallationVersion(&mut s) };
         let bstr = unsafe { BStr::from_raw(s) };
-        if err < 0 { return Err(err); }
+        if err < 0 {
+            return Err(err);
+        }
         Ok(bstr.to_osstring())
     }
     pub fn product_path(&self) -> Result<OsString, i32> {
@@ -231,7 +252,9 @@ impl SetupInstance {
         let this = try!(self.0.cast::<ISetupInstance2>());
         let err = unsafe { this.GetProductPath(&mut s) };
         let bstr = unsafe { BStr::from_raw(s) };
-        if err < 0 { return Err(err); }
+        if err < 0 {
+            return Err(err);
+        }
         Ok(bstr.to_osstring())
     }
 }
@@ -249,9 +272,12 @@ impl Iterator for EnumSetupInstances {
     fn next(&mut self) -> Option<Result<SetupInstance, i32>> {
         let mut obj = null_mut();
         let err = unsafe { self.0.Next(1, &mut obj, null_mut()) };
-        if err < 0 { return Some(Err(err)); }
-        if err == S_FALSE { return None; }
+        if err < 0 {
+            return Some(Err(err));
+        }
+        if err == S_FALSE {
+            return None;
+        }
         Some(Ok(unsafe { SetupInstance::from_raw(obj) }))
     }
 }
-
