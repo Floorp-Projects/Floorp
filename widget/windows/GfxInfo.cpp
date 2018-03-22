@@ -1190,6 +1190,15 @@ GfxInfo::GetGfxDriverInfo()
       GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
       DRIVER_BUILD_ID_LESS_THAN_OR_EQUAL, 2321, "FEATURE_FAILURE_BUG_1018278", "X.X.X.2342");
 
+    /**
+     * Disable D2D on Win7 on Intel Haswell for graphics drivers build id <= 4578.
+     * See bug 1432610
+     */
+    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows7,
+        (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorIntel), (GfxDeviceFamily*) GfxDriverInfo::GetDeviceFamily(IntelHDGraphicsToHaswell),
+      nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+      DRIVER_BUILD_ID_LESS_THAN_OR_EQUAL, 4578, "FEATURE_FAILURE_BUG_1432610");
+
     /* Disable D2D on Win7 on Intel HD Graphics on driver <= 8.15.10.2302
      * See bug 806786
      */
