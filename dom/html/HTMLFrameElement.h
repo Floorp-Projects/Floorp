@@ -26,7 +26,7 @@ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLFrameElement,
                                        nsGenericHTMLFrameElement)
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLFrameElement, frame)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLFrameElement, frame)
 
   // nsIContent
   virtual bool ParseAttribute(int32_t aNamespaceID,

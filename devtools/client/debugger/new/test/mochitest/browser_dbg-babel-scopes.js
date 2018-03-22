@@ -251,7 +251,30 @@ add_task(async function() {
     "thirdModuleScoped()"
   ]);
 
+  await breakpointScopes(dbg, "out-of-order-declarations", { line: 8, column: 4 }, [
+    "callback",
+    "fn()",
+    ["val", "undefined"],
+    "root",
+    ["callback", "(optimized away)"],
+    ["fn", "(optimized away)"],
+    ["val", "(optimized away)"],
+    "Module",
+
+    // This value is currently unmapped because import declarations don't map
+    // very well and ones at the end of the file map especially badly.
+    ["aDefault", "(unmapped)"],
+    ["root", "(optimized away)"],
+    ["val", "(optimized away)"],
+  ]);
+
   await breakpointScopes(dbg, "non-modules", { line: 7, column: 2 }, []);
+
+  await breakpointScopes(dbg, "flowtype-bindings", { line: 8, column: 2 }, [
+    "Module",
+    ["aConst", '"a-const"'],
+    "root()"
+  ]);
 
   await breakpointScopes(dbg, "switches", { line: 7, column: 6 }, [
     "Switch",

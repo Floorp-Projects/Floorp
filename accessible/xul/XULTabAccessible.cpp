@@ -52,7 +52,7 @@ XULTabAccessible::DoAction(uint8_t index)
 {
   if (index == eAction_Switch) {
     // XXXbz Could this just FromContent?
-    RefPtr<nsXULElement> tab = nsXULElement::FromContentOrNull(mContent);
+    RefPtr<nsXULElement> tab = nsXULElement::FromNodeOrNull(mContent);
     if (tab) {
       tab->Click(mozilla::dom::CallerType::System);
       return true;

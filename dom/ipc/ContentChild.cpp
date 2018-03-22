@@ -544,6 +544,7 @@ ContentChild::ContentChild()
 #endif
  , mIsAlive(true)
  , mShuttingDown(false)
+ , mShutdownTimeout(0)
 {
   // This process is a content process, so it's clearly running in
   // multiprocess mode!
@@ -558,6 +559,12 @@ ContentChild::ContentChild()
     sShutdownCanary = new ShutdownCanary();
     ClearOnShutdown(&sShutdownCanary, ShutdownPhase::Shutdown);
   }
+  // If a shutdown message is received from within a nested event loop, we set
+  // the timeout for the nested event loop to half the ForceKillTimer timeout
+  // (in ms) to leave enough time to send the FinishShutdown message to the
+  // parent.
+  mShutdownTimeout =
+    Preferences::GetInt("dom.ipc.tabs.shutdownTimeoutSecs", 5) * 1000 / 2;
 }
 
 #ifdef _MSC_VER
@@ -3030,28 +3037,32 @@ ContentChild::RecvShutdown()
 void
 ContentChild::ShutdownInternal()
 {
-  // If we receive the shutdown message from within a nested event loop, we want
-  // to wait for that event loop to finish. Otherwise we could prematurely
-  // terminate an "unload" or "pagehide" event handler (which might be doing a
-  // sync XHR, for example).
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCShutdownState"),
                                      NS_LITERAL_CSTRING("RecvShutdown"));
 
-  MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<nsThread> mainThread = nsThreadManager::get().GetCurrentThread();
+  // If we receive the shutdown message from within a nested event loop, we want
+  // to wait for that event loop to finish. Otherwise we could prematurely
+  // terminate an "unload" or "pagehide" event handler (which might be doing a
+  // sync XHR, for example). However, we need to strike a balance and shut down
+  // within a reasonable amount of time (mShutdownTimeout) or the ForceKillTimer
+  // in the parent will execute and kill us hard.
   // Note that we only have to check the recursion count for the current
   // cooperative thread. Since the Shutdown message is not labeled with a
   // SchedulerGroup, there can be no other cooperative threads doing work while
   // we're running.
-  if (mainThread && mainThread->RecursionDepth() > 1) {
+  MOZ_ASSERT(NS_IsMainThread());
+  RefPtr<nsThread> mainThread = nsThreadManager::get().GetCurrentThread();
+  if (mainThread && mainThread->RecursionDepth() > 1 && mShutdownTimeout > 0) {
     // We're in a nested event loop. Let's delay for an arbitrary period of
     // time (100ms) in the hopes that the event loop will have finished by
     // then.
+    int32_t delay = 100;
     MessageLoop::current()->PostDelayedTask(
       NewRunnableMethod(
         "dom::ContentChild::RecvShutdown", this,
         &ContentChild::ShutdownInternal),
-      100);
+      delay);
+    mShutdownTimeout -= delay;
     return;
   }
 

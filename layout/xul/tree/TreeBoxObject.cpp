@@ -143,7 +143,7 @@ TreeBoxObject::GetView(nsITreeView * *aView)
       return mTreeBody->GetView(aView);
   }
   if (!mView) {
-    RefPtr<nsXULElement> xulele = nsXULElement::FromContentOrNull(mContent);
+    RefPtr<nsXULElement> xulele = nsXULElement::FromNodeOrNull(mContent);
     if (xulele) {
       // No tree builder, create a tree content view.
       nsresult rv = NS_NewTreeContentView(getter_AddRefs(mView));

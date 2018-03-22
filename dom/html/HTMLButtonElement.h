@@ -33,7 +33,7 @@ public:
 
   virtual int32_t TabIndexDefault() override;
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLButtonElement, button)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLButtonElement, button)
 
   // Element
   virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override

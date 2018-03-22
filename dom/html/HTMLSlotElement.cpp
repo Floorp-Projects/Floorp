@@ -140,7 +140,7 @@ FlattenAssignedNodes(HTMLSlotElement* aSlot, nsTArray<RefPtr<nsINode>>& aNodes)
       }
 
       if (child->IsHTMLElement(nsGkAtoms::slot)) {
-        FlattenAssignedNodes(HTMLSlotElement::FromContent(child), aNodes);
+        FlattenAssignedNodes(HTMLSlotElement::FromNode(child), aNodes);
       } else {
         aNodes.AppendElement(child);
       }
@@ -152,7 +152,7 @@ FlattenAssignedNodes(HTMLSlotElement* aSlot, nsTArray<RefPtr<nsINode>>& aNodes)
     nsINode* assignedNode = assignedNodes[i];
     if (assignedNode->IsHTMLElement(nsGkAtoms::slot)) {
       FlattenAssignedNodes(
-        HTMLSlotElement::FromContent(assignedNode->AsContent()), aNodes);
+        HTMLSlotElement::FromNode(assignedNode->AsContent()), aNodes);
     } else {
       aNodes.AppendElement(assignedNode);
     }

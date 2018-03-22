@@ -37,9 +37,7 @@ ContainerBoxObject::GetDocShell()
   if (subDocFrame) {
     // Ok, the frame for mContent is an nsSubDocumentFrame, it knows how
     // to reach the docshell, so ask it...
-    nsCOMPtr<nsIDocShell> ret;
-    subDocFrame->GetDocShell(getter_AddRefs(ret));
-    return ret.forget();
+    return do_AddRef(subDocFrame->GetDocShell());
   }
 
   if (!mContent) {

@@ -26,7 +26,7 @@ ExplicitChildIterator::ExplicitChildIterator(const nsIContent* aParent,
     mIndexInInserted(0)
 {
   mParentAsSlot = nsDocument::IsShadowDOMEnabled(mParent) ?
-    HTMLSlotElement::FromContent(mParent) : nullptr;
+    HTMLSlotElement::FromNode(mParent) : nullptr;
 }
 
 nsIContent*

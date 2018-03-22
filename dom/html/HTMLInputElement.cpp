@@ -2465,7 +2465,7 @@ HTMLInputElement::GetOwnerNumberControl()
       mType == NS_FORM_INPUT_TEXT &&
       GetParent() && GetParent()->GetParent()) {
     HTMLInputElement* grandparent =
-      HTMLInputElement::FromContentOrNull(GetParent()->GetParent());
+      HTMLInputElement::FromNodeOrNull(GetParent()->GetParent());
     if (grandparent && grandparent->mType == NS_FORM_INPUT_NUMBER) {
       return grandparent;
     }
@@ -4244,7 +4244,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
       if (oldType == NS_FORM_INPUT_RADIO) {
         nsCOMPtr<nsIContent> content = do_QueryInterface(aVisitor.mItemData);
         HTMLInputElement* selectedRadioButton =
-          HTMLInputElement::FromContentOrNull(content);
+          HTMLInputElement::FromNodeOrNull(content);
         if (selectedRadioButton) {
           selectedRadioButton->SetChecked(true);
         }
@@ -4280,7 +4280,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
         // Fire event for the previous selected radio.
         nsCOMPtr<nsIContent> content = do_QueryInterface(aVisitor.mItemData);
         HTMLInputElement* previous =
-          HTMLInputElement::FromContentOrNull(content);
+          HTMLInputElement::FromNodeOrNull(content);
         if (previous) {
           FireEventForAccessibility(previous, aVisitor.mPresContext,
                                     eFormRadioStateChange);

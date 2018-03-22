@@ -680,7 +680,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   // an image or canvas, fall through to RenderNode below.
   if (mImage) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(dragNode);
-    HTMLCanvasElement *canvas = HTMLCanvasElement::FromContentOrNull(content);
+    HTMLCanvasElement *canvas = HTMLCanvasElement::FromNodeOrNull(content);
     if (canvas) {
       return DrawDragForImage(*aPresContext, nullptr, canvas, aScreenDragRect, aSurface);
     }

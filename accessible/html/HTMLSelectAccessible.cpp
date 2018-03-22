@@ -186,7 +186,7 @@ HTMLSelectOptionAccessible::NativeState()
     return state;
 
   // Are we selected?
-  HTMLOptionElement* option = HTMLOptionElement::FromContent(mContent);
+  HTMLOptionElement* option = HTMLOptionElement::FromNode(mContent);
   bool selected = option && option->Selected();
   if (selected)
     state |= states::SELECTED;
@@ -280,7 +280,7 @@ HTMLSelectOptionAccessible::DoAction(uint8_t aIndex)
 void
 HTMLSelectOptionAccessible::SetSelected(bool aSelect)
 {
-  HTMLOptionElement* option = HTMLOptionElement::FromContent(mContent);
+  HTMLOptionElement* option = HTMLOptionElement::FromNode(mContent);
   if (option)
     option->SetSelected(aSelect);
 }
@@ -516,7 +516,7 @@ HTMLComboboxAccessible::SetCurrentItem(Accessible* aItem)
 Accessible*
 HTMLComboboxAccessible::SelectedOption() const
 {
-  HTMLSelectElement* select = HTMLSelectElement::FromContent(mContent);
+  HTMLSelectElement* select = HTMLSelectElement::FromNode(mContent);
   int32_t selectedIndex = select->SelectedIndex();
 
   if (selectedIndex >= 0) {

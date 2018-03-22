@@ -560,7 +560,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
 
     if (wasRegistered && oldDoc != newDoc) {
       nsIContent* content = aNode->AsContent();
-      if (auto mediaElem = HTMLMediaElement::FromContentOrNull(content)) {
+      if (auto mediaElem = HTMLMediaElement::FromNodeOrNull(content)) {
         mediaElem->NotifyOwnerDocumentActivityChanged();
       }
       nsCOMPtr<nsIObjectLoadingContent> objectLoadingContent(do_QueryInterface(aNode));

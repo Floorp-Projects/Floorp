@@ -35,7 +35,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLTableCellElement)
 HTMLTableRowElement*
 HTMLTableCellElement::GetRow() const
 {
-  return HTMLTableRowElement::FromContentOrNull(GetParent());
+  return HTMLTableRowElement::FromNodeOrNull(GetParent());
 }
 
 // protected method

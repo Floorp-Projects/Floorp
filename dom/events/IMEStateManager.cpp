@@ -1295,7 +1295,7 @@ IMEStateManager::SetIMEState(const IMEState& aState,
       // if so, use the number control instead:
       Element* element = aContent->AsElement();
       HTMLInputElement* inputElement =
-        HTMLInputElement::FromContentOrNull(aContent);
+        HTMLInputElement::FromNodeOrNull(aContent);
       if (inputElement) {
         HTMLInputElement* ownerNumberControl =
           inputElement->GetOwnerNumberControl();

@@ -139,7 +139,7 @@ bool
 HTMLLabelIterator::IsLabel(Accessible* aLabel)
 {
   dom::HTMLLabelElement* labelEl =
-    dom::HTMLLabelElement::FromContent(aLabel->GetContent());
+    dom::HTMLLabelElement::FromNode(aLabel->GetContent());
   return labelEl && labelEl->GetControl() == mAcc->GetContent();
 }
 

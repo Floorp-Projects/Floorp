@@ -76,7 +76,9 @@ module.exports = [
                     ? [["env", { modules: babelModules ? "commonjs" : false }]]
                     : [],
                   plugins:
-                    babelEnv && babelModules ? ["add-module-exports"] : []
+                    (babelEnv && babelModules ? ["add-module-exports"] : []).concat([
+                      "babel-plugin-transform-flow-strip-types",
+                    ])
                 }
               }
             ]

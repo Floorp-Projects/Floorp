@@ -20,7 +20,7 @@ class HTMLMenuElement final : public nsGenericHTMLElement
 public:
   explicit HTMLMenuElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLMenuElement, menu)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLMenuElement, menu)
 
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLMenuElement, nsGenericHTMLElement)

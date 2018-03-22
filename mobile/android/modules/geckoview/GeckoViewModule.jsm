@@ -148,7 +148,7 @@ class EventProxy {
       debug("rabbit queue " + aEvent + ", aData=" + JSON.stringify(aData));
       this._eventQueue.unshift(arguments);
     } else {
-      this._dispatch.appy(this, arguments);
+      this._dispatch.apply(this, arguments);
     }
   }
 

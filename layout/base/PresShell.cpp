@@ -8238,8 +8238,7 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
     int32_t currentIndex;
     multiSelect->GetCurrentIndex(&currentIndex);
     if (currentIndex >= 0) {
-      RefPtr<nsXULElement> xulElement =
-        nsXULElement::FromContent(focusedContent);
+      RefPtr<nsXULElement> xulElement = nsXULElement::FromNode(focusedContent);
       if (xulElement) {
         nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(IgnoreErrors());
         nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(box));

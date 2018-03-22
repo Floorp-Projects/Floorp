@@ -54,7 +54,7 @@ SafeOptionListMutation::SafeOptionListMutation(nsIContent* aSelect,
                                                nsIContent* aKid,
                                                uint32_t aIndex,
                                                bool aNotify)
-  : mSelect(HTMLSelectElement::FromContentOrNull(aSelect))
+  : mSelect(HTMLSelectElement::FromNodeOrNull(aSelect))
   , mTopLevelMutation(false)
   , mNeedsRebuild(false)
   , mNotify(aNotify)
@@ -258,7 +258,7 @@ HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
   MOZ_ASSERT(aDepth == 0 || aDepth == 1);
   int32_t insertIndex = aListIndex;
 
-  HTMLOptionElement* optElement = HTMLOptionElement::FromContent(aOptions);
+  HTMLOptionElement* optElement = HTMLOptionElement::FromNode(aOptions);
   if (optElement) {
     mOptions->InsertOptionAt(optElement, insertIndex);
     insertIndex++;
@@ -274,7 +274,7 @@ HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
       for (nsIContent* child = aOptions->GetFirstChild();
            child;
            child = child->GetNextSibling()) {
-        optElement = HTMLOptionElement::FromContent(child);
+        optElement = HTMLOptionElement::FromNode(child);
         if (optElement) {
           mOptions->InsertOptionAt(optElement, insertIndex);
           insertIndex++;
@@ -339,7 +339,7 @@ HTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
   MOZ_ASSERT(aDepth == 0 || aDepth == 1);
   int32_t numRemoved = 0;
 
-  HTMLOptionElement* optElement = HTMLOptionElement::FromContent(aOptions);
+  HTMLOptionElement* optElement = HTMLOptionElement::FromNode(aOptions);
   if (optElement) {
     if (mOptions->ItemAsOption(aListIndex) != optElement) {
       NS_ERROR("wrong option at index");
@@ -358,7 +358,7 @@ HTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
       for (nsIContent* child = aOptions->GetFirstChild();
           child;
           child = child->GetNextSibling()) {
-        optElement = HTMLOptionElement::FromContent(child);
+        optElement = HTMLOptionElement::FromNode(child);
         if (optElement) {
           if (mOptions->ItemAsOption(aListIndex) != optElement) {
             NS_ERROR("wrong option at index");
@@ -534,7 +534,7 @@ int32_t
 HTMLSelectElement::GetFirstOptionIndex(nsIContent* aOptions)
 {
   int32_t listIndex = -1;
-  HTMLOptionElement* optElement = HTMLOptionElement::FromContent(aOptions);
+  HTMLOptionElement* optElement = HTMLOptionElement::FromNode(aOptions);
   if (optElement) {
     mOptions->GetOptionIndex(optElement->AsElement(), 0, true, &listIndex);
     return listIndex;
@@ -698,7 +698,7 @@ HTMLSelectElement::MatchSelectedOptions(Element* aElement,
                                         nsAtom* /* unused */,
                                         void* /* unused*/)
 {
-  HTMLOptionElement* option = HTMLOptionElement::FromContent(aElement);
+  HTMLOptionElement* option = HTMLOptionElement::FromNode(aElement);
   return option && option->Selected();
 }
 
@@ -1014,7 +1014,7 @@ HTMLSelectElement::IsOptionDisabled(HTMLOptionElement* aOption) const
       }
 
       RefPtr<HTMLOptGroupElement> optGroupElement =
-        HTMLOptGroupElement::FromContent(node);
+        HTMLOptGroupElement::FromNode(node);
 
       if (!optGroupElement) {
         // If you put something else between you and the optgroup, you're a
@@ -1634,14 +1634,14 @@ AddOptions(nsIContent* aRoot, HTMLOptionsCollection* aArray)
   for (nsIContent* child = aRoot->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    HTMLOptionElement* opt = HTMLOptionElement::FromContent(child);
+    HTMLOptionElement* opt = HTMLOptionElement::FromNode(child);
     if (opt) {
       aArray->AppendOption(opt);
     } else if (child->IsHTMLElement(nsGkAtoms::optgroup)) {
       for (nsIContent* grandchild = child->GetFirstChild();
            grandchild;
            grandchild = grandchild->GetNextSibling()) {
-        opt = HTMLOptionElement::FromContent(grandchild);
+        opt = HTMLOptionElement::FromNode(grandchild);
         if (opt) {
           aArray->AppendOption(opt);
         }
@@ -1726,7 +1726,7 @@ HTMLSelectElement::VerifyOptionsArray()
   for (nsIContent* child = nsINode::GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    HTMLOptionElement* opt = HTMLOptionElement::FromContent(child);
+    HTMLOptionElement* opt = HTMLOptionElement::FromNode(child);
     if (opt) {
       NS_ASSERTION(opt == mOptions->ItemAsOption(index++),
                    "Options collection broken");
@@ -1734,7 +1734,7 @@ HTMLSelectElement::VerifyOptionsArray()
       for (nsIContent* grandchild = child->GetFirstChild();
            grandchild;
            grandchild = grandchild->GetNextSibling()) {
-        opt = HTMLOptionElement::FromContent(grandchild);
+        opt = HTMLOptionElement::FromNode(grandchild);
         if (opt) {
           NS_ASSERTION(opt == mOptions->ItemAsOption(index++),
                        "Options collection broken");

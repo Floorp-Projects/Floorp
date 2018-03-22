@@ -22,7 +22,7 @@ public:
   {
   }
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLDialogElement, dialog)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLDialogElement, dialog)
 
   virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
                          bool aPreallocateChildren) const override;

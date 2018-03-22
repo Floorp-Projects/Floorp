@@ -274,7 +274,7 @@ TableRowsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
       }
     }
 
-    nsGenericHTMLElement* el = nsGenericHTMLElement::FromContent(node);
+    nsGenericHTMLElement* el = nsGenericHTMLElement::FromNode(node);
     if (el) {
       const nsAttrValue* val = el->GetParsedAttr(nsGkAtoms::name);
       if (val && val->Type() == nsAttrValue::eAtom) {

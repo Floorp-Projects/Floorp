@@ -185,13 +185,13 @@ HTMLMenuElement::TraverseContent(nsIContent* aContent,
   nsCOMPtr<nsIContent> child;
   for (child = aContent->GetFirstChild(); child;
        child = child->GetNextSibling()) {
-    nsGenericHTMLElement* element = nsGenericHTMLElement::FromContent(child);
+    nsGenericHTMLElement* element = nsGenericHTMLElement::FromNode(child);
     if (!element) {
       continue;
     }
 
     if (child->IsHTMLElement(nsGkAtoms::menuitem)) {
-      HTMLMenuItemElement* menuitem = HTMLMenuItemElement::FromContent(child);
+      HTMLMenuItemElement* menuitem = HTMLMenuItemElement::FromNode(child);
 
       if (menuitem->IsHidden()) {
         continue;

@@ -28,7 +28,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLSourceElement,
                                            nsGenericHTMLElement)
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLSourceElement, source)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLSourceElement, source)
 
   virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
                          bool aPreallocateChildren) const override;

@@ -451,7 +451,7 @@ var SessionStoreInternal = {
   // they get restored).
   _crashedBrowsers: new WeakSet(),
 
-  // A map (xul:browser -> nsIFrameLoader) that maps a browser to the last
+  // A map (xul:browser -> FrameLoader) that maps a browser to the last
   // associated frameLoader we heard about.
   _lastKnownFrameLoader: new WeakMap(),
 

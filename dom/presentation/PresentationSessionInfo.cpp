@@ -1585,7 +1585,7 @@ PresentationPresentingInfo::ResolvedCallback(JSContext* aCx,
     return;
   }
 
-  nsCOMPtr<nsIFrameLoader> frameLoader = owner->GetFrameLoader();
+  RefPtr<nsFrameLoader> frameLoader = owner->GetFrameLoader();
   if (NS_WARN_IF(!frameLoader)) {
     ReplyError(NS_ERROR_DOM_OPERATION_ERR);
     return;
@@ -1600,9 +1600,9 @@ PresentationPresentingInfo::ResolvedCallback(JSContext* aCx,
     Unused << NS_WARN_IF(!static_cast<ContentParent*>(mContentParent.get())->SendNotifyPresentationReceiverLaunched(tabParent, mSessionId));
   } else {
     // In-process frame
-    nsCOMPtr<nsIDocShell> docShell;
-    rv = frameLoader->GetDocShell(getter_AddRefs(docShell));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
+    IgnoredErrorResult error;
+    nsCOMPtr<nsIDocShell> docShell = frameLoader->GetDocShell(error);
+    if (NS_WARN_IF(error.Failed())) {
       ReplyError(NS_ERROR_DOM_OPERATION_ERR);
       return;
     }

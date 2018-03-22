@@ -916,7 +916,7 @@ nsBulletFrame::SetListItemOrdinal(int32_t aNextOrdinal,
   nsIContent* parentContent = GetParent()->GetContent();
   if (parentContent) {
     nsGenericHTMLElement *hc =
-      nsGenericHTMLElement::FromContent(parentContent);
+      nsGenericHTMLElement::FromNode(parentContent);
     if (hc) {
       const nsAttrValue* attr = hc->GetParsedAttr(nsGkAtoms::value);
       if (attr && attr->Type() == nsAttrValue::eInteger) {

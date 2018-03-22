@@ -29,7 +29,7 @@ public:
   {
   }
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLDetailsElement, details)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLDetailsElement, details)
 
   nsIContent* GetFirstSummary() const;
 
