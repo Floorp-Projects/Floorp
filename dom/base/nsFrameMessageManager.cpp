@@ -1157,7 +1157,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       argument.mSync = aIsSync;
       argument.mTarget = aTarget;
       if (aTargetFrameLoader) {
-        argument.mTargetFrameLoader.Construct(aTargetFrameLoader);
+        argument.mTargetFrameLoader.Construct(*aTargetFrameLoader);
       }
 
       JS::Rooted<JS::Value> thisValue(cx, JS::UndefinedValue());
