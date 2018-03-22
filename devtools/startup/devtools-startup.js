@@ -35,6 +35,7 @@ const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
 const DEVTOOLS_POLICY_DISABLED_PREF = "devtools.policy.disabled";
 
 const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
+
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "AppConstants",
@@ -43,6 +44,15 @@ ChromeUtils.defineModuleGetter(this, "CustomizableUI",
                                "resource:///modules/CustomizableUI.jsm");
 ChromeUtils.defineModuleGetter(this, "CustomizableWidgets",
                                "resource:///modules/CustomizableWidgets.jsm");
+
+// We don't want to spend time initializing the full loader here so we create
+// our own lazy require.
+XPCOMUtils.defineLazyGetter(this, "Telemetry", function() {
+  const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
+  const Telemetry = require("devtools/client/shared/telemetry");
+
+  return Telemetry;
+});
 
 XPCOMUtils.defineLazyGetter(this, "StartupBundle", function() {
   const url = "chrome://devtools-startup/locale/startup.properties";
@@ -179,6 +189,9 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
 function DevToolsStartup() {
   this.onEnabledPrefChanged = this.onEnabledPrefChanged.bind(this);
   this.onWindowReady = this.onWindowReady.bind(this);
+
+  this._telemetry = new Telemetry();
+  this._telemetry.setEventRecordingEnabled("devtools.main", true);
 }
 
 DevToolsStartup.prototype = {
@@ -322,7 +335,7 @@ DevToolsStartup.prototype = {
     }
 
     let scalarId = "devtools.onboarding.is_devtools_user";
-    Services.telemetry.scalarSet(scalarId, this.isDevToolsUser());
+    this._telemetry.logScalar(scalarId, this.isDevToolsUser());
     Services.prefs.setBoolPref(alreadyLoggedPref, true);
   },
 
@@ -832,13 +845,20 @@ DevToolsStartup.prototype = {
   },
 
   sendEntryPointTelemetry(reason) {
-    if (reason && !this.recorded) {
+    if (reason) {
+      this._telemetry.addEventProperty(
+        "devtools.main", "open", "tools", null, "entrypoint", reason
+      );
+
+      if (this.recorded) {
+        return;
+      }
+
       // Only save the first call for each firefox run as next call
       // won't necessarely start the tool. For example key shortcuts may
       // only change the currently selected tool.
       try {
-        Services.telemetry.getHistogramById("DEVTOOLS_ENTRY_POINT")
-                          .add(reason);
+        this._telemetry.log("DEVTOOLS_ENTRY_POINT", reason);
       } catch (e) {
         dump("DevTools telemetry entry point failed: " + e + "\n");
       }
