@@ -33,13 +33,12 @@ var gEditItemOverlay = {
     let isFolderShortcut = isItem &&
                            node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT;
     let isTag = node && PlacesUtils.nodeIsTagQuery(node);
+    let tag = null;
     if (isTag) {
-      itemId = PlacesUtils.getConcreteItemId(node);
-      // For now we don't have access to the item guid synchronously for tags,
-      // so we'll need to fetch it later.
+      tag = PlacesUtils.asQuery(node).query.tags.length == 1 ? node.query.tags[0] : node.title;
     }
     let isURI = node && PlacesUtils.nodeIsURI(node);
-    let uri = isURI ? Services.io.newURI(node.uri) : null;
+    let uri = isURI || isTag ? Services.io.newURI(node.uri) : null;
     let title = node ? node.title : null;
     let isBookmark = isItem && isURI;
     let bulkTagging = !node;
@@ -68,7 +67,7 @@ var gEditItemOverlay = {
                               isBookmark, isFolderShortcut, isParentReadOnly,
                               bulkTagging, uris,
                               visibleRows, postData, isTag, focusedElement,
-                              onPanelReady };
+                              onPanelReady, tag };
   },
 
   get initialized() {
@@ -77,7 +76,7 @@ var gEditItemOverlay = {
 
   // Backwards-compatibility getters
   get itemId() {
-    if (!this.initialized || this._paneInfo.bulkTagging)
+    if (!this.initialized || this._paneInfo.isTag || this._paneInfo.bulkTagging)
       return -1;
     return this._paneInfo.itemId;
   },
@@ -120,7 +119,7 @@ var gEditItemOverlay = {
       throw new Error("_initNamePicker called unexpectedly");
 
     // title may by null, which, for us, is the same as an empty string.
-    this._initTextField(this._namePicker, this._paneInfo.title || "");
+    this._initTextField(this._namePicker, this._paneInfo.title || this._paneInfo.tag || "");
   },
 
   _initLocationField() {
@@ -607,18 +606,28 @@ var gEditItemOverlay = {
       return;
 
     // Here we update either the item title or its cached static title
-    let newTitle = this._namePicker.value;
-    if (!newTitle && this._paneInfo.isTag) {
-      // We don't allow setting an empty title for a tag, restore the old one.
-      this._initNamePicker();
-    } else {
-      this._mayUpdateFirstEditField("namePicker");
-
-      let guid = this._paneInfo.isTag
-                  ? (await PlacesUtils.promiseItemGuid(this._paneInfo.itemId))
-                  : this._paneInfo.itemGuid;
-      await PlacesTransactions.EditTitle({ guid, title: newTitle }).transact();
+    if (this._paneInfo.isTag) {
+      let tag = this._namePicker.value;
+      if (!tag || tag.includes("&")) {
+        // We don't allow setting an empty title for a tag, restore the old one.
+        this._initNamePicker();
+        return;
+      }
+      // Get all the bookmarks for the old tag, tag them with the new tag, and
+      // untag them from the old tag.
+      let oldTag = this._paneInfo.tag;
+      this._paneInfo.tag = tag;
+      let title = this._paneInfo.title;
+      if (title == oldTag) {
+        this._paneInfo.title = tag;
+      }
+      await PlacesTransactions.RenameTag({ oldTag, tag }).transact();
+      return;
     }
+
+    this._mayUpdateFirstEditField("namePicker");
+    await PlacesTransactions.EditTitle({ guid: this._paneInfo.itemGuid,
+                                         title: this._namePicker.value }).transact();
   },
 
   onDescriptionFieldChange() {
@@ -1020,8 +1029,8 @@ var gEditItemOverlay = {
     }
   },
 
-  _onItemTitleChange(aItemId, aNewTitle) {
-    if (aItemId == this._paneInfo.itemId) {
+  _onItemTitleChange(aItemId, aNewTitle, aGuid) {
+    if (aItemId == this._paneInfo.itemId || aGuid == this._paneInfo.itemGuid) {
       this._paneInfo.title = aNewTitle;
       this._initTextField(this._namePicker, aNewTitle);
     } else if (this._paneInfo.visibleRows.has("folderRow")) {
@@ -1056,7 +1065,7 @@ var gEditItemOverlay = {
     }
     if (aProperty == "title" && (this._paneInfo.isItem || this._paneInfo.isTag)) {
       // This also updates titles of folders in the folder menu list.
-      this._onItemTitleChange(aItemId, aValue);
+      this._onItemTitleChange(aItemId, aValue, aGuid);
       return;
     }
 
@@ -1124,7 +1133,6 @@ var gEditItemOverlay = {
   onEndUpdateBatch() { },
   onItemVisited() { },
 };
-
 
 for (let elt of ["folderMenuList", "folderTree", "namePicker",
                  "locationField", "descriptionField", "keywordField",
