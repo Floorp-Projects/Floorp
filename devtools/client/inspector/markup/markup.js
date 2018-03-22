@@ -1190,6 +1190,7 @@ MarkupView.prototype = {
    *
    * @param  {DOMNode} node
    *         The node to expand, or null to start from the top.
+   * @return {Promise} promise that resolves once all children are expanded.
    */
   expandAll: function(node) {
     node = node || this._rootNode;
@@ -1212,9 +1213,16 @@ MarkupView.prototype = {
 
   /**
    * Collapse the entire tree beneath a node.
+   *
+   * @param  {DOMNode} node
+   *         The node to collapse.
+   * @return {Promise} promise that resolves once all children are collapsed.
    */
   collapseAll: function(node) {
     this._collapseAll(this.getContainer(node));
+
+    // collapseAll is synchronous, return a promise for consistency with expandAll.
+    return Promise.resolve();
   },
 
   /**
