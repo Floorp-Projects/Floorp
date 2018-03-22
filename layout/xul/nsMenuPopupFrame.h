@@ -135,7 +135,7 @@ enum MenuPopupAnchorType {
 #define POPUPPOSITION_HFLIP(v) (v ^ 1)
 #define POPUPPOSITION_VFLIP(v) (v ^ 2)
 
-nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell, mozilla::ComputedStyle* aStyle);
 
 class nsView;
 class nsMenuPopupFrame;
@@ -173,7 +173,7 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsMenuPopupFrame)
 
-  explicit nsMenuPopupFrame(nsStyleContext* aContext);
+  explicit nsMenuPopupFrame(ComputedStyle* aStyle);
 
   // nsMenuParent interface
   virtual nsMenuFrame* GetCurrentMenuItem() override;

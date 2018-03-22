@@ -10,15 +10,16 @@
 #include "mozilla/dom/SVGUseElement.h"
 #include "SVGObserverUtils.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 // Implementation
 
 nsIFrame*
-NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewSVGUseFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsSVGUseFrame(aContext);
+  return new (aPresShell) nsSVGUseFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGUseFrame)

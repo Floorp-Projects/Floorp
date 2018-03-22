@@ -49,7 +49,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmencloseFrame)
 
   friend nsIFrame* NS_NewMathMLmencloseFrame(nsIPresShell*   aPresShell,
-                                             nsStyleContext* aContext);
+                                             ComputedStyle* aStyle);
 
   virtual nsresult
   Place(DrawTarget*          aDrawTarget,
@@ -66,10 +66,10 @@ public:
                    int32_t         aModType) override;
 
   virtual void
-  SetAdditionalStyleContext(int32_t          aIndex,
-                            nsStyleContext*  aStyleContext) override;
-  virtual nsStyleContext*
-  GetAdditionalStyleContext(int32_t aIndex) const override;
+  SetAdditionalComputedStyle(int32_t aIndex,
+                             ComputedStyle* aComputedStyle) override;
+  virtual ComputedStyle*
+  GetAdditionalComputedStyle(int32_t aIndex) const override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsDisplayListSet& aLists) override;
@@ -90,7 +90,7 @@ public:
   }
 
 protected:
-  explicit nsMathMLmencloseFrame(nsStyleContext* aContext, ClassID aID = kClassID);
+  explicit nsMathMLmencloseFrame(ComputedStyle* aStyle, ClassID aID = kClassID);
   virtual ~nsMathMLmencloseFrame();
 
   nsresult PlaceInternal(DrawTarget*          aDrawTarget,

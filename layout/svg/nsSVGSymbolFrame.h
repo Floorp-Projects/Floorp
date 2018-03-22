@@ -13,10 +13,10 @@ class nsSVGSymbolFrame
  : public nsSVGViewportFrame
 {
   friend nsIFrame*
-  NS_NewSVGSymbolFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  NS_NewSVGSymbolFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 protected:
-  explicit nsSVGSymbolFrame(nsStyleContext* aContext)
-    : nsSVGViewportFrame(aContext, kClassID)
+  explicit nsSVGSymbolFrame(ComputedStyle* aStyle)
+    : nsSVGViewportFrame(aStyle, kClassID)
   {
   }
 

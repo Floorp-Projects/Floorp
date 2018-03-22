@@ -14,6 +14,7 @@
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
+#include "nsQueryObject.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/storage.h"
 
@@ -2181,15 +2182,17 @@ nsNavBookmarks::OnPageChanged(nsIURI* aURI,
       nsNavHistory* history = nsNavHistory::GetHistoryService();
       NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
 
-      nsCOMArray<nsNavHistoryQuery> queries;
-      nsCOMPtr<nsNavHistoryQueryOptions> options;
-      rv = history->QueryStringToQueryArray(changeData.bookmark.url,
-                                            &queries, getter_AddRefs(options));
+      nsCOMPtr<nsINavHistoryQuery> query;
+      nsCOMPtr<nsINavHistoryQueryOptions> options;
+      rv = history->QueryStringToQuery(changeData.bookmark.url,
+                                       getter_AddRefs(query),
+                                       getter_AddRefs(options));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (queries.Count() == 1 && queries[0]->Folders().Length() == 1) {
+      RefPtr<nsNavHistoryQuery> queryObj = do_QueryObject(query);
+      if (queryObj->Folders().Length() == 1) {
         // Fetch missing data.
-        rv = FetchItemInfo(queries[0]->Folders()[0], changeData.bookmark);
+        rv = FetchItemInfo(queryObj->Folders()[0], changeData.bookmark);
         NS_ENSURE_SUCCESS(rv, rv);
         NotifyItemChanged(changeData);
       }

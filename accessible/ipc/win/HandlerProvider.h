@@ -64,6 +64,8 @@ public:
                                long* aNAttribRuns) override;
   STDMETHODIMP get_RelationsInfo(IARelationData** aRelations,
                                  long* aNRelations) override;
+  STDMETHODIMP get_AllChildren(AccChildData** aChildren,
+                               ULONG* aNChildren) override;
 
 private:
   ~HandlerProvider() = default;
@@ -95,6 +97,8 @@ private:
   void GetRelationsInfoMainThread(IARelationData** aRelations,
                                   long* aNRelations,
                                   HRESULT* result);
+  void GetAllChildrenMainThread(AccChildData** aChildren, ULONG* aNChildren,
+                                HRESULT* result);
 
   Atomic<uint32_t>                  mRefCnt;
   Mutex                             mMutex; // Protects mSerializer

@@ -40,9 +40,9 @@ GetLuminanceType(uint8_t aNSMaskType)
 }
 
 nsIFrame*
-NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewSVGMaskFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsSVGMaskFrame(aContext);
+  return new (aPresShell) nsSVGMaskFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGMaskFrame)

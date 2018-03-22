@@ -70,7 +70,7 @@ impl App {
         let mut resources = ResourceUpdates::new();
         resources.add_image(
             self.external_image_key.unwrap(),
-            ImageDescriptor::new(100, 100, ImageFormat::BGRA8, true),
+            ImageDescriptor::new(100, 100, ImageFormat::BGRA8, true, false),
             ImageData::External(ExternalImageData {
                 id: ExternalImageId(0),
                 channel_index: 0,

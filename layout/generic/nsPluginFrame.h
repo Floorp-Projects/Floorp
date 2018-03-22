@@ -71,7 +71,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsPluginFrame)
   NS_DECL_QUERYFRAME
 
-  friend nsIFrame* NS_NewObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsIFrame* NS_NewObjectFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
@@ -103,7 +103,7 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
+  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 
   NS_IMETHOD GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance) override;
 
@@ -233,7 +233,7 @@ public:
                                mozilla::layers::WebRenderLayerManager* aManager,
                                nsDisplayListBuilder* aDisplayListBuilder);
 protected:
-  explicit nsPluginFrame(nsStyleContext* aContext);
+  explicit nsPluginFrame(ComputedStyle* aStyle);
   virtual ~nsPluginFrame();
 
   // NOTE:  This frame class does not inherit from |nsLeafFrame|, so

@@ -17,6 +17,12 @@ add_task(async function test_toolbar_element_restyles_on_activation() {
   let win2 = await BrowserTestUtils.openNewBrowserWindow();
   await new Promise(resolve => waitForFocus(resolve, win2));
 
+  // (De)-activate both windows once before we take a measurement. The first
+  // (de-)activation may flush styles, after that the style data should be
+  // cached.
+  Services.focus.activeWindow = win1;
+  Services.focus.activeWindow = win2;
+
   // Flush any pending styles before we take a measurement.
   win1.getComputedStyle(win1.document.firstElementChild);
   win2.getComputedStyle(win2.document.firstElementChild);

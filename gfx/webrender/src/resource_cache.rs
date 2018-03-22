@@ -889,8 +889,7 @@ impl ResourceCache {
                     height: actual_height,
                     stride,
                     offset,
-                    format: image_descriptor.format,
-                    is_opaque: image_descriptor.is_opaque,
+                    ..*image_descriptor
                 }
             } else {
                 image_template.descriptor.clone()
@@ -908,7 +907,8 @@ impl ResourceCache {
                     // that is > 512 in either dimension, so it should cover
                     // the most important use cases. We may want to support
                     // mip-maps on shared cache items in the future.
-                    if descriptor.width > 512 &&
+                    if descriptor.allow_mipmaps &&
+                       descriptor.width > 512 &&
                        descriptor.height > 512 &&
                        !self.texture_cache.is_allowed_in_shared_cache(
                         TextureFilter::Linear,
@@ -953,6 +953,9 @@ impl ResourceCache {
         }
         if what.contains(ClearCache::RENDER_TASKS) {
             self.cached_render_tasks.clear();
+        }
+        if what.contains(ClearCache::TEXTURE_CACHE) {
+            self.texture_cache.clear();
         }
     }
 

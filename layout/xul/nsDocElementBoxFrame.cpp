@@ -34,10 +34,10 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
-                                  nsStyleContext* aContext);
+                                  ComputedStyle* aStyle);
 
-  explicit nsDocElementBoxFrame(nsStyleContext* aContext)
-    :nsBoxFrame(aContext, kClassID, true) {}
+  explicit nsDocElementBoxFrame(ComputedStyle* aStyle)
+    :nsBoxFrame(aStyle, kClassID, true) {}
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsDocElementBoxFrame)
@@ -66,9 +66,9 @@ private:
 //----------------------------------------------------------------------
 
 nsContainerFrame*
-NS_NewDocElementBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewDocElementBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsDocElementBoxFrame(aContext);
+  return new (aPresShell) nsDocElementBoxFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsDocElementBoxFrame)

@@ -101,7 +101,7 @@ public:
   ReverseLineIterator LinesRBeginFrom(nsLineBox* aList) { return mLines.rbegin(aList); }
 
   friend nsBlockFrame* NS_NewBlockFrame(nsIPresShell* aPresShell,
-                                        nsStyleContext* aContext);
+                                        ComputedStyle* aStyle);
 
   // nsQueryFrame
   NS_DECL_QUERYFRAME
@@ -416,8 +416,8 @@ public:
   void UpdateFirstLetterStyle(mozilla::ServoRestyleState& aRestyleState);
 
 protected:
-  explicit nsBlockFrame(nsStyleContext* aContext, ClassID aID = kClassID)
-    : nsContainerFrame(aContext, aID)
+  explicit nsBlockFrame(ComputedStyle* aStyle, ClassID aID = kClassID)
+    : nsContainerFrame(aStyle, aID)
     , mMinWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mPrefWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
   {
@@ -429,7 +429,7 @@ protected:
   virtual ~nsBlockFrame();
 
 #ifdef DEBUG
-  already_AddRefed<nsStyleContext> GetFirstLetterStyle(nsPresContext* aPresContext);
+  already_AddRefed<ComputedStyle> GetFirstLetterStyle(nsPresContext* aPresContext);
 #endif
 
   NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(LineCursorProperty, nsLineBox)
@@ -941,7 +941,7 @@ protected:
   // Resolve a style context for our bullet frame.  aType should be
   // mozListBullet or mozListNumber.  Passing in the style set is an
   // optimization, because all callsites have it.
-  already_AddRefed<nsStyleContext> ResolveBulletStyle(
+  already_AddRefed<ComputedStyle> ResolveBulletStyle(
     mozilla::CSSPseudoElementType aType,
     mozilla::StyleSetHandle aStyleSet);
 

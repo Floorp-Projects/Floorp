@@ -54,9 +54,9 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsIFrame*
-NS_NewTextControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewTextControlFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsTextControlFrame(aContext);
+  return new (aPresShell) nsTextControlFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTextControlFrame)
@@ -117,8 +117,8 @@ private:
   nsTextControlFrame& mFrame;
 };
 
-nsTextControlFrame::nsTextControlFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, kClassID)
+nsTextControlFrame::nsTextControlFrame(ComputedStyle* aStyle)
+  : nsContainerFrame(aStyle, kClassID)
   , mFirstBaseline(NS_INTRINSIC_WIDTH_UNKNOWN)
   , mEditorHasBeenInitialized(false)
   , mIsProcessing(false)
@@ -176,7 +176,7 @@ nsTextControlFrame::CalcIntrinsicSize(gfxContext* aRenderingContext,
     nsLayoutUtils::GetFontMetricsForFrame(this, aFontSizeInflation);
 
   lineHeight =
-    ReflowInput::CalcLineHeight(GetContent(), StyleContext(),
+    ReflowInput::CalcLineHeight(GetContent(), Style(),
                                       NS_AUTOHEIGHT, aFontSizeInflation);
   charWidth = fontMet->AveCharWidth();
   charMaxAdvance = fontMet->MaxAdvance();
@@ -634,7 +634,7 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
   nscoord lineHeight = aReflowInput.ComputedBSize();
   float inflation = nsLayoutUtils::FontSizeInflationFor(this);
   if (!IsSingleLineTextControl()) {
-    lineHeight = ReflowInput::CalcLineHeight(GetContent(), StyleContext(),
+    lineHeight = ReflowInput::CalcLineHeight(GetContent(), Style(),
                                              NS_AUTOHEIGHT, inflation);
   }
   RefPtr<nsFontMetrics> fontMet =

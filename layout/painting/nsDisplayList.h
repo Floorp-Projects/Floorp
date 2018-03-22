@@ -3874,7 +3874,7 @@ public:
                                          const nsRect& aBackgroundRect,
                                          nsDisplayList* aList,
                                          bool aAllowWillPaintBorderOptimization = true,
-                                         nsStyleContext* aStyleContext = nullptr,
+                                         mozilla::ComputedStyle* aComputedStyle = nullptr,
                                          const nsRect& aBackgroundOriginRect = nsRect(),
                                          nsIFrame* aSecondaryReferenceFrame = nullptr);
 

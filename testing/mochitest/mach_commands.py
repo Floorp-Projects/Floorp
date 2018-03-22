@@ -300,16 +300,6 @@ class MachCommands(MachCommandBase):
         else:
             flavors = [f for f, v in ALL_FLAVORS.iteritems() if buildapp in v['enabled_apps']]
 
-        if not kwargs.get('log'):
-            # Create shared logger
-            default_format = self._mach_context.settings['test']['format']
-            default_level = self._mach_context.settings['test']['level']
-            kwargs['log'] = setup_logging('mach-mochitest', kwargs, {default_format: sys.stdout},
-                                          {'level': default_level})
-            for handler in kwargs['log'].handlers:
-                if isinstance(handler, StreamHandler):
-                    handler.formatter.inner.summary_on_shutdown = True
-
         from mozbuild.controller.building import BuildDriver
         self._ensure_state_subdir_exists('.')
 
@@ -320,6 +310,20 @@ class MachCommands(MachCommandBase):
         tests = []
         if resolve_tests:
             tests = mochitest.resolve_tests(test_paths, test_objects, cwd=self._mach_context.cwd)
+
+        if not kwargs.get('log'):
+            # Create shared logger
+            format_args = {'level': self._mach_context.settings['test']['level']}
+            if len(tests) == 1:
+                format_args['verbose'] = True
+                format_args['compact'] = False
+
+            default_format = self._mach_context.settings['test']['format']
+            kwargs['log'] = setup_logging('mach-mochitest', kwargs, {default_format: sys.stdout},
+                                          format_args)
+            for handler in kwargs['log'].handlers:
+                if isinstance(handler, StreamHandler):
+                    handler.formatter.inner.summary_on_shutdown = True
 
         driver = self._spawn(BuildDriver)
         driver.install_tests(tests)

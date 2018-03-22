@@ -23,7 +23,7 @@
 #include "nsScrollbarFrame.h"
 #include "nsView.h"
 #include "nsViewManager.h"
-#include "nsStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "nsFontMetrics.h"
 #include "nsITimer.h"
 #include "mozilla/StyleSetHandle.h"
@@ -148,9 +148,9 @@ nsListScrollSmoother::Stop()
 
 /////////////// nsListBoxBodyFrame //////////////////
 
-nsListBoxBodyFrame::nsListBoxBodyFrame(nsStyleContext* aContext,
+nsListBoxBodyFrame::nsListBoxBodyFrame(ComputedStyle* aStyle,
                                        nsBoxLayout* aLayoutManager)
-  : nsBoxFrame(aContext, kClassID, false, aLayoutManager),
+  : nsBoxFrame(aStyle, kClassID, false, aLayoutManager),
     mTopFrame(nullptr),
     mBottomFrame(nullptr),
     mLinkupFrame(nullptr),
@@ -714,7 +714,7 @@ nsListBoxBodyFrame::ComputeIntrinsicISize(nsBoxLayoutState& aBoxLayoutState)
 
   if (firstRowContent) {
     nsPresContext* presContext = aBoxLayoutState.PresContext();
-    RefPtr<nsStyleContext> styleContext =
+    RefPtr<ComputedStyle> styleContext =
       presContext->StyleSet()->ResolveStyleFor(
           firstRowContent->AsElement(), nullptr, LazyComputeBehavior::Allow);
 
@@ -741,7 +741,7 @@ nsListBoxBodyFrame::ComputeIntrinsicISize(nsBoxLayoutState& aBoxLayoutState)
           }
 
           RefPtr<nsFontMetrics> fm =
-            nsLayoutUtils::GetFontMetricsForStyleContext(styleContext);
+            nsLayoutUtils::GetFontMetricsForComputedStyle(styleContext);
 
           nscoord textWidth =
             nsLayoutUtils::AppUnitWidthOfStringBidi(value, this, *fm,
@@ -1524,10 +1524,10 @@ nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
 already_AddRefed<nsBoxLayout> NS_NewListBoxLayout();
 
 nsIFrame*
-NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
   nsCOMPtr<nsBoxLayout> layout = NS_NewListBoxLayout();
-  return new (aPresShell) nsListBoxBodyFrame(aContext, layout);
+  return new (aPresShell) nsListBoxBodyFrame(aStyle, layout);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsListBoxBodyFrame)

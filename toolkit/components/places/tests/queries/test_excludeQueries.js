@@ -57,12 +57,11 @@ add_task(async function test_bookmarks_url_query_implicit_exclusions() {
 add_task(async function test_bookmarks_excludeQueries() {
   // When excluding queries, we exclude actual queries, but not folder shortcuts.
   let expectedGuids = [bm.guid, folderShortcut.guid];
-  let query = {};
-  let options = {};
+  let query = {}, options = {};
   let queryString = `place:folder=${PlacesUtils.unfiledBookmarksFolderId}&excludeQueries=1`;
-  PlacesUtils.history.queryStringToQueries(queryString, query, {}, options);
+  PlacesUtils.history.queryStringToQuery(queryString, query, options);
 
-  let root = PlacesUtils.history.executeQuery(query.value[0], options.value).root;
+  let root = PlacesUtils.history.executeQuery(query.value, options.value).root;
   root.containerOpen = true;
 
   Assert.equal(root.childCount, expectedGuids.length, "Checking root child count");
