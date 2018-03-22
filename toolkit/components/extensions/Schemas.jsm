@@ -1798,7 +1798,8 @@ class IntegerType extends Type {
   static parseSchema(root, schema, path, extraProperties = []) {
     this.checkSchemaProperties(schema, path, extraProperties);
 
-    return new this(schema, schema.minimum || -Infinity, schema.maximum || Infinity);
+    let {minimum = -Infinity, maximum = Infinity} = schema;
+    return new this(schema, minimum, maximum);
   }
 
   constructor(schema, minimum, maximum) {
