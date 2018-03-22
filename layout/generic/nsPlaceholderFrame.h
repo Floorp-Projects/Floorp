@@ -40,7 +40,7 @@
 #include "nsGkAtoms.h"
 
 nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
-                                 mozilla::ComputedStyle* aStyle,
+                                 nsStyleContext* aContext,
                                  nsFrameState aTypeBits);
 
 #define PLACEHOLDER_TYPE_MASK    (PLACEHOLDER_FOR_FLOAT | \
@@ -65,10 +65,10 @@ public:
    * PLACEHOLDER_FOR_* constants above.
    */
   friend nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell,
-                                          ComputedStyle* aStyle,
+                                          nsStyleContext* aContext,
                                           nsFrameState aTypeBits);
-  nsPlaceholderFrame(ComputedStyle* aStyle, nsFrameState aTypeBits)
-    : nsFrame(aStyle, kClassID)
+  nsPlaceholderFrame(nsStyleContext* aContext, nsFrameState aTypeBits)
+    : nsFrame(aContext, kClassID)
     , mOutOfFlowFrame(nullptr)
   {
     MOZ_ASSERT(aTypeBits == PLACEHOLDER_FOR_FLOAT ||
@@ -146,10 +146,10 @@ public:
   }
 #endif
 
-  ComputedStyle* GetParentComputedStyleForOutOfFlow(nsIFrame** aProviderFrame) const;
+  nsStyleContext* GetParentStyleContextForOutOfFlow(nsIFrame** aProviderFrame) const;
 
-  // Like GetParentComputedStyleForOutOfFlow, but ignores display:contents bits.
-  ComputedStyle* GetLayoutParentStyleForOutOfFlow(nsIFrame** aProviderFrame) const;
+  // Like GetParentStyleContextForOutOfFlow, but ignores display:contents bits.
+  nsStyleContext* GetLayoutParentStyleForOutOfFlow(nsIFrame** aProviderFrame) const;
 
   bool RenumberFrameAndDescendants(int32_t* aOrdinal,
                                    int32_t aDepth,

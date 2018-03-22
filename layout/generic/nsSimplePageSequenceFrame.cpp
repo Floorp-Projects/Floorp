@@ -37,15 +37,15 @@ mozilla::LazyLogModule gLayoutPrintingLog("printing-layout");
 #define PR_PL(_p1)  MOZ_LOG(gLayoutPrintingLog, mozilla::LogLevel::Debug, _p1)
 
 nsSimplePageSequenceFrame*
-NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSimplePageSequenceFrame(aStyle);
+  return new (aPresShell) nsSimplePageSequenceFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSimplePageSequenceFrame)
 
-nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(ComputedStyle* aStyle)
-  : nsContainerFrame(aStyle, kClassID)
+nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext)
+  : nsContainerFrame(aContext, kClassID)
   , mTotalPages(-1)
   , mCalledBeginPage(false)
   , mCurrentCanvasListSetup(false)
@@ -57,7 +57,7 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(ComputedStyle* aStyle)
   mPageData = new nsSharedPageData();
   mPageData->mHeadFootFont =
     *PresContext()->GetDefaultFont(kGenericFont_serif,
-                                   aStyle->StyleFont()->mLanguage);
+                                   aContext->StyleFont()->mLanguage);
   mPageData->mHeadFootFont.size = nsPresContext::CSSPointsToAppUnits(10);
 
   // Doing this here so we only have to go get these formats once

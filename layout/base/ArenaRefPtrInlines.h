@@ -13,8 +13,8 @@
 
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/ComputedStyle.h"
 #include "nsStyleStruct.h"
+#include "nsStyleContext.h"
 
 namespace mozilla {
 
@@ -24,10 +24,10 @@ ArenaRefPtr<T>::AssertValidType()
 {
   // If adding new types, please update nsPresArena::ClearArenaRefPtrWithoutDeregistering
   // as well
-  static_assert(IsSame<T, ComputedStyle>::value,
-                "ArenaRefPtr<T> template parameter T must be declared in "
-                "nsPresArenaObjectList and explicitly handled in"
-                "nsPresArena.cpp");
+  static_assert(IsSame<T, GeckoStyleContext>::value || IsSame<T, nsStyleContext>::value,
+                 "ArenaRefPtr<T> template parameter T must be declared in "
+                 "nsPresArenaObjectList and explicitly handled in"
+                 "nsPresArena.cpp");
 }
 
 } // namespace mozilla

@@ -21,10 +21,10 @@ using namespace mozilla::dom;
 class SVGFEImageFrame final : public nsFrame
 {
   friend nsIFrame*
-  NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  explicit SVGFEImageFrame(ComputedStyle* aStyle)
-    : nsFrame(aStyle, kClassID)
+  explicit SVGFEImageFrame(nsStyleContext* aContext)
+    : nsFrame(aContext, kClassID)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
 
@@ -69,9 +69,9 @@ public:
 };
 
 nsIFrame*
-NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) SVGFEImageFrame(aStyle);
+  return new (aPresShell) SVGFEImageFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGFEImageFrame)

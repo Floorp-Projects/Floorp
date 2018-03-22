@@ -16,14 +16,13 @@
 
 class nsIScrollbarMediator;
 
-nsIFrame* NS_NewScrollbarFrame(nsIPresShell* aPresShell,
-                               mozilla::ComputedStyle* aStyle);
+nsIFrame* NS_NewScrollbarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 class nsScrollbarFrame final : public nsBoxFrame
 {
 public:
-  explicit nsScrollbarFrame(ComputedStyle* aStyle)
-    : nsBoxFrame(aStyle, kClassID)
+  explicit nsScrollbarFrame(nsStyleContext* aContext)
+    : nsBoxFrame(aContext, kClassID)
     , mIncrement(0)
     , mSmoothScroll(false)
     , mScrollbarMediator(nullptr)

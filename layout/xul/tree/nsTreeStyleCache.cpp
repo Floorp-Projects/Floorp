@@ -9,8 +9,6 @@
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 
-using namespace mozilla;
-
 nsTreeStyleCache::Transition::Transition(DFAState aState, nsAtom* aSymbol)
   : mState(aState), mInputSymbol(aSymbol)
 {
@@ -33,12 +31,12 @@ nsTreeStyleCache::Transition::Hash() const
 
 
 // The style context cache impl
-ComputedStyle*
-nsTreeStyleCache::GetComputedStyle(nsPresContext* aPresContext,
-                                   nsIContent* aContent,
-                                   ComputedStyle* aStyle,
-                                   nsICSSAnonBoxPseudo* aPseudoElement,
-                                   const AtomArray & aInputWord)
+nsStyleContext*
+nsTreeStyleCache::GetStyleContext(nsPresContext* aPresContext,
+                                  nsIContent* aContent,
+                                  nsStyleContext* aContext,
+                                  nsICSSAnonBoxPseudo* aPseudoElement,
+                                  const AtomArray & aInputWord)
 {
   MOZ_ASSERT(nsCSSAnonBoxes::IsTreePseudoElement(aPseudoElement));
 
@@ -75,19 +73,19 @@ nsTreeStyleCache::GetComputedStyle(nsPresContext* aPresContext,
 
   // We're in a final state.
   // Look up our style context for this state.
-  ComputedStyle* result = nullptr;
+  nsStyleContext* result = nullptr;
   if (mCache) {
     result = mCache->GetWeak(currState);
   }
   if (!result) {
     // We missed the cache. Resolve this pseudo-style.
-    RefPtr<ComputedStyle> newResult = aPresContext->StyleSet()->
+    RefPtr<nsStyleContext> newResult = aPresContext->StyleSet()->
         ResolveXULTreePseudoStyle(aContent->AsElement(),
-                                  aPseudoElement, aStyle, aInputWord);
+                                  aPseudoElement, aContext, aInputWord);
 
     // Put the style context in our table, transferring the owning reference to the table.
     if (!mCache) {
-      mCache = new ComputedStyleCache();
+      mCache = new StyleContextCache();
     }
     result = newResult.get();
     mCache->Put(currState, newResult.forget());

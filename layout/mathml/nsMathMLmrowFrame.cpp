@@ -12,9 +12,9 @@
 //
 
 nsIFrame*
-NS_NewMathMLmrowFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewMathMLmrowFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmrowFrame(aStyle);
+  return new (aPresShell) nsMathMLmrowFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmrowFrame)

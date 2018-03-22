@@ -29,15 +29,15 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsIFrame*
-NS_NewProgressFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewProgressFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsProgressFrame(aStyle);
+  return new (aPresShell) nsProgressFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsProgressFrame)
 
-nsProgressFrame::nsProgressFrame(ComputedStyle* aStyle)
-  : nsContainerFrame(aStyle, kClassID)
+nsProgressFrame::nsProgressFrame(nsStyleContext* aContext)
+  : nsContainerFrame(aContext, kClassID)
   , mBarDiv(nullptr)
 {
 }

@@ -45,9 +45,9 @@ class nsRootBoxFrame final : public nsBoxFrame, public nsIRootBox
 {
 public:
 
-  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  explicit nsRootBoxFrame(ComputedStyle* aStyle);
+  explicit nsRootBoxFrame(nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsRootBoxFrame)
@@ -97,15 +97,15 @@ protected:
 //----------------------------------------------------------------------
 
 nsContainerFrame*
-NS_NewRootBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewRootBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsRootBoxFrame(aStyle);
+  return new (aPresShell) nsRootBoxFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRootBoxFrame)
 
-nsRootBoxFrame::nsRootBoxFrame(ComputedStyle* aStyle)
-  : nsBoxFrame(aStyle, kClassID, true)
+nsRootBoxFrame::nsRootBoxFrame(nsStyleContext* aContext)
+  : nsBoxFrame(aContext, kClassID, true)
   , mPopupSetFrame(nullptr)
   , mDefaultTooltip(nullptr)
 {

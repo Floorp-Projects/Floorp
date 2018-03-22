@@ -57,17 +57,17 @@ nsSVGOuterSVGFrame::UnregisterForeignObject(nsSVGForeignObjectFrame* aFrame)
 // Implementation
 
 nsContainerFrame*
-NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSVGOuterSVGFrame(aStyle);
+  return new (aPresShell) nsSVGOuterSVGFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGOuterSVGFrame)
 
-nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(ComputedStyle* aStyle)
-  : nsSVGDisplayContainerFrame(aStyle, kClassID)
+nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
+  : nsSVGDisplayContainerFrame(aContext, kClassID)
   , mCallingReflowSVG(false)
-  , mFullZoom(aStyle->PresContext()->GetFullZoom())
+  , mFullZoom(aContext->PresContext()->GetFullZoom())
   , mViewportInitialized(false)
   , mIsRootContent(false)
 {
@@ -983,9 +983,9 @@ nsSVGOuterSVGFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult
 
 nsContainerFrame*
 NS_NewSVGOuterSVGAnonChildFrame(nsIPresShell* aPresShell,
-                                ComputedStyle* aStyle)
+                                nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSVGOuterSVGAnonChildFrame(aStyle);
+  return new (aPresShell) nsSVGOuterSVGAnonChildFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGOuterSVGAnonChildFrame)

@@ -23,12 +23,12 @@
 #include "nsStyleTransformMatrix.h"
 
 class nsIFrame;
+class nsStyleContext;
 class gfx3DMatrix;
 
 namespace mozilla {
 
-class ComputedStyle;
-class GeckoComputedStyle;
+class GeckoStyleContext;
 
 namespace css {
 class StyleRule;
@@ -96,11 +96,11 @@ struct AnimationValue
                           const AnimationValue& aToValue) const;
 
   // Compute the distance between *this and aOther.
-  // If |aComputedStyle| is nullptr, we will return 0.0 if we have mismatched
+  // If |aStyleContext| is nullptr, we will return 0.0 if we have mismatched
   // transform lists.
   double ComputeDistance(nsCSSPropertyID aProperty,
                          const AnimationValue& aOther,
-                         ComputedStyle* aComputedStyle) const;
+                         nsStyleContext* aStyleContext) const;
 
   // Create an AnimaitonValue from a string. This method flushes style, so we
   // should use this carefully. Now, it is only used by

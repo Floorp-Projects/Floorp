@@ -9,7 +9,7 @@
 #include "nsIContent.h"
 #include "nsAtom.h"
 #include "nsPresContext.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsNameSpaceManager.h"
 #include "nsIDocument.h"
@@ -39,9 +39,9 @@ using mozilla::dom::KeyboardEvent;
 // Wrapper for creating a new menu Bar container
 //
 nsIFrame*
-NS_NewMenuBarFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMenuBarFrame(aStyle);
+  return new (aPresShell) nsMenuBarFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMenuBarFrame)
@@ -53,8 +53,8 @@ NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 //
 // nsMenuBarFrame cntr
 //
-nsMenuBarFrame::nsMenuBarFrame(ComputedStyle* aStyle)
-  : nsBoxFrame(aStyle, kClassID)
+nsMenuBarFrame::nsMenuBarFrame(nsStyleContext* aContext)
+  : nsBoxFrame(aContext, kClassID)
   , mStayActive(false)
   , mIsActive(false)
   , mActiveByKeyboard(false)

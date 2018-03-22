@@ -23,9 +23,9 @@ protected:
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsResizerFrame)
 
-  friend nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  explicit nsResizerFrame(ComputedStyle* aStyle);
+  explicit nsResizerFrame(nsStyleContext* aContext);
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,

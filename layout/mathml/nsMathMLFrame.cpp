@@ -93,21 +93,21 @@ nsMathMLFrame::UpdatePresentationData(uint32_t        aFlagsValues,
 // Helper to give a style context suitable for doing the stretching of
 // a MathMLChar. Frame classes that use this should ensure that the
 // extra leaf style contexts given to the MathMLChars are accessible to
-// the Style System via the Get/Set AdditionalComputedStyle() APIs.
+// the Style System via the Get/Set AdditionalStyleContext() APIs.
 /* static */ void
 nsMathMLFrame::ResolveMathMLCharStyle(nsPresContext*  aPresContext,
                                       nsIContent*      aContent,
-                                      ComputedStyle*  aParentComputedStyle,
+                                      nsStyleContext*  aParentStyleContext,
                                       nsMathMLChar*    aMathMLChar)
 {
   CSSPseudoElementType pseudoType =
     CSSPseudoElementType::mozMathAnonymous; // savings
-  RefPtr<ComputedStyle> newComputedStyle;
-  newComputedStyle = aPresContext->StyleSet()->
+  RefPtr<nsStyleContext> newStyleContext;
+  newStyleContext = aPresContext->StyleSet()->
     ResolvePseudoElementStyle(aContent->AsElement(), pseudoType,
-                              aParentComputedStyle, nullptr);
+                              aParentStyleContext, nullptr);
 
-  aMathMLChar->SetComputedStyle(newComputedStyle);
+  aMathMLChar->SetStyleContext(newStyleContext);
 }
 
 /* static */ void
@@ -213,7 +213,7 @@ nsMathMLFrame::GetAxisHeight(DrawTarget*    aDrawTarget,
 
 /* static */ nscoord
 nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
-                          ComputedStyle*   aComputedStyle,
+                          nsStyleContext*   aStyleContext,
                           const nsCSSValue& aCSSValue,
                           float             aFontSizeInflation)
 {
@@ -226,13 +226,13 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
   nsCSSUnit unit = aCSSValue.GetUnit();
 
   if (eCSSUnit_EM == unit) {
-    const nsStyleFont* font = aComputedStyle->StyleFont();
+    const nsStyleFont* font = aStyleContext->StyleFont();
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)font->mFont.size);
   }
   else if (eCSSUnit_XHeight == unit) {
     aPresContext->SetUsesExChUnits(true);
     RefPtr<nsFontMetrics> fm = nsLayoutUtils::
-      GetFontMetricsForComputedStyle(aComputedStyle, aFontSizeInflation);
+      GetFontMetricsForStyleContext(aStyleContext, aFontSizeInflation);
     nscoord xHeight = fm->XHeight();
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)xHeight);
   }
@@ -247,7 +247,7 @@ nsMathMLFrame::ParseNumericValue(const nsString&   aString,
                                  nscoord*          aLengthValue,
                                  uint32_t          aFlags,
                                  nsPresContext*    aPresContext,
-                                 ComputedStyle*   aComputedStyle,
+                                 nsStyleContext*   aStyleContext,
                                  float             aFontSizeInflation)
 {
   nsCSSValue cssValue;
@@ -270,7 +270,7 @@ nsMathMLFrame::ParseNumericValue(const nsString&   aString,
   }
 
   // Absolute units.
-  *aLengthValue = CalcLength(aPresContext, aComputedStyle, cssValue,
+  *aLengthValue = CalcLength(aPresContext, aStyleContext, cssValue,
                              aFontSizeInflation);
 }
 

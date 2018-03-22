@@ -45,8 +45,8 @@ class ErrorResult;
 struct AnimationRule;
 struct TimingParams;
 class EffectSet;
-class ComputedStyle;
-class GeckoComputedStyle;
+class ServoStyleContext;
+class GeckoStyleContext;
 
 namespace dom {
 class ElementOrCSSPseudoElement;
@@ -166,7 +166,7 @@ public:
   void SetKeyframes(JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
                     ErrorResult& aRv);
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
-                    const ComputedStyle* aComputedValues);
+                    const ServoStyleContext* aComputedValues);
 
   // Returns true if the effect includes |aProperty| regardless of whether the
   // property is overridden by !important rule.
@@ -192,8 +192,10 @@ public:
   }
 
   // Update |mProperties| by recalculating from |mKeyframes| using
-  // |aComputedStyle| to resolve specified values.
-  void UpdateProperties(const ComputedStyle* aComputedValues);
+  // |aStyleContext| to resolve specified values.
+  void UpdateProperties(nsStyleContext* aStyleContext);
+  // Servo version of the above function.
+  void UpdateProperties(const ServoStyleContext* aComputedValues);
 
   // Update various bits of state related to running ComposeStyle().
   // We need to update this outside ComposeStyle() because we should avoid
@@ -245,7 +247,7 @@ public:
   // Cumulative change hint on each segment for each property.
   // This is used for deciding the animation is paint-only.
   template<typename StyleType>
-  void CalculateCumulativeChangeHint(StyleType* aComputedStyle);
+  void CalculateCumulativeChangeHint(StyleType* aStyleContext);
 
   // Returns true if all of animation properties' change hints
   // can ignore painting if the animation is not visible.
@@ -298,7 +300,7 @@ protected:
                           KeyframeEffectReadOnly& aSource,
                           ErrorResult& aRv);
 
-  // Build properties by recalculating from |mKeyframes| using |aComputedStyle|
+  // Build properties by recalculating from |mKeyframes| using |aStyleContext|
   // to resolve specified values. This function also applies paced spacing if
   // needed.
   template<typename StyleType>
@@ -326,24 +328,24 @@ protected:
 
   // Looks up the style context associated with the target element, if any.
   // We need to be careful to *not* call this when we are updating the style
-  // context. That's because calling GetComputedStyle when we are in the process
+  // context. That's because calling GetStyleContext when we are in the process
   // of building a style context may trigger various forms of infinite
   // recursion.
-  already_AddRefed<ComputedStyle> GetTargetComputedStyle();
+  already_AddRefed<nsStyleContext> GetTargetStyleContext();
 
   // A wrapper for marking cascade update according to the current
   // target and its effectSet.
   void MarkCascadeNeedsUpdate();
 
-  void EnsureBaseStyles(const ComputedStyle* aComputedValues,
+  void EnsureBaseStyles(const ServoStyleContext* aComputedValues,
                         const nsTArray<AnimationProperty>& aProperties);
 
   // Stylo version of the above function that also first checks for an additive
   // value in |aProperty|'s list of segments.
   void EnsureBaseStyle(const AnimationProperty& aProperty,
                        nsPresContext* aPresContext,
-                       const ComputedStyle* aComputedValues,
-                       RefPtr<ComputedStyle>& aBaseComputedValues);
+                       const ServoStyleContext* aComputedValues,
+                       RefPtr<mozilla::ServoStyleContext>& aBaseComputedValues);
 
   Maybe<OwningAnimationTarget> mTarget;
 
@@ -396,10 +398,10 @@ private:
                         const ComputedTiming& aComputedTiming);
 
 
-  already_AddRefed<ComputedStyle> CreateComputedStyleForAnimationValue(
+  already_AddRefed<nsStyleContext> CreateStyleContextForAnimationValue(
     nsCSSPropertyID aProperty,
     const AnimationValue& aValue,
-    const ComputedStyle* aBaseComputedStyle);
+    const ServoStyleContext* aBaseStyleContext);
 
   nsIFrame* GetAnimationFrame() const;
 

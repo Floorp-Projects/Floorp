@@ -15,10 +15,10 @@
 #include "nsBoxLayout.h"
 #include "nsIContent.h"
 
-nsListItemFrame::nsListItemFrame(ComputedStyle* aStyle,
+nsListItemFrame::nsListItemFrame(nsStyleContext* aContext,
                                  bool aIsRoot,
                                  nsBoxLayout* aLayoutManager)
-  : nsGridRowLeafFrame(aStyle, aIsRoot, aLayoutManager, kClassID)
+  : nsGridRowLeafFrame(aContext, aIsRoot, aLayoutManager, kClassID)
 {
 }
 
@@ -57,14 +57,14 @@ nsListItemFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 already_AddRefed<nsBoxLayout> NS_NewGridRowLeafLayout();
 
 nsIFrame*
-NS_NewListItemFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewListItemFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   nsCOMPtr<nsBoxLayout> layout = NS_NewGridRowLeafLayout();
   if (!layout) {
     return nullptr;
   }
 
-  return new (aPresShell) nsListItemFrame(aStyle, false, layout);
+  return new (aPresShell) nsListItemFrame(aContext, false, layout);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsListItemFrame)

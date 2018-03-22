@@ -29,7 +29,7 @@ public:
     * @return           the frame that was created
     */
   friend nsTableWrapperFrame* NS_NewTableWrapperFrame(nsIPresShell* aPresShell,
-                                                      ComputedStyle* aStyle);
+                                                      nsStyleContext* aContext);
 
   // nsIFrame overrides - see there for a description
 
@@ -108,7 +108,7 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  virtual ComputedStyle* GetParentComputedStyle(nsIFrame** aProviderFrame) const override;
+  virtual nsStyleContext* GetParentStyleContext(nsIFrame** aProviderFrame) const override;
 
   /**
    * Return the content for the cell at the given row and column.
@@ -194,7 +194,7 @@ public:
 
 protected:
 
-  explicit nsTableWrapperFrame(ComputedStyle* aStyle, ClassID aID = kClassID);
+  explicit nsTableWrapperFrame(nsStyleContext* aContext, ClassID aID = kClassID);
   virtual ~nsTableWrapperFrame();
 
   void InitChildReflowInput(nsPresContext&     aPresContext,

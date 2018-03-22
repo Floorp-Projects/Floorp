@@ -54,7 +54,7 @@ class nsMathMLmfracFrame : public nsMathMLContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmfracFrame)
 
-  friend nsIFrame* NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual eMathMLFrameType GetMathMLFrameType() override;
 
@@ -85,7 +85,7 @@ public:
   // helper to translate the thickness attribute into a usable form
   static nscoord
   CalcLineThickness(nsPresContext*  aPresContext,
-                    ComputedStyle*  aComputedStyle,
+                    nsStyleContext*  aStyleContext,
                     nsString&        aThicknessAttribute,
                     nscoord          onePixel,
                     nscoord          aDefaultRuleThickness,
@@ -95,8 +95,8 @@ public:
   ScriptIncrement(nsIFrame* aFrame) override;
 
 protected:
-  explicit nsMathMLmfracFrame(ComputedStyle* aStyle)
-    : nsMathMLContainerFrame(aStyle, kClassID)
+  explicit nsMathMLmfracFrame(nsStyleContext* aContext)
+    : nsMathMLContainerFrame(aContext, kClassID)
     , mLineRect()
     , mSlashChar(nullptr)
     , mLineThickness(0)

@@ -24,13 +24,13 @@ class nsScrollbarButtonFrame final : public nsButtonBoxFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsScrollbarButtonFrame)
 
-  explicit nsScrollbarButtonFrame(ComputedStyle* aStyle):
-    nsButtonBoxFrame(aStyle, kClassID), mCursorOnThis(false) {}
+  explicit nsScrollbarButtonFrame(nsStyleContext* aContext):
+    nsButtonBoxFrame(aContext, kClassID), mCursorOnThis(false) {}
 
   // Overrides
   virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
-  friend nsIFrame* NS_NewScrollbarButtonFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewScrollbarButtonFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,

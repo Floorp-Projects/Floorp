@@ -17,15 +17,16 @@
 class nsAtom;
 class nsIFrame;
 class nsIPresShell;
+class nsStyleContext;
 
 class nsSVGGenericContainerFrame final : public nsSVGDisplayContainerFrame
 {
   friend nsIFrame*
-  NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 protected:
-  explicit nsSVGGenericContainerFrame(ComputedStyle* aStyle)
-    : nsSVGDisplayContainerFrame(aStyle, kClassID)
+  explicit nsSVGGenericContainerFrame(nsStyleContext* aContext)
+    : nsSVGDisplayContainerFrame(aContext, kClassID)
   {}
 
 public:

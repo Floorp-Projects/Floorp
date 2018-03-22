@@ -15,7 +15,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsSelectsAreaFrame)
 
   friend nsContainerFrame* NS_NewSelectsAreaFrame(nsIPresShell* aShell,
-                                                  ComputedStyle* aStyle,
+                                                  nsStyleContext* aContext,
                                                   nsFrameState aFlags);
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -32,8 +32,8 @@ public:
   nscoord BSizeOfARow() const { return mBSizeOfARow; }
 
 protected:
-  explicit nsSelectsAreaFrame(ComputedStyle* aStyle) :
-    nsBlockFrame(aStyle, kClassID),
+  explicit nsSelectsAreaFrame(nsStyleContext* aContext) :
+    nsBlockFrame(aContext, kClassID),
     // initialize to wacky value so first call of
     // nsSelectsAreaFrame::Reflow will always invalidate
     mBSizeOfARow(nscoord_MIN)

@@ -9,13 +9,13 @@
 #include "nsRubyFrame.h"
 
 #include "RubyUtils.h"
-#include "mozilla/ComputedStyle.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/WritingModes.h"
 #include "nsLineLayout.h"
 #include "nsPresContext.h"
 #include "nsRubyBaseContainerFrame.h"
 #include "nsRubyTextContainerFrame.h"
+#include "nsStyleContext.h"
 
 using namespace mozilla;
 
@@ -32,9 +32,9 @@ NS_IMPL_FRAMEARENA_HELPERS(nsRubyFrame)
 
 nsContainerFrame*
 NS_NewRubyFrame(nsIPresShell* aPresShell,
-                ComputedStyle* aStyle)
+                nsStyleContext* aContext)
 {
-  return new (aPresShell) nsRubyFrame(aStyle);
+  return new (aPresShell) nsRubyFrame(aContext);
 }
 
 //----------------------------------------------------------------------

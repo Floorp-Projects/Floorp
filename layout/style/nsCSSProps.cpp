@@ -504,7 +504,7 @@ nsCSSProps::IsInherited(nsCSSPropertyID aProperty)
   MOZ_ASSERT(!IsShorthand(aProperty));
 
   nsStyleStructID sid = kSIDTable[aProperty];
-  return ComputedStyle::IsInherited(sid);
+  return nsStyleContext::IsInherited(sid);
 }
 
 /* static */ bool

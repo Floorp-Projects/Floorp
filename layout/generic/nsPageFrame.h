@@ -21,7 +21,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsPageFrame)
 
   friend nsPageFrame* NS_NewPageFrame(nsIPresShell* aPresShell,
-                                      ComputedStyle* aStyle);
+                                      nsStyleContext* aContext);
 
   virtual void Reflow(nsPresContext*      aPresContext,
                       ReflowOutput& aDesiredSize,
@@ -57,7 +57,7 @@ public:
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
 protected:
-  explicit nsPageFrame(ComputedStyle* aStyle);
+  explicit nsPageFrame(nsStyleContext* aContext);
   virtual ~nsPageFrame();
 
   typedef enum {
@@ -105,7 +105,7 @@ class nsPageBreakFrame final : public nsLeafFrame
 {
   NS_DECL_FRAMEARENA_HELPERS(nsPageBreakFrame)
 
-  explicit nsPageBreakFrame(ComputedStyle* aStyle);
+  explicit nsPageBreakFrame(nsStyleContext* aContext);
   ~nsPageBreakFrame();
 
   virtual void Reflow(nsPresContext* aPresContext,
@@ -125,7 +125,7 @@ protected:
   bool mHaveReflowed;
 
   friend nsIFrame* NS_NewPageBreakFrame(nsIPresShell* aPresShell,
-                                        ComputedStyle* aStyle);
+                                        nsStyleContext* aContext);
 };
 
 #endif /* nsPageFrame_h___ */

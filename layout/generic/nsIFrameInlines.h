@@ -38,7 +38,7 @@ bool
 nsIFrame::IsTableCaption() const
 {
   return StyleDisplay()->mDisplay == mozilla::StyleDisplay::TableCaption &&
-    GetParent()->Style()->GetPseudo() == nsCSSAnonBoxes::tableWrapper;
+    GetParent()->StyleContext()->GetPseudo() == nsCSSAnonBoxes::tableWrapper;
 }
 
 bool

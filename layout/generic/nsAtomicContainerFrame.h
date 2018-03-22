@@ -41,8 +41,8 @@ public:
   }
 
 protected:
-  nsAtomicContainerFrame(ComputedStyle* aStyle, ClassID aID)
-    : nsContainerFrame(aStyle, aID)
+  nsAtomicContainerFrame(nsStyleContext* aContext, ClassID aID)
+    : nsContainerFrame(aContext, aID)
   {}
 };
 

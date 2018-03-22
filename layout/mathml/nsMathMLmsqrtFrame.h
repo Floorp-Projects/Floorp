@@ -38,7 +38,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmsqrtFrame)
 
   friend nsIFrame* NS_NewMathMLmsqrtFrame(nsIPresShell*   aPresShell,
-                                          ComputedStyle* aStyle);
+                                          nsStyleContext* aContext);
 
   virtual void
   Init(nsIContent*       aContent,
@@ -61,7 +61,7 @@ public:
   }
 
 protected:
-  explicit nsMathMLmsqrtFrame(ComputedStyle* aStyle);
+  explicit nsMathMLmsqrtFrame(nsStyleContext* aContext);
   virtual ~nsMathMLmsqrtFrame();
 };
 

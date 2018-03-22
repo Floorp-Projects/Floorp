@@ -58,7 +58,7 @@ class nsSimplePageSequenceFrame final
 {
 public:
   friend nsSimplePageSequenceFrame* NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell,
-                                                                  ComputedStyle* aStyle);
+                                                                  nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsSimplePageSequenceFrame)
@@ -105,7 +105,7 @@ public:
 #endif
 
 protected:
-  explicit nsSimplePageSequenceFrame(ComputedStyle* aStyle);
+  explicit nsSimplePageSequenceFrame(nsStyleContext* aContext);
   virtual ~nsSimplePageSequenceFrame();
 
   void SetPageNumberFormat(const char* aPropName, const char* aDefPropVal, bool aPageNumOnly);

@@ -38,6 +38,12 @@ nsButtonFrameRenderer::nsButtonFrameRenderer()
 nsButtonFrameRenderer::~nsButtonFrameRenderer()
 {
   MOZ_COUNT_DTOR(nsButtonFrameRenderer);
+
+#ifdef DEBUG
+  if (mInnerFocusStyle) {
+    mInnerFocusStyle->FrameRelease();
+  }
+#endif
 }
 
 void
@@ -281,7 +287,7 @@ nsDisplayButtonBorder::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& 
                                        mFrame,
                                        nsRect(),
                                        nsRect(ToReferenceFrame(), mFrame->GetSize()),
-                                       mFrame->Style(),
+                                       mFrame->StyleContext(),
                                        &borderIsEmpty,
                                        mFrame->GetSkipSides());
   if (!br) {
@@ -535,7 +541,7 @@ nsButtonFrameRenderer::PaintBorder(
 {
   // get the button rect this is inside the focus and outline rects
   nsRect buttonRect = aRect;
-  ComputedStyle* context = mFrame->Style();
+  nsStyleContext* context = mFrame->StyleContext();
 
   PaintBorderFlags borderFlags = aBuilder->ShouldSyncDecodeImages()
                                ? PaintBorderFlags::SYNC_DECODE_IMAGES
@@ -558,18 +564,30 @@ void
 nsButtonFrameRenderer::ReResolveStyles(nsPresContext* aPresContext)
 {
   // get all the styles
-  ComputedStyle* context = mFrame->Style();
+  nsStyleContext* context = mFrame->StyleContext();
   StyleSetHandle styleSet = aPresContext->StyleSet();
+
+#ifdef DEBUG
+  if (mInnerFocusStyle) {
+    mInnerFocusStyle->FrameRelease();
+  }
+#endif
 
   // get styles assigned to -moz-inner-focus (ie dotted border on Windows)
   mInnerFocusStyle =
     styleSet->ProbePseudoElementStyle(mFrame->GetContent()->AsElement(),
                                       CSSPseudoElementType::mozFocusInner,
                                       context);
+
+#ifdef DEBUG
+  if (mInnerFocusStyle) {
+    mInnerFocusStyle->FrameAddRef();
+  }
+#endif
 }
 
-ComputedStyle*
-nsButtonFrameRenderer::GetComputedStyle(int32_t aIndex) const
+nsStyleContext*
+nsButtonFrameRenderer::GetStyleContext(int32_t aIndex) const
 {
   switch (aIndex) {
   case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
@@ -580,11 +598,19 @@ nsButtonFrameRenderer::GetComputedStyle(int32_t aIndex) const
 }
 
 void
-nsButtonFrameRenderer::SetComputedStyle(int32_t aIndex, ComputedStyle* aComputedStyle)
+nsButtonFrameRenderer::SetStyleContext(int32_t aIndex, nsStyleContext* aStyleContext)
 {
   switch (aIndex) {
   case NS_BUTTON_RENDERER_FOCUS_INNER_CONTEXT_INDEX:
-    mInnerFocusStyle = aComputedStyle;
+#ifdef DEBUG
+    if (mInnerFocusStyle) {
+      mInnerFocusStyle->FrameRelease();
+    }
+#endif
+    mInnerFocusStyle = aStyleContext;
     break;
   }
+#ifdef DEBUG
+  aStyleContext->FrameAddRef();
+#endif
 }

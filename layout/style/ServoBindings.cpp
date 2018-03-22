@@ -88,7 +88,7 @@ using namespace mozilla::dom;
     return result.forget();          \
   }
 #include "mozilla/ServoArcTypeList.h"
-SERVO_ARC_TYPE(ComputedStyle, ComputedStyle)
+SERVO_ARC_TYPE(StyleContext, ServoStyleContext)
 #undef SERVO_ARC_TYPE
 
 // Definitions of the global traversal stats.
@@ -183,16 +183,16 @@ Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* aAnonContent)
 }
 
 void
-Gecko_ComputedStyle_Init(
-    mozilla::ComputedStyle* aStyle,
-    const mozilla::ComputedStyle* aParentContext,
+Gecko_ServoStyleContext_Init(
+    ServoStyleContext* aContext,
+    const ServoStyleContext* aParentContext,
     RawGeckoPresContextBorrowed aPresContext,
     const ServoComputedData* aValues,
     mozilla::CSSPseudoElementType aPseudoType,
     nsAtom* aPseudoTag)
 {
   auto* presContext = const_cast<nsPresContext*>(aPresContext);
-  new (KnownNotNull, aStyle) mozilla::ComputedStyle(
+  new (KnownNotNull, aContext) ServoStyleContext(
       presContext, aPseudoTag, aPseudoType,
       ServoComputedDataForgotten(aValues));
 }
@@ -247,9 +247,9 @@ ServoComputedData::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
 }
 
 void
-Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle* aStyle)
+Gecko_ServoStyleContext_Destroy(ServoStyleContext* aContext)
 {
-  aStyle->~ComputedStyle();
+  aContext->~ServoStyleContext();
 }
 
 void
@@ -356,8 +356,8 @@ Gecko_GetImplementedPseudo(RawGeckoElementBorrowed aElement)
 }
 
 uint32_t
-Gecko_CalcStyleDifference(ComputedStyleBorrowed aOldStyle,
-                          ComputedStyleBorrowed aNewStyle,
+Gecko_CalcStyleDifference(ServoStyleContextBorrowed aOldStyle,
+                          ServoStyleContextBorrowed aNewStyle,
                           bool* aAnyStyleChanged,
                           bool* aOnlyResetStructsChanged)
 {
@@ -366,9 +366,9 @@ Gecko_CalcStyleDifference(ComputedStyleBorrowed aOldStyle,
 
   uint32_t equalStructs;
   uint32_t samePointerStructs;  // unused
-  nsChangeHint result = const_cast<mozilla::ComputedStyle*>(aOldStyle)->
+  nsChangeHint result = const_cast<ServoStyleContext*>(aOldStyle)->
     CalcStyleDifference(
-      const_cast<mozilla::ComputedStyle*>(aNewStyle),
+      const_cast<ServoStyleContext*>(aNewStyle),
       &equalStructs,
       &samePointerStructs,
       /* aIgnoreVariables = */ true);
@@ -616,8 +616,8 @@ Gecko_SetAnimationName(StyleAnimation* aStyleAnimation,
 
 void
 Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
-                       ComputedStyleBorrowedOrNull aOldComputedData,
-                       ComputedStyleBorrowedOrNull aComputedData,
+                       ServoStyleContextBorrowedOrNull aOldComputedData,
+                       ServoStyleContextBorrowedOrNull aComputedData,
                        UpdateAnimationsTasks aTasks)
 {
   MOZ_ASSERT(NS_IsMainThread());

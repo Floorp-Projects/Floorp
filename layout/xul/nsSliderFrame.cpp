@@ -14,7 +14,7 @@
 #include "nsSliderFrame.h"
 
 #include "gfxPrefs.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
@@ -70,9 +70,9 @@ GetContentOfBox(nsIFrame *aBox)
 }
 
 nsIFrame*
-NS_NewSliderFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewSliderFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSliderFrame(aStyle);
+  return new (aPresShell) nsSliderFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSliderFrame)
@@ -81,8 +81,8 @@ NS_QUERYFRAME_HEAD(nsSliderFrame)
   NS_QUERYFRAME_ENTRY(nsSliderFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
-nsSliderFrame::nsSliderFrame(ComputedStyle* aStyle)
-  : nsBoxFrame(aStyle, kClassID)
+nsSliderFrame::nsSliderFrame(nsStyleContext* aContext)
+  : nsBoxFrame(aContext, kClassID)
   , mRatio(0.0f)
   , mDragStart(0)
   , mThumbStart(0)

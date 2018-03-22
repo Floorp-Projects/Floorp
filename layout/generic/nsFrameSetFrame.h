@@ -68,7 +68,7 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsHTMLFramesetFrame)
 
-  explicit nsHTMLFramesetFrame(ComputedStyle* aStyle);
+  explicit nsHTMLFramesetFrame(nsStyleContext* aContext);
 
   virtual ~nsHTMLFramesetFrame();
 

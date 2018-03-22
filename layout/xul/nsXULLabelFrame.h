@@ -18,7 +18,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsXULLabelFrame)
 
   friend nsIFrame* NS_NewXULLabelFrame(nsIPresShell* aPresShell,
-                                       ComputedStyle* aStyle);
+                                       nsStyleContext *aContext);
 
   // nsIFrame
   virtual void Init(nsIContent*       aContent,
@@ -36,14 +36,14 @@ public:
 #endif
 
 protected:
-  explicit nsXULLabelFrame(ComputedStyle* aStyle)
-    : nsBlockFrame(aStyle, kClassID)
+  explicit nsXULLabelFrame(nsStyleContext* aContext)
+    : nsBlockFrame(aContext, kClassID)
   {}
 
   nsresult RegUnregAccessKey(bool aDoReg);
 };
 
 nsIFrame*
-NS_NewXULLabelFrame(nsIPresShell* aPresShell, mozilla::ComputedStyle* aStyle);
+NS_NewXULLabelFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 #endif /* !defined(nsXULLabelFrame_h_) */

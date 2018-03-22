@@ -15,7 +15,7 @@ class nsLeafBoxFrame : public nsLeafFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsLeafBoxFrame)
 
-  friend nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aState) override;
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aState) override;
@@ -82,8 +82,8 @@ protected:
 
   virtual nscoord GetIntrinsicISize() override;
 
-  explicit nsLeafBoxFrame(ComputedStyle* aStyle, ClassID aID = kClassID)
-    : nsLeafFrame(aStyle, aID)
+  explicit nsLeafBoxFrame(nsStyleContext* aContext, ClassID aID = kClassID)
+    : nsLeafFrame(aContext, aID)
   {}
 
 private:

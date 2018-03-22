@@ -22,15 +22,15 @@ using mozilla::dom::Element;
 using mozilla::dom::HTMLInputElement;
 using mozilla::dom::CallerType;
 
-nsColorControlFrame::nsColorControlFrame(ComputedStyle* aStyle)
-  : nsHTMLButtonControlFrame(aStyle, kClassID)
+nsColorControlFrame::nsColorControlFrame(nsStyleContext* aContext)
+  : nsHTMLButtonControlFrame(aContext, kClassID)
 {
 }
 
 nsIFrame*
-NS_NewColorControlFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewColorControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsColorControlFrame(aStyle);
+  return new (aPresShell) nsColorControlFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsColorControlFrame)

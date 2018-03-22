@@ -6,12 +6,12 @@
 
 #include "nsTextRunTransformations.h"
 
-#include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
+#include "nsStyleContextInlines.h"
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
 #include "nsSpecialCasingData.h"

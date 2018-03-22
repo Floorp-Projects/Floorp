@@ -20,16 +20,16 @@ class nsMathMLmfencedFrame final : public nsMathMLContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmfencedFrame)
 
-  friend nsIFrame* NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   void DestroyFrom(nsIFrame* aDestructRoot,
                    PostDestroyData& aPostDestroyData) override;
 
   virtual void
-  SetAdditionalComputedStyle(int32_t          aIndex,
-                            ComputedStyle*  aComputedStyle) override;
-  virtual ComputedStyle*
-  GetAdditionalComputedStyle(int32_t aIndex) const override;
+  SetAdditionalStyleContext(int32_t          aIndex,
+                            nsStyleContext*  aStyleContext) override;
+  virtual nsStyleContext*
+  GetAdditionalStyleContext(int32_t aIndex) const override;
 
   NS_IMETHOD
   InheritAutomaticData(nsIFrame* aParent) override;
@@ -98,8 +98,8 @@ public:
   }
 
 protected:
-  explicit nsMathMLmfencedFrame(ComputedStyle* aStyle)
-    : nsMathMLContainerFrame(aStyle, kClassID)
+  explicit nsMathMLmfencedFrame(nsStyleContext* aContext)
+    : nsMathMLContainerFrame(aContext, kClassID)
     , mOpenChar(nullptr)
     , mCloseChar(nullptr)
     , mSeparatorsChar(nullptr)

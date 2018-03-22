@@ -48,8 +48,8 @@ public:
   virtual nsQueryFrame::FrameIID GetFrameId() override = 0;
 
 protected:
-  nsMathMLSelectedFrame(ComputedStyle* aStyle, ClassID aID) :
-    nsMathMLContainerFrame(aStyle, aID),
+  nsMathMLSelectedFrame(nsStyleContext* aContext, ClassID aID) :
+    nsMathMLContainerFrame(aContext, aID),
     mSelectedFrame(nullptr),
     mInvalidMarkup(false) {}
   virtual ~nsMathMLSelectedFrame();

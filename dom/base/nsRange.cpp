@@ -3741,8 +3741,8 @@ ElementIsVisibleNoFlush(Element* aElement)
   if (!aElement) {
     return false;
   }
-  RefPtr<ComputedStyle> sc =
-    nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
+  RefPtr<nsStyleContext> sc =
+    nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr);
   return sc && sc->StyleVisibility()->IsVisible();
 }
 

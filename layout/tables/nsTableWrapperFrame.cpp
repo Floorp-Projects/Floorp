@@ -8,7 +8,7 @@
 #include "nsFrameManager.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsCSSRendering.h"
@@ -42,8 +42,8 @@ nsTableWrapperFrame::GetLogicalBaseline(WritingMode aWritingMode) const
          kid->BStart(aWritingMode, mRect.Size());
 }
 
-nsTableWrapperFrame::nsTableWrapperFrame(ComputedStyle* aStyle, ClassID aID)
-  : nsContainerFrame(aStyle, aID)
+nsTableWrapperFrame::nsTableWrapperFrame(nsStyleContext* aContext, ClassID aID)
+  : nsContainerFrame(aContext, aID)
 {
 }
 
@@ -212,8 +212,8 @@ nsTableWrapperFrame::BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuil
   }
 }
 
-ComputedStyle*
-nsTableWrapperFrame::GetParentComputedStyle(nsIFrame** aProviderFrame) const
+nsStyleContext*
+nsTableWrapperFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
 {
   // The table wrapper frame and the (inner) table frame split the style
   // data by giving the table frame the style context associated with
@@ -225,7 +225,7 @@ nsTableWrapperFrame::GetParentComputedStyle(nsIFrame** aProviderFrame) const
   // children of the table inherit directly from the inner table, and
   // the table wrapper's style context is a leaf.
 
-  return (*aProviderFrame = InnerTableFrame())->Style();
+  return (*aProviderFrame = InnerTableFrame())->StyleContext();
 }
 
 // INCREMENTAL REFLOW HELPER FUNCTIONS
@@ -410,8 +410,8 @@ nsTableWrapperFrame::ChildShrinkWrapISize(gfxContext*         aRenderingContext,
   if (MOZ_UNLIKELY(isGridItem) &&
       !StyleMargin()->HasInlineAxisAuto(aWM)) {
     auto inlineAxisAlignment = aWM.IsOrthogonalTo(parent->GetWritingMode()) ?
-                     StylePosition()->UsedAlignSelf(parent->Style()) :
-                     StylePosition()->UsedJustifySelf(parent->Style());
+                     StylePosition()->UsedAlignSelf(parent->StyleContext()) :
+                     StylePosition()->UsedJustifySelf(parent->StyleContext());
     if (inlineAxisAlignment == NS_STYLE_ALIGN_NORMAL ||
         inlineAxisAlignment == NS_STYLE_ALIGN_STRETCH) {
       flags = nsIFrame::ComputeSizeFlags::eDefault;
@@ -1089,9 +1089,9 @@ nsTableWrapperFrame::GetCellAt(uint32_t aRowIdx, uint32_t aColIdx) const
 
 
 nsTableWrapperFrame*
-NS_NewTableWrapperFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewTableWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTableWrapperFrame(aStyle);
+  return new (aPresShell) nsTableWrapperFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTableWrapperFrame)

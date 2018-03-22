@@ -22,10 +22,10 @@ using namespace mozilla::dom;
 class SVGViewFrame : public nsFrame
 {
   friend nsIFrame*
-  NS_NewSVGViewFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  NS_NewSVGViewFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  explicit SVGViewFrame(ComputedStyle* aStyle)
-    : nsFrame(aStyle, kClassID)
+  explicit SVGViewFrame(nsStyleContext* aContext)
+    : nsFrame(aContext, kClassID)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
@@ -62,9 +62,9 @@ public:
 };
 
 nsIFrame*
-NS_NewSVGViewFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewSVGViewFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) SVGViewFrame(aStyle);
+  return new (aPresShell) SVGViewFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGViewFrame)

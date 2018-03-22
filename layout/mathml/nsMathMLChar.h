@@ -22,11 +22,8 @@ class nsDisplayListBuilder;
 class nsDisplayListSet;
 class nsPresContext;
 struct nsBoundingMetrics;
+class nsStyleContext;
 struct nsFont;
-
-namespace mozilla {
-class ComputedStyle;
-}
 
 // Hints for Stretch() to indicate criteria for stretching
 enum {
@@ -94,7 +91,7 @@ public:
   // constructor and destructor
   nsMathMLChar() {
     MOZ_COUNT_CTOR(nsMathMLChar);
-    mComputedStyle = nullptr;
+    mStyleContext = nullptr;
     mUnscaledAscent = 0;
     mScaleX = mScaleY = 1.0;
     mDraw = DRAW_NORMAL;
@@ -191,11 +188,11 @@ public:
 
   // Hooks to access the extra leaf style contexts given to the MathMLChars.
   // They provide an interface to make them accessible to the Style System via
-  // the Get/Set AdditionalComputedStyle() APIs. Owners of MathMLChars
+  // the Get/Set AdditionalStyleContext() APIs. Owners of MathMLChars
   // should honor these APIs.
-  mozilla::ComputedStyle* GetComputedStyle() const;
+  nsStyleContext* GetStyleContext() const;
 
-  void SetComputedStyle(mozilla::ComputedStyle* aComputedStyle);
+  void SetStyleContext(nsStyleContext* aStyleContext);
 
 protected:
   friend class nsGlyphTable;
@@ -207,7 +204,7 @@ private:
   nsRect             mRect;
   nsStretchDirection mDirection;
   nsBoundingMetrics  mBoundingMetrics;
-  RefPtr<mozilla::ComputedStyle> mComputedStyle;
+  RefPtr<nsStyleContext> mStyleContext;
   // mGlyphs/mBmData are arrays describing the glyphs used to draw the operator.
   // See the drawing methods below.
   RefPtr<gfxTextRun> mGlyphs[4];
