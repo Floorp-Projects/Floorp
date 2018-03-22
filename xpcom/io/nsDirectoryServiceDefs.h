@@ -22,7 +22,11 @@
 
 /* General OS specific locations */
 
+// If this value ever changes, the special handling of the
+// nsDirectoryService::sOS_HomeDirectory static atom -- i.e. the use of
+// nsGkAtoms::Home in its place -- must be removed.
 #define NS_OS_HOME_DIR                          "Home"
+
 #define NS_OS_TEMP_DIR                          "TmpD"
 #define NS_OS_CURRENT_WORKING_DIR               "CurWorkD"
 /* Files stored in this directory will appear on the user's desktop,

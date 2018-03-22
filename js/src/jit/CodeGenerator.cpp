@@ -13355,9 +13355,9 @@ CodeGenerator::visitFinishBoundFunctionInit(LFinishBoundFunctionInit* lir)
     Label notBoundTarget, loadName;
     masm.branchTest32(Assembler::Zero, temp1, Imm32(JSFunction::BOUND_FUN), &notBoundTarget);
     {
-        // Target's name atom doesn't contain the bound function prefix, so we
-        // need to call into the VM.
-        masm.branchTest32(Assembler::Zero, temp1,
+        // Call into the VM if the target's name atom contains the bound
+        // function prefix.
+        masm.branchTest32(Assembler::NonZero, temp1,
                           Imm32(JSFunction::HAS_BOUND_FUNCTION_NAME_PREFIX), slowPath);
 
         // We also take the slow path when target's length isn't an int32.

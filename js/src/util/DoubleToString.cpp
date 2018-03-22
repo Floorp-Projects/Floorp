@@ -312,11 +312,7 @@ js_dtobasestr(DtoaState* state, int base, double dinput)
         return nullptr;
     p = buffer;
 
-    if (dval(d) < 0.0
-#if defined(XP_WIN)
-        && !((word0(d) & Exp_mask) == Exp_mask && ((word0(d) & Frac_mask) || word1(d))) /* Visual C++ doesn't know how to compare against NaN */
-#endif
-       ) {
+    if (dval(d) < 0.0) {
         *p++ = '-';
         dval(d) = -dval(d);
     }

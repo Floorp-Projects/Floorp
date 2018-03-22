@@ -359,6 +359,7 @@ MacroAssembler::sub32FromStackPtrWithPatch(Register dest)
 {
     vixl::UseScratchRegisterScope temps(this);
     const ARMRegister scratch = temps.AcquireX();
+    AutoForbidPools afp(this, /* max number of instructions in scope = */ 3);
     CodeOffset offs = CodeOffset(currentOffset());
     movz(scratch, 0, 0);
     movk(scratch, 0, 16);
