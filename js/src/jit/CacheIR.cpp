@@ -5152,8 +5152,12 @@ BinaryArithIRGenerator::tryAttachDouble()
 bool
 BinaryArithIRGenerator::tryAttachInt32()
 {
-    if (op_ != JSOP_ADD && op_ != JSOP_SUB)
+    if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
+        op_ != JSOP_BITOR && op_ != JSOP_BITAND &&
+        op_ != JSOP_BITXOR)
+    {
         return false;
+    }
 
     if (!lhs_.isInt32() || !rhs_.isInt32())
         return false;
@@ -5173,6 +5177,18 @@ BinaryArithIRGenerator::tryAttachInt32()
         writer.int32SubResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.Int32.Sub");
         break;
+      case JSOP_BITOR:
+        writer.int32BitOrResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.BitOr");
+        break;
+      case JSOP_BITXOR:
+        writer.int32BitXOrResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.BitXOr");
+        break;
+      case JSOP_BITAND:
+        writer.int32BitAndResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.BitAnd");
+        break;
       default:
         MOZ_CRASH("Unhandled op in tryAttachInt32");
     }
@@ -5184,7 +5200,9 @@ BinaryArithIRGenerator::tryAttachInt32()
 bool
 BinaryArithIRGenerator::tryAttachBooleanWithInt32()
 {
-    if (op_ != JSOP_ADD && op_ != JSOP_SUB)
+    if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
+        op_ != JSOP_BITOR && op_ != JSOP_BITAND &&
+        op_ != JSOP_BITXOR)
         return false;
 
     if (!(lhs_.isBoolean() && (rhs_.isBoolean() || rhs_.isInt32())) &&
@@ -5208,6 +5226,18 @@ BinaryArithIRGenerator::tryAttachBooleanWithInt32()
       case JSOP_SUB:
         writer.int32SubResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.BooleanInt32.Sub");
+        break;
+      case JSOP_BITOR:
+        writer.int32BitOrResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.BitOr");
+        break;
+      case JSOP_BITXOR:
+        writer.int32BitXOrResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.BitXOr");
+        break;
+      case JSOP_BITAND:
+        writer.int32BitAndResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.BitAnd");
         break;
       default:
         MOZ_CRASH("Unhandled op in tryAttachInt32");
