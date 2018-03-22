@@ -735,13 +735,11 @@ RenderConversionOperator(WasmRenderContext& c, AstConversionOperator& conv)
       case Op::F64ConvertUI64:    opStr = "f64.convert_u/i64"; break;
       case Op::F64ReinterpretI64: opStr = "f64.reinterpret/i64"; break;
       case Op::F64PromoteF32:     opStr = "f64.promote/f32"; break;
-#ifdef ENABLE_WASM_SIGNEXTEND_OPS
       case Op::I32Extend8S:       opStr = "i32.extend8_s"; break;
       case Op::I32Extend16S:      opStr = "i32.extend16_s"; break;
       case Op::I64Extend8S:       opStr = "i64.extend8_s"; break;
       case Op::I64Extend16S:      opStr = "i64.extend16_s"; break;
       case Op::I64Extend32S:      opStr = "i64.extend32_s"; break;
-#endif
       case Op::I32Eqz:            opStr = "i32.eqz"; break;
       case Op::I64Eqz:            opStr = "i64.eqz"; break;
       default:                      return Fail(c, "unexpected conversion operator");
