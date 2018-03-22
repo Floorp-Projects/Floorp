@@ -1267,8 +1267,7 @@ public:
     static XPCWrappedNativeProto*
     GetNewOrUsed(XPCWrappedNativeScope* scope,
                  nsIClassInfo* classInfo,
-                 nsIXPCScriptable* scriptable,
-                 bool callPostCreatePrototype = true);
+                 nsIXPCScriptable* scriptable);
 
     XPCWrappedNativeScope*
     GetScope()   const {return mScope;}
@@ -1291,7 +1290,6 @@ public:
     nsIXPCScriptable*
     GetScriptable() const { return mScriptable; }
 
-    bool CallPostCreatePrototype();
     void JSProtoObjectFinalized(js::FreeOp* fop, JSObject* obj);
     void JSProtoObjectMoved(JSObject* obj, const JSObject* old);
 
@@ -1335,7 +1333,7 @@ protected:
                           nsIClassInfo* ClassInfo,
                           already_AddRefed<XPCNativeSet>&& Set);
 
-    bool Init(nsIXPCScriptable* scriptable, bool callPostCreatePrototype);
+    bool Init(nsIXPCScriptable* scriptable);
 
 private:
 #ifdef DEBUG
