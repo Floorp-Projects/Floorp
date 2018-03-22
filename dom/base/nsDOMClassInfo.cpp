@@ -492,29 +492,6 @@ nsDOMClassInfo::ShutDown()
 }
 
 static nsresult
-GetXPCProto(nsIXPConnect *aXPConnect, JSContext *cx, nsGlobalWindowInner *aWin,
-            const nsGlobalNameStruct *aNameStruct,
-            JS::MutableHandle<JSObject*> aProto)
-{
-  NS_ASSERTION(aNameStruct->mType == nsGlobalNameStruct::eTypeClassConstructor,
-               "Wrong type!");
-
-  int32_t id = aNameStruct->mDOMClassInfoID;
-  MOZ_ASSERT(id >= 0, "Negative DOM classinfo?!?");
-
-  nsDOMClassInfoID ci_id = (nsDOMClassInfoID)id;
-
-  nsCOMPtr<nsIClassInfo> ci = NS_GetDOMClassInfoInstance(ci_id);
-  NS_ENSURE_TRUE(ci, NS_ERROR_UNEXPECTED);
-
-  nsresult rv =
-    aXPConnect->GetWrappedNativePrototype(cx, aWin->GetGlobalJSObject(), ci, aProto.address());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return JS_WrapObject(cx, aProto) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-static nsresult
 LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
                      nsPIDOMWindowInner *win,
                      JS::MutableHandle<JS::PropertyDescriptor> desc);
@@ -605,24 +582,6 @@ nsWindowSH::GlobalResolve(nsGlobalWindowInner *aWin, JSContext *cx,
   NS_ENSURE_TRUE(class_name, NS_ERROR_UNEXPECTED);
 
   nsresult rv = NS_OK;
-
-  if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
-    // The only eTypeClassConstructor struct left is DOMConstructor.
-    MOZ_ASSERT(name.EqualsLiteral("DOMConstructor"));
-
-    // Create the XPConnect prototype for our classinfo, PostCreateProto will
-    // set up the prototype chain.  This will go ahead and define things on the
-    // actual window's global.
-    JS::Rooted<JSObject*> dot_prototype(cx);
-    rv = GetXPCProto(nsDOMClassInfo::sXPConnect, cx, aWin, name_struct,
-                     &dot_prototype);
-    NS_ENSURE_SUCCESS(rv, rv);
-    MOZ_ASSERT(dot_prototype);
-
-    // GetXPCProto already defined the property for us if needed.
-    FillPropertyDescriptor(desc, obj, JS::UndefinedValue(), false);
-    return NS_OK;
-  }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeProperty) {
     // Before defining a global property, check for a named subframe of the
