@@ -112,24 +112,6 @@ public:
 
 typedef nsDOMClassInfo nsDOMGenericSH;
 
-// Makes sure that the wrapper is preserved if new properties are added.
-class nsEventTargetSH : public nsDOMGenericSH
-{
-protected:
-  explicit nsEventTargetSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
-  {
-  }
-
-  virtual ~nsEventTargetSH()
-  {
-  }
-public:
-  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
-                       JSObject *globalObj, JSObject **parentObj) override;
-
-  virtual void PreserveWrapper(nsISupports *aNative) override;
-};
-
 // A place to hang some static methods that we should really consider
 // moving to be nsGlobalWindow member methods.  See bug 1062418.
 class nsWindowSH
