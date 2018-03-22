@@ -100,8 +100,6 @@ interface nsIXPCScriptable : nsISupports
                        in JSContextPtr cx, in JSObjectPtr obj,
                        in jsval val, out boolean bp);
 
-    void postCreatePrototype(in JSContextPtr cx, in JSObjectPtr proto);
-
 %{ C++
     #define GET_IT(f_, c_) \
     bool f_() { \

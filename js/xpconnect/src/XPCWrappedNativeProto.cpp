@@ -50,8 +50,7 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto()
 }
 
 bool
-XPCWrappedNativeProto::Init(nsIXPCScriptable* scriptable,
-                            bool callPostCreatePrototype)
+XPCWrappedNativeProto::Init(nsIXPCScriptable* scriptable)
 {
     AutoJSContext cx;
     mScriptable = scriptable;
@@ -64,33 +63,9 @@ XPCWrappedNativeProto::Init(nsIXPCScriptable* scriptable,
     bool success = !!mJSProtoObject;
     if (success) {
         JS_SetPrivate(mJSProtoObject, this);
-        if (callPostCreatePrototype)
-            success = CallPostCreatePrototype();
     }
 
     return success;
-}
-
-bool
-XPCWrappedNativeProto::CallPostCreatePrototype()
-{
-    AutoJSContext cx;
-
-    // Nothing to do if we don't have a scriptable callback.
-    if (!mScriptable)
-        return true;
-
-    // Call the helper. This can handle being called if it's not implemented,
-    // so we don't have to check any sort of "want" here. See xpc_map_end.h.
-    nsresult rv = mScriptable->PostCreatePrototype(cx, mJSProtoObject);
-    if (NS_FAILED(rv)) {
-        JS_SetPrivate(mJSProtoObject, nullptr);
-        mJSProtoObject = nullptr;
-        XPCThrower::Throw(rv, cx);
-        return false;
-    }
-
-    return true;
 }
 
 void
@@ -133,8 +108,7 @@ XPCWrappedNativeProto::SystemIsBeingShutDown()
 XPCWrappedNativeProto*
 XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
                                     nsIClassInfo* classInfo,
-                                    nsIXPCScriptable* scriptable,
-                                    bool callPostCreatePrototype)
+                                    nsIXPCScriptable* scriptable)
 {
     AutoJSContext cx;
     MOZ_ASSERT(scope, "bad param");
@@ -154,7 +128,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
 
     proto = new XPCWrappedNativeProto(scope, classInfo, set.forget());
 
-    if (!proto || !proto->Init(scriptable, callPostCreatePrototype)) {
+    if (!proto || !proto->Init(scriptable)) {
         delete proto.get();
         return nullptr;
     }
