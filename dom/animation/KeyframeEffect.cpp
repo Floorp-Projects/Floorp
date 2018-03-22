@@ -110,9 +110,9 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
 
   if (mTarget) {
     UpdateTargetRegistration();
-    RefPtr<ComputedStyle> styleContext = GetTargetComputedStyle();
-    if (styleContext) {
-      UpdateProperties(styleContext);
+    RefPtr<ComputedStyle> computedStyle = GetTargetComputedStyle();
+    if (computedStyle) {
+      UpdateProperties(computedStyle);
     }
 
     MaybeUpdateFrameForCompositor();
@@ -163,9 +163,9 @@ KeyframeEffect::SetComposite(const CompositeOperation& aComposite)
   }
 
   if (mTarget) {
-    RefPtr<ComputedStyle> styleContext = GetTargetComputedStyle();
-    if (styleContext) {
-      UpdateProperties(styleContext);
+    RefPtr<ComputedStyle> computedStyle = GetTargetComputedStyle();
+    if (computedStyle) {
+      UpdateProperties(computedStyle);
     }
   }
 }
