@@ -28,9 +28,6 @@ struct nsGlobalNameStruct
     eTypeClassProto,
   } mType;
 
-  bool mChromeOnly : 1;
-  bool mAllowXBL : 1;
-
   union {
     int32_t mDOMClassInfoID; // eTypeClassConstructor
     nsIID mIID; // eTypeClassProto
@@ -78,8 +75,6 @@ public:
 
   nsresult RegisterClassName(const char *aClassName,
                              int32_t aDOMClassInfoID,
-                             bool aPrivileged,
-                             bool aXBLAllowed,
                              const char16_t **aResult);
 
   nsresult RegisterClassProto(const char *aClassName,

@@ -204,8 +204,6 @@ nsScriptNameSpaceManager::LookupName(const nsAString& aName,
 nsresult
 nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
                                             int32_t aDOMClassInfoID,
-                                            bool aPrivileged,
-                                            bool aXBLAllowed,
                                             const char16_t **aResult)
 {
   if (!nsCRT::IsAscii(aClassName)) {
@@ -224,8 +222,6 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
 
   s->mType = nsGlobalNameStruct::eTypeClassConstructor;
   s->mDOMClassInfoID = aDOMClassInfoID;
-  s->mChromeOnly = aPrivileged;
-  s->mAllowXBL = aXBLAllowed;
 
   return NS_OK;
 }
@@ -327,7 +323,6 @@ nsScriptNameSpaceManager::OperateCategoryEntryHash(nsICategoryManager* aCategory
   if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
     s->mType = type;
     s->mCID = cid;
-    s->mChromeOnly = false;
   } else {
     NS_WARNING("Global script name not overwritten!");
   }
