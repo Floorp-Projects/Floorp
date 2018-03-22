@@ -9,6 +9,7 @@ var addon1 = {
   id: "addon1@tests.mozilla.org",
   version: "1.0",
   name: "Test 1",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -20,6 +21,7 @@ var addon1_2 = {
   id: "addon1@tests.mozilla.org",
   version: "2.0",
   name: "Test 1",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -31,6 +33,7 @@ var addon2 = {
   id: "addon2@tests.mozilla.org",
   version: "1.0",
   name: "Test 2",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -111,6 +114,7 @@ add_task(async function test_addon_over_pointer() {
       id: "addon1@tests.mozilla.org",
       version: "2.0",
       name: "File Pointer Test",
+      bootstrap: true,
 
       targetApplications: [{
           id: "xpcshell@tests.mozilla.org",
@@ -128,7 +132,8 @@ add_task(async function test_addon_over_pointer() {
 
     prepare_test({
       "addon1@tests.mozilla.org": [
-        "onInstalling"
+        ["onInstalling", false],
+        ["onInstalled", false],
       ]
     }, [
       "onDownloadStarted",
