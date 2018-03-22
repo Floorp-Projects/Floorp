@@ -1137,7 +1137,7 @@ nsObjectLoadingContent::PresetOpenerWindow(mozIDOMWindowProxy* aWindow, mozilla:
 }
 
 void
-nsObjectLoadingContent::InternalSetFrameLoader(nsIFrameLoader* aNewFrameLoader)
+nsObjectLoadingContent::InternalSetFrameLoader(nsFrameLoader* aNewFrameLoader)
 {
   MOZ_CRASH("You shouldn't be calling this function, it doesn't make any sense on this type.");
 }

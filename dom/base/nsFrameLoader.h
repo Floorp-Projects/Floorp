@@ -515,4 +515,10 @@ private:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsFrameLoader, NS_FRAMELOADER_IID)
 
+inline nsISupports*
+ToSupports(nsFrameLoader* aFrameLoader)
+{
+  return static_cast<nsIFrameLoader*>(aFrameLoader);
+}
+
 #endif
