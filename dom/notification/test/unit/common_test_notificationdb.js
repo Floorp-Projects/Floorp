@@ -3,10 +3,6 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
-                                   "@mozilla.org/childprocessmessagemanager;1",
-                                   "nsIMessageSender");
-
 function getNotificationObject(app, id, tag) {
   return {
     origin: "https://" + app + ".gaiamobile.org/",
@@ -36,7 +32,7 @@ function addAndSend(msg, reply, callback, payload, runNext = true) {
   let handler = {
     receiveMessage: function(message) {
       if (message.name === reply) {
-        cpmm.removeMessageListener(reply, handler);
+        Services.cpmm.removeMessageListener(reply, handler);
         callback(message);
         if (runNext) {
           run_next_test();
@@ -44,8 +40,8 @@ function addAndSend(msg, reply, callback, payload, runNext = true) {
       }
     }
   };
-  cpmm.addMessageListener(reply, handler);
-  cpmm.sendAsyncMessage(msg, payload);
+  Services.cpmm.addMessageListener(reply, handler);
+  Services.cpmm.sendAsyncMessage(msg, payload);
 }
 
 // helper fonction, comparing two notifications

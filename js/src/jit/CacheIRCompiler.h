@@ -539,7 +539,7 @@ class MOZ_RAII CacheIRCompiler
     JSContext* cx_;
     CacheIRReader reader;
     const CacheIRWriter& writer_;
-    MacroAssembler masm;
+    StackMacroAssembler masm;
 
     CacheRegisterAllocator allocator;
     Vector<FailurePath, 4, SystemAllocPolicy> failurePaths;

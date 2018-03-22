@@ -17,8 +17,8 @@ ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm");
 // BrowserTestUtils.jsm. Moreover, we can't resolve the URI it loads the content
 // frame script from ("chrome://mochikit/content/tests/BrowserTestUtils/content-utils.js"),
 // hence the hackiness here and in BrowserTabs.Add.
-Cc["@mozilla.org/globalmessagemanager;1"]
-.getService(Ci.nsIMessageListenerManager)
+Services
+.mm
 .loadFrameScript("data:application/javascript;charset=utf-8," + encodeURIComponent(`
   Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
   addEventListener("load", function(event) {

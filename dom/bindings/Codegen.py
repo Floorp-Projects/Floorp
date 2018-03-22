@@ -281,12 +281,15 @@ class CGStringTable(CGThing):
     The uint16_t indices are smaller than the pointer equivalents, and the
     string table requires no runtime relocations.
     """
-    def __init__(self, accessorName, strings):
+    def __init__(self, accessorName, strings, static=False):
         CGThing.__init__(self)
         self.accessorName = accessorName
         self.strings = strings
+        self.static = static
 
     def declare(self):
+        if self.static:
+            return ""
         return "extern const char *%s(unsigned int aIndex);\n" % self.accessorName
 
     def define(self):
@@ -298,7 +301,7 @@ class CGStringTable(CGThing):
             currentIndex += len(s) + 1  # for the null terminator
         return fill(
             """
-            const char *${name}(unsigned int aIndex)
+            ${static}const char *${name}(unsigned int aIndex)
             {
               static const char table[] = ${table};
               static const uint16_t indices[] = { ${indices} };
@@ -306,6 +309,7 @@ class CGStringTable(CGThing):
               return &table[indices[aIndex]];
             }
             """,
+            static="static " if self.static else "",
             name=self.accessorName,
             table=table,
             indices=", ".join("%d" % index for index in indices),
@@ -1103,7 +1107,7 @@ class CGHeaders(CGWrapper):
                                       interfacesImplementingSelf)
 
         # Grab the includes for the things that involve XPCOM interfaces
-        hasInstanceIncludes = set("nsIDOM" + d.interface.identifier.name + ".h" for d
+        hasInstanceIncludes = set(self.getDeclarationFilename(d.interface) for d
                                   in descriptors if
                                   d.interface.hasInterfaceObject() and
                                   NeedsGeneratedHasInstance(d) and
@@ -13924,58 +13928,120 @@ class CGRegisterWorkletBindings(CGAbstractMethod):
         lines.append(CGGeneric("return true;\n"))
         return CGList(lines, "\n").define()
 
+
+class CGSystemBindingInitIds(CGAbstractMethod):
+    def __init__(self):
+        CGAbstractMethod.__init__(self, None, 'SystemBindingInitIds', 'bool',
+                                  [Argument('JSContext*', 'aCx')])
+
+    def definition_body(self):
+        return dedent("""
+            MOZ_ASSERT(NS_IsMainThread());
+
+            if (!idsInited) {
+              // We can't use range-based for because we need the index to call IdString.
+              for (uint32_t i = 0; i < ArrayLength(properties); ++i) {
+                if (!properties[i].id.init(aCx, IdString(i))) {
+                  return false;
+                }
+              }
+              idsInited = true;
+            }
+
+            return true;
+            """)
+
+
 class CGResolveSystemBinding(CGAbstractMethod):
-    def __init__(self, config):
+    def __init__(self):
         CGAbstractMethod.__init__(self, None, 'ResolveSystemBinding', 'bool',
                                   [Argument('JSContext*', 'aCx'),
                                    Argument('JS::Handle<JSObject*>', 'aObj'),
                                    Argument('JS::Handle<jsid>', 'aId'),
                                    Argument('bool*', 'aResolvedp')])
-        self.config = config
 
     def definition_body(self):
-        descriptors = self.config.getDescriptors(hasInterfaceObject=True,
-                                                 isExposedInSystemGlobals=True,
-                                                 register=True)
+        return dedent("""
+            MOZ_ASSERT(NS_IsMainThread());
+            MOZ_ASSERT(idsInited);
 
-        def descNameToId(name):
-            return "s%s_id" % name
-        jsidNames = [descNameToId(desc.name) for desc in descriptors]
-        jsidDecls = CGList(CGGeneric("static jsid %s;\n" % name)
-                           for name in jsidNames)
+            if (JSID_IS_VOID(aId)) {
+              for (const auto& property : properties) {
+                if (!property.enabled || property.enabled(aCx, aObj)) {
+                  if (!property.define(aCx)) {
+                    return false;
+                  }
+                  *aResolvedp = true;
+                }
+              }
+              return true;
+            }
 
-        jsidInits = CGList(
-            (CGIfWrapper(
-                CGGeneric("return false;\n"),
-                '!AtomizeAndPinJSString(aCx, %s, "%s")' %
-                (descNameToId(desc.name), desc.interface.identifier.name))
-             for desc in descriptors),
-            "\n")
-        jsidInits.append(CGGeneric("idsInited = true;\n"))
-        jsidInits = CGIfWrapper(jsidInits, "!idsInited")
-        jsidInits = CGList([CGGeneric("static bool idsInited = false;\n"),
-                            jsidInits])
+            for (const auto& property : properties) {
+              if (property.id == aId) {
+                if (!property.enabled || property.enabled(aCx, aObj)) {
+                  if (!property.define(aCx)) {
+                    return false;
+                  }
+                  *aResolvedp = true;
+                  break;
+                }
+              }
+            }
+            return true;
+            """)
 
-        definitions = CGList([], "\n")
-        for desc in descriptors:
-            bindingNS = toBindingNamespace(desc.name)
-            defineCode = "!%s::GetConstructorObject(aCx)" % bindingNS
-            defineCode = CGIfWrapper(CGGeneric("return false;\n"), defineCode)
-            defineCode = CGList([defineCode,
-                                 CGGeneric("*aResolvedp = true;\n")])
 
-            condition = "JSID_IS_VOID(aId) || aId == %s" % descNameToId(desc.name)
-            if desc.isExposedConditionally():
-                condition = "(%s) && %s::ConstructorEnabled(aCx, aObj)" % (condition, bindingNS)
+class CGMayResolveAsSystemBindingName(CGAbstractMethod):
+    def __init__(self):
+        CGAbstractMethod.__init__(self, None, 'MayResolveAsSystemBindingName', 'bool',
+                                  [Argument('jsid', 'aId')])
 
-            definitions.append(CGIfWrapper(defineCode, condition))
+    def definition_body(self):
+        return dedent("""
+            MOZ_ASSERT(NS_IsMainThread());
+            MOZ_ASSERT(idsInited);
 
-        return CGList([CGGeneric("MOZ_ASSERT(NS_IsMainThread());\n"),
-                       jsidDecls,
-                       jsidInits,
-                       definitions,
-                       CGGeneric("return true;\n")],
-                      "\n").define()
+            for (const auto& property : properties) {
+              if (aId == property.id) {
+                return true;
+              }
+            }
+            return false;
+            """)
+
+
+class CGGetSystemBindingNames(CGAbstractMethod):
+    def __init__(self):
+        CGAbstractMethod.__init__(self, None, 'GetSystemBindingNames', 'void',
+                                  [Argument('JSContext*', 'aCx'),
+                                   Argument('JS::Handle<JSObject*>', 'aObj'),
+                                   Argument('JS::AutoIdVector&', 'aNames'),
+                                   Argument('bool', 'aEnumerableOnly'),
+                                   Argument('mozilla::ErrorResult&', 'aRv')])
+
+    def definition_body(self):
+        return dedent("""
+            MOZ_ASSERT(NS_IsMainThread());
+
+            if (aEnumerableOnly) {
+              return;
+            }
+
+            if (!SystemBindingInitIds(aCx)) {
+              aRv.NoteJSContextException(aCx);
+              return;
+            }
+
+            for (const auto& property : properties) {
+              if (!property.enabled || property.enabled(aCx, aObj)) {
+                if (!aNames.append(property.id)) {
+                  aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+                  return;
+                }
+              }
+            }
+            """)
 
 
 def getGlobalNames(config):
@@ -17474,8 +17540,44 @@ class GlobalGenRoots():
 
     @staticmethod
     def ResolveSystemBinding(config):
+        curr = CGList([], "\n")
+        
+        descriptors = config.getDescriptors(hasInterfaceObject=True,
+                                            isExposedInSystemGlobals=True,
+                                            register=True)
+        properties = [desc.name for desc in descriptors]
+        
+        curr.append(CGStringTable("IdString", properties, static=True))
 
-        curr = CGResolveSystemBinding(config)
+        initValues = []
+        for desc in descriptors:
+            bindingNS = toBindingNamespace(desc.name)
+            if desc.isExposedConditionally():
+                enabled = "%s::ConstructorEnabled" % bindingNS
+            else:
+                enabled = "nullptr"
+            define = "%s::GetConstructorObject" % bindingNS
+            initValues.append("{ %s, %s },\n" % (enabled, define))
+        curr.append(CGGeneric(fill("""
+            struct SystemProperty
+            {
+              WebIDLGlobalNameHash::ConstructorEnabled enabled;
+              ProtoGetter define;
+              PinnedStringId id;
+            };
+          
+            static SystemProperty properties[] = {
+              $*{init}
+            };
+
+            static bool idsInited = false;
+            """,
+            init="".join(initValues))))
+
+        curr.append(CGSystemBindingInitIds())
+        curr.append(CGResolveSystemBinding())
+        curr.append(CGMayResolveAsSystemBindingName())
+        curr.append(CGGetSystemBindingNames())
 
         # Wrap all of that in our namespaces.
         curr = CGNamespace.build(['mozilla', 'dom'],
@@ -17489,7 +17591,7 @@ class GlobalGenRoots():
                                                             isExposedInSystemGlobals=True)]
         defineIncludes.append("nsThreadUtils.h")  # For NS_IsMainThread
         defineIncludes.append("js/Id.h")  # For jsid
-        defineIncludes.append("mozilla/dom/BindingUtils.h")  # AtomizeAndPinJSString
+        defineIncludes.append("mozilla/dom/WebIDLGlobalNameHash.h")
 
         curr = CGHeaders([], [], [], [], [], defineIncludes,
                          'ResolveSystemBinding', curr)

@@ -247,15 +247,9 @@ public:
 
   // If aInsertionKind is Async then frame construction of the new children can
   // be done lazily.
-  //
-  // When constructing frames lazily, we can keep the tree match context in a
-  // much easier way than nsFrameConstructorState, and thus, we're allowed to
-  // provide a TreeMatchContext to avoid calling InitAncestors repeatedly deep
-  // in the DOM.
   void ContentAppended(nsIContent* aContainer,
                        nsIContent* aFirstNewContent,
-                       InsertionKind aInsertionKind,
-                       TreeMatchContext* aProvidedTreeMatchContext = nullptr);
+                       InsertionKind aInsertionKind);
 
   // If aInsertionkind is Async then frame construction of the new child
   // can be done lazily.
@@ -272,15 +266,11 @@ public:
   // If aInsertionKind is Async then frame construction of the new children can
   // be done lazily. It is only allowed to be Async when inserting a single
   // node.
-  //
-  // See ContentAppended to see why we allow passing an already initialized
-  // TreeMatchContext.
   void ContentRangeInserted(nsIContent* aContainer,
                             nsIContent* aStartChild,
                             nsIContent* aEndChild,
                             nsILayoutHistoryState* aFrameState,
-                            InsertionKind aInsertionKind,
-                            TreeMatchContext* aProvidedTreeMatchContext = nullptr);
+                            InsertionKind aInsertionKind);
 
   enum RemoveFlags {
     REMOVE_CONTENT,
@@ -399,26 +389,7 @@ private:
                             nsIFrame*                      aNewFrame,
                             bool                           aAllowCounters = true);
 
-  // aState can be null if not available; it's used as an optimization.
-  // XXXbz IsValidSibling is the only caller that doesn't pass a state here!
-  already_AddRefed<nsStyleContext>
-  ResolveStyleContext(nsIFrame*                aParentFrame,
-                      nsIContent*              aContainer,
-                      nsIContent*              aChild,
-                      nsFrameConstructorState* aState);
-  already_AddRefed<nsStyleContext>
-  ResolveStyleContext(nsIFrame*                aParentFrame,
-                      nsIContent*              aChild,
-                      nsFrameConstructorState* aState);
-  already_AddRefed<nsStyleContext>
-  ResolveStyleContext(const InsertionPoint&    aInsertion,
-                      nsIContent*              aChild,
-                      nsFrameConstructorState* aState);
-  already_AddRefed<nsStyleContext>
-  ResolveStyleContext(nsStyleContext*          aParentStyleContext,
-                      nsIContent*              aContent,
-                      nsFrameConstructorState* aState,
-                      Element*                 aOriginatingElementOrNull = nullptr);
+  already_AddRefed<nsStyleContext> ResolveStyleContext(nsIContent* aContent);
 
   // Add the frame construction items for the given aContent and aParentFrame
   // to the list.  This might add more than one item in some rare cases.

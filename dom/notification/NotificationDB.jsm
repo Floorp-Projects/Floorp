@@ -15,10 +15,6 @@ ChromeUtils.import("resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
-                                   "@mozilla.org/parentprocessmessagemanager;1",
-                                   "nsIMessageListenerManager");
-
 XPCOMUtils.defineLazyServiceGetter(this, "notificationStorage",
                                    "@mozilla.org/notificationStorage;1",
                                    "nsINotificationStorage");
@@ -56,13 +52,13 @@ var NotificationDB = {
 
   registerListeners: function() {
     for (let message of kMessages) {
-      ppmm.addMessageListener(message, this);
+      Services.ppmm.addMessageListener(message, this);
     }
   },
 
   unregisterListeners: function() {
     for (let message of kMessages) {
-      ppmm.removeMessageListener(message, this);
+      Services.ppmm.removeMessageListener(message, this);
     }
   },
 

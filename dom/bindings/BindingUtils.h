@@ -50,6 +50,7 @@ enum UseCounter : int16_t;
 
 namespace dom {
 class CustomElementReactionsStack;
+class MessageManagerGlobal;
 template<typename KeyType, typename ValueType> class Record;
 
 nsresult
@@ -3100,11 +3101,9 @@ bool
 EnumerateGlobal(JSContext* aCx, JS::HandleObject aObj,
                 JS::AutoIdVector& aProperties, bool aEnumerableOnly);
 
-template <class T>
-struct CreateGlobalOptions
+
+struct CreateGlobalOptionsGeneric
 {
-  static constexpr ProtoAndIfaceCache::Kind ProtoAndIfaceCacheKind =
-    ProtoAndIfaceCache::NonWindowLike;
   static void TraceGlobal(JSTracer* aTrc, JSObject* aObj)
   {
     mozilla::dom::TraceProtoAndIfaceCache(aTrc, aObj);
@@ -3117,12 +3116,34 @@ struct CreateGlobalOptions
   }
 };
 
+struct CreateGlobalOptionsWithXPConnect
+{
+  static void TraceGlobal(JSTracer* aTrc, JSObject* aObj);
+  static bool PostCreateGlobal(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
+};
+
+template <class T>
+using IsGlobalWithXPConnect =
+  IntegralConstant<bool,
+                   IsBaseOf<nsGlobalWindowInner, T>::value ||
+                   IsBaseOf<MessageManagerGlobal, T>::value>;
+
+template <class T>
+struct CreateGlobalOptions
+  : Conditional<IsGlobalWithXPConnect<T>::value,
+                CreateGlobalOptionsWithXPConnect,
+                CreateGlobalOptionsGeneric>::Type
+{
+  static constexpr ProtoAndIfaceCache::Kind ProtoAndIfaceCacheKind =
+    ProtoAndIfaceCache::NonWindowLike;
+};
+
 template <>
 struct CreateGlobalOptions<nsGlobalWindowInner>
+  : public CreateGlobalOptionsWithXPConnect
 {
   static constexpr ProtoAndIfaceCache::Kind ProtoAndIfaceCacheKind =
     ProtoAndIfaceCache::WindowLike;
-  static void TraceGlobal(JSTracer* aTrc, JSObject* aObj);
   static bool PostCreateGlobal(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 };
 
@@ -3203,7 +3224,7 @@ class PinnedStringId
   jsid id;
 
  public:
-  PinnedStringId() : id(JSID_VOID) {}
+  constexpr PinnedStringId() : id(JSID_VOID) {}
 
   bool init(JSContext *cx, const char *string) {
     JSString* str = JS_AtomizeAndPinString(cx, string);
@@ -3213,11 +3234,11 @@ class PinnedStringId
     return true;
   }
 
-  operator const jsid& () {
+  operator const jsid& () const {
     return id;
   }
 
-  operator JS::Handle<jsid> () {
+  operator JS::Handle<jsid> () const {
     /* This is safe because we have pinned the string. */
     return JS::Handle<jsid>::fromMarkedLocation(&id);
   }

@@ -80,11 +80,14 @@ function dismissNotification(popup, win)
 function waitForMessage(aMessage, browser)
 {
   return new Promise((resolve, reject) => {
+    // When contentScript runs, "this" is a ContentFrameMessageManager (so that's where
+    // addEventListener will add the listener), but the non-bubbling "message" event is
+    // sent to the Window involved, so we need a capturing listener.
     function contentScript() {
       addEventListener("message", function(event) {
         sendAsyncMessage("testLocal:persisted",
           {persisted: event.data});
-      }, {once: true}, true);
+      }, {once: true, capture: true}, true);
     }
 
     let script = "data:,(" + contentScript.toString() + ")();";

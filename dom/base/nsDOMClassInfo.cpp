@@ -71,7 +71,6 @@
 // includes needed for the prototype chain interfaces
 
 #include "nsIEventListenerService.h"
-#include "nsIMessageManager.h"
 
 #include "mozilla/dom/TouchEvent.h"
 
@@ -129,9 +128,6 @@ using namespace mozilla::dom;
 #define NS_DEFINE_CLASSINFO_DATA(_class, _helper, _flags)                     \
   NS_DEFINE_CLASSINFO_DATA_HELPER(_class, _helper, _flags, false, false)
 
-#define NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(_class, _helper, _flags)         \
-  NS_DEFINE_CLASSINFO_DATA_HELPER(_class, _helper, _flags, true, false)
-
 #define NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(_class, _helper, _flags)          \
   NS_DEFINE_CLASSINFO_DATA_HELPER(_class, _helper, _flags, true, true)
 
@@ -166,20 +162,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   // Misc Core related classes
 
-  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ContentFrameMessageManager,
-                                       nsMessageManagerSH<nsEventTargetSH>,
-                                       DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                                       XPC_SCRIPTABLE_WANT_ENUMERATE |
-                                       XPC_SCRIPTABLE_IS_GLOBAL_OBJECT)
-  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ContentProcessMessageManager,
-                                       nsMessageManagerSH<nsDOMGenericSH>,
-                                       DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                                       XPC_SCRIPTABLE_WANT_ENUMERATE |
-                                       XPC_SCRIPTABLE_IS_GLOBAL_OBJECT)
-  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ChromeMessageBroadcaster, nsDOMGenericSH,
-                                       DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ChromeMessageSender, nsDOMGenericSH,
-                                       DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nullptr;
@@ -411,36 +393,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(DOMConstructor, nsIDOMDOMConstructor)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMConstructor)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ContentFrameMessageManager, nsISupports)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
-    DOM_CLASSINFO_MAP_ENTRY(nsIMessageSender)
-    DOM_CLASSINFO_MAP_ENTRY(nsISyncMessageSender)
-    DOM_CLASSINFO_MAP_ENTRY(nsIContentFrameMessageManager)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ContentProcessMessageManager, nsISupports)
-    DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
-    DOM_CLASSINFO_MAP_ENTRY(nsIMessageSender)
-    DOM_CLASSINFO_MAP_ENTRY(nsISyncMessageSender)
-    DOM_CLASSINFO_MAP_ENTRY(nsIContentProcessMessageManager)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeMessageBroadcaster, nsISupports)
-    DOM_CLASSINFO_MAP_ENTRY(nsIFrameScriptLoader)
-    DOM_CLASSINFO_MAP_ENTRY(nsIProcessScriptLoader)
-    DOM_CLASSINFO_MAP_ENTRY(nsIGlobalProcessScriptLoader)
-    DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
-    DOM_CLASSINFO_MAP_ENTRY(nsIMessageBroadcaster)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeMessageSender, nsISupports)
-    DOM_CLASSINFO_MAP_ENTRY(nsIFrameScriptLoader)
-    DOM_CLASSINFO_MAP_ENTRY(nsIProcessScriptLoader)
-    DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
-    DOM_CLASSINFO_MAP_ENTRY(nsIMessageSender)
   DOM_CLASSINFO_MAP_END
 
   static_assert(MOZ_ARRAY_LENGTH(sClassInfoData) == eDOMClassInfoIDCount,
@@ -1893,42 +1845,4 @@ nsDOMConstructorSH::HasInstance(nsIXPConnectWrappedNative *wrapper,
 #endif
 
   return wrapped->HasInstance(wrapper, cx, obj, val, bp, _retval);
-}
-
-// nsContentFrameMessageManagerSH
-
-template<typename Super>
-NS_IMETHODIMP
-nsMessageManagerSH<Super>::Resolve(nsIXPConnectWrappedNative* wrapper,
-                                   JSContext* cx, JSObject* obj_,
-                                   jsid id_, bool* resolvedp,
-                                   bool* _retval)
-{
-  JS::Rooted<JSObject*> obj(cx, obj_);
-  JS::Rooted<jsid> id(cx, id_);
-
-  *_retval = SystemGlobalResolve(cx, obj, id, resolvedp);
-  NS_ENSURE_TRUE(*_retval, NS_ERROR_FAILURE);
-
-  if (*resolvedp) {
-    return NS_OK;
-  }
-
-  return Super::Resolve(wrapper, cx, obj, id, resolvedp, _retval);
-}
-
-template<typename Super>
-NS_IMETHODIMP
-nsMessageManagerSH<Super>::Enumerate(nsIXPConnectWrappedNative* wrapper,
-                                     JSContext* cx, JSObject* obj_,
-                                     bool* _retval)
-{
-  JS::Rooted<JSObject*> obj(cx, obj_);
-
-  *_retval = SystemGlobalEnumerate(cx, obj);
-  NS_ENSURE_TRUE(*_retval, NS_ERROR_FAILURE);
-
-  // Don't call up to our superclass, since neither nsDOMGenericSH nor
-  // nsEventTargetSH have WANT_ENUMERATE.
-  return NS_OK;
 }

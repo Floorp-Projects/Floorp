@@ -168,7 +168,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     LifoAlloc                       lifo_;
     jit::JitContext                 jcx_;
     jit::TempAllocator              masmAlloc_;
-    jit::MacroAssembler             masm_;
+    jit::WasmMacroAssembler         masm_;
     Uint32Vector                    funcToCodeRange_;
     OldTrapOffsetArray              oldTrapCodeOffsets_;
     uint32_t                        debugTrapCodeOffset_;

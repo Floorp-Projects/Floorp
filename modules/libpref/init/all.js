@@ -5924,21 +5924,6 @@ pref("dom.webkitBlink.filesystem.enabled", true);
 
 pref("media.block-autoplay-until-in-foreground", true);
 
-// Is Stylo CSS support built and enabled?
-// Only define these prefs if Stylo support is actually built in.
-#ifdef MOZ_STYLO
-#ifdef MOZ_STYLO_ENABLE
-pref("layout.css.servo.enabled", true);
-#else
-pref("layout.css.servo.enabled", false);
-#endif
-// Whether Stylo is enabled for chrome document?
-// If Stylo is not enabled, this pref doesn't take any effect.
-// Note that this pref is only read once when requested. Changing it
-// at runtime may have no effect.
-pref("layout.css.servo.chrome.enabled", true);
-#endif
-
 // TODO: Bug 1324406: Treat 'data:' documents as unique, opaque origins
 // If true, data: URIs will be treated as unique opaque origins, hence will use
 // a NullPrincipal as the security context.
@@ -6001,24 +5986,6 @@ pref("layers.mlgpu.enabled", true);
 // on Windows 7.
 pref("layers.mlgpu.enable-on-windows7", true);
 #endif
-
-// Set advanced layers preferences here to have them show up in about:config or
-// to be overridable in reftest.list files. They should pretty much all be set
-// to a value of 2, and the conditional-pref code in gfxPrefs.h will convert
-// it to a boolean as appropriate. In particular, do NOT add ifdefs here to
-// turn these on and off, instead use the conditional-pref code in gfxPrefs.h
-// to do that.
-pref("layers.advanced.background-color", false);
-pref("layers.advanced.background-image", 2);
-pref("layers.advanced.border-layers", 2);
-pref("layers.advanced.bullet-layers", 2);
-pref("layers.advanced.canvas-background-color", 2);
-pref("layers.advanced.caret-layers", false);
-pref("layers.advanced.columnRule-layers", 2);
-pref("layers.advanced.image-layers", 2);
-pref("layers.advanced.outline-layers", 2);
-pref("layers.advanced.solid-color", false);
-pref("layers.advanced.table", false);
 
 // Enable lowercased response header name
 pref("dom.xhr.lowercase_header.enabled", false);

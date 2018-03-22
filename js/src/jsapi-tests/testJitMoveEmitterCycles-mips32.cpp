@@ -90,7 +90,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_simple)
     JitContext jc(cx, &alloc);
     AutoFlushICache afc("test");
 
-    MacroAssembler masm;
+    StackMacroAssembler masm;
     MoveEmitter mover(masm);
     MoveResolver mr;
     mr.setAllocator(alloc);
@@ -131,7 +131,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen)
     TempAllocator alloc(&lifo);
     JitContext jc(cx, &alloc);
     AutoFlushICache afc("test");
-    MacroAssembler masm;
+    StackMacroAssembler masm;
     MoveEmitter mover(masm);
     MoveResolver mr;
     mr.setAllocator(alloc);
@@ -218,7 +218,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen2)
     TempAllocator alloc(&lifo);
     JitContext jc(cx, &alloc);
     AutoFlushICache afc("test");
-    MacroAssembler masm;
+    StackMacroAssembler masm;
     MoveEmitter mover(masm);
     MoveResolver mr;
     mr.setAllocator(alloc);
@@ -317,7 +317,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen3)
     TempAllocator alloc(&lifo);
     JitContext jc(cx, &alloc);
     AutoFlushICache afc("test");
-    MacroAssembler masm;
+    StackMacroAssembler masm;
     MoveEmitter mover(masm);
     MoveResolver mr;
     mr.setAllocator(alloc);

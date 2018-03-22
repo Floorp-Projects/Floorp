@@ -678,7 +678,7 @@ LazyStubTier::createMany(const Uint32Vector& funcExportIndices, const CodeTier& 
     LifoAlloc lifo(LAZY_STUB_LIFO_DEFAULT_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
     JitContext jitContext(&alloc);
-    MacroAssembler masm(MacroAssembler::WasmToken(), alloc);
+    WasmMacroAssembler masm(alloc);
 
     const CodeRangeVector& moduleRanges = codeTier.metadata().codeRanges;
     const FuncExportVector& funcExports = codeTier.metadata().funcExports;

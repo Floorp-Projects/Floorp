@@ -17,8 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
     var FRAME_SCRIPT2 = "data:,addMessageListener('test', function () {" +
                         "sendSyncMessage('test', 'frame2')})";
 
-    var globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
-                     .getService(Ci.nsIMessageListenerManager);
+    var globalMM = Cc["@mozilla.org/globalmessagemanager;1"].getService();
 
     function is(val, exp, msg) {
       opener.wrappedJSObject.is(val, exp, msg);
