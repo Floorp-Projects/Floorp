@@ -388,6 +388,8 @@ class Linkable(ContextDerived):
         'lib_defines',
         'linked_libraries',
         'linked_system_libs',
+        'no_pgo_sources',
+        'no_pgo',
         'sources',
     )
 
@@ -398,6 +400,8 @@ class Linkable(ContextDerived):
         self.linked_system_libs = []
         self.lib_defines = Defines(context, {})
         self.sources = defaultdict(list)
+        self.no_pgo_sources = []
+        self.no_pgo = False
 
     def link_library(self, obj):
         assert isinstance(obj, BaseLibrary)
@@ -437,8 +441,7 @@ class Linkable(ContextDerived):
             all_sources += self.sources.get(suffix, [])
         return all_sources
 
-    @property
-    def objs(self):
+    def _get_objs(self, sources):
         obj_prefix = ''
         if self.KIND == 'host':
             obj_prefix = 'host_'
@@ -446,7 +449,15 @@ class Linkable(ContextDerived):
         return [mozpath.join(self.objdir, '%s%s.%s' % (obj_prefix,
                                                        mozpath.splitext(mozpath.basename(f))[0],
                                                        self.config.substs.get('OBJ_SUFFIX', '')))
-                for f in self.source_files()]
+                for f in sources]
+
+    @property
+    def no_pgo_objs(self):
+        return self._get_objs(self.no_pgo_sources)
+
+    @property
+    def objs(self):
+        return self._get_objs(self.source_files())
 
 
 class BaseProgram(Linkable):
@@ -486,6 +497,10 @@ class BaseProgram(Linkable):
 
     def __repr__(self):
         return '<%s: %s/%s>' % (type(self).__name__, self.relobjdir, self.program)
+
+    @property
+    def name(self):
+        return self.program
 
 
 class Program(BaseProgram):
@@ -600,6 +615,10 @@ class BaseLibrary(Linkable):
 
     def __repr__(self):
         return '<%s: %s/%s>' % (type(self).__name__, self.relobjdir, self.lib_name)
+
+    @property
+    def name(self):
+        return self.lib_name
 
 
 class Library(BaseLibrary):

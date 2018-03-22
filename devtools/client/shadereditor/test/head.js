@@ -81,16 +81,6 @@ function createCanvas() {
   return document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
 }
 
-// Hack around `once`, as that only resolves to a single (first) argument
-// and discards the rest. `onceSpread` is similar, except resolves to an
-// array of all of the arguments in the handler. These should be consolidated
-// into the same function, but many tests will need to be changed.
-function onceSpread(aTarget, aEvent) {
-  let deferred = defer();
-  aTarget.once(aEvent, (...args) => deferred.resolve(args));
-  return deferred.promise;
-}
-
 function observe(aNotificationName, aOwnsWeak = false) {
   info("Waiting for observer notification: '" + aNotificationName + ".");
 

@@ -426,6 +426,7 @@ class WinArtifactJob(ArtifactJob):
         'firefox/**/*.dll',
         'firefox/*.exe',
         'firefox/**/interfaces.xpt',
+        'firefox/*.tlb',
     }
 
     product = 'firefox'
