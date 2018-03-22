@@ -30,7 +30,7 @@ import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
 
-class ManualAddSearchEngineSettingsFragment : SettingsFragment() {
+class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
     /**
      * A reference to an active async task, if applicable, used to manage the task for lifecycle changes.
      * See {@link #onPause()} for details.
