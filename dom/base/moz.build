@@ -22,7 +22,7 @@ XPIDL_SOURCES += [
     'nsIDOMParser.idl',
     'nsIDOMSerializer.idl',
     'nsIDroppedLinkHandler.idl',
-    'nsIFrameLoader.idl',
+    'nsIFrameLoaderOwner.idl',
     'nsIImageLoadingContent.idl',
     'nsIMessageManager.idl',
     'nsIObjectLoadingContent.idl',
