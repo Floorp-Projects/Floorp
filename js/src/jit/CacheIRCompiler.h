@@ -51,8 +51,10 @@ namespace jit {
     _(LoadUndefinedResult)                \
     _(LoadBooleanResult)                  \
     _(LoadInt32ArrayLengthResult)         \
-    _(Int32AddResult)                     \
     _(DoubleAddResult)                    \
+    _(DoubleSubResult)                    \
+    _(Int32AddResult)                     \
+    _(Int32SubResult)                     \
     _(Int32NegationResult)                \
     _(Int32NotResult)                     \
     _(DoubleNegationResult)               \
