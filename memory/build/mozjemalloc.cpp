@@ -4549,7 +4549,6 @@ ArenaCollection::GetById(arena_id_t aArenaId, bool aIsPrivate)
   return result;
 }
 
-#ifdef NIGHTLY_BUILD
 template<>
 inline arena_id_t
 MozJemalloc::moz_create_arena_with_params(arena_params_t* aParams)
@@ -4585,20 +4584,6 @@ MozJemalloc::moz_dispose_arena(arena_id_t aArenaId)
   }
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
 #include "malloc_decls.h"
-
-#else
-
-#define MALLOC_DECL(name, return_type, ...)                                    \
-  template<>                                                                   \
-  inline return_type MozJemalloc::name(ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) \
-  {                                                                            \
-    return DummyArenaAllocator<MozJemalloc>::name(                             \
-      ARGS_HELPER(ARGS, ##__VA_ARGS__));                                       \
-  }
-#define MALLOC_FUNCS MALLOC_FUNCS_ARENA
-#include "malloc_decls.h"
-
-#endif
 
 // End non-standard functions.
 // ***************************************************************************
