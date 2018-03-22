@@ -102,21 +102,6 @@ public: /* internal -- HPUX compiler can't handle this being private */
     };
 
     //
-    // Pref observer
-    //
-    class nsPrefObserver final : public nsIObserver
-    {
-        ~nsPrefObserver() {}
-
-    public:
-        NS_DECL_ISUPPORTS
-        NS_DECL_NSIOBSERVER
-
-        nsPrefObserver() { }
-    };
-    friend class nsPrefObserver;
-
-    //
     // URL segment encoder : performs charset conversion and URL escaping.
     //
     class nsSegmentEncoder
@@ -276,8 +261,6 @@ private:
     nsresult ReadSegment(nsIBinaryInputStream *, URLSegment &);
     nsresult WriteSegment(nsIBinaryOutputStream *, const URLSegment &);
 
-    static void PrefsChanged(nsIPrefBranch *prefs, const char *pref);
-
     void FindHostLimit(nsACString::const_iterator& aStart,
                        nsACString::const_iterator& aEnd);
 
@@ -316,7 +299,6 @@ private:
         eEncoding_UTF8
     };
 
-    uint32_t mSpecEncoding    : 2; // eEncoding_xxx
     uint32_t mURLType         : 2; // nsIStandardURL::URLTYPE_xxx
     uint32_t mMutable         : 1; // nsIStandardURL::mutable
     uint32_t mSupportsFileURL : 1; // QI to nsIFileURL?
