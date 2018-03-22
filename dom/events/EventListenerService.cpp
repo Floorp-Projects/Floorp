@@ -12,7 +12,6 @@
 #include "mozilla/Maybe.h"
 #include "nsArrayUtils.h"
 #include "nsCOMArray.h"
-#include "nsDOMClassInfoID.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
 #include "nsMemory.h"
