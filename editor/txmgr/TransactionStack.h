@@ -3,31 +3,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsTransactionStack_h__
-#define nsTransactionStack_h__
+#ifndef mozilla_TransactionStack_h
+#define mozilla_TransactionStack_h
 
 #include "nsDeque.h"
 
 class nsCycleCollectionTraversalCallback;
 
 namespace mozilla {
-class TransactionItem;
-} // namespace mozilla
 
-class nsTransactionStack : private nsDeque
+class TransactionItem;
+
+class TransactionStack : private nsDeque
 {
 public:
   enum Type { FOR_UNDO, FOR_REDO };
 
-  explicit nsTransactionStack(Type aType);
-  ~nsTransactionStack();
+  explicit TransactionStack(Type aType);
+  ~TransactionStack();
 
-  void Push(mozilla::TransactionItem* aTransactionItem);
-  void Push(already_AddRefed<mozilla::TransactionItem> aTransactionItem);
-  already_AddRefed<mozilla::TransactionItem> Pop();
-  already_AddRefed<mozilla::TransactionItem> PopBottom();
-  already_AddRefed<mozilla::TransactionItem> Peek();
-  already_AddRefed<mozilla::TransactionItem> GetItem(int32_t aIndex);
+  void Push(TransactionItem* aTransactionItem);
+  void Push(already_AddRefed<TransactionItem> aTransactionItem);
+  already_AddRefed<TransactionItem> Pop();
+  already_AddRefed<TransactionItem> PopBottom();
+  already_AddRefed<TransactionItem> Peek();
+  already_AddRefed<TransactionItem> GetItem(int32_t aIndex);
   void Clear();
   int32_t GetSize() const { return static_cast<int32_t>(nsDeque::GetSize()); }
   bool IsEmpty() const { return GetSize() == 0; }
@@ -39,4 +39,6 @@ private:
   const Type mType;
 };
 
-#endif // nsTransactionStack_h__
+} // namespace mozilla
+
+#endif // mozilla_TransactionStack_h

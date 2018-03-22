@@ -240,7 +240,6 @@ LOCAL_INCLUDES += [
     '/dom/security',
     '/dom/xbl',
     '/dom/xul',
-    '/editor/txmgr',
     '/image',
     '/layout/forms',
     '/layout/generic',

@@ -6,13 +6,13 @@
 #ifndef mozilla_TransactionManager_h
 #define mozilla_TransactionManager_h
 
+#include "mozilla/TransactionStack.h"
+
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsTransactionStack.h"
 #include "nsISupportsImpl.h"
 #include "nsITransactionManager.h"
-#include "nsTransactionStack.h"
 #include "nsWeakReference.h"
 #include "nscore.h"
 
@@ -62,9 +62,9 @@ private:
   nsresult EndTransaction(bool aAllowEmpty);
 
   int32_t                mMaxTransactionCount;
-  nsTransactionStack     mDoStack;
-  nsTransactionStack     mUndoStack;
-  nsTransactionStack     mRedoStack;
+  TransactionStack mDoStack;
+  TransactionStack mUndoStack;
+  TransactionStack mRedoStack;
   nsCOMArray<nsITransactionListener> mListeners;
 };
 

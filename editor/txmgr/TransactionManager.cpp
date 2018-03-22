@@ -7,6 +7,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/TransactionStack.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
@@ -15,16 +16,15 @@
 #include "nsITransaction.h"
 #include "nsITransactionListener.h"
 #include "nsIWeakReference.h"
-#include "nsTransactionStack.h"
 #include "TransactionItem.h"
 
 namespace mozilla {
 
 TransactionManager::TransactionManager(int32_t aMaxTransactionCount)
   : mMaxTransactionCount(aMaxTransactionCount)
-  , mDoStack(nsTransactionStack::FOR_UNDO)
-  , mUndoStack(nsTransactionStack::FOR_UNDO)
-  , mRedoStack(nsTransactionStack::FOR_REDO)
+  , mDoStack(TransactionStack::FOR_UNDO)
+  , mUndoStack(TransactionStack::FOR_UNDO)
+  , mRedoStack(TransactionStack::FOR_REDO)
 {
 }
 

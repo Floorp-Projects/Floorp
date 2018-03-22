@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsTransactionStack.h"
+#include "mozilla/TransactionStack.h"
 
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -11,9 +11,9 @@
 #include "nscore.h"
 #include "TransactionItem.h"
 
-using namespace mozilla;
+namespace mozilla {
 
-class nsTransactionStackDeallocator final : public nsDequeFunctor
+class TransactionStackDeallocator final : public nsDequeFunctor
 {
   virtual void operator()(void* aObject) override
   {
@@ -22,19 +22,19 @@ class nsTransactionStackDeallocator final : public nsDequeFunctor
   }
 };
 
-nsTransactionStack::nsTransactionStack(Type aType)
-  : nsDeque(new nsTransactionStackDeallocator())
+TransactionStack::TransactionStack(Type aType)
+  : nsDeque(new TransactionStackDeallocator())
   , mType(aType)
 {
 }
 
-nsTransactionStack::~nsTransactionStack()
+TransactionStack::~TransactionStack()
 {
   Clear();
 }
 
 void
-nsTransactionStack::Push(TransactionItem* aTransactionItem)
+TransactionStack::Push(TransactionItem* aTransactionItem)
 {
   if (!aTransactionItem) {
     return;
@@ -45,7 +45,7 @@ nsTransactionStack::Push(TransactionItem* aTransactionItem)
 }
 
 void
-nsTransactionStack::Push(already_AddRefed<TransactionItem> aTransactionItem)
+TransactionStack::Push(already_AddRefed<TransactionItem> aTransactionItem)
 {
   RefPtr<TransactionItem> item(aTransactionItem);
   if (!item) {
@@ -56,7 +56,7 @@ nsTransactionStack::Push(already_AddRefed<TransactionItem> aTransactionItem)
 }
 
 already_AddRefed<TransactionItem>
-nsTransactionStack::Pop()
+TransactionStack::Pop()
 {
   RefPtr<TransactionItem> item =
     dont_AddRef(static_cast<TransactionItem*>(nsDeque::Pop()));
@@ -64,7 +64,7 @@ nsTransactionStack::Pop()
 }
 
 already_AddRefed<TransactionItem>
-nsTransactionStack::PopBottom()
+TransactionStack::PopBottom()
 {
   RefPtr<TransactionItem> item =
     dont_AddRef(static_cast<TransactionItem*>(nsDeque::PopFront()));
@@ -72,7 +72,7 @@ nsTransactionStack::PopBottom()
 }
 
 already_AddRefed<TransactionItem>
-nsTransactionStack::Peek()
+TransactionStack::Peek()
 {
   RefPtr<TransactionItem> item =
     static_cast<TransactionItem*>(nsDeque::Peek());
@@ -80,7 +80,7 @@ nsTransactionStack::Peek()
 }
 
 already_AddRefed<TransactionItem>
-nsTransactionStack::GetItem(int32_t aIndex)
+TransactionStack::GetItem(int32_t aIndex)
 {
   if (aIndex < 0 || aIndex >= static_cast<int32_t>(nsDeque::GetSize())) {
     return nullptr;
@@ -91,7 +91,7 @@ nsTransactionStack::GetItem(int32_t aIndex)
 }
 
 void
-nsTransactionStack::Clear()
+TransactionStack::Clear()
 {
   while (GetSize() != 0) {
     RefPtr<TransactionItem> item =
@@ -100,7 +100,7 @@ nsTransactionStack::Clear()
 }
 
 void
-nsTransactionStack::DoTraverse(nsCycleCollectionTraversalCallback &cb)
+TransactionStack::DoTraverse(nsCycleCollectionTraversalCallback &cb)
 {
   size_t size = GetSize();
   for (size_t i = 0; i < size; ++i) {
@@ -112,3 +112,5 @@ nsTransactionStack::DoTraverse(nsCycleCollectionTraversalCallback &cb)
     }
   }
 }
+
+} // namespace mozilla
