@@ -1,1 +1,0 @@
-This test file can be altered to break signing checks.
