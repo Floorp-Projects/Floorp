@@ -4565,6 +4565,10 @@ template<>
 inline void
 MozJemalloc::moz_dispose_arena(arena_id_t aArenaId)
 {
+  // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
+  // We want to catch any such occurances of that behavior.
+  MOZ_CRASH("Do not call moz_dispose_arena until Bug 1364359 is fixed.");
+
   arena_t* arena = gArenas.GetById(aArenaId, /* IsPrivate = */ true);
   MOZ_RELEASE_ASSERT(arena);
   gArenas.DisposeArena(arena);
