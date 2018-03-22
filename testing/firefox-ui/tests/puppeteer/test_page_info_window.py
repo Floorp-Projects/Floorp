@@ -45,7 +45,6 @@ class TestPageInfoWindow(PuppeteerMixin, MarionetteTestCase):
         self.assertEqual(panel.verifier.get_property('localName'), 'textbox')
 
         self.assertEqual(panel.view_certificate.get_property('localName'), 'button')
-        self.assertEqual(panel.view_cookies.get_property('localName'), 'button')
         self.assertEqual(panel.view_passwords.get_property('localName'), 'button')
 
     def test_select(self):
