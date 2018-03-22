@@ -421,8 +421,7 @@ nsDOMClassInfo::Init()
     }
 
     nsDOMClassInfoData& data = sClassInfoData[i];
-    nameSpaceManager->RegisterClassName(data.mClass.name, i, false,
-                                        false, &data.mNameUTF16);
+    nameSpaceManager->RegisterClassName(data.mClass.name, i, &data.mNameUTF16);
   }
 
   for (i = 0; i < eDOMClassInfoIDCount; ++i) {
@@ -1315,30 +1314,6 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindowInner *aWin, JSContext 
   return NS_OK;
 }
 
-static bool
-OldBindingConstructorEnabled(const nsGlobalNameStruct *aStruct,
-                             nsGlobalWindowInner *aWin, JSContext *cx)
-{
-  MOZ_ASSERT(aStruct->mType == nsGlobalNameStruct::eTypeProperty ||
-             aStruct->mType == nsGlobalNameStruct::eTypeClassConstructor);
-
-  // Don't expose chrome only constructors to content windows.
-  if (aStruct->mChromeOnly) {
-    bool expose;
-    if (aStruct->mAllowXBL) {
-      expose = IsChromeOrXBL(cx, nullptr);
-    } else {
-      expose = nsContentUtils::IsSystemPrincipal(aWin->GetPrincipal());
-    }
-
-    if (!expose) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 static nsresult
 LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
                      nsPIDOMWindowInner *win,
@@ -1352,13 +1327,7 @@ nsWindowSH::NameStructEnabled(JSContext* aCx, nsGlobalWindowInner *aWin,
 {
   // DOMConstructor is special: creating its proto does not actually define it
   // as a property on the global.  So we don't want to expose its name either.
-  if (aName.EqualsLiteral("DOMConstructor")) {
-    return false;
-  }
-  const nsGlobalNameStruct* nameStruct = &aNameStruct;
-  return (nameStruct->mType != nsGlobalNameStruct::eTypeProperty &&
-          nameStruct->mType != nsGlobalNameStruct::eTypeClassConstructor) ||
-         OldBindingConstructorEnabled(nameStruct, aWin, aCx);
+  return !aName.EqualsLiteral("DOMConstructor");
 }
 
 #ifdef RELEASE_OR_BETA
@@ -1438,10 +1407,6 @@ nsWindowSH::GlobalResolve(nsGlobalWindowInner *aWin, JSContext *cx,
   nsresult rv = NS_OK;
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
-    if (!OldBindingConstructorEnabled(name_struct, aWin, cx)) {
-      return NS_OK;
-    }
-
     // Create the XPConnect prototype for our classinfo, PostCreateProto will
     // set up the prototype chain.  This will go ahead and define things on the
     // actual window's global.
@@ -1477,9 +1442,6 @@ nsWindowSH::GlobalResolve(nsGlobalWindowInner *aWin, JSContext *cx,
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeProperty) {
-    if (!OldBindingConstructorEnabled(name_struct, aWin, cx))
-      return NS_OK;
-
     // Before defining a global property, check for a named subframe of the
     // same name. If it exists, we don't want to shadow it.
     if (nsCOMPtr<nsPIDOMWindowOuter> childWin = aWin->GetChildWindow(name)) {
