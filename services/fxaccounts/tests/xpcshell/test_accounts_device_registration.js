@@ -8,6 +8,7 @@ ChromeUtils.import("resource://gre/modules/FxAccounts.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccountsClient.jsm");
 ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
+var {AccountState} = ChromeUtils.import("resource://gre/modules/FxAccounts.jsm", {});
 
 initTestLogging("Trace");
 
@@ -92,6 +93,12 @@ MockFxAccountsClient.prototype = {
 
 function MockFxAccounts(device = {}) {
   return new FxAccounts({
+    newAccountState(credentials) {
+      // we use a real accountState but mocked storage.
+      let storage = new MockStorageManager();
+      storage.initialize(credentials);
+      return new AccountState(storage);
+    },
     _getDeviceName() {
       return device.name || "mock device name";
     },
@@ -122,9 +129,10 @@ add_task(async function test_updateDeviceRegistration_with_new_device() {
   const deviceType = "bar";
 
   const credentials = getTestUser("baz");
-  delete credentials.deviceId;
   const fxa = new MockFxAccounts({ name: deviceName });
   await fxa.internal.setSignedInUser(credentials);
+  // Remove the current device registration (setSIgnedInUser does one!).
+  await fxa.updateUserAccountData({uid: credentials.uid, device: null});
 
   const spy = {
     registerDevice: { count: 0, args: [] },
@@ -153,9 +161,8 @@ add_task(async function test_updateDeviceRegistration_with_new_device() {
     return Promise.resolve([]);
   };
 
-  const result = await fxa.updateDeviceRegistration();
+  await fxa.updateDeviceRegistration();
 
-  Assert.equal(result, "newly-generated device id");
   Assert.equal(spy.updateDevice.count, 0);
   Assert.equal(spy.getDeviceList.count, 0);
   Assert.equal(spy.registerDevice.count, 1);
@@ -170,16 +177,21 @@ add_task(async function test_updateDeviceRegistration_with_new_device() {
   const state = fxa.internal.currentAccountState;
   const data = await state.getUserAccountData();
 
-  Assert.equal(data.deviceId, "newly-generated device id");
-  Assert.equal(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
+  Assert.equal(data.device.id, "newly-generated device id");
+  Assert.equal(data.device.registrationVersion, DEVICE_REGISTRATION_VERSION);
 });
 
 add_task(async function test_updateDeviceRegistration_with_existing_device() {
+  const deviceId = "my device id";
   const deviceName = "phil's device";
 
   const credentials = getTestUser("pb");
   const fxa = new MockFxAccounts({ name: deviceName });
   await fxa.internal.setSignedInUser(credentials);
+  await fxa.updateUserAccountData({uid: credentials.uid, device: {
+    id: deviceId,
+    registrationVersion: 1 // < 42
+  }});
 
   const spy = {
     registerDevice: { count: 0, args: [] },
@@ -196,7 +208,7 @@ add_task(async function test_updateDeviceRegistration_with_existing_device() {
     spy.updateDevice.count += 1;
     spy.updateDevice.args.push(arguments);
     return Promise.resolve({
-      id: credentials.deviceId,
+      id: deviceId,
       name: deviceName
     });
   };
@@ -205,15 +217,14 @@ add_task(async function test_updateDeviceRegistration_with_existing_device() {
     spy.getDeviceList.args.push(arguments);
     return Promise.resolve([]);
   };
-  const result = await fxa.updateDeviceRegistration();
+  await fxa.updateDeviceRegistration();
 
-  Assert.equal(result, credentials.deviceId);
   Assert.equal(spy.registerDevice.count, 0);
   Assert.equal(spy.getDeviceList.count, 0);
   Assert.equal(spy.updateDevice.count, 1);
   Assert.equal(spy.updateDevice.args[0].length, 4);
   Assert.equal(spy.updateDevice.args[0][0], credentials.sessionToken);
-  Assert.equal(spy.updateDevice.args[0][1], credentials.deviceId);
+  Assert.equal(spy.updateDevice.args[0][1], deviceId);
   Assert.equal(spy.updateDevice.args[0][2], deviceName);
   Assert.equal(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
   Assert.equal(spy.updateDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
@@ -222,17 +233,22 @@ add_task(async function test_updateDeviceRegistration_with_existing_device() {
   const state = fxa.internal.currentAccountState;
   const data = await state.getUserAccountData();
 
-  Assert.equal(data.deviceId, credentials.deviceId);
-  Assert.equal(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
+  Assert.equal(data.device.id, deviceId);
+  Assert.equal(data.device.registrationVersion, DEVICE_REGISTRATION_VERSION);
 });
 
 add_task(async function test_updateDeviceRegistration_with_unknown_device_error() {
   const deviceName = "foo";
   const deviceType = "bar";
+  const currentDeviceId = "my device id";
 
   const credentials = getTestUser("baz");
   const fxa = new MockFxAccounts({ name: deviceName });
   await fxa.internal.setSignedInUser(credentials);
+  await fxa.updateUserAccountData({uid: credentials.uid, device: {
+    id: currentDeviceId,
+    registrationVersion: 1 // < 42
+  }});
 
   const spy = {
     registerDevice: { count: 0, args: [] },
@@ -264,15 +280,14 @@ add_task(async function test_updateDeviceRegistration_with_unknown_device_error(
     return Promise.resolve([]);
   };
 
-  const result = await fxa.updateDeviceRegistration();
+  await fxa.updateDeviceRegistration();
 
-  Assert.equal(null, result);
   Assert.equal(spy.getDeviceList.count, 0);
   Assert.equal(spy.registerDevice.count, 0);
   Assert.equal(spy.updateDevice.count, 1);
   Assert.equal(spy.updateDevice.args[0].length, 4);
   Assert.equal(spy.updateDevice.args[0][0], credentials.sessionToken);
-  Assert.equal(spy.updateDevice.args[0][1], credentials.deviceId);
+  Assert.equal(spy.updateDevice.args[0][1], currentDeviceId);
   Assert.equal(spy.updateDevice.args[0][2], deviceName);
   Assert.equal(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
   Assert.equal(spy.updateDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
@@ -282,17 +297,22 @@ add_task(async function test_updateDeviceRegistration_with_unknown_device_error(
   const state = fxa.internal.currentAccountState;
   const data = await state.getUserAccountData();
 
-  Assert.equal(null, data.deviceId);
-  Assert.equal(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
+  Assert.equal(null, data.device);
 });
 
 add_task(async function test_updateDeviceRegistration_with_device_session_conflict_error() {
   const deviceName = "foo";
   const deviceType = "bar";
+  const currentDeviceId = "my device id";
+  const conflictingDeviceId = "conflicting device id";
 
   const credentials = getTestUser("baz");
   const fxa = new MockFxAccounts({ name: deviceName });
   await fxa.internal.setSignedInUser(credentials);
+  await fxa.updateUserAccountData({uid: credentials.uid, device: {
+    id: currentDeviceId,
+    registrationVersion: 1 // < 42
+  }});
 
   const spy = {
     registerDevice: { count: 0, args: [] },
@@ -316,7 +336,7 @@ add_task(async function test_updateDeviceRegistration_with_device_session_confli
       });
     }
     return Promise.resolve({
-      id: credentials.deviceId,
+      id: conflictingDeviceId,
       name: deviceName
     });
   };
@@ -326,18 +346,17 @@ add_task(async function test_updateDeviceRegistration_with_device_session_confli
     spy.getDeviceList.time = Date.now();
     return Promise.resolve([
       { id: "ignore", name: "ignore", type: "ignore", isCurrentDevice: false },
-      { id: credentials.deviceId, name: deviceName, type: deviceType, isCurrentDevice: true }
+      { id: conflictingDeviceId, name: deviceName, type: deviceType, isCurrentDevice: true }
     ]);
   };
 
-  const result = await fxa.updateDeviceRegistration();
+  await fxa.updateDeviceRegistration();
 
-  Assert.equal(result, credentials.deviceId);
   Assert.equal(spy.registerDevice.count, 0);
   Assert.equal(spy.updateDevice.count, 1);
   Assert.equal(spy.updateDevice.args[0].length, 4);
   Assert.equal(spy.updateDevice.args[0][0], credentials.sessionToken);
-  Assert.equal(spy.updateDevice.args[0][1], credentials.deviceId);
+  Assert.equal(spy.updateDevice.args[0][1], currentDeviceId);
   Assert.equal(spy.updateDevice.args[0][2], deviceName);
   Assert.equal(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
   Assert.equal(spy.updateDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
@@ -350,17 +369,17 @@ add_task(async function test_updateDeviceRegistration_with_device_session_confli
   const state = fxa.internal.currentAccountState;
   const data = await state.getUserAccountData();
 
-  Assert.equal(data.deviceId, credentials.deviceId);
-  Assert.equal(data.deviceRegistrationVersion, null);
+  Assert.equal(data.device.id, conflictingDeviceId);
+  Assert.equal(data.device.registrationVersion, null);
 });
 
 add_task(async function test_updateDeviceRegistration_with_unrecoverable_error() {
   const deviceName = "foo";
 
   const credentials = getTestUser("baz");
-  delete credentials.deviceId;
   const fxa = new MockFxAccounts({ name: deviceName });
   await fxa.internal.setSignedInUser(credentials);
+  await fxa.updateUserAccountData({uid: credentials.uid, device: null});
 
   const spy = {
     registerDevice: { count: 0, args: [] },
@@ -387,9 +406,8 @@ add_task(async function test_updateDeviceRegistration_with_unrecoverable_error()
     return Promise.resolve([]);
   };
 
-  const result = await fxa.updateDeviceRegistration();
+  await fxa.updateDeviceRegistration();
 
-  Assert.equal(null, result);
   Assert.equal(spy.getDeviceList.count, 0);
   Assert.equal(spy.updateDevice.count, 0);
   Assert.equal(spy.registerDevice.count, 1);
@@ -398,20 +416,20 @@ add_task(async function test_updateDeviceRegistration_with_unrecoverable_error()
   const state = fxa.internal.currentAccountState;
   const data = await state.getUserAccountData();
 
-  Assert.equal(null, data.deviceId);
+  Assert.equal(null, data.device);
 });
 
 add_task(async function test_getDeviceId_with_no_device_id_invokes_device_registration() {
   const credentials = getTestUser("foo");
   credentials.verified = true;
-  delete credentials.deviceId;
   const fxa = new MockFxAccounts();
   await fxa.internal.setSignedInUser(credentials);
+  await fxa.updateUserAccountData({uid: credentials.uid, device: null});
 
   const spy = { count: 0, args: [] };
   fxa.internal.currentAccountState.getUserAccountData =
     () => Promise.resolve({ email: credentials.email,
-                            deviceRegistrationVersion: DEVICE_REGISTRATION_VERSION });
+                            registrationVersion: DEVICE_REGISTRATION_VERSION });
   fxa.internal._registerOrUpdateDevice = function() {
     spy.count += 1;
     spy.args.push(arguments);
@@ -423,7 +441,7 @@ add_task(async function test_getDeviceId_with_no_device_id_invokes_device_regist
   Assert.equal(spy.count, 1);
   Assert.equal(spy.args[0].length, 1);
   Assert.equal(spy.args[0][0].email, credentials.email);
-  Assert.equal(null, spy.args[0][0].deviceId);
+  Assert.equal(null, spy.args[0][0].device);
   Assert.equal(result, "bar");
 });
 
@@ -435,7 +453,7 @@ add_task(async function test_getDeviceId_with_registration_version_outdated_invo
 
   const spy = { count: 0, args: [] };
   fxa.internal.currentAccountState.getUserAccountData =
-    () => Promise.resolve({ deviceId: credentials.deviceId, deviceRegistrationVersion: 0 });
+    () => Promise.resolve({ device: {id: "my id", registrationVersion: 0}});
   fxa.internal._registerOrUpdateDevice = function() {
     spy.count += 1;
     spy.args.push(arguments);
@@ -446,7 +464,7 @@ add_task(async function test_getDeviceId_with_registration_version_outdated_invo
 
   Assert.equal(spy.count, 1);
   Assert.equal(spy.args[0].length, 1);
-  Assert.equal(spy.args[0][0].deviceId, credentials.deviceId);
+  Assert.equal(spy.args[0][0].device.id, "my id");
   Assert.equal(result, "wibble");
 });
 
@@ -458,7 +476,7 @@ add_task(async function test_getDeviceId_with_device_id_and_uptodate_registratio
 
   const spy = { count: 0 };
   fxa.internal.currentAccountState.getUserAccountData =
-    () => Promise.resolve({ deviceId: credentials.deviceId, deviceRegistrationVersion: DEVICE_REGISTRATION_VERSION });
+    () => Promise.resolve({ device: {id: "foo's device id", registrationVersion: DEVICE_REGISTRATION_VERSION}});
   fxa.internal._registerOrUpdateDevice = function() {
     spy.count += 1;
     return Promise.resolve("bar");
@@ -478,7 +496,7 @@ add_task(async function test_getDeviceId_with_device_id_and_with_no_registration
 
   const spy = { count: 0, args: [] };
   fxa.internal.currentAccountState.getUserAccountData =
-    () => Promise.resolve({ deviceId: credentials.deviceId });
+    () => Promise.resolve({ device: {id: "wibble"}});
   fxa.internal._registerOrUpdateDevice = function() {
     spy.count += 1;
     spy.args.push(arguments);
@@ -489,8 +507,29 @@ add_task(async function test_getDeviceId_with_device_id_and_with_no_registration
 
   Assert.equal(spy.count, 1);
   Assert.equal(spy.args[0].length, 1);
-  Assert.equal(spy.args[0][0].deviceId, credentials.deviceId);
+  Assert.equal(spy.args[0][0].device.id, "wibble");
   Assert.equal(result, "wibble");
+});
+
+add_task(async function test_migration_toplevel_deviceId_to_device() {
+  const credentials = getTestUser("foo");
+  credentials.verified = true;
+  const fxa = new MockFxAccounts();
+  await fxa.internal.setSignedInUser(credentials);
+  await fxa.updateUserAccountData({uid: credentials.uid, device: null});
+  // Can't use updateUserAccountData here since it won't accept deprecated fields!
+  const accountData = fxa.internal.currentAccountState.storageManager.accountData;
+  accountData.deviceId = "mydeviceid";
+  accountData.deviceRegistrationVersion = DEVICE_REGISTRATION_VERSION;
+
+  const result = await fxa.internal.getDeviceId();
+  Assert.equal(result, "mydeviceid");
+
+  const state = fxa.internal.currentAccountState;
+  const data = await state.getUserAccountData();
+  Assert.deepEqual(data.device, {id: "mydeviceid", registrationVersion: DEVICE_REGISTRATION_VERSION});
+  Assert.ok(!data.deviceId);
+  Assert.ok(!data.deviceRegistrationVersion);
 });
 
 function expandHex(two_hex) {
@@ -508,7 +547,6 @@ function getTestUser(name) {
   return {
     email: name + "@example.com",
     uid: "1ad7f502-4cc7-4ec1-a209-071fd2fae348",
-    deviceId: name + "'s device id",
     sessionToken: name + "'s session token",
     keyFetchToken: name + "'s keyfetch token",
     unwrapBKey: expandHex("44"),
