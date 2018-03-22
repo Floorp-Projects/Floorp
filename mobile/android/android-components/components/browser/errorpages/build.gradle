@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -19,6 +20,11 @@ android {
     lintOptions {
         warningsAsErrors true
         abortOnError true
+
+        // Lint reports (falsely) a bunch of unused resources for this project. Those resources
+        // are references from Kotlin code and it looks like Android lint can't see those references
+        // yet. Let's disable this check and retry once a newer SDK is available.
+        disable 'UnusedResources'
     }
 
     buildTypes {

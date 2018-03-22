@@ -1,7 +1,8 @@
+package mozilla.components.errorpages
+
 import android.content.Context
 import android.support.annotation.StringRes
 import android.webkit.WebViewClient
-import mozilla.components.errorpages.R
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -49,7 +50,7 @@ object ErrorPages {
      */
     fun mapWebViewErrorCodeToErrorType(errorCode: Int): ErrorType =
         // Chromium's mapping (internal error code, to Android WebView error code) is described at:
-        // https://chromium.googlesource.com/chromium/src.git/+/master/android_webview/java/src/org/chromium/android_webview/ErrorCodeConversionHelper.java
+        // https://goo.gl/vspwct (ErrorCodeConversionHelper.java)
         when (errorCode) {
             WebViewClient.ERROR_UNKNOWN -> ErrorType.CONNECTION_FAILURE
 
@@ -100,8 +101,8 @@ object ErrorPages {
                 .use { it.readText() }
                 .replace("%page-title%", context.getString(R.string.errorpage_title))
                 .replace("%button%", context.getString(R.string.errorpage_refresh))
-                .replace("%messageShort%", "")
-                .replace("%messageLong%", "")
+                .replace("%messageShort%", context.getString(errorType.titleRes))
+                .replace("%messageLong%", context.getString(errorType.messageRes))
                 .replace("%css%", css)
     }
 }
