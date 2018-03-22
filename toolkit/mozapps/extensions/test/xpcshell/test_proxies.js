@@ -30,6 +30,7 @@ var ADDONS = [
 
 var METADATA = {
   version: "2.0",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "2",
@@ -49,17 +50,11 @@ function createSymlink(aSource, aDest) {
   return OS.File.unixSymLink(aSource, aDest);
 }
 
-function writeFile(aData, aFile) {
+function promiseWriteFile(aFile, aData) {
   if (!aFile.parent.exists())
     aFile.parent.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0o755);
 
-  var fos = AM_Cc["@mozilla.org/network/file-output-stream;1"].
-            createInstance(AM_Ci.nsIFileOutputStream);
-  fos.init(aFile,
-           FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE,
-           FileUtils.PERMS_FILE, 0);
-  fos.write(aData, aData.length);
-  fos.close();
+  return OS.File.writeAtomic(aFile.path, new TextEncoder().encode(aData));
 }
 
 function checkAddonsExist() {
@@ -103,7 +98,7 @@ async function run_proxy_tests() {
     writeInstallRDFToDir(METADATA, gTmpD);
 
     if (addon.type == "proxy") {
-      writeFile(addon.directory.path, addon.proxyFile);
+      await promiseWriteFile(addon.proxyFile, addon.directory.path);
     } else if (addon.type == "symlink") {
       await createSymlink(addon.directory, addon.proxyFile);
     }

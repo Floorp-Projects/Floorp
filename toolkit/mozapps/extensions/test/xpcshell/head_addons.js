@@ -89,7 +89,6 @@ const LEGACY_NON_RESTARTLESS_TESTS = new Set([
   "test_bug655254.js",
   "test_cacheflush.js",
   "test_checkcompatibility.js",
-  "test_proxies.js",
   "test_signed_verify.js",
   "test_strictcompatibility.js",
   "test_syncGUID.js",
