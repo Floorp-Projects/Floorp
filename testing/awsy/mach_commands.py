@@ -69,9 +69,6 @@ class MachCommands(MachCommandBase):
         else:
             os.environ['STYLO_THREADS'] = '4'
 
-        if 'enable_stylo' in kwargs and kwargs['enable_stylo']:
-            os.environ['STYLO_FORCE_ENABLED'] = '1'
-
         if 'enable_webrender' in kwargs and kwargs['enable_webrender']:
             os.environ['MOZ_WEBRENDER'] = '1'
             os.environ['MOZ_ACCELERATED'] = '1'
@@ -205,9 +202,6 @@ class MachCommands(MachCommandBase):
                      dest='settleWaitTime',
                      help='Seconds to wait for things to settled down. '
                      'Defaults to %s.' % SETTLE_WAIT_TIME)
-    @CommandArgument('--enable-stylo', group='AWSY', action='store_true',
-                     dest='enable_stylo', default=False,
-                     help='Enable Stylo.')
     @CommandArgument('--single-stylo-traversal', group='AWSY', action='store_true',
                      dest='single_stylo_traversal', default=False,
                      help='Set STYLO_THREADS=1.')

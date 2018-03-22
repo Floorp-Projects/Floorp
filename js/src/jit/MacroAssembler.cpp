@@ -2803,15 +2803,13 @@ MacroAssembler::alignJitStackBasedOnNArgs(uint32_t nargs)
 
 // ===============================================================
 
-MacroAssembler::MacroAssembler(JSContext* cx, IonScript* ion,
-                               JSScript* script, jsbytecode* pc)
+MacroAssembler::MacroAssembler(JSContext* cx)
   : framePushed_(0),
 #ifdef DEBUG
     inCall_(false),
 #endif
     emitProfilingInstrumentation_(false)
 {
-    constructRoot(cx);
     jitContext_.emplace(cx, (js::jit::TempAllocator*)nullptr);
     alloc_.emplace(cx);
     moveResolver_.setAllocator(*jitContext_->temp);
@@ -2822,11 +2820,53 @@ MacroAssembler::MacroAssembler(JSContext* cx, IonScript* ion,
     initWithAllocator();
     armbuffer_.id = GetJitContext()->getNextAssemblerId();
 #endif
-    if (ion) {
-        setFramePushed(ion->frameSize());
-        if (pc && cx->runtime()->geckoProfiler().enabled())
-            enableProfilingInstrumentation();
+}
+
+MacroAssembler::MacroAssembler()
+  : framePushed_(0),
+#ifdef DEBUG
+    inCall_(false),
+#endif
+    emitProfilingInstrumentation_(false)
+{
+    JitContext* jcx = GetJitContext();
+
+    if (!jcx->temp) {
+        JSContext* cx = jcx->cx;
+        MOZ_ASSERT(cx);
+        alloc_.emplace(cx);
     }
+
+    moveResolver_.setAllocator(*jcx->temp);
+
+#if defined(JS_CODEGEN_ARM)
+    initWithAllocator();
+    m_buffer.id = jcx->getNextAssemblerId();
+#elif defined(JS_CODEGEN_ARM64)
+    initWithAllocator();
+    armbuffer_.id = jcx->getNextAssemblerId();
+#endif
+}
+
+MacroAssembler::MacroAssembler(WasmToken, TempAllocator& alloc)
+  : framePushed_(0),
+#ifdef DEBUG
+    inCall_(false),
+#endif
+    emitProfilingInstrumentation_(false)
+{
+    moveResolver_.setAllocator(alloc);
+
+#if defined(JS_CODEGEN_ARM)
+    initWithAllocator();
+    m_buffer.id = 0;
+#elif defined(JS_CODEGEN_ARM64)
+    initWithAllocator();
+    // Stubs + builtins + the baseline compiler all require the native SP,
+    // not the PSP.
+    SetStackPointer64(sp);
+    armbuffer_.id = 0;
+#endif
 }
 
 bool

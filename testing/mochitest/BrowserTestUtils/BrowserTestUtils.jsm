@@ -21,8 +21,8 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 ChromeUtils.import("resource://testing-common/ContentTask.jsm");
 
-Cc["@mozilla.org/globalmessagemanager;1"]
-  .getService(Ci.nsIMessageListenerManager)
+Services
+  .mm
   .loadFrameScript(
     "chrome://mochikit/content/tests/BrowserTestUtils/content-utils.js", true);
 

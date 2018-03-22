@@ -160,9 +160,6 @@ class Assembler : public AssemblerMIPSShared
       : AssemblerMIPSShared()
     { }
 
-    // MacroAssemblers hold onto gcthings, so they are traced by the GC.
-    void trace(JSTracer* trc);
-
     static uintptr_t GetPointer(uint8_t*);
 
     using AssemblerMIPSShared::bind;

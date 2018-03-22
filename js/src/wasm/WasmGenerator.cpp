@@ -77,7 +77,7 @@ ModuleGenerator::ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env
     taskState_(mutexid::WasmCompileTaskState),
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
     masmAlloc_(&lifo_),
-    masm_(MacroAssembler::WasmToken(), masmAlloc_),
+    masm_(masmAlloc_),
     oldTrapCodeOffsets_(),
     debugTrapCodeOffset_(),
     lastPatchedCallSite_(0),
