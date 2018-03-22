@@ -26,6 +26,7 @@
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
 #include "mozilla/dom/ServiceWorkerRegistrationInfo.h"
+#include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
@@ -118,6 +119,19 @@ public:
   };
 
   nsClassHashtable<nsIDHashKey, ControlledClientData> mControlledClients;
+
+  struct PendingReadyData
+  {
+    RefPtr<ClientHandle> mClientHandle;
+    RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
+
+    explicit PendingReadyData(ClientHandle* aClientHandle)
+      : mClientHandle(aClientHandle)
+      , mPromise(new ServiceWorkerRegistrationPromise::Private(__func__))
+    { }
+  };
+
+  nsTArray<UniquePtr<PendingReadyData>> mPendingReadyList;
 
   bool
   IsAvailable(nsIPrincipal* aPrincipal, nsIURI* aURI);
@@ -310,8 +324,14 @@ public:
   void
   WorkerIsIdle(ServiceWorkerInfo* aWorker);
 
+  RefPtr<ServiceWorkerRegistrationPromise>
+  WhenReady(const ClientInfo& aClientInfo);
+
   void
   CheckPendingReadyPromises();
+
+  void
+  RemovePendingReadyPromise(const ClientInfo& aClientInfo);
 
 private:
   ServiceWorkerManager();
@@ -368,17 +388,20 @@ private:
   StopControllingRegistration(ServiceWorkerRegistrationInfo* aRegistration);
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
-  GetServiceWorkerRegistrationInfo(nsPIDOMWindowInner* aWindow);
+  GetServiceWorkerRegistrationInfo(nsPIDOMWindowInner* aWindow) const;
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
-  GetServiceWorkerRegistrationInfo(nsIDocument* aDoc);
+  GetServiceWorkerRegistrationInfo(nsIDocument* aDoc) const;
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
-  GetServiceWorkerRegistrationInfo(nsIPrincipal* aPrincipal, nsIURI* aURI);
+  GetServiceWorkerRegistrationInfo(const ClientInfo& aClientInfo) const;
+
+  already_AddRefed<ServiceWorkerRegistrationInfo>
+  GetServiceWorkerRegistrationInfo(nsIPrincipal* aPrincipal, nsIURI* aURI) const;
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetServiceWorkerRegistrationInfo(const nsACString& aScopeKey,
-                                   nsIURI* aURI);
+                                   nsIURI* aURI) const;
 
   // This method generates a key using appId and isInElementBrowser from the
   // principal. We don't use the origin because it can change during the

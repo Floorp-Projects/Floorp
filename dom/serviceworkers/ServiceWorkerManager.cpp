@@ -1435,6 +1435,40 @@ ServiceWorkerManager::StorePendingReadyPromise(nsPIDOMWindowInner* aWindow,
   mPendingReadyPromises.Put(aWindow, data);
 }
 
+RefPtr<ServiceWorkerRegistrationPromise>
+ServiceWorkerManager::WhenReady(const ClientInfo& aClientInfo)
+{
+  AssertIsOnMainThread();
+
+  for (auto &prd : mPendingReadyList) {
+    if (prd->mClientHandle->Info().Id() == aClientInfo.Id() &&
+        prd->mClientHandle->Info().PrincipalInfo() == aClientInfo.PrincipalInfo()) {
+      return prd->mPromise;
+    }
+  }
+
+  RefPtr<ServiceWorkerRegistrationInfo> reg =
+    GetServiceWorkerRegistrationInfo(aClientInfo);
+  if (reg && reg->GetActive()) {
+    return ServiceWorkerRegistrationPromise::CreateAndResolve(reg->Descriptor(),
+                                                              __func__);
+  }
+
+  nsCOMPtr<nsISerialEventTarget> target =
+    SystemGroup::EventTargetFor(TaskCategory::Other);
+
+  RefPtr<ClientHandle> handle = ClientManager::CreateHandle(aClientInfo, target);
+  mPendingReadyList.AppendElement(MakeUnique<PendingReadyData>(handle));
+
+  RefPtr<ServiceWorkerManager> self(this);
+  handle->OnDetach()->Then( target, __func__,
+    [self = Move(self), aClientInfo] {
+      self->RemovePendingReadyPromise(aClientInfo);
+    });
+
+  return mPendingReadyList.LastElement()->mPromise;
+}
+
 void
 ServiceWorkerManager::CheckPendingReadyPromises()
 {
@@ -1446,6 +1480,21 @@ ServiceWorkerManager::CheckPendingReadyPromises()
     if (CheckReadyPromise(window, pendingReadyPromise->mURI,
                           pendingReadyPromise->mPromise)) {
       iter.Remove();
+    }
+  }
+
+  nsTArray<UniquePtr<PendingReadyData>> pendingReadyList;
+  mPendingReadyList.SwapElements(pendingReadyList);
+  for (uint32_t i = 0; i < pendingReadyList.Length(); ++i) {
+    UniquePtr<PendingReadyData> prd(Move(pendingReadyList[i]));
+
+    RefPtr<ServiceWorkerRegistrationInfo> reg =
+      GetServiceWorkerRegistrationInfo(prd->mClientHandle->Info());
+
+    if (reg && reg->GetActive()) {
+      prd->mPromise->Resolve(reg->Descriptor(), __func__);
+    } else {
+      mPendingReadyList.AppendElement(Move(prd));
     }
   }
 }
@@ -1474,6 +1523,23 @@ ServiceWorkerManager::CheckReadyPromise(nsPIDOMWindowInner* aWindow,
   }
 
   return false;
+}
+
+void
+ServiceWorkerManager::RemovePendingReadyPromise(const ClientInfo& aClientInfo)
+{
+  nsTArray<UniquePtr<PendingReadyData>> pendingReadyList;
+  mPendingReadyList.SwapElements(pendingReadyList);
+  for (uint32_t i = 0; i < pendingReadyList.Length(); ++i) {
+    UniquePtr<PendingReadyData> prd(Move(pendingReadyList[i]));
+
+    if (prd->mClientHandle->Info().Id() == aClientInfo.Id() &&
+        prd->mClientHandle->Info().PrincipalInfo() == aClientInfo.PrincipalInfo()) {
+      prd->mPromise->Reject(NS_ERROR_DOM_ABORT_ERR, __func__);
+    } else {
+      mPendingReadyList.AppendElement(Move(prd));
+    }
+  }
 }
 
 ServiceWorkerInfo*
@@ -1893,7 +1959,7 @@ ServiceWorkerManager::StoreRegistration(
 }
 
 already_AddRefed<ServiceWorkerRegistrationInfo>
-ServiceWorkerManager::GetServiceWorkerRegistrationInfo(nsPIDOMWindowInner* aWindow)
+ServiceWorkerManager::GetServiceWorkerRegistrationInfo(nsPIDOMWindowInner* aWindow) const
 {
   MOZ_ASSERT(aWindow);
   nsCOMPtr<nsIDocument> document = aWindow->GetExtantDoc();
@@ -1901,7 +1967,7 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(nsPIDOMWindowInner* aWind
 }
 
 already_AddRefed<ServiceWorkerRegistrationInfo>
-ServiceWorkerManager::GetServiceWorkerRegistrationInfo(nsIDocument* aDoc)
+ServiceWorkerManager::GetServiceWorkerRegistrationInfo(nsIDocument* aDoc) const
 {
   MOZ_ASSERT(aDoc);
   nsCOMPtr<nsIURI> documentURI = aDoc->GetDocumentURI();
@@ -1918,8 +1984,22 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(nsIDocument* aDoc)
 }
 
 already_AddRefed<ServiceWorkerRegistrationInfo>
+ServiceWorkerManager::GetServiceWorkerRegistrationInfo(const ClientInfo& aClientInfo) const
+{
+  nsCOMPtr<nsIPrincipal> principal = aClientInfo.GetPrincipal();
+  NS_ENSURE_TRUE(principal, nullptr);
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aClientInfo.URL(),
+                          nullptr, nullptr);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return GetServiceWorkerRegistrationInfo(principal, uri);
+}
+
+already_AddRefed<ServiceWorkerRegistrationInfo>
 ServiceWorkerManager::GetServiceWorkerRegistrationInfo(nsIPrincipal* aPrincipal,
-                                                       nsIURI* aURI)
+                                                       nsIURI* aURI) const
 {
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aURI);
@@ -1940,7 +2020,7 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(nsIPrincipal* aPrincipal,
 
 already_AddRefed<ServiceWorkerRegistrationInfo>
 ServiceWorkerManager::GetServiceWorkerRegistrationInfo(const nsACString& aScopeKey,
-                                                       nsIURI* aURI)
+                                                       nsIURI* aURI) const
 {
   MOZ_ASSERT(aURI);
 

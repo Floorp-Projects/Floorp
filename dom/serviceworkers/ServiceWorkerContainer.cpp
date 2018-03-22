@@ -101,6 +101,7 @@ ServiceWorkerContainer::ControllerChanged(ErrorResult& aRv)
 void
 ServiceWorkerContainer::RemoveReadyPromise()
 {
+  mReadyPromiseHolder.DisconnectIfExists();
   if (nsCOMPtr<nsPIDOMWindowInner> window = GetOwner()) {
     nsCOMPtr<nsIServiceWorkerManager> swm =
       mozilla::services::GetServiceWorkerManager();
@@ -287,16 +288,47 @@ ServiceWorkerContainer::GetReady(ErrorResult& aRv)
     return mReadyPromise;
   }
 
-  nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
-  if (!swm) {
-    aRv.Throw(NS_ERROR_FAILURE);
+  nsIGlobalObject* global = GetParentObject();
+  if (!global) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
-  nsCOMPtr<nsISupports> promise;
-  aRv = swm->GetReadyPromise(GetOwner(), getter_AddRefs(promise));
+  Maybe<ClientInfo> clientInfo(global->GetClientInfo());
+  if (clientInfo.isNothing()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
 
-  mReadyPromise = static_cast<Promise*>(promise.get());
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  mReadyPromise = Promise::Create(GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  RefPtr<ServiceWorkerContainer> self = this;
+  RefPtr<Promise> outer = mReadyPromise;
+
+  swm->WhenReady(clientInfo.ref())->Then(
+    global->EventTargetFor(TaskCategory::Other), __func__,
+    [self, outer] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+      self->mReadyPromiseHolder.Complete();
+      nsIGlobalObject* global = self->GetParentObject();
+      NS_ENSURE_TRUE_VOID(global);
+      RefPtr<ServiceWorkerRegistration> reg =
+        global->GetOrCreateServiceWorkerRegistration(aDescriptor);
+      NS_ENSURE_TRUE_VOID(reg);
+      outer->MaybeResolve(reg);
+    }, [self, outer] (nsresult aRv) {
+      self->mReadyPromiseHolder.Complete();
+      outer->MaybeReject(aRv);
+    })->Track(mReadyPromiseHolder);
+
   return mReadyPromise;
 }
 
