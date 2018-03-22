@@ -80,7 +80,7 @@ async function checkToggleTarget(targetID) {
   await gContentAPI.hideMenu("controlCenter");
   await hideMenuPromise;
 
-  ok(!is_visible(popup), "The tooltip should now be hidden.");
+  ok(!BrowserTestUtils.is_visible(popup), "The tooltip should now be hidden.");
   await testTargetAvailability(false);
 
   await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {

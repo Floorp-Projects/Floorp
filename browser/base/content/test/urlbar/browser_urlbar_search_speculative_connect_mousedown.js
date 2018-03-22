@@ -62,7 +62,7 @@ add_task(async function popup_mousedown_tests() {
 
   await BrowserTestUtils.waitForCondition(() => {
     return !!gURLBar.popup.richlistbox.childNodes[1] &&
-           is_visible(gURLBar.popup.richlistbox.childNodes[1]);
+           BrowserTestUtils.is_visible(gURLBar.popup.richlistbox.childNodes[1]);
   }, "the node is there.");
 
   let listitem = gURLBar.popup.richlistbox.childNodes[1];

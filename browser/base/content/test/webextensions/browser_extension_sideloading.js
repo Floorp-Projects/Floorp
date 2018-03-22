@@ -215,8 +215,8 @@ add_task(async function() {
   ok(item, "Found entry for sideloaded extension in about:addons");
   item.scrollIntoView({behavior: "instant"});
 
-  ok(is_visible(item._enableBtn), "Enable button is visible for sideloaded extension");
-  ok(is_hidden(item._disableBtn), "Disable button is not visible for sideloaded extension");
+  ok(BrowserTestUtils.is_visible(item._enableBtn), "Enable button is visible for sideloaded extension");
+  ok(BrowserTestUtils.is_hidden(item._disableBtn), "Disable button is not visible for sideloaded extension");
 
   // When clicking enable we should see the permissions notification
   popupPromise = promisePopupNotificationShown("addon-webext-permissions");

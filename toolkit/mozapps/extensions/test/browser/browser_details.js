@@ -288,7 +288,7 @@ add_test(function() {
 // Opens and tests the details view for add-on 5
 add_test(function() {
   open_details("addon5@tests.mozilla.org", "extension", async function() {
-    await TestUtils.waitForCondition(() => !is_hidden(get("detail-error-link")));
+    await TestUtils.waitForCondition(() => !BrowserTestUtils.is_hidden(get("detail-error-link")));
     is(get("detail-name").textContent, "Test add-on 5", "Name should be correct");
 
     is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
@@ -344,7 +344,7 @@ add_test(async function() {
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
   open_details("addon9@tests.mozilla.org", "extension", async function() {
-    await TestUtils.waitForCondition(() => !is_hidden(get("detail-error-link")));
+    await TestUtils.waitForCondition(() => !BrowserTestUtils.is_hidden(get("detail-error-link")));
     is(get("detail-name").textContent, "Test add-on 9", "Name should be correct");
 
     is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
@@ -403,7 +403,7 @@ add_test(async function() {
   gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
   open_details("addon10@tests.mozilla.org", "extension", async function() {
-    await TestUtils.waitForCondition(() => !is_hidden(get("detail-error-link")));
+    await TestUtils.waitForCondition(() => !BrowserTestUtils.is_hidden(get("detail-error-link")));
     is(get("detail-name").textContent, "Test add-on 10", "Name should be correct");
 
     is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
