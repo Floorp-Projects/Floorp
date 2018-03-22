@@ -1451,11 +1451,6 @@ IsWindow(JSContext* cx, JSObject* wrapper)
 void
 XPCWrappedNativeXrayTraits::preserveWrapper(JSObject* target)
 {
-    XPCWrappedNative* wn = XPCWrappedNative::Get(target);
-    RefPtr<nsXPCClassInfo> ci;
-    CallQueryInterface(wn->Native(), getter_AddRefs(ci));
-    if (ci)
-        ci->PreserveWrapper(wn->Native());
 }
 
 static bool
