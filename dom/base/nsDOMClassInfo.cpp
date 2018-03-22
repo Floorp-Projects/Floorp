@@ -981,9 +981,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
   }
 
   const nsIID *class_iid;
-  if (class_name_struct->mType == nsGlobalNameStruct::eTypeClassProto) {
-    class_iid = &class_name_struct->mIID;
-  } else if (class_name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+  if (class_name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
     class_iid =
       sClassInfoData[class_name_struct->mDOMClassInfoID].mProtoChainInterface;
   } else {
@@ -1044,9 +1042,7 @@ nsDOMConstructor::ResolveInterfaceConstants(JSContext *cx, JS::Handle<JSObject*>
     return NS_ERROR_UNEXPECTED;
 
   const nsIID *class_iid;
-  if (class_name_struct->mType == nsGlobalNameStruct::eTypeClassProto) {
-    class_iid = &class_name_struct->mIID;
-  } else if (class_name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+  if (class_name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
     class_iid =
       sClassInfoData[class_name_struct->mDOMClassInfoID].mProtoChainInterface;
   } else {
@@ -1093,8 +1089,7 @@ GetXPCProto(nsIXPConnect *aXPConnect, JSContext *cx, nsGlobalWindowInner *aWin,
   return JS_WrapObject(cx, aProto) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-// Either ci_data must be non-null or name_struct must be non-null and of type
-// eTypeClassProto.
+// ci_data must be non-null
 static nsresult
 ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindowInner *aWin, JSContext *cx,
                  JS::Handle<JSObject*> obj, const char16_t *name,
@@ -1105,10 +1100,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindowInner *aWin, JSContext 
                  JS::MutableHandle<JS::PropertyDescriptor> ctorDesc)
 {
   JS::Rooted<JSObject*> dot_prototype(cx, aDot_prototype);
-  NS_ASSERTION(ci_data ||
-               (name_struct &&
-                name_struct->mType == nsGlobalNameStruct::eTypeClassProto),
-               "Wrong type or missing ci_data!");
+  NS_ASSERTION(ci_data, "Missing ci_data!");
 
   RefPtr<nsDOMConstructor> constructor;
   nsresult rv = nsDOMConstructor::Create(name, name_struct, aWin->AsInner(),
@@ -1135,10 +1127,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindowInner *aWin, JSContext 
 
   const nsIID *primary_iid = &NS_GET_IID(nsISupports);
 
-  if (!ci_data) {
-    primary_iid = &name_struct->mIID;
-  }
-  else if (ci_data->mProtoChainInterface) {
+  if (ci_data->mProtoChainInterface) {
     primary_iid = ci_data->mProtoChainInterface;
   }
 
@@ -1161,7 +1150,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindowInner *aWin, JSContext 
 
     const nsIID *iid = nullptr;
 
-    if (ci_data && !ci_data->mHasClassInterface) {
+    if (!ci_data->mHasClassInterface) {
       if_info->GetIIDShared(&iid);
     } else {
       if_info->GetParent(getter_AddRefs(parent));
@@ -1172,7 +1161,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindowInner *aWin, JSContext 
 
     if (iid) {
       if (!iid->Equals(NS_GET_IID(nsISupports))) {
-        if (ci_data && !ci_data->mHasClassInterface) {
+        if (!ci_data->mHasClassInterface) {
           // If the class doesn't have a class interface the primary
           // interface is the interface that should be
           // constructor.prototype.__proto__.
@@ -1375,14 +1364,6 @@ nsWindowSH::GlobalResolve(nsGlobalWindowInner *aWin, JSContext *cx,
                             &sClassInfoData[name_struct->mDOMClassInfoID],
                             name_struct, nameSpaceManager, dot_prototype,
                             desc);
-  }
-
-  if (name_struct->mType == nsGlobalNameStruct::eTypeClassProto) {
-    // We don't have a XPConnect prototype object, let ResolvePrototype create
-    // one.
-    return ResolvePrototype(nsDOMClassInfo::sXPConnect, aWin, cx, obj,
-                            class_name, nullptr,
-                            name_struct, nameSpaceManager, nullptr, desc);
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeProperty) {
