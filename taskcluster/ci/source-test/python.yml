@@ -107,6 +107,7 @@ mozlint:
     when:
         files-changed:
             - 'python/mozlint/**'
+            - 'tools/lint/**'
 
 mozterm:
     description: python/mozterm unit tests
