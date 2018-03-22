@@ -15,14 +15,10 @@ var CallsListView = extend(WidgetMethods, {
    */
   initialize: function () {
     this.widget = new SideMenuWidget($("#calls-list"));
-    this._slider = $("#calls-slider");
     this._searchbox = $("#calls-searchbox");
     this._filmstrip = $("#snapshot-filmstrip");
 
     this._onSelect = this._onSelect.bind(this);
-    this._onSlideMouseDown = this._onSlideMouseDown.bind(this);
-    this._onSlideMouseUp = this._onSlideMouseUp.bind(this);
-    this._onSlide = this._onSlide.bind(this);
     this._onSearch = this._onSearch.bind(this);
     this._onScroll = this._onScroll.bind(this);
     this._onExpand = this._onExpand.bind(this);
@@ -30,9 +26,6 @@ var CallsListView = extend(WidgetMethods, {
     this._onThumbnailClick = this._onThumbnailClick.bind(this);
 
     this.widget.addEventListener("select", this._onSelect);
-    this._slider.addEventListener("mousedown", this._onSlideMouseDown);
-    this._slider.addEventListener("mouseup", this._onSlideMouseUp);
-    this._slider.addEventListener("change", this._onSlide);
     this._searchbox.addEventListener("input", this._onSearch);
     this._filmstrip.addEventListener("wheel", this._onScroll);
   },
@@ -42,9 +35,6 @@ var CallsListView = extend(WidgetMethods, {
    */
   destroy: function () {
     this.widget.removeEventListener("select", this._onSelect);
-    this._slider.removeEventListener("mousedown", this._onSlideMouseDown);
-    this._slider.removeEventListener("mouseup", this._onSlideMouseUp);
-    this._slider.removeEventListener("change", this._onSlide);
     this._searchbox.removeEventListener("input", this._onSearch);
     this._filmstrip.removeEventListener("wheel", this._onScroll);
   },
@@ -139,14 +129,6 @@ var CallsListView = extend(WidgetMethods, {
     // Flushes all the prepared function call items into this container.
     this.commit();
     window.emit(EVENTS.CALL_LIST_POPULATED);
-
-    // Resetting the function selection slider's value (shown in this
-    // container's toolbar) would trigger a selection event, which should be
-    // ignored in this case.
-    this._ignoreSliderChanges = true;
-    this._slider.value = 0;
-    this._slider.max = functionCalls.length - 1;
-    this._ignoreSliderChanges = false;
   },
 
   /**
@@ -265,12 +247,6 @@ var CallsListView = extend(WidgetMethods, {
       $("#step-out").removeAttribute("disabled");
     }
 
-    // Correlate the currently selected item with the function selection
-    // slider's value. Avoid triggering a redundant selection event.
-    this._ignoreSliderChanges = true;
-    this._slider.value = this.selectedIndex;
-    this._ignoreSliderChanges = false;
-
     // Can't generate screenshots for function call actors loaded from disk.
     // XXX: Bug 984844.
     if (callItem.attachment.actor.isLoadedFromDisk) {
@@ -290,54 +266,6 @@ var CallsListView = extend(WidgetMethods, {
         this.highlightedThumbnail = screenshot.index;
       }).catch(console.error);
     });
-  },
-
-  /**
-   * The mousedown listener for the call selection slider.
-   */
-  _onSlideMouseDown: function () {
-    this._isSliding = true;
-  },
-
-  /**
-   * The mouseup listener for the call selection slider.
-   */
-  _onSlideMouseUp: function () {
-    this._isSliding = false;
-  },
-
-  /**
-   * The change listener for the call selection slider.
-   */
-  _onSlide: function () {
-    // Avoid performing any operations when programatically changing the value.
-    if (this._ignoreSliderChanges) {
-      return;
-    }
-    let selectedFunctionCallIndex = this.selectedIndex = this._slider.value;
-
-    // While sliding, immediately show the most relevant thumbnail for a
-    // function call, for a nice diff-like animation effect between draws.
-    let thumbnails = SnapshotsListView.selectedItem.attachment.thumbnails;
-    let thumbnail = getThumbnailForCall(thumbnails, selectedFunctionCallIndex);
-
-    // Avoid drawing and highlighting if the selected function call has the
-    // same thumbnail as the last one.
-    if (thumbnail.index == this.highlightedThumbnail) {
-      return;
-    }
-    // If a thumbnail wasn't found (e.g. the backend avoids creating thumbnails
-    // when rendering offscreen), simply defer to the first available one.
-    if (thumbnail.index == -1) {
-      thumbnail = thumbnails[0];
-    }
-
-    let { index, width, height, flipped, pixels } = thumbnail;
-    this.highlightedThumbnail = index;
-
-    let screenshotNode = $("#screenshot-image");
-    screenshotNode.setAttribute("flipped", flipped);
-    drawBackground("screenshot-rendering", width, height, pixels);
   },
 
   /**
