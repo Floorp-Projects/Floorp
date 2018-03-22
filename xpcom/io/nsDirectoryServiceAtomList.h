@@ -11,7 +11,9 @@ DIR_ATOM(sOS_DriveDirectory, NS_OS_DRIVE_DIR)
 DIR_ATOM(sOS_TemporaryDirectory, NS_OS_TEMP_DIR)
 DIR_ATOM(sOS_CurrentProcessDirectory, NS_OS_CURRENT_PROCESS_DIR)
 DIR_ATOM(sOS_CurrentWorkingDirectory, NS_OS_CURRENT_WORKING_DIR)
-DIR_ATOM(sOS_HomeDirectory, NS_OS_HOME_DIR)
+// This one is commented out because nsGkAtoms::Home also exists, and we don't
+// allow duplicate static atoms.
+//DIR_ATOM(sOS_HomeDirectory, NS_OS_HOME_DIR)
 DIR_ATOM(sOS_DesktopDirectory, NS_OS_DESKTOP_DIR)
 DIR_ATOM(sInitCurrentProcess_dummy, NS_XPCOM_INIT_CURRENT_PROCESS_DIR)
 #if defined (MOZ_WIDGET_COCOA)

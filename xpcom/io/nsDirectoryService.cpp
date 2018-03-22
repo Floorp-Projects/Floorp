@@ -415,6 +415,11 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
 
   RefPtr<nsAtom> inAtom = NS_Atomize(aProp);
 
+  // Check that nsGkAtoms::Home matches the value that sOS_HomeDirectory would
+  // have if it wasn't commented out to avoid static atom duplication.
+  MOZ_ASSERT(
+    NS_strcmp(nsGkAtoms::Home->GetUTF16String(), u"" NS_OS_HOME_DIR) == 0);
+
   // check to see if it is one of our defaults
 
   if (inAtom == nsDirectoryService::sCurrentProcess ||
@@ -462,7 +467,7 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
     rv = GetOSXFolderType(kClassicDomain, kInternetSearchSitesFolderType, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sUserLibDirectory) {
     rv = GetOSXFolderType(kUserDomain, kDomainLibraryFolderType, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sOS_HomeDirectory) {
+  } else if (inAtom == nsGkAtoms::Home) {
     rv = GetOSXFolderType(kUserDomain, kDomainTopLevelFolderType, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sDefaultDownloadDirectory) {
     // 10.5 and later, we can use kDownloadsFolderType which is defined in
@@ -520,7 +525,7 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
     rv = GetSpecialSystemDirectory(Win_WindowsDirectory, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sWindowsProgramFiles) {
     rv = GetSpecialSystemDirectory(Win_ProgramFiles, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sOS_HomeDirectory) {
+  } else if (inAtom == nsGkAtoms::Home) {
     rv = GetSpecialSystemDirectory(Win_HomeDirectory, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sDesktop) {
     rv = GetSpecialSystemDirectory(Win_Desktop, getter_AddRefs(localFile));
@@ -598,7 +603,7 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
     rv = GetSpecialSystemDirectory(Unix_LocalDirectory, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sLibDirectory) {
     rv = GetSpecialSystemDirectory(Unix_LibDirectory, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sOS_HomeDirectory) {
+  } else if (inAtom == nsGkAtoms::Home) {
     rv = GetSpecialSystemDirectory(Unix_HomeDirectory, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sXDGDesktop ||
              inAtom == nsDirectoryService::sOS_DesktopDirectory) {
