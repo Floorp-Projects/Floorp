@@ -4923,6 +4923,7 @@ DoCacheIRBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_
     // Ensure we're only generating for an enabled opcode.
     switch(op) {
       case JSOP_ADD:
+      case JSOP_SUB:
         break;
       default:
         return false; // Fallback to shared IC.

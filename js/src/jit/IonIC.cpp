@@ -568,6 +568,10 @@ IonBinaryArithIC::update(JSContext* cx, HandleScript outerScript, IonBinaryArith
         if (!AddValues(cx, &lhsCopy, &rhsCopy, ret))
             return false;
         break;
+      case JSOP_SUB:
+        if (!SubValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
       default:
         MOZ_CRASH("Unhandled binary arith op");
     }
