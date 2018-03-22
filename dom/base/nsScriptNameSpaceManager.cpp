@@ -166,9 +166,6 @@ nsScriptNameSpaceManager::Init()
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = FillHash(cm, JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Initial filling of the has table has been done.
   // Now, listen for changes.
   nsCOMPtr<nsIObserverService> serv =
@@ -208,76 +205,6 @@ nsScriptNameSpaceManager::OperateCategoryEntryHash(nsICategoryManager* aCategory
                                                    bool aRemove)
 {
   MOZ_ASSERT(aCategoryManager);
-  // Get the type from the category name.
-  // NOTE: we could have passed the type in FillHash() and guessed it in
-  // Observe() but this way, we have only one place to update and this is
-  // not performance sensitive.
-  nsGlobalNameStruct::nametype type;
-  if (strcmp(aCategory, JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY) == 0) {
-    type = nsGlobalNameStruct::eTypeProperty;
-  } else {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsISupportsCString> strWrapper = do_QueryInterface(aEntry);
-
-  if (!strWrapper) {
-    NS_WARNING("Category entry not an nsISupportsCString!");
-    return NS_OK;
-  }
-
-  nsAutoCString categoryEntry;
-  nsresult rv = strWrapper->GetData(categoryEntry);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // We need to handle removal before calling GetCategoryEntry
-  // because the category entry is already removed before we are
-  // notified.
-  if (aRemove) {
-    NS_ConvertASCIItoUTF16 entry(categoryEntry);
-    const nsGlobalNameStruct *s = LookupName(entry);
-    // Verify mType so that this API doesn't remove names
-    // registered by others.
-    if (!s || s->mType != type) {
-      return NS_OK;
-    }
-
-    RemoveFromHash(&entry);
-    return NS_OK;
-  }
-
-  nsCString contractId;
-  rv = aCategoryManager->GetCategoryEntry(aCategory, categoryEntry.get(),
-                                          getter_Copies(contractId));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIComponentRegistrar> registrar;
-  rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCID *cidPtr;
-  rv = registrar->ContractIDToCID(contractId.get(), &cidPtr);
-
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Bad contract id registed with the script namespace manager");
-    return NS_OK;
-  }
-
-  // Copy CID onto the stack, so we can free it right away and avoid having
-  // to add cleanup code at every exit point from this function.
-  nsCID cid = *cidPtr;
-  free(cidPtr);
-
-  nsGlobalNameStruct *s = AddToHash(categoryEntry.get());
-  NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
-
-  if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
-    s->mType = type;
-    s->mCID = cid;
-  } else {
-    NS_WARNING("Global script name not overwritten!");
-  }
-
   return NS_OK;
 }
 
