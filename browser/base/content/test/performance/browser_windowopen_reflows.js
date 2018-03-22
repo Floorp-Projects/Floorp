@@ -61,10 +61,10 @@ add_task(async function() {
 
   let win = OpenBrowserWindow();
 
-  await withReflowObserver(async function() {
+  await withPerfObserver(async function() {
     await TestUtils.topicObserved("browser-delayed-startup-finished",
                                   subject => subject == win);
-  }, EXPECTED_REFLOWS, win);
+  }, {expectedReflows: EXPECTED_REFLOWS}, win);
 
   await BrowserTestUtils.closeWindow(win);
 });

@@ -37,11 +37,11 @@ add_task(async function() {
   let otherTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   await firstSwitchDone;
 
-  await withReflowObserver(async function() {
+  await withPerfObserver(async function() {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
     gBrowser.selectedTab = origTab;
     await switchDone;
-  }, EXPECTED_REFLOWS);
+  }, {expectedReflows: EXPECTED_REFLOWS});
 
   BrowserTestUtils.removeTab(otherTab);
 });
