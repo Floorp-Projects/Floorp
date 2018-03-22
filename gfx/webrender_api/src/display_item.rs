@@ -420,8 +420,8 @@ pub struct GradientStop {
 pub struct RadialGradient {
     pub center: LayoutPoint,
     pub radius: LayoutSize,
-    pub start_radius: f32,
-    pub end_radius: f32,
+    pub start_offset: f32,
+    pub end_offset: f32,
     pub extend_mode: ExtendMode,
 } // IMPLICIT stops: Vec<GradientStop>
 

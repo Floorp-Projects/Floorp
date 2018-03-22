@@ -16,8 +16,8 @@ replay = ["webrender_api/deserialize", "ron", "serde"]
 
 [dependencies]
 app_units = "0.6"
-bincode = "0.9"
 byteorder = "1.0"
+bincode = "1.0"
 euclid = "0.17"
 fxhash = "0.2.1"
 gleam = "0.4.20"

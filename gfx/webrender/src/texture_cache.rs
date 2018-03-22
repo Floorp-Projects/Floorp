@@ -281,6 +281,56 @@ impl TextureCache {
         }
     }
 
+    pub fn clear(&mut self) {
+        let standalone_entry_handles = mem::replace(
+            &mut self.standalone_entry_handles,
+            Vec::new(),
+        );
+
+        for handle in standalone_entry_handles {
+            let entry = self.entries.free(handle);
+            entry.evict();
+            self.free(entry);
+        }
+
+        let shared_entry_handles = mem::replace(
+            &mut self.shared_entry_handles,
+            Vec::new(),
+        );
+
+        for handle in shared_entry_handles {
+            let entry = self.entries.free(handle);
+            entry.evict();
+            self.free(entry);
+        }
+
+        assert!(self.entries.len() == 0);
+
+        if let Some(texture_id) = self.array_a8_linear.clear() {
+            self.pending_updates.push(TextureUpdate {
+                id: texture_id,
+                op: TextureUpdateOp::Free,
+            });
+            self.cache_textures.free(texture_id, self.array_a8_linear.format);
+        }
+
+        if let Some(texture_id) = self.array_rgba8_linear.clear() {
+            self.pending_updates.push(TextureUpdate {
+                id: texture_id,
+                op: TextureUpdateOp::Free,
+            });
+            self.cache_textures.free(texture_id, self.array_rgba8_linear.format);
+        }
+
+        if let Some(texture_id) = self.array_rgba8_nearest.clear() {
+            self.pending_updates.push(TextureUpdate {
+                id: texture_id,
+                op: TextureUpdateOp::Free,
+            });
+            self.cache_textures.free(texture_id, self.array_rgba8_nearest.format);
+        }
+    }
+
     pub fn begin_frame(&mut self, frame_id: FrameId) {
         self.frame_id = frame_id;
     }
@@ -1011,6 +1061,12 @@ impl TextureArray {
             regions: Vec::new(),
             texture_id: None,
         }
+    }
+
+    fn clear(&mut self) -> Option<CacheTextureId> {
+        self.is_allocated = false;
+        self.regions.clear();
+        self.texture_id.take()
     }
 
     fn update_profile(&self, counter: &mut ResourceProfileCounter) {

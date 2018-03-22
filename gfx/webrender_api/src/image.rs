@@ -76,10 +76,17 @@ pub struct ImageDescriptor {
     pub stride: Option<u32>,
     pub offset: u32,
     pub is_opaque: bool,
+    pub allow_mipmaps: bool,
 }
 
 impl ImageDescriptor {
-    pub fn new(width: u32, height: u32, format: ImageFormat, is_opaque: bool) -> Self {
+    pub fn new(
+        width: u32,
+        height: u32,
+        format: ImageFormat,
+        is_opaque: bool,
+        allow_mipmaps: bool,
+    ) -> Self {
         ImageDescriptor {
             width,
             height,
@@ -87,6 +94,7 @@ impl ImageDescriptor {
             stride: None,
             offset: 0,
             is_opaque,
+            allow_mipmaps,
         }
     }
 

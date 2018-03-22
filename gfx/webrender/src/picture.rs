@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DeviceIntPoint, DeviceIntRect};
-use api::{LayerPoint, LayerRect, LayerToWorldScale, LayerVector2D};
 use api::{ColorF, FilterOp, MixBlendMode, PipelineId};
+use api::{DeviceIntRect, LayerRect, LayerToWorldScale, LayerVector2D};
 use api::{PremultipliedColorF, Shadow};
 use box_shadow::{BLUR_SAMPLE_SCALE};
 use clip_scroll_tree::ClipScrollNodeIndex;
@@ -14,7 +13,7 @@ use gpu_types::{PictureType};
 use prim_store::{PrimitiveIndex, PrimitiveRun, PrimitiveRunLocalRect};
 use prim_store::{PrimitiveMetadata, ScrollNodeAndClipChain};
 use render_task::{ClearMode, RenderTask};
-use render_task::{RenderTaskId, RenderTaskLocation, to_cache_size};
+use render_task::{RenderTaskId, RenderTaskLocation};
 use scene::{FilterOpHelpers, SceneProperties};
 use tiling::RenderTargetKind;
 
@@ -41,23 +40,12 @@ pub enum PictureCompositeMode {
     Blit,
 }
 
-/// Configure whether the content to be drawn by a picture
-/// in local space rasterization or the screen space.
-#[derive(Debug, Copy, Clone, PartialEq)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum ContentOrigin {
-    Local(LayerPoint),
-    Screen(DeviceIntPoint),
-}
-
 #[derive(Debug)]
 pub enum PictureKind {
     TextShadow {
         offset: LayerVector2D,
         color: ColorF,
         blur_radius: f32,
-        content_rect: LayerRect,
     },
     Image {
         // If a mix-blend-mode, contains the render task for
@@ -85,9 +73,6 @@ pub enum PictureKind {
         // in the GPU cache, depending on the type of
         // picture.
         extra_gpu_data_handle: GpuCacheHandle,
-        // The current screen-space rect of the rendered
-        // portion of this picture.
-        task_rect: DeviceIntRect,
     },
 }
 
@@ -106,10 +91,9 @@ pub struct PicturePrimitive {
     // The pipeline that the primitives on this picture belong to.
     pub pipeline_id: PipelineId,
 
-    // If true, apply visibility culling to primitives on this
-    // picture. For text shadows and box shadows, we want to
-    // unconditionally draw them.
-    pub cull_children: bool,
+    // The current screen-space rect of the rendered
+    // portion of this picture.
+    task_rect: DeviceIntRect,
 }
 
 impl PicturePrimitive {
@@ -121,10 +105,9 @@ impl PicturePrimitive {
                 offset: shadow.offset,
                 color: shadow.color,
                 blur_radius: shadow.blur_radius,
-                content_rect: LayerRect::zero(),
             },
             pipeline_id,
-            cull_children: false,
+            task_rect: DeviceIntRect::zero(),
         }
     }
 
@@ -167,10 +150,9 @@ impl PicturePrimitive {
                 reference_frame_index,
                 real_local_rect: LayerRect::zero(),
                 extra_gpu_data_handle: GpuCacheHandle::new(),
-                task_rect: DeviceIntRect::zero(),
             },
             pipeline_id,
-            cull_children: true,
+            task_rect: DeviceIntRect::zero(),
         }
     }
 
@@ -219,15 +201,13 @@ impl PicturePrimitive {
                     }
                 }
             }
-            PictureKind::TextShadow { offset, blur_radius, ref mut content_rect, .. } => {
+            PictureKind::TextShadow { blur_radius, .. } => {
                 let blur_offset = blur_radius * BLUR_SAMPLE_SCALE;
 
-                *content_rect = local_content_rect.inflate(
+                local_content_rect.inflate(
                     blur_offset,
                     blur_offset,
-                );
-
-                content_rect.translate(&offset)
+                )
             }
         }
     }
@@ -246,16 +226,16 @@ impl PicturePrimitive {
                                 .screen_rect
                                 .as_ref()
                                 .expect("bug: trying to draw an off-screen picture!?");
+        let device_rect;
 
         match self.kind {
             PictureKind::Image {
                 ref mut secondary_render_task_id,
                 ref mut extra_gpu_data_handle,
-                ref mut task_rect,
                 composite_mode,
                 ..
             } => {
-                let device_rect = match composite_mode {
+                device_rect = match composite_mode {
                     Some(PictureCompositeMode::Filter(FilterOp::Blur(blur_radius))) => {
                         // If blur radius is 0, we can skip drawing this an an
                         // intermediate surface.
@@ -282,13 +262,11 @@ impl PicturePrimitive {
                                 .intersection(&prim_screen_rect.unclipped)
                                 .unwrap();
 
-                            let content_origin = ContentOrigin::Screen(device_rect.origin);
-
                             let picture_task = RenderTask::new_picture(
                                 RenderTaskLocation::Dynamic(None, device_rect.size),
                                 prim_index,
                                 RenderTargetKind::Color,
-                                content_origin,
+                                device_rect.origin,
                                 PremultipliedColorF::TRANSPARENT,
                                 ClearMode::Transparent,
                                 pic_state_for_children.tasks,
@@ -320,7 +298,7 @@ impl PicturePrimitive {
                             RenderTaskLocation::Dynamic(None, rect.size),
                             prim_index,
                             RenderTargetKind::Color,
-                            ContentOrigin::Screen(rect.origin),
+                            rect.origin,
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
                             pic_state_for_children.tasks,
@@ -348,13 +326,11 @@ impl PicturePrimitive {
                         rect
                     }
                     Some(PictureCompositeMode::MixBlend(..)) => {
-                        let content_origin = ContentOrigin::Screen(prim_screen_rect.clipped.origin);
-
                         let picture_task = RenderTask::new_picture(
                             RenderTaskLocation::Dynamic(None, prim_screen_rect.clipped.size),
                             prim_index,
                             RenderTargetKind::Color,
-                            content_origin,
+                            prim_screen_rect.clipped.origin,
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
                             pic_state_for_children.tasks,
@@ -375,8 +351,6 @@ impl PicturePrimitive {
                         prim_screen_rect.clipped
                     }
                     Some(PictureCompositeMode::Filter(filter)) => {
-                        let content_origin = ContentOrigin::Screen(prim_screen_rect.clipped.origin);
-
                         // If this filter is not currently going to affect
                         // the picture, just collapse this picture into the
                         // current render task. This most commonly occurs
@@ -399,7 +373,7 @@ impl PicturePrimitive {
                                 RenderTaskLocation::Dynamic(None, prim_screen_rect.clipped.size),
                                 prim_index,
                                 RenderTargetKind::Color,
-                                content_origin,
+                                prim_screen_rect.clipped.origin,
                                 PremultipliedColorF::TRANSPARENT,
                                 ClearMode::Transparent,
                                 pic_state_for_children.tasks,
@@ -414,13 +388,11 @@ impl PicturePrimitive {
                         prim_screen_rect.clipped
                     }
                     Some(PictureCompositeMode::Blit) => {
-                        let content_origin = ContentOrigin::Screen(prim_screen_rect.clipped.origin);
-
                         let picture_task = RenderTask::new_picture(
                             RenderTaskLocation::Dynamic(None, prim_screen_rect.clipped.size),
                             prim_index,
                             RenderTargetKind::Color,
-                            content_origin,
+                            prim_screen_rect.clipped.origin,
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
                             pic_state_for_children.tasks,
@@ -440,22 +412,12 @@ impl PicturePrimitive {
                         DeviceIntRect::zero()
                     }
                 };
-
-                // If scrolling or property animation has resulted in the task
-                // rect being different than last time, invalidate the GPU
-                // cache entry for this picture to ensure that the correct
-                // task rect is provided to the image shader.
-                if *task_rect != device_rect {
-                    frame_state.gpu_cache.invalidate(&prim_metadata.gpu_location);
-                    *task_rect = device_rect;
-                }
             }
-            PictureKind::TextShadow { blur_radius, color, content_rect, .. } => {
+            PictureKind::TextShadow { blur_radius, color, .. } => {
                 // This is a shadow element. Create a render task that will
                 // render the text run to a target, and then apply a gaussian
                 // blur to that text run in order to build the actual primitive
                 // which will be blitted to the framebuffer.
-                let cache_size = to_cache_size(content_rect.size * content_scale);
 
                 // Quote from https://drafts.csswg.org/css-backgrounds-3/#shadow-blur
                 // "the image that would be generated by applying to the shadow a
@@ -463,11 +425,19 @@ impl PicturePrimitive {
                 let device_radius = (blur_radius * frame_context.device_pixel_scale.0).round();
                 let blur_std_deviation = device_radius * 0.5;
 
+                let blur_range = (blur_std_deviation * BLUR_SAMPLE_SCALE).ceil() as i32;
+
+                device_rect = prim_screen_rect
+                    .clipped
+                    .inflate(blur_range, blur_range)
+                    .intersection(&prim_screen_rect.unclipped)
+                    .unwrap();
+
                 let picture_task = RenderTask::new_picture(
-                    RenderTaskLocation::Dynamic(None, cache_size),
+                    RenderTaskLocation::Dynamic(None, device_rect.size),
                     prim_index,
                     RenderTargetKind::Color,
-                    ContentOrigin::Local(content_rect.origin),
+                    device_rect.origin,
                     color.premultiplied(),
                     ClearMode::Transparent,
                     Vec::new(),
@@ -489,15 +459,25 @@ impl PicturePrimitive {
                 self.surface = Some(render_task_id);
             }
         }
+
+        // If scrolling or property animation has resulted in the task
+        // rect being different than last time, invalidate the GPU
+        // cache entry for this picture to ensure that the correct
+        // task rect is provided to the image shader.
+        if self.task_rect != device_rect {
+            frame_state.gpu_cache.invalidate(&prim_metadata.gpu_location);
+            self.task_rect = device_rect;
+        }
     }
 
     pub fn write_gpu_blocks(&self, request: &mut GpuDataRequest) {
+        request.push(self.task_rect.to_f32());
+
         match self.kind {
             PictureKind::TextShadow { .. } => {
-                request.push([0.0; 4]);
                 request.push(PremultipliedColorF::WHITE);
             }
-            PictureKind::Image { task_rect, composite_mode, .. } => {
+            PictureKind::Image { composite_mode, .. } => {
                 let color = match composite_mode {
                     Some(PictureCompositeMode::Filter(FilterOp::DropShadow(_, _, color))) => {
                         color.premultiplied()
@@ -507,7 +487,6 @@ impl PicturePrimitive {
                     }
                 };
 
-                request.push(task_rect.to_f32());
                 request.push(color);
             }
         }
