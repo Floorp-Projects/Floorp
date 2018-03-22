@@ -47,13 +47,12 @@
 }
 
 .datetime-reset-button {
-  background-image: url(chrome://global/skin/icons/input-clear.svg);
+  fill: currentColor;
+  opacity: .5;
   background-color: transparent;
-  background-repeat: no-repeat;
-  background-size: 12px, 12px;
   border: none;
-  height: 12px;
-  width: 12px;
   align-self: center;
   flex: none;
+  padding-left: 2px;
+  padding-right: 2px;
 }

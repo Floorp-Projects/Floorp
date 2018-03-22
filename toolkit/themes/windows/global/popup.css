@@ -45,10 +45,10 @@ panel[type="arrow"][side="right"] {
 
 .panel-arrowcontent {
   padding: var(--arrowpanel-padding);
-  color: var(--arrowpanel-color);
-  background: var(--arrowpanel-background);
+  color: var(--lwt-arrowpanel-color, var(--arrowpanel-color));
+  background: var(--lwt-arrowpanel-background, var(--arrowpanel-background));
   background-clip: padding-box;
-  border: 1px solid var(--arrowpanel-border-color);
+  border: 1px solid var(--lwt-arrowpanel-border-color, var(--arrowpanel-border-color));
   box-shadow: 0 0 4px hsla(0,0%,0%,.2);
   margin: 4px;
 }
