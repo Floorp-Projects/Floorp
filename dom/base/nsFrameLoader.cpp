@@ -621,25 +621,11 @@ nsFrameLoader::CheckURILoad(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal)
   return CheckForRecursiveLoad(aURI);
 }
 
-already_AddRefed<nsIDocShell>
+nsIDocShell*
 nsFrameLoader::GetDocShell(ErrorResult& aRv)
 {
-  nsCOMPtr<nsIDocShell> docShell;
-  nsresult rv = GetDocShell(getter_AddRefs(docShell));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-  return docShell.forget();
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
-{
-  *aDocShell = nullptr;
-  nsresult rv = NS_OK;
-
   if (IsRemoteFrame()) {
-    return rv;
+    return nullptr;
   }
 
   // If we have an owner, make sure we have a docshell and return
@@ -648,16 +634,14 @@ nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
   if (mOwnerContent) {
     nsresult rv = MaybeCreateDocShell();
     if (NS_FAILED(rv)) {
-      return rv;
+      aRv.Throw(rv);
+      return nullptr;
     }
     NS_ASSERTION(mDocShell,
                  "MaybeCreateDocShell succeeded, but null mDocShell");
   }
 
-  *aDocShell = mDocShell;
-  NS_IF_ADDREF(*aDocShell);
-
-  return rv;
+  return mDocShell;
 }
 
 static void
@@ -2068,8 +2052,8 @@ nsFrameLoader::MaybeCreateDocShell()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCOMPtr<nsIDocShell> docShell = doc->GetDocShell();
-  nsCOMPtr<nsIWebNavigation> parentAsWebNav = do_QueryInterface(docShell);
+  nsCOMPtr<nsIDocShell> parentDocShell = doc->GetDocShell();
+  nsCOMPtr<nsIWebNavigation> parentAsWebNav = do_QueryInterface(parentDocShell);
   NS_ENSURE_STATE(parentAsWebNav);
 
   // Create the docshell...
@@ -2106,15 +2090,16 @@ nsFrameLoader::MaybeCreateDocShell()
   // Note: This logic duplicates a lot of logic in
   // nsSubDocumentFrame::AttributeChanged.  We should fix that.
 
-  const int32_t parentType = docShell->ItemType();
+  const int32_t parentType = parentDocShell->ItemType();
 
   // XXXbz why is this in content code, exactly?  We should handle
   // this some other way.....  Not sure how yet.
   nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
-  docShell->GetTreeOwner(getter_AddRefs(parentTreeOwner));
+  parentDocShell->GetTreeOwner(getter_AddRefs(parentTreeOwner));
   NS_ENSURE_STATE(parentTreeOwner);
   mIsTopLevelContent =
-    AddTreeItemToTreeOwner(mDocShell, parentTreeOwner, parentType, docShell);
+    AddTreeItemToTreeOwner(mDocShell, parentTreeOwner, parentType,
+                           parentDocShell);
 
   if (mIsTopLevelContent) {
     mDocShell->SetCreatedDynamically(false);
@@ -2135,7 +2120,7 @@ nsFrameLoader::MaybeCreateDocShell()
     // Our parent shell is a content shell. Get the chrome event
     // handler from it and use that for our shell as well.
 
-    docShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+    parentDocShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
   }
 
   mDocShell->SetChromeEventHandler(chromeEventHandler);
@@ -2183,8 +2168,8 @@ nsFrameLoader::MaybeCreateDocShell()
   }
 
   OriginAttributes attrs;
-  if (docShell->ItemType() == mDocShell->ItemType()) {
-    attrs = nsDocShell::Cast(docShell)->GetOriginAttributes();
+  if (parentDocShell->ItemType() == mDocShell->ItemType()) {
+    attrs = nsDocShell::Cast(parentDocShell)->GetOriginAttributes();
   }
 
   // Inherit origin attributes from parent document if
@@ -2240,7 +2225,7 @@ nsFrameLoader::MaybeCreateDocShell()
   }
 
   bool isPrivate = false;
-  nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(docShell);
+  nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(parentDocShell);
   NS_ENSURE_STATE(parentContext);
 
   rv = parentContext->GetUsePrivateBrowsing(&isPrivate);
@@ -2253,7 +2238,7 @@ nsFrameLoader::MaybeCreateDocShell()
     // For inproc frames, set the docshell properties.
     nsAutoString name;
     if (mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name)) {
-      docShell->SetName(name);
+      mDocShell->SetName(name);
     }
     mDocShell->SetFullscreenAllowed(
       mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) ||
@@ -2482,9 +2467,8 @@ nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame *aIFrame)
 void
 nsFrameLoader::UpdateBaseWindowPositionAndSize(nsSubDocumentFrame *aIFrame)
 {
-  nsCOMPtr<nsIDocShell> docShell;
-  GetDocShell(getter_AddRefs(docShell));
-  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(docShell));
+  nsCOMPtr<nsIBaseWindow> baseWindow =
+    do_QueryInterface(GetDocShell(IgnoreErrors()));
 
   // resize the sub document
   if (baseWindow) {
@@ -2858,8 +2842,7 @@ nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
   dest->mDocShell->GetContentViewer(getter_AddRefs(viewer));
   NS_ENSURE_STATE(viewer);
 
-  nsCOMPtr<nsIDocShell> origDocShell;
-  GetDocShell(getter_AddRefs(origDocShell));
+  nsIDocShell* origDocShell = GetDocShell(IgnoreErrors());
   NS_ENSURE_STATE(origDocShell);
 
   nsCOMPtr<nsIDocument> doc = origDocShell->GetDocument();
@@ -3271,9 +3254,7 @@ nsFrameLoader::LoadContext()
       (mRemoteBrowser || TryRemoteBrowser())) {
     loadContext = mRemoteBrowser->GetLoadContext();
   } else {
-    nsCOMPtr<nsIDocShell> docShell;
-    GetDocShell(getter_AddRefs(docShell));
-    loadContext = do_GetInterface(docShell);
+    loadContext = do_GetInterface(GetDocShell(IgnoreErrors()));
   }
   return loadContext.forget();
 }

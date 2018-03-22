@@ -582,8 +582,9 @@ nsObjectLoadingContent::SetupDocShell(nsIURI* aRecursionCheckURI)
   if (aRecursionCheckURI) {
     nsresult rv = mFrameLoader->CheckForRecursiveLoad(aRecursionCheckURI);
     if (NS_SUCCEEDED(rv)) {
-      rv = mFrameLoader->GetDocShell(getter_AddRefs(docShell));
-      if (NS_FAILED(rv)) {
+      IgnoredErrorResult result;
+      docShell = mFrameLoader->GetDocShell(result);
+      if (result.Failed()) {
         NS_NOTREACHED("Could not get DocShell from mFrameLoader?");
       }
     } else {

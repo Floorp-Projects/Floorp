@@ -167,11 +167,11 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
     // any other non-document-loading element.
     nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner =
       do_QueryInterface(aLoadingContext);
-    nsCOMPtr<nsIFrameLoader> fl = frameLoaderOwner ?
+    RefPtr<nsFrameLoader> fl = frameLoaderOwner ?
       frameLoaderOwner->GetFrameLoader() : nullptr;
     if (fl) {
-      nsCOMPtr<nsIDocShell> docShell;
-      if (NS_SUCCEEDED(fl->GetDocShell(getter_AddRefs(docShell))) && docShell) {
+      nsCOMPtr<nsIDocShell> docShell = fl->GetDocShell(IgnoreErrors());
+      if (docShell) {
         nsCOMPtr<nsPIDOMWindowOuter> outerWindow = do_GetInterface(docShell);
         if (outerWindow) {
           mFrameOuterWindowID = outerWindow->WindowID();
