@@ -1544,13 +1544,6 @@ nsXULElement::LoadSrc()
     frameLoader->LoadFrame(false);
 }
 
-nsresult
-nsXULElement::GetFrameLoaderXPCOM(nsIFrameLoader **aFrameLoader)
-{
-    *aFrameLoader = GetFrameLoader().take();
-    return NS_OK;
-}
-
 already_AddRefed<nsFrameLoader>
 nsXULElement::GetFrameLoader()
 {
