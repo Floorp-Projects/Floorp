@@ -576,7 +576,7 @@ namespace places {
 
     // Fetch the page stats from the database.
     {
-      RefPtr<mozIStorageStatement> getPageInfo = DB->GetStatement(
+      nsCOMPtr<mozIStorageStatement> getPageInfo = DB->GetStatement(
         "SELECT typed, visit_count, foreign_count, "
                "(substr(url, 0, 7) = 'place:') "
         "FROM moz_places "
