@@ -5108,6 +5108,8 @@ BinaryArithIRGenerator::tryAttachStub()
         return true;
     if (tryAttachDouble())
         return true;
+    if (tryAttachBooleanWithInt32())
+        return true;
 
     trackAttached(IRGenerator::NotAttached);
     return false;
@@ -5170,6 +5172,42 @@ BinaryArithIRGenerator::tryAttachInt32()
       case JSOP_SUB:
         writer.int32SubResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.Int32.Sub");
+        break;
+      default:
+        MOZ_CRASH("Unhandled op in tryAttachInt32");
+    }
+
+    writer.returnFromIC();
+    return true;
+}
+
+bool
+BinaryArithIRGenerator::tryAttachBooleanWithInt32()
+{
+    if (op_ != JSOP_ADD && op_ != JSOP_SUB)
+        return false;
+
+    if (!(lhs_.isBoolean() && (rhs_.isBoolean() || rhs_.isInt32())) &&
+        !(rhs_.isBoolean() && (lhs_.isBoolean() || lhs_.isInt32())))
+        return false;
+
+
+    ValOperandId lhsId(writer.setInputOperandId(0));
+    ValOperandId rhsId(writer.setInputOperandId(1));
+
+    Int32OperandId lhsIntId = (lhs_.isBoolean() ? writer.guardIsBoolean(lhsId)
+                                                : writer.guardIsInt32(lhsId));
+    Int32OperandId rhsIntId = (rhs_.isBoolean() ? writer.guardIsBoolean(rhsId)
+                                                : writer.guardIsInt32(rhsId));
+
+    switch (op_) {
+      case JSOP_ADD:
+        writer.int32AddResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.Add");
+        break;
+      case JSOP_SUB:
+        writer.int32SubResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.Sub");
         break;
       default:
         MOZ_CRASH("Unhandled op in tryAttachInt32");

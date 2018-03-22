@@ -1385,6 +1385,28 @@ CacheIRCompiler::emitGuardIsObjectOrNull()
 }
 
 bool
+CacheIRCompiler::emitGuardIsBoolean()
+{
+    ValOperandId inputId = reader.valOperandId();
+    Register output = allocator.defineRegister(masm, reader.int32OperandId());
+
+    if (allocator.knownType(inputId) == JSVAL_TYPE_BOOLEAN) {
+        Register input = allocator.useRegister(masm, Int32OperandId(inputId.id()));
+        masm.move32(input, output);
+        return true;
+    }
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchTestBoolean(Assembler::NotEqual, input, failure->label());
+    masm.unboxBoolean(input, output);
+    return true;
+}
+
+bool
 CacheIRCompiler::emitGuardIsString()
 {
     ValOperandId inputId = reader.valOperandId();
