@@ -31,6 +31,8 @@ _Generic UI components for building apps._
 
 * **Colors** - The standard set of [Photon](https://design.firefox.com/photon/) colors.
 
+* **Autocomplete** - A set of components to provide autocomplete functionality.
+
 ## Support
 
 _Supporting components with generic helper code._

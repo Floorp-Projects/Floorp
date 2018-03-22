@@ -25,6 +25,9 @@ project(':browser-toolbar').projectDir = new File(rootDir, 'components/browser/t
 // UI components
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+include ':ui-autocomplete'
+project(':ui-autocomplete').projectDir = new File(rootDir, 'components/ui/autocomplete')
+
 include ':ui-colors'
 project(':ui-colors').projectDir = new File(rootDir, 'components/ui/colors')
 
