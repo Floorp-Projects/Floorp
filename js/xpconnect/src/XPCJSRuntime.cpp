@@ -2868,7 +2868,7 @@ XPCJSRuntime::DescribeCustomObjects(JSObject* obj, const js::Class* clasp,
                                     char (&name)[72]) const
 {
 
-    if (!IS_PROTO_CLASS(clasp)) {
+    if (clasp != &XPC_WN_Proto_JSClass) {
         return false;
     }
 
