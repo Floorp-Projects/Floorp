@@ -348,20 +348,6 @@ nsVideoFrame::Reflow(nsPresContext* aPresContext,
                         kidDesiredSize, &kidReflowInput,
                         posterRenderRect.x, posterRenderRect.y, 0);
 
-// Android still uses XUL media controls & hence needs this XUL-friendly
-// custom reflow code. This will go away in bug 1310907.
-#ifdef ANDROID
-    } else if (child->GetContent() == mVideoControls) {
-      // Reflow the video controls frame.
-      nsBoxLayoutState boxState(PresContext(), aReflowInput.mRenderingContext);
-      nsBoxFrame::LayoutChildAt(boxState,
-                                child,
-                                nsRect(borderPadding.left,
-                                       borderPadding.top,
-                                       aReflowInput.ComputedWidth(),
-                                       aReflowInput.ComputedHeight()));
-
-#endif // ANDROID
     } else if (child->GetContent() == mCaptionDiv ||
                child->GetContent() == mVideoControls) {
       // Reflow the caption and control bar frames.
@@ -621,10 +607,6 @@ nsVideoFrame::ComputeSize(gfxContext *aRenderingContext,
                           const LogicalSize& aPadding,
                           ComputeSizeFlags aFlags)
 {
-// When in no video scenario, it should fall back to inherited method.
-// We keep old codepath here since Android still uses XUL media controls.
-// This will go away in bug 1310907.
-#ifndef ANDROID
   if (!HasVideoElement()) {
     return nsContainerFrame::ComputeSize(aRenderingContext,
                                          aWM,
@@ -635,7 +617,6 @@ nsVideoFrame::ComputeSize(gfxContext *aRenderingContext,
                                          aPadding,
                                          aFlags);
   }
-#endif // ANDROID
 
   nsSize size = GetVideoIntrinsicSize(aRenderingContext);
 
@@ -742,21 +723,6 @@ nsVideoFrame::GetVideoIntrinsicSize(gfxContext *aRenderingContext)
 {
   // Defaulting size to 300x150 if no size given.
   nsIntSize size(300, 150);
-
-// All media controls have been converted to HTML except Android. Hence
-// we keep this codepath for Android until removal in bug 1310907.
-#ifdef ANDROID
-  if (!HasVideoElement()) {
-    if (!mFrames.FirstChild()) {
-      return nsSize(0, 0);
-    }
-
-    // Ask the controls frame what its preferred height is
-    nsBoxLayoutState boxState(PresContext(), aRenderingContext, 0);
-    nscoord prefHeight = mFrames.LastChild()->GetXULPrefSize(boxState).height;
-    return nsSize(nsPresContext::CSSPixelsToAppUnits(size.width), prefHeight);
-  }
-#endif // ANDROID
 
   HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
   if (NS_FAILED(element->GetVideoSize(&size)) && ShouldDisplayPoster()) {
