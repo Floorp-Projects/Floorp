@@ -1604,10 +1604,9 @@ DebuggerServerConnection.prototype = {
     if (actor instanceof ObservedActorFactory) {
       try {
         actor = actor.createActor();
-      } catch (e) {
-        this.transport.send(this._unknownError(
-          "Error occurred while creating actor '" + actor.name,
-          e));
+      } catch (error) {
+        let prefix = "Error occurred while creating actor '" + actor.name;
+        this.transport.send(this._unknownError(actorID, prefix, error));
       }
     } else if (typeof (actor) !== "object") {
       // ActorPools should now contain only actor instances (i.e. objects)
@@ -1628,11 +1627,12 @@ DebuggerServerConnection.prototype = {
     return null;
   },
 
-  _unknownError(prefix, error) {
+  _unknownError(from, prefix, error) {
     let errorString = prefix + ": " + DevToolsUtils.safeErrorString(error);
     reportError(errorString);
     dumpn(errorString);
     return {
+      from,
       error: "unknownError",
       message: errorString
     };
@@ -1651,15 +1651,14 @@ DebuggerServerConnection.prototype = {
         response.from = from;
       }
       this.transport.send(response);
-    }).catch((e) => {
+    }).catch((error) => {
       if (!this.transport) {
         throw new Error(`Connection closed, pending error from ${from}, ` +
                         `type ${type} failed`);
       }
-      let errorPacket = this._unknownError(
-        "error occurred while processing '" + type, e);
-      errorPacket.from = from;
-      this.transport.send(errorPacket);
+
+      let prefix = "error occurred while processing '" + type;
+      this.transport.send(this._unknownError(from, prefix, error));
     });
 
     this._actorResponses.set(from, responsePromise);
@@ -1776,10 +1775,9 @@ DebuggerServerConnection.prototype = {
       try {
         this.currentPacket = packet;
         ret = actor.requestTypes[packet.type].bind(actor)(packet, this);
-      } catch (e) {
-        this.transport.send(this._unknownError(
-          "error occurred while processing '" + packet.type,
-          e));
+      } catch (error) {
+        let prefix = "error occurred while processing '" + packet.type;
+        this.transport.send(this._unknownError(actor.actorID, prefix, error));
       } finally {
         this.currentPacket = undefined;
       }
@@ -1839,10 +1837,10 @@ DebuggerServerConnection.prototype = {
     if (actor.requestTypes && actor.requestTypes[type]) {
       try {
         ret = actor.requestTypes[type].call(actor, packet);
-      } catch (e) {
-        this.transport.send(this._unknownError(
-          "error occurred while processing bulk packet '" + type, e));
-        packet.done.reject(e);
+      } catch (error) {
+        let prefix = "error occurred while processing bulk packet '" + type;
+        this.transport.send(this._unknownError(actorKey, prefix, error));
+        packet.done.reject(error);
       }
     } else {
       let message = "Actor " + actorKey +
