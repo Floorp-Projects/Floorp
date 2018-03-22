@@ -5,6 +5,8 @@ The `release promotion action`_ allows us to chain multiple task groups, or grap
 Essentially, we're using :ref:`optimization` logic to replace task labels in the
 current task group with task IDs from the previous task group(s).
 
+.. _snowman model:
+
 The snowman model
 -----------------
 
@@ -44,28 +46,28 @@ Now let's specify task group ``G1`` and ``G2`` as previous task group IDs. If ta
 
 For a more real-world example::
 
-|         G
-|         |
-|       build
-|         |
-|      signing
-|         |
-|    l10n-repack
-|         |
-|    l10n-signing
+         G
+         |
+       build
+         |
+      signing
+         |
+    l10n-repack
+         |
+    l10n-signing
 
 If we point the ``promote`` task group G at the on-push build task group ``G1``, the l10n-repack job will depend on the previously finished build and build-signing tasks::
 
-|         G1            G
-|         |             |
-|       build           |
-|         |             |
-|      signing          |
-|             \_________|
-|                       |
-|                  l10n-repack
-|                       |
-|                  l10n-signing
+         G1            G
+         |             |
+       build           |
+         |             |
+      signing          |
+             \_________|
+                       |
+                  l10n-repack
+                       |
+                  l10n-signing
 
 We can also explicitly exclude certain tasks from being optimized out.
 We currently do this by specifying ``rebuild_kinds`` in the action; these
@@ -77,9 +79,9 @@ specifying kinds to rebuild.
 Release promotion action mechanics
 ----------------------------------
 
-The action downloads the ``parameters.yml`` from the initial ``previous_graph_id``.
-This is most likely the decision task of the revision to promote, which is generally
-the same revision the release promotion action is run against.
+There are a number of inputs defined in the `release promotion action`_. Among these are the ``previous_graph_ids``, which is an ordered list of taskGroupIds of the task groups that we want to build our task group, off of. In the :ref:`snowman model`, these define the already-built portions of the snowman.
+
+The action downloads the ``parameters.yml`` from the initial ``previous_graph_id``, which matches the decision- or action- taskId. (See :ref:`taskid vs taskgroupid`.) This is most likely the decision task of the revision to promote, which is generally the same revision the release promotion action is run against.
 
 .. note:: If the parameters have been changed since the build happened, *and* we explicitly want the new parameters for the release promotion action task, the first ``previous_graph_id`` should be the new revision's decision task. Then the build and other previous action task group IDs can follow, so we're still replacing the task labels with the task IDs from the original revision.
 
@@ -114,6 +116,8 @@ Triggering the release promotion action via releaserunner3
 To deal with the above ``previous_graph_ids`` logic, we allow for a ``decision_task_id`` in `trigger_action.py`_. As of 2018-03-14, this script assumes we want to download ``parameters.yml`` from the same decision task that we get ``actions.json`` from. At some point, we'd like the `trigger_action.py`_ call to happen automatically once we push a button on Ship It.
 
 The action task that's generated from ``actions.json`` matches the `.taskcluster.yml`_ template. This is important; Chain of Trust (v2) requires that the task definition be reproducible from `.taskcluster.yml`_.
+
+.. _taskid vs taskgroupid:
 
 Release promotion action taskId and taskGroupId
 -----------------------------------------------
