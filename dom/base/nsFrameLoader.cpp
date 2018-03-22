@@ -236,18 +236,11 @@ nsFrameLoader::Create(Element* aOwner, nsPIDOMWindowOuter* aOpener, bool aNetwor
 }
 
 void
-nsFrameLoader::LoadFrame(bool aOriginalSrc, ErrorResult& aRv)
-{
-  nsresult rv = LoadFrame(aOriginalSrc);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
-NS_IMETHODIMP
 nsFrameLoader::LoadFrame(bool aOriginalSrc)
 {
-  NS_ENSURE_TRUE(mOwnerContent, NS_ERROR_NOT_INITIALIZED);
+  if (NS_WARN_IF(!mOwnerContent)) {
+    return;
+  }
 
   nsAutoString src;
   nsCOMPtr<nsIPrincipal> principal;
@@ -269,7 +262,7 @@ nsFrameLoader::LoadFrame(bool aOriginalSrc)
       if (mOwnerContent->IsXULElement() &&
           mOwnerContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::nodefaultsrc,
                                      nsGkAtoms::_true, eCaseMatters)) {
-        return NS_OK;
+        return;
       }
       src.AssignLiteral("about:blank");
     }
@@ -277,12 +270,12 @@ nsFrameLoader::LoadFrame(bool aOriginalSrc)
 
   nsIDocument* doc = mOwnerContent->OwnerDoc();
   if (doc->IsStaticDocument()) {
-    return NS_OK;
+    return;
   }
 
   if (doc->IsLoadedAsInteractiveData()) {
     // XBL bindings doc shouldn't load sub-documents.
-    return NS_OK;
+    return;
   }
 
   nsCOMPtr<nsIURI> base_uri = mOwnerContent->GetBaseURI();
@@ -303,11 +296,7 @@ nsFrameLoader::LoadFrame(bool aOriginalSrc)
 
   if (NS_FAILED(rv)) {
     FireErrorEvent();
-
-    return rv;
   }
-
-  return NS_OK;
 }
 
 void

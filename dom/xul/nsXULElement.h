@@ -695,7 +695,7 @@ protected:
 
     nsresult AddPopupListener(nsAtom* aName);
 
-    nsresult LoadSrc();
+    void LoadSrc();
 
     /**
      * The nearest enclosing content node with a binding

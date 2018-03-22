@@ -232,25 +232,18 @@ nsGenericHTMLFrameElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherLoaderOwn
   rv = loader->SwapWithOtherLoader(otherLoader, this, aOtherLoaderOwner);
 }
 
-nsresult
+void
 nsGenericHTMLFrameElement::LoadSrc()
 {
   EnsureFrameLoader();
 
   if (!mFrameLoader) {
-    return NS_OK;
+    return;
   }
 
   bool origSrc = !mSrcLoadHappened;
   mSrcLoadHappened = true;
-  nsresult rv = mFrameLoader->LoadFrame(origSrc);
-#ifdef DEBUG
-  if (NS_FAILED(rv)) {
-    NS_WARNING("failed to load URL");
-  }
-#endif
-
-  return rv;
+  mFrameLoader->LoadFrame(origSrc);
 }
 
 nsresult
