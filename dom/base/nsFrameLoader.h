@@ -66,6 +66,13 @@ class RenderFrameParent;
 typedef struct _GtkWidget GtkWidget;
 #endif
 
+// IID for nsFrameLoader, because some places want to QI to it.
+#define NS_FRAMELOADER_IID                                      \
+  { 0x297fd0ea, 0x1b4a, 0x4c9a,                                 \
+      { 0xa4, 0x04, 0xe5, 0x8b, 0xe8, 0x95, 0x10, 0x50 } }
+
+// If nsIFrameLoader stops being the first interface we implement, fix
+// our impl of QI to nsFrameLoader.
 class nsFrameLoader final : public nsIFrameLoader,
                             public nsIWebBrowserPersistable,
                             public nsStubMutationObserver,
@@ -83,6 +90,8 @@ public:
                                nsPIDOMWindowOuter* aOpener,
                                bool aNetworkCreated,
                                int32_t aJSPluginID = nsFakePluginTag::NOT_JSPLUGIN);
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_FRAMELOADER_IID)
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsFrameLoader, nsIFrameLoader)
@@ -490,5 +499,7 @@ private:
 
   bool mFreshProcess : 1;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsFrameLoader, NS_FRAMELOADER_IID)
 
 #endif
