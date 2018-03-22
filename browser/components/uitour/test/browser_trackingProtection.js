@@ -29,7 +29,7 @@ add_task(async function test_benignPage() {
   allowOneIntro();
   await BrowserTestUtils.withNewTab({gBrowser, url: BENIGN_PAGE}, async function() {
     await waitForConditionPromise(() => {
-      return is_visible(TOOLTIP_PANEL);
+      return BrowserTestUtils.is_visible(TOOLTIP_PANEL);
     }, "Info panel shouldn't appear on a benign page").
       then(() => ok(false, "Info panel shouldn't appear"),
            () => {
@@ -78,7 +78,7 @@ add_task(async function test_trackingPages() {
   info("Open another tracking page and make sure we don't show the panel again");
   await BrowserTestUtils.withNewTab({gBrowser, url: TRACKING_PAGE}, async function() {
     await waitForConditionPromise(() => {
-      return is_visible(TOOLTIP_PANEL);
+      return BrowserTestUtils.is_visible(TOOLTIP_PANEL);
     }, "Info panel shouldn't appear more than MAX_INTROS").
       then(() => ok(false, "Info panel shouldn't appear again"),
            () => {
