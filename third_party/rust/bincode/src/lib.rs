@@ -1,32 +1,20 @@
 #![deny(missing_docs)]
 
-//! `bincode` is a crate for encoding and decoding using a tiny binary
-//! serialization strategy.
-//!
-//! There are simple functions for encoding to `Vec<u8>` and decoding from
-//! `&[u8]`, but the meat of the library is the `serialize_into` and `deserialize_from`
-//! functions which respectively allow encoding into any `std::io::Write`
-//! or decode from any `std::io::Read`.
-//!
-//! ## Modules
-//! Until "default type parameters" lands, we have an extra module called `endian_choice`
-//! that duplicates all of the core bincode functionality but with the option to choose
-//! which endianness the integers are encoded using.
-//!
-//! The default endianness is little.
+//! Bincode is a crate for encoding and decoding using a tiny binary
+//! serialization strategy.  Using it, you can easily go from having
+//! an object in memory, quickly serialize it to bytes, and then
+//! deserialize it back just as fast!
 //!
 //! ### Using Basic Functions
 //!
 //! ```rust
 //! extern crate bincode;
-//! use bincode::{serialize, deserialize, Bounded};
+//! use bincode::{serialize, deserialize};
 //! fn main() {
 //!     // The object that we will serialize.
-//!     let target = Some("hello world".to_string());
-//!     // The maximum size of the encoded message.
-//!     let limit = Bounded(20);
+//!     let target: Option<String>  = Some("hello world".to_string());
 //!
-//!     let encoded: Vec<u8>        = serialize(&target, limit).unwrap();
+//!     let encoded: Vec<u8>        = serialize(&target).unwrap();
 //!     let decoded: Option<String> = deserialize(&encoded[..]).unwrap();
 //!     assert_eq!(target, decoded);
 //! }
@@ -37,145 +25,141 @@
 #![crate_type = "dylib"]
 
 extern crate byteorder;
-extern crate serde as serde_crate;
+extern crate serde;
 
+mod config;
 mod ser;
+mod error;
 mod de;
-pub mod internal;
+mod internal;
 
-pub mod read_types {
-    //! The types that the deserializer uses for optimizations
-    pub use ::de::read::{SliceReader, BincodeRead, IoReader};
+pub use error::{Error, ErrorKind, Result};
+pub use config::Config;
+pub use de::read::{BincodeRead, IoReader, SliceReader};
+
+/// An object that implements this trait can be passed a
+/// serde::Deserializer without knowing its concrete type.
+///
+/// This trait should be used only for `with_deserializer` functions.
+#[doc(hidden)]
+pub trait DeserializerAcceptor<'a> {
+    /// The return type for the accept method
+    type Output;
+    /// Accept a serde::Deserializer and do whatever you want with it.
+    fn accept<T: serde::Deserializer<'a>>(self, T) -> Self::Output;
 }
 
-use std::io::{Read, Write};
-
-pub use internal::{ErrorKind, Error, Result, serialized_size, serialized_size_bounded};
-
-/// A Deserializer that uses LittleEndian byteorder
-pub type Deserializer<W, S> = internal::Deserializer<W, S, byteorder::LittleEndian>;
-/// A Serializer that uses LittleEndian byteorder
-pub type Serializer<W> = internal::Serializer<W, byteorder::LittleEndian>;
-
-/// Deserializes a slice of bytes into an object.
+/// An object that implements this trait can be passed a
+/// serde::Serializer without knowing its concrete type.
 ///
-/// This method does not have a size-limit because if you already have the bytes
-/// in memory, then you don't gain anything by having a limiter.
-pub fn deserialize<'a, T>(bytes: &'a [u8]) -> internal::Result<T>
-    where T: serde_crate::de::Deserialize<'a>,
-{
-    internal::deserialize::<_, byteorder::LittleEndian>(bytes)
+/// This trait should be used only for `with_serializer` functions.
+#[doc(hidden)]
+pub trait SerializerAcceptor {
+    /// The return type for the accept method
+    type Output;
+    /// Accept a serde::Serializer and do whatever you want with it.
+    fn accept<T: serde::Serializer>(self, T) -> Self::Output;
 }
 
-/// Deserializes an object directly from a `Buffer`ed Reader.
+/// Get a default configuration object.
 ///
-/// If the provided `SizeLimit` is reached, the deserialization will bail immediately.
-/// A SizeLimit can help prevent an attacker from flooding your server with
-/// a neverending stream of values that runs your server out of memory.
+/// ### Default Configuration:
 ///
-/// If this returns an `Error`, assume that the buffer that you passed
-/// in is in an invalid state, as the error could be returned during any point
-/// in the reading.
-pub fn deserialize_from<R: ?Sized, T, S>(reader: &mut R, size_limit: S) -> internal::Result<T>
-    where R: Read, T: serde_crate::de::DeserializeOwned, S: SizeLimit
-{
-    internal::deserialize_from::<_, _, _, byteorder::LittleEndian>(reader, size_limit)
+/// | Byte limit | Endianness |
+/// |------------|------------|
+/// | Unlimited  | Little     |
+pub fn config() -> Config {
+    Config::new()
 }
 
-/// Serializes an object directly into a `Writer`.
+/// Serializes an object directly into a `Writer` using the default configuration.
 ///
-/// If the serialization would take more bytes than allowed by `size_limit`, an error
+/// If the serialization would take more bytes than allowed by the size limit, an error
 /// is returned and *no bytes* will be written into the `Writer`.
-///
-/// If this returns an `Error` (other than SizeLimit), assume that the
-/// writer is in an invalid state, as writing could bail out in the middle of
-/// serializing.
-pub fn serialize_into<W: ?Sized, T: ?Sized, S>(writer: &mut W, value: &T, size_limit: S) -> internal::Result<()>
-    where W: Write, T: serde_crate::Serialize, S: SizeLimit
+pub fn serialize_into<W, T: ?Sized>(writer: W, value: &T) -> Result<()>
+where
+    W: std::io::Write,
+    T: serde::Serialize,
 {
-    internal::serialize_into::<_, _, _, byteorder::LittleEndian>(writer, value, size_limit)
+    config().serialize_into(writer, value)
 }
 
-/// Serializes a serializable object into a `Vec` of bytes.
-///
-/// If the serialization would take more bytes than allowed by `size_limit`,
-/// an error is returned.
-pub fn serialize<T: ?Sized, S>(value: &T, size_limit: S) -> internal::Result<Vec<u8>>
-    where T: serde_crate::Serialize, S: SizeLimit
+/// Serializes a serializable object into a `Vec` of bytes using the default configuration.
+pub fn serialize<T: ?Sized>(value: &T) -> Result<Vec<u8>>
+where
+    T: serde::Serialize,
 {
-    internal::serialize::<_, _, byteorder::LittleEndian>(value, size_limit)
+    config().serialize(value)
 }
 
-/// A limit on the amount of bytes that can be read or written.
+/// Deserializes an object directly from a `Read`er using the default configuration.
 ///
-/// Size limits are an incredibly important part of both encoding and decoding.
+/// If this returns an `Error`, `reader` may be in an invalid state.
+pub fn deserialize_from<R, T>(reader: R) -> Result<T>
+where
+    R: std::io::Read,
+    T: serde::de::DeserializeOwned,
+{
+    config().deserialize_from(reader)
+}
+
+/// Deserializes an object from a custom `BincodeRead`er using the default configuration.
+/// It is highly recommended to use `deserialize_from` unless you need to implement
+/// `BincodeRead` for performance reasons.
 ///
-/// In order to prevent DOS attacks on a decoder, it is important to limit the
-/// amount of bytes that a single encoded message can be; otherwise, if you
-/// are decoding bytes right off of a TCP stream for example, it would be
-/// possible for an attacker to flood your server with a 3TB vec, causing the
-/// decoder to run out of memory and crash your application!
-/// Because of this, you can provide a maximum-number-of-bytes that can be read
-/// during decoding, and the decoder will explicitly fail if it has to read
-/// any more than that.
+/// If this returns an `Error`, `reader` may be in an invalid state.
+pub fn deserialize_from_custom<'a, R, T>(reader: R) -> Result<T>
+where
+    R: de::read::BincodeRead<'a>,
+    T: serde::de::DeserializeOwned,
+{
+    config().deserialize_from_custom(reader)
+}
+
+/// Only use this if you know what you're doing.
 ///
-/// On the other side, you want to make sure that you aren't encoding a message
-/// that is larger than your decoder expects.  By supplying a size limit to an
-/// encoding function, the encoder will verify that the structure can be encoded
-/// within that limit.  This verification occurs before any bytes are written to
-/// the Writer, so recovering from an error is easy.
-pub trait SizeLimit: private::Sealed {
-    /// Tells the SizeLimit that a certain number of bytes has been
-    /// read or written.  Returns Err if the limit has been exceeded.
-    fn add(&mut self, n: u64) -> Result<()>;
-    /// Returns the hard limit (if one exists)
-    fn limit(&self) -> Option<u64>;
+/// This is part of the public API.
+#[doc(hidden)]
+pub fn deserialize_in_place<'a, R, T>(reader: R, place: &mut T) -> Result<()>
+where
+    T: serde::de::Deserialize<'a>,
+    R: BincodeRead<'a>
+{
+    config().deserialize_in_place(reader, place)
 }
 
-/// A SizeLimit that restricts serialized or deserialized messages from
-/// exceeding a certain byte length.
-#[derive(Copy, Clone)]
-pub struct Bounded(pub u64);
-
-/// A SizeLimit without a limit!
-/// Use this if you don't care about the size of encoded or decoded messages.
-#[derive(Copy, Clone)]
-pub struct Infinite;
-
-struct CountSize {
-    total: u64,
-    limit: Option<u64>,
+/// Deserializes a slice of bytes into an instance of `T` using the default configuration.
+pub fn deserialize<'a, T>(bytes: &'a [u8]) -> Result<T>
+where
+    T: serde::de::Deserialize<'a>,
+{
+    config().deserialize(bytes)
 }
 
-impl SizeLimit for Bounded {
-    #[inline(always)]
-    fn add(&mut self, n: u64) -> Result<()> {
-        if self.0 >= n {
-            self.0 -= n;
-            Ok(())
-        } else {
-            Err(Box::new(ErrorKind::SizeLimit))
-        }
-    }
-
-    #[inline(always)]
-    fn limit(&self) -> Option<u64> { Some(self.0) }
+/// Returns the size that an object would be if serialized using Bincode with the default configuration.
+pub fn serialized_size<T: ?Sized>(value: &T) -> Result<u64>
+where
+    T: serde::Serialize,
+{
+    config().serialized_size(value)
 }
 
-impl SizeLimit for Infinite {
-    #[inline(always)]
-    fn add(&mut self, _: u64) -> Result<()> { Ok (()) }
-
-    #[inline(always)]
-    fn limit(&self) -> Option<u64> { None }
+/// Executes the acceptor with a serde::Deserializer instance.
+/// NOT A PART OF THE STABLE PUBLIC API
+#[doc(hidden)]
+pub fn with_deserializer<'a, A,  R>(reader: R, acceptor: A) -> A::Output
+where A: DeserializerAcceptor<'a>,
+        R: BincodeRead<'a>
+{
+    config().with_deserializer(reader, acceptor)
 }
 
-mod private {
-    pub trait Sealed {}
-
-    impl<'a> Sealed for super::de::read::SliceReader<'a> {}
-    impl<R> Sealed for super::de::read::IoReader<R> {}
-    impl Sealed for super::Infinite {}
-    impl Sealed for super::Bounded {}
-    impl Sealed for super::CountSize {}
+/// Executes the acceptor with a serde::Serializer instance.
+/// NOT A PART OF THE STABLE PUBLIC API
+#[doc(hidden)]
+pub fn with_serializer<A, W>(writer: W, acceptor: A) -> A::Output
+where A: SerializerAcceptor,
+    W: std::io::Write
+{
+    config().with_serializer(writer, acceptor)
 }
