@@ -1937,6 +1937,19 @@ CacheIRCompiler::emitDoubleAddResult()
 
     return true;
 }
+bool
+CacheIRCompiler::emitDoubleSubResult()
+{
+    AutoOutputRegister output(*this);
+
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg0);
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
+
+    masm.subDouble(FloatReg1, FloatReg0);
+    masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+
+    return true;
+}
 
 bool
 CacheIRCompiler::emitInt32AddResult()
@@ -1951,6 +1964,22 @@ CacheIRCompiler::emitInt32AddResult()
 
     masm.branchAdd32(Assembler::Overflow, lhs, rhs, failure->label());
     EmitStoreResult(masm, rhs, JSVAL_TYPE_INT32, output);
+
+    return true;
+}
+bool
+CacheIRCompiler::emitInt32SubResult()
+{
+    AutoOutputRegister output(*this);
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchSub32(Assembler::Overflow, rhs, lhs, failure->label());
+    EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
 
     return true;
 }
