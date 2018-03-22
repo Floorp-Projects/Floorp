@@ -572,13 +572,6 @@ XPCWrappedNative::GatherScriptable(nsISupports* aObj,
     // Get the class scriptable helper (if present)
     if (aClassInfo) {
         scrProto = GatherProtoScriptable(aClassInfo);
-
-        if (scrProto && scrProto->DontAskInstanceForScriptable()) {
-            scrWrapper = scrProto;
-            scrProto.forget(aScrProto);
-            scrWrapper.forget(aScrWrapper);
-            return;
-        }
     }
 
     // Do the same for the wrapper specific scriptable
@@ -597,25 +590,10 @@ XPCWrappedNative::GatherScriptable(nsISupports* aObj,
         MOZ_ASSERT_IF(scrWrapper->DontEnumQueryInterface() && scrProto,
                       scrProto->DontEnumQueryInterface());
 
-        // Can't set DONT_ASK_INSTANCE_FOR_SCRIPTABLE on an instance scriptable
-        // without also setting it on the class scriptable.
-        MOZ_ASSERT_IF(scrWrapper->DontAskInstanceForScriptable(),
-                      scrProto && scrProto->DontAskInstanceForScriptable());
-
-        // Can't set CLASSINFO_INTERFACES_ONLY on an instance scriptable
-        // without also setting it on the class scriptable (if present).
-        MOZ_ASSERT_IF(scrWrapper->ClassInfoInterfacesOnly() && scrProto,
-                      scrProto->ClassInfoInterfacesOnly());
-
         // Can't set ALLOW_PROP_MODS_DURING_RESOLVE on an instance scriptable
         // without also setting it on the class scriptable (if present).
         MOZ_ASSERT_IF(scrWrapper->AllowPropModsDuringResolve() && scrProto,
                       scrProto->AllowPropModsDuringResolve());
-
-        // Can't set ALLOW_PROP_MODS_TO_PROTOTYPE on an instance scriptable
-        // without also setting it on the class scriptable (if present).
-        MOZ_ASSERT_IF(scrWrapper->AllowPropModsToPrototype() && scrProto,
-                      scrProto->AllowPropModsToPrototype());
     } else {
         scrWrapper = scrProto;
     }
@@ -981,15 +959,6 @@ XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
     // This is an nsRefPtr instead of an nsCOMPtr because it may not be the
     // canonical nsISupports for this object.
     RefPtr<nsISupports> qiResult;
-
-    // If the scriptable helper forbids us from reflecting additional
-    // interfaces, then don't even try the QI, just fail.
-    if (mScriptable &&
-        mScriptable->ClassInfoInterfacesOnly() &&
-        !mSet->HasInterface(aInterface) &&
-        !mSet->HasInterfaceWithAncestor(aInterface)) {
-        return NS_ERROR_NO_INTERFACE;
-    }
 
     // We are about to call out to other code.
     // So protect our intended tearoff.
