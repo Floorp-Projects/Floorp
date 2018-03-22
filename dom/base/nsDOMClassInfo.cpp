@@ -107,8 +107,7 @@ using namespace mozilla::dom;
   // nothing
 #endif
 
-#define NS_DEFINE_CLASSINFO_DATA_HELPER(_class, _helper, _flags,              \
-                                        _chromeOnly, _allowXBL)               \
+#define NS_DEFINE_CLASSINFO_DATA_HELPER(_class, _helper, _flags)              \
   { nullptr,                                                                  \
     XPC_MAKE_CLASS_OPS(_flags),                                               \
     XPC_MAKE_CLASS(#_class, _flags,                                           \
@@ -119,18 +118,12 @@ using namespace mozilla::dom;
     nullptr,                                                                  \
     _flags,                                                                   \
     true,                                                                     \
-    _chromeOnly,                                                              \
-    _allowXBL,                                                                \
     false,                                                                    \
     NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                    \
   },
 
 #define NS_DEFINE_CLASSINFO_DATA(_class, _helper, _flags)                     \
-  NS_DEFINE_CLASSINFO_DATA_HELPER(_class, _helper, _flags, false, false)
-
-#define NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(_class, _helper, _flags)          \
-  NS_DEFINE_CLASSINFO_DATA_HELPER(_class, _helper, _flags, true, true)
-
+  NS_DEFINE_CLASSINFO_DATA_HELPER(_class, _helper, _flags)
 
 // This list of NS_DEFINE_CLASSINFO_DATA macros is what gives the DOM
 // classes their correct behavior when used through XPConnect. The
@@ -428,8 +421,8 @@ nsDOMClassInfo::Init()
     }
 
     nsDOMClassInfoData& data = sClassInfoData[i];
-    nameSpaceManager->RegisterClassName(data.mClass.name, i, data.mChromeOnly,
-                                        data.mAllowXBL, &data.mNameUTF16);
+    nameSpaceManager->RegisterClassName(data.mClass.name, i, false,
+                                        false, &data.mNameUTF16);
   }
 
   for (i = 0; i < eDOMClassInfoIDCount; ++i) {
