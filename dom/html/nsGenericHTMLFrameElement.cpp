@@ -120,9 +120,7 @@ nsGenericHTMLFrameElement::GetContentWindow()
     return nullptr;
   }
 
-  bool depthTooGreat = false;
-  mFrameLoader->GetDepthTooGreat(&depthTooGreat);
-  if (depthTooGreat) {
+  if (mFrameLoader->DepthTooGreat()) {
     // Claim to have no contentWindow
     return nullptr;
   }
