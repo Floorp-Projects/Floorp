@@ -548,14 +548,6 @@ XPCWrappedNative::GatherProtoScriptable(nsIClassInfo* classInfo)
 {
     MOZ_ASSERT(classInfo, "bad param");
 
-    nsXPCClassInfo* classInfoHelper = nullptr;
-    CallQueryInterface(classInfo, &classInfoHelper);
-    if (classInfoHelper) {
-        nsCOMPtr<nsIXPCScriptable> helper =
-          dont_AddRef(static_cast<nsIXPCScriptable*>(classInfoHelper));
-        return helper;
-    }
-
     nsCOMPtr<nsIXPCScriptable> helper;
     nsresult rv = classInfo->GetScriptableHelper(getter_AddRefs(helper));
     if (NS_SUCCEEDED(rv) && helper) {
