@@ -18,6 +18,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/FrameLoaderBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabParent.h"
@@ -1438,9 +1439,8 @@ EventStateManager::HandleCrossProcessEvent(WidgetEvent* aEvent,
       continue;
     }
 
-    uint32_t eventMode;
-    frameLoader->GetEventMode(&eventMode);
-    if (eventMode == nsIFrameLoader::EVENT_MODE_DONT_FORWARD_TO_CHILD) {
+    if (frameLoader->EventMode() ==
+          FrameLoaderBinding::EVENT_MODE_DONT_FORWARD_TO_CHILD) {
       continue;
     }
 
