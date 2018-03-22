@@ -38,7 +38,7 @@
 #include "nsBoxLayoutState.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/Move.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
@@ -96,16 +96,16 @@ nsIFrame* nsBoxFrame::mDebugChild = nullptr;
 #endif
 
 nsIFrame*
-NS_NewBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle, bool aIsRoot, nsBoxLayout* aLayoutManager)
+NS_NewBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, bool aIsRoot, nsBoxLayout* aLayoutManager)
 {
-  return new (aPresShell) nsBoxFrame(aStyle, nsBoxFrame::kClassID,
+  return new (aPresShell) nsBoxFrame(aContext, nsBoxFrame::kClassID,
                                      aIsRoot, aLayoutManager);
 }
 
 nsIFrame*
-NS_NewBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsBoxFrame(aStyle);
+  return new (aPresShell) nsBoxFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBoxFrame)
@@ -116,11 +116,11 @@ NS_QUERYFRAME_HEAD(nsBoxFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 #endif
 
-nsBoxFrame::nsBoxFrame(ComputedStyle* aStyle,
+nsBoxFrame::nsBoxFrame(nsStyleContext* aContext,
                        ClassID aID,
                        bool aIsRoot,
                        nsBoxLayout* aLayoutManager)
-  : nsContainerFrame(aStyle, aID)
+  : nsContainerFrame(aContext, aID)
   , mFlex(0)
   , mAscent(0)
 {
@@ -161,9 +161,9 @@ nsBoxFrame::SetInitialChildList(ChildListID     aListID,
 }
 
 /* virtual */ void
-nsBoxFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
+nsBoxFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  nsContainerFrame::DidSetComputedStyle(aOldComputedStyle);
+  nsContainerFrame::DidSetStyleContext(aOldStyleContext);
 
   // The values that CacheAttributes() computes depend on our style,
   // so we need to recompute them here...

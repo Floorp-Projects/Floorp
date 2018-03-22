@@ -119,9 +119,9 @@ NS_IMPL_ISUPPORTS(nsComboButtonListener,
 nsComboboxControlFrame* nsComboboxControlFrame::sFocused = nullptr;
 
 nsComboboxControlFrame*
-NS_NewComboboxControlFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle, nsFrameState aStateFlags)
+NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsFrameState aStateFlags)
 {
-  nsComboboxControlFrame* it = new (aPresShell) nsComboboxControlFrame(aStyle);
+  nsComboboxControlFrame* it = new (aPresShell) nsComboboxControlFrame(aContext);
 
   if (it) {
     // set the state flags (if any are provided)
@@ -224,8 +224,8 @@ static int32_t gReflowInx = -1;
 //-- Done with macros
 //------------------------------------------------------
 
-nsComboboxControlFrame::nsComboboxControlFrame(ComputedStyle* aStyle)
-  : nsBlockFrame(aStyle, kClassID)
+nsComboboxControlFrame::nsComboboxControlFrame(nsStyleContext* aContext)
+  : nsBlockFrame(aContext, kClassID)
   , mDisplayFrame(nullptr)
   , mButtonFrame(nullptr)
   , mDropdownFrame(nullptr)
@@ -1303,9 +1303,9 @@ class nsComboboxDisplayFrame : public nsBlockFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsComboboxDisplayFrame)
 
-  nsComboboxDisplayFrame(ComputedStyle* aStyle,
+  nsComboboxDisplayFrame(nsStyleContext* aContext,
                          nsComboboxControlFrame* aComboBox)
-    : nsBlockFrame(aStyle, kClassID)
+    : nsBlockFrame(aContext, kClassID)
     , mComboBox(aComboBox)
   {}
 
@@ -1387,21 +1387,21 @@ nsComboboxControlFrame::CreateFrameForDisplayNode()
   StyleSetHandle styleSet = shell->StyleSet();
 
   // create the style contexts for the anonymous block frame and text frame
-  RefPtr<ComputedStyle> styleContext;
+  RefPtr<nsStyleContext> styleContext;
   styleContext = styleSet->
     ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
-                                       mComputedStyle);
+                                       mStyleContext);
 
-  RefPtr<ComputedStyle> textComputedStyle;
-  textComputedStyle =
-    styleSet->ResolveStyleForText(mDisplayContent, mComputedStyle);
+  RefPtr<nsStyleContext> textStyleContext;
+  textStyleContext =
+    styleSet->ResolveStyleForText(mDisplayContent, mStyleContext);
 
   // Start by creating our anonymous block frame
   mDisplayFrame = new (shell) nsComboboxDisplayFrame(styleContext, this);
   mDisplayFrame->Init(mContent, this, nullptr);
 
   // Create a text frame and put it inside the block frame
-  nsIFrame* textFrame = NS_NewTextFrame(shell, textComputedStyle);
+  nsIFrame* textFrame = NS_NewTextFrame(shell, textStyleContext);
 
   // initialize the text frame
   textFrame->Init(mDisplayContent, mDisplayFrame, nullptr);

@@ -19,9 +19,9 @@
 //
 
 nsIFrame*
-NS_NewMathMLmunderoverFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewMathMLmunderoverFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLmunderoverFrame(aStyle);
+  return new (aPresShell) nsMathMLmunderoverFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmunderoverFrame)

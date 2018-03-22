@@ -8,9 +8,9 @@
 #define mozilla_StyleSetHandleInlines_h
 
 #include "mozilla/StyleSheetInlines.h"
-#include "mozilla/ComputedStyle.h"
+#include "mozilla/ServoStyleContext.h"
 #include "mozilla/ServoStyleSet.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 
 
 #define FORWARD_CONCRETE(method_, geckoargs_, servoargs_) \
@@ -79,60 +79,60 @@ StyleSetHandle::Ptr::EndUpdate()
 }
 
 // resolve a style context
-already_AddRefed<ComputedStyle>
+already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ResolveStyleFor(dom::Element* aElement,
-                                     ComputedStyle* aParentContext,
+                                     nsStyleContext* aParentContext,
                                      LazyComputeBehavior aMayCompute)
 {
   FORWARD_WITH_PARENT(ResolveStyleFor, aParentContext, (aElement, parent, aMayCompute));
 }
 
-already_AddRefed<ComputedStyle>
+already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ResolveStyleForText(nsIContent* aTextNode,
-                                         ComputedStyle* aParentContext)
+                                         nsStyleContext* aParentContext)
 {
   FORWARD_WITH_PARENT(ResolveStyleForText, aParentContext, (aTextNode, parent));
 }
 
-already_AddRefed<ComputedStyle>
+already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ResolveStyleForPlaceholder()
 {
   FORWARD(ResolveStyleForPlaceholder, ());
 }
 
-already_AddRefed<ComputedStyle>
-StyleSetHandle::Ptr::ResolveStyleForFirstLetterContinuation(ComputedStyle* aParentContext)
+already_AddRefed<nsStyleContext>
+StyleSetHandle::Ptr::ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext)
 {
   FORWARD_WITH_PARENT(ResolveStyleForFirstLetterContinuation, aParentContext, (parent));
 }
 
-already_AddRefed<ComputedStyle>
+already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ResolvePseudoElementStyle(dom::Element* aParentElement,
                                                CSSPseudoElementType aType,
-                                               ComputedStyle* aParentContext,
+                                               nsStyleContext* aParentContext,
                                                dom::Element* aPseudoElement)
 {
   FORWARD_WITH_PARENT(ResolvePseudoElementStyle, aParentContext, (aParentElement, aType, parent, aPseudoElement));
 }
 
-already_AddRefed<ComputedStyle>
+already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ResolveInheritingAnonymousBoxStyle(nsAtom* aPseudoTag,
-                                                        ComputedStyle* aParentContext)
+                                                        nsStyleContext* aParentContext)
 {
   FORWARD_WITH_PARENT(ResolveInheritingAnonymousBoxStyle, aParentContext, (aPseudoTag, parent));
 }
 
-already_AddRefed<ComputedStyle>
+already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ResolveNonInheritingAnonymousBoxStyle(nsAtom* aPseudoTag)
 {
   FORWARD(ResolveNonInheritingAnonymousBoxStyle, (aPseudoTag));
 }
 
 #ifdef MOZ_XUL
-already_AddRefed<ComputedStyle>
+already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ResolveXULTreePseudoStyle(dom::Element* aParentElement,
                                                nsICSSAnonBoxPseudo* aPseudoTag,
-                                               ComputedStyle* aParentContext,
+                                               nsStyleContext* aParentContext,
                                                const AtomArray& aInputWord)
 {
   FORWARD_WITH_PARENT(ResolveXULTreePseudoStyle, aParentContext,
@@ -273,16 +273,16 @@ StyleSetHandle::Ptr::InvalidateStyleForCSSRuleChanges()
 }
 
 // check whether there is ::before/::after style for an element
-already_AddRefed<ComputedStyle>
+already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ProbePseudoElementStyle(dom::Element* aParentElement,
                                              CSSPseudoElementType aType,
-                                             ComputedStyle* aParentContext)
+                                             nsStyleContext* aParentContext)
 {
   FORWARD_WITH_PARENT(ProbePseudoElementStyle, aParentContext, (aParentElement, aType, parent));
 }
 
 void
-StyleSetHandle::Ptr::RootComputedStyleAdded()
+StyleSetHandle::Ptr::RootStyleContextAdded()
 {
   if (IsGecko()) {
     MOZ_CRASH("old style system disabled");
@@ -292,7 +292,7 @@ StyleSetHandle::Ptr::RootComputedStyleAdded()
 }
 
 void
-StyleSetHandle::Ptr::RootComputedStyleRemoved()
+StyleSetHandle::Ptr::RootStyleContextRemoved()
 {
   if (IsGecko()) {
     MOZ_CRASH("old style system disabled");

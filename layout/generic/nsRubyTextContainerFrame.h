@@ -16,7 +16,7 @@
  * @return a newly allocated nsRubyTextContainerFrame (infallible)
  */
 nsContainerFrame* NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
-                                               mozilla::ComputedStyle* aStyle);
+                                               nsStyleContext* aContext);
 
 class nsRubyTextContainerFrame final : public nsContainerFrame
 {
@@ -53,10 +53,10 @@ public:
 protected:
   friend nsContainerFrame*
     NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle);
+                                 nsStyleContext* aContext);
 
-  explicit nsRubyTextContainerFrame(ComputedStyle* aStyle)
-    : nsContainerFrame(aStyle, kClassID)
+  explicit nsRubyTextContainerFrame(nsStyleContext* aContext)
+    : nsContainerFrame(aContext, kClassID)
     , mISize(0)
   {}
 

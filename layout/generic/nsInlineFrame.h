@@ -27,7 +27,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsInlineFrame)
 
   friend nsInlineFrame* NS_NewInlineFrame(nsIPresShell* aPresShell,
-                                          ComputedStyle* aStyle);
+                                          nsStyleContext* aContext);
 
   // nsIFrame overrides
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -140,8 +140,8 @@ protected:
     }
   };
 
-  nsInlineFrame(ComputedStyle* aStyle, ClassID aID)
-    : nsContainerFrame(aStyle, aID)
+  nsInlineFrame(nsStyleContext* aContext, ClassID aID)
+    : nsContainerFrame(aContext, aID)
     , mBaseline(NS_INTRINSIC_WIDTH_UNKNOWN)
   {}
 
@@ -169,8 +169,8 @@ protected:
                           InlineReflowInput& aState);
 
 private:
-  explicit nsInlineFrame(ComputedStyle* aStyle)
-    : nsInlineFrame(aStyle, kClassID)
+  explicit nsInlineFrame(nsStyleContext* aContext)
+    : nsInlineFrame(aContext, kClassID)
   {}
 
   // Helper method for DrainSelfOverflowList() to deal with lazy parenting
@@ -200,7 +200,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsFirstLineFrame)
 
   friend nsFirstLineFrame* NS_NewFirstLineFrame(nsIPresShell* aPresShell,
-                                                ComputedStyle* aStyle);
+                                                nsStyleContext* aContext);
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
@@ -217,8 +217,8 @@ public:
   virtual bool DrainSelfOverflowList() override;
 
 protected:
-  explicit nsFirstLineFrame(ComputedStyle* aStyle)
-    : nsInlineFrame(aStyle, kClassID)
+  explicit nsFirstLineFrame(nsStyleContext* aContext)
+    : nsInlineFrame(aContext, kClassID)
   {}
 
   virtual nsIFrame* PullOneFrame(nsPresContext* aPresContext,

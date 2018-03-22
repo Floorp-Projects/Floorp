@@ -21,7 +21,7 @@ class nsMathMLmmultiscriptsFrame : public nsMathMLContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmmultiscriptsFrame)
 
-  friend nsIFrame* NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD
   TransmitAutomaticData() override;
@@ -45,8 +45,8 @@ public:
   ScriptIncrement(nsIFrame* aFrame) override;
 
 protected:
-  explicit nsMathMLmmultiscriptsFrame(ComputedStyle* aStyle)
-    : nsMathMLContainerFrame(aStyle, kClassID) {}
+  explicit nsMathMLmmultiscriptsFrame(nsStyleContext* aContext)
+    : nsMathMLContainerFrame(aContext, kClassID) {}
   virtual ~nsMathMLmmultiscriptsFrame();
 
 

@@ -24,7 +24,7 @@ class nsGfxButtonControlFrame final
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsGfxButtonControlFrame)
 
-  explicit nsGfxButtonControlFrame(ComputedStyle* aStyle);
+  explicit nsGfxButtonControlFrame(nsStyleContext* aContext);
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 

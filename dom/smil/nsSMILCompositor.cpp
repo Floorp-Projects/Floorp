@@ -57,16 +57,16 @@ nsSMILCompositor::ComposeAttribute(bool& aMightHavePendingStyleUpdates)
 
   // If we might need to resolve base styles, grab a suitable style context
   // for initializing our nsISMILAttr with.
-  RefPtr<ComputedStyle> baseComputedStyle;
+  RefPtr<nsStyleContext> baseStyleContext;
   if (MightNeedBaseStyle()) {
-    baseComputedStyle =
-      nsComputedDOMStyle::GetUnanimatedComputedStyleNoFlush(mKey.mElement,
-                                                            nullptr);
+    baseStyleContext =
+      nsComputedDOMStyle::GetUnanimatedStyleContextNoFlush(mKey.mElement,
+                                                           nullptr);
   }
 
   // FIRST: Get the nsISMILAttr (to grab base value from, and to eventually
   // give animated value to)
-  UniquePtr<nsISMILAttr> smilAttr = CreateSMILAttr(baseComputedStyle);
+  UniquePtr<nsISMILAttr> smilAttr = CreateSMILAttr(baseStyleContext);
   if (!smilAttr) {
     // Target attribute not found (or, out of memory)
     return;
@@ -134,13 +134,13 @@ nsSMILCompositor::ClearAnimationEffects()
 // Protected Helper Functions
 // --------------------------
 UniquePtr<nsISMILAttr>
-nsSMILCompositor::CreateSMILAttr(ComputedStyle* aBaseComputedStyle)
+nsSMILCompositor::CreateSMILAttr(nsStyleContext* aBaseStyleContext)
 {
   nsCSSPropertyID propID = GetCSSPropertyToAnimate();
 
   if (propID != eCSSProperty_UNKNOWN) {
     return MakeUnique<nsSMILCSSProperty>(propID, mKey.mElement.get(),
-                                         aBaseComputedStyle);
+                                         aBaseStyleContext);
   }
 
   return mKey.mElement->GetAnimatedAttr(mKey.mAttributeNamespaceID,

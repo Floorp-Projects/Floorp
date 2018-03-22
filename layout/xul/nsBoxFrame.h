@@ -29,11 +29,11 @@ class DrawTarget;
 } // namespace mozilla
 
 nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
-                         mozilla::ComputedStyle* aStyle,
+                         nsStyleContext* aContext,
                          bool aIsRoot,
                          nsBoxLayout* aLayoutManager);
 nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
-                         mozilla::ComputedStyle* aStyle);
+                         nsStyleContext* aContext);
 
 class nsBoxFrame : public nsContainerFrame
 {
@@ -47,11 +47,11 @@ public:
 #endif
 
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
-                                  ComputedStyle* aStyle,
+                                  nsStyleContext* aContext,
                                   bool aIsRoot,
                                   nsBoxLayout* aLayoutManager);
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
-                                  ComputedStyle* aStyle);
+                                  nsStyleContext* aContext);
 
   // gets the rect inside our border and debug border. If you wish to paint inside a box
   // call this method to get the rect so you don't draw on the debug border or outer border.
@@ -110,7 +110,7 @@ public:
 
   virtual nsContainerFrame* GetContentInsertionFrame() override;
 
-  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
@@ -175,10 +175,10 @@ public:
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
 private:
-  explicit nsBoxFrame(ComputedStyle* aStyle)
-    : nsBoxFrame(aStyle, kClassID, false, nullptr) {}
+  explicit nsBoxFrame(nsStyleContext* aContext)
+    : nsBoxFrame(aContext, kClassID, false, nullptr) {}
 protected:
-  nsBoxFrame(ComputedStyle* aStyle, ClassID aID, bool aIsRoot = false,
+  nsBoxFrame(nsStyleContext* aContext, ClassID aID, bool aIsRoot = false,
              nsBoxLayout* aLayoutManager = nullptr);
   virtual ~nsBoxFrame();
 

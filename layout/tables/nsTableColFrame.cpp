@@ -6,7 +6,7 @@
 #include "nsTableColFrame.h"
 #include "nsTableFrame.h"
 #include "nsContainerFrame.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
@@ -23,8 +23,8 @@ using namespace mozilla;
 
 using namespace mozilla;
 
-nsTableColFrame::nsTableColFrame(ComputedStyle* aStyle)
-  : nsSplittableFrame(aStyle, kClassID)
+nsTableColFrame::nsTableColFrame(nsStyleContext* aContext)
+  : nsSplittableFrame(aContext, kClassID)
   , mMinCoord(0)
   , mPrefCoord(0)
   , mSpanMinCoord(0)
@@ -70,16 +70,16 @@ nsTableColFrame::SetColType(nsTableColType aType)
 }
 
 /* virtual */ void
-nsTableColFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
+nsTableColFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  nsSplittableFrame::DidSetComputedStyle(aOldComputedStyle);
+  nsSplittableFrame::DidSetStyleContext(aOldStyleContext);
 
-  if (!aOldComputedStyle) //avoid this on init
+  if (!aOldStyleContext) //avoid this on init
     return;
 
   nsTableFrame* tableFrame = GetTableFrame();
   if (tableFrame->IsBorderCollapse() &&
-      tableFrame->BCRecalcNeeded(aOldComputedStyle, Style())) {
+      tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
     TableArea damageArea(GetColIndex(), 0, 1, tableFrame->GetRowCount());
     tableFrame->AddBCDamageArea(damageArea);
   }
@@ -174,9 +174,9 @@ void nsTableColFrame::Dump(int32_t aIndent)
 /* ----- global methods ----- */
 
 nsTableColFrame*
-NS_NewTableColFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewTableColFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTableColFrame(aStyle);
+  return new (aPresShell) nsTableColFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTableColFrame)

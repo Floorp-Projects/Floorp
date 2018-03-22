@@ -8,9 +8,9 @@
 #include "nsSVGSymbolFrame.h"
 
 nsIFrame*
-NS_NewSVGSymbolFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewSVGSymbolFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSVGSymbolFrame(aStyle);
+  return new (aPresShell) nsSVGSymbolFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGSymbolFrame)

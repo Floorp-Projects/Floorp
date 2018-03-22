@@ -10,7 +10,6 @@
 
 #include "gfxContext.h"
 #include "gfxUtils.h"
-#include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
@@ -26,6 +25,7 @@
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
+#include "nsStyleContext.h"
 #include "nsHTMLParts.h"
 #include "nsNameSpaceManager.h"
 #include "nsCSSAnonBoxes.h"
@@ -114,7 +114,7 @@ public:
   void PaintBorder(DrawTarget* aDrawTarget, nsPoint aPt);
 
 protected:
-  nsHTMLFramesetBorderFrame(ComputedStyle* aStyle, int32_t aWidth, bool aVertical, bool aVisible);
+  nsHTMLFramesetBorderFrame(nsStyleContext* aContext, int32_t aWidth, bool aVertical, bool aVisible);
   virtual ~nsHTMLFramesetBorderFrame();
   virtual nscoord GetIntrinsicISize() override;
   virtual nscoord GetIntrinsicBSize() override;
@@ -155,8 +155,8 @@ public:
                           nsReflowStatus&          aStatus) override;
 
 protected:
-  explicit nsHTMLFramesetBlankFrame(ComputedStyle* aStyle)
-    : nsLeafFrame(aStyle, kClassID)
+  explicit nsHTMLFramesetBlankFrame(nsStyleContext* aContext)
+    : nsLeafFrame(aContext, kClassID)
   {}
 
   virtual ~nsHTMLFramesetBlankFrame();
@@ -173,8 +173,8 @@ protected:
 bool    nsHTMLFramesetFrame::gDragInProgress = false;
 #define DEFAULT_BORDER_WIDTH_PX 6
 
-nsHTMLFramesetFrame::nsHTMLFramesetFrame(ComputedStyle* aStyle)
-  : nsContainerFrame(aStyle, kClassID)
+nsHTMLFramesetFrame::nsHTMLFramesetFrame(nsStyleContext* aContext)
+  : nsContainerFrame(aContext, kClassID)
 {
   mNumRows             = 0;
   mNumCols             = 0;
@@ -299,9 +299,9 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
       continue;
     }
 
-    RefPtr<ComputedStyle> kidSC =
+    RefPtr<nsStyleContext> kidSC =
       shell->StyleSet()->ResolveStyleFor(child->AsElement(),
-                                         mComputedStyle,
+                                         mStyleContext,
                                          LazyComputeBehavior::Allow);
 
     nsIFrame* frame;
@@ -333,13 +333,13 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
   mNonBlankChildCount = mChildCount;
   // add blank frames for frameset cells that had no content provided
   for (int blankX = mChildCount; blankX < numCells; blankX++) {
-    RefPtr<ComputedStyle> pseudoComputedStyle;
-    pseudoComputedStyle = shell->StyleSet()->
+    RefPtr<nsStyleContext> pseudoStyleContext;
+    pseudoStyleContext = shell->StyleSet()->
       ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::framesetBlank);
 
     // XXX the blank frame is using the content of its parent - at some point it
     // should just have null content, if we support that
-    nsHTMLFramesetBlankFrame* blankFrame = new (shell) nsHTMLFramesetBlankFrame(pseudoComputedStyle);
+    nsHTMLFramesetBlankFrame* blankFrame = new (shell) nsHTMLFramesetBlankFrame(pseudoStyleContext);
 
     blankFrame->Init(mContent, this, nullptr);
 
@@ -909,11 +909,11 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
       offset.y += lastSize.height;
       if (firstTime) { // create horizontal border
 
-        RefPtr<ComputedStyle> pseudoComputedStyle;
-        pseudoComputedStyle = styleSet->
+        RefPtr<nsStyleContext> pseudoStyleContext;
+        pseudoStyleContext = styleSet->
           ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::horizontalFramesetBorder);
 
-        borderFrame = new (shell) nsHTMLFramesetBorderFrame(pseudoComputedStyle,
+        borderFrame = new (shell) nsHTMLFramesetBorderFrame(pseudoStyleContext,
                                                             borderWidth,
                                                             false,
                                                             false);
@@ -938,11 +938,11 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
         if (0 == cellIndex.y) { // in 1st row
           if (firstTime) { // create vertical border
 
-            RefPtr<ComputedStyle> pseudoComputedStyle;
-            pseudoComputedStyle = styleSet->
+            RefPtr<nsStyleContext> pseudoStyleContext;
+            pseudoStyleContext = styleSet->
               ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::verticalFramesetBorder);
 
-            borderFrame = new (shell) nsHTMLFramesetBorderFrame(pseudoComputedStyle,
+            borderFrame = new (shell) nsHTMLFramesetBorderFrame(pseudoStyleContext,
                                                                 borderWidth,
                                                                 true,
                                                                 false);
@@ -1310,15 +1310,15 @@ nsHTMLFramesetFrame::EndMouseDrag(nsPresContext* aPresContext)
 }
 
 nsIFrame*
-NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
 #ifdef DEBUG
-  const nsStyleDisplay* disp = aStyle->StyleDisplay();
+  const nsStyleDisplay* disp = aContext->StyleDisplay();
   NS_ASSERTION(!disp->IsAbsolutelyPositionedStyle() && !disp->IsFloatingStyle(),
                "Framesets should not be positioned and should not float");
 #endif
 
-  return new (aPresShell) nsHTMLFramesetFrame(aStyle);
+  return new (aPresShell) nsHTMLFramesetFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLFramesetFrame)
@@ -1326,11 +1326,11 @@ NS_IMPL_FRAMEARENA_HELPERS(nsHTMLFramesetFrame)
 /*******************************************************************************
  * nsHTMLFramesetBorderFrame
  ******************************************************************************/
-nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(ComputedStyle* aStyle,
+nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(nsStyleContext* aContext,
                                                      int32_t aWidth,
                                                      bool aVertical,
                                                      bool aVisibility)
-  : nsLeafFrame(aStyle, kClassID)
+  : nsLeafFrame(aContext, kClassID)
   , mWidth(aWidth)
   , mVertical(aVertical)
   , mVisibility(aVisibility)

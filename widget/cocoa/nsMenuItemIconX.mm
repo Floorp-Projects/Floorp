@@ -145,7 +145,7 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
                                    imageURIString);
 
   nsresult rv;
-  RefPtr<ComputedStyle> sc;
+  RefPtr<nsStyleContext> sc;
   nsCOMPtr<nsIURI> iconURI;
   if (!hasImageAttr) {
     // If the content node has no "image" attribute, get the
@@ -155,7 +155,7 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
       return NS_ERROR_FAILURE;
     }
 
-    sc = nsComputedDOMStyle::GetComputedStyle(mContent->AsElement(), nullptr);
+    sc = nsComputedDOMStyle::GetStyleContext(mContent->AsElement(), nullptr);
     if (!sc) {
       return NS_ERROR_FAILURE;
     }

@@ -1866,7 +1866,7 @@ nsFrameSelection::PhysicalMove(int16_t aDirection, int16_t aAmount,
   if (NS_SUCCEEDED(sel->GetPrimaryFrameForFocusNode(&frame, &offsetused,
                                                     true))) {
     if (frame) {
-      if (!frame->Style()->IsTextCombined()) {
+      if (!frame->StyleContext()->IsTextCombined()) {
         wm = frame->GetWritingMode();
       } else {
         // Using different direction for horizontal-in-vertical would

@@ -317,7 +317,7 @@ public:
 #endif
 
 #ifdef DEBUG
-  void ListComputedStyles(FILE *out, int32_t aIndent = 0) override;
+  void ListStyleContexts(FILE *out, int32_t aIndent = 0) override;
 
   void ListStyleSheets(FILE *out, int32_t aIndent = 0) override;
   void VerifyStyleTree() override;

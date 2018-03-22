@@ -127,7 +127,7 @@ public:
    * 0,0 area.
    */
   friend nsIFrame* NS_NewEmptyFrame(nsIPresShell* aShell,
-                                    ComputedStyle* aStyle);
+                                    nsStyleContext* aContext);
 
 private:
   // Left undefined; nsFrame objects are never allocated from the heap.
@@ -161,9 +161,9 @@ public:
             nsContainerFrame* aParent,
             nsIFrame*         aPrevInFlow) override;
   void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
-  ComputedStyle* GetAdditionalComputedStyle(int32_t aIndex) const override;
-  void SetAdditionalComputedStyle(int32_t aIndex,
-                                  ComputedStyle* aComputedStyle) override;
+  nsStyleContext* GetAdditionalStyleContext(int32_t aIndex) const override;
+  void SetAdditionalStyleContext(int32_t aIndex,
+                                 nsStyleContext* aStyleContext) override;
   nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
   const nsFrameList& GetChildList(ChildListID aListID) const override;
   void GetChildLists(nsTArray<ChildList>* aLists) const override;
@@ -245,13 +245,13 @@ public:
   mozilla::a11y::AccType AccessibleType() override;
 #endif
 
-  ComputedStyle* GetParentComputedStyle(nsIFrame** aProviderFrame) const override {
-    return DoGetParentComputedStyle(aProviderFrame);
+  nsStyleContext* GetParentStyleContext(nsIFrame** aProviderFrame) const override {
+    return DoGetParentStyleContext(aProviderFrame);
   }
 
   /**
    * Do the work for getting the parent style context frame so that
-   * other frame's |GetParentComputedStyle| methods can call this
+   * other frame's |GetParentStyleContext| methods can call this
    * method on *another* frame.  (This function handles out-of-flow
    * frames by using the frame manager's placeholder map and it also
    * handles block-within-inline and generated content wrappers.)
@@ -262,7 +262,7 @@ public:
    *         style context.  Null is permitted, and means that this frame's
    *         style context should be the root of the style context tree.
    */
-  ComputedStyle* DoGetParentComputedStyle(nsIFrame** aProviderFrame) const;
+  nsStyleContext* DoGetParentStyleContext(nsIFrame** aProviderFrame) const;
 
   bool IsEmpty() override;
   bool IsSelfEmpty() override;
@@ -569,9 +569,9 @@ public:
 
 protected:
   // Protected constructor and destructor
-  nsFrame(ComputedStyle* aStyle, ClassID aID);
-  explicit nsFrame(ComputedStyle* aStyle)
-    : nsFrame(aStyle, ClassID::nsFrame_id) {}
+  nsFrame(nsStyleContext* aContext, ClassID aID);
+  explicit nsFrame(nsStyleContext* aContext)
+    : nsFrame(aContext, ClassID::nsFrame_id) {}
   virtual ~nsFrame();
 
   /**
@@ -586,7 +586,7 @@ protected:
   int16_t DisplaySelection(nsPresContext* aPresContext, bool isOkToTurnOn = false);
 
   // Style post processing hook
-  void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+  void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
 public:
   /**

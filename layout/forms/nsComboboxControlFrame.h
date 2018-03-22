@@ -32,6 +32,7 @@
 #include "nsIStatefulFrame.h"
 #include "nsThreadUtils.h"
 
+class nsStyleContext;
 class nsIListControlFrame;
 class nsComboboxDisplayFrame;
 class nsIDOMEventListener;
@@ -55,11 +56,11 @@ class nsComboboxControlFrame final : public nsBlockFrame,
 
 public:
   friend nsComboboxControlFrame* NS_NewComboboxControlFrame(nsIPresShell* aPresShell,
-                                                            ComputedStyle* aStyle,
+                                                            nsStyleContext* aContext,
                                                             nsFrameState aFlags);
   friend class nsComboboxDisplayFrame;
 
-  explicit nsComboboxControlFrame(ComputedStyle* aStyle);
+  explicit nsComboboxControlFrame(nsStyleContext* aContext);
   ~nsComboboxControlFrame();
 
   NS_DECL_QUERYFRAME

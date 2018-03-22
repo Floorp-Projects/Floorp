@@ -27,7 +27,7 @@ class nsFileControlFrame : public nsBlockFrame,
                            public nsIAnonymousContentCreator
 {
 public:
-  explicit nsFileControlFrame(ComputedStyle* aStyle);
+  explicit nsFileControlFrame(nsStyleContext* aContext);
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,

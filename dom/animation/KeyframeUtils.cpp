@@ -6,7 +6,6 @@
 
 #include "mozilla/KeyframeUtils.h"
 
-#include "mozilla/ComputedStyle.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Move.h"
 #include "mozilla/RangedArray.h"
@@ -29,6 +28,7 @@
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
 #include "nsDocument.h" // For nsDocument::IsWebAnimationsEnabled
 #include "nsIScriptError.h"
+#include "nsStyleContext.h"
 #include "nsTArray.h"
 #include <algorithm> // For std::stable_sort, std::min
 
@@ -370,7 +370,7 @@ MarkAsComputeValuesFailureKey(PropertyValuePair& aPair);
 static nsTArray<ComputedKeyframeValues>
 GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
                           dom::Element* aElement,
-                          const ComputedStyle* aComputedValues);
+                          const ServoStyleContext* aComputedValues);
 
 static void
 BuildSegmentsFromValueEntries(nsTArray<KeyframeValueEntry>& aEntries,
@@ -945,7 +945,7 @@ MarkAsComputeValuesFailureKey(PropertyValuePair& aPair)
 static nsTArray<ComputedKeyframeValues>
 GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
                           dom::Element* aElement,
-                          const ComputedStyle* aComputedStyle)
+                          const ServoStyleContext* aStyleContext)
 {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(aElement->IsStyledByServo());
@@ -962,7 +962,7 @@ GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
   }
 
   result = presContext->StyleSet()->AsServo()
-    ->GetComputedKeyframeValuesFor(aKeyframes, aElement, aComputedStyle);
+    ->GetComputedKeyframeValuesFor(aKeyframes, aElement, aStyleContext);
   return result;
 }
 
@@ -1533,7 +1533,7 @@ nsTArray<AnimationProperty>
 KeyframeUtils::GetAnimationPropertiesFromKeyframes(
   const nsTArray<Keyframe>& aKeyframes,
   dom::Element* aElement,
-  const ComputedStyle* aStyle,
+  const ServoStyleContext* aStyle,
   dom::CompositeOperation aEffectComposite);
 
 } // namespace mozilla

@@ -621,8 +621,8 @@ HTMLEditor::GetTemporaryStyleForFocusedPositionedElement(Element& aElement,
     return NS_OK;
   }
 
-  RefPtr<ComputedStyle> style =
-    nsComputedDOMStyle::GetComputedStyle(&aElement, nullptr);
+  RefPtr<nsStyleContext> style =
+    nsComputedDOMStyle::GetStyleContext(&aElement, nullptr);
   NS_ENSURE_STATE(style);
 
   const uint8_t kBlackBgTrigger = 0xd0;

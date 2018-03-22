@@ -24,7 +24,7 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsCheckboxRadioFrame)
 
-  explicit nsCheckboxRadioFrame(ComputedStyle* aStyle);
+  explicit nsCheckboxRadioFrame(nsStyleContext* aContext);
 
   // nsIFrame replacements
   virtual bool IsFrameOfType(uint32_t aFlags) const override

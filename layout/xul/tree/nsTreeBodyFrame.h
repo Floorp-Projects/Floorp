@@ -56,7 +56,7 @@ class nsTreeBodyFrame final
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
 
 public:
-  explicit nsTreeBodyFrame(ComputedStyle* aStyle);
+  explicit nsTreeBodyFrame(nsStyleContext* aContext);
   ~nsTreeBodyFrame();
 
   NS_DECL_QUERYFRAME
@@ -176,7 +176,7 @@ public:
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsDisplayListSet& aLists) override;
 
-  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
   friend nsIFrame* NS_NewTreeBodyFrame(nsIPresShell* aPresShell);
   friend class nsTreeColumn;
@@ -286,11 +286,11 @@ protected:
 
   // This method is called with a specific style context and rect to
   // paint the background rect as if it were a full-blown frame.
-  ImgDrawResult PaintBackgroundLayer(ComputedStyle*      aComputedStyle,
-                                     nsPresContext*       aPresContext,
-                                     gfxContext&          aRenderingContext,
-                                     const nsRect&        aRect,
-                                     const nsRect&        aDirtyRect);
+  ImgDrawResult PaintBackgroundLayer(nsStyleContext*      aStyleContext,
+                                  nsPresContext*       aPresContext,
+                                  gfxContext&          aRenderingContext,
+                                  const nsRect&        aRect,
+                                  const nsRect&        aDirtyRect);
 
 
   // An internal hit test.  aX and aY are expected to be in twips in the
@@ -325,21 +325,21 @@ protected:
                           nsRect& aImageRect,
                           nsRect& aTwistyRect,
                           nsPresContext* aPresContext,
-                          ComputedStyle* aTwistyContext);
+                          nsStyleContext* aTwistyContext);
 
   // Fetch an image from the image cache.
   nsresult GetImage(int32_t aRowIndex, nsTreeColumn* aCol, bool aUseContext,
-                    ComputedStyle* aComputedStyle, bool& aAllowImageRegions, imgIContainer** aResult);
+                    nsStyleContext* aStyleContext, bool& aAllowImageRegions, imgIContainer** aResult);
 
   // Returns the size of a given image.   This size *includes* border and
   // padding.  It does not include margins.
-  nsRect GetImageSize(int32_t aRowIndex, nsTreeColumn* aCol, bool aUseContext, ComputedStyle* aComputedStyle);
+  nsRect GetImageSize(int32_t aRowIndex, nsTreeColumn* aCol, bool aUseContext, nsStyleContext* aStyleContext);
 
   // Returns the destination size of the image, not including borders and padding.
-  nsSize GetImageDestSize(ComputedStyle* aComputedStyle, bool useImageRegion, imgIContainer* image);
+  nsSize GetImageDestSize(nsStyleContext* aStyleContext, bool useImageRegion, imgIContainer* image);
 
   // Returns the source rectangle of the image to be displayed.
-  nsRect GetImageSourceRect(ComputedStyle* aComputedStyle, bool useImageRegion, imgIContainer* image);
+  nsRect GetImageSourceRect(nsStyleContext* aStyleContext, bool useImageRegion, imgIContainer* image);
 
   // Returns the height of rows in the tree.
   int32_t GetRowHeight();
@@ -355,7 +355,7 @@ protected:
 
   // Looks up a style context in the style cache.  On a cache miss we resolve
   // the pseudo-styles passed in and place them into the cache.
-  ComputedStyle* GetPseudoComputedStyle(nsICSSAnonBoxPseudo* aPseudoElement);
+  nsStyleContext* GetPseudoStyleContext(nsICSSAnonBoxPseudo* aPseudoElement);
 
   // Retrieves the scrollbars and scrollview relevant to this treebody. We
   // traverse the frame tree under our base element, in frame order, looking

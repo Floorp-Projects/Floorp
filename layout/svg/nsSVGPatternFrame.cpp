@@ -18,7 +18,7 @@
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsSVGDisplayableFrame.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 #include "SVGObserverUtils.h"
 #include "SVGGeometryFrame.h"
 #include "mozilla/dom/SVGPatternElement.h"
@@ -36,8 +36,8 @@ using namespace mozilla::image;
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGPatternFrame::nsSVGPatternFrame(ComputedStyle* aStyle)
-  : nsSVGPaintServerFrame(aStyle, kClassID)
+nsSVGPatternFrame::nsSVGPatternFrame(nsStyleContext* aContext)
+  : nsSVGPaintServerFrame(aContext, kClassID)
   , mSource(nullptr)
   , mLoopFlag(false)
   , mNoHRefURI(false)
@@ -757,8 +757,8 @@ nsSVGPatternFrame::GetPaintServerPattern(nsIFrame *aSource,
 // -------------------------------------------------------------------------
 
 nsIFrame* NS_NewSVGPatternFrame(nsIPresShell*   aPresShell,
-                                ComputedStyle* aStyle)
+                                nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSVGPatternFrame(aStyle);
+  return new (aPresShell) nsSVGPatternFrame(aContext);
 }
 

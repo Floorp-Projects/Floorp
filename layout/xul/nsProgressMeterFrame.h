@@ -26,7 +26,7 @@ class nsProgressMeterFrame final : public nsBoxFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsProgressMeterFrame)
 
-  friend nsIFrame* NS_NewProgressMeterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewProgressMeterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
 
@@ -39,8 +39,8 @@ public:
 #endif
 
 protected:
-  explicit nsProgressMeterFrame(ComputedStyle* aStyle) :
-    nsBoxFrame(aStyle, kClassID), mNeedsReflowCallback(true) {}
+  explicit nsProgressMeterFrame(nsStyleContext* aContext) :
+    nsBoxFrame(aContext, kClassID), mNeedsReflowCallback(true) {}
   virtual ~nsProgressMeterFrame();
 
   bool mNeedsReflowCallback;

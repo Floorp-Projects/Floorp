@@ -25,10 +25,10 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 nsIFrame*
-NS_NewPlaceholderFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle,
+NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
                        nsFrameState aTypeBits)
 {
-  return new (aPresShell) nsPlaceholderFrame(aStyle, aTypeBits);
+  return new (aPresShell) nsPlaceholderFrame(aContext, aTypeBits);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPlaceholderFrame)
@@ -210,14 +210,14 @@ nsPlaceholderFrame::CanContinueTextRun() const
   return mOutOfFlowFrame->CanContinueTextRun();
 }
 
-ComputedStyle*
-nsPlaceholderFrame::GetParentComputedStyleForOutOfFlow(nsIFrame** aProviderFrame) const
+nsStyleContext*
+nsPlaceholderFrame::GetParentStyleContextForOutOfFlow(nsIFrame** aProviderFrame) const
 {
   NS_PRECONDITION(GetParent(), "How can we not have a parent here?");
 
   nsIContent* parentContent = mContent ? mContent->GetFlattenedTreeParent() : nullptr;
   if (parentContent) {
-    ComputedStyle* sc =
+    nsStyleContext* sc =
       PresContext()->FrameConstructor()->GetDisplayContentsStyleFor(parentContent);
     if (sc) {
       *aProviderFrame = nullptr;
@@ -228,7 +228,7 @@ nsPlaceholderFrame::GetParentComputedStyleForOutOfFlow(nsIFrame** aProviderFrame
   return GetLayoutParentStyleForOutOfFlow(aProviderFrame);
 }
 
-ComputedStyle*
+nsStyleContext*
 nsPlaceholderFrame::GetLayoutParentStyleForOutOfFlow(nsIFrame** aProviderFrame) const
 {
   // Lie about our pseudo so we can step out of all anon boxes and
@@ -236,7 +236,7 @@ nsPlaceholderFrame::GetLayoutParentStyleForOutOfFlow(nsIFrame** aProviderFrame) 
   // {ib} split gunk here.
   *aProviderFrame = CorrectStyleParentFrame(GetParent(),
                                             nsGkAtoms::placeholderFrame);
-  return *aProviderFrame ? (*aProviderFrame)->Style() : nullptr;
+  return *aProviderFrame ? (*aProviderFrame)->StyleContext() : nullptr;
 }
 
 

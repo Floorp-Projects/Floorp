@@ -16,15 +16,15 @@ class nsBackdropFrame final : public nsFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsBackdropFrame)
 
-  explicit nsBackdropFrame(ComputedStyle* aStyle)
-    : nsFrame(aStyle, kClassID)
+  explicit nsBackdropFrame(nsStyleContext* aContext)
+    : nsFrame(aContext, kClassID)
   {}
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
-  virtual ComputedStyle*
-    GetParentComputedStyle(nsIFrame** aProviderFrame) const override;
+  virtual nsStyleContext*
+    GetParentStyleContext(nsIFrame** aProviderFrame) const override;
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
   virtual mozilla::LogicalSize

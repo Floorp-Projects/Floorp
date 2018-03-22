@@ -33,9 +33,9 @@ using namespace mozilla;
 // Creates a new Toolbar frame and returns it
 //
 nsIFrame*
-NS_NewScrollbarButtonFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewScrollbarButtonFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsScrollbarButtonFrame(aStyle);
+  return new (aPresShell) nsScrollbarButtonFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsScrollbarButtonFrame)

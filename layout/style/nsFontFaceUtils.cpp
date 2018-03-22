@@ -14,31 +14,29 @@
 #include "nsTArray.h"
 #include "SVGTextFrame.h"
 
-using namespace mozilla;
-
 static bool
-ComputedStyleContainsFont(ComputedStyle* aComputedStyle,
-                          const gfxUserFontSet* aUserFontSet,
-                          const gfxUserFontEntry* aFont)
+StyleContextContainsFont(nsStyleContext* aStyleContext,
+                         const gfxUserFontSet* aUserFontSet,
+                         const gfxUserFontEntry* aFont)
 {
   // if the font is null, simply check to see whether fontlist includes
   // downloadable fonts
   if (!aFont) {
     const mozilla::FontFamilyList& fontlist =
-      aComputedStyle->StyleFont()->mFont.fontlist;
+      aStyleContext->StyleFont()->mFont.fontlist;
     return aUserFontSet->ContainsUserFontSetFonts(fontlist);
   }
 
   // first, check if the family name is in the fontlist
   const nsString& familyName = aFont->FamilyName();
-  if (!aComputedStyle->StyleFont()->mFont.fontlist.Contains(familyName)) {
+  if (!aStyleContext->StyleFont()->mFont.fontlist.Contains(familyName)) {
     return false;
   }
 
   // family name is in the fontlist, check to see if the font group
   // associated with the frame includes the specific userfont
   RefPtr<nsFontMetrics> fm =
-    nsLayoutUtils::GetFontMetricsForComputedStyle(aComputedStyle, 1.0f);
+    nsLayoutUtils::GetFontMetricsForStyleContext(aStyleContext, 1.0f);
 
   if (fm->GetThebesFontGroup()->ContainsUserFont(aFont)) {
     return true;
@@ -50,18 +48,18 @@ ComputedStyleContainsFont(ComputedStyle* aComputedStyle,
 static bool
 FrameUsesFont(nsIFrame* aFrame, const gfxUserFontEntry* aFont)
 {
-  // check the style of the frame
+  // check the style context of the frame
   gfxUserFontSet* ufs = aFrame->PresContext()->GetUserFontSet();
-  if (ComputedStyleContainsFont(aFrame->Style(), ufs, aFont)) {
+  if (StyleContextContainsFont(aFrame->StyleContext(), ufs, aFont)) {
     return true;
   }
 
-  // check additional styles
+  // check additional style contexts
   int32_t contextIndex = 0;
-  for (ComputedStyle* extraContext;
-       (extraContext = aFrame->GetAdditionalComputedStyle(contextIndex));
+  for (nsStyleContext* extraContext;
+       (extraContext = aFrame->GetAdditionalStyleContext(contextIndex));
        ++contextIndex) {
-    if (ComputedStyleContainsFont(extraContext, ufs, aFont)) {
+    if (StyleContextContainsFont(extraContext, ufs, aFont)) {
       return true;
     }
   }

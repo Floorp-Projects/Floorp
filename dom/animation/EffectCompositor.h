@@ -22,12 +22,12 @@ class nsCSSPropertyIDSet;
 class nsAtom;
 class nsIFrame;
 class nsPresContext;
+class nsStyleContext;
 struct RawServoAnimationValueMap;
 typedef RawServoAnimationValueMap* RawServoAnimationValueMapBorrowedMut;
 
 namespace mozilla {
 
-class ComputedStyle;
 class EffectSet;
 class RestyleTracker;
 class StyleAnimationValue;
@@ -153,12 +153,12 @@ public:
   // the change in the set of effects or a change in one of the effects'
   // "in effect" state.
   //
-  // When |aBackendType| is StyleBackendType::Gecko, |aComputedStyle| is used to
-  // find overridden properties. If it is nullptr, the ComputedStyle of the
+  // When |aBackendType| is StyleBackendType::Gecko, |aStyleContext| is used to
+  // find overridden properties. If it is nullptr, the nsStyleContext of the
   // primary frame of the specified (pseudo-)element, if available, is used.
   //
   // When |aBackendType| is StyleBackendType::Servo, we fetch the rule node
-  // from the |aElement| (i.e. |aComputedStyle| is ignored).
+  // from the |aElement| (i.e. |aStyleContext| is ignored).
   //
   // This method does NOT detect if other styles that apply above the
   // animation level of the cascade have changed.
@@ -166,7 +166,7 @@ public:
   MaybeUpdateCascadeResults(StyleBackendType aBackendType,
                             dom::Element* aElement,
                             CSSPseudoElementType aPseudoType,
-                            ComputedStyle* aComputedStyle);
+                            nsStyleContext* aStyleContext);
 
   // Update the mPropertiesWithImportantRules and
   // mPropertiesForAnimationsLevel members of the given EffectSet, and also
@@ -181,7 +181,7 @@ public:
   // MarkCascadeNeedsUpdate during the traversal so instead we call this as part
   // of a follow-up sequential task.
   //
-  // As with MaybeUpdateCascadeResults, |aComputedStyle| is only used
+  // As with MaybeUpdateCascadeResults, |aStyleContext| is only used
   // when |aBackendType| is StyleBackendType::Gecko. When |aBackendType| is
   // StyleBackendType::Servo, it is ignored.
   static void
@@ -189,7 +189,7 @@ public:
                        EffectSet& aEffectSet,
                        dom::Element* aElement,
                        CSSPseudoElementType aPseudoType,
-                       ComputedStyle* aComputedStyle);
+                       nsStyleContext* aStyleContext);
 
   // Helper to fetch the corresponding element and pseudo-type from a frame.
   //
@@ -242,8 +242,8 @@ private:
   // than the animations level.
   //
   // When |aBackendType| is StyleBackendType::Gecko, we determine which
-  // properties are specified using the provided |aComputedStyle| and
-  // |aElement| and |aPseudoType| are ignored. If |aComputedStyle| is nullptr,
+  // properties are specified using the provided |aStyleContext| and
+  // |aElement| and |aPseudoType| are ignored. If |aStyleContext| is nullptr,
   // we automatically look up the style context of primary frame of the
   // (pseudo-)element.
   //
@@ -254,7 +254,7 @@ private:
                           EffectSet& aEffectSet,
                           dom::Element* aElement,
                           CSSPseudoElementType aPseudoType,
-                          ComputedStyle* aComputedStyle);
+                          nsStyleContext* aStyleContext);
 
   static nsPresContext* GetPresContext(dom::Element* aElement);
 

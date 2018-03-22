@@ -29,9 +29,9 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsIFrame*
-NS_NewDateTimeControlFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewDateTimeControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsDateTimeControlFrame(aStyle);
+  return new (aPresShell) nsDateTimeControlFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsDateTimeControlFrame)
@@ -41,8 +41,8 @@ NS_QUERYFRAME_HEAD(nsDateTimeControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
-nsDateTimeControlFrame::nsDateTimeControlFrame(ComputedStyle* aStyle)
-  : nsContainerFrame(aStyle, kClassID)
+nsDateTimeControlFrame::nsDateTimeControlFrame(nsStyleContext* aContext)
+  : nsContainerFrame(aContext, kClassID)
 {
 }
 

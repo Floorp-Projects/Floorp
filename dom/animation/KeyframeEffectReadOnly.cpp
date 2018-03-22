@@ -14,7 +14,6 @@
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/FloatingPoint.h" // For IsFinite
 #include "mozilla/LayerAnimationInfo.h"
@@ -23,7 +22,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/TypeTraits.h"
 #include "Layers.h" // For Layer
-#include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetComputedStyle
+#include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetStyleContext
 #include "nsContentUtils.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
@@ -33,6 +32,7 @@
 #include "nsIPresShell.h"
 #include "nsIScriptError.h"
 #include "nsRefreshDriver.h"
+#include "nsStyleContextInlines.h"
 
 namespace mozilla {
 
@@ -190,13 +190,17 @@ KeyframeEffectReadOnly::SetKeyframes(JSContext* aContext,
     return;
   }
 
-  RefPtr<ComputedStyle> style = GetTargetComputedStyle();
-  if (style) {
-    SetKeyframes(Move(keyframes), style);
+  RefPtr<nsStyleContext> styleContext = GetTargetStyleContext();
+  if (styleContext) {
+    if (styleContext->IsGecko()) {
+      MOZ_CRASH("old style system disabled");
+    } else {
+      SetKeyframes(Move(keyframes), styleContext->AsServo());
+    }
   } else {
     // SetKeyframes has the same behavior for null StyleType* for
     // both backends, just pick one and use it.
-    SetKeyframes(Move(keyframes), (ComputedStyle*) nullptr);
+    SetKeyframes(Move(keyframes), (ServoStyleContext*) nullptr);
   }
 }
 
@@ -204,7 +208,7 @@ KeyframeEffectReadOnly::SetKeyframes(JSContext* aContext,
 void
 KeyframeEffectReadOnly::SetKeyframes(
   nsTArray<Keyframe>&& aKeyframes,
-  const ComputedStyle* aComputedValues)
+  const ServoStyleContext* aComputedValues)
 {
   DoSetKeyframes(Move(aKeyframes), aComputedValues);
 }
@@ -293,9 +297,22 @@ SpecifiedKeyframeArraysAreEqual(const nsTArray<Keyframe>& aA,
 #endif
 
 void
-KeyframeEffectReadOnly::UpdateProperties(const ComputedStyle* aComputedStyle)
+KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 {
-  DoUpdateProperties(aComputedStyle);
+  MOZ_ASSERT(aStyleContext);
+
+  if (aStyleContext->IsGecko()) {
+    MOZ_CRASH("old style system disabled");
+  }
+
+  UpdateProperties(aStyleContext->AsServo());
+}
+
+void
+KeyframeEffectReadOnly::UpdateProperties(
+  const ServoStyleContext* aStyleContext)
+{
+  DoUpdateProperties(aStyleContext);
 }
 
 template<typename StyleType>
@@ -306,7 +323,7 @@ KeyframeEffectReadOnly::DoUpdateProperties(StyleType* aStyle)
 
   // Skip updating properties when we are composing style.
   // FIXME: Bug 1324966. Drop this check once we have a function to get
-  // ComputedStyle without resolving animating style.
+  // nsStyleContext without resolving animating style.
   MOZ_DIAGNOSTIC_ASSERT(!mIsComposingStyle,
                         "Should not be called while processing ComposeStyle()");
   if (mIsComposingStyle) {
@@ -350,7 +367,7 @@ KeyframeEffectReadOnly::DoUpdateProperties(StyleType* aStyle)
 
 void
 KeyframeEffectReadOnly::EnsureBaseStyles(
-  const ComputedStyle* aComputedValues,
+  const ServoStyleContext* aComputedValues,
   const nsTArray<AnimationProperty>& aProperties)
 {
   if (!mTarget) {
@@ -375,12 +392,12 @@ KeyframeEffectReadOnly::EnsureBaseStyles(
              " we should have also failed to calculate the computed values"
              " passed-in as aProperties");
 
-  RefPtr<ComputedStyle> baseComputedStyle;
+  RefPtr<ServoStyleContext> baseStyleContext;
   for (const AnimationProperty& property : aProperties) {
     EnsureBaseStyle(property,
                     presContext,
                     aComputedValues,
-                    baseComputedStyle);
+                    baseStyleContext);
   }
 }
 
@@ -388,8 +405,8 @@ void
 KeyframeEffectReadOnly::EnsureBaseStyle(
   const AnimationProperty& aProperty,
   nsPresContext* aPresContext,
-  const ComputedStyle* aComputedStyle,
- RefPtr<ComputedStyle>& aBaseComputedStyle)
+  const ServoStyleContext* aComputedStyle,
+ RefPtr<ServoStyleContext>& aBaseStyleContext)
 {
   bool hasAdditiveValues = false;
 
@@ -404,18 +421,18 @@ KeyframeEffectReadOnly::EnsureBaseStyle(
     return;
   }
 
-  if (!aBaseComputedStyle) {
+  if (!aBaseStyleContext) {
     Element* animatingElement =
       EffectCompositor::GetElementToRestyle(mTarget->mElement,
                                             mTarget->mPseudoType);
-    aBaseComputedStyle =
+    aBaseStyleContext =
       aPresContext->StyleSet()->AsServo()->GetBaseContextForElement(
           animatingElement,
           aPresContext,
           aComputedStyle);
   }
   RefPtr<RawServoAnimationValue> baseValue =
-    Servo_ComputedValues_ExtractAnimationValue(aBaseComputedStyle,
+    Servo_ComputedValues_ExtractAnimationValue(aBaseStyleContext,
                                                aProperty.mProperty).Consume();
   mBaseStyleValuesForServo.Put(aProperty.mProperty, baseValue);
 }
@@ -822,8 +839,8 @@ KeyframeEffectReadOnly::RequestRestyle(
   }
 }
 
-already_AddRefed<ComputedStyle>
-KeyframeEffectReadOnly::GetTargetComputedStyle()
+already_AddRefed<nsStyleContext>
+KeyframeEffectReadOnly::GetTargetStyleContext()
 {
   if (!GetRenderedDocument()) {
     return nullptr;
@@ -836,7 +853,7 @@ KeyframeEffectReadOnly::GetTargetComputedStyle()
                     ? nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType)
                     : nullptr;
 
-  return nsComputedDOMStyle::GetComputedStyle(mTarget->mElement, pseudo);
+  return nsComputedDOMStyle::GetStyleContext(mTarget->mElement, pseudo);
 }
 
 #ifdef DEBUG
@@ -1023,7 +1040,7 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
   // be consistent with Gecko, we just expand the variables (assuming we have
   // enough context to do so). For that we need to grab the style context so we
   // know what custom property values to provide.
-  RefPtr<ComputedStyle> styleContext;
+  RefPtr<nsStyleContext> styleContext;
   if (isServo && isCSSAnimation) {
     // The following will flush style but that's ok since if you update
     // a variable's computed value, you expect to see that updated value in the
@@ -1033,7 +1050,7 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
     // we might end up returning variables as-is or empty string. That should be
     // acceptable however, since such a case is rare and this is only
     // short-term (and unshipped) behavior until bug 1391537 is fixed.
-    styleContext = GetTargetComputedStyle();
+    styleContext = GetTargetStyleContext();
   }
 
   for (const Keyframe& keyframe : mKeyframes) {
@@ -1085,13 +1102,13 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
           continue;
         }
         if (propertyValue.mServoDeclarationBlock) {
-          const ComputedStyle* servoComputedStyle =
+          const ServoStyleContext* servoStyleContext =
             styleContext ? styleContext->AsServo() : nullptr;
           Servo_DeclarationBlock_SerializeOneValue(
             propertyValue.mServoDeclarationBlock,
             propertyValue.mProperty,
             &stringValue,
-            servoComputedStyle,
+            servoStyleContext,
             customProperties);
         } else {
           RawServoAnimationValue* value =
@@ -1486,30 +1503,30 @@ KeyframeEffectReadOnly::SetPerformanceWarning(
 }
 
 
-already_AddRefed<ComputedStyle>
-KeyframeEffectReadOnly::CreateComputedStyleForAnimationValue(
+already_AddRefed<nsStyleContext>
+KeyframeEffectReadOnly::CreateStyleContextForAnimationValue(
   nsCSSPropertyID aProperty,
   const AnimationValue& aValue,
-  const ComputedStyle* aBaseComputedStyle)
+  const ServoStyleContext* aBaseStyleContext)
 {
-  MOZ_ASSERT(aBaseComputedStyle,
-             "CreateComputedStyleForAnimationValue needs to be called "
-             "with a valid ComputedStyle");
+  MOZ_ASSERT(aBaseStyleContext,
+             "CreateStyleContextForAnimationValue needs to be called "
+             "with a valid ServoStyleContext");
 
   ServoStyleSet* styleSet =
-    aBaseComputedStyle->PresContext()->StyleSet()->AsServo();
+    aBaseStyleContext->PresContext()->StyleSet()->AsServo();
   Element* elementForResolve =
     EffectCompositor::GetElementToRestyle(mTarget->mElement,
                                           mTarget->mPseudoType);
   MOZ_ASSERT(elementForResolve, "The target element shouldn't be null");
   return styleSet->ResolveServoStyleByAddingAnimation(elementForResolve,
-                                                      aBaseComputedStyle,
+                                                      aBaseStyleContext,
                                                       aValue.mServo);
 }
 
 template<typename StyleType>
 void
-KeyframeEffectReadOnly::CalculateCumulativeChangeHint(StyleType* aComputedStyle)
+KeyframeEffectReadOnly::CalculateCumulativeChangeHint(StyleType* aStyleContext)
 {
   mCumulativeChangeHint = nsChangeHint(0);
 
@@ -1532,19 +1549,19 @@ KeyframeEffectReadOnly::CalculateCumulativeChangeHint(StyleType* aComputedStyle)
         mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
         return;
       }
-      RefPtr<ComputedStyle> fromContext =
-        CreateComputedStyleForAnimationValue(property.mProperty,
+      RefPtr<nsStyleContext> fromContext =
+        CreateStyleContextForAnimationValue(property.mProperty,
                                             segment.mFromValue,
-                                            aComputedStyle);
+                                            aStyleContext);
       if (!fromContext) {
         mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
         return;
       }
 
-      RefPtr<ComputedStyle> toContext =
-        CreateComputedStyleForAnimationValue(property.mProperty,
+      RefPtr<nsStyleContext> toContext =
+        CreateStyleContextForAnimationValue(property.mProperty,
                                             segment.mToValue,
-                                            aComputedStyle);
+                                            aStyleContext);
       if (!toContext) {
         mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
         return;

@@ -12,7 +12,7 @@
 //
 
 #include "nsDeckFrame.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
@@ -33,9 +33,9 @@
 #endif
 
 nsIFrame*
-NS_NewDeckFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewDeckFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsDeckFrame(aStyle);
+  return new (aPresShell) nsDeckFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsDeckFrame)
@@ -44,8 +44,8 @@ NS_QUERYFRAME_HEAD(nsDeckFrame)
   NS_QUERYFRAME_ENTRY(nsDeckFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
-nsDeckFrame::nsDeckFrame(ComputedStyle* aStyle)
-  : nsBoxFrame(aStyle, kClassID)
+nsDeckFrame::nsDeckFrame(nsStyleContext* aContext)
+  : nsBoxFrame(aContext, kClassID)
   , mIndex(0)
 {
   nsCOMPtr<nsBoxLayout> layout;

@@ -11,21 +11,21 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
 #include "gfxTextRun.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 
 class nsTransformedTextRun;
 
 struct nsTransformedCharStyle final {
   NS_INLINE_DECL_REFCOUNTING(nsTransformedCharStyle)
 
-  explicit nsTransformedCharStyle(mozilla::ComputedStyle* aStyle)
-    : mFont(aStyle->StyleFont()->mFont)
-    , mLanguage(aStyle->StyleFont()->mLanguage)
-    , mPresContext(aStyle->PresContext())
-    , mScriptSizeMultiplier(aStyle->StyleFont()->mScriptSizeMultiplier)
-    , mTextTransform(aStyle->StyleText()->mTextTransform)
-    , mMathVariant(aStyle->StyleFont()->mMathVariant)
-    , mExplicitLanguage(aStyle->StyleFont()->mExplicitLanguage) {}
+  explicit nsTransformedCharStyle(nsStyleContext* aContext)
+    : mFont(aContext->StyleFont()->mFont)
+    , mLanguage(aContext->StyleFont()->mLanguage)
+    , mPresContext(aContext->PresContext())
+    , mScriptSizeMultiplier(aContext->StyleFont()->mScriptSizeMultiplier)
+    , mTextTransform(aContext->StyleText()->mTextTransform)
+    , mMathVariant(aContext->StyleFont()->mMathVariant)
+    , mExplicitLanguage(aContext->StyleFont()->mExplicitLanguage) {}
 
   nsFont                  mFont;
   RefPtr<nsAtom>       mLanguage;

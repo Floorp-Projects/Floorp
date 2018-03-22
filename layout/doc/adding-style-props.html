@@ -83,9 +83,9 @@ able to hold the property and its value(s)</li>
     <li><a href="#Parser">CSS Parser</a>: the parser must be able to parse the
 property name, validate the values, and provide a declaration for the property
 and value</li>
-    <li><a href="#ComputedStyle">Style Context</a>: the ComputedStyle must be able
+    <li><a href="#StyleContext">Style Context</a>: the StyleContext must be able
 to hold the resolved value of the property, and provide a means to retrieve the
-property value. Additionally, the ComputedStyle has to know what kind of impact a
+property value. Additionally, the StyleContext has to know what kind of impact a
 change to this property causes.</li>
     <li><a href="#RuleNode">Rule Nodes</a>: the RuleNodes need to know how the
 property is inherited and how it is shared by other elements.</li>
@@ -277,7 +277,7 @@ variant flag</a>
   <pre>    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_INTEGER, nullptr);</pre>
 This will parse the value as a positive integer value, which is what we want.<br>
   <br>
-  <h3><a name="ComputedStyle">Style Context</a></h3>
+  <h3><a name="StyleContext">Style Context</a></h3>
 Having implemented support for the new property in the CSS Parser and CSS
 Declaration classes in the content module, it is now time to provide support
 for the new property in layout. The Style Context must be given a new data
@@ -290,7 +290,7 @@ nsStyleStruct.h</a>
 data on. In this example, we want to put it on the nsStyleUserInterface struct,
 however there is also a class nsStyleUIReset that holds the non-inherited
 values, so we will use that one (remember, our property is not inherited).
-Add a <a href="#ComputedStyleMember">data member</a>
+Add a <a href="#StyleContextMember">data member</a>
  to hold the value:
   <pre>struct nsStyleUIReset {
   nsStyleUIReset(void);
@@ -312,11 +312,11 @@ Add a <a href="#ComputedStyleMember">data member</a>
   uint8_t   mUserSelect;      // [reset] (selection-style)
   PRUnichar mKeyEquivalent;   // [reset] XXX what type should this be?
   uint8_t   mResizer;         // [reset]
-  <b><a name="ComputedStyleMember"></a>uint8_t   mForceBrokenImageIcon; // [reset]  (0 if not forcing, otherwise forcing)</b>
+  <b><a name="StyleContextMember"></a>uint8_t   mForceBrokenImageIcon; // [reset]  (0 if not forcing, otherwise forcing)</b>
 };
 </pre>
 In the implementation file <a href="http://lxr.mozilla.org/seamonkey/source/content/shared/src/nsStyleStruct.cpp">
-ComputedStyle.cpp </a>
+nsStyleContext.cpp </a>
 add the new data member to the constructors of the style struct and the CalcDifference
 method, which must return the correct style-change hint when a change to
 your new property is detected. The constructor changes are obvious, but here

@@ -18,7 +18,7 @@ class nsMathMLmspaceFrame : public nsMathMLContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmspaceFrame)
 
-  friend nsIFrame* NS_NewMathMLmspaceFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewMathMLmspaceFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD
   TransmitAutomaticData() override {
@@ -35,8 +35,8 @@ public:
          nsReflowStatus&          aStatus) override;
 
 protected:
-  explicit nsMathMLmspaceFrame(ComputedStyle* aStyle) :
-    nsMathMLContainerFrame(aStyle, kClassID), mWidth(0), mHeight(0), mDepth(0) {}
+  explicit nsMathMLmspaceFrame(nsStyleContext* aContext) :
+    nsMathMLContainerFrame(aContext, kClassID), mWidth(0), mHeight(0), mDepth(0) {}
   virtual ~nsMathMLmspaceFrame();
 
   virtual nsresult

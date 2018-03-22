@@ -17,8 +17,8 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsFirstLetterFrame)
 
-  explicit nsFirstLetterFrame(ComputedStyle* aStyle)
-    : nsContainerFrame(aStyle, kClassID)
+  explicit nsFirstLetterFrame(nsStyleContext* aContext)
+    : nsContainerFrame(aContext, kClassID)
   {}
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,

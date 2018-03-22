@@ -102,9 +102,9 @@ nsBulletFrame::IsSelfEmpty()
 }
 
 /* virtual */ void
-nsBulletFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
+nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  nsFrame::DidSetComputedStyle(aOldComputedStyle);
+  nsFrame::DidSetStyleContext(aOldStyleContext);
 
   imgRequestProxy *newRequest = StyleList()->GetListStyleImage();
 
@@ -155,10 +155,10 @@ nsBulletFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
 #ifdef ACCESSIBILITY
   // Update the list bullet accessible. If old style list isn't available then
   // no need to update the accessible tree because it's not created yet.
-  if (aOldComputedStyle) {
+  if (aOldStyleContext) {
     nsAccessibilityService* accService = nsIPresShell::AccService();
     if (accService) {
-      const nsStyleList* oldStyleList = aOldComputedStyle->PeekStyleList();
+      const nsStyleList* oldStyleList = aOldStyleContext->PeekStyleList();
       if (oldStyleList) {
         bool hadBullet = oldStyleList->GetListStyleImage() ||
           !oldStyleList->mCounterStyle->IsNone();

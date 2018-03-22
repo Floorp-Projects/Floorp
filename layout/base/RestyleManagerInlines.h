@@ -73,9 +73,9 @@ RestyleManager::AttributeChanged(dom::Element* aElement,
 }
 
 nsresult
-RestyleManager::ReparentComputedStyle(nsIFrame* aFrame)
+RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 {
-  MOZ_STYLO_FORWARD(ReparentComputedStyle, (aFrame));
+  MOZ_STYLO_FORWARD(ReparentStyleContext, (aFrame));
 }
 
 void

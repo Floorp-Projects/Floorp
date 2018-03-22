@@ -13,10 +13,10 @@ class nsSVGInnerSVGFrame final
   : public nsSVGViewportFrame
 {
   friend nsIFrame*
-  NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  explicit nsSVGInnerSVGFrame(ComputedStyle* aStyle)
-    : nsSVGViewportFrame(aStyle, kClassID)
+  explicit nsSVGInnerSVGFrame(nsStyleContext* aContext)
+    : nsSVGViewportFrame(aContext, kClassID)
   {
   }
 

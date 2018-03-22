@@ -19,7 +19,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsString.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 #include "nsComputedDOMStyle.h"
 #include "nsContentUtils.h"
 #include "nsCSSParser.h"
@@ -34,7 +34,7 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "gfx2DGlue.h"
-#include "mozilla/ComputedStyleInlines.h"
+#include "nsStyleContextInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -189,7 +189,7 @@ AnimationValue::IsInterpolableWith(nsCSSPropertyID aProperty,
 double
 AnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
                                 const AnimationValue& aOther,
-                                ComputedStyle* aComputedStyle) const
+                                nsStyleContext* aStyleContext) const
 {
   if (IsNull() || aOther.IsNull()) {
     return 0.0;
@@ -228,25 +228,29 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
     return result;
   }
 
-  // GetComputedStyle() flushes style, so we shouldn't assume that any
+  // GetStyleContext() flushes style, so we shouldn't assume that any
   // non-owning references we have are still valid.
-  RefPtr<ComputedStyle> styleContext =
-    nsComputedDOMStyle::GetComputedStyle(aElement, nullptr);
+  RefPtr<nsStyleContext> styleContext =
+    nsComputedDOMStyle::GetStyleContext(aElement, nullptr);
   MOZ_ASSERT(styleContext);
 
-  RefPtr<RawServoDeclarationBlock> declarations =
-    ServoCSSParser::ParseProperty(aProperty, aValue,
-                                  ServoCSSParser::GetParsingEnvironment(doc));
+  if (auto* servoContext = styleContext->GetAsServo()) {
+    RefPtr<RawServoDeclarationBlock> declarations =
+      ServoCSSParser::ParseProperty(aProperty, aValue,
+                                    ServoCSSParser::GetParsingEnvironment(doc));
 
-  if (!declarations) {
+    if (!declarations) {
+      return result;
+    }
+
+    result.mServo =
+      shell->StyleSet()->AsServo()->ComputeAnimationValue(aElement,
+                                                          declarations,
+                                                          servoContext);
     return result;
   }
 
-  result.mServo =
-    shell->StyleSet()->AsServo()->ComputeAnimationValue(aElement,
-                                                        declarations,
-                                                        styleContext);
-  return result;
+  MOZ_CRASH("old style system disabled");
 }
 
 /* static */ AnimationValue

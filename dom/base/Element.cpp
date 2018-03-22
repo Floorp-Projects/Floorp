@@ -544,8 +544,8 @@ Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
   }
 
   // Get the computed -moz-binding directly from the style context
-  RefPtr<ComputedStyle> sc =
-    nsComputedDOMStyle::GetComputedStyleNoFlush(this, nullptr);
+  RefPtr<nsStyleContext> sc =
+    nsComputedDOMStyle::GetStyleContextNoFlush(this, nullptr);
   NS_ENSURE_TRUE(sc, false);
 
   NS_IF_ADDREF(*aResult = sc->StyleDisplay()->mBinding);
@@ -1505,8 +1505,8 @@ Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements)
   // generate a nsGridContainerFrame during layout.
   auto IsDisplayGrid = [](Element* aElement) -> bool
   {
-    RefPtr<ComputedStyle> styleContext =
-      nsComputedDOMStyle::GetComputedStyle(aElement, nullptr);
+    RefPtr<nsStyleContext> styleContext =
+      nsComputedDOMStyle::GetStyleContext(aElement, nullptr);
     if (styleContext) {
       const nsStyleDisplay* display = styleContext->StyleDisplay();
       return (display->mDisplay == StyleDisplay::Grid ||
@@ -4385,7 +4385,7 @@ Element::AddSizeOfExcludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
 
     // Now measure just the ComputedValues (and style structs) under
     // mServoData. This counts towards the relevant fields in |aSizes|.
-    RefPtr<ComputedStyle> sc;
+    RefPtr<ServoStyleContext> sc;
     if (Servo_Element_HasPrimaryComputedValues(this)) {
       sc = Servo_Element_GetPrimaryComputedValues(this).Consume();
       if (!aSizes.mState.HaveSeenPtr(sc.get())) {

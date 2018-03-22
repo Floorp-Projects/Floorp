@@ -7,10 +7,9 @@
 #ifndef WritingModes_h_
 #define WritingModes_h_
 
-#include "mozilla/ComputedStyle.h"
-#include "mozilla/ComputedStyleInlines.h"
-
 #include "nsRect.h"
+#include "nsStyleContext.h"
+#include "nsStyleContextInlines.h"
 #include "nsBidiUtils.h"
 
 // It is the caller's responsibility to operate on logical-coordinate objects
@@ -483,10 +482,10 @@ public:
   /**
    * Construct writing mode based on a style context
    */
-  explicit WritingMode(ComputedStyle* aComputedStyle)
+  explicit WritingMode(nsStyleContext* aStyleContext)
   {
-    NS_ASSERTION(aComputedStyle, "we need an ComputedStyle here");
-    InitFromStyleVisibility(aComputedStyle->StyleVisibility());
+    NS_ASSERTION(aStyleContext, "we need an nsStyleContext here");
+    InitFromStyleVisibility(aStyleContext->StyleVisibility());
   }
 
   explicit WritingMode(const nsStyleVisibility* aStyleVisibility)

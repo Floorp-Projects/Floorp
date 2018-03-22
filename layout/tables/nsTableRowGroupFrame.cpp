@@ -8,7 +8,7 @@
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsPresContext.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
 #include "nsGkAtoms.h"
@@ -53,8 +53,8 @@ struct TableRowGroupReflowInput {
 
 } // namespace mozilla
 
-nsTableRowGroupFrame::nsTableRowGroupFrame(ComputedStyle* aStyle)
-  : nsContainerFrame(aStyle, kClassID)
+nsTableRowGroupFrame::nsTableRowGroupFrame(nsStyleContext* aContext)
+  : nsContainerFrame(aContext, kClassID)
 {
   SetRepeatable(false);
 }
@@ -1443,16 +1443,16 @@ nsTableRowGroupFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
 }
 
 /* virtual */ void
-nsTableRowGroupFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
+nsTableRowGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  nsContainerFrame::DidSetComputedStyle(aOldComputedStyle);
+  nsContainerFrame::DidSetStyleContext(aOldStyleContext);
 
-  if (!aOldComputedStyle) //avoid this on init
+  if (!aOldStyleContext) //avoid this on init
     return;
 
   nsTableFrame* tableFrame = GetTableFrame();
   if (tableFrame->IsBorderCollapse() &&
-      tableFrame->BCRecalcNeeded(aOldComputedStyle, Style())) {
+      tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
     TableArea damageArea(0, GetStartRowIndex(), tableFrame->GetColCount(),
                          GetRowCount());
     tableFrame->AddBCDamageArea(damageArea);
@@ -1650,9 +1650,9 @@ nsTableRowGroupFrame::HasInternalBreakAfter() const
 /* ----- global methods ----- */
 
 nsTableRowGroupFrame*
-NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTableRowGroupFrame(aStyle);
+  return new (aPresShell) nsTableRowGroupFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTableRowGroupFrame)

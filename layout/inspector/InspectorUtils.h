@@ -12,7 +12,7 @@
 
 class nsAtom;
 class nsIDocument;
-class ComputedStyle;
+class nsStyleContext;
 
 namespace mozilla {
 class StyleSheet;
@@ -270,8 +270,8 @@ public:
   static void ScrollElementIntoView(GlobalObject& aGlobal, Element& aElement);
 
 private:
-  static already_AddRefed<ComputedStyle>
-    GetCleanComputedStyleForElement(Element* aElement, nsAtom* aPseudo);
+  static already_AddRefed<nsStyleContext>
+    GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);
 };
 
 } // namespace dom

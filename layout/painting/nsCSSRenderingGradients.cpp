@@ -10,7 +10,6 @@
 
 #include "gfx2DGlue.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
@@ -20,6 +19,7 @@
 #include "nsPresContext.h"
 #include "nsPoint.h"
 #include "nsRect.h"
+#include "nsStyleContext.h"
 #include "nsCSSColorUtils.h"
 #include "gfxContext.h"
 #include "nsStyleStructInlines.h"

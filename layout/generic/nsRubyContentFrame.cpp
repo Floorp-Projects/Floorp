@@ -7,9 +7,8 @@
 /* base class for ruby rendering objects that directly contain content */
 
 #include "nsRubyContentFrame.h"
-
-#include "mozilla/ComputedStyle.h"
 #include "nsPresContext.h"
+#include "nsStyleContext.h"
 #include "nsCSSAnonBoxes.h"
 
 using namespace mozilla;
@@ -31,7 +30,7 @@ nsRubyContentFrame::IsFrameOfType(uint32_t aFlags) const
 bool
 nsRubyContentFrame::IsIntraLevelWhitespace() const
 {
-  nsAtom* pseudoType = Style()->GetPseudo();
+  nsAtom* pseudoType = StyleContext()->GetPseudo();
   if (pseudoType != nsCSSAnonBoxes::rubyBase &&
       pseudoType != nsCSSAnonBoxes::rubyText) {
     return false;
