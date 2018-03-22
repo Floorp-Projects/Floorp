@@ -39,14 +39,14 @@ add_task(async function() {
   let lastTab = gBrowser.tabs[gBrowser.tabs.length - 1];
   await BrowserTestUtils.switchTab(gBrowser, lastTab);
 
-  await withReflowObserver(async function() {
+  await withPerfObserver(async function() {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
     let tab = gBrowser.tabs[gBrowser.tabs.length - 1];
     gBrowser.removeTab(tab, { animate: true });
     await BrowserTestUtils.waitForEvent(tab, "transitionend",
       false, e => e.propertyName === "max-width");
     await switchDone;
-  }, EXPECTED_REFLOWS);
+  }, {expectedReflows: EXPECTED_REFLOWS});
 
   await removeAllButFirstTab();
 });

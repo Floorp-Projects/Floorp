@@ -50,16 +50,16 @@ add_task(async function() {
   await ensureNoPreloadedBrowser();
 
   // First, open the appmenu.
-  await withReflowObserver(async function() {
+  await withPerfObserver(async function() {
     let popupShown =
       BrowserTestUtils.waitForEvent(PanelUI.panel, "popupshown");
     await PanelUI.show();
     await popupShown;
-  }, EXPECTED_APPMENU_OPEN_REFLOWS);
+  }, {expectedReflows: EXPECTED_APPMENU_OPEN_REFLOWS});
 
   // Now open a series of subviews, and then close the appmenu. We
   // should not reflow during any of this.
-  await withReflowObserver(async function() {
+  await withPerfObserver(async function() {
     // This recursive function will take the current main or subview,
     // find all of the buttons that navigate to subviews inside it,
     // and click each one individually. Upon entering the new view,
@@ -103,5 +103,5 @@ add_task(async function() {
     let hidden = BrowserTestUtils.waitForEvent(PanelUI.panel, "popuphidden");
     PanelUI.hide();
     await hidden;
-  }, []);
+  }, {expectedReflows: []});
 });
