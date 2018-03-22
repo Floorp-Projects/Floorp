@@ -144,7 +144,7 @@ add_task(async function() {
 
   URLBar.focus();
   URLBar.value = SEARCH_TERM;
-  let testFn = async function(dirtyFrameFn) {
+  let testFn = async function() {
     let oldInvalidate = popup.invalidate.bind(popup);
     let oldResultsAdded = popup.onResultsAdded.bind(popup);
     let oldSetTimeout = win.setTimeout;
@@ -154,18 +154,18 @@ add_task(async function() {
     // URL bar occur without firing JS events (which is how we
     // normally know to dirty the frame tree).
     popup.invalidate = (reason) => {
-      dirtyFrameFn();
+      dirtyFrame(win);
       oldInvalidate(reason);
     };
 
     popup.onResultsAdded = () => {
-      dirtyFrameFn();
+      dirtyFrame(win);
       oldResultsAdded();
     };
 
     win.setTimeout = (fn, ms) => {
       return oldSetTimeout(() => {
-        dirtyFrameFn();
+        dirtyFrame(win);
         fn();
       }, ms);
     };

@@ -5,6 +5,25 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
 ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
 
+
+/**
+ * This function can be called if the test needs to trigger frame dirtying
+ * outside of the normal mechanism.
+ *
+ * @param win (dom window)
+ *        The window in which the frame tree needs to be marked as dirty.
+ */
+function dirtyFrame(win) {
+  let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIDOMWindowUtils);
+  try {
+    dwu.ensureDirtyRootFrame();
+  } catch (e) {
+    // If this fails, we should probably make note of it, but it's not fatal.
+    info("Note: ensureDirtyRootFrame threw an exception:" + e);
+  }
+}
+
 /**
  * Async utility function for ensuring that no unexpected uninterruptible
  * reflows occur during some period of time in a window.
@@ -13,9 +32,6 @@ ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
  *        The async function that will exercise the browser activity that is
  *        being tested for reflows.
  *
- *        The testFn will be passed a single argument, which is a frame dirtying
- *        function that can be called if the test needs to trigger frame
- *        dirtying outside of the normal mechanism.
  * @param expectedReflows (Array, optional)
  *        An Array of Objects representing reflows.
  *
@@ -58,17 +74,6 @@ ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
  *        The browser window to monitor. Defaults to the current window.
  */
 async function withReflowObserver(testFn, expectedReflows = [], win = window) {
-  let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindowUtils);
-  let dirtyFrameFn = () => {
-    try {
-      dwu.ensureDirtyRootFrame();
-    } catch (e) {
-      // If this fails, we should probably make note of it, but it's not fatal.
-      info("Note: ensureDirtyRootFrame threw an exception.");
-    }
-  };
-
   // Collect all reflow stacks, we'll process them later.
   let reflows = [];
 
@@ -78,7 +83,7 @@ async function withReflowObserver(testFn, expectedReflows = [], win = window) {
       reflows.push(new Error().stack);
 
       // Just in case, dirty the frame now that we've reflowed.
-      dirtyFrameFn();
+      dirtyFrame(win);
     },
 
     reflowInterruptible(start, end) {
@@ -95,11 +100,12 @@ async function withReflowObserver(testFn, expectedReflows = [], win = window) {
                     .QueryInterface(Ci.nsIDocShell);
   docShell.addWeakReflowObserver(observer);
 
+  let dirtyFrameFn = dirtyFrame.bind(null, win);
   Services.els.addListenerForAllEvents(win, dirtyFrameFn, true);
 
   try {
-    dirtyFrameFn();
-    await testFn(dirtyFrameFn);
+    dirtyFrame(win);
+    await testFn();
   } finally {
     let knownReflows = expectedReflows.map(r => {
       return {stack: r.stack, path: r.stack.join("|"),
