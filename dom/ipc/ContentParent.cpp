@@ -609,7 +609,6 @@ ContentParent::PreallocateProcess()
     return nullptr;
   }
 
-  process->Init();
   return process.forget();
 }
 
@@ -836,8 +835,6 @@ ContentParent::GetNewOrUsedBrowserProcess(const nsAString& aRemoteType,
     return nullptr;
   }
 
-  p->Init();
-
   contentParents.AppendElement(p);
   p->mActivateTS = TimeStamp::Now();
   return p.forget();
@@ -864,8 +861,6 @@ ContentParent::GetNewOrUsedJSPluginProcess(uint32_t aPluginID,
   if (!p->LaunchSubprocess(aPriority)) {
     return nullptr;
   }
-
-  p->Init();
 
   sJSPluginContentParents->Put(aPluginID, p);
 
@@ -2090,6 +2085,8 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
     cpId.AppendInt(static_cast<uint64_t>(this->ChildID()));
     obs->NotifyObservers(static_cast<nsIObserver*>(this), "ipc:content-initializing", cpId.get());
   }
+
+  Init();
 
   return true;
 }
