@@ -257,14 +257,16 @@ TransactionManager::EndBatch(bool aAllowEmpty)
 NS_IMETHODIMP
 TransactionManager::GetNumberOfUndoItems(int32_t* aNumItems)
 {
-  *aNumItems = mUndoStack.GetSize();
+  *aNumItems = static_cast<int32_t>(NumberOfUndoItems());
+  MOZ_ASSERT(*aNumItems >= 0);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TransactionManager::GetNumberOfRedoItems(int32_t* aNumItems)
 {
-  *aNumItems = mRedoStack.GetSize();
+  *aNumItems = static_cast<int32_t>(NumberOfRedoItems());
+  MOZ_ASSERT(*aNumItems >= 0);
   return NS_OK;
 }
 

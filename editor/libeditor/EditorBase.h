@@ -15,6 +15,7 @@
 #include "mozilla/SelectionState.h"     // for RangeUpdater, etc.
 #include "mozilla/StyleSheet.h"         // for StyleSheet
 #include "mozilla/TextEditRules.h"      // for TextEditRules
+#include "mozilla/TransactionManager.h" // for TransactionManager
 #include "mozilla/WeakPtr.h"            // for WeakPtr
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
@@ -79,7 +80,6 @@ class TextComposition;
 class TextEditor;
 class TextInputListener;
 class TextServicesDocument;
-class TransactionManager;
 enum class EditAction : int32_t;
 
 namespace dom {
@@ -1100,11 +1100,36 @@ public:
   bool ShouldHandleIMEComposition() const;
 
   /**
-   * Returns number of undo or redo items.  If TransactionManager returns
-   * unexpected error, returns -1.
+   * Returns number of undo or redo items.
    */
-  int32_t NumberOfUndoItems() const;
-  int32_t NumberOfRedoItems() const;
+  size_t NumberOfUndoItems() const
+  {
+    return mTransactionManager ? mTransactionManager->NumberOfUndoItems() : 0;
+  }
+  size_t NumberOfRedoItems() const
+  {
+    return mTransactionManager ? mTransactionManager->NumberOfRedoItems() : 0;
+  }
+
+  /**
+   * Returns true if this editor can store transactions for undo/redo.
+   */
+  bool IsUndoRedoEnabled() const
+  {
+    return !!mTransactionManager;
+  }
+
+  /**
+   * Return true if it's possible to undo/redo right now.
+   */
+  bool CanUndo() const
+  {
+    return IsUndoRedoEnabled() && NumberOfUndoItems() > 0;
+  }
+  bool CanRedo() const
+  {
+    return IsUndoRedoEnabled() && NumberOfRedoItems() > 0;
+  }
 
   /**
    * From html rules code - migration in progress.
