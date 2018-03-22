@@ -5,7 +5,6 @@
 
 mod context;
 mod cork_state;
-mod mixer;
 mod stream;
 mod intern;
 
