@@ -49,7 +49,7 @@
   <vbox flex="1">
 
     <toolbox>
-      <menubar id="main-menubar">
+      <menubar id="main-menubar" grippyhidden="true">
         <menu id="menu_file" label="File" accesskey="F">
           <menupopup id="menu_FilePopup">
             <menuitem id="menu_open" label="&ldb.Open.label;" accesskey="&ldb.Open.accesskey;" key="openFileKb" oncommand="openFile()"/>
@@ -92,7 +92,7 @@
         <menu id="menu_Help"/>
       </menubar>
 
-      <toolbar>
+      <toolbar grippyhidden="true">
         <toolbarbutton id="back-button" class="toolbarbutton-1"
                        label="&ldb.BackButton.label;"
                        oncommand="gBrowser.goBack();" />
