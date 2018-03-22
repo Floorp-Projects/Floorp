@@ -164,25 +164,6 @@ bool nsDOMClassInfo::sIsInitialized = false;
 jsid nsDOMClassInfo::sConstructor_id     = JSID_VOID;
 jsid nsDOMClassInfo::sWrappedJSObject_id = JSID_VOID;
 
-static const JSClass *sObjectClass = nullptr;
-
-/**
- * Set our JSClass pointer for the Object class
- */
-static void
-FindObjectClass(JSContext* cx, JSObject* aGlobalObject)
-{
-  NS_ASSERTION(!sObjectClass,
-               "Double set of sObjectClass");
-  JS::Rooted<JSObject*> obj(cx), proto(cx, aGlobalObject);
-  do {
-    obj = proto;
-    js::GetObjectProto(cx, obj, &proto);
-  } while (proto);
-
-  sObjectClass = js::GetObjectJSClass(obj);
-}
-
 // Helper to handle torn-down inner windows.
 static inline nsresult
 SetParentToWindow(nsGlobalWindowInner *win, JSObject **parent)
@@ -249,22 +230,6 @@ static const JSClass sDOMConstructorProtoClass = {
   "DOM Constructor.prototype", 0
 };
 
-
-static const char *
-CutPrefix(const char *aName) {
-  static const char prefix_nsIDOM[] = "nsIDOM";
-  static const char prefix_nsI[]    = "nsI";
-
-  if (strncmp(aName, prefix_nsIDOM, sizeof(prefix_nsIDOM) - 1) == 0) {
-    return aName + sizeof(prefix_nsIDOM) - 1;
-  }
-
-  if (strncmp(aName, prefix_nsI, sizeof(prefix_nsI) - 1) == 0) {
-    return aName + sizeof(prefix_nsI) - 1;
-  }
-
-  return aName;
-}
 
 #define _DOM_CLASSINFO_MAP_BEGIN(_class, _ifptr, _has_class_if)               \
   {                                                                           \
@@ -574,99 +539,11 @@ nsDOMClassInfo::HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   return NS_ERROR_UNEXPECTED;
 }
 
-static nsresult
-ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindowInner *aWin, JSContext *cx,
-                 JS::Handle<JSObject*> obj, const char16_t *name,
-                 const nsDOMClassInfoData *ci_data,
-                 const nsGlobalNameStruct *name_struct,
-                 nsScriptNameSpaceManager *nameSpaceManager,
-                 JSObject *dot_prototype,
-                 JS::MutableHandle<JS::PropertyDescriptor> ctorDesc);
-
 NS_IMETHODIMP
 nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
 {
-  JS::Rooted<JSObject*> proto(cx, aProto);
-
-  // This is called before any other location that requires
-  // sObjectClass, so compute it here. We assume that nobody has had a
-  // chance to monkey around with proto's prototype chain before this.
-  if (!sObjectClass) {
-    FindObjectClass(cx, proto);
-    NS_ASSERTION(sObjectClass && !strcmp(sObjectClass->name, "Object"),
-                 "Incorrect object class!");
-  }
-
-#ifdef DEBUG
-    JS::Rooted<JSObject*> proto2(cx);
-    JS_GetPrototype(cx, proto, &proto2);
-    NS_ASSERTION(proto2 && JS_GetClass(proto2) == sObjectClass,
-                 "Hmm, somebody did something evil?");
-#endif
-
-#ifdef DEBUG
-  if (mData->mHasClassInterface && mData->mProtoChainInterface &&
-      mData->mProtoChainInterface != &NS_GET_IID(nsISupports)) {
-    nsCOMPtr<nsIInterfaceInfoManager>
-      iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
-
-    if (iim) {
-      nsCOMPtr<nsIInterfaceInfo> if_info;
-      iim->GetInfoForIID(mData->mProtoChainInterface,
-                         getter_AddRefs(if_info));
-
-      if (if_info) {
-        nsCString name;
-        if_info->GetName(getter_Copies(name));
-        NS_ASSERTION(nsCRT::strcmp(CutPrefix(name.get()), mData->mClass.name) == 0,
-                     "Class name and proto chain interface name mismatch!");
-      }
-    }
-  }
-#endif
-
-  // Make prototype delegation work correctly. Consider if a site sets
-  // HTMLElement.prototype.foopy = function () { ... } Now, calling
-  // document.body.foopy() needs to ensure that looking up foopy on
-  // document.body's prototype will find the right function.
-  JS::Rooted<JSObject*> global(cx, ::JS_GetGlobalForObject(cx, proto));
-
-  // Only do this if the global object is a window.
-  nsGlobalWindowInner* win;
-  if (NS_FAILED(UNWRAP_OBJECT(Window, &global, win))) {
-    // Not a window.
-    return NS_OK;
-  }
-
-  if (win->IsClosedOrClosing()) {
-    return NS_OK;
-  }
-
-  // Don't overwrite a property set by content.
-  bool contentDefinedProperty;
-  if (!::JS_AlreadyHasOwnUCProperty(cx, global, reinterpret_cast<const char16_t*>(mData->mNameUTF16),
-                                    NS_strlen(mData->mNameUTF16),
-                                    &contentDefinedProperty)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsScriptNameSpaceManager *nameSpaceManager = GetNameSpaceManager();
-  NS_ENSURE_TRUE(nameSpaceManager, NS_OK);
-
-  JS::Rooted<JS::PropertyDescriptor> desc(cx);
-  nsresult rv = ResolvePrototype(sXPConnect, win, cx, global,
-                                 mData->mNameUTF16, mData, nullptr,
-                                 nameSpaceManager, proto, &desc);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!contentDefinedProperty && desc.object() && !desc.value().isUndefined()) {
-    desc.attributesRef() |= JSPROP_RESOLVING;
-    if (!JS_DefineUCProperty(cx, global, mData->mNameUTF16,
-                             NS_strlen(mData->mNameUTF16), desc)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
-  return NS_OK;
+  NS_NOTREACHED("nsDOMConstructorSH overrides this");
+  return NS_ERROR_UNEXPECTED;
 }
 
 // static
@@ -1087,164 +964,6 @@ GetXPCProto(nsIXPConnect *aXPConnect, JSContext *cx, nsGlobalWindowInner *aWin,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return JS_WrapObject(cx, aProto) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-// ci_data must be non-null
-static nsresult
-ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindowInner *aWin, JSContext *cx,
-                 JS::Handle<JSObject*> obj, const char16_t *name,
-                 const nsDOMClassInfoData *ci_data,
-                 const nsGlobalNameStruct *name_struct,
-                 nsScriptNameSpaceManager *nameSpaceManager,
-                 JSObject* aDot_prototype,
-                 JS::MutableHandle<JS::PropertyDescriptor> ctorDesc)
-{
-  JS::Rooted<JSObject*> dot_prototype(cx, aDot_prototype);
-  NS_ASSERTION(ci_data, "Missing ci_data!");
-
-  RefPtr<nsDOMConstructor> constructor;
-  nsresult rv = nsDOMConstructor::Create(name, name_struct, aWin->AsInner(),
-                                         getter_AddRefs(constructor));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JS::Rooted<JS::Value> v(cx);
-
-  js::AssertSameCompartment(cx, obj);
-  rv = nsContentUtils::WrapNative(cx, constructor,
-                                  &NS_GET_IID(nsIDOMDOMConstructor), &v,
-                                  false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  FillPropertyDescriptor(ctorDesc, obj, 0, v);
-  // And make sure we wrap the value into the right compartment.  Note that we
-  // do this with ctorDesc.value(), not with v, because we need v to be in the
-  // right compartment (that of the reflector of |constructor|) below.
-  if (!JS_WrapValue(cx, ctorDesc.value())) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  JS::Rooted<JSObject*> class_obj(cx, &v.toObject());
-
-  const nsIID *primary_iid = &NS_GET_IID(nsISupports);
-
-  if (ci_data->mProtoChainInterface) {
-    primary_iid = ci_data->mProtoChainInterface;
-  }
-
-  nsCOMPtr<nsIInterfaceInfo> if_info;
-  nsCOMPtr<nsIInterfaceInfo> parent;
-  const char *class_parent_name = nullptr;
-
-  if (!primary_iid->Equals(NS_GET_IID(nsISupports))) {
-    JSAutoCompartment ac(cx, class_obj);
-
-    rv = DefineInterfaceConstants(cx, class_obj, primary_iid);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIInterfaceInfoManager>
-      iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
-    NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
-
-    iim->GetInfoForIID(primary_iid, getter_AddRefs(if_info));
-    NS_ENSURE_TRUE(if_info, NS_ERROR_UNEXPECTED);
-
-    const nsIID *iid = nullptr;
-
-    if (!ci_data->mHasClassInterface) {
-      if_info->GetIIDShared(&iid);
-    } else {
-      if_info->GetParent(getter_AddRefs(parent));
-      NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
-
-      parent->GetIIDShared(&iid);
-    }
-
-    if (iid) {
-      if (!iid->Equals(NS_GET_IID(nsISupports))) {
-        if (!ci_data->mHasClassInterface) {
-          // If the class doesn't have a class interface the primary
-          // interface is the interface that should be
-          // constructor.prototype.__proto__.
-
-          if_info->GetNameShared(&class_parent_name);
-        } else {
-          // If the class does have a class interface (or there's no
-          // real class for this name) then the parent of the
-          // primary interface is what we want on
-          // constructor.prototype.__proto__.
-
-          NS_ASSERTION(parent, "Whoa, this is bad, null parent here!");
-
-          parent->GetNameShared(&class_parent_name);
-        }
-      }
-    }
-  }
-
-  {
-    JS::Rooted<JSObject*> winobj(cx, aWin->FastGetGlobalJSObject());
-
-    JS::Rooted<JSObject*> proto(cx);
-
-    if (class_parent_name) {
-      JSAutoCompartment ac(cx, winobj);
-
-      JS::Rooted<JS::PropertyDescriptor> desc(cx);
-      if (!JS_GetPropertyDescriptor(cx, winobj, CutPrefix(class_parent_name), &desc)) {
-        return NS_ERROR_UNEXPECTED;
-      }
-
-      if (desc.object() && !desc.hasGetterOrSetter() && desc.value().isObject()) {
-        JS::Rooted<JSObject*> obj(cx, &desc.value().toObject());
-        if (!JS_GetPropertyDescriptor(cx, obj, "prototype", &desc)) {
-          return NS_ERROR_UNEXPECTED;
-        }
-
-        if (desc.object() && !desc.hasGetterOrSetter() && desc.value().isObject()) {
-          proto = &desc.value().toObject();
-        }
-      }
-    }
-
-    if (dot_prototype) {
-      JSAutoCompartment ac(cx, dot_prototype);
-      JS::Rooted<JSObject*> xpc_proto_proto(cx);
-      if (!::JS_GetPrototype(cx, dot_prototype, &xpc_proto_proto)) {
-        return NS_ERROR_UNEXPECTED;
-      }
-
-      if (proto &&
-          (!xpc_proto_proto ||
-           JS_GetClass(xpc_proto_proto) == sObjectClass)) {
-        if (!JS_WrapObject(cx, &proto) ||
-            !JS_SetPrototype(cx, dot_prototype, proto)) {
-          return NS_ERROR_UNEXPECTED;
-        }
-      }
-    } else {
-      JSAutoCompartment ac(cx, winobj);
-      if (!proto) {
-        proto = JS_GetObjectPrototype(cx, winobj);
-      }
-      dot_prototype = ::JS_NewObjectWithUniqueType(cx,
-                                                   &sDOMConstructorProtoClass,
-                                                   proto);
-      NS_ENSURE_TRUE(dot_prototype, NS_ERROR_OUT_OF_MEMORY);
-    }
-  }
-
-  v.setObject(*dot_prototype);
-
-  JSAutoCompartment ac(cx, class_obj);
-
-  // Per ECMA, the prototype property is {DontEnum, DontDelete, ReadOnly}
-  if (!JS_WrapValue(cx, &v) ||
-      !JS_DefineProperty(cx, class_obj, "prototype", v,
-                         JSPROP_PERMANENT | JSPROP_READONLY)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  return NS_OK;
 }
 
 static nsresult
