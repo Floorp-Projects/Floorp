@@ -73,15 +73,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
                                    "@mozilla.org/addons/addon-manager-startup;1",
                                    "amIAddonManagerStartup");
 
-// Whitelist existing tests that still use non-restartless extensions.
-const LEGACY_NON_RESTARTLESS_TESTS = new Set([
-  "test_bug455906.js",
-]);
-
-if (LEGACY_NON_RESTARTLESS_TESTS.has(_TEST_FILE[0].replace(/.*\//, ""))) {
-  Services.prefs.setBoolPref("extensions.legacy.non-restartless.enabled", true);
-}
-
 const {
   awaitPromise,
   createAppInfo,
