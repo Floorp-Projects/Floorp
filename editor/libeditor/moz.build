@@ -77,7 +77,6 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += [
     '/dom/base',
-    '/editor/txmgr',
     '/extensions/spellcheck/src',
     '/layout/generic',
     '/layout/style',
