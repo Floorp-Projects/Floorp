@@ -31,13 +31,13 @@ add_task(async function() {
   let rangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED,
                            { spreadArgs: true });
   dragStartCanvasGraph(graph, { x: 0 });
-  let [, { startTime, endTime }] = await rangeSelected;
+  let [{ startTime, endTime }] = await rangeSelected;
   is(endTime, duration, "The selected range is the entire graph, for now.");
 
   rangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED,
                        { spreadArgs: true });
   dragStopCanvasGraph(graph, { x: graph.width / 2 });
-  [, { startTime, endTime }] = await rangeSelected;
+  [{ startTime, endTime }] = await rangeSelected;
   is(endTime, duration / 2, "The selected range is half of the graph.");
 
   is(graph.hasSelection(), true,
@@ -58,7 +58,7 @@ add_task(async function() {
   rangeSelected = once(OverviewView, EVENTS.UI_OVERVIEW_RANGE_SELECTED,
                        { spreadArgs: true });
   clickCanvasGraph(graph, { x: 3 * graph.width / 4 });
-  [, { startTime, endTime }] = await rangeSelected;
+  [{ startTime, endTime }] = await rangeSelected;
 
   is(graph.hasSelection(), false,
     "A selection no longer on the graph.");

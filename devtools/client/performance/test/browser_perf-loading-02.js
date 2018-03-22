@@ -33,10 +33,10 @@ add_task(async function() {
     "The recording-notice is shown while recording.");
 
   let recordingStopping = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: { "1": "recording-stopping" }
+    expectedArgs: ["recording-stopping"]
   });
   let recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: { "1": "recording-stopped" }
+    expectedArgs: ["recording-stopped"]
   });
   let everythingStopped = stopRecording(panel);
 
@@ -57,10 +57,10 @@ add_task(async function() {
   await recordingSelected;
 
   recordingStopping = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: { "1": "recording-stopping" }
+    expectedArgs: ["recording-stopping"]
   });
   recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: { "1": "recording-stopped" }
+    expectedArgs: ["recording-stopped"]
   });
   everythingStopped = stopRecording(panel);
 

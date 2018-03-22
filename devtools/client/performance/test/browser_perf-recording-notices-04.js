@@ -41,8 +41,7 @@ add_task(async function() {
   await startRecording(panel);
 
   await waitUntil(async function() {
-    [, gPercent] = await once(PerformanceView,
-                              EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED,
+    [gPercent] = await once(PerformanceView, EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED,
                               { spreadArgs: true });
     return gPercent == 100;
   });

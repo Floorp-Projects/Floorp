@@ -166,7 +166,7 @@ add_task(async function() {
 
   // Ensure overview is still rendering.
   await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
-    expectedArgs: { "1": Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL }
+    expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL]
   });
 
   info("Ending console.profileEnd()...");
@@ -193,7 +193,7 @@ add_task(async function() {
 
   // Ensure overview is still rendering.
   await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
-    expectedArgs: { "1": Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL }
+    expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL]
   });
 
   info("Recording 5 - Start one more manual recording.");
@@ -210,7 +210,7 @@ add_task(async function() {
 
   // Ensure overview is still rendering.
   await times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, 3, {
-    expectedArgs: { "1": Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL }
+    expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL]
   });
 
   info("Recording 5 - Stop manual recording.");
