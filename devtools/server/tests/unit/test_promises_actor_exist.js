@@ -13,20 +13,23 @@ add_task(async function() {
 
   let response = await listTabs(client);
   let targetTab = findTab(response.tabs, "promises-actor-test");
-  ok(targetTab, "Found our target tab.");
+  Assert.ok(targetTab, "Found our target tab.");
 
   // Attach to the TabActor and check the response
-  client.request({ to: targetTab.actor, type: "attach" }, response => {
-    ok(!("error" in response), "Expect no error in response.");
-    ok(response.from, targetTab.actor,
-      "Expect the target TabActor in response form field.");
-    ok(response.type, "tabAttached",
-      "Expect tabAttached in the response type.");
-    is(typeof response.promisesActor === "string",
-      "Should have a tab context PromisesActor.");
+  await new Promise(resolve => {
+    client.request({ to: targetTab.actor, type: "attach" }, response => {
+      Assert.ok(!("error" in response), "Expect no error in response.");
+      Assert.equal(response.from, targetTab.actor,
+        "Expect the target TabActor in response form field.");
+      Assert.equal(response.type, "tabAttached",
+        "Expect tabAttached in the response type.");
+      Assert.ok(typeof response.promisesActor === "string",
+        "Should have a tab context PromisesActor.");
+      resolve();
+    });
   });
 
   let chromeActors = await getChromeActors(client);
-  ok(typeof chromeActors.promisesActor === "string",
+  Assert.ok(typeof chromeActors.promisesActor === "string",
     "Should have a chrome context PromisesActor.");
 });
