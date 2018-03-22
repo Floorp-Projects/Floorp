@@ -189,7 +189,7 @@ nsInProcessTabChildGlobal::WrapGlobalObject(JSContext* aCx,
 }
 
 void
-nsInProcessTabChildGlobal::CacheFrameLoader(nsIFrameLoader* aFrameLoader)
+nsInProcessTabChildGlobal::CacheFrameLoader(nsFrameLoader* aFrameLoader)
 {
   mFrameLoader = aFrameLoader;
 }

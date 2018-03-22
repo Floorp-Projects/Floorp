@@ -1565,12 +1565,12 @@ nsXULElement::PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv)
 }
 
 void
-nsXULElement::InternalSetFrameLoader(nsIFrameLoader* aNewFrameLoader)
+nsXULElement::InternalSetFrameLoader(nsFrameLoader* aNewFrameLoader)
 {
     nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
     MOZ_ASSERT(slots);
 
-    slots->mFrameLoaderOrOpener = aNewFrameLoader;
+    slots->mFrameLoaderOrOpener = ToSupports(aNewFrameLoader);
 }
 
 void

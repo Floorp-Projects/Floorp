@@ -51,7 +51,7 @@ nsBrowserElement::InitBrowserElementAPI()
       return;
     }
   }
-  mBrowserElementAPI->SetFrameLoader(frameLoader);
+  mBrowserElementAPI->SetFrameLoader(ToSupports(frameLoader));
 }
 
 void

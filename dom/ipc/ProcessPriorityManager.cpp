@@ -17,7 +17,7 @@
 #include "mozilla/Logging.h"
 #include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
-#include "nsIFrameLoader.h"
+#include "nsFrameLoader.h"
 #include "nsINamed.h"
 #include "nsIObserverService.h"
 #include "StaticPtr.h"

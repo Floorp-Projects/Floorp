@@ -140,7 +140,7 @@ protected:
   // We keep a strong reference to the frameloader after we've started
   // teardown. This allows us to dispatch message manager messages during this
   // time.
-  nsCOMPtr<nsIFrameLoader> mFrameLoader;
+  RefPtr<nsFrameLoader> mFrameLoader;
 public:
   nsIContent* mOwner;
   nsFrameMessageManager* mChromeMessageManager;
