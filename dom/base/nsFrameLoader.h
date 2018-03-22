@@ -123,19 +123,11 @@ public:
    */
   void LoadFrame(bool aOriginalSrc);
 
-  void LoadURI(nsIURI* aURI, bool aOriginalSrc, mozilla::ErrorResult& aRv);
-  nsresult LoadURI(nsIURI* aURI, bool aOriginalSrc);
-
   /**
-   * Triggers a load of the given URI.
-   *
-   * @param aURI The URI to load.
-   * @param aTriggeringPrincipal The triggering principal for the load. May be
-   *        null, in which case the node principal of the owner content will be
-   *        used.
+   * Loads the specified URI in this frame. Behaves identically to loadFrame,
+   * except that this method allows specifying the URI to load.
    */
-  nsresult LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
-                   bool aOriginalSrc);
+  nsresult LoadURI(nsIURI* aURI, bool aOriginalSrc);
 
   void AddProcessChangeBlockingPromise(mozilla::dom::Promise& aPromise, mozilla::ErrorResult& aRv);
 
@@ -447,6 +439,17 @@ private:
   // Returns a promise which will be resolved once all of the blockers have
   // resolved which were added during the BrowserWillChangeProcess event.
   already_AddRefed<mozilla::dom::Promise> FireWillChangeProcessEvent();
+
+  /**
+   * Triggers a load of the given URI.
+   *
+   * @param aURI The URI to load.
+   * @param aTriggeringPrincipal The triggering principal for the load. May be
+   *        null, in which case the node principal of the owner content will be
+   *        used.
+   */
+  nsresult LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
+                   bool aOriginalSrc);
 
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
