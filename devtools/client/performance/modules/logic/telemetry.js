@@ -26,7 +26,7 @@ function PerformanceTelemetry(emitter) {
   this.onViewSelected = this.onViewSelected.bind(this);
 
   for (let [event] of EVENT_MAP_FLAGS) {
-    this._emitter.on(event, this.onFlagEvent);
+    this._emitter.on(event, this.onFlagEvent.bind(this, event));
   }
 
   this._emitter.on(EVENTS.RECORDING_STATE_CHANGE, this.onRecordingStateChange);
@@ -55,7 +55,7 @@ PerformanceTelemetry.prototype.onFlagEvent = function(eventName, ...data) {
   this._telemetry.log(EVENT_MAP_FLAGS.get(eventName), true);
 };
 
-PerformanceTelemetry.prototype.onRecordingStateChange = function(_, status, model) {
+PerformanceTelemetry.prototype.onRecordingStateChange = function(status, model) {
   if (status != "recording-stopped") {
     return;
   }
@@ -77,7 +77,7 @@ PerformanceTelemetry.prototype.onRecordingStateChange = function(_, status, mode
   }
 };
 
-PerformanceTelemetry.prototype.onViewSelected = function(_, viewName) {
+PerformanceTelemetry.prototype.onViewSelected = function(viewName) {
   if (this._previousView) {
     this._telemetry.stopTimer(SELECTED_VIEW_HISTOGRAM_NAME, this._previousView);
   }
