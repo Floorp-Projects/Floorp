@@ -67,6 +67,10 @@ ServiceWorkerContainer::Create(nsIGlobalObject* aGlobal)
 ServiceWorkerContainer::ServiceWorkerContainer(nsIGlobalObject* aGlobal)
   : DOMEventTargetHelper(aGlobal)
 {
+  Maybe<ServiceWorkerDescriptor> controller = aGlobal->GetController();
+  if (controller.isSome()) {
+    mControllerWorker = aGlobal->GetOrCreateServiceWorker(controller.ref());
+  }
 }
 
 ServiceWorkerContainer::~ServiceWorkerContainer()
@@ -85,7 +89,12 @@ ServiceWorkerContainer::DisconnectFromOwner()
 void
 ServiceWorkerContainer::ControllerChanged(ErrorResult& aRv)
 {
-  mControllerWorker = nullptr;
+  nsCOMPtr<nsIGlobalObject> go = GetParentObject();
+  if (!go) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+  mControllerWorker = go->GetOrCreateServiceWorker(go->GetController().ref());
   aRv = DispatchTrustedEvent(NS_LITERAL_STRING("controllerchange"));
 }
 
@@ -224,44 +233,6 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
 already_AddRefed<ServiceWorker>
 ServiceWorkerContainer::GetController()
 {
-  if (!mControllerWorker) {
-    // If we don't have a controller reference cached, then we need to
-    // check if we should create one.  We try to do this in a thread-agnostic
-    // way here to help support workers in the future.  There are still
-    // some main thread calls for now, though.
-
-    nsIGlobalObject* owner = GetOwnerGlobal();
-    NS_ENSURE_TRUE(owner, nullptr);
-
-    Maybe<ServiceWorkerDescriptor> controller(owner->GetController());
-    if (controller.isNothing()) {
-      return nullptr;
-    }
-
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (!swm) {
-      return nullptr;
-    }
-
-    // This is a main thread only call.  We will need to replace it with
-    // something for worker threads.
-    RefPtr<ServiceWorkerRegistrationInfo> reg =
-      swm->GetRegistration(controller.ref().PrincipalInfo(),
-                           controller.ref().Scope());
-    NS_ENSURE_TRUE(reg, nullptr);
-
-    ServiceWorkerInfo* info = reg->GetActive();
-    NS_ENSURE_TRUE(info, nullptr);
-
-    nsCOMPtr<nsPIDOMWindowInner> inner = do_QueryInterface(owner);
-    NS_ENSURE_TRUE(inner, nullptr);
-
-    // Right now we only know how to create ServiceWorker DOM objects on
-    // the main thread with a window.  In the future this should operate
-    // on only nsIGlobalObject somehow.
-    mControllerWorker = inner->GetOrCreateServiceWorker(info->Descriptor());
-  }
-
   RefPtr<ServiceWorker> ref = mControllerWorker;
   return ref.forget();
 }
