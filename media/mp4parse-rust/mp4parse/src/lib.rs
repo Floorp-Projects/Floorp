@@ -45,7 +45,7 @@ const TABLE_SIZE_LIMIT: u32 = 30 * 60 * 60 * 24 * 7;
 pub fn vec_push<T>(vec: &mut Vec<T>, val: T) -> std::result::Result<(), ()> {
     #[cfg(feature = "mp4parse_fallible")]
     {
-        return vec.try_push(val);
+        return FallibleVec::try_push(vec, val);
     }
 
     vec.push(val);
@@ -56,7 +56,7 @@ pub fn vec_push<T>(vec: &mut Vec<T>, val: T) -> std::result::Result<(), ()> {
 pub fn vec_reserve<T>(vec: &mut Vec<T>, size: usize) -> std::result::Result<(), ()> {
     #[cfg(feature = "mp4parse_fallible")]
     {
-        return vec.try_reserve(size);
+        return FallibleVec::try_reserve(vec, size);
     }
 
     vec.reserve(size);
@@ -68,7 +68,7 @@ fn allocate_read_buf(size: usize) -> std::result::Result<Vec<u8>, ()> {
     #[cfg(feature = "mp4parse_fallible")]
     {
         let mut buf: Vec<u8> = Vec::new();
-        buf.try_reserve(size)?;
+        FallibleVec::try_reserve(&mut buf, size)?;
         unsafe { buf.set_len(size); }
         return Ok(buf);
     }
