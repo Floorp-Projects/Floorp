@@ -49,10 +49,10 @@ interface nsIXPConnectWrappedNative;
     #define XPC_SCRIPTABLE_USE_JSSTUB_FOR_DELPROPERTY       (1 << 11)
     // (1 << 12) is unused
     #define XPC_SCRIPTABLE_DONT_ENUM_QUERY_INTERFACE        (1 << 13)
-    #define XPC_SCRIPTABLE_DONT_ASK_INSTANCE_FOR_SCRIPTABLE (1 << 14)
-    #define XPC_SCRIPTABLE_CLASSINFO_INTERFACES_ONLY        (1 << 15)
+    // (1 << 14) is unused
+    // (1 << 15) is unused
     #define XPC_SCRIPTABLE_ALLOW_PROP_MODS_DURING_RESOLVE   (1 << 16)
-    #define XPC_SCRIPTABLE_ALLOW_PROP_MODS_TO_PROTOTYPE     (1 << 17)
+    // (1 << 17) is unused
     #define XPC_SCRIPTABLE_IS_GLOBAL_OBJECT                 (1 << 18)
     #define XPC_SCRIPTABLE_DONT_REFLECT_INTERFACE_NAMES     (1 << 19)
 %}
@@ -119,10 +119,7 @@ interface nsIXPCScriptable : nsISupports
     GET_IT(UseJSStubForAddProperty,      USE_JSSTUB_FOR_ADDPROPERTY)
     GET_IT(UseJSStubForDelProperty,      USE_JSSTUB_FOR_DELPROPERTY)
     GET_IT(DontEnumQueryInterface,       DONT_ENUM_QUERY_INTERFACE)
-    GET_IT(DontAskInstanceForScriptable, DONT_ASK_INSTANCE_FOR_SCRIPTABLE)
-    GET_IT(ClassInfoInterfacesOnly,      CLASSINFO_INTERFACES_ONLY)
     GET_IT(AllowPropModsDuringResolve,   ALLOW_PROP_MODS_DURING_RESOLVE)
-    GET_IT(AllowPropModsToPrototype,     ALLOW_PROP_MODS_TO_PROTOTYPE)
     GET_IT(IsGlobalObject,               IS_GLOBAL_OBJECT)
     GET_IT(DontReflectInterfaceNames,    DONT_REFLECT_INTERFACE_NAMES)
 
