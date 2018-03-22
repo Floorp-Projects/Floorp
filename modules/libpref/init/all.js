@@ -666,6 +666,11 @@ pref("media.cubeb.logging_level", "");
 // Cubeb sandbox (remoting) control
 #ifdef XP_LINUX
 pref("media.cubeb.sandbox", true);
+// The cubeb pulse audio backend effectively serializes callbacks so
+// only 1 thread is required.
+pref("media.audioipc.pool_size", 1);
+// 64 kB stack per pool thread.
+pref("media.audioipc.stack_size", 65536);
 #else
 pref("media.cubeb.sandbox", false);
 #endif
