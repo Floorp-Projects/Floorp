@@ -116,7 +116,6 @@ const LEGACY_NON_RESTARTLESS_TESTS = new Set([
   "test_signed_verify.js",
   "test_softblocked.js",
   "test_sourceURI.js",
-  "test_startup.js",
   "test_strictcompatibility.js",
   "test_syncGUID.js",
   "test_targetPlatforms.js",
@@ -754,6 +753,10 @@ function isThemeInAddonsList(aDir, aId) {
 
 function isExtensionInAddonsList(aDir, aId) {
   return AddonTestUtils.addonsList.hasExtension(aDir, aId);
+}
+
+function isExtensionInBootstrappedList(aDir, aId) {
+  return AddonTestUtils.addonsList.hasBootstrapped(aDir, aId);
 }
 
 function check_startup_changes(aType, aIds) {
