@@ -71,10 +71,6 @@ public:
   const nsGlobalNameStruct* LookupName(const nsAString& aName,
                                        const char16_t **aClassName = nullptr);
 
-  nsresult RegisterClassName(const char *aClassName,
-                             int32_t aDOMClassInfoID,
-                             const char16_t **aResult);
-
   class NameIterator : public PLDHashTable::Iterator
   {
   public:
