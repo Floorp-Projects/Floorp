@@ -16,7 +16,6 @@
 #include "gtest/gtest.h"
 
 
-#ifdef NIGHTLY_BUILD
 #if defined(DEBUG) && !defined(XP_WIN) && !defined(ANDROID)
 #define HAS_GDB_SLEEP_DURATION 1
 extern unsigned int _gdb_sleep_duration;
@@ -41,7 +40,7 @@ static void DisableCrashReporter()
 #else
 #define ASSERT_DEATH_WRAP(a, b)
 #endif
-#endif
+
 
 using namespace mozilla;
 
@@ -255,7 +254,6 @@ TEST(Jemalloc, PtrInfo)
   jemalloc_thread_local_arena(false);
 }
 
-#ifdef NIGHTLY_BUILD
 size_t sSizes[] = { 1,      42,      79,      918,     1.5_KiB,
                     73_KiB, 129_KiB, 1.1_MiB, 2.6_MiB, 5.1_MiB };
 
@@ -624,4 +622,3 @@ TEST(Jemalloc, JunkPoison)
   // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
   // moz_dispose_arena(buf_arena);
 }
-#endif
