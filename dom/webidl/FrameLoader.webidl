@@ -34,14 +34,6 @@ interface FrameLoader {
   readonly attribute LoadContext loadContext;
 
   /**
-   * Loads the specified URI in this frame. Behaves identically to loadFrame,
-   * except that this method allows specifying the URI to load.
-   */
-  // XXXbz Should this even be exposed to JS?
-  [Throws]
-  void loadURI(URI aURI, optional boolean originalSrc = false);
-
-  /**
    * Adds a blocking promise for the current cross process navigation.
    * This method can only be called while the "BrowserWillChangeProcess" event
    * is being fired.

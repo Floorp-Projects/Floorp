@@ -311,15 +311,6 @@ nsFrameLoader::FireErrorEvent()
   loadBlockingAsyncDispatcher->PostDOMEvent();
 }
 
-void
-nsFrameLoader::LoadURI(nsIURI* aURI, bool aOriginalSrc, ErrorResult& aRv)
-{
-  nsresult rv = LoadURI(aURI, aOriginalSrc);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
-}
-
 nsresult
 nsFrameLoader::LoadURI(nsIURI* aURI, bool aOriginalSrc)
 {
