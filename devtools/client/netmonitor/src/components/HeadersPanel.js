@@ -220,7 +220,7 @@ class HeadersPanel extends Component {
 
       let statusCodeDocURL = getHTTPStatusCodeURL(status.toString());
       let inputWidth = status.toString().length + statusText.length + 1;
-      let toggleRawHeadersClassList = ["devtools-button"];
+      let toggleRawHeadersClassList = ["devtools-button", "raw-headers-button"];
       if (this.state.rawHeadersOpened) {
         toggleRawHeadersClassList.push("checked");
       }
@@ -272,6 +272,7 @@ class HeadersPanel extends Component {
             div({ className: "raw-headers" },
               div({ className: "tabpanel-summary-label" }, RAW_HEADERS_REQUEST),
               textarea({
+                className: "raw-request-headers-textarea",
                 value: writeHeaderText(requestHeaders.headers),
                 readOnly: true,
               }),
@@ -279,6 +280,7 @@ class HeadersPanel extends Component {
             div({ className: "raw-headers" },
               div({ className: "tabpanel-summary-label" }, RAW_HEADERS_RESPONSE),
               textarea({
+                className: "raw-response-headers-textarea",
                 value: statusLine + writeHeaderText(responseHeaders.headers),
                 readOnly: true,
               }),
