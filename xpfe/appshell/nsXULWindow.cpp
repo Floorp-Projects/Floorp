@@ -1302,18 +1302,12 @@ nsXULWindow::SetSpecifiedSize(int32_t aSpecWidth, int32_t aSpecHeight)
 
   NS_ASSERTION(mWindow, "we expected to have a window already");
 
-  int32_t currWidth = 0;
-  int32_t currHeight = 0;
-  GetSize(&currWidth, &currHeight); // returns device pixels
-
   // convert specified values to device pixels, and resize if needed
   double cssToDevPx = mWindow ? mWindow->GetDefaultScale().scale : 1.0;
   aSpecWidth = NSToIntRound(aSpecWidth * cssToDevPx);
   aSpecHeight = NSToIntRound(aSpecHeight * cssToDevPx);
   mIntrinsicallySized = false;
-  if (aSpecWidth != currWidth || aSpecHeight != currHeight) {
-    SetSize(aSpecWidth, aSpecHeight, false);
-  }
+  SetSize(aSpecWidth, aSpecHeight, false);
 }
 
 /* Miscellaneous persistent attributes are attributes named in the
