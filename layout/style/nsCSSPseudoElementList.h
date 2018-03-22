@@ -60,7 +60,7 @@ CSS_PSEUDO_ELEMENT(mozListNumber, ":-moz-list-number", 0)
 // style them.
 //
 // This is a pseudo instead of an anon box because of how the
-// AdditionalStyleContext APIs work.
+// AdditionalComputedStyle APIs work.
 CSS_PSEUDO_ELEMENT(mozMathAnonymous, ":-moz-math-anonymous",
   CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS)
 

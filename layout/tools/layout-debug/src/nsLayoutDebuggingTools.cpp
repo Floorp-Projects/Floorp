@@ -470,14 +470,14 @@ nsLayoutDebuggingTools::DumpStyleSheets()
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::DumpStyleContexts()
+nsLayoutDebuggingTools::DumpComputedStyles()
 {
     NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
 #ifdef DEBUG
     FILE *out = stdout;
     nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell));
     if (shell) {
-        shell->ListStyleContexts(out);
+        shell->ListComputedStyles(out);
     } else {
         fputs("null pres shell\n", out);
     }

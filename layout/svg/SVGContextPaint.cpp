@@ -141,7 +141,7 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
   }
 
   nscolor color =
-    nsSVGUtils::GetFallbackOrPaintColor(aFrame->StyleContext(), aFillOrStroke);
+    nsSVGUtils::GetFallbackOrPaintColor(aFrame->Style(), aFillOrStroke);
   aTargetPaint.SetColor(color);
 }
 

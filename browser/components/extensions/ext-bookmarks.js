@@ -71,12 +71,7 @@ const getTree = (rootGuid, onlyChildren) => {
     return treenode;
   }
 
-  return PlacesUtils.promiseBookmarksTree(rootGuid, {
-    excludeItemsCallback: item => {
-      return item.annos &&
-             item.annos.find(a => a.name == PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
-    },
-  }).then(root => {
+  return PlacesUtils.promiseBookmarksTree(rootGuid).then(root => {
     if (onlyChildren) {
       let children = root.children || [];
       return children.map(child => convert(child, root));

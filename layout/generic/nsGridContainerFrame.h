@@ -20,7 +20,7 @@
  * @return a newly allocated nsGridContainerFrame (infallible)
  */
 nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
-                                           nsStyleContext* aContext);
+                                           mozilla::ComputedStyle* aStyle);
 
 namespace mozilla {
 
@@ -257,9 +257,9 @@ protected:
   struct Tracks;
   struct TranslatedLineRange;
   friend nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
-                                                    nsStyleContext* aContext);
-  explicit nsGridContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext, kClassID)
+                                                    ComputedStyle* aStyle);
+  explicit nsGridContainerFrame(ComputedStyle* aStyle)
+    : nsContainerFrame(aStyle, kClassID)
     , mCachedMinISize(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mCachedPrefISize(NS_INTRINSIC_WIDTH_UNKNOWN)
   {

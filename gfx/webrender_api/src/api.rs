@@ -536,6 +536,7 @@ bitflags!{
         const GLYPHS = 0x2;
         const GLYPH_DIMENSIONS = 0x4;
         const RENDER_TASKS = 0x8;
+        const TEXTURE_CACHE = 0x16;
     }
 }
 

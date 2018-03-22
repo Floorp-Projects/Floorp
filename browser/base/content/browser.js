@@ -1231,7 +1231,20 @@ var gBrowserInit = {
     }
 
     new LightweightThemeConsumer(document);
+    CompactTheme.init();
+
     TabsInTitlebar.init();
+
+    if (window.matchMedia("(-moz-os-version: windows-win8)").matches &&
+        window.matchMedia("(-moz-windows-default-theme)").matches) {
+      let windowFrameColor = new Color(...ChromeUtils.import("resource:///modules/Windows8WindowFrameColor.jsm", {})
+                                            .Windows8WindowFrameColor.get());
+      // Default to black for foreground text.
+      if (!windowFrameColor.isContrastRatioAcceptable(new Color(0, 0, 0))) {
+        document.documentElement.setAttribute("darkwindowframe", "true");
+      }
+    }
+    ToolbarIconColor.init();
   },
 
   onDOMContentLoaded() {
@@ -1319,7 +1332,6 @@ var gBrowserInit = {
     LanguageDetectionListener.init();
     BrowserOnClick.init();
     FeedHandler.init();
-    CompactTheme.init();
     AboutCapabilitiesListener.init();
     TrackingProtection.init();
     CaptivePortalWatcher.init();
@@ -1367,18 +1379,6 @@ var gBrowserInit = {
     gPrivateBrowsingUI.init();
     BrowserPageActions.init();
     gAccessibilityServiceIndicator.init();
-
-    if (window.matchMedia("(-moz-os-version: windows-win8)").matches &&
-        window.matchMedia("(-moz-windows-default-theme)").matches) {
-      let windowFrameColor = new Color(...ChromeUtils.import("resource:///modules/Windows8WindowFrameColor.jsm", {})
-                                            .Windows8WindowFrameColor.get());
-      // Default to black for foreground text.
-      if (!windowFrameColor.isContrastRatioAcceptable(new Color(0, 0, 0))) {
-        document.documentElement.setAttribute("darkwindowframe", "true");
-      }
-    }
-
-    ToolbarIconColor.init();
 
     gRemoteControl.updateVisualCue(Marionette.running);
 

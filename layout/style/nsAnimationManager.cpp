@@ -351,10 +351,10 @@ PopExistingAnimation(const nsAtom* aName,
 
 class MOZ_STACK_CLASS ServoCSSAnimationBuilder final {
 public:
-  explicit ServoCSSAnimationBuilder(const ServoStyleContext* aStyleContext)
-    : mStyleContext(aStyleContext)
+  explicit ServoCSSAnimationBuilder(const ComputedStyle* aComputedStyle)
+    : mComputedStyle(aComputedStyle)
   {
-    MOZ_ASSERT(aStyleContext);
+    MOZ_ASSERT(aComputedStyle);
   }
 
   bool BuildKeyframes(nsPresContext* aPresContext,
@@ -371,7 +371,7 @@ public:
   void SetKeyframes(KeyframeEffectReadOnly& aEffect,
                     nsTArray<Keyframe>&& aKeyframes)
   {
-    aEffect.SetKeyframes(Move(aKeyframes), mStyleContext);
+    aEffect.SetKeyframes(Move(aKeyframes), mComputedStyle);
   }
 
   // Currently all the animation building code in this file is based on
@@ -414,7 +414,7 @@ public:
   }
 
 private:
-  const ServoStyleContext* mStyleContext;
+  const ComputedStyle* mComputedStyle;
 };
 
 
@@ -599,7 +599,7 @@ void
 nsAnimationManager::UpdateAnimations(
   dom::Element* aElement,
   CSSPseudoElementType aPseudoType,
-  const ServoStyleContext* aStyleContext)
+  const ComputedStyle* aComputedStyle)
 {
   MOZ_ASSERT(mPresContext->IsDynamic(),
              "Should not update animations for print or print preview");
@@ -607,8 +607,8 @@ nsAnimationManager::UpdateAnimations(
              "Should not update animations that are not attached to the "
              "document tree");
 
-  const nsStyleDisplay* disp = aStyleContext
-    ? aStyleContext->ComputedData()->GetStyleDisplay()
+  const nsStyleDisplay* disp = aComputedStyle
+    ? aComputedStyle->ComputedData()->GetStyleDisplay()
     : nullptr;
 
   if (!disp || disp->mDisplay == StyleDisplay::None) {
@@ -623,7 +623,7 @@ nsAnimationManager::UpdateAnimations(
   }
 
   NonOwningAnimationTarget target(aElement, aPseudoType);
-  ServoCSSAnimationBuilder builder(aStyleContext);
+  ServoCSSAnimationBuilder builder(aComputedStyle);
 
   DoUpdateAnimations(target, *disp, builder);
 }

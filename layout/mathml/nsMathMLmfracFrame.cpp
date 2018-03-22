@@ -34,9 +34,9 @@ using namespace mozilla::gfx;
 #define THICK_FRACTION_LINE_MINIMUM_PIXELS   2  // minimum of 2 pixels
 
 nsIFrame*
-NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsMathMLmfracFrame(aContext);
+  return new (aPresShell) nsMathMLmfracFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmfracFrame)
@@ -94,7 +94,7 @@ nsMathMLmfracFrame::TransmitAutomaticData()
 
 nscoord
 nsMathMLmfracFrame::CalcLineThickness(nsPresContext*  aPresContext,
-                                      nsStyleContext*  aStyleContext,
+                                      ComputedStyle*  aComputedStyle,
                                       nsString&        aThicknessAttribute,
                                       nscoord          onePixel,
                                       nscoord          aDefaultRuleThickness,
@@ -136,7 +136,7 @@ nsMathMLmfracFrame::CalcLineThickness(nsPresContext*  aPresContext,
       lineThickness = defaultThickness;
       ParseNumericValue(aThicknessAttribute, &lineThickness,
                         nsMathMLElement::PARSE_ALLOW_UNITLESS,
-                        aPresContext, aStyleContext, aFontSizeInflation);
+                        aPresContext, aComputedStyle, aFontSizeInflation);
     }
   }
 
@@ -256,7 +256,7 @@ nsMathMLmfracFrame::PlaceInternal(DrawTarget*          aDrawTarget,
   // see if the linethickness attribute is there
   nsAutoString value;
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::linethickness_, value);
-  mLineThickness = CalcLineThickness(presContext, mStyleContext, value,
+  mLineThickness = CalcLineThickness(presContext, mComputedStyle, value,
                                      onePixel, defaultRuleThickness,
                                      fontSizeInflation);
 

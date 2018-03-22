@@ -39,15 +39,15 @@ using namespace mozilla;
 // Creates a new Resizer frame and returns it
 //
 nsIFrame*
-NS_NewResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewResizerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsResizerFrame(aContext);
+  return new (aPresShell) nsResizerFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsResizerFrame)
 
-nsResizerFrame::nsResizerFrame(nsStyleContext* aContext)
-  : nsTitleBarFrame(aContext, kClassID)
+nsResizerFrame::nsResizerFrame(ComputedStyle* aStyle)
+  : nsTitleBarFrame(aStyle, kClassID)
 {
 }
 

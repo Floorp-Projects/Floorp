@@ -17,14 +17,15 @@
 
 class nsSplitterFrameInner;
 
-nsIFrame* NS_NewSplitterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame* NS_NewSplitterFrame(nsIPresShell* aPresShell,
+                              mozilla::ComputedStyle* aStyle);
 
 class nsSplitterFrame final : public nsBoxFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsSplitterFrame)
 
-  explicit nsSplitterFrame(nsStyleContext* aContext);
+  explicit nsSplitterFrame(ComputedStyle* aStyle);
   virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
 #ifdef DEBUG_FRAME_DUMP

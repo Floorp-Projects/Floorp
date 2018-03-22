@@ -16,11 +16,11 @@ class nsSVGUseFrame final
   , public nsIAnonymousContentCreator
 {
   friend nsIFrame* NS_NewSVGUseFrame(nsIPresShell* aPresShell,
-                                     nsStyleContext* aContext);
+                                     ComputedStyle* aStyle);
 
 protected:
-  explicit nsSVGUseFrame(nsStyleContext* aContext)
-    : nsSVGGFrame(aContext, kClassID)
+  explicit nsSVGUseFrame(ComputedStyle* aStyle)
+    : nsSVGGFrame(aStyle, kClassID)
     , mHasValidDimensions(true)
   {
   }

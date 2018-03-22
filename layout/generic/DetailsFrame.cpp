@@ -24,15 +24,15 @@ NS_QUERYFRAME_HEAD(DetailsFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 nsBlockFrame*
-NS_NewDetailsFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewDetailsFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) DetailsFrame(aContext);
+  return new (aPresShell) DetailsFrame(aStyle);
 }
 
 namespace mozilla {
 
-DetailsFrame::DetailsFrame(nsStyleContext* aContext)
-  : nsBlockFrame(aContext, kClassID)
+DetailsFrame::DetailsFrame(ComputedStyle* aStyle)
+  : nsBlockFrame(aStyle, kClassID)
 {
 }
 

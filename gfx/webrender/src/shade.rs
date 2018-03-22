@@ -413,7 +413,6 @@ pub struct Shaders {
     // These are "cache shaders". These shaders are used to
     // draw intermediate results to cache targets. The results
     // of these shaders are then used by the primitive shaders.
-    pub cs_text_run: LazilyCompiledShader,
     pub cs_blur_a8: LazilyCompiledShader,
     pub cs_blur_rgba8: LazilyCompiledShader,
 
@@ -458,14 +457,6 @@ impl Shaders {
         gl_type: GlType,
         options: &RendererOptions,
     ) -> Result<Self, ShaderError> {
-        let cs_text_run = LazilyCompiledShader::new(
-            ShaderKind::Cache(VertexArrayKind::Primitive),
-            "cs_text_run",
-            &[],
-            device,
-            options.precache_shaders,
-        )?;
-
         let brush_solid = BrushShader::new(
             "brush_solid",
             device,
@@ -682,7 +673,6 @@ impl Shaders {
         )?;
 
         Ok(Shaders {
-            cs_text_run,
             cs_blur_a8,
             cs_blur_rgba8,
             brush_solid,
@@ -782,7 +772,6 @@ impl Shaders {
     }
 
     pub fn deinit(self, device: &mut Device) {
-        self.cs_text_run.deinit(device);
         self.cs_blur_a8.deinit(device);
         self.cs_blur_rgba8.deinit(device);
         self.brush_solid.deinit(device);

@@ -39,9 +39,9 @@ using namespace mozilla::image;
 
 nsIFrame*
 NS_NewSVGGeometryFrame(nsIPresShell* aPresShell,
-                       nsStyleContext* aContext)
+                       ComputedStyle* aStyle)
 {
-  return new (aPresShell) SVGGeometryFrame(aContext);
+  return new (aPresShell) SVGGeometryFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGGeometryFrame)
@@ -187,15 +187,15 @@ SVGGeometryFrame::AttributeChanged(int32_t         aNameSpaceID,
 }
 
 /* virtual */ void
-SVGGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+SVGGeometryFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
 {
-  nsFrame::DidSetStyleContext(aOldStyleContext);
+  nsFrame::DidSetComputedStyle(aOldComputedStyle);
 
-  if (aOldStyleContext) {
+  if (aOldComputedStyle) {
     SVGGeometryElement* element =
       static_cast<SVGGeometryElement*>(GetContent());
 
-    auto oldStyleSVG = aOldStyleContext->PeekStyleSVG();
+    auto oldStyleSVG = aOldComputedStyle->PeekStyleSVG();
     if (oldStyleSVG && !SVGContentUtils::ShapeTypeHasNoCorners(GetContent())) {
       if (StyleSVG()->mStrokeLinecap != oldStyleSVG->mStrokeLinecap &&
           element->IsSVGElement(nsGkAtoms::path)) {
@@ -351,7 +351,7 @@ SVGGeometryFrame::GetFrameForPoint(const gfxPoint& aPoint)
   if (!isHit && (hitTestFlags & SVG_HIT_TEST_STROKE)) {
     Point point = ToPoint(aPoint);
     SVGContentUtils::AutoStrokeOptions stroke;
-    SVGContentUtils::GetStrokeOptions(&stroke, content, StyleContext(), nullptr);
+    SVGContentUtils::GetStrokeOptions(&stroke, content, Style(), nullptr);
     gfxMatrix userToOuterSVG;
     if (nsSVGUtils::GetNonScalingStrokeTransform(this, &userToOuterSVG)) {
       // We need to transform the path back into the appropriate ancestor
@@ -497,7 +497,7 @@ SVGGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
   SVGContentUtils::AutoStrokeOptions strokeOptions;
   if (getStroke) {
     SVGContentUtils::GetStrokeOptions(&strokeOptions, element,
-                                      StyleContext(), nullptr,
+                                      Style(), nullptr,
                                       SVGContentUtils::eIgnoreStrokeDashing);
   } else {
     // Override the default line width of 1.f so that when we call
@@ -607,7 +607,7 @@ SVGGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
       // into aToBBoxUserspace and then scales the bounds that we return.
       SVGContentUtils::AutoStrokeOptions strokeOptions;
       SVGContentUtils::GetStrokeOptions(&strokeOptions, element,
-                                        StyleContext(), nullptr,
+                                        Style(), nullptr,
                                         SVGContentUtils::eIgnoreStrokeDashing);
       Rect strokeBBoxExtents;
       gfxMatrix userToOuterSVG;
@@ -841,7 +841,7 @@ SVGGeometryFrame::Render(gfxContext* aContext,
       SVGContentUtils::AutoStrokeOptions strokeOptions;
       SVGContentUtils::GetStrokeOptions(&strokeOptions,
                                         static_cast<nsSVGElement*>(GetContent()),
-                                        StyleContext(), contextPaint);
+                                        Style(), contextPaint);
       // GetStrokeOptions may set the line width to zero as an optimization
       if (strokeOptions.mLineWidth <= 0) {
         return;

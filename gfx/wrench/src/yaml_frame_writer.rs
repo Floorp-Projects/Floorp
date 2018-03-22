@@ -273,6 +273,30 @@ fn native_font_handle_to_yaml(
     str_node(parent, "font", &handle.pathname);
 }
 
+fn radial_gradient_to_yaml(
+    table: &mut Table,
+    gradient: &webrender::api::RadialGradient,
+    stops_range: ItemRange<GradientStop>,
+    display_list: &BuiltDisplayList
+) {
+    point_node(table, "center", &gradient.center);
+    size_node(table, "radius", &gradient.radius);
+
+    let first_offset = gradient.start_offset;
+    let last_offset = gradient.end_offset;
+    let stops_delta = last_offset - first_offset;
+    assert!(first_offset <= last_offset);
+
+    let mut denormalized_stops = vec![];
+    for stop in display_list.get(stops_range) {
+        let denormalized_stop = (stop.offset * stops_delta) + first_offset;
+        denormalized_stops.push(Yaml::Real(denormalized_stop.to_string()));
+        denormalized_stops.push(Yaml::String(color_to_string(stop.color)));
+    }
+    yaml_node(table, "stops", Yaml::Array(denormalized_stops));
+    bool_node(table, "repeat", gradient.extend_mode == ExtendMode::Repeat);
+}
+
 enum CachedFont {
     Native(NativeFontHandle, Option<PathBuf>),
     Raw(Option<Vec<u8>>, u32, Option<PathBuf>),
@@ -905,22 +929,13 @@ impl YamlFrameWriter {
                             ];
                             yaml_node(&mut v, "width", f32_vec_yaml(&widths, true));
                             str_node(&mut v, "border-type", "radial-gradient");
-                            point_node(&mut v, "center", &details.gradient.center);
-                            size_node(&mut v, "radius", &details.gradient.radius);
-                            f32_node(&mut v, "start-radius", details.gradient.start_radius);
-                            f32_node(&mut v, "end-radius", details.gradient.end_radius);
-                            let mut stops = vec![];
-                            for stop in display_list.get(base.gradient_stops()) {
-                                stops.push(Yaml::Real(stop.offset.to_string()));
-                                stops.push(Yaml::String(color_to_string(stop.color)));
-                            }
-                            yaml_node(&mut v, "stops", Yaml::Array(stops));
-                            bool_node(
-                                &mut v,
-                                "repeat",
-                                details.gradient.extend_mode == ExtendMode::Repeat,
-                            );
                             yaml_node(&mut v, "outset", f32_vec_yaml(&outset, true));
+                            radial_gradient_to_yaml(
+                                &mut v,
+                                &details.gradient,
+                                base.gradient_stops(),
+                                display_list
+                            );
                         }
                     }
                 }
@@ -960,22 +975,13 @@ impl YamlFrameWriter {
                 }
                 RadialGradient(item) => {
                     str_node(&mut v, "type", "radial-gradient");
-                    point_node(&mut v, "center", &item.gradient.center);
-                    size_node(&mut v, "center", &item.gradient.radius);
-                    f32_node(&mut v, "start-radius", item.gradient.start_radius);
-                    f32_node(&mut v, "end-radius", item.gradient.end_radius);
                     size_node(&mut v, "tile-size", &item.tile_size);
                     size_node(&mut v, "tile-spacing", &item.tile_spacing);
-                    let mut stops = vec![];
-                    for stop in display_list.get(base.gradient_stops()) {
-                        stops.push(Yaml::Real(stop.offset.to_string()));
-                        stops.push(Yaml::String(color_to_string(stop.color)));
-                    }
-                    yaml_node(&mut v, "stops", Yaml::Array(stops));
-                    bool_node(
+                    radial_gradient_to_yaml(
                         &mut v,
-                        "repeat",
-                        item.gradient.extend_mode == ExtendMode::Repeat,
+                        &item.gradient,
+                        base.gradient_stops(),
+                        display_list
                     );
                 }
                 Iframe(item) => {

@@ -42,7 +42,6 @@ use internal_types::{SourceTexture, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceC
 use internal_types::{CacheTextureId, DebugOutput, FastHashMap, RenderedDocument, ResultMsg};
 use internal_types::{TextureUpdateList, TextureUpdateOp, TextureUpdateSource};
 use internal_types::{RenderTargetInfo, SavedTargetIndex};
-use picture::ContentOrigin;
 use prim_store::DeferredResolve;
 use profiler::{BackendProfileCounters, FrameProfileCounters, Profiler};
 use profiler::{GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
@@ -120,10 +119,6 @@ const GPU_TAG_BRUSH_LINE: GpuProfileTag = GpuProfileTag {
 const GPU_TAG_CACHE_CLIP: GpuProfileTag = GpuProfileTag {
     label: "C_Clip",
     color: debug_colors::PURPLE,
-};
-const GPU_TAG_CACHE_TEXT_RUN: GpuProfileTag = GpuProfileTag {
-    label: "C_TextRun",
-    color: debug_colors::MISTYROSE,
 };
 const GPU_TAG_SETUP_TARGET: GpuProfileTag = GpuProfileTag {
     label: "target init",
@@ -1445,7 +1440,6 @@ impl Renderer {
         let config = FrameBuilderConfig {
             enable_scrollbars: options.enable_scrollbars,
             default_font_render_mode,
-            debug: options.debug,
             dual_source_blending_is_enabled: true,
             dual_source_blending_is_supported: ext_dual_source_blending,
         };
@@ -1484,6 +1478,7 @@ impl Renderer {
         let blob_image_renderer = options.blob_image_renderer.take();
         let thread_listener_for_render_backend = thread_listener.clone();
         let thread_listener_for_scene_builder = thread_listener.clone();
+        let renderer_id_for_render_backend = options.renderer_id.clone();
         let rb_thread_name = format!("WRRenderBackend#{}", options.renderer_id.unwrap_or(0));
         let scene_thread_name = format!("WRSceneBuilder#{}", options.renderer_id.unwrap_or(0));
         let glyph_rasterizer = GlyphRasterizer::new(workers)?;
@@ -1506,6 +1501,7 @@ impl Renderer {
         thread::Builder::new().name(rb_thread_name.clone()).spawn(move || {
             register_thread_with_profiler(rb_thread_name.clone());
             if let Some(ref thread_listener) = *thread_listener_for_render_backend {
+                thread_listener.new_render_backend_thread(renderer_id_for_render_backend);
                 thread_listener.thread_started(&rb_thread_name);
             }
 
@@ -1723,7 +1719,7 @@ impl Renderer {
     fn get_screenshot_for_debugger(&mut self) -> String {
         use api::ImageDescriptor;
 
-        let desc = ImageDescriptor::new(1024, 768, ImageFormat::BGRA8, true);
+        let desc = ImageDescriptor::new(1024, 768, ImageFormat::BGRA8, true, false);
         let data = self.device.read_pixels(&desc);
         let screenshot = debug_server::Screenshot::new(desc.width, desc.height, data);
 
@@ -1814,14 +1810,6 @@ impl Renderer {
         );
 
         for alpha_batch_container in &target.alpha_batch_containers {
-            for (_, batch) in &alpha_batch_container.text_run_cache_prims {
-                debug_target.add(
-                    debug_server::BatchKind::Cache,
-                    "Text Shadow",
-                    batch.len(),
-                );
-            }
-
             for batch in alpha_batch_container
                 .opaque_batches
                 .iter()
@@ -2425,17 +2413,11 @@ impl Renderer {
         let (readback_rect, readback_layer) = readback.get_target_rect();
         let (backdrop_rect, _) = backdrop.get_target_rect();
         let backdrop_screen_origin = match backdrop.kind {
-            RenderTaskKind::Picture(ref task_info) => match task_info.content_origin {
-                ContentOrigin::Local(_) => panic!("bug: composite from a local-space rasterized picture?"),
-                ContentOrigin::Screen(p) => p,
-            },
+            RenderTaskKind::Picture(ref task_info) => task_info.content_origin,
             _ => panic!("bug: composite on non-picture?"),
         };
         let source_screen_origin = match source.kind {
-            RenderTaskKind::Picture(ref task_info) => match task_info.content_origin {
-                ContentOrigin::Local(_) => panic!("bug: composite from a local-space rasterized picture?"),
-                ContentOrigin::Screen(p) => p,
-            },
+            RenderTaskKind::Picture(ref task_info) => task_info.content_origin,
             _ => panic!("bug: composite on non-picture?"),
         };
 
@@ -2683,31 +2665,6 @@ impl Renderer {
         }
 
         self.handle_scaling(render_tasks, &target.scalings, SourceTexture::CacheRGBA8);
-
-        // Draw any textrun caches for this target. For now, this
-        // is only used to cache text runs that are to be blurred
-        // for shadow support. In the future it may be worth
-        // considering using this for (some) other text runs, since
-        // it removes the overhead of submitting many small glyphs
-        // to multiple tiles in the normal text run case.
-        for alpha_batch_container in &target.alpha_batch_containers {
-            if !alpha_batch_container.text_run_cache_prims.is_empty() {
-                self.device.set_blend(true);
-                self.device.set_blend_mode_premultiplied_alpha();
-
-                let _timer = self.gpu_profile.start_timer(GPU_TAG_CACHE_TEXT_RUN);
-                self.shaders.cs_text_run
-                    .bind(&mut self.device, projection, &mut self.renderer_errors);
-                for (texture_id, instances) in &alpha_batch_container.text_run_cache_prims {
-                    self.draw_instanced_batch(
-                        instances,
-                        VertexArrayKind::Primitive,
-                        &BatchTextures::color(*texture_id),
-                        stats,
-                    );
-                }
-            }
-        }
 
         //TODO: record the pixel count for cached primitives
 
@@ -3821,6 +3778,7 @@ pub trait OutputImageHandler {
 pub trait ThreadListener {
     fn thread_started(&self, thread_name: &str);
     fn thread_stopped(&self, thread_name: &str);
+    fn new_render_backend_thread(&self, renderer_id: Option<u64>);
 }
 
 pub struct RendererOptions {
@@ -3829,7 +3787,6 @@ pub struct RendererOptions {
     pub enable_aa: bool,
     pub enable_dithering: bool,
     pub max_recorded_profiles: usize,
-    pub debug: bool,
     pub enable_scrollbars: bool,
     pub precache_shaders: bool,
     pub renderer_kind: RendererKind,
@@ -3859,7 +3816,6 @@ impl Default for RendererOptions {
             enable_dithering: true,
             debug_flags: DebugFlags::empty(),
             max_recorded_profiles: 0,
-            debug: false,
             enable_scrollbars: false,
             precache_shaders: false,
             renderer_kind: RendererKind::Native,

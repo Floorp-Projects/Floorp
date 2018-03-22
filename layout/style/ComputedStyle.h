@@ -6,73 +6,105 @@
 
 /* the interface (to internal code) for retrieving computed style data */
 
-#ifndef _nsStyleContext_h_
-#define _nsStyleContext_h_
+#ifndef _ComputedStyle_h_
+#define _ComputedStyle_h_
 
+#include "nsIMemoryReporter.h"
+#include "nsWindowSizes.h"
+#include <algorithm>
 #include "mozilla/Assertions.h"
 #include "mozilla/RestyleLogging.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StyleComplexColor.h"
+#include "mozilla/CachedInheritingStyles.h"
 #include "nsCSSAnonBoxes.h"
 
 class nsAtom;
 class nsPresContext;
 
 namespace mozilla {
+
 enum class CSSPseudoElementType : uint8_t;
-class GeckoStyleContext;
-class ServoStyleContext;
-} // namespace mozilla
+class ComputedStyle;
 
 extern "C" {
-  void Servo_StyleContext_AddRef(const mozilla::ServoStyleContext* aContext);
-  void Servo_StyleContext_Release(const mozilla::ServoStyleContext* aContext);
+  void Servo_ComputedStyle_AddRef(const mozilla::ComputedStyle* aStyle);
+  void Servo_ComputedStyle_Release(const mozilla::ComputedStyle* aStyle);
 }
 
+MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoComputedValuesMallocEnclosingSizeOf)
+
 /**
- * An nsStyleContext represents the computed style data for an element.
- * The computed style data are stored in a set of structs (see
- * nsStyleStruct.h) that are cached either on the style context or in
- * the rule tree (see nsRuleNode.h for a description of this caching and
- * how the cached structs are shared).
+ * A ComputedStyle represents the computed style data for an element.  The
+ * computed style data are stored in a set of structs (see nsStyleStruct.h) that
+ * are cached either on the style context or in the rule tree (see nsRuleNode.h
+ * for a description of this caching and how the cached structs are shared).
  *
- * Since the data in |nsIStyleRule|s and |nsRuleNode|s are immutable
- * (with a few exceptions, like system color changes), the data in an
- * nsStyleContext are also immutable (with the additional exception of
- * GetUniqueStyleData).  When style data change,
- * ElementRestyler::Restyle creates a new style context.
+ * Since the data in |nsIStyleRule|s and |nsRuleNode|s are immutable (with a few
+ * exceptions, like system color changes), the data in an ComputedStyle are also
+ * immutable (with the additional exception of GetUniqueStyleData).  When style
+ * data change, ElementRestyler::Restyle creates a new style context.
  *
- * Style contexts are reference counted.  References are generally held
- * by:
+ * ComputedStyles are reference counted. References are generally held by:
  *  1. the |nsIFrame|s that are using the style context and
  *  2. any *child* style contexts (this might be the reverse of
  *     expectation, but it makes sense in this case)
+ *
+ * FIXME(emilio): This comment is somewhat outdated now.
  */
 
-class nsStyleContext
+class ComputedStyle
 {
 public:
-  bool IsGecko() const { return !IsServo(); }
-  bool IsServo() const { return (mBits & NS_STYLE_CONTEXT_IS_GECKO) == 0; }
-  MOZ_DECL_STYLO_CONVERT_METHODS(mozilla::GeckoStyleContext, mozilla::ServoStyleContext);
+  ComputedStyle(nsPresContext* aPresContext,
+                nsAtom* aPseudoTag,
+                CSSPseudoElementType aPseudoType,
+                ServoComputedDataForgotten aComputedValues);
+
+  // FIXME(emilio): remove.
+  ComputedStyle* AsServo() { return this; }
+  const ComputedStyle* AsServo() const { return this; }
+
+  nsPresContext* PresContext() const { return mPresContext; }
+  const ServoComputedData* ComputedData() const { return &mSource; }
 
   // These two methods are for use by ArenaRefPtr.
+  //
+  // FIXME(emilio): Think this can go away.
   static mozilla::ArenaObjectID ArenaObjectID()
   {
-    return mozilla::eArenaObjectID_GeckoStyleContext;
+    return mozilla::eArenaObjectID_GeckoComputedStyle;
   }
   nsIPresShell* Arena();
 
-  inline void AddRef();
-  inline void Release();
+  void AddRef() { Servo_ComputedStyle_AddRef(this); }
+  void Release() { Servo_ComputedStyle_Release(this); }
 
-#ifdef DEBUG
-  void FrameAddRef();
-  void FrameRelease();
-#endif
+  // Return the style context whose style data should be used for the R,
+  // G, and B components of color, background-color, and border-*-color
+  // if RelevantLinkIsVisited().
+  //
+  // GetPseudo() and GetPseudoType() on this style context return the
+  // same as on |this|, and its depth in the tree (number of GetParent()
+  // calls until null is returned) is the same as |this|, since its
+  // parent is either |this|'s parent or |this|'s parent's
+  // style-if-visited.
+  //
+  // Structs on this context should never be examined without also
+  // examining the corresponding struct on |this|.  Doing so will likely
+  // both (1) lead to a privacy leak and (2) lead to dynamic change bugs
+  // related to the Peek code in ComputedStyle::CalcStyleDifference.
+  ComputedStyle* GetStyleIfVisited() const
+  {
+    return ComputedData()->visited_style.mPtr;
+  }
 
-  inline nsPresContext* PresContext() const;
+  bool IsLazilyCascadedPseudoElement() const
+  {
+    return IsPseudoElement() &&
+           !nsCSSPseudoElements::IsEagerlyCascadedInServo(GetPseudoType());
+  }
 
   nsAtom* GetPseudo() const { return mPseudoTag; }
   mozilla::CSSPseudoElementType GetPseudoType() const {
@@ -158,22 +190,6 @@ public:
   void SetIsStyleIfVisited()
     { mBits |= NS_STYLE_IS_STYLE_IF_VISITED; }
 
-  // Return the style context whose style data should be used for the R,
-  // G, and B components of color, background-color, and border-*-color
-  // if RelevantLinkIsVisited().
-  //
-  // GetPseudo() and GetPseudoType() on this style context return the
-  // same as on |this|, and its depth in the tree (number of GetParent()
-  // calls until null is returned) is the same as |this|, since its
-  // parent is either |this|'s parent or |this|'s parent's
-  // style-if-visited.
-  //
-  // Structs on this context should never be examined without also
-  // examining the corresponding struct on |this|.  Doing so will likely
-  // both (1) lead to a privacy leak and (2) lead to dynamic change bugs
-  // related to the Peek code in nsStyleContext::CalcStyleDifference.
-  inline nsStyleContext* GetStyleIfVisited() const;
-
   // Does any descendant of this style context have any style values
   // that were computed based on this style context's ancestors?
   bool HasChildThatUsesGrandancestorStyle() const
@@ -194,7 +210,42 @@ public:
     return mBits & GetBitForSID(aSID);
   }
 
-  inline const ServoComputedData* ComputedData();
+  ComputedStyle* GetCachedInheritingAnonBoxStyle(nsAtom* aAnonBox) const
+  {
+    MOZ_ASSERT(nsCSSAnonBoxes::IsInheritingAnonBox(aAnonBox));
+    return mCachedInheritingStyles.Lookup(aAnonBox);
+  }
+
+  void SetCachedInheritedAnonBoxStyle(nsAtom* aAnonBox, ComputedStyle* aStyle)
+  {
+    MOZ_ASSERT(!GetCachedInheritingAnonBoxStyle(aAnonBox));
+    mCachedInheritingStyles.Insert(aStyle);
+  }
+
+  ComputedStyle* GetCachedLazyPseudoStyle(CSSPseudoElementType aPseudo) const;
+
+  void SetCachedLazyPseudoStyle(ComputedStyle* aStyle)
+  {
+    MOZ_ASSERT(aStyle->GetPseudo() && !aStyle->IsAnonBox());
+    MOZ_ASSERT(!GetCachedLazyPseudoStyle(aStyle->GetPseudoType()));
+    MOZ_ASSERT(!IsLazilyCascadedPseudoElement(), "lazy pseudos can't inherit lazy pseudos");
+    MOZ_ASSERT(aStyle->IsLazilyCascadedPseudoElement());
+
+    // Since we're caching lazy pseudo styles on the ComputedValues of the
+    // originating element, we can assume that we either have the same
+    // originating element, or that they were at least similar enough to share
+    // the same ComputedValues, which means that they would match the same
+    // pseudo rules. This allows us to avoid matching selectors and checking
+    // the rule node before deciding to share.
+    //
+    // The one place this optimization breaks is with pseudo-elements that
+    // support state (like :hover). So we just avoid sharing in those cases.
+    if (nsCSSPseudoElements::PseudoElementSupportsUserActionState(aStyle->GetPseudoType())) {
+      return;
+    }
+
+    mCachedInheritingStyles.Insert(aStyle);
+  }
 
   void AddStyleBit(const uint64_t& aBit) { mBits |= aBit; }
 
@@ -228,7 +279,7 @@ public:
    * computation if the data is not cached on either the style context
    * or the rule node.
    *
-   * Perhaps this shouldn't be a public nsStyleContext API.
+   * Perhaps this shouldn't be a public ComputedStyle API.
    */
   #define STYLE_STRUCT(name_, checkdata_cb_)  \
     inline const nsStyle##name_ * PeekStyle##name_();
@@ -253,7 +304,7 @@ public:
    * struct.  This must only be true for Servo style contexts.  When
    * true, the Variables bit in aEqualStructs will be set.
    */
-  nsChangeHint CalcStyleDifference(nsStyleContext* aNewContext,
+  nsChangeHint CalcStyleDifference(ComputedStyle* aNewContext,
                                    uint32_t* aEqualStructs,
                                    uint32_t* aSamePointerStructs,
 				   bool aIgnoreVariables = false);
@@ -299,13 +350,37 @@ public:
   static bool LookupStruct(const nsACString& aName, nsStyleStructID& aResult);
 #endif
 
-protected:
-  // protected destructor to discourage deletion outside of Release()
-  ~nsStyleContext() {}
+  /**
+   * Makes this context match |aOther| in terms of which style structs have
+   * been resolved.
+   */
+  inline void ResolveSameStructsAs(const ComputedStyle* aOther);
 
-  // Delegated Helper constructor.
-  nsStyleContext(nsAtom* aPseudoTag,
-                 mozilla::CSSPseudoElementType aPseudoType);
+  // The |aCVsSize| outparam on this function is where the actual CVs size
+  // value is added. It's done that way because the callers know which value
+  // the size should be added to.
+  void AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aCVsSize) const
+  {
+    // Note: |this| sits within a servo_arc::Arc, i.e. it is preceded by a
+    // refcount. So we need to measure it with a function that can handle an
+    // interior pointer. We use ServoComputedValuesMallocEnclosingSizeOf to
+    // clearly identify in DMD's output the memory measured here.
+    *aCVsSize += ServoComputedValuesMallocEnclosingSizeOf(this);
+    mSource.AddSizeOfExcludingThis(aSizes);
+    mCachedInheritingStyles.AddSizeOfIncludingThis(aSizes, aCVsSize);
+  }
+
+  // Needs to be public so that we can call it from Servo.
+  ~ComputedStyle() = default;
+
+protected:
+
+  nsPresContext* mPresContext;
+
+  ServoComputedData mSource;
+
+  // A cache of anonymous box and lazy pseudo styles inheriting from this style.
+  CachedInheritingStyles mCachedInheritingStyles;
 
   // Helper functions for GetStyle* and PeekStyle*
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                  \
@@ -342,5 +417,6 @@ protected:
 #endif
 };
 
+} // namespace mozilla
 
 #endif

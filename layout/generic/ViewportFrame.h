@@ -31,8 +31,8 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(ViewportFrame)
 
-  explicit ViewportFrame(nsStyleContext* aContext)
-    : ViewportFrame(aContext, kClassID)
+  explicit ViewportFrame(ComputedStyle* aStyle)
+    : ViewportFrame(aStyle, kClassID)
   {}
 
   virtual ~ViewportFrame() { } // useful for debugging
@@ -90,8 +90,8 @@ public:
 #endif
 
 protected:
-  ViewportFrame(nsStyleContext* aContext, ClassID aID)
-    : nsContainerFrame(aContext, aID)
+  ViewportFrame(ComputedStyle* aStyle, ClassID aID)
+    : nsContainerFrame(aStyle, aID)
     , mView(nullptr)
   {}
 

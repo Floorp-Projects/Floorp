@@ -17,7 +17,7 @@
  * @return a newly allocated nsRubyFrame (infallible)
  */
 nsContainerFrame* NS_NewRubyFrame(nsIPresShell* aPresShell,
-                                  nsStyleContext* aContext);
+                                  mozilla::ComputedStyle* aStyle);
 
 class nsRubyFrame final : public nsInlineFrame
 {
@@ -46,9 +46,9 @@ public:
 
 protected:
   friend nsContainerFrame* NS_NewRubyFrame(nsIPresShell* aPresShell,
-                                           nsStyleContext* aContext);
-  explicit nsRubyFrame(nsStyleContext* aContext)
-    : nsInlineFrame(aContext, kClassID)
+                                           ComputedStyle* aStyle);
+  explicit nsRubyFrame(ComputedStyle* aStyle)
+    : nsInlineFrame(aStyle, kClassID)
   {}
 
   void ReflowSegment(nsPresContext* aPresContext,

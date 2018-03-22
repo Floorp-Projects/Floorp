@@ -27,7 +27,7 @@ class KeyboardEvent;
 } // namespace dom
 } // namespace mozilla
 
-nsIFrame* NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame* NS_NewMenuBarFrame(nsIPresShell* aPresShell, mozilla::ComputedStyle* aStyle);
 
 class nsMenuBarFrame final : public nsBoxFrame, public nsMenuParent
 {
@@ -35,7 +35,7 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsMenuBarFrame)
 
-  explicit nsMenuBarFrame(nsStyleContext* aContext);
+  explicit nsMenuBarFrame(ComputedStyle* aStyle);
 
   // nsMenuParent interface
   virtual nsMenuFrame* GetCurrentMenuItem() override;

@@ -222,12 +222,12 @@ Count %Total  Function Name
 <a href="#23081">8806   5.8     __libc_poll</a>
 <a href="#40008">2254   1.5     __i686.get_pc_thunk.bx</a>
 <a href="#21390">2053   1.4     _int_malloc</a>
-<a href="#49013">1777   1.2     nsStyleContext::GetStyleData(nsStyleStructID)</a>
+<a href="#49013">1777   1.2     ComputedStyle::GetStyleData(nsStyleStructID)</a>
 <a href="#21380">1600   1.1     __libc_malloc</a>
 <a href="#603">1552   1.0     nsCOMPtr_base::~nsCOMPtr_base()</a>
 </pre> </blockquote>
 
-This shows that of the 151603 times the timer fired, 1777 (1.2% of the total) were inside nsStyleContext::GetStyleData() and 1552 (1.0% of the total) were in the nsCOMPtr_base destructor.
+This shows that of the 151603 times the timer fired, 1777 (1.2% of the total) were inside ComputedStyle::GetStyleData() and 1552 (1.0% of the total) were in the nsCOMPtr_base destructor.
 
 <p>
 In general, the functions with the highest count are the functions which

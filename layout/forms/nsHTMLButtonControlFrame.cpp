@@ -20,16 +20,16 @@
 using namespace mozilla;
 
 nsContainerFrame*
-NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsHTMLButtonControlFrame(aContext);
+  return new (aPresShell) nsHTMLButtonControlFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLButtonControlFrame)
 
-nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(nsStyleContext* aContext,
+nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(ComputedStyle* aStyle,
                                                    nsIFrame::ClassID aID)
-  : nsContainerFrame(aContext, aID)
+  : nsContainerFrame(aStyle, aID)
 {
 }
 
@@ -190,7 +190,7 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(firstKid, "Button should have a child frame for its contents");
   MOZ_ASSERT(!firstKid->GetNextSibling(),
              "Button should have exactly one child frame");
-  MOZ_ASSERT(firstKid->StyleContext()->GetPseudo() ==
+  MOZ_ASSERT(firstKid->Style()->GetPseudo() ==
              nsCSSAnonBoxes::buttonContent,
              "Button's child frame has unexpected pseudo type!");
 
@@ -382,17 +382,17 @@ nsresult nsHTMLButtonControlFrame::SetFormProperty(nsAtom* aName, const nsAStrin
   return NS_OK;
 }
 
-nsStyleContext*
-nsHTMLButtonControlFrame::GetAdditionalStyleContext(int32_t aIndex) const
+ComputedStyle*
+nsHTMLButtonControlFrame::GetAdditionalComputedStyle(int32_t aIndex) const
 {
-  return mRenderer.GetStyleContext(aIndex);
+  return mRenderer.GetComputedStyle(aIndex);
 }
 
 void
-nsHTMLButtonControlFrame::SetAdditionalStyleContext(int32_t aIndex,
-                                                    nsStyleContext* aStyleContext)
+nsHTMLButtonControlFrame::SetAdditionalComputedStyle(int32_t aIndex,
+                                                    ComputedStyle* aComputedStyle)
 {
-  mRenderer.SetStyleContext(aIndex, aStyleContext);
+  mRenderer.SetComputedStyle(aIndex, aComputedStyle);
 }
 
 void
