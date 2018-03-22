@@ -56,8 +56,16 @@ ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal)
   return DOMPrefs::ServiceWorkersEnabled();
 }
 
-ServiceWorkerContainer::ServiceWorkerContainer(nsPIDOMWindowInner* aWindow)
-  : DOMEventTargetHelper(aWindow)
+// static
+already_AddRefed<ServiceWorkerContainer>
+ServiceWorkerContainer::Create(nsIGlobalObject* aGlobal)
+{
+  RefPtr<ServiceWorkerContainer> ref = new ServiceWorkerContainer(aGlobal);
+  return ref.forget();
+}
+
+ServiceWorkerContainer::ServiceWorkerContainer(nsIGlobalObject* aGlobal)
+  : DOMEventTargetHelper(aGlobal)
 {
 }
 
