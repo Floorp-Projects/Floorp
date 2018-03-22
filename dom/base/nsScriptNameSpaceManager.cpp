@@ -222,13 +222,6 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
     return NS_OK;
   }
 
-  // If a external constructor is already defined with aClassName we
-  // won't overwrite it.
-
-  if (s->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
-    return NS_OK;
-  }
-
   NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized,
                "Whaaa, JS environment name clash!");
 
