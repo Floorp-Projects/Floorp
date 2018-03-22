@@ -50,17 +50,17 @@ exports.waitForRecordingStartedEvents = function(panel, options = {}) {
     options.skipWaitingForRecordingStarted
       ? null
       : once(controller, EVENTS.RECORDING_STATE_CHANGE, {
-        expectedArgs: { "1": "recording-started" }
+        expectedArgs: ["recording-started"]
       }),
     options.skipWaitingForViewState
       ? null
       : once(view, EVENTS.UI_STATE_CHANGED, {
-        expectedArgs: { "1": options.expectedViewState }
+        expectedArgs: [options.expectedViewState]
       }),
     options.skipWaitingForOverview
       ? null
       : once(overview, EVENTS.UI_OVERVIEW_RENDERED, {
-        expectedArgs: { "1": Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL }
+        expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL]
       }),
   ]);
 };
@@ -86,22 +86,22 @@ exports.waitForRecordingStoppedEvents = function(panel, options = {}) {
     options.skipWaitingForRecordingStop
       ? null
       : once(controller, EVENTS.RECORDING_STATE_CHANGE, {
-        expectedArgs: { "1": "recording-stopping" }
+        expectedArgs: ["recording-stopping"]
       }),
     options.skipWaitingForRecordingStop
       ? null
       : once(controller, EVENTS.RECORDING_STATE_CHANGE, {
-        expectedArgs: { "1": "recording-stopped" }
+        expectedArgs: ["recording-stopped"]
       }),
     options.skipWaitingForViewState
       ? null
       : once(view, EVENTS.UI_STATE_CHANGED, {
-        expectedArgs: { "1": options.expectedViewState }
+        expectedArgs: [options.expectedViewState]
       }),
     options.skipWaitingForOverview
       ? null
       : once(overview, EVENTS.UI_OVERVIEW_RENDERED, {
-        expectedArgs: { "1": Constants.FRAMERATE_GRAPH_HIGH_RES_INTERVAL }
+        expectedArgs: [Constants.FRAMERATE_GRAPH_HIGH_RES_INTERVAL]
       }),
     options.skipWaitingForSubview
       ? null
@@ -138,7 +138,7 @@ exports.waitForOverviewRenderedWithMarkers = (panel, minTimes = 3, minMarkers = 
 
   return Promise.all([
     times(OverviewView, EVENTS.UI_OVERVIEW_RENDERED, minTimes, {
-      expectedArgs: { "1": Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL }
+      expectedArgs: [Constants.FRAMERATE_GRAPH_LOW_RES_INTERVAL]
     }),
     waitUntil(() =>
       PerformanceController.getCurrentRecording().getMarkers().length >= minMarkers

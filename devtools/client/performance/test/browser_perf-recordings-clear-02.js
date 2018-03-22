@@ -43,7 +43,7 @@ add_task(async function() {
 
   let recordingDeleted = times(PerformanceController, EVENTS.RECORDING_DELETED, 2);
   let recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: { "1": "recording-stopped" }
+    expectedArgs: ["recording-stopped"]
   });
 
   PerformanceController.clearRecordings();
