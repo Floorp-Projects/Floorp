@@ -13,6 +13,7 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema, validate_schema
 from taskgraph.util.scriptworker import get_push_apk_scope
+from taskgraph.util.taskcluster import get_artifact_prefix
 
 from voluptuous import Optional, Required
 
@@ -85,7 +86,9 @@ Given dependencies: {}.
 def make_task_description(config, jobs):
     for job in jobs:
         job['dependencies'] = generate_dependencies(job['dependent-tasks'])
-        job['worker']['upstream-artifacts'] = generate_upstream_artifacts(job['dependencies'])
+        job['worker']['upstream-artifacts'] = generate_upstream_artifacts(
+            job, job['dependencies']
+        )
 
         # Use the rc-google-play-track and rc-rollout-percentage in RC relpro flavors
         if config.params['release_type'] == 'rc':
@@ -128,11 +131,12 @@ def generate_dependencies(dependent_tasks):
     return dependencies
 
 
-def generate_upstream_artifacts(dependencies):
+def generate_upstream_artifacts(job, dependencies):
+    artifact_prefix = get_artifact_prefix(job)
     apks = [{
         'taskId': {'task-reference': '<{}>'.format(task_kind)},
         'taskType': 'signing',
-        'paths': ['public/build/target.apk'],
+        'paths': ['{}/target.apk'.format(artifact_prefix)],
     } for task_kind in dependencies.keys()
       if task_kind not in ('google-play-strings', 'beetmover-checksums')
     ]
