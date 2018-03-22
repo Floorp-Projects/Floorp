@@ -385,7 +385,9 @@ android.applicationVariants.all { variant ->
             versionCode = versionCode + (1 * multiplier)
         }
 
-        variant.mergedFlavor.versionCode = versionCode
+        variant.outputs.all { output ->
+            setVersionCodeOverride(versionCode)
+        }
     }
 
     println("----------------------------------------------")
