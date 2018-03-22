@@ -6,9 +6,7 @@
 
 ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-var gServer = new HttpServer();
-gServer.start(-1);
+var gServer = AddonTestUtils.createHttpServer();
 
 const PREF_GETADDONS_BROWSEADDONS        = "extensions.getAddons.browseAddons";
 const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseURL";
@@ -16,6 +14,56 @@ const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseUR
 const PORT          = gServer.identity.primaryPort;
 const BASE_URL      = "http://localhost:" + PORT;
 const DEFAULT_URL   = "about:blank";
+
+const ADDONS = [
+  {
+    id: "test_AddonRepository_1@tests.mozilla.org",
+    version: "1.1",
+
+    name: "XPI Add-on 1",
+    description: "XPI Add-on 1 - Description",
+    creator: "XPI Add-on 1 - Creator",
+    developer: ["XPI Add-on 1 - First Developer",
+                "XPI Add-on 1 - Second Developer"],
+    translator: ["XPI Add-on 1 - First Translator",
+                 "XPI Add-on 1 - Second Translator"],
+    contributor: ["XPI Add-on 1 - First Contributor",
+                  "XPI Add-on 1 - Second Contributor"],
+    homepageURL: "http://example.com/xpi/1/homepage.html",
+    optionsURL: "http://example.com/xpi/1/options.html",
+    aboutURL: "http://example.com/xpi/1/about.html",
+    iconURL: "http://example.com/xpi/1/icon.png",
+
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"}],
+  },
+  {
+    id: "test_AddonRepository_2@tests.mozilla.org",
+    type: 4,
+    internalName: "test2/1.0",
+    version: "1.2",
+    name: "XPI Add-on 2",
+
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"}],
+  },
+  {
+    id: "test_AddonRepository_3@tests.mozilla.org",
+    type: "4",
+    internalName: "test3/1.0",
+    version: "1.3",
+    name: "XPI Add-on 3",
+
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"}],
+  },
+];
 
 gPort = PORT;
 
@@ -109,68 +157,45 @@ function check_results(aActualAddons, aExpectedAddons) {
   });
 }
 
-function run_test() {
+add_task(async function setup() {
   // Setup for test
-  do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
-  startupManager();
+  let xpis = ADDONS.map(addon => createTempXPIFile(addon));
+
+  // Register other add-on XPI files
+  gServer.registerFile(INSTALL_URL2, xpis[1]);
+  gServer.registerFile(INSTALL_URL3, xpis[2]);
+
+  // Register files used to test search failure
+  mapUrlToFile(GET_TEST.failedURL,
+               do_get_file("data/test_AddonRepository_fail.json"),
+               gServer);
+
+  // Register files used to test search success
+  mapUrlToFile(GET_TEST.successfulURL,
+               do_get_file("data/test_AddonRepository_getAddonsByIDs.json"),
+               gServer);
+
+  await promiseStartupManager();
 
   // Install an add-on so can check that it isn't returned in the results
-  installAllFiles([do_get_addon("test_AddonRepository_1")], function addon_1_install_callback() {
-    restartManager();
+  await promiseInstallFile(xpis[0]);
+  await promiseRestartManager();
 
-    // Register other add-on XPI files
-    gServer.registerFile(INSTALL_URL2,
-                        do_get_addon("test_AddonRepository_2"));
-    gServer.registerFile(INSTALL_URL3,
-                        do_get_addon("test_AddonRepository_3"));
+  // Create an active AddonInstall so can check that it isn't returned in the results
+  let install = await AddonManager.getInstallForURL(BASE_URL + INSTALL_URL2,
+                                                    undefined,
+                                                    "application/x-xpinstall");
+  install.install();
 
-    // Register files used to test search failure
-    mapUrlToFile(GET_TEST.failedURL,
-                 do_get_file("data/test_AddonRepository_fail.json"),
-                 gServer);
-
-    // Register files used to test search success
-    mapUrlToFile(GET_TEST.successfulURL,
-                 do_get_file("data/test_AddonRepository_getAddonsByIDs.json"),
-                 gServer);
-
-    // Create an active AddonInstall so can check that it isn't returned in the results
-    AddonManager.getInstallForURL(BASE_URL + INSTALL_URL2, function addon_2_get(aInstall) {
-      try {
-        aInstall.install();
-      } catch (e) {
-        info("Failed to install add-on " + aInstall.sourceURI.spec);
-        do_report_unexpected_exception(e);
-      }
-
-      // Create a non-active AddonInstall so can check that it is returned in the results
-      AddonManager.getInstallForURL(BASE_URL + INSTALL_URL3,
-                                    run_test_1, "application/x-xpinstall");
-    }, "application/x-xpinstall");
-  });
-}
-
-function end_test() {
-  let testDir = gProfD.clone();
-  testDir.append("extensions");
-  testDir.append("staged");
-  gServer.stop(function() {
-    function loop() {
-      if (!testDir.exists()) {
-        info("Staged directory has been cleaned up");
-        do_test_finished();
-      }
-      info("Waiting 1 second until cleanup is complete");
-      do_timeout(1000, loop);
-    }
-    loop();
-  });
-}
+  // Create a non-active AddonInstall so can check that it is returned in the results
+  await AddonManager.getInstallForURL(BASE_URL + INSTALL_URL3,
+                                      undefined, "application/x-xpinstall");
+});
 
 // Tests homepageURL and getSearchURL()
-function run_test_1() {
+add_task(async function test_1() {
   function check_urls(aPreference, aGetURL, aTests) {
     aTests.forEach(function(aTest) {
       Services.prefs.setCharPref(aPreference, aTest.preferenceValue);
@@ -228,28 +253,19 @@ function run_test_1() {
 
     check_urls(aTest.preference, aTest.getURL, aTest.urlTests);
   });
-
-  run_test_getAddonsByID_fails();
-}
+});
 
 // Tests failure of AddonRepository.getAddonsByIDs()
-function run_test_getAddonsByID_fails() {
+add_task(async function test_getAddonsByID_fails() {
   Services.prefs.setCharPref(GET_TEST.preference, GET_TEST.preferenceValue);
-  AddonRepository.getAddonsByIDs(GET_TEST.failedIDs).then(result => {
-    do_throw("getAddonsByIDs should not have succeeded");
-    end_test();
-  }).catch(err => {
-    run_test_getAddonsByID_succeeds();
-  });
-}
+
+  await Assert.rejects(
+    AddonRepository.getAddonsByIDs(GET_TEST.failedIDs));
+});
 
 // Tests success of AddonRepository.getAddonsByIDs()
-function run_test_getAddonsByID_succeeds() {
-  AddonRepository.getAddonsByIDs(GET_TEST.successfulIDs).then(result => {
-    check_results(result, GET_RESULTS);
-    end_test();
-  }).catch(err => {
-    do_throw(err);
-    end_test();
-  });
-}
+add_task(async function test_getAddonsByID_succeeds() {
+  let result = await AddonRepository.getAddonsByIDs(GET_TEST.successfulIDs);
+
+  check_results(result, GET_RESULTS);
+});
