@@ -16,34 +16,46 @@ use std::os::raw::{c_long, c_void};
 const PULSE_NO_GAIN: f32 = -1.0;
 
 fn cubeb_channel_to_pa_channel(channel: ffi::cubeb_channel) -> pa_channel_position_t {
-    use cubeb_backend::ffi::*;
-    assert_ne!(channel, CHANNEL_INVALID);
-
     match channel {
-        CHANNEL_LEFT => PA_CHANNEL_POSITION_FRONT_LEFT,
-        CHANNEL_RIGHT => PA_CHANNEL_POSITION_FRONT_RIGHT,
-        CHANNEL_CENTER => PA_CHANNEL_POSITION_FRONT_CENTER,
-        CHANNEL_LS => PA_CHANNEL_POSITION_SIDE_LEFT,
-        CHANNEL_RS => PA_CHANNEL_POSITION_SIDE_RIGHT,
-        CHANNEL_RLS => PA_CHANNEL_POSITION_REAR_LEFT,
-        CHANNEL_RCENTER => PA_CHANNEL_POSITION_REAR_CENTER,
-        CHANNEL_RRS => PA_CHANNEL_POSITION_REAR_RIGHT,
-        CHANNEL_LFE => PA_CHANNEL_POSITION_LFE,
-        // Also handles CHANNEL_MONO case
-        _ => PA_CHANNEL_POSITION_MONO,
+        ffi::CHANNEL_FRONT_LEFT => PA_CHANNEL_POSITION_FRONT_LEFT,
+        ffi::CHANNEL_FRONT_RIGHT => PA_CHANNEL_POSITION_FRONT_RIGHT,
+        ffi::CHANNEL_FRONT_CENTER => PA_CHANNEL_POSITION_FRONT_CENTER,
+        ffi::CHANNEL_LOW_FREQUENCY => PA_CHANNEL_POSITION_LFE,
+        ffi::CHANNEL_BACK_LEFT => PA_CHANNEL_POSITION_REAR_LEFT,
+        ffi::CHANNEL_BACK_RIGHT => PA_CHANNEL_POSITION_REAR_RIGHT,
+        ffi::CHANNEL_FRONT_LEFT_OF_CENTER => PA_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
+        ffi::CHANNEL_FRONT_RIGHT_OF_CENTER => PA_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
+        ffi::CHANNEL_BACK_CENTER => PA_CHANNEL_POSITION_REAR_CENTER,
+        ffi::CHANNEL_SIDE_LEFT => PA_CHANNEL_POSITION_SIDE_LEFT,
+        ffi::CHANNEL_SIDE_RIGHT => PA_CHANNEL_POSITION_SIDE_RIGHT,
+        ffi::CHANNEL_TOP_CENTER => PA_CHANNEL_POSITION_TOP_CENTER,
+        ffi::CHANNEL_TOP_FRONT_LEFT => PA_CHANNEL_POSITION_TOP_FRONT_LEFT,
+        ffi::CHANNEL_TOP_FRONT_CENTER => PA_CHANNEL_POSITION_TOP_FRONT_CENTER,
+        ffi::CHANNEL_TOP_FRONT_RIGHT => PA_CHANNEL_POSITION_TOP_FRONT_RIGHT,
+        ffi::CHANNEL_TOP_BACK_LEFT => PA_CHANNEL_POSITION_TOP_REAR_LEFT,
+        ffi::CHANNEL_TOP_BACK_CENTER => PA_CHANNEL_POSITION_TOP_REAR_CENTER,
+        ffi::CHANNEL_TOP_BACK_RIGHT => PA_CHANNEL_POSITION_TOP_REAR_RIGHT,
+        _ => PA_CHANNEL_POSITION_INVALID,
     }
 }
 
 fn layout_to_channel_map(layout: ChannelLayout) -> pulse::ChannelMap {
-    assert_ne!(layout, ChannelLayout::Undefined);
-
-    let order = mixer::channel_index_to_order(layout.into());
+    assert_ne!(layout, ChannelLayout::UNDEFINED);
 
     let mut cm = pulse::ChannelMap::init();
-    cm.channels = order.len() as u8;
-    for (s, d) in order.iter().zip(cm.map.iter_mut()) {
-        *d = cubeb_channel_to_pa_channel(*s);
+
+    let mut channel_map = layout.bits();
+    let mut i = 0;
+    while channel_map != 0 {
+        let channel = (channel_map & 1) << i;
+        if channel != 0 {
+            cm.map[i] = cubeb_channel_to_pa_channel(channel);
+            i += 1;
+        }
+        channel_map = channel_map >> 1;
     }
+
+    cm.channels = layout.num_channels() as _;
     cm
 }
 
@@ -626,7 +638,7 @@ impl<'ctx> PulseStream<'ctx> {
         };
 
         let cm: Option<pa_channel_map> = match stream_params.layout() {
-            ChannelLayout::Undefined => None,
+            ChannelLayout::UNDEFINED => None,
             _ => Some(layout_to_channel_map(stream_params.layout())),
         };
 
