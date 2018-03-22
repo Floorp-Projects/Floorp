@@ -30,7 +30,7 @@ async function testClearData(clearSiteData, clearCache) {
 
   // Test the initial states.
   let cacheUsage = await SiteDataManager.getCacheSize();
-  let quotaUsage = await getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
+  let quotaUsage = await SiteDataTestUtils.getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
   let totalUsage = await SiteDataManager.getTotalUsage();
   Assert.greater(cacheUsage, 0, "The cache usage should not be 0");
   Assert.greater(quotaUsage, 0, "The quota usage should not be 0");
@@ -127,7 +127,7 @@ async function testClearData(clearSiteData, clearCache) {
       return usage == 0;
     }, "The total usage should be removed");
   } else {
-    quotaUsage = await getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
+    quotaUsage = await SiteDataTestUtils.getQuotaUsage(TEST_QUOTA_USAGE_ORIGIN);
     totalUsage = await SiteDataManager.getTotalUsage();
     Assert.greater(quotaUsage, 0, "The quota usage should not be 0");
     Assert.greater(totalUsage, 0, "The total usage should not be 0");
