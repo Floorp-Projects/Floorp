@@ -911,7 +911,7 @@ nsContentTreeOwner::ProvideWindow(mozIDOMWindowProxy* aParent,
     //
     // This method handles setting the opener for us, so we don't need to set it
     // ourselves.
-    RefPtr<NullPrincipal> nullPrincipal = NullPrincipal::Create();
+    RefPtr<NullPrincipal> nullPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
     return browserDOMWin->CreateContentWindow(aURI, aParent, openLocation,
                                               flags, nullPrincipal, aReturn);
   }

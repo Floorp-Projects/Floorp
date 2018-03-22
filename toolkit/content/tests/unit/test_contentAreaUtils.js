@@ -11,8 +11,7 @@ function loadUtilsScript() {
 }
 
 function test_urlSecurityCheck() {
-  var nullPrincipal = Cc["@mozilla.org/nullprincipal;1"].
-                      createInstance(Ci.nsIPrincipal);
+  var nullPrincipal = Services.scriptSecurityManager.createNullPrincipal({});
 
   const HTTP_URI = "http://www.mozilla.org/";
   const CHROME_URI = "chrome://browser/content/browser.xul";
