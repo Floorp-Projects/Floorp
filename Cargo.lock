@@ -117,15 +117,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "bincode"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "bincode"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
@@ -2025,7 +2016,7 @@ name = "webrender"
 version = "0.57.0"
 dependencies = [
  "app_units 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "bincode 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2054,7 +2045,7 @@ name = "webrender_api"
 version = "0.57.0"
 dependencies = [
  "app_units 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "bincode 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2195,7 +2186,6 @@ dependencies = [
 "checksum atty 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d912da0db7fa85514874458ca3651fe2cddace8d0b0505571dbdcd41ab490159"
 "checksum base64 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "96434f987501f0ed4eb336a411e0631ecd1afa11574fe148587adc4ff96143c9"
 "checksum binary-space-partition 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "88ceb0d16c4fd0e42876e298d7d3ce3780dd9ebdcbe4199816a32c77e08597ff"
-"checksum bincode 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "9d3fb369af639822830328794eba2501b3479652fcd021b2aeb1ed4984202afd"
 "checksum bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bda13183df33055cbb84b847becce220d392df502ebe7a4a78d7021771ed94d0"
 "checksum bindgen 0.33.2 (registry+https://github.com/rust-lang/crates.io-index)" = "603ed8d8392ace9581e834e26bd09799bf1e989a79bd1aedbb893e72962bdc6e"
 "checksum bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "aad18937a628ec6abcd26d1489012cc0e18c21798210f491af69ded9b881106d"
