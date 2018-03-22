@@ -187,9 +187,9 @@ nsGenericHTMLFrameElement::PresetOpenerWindow(mozIDOMWindowProxy* aWindow, Error
 }
 
 void
-nsGenericHTMLFrameElement::InternalSetFrameLoader(nsIFrameLoader* aNewFrameLoader)
+nsGenericHTMLFrameElement::InternalSetFrameLoader(nsFrameLoader* aNewFrameLoader)
 {
-  mFrameLoader = static_cast<nsFrameLoader*>(aNewFrameLoader);
+  mFrameLoader = aNewFrameLoader;
 }
 
 void

@@ -28,6 +28,10 @@ class nsFrameLoader;
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
 
+// We define a "native" type for nsFrameLoader so that the rust xpidl
+// codegen doesn't try to do anything with it.
+[ptr] native nativeFrameLoader(nsFrameLoader);
+
 [scriptable, builtinclass, uuid(adc1b3ba-8deb-4943-8045-e6de0044f2ce)]
 interface nsIFrameLoaderOwner : nsISupports
 {
@@ -44,5 +48,5 @@ interface nsIFrameLoaderOwner : nsISupports
    * SwapFrameLoaders.
    */
   [noscript, notxpcom] void
-  internalSetFrameLoader(in nsIFrameLoader aNewFrameLoader);
+  internalSetFrameLoader(in nativeFrameLoader aNewFrameLoader);
 };

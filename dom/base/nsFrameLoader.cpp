@@ -1196,7 +1196,7 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
   // Perform the actual swap of the internal refptrs. We keep a strong reference
   // to ourselves to make sure we don't die while we overwrite our reference to
   // ourself.
-  nsCOMPtr<nsIFrameLoader> kungFuDeathGrip(this);
+  RefPtr<nsFrameLoader> kungFuDeathGrip(this);
   aThisOwner->InternalSetFrameLoader(aOther);
   aOtherOwner->InternalSetFrameLoader(kungFuDeathGrip);
 
@@ -1621,7 +1621,7 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   // Perform the actual swap of the internal refptrs. We keep a strong reference
   // to ourselves to make sure we don't die while we overwrite our reference to
   // ourself.
-  nsCOMPtr<nsIFrameLoader> kungFuDeathGrip(this);
+  RefPtr<nsFrameLoader> kungFuDeathGrip(this);
   aThisOwner->InternalSetFrameLoader(aOther);
   aOtherOwner->InternalSetFrameLoader(kungFuDeathGrip);
 
@@ -2544,8 +2544,9 @@ GetContentParent(Element* aBrowser)
     return ReturnTuple(nullptr, nullptr);
   }
 
-  nsCOMPtr<nsIFrameLoader> otherLoader;
-  browser->GetSameProcessAsFrameLoader(getter_AddRefs(otherLoader));
+  nsCOMPtr<nsISupports> otherLoaderAsSupports;
+  browser->GetSameProcessAsFrameLoader(getter_AddRefs(otherLoaderAsSupports));
+  RefPtr<nsFrameLoader> otherLoader = do_QueryObject(otherLoaderAsSupports);
   if (!otherLoader) {
     return ReturnTuple(nullptr, nullptr);
   }
