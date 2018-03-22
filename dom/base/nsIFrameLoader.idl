@@ -21,11 +21,6 @@ interface nsIWebProgressListener;
 interface nsIFrameLoader : nsISupports
 {
   /**
-   * Get the docshell from the frame loader.
-   */
-  readonly attribute nsIDocShell docShell;
-
-  /**
    * Get this frame loader's TabParent, if it has a remote frame.  Otherwise,
    * returns null.
    */

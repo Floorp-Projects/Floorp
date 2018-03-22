@@ -4258,8 +4258,7 @@ EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
     // tell the subdocument that we're moving out of it
     nsSubDocumentFrame* subdocFrame = do_QueryFrame(wrapper->mLastOverFrame.GetFrame());
     if (subdocFrame) {
-      nsCOMPtr<nsIDocShell> docshell;
-      subdocFrame->GetDocShell(getter_AddRefs(docshell));
+      nsIDocShell* docshell = subdocFrame->GetDocShell();
       if (docshell) {
         RefPtr<nsPresContext> presContext;
         docshell->GetPresContext(getter_AddRefs(presContext));

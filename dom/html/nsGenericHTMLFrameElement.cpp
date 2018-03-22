@@ -127,8 +127,7 @@ nsGenericHTMLFrameElement::GetContentWindow()
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocShell> doc_shell;
-  mFrameLoader->GetDocShell(getter_AddRefs(doc_shell));
+  nsCOMPtr<nsIDocShell> doc_shell = mFrameLoader->GetDocShell(IgnoreErrors());
   if (!doc_shell) {
     return nullptr;
   }
