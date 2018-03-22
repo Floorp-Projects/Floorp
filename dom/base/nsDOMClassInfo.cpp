@@ -778,32 +778,6 @@ nsDOMClassInfo::ShutDown()
 }
 
 static nsresult
-BaseStubConstructor(nsIWeakReference* aWeakOwner,
-                    const nsGlobalNameStruct *name_struct, JSContext *cx,
-                    JS::Handle<JSObject*> obj, const JS::CallArgs &args)
-{
-  MOZ_ASSERT(obj);
-  MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
-
-  nsresult rv;
-  nsCOMPtr<nsISupports> native;
-  if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
-    rv = NS_ERROR_NOT_AVAILABLE;
-  } else {
-    MOZ_ASSERT_UNREACHABLE("We have no eTypeExternalConstructor anymore; "
-                           "this code is about to go away");
-    native = do_CreateInstance(name_struct->mCID, &rv);
-  }
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Failed to create the object");
-    return rv;
-  }
-
-  js::AssertSameCompartment(cx, obj);
-  return nsContentUtils::WrapNative(cx, native, args.rval(), true);
-}
-
-static nsresult
 DefineInterfaceConstants(JSContext *cx, JS::Handle<JSObject*> obj, const nsIID *aIID)
 {
   nsCOMPtr<nsIInterfaceInfoManager>
@@ -850,10 +824,8 @@ class nsDOMConstructor final : public nsIDOMDOMConstructor
 {
 protected:
   nsDOMConstructor(const char16_t* aName,
-                   bool aIsConstructable,
                    nsPIDOMWindowInner* aOwner)
     : mClassName(aName),
-      mConstructable(aIsConstructable),
       mWeakOwner(do_GetWeakReference(aOwner))
   {
   }
@@ -918,13 +890,7 @@ private:
     return NS_OK;
   }
 
-  static bool IsConstructable(const nsGlobalNameStruct *aNameStruct)
-  {
-    return false;
-  }
-
   const char16_t*   mClassName;
-  const bool mConstructable;
   nsWeakPtr          mWeakOwner;
 };
 
@@ -952,9 +918,7 @@ nsDOMConstructor::Create(const char16_t* aName,
     currentInner = aOwner;
   }
 
-  bool constructable = aNameStruct && IsConstructable(aNameStruct);
-
-  *aResult = new nsDOMConstructor(aName, constructable, currentInner);
+  *aResult = new nsDOMConstructor(aName, currentInner);
   NS_ADDREF(*aResult);
   return NS_OK;
 }
@@ -965,18 +929,8 @@ NS_INTERFACE_MAP_BEGIN(nsDOMConstructor)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDOMConstructor)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
-#ifdef DEBUG
-    {
-      const nsGlobalNameStruct *name_struct = GetNameStruct();
-      NS_ASSERTION(!name_struct ||
-                   mConstructable == IsConstructable(name_struct),
-                   "Can't change constructability dynamically!");
-    }
-#endif
     foundInterface =
-      NS_GetDOMClassInfoInstance(mConstructable ?
-                                 eDOMClassInfo_DOMConstructor_id :
-                                 eDOMClassInfo_DOMPrototype_id);
+      NS_GetDOMClassInfoInstance(eDOMClassInfo_DOMPrototype_id);
     if (!foundInterface) {
       *aInstancePtr = nullptr;
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1004,15 +958,7 @@ nsDOMConstructor::Construct(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
 {
   MOZ_ASSERT(obj);
 
-  const nsGlobalNameStruct *name_struct = GetNameStruct();
-  NS_ENSURE_TRUE(name_struct, NS_ERROR_FAILURE);
-
-  if (!IsConstructable(name_struct)) {
-    // ignore return value, we return false anyway
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
-  return BaseStubConstructor(mWeakOwner, name_struct, cx, obj, args);
+  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 nsresult
