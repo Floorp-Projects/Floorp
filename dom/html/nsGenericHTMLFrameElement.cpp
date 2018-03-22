@@ -172,13 +172,6 @@ nsGenericHTMLFrameElement::CreateRemoteFrameLoader(nsITabParent* aTabParent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::GetFrameLoaderXPCOM(nsIFrameLoader **aFrameLoader)
-{
-  NS_IF_ADDREF(*aFrameLoader = mFrameLoader);
-  return NS_OK;
-}
-
 NS_IMETHODIMP_(already_AddRefed<nsFrameLoader>)
 nsGenericHTMLFrameElement::GetFrameLoader()
 {

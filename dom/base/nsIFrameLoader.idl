@@ -28,13 +28,12 @@ class nsFrameLoader;
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);
 
-[scriptable, uuid(adc1b3ba-8deb-4943-8045-e6de0044f2ce)]
+[scriptable, builtinclass, uuid(adc1b3ba-8deb-4943-8045-e6de0044f2ce)]
 interface nsIFrameLoaderOwner : nsISupports
 {
   /**
    * The frame loader owned by this nsIFrameLoaderOwner
    */
-  [binaryname(FrameLoaderXPCOM)] readonly attribute nsIFrameLoader frameLoader;
   [noscript, notxpcom] alreadyAddRefed_nsFrameLoader GetFrameLoader();
 
   /**
