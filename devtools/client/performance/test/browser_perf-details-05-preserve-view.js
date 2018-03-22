@@ -32,8 +32,9 @@ add_task(async function() {
   ok(DetailsView.isViewSelected(JsCallTreeView),
     "The js calltree view is now selected in the details view.");
 
-  let cleared = once(PerformanceController, EVENTS.RECORDING_SELECTED,
-                     { expectedArgs: { "1": null } });
+  let cleared = once(PerformanceController, EVENTS.RECORDING_SELECTED, {
+    expectedArgs: [null]
+  });
   await PerformanceController.clearRecordings();
   await cleared;
 

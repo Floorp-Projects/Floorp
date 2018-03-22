@@ -52,8 +52,7 @@ add_task(async function() {
   await startRecording(panel);
 
   await waitUntil(async function() {
-    [, gPercent] = await once(PerformanceView,
-                              EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED,
+    [gPercent] = await once(PerformanceView, EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED,
                               { spreadArgs: true });
     return gPercent > 0;
   });
@@ -71,8 +70,7 @@ add_task(async function() {
   await console.profile("rust");
 
   await waitUntil(async function() {
-    [, gPercent] = await once(PerformanceView,
-                              EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED,
+    [gPercent] = await once(PerformanceView, EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED,
                               { spreadArgs: true });
     return gPercent > Math.floor(bufferUsage * 100);
   });
@@ -92,8 +90,7 @@ add_task(async function() {
   await selected;
 
   await waitUntil(async function() {
-    [, gPercent] = await once(PerformanceView,
-                              EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED,
+    [gPercent] = await once(PerformanceView, EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED,
                               { spreadArgs: true });
     return gPercent > 0;
   });
@@ -113,7 +110,7 @@ add_task(async function() {
   await selected;
 
   await waitUntil(async function() {
-    [, gPercent] = await once(PerformanceView,
+    [gPercent] = await once(PerformanceView,
                               EVENTS.UI_RECORDING_PROFILER_STATUS_RENDERED,
                               { spreadArgs: true });
     return gPercent > Math.floor(bufferUsage * 100);

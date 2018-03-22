@@ -32,14 +32,14 @@ add_task(async function() {
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
 
   let exported = once(PerformanceController, EVENTS.RECORDING_EXPORTED);
-  await PerformanceController.exportRecording("",
-    PerformanceController.getCurrentRecording(), file);
+  await PerformanceController.exportRecording(PerformanceController.getCurrentRecording(),
+    file);
   await exported;
 
   ok(logs[EXPORTED], `A telemetry entry for ${EXPORTED} exists after exporting.`);
 
   let imported = once(PerformanceController, EVENTS.RECORDING_IMPORTED);
-  await PerformanceController.importRecording(null, file);
+  await PerformanceController.importRecording(file);
   await imported;
 
   ok(logs[IMPORTED], `A telemetry entry for ${IMPORTED} exists after importing.`);

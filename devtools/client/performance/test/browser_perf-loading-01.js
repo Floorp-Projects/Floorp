@@ -28,10 +28,10 @@ add_task(async function() {
     "The duration node should show the 'recording' message while recording");
 
   let recordingStopping = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: { "1": "recording-stopping" }
+    expectedArgs: ["recording-stopping"]
   });
   let recordingStopped = once(PerformanceController, EVENTS.RECORDING_STATE_CHANGE, {
-    expectedArgs: { "1": "recording-stopped" }
+    expectedArgs: ["recording-stopped"]
   });
   let everythingStopped = stopRecording(panel);
 
