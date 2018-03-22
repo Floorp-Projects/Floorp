@@ -13,9 +13,10 @@
 #include "Units.h"
 
 class nsIFrame;
-class nsStyleContext;
 
 namespace mozilla {
+
+class ComputedStyle;
 
 // SVG image-specific rendering context. For imgIContainer::Draw.
 // Used to pass information such as
@@ -54,7 +55,7 @@ public:
                                      imgIContainer* aImgContainer);
 
   static void MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
-                                     nsStyleContext* aFromStyleContext,
+                                     ComputedStyle* aFromComputedStyle,
                                      imgIContainer* aImgContainer);
 
   const Maybe<CSSIntSize>& GetViewportSize() const {

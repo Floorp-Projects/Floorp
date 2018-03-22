@@ -11,6 +11,7 @@
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
@@ -27,7 +28,6 @@
 #include "nsRect.h"
 #include "nsIPresShell.h"
 #include "nsFrameManager.h"
-#include "nsStyleContext.h"
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsIContent.h"
@@ -634,32 +634,32 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                             nsIFrame* aForFrame,
                             const nsRect& aDirtyRect,
                             const nsRect& aBorderArea,
-                            nsStyleContext* aStyleContext,
+                            ComputedStyle* aComputedStyle,
                             PaintBorderFlags aFlags,
                             Sides aSkipSides)
 {
   AUTO_PROFILER_LABEL("nsCSSRendering::PaintBorder", GRAPHICS);
 
-  nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
-  const nsStyleBorder *styleBorder = aStyleContext->StyleBorder();
+  ComputedStyle *styleIfVisited = aComputedStyle->GetStyleIfVisited();
+  const nsStyleBorder *styleBorder = aComputedStyle->StyleBorder();
   // Don't check RelevantLinkVisited here, since we want to take the
   // same amount of time whether or not it's true.
   if (!styleIfVisited) {
     return PaintBorderWithStyleBorder(aPresContext, aRenderingContext, aForFrame,
                                       aDirtyRect, aBorderArea, *styleBorder,
-                                      aStyleContext, aFlags, aSkipSides);
+                                      aComputedStyle, aFlags, aSkipSides);
   }
 
   nsStyleBorder newStyleBorder(*styleBorder);
 
   NS_FOR_CSS_SIDES(side) {
-    nscolor color = aStyleContext->
+    nscolor color = aComputedStyle->
       GetVisitedDependentColor(nsStyleBorder::BorderColorFieldFor(side));
     newStyleBorder.mBorderColor[side] = StyleComplexColor::FromColor(color);
   }
   return PaintBorderWithStyleBorder(aPresContext, aRenderingContext, aForFrame,
                                     aDirtyRect, aBorderArea, newStyleBorder,
-                                    aStyleContext, aFlags, aSkipSides);
+                                    aComputedStyle, aFlags, aSkipSides);
 }
 
 Maybe<nsCSSBorderRenderer>
@@ -668,32 +668,32 @@ nsCSSRendering::CreateBorderRenderer(nsPresContext* aPresContext,
                                      nsIFrame* aForFrame,
                                      const nsRect& aDirtyRect,
                                      const nsRect& aBorderArea,
-                                     nsStyleContext* aStyleContext,
+                                     ComputedStyle* aComputedStyle,
                                      bool* aOutBorderIsEmpty,
                                      Sides aSkipSides)
 {
-  nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
-  const nsStyleBorder *styleBorder = aStyleContext->StyleBorder();
+  ComputedStyle *styleIfVisited = aComputedStyle->GetStyleIfVisited();
+  const nsStyleBorder *styleBorder = aComputedStyle->StyleBorder();
   // Don't check RelevantLinkVisited here, since we want to take the
   // same amount of time whether or not it's true.
   if (!styleIfVisited) {
     return CreateBorderRendererWithStyleBorder(aPresContext, aDrawTarget,
                                                aForFrame, aDirtyRect,
                                                aBorderArea, *styleBorder,
-                                               aStyleContext, aOutBorderIsEmpty,
+                                               aComputedStyle, aOutBorderIsEmpty,
                                                aSkipSides);
   }
 
   nsStyleBorder newStyleBorder(*styleBorder);
 
   NS_FOR_CSS_SIDES(side) {
-    nscolor color = aStyleContext->
+    nscolor color = aComputedStyle->
       GetVisitedDependentColor(nsStyleBorder::BorderColorFieldFor(side));
     newStyleBorder.mBorderColor[side] = StyleComplexColor::FromColor(color);
   }
   return CreateBorderRendererWithStyleBorder(aPresContext, aDrawTarget,
                                              aForFrame, aDirtyRect, aBorderArea,
-                                             newStyleBorder, aStyleContext,
+                                             newStyleBorder, aComputedStyle,
                                              aOutBorderIsEmpty, aSkipSides);
 }
 
@@ -717,7 +717,7 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(nsDisplayItem* aItem,
                                            aForFrame,
                                            nsRect(),
                                            aBorderArea,
-                                           aForFrame->StyleContext(),
+                                           aForFrame->Style(),
                                            &borderIsEmpty,
                                            aForFrame->GetSkipSides());
     if (borderIsEmpty) {
@@ -731,7 +731,7 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(nsDisplayItem* aItem,
   }
 
   // Next try to draw an image border
-  const nsStyleBorder* styleBorder = aForFrame->StyleContext()->StyleBorder();
+  const nsStyleBorder* styleBorder = aForFrame->Style()->StyleBorder();
   const nsStyleImage* image = &styleBorder->mBorderImageSource;
 
   // Filter out unsupported image/border types
@@ -789,7 +789,7 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(nsDisplayItem* aItem,
 
 static nsCSSBorderRenderer
 ConstructBorderRenderer(nsPresContext* aPresContext,
-                        nsStyleContext* aStyleContext,
+                        ComputedStyle* aComputedStyle,
                         DrawTarget* aDrawTarget,
                         nsIFrame* aForFrame,
                         const nsRect& aDirtyRect,
@@ -801,13 +801,13 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
   nsMargin border = aStyleBorder.GetComputedBorder();
 
   // Get our style context's color struct.
-  const nsStyleColor* ourColor = aStyleContext->StyleColor();
+  const nsStyleColor* ourColor = aComputedStyle->StyleColor();
 
   // In NavQuirks mode we want to use the parent's context as a starting point
   // for determining the background color.
   bool quirks = aPresContext->CompatibilityMode() == eCompatibility_NavQuirks;
   nsIFrame* bgFrame = nsCSSRendering::FindNonTransparentBackgroundFrame(aForFrame, quirks);
-  nsStyleContext* bgContext = bgFrame->StyleContext();
+  ComputedStyle* bgContext = bgFrame->Style();
   nscolor bgColor = bgContext->
     GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
 
@@ -894,7 +894,7 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
                                            const nsRect& aDirtyRect,
                                            const nsRect& aBorderArea,
                                            const nsStyleBorder& aStyleBorder,
-                                           nsStyleContext* aStyleContext,
+                                           ComputedStyle* aComputedStyle,
                                            PaintBorderFlags aFlags,
                                            Sides aSkipSides)
 {
@@ -904,8 +904,8 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
 
   // Check to see if we have an appearance defined.  If so, we let the theme
   // renderer draw the border.  DO not get the data from aForFrame, since the passed in style context
-  // may be different!  Always use |aStyleContext|!
-  const nsStyleDisplay* displayData = aStyleContext->StyleDisplay();
+  // may be different!  Always use |aComputedStyle|!
+  const nsStyleDisplay* displayData = aComputedStyle->StyleDisplay();
   if (displayData->mAppearance) {
     nsITheme *theme = aPresContext->GetTheme();
     if (theme &&
@@ -956,7 +956,7 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
 
   bool needsClip = false;
   nsCSSBorderRenderer br = ConstructBorderRenderer(aPresContext,
-                                                   aStyleContext,
+                                                   aComputedStyle,
                                                    &aDrawTarget,
                                                    aForFrame,
                                                    aDirtyRect,
@@ -989,11 +989,11 @@ nsCSSRendering::CreateBorderRendererWithStyleBorder(nsPresContext* aPresContext,
                                                     const nsRect& aDirtyRect,
                                                     const nsRect& aBorderArea,
                                                     const nsStyleBorder& aStyleBorder,
-                                                    nsStyleContext* aStyleContext,
+                                                    ComputedStyle* aComputedStyle,
                                                     bool* aOutBorderIsEmpty,
                                                     Sides aSkipSides)
 {
-  const nsStyleDisplay* displayData = aStyleContext->StyleDisplay();
+  const nsStyleDisplay* displayData = aComputedStyle->StyleDisplay();
   if (displayData->mAppearance) {
     nsITheme *theme = aPresContext->GetTheme();
     if (theme &&
@@ -1019,7 +1019,7 @@ nsCSSRendering::CreateBorderRendererWithStyleBorder(nsPresContext* aPresContext,
 
   bool needsClip = false;
   nsCSSBorderRenderer br = ConstructBorderRenderer(aPresContext,
-                                                   aStyleContext,
+                                                   aComputedStyle,
                                                    aDrawTarget,
                                                    aForFrame,
                                                    aDirtyRect,
@@ -1047,12 +1047,12 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
                                                nsIFrame* aForFrame,
                                                const nsRect& aDirtyRect,
                                                const nsRect& aBorderArea,
-                                               nsStyleContext* aStyleContext)
+                                               ComputedStyle* aComputedStyle)
 {
   nscoord             twipsRadii[8];
 
   // Get our style context's color struct.
-  const nsStyleOutline* ourOutline = aStyleContext->StyleOutline();
+  const nsStyleOutline* ourOutline = aComputedStyle->StyleOutline();
 
   if (!ourOutline->ShouldPaintOutline()) {
     // Empty outline
@@ -1061,14 +1061,14 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
 
   nsIFrame* bgFrame = nsCSSRendering::FindNonTransparentBackgroundFrame
     (aForFrame, false);
-  nsStyleContext* bgContext = bgFrame->StyleContext();
+  ComputedStyle* bgContext = bgFrame->Style();
   nscolor bgColor = bgContext->
     GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
 
   nsRect innerRect;
   if (
 #ifdef MOZ_XUL
-      aStyleContext->GetPseudoType() == CSSPseudoElementType::XULTree
+      aComputedStyle->GetPseudoType() == CSSPseudoElementType::XULTree
 #else
       false
 #endif
@@ -1133,7 +1133,7 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
   // This handles treating the initial color as 'currentColor'; if we
   // ever want 'invert' back we'll need to do a bit of work here too.
   nscolor outlineColor =
-    aStyleContext->GetVisitedDependentColor(&nsStyleOutline::mOutlineColor);
+    aComputedStyle->GetVisitedDependentColor(&nsStyleOutline::mOutlineColor);
   nscolor outlineColors[4] = { outlineColor,
                                outlineColor,
                                outlineColor,
@@ -1175,14 +1175,14 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                              nsIFrame* aForFrame,
                              const nsRect& aDirtyRect,
                              const nsRect& aBorderArea,
-                             nsStyleContext* aStyleContext)
+                             ComputedStyle* aComputedStyle)
 {
   Maybe<nsCSSBorderRenderer> br = CreateBorderRendererForOutline(aPresContext,
                                                                  &aRenderingContext,
                                                                  aForFrame,
                                                                  aDirtyRect,
                                                                  aBorderArea,
-                                                                 aStyleContext);
+                                                                 aComputedStyle);
   if (!br) {
     return;
   }
@@ -1411,10 +1411,10 @@ nsCSSRendering::FindBackgroundStyleFrame(nsIFrame* aForFrame)
  * the resulting style context to use for the background information
  * will be filled in to |aBackground|.
  */
-nsStyleContext*
+ComputedStyle*
 nsCSSRendering::FindRootFrameBackground(nsIFrame* aForFrame)
 {
-  return FindBackgroundStyleFrame(aForFrame)->StyleContext();
+  return FindBackgroundStyleFrame(aForFrame)->Style();
 }
 
 inline bool
@@ -1434,7 +1434,7 @@ FindElementBackground(nsIFrame* aForFrame, nsIFrame* aRootElementFrame)
   // It could be a non-HTML "body" element but that's OK, we'd fail the
   // bodyContent check below
 
-  if (aForFrame->StyleContext()->GetPseudo())
+  if (aForFrame->Style()->GetPseudo())
     return true; // A pseudo-element frame.
 
   // We should only look at the <html> background if we're in an HTML document
@@ -1471,11 +1471,11 @@ nsCSSRendering::FindBackgroundFrame(nsIFrame* aForFrame,
 
 bool
 nsCSSRendering::FindBackground(nsIFrame* aForFrame,
-                               nsStyleContext** aBackgroundSC)
+                               ComputedStyle** aBackgroundSC)
 {
   nsIFrame *backgroundFrame = nullptr;
   if (FindBackgroundFrame(aForFrame, &backgroundFrame)) {
-    *aBackgroundSC = backgroundFrame->StyleContext();
+    *aBackgroundSC = backgroundFrame->Style();
     return true;
   }
   return false;
@@ -2026,7 +2026,7 @@ nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams,
   NS_PRECONDITION(aParams.frame,
                   "Frame is expected to be provided to PaintStyleImageLayer");
 
-  nsStyleContext *sc;
+  ComputedStyle *sc;
   if (!FindBackground(aParams.frame, &sc)) {
     // We don't want to bail out if moz-appearance is set on a root
     // node. If it has a parent content node, bail because it's not
@@ -2042,7 +2042,7 @@ nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams,
       return ImgDrawResult::SUCCESS;
     }
 
-    sc = aParams.frame->StyleContext();
+    sc = aParams.frame->Style();
   }
 
   return PaintStyleImageLayerWithSC(aParams, aRenderingCtx, sc, *aParams.frame->StyleBorder());
@@ -2119,7 +2119,7 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams
   NS_PRECONDITION(aParams.frame,
                   "Frame is expected to be provided to BuildWebRenderDisplayItemsForStyleImageLayer");
 
-  nsStyleContext *sc;
+  ComputedStyle *sc;
   if (!FindBackground(aParams.frame, &sc)) {
     // We don't want to bail out if moz-appearance is set on a root
     // node. If it has a parent content node, bail because it's not
@@ -2135,7 +2135,7 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayer(const PaintBGParams
       return ImgDrawResult::SUCCESS;
     }
 
-    sc = aParams.frame->StyleContext();
+    sc = aParams.frame->Style();
   }
   return BuildWebRenderDisplayItemsForStyleImageLayerWithSC(aParams, aBuilder, aResources, aSc,
                                                             aManager, aItem,
@@ -2538,7 +2538,7 @@ DrawBackgroundColor(nsCSSRendering::ImageLayerClipState& aClipState,
 
 nscolor
 nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
-                                         nsStyleContext* aStyleContext,
+                                         ComputedStyle* aComputedStyle,
                                          nsIFrame* aFrame,
                                          bool& aDrawBackgroundImage,
                                          bool& aDrawBackgroundColor)
@@ -2546,7 +2546,7 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
   aDrawBackgroundImage = true;
   aDrawBackgroundColor = true;
 
-  const nsStyleVisibility* visibility = aStyleContext->StyleVisibility();
+  const nsStyleVisibility* visibility = aComputedStyle->StyleVisibility();
 
   if (visibility->mColorAdjust != NS_STYLE_COLOR_ADJUST_EXACT &&
       aFrame->HonorPrintBackgroundSettings()) {
@@ -2554,10 +2554,10 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
     aDrawBackgroundColor = aPresContext->GetBackgroundColorDraw();
   }
 
-  const nsStyleBackground *bg = aStyleContext->StyleBackground();
+  const nsStyleBackground *bg = aComputedStyle->StyleBackground();
   nscolor bgColor;
   if (aDrawBackgroundColor) {
-    bgColor = aStyleContext->
+    bgColor = aComputedStyle->
       GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
     if (NS_GET_A(bgColor) == 0) {
       aDrawBackgroundColor = false;
@@ -2568,7 +2568,7 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
     // transparent, but we are expected to use white instead of whatever
     // color was specified.
     bgColor = NS_RGB(255, 255, 255);
-    if (aDrawBackgroundImage || !bg->IsTransparent(aStyleContext)) {
+    if (aDrawBackgroundImage || !bg->IsTransparent(aComputedStyle)) {
       aDrawBackgroundColor = true;
     } else {
       bgColor = NS_RGBA(0,0,0,0);
@@ -2618,7 +2618,7 @@ DetermineCompositionOp(const nsCSSRendering::PaintBGParams& aParams,
 ImgDrawResult
 nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
                                            gfxContext& aRenderingCtx,
-                                           nsStyleContext *aBackgroundSC,
+                                           ComputedStyle *aBackgroundSC,
                                            const nsStyleBorder& aBorder)
 {
   NS_PRECONDITION(aParams.frame,
@@ -2738,7 +2738,7 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
   // Ensure we get invalidated for loads of the image.  We need to do
   // this here because this might be the only code that knows about the
   // association of the style data with the frame.
-  if (aBackgroundSC != aParams.frame->StyleContext()) {
+  if (aBackgroundSC != aParams.frame->Style()) {
     uint32_t startLayer = drawAllLayers ? layers.mImageCount - 1
                                         : aParams.layer;
     uint32_t count = drawAllLayers ? layers.mImageCount : 1;
@@ -2859,7 +2859,7 @@ nsCSSRendering::BuildWebRenderDisplayItemsForStyleImageLayerWithSC(const PaintBG
                                                                    const mozilla::layers::StackingContextHelper& aSc,
                                                                    mozilla::layers::WebRenderLayerManager* aManager,
                                                                    nsDisplayItem* aItem,
-                                                                   nsStyleContext *aBackgroundSC,
+                                                                   ComputedStyle *aBackgroundSC,
                                                                    const nsStyleBorder& aBorder)
 {
   MOZ_ASSERT(!(aParams.paintFlags & PAINTBG_MASK_IMAGE));

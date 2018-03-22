@@ -14,9 +14,9 @@
 //
 
 nsIFrame*
-NS_NewMathMLsemanticsFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewMathMLsemanticsFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsMathMLsemanticsFrame(aContext);
+  return new (aPresShell) nsMathMLsemanticsFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLsemanticsFrame)

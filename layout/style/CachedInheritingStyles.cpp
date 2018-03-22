@@ -6,20 +6,20 @@
 
 #include "mozilla/CachedInheritingStyles.h"
 
-#include "mozilla/ServoStyleContext.h"
+#include "mozilla/ComputedStyle.h"
 #include "nsCOMPtr.h"
 #include "nsIMemoryReporter.h"
 
 namespace mozilla {
 
 void
-CachedInheritingStyles::Insert(ServoStyleContext* aStyle)
+CachedInheritingStyles::Insert(ComputedStyle* aStyle)
 {
   MOZ_ASSERT(aStyle);
   MOZ_ASSERT(aStyle->IsInheritingAnonBox() || aStyle->IsLazilyCascadedPseudoElement());
 
   if (IsEmpty()) {
-    RefPtr<ServoStyleContext> s = aStyle;
+    RefPtr<ComputedStyle> s = aStyle;
     mBits = reinterpret_cast<uintptr_t>(s.forget().take());
     MOZ_ASSERT(!IsEmpty() && !IsIndirect());
   } else if (IsIndirect()) {
@@ -33,7 +33,7 @@ CachedInheritingStyles::Insert(ServoStyleContext* aStyle)
   }
 }
 
-ServoStyleContext*
+ComputedStyle*
 CachedInheritingStyles::Lookup(nsAtom* aPseudoTag) const
 {
   MOZ_ASSERT(nsCSSAnonBoxes::IsInheritingAnonBox(aPseudoTag) ||
@@ -48,7 +48,7 @@ CachedInheritingStyles::Lookup(nsAtom* aPseudoTag) const
     return nullptr;
   }
 
-  ServoStyleContext* direct = AsDirect();
+  ComputedStyle* direct = AsDirect();
   return direct && direct->GetPseudo() == aPseudoTag ? direct : nullptr;
 }
 
@@ -65,7 +65,7 @@ CachedInheritingStyles::AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aC
     return;
   }
 
-  ServoStyleContext* direct = AsDirect();
+  ComputedStyle* direct = AsDirect();
   if (direct && !aSizes.mState.HaveSeenPtr(direct)) {
     direct->AddSizeOfIncludingThis(aSizes, aCVsSize);
   }

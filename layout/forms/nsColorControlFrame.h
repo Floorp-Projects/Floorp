@@ -25,7 +25,7 @@ class nsColorControlFrame final : public nsHTMLButtonControlFrame,
 
 public:
   friend nsIFrame* NS_NewColorControlFrame(nsIPresShell* aPresShell,
-                                           nsStyleContext* aContext);
+                                           ComputedStyle* aStyle);
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
@@ -53,7 +53,7 @@ public:
   nsresult UpdateColor();
 
 private:
-  explicit nsColorControlFrame(nsStyleContext* aContext);
+  explicit nsColorControlFrame(ComputedStyle* aStyle);
 
   nsCOMPtr<Element> mColorContent;
 };

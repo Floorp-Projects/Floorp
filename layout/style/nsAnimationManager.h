@@ -17,11 +17,11 @@
 #include "nsISupportsImpl.h"
 
 class nsIGlobalObject;
-class nsStyleContext;
 class ServoComputedData;
 struct nsStyleDisplay;
 
 namespace mozilla {
+class ComputedStyle;
 namespace css {
 class Declaration;
 } /* namespace css */
@@ -30,8 +30,8 @@ class KeyframeEffectReadOnly;
 class Promise;
 } /* namespace dom */
 
-class GeckoStyleContext;
-class ServoStyleContext;
+class GeckoComputedStyle;
+class ComputedStyle;
 enum class CSSPseudoElementType : uint8_t;
 struct NonOwningAnimationTarget;
 
@@ -298,7 +298,7 @@ public:
   void UpdateAnimations(
     mozilla::dom::Element* aElement,
     mozilla::CSSPseudoElementType aPseudoType,
-    const mozilla::ServoStyleContext* aComputedValues);
+    const mozilla::ComputedStyle* aComputedValues);
 
   // Utility function to walk through |aIter| to find the Keyframe with
   // matching offset and timing function but stopping as soon as the offset

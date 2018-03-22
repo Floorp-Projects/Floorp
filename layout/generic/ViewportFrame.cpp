@@ -11,6 +11,7 @@
 
 #include "mozilla/ViewportFrame.h"
 
+#include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "nsGkAtoms.h"
 #include "nsIScrollableFrame.h"
@@ -20,15 +21,14 @@
 #include "GeckoProfiler.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsPlaceholderFrame.h"
-#include "mozilla/ServoStyleContextInlines.h"
 
 using namespace mozilla;
 typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
 
 ViewportFrame*
-NS_NewViewportFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewViewportFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) ViewportFrame(aContext);
+  return new (aPresShell) ViewportFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(ViewportFrame)
@@ -425,9 +425,9 @@ ViewportFrame::ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas)
 void
 ViewportFrame::UpdateStyle(ServoRestyleState& aRestyleState)
 {
-  ServoStyleContext* oldContext = StyleContext()->AsServo();
+  ComputedStyle* oldContext = Style()->AsServo();
   nsAtom* pseudo = oldContext->GetPseudo();
-  RefPtr<ServoStyleContext> newContext =
+  RefPtr<ComputedStyle> newContext =
     aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(pseudo, nullptr);
 
   // We're special because we have a null GetContent(), so don't call things
@@ -437,7 +437,7 @@ ViewportFrame::UpdateStyle(ServoRestyleState& aRestyleState)
   newContext->ResolveSameStructsAs(oldContext);
 
   MOZ_ASSERT(!GetNextContinuation(), "Viewport has continuations?");
-  SetStyleContext(newContext);
+  SetComputedStyle(newContext);
 
   UpdateStyleOfOwnedAnonBoxes(aRestyleState);
 }

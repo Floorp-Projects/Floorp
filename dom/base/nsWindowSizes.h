@@ -103,7 +103,7 @@ struct nsArenaSizes {
 #define FOR_EACH_SIZE(macro) \
   macro(Other, mLineBoxes) \
   macro(Style, mRuleNodes) \
-  macro(Style, mStyleContexts)
+  macro(Style, mComputedStyles)
 
   nsArenaSizes()
     :

@@ -78,10 +78,10 @@ private:
 
 //---------------------------------------------------------
 nsContainerFrame*
-NS_NewListControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewListControlFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
   nsListControlFrame* it =
-    new (aPresShell) nsListControlFrame(aContext);
+    new (aPresShell) nsListControlFrame(aStyle);
 
   it->AddStateBits(NS_FRAME_INDEPENDENT_SELECTION);
 
@@ -91,8 +91,8 @@ NS_NewListControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsListControlFrame)
 
 //---------------------------------------------------------
-nsListControlFrame::nsListControlFrame(nsStyleContext* aContext)
-  : nsHTMLScrollFrame(aContext, kClassID, false)
+nsListControlFrame::nsListControlFrame(ComputedStyle* aStyle)
+  : nsHTMLScrollFrame(aStyle, kClassID, false)
   , mView(nullptr)
   , mMightNeedSecondPass(false)
   , mHasPendingInterruptAtStartOfReflow(false)
@@ -1463,7 +1463,7 @@ nsListControlFrame::AboutToDropDown()
   nsIFrame* ancestor = comboboxFrame->GetParent();
   mLastDropdownBackstopColor = NS_RGBA(0,0,0,0);
   while (NS_GET_A(mLastDropdownBackstopColor) < 255 && ancestor) {
-    nsStyleContext* context = ancestor->StyleContext();
+    ComputedStyle* context = ancestor->Style();
     mLastDropdownBackstopColor =
       NS_ComposeColors(context->StyleBackground()->BackgroundColor(context),
                        mLastDropdownBackstopColor);

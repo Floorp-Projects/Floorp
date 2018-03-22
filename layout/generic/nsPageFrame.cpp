@@ -30,9 +30,9 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 nsPageFrame*
-NS_NewPageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewPageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
-  return new (aPresShell) nsPageFrame(aContext);
+  return new (aPresShell) nsPageFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPageFrame)
@@ -41,8 +41,8 @@ NS_QUERYFRAME_HEAD(nsPageFrame)
   NS_QUERYFRAME_ENTRY(nsPageFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
-nsPageFrame::nsPageFrame(nsStyleContext* aContext)
-  : nsContainerFrame(aContext, kClassID)
+nsPageFrame::nsPageFrame(ComputedStyle* aStyle)
+  : nsContainerFrame(aStyle, kClassID)
 {
 }
 
@@ -681,19 +681,19 @@ nsPageFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
 }
 
 nsIFrame*
-NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+NS_NewPageBreakFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {
   NS_PRECONDITION(aPresShell, "null PresShell");
   //check that we are only creating page break frames when printing
   NS_ASSERTION(aPresShell->GetPresContext()->IsPaginated(), "created a page break frame while not printing");
 
-  return new (aPresShell) nsPageBreakFrame(aContext);
+  return new (aPresShell) nsPageBreakFrame(aStyle);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPageBreakFrame)
 
-nsPageBreakFrame::nsPageBreakFrame(nsStyleContext* aContext)
-  : nsLeafFrame(aContext, kClassID)
+nsPageBreakFrame::nsPageBreakFrame(ComputedStyle* aStyle)
+  : nsLeafFrame(aStyle, kClassID)
   , mHaveReflowed(false)
 {
 }

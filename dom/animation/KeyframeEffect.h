@@ -65,11 +65,11 @@ public:
 
   void NotifySpecifiedTimingUpdated();
 
-  // This method calls GetTargetStyleContext which is not safe to use when
+  // This method calls GetTargetComputedStyle which is not safe to use when
   // we are in the middle of updating style. If we need to use this when
-  // updating style, we should pass the nsStyleContext into this method and use
+  // updating style, we should pass the ComputedStyle into this method and use
   // that to update the properties rather than calling
-  // GetStyleContext.
+  // GetComputedStyle.
   void SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget);
 
   IterationCompositeOperation IterationComposite(CallerType aCallerType)

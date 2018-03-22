@@ -24,7 +24,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsStackFrame)
 
   friend nsIFrame* NS_NewStackFrame(nsIPresShell* aPresShell,
-                                    nsStyleContext* aContext);
+                                    ComputedStyle* aStyle);
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override
@@ -37,7 +37,7 @@ public:
                                            const nsDisplayListSet& aLists) override;
 
 protected:
-  explicit nsStackFrame(nsStyleContext* aContext);
+  explicit nsStackFrame(ComputedStyle* aStyle);
 }; // class nsStackFrame
 
 
