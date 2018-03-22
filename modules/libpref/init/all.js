@@ -843,7 +843,7 @@ pref("gfx.downloadable_fonts.otl_validation", true);
 pref("gfx.downloadable_fonts.keep_color_bitmaps", false);
 
 // Whether to preserve OpenType variation tables in fonts (bypassing OTS)
-pref("gfx.downloadable_fonts.keep_variation_tables", true);
+pref("gfx.downloadable_fonts.keep_variation_tables", false);
 
 #ifdef ANDROID
 pref("gfx.bundled_fonts.enabled", true);
@@ -3065,7 +3065,7 @@ pref("layout.css.image-orientation.enabled", true);
 pref("layout.css.font-display.enabled", true);
 
 // Is support for variation fonts enabled?
-pref("layout.css.font-variations.enabled", true);
+pref("layout.css.font-variations.enabled", false);
 
 // Is support for the frames() timing function enabled?
 #ifdef RELEASE_OR_BETA
