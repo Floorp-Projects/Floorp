@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
+ChromeUtils.import("resource:///modules/SiteDataManager.jsm");
+ChromeUtils.import("resource://gre/modules/DownloadUtils.jsm");
 
 /* import-globals-from pageInfo.js */
 
@@ -133,26 +135,51 @@ var security = {
     return null;
   },
 
-  /**
-   * Open the cookie manager window
-   */
-  viewCookies() {
-    var win = Services.wm.getMostRecentWindow("Browser:Cookies");
+  async _updateSiteDataInfo() {
+    // Save site data info for deleting.
+    this.siteData = await SiteDataManager.getSites(
+      SiteDataManager.getBaseDomainFromHost(this.uri.host));
 
-    var eTLD;
-    try {
-      eTLD = Services.eTLD.getBaseDomain(this.uri);
-    } catch (e) {
-      // getBaseDomain will fail if the host is an IP address or is empty
-      eTLD = this.uri.asciiHost;
+    let pageInfoBundle = document.getElementById("pageinfobundle");
+    let clearSiteDataButton = document.getElementById("security-clear-sitedata");
+    let siteDataLabel = document.getElementById("security-privacy-sitedata-value");
+
+    if (!this.siteData.length) {
+      let noStr = pageInfoBundle.getString("securitySiteDataNo");
+      siteDataLabel.textContent = noStr;
+      clearSiteDataButton.setAttribute("disabled", "true");
+      return;
     }
 
-    if (win) {
-      win.gCookiesWindow.setFilter(eTLD);
-      win.focus();
-    } else
-      window.openDialog("chrome://browser/content/preferences/cookies.xul",
-                        "Browser:Cookies", "", {filterString: eTLD});
+    let usageText;
+    let usage = this.siteData.reduce((acc, site) => acc + site.usage, 0);
+    if (usage > 0) {
+      let size = DownloadUtils.convertByteUnits(usage);
+      let hasCookies = this.siteData.some(site => site.cookies.length > 0);
+      if (hasCookies) {
+        usageText = pageInfoBundle.getFormattedString("securitySiteDataCookies", size);
+      } else {
+        usageText = pageInfoBundle.getFormattedString("securitySiteDataOnly", size);
+      }
+    } else {
+      // We're storing cookies, else the list would have been empty.
+      usageText = pageInfoBundle.getString("securitySiteDataCookiesOnly");
+    }
+
+    clearSiteDataButton.removeAttribute("disabled");
+    siteDataLabel.textContent = usageText;
+  },
+
+  /**
+   * Clear Site Data and Cookies
+   */
+  clearSiteData() {
+    if (this.siteData && this.siteData.length) {
+      let hosts = this.siteData.map(site => site.host);
+      if (SiteDataManager.promptSiteDataRemoval(window, hosts)) {
+        SiteDataManager.remove(hosts).then(() => this._updateSiteDataInfo());
+      }
+    }
   },
 
   /**
@@ -225,8 +252,13 @@ function securityOnLoad(uri, windowInfo) {
   var yesStr = pageInfoBundle.getString("yes");
   var noStr = pageInfoBundle.getString("no");
 
-  setText("security-privacy-cookies-value",
-          hostHasCookies(uri) ? yesStr : noStr);
+  // Only show quota usage data for websites, not internal sites.
+  if (uri.scheme == "http" || uri.scheme == "https") {
+    SiteDataManager.updateSites().then(() => security._updateSiteDataInfo());
+  } else {
+    document.getElementById("security-privacy-sitedata-row").hidden = true;
+  }
+
   setText("security-privacy-passwords-value",
           realmHasPasswords(uri) ? yesStr : noStr);
 
@@ -304,13 +336,6 @@ function viewCertHelper(parent, cert) {
 
   var cd = Cc[CERTIFICATEDIALOGS_CONTRACTID].getService(nsICertificateDialogs);
   cd.viewCert(parent, cert);
-}
-
-/**
- * Return true iff we have cookies for uri
- */
-function hostHasCookies(uri) {
-  return Services.cookies.countCookiesFromHost(uri.asciiHost) > 0;
 }
 
 /**
