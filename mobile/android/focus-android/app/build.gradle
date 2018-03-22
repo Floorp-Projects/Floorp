@@ -114,8 +114,13 @@ android {
 
     variantFilter { variant ->
         def flavors = variant.flavors*.name
-        // We only need a gecko debug and beta build for now.
         if (flavors.contains("gecko") && flavors.contains("focus")) {
+            // We only need Klar builds with gecko for now
+            setIgnore(true)
+        }
+
+        if (variant.buildType.name == "release" && flavors.contains("gecko")) {
+            // Do not build release versions including Gecko until we actually want to release something.
             setIgnore(true)
         }
 
