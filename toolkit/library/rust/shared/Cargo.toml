@@ -16,7 +16,7 @@ prefs_parser = { path = "../../../../modules/libpref/parser" }
 rust_url_capi = { path = "../../../../netwerk/base/rust-url-capi" }
 webrender_bindings = { path = "../../../../gfx/webrender_bindings", optional = true }
 cubeb-pulse = { path = "../../../../media/libcubeb/cubeb-pulse-rs", optional = true, features=["pulse-dlopen"] }
-cubeb-sys = { version = "0.4.1", optional = true, features=["gecko-in-tree"] }
+cubeb-sys = { version = "0.5.0", optional = true, features=["gecko-in-tree"] }
 encoding_c = "0.8.0"
 encoding_glue = { path = "../../../../intl/encoding_glue" }
 audioipc-client = { path = "../../../../media/audioipc/client", optional = true }
