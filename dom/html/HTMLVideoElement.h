@@ -27,7 +27,7 @@ public:
 
   explicit HTMLVideoElement(already_AddRefed<NodeInfo>& aNodeInfo);
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLVideoElement, video)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLVideoElement, video)
 
   using HTMLMediaElement::GetPaused;
 

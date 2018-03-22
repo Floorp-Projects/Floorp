@@ -120,15 +120,12 @@ nsGenericHTMLFrameElement::GetContentWindow()
     return nullptr;
   }
 
-  bool depthTooGreat = false;
-  mFrameLoader->GetDepthTooGreat(&depthTooGreat);
-  if (depthTooGreat) {
+  if (mFrameLoader->DepthTooGreat()) {
     // Claim to have no contentWindow
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocShell> doc_shell;
-  mFrameLoader->GetDocShell(getter_AddRefs(doc_shell));
+  nsCOMPtr<nsIDocShell> doc_shell = mFrameLoader->GetDocShell(IgnoreErrors());
   if (!doc_shell) {
     return nullptr;
   }
@@ -175,13 +172,6 @@ nsGenericHTMLFrameElement::CreateRemoteFrameLoader(nsITabParent* aTabParent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericHTMLFrameElement::GetFrameLoaderXPCOM(nsIFrameLoader **aFrameLoader)
-{
-  NS_IF_ADDREF(*aFrameLoader = mFrameLoader);
-  return NS_OK;
-}
-
 NS_IMETHODIMP_(already_AddRefed<nsFrameLoader>)
 nsGenericHTMLFrameElement::GetFrameLoader()
 {
@@ -197,9 +187,9 @@ nsGenericHTMLFrameElement::PresetOpenerWindow(mozIDOMWindowProxy* aWindow, Error
 }
 
 void
-nsGenericHTMLFrameElement::InternalSetFrameLoader(nsIFrameLoader* aNewFrameLoader)
+nsGenericHTMLFrameElement::InternalSetFrameLoader(nsFrameLoader* aNewFrameLoader)
 {
-  mFrameLoader = static_cast<nsFrameLoader*>(aNewFrameLoader);
+  mFrameLoader = aNewFrameLoader;
 }
 
 void
@@ -235,25 +225,18 @@ nsGenericHTMLFrameElement::SwapFrameLoaders(nsIFrameLoaderOwner* aOtherLoaderOwn
   rv = loader->SwapWithOtherLoader(otherLoader, this, aOtherLoaderOwner);
 }
 
-nsresult
+void
 nsGenericHTMLFrameElement::LoadSrc()
 {
   EnsureFrameLoader();
 
   if (!mFrameLoader) {
-    return NS_OK;
+    return;
   }
 
   bool origSrc = !mSrcLoadHappened;
   mSrcLoadHappened = true;
-  nsresult rv = mFrameLoader->LoadFrame(origSrc);
-#ifdef DEBUG
-  if (NS_FAILED(rv)) {
-    NS_WARNING("failed to load URL");
-  }
-#endif
-
-  return rv;
+  mFrameLoader->LoadFrame(origSrc);
 }
 
 nsresult
@@ -444,7 +427,7 @@ nsGenericHTMLFrameElement::CopyInnerTo(Element* aDest,
     nsFrameLoader* fl = nsFrameLoader::Create(dest, nullptr, false);
     NS_ENSURE_STATE(fl);
     dest->mFrameLoader = fl;
-    static_cast<nsFrameLoader*>(mFrameLoader.get())->CreateStaticClone(fl);
+    mFrameLoader->CreateStaticClone(fl);
   }
 
   return rv;

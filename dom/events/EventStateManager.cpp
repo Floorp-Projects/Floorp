@@ -18,6 +18,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DragEvent.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/FrameLoaderBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabParent.h"
@@ -1438,9 +1439,8 @@ EventStateManager::HandleCrossProcessEvent(WidgetEvent* aEvent,
       continue;
     }
 
-    uint32_t eventMode;
-    frameLoader->GetEventMode(&eventMode);
-    if (eventMode == nsIFrameLoader::EVENT_MODE_DONT_FORWARD_TO_CHILD) {
+    if (frameLoader->EventMode() ==
+          FrameLoaderBinding::EVENT_MODE_DONT_FORWARD_TO_CHILD) {
       continue;
     }
 
@@ -1993,7 +1993,7 @@ EventStateManager::DetermineDragTargetAndDefaultData(nsPIDOMWindowOuter* aWindow
   // found, just use the clicked node.
   if (!*aSelection) {
     while (dragContent) {
-      if (auto htmlElement = nsGenericHTMLElement::FromContent(dragContent)) {
+      if (auto htmlElement = nsGenericHTMLElement::FromNode(dragContent)) {
         if (htmlElement->Draggable()) {
           break;
         }
@@ -4258,8 +4258,7 @@ EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
     // tell the subdocument that we're moving out of it
     nsSubDocumentFrame* subdocFrame = do_QueryFrame(wrapper->mLastOverFrame.GetFrame());
     if (subdocFrame) {
-      nsCOMPtr<nsIDocShell> docshell;
-      subdocFrame->GetDocShell(getter_AddRefs(docshell));
+      nsIDocShell* docshell = subdocFrame->GetDocShell();
       if (docshell) {
         RefPtr<nsPresContext> presContext;
         docshell->GetPresContext(getter_AddRefs(presContext));
@@ -5009,7 +5008,7 @@ static Element*
 GetLabelTarget(nsIContent* aPossibleLabel)
 {
   mozilla::dom::HTMLLabelElement* label =
-    mozilla::dom::HTMLLabelElement::FromContent(aPossibleLabel);
+    mozilla::dom::HTMLLabelElement::FromNode(aPossibleLabel);
   if (!label)
     return nullptr;
 

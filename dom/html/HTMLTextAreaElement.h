@@ -52,7 +52,7 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLTextAreaElement, textarea)
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLTextAreaElement, textarea)
 
   virtual int32_t TabIndexDefault() override;
 

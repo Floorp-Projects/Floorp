@@ -182,6 +182,10 @@ GetAndInitDisplayForWebRender(GLLibraryEGL& egl, void* displayType)
     }
 
     if (!egl.fInitialize(display, nullptr, nullptr)) {
+        const EGLint err = egl.fGetError();
+        if (err != LOCAL_EGL_SUCCESS) {
+            gfxCriticalError() << "Failed to initialize EGLDisplay for WebRender error: " << gfx::hexa(err);
+        }
         return EGL_NO_DISPLAY;
     }
     return display;

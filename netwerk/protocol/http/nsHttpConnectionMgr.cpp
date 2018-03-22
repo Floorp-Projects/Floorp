@@ -4727,7 +4727,6 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError, bool aWillRetry)
     if (mEnt) {
         mEnt->mDoNotDestroy = false;
     } else {
-        MOZ_ASSERT(!mSynTimer);
         MOZ_ASSERT(!mBackupTransport);
         MOZ_ASSERT(!mBackupStreamOut);
     }
@@ -4782,7 +4781,7 @@ nsHalfOpenSocket::CancelFastOpenConnection()
     mFastOpenInProgress = false;
     mConnectionNegotiatingFastOpen = nullptr;
     Abandon();
-    MOZ_ASSERT(!mSynTimer);
+
     MOZ_ASSERT(!mBackupTransport);
     MOZ_ASSERT(!mBackupStreamOut);
 }

@@ -671,23 +671,25 @@ function ToDateTimeOptions(options, required, defaults) {
     var needDefaults = true;
 
     // Step 4.
-    // TODO: spec issue - The spec requires to retrieve all options, so using
-    // the ||-operator with its lazy evaluation semantics is incorrect.
-    if ((required === "date" || required === "any") &&
-        (options.weekday !== undefined || options.year !== undefined ||
-         options.month !== undefined || options.day !== undefined))
-    {
-        needDefaults = false;
+    if (required === "date" || required === "any") {
+        if (options.weekday !== undefined)
+            needDefaults = false;
+        if (options.year !== undefined)
+            needDefaults = false;
+        if (options.month !== undefined)
+            needDefaults = false;
+        if (options.day !== undefined)
+            needDefaults = false;
     }
 
     // Step 5.
-    // TODO: spec issue - The spec requires to retrieve all options, so using
-    // the ||-operator with its lazy evaluation semantics is incorrect.
-    if ((required === "time" || required === "any") &&
-        (options.hour !== undefined || options.minute !== undefined ||
-         options.second !== undefined))
-    {
-        needDefaults = false;
+    if (required === "time" || required === "any") {
+        if (options.hour !== undefined)
+            needDefaults = false;
+        if (options.minute !== undefined)
+            needDefaults = false;
+        if (options.second !== undefined)
+            needDefaults = false;
     }
 
     // Step 6.

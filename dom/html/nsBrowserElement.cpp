@@ -38,13 +38,10 @@ nsBrowserElement::IsBrowserElementOrThrow(ErrorResult& aRv)
 void
 nsBrowserElement::InitBrowserElementAPI()
 {
-  bool isMozBrowser;
-  nsCOMPtr<nsIFrameLoader> frameLoader = GetFrameLoader();
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   NS_ENSURE_TRUE_VOID(frameLoader);
-  nsresult rv = frameLoader->GetOwnerIsMozBrowserFrame(&isMozBrowser);
-  NS_ENSURE_SUCCESS_VOID(rv);
 
-  if (!isMozBrowser) {
+  if (!frameLoader->OwnerIsMozBrowserFrame()) {
     return;
   }
 
@@ -54,7 +51,7 @@ nsBrowserElement::InitBrowserElementAPI()
       return;
     }
   }
-  mBrowserElementAPI->SetFrameLoader(frameLoader);
+  mBrowserElementAPI->SetFrameLoader(ToSupports(frameLoader));
 }
 
 void

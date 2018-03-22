@@ -444,7 +444,7 @@ EditorBase::GetDesiredSpellCheckState()
     return false;
   }
 
-  auto element = nsGenericHTMLElement::FromContent(content);
+  auto element = nsGenericHTMLElement::FromNode(content);
   if (!element) {
     return false;
   }
@@ -4351,7 +4351,7 @@ EditorBase::DeleteSelectionImpl(EDirection aAction,
   }
 
   RefPtr<CharacterData> deleteCharData =
-    CharacterData::FromContentOrNull(deleteNode);
+    CharacterData::FromNodeOrNull(deleteNode);
   AutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
 
   if (mRules && mRules->AsHTMLEditRules()) {

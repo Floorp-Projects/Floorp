@@ -348,7 +348,7 @@ TaskbarPreviewCallback::Done(nsISupports *aCanvas, bool aDrawBorder) {
   }
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aCanvas));
-  auto canvas = dom::HTMLCanvasElement::FromContentOrNull(content);
+  auto canvas = dom::HTMLCanvasElement::FromNodeOrNull(content);
   if (!canvas) {
     return NS_ERROR_FAILURE;
   }

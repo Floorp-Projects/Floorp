@@ -48,7 +48,7 @@ using namespace mozilla;
 bool
 nsCoreUtils::IsLabelWithControl(nsIContent* aContent)
 {
-  dom::HTMLLabelElement* label = dom::HTMLLabelElement::FromContent(aContent);
+  dom::HTMLLabelElement* label = dom::HTMLLabelElement::FromNode(aContent);
   if (label && label->GetControl())
     return true;
 
@@ -100,7 +100,7 @@ nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
 
   nsCOMPtr<nsIContent> tcXULElm(do_QueryInterface(tcElm));
   nsCOMPtr<nsIBoxObject> tcBoxObj =
-    nsXULElement::FromContent(tcXULElm)->GetBoxObject(IgnoreErrors());
+    nsXULElement::FromNode(tcXULElm)->GetBoxObject(IgnoreErrors());
 
   int32_t tcX = 0;
   tcBoxObj->GetX(&tcX);
@@ -493,7 +493,7 @@ nsCoreUtils::GetTreeBodyBoxObject(nsITreeBoxObject *aTreeBoxObj)
   nsCOMPtr<nsIDOMElement> tcElm;
   aTreeBoxObj->GetTreeBody(getter_AddRefs(tcElm));
   nsCOMPtr<nsIContent> tcContent(do_QueryInterface(tcElm));
-  RefPtr<nsXULElement> tcXULElm = nsXULElement::FromContentOrNull(tcContent);
+  RefPtr<nsXULElement> tcXULElm = nsXULElement::FromNodeOrNull(tcContent);
   if (!tcXULElm)
     return nullptr;
 
@@ -510,7 +510,7 @@ nsCoreUtils::GetTreeBoxObject(nsIContent *aContent)
                                            kNameSpaceID_XUL)) {
       // We will get the nsITreeBoxObject from the tree node
       RefPtr<nsXULElement> xulElement =
-        nsXULElement::FromContent(currentContent);
+        nsXULElement::FromNode(currentContent);
       nsCOMPtr<nsIBoxObject> box = xulElement->GetBoxObject(IgnoreErrors());
       nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(box));
       if (treeBox)
