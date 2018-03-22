@@ -15,6 +15,7 @@ const ADDONS = {
       id: "addon1@tests.mozilla.org",
       version: "1.0",
       name: "Test 1",
+      bootstrap: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
@@ -33,6 +34,7 @@ const ADDONS = {
       id: "addon2@tests.mozilla.org",
       version: "1.0",
       name: "Test 2",
+      bootstrap: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "0.7",
@@ -70,6 +72,7 @@ const ADDONS = {
       id: "addon4@tests.mozilla.org",
       version: "1.0",
       name: "Test 4",
+      bootstrap: true,
       strictCompatibility: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
@@ -90,6 +93,7 @@ const ADDONS = {
       id: "addon5@tests.mozilla.org",
       version: "1.0",
       name: "Test 5",
+      bootstrap: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "3",
@@ -109,6 +113,7 @@ const ADDONS = {
       id: "addon6@tests.mozilla.org",
       version: "1.0",
       name: "Test 6",
+      bootstrap: true,
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "0.1",
