@@ -166,9 +166,6 @@ nsScriptNameSpaceManager::Init()
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = FillHash(cm, JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   rv = FillHash(cm, JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -279,10 +276,8 @@ nsScriptNameSpaceManager::OperateCategoryEntryHash(nsICategoryManager* aCategory
   // Observe() but this way, we have only one place to update and this is
   // not performance sensitive.
   nsGlobalNameStruct::nametype type;
-  if (strcmp(aCategory, JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY) == 0) {
-    type = nsGlobalNameStruct::eTypeExternalConstructor;
-  } else if (strcmp(aCategory, JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY) == 0 ||
-             strcmp(aCategory, JAVASCRIPT_GLOBAL_PRIVILEGED_PROPERTY_CATEGORY) == 0) {
+  if (strcmp(aCategory, JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY) == 0 ||
+      strcmp(aCategory, JAVASCRIPT_GLOBAL_PRIVILEGED_PROPERTY_CATEGORY) == 0) {
     type = nsGlobalNameStruct::eTypeProperty;
   } else {
     return NS_OK;
