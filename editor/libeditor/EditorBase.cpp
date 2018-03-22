@@ -48,6 +48,7 @@
 #include "mozilla/TextInputListener.h"  // for TextInputListener
 #include "mozilla/TextServicesDocument.h" // for TextServicesDocument
 #include "mozilla/TextEvents.h"
+#include "mozilla/TransactionManager.h" // for TransactionManager
 #include "mozilla/dom/CharacterData.h"  // for CharacterData
 #include "mozilla/dom/Element.h"        // for Element, nsINode::AsElement
 #include "mozilla/dom/HTMLBodyElement.h"
@@ -108,7 +109,6 @@
 #include "nsStyleStructFwd.h"           // for nsIFrame::StyleUIReset, etc.
 #include "nsTextNode.h"                 // for nsTextNode
 #include "nsThreadUtils.h"              // for nsRunnable
-#include "nsTransactionManager.h"       // for nsTransactionManager
 #include "prtime.h"                     // for PR_Now
 
 class nsIOutputStream;
@@ -180,7 +180,7 @@ EditorBase::~EditorBase()
   }
   // If this editor is still hiding the caret, we need to restore it.
   HideCaret(false);
-  mTxnMgr = nullptr;
+  mTransactionManager = nullptr;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(EditorBase)
@@ -193,7 +193,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EditorBase)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInlineSpellChecker)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTextServicesDocument)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTextInputListener)
- NS_IMPL_CYCLE_COLLECTION_UNLINK(mTxnMgr)
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(mTransactionManager)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mActionListeners)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditorObservers)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocStateListeners)
@@ -223,7 +223,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EditorBase)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInlineSpellChecker)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTextServicesDocument)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTextInputListener)
- NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTxnMgr)
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTransactionManager)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mActionListeners)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditorObservers)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocStateListeners)
@@ -525,9 +525,9 @@ EditorBase::PreDestroy(bool aDestroyingFrames)
 
   // Transaction may grab this instance.  Therefore, they should be released
   // here for stopping the circular reference with this instance.
-  if (mTxnMgr) {
-    mTxnMgr->Clear();
-    mTxnMgr = nullptr;
+  if (mTransactionManager) {
+    mTransactionManager->Clear();
+    mTransactionManager = nullptr;
   }
 
   mDidPreDestroy = true;
@@ -746,8 +746,9 @@ EditorBase::DoTransaction(Selection* aSelection, nsITransaction* aTxn)
     // We will recurse, but will not hit this case in the nested call
     DoTransaction(mPlaceholderTransaction);
 
-    if (mTxnMgr) {
-      nsCOMPtr<nsITransaction> topTransaction = mTxnMgr->PeekUndoStack();
+    if (mTransactionManager) {
+      nsCOMPtr<nsITransaction> topTransaction =
+        mTransactionManager->PeekUndoStack();
       nsCOMPtr<nsIAbsorbingTransaction> topAbsorbingTransaction =
         do_QueryInterface(topTransaction);
       if (topAbsorbingTransaction) {
@@ -791,9 +792,9 @@ EditorBase::DoTransaction(Selection* aSelection, nsITransaction* aTxn)
     SelectionBatcher selectionBatcher(selection);
 
     nsresult rv;
-    if (mTxnMgr) {
-      RefPtr<nsTransactionManager> txnMgr = mTxnMgr;
-      rv = txnMgr->DoTransaction(aTxn);
+    if (mTransactionManager) {
+      RefPtr<TransactionManager> transactionManager(mTransactionManager);
+      rv = transactionManager->DoTransaction(aTxn);
     } else {
       rv = aTxn->DoTransaction();
     }
@@ -811,14 +812,14 @@ NS_IMETHODIMP
 EditorBase::EnableUndo(bool aEnable)
 {
   if (aEnable) {
-    if (!mTxnMgr) {
-      mTxnMgr = new nsTransactionManager();
+    if (!mTransactionManager) {
+      mTransactionManager = new TransactionManager();
     }
-    mTxnMgr->SetMaxTransactionCount(-1);
-  } else if (mTxnMgr) {
+    mTransactionManager->SetMaxTransactionCount(-1);
+  } else if (mTransactionManager) {
     // disable the transaction manager if it is enabled
-    mTxnMgr->Clear();
-    mTxnMgr->SetMaxTransactionCount(0);
+    mTransactionManager->Clear();
+    mTransactionManager->SetMaxTransactionCount(0);
   }
 
   return NS_OK;
@@ -834,11 +835,12 @@ EditorBase::GetNumberOfUndoItems(int32_t* aNumItems)
 int32_t
 EditorBase::NumberOfUndoItems() const
 {
-  if (!mTxnMgr) {
+  if (!mTransactionManager) {
     return 0;
   }
   int32_t numItems = 0;
-  if (NS_WARN_IF(NS_FAILED(mTxnMgr->GetNumberOfUndoItems(&numItems)))) {
+  nsresult rv = mTransactionManager->GetNumberOfUndoItems(&numItems);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return -1;
   }
   return numItems;
@@ -854,11 +856,12 @@ EditorBase::GetNumberOfRedoItems(int32_t* aNumItems)
 int32_t
 EditorBase::NumberOfRedoItems() const
 {
-  if (!mTxnMgr) {
+  if (!mTransactionManager) {
     return 0;
   }
   int32_t numItems = 0;
-  if (NS_WARN_IF(NS_FAILED(mTxnMgr->GetNumberOfRedoItems(&numItems)))) {
+  nsresult rv = mTransactionManager->GetNumberOfRedoItems(&numItems);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return -1;
   }
   return numItems;
@@ -882,7 +885,7 @@ EditorBase::GetTransactionManager(nsITransactionManager** aTxnManager)
 already_AddRefed<nsITransactionManager>
 EditorBase::GetTransactionManager() const
 {
-  nsCOMPtr<nsITransactionManager> transactionManager = mTxnMgr.get();
+  nsCOMPtr<nsITransactionManager> transactionManager(mTransactionManager);
   return transactionManager.forget();
 }
 
@@ -891,19 +894,19 @@ EditorBase::Undo(uint32_t aCount)
 {
   ForceCompositionEnd();
 
-  bool hasTxnMgr, hasTransaction = false;
-  CanUndo(&hasTxnMgr, &hasTransaction);
+  bool hasTransactionManager, hasTransaction = false;
+  CanUndo(&hasTransactionManager, &hasTransaction);
   NS_ENSURE_TRUE(hasTransaction, NS_OK);
 
   AutoRules beginRulesSniffing(this, EditAction::undo, nsIEditor::eNone);
 
-  if (!mTxnMgr) {
+  if (!mTransactionManager) {
     return NS_OK;
   }
 
-  RefPtr<nsTransactionManager> txnMgr = mTxnMgr;
+  RefPtr<TransactionManager> transactionManager(mTransactionManager);
   for (uint32_t i = 0; i < aCount; ++i) {
-    nsresult rv = txnMgr->UndoTransaction();
+    nsresult rv = transactionManager->UndoTransaction();
     NS_ENSURE_SUCCESS(rv, rv);
 
     DoAfterUndoTransaction();
@@ -917,10 +920,10 @@ EditorBase::CanUndo(bool* aIsEnabled,
                     bool* aCanUndo)
 {
   NS_ENSURE_TRUE(aIsEnabled && aCanUndo, NS_ERROR_NULL_POINTER);
-  *aIsEnabled = !!mTxnMgr;
+  *aIsEnabled = !!mTransactionManager;
   if (*aIsEnabled) {
     int32_t numTxns = 0;
-    mTxnMgr->GetNumberOfUndoItems(&numTxns);
+    mTransactionManager->GetNumberOfUndoItems(&numTxns);
     *aCanUndo = !!numTxns;
   } else {
     *aCanUndo = false;
@@ -931,19 +934,19 @@ EditorBase::CanUndo(bool* aIsEnabled,
 NS_IMETHODIMP
 EditorBase::Redo(uint32_t aCount)
 {
-  bool hasTxnMgr, hasTransaction = false;
-  CanRedo(&hasTxnMgr, &hasTransaction);
+  bool hasTransactionManager, hasTransaction = false;
+  CanRedo(&hasTransactionManager, &hasTransaction);
   NS_ENSURE_TRUE(hasTransaction, NS_OK);
 
   AutoRules beginRulesSniffing(this, EditAction::redo, nsIEditor::eNone);
 
-  if (!mTxnMgr) {
+  if (!mTransactionManager) {
     return NS_OK;
   }
 
-  RefPtr<nsTransactionManager> txnMgr = mTxnMgr;
+  RefPtr<TransactionManager> transactionManager(mTransactionManager);
   for (uint32_t i = 0; i < aCount; ++i) {
-    nsresult rv = txnMgr->RedoTransaction();
+    nsresult rv = transactionManager->RedoTransaction();
     NS_ENSURE_SUCCESS(rv, rv);
 
     DoAfterRedoTransaction();
@@ -957,10 +960,10 @@ EditorBase::CanRedo(bool* aIsEnabled, bool* aCanRedo)
 {
   NS_ENSURE_TRUE(aIsEnabled && aCanRedo, NS_ERROR_NULL_POINTER);
 
-  *aIsEnabled = !!mTxnMgr;
+  *aIsEnabled = !!mTransactionManager;
   if (*aIsEnabled) {
     int32_t numTxns = 0;
-    mTxnMgr->GetNumberOfRedoItems(&numTxns);
+    mTransactionManager->GetNumberOfRedoItems(&numTxns);
     *aCanRedo = !!numTxns;
   } else {
     *aCanRedo = false;
@@ -973,9 +976,9 @@ EditorBase::BeginTransaction()
 {
   BeginUpdateViewBatch();
 
-  if (mTxnMgr) {
-    RefPtr<nsTransactionManager> txnMgr = mTxnMgr;
-    txnMgr->BeginBatch(nullptr);
+  if (mTransactionManager) {
+    RefPtr<TransactionManager> transactionManager(mTransactionManager);
+    transactionManager->BeginBatch(nullptr);
   }
 
   return NS_OK;
@@ -984,9 +987,9 @@ EditorBase::BeginTransaction()
 NS_IMETHODIMP
 EditorBase::EndTransaction()
 {
-  if (mTxnMgr) {
-    RefPtr<nsTransactionManager> txnMgr = mTxnMgr;
-    txnMgr->EndBatch(false);
+  if (mTransactionManager) {
+    RefPtr<TransactionManager> transactionManager(mTransactionManager);
+    transactionManager->EndBatch(false);
   }
 
   EndUpdateViewBatch();
@@ -2471,8 +2474,8 @@ EditorBase::EndIMEComposition()
 
   // commit the IME transaction..we can get at it via the transaction mgr.
   // Note that this means IME won't work without an undo stack!
-  if (mTxnMgr) {
-    nsCOMPtr<nsITransaction> txn = mTxnMgr->PeekUndoStack();
+  if (mTransactionManager) {
+    nsCOMPtr<nsITransaction> txn = mTransactionManager->PeekUndoStack();
     nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryInterface(txn);
     if (plcTxn) {
       DebugOnly<nsresult> rv = plcTxn->Commit();
