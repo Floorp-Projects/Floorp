@@ -12,9 +12,8 @@
 #ifndef nsIAnonymousContentCreator_h___
 #define nsIAnonymousContentCreator_h___
 
-#include "mozilla/ComputedStyle.h"
-
 #include "nsQueryFrame.h"
+#include "nsStyleContext.h"
 #include "nsTArrayForwardDeclare.h"
 
 class nsIContent;

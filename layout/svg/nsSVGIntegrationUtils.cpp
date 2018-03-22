@@ -436,7 +436,7 @@ typedef nsSVGIntegrationUtils::PaintFramesParams PaintFramesParams;
  */
 static void
 PaintMaskSurface(const PaintFramesParams& aParams,
-                 DrawTarget* aMaskDT, float aOpacity, ComputedStyle* aSC,
+                 DrawTarget* aMaskDT, float aOpacity, nsStyleContext* aSC,
                  const nsTArray<nsSVGMaskFrame*>& aMaskFrames,
                  const Matrix& aMaskSurfaceMatrix,
                  const nsPoint& aOffsetToUserSpace)
@@ -521,7 +521,7 @@ struct MaskPaintResult {
 
 static MaskPaintResult
 CreateAndPaintMaskSurface(const PaintFramesParams& aParams,
-                          float aOpacity, ComputedStyle* aSC,
+                          float aOpacity, nsStyleContext* aSC,
                           const nsTArray<nsSVGMaskFrame*>& aMaskFrames,
                           const nsPoint& aOffsetToUserSpace)
 {
@@ -831,7 +831,7 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
     EffectOffsets offsets = MoveContextOriginToUserSpace(frame, aParams);
     PaintMaskSurface(aParams, maskTarget,
                      shouldPushOpacity ?  1.0 : maskUsage.opacity,
-                     firstFrame->Style(), maskFrames,
+                     firstFrame->StyleContext(), maskFrames,
                      ctx.CurrentMatrix(),
                      offsets.offsetToUserSpace);
   }
@@ -925,7 +925,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
       EffectOffsets offsets = MoveContextOriginToUserSpace(frame, aParams);
       MaskPaintResult paintResult =
         CreateAndPaintMaskSurface(aParams, maskUsage.opacity,
-                                  firstFrame->Style(),
+                                  firstFrame->StyleContext(),
                                   maskFrames, offsets.offsetToUserSpace);
 
       if (paintResult.transparentBlackMask) {

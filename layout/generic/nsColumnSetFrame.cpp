@@ -99,17 +99,17 @@ nsDisplayColumnRule::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aB
  * XXX should we support CSS columns applied to table elements?
  */
 nsContainerFrame*
-NS_NewColumnSetFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle, nsFrameState aStateFlags)
+NS_NewColumnSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, nsFrameState aStateFlags)
 {
-  nsColumnSetFrame* it = new (aPresShell) nsColumnSetFrame(aStyle);
+  nsColumnSetFrame* it = new (aPresShell) nsColumnSetFrame(aContext);
   it->AddStateBits(aStateFlags | NS_BLOCK_MARGIN_ROOT);
   return it;
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsColumnSetFrame)
 
-nsColumnSetFrame::nsColumnSetFrame(ComputedStyle* aStyle)
-  : nsContainerFrame(aStyle, kClassID)
+nsColumnSetFrame::nsColumnSetFrame(nsStyleContext* aContext)
+  : nsContainerFrame(aContext, kClassID)
   , mLastBalanceBSize(NS_INTRINSICSIZE)
 {
 }
@@ -250,7 +250,7 @@ nsColumnSetFrame::CreateBorderRenderers(nsTArray<nsCSSBorderRenderer>& aBorderRe
                         nsCSSRendering::CreateBorderRendererWithStyleBorder(presContext, dt,
                                                                             this, aDirtyRect,
                                                                             aLineRect, border,
-                                                                            Style(),
+                                                                            StyleContext(),
                                                                             &borderIsEmpty,
                                                                             skipSides);
                       if (br.isSome()) {
@@ -1266,7 +1266,7 @@ nsColumnSetFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
     return;
   }
 
-  MOZ_ASSERT(column->Style()->GetPseudo() ==
+  MOZ_ASSERT(column->StyleContext()->GetPseudo() ==
                nsCSSAnonBoxes::columnContent,
              "What sort of child is this?");
   aResult.AppendElement(OwnedAnonBox(column));

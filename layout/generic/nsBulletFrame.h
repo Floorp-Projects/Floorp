@@ -50,8 +50,8 @@ public:
   NS_DECL_QUERYFRAME
 #endif
 
-  explicit nsBulletFrame(ComputedStyle* aStyle)
-    : nsFrame(aStyle, kClassID)
+  explicit nsBulletFrame(nsStyleContext* aContext)
+    : nsFrame(aContext, kClassID)
     , mPadding(GetWritingMode())
     , mIntrinsicSize(GetWritingMode())
     , mOrdinal(0)
@@ -66,7 +66,7 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsDisplayListSet& aLists) override;
-  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif

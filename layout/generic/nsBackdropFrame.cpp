@@ -22,8 +22,8 @@ nsBackdropFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-/* virtual */ ComputedStyle*
-nsBackdropFrame::GetParentComputedStyle(nsIFrame** aProviderFrame) const
+/* virtual */ nsStyleContext*
+nsBackdropFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
 {
   // Style context of backdrop pseudo-element does not inherit from
   // any element, per the Fullscreen API spec.

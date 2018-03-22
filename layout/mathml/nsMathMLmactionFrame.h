@@ -20,7 +20,7 @@ class nsMathMLmactionFrame : public nsMathMLSelectedFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmactionFrame)
 
-  friend nsIFrame* NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual void
   Init(nsIContent*       aContent,
@@ -59,8 +59,8 @@ private:
   };
 
 protected:
-  explicit nsMathMLmactionFrame(ComputedStyle* aStyle) :
-    nsMathMLSelectedFrame(aStyle, kClassID) {}
+  explicit nsMathMLmactionFrame(nsStyleContext* aContext) :
+    nsMathMLSelectedFrame(aContext, kClassID) {}
   virtual ~nsMathMLmactionFrame();
 
 private:

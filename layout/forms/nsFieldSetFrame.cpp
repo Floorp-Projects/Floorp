@@ -25,15 +25,15 @@ using namespace mozilla::gfx;
 using namespace mozilla::layout;
 
 nsContainerFrame*
-NS_NewFieldSetFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsFieldSetFrame(aStyle);
+  return new (aPresShell) nsFieldSetFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsFieldSetFrame)
 
-nsFieldSetFrame::nsFieldSetFrame(ComputedStyle* aStyle)
-  : nsContainerFrame(aStyle, kClassID)
+nsFieldSetFrame::nsFieldSetFrame(nsStyleContext* aContext)
+  : nsContainerFrame(aContext, kClassID)
   , mLegendRect(GetWritingMode())
 {
   mLegendSpace  = 0;
@@ -60,7 +60,7 @@ nsFieldSetFrame::GetInner() const
 {
   nsIFrame* last = mFrames.LastChild();
   if (last &&
-      last->Style()->GetPseudo() == nsCSSAnonBoxes::fieldsetContent) {
+      last->StyleContext()->GetPseudo() == nsCSSAnonBoxes::fieldsetContent) {
     return last;
   }
   MOZ_ASSERT(mFrames.LastChild() == mFrames.FirstChild());
@@ -298,13 +298,13 @@ nsFieldSetFrame::PaintBorder(
     aRenderingContext.Clip(clipPath);
     result &=
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
-                                  aDirtyRect, rect, mComputedStyle, borderFlags);
+                                  aDirtyRect, rect, mStyleContext, borderFlags);
     aRenderingContext.Restore();
   } else {
     result &=
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                   aDirtyRect, nsRect(aPt, mRect.Size()),
-                                  mComputedStyle, borderFlags);
+                                  mStyleContext, borderFlags);
   }
 
   return result;

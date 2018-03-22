@@ -140,8 +140,8 @@ protected:
   nsPluginFrame* mFrame;
 };
 
-nsPluginFrame::nsPluginFrame(ComputedStyle* aStyle)
-  : nsFrame(aStyle, kClassID)
+nsPluginFrame::nsPluginFrame(nsStyleContext* aContext)
+  : nsFrame(aContext, kClassID)
   , mInstanceOwner(nullptr)
   , mOuterView(nullptr)
   , mInnerView(nullptr)
@@ -221,7 +221,7 @@ nsPluginFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestro
 }
 
 /* virtual */ void
-nsPluginFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
+nsPluginFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   if (HasView()) {
     nsView* view = GetView();
@@ -233,7 +233,7 @@ nsPluginFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
     }
   }
 
-  nsFrame::DidSetComputedStyle(aOldComputedStyle);
+  nsFrame::DidSetStyleContext(aOldStyleContext);
 }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -1817,9 +1817,9 @@ nsPluginFrame::EndSwapDocShells(nsISupports* aSupports, void*)
 }
 
 nsIFrame*
-NS_NewObjectFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsPluginFrame(aStyle);
+  return new (aPresShell) nsPluginFrame(aContext);
 }
 
 bool

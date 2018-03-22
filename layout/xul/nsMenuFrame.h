@@ -24,8 +24,8 @@
 #include "nsITimer.h"
 #include "mozilla/Attributes.h"
 
-nsIFrame* NS_NewMenuFrame(nsIPresShell* aPresShell, mozilla::ComputedStyle*);
-nsIFrame* NS_NewMenuItemFrame(nsIPresShell* aPresShell, mozilla::ComputedStyle*);
+nsIFrame* NS_NewMenuFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame* NS_NewMenuItemFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 class nsIContent;
 
@@ -80,7 +80,7 @@ class nsMenuFrame final : public nsBoxFrame
                         , public nsIReflowCallback
 {
 public:
-  explicit nsMenuFrame(ComputedStyle* aStyle);
+  explicit nsMenuFrame(nsStyleContext* aContext);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsMenuFrame)

@@ -18,7 +18,7 @@ class nsMathMLmpaddedFrame : public nsMathMLContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmpaddedFrame)
 
-  friend nsIFrame* NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD
   InheritAutomaticData(nsIFrame* aParent) override;
@@ -46,8 +46,8 @@ public:
   }
 
 protected:
-  explicit nsMathMLmpaddedFrame(ComputedStyle* aStyle)
-    : nsMathMLContainerFrame(aStyle, kClassID)
+  explicit nsMathMLmpaddedFrame(nsStyleContext* aContext)
+    : nsMathMLContainerFrame(aContext, kClassID)
     , mWidthSign(0)
     , mHeightSign(0)
     , mDepthSign(0)

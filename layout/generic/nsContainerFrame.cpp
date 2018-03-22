@@ -8,13 +8,13 @@
 
 #include "nsContainerFrame.h"
 
-#include "mozilla/ComputedStyle.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
+#include "nsStyleContext.h"
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "nsStyleConsts.h"

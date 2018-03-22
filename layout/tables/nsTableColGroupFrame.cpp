@@ -5,7 +5,7 @@
 #include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
 #include "nsTableFrame.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsHTMLParts.h"
@@ -136,16 +136,16 @@ nsTableColGroupFrame::SetInitialChildList(ChildListID     aListID,
 }
 
 /* virtual */ void
-nsTableColGroupFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
+nsTableColGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  nsContainerFrame::DidSetComputedStyle(aOldComputedStyle);
+  nsContainerFrame::DidSetStyleContext(aOldStyleContext);
 
-  if (!aOldComputedStyle) //avoid this on init
+  if (!aOldStyleContext) //avoid this on init
     return;
 
   nsTableFrame* tableFrame = GetTableFrame();
   if (tableFrame->IsBorderCollapse() &&
-      tableFrame->BCRecalcNeeded(aOldComputedStyle, Style())) {
+      tableFrame->BCRecalcNeeded(aOldStyleContext, StyleContext())) {
     int32_t colCount = GetColCount();
     if (!colCount)
       return; // this is a degenerated colgroup
@@ -441,9 +441,9 @@ void nsTableColGroupFrame::GetContinuousBCBorderWidth(WritingMode aWM,
 /* ----- global methods ----- */
 
 nsTableColGroupFrame*
-NS_NewTableColGroupFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTableColGroupFrame(aStyle);
+  return new (aPresShell) nsTableColGroupFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTableColGroupFrame)

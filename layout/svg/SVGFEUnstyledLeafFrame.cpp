@@ -14,10 +14,10 @@
 class SVGFEUnstyledLeafFrame : public nsFrame
 {
   friend nsIFrame*
-  NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  explicit SVGFEUnstyledLeafFrame(ComputedStyle* aStyle)
-    : nsFrame(aStyle, kClassID)
+  explicit SVGFEUnstyledLeafFrame(nsStyleContext* aContext)
+    : nsFrame(aContext, kClassID)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
@@ -51,9 +51,9 @@ public:
 };
 
 nsIFrame*
-NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) SVGFEUnstyledLeafFrame(aStyle);
+  return new (aPresShell) SVGFEUnstyledLeafFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGFEUnstyledLeafFrame)

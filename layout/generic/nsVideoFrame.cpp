@@ -33,9 +33,9 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
 nsIFrame*
-NS_NewHTMLVideoFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewHTMLVideoFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsVideoFrame(aStyle);
+  return new (aPresShell) nsVideoFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsVideoFrame)
@@ -73,8 +73,8 @@ SwapScaleWidthHeightForRotation(IntSize& aSize, VideoInfo::Rotation aDegrees)
   }
 }
 
-nsVideoFrame::nsVideoFrame(ComputedStyle* aStyle)
-  : nsContainerFrame(aStyle, kClassID)
+nsVideoFrame::nsVideoFrame(nsStyleContext* aContext)
+  : nsContainerFrame(aContext, kClassID)
 {
   EnableVisibilityTracking();
 }

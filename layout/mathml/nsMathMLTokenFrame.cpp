@@ -13,9 +13,9 @@
 using namespace mozilla;
 
 nsIFrame*
-NS_NewMathMLTokenFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewMathMLTokenFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsMathMLTokenFrame(aStyle);
+  return new (aPresShell) nsMathMLTokenFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLTokenFrame)

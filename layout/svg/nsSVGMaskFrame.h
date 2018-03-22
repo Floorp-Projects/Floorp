@@ -20,15 +20,15 @@ class gfxContext;
 class nsSVGMaskFrame final : public nsSVGContainerFrame
 {
   friend nsIFrame*
-  NS_NewSVGMaskFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   typedef mozilla::gfx::Matrix Matrix;
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
 protected:
-  explicit nsSVGMaskFrame(ComputedStyle* aStyle)
-    : nsSVGContainerFrame(aStyle, kClassID)
+  explicit nsSVGMaskFrame(nsStyleContext* aContext)
+    : nsSVGContainerFrame(aContext, kClassID)
     , mInUse(false)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);

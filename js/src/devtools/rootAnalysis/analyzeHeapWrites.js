@@ -476,7 +476,7 @@ function ignoreContents(entry)
 
         // The analysis thinks we'll write to mBits in the DoGetStyleFoo<false>
         // call.  Maybe the template parameter confuses it?
-        /ComputedStyle::PeekStyle/,
+        /nsStyleContext::PeekStyle/,
 
         // The analysis can't cope with the indirection used for the objects
         // being initialized here, from nsCSSValue::Array::Create to the return

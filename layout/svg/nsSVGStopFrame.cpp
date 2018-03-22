@@ -8,7 +8,7 @@
 #include "nsContainerFrame.h"
 #include "nsFrame.h"
 #include "nsGkAtoms.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 #include "SVGObserverUtils.h"
 
 // This is a very simple frame whose only purpose is to capture style change
@@ -18,10 +18,10 @@
 class nsSVGStopFrame : public nsFrame
 {
   friend nsIFrame*
-  NS_NewSVGStopFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  NS_NewSVGStopFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  explicit nsSVGStopFrame(ComputedStyle* aStyle)
-    : nsFrame(aStyle, kClassID)
+  explicit nsSVGStopFrame(nsStyleContext* aContext)
+    : nsFrame(aContext, kClassID)
   {
     AddStateBits(NS_FRAME_IS_NONDISPLAY);
   }
@@ -97,7 +97,7 @@ nsSVGStopFrame::AttributeChanged(int32_t         aNameSpaceID,
 // -------------------------------------------------------------------------
 
 nsIFrame* NS_NewSVGStopFrame(nsIPresShell*   aPresShell,
-                             ComputedStyle* aStyle)
+                             nsStyleContext* aContext)
 {
-  return new (aPresShell) nsSVGStopFrame(aStyle);
+  return new (aPresShell) nsSVGStopFrame(aContext);
 }

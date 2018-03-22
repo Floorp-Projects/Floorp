@@ -27,7 +27,7 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsProgressFrame)
 
-  explicit nsProgressFrame(ComputedStyle* aStyle);
+  explicit nsProgressFrame(nsStyleContext* aContext);
   virtual ~nsProgressFrame();
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;

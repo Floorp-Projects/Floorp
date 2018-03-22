@@ -13,9 +13,9 @@
 using namespace mozilla;
 
 nsPageContentFrame*
-NS_NewPageContentFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewPageContentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsPageContentFrame(aStyle);
+  return new (aPresShell) nsPageContentFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsPageContentFrame)

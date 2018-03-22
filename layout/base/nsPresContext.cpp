@@ -1478,7 +1478,7 @@ GetPropagatedScrollbarStylesForViewport(nsPresContext* aPresContext,
 
   // Check the style on the document root element
   StyleSetHandle styleSet = aPresContext->StyleSet();
-  RefPtr<ComputedStyle> rootStyle =
+  RefPtr<nsStyleContext> rootStyle =
     styleSet->ResolveStyleFor(docElement, nullptr, LazyComputeBehavior::Allow);
   if (CheckOverflow(rootStyle->StyleDisplay(), aStyles)) {
     // tell caller we stole the overflow style from the root element
@@ -1505,7 +1505,7 @@ GetPropagatedScrollbarStylesForViewport(nsPresContext* aPresContext,
   MOZ_ASSERT(bodyElement->IsHTMLElement(nsGkAtoms::body),
              "GetBodyElement returned something bogus");
 
-  RefPtr<ComputedStyle> bodyStyle =
+  RefPtr<nsStyleContext> bodyStyle =
     styleSet->ResolveStyleFor(bodyElement, rootStyle,
                               LazyComputeBehavior::Allow);
 
@@ -2014,6 +2014,9 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
   // here if there's no restyle hint? That looks pretty bogus.
   mUsesRootEMUnits = false;
   mUsesExChUnits = false;
+  if (mShell->StyleSet()->IsGecko()) {
+    MOZ_CRASH("old style system disabled");
+  }
 
   // TODO(emilio): It's unclear to me why would these three calls below be
   // needed. In particular, RebuildAllStyleData doesn't rebuild rules or
@@ -2207,6 +2210,9 @@ bool
 nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
                                        uint32_t aRuleTypeMask) const
 {
+  if (aFrame->StyleContext()->IsGecko()) {
+    MOZ_CRASH("old style system disabled");
+  }
   Element* elem = aFrame->GetContent()->AsElement();
 
   // We need to handle non-generated content pseudos too, so we use
@@ -2220,7 +2226,7 @@ nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
     return false;
   }
 
-  ComputedStyle* styleContext = aFrame->Style();
+  nsStyleContext* styleContext = aFrame->StyleContext();
   CSSPseudoElementType pseudoType = styleContext->GetPseudoType();
   // Anonymous boxes are more complicated, and we just assume that they
   // cannot have any author-specified rules here.

@@ -137,6 +137,9 @@ TransformReferenceBox::Init(const nsSize& aDimensions)
 
 float
 ProcessTranslatePart(const nsCSSValue& aValue,
+                     GeckoStyleContext* aContext,
+                     nsPresContext* aPresContext,
+                     RuleNodeCacheConditions& aConditions,
                      TransformReferenceBox* aRefBox,
                      TransformReferenceBox::DimensionGetter aDimensionGetter)
 {
@@ -158,14 +161,18 @@ ProcessTranslatePart(const nsCSSValue& aValue,
     // Don't convert to aValue to AppUnits here to avoid precision issues.
     return aValue.GetFloatValue();
   } else if (aValue.IsCalcUnit()) {
-    // Servo backend. We can retrieve the Calc value directly because it has
-    // been computed from Servo side and set by nsCSSValue::SetCalcValue().
-    // We don't use nsRuleNode::SpecifiedCalcToComputedCalc() because it
-    // asserts for null context and we always pass null context for Servo
-    // backend.
-    nsStyleCoord::CalcValue calc = aValue.GetCalcValue();
-    percent = calc.mPercent;
-    offset = calc.mLength;
+    if (aContext) {
+      MOZ_CRASH("old style system disabled");
+    } else {
+      // Servo backend. We can retrieve the Calc value directly because it has
+      // been computed from Servo side and set by nsCSSValue::SetCalcValue().
+      // We don't use nsRuleNode::SpecifiedCalcToComputedCalc() because it
+      // asserts for null context and we always pass null context for Servo
+      // backend.
+      nsStyleCoord::CalcValue calc = aValue.GetCalcValue();
+      percent = calc.mPercent;
+      offset = calc.mLength;
+    }
   } else {
     // Note: The unit of nsCSSValue passed from Servo side would be number,
     //       pixel, percent, or eCSSUnit_Calc, so it is impossible to go into
@@ -195,6 +202,9 @@ ProcessTranslatePart(const nsCSSValue& aValue,
 static void
 ProcessMatrix(Matrix4x4& aMatrix,
               const nsCSSValue::Array* aData,
+              GeckoStyleContext* aContext,
+              nsPresContext* aPresContext,
+              RuleNodeCacheConditions& aConditions,
               TransformReferenceBox& aRefBox)
 {
   NS_PRECONDITION(aData->Count() == 7, "Invalid array!");
@@ -213,9 +223,11 @@ ProcessMatrix(Matrix4x4& aMatrix,
    * and their percent parts stored in aX[0] and aY[1].
    */
   result._31 = ProcessTranslatePart(aData->Item(5),
-                                    &aRefBox, &TransformReferenceBox::Width);
+                                   aContext, aPresContext, aConditions,
+                                   &aRefBox, &TransformReferenceBox::Width);
   result._32 = ProcessTranslatePart(aData->Item(6),
-                                    &aRefBox, &TransformReferenceBox::Height);
+                                   aContext, aPresContext, aConditions,
+                                   &aRefBox, &TransformReferenceBox::Height);
 
   aMatrix = result * aMatrix;
 }
@@ -223,6 +235,9 @@ ProcessMatrix(Matrix4x4& aMatrix,
 static void
 ProcessMatrix3D(Matrix4x4& aMatrix,
                 const nsCSSValue::Array* aData,
+                GeckoStyleContext* aContext,
+                nsPresContext* aPresContext,
+                RuleNodeCacheConditions& aConditions,
                 TransformReferenceBox& aRefBox)
 {
   NS_PRECONDITION(aData->Count() == 17, "Invalid array!");
@@ -244,10 +259,14 @@ ProcessMatrix3D(Matrix4x4& aMatrix,
   temp._44 = aData->Item(16).GetFloatValue();
 
   temp._41 = ProcessTranslatePart(aData->Item(13),
+                                  aContext, aPresContext, aConditions,
                                   &aRefBox, &TransformReferenceBox::Width);
   temp._42 = ProcessTranslatePart(aData->Item(14),
+                                  aContext, aPresContext, aConditions,
                                   &aRefBox, &TransformReferenceBox::Height);
-  temp._43 = ProcessTranslatePart(aData->Item(15), nullptr);
+  temp._43 = ProcessTranslatePart(aData->Item(15),
+                                  aContext, aPresContext, aConditions,
+                                  nullptr);
 
   aMatrix = temp * aMatrix;
 }
@@ -481,6 +500,9 @@ template <typename Operator>
 static void
 ProcessMatrixOperator(Matrix4x4& aMatrix,
                       const nsCSSValue::Array* aData,
+                      GeckoStyleContext* aContext,
+                      nsPresContext* aPresContext,
+                      RuleNodeCacheConditions& aConditions,
                       TransformReferenceBox& aRefBox,
                       bool* aContains3dTransform)
 {
@@ -511,6 +533,9 @@ ProcessMatrixOperator(Matrix4x4& aMatrix,
 
     float appUnitPerCSSPixel = nsPresContext::AppUnitsPerCSSPixel();
     matrix = nsStyleTransformMatrix::ReadTransforms(list,
+                                                    nullptr,
+                                                    aPresContext,
+                                                    aConditions,
                                                     aRefBox,
                                                     appUnitPerCSSPixel,
                                                     aContains3dTransform);
@@ -521,7 +546,7 @@ ProcessMatrixOperator(Matrix4x4& aMatrix,
   Matrix4x4 matrix2 = readTransform(aData->Item(2));
   double progress = aData->Item(3).GetPercentValue();
 
-  // We cannot use GeckoComputedStyle to check if we use Servo backend because
+  // We cannot use GeckoStyleContext to check if we use Servo backend because
   // it could be null in Gecko. Instead, use the unit of the nsCSSValue because
   // we use eCSSUnit_SharedList for Servo backend.
   if (aData->Item(1).GetUnit() == eCSSUnit_SharedList) {
@@ -539,21 +564,28 @@ ProcessMatrixOperator(Matrix4x4& aMatrix,
 void
 ProcessInterpolateMatrix(Matrix4x4& aMatrix,
                          const nsCSSValue::Array* aData,
+                         GeckoStyleContext* aContext,
+                         nsPresContext* aPresContext,
+                         RuleNodeCacheConditions& aConditions,
                          TransformReferenceBox& aRefBox,
                          bool* aContains3dTransform)
 {
-  ProcessMatrixOperator<Interpolate>(aMatrix, aData,
-                                     aRefBox,
+  ProcessMatrixOperator<Interpolate>(aMatrix, aData, aContext, aPresContext,
+                                     aConditions, aRefBox,
                                      aContains3dTransform);
 }
 
 void
 ProcessAccumulateMatrix(Matrix4x4& aMatrix,
                         const nsCSSValue::Array* aData,
+                        GeckoStyleContext* aContext,
+                        nsPresContext* aPresContext,
+                        RuleNodeCacheConditions& aConditions,
                         TransformReferenceBox& aRefBox,
                         bool* aContains3dTransform)
 {
-  ProcessMatrixOperator<Accumulate>(aMatrix, aData, aRefBox,
+  ProcessMatrixOperator<Accumulate>(aMatrix, aData, aContext, aPresContext,
+                                    aConditions, aRefBox,
                                     aContains3dTransform);
 }
 
@@ -561,6 +593,9 @@ ProcessAccumulateMatrix(Matrix4x4& aMatrix,
 static void
 ProcessTranslateX(Matrix4x4& aMatrix,
                   const nsCSSValue::Array* aData,
+                  GeckoStyleContext* aContext,
+                  nsPresContext* aPresContext,
+                  RuleNodeCacheConditions& aConditions,
                   TransformReferenceBox& aRefBox)
 {
   NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
@@ -568,6 +603,7 @@ ProcessTranslateX(Matrix4x4& aMatrix,
   Point3D temp;
 
   temp.x = ProcessTranslatePart(aData->Item(1),
+                                aContext, aPresContext, aConditions,
                                 &aRefBox, &TransformReferenceBox::Width);
   aMatrix.PreTranslate(temp);
 }
@@ -576,6 +612,9 @@ ProcessTranslateX(Matrix4x4& aMatrix,
 static void
 ProcessTranslateY(Matrix4x4& aMatrix,
                   const nsCSSValue::Array* aData,
+                  GeckoStyleContext* aContext,
+                  nsPresContext* aPresContext,
+                  RuleNodeCacheConditions& aConditions,
                   TransformReferenceBox& aRefBox)
 {
   NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
@@ -583,18 +622,25 @@ ProcessTranslateY(Matrix4x4& aMatrix,
   Point3D temp;
 
   temp.y = ProcessTranslatePart(aData->Item(1),
+                                aContext, aPresContext, aConditions,
                                 &aRefBox, &TransformReferenceBox::Height);
   aMatrix.PreTranslate(temp);
 }
 
 static void
-ProcessTranslateZ(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
+ProcessTranslateZ(Matrix4x4& aMatrix,
+                  const nsCSSValue::Array* aData,
+                  GeckoStyleContext* aContext,
+                  nsPresContext* aPresContext,
+                  RuleNodeCacheConditions& aConditions)
 {
   NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
 
   Point3D temp;
 
-  temp.z = ProcessTranslatePart(aData->Item(1), nullptr);
+  temp.z = ProcessTranslatePart(aData->Item(1), aContext,
+                                aPresContext, aConditions,
+                                nullptr);
   aMatrix.PreTranslate(temp);
 }
 
@@ -602,6 +648,9 @@ ProcessTranslateZ(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 static void
 ProcessTranslate(Matrix4x4& aMatrix,
                  const nsCSSValue::Array* aData,
+                 GeckoStyleContext* aContext,
+                 nsPresContext* aPresContext,
+                 RuleNodeCacheConditions& aConditions,
                  TransformReferenceBox& aRefBox)
 {
   NS_PRECONDITION(aData->Count() == 2 || aData->Count() == 3, "Invalid array!");
@@ -609,11 +658,13 @@ ProcessTranslate(Matrix4x4& aMatrix,
   Point3D temp;
 
   temp.x = ProcessTranslatePart(aData->Item(1),
+                                aContext, aPresContext, aConditions,
                                 &aRefBox, &TransformReferenceBox::Width);
 
   /* If we read in a Y component, set it appropriately */
   if (aData->Count() == 3) {
     temp.y = ProcessTranslatePart(aData->Item(2),
+                                  aContext, aPresContext, aConditions,
                                   &aRefBox, &TransformReferenceBox::Height);
   }
   aMatrix.PreTranslate(temp);
@@ -622,6 +673,9 @@ ProcessTranslate(Matrix4x4& aMatrix,
 static void
 ProcessTranslate3D(Matrix4x4& aMatrix,
                    const nsCSSValue::Array* aData,
+                   GeckoStyleContext* aContext,
+                   nsPresContext* aPresContext,
+                   RuleNodeCacheConditions& aConditions,
                    TransformReferenceBox& aRefBox)
 {
   NS_PRECONDITION(aData->Count() == 4, "Invalid array!");
@@ -629,12 +683,15 @@ ProcessTranslate3D(Matrix4x4& aMatrix,
   Point3D temp;
 
   temp.x = ProcessTranslatePart(aData->Item(1),
+                                aContext, aPresContext, aConditions,
                                 &aRefBox, &TransformReferenceBox::Width);
 
   temp.y = ProcessTranslatePart(aData->Item(2),
+                                aContext, aPresContext, aConditions,
                                 &aRefBox, &TransformReferenceBox::Height);
 
   temp.z = ProcessTranslatePart(aData->Item(3),
+                                aContext, aPresContext, aConditions,
                                 nullptr);
 
   aMatrix.PreTranslate(temp);
@@ -781,11 +838,16 @@ ProcessRotate3D(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 }
 
 static void
-ProcessPerspective(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
+ProcessPerspective(Matrix4x4& aMatrix,
+                   const nsCSSValue::Array* aData,
+                   GeckoStyleContext *aContext,
+                   nsPresContext *aPresContext,
+                   RuleNodeCacheConditions& aConditions)
 {
   NS_PRECONDITION(aData->Count() == 2, "Invalid array!");
 
-  float depth = ProcessTranslatePart(aData->Item(1), nullptr);
+  float depth = ProcessTranslatePart(aData->Item(1), aContext,
+                                     aPresContext, aConditions, nullptr);
   ApplyPerspectiveToMatrix(aMatrix, depth);
 }
 
@@ -797,30 +859,41 @@ ProcessPerspective(Matrix4x4& aMatrix, const nsCSSValue::Array* aData)
 static void
 MatrixForTransformFunction(Matrix4x4& aMatrix,
                            const nsCSSValue::Array * aData,
+                           GeckoStyleContext* aContext,
+                           nsPresContext* aPresContext,
+                           RuleNodeCacheConditions& aConditions,
                            TransformReferenceBox& aRefBox,
                            bool* aContains3dTransform)
 {
   MOZ_ASSERT(aContains3dTransform);
   NS_PRECONDITION(aData, "Why did you want to get data from a null array?");
+  // It's OK if aContext and aPresContext are null if the caller already
+  // knows that all length units have been converted to pixels (as
+  // StyleAnimationValue does).
 
   /* Get the keyword for the transform. */
   switch (TransformFunctionOf(aData)) {
   case eCSSKeyword_translatex:
-    ProcessTranslateX(aMatrix, aData, aRefBox);
+    ProcessTranslateX(aMatrix, aData, aContext, aPresContext,
+                      aConditions, aRefBox);
     break;
   case eCSSKeyword_translatey:
-    ProcessTranslateY(aMatrix, aData, aRefBox);
+    ProcessTranslateY(aMatrix, aData, aContext, aPresContext,
+                      aConditions, aRefBox);
     break;
   case eCSSKeyword_translatez:
     *aContains3dTransform = true;
-    ProcessTranslateZ(aMatrix, aData);
+    ProcessTranslateZ(aMatrix, aData, aContext, aPresContext,
+                      aConditions);
     break;
   case eCSSKeyword_translate:
-    ProcessTranslate(aMatrix, aData, aRefBox);
+    ProcessTranslate(aMatrix, aData, aContext, aPresContext,
+                     aConditions, aRefBox);
     break;
   case eCSSKeyword_translate3d:
     *aContains3dTransform = true;
-    ProcessTranslate3D(aMatrix, aData, aRefBox);
+    ProcessTranslate3D(aMatrix, aData, aContext, aPresContext,
+                       aConditions, aRefBox);
     break;
   case eCSSKeyword_scalex:
     ProcessScaleX(aMatrix, aData);
@@ -867,23 +940,28 @@ MatrixForTransformFunction(Matrix4x4& aMatrix,
     ProcessRotate3D(aMatrix, aData);
     break;
   case eCSSKeyword_matrix:
-    ProcessMatrix(aMatrix, aData, aRefBox);
+    ProcessMatrix(aMatrix, aData, aContext, aPresContext,
+                  aConditions, aRefBox);
     break;
   case eCSSKeyword_matrix3d:
     *aContains3dTransform = true;
-    ProcessMatrix3D(aMatrix, aData, aRefBox);
+    ProcessMatrix3D(aMatrix, aData, aContext, aPresContext,
+                    aConditions, aRefBox);
     break;
   case eCSSKeyword_interpolatematrix:
-    ProcessMatrixOperator<Interpolate>(aMatrix, aData, aRefBox,
+    ProcessMatrixOperator<Interpolate>(aMatrix, aData, aContext, aPresContext,
+                                       aConditions, aRefBox,
                                        aContains3dTransform);
     break;
   case eCSSKeyword_accumulatematrix:
-    ProcessMatrixOperator<Accumulate>(aMatrix, aData, aRefBox,
+    ProcessMatrixOperator<Accumulate>(aMatrix, aData, aContext, aPresContext,
+                                      aConditions, aRefBox,
                                       aContains3dTransform);
     break;
   case eCSSKeyword_perspective:
     *aContains3dTransform = true;
-    ProcessPerspective(aMatrix, aData);
+    ProcessPerspective(aMatrix, aData, aContext, aPresContext,
+                       aConditions);
     break;
   default:
     NS_NOTREACHED("Unknown transform function!");
@@ -929,11 +1007,16 @@ SetIdentityMatrix(nsCSSValue::Array* aMatrix)
 
 Matrix4x4
 ReadTransforms(const nsCSSValueList* aList,
+               nsStyleContext* aContext,
+               nsPresContext* aPresContext,
+               RuleNodeCacheConditions& aConditions,
                TransformReferenceBox& aRefBox,
                float aAppUnitsPerMatrixUnit,
                bool* aContains3dTransform)
 {
   Matrix4x4 result;
+  GeckoStyleContext* contextIfGecko =
+    nullptr;
 
   for (const nsCSSValueList* curr = aList; curr != nullptr; curr = curr->mNext) {
     const nsCSSValue &currElem = curr->mValue;
@@ -948,7 +1031,8 @@ ReadTransforms(const nsCSSValueList* aList,
                  "Incoming function is too short!");
 
     /* Read in a single transform matrix. */
-    MatrixForTransformFunction(result, currElem.GetArrayValue(), aRefBox,
+    MatrixForTransformFunction(result, currElem.GetArrayValue(), contextIfGecko,
+                               aPresContext, aConditions, aRefBox,
                                aContains3dTransform);
   }
 
@@ -1316,11 +1400,13 @@ GetScaleValue(const nsCSSValueSharedList* aList,
   MOZ_ASSERT(aList && aList->mHead);
   MOZ_ASSERT(aForFrame);
 
+  RuleNodeCacheConditions dontCare;
   bool dontCareBool;
   TransformReferenceBox refBox(aForFrame);
   Matrix4x4 transform = ReadTransforms(
                           aList->mHead,
-                          refBox,
+                          aForFrame->StyleContext(),
+                          aForFrame->PresContext(), dontCare, refBox,
                           aForFrame->PresContext()->AppUnitsPerDevPixel(),
                           &dontCareBool);
   Matrix transform2d;

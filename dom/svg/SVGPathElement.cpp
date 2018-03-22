@@ -298,8 +298,8 @@ SVGPathElement::BuildPath(PathBuilder* aBuilder)
   uint8_t strokeLineCap = NS_STYLE_STROKE_LINECAP_BUTT;
   Float strokeWidth = 0;
 
-  RefPtr<ComputedStyle> styleContext =
-    nsComputedDOMStyle::GetComputedStyleNoFlush(this, nullptr);
+  RefPtr<nsStyleContext> styleContext =
+    nsComputedDOMStyle::GetStyleContextNoFlush(this, nullptr);
   if (styleContext) {
     const nsStyleSVG* style = styleContext->StyleSVG();
     // Note: the path that we return may be used for hit-testing, and SVG

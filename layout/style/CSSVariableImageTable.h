@@ -9,16 +9,15 @@
 #ifndef mozilla_CSSVariableImageTable_h
 #define mozilla_CSSVariableImageTable_h
 
-#include "mozilla/ComputedStyle.h"
-
 #include "nsClassHashtable.h"
 #include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
+#include "nsStyleContext.h"
 #include "nsTArray.h"
 
 /**
  * CSSVariableImageTable maintains a global mapping
- *   (ComputedStyle, nsCSSPropertyID) -> nsTArray<ImageValue>
+ *   (nsStyleContext, nsCSSPropertyID) -> nsTArray<ImageValue>
  * which allows us to track the relationship between CSS property values
  * involving variables and any images they may reference.
  *
@@ -30,13 +29,13 @@
  * when we re-parse a token stream and get an ImageValue, we record it in the
  * CSSVariableImageTable to keep the ImageValue alive. Such ImageValues are
  * eventually freed the next time the token stream is re-parsed, or when the
- * associated style is destroyed.
+ * associated style context is destroyed.
  *
  * To add ImageValues to the CSSVariableImageTable, callers should pass a lambda
  * to CSSVariableImageTable::ReplaceAll() that calls
  * CSSVariableImageTable::Add() for each ImageValue that needs to be added to
  * the table. When callers are sure that the ImageValues for a given
- * ComputedStyle won't be needed anymore, they can call
+ * nsStyleContext won't be needed anymore, they can call
  * CSSVariableImageTable::RemoveAll() to release them.
  */
 
@@ -48,7 +47,7 @@ namespace detail {
 typedef nsTArray<RefPtr<css::ImageValue>> ImageValueArray;
 typedef nsClassHashtable<nsGenericHashKey<nsCSSPropertyID>, ImageValueArray>
         PerPropertyImageHashtable;
-typedef nsClassHashtable<nsPtrHashKey<ComputedStyle>, PerPropertyImageHashtable>
+typedef nsClassHashtable<nsPtrHashKey<nsStyleContext>, PerPropertyImageHashtable>
         CSSVariableImageHashtable;
 
 inline CSSVariableImageHashtable& GetTable()
@@ -69,16 +68,16 @@ inline bool& IsReplacing()
 
 /**
  * ReplaceAll() allows callers to replace the ImageValues associated with a
- * (ComputedStyle, nsCSSPropertyID) pair. The memory used by the previous list of
+ * (nsStyleContext, nsCSSPropertyID) pair. The memory used by the previous list of
  * ImageValues is automatically released.
  *
- * @param aContext The style the ImageValues are associated with.
+ * @param aContext The style context the ImageValues are associated with.
  * @param aProp    The CSS property the ImageValues are associated with.
  * @param aFunc    A lambda that calls CSSVariableImageTable::Add() to add new
  *                 ImageValues which will replace the old ones.
  */
 template <typename Lambda>
-inline void ReplaceAll(mozilla::ComputedStyle* aStyle,
+inline void ReplaceAll(nsStyleContext* aContext,
                        nsCSSPropertyID aProp,
                        Lambda aFunc)
 {
@@ -136,7 +135,7 @@ inline void ReplaceAll(mozilla::ComputedStyle* aStyle,
  * CSSVariableImageTable::ReplaceAll().
  */
 inline void
-Add(mozilla::ComputedStyle* aStyle, nsCSSPropertyID aProp, css::ImageValue* aValue)
+Add(nsStyleContext* aContext, nsCSSPropertyID aProp, css::ImageValue* aValue)
 {
   MOZ_ASSERT(aValue);
   MOZ_ASSERT(aContext);
@@ -144,7 +143,7 @@ Add(mozilla::ComputedStyle* aStyle, nsCSSPropertyID aProp, css::ImageValue* aVal
 
   auto& imageTable = detail::GetTable();
 
-  // Ensure there's a per-property image table for this style.
+  // Ensure there's a per-property image table for this style context.
   auto* perPropertyImageTable = imageTable.Get(aContext);
   if (!perPropertyImageTable) {
     perPropertyImageTable = new detail::PerPropertyImageHashtable();
@@ -167,12 +166,13 @@ Add(mozilla::ComputedStyle* aStyle, nsCSSPropertyID aProp, css::ImageValue* aVal
  * @aContext.
  */
 inline void
-RemoveAll(mozilla::ComputedStyle* aStyle)
+RemoveAll(nsStyleContext* aContext)
 {
   // Move all ImageValue references into removedImageList so that we can
   // release them outside of any hashtable methods.  (If we just call
   // Remove(aContext) on the table then we can end up calling back
-  // re-entrantly into hashtable methods, as other styles are released.)
+  // re-entrantly into hashtable methods, as other style contexts
+  // are released.)
   detail::ImageValueArray removedImages;
   auto& imageTable = detail::GetTable();
   auto* perPropertyImageTable = imageTable.Get(aContext);

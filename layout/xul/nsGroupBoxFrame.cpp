@@ -12,7 +12,7 @@
 #include "mozilla/gfx/2D.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutUtils.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 #include "nsDisplayList.h"
 
 using namespace mozilla;
@@ -24,8 +24,8 @@ class nsGroupBoxFrame final : public nsBoxFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsGroupBoxFrame)
 
-  explicit nsGroupBoxFrame(ComputedStyle* aStyle):
-    nsBoxFrame(aStyle, kClassID) {}
+  explicit nsGroupBoxFrame(nsStyleContext* aContext):
+    nsBoxFrame(aContext, kClassID) {}
 
   virtual nsresult GetXULBorderAndPadding(nsMargin& aBorderAndPadding) override;
 
@@ -60,7 +60,7 @@ public:
 class nsGroupBoxInnerFrame : public nsBoxFrame {
 public:
 
-    nsGroupBoxInnerFrame(nsIPresShell* aShell, ComputedStyle* aStyle):
+    nsGroupBoxInnerFrame(nsIPresShell* aShell, nsStyleContext* aContext):
       nsBoxFrame(aShell, aContext) {}
 
 
@@ -77,9 +77,9 @@ public:
 */
 
 nsIFrame*
-NS_NewGroupBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewGroupBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsGroupBoxFrame(aStyle);
+  return new (aPresShell) nsGroupBoxFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsGroupBoxFrame)
@@ -228,7 +228,7 @@ nsGroupBoxFrame::PaintBorder(gfxContext& aRenderingContext,
       NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     result &=
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
-                                  aDirtyRect, rect, mComputedStyle,
+                                  aDirtyRect, rect, mStyleContext,
                                   PaintBorderFlags::SYNC_DECODE_IMAGES, skipSides);
     aRenderingContext.Restore();
 
@@ -243,7 +243,7 @@ nsGroupBoxFrame::PaintBorder(gfxContext& aRenderingContext,
       NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     result &=
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
-                                  aDirtyRect, rect, mComputedStyle,
+                                  aDirtyRect, rect, mStyleContext,
                                   PaintBorderFlags::SYNC_DECODE_IMAGES, skipSides);
 
     aRenderingContext.Restore();
@@ -258,7 +258,7 @@ nsGroupBoxFrame::PaintBorder(gfxContext& aRenderingContext,
       NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, *drawTarget));
     result &=
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
-                                  aDirtyRect, rect, mComputedStyle,
+                                  aDirtyRect, rect, mStyleContext,
                                   PaintBorderFlags::SYNC_DECODE_IMAGES, skipSides);
 
     aRenderingContext.Restore();
@@ -266,7 +266,7 @@ nsGroupBoxFrame::PaintBorder(gfxContext& aRenderingContext,
     result &=
       nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                   aDirtyRect, nsRect(aPt, GetSize()),
-                                  mComputedStyle,
+                                  mStyleContext,
                                   PaintBorderFlags::SYNC_DECODE_IMAGES, skipSides);
   }
 

@@ -51,6 +51,7 @@ class nsDisplayItem;
 class nsFontMetrics;
 class nsFontFaceList;
 class nsIImageLoadingContent;
+class nsStyleContext;
 class nsBlockFrame;
 class nsContainerFrame;
 class nsView;
@@ -65,7 +66,6 @@ struct nsStyleImageOrientation;
 struct nsOverflowAreas;
 
 namespace mozilla {
-class ComputedStyle;
 enum class CSSPseudoElementType : uint8_t;
 class EventListenerManager;
 enum class LayoutFrameType : uint8_t;
@@ -140,7 +140,6 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DrawStringFlags)
  */
 class nsLayoutUtils
 {
-  typedef mozilla::ComputedStyle ComputedStyle;
   typedef mozilla::dom::DOMRectList DOMRectList;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::StackingContextHelper StackingContextHelper;
@@ -673,19 +672,19 @@ public:
 
   /**
    * HasPseudoStyle returns true if aContent (whose primary style
-   * context is aComputedStyle) has the aPseudoElement pseudo-style
+   * context is aStyleContext) has the aPseudoElement pseudo-style
    * attached to it; returns false otherwise.
    *
    * @param aContent the content node we're looking at
-   * @param aComputedStyle aContent's style context
+   * @param aStyleContext aContent's style context
    * @param aPseudoElement the id of the pseudo style we care about
    * @param aPresContext the presentation context
    * @return whether aContent has aPseudoElement style attached to it
    */
   static bool HasPseudoStyle(nsIContent* aContent,
-                             ComputedStyle* aComputedStyle,
-                             mozilla::CSSPseudoElementType aPseudoElement,
-                             nsPresContext* aPresContext);
+                               nsStyleContext* aStyleContext,
+                               mozilla::CSSPseudoElementType aPseudoElement,
+                               nsPresContext* aPresContext);
 
   /**
    * If this frame is a placeholder for a float, then return the float,
@@ -1298,26 +1297,24 @@ public:
 
   /**
    * Get the font metrics corresponding to the given style data.
-   * @param aComputedStyle the style data
+   * @param aStyleContext the style data
    * @param aSizeInflation number to multiply font size by
    */
-  static already_AddRefed<nsFontMetrics> GetFontMetricsForComputedStyle(
-      ComputedStyle* aComputedStyle,
-      float aSizeInflation = 1.0f,
+  static already_AddRefed<nsFontMetrics> GetFontMetricsForStyleContext(
+      nsStyleContext* aStyleContext, float aSizeInflation = 1.0f,
       uint8_t aVariantWidth = NS_FONT_VARIANT_WIDTH_NORMAL);
 
   /**
    * Get the font metrics of emphasis marks corresponding to the given
-   * style data. The result is same as GetFontMetricsForComputedStyle
+   * style data. The result is same as GetFontMetricsForStyleContext
    * except that the font size is scaled down to 50%.
-   * @param aComputedStyle the style data
+   * @param aStyleContext the style data
    * @param aInflation number to multiple font size by
    */
   static already_AddRefed<nsFontMetrics> GetFontMetricsOfEmphasisMarks(
-      ComputedStyle* aComputedStyle,
-      float aInflation)
+      nsStyleContext* aStyleContext, float aInflation)
   {
-    return GetFontMetricsForComputedStyle(aComputedStyle, aInflation * 0.5f);
+    return GetFontMetricsForStyleContext(aStyleContext, aInflation * 0.5f);
   }
 
   /**
@@ -1632,14 +1629,14 @@ public:
                                                  nsFontMetrics& aFontMetrics,
                                                  DrawTarget* aDrawTarget);
 
-  static void DrawString(const nsIFrame*         aFrame,
-                         nsFontMetrics&          aFontMetrics,
-                         gfxContext*             aContext,
-                         const char16_t*         aString,
-                         int32_t                 aLength,
-                         nsPoint                 aPoint,
-                         ComputedStyle* aComputedStyle = nullptr,
-                         DrawStringFlags         aFlags = DrawStringFlags::eDefault);
+  static void DrawString(const nsIFrame*     aFrame,
+                         nsFontMetrics&      aFontMetrics,
+                         gfxContext*         aContext,
+                         const char16_t*     aString,
+                         int32_t             aLength,
+                         nsPoint             aPoint,
+                         nsStyleContext*     aStyleContext = nullptr,
+                         DrawStringFlags     aFlags = DrawStringFlags::eDefault);
 
   static nsPoint GetBackgroundFirstTilePos(const nsPoint& aDest,
                                            const nsPoint& aFill,
@@ -1835,7 +1832,7 @@ public:
    *   @param aRenderingContext Where to draw the image, set up with an
    *                            appropriate scale and transform for drawing in
    *                            app units.
-   *   @param aComputedStyle     The style context of the nsIFrame (or
+   *   @param aStyleContext     The style context of the nsIFrame (or
    *                            pseudo-element) for which this image is being
    *                            drawn.
    *   @param aImage            The image.
@@ -1848,16 +1845,16 @@ public:
    *   @param aImageFlags       Image flags of the imgIContainer::FLAG_* variety
    */
   static ImgDrawResult DrawImage(gfxContext&         aContext,
-                                 ComputedStyle*      aComputedStyle,
-                                 nsPresContext*      aPresContext,
-                                 imgIContainer*      aImage,
-                                 const SamplingFilter aSamplingFilter,
-                                 const nsRect&       aDest,
-                                 const nsRect&       aFill,
-                                 const nsPoint&      aAnchor,
-                                 const nsRect&       aDirty,
-                                 uint32_t            aImageFlags,
-                                 float               aOpacity = 1.0);
+                              nsStyleContext*     aStyleContext,
+                              nsPresContext*      aPresContext,
+                              imgIContainer*      aImage,
+                              const SamplingFilter aSamplingFilter,
+                              const nsRect&       aDest,
+                              const nsRect&       aFill,
+                              const nsPoint&      aAnchor,
+                              const nsRect&       aDirty,
+                              uint32_t            aImageFlags,
+                              float               aOpacity = 1.0);
 
   /**
    * Draw a whole image without scaling or tiling.
@@ -2056,7 +2053,7 @@ public:
    * and prefs indicate we should be optimizing for speed over quality
    */
   static mozilla::gfx::ShapedTextFlags
-  GetTextRunFlagsForStyle(ComputedStyle* aComputedStyle,
+  GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
                           const nsStyleFont* aStyleFont,
                           const nsStyleText* aStyleText,
                           nscoord aLetterSpacing);
@@ -2065,7 +2062,7 @@ public:
    * Get orientation flags for textrun construction.
    */
   static mozilla::gfx::ShapedTextFlags
-  GetTextRunOrientFlagsForStyle(ComputedStyle* aComputedStyle);
+  GetTextRunOrientFlagsForStyle(nsStyleContext* aStyleContext);
 
   /**
    * Takes two rectangles whose origins must be the same, and computes

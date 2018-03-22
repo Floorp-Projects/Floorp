@@ -34,6 +34,7 @@ class nsIContent;
 class nsIDocument;
 class nsIFrame;
 class nsPresContext;
+class nsStyleContext;
 class nsStyleSVGPaint;
 class nsSVGDisplayContainerFrame;
 class nsSVGElement;
@@ -516,7 +517,7 @@ public:
                             std::min(double(INT32_MAX), aVal)));
   }
 
-  static nscolor GetFallbackOrPaintColor(mozilla::ComputedStyle *aComputedStyle,
+  static nscolor GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
 
   static void

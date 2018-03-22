@@ -46,7 +46,7 @@ public:
     * @return           the frame that was created
     */
   friend nsTableRowGroupFrame* NS_NewTableRowGroupFrame(nsIPresShell* aPresShell,
-                                                        ComputedStyle* aStyle);
+                                                        nsStyleContext* aContext);
   virtual ~nsTableRowGroupFrame();
 
   // nsIFrame overrides
@@ -62,8 +62,8 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
-  /** @see nsIFrame::DidSetComputedStyle */
-  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+  /** @see nsIFrame::DidSetStyleContext */
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
   virtual void AppendFrames(ChildListID     aListID,
                             nsFrameList&    aFrameList) override;
@@ -333,7 +333,7 @@ public:
   virtual void InvalidateFrameForRemoval() override { InvalidateFrameSubtree(); }
 
 protected:
-  explicit nsTableRowGroupFrame(ComputedStyle* aStyle);
+  explicit nsTableRowGroupFrame(nsStyleContext* aContext);
 
   void InitChildReflowInput(nsPresContext&     aPresContext,
                             bool               aBorderCollapse,

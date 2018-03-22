@@ -25,9 +25,9 @@ class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
   friend nsContainerFrame*
-  NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  explicit nsSVGOuterSVGFrame(ComputedStyle* aStyle);
+  explicit nsSVGOuterSVGFrame(nsStyleContext* aContext);
 
 public:
   NS_DECL_QUERYFRAME
@@ -225,10 +225,10 @@ class nsSVGOuterSVGAnonChildFrame final : public nsSVGDisplayContainerFrame
 {
   friend nsContainerFrame*
   NS_NewSVGOuterSVGAnonChildFrame(nsIPresShell* aPresShell,
-                                  ComputedStyle* aStyle);
+                                  nsStyleContext* aContext);
 
-  explicit nsSVGOuterSVGAnonChildFrame(ComputedStyle* aStyle)
-    : nsSVGDisplayContainerFrame(aStyle, kClassID)
+  explicit nsSVGOuterSVGAnonChildFrame(nsStyleContext* aContext)
+    : nsSVGDisplayContainerFrame(aContext, kClassID)
   {}
 
 public:

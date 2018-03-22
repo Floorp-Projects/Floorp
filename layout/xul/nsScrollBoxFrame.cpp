@@ -21,7 +21,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsAutoRepeatBoxFrame)
 
   friend nsIFrame* NS_NewAutoRepeatBoxFrame(nsIPresShell* aPresShell,
-                                            ComputedStyle* aStyle);
+                                            nsStyleContext* aContext);
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
 
@@ -42,8 +42,8 @@ public:
                            nsEventStatus* aEventStatus) override;
 
 protected:
-  explicit nsAutoRepeatBoxFrame(ComputedStyle* aStyle):
-    nsButtonBoxFrame(aStyle, kClassID) {}
+  explicit nsAutoRepeatBoxFrame(nsStyleContext* aContext):
+    nsButtonBoxFrame(aContext, kClassID) {}
 
   void StartRepeat() {
     if (IsActivatedOnHover()) {
@@ -72,9 +72,9 @@ protected:
 };
 
 nsIFrame*
-NS_NewAutoRepeatBoxFrame (nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewAutoRepeatBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsAutoRepeatBoxFrame(aStyle);
+  return new (aPresShell) nsAutoRepeatBoxFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsAutoRepeatBoxFrame)

@@ -6,7 +6,7 @@
 
 #include "mozilla/StyleSheet.h"
 
-#include "mozilla/ComputedStyleInlines.h"
+#include "nsStyleContextInlines.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSSRuleList.h"

@@ -33,10 +33,10 @@ class nsSVGMarkerFrame final : public nsSVGContainerFrame
 
   friend class nsSVGMarkerAnonChildFrame;
   friend nsContainerFrame*
-  NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  explicit nsSVGMarkerFrame(ComputedStyle* aStyle)
-    : nsSVGContainerFrame(aStyle, kClassID)
+  explicit nsSVGMarkerFrame(nsStyleContext* aContext)
+    : nsSVGContainerFrame(aContext, kClassID)
     , mMarkedFrame(nullptr)
     , mInUse(false)
     , mInUse2(false)
@@ -135,10 +135,10 @@ class nsSVGMarkerAnonChildFrame final : public nsSVGDisplayContainerFrame
 {
   friend nsContainerFrame*
   NS_NewSVGMarkerAnonChildFrame(nsIPresShell* aPresShell,
-                                ComputedStyle* aStyle);
+                                nsStyleContext* aContext);
 
-  explicit nsSVGMarkerAnonChildFrame(ComputedStyle* aStyle)
-    : nsSVGDisplayContainerFrame(aStyle, kClassID)
+  explicit nsSVGMarkerAnonChildFrame(nsStyleContext* aContext)
+    : nsSVGDisplayContainerFrame(aContext, kClassID)
   {}
 
 public:

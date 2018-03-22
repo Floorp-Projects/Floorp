@@ -17,8 +17,8 @@ using namespace mozilla::a11y;
 StyleInfo::StyleInfo(dom::Element* aElement) :
   mElement(aElement)
 {
-  mComputedStyle =
-    nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
+  mStyleContext =
+    nsComputedDOMStyle::GetStyleContextNoFlush(aElement, nullptr);
 }
 
 void
@@ -26,7 +26,7 @@ StyleInfo::Display(nsAString& aValue)
 {
   aValue.Truncate();
   AppendASCIItoUTF16(
-    nsCSSProps::ValueToKeyword(mComputedStyle->StyleDisplay()->mDisplay,
+    nsCSSProps::ValueToKeyword(mStyleContext->StyleDisplay()->mDisplay,
                                nsCSSProps::kDisplayKTable), aValue);
 }
 
@@ -35,7 +35,7 @@ StyleInfo::TextAlign(nsAString& aValue)
 {
   aValue.Truncate();
   AppendASCIItoUTF16(
-    nsCSSProps::ValueToKeyword(mComputedStyle->StyleText()->mTextAlign,
+    nsCSSProps::ValueToKeyword(mStyleContext->StyleText()->mTextAlign,
                                nsCSSProps::kTextAlignKTable), aValue);
 }
 
@@ -45,7 +45,7 @@ StyleInfo::TextIndent(nsAString& aValue)
   aValue.Truncate();
 
   const nsStyleCoord& styleCoord =
-    mComputedStyle->StyleText()->mTextIndent;
+    mStyleContext->StyleText()->mTextIndent;
 
   nscoord coordVal = 0;
   switch (styleCoord.GetUnit()) {

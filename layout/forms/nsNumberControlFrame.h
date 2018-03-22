@@ -33,7 +33,7 @@ class nsNumberControlFrame final : public nsContainerFrame
                                  , public nsIFormControlFrame
 {
   friend nsIFrame*
-  NS_NewNumberControlFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  NS_NewNumberControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   typedef mozilla::CSSPseudoElementType CSSPseudoElementType;
   typedef mozilla::dom::Element Element;
@@ -41,7 +41,7 @@ class nsNumberControlFrame final : public nsContainerFrame
   typedef mozilla::WidgetEvent WidgetEvent;
   typedef mozilla::WidgetGUIEvent WidgetGUIEvent;
 
-  explicit nsNumberControlFrame(ComputedStyle* aStyle);
+  explicit nsNumberControlFrame(nsStyleContext* aContext);
 
 public:
   NS_DECL_QUERYFRAME

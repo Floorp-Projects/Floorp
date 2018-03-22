@@ -22,7 +22,7 @@
 #include "nsSVGFilters.h"
 #include "nsLayoutUtils.h"
 #include "nsSVGUtils.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 #include "nsIFrame.h"
 #include "imgIContainer.h"
 #include "mozilla/dom/SVGFilterElement.h"
@@ -161,7 +161,7 @@ nsSVGFE::StyleIsSetToSRGB()
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) return false;
 
-  ComputedStyle* style = frame->Style();
+  nsStyleContext* style = frame->StyleContext();
   return style->StyleSVG()->mColorInterpolationFilters ==
            NS_STYLE_COLOR_INTERPOLATION_SRGB;
 }
@@ -502,7 +502,7 @@ nsSVGFELightingElement::AddLightingAttributes(const FilterPrimitiveDescription& 
     return FilterPrimitiveDescription(PrimitiveType::Empty);
   }
 
-  ComputedStyle* style = frame->Style();
+  nsStyleContext* style = frame->StyleContext();
   Color color(Color::FromABGR(style->StyleSVGReset()->mLightingColor));
   color.a = 1.f;
   float surfaceScale = mNumberAttributes[SURFACE_SCALE].GetAnimValue();

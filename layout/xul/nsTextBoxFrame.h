@@ -27,7 +27,7 @@ public:
 
   enum CroppingStyle { CropNone, CropLeft, CropRight, CropCenter, CropAuto };
 
-  friend nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
@@ -63,7 +63,7 @@ public:
 
   void GetCroppedTitle(nsString& aTitle) const { aTitle = mCroppedTitle; }
 
-  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
 protected:
   friend class nsAsyncAccesskeyUpdate;
@@ -89,7 +89,7 @@ protected:
 
   void CalcDrawRect(gfxContext &aRenderingContext);
 
-  explicit nsTextBoxFrame(ComputedStyle* aStyle);
+  explicit nsTextBoxFrame(nsStyleContext* aContext);
 
   nscoord CalculateTitleForWidth(gfxContext&          aRenderingContext,
                                  nscoord              aWidth);

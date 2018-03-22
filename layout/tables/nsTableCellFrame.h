@@ -10,7 +10,7 @@
 #include "nsITableCellLayout.h"
 #include "nscore.h"
 #include "nsContainerFrame.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 #include "nsIPercentBSizeObserver.h"
 #include "nsTArray.h"
 #include "nsTableRowFrame.h"
@@ -35,11 +35,11 @@ class nsTableCellFrame : public nsContainerFrame,
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
 
   friend nsTableCellFrame* NS_NewTableCellFrame(nsIPresShell*   aPresShell,
-                                                ComputedStyle* aStyle,
+                                                nsStyleContext* aContext,
                                                 nsTableFrame* aTableFrame);
 
-  nsTableCellFrame(ComputedStyle* aStyle, nsTableFrame* aTableFrame)
-    : nsTableCellFrame(aStyle, aTableFrame, kClassID) {}
+  nsTableCellFrame(nsStyleContext* aContext, nsTableFrame* aTableFrame)
+    : nsTableCellFrame(aContext, aTableFrame, kClassID) {}
 
 protected:
   typedef mozilla::WritingMode WritingMode;
@@ -76,8 +76,8 @@ public:
                                      nsAtom*        aAttribute,
                                      int32_t         aModType) override;
 
-  /** @see nsIFrame::DidSetComputedStyle */
-  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+  /** @see nsIFrame::DidSetStyleContext */
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
 #ifdef DEBUG
   // Our anonymous block frame is the content insertion frame so these
@@ -249,7 +249,7 @@ public:
   bool ShouldPaintBackground(nsDisplayListBuilder* aBuilder);
 
 protected:
-  nsTableCellFrame(ComputedStyle* aStyle, nsTableFrame* aTableFrame,
+  nsTableCellFrame(nsStyleContext* aContext, nsTableFrame* aTableFrame,
                    ClassID aID);
   ~nsTableCellFrame();
 
@@ -323,7 +323,7 @@ class nsBCTableCellFrame final : public nsTableCellFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsBCTableCellFrame)
 
-  nsBCTableCellFrame(ComputedStyle* aStyle, nsTableFrame* aTableFrame);
+  nsBCTableCellFrame(nsStyleContext* aContext, nsTableFrame* aTableFrame);
 
   ~nsBCTableCellFrame();
 

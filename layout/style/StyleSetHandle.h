@@ -26,13 +26,13 @@ class nsAtom;
 class nsICSSAnonBoxPseudo;
 class nsIContent;
 class nsIDocument;
+class nsStyleContext;
 class nsStyleSet;
 class nsPresContext;
 class gfxFontFeatureValueSet;
 
 namespace mozilla {
 
-class ComputedStyle;
 class CSSStyleSheet;
 class ServoStyleSet;
 namespace dom {
@@ -111,11 +111,11 @@ public:
     inline void SetAuthorStyleDisabled(bool aStyleDisabled);
     inline void BeginUpdate();
     inline nsresult EndUpdate();
-    inline already_AddRefed<ComputedStyle>
+    inline already_AddRefed<nsStyleContext>
     ResolveStyleFor(dom::Element* aElement,
-                    ComputedStyle* aParentContext,
+                    nsStyleContext* aParentContext,
                     LazyComputeBehavior aMayCompute);
-    inline already_AddRefed<ComputedStyle>
+    inline already_AddRefed<nsStyleContext>
     ResolveStyleFor(dom::Element* aElement, LazyComputeBehavior aMayCompute);
 
     // TODO(emilio): This might be nicer (albeit a bit slower) if we just grab
@@ -123,28 +123,28 @@ public:
     //
     // It may be faster if we account not having to pass it around in
     // nsCSSFrameConstructor though.
-    inline already_AddRefed<ComputedStyle>
-    ResolveStyleForText(nsIContent* aTextNode, ComputedStyle* aParentContext);
+    inline already_AddRefed<nsStyleContext>
+    ResolveStyleForText(nsIContent* aTextNode, nsStyleContext* aParentContext);
 
-    inline already_AddRefed<ComputedStyle>
-    ResolveStyleForFirstLetterContinuation(ComputedStyle* aParentContext);
-    inline already_AddRefed<ComputedStyle>
+    inline already_AddRefed<nsStyleContext>
+    ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext);
+    inline already_AddRefed<nsStyleContext>
     ResolveStyleForPlaceholder();
-    inline already_AddRefed<ComputedStyle>
+    inline already_AddRefed<nsStyleContext>
     ResolvePseudoElementStyle(dom::Element* aParentElement,
                               mozilla::CSSPseudoElementType aType,
-                              ComputedStyle* aParentContext,
+                              nsStyleContext* aParentContext,
                               dom::Element* aPseudoElement);
-    inline already_AddRefed<ComputedStyle>
+    inline already_AddRefed<nsStyleContext>
     ResolveInheritingAnonymousBoxStyle(nsAtom* aPseudoTag,
-                                       ComputedStyle* aParentContext);
-    inline already_AddRefed<ComputedStyle>
+                                       nsStyleContext* aParentContext);
+    inline already_AddRefed<nsStyleContext>
     ResolveNonInheritingAnonymousBoxStyle(nsAtom* aPseudoTag);
 #ifdef MOZ_XUL
-    inline already_AddRefed<ComputedStyle>
+    inline already_AddRefed<nsStyleContext>
     ResolveXULTreePseudoStyle(dom::Element* aParentElement,
                               nsICSSAnonBoxPseudo* aPseudoTag,
-                              ComputedStyle* aParentContext,
+                              nsStyleContext* aParentContext,
                               const AtomArray& aInputWord);
 #endif
     inline nsresult AppendStyleSheet(SheetType aType, StyleSheet* aSheet);
@@ -171,15 +171,15 @@ public:
     inline bool StyleSheetsHaveChanged() const;
     inline void InvalidateStyleForCSSRuleChanges();
     inline nsRestyleHint MediumFeaturesChanged(mozilla::MediaFeatureChangeReason);
-    inline already_AddRefed<ComputedStyle>
+    inline already_AddRefed<nsStyleContext>
     ProbePseudoElementStyle(dom::Element* aParentElement,
                             mozilla::CSSPseudoElementType aType,
-                            ComputedStyle* aParentContext);
-    inline already_AddRefed<ComputedStyle>
+                            nsStyleContext* aParentContext);
+    inline already_AddRefed<nsStyleContext>
     ProbePseudoElementStyle(dom::Element* aParentElement,
                             mozilla::CSSPseudoElementType aType);
-    inline void RootComputedStyleAdded();
-    inline void RootComputedStyleRemoved();
+    inline void RootStyleContextAdded();
+    inline void RootStyleContextRemoved();
 
     inline bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
     inline nsCSSCounterStyleRule* CounterStyleRuleForName(nsAtom* aName);

@@ -20,7 +20,7 @@ class nsMathMLmrowFrame : public nsMathMLContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmrowFrame)
 
-  friend nsIFrame* NS_NewMathMLmrowFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewMathMLmrowFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual nsresult
   AttributeChanged(int32_t  aNameSpaceID,
@@ -48,8 +48,8 @@ public:
   }
 
 protected:
-  explicit nsMathMLmrowFrame(ComputedStyle* aStyle)
-    : nsMathMLContainerFrame(aStyle, kClassID) {}
+  explicit nsMathMLmrowFrame(nsStyleContext* aContext)
+    : nsMathMLContainerFrame(aContext, kClassID) {}
   virtual ~nsMathMLmrowFrame();
 };
 

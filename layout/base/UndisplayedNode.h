@@ -10,7 +10,7 @@
 #define mozilla_UndisplayedNode_h
 
 #include "nsIContent.h"
-#include "mozilla/ComputedStyle.h"
+#include "nsStyleContext.h"
 
 namespace mozilla {
 
@@ -20,7 +20,7 @@ namespace mozilla {
  */
 struct UndisplayedNode : public LinkedListElement<UndisplayedNode>
 {
-  UndisplayedNode(nsIContent* aContent, ComputedStyle* aStyle)
+  UndisplayedNode(nsIContent* aContent, nsStyleContext* aStyle)
     : mContent(aContent)
     , mStyle(aStyle)
   {
@@ -30,7 +30,7 @@ struct UndisplayedNode : public LinkedListElement<UndisplayedNode>
   ~UndisplayedNode() { MOZ_COUNT_DTOR(mozilla::UndisplayedNode); }
 
   nsCOMPtr<nsIContent> mContent;
-  RefPtr<ComputedStyle> mStyle;
+  RefPtr<nsStyleContext> mStyle;
 };
 
 } // namespace mozilla

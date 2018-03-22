@@ -31,7 +31,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsGridRowLeafFrame)
 
   friend nsIFrame* NS_NewGridRowLeafFrame(nsIPresShell* aPresShell,
-                                          ComputedStyle* aStyle);
+                                          nsStyleContext* aContext);
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override
@@ -40,11 +40,11 @@ public:
   }
 #endif
 
-  nsGridRowLeafFrame(ComputedStyle* aStyle,
+  nsGridRowLeafFrame(nsStyleContext* aContext,
                      bool aIsRoot,
                      nsBoxLayout* aLayoutManager,
                      ClassID aID = kClassID) :
-    nsBoxFrame(aStyle, aID, aIsRoot, aLayoutManager) {}
+    nsBoxFrame(aContext, aID, aIsRoot, aLayoutManager) {}
 
   virtual nsresult GetXULBorderAndPadding(nsMargin& aBorderAndPadding) override;
 

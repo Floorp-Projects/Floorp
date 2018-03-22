@@ -19,11 +19,11 @@ public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLsemanticsFrame)
 
   friend nsIFrame* NS_NewMathMLsemanticsFrame(nsIPresShell* aPresShell,
-                                              ComputedStyle* aStyle);
+                                              nsStyleContext* aContext);
 
 protected:
-  explicit nsMathMLsemanticsFrame(ComputedStyle* aStyle) :
-    nsMathMLSelectedFrame(aStyle, kClassID) {}
+  explicit nsMathMLsemanticsFrame(nsStyleContext* aContext) :
+    nsMathMLSelectedFrame(aContext, kClassID) {}
   virtual ~nsMathMLsemanticsFrame();
 
   nsIFrame* GetSelectedFrame() override;

@@ -12,8 +12,6 @@
 #include "SVGObserverUtils.h"
 #include "nsSVGFilters.h"
 
-using namespace mozilla;
-
 /*
  * This frame is used by filter primitive elements that
  * have special child elements that provide parameters.
@@ -21,10 +19,10 @@ using namespace mozilla;
 class SVGFEContainerFrame : public nsContainerFrame
 {
   friend nsIFrame*
-  NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+  NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
-  explicit SVGFEContainerFrame(ComputedStyle* aStyle)
-    : nsContainerFrame(aStyle, kClassID)
+  explicit SVGFEContainerFrame(nsStyleContext* aContext)
+    : nsContainerFrame(aContext, kClassID)
   {
     AddStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
   }
@@ -62,9 +60,9 @@ public:
 };
 
 nsIFrame*
-NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) SVGFEContainerFrame(aStyle);
+  return new (aPresShell) SVGFEContainerFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(SVGFEContainerFrame)

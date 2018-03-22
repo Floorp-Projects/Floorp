@@ -14,6 +14,7 @@
 #include "nsContainerFrame.h"
 #include "nsCSSRendering.h"
 #include "nsPresContext.h"
+#include "nsStyleContext.h"
 #include "nsGkAtoms.h"
 #include "nsIFrameInlines.h"
 #include "nsIPresShell.h"
@@ -22,7 +23,6 @@
 #include "nsFrameManager.h"
 #include "gfxPlatform.h"
 #include "nsPrintfCString.h"
-#include "mozilla/ComputedStyle.h"
 #include "mozilla/dom/AnonymousContent.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
@@ -42,9 +42,9 @@ using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 nsCanvasFrame*
-NS_NewCanvasFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
+NS_NewCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsCanvasFrame(aStyle);
+  return new (aPresShell) nsCanvasFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsCanvasFrame)
@@ -460,7 +460,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsIFrame* dependentFrame = nullptr;
     bool isThemed = IsThemed();
     if (!isThemed && nsCSSRendering::FindBackgroundFrame(this, &dependentFrame)) {
-      bg = dependentFrame->Style()->StyleBackground();
+      bg = dependentFrame->StyleContext()->StyleBackground();
       if (dependentFrame == this) {
         dependentFrame = nullptr;
       }

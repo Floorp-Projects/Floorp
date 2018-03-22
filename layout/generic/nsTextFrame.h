@@ -52,8 +52,8 @@ class nsTextFrame : public nsFrame
   typedef gfxTextRun::Range Range;
 
 public:
-  explicit nsTextFrame(ComputedStyle* aStyle, ClassID aID = kClassID)
-    : nsFrame(aStyle, aID)
+  explicit nsTextFrame(nsStyleContext* aContext, ClassID aID = kClassID)
+    : nsFrame(aContext, aID)
     , mNextContinuation(nullptr)
     , mContentOffset(0)
     , mContentLengthHint(0)
@@ -157,7 +157,7 @@ public:
     if (mozilla::RubyUtils::IsRubyContentBox(GetParent()->Type())) {
       return true;
     }
-    return Style()->ShouldSuppressLineBreak();
+    return StyleContext()->ShouldSuppressLineBreak();
   }
 
   void InvalidateFrame(uint32_t aDisplayItemKey = 0) override;

@@ -522,7 +522,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
 
       nsCOMPtr<imgIContainer> image(ImageOps::CreateFromDrawable(drawable));
       result =
-        nsLayoutUtils::DrawImage(*ctx, mForFrame->Style(),
+        nsLayoutUtils::DrawImage(*ctx, mForFrame->StyleContext(),
                                  aPresContext, image,
                                  samplingFilter, aDest, aFill, aAnchor, aDirtyRect,
                                  ConvertImageRendererToDrawFlags(mFlags),
