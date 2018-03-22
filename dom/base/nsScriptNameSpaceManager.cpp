@@ -202,31 +202,6 @@ nsScriptNameSpaceManager::LookupName(const nsAString& aName,
 }
 
 nsresult
-nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
-                                            int32_t aDOMClassInfoID,
-                                            const char16_t **aResult)
-{
-  if (!nsCRT::IsAscii(aClassName)) {
-    NS_ERROR("Trying to register a non-ASCII class name");
-    return NS_OK;
-  }
-  nsGlobalNameStruct *s = AddToHash(aClassName, aResult);
-  NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
-
-  if (s->mType == nsGlobalNameStruct::eTypeClassConstructor) {
-    return NS_OK;
-  }
-
-  NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized,
-               "Whaaa, JS environment name clash!");
-
-  s->mType = nsGlobalNameStruct::eTypeClassConstructor;
-  s->mDOMClassInfoID = aDOMClassInfoID;
-
-  return NS_OK;
-}
-
-nsresult
 nsScriptNameSpaceManager::OperateCategoryEntryHash(nsICategoryManager* aCategoryManager,
                                                    const char* aCategory,
                                                    nsISupports* aEntry,
