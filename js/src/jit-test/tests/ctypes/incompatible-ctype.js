@@ -2,9 +2,9 @@ load(libdir + 'asserts.js');
 
 function test() {
   assertTypeErrorMessage(() => { ctypes.int32_t.toString.call(1); },
-                         "CType.prototype.toString called on incompatible Number");
+                         "CType.prototype.toString called on incompatible object, got the number 1");
   assertTypeErrorMessage(() => { ctypes.int32_t.toSource.call(1); },
-                         "CType.prototype.toSource called on incompatible Number");
+                         "CType.prototype.toSource called on incompatible object, got the number 1");
 }
 
 if (typeof ctypes === "object")

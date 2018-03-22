@@ -213,9 +213,10 @@ bool
 Library::Open(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  JSObject* ctypesObj = JS_THIS_OBJECT(cx, vp);
+  JSObject* ctypesObj = GetThisObject(cx, args, "ctypes.open");
   if (!ctypesObj)
     return false;
+
   if (!IsCTypesGlobal(ctypesObj)) {
     JS_ReportErrorASCII(cx, "not a ctypes object");
     return false;
@@ -239,10 +240,11 @@ Library::Close(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  RootedObject obj(cx);
-  if (args.thisv().isObject())
-    obj = &args.thisv().toObject();
-  if (!obj || !IsLibrary(obj)) {
+  RootedObject obj(cx, GetThisObject(cx, args, "ctypes.close"));
+  if (!obj)
+    return false;
+
+  if (!IsLibrary(obj)) {
     JS_ReportErrorASCII(cx, "not a library");
     return false;
   }
@@ -264,9 +266,11 @@ bool
 Library::Declare(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+
+  RootedObject obj(cx, GetThisObject(cx, args, "ctypes.declare"));
   if (!obj)
     return false;
+
   if (!IsLibrary(obj)) {
     JS_ReportErrorASCII(cx, "not a library");
     return false;

@@ -277,7 +277,7 @@ namespace PointerType {
   static bool Decrement(JSContext* cx, unsigned argc, Value* vp);
   // The following is not an instance function, since we don't want to expose arbitrary
   // pointer arithmetic at this moment.
-  static bool OffsetBy(JSContext* cx, const CallArgs& args, int offset);
+  static bool OffsetBy(JSContext* cx, const CallArgs& args, int offset, const char* name);
 } // namespace PointerType
 
 namespace ArrayType {
@@ -1983,6 +1983,17 @@ VariadicArgumentTypeError(JSContext* cx, uint32_t index, HandleValue actual)
   JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
                              CTYPESMSG_VARG_TYPE_ERROR, indexStr, valStr);
   return false;
+}
+
+MOZ_MUST_USE JSObject*
+GetThisObject(JSContext* cx, const CallArgs& args, const char* msg)
+{
+  if (!args.thisv().isObject()) {
+    IncompatibleThisProto(cx, msg, args.thisv());
+    return nullptr;
+  }
+
+  return &args.thisv().toObject();
 }
 
 static JSObject*
@@ -4931,7 +4942,7 @@ bool
 CType::CreateArray(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject baseType(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject baseType(cx, GetThisObject(cx, args, "CType.prototype.array"));
   if (!baseType)
     return false;
   if (!CType::IsCType(baseType)) {
@@ -4962,7 +4973,7 @@ bool
 CType::ToString(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject obj(cx, GetThisObject(cx, args, "CType.prototype.toString"));
   if (!obj)
     return false;
   if (!CType::IsCType(obj) && !CType::IsCTypeProto(obj)) {
@@ -4993,7 +5004,7 @@ bool
 CType::ToSource(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  JSObject* obj = GetThisObject(cx, args, "CType.prototype.toSource");
   if (!obj)
     return false;
   if (!CType::IsCType(obj) && !CType::IsCTypeProto(obj)) {
@@ -5081,7 +5092,7 @@ ABI::ToSource(JSContext* cx, unsigned argc, Value* vp)
     return ArgumentLengthError(cx, "ABI.prototype.toSource", "no", "s");
   }
 
-  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  JSObject* obj = GetThisObject(cx, args, "ABI.prototype.toSource");
   if (!obj)
     return false;
   if (!ABI::IsABI(obj)) {
@@ -5300,7 +5311,7 @@ bool
 PointerType::IsNull(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject obj(cx, GetThisObject(cx, args, "PointerType.prototype.isNull"));
   if (!obj)
     return false;
   if (!CData::IsCDataMaybeUnwrap(&obj)) {
@@ -5321,29 +5332,17 @@ PointerType::IsNull(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-PointerType::OffsetBy(JSContext* cx, const CallArgs& args, int offset)
+PointerType::OffsetBy(JSContext* cx, const CallArgs& args, int offset, const char* name)
 {
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, args.base()));
+  RootedObject obj(cx, GetThisObject(cx, args, name));
   if (!obj)
     return false;
-  if (!CData::IsCDataMaybeUnwrap(&obj)) {
-    if (offset == 1) {
-      return IncompatibleThisProto(cx, "PointerType.prototype.increment",
-                                   args.thisv());
-    }
-    return IncompatibleThisProto(cx, "PointerType.prototype.decrement",
-                                 args.thisv());
-  }
+  if (!CData::IsCDataMaybeUnwrap(&obj))
+    return IncompatibleThisProto(cx, name, args.thisv());
 
   RootedObject typeObj(cx, CData::GetCType(obj));
-  if (CType::GetTypeCode(typeObj) != TYPE_pointer) {
-    if (offset == 1) {
-      return IncompatibleThisType(cx, "PointerType.prototype.increment",
-                                  "non-PointerType CData", args.thisv());
-    }
-    return IncompatibleThisType(cx, "PointerType.prototype.decrement",
-                                "non-PointerType CData", args.thisv());
-  }
+  if (CType::GetTypeCode(typeObj) != TYPE_pointer)
+    return IncompatibleThisType(cx, name, "non-PointerType CData", args.thisv());
 
   RootedObject baseType(cx, PointerType::GetBaseType(typeObj));
   if (!CType::IsSizeDefined(baseType)) {
@@ -5367,14 +5366,14 @@ bool
 PointerType::Increment(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return OffsetBy(cx, args, 1);
+  return OffsetBy(cx, args, 1, "PointerType.prototype.increment");
 }
 
 bool
 PointerType::Decrement(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return OffsetBy(cx, args, -1);
+  return OffsetBy(cx, args, -1, "PointerType.prototype.decrement");
 }
 
 bool
@@ -5859,7 +5858,7 @@ bool
 ArrayType::AddressOfElement(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject obj(cx, GetThisObject(cx, args, "ArrayType.prototype.addressOfElement"));
   if (!obj)
     return false;
   if (!CData::IsCDataMaybeUnwrap(&obj)) {
@@ -6262,7 +6261,7 @@ bool
 StructType::Define(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject obj(cx, GetThisObject(cx, args, "StructType.prototype.define"));
   if (!obj)
     return false;
   if (!CType::IsCType(obj)) {
@@ -6554,10 +6553,11 @@ bool
 StructType::AddressOfField(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject obj(cx, GetThisObject(cx, args, "StructType.prototype.addressOfField"));
   if (!obj)
     return false;
- if (!CData::IsCDataMaybeUnwrap(&obj)) {
+
+  if (!CData::IsCDataMaybeUnwrap(&obj)) {
     return IncompatibleThisProto(cx, "StructType.prototype.addressOfField",
                                  args.thisv());
   }
@@ -7808,7 +7808,7 @@ CData::Address(JSContext* cx, unsigned argc, Value* vp)
     return ArgumentLengthError(cx, "CData.prototype.address", "no", "s");
   }
 
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject obj(cx, GetThisObject(cx, args, "CData.prototype.address"));
   if (!obj)
     return false;
   if (!IsCDataMaybeUnwrap(&obj)) {
@@ -7916,7 +7916,7 @@ ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8, unsigned argc,
     return ArgumentLengthError(cx, funName, "no", "s");
   }
 
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject obj(cx, GetThisObject(cx, args, funName));
   if (!obj) {
     return IncompatibleThisProto(cx, funName, args.thisv());
   }
@@ -8065,7 +8065,7 @@ CData::ToSource(JSContext* cx, unsigned argc, Value* vp)
     return ArgumentLengthError(cx, "CData.prototype.toSource", "no", "s");
   }
 
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject obj(cx, GetThisObject(cx, args, "CData.prototype.toSource"));
   if (!obj)
     return false;
   if (!CData::IsCDataMaybeUnwrap(&obj) && !CData::IsCDataProto(obj)) {
@@ -8110,7 +8110,7 @@ bool
 CDataFinalizer::Methods::ToSource(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject objThis(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject objThis(cx, GetThisObject(cx, args, "CDataFinalizer.prototype.toSource"));
   if (!objThis)
     return false;
   if (!CDataFinalizer::IsCDataFinalizer(objThis)) {
@@ -8169,7 +8169,7 @@ bool
 CDataFinalizer::Methods::ToString(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  JSObject* objThis = JS_THIS_OBJECT(cx, vp);
+  JSObject* objThis = GetThisObject(cx, args, "CDataFinalizer.prototype.toString");
   if (!objThis)
     return false;
   if (!CDataFinalizer::IsCDataFinalizer(objThis)) {
@@ -8489,7 +8489,7 @@ CDataFinalizer::Methods::Forget(JSContext* cx, unsigned argc, Value* vp)
                                "s");
   }
 
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject obj(cx, GetThisObject(cx, args, "CDataFinalizer.prototype.forget"));
   if (!obj)
     return false;
   if (!CDataFinalizer::IsCDataFinalizer(obj)) {
@@ -8536,7 +8536,7 @@ CDataFinalizer::Methods::Dispose(JSContext* cx, unsigned argc, Value* vp)
                                "s");
   }
 
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject obj(cx, GetThisObject(cx, args, "CDataFinalizer.prototype.dispose"));
   if (!obj)
     return false;
   if (!CDataFinalizer::IsCDataFinalizer(obj)) {
@@ -8819,7 +8819,7 @@ bool
 Int64::ToString(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject obj(cx, GetThisObject(cx, args, "Int64.prototype.toString"));
   if (!obj)
     return false;
   if (!Int64::IsInt64(obj)) {
@@ -8838,7 +8838,7 @@ bool
 Int64::ToSource(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject obj(cx, GetThisObject(cx, args, "Int64.prototype.toSource"));
   if (!obj)
     return false;
   if (!Int64::IsInt64(obj)) {
@@ -9003,7 +9003,7 @@ bool
 UInt64::ToString(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject obj(cx, GetThisObject(cx, args, "UInt64.prototype.toString"));
   if (!obj)
     return false;
   if (!UInt64::IsUInt64(obj)) {
@@ -9022,7 +9022,7 @@ bool
 UInt64::ToSource(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
+  RootedObject obj(cx, GetThisObject(cx, args, "UInt64.prototype.toSource"));
   if (!obj)
     return false;
   if (!UInt64::IsUInt64(obj)) {
