@@ -181,6 +181,8 @@ MOZ_MUST_USE bool
 DeflateStringToUTF8Buffer(JSContext* maybecx, const CharT* src, size_t srclen,
                           char* dst, size_t* dstlenp);
 
+MOZ_MUST_USE JSObject*
+GetThisObject(JSContext* cx, const CallArgs& args, const char* msg);
 
 /*******************************************************************************
 ** Function and struct API definitions
