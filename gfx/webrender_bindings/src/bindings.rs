@@ -267,6 +267,7 @@ impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
             format: self.format,
             is_opaque: self.is_opaque,
             offset: 0,
+            allow_mipmaps: true,
         }
     }
 }
