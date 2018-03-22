@@ -378,8 +378,25 @@ async function recordFrames(testPromise, win = window) {
                    ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_VIEW |
                    ctx.DRAWWINDOW_ASYNC_DECODE_IMAGES |
                    ctx.DRAWWINDOW_USE_WIDGET_LAYERS);
-    frames.push({data: Cu.cloneInto(ctx.getImageData(0, 0, width, height).data, {}),
-                 width, height});
+    let data = Cu.cloneInto(ctx.getImageData(0, 0, width, height).data, {});
+    if (frames.length) {
+      // Compare this frame with the previous one to avoid storing duplicate
+      // frames and running out of memory.
+      let previous = frames[frames.length - 1];
+      if (previous.width == width && previous.height == height) {
+        let equals = true;
+        for (let i = 0; i < data.length; ++i) {
+          if (data[i] != previous.data[i]) {
+            equals = false;
+            break;
+          }
+        }
+        if (equals) {
+          return;
+        }
+      }
+    }
+    frames.push({data, width, height});
   };
   win.addEventListener("MozAfterPaint", afterPaintListener);
 
@@ -530,14 +547,12 @@ function dumpFrame({data, width, height}) {
  *             ]
  */
 function reportUnexpectedFlicker(frames, expectations) {
+  info("comparing " + frames.length + " frames");
+
   let unexpectedRects = 0;
   for (let i = 1; i < frames.length; ++i) {
     let frame = frames[i], previousFrame = frames[i - 1];
     let rects = compareFrames(frame, previousFrame);
-    if (!rects.length) {
-      info("ignoring identical frame");
-      continue;
-    }
 
     if (expectations.filter) {
       rects = expectations.filter(rects, frame, previousFrame);
