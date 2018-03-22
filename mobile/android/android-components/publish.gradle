@@ -75,12 +75,15 @@ ext.configurePublish = { artifactIdArg, descriptionArg ->
         archives sourcesJar
     }
 
-    Properties localProperties = new Properties()
-    localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
+    Properties localProperties = null;
+    if (project.rootProject.file('local.properties').canRead()) {
+        localProperties = new Properties()
+        localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
+    }
 
     bintray {
-        user = localProperties.getProperty("bintray.user")
-        key = localProperties.getProperty("bintray.apikey")
+        user = localProperties != null ? localProperties.getProperty("bintray.user") : ""
+        key = localProperties != null ? localProperties.getProperty("bintray.apikey") : ""
 
         configurations = ['archives']
         pkg {
