@@ -2011,6 +2011,46 @@ CacheIRCompiler::emitInt32SubResult()
 
     return true;
 }
+bool
+CacheIRCompiler::emitInt32BitOrResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+
+    masm.or32(lhs, rhs);
+    EmitStoreResult(masm, rhs, JSVAL_TYPE_INT32, output);
+
+    return true;
+}
+bool
+CacheIRCompiler::emitInt32BitXorResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+
+    masm.xor32(lhs, rhs);
+    EmitStoreResult(masm, rhs, JSVAL_TYPE_INT32, output);
+
+    return true;
+}
+bool
+CacheIRCompiler::emitInt32BitAndResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+
+    masm.and32(lhs, rhs);
+    EmitStoreResult(masm, rhs, JSVAL_TYPE_INT32, output);
+
+    return true;
+}
+
 
 bool
 CacheIRCompiler::emitInt32NegationResult()
