@@ -100,8 +100,6 @@ protected:
   {
   }
 
-  static nsresult RegisterClassProtos(int32_t aDOMClassInfoID);
-
   static nsIXPConnect *sXPConnect;
 
   // nsIXPCScriptable code
