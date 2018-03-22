@@ -77,10 +77,6 @@ public:
                              int32_t aDOMClassInfoID,
                              const char16_t **aResult);
 
-  nsresult RegisterClassProto(const char *aClassName,
-                              const nsIID *aConstructorProtoIID,
-                              bool *aFoundOld);
-
   class NameIterator : public PLDHashTable::Iterator
   {
   public:
