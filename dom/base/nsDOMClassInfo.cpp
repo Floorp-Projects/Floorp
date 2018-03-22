@@ -474,13 +474,6 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
 }
 
 // static
-nsIClassInfo *
-NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID)
-{
-  return nullptr;
-}
-
-// static
 void
 nsDOMClassInfo::ShutDown()
 {

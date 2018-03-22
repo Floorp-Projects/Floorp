@@ -92,8 +92,6 @@ public:
   static bool ObjectIsNativeWrapper(JSContext* cx, JSObject* obj);
 
 protected:
-  friend nsIClassInfo* NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);
-
   const nsDOMClassInfoData* mData;
 
   virtual void PreserveWrapper(nsISupports *aNative) override
