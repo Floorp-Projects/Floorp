@@ -5,6 +5,7 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/intl/LocaleService.h"
+#include "mozilla/intl/MozLocale.h"
 #include "mozilla/Services.h"
 #include "nsIToolkitChromeRegistry.h"
 
@@ -73,11 +74,11 @@ TEST(Intl_Locale_LocaleService, GetPackagedLocales) {
 }
 
 TEST(Intl_Locale_LocaleService, GetDefaultLocale) {
-  nsAutoCString locale;
-  LocaleService::GetInstance()->GetDefaultLocale(locale);
+  nsAutoCString locStr;
+  LocaleService::GetInstance()->GetDefaultLocale(locStr);
 
-  int32_t len = locale.Length();
-  ASSERT_TRUE(len > 0);
+  ASSERT_FALSE(locStr.IsEmpty());
+  ASSERT_TRUE(Locale(locStr).IsValid());
 }
 
 TEST(Intl_Locale_LocaleService, IsAppLocaleRTL) {

@@ -62,3 +62,31 @@ TEST(Intl_Locale_Locale, MatchesRange) {
   ASSERT_FALSE(loc.Matches(loc3, false, false));
   ASSERT_TRUE(loc.Matches(loc3, true, true));
 }
+
+TEST(Intl_Locale_Locale, PrivateUse) {
+  Locale loc = Locale("x-test");
+
+  ASSERT_TRUE(loc.IsValid());
+  ASSERT_TRUE(loc.GetLanguage().Equals(""));
+  ASSERT_TRUE(loc.GetScript().Equals(""));
+  ASSERT_TRUE(loc.GetRegion().Equals(""));
+  ASSERT_TRUE(loc.GetVariants().Length() == 0);
+
+  ASSERT_TRUE(loc.AsString().Equals("x-test"));
+
+  Locale loc2 = Locale("fr-x-test");
+
+  ASSERT_TRUE(loc2.IsValid());
+  ASSERT_TRUE(loc2.GetLanguage().Equals("fr"));
+  ASSERT_TRUE(loc2.GetScript().Equals(""));
+  ASSERT_TRUE(loc2.GetRegion().Equals(""));
+  ASSERT_TRUE(loc2.GetVariants().Length() == 0);
+
+  ASSERT_TRUE(loc2.AsString().Equals("fr-x-test"));
+
+  // Make sure that we preserve private use tags order.
+  Locale loc3 = Locale("fr-x-foo-bar-baz");
+
+  ASSERT_TRUE(loc3.IsValid());
+  ASSERT_TRUE(loc3.AsString().Equals("fr-x-foo-bar-baz"));
+}
