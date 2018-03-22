@@ -790,8 +790,8 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
   if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
     rv = NS_ERROR_NOT_AVAILABLE;
   } else {
-    MOZ_ASSERT(name_struct->mType ==
-               nsGlobalNameStruct::eTypeExternalConstructor);
+    MOZ_ASSERT_UNREACHABLE("We have no eTypeExternalConstructor anymore; "
+                           "this code is about to go away");
     native = do_CreateInstance(name_struct->mCID, &rv);
   }
   if (NS_FAILED(rv)) {
@@ -920,7 +920,7 @@ private:
 
   static bool IsConstructable(const nsGlobalNameStruct *aNameStruct)
   {
-    return aNameStruct->mType == nsGlobalNameStruct::eTypeExternalConstructor;
+    return false;
   }
 
   const char16_t*   mClassName;
@@ -1535,26 +1535,6 @@ nsWindowSH::GlobalResolve(nsGlobalWindowInner *aWin, JSContext *cx,
     return ResolvePrototype(nsDOMClassInfo::sXPConnect, aWin, cx, obj,
                             class_name, nullptr,
                             name_struct, nameSpaceManager, nullptr, desc);
-  }
-
-  if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
-    RefPtr<nsDOMConstructor> constructor;
-    rv = nsDOMConstructor::Create(class_name, name_struct, aWin->AsInner(),
-                                  getter_AddRefs(constructor));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    JS::Rooted<JS::Value> val(cx);
-    js::AssertSameCompartment(cx, obj);
-    rv = nsContentUtils::WrapNative(cx, constructor,
-                                    &NS_GET_IID(nsIDOMDOMConstructor), &val,
-                                    true);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ASSERTION(val.isObject(), "Why didn't we get a JSObject?");
-
-    FillPropertyDescriptor(desc, obj, 0, val);
-
-    return NS_OK;
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeProperty) {

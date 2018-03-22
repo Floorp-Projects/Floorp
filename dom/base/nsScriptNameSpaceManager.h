@@ -24,7 +24,6 @@ struct nsGlobalNameStruct
   enum nametype {
     eTypeNotInitialized,
     eTypeProperty,
-    eTypeExternalConstructor,
     eTypeClassConstructor,
     eTypeClassProto,
   } mType;
