@@ -20,11 +20,6 @@ interface nsIWebProgressListener;
 [builtinclass, uuid(1645af04-1bc7-4363-8f2c-eb9679220ab1)]
 interface nsIFrameLoader : nsISupports
 {
-  /**
-   * Loads the specified URI in this frame. Behaves identically to loadFrame,
-   * except that this method allows specifying the URI to load.
-   */
-  void loadURI(in nsIURI aURI, in boolean originalSrc);
 };
 
 %{C++
