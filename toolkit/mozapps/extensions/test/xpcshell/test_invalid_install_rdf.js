@@ -53,6 +53,7 @@ add_task(async function() {
   await promiseWriteInstallRDFToXPI({
     id: "foo@addons.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -65,15 +66,34 @@ add_task(async function() {
     `,
   });
 
+  await promiseWriteInstallRDFToXPI({
+    id: "foo-legacy-legacy@addons.mozilla.org",
+    version: "1.0",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Invalid install.rdf extension",
+  }, userExtensions, undefined, {
+    "chrome.manifest": `
+      content foo-legacy-legacy ./
+    `,
+  });
+
   equal(hasChromeEntry("foo-langpack"), false,
-        "Should not foo-langpack resource before AOM startup");
+        "Should not have registered foo-langpack resource before AOM startup");
+  equal(hasChromeEntry("foo-legacy-legacy"), false,
+        "Should not have registered foo-legacy-legacy resource before AOM startup");
   equal(hasChromeEntry("foo"), false,
-        "Should not foo resource before AOM startup");
+        "Should not have registered foo resource before AOM startup");
 
   await promiseStartupManager();
 
   equal(hasChromeEntry("foo-langpack"), false,
         "Should not have registered chrome manifest for invalid extension");
+  equal(hasChromeEntry("foo-legacy-legacy"), false,
+        "Should not have registered chrome manifest for non-restartless extension");
   equal(hasChromeEntry("foo"), true,
         "Should have registered chrome manifest for valid extension");
 
@@ -81,6 +101,8 @@ add_task(async function() {
 
   equal(hasChromeEntry("foo-langpack"), false,
         "Should still not have registered chrome manifest for invalid extension after restart");
+  equal(hasChromeEntry("foo-legacy-legacy"), false,
+        "Should still not have registered chrome manifest for non-restartless extension");
   equal(hasChromeEntry("foo"), true,
         "Should still have registered chrome manifest for valid extension after restart");
 

@@ -73,6 +73,7 @@ add_task(async function() {
     id: "softblock1@tests.mozilla.org",
     version: "1.0",
     name: "Softblocked add-on",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "2",
