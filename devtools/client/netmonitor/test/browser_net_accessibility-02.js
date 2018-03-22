@@ -30,11 +30,8 @@ add_task(async function() {
       "The network details panel should render correctly.");
   }
 
-  let wait = waitForNetworkEvents(monitor, 2);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    content.wrappedJSObject.performRequests(2);
-  });
-  await wait;
+  // Execute requests.
+  await performRequests(monitor, tab, 2);
 
   document.querySelector(".requests-list-contents").focus();
 
@@ -55,11 +52,8 @@ add_task(async function() {
   EventUtils.sendKey("HOME", window);
   check(0, true);
 
-  wait = waitForNetworkEvents(monitor, 18);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    content.wrappedJSObject.performRequests(18);
-  });
-  await wait;
+  // Execute requests.
+  await performRequests(monitor, tab, 18);
 
   EventUtils.sendKey("DOWN", window);
   check(1, true);

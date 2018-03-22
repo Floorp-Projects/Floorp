@@ -21,9 +21,8 @@ add_task(async function test() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  let onEvents = waitForNetworkEvents(monitor, IMAGE_TOOLTIP_REQUESTS);
-  await performRequests();
-  await onEvents;
+  // Execute requests.
+  await performRequests(monitor, tab, IMAGE_TOOLTIP_REQUESTS);
 
   info("Checking the image thumbnail after a few requests were made...");
   await showTooltipAndVerify(document.querySelectorAll(".request-list-item")[0]);
@@ -34,11 +33,13 @@ add_task(async function test() {
   await hideTooltipAndVerify(document.querySelectorAll(".request-list-item")[0]);
 
   // +1 extra document reload
-  onEvents = waitForNetworkEvents(monitor, IMAGE_TOOLTIP_REQUESTS + 1);
+  let onEvents = waitForNetworkEvents(monitor, IMAGE_TOOLTIP_REQUESTS + 1);
 
   info("Reloading the debuggee and performing all requests again...");
   await triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
-  await performRequests();
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    content.wrappedJSObject.performRequests();
+  });
   await onEvents;
 
   info("Checking the image thumbnail after a reload.");
@@ -51,12 +52,6 @@ add_task(async function test() {
   await waitUntil(() => !toolboxDoc.querySelector(".tooltip-container.tooltip-visible"));
 
   await teardown(monitor);
-
-  function performRequests() {
-    return ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-      content.wrappedJSObject.performRequests();
-    });
-  }
 
   /**
    * Show a tooltip on the {target} and verify that it was displayed
