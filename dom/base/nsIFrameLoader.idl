@@ -55,12 +55,6 @@ interface nsIFrameLoader : nsISupports
   const unsigned long EVENT_MODE_DONT_FORWARD_TO_CHILD = 0x00000001;
 
   attribute unsigned long eventMode;
-
-  /**
-   * Find out whether the owner content really is a mozbrowser. <xul:browser>
-   * is not considered to be a mozbrowser frame.
-   */
-  readonly attribute boolean ownerIsMozBrowserFrame;
 };
 
 %{C++

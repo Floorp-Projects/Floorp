@@ -28,6 +28,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsCRT.h"
 #include "nsTHashtable.h"
+#include "nsQueryObject.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -718,7 +719,7 @@ ParticularProcessPriorityManager::NameWithComma()
 void
 ParticularProcessPriorityManager::OnRemoteBrowserFrameShown(nsISupports* aSubject)
 {
-  nsCOMPtr<nsIFrameLoader> fl = do_QueryInterface(aSubject);
+  RefPtr<nsFrameLoader> fl = do_QueryObject(aSubject);
   NS_ENSURE_TRUE_VOID(fl);
 
   TabParent* tp = TabParent::GetFrom(fl);
@@ -730,9 +731,7 @@ ParticularProcessPriorityManager::OnRemoteBrowserFrameShown(nsISupports* aSubjec
   }
 
   // Ignore notifications that aren't from a Browser
-  bool isMozBrowser;
-  fl->GetOwnerIsMozBrowserFrame(&isMozBrowser);
-  if (isMozBrowser) {
+  if (fl->OwnerIsMozBrowserFrame()) {
     ResetPriority();
   }
 
