@@ -263,6 +263,7 @@ let gSiteDataSettings = {
   onClickTreeCol(e) {
     this._sortSites(this._sites, e.target);
     this._buildSitesList(this._sites);
+    this._list.clearSelection();
   },
 
   onCommandSearch() {
