@@ -83,9 +83,6 @@ const MICROSEC_PER_SEC = 1000000;
 
 const EXPORT_INDENT = "    "; // four spaces
 
-// Counter used to build fake favicon urls.
-var serialNumber = 0;
-
 function base64EncodeString(aString) {
   let stream = Cc["@mozilla.org/io/string-input-stream;1"]
                  .createInstance(Ci.nsIStringInputStream);
@@ -755,62 +752,6 @@ BookmarkImporter.prototype = {
 
   _appendText: function appendText(str) {
     this._curFrame.previousText += str;
-  },
-
-  /**
-   * data is a string that is a data URI for the favicon. Our job is to
-   * decode it and store it in the favicon service.
-   *
-   * When aIconURI is non-null, we will use that as the URI of the favicon
-   * when storing in the favicon service.
-   *
-   * When aIconURI is null, we have to make up a URI for this favicon so that
-   * it can be stored in the service. The real one will be set the next time
-   * the user visits the page. Our made up one should get expired when the
-   * page no longer references it.
-   */
-  _setFaviconForURI: function setFaviconForURI(aPageURI, aIconURI, aData) {
-    // if the input favicon URI is a chrome: URI, then we just save it and don't
-    // worry about data
-    if (aIconURI) {
-      if (aIconURI.schemeIs("chrome")) {
-        PlacesUtils.favicons.setAndFetchFaviconForPage(aPageURI, aIconURI, false,
-                                                       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
-                                                       Services.scriptSecurityManager.getSystemPrincipal());
-
-        return;
-      }
-    }
-
-    // some bookmarks have placeholder URIs that contain just "data:"
-    // ignore these
-    if (aData.length <= 5) {
-      return;
-    }
-
-    let faviconURI;
-    if (aIconURI) {
-      faviconURI = aIconURI;
-    } else {
-      // Make up a favicon URI for this page.  Later, we'll make sure that this
-      // favicon URI is always associated with local favicon data, so that we
-      // don't load this URI from the network.
-      let faviconSpec = "http://www.mozilla.org/2005/made-up-favicon/"
-                      + serialNumber
-                      + "-"
-                      + new Date().getTime();
-      faviconURI = NetUtil.newURI(faviconSpec);
-      serialNumber++;
-    }
-
-    // This could fail if the favicon is bigger than defined limit, in such a
-    // case neither the favicon URI nor the favicon data will be saved.  If the
-    // bookmark is visited again later, the URI and data will be fetched.
-    PlacesUtils.favicons.replaceFaviconDataFromDataURL(faviconURI, aData, 0,
-                                                       Services.scriptSecurityManager.getSystemPrincipal());
-    PlacesUtils.favicons.setAndFetchFaviconForPage(aPageURI, faviconURI, false,
-                                                   PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
-                                                   Services.scriptSecurityManager.getSystemPrincipal());
   },
 
   /**

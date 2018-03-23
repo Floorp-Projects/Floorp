@@ -68,7 +68,8 @@ var HeadersProvider = {
  * Helper data structures for list of headers.
  */
 function HeaderList(headers) {
-  this.headers = headers;
+  // Clone, so the sort doesn't affect the original array.
+  this.headers = headers.slice(0);
   this.headers.sort((a, b) => {
     return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
   });

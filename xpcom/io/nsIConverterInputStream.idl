@@ -20,8 +20,14 @@ interface nsIConverterInputStream : nsIUnicharInputStream {
     const char16_t DEFAULT_REPLACEMENT_CHARACTER = 0xFFFD;
 
     /**
+     * Special replacement character value that requests errors to
+     * be treated as fatal.
+     */
+    const char16_t ERRORS_ARE_FATAL = 0;
+
+    /**
      * Initialize this stream.
-     * @param aStream 
+     * @param aStream
      *        The underlying stream to read from.
      * @param aCharset
      *        The character encoding to use for converting the bytes of the

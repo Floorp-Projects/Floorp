@@ -273,7 +273,7 @@ DevToolsStartup.prototype = {
     if (Services.prefs.getBoolPref(TOOLBAR_VISIBLE_PREF, false)) {
       // Loading devtools-browser will open the developer toolbar by also checking this
       // pref.
-      this.initDevTools();
+      this.initDevTools("DeveloperToolbar");
     }
 
     // This listener is called for all Firefox windows, but we want to execute some code
@@ -612,18 +612,7 @@ DevToolsStartup.prototype = {
       return null;
     }
 
-    if (reason && !this.recorded) {
-      // Only save the first call for each firefox run as next call
-      // won't necessarely start the tool. For example key shortcuts may
-      // only change the currently selected tool.
-      try {
-        Services.telemetry.getHistogramById("DEVTOOLS_ENTRY_POINT")
-                          .add(reason);
-      } catch (e) {
-        dump("DevTools telemetry entry point failed: " + e + "\n");
-      }
-      this.recorded = true;
-    }
+    this.sendEntryPointTelemetry(reason);
 
     this.initialized = true;
     let { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
@@ -750,6 +739,8 @@ DevToolsStartup.prototype = {
       Services.obs.addObserver(observe, "devtools-thread-resumed");
     }
 
+    this.sendEntryPointTelemetry("CommandLine");
+
     const { BrowserToolboxProcess } = ChromeUtils.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
     BrowserToolboxProcess.init();
 
@@ -831,6 +822,21 @@ DevToolsStartup.prototype = {
 
     if (cmdLine.state == Ci.nsICommandLine.STATE_REMOTE_AUTO) {
       cmdLine.preventDefault = true;
+    }
+  },
+
+  sendEntryPointTelemetry(reason) {
+    if (reason && !this.recorded) {
+      // Only save the first call for each firefox run as next call
+      // won't necessarely start the tool. For example key shortcuts may
+      // only change the currently selected tool.
+      try {
+        Services.telemetry.getHistogramById("DEVTOOLS_ENTRY_POINT")
+                          .add(reason);
+      } catch (e) {
+        dump("DevTools telemetry entry point failed: " + e + "\n");
+      }
+      this.recorded = true;
     }
   },
 

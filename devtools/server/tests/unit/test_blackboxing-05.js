@@ -38,7 +38,7 @@ const SOURCE_URL = "http://example.com/source.js";
 function test_black_box() {
   gClient.addOneTimeListener("paused", test_black_box_exception);
 
-  /* eslint-disable no-multi-spaces, no-unreachable */
+  /* eslint-disable no-multi-spaces, no-unreachable, no-undef */
   Cu.evalInSandbox(
     "" + function doStuff(k) {                                   // line 1
       throw new Error("wu tang clan ain't nuthin' ta fuck wit"); // line 2
@@ -65,7 +65,7 @@ function test_black_box() {
     SOURCE_URL,
     1
   );
-  /* eslint-enable no-multi-spaces */
+  /* eslint-enable no-multi-spaces, no-unreachable, no-undef */
 }
 
 function test_black_box_exception() {
