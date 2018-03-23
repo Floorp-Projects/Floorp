@@ -1,6 +1,9 @@
 "use strict";
 
-/* exported asyncElementRendered, promiseStateChange, deepClone */
+/* exported asyncElementRendered, promiseStateChange, deepClone, PTU */
+
+const PTU = SpecialPowers.Cu.import("resource://testing-common/PaymentTestUtils.jsm", {})
+                            .PaymentTestUtils;
 
 /**
  * A helper to await on while waiting for an asynchronous rendering of a Custom

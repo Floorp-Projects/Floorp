@@ -16,7 +16,10 @@ EXTRA_COMPONENTS += [
 
 JAR_MANIFESTS += ['jar.mn']
 
-MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
+MOCHITEST_MANIFESTS += [
+    'test/mochitest/formautofill/mochitest.ini',
+    'test/mochitest/mochitest.ini',
+]
 
 SPHINX_TREES['docs'] = 'docs'
 
