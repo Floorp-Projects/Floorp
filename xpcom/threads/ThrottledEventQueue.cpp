@@ -80,11 +80,13 @@ class ThrottledEventQueue::Inner final : public nsIObserver
       return NS_OK;
     }
 
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
     NS_IMETHODIMP
     GetName(nsACString& aName) override
     {
       return mInner->CurrentName(aName);
     }
+#endif
   };
 
   mutable Mutex mMutex;

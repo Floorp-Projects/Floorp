@@ -173,6 +173,7 @@ private:
       return rv;
     }
 
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
     NS_IMETHOD GetName(nsACString& aName) override
     {
       aName.AssignLiteral("AbstractThread::Runner");
@@ -186,6 +187,7 @@ private:
       }
       return NS_OK;
     }
+#endif
 
   private:
     RefPtr<EventTargetWrapper> mThread;
