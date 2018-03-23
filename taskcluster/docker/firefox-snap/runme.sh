@@ -61,6 +61,12 @@ cd "${WORKSPACE}"
 
 # Make sure snapcraft knows we're building amd64, even though we may not be on this arch.
 export SNAP_ARCH='amd64'
+
+# When a snap is built, snapcraft fetches deb packages from ubuntu.com. They may bump packages
+# there and remove the old ones. Updating the database allows snapcraft to find the latest packages.
+# For more context, see 1448239
+apt-get update
+
 snapcraft
 
 mv -- *.snap "$TARGET_FULL_PATH"
