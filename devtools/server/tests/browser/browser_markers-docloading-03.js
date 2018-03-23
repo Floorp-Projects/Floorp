@@ -11,7 +11,6 @@ const MARKER_NAMES = ["document::DOMContentLoaded", "document::Load"];
 
 add_task(async function() {
   let browser = await addTab(MAIN_DOMAIN + "doc_innerHTML.html");
-  let doc = browser.contentDocumentAsCPOW;
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
@@ -25,7 +24,9 @@ add_task(async function() {
 
   await new Promise(resolve => {
     front.once("doc-loading", resolve);
-    doc.location.reload();
+    ContentTask.spawn(browser, null, function() {
+      content.location.reload();
+    });
   });
 
   ok(true, "At least one doc-loading event got fired.");
