@@ -29,6 +29,7 @@
   <string name="preference_search_engine_default">طے شدہ</string>
   <string name="preference_state_on">چالو</string>
   <string name="preference_state_off">بند</string>
+  <string name="preference_subitem_autocomplete">URL خودکار تکميل</string>
   <string name="preference_switch_autocomplete">خودکار تکميل</string>
   <string name="preference_category_autocomplete_preinstalled">طے شدہ URL فہرست</string>
   <string name="preference_category_autocomplete_custom">مخصوص URL</string>
@@ -37,7 +38,9 @@
   <string name="preference_autocomplete_learn_more">مزید سیکھیں</string>
   <string name="preference_autocomplete_add_title">URL اظافہ کرنے کے لیئے</string>
   <string name="preference_autocomplete_add_hint">URL چسپاں یا داخل کریں</string>
+  <string name="preference_autocomplete_add_example">مثال: example.com</string>
   <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">نئے تخصیصی URL کا اظافہ کر دیا گیا ہے۔</string>
   <string name="preference_autocomplete_menu_remove">ہٹائیں</string>
   <string name="preference_autocomplete_action_remove_content_description">ہٹائیں</string>
   <string name="preference_language">زبان</string>
@@ -84,6 +87,7 @@
   <string name="accessibility_announcement_search">تلاش انجن اضافہ کریں</string>
   <string name="search_add_confirmation">نیا تلاش انجن شامل کر دیا گیا۔</string>
   <string name="search_add_error_empty_name">تلاش انجن کا نام داخل کریں</string>
+  <string name="search_add_error_empty_search">ایک سٹرنگ داخل کریں</string>
   <string name="content_description_clear_input">ان پٹ صاف کریں</string>
   <string name="content_description_dismiss_input">برخاست کریں</string>
   <string name="content_description_erase">برائوزنگ سابقات مٹائیں</string>
@@ -159,4 +163,5 @@
   <string name="gv_prompt_password_hint">پاس ورڈ</string>
   <string name="gv_prompt_clear">صاف کریں</string>
   <string name="security_popup_secure_connection">قابل بھروسا کنکشن</string>
+  <string name="security_popup_insecure_connection">غیر مھفوظ کنکشن</string>
 </resources>
