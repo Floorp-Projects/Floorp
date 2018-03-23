@@ -62,6 +62,15 @@ ipc/chromium/.*
 js/src/ctypes/libffi/.*
 js/src/dtoa.c.*
 js/src/jit/arm64/vixl/.*
+js/src/vtune/disable_warnings.h
+js/src/vtune/ittnotify.h
+js/src/vtune/ittnotify_config.h
+js/src/vtune/ittnotify_static.c
+js/src/vtune/ittnotify_static.h
+js/src/vtune/ittnotify_types.h
+js/src/vtune/jitprofiling.c
+js/src/vtune/jitprofiling.h
+js/src/vtune/legacy/.*
 media/ffvpx/.*
 media/gmp-clearkey/0.1/openaes/.*
 media/kiss_fft/.*
