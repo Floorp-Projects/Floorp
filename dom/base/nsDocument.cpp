@@ -2370,6 +2370,10 @@ nsIDocument::ResetToURI(nsIURI* aURI,
     }
   }
 
+  if (mFontFaceSet) {
+    mFontFaceSet->RefreshStandardFontLoadPrincipal();
+  }
+
   // Refresh the principal on the compartment.
   if (nsPIDOMWindowInner* win = GetInnerWindow()) {
     nsGlobalWindowInner::Cast(win)->RefreshCompartmentPrincipal();
