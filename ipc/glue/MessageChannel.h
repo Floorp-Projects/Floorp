@@ -94,6 +94,9 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
 {
     friend class ProcessLink;
     friend class ThreadLink;
+#ifdef FUZZING
+    friend class ProtocolFuzzerHelper;
+#endif
 
     class CxxStackFrame;
     class InterruptFrame;
