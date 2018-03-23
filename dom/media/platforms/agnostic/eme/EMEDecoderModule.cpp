@@ -21,7 +21,6 @@
 #include "nsServiceManagerUtils.h"
 #include "DecryptThroughputLimit.h"
 #include "ChromiumCDMVideoDecoder.h"
-#include <algorithm>
 
 namespace mozilla {
 
@@ -35,10 +34,14 @@ class ADTSSampleConverter
 public:
   explicit ADTSSampleConverter(const AudioInfo& aInfo)
     : mNumChannels(aInfo.mChannels)
-    // Note: we clamp profile to 4 so that HE-AACv2 (profile 5) can pass
-    // through the conversion to ADTS and back again.
-    , mProfile(
-        std::min<uint8_t>(static_cast<uint8_t>(0xff & aInfo.mProfile), 4))
+    // Note: we set profile to 2 if we encounter an extended profile (which set
+    // mProfile to 0 and then set mExtendedProfile) such as HE-AACv2
+    // (profile 5). These can then pass through conversion to ADTS and back.
+    // This is done as ADTS only has 2 bits for profile, and the transform
+    // subtracts one from the value. We check if the profile supplied is > 4 for
+    // safety. 2 is used as a fallback value, though it seems the CDM doesn't
+    // care what is set.
+    , mProfile(aInfo.mProfile < 1 || aInfo.mProfile > 4 ? 2 : aInfo.mProfile)
     , mFrequencyIndex(Adts::GetFrequencyIndex(aInfo.mRate))
   {
   }
