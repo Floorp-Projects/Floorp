@@ -1014,21 +1014,23 @@ class FunctionCompiler
         return binop;
     }
 
-    MDefinition* loadGlobalVar(unsigned globalDataOffset, bool isConst, MIRType type)
+    MDefinition* loadGlobalVar(unsigned globalDataOffset, bool isConst, bool isIndirect, MIRType type)
     {
         if (inDeadCode())
             return nullptr;
 
-        auto* load = MWasmLoadGlobalVar::New(alloc(), type, globalDataOffset, isConst, tlsPointer_);
+        auto* load = MWasmLoadGlobalVar::New(alloc(), type, globalDataOffset, isConst, isIndirect,
+                                             tlsPointer_);
         curBlock_->add(load);
         return load;
     }
 
-    void storeGlobalVar(uint32_t globalDataOffset, MDefinition* v)
+    void storeGlobalVar(uint32_t globalDataOffset, bool isIndirect, MDefinition* v)
     {
         if (inDeadCode())
             return;
-        curBlock_->add(MWasmStoreGlobalVar::New(alloc(), globalDataOffset, v, tlsPointer_));
+        curBlock_->add(MWasmStoreGlobalVar::New(alloc(), globalDataOffset, isIndirect, v,
+                                                tlsPointer_));
     }
 
     void addInterruptCheck()
@@ -2293,7 +2295,7 @@ EmitGetGlobal(FunctionCompiler& f)
     const GlobalDesc& global = f.env().globals[id];
     if (!global.isConstant()) {
         f.iter().setResult(f.loadGlobalVar(global.offset(), !global.isMutable(),
-                                           ToMIRType(global.type())));
+                                           global.isIndirect(), ToMIRType(global.type())));
         return true;
     }
 
@@ -2344,8 +2346,7 @@ EmitSetGlobal(FunctionCompiler& f)
 
     const GlobalDesc& global = f.env().globals[id];
     MOZ_ASSERT(global.isMutable());
-
-    f.storeGlobalVar(global.offset(), value);
+    f.storeGlobalVar(global.offset(), global.isIndirect(), value);
     return true;
 }
 
@@ -2360,7 +2361,7 @@ EmitTeeGlobal(FunctionCompiler& f)
     const GlobalDesc& global = f.env().globals[id];
     MOZ_ASSERT(global.isMutable());
 
-    f.storeGlobalVar(global.offset(), value);
+    f.storeGlobalVar(global.offset(), global.isIndirect(), value);
     return true;
 }
 

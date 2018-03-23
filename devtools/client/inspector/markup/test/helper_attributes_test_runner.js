@@ -23,14 +23,14 @@
  */
 function runAddAttributesTests(tests, nodeOrSelector, inspector, testActor) {
   info("Running " + tests.length + " add-attributes tests");
-  return Task.spawn(function* () {
+  return (async function() {
     info("Selecting the test node");
-    yield selectNode("div", inspector);
+    await selectNode("div", inspector);
 
     for (let test of tests) {
-      yield runAddAttributesTest(test, "div", inspector, testActor);
+      await runAddAttributesTest(test, "div", inspector, testActor);
     }
-  });
+  })();
 }
 
 /**
@@ -54,27 +54,27 @@ function runAddAttributesTests(tests, nodeOrSelector, inspector, testActor) {
  * @param {TestActorFront} testActor The current TestActorFront instance.
  * opened
  */
-function* runAddAttributesTest(test, selector, inspector, testActor) {
+async function runAddAttributesTest(test, selector, inspector, testActor) {
   if (test.setUp) {
     test.setUp(inspector);
   }
 
   info("Starting add-attribute test: " + test.desc);
-  yield addNewAttributes(selector, test.text, inspector);
+  await addNewAttributes(selector, test.text, inspector);
 
   info("Assert that the attribute(s) has/have been applied correctly");
-  yield assertAttributes(selector, test.expectedAttributes, testActor);
+  await assertAttributes(selector, test.expectedAttributes, testActor);
 
   if (test.validate) {
-    let container = yield getContainerForSelector(selector, inspector);
+    let container = await getContainerForSelector(selector, inspector);
     test.validate(container, inspector);
   }
 
   info("Undo the change");
-  yield undoChange(inspector);
+  await undoChange(inspector);
 
   info("Assert that the attribute(s) has/have been removed correctly");
-  yield assertAttributes(selector, {}, testActor);
+  await assertAttributes(selector, {}, testActor);
   if (test.tearDown) {
     test.tearDown(inspector);
   }
@@ -96,14 +96,14 @@ function* runAddAttributesTest(test, selector, inspector, testActor) {
  */
 function runEditAttributesTests(tests, inspector, testActor) {
   info("Running " + tests.length + " edit-attributes tests");
-  return Task.spawn(function* () {
+  return (async function() {
     info("Expanding all nodes in the markup-view");
-    yield inspector.markup.expandAll();
+    await inspector.markup.expandAll();
 
     for (let test of tests) {
-      yield runEditAttributesTest(test, inspector, testActor);
+      await runEditAttributesTest(test, inspector, testActor);
     }
-  });
+  })();
 }
 
 /**
@@ -124,18 +124,18 @@ function runEditAttributesTests(tests, inspector, testActor) {
  * @param {TestActorFront} testActor The current TestActorFront instance.
  * opened
  */
-function* runEditAttributesTest(test, inspector, testActor) {
+async function runEditAttributesTest(test, inspector, testActor) {
   info("Starting edit-attribute test: " + test.desc);
 
   info("Selecting the test node " + test.node);
-  yield selectNode(test.node, inspector);
+  await selectNode(test.node, inspector);
 
   info("Asserting that the node has the right attributes to start with");
-  yield assertAttributes(test.node, test.originalAttributes, testActor);
+  await assertAttributes(test.node, test.originalAttributes, testActor);
 
   info("Editing attribute " + test.name + " with value " + test.value);
 
-  let container = yield focusNode(test.node, inspector);
+  let container = await focusNode(test.node, inspector);
   ok(container && container.editor, "The markup-container for " + test.node +
     " was found");
 
@@ -144,17 +144,17 @@ function* runEditAttributesTest(test, inspector, testActor) {
   let attr = container.editor.attrElements.get(test.name)
                                           .querySelector(".editable");
   setEditableFieldValue(attr, test.value, inspector);
-  yield nodeMutated;
+  await nodeMutated;
 
   info("Asserting the new attributes after edition");
-  yield assertAttributes(test.node, test.expectedAttributes, testActor);
+  await assertAttributes(test.node, test.expectedAttributes, testActor);
 
   info("Undo the change and assert that the attributes have been changed back");
-  yield undoChange(inspector);
-  yield assertAttributes(test.node, test.originalAttributes, testActor);
+  await undoChange(inspector);
+  await assertAttributes(test.node, test.originalAttributes, testActor);
 
   info("Redo the change and assert that the attributes have been changed " +
        "again");
-  yield redoChange(inspector);
-  yield assertAttributes(test.node, test.expectedAttributes, testActor);
+  await redoChange(inspector);
+  await assertAttributes(test.node, test.expectedAttributes, testActor);
 }

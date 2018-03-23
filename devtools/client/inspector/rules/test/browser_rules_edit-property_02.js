@@ -19,21 +19,21 @@ const TEST_URI = `
   <div id="testid2">Styled Node</div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#testid", inspector);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
+  await selectNode("#testid", inspector);
 
-  yield testEditProperty(inspector, view);
-  yield testDisableProperty(inspector, view);
-  yield testPropertyStillMarkedDirty(inspector, view);
+  await testEditProperty(inspector, view);
+  await testDisableProperty(inspector, view);
+  await testPropertyStillMarkedDirty(inspector, view);
 });
 
-function* testEditProperty(inspector, ruleView) {
+async function testEditProperty(inspector, ruleView) {
   let idRule = getRuleViewRuleEditor(ruleView, 1).rule;
   let prop = idRule.textProps[0];
 
-  let editor = yield focusEditableField(ruleView, prop.editor.nameSpan);
+  let editor = await focusEditableField(ruleView, prop.editor.nameSpan);
   let input = editor.input;
   is(inplaceEditor(prop.editor.nameSpan), editor,
     "Next focused editor should be the name editor.");
@@ -51,8 +51,8 @@ function* testEditProperty(inspector, ruleView) {
   let onNameDone = ruleView.once("ruleview-changed");
   let onFocus = once(idRule.editor.element, "focus", true);
   EventUtils.sendString("border-color:", ruleView.styleWindow);
-  yield onFocus;
-  yield onNameDone;
+  await onFocus;
+  await onNameDone;
 
   info("Verifying that the focused field is the valueSpan");
   editor = inplaceEditor(ruleView.styleDocument.activeElement);
@@ -70,13 +70,13 @@ function* testEditProperty(inspector, ruleView) {
     let onPreviewDone = ruleView.once("ruleview-changed");
     EventUtils.sendChar(ch, ruleView.styleWindow);
     ruleView.debounce.flush();
-    yield onPreviewDone;
+    await onPreviewDone;
     is(prop.editor.warning.hidden, true,
       "warning triangle is hidden or shown as appropriate");
   }
-  yield onBlur;
+  await onBlur;
 
-  let newValue = yield executeInContent("Test:GetRulePropertyValue", {
+  let newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
     name: "border-color"
@@ -84,7 +84,7 @@ function* testEditProperty(inspector, ruleView) {
   is(newValue, "red", "border-color should have been set.");
 
   ruleView.styleDocument.activeElement.blur();
-  yield addProperty(ruleView, 1, "color", "red", ";");
+  await addProperty(ruleView, 1, "color", "red", ";");
 
   let props = ruleView.element.querySelectorAll(".ruleview-property");
   for (let i = 0; i < props.length; i++) {
@@ -93,14 +93,14 @@ function* testEditProperty(inspector, ruleView) {
   }
 }
 
-function* testDisableProperty(inspector, ruleView) {
+async function testDisableProperty(inspector, ruleView) {
   let idRule = getRuleViewRuleEditor(ruleView, 1).rule;
   let prop = idRule.textProps[0];
 
   info("Disabling a property");
-  yield togglePropStatus(ruleView, prop);
+  await togglePropStatus(ruleView, prop);
 
-  let newValue = yield executeInContent("Test:GetRulePropertyValue", {
+  let newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
     name: "border-color"
@@ -108,9 +108,9 @@ function* testDisableProperty(inspector, ruleView) {
   is(newValue, "", "Border-color should have been unset.");
 
   info("Enabling the property again");
-  yield togglePropStatus(ruleView, prop);
+  await togglePropStatus(ruleView, prop);
 
-  newValue = yield executeInContent("Test:GetRulePropertyValue", {
+  newValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
     name: "border-color"
@@ -118,12 +118,12 @@ function* testDisableProperty(inspector, ruleView) {
   is(newValue, "red", "Border-color should have been reset.");
 }
 
-function* testPropertyStillMarkedDirty(inspector, ruleView) {
+async function testPropertyStillMarkedDirty(inspector, ruleView) {
   // Select an unstyled node.
-  yield selectNode("#testid2", inspector);
+  await selectNode("#testid2", inspector);
 
   // Select the original node again.
-  yield selectNode("#testid", inspector);
+  await selectNode("#testid", inspector);
 
   let props = ruleView.element.querySelectorAll(".ruleview-property");
   for (let i = 0; i < props.length; i++) {

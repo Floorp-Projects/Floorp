@@ -24,41 +24,41 @@ const TEST_URI = `
 
 const PSEUDO_PREF = "devtools.inspector.show_pseudo_elements";
 
-add_task(function* () {
+add_task(async function() {
   // Expand the pseudo-elements section by default.
   Services.prefs.setBoolPref(PSEUDO_PREF, true);
 
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
 
   info("Selecting the test element");
-  yield selectNode(".testclass", inspector);
-  yield testEditSelector(view, "div:nth-child(1)");
+  await selectNode(".testclass", inspector);
+  await testEditSelector(view, "div:nth-child(1)");
 
   info("Selecting the modified element");
-  yield selectNode("#testid", inspector);
-  yield checkModifiedElement(view, "div:nth-child(1)");
+  await selectNode("#testid", inspector);
+  await checkModifiedElement(view, "div:nth-child(1)");
 
   info("Selecting the test element");
-  yield selectNode("#testid3", inspector);
-  yield testEditSelector(view, ".testclass2::first-letter");
+  await selectNode("#testid3", inspector);
+  await testEditSelector(view, ".testclass2::first-letter");
 
   info("Selecting the modified element");
-  yield selectNode(".testclass2", inspector);
-  yield checkModifiedElement(view, ".testclass2::first-letter");
+  await selectNode(".testclass2", inspector);
+  await checkModifiedElement(view, ".testclass2::first-letter");
 
   // Reset the pseudo-elements section pref to its default value.
   Services.prefs.clearUserPref(PSEUDO_PREF);
 });
 
-function* testEditSelector(view, name) {
+async function testEditSelector(view, name) {
   info("Test editing existing selector fields");
 
   let idRuleEditor = getRuleViewRuleEditor(view, 1) ||
     getRuleViewRuleEditor(view, 1, 0);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = yield focusEditableField(view, idRuleEditor.selectorText);
+  let editor = await focusEditableField(view, idRuleEditor.selectorText);
 
   is(inplaceEditor(idRuleEditor.selectorText), editor,
     "The selector editor got focused");
@@ -71,7 +71,7 @@ function* testEditSelector(view, name) {
 
   info("Entering the commit key");
   EventUtils.synthesizeKey("KEY_Enter");
-  yield onRuleViewChanged;
+  await onRuleViewChanged;
 
   is(view._elementStyle.rules.length, 2, "Should have 2 rule.");
   ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");
@@ -82,7 +82,7 @@ function* testEditSelector(view, name) {
     "Rule with " + name + " does not match the current element.");
 }
 
-function* checkModifiedElement(view, name) {
+function checkModifiedElement(view, name) {
   is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
   ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");
 }

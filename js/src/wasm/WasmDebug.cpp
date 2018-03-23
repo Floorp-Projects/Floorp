@@ -581,6 +581,8 @@ DebugState::getGlobal(Instance& instance, uint32_t globalIndex, MutableHandleVal
 
     uint8_t* globalData = instance.globalData();
     void* dataPtr = globalData + global.offset();
+    if (global.isIndirect())
+        dataPtr = *static_cast<void**>(dataPtr);
     switch (global.type()) {
       case ValType::I32: {
         vp.set(Int32Value(*static_cast<int32_t*>(dataPtr)));

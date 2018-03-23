@@ -8,43 +8,43 @@
 
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
-add_task(function* () {
-  let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URL);
 
-  yield startPicker(toolbox);
+  await startPicker(toolbox);
 
   info("Selecting the simple-div1 DIV");
-  yield moveMouseOver("#simple-div1");
+  await moveMouseOver("#simple-div1");
 
-  ok((yield testActor.assertHighlightedNode("#simple-div1")),
+  ok((await testActor.assertHighlightedNode("#simple-div1")),
      "The highlighter shows #simple-div1. OK.");
 
   // First Child selection
   info("Testing first-child selection.");
 
-  yield doKeyHover({key: "VK_RIGHT", options: {}});
-  ok((yield testActor.assertHighlightedNode("#useless-para")),
+  await doKeyHover({key: "VK_RIGHT", options: {}});
+  ok((await testActor.assertHighlightedNode("#useless-para")),
      "The highlighter shows #useless-para. OK.");
 
   info("Selecting the useful-para paragraph DIV");
-  yield moveMouseOver("#useful-para");
-  ok((yield testActor.assertHighlightedNode("#useful-para")),
+  await moveMouseOver("#useful-para");
+  ok((await testActor.assertHighlightedNode("#useful-para")),
      "The highlighter shows #useful-para. OK.");
 
-  yield doKeyHover({key: "VK_RIGHT", options: {}});
-  ok((yield testActor.assertHighlightedNode("#bold")),
+  await doKeyHover({key: "VK_RIGHT", options: {}});
+  ok((await testActor.assertHighlightedNode("#bold")),
      "The highlighter shows #bold. OK.");
 
   info("Going back up to the simple-div1 DIV");
-  yield doKeyHover({key: "VK_LEFT", options: {}});
-  yield doKeyHover({key: "VK_LEFT", options: {}});
-  ok((yield testActor.assertHighlightedNode("#simple-div1")),
+  await doKeyHover({key: "VK_LEFT", options: {}});
+  await doKeyHover({key: "VK_LEFT", options: {}});
+  ok((await testActor.assertHighlightedNode("#simple-div1")),
      "The highlighter shows #simple-div1. OK.");
 
   info("First child selection test Passed.");
 
   info("Stopping the picker");
-  yield toolbox.highlighterUtils.stopPicker();
+  await toolbox.highlighterUtils.stopPicker();
 
   function doKeyHover(args) {
     info("Key pressed. Waiting for element to be highlighted/hovered");

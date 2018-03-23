@@ -12,19 +12,19 @@ loadHelperScript("helper_diff.js");
  * Generator function that runs checkEventsForNode() for each object in the
  * TEST_DATA array.
  */
-function* runEventPopupTests(url, tests) {
-  let {inspector, testActor} = yield openInspectorForURL(url);
+async function runEventPopupTests(url, tests) {
+  let {inspector, testActor} = await openInspectorForURL(url);
 
-  yield inspector.markup.expandAll();
+  await inspector.markup.expandAll();
 
   for (let test of tests) {
-    yield checkEventsForNode(test, inspector, testActor);
+    await checkEventsForNode(test, inspector, testActor);
   }
 
   // Wait for promises to avoid leaks when running this as a single test.
   // We need to do this because we have opened a bunch of popups and don't them
   // to affect other test runs when they are GCd.
-  yield promiseNextTick();
+  await promiseNextTick();
 }
 
 /**
@@ -47,12 +47,12 @@ function* runEventPopupTests(url, tests) {
  * opened
  * @param {TestActorFront} testActor
  */
-function* checkEventsForNode(test, inspector, testActor) {
+async function checkEventsForNode(test, inspector, testActor) {
   let {selector, expected, beforeTest, isSourceMapped} = test;
-  let container = yield getContainerForSelector(selector, inspector);
+  let container = await getContainerForSelector(selector, inspector);
 
   if (typeof beforeTest === "function") {
-    yield beforeTest(inspector, testActor);
+    await beforeTest(inspector, testActor);
   }
 
   let evHolder = container.elt.querySelector(".markupview-events");
@@ -65,7 +65,7 @@ function* checkEventsForNode(test, inspector, testActor) {
 
   let tooltip = inspector.markup.eventDetailsTooltip;
 
-  yield selectNode(selector, inspector);
+  await selectNode(selector, inspector);
 
   let sourceMapPromise = null;
   if (isSourceMapped) {
@@ -76,12 +76,12 @@ function* checkEventsForNode(test, inspector, testActor) {
   info("Clicking evHolder");
   EventUtils.synthesizeMouseAtCenter(evHolder, {},
     inspector.markup.doc.defaultView);
-  yield tooltip.once("shown");
+  await tooltip.once("shown");
   info("tooltip shown");
 
   if (isSourceMapped) {
     info("Waiting for source map to be applied");
-    yield sourceMapPromise;
+    await sourceMapPromise;
   }
 
   // Check values
@@ -120,7 +120,7 @@ function* checkEventsForNode(test, inspector, testActor) {
     header.scrollIntoView();
 
     EventUtils.synthesizeMouseAtCenter(header, {}, type.ownerGlobal);
-    yield tooltip.once("event-tooltip-ready");
+    await tooltip.once("event-tooltip-ready");
 
     is(header.classList.contains("content-expanded"), true,
         "We are in expanded state and icon changed");

@@ -9,13 +9,13 @@
 
 const TEST_URL = 'data:text/html,<body class="abcd"></body>';
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(TEST_URL);
 
-  yield selectNode(".abcd", inspector);
-  yield clickContainer(".abcd", inspector);
+  await selectNode(".abcd", inspector);
+  await clickContainer(".abcd", inspector);
 
-  let container = yield focusNode(".abcd", inspector);
+  let container = await focusNode(".abcd", inspector);
   ok(container && container.editor, "The markup-container was found");
 
   info("Listening for the markupmutation event");
@@ -33,10 +33,10 @@ add_task(function* () {
   EventUtils.synthesizeMouseAtCenter(inspector.searchBox, {}, inspector.panelWin);
 
   info("Wait for the focus event on search box");
-  yield onFocus;
+  await onFocus;
 
   info("Wait for the markup-mutation event");
-  yield nodeMutated;
+  await nodeMutated;
 
   is(inspector.panelDoc.activeElement, inspector.searchBox,
      "The currently focused element is the search box");

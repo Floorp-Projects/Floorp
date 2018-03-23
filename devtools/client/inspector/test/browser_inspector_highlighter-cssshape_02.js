@@ -9,45 +9,45 @@
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_cssshapes.html";
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
-  let highlighter = yield front.getHighlighterByType(HIGHLIGHTER_TYPE);
+  let highlighter = await front.getHighlighterByType(HIGHLIGHTER_TYPE);
 
-  yield polygonHasCorrectAttrs(testActor, inspector, highlighter);
-  yield circleHasCorrectAttrs(testActor, inspector, highlighter);
-  yield ellipseHasCorrectAttrs(testActor, inspector, highlighter);
-  yield insetHasCorrectAttrs(testActor, inspector, highlighter);
+  await polygonHasCorrectAttrs(testActor, inspector, highlighter);
+  await circleHasCorrectAttrs(testActor, inspector, highlighter);
+  await ellipseHasCorrectAttrs(testActor, inspector, highlighter);
+  await insetHasCorrectAttrs(testActor, inspector, highlighter);
 
-  yield highlighter.finalize();
+  await highlighter.finalize();
 });
 
-function* polygonHasCorrectAttrs(testActor, inspector, highlighterFront) {
+async function polygonHasCorrectAttrs(testActor, inspector, highlighterFront) {
   info("Checking polygon highlighter has correct points");
 
-  let polygonNode = yield getNodeFront("#polygon", inspector);
-  yield highlighterFront.show(polygonNode, {mode: "cssClipPath"});
+  let polygonNode = await getNodeFront("#polygon", inspector);
+  await highlighterFront.show(polygonNode, {mode: "cssClipPath"});
 
-  let points = yield testActor.getHighlighterNodeAttribute(
+  let points = await testActor.getHighlighterNodeAttribute(
     "shapes-polygon", "points", highlighterFront);
   let realPoints = "0,0 12.5,50 25,0 37.5,50 50,0 62.5,50 " +
                    "75,0 87.5,50 100,0 90,100 50,60 10,100";
   is(points, realPoints, "Polygon highlighter has correct points");
 }
 
-function* circleHasCorrectAttrs(testActor, inspector, highlighterFront) {
+async function circleHasCorrectAttrs(testActor, inspector, highlighterFront) {
   info("Checking circle highlighter has correct attributes");
 
-  let circleNode = yield getNodeFront("#circle", inspector);
-  yield highlighterFront.show(circleNode, {mode: "cssClipPath"});
+  let circleNode = await getNodeFront("#circle", inspector);
+  await highlighterFront.show(circleNode, {mode: "cssClipPath"});
 
-  let rx = yield testActor.getHighlighterNodeAttribute(
+  let rx = await testActor.getHighlighterNodeAttribute(
     "shapes-ellipse", "rx", highlighterFront);
-  let ry = yield testActor.getHighlighterNodeAttribute(
+  let ry = await testActor.getHighlighterNodeAttribute(
     "shapes-ellipse", "ry", highlighterFront);
-  let cx = yield testActor.getHighlighterNodeAttribute(
+  let cx = await testActor.getHighlighterNodeAttribute(
     "shapes-ellipse", "cx", highlighterFront);
-  let cy = yield testActor.getHighlighterNodeAttribute(
+  let cy = await testActor.getHighlighterNodeAttribute(
     "shapes-ellipse", "cy", highlighterFront);
 
   is(rx, 25, "Circle highlighter has correct rx");
@@ -56,19 +56,19 @@ function* circleHasCorrectAttrs(testActor, inspector, highlighterFront) {
   is(cy, 40, "Circle highlighter has correct cy");
 }
 
-function* ellipseHasCorrectAttrs(testActor, inspector, highlighterFront) {
+async function ellipseHasCorrectAttrs(testActor, inspector, highlighterFront) {
   info("Checking ellipse highlighter has correct attributes");
 
-  let ellipseNode = yield getNodeFront("#ellipse", inspector);
-  yield highlighterFront.show(ellipseNode, {mode: "cssClipPath"});
+  let ellipseNode = await getNodeFront("#ellipse", inspector);
+  await highlighterFront.show(ellipseNode, {mode: "cssClipPath"});
 
-  let rx = yield testActor.getHighlighterNodeAttribute(
+  let rx = await testActor.getHighlighterNodeAttribute(
     "shapes-ellipse", "rx", highlighterFront);
-  let ry = yield testActor.getHighlighterNodeAttribute(
+  let ry = await testActor.getHighlighterNodeAttribute(
     "shapes-ellipse", "ry", highlighterFront);
-  let cx = yield testActor.getHighlighterNodeAttribute(
+  let cx = await testActor.getHighlighterNodeAttribute(
     "shapes-ellipse", "cx", highlighterFront);
-  let cy = yield testActor.getHighlighterNodeAttribute(
+  let cy = await testActor.getHighlighterNodeAttribute(
     "shapes-ellipse", "cy", highlighterFront);
 
   is(rx, 40, "Ellipse highlighter has correct rx");
@@ -77,19 +77,19 @@ function* ellipseHasCorrectAttrs(testActor, inspector, highlighterFront) {
   is(cy, 30, "Ellipse highlighter has correct cy");
 }
 
-function* insetHasCorrectAttrs(testActor, inspector, highlighterFront) {
+async function insetHasCorrectAttrs(testActor, inspector, highlighterFront) {
   info("Checking rect highlighter has correct attributes");
 
-  let insetNode = yield getNodeFront("#inset", inspector);
-  yield highlighterFront.show(insetNode, {mode: "cssClipPath"});
+  let insetNode = await getNodeFront("#inset", inspector);
+  await highlighterFront.show(insetNode, {mode: "cssClipPath"});
 
-  let x = yield testActor.getHighlighterNodeAttribute(
+  let x = await testActor.getHighlighterNodeAttribute(
     "shapes-rect", "x", highlighterFront);
-  let y = yield testActor.getHighlighterNodeAttribute(
+  let y = await testActor.getHighlighterNodeAttribute(
     "shapes-rect", "y", highlighterFront);
-  let width = yield testActor.getHighlighterNodeAttribute(
+  let width = await testActor.getHighlighterNodeAttribute(
     "shapes-rect", "width", highlighterFront);
-  let height = yield testActor.getHighlighterNodeAttribute(
+  let height = await testActor.getHighlighterNodeAttribute(
     "shapes-rect", "height", highlighterFront);
 
   is(x, 15, "Rect highlighter has correct x");

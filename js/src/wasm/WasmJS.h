@@ -49,8 +49,8 @@ HasSupport(JSContext* cx);
 bool
 ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v, Val* val);
 
-void
-ToJSValue(const Val& val, MutableHandleValue v);
+Value
+ToJSValue(const Val& val);
 
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
@@ -119,6 +119,54 @@ class WasmModuleObject : public NativeObject
     wasm::Module& module() const;
 };
 
+// The class of WebAssembly.Global.  This wraps a storage location, and there is
+// a per-agent one-to-one relationship between the WasmGlobalObject and the
+// storage location (the Cell) it wraps: if a module re-exports an imported
+// global, the imported and exported WasmGlobalObjects are the same, and if a
+// module exports a global twice, the two exported WasmGlobalObjects are the
+// same.
+
+class WasmGlobalObject : public NativeObject
+{
+    static const unsigned TYPE_SLOT = 0;
+    static const unsigned MUTABLE_SLOT = 1;
+    static const unsigned CELL_SLOT = 2;
+
+    static const ClassOps classOps_;
+    static void finalize(FreeOp*, JSObject* obj);
+
+    static bool valueGetterImpl(JSContext* cx, const CallArgs& args);
+    static bool valueGetter(JSContext* cx, unsigned argc, Value* vp);
+    static bool valueSetterImpl(JSContext* cx, const CallArgs& args);
+    static bool valueSetter(JSContext* cx, unsigned argc, Value* vp);
+
+  public:
+    // For exposed globals the Cell holds the value of the global; the
+    // instance's global area holds a pointer to the Cell.
+    union Cell {
+        int32_t i32;
+        int64_t i64;
+        float   f32;
+        double  f64;
+    };
+
+    static const unsigned RESERVED_SLOTS = 3;
+    static const Class class_;
+    static const JSPropertySpec properties[];
+    static const JSFunctionSpec methods[];
+    static const JSFunctionSpec static_methods[];
+    static bool construct(JSContext*, unsigned, Value*);
+
+    static WasmGlobalObject* create(JSContext* cx, const wasm::Val& value, bool isMutable);
+
+    wasm::ValType type() const;
+    wasm::Val val() const;
+    bool isMutable() const;
+    // value() will MOZ_CRASH if the type is int64
+    Value value() const;
+    Cell* cell() const;
+};
+
 // The class of WebAssembly.Instance. Each WasmInstanceObject owns a
 // wasm::Instance. These objects are used both as content-facing JS objects and
 // as internal implementation details of asm.js.
@@ -130,6 +178,7 @@ class WasmInstanceObject : public NativeObject
     static const unsigned EXPORTS_SLOT = 2;
     static const unsigned SCOPES_SLOT = 3;
     static const unsigned INSTANCE_SCOPE_SLOT = 4;
+    static const unsigned GLOBALS_SLOT = 5;
 
     static const ClassOps classOps_;
     static bool exportsGetterImpl(JSContext* cx, const CallArgs& args);
@@ -158,7 +207,7 @@ class WasmInstanceObject : public NativeObject
     ScopeMap& scopes() const;
 
   public:
-    static const unsigned RESERVED_SLOTS = 5;
+    static const unsigned RESERVED_SLOTS = 6;
     static const Class class_;
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
@@ -172,7 +221,9 @@ class WasmInstanceObject : public NativeObject
                                       HandleWasmMemoryObject memory,
                                       Vector<RefPtr<wasm::Table>, 0, SystemAllocPolicy>&& tables,
                                       Handle<FunctionVector> funcImports,
-                                      const wasm::ValVector& globalImports,
+                                      const wasm::GlobalDescVector& globals,
+                                      const wasm::ValVector& globalImportValues,
+                                      const WasmGlobalObjectVector& globalObjs,
                                       HandleObject proto);
     void initExportsObj(JSObject& exportsObj);
 
@@ -190,6 +241,8 @@ class WasmInstanceObject : public NativeObject
     static WasmFunctionScope* getFunctionScope(JSContext* cx,
                                                HandleWasmInstanceObject instanceObj,
                                                uint32_t funcIndex);
+
+    WasmGlobalObjectVector& indirectGlobals() const;
 };
 
 // The class of WebAssembly.Memory. A WasmMemoryObject references an ArrayBuffer
@@ -284,42 +337,6 @@ class WasmTableObject : public NativeObject
     static WasmTableObject* create(JSContext* cx, const wasm::Limits& limits);
     wasm::Table& table() const;
 };
-
-#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
-
-// The class of WebAssembly.Global.  A WasmGlobalObject holds either the value
-// of an immutable wasm global or the cell of a mutable wasm global.
-
-class WasmGlobalObject : public NativeObject
-{
-    static const unsigned TYPE_SLOT = 0;
-    static const unsigned MUTABLE_SLOT = 1;
-    static const unsigned VALUE_SLOT = 2;
-
-    static const ClassOps classOps_;
-
-    static bool valueGetterImpl(JSContext* cx, const CallArgs& args);
-    static bool valueGetter(JSContext* cx, unsigned argc, Value* vp);
-    static bool valueSetterImpl(JSContext* cx, const CallArgs& args);
-    static bool valueSetter(JSContext* cx, unsigned argc, Value* vp);
-
-  public:
-    static const unsigned RESERVED_SLOTS = 3;
-    static const Class class_;
-    static const JSPropertySpec properties[];
-    static const JSFunctionSpec methods[];
-    static const JSFunctionSpec static_methods[];
-    static bool construct(JSContext*, unsigned, Value*);
-
-    static WasmGlobalObject* create(JSContext* cx, wasm::ValType type, bool isMutable,
-                                    HandleValue value);
-
-    wasm::ValType type() const;
-    bool isMutable() const;
-    Value value() const;
-};
-
-#endif // ENABLE_WASM_GLOBAL && EARLY_BETA_OR_EARLIER
 
 } // namespace js
 

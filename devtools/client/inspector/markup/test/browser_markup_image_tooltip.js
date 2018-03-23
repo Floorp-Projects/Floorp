@@ -14,23 +14,23 @@ const TEST_NODES = [
   {selector: ".canvas", size: "600" + " \u00D7 " + "600"}
 ];
 
-add_task(function* () {
-  yield addTab(URL_ROOT + "doc_markup_image_and_canvas_2.html");
-  let {inspector} = yield openInspector();
+add_task(async function() {
+  await addTab(URL_ROOT + "doc_markup_image_and_canvas_2.html");
+  let {inspector} = await openInspector();
 
   info("Selecting the first <img> tag");
-  yield selectNode("img", inspector);
+  await selectNode("img", inspector);
 
   for (let testNode of TEST_NODES) {
-    let target = yield getImageTooltipTarget(testNode, inspector);
-    yield assertTooltipShownOnHover(inspector.markup.imagePreviewTooltip, target);
+    let target = await getImageTooltipTarget(testNode, inspector);
+    await assertTooltipShownOnHover(inspector.markup.imagePreviewTooltip, target);
     checkImageTooltip(testNode, inspector);
-    yield assertTooltipHiddenOnMouseOut(inspector.markup.imagePreviewTooltip, target);
+    await assertTooltipHiddenOnMouseOut(inspector.markup.imagePreviewTooltip, target);
   }
 });
 
-function* getImageTooltipTarget({selector}, inspector) {
-  let nodeFront = yield getNodeFront(selector, inspector);
+async function getImageTooltipTarget({selector}, inspector) {
+  let nodeFront = await getNodeFront(selector, inspector);
   let isImg = nodeFront.tagName.toLowerCase() === "img";
 
   let container = getContainerForNodeFront(nodeFront, inspector);

@@ -21,13 +21,13 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, gridInspector, testActor } = yield openLayoutView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let { inspector, gridInspector, testActor } = await openLayoutView();
   let { document: doc } = gridInspector;
   let { highlighters, store } = inspector;
 
-  yield selectNode("#grid", inspector);
+  await selectNode("#grid", inspector);
   let gridList = doc.getElementById("grid-list");
   let checkbox1 = gridList.children[0].querySelector("input");
 
@@ -40,7 +40,7 @@ add_task(function* () {
   info("Toggling ON the CSS grid highlighter from the layout panel.");
   let onHighlighterShown = highlighters.once("grid-highlighter-shown");
   checkbox1.click();
-  yield onHighlighterShown;
+  await onHighlighterShown;
 
   info("Checking the CSS grid highlighter is created.");
   ok(highlighters.highlighters[HIGHLIGHTER_TYPE],
@@ -55,7 +55,7 @@ add_task(function* () {
   testActor.eval(`
     document.getElementById("grid2").classList.add("grid");
   `);
-  yield onGridListUpdate;
+  await onGridListUpdate;
 
   info("Checking the new Grid Inspector state.");
   is(gridList.childNodes.length, 2, "Two grid containers are listed.");
@@ -72,8 +72,8 @@ add_task(function* () {
     !state.grids[0].highlighted &&
     state.grids[1].highlighted);
   checkbox2.click();
-  yield onHighlighterShown;
-  yield onCheckboxChange;
+  await onHighlighterShown;
+  await onCheckboxChange;
 
   info("Checking the CSS grid highlighter is still shown.");
   ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
@@ -85,8 +85,8 @@ add_task(function* () {
     !state.grids[0].highlighted &&
     !state.grids[1].highlighted);
   checkbox2.click();
-  yield onHighlighterHidden;
-  yield onCheckboxChange;
+  await onHighlighterHidden;
+  await onCheckboxChange;
 
   info("Checking the CSS grid highlighter is not shown.");
   ok(!highlighters.gridHighlighterShown, "No CSS grid highlighter is shown.");
