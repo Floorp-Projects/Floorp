@@ -350,8 +350,9 @@ public:
    *                            container.  Otherwise, will insert the node
    *                            before child node referred by this.
    */
+  template<typename PT, typename CT>
   nsresult InsertNode(nsIContent& aContentToInsert,
-                      const EditorRawDOMPoint& aPointToInsert);
+                      const EditorDOMPointBase<PT, CT>& aPointToInsert);
 
   enum ECloneAttributes { eDontCloneAttributes, eCloneAttributes };
   already_AddRefed<Element> ReplaceContainer(Element* aOldContainer,
@@ -381,8 +382,9 @@ public:
    * @param aError              If succeed, returns no error.  Otherwise, an
    *                            error.
    */
+  template<typename PT, typename CT>
   already_AddRefed<nsIContent>
-  SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
+  SplitNode(const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
             ErrorResult& aResult);
 
   nsresult JoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
@@ -520,8 +522,10 @@ protected:
    *                        child node referred by this.
    * @return                The created new element node.
    */
-  already_AddRefed<Element> CreateNode(nsAtom* aTag,
-                                       const EditorRawDOMPoint& aPointToInsert);
+  template<typename PT, typename CT>
+  already_AddRefed<Element>
+  CreateNode(nsAtom* aTag,
+             const EditorDOMPointBase<PT, CT>& aPointToInsert);
 
   /**
    * Create an aggregate transaction for delete selection.  The result may
@@ -905,28 +909,35 @@ public:
    * you want.  They start to search the result from next node of the given
    * node.
    */
-  nsIContent* GetNextNode(const EditorRawDOMPoint& aPoint)
+  template<typename PT, typename CT>
+  nsIContent* GetNextNode(const EditorDOMPointBase<PT, CT>& aPoint)
   {
     return GetNextNodeInternal(aPoint, false, true, false);
   }
-  nsIContent* GetNextElementOrText(const EditorRawDOMPoint& aPoint)
+  template<typename PT, typename CT>
+  nsIContent* GetNextElementOrText(const EditorDOMPointBase<PT, CT>& aPoint)
   {
     return GetNextNodeInternal(aPoint, false, false, false);
   }
-  nsIContent* GetNextEditableNode(const EditorRawDOMPoint& aPoint)
+  template<typename PT, typename CT>
+  nsIContent* GetNextEditableNode(const EditorDOMPointBase<PT, CT>& aPoint)
   {
     return GetNextNodeInternal(aPoint, true, true, false);
   }
-  nsIContent* GetNextNodeInBlock(const EditorRawDOMPoint& aPoint)
+  template<typename PT, typename CT>
+  nsIContent* GetNextNodeInBlock(const EditorDOMPointBase<PT, CT>& aPoint)
   {
     return GetNextNodeInternal(aPoint, false, true, true);
   }
-  nsIContent* GetNextElementOrTextInBlock(const EditorRawDOMPoint& aPoint)
+  template<typename PT, typename CT>
+  nsIContent* GetNextElementOrTextInBlock(
+                const EditorDOMPointBase<PT, CT>& aPoint)
   {
     return GetNextNodeInternal(aPoint, false, false, true);
   }
+  template<typename PT, typename CT>
   nsIContent* GetNextEditableNodeInBlock(
-                const EditorRawDOMPoint& aPoint)
+                const EditorDOMPointBase<PT, CT>& aPoint)
   {
     return GetNextNodeInternal(aPoint, true, true, true);
   }
@@ -1182,9 +1193,10 @@ public:
    *                                    be good to insert something if the
    *                                    caller want to do it.
    */
+  template<typename PT, typename CT>
   SplitNodeResult
   SplitNodeDeep(nsIContent& aMostAncestorToSplit,
-                const EditorRawDOMPoint& aDeepestStartOfRightNode,
+                const EditorDOMPointBase<PT, CT>& aDeepestStartOfRightNode,
                 SplitAtEdges aSplitAtEdges);
 
   EditorDOMPoint JoinNodeDeep(nsIContent& aLeftNode,

@@ -88,6 +88,17 @@ IsNamedAnchorTag(const nsString& s)
   return s.EqualsIgnoreCase("anchor") || s.EqualsIgnoreCase("namedanchor");
 }
 
+template EditorDOMPoint
+HTMLEditor::InsertNodeIntoProperAncestor(
+              nsIContent& aNode,
+              const EditorDOMPoint& aPointToInsert,
+              SplitAtEdges aSplitAtEdges);
+template EditorDOMPoint
+HTMLEditor::InsertNodeIntoProperAncestor(
+              nsIContent& aNode,
+              const EditorRawDOMPoint& aPointToInsert,
+              SplitAtEdges aSplitAtEdges);
+
 HTMLEditor::HTMLEditor()
   : mCRInParagraphCreatesParagraph(false)
   , mCSSAware(false)
@@ -1600,7 +1611,7 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
           "Failed to advance offset from inserted point");
         // Collapse selection to the new <br> element node after creating it.
         RefPtr<Element> newBRElement =
-          CreateBRImpl(*selection, insertedPoint.AsRaw(), ePrevious);
+          CreateBRImpl(*selection, insertedPoint, ePrevious);
         if (NS_WARN_IF(!newBRElement)) {
           return NS_ERROR_FAILURE;
         }
@@ -1611,10 +1622,11 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
   return rv;
 }
 
+template<typename PT, typename CT>
 EditorDOMPoint
 HTMLEditor::InsertNodeIntoProperAncestor(
               nsIContent& aNode,
-              const EditorRawDOMPoint& aPointToInsert,
+              const EditorDOMPointBase<PT, CT>& aPointToInsert,
               SplitAtEdges aSplitAtEdges)
 {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
@@ -1670,7 +1682,7 @@ HTMLEditor::InsertNodeIntoProperAncestor(
     // when it's necessary.
     AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
     // Now we can insert the new node.
-    nsresult rv = InsertNode(aNode, pointToInsert.AsRaw());
+    nsresult rv = InsertNode(aNode, pointToInsert);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditorDOMPoint();
     }
@@ -2042,7 +2054,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
     // Create a list and insert it before the right node if we split some
     // parents of start of selection above, or just start of selection
     // otherwise.
-    RefPtr<Element> newList = CreateNode(listAtom, pointToInsertList.AsRaw());
+    RefPtr<Element> newList = CreateNode(listAtom, pointToInsertList);
     NS_ENSURE_STATE(newList);
     // make a list item
     EditorRawDOMPoint atStartOfNewList(newList, 0);
@@ -2192,8 +2204,7 @@ HTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
     // Create a block and insert it before the right node if we split some
     // parents of start of selection above, or just start of selection
     // otherwise.
-    RefPtr<Element> newBlock =
-      CreateNode(blockAtom, pointToInsertBlock.AsRaw());
+    RefPtr<Element> newBlock = CreateNode(blockAtom, pointToInsertBlock);
     NS_ENSURE_STATE(newBlock);
 
     // reposition selection to inside the block
@@ -2276,7 +2287,7 @@ HTMLEditor::Indent(const nsAString& aIndent)
     // parents of start of selection above, or just start of selection
     // otherwise.
     RefPtr<Element> newBQ =
-      CreateNode(nsGkAtoms::blockquote, pointToInsertBlockquote.AsRaw());
+      CreateNode(nsGkAtoms::blockquote, pointToInsertBlockquote);
     NS_ENSURE_STATE(newBQ);
     // put a space in it so layout will draw the list item
     rv = selection->Collapse(newBQ, 0);
@@ -3801,9 +3812,10 @@ HTMLEditor::GetPreviousHTMLElementOrTextInternal(nsINode& aNode,
                             GetPreviousElementOrText(aNode);
 }
 
+template<typename PT, typename CT>
 nsIContent*
 HTMLEditor::GetPreviousHTMLElementOrTextInternal(
-              const EditorRawDOMPoint& aPoint,
+              const EditorDOMPointBase<PT, CT>& aPoint,
               bool aNoBlockCrossing)
 {
   if (!GetActiveEditingHost()) {
@@ -3824,9 +3836,11 @@ HTMLEditor::GetPreviousEditableHTMLNodeInternal(nsINode& aNode,
                             GetPreviousEditableNode(aNode);
 }
 
+template<typename PT, typename CT>
 nsIContent*
-HTMLEditor::GetPreviousEditableHTMLNodeInternal(const EditorRawDOMPoint& aPoint,
-                                                bool aNoBlockCrossing)
+HTMLEditor::GetPreviousEditableHTMLNodeInternal(
+              const EditorDOMPointBase<PT, CT>& aPoint,
+              bool aNoBlockCrossing)
 {
   if (!GetActiveEditingHost()) {
     return nullptr;
@@ -3846,9 +3860,11 @@ HTMLEditor::GetNextHTMLElementOrTextInternal(nsINode& aNode,
                             GetNextElementOrText(aNode);
 }
 
+template<typename PT, typename CT>
 nsIContent*
-HTMLEditor::GetNextHTMLElementOrTextInternal(const EditorRawDOMPoint& aPoint,
-                                             bool aNoBlockCrossing)
+HTMLEditor::GetNextHTMLElementOrTextInternal(
+              const EditorDOMPointBase<PT, CT>& aPoint,
+              bool aNoBlockCrossing)
 {
   if (!GetActiveEditingHost()) {
     return nullptr;
@@ -3868,9 +3884,11 @@ HTMLEditor::GetNextEditableHTMLNodeInternal(nsINode& aNode,
                             GetNextEditableNode(aNode);
 }
 
+template<typename PT, typename CT>
 nsIContent*
-HTMLEditor::GetNextEditableHTMLNodeInternal(const EditorRawDOMPoint& aPoint,
-                                            bool aNoBlockCrossing)
+HTMLEditor::GetNextEditableHTMLNodeInternal(
+              const EditorDOMPointBase<PT, CT>& aPoint,
+              bool aNoBlockCrossing)
 {
   if (!GetActiveEditingHost()) {
     return nullptr;

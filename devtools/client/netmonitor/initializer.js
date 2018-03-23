@@ -110,6 +110,8 @@ window.Netmonitor = {
     let options = {
       connector,
       items: getSortedRequests(state),
+      // Always generate HAR log even if there are no requests.
+      forceExport: true,
     };
 
     return HarExporter.getHar(options);

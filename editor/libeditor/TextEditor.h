@@ -213,8 +213,10 @@ protected:
    * @return                The new <br> node.  If failed to create new <br>
    *                        node, returns nullptr.
    */
-  already_AddRefed<Element> CreateBR(const EditorRawDOMPoint& aPointToInsert,
-                                     EDirection aSelect = eNone);
+  template<typename PT, typename CT>
+  already_AddRefed<Element>
+  CreateBR(const EditorDOMPointBase<PT, CT>& aPointToInsert,
+           EDirection aSelect = eNone);
 
   /**
    * CreateBRImpl() creates a <br> element and inserts it before aPointToInsert.
@@ -233,9 +235,10 @@ protected:
    * @return                    The new <br> node.  If failed to create new
    *                            <br> node, returns nullptr.
    */
+  template<typename PT, typename CT>
   already_AddRefed<Element>
   CreateBRImpl(Selection& aSelection,
-               const EditorRawDOMPoint& aPointToInsert,
+               const EditorDOMPointBase<PT, CT>& aPointToInsert,
                EDirection aSelect);
 
   /**

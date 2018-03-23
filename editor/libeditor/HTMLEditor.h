@@ -423,9 +423,10 @@ public:
    * @return                  Returns inserted point if succeeded.
    *                          Otherwise, the result is not set.
    */
+  template<typename PT, typename CT>
   EditorDOMPoint
   InsertNodeIntoProperAncestor(nsIContent& aNode,
-                               const EditorRawDOMPoint& aPointToInsert,
+                               const EditorDOMPointBase<PT, CT>& aPointToInsert,
                                SplitAtEdges aSplitAtEdges);
 
   /**
@@ -934,12 +935,15 @@ protected:
   {
     return GetPreviousHTMLElementOrTextInternal(aNode, true);
   }
-  nsIContent* GetPreviousHTMLElementOrText(const EditorRawDOMPoint& aPoint)
+  template<typename PT, typename CT>
+  nsIContent*
+  GetPreviousHTMLElementOrText(const EditorDOMPointBase<PT, CT>& aPoint)
   {
     return GetPreviousHTMLElementOrTextInternal(aPoint, false);
   }
+  template<typename PT, typename CT>
   nsIContent*
-  GetPreviousHTMLElementOrTextInBlock(const EditorRawDOMPoint& aPoint)
+  GetPreviousHTMLElementOrTextInBlock(const EditorDOMPointBase<PT, CT>& aPoint)
   {
     return GetPreviousHTMLElementOrTextInternal(aPoint, true);
   }
@@ -950,8 +954,9 @@ protected:
    */
   nsIContent* GetPreviousHTMLElementOrTextInternal(nsINode& aNode,
                                                    bool aNoBlockCrossing);
+  template<typename PT, typename CT>
   nsIContent*
-  GetPreviousHTMLElementOrTextInternal(const EditorRawDOMPoint& aPoint,
+  GetPreviousHTMLElementOrTextInternal(const EditorDOMPointBase<PT, CT>& aPoint,
                                        bool aNoBlockCrossing);
 
   /**
@@ -967,12 +972,15 @@ protected:
   {
     return GetPreviousEditableHTMLNodeInternal(aNode, true);
   }
-  nsIContent* GetPreviousEditableHTMLNode(const EditorRawDOMPoint& aPoint)
+  template<typename PT, typename CT>
+  nsIContent*
+  GetPreviousEditableHTMLNode(const EditorDOMPointBase<PT, CT>& aPoint)
   {
     return GetPreviousEditableHTMLNodeInternal(aPoint, false);
   }
+  template<typename PT, typename CT>
   nsIContent* GetPreviousEditableHTMLNodeInBlock(
-                const EditorRawDOMPoint& aPoint)
+                const EditorDOMPointBase<PT, CT>& aPoint)
   {
     return GetPreviousEditableHTMLNodeInternal(aPoint, true);
   }
@@ -983,8 +991,9 @@ protected:
    */
   nsIContent* GetPreviousEditableHTMLNodeInternal(nsINode& aNode,
                                                   bool aNoBlockCrossing);
+  template<typename PT, typename CT>
   nsIContent* GetPreviousEditableHTMLNodeInternal(
-                const EditorRawDOMPoint& aPoint,
+                const EditorDOMPointBase<PT, CT>& aPoint,
                 bool aNoBlockCrossing);
 
   /**
@@ -1005,11 +1014,15 @@ protected:
   {
     return GetNextHTMLElementOrTextInternal(aNode, true);
   }
-  nsIContent* GetNextHTMLElementOrText(const EditorRawDOMPoint& aPoint)
+  template<typename PT, typename CT>
+  nsIContent*
+  GetNextHTMLElementOrText(const EditorDOMPointBase<PT, CT>& aPoint)
   {
     return GetNextHTMLElementOrTextInternal(aPoint, false);
   }
-  nsIContent* GetNextHTMLElementOrTextInBlock(const EditorRawDOMPoint& aPoint)
+  template<typename PT, typename CT>
+  nsIContent*
+  GetNextHTMLElementOrTextInBlock(const EditorDOMPointBase<PT, CT>& aPoint)
   {
     return GetNextHTMLElementOrTextInternal(aPoint, true);
   }
@@ -1020,8 +1033,10 @@ protected:
    */
   nsIContent* GetNextHTMLElementOrTextInternal(nsINode& aNode,
                                                bool aNoBlockCrossing);
-  nsIContent* GetNextHTMLElementOrTextInternal(const EditorRawDOMPoint& aPoint,
-                                               bool aNoBlockCrossing);
+  template<typename PT, typename CT>
+  nsIContent*
+  GetNextHTMLElementOrTextInternal(const EditorDOMPointBase<PT, CT>& aPoint,
+                                   bool aNoBlockCrossing);
 
   /**
    * GetNextEditableHTMLNode*() methods are similar to
@@ -1041,12 +1056,14 @@ protected:
   {
     return GetNextEditableHTMLNodeInternal(aNode, true);
   }
-  nsIContent* GetNextEditableHTMLNode(const EditorRawDOMPoint& aPoint)
+  template<typename PT, typename CT>
+  nsIContent* GetNextEditableHTMLNode(const EditorDOMPointBase<PT, CT>& aPoint)
   {
     return GetNextEditableHTMLNodeInternal(aPoint, false);
   }
+  template<typename PT, typename CT>
   nsIContent* GetNextEditableHTMLNodeInBlock(
-                const EditorRawDOMPoint& aPoint)
+                const EditorDOMPointBase<PT, CT>& aPoint)
   {
     return GetNextEditableHTMLNodeInternal(aPoint, true);
   }
@@ -1056,9 +1073,10 @@ protected:
    * of above methods.  Please don't use this method directly.
    */
   nsIContent* GetNextEditableHTMLNodeInternal(nsINode& aNode,
-                                                  bool aNoBlockCrossing);
+                                              bool aNoBlockCrossing);
+  template<typename PT, typename CT>
   nsIContent* GetNextEditableHTMLNodeInternal(
-                const EditorRawDOMPoint& aPoint,
+                const EditorDOMPointBase<PT, CT>& aPoint,
                 bool aNoBlockCrossing);
 
   bool IsFirstEditableChild(nsINode* aNode);

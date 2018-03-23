@@ -22,21 +22,32 @@ namespace mozilla {
 
 using namespace dom;
 
+template already_AddRefed<InsertNodeTransaction>
+InsertNodeTransaction::Create(EditorBase& aEditorBase,
+                              nsIContent& aContentToInsert,
+                              const EditorDOMPoint& aPointToInsert);
+template already_AddRefed<InsertNodeTransaction>
+InsertNodeTransaction::Create(EditorBase& aEditorBase,
+                              nsIContent& aContentToInsert,
+                              const EditorRawDOMPoint& aPointToInsert);
+
 // static
+template<typename PT, typename CT>
 already_AddRefed<InsertNodeTransaction>
 InsertNodeTransaction::Create(EditorBase& aEditorBase,
                               nsIContent& aContentToInsert,
-                              const EditorRawDOMPoint& aPointToInsert)
+                              const EditorDOMPointBase<PT, CT>& aPointToInsert)
 {
   RefPtr<InsertNodeTransaction> transaction =
     new InsertNodeTransaction(aEditorBase, aContentToInsert, aPointToInsert);
   return transaction.forget();
 }
 
+template<typename PT, typename CT>
 InsertNodeTransaction::InsertNodeTransaction(
                          EditorBase& aEditorBase,
                          nsIContent& aContentToInsert,
-                         const EditorRawDOMPoint& aPointToInsert)
+                         const EditorDOMPointBase<PT, CT>& aPointToInsert)
   : mContentToInsert(&aContentToInsert)
   , mPointToInsert(aPointToInsert)
   , mEditorBase(&aEditorBase)

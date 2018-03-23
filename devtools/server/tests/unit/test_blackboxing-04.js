@@ -49,7 +49,7 @@ function test_black_box() {
     }
   });
 
-  /* eslint-disable no-multi-spaces */
+  /* eslint-disable no-multi-spaces, no-undef */
   Cu.evalInSandbox(
     "" + function doStuff(k) { // line 1
       debugger;                // line 2
@@ -75,7 +75,7 @@ function test_black_box() {
     SOURCE_URL,
     1
   );
-  /* eslint-enable no-multi-spaces */
+  /* eslint-enable no-multi-spaces, no-undef */
 }
 
 function test_black_box_paused() {

@@ -27,8 +27,9 @@ class EditorBase;
 class SplitNodeTransaction final : public EditTransactionBase
 {
 private:
+  template<typename PT, typename CT>
   SplitNodeTransaction(EditorBase& aEditorBase,
-                       const EditorRawDOMPoint& aStartOfRightNode);
+                       const EditorDOMPointBase<PT, CT>& aStartOfRightNode);
 
 public:
   /**
@@ -42,9 +43,10 @@ public:
    *                            next sibling.  And the point will be start
    *                            of the right node.
    */
+  template<typename PT, typename CT>
   static already_AddRefed<SplitNodeTransaction>
   Create(EditorBase& aEditorBase,
-         const EditorRawDOMPoint& aStartOfRightNode);
+         const EditorDOMPointBase<PT, CT>& aStartOfRightNode);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SplitNodeTransaction,

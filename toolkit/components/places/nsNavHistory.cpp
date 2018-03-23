@@ -2602,7 +2602,7 @@ NS_IMETHODIMP
 nsNavHistory::GetDBConnection(mozIStorageConnection **_DBConnection)
 {
   NS_ENSURE_ARG_POINTER(_DBConnection);
-  RefPtr<mozIStorageConnection> connection = mDB->MainConn();
+  nsCOMPtr<mozIStorageConnection> connection = mDB->MainConn();
   connection.forget(_DBConnection);
 
   return NS_OK;

@@ -8,15 +8,27 @@
  * Styles for React component at `devtools/client/shared/components/Frame.js`
  */
 
-.frame-link {
-  display: flex;
-  justify-content: space-between;
+.theme-light {
   --frame-link-line-color: var(--theme-highlight-blue);
   --frame-link-source: var(--theme-highlight-purple);
 }
 
-.theme-dark .frame-link {
+.theme-dark {
   --frame-link-source: #6B89FF;
+}
+
+.stack-trace {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+}
+
+.stack-trace .frame-link-async-cause {
+  grid-column: 1 / -1;
+}
+
+.stack-trace .frame-link {
+  display: contents;
 }
 
 .frame-link-async-cause {
@@ -24,7 +36,6 @@
 }
 
 .frame-link .frame-link-source {
-  flex: initial;
   color: var(--frame-link-source);
 }
 
@@ -49,10 +60,15 @@
   color: var(--console-output-color, currentColor);
 }
 
+.frame-link .frame-link-function-display-name::before {
+  content: "\3BB"; /* The "lambda" symbol */
+  display: inline-block;
+  margin: 0 0.3em;
+}
+
 .frame-link .frame-link-line {
   color: var(--frame-link-line-color);
 }
-
 
 .focused .frame-link .frame-link-source,
 .focused .frame-link .frame-link-line,

@@ -7,34 +7,20 @@ ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+function loadChromeScripts(win) {
+  Services.scriptloader.loadSubScript("chrome://mochikit/content/chrome-harness.js", win);
+  Services.scriptloader.loadSubScript("chrome://mochikit/content/mochitest-e10s-utils.js", win);
+  Services.scriptloader.loadSubScript("chrome://mochikit/content/browser-test.js", win);
+}
+
 /////// Android ///////
 
 Cu.importGlobalProperties(["TextDecoder"]);
-
-class DefaultMap extends Map {
-  constructor(defaultConstructor = undefined, init = undefined) {
-    super(init);
-    if (defaultConstructor) {
-      this.defaultConstructor = defaultConstructor;
-    }
-  }
-
-  get(key) {
-    let value = super.get(key);
-    if (value === undefined && !this.has(key)) {
-      value = this.defaultConstructor(key);
-      this.set(key, value);
-    }
-    return value;
-  }
-}
 
 const windowTracker = {
   init() {
     Services.obs.addObserver(this, "chrome-document-global-created");
   },
-
-  overlays: new DefaultMap(() => new Set()),
 
   async observe(window, topic, data) {
     if (topic === "chrome-document-global-created") {
@@ -44,30 +30,19 @@ const windowTracker = {
       let {document} = window;
       let {documentURI} = document;
 
-      if (this.overlays.has(documentURI)) {
-        for (let overlay of this.overlays.get(documentURI)) {
-          document.loadOverlay(overlay, null);
-        }
+      if (documentURI !== "chrome://browser/content/browser.xul") {
+        return;
       }
+      loadChromeScripts(window);
     }
   },
 };
 
-function readSync(uri) {
-  let channel = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
-  let buffer = NetUtil.readInputStream(channel.open2());
-  return new TextDecoder().decode(buffer);
-}
-
 function androidStartup(data, reason) {
-  windowTracker.init();
-
-  for (let line of readSync(data.resourceURI.resolve("chrome.manifest")).split("\n")) {
-    let [directive, ...args] = line.trim().split(/\s+/);
-    if (directive === "overlay") {
-      let [url, overlay] = args;
-      windowTracker.overlays.get(url).add(overlay);
-    }
+  // Only browser chrome tests need help starting.
+  let testRoot = Services.prefs.getStringPref("mochitest.testRoot", "");
+  if (testRoot.endsWith("/chrome")) {
+    windowTracker.init();
   }
 }
 
@@ -116,8 +91,7 @@ function loadMochitest(e) {
   WindowListener.setupWindow(win);
   Services.wm.addListener(WindowListener);
 
-  let overlay = "chrome://mochikit/content/browser-test-overlay.xul";
-  win.document.loadOverlay(overlay, null);
+  loadChromeScripts(win);
 }
 
 function startup(data, reason) {

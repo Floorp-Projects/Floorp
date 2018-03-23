@@ -1,5 +1,7 @@
 "use strict";
 
+/* globals initializeBrowser */
+
 // PLEASE NOTE:
 //
 // The canonical version of this file lives in testing/talos/talos, and
@@ -12,32 +14,10 @@
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-Cu.importGlobalProperties(["TextDecoder"]);
-
-class DefaultMap extends Map {
-  constructor(defaultConstructor = undefined, init = undefined) {
-    super(init);
-    if (defaultConstructor) {
-      this.defaultConstructor = defaultConstructor;
-    }
-  }
-
-  get(key) {
-    let value = super.get(key);
-    if (value === undefined && !this.has(key)) {
-      value = this.defaultConstructor(key);
-      this.set(key, value);
-    }
-    return value;
-  }
-}
-
 const windowTracker = {
   init() {
     Services.ww.registerNotification(this);
   },
-
-  overlays: new DefaultMap(() => new Set()),
 
   async observe(window, topic, data) {
     if (topic === "domwindowopened") {
@@ -47,11 +27,10 @@ const windowTracker = {
       let {document} = window;
       let {documentURI} = document;
 
-      if (this.overlays.has(documentURI)) {
-        for (let overlay of this.overlays.get(documentURI)) {
-          document.loadOverlay(overlay, null);
-        }
+      if (documentURI !== "chrome://browser/content/browser.xul") {
+        return;
       }
+      initializeBrowser(window);
     }
   },
 };
@@ -63,15 +42,8 @@ function readSync(uri) {
 }
 
 function startup(data, reason) {
+  Services.scriptloader.loadSubScript(data.resourceURI.resolve("content/initialize_browser.js"));
   windowTracker.init();
-
-  for (let line of readSync(data.resourceURI.resolve("chrome.manifest")).split("\n")) {
-    let [directive, ...args] = line.trim().split(/\s+/);
-    if (directive === "overlay") {
-      let [url, overlay] = args;
-      windowTracker.overlays.get(url).add(overlay);
-    }
-  }
 }
 
 function shutdown(data, reason) {}

@@ -629,16 +629,6 @@ var PlacesOrganizer = {
     additionalInfoBroadcaster.hidden = infoBox.getAttribute("minimal") == "true";
   },
 
-  // NOT YET USED
-  updateThumbnailProportions: function PO_updateThumbnailProportions() {
-    var previewBox = document.getElementById("previewBox");
-    var canvas = document.getElementById("itemThumbnail");
-    var height = previewBox.boxObject.height;
-    var width = height * (screen.width / screen.height);
-    canvas.width = width;
-    canvas.height = height;
-  },
-
   _fillDetailsPane: function PO__fillDetailsPane(aNodeList) {
     var infoBox = document.getElementById("infoBox");
     var detailsDeck = document.getElementById("detailsDeck");
@@ -724,28 +714,6 @@ var PlacesOrganizer = {
                                         itemsCount, [itemsCount]);
       }
     }
-  },
-
-  // NOT YET USED
-  _updateThumbnail: function PO__updateThumbnail() {
-    var bo = document.getElementById("previewBox").boxObject;
-    var width  = bo.width;
-    var height = bo.height;
-
-    var canvas = document.getElementById("itemThumbnail");
-    var ctx = canvas.getContext("2d");
-    var notAvailableText = canvas.getAttribute("notavailabletext");
-    ctx.save();
-    ctx.fillStyle = "-moz-Dialog";
-    ctx.fillRect(0, 0, width, height);
-    ctx.translate(width / 2, height / 2);
-
-    ctx.fillStyle = "GrayText";
-    ctx.mozTextStyle = "12pt sans serif";
-    var len = ctx.mozMeasureText(notAvailableText);
-    ctx.translate(-len / 2, 0);
-    ctx.mozDrawText(notAvailableText);
-    ctx.restore();
   },
 
   toggleAdditionalInfoFields: function PO_toggleAdditionalInfoFields() {
