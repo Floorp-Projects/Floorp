@@ -21,6 +21,10 @@ nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
 namespace mozilla {
 namespace dom {
 
+// textPath side types
+static const uint16_t TEXTPATH_SIDETYPE_LEFT    = 1;
+static const uint16_t TEXTPATH_SIDETYPE_RIGHT   = 2;
+
 typedef SVGTextContentElement SVGTextPathElementBase;
 
 class SVGTextPathElement final : public SVGTextPathElementBase
@@ -44,6 +48,7 @@ public:
   already_AddRefed<SVGAnimatedLength> StartOffset();
   already_AddRefed<SVGAnimatedEnumeration> Method();
   already_AddRefed<SVGAnimatedEnumeration> Spacing();
+  already_AddRefed<SVGAnimatedEnumeration> Side();
   already_AddRefed<SVGAnimatedString> Href();
 
  protected:
@@ -58,13 +63,14 @@ public:
     { return mLengthAttributes; }
   static LengthInfo sLengthInfo[2];
 
-  enum { /* LENGTHADJUST, */ METHOD = 1, SPACING };
-  nsSVGEnum mEnumAttributes[3];
+  enum { /* LENGTHADJUST, */ METHOD = 1, SPACING, SIDE };
+  nsSVGEnum mEnumAttributes[4];
   virtual nsSVGEnum* EnumAttributes() override
     { return mEnumAttributes; }
   static nsSVGEnumMapping sMethodMap[];
   static nsSVGEnumMapping sSpacingMap[];
-  static EnumInfo sEnumInfo[3];
+  static nsSVGEnumMapping sSideMap[];
+  static EnumInfo sEnumInfo[4];
 
   enum { HREF, XLINK_HREF };
   nsSVGString mStringAttributes[2];

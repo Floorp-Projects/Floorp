@@ -406,7 +406,7 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
   }
 
   if (aIid == IID_IEnumVARIANT && mCachedData.mGeckoBackChannel) {
-    if (&mCachedData.mDynamicData.mChildCount == 0) {
+    if (mCachedData.mDynamicData.mChildCount == 0) {
       return E_NOINTERFACE;
     }
     RefPtr<IEnumVARIANT> childEnum(

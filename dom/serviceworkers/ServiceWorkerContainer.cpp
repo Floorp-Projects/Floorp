@@ -56,44 +56,46 @@ ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal)
   return DOMPrefs::ServiceWorkersEnabled();
 }
 
-ServiceWorkerContainer::ServiceWorkerContainer(nsPIDOMWindowInner* aWindow)
-  : DOMEventTargetHelper(aWindow)
+// static
+already_AddRefed<ServiceWorkerContainer>
+ServiceWorkerContainer::Create(nsIGlobalObject* aGlobal)
 {
+  RefPtr<ServiceWorkerContainer> ref = new ServiceWorkerContainer(aGlobal);
+  return ref.forget();
+}
+
+ServiceWorkerContainer::ServiceWorkerContainer(nsIGlobalObject* aGlobal)
+  : DOMEventTargetHelper(aGlobal)
+{
+  Maybe<ServiceWorkerDescriptor> controller = aGlobal->GetController();
+  if (controller.isSome()) {
+    mControllerWorker = aGlobal->GetOrCreateServiceWorker(controller.ref());
+  }
 }
 
 ServiceWorkerContainer::~ServiceWorkerContainer()
 {
-  RemoveReadyPromise();
+  mReadyPromiseHolder.DisconnectIfExists();
 }
 
 void
 ServiceWorkerContainer::DisconnectFromOwner()
 {
   mControllerWorker = nullptr;
-  RemoveReadyPromise();
+  mReadyPromiseHolder.DisconnectIfExists();
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
 void
 ServiceWorkerContainer::ControllerChanged(ErrorResult& aRv)
 {
-  mControllerWorker = nullptr;
-  aRv = DispatchTrustedEvent(NS_LITERAL_STRING("controllerchange"));
-}
-
-void
-ServiceWorkerContainer::RemoveReadyPromise()
-{
-  if (nsCOMPtr<nsPIDOMWindowInner> window = GetOwner()) {
-    nsCOMPtr<nsIServiceWorkerManager> swm =
-      mozilla::services::GetServiceWorkerManager();
-    if (!swm) {
-      // If the browser is shutting down, we don't need to remove the promise.
-      return;
-    }
-
-    swm->RemoveReadyPromise(window);
+  nsCOMPtr<nsIGlobalObject> go = GetParentObject();
+  if (!go) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
+  mControllerWorker = go->GetOrCreateServiceWorker(go->GetController().ref());
+  aRv = DispatchTrustedEvent(NS_LITERAL_STRING("controllerchange"));
 }
 
 JSObject*
@@ -216,44 +218,6 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
 already_AddRefed<ServiceWorker>
 ServiceWorkerContainer::GetController()
 {
-  if (!mControllerWorker) {
-    // If we don't have a controller reference cached, then we need to
-    // check if we should create one.  We try to do this in a thread-agnostic
-    // way here to help support workers in the future.  There are still
-    // some main thread calls for now, though.
-
-    nsIGlobalObject* owner = GetOwnerGlobal();
-    NS_ENSURE_TRUE(owner, nullptr);
-
-    Maybe<ServiceWorkerDescriptor> controller(owner->GetController());
-    if (controller.isNothing()) {
-      return nullptr;
-    }
-
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (!swm) {
-      return nullptr;
-    }
-
-    // This is a main thread only call.  We will need to replace it with
-    // something for worker threads.
-    RefPtr<ServiceWorkerRegistrationInfo> reg =
-      swm->GetRegistration(controller.ref().PrincipalInfo(),
-                           controller.ref().Scope());
-    NS_ENSURE_TRUE(reg, nullptr);
-
-    ServiceWorkerInfo* info = reg->GetActive();
-    NS_ENSURE_TRUE(info, nullptr);
-
-    nsCOMPtr<nsPIDOMWindowInner> inner = do_QueryInterface(owner);
-    NS_ENSURE_TRUE(inner, nullptr);
-
-    // Right now we only know how to create ServiceWorker DOM objects on
-    // the main thread with a window.  In the future this should operate
-    // on only nsIGlobalObject somehow.
-    mControllerWorker = inner->GetOrCreateServiceWorker(info->Descriptor());
-  }
-
   RefPtr<ServiceWorker> ref = mControllerWorker;
   return ref.forget();
 }
@@ -308,16 +272,47 @@ ServiceWorkerContainer::GetReady(ErrorResult& aRv)
     return mReadyPromise;
   }
 
-  nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
-  if (!swm) {
-    aRv.Throw(NS_ERROR_FAILURE);
+  nsIGlobalObject* global = GetParentObject();
+  if (!global) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
-  nsCOMPtr<nsISupports> promise;
-  aRv = swm->GetReadyPromise(GetOwner(), getter_AddRefs(promise));
+  Maybe<ClientInfo> clientInfo(global->GetClientInfo());
+  if (clientInfo.isNothing()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
 
-  mReadyPromise = static_cast<Promise*>(promise.get());
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  mReadyPromise = Promise::Create(GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  RefPtr<ServiceWorkerContainer> self = this;
+  RefPtr<Promise> outer = mReadyPromise;
+
+  swm->WhenReady(clientInfo.ref())->Then(
+    global->EventTargetFor(TaskCategory::Other), __func__,
+    [self, outer] (const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+      self->mReadyPromiseHolder.Complete();
+      nsIGlobalObject* global = self->GetParentObject();
+      NS_ENSURE_TRUE_VOID(global);
+      RefPtr<ServiceWorkerRegistration> reg =
+        global->GetOrCreateServiceWorkerRegistration(aDescriptor);
+      NS_ENSURE_TRUE_VOID(reg);
+      outer->MaybeResolve(reg);
+    }, [self, outer] (nsresult aRv) {
+      self->mReadyPromiseHolder.Complete();
+      outer->MaybeReject(aRv);
+    })->Track(mReadyPromiseHolder);
+
   return mReadyPromise;
 }
 

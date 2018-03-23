@@ -517,6 +517,30 @@
   background-size: 1em;
 }
 
+.ruleview-rule:not(:hover) .ruleview-fontswatch:not(.active) {
+  visibility: hidden;
+}
+
+.ruleview-fontswatch {
+  position: absolute;
+  width: 1.45em;
+  height: 1em;
+  right: 1.5em;
+  bottom: 0.5em;
+  font-size: 1em;
+
+  background: url("chrome://devtools/skin/images/font-swatch.svg");
+  -moz-context-properties: fill;
+  fill: var(--grey-40);
+  background-size: contain;
+  cursor: pointer;
+  -moz-user-select: none;
+}
+
+.ruleview-fontswatch.active {
+  fill: var(--blue-50);
+}
+
 .ruleview-shapeswatch {
   background: url("chrome://devtools/skin/images/tool-shadereditor.svg");
   -moz-context-properties: fill;

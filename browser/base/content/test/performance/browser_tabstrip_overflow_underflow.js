@@ -10,13 +10,9 @@
  * for tips on how to do that.
  */
 const EXPECTED_OVERFLOW_REFLOWS = [
-  {
-    stack: [
-      "select@chrome://global/content/bindings/textbox.xml",
-      "focusAndSelectUrlBar@chrome://browser/content/browser.js",
-      "_adjustFocusAfterTabSwitch@chrome://browser/content/tabbrowser.js",
-    ]
-  },
+  /**
+   * Nothing here! Please don't add anything new!
+   */
 ];
 
 const EXPECTED_UNDERFLOW_REFLOWS = [
@@ -39,7 +35,33 @@ add_task(async function() {
 
   await createTabs(TAB_COUNT_FOR_OVERFLOW);
 
-  await withReflowObserver(async function(dirtyFrame) {
+  await ensureFocusedUrlbar();
+
+  let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
+  let textBoxRect = document.getAnonymousElementByAttribute(gURLBar,
+    "anonid", "textbox-input-box").getBoundingClientRect();
+  let ignoreTabstripRects = {
+    filter: rects => rects.filter(r => !(
+      // We expect plenty of changed rects within the tab strip.
+      r.y1 >= tabStripRect.top && r.y2 <= tabStripRect.bottom &&
+      r.x1 >= tabStripRect.left && r.x2 <= tabStripRect.right
+    )),
+    exceptions: [
+      {name: "the urlbar placeolder moves up and down by a few pixels",
+       condition: r =>
+         r.x1 >= textBoxRect.left && r.x2 <= textBoxRect.right &&
+         r.y1 >= textBoxRect.top && r.y2 <= textBoxRect.bottom
+      },
+      {name: "bug 1446449 - spurious tab switch spinner",
+       condition: r =>
+         AppConstants.DEBUG &&
+         // In the content area
+         r.y1 >= document.getElementById("appcontent").getBoundingClientRect().top
+      },
+    ]
+  };
+
+  await withPerfObserver(async function() {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
     BrowserOpenTab();
     await BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "transitionend",
@@ -48,27 +70,27 @@ add_task(async function() {
     await BrowserTestUtils.waitForCondition(() => {
       return gBrowser.tabContainer.arrowScrollbox.hasAttribute("scrolledtoend");
     });
-  }, EXPECTED_OVERFLOW_REFLOWS, window);
+  }, {expectedReflows: EXPECTED_OVERFLOW_REFLOWS, frames: ignoreTabstripRects});
 
   Assert.ok(gBrowser.tabContainer.hasAttribute("overflow"),
             "Tabs should now be overflowed.");
 
   // Now test that opening and closing a tab while overflowed doesn't cause
   // us to reflow.
-  await withReflowObserver(async function(dirtyFrame) {
+  await withPerfObserver(async function() {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
     BrowserOpenTab();
     await switchDone;
     await BrowserTestUtils.waitForCondition(() => {
       return gBrowser.tabContainer.arrowScrollbox.hasAttribute("scrolledtoend");
     });
-  }, [], window);
+  }, {expectedReflows: [], frames: ignoreTabstripRects});
 
-  await withReflowObserver(async function(dirtyFrame) {
+  await withPerfObserver(async function() {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
     BrowserTestUtils.removeTab(gBrowser.selectedTab, { animate: true });
     await switchDone;
-  }, [], window);
+  }, {expectedReflows: [], frames: ignoreTabstripRects});
 
   // At this point, we have an overflowed tab strip, and we've got the last tab
   // selected. This should mean that the first tab is scrolled out of view.
@@ -82,13 +104,13 @@ add_task(async function() {
             "First tab should be partially scrolled out of view.");
 
   // Now switch to the first tab. We shouldn't flush layout at all.
-  await withReflowObserver(async function(dirtyFrame) {
+  await withPerfObserver(async function() {
     let firstTab = gBrowser.tabContainer.firstChild;
     await BrowserTestUtils.switchTab(gBrowser, firstTab);
     await BrowserTestUtils.waitForCondition(() => {
       return gBrowser.tabContainer.arrowScrollbox.hasAttribute("scrolledtostart");
     });
-  }, [], window);
+  }, {expectedReflows: [], frames: ignoreTabstripRects});
 
   // Okay, now close the last tab. The tabstrip should stay overflowed, but removing
   // one more after that should underflow it.
@@ -108,12 +130,13 @@ add_task(async function() {
 
     // ... and make sure we don't flush layout when closing it, and exiting
     // the overflowed state.
-    await withReflowObserver(async function() {
+    await withPerfObserver(async function() {
       let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
       BrowserTestUtils.removeTab(lastTab, { animate: true });
       await switchDone;
       await BrowserTestUtils.waitForCondition(() => !lastTab.isConnected);
-    }, EXPECTED_UNDERFLOW_REFLOWS, window);
+    }, {expectedReflows: EXPECTED_UNDERFLOW_REFLOWS,
+        frames: ignoreTabstripRects});
   }
 
   await removeAllButFirstTab();

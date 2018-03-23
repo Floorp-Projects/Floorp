@@ -125,14 +125,13 @@ txXSLTEnvironmentFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 }
 
 #ifdef TX_TO_STRING
-nsresult
-txXSLTEnvironmentFunctionCall::getNameAtom(nsAtom** aAtom)
+void
+txXSLTEnvironmentFunctionCall::appendName(nsAString& aDest)
 {
-    *aAtom = mType == SYSTEM_PROPERTY ? nsGkAtoms::systemProperty :
-             mType == ELEMENT_AVAILABLE ? nsGkAtoms::elementAvailable :
-             nsGkAtoms::functionAvailable;
-    NS_ADDREF(*aAtom);
-
-    return NS_OK;
+    nsStaticAtom* atom =
+        mType == SYSTEM_PROPERTY ? nsGkAtoms::systemProperty :
+        mType == ELEMENT_AVAILABLE ? nsGkAtoms::elementAvailable :
+        nsGkAtoms::functionAvailable;
+    aDest.Append(atom->GetUTF16String());
 }
 #endif

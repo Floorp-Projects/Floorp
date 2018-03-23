@@ -40,7 +40,7 @@ with Files("test/pageinfo/**"):
 with Files("test/performance/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
-with Files("test/performance/browser_appmenu_reflows.js"):
+with Files("test/performance/browser_appmenu.js"):
     BUG_COMPONENT = ("Firefox", "Menus")
 
 with Files("test/permissions/**"):

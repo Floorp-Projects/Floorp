@@ -112,16 +112,8 @@ FunctionCall::argsSensitiveTo(ContextSensitivity aContext)
 void
 FunctionCall::toString(nsAString& aDest)
 {
-    RefPtr<nsAtom> functionNameAtom;
-    if (NS_FAILED(getNameAtom(getter_AddRefs(functionNameAtom)))) {
-        NS_ERROR("Can't get function name.");
-        return;
-    }
-
-
-
-    aDest.Append(nsDependentAtomString(functionNameAtom) +
-                 NS_LITERAL_STRING("("));
+    appendName(aDest);
+    aDest.AppendLiteral("(");
     for (uint32_t i = 0; i < mParams.Length(); ++i) {
         if (i != 0) {
             aDest.Append(char16_t(','));

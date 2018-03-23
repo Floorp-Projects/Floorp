@@ -46,11 +46,8 @@ add_task(async function() {
   });
 
   info("Performing requests...");
-  let wait = waitForNetworkEvents(monitor, REQUEST_DATA.length);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    content.wrappedJSObject.performRequests();
-  });
-  await wait;
+  // Execute requests.
+  await performRequests(monitor, tab, REQUEST_DATA.length);
 
   // Fetch stack-trace data from the backend and wait till
   // all packets are received.

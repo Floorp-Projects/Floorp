@@ -18,7 +18,7 @@ import android.view.InputDevice;
 
 import java.util.ArrayList;
 
-public final class NativePanZoomController extends JNIObject {
+public final class PanZoomController extends JNIObject {
     private static final String LOGTAG = "GeckoNPZC";
     private static final int EVENT_SOURCE_SCROLL = 0;
     private static final int EVENT_SOURCE_MOTION = 1;
@@ -149,7 +149,7 @@ public final class NativePanZoomController extends JNIObject {
                                 event.getMetaState(), x, y, event.getButtonState());
     }
 
-    /* package */ NativePanZoomController(final LayerSession session) {
+    /* package */ PanZoomController(final LayerSession session) {
         mSession = session;
         enableEventQueue();
     }
