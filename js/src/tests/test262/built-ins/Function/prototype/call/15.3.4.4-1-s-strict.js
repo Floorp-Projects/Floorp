@@ -11,9 +11,9 @@ description: >
 flags: [onlyStrict]
 ---*/
 
-        function fun() {
-            return (this instanceof String);
-        }
+function fun() {
+  return (this instanceof String);
+}
 
 assert.sameValue(fun.call(""), false, 'fun.call("")');
 

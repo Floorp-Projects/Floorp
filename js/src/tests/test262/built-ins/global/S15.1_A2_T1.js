@@ -10,7 +10,7 @@ description: It is not possible to invoke the global object as a function
 var global = this;
 
 assert.throws(TypeError, function() {
-    global();
+  global();
 });
 
 reportCompare(0, 0);

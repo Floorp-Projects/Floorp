@@ -12,16 +12,16 @@ features: [Symbol]
 ---*/
 
 function Target() {
-    this.attr = "done";
+  this.attr = "done";
 };
 var P = new Proxy(Target, {
-    construct: function() {
-        return Symbol();
-    }
+  construct: function() {
+    return Symbol();
+  }
 });
 
 assert.throws(TypeError, function() {
-    new P();
+  new P();
 });
 
 reportCompare(0, 0);

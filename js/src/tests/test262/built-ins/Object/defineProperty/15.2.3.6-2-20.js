@@ -8,8 +8,8 @@ description: >
     a string (value is 0.000001)
 ---*/
 
-        var obj = {};
-        Object.defineProperty(obj, 0.000001, {});
+var obj = {};
+Object.defineProperty(obj, 0.000001, {});
 
 assert(obj.hasOwnProperty("0.000001"), 'obj.hasOwnProperty("0.000001") !== true');
 

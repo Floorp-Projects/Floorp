@@ -38,27 +38,39 @@ assert.throws(TypeError, function() {
 }, 'undefined');
 
 assert.throws(TypeError, function() {
-  Promise.prototype.catch.call({ then: null });
+  Promise.prototype.catch.call({
+    then: null
+  });
 }, 'null');
 
 assert.throws(TypeError, function() {
-  Promise.prototype.catch.call({ then: 1 });
+  Promise.prototype.catch.call({
+    then: 1
+  });
 }, 'number');
 
 assert.throws(TypeError, function() {
-  Promise.prototype.catch.call({ then: '' });
+  Promise.prototype.catch.call({
+    then: ''
+  });
 }, 'string');
 
 assert.throws(TypeError, function() {
-  Promise.prototype.catch.call({ then: true });
+  Promise.prototype.catch.call({
+    then: true
+  });
 }, 'boolean');
 
 assert.throws(TypeError, function() {
-  Promise.prototype.catch.call({ then: symbol });
+  Promise.prototype.catch.call({
+    then: symbol
+  });
 }, 'symbol');
 
 assert.throws(TypeError, function() {
-  Promise.prototype.catch.call({ then: {} });
+  Promise.prototype.catch.call({
+    then: {}
+  });
 }, 'ordinary object');
 
 reportCompare(0, 0);

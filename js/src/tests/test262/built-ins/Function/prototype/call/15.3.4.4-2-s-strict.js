@@ -11,9 +11,9 @@ description: >
 flags: [onlyStrict]
 ---*/
 
-        function fun() {
-            return (this instanceof Number);
-        }
+function fun() {
+  return (this instanceof Number);
+}
 
 assert.sameValue(fun.call(-12), false, 'fun.call(-12)');
 

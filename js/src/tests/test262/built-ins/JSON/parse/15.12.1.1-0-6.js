@@ -9,7 +9,7 @@ description: >
 ---*/
 
 assert.throws(SyntaxError, function() {
-    JSON.parse('\ufeff1234'); // should produce a syntax error a
+  JSON.parse('\ufeff1234'); // should produce a syntax error a
 });
 
 reportCompare(0, 0);

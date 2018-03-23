@@ -6,9 +6,9 @@ es5id: 15.2.3.6-3-15
 description: Object.defineProperty - 'Attributes' is undefined  (8.10.5 step 1)
 ---*/
 
-        var obj = {};
+var obj = {};
 assert.throws(TypeError, function() {
-            Object.defineProperty(obj, "property", undefined);
+  Object.defineProperty(obj, "property", undefined);
 });
 
 reportCompare(0, 0);

@@ -12,8 +12,8 @@ includes: [propertyHelper.js]
 
 
 Object.defineProperty(JSON, "foo", {
-value: 12,
-configurable: true
+  value: 12,
+  configurable: true
 });
 
 verifyEqualTo(JSON, "foo", 12);
@@ -25,6 +25,5 @@ verifyNotEnumerable(JSON, "foo");
 verifyConfigurable(JSON, "foo");
 
 delete JSON.foo;
-
 
 reportCompare(0, 0);

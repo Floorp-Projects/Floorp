@@ -8,8 +8,10 @@ description: >
     non-enumerable own value property)
 ---*/
 
-    var o = {};
-    Object.defineProperty(o, "foo", {value: 42});
+var o = {};
+Object.defineProperty(o, "foo", {
+  value: 42
+});
 
 assert(o.hasOwnProperty("foo"), 'o.hasOwnProperty("foo") !== true');
 

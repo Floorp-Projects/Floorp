@@ -10,15 +10,15 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-    Object.defineProperty(Object.prototype, "prop", {
-        value: 1001,
-        writable: false,
-        enumerable: false,
-        configurable: true
-    });
+Object.defineProperty(Object.prototype, "prop", {
+  value: 1001,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
-    assert(!JSON.hasOwnProperty("prop"));
-    verifyNotWritable(JSON, "prop", "noCheckOwnProp");
-    assert.sameValue(JSON.prop, 1001);
+assert(!JSON.hasOwnProperty("prop"));
+verifyNotWritable(JSON, "prop", "noCheckOwnProp");
+assert.sameValue(JSON.prop, 1001);
 
 reportCompare(0, 0);

@@ -8,6 +8,6 @@ description: >
     is null
 ---*/
 
-    Object.isFrozen(null);
+Object.isFrozen(null);
 
 reportCompare(0, 0);

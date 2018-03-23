@@ -19,7 +19,9 @@ var symbol = Symbol();
 
 assert.throws(
   TypeError,
-  function() { trimEnd.call(symbol); },
+  function() {
+    trimEnd.call(symbol);
+  },
   'String.prototype.trimEnd.call(Symbol())'
 );
 

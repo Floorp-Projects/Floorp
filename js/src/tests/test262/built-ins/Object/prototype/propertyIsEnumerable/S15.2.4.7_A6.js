@@ -11,7 +11,7 @@ description: >
 
 //CHECK#1
 if (Object.prototype.propertyIsEnumerable.prototype !== undefined) {
-  $ERROR('#1: Object.prototype.propertyIsEnumerable has not prototype property'+Object.prototype.propertyIsEnumerable.prototype);
+  $ERROR('#1: Object.prototype.propertyIsEnumerable has not prototype property' + Object.prototype.propertyIsEnumerable.prototype);
 }
 //
 

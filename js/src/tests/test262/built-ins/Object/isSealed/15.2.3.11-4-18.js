@@ -8,7 +8,7 @@ description: >
     (RegExp.prototype)
 ---*/
 
-  var b = Object.isSealed(RegExp.prototype);
+var b = Object.isSealed(RegExp.prototype);
 
 assert.sameValue(b, false, 'b');
 

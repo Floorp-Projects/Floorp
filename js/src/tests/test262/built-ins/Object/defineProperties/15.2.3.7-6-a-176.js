@@ -17,26 +17,25 @@ includes: [propertyHelper.js]
 var arr = [0, 1];
 
 try {
-    Object.defineProperty(arr, "1", {
-        configurable: false
-    });
+  Object.defineProperty(arr, "1", {
+    configurable: false
+  });
 
-    Object.defineProperties(arr, {
-        length: {
-            value: 1,
-            writable: false
-        }
-    });
+  Object.defineProperties(arr, {
+    length: {
+      value: 1,
+      writable: false
+    }
+  });
 
-    $ERROR("Expected to throw TypeError");
+  $ERROR("Expected to throw TypeError");
 } catch (e) {
-    assert(e instanceof TypeError);
-    assert(arr.hasOwnProperty("1"));
-    verifyNotWritable(arr, "length");
-    assert.sameValue(arr[0], 0);
-    assert.sameValue(arr[1], 1);
-    assert.sameValue(arr.length, 2)
+  assert(e instanceof TypeError);
+  assert(arr.hasOwnProperty("1"));
+  verifyNotWritable(arr, "length");
+  assert.sameValue(arr[0], 0);
+  assert.sameValue(arr[1], 1);
+  assert.sameValue(arr.length, 2)
 }
-
 
 reportCompare(0, 0);

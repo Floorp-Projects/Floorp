@@ -10,9 +10,9 @@ description: >
 
 
 assert.throws(TypeError, function() {
-            Object.create({}, {
-                prop: undefined 
-            });
+  Object.create({}, {
+    prop: undefined
+  });
 });
 
 reportCompare(0, 0);

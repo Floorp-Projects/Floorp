@@ -8,7 +8,9 @@ description: >
     to a string
 ---*/
 
-        var funObj = function () { return arguments; };
+var funObj = function() {
+  return arguments;
+};
 
 assert.sameValue(typeof(String.prototype.trim.call(funObj)), "string", 'typeof(String.prototype.trim.call(funObj))');
 

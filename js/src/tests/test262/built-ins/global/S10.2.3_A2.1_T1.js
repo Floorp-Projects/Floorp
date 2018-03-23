@@ -9,13 +9,13 @@ description: Global execution context - Value Properties
 
 //CHECK#1
 for (var x in this) {
-  if ( x === 'NaN' ) {
+  if (x === 'NaN') {
     $ERROR("#1: 'NaN' have attribute DontEnum");
-  } else if ( x === 'Infinity' ) {
+  } else if (x === 'Infinity') {
     $ERROR("#1: 'Infinity' have attribute DontEnum");
-  } else if ( x === 'undefined' ) {
+  } else if (x === 'undefined') {
     $ERROR("#1: 'undefined' have attribute DontEnum");
-  } 
+  }
 }
 
 reportCompare(0, 0);

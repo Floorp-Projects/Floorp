@@ -13,9 +13,13 @@ includes: [propertyHelper.js]
 
 var arrObj = [];
 
-Object.defineProperty(arrObj, "0", { value: "abcd" });
+Object.defineProperty(arrObj, "0", {
+  value: "abcd"
+});
 
-Object.defineProperty(arrObj, "0", { value: "abcd" });
+Object.defineProperty(arrObj, "0", {
+  value: "abcd"
+});
 verifyEqualTo(arrObj, "0", "abcd");
 
 verifyNotWritable(arrObj, "0");
@@ -23,6 +27,5 @@ verifyNotWritable(arrObj, "0");
 verifyNotEnumerable(arrObj, "0");
 
 verifyNotConfigurable(arrObj, "0");
-
 
 reportCompare(0, 0);

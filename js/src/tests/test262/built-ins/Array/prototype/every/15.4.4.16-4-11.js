@@ -9,21 +9,24 @@ description: >
     was thrown by step 3
 ---*/
 
-        var obj = { 0: 11, 1: 12 };
+var obj = {
+  0: 11,
+  1: 12
+};
 
-        Object.defineProperty(obj, "length", {
-            get: function () {
-                return {
-                    toString: function () {
-                        throw new Test262Error();
-                    }
-                };
-            },
-            configurable: true
-        });
+Object.defineProperty(obj, "length", {
+  get: function() {
+    return {
+      toString: function() {
+        throw new Test262Error();
+      }
+    };
+  },
+  configurable: true
+});
 
 assert.throws(Test262Error, function() {
-            Array.prototype.every.call(obj, undefined);
+  Array.prototype.every.call(obj, undefined);
 });
 
 reportCompare(0, 0);

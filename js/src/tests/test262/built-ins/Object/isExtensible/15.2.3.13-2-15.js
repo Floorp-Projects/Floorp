@@ -8,7 +8,7 @@ description: >
     (Array.prototype)
 ---*/
 
-  var e = Object.isExtensible(Array.prototype);
+var e = Object.isExtensible(Array.prototype);
 
 assert.sameValue(e, true, 'e');
 

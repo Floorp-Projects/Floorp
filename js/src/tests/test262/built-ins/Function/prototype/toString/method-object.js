@@ -4,10 +4,11 @@
 /*---
 esid: sec-runtime-semantics-definemethod
 description: Function.prototype.toString on a method (object)
+includes: [nativeFunctionMatcher.js]
 ---*/
 
 let f = { /* before */f /* a */ ( /* b */ ) /* c */ { /* d */ }/* after */ }.f;
 
-assert.sameValue(f.toString(), "f /* a */ ( /* b */ ) /* c */ { /* d */ }");
+assertToStringOrNativeFunction(f, "f /* a */ ( /* b */ ) /* c */ { /* d */ }");
 
 reportCompare(0, 0);

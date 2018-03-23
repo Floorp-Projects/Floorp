@@ -8,9 +8,11 @@ description: >
     string 'null'
 ---*/
 
-        var obj = { "null": 1 };
+var obj = {
+  "null": 1
+};
 
-        var desc = Object.getOwnPropertyDescriptor(obj, "null");
+var desc = Object.getOwnPropertyDescriptor(obj, "null");
 
 assert.sameValue(desc.value, 1, 'desc.value');
 

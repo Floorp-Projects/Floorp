@@ -10,16 +10,16 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-    Object.defineProperty(Number.prototype, "prop", {
-        value: 1001,
-        writable: false,
-        enumerable: false,
-        configurable: true
-    });
-    
-    var numObj = new Number();
+Object.defineProperty(Number.prototype, "prop", {
+  value: 1001,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
-    assert(!numObj.hasOwnProperty("prop"));
-    verifyNotWritable(numObj, "prop", "noCheckOwnProp");
+var numObj = new Number();
+
+assert(!numObj.hasOwnProperty("prop"));
+verifyNotWritable(numObj, "prop", "noCheckOwnProp");
 
 reportCompare(0, 0);

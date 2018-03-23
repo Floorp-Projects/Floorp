@@ -8,7 +8,7 @@ description: >
     (Date object)
 ---*/
 
-        var obj = new Date();
+var obj = new Date();
 
 assert.sameValue(Object.getPrototypeOf(obj), Date.prototype, 'Object.getPrototypeOf(obj)');
 

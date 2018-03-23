@@ -11,7 +11,7 @@ var p = Proxy.revocable({}, {});
 p.revoke();
 
 assert.throws(TypeError, function() {
-    Object.getOwnPropertyDescriptor(p.proxy);
+  Object.getOwnPropertyDescriptor(p.proxy);
 });
 
 reportCompare(0, 0);

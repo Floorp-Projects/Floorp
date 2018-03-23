@@ -26,5 +26,4 @@ assert.sameValue(BigInt("-7"), -7n);
 assert.sameValue(BigInt("-88"), -88n);
 assert.sameValue(BigInt("-900"), -900n);
 
-
 reportCompare(0, 0);

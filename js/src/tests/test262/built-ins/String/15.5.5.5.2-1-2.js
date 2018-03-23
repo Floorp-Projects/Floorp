@@ -9,8 +9,8 @@ es5id: 15.5.5.5.2-1-2
 description: String value supports bracket notation to lookup data properties
 ---*/
 
-  var s = String("hello world");
-  
+var s = String("hello world");
+
 
 assert.sameValue(s["foo"], undefined, 's["foo"]');
 

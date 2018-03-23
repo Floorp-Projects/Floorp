@@ -46,5 +46,4 @@ assert.sameValue(
   'String.prototype.trimEnd.call(-1)'
 );
 
-
 reportCompare(0, 0);

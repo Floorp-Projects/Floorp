@@ -9,19 +9,19 @@ description: >
     step 7.a)
 ---*/
 
-        var obj = {};
+var obj = {};
 
-        var func = function (a, b) {
-            return a + b;
-        };
+var func = function(a, b) {
+  return a + b;
+};
 
-        func.get = function () {
-            return "Function";
-        };
+func.get = function() {
+  return "Function";
+};
 
-        Object.defineProperties(obj, {
-            property: func
-        });
+Object.defineProperties(obj, {
+  property: func
+});
 
 assert.sameValue(obj.property, "Function", 'obj.property');
 

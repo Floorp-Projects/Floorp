@@ -15,11 +15,11 @@ includes: [propertyHelper.js]
 var arr = [12];
 
 Object.defineProperties(arr, {
-    "0": {
-        value: 36,
-        writable: false,
-        configurable: false
-    }
+  "0": {
+    value: 36,
+    writable: false,
+    configurable: false
+  }
 });
 verifyEqualTo(arr, "0", 36);
 
@@ -28,6 +28,5 @@ verifyNotWritable(arr, "0");
 verifyEnumerable(arr, "0");
 
 verifyNotConfigurable(arr, "0");
-
 
 reportCompare(0, 0);

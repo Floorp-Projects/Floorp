@@ -7,11 +7,11 @@ es5id: 15.2_A1
 description: Checking if Object equals to this.Object
 ---*/
 
-var obj=Object;
+var obj = Object;
 
-var thisobj=this.Object;
+var thisobj = this.Object;
 
-if(obj!==thisobj){
+if (obj !== thisobj) {
   $ERROR('Object is the property of global');
 }
 

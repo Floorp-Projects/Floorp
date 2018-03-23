@@ -8,9 +8,11 @@ description: >
     of returned object is data property with correct 'value' attribute
 ---*/
 
-        var obj = { "property": "ownDataProperty" };
+var obj = {
+  "property": "ownDataProperty"
+};
 
-        var desc = Object.getOwnPropertyDescriptor(obj, "property");
+var desc = Object.getOwnPropertyDescriptor(obj, "property");
 
 assert.sameValue(desc.writable, true, 'desc.writable');
 

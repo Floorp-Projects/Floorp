@@ -9,11 +9,11 @@ description: >
     5.a)
 ---*/
 
-            Math.prop = {
-                value: 12,
-                enumerable: true
-            };
-            var newObj = Object.create({}, Math);
+Math.prop = {
+  value: 12,
+  enumerable: true
+};
+var newObj = Object.create({}, Math);
 
 assert(newObj.hasOwnProperty("prop"), 'newObj.hasOwnProperty("prop") !== true');
 

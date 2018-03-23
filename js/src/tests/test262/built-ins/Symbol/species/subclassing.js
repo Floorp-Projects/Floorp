@@ -9,10 +9,8 @@ description: Symbol.species is retained on subclassing
 features: [Symbol.species]
 ---*/
 
-class MyRegExp extends RegExp {
-};
+class MyRegExp extends RegExp {};
 
 assert.sameValue(MyRegExp[Symbol.species], MyRegExp);
-
 
 reportCompare(0, 0);

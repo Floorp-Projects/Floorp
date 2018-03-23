@@ -9,9 +9,9 @@ description: >
     object
 ---*/
 
-        function callbackfn(val, idx, obj) {
-            return Math;
-        }
+function callbackfn(val, idx, obj) {
+  return Math;
+}
 
 assert([11].some(callbackfn), '[11].some(callbackfn) !== true');
 

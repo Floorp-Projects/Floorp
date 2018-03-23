@@ -11,16 +11,16 @@ info: |
 ---*/
 
 function Target() {
-    this.attr = "done";
+  this.attr = "done";
 };
 var P = new Proxy(Target, {
-    construct: function() {
-        return 0;
-    }
+  construct: function() {
+    return 0;
+  }
 });
 
 assert.throws(TypeError, function() {
-    new P();
+  new P();
 });
 
 reportCompare(0, 0);

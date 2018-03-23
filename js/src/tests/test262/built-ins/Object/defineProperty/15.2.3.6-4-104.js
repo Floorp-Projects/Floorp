@@ -13,12 +13,12 @@ includes: [propertyHelper.js]
 var obj = {};
 
 Object.defineProperty(obj, "foo", {
-    enumerable: false,
-    configurable: true
+  enumerable: false,
+  configurable: true
 });
 
 Object.defineProperty(obj, "foo", {
-    enumerable: true
+  enumerable: true
 });
 verifyEqualTo(obj, "foo", undefined);
 
@@ -27,6 +27,5 @@ verifyNotWritable(obj, "foo");
 verifyEnumerable(obj, "foo");
 
 verifyConfigurable(obj, "foo");
-
 
 reportCompare(0, 0);
