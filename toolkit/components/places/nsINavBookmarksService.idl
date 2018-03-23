@@ -460,19 +460,11 @@ interface nsINavBookmarksService : nsISupports
                            [optional] in unsigned short aSource);
 
   /**
-   * Get the URI for a bookmark item.
-   */
-  nsIURI getBookmarkURI(in long long aItemId);
-
-  /**
-
-  /**
    * Get the parent folder's id for an item.
    */
   long long getFolderIdForItem(in long long aItemId);
 
   /**
-
    * Adds a bookmark observer. If ownsWeak is false, the bookmark service will
    * keep an owning reference to the observer.  If ownsWeak is true, then
    * aObserver must implement nsISupportsWeakReference, and the bookmark
