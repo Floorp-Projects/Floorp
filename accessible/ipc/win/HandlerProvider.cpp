@@ -556,6 +556,16 @@ HandlerProvider::Refresh(DynamicIA2Data* aOutData)
     return E_FAIL;
   }
 
+  if (!aOutData->mUniqueId) {
+    // BuildDynamicIA2Data failed.
+    if (!mTargetUnk) {
+      // Even though we checked this before, the accessible can be shut down
+      // before BuildDynamicIA2Data executes on the main thread.
+      return CO_E_OBJNOTCONNECTED;
+    }
+    return E_FAIL;
+  }
+
   return S_OK;
 }
 
