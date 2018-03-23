@@ -46,9 +46,6 @@ public:
     return mDocument;
   }
 
-  // Whether we should ignore document colors.
-  inline bool ShouldIgnoreColors() const;
-
   // Check if we already contain a certain longhand
   inline bool PropertyIsSet(nsCSSPropertyID aId);
 
