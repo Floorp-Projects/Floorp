@@ -34,6 +34,7 @@ txXSLTProcessor::init()
 void
 txXSLTProcessor::shutdown()
 {
+    txStylesheetCompilerState::shutdown();
     txHandlerTable::shutdown();
 }
 
