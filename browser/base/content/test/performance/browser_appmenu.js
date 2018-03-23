@@ -49,17 +49,39 @@ const EXPECTED_APPMENU_OPEN_REFLOWS = [
 add_task(async function() {
   await ensureNoPreloadedBrowser();
 
+  let textBoxRect = document.getAnonymousElementByAttribute(gURLBar,
+    "anonid", "textbox-input-box").getBoundingClientRect();
+  let menuButtonRect =
+    document.getElementById("PanelUI-menu-button").getBoundingClientRect();
+  let frameExpectations = {
+    filter: rects => rects.filter(r => !(
+      // We expect the menu button to get into the active state.
+      r.y1 >= menuButtonRect.top && r.y2 <= menuButtonRect.bottom &&
+      r.x1 >= menuButtonRect.left && r.x2 <= menuButtonRect.right
+      // XXX For some reason the menu panel isn't in our screenshots,
+      // but that's where we actually expect many changes.
+    )),
+    exceptions: [
+      {name: "the urlbar placeolder moves up and down by a few pixels",
+       condition: r =>
+         r.x1 >= textBoxRect.left && r.x2 <= textBoxRect.right &&
+         r.y1 >= textBoxRect.top && r.y2 <= textBoxRect.bottom
+      }
+    ]
+  };
+
   // First, open the appmenu.
-  await withReflowObserver(async function() {
+  await withPerfObserver(async function() {
     let popupShown =
       BrowserTestUtils.waitForEvent(PanelUI.panel, "popupshown");
     await PanelUI.show();
     await popupShown;
-  }, EXPECTED_APPMENU_OPEN_REFLOWS);
+  }, {expectedReflows: EXPECTED_APPMENU_OPEN_REFLOWS,
+      frames: frameExpectations});
 
   // Now open a series of subviews, and then close the appmenu. We
   // should not reflow during any of this.
-  await withReflowObserver(async function() {
+  await withPerfObserver(async function() {
     // This recursive function will take the current main or subview,
     // find all of the buttons that navigate to subviews inside it,
     // and click each one individually. Upon entering the new view,
@@ -103,5 +125,5 @@ add_task(async function() {
     let hidden = BrowserTestUtils.waitForEvent(PanelUI.panel, "popuphidden");
     PanelUI.hide();
     await hidden;
-  }, []);
+  }, {expectedReflows: [], frames: frameExpectations});
 });

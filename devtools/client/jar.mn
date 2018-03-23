@@ -118,6 +118,7 @@ devtools.jar:
     skin/images/breadcrumbs-divider.svg (themes/images/breadcrumbs-divider.svg)
     skin/images/filters.svg (themes/images/filters.svg)
     skin/images/filter-swatch.svg (themes/images/filter-swatch.svg)
+    skin/images/font-swatch.svg (themes/images/font-swatch.svg)
     skin/images/grid.svg (themes/images/grid.svg)
     skin/images/angle-swatch.svg (themes/images/angle-swatch.svg)
     skin/images/pseudo-class.svg (themes/images/pseudo-class.svg)

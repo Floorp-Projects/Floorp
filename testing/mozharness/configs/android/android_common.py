@@ -186,6 +186,21 @@ config = {
             ],
             "tests": ["tests/testing/crashtest/crashtests.list",],
         },
+        "jittest": {
+            "run_filename": "jit_test.py",
+            "testsdir": "jit-test/jit-test",
+            "options": [
+                "../../bin/js",
+                "--remote",
+                "-j",
+                "1",
+                "--localLib=../../bin",
+                "--no-slow",
+                "--no-progress",
+                "--format=automation",
+                "--jitflags=all",
+            ],
+        },
         "jsreftest": {
             "run_filename": "remotereftest.py",
             "testsdir": "reftest",
