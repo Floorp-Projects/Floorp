@@ -253,6 +253,7 @@
               this.advanceToNextField();
             }
             targetField.setAttribute("typeBuffer", buffer);
+            this.setInputValueFromFields();
           }
         ]]>
         </body>
@@ -1029,6 +1030,7 @@
             } else if (key == "p" || key == "P") {
               this.setDayPeriodValue(this.mPMIndicator);
             }
+            this.setInputValueFromFields();
             return;
           }
 
@@ -1046,6 +1048,7 @@
               this.advanceToNextField();
             }
             targetField.setAttribute("typeBuffer", buffer);
+            this.setInputValueFromFields();
           }
         ]]>
         </body>
