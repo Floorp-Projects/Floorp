@@ -39,38 +39,38 @@ var testData = [
 
 const TEST_URI = "<h1 style='color: red'>Header</h1>";
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view, testActor} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {toolbox, inspector, view, testActor} = await openRuleView();
 
   info("Test autocompletion after 1st page load");
-  yield runAutocompletionTest(toolbox, inspector, view);
+  await runAutocompletionTest(toolbox, inspector, view);
 
   info("Test autocompletion after page navigation");
-  yield reloadPage(inspector, testActor);
-  yield runAutocompletionTest(toolbox, inspector, view);
+  await reloadPage(inspector, testActor);
+  await runAutocompletionTest(toolbox, inspector, view);
 });
 
-function* runAutocompletionTest(toolbox, inspector, view) {
+async function runAutocompletionTest(toolbox, inspector, view) {
   info("Selecting the test node");
-  yield selectNode("h1", inspector);
+  await selectNode("h1", inspector);
 
   let rule = getRuleViewRuleEditor(view, 0).rule;
   let prop = rule.textProps[0];
 
   info("Focusing the css property editable value");
-  let editor = yield focusEditableField(view, prop.editor.valueSpan);
+  let editor = await focusEditableField(view, prop.editor.valueSpan);
 
   info("Starting to test for css property completion");
   for (let i = 0; i < testData.length; i++) {
     // Re-define the editor at each iteration, because the focus may have moved
     // from property to value and back
     editor = inplaceEditor(view.styleDocument.activeElement);
-    yield testCompletion(testData[i], editor, view);
+    await testCompletion(testData[i], editor, view);
   }
 }
 
-function* testCompletion([key, modifiers, completion, open, selected, change],
+async function testCompletion([key, modifiers, completion, open, selected, change],
                          editor, view) {
   info("Pressing key " + key);
   info("Expecting " + completion);
@@ -102,8 +102,8 @@ function* testCompletion([key, modifiers, completion, open, selected, change],
   // Flush the debounce for the preview text.
   view.debounce.flush();
 
-  yield onDone;
-  yield onPopupEvent;
+  await onDone;
+  await onPopupEvent;
 
   // The key might have been a TAB or shift-TAB, in which case the editor will
   // be a new one

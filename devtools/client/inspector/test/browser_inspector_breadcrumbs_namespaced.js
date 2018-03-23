@@ -29,8 +29,8 @@ const NODES = [
    nodeName: "svg:circle", title: "svg:circle"},
 ];
 
-add_task(function* () {
-  let { inspector } = yield openInspectorForURL(TEST_URI);
+add_task(async function() {
+  let { inspector } = await openInspectorForURL(TEST_URI);
   let container = inspector.panelDoc.getElementById("inspector-breadcrumbs");
 
   for (let node of NODES) {
@@ -38,8 +38,8 @@ add_task(function* () {
 
     info("Selecting node and waiting for breadcrumbs to update");
     let breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
-    yield selectNode(node.selector, inspector);
-    yield breadcrumbsUpdated;
+    await selectNode(node.selector, inspector);
+    await breadcrumbsUpdated;
 
     info("Performing checks for node " + node.selector);
 

@@ -10,15 +10,15 @@
 const SEARCH = "20%";
 const TEST_URI = URL_ROOT + "doc_keyframeanimation.html";
 
-add_task(function* () {
-  yield addTab(TEST_URI);
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#boxy", inspector);
-  yield testAddTextInFilter(inspector, view);
+add_task(async function() {
+  await addTab(TEST_URI);
+  let {inspector, view} = await openRuleView();
+  await selectNode("#boxy", inspector);
+  await testAddTextInFilter(inspector, view);
 });
 
-function* testAddTextInFilter(inspector, view) {
-  yield setSearchFilter(view, SEARCH);
+async function testAddTextInFilter(inspector, view) {
+  await setSearchFilter(view, SEARCH);
 
   info("Check that the correct rules are visible");
   is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",

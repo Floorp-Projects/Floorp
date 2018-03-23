@@ -16,34 +16,34 @@ const TEST_URI = `
   <div id='testid'>Styled Node</div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#testid", inspector);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
+  await selectNode("#testid", inspector);
 
   let rule = getRuleViewRuleEditor(view, 1).rule;
   let prop = rule.textProps[0];
 
   info("Disabling background-color property");
-  yield togglePropStatus(view, prop);
+  await togglePropStatus(view, prop);
 
-  let newValue = yield getRulePropertyValue("background-color");
+  let newValue = await getRulePropertyValue("background-color");
   is(newValue, "", "background-color should have been unset.");
 
   info("Entering a new property name, including : to commit and " +
        "focus the value");
 
-  yield focusEditableField(view, prop.editor.nameSpan);
+  await focusEditableField(view, prop.editor.nameSpan);
   let onNameDone = view.once("ruleview-changed");
   EventUtils.sendString("border-color:", view.styleWindow);
-  yield onNameDone;
+  await onNameDone;
 
   info("Escape editing the property value");
   let onValueDone = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
-  yield onValueDone;
+  await onValueDone;
 
-  newValue = yield getRulePropertyValue("border-color");
+  newValue = await getRulePropertyValue("border-color");
   is(newValue, "blue", "border-color should have been set.");
 
   ok(prop.enabled, "border-color property is enabled.");
@@ -51,15 +51,15 @@ add_task(function* () {
     "border-color is not overridden");
 
   info("Disabling border-color property");
-  yield togglePropStatus(view, prop);
+  await togglePropStatus(view, prop);
 
-  newValue = yield getRulePropertyValue("border-color");
+  newValue = await getRulePropertyValue("border-color");
   is(newValue, "", "border-color should have been unset.");
 
   info("Enter a new property value for the border-color property");
-  yield setProperty(view, prop, "red");
+  await setProperty(view, prop, "red");
 
-  newValue = yield getRulePropertyValue("border-color");
+  newValue = await getRulePropertyValue("border-color");
   is(newValue, "red", "new border-color should have been set.");
 
   ok(prop.enabled, "border-color property is enabled.");
@@ -67,8 +67,8 @@ add_task(function* () {
     "border-color is not overridden");
 });
 
-function* getRulePropertyValue(name) {
-  let propValue = yield executeInContent("Test:GetRulePropertyValue", {
+async function getRulePropertyValue(name) {
+  let propValue = await executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
     name: name

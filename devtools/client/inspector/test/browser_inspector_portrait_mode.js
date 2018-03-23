@@ -7,8 +7,8 @@
 // Test that the inspector splitter is properly initialized in horizontal mode if the
 // inspector starts in portrait mode.
 
-add_task(function* () {
-  let { inspector, toolbox } = yield openInspectorForURL(
+add_task(async function() {
+  let { inspector, toolbox } = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>", "window");
 
   let hostWindow = toolbox.win.parent;
@@ -22,7 +22,7 @@ add_task(function* () {
     info("Resize toolbox window to force inspector to landscape mode");
     let onClassnameMutation = waitForClassMutation(splitter);
     hostWindow.resizeTo(800, 500);
-    yield onClassnameMutation;
+    await onClassnameMutation;
 
     ok(splitter.classList.contains("vert"), "Splitter is in vertical mode");
   }
@@ -30,15 +30,15 @@ add_task(function* () {
   info("Resize toolbox window to force inspector to portrait mode");
   let onClassnameMutation = waitForClassMutation(splitter);
   hostWindow.resizeTo(500, 500);
-  yield onClassnameMutation;
+  await onClassnameMutation;
 
   ok(splitter.classList.contains("horz"), "Splitter is in horizontal mode");
 
   info("Close the inspector");
-  yield gDevTools.closeToolbox(toolbox.target);
+  await gDevTools.closeToolbox(toolbox.target);
 
   info("Reopen inspector");
-  ({ inspector, toolbox } = yield openInspector("window"));
+  ({ inspector, toolbox } = await openInspector("window"));
 
   // Devtools window should still be 500px * 500px, inspector should still be in portrait.
   splitter = inspector.panelDoc.querySelector(".inspector-sidebar-splitter");

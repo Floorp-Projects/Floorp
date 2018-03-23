@@ -15,7 +15,7 @@ const TEST_URI = `
   <div id='testid' class='testclass'>Styled Node</div>
 `;
 
-add_task(function* () {
+add_task(async function() {
   let TESTS = [
     {name: "hex", result: "#0f0"},
     {name: "rgb", result: "rgb(0, 255, 0)"}
@@ -25,28 +25,28 @@ add_task(function* () {
     info("starting test for " + name);
     Services.prefs.setCharPref("devtools.defaultColorUnit", name);
 
-    let tab = yield addTab("data:text/html;charset=utf-8," +
+    let tab = await addTab("data:text/html;charset=utf-8," +
                            encodeURIComponent(TEST_URI));
-    let {inspector, view} = yield openRuleView();
+    let {inspector, view} = await openRuleView();
 
-    yield selectNode("#testid", inspector);
-    yield basicTest(view, name, result);
+    await selectNode("#testid", inspector);
+    await basicTest(view, name, result);
 
     let target = TargetFactory.forTab(tab);
-    yield gDevTools.closeToolbox(target);
+    await gDevTools.closeToolbox(target);
     gBrowser.removeCurrentTab();
   }
 });
 
-function* basicTest(view, name, result) {
+async function basicTest(view, name, result) {
   let cPicker = view.tooltips.getTooltip("colorPicker");
   let swatch = getRuleViewProperty(view, "#testid", "color").valueSpan
       .querySelector(".ruleview-colorswatch");
   let onColorPickerReady = cPicker.once("ready");
   swatch.click();
-  yield onColorPickerReady;
+  await onColorPickerReady;
 
-  yield simulateColorPickerChange(view, cPicker, [0, 255, 0, 1], {
+  await simulateColorPickerChange(view, cPicker, [0, 255, 0, 1], {
     selector: "#testid",
     name: "color",
     value: "rgb(0, 255, 0)"
@@ -57,8 +57,8 @@ function* basicTest(view, name, result) {
   // Validating the color change ends up updating the rule view twice
   let onRuleViewChanged = waitForNEvents(view, "ruleview-changed", 2);
   focusAndSendKey(spectrum.element.ownerDocument.defaultView, "RETURN");
-  yield onHidden;
-  yield onRuleViewChanged;
+  await onHidden;
+  await onRuleViewChanged;
 
   is(getRuleViewPropertyValue(view, "#testid", "color"), result,
      "changing the color used the " + name + " unit");

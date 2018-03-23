@@ -19,19 +19,19 @@ const TEST_URI = `
   <h1 id='testid'>Styled Node</h1>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#testid", inspector);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
+  await selectNode("#testid", inspector);
 
   info("Enter the test value in the search filter");
-  yield setSearchFilter(view, SEARCH);
+  await setSearchFilter(view, SEARCH);
 
   info("Focus the height property value");
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let rule = ruleEditor.rule;
   let propEditor = rule.textProps[1].editor;
-  yield focusEditableField(view, propEditor.valueSpan);
+  await focusEditableField(view, propEditor.valueSpan);
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 2, "Should have 2 rules.");
@@ -46,7 +46,7 @@ add_task(function* () {
   let onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.sendString("100%", view.styleWindow);
   EventUtils.synthesizeKey("KEY_Enter");
-  yield onRuleViewChanged;
+  await onRuleViewChanged;
 
   ok(propEditor.container.classList.contains("ruleview-highlight"),
     "height text property is correctly highlighted.");

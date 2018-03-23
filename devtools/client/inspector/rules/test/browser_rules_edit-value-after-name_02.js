@@ -23,19 +23,19 @@ const TEST_URI = `
   <div id="testid">Styled Node</div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
 
   info("Test shift + click on color swatch while editing property name");
 
-  yield selectNode("#testid", inspector);
+  await selectNode("#testid", inspector);
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let propEditor = ruleEditor.rule.textProps[1].editor;
   let swatchSpan = propEditor.valueSpan.querySelectorAll(".ruleview-colorswatch")[2];
 
   info("Focus the background name span");
-  yield focusEditableField(view, propEditor.nameSpan);
+  await focusEditableField(view, propEditor.nameSpan);
   let editor = inplaceEditor(propEditor.doc.activeElement);
 
   info("Modify the property to background-image to trigger the " +
@@ -51,14 +51,14 @@ add_task(function* () {
     propEditor.doc.defaultView);
 
   info("wait for ruleview-changed event to be triggered to prevent pending requests");
-  yield onRuleViewChanged;
+  await onRuleViewChanged;
 
   info("wait for the color unit to change");
-  yield onSwatchUnitChange;
+  await onSwatchUnitChange;
   ok(true, "the color unit was changed");
 
   info("wait for the property value to be updated");
-  yield onPropertyValueUpdate;
+  await onPropertyValueUpdate;
 
   ok(!inplaceEditor(propEditor.valueSpan), "The inplace editor wasn't shown " +
     "as a result of the color swatch shift + click");

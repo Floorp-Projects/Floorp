@@ -16,46 +16,46 @@ const TEST_URI = `
   <div id='testid'>Styled Node</div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#testid", inspector);
-  yield testEditPropertyAndCancel(inspector, view);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
+  await selectNode("#testid", inspector);
+  await testEditPropertyAndCancel(inspector, view);
 });
 
-function* testEditPropertyAndCancel(inspector, view) {
+async function testEditPropertyAndCancel(inspector, view) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let propEditor = ruleEditor.rule.textProps[0].editor;
 
   info("Test editor is created when clicking on property name");
-  yield focusEditableField(view, propEditor.nameSpan);
+  await focusEditableField(view, propEditor.nameSpan);
   ok(propEditor.nameSpan.inplaceEditor, "Editor created for property name");
-  yield sendKeysAndWaitForFocus(view, ruleEditor.element, ["ESCAPE"]);
+  await sendKeysAndWaitForFocus(view, ruleEditor.element, ["ESCAPE"]);
 
   info("Test editor is created when clicking on ':' next to property name");
   let nameRect = propEditor.nameSpan.getBoundingClientRect();
-  yield focusEditableField(view, propEditor.nameSpan, nameRect.width + 1);
+  await focusEditableField(view, propEditor.nameSpan, nameRect.width + 1);
   ok(propEditor.nameSpan.inplaceEditor, "Editor created for property name");
-  yield sendKeysAndWaitForFocus(view, ruleEditor.element, ["ESCAPE"]);
+  await sendKeysAndWaitForFocus(view, ruleEditor.element, ["ESCAPE"]);
 
   info("Test editor is created when clicking on property value");
-  yield focusEditableField(view, propEditor.valueSpan);
+  await focusEditableField(view, propEditor.valueSpan);
   ok(propEditor.valueSpan.inplaceEditor, "Editor created for property value");
   // When cancelling a value edition, the text-property-editor will trigger
   // a modification to make sure the property is back to its original value
   // => need to wait on "ruleview-changed" to avoid unhandled promises
   let onRuleviewChanged = view.once("ruleview-changed");
-  yield sendKeysAndWaitForFocus(view, ruleEditor.element, ["ESCAPE"]);
-  yield onRuleviewChanged;
+  await sendKeysAndWaitForFocus(view, ruleEditor.element, ["ESCAPE"]);
+  await onRuleviewChanged;
 
   info("Test editor is created when clicking on ';' next to property value");
   let valueRect = propEditor.valueSpan.getBoundingClientRect();
-  yield focusEditableField(view, propEditor.valueSpan, valueRect.width + 1);
+  await focusEditableField(view, propEditor.valueSpan, valueRect.width + 1);
   ok(propEditor.valueSpan.inplaceEditor, "Editor created for property value");
   // When cancelling a value edition, the text-property-editor will trigger
   // a modification to make sure the property is back to its original value
   // => need to wait on "ruleview-changed" to avoid unhandled promises
   onRuleviewChanged = view.once("ruleview-changed");
-  yield sendKeysAndWaitForFocus(view, ruleEditor.element, ["ESCAPE"]);
-  yield onRuleviewChanged;
+  await sendKeysAndWaitForFocus(view, ruleEditor.element, ["ESCAPE"]);
+  await onRuleviewChanged;
 }

@@ -8,16 +8,16 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(TEST_URL);
   let {markup} = inspector;
 
   info("Get a test container");
-  yield selectNode("#test", inspector);
-  let container = yield getContainerForSelector("#test", inspector);
+  await selectNode("#test", inspector);
+  let container = await getContainerForSelector("#test", inspector);
 
   info("Simulate a drag/drop on this container");
-  yield simulateNodeDrag(inspector, "#test");
+  await simulateNodeDrag(inspector, "#test");
 
   ok(container.isDragging && markup.isDragging,
      "The container is being dragged");

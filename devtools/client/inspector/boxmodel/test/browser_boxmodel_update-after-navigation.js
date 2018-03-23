@@ -10,31 +10,31 @@
 const IFRAME1 = URL_ROOT + "doc_boxmodel_iframe1.html";
 const IFRAME2 = URL_ROOT + "doc_boxmodel_iframe2.html";
 
-add_task(function* () {
-  yield addTab(IFRAME1);
-  let {inspector, boxmodel, testActor} = yield openLayoutView();
+add_task(async function() {
+  await addTab(IFRAME1);
+  let {inspector, boxmodel, testActor} = await openLayoutView();
 
-  yield testFirstPage(inspector, boxmodel, testActor);
+  await testFirstPage(inspector, boxmodel, testActor);
 
   info("Navigate to the second page");
   let onMarkupLoaded = waitForMarkupLoaded(inspector);
-  yield testActor.eval(`location.href="${IFRAME2}"`);
-  yield onMarkupLoaded;
+  await testActor.eval(`location.href="${IFRAME2}"`);
+  await onMarkupLoaded;
 
-  yield testSecondPage(inspector, boxmodel, testActor);
+  await testSecondPage(inspector, boxmodel, testActor);
 
   info("Go back to the first page");
   onMarkupLoaded = waitForMarkupLoaded(inspector);
-  yield testActor.eval("history.back();");
-  yield onMarkupLoaded;
+  await testActor.eval("history.back();");
+  await onMarkupLoaded;
 
-  yield testBackToFirstPage(inspector, boxmodel, testActor);
+  await testBackToFirstPage(inspector, boxmodel, testActor);
 });
 
-function* testFirstPage(inspector, boxmodel, testActor) {
+async function testFirstPage(inspector, boxmodel, testActor) {
   info("Test that the box model view works on the first page");
 
-  yield selectNode("p", inspector);
+  await selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
   let paddingElt = boxmodel.document.querySelector(
@@ -43,18 +43,18 @@ function* testFirstPage(inspector, boxmodel, testActor) {
 
   info("Listening for box model view changes and modifying the padding");
   let onUpdated = waitForUpdate(inspector);
-  yield setStyle(testActor, "p", "padding", "20px");
-  yield onUpdated;
+  await setStyle(testActor, "p", "padding", "20px");
+  await onUpdated;
   ok(true, "Box model view got updated");
 
   info("Checking that the box model view shows the right value after update");
   is(paddingElt.textContent, "20");
 }
 
-function* testSecondPage(inspector, boxmodel, testActor) {
+async function testSecondPage(inspector, boxmodel, testActor) {
   info("Test that the box model view works on the second page");
 
-  yield selectNode("p", inspector);
+  await selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
   let sizeElt = boxmodel.document.querySelector(".boxmodel-size > span");
@@ -62,18 +62,18 @@ function* testSecondPage(inspector, boxmodel, testActor) {
 
   info("Listening for box model view changes and modifying the size");
   let onUpdated = waitForUpdate(inspector);
-  yield setStyle(testActor, "p", "width", "200px");
-  yield onUpdated;
+  await setStyle(testActor, "p", "width", "200px");
+  await onUpdated;
   ok(true, "Box model view got updated");
 
   info("Checking that the box model view shows the right value after update");
   is(sizeElt.textContent, "200" + "\u00D7" + "100");
 }
 
-function* testBackToFirstPage(inspector, boxmodel, testActor) {
+async function testBackToFirstPage(inspector, boxmodel, testActor) {
   info("Test that the box model view works on the first page after going back");
 
-  yield selectNode("p", inspector);
+  await selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value, which is the" +
     "modified value from step one because of the bfcache");
@@ -83,8 +83,8 @@ function* testBackToFirstPage(inspector, boxmodel, testActor) {
 
   info("Listening for box model view changes and modifying the padding");
   let onUpdated = waitForUpdate(inspector);
-  yield setStyle(testActor, "p", "padding", "100px");
-  yield onUpdated;
+  await setStyle(testActor, "p", "padding", "100px");
+  await onUpdated;
   ok(true, "Box model view got updated");
 
   info("Checking that the box model view shows the right value after update");

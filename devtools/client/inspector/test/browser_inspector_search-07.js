@@ -20,22 +20,22 @@ const TEST_DATA = [{
   suggestions: [".class1", ".class2"]
 }];
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(TEST_URL);
   let {searchBox} = inspector;
   let popup = inspector.searchSuggestions.searchPopup;
 
-  yield focusSearchBoxUsingShortcut(inspector.panelWin);
+  await focusSearchBoxUsingShortcut(inspector.panelWin);
 
   for (let {key, suggestions} of TEST_DATA) {
     info("Pressing " + key + " to get " + suggestions);
 
     let command = once(searchBox, "input");
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
-    yield command;
+    await command;
 
     info("Waiting for search query to complete and getting the suggestions");
-    yield inspector.searchSuggestions._lastQuery;
+    await inspector.searchSuggestions._lastQuery;
     let actualSuggestions = popup.getItems().reverse();
 
     is(popup.isOpen ? actualSuggestions.length : 0, suggestions.length,

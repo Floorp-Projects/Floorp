@@ -27,10 +27,10 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  let { inspector, gridInspector } = yield openLayoutView();
+  let { inspector, gridInspector } = await openLayoutView();
   let { document: doc } = gridInspector;
   let { highlighters, store } = inspector;
 
@@ -47,9 +47,9 @@ add_task(function* () {
     state.grids.length == 1 &&
     state.grids[0].highlighted);
   checkbox.click();
-  yield onCheckboxChange;
-  yield onHighlighterShown;
-  let elements = yield onGridOutlineRendered;
+  await onCheckboxChange;
+  await onHighlighterShown;
+  let elements = await onGridOutlineRendered;
 
   let gridCellA = elements[0];
 
@@ -67,5 +67,5 @@ add_task(function* () {
       is(showGridArea, "header", "Grid area name should be 'header'.");
     });
   EventUtils.synthesizeMouse(gridCellA, 1, 1, {type: "mouseover"}, doc.defaultView);
-  yield onCellAHighlight;
+  await onCellAHighlight;
 });

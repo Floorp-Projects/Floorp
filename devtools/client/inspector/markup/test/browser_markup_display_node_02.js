@@ -35,8 +35,8 @@ const TEST_DATA = [
       textContent: "grid",
       display: "inline-block"
     },
-    changeStyle: function* (testActor) {
-      yield testActor.eval(`
+    changeStyle: async function(testActor) {
+      await testActor.eval(`
         let node = document.getElementById("grid");
         node.style.display = "block";
       `);
@@ -53,8 +53,8 @@ const TEST_DATA = [
       textContent: "block",
       display: "none"
     },
-    changeStyle: function* (testActor) {
-      yield testActor.eval(`
+    changeStyle: async function(testActor) {
+      await testActor.eval(`
         let node = document.getElementById("block");
         node.style.display = "grid";
       `);
@@ -71,8 +71,8 @@ const TEST_DATA = [
       textContent: "none",
       display: "none"
     },
-    changeStyle: function* (testActor) {
-      yield testActor.eval(`
+    changeStyle: async function(testActor) {
+      await testActor.eval(`
         document.getElementById("flex").removeAttribute("hidden");
       `);
     },
@@ -83,20 +83,20 @@ const TEST_DATA = [
   }
 ];
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL("data:text/html;charset=utf-8," +
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL("data:text/html;charset=utf-8," +
     encodeURIComponent(TEST_URI));
 
   for (let data of TEST_DATA) {
     info("Running test case: " + data.desc);
-    yield runTestData(inspector, testActor, data);
+    await runTestData(inspector, testActor, data);
   }
 });
 
-function* runTestData(inspector, testActor,
+async function runTestData(inspector, testActor,
                       {selector, before, changeStyle, after}) {
-  yield selectNode(selector, inspector);
-  let container = yield getContainerForSelector(selector, inspector);
+  await selectNode(selector, inspector);
+  let container = await getContainerForSelector(selector, inspector);
   let displayNode = container.elt.querySelector(".markupview-display");
 
   is(displayNode.textContent, before.textContent,
@@ -107,8 +107,8 @@ function* runTestData(inspector, testActor,
   info("Listening for the display-change event");
   let onDisplayChanged = inspector.markup.walker.once("display-change");
   info("Making style changes");
-  yield changeStyle(testActor);
-  let nodes = yield onDisplayChanged;
+  await changeStyle(testActor);
+  let nodes = await onDisplayChanged;
 
   info("Verifying that the list of changed nodes include our container");
   ok(nodes.length, "The display-change event was received with a nodes");

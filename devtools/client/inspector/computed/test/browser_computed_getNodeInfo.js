@@ -50,7 +50,7 @@ const TEST_URI = `
 const TEST_DATA = [
   {
     desc: "Testing a null node",
-    getHoveredNode: function* () {
+    getHoveredNode: function() {
       return null;
     },
     assertNodeInfo: function(nodeInfo) {
@@ -59,7 +59,7 @@ const TEST_DATA = [
   },
   {
     desc: "Testing a useless node",
-    getHoveredNode: function* (view) {
+    getHoveredNode: function(view) {
       return view.element;
     },
     assertNodeInfo: function(nodeInfo) {
@@ -68,7 +68,7 @@ const TEST_DATA = [
   },
   {
     desc: "Testing a property name",
-    getHoveredNode: function* (view) {
+    getHoveredNode: function(view) {
       return getComputedViewProperty(view, "color").nameSpan;
     },
     assertNodeInfo: function(nodeInfo) {
@@ -81,7 +81,7 @@ const TEST_DATA = [
   },
   {
     desc: "Testing a property value",
-    getHoveredNode: function* (view) {
+    getHoveredNode: function(view) {
       return getComputedViewProperty(view, "color").valueSpan;
     },
     assertNodeInfo: function(nodeInfo) {
@@ -94,7 +94,7 @@ const TEST_DATA = [
   },
   {
     desc: "Testing an image url",
-    getHoveredNode: function* (view) {
+    getHoveredNode: function(view) {
       let {valueSpan} = getComputedViewProperty(view, "background-image");
       return valueSpan.querySelector(".theme-link");
     },
@@ -110,8 +110,8 @@ const TEST_DATA = [
   },
   {
     desc: "Testing a matched rule selector (bestmatch)",
-    getHoveredNode: function* (view) {
-      let el = yield getComputedViewMatchedRules(view, "background-color");
+    getHoveredNode: async function(view) {
+      let el = await getComputedViewMatchedRules(view, "background-color");
       return el.querySelector(".bestmatch");
     },
     assertNodeInfo: function(nodeInfo) {
@@ -121,8 +121,8 @@ const TEST_DATA = [
   },
   {
     desc: "Testing a matched rule selector (matched)",
-    getHoveredNode: function* (view) {
-      let el = yield getComputedViewMatchedRules(view, "background-color");
+    getHoveredNode: async function(view) {
+      let el = await getComputedViewMatchedRules(view, "background-color");
       return el.querySelector(".matched");
     },
     assertNodeInfo: function(nodeInfo) {
@@ -132,8 +132,8 @@ const TEST_DATA = [
   },
   {
     desc: "Testing a matched rule selector (parentmatch)",
-    getHoveredNode: function* (view) {
-      let el = yield getComputedViewMatchedRules(view, "color");
+    getHoveredNode: async function(view) {
+      let el = await getComputedViewMatchedRules(view, "color");
       return el.querySelector(".parentmatch");
     },
     assertNodeInfo: function(nodeInfo) {
@@ -143,8 +143,8 @@ const TEST_DATA = [
   },
   {
     desc: "Testing a matched rule value",
-    getHoveredNode: function* (view) {
-      let el = yield getComputedViewMatchedRules(view, "color");
+    getHoveredNode: async function(view) {
+      let el = await getComputedViewMatchedRules(view, "color");
       return el.querySelector(".computed-other-property-value");
     },
     assertNodeInfo: function(nodeInfo) {
@@ -155,8 +155,8 @@ const TEST_DATA = [
   },
   {
     desc: "Testing a matched rule stylesheet link",
-    getHoveredNode: function* (view) {
-      let el = yield getComputedViewMatchedRules(view, "color");
+    getHoveredNode: async function(view) {
+      let el = await getComputedViewMatchedRules(view, "color");
       return el.querySelector(".rule-link .theme-link");
     },
     assertNodeInfo: function(nodeInfo) {
@@ -165,14 +165,14 @@ const TEST_DATA = [
   }
 ];
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openComputedView();
-  yield selectNode("#testElement", inspector);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openComputedView();
+  await selectNode("#testElement", inspector);
 
   for (let {desc, getHoveredNode, assertNodeInfo} of TEST_DATA) {
     info(desc);
-    let nodeInfo = view.getNodeInfo(yield getHoveredNode(view));
+    let nodeInfo = view.getNodeInfo(await getHoveredNode(view));
     assertNodeInfo(nodeInfo);
   }
 });

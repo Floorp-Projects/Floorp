@@ -22,12 +22,12 @@ const TEST_DATA = [
   {selector: "#hidden-via-hide-shortcut", isDisplayed: false},
 ];
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(TEST_URL);
 
   for (let {selector, isDisplayed} of TEST_DATA) {
     info("Getting node " + selector);
-    let nodeFront = yield getNodeFront(selector, inspector);
+    let nodeFront = await getNodeFront(selector, inspector);
     let container = getContainerForNodeFront(nodeFront, inspector);
     is(!container.elt.classList.contains("not-displayed"), isDisplayed,
        `The container for ${selector} is marked as displayed ${isDisplayed}`);

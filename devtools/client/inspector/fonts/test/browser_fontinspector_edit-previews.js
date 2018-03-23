@@ -9,23 +9,23 @@
 
 const TEST_URI = URL_ROOT + "browser_fontinspector.html";
 
-add_task(function* () {
-  let {view} = yield openFontInspectorForURL(TEST_URI);
+add_task(async function() {
+  let {view} = await openFontInspectorForURL(TEST_URI);
   let viewDoc = view.document;
 
   let previews = viewDoc.querySelectorAll("#font-container .font-preview");
   let initialPreviews = [...previews].map(p => p.src);
 
   info("Typing 'Abc' to check that the reference previews are correct.");
-  yield updatePreviewText(view, "Abc");
+  await updatePreviewText(view, "Abc");
   checkPreviewImages(viewDoc, initialPreviews, true);
 
   info("Typing something else to the preview box.");
-  yield updatePreviewText(view, "The quick brown");
+  await updatePreviewText(view, "The quick brown");
   checkPreviewImages(viewDoc, initialPreviews, false);
 
   info("Blanking the input to restore default previews.");
-  yield updatePreviewText(view, "");
+  await updatePreviewText(view, "");
   checkPreviewImages(viewDoc, initialPreviews, true);
 });
 

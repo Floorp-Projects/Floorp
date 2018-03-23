@@ -32,11 +32,11 @@ const TEST_DATA = [{
   newSelection: "#i2"
 }];
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URI);
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(TEST_URI);
 
   info("Selecting the test node");
-  yield selectNode("#i2", inspector);
+  await selectNode("#i2", inspector);
 
   info("Clicking on the corresponding breadcrumbs node to focus it");
   let container = inspector.panelDoc.getElementById("inspector-breadcrumbs");
@@ -57,9 +57,9 @@ add_task(function* () {
     }
 
     EventUtils.synthesizeKey(key);
-    yield onUpdated;
+    await onUpdated;
 
-    let newNodeFront = yield getNodeFront(newSelection, inspector);
+    let newNodeFront = await getNodeFront(newSelection, inspector);
     is(newNodeFront, inspector.selection.nodeFront,
        "The current selection is correct");
     is(container.getAttribute("aria-activedescendant"),

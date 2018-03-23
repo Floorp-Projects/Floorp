@@ -20,14 +20,14 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  let { inspector, gridInspector } = yield openLayoutView();
+  let { inspector, gridInspector } = await openLayoutView();
   let { document: doc } = gridInspector;
   let { highlighters, store } = inspector;
 
-  yield selectNode("#grid", inspector);
+  await selectNode("#grid", inspector);
   let outline = doc.getElementById("grid-outline-container");
   let gridList = doc.getElementById("grid-list");
   let checkbox = gridList.children[0].querySelector("input");
@@ -39,9 +39,9 @@ add_task(function* () {
     state.grids.length == 1 &&
     state.grids[0].highlighted);
   checkbox.click();
-  yield onHighlighterShown;
-  yield onCheckboxChange;
-  let elements = yield onGridOutlineRendered;
+  await onHighlighterShown;
+  await onCheckboxChange;
+  let elements = await onGridOutlineRendered;
 
   let cannotShowGridOutline = elements[0];
 

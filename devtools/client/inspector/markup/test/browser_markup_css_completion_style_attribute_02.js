@@ -97,10 +97,10 @@ const TEST_DATA_INNER = [
   ["VK_RETURN", "style=\"background:url('1'); color:beige\"", -1, -1, false]
 ];
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(TEST_URL);
 
-  yield runStyleAttributeAutocompleteTests(inspector, TEST_DATA_DOUBLE);
-  yield runStyleAttributeAutocompleteTests(inspector, TEST_DATA_SINGLE);
-  yield runStyleAttributeAutocompleteTests(inspector, TEST_DATA_INNER);
+  await runStyleAttributeAutocompleteTests(inspector, TEST_DATA_DOUBLE);
+  await runStyleAttributeAutocompleteTests(inspector, TEST_DATA_SINGLE);
+  await runStyleAttributeAutocompleteTests(inspector, TEST_DATA_INNER);
 });

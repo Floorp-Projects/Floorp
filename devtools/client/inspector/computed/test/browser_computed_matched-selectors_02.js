@@ -6,10 +6,10 @@
 
 // Tests for matched selector texts in the computed view.
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8,<div style='color:blue;'></div>");
-  let {inspector, view} = yield openComputedView();
-  yield selectNode("div", inspector);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8,<div style='color:blue;'></div>");
+  let {inspector, view} = await openComputedView();
+  await selectNode("div", inspector);
 
   info("Checking the color property view");
   let propertyView = getPropertyView(view, "color");
@@ -18,7 +18,7 @@ add_task(function* () {
 
   info("Expanding the matched selectors");
   propertyView.matchedExpanded = true;
-  yield propertyView.refreshMatchedSelectors();
+  await propertyView.refreshMatchedSelectors();
 
   let span = propertyView.matchedSelectorsContainer
     .querySelector("span.rule-text");

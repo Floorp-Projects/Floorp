@@ -19,26 +19,26 @@ const TEST_URL = `
 
 const HIGHLIGHTER_TYPE = "CssGridHighlighter";
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URL));
   let front = inspector.inspector;
-  let highlighter = yield front.getHighlighterByType(HIGHLIGHTER_TYPE);
+  let highlighter = await front.getHighlighterByType(HIGHLIGHTER_TYPE);
 
   info("Try to show the highlighter on the grid container");
-  let node = yield getNodeFront(".grid", inspector);
-  yield highlighter.show(node);
+  let node = await getNodeFront(".grid", inspector);
+  await highlighter.show(node);
 
-  let hidden = yield testActor.getHighlighterNodeAttribute(
+  let hidden = await testActor.getHighlighterNodeAttribute(
     "css-grid-canvas", "hidden", highlighter);
   ok(!hidden, "The highlighter is visible");
 
   info("Hiding the highlighter");
-  yield highlighter.hide();
+  await highlighter.hide();
 
-  hidden = yield testActor.getHighlighterNodeAttribute(
+  hidden = await testActor.getHighlighterNodeAttribute(
     "css-grid-canvas", "hidden", highlighter);
   ok(hidden, "The highlighter is hidden");
 
-  yield highlighter.finalize();
+  await highlighter.finalize();
 });

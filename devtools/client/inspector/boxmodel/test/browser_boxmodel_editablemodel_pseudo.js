@@ -20,30 +20,30 @@ const TEST_URI =
     <div class=test></div>
   </div>`;
 
-add_task(function* () {
-  yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel, testActor} = yield openLayoutView();
+add_task(async function() {
+  await addTab("data:text/html," + encodeURIComponent(TEST_URI));
+  let {inspector, boxmodel, testActor} = await openLayoutView();
 
-  yield selectNode(".test", inspector);
+  await selectNode(".test", inspector);
 
   // No margin-top defined.
   info("Test that margins are not impacted by a pseudo element");
-  is((yield getStyle(testActor, ".test", "margin-top")), "", "margin-top is correct");
-  yield checkValueInBoxModel(".boxmodel-margin.boxmodel-top", "0", boxmodel.document);
+  is((await getStyle(testActor, ".test", "margin-top")), "", "margin-top is correct");
+  await checkValueInBoxModel(".boxmodel-margin.boxmodel-top", "0", boxmodel.document);
 
   // No padding-top defined.
   info("Test that paddings are not impacted by a pseudo element");
-  is((yield getStyle(testActor, ".test", "padding-top")), "", "padding-top is correct");
-  yield checkValueInBoxModel(".boxmodel-padding.boxmodel-top", "0", boxmodel.document);
+  is((await getStyle(testActor, ".test", "padding-top")), "", "padding-top is correct");
+  await checkValueInBoxModel(".boxmodel-padding.boxmodel-top", "0", boxmodel.document);
 
   // Width should be driven by the parent div.
   info("Test that dimensions are not impacted by a pseudo element");
-  is((yield getStyle(testActor, ".test", "width")), "", "width is correct");
-  yield checkValueInBoxModel(".boxmodel-content.boxmodel-width", "200",
+  is((await getStyle(testActor, ".test", "width")), "", "width is correct");
+  await checkValueInBoxModel(".boxmodel-content.boxmodel-width", "200",
     boxmodel.document);
 });
 
-function* checkValueInBoxModel(selector, expectedValue, doc) {
+async function checkValueInBoxModel(selector, expectedValue, doc) {
   let span = doc.querySelector(selector + " > span");
   is(span.textContent, expectedValue, "Should have the right value in the box model.");
 
@@ -54,5 +54,5 @@ function* checkValueInBoxModel(selector, expectedValue, doc) {
 
   let onBlur = once(editor, "blur");
   EventUtils.synthesizeKey("VK_RETURN", {}, doc.defaultView);
-  yield onBlur;
+  await onBlur;
 }

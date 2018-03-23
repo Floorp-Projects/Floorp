@@ -65,26 +65,6 @@ void EnableSwitchNotifications(hal::SwitchDevice aDevice);
 void DisableSwitchNotifications(hal::SwitchDevice aDevice);
 
 /**
- * Enable system clock change notifications from the backend.
- */
-void EnableSystemClockChangeNotifications();
-
-/**
- * Disable system clock change notifications from the backend.
- */
-void DisableSystemClockChangeNotifications();
-
-/**
- * Enable system timezone change notifications from the backend.
- */
-void EnableSystemTimezoneChangeNotifications();
-
-/**
- * Disable system timezone change notifications from the backend.
- */
-void DisableSystemTimezoneChangeNotifications();
-
-/**
  * Has the child-side HAL IPC object been destroyed?  If so, you shouldn't send
  * messages to hal_sandbox.
  */

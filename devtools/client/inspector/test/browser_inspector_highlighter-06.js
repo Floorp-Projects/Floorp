@@ -9,23 +9,23 @@
 // NOTE: Using a real file instead data: URL since the bug won't happen on data: URL
 const TEST_URI = URL_ROOT + "doc_inspector_highlighter_scroll.html";
 
-add_task(function* () {
-  let { inspector, testActor } = yield openInspectorForURL(TEST_URI);
+add_task(async function() {
+  let { inspector, testActor } = await openInspectorForURL(TEST_URI);
 
-  yield testActor.scrollIntoView("a");
-  yield selectAndHighlightNode("a", inspector);
+  await testActor.scrollIntoView("a");
+  await selectAndHighlightNode("a", inspector);
 
   let markupLoaded = inspector.once("markuploaded");
 
-  let y = yield testActor.eval("window.pageYOffset");
+  let y = await testActor.eval("window.pageYOffset");
   isnot(y, 0, "window scrolled vertically.");
 
   info("Reloading page.");
-  yield testActor.reload();
+  await testActor.reload();
 
   info("Waiting for markupview to load after reload.");
-  yield markupLoaded;
+  await markupLoaded;
 
-  let newY = yield testActor.eval("window.pageYOffset");
+  let newY = await testActor.eval("window.pageYOffset");
   is(y, newY, "window remember the previous scroll position.");
 });

@@ -21,16 +21,16 @@ const TEST_URI = `
   <div id="testid" class="testclass">Styled Node</div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#testid", inspector);
-  yield testAddTextInFilter(inspector, view);
-  yield testRemoveTextInFilter(inspector, view);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
+  await selectNode("#testid", inspector);
+  await testAddTextInFilter(inspector, view);
+  await testRemoveTextInFilter(inspector, view);
 });
 
-function* testAddTextInFilter(inspector, view) {
-  yield setSearchFilter(view, SEARCH);
+async function testAddTextInFilter(inspector, view) {
+  await setSearchFilter(view, SEARCH);
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 2, "Should have 2 rules.");
@@ -45,7 +45,7 @@ function* testAddTextInFilter(inspector, view) {
     "background-color text property is correctly highlighted.");
 }
 
-function* testRemoveTextInFilter(inspector, view) {
+async function testRemoveTextInFilter(inspector, view) {
   info("Press backspace and set filter text to \"00\"");
 
   let win = view.styleWindow;
@@ -53,7 +53,7 @@ function* testRemoveTextInFilter(inspector, view) {
 
   searchField.focus();
   EventUtils.synthesizeKey("VK_BACK_SPACE", {}, win);
-  yield inspector.once("ruleview-filtered");
+  await inspector.once("ruleview-filtered");
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 3, "Should have 3 rules.");

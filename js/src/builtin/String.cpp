@@ -3292,13 +3292,8 @@ static const JSFunctionSpec string_methods[] = {
     JS_FN("startsWith",        str_startsWith,        1,0),
     JS_FN("endsWith",          str_endsWith,          1,0),
     JS_FN("trim",              str_trim,              0,0),
-#ifdef NIGHTLY_BUILD
     JS_FN("trimStart",         str_trimStart,         0,0),
     JS_FN("trimEnd",           str_trimEnd,           0,0),
-#else
-    JS_FN("trimLeft",          str_trimStart,         0,0),
-    JS_FN("trimRight",         str_trimEnd,           0,0),
-#endif
 #if EXPOSE_INTL_API
     JS_SELF_HOSTED_FN("toLocaleLowerCase", "String_toLocaleLowerCase", 0,0),
     JS_SELF_HOSTED_FN("toLocaleUpperCase", "String_toLocaleUpperCase", 0,0),
@@ -3657,7 +3652,6 @@ js::InitStringClass(JSContext* cx, HandleObject obj)
         return nullptr;
     }
 
-#ifdef NIGHTLY_BUILD
     // Create "trimLeft" as an alias for "trimStart".
     RootedValue trimFn(cx);
     RootedId trimId(cx, NameToId(cx->names().trimStart));
@@ -3676,7 +3670,6 @@ js::InitStringClass(JSContext* cx, HandleObject obj)
     {
         return nullptr;
     }
-#endif
 
     /*
      * Define escape/unescape, the URI encode/decode functions, and maybe

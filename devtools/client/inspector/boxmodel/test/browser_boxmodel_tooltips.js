@@ -70,9 +70,9 @@ const VALUES_TEST_DATA = [{
   }]
 }];
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel} = yield openLayoutView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, boxmodel} = await openLayoutView();
 
   info("Checking the regions tooltips");
 
@@ -98,7 +98,7 @@ add_task(function* () {
 
   for (let {selector, values} of VALUES_TEST_DATA) {
     info("Selecting " + selector + " and checking the values tooltips");
-    yield selectNode(selector, inspector);
+    await selectNode(selector, inspector);
 
     info("Iterate over all values");
     for (let key in boxmodel.map) {

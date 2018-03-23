@@ -9,14 +9,14 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Adding a contextmenu attribute to the body node");
-  yield addNewAttributes("body", "contextmenu=\"menu1\"", inspector);
+  await addNewAttributes("body", "contextmenu=\"menu1\"", inspector);
 
   info("Checking for links in the new attribute");
-  let {editor} = yield getContainerForSelector("body", inspector);
+  let {editor} = await getContainerForSelector("body", inspector);
   let linkEls = editor.attrElements.get("contextmenu")
                                    .querySelectorAll(".link");
   is(linkEls.length, 1, "There is one link in the contextmenu attribute");
@@ -27,10 +27,10 @@ add_task(function* () {
   let nodeMutated = inspector.once("markupmutation");
   let attr = editor.attrElements.get("contextmenu").querySelector(".editable");
   setEditableFieldValue(attr, "contextmenu=\"menu2\"", inspector);
-  yield nodeMutated;
+  await nodeMutated;
 
   info("Checking for links in the updated attribute");
-  ({editor} = yield getContainerForSelector("body", inspector));
+  ({editor} = await getContainerForSelector("body", inspector));
   linkEls = editor.attrElements.get("contextmenu").querySelectorAll(".link");
   is(linkEls.length, 1, "There is one link in the contextmenu attribute");
   is(linkEls[0].dataset.type, "idref", "The link has the right type");

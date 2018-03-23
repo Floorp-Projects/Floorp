@@ -18,9 +18,9 @@ const TEST_URI = `
   Testing the color picker tooltip!
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {view} = await openRuleView();
 
   let swatch = getRuleViewProperty(view, "body", "color").valueSpan
     .querySelector(".ruleview-colorswatch");
@@ -32,17 +32,17 @@ add_task(function* () {
   info("Showing the color picker tooltip by clicking on the color swatch");
   let onColorPickerReady = colorPicker.once("ready");
   swatch.click();
-  yield onColorPickerReady;
+  await onColorPickerReady;
 
   info("Now showing the image preview tooltip to hide the color picker");
   let onHidden = colorPicker.tooltip.once("hidden");
   // Hiding the color picker refreshes the value.
   let onRuleViewChanged = view.once("ruleview-changed");
-  let previewTooltip = yield assertShowPreviewTooltip(view, uriSpan);
-  yield onHidden;
-  yield onRuleViewChanged;
+  let previewTooltip = await assertShowPreviewTooltip(view, uriSpan);
+  await onHidden;
+  await onRuleViewChanged;
 
-  yield assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);
+  await assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);
 
   ok(true, "The color picker closed when the image preview tooltip appeared");
 });

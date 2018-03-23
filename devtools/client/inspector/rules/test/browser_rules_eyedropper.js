@@ -39,27 +39,27 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.toolbox.host");
 });
 
-add_task(function* () {
+add_task(async function() {
   info("Add the test tab, open the rule-view and select the test node");
 
   let url = "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI);
-  yield addTab(url);
+  await addTab(url);
 
-  let {testActor, inspector, view, toolbox} = yield openRuleView();
+  let {testActor, inspector, view, toolbox} = await openRuleView();
 
-  yield runTest(testActor, inspector, view);
+  await runTest(testActor, inspector, view);
 
   info("Reload the page to restore the initial state");
-  yield navigateTo(inspector, url);
+  await navigateTo(inspector, url);
 
   info("Change toolbox host to WINDOW");
-  yield toolbox.switchHost("window");
+  await toolbox.switchHost("window");
 
-  yield runTest(testActor, inspector, view);
+  await runTest(testActor, inspector, view);
 });
 
-function* runTest(testActor, inspector, view) {
-  yield selectNode("#div2", inspector);
+async function runTest(testActor, inspector, view) {
+  await selectNode("#div2", inspector);
 
   info("Get the background-color property from the rule-view");
   let property = getRuleViewProperty(view, "#div2", "background-color");
@@ -67,41 +67,41 @@ function* runTest(testActor, inspector, view) {
   ok(swatch, "Color swatch is displayed for the bg-color property");
 
   info("Open the eyedropper from the colorpicker tooltip");
-  yield openEyedropper(view, swatch);
+  await openEyedropper(view, swatch);
 
   let tooltip = view.tooltips.getTooltip("colorPicker").tooltip;
   ok(!tooltip.isVisible(), "color picker tooltip is closed after opening eyedropper");
 
   info("Test that pressing escape dismisses the eyedropper");
-  yield testESC(swatch, inspector, testActor);
+  await testESC(swatch, inspector, testActor);
 
   info("Open the eyedropper again");
-  yield openEyedropper(view, swatch);
+  await openEyedropper(view, swatch);
 
   info("Test that a color can be selected with the eyedropper");
-  yield testSelect(view, swatch, inspector, testActor);
+  await testSelect(view, swatch, inspector, testActor);
 
   let onHidden = tooltip.once("hidden");
   tooltip.hide();
-  yield onHidden;
+  await onHidden;
   ok(!tooltip.isVisible(), "color picker tooltip is closed");
 
-  yield waitForTick();
+  await waitForTick();
 }
 
-function* testESC(swatch, inspector, testActor) {
+async function testESC(swatch, inspector, testActor) {
   info("Press escape");
   let onCanceled = new Promise(resolve => {
     inspector.inspector.once("color-pick-canceled", resolve);
   });
-  yield testActor.synthesizeKey({key: "VK_ESCAPE", options: {}});
-  yield onCanceled;
+  await testActor.synthesizeKey({key: "VK_ESCAPE", options: {}});
+  await onCanceled;
 
   let color = swatch.style.backgroundColor;
   is(color, ORIGINAL_COLOR, "swatch didn't change after pressing ESC");
 }
 
-function* testSelect(view, swatch, inspector, testActor) {
+async function testSelect(view, swatch, inspector, testActor) {
   info("Click at x:10px y:10px");
   let onPicked = new Promise(resolve => {
     inspector.inspector.once("color-picked", resolve);
@@ -109,15 +109,15 @@ function* testSelect(view, swatch, inspector, testActor) {
   // The change to the content is done async after rule view change
   let onRuleViewChanged = view.once("ruleview-changed");
 
-  yield testActor.synthesizeMouse({selector: "html", x: 10, y: 10,
+  await testActor.synthesizeMouse({selector: "html", x: 10, y: 10,
                                    options: {type: "mousemove"}});
-  yield testActor.synthesizeMouse({selector: "html", x: 10, y: 10,
+  await testActor.synthesizeMouse({selector: "html", x: 10, y: 10,
                                    options: {type: "mousedown"}});
-  yield testActor.synthesizeMouse({selector: "html", x: 10, y: 10,
+  await testActor.synthesizeMouse({selector: "html", x: 10, y: 10,
                                    options: {type: "mouseup"}});
 
-  yield onPicked;
-  yield onRuleViewChanged;
+  await onPicked;
+  await onRuleViewChanged;
 
   let color = swatch.style.backgroundColor;
   is(color, EXPECTED_COLOR, "swatch changed colors");
@@ -125,7 +125,7 @@ function* testSelect(view, swatch, inspector, testActor) {
   ok(!swatch.eyedropperOpen, "swatch eye dropper is closed");
   ok(!swatch.activeSwatch, "no active swatch");
 
-  is((yield getComputedStyleProperty("div", null, "background-color")),
+  is((await getComputedStyleProperty("div", null, "background-color")),
      EXPECTED_COLOR,
      "div's color set to body color after dropper");
 }

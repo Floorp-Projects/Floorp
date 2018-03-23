@@ -9,23 +9,23 @@
 const TEST_URI = URL_ROOT + "doc_pseudoelement.html";
 const PSEUDO_PREF = "devtools.inspector.show_pseudo_elements";
 
-add_task(function* () {
-  yield pushPref(PSEUDO_PREF, true);
+add_task(async function() {
+  await pushPref(PSEUDO_PREF, true);
 
-  yield addTab(TEST_URI);
-  let {inspector, view} = yield openRuleView();
+  await addTab(TEST_URI);
+  let {inspector, view} = await openRuleView();
 
-  yield testTopLeft(inspector, view);
-  yield testTopRight(inspector, view);
-  yield testBottomRight(inspector, view);
-  yield testBottomLeft(inspector, view);
-  yield testParagraph(inspector, view);
-  yield testBody(inspector, view);
+  await testTopLeft(inspector, view);
+  await testTopRight(inspector, view);
+  await testBottomRight(inspector, view);
+  await testBottomLeft(inspector, view);
+  await testParagraph(inspector, view);
+  await testBody(inspector, view);
 });
 
-function* testTopLeft(inspector, view) {
+async function testTopLeft(inspector, view) {
   let id = "#topleft";
-  let rules = yield assertPseudoElementRulesNumbers(id,
+  let rules = await assertPseudoElementRulesNumbers(id,
     inspector, view, {
       elementRulesNb: 4,
       firstLineRulesNb: 2,
@@ -71,12 +71,12 @@ function* testTopLeft(inspector, view) {
   let onAdded = view.once("ruleview-changed");
   let firstProp = elementFirstLineRuleView.addProperty("background-color",
     "rgb(0, 255, 0)", "", true);
-  yield onAdded;
+  await onAdded;
 
   onAdded = view.once("ruleview-changed");
   let secondProp = elementFirstLineRuleView.addProperty("font-style",
     "italic", "", true);
-  yield onAdded;
+  await onAdded;
 
   is(firstProp,
      elementFirstLineRule.textProps[elementFirstLineRule.textProps.length - 2],
@@ -85,40 +85,40 @@ function* testTopLeft(inspector, view) {
      elementFirstLineRule.textProps[elementFirstLineRule.textProps.length - 1],
      "Second added property is on back of array");
 
-  is((yield getComputedStyleProperty(id, ":first-line", "background-color")),
+  is((await getComputedStyleProperty(id, ":first-line", "background-color")),
      "rgb(0, 255, 0)", "Added property should have been used.");
-  is((yield getComputedStyleProperty(id, ":first-line", "font-style")),
+  is((await getComputedStyleProperty(id, ":first-line", "font-style")),
      "italic", "Added property should have been used.");
-  is((yield getComputedStyleProperty(id, null, "text-decoration")),
+  is((await getComputedStyleProperty(id, null, "text-decoration")),
      "none", "Added property should not apply to element");
 
-  yield togglePropStatus(view, firstProp);
+  await togglePropStatus(view, firstProp);
 
-  is((yield getComputedStyleProperty(id, ":first-line", "background-color")),
+  is((await getComputedStyleProperty(id, ":first-line", "background-color")),
      "rgb(255, 0, 0)", "Disabled property should now have been used.");
-  is((yield getComputedStyleProperty(id, null, "background-color")),
+  is((await getComputedStyleProperty(id, null, "background-color")),
      "rgb(221, 221, 221)", "Added property should not apply to element");
 
-  yield togglePropStatus(view, firstProp);
+  await togglePropStatus(view, firstProp);
 
-  is((yield getComputedStyleProperty(id, ":first-line", "background-color")),
+  is((await getComputedStyleProperty(id, ":first-line", "background-color")),
      "rgb(0, 255, 0)", "Added property should have been used.");
-  is((yield getComputedStyleProperty(id, null, "text-decoration")),
+  is((await getComputedStyleProperty(id, null, "text-decoration")),
      "none", "Added property should not apply to element");
 
   onAdded = view.once("ruleview-changed");
   firstProp = elementRuleView.addProperty("background-color",
                                           "rgb(0, 0, 255)", "", true);
-  yield onAdded;
+  await onAdded;
 
-  is((yield getComputedStyleProperty(id, null, "background-color")),
+  is((await getComputedStyleProperty(id, null, "background-color")),
      "rgb(0, 0, 255)", "Added property should have been used.");
-  is((yield getComputedStyleProperty(id, ":first-line", "background-color")),
+  is((await getComputedStyleProperty(id, ":first-line", "background-color")),
      "rgb(0, 255, 0)", "Added prop does not apply to pseudo");
 }
 
-function* testTopRight(inspector, view) {
-  yield assertPseudoElementRulesNumbers("#topright", inspector, view, {
+async function testTopRight(inspector, view) {
+  await assertPseudoElementRulesNumbers("#topright", inspector, view, {
     elementRulesNb: 4,
     firstLineRulesNb: 1,
     firstLetterRulesNb: 1,
@@ -139,8 +139,8 @@ function* testTopRight(inspector, view) {
     "Pseudo Elements are shown again after clicking twisty");
 }
 
-function* testBottomRight(inspector, view) {
-  yield assertPseudoElementRulesNumbers("#bottomright", inspector, view, {
+async function testBottomRight(inspector, view) {
+  await assertPseudoElementRulesNumbers("#bottomright", inspector, view, {
     elementRulesNb: 4,
     firstLineRulesNb: 1,
     firstLetterRulesNb: 1,
@@ -150,8 +150,8 @@ function* testBottomRight(inspector, view) {
   });
 }
 
-function* testBottomLeft(inspector, view) {
-  yield assertPseudoElementRulesNumbers("#bottomleft", inspector, view, {
+async function testBottomLeft(inspector, view) {
+  await assertPseudoElementRulesNumbers("#bottomleft", inspector, view, {
     elementRulesNb: 4,
     firstLineRulesNb: 1,
     firstLetterRulesNb: 1,
@@ -161,9 +161,9 @@ function* testBottomLeft(inspector, view) {
   });
 }
 
-function* testParagraph(inspector, view) {
+async function testParagraph(inspector, view) {
   let rules =
-    yield assertPseudoElementRulesNumbers("#bottomleft p", inspector, view, {
+    await assertPseudoElementRulesNumbers("#bottomleft p", inspector, view, {
       elementRulesNb: 3,
       firstLineRulesNb: 1,
       firstLetterRulesNb: 1,
@@ -190,8 +190,8 @@ function* testParagraph(inspector, view) {
      "Paragraph first-letter properties are correct");
 }
 
-function* testBody(inspector, view) {
-  yield testNode("body", inspector, view);
+async function testBody(inspector, view) {
+  await testNode("body", inspector, view);
 
   let gutters = getGutters(view);
   is(gutters.length, 0, "There are no gutter headings");
@@ -201,14 +201,14 @@ function convertTextPropsToString(textProps) {
   return textProps.map(t => t.name + ": " + t.value).join("; ");
 }
 
-function* testNode(selector, inspector, view) {
-  yield selectNode(selector, inspector);
+async function testNode(selector, inspector, view) {
+  await selectNode(selector, inspector);
   let elementStyle = view._elementStyle;
   return elementStyle;
 }
 
-function* assertPseudoElementRulesNumbers(selector, inspector, view, ruleNbs) {
-  let elementStyle = yield testNode(selector, inspector, view);
+async function assertPseudoElementRulesNumbers(selector, inspector, view, ruleNbs) {
+  let elementStyle = await testNode(selector, inspector, view);
 
   let rules = {
     elementRules: elementStyle.rules.filter(rule => !rule.pseudoElement),

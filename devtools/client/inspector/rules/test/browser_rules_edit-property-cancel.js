@@ -16,31 +16,31 @@ const TEST_URI = `
   <div id='testid'>Styled Node</div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#testid", inspector);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
+  await selectNode("#testid", inspector);
 
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let propEditor = ruleEditor.rule.textProps[0].editor;
 
-  yield focusEditableField(view, propEditor.nameSpan);
-  yield sendKeysAndWaitForFocus(view, ruleEditor.element,
+  await focusEditableField(view, propEditor.nameSpan);
+  await sendKeysAndWaitForFocus(view, ruleEditor.element,
     ["DELETE", "ESCAPE"]);
 
   is(propEditor.nameSpan.textContent, "background-color",
     "'background-color' property name is correctly set.");
-  is((yield getComputedStyleProperty("#testid", null, "background-color")),
+  is((await getComputedStyleProperty("#testid", null, "background-color")),
     "rgb(0, 0, 255)", "#00F background color is set.");
 
-  yield focusEditableField(view, propEditor.valueSpan);
+  await focusEditableField(view, propEditor.valueSpan);
   let onValueDeleted = view.once("ruleview-changed");
-  yield sendKeysAndWaitForFocus(view, ruleEditor.element,
+  await sendKeysAndWaitForFocus(view, ruleEditor.element,
     ["DELETE", "ESCAPE"]);
-  yield onValueDeleted;
+  await onValueDeleted;
 
   is(propEditor.valueSpan.textContent, "#00F",
     "'#00F' property value is correctly set.");
-  is((yield getComputedStyleProperty("#testid", null, "background-color")),
+  is((await getComputedStyleProperty("#testid", null, "background-color")),
     "rgb(0, 0, 255)", "#00F background color is set.");
 });

@@ -13,23 +13,23 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "<iframe style='margin:100px' src='data:text/html," +
   "<div id=\"inner\">Look I am here!</div>'>";
 
-add_task(function* () {
+add_task(async function() {
   info("Enable command-button-frames preference setting");
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
-  let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URI);
+  let {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URI);
 
   info("Switch to the iframe context.");
-  yield switchToFrameContext(1, toolbox, inspector);
+  await switchToFrameContext(1, toolbox, inspector);
 
   info("Check navigation was successful.");
-  let hasOuterNode = yield testActor.hasNode("#outer");
+  let hasOuterNode = await testActor.hasNode("#outer");
   ok(!hasOuterNode, "Check testActor has no access to outer element");
-  let hasTestNode = yield testActor.hasNode("#inner");
+  let hasTestNode = await testActor.hasNode("#inner");
   ok(hasTestNode, "Check testActor has access to inner element");
 
   info("Check highlighting is correct after switching iframe context");
-  yield selectAndHighlightNode("#inner", inspector);
-  let isHighlightCorrect = yield testActor.assertHighlightedNode("#inner");
+  await selectAndHighlightNode("#inner", inspector);
+  let isHighlightCorrect = await testActor.assertHighlightedNode("#inner");
   ok(isHighlightCorrect, "The selected node is properly highlighted.");
 
   info("Cleanup command-button-frames preferences.");
@@ -41,19 +41,19 @@ add_task(function* () {
  * Returns a promise that will resolve when the navigation is complete.
  * @return {Promise}
  */
-function* switchToFrameContext(frameIndex, toolbox, inspector) {
+async function switchToFrameContext(frameIndex, toolbox, inspector) {
   // Open frame menu and wait till it's available on the screen.
   let btn = toolbox.doc.getElementById("command-button-frames");
-  let menu = yield toolbox.showFramesMenu({target: btn});
-  yield once(menu, "open");
+  let menu = await toolbox.showFramesMenu({target: btn});
+  await once(menu, "open");
 
   info("Select the iframe in the frame list.");
   let newRoot = inspector.once("new-root");
 
   menu.items[frameIndex].click();
 
-  yield newRoot;
-  yield inspector.once("inspector-updated");
+  await newRoot;
+  await inspector.once("inspector-updated");
 
   info("Navigation to the iframe is done.");
 }

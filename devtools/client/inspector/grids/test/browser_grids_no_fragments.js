@@ -23,10 +23,10 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  let { inspector, gridInspector } = yield openLayoutView();
+  let { inspector, gridInspector } = await openLayoutView();
   let { document: doc } = gridInspector;
   let { store } = inspector;
 
@@ -38,12 +38,12 @@ add_task(function* () {
   let onCheckbox1Change = waitUntilState(store, state =>
     state.grids[0] && state.grids[0].highlighted);
   checkbox1.click();
-  yield onCheckbox1Change;
+  await onCheckbox1Change;
 
   info("Try to click the second grid's checkbox");
   let checkbox2 = gridList.children[1].querySelector("input");
   let onCheckbox2Change = waitUntilState(store, state =>
     state.grids[1] && state.grids[1].highlighted);
   checkbox2.click();
-  yield onCheckbox2Change;
+  await onCheckbox2Change;
 });

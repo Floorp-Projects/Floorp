@@ -16,11 +16,11 @@ const TEST_URI = `
   <div id='testid'>Styled Node</div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#testid", inspector);
-  yield testClickOnEmptyAreaToCloseEditor(inspector, view);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
+  await selectNode("#testid", inspector);
+  await testClickOnEmptyAreaToCloseEditor(inspector, view);
 });
 
 function synthesizeMouseOnEmptyArea(ruleEditor, view) {
@@ -33,14 +33,14 @@ function synthesizeMouseOnEmptyArea(ruleEditor, view) {
    view.styleWindow);
 }
 
-function* testClickOnEmptyAreaToCloseEditor(inspector, view) {
+async function testClickOnEmptyAreaToCloseEditor(inspector, view) {
   // Start at the beginning: start to add a rule to the element's style
   // declaration, add some text, then press escape.
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let propEditor = ruleEditor.rule.textProps[0].editor;
 
   info("Create a property value editor");
-  let editor = yield focusEditableField(view, propEditor.valueSpan);
+  let editor = await focusEditableField(view, propEditor.valueSpan);
   ok(editor.input, "The inplace-editor field is ready");
 
   info("Close the property value editor by clicking on an empty area " +
@@ -48,14 +48,14 @@ function* testClickOnEmptyAreaToCloseEditor(inspector, view) {
   let onRuleViewChanged = view.once("ruleview-changed");
   let onBlur = once(editor.input, "blur");
   synthesizeMouseOnEmptyArea(ruleEditor, view);
-  yield onBlur;
-  yield onRuleViewChanged;
+  await onBlur;
+  await onRuleViewChanged;
   ok(!view.isEditing, "No inplace editor should be displayed in the ruleview");
 
   info("Create new newProperty editor by clicking again on the empty area");
   let onFocus = once(ruleEditor.element, "focus", true);
   synthesizeMouseOnEmptyArea(ruleEditor, view);
-  yield onFocus;
+  await onFocus;
   editor = inplaceEditor(ruleEditor.element.ownerDocument.activeElement);
   is(inplaceEditor(ruleEditor.newPropSpan), editor,
    "New property editor was created");
@@ -63,7 +63,7 @@ function* testClickOnEmptyAreaToCloseEditor(inspector, view) {
   info("Close the newProperty editor by clicking again on the empty area");
   onBlur = once(editor.input, "blur");
   synthesizeMouseOnEmptyArea(ruleEditor, view);
-  yield onBlur;
+  await onBlur;
 
   ok(!view.isEditing, "No inplace editor should be displayed in the ruleview");
 }

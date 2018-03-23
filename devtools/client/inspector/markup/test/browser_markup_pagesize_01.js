@@ -37,31 +37,31 @@ const TEST_DATA = [{
   expected: "*more*uvwxy*more*"
 }];
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Start iterating through the test data");
   for (let step of TEST_DATA) {
     info("Start test: " + step.desc);
 
     if (step.forceReload) {
-      yield forceReload(inspector);
+      await forceReload(inspector);
     }
     info("Selecting the node that corresponds to " + step.selector);
-    yield selectNode(step.selector, inspector);
+    await selectNode(step.selector, inspector);
 
     info("Checking that the right nodes are shwon");
-    yield assertChildren(step.expected, inspector);
+    await assertChildren(step.expected, inspector);
   }
 
   info("Checking that clicking the more button loads everything");
-  yield clickShowMoreNodes(inspector);
-  yield inspector.markup._waitForChildren();
-  yield assertChildren("abcdefghijklmnopqrstuvwxyz", inspector);
+  await clickShowMoreNodes(inspector);
+  await inspector.markup._waitForChildren();
+  await assertChildren("abcdefghijklmnopqrstuvwxyz", inspector);
 });
 
-function* assertChildren(expected, inspector) {
-  let container = yield getContainerForSelector("body", inspector);
+async function assertChildren(expected, inspector) {
+  let container = await getContainerForSelector("body", inspector);
   let found = "";
   for (let child of container.children.children) {
     if (child.classList.contains("more-nodes")) {
@@ -73,13 +73,13 @@ function* assertChildren(expected, inspector) {
   is(found, expected, "Got the expected children.");
 }
 
-function* forceReload(inspector) {
-  let container = yield getContainerForSelector("body", inspector);
+async function forceReload(inspector) {
+  let container = await getContainerForSelector("body", inspector);
   container.childrenDirty = true;
 }
 
-function* clickShowMoreNodes(inspector) {
-  let container = yield getContainerForSelector("body", inspector);
+async function clickShowMoreNodes(inspector) {
+  let container = await getContainerForSelector("body", inspector);
   let button = container.elt.querySelector("button");
   let win = button.ownerDocument.defaultView;
   EventUtils.sendMouseEvent({type: "click"}, button, win);

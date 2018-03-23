@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {createNode} = require("devtools/client/animationinspector/utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
@@ -327,26 +326,26 @@ var HighlighterLock = {
   highlighter: null,
   isShown: false,
 
-  highlight: Task.async(function* (animationTargetNode) {
+  async highlight(animationTargetNode) {
     if (!this.highlighter) {
       let util = animationTargetNode.inspector.toolbox.highlighterUtils;
-      this.highlighter = yield util.getHighlighterByType("BoxModelHighlighter");
+      this.highlighter = await util.getHighlighterByType("BoxModelHighlighter");
     }
 
-    yield this.highlighter.show(animationTargetNode.nodeFront);
+    await this.highlighter.show(animationTargetNode.nodeFront);
     this.isShown = true;
     this.emit("highlighted", animationTargetNode);
-  }),
+  },
 
-  unhighlight: Task.async(function* () {
+  async unhighlight() {
     if (!this.highlighter || !this.isShown) {
       return;
     }
 
-    yield this.highlighter.hide();
+    await this.highlighter.hide();
     this.isShown = false;
     this.emit("unhighlighted");
-  })
+  }
 };
 
 EventEmitter.decorate(HighlighterLock);

@@ -21,11 +21,11 @@ const TEST_URI = `
   <div id="shape"></div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
 
-  yield selectNode("#shape", inspector);
+  await selectNode("#shape", inspector);
   let container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
   let shapeToggle = container.querySelector(".ruleview-shapeswatch");
   let shapeToggleStyle = getComputedStyle(shapeToggle);

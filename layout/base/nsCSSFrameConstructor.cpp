@@ -6873,8 +6873,7 @@ nsCSSFrameConstructor::CheckBitsForLazyFrameConstruction(nsIContent* aParent)
   bool noPrimaryFrame = false;
   bool needsFrameBitSet = false;
   nsIContent* content = aParent;
-  while (content &&
-         !content->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
+  while (content && !content->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
     if (content->GetPrimaryFrame() && content->GetPrimaryFrame()->IsLeaf()) {
       noPrimaryFrame = needsFrameBitSet = false;
     }
@@ -6900,39 +6899,30 @@ nsCSSFrameConstructor::CheckBitsForLazyFrameConstruction(nsIContent* aParent)
 }
 #endif
 
-// For inserts aChild should be valid, for appends it should be null.
 // Returns true if this operation can be lazy, false if not.
 //
 // FIXME(emilio, bug 1410020): This function assumes that the flattened tree
 // parent of all the appended children is the same, which, afaict, is not
 // necessarily true.
 //
-// But we disable lazy frame construction for shadow trees... We should fix
-// that, too.
-//
-// NOTE(emilio): The IsXULElement check is pretty unfortunate, but there's tons
-// of browser chrome code that rely on XBL bindings getting synchronously loaded
-// as soon as the elements get inserted in the DOM.
+// NOTE(emilio): The IsXULElement checks are pretty unfortunate, but there's
+// tons of browser chrome code that rely on XBL bindings getting synchronously
+// loaded as soon as the elements get inserted in the DOM.
 bool
 nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
-                                            nsIContent* aContainer,
                                             nsIContent* aChild)
 {
-  if (!aContainer || aContainer->IsInNativeAnonymousSubtree() ||
-      aContainer->IsXULElement()) {
-    return false;
-  }
-
+  MOZ_ASSERT(aChild->GetParent());
   if (aOperation == CONTENTINSERT) {
-    if (aChild->IsRootOfAnonymousSubtree() || aChild->IsXULElement()) {
+    MOZ_ASSERT(!aChild->IsRootOfAnonymousSubtree());
+    if (aChild->IsXULElement()) {
       return false;
     }
   } else { // CONTENTAPPEND
-    NS_ASSERTION(aOperation == CONTENTAPPEND,
-                 "operation should be either insert or append");
+    MOZ_ASSERT(aOperation == CONTENTAPPEND,
+               "operation should be either insert or append");
     for (nsIContent* child = aChild; child; child = child->GetNextSibling()) {
-      NS_ASSERTION(!child->IsRootOfAnonymousSubtree(),
-                   "Should be coming through the CONTENTINSERT case");
+      MOZ_ASSERT(!child->IsRootOfAnonymousSubtree());
       if (child->IsXULElement()) {
         return false;
       }
@@ -6969,15 +6959,8 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
     }
   }
 
-  // Walk up the tree setting the NODE_DESCENDANTS_NEED_FRAMES bit as we go.
-  // We need different handling for servo given the scoped restyle roots.
   CheckBitsForLazyFrameConstruction(parent);
-
-  if (RestyleManager()->IsGecko()) {
-    MOZ_CRASH("old style system disabled");
-  } else {
-    parent->AsElement()->NoteDescendantsNeedFramesForServo();
-  }
+  parent->AsElement()->NoteDescendantsNeedFramesForServo();
 
   return true;
 }
@@ -7195,7 +7178,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   }
 
   if (aInsertionKind == InsertionKind::Async &&
-      MaybeConstructLazily(CONTENTAPPEND, aContainer, aFirstNewContent)) {
+      MaybeConstructLazily(CONTENTAPPEND, aFirstNewContent)) {
     if (aContainer->IsStyledByServo()) {
       LazilyStyleNewChildRange(aFirstNewContent, nullptr);
     }
@@ -7665,7 +7648,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
                GetDisplayContentsStyleFor(aContainer), "New XBL code is possibly wrong!");
 
   if (aInsertionKind == InsertionKind::Async &&
-      MaybeConstructLazily(CONTENTINSERT, aContainer, aStartChild)) {
+      MaybeConstructLazily(CONTENTINSERT, aStartChild)) {
     if (aContainer->IsStyledByServo()) {
       LazilyStyleNewChildRange(aStartChild, aEndChild);
     }

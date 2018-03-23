@@ -8,17 +8,17 @@
 
 const TEST_URL = URL_ROOT + "doc_inspector_search.html";
 
-add_task(function* () {
-  let { inspector } = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let { inspector } = await openInspectorForURL(TEST_URL);
   let { panelWin, searchResultsLabel } = inspector;
 
   info("Searching for test node #d1");
   // Expect the label shows 1 result
-  yield focusSearchBoxUsingShortcut(panelWin);
+  await focusSearchBoxUsingShortcut(panelWin);
   synthesizeKeys("#d1", panelWin);
   EventUtils.synthesizeKey("VK_RETURN", {}, panelWin);
 
-  yield inspector.search.once("search-result");
+  await inspector.search.once("search-result");
   is(searchResultsLabel.textContent, "1 of 1");
 
   info("Click the clear button");
@@ -29,5 +29,5 @@ add_task(function* () {
 
   // Catch-all event for remaining server requests when searching for the new
   // node.
-  yield inspector.once("inspector-updated");
+  await inspector.once("inspector-updated");
 });

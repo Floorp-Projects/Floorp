@@ -6,22 +6,22 @@
 
 // Tests adding a new rule and a new property in this rule.
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8,<div id='testid'>Styled Node</div>");
-  let {inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8,<div id='testid'>Styled Node</div>");
+  let {inspector, view} = await openRuleView();
 
   info("Selecting the test node");
-  yield selectNode("#testid", inspector);
+  await selectNode("#testid", inspector);
 
   info("Adding a new rule for this node and blurring the new selector field");
-  yield addNewRuleAndDismissEditor(inspector, view, "#testid", 1);
+  await addNewRuleAndDismissEditor(inspector, view, "#testid", 1);
 
   info("Adding a new property for this rule");
   let ruleEditor = getRuleViewRuleEditor(view, 1);
 
   let onRuleViewChanged = view.once("ruleview-changed");
   ruleEditor.addProperty("font-weight", "bold", "", true);
-  yield onRuleViewChanged;
+  await onRuleViewChanged;
 
   let textProps = ruleEditor.rule.textProps;
   let prop = textProps[textProps.length - 1];
