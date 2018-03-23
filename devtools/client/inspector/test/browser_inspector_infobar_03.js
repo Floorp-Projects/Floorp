@@ -8,8 +8,8 @@
 
 const TEST_URI = URL_ROOT + "doc_inspector_infobar_03.html";
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URI);
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(TEST_URI);
 
   let testData = {
     selector: "body",
@@ -17,23 +17,23 @@ add_task(function* () {
     style: "position:fixed",
   };
 
-  yield testPositionAndStyle(testData, inspector, testActor);
+  await testPositionAndStyle(testData, inspector, testActor);
 });
 
-function* testPositionAndStyle(test, inspector, testActor) {
+async function testPositionAndStyle(test, inspector, testActor) {
   info("Testing " + test.selector);
 
-  yield selectAndHighlightNode(test.selector, inspector);
+  await selectAndHighlightNode(test.selector, inspector);
 
-  let style = yield testActor.getHighlighterNodeAttribute(
+  let style = await testActor.getHighlighterNodeAttribute(
     "box-model-infobar-container", "style");
 
   is(style.split(";")[0].trim(), test.style,
     "Infobar shows on top of the page when page isn't scrolled");
 
-  yield testActor.scrollWindow(0, 500);
+  await testActor.scrollWindow(0, 500);
 
-  style = yield testActor.getHighlighterNodeAttribute(
+  style = await testActor.getHighlighterNodeAttribute(
     "box-model-infobar-container", "style");
 
   is(style.split(";")[0].trim(), test.style,

@@ -19,37 +19,37 @@ const expectedStyle = (w, h, z) =>
         `position:absolute; width:${w * z}px;height:${h * z}px; ` +
         "overflow:hidden";
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
   let highlighterUtils = inspector.toolbox.highlighterUtils;
 
-  let div = yield getNodeFront("div", inspector);
+  let div = await getNodeFront("div", inspector);
 
   for (let level of TEST_LEVELS) {
     info(`Zoom to level ${level}`);
-    yield testActor.zoomPageTo(level, false);
+    await testActor.zoomPageTo(level, false);
 
     info("Highlight the test node");
-    yield highlighterUtils.highlightNodeFront(div);
+    await highlighterUtils.highlightNodeFront(div);
 
-    let isVisible = yield testActor.isHighlighting();
+    let isVisible = await testActor.isHighlighting();
     ok(isVisible, `The highlighter is visible at zoom level ${level}`);
 
-    yield testActor.isNodeCorrectlyHighlighted("div", is);
+    await testActor.isNodeCorrectlyHighlighted("div", is);
 
     info("Check that the highlighter root wrapper node was scaled down");
 
-    let style = yield getElementsNodeStyle(testActor);
-    let { width, height } = yield testActor.getWindowDimensions();
+    let style = await getElementsNodeStyle(testActor);
+    let { width, height } = await testActor.getWindowDimensions();
     is(style, expectedStyle(width, height, level),
       "The style attribute of the root element is correct");
 
     info("Unhighlight the node");
-    yield highlighterUtils.unhighlight();
+    await highlighterUtils.unhighlight();
   }
 });
 
-function* getElementsNodeStyle(testActor) {
-  let value = yield testActor.getHighlighterNodeAttribute("box-model-elements", "style");
+async function getElementsNodeStyle(testActor) {
+  let value = await testActor.getHighlighterNodeAttribute("box-model-elements", "style");
   return value;
 }

@@ -29,38 +29,38 @@ const DOCUMENT_SRC = "<style>" +
 
 const TEST_URI = "data:text/html;charset=utf-8," + DOCUMENT_SRC;
 
-add_task(function* () {
-  let { inspector, toolbox, testActor } = yield openInspectorForURL(TEST_URI);
+add_task(async function() {
+  let { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URI);
 
   info("Waiting for box mode to show.");
-  let body = yield getNodeFront("body", inspector);
-  yield inspector.highlighter.showBoxModel(body);
+  let body = await getNodeFront("body", inspector);
+  await inspector.highlighter.showBoxModel(body);
 
   info("Waiting for element picker to become active.");
-  yield startPicker(toolbox);
+  await startPicker(toolbox);
 
   info("Moving mouse over iframe padding.");
-  yield moveMouseOver("iframe", 1, 1);
+  await moveMouseOver("iframe", 1, 1);
 
   info("Performing checks");
-  yield testActor.isNodeCorrectlyHighlighted("iframe", is);
+  await testActor.isNodeCorrectlyHighlighted("iframe", is);
 
   info("Scrolling the document");
-  yield testActor.setProperty("iframe", "style", "margin-bottom: 2000px");
-  yield testActor.eval("window.scrollBy(0, 40);");
+  await testActor.setProperty("iframe", "style", "margin-bottom: 2000px");
+  await testActor.eval("window.scrollBy(0, 40);");
 
   // target the body within the iframe
   let iframeBodySelector = ["iframe", "body"];
 
   info("Moving mouse over iframe body");
-  yield moveMouseOver("iframe", 40, 40);
+  await moveMouseOver("iframe", 40, 40);
 
-  ok((yield testActor.assertHighlightedNode(iframeBodySelector)),
+  ok((await testActor.assertHighlightedNode(iframeBodySelector)),
      "highlighter shows the right node");
-  yield testActor.isNodeCorrectlyHighlighted(iframeBodySelector, is);
+  await testActor.isNodeCorrectlyHighlighted(iframeBodySelector, is);
 
   info("Waiting for the element picker to deactivate.");
-  yield inspector.toolbox.highlighterUtils.stopPicker();
+  await inspector.toolbox.highlighterUtils.stopPicker();
 
   function moveMouseOver(selector, x, y) {
     info("Waiting for element " + selector + " to be highlighted");
