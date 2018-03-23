@@ -2530,7 +2530,7 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
 
   StyleSheet* previousFirstChild = aParent->GetFirstChild();
   if (NS_SUCCEEDED(rv)) {
-    rv = aLoader->LoadChildSheet(aParent, aParentLoadData, uri, media, nullptr, aReusableSheets);
+    rv = aLoader->LoadChildSheet(aParent, aParentLoadData, uri, media, aReusableSheets);
   }
 
   if (NS_FAILED(rv) ||
