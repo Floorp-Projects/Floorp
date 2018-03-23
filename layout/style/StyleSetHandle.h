@@ -43,8 +43,6 @@ namespace css {
 class Rule;
 } // namespace css
 
-#define SERVO_BIT 0x1
-
 /**
  * Smart pointer class that can hold a pointer to either an nsStyleSet
  * or a ServoStyleSet.
@@ -61,40 +59,26 @@ public:
   public:
     friend class ::mozilla::StyleSetHandle;
 
-    bool IsGecko() const
-    {
-      return false;
-    }
-
-    bool IsServo() const
-    {
-      MOZ_ASSERT(mValue, "StyleSetHandle null pointer dereference");
-      return mValue & SERVO_BIT;
-    }
-
     StyleBackendType BackendType() const
     {
-      return IsGecko() ? StyleBackendType::Gecko :
-                         StyleBackendType::Servo;
+      return StyleBackendType::Servo;
     }
 
 
     ServoStyleSet* AsServo()
     {
-      MOZ_ASSERT(IsServo());
-      return reinterpret_cast<ServoStyleSet*>(mValue & ~SERVO_BIT);
+      return reinterpret_cast<ServoStyleSet*>(mValue);
     }
 
-    ServoStyleSet* GetAsServo() { return IsServo() ? AsServo() : nullptr; }
+    ServoStyleSet* GetAsServo() { return AsServo(); }
 
 
     const ServoStyleSet* AsServo() const
     {
-      MOZ_ASSERT(IsServo());
       return const_cast<Ptr*>(this)->AsServo();
     }
 
-    const ServoStyleSet* GetAsServo() const { return IsServo() ? AsServo() : nullptr; }
+    const ServoStyleSet* GetAsServo() const { return AsServo(); }
 
     // These inline methods are defined in StyleSetHandleInlines.h.
     inline void Delete();
@@ -178,8 +162,6 @@ public:
     inline already_AddRefed<ComputedStyle>
     ProbePseudoElementStyle(dom::Element* aParentElement,
                             mozilla::CSSPseudoElementType aType);
-    inline void RootComputedStyleAdded();
-    inline void RootComputedStyleRemoved();
 
     inline bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
     inline nsCSSCounterStyleRule* CounterStyleRuleForName(nsAtom* aName);
@@ -203,18 +185,14 @@ public:
 
   StyleSetHandle& operator=(nsStyleSet* aStyleSet)
   {
-    MOZ_ASSERT(!(reinterpret_cast<uintptr_t>(aStyleSet) & SERVO_BIT),
-               "least significant bit shouldn't be set; we use it for state");
     mPtr.mValue = reinterpret_cast<uintptr_t>(aStyleSet);
     return *this;
   }
 
   StyleSetHandle& operator=(ServoStyleSet* aStyleSet)
   {
-    MOZ_ASSERT(!(reinterpret_cast<uintptr_t>(aStyleSet) & SERVO_BIT),
-               "least significant bit shouldn't be set; we use it for state");
     mPtr.mValue =
-      aStyleSet ? (reinterpret_cast<uintptr_t>(aStyleSet) | SERVO_BIT) : 0;
+      aStyleSet ? reinterpret_cast<uintptr_t>(aStyleSet) : 0;
     return *this;
   }
 
@@ -234,8 +212,6 @@ public:
 private:
   Ptr mPtr;
 };
-
-#undef SERVO_BIT
 
 } // namespace mozilla
 
