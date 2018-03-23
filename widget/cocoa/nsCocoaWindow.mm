@@ -3604,7 +3604,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   [super setBackgroundColor:[NSColor whiteColor]];
   [mColor release];
   [mBackgroundColor release];
-  [mTitlebarView release];
   [super dealloc];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
