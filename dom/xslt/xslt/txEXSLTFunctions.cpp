@@ -684,6 +684,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
     }
 
     NS_NOTREACHED("Missing switch case.");
+    return NS_ERROR_UNEXPECTED;
 }
 
 Expr::ResultType
@@ -801,6 +802,7 @@ txEXSLTRegExFunctionCall::evaluate(txIEvalContext* aContext,
     }
 
     NS_NOTREACHED("Missing switch case.");
+    return NS_ERROR_UNEXPECTED;
 }
 
 Expr::ResultType
