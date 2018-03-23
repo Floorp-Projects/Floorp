@@ -2855,6 +2855,7 @@ MessageChannel::RepostAllMessages()
     for (MessageTask* task : mPending) {
         if (!task->IsScheduled()) {
             needRepost = true;
+            break;
         }
     }
     if (!needRepost) {
