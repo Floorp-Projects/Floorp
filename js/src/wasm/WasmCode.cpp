@@ -696,8 +696,6 @@ LazyStubTier::createMany(const Uint32Vector& funcExportIndices, const CodeTier& 
     MOZ_ASSERT(masm.callSiteTargets().empty());
     MOZ_ASSERT(masm.callFarJumps().empty());
     MOZ_ASSERT(masm.trapSites().empty());
-    MOZ_ASSERT(masm.oldTrapSites().empty());
-    MOZ_ASSERT(masm.oldTrapFarJumps().empty());
     MOZ_ASSERT(masm.callFarJumps().empty());
     MOZ_ASSERT(masm.symbolicAccesses().empty());
 

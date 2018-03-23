@@ -866,55 +866,6 @@ struct CallFarJump
 
 typedef Vector<CallFarJump, 0, SystemAllocPolicy> CallFarJumpVector;
 
-// The OldTrapDesc struct describes a wasm trap that is about to be emitted. This
-// includes the logical wasm bytecode offset to report, the kind of instruction
-// causing the trap, and the stack depth right before control is transferred to
-// the trap out-of-line path.
-
-struct OldTrapDesc : BytecodeOffset
-{
-    Trap trap;
-    uint32_t framePushed;
-
-    OldTrapDesc(BytecodeOffset offset, Trap trap, uint32_t framePushed)
-      : BytecodeOffset(offset), trap(trap), framePushed(framePushed)
-    {}
-};
-
-// An OldTrapSite captures all relevant information at the point of emitting the
-// in-line trapping instruction for the purpose of generating the out-of-line
-// trap code (at the end of the function).
-
-struct OldTrapSite : OldTrapDesc
-{
-    uint32_t codeOffset;
-
-    OldTrapSite(OldTrapDesc trap, uint32_t codeOffset)
-      : OldTrapDesc(trap), codeOffset(codeOffset)
-    {}
-};
-
-typedef Vector<OldTrapSite, 0, SystemAllocPolicy> OldTrapSiteVector;
-
-// An OldTrapFarJump records the offset of a jump that needs to be patched to a trap
-// exit at the end of the module when trap exits are emitted.
-
-struct OldTrapFarJump
-{
-    Trap trap;
-    jit::CodeOffset jump;
-
-    OldTrapFarJump(Trap trap, jit::CodeOffset jump)
-      : trap(trap), jump(jump)
-    {}
-
-    void offsetBy(size_t delta) {
-        jump.offsetBy(delta);
-    }
-};
-
-typedef Vector<OldTrapFarJump, 0, SystemAllocPolicy> OldTrapFarJumpVector;
-
 } // namespace wasm
 
 namespace jit {
@@ -925,8 +876,6 @@ class AssemblerShared
     wasm::CallSiteVector callSites_;
     wasm::CallSiteTargetVector callSiteTargets_;
     wasm::TrapSiteVectorArray trapSites_;
-    wasm::OldTrapSiteVector oldTrapSites_;
-    wasm::OldTrapFarJumpVector oldTrapFarJumps_;
     wasm::CallFarJumpVector callFarJumps_;
     wasm::SymbolicAccessVector symbolicAccesses_;
 
@@ -986,12 +935,6 @@ class AssemblerShared
     void append(wasm::Trap trap, wasm::TrapSite site) {
         enoughMemory_ &= trapSites_[trap].append(site);
     }
-    void append(wasm::OldTrapSite trapSite) {
-        enoughMemory_ &= oldTrapSites_.append(trapSite);
-    }
-    void append(wasm::OldTrapFarJump jmp) {
-        enoughMemory_ &= oldTrapFarJumps_.append(jmp);
-    }
     void append(wasm::CallFarJump jmp) {
         enoughMemory_ &= callFarJumps_.append(jmp);
     }
@@ -1005,8 +948,6 @@ class AssemblerShared
     wasm::CallSiteVector& callSites() { return callSites_; }
     wasm::CallSiteTargetVector& callSiteTargets() { return callSiteTargets_; }
     wasm::TrapSiteVectorArray& trapSites() { return trapSites_; }
-    wasm::OldTrapSiteVector& oldTrapSites() { return oldTrapSites_; }
-    wasm::OldTrapFarJumpVector& oldTrapFarJumps() { return oldTrapFarJumps_; }
     wasm::CallFarJumpVector& callFarJumps() { return callFarJumps_; }
     wasm::SymbolicAccessVector& symbolicAccesses() { return symbolicAccesses_; }
 };

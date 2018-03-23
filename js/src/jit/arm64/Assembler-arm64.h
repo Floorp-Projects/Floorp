@@ -199,7 +199,6 @@ class Assembler : public vixl::Assembler
     void bind(Label* label) { bind(label, nextOffset()); }
     void bind(Label* label, BufferOffset boff);
     void bind(RepatchLabel* label);
-    void bindLater(Label* label, wasm::OldTrapDesc target);
 
     bool oom() const {
         return AssemblerShared::oom() ||

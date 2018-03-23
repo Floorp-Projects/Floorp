@@ -65,8 +65,6 @@ struct CompiledCode
     CallSiteVector       callSites;
     CallSiteTargetVector callSiteTargets;
     TrapSiteVectorArray  trapSites;
-    OldTrapSiteVector    oldTrapSites;
-    OldTrapFarJumpVector oldTrapFarJumps;
     CallFarJumpVector    callFarJumps;
     SymbolicAccessVector symbolicAccesses;
     jit::CodeLabelVector codeLabels;
@@ -79,8 +77,6 @@ struct CompiledCode
         callSites.clear();
         callSiteTargets.clear();
         trapSites.clear();
-        oldTrapSites.clear();
-        oldTrapFarJumps.clear();
         callFarJumps.clear();
         symbolicAccesses.clear();
         codeLabels.clear();
@@ -93,8 +89,6 @@ struct CompiledCode
                callSites.empty() &&
                callSiteTargets.empty() &&
                trapSites.empty() &&
-               oldTrapSites.empty() &&
-               oldTrapFarJumps.empty() &&
                callFarJumps.empty() &&
                symbolicAccesses.empty() &&
                codeLabels.empty();
@@ -145,7 +139,6 @@ struct CompileTask
 class MOZ_STACK_CLASS ModuleGenerator
 {
     typedef Vector<CompileTask, 0, SystemAllocPolicy> CompileTaskVector;
-    typedef EnumeratedArray<Trap, Trap::Limit, uint32_t> OldTrapOffsetArray;
     typedef Vector<jit::CodeOffset, 0, SystemAllocPolicy> CodeOffsetVector;
 
     // Constant parameters
@@ -167,9 +160,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     jit::TempAllocator              masmAlloc_;
     jit::WasmMacroAssembler         masm_;
     Uint32Vector                    funcToCodeRange_;
-    OldTrapOffsetArray              oldTrapCodeOffsets_;
     uint32_t                        debugTrapCodeOffset_;
-    OldTrapFarJumpVector            oldTrapFarJumps_;
     CallFarJumpVector               callFarJumps_;
     CallSiteTargetVector            callSiteTargets_;
     uint32_t                        lastPatchedCallSite_;
