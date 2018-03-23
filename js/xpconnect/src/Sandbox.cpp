@@ -216,12 +216,10 @@ SandboxImport(JSContext* cx, unsigned argc, Value* vp)
     // We need to resolve the this object, because this function is used
     // unbound and should still work and act on the original sandbox.
 
-    RootedValue thisv(cx, args.computeThis(cx));
-    if (!thisv.isObject()) {
-        XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
+    RootedObject thisObject(cx);
+    if (!args.computeThis(cx, &thisObject))
         return false;
-    }
-    RootedObject thisObject(cx, &thisv.toObject());
+
     if (!JS_SetPropertyById(cx, thisObject, id, args[0]))
         return false;
 
@@ -562,7 +560,15 @@ xpc::SandboxCallableProxyHandler::call(JSContext* cx, JS::Handle<JSObject*> prox
     // if the sandboxPrototype is an Xray Wrapper, which lets us appropriately
     // remap |this|.
     bool isXray = WrapperFactory::IsXrayWrapper(sandboxProxy);
-    RootedValue thisVal(cx, isXray ? args.computeThis(cx) : args.thisv());
+    RootedValue thisVal(cx, args.thisv());
+    if (isXray) {
+        RootedObject thisObject(cx);
+        if (!args.computeThis(cx, &thisObject)) {
+            return false;
+        }
+        thisVal.setObject(*thisObject);
+    }
+
     if (thisVal == ObjectValue(*sandboxGlobal)) {
         thisVal = ObjectValue(*js::GetProxyTargetObject(sandboxProxy));
     }

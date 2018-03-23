@@ -337,8 +337,10 @@ Load(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedValue thisv(cx, args.computeThis(cx));
-    if (!thisv.isObject() || !JS_IsGlobalObject(&thisv.toObject())) {
+    JS::RootedObject thisObject(cx);
+    if (!args.computeThis(cx, &thisObject))
+        return false;
+    if (!JS_IsGlobalObject(thisObject)) {
         JS_ReportErrorASCII(cx, "Trying to load() into a non-global object");
         return false;
     }
