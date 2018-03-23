@@ -29,10 +29,20 @@ var gSafeBrowsing = {
     const isReportablePage = uri && (uri.schemeIs("http") || uri.schemeIs("https"));
 
     const disabledByPolicy = !Services.policies.isAllowed("feedbackCommands");
-    document.getElementById("reportPhishingBroadcaster")
-            .disabled = disabledByPolicy || isPhishingPage || !isReportablePage;
-    document.getElementById("reportPhishingErrorBroadcaster")
-            .disabled = disabledByPolicy || !isPhishingPage || !isReportablePage;
+
+    const reportBroadcaster = document.getElementById("reportPhishingBroadcaster");
+    if (disabledByPolicy || isPhishingPage || !isReportablePage) {
+      reportBroadcaster.setAttribute("disabled", "true");
+    } else {
+      reportBroadcaster.removeAttribute("disabled");
+    }
+
+    const reportErrorBroadcaster = document.getElementById("reportPhishingErrorBroadcaster");
+    if (disabledByPolicy || !isPhishingPage || !isReportablePage) {
+      reportErrorBroadcaster.setAttribute("disabled", "true");
+    } else {
+      reportErrorBroadcaster.removeAttribute("disabled");
+    }
   },
 
   /**
