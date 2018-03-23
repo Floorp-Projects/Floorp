@@ -384,6 +384,7 @@ SchedulerGroup::Runnable::DocGroup() const
   return mDocGroup;
 }
 
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
 NS_IMETHODIMP
 SchedulerGroup::Runnable::GetName(nsACString& aName)
 {
@@ -398,6 +399,7 @@ SchedulerGroup::Runnable::GetName(nsACString& aName)
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 SchedulerGroup::Runnable::Run()

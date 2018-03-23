@@ -44,19 +44,17 @@ public:
     return Run();
   }
 
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   NS_IMETHOD GetName(nsACString& aName) override
   {
-#ifdef RELEASE_OR_BETA
-    aName.Truncate();
-#else
     if (mName) {
       aName.Append(nsPrintfCString("ProxyReleaseEvent for %s", mName));
     } else {
       aName.AssignLiteral("ProxyReleaseEvent");
     }
-#endif
     return NS_OK;
   }
+#endif
 
 private:
   T* MOZ_OWNING_REF mDoomed;
