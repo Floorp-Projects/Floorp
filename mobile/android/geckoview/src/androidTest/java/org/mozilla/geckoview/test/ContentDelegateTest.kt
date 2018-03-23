@@ -5,10 +5,8 @@
 
 package org.mozilla.geckoview.test
 
-import android.support.test.InstrumentationRegistry
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.test.filters.MediumTest
@@ -30,6 +28,30 @@ class ContentDelegateTest : BaseSessionTest() {
             override fun onTitleChange(session: GeckoSession, title: String) {
                 assertThat("Title should match", title,
                            equalTo(titles.removeAt(0)))
+            }
+        })
+    }
+
+    @Test fun download() {
+        sessionRule.session.loadTestPath(DOWNLOAD_HTML_PATH)
+
+        sessionRule.waitUntilCalled(object : Callbacks.NavigationDelegate, Callbacks.ContentDelegate {
+
+            @AssertCalled(count = 2)
+            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, response: GeckoSession.Response<Boolean>) {
+                response.respond(false)
+            }
+
+            @AssertCalled(false)
+            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoSession.Response<GeckoSession>) {
+            }
+
+            @AssertCalled(count = 1)
+            override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {
+                assertThat("Uri should start with data:", response.uri, startsWith("data:"))
+                assertThat("Content type should match", response.contentType, equalTo("text/plain"))
+                assertThat("Content length should be non-zero", response.contentLength, greaterThan(0L))
+                assertThat("Filename should match", response.filename, equalTo("download.txt"))
             }
         })
     }

@@ -1,0 +1,13 @@
+<html>
+<body>
+    <script>
+        const data = "Downloaded Data";
+        const element = document.createElement("a");
+        element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(data));
+        element.setAttribute("download", "download.txt");
+        element.style.display = "none";
+        document.body.appendChild(element);
+        element.click();
+    </script>
+</body>
+</html>
