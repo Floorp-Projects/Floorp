@@ -121,20 +121,16 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText,
   // rule (see stack in bug 209575).
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
 
-  RefPtr<DeclarationBlock> newdecl;
-  if (olddecl->IsServo()) {
-    ServoCSSParsingEnvironment servoEnv = GetServoCSSParsingEnvironment(
-        aSubjectPrincipal);
-    if (!servoEnv.mUrlExtraData) {
-      aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-      return;
-    }
-
-    newdecl = ServoDeclarationBlock::FromCssText(aCssText, servoEnv.mUrlExtraData,
-                                                 servoEnv.mCompatMode, servoEnv.mLoader);
-  } else {
-    MOZ_CRASH("old style system disabled");
+  ServoCSSParsingEnvironment servoEnv =
+    GetServoCSSParsingEnvironment(aSubjectPrincipal);
+  if (!servoEnv.mUrlExtraData) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
   }
+
+  RefPtr<DeclarationBlock> newdecl =
+    ServoDeclarationBlock::FromCssText(aCssText, servoEnv.mUrlExtraData,
+                                       servoEnv.mCompatMode, servoEnv.mLoader);
 
   aRv = SetCSSDeclaration(newdecl);
 }
@@ -295,17 +291,14 @@ nsDOMCSSDeclaration::ModifyDeclaration(nsIPrincipal* aSubjectPrincipal,
   RefPtr<DeclarationBlock> decl = olddecl->EnsureMutable();
 
   bool changed;
-  if (decl->IsGecko()) {
-    MOZ_CRASH("old style system disabled");
-  } else {
-    ServoCSSParsingEnvironment servoEnv = GetServoCSSParsingEnvironment(
-        aSubjectPrincipal);
-    if (!servoEnv.mUrlExtraData) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    changed = aServoFunc(decl->AsServo(), servoEnv);
+  ServoCSSParsingEnvironment servoEnv = GetServoCSSParsingEnvironment(
+      aSubjectPrincipal);
+  if (!servoEnv.mUrlExtraData) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
+
+  changed = aServoFunc(decl->AsServo(), servoEnv);
+
   if (!changed) {
     // Parsing failed -- but we don't throw an exception for that.
     return NS_OK;

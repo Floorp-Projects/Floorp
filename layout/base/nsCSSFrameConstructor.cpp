@@ -471,12 +471,7 @@ ReparentFrame(RestyleManager* aRestyleManager,
   aFrame->SetParent(aNewParentFrame);
   // We reparent frames for two reasons: to put them inside ::first-line, and to
   // put them inside some wrapper anonymous boxes.
-  //
-  // The latter shouldn't affect any styles in practice, so only needs style
-  // context reparenting in the Gecko backend.
-  //
-  // FIXME(emilio): Remove old Gecko stuff.
-  if (aForceStyleReparent || aRestyleManager->IsGecko()) {
+  if (aForceStyleReparent) {
     aRestyleManager->ReparentComputedStyle(aFrame);
   }
 }
@@ -10632,11 +10627,6 @@ nsCSSFrameConstructor::CheckForFirstLineInsertion(nsIFrame* aParentFrame,
   }
 
   class RestyleManager* restyleManager = RestyleManager();
-  if (!restyleManager->IsServo()) {
-    // Gecko's style resolution is frame-based, so already has the right styles
-    // even in the ::first-line case.
-    return;
-  }
 
   // Check whether there's a ::first-line on the path up from aParentFrame.
   // Note that we can't stop until we've run out of ancestors with

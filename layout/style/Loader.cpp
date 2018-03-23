@@ -1204,7 +1204,7 @@ Loader::InsertChildSheet(StyleSheet* aSheet,
   LOG(("css::Loader::InsertChildSheet"));
   MOZ_ASSERT(aSheet, "Nothing to insert");
   MOZ_ASSERT(aParentSheet, "Need a parent to insert into");
-  MOZ_ASSERT(aSheet->IsGecko() == !!aGeckoParentRule);
+  MOZ_ASSERT(!aGeckoParentRule, "TODO remove this param");
 
   // child sheets should always start out enabled, even if they got
   // cloned off of top-level sheets which were disabled
@@ -2092,7 +2092,7 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
   LOG(("css::Loader::LoadChildSheet"));
   NS_PRECONDITION(aURL, "Must have a URI to load");
   NS_PRECONDITION(aParentSheet, "Must have a parent sheet");
-  MOZ_ASSERT(aParentSheet->IsGecko() == !!aGeckoParentRule);
+  MOZ_ASSERT(!aGeckoParentRule, "TODO remove this param");
 
   if (!mEnabled) {
     LOG_WARN(("  Not enabled"));
@@ -2158,9 +2158,6 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
   RefPtr<StyleSheet> sheet;
   StyleSheetState state;
   if (aReusableSheets && aReusableSheets->FindReusableStyleSheet(aURL, sheet)) {
-    if (aParentSheet->IsGecko()) {
-      MOZ_CRASH("old style system disabled");
-    }
     state = eSheetComplete;
   } else {
     bool isAlternate;

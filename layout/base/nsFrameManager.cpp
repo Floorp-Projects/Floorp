@@ -85,7 +85,7 @@ public:
    */
   static nsIContent* GetApplicableParent(nsIContent* aParent);
 
-  void AddSizeOfIncludingThis(nsWindowSizes& aSizes, bool aIsServo) const;
+  void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
 
 protected:
   LinkedList<UndisplayedNode>* GetListFor(nsIContent* aParentContent);
@@ -693,13 +693,12 @@ nsFrameManager::DestroyAnonymousContent(already_AddRefed<nsIContent> aContent)
 void
 nsFrameManager::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
 {
-  bool isServo = mPresShell->StyleSet()->IsServo();
   aSizes.mLayoutPresShellSize += aSizes.mState.mMallocSizeOf(this);
   if (mDisplayNoneMap) {
-    mDisplayNoneMap->AddSizeOfIncludingThis(aSizes, isServo);
+    mDisplayNoneMap->AddSizeOfIncludingThis(aSizes);
   }
   if (mDisplayContentsMap) {
-    mDisplayContentsMap->AddSizeOfIncludingThis(aSizes, isServo);
+    mDisplayContentsMap->AddSizeOfIncludingThis(aSizes);
   }
 }
 
@@ -840,7 +839,7 @@ nsFrameManager::UndisplayedMap::RemoveNodesFor(nsIContent* aParentContent)
 
 void
 nsFrameManager::UndisplayedMap::
-AddSizeOfIncludingThis(nsWindowSizes& aSizes, bool aIsServo) const
+AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
 {
   MallocSizeOf mallocSizeOf = aSizes.mState.mMallocSizeOf;
   aSizes.mLayoutPresShellSize += ShallowSizeOfIncludingThis(mallocSizeOf);
@@ -849,11 +848,6 @@ AddSizeOfIncludingThis(nsWindowSizes& aSizes, bool aIsServo) const
   for (auto iter = ConstIter(); !iter.Done(); iter.Next()) {
     const LinkedList<UndisplayedNode>* list = iter.UserData();
     aSizes.mLayoutPresShellSize += list->sizeOfExcludingThis(mallocSizeOf);
-    if (!aIsServo) {
-      // Computed values and style structs can only be stale when using
-      // Servo style system.
-      continue;
-    }
     for (const UndisplayedNode* node = list->getFirst();
           node; node = node->getNext()) {
       ComputedStyle* computedStyle = node->mStyle;
