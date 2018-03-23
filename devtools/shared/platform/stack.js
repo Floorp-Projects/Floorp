@@ -10,31 +10,36 @@
 const { Cu, components } = require("chrome");
 
 /**
- * Return a description of the Nth caller, suitable for logging.
+ * Return the Nth path from the stack excluding substr.
  *
- * @param {Number} n the caller to describe
- * @return {String} a description of the nth caller.
+ * @param {Number}
+ *        n the Nth path from the stack to describe.
+ * @param {String} substr
+ *        A segment of the path that should be excluded.
  */
-function describeNthCaller(n) {
-  if (isWorker) {
-    return "";
+function getNthPathExcluding(n, substr) {
+  let stack = components.stack.formattedStack.split("\n");
+
+  // Remove this method from the stack
+  stack = stack.splice(1);
+
+  stack = stack.map(line => {
+    if (line.includes(" -> ")) {
+      return line.split(" -> ")[1];
+    }
+    return line;
+  });
+
+  if (substr) {
+    stack = stack.filter(line => {
+      return line && !line.includes(substr);
+    });
   }
 
-  let caller = components.stack;
-  // Do one extra iteration to skip this function.
-  while (n >= 0) {
-    --n;
-    caller = caller.caller;
+  if (!stack[n]) {
+    n = 0;
   }
-
-  let func = caller.name;
-  let file = caller.filename;
-  if (file.includes(" -> ")) {
-    file = caller.filename.split(/ -> /)[1];
-  }
-  let path = file + ":" + caller.lineNumber;
-
-  return func + "() -> " + path;
+  return (stack[n] || "");
 }
 
 /**
@@ -57,5 +62,5 @@ function callFunctionWithAsyncStack(callee, stack, id) {
 }
 
 exports.callFunctionWithAsyncStack = callFunctionWithAsyncStack;
-exports.describeNthCaller = describeNthCaller;
+exports.getNthPathExcluding = getNthPathExcluding;
 exports.getStack = getStack;
