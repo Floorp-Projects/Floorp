@@ -9,7 +9,7 @@ description = "Remote cubeb server"
 
 [dependencies]
 audioipc = { path = "../audioipc" }
-cubeb = "0.4"
+cubeb = "0.5"
 bytes = "0.4"
 lazycell = "^0.4"
 libc = "0.2"
