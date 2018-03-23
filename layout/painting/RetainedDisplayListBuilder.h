@@ -49,11 +49,10 @@ struct RetainedDisplayListBuilder {
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(Cached, RetainedDisplayListBuilder)
 
 private:
-  bool PreProcessDisplayList(nsDisplayList* aList, AnimatedGeometryRoot* aAGR);
-
+  bool PreProcessDisplayList(RetainedDisplayList* aList, AnimatedGeometryRoot* aAGR);
   bool MergeDisplayLists(nsDisplayList* aNewList,
-                         nsDisplayList* aOldList,
-                         nsDisplayList* aOutList,
+                         RetainedDisplayList* aOldList,
+                         RetainedDisplayList* aOutList,
                          mozilla::Maybe<const mozilla::ActiveScrolledRoot*>& aOutContainerASR);
 
   bool ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedFrames,
@@ -63,8 +62,10 @@ private:
 
   void IncrementSubDocPresShellPaintCount(nsDisplayItem* aItem);
 
+  friend class MergeState;
+
   nsDisplayListBuilder mBuilder;
-  nsDisplayList mList;
+  RetainedDisplayList mList;
   WeakFrame mPreviousCaret;
 
 };
