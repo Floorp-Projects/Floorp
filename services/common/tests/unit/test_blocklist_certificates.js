@@ -1,8 +1,9 @@
 const { Constructor: CC } = Components;
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 
-const { OneCRLBlocklistClient } = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
+const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
@@ -19,6 +20,10 @@ add_task(async function test_something() {
 
   const dummyServerURL = `http://localhost:${server.identity.primaryPort}/v1`;
   Services.prefs.setCharPref("services.settings.server", dummyServerURL);
+
+  BlocklistClients.initialize();
+
+  const OneCRLBlocklistClient = BlocklistClients.OneCRLBlocklistClient;
 
   // register a handler
   function handleResponse(request, response) {
@@ -121,7 +126,7 @@ add_task(async function test_something() {
 function run_test() {
   // Ensure that signature verification is disabled to prevent interference
   // with basic certificate sync tests
-  Services.prefs.setBoolPref("services.blocklist.signing.enforced", false);
+  Services.prefs.setBoolPref("services.settings.verify_signature", false);
 
   // Set up an HTTP Server
   server = new HttpServer();
