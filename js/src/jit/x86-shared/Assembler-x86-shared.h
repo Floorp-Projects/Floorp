@@ -939,17 +939,6 @@ class AssemblerX86Shared : public AssemblerShared
     void j(Condition cond, RepatchLabel* label) { jSrc(cond, label); }
     void jmp(RepatchLabel* label) { jmpSrc(label); }
 
-    void j(Condition cond, wasm::OldTrapDesc target) {
-        Label l;
-        j(cond, &l);
-        bindLater(&l, target);
-    }
-    void jmp(wasm::OldTrapDesc target) {
-        Label l;
-        jmp(&l);
-        bindLater(&l, target);
-    }
-
     void jmp(const Operand& op) {
         switch (op.kind()) {
           case Operand::MEM_REG_DISP:
@@ -979,15 +968,6 @@ class AssemblerX86Shared : public AssemblerShared
             } while (more);
         }
         label->bind(dst.offset());
-    }
-    void bindLater(Label* label, wasm::OldTrapDesc target) {
-        if (label->used()) {
-            JmpSrc jmp(label->offset());
-            do {
-                append(wasm::OldTrapSite(target, jmp.offset()));
-            } while (masm.nextJump(jmp, &jmp));
-        }
-        label->reset();
     }
     void bind(RepatchLabel* label) {
         JmpDst dst(masm.label());

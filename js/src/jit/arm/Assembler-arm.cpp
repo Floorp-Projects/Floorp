@@ -2206,15 +2206,6 @@ Assembler::as_b(Label* l, Condition c)
 }
 
 BufferOffset
-Assembler::as_b(wasm::OldTrapDesc target, Condition c)
-{
-    Label l;
-    BufferOffset ret = as_b(&l, c);
-    bindLater(&l, target);
-    return ret;
-}
-
-BufferOffset
 Assembler::as_b(BOffImm off, Condition c, BufferOffset inst)
 {
     // JS_DISASM_ARM NOTE: Can't disassemble here, because numerous callers use this to
@@ -2644,18 +2635,6 @@ Assembler::bind(Label* label, BufferOffset boff)
     }
     label->bind(nextOffset().getOffset());
     MOZ_ASSERT(!oom());
-}
-
-void
-Assembler::bindLater(Label* label, wasm::OldTrapDesc target)
-{
-    if (label->used()) {
-        BufferOffset b(label);
-        do {
-            append(wasm::OldTrapSite(target, b.getOffset()));
-        } while (nextLink(b, &b));
-    }
-    label->reset();
 }
 
 void

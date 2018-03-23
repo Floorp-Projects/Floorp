@@ -60,17 +60,6 @@ MacroAssemblerCompat::asVIXL() const
     return *static_cast<const vixl::MacroAssembler*>(this);
 }
 
-void
-MacroAssemblerCompat::B(wasm::OldTrapDesc target, Condition cond)
-{
-    Label l;
-    if (cond == Always)
-        B(&l);
-    else
-        B(&l, cond);
-    bindLater(&l, target);
-}
-
 BufferOffset
 MacroAssemblerCompat::movePatchablePtr(ImmPtr ptr, Register dest)
 {

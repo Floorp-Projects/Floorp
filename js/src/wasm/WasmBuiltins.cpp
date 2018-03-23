@@ -239,12 +239,12 @@ CheckInterrupt(JSContext* cx, JitActivation* activation)
 //   - return the (non-null) resumePC that should be jumped if execution should
 //     resume after the trap.
 static void*
-HandleTrap(Trap trap)
+WasmHandleTrap()
 {
     JitActivation* activation = CallingActivation();
     JSContext* cx = activation->cx();
 
-    switch (trap) {
+    switch (activation->wasmTrapData().trap) {
       case Trap::Unreachable:
         return ReportError(cx, JSMSG_WASM_UNREACHABLE);
       case Trap::IntegerOverflow:
@@ -284,20 +284,6 @@ HandleTrap(Trap trap)
     }
 
     MOZ_CRASH("unexpected trap");
-}
-
-static void
-WasmOldReportTrap(int32_t trapIndex)
-{
-    MOZ_ASSERT(trapIndex < int32_t(Trap::Limit) && trapIndex >= 0);
-    DebugOnly<void*> resumePC = HandleTrap(Trap(trapIndex));
-    MOZ_ASSERT(!resumePC);
-}
-
-static void*
-WasmHandleTrap()
-{
-    return HandleTrap(CallingActivation()->wasmTrapData().trap);
 }
 
 static void
@@ -529,9 +515,6 @@ wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
       case SymbolicAddress::HandleTrap:
         *abiType = Args_General0;
         return FuncCast(WasmHandleTrap, *abiType);
-      case SymbolicAddress::OldReportTrap:
-        *abiType = Args_General1;
-        return FuncCast(WasmOldReportTrap, *abiType);
       case SymbolicAddress::ReportOutOfBounds:
         *abiType = Args_General0;
         return FuncCast(WasmReportOutOfBounds, *abiType);
@@ -701,7 +684,6 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
       case SymbolicAddress::HandleDebugTrap:          // GenerateDebugTrapStub
       case SymbolicAddress::HandleThrow:              // GenerateThrowStub
       case SymbolicAddress::HandleTrap:               // GenerateTrapExit
-      case SymbolicAddress::OldReportTrap:            // GenerateOldTrapExit
       case SymbolicAddress::ReportOutOfBounds:        // GenerateOutOfBoundsExit
       case SymbolicAddress::ReportUnalignedAccess:    // GenerateUnalignedExit
       case SymbolicAddress::CallImport_Void:          // GenerateImportInterpExit
@@ -1005,8 +987,6 @@ wasm::EnsureBuiltinThunksInitialized()
     MOZ_ASSERT(masm.callSiteTargets().empty());
     MOZ_ASSERT(masm.callFarJumps().empty());
     MOZ_ASSERT(masm.trapSites().empty());
-    MOZ_ASSERT(masm.oldTrapSites().empty());
-    MOZ_ASSERT(masm.oldTrapFarJumps().empty());
     MOZ_ASSERT(masm.callFarJumps().empty());
     MOZ_ASSERT(masm.symbolicAccesses().empty());
 
