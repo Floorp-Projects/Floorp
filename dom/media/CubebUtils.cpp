@@ -29,9 +29,6 @@
 #include "GeneratedJNIWrappers.h"
 #endif
 
-#define AUDIOIPC_POOL_SIZE_DEFAULT 1
-#define AUDIOIPC_STACK_SIZE_DEFAULT (64*1024)
-
 #define PREF_VOLUME_SCALE "media.volume_scale"
 #define PREF_CUBEB_BACKEND "media.cubeb.backend"
 #define PREF_CUBEB_LATENCY_PLAYBACK "media.cubeb_latency_playback_ms"
@@ -41,8 +38,6 @@
 #define PREF_CUBEB_FORCE_SAMPLE_RATE "media.cubeb.force_sample_rate"
 #define PREF_CUBEB_LOGGING_LEVEL "media.cubeb.logging_level"
 #define PREF_CUBEB_SANDBOX "media.cubeb.sandbox"
-#define PREF_AUDIOIPC_POOL_SIZE "media.audioipc.pool_size"
-#define PREF_AUDIOIPC_STACK_SIZE "media.audioipc.stack_size"
 
 #define MASK_MONO       (1 << AudioConfig::CHANNEL_MONO)
 #define MASK_MONO_LFE   (MASK_MONO | (1 << AudioConfig::CHANNEL_LFE))
@@ -66,19 +61,12 @@
 #endif
 
 extern "C" {
-
-struct AudioIpcInitParams {
-  int mServerConnection;
-  size_t mPoolSize;
-  size_t mStackSize;
-};
-
 // These functions are provided by audioipc-server crate
 extern void* audioipc_server_start();
 extern mozilla::ipc::FileDescriptor::PlatformHandleType audioipc_server_new_client(void*);
 extern void audioipc_server_stop(void*);
 // These functions are provided by audioipc-client crate
-extern int audioipc_client_init(cubeb**, const char*, const AudioIpcInitParams*);
+extern int audioipc_client_init(cubeb**, const char*, int);
 }
 
 namespace mozilla {
@@ -145,9 +133,7 @@ bool sCubebPlaybackLatencyPrefSet = false;
 bool sCubebMSGLatencyPrefSet = false;
 bool sAudioStreamInitEverSucceeded = false;
 #ifdef MOZ_CUBEB_REMOTING
-bool sCubebSandbox = false;
-size_t sAudioIPCPoolSize;
-size_t sAudioIPCStackSize;
+bool sCubebSandbox;
 #endif
 StaticAutoPtr<char> sBrandName;
 StaticAutoPtr<char> sCubebBackendName;
@@ -296,16 +282,6 @@ void PrefChanged(const char* aPref, void* aClosure)
       MOZ_LOG(gCubebLog, LogLevel::Debug, ("Starting cubeb server..."));
       StartSoundServer();
     }
-  }
-  else if (strcmp(aPref, PREF_AUDIOIPC_POOL_SIZE) == 0) {
-    StaticMutexAutoLock lock(sMutex);
-    sAudioIPCPoolSize =  Preferences::GetUint(PREF_AUDIOIPC_POOL_SIZE,
-                                             AUDIOIPC_POOL_SIZE_DEFAULT);
-  }
-  else if (strcmp(aPref, PREF_AUDIOIPC_STACK_SIZE) == 0) {
-    StaticMutexAutoLock lock(sMutex);
-    sAudioIPCStackSize = Preferences::GetUint(PREF_AUDIOIPC_STACK_SIZE,
-                                             AUDIOIPC_STACK_SIZE_DEFAULT);
   }
 #endif
 }
@@ -494,9 +470,6 @@ cubeb* GetCubebContextUnlocked()
   }
 
 #ifdef MOZ_CUBEB_REMOTING
-  MOZ_LOG(gCubebLog, LogLevel::Info, ("%s: %s", PREF_CUBEB_SANDBOX, sCubebSandbox ? "true" : "false"));
-
-  int rv = CUBEB_OK;
   if (sCubebSandbox) {
     if (XRE_IsParentProcess()) {
       // TODO: Don't use audio IPC when within the same process.
@@ -505,19 +478,14 @@ cubeb* GetCubebContextUnlocked()
     } else {
       MOZ_DIAGNOSTIC_ASSERT(sIPCConnection);
     }
-
-    AudioIpcInitParams initParams;
-    initParams.mPoolSize = sAudioIPCPoolSize;
-    initParams.mStackSize = sAudioIPCStackSize;
-    initParams.mServerConnection = sIPCConnection->ClonePlatformHandle().release();
-
-    MOZ_LOG(gCubebLog, LogLevel::Debug, ("%s: %d", PREF_AUDIOIPC_POOL_SIZE, (int) initParams.mPoolSize));
-    MOZ_LOG(gCubebLog, LogLevel::Debug, ("%s: %d", PREF_AUDIOIPC_STACK_SIZE, (int) initParams.mStackSize));
-
-    rv = audioipc_client_init(&sCubebContext, sBrandName, &initParams);
-  } else {
-    rv = cubeb_init(&sCubebContext, sBrandName, sCubebBackendName.get());
   }
+
+  MOZ_LOG(gCubebLog, LogLevel::Info, ("%s: %s", PREF_CUBEB_SANDBOX, sCubebSandbox ? "true" : "false"));
+
+  int rv = sCubebSandbox
+    ? audioipc_client_init(&sCubebContext, sBrandName,
+                           sIPCConnection->ClonePlatformHandle().release())
+    : cubeb_init(&sCubebContext, sBrandName, sCubebBackendName.get());
   sIPCConnection = nullptr;
 #else // !MOZ_CUBEB_REMOTING
   int rv = cubeb_init(&sCubebContext, sBrandName, sCubebBackendName.get());
@@ -611,8 +579,6 @@ void InitLibrary()
   Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_FORCE_SAMPLE_RATE);
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_BACKEND);
   Preferences::RegisterCallbackAndCall(PrefChanged, PREF_CUBEB_SANDBOX);
-  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_AUDIOIPC_POOL_SIZE);
-  Preferences::RegisterCallbackAndCall(PrefChanged, PREF_AUDIOIPC_STACK_SIZE);
   if (MOZ_LOG_TEST(gCubebLog, LogLevel::Verbose)) {
     cubeb_set_log_callback(CUBEB_LOG_VERBOSE, CubebLogCallback);
   } else if (MOZ_LOG_TEST(gCubebLog, LogLevel::Error)) {
@@ -637,8 +603,6 @@ void InitLibrary()
 void ShutdownLibrary()
 {
   Preferences::UnregisterCallback(PrefChanged, PREF_VOLUME_SCALE);
-  Preferences::UnregisterCallback(PrefChanged, PREF_AUDIOIPC_STACK_SIZE);
-  Preferences::UnregisterCallback(PrefChanged, PREF_AUDIOIPC_POOL_SIZE);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_SANDBOX);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_BACKEND);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
