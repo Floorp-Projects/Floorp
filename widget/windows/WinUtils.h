@@ -506,6 +506,11 @@ public:
 
   static void Initialize();
 
+  static nsresult WriteBitmap(nsIFile* aFile, mozilla::gfx::SourceSurface* surface);
+  // This function is a helper, but it cannot be called from the main thread.
+  // Use the one above!
+  static nsresult WriteBitmap(nsIFile* aFile, imgIContainer* aImage);
+
   /**
    * This function normalizes the input path, converts short filenames to long
    * filenames, and substitutes environment variables for system paths.
