@@ -20,10 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795275
   /** Test for Warning in content scopes about Components. **/
 
   SimpleTest.waitForExplicitFinish();
-  SimpleTest.executeSoon(function() {
-    SpecialPowers.pushPrefEnv({set: [["dom.use_components_shim", true]]},
-			      startLoad)
-  });
+  SimpleTest.executeSoon(startLoad);
   function startLoad() {
     for (var i = 1; i <= document.getElementsByTagName('iframe').length; ++i) {
       var frame = document.getElementById('frame' + i);
