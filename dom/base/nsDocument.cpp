@@ -1429,7 +1429,6 @@ nsIDocument::nsIDocument()
     mIsTopLevelContentDocument(false),
     mIsContentDocument(false),
     mDidCallBeginLoad(false),
-    mBufferingCSPViolations(false),
     mAllowPaymentRequest(false),
     mEncodingMenuDisabled(false),
     mIsShadowDOMEnabled(false),
