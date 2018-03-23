@@ -25,11 +25,8 @@ add_task(function* () {
 
   store.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, 2);
-  yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
-    content.wrappedJSObject.performRequests();
-  });
-  yield wait;
+  // Execute requests.
+  yield performRequests(monitor, tab, 2);
 
   let origItem = getSortedRequests(store.getState()).get(0);
 

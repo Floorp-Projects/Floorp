@@ -3381,7 +3381,8 @@ SVGTextFrame::HandleAttributeChangeInDescendant(Element* aElement,
 {
   if (aElement->IsSVGElement(nsGkAtoms::textPath)) {
     if (aNameSpaceID == kNameSpaceID_None &&
-        aAttribute == nsGkAtoms::startOffset) {
+        (aAttribute == nsGkAtoms::startOffset ||
+         aAttribute == nsGkAtoms::side_)) {
       NotifyGlyphMetricsChange();
     } else if ((aNameSpaceID == kNameSpaceID_XLink ||
                 aNameSpaceID == kNameSpaceID_None) &&
@@ -5092,7 +5093,10 @@ SVGTextFrame::DoTextPathLayout()
       continue;
     }
 
-    nsIContent* textPath = textPathFrame->GetContent();
+    dom::SVGTextPathElement* textPath =
+      static_cast<dom::SVGTextPathElement*>(textPathFrame->GetContent());
+    RefPtr<SVGAnimatedEnumeration> sideEnum = textPath->Side();
+    uint16_t side = sideEnum->AnimVal();
 
     gfxFloat offset = GetStartOffset(textPathFrame);
     Float pathLength = path->ComputeLength();
@@ -5113,7 +5117,13 @@ SVGTextFrame::DoTextPathLayout()
 
       // Position the character on the path at the right angle.
       Point tangent; // Unit vector tangent to the point we find.
-      Point pt = path->ComputePointAtLength(Float(midx), &tangent);
+      Point pt;
+      if (side == TEXTPATH_SIDETYPE_RIGHT) {
+        pt = path->ComputePointAtLength(Float(pathLength - midx), &tangent);
+        tangent = -tangent;
+      } else {
+        pt = path->ComputePointAtLength(Float(midx), &tangent);
+      }
       Float rotation = vertical ? atan2f(-tangent.x, tangent.y)
                                 : atan2f(tangent.y, tangent.x);
       Point normal(-tangent.y, tangent.x); // Unit vector normal to the point.

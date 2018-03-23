@@ -144,12 +144,6 @@ interface nsIServiceWorkerManager : nsISupports
   // Returns a Promise
   nsISupports getRegistration(in mozIDOMWindow aWindow, in DOMString aScope);
 
-  // Returns a Promise
-  nsISupports getReadyPromise(in mozIDOMWindow aWindow);
-
-  // Remove ready pending Promise
-  void removeReadyPromise(in mozIDOMWindow aWindow);
-
   nsIServiceWorkerRegistrationInfo getRegistrationByPrincipal(in nsIPrincipal aPrincipal,
                                                               in DOMString aScope);
 

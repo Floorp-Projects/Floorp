@@ -610,11 +610,9 @@ txXPCOMExtensionFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 }
 
 #ifdef TX_TO_STRING
-nsresult
-txXPCOMExtensionFunctionCall::getNameAtom(nsAtom** aAtom)
+void
+txXPCOMExtensionFunctionCall::appendName(nsAString& aDest)
 {
-    NS_ADDREF(*aAtom = mName);
-
-    return NS_OK;
+    aDest.Append(mName->GetUTF16String());
 }
 #endif

@@ -21,11 +21,6 @@
 #include "vm/MallocProvider.h"
 #include "vm/Runtime.h"
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4100) /* Silence unreferenced formal parameter warnings */
-#endif
-
 struct DtoaState;
 
 namespace js {
@@ -1385,9 +1380,5 @@ struct MOZ_RAII AutoSetThreadIsSweeping
 } // namespace gc
 
 } /* namespace js */
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 #endif /* vm_JSContext_h */

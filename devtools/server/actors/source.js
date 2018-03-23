@@ -662,6 +662,21 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
   },
 
   /**
+   * Handler for the "setPausePoints" packet.
+   *
+   * @param Array pausePoints
+   *        A list of pausePoint objects
+   *
+   *        type PausePoint = {
+   *          location: { line: number, column: number }
+   *          types: { breakpoint: boolean, stepOver: boolean }
+   *        }
+   */
+  setPausePoints: function(pausePoints) {
+    this.pausePoints = pausePoints;
+  },
+
+  /**
    * Handle a request to set a breakpoint.
    *
    * @param Number line

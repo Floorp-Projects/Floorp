@@ -11,11 +11,8 @@ add_task(async function() {
   let { tab, monitor } = await initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
   let { document } = monitor.panelWin;
 
-  let onAllEvents = waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    content.wrappedJSObject.performRequests();
-  });
-  await onAllEvents;
+  // Execute requests.
+  await performRequests(monitor, tab, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
 
   info("Clicking waterfall and waiting for panel update.");
   let wait = waitForDOM(document, "#timings-panel");

@@ -112,6 +112,10 @@ struct nsRect :
   {
     return SaturatingUnion(aRect);
   }
+  MOZ_MUST_USE nsRect UnsafeUnion(const nsRect& aRect) const
+  {
+    return Super::Union(aRect);
+  }
   void UnionRect(const nsRect& aRect1, const nsRect& aRect2)
   {
     *this = aRect1.Union(aRect2);

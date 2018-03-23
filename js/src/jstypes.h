@@ -82,14 +82,7 @@
 **      behave syntactically more like functions when called.
 ***********************************************************************/
 #define JS_BEGIN_MACRO  do {
-
-#if defined(_MSC_VER)
-# define JS_END_MACRO                                                         \
-    } __pragma(warning(push)) __pragma(warning(disable:4127))                 \
-    while (0) __pragma(warning(pop))
-#else
-# define JS_END_MACRO   } while (0)
-#endif
+#define JS_END_MACRO   } while (0)
 
 /***********************************************************************
 ** MACROS:      JS_BIT

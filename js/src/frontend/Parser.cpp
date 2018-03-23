@@ -5318,14 +5318,99 @@ GeneralParser<ParseHandler, CharT>::checkExportedName(JSAtom* exportName)
 
 template<typename CharT>
 bool
+Parser<FullParseHandler, CharT>::checkExportedNamesForArrayBinding(ParseNode* pn)
+{
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::Array));
+    MOZ_ASSERT(pn->isArity(PN_LIST));
+
+    for (ParseNode* node = pn->pn_head; node; node = node->pn_next) {
+        if (node->isKind(ParseNodeKind::Elision))
+            continue;
+
+        ParseNode* binding;
+        if (node->isKind(ParseNodeKind::Spread))
+            binding = node->pn_kid;
+        else if (node->isKind(ParseNodeKind::Assign))
+            binding = node->pn_left;
+        else
+            binding = node;
+
+        if (!checkExportedNamesForDeclaration(binding))
+            return false;
+    }
+
+    return true;
+}
+
+template<typename CharT>
+inline bool
+Parser<SyntaxParseHandler, CharT>::checkExportedNamesForArrayBinding(Node node)
+{
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
+}
+
+template<class ParseHandler, typename CharT>
+inline bool
+GeneralParser<ParseHandler, CharT>::checkExportedNamesForArrayBinding(Node node)
+{
+    return asFinalParser()->checkExportedNamesForArrayBinding(node);
+}
+
+template<typename CharT>
+bool
+Parser<FullParseHandler, CharT>::checkExportedNamesForObjectBinding(ParseNode* pn)
+{
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::Object));
+    MOZ_ASSERT(pn->isArity(PN_LIST));
+
+    for (ParseNode* node = pn->pn_head; node; node = node->pn_next) {
+        MOZ_ASSERT(node->isKind(ParseNodeKind::MutateProto) ||
+                   node->isKind(ParseNodeKind::Colon) ||
+                   node->isKind(ParseNodeKind::Shorthand));
+
+        ParseNode* target = node->isKind(ParseNodeKind::MutateProto)
+            ? node->pn_kid
+            : node->pn_right;
+
+        if (target->isKind(ParseNodeKind::Assign))
+            target = target->pn_left;
+
+        if (!checkExportedNamesForDeclaration(target))
+            return false;
+    }
+
+    return true;
+}
+
+template<typename CharT>
+inline bool
+Parser<SyntaxParseHandler, CharT>::checkExportedNamesForObjectBinding(Node node)
+{
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
+}
+
+template<class ParseHandler, typename CharT>
+inline bool
+GeneralParser<ParseHandler, CharT>::checkExportedNamesForObjectBinding(Node node)
+{
+    return asFinalParser()->checkExportedNamesForObjectBinding(node);
+}
+
+template<typename CharT>
+bool
 Parser<FullParseHandler, CharT>::checkExportedNamesForDeclaration(ParseNode* node)
 {
-    MOZ_ASSERT(node->isArity(PN_LIST));
-    for (ParseNode* binding = node->pn_head; binding; binding = binding->pn_next) {
-        if (binding->isKind(ParseNodeKind::Assign))
-            binding = binding->pn_left;
-        MOZ_ASSERT(binding->isKind(ParseNodeKind::Name));
-        if (!checkExportedName(binding->pn_atom))
+    if (node->isKind(ParseNodeKind::Name)) {
+        if (!checkExportedName(node->pn_atom))
+            return false;
+    } else if (node->isKind(ParseNodeKind::Array)) {
+        if (!checkExportedNamesForArrayBinding(node))
+            return false;
+    } else {
+        MOZ_ASSERT(node->isKind(ParseNodeKind::Object));
+        if (!checkExportedNamesForObjectBinding(node))
             return false;
     }
 
@@ -5345,6 +5430,39 @@ inline bool
 GeneralParser<ParseHandler, CharT>::checkExportedNamesForDeclaration(Node node)
 {
     return asFinalParser()->checkExportedNamesForDeclaration(node);
+}
+
+template<typename CharT>
+bool
+Parser<FullParseHandler, CharT>::checkExportedNamesForDeclarationList(ParseNode* node)
+{
+    MOZ_ASSERT(node->isArity(PN_LIST));
+    for (ParseNode* binding = node->pn_head; binding; binding = binding->pn_next) {
+        if (binding->isKind(ParseNodeKind::Assign))
+            binding = binding->pn_left;
+        else
+            MOZ_ASSERT(binding->isKind(ParseNodeKind::Name));
+
+        if (!checkExportedNamesForDeclaration(binding))
+            return false;
+    }
+
+    return true;
+}
+
+template<typename CharT>
+inline bool
+Parser<SyntaxParseHandler, CharT>::checkExportedNamesForDeclarationList(Node node)
+{
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
+}
+
+template<class ParseHandler, typename CharT>
+inline bool
+GeneralParser<ParseHandler, CharT>::checkExportedNamesForDeclarationList(Node node)
+{
+    return asFinalParser()->checkExportedNamesForDeclarationList(node);
 }
 
 template<typename CharT>
@@ -5648,7 +5766,7 @@ GeneralParser<ParseHandler, CharT>::exportVariableStatement(uint32_t begin)
         return null();
     if (!matchOrInsertSemicolon())
         return null();
-    if (!checkExportedNamesForDeclaration(kid))
+    if (!checkExportedNamesForDeclarationList(kid))
         return null();
 
     Node node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));
@@ -5729,7 +5847,7 @@ GeneralParser<ParseHandler, CharT>::exportLexicalDeclaration(uint32_t begin, Dec
     Node kid = lexicalDeclaration(YieldIsName, kind);
     if (!kid)
         return null();
-    if (!checkExportedNamesForDeclaration(kid))
+    if (!checkExportedNamesForDeclarationList(kid))
         return null();
 
     Node node = handler.newExportDeclaration(kid, TokenPos(begin, pos().end));

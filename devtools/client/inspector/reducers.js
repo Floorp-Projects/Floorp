@@ -15,5 +15,6 @@ exports.extensionsSidebar = require("devtools/client/inspector/extensions/reduce
 exports.flexbox = require("devtools/client/inspector/flexbox/reducers/flexbox");
 exports.fontOptions = require("devtools/client/inspector/fonts/reducers/font-options");
 exports.fontData = require("devtools/client/inspector/fonts/reducers/fonts");
+exports.fontEditor = require("devtools/client/inspector/fonts/reducers/font-editor");
 exports.grids = require("devtools/client/inspector/grids/reducers/grids");
 exports.highlighterSettings = require("devtools/client/inspector/grids/reducers/highlighter-settings");

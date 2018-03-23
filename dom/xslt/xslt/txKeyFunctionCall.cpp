@@ -110,12 +110,10 @@ txKeyFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 }
 
 #ifdef TX_TO_STRING
-nsresult
-txKeyFunctionCall::getNameAtom(nsAtom** aAtom)
+void
+txKeyFunctionCall::appendName(nsAString& aDest)
 {
-    *aAtom = nsGkAtoms::key;
-    NS_ADDREF(*aAtom);
-    return NS_OK;
+    aDest.Append(nsGkAtoms::key->GetUTF16String());
 }
 #endif
 

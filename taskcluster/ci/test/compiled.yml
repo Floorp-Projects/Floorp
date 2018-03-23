@@ -60,6 +60,10 @@ jittest:
     description: "JIT Test run"
     suite: jittest/jittest-chunked
     treeherder-symbol: Jit
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['mozilla-central', 'try']
@@ -69,6 +73,8 @@ jittest:
             windows.*: 1
             windows10-64-ccov/debug: 6
             macosx.*: 1
+            android-4.3-arm7-api-15/debug: 20
+            android.*: 10
             default: 6
     max-run-time:
         by-test-platform:

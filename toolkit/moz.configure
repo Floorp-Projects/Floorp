@@ -896,13 +896,10 @@ set_define('SK_BUILD_FOR_ANDROID_NDK', skia_android)
 
 option('--disable-skia-gpu', help='Disable use of Skia-GPU')
 
-@depends('--disable-skia-gpu', skia, target)
-def skia_gpu(value, skia, target):
+@depends('--disable-skia-gpu', skia)
+def skia_gpu(value, skia):
     if value.origin == 'default':
         if not skia:
-            return None
-        # Skia GPU support may not reliably build on certain *BSDs (see bug 1234494)
-        if target.os in ('NetBSD', 'OpenBSD'):
             return None
     elif value and not skia:
         die('Cannot enable Skia-GPU without enabling Skia')
@@ -954,22 +951,17 @@ def sfntly_includes(skia_pdf_sfntly):
 
 set_config('SFNTLY_INCLUDES', sfntly_includes)
 
-@depends(skia, skia_gpu)
-def skia_includes(skia, skia_gpu):
+@depends(skia)
+def skia_includes(skia):
     includes = []
     if skia:
         includes += [
             '/gfx/skia',
             '/gfx/skia/skia/include/config',
             '/gfx/skia/skia/include/core',
-        ]
-
-    if skia_gpu:
-        includes += [
             '/gfx/skia/skia/include/gpu',
             '/gfx/skia/skia/include/utils',
         ]
-
     return includes
 
 set_config('SKIA_INCLUDES', skia_includes)
