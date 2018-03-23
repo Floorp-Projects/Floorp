@@ -16,10 +16,6 @@
 #define FORWARD_CONCRETE(method_, geckoargs_, servoargs_) \
   return AsServo()->method_ servoargs_;
 
-#define FORWARD_WITH_PARENT(method_, parent_, args_) \
-  auto* parent = parent_ ? parent_->AsServo() : nullptr; \
-  return AsServo()->method_ args_;
-
 
 #define FORWARD(method_, args_) FORWARD_CONCRETE(method_, args_, args_)
 
@@ -81,17 +77,17 @@ StyleSetHandle::Ptr::EndUpdate()
 // resolve a style context
 already_AddRefed<ComputedStyle>
 StyleSetHandle::Ptr::ResolveStyleFor(dom::Element* aElement,
-                                     ComputedStyle* aParentContext,
+                                     ComputedStyle* aParentStyle,
                                      LazyComputeBehavior aMayCompute)
 {
-  FORWARD_WITH_PARENT(ResolveStyleFor, aParentContext, (aElement, parent, aMayCompute));
+  FORWARD(ResolveStyleFor, (aElement, aParentStyle, aMayCompute));
 }
 
 already_AddRefed<ComputedStyle>
 StyleSetHandle::Ptr::ResolveStyleForText(nsIContent* aTextNode,
-                                         ComputedStyle* aParentContext)
+                                         ComputedStyle* aParentStyle)
 {
-  FORWARD_WITH_PARENT(ResolveStyleForText, aParentContext, (aTextNode, parent));
+  FORWARD(ResolveStyleForText, (aTextNode, aParentStyle));
 }
 
 already_AddRefed<ComputedStyle>
@@ -101,25 +97,25 @@ StyleSetHandle::Ptr::ResolveStyleForPlaceholder()
 }
 
 already_AddRefed<ComputedStyle>
-StyleSetHandle::Ptr::ResolveStyleForFirstLetterContinuation(ComputedStyle* aParentContext)
+StyleSetHandle::Ptr::ResolveStyleForFirstLetterContinuation(ComputedStyle* aParentStyle)
 {
-  FORWARD_WITH_PARENT(ResolveStyleForFirstLetterContinuation, aParentContext, (parent));
+  FORWARD(ResolveStyleForFirstLetterContinuation, (aParentStyle));
 }
 
 already_AddRefed<ComputedStyle>
 StyleSetHandle::Ptr::ResolvePseudoElementStyle(dom::Element* aParentElement,
                                                CSSPseudoElementType aType,
-                                               ComputedStyle* aParentContext,
+                                               ComputedStyle* aParentStyle,
                                                dom::Element* aPseudoElement)
 {
-  FORWARD_WITH_PARENT(ResolvePseudoElementStyle, aParentContext, (aParentElement, aType, parent, aPseudoElement));
+  FORWARD(ResolvePseudoElementStyle, (aParentElement, aType, aParentStyle, aPseudoElement));
 }
 
 already_AddRefed<ComputedStyle>
 StyleSetHandle::Ptr::ResolveInheritingAnonymousBoxStyle(nsAtom* aPseudoTag,
-                                                        ComputedStyle* aParentContext)
+                                                        ComputedStyle* aParentStyle)
 {
-  FORWARD_WITH_PARENT(ResolveInheritingAnonymousBoxStyle, aParentContext, (aPseudoTag, parent));
+  FORWARD(ResolveInheritingAnonymousBoxStyle, (aPseudoTag, aParentStyle));
 }
 
 already_AddRefed<ComputedStyle>
@@ -132,11 +128,10 @@ StyleSetHandle::Ptr::ResolveNonInheritingAnonymousBoxStyle(nsAtom* aPseudoTag)
 already_AddRefed<ComputedStyle>
 StyleSetHandle::Ptr::ResolveXULTreePseudoStyle(dom::Element* aParentElement,
                                                nsICSSAnonBoxPseudo* aPseudoTag,
-                                               ComputedStyle* aParentContext,
+                                               ComputedStyle* aParentStyle,
                                                const AtomArray& aInputWord)
 {
-  FORWARD_WITH_PARENT(ResolveXULTreePseudoStyle, aParentContext,
-                      (aParentElement, aPseudoTag, parent, aInputWord));
+  FORWARD(ResolveXULTreePseudoStyle, (aParentElement, aPseudoTag, aParentStyle, aInputWord));
 }
 #endif
 
@@ -276,9 +271,9 @@ StyleSetHandle::Ptr::InvalidateStyleForCSSRuleChanges()
 already_AddRefed<ComputedStyle>
 StyleSetHandle::Ptr::ProbePseudoElementStyle(dom::Element* aParentElement,
                                              CSSPseudoElementType aType,
-                                             ComputedStyle* aParentContext)
+                                             ComputedStyle* aParentStyle)
 {
-  FORWARD_WITH_PARENT(ProbePseudoElementStyle, aParentContext, (aParentElement, aType, parent));
+  FORWARD(ProbePseudoElementStyle, (aParentElement, aType, aParentStyle));
 }
 
 void
