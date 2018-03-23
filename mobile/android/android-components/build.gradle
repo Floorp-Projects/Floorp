@@ -6,6 +6,8 @@ buildscript {
     ext.targetSdkVersion = 27
     ext.minSdkVersion = 21
 
+    ext.version = "0.2.1"
+
     repositories {
         google()
         jcenter()

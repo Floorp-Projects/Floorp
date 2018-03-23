@@ -41,6 +41,7 @@ dependencies {
 }
 
 apply from: '../../../publish.gradle'
-def packageName = 'utils'
-def description = 'A collection of generic helper classes.'
-ext.configurePublish(packageName, description)
+ext.configurePublish(
+        'org.mozilla.components',
+        'utils',
+        'A collection of generic helper classes.')

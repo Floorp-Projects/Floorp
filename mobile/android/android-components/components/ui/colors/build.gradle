@@ -30,6 +30,7 @@ dependencies {
 }
 
 apply from: '../../../publish.gradle'
-def packageName = 'colors'
-def description = 'The standard set of Photon colors.'
-ext.configurePublish(packageName, description)
+ext.configurePublish(
+        'org.mozilla.photon',
+        'colors',
+        'The standard set of Photon colors.')

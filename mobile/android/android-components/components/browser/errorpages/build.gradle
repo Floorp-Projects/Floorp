@@ -11,8 +11,6 @@ android {
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -43,6 +41,7 @@ dependencies {
 }
 
 apply from: '../../../publish.gradle'
-def packageName = 'errorpages'
-def description = 'Responsive browser error pages for Android apps.'
-ext.configurePublish(packageName, description)
+ext.configurePublish(
+        'org.mozilla.components',
+        'errorpages',
+        'Responsive browser error pages for Android apps.')

@@ -39,6 +39,7 @@ dependencies {
 }
 
 apply from: '../../../publish.gradle'
-def packageName = 'ktx'
-def description = 'A set of Kotlin extensions.'
-ext.configurePublish(packageName, description)
+ext.configurePublish(
+        'org.mozilla.components',
+        'ktx',
+        'A set of Kotlin extensions.')

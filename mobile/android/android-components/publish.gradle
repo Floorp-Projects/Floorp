@@ -3,23 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 def libRepoName = properties.libRepositoryName
-def libGroupId = properties.libGroupId
 def libUrl = properties.libUrl
 def libVcsUrl = properties.libVcsUrl
 def libLicense = properties.libLicense
 def libLicenseUrl = properties.libLicenseUrl
 
-ext.configurePublish = { artifactIdArg, descriptionArg ->
+ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
     apply plugin: 'com.github.dcendents.android-maven'
 
-    group = properties.libGroupId
+    group = groupIdArg
 
     install {
         repositories.mavenInstaller {
             pom {
                 project {
                     packaging 'aar'
-                    groupId libGroupId
+                    groupId groupIdArg
                     artifactId artifactIdArg
 
                     name libRepoName
@@ -53,7 +52,7 @@ ext.configurePublish = { artifactIdArg, descriptionArg ->
 
     apply plugin: 'com.jfrog.bintray'
 
-    version = properties.libVersion
+    version = rootProject.ext.version
 
     task sourcesJar(type: Jar) {
         from android.sourceSets.main.java.srcDirs
