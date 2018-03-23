@@ -31,5 +31,6 @@ check out the :doc:`how-to section <how-tos>`.
     try
     actions
     release-promotion
+    versioncontrol
     how-tos
     reference
