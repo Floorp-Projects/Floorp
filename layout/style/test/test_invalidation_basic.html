@@ -24,7 +24,7 @@
 SimpleTest.waitForExplicitFinish();
 const utils = SpecialPowers.getDOMWindowUtils(window);
 
-// TODO(emilio): Add an API to get the style contexts we've recreated, to make
+// TODO(emilio): Add an API to get the ComputedStyles we've recreated, to make
 // more elaborated tests.
 document.documentElement.offsetTop;
 const initialRestyleGeneration = utils.restyleGeneration;

@@ -4136,7 +4136,8 @@ EditorBase::IsPreformatted(nsIDOMNode* aNode,
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
-  // Look at the node (and its parent if it's not an element), and grab its style context
+  // Look at the node (and its parent if it's not an element), and grab its
+  // ComputedStyle.
   RefPtr<ComputedStyle> elementStyle;
   if (!content->IsElement()) {
     content = content->GetParent();
@@ -4147,9 +4148,9 @@ EditorBase::IsPreformatted(nsIDOMNode* aNode,
   }
 
   if (!elementStyle) {
-    // Consider nodes without a style context to be NOT preformatted:
+    // Consider nodes without a ComputedStyle to be NOT preformatted:
     // For instance, this is true of JS tags inside the body (which show
-    // up as #text nodes but have no style context).
+    // up as #text nodes but have no ComputedStyle).
     *aResult = false;
     return NS_OK;
   }

@@ -56,7 +56,7 @@ nsMathMLmfencedFrame::SetInitialChildList(ChildListID     aListID,
   // frame, so initialize NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY for
   // GetPreferredStretchSize() from Reflow().
   mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
-  // No need to track the style contexts given to our MathML chars.
+  // No need to track the ComputedStyle given to our MathML chars.
   // The Style System will use Get/SetAdditionalComputedStyle() to keep them
   // up-to-date if dynamic changes arise.
   CreateFencesAndSeparators(PresContext());
@@ -682,7 +682,8 @@ nsMathMLmfencedFrame::FixInterFrameSpacing(ReflowOutput& aDesiredSize)
 }
 
 // ----------------------
-// the Style System will use these to pass the proper style context to our MathMLChar
+// the Style System will use these to pass the proper ComputedStyle to our
+// MathMLChar
 ComputedStyle*
 nsMathMLmfencedFrame::GetAdditionalComputedStyle(int32_t aIndex) const
 {

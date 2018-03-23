@@ -2709,7 +2709,7 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
   ServoStyleSet* styleSet = aPresShell->StyleSet()->AsServo();
 
   RefPtr<ComputedStyle> parentStyle;
-  // have to get a parent style context for inherit-like relative
+  // have to get a parent ComputedStyle for inherit-like relative
   // values (2em, bolder, etc.)
   if (aElement && aElement->IsInComposedDoc()) {
     parentStyle = nsComputedDOMStyle::GetComputedStyle(aElement, nullptr);
@@ -3717,7 +3717,7 @@ CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
 {
   /*
     * If font is defined with relative units (e.g. ems) and the parent
-    * style context changes in between calls, setting the font to the
+    * ComputedStyle changes in between calls, setting the font to the
     * same value as previous could result in a different computed value,
     * so we cannot have the optimization where we check if the new font
     * string is equal to the old one.
@@ -4351,7 +4351,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
   CanvasBidiProcessor processor;
 
-  // If we don't have a style context, we can't set up vertical-text flags
+  // If we don't have a ComputedStyle, we can't set up vertical-text flags
   // (for now, at least; perhaps we need new Canvas API to control this).
   processor.mTextRunFlags = canvasStyle
     ? nsLayoutUtils::GetTextRunFlagsForStyle(canvasStyle,

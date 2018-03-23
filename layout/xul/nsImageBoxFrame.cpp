@@ -642,7 +642,8 @@ nsImageBoxFrame::CanOptimizeToImageLayer()
 //
 // DidSetComputedStyle
 //
-// When the style context changes, make sure that all of our image is up to date.
+// When the ComputedStyle changes, make sure that all of our image is up to
+// date.
 //
 /* virtual */ void
 nsImageBoxFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
