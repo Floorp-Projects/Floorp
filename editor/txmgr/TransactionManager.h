@@ -63,6 +63,16 @@ public:
     return true;
   }
 
+  bool AddTransactionListener(nsITransactionListener& aListener)
+  {
+    // XXX Shouldn't we check if aListener has already been in mListeners?
+    return mListeners.AppendObject(&aListener);
+  }
+  bool RemoveTransactionListener(nsITransactionListener& aListener)
+  {
+    return mListeners.RemoveObject(&aListener);
+  }
+
   nsresult WillDoNotify(nsITransaction* aTransaction, bool* aInterrupt);
   nsresult DidDoNotify(nsITransaction* aTransaction, nsresult aExecuteResult);
   nsresult WillUndoNotify(nsITransaction* aTransaction, bool* aInterrupt);
