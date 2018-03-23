@@ -209,9 +209,8 @@ MacroAssemblerMIPS::ma_liPatchable(Register dest, ImmWord imm)
 // Arithmetic-based ops.
 
 // Add.
-template <typename L>
 void
-MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Register rt, L overflow)
+MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Register rt, Label* overflow)
 {
     Label goodAddition;
     as_addu(rd, rs, rt);
@@ -226,16 +225,8 @@ MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Register rt, L 
     bind(&goodAddition);
 }
 
-template void
-MacroAssemblerMIPS::ma_addTestOverflow<Label*>(Register rd, Register rs,
-                                               Register rt, Label* overflow);
-template void
-MacroAssemblerMIPS::ma_addTestOverflow<wasm::OldTrapDesc>(Register rd, Register rs, Register rt,
-                                                          wasm::OldTrapDesc overflow);
-
-template <typename L>
 void
-MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Imm32 imm, L overflow)
+MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow)
 {
     // Check for signed range because of as_addiu
     // Check for unsigned range because of as_xori
@@ -257,13 +248,6 @@ MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Imm32 imm, L ov
         ma_addTestOverflow(rd, rs, ScratchRegister, overflow);
     }
 }
-
-template void
-MacroAssemblerMIPS::ma_addTestOverflow<Label*>(Register rd, Register rs,
-                                               Imm32 imm, Label* overflow);
-template void
-MacroAssemblerMIPS::ma_addTestOverflow<wasm::OldTrapDesc>(Register rd, Register rs, Imm32 imm,
-                                                          wasm::OldTrapDesc overflow);
 
 // Subtract.
 void

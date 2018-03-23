@@ -96,10 +96,8 @@ class MacroAssemblerMIPS : public MacroAssemblerMIPSShared
 
     // arithmetic based ops
     // add
-    template <typename L>
-    void ma_addTestOverflow(Register rd, Register rs, Register rt, L overflow);
-    template <typename L>
-    void ma_addTestOverflow(Register rd, Register rs, Imm32 imm, L overflow);
+    void ma_addTestOverflow(Register rd, Register rs, Register rt, Label* overflow);
+    void ma_addTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow);
 
     // subtract
     void ma_subTestOverflow(Register rd, Register rs, Register rt, Label* overflow);
@@ -340,10 +338,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 
     void jump(JitCode* code) {
         branch(code);
-    }
-
-    void jump(wasm::OldTrapDesc target) {
-        ma_b(target);
     }
 
     void jump(TrampolinePtr code)
