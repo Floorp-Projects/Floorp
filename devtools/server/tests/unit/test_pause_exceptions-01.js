@@ -30,12 +30,11 @@ function run_test() {
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function(event, packet) {
     gThreadClient.addOneTimeListener("paused", function(event, packet) {
-      Assert.equal(packet.why.type, "exception");
-      Assert.equal(packet.why.exception, 42);
-      gThreadClient.resume(function() {
-        finishClient(gClient);
-      });
+      Assert.equal(packet.why.type, "debuggerStatement");
+      Assert.equal(packet.frame.where.line, 9);
+      gThreadClient.resume(() => finishClient(gClient));
     });
+
     gThreadClient.pauseOnExceptions(true);
     gThreadClient.resume();
   });
@@ -48,7 +47,9 @@ function test_pause_frame() {
     }
     try {
       stopMe();
-    } catch (e) {}
+    } catch (e) {
+      debugger
+    }
   } + ")()");
   /* eslint-enable */
 }
