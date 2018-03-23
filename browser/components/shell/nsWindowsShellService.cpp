@@ -9,11 +9,9 @@
 #include "city.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
 #include "nsIContent.h"
 #include "nsIImageLoadingContent.h"
-#include "nsIOutputStream.h"
 #include "nsIPrefService.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIServiceManager.h"
@@ -46,6 +44,7 @@
 #define NTDDI_VERSION NTDDI_WIN8
 // Needed for access to IApplicationActivationManager
 #include <shlobj.h>
+#include "WinUtils.h"
 
 #include <mbstring.h>
 #include <shlwapi.h>
@@ -67,7 +66,7 @@
 
 using mozilla::IsWin8OrLater;
 using namespace mozilla;
-using namespace mozilla::gfx;
+using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS(nsWindowsShellService, nsIShellService)
 
@@ -485,95 +484,6 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
   return rv;
 }
 
-static nsresult
-WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
-{
-  nsresult rv;
-
-  RefPtr<SourceSurface> surface =
-    aImage->GetFrame(imgIContainer::FRAME_FIRST,
-                     imgIContainer::FLAG_SYNC_DECODE);
-  NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
-
-  // For either of the following formats we want to set the biBitCount member
-  // of the BITMAPINFOHEADER struct to 32, below. For that value the bitmap
-  // format defines that the A8/X8 WORDs in the bitmap byte stream be ignored
-  // for the BI_RGB value we use for the biCompression member.
-  MOZ_ASSERT(surface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-             surface->GetFormat() == SurfaceFormat::B8G8R8X8);
-
-  RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
-  NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
-
-  int32_t width = dataSurface->GetSize().width;
-  int32_t height = dataSurface->GetSize().height;
-  int32_t bytesPerPixel = 4 * sizeof(uint8_t);
-  uint32_t bytesPerRow = bytesPerPixel * width;
-
-  // initialize these bitmap structs which we will later
-  // serialize directly to the head of the bitmap file
-  BITMAPINFOHEADER bmi;
-  bmi.biSize = sizeof(BITMAPINFOHEADER);
-  bmi.biWidth = width;
-  bmi.biHeight = height;
-  bmi.biPlanes = 1;
-  bmi.biBitCount = (WORD)bytesPerPixel*8;
-  bmi.biCompression = BI_RGB;
-  bmi.biSizeImage = bytesPerRow * height;
-  bmi.biXPelsPerMeter = 0;
-  bmi.biYPelsPerMeter = 0;
-  bmi.biClrUsed = 0;
-  bmi.biClrImportant = 0;
-
-  BITMAPFILEHEADER bf;
-  bf.bfType = 0x4D42; // 'BM'
-  bf.bfReserved1 = 0;
-  bf.bfReserved2 = 0;
-  bf.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-  bf.bfSize = bf.bfOffBits + bmi.biSizeImage;
-
-  // get a file output stream
-  nsCOMPtr<nsIOutputStream> stream;
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(stream), aFile);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  DataSourceSurface::MappedSurface map;
-  if (!dataSurface->Map(DataSourceSurface::MapType::READ, &map)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // write the bitmap headers and rgb pixel data to the file
-  rv = NS_ERROR_FAILURE;
-  if (stream) {
-    uint32_t written;
-    stream->Write((const char*)&bf, sizeof(BITMAPFILEHEADER), &written);
-    if (written == sizeof(BITMAPFILEHEADER)) {
-      stream->Write((const char*)&bmi, sizeof(BITMAPINFOHEADER), &written);
-      if (written == sizeof(BITMAPINFOHEADER)) {
-        // write out the image data backwards because the desktop won't
-        // show bitmaps with negative heights for top-to-bottom
-        uint32_t i = map.mStride * height;
-        do {
-          i -= map.mStride;
-          stream->Write(((const char*)map.mData) + i, bytesPerRow, &written);
-          if (written == bytesPerRow) {
-            rv = NS_OK;
-          } else {
-            rv = NS_ERROR_FAILURE;
-            break;
-          }
-        } while (i != 0);
-      }
-    }
-
-    stream->Close();
-  }
-
-  dataSurface->Unmap();
-
-  return rv;
-}
-
 NS_IMETHODIMP
 nsWindowsShellService::SetDesktopBackground(dom::Element* aElement,
                                             int32_t aPosition,
@@ -633,7 +543,7 @@ nsWindowsShellService::SetDesktopBackground(dom::Element* aElement,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // write the bitmap to a file in the profile directory
-  rv = WriteBitmap(file, container);
+  rv = WinUtils::WriteBitmap(file, container);
 
   // if the file was written successfully, set it as the system wallpaper
   if (NS_SUCCEEDED(rv)) {
