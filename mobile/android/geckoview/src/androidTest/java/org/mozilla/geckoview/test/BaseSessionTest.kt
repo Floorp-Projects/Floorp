@@ -30,6 +30,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val NEW_SESSION_CHILD_HTML_PATH = "/assets/www/newSession_child.html"
         const val CLICK_TO_RELOAD_HTML_PATH = "/assets/www/clickToReload.html"
         const val TITLE_CHANGE_HTML_PATH = "/assets/www/titleChange.html"
+        const val DOWNLOAD_HTML_PATH = "/assets/www/download.html"
     }
 
     @get:Rule val sessionRule = GeckoSessionTestRule()
