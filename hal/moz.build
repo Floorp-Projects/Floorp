@@ -101,7 +101,6 @@ UNIFIED_SOURCES += [
     'fallback/FallbackProcessPriority.cpp',
     'fallback/FallbackSwitch.cpp',
     'fallback/FallbackThreadPriority.cpp',
-    'fallback/FallbackTime.cpp',
 ]
 
 # Fallbacks for backends implemented on Android only.

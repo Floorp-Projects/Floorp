@@ -705,13 +705,13 @@ Module::extractCode(JSContext* cx, Tier tier, MutableHandleValue vp) const
 }
 
 static uint32_t
-EvaluateInitExpr(const ValVector& globalImports, InitExpr initExpr)
+EvaluateInitExpr(const ValVector& globalImportValues, InitExpr initExpr)
 {
     switch (initExpr.kind()) {
       case InitExpr::Kind::Constant:
         return initExpr.val().i32();
       case InitExpr::Kind::GetGlobal:
-        return globalImports[initExpr.globalIndex()].i32();
+        return globalImportValues[initExpr.globalIndex()].i32();
     }
 
     MOZ_CRASH("bad initializer expression");
@@ -722,7 +722,7 @@ Module::initSegments(JSContext* cx,
                      HandleWasmInstanceObject instanceObj,
                      Handle<FunctionVector> funcImports,
                      HandleWasmMemoryObject memoryObj,
-                     const ValVector& globalImports) const
+                     const ValVector& globalImportValues) const
 {
     Instance& instance = instanceObj->instance();
     const SharedTableVector& tables = instance.tables();
@@ -736,7 +736,7 @@ Module::initSegments(JSContext* cx,
         uint32_t numElems = seg.elemCodeRangeIndices(tier).length();
 
         uint32_t tableLength = tables[seg.tableIndex]->length();
-        uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
+        uint32_t offset = EvaluateInitExpr(globalImportValues, seg.offset);
 
         if (offset > tableLength || tableLength - offset < numElems) {
             JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
@@ -748,7 +748,7 @@ Module::initSegments(JSContext* cx,
     if (memoryObj) {
         uint32_t memoryLength = memoryObj->volatileMemoryLength();
         for (const DataSegment& seg : dataSegments_) {
-            uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
+            uint32_t offset = EvaluateInitExpr(globalImportValues, seg.offset);
 
             if (offset > memoryLength || memoryLength - offset < seg.length) {
                 JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
@@ -765,7 +765,7 @@ Module::initSegments(JSContext* cx,
 
     for (const ElemSegment& seg : elemSegments_) {
         Table& table = *tables[seg.tableIndex];
-        uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
+        uint32_t offset = EvaluateInitExpr(globalImportValues, seg.offset);
         const CodeRangeVector& codeRanges = metadata(tier).codeRanges;
         uint8_t* codeBase = instance.codeBase(tier);
 
@@ -797,7 +797,7 @@ Module::initSegments(JSContext* cx,
         for (const DataSegment& seg : dataSegments_) {
             MOZ_ASSERT(seg.bytecodeOffset <= bytecode_->length());
             MOZ_ASSERT(seg.length <= bytecode_->length() - seg.bytecodeOffset);
-            uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
+            uint32_t offset = EvaluateInitExpr(globalImportValues, seg.offset);
             memcpy(memoryBase + offset, bytecode_->begin() + seg.bytecodeOffset, seg.length);
         }
     }
@@ -994,6 +994,68 @@ Module::instantiateTable(JSContext* cx, MutableHandleWasmTableObject tableObj,
     return true;
 }
 
+static Val
+ExtractGlobalValue(const ValVector& globalImportValues, uint32_t globalIndex, const GlobalDesc& global)
+{
+    switch (global.kind()) {
+      case GlobalKind::Import: {
+        return globalImportValues[globalIndex];
+      }
+      case GlobalKind::Variable: {
+        const InitExpr& init = global.initExpr();
+        switch (init.kind()) {
+          case InitExpr::Kind::Constant:
+            return init.val();
+          case InitExpr::Kind::GetGlobal:
+            return globalImportValues[init.globalIndex()];
+        }
+        break;
+      }
+      case GlobalKind::Constant: {
+        return global.constantValue();
+      }
+    }
+    MOZ_CRASH("Not a global value");
+}
+
+bool
+Module::instantiateGlobalExports(JSContext* cx,
+                                 const ValVector& globalImportValues,
+                                 WasmGlobalObjectVector& globalObjs) const
+{
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
+    // If there are exported globals that aren't in the globalObjs because they
+    // originate in this module or because they were immutable imports that came
+    // in as values (not cells) then we must create cells in the globalObjs for
+    // them here, as WasmInstanceObject::create() and CreateExportObject() will
+    // need the cells to exist.
+
+    const GlobalDescVector& globals = metadata().globals;
+
+    for (const Export& exp : exports_) {
+        if (exp.kind() == DefinitionKind::Global) {
+            unsigned globalIndex = exp.globalIndex();
+
+            if (globalIndex >= globalObjs.length() || !globalObjs[globalIndex]) {
+                const GlobalDesc& global = globals[globalIndex];
+
+                Val val = ExtractGlobalValue(globalImportValues, globalIndex, global);
+                RootedWasmGlobalObject go(cx, WasmGlobalObject::create(cx, val,
+                                                                       global.isMutable()));
+                if (!go)
+                    return false;
+                if (globalObjs.length() <= globalIndex && !globalObjs.resize(globalIndex+1)) {
+                    ReportOutOfMemory(cx);
+                    return false;
+                }
+                globalObjs[globalIndex] = go;
+            }
+        }
+    }
+#endif
+    return true;
+}
+
 static bool
 GetFunctionExport(JSContext* cx,
                   HandleWasmInstanceObject instanceObj,
@@ -1017,51 +1079,27 @@ GetFunctionExport(JSContext* cx,
 }
 
 static bool
-GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalIndex,
-                const ValVector& globalImports, MutableHandleValue jsval)
+GetGlobalExport(JSContext* cx,
+                const GlobalDescVector& globals,
+                uint32_t globalIndex,
+                const ValVector& globalImportValues,
+                const WasmGlobalObjectVector& globalObjs,
+                MutableHandleValue jsval)
 {
+#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
+    jsval.setObject(*globalObjs[globalIndex]);
+#else
     const GlobalDesc& global = globals[globalIndex];
 
-    // Imports are located upfront in the globals array.
-    Val val;
-    switch (global.kind()) {
-      case GlobalKind::Import: {
-        val = globalImports[globalIndex];
-        break;
-      }
-      case GlobalKind::Variable: {
-        MOZ_ASSERT(!global.isMutable(), "mutable variables can't be exported");
-        const InitExpr& init = global.initExpr();
-        switch (init.kind()) {
-          case InitExpr::Kind::Constant: {
-            val = init.val();
-            break;
-          }
-          case InitExpr::Kind::GetGlobal: {
-            val = globalImports[init.globalIndex()];
-            break;
-          }
-        }
-        break;
-      }
-      case GlobalKind::Constant: {
-        val = global.constantValue();
-        break;
-      }
-    }
+    MOZ_ASSERT(!global.isMutable(), "Mutable variables can't be exported.");
 
+    Val val = ExtractGlobalValue(globalImportValues, globalIndex, global);
     if (val.type() == ValType::I64) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
         return false;
     }
 
-    ToJSValue(val, jsval);
-
-#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
-    Rooted<WasmGlobalObject*> go(cx, WasmGlobalObject::create(cx, ValType::I32, false, jsval));
-    if (!go)
-        return false;
-    jsval.setObject(*go);
+    jsval.set(ToJSValue(val));
 #endif
 
     return true;
@@ -1073,7 +1111,8 @@ CreateExportObject(JSContext* cx,
                    Handle<FunctionVector> funcImports,
                    HandleWasmTableObject tableObj,
                    HandleWasmMemoryObject memoryObj,
-                   const ValVector& globalImports,
+                   const ValVector& globalImportValues,
+                   const WasmGlobalObjectVector& globalObjs,
                    const ExportVector& exports)
 {
     const Instance& instance = instanceObj->instance();
@@ -1114,8 +1153,11 @@ CreateExportObject(JSContext* cx,
             val = ObjectValue(*memoryObj);
             break;
           case DefinitionKind::Global:
-            if (!GetGlobalExport(cx, metadata.globals, exp.globalIndex(), globalImports, &val))
+            if (!GetGlobalExport(cx, metadata.globals, exp.globalIndex(), globalImportValues,
+                                 globalObjs, &val))
+            {
                 return false;
+            }
             break;
         }
 
@@ -1137,7 +1179,8 @@ Module::instantiate(JSContext* cx,
                     Handle<FunctionVector> funcImports,
                     HandleWasmTableObject tableImport,
                     HandleWasmMemoryObject memoryImport,
-                    const ValVector& globalImports,
+                    const ValVector& globalImportValues,
+                    WasmGlobalObjectVector& globalObjs,
                     HandleObject instanceProto,
                     MutableHandleWasmInstanceObject instance) const
 {
@@ -1151,6 +1194,9 @@ Module::instantiate(JSContext* cx,
     RootedWasmTableObject table(cx, tableImport);
     SharedTableVector tables;
     if (!instantiateTable(cx, &table, &tables))
+        return false;
+
+    if (!instantiateGlobalExports(cx, globalImportValues, globalObjs))
         return false;
 
     UniqueTlsData tlsData = CreateTlsData(metadata().globalDataLength);
@@ -1230,13 +1276,18 @@ Module::instantiate(JSContext* cx,
                                             memory,
                                             Move(tables),
                                             funcImports,
-                                            globalImports,
+                                            metadata().globals,
+                                            globalImportValues,
+                                            globalObjs,
                                             instanceProto));
     if (!instance)
         return false;
 
-    if (!CreateExportObject(cx, instance, funcImports, table, memory, globalImports, exports_))
+    if (!CreateExportObject(cx, instance, funcImports, table, memory, globalImportValues,
+                            globalObjs, exports_))
+    {
         return false;
+    }
 
     // Register the instance with the JSCompartment so that it can find out
     // about global events like profiling being enabled in the compartment.
@@ -1250,7 +1301,7 @@ Module::instantiate(JSContext* cx,
     // constructed since this can make the instance live to content (even if the
     // start function fails).
 
-    if (!initSegments(cx, instance, funcImports, memory, globalImports))
+    if (!initSegments(cx, instance, funcImports, memory, globalImportValues))
         return false;
 
     // Now that the instance is fully live and initialized, the start function.

@@ -27,13 +27,13 @@ registerCleanupFunction(() => {
  * @return {Promise} a promise that resolves when the inspector is updated with the new
  *         node.
  */
-function* selectAndHighlightNode(selectorOrNodeFront, inspector) {
+async function selectAndHighlightNode(selectorOrNodeFront, inspector) {
   info("Highlighting and selecting the node " + selectorOrNodeFront);
 
-  let nodeFront = yield getNodeFront(selectorOrNodeFront, inspector);
+  let nodeFront = await getNodeFront(selectorOrNodeFront, inspector);
   let updated = inspector.toolbox.once("highlighter-ready");
   inspector.selection.setNodeFront(nodeFront, "test-highlight");
-  yield updated;
+  await updated;
 }
 
 /**
@@ -100,8 +100,8 @@ function setStyle(testActor, selector, propertyName, value) {
  * finished updating. We also need to wait for the "boxmodel-view-updated" event.
  */
 var _selectNode = selectNode;
-selectNode = function* (node, inspector, reason) {
+selectNode = async function(node, inspector, reason) {
   let onUpdate = waitForUpdate(inspector, true);
-  yield _selectNode(node, inspector, reason);
-  yield onUpdate;
+  await _selectNode(node, inspector, reason);
+  await onUpdate;
 };

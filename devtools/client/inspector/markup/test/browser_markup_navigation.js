@@ -76,8 +76,8 @@ const TEST_DATA = [
   ["KEY_ArrowDown", "head"]
 ];
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(TEST_URL);
 
   info("Making sure the markup-view frame is focused");
   inspector.markup._frame.focus();
@@ -88,7 +88,7 @@ add_task(function* () {
     EventUtils.synthesizeKey(key);
 
     info("Making sure markup-view children get updated");
-    yield waitForChildrenUpdated(inspector);
+    await waitForChildrenUpdated(inspector);
 
     info("Checking the right node is selected");
     checkSelectedNode(key, className, inspector);
@@ -99,7 +99,7 @@ add_task(function* () {
   // changing the current node ends up refreshing the rule-view, breadcrumbs,
   // ...), but this would make this test a *lot* slower. Instead, having a final
   // catch-all event works too.
-  yield inspector.once("inspector-updated");
+  await inspector.once("inspector-updated");
 });
 
 function checkSelectedNode(key, className, inspector) {

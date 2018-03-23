@@ -46,21 +46,21 @@ const TEST_URL = "data:text/html," + encodeURIComponent(`
   </html>
 `);
 
-add_task(function* () {
+add_task(async function() {
   info("Open the inspector to a blank page.");
-  let { inspector, tab, testActor } = yield openInspectorForURL("about:blank");
+  let { inspector, tab, testActor } = await openInspectorForURL("about:blank");
 
   let pageLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("Navigate to the test url and waiting for the page to be loaded.");
-  yield navigateTo(inspector, TEST_URL);
-  yield pageLoaded;
+  await navigateTo(inspector, TEST_URL);
+  await pageLoaded;
 
   info("Shows the box model highligher for the <p> node.");
-  let divFront = yield getNodeFront("p", inspector);
-  yield inspector.highlighter.showBoxModel(divFront);
+  let divFront = await getNodeFront("p", inspector);
+  await inspector.highlighter.showBoxModel(divFront);
 
   info("Check the node is highlighted.");
-  is(yield testActor.isHighlighting(), true,
+  is(await testActor.isHighlighting(), true,
     "Box Model highlighter is working as expected.");
 });

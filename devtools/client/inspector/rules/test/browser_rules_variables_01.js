@@ -8,10 +8,10 @@
 
 const TEST_URI = URL_ROOT + "doc_variables_1.html";
 
-add_task(function* () {
-  yield addTab(TEST_URI);
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#target", inspector);
+add_task(async function() {
+  await addTab(TEST_URI);
+  let {inspector, view} = await openRuleView();
+  await selectNode("#target", inspector);
 
   info("Tests basic support for CSS Variables for both single variable " +
   "and double variable. Formats tested: var(x, constant), var(x, var(y))");
@@ -23,8 +23,8 @@ add_task(function* () {
   is(setColor.textContent, "--color", "--color is not set correctly");
   is(setColor.dataset.variable, "--color = chartreuse",
                                 "--color's dataset.variable is not set correctly");
-  let previewTooltip = yield assertShowPreviewTooltip(view, setColor);
-  yield assertTooltipHiddenOnMouseOut(previewTooltip, setColor);
+  let previewTooltip = await assertShowPreviewTooltip(view, setColor);
+  await assertTooltipHiddenOnMouseOut(previewTooltip, setColor);
 
   let unsetVar = getRuleViewProperty(view, "div", "background-color").valueSpan
     .querySelector(".ruleview-unmatched-variable");
@@ -36,6 +36,6 @@ add_task(function* () {
   is(setVarName.textContent, "--bg", "--bg is not set correctly");
   is(setVarName.dataset.variable, "--bg = seagreen",
                                   "--bg's dataset.variable is not set correctly");
-  previewTooltip = yield assertShowPreviewTooltip(view, setVarName);
-  yield assertTooltipHiddenOnMouseOut(previewTooltip, setVarName);
+  previewTooltip = await assertShowPreviewTooltip(view, setVarName);
+  await assertTooltipHiddenOnMouseOut(previewTooltip, setVarName);
 });

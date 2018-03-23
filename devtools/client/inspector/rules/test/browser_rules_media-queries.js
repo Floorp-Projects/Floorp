@@ -9,10 +9,10 @@
 
 const TEST_URI = URL_ROOT + "doc_media_queries.html";
 
-add_task(function* () {
-  yield addTab(TEST_URI);
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("div", inspector);
+add_task(async function() {
+  await addTab(TEST_URI);
+  let {inspector, view} = await openRuleView();
+  await selectNode("div", inspector);
 
   let elementStyle = view._elementStyle;
 

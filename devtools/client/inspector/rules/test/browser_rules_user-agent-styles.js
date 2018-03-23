@@ -57,31 +57,31 @@ const TEST_DATA = [
   }
 ];
 
-add_task(function* () {
+add_task(async function() {
   requestLongerTimeout(4);
 
   info("Starting the test with the pref set to true before toolbox is opened");
-  yield setUserAgentStylesPref(true);
+  await setUserAgentStylesPref(true);
 
-  yield addTab(TEST_URI);
-  let {inspector, view} = yield openRuleView();
+  await addTab(TEST_URI);
+  let {inspector, view} = await openRuleView();
 
   info("Making sure that UA styles are visible on initial load");
-  yield userAgentStylesVisible(inspector, view);
+  await userAgentStylesVisible(inspector, view);
 
   info("Making sure that setting the pref to false hides UA styles");
-  yield setUserAgentStylesPref(false);
-  yield userAgentStylesNotVisible(inspector, view);
+  await setUserAgentStylesPref(false);
+  await userAgentStylesNotVisible(inspector, view);
 
   info("Making sure that resetting the pref to true shows UA styles again");
-  yield setUserAgentStylesPref(true);
-  yield userAgentStylesVisible(inspector, view);
+  await setUserAgentStylesPref(true);
+  await userAgentStylesVisible(inspector, view);
 
   info("Resetting " + PREF_UA_STYLES);
   Services.prefs.clearUserPref(PREF_UA_STYLES);
 });
 
-function* setUserAgentStylesPref(val) {
+async function setUserAgentStylesPref(val) {
   info("Setting the pref " + PREF_UA_STYLES + " to: " + val);
 
   // Reset the pref and wait for PrefObserver to callback so UI
@@ -96,18 +96,18 @@ function* setUserAgentStylesPref(val) {
     }
   });
   Services.prefs.setBoolPref(PREF_UA_STYLES, val);
-  yield oncePrefChanged;
+  await oncePrefChanged;
 }
 
-function* userAgentStylesVisible(inspector, view) {
+async function userAgentStylesVisible(inspector, view) {
   info("Making sure that user agent styles are currently visible");
 
   let userRules;
   let uaRules;
 
   for (let data of TEST_DATA) {
-    yield selectNode(data.selector, inspector);
-    yield compareAppliedStylesWithUI(inspector, view, "ua");
+    await selectNode(data.selector, inspector);
+    await compareAppliedStylesWithUI(inspector, view, "ua");
 
     userRules = view._elementStyle.rules.filter(rule=>rule.editor.isEditable);
     uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
@@ -131,15 +131,15 @@ function* userAgentStylesVisible(inspector, view) {
   }), "Inline styles for ua styles");
 }
 
-function* userAgentStylesNotVisible(inspector, view) {
+async function userAgentStylesNotVisible(inspector, view) {
   info("Making sure that user agent styles are not currently visible");
 
   let userRules;
   let uaRules;
 
   for (let data of TEST_DATA) {
-    yield selectNode(data.selector, inspector);
-    yield compareAppliedStylesWithUI(inspector, view);
+    await selectNode(data.selector, inspector);
+    await compareAppliedStylesWithUI(inspector, view);
 
     userRules = view._elementStyle.rules.filter(rule=>rule.editor.isEditable);
     uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
@@ -148,10 +148,10 @@ function* userAgentStylesNotVisible(inspector, view) {
   }
 }
 
-function* compareAppliedStylesWithUI(inspector, view, filter) {
+async function compareAppliedStylesWithUI(inspector, view, filter) {
   info("Making sure that UI is consistent with pageStyle.getApplied");
 
-  let entries = yield inspector.pageStyle.getApplied(
+  let entries = await inspector.pageStyle.getApplied(
     inspector.selection.nodeFront,
     {
       inherited: true,

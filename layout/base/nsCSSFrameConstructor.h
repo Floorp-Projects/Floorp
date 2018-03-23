@@ -113,9 +113,7 @@ private:
 
   // aChild is the child being inserted for inserts, and the first
   // child being appended for appends.
-  bool MaybeConstructLazily(Operation aOperation,
-                            nsIContent* aContainer,
-                            nsIContent* aChild);
+  bool MaybeConstructLazily(Operation aOperation, nsIContent* aChild);
 
 #ifdef DEBUG
   void CheckBitsForLazyFrameConstruction(nsIContent* aParent);

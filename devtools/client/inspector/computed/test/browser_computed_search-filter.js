@@ -15,23 +15,23 @@ const TEST_URI = `
   <span id="matches" class="matches">Some styled text</span>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openComputedView();
-  yield selectNode("#matches", inspector);
-  yield testToggleDefaultStyles(inspector, view);
-  yield testAddTextInFilter(inspector, view);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openComputedView();
+  await selectNode("#matches", inspector);
+  await testToggleDefaultStyles(inspector, view);
+  await testAddTextInFilter(inspector, view);
 });
 
-function* testToggleDefaultStyles(inspector, computedView) {
+async function testToggleDefaultStyles(inspector, computedView) {
   info("checking \"Browser styles\" checkbox");
   let checkbox = computedView.includeBrowserStylesCheckbox;
   let onRefreshed = inspector.once("computed-view-refreshed");
   checkbox.click();
-  yield onRefreshed;
+  await onRefreshed;
 }
 
-function* testAddTextInFilter(inspector, computedView) {
+async function testAddTextInFilter(inspector, computedView) {
   info("setting filter text to \"color\"");
   let searchField = computedView.searchField;
   let onRefreshed = inspector.once("computed-view-refreshed");
@@ -49,7 +49,7 @@ function* testAddTextInFilter(inspector, computedView) {
   is(inspector.panelDoc.activeElement, searchField, "Search field is focused");
 
   synthesizeKeys("color", win);
-  yield onRefreshed;
+  await onRefreshed;
 
   info("check that the correct properties are visible");
 

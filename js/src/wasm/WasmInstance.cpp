@@ -384,7 +384,8 @@ Instance::Instance(JSContext* cx,
                    HandleWasmMemoryObject memory,
                    SharedTableVector&& tables,
                    Handle<FunctionVector> funcImports,
-                   const ValVector& globalImports)
+                   const ValVector& globalImportValues,
+                   const WasmGlobalObjectVector& globalObjs)
   : compartment_(cx->compartment()),
     object_(object),
     code_(code),
@@ -446,25 +447,44 @@ Instance::Instance(JSContext* cx,
 
     for (size_t i = 0; i < metadata().globals.length(); i++) {
         const GlobalDesc& global = metadata().globals[i];
+
+        // Constants are baked into the code, never stored in the global area.
         if (global.isConstant())
             continue;
 
         uint8_t* globalAddr = globalData() + global.offset();
         switch (global.kind()) {
           case GlobalKind::Import: {
-            globalImports[global.importIndex()].writePayload(globalAddr);
+            if (global.isIndirect())
+                *(void**)globalAddr = globalObjs[global.importIndex()]->cell();
+            else
+                globalImportValues[global.importIndex()].writePayload(globalAddr);
             break;
           }
           case GlobalKind::Variable: {
             const InitExpr& init = global.initExpr();
             switch (init.kind()) {
               case InitExpr::Kind::Constant: {
-                init.val().writePayload(globalAddr);
+                if (global.isIndirect())
+                    *(void**)globalAddr = globalObjs[i]->cell();
+                else
+                    init.val().writePayload(globalAddr);
                 break;
               }
               case InitExpr::Kind::GetGlobal: {
                 const GlobalDesc& imported = metadata().globals[init.globalIndex()];
-                globalImports[imported.importIndex()].writePayload(globalAddr);
+
+                // Global-ref initializers cannot reference mutable globals, so
+                // the source global should never be indirect.
+                MOZ_ASSERT(!imported.isIndirect());
+
+                if (global.isIndirect()) {
+                    void* address = globalObjs[i]->cell();
+                    *(void**)globalAddr = address;
+                    globalImportValues[imported.importIndex()].writePayload((uint8_t*)address);
+                } else {
+                    globalImportValues[imported.importIndex()].writePayload(globalAddr);
+                }
                 break;
               }
             }

@@ -8,17 +8,17 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_svg_attributes.html";
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
-  yield inspector.markup.expandAll();
-  yield selectNode("svg", inspector);
+  await inspector.markup.expandAll();
+  await selectNode("svg", inspector);
 
-  yield testWellformedMixedCase(inspector, testActor);
-  yield testMalformedMixedCase(inspector, testActor);
+  await testWellformedMixedCase(inspector, testActor);
+  await testMalformedMixedCase(inspector, testActor);
 });
 
-function* testWellformedMixedCase(inspector, testActor) {
+async function testWellformedMixedCase(inspector, testActor) {
   info("Modifying a mixed-case attribute, " +
     "expecting the attribute's case to be preserved");
 
@@ -26,7 +26,7 @@ function* testWellformedMixedCase(inspector, testActor) {
   let onMutated = inspector.once("markupmutation");
 
   info("Focusing the viewBox attribute editor");
-  let {editor} = yield focusNode("svg", inspector);
+  let {editor} = await focusNode("svg", inspector);
   let attr = editor.attrElements.get("viewBox").querySelector(".editable");
   attr.focus();
   EventUtils.sendKey("return", inspector.panelWin);
@@ -35,16 +35,16 @@ function* testWellformedMixedCase(inspector, testActor) {
   let input = inplaceEditor(attr).input;
   input.value = "viewBox=\"0 0 1 1\"";
   EventUtils.sendKey("return", inspector.panelWin);
-  yield onMutated;
+  await onMutated;
 
-  yield assertAttributes("svg", {
+  await assertAttributes("svg", {
     "viewBox": "0 0 1 1",
     "width": "200",
     "height": "200"
   }, testActor);
 }
 
-function* testMalformedMixedCase(inspector, testActor) {
+async function testMalformedMixedCase(inspector, testActor) {
   info("Modifying a malformed, mixed-case attribute, " +
     "expecting the attribute's case to be preserved");
 
@@ -52,7 +52,7 @@ function* testMalformedMixedCase(inspector, testActor) {
   let onMutated = inspector.once("markupmutation");
 
   info("Focusing the viewBox attribute editor");
-  let {editor} = yield focusNode("svg", inspector);
+  let {editor} = await focusNode("svg", inspector);
   let attr = editor.attrElements.get("viewBox").querySelector(".editable");
   attr.focus();
   EventUtils.sendKey("return", inspector.panelWin);
@@ -61,9 +61,9 @@ function* testMalformedMixedCase(inspector, testActor) {
   let input = inplaceEditor(attr).input;
   input.value = "viewBox=\"<>\"";
   EventUtils.sendKey("return", inspector.panelWin);
-  yield onMutated;
+  await onMutated;
 
-  yield assertAttributes("svg", {
+  await assertAttributes("svg", {
     "viewBox": "<>",
     "width": "200",
     "height": "200"
