@@ -1008,7 +1008,6 @@ wasm::EnsureBuiltinThunksInitialized()
     MOZ_ASSERT(masm.oldTrapSites().empty());
     MOZ_ASSERT(masm.oldTrapFarJumps().empty());
     MOZ_ASSERT(masm.callFarJumps().empty());
-    MOZ_ASSERT(masm.memoryAccesses().empty());
     MOZ_ASSERT(masm.symbolicAccesses().empty());
 
     ExecutableAllocator::cacheFlush(thunks->codeBase, thunks->codeSize);
