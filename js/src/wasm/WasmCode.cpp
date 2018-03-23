@@ -58,18 +58,20 @@ CodeSegment::~CodeSegment()
 static uint32_t
 RoundupCodeLength(uint32_t codeLength)
 {
-    // codeLength is a multiple of the system's page size, but not necessarily
-    // a multiple of ExecutableCodePageSize.
-    MOZ_ASSERT(codeLength % gc::SystemPageSize() == 0);
+    // AllocateExecutableMemory() requires a multiple of ExecutableCodePageSize.
     return JS_ROUNDUP(codeLength, ExecutableCodePageSize);
 }
 
 /* static */ UniqueCodeBytes
 CodeSegment::AllocateCodeBytes(uint32_t codeLength)
 {
-    codeLength = RoundupCodeLength(codeLength);
+    if (codeLength > MaxCodeBytesPerProcess)
+        return nullptr;
 
-    void* p = AllocateExecutableMemory(codeLength, ProtectionSetting::Writable);
+    static_assert(MaxCodeBytesPerProcess <= INT32_MAX, "rounding won't overflow");
+    uint32_t roundedCodeLength = RoundupCodeLength(codeLength);
+
+    void* p = AllocateExecutableMemory(roundedCodeLength, ProtectionSetting::Writable);
 
     // If the allocation failed and the embedding gives us a last-ditch attempt
     // to purge all memory (which, in gecko, does a purging GC/CC/GC), do that
@@ -77,17 +79,20 @@ CodeSegment::AllocateCodeBytes(uint32_t codeLength)
     if (!p) {
         if (OnLargeAllocationFailure) {
             OnLargeAllocationFailure();
-            p = AllocateExecutableMemory(codeLength, ProtectionSetting::Writable);
+            p = AllocateExecutableMemory(roundedCodeLength, ProtectionSetting::Writable);
         }
     }
 
     if (!p)
         return nullptr;
 
+    // Zero the padding.
+    memset(((uint8_t*)p) + codeLength, 0, roundedCodeLength - codeLength);
+
     // We account for the bytes allocated in WasmModuleObject::create, where we
     // have the necessary JSContext.
 
-    return UniqueCodeBytes((uint8_t*)p, FreeCode(codeLength));
+    return UniqueCodeBytes((uint8_t*)p, FreeCode(roundedCodeLength));
 }
 
 const Code&
@@ -262,11 +267,7 @@ ModuleSegment::create(Tier tier,
                       const Metadata& metadata,
                       const CodeRangeVector& codeRanges)
 {
-    // Round up the code size to page size since this is eventually required by
-    // the executable-code allocator and for setting memory protection.
-    uint32_t bytesNeeded = masm.bytesNeeded();
-    uint32_t padding = ComputeByteAlignment(bytesNeeded, gc::SystemPageSize());
-    uint32_t codeLength = bytesNeeded + padding;
+    uint32_t codeLength = masm.bytesNeeded();
 
     UniqueCodeBytes codeBytes = AllocateCodeBytes(codeLength);
     if (!codeBytes)
@@ -274,9 +275,6 @@ ModuleSegment::create(Tier tier,
 
     // We'll flush the icache after static linking, in initialize().
     masm.executableCopy(codeBytes.get(), /* flushICache = */ false);
-
-    // Zero the padding.
-    memset(codeBytes.get() + bytesNeeded, 0, padding);
 
     return create(tier, Move(codeBytes), codeLength, bytecode, linkData, metadata, codeRanges);
 }
@@ -289,17 +287,13 @@ ModuleSegment::create(Tier tier,
                       const Metadata& metadata,
                       const CodeRangeVector& codeRanges)
 {
-    // The unlinked bytes are a snapshot of the MacroAssembler's contents so
-    // round up just like in the MacroAssembler overload above.
-    uint32_t padding = ComputeByteAlignment(unlinkedBytes.length(), gc::SystemPageSize());
-    uint32_t codeLength = unlinkedBytes.length() + padding;
+    uint32_t codeLength = unlinkedBytes.length();
 
     UniqueCodeBytes codeBytes = AllocateCodeBytes(codeLength);
     if (!codeBytes)
         return nullptr;
 
-    memcpy(codeBytes.get(), unlinkedBytes.begin(), unlinkedBytes.length());
-    memset(codeBytes.get() + unlinkedBytes.length(), 0, padding);
+    memcpy(codeBytes.get(), unlinkedBytes.begin(), codeLength);
 
     return create(tier, Move(codeBytes), codeLength, bytecode, linkData, metadata, codeRanges);
 }
@@ -395,7 +389,6 @@ ModuleSegment::deserialize(const uint8_t* cursor, const ShareableBytes& bytecode
     if (!cursor)
         return nullptr;
 
-    MOZ_ASSERT(length % gc::SystemPageSize() == 0);
     UniqueCodeBytes bytes = AllocateCodeBytes(length);
     if (!bytes)
         return nullptr;
