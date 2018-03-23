@@ -60,7 +60,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
     if ("id" in e.target) {
       s = s + ", id=\"" + e.target.id + "\"";
     }
-    ok(e.eventPhase == Event.CAPTURING_PHASE,
+    ok(e.eventPhase == Components.interfaces.nsIDOMEvent.CAPTURING_PHASE,
        "|window| should not have got a focus event, " + s);
   }
 
@@ -86,7 +86,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
     if ("id" in e.target) {
       s = s + ", id=\"" + e.target.id + "\"";
     }
-    ok(e.eventPhase == Event.CAPTURING_PHASE,
+    ok(e.eventPhase == Components.interfaces.nsIDOMEvent.CAPTURING_PHASE,
        "|window| should not have got a blur event, " + s);
   }
 

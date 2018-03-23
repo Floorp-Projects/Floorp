@@ -865,20 +865,10 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
 
     // If this is a request to focus a remote child window, the request must
     // be forwarded to the child process.
-    //
-    // Even if the real |Components| doesn't exist, we might shim in a simple JS
-    // placebo for compat. An easy way to differentiate this from the real thing
-    // is whether the property is read-only or not.  The real |Components|
-    // property is read-only.
-    var c = Object.getOwnPropertyDescriptor(window, 'Components');
-    var Cu, Ci;
-    if (c && c.value && !c.writable) {
-        Cu = Components.utils;
-        Ci = Components.interfaces;
-    } else {
-        Cu = SpecialPowers.Cu;
-        Ci = SpecialPowers.Ci;
-    }
+    // XXXndeakin now sure what this issue with Components.utils is about, but
+    // browser tests require the former and plain tests require the latter.
+    var Cu = Components.utils || SpecialPowers.Cu;
+    var Ci = Components.interfaces || SpecialPowers.Ci;
 
     var browser = null;
     if (typeof(XULElement) != "undefined" &&
