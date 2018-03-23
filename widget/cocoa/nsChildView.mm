@@ -2551,9 +2551,11 @@ nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometri
   int32_t titlebarHeight = CocoaPointsToDevPixels([win titlebarHeight]);
   int32_t devUnifiedHeight = titlebarHeight + unifiedToolbarBottom;
   [win setUnifiedToolbarHeight:DevPixelsToCocoaPoints(devUnifiedHeight)];
-  int32_t devSheetPosition = titlebarHeight +
-                             std::max(toolboxBottom, unifiedToolbarBottom);
-  [win setSheetAttachmentPosition:DevPixelsToCocoaPoints(devSheetPosition)];
+
+  int32_t sheetPositionDevPx = std::max(toolboxBottom, unifiedToolbarBottom);
+  NSPoint sheetPositionView = { 0, DevPixelsToCocoaPoints(sheetPositionDevPx) };
+  NSPoint sheetPositionWindow = [mView convertPoint:sheetPositionView toView:nil];
+  [win setSheetAttachmentPosition:sheetPositionWindow.y];
 
   // Update titlebar control offsets.
   LayoutDeviceIntRect windowButtonRect = FindFirstRectOfType(aThemeGeometries, nsNativeThemeCocoa::eThemeGeometryTypeWindowButtons);
