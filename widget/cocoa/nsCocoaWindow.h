@@ -195,8 +195,6 @@ typedef struct _nsCocoaWindowList {
 - (void)placeFullScreenButton:(NSRect)aRect;
 - (NSPoint)windowButtonsPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
 - (NSPoint)fullScreenButtonPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
-- (void)setTemporaryBackgroundColor;
-- (void)restoreBackgroundColor;
 @end
 
 class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa
