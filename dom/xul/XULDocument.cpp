@@ -2259,6 +2259,21 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
 {
     nsresult rv;
 
+    // XUL overlays are in the process of being removed. In a Firefox build,
+    // loading an overlay will cause a crash as they are no longer allowed.
+    // However, overlays are allowed in other applications (e.g. Thunderbird)
+    // while they work on removing them. See bug 1448162.
+#ifdef MOZ_CRASH_XUL_OVERLAYS
+    nsCString docSpec;
+    mCurrentPrototype->GetURI()->GetSpec(docSpec);
+    nsCString overlaySpec;
+    aURI->GetSpec(overlaySpec);
+    printf("Attempt to load overlay %s into %s\n",
+           overlaySpec.get(),
+           docSpec.get());
+    MOZ_CRASH("Attempt to load overlay");
+#endif
+
     *aShouldReturn = false;
     *aFailureFromContent = false;
 
