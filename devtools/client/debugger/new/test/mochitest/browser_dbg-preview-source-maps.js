@@ -6,9 +6,11 @@ function getCoordsFromPosition(cm, { line, ch }) {
 }
 
 function hoverAtPos(dbg, { line, ch }) {
+  info(`Hovering at (${line}, ${ch})\n`);
   const cm = getCM(dbg);
   const coords = getCoordsFromPosition(cm, { line: line - 1, ch });
   const tokenEl = dbg.win.document.elementFromPoint(coords.left, coords.top);
+  const previewed = waitForDispatch(dbg, "SET_PREVIEW");
   tokenEl.dispatchEvent(
     new MouseEvent("mouseover", {
       bubbles: true,
@@ -16,6 +18,7 @@ function hoverAtPos(dbg, { line, ch }) {
       view: dbg.win
     })
   );
+  return previewed;
 }
 
 function assertTooltip(dbg, { result, expression }) {
@@ -55,9 +58,12 @@ add_task(async function() {
   await waitForPaused(dbg);
   await waitForSelectedSource(dbg, "times2");
 
-  const tooltipPreviewed = waitForDispatch(dbg, "SET_PREVIEW");
-  hoverAtPos(dbg, { line: 2, ch: 9 });
+  await hoverAtPos(dbg, { line: 2, ch: 9 });
+  assertPreviewTooltip(dbg, { result: 4, expression: "x" });
 
-  await tooltipPreviewed;
-  assertTooltip(dbg, { result: 4, expression: "x" });
+  await dbg.actions.jumpToMappedSelectedLocation();
+  await waitForSelectedSource(dbg, "bundle.js");
+
+  await hoverAtPos(dbg, { line: 70, ch: 10 });
+  assertPreviewTooltip(dbg, { result: 4, expression: "x" });
 });
