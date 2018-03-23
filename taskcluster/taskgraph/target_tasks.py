@@ -40,14 +40,6 @@ def filter_on_platforms(task, platforms):
     return (platform in platforms)
 
 
-def filter_upload_symbols(task, parameters):
-    # Filters out symbols when there are not part of a nightly or a release build
-    # TODO Remove this too specific filter (bug 1353296)
-    return '-upload-symbols' not in task.label or \
-        task.attributes.get('nightly') or \
-        parameters.get('project') in ('mozilla-beta', 'mozilla-release')
-
-
 def filter_beta_release_tasks(task, parameters, ignore_kinds=None, allow_l10n=False):
     if not standard_filter(task, parameters):
         return False
@@ -94,7 +86,7 @@ def filter_beta_release_tasks(task, parameters, ignore_kinds=None, allow_l10n=Fa
 def standard_filter(task, parameters):
     return all(
         filter_func(task, parameters) for filter_func in
-        (filter_out_nightly, filter_for_project, filter_upload_symbols)
+        (filter_out_nightly, filter_for_project)
     )
 
 
