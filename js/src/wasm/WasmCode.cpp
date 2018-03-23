@@ -661,8 +661,8 @@ struct ProjectLazyFuncIndex
 static constexpr unsigned LAZY_STUB_LIFO_DEFAULT_CHUNK_SIZE = 8 * 1024;
 
 bool
-LazyStubTier::createMany(const Uint32Vector& funcExportIndices, const CodeTier& codeTier,
-                         size_t* stubSegmentIndex)
+LazyStubTier::createMany(HasGcTypes gcTypesEnabled, const Uint32Vector& funcExportIndices,
+                         const CodeTier& codeTier, size_t* stubSegmentIndex)
 {
     MOZ_ASSERT(funcExportIndices.length());
 
@@ -684,8 +684,11 @@ LazyStubTier::createMany(const Uint32Vector& funcExportIndices, const CodeTier& 
                           moduleRanges[fe.interpCodeRangeIndex()].funcNormalEntry();
         Maybe<ImmPtr> callee;
         callee.emplace(calleePtr, ImmPtr::NoCheckToken());
-        if (!GenerateEntryStubs(masm, funcExportIndex, fe, callee, /* asmjs*/ false, &codeRanges))
+        if (!GenerateEntryStubs(masm, funcExportIndex, fe, callee, /* asmjs */ false,
+                                gcTypesEnabled, &codeRanges))
+        {
             return false;
+        }
     }
     MOZ_ASSERT(codeRanges.length() == numExpectedRanges, "incorrect number of entries per function");
 
@@ -764,8 +767,11 @@ LazyStubTier::createOne(uint32_t funcExportIndex, const CodeTier& codeTier)
         return false;
 
     size_t stubSegmentIndex;
-    if (!createMany(funcExportIndexes, codeTier, &stubSegmentIndex))
+    if (!createMany(codeTier.code().metadata().temporaryHasGcTypes, funcExportIndexes, codeTier,
+                    &stubSegmentIndex))
+    {
         return false;
+    }
 
     const UniqueLazyStubSegment& segment = stubSegments_[stubSegmentIndex];
     const CodeRangeVector& codeRanges = segment->codeRanges();
@@ -788,14 +794,14 @@ LazyStubTier::createOne(uint32_t funcExportIndex, const CodeTier& codeTier)
 }
 
 bool
-LazyStubTier::createTier2(const Uint32Vector& funcExportIndices, const CodeTier& codeTier,
-                          Maybe<size_t>* outStubSegmentIndex)
+LazyStubTier::createTier2(HasGcTypes gcTypesEnabled, const Uint32Vector& funcExportIndices,
+                          const CodeTier& codeTier, Maybe<size_t>* outStubSegmentIndex)
 {
     if (!funcExportIndices.length())
         return true;
 
     size_t stubSegmentIndex;
-    if (!createMany(funcExportIndices, codeTier, &stubSegmentIndex))
+    if (!createMany(gcTypesEnabled, funcExportIndices, codeTier, &stubSegmentIndex))
         return false;
 
     outStubSegmentIndex->emplace(stubSegmentIndex);
