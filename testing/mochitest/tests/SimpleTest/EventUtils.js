@@ -28,22 +28,24 @@
 // be careful about our access to Components.interfaces. We also want to avoid
 // naming collisions with anything that might be defined in the scope that imports
 // this script.
+//
+// Even if the real |Components| doesn't exist, we might shim in a simple JS
+// placebo for compat. An easy way to differentiate this from the real thing
+// is whether the property is read-only or not.  The real |Components| property
+// is read-only.
 window.__defineGetter__('_EU_Ci', function() {
-  // Even if the real |Components| doesn't exist, we might shim in a simple JS
-  // placebo for compat. An easy way to differentiate this from the real thing
-  // is whether the property is read-only or not.
   var c = Object.getOwnPropertyDescriptor(window, 'Components');
-  return c.value && !c.writable ? Ci : SpecialPowers.Ci;
+  return c && c.value && !c.writable ? Ci : SpecialPowers.Ci;
 });
 
 window.__defineGetter__('_EU_Cc', function() {
   var c = Object.getOwnPropertyDescriptor(window, 'Components');
-  return c.value && !c.writable ? Cc : SpecialPowers.Cc;
+  return c && c.value && !c.writable ? Cc : SpecialPowers.Cc;
 });
 
 window.__defineGetter__('_EU_Cu', function() {
   var c = Object.getOwnPropertyDescriptor(window, 'Components');
-  return c.value && !c.writable ? Cu : SpecialPowers.Cu;
+  return c && c.value && !c.writable ? Cu : SpecialPowers.Cu;
 });
 
 window.__defineGetter__("_EU_OS", function() {
@@ -119,12 +121,12 @@ function _EU_maybeWrap(o) {
     return o;
   }
   var c = Object.getOwnPropertyDescriptor(window, 'Components');
-  return c.value && !c.writable ? o : SpecialPowers.wrap(o);
+  return c && c.value && !c.writable ? o : SpecialPowers.wrap(o);
 }
 
 function _EU_maybeUnwrap(o) {
   var c = Object.getOwnPropertyDescriptor(window, 'Components');
-  return c.value && !c.writable ? o : SpecialPowers.unwrap(o);
+  return c && c.value && !c.writable ? o : SpecialPowers.unwrap(o);
 }
 
 /**
@@ -2361,9 +2363,7 @@ function synthesizeDragStart(element, expectedDragData, aWindow, x, y)
   var trapDrag = function(event) {
     try {
       // We must wrap only in plain mochitests, not chrome
-      var c = Object.getOwnPropertyDescriptor(window, 'Components');
-      var dataTransfer = c.value && !c.writable
-        ? event.dataTransfer : SpecialPowers.wrap(event.dataTransfer);
+      var dataTransfer = _EU_maybeWrap(event.dataTransfer);
       result = null;
       if (!dataTransfer)
         throw "no dataTransfer";
