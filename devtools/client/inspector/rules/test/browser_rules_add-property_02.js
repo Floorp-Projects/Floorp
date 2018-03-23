@@ -16,14 +16,14 @@ const TEST_URI = `
   <div id='testid'>Styled Node</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
 
   info("Focus the new property name field");
   let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let editor = await focusNewRuleViewProperty(ruleEditor);
+  let editor = yield focusNewRuleViewProperty(ruleEditor);
   let input = editor.input;
 
   is(inplaceEditor(ruleEditor.newPropSpan), editor,
@@ -43,7 +43,7 @@ add_task(async function() {
   let onNameAdded = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
 
-  await onNameAdded;
+  yield onNameAdded;
 
   editor = inplaceEditor(view.styleDocument.activeElement);
 
@@ -59,7 +59,7 @@ add_task(async function() {
   let onValueAdded = view.once("ruleview-changed");
   editor.input.value = "purple";
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
-  await onValueAdded;
+  yield onValueAdded;
 
   is(textProp.value, "purple", "Text prop should have been changed.");
 });

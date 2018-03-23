@@ -19,9 +19,9 @@ const TEST_URI = `
 
 var TYPE = "CssTransformHighlighter";
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
   let hs = view.highlighters;
 
   ok(!hs.highlighters[TYPE], "No highlighter exists in the rule-view (1)");
@@ -35,11 +35,11 @@ add_task(async function() {
   ({valueSpan} = getRuleViewProperty(view, "body", "transform"));
   let onHighlighterShown = hs.once("highlighter-shown");
   hs.onMouseMove({target: valueSpan});
-  await onHighlighterShown;
+  yield onHighlighterShown;
 
   let onComputedViewReady = inspector.once("computed-view-refreshed");
   let cView = selectComputedView(inspector);
-  await onComputedViewReady;
+  yield onComputedViewReady;
   hs = cView.highlighters;
 
   info("Remove the created transform highlighter");
@@ -55,7 +55,7 @@ add_task(async function() {
   ({valueSpan} = getComputedViewProperty(cView, "transform"));
   onHighlighterShown = hs.once("highlighter-shown");
   hs.onMouseMove({target: valueSpan});
-  await onHighlighterShown;
+  yield onHighlighterShown;
 
   ok(hs.highlighters[TYPE],
     "The highlighter has been created in the computed-view");

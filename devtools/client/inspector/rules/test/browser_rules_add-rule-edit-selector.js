@@ -17,20 +17,20 @@ const TEST_URI = `
   <span>This is a span</span>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
 
-  await addNewRule(inspector, view);
-  await testEditSelector(view, "span");
+  yield addNewRule(inspector, view);
+  yield testEditSelector(view, "span");
 
   info("Selecting the modified element with the new rule");
-  await selectNode("span", inspector);
-  await checkModifiedElement(view, "span");
+  yield selectNode("span", inspector);
+  yield checkModifiedElement(view, "span");
 });
 
-async function testEditSelector(view, name) {
+function* testEditSelector(view, name) {
   info("Test editing existing selector field");
   let idRuleEditor = getRuleViewRuleEditor(view, 1);
   let editor = idRuleEditor.selectorText.ownerDocument.activeElement;
@@ -43,13 +43,13 @@ async function testEditSelector(view, name) {
 
   info("Entering the commit key");
   EventUtils.synthesizeKey("KEY_Enter");
-  await onRuleViewChanged;
+  yield onRuleViewChanged;
 
   is(view._elementStyle.rules.length, 3, "Should have 3 rules.");
   ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");
 }
 
-function checkModifiedElement(view, name) {
+function* checkModifiedElement(view, name) {
   is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
   ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");
 }

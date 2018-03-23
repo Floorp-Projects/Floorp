@@ -76,24 +76,24 @@ const MOVE_EVENTS_DATA = [
   },
 ];
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)({inspector, testActor});
+  let helper = yield getHighlighterHelperFor(HIGHLIGHTER_TYPE)({inspector, testActor});
 
   helper.prefix = ID;
 
-  await helper.show("html");
-  await respondsToMoveEvents(helper, testActor);
-  await respondsToReturnAndEscape(helper);
+  yield helper.show("html");
+  yield respondsToMoveEvents(helper, testActor);
+  yield respondsToReturnAndEscape(helper);
 
   helper.finalize();
 });
 
-async function respondsToMoveEvents(helper, testActor) {
+function* respondsToMoveEvents(helper, testActor) {
   info("Checking that the eyedropper responds to events from the mouse and keyboard");
   let {mouse} = helper;
-  let {width, height} = await testActor.getBoundingClientRect("html");
+  let {width, height} = yield testActor.getBoundingClientRect("html");
 
   for (let {type, x, y, key, shift, expected, desc} of MOVE_EVENTS_DATA) {
     x = typeof x === "function" ? x(width, height) : x;
@@ -110,32 +110,32 @@ async function respondsToMoveEvents(helper, testActor) {
     }
 
     if (type === "mouse") {
-      await mouse.move(x, y);
+      yield mouse.move(x, y);
     } else if (type === "keyboard") {
       let options = shift ? {shiftKey: true} : {};
-      await EventUtils.synthesizeAndWaitKey(key, options);
+      yield EventUtils.synthesizeAndWaitKey(key, options);
     }
-    await checkPosition(expected, helper);
+    yield checkPosition(expected, helper);
   }
 }
 
-async function checkPosition({x, y}, {getElementAttribute}) {
-  let style = await getElementAttribute("root", "style");
+function* checkPosition({x, y}, {getElementAttribute}) {
+  let style = yield getElementAttribute("root", "style");
   is(style, `top:${y}px;left:${x}px;`,
      `The eyedropper is at the expected ${x} ${y} position`);
 }
 
-async function respondsToReturnAndEscape({isElementHidden, show}) {
+function* respondsToReturnAndEscape({isElementHidden, show}) {
   info("Simulating return to select the color and hide the eyedropper");
 
-  await EventUtils.synthesizeAndWaitKey("VK_RETURN", {});
-  let hidden = await isElementHidden("root");
+  yield EventUtils.synthesizeAndWaitKey("VK_RETURN", {});
+  let hidden = yield isElementHidden("root");
   ok(hidden, "The eyedropper has been hidden");
 
   info("Showing the eyedropper again and simulating escape to hide it");
 
-  await show("html");
-  await EventUtils.synthesizeAndWaitKey("VK_ESCAPE", {});
-  hidden = await isElementHidden("root");
+  yield show("html");
+  yield EventUtils.synthesizeAndWaitKey("VK_ESCAPE", {});
+  hidden = yield isElementHidden("root");
   ok(hidden, "The eyedropper has been hidden again");
 }

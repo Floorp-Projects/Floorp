@@ -10,29 +10,29 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,<p>Select me!</p>";
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("hover over the <p> line in the markup-view so that it's the " +
        "currently hovered node");
-  await hoverContainer("p", inspector);
+  yield hoverContainer("p", inspector);
 
   info("select the <p> markup-container line by clicking");
-  await clickContainer("p", inspector);
-  let isVisible = await testActor.isHighlighting();
+  yield clickContainer("p", inspector);
+  let isVisible = yield testActor.isHighlighting();
   ok(isVisible, "the highlighter is shown");
 
   info("listen to the highlighter's hidden event");
   let onHidden = testActor.waitForHighlighterEvent("hidden",
     inspector.highlighter);
   info("mouse-leave the markup-view");
-  await mouseLeaveMarkupView(inspector);
-  await onHidden;
-  isVisible = await testActor.isHighlighting();
+  yield mouseLeaveMarkupView(inspector);
+  yield onHidden;
+  isVisible = yield testActor.isHighlighting();
   ok(!isVisible, "the highlighter is hidden after mouseleave");
 
   info("hover over the <p> line again, which is still selected");
-  await hoverContainer("p", inspector);
-  isVisible = await testActor.isHighlighting();
+  yield hoverContainer("p", inspector);
+  isVisible = yield testActor.isHighlighting();
   ok(isVisible, "the highlighter is visible again");
 });

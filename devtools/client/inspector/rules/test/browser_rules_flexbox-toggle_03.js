@@ -19,13 +19,13 @@ const TEST_URI = `
 
 const HIGHLIGHTER_TYPE = "FlexboxHighlighter";
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
   let {highlighters} = view;
 
   info("Selecting the first flexbox container.");
-  await selectNode("#flex1", inspector);
+  yield selectNode("#flex1", inspector);
   let container = getRuleViewProperty(view, ".flex", "display").valueSpan;
   let flexboxToggle = container.querySelector(".ruleview-flex");
 
@@ -42,7 +42,7 @@ add_task(async function() {
     "rule-view.");
   let onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
   flexboxToggle.click();
-  await onHighlighterShown;
+  yield onHighlighterShown;
 
   info("Checking the flexbox highlighter is created and toggle button is active in " +
     "the rule-view.");
@@ -53,7 +53,7 @@ add_task(async function() {
   ok(highlighters.flexboxHighlighterShown, "Flexbox highlighter is shown.");
 
   info("Selecting the second flexbox container.");
-  await selectNode("#flex2", inspector);
+  yield selectNode("#flex2", inspector);
   let firstFlexboxHighterShown = highlighters.flexboxHighlighterShown;
   container = getRuleViewProperty(view, ".flex", "display").valueSpan;
   flexboxToggle = container.querySelector(".ruleview-flex");
@@ -69,7 +69,7 @@ add_task(async function() {
     "rule-view.");
   onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
   flexboxToggle.click();
-  await onHighlighterShown;
+  yield onHighlighterShown;
 
   info("Checking the flexbox highlighter is created for the second flexbox container " +
     "and toggle button is active in the rule-view.");
@@ -79,7 +79,7 @@ add_task(async function() {
     "Flexbox highlighter for the second flexbox container is shown.");
 
   info("Selecting the first flexbox container.");
-  await selectNode("#flex1", inspector);
+  yield selectNode("#flex1", inspector);
   container = getRuleViewProperty(view, ".flex", "display").valueSpan;
   flexboxToggle = container.querySelector(".ruleview-flex");
 

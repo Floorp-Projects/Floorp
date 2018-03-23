@@ -9,10 +9,10 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,<div></div>";
 
-add_task(async function() {
+add_task(function* () {
   let isEditTagNameCalled = false;
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   // Overriding the editTagName walkerActor method here to check that it isn't
   // called when blurring the tagname field.
@@ -20,7 +20,7 @@ add_task(async function() {
     isEditTagNameCalled = true;
   };
 
-  let container = await focusNode("div", inspector);
+  let container = yield focusNode("div", inspector);
   let tagEditor = container.editor.tag;
 
   info("Blurring the tagname field");
@@ -28,7 +28,7 @@ add_task(async function() {
   is(isEditTagNameCalled, false, "The editTagName method wasn't called");
 
   info("Updating the tagname to uppercase");
-  await focusNode("div", inspector);
+  yield focusNode("div", inspector);
   setEditableFieldValue(tagEditor, "DIV", inspector);
   is(isEditTagNameCalled, false, "The editTagName method wasn't called");
 

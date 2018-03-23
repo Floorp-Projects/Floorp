@@ -21,21 +21,21 @@ const TEST_DATA = [
   "[dir=rtl] > span"
 ];
 
-add_task(async function() {
+add_task(function* () {
   info("Loading the test document and opening the inspector");
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   for (let selector of TEST_DATA) {
     info("Selecting and highlighting node " + selector);
-    await selectAndHighlightNode(selector, inspector);
+    yield selectAndHighlightNode(selector, inspector);
 
     info("Get all quads for this node");
-    let data = await testActor.getAllAdjustedQuads(selector);
+    let data = yield testActor.getAllAdjustedQuads(selector);
 
     info("Iterate over the box-model regions and verify that the highlighter " +
          "is correct");
     for (let region of ["margin", "border", "padding", "content"]) {
-      let {points} = await testActor.getHighlighterRegionPath(region);
+      let {points} = yield testActor.getHighlighterRegionPath(region);
       is(points.length, data[region].length, "The highlighter's " + region +
          " path defines the correct number of boxes");
     }
@@ -60,7 +60,7 @@ add_task(async function() {
       expectedContentRect.p4.y = Math.max(expectedContentRect.p4.y, p4.y);
     }
 
-    let contentRect = await testActor.getGuidesRectangle();
+    let contentRect = yield testActor.getGuidesRectangle();
 
     for (let point of ["p1", "p2", "p3", "p4"]) {
       is(Math.round(contentRect[point].x),

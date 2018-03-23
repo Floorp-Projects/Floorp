@@ -9,40 +9,40 @@
 const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
 const PREF = "devtools.inspector.showAllAnonymousContent";
 
-add_task(async function() {
+add_task(function* () {
   Services.prefs.setBoolPref(PREF, true);
 
-  let {inspector} = await openInspectorForURL(TEST_URL);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Expanding nodes below #test");
-  let parentFront = await getNodeFront("#test", inspector);
-  await inspector.markup.expandNode(parentFront);
-  await waitForMultipleChildrenUpdates(inspector);
+  let parentFront = yield getNodeFront("#test", inspector);
+  yield inspector.markup.expandNode(parentFront);
+  yield waitForMultipleChildrenUpdates(inspector);
 
   info("Getting the ::before pseudo element and selecting it");
-  let parentContainer = await getContainerForNodeFront(parentFront, inspector);
+  let parentContainer = yield getContainerForNodeFront(parentFront, inspector);
   let beforePseudo = parentContainer.elt.children[1].firstChild.container;
   parentContainer.elt.scrollIntoView(true);
-  await selectNode(beforePseudo.node, inspector);
+  yield selectNode(beforePseudo.node, inspector);
 
   info("Simulate dragging the ::before pseudo element");
-  await simulateNodeDrag(inspector, beforePseudo);
+  yield simulateNodeDrag(inspector, beforePseudo);
 
   ok(!beforePseudo.isDragging, "::before pseudo element isn't dragging");
 
   info("Expanding nodes below #anonymousParent");
-  let inputFront = await getNodeFront("#anonymousParent", inspector);
-  await inspector.markup.expandNode(inputFront);
-  await waitForMultipleChildrenUpdates(inspector);
+  let inputFront = yield getNodeFront("#anonymousParent", inspector);
+  yield inspector.markup.expandNode(inputFront);
+  yield waitForMultipleChildrenUpdates(inspector);
 
   info("Getting the anonymous node and selecting it");
-  let inputContainer = await getContainerForNodeFront(inputFront, inspector);
+  let inputContainer = yield getContainerForNodeFront(inputFront, inspector);
   let anonymousDiv = inputContainer.elt.children[1].firstChild.container;
   inputContainer.elt.scrollIntoView(true);
-  await selectNode(anonymousDiv.node, inspector);
+  yield selectNode(anonymousDiv.node, inspector);
 
   info("Simulate dragging the anonymous node");
-  await simulateNodeDrag(inspector, anonymousDiv);
+  yield simulateNodeDrag(inspector, anonymousDiv);
 
   ok(!anonymousDiv.isDragging, "anonymous node isn't dragging");
 });

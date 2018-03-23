@@ -59,14 +59,14 @@ if (Services.appinfo.OS !== "Linux") {
   TESTS.push({selector: "#id6", nb: 2, used: [0, 1]});
 }
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
   for (let {selector, nb, used} of TESTS) {
     let onFontHighlighted = view.once("font-highlighted");
-    await selectNode(selector, inspector);
-    await onFontHighlighted;
+    yield selectNode(selector, inspector);
+    yield onFontHighlighted;
 
     info("Looking for fonts in font-family property in selector " + selector);
 

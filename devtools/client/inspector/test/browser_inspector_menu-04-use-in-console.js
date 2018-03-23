@@ -10,27 +10,27 @@ const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
 // Use the old webconsole since the node isn't being rendered as an HTML tag
 // in the new one (Bug 1304794)
 Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", false);
-registerCleanupFunction(function() {
+registerCleanupFunction(function* () {
   Services.prefs.clearUserPref("devtools.webconsole.new-frontend-enabled");
 });
 
-add_task(async function() {
-  let { inspector, toolbox } = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let { inspector, toolbox } = yield openInspectorForURL(TEST_URL);
 
-  await testUseInConsole();
+  yield testUseInConsole();
 
-  async function testUseInConsole() {
+  function* testUseInConsole() {
     info("Testing 'Use in Console' menu item.");
 
-    await selectNode("#console-var", inspector);
-    let container = await getContainerForSelector("#console-var", inspector);
+    yield selectNode("#console-var", inspector);
+    let container = yield getContainerForSelector("#console-var", inspector);
     let allMenuItems = openContextMenuAndGetAllItems(inspector, {
       target: container.tagLine,
     });
     let menuItem = allMenuItems.find(i => i.id === "node-menu-useinconsole");
     menuItem.click();
 
-    await inspector.once("console-var-ready");
+    yield inspector.once("console-var-ready");
 
     let hud = toolbox.getPanel("webconsole").hud;
     let jsterm = hud.jsterm;
@@ -38,17 +38,17 @@ add_task(async function() {
     let jstermInput = jsterm.hud.document.querySelector(".jsterm-input-node");
     is(jstermInput.value, "temp0", "first console variable is named temp0");
 
-    let result = await jsterm.execute();
+    let result = yield jsterm.execute();
     isnot(result.textContent.indexOf('<p id="console-var">'), -1,
           "variable temp0 references correct node");
 
-    await selectNode("#console-var-multi", inspector);
+    yield selectNode("#console-var-multi", inspector);
     menuItem.click();
-    await inspector.once("console-var-ready");
+    yield inspector.once("console-var-ready");
 
     is(jstermInput.value, "temp1", "second console variable is named temp1");
 
-    result = await jsterm.execute();
+    result = yield jsterm.execute();
     isnot(result.textContent.indexOf('<p id="console-var-multi">'), -1,
           "variable temp1 references correct node");
 

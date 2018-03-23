@@ -36,16 +36,16 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("div", inspector);
-  await checkCopySelection(view);
-  await checkSelectAll(view);
-  await checkCopyEditorValue(view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("div", inspector);
+  yield checkCopySelection(view);
+  yield checkSelectAll(view);
+  yield checkCopyEditorValue(view);
 });
 
-async function checkCopySelection(view) {
+function* checkCopySelection(view) {
   info("Testing selection copy");
 
   let contentDoc = view.styleDocument;
@@ -75,14 +75,14 @@ async function checkCopySelection(view) {
     "Copy menu item is displayed as expected");
 
   try {
-    await waitForClipboardPromise(() => menuitemCopy.click(),
+    yield waitForClipboardPromise(() => menuitemCopy.click(),
       () => checkClipboardData(expectedPattern));
   } catch (e) {
     failedClipboard(expectedPattern);
   }
 }
 
-async function checkSelectAll(view) {
+function* checkSelectAll(view) {
   info("Testing select-all copy");
 
   let contentDoc = view.styleDocument;
@@ -109,20 +109,20 @@ async function checkSelectAll(view) {
     "Copy menu item is displayed as expected");
 
   try {
-    await waitForClipboardPromise(() => menuitemCopy.click(),
+    yield waitForClipboardPromise(() => menuitemCopy.click(),
       () => checkClipboardData(expectedPattern));
   } catch (e) {
     failedClipboard(expectedPattern);
   }
 }
 
-async function checkCopyEditorValue(view) {
+function* checkCopyEditorValue(view) {
   info("Testing CSS property editor value copy");
 
   let ruleEditor = getRuleViewRuleEditor(view, 0);
   let propEditor = ruleEditor.rule.textProps[0].editor;
 
-  let editor = await focusEditableField(view, propEditor.valueSpan);
+  let editor = yield focusEditableField(view, propEditor.valueSpan);
 
   info("Checking that copying a css property value editor returns the correct" +
     " clipboard value");
@@ -137,7 +137,7 @@ async function checkCopyEditorValue(view) {
     "Copy menu item is displayed as expected");
 
   try {
-    await waitForClipboardPromise(() => menuitemCopy.click(),
+    yield waitForClipboardPromise(() => menuitemCopy.click(),
       () => checkClipboardData(expectedPattern));
   } catch (e) {
     failedClipboard(expectedPattern);

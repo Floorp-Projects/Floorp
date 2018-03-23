@@ -17,15 +17,15 @@ const TEST_URI = `
   <div></div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("div", inspector);
-  await testImageDimension(view);
-  await testPickerDimension(view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("div", inspector);
+  yield testImageDimension(view);
+  yield testPickerDimension(view);
 });
 
-async function testImageDimension(ruleView) {
+function* testImageDimension(ruleView) {
   info("Testing background-image tooltip dimensions");
 
   let tooltip = ruleView.tooltips.getTooltip("previewTooltip");
@@ -35,7 +35,7 @@ async function testImageDimension(ruleView) {
 
   // Make sure there is a hover tooltip for this property, this also will fill
   // the tooltip with its content
-  let previewTooltip = await assertShowPreviewTooltip(ruleView, uriSpan);
+  let previewTooltip = yield assertShowPreviewTooltip(ruleView, uriSpan);
 
   // Let's not test for a specific size, but instead let's make sure it's at
   // least as big as the image
@@ -47,10 +47,10 @@ async function testImageDimension(ruleView) {
   ok(panelRect.height >= imageRect.height,
     "The panel is high enough to show the image");
 
-  await assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);
 }
 
-async function testPickerDimension(ruleView) {
+function* testPickerDimension(ruleView) {
   info("Testing color-picker tooltip dimensions");
 
   let {valueSpan} = getRuleViewProperty(ruleView, "div", "background");
@@ -59,7 +59,7 @@ async function testPickerDimension(ruleView) {
 
   let onReady = cPicker.once("ready");
   swatch.click();
-  await onReady;
+  yield onReady;
 
   // The colorpicker spectrum's iframe has a fixed width height, so let's
   // make sure the tooltip is at least as big as that
@@ -74,6 +74,6 @@ async function testPickerDimension(ruleView) {
   let onHidden = cPicker.tooltip.once("hidden");
   let onRuleViewChanged = ruleView.once("ruleview-changed");
   cPicker.hide();
-  await onHidden;
-  await onRuleViewChanged;
+  yield onHidden;
+  yield onRuleViewChanged;
 }

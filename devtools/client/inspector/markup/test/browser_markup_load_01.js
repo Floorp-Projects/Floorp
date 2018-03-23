@@ -33,8 +33,8 @@ const TEST_URL = "data:text/html," +
   "</body>" +
   "</html>";
 
-add_task(async function() {
-  let {inspector, testActor, tab} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector, testActor, tab} = yield openInspectorForURL(TEST_URL);
 
   let domContentLoaded = waitForLinkedBrowserEvent(tab, "DOMContentLoaded");
   let pageLoaded = waitForLinkedBrowserEvent(tab, "load");
@@ -45,31 +45,31 @@ add_task(async function() {
   testActor.eval("location.reload()");
 
   info("Wait for DOMContentLoaded");
-  await domContentLoaded;
+  yield domContentLoaded;
 
   info("Inspect element via context menu");
   let markupLoaded = inspector.once("markuploaded");
-  await chooseWithInspectElementContextMenu("img", tab);
+  yield chooseWithInspectElementContextMenu("img", tab);
 
   info("Wait for load");
-  await pageLoaded;
+  yield pageLoaded;
 
   info("Wait for markup-loaded after element inspection");
-  await markupLoaded;
+  yield markupLoaded;
   info("Wait for multiple children updates after element inspection");
-  await waitForMultipleChildrenUpdates(inspector);
+  yield waitForMultipleChildrenUpdates(inspector);
 
   ok(inspector.markup, "There is a markup view");
   is(inspector.markup._elt.children.length, 1, "The markup view is rendering");
 });
 
-async function chooseWithInspectElementContextMenu(selector, tab) {
-  await BrowserTestUtils.synthesizeMouseAtCenter(selector, {
+function* chooseWithInspectElementContextMenu(selector, tab) {
+  yield BrowserTestUtils.synthesizeMouseAtCenter(selector, {
     type: "contextmenu",
     button: 2
   }, tab.linkedBrowser);
 
-  await EventUtils.sendString("Q");
+  yield EventUtils.sendString("Q");
 }
 
 function waitForLinkedBrowserEvent(tab, event) {

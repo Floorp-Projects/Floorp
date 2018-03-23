@@ -17,21 +17,21 @@ const HTML = `
 
 const TEST_URI = "data:text/html;charset=utf-8," + encodeURI(HTML);
 
-add_task(async function() {
-  let tab = await addTab(TEST_URI);
-  let testActor = await getTestActorWithoutToolbox(tab);
+add_task(function* () {
+  let tab = yield addTab(TEST_URI);
+  let testActor = yield getTestActorWithoutToolbox(tab);
 
-  await testContextMenuWithinIframe(testActor);
+  yield testContextMenuWithinIframe(testActor);
 });
 
-async function testContextMenuWithinIframe(testActor) {
+function* testContextMenuWithinIframe(testActor) {
   info("Opening inspector via 'Inspect Element' context menu item within an iframe");
   let selector = ["iframe", "#in-frame"];
-  await clickOnInspectMenuItem(testActor, selector);
+  yield clickOnInspectMenuItem(testActor, selector);
 
   info("Checking inspector state.");
   let inspector = getActiveInspector();
-  let nodeFront = await getNodeFrontInFrame("#in-frame", "iframe", inspector);
+  let nodeFront = yield getNodeFrontInFrame("#in-frame", "iframe", inspector);
 
   is(inspector.selection.nodeFront, nodeFront,
      "Right node is selected in the markup view");

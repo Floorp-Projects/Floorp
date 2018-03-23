@@ -15,14 +15,14 @@ const TEST_URI = `
   </style>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {view} = await openRuleView();
-  await testPressingEscapeRevertsChanges(view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {view} = yield openRuleView();
+  yield testPressingEscapeRevertsChanges(view);
 });
 
-async function testPressingEscapeRevertsChanges(view) {
-  let {propEditor} = await openCubicBezierAndChangeCoords(view, 1, 0,
+function* testPressingEscapeRevertsChanges(view) {
+  let {propEditor} = yield openCubicBezierAndChangeCoords(view, 1, 0,
     [0.1, 2, 0.9, -1], {
       selector: "body",
       name: "animation-timing-function",
@@ -32,22 +32,22 @@ async function testPressingEscapeRevertsChanges(view) {
   is(propEditor.valueSpan.textContent, "cubic-bezier(.1,2,.9,-1)",
     "Got expected property value.");
 
-  await escapeTooltip(view);
+  yield escapeTooltip(view);
 
-  await waitForComputedStyleProperty("body", null, "animation-timing-function",
+  yield waitForComputedStyleProperty("body", null, "animation-timing-function",
     "linear");
   is(propEditor.valueSpan.textContent, "linear",
     "Got expected property value.");
 }
 
-async function escapeTooltip(view) {
+function* escapeTooltip(view) {
   info("Pressing ESCAPE to close the tooltip");
 
   let bezierTooltip = view.tooltips.getTooltip("cubicBezier");
-  let widget = await bezierTooltip.widget;
+  let widget = yield bezierTooltip.widget;
   let onHidden = bezierTooltip.tooltip.once("hidden");
   let onModifications = view.once("ruleview-changed");
   focusAndSendKey(widget.parent.ownerDocument.defaultView, "ESCAPE");
-  await onHidden;
-  await onModifications;
+  yield onHidden;
+  yield onModifications;
 }

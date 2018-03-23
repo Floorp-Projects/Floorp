@@ -70,8 +70,8 @@ const TEST_DATA = [{
   hasVisibleArrowsAndHandlers: true
 }];
 
-add_task(async function() {
-  let helper = await openInspectorForURL(TEST_URL)
+add_task(function* () {
+  let helper = yield openInspectorForURL(TEST_URL)
                        .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
 
   helper.prefix = ID;
@@ -79,40 +79,40 @@ add_task(async function() {
   let { hide, finalize } = helper;
 
   for (let data of TEST_DATA) {
-    await testNode(helper, data);
+    yield testNode(helper, data);
   }
 
   info("Hiding the highlighter");
-  await hide();
-  await finalize();
+  yield hide();
+  yield finalize();
 });
 
-async function testNode(helper, data) {
+function* testNode(helper, data) {
   let { selector } = data;
-  await helper.show(data.selector);
+  yield helper.show(data.selector);
 
-  is((await isOffsetParentVisible(helper)), data.isOffsetParentVisible,
+  is((yield isOffsetParentVisible(helper)), data.isOffsetParentVisible,
     "The offset-parent highlighter visibility is correct for node " + selector);
-  is((await isCurrentNodeVisible(helper)), data.isCurrentNodeVisible,
+  is((yield isCurrentNodeVisible(helper)), data.isCurrentNodeVisible,
     "The current-node highlighter visibility is correct for node " + selector);
-  is((await hasVisibleArrowsAndHandlers(helper)),
+  is((yield hasVisibleArrowsAndHandlers(helper)),
     data.hasVisibleArrowsAndHandlers,
     "The arrows visibility is correct for node " + selector);
 }
 
-async function isOffsetParentVisible({isElementHidden}) {
-  return !(await isElementHidden("offset-parent"));
+function* isOffsetParentVisible({isElementHidden}) {
+  return !(yield isElementHidden("offset-parent"));
 }
 
-async function isCurrentNodeVisible({isElementHidden}) {
-  return !(await isElementHidden("current-node"));
+function* isCurrentNodeVisible({isElementHidden}) {
+  return !(yield isElementHidden("current-node"));
 }
 
-async function hasVisibleArrowsAndHandlers({isElementHidden}) {
+function* hasVisibleArrowsAndHandlers({isElementHidden}) {
   for (let side of ["top", "left", "bottom", "right"]) {
-    let hidden = await isElementHidden("arrow-" + side);
+    let hidden = yield isElementHidden("arrow-" + side);
     if (!hidden) {
-      return !(await isElementHidden("handler-" + side));
+      return !(yield isElementHidden("handler-" + side));
     }
   }
   return false;

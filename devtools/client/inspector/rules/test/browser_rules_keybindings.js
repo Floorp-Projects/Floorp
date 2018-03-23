@@ -7,17 +7,17 @@
 // Test that focus doesn't leave the style editor when adding a property
 // (bug 719916)
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8,<h1>Some header text</h1>");
-  let {inspector, view} = await openRuleView();
-  await selectNode("h1", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8,<h1>Some header text</h1>");
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("h1", inspector);
 
   info("Getting the ruleclose brace element");
   let brace = view.styleDocument.querySelector(".ruleview-ruleclose");
 
   info("Focus the new property editable field to create a color property");
   let ruleEditor = getRuleViewRuleEditor(view, 0);
-  let editor = await focusNewRuleViewProperty(ruleEditor);
+  let editor = yield focusNewRuleViewProperty(ruleEditor);
   editor.input.value = "color";
 
   info("Typing ENTER to focus the next field: property value");
@@ -26,8 +26,8 @@ add_task(async function() {
 
   EventUtils.sendKey("return");
 
-  await onFocus;
-  await onRuleViewChanged;
+  yield onFocus;
+  yield onRuleViewChanged;
   ok(true, "The value field was focused");
 
   info("Entering a property value");
@@ -38,8 +38,8 @@ add_task(async function() {
   onFocus = once(brace.parentNode, "focus", true);
   onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.sendKey("return");
-  await onFocus;
-  await onRuleViewChanged;
+  yield onFocus;
+  yield onRuleViewChanged;
   ok(true, "The new property name field was focused");
   getCurrentInplaceEditor(view).input.blur();
 });

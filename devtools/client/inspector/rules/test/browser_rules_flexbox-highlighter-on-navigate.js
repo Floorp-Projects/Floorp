@@ -17,21 +17,21 @@ const TEST_URI = `
 
 const TEST_URI_2 = "data:text/html,<html><body>test</body></html>";
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
   let {highlighters} = view;
 
-  await selectNode("#flex", inspector);
+  yield selectNode("#flex", inspector);
   let container = getRuleViewProperty(view, "#flex", "display").valueSpan;
   let flexboxToggle = container.querySelector(".ruleview-flex");
 
   info("Toggling ON the flexbox highlighter from the rule-view.");
   let onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
   flexboxToggle.click();
-  await onHighlighterShown;
+  yield onHighlighterShown;
   ok(highlighters.flexboxHighlighterShown, "Flexbox highlighter is shown.");
 
-  await navigateTo(inspector, TEST_URI_2);
+  yield navigateTo(inspector, TEST_URI_2);
   ok(!highlighters.flexboxHighlighterShown, "Flexbox highlighter is hidden.");
 });

@@ -13,22 +13,22 @@
 const TEST_URI = "<style>.title {color: red;}</style>" +
                  "<h1 class=title>Header</h1>";
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let { inspector, view} = yield openRuleView();
 
   info("Selecting the test node");
-  await selectNode("h1", inspector);
+  yield selectNode("h1", inspector);
 
   info("Focusing the new property editable field");
   let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let editor = await focusNewRuleViewProperty(ruleEditor);
+  let editor = yield focusNewRuleViewProperty(ruleEditor);
 
   info("Sending \"background\" to the editable field.");
   for (let key of "background") {
     let onSuggest = editor.once("after-suggest");
     EventUtils.synthesizeKey(key, {}, view.styleWindow);
-    await onSuggest;
+    yield onSuggest;
   }
 
   const itemIndex = 4;
@@ -42,14 +42,14 @@ add_task(async function() {
   let node = editor.popup.elements.get(bgcItem);
   EventUtils.synthesizeMouseAtCenter(node, {}, editor.popup._window);
 
-  await onSuggest;
+  yield onSuggest;
   is(editor.input.value, "background-color", "Correct value is autocompleted");
 
   info("Press RETURN to move the focus to a property value editor.");
   let onModifications = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
 
-  await onModifications;
+  yield onModifications;
 
   // Getting the new value editor after focus
   editor = inplaceEditor(view.styleDocument.activeElement);
@@ -67,7 +67,7 @@ add_task(async function() {
 
   onModifications = view.once("ruleview-changed");
   editor.input.blur();
-  await onModifications;
+  yield onModifications;
 
   is(textProp.value, "#F00", "Text prop should have been changed.");
 });

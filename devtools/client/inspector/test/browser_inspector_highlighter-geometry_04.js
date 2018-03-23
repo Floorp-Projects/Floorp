@@ -20,55 +20,55 @@ const handlerMap = {
   "right": {"cx": "x2", "cy": "y2"}
 };
 
-add_task(async function() {
-  let helper = await openInspectorForURL(TEST_URL)
+add_task(function* () {
+  let helper = yield openInspectorForURL(TEST_URL)
                        .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
 
   helper.prefix = ID;
 
   let { hide, finalize } = helper;
 
-  await checkArrowsAndHandlers(helper, ".absolute-all-4", {
+  yield checkArrowsAndHandlers(helper, ".absolute-all-4", {
     "top": {x1: 506, y1: 51, x2: 506, y2: 61},
     "bottom": {x1: 506, y1: 451, x2: 506, y2: 251},
     "left": {x1: 401, y1: 156, x2: 411, y2: 156},
     "right": {x1: 901, y1: 156, x2: 601, y2: 156}
   });
 
-  await checkArrowsAndHandlers(helper, ".relative", {
+  yield checkArrowsAndHandlers(helper, ".relative", {
     "top": {x1: 901, y1: 51, x2: 901, y2: 91},
     "left": {x1: 401, y1: 97, x2: 651, y2: 97}
   });
 
-  await checkArrowsAndHandlers(helper, ".fixed", {
+  yield checkArrowsAndHandlers(helper, ".fixed", {
     "top": {x1: 25, y1: 0, x2: 25, y2: 400},
     "left": {x1: 0, y1: 425, x2: 0, y2: 425}
   });
 
   info("Hiding the highlighter");
-  await hide();
-  await finalize();
+  yield hide();
+  yield finalize();
 });
 
-async function checkArrowsAndHandlers(helper, selector, arrows) {
+function* checkArrowsAndHandlers(helper, selector, arrows) {
   info("Highlighting the test node " + selector);
 
-  await helper.show(selector);
+  yield helper.show(selector);
 
   for (let side in arrows) {
-    await checkArrowAndHandler(helper, side, arrows[side]);
+    yield checkArrowAndHandler(helper, side, arrows[side]);
   }
 }
 
-async function checkArrowAndHandler({getElementAttribute}, name, expectedCoords) {
+function* checkArrowAndHandler({getElementAttribute}, name, expectedCoords) {
   info("Checking " + name + "arrow and handler coordinates are correct");
 
-  let handlerX = await getElementAttribute("handler-" + name, "cx");
-  let handlerY = await getElementAttribute("handler-" + name, "cy");
+  let handlerX = yield getElementAttribute("handler-" + name, "cx");
+  let handlerY = yield getElementAttribute("handler-" + name, "cy");
 
-  let expectedHandlerX = await getElementAttribute("arrow-" + name,
+  let expectedHandlerX = yield getElementAttribute("arrow-" + name,
                                 handlerMap[name].cx);
-  let expectedHandlerY = await getElementAttribute("arrow-" + name,
+  let expectedHandlerY = yield getElementAttribute("arrow-" + name,
                                 handlerMap[name].cy);
 
   is(handlerX, expectedHandlerX,
@@ -77,7 +77,7 @@ async function checkArrowAndHandler({getElementAttribute}, name, expectedCoords)
     "coordinate Y for handler " + name + " is correct.");
 
   for (let coordinate in expectedCoords) {
-    let value = await getElementAttribute("arrow-" + name, coordinate);
+    let value = yield getElementAttribute("arrow-" + name, coordinate);
 
     is(Math.floor(value), expectedCoords[coordinate],
       coordinate + " coordinate for arrow " + name + " is correct");

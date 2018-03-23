@@ -109,17 +109,17 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
   for (let {node, pseudoClass, expected} of TEST_DATA) {
-    await selectNode(node, inspector);
+    yield selectNode(node, inspector);
 
     if (pseudoClass) {
       let onRefresh = inspector.once("rule-view-refreshed");
       inspector.togglePseudoClass(pseudoClass);
-      await onRefresh;
+      yield onRefresh;
     }
 
     let selectorContainer =

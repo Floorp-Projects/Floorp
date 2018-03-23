@@ -15,34 +15,34 @@ const TEST_URI = `
   <div id="flex"></div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   info("Check that the flexbox highlighter can be displayed.");
-  await checkFlexboxHighlighter();
+  yield checkFlexboxHighlighter();
 
   info("Close the toolbox before reloading the tab.");
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  await gDevTools.closeToolbox(target);
+  yield gDevTools.closeToolbox(target);
 
-  await refreshTab();
+  yield refreshTab();
 
   info("Check that the flexbox highlighter can be displayed after reloading the page.");
-  await checkFlexboxHighlighter();
+  yield checkFlexboxHighlighter();
 });
 
-async function checkFlexboxHighlighter() {
-  let {inspector, view} = await openRuleView();
+function* checkFlexboxHighlighter() {
+  let {inspector, view} = yield openRuleView();
   let {highlighters} = view;
 
-  await selectNode("#flex", inspector);
+  yield selectNode("#flex", inspector);
   let container = getRuleViewProperty(view, "#flex", "display").valueSpan;
   let flexboxToggle = container.querySelector(".ruleview-flex");
 
   info("Toggling ON the flexbox highlighter from the rule-view.");
   let onHighlighterShown = highlighters.once("flexbox-highlighter-shown");
   flexboxToggle.click();
-  await onHighlighterShown;
+  yield onHighlighterShown;
 
   ok(highlighters.flexboxHighlighterShown, "Flexbox highlighter is shown.");
 }

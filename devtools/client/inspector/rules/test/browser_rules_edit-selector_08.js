@@ -18,17 +18,17 @@ const TEST_URI = `
   </span>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
   info("Selecting the test element");
-  await selectNode("#testid", inspector);
+  yield selectNode("#testid", inspector);
 
   let idRuleEditor = getRuleViewRuleEditor(view, 2);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = await focusEditableField(view, idRuleEditor.selectorText);
+  let editor = yield focusEditableField(view, idRuleEditor.selectorText);
 
   is(inplaceEditor(idRuleEditor.selectorText), editor,
     "The selector editor got focused");
@@ -41,11 +41,11 @@ add_task(async function() {
 
   info("Entering the commit key");
   EventUtils.synthesizeKey("KEY_Enter");
-  await onRuleViewChanged;
+  yield onRuleViewChanged;
 
   info("Re-focusing the selector name in the rule-view");
   idRuleEditor = getRuleViewRuleEditor(view, 2);
-  editor = await focusEditableField(view, idRuleEditor.selectorText);
+  editor = yield focusEditableField(view, idRuleEditor.selectorText);
 
   is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
   ok(getRuleViewRule(view, "pre"), "Rule with pre selector exists.");
@@ -62,7 +62,7 @@ add_task(async function() {
 
   info("Entering the commit key");
   EventUtils.synthesizeKey("KEY_Enter");
-  await onRuleViewChanged;
+  yield onRuleViewChanged;
 
   is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
   ok(getRuleViewRule(view, "span"), "Rule with span selector exists.");

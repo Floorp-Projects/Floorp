@@ -9,16 +9,16 @@
 
 const TEST_URI = URL_ROOT + "doc_iframe_reloaded.html";
 
-add_task(async function() {
-  await addTab(TEST_URI);
+add_task(function* () {
+  yield addTab(TEST_URI);
 
-  const { inspector, gridInspector, testActor } = await openLayoutView();
+  const { inspector, gridInspector, testActor } = yield openLayoutView();
   const { document: doc } = gridInspector;
   const { store, highlighters } = inspector;
   const gridList = doc.querySelector("#grid-list");
 
   info("Clicking on the first checkbox to highlight the grid");
-  await enableTheFirstGrid(doc, inspector);
+  yield enableTheFirstGrid(doc, inspector);
 
   is(gridList.childNodes.length, 1, "There's one grid in the list");
   let checkbox = gridList.querySelector("input");
@@ -33,19 +33,19 @@ add_task(async function() {
     !state.grids[0].highlighted);
   const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
   testActor.eval("window.wrappedJSObject.reloadIFrame();");
-  await onNewListUnchecked;
-  await onHighlighterHidden;
+  yield onNewListUnchecked;
+  yield onHighlighterHidden;
 
   is(gridList.childNodes.length, 1, "There's still one grid in the list");
 
   info("Highlight the first grid again to make sure this still works");
-  await enableTheFirstGrid(doc, inspector);
+  yield enableTheFirstGrid(doc, inspector);
 
   is(gridList.childNodes.length, 1, "There's again one grid in the list");
   ok(highlighters.gridHighlighterShown, "There's a highlighter shown");
 });
 
-async function enableTheFirstGrid(doc, { highlighters, store }) {
+function* enableTheFirstGrid(doc, { highlighters, store }) {
   const checkbox = doc.querySelector("#grid-list input");
 
   const onHighlighterShown = highlighters.once("grid-highlighter-shown");
@@ -54,6 +54,6 @@ async function enableTheFirstGrid(doc, { highlighters, store }) {
 
   checkbox.click();
 
-  await onHighlighterShown;
-  await onCheckboxChange;
+  yield onHighlighterShown;
+  yield onCheckboxChange;
 }

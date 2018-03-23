@@ -6,20 +6,20 @@
 
 // Test for as-authored styles.
 
-async function createTestContent(style) {
+function* createTestContent(style) {
   let html = `<style type="text/css">
       ${style}
       </style>
       <div id="testid" class="testclass">Styled Node</div>`;
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(html));
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(html));
 
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
   return view;
 }
 
-add_task(async function() {
-  let view = await createTestContent("#testid {" +
+add_task(function* () {
+  let view = yield createTestContent("#testid {" +
                                      // Invalid property.
                                      "  something: random;" +
                                      // Invalid value.

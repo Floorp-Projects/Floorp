@@ -9,27 +9,27 @@
 const IS_OSX = Services.appinfo.OS === "Darwin";
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
-add_task(async function() {
-  let {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
 
-  await startPicker(toolbox);
-  await moveMouseOver("#another");
+  yield startPicker(toolbox);
+  yield moveMouseOver("#another");
 
   info("Testing enter/return key as pick-node command");
-  await doKeyPick({key: "VK_RETURN", options: {}});
+  yield doKeyPick({key: "VK_RETURN", options: {}});
   is(inspector.selection.nodeFront.id, "another",
      "The #another node was selected. Passed.");
 
   info("Testing escape key as cancel-picker command");
-  await startPicker(toolbox);
-  await moveMouseOver("#ahoy");
-  await doKeyStop({key: "VK_ESCAPE", options: {}});
+  yield startPicker(toolbox);
+  yield moveMouseOver("#ahoy");
+  yield doKeyStop({key: "VK_ESCAPE", options: {}});
   is(inspector.selection.nodeFront.id, "another",
      "The #another DIV is still selected. Passed.");
 
   info("Testing Ctrl+Shift+C shortcut as cancel-picker command");
-  await startPicker(toolbox);
-  await moveMouseOver("#ahoy");
+  yield startPicker(toolbox);
+  yield moveMouseOver("#ahoy");
   let shortcutOpts = {key: "VK_C", options: {}};
   if (IS_OSX) {
     shortcutOpts.options.metaKey = true;
@@ -38,7 +38,7 @@ add_task(async function() {
     shortcutOpts.options.ctrlKey = true;
     shortcutOpts.options.shiftKey = true;
   }
-  await doKeyStop(shortcutOpts);
+  yield doKeyStop(shortcutOpts);
   is(inspector.selection.nodeFront.id, "another",
      "The #another DIV is still selected. Passed.");
 

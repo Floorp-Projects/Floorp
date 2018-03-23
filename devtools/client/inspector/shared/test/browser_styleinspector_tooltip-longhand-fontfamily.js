@@ -17,23 +17,23 @@ const TEST_URI = `
   <div id="testElement">test element</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testElement", inspector);
-  await testRuleView(view, inspector.selection.nodeFront);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testElement", inspector);
+  yield testRuleView(view, inspector.selection.nodeFront);
 
   info("Opening the computed view");
   let onComputedViewReady = inspector.once("computed-view-refreshed");
   view = selectComputedView(inspector);
-  await onComputedViewReady;
+  yield onComputedViewReady;
 
-  await testComputedView(view, inspector.selection.nodeFront);
+  yield testComputedView(view, inspector.selection.nodeFront);
 
-  await testExpandedComputedViewProperty(view, inspector.selection.nodeFront);
+  yield testExpandedComputedViewProperty(view, inspector.selection.nodeFront);
 });
 
-async function testRuleView(ruleView, nodeFront) {
+function* testRuleView(ruleView, nodeFront) {
   info("Testing font-family tooltips in the rule view");
 
   let tooltip = ruleView.tooltips.getTooltip("previewTooltip");
@@ -50,39 +50,39 @@ async function testRuleView(ruleView, nodeFront) {
 
   // And verify that the tooltip gets shown on this property
   valueSpan.scrollIntoView(true);
-  let previewTooltip = await assertShowPreviewTooltip(ruleView, valueSpan);
+  let previewTooltip = yield assertShowPreviewTooltip(ruleView, valueSpan);
 
   let images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
   ok(images[0].getAttribute("src").startsWith("data:"),
     "Tooltip contains a data-uri image as expected");
 
-  let dataURL = await getFontFamilyDataURL(valueSpan.textContent, nodeFront);
+  let dataURL = yield getFontFamilyDataURL(valueSpan.textContent, nodeFront);
   is(images[0].getAttribute("src"), dataURL,
     "Tooltip contains the correct data-uri image");
 
-  await assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
 
   // Do the tooltip test again, but now when hovering on the span that
   // encloses each and every font family.
   const fontFamilySpan = valueSpan.querySelector(".ruleview-font-family");
   fontFamilySpan.scrollIntoView(true);
 
-  previewTooltip = await assertShowPreviewTooltip(ruleView, fontFamilySpan);
+  previewTooltip = yield assertShowPreviewTooltip(ruleView, fontFamilySpan);
 
   images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
   ok(images[0].getAttribute("src").startsWith("data:"),
     "Tooltip contains a data-uri image as expected");
 
-  dataURL = await getFontFamilyDataURL(fontFamilySpan.textContent, nodeFront);
+  dataURL = yield getFontFamilyDataURL(fontFamilySpan.textContent, nodeFront);
   is(images[0].getAttribute("src"), dataURL,
     "Tooltip contains the correct data-uri image");
 
-  await assertTooltipHiddenOnMouseOut(previewTooltip, fontFamilySpan);
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, fontFamilySpan);
 }
 
-async function testComputedView(computedView, nodeFront) {
+function* testComputedView(computedView, nodeFront) {
   info("Testing font-family tooltips in the computed view");
 
   let tooltip = computedView.tooltips.getTooltip("previewTooltip");
@@ -90,28 +90,28 @@ async function testComputedView(computedView, nodeFront) {
   let {valueSpan} = getComputedViewProperty(computedView, "font-family");
 
   valueSpan.scrollIntoView(true);
-  let previewTooltip = await assertShowPreviewTooltip(computedView, valueSpan);
+  let previewTooltip = yield assertShowPreviewTooltip(computedView, valueSpan);
 
   let images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
   ok(images[0].getAttribute("src").startsWith("data:"),
     "Tooltip contains a data-uri image as expected");
 
-  let dataURL = await getFontFamilyDataURL(valueSpan.textContent, nodeFront);
+  let dataURL = yield getFontFamilyDataURL(valueSpan.textContent, nodeFront);
   is(images[0].getAttribute("src"), dataURL,
     "Tooltip contains the correct data-uri image");
 
-  await assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
 }
 
-async function testExpandedComputedViewProperty(computedView, nodeFront) {
+function* testExpandedComputedViewProperty(computedView, nodeFront) {
   info("Testing font-family tooltips in expanded properties of the " +
     "computed view");
 
   info("Expanding the font-family property to reveal matched selectors");
   let propertyView = getPropertyView(computedView, "font-family");
   propertyView.matchedExpanded = true;
-  await propertyView.refreshMatchedSelectors();
+  yield propertyView.refreshMatchedSelectors();
 
   let valueSpan = propertyView.matchedSelectorsContainer
     .querySelector(".bestmatch .computed-other-property-value");
@@ -120,18 +120,18 @@ async function testExpandedComputedViewProperty(computedView, nodeFront) {
   let panel = tooltip.panel;
 
   valueSpan.scrollIntoView(true);
-  let previewTooltip = await assertShowPreviewTooltip(computedView, valueSpan);
+  let previewTooltip = yield assertShowPreviewTooltip(computedView, valueSpan);
 
   let images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
   ok(images[0].getAttribute("src").startsWith("data:"),
     "Tooltip contains a data-uri image as expected");
 
-  let dataURL = await getFontFamilyDataURL(valueSpan.textContent, nodeFront);
+  let dataURL = yield getFontFamilyDataURL(valueSpan.textContent, nodeFront);
   is(images[0].getAttribute("src"), dataURL,
     "Tooltip contains the correct data-uri image");
 
-  await assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
 }
 
 function getPropertyView(computedView, name) {

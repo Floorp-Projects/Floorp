@@ -12,24 +12,24 @@
 const TEST_URL = "data:text/html;charset=utf-8," +
                  "<p>It's going to be legen....</p>";
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("hovering over the <p> line in the markup-view");
-  await hoverContainer("p", inspector);
-  let isVisible = await testActor.isHighlighting();
+  yield hoverContainer("p", inspector);
+  let isVisible = yield testActor.isHighlighting();
   ok(isVisible, "the highlighter is still visible");
 
   info("selecting the <p> line by clicking in the markup-view");
-  await clickContainer("p", inspector);
+  yield clickContainer("p", inspector);
 
-  await testActor.setProperty("p", "textContent", "wait for it ....");
+  yield testActor.setProperty("p", "textContent", "wait for it ....");
   info("wait and see if the highlighter stays visible even after the node " +
        "was selected");
-  await waitForTheBrieflyShowBoxModelTimeout();
+  yield waitForTheBrieflyShowBoxModelTimeout();
 
-  await testActor.setProperty("p", "textContent", "dary!!!!");
-  isVisible = await testActor.isHighlighting();
+  yield testActor.setProperty("p", "textContent", "dary!!!!");
+  isVisible = yield testActor.isHighlighting();
   ok(isVisible, "the highlighter is still visible");
 });
 

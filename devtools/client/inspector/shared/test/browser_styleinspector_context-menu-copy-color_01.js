@@ -11,25 +11,25 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(async function() {
+add_task(function* () {
   // Test is slow on Linux EC2 instances - Bug 1137765
   requestLongerTimeout(2);
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector} = await openInspector();
-  await testView("ruleview", inspector);
-  await testView("computedview", inspector);
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector} = yield openInspector();
+  yield testView("ruleview", inspector);
+  yield testView("computedview", inspector);
 });
 
-async function testView(viewId, inspector) {
+function* testView(viewId, inspector) {
   info("Testing " + viewId);
 
-  await inspector.sidebar.select(viewId);
+  yield inspector.sidebar.select(viewId);
   let view = inspector.getPanel(viewId).view || inspector.getPanel(viewId).computedView;
-  await selectNode("div", inspector);
+  yield selectNode("div", inspector);
 
   testIsColorValueNode(view);
   testIsColorPopupOnAllNodes(view);
-  await clearCurrentNodeSelection(inspector);
+  yield clearCurrentNodeSelection(inspector);
 }
 
 /**

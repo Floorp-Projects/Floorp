@@ -8,8 +8,8 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,<h1>Add node</h1>";
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL(TEST_URL);
   let {panelDoc} = inspector;
 
   let allMenuItems = openContextMenuAndGetAllItems(inspector);

@@ -20,7 +20,7 @@ const colors = [
   {name: "hex", id: "test3", color: "#F06", result: "#0F0"},
 ];
 
-add_task(async function() {
+add_task(function* () {
   Services.prefs.setCharPref("devtools.defaultColorUnit", "authored");
 
   let html = "";
@@ -28,22 +28,22 @@ add_task(async function() {
     html += `<div id="${id}" style="color: ${color}">Styled Node</div>`;
   }
 
-  let tab = await addTab("data:text/html;charset=utf-8," + encodeURIComponent(html));
+  let tab = yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(html));
 
-  let {inspector, view} = await openRuleView();
+  let {inspector, view} = yield openRuleView();
 
   for (let color of colors) {
     let selector = "#" + color.id;
-    await selectNode(selector, inspector);
+    yield selectNode(selector, inspector);
 
     let swatch = getRuleViewProperty(view, "element", "color").valueSpan
         .querySelector(".ruleview-colorswatch");
     let cPicker = view.tooltips.getTooltip("colorPicker");
     let onColorPickerReady = cPicker.once("ready");
     swatch.click();
-    await onColorPickerReady;
+    yield onColorPickerReady;
 
-    await simulateColorPickerChange(view, cPicker, [0, 255, 0, 1], {
+    yield simulateColorPickerChange(view, cPicker, [0, 255, 0, 1], {
       selector,
       name: "color",
       value: "rgb(0, 255, 0)"
@@ -54,14 +54,14 @@ add_task(async function() {
     // Validating the color change ends up updating the rule view twice
     let onRuleViewChanged = waitForNEvents(view, "ruleview-changed", 2);
     focusAndSendKey(spectrum.element.ownerDocument.defaultView, "RETURN");
-    await onHidden;
-    await onRuleViewChanged;
+    yield onHidden;
+    yield onRuleViewChanged;
 
     is(getRuleViewPropertyValue(view, "element", "color"), color.result,
        "changing the color preserved the unit for " + color.name);
   }
 
   let target = TargetFactory.forTab(tab);
-  await gDevTools.closeToolbox(target);
+  yield gDevTools.closeToolbox(target);
   gBrowser.removeCurrentTab();
 });

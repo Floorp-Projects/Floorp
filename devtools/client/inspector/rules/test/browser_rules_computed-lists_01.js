@@ -16,14 +16,14 @@ var TEST_URI = `
   <h1 id="testid">Styled Node</h1>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
-  await testExpandersShown(inspector, view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
+  yield testExpandersShown(inspector, view);
 });
 
-function testExpandersShown(inspector, view) {
+function* testExpandersShown(inspector, view) {
   let rule = getRuleViewRuleEditor(view, 1).rule;
 
   info("Check that the correct rules are visible");

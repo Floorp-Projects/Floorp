@@ -18,9 +18,9 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, gridInspector, toolbox } = await openLayoutView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let { inspector, gridInspector, toolbox } = yield openLayoutView();
   let { document: doc } = gridInspector;
   let { store } = inspector;
 
@@ -32,7 +32,7 @@ add_task(async function() {
   info("Listen to node-highlight event and mouse over the widget");
   let onHighlight = toolbox.once("node-highlight");
   EventUtils.synthesizeMouse(elementRep, 10, 5, {type: "mouseover"}, doc.defaultView);
-  let nodeFront = await onHighlight;
+  let nodeFront = yield onHighlight;
 
   ok(nodeFront, "nodeFront was returned from highlighting the node.");
   is(nodeFront.tagName, "DIV", "The highlighted node has the correct tagName.");
@@ -42,7 +42,7 @@ add_task(async function() {
 
   let onSelection = inspector.selection.once("new-node-front");
   EventUtils.sendMouseEvent({type: "click"}, elementRep, doc.defaultView);
-  await onSelection;
+  yield onSelection;
 
   is(inspector.selection.nodeFront, store.getState().grids[0].nodeFront,
     "The selected node is the one stored on the grid item's state.");

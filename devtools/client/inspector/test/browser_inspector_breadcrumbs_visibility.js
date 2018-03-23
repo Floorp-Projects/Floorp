@@ -36,31 +36,31 @@ const NODES = [
   { action: "end", title: NODE_SIX }
 ];
 
-add_task(async function() {
-  let { inspector, toolbox } = await openInspectorForURL(TEST_URI);
+add_task(function* () {
+  let { inspector, toolbox } = yield openInspectorForURL(TEST_URI);
 
   // No way to wait for scrolling to end (Bug 1172171)
   // Rather than wait a max time; limit test to instant scroll behavior
   inspector.breadcrumbs.arrowScrollBox.scrollBehavior = "instant";
 
-  await toolbox.switchHost(Toolbox.HostType.WINDOW);
+  yield toolbox.switchHost(Toolbox.HostType.WINDOW);
   let hostWindow = toolbox.win.parent;
   let originalWidth = hostWindow.outerWidth;
   let originalHeight = hostWindow.outerHeight;
   hostWindow.resizeTo(640, 300);
 
   info("Testing transitions ltr");
-  await pushPref("intl.uidirection", 0);
-  await testBreadcrumbTransitions(hostWindow, inspector);
+  yield pushPref("intl.uidirection", 0);
+  yield testBreadcrumbTransitions(hostWindow, inspector);
 
   info("Testing transitions rtl");
-  await pushPref("intl.uidirection", 1);
-  await testBreadcrumbTransitions(hostWindow, inspector);
+  yield pushPref("intl.uidirection", 1);
+  yield testBreadcrumbTransitions(hostWindow, inspector);
 
   hostWindow.resizeTo(originalWidth, originalHeight);
 });
 
-async function testBreadcrumbTransitions(hostWindow, inspector) {
+function* testBreadcrumbTransitions(hostWindow, inspector) {
   let breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
   let startBtn = breadcrumbs.querySelector(".scrollbutton-up");
   let endBtn = breadcrumbs.querySelector(".scrollbutton-down");
@@ -68,10 +68,10 @@ async function testBreadcrumbTransitions(hostWindow, inspector) {
   let breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
 
   info("Selecting initial node");
-  await selectNode(NODE_SEVEN, inspector);
+  yield selectNode(NODE_SEVEN, inspector);
 
   // So just need to wait for a duration
-  await breadcrumbsUpdated;
+  yield breadcrumbsUpdated;
   let initialCrumb = container.querySelector("button[checked]");
   is(isElementInViewport(hostWindow, initialCrumb), true,
      "initial element was visible");
@@ -86,7 +86,7 @@ async function testBreadcrumbTransitions(hostWindow, inspector) {
       EventUtils.synthesizeMouseAtCenter(startBtn, {}, inspector.panelWin);
     }
 
-    await breadcrumbsUpdated;
+    yield breadcrumbsUpdated;
     let selector = "button[title=\"" + node.title + "\"]";
     let relevantCrumb = container.querySelector(selector);
     is(isElementInViewport(hostWindow, relevantCrumb), true,

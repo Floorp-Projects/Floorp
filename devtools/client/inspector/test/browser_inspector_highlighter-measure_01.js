@@ -19,67 +19,67 @@ const HIGHLIGHTER_TYPE = "MeasuringToolHighlighter";
 const X = 32;
 const Y = 20;
 
-add_task(async function() {
-  let helper = await openInspectorForURL(TEST_URL)
+add_task(function* () {
+  let helper = yield openInspectorForURL(TEST_URL)
                        .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
 
   let { finalize } = helper;
 
   helper.prefix = PREFIX;
 
-  await isHiddenByDefault(helper);
-  await areLabelsHiddenByDefaultWhenShows(helper);
-  await areLabelsProperlyDisplayedWhenMouseMoved(helper);
+  yield isHiddenByDefault(helper);
+  yield areLabelsHiddenByDefaultWhenShows(helper);
+  yield areLabelsProperlyDisplayedWhenMouseMoved(helper);
 
-  await finalize();
+  yield finalize();
 });
 
-async function isHiddenByDefault({isElementHidden}) {
+function* isHiddenByDefault({isElementHidden}) {
   info("Checking the highlighter is hidden by default");
 
-  let hidden = await isElementHidden("root");
+  let hidden = yield isElementHidden("root");
   ok(hidden, "highlighter's root is hidden by default");
 
-  hidden = await isElementHidden("label-size");
+  hidden = yield isElementHidden("label-size");
   ok(hidden, "highlighter's label size is hidden by default");
 
-  hidden = await isElementHidden("label-position");
+  hidden = yield isElementHidden("label-position");
   ok(hidden, "highlighter's label position is hidden by default");
 }
 
-async function areLabelsHiddenByDefaultWhenShows({isElementHidden, show}) {
+function* areLabelsHiddenByDefaultWhenShows({isElementHidden, show}) {
   info("Checking the highlighter is displayed when asked");
 
-  await show();
+  yield show();
 
-  let hidden = await isElementHidden("elements");
+  let hidden = yield isElementHidden("elements");
   is(hidden, false, "highlighter is visible after show");
 
-  hidden = await isElementHidden("label-size");
+  hidden = yield isElementHidden("label-size");
   ok(hidden, "label's size still hidden");
 
-  hidden = await isElementHidden("label-position");
+  hidden = yield isElementHidden("label-position");
   ok(hidden, "label's position still hidden");
 }
 
-async function areLabelsProperlyDisplayedWhenMouseMoved({isElementHidden,
+function* areLabelsProperlyDisplayedWhenMouseMoved({isElementHidden,
   synthesizeMouse, getElementTextContent}) {
   info("Checking labels are properly displayed when mouse moved");
 
-  await synthesizeMouse({
+  yield synthesizeMouse({
     selector: ":root",
     options: {type: "mousemove"},
     x: X,
     y: Y
   });
 
-  let hidden = await isElementHidden("label-position");
+  let hidden = yield isElementHidden("label-position");
   is(hidden, false, "label's position is displayed after the mouse is moved");
 
-  hidden = await isElementHidden("label-size");
+  hidden = yield isElementHidden("label-size");
   ok(hidden, "label's size still hidden");
 
-  let text = await getElementTextContent("label-position");
+  let text = yield getElementTextContent("label-position");
 
   let [x, y] = text.replace(/ /g, "").split(/\n/);
 

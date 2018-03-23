@@ -22,63 +22,63 @@ const TEST_URI = `
   <div id='testid'>Styled Node</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
-  await testEditableFieldFocus(inspector, view, "VK_TAB", { shiftKey: true });
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
+  yield testEditableFieldFocus(inspector, view, "VK_TAB", { shiftKey: true });
 });
 
-async function testEditableFieldFocus(inspector, view, commitKey, options = {}) {
+function* testEditableFieldFocus(inspector, view, commitKey, options = {}) {
   let ruleEditor = getRuleViewRuleEditor(view, 2);
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
+  let editor = yield focusEditableField(view, ruleEditor.selectorText);
   is(inplaceEditor(ruleEditor.selectorText), editor,
     "Focus should be in the 'div' rule selector");
 
   ruleEditor = getRuleViewRuleEditor(view, 1);
 
-  await focusNextField(view, ruleEditor, commitKey, options);
+  yield focusNextField(view, ruleEditor, commitKey, options);
   assertEditor(view, ruleEditor.newPropSpan,
     "Focus should have moved to the new property span");
 
   for (let textProp of ruleEditor.rule.textProps.slice(0).reverse()) {
     let propEditor = textProp.editor;
 
-    await focusNextField(view, ruleEditor, commitKey, options);
-    await assertEditor(view, propEditor.valueSpan,
+    yield focusNextField(view, ruleEditor, commitKey, options);
+    yield assertEditor(view, propEditor.valueSpan,
       "Focus should have moved to the property value");
 
-    await focusNextFieldAndExpectChange(view, ruleEditor, commitKey, options);
-    await assertEditor(view, propEditor.nameSpan,
+    yield focusNextFieldAndExpectChange(view, ruleEditor, commitKey, options);
+    yield assertEditor(view, propEditor.nameSpan,
       "Focus should have moved to the property name");
   }
 
   ruleEditor = getRuleViewRuleEditor(view, 1);
 
-  await focusNextField(view, ruleEditor, commitKey, options);
-  await assertEditor(view, ruleEditor.selectorText,
+  yield focusNextField(view, ruleEditor, commitKey, options);
+  yield assertEditor(view, ruleEditor.selectorText,
     "Focus should have moved to the '#testid' rule selector");
 
   ruleEditor = getRuleViewRuleEditor(view, 0);
 
-  await focusNextField(view, ruleEditor, commitKey, options);
+  yield focusNextField(view, ruleEditor, commitKey, options);
   assertEditor(view, ruleEditor.newPropSpan,
     "Focus should have moved to the new property span");
 }
 
-async function focusNextFieldAndExpectChange(view, ruleEditor, commitKey, options) {
+function* focusNextFieldAndExpectChange(view, ruleEditor, commitKey, options) {
   let onRuleViewChanged = view.once("ruleview-changed");
-  await focusNextField(view, ruleEditor, commitKey, options);
-  await onRuleViewChanged;
+  yield focusNextField(view, ruleEditor, commitKey, options);
+  yield onRuleViewChanged;
 }
 
-async function focusNextField(view, ruleEditor, commitKey, options) {
+function* focusNextField(view, ruleEditor, commitKey, options) {
   let onFocus = once(ruleEditor.element, "focus", true);
   EventUtils.synthesizeKey(commitKey, options, view.styleWindow);
-  await onFocus;
+  yield onFocus;
 }
 
-function assertEditor(view, element, message) {
+function* assertEditor(view, element, message) {
   let editor = inplaceEditor(view.styleDocument.activeElement);
   is(inplaceEditor(element), editor, message);
 }

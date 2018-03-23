@@ -8,11 +8,11 @@
 const TEST_INPUT = "h1";
 const TEST_URI = "<h1>test filter context menu</h1>";
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector} = await openInspector();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {toolbox, inspector} = yield openInspector();
   let {searchBox} = inspector;
-  await selectNode("h1", inspector);
+  yield selectNode("h1", inspector);
 
   let win = inspector.panelWin;
   let searchContextMenu = toolbox.textBoxContextMenuPopup;
@@ -31,12 +31,12 @@ add_task(async function() {
   info("Opening context menu");
   let onFocus = once(searchBox, "focus");
   searchBox.focus();
-  await onFocus;
+  yield onFocus;
 
   let onContextMenuPopup = once(searchContextMenu, "popupshowing");
   EventUtils.synthesizeMouse(searchBox, 2, 2,
     {type: "contextmenu", button: 2}, win);
-  await onContextMenuPopup;
+  yield onContextMenuPopup;
 
   is(cmdUndo.getAttribute("disabled"), "true", "cmdUndo is disabled");
   is(cmdDelete.getAttribute("disabled"), "true", "cmdDelete is disabled");
@@ -51,7 +51,7 @@ add_task(async function() {
   info("Closing context menu");
   let onContextMenuHidden = once(searchContextMenu, "popuphidden");
   searchContextMenu.hidePopup();
-  await onContextMenuHidden;
+  yield onContextMenuHidden;
 
   info("Copy text in search field using the context menu");
   searchBox.setUserInput(TEST_INPUT);
@@ -59,15 +59,15 @@ add_task(async function() {
   searchBox.focus();
   EventUtils.synthesizeMouse(searchBox, 2, 2,
     {type: "contextmenu", button: 2}, win);
-  await onContextMenuPopup;
-  await waitForClipboardPromise(() => cmdCopy.click(), TEST_INPUT);
+  yield onContextMenuPopup;
+  yield waitForClipboardPromise(() => cmdCopy.click(), TEST_INPUT);
   searchContextMenu.hidePopup();
-  await onContextMenuHidden;
+  yield onContextMenuHidden;
 
   info("Reopen context menu and check command properties");
   EventUtils.synthesizeMouse(searchBox, 2, 2,
     {type: "contextmenu", button: 2}, win);
-  await onContextMenuPopup;
+  yield onContextMenuPopup;
 
   is(cmdUndo.getAttribute("disabled"), "", "cmdUndo is enabled");
   is(cmdDelete.getAttribute("disabled"), "", "cmdDelete is enabled");
@@ -78,5 +78,5 @@ add_task(async function() {
 
   // We have to wait for search query to avoid test failure.
   info("Waiting for search query to complete and getting the suggestions");
-  await inspector.searchSuggestions._lastQuery;
+  yield inspector.searchSuggestions._lastQuery;
 });

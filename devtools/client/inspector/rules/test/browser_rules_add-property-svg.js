@@ -9,14 +9,14 @@
 var TEST_URL = "chrome://global/skin/icons/warning.svg";
 var TEST_SELECTOR = "path";
 
-add_task(async function() {
-  await addTab(TEST_URL);
-  let {inspector, view} = await openRuleView();
-  await selectNode(TEST_SELECTOR, inspector);
+add_task(function* () {
+  yield addTab(TEST_URL);
+  let {inspector, view} = yield openRuleView();
+  yield selectNode(TEST_SELECTOR, inspector);
 
   info("Test creating a new property");
-  await addProperty(view, 0, "fill", "red");
+  yield addProperty(view, 0, "fill", "red");
 
-  is((await getComputedStyleProperty(TEST_SELECTOR, null, "fill")),
+  is((yield getComputedStyleProperty(TEST_SELECTOR, null, "fill")),
      "rgb(255, 0, 0)", "The fill was changed to red");
 });

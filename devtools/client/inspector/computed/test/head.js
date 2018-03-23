@@ -82,7 +82,7 @@ function getComputedViewPropertyView(view, name) {
  * @return {Promise} A promise that resolves to the property matched rules
  * container
  */
-var getComputedViewMatchedRules = async function(view, name) {
+var getComputedViewMatchedRules = Task.async(function* (view, name) {
   let expander;
   let propertyContent;
   for (let property of view.styleDocument.querySelectorAll(".computed-property-view")) {
@@ -98,11 +98,11 @@ var getComputedViewMatchedRules = async function(view, name) {
     // Need to expand the property
     let onExpand = view.inspector.once("computed-view-property-expanded");
     expander.click();
-    await onExpand;
+    yield onExpand;
   }
 
   return propertyContent;
-};
+});
 
 /**
  * Get the text value of the property corresponding to a given name in the
@@ -175,14 +175,14 @@ function selectAllText(view) {
  * @param {String} expectedPattern
  *        A regular expression used to check the content of the clipboard
  */
-async function copyAllAndCheckClipboard(view, expectedPattern) {
+function* copyAllAndCheckClipboard(view, expectedPattern) {
   selectAllText(view);
   let contentDoc = view.styleDocument;
   let prop = contentDoc.querySelector(".computed-property-view");
 
   try {
     info("Trigger a copy event and wait for the clipboard content");
-    await waitForClipboardPromise(() => fireCopyEvent(prop),
+    yield waitForClipboardPromise(() => fireCopyEvent(prop),
                                   () => checkClipboard(expectedPattern));
   } catch (e) {
     failClipboardCheck(expectedPattern);
@@ -201,7 +201,7 @@ async function copyAllAndCheckClipboard(view, expectedPattern) {
  * @param {String} expectedPattern
  *        A regular expression used to check the content of the clipboard
  */
-async function copySomeTextAndCheckClipboard(view, positions, expectedPattern) {
+function* copySomeTextAndCheckClipboard(view, positions, expectedPattern) {
   info("Testing selection copy");
 
   let contentDocument = view.styleDocument;
@@ -215,7 +215,7 @@ async function copySomeTextAndCheckClipboard(view, positions, expectedPattern) {
 
   try {
     info("Trigger a copy event and wait for the clipboard content");
-    await waitForClipboardPromise(() => fireCopyEvent(props[0]),
+    yield waitForClipboardPromise(() => fireCopyEvent(props[0]),
                                   () => checkClipboard(expectedPattern));
   } catch (e) {
     failClipboardCheck(expectedPattern);

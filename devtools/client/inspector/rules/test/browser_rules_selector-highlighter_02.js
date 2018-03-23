@@ -22,9 +22,9 @@ const TEST_URI = `
   <p>Testing the selector highlighter</p>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
   // Mock the highlighter front to get the reference of the NodeFront
   let HighlighterFront = {
@@ -46,31 +46,31 @@ add_task(async function() {
   // Inject the mock highlighter in the rule-view
   view.selectorHighlighter = HighlighterFront;
 
-  let icon = await getRuleViewSelectorHighlighterIcon(view, "body");
+  let icon = yield getRuleViewSelectorHighlighterIcon(view, "body");
 
   info("Checking that the HighlighterFront's show/hide methods are called");
 
   info("Clicking once on the body selector highlighter icon");
-  await clickSelectorIcon(icon, view);
+  yield clickSelectorIcon(icon, view);
   ok(HighlighterFront.isShown, "The highlighter is shown");
 
   info("Clicking once again on the body selector highlighter icon");
-  await clickSelectorIcon(icon, view);
+  yield clickSelectorIcon(icon, view);
   ok(!HighlighterFront.isShown, "The highlighter is hidden");
 
   info("Checking that the right NodeFront reference and options are passed");
-  await selectNode("p", inspector);
-  icon = await getRuleViewSelectorHighlighterIcon(view, "p");
+  yield selectNode("p", inspector);
+  icon = yield getRuleViewSelectorHighlighterIcon(view, "p");
 
-  await clickSelectorIcon(icon, view);
+  yield clickSelectorIcon(icon, view);
   is(HighlighterFront.nodeFront.tagName, "P",
     "The right NodeFront is passed to the highlighter (1)");
   is(HighlighterFront.options.selector, "p",
     "The right selector option is passed to the highlighter (1)");
 
-  await selectNode("body", inspector);
-  icon = await getRuleViewSelectorHighlighterIcon(view, "body");
-  await clickSelectorIcon(icon, view);
+  yield selectNode("body", inspector);
+  icon = yield getRuleViewSelectorHighlighterIcon(view, "body");
+  yield clickSelectorIcon(icon, view);
   is(HighlighterFront.nodeFront.tagName, "BODY",
     "The right NodeFront is passed to the highlighter (2)");
   is(HighlighterFront.options.selector, "body",

@@ -14,33 +14,33 @@ const ID = "geometry-editor-";
 const HIGHLIGHTER_TYPE = "GeometryEditorHighlighter";
 const PROPS = ["left", "right", "top", "bottom"];
 
-add_task(async function() {
-  let helper = await openInspectorForURL(TEST_URL)
+add_task(function* () {
+  let helper = yield openInspectorForURL(TEST_URL)
                        .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
 
   helper.prefix = ID;
 
   let { finalize } = helper;
 
-  await checkArrowsLabelsAndHandlers(
+  yield checkArrowsLabelsAndHandlers(
     "#node2", ["top", "left", "bottom", "right"],
      helper);
 
-  await checkArrowsLabelsAndHandlers("#node3", ["top", "left"], helper);
+  yield checkArrowsLabelsAndHandlers("#node3", ["top", "left"], helper);
 
-  await finalize();
+  yield finalize();
 });
 
-async function checkArrowsLabelsAndHandlers(selector, expectedProperties,
+function* checkArrowsLabelsAndHandlers(selector, expectedProperties,
   {show, hide, isElementHidden}
 ) {
   info("Getting node " + selector + " from the page");
 
-  await show(selector);
+  yield show(selector);
 
   for (let name of expectedProperties) {
-    let hidden = (await isElementHidden("arrow-" + name)) &&
-                 (await isElementHidden("handler-" + name));
+    let hidden = (yield isElementHidden("arrow-" + name)) &&
+                 (yield isElementHidden("handler-" + name));
     ok(!hidden,
       "The " + name + " label/arrow & handler is visible for node " + selector);
   }
@@ -50,12 +50,12 @@ async function checkArrowsLabelsAndHandlers(selector, expectedProperties,
     if (expectedProperties.includes(name)) {
       continue;
     }
-    let hidden = (await isElementHidden("arrow-" + name)) &&
-                 (await isElementHidden("handler-" + name));
+    let hidden = (yield isElementHidden("arrow-" + name)) &&
+                 (yield isElementHidden("handler-" + name));
     ok(hidden,
       "The " + name + " arrow & handler is hidden for node " + selector);
   }
 
   info("Hiding the highlighter");
-  await hide();
+  yield hide();
 }

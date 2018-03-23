@@ -20,13 +20,13 @@ const TEST_DATA = [
   { key: "KEY_ArrowRight", selectedNode: "strong" },
 ];
 
-add_task(async function() {
-  let { inspector } = await openInspectorForURL(TEST_URI);
+add_task(function* () {
+  let { inspector } = yield openInspectorForURL(TEST_URI);
 
   info("Selecting the deepest element to start with");
-  await selectNode("strong", inspector);
+  yield selectNode("strong", inspector);
 
-  let nodeFront = await getNodeFront("strong", inspector);
+  let nodeFront = yield getNodeFront("strong", inspector);
   is(inspector.selection.nodeFront, nodeFront,
      "<strong> should be selected initially");
 
@@ -39,9 +39,9 @@ add_task(async function() {
 
     let updated = inspector.once("inspector-updated");
     EventUtils.synthesizeKey(key);
-    await updated;
+    yield updated;
 
-    let selectedNodeFront = await getNodeFront(selectedNode, inspector);
+    let selectedNodeFront = yield getNodeFront(selectedNode, inspector);
     is(inspector.selection.nodeFront, selectedNodeFront,
       selectedNode + " is selected.");
   }

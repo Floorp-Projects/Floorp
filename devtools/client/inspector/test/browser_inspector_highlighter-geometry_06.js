@@ -60,63 +60,63 @@ const TESTS = {
   }
 };
 
-add_task(async function() {
-  let inspector = await openInspectorForURL(TEST_URL);
-  let helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(inspector);
+add_task(function* () {
+  let inspector = yield openInspectorForURL(TEST_URL);
+  let helper = yield getHighlighterHelperFor(HIGHLIGHTER_TYPE)(inspector);
 
   helper.prefix = ID;
 
   let { show, hide, finalize } = helper;
 
   info("Showing the highlighter");
-  await show("#node2");
+  yield show("#node2");
 
   for (let desc in TESTS) {
-    await executeTest(helper, desc, TESTS[desc]);
+    yield executeTest(helper, desc, TESTS[desc]);
   }
 
   info("Hiding the highlighter");
-  await hide();
-  await finalize();
+  yield hide();
+  yield finalize();
 });
 
-async function executeTest(helper, desc, data) {
+function* executeTest(helper, desc, data) {
   info(desc);
 
-  ok((await areElementAndHighlighterMovedCorrectly(
+  ok((yield areElementAndHighlighterMovedCorrectly(
     helper, data.drag, data.by)), data.expects);
 }
 
-async function areElementAndHighlighterMovedCorrectly(helper, side, by) {
+function* areElementAndHighlighterMovedCorrectly(helper, side, by) {
   let { mouse, reflow, highlightedNode } = helper;
 
-  let {x, y} = await getHandlerCoords(helper, side);
+  let {x, y} = yield getHandlerCoords(helper, side);
 
   let dx = x + by.x;
   let dy = y + by.y;
 
-  let beforeDragStyle = await highlightedNode.getComputedStyle();
+  let beforeDragStyle = yield highlightedNode.getComputedStyle();
 
   // simulate drag & drop
-  await mouse.down(x, y);
-  await mouse.move(dx, dy);
-  await mouse.up();
+  yield mouse.down(x, y);
+  yield mouse.move(dx, dy);
+  yield mouse.up();
 
-  await reflow();
+  yield reflow();
 
   info(`Checking ${side} handler is moved correctly`);
-  await isHandlerPositionUpdated(helper, side, x, y, by);
+  yield isHandlerPositionUpdated(helper, side, x, y, by);
 
   let delta = (side === "left" || side === "right") ? by.x : by.y;
   delta = delta * ((side === "right" || side === "bottom") ? -1 : 1);
 
   info("Checking element's sides are correct after drag & drop");
-  return areElementSideValuesCorrect(highlightedNode, beforeDragStyle,
-                                     side, delta);
+  return yield areElementSideValuesCorrect(highlightedNode, beforeDragStyle,
+                                           side, delta);
 }
 
-async function isHandlerPositionUpdated(helper, name, x, y, by) {
-  let {x: afterDragX, y: afterDragY} = await getHandlerCoords(helper, name);
+function* isHandlerPositionUpdated(helper, name, x, y, by) {
+  let {x: afterDragX, y: afterDragY} = yield getHandlerCoords(helper, name);
 
   if (name === "left" || name === "right") {
     is(afterDragX, x + by.x,
@@ -131,8 +131,8 @@ async function isHandlerPositionUpdated(helper, name, x, y, by) {
   }
 }
 
-async function areElementSideValuesCorrect(node, beforeDragStyle, name, delta) {
-  let afterDragStyle = await node.getComputedStyle();
+function* areElementSideValuesCorrect(node, beforeDragStyle, name, delta) {
+  let afterDragStyle = yield node.getComputedStyle();
   let isSideCorrect = true;
 
   for (let side of SIDES) {
@@ -158,9 +158,9 @@ async function areElementSideValuesCorrect(node, beforeDragStyle, name, delta) {
   return isSideCorrect;
 }
 
-async function getHandlerCoords({getElementAttribute}, side) {
+function* getHandlerCoords({getElementAttribute}, side) {
   return {
-    x: Math.round(await getElementAttribute("handler-" + side, "cx")),
-    y: Math.round(await getElementAttribute("handler-" + side, "cy"))
+    x: Math.round(yield getElementAttribute("handler-" + side, "cx")),
+    y: Math.round(yield getElementAttribute("handler-" + side, "cy"))
   };
 }

@@ -6,6 +6,7 @@
 
 const promise = require("promise");
 const Services = require("Services");
+const {Task} = require("devtools/shared/task");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -511,7 +512,7 @@ MarkupView.prototype = {
    * @return {Promise} the promise returned by
    *         MarkupElementContainer._isImagePreviewTarget
    */
-  async _isImagePreviewTarget(target) {
+  _isImagePreviewTarget: Task.async(function* (target) {
     // From the target passed here, let's find the parent MarkupContainer
     // and ask it if the tooltip should be shown
     if (this.isDragging) {
@@ -534,7 +535,7 @@ MarkupView.prototype = {
     }
 
     return false;
-  },
+  }),
 
   /**
    * Given the known reason, should the current selection be briefly highlighted

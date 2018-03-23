@@ -62,7 +62,7 @@ var TEST_DATA = [{
   }
 }];
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
-  await runEditAttributesTests(TEST_DATA, inspector, testActor);
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+  yield runEditAttributesTests(TEST_DATA, inspector, testActor);
 });

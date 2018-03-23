@@ -70,13 +70,13 @@ const TEST_DATA = [{
   expectedPositions: {top: false, right: false, left: true}
 }];
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_PAGE);
-  let helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)({inspector, testActor});
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_PAGE);
+  let helper = yield getHighlighterHelperFor(HIGHLIGHTER_TYPE)({inspector, testActor});
   helper.prefix = ID;
 
   let {mouse, show, hide, finalize} = helper;
-  let {width, height} = await testActor.getBoundingClientRect("html");
+  let {width, height} = yield testActor.getBoundingClientRect("html");
 
   // This test fails in non-e10s windows if we use width and height. For some reasons, the
   // mouse events can't be dispatched/handled properly when we try to move the eyedropper
@@ -86,30 +86,30 @@ add_task(async function() {
   height -= 10;
 
   info("Show the eyedropper on the page");
-  await show("html");
+  yield show("html");
 
   info("Move the eyedropper around and check that the label appears at the right place");
   for (let {desc, getCoordinates, expectedPositions} of TEST_DATA) {
     info(desc);
     let {x, y} = getCoordinates(width, height);
     info(`Moving the mouse to ${x} ${y}`);
-    await mouse.move(x, y);
-    await checkLabelPositionAttributes(helper, expectedPositions);
+    yield mouse.move(x, y);
+    yield checkLabelPositionAttributes(helper, expectedPositions);
   }
 
   info("Hide the eyedropper");
-  await hide();
+  yield hide();
   finalize();
 });
 
-async function checkLabelPositionAttributes(helper, positions) {
+function* checkLabelPositionAttributes(helper, positions) {
   for (let position in positions) {
-    is((await hasAttribute(helper, position)), positions[position],
+    is((yield hasAttribute(helper, position)), positions[position],
        `The label was ${positions[position] ? "" : "not "}moved to the ${position}`);
   }
 }
 
-async function hasAttribute({getElementAttribute}, name) {
-  let value = await getElementAttribute("root", name);
+function* hasAttribute({getElementAttribute}, name) {
+  let value = yield getElementAttribute("root", name);
   return value !== null;
 }

@@ -27,12 +27,12 @@ const TEST_URI =
   </style>
   <h1 class=title>Header</h1>`;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let { inspector, view} = yield openRuleView();
 
   info("Selecting the test node");
-  await selectNode("h1", inspector);
+  yield selectNode("h1", inspector);
 
   info("Focusing the property editable field");
   let rule = getRuleViewRuleEditor(view, 1).rule;
@@ -50,7 +50,7 @@ add_task(async function() {
   let y = firstQuad.bounds.height / 2;
 
   info("Focusing the css property editable value");
-  let editor = await focusEditableField(view, prop.editor.valueSpan, x, y);
+  let editor = yield focusEditableField(view, prop.editor.valueSpan, x, y);
 
   info("Moving the caret next to a number");
   let pos = editor.input.value.indexOf("0deg") + 1;
@@ -69,7 +69,7 @@ add_task(async function() {
 
   info("Sending \", re\" to the editable field.");
   for (let key of ", re") {
-    await synthesizeKeyForAutocomplete(key, editor, view.styleWindow);
+    yield synthesizeKeyForAutocomplete(key, editor, view.styleWindow);
   }
 
   info("Check the autocomplete can still be displayed.");
@@ -83,11 +83,11 @@ add_task(async function() {
 
   info("Check autocomplete suggestions can be cycled using UP/DOWN arrows.");
 
-  await synthesizeKeyForAutocomplete("VK_DOWN", editor, view.styleWindow);
+  yield synthesizeKeyForAutocomplete("VK_DOWN", editor, view.styleWindow);
   ok(editor.popup.selectedIndex, 1, "Using DOWN cycles autocomplete values.");
-  await synthesizeKeyForAutocomplete("VK_DOWN", editor, view.styleWindow);
+  yield synthesizeKeyForAutocomplete("VK_DOWN", editor, view.styleWindow);
   ok(editor.popup.selectedIndex, 2, "Using DOWN cycles autocomplete values.");
-  await synthesizeKeyForAutocomplete("VK_UP", editor, view.styleWindow);
+  yield synthesizeKeyForAutocomplete("VK_UP", editor, view.styleWindow);
   is(editor.popup.selectedIndex, 1, "Using UP cycles autocomplete values.");
   item = editor.popup.getItemAtIndex(editor.popup.selectedIndex);
   is(item.label, "red", "Check autocomplete displays expected value.");
@@ -100,8 +100,8 @@ add_task(async function() {
   EventUtils.synthesizeMouseAtCenter(node, {}, editor.popup._window);
 
   view.debounce.flush();
-  await onSuggest;
-  await onRuleviewChanged;
+  yield onSuggest;
+  yield onRuleviewChanged;
 
   is(editor.input.value, EXPECTED_CSS_VALUE,
     "Input value correctly autocompleted");
@@ -109,7 +109,7 @@ add_task(async function() {
   info("Press ESCAPE to leave the input.");
   onRuleviewChanged = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
-  await onRuleviewChanged;
+  yield onRuleviewChanged;
 });
 
 /**
@@ -124,8 +124,8 @@ add_task(async function() {
  * @param {Window} win
  *        Window in which the key event will be dispatched.
  */
-async function synthesizeKeyForAutocomplete(key, editor, win) {
+function* synthesizeKeyForAutocomplete(key, editor, win) {
   let onSuggest = editor.once("after-suggest");
   EventUtils.synthesizeKey(key, {}, win);
-  await onSuggest;
+  yield onSuggest;
 }

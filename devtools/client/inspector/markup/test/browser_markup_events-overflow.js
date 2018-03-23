@@ -30,17 +30,17 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function() {
-  let { inspector } = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let { inspector } = yield openInspectorForURL(TEST_URL);
 
-  let markupContainer = await getContainerForSelector("#events", inspector);
+  let markupContainer = yield getContainerForSelector("#events", inspector);
   let evHolder = markupContainer.elt.querySelector(".markupview-events");
   let tooltip = inspector.markup.eventDetailsTooltip;
 
   info("Clicking to open event tooltip.");
   EventUtils.synthesizeMouseAtCenter(evHolder, {},
     inspector.markup.doc.defaultView);
-  await tooltip.once("shown");
+  yield tooltip.once("shown");
   info("EventTooltip visible.");
 
   let container = tooltip.panel;
@@ -66,12 +66,12 @@ add_task(async function() {
 
     let ready = tooltip.once("event-tooltip-ready");
     EventUtils.synthesizeMouseAtCenter(header, {}, header.ownerGlobal);
-    await ready;
+    yield ready;
 
     info("Event handler expanded.");
 
     // Wait for any scrolling to finish.
-    await promiseNextTick();
+    yield promiseNextTick();
 
     if (data.alignTop) {
       let headerRect = header.getBoundingClientRect();

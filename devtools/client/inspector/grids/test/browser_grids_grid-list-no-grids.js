@@ -15,13 +15,13 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, gridInspector } = await openLayoutView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let { inspector, gridInspector } = yield openLayoutView();
   let { document: doc } = gridInspector;
   let { highlighters } = inspector;
 
-  await selectNode("#grid", inspector);
+  yield selectNode("#grid", inspector);
   let noGridList = doc.querySelector(".grid-pane .devtools-sidepanel-no-result");
   let gridList = doc.getElementById("grid-list");
 

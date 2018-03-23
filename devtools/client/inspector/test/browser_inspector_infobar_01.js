@@ -8,8 +8,8 @@
 
 const TEST_URI = URL_ROOT + "doc_inspector_infobar_01.html";
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URI);
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URI);
 
   let testData = [
     {
@@ -59,40 +59,40 @@ add_task(async function() {
   ];
 
   for (let currTest of testData) {
-    await testPosition(currTest, inspector, testActor);
+    yield testPosition(currTest, inspector, testActor);
   }
 });
 
-async function testPosition(test, inspector, testActor) {
+function* testPosition(test, inspector, testActor) {
   info("Testing " + test.selector);
 
-  await selectAndHighlightNode(test.selector, inspector);
+  yield selectAndHighlightNode(test.selector, inspector);
 
-  let position = await testActor.getHighlighterNodeAttribute(
+  let position = yield testActor.getHighlighterNodeAttribute(
     "box-model-infobar-container", "position");
   is(position, test.position, "Node " + test.selector + ": position matches");
 
-  let tag = await testActor.getHighlighterNodeTextContent(
+  let tag = yield testActor.getHighlighterNodeTextContent(
     "box-model-infobar-tagname");
   is(tag, test.tag, "node " + test.selector + ": tagName matches.");
 
   if (test.id) {
-    let id = await testActor.getHighlighterNodeTextContent(
+    let id = yield testActor.getHighlighterNodeTextContent(
       "box-model-infobar-id");
     is(id, "#" + test.id, "node " + test.selector + ": id matches.");
   }
 
-  let classes = await testActor.getHighlighterNodeTextContent(
+  let classes = yield testActor.getHighlighterNodeTextContent(
     "box-model-infobar-classes");
   is(classes, test.classes, "node " + test.selector + ": classes match.");
 
-  let arrowed = !(await testActor.getHighlighterNodeAttribute(
+  let arrowed = !(yield testActor.getHighlighterNodeAttribute(
     "box-model-infobar-container", "hide-arrow"));
 
   is(arrowed, test.arrowed, "node " + test.selector + ": arrow visibility match.");
 
   if (test.dims) {
-    let dims = await testActor.getHighlighterNodeTextContent(
+    let dims = yield testActor.getHighlighterNodeTextContent(
       "box-model-infobar-dimensions");
     is(dims, test.dims, "node " + test.selector + ": dims match.");
   }

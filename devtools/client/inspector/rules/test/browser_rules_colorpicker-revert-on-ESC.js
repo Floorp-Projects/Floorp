@@ -15,14 +15,14 @@ const TEST_URI = `
   </style>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {view} = await openRuleView();
-  await testPressingEscapeRevertsChanges(view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {view} = yield openRuleView();
+  yield testPressingEscapeRevertsChanges(view);
 });
 
-async function testPressingEscapeRevertsChanges(view) {
-  let {swatch, propEditor, cPicker} = await openColorPickerAndSelectColor(view,
+function* testPressingEscapeRevertsChanges(view) {
+  let {swatch, propEditor, cPicker} = yield openColorPickerAndSelectColor(view,
     1, 0, [0, 0, 0, 1], {
       selector: "body",
       name: "background-color",
@@ -40,10 +40,10 @@ async function testPressingEscapeRevertsChanges(view) {
   let onHidden = cPicker.tooltip.once("hidden");
   let onModifications = view.once("ruleview-changed");
   EventUtils.sendKey("ESCAPE", spectrum.element.ownerDocument.defaultView);
-  await onHidden;
-  await onModifications;
+  yield onHidden;
+  yield onModifications;
 
-  await waitForComputedStyleProperty("body", null, "background-color",
+  yield waitForComputedStyleProperty("body", null, "background-color",
     "rgb(237, 237, 237)");
   is(propEditor.valueSpan.textContent, "#EDEDED",
     "Got expected property value.");

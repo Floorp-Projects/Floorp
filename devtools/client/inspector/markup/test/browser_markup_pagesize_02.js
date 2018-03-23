@@ -13,35 +13,35 @@ const TEST_URL = URL_ROOT + "doc_markup_pagesize_02.html";
 // Make sure nodes are hidden when there are more than 5 in a row
 Services.prefs.setIntPref("devtools.markup.pagesize", 5);
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Selecting the UL node");
-  await clickContainer("ul", inspector);
+  yield clickContainer("ul", inspector);
   info("Reloading the page with the UL node selected will expand its children");
-  await reloadPage(inspector, testActor);
-  await inspector.markup._waitForChildren();
+  yield reloadPage(inspector, testActor);
+  yield inspector.markup._waitForChildren();
 
   info("Click on the 'show all nodes' button in the UL's list of children");
-  await showAllNodes(inspector);
+  yield showAllNodes(inspector);
 
-  await assertAllNodesAreVisible(inspector, testActor);
+  yield assertAllNodesAreVisible(inspector, testActor);
 });
 
-async function showAllNodes(inspector) {
-  let container = await getContainerForSelector("ul", inspector);
+function* showAllNodes(inspector) {
+  let container = yield getContainerForSelector("ul", inspector);
   let button = container.elt.querySelector("button");
   ok(button, "All nodes button is here");
   let win = button.ownerDocument.defaultView;
 
   EventUtils.sendMouseEvent({type: "click"}, button, win);
-  await inspector.markup._waitForChildren();
+  yield inspector.markup._waitForChildren();
 }
 
-async function assertAllNodesAreVisible(inspector, testActor) {
-  let container = await getContainerForSelector("ul", inspector);
+function* assertAllNodesAreVisible(inspector, testActor) {
+  let container = yield getContainerForSelector("ul", inspector);
   ok(!container.elt.querySelector("button"),
      "All nodes button isn't here anymore");
-  let numItems = await testActor.getNumberOfElementMatches("ul > *");
+  let numItems = yield testActor.getNumberOfElementMatches("ul > *");
   is(container.children.childNodes.length, numItems);
 }

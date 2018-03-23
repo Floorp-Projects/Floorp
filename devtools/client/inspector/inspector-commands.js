@@ -28,12 +28,12 @@ exports.items = [{
       manual: l10n.lookup("inspectNodeManual")
     }
   ],
-  exec: async function(args, context) {
+  exec: function* (args, context) {
     let target = context.environment.target;
-    let toolbox = await gDevTools.showToolbox(target, "inspector");
+    let toolbox = yield gDevTools.showToolbox(target, "inspector");
     let walker = toolbox.getCurrentPanel().walker;
-    let rootNode = await walker.getRootNode();
-    let nodeFront = await walker.querySelector(rootNode, args.selector);
+    let rootNode = yield walker.getRootNode();
+    let nodeFront = yield walker.querySelector(rootNode, args.selector);
     toolbox.getCurrentPanel().selection.setNodeFront(nodeFront, "gcli");
   },
 }, {
@@ -57,7 +57,7 @@ exports.items = [{
       hidden: true
     }]
   }],
-  exec: async function(args, context) {
+  exec: function* (args, context) {
     if (args.hide) {
       context.updateExec("eyedropper_server_hide").catch(console.error);
       return;
@@ -69,7 +69,7 @@ exports.items = [{
     if (toolbox) {
       let inspector = toolbox.getPanel("inspector");
       if (inspector) {
-        await inspector.hideEyeDropper();
+        yield inspector.hideEyeDropper();
       }
     }
 

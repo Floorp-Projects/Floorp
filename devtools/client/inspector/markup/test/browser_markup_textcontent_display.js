@@ -53,19 +53,19 @@ const TEST_DATA = [{
   value: LONG_VALUE,
 }];
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   for (let data of TEST_DATA) {
-    await checkNode(inspector, testActor, data);
+    yield checkNode(inspector, testActor, data);
   }
 });
 
-async function checkNode(inspector, testActor, {desc, selector, inline, value}) {
+function* checkNode(inspector, testActor, {desc, selector, inline, value}) {
   info(desc);
 
-  let container = await getContainerForSelector(selector, inspector);
-  let nodeValue = await getFirstChildNodeValue(selector, testActor);
+  let container = yield getContainerForSelector(selector, inspector);
+  let nodeValue = yield getFirstChildNodeValue(selector, testActor);
   is(nodeValue, value, "The test node's text content is correct");
 
   is(!!container.inlineTextChild, inline, "Container inlineTextChild is as expected");
@@ -82,8 +82,8 @@ async function checkNode(inspector, testActor, {desc, selector, inline, value}) 
   } else {
     textContainer = container.elt.querySelector("pre");
     ok(!textContainer, "Text container is not rendered for collapsed text nodes");
-    await inspector.markup.expandNode(container.node);
-    await waitForMultipleChildrenUpdates(inspector);
+    yield inspector.markup.expandNode(container.node);
+    yield waitForMultipleChildrenUpdates(inspector);
 
     textContainer = container.elt.querySelector("pre");
     ok(!!textContainer, "Text container is rendered after expanding the container");

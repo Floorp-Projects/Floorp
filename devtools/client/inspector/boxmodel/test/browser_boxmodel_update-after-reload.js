@@ -6,24 +6,24 @@
 
 // Test that the box model view continues to work after the page is reloaded
 
-add_task(async function() {
-  await addTab(URL_ROOT + "doc_boxmodel_iframe1.html");
-  let {inspector, boxmodel, testActor} = await openLayoutView();
+add_task(function* () {
+  yield addTab(URL_ROOT + "doc_boxmodel_iframe1.html");
+  let {inspector, boxmodel, testActor} = yield openLayoutView();
 
   info("Test that the box model view works on the first page");
-  await assertBoxModelView(inspector, boxmodel, testActor);
+  yield assertBoxModelView(inspector, boxmodel, testActor);
 
   info("Reload the page");
   let onMarkupLoaded = waitForMarkupLoaded(inspector);
-  await testActor.reload();
-  await onMarkupLoaded;
+  yield testActor.reload();
+  yield onMarkupLoaded;
 
   info("Test that the box model view works on the reloaded page");
-  await assertBoxModelView(inspector, boxmodel, testActor);
+  yield assertBoxModelView(inspector, boxmodel, testActor);
 });
 
-async function assertBoxModelView(inspector, boxmodel, testActor) {
-  await selectNode("p", inspector);
+function* assertBoxModelView(inspector, boxmodel, testActor) {
+  yield selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
   let paddingElt = boxmodel.document.querySelector(
@@ -32,8 +32,8 @@ async function assertBoxModelView(inspector, boxmodel, testActor) {
 
   info("Listening for box model view changes and modifying the padding");
   let onUpdated = waitForUpdate(inspector);
-  await setStyle(testActor, "p", "padding", "20px");
-  await onUpdated;
+  yield setStyle(testActor, "p", "padding", "20px");
+  yield onUpdated;
   ok(true, "Box model view got updated");
 
   info("Checking that the box model view shows the right value after update");

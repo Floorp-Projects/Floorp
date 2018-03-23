@@ -9,25 +9,25 @@
 const TEST_URI = "<div class='one'>el 1</div><div class='two'>el 2</div>";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode(".one", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode(".one", inspector);
 
   info("Testing rule view tooltip closes on new selection");
-  await testRuleView(view, inspector);
+  yield testRuleView(view, inspector);
 
   info("Testing computed view tooltip closes on new selection");
   view = selectComputedView(inspector);
-  await testComputedView(view, inspector);
+  yield testComputedView(view, inspector);
 });
 
-async function testRuleView(ruleView, inspector) {
+function* testRuleView(ruleView, inspector) {
   info("Showing the tooltip");
 
   let tooltip = ruleView.tooltips.getTooltip("previewTooltip");
   let tooltipContent = ruleView.styleDocument.createElementNS(XHTML_NS, "div");
-  await tooltip.setContent(tooltipContent, {width: 100, height: 30});
+  yield tooltip.setContent(tooltipContent, {width: 100, height: 30});
 
   // Stop listening for mouse movements because it's not needed for this test,
   // and causes intermittent failures on Linux. When this test runs in the suite
@@ -37,22 +37,22 @@ async function testRuleView(ruleView, inspector) {
 
   let onShown = tooltip.once("shown");
   tooltip.show(ruleView.styleDocument.firstElementChild);
-  await onShown;
+  yield onShown;
 
   info("Selecting a new node");
   let onHidden = tooltip.once("hidden");
-  await selectNode(".two", inspector);
-  await onHidden;
+  yield selectNode(".two", inspector);
+  yield onHidden;
 
   ok(true, "Rule view tooltip closed after a new node got selected");
 }
 
-async function testComputedView(computedView, inspector) {
+function* testComputedView(computedView, inspector) {
   info("Showing the tooltip");
 
   let tooltip = computedView.tooltips.getTooltip("previewTooltip");
   let tooltipContent = computedView.styleDocument.createElementNS(XHTML_NS, "div");
-  await tooltip.setContent(tooltipContent, {width: 100, height: 30});
+  yield tooltip.setContent(tooltipContent, {width: 100, height: 30});
 
   // Stop listening for mouse movements because it's not needed for this test,
   // and causes intermittent failures on Linux. When this test runs in the suite
@@ -62,12 +62,12 @@ async function testComputedView(computedView, inspector) {
 
   let onShown = tooltip.once("shown");
   tooltip.show(computedView.styleDocument.firstElementChild);
-  await onShown;
+  yield onShown;
 
   info("Selecting a new node");
   let onHidden = tooltip.once("hidden");
-  await selectNode(".one", inspector);
-  await onHidden;
+  yield selectNode(".one", inspector);
+  yield onHidden;
 
   ok(true, "Computed view tooltip closed after a new node got selected");
 }

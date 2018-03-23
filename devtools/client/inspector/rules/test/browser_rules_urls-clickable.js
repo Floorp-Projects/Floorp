@@ -12,13 +12,13 @@ const BASE_64_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAA" +
   "FCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAA" +
   "BJRU5ErkJggg==";
 
-add_task(async function() {
-  await addTab(TEST_URI);
-  let {inspector, view} = await openRuleView();
-  await selectNodes(inspector, view);
+add_task(function* () {
+  yield addTab(TEST_URI);
+  let {inspector, view} = yield openRuleView();
+  yield selectNodes(inspector, view);
 });
 
-async function selectNodes(inspector, ruleView) {
+function* selectNodes(inspector, ruleView) {
   let relative1 = ".relative1";
   let relative2 = ".relative2";
   let absolute = ".absolute";
@@ -27,43 +27,43 @@ async function selectNodes(inspector, ruleView) {
   let noimage = ".noimage";
   let inlineresolved = ".inline-resolved";
 
-  await selectNode(relative1, inspector);
+  yield selectNode(relative1, inspector);
   let relativeLink = ruleView.styleDocument
     .querySelector(".ruleview-propertyvaluecontainer a");
   ok(relativeLink, "Link exists for relative1 node");
   is(relativeLink.getAttribute("href"), TEST_IMAGE, "href matches");
 
-  await selectNode(relative2, inspector);
+  yield selectNode(relative2, inspector);
   relativeLink = ruleView.styleDocument
     .querySelector(".ruleview-propertyvaluecontainer a");
   ok(relativeLink, "Link exists for relative2 node");
   is(relativeLink.getAttribute("href"), TEST_IMAGE, "href matches");
 
-  await selectNode(absolute, inspector);
+  yield selectNode(absolute, inspector);
   let absoluteLink = ruleView.styleDocument
     .querySelector(".ruleview-propertyvaluecontainer a");
   ok(absoluteLink, "Link exists for absolute node");
   is(absoluteLink.getAttribute("href"), TEST_IMAGE, "href matches");
 
-  await selectNode(inline, inspector);
+  yield selectNode(inline, inspector);
   let inlineLink = ruleView.styleDocument
     .querySelector(".ruleview-propertyvaluecontainer a");
   ok(inlineLink, "Link exists for inline node");
   is(inlineLink.getAttribute("href"), TEST_IMAGE, "href matches");
 
-  await selectNode(base64, inspector);
+  yield selectNode(base64, inspector);
   let base64Link = ruleView.styleDocument
     .querySelector(".ruleview-propertyvaluecontainer a");
   ok(base64Link, "Link exists for base64 node");
   is(base64Link.getAttribute("href"), BASE_64_URL, "href matches");
 
-  await selectNode(inlineresolved, inspector);
+  yield selectNode(inlineresolved, inspector);
   let inlineResolvedLink = ruleView.styleDocument
     .querySelector(".ruleview-propertyvaluecontainer a");
   ok(inlineResolvedLink, "Link exists for style tag node");
   is(inlineResolvedLink.getAttribute("href"), TEST_IMAGE, "href matches");
 
-  await selectNode(noimage, inspector);
+  yield selectNode(noimage, inspector);
   let noimageLink = ruleView.styleDocument
     .querySelector(".ruleview-propertyvaluecontainer a");
   ok(!noimageLink, "There is no link for the node with no background image");

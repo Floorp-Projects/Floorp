@@ -22,18 +22,18 @@ const TEST_DATA = [
   { node: "input", draggable: true },
   { node: "div", draggable: true },
   {
-    node: async function(inspector) {
-      let parentFront = await getNodeFront("#before", inspector);
-      let {nodes} = await inspector.walker.children(parentFront);
+    node: function* (inspector) {
+      let parentFront = yield getNodeFront("#before", inspector);
+      let {nodes} = yield inspector.walker.children(parentFront);
       // Getting the comment node.
       return getContainerForNodeFront(nodes[1], inspector);
     },
     draggable: true
   },
   {
-    node: async function(inspector) {
-      let parentFront = await getNodeFront("#test", inspector);
-      let {nodes} = await inspector.walker.children(parentFront);
+    node: function* (inspector) {
+      let parentFront = yield getNodeFront("#test", inspector);
+      let {nodes} = yield inspector.walker.children(parentFront);
       // Getting the ::before pseudo element.
       return getContainerForNodeFront(nodes[0], inspector);
     },
@@ -41,18 +41,18 @@ const TEST_DATA = [
   }
 ];
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
-  await inspector.markup.expandAll();
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL(TEST_URL);
+  yield inspector.markup.expandAll();
 
   for (let {node, draggable} of TEST_DATA) {
     let container;
     let name;
     if (typeof node === "string") {
-      container = await getContainerForSelector(node, inspector);
+      container = yield getContainerForSelector(node, inspector);
       name = node;
     } else {
-      container = await node(inspector);
+      container = yield node(inspector);
       name = container.toString();
     }
 

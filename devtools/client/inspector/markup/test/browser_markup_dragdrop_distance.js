@@ -14,31 +14,31 @@ const TEST_NODE = "#test";
 // Keep this in sync with DRAG_DROP_MIN_INITIAL_DISTANCE in markup-view.js
 const MIN_DISTANCE = 10;
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Drag the test node by half of the minimum distance");
-  await simulateNodeDrag(inspector, TEST_NODE, 0, MIN_DISTANCE / 2);
-  await checkIsDragging(inspector, TEST_NODE, false);
+  yield simulateNodeDrag(inspector, TEST_NODE, 0, MIN_DISTANCE / 2);
+  yield checkIsDragging(inspector, TEST_NODE, false);
 
   info("Drag the test node by exactly the minimum distance");
-  await simulateNodeDrag(inspector, TEST_NODE, 0, MIN_DISTANCE);
-  await checkIsDragging(inspector, TEST_NODE, true);
+  yield simulateNodeDrag(inspector, TEST_NODE, 0, MIN_DISTANCE);
+  yield checkIsDragging(inspector, TEST_NODE, true);
   inspector.markup.cancelDragging();
 
   info("Drag the test node by more than the minimum distance");
-  await simulateNodeDrag(inspector, TEST_NODE, 0, MIN_DISTANCE * 2);
-  await checkIsDragging(inspector, TEST_NODE, true);
+  yield simulateNodeDrag(inspector, TEST_NODE, 0, MIN_DISTANCE * 2);
+  yield checkIsDragging(inspector, TEST_NODE, true);
   inspector.markup.cancelDragging();
 
   info("Drag the test node by minus the minimum distance");
-  await simulateNodeDrag(inspector, TEST_NODE, 0, MIN_DISTANCE * -1);
-  await checkIsDragging(inspector, TEST_NODE, true);
+  yield simulateNodeDrag(inspector, TEST_NODE, 0, MIN_DISTANCE * -1);
+  yield checkIsDragging(inspector, TEST_NODE, true);
   inspector.markup.cancelDragging();
 });
 
-async function checkIsDragging(inspector, selector, isDragging) {
-  let container = await getContainerForSelector(selector, inspector);
+function* checkIsDragging(inspector, selector, isDragging) {
+  let container = yield getContainerForSelector(selector, inspector);
   if (isDragging) {
     ok(container.isDragging, "The container is being dragged");
     ok(inspector.markup.isDragging, "And the markup-view knows it");

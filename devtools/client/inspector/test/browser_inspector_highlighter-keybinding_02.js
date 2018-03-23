@@ -8,39 +8,39 @@
 
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
-add_task(async function() {
-  let {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
 
-  await startPicker(toolbox);
+  yield startPicker(toolbox);
 
   // Previously chosen child memory
   info("Testing whether previously chosen child is remembered");
 
   info("Selecting the ahoy paragraph DIV");
-  await moveMouseOver("#ahoy");
+  yield moveMouseOver("#ahoy");
 
-  await doKeyHover({key: "VK_LEFT", options: {}});
-  ok((await testActor.assertHighlightedNode("#simple-div2")),
+  yield doKeyHover({key: "VK_LEFT", options: {}});
+  ok((yield testActor.assertHighlightedNode("#simple-div2")),
      "The highlighter shows #simple-div2. OK.");
 
-  await doKeyHover({key: "VK_RIGHT", options: {}});
-  ok((await testActor.assertHighlightedNode("#ahoy")),
+  yield doKeyHover({key: "VK_RIGHT", options: {}});
+  ok((yield testActor.assertHighlightedNode("#ahoy")),
      "The highlighter shows #ahoy. OK.");
 
   info("Going back up to the complex-div DIV");
-  await doKeyHover({key: "VK_LEFT", options: {}});
-  await doKeyHover({key: "VK_LEFT", options: {}});
-  ok((await testActor.assertHighlightedNode("#complex-div")),
+  yield doKeyHover({key: "VK_LEFT", options: {}});
+  yield doKeyHover({key: "VK_LEFT", options: {}});
+  ok((yield testActor.assertHighlightedNode("#complex-div")),
      "The highlighter shows #complex-div. OK.");
 
-  await doKeyHover({key: "VK_RIGHT", options: {}});
-  ok((await testActor.assertHighlightedNode("#simple-div2")),
+  yield doKeyHover({key: "VK_RIGHT", options: {}});
+  ok((yield testActor.assertHighlightedNode("#simple-div2")),
      "The highlighter shows #simple-div2. OK.");
 
   info("Previously chosen child is remembered. Passed.");
 
   info("Stopping the picker");
-  await toolbox.highlighterUtils.stopPicker();
+  yield toolbox.highlighterUtils.stopPicker();
 
   function doKeyHover(args) {
     info("Key pressed. Waiting for element to be highlighted/hovered");

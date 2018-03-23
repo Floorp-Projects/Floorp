@@ -124,13 +124,13 @@ function waitForSuccess(validatorFn, name = "untitled") {
  *        The NodeActor that will used to retrieve the dataURL for the
  *        font family tooltip contents.
  */
-var getFontFamilyDataURL = async function(font, nodeFront) {
+var getFontFamilyDataURL = Task.async(function* (font, nodeFront) {
   let fillStyle = getThemeColor("body-color");
 
-  let {data} = await nodeFront.getFontFamilyDataURL(font, fillStyle);
-  let dataURL = await data.string();
+  let {data} = yield nodeFront.getFontFamilyDataURL(font, fillStyle);
+  let dataURL = yield data.string();
   return dataURL;
-};
+});
 
 /* *********************************************
  * RULE-VIEW
@@ -156,27 +156,27 @@ var getFontFamilyDataURL = async function(font, nodeFront) {
  *          - {String} value The expected style value
  * The style will be checked like so: getComputedStyle(element)[name] === value
  */
-var simulateColorPickerChange = async function(ruleView, colorPicker,
+var simulateColorPickerChange = Task.async(function* (ruleView, colorPicker,
     newRgba, expectedChange) {
   let onRuleViewChanged = ruleView.once("ruleview-changed");
   info("Getting the spectrum colorpicker object");
-  let spectrum = await colorPicker.spectrum;
+  let spectrum = yield colorPicker.spectrum;
   info("Setting the new color");
   spectrum.rgb = newRgba;
   info("Applying the change");
   spectrum.updateUI();
   spectrum.onChange();
   info("Waiting for rule-view to update");
-  await onRuleViewChanged;
+  yield onRuleViewChanged;
 
   if (expectedChange) {
     info("Waiting for the style to be applied on the page");
-    await waitForSuccess(() => {
+    yield waitForSuccess(() => {
       let {element, name, value} = expectedChange;
       return content.getComputedStyle(element)[name] === value;
     }, "Color picker change applied on the page");
   }
-};
+});
 
 /* *********************************************
  * COMPUTED-VIEW

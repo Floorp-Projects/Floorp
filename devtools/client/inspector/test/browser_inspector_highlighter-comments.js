@@ -11,42 +11,42 @@
 const TEST_PAGE = URL_ROOT +
   "doc_inspector_highlighter-comments.html";
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_PAGE);
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_PAGE);
   let markupView = inspector.markup;
-  await selectNode("p", inspector);
+  yield selectNode("p", inspector);
 
   info("Hovering over #id1 and waiting for highlighter to appear.");
-  await hoverElement("#id1");
-  await assertHighlighterShownOn("#id1");
+  yield hoverElement("#id1");
+  yield assertHighlighterShownOn("#id1");
 
   info("Hovering over comment node and ensuring highlighter doesn't appear.");
-  await hoverComment();
-  await assertHighlighterHidden();
+  yield hoverComment();
+  yield assertHighlighterHidden();
 
   info("Hovering over #id1 again and waiting for highlighter to appear.");
-  await hoverElement("#id1");
-  await assertHighlighterShownOn("#id1");
+  yield hoverElement("#id1");
+  yield assertHighlighterShownOn("#id1");
 
   info("Hovering over #id2 and waiting for highlighter to appear.");
-  await hoverElement("#id2");
-  await assertHighlighterShownOn("#id2");
+  yield hoverElement("#id2");
+  yield assertHighlighterShownOn("#id2");
 
   info("Hovering over <script> and ensuring highlighter doesn't appear.");
-  await hoverElement("script");
-  await assertHighlighterHidden();
+  yield hoverElement("script");
+  yield assertHighlighterHidden();
 
   info("Hovering over #id3 and waiting for highlighter to appear.");
-  await hoverElement("#id3");
-  await assertHighlighterShownOn("#id3");
+  yield hoverElement("#id3");
+  yield assertHighlighterShownOn("#id3");
 
   info("Hovering over hidden #id4 and ensuring highlighter doesn't appear.");
-  await hoverElement("#id4");
-  await assertHighlighterHidden();
+  yield hoverElement("#id4");
+  yield assertHighlighterHidden();
 
   info("Hovering over a text node and waiting for highlighter to appear.");
-  await hoverTextNode("Visible text node");
-  await assertHighlighterShownOnTextNode("body", 14);
+  yield hoverTextNode("Visible text node");
+  yield assertHighlighterShownOnTextNode("body", 14);
 
   function hoverContainer(container) {
     let promise = inspector.toolbox.once("node-highlight");
@@ -58,9 +58,9 @@ add_task(async function() {
     return promise;
   }
 
-  async function hoverElement(selector) {
+  function* hoverElement(selector) {
     info(`Hovering node ${selector} in the markup view`);
-    let container = await getContainerForSelector(selector, inspector);
+    let container = yield getContainerForSelector(selector, inspector);
     return hoverContainer(container);
   }
 
@@ -83,18 +83,18 @@ add_task(async function() {
     return hoverContainer(container);
   }
 
-  async function assertHighlighterShownOn(selector) {
-    ok((await testActor.assertHighlightedNode(selector)),
+  function* assertHighlighterShownOn(selector) {
+    ok((yield testActor.assertHighlightedNode(selector)),
        "Highlighter is shown on the right node: " + selector);
   }
 
-  async function assertHighlighterShownOnTextNode(parentSelector, childNodeIndex) {
-    ok((await testActor.assertHighlightedTextNode(parentSelector, childNodeIndex)),
+  function* assertHighlighterShownOnTextNode(parentSelector, childNodeIndex) {
+    ok((yield testActor.assertHighlightedTextNode(parentSelector, childNodeIndex)),
        "Highlighter is shown on the right text node");
   }
 
-  async function assertHighlighterHidden() {
-    let isVisible = await testActor.isHighlighting();
+  function* assertHighlighterHidden() {
+    let isVisible = yield testActor.isHighlighting();
     ok(!isVisible, "Highlighter is hidden");
   }
 });

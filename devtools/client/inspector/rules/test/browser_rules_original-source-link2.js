@@ -12,33 +12,33 @@ const PREF = "devtools.source-map.client-service.enabled";
 const SCSS_LOC = "doc_sourcemaps.scss:4";
 const CSS_LOC = "doc_sourcemaps2.css:1";
 
-add_task(async function() {
+add_task(function* () {
   info("Setting the " + PREF + " pref to true");
   Services.prefs.setBoolPref(PREF, true);
 
-  await addTab(TESTCASE_URI);
-  let {toolbox, inspector, view} = await openRuleView();
+  yield addTab(TESTCASE_URI);
+  let {toolbox, inspector, view} = yield openRuleView();
 
   info("Selecting the test node");
-  await selectNode("div", inspector);
+  yield selectNode("div", inspector);
 
-  await verifyLinkText(SCSS_LOC, view);
+  yield verifyLinkText(SCSS_LOC, view);
 
   info("Setting the " + PREF + " pref to false");
   Services.prefs.setBoolPref(PREF, false);
-  await verifyLinkText(CSS_LOC, view);
+  yield verifyLinkText(CSS_LOC, view);
 
   info("Setting the " + PREF + " pref to true again");
   Services.prefs.setBoolPref(PREF, true);
 
-  await testClickingLink(toolbox, view);
-  await checkDisplayedStylesheet(toolbox);
+  yield testClickingLink(toolbox, view);
+  yield checkDisplayedStylesheet(toolbox);
 
   info("Clearing the " + PREF + " pref");
   Services.prefs.clearUserPref(PREF);
 });
 
-async function testClickingLink(toolbox, view) {
+function* testClickingLink(toolbox, view) {
   info("Listening for switch to the style editor");
   let onStyleEditorReady = toolbox.once("styleeditor-ready");
 
@@ -46,7 +46,7 @@ async function testClickingLink(toolbox, view) {
   let link = getRuleViewLinkByIndex(view, 1);
   link.scrollIntoView();
   link.click();
-  await onStyleEditorReady;
+  yield onStyleEditorReady;
 }
 
 function checkDisplayedStylesheet(toolbox) {
@@ -77,7 +77,7 @@ function verifyLinkText(text, view) {
   info("Verifying that the rule-view stylesheet link is " + text);
   let label = getRuleViewLinkByIndex(view, 1)
     .querySelector(".ruleview-rule-source-label");
-  return waitForSuccess(function() {
+  return waitForSuccess(function* () {
     return label.textContent == text;
   }, "Link text changed to display correct location: " + text);
 }

@@ -28,21 +28,21 @@ const FONTS = [{
   cssName: "barnormal"
 }];
 
-add_task(async function() {
-  let { inspector, view } = await openFontInspectorForURL(TEST_URI);
+add_task(function* () {
+  let { inspector, view } = yield openFontInspectorForURL(TEST_URI);
   ok(!!view, "Font inspector document is alive.");
 
   let viewDoc = view.document;
 
-  await testBodyFonts(inspector, viewDoc);
-  await testDivFonts(inspector, viewDoc);
+  yield testBodyFonts(inspector, viewDoc);
+  yield testDivFonts(inspector, viewDoc);
 });
 
 function isRemote(fontLi) {
   return fontLi.querySelector(".font-origin").classList.contains("remote");
 }
 
-function testBodyFonts(inspector, viewDoc) {
+function* testBodyFonts(inspector, viewDoc) {
   let lis = getUsedFontsEls(viewDoc);
   is(lis.length, 5, "Found 5 fonts");
 
@@ -70,10 +70,10 @@ function testBodyFonts(inspector, viewDoc) {
   ok(!isRemote(lis[4]), "local font is local");
 }
 
-async function testDivFonts(inspector, viewDoc) {
+function* testDivFonts(inspector, viewDoc) {
   let updated = inspector.once("fontinspector-updated");
-  await selectNode("div", inspector);
-  await updated;
+  yield selectNode("div", inspector);
+  yield updated;
 
   let lis = getUsedFontsEls(viewDoc);
   is(lis.length, 1, "Found 1 font on DIV");

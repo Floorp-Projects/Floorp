@@ -25,39 +25,39 @@ const TEST_URI = `
   <div class="test-element">test element</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
   info("Testing the background-image property on the body rule");
-  await testBodyRuleView(view);
+  yield testBodyRuleView(view);
 
   info("Selecting the test div node");
-  await selectNode(".test-element", inspector);
+  yield selectNode(".test-element", inspector);
   info("Testing the the background property on the .test-element rule");
-  await testDivRuleView(view);
+  yield testDivRuleView(view);
 
   info("Testing that image preview tooltips show even when there are " +
     "fields being edited");
-  await testTooltipAppearsEvenInEditMode(view);
+  yield testTooltipAppearsEvenInEditMode(view);
 
   info("Switching over to the computed-view");
   let onComputedViewReady = inspector.once("computed-view-refreshed");
   view = selectComputedView(inspector);
-  await onComputedViewReady;
+  yield onComputedViewReady;
 
   info("Testing that the background-image computed style has a tooltip too");
-  await testComputedView(view);
+  yield testComputedView(view);
 });
 
-async function testBodyRuleView(view) {
+function* testBodyRuleView(view) {
   info("Testing tooltips in the rule view");
 
   // Get the background-image property inside the rule view
   let {valueSpan} = getRuleViewProperty(view, "body", "background-image");
   let uriSpan = valueSpan.querySelector(".theme-link");
 
-  let previewTooltip = await assertShowPreviewTooltip(view, uriSpan);
+  let previewTooltip = yield assertShowPreviewTooltip(view, uriSpan);
 
   let images = previewTooltip.panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
@@ -65,38 +65,38 @@ async function testBodyRuleView(view) {
     .includes("iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHe"),
     "The image URL seems fine");
 
-  await assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);
 }
 
-async function testDivRuleView(view) {
+function* testDivRuleView(view) {
   // Get the background property inside the rule view
   let {valueSpan} = getRuleViewProperty(view, ".test-element", "background");
   let uriSpan = valueSpan.querySelector(".theme-link");
 
-  let previewTooltip = await assertShowPreviewTooltip(view, uriSpan);
+  let previewTooltip = yield assertShowPreviewTooltip(view, uriSpan);
 
   let images = previewTooltip.panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
   ok(images[0].getAttribute("src").startsWith("data:"),
     "Tooltip contains a data-uri image as expected");
 
-  await assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);
 }
 
-async function testTooltipAppearsEvenInEditMode(view) {
+function* testTooltipAppearsEvenInEditMode(view) {
   info("Switching to edit mode in the rule view");
-  let editor = await turnToEditMode(view);
+  let editor = yield turnToEditMode(view);
 
   info("Now trying to show the preview tooltip");
   let {valueSpan} = getRuleViewProperty(view, ".test-element", "background");
   let uriSpan = valueSpan.querySelector(".theme-link");
 
-  let previewTooltip = await assertShowPreviewTooltip(view, uriSpan);
+  let previewTooltip = yield assertShowPreviewTooltip(view, uriSpan);
 
   is(view.styleDocument.activeElement, editor.input,
     "Tooltip was shown in edit mode, and inplace-editor still focused");
 
-  await assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);
 }
 
 function turnToEditMode(ruleView) {
@@ -104,14 +104,14 @@ function turnToEditMode(ruleView) {
   return focusEditableField(ruleView, brace);
 }
 
-async function testComputedView(view) {
+function* testComputedView(view) {
   let {valueSpan} = getComputedViewProperty(view, "background-image");
   let uriSpan = valueSpan.querySelector(".theme-link");
 
   // Scroll to ensure the line is visible as we see the box model by default
   valueSpan.scrollIntoView();
 
-  let previewTooltip = await assertShowPreviewTooltip(view, uriSpan);
+  let previewTooltip = yield assertShowPreviewTooltip(view, uriSpan);
 
   let images = previewTooltip.panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
@@ -119,5 +119,5 @@ async function testComputedView(view) {
   ok(images[0].getAttribute("src").startsWith("data:"),
     "Tooltip contains a data-uri in the computed-view too");
 
-  await assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, uriSpan);
 }

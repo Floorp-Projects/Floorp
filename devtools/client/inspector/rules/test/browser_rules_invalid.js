@@ -20,11 +20,11 @@ const TEST_URI = `
  </body>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
 
   is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
   // Have to actually get the rule in order to ensure that the

@@ -9,10 +9,10 @@
 const TEST_INPUT = "h1";
 const TEST_URI = "<h1>test filter context menu</h1>";
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = await openRuleView();
-  await selectNode("h1", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {toolbox, inspector, view} = yield openRuleView();
+  yield selectNode("h1", inspector);
 
   let win = view.styleWindow;
   let searchField = view.searchField;
@@ -33,12 +33,12 @@ add_task(async function() {
 
   let onFocus = once(searchField, "focus");
   searchField.focus();
-  await onFocus;
+  yield onFocus;
 
   let onContextMenuPopup = once(searchContextMenu, "popupshowing");
   EventUtils.synthesizeMouse(searchField, 2, 2,
     {type: "contextmenu", button: 2}, win);
-  await onContextMenuPopup;
+  yield onContextMenuPopup;
 
   is(cmdUndo.getAttribute("disabled"), "true", "cmdUndo is disabled");
   is(cmdDelete.getAttribute("disabled"), "true", "cmdDelete is disabled");
@@ -53,22 +53,22 @@ add_task(async function() {
   info("Closing context menu");
   let onContextMenuHidden = once(searchContextMenu, "popuphidden");
   searchContextMenu.hidePopup();
-  await onContextMenuHidden;
+  yield onContextMenuHidden;
 
   info("Copy text in search field using the context menu");
   searchField.setUserInput(TEST_INPUT);
   searchField.select();
   EventUtils.synthesizeMouse(searchField, 2, 2,
     {type: "contextmenu", button: 2}, win);
-  await onContextMenuPopup;
-  await waitForClipboardPromise(() => cmdCopy.click(), TEST_INPUT);
+  yield onContextMenuPopup;
+  yield waitForClipboardPromise(() => cmdCopy.click(), TEST_INPUT);
   searchContextMenu.hidePopup();
-  await onContextMenuHidden;
+  yield onContextMenuHidden;
 
   info("Reopen context menu and check command properties");
   EventUtils.synthesizeMouse(searchField, 2, 2,
     {type: "contextmenu", button: 2}, win);
-  await onContextMenuPopup;
+  yield onContextMenuPopup;
 
   is(cmdUndo.getAttribute("disabled"), "", "cmdUndo is enabled");
   is(cmdDelete.getAttribute("disabled"), "", "cmdDelete is enabled");

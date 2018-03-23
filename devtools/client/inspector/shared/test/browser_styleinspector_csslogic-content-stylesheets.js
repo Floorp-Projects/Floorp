@@ -16,34 +16,34 @@ const TEST_URI_XUL = TEST_URL_ROOT + "doc_content_stylesheet.xul";
 const XUL_URI = Services.io.newURI(TEST_URI_XUL);
 const XUL_PRINCIPAL = Services.scriptSecurityManager.createCodebasePrincipal(XUL_URI, {});
 
-add_task(async function() {
+add_task(function* () {
   requestLongerTimeout(2);
 
   info("Checking stylesheets on HTML document");
-  await addTab(TEST_URI_HTML);
+  yield addTab(TEST_URI_HTML);
 
-  let {inspector, testActor} = await openInspector();
-  await selectNode("#target", inspector);
+  let {inspector, testActor} = yield openInspector();
+  yield selectNode("#target", inspector);
 
   info("Checking stylesheets");
-  await checkSheets("#target", testActor);
+  yield checkSheets("#target", testActor);
 
   info("Checking authored stylesheets");
-  await addTab(TEST_URI_AUTHOR);
+  yield addTab(TEST_URI_AUTHOR);
 
-  ({inspector} = await openInspector());
-  await selectNode("#target", inspector);
-  await checkSheets("#target", testActor);
+  ({inspector} = yield openInspector());
+  yield selectNode("#target", inspector);
+  yield checkSheets("#target", testActor);
 
   info("Checking stylesheets on XUL document");
   info("Allowing XUL content");
   allowXUL();
-  await addTab(TEST_URI_XUL);
+  yield addTab(TEST_URI_XUL);
 
-  ({inspector} = await openInspector());
-  await selectNode("#target", inspector);
+  ({inspector} = yield openInspector());
+  yield selectNode("#target", inspector);
 
-  await checkSheets("#target", testActor);
+  yield checkSheets("#target", testActor);
   info("Disallowing XUL content");
   disallowXUL();
 });
@@ -58,8 +58,8 @@ function disallowXUL() {
     Ci.nsIPermissionManager.DENY_ACTION);
 }
 
-async function checkSheets(targetSelector, testActor) {
-  let sheets = await testActor.getStyleSheetsInfoForNode(targetSelector);
+function* checkSheets(targetSelector, testActor) {
+  let sheets = yield testActor.getStyleSheetsInfoForNode(targetSelector);
 
   for (let sheet of sheets) {
     if (!sheet.href ||

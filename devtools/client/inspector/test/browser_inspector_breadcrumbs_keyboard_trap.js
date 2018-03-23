@@ -45,12 +45,12 @@ const TEST_DATA = [
   }
 ];
 
-add_task(async function() {
-  let { toolbox, inspector } = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let { toolbox, inspector } = yield openInspectorForURL(TEST_URL);
   let doc = inspector.panelDoc;
   let {breadcrumbs} = inspector;
 
-  await selectNode("#i2", inspector);
+  yield selectNode("#i2", inspector);
 
   info("Clicking on the corresponding breadcrumbs node to focus it");
   let container = doc.getElementById("inspector-breadcrumbs");
@@ -58,7 +58,7 @@ add_task(async function() {
   let button = container.querySelector("button[checked]");
   let onHighlight = toolbox.once("node-highlight");
   button.click();
-  await onHighlight;
+  yield onHighlight;
 
   // Ensure a breadcrumb is focused.
   is(doc.activeElement, container, "Focus is on selected breadcrumb");
@@ -70,7 +70,7 @@ add_task(async function() {
 
     EventUtils.synthesizeKey(key, options);
     // Wait until the keyPromise promise resolves.
-    await breadcrumbs.keyPromise;
+    yield breadcrumbs.keyPromise;
 
     if (focused) {
       is(doc.activeElement, container, "Focus is on selected breadcrumb");

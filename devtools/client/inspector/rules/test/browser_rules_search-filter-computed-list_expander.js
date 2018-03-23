@@ -21,15 +21,15 @@ const TEST_URI = `
   <h1 id="testid" class="testclass">Styled Node</h1>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
-  await testOpenExpanderAndAddTextInFilter(inspector, view);
-  await testClearSearchFilter(inspector, view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
+  yield testOpenExpanderAndAddTextInFilter(inspector, view);
+  yield testClearSearchFilter(inspector, view);
 });
 
-async function testOpenExpanderAndAddTextInFilter(inspector, view) {
+function* testOpenExpanderAndAddTextInFilter(inspector, view) {
   let rule = getRuleViewRuleEditor(view, 1).rule;
   let ruleEditor = rule.textProps[0].editor;
   let computed = ruleEditor.computed;
@@ -37,7 +37,7 @@ async function testOpenExpanderAndAddTextInFilter(inspector, view) {
   info("Opening the computed list of margin property");
   ruleEditor.expander.click();
 
-  await setSearchFilter(view, SEARCH);
+  yield setSearchFilter(view, SEARCH);
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 2, "Should have 2 rules.");
@@ -63,7 +63,7 @@ async function testOpenExpanderAndAddTextInFilter(inspector, view) {
     "margin-left computed property is correctly highlighted.");
 }
 
-async function testClearSearchFilter(inspector, view) {
+function* testClearSearchFilter(inspector, view) {
   info("Clearing the search filter");
 
   let searchField = view.searchField;
@@ -73,7 +73,7 @@ async function testClearSearchFilter(inspector, view) {
   EventUtils.synthesizeMouseAtCenter(searchClearButton, {},
     view.styleWindow);
 
-  await onRuleViewFiltered;
+  yield onRuleViewFiltered;
 
   info("Check the search filter is cleared and no rules are highlighted");
   is(view.element.children.length, 3, "Should have 3 rules.");
