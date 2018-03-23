@@ -43,10 +43,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777385
 
   make_live_map();
 
-  // RGBColor is a non-nsISupports refCounted class using WebIDL bindings.
+  // DOMPoint is a non-nsISupports refCounted class using WebIDL bindings.
 
   // non-nsISupports cycle-collected classes should fail as weak map keys.
-  let context = window.getComputedStyle(document.documentElement).getPropertyCSSValue("color").getRGBColorValue();
+  let context = new DOMPoint(1, 2, 3);
   let contextFail = false;
   try {
     live_map.set(context, 2);
