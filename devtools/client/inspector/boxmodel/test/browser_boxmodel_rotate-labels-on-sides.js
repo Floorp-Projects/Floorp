@@ -30,10 +30,10 @@ const TEST_URI = encodeURIComponent([
 ].join(""));
 const LONG_TEXT_ROTATE_LIMIT = 3;
 
-add_task(function* () {
-  yield addTab("data:text/html," + TEST_URI);
-  let {inspector, boxmodel} = yield openLayoutView();
-  yield selectNode("div", inspector);
+add_task(async function() {
+  await addTab("data:text/html," + TEST_URI);
+  let {inspector, boxmodel} = await openLayoutView();
+  await selectNode("div", inspector);
 
   for (let i = 0; i < res1.length; i++) {
     let elt = boxmodel.document.querySelector(res1[i].selector);

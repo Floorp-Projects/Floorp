@@ -14,10 +14,10 @@ const TEST_DATA = [{
   selector: "#one",
   oldHTML: '<div id="one">First <em>Div</em></div>',
   newHTML: '<div id="one">First Div</div>',
-  validate: function* ({pageNodeFront, selectedNodeFront, testActor}) {
-    let text = yield testActor.getProperty("#one", "textContent");
+  validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
+    let text = await testActor.getProperty("#one", "textContent");
     is(text, "First Div", "New div has expected text content");
-    let num = yield testActor.getNumberOfElementMatches("#one em");
+    let num = await testActor.getNumberOfElementMatches("#one em");
     is(num, 0, "No em remaining");
   }
 }, {
@@ -35,9 +35,9 @@ const TEST_DATA = [{
   oldHTML: '<div id="addedAttribute">addedAttribute</div>',
   newHTML: "<div id=\"addedAttribute\" class=\"important\" disabled checked>" +
            "addedAttribute</div>",
-  validate: function* ({pageNodeFront, selectedNodeFront, testActor}) {
+  validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
     is(pageNodeFront, selectedNodeFront, "Original element is selected");
-    let html = yield testActor.getProperty("#addedAttribute", "outerHTML");
+    let html = await testActor.getProperty("#addedAttribute", "outerHTML");
     is(html, "<div id=\"addedAttribute\" class=\"important\" disabled=\"\" " +
        "checked=\"\">addedAttribute</div>", "Attributes have been added");
   }
@@ -51,19 +51,19 @@ const TEST_DATA = [{
   newHTML: '<div id="siblings-before-sibling">before sibling</div>' +
            '<div id="siblings">siblings (updated)</div>' +
            '<div id="siblings-after-sibling">after sibling</div>',
-  validate: function* ({selectedNodeFront, inspector, testActor}) {
-    let beforeSiblingFront = yield getNodeFront("#siblings-before-sibling",
+  validate: async function({selectedNodeFront, inspector, testActor}) {
+    let beforeSiblingFront = await getNodeFront("#siblings-before-sibling",
                                                 inspector);
     is(beforeSiblingFront, selectedNodeFront, "Sibling has been selected");
 
-    let text = yield testActor.getProperty("#siblings", "textContent");
+    let text = await testActor.getProperty("#siblings", "textContent");
     is(text, "siblings (updated)", "New div has expected text content");
 
-    let beforeText = yield testActor.getProperty("#siblings-before-sibling",
+    let beforeText = await testActor.getProperty("#siblings-before-sibling",
                                                  "textContent");
     is(beforeText, "before sibling", "Sibling has been inserted");
 
-    let afterText = yield testActor.getProperty("#siblings-after-sibling",
+    let afterText = await testActor.getProperty("#siblings-after-sibling",
                                                 "textContent");
     is(afterText, "after sibling", "Sibling has been inserted");
   }
@@ -77,8 +77,8 @@ const TEST_URL = "data:text/html," +
   "</body>" +
   "</html>";
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
   inspector.markup._frame.focus();
-  yield runEditOuterHTMLTests(TEST_DATA, inspector, testActor);
+  await runEditOuterHTMLTests(TEST_DATA, inspector, testActor);
 });

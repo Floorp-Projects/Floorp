@@ -12,32 +12,32 @@ const TEST_URL = "data:text/html;charset=utf-8," +
 
 const ID = "rulers-highlighter-";
 
-add_task(function* () {
-  let { inspector, testActor } = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let { inspector, testActor } = await openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
 
-  let highlighter = yield front.getHighlighterByType("RulersHighlighter");
+  let highlighter = await front.getHighlighterByType("RulersHighlighter");
 
   // the rulers doesn't need any node, but as highligher it seems mandatory
   // ones, so the body is given
-  let body = yield getNodeFront("body", inspector);
-  yield highlighter.show(body);
+  let body = await getNodeFront("body", inspector);
+  await highlighter.show(body);
 
-  yield isUpdatedAfterScroll(highlighter, inspector, testActor);
+  await isUpdatedAfterScroll(highlighter, inspector, testActor);
 
-  yield highlighter.finalize();
+  await highlighter.finalize();
 });
 
-function* isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
+async function isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
   info("Check the rulers' position by default");
 
-  let xAxisRulerTransform = yield testActor.getHighlighterNodeAttribute(
+  let xAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
     `${ID}x-axis-ruler`, "transform", highlighterFront);
-  let xAxisTextTransform = yield testActor.getHighlighterNodeAttribute(
+  let xAxisTextTransform = await testActor.getHighlighterNodeAttribute(
     `${ID}x-axis-text`, "transform", highlighterFront);
-  let yAxisRulerTransform = yield testActor.getHighlighterNodeAttribute(
+  let yAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
     `${ID}y-axis-ruler`, "transform", highlighterFront);
-  let yAxisTextTransform = yield testActor.getHighlighterNodeAttribute(
+  let yAxisTextTransform = await testActor.getHighlighterNodeAttribute(
     `${ID}y-axis-text`, "transform", highlighterFront);
 
   is(xAxisRulerTransform, null, "x axis ruler is positioned properly");
@@ -49,20 +49,20 @@ function* isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
 
   let x = 200, y = 300;
 
-  let data = yield testActor.scrollWindow(x, y);
+  let data = await testActor.scrollWindow(x, y);
 
   is(data.x, x, "window scrolled properly horizontally");
   is(data.y, y, "window scrolled properly vertically");
 
   info("Check the rulers are properly positioned after the scrolling");
 
-  xAxisRulerTransform = yield testActor.getHighlighterNodeAttribute(
+  xAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
     `${ID}x-axis-ruler`, "transform", highlighterFront);
-  xAxisTextTransform = yield testActor.getHighlighterNodeAttribute(
+  xAxisTextTransform = await testActor.getHighlighterNodeAttribute(
     `${ID}x-axis-text`, "transform", highlighterFront);
-  yAxisRulerTransform = yield testActor.getHighlighterNodeAttribute(
+  yAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
     `${ID}y-axis-ruler`, "transform", highlighterFront);
-  yAxisTextTransform = yield testActor.getHighlighterNodeAttribute(
+  yAxisTextTransform = await testActor.getHighlighterNodeAttribute(
     `${ID}y-axis-text`, "transform", highlighterFront);
 
   is(xAxisRulerTransform, `translate(-${x})`,
@@ -76,20 +76,20 @@ function* isUpdatedAfterScroll(highlighterFront, inspector, testActor) {
 
   info("Ask the content window to scroll relative to the current position");
 
-  data = yield testActor.scrollWindow(-50, -60, true);
+  data = await testActor.scrollWindow(-50, -60, true);
 
   is(data.x, x - 50, "window scrolled properly horizontally");
   is(data.y, y - 60, "window scrolled properly vertically");
 
   info("Check the rulers are properly positioned after the relative scrolling");
 
-  xAxisRulerTransform = yield testActor.getHighlighterNodeAttribute(
+  xAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
     `${ID}x-axis-ruler`, "transform", highlighterFront);
-  xAxisTextTransform = yield testActor.getHighlighterNodeAttribute(
+  xAxisTextTransform = await testActor.getHighlighterNodeAttribute(
     `${ID}x-axis-text`, "transform", highlighterFront);
-  yAxisRulerTransform = yield testActor.getHighlighterNodeAttribute(
+  yAxisRulerTransform = await testActor.getHighlighterNodeAttribute(
     `${ID}y-axis-ruler`, "transform", highlighterFront);
-  yAxisTextTransform = yield testActor.getHighlighterNodeAttribute(
+  yAxisTextTransform = await testActor.getHighlighterNodeAttribute(
     `${ID}y-axis-text`, "transform", highlighterFront);
 
   is(xAxisRulerTransform, `translate(-${x - 50})`,

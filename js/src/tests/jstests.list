@@ -50,12 +50,6 @@ skip-if(!this.hasOwnProperty("SharedArrayBuffer")) include test262/built-ins/Sha
 skip-if(!Array.prototype.flatMap) include test262/built-ins/Array/prototype/flatMap/jstests.list
 skip-if(!Array.prototype.flatten) include test262/built-ins/Array/prototype/flatten/jstests.list
 
-# trimStart and trimEnd are Nightly-only
-skip-if(!String.prototype.trimStart) include test262/built-ins/String/prototype/trimStart/jstests.list
-skip-if(!String.prototype.trimStart) include test262/annexB/built-ins/String/prototype/trimLeft/jstests.list
-skip-if(!String.prototype.trimEnd) include test262/built-ins/String/prototype/trimEnd/jstests.list
-skip-if(!String.prototype.trimEnd) include test262/annexB/built-ins/String/prototype/trimRight/jstests.list
-
 
 #####################################
 # Test262 tests disabled on browser #

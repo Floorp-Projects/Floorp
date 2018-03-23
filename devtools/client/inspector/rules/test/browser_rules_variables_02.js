@@ -8,23 +8,23 @@
 
 const TEST_URI = URL_ROOT + "doc_variables_2.html";
 
-add_task(function* () {
-  yield addTab(TEST_URI);
-  let {inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab(TEST_URI);
+  let {inspector, view} = await openRuleView();
 
-  yield testBasic(inspector, view);
-  yield testNestedCssFunctions(inspector, view);
-  yield testBorderShorthandAndInheritance(inspector, view);
-  yield testSingleLevelVariable(inspector, view);
-  yield testDoubleLevelVariable(inspector, view);
-  yield testTripleLevelVariable(inspector, view);
+  await testBasic(inspector, view);
+  await testNestedCssFunctions(inspector, view);
+  await testBorderShorthandAndInheritance(inspector, view);
+  await testSingleLevelVariable(inspector, view);
+  await testDoubleLevelVariable(inspector, view);
+  await testTripleLevelVariable(inspector, view);
 });
 
-function* testBasic(inspector, view) {
+async function testBasic(inspector, view) {
   info("Test support for basic variable functionality for var() with 2 variables." +
        "Format: var(--var1, var(--var2))");
 
-  yield selectNode("#a", inspector);
+  await selectNode("#a", inspector);
   let unsetVar = getRuleViewProperty(view, "#a", "font-size").valueSpan
     .querySelector(".ruleview-unmatched-variable");
   let setVarParent = unsetVar.nextElementSibling;
@@ -41,11 +41,11 @@ function* testBasic(inspector, view) {
     "--bg's dataset.variable is not set correctly");
 }
 
-function* testNestedCssFunctions(inspector, view) {
+async function testNestedCssFunctions(inspector, view) {
   info("Test support for variable functionality for a var() nested inside " +
   "another CSS function. Format: rgb(0, 0, var(--var1, var(--var2)))");
 
-  yield selectNode("#b", inspector);
+  await selectNode("#b", inspector);
   let unsetVarParent = getRuleViewProperty(view, "#b", "color").valueSpan
     .querySelector(".ruleview-unmatched-variable");
   let unsetVar = getVarFromParent(unsetVarParent);
@@ -62,12 +62,12 @@ function* testNestedCssFunctions(inspector, view) {
     "--var-defined-r-1's dataset.variable is not set correctly");
 }
 
-function* testBorderShorthandAndInheritance(inspector, view) {
+async function testBorderShorthandAndInheritance(inspector, view) {
   info("Test support for variable functionality for shorthands/CSS styles with spaces " +
   "like \"margin: w x y z\". Also tests functionality for inherticance of CSS" +
   " variables. Format: var(l, var(m)) var(x) rgb(var(r) var(g) var(b))");
 
-  yield selectNode("#c", inspector);
+  await selectNode("#c", inspector);
   let unsetVarL = getRuleViewProperty(view, "#c", "border").valueSpan
     .querySelector(".ruleview-unmatched-variable");
   let setVarMParent = unsetVarL.nextElementSibling;
@@ -117,11 +117,11 @@ function* testBorderShorthandAndInheritance(inspector, view) {
     "--var-defined-b's dataset.variable is not set correctly");
 }
 
-function* testSingleLevelVariable(inspector, view) {
+async function testSingleLevelVariable(inspector, view) {
   info("Test support for variable functionality of a single level of " +
   "undefined variables. Format: var(x, constant)");
 
-  yield selectNode("#d", inspector);
+  await selectNode("#d", inspector);
   let unsetVar = getRuleViewProperty(view, "#d", "font-size").valueSpan
     .querySelector(".ruleview-unmatched-variable");
 
@@ -131,11 +131,11 @@ function* testSingleLevelVariable(inspector, view) {
     "--var-undefined's dataset.variable is not set correctly");
 }
 
-function* testDoubleLevelVariable(inspector, view) {
+async function testDoubleLevelVariable(inspector, view) {
   info("Test support for variable functionality of double level of " +
   "undefined variables. Format: var(x, var(y, constant))");
 
-  yield selectNode("#e", inspector);
+  await selectNode("#e", inspector);
   let allUnsetVars = getRuleViewProperty(view, "#e", "color").valueSpan
     .querySelectorAll(".ruleview-unmatched-variable");
 
@@ -155,11 +155,11 @@ function* testDoubleLevelVariable(inspector, view) {
     "--var-undefined-2's dataset.variable is not set correctly");
 }
 
-function* testTripleLevelVariable(inspector, view) {
+async function testTripleLevelVariable(inspector, view) {
   info("Test support for variable functionality of triple level of " +
   "undefined variables. Format: var(x, var(y, var(z, constant)))");
 
-  yield selectNode("#f", inspector);
+  await selectNode("#f", inspector);
   let allUnsetVars = getRuleViewProperty(view, "#f", "border-style").valueSpan
     .querySelectorAll(".ruleview-unmatched-variable");
 

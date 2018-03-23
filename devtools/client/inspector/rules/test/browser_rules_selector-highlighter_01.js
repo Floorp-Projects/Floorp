@@ -16,19 +16,19 @@ const TEST_URI = `
   Test the selector highlighter
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {view} = await openRuleView();
 
   ok(!view.selectorHighlighter,
     "No selectorhighlighter exist in the rule-view");
 
   info("Clicking on a selector icon");
-  let icon = yield getRuleViewSelectorHighlighterIcon(view, "body, p, td");
+  let icon = await getRuleViewSelectorHighlighterIcon(view, "body, p, td");
 
   let onToggled = view.once("ruleview-selectorhighlighter-toggled");
   EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
-  let isVisible = yield onToggled;
+  let isVisible = await onToggled;
 
   ok(view.selectorHighlighter, "The selectorhighlighter instance was created");
   ok(isVisible, "The toggle event says the highlighter is visible");
