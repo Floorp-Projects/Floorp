@@ -27,17 +27,30 @@ StrBlockCopy(const nsACString &aSource1,
              char             *&aDest4,
              char             *&aDestEnd)
 {
-  char *toBegin = aDest1;
-  nsACString::const_iterator fromBegin, fromEnd;
+  size_t len1 = aSource1.Length();
+  memcpy(aDest1, aSource1.BeginReading(), len1);
+  aDest1[len1] = 0;
 
-  *copy_string(aSource1.BeginReading(fromBegin), aSource1.EndReading(fromEnd), toBegin) = char(0);
-  aDest2 = ++toBegin;
-  *copy_string(aSource2.BeginReading(fromBegin), aSource2.EndReading(fromEnd), toBegin) = char(0);
-  aDest3 = ++toBegin;
-  *copy_string(aSource3.BeginReading(fromBegin), aSource3.EndReading(fromEnd), toBegin) = char(0);
-  aDest4 = ++toBegin;
-  *copy_string(aSource4.BeginReading(fromBegin), aSource4.EndReading(fromEnd), toBegin) = char(0);
-  aDestEnd = toBegin;
+  aDest2 = aDest1 + len1 + 1;
+
+  size_t len2 = aSource2.Length();
+  memcpy(aDest2, aSource2.BeginReading(), len2);
+  aDest2[len2] = 0;
+
+  aDest3 = aDest2 + len2 + 1;
+
+  size_t len3 = aSource3.Length();
+  memcpy(aDest3, aSource3.BeginReading(), len3);
+  aDest3[len3] = 0;
+
+  aDest4 = aDest3 + len3 + 1;
+
+  size_t len4 = aSource4.Length();
+  memcpy(aDest4, aSource4.BeginReading(), len4);
+  aDest4[len4] = 0;
+
+  // Intentionally no + 1 here!
+  aDestEnd = aDest4 + len4;
 }
 
 /******************************************************************************
