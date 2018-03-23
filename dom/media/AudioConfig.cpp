@@ -36,76 +36,6 @@ typedef AudioConfig::ChannelLayout ChannelLayout;
  3F4-LFE        L   R   C    LFE  Rls  Rrs  LS   RS
 */
 
-ChannelLayout ChannelLayout::LMONO{ CHANNEL_FRONT_CENTER };
-ChannelLayout ChannelLayout::LMONO_LFE{ CHANNEL_FRONT_CENTER, CHANNEL_LFE };
-ChannelLayout ChannelLayout::LSTEREO{ CHANNEL_FRONT_LEFT, CHANNEL_FRONT_RIGHT };
-ChannelLayout ChannelLayout::LSTEREO_LFE{ CHANNEL_FRONT_LEFT,
-                                          CHANNEL_FRONT_RIGHT,
-                                          CHANNEL_LFE };
-ChannelLayout ChannelLayout::L3F{ CHANNEL_FRONT_LEFT,
-                                  CHANNEL_FRONT_RIGHT,
-                                  CHANNEL_FRONT_CENTER };
-ChannelLayout ChannelLayout::L3F_LFE{ CHANNEL_FRONT_LEFT,
-                                      CHANNEL_FRONT_RIGHT,
-                                      CHANNEL_FRONT_CENTER,
-                                      CHANNEL_LFE };
-ChannelLayout ChannelLayout::L2F1{ CHANNEL_FRONT_LEFT,
-                                   CHANNEL_FRONT_RIGHT,
-                                   CHANNEL_BACK_CENTER };
-ChannelLayout ChannelLayout::L2F1_LFE{ CHANNEL_FRONT_LEFT,
-                                       CHANNEL_FRONT_RIGHT,
-                                       CHANNEL_LFE,
-                                       CHANNEL_BACK_CENTER };
-ChannelLayout ChannelLayout::L3F1{ CHANNEL_FRONT_LEFT,
-                                   CHANNEL_FRONT_RIGHT,
-                                   CHANNEL_FRONT_CENTER,
-                                   CHANNEL_BACK_CENTER };
-ChannelLayout ChannelLayout::LSURROUND = ChannelLayout::L3F1;
-ChannelLayout ChannelLayout::L3F1_LFE{ CHANNEL_FRONT_LEFT,
-                                       CHANNEL_FRONT_RIGHT,
-                                       CHANNEL_FRONT_CENTER,
-                                       CHANNEL_LFE,
-                                       CHANNEL_BACK_CENTER };
-ChannelLayout ChannelLayout::L2F2{ CHANNEL_FRONT_LEFT,
-                                   CHANNEL_FRONT_RIGHT,
-                                   CHANNEL_SIDE_LEFT,
-                                   CHANNEL_SIDE_RIGHT };
-ChannelLayout ChannelLayout::L2F2_LFE{ CHANNEL_FRONT_LEFT,
-                                       CHANNEL_FRONT_RIGHT,
-                                       CHANNEL_LFE,
-                                       CHANNEL_SIDE_LEFT,
-                                       CHANNEL_SIDE_RIGHT };
-ChannelLayout ChannelLayout::LQUAD{ CHANNEL_FRONT_LEFT,
-                                    CHANNEL_FRONT_RIGHT,
-                                    CHANNEL_BACK_LEFT,
-                                    CHANNEL_BACK_RIGHT };
-ChannelLayout ChannelLayout::LQUAD_LFE{ CHANNEL_FRONT_LEFT,
-                                        CHANNEL_FRONT_RIGHT,
-                                        CHANNEL_LFE,
-                                        CHANNEL_BACK_LEFT,
-                                        CHANNEL_BACK_RIGHT };
-ChannelLayout ChannelLayout::L3F2{ CHANNEL_FRONT_LEFT,
-                                   CHANNEL_FRONT_RIGHT,
-                                   CHANNEL_FRONT_CENTER,
-                                   CHANNEL_SIDE_LEFT,
-                                   CHANNEL_SIDE_RIGHT };
-ChannelLayout ChannelLayout::L3F2_LFE{
-  CHANNEL_FRONT_LEFT, CHANNEL_FRONT_RIGHT, CHANNEL_FRONT_CENTER,
-  CHANNEL_LFE,        CHANNEL_SIDE_LEFT,   CHANNEL_SIDE_RIGHT
-};
-ChannelLayout ChannelLayout::L5POINT1_SURROUND = ChannelLayout::L3F2_LFE;
-
-ChannelLayout ChannelLayout::L3F3R_LFE{
-  CHANNEL_FRONT_LEFT,  CHANNEL_FRONT_RIGHT, CHANNEL_FRONT_CENTER, CHANNEL_LFE,
-  CHANNEL_BACK_CENTER, CHANNEL_SIDE_LEFT,   CHANNEL_SIDE_RIGHT
-};
-ChannelLayout ChannelLayout::L3F4_LFE{
-  CHANNEL_FRONT_LEFT, CHANNEL_FRONT_RIGHT, CHANNEL_FRONT_CENTER,
-  CHANNEL_LFE,        CHANNEL_BACK_LEFT,   CHANNEL_BACK_RIGHT,
-  CHANNEL_SIDE_LEFT,  CHANNEL_SIDE_RIGHT
-};
-ChannelLayout ChannelLayout::L7POINT1_SURROUND = ChannelLayout::L3F4_LFE;
-
 void
 AudioConfig::ChannelLayout::UpdateChannelMap()
 {
@@ -197,43 +127,93 @@ AudioConfig::ChannelLayout::SMPTEDefault(
 /* static */ ChannelLayout
 AudioConfig::ChannelLayout::SMPTEDefault(ChannelMap aMap)
 {
-  MOZ_ASSERT(LMONO_MAP == LMONO.Map());
-  MOZ_ASSERT(LMONO_LFE_MAP == LMONO_LFE.Map());
-  MOZ_ASSERT(LSTEREO_MAP == LSTEREO.Map());
-  MOZ_ASSERT(LSTEREO_LFE_MAP == LSTEREO_LFE.Map());
-  MOZ_ASSERT(L3F_MAP == L3F.Map());
-  MOZ_ASSERT(L3F_LFE_MAP == L3F_LFE.Map());
-  MOZ_ASSERT(L2F1_MAP == L2F1.Map());
-  MOZ_ASSERT(L2F1_LFE_MAP == L2F1_LFE.Map());
-  MOZ_ASSERT(L3F1_MAP == L3F1.Map());
-  MOZ_ASSERT(L3F1_LFE_MAP == L3F1_LFE.Map());
-  MOZ_ASSERT(L2F2_MAP == L2F2.Map());
-  MOZ_ASSERT(L2F2_LFE_MAP == L2F2_LFE.Map());
-  MOZ_ASSERT(LQUAD_MAP == LQUAD.Map());
-  MOZ_ASSERT(L3F2_MAP == L3F2.Map());
-  MOZ_ASSERT(L3F2_LFE_MAP == L3F2_LFE.Map());
-  MOZ_ASSERT(L3F3R_LFE_MAP == L3F3R_LFE.Map());
-  MOZ_ASSERT(L3F4_LFE_MAP == L3F4_LFE.Map());
-
   // First handle the most common cases.
   switch (aMap) {
-    case LMONO_MAP: return LMONO;
-    case LMONO_LFE_MAP: return LMONO_LFE;
-    case LSTEREO_MAP: return LSTEREO;
-    case LSTEREO_LFE_MAP : return LSTEREO_LFE;
-    case L3F_MAP: return L3F;
-    case L3F_LFE_MAP: return L3F_LFE;
-    case L2F1_MAP: return L2F1;
-    case L2F1_LFE_MAP: return L2F1_LFE;
-    case L3F1_MAP: return L3F1;
-    case L3F1_LFE_MAP: return L3F1_LFE;
-    case L2F2_MAP: return L2F2;
-    case L2F2_LFE_MAP: return L2F2_LFE;
-    case LQUAD_MAP: return LQUAD;
-    case L3F2_MAP: return L3F2;
-    case L3F2_LFE_MAP: return L3F2_LFE;
-    case L3F3R_LFE_MAP: return L3F3R_LFE;
-    case L3F4_LFE_MAP: return L3F4_LFE;
+    case LMONO_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_CENTER };
+    case LSTEREO_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT, CHANNEL_FRONT_RIGHT };
+    case L3F_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,
+                            CHANNEL_FRONT_RIGHT,
+                            CHANNEL_FRONT_CENTER };
+    case L3F_LFE_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,
+                            CHANNEL_FRONT_RIGHT,
+                            CHANNEL_FRONT_CENTER,
+                            CHANNEL_LFE };
+    case L2F1_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,
+                            CHANNEL_FRONT_RIGHT,
+                            CHANNEL_BACK_CENTER };
+    case L2F1_LFE_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,
+                            CHANNEL_FRONT_RIGHT,
+                            CHANNEL_LFE,
+                            CHANNEL_BACK_CENTER };
+    case L3F1_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,
+                            CHANNEL_FRONT_RIGHT,
+                            CHANNEL_FRONT_CENTER,
+                            CHANNEL_BACK_CENTER };
+    case L3F1_LFE_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,
+                            CHANNEL_FRONT_RIGHT,
+                            CHANNEL_FRONT_CENTER,
+                            CHANNEL_LFE,
+                            CHANNEL_BACK_CENTER };
+    case L2F2_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,
+                            CHANNEL_FRONT_RIGHT,
+                            CHANNEL_SIDE_LEFT,
+                            CHANNEL_SIDE_RIGHT };
+    case L2F2_LFE_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,
+                            CHANNEL_FRONT_RIGHT,
+                            CHANNEL_LFE,
+                            CHANNEL_SIDE_LEFT,
+                            CHANNEL_SIDE_RIGHT };
+    case LQUAD_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,
+                            CHANNEL_FRONT_RIGHT,
+                            CHANNEL_BACK_LEFT,
+                            CHANNEL_BACK_RIGHT };
+    case LQUAD_LFE_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,
+                            CHANNEL_FRONT_RIGHT,
+                            CHANNEL_LFE,
+                            CHANNEL_BACK_LEFT,
+                            CHANNEL_BACK_RIGHT };
+    case L3F2_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,
+                            CHANNEL_FRONT_RIGHT,
+                            CHANNEL_FRONT_CENTER,
+                            CHANNEL_SIDE_LEFT,
+                            CHANNEL_SIDE_RIGHT };
+    case L3F2_LFE_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,   CHANNEL_FRONT_RIGHT,
+                            CHANNEL_FRONT_CENTER, CHANNEL_LFE,
+                            CHANNEL_SIDE_LEFT,    CHANNEL_SIDE_RIGHT };
+    case L3F2_BACK_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,
+                            CHANNEL_FRONT_RIGHT,
+                            CHANNEL_FRONT_CENTER,
+                            CHANNEL_BACK_LEFT,
+                            CHANNEL_BACK_RIGHT };
+    case L3F2_BACK_LFE_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,   CHANNEL_FRONT_RIGHT,
+                            CHANNEL_FRONT_CENTER, CHANNEL_LFE,
+                            CHANNEL_BACK_LEFT,    CHANNEL_BACK_RIGHT };
+    case L3F3R_LFE_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,   CHANNEL_FRONT_RIGHT,
+                            CHANNEL_FRONT_CENTER, CHANNEL_LFE,
+                            CHANNEL_BACK_CENTER,  CHANNEL_SIDE_LEFT,
+                            CHANNEL_SIDE_RIGHT };
+    case L3F4_LFE_MAP:
+      return ChannelLayout{ CHANNEL_FRONT_LEFT,   CHANNEL_FRONT_RIGHT,
+                            CHANNEL_FRONT_CENTER, CHANNEL_LFE,
+                            CHANNEL_BACK_LEFT,    CHANNEL_BACK_RIGHT,
+                            CHANNEL_SIDE_LEFT,    CHANNEL_SIDE_RIGHT };
     default:
       break;
   }
