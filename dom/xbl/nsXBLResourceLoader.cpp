@@ -182,12 +182,8 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
 
   if (mPendingSheets == 0) {
     // All stylesheets are loaded.
-    if (aSheet->IsGecko()) {
-      MOZ_CRASH("old style system disabled");
-    } else {
-      mResources->ComputeServoStyles(
-        *mBoundDocument->GetShell()->StyleSet()->AsServo());
-    }
+    mResources->ComputeServoStyles(
+      *mBoundDocument->GetShell()->StyleSet()->AsServo());
 
     // XXX Check for mPendingScripts when scripts also come online.
     if (!mInLoadResourcesFunc)

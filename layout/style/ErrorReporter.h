@@ -15,7 +15,6 @@
 #include "nsString.h"
 
 struct nsCSSToken;
-class nsCSSScanner;
 class nsIURI;
 
 namespace mozilla {
@@ -30,13 +29,9 @@ class Loader;
 // methods become inline stubs.
 class ErrorReporter {
 public:
-  ErrorReporter(const nsCSSScanner &aScanner,
-                const StyleSheet *aSheet,
-                const Loader *aLoader,
-                nsIURI *aURI);
-  ErrorReporter(const ServoStyleSheet *aSheet,
-                const Loader *aLoader,
-                nsIURI *aURI);
+  ErrorReporter(const StyleSheet* aSheet,
+                const Loader* aLoader,
+                nsIURI* aURI);
   ~ErrorReporter();
 
   static void ReleaseGlobals();
@@ -75,13 +70,10 @@ public:
 private:
   void AddToError(const nsString &aErrorText);
 
-  bool IsServo() const;
-
 #ifdef CSS_REPORT_PARSE_ERRORS
   nsAutoString mError;
   nsString mErrorLine;
   nsString mFileName;
-  const nsCSSScanner *mScanner;
   const StyleSheet *mSheet;
   const Loader *mLoader;
   nsIURI *mURI;
@@ -93,8 +85,7 @@ private:
 };
 
 #ifndef CSS_REPORT_PARSE_ERRORS
-inline ErrorReporter::ErrorReporter(const nsCSSScanner&,
-                                    const StyleSheet*,
+inline ErrorReporter::ErrorReporter(const StyleSheet*,
                                     const Loader*,
                                     nsIURI*) {}
 inline ErrorReporter::~ErrorReporter() {}

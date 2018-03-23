@@ -20,7 +20,6 @@ StreamLoader::StreamLoader(mozilla::css::SheetLoadData* aSheetLoadData)
   : mSheetLoadData(aSheetLoadData)
   , mStatus(NS_OK)
 {
-  MOZ_ASSERT(!aSheetLoadData->mSheet->IsGecko());
 }
 
 StreamLoader::~StreamLoader()

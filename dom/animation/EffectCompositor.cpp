@@ -311,27 +311,26 @@ EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
                                         eRestyle_CSSTransitions :
                                         eRestyle_CSSAnimations;
 
-  if (mPresContext->StyleSet()->IsServo()) {
-    MOZ_ASSERT(NS_IsMainThread(),
-               "Restyle request during restyling should be requested only on "
-               "the main-thread. e.g. after the parallel traversal");
-    if (ServoStyleSet::IsInServoTraversal() || mIsInPreTraverse) {
-      MOZ_ASSERT(hint == eRestyle_CSSAnimations ||
-                 hint == eRestyle_CSSTransitions);
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Restyle request during restyling should be requested only on "
+             "the main-thread. e.g. after the parallel traversal");
+  if (ServoStyleSet::IsInServoTraversal() || mIsInPreTraverse) {
+    MOZ_ASSERT(hint == eRestyle_CSSAnimations ||
+               hint == eRestyle_CSSTransitions);
 
-      // We can't call Servo_NoteExplicitHints here since AtomicRefCell does not
-      // allow us mutate ElementData of the |aElement| in SequentialTask.
-      // Instead we call Servo_NoteExplicitHints for the element in PreTraverse()
-      // which will be called right before the second traversal that we do for
-      // updating CSS animations.
-      // In that case PreTraverse() will return true so that we know to do the
-      // second traversal so we don't need to post any restyle requests to the
-      // PresShell.
-      return;
-    } else {
-      MOZ_ASSERT(!mPresContext->RestyleManager()->IsInStyleRefresh());
-    }
+    // We can't call Servo_NoteExplicitHints here since AtomicRefCell does not
+    // allow us mutate ElementData of the |aElement| in SequentialTask.
+    // Instead we call Servo_NoteExplicitHints for the element in PreTraverse()
+    // which will be called right before the second traversal that we do for
+    // updating CSS animations.
+    // In that case PreTraverse() will return true so that we know to do the
+    // second traversal so we don't need to post any restyle requests to the
+    // PresShell.
+    return;
   }
+
+  MOZ_ASSERT(!mPresContext->RestyleManager()->IsInStyleRefresh());
+
   mPresContext->PresShell()->RestyleForAnimation(element, hint);
 }
 
@@ -812,7 +811,6 @@ EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
                                        Element* aRoot)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
   MOZ_ASSERT(!aRoot || nsContentUtils::GetPresShellForContent(aRoot),
              "Traversal root, if provided, should be bound to a display "
              "document");
@@ -961,7 +959,6 @@ EffectCompositor::PreTraverse(dom::Element* aElement,
                               CSSPseudoElementType aPseudoType)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mPresContext->RestyleManager()->IsServo());
 
   // If |aElement|'s document does not have a pres shell, e.g. it is document
   // without a browsing context such as we might get from an XMLHttpRequest, we
