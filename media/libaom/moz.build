@@ -15,9 +15,14 @@ if CONFIG['CPU_ARCH'] == 'x86_64':
     SOURCES += files['X64_SOURCES']
     USE_YASM = True
     if CONFIG['OS_TARGET'] == 'WINNT':
-        ASFLAGS += [ '-I%s/media/libaom/config/win/x64/' % TOPSRCDIR ]
-        LOCAL_INCLUDES += [ '/media/libaom/config/win/x64/' ]
-        EXPORTS.aom += [ 'config/win/x64/aom_config.h' ]
+        if CONFIG['CC_TYPE'] == 'gcc':
+            ASFLAGS += [ '-I%s/media/libaom/config/win/mingw64/' % TOPSRCDIR ]
+            LOCAL_INCLUDES += [ '/media/libaom/config/win/mingw64/' ]
+            EXPORTS.aom += [ 'config/win/mingw64/aom_config.h' ]
+        else:
+            ASFLAGS += [ '-I%s/media/libaom/config/win/x64/' % TOPSRCDIR ]
+            LOCAL_INCLUDES += [ '/media/libaom/config/win/x64/' ]
+            EXPORTS.aom += [ 'config/win/x64/aom_config.h' ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libaom/config/mac/x64/' % TOPSRCDIR ]
         LOCAL_INCLUDES += [ '/media/libaom/config/mac/x64/' ]
