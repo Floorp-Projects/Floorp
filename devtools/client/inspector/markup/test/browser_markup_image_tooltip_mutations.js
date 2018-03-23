@@ -16,18 +16,18 @@ const UPDATED_SRC = URL_ROOT + "doc_markup_tooltip.png";
 const INITIAL_SRC_SIZE = "64" + " \u00D7 " + "64";
 const UPDATED_SRC_SIZE = "22" + " \u00D7 " + "23";
 
-add_task(function* () {
-  let { inspector } = yield openInspectorForURL(
+add_task(async function() {
+  let { inspector } = await openInspectorForURL(
     "data:text/html,<p>markup view tooltip test</p><img>");
 
   info("Retrieving NodeFront for the <img> element.");
-  let img = yield getNodeFront("img", inspector);
+  let img = await getNodeFront("img", inspector);
 
   info("Selecting the <img> element");
-  yield selectNode(img, inspector);
+  await selectNode(img, inspector);
 
   info("Adding src attribute to the image.");
-  yield updateImageSrc(img, INITIAL_SRC, inspector);
+  await updateImageSrc(img, INITIAL_SRC, inspector);
 
   let container = getContainerForNodeFront(img, inspector);
   ok(container, "Found markup container for the image.");
@@ -37,25 +37,25 @@ add_task(function* () {
   ok(target, "Found the src attribute in the markup view.");
 
   info("Showing tooltip on the src link.");
-  yield assertTooltipShownOnHover(inspector.markup.imagePreviewTooltip, target);
+  await assertTooltipShownOnHover(inspector.markup.imagePreviewTooltip, target);
 
   checkImageTooltip(INITIAL_SRC_SIZE, inspector);
 
-  yield assertTooltipHiddenOnMouseOut(inspector.markup.imagePreviewTooltip, target);
+  await assertTooltipHiddenOnMouseOut(inspector.markup.imagePreviewTooltip, target);
 
   info("Updating the image src.");
-  yield updateImageSrc(img, UPDATED_SRC, inspector);
+  await updateImageSrc(img, UPDATED_SRC, inspector);
 
   target = container.editor.getAttributeElement("src").querySelector(".link");
   ok(target, "Found the src attribute in the markup view after mutation.");
 
   info("Showing tooltip on the src link.");
-  yield assertTooltipShownOnHover(inspector.markup.imagePreviewTooltip, target);
+  await assertTooltipShownOnHover(inspector.markup.imagePreviewTooltip, target);
 
   info("Checking that the new image was shown.");
   checkImageTooltip(UPDATED_SRC_SIZE, inspector);
 
-  yield assertTooltipHiddenOnMouseOut(inspector.markup.imagePreviewTooltip, target);
+  await assertTooltipHiddenOnMouseOut(inspector.markup.imagePreviewTooltip, target);
 });
 
 /**

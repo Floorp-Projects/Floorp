@@ -55,28 +55,28 @@ const TEST_DATA = [
   }
 ];
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, view } = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let { inspector, view } = await openRuleView();
 
   for (let data of TEST_DATA) {
-    yield runTestData(inspector, view, data);
+    await runTestData(inspector, view, data);
   }
 });
 
-function* runTestData(inspector, view, data) {
+async function runTestData(inspector, view, data) {
   let {node, value, commitKey, modifiers, expected} = data;
 
   info("Updating " + node + " to " + value + " and committing with " +
        commitKey + ". Expecting: " + expected);
 
   info("Selecting the test element");
-  yield selectNode(node, inspector);
+  await selectNode(node, inspector);
 
   let idRuleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = yield focusEditableField(view, idRuleEditor.selectorText);
+  let editor = await focusEditableField(view, idRuleEditor.selectorText);
   is(inplaceEditor(idRuleEditor.selectorText), editor,
       "The selector editor got focused");
 
@@ -97,7 +97,7 @@ function* runTestData(inspector, view, data) {
     return;
   }
 
-  yield once(view, "ruleview-changed");
+  await once(view, "ruleview-changed");
 
   ok(getRuleViewRule(view, expected),
      "Rule with " + expected + " selector exists.");

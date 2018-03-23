@@ -9,18 +9,18 @@
 
 const TEST_URI = URL_ROOT + "doc_keyframeanimation.html";
 
-add_task(function* () {
-  yield addTab(TEST_URI);
-  let {inspector, view} = yield openRuleView();
-  yield testPacman(inspector, view);
-  yield testBoxy(inspector, view);
-  yield testMoxy(inspector, view);
+add_task(async function() {
+  await addTab(TEST_URI);
+  let {inspector, view} = await openRuleView();
+  await testPacman(inspector, view);
+  await testBoxy(inspector, view);
+  await testMoxy(inspector, view);
 });
 
-function* testPacman(inspector, view) {
+async function testPacman(inspector, view) {
   info("Test content and gutter in the keyframes rule of #pacman");
 
-  yield assertKeyframeRules("#pacman", inspector, view, {
+  await assertKeyframeRules("#pacman", inspector, view, {
     elementRulesNb: 2,
     keyframeRulesNb: 2,
     keyframesRules: ["pacman", "pacman"],
@@ -33,10 +33,10 @@ function* testPacman(inspector, view) {
   });
 }
 
-function* testBoxy(inspector, view) {
+async function testBoxy(inspector, view) {
   info("Test content and gutter in the keyframes rule of #boxy");
 
-  yield assertKeyframeRules("#boxy", inspector, view, {
+  await assertKeyframeRules("#boxy", inspector, view, {
     elementRulesNb: 3,
     keyframeRulesNb: 3,
     keyframesRules: ["boxy", "boxy", "boxy"],
@@ -49,10 +49,10 @@ function* testBoxy(inspector, view) {
   });
 }
 
-function* testMoxy(inspector, view) {
+async function testMoxy(inspector, view) {
   info("Test content and gutter in the keyframes rule of #moxy");
 
-  yield assertKeyframeRules("#moxy", inspector, view, {
+  await assertKeyframeRules("#moxy", inspector, view, {
     elementRulesNb: 3,
     keyframeRulesNb: 4,
     keyframesRules: ["boxy", "boxy", "boxy", "moxy"],
@@ -65,8 +65,8 @@ function* testMoxy(inspector, view) {
   });
 }
 
-function* assertKeyframeRules(selector, inspector, view, expected) {
-  yield selectNode(selector, inspector);
+async function assertKeyframeRules(selector, inspector, view, expected) {
+  await selectNode(selector, inspector);
   let elementStyle = view._elementStyle;
 
   let rules = {

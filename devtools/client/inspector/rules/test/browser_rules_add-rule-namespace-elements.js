@@ -29,13 +29,13 @@ const TEST_DATA = [
   { node: "circle", expected: "circle" }
 ];
 
-add_task(function* () {
-  yield addTab(TEST_URI);
-  let {inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab(TEST_URI);
+  let {inspector, view} = await openRuleView();
 
   for (let data of TEST_DATA) {
     let {node, expected} = data;
-    yield selectNode(node, inspector);
-    yield addNewRuleAndDismissEditor(inspector, view, expected, 1);
+    await selectNode(node, inspector);
+    await addNewRuleAndDismissEditor(inspector, view, expected, 1);
   }
 });

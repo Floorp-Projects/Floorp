@@ -4129,64 +4129,16 @@ class BaseCompiler final : public BaseCompilerInterface
     //
     // Global variable access.
 
-    uint32_t globalToTlsOffset(uint32_t globalOffset) {
-        return offsetof(TlsData, globalArea) + globalOffset;
-    }
-
-    void loadGlobalVarI32(unsigned globalDataOffset, RegI32 r)
+    Address addressOfGlobalVar(const GlobalDesc& global, RegI32 tmp)
     {
-        ScratchI32 tmp(*this);
-        masm.loadWasmTlsRegFromFrame(tmp);
-        masm.load32(Address(tmp, globalToTlsOffset(globalDataOffset)), r);
-    }
+        uint32_t globalToTlsOffset = offsetof(TlsData, globalArea) + global.offset();
 
-    void loadGlobalVarI64(unsigned globalDataOffset, RegI64 r)
-    {
-        ScratchI32 tmp(*this);
         masm.loadWasmTlsRegFromFrame(tmp);
-        masm.load64(Address(tmp, globalToTlsOffset(globalDataOffset)), r);
-    }
-
-    void loadGlobalVarF32(unsigned globalDataOffset, RegF32 r)
-    {
-        ScratchI32 tmp(*this);
-        masm.loadWasmTlsRegFromFrame(tmp);
-        masm.loadFloat32(Address(tmp, globalToTlsOffset(globalDataOffset)), r);
-    }
-
-    void loadGlobalVarF64(unsigned globalDataOffset, RegF64 r)
-    {
-        ScratchI32 tmp(*this);
-        masm.loadWasmTlsRegFromFrame(tmp);
-        masm.loadDouble(Address(tmp, globalToTlsOffset(globalDataOffset)), r);
-    }
-
-    void storeGlobalVarI32(unsigned globalDataOffset, RegI32 r)
-    {
-        ScratchI32 tmp(*this);
-        masm.loadWasmTlsRegFromFrame(tmp);
-        masm.store32(r, Address(tmp, globalToTlsOffset(globalDataOffset)));
-    }
-
-    void storeGlobalVarI64(unsigned globalDataOffset, RegI64 r)
-    {
-        ScratchI32 tmp(*this);
-        masm.loadWasmTlsRegFromFrame(tmp);
-        masm.store64(r, Address(tmp, globalToTlsOffset(globalDataOffset)));
-    }
-
-    void storeGlobalVarF32(unsigned globalDataOffset, RegF32 r)
-    {
-        ScratchI32 tmp(*this);
-        masm.loadWasmTlsRegFromFrame(tmp);
-        masm.storeFloat32(r, Address(tmp, globalToTlsOffset(globalDataOffset)));
-    }
-
-    void storeGlobalVarF64(unsigned globalDataOffset, RegF64 r)
-    {
-        ScratchI32 tmp(*this);
-        masm.loadWasmTlsRegFromFrame(tmp);
-        masm.storeDouble(r, Address(tmp, globalToTlsOffset(globalDataOffset)));
+        if (global.isIndirect()) {
+            masm.loadPtr(Address(tmp, globalToTlsOffset), tmp);
+            return Address(tmp, 0);
+        }
+        return Address(tmp, globalToTlsOffset);
     }
 
     //////////////////////////////////////////////////////////////////////
@@ -8030,28 +7982,29 @@ BaseCompiler::emitGetGlobal()
         return true;
     }
 
+    ScratchI32 tmp(*this);
     switch (global.type()) {
       case ValType::I32: {
         RegI32 rv = needI32();
-        loadGlobalVarI32(global.offset(), rv);
+        masm.load32(addressOfGlobalVar(global, tmp), rv);
         pushI32(rv);
         break;
       }
       case ValType::I64: {
         RegI64 rv = needI64();
-        loadGlobalVarI64(global.offset(), rv);
+        masm.load64(addressOfGlobalVar(global, tmp), rv);
         pushI64(rv);
         break;
       }
       case ValType::F32: {
         RegF32 rv = needF32();
-        loadGlobalVarF32(global.offset(), rv);
+        masm.loadFloat32(addressOfGlobalVar(global, tmp), rv);
         pushF32(rv);
         break;
       }
       case ValType::F64: {
         RegF64 rv = needF64();
-        loadGlobalVarF64(global.offset(), rv);
+        masm.loadDouble(addressOfGlobalVar(global, tmp), rv);
         pushF64(rv);
         break;
       }
@@ -8075,28 +8028,29 @@ BaseCompiler::emitSetGlobal()
 
     const GlobalDesc& global = env_.globals[id];
 
+    ScratchI32 tmp(*this);
     switch (global.type()) {
       case ValType::I32: {
         RegI32 rv = popI32();
-        storeGlobalVarI32(global.offset(), rv);
+        masm.store32(rv, addressOfGlobalVar(global, tmp));
         freeI32(rv);
         break;
       }
       case ValType::I64: {
         RegI64 rv = popI64();
-        storeGlobalVarI64(global.offset(), rv);
+        masm.store64(rv, addressOfGlobalVar(global, tmp));
         freeI64(rv);
         break;
       }
       case ValType::F32: {
         RegF32 rv = popF32();
-        storeGlobalVarF32(global.offset(), rv);
+        masm.storeFloat32(rv, addressOfGlobalVar(global, tmp));
         freeF32(rv);
         break;
       }
       case ValType::F64: {
         RegF64 rv = popF64();
-        storeGlobalVarF64(global.offset(), rv);
+        masm.storeDouble(rv, addressOfGlobalVar(global, tmp));
         freeF64(rv);
         break;
       }

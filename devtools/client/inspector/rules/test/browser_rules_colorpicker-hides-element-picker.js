@@ -8,13 +8,13 @@
 
 const TEST_URI = `<style>body{background:red}</style>`;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  let {view, toolbox} = yield openRuleView();
+  let {view, toolbox} = await openRuleView();
   let pickerStopped = toolbox.once("picker-stopped");
 
-  yield startPicker(toolbox);
+  await startPicker(toolbox);
 
   info("Get the background property from the rule-view");
   let property = getRuleViewProperty(view, "body", "background");
@@ -22,10 +22,10 @@ add_task(function* () {
   ok(swatch, "Color swatch is displayed for the background property");
 
   info("Open the eyedropper from the colorpicker tooltip");
-  yield openEyedropper(view, swatch);
+  await openEyedropper(view, swatch);
 
   info("Waiting for the picker-stopped event to be fired");
-  yield pickerStopped;
+  await pickerStopped;
 
   ok(true, "picker-stopped event fired after eyedropper was clicked");
 });

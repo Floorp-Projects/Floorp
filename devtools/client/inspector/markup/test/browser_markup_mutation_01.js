@@ -17,11 +17,11 @@ const TEST_URL = URL_ROOT + "doc_markup_mutation.html";
 const TEST_DATA = [
   {
     desc: "Adding an attribute",
-    test: function* (testActor) {
-      yield testActor.setAttribute("#node1", "newattr", "newattrval");
+    test: async function(testActor) {
+      await testActor.setAttribute("#node1", "newattr", "newattrval");
     },
-    check: function* (inspector) {
-      let {editor} = yield getContainerForSelector("#node1", inspector);
+    check: async function(inspector) {
+      let {editor} = await getContainerForSelector("#node1", inspector);
       ok([...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
         return attr.textContent.trim() === "newattr=\"newattrval\""
           && attr.dataset.value === "newattrval"
@@ -31,11 +31,11 @@ const TEST_DATA = [
   },
   {
     desc: "Removing an attribute",
-    test: function* (testActor) {
-      yield testActor.removeAttribute("#node1", "newattr");
+    test: async function(testActor) {
+      await testActor.removeAttribute("#node1", "newattr");
     },
-    check: function* (inspector) {
-      let {editor} = yield getContainerForSelector("#node1", inspector);
+    check: async function(inspector) {
+      let {editor} = await getContainerForSelector("#node1", inspector);
       ok(![...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
         return attr.textContent.trim() === "newattr=\"newattrval\"";
       }), "newattr attribute removed");
@@ -43,11 +43,11 @@ const TEST_DATA = [
   },
   {
     desc: "Re-adding an attribute",
-    test: function* (testActor) {
-      yield testActor.setAttribute("#node1", "newattr", "newattrval");
+    test: async function(testActor) {
+      await testActor.setAttribute("#node1", "newattr", "newattrval");
     },
-    check: function* (inspector) {
-      let {editor} = yield getContainerForSelector("#node1", inspector);
+    check: async function(inspector) {
+      let {editor} = await getContainerForSelector("#node1", inspector);
       ok([...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
         return attr.textContent.trim() === "newattr=\"newattrval\""
           && attr.dataset.value === "newattrval"
@@ -57,11 +57,11 @@ const TEST_DATA = [
   },
   {
     desc: "Changing an attribute",
-    test: function* (testActor) {
-      yield testActor.setAttribute("#node1", "newattr", "newattrchanged");
+    test: async function(testActor) {
+      await testActor.setAttribute("#node1", "newattr", "newattrchanged");
     },
-    check: function* (inspector) {
-      let {editor} = yield getContainerForSelector("#node1", inspector);
+    check: async function(inspector) {
+      let {editor} = await getContainerForSelector("#node1", inspector);
       ok([...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
         return attr.textContent.trim() === "newattr=\"newattrchanged\""
           && attr.dataset.value === "newattrchanged"
@@ -71,8 +71,8 @@ const TEST_DATA = [
   },
   {
     desc: "Adding another attribute does not rerender unchanged attributes",
-    test: function* (testActor, inspector) {
-      let {editor} = yield getContainerForSelector("#node1", inspector);
+    test: async function(testActor, inspector) {
+      let {editor} = await getContainerForSelector("#node1", inspector);
 
       // This test checks the impact on the markup-view nodes after setting attributes on
       // content nodes.
@@ -84,10 +84,10 @@ const TEST_DATA = [
       attributeContainer.beforeMutationFlag = true;
 
       info("Add the attribute 'otherattr' on the content node to trigger the mutation");
-      yield testActor.setAttribute("#node1", "otherattr", "othervalue");
+      await testActor.setAttribute("#node1", "otherattr", "othervalue");
     },
-    check: function* (inspector) {
-      let {editor} = yield getContainerForSelector("#node1", inspector);
+    check: async function(inspector) {
+      let {editor} = await getContainerForSelector("#node1", inspector);
 
       info("Check the attribute-container for the new attribute mutation was created");
       let otherAttrContainer = editor.attrList.querySelector("[data-attr=otherattr]");
@@ -102,14 +102,14 @@ const TEST_DATA = [
   {
     desc: "Adding ::after element",
     numMutations: 2,
-    test: function* (testActor) {
-      yield testActor.eval(`
+    test: async function(testActor) {
+      await testActor.eval(`
         let node1 = document.querySelector("#node1");
         node1.classList.add("pseudo");
       `);
     },
-    check: function* (inspector) {
-      let {children} = yield getContainerForSelector("#node1", inspector);
+    check: async function(inspector) {
+      let {children} = await getContainerForSelector("#node1", inspector);
       is(children.childNodes.length, 2,
         "Node1 now has 2 children (text child and ::after");
     }
@@ -117,24 +117,24 @@ const TEST_DATA = [
   {
     desc: "Removing ::after element",
     numMutations: 2,
-    test: function* (testActor) {
-      yield testActor.eval(`
+    test: async function(testActor) {
+      await testActor.eval(`
         let node1 = document.querySelector("#node1");
         node1.classList.remove("pseudo");
       `);
     },
-    check: function* (inspector) {
-      let container = yield getContainerForSelector("#node1", inspector);
+    check: async function(inspector) {
+      let container = await getContainerForSelector("#node1", inspector);
       ok(container.inlineTextChild, "Has single text child.");
     }
   },
   {
     desc: "Updating the text-content",
-    test: function* (testActor) {
-      yield testActor.setProperty("#node1", "textContent", "newtext");
+    test: async function(testActor) {
+      await testActor.setProperty("#node1", "textContent", "newtext");
     },
-    check: function* (inspector) {
-      let container = yield getContainerForSelector("#node1", inspector);
+    check: async function(inspector) {
+      let container = await getContainerForSelector("#node1", inspector);
       ok(container.inlineTextChild, "Has single text child.");
       ok(!container.canExpand, "Can't expand container with inlineTextChild.");
       ok(!container.inlineTextChild.canExpand, "Can't expand inlineTextChild.");
@@ -144,15 +144,15 @@ const TEST_DATA = [
   },
   {
     desc: "Adding a second text child",
-    test: function* (testActor) {
-      yield testActor.eval(`
+    test: async function(testActor) {
+      await testActor.eval(`
         let node1 = document.querySelector("#node1");
         let newText = node1.ownerDocument.createTextNode("more");
         node1.appendChild(newText);
       `);
     },
-    check: function* (inspector) {
-      let container = yield getContainerForSelector("#node1", inspector);
+    check: async function(inspector) {
+      let container = await getContainerForSelector("#node1", inspector);
       ok(!container.inlineTextChild, "Does not have single text child.");
       ok(container.canExpand, "Can expand container with child nodes.");
       ok(container.editor.elt.querySelector(".text") == null,
@@ -161,11 +161,11 @@ const TEST_DATA = [
   },
   {
     desc: "Go from 2 to 1 text child",
-    test: function* (testActor) {
-      yield testActor.setProperty("#node1", "textContent", "newtext");
+    test: async function(testActor) {
+      await testActor.setProperty("#node1", "textContent", "newtext");
     },
-    check: function* (inspector) {
-      let container = yield getContainerForSelector("#node1", inspector);
+    check: async function(inspector) {
+      let container = await getContainerForSelector("#node1", inspector);
       ok(container.inlineTextChild, "Has single text child.");
       ok(!container.canExpand, "Can't expand container with inlineTextChild.");
       ok(!container.inlineTextChild.canExpand, "Can't expand inlineTextChild.");
@@ -175,11 +175,11 @@ const TEST_DATA = [
   },
   {
     desc: "Removing an only text child",
-    test: function* (testActor) {
-      yield testActor.setProperty("#node1", "innerHTML", "");
+    test: async function(testActor) {
+      await testActor.setProperty("#node1", "innerHTML", "");
     },
-    check: function* (inspector) {
-      let container = yield getContainerForSelector("#node1", inspector);
+    check: async function(inspector) {
+      let container = await getContainerForSelector("#node1", inspector);
       ok(!container.inlineTextChild, "Does not have single text child.");
       ok(!container.canExpand, "Can't expand empty container.");
       ok(container.editor.elt.querySelector(".text") == null,
@@ -188,11 +188,11 @@ const TEST_DATA = [
   },
   {
     desc: "Go from 0 to 1 text child",
-    test: function* (testActor) {
-      yield testActor.setProperty("#node1", "textContent", "newtext");
+    test: async function(testActor) {
+      await testActor.setProperty("#node1", "textContent", "newtext");
     },
-    check: function* (inspector) {
-      let container = yield getContainerForSelector("#node1", inspector);
+    check: async function(inspector) {
+      let container = await getContainerForSelector("#node1", inspector);
       ok(container.inlineTextChild, "Has single text child.");
       ok(!container.canExpand, "Can't expand container with inlineTextChild.");
       ok(!container.inlineTextChild.canExpand, "Can't expand inlineTextChild.");
@@ -203,12 +203,12 @@ const TEST_DATA = [
 
   {
     desc: "Updating the innerHTML",
-    test: function* (testActor) {
-      yield testActor.setProperty("#node2", "innerHTML",
+    test: async function(testActor) {
+      await testActor.setProperty("#node2", "innerHTML",
                                   "<div><span>foo</span></div>");
     },
-    check: function* (inspector) {
-      let container = yield getContainerForSelector("#node2", inspector);
+    check: async function(inspector) {
+      let container = await getContainerForSelector("#node2", inspector);
 
       let openTags = container.children.querySelectorAll(".open .tag");
       is(openTags.length, 2, "There are 2 tags in node2");
@@ -221,34 +221,34 @@ const TEST_DATA = [
   },
   {
     desc: "Removing child nodes",
-    test: function* (testActor) {
-      yield testActor.eval(`
+    test: async function(testActor) {
+      await testActor.eval(`
         let node4 = document.querySelector("#node4");
         while (node4.firstChild) {
           node4.removeChild(node4.firstChild);
         }
       `);
     },
-    check: function* (inspector) {
-      let {children} = yield getContainerForSelector("#node4", inspector);
+    check: async function(inspector) {
+      let {children} = await getContainerForSelector("#node4", inspector);
       is(children.innerHTML, "", "Children have been removed");
     }
   },
   {
     desc: "Appending a child to a different parent",
-    test: function* (testActor) {
-      yield testActor.eval(`
+    test: async function(testActor) {
+      await testActor.eval(`
         let node17 = document.querySelector("#node17");
         let node2 = document.querySelector("#node2");
         node2.appendChild(node17);
       `);
     },
-    check: function* (inspector) {
-      let {children} = yield getContainerForSelector("#node16", inspector);
+    check: async function(inspector) {
+      let {children} = await getContainerForSelector("#node16", inspector);
       is(children.innerHTML, "",
          "Node17 has been removed from its node16 parent");
 
-      let container = yield getContainerForSelector("#node2", inspector);
+      let container = await getContainerForSelector("#node2", inspector);
       let openTags = container.children.querySelectorAll(".open .tag");
       is(openTags.length, 3, "There are now 3 tags in node2");
       is(openTags[2].textContent.trim(), "p", "The third tag is node17");
@@ -269,8 +269,8 @@ const TEST_DATA = [
     //      node21
     //      node18
     //        node19
-    test: function* (testActor) {
-      yield testActor.eval(`
+    test: async function(testActor) {
+      await testActor.eval(`
         let node18 = document.querySelector("#node18");
         let node20 = document.querySelector("#node20");
         let node1 = document.querySelector("#node1");
@@ -278,10 +278,10 @@ const TEST_DATA = [
         node20.appendChild(node18);
       `);
     },
-    check: function* (inspector) {
-      yield inspector.markup.expandAll();
+    check: async function(inspector) {
+      await inspector.markup.expandAll();
 
-      let {children} = yield getContainerForSelector("#node1", inspector);
+      let {children} = await getContainerForSelector("#node1", inspector);
       is(children.childNodes.length, 2,
         "Node1 now has 2 children (textnode and node20)");
 
@@ -302,11 +302,11 @@ const TEST_DATA = [
   }
 ];
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   info("Expanding all markup-view nodes");
-  yield inspector.markup.expandAll();
+  await inspector.markup.expandAll();
 
   for (let {desc, test, check, numMutations} of TEST_DATA) {
     info("Starting test: " + desc);
@@ -329,13 +329,13 @@ add_task(function* () {
         }
       });
     });
-    yield test(testActor, inspector);
-    yield promise;
+    await test(testActor, inspector);
+    await promise;
 
     info("Expanding all markup-view nodes to make sure new nodes are imported");
-    yield inspector.markup.expandAll();
+    await inspector.markup.expandAll();
 
     info("Checking the markup-view content");
-    yield check(inspector);
+    await check(inspector);
   }
 });

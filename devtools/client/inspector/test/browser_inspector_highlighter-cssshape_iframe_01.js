@@ -9,38 +9,38 @@
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_cssshapes_iframe.html";
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 
-add_task(function* () {
-  let inspector = yield openInspectorForURL(TEST_URL);
-  let helper = yield getHighlighterHelperFor(HIGHLIGHTER_TYPE)(inspector);
+add_task(async function() {
+  let inspector = await openInspectorForURL(TEST_URL);
+  let helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(inspector);
   let {testActor} = inspector;
 
-  yield testPolygonIframeMovePoint(testActor, helper);
+  await testPolygonIframeMovePoint(testActor, helper);
 
-  yield helper.finalize();
+  await helper.finalize();
 });
 
-function* testPolygonIframeMovePoint(testActor, helper) {
+async function testPolygonIframeMovePoint(testActor, helper) {
   info("Displaying polygon");
-  yield helper.show("#polygon", {mode: "cssClipPath"}, "#frame");
+  await helper.show("#polygon", {mode: "cssClipPath"}, "#frame");
   let { mouse, highlightedNode } = helper;
 
   info("Moving polygon point visible in iframe");
-  yield mouse.down(10, 10);
-  yield mouse.move(20, 20);
-  yield mouse.up();
-  yield testActor.reflow();
+  await mouse.down(10, 10);
+  await mouse.move(20, 20);
+  await mouse.up();
+  await testActor.reflow();
 
-  let computedStyle = yield highlightedNode.getComputedStyle();
+  let computedStyle = await highlightedNode.getComputedStyle();
   let definition = computedStyle["clip-path"].value;
   ok(definition.includes("10px 10px"), "Point moved to 10px 10px");
 
   info("Moving polygon point not visible in iframe");
-  yield mouse.down(110, 410);
-  yield mouse.move(120, 420);
-  yield mouse.up();
-  yield testActor.reflow();
+  await mouse.down(110, 410);
+  await mouse.move(120, 420);
+  await mouse.up();
+  await testActor.reflow();
 
-  computedStyle = yield highlightedNode.getComputedStyle();
+  computedStyle = await highlightedNode.getComputedStyle();
   definition = computedStyle["clip-path"].value;
   ok(definition.includes("110px 51.25%"), "Point moved to 110px 51.25%");
 }

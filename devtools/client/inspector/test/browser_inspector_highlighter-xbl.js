@@ -7,14 +7,14 @@
 
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_xbl.xul";
 
-add_task(function* () {
-  let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URL);
 
-  yield startPicker(toolbox);
+  await startPicker(toolbox);
 
   info("Selecting the scale");
-  yield moveMouseOver("#scale");
-  yield doKeyPick({key: "VK_RETURN", options: {}});
+  await moveMouseOver("#scale");
+  await doKeyPick({key: "VK_RETURN", options: {}});
   is(inspector.selection.nodeFront.className, "scale-slider",
      "The .scale-slider inside the scale was selected");
 

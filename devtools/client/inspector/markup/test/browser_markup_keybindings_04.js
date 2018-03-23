@@ -12,25 +12,25 @@ requestLongerTimeout(2);
 
 const TEST_URL = "data:text/html;charset=utf8,<div>test element</div>";
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   info("Select the test node with the browser ctx menu");
-  yield clickOnInspectMenuItem(testActor, "div");
+  await clickOnInspectMenuItem(testActor, "div");
   assertNodeSelected(inspector, "div");
 
   info("Press arrowUp to focus <body> " +
        "(which works if the node was focused properly)");
-  yield selectPreviousNodeWithArrowUp(inspector);
+  await selectPreviousNodeWithArrowUp(inspector);
   assertNodeSelected(inspector, "body");
 
   info("Select the test node with the element picker");
-  yield selectWithElementPicker(inspector, testActor);
+  await selectWithElementPicker(inspector, testActor);
   assertNodeSelected(inspector, "div");
 
   info("Press arrowUp to focus <body> " +
        "(which works if the node was focused properly)");
-  yield selectPreviousNodeWithArrowUp(inspector);
+  await selectPreviousNodeWithArrowUp(inspector);
   assertNodeSelected(inspector, "body");
 });
 
@@ -46,13 +46,13 @@ function selectPreviousNodeWithArrowUp(inspector) {
   return Promise.all([onUpdated, onNodeHighlighted]);
 }
 
-function* selectWithElementPicker(inspector, testActor) {
-  yield startPicker(inspector.toolbox);
+async function selectWithElementPicker(inspector, testActor) {
+  await startPicker(inspector.toolbox);
 
-  yield BrowserTestUtils.synthesizeMouseAtCenter("div", {
+  await BrowserTestUtils.synthesizeMouseAtCenter("div", {
     type: "mousemove",
   }, gBrowser.selectedBrowser);
 
-  yield testActor.synthesizeKey({key: "KEY_Enter", options: {}});
-  yield inspector.once("inspector-updated");
+  await testActor.synthesizeKey({key: "KEY_Enter", options: {}});
+  await inspector.once("inspector-updated");
 }

@@ -10,41 +10,41 @@ const TEST_URL_2 = "http://127.0.0.1:36325/";
 const TEST_URL_3 = "http://www.wronguri.wronguri/";
 const TEST_URL_4 = "data:text/html,<html><body>test-doc-4</body></html>";
 
-add_task(function* () {
+add_task(async function() {
   // Open the inspector on a valid URL
-  let { inspector, testActor } = yield openInspectorForURL(TEST_URL_1);
+  let { inspector, testActor } = await openInspectorForURL(TEST_URL_1);
 
   info("Navigate to closed port");
-  yield navigateTo(inspector, TEST_URL_2);
+  await navigateTo(inspector, TEST_URL_2);
 
-  let documentURI = yield testActor.eval("document.documentURI;");
+  let documentURI = await testActor.eval("document.documentURI;");
   ok(documentURI.startsWith("about:neterror"), "content is correct.");
 
-  let hasPage = yield getNodeFront("#test-doc-1", inspector);
+  let hasPage = await getNodeFront("#test-doc-1", inspector);
   ok(!hasPage, "Inspector actor is no longer able to reach previous page DOM node");
 
-  let hasNetErrorNode = yield getNodeFront("#errorShortDesc", inspector);
+  let hasNetErrorNode = await getNodeFront("#errorShortDesc", inspector);
   ok(hasNetErrorNode, "Inspector actor is able to reach error page DOM node");
 
   let bundle = Services.strings.createBundle("chrome://global/locale/appstrings.properties");
   let domain = TEST_URL_2.match(/^http:\/\/(.*)\/$/)[1];
   let errorMsg = bundle.formatStringFromName("connectionFailure",
                                              [domain], 1);
-  is(yield getDisplayedNodeTextContent("#errorShortDescText", inspector), errorMsg,
+  is(await getDisplayedNodeTextContent("#errorShortDescText", inspector), errorMsg,
      "Inpector really inspects the error page");
 
   info("Navigate to unknown domain");
-  yield navigateTo(inspector, TEST_URL_3);
+  await navigateTo(inspector, TEST_URL_3);
 
   domain = TEST_URL_3.match(/^http:\/\/(.*)\/$/)[1];
   errorMsg = bundle.formatStringFromName("dnsNotFound2",
                                          [domain], 1);
-  is(yield getDisplayedNodeTextContent("#errorShortDescText", inspector), errorMsg,
+  is(await getDisplayedNodeTextContent("#errorShortDescText", inspector), errorMsg,
      "Inspector really inspects the new error page");
 
   info("Navigate to a valid url");
-  yield navigateTo(inspector, TEST_URL_4);
+  await navigateTo(inspector, TEST_URL_4);
 
-  is(yield getDisplayedNodeTextContent("body", inspector), "test-doc-4",
+  is(await getDisplayedNodeTextContent("body", inspector), "test-doc-4",
      "Inspector really inspects the valid url");
 });

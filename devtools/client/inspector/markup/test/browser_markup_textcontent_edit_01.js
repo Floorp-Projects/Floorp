@@ -9,20 +9,20 @@
 const TEST_URL = URL_ROOT + "doc_markup_edit.html";
 const {DEFAULT_VALUE_SUMMARY_LENGTH} = require("devtools/server/actors/inspector/walker");
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   info("Expanding all nodes");
-  yield inspector.markup.expandAll();
-  yield waitForMultipleChildrenUpdates(inspector);
+  await inspector.markup.expandAll();
+  await waitForMultipleChildrenUpdates(inspector);
 
-  yield editContainer(inspector, testActor, {
+  await editContainer(inspector, testActor, {
     selector: ".node6",
     newValue: "New text",
     oldValue: "line6"
   });
 
-  yield editContainer(inspector, testActor, {
+  await editContainer(inspector, testActor, {
     selector: "#node17",
     newValue: "LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. " +
               "DONEC POSUERE PLACERAT MAGNA ET IMPERDIET.",
@@ -30,14 +30,14 @@ add_task(function* () {
               "Donec posuere placerat magna et imperdiet."
   });
 
-  yield editContainer(inspector, testActor, {
+  await editContainer(inspector, testActor, {
     selector: "#node17",
     newValue: "New value",
     oldValue: "LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. " +
               "DONEC POSUERE PLACERAT MAGNA ET IMPERDIET."
   });
 
-  yield editContainer(inspector, testActor, {
+  await editContainer(inspector, testActor, {
     selector: "#node17",
     newValue: "LOREM IPSUM DOLOR SIT AMET, CONSECTETUR ADIPISCING ELIT. " +
               "DONEC POSUERE PLACERAT MAGNA ET IMPERDIET.",
@@ -45,14 +45,14 @@ add_task(function* () {
   });
 });
 
-function* editContainer(inspector, testActor,
+async function editContainer(inspector, testActor,
                         {selector, newValue, oldValue}) {
-  let nodeValue = yield getFirstChildNodeValue(selector, testActor);
+  let nodeValue = await getFirstChildNodeValue(selector, testActor);
   is(nodeValue, oldValue, "The test node's text content is correct");
 
   info("Changing the text content");
   let onMutated = inspector.once("markupmutation");
-  let container = yield focusNode(selector, inspector);
+  let container = await focusNode(selector, inspector);
 
   let isOldValueInline = oldValue.length <= DEFAULT_VALUE_SUMMARY_LENGTH;
   is(!!container.inlineTextChild, isOldValueInline, "inlineTextChild is as expected");
@@ -64,9 +64,9 @@ function* editContainer(inspector, testActor,
   setEditableFieldValue(field, newValue, inspector);
 
   info("Listening to the markupmutation event");
-  yield onMutated;
+  await onMutated;
 
-  nodeValue = yield getFirstChildNodeValue(selector, testActor);
+  nodeValue = await getFirstChildNodeValue(selector, testActor);
   is(nodeValue, newValue, "The test node's text content has changed");
 
   let isNewValueInline = newValue.length <= DEFAULT_VALUE_SUMMARY_LENGTH;
@@ -79,6 +79,6 @@ function* editContainer(inspector, testActor,
   }
 
   info("Selecting the <body> to reset the selection");
-  let bodyContainer = yield getContainerForSelector("body", inspector);
+  let bodyContainer = await getContainerForSelector("body", inspector);
   inspector.markup.markNodeAsSelected(bodyContainer.node);
 }

@@ -20,34 +20,34 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   info("Check that the grid highlighter can be displayed");
-  yield checkGridHighlighter();
+  await checkGridHighlighter();
 
   info("Close the toolbox before reloading the tab");
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  yield gDevTools.closeToolbox(target);
+  await gDevTools.closeToolbox(target);
 
-  yield refreshTab();
+  await refreshTab();
 
   info("Check that the grid highlighter can be displayed after reloading the page");
-  yield checkGridHighlighter();
+  await checkGridHighlighter();
 });
 
-function* checkGridHighlighter() {
-  let {inspector, view} = yield openRuleView();
+async function checkGridHighlighter() {
+  let {inspector, view} = await openRuleView();
   let {highlighters} = view;
 
-  yield selectNode("#grid", inspector);
+  await selectNode("#grid", inspector);
   let container = getRuleViewProperty(view, "#grid", "display").valueSpan;
   let gridToggle = container.querySelector(".ruleview-grid");
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");
   let onHighlighterShown = highlighters.once("grid-highlighter-shown");
   gridToggle.click();
-  yield onHighlighterShown;
+  await onHighlighterShown;
 
   ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
 }

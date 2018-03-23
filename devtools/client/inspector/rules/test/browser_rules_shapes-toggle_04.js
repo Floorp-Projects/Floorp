@@ -18,26 +18,26 @@ const TEST_URI = `
   <div id="shape"></div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
   let highlighters = view.highlighters;
 
-  yield selectNode("#shape", inspector);
+  await selectNode("#shape", inspector);
   let container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
   let shapeToggle = container.querySelector(".ruleview-shapeswatch");
 
   info("Toggling ON the CSS shape highlighter from the rule-view.");
   let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
   shapeToggle.click();
-  yield onHighlighterShown;
+  await onHighlighterShown;
 
   info("Edit the clip-path property to ellipse.");
-  let editor = yield focusEditableField(view, container, 30);
+  let editor = await focusEditableField(view, container, 30);
   let onDone = view.once("ruleview-changed");
   editor.input.value = "ellipse(30% 20%);";
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
-  yield onDone;
+  await onDone;
 
   info("Check the shape highlighter and shape toggle button are still visible.");
   shapeToggle = container.querySelector(".ruleview-shapeswatch");

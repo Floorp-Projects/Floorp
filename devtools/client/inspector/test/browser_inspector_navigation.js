@@ -20,60 +20,60 @@ const TEST_URL_3 = "data:text/html;charset=utf-8," +
 const TEST_URL_4 = "data:text/html;charset=utf-8," +
   encodeURIComponent("<h1>bar</h1>");
 
-add_task(function* () {
-  let { inspector, testActor } = yield openInspectorForURL(TEST_URL_1);
+add_task(async function() {
+  let { inspector, testActor } = await openInspectorForURL(TEST_URL_1);
 
-  yield selectNode("#i1", inspector);
+  await selectNode("#i1", inspector);
 
   info("Navigating to a different page.");
-  yield navigateTo(inspector, TEST_URL_2);
+  await navigateTo(inspector, TEST_URL_2);
 
   ok(true, "New page loaded");
-  yield selectNode("#i1", inspector);
+  await selectNode("#i1", inspector);
 
   let markuploaded = inspector.once("markuploaded");
   let onUpdated = inspector.once("inspector-updated");
 
   info("Going back in history");
-  yield testActor.eval("history.go(-1)");
+  await testActor.eval("history.go(-1)");
 
   info("Waiting for markup view to load after going back in history.");
-  yield markuploaded;
+  await markuploaded;
 
   info("Check that the inspector updates");
-  yield onUpdated;
+  await onUpdated;
 
   ok(true, "Old page loaded");
-  is((yield testActor.eval("location.href;")), TEST_URL_1, "URL is correct.");
+  is((await testActor.eval("location.href;")), TEST_URL_1, "URL is correct.");
 
-  yield selectNode("#i1", inspector);
+  await selectNode("#i1", inspector);
 });
 
-add_task(function* () {
-  let { inspector, testActor } = yield openInspectorForURL(TEST_URL_3);
+add_task(async function() {
+  let { inspector, testActor } = await openInspectorForURL(TEST_URL_3);
 
-  yield selectNode("img", inspector);
+  await selectNode("img", inspector);
 
   info("Navigating to a different page.");
-  yield navigateTo(inspector, TEST_URL_4);
+  await navigateTo(inspector, TEST_URL_4);
 
   ok(true, "New page loaded");
-  yield selectNode("#h1", inspector);
+  await selectNode("#h1", inspector);
 
   let markuploaded = inspector.once("markuploaded");
   let onUpdated = inspector.once("inspector-updated");
 
   info("Going back in history");
-  yield testActor.eval("history.go(-1)");
+  await testActor.eval("history.go(-1)");
 
   info("Waiting for markup view to load after going back in history.");
-  yield markuploaded;
+  await markuploaded;
 
   info("Check that the inspector updates");
-  yield onUpdated;
+  await onUpdated;
 
   ok(true, "Old page loaded");
-  is((yield testActor.eval("location.href;")), TEST_URL_3, "URL is correct.");
+  is((await testActor.eval("location.href;")), TEST_URL_3, "URL is correct.");
 
-  yield selectNode("img", inspector);
+  await selectNode("img", inspector);
 });
