@@ -15,15 +15,15 @@ const TEST_URI = `
   <div id="testElement">test element</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
-  await selectNode("#testElement", inspector);
-  await testRuleView(view, inspector.selection.nodeFront);
+  yield selectNode("#testElement", inspector);
+  yield testRuleView(view, inspector.selection.nodeFront);
 });
 
-async function testRuleView(ruleView, nodeFront) {
+function* testRuleView(ruleView, nodeFront) {
   info("Testing font-family tooltips in the rule view");
 
   let tooltip = ruleView.tooltips.getTooltip("previewTooltip");
@@ -45,16 +45,16 @@ async function testRuleView(ruleView, nodeFront) {
     .querySelector(".ruleview-computed .ruleview-propertyvalue");
 
   // And verify that the tooltip gets shown on this property
-  let previewTooltip = await assertShowPreviewTooltip(ruleView, valueSpan);
+  let previewTooltip = yield assertShowPreviewTooltip(ruleView, valueSpan);
 
   let images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
   ok(images[0].getAttribute("src")
     .startsWith("data:"), "Tooltip contains a data-uri image as expected");
 
-  let dataURL = await getFontFamilyDataURL(valueSpan.textContent, nodeFront);
+  let dataURL = yield getFontFamilyDataURL(valueSpan.textContent, nodeFront);
   is(images[0].getAttribute("src"), dataURL,
     "Tooltip contains the correct data-uri image");
 
-  await assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, valueSpan);
 }

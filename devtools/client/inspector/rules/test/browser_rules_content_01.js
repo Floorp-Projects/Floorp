@@ -21,19 +21,19 @@ const TEST_URI = `
   <div id="testid2">Styled Node</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
-  await selectNode("#testid", inspector);
+  yield selectNode("#testid", inspector);
   is(view.element.querySelectorAll("#ruleview-no-results").length, 0,
     "After a highlight, no longer has a no-results element.");
 
-  await clearCurrentNodeSelection(inspector);
+  yield clearCurrentNodeSelection(inspector);
   is(view.element.querySelectorAll("#ruleview-no-results").length, 1,
     "After highlighting null, has a no-results element again.");
 
-  await selectNode("#testid", inspector);
+  yield selectNode("#testid", inspector);
 
   let linkText = getRuleViewLinkTextByIndex(view, 1);
   is(linkText, "inline:3 @screen and (min-width: 10px)",

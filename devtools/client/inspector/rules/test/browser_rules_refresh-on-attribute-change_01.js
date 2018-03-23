@@ -20,10 +20,10 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view, testActor} = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view, testActor} = yield openRuleView();
+  yield selectNode("#testid", inspector);
 
   info("Checking that the rule-view has the element, #testid and " +
     ".testclass selectors");
@@ -32,16 +32,16 @@ add_task(async function() {
   info("Changing the node's ID attribute and waiting for the " +
     "rule-view refresh");
   let ruleViewRefreshed = inspector.once("rule-view-refreshed");
-  await testActor.setAttribute("#testid", "id", "differentid");
-  await ruleViewRefreshed;
+  yield testActor.setAttribute("#testid", "id", "differentid");
+  yield ruleViewRefreshed;
 
   info("Checking that the rule-view doesn't have the #testid selector anymore");
   checkRuleViewContent(view, ["element", ".testclass"]);
 
   info("Reverting the ID attribute change");
   ruleViewRefreshed = inspector.once("rule-view-refreshed");
-  await testActor.setAttribute("#differentid", "id", "testid");
-  await ruleViewRefreshed;
+  yield testActor.setAttribute("#differentid", "id", "testid");
+  yield ruleViewRefreshed;
 
   info("Checking that the rule-view has all the selectors again");
   checkRuleViewContent(view, ["element", "#testid", ".testclass"]);

@@ -6,24 +6,24 @@
 
 // Test for as-authored styles.
 
-async function createTestContent(style) {
+function* createTestContent(style) {
   let html = `<style type="text/css">
       ${style}
       </style>
       <div id="testid" class="testclass">Styled Node</div>`;
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(html));
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(html));
 
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
   return view;
 }
 
-add_task(async function() {
+add_task(function* () {
   let gradientText1 = "(orange, blue);";
   let gradientText2 = "(pink, teal);";
 
   let view =
-      await createTestContent("#testid {" +
+      yield createTestContent("#testid {" +
                               "  background-image: linear-gradient" +
                               gradientText1 +
                               "  background-image: -ms-linear-gradient" +
@@ -42,7 +42,7 @@ add_task(async function() {
     is(prop.overridden, i !== 2, "check overridden for " + i);
   }
 
-  await togglePropStatus(view, rule.textProps[2]);
+  yield togglePropStatus(view, rule.textProps[2]);
 
   // Now the first property should be active.
   for (let i = 0; i < 3; ++i) {

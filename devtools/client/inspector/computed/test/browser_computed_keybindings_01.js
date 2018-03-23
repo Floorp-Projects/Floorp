@@ -15,10 +15,10 @@ const TEST_URI = `
   <span class="matches">Some styled text</span>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
-  await selectNode(".matches", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openComputedView();
+  yield selectNode(".matches", inspector);
 
   let propView = getFirstVisiblePropertyView(view);
   let rulesTable = propView.matchedSelectorsContainer;
@@ -28,13 +28,13 @@ add_task(async function() {
   matchedExpander.scrollIntoView();
   let onMatchedExpanderFocus = once(matchedExpander, "focus", true);
   EventUtils.synthesizeMouseAtCenter(matchedExpander, {}, view.styleWindow);
-  await onMatchedExpanderFocus;
+  yield onMatchedExpanderFocus;
 
-  await checkToggleKeyBinding(view.styleWindow, "VK_SPACE", rulesTable,
+  yield checkToggleKeyBinding(view.styleWindow, "VK_SPACE", rulesTable,
                               inspector);
-  await checkToggleKeyBinding(view.styleWindow, "VK_RETURN", rulesTable,
+  yield checkToggleKeyBinding(view.styleWindow, "VK_RETURN", rulesTable,
                               inspector);
-  await checkHelpLinkKeybinding(view);
+  yield checkHelpLinkKeybinding(view);
 });
 
 function getFirstVisiblePropertyView(view) {
@@ -50,7 +50,7 @@ function getFirstVisiblePropertyView(view) {
   return propView;
 }
 
-async function checkToggleKeyBinding(win, key, rulesTable, inspector) {
+function* checkToggleKeyBinding(win, key, rulesTable, inspector) {
   info("Pressing " + key + " key a couple of times to check that the " +
     "property gets expanded/collapsed");
 
@@ -59,12 +59,12 @@ async function checkToggleKeyBinding(win, key, rulesTable, inspector) {
 
   info("Expanding the property");
   EventUtils.synthesizeKey(key, {}, win);
-  await onExpand;
+  yield onExpand;
   isnot(rulesTable.innerHTML, "", "The property has been expanded");
 
   info("Collapsing the property");
   EventUtils.synthesizeKey(key, {}, win);
-  await onCollapse;
+  yield onCollapse;
   is(rulesTable.innerHTML, "", "The property has been collapsed");
 }
 

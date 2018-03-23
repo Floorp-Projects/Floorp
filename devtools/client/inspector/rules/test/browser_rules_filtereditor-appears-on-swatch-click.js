@@ -7,10 +7,10 @@
 
 const TEST_URL = URL_ROOT + "doc_filter.html";
 
-add_task(async function() {
-  await addTab(TEST_URL);
+add_task(function* () {
+  yield addTab(TEST_URL);
 
-  let {view} = await openRuleView();
+  let {view} = yield openRuleView();
 
   info("Getting the filter swatch element");
   let swatch = getRuleViewProperty(view, "body", "filter").valueSpan
@@ -22,13 +22,13 @@ add_task(async function() {
   // the rule-view to refresh. So we must wait for the ruleview-changed event.
   let onRuleViewChanged = view.once("ruleview-changed");
   swatch.click();
-  await onRuleViewChanged;
+  yield onRuleViewChanged;
 
   ok(true, "The shown event was emitted after clicking on swatch");
   ok(!inplaceEditor(swatch.parentNode),
   "The inplace editor wasn't shown as a result of the filter swatch click");
 
-  await hideTooltipAndWaitForRuleViewChanged(filterTooltip, view);
+  yield hideTooltipAndWaitForRuleViewChanged(filterTooltip, view);
 
-  await waitForTick();
+  yield waitForTick();
 });

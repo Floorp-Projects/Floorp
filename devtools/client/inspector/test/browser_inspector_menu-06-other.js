@@ -5,15 +5,15 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Tests for menuitem functionality that doesn't fit into any specific category
 const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
-add_task(async function() {
-  let { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
-  await testShowDOMProperties();
-  await testDuplicateNode();
-  await testDeleteNode();
-  await testDeleteTextNode();
-  await testDeleteRootNode();
-  await testScrollIntoView();
-  async function testShowDOMProperties() {
+add_task(function* () {
+  let { inspector, toolbox, testActor } = yield openInspectorForURL(TEST_URL);
+  yield testShowDOMProperties();
+  yield testDuplicateNode();
+  yield testDeleteNode();
+  yield testDeleteTextNode();
+  yield testDeleteRootNode();
+  yield testScrollIntoView();
+  function* testShowDOMProperties() {
     info("Testing 'Show DOM Properties' menu item.");
     let allMenuItems = openContextMenuAndGetAllItems(inspector);
     let showDOMPropertiesNode =
@@ -24,20 +24,20 @@ add_task(async function() {
 
     info("Triggering 'Show DOM Properties' and waiting for inspector open");
     showDOMPropertiesNode.click();
-    await consoleOpened;
+    yield consoleOpened;
 
     let webconsoleUI = toolbox.getPanel("webconsole").hud.ui;
     let messagesAdded = webconsoleUI.once("new-messages");
-    await messagesAdded;
+    yield messagesAdded;
     info("Checking if 'inspect($0)' was evaluated");
     ok(webconsoleUI.jsterm.history[0] === "inspect($0)");
-    await toolbox.toggleSplitConsole();
+    yield toolbox.toggleSplitConsole();
   }
-  async function testDuplicateNode() {
+  function* testDuplicateNode() {
     info("Testing 'Duplicate Node' menu item for normal elements.");
 
-    await selectNode(".duplicate", inspector);
-    is((await testActor.getNumberOfElementMatches(".duplicate")), 1,
+    yield selectNode(".duplicate", inspector);
+    is((yield testActor.getNumberOfElementMatches(".duplicate")), 1,
        "There should initially be 1 .duplicate node");
 
     let allMenuItems = openContextMenuAndGetAllItems(inspector);
@@ -48,19 +48,19 @@ add_task(async function() {
     info("Triggering 'Duplicate Node' and waiting for inspector to update");
     let updated = inspector.once("markupmutation");
     menuItem.click();
-    await updated;
+    yield updated;
 
-    is((await testActor.getNumberOfElementMatches(".duplicate")), 2,
+    is((yield testActor.getNumberOfElementMatches(".duplicate")), 2,
        "The duplicated node should be in the markup.");
 
-    let container = await getContainerForSelector(".duplicate + .duplicate",
+    let container = yield getContainerForSelector(".duplicate + .duplicate",
                                                    inspector);
     ok(container, "A MarkupContainer should be created for the new node");
   }
 
-  async function testDeleteNode() {
+  function* testDeleteNode() {
     info("Testing 'Delete Node' menu item for normal elements.");
-    await selectNode("#delete", inspector);
+    yield selectNode("#delete", inspector);
     let allMenuItems = openContextMenuAndGetAllItems(inspector);
     let deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
     ok(deleteNode, "the popup menu has a delete menu item");
@@ -68,17 +68,17 @@ add_task(async function() {
 
     info("Triggering 'Delete Node' and waiting for inspector to update");
     deleteNode.click();
-    await updated;
+    yield updated;
 
-    ok(!(await testActor.hasNode("#delete")), "Node deleted");
+    ok(!(yield testActor.hasNode("#delete")), "Node deleted");
   }
 
-  async function testDeleteTextNode() {
+  function* testDeleteTextNode() {
     info("Testing 'Delete Node' menu item for text elements.");
     let { walker } = inspector;
-    let divBefore = await walker.querySelector(walker.rootNode, "#nestedHiddenElement");
-    let { nodes } = await walker.children(divBefore);
-    await selectNode(nodes[0], inspector, "test-highlight");
+    let divBefore = yield walker.querySelector(walker.rootNode, "#nestedHiddenElement");
+    let { nodes } = yield walker.children(divBefore);
+    yield selectNode(nodes[0], inspector, "test-highlight");
 
     let allMenuItems = openContextMenuAndGetAllItems(inspector);
     let deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
@@ -88,30 +88,30 @@ add_task(async function() {
 
     info("Triggering 'Delete Node' and waiting for inspector to update");
     deleteNode.click();
-    await updated;
+    yield updated;
 
-    let divAfter = await walker.querySelector(walker.rootNode, "#nestedHiddenElement");
-    let nodesAfter = (await walker.children(divAfter)).nodes;
+    let divAfter = yield walker.querySelector(walker.rootNode, "#nestedHiddenElement");
+    let nodesAfter = (yield walker.children(divAfter)).nodes;
     ok(nodesAfter.length == 0, "the node still had children");
   }
 
-  async function testDeleteRootNode() {
+  function* testDeleteRootNode() {
     info("Testing 'Delete Node' menu item does not delete root node.");
-    await selectNode("html", inspector);
+    yield selectNode("html", inspector);
 
     let allMenuItems = openContextMenuAndGetAllItems(inspector);
     let deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
     deleteNode.click();
 
-    await new Promise(resolve => {
+    yield new Promise(resolve => {
       executeSoon(resolve);
     });
 
-    ok((await testActor.eval("!!document.documentElement")),
+    ok((yield testActor.eval("!!document.documentElement")),
        "Document element still alive.");
   }
 
-  function testScrollIntoView() {
+  function* testScrollIntoView() {
     // Follow up bug to add this test - https://bugzilla.mozilla.org/show_bug.cgi?id=1154107
     todo(false, "Verify that node is scrolled into the viewport.");
   }

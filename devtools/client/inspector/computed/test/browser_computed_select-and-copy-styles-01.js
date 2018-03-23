@@ -32,31 +32,31 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
-  await selectNode("span", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openComputedView();
+  yield selectNode("span", inspector);
 
-  await testCopySome(view);
-  await testCopyAll(view);
+  yield testCopySome(view);
+  yield testCopyAll(view);
 });
 
-async function testCopySome(view) {
+function* testCopySome(view) {
   let expectedPattern = "font-family: helvetica, sans-serif;[\\r\\n]+" +
                         "font-size: 16px;[\\r\\n]+" +
                         "font-variant-caps: small-caps;[\\r\\n]*";
 
-  await copySomeTextAndCheckClipboard(view, {
+  yield copySomeTextAndCheckClipboard(view, {
     start: {prop: 1, offset: 0},
     end: {prop: 3, offset: 2}
   }, expectedPattern);
 }
 
-async function testCopyAll(view) {
+function* testCopyAll(view) {
   let expectedPattern = "color: rgb\\(255, 255, 0\\);[\\r\\n]+" +
                         "font-family: helvetica, sans-serif;[\\r\\n]+" +
                         "font-size: 16px;[\\r\\n]+" +
                         "font-variant-caps: small-caps;[\\r\\n]*";
 
-  await copyAllAndCheckClipboard(view, expectedPattern);
+  yield copyAllAndCheckClipboard(view, expectedPattern);
 }

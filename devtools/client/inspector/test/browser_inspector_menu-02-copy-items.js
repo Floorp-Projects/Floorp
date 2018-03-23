@@ -50,19 +50,19 @@ const COPY_ITEMS_TEST_DATA = [
   },
 ];
 
-add_task(async function() {
+add_task(function* () {
   let Telemetry = loadTelemetryAndRecordLogs();
-  let { inspector } = await openInspectorForURL(TEST_URL);
+  let { inspector } = yield openInspectorForURL(TEST_URL);
 
   for (let {desc, id, selector, text} of COPY_ITEMS_TEST_DATA) {
     info("Testing " + desc);
-    await selectNode(selector, inspector);
+    yield selectNode(selector, inspector);
 
     let allMenuItems = openContextMenuAndGetAllItems(inspector);
     let item = allMenuItems.find(i => i.id === id);
     ok(item, "The popup has a " + desc + " menu item.");
 
-    await waitForClipboardPromise(() => item.click(), text);
+    yield waitForClipboardPromise(() => item.click(), text);
   }
 
   checkTelemetryResults(Telemetry);

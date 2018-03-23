@@ -17,22 +17,22 @@ const TEST_URI = `
 
 const TEST_URI_2 = "data:text/html,<html><body>test</body></html>";
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
   let highlighters = view.highlighters;
 
   info("Clicking on a selector icon");
-  let icon = await getRuleViewSelectorHighlighterIcon(view, "body, p, td");
+  let icon = yield getRuleViewSelectorHighlighterIcon(view, "body, p, td");
 
   let onToggled = view.once("ruleview-selectorhighlighter-toggled");
   EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
-  let isVisible = await onToggled;
+  let isVisible = yield onToggled;
 
   ok(highlighters.selectorHighlighterShown, "The selectorHighlighterShown is set.");
   ok(view.selectorHighlighter, "The selectorhighlighter instance was created");
   ok(isVisible, "The toggle event says the highlighter is visible");
 
-  await navigateTo(inspector, TEST_URI_2);
+  yield navigateTo(inspector, TEST_URI_2);
   ok(!highlighters.selectorHighlighterShown, "The selectorHighlighterShown is unset.");
 });

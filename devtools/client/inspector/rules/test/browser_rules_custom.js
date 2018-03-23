@@ -8,17 +8,17 @@ const TEST_URI = URL_ROOT + "doc_custom.html";
 
 // Tests the display of custom declarations in the rule-view.
 
-add_task(async function() {
-  await addTab(TEST_URI);
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab(TEST_URI);
+  let {inspector, view} = yield openRuleView();
 
-  await simpleCustomOverride(inspector, view);
-  await importantCustomOverride(inspector, view);
-  await disableCustomOverride(inspector, view);
+  yield simpleCustomOverride(inspector, view);
+  yield importantCustomOverride(inspector, view);
+  yield disableCustomOverride(inspector, view);
 });
 
-async function simpleCustomOverride(inspector, view) {
-  await selectNode("#testidSimple", inspector);
+function* simpleCustomOverride(inspector, view) {
+  yield selectNode("#testidSimple", inspector);
 
   let idRule = getRuleViewRuleEditor(view, 1).rule;
   let idRuleProp = idRule.textProps[0];
@@ -35,7 +35,7 @@ async function simpleCustomOverride(inspector, view) {
   ok(classRuleProp.overridden, "Class property should be overridden.");
 
   // Override --background-color by changing the element style.
-  let elementProp = await addProperty(view, 0, "--background-color", "purple");
+  let elementProp = yield addProperty(view, 0, "--background-color", "purple");
 
   is(classRuleProp.name, "--background-color",
      "First element prop should now be --background-color");
@@ -45,8 +45,8 @@ async function simpleCustomOverride(inspector, view) {
   ok(classRuleProp.overridden, "Class property should be overridden");
 }
 
-async function importantCustomOverride(inspector, view) {
-  await selectNode("#testidImportant", inspector);
+function* importantCustomOverride(inspector, view) {
+  yield selectNode("#testidImportant", inspector);
 
   let idRule = getRuleViewRuleEditor(view, 1).rule;
   let idRuleProp = idRule.textProps[0];
@@ -57,13 +57,13 @@ async function importantCustomOverride(inspector, view) {
   ok(!classRuleProp.overridden, "Important rule should not be overridden.");
 }
 
-async function disableCustomOverride(inspector, view) {
-  await selectNode("#testidDisable", inspector);
+function* disableCustomOverride(inspector, view) {
+  yield selectNode("#testidDisable", inspector);
 
   let idRule = getRuleViewRuleEditor(view, 1).rule;
   let idRuleProp = idRule.textProps[0];
 
-  await togglePropStatus(view, idRuleProp);
+  yield togglePropStatus(view, idRuleProp);
 
   let classRule = getRuleViewRuleEditor(view, 2).rule;
   let classRuleProp = classRule.textProps[0];

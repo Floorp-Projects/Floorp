@@ -46,7 +46,7 @@ function testNavigationState(inspector, elms, focused, activedescendant) {
  *        - {String} waitFor, optional: markupview event to wait for if keyboard actions
  *          result in async updates. Also accepts the inspector event "inspector-updated".
  */
-async function runAccessibilityNavigationTest(inspector, elms,
+function* runAccessibilityNavigationTest(inspector, elms,
   {desc, key, options, focused, activedescendant, waitFor}) {
   info(desc);
 
@@ -62,7 +62,7 @@ async function runAccessibilityNavigationTest(inspector, elms,
     updated = Promise.resolve();
   }
   EventUtils.synthesizeKey(key, options, win);
-  await updated;
+  yield updated;
 
   let focusedElement = lookupPath(elms, focused);
   let activeDescendantElement = lookupPath(elms, activedescendant);

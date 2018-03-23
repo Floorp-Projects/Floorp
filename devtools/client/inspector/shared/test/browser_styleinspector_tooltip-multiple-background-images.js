@@ -11,39 +11,39 @@ const BLUE_DOT = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAf
 const TEST_STYLE = `h1 {background: url(${YELLOW_DOT}), url(${BLUE_DOT});}`;
 const TEST_URI = `<style>${TEST_STYLE}</style><h1>test element</h1>`;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector} = await openInspector();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector} = yield openInspector();
 
-  await testRuleViewUrls(inspector);
-  await testComputedViewUrls(inspector);
+  yield testRuleViewUrls(inspector);
+  yield testComputedViewUrls(inspector);
 });
 
-async function testRuleViewUrls(inspector) {
+function* testRuleViewUrls(inspector) {
   info("Testing tooltips in the rule view");
   let view = selectRuleView(inspector);
-  await selectNode("h1", inspector);
+  yield selectNode("h1", inspector);
 
   let {valueSpan} = getRuleViewProperty(view, "h1", "background");
-  await performChecks(view, valueSpan);
+  yield performChecks(view, valueSpan);
 }
 
-async function testComputedViewUrls(inspector) {
+function* testComputedViewUrls(inspector) {
   info("Testing tooltips in the computed view");
 
   let onComputedViewReady = inspector.once("computed-view-refreshed");
   let view = selectComputedView(inspector);
-  await onComputedViewReady;
+  yield onComputedViewReady;
 
   let {valueSpan} = getComputedViewProperty(view, "background-image");
 
-  await performChecks(view, valueSpan);
+  yield performChecks(view, valueSpan);
 }
 
 /**
  * A helper that checks url() tooltips contain correct images
  */
-async function performChecks(view, propertyValue) {
+function* performChecks(view, propertyValue) {
   function checkTooltip(panel, imageSrc) {
     let images = panel.getElementsByTagName("img");
     is(images.length, 1, "Tooltip contains an image");
@@ -53,15 +53,15 @@ async function performChecks(view, propertyValue) {
   let links = propertyValue.querySelectorAll(".theme-link");
 
   info("Checking first link tooltip");
-  let previewTooltip = await assertShowPreviewTooltip(view, links[0]);
+  let previewTooltip = yield assertShowPreviewTooltip(view, links[0]);
   let panel = view.tooltips.getTooltip("previewTooltip").panel;
   checkTooltip(panel, YELLOW_DOT);
 
-  await assertTooltipHiddenOnMouseOut(previewTooltip, links[0]);
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, links[0]);
 
   info("Checking second link tooltip");
-  previewTooltip = await assertShowPreviewTooltip(view, links[1]);
+  previewTooltip = yield assertShowPreviewTooltip(view, links[1]);
   checkTooltip(panel, BLUE_DOT);
 
-  await assertTooltipHiddenOnMouseOut(previewTooltip, links[1]);
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, links[1]);
 }

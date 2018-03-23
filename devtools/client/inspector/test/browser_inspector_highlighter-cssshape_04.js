@@ -9,29 +9,29 @@
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_cssshapes.html";
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 
-add_task(async function() {
-  let inspector = await openInspectorForURL(TEST_URL);
-  let helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(inspector);
+add_task(function* () {
+  let inspector = yield openInspectorForURL(TEST_URL);
+  let helper = yield getHighlighterHelperFor(HIGHLIGHTER_TYPE)(inspector);
   let {testActor} = inspector;
 
-  await testPolygonMovePoint(testActor, helper);
-  await testPolygonAddPoint(testActor, helper);
-  await testPolygonRemovePoint(testActor, helper);
-  await testCircleMoveCenter(testActor, helper);
-  await testEllipseMoveRadius(testActor, helper);
-  await testInsetMoveEdges(testActor, helper);
+  yield testPolygonMovePoint(testActor, helper);
+  yield testPolygonAddPoint(testActor, helper);
+  yield testPolygonRemovePoint(testActor, helper);
+  yield testCircleMoveCenter(testActor, helper);
+  yield testEllipseMoveRadius(testActor, helper);
+  yield testInsetMoveEdges(testActor, helper);
 
   helper.finalize();
 });
 
-async function testPolygonMovePoint(testActor, helper) {
+function* testPolygonMovePoint(testActor, helper) {
   info("Displaying polygon");
-  await helper.show("#polygon", {mode: "cssClipPath"});
+  yield helper.show("#polygon", {mode: "cssClipPath"});
   let { mouse, highlightedNode } = helper;
 
-  let points = await helper.getElementAttribute("shapes-polygon", "points");
+  let points = yield helper.getElementAttribute("shapes-polygon", "points");
   let [x, y] = points.split(" ")[0].split(",");
-  let quads = await testActor.getAllAdjustedQuads("#polygon");
+  let quads = yield testActor.getAllAdjustedQuads("#polygon");
   let { top, left, width, height } = quads.border[0].bounds;
   x = left + width * x / 100;
   y = top + height * y / 100;
@@ -39,25 +39,25 @@ async function testPolygonMovePoint(testActor, helper) {
   let dy = height / 10;
 
   info("Moving first polygon point");
-  await mouse.down(x, y);
-  await mouse.move(x + dx, y + dy);
-  await mouse.up();
-  await testActor.reflow();
+  yield mouse.down(x, y);
+  yield mouse.move(x + dx, y + dy);
+  yield mouse.up();
+  yield testActor.reflow();
 
-  let computedStyle = await highlightedNode.getComputedStyle();
+  let computedStyle = yield highlightedNode.getComputedStyle();
   let definition = computedStyle["clip-path"].value;
   ok(definition.includes(`${dx}px ${dy}px`), `Point moved to ${dx}px ${dy}px`);
 }
 
-async function testPolygonAddPoint(testActor, helper) {
-  await helper.show("#polygon", {mode: "cssClipPath"});
+function* testPolygonAddPoint(testActor, helper) {
+  yield helper.show("#polygon", {mode: "cssClipPath"});
   let { mouse, highlightedNode } = helper;
 
   // Move first point to have same x as second point, then double click between
   // the two points to add a new one.
-  let points = await helper.getElementAttribute("shapes-polygon", "points");
+  let points = yield helper.getElementAttribute("shapes-polygon", "points");
   let pointsArray = points.split(" ");
-  let quads = await testActor.getAllAdjustedQuads("#polygon");
+  let quads = yield testActor.getAllAdjustedQuads("#polygon");
   let { top, left, width, height } = quads.border[0].bounds;
   let [x1, y1] = pointsArray[0].split(",");
   let [x2, y2] = pointsArray[1].split(",");
@@ -66,10 +66,10 @@ async function testPolygonAddPoint(testActor, helper) {
   y1 = top + height * y1 / 100;
   y2 = top + height * y2 / 100;
 
-  await mouse.down(x1, y1);
-  await mouse.move(x2, y1);
-  await mouse.up();
-  await testActor.reflow();
+  yield mouse.down(x1, y1);
+  yield mouse.move(x2, y1);
+  yield mouse.up();
+  yield testActor.reflow();
 
   let newPointX = x2;
   let newPointY = (y1 + y2) / 2;
@@ -82,10 +82,10 @@ async function testPolygonAddPoint(testActor, helper) {
   };
 
   info("Adding new polygon point");
-  await testActor.synthesizeMouse(options);
-  await testActor.reflow();
+  yield testActor.synthesizeMouse(options);
+  yield testActor.reflow();
 
-  let computedStyle = await highlightedNode.getComputedStyle();
+  let computedStyle = yield highlightedNode.getComputedStyle();
   let definition = computedStyle["clip-path"].value;
   // Decimal precision for coordinates with percentage units is 2
   let precision = 2;
@@ -96,13 +96,13 @@ async function testPolygonAddPoint(testActor, helper) {
      "Point successfuly added");
 }
 
-async function testPolygonRemovePoint(testActor, helper) {
-  await helper.show("#polygon", {mode: "cssClipPath"});
+function* testPolygonRemovePoint(testActor, helper) {
+  yield helper.show("#polygon", {mode: "cssClipPath"});
   let { highlightedNode } = helper;
 
-  let points = await helper.getElementAttribute("shapes-polygon", "points");
+  let points = yield helper.getElementAttribute("shapes-polygon", "points");
   let [x, y] = points.split(" ")[0].split(",");
-  let quads = await testActor.getAllAdjustedQuads("#polygon");
+  let quads = yield testActor.getAllAdjustedQuads("#polygon");
   let { top, left, width, height } = quads.border[0].bounds;
 
   let options = {
@@ -114,21 +114,21 @@ async function testPolygonRemovePoint(testActor, helper) {
   };
 
   info("Removing first polygon point");
-  await testActor.synthesizeMouse(options);
-  await testActor.reflow();
+  yield testActor.synthesizeMouse(options);
+  yield testActor.reflow();
 
-  let computedStyle = await highlightedNode.getComputedStyle();
+  let computedStyle = yield highlightedNode.getComputedStyle();
   let definition = computedStyle["clip-path"].value;
   ok(!definition.includes(`${x}% ${y}%`), "Point successfully removed");
 }
 
-async function testCircleMoveCenter(testActor, helper) {
-  await helper.show("#circle", {mode: "cssClipPath"});
+function* testCircleMoveCenter(testActor, helper) {
+  yield helper.show("#circle", {mode: "cssClipPath"});
   let { mouse, highlightedNode } = helper;
 
-  let cx = parseFloat(await helper.getElementAttribute("shapes-ellipse", "cx"));
-  let cy = parseFloat(await helper.getElementAttribute("shapes-ellipse", "cy"));
-  let quads = await testActor.getAllAdjustedQuads("#circle");
+  let cx = parseFloat(yield helper.getElementAttribute("shapes-ellipse", "cx"));
+  let cy = parseFloat(yield helper.getElementAttribute("shapes-ellipse", "cy"));
+  let quads = yield testActor.getAllAdjustedQuads("#circle");
   let { width, height } = quads.border[0].bounds;
   let cxPixel = width * cx / 100;
   let cyPixel = height * cy / 100;
@@ -136,28 +136,28 @@ async function testCircleMoveCenter(testActor, helper) {
   let dy = height / 10;
 
   info("Moving circle center");
-  await mouse.down(cxPixel, cyPixel, "#circle");
-  await mouse.move(cxPixel + dx, cyPixel + dy, "#circle");
-  await mouse.up(cxPixel + dx, cyPixel + dy, "#circle");
-  await testActor.reflow();
+  yield mouse.down(cxPixel, cyPixel, "#circle");
+  yield mouse.move(cxPixel + dx, cyPixel + dy, "#circle");
+  yield mouse.up(cxPixel + dx, cyPixel + dy, "#circle");
+  yield testActor.reflow();
 
-  let computedStyle = await highlightedNode.getComputedStyle();
+  let computedStyle = yield highlightedNode.getComputedStyle();
   let definition = computedStyle["clip-path"].value;
   ok(definition.includes(`at ${cx + 10}% ${cy + 10}%`),
      "Circle center successfully moved");
 }
 
-async function testEllipseMoveRadius(testActor, helper) {
-  await helper.show("#ellipse", {mode: "cssClipPath"});
+function* testEllipseMoveRadius(testActor, helper) {
+  yield helper.show("#ellipse", {mode: "cssClipPath"});
   let { mouse, highlightedNode } = helper;
 
-  let rx = parseFloat(await helper.getElementAttribute("shapes-ellipse", "rx"));
-  let ry = parseFloat(await helper.getElementAttribute("shapes-ellipse", "ry"));
-  let cx = parseFloat(await helper.getElementAttribute("shapes-ellipse", "cx"));
-  let cy = parseFloat(await helper.getElementAttribute("shapes-ellipse", "cy"));
-  let quads = await testActor.getAllAdjustedQuads("#ellipse");
+  let rx = parseFloat(yield helper.getElementAttribute("shapes-ellipse", "rx"));
+  let ry = parseFloat(yield helper.getElementAttribute("shapes-ellipse", "ry"));
+  let cx = parseFloat(yield helper.getElementAttribute("shapes-ellipse", "cx"));
+  let cy = parseFloat(yield helper.getElementAttribute("shapes-ellipse", "cy"));
+  let quads = yield testActor.getAllAdjustedQuads("#ellipse");
   let { width, height } = quads.content[0].bounds;
-  let computedStyle = await highlightedNode.getComputedStyle();
+  let computedStyle = yield highlightedNode.getComputedStyle();
   let paddingTop = parseFloat(computedStyle["padding-top"].value);
   let paddingLeft = parseFloat(computedStyle["padding-left"].value);
   let cxPixel = paddingLeft + width * cx / 100;
@@ -168,32 +168,32 @@ async function testEllipseMoveRadius(testActor, helper) {
   let dy = height / 10;
 
   info("Moving ellipse rx");
-  await mouse.down(rxPixel, cyPixel, "#ellipse");
-  await mouse.move(rxPixel + dx, cyPixel, "#ellipse");
-  await mouse.up(rxPixel + dx, cyPixel, "#ellipse");
-  await testActor.reflow();
+  yield mouse.down(rxPixel, cyPixel, "#ellipse");
+  yield mouse.move(rxPixel + dx, cyPixel, "#ellipse");
+  yield mouse.up(rxPixel + dx, cyPixel, "#ellipse");
+  yield testActor.reflow();
 
   info("Moving ellipse ry");
-  await mouse.down(cxPixel, ryPixel, "#ellipse");
-  await mouse.move(cxPixel, ryPixel - dy, "#ellipse");
-  await mouse.up(cxPixel, ryPixel - dy, "#ellipse");
-  await testActor.reflow();
+  yield mouse.down(cxPixel, ryPixel, "#ellipse");
+  yield mouse.move(cxPixel, ryPixel - dy, "#ellipse");
+  yield mouse.up(cxPixel, ryPixel - dy, "#ellipse");
+  yield testActor.reflow();
 
-  computedStyle = await highlightedNode.getComputedStyle();
+  computedStyle = yield highlightedNode.getComputedStyle();
   let definition = computedStyle["clip-path"].value;
   ok(definition.includes(`${rx + 10}% ${ry - 10}%`),
      "Ellipse radiuses successfully moved");
 }
 
-async function testInsetMoveEdges(testActor, helper) {
-  await helper.show("#inset", {mode: "cssClipPath"});
+function* testInsetMoveEdges(testActor, helper) {
+  yield helper.show("#inset", {mode: "cssClipPath"});
   let { mouse, highlightedNode } = helper;
 
-  let x = parseFloat(await helper.getElementAttribute("shapes-rect", "x"));
-  let y = parseFloat(await helper.getElementAttribute("shapes-rect", "y"));
-  let width = parseFloat(await helper.getElementAttribute("shapes-rect", "width"));
-  let height = parseFloat(await helper.getElementAttribute("shapes-rect", "height"));
-  let quads = await testActor.getAllAdjustedQuads("#inset");
+  let x = parseFloat(yield helper.getElementAttribute("shapes-rect", "x"));
+  let y = parseFloat(yield helper.getElementAttribute("shapes-rect", "y"));
+  let width = parseFloat(yield helper.getElementAttribute("shapes-rect", "width"));
+  let height = parseFloat(yield helper.getElementAttribute("shapes-rect", "height"));
+  let quads = yield testActor.getAllAdjustedQuads("#inset");
   let { width: elemWidth, height: elemHeight } = quads.content[0].bounds;
 
   let left = elemWidth * x / 100;
@@ -206,30 +206,30 @@ async function testInsetMoveEdges(testActor, helper) {
   let dy = elemHeight / 10;
 
   info("Moving inset top");
-  await mouse.down(xCenter, top, "#inset");
-  await mouse.move(xCenter, top + dy, "#inset");
-  await mouse.up(xCenter, top + dy, "#inset");
-  await testActor.reflow();
+  yield mouse.down(xCenter, top, "#inset");
+  yield mouse.move(xCenter, top + dy, "#inset");
+  yield mouse.up(xCenter, top + dy, "#inset");
+  yield testActor.reflow();
 
   info("Moving inset bottom");
-  await mouse.down(xCenter, bottom, "#inset");
-  await mouse.move(xCenter, bottom + dy, "#inset");
-  await mouse.up(xCenter, bottom + dy, "#inset");
-  await testActor.reflow();
+  yield mouse.down(xCenter, bottom, "#inset");
+  yield mouse.move(xCenter, bottom + dy, "#inset");
+  yield mouse.up(xCenter, bottom + dy, "#inset");
+  yield testActor.reflow();
 
   info("Moving inset left");
-  await mouse.down(left, yCenter, "#inset");
-  await mouse.move(left + dx, yCenter, "#inset");
-  await mouse.up(left + dx, yCenter, "#inset");
-  await testActor.reflow();
+  yield mouse.down(left, yCenter, "#inset");
+  yield mouse.move(left + dx, yCenter, "#inset");
+  yield mouse.up(left + dx, yCenter, "#inset");
+  yield testActor.reflow();
 
   info("Moving inset right");
-  await mouse.down(right, yCenter, "#inset");
-  await mouse.move(right + dx, yCenter, "#inset");
-  await mouse.up(right + dx, yCenter, "#inset");
-  await testActor.reflow();
+  yield mouse.down(right, yCenter, "#inset");
+  yield mouse.move(right + dx, yCenter, "#inset");
+  yield mouse.up(right + dx, yCenter, "#inset");
+  yield testActor.reflow();
 
-  let computedStyle = await highlightedNode.getComputedStyle();
+  let computedStyle = yield highlightedNode.getComputedStyle();
   let definition = computedStyle["clip-path"].value;
   ok(definition.includes(
     `${top + dy}px ${elemWidth - right - dx}px ${100 - y - height - 10}% ${x + 10}%`),

@@ -7,8 +7,8 @@
 // Test the class panel shows a message when invalid nodes are selected.
 // text nodes, pseudo-elements, DOCTYPE, comment nodes.
 
-add_task(async function() {
-  await addTab(`data:text/html;charset=utf-8,
+add_task(function* () {
+  yield addTab(`data:text/html;charset=utf-8,
     <body>
     <style>div::after {content: "test";}</style>
     <!-- comment -->
@@ -17,29 +17,29 @@ add_task(async function() {
     </body>`);
 
   info("Open the class panel");
-  let {inspector, view} = await openRuleView();
+  let {inspector, view} = yield openRuleView();
   view.showClassPanel();
 
   info("Selecting the DOCTYPE node");
-  let {nodes} = await inspector.walker.children(inspector.walker.rootNode);
-  await selectNode(nodes[0], inspector);
+  let {nodes} = yield inspector.walker.children(inspector.walker.rootNode);
+  yield selectNode(nodes[0], inspector);
   checkMessageIsDisplayed(view);
 
   info("Selecting the comment node");
-  let styleNode = await getNodeFront("style", inspector);
-  let commentNode = await inspector.walker.nextSibling(styleNode);
-  await selectNode(commentNode, inspector);
+  let styleNode = yield getNodeFront("style", inspector);
+  let commentNode = yield inspector.walker.nextSibling(styleNode);
+  yield selectNode(commentNode, inspector);
   checkMessageIsDisplayed(view);
 
   info("Selecting the text node");
-  let textNode = await inspector.walker.nextSibling(commentNode);
-  await selectNode(textNode, inspector);
+  let textNode = yield inspector.walker.nextSibling(commentNode);
+  yield selectNode(textNode, inspector);
   checkMessageIsDisplayed(view);
 
   info("Selecting the ::after pseudo-element");
-  let divNode = await getNodeFront("div", inspector);
-  let pseudoElement = (await inspector.walker.children(divNode)).nodes[0];
-  await selectNode(pseudoElement, inspector);
+  let divNode = yield getNodeFront("div", inspector);
+  let pseudoElement = (yield inspector.walker.children(divNode)).nodes[0];
+  yield selectNode(pseudoElement, inspector);
   checkMessageIsDisplayed(view);
 });
 

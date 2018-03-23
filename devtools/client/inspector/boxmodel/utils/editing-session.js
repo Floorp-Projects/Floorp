@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { Task } = require("devtools/shared/task");
 const { getCssProperties } = require("devtools/shared/fronts/css-properties");
 
 /**
@@ -106,7 +107,7 @@ EditingSession.prototype = {
    *         is removed.
    * @return {Promise} Resolves when the modifications are complete.
    */
-  async setProperties(properties) {
+  setProperties: Task.async(function* (properties) {
     for (let property of properties) {
       // Get a RuleModificationList or RuleRewriter helper object from the
       // StyleRuleActor to make changes to CSS properties.
@@ -134,16 +135,16 @@ EditingSession.prototype = {
         modifications.setProperty(index, property.name, property.value, "");
       }
 
-      await modifications.apply();
+      yield modifications.apply();
     }
-  },
+  }),
 
   /**
    * Reverts all of the property changes made by this instance.
    *
    * @return {Promise} Resolves when all properties have been reverted.
    */
-  async revert() {
+  revert: Task.async(function* () {
     // Revert each property that we modified previously, one by one. See
     // setProperties for information about why.
     for (let [property, value] of this._modifications) {
@@ -169,9 +170,9 @@ EditingSession.prototype = {
         modifications.removeProperty(index, property);
       }
 
-      await modifications.apply();
+      yield modifications.apply();
     }
-  },
+  }),
 
   destroy: function() {
     this._doc = null;

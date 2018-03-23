@@ -15,18 +15,18 @@ const TEST_URI = `
   <h1>Some header text</h1>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
-  await selectNode("h1", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openComputedView();
+  yield selectNode("h1", inspector);
 
-  await testExpandOnTwistyClick(view, inspector);
-  await testCollapseOnTwistyClick(view, inspector);
-  await testExpandOnDblClick(view, inspector);
-  await testCollapseOnDblClick(view, inspector);
+  yield testExpandOnTwistyClick(view, inspector);
+  yield testCollapseOnTwistyClick(view, inspector);
+  yield testExpandOnDblClick(view, inspector);
+  yield testCollapseOnDblClick(view, inspector);
 });
 
-async function testExpandOnTwistyClick({styleDocument, styleWindow}, inspector) {
+function* testExpandOnTwistyClick({styleDocument, styleWindow}, inspector) {
   info("Testing that a property expands on twisty click");
 
   info("Getting twisty element");
@@ -37,7 +37,7 @@ async function testExpandOnTwistyClick({styleDocument, styleWindow}, inspector) 
   info("Clicking on the twisty element");
   twisty.click();
 
-  await onExpand;
+  yield onExpand;
 
   // Expanded means the matchedselectors div is not empty
   let div = styleDocument.querySelector(".computed-property-content .matchedselectors");
@@ -45,7 +45,7 @@ async function testExpandOnTwistyClick({styleDocument, styleWindow}, inspector) 
     "Matched selectors are expanded on twisty click");
 }
 
-async function testCollapseOnTwistyClick({styleDocument, styleWindow}, inspector) {
+function* testCollapseOnTwistyClick({styleDocument, styleWindow}, inspector) {
   info("Testing that a property collapses on twisty click");
 
   info("Getting twisty element");
@@ -56,7 +56,7 @@ async function testCollapseOnTwistyClick({styleDocument, styleWindow}, inspector
   info("Clicking on the twisty element");
   twisty.click();
 
-  await onCollapse;
+  yield onCollapse;
 
   // Collapsed means the matchedselectors div is empty
   let div = styleDocument.querySelector(".computed-property-content .matchedselectors");
@@ -64,7 +64,7 @@ async function testCollapseOnTwistyClick({styleDocument, styleWindow}, inspector
     "Matched selectors are collapsed on twisty click");
 }
 
-async function testExpandOnDblClick({styleDocument, styleWindow}, inspector) {
+function* testExpandOnDblClick({styleDocument, styleWindow}, inspector) {
   info("Testing that a property expands on container dbl-click");
 
   info("Getting computed property container");
@@ -77,14 +77,14 @@ async function testExpandOnDblClick({styleDocument, styleWindow}, inspector) {
   info("Dbl-clicking on the container");
   EventUtils.synthesizeMouseAtCenter(container, {clickCount: 2}, styleWindow);
 
-  await onExpand;
+  yield onExpand;
 
   // Expanded means the matchedselectors div is not empty
   let div = styleDocument.querySelector(".computed-property-content .matchedselectors");
   ok(div.childNodes.length > 0, "Matched selectors are expanded on dblclick");
 }
 
-async function testCollapseOnDblClick({styleDocument, styleWindow}, inspector) {
+function* testCollapseOnDblClick({styleDocument, styleWindow}, inspector) {
   info("Testing that a property collapses on container dbl-click");
 
   info("Getting computed property container");
@@ -95,7 +95,7 @@ async function testCollapseOnDblClick({styleDocument, styleWindow}, inspector) {
   info("Dbl-clicking on the container");
   EventUtils.synthesizeMouseAtCenter(container, {clickCount: 2}, styleWindow);
 
-  await onCollapse;
+  yield onCollapse;
 
   // Collapsed means the matchedselectors div is empty
   let div = styleDocument.querySelector(".computed-property-content .matchedselectors");

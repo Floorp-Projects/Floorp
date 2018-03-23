@@ -15,10 +15,10 @@ const TEST_URI = `
   <span id="matches" class="matches">Some styled text</span>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
-  await selectNode("#matches", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openComputedView();
+  yield selectNode("#matches", inspector);
 
   info("Checking the default styles");
   is(isPropertyVisible("color", view), true,
@@ -31,7 +31,7 @@ add_task(async function() {
   let checkbox = doc.querySelector(".includebrowserstyles");
   let onRefreshed = inspector.once("computed-view-refreshed");
   checkbox.click();
-  await onRefreshed;
+  yield onRefreshed;
 
   info("Checking the browser styles");
   is(isPropertyVisible("color", view), true,

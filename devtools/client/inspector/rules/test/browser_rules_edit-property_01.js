@@ -31,25 +31,25 @@ var TEST_DATA = [
   { name: "border", value: "solid 1px foo", isValid: false },
 ];
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
 
   let rule = getRuleViewRuleEditor(view, 1).rule;
   for (let {name, value, isValid} of TEST_DATA) {
-    await testEditProperty(view, rule, name, value, isValid);
+    yield testEditProperty(view, rule, name, value, isValid);
   }
 });
 
-async function testEditProperty(view, rule, name, value, isValid) {
+function* testEditProperty(view, rule, name, value, isValid) {
   info("Test editing existing property name/value fields");
 
   let doc = rule.editor.doc;
   let prop = rule.textProps[0];
 
   info("Focusing an existing property name in the rule-view");
-  let editor = await focusEditableField(view, prop.editor.nameSpan, 32, 1);
+  let editor = yield focusEditableField(view, prop.editor.nameSpan, 32, 1);
 
   is(inplaceEditor(prop.editor.nameSpan), editor,
     "The property name editor got focused");
@@ -60,8 +60,8 @@ async function testEditProperty(view, rule, name, value, isValid) {
   let onValueFocus = once(rule.editor.element, "focus", true);
   let onNameDone = view.once("ruleview-changed");
   EventUtils.sendString(name + ":", doc.defaultView);
-  await onValueFocus;
-  await onNameDone;
+  yield onValueFocus;
+  yield onNameDone;
 
   // Getting the value editor after focus
   editor = inplaceEditor(doc.activeElement);
@@ -72,14 +72,14 @@ async function testEditProperty(view, rule, name, value, isValid) {
   let onValueDone = view.once("ruleview-changed");
   let onBlur = once(input, "blur");
   EventUtils.sendString(value + ";", doc.defaultView);
-  await onBlur;
-  await onValueDone;
+  yield onBlur;
+  yield onValueDone;
 
   is(prop.editor.isValid(), isValid,
     value + " is " + isValid ? "valid" : "invalid");
 
   info("Checking that the style property was changed on the content page");
-  let propValue = await executeInContent("Test:GetRulePropertyValue", {
+  let propValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
     name

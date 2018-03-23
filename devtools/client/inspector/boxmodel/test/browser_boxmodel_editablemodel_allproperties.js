@@ -14,23 +14,23 @@ const TEST_URI = "<style>" +
   "</style>" +
   "<div id='div1'></div><div id='div2'></div><div id='div3'></div>";
 
-add_task(async function() {
-  await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel, testActor} = await openLayoutView();
+add_task(function* () {
+  yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
+  let {inspector, boxmodel, testActor} = yield openLayoutView();
 
-  await testEditing(inspector, boxmodel, testActor);
-  await testEditingAndCanceling(inspector, boxmodel, testActor);
-  await testDeleting(inspector, boxmodel, testActor);
-  await testDeletingAndCanceling(inspector, boxmodel, testActor);
+  yield testEditing(inspector, boxmodel, testActor);
+  yield testEditingAndCanceling(inspector, boxmodel, testActor);
+  yield testDeleting(inspector, boxmodel, testActor);
+  yield testDeletingAndCanceling(inspector, boxmodel, testActor);
 });
 
-async function testEditing(inspector, boxmodel, testActor) {
+function* testEditing(inspector, boxmodel, testActor) {
   info("When all properties are set on the node editing one should work");
 
-  await setStyle(testActor, "#div1", "padding", "5px");
-  await waitForUpdate(inspector);
+  yield setStyle(testActor, "#div1", "padding", "5px");
+  yield waitForUpdate(inspector);
 
-  await selectNode("#div1", inspector);
+  yield selectNode("#div1", inspector);
 
   let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-bottom > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
@@ -41,27 +41,27 @@ async function testEditing(inspector, boxmodel, testActor) {
   is(editor.value, "5px", "Should have the right value in the editor.");
 
   EventUtils.synthesizeKey("7", {}, boxmodel.document.defaultView);
-  await waitForUpdate(inspector);
+  yield waitForUpdate(inspector);
 
   is(editor.value, "7", "Should have the right value in the editor.");
-  is((await getStyle(testActor, "#div1", "padding-bottom")), "7px",
+  is((yield getStyle(testActor, "#div1", "padding-bottom")), "7px",
      "Should have updated the padding");
 
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
-  is((await getStyle(testActor, "#div1", "padding-bottom")), "7px",
+  is((yield getStyle(testActor, "#div1", "padding-bottom")), "7px",
      "Should be the right padding.");
   is(span.textContent, 7, "Should have the right value in the box model.");
 }
 
-async function testEditingAndCanceling(inspector, boxmodel, testActor) {
+function* testEditingAndCanceling(inspector, boxmodel, testActor) {
   info("When all properties are set on the node editing one and then " +
        "cancelling with ESCAPE should work");
 
-  await setStyle(testActor, "#div1", "padding", "5px");
-  await waitForUpdate(inspector);
+  yield setStyle(testActor, "#div1", "padding", "5px");
+  yield waitForUpdate(inspector);
 
-  await selectNode("#div1", inspector);
+  yield selectNode("#div1", inspector);
 
   let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
@@ -72,24 +72,24 @@ async function testEditingAndCanceling(inspector, boxmodel, testActor) {
   is(editor.value, "5px", "Should have the right value in the editor.");
 
   EventUtils.synthesizeKey("8", {}, boxmodel.document.defaultView);
-  await waitForUpdate(inspector);
+  yield waitForUpdate(inspector);
 
   is(editor.value, "8", "Should have the right value in the editor.");
-  is((await getStyle(testActor, "#div1", "padding-left")), "8px",
+  is((yield getStyle(testActor, "#div1", "padding-left")), "8px",
      "Should have updated the padding");
 
   EventUtils.synthesizeKey("VK_ESCAPE", {}, boxmodel.document.defaultView);
-  await waitForUpdate(inspector);
+  yield waitForUpdate(inspector);
 
-  is((await getStyle(testActor, "#div1", "padding-left")), "5px",
+  is((yield getStyle(testActor, "#div1", "padding-left")), "5px",
      "Should be the right padding.");
   is(span.textContent, 5, "Should have the right value in the box model.");
 }
 
-async function testDeleting(inspector, boxmodel, testActor) {
+function* testDeleting(inspector, boxmodel, testActor) {
   info("When all properties are set on the node deleting one should work");
 
-  await selectNode("#div1", inspector);
+  yield selectNode("#div1", inspector);
 
   let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
@@ -100,27 +100,27 @@ async function testDeleting(inspector, boxmodel, testActor) {
   is(editor.value, "5px", "Should have the right value in the editor.");
 
   EventUtils.synthesizeKey("VK_DELETE", {}, boxmodel.document.defaultView);
-  await waitForUpdate(inspector);
+  yield waitForUpdate(inspector);
 
   is(editor.value, "", "Should have the right value in the editor.");
-  is((await getStyle(testActor, "#div1", "padding-left")), "",
+  is((yield getStyle(testActor, "#div1", "padding-left")), "",
      "Should have updated the padding");
 
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
-  is((await getStyle(testActor, "#div1", "padding-left")), "",
+  is((yield getStyle(testActor, "#div1", "padding-left")), "",
      "Should be the right padding.");
   is(span.textContent, 3, "Should have the right value in the box model.");
 }
 
-async function testDeletingAndCanceling(inspector, boxmodel, testActor) {
+function* testDeletingAndCanceling(inspector, boxmodel, testActor) {
   info("When all properties are set on the node deleting one then cancelling " +
        "should work");
 
-  await setStyle(testActor, "#div1", "padding", "5px");
-  await waitForUpdate(inspector);
+  yield setStyle(testActor, "#div1", "padding", "5px");
+  yield waitForUpdate(inspector);
 
-  await selectNode("#div1", inspector);
+  yield selectNode("#div1", inspector);
 
   let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
@@ -131,16 +131,16 @@ async function testDeletingAndCanceling(inspector, boxmodel, testActor) {
   is(editor.value, "5px", "Should have the right value in the editor.");
 
   EventUtils.synthesizeKey("VK_DELETE", {}, boxmodel.document.defaultView);
-  await waitForUpdate(inspector);
+  yield waitForUpdate(inspector);
 
   is(editor.value, "", "Should have the right value in the editor.");
-  is((await getStyle(testActor, "#div1", "padding-left")), "",
+  is((yield getStyle(testActor, "#div1", "padding-left")), "",
      "Should have updated the padding");
 
   EventUtils.synthesizeKey("VK_ESCAPE", {}, boxmodel.document.defaultView);
-  await waitForUpdate(inspector);
+  yield waitForUpdate(inspector);
 
-  is((await getStyle(testActor, "#div1", "padding-left")), "5px",
+  is((yield getStyle(testActor, "#div1", "padding-left")), "5px",
      "Should be the right padding.");
   is(span.textContent, 5, "Should have the right value in the box model.");
 }

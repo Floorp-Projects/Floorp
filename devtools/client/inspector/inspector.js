@@ -12,6 +12,7 @@ const Services = require("Services");
 const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
+const {Task} = require("devtools/shared/task");
 const {PrefObserver} = require("devtools/client/shared/prefs");
 const Telemetry = require("devtools/client/shared/telemetry");
 const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
@@ -144,21 +145,21 @@ Inspector.prototype = {
   /**
    * open is effectively an asynchronous constructor
    */
-  async init() {
+  init: Task.async(function* () {
     // Localize all the nodes containing a data-localization attribute.
     localizeMarkup(this.panelDoc);
 
-    this._cssProperties = await initCssProperties(this.toolbox);
-    await this.target.makeRemote();
-    await this._getPageStyle();
+    this._cssProperties = yield initCssProperties(this.toolbox);
+    yield this.target.makeRemote();
+    yield this._getPageStyle();
 
     // This may throw if the document is still loading and we are
     // refering to a dead about:blank document
-    let defaultSelection = await this._getDefaultNodeForSelection()
+    let defaultSelection = yield this._getDefaultNodeForSelection()
       .catch(this._handleRejectionIfNotDestroyed);
 
-    return this._deferredOpen(defaultSelection);
-  },
+    return yield this._deferredOpen(defaultSelection);
+  }),
 
   get toolbox() {
     return this._toolbox;
@@ -949,14 +950,14 @@ Inspector.prototype = {
    * @return {Boolean} true if the eyedropper highlighter is supported by the current
    *         document.
    */
-  async supportsEyeDropper() {
+  supportsEyeDropper: Task.async(function* () {
     try {
       let hasSupportsHighlighters =
-        await this.target.actorHasMethod("inspector", "supportsHighlighters");
+        yield this.target.actorHasMethod("inspector", "supportsHighlighters");
 
       let supportsHighlighters;
       if (hasSupportsHighlighters) {
-        supportsHighlighters = await this.inspector.supportsHighlighters();
+        supportsHighlighters = yield this.inspector.supportsHighlighters();
       } else {
         // If the actor does not provide the supportsHighlighter method, fallback to
         // check if the selected node's document is a HTML document.
@@ -969,9 +970,9 @@ Inspector.prototype = {
       console.error(e);
       return false;
     }
-  },
+  }),
 
-  async setupToolbar() {
+  setupToolbar: Task.async(function* () {
     this.teardownToolbar();
 
     // Setup the add-node button.
@@ -980,7 +981,7 @@ Inspector.prototype = {
     this.addNodeButton.addEventListener("click", this.addNode);
 
     // Setup the eye-dropper icon if we're in an HTML document and we have actor support.
-    let canShowEyeDropper = await this.supportsEyeDropper();
+    let canShowEyeDropper = yield this.supportsEyeDropper();
 
     // Bail out if the inspector was destroyed in the meantime and panelDoc is no longer
     // available.
@@ -1017,7 +1018,7 @@ Inspector.prototype = {
       let parentBox = this.panelDoc.getElementById("inspector-sidebar-toggle-box");
       this.sidebarToggle = this.ReactDOM.render(sidebarToggle, parentBox);
     }
-  },
+  }),
 
   teardownToolbar: function() {
     if (this.addNodeButton) {
@@ -1067,7 +1068,7 @@ Inspector.prototype = {
    * view is initialized. Expands the current selected node and restores the saved
    * highlighter state.
    */
-  async onMarkupLoaded() {
+  onMarkupLoaded: Task.async(function* () {
     if (!this.markup) {
       return;
     }
@@ -1075,7 +1076,7 @@ Inspector.prototype = {
     let onExpand = this.markup.expandNode(this.selection.nodeFront);
 
     // Restore the highlighter states prior to emitting "new-root".
-    await Promise.all([
+    yield Promise.all([
       this.highlighters.restoreFlexboxState(),
       this.highlighters.restoreGridState(),
       this.highlighters.restoreShapeState()
@@ -1087,7 +1088,7 @@ Inspector.prototype = {
     // the markup view is fully emitted before firing 'reloaded'.
     // 'reloaded' is used to know when the panel is fully updated
     // after a page reload.
-    await onExpand;
+    yield onExpand;
 
     this.emit("reloaded");
 
@@ -1102,7 +1103,7 @@ Inspector.prototype = {
       }
       delete this._newRootStart;
     }
-  },
+  }),
 
   _selectionCssSelector: null,
 
@@ -1850,7 +1851,7 @@ Inspector.prototype = {
    * Create a new node as the last child of the current selection, expand the
    * parent and select the new node.
    */
-  async addNode() {
+  addNode: Task.async(function* () {
     if (!this.canAddHTMLChild()) {
       return;
     }
@@ -1859,12 +1860,12 @@ Inspector.prototype = {
 
     // Insert the html and expect a childList markup mutation.
     let onMutations = this.once("markupmutation");
-    await this.walker.insertAdjacentHTML(this.selection.nodeFront, "beforeEnd", html);
-    await onMutations;
+    yield this.walker.insertAdjacentHTML(this.selection.nodeFront, "beforeEnd", html);
+    yield onMutations;
 
     // Expand the parent node.
     this.markup.expandNode(this.selection.nodeFront);
-  },
+  }),
 
   /**
    * Toggle a pseudo class.
@@ -2101,7 +2102,7 @@ Inspector.prototype = {
   /**
    * Initiate gcli screenshot command on selected node.
    */
-  async screenshotNode() {
+  screenshotNode: Task.async(function* () {
     const command = Services.prefs.getBoolPref("devtools.screenshot.clipboard.enabled") ?
       "screenshot --file --clipboard --selector" :
       "screenshot --file --selector";
@@ -2110,14 +2111,14 @@ Inspector.prototype = {
     // is still visible, therefore showing it in the picture.
     // To avoid that, we have to hide it before taking the screenshot. The `hideBoxModel`
     // will do that, calling `hide` for the highlighter only if previously shown.
-    await this.highlighter.hideBoxModel();
+    yield this.highlighter.hideBoxModel();
 
     // Bug 1180314 -  CssSelector might contain white space so need to make sure it is
     // passed to screenshot as a single parameter.  More work *might* be needed if
     // CssSelector could contain escaped single- or double-quotes, backslashes, etc.
     CommandUtils.executeOnTarget(this._target,
       `${command} '${this.selectionCssSelector}'`);
-  },
+  }),
 
   /**
    * Scroll the node into view.
@@ -2343,7 +2344,7 @@ Inspector.prototype = {
  *        - reactDOM
  *        - browserRequire
  */
-const buildFakeToolbox = async function(
+const buildFakeToolbox = Task.async(function* (
   target, createThreadClient, {
     React,
     ReactDOM,
@@ -2396,14 +2397,14 @@ const buildFakeToolbox = async function(
     getNotificationBox() {}
   };
 
-  fakeToolbox.threadClient = await createThreadClient(fakeToolbox);
+  fakeToolbox.threadClient = yield createThreadClient(fakeToolbox);
 
   let inspector = InspectorFront(target.client, target.form);
   let showAllAnonymousContent =
     Services.prefs.getBoolPref("devtools.inspector.showAllAnonymousContent");
-  let walker = await inspector.getWalker({ showAllAnonymousContent });
+  let walker = yield inspector.getWalker({ showAllAnonymousContent });
   let selection = new Selection(walker);
-  let highlighter = await inspector.getHighlighter(false);
+  let highlighter = yield inspector.getHighlighter(false);
   fakeToolbox.highlighterUtils = getHighlighterUtils(fakeToolbox);
 
   fakeToolbox.inspector = inspector;
@@ -2411,7 +2412,7 @@ const buildFakeToolbox = async function(
   fakeToolbox.selection = selection;
   fakeToolbox.highlighter = highlighter;
   return fakeToolbox;
-};
+});
 
 // URL constructor doesn't support chrome: scheme
 let href = window.location.href.replace(/chrome:/, "http://");
@@ -2426,16 +2427,16 @@ if (window.location.protocol === "chrome:" && url.search.length > 1) {
   const React = browserRequire("devtools/client/shared/vendor/react");
   const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
 
-  (async function() {
-    let target = await targetFromURL(url);
-    let fakeToolbox = await buildFakeToolbox(
+  Task.spawn(function* () {
+    let target = yield targetFromURL(url);
+    let fakeToolbox = yield buildFakeToolbox(
       target,
       (toolbox) => attachThread(toolbox),
       { React, ReactDOM, browserRequire }
     );
     let inspectorUI = new Inspector(fakeToolbox);
     inspectorUI.init();
-  })().catch(e => {
+  }).catch(e => {
     window.alert("Unable to start the inspector:" + e.message + "\n" + e.stack);
   });
 }

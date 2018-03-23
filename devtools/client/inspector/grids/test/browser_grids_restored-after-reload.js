@@ -32,13 +32,13 @@ const OTHER_URI = `
   </div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { gridInspector, inspector } = await openLayoutView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let { gridInspector, inspector } = yield openLayoutView();
   let { document: doc } = gridInspector;
   let { highlighters, store } = inspector;
 
-  await selectNode("#grid", inspector);
+  yield selectNode("#grid", inspector);
   let gridList = doc.getElementById("grid-list");
   let checkbox = gridList.children[0].querySelector("input");
 
@@ -48,8 +48,8 @@ add_task(async function() {
     state.grids.length == 1 &&
     state.grids[0].highlighted);
   checkbox.click();
-  await onHighlighterShown;
-  await onCheckboxChange;
+  yield onHighlighterShown;
+  yield onCheckboxChange;
 
   info("Checking the CSS grid highlighter is created.");
   ok(highlighters.highlighters[HIGHLIGHTER_TYPE],
@@ -62,9 +62,9 @@ add_task(async function() {
   let onGridListRestored = waitUntilState(store, state =>
     state.grids.length == 1 &&
     state.grids[0].highlighted);
-  await refreshTab();
-  let { restored } = await onStateRestored;
-  await onGridListRestored;
+  yield refreshTab();
+  let { restored } = yield onStateRestored;
+  yield onGridListRestored;
 
   info("Check that the grid highlighter can be displayed after reloading the page");
   ok(restored, "The highlighter state was restored");
@@ -77,9 +77,9 @@ add_task(async function() {
   onGridListRestored = waitUntilState(store, state =>
     state.grids.length == 1 &&
     !state.grids[0].highlighted);
-  await navigateTo(inspector, otherUri);
-  ({ restored } = await onStateRestored);
-  await onGridListRestored;
+  yield navigateTo(inspector, otherUri);
+  ({ restored } = yield onStateRestored);
+  yield onGridListRestored;
 
   info("Check that the grid highlighter is hidden after navigating to a different page");
   ok(!restored, "The highlighter state was not restored");

@@ -9,53 +9,53 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Select a node with a URI attribute");
-  await selectNode("video", inspector);
+  yield selectNode("video", inspector);
 
   info("Find the link element from the markup-view");
-  let {editor} = await getContainerForSelector("video", inspector);
+  let {editor} = yield getContainerForSelector("video", inspector);
   let linkEl = editor.attrElements.get("poster").querySelector(".link");
 
   info("Follow the link with middle-click and wait for the new tab to open");
-  await followLinkWaitForTab(linkEl, false,
+  yield followLinkWaitForTab(linkEl, false,
                              URL_ROOT + "doc_markup_tooltip.png");
 
   info("Follow the link with meta/ctrl-click and wait for the new tab to open");
-  await followLinkWaitForTab(linkEl, true,
+  yield followLinkWaitForTab(linkEl, true,
                              URL_ROOT + "doc_markup_tooltip.png");
 
   info("Select a node with a IDREF attribute");
-  await selectNode("label", inspector);
+  yield selectNode("label", inspector);
 
   info("Find the link element from the markup-view that contains the ref");
-  ({editor} = await getContainerForSelector("label", inspector));
+  ({editor} = yield getContainerForSelector("label", inspector));
   linkEl = editor.attrElements.get("for").querySelector(".link");
 
   info("Follow link with middle-click, wait for new node to be selected.");
-  await followLinkWaitForNewNode(linkEl, false, inspector);
+  yield followLinkWaitForNewNode(linkEl, false, inspector);
 
   // We have to re-select the label as the link switched the currently selected
   // node.
-  await selectNode("label", inspector);
+  yield selectNode("label", inspector);
 
   info("Follow link with ctrl/meta-click, wait for new node to be selected.");
-  await followLinkWaitForNewNode(linkEl, true, inspector);
+  yield followLinkWaitForNewNode(linkEl, true, inspector);
 
   info("Select a node with an invalid IDREF attribute");
-  await selectNode("output", inspector);
+  yield selectNode("output", inspector);
 
   info("Find the link element from the markup-view that contains the ref");
-  ({editor} = await getContainerForSelector("output", inspector));
+  ({editor} = yield getContainerForSelector("output", inspector));
   linkEl = editor.attrElements.get("for").querySelectorAll(".link")[2];
 
   info("Try to follow link wiith middle-click, check no new node selected");
-  await followLinkNoNewNode(linkEl, false, inspector);
+  yield followLinkNoNewNode(linkEl, false, inspector);
 
   info("Try to follow link wiith meta/ctrl-click, check no new node selected");
-  await followLinkNoNewNode(linkEl, true, inspector);
+  yield followLinkNoNewNode(linkEl, true, inspector);
 });
 
 function performMouseDown(linkEl, metactrl) {
@@ -78,30 +78,30 @@ function performMouseDown(linkEl, metactrl) {
   linkEl.dispatchEvent(evt);
 }
 
-async function followLinkWaitForTab(linkEl, isMetaClick, expectedTabURI) {
+function* followLinkWaitForTab(linkEl, isMetaClick, expectedTabURI) {
   let onTabOpened = once(gBrowser.tabContainer, "TabOpen");
   performMouseDown(linkEl, isMetaClick);
-  let {target} = await onTabOpened;
-  await BrowserTestUtils.browserLoaded(target.linkedBrowser);
+  let {target} = yield onTabOpened;
+  yield BrowserTestUtils.browserLoaded(target.linkedBrowser);
   ok(true, "A new tab opened");
   is(target.linkedBrowser.currentURI.spec, expectedTabURI,
      "The URL for the new tab is correct");
   gBrowser.removeTab(target);
 }
 
-async function followLinkWaitForNewNode(linkEl, isMetaClick, inspector) {
+function* followLinkWaitForNewNode(linkEl, isMetaClick, inspector) {
   let onSelection = inspector.selection.once("new-node-front");
   performMouseDown(linkEl, isMetaClick);
-  await onSelection;
+  yield onSelection;
 
   ok(true, "A new node was selected");
   is(inspector.selection.nodeFront.id, "name", "The right node was selected");
 }
 
-async function followLinkNoNewNode(linkEl, isMetaClick, inspector) {
+function* followLinkNoNewNode(linkEl, isMetaClick, inspector) {
   let onFailed = inspector.once("idref-attribute-link-failed");
   performMouseDown(linkEl, isMetaClick);
-  await onFailed;
+  yield onFailed;
 
   ok(true, "The node selection failed");
   is(inspector.selection.nodeFront.tagName.toLowerCase(), "output",

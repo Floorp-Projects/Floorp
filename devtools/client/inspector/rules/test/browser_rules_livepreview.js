@@ -31,22 +31,22 @@ const TEST_DATA = [
   {escape: true, value: "inline", expected: "block"}
 ];
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
 
   for (let data of TEST_DATA) {
-    await testLivePreviewData(data, view, "#testid");
+    yield testLivePreviewData(data, view, "#testid");
   }
 });
 
-async function testLivePreviewData(data, ruleView, selector) {
+function* testLivePreviewData(data, ruleView, selector) {
   let rule = getRuleViewRuleEditor(ruleView, 1).rule;
   let propEditor = rule.textProps[0].editor;
 
   info("Focusing the property value inplace-editor");
-  let editor = await focusEditableField(ruleView, propEditor.valueSpan);
+  let editor = yield focusEditableField(ruleView, propEditor.valueSpan);
   is(inplaceEditor(propEditor.valueSpan), editor,
     "The focused editor is the value");
 
@@ -54,7 +54,7 @@ async function testLivePreviewData(data, ruleView, selector) {
   let onPreviewDone = ruleView.once("ruleview-changed");
   EventUtils.sendString(data.value, ruleView.styleWindow);
   ruleView.debounce.flush();
-  await onPreviewDone;
+  yield onPreviewDone;
 
   let onValueDone = ruleView.once("ruleview-changed");
   if (data.escape) {
@@ -62,11 +62,11 @@ async function testLivePreviewData(data, ruleView, selector) {
   } else {
     EventUtils.synthesizeKey("KEY_Enter");
   }
-  await onValueDone;
+  yield onValueDone;
 
   // While the editor is still focused in, the display should have
   // changed already
-  is((await getComputedStyleProperty(selector, null, "display")),
+  is((yield getComputedStyleProperty(selector, null, "display")),
     data.expected,
     "Element should be previewed as " + data.expected);
 }

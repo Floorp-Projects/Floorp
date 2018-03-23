@@ -21,16 +21,16 @@ const TEST_URI = `
   <div id="testid" class="testclass">Styled Node</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
-  await testAddTextInFilter(inspector, view);
-  await testEscapeKeypress(inspector, view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
+  yield testAddTextInFilter(inspector, view);
+  yield testEscapeKeypress(inspector, view);
 });
 
-async function testAddTextInFilter(inspector, view) {
-  await setSearchFilter(view, SEARCH);
+function* testAddTextInFilter(inspector, view) {
+  yield setSearchFilter(view, SEARCH);
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 2, "Should have 2 rules.");
@@ -45,7 +45,7 @@ async function testAddTextInFilter(inspector, view) {
     "background-color text property is correctly highlighted.");
 }
 
-async function testEscapeKeypress(inspector, view) {
+function* testEscapeKeypress(inspector, view) {
   info("Pressing the escape key on search filter");
 
   let doc = view.styleDocument;
@@ -55,7 +55,7 @@ async function testEscapeKeypress(inspector, view) {
 
   searchField.focus();
   EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
-  await onRuleViewFiltered;
+  yield onRuleViewFiltered;
 
   info("Check the search filter is cleared and no rules are highlighted");
   is(view.element.children.length, 3, "Should have 3 rules.");

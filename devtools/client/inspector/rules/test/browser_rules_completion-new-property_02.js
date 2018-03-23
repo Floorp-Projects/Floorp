@@ -50,36 +50,36 @@ const TEST_URI = `
   <h1>Test element</h1>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view, testActor} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {toolbox, inspector, view, testActor} = yield openRuleView();
 
   info("Test autocompletion after 1st page load");
-  await runAutocompletionTest(toolbox, inspector, view);
+  yield runAutocompletionTest(toolbox, inspector, view);
 
   info("Test autocompletion after page navigation");
-  await reloadPage(inspector, testActor);
-  await runAutocompletionTest(toolbox, inspector, view);
+  yield reloadPage(inspector, testActor);
+  yield runAutocompletionTest(toolbox, inspector, view);
 });
 
-async function runAutocompletionTest(toolbox, inspector, view) {
+function* runAutocompletionTest(toolbox, inspector, view) {
   info("Selecting the test node");
-  await selectNode("h1", inspector);
+  yield selectNode("h1", inspector);
 
   info("Focusing a new css property editable property");
   let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let editor = await focusNewRuleViewProperty(ruleEditor);
+  let editor = yield focusNewRuleViewProperty(ruleEditor);
 
   info("Starting to test for css property completion");
   for (let i = 0; i < testData.length; i++) {
     // Re-define the editor at each iteration, because the focus may have moved
     // from property to value and back
     editor = inplaceEditor(view.styleDocument.activeElement);
-    await testCompletion(testData[i], editor, view);
+    yield testCompletion(testData[i], editor, view);
   }
 }
 
-async function testCompletion([key, modifiers, completion, open, selected, change],
+function* testCompletion([key, modifiers, completion, open, selected, change],
                          editor, view) {
   info("Pressing key " + key);
   info("Expecting " + completion);
@@ -110,8 +110,8 @@ async function testCompletion([key, modifiers, completion, open, selected, chang
   // Flush the debounce for the preview text.
   view.debounce.flush();
 
-  await onDone;
-  await onPopupEvent;
+  yield onDone;
+  yield onPopupEvent;
 
   info("Checking the state");
   if (completion !== null) {

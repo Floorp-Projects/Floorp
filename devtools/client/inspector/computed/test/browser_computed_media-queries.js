@@ -11,11 +11,11 @@ const TEST_URI = URL_ROOT + "doc_media_queries.html";
 
 var {PropertyView} = require("devtools/client/inspector/computed/computed");
 
-add_task(async function() {
-  await addTab(TEST_URI);
-  let {inspector, view} = await openComputedView();
-  await selectNode("div", inspector);
-  await checkPropertyView(view);
+add_task(function* () {
+  yield addTab(TEST_URI);
+  let {inspector, view} = yield openComputedView();
+  yield selectNode("div", inspector);
+  yield checkPropertyView(view);
 });
 
 function checkPropertyView(view) {

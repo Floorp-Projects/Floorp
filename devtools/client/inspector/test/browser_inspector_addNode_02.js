@@ -9,39 +9,39 @@
 
 const TEST_URL = URL_ROOT + "doc_inspector_add_node.html";
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Select the DOCTYPE element");
-  let {nodes} = await inspector.walker.children(inspector.walker.rootNode);
-  await selectNode(nodes[0], inspector);
+  let {nodes} = yield inspector.walker.children(inspector.walker.rootNode);
+  yield selectNode(nodes[0], inspector);
   assertState(false, inspector,
     "The button and item are disabled on DOCTYPE");
 
   info("Select the ::before pseudo-element");
-  let body = await getNodeFront("body", inspector);
-  ({nodes} = await inspector.walker.children(body));
-  await selectNode(nodes[0], inspector);
+  let body = yield getNodeFront("body", inspector);
+  ({nodes} = yield inspector.walker.children(body));
+  yield selectNode(nodes[0], inspector);
   assertState(false, inspector,
     "The button and item are disabled on a pseudo-element");
 
   info("Select the svg element");
-  await selectNode("svg", inspector);
+  yield selectNode("svg", inspector);
   assertState(false, inspector,
     "The button and item are disabled on a SVG element");
 
   info("Select the div#foo element");
-  await selectNode("#foo", inspector);
+  yield selectNode("#foo", inspector);
   assertState(true, inspector,
     "The button and item are enabled on a DIV element");
 
   info("Select the documentElement element (html)");
-  await selectNode("html", inspector);
+  yield selectNode("html", inspector);
   assertState(false, inspector,
     "The button and item are disabled on the documentElement");
 
   info("Select the iframe element");
-  await selectNode("iframe", inspector);
+  yield selectNode("iframe", inspector);
   assertState(false, inspector,
     "The button and item are disabled on an IFRAME element");
 });

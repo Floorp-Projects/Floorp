@@ -8,14 +8,14 @@
 
 const TEST_URI = URL_ROOT + "browser_fontinspector.html";
 
-add_task(async function() {
-  let { inspector, view } = await openFontInspectorForURL(TEST_URI);
+add_task(function* () {
+  let { inspector, view } = yield openFontInspectorForURL(TEST_URI);
   let viewDoc = view.document;
 
   info("Selecting the first text-node first-child of <body>");
-  let bodyNode = await getNodeFront("body", inspector);
-  let { nodes } = await inspector.walker.children(bodyNode);
-  await selectNode(nodes[0], inspector);
+  let bodyNode = yield getNodeFront("body", inspector);
+  let { nodes } = yield inspector.walker.children(bodyNode);
+  yield selectNode(nodes[0], inspector);
 
   let lis = getUsedFontsEls(viewDoc);
   is(lis.length, 1, "Font inspector shows 1 font");

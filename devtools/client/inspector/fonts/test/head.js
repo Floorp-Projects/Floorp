@@ -23,10 +23,10 @@ registerCleanupFunction(() => {
  * updating. We also need to wait for the fontinspector-updated event.
  */
 var _selectNode = selectNode;
-selectNode = async function(node, inspector, reason) {
+selectNode = function* (node, inspector, reason) {
   let onUpdated = inspector.once("fontinspector-updated");
-  await _selectNode(node, inspector, reason);
-  await onUpdated;
+  yield _selectNode(node, inspector, reason);
+  yield onUpdated;
 };
 
 /**
@@ -34,21 +34,21 @@ selectNode = async function(node, inspector, reason) {
  * font-inspector tab.
  * @return {Promise} resolves to a {toolbox, inspector, view} object
  */
-var openFontInspectorForURL = async function(url) {
-  await addTab(url);
-  let {toolbox, inspector} = await openInspector();
+var openFontInspectorForURL = Task.async(function* (url) {
+  yield addTab(url);
+  let {toolbox, inspector} = yield openInspector();
 
   // Call selectNode again here to force a fontinspector update since we don't
   // know if the fontinspector-updated event has been sent while the inspector
   // was being opened or not.
-  await selectNode("body", inspector);
+  yield selectNode("body", inspector);
 
   return {
     toolbox,
     inspector,
     view: inspector.fontinspector
   };
-};
+});
 
 /**
  * Focus one of the preview inputs, clear it, type new text into it and wait for the
@@ -57,7 +57,7 @@ var openFontInspectorForURL = async function(url) {
  * @param {FontInspector} view - The FontInspector instance.
  * @param {String} text - The text to preview.
  */
-async function updatePreviewText(view, text) {
+function* updatePreviewText(view, text) {
   info(`Changing the preview text to '${text}'`);
 
   let doc = view.document;
@@ -66,7 +66,7 @@ async function updatePreviewText(view, text) {
   info("Clicking the font preview element to turn it to edit mode");
   let onClick = once(doc, "click");
   previewImg.click();
-  await onClick;
+  yield onClick;
 
   let input = previewImg.parentNode.querySelector("input");
   is(doc.activeElement, input, "The input was focused.");
@@ -75,14 +75,14 @@ async function updatePreviewText(view, text) {
   while (input.value.length) {
     let update = view.inspector.once("fontinspector-updated");
     EventUtils.sendKey("BACK_SPACE", doc.defaultView);
-    await update;
+    yield update;
   }
 
   if (text) {
     info("Typing the specified text to the input field.");
     let update = waitForNEvents(view.inspector, "fontinspector-updated", text.length);
     EventUtils.sendString(text, doc.defaultView);
-    await update;
+    yield update;
   }
 
   is(input.value, text, "The input now contains the correct text.");

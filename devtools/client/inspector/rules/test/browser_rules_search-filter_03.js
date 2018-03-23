@@ -17,15 +17,15 @@ const TEST_URI = `
   <div id="testid" style="background-color:aliceblue">Styled Node</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
-  await testAddTextInFilter(inspector, view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
+  yield testAddTextInFilter(inspector, view);
 });
 
-async function testAddTextInFilter(inspector, view) {
-  await setSearchFilter(view, SEARCH);
+function* testAddTextInFilter(inspector, view) {
+  yield setSearchFilter(view, SEARCH);
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 1, "Should have 1 rule.");

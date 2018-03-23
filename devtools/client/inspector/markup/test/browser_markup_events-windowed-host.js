@@ -15,21 +15,21 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.toolbox.host");
 });
 
-add_task(async function() {
-  let { inspector, toolbox } = await openInspectorForURL(TEST_URL);
-  await runTests(inspector);
+add_task(function* () {
+  let { inspector, toolbox } = yield openInspectorForURL(TEST_URL);
+  yield runTests(inspector);
 
-  await toolbox.switchHost("window");
-  await runTests(inspector);
+  yield toolbox.switchHost("window");
+  yield runTests(inspector);
 
-  await toolbox.switchHost("bottom");
-  await runTests(inspector);
+  yield toolbox.switchHost("bottom");
+  yield runTests(inspector);
 
-  await toolbox.destroy();
+  yield toolbox.destroy();
 });
 
-async function runTests(inspector) {
-  let markupContainer = await getContainerForSelector("#events", inspector);
+function* runTests(inspector) {
+  let markupContainer = yield getContainerForSelector("#events", inspector);
   let evHolder = markupContainer.elt.querySelector(".markupview-events");
   let tooltip = inspector.markup.eventDetailsTooltip;
 
@@ -39,9 +39,9 @@ async function runTests(inspector) {
   let onTooltipShown = tooltip.once("shown");
   EventUtils.synthesizeMouseAtCenter(evHolder, {}, inspector.markup.doc.defaultView);
 
-  await onTooltipShown;
+  yield onTooltipShown;
   // New node is selected when clicking on the events bubble, wait for inspector-updated.
-  await onInspectorUpdated;
+  yield onInspectorUpdated;
 
   ok(tooltip.isVisible(), "EventTooltip visible.");
 
@@ -49,13 +49,13 @@ async function runTests(inspector) {
   let onTooltipHidden = tooltip.once("hidden");
 
   info("Click on another tag to hide the event tooltip");
-  let h1 = await getContainerForSelector("h1", inspector);
+  let h1 = yield getContainerForSelector("h1", inspector);
   let tag = h1.elt.querySelector(".tag");
   EventUtils.synthesizeMouseAtCenter(tag, {}, inspector.markup.doc.defaultView);
 
-  await onTooltipHidden;
+  yield onTooltipHidden;
   // New node is selected, wait for inspector-updated.
-  await onInspectorUpdated;
+  yield onInspectorUpdated;
 
   ok(!tooltip.isVisible(), "EventTooltip hidden.");
 }

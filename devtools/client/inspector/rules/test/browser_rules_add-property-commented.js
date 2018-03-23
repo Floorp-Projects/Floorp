@@ -8,19 +8,19 @@
 
 const TEST_URI = "<div id='testid'></div>";
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
-  await testCreateNewSetOfCommentedAndUncommentedProperties(view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
+  yield testCreateNewSetOfCommentedAndUncommentedProperties(view);
 });
 
-async function testCreateNewSetOfCommentedAndUncommentedProperties(view) {
+function* testCreateNewSetOfCommentedAndUncommentedProperties(view) {
   info("Test creating a new set of commented and uncommented properties");
 
   info("Focusing a new property name in the rule-view");
   let ruleEditor = getRuleViewRuleEditor(view, 0);
-  let editor = await focusEditableField(view, ruleEditor.closeBrace);
+  let editor = yield focusEditableField(view, ruleEditor.closeBrace);
   is(inplaceEditor(ruleEditor.newPropSpan), editor,
     "The new property editor has focus");
 
@@ -36,7 +36,7 @@ async function testCreateNewSetOfCommentedAndUncommentedProperties(view) {
   info("Pressing return to commit and focus the new value field");
   let onModifications = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
-  await onModifications;
+  yield onModifications;
 
   let textProps = ruleEditor.rule.textProps;
   ok(textProps[0].enabled, "The 'color' property is enabled.");

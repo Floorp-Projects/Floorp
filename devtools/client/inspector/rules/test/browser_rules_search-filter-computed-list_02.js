@@ -21,16 +21,16 @@ const TEST_URI = `
   <h1 id="testid" class="testclass">Styled Node</h1>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
-  await testAddTextInFilter(inspector, view);
-  await testRemoveTextInFilter(inspector, view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
+  yield testAddTextInFilter(inspector, view);
+  yield testRemoveTextInFilter(inspector, view);
 });
 
-async function testAddTextInFilter(inspector, view) {
-  await setSearchFilter(view, SEARCH);
+function* testAddTextInFilter(inspector, view) {
+  yield setSearchFilter(view, SEARCH);
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 2, "Should have 2 rules.");
@@ -57,7 +57,7 @@ async function testAddTextInFilter(inspector, view) {
     "margin-left computed property is correctly highlighted.");
 }
 
-async function testRemoveTextInFilter(inspector, view) {
+function* testRemoveTextInFilter(inspector, view) {
   info("Press backspace and set filter text to \"margin\"");
 
   let win = view.styleWindow;
@@ -65,7 +65,7 @@ async function testRemoveTextInFilter(inspector, view) {
 
   searchField.focus();
   EventUtils.synthesizeKey("VK_BACK_SPACE", {}, win);
-  await inspector.once("ruleview-filtered");
+  yield inspector.once("ruleview-filtered");
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 2, "Should have 2 rules.");

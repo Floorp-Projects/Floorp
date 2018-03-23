@@ -30,18 +30,18 @@ div {
 }
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {toolbox, inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
 
   info("Add a new property in the rule-view");
-  await addProperty(view, 2, "color", "chartreuse");
+  yield addProperty(view, 2, "color", "chartreuse");
 
   info("Switch to the style-editor");
-  let { UI } = await toolbox.selectTool("styleeditor");
+  let { UI } = yield toolbox.selectTool("styleeditor");
 
-  let styleEditor = await UI.editors[0].getSourceEditor();
+  let styleEditor = yield UI.editors[0].getSourceEditor();
   let text = styleEditor.sourceEditor.getText();
   is(text, expectedText, "style inspector changes are synced");
 });

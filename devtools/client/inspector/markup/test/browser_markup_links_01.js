@@ -102,13 +102,13 @@ const TEST_DATA = [{
 
 requestLongerTimeout(2);
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   for (let {selector, attributes} of TEST_DATA) {
     info("Testing attributes on node " + selector);
-    await selectNode(selector, inspector);
-    let {editor} = await getContainerForSelector(selector, inspector);
+    yield selectNode(selector, inspector);
+    let {editor} = yield getContainerForSelector(selector, inspector);
 
     for (let {attributeName, links} of attributes) {
       info("Testing attribute " + attributeName);

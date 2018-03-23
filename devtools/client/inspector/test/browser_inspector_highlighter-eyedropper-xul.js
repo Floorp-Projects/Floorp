@@ -10,15 +10,15 @@ const TEST_URL = URL_ROOT + "doc_inspector_highlighter_xbl.xul";
 const TEST_URL_2 =
   "data:text/html;charset=utf-8,<h1 style='color:red'>HTML test page</h1>";
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Check the inspector toolbar");
   let button = inspector.panelDoc.querySelector("#inspector-eyedropper-toggle");
   ok(isDisabled(button), "The button is hidden in the toolbar");
 
   info("Check the color picker");
-  await selectNode("#scale", inspector);
+  yield selectNode("#scale", inspector);
 
   // Find the color swatch in the rule-view.
   let ruleView = inspector.getPanel("ruleview").view;
@@ -29,13 +29,13 @@ add_task(async function() {
   let cPicker = ruleView.tooltips.getTooltip("colorPicker");
   let onColorPickerReady = cPicker.once("ready");
   swatchEl.click();
-  await onColorPickerReady;
+  yield onColorPickerReady;
 
   button = cPicker.tooltip.container.querySelector("#eyedropper-button");
   ok(isDisabled(button), "The button is disabled in the color picker");
 
   info("Navigate to a HTML document");
-  await navigateTo(inspector, TEST_URL_2);
+  yield navigateTo(inspector, TEST_URL_2);
 
   info("Check the inspector toolbar in HTML document");
   button = inspector.panelDoc.querySelector("#inspector-eyedropper-toggle");
@@ -43,7 +43,7 @@ add_task(async function() {
 
   info("Check the color picker in HTML document");
   // Find the color swatch in the rule-view.
-  await selectNode("h1", inspector);
+  yield selectNode("h1", inspector);
 
   ruleView = inspector.getPanel("ruleview").view;
   ruleViewDocument = ruleView.styleDocument;
@@ -53,7 +53,7 @@ add_task(async function() {
   cPicker = ruleView.tooltips.getTooltip("colorPicker");
   onColorPickerReady = cPicker.once("ready");
   swatchEl.click();
-  await onColorPickerReady;
+  yield onColorPickerReady;
 
   button = cPicker.tooltip.container.querySelector("#eyedropper-button");
   ok(!isDisabled(button), "The button is enabled in the color picker");

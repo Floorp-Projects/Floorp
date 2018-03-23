@@ -13,7 +13,7 @@ const TEST_DATA_URI = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQA
 const INVALID_IMAGE_URI = "resource://devtools/client/definitions.js";
 const ERROR_MESSAGE = STYLE_INSPECTOR_L10N.getStr("styleinspector.copyImageDataUrlError");
 
-add_task(async function() {
+add_task(function* () {
   const TEST_URI = `<style type="text/css">
       .valid-background {
         background-image: url(${TEST_DATA_URI});
@@ -25,46 +25,46 @@ add_task(async function() {
     <div class="valid-background">Valid background image</div>
     <div class="invalid-background">Invalid background image</div>`;
 
-  await addTab("data:text/html;charset=utf8," + encodeURIComponent(TEST_URI));
+  yield addTab("data:text/html;charset=utf8," + encodeURIComponent(TEST_URI));
 
-  await startTest();
+  yield startTest();
 });
 
-async function startTest() {
+function* startTest() {
   info("Opening rule view");
-  let {inspector, view} = await openRuleView();
+  let {inspector, view} = yield openRuleView();
 
   info("Test valid background image URL in rule view");
-  await testCopyUrlToClipboard({view, inspector}, "data-uri",
+  yield testCopyUrlToClipboard({view, inspector}, "data-uri",
     ".valid-background", TEST_DATA_URI);
-  await testCopyUrlToClipboard({view, inspector}, "url",
+  yield testCopyUrlToClipboard({view, inspector}, "url",
     ".valid-background", TEST_DATA_URI);
 
   info("Test invalid background image URL in rue view");
-  await testCopyUrlToClipboard({view, inspector}, "data-uri",
+  yield testCopyUrlToClipboard({view, inspector}, "data-uri",
     ".invalid-background", ERROR_MESSAGE);
-  await testCopyUrlToClipboard({view, inspector}, "url",
+  yield testCopyUrlToClipboard({view, inspector}, "url",
     ".invalid-background", INVALID_IMAGE_URI);
 
   info("Opening computed view");
   view = selectComputedView(inspector);
 
   info("Test valid background image URL in computed view");
-  await testCopyUrlToClipboard({view, inspector}, "data-uri",
+  yield testCopyUrlToClipboard({view, inspector}, "data-uri",
     ".valid-background", TEST_DATA_URI);
-  await testCopyUrlToClipboard({view, inspector}, "url",
+  yield testCopyUrlToClipboard({view, inspector}, "url",
     ".valid-background", TEST_DATA_URI);
 
   info("Test invalid background image URL in computed view");
-  await testCopyUrlToClipboard({view, inspector}, "data-uri",
+  yield testCopyUrlToClipboard({view, inspector}, "data-uri",
     ".invalid-background", ERROR_MESSAGE);
-  await testCopyUrlToClipboard({view, inspector}, "url",
+  yield testCopyUrlToClipboard({view, inspector}, "url",
     ".invalid-background", INVALID_IMAGE_URI);
 }
 
-async function testCopyUrlToClipboard({view, inspector}, type, selector, expected) {
+function* testCopyUrlToClipboard({view, inspector}, type, selector, expected) {
   info("Select node in inspector panel");
-  await selectNode(selector, inspector);
+  yield selectNode(selector, inspector);
 
   info("Retrieve background-image link for selected node in current " +
        "styleinspector view");
@@ -87,12 +87,12 @@ async function testCopyUrlToClipboard({view, inspector}, type, selector, expecte
 
   if (type == "data-uri") {
     info("Click Copy Data URI and wait for clipboard");
-    await waitForClipboardPromise(() => {
+    yield waitForClipboardPromise(() => {
       return menuitemCopyImageDataUrl.click();
     }, expected);
   } else {
     info("Click Copy URL and wait for clipboard");
-    await waitForClipboardPromise(() => {
+    yield waitForClipboardPromise(() => {
       return menuitemCopyUrl.click();
     }, expected);
   }

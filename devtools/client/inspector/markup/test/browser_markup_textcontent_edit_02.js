@@ -10,19 +10,19 @@
 const TEST_URL = URL_ROOT + "doc_markup_edit.html";
 const SELECTOR = ".node6";
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Expanding all nodes");
-  await inspector.markup.expandAll();
-  await waitForMultipleChildrenUpdates(inspector);
+  yield inspector.markup.expandAll();
+  yield waitForMultipleChildrenUpdates(inspector);
 
-  let nodeValue = await getFirstChildNodeValue(SELECTOR, testActor);
+  let nodeValue = yield getFirstChildNodeValue(SELECTOR, testActor);
   let expectedValue = "line6";
   is(nodeValue, expectedValue, "The test node's text content is correct");
 
   info("Open editable field for .node6");
-  let container = await focusNode(SELECTOR, inspector);
+  let container = yield focusNode(SELECTOR, inspector);
   let field = container.elt.querySelector("pre");
   field.focus();
   EventUtils.sendKey("return", inspector.panelWin);
@@ -32,59 +32,59 @@ add_task(async function() {
   checkSelectionPositions(editor, 0, expectedValue.length);
 
   info("Navigate using 'RIGHT': move the caret to the end");
-  await sendKey("VK_RIGHT", {}, editor, inspector.panelWin);
+  yield sendKey("VK_RIGHT", {}, editor, inspector.panelWin);
   is(editor.input.value, expectedValue, "Value should not have changed");
   checkSelectionPositions(editor, expectedValue.length, expectedValue.length);
 
   info("Navigate using 'DOWN': no effect, already at the end");
-  await sendKey("VK_DOWN", {}, editor, inspector.panelWin);
+  yield sendKey("VK_DOWN", {}, editor, inspector.panelWin);
   is(editor.input.value, expectedValue, "Value should not have changed");
   checkSelectionPositions(editor, expectedValue.length, expectedValue.length);
 
   info("Navigate using 'UP': move to the start");
-  await sendKey("VK_UP", {}, editor, inspector.panelWin);
+  yield sendKey("VK_UP", {}, editor, inspector.panelWin);
   is(editor.input.value, expectedValue, "Value should not have changed");
   checkSelectionPositions(editor, 0, 0);
 
   info("Navigate using 'DOWN': move to the end");
-  await sendKey("VK_DOWN", {}, editor, inspector.panelWin);
+  yield sendKey("VK_DOWN", {}, editor, inspector.panelWin);
   is(editor.input.value, expectedValue, "Value should not have changed");
   checkSelectionPositions(editor, expectedValue.length, expectedValue.length);
 
   info("Type 'b' in the editable field");
-  await sendKey("b", {}, editor, inspector.panelWin);
+  yield sendKey("b", {}, editor, inspector.panelWin);
   expectedValue += "b";
   is(editor.input.value, expectedValue, "Value should be updated");
 
   info("Type 'a' in the editable field");
-  await sendKey("a", {}, editor, inspector.panelWin);
+  yield sendKey("a", {}, editor, inspector.panelWin);
   expectedValue += "a";
   is(editor.input.value, expectedValue, "Value should be updated");
 
   info("Create a new line using shift+RETURN");
-  await sendKey("VK_RETURN", {shiftKey: true}, editor, inspector.panelWin);
+  yield sendKey("VK_RETURN", {shiftKey: true}, editor, inspector.panelWin);
   expectedValue += "\n";
   is(editor.input.value, expectedValue, "Value should have a new line");
   checkSelectionPositions(editor, expectedValue.length, expectedValue.length);
 
   info("Type '1' in the editable field");
-  await sendKey("1", {}, editor, inspector.panelWin);
+  yield sendKey("1", {}, editor, inspector.panelWin);
   expectedValue += "1";
   is(editor.input.value, expectedValue, "Value should be updated");
   checkSelectionPositions(editor, expectedValue.length, expectedValue.length);
 
   info("Navigate using 'UP': move back to the first line");
-  await sendKey("VK_UP", {}, editor, inspector.panelWin);
+  yield sendKey("VK_UP", {}, editor, inspector.panelWin);
   is(editor.input.value, expectedValue, "Value should not have changed");
   info("Caret should be back on the first line");
   checkSelectionPositions(editor, 1, 1);
 
   info("Commit the new value with RETURN, wait for the markupmutation event");
   let onMutated = inspector.once("markupmutation");
-  await sendKey("VK_RETURN", {}, editor, inspector.panelWin);
-  await onMutated;
+  yield sendKey("VK_RETURN", {}, editor, inspector.panelWin);
+  yield onMutated;
 
-  nodeValue = await getFirstChildNodeValue(SELECTOR, testActor);
+  nodeValue = yield getFirstChildNodeValue(SELECTOR, testActor);
   is(nodeValue, expectedValue, "The test node's text content is correct");
 });
 

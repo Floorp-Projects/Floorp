@@ -22,13 +22,13 @@ const TEST_URI = `
   <div id="testid">Styled Node</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
   info("Test click on color swatch while editing property name");
 
-  await selectNode("#testid", inspector);
+  yield selectNode("#testid", inspector);
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let propEditor = ruleEditor.rule.textProps[1].editor;
   let swatchSpan = propEditor.valueSpan.querySelectorAll(
@@ -36,7 +36,7 @@ add_task(async function() {
   let colorPicker = view.tooltips.getTooltip("colorPicker");
 
   info("Focus the background name span");
-  await focusEditableField(view, propEditor.nameSpan);
+  yield focusEditableField(view, propEditor.nameSpan);
   let editor = inplaceEditor(propEditor.doc.activeElement);
 
   info("Modify the background property to background-image to trigger the " +
@@ -52,13 +52,13 @@ add_task(async function() {
     propEditor.doc.defaultView);
 
   info("wait for ruleview-changed event to be triggered to prevent pending requests");
-  await onRuleViewChanged;
+  yield onRuleViewChanged;
 
   info("wait for the property value to be updated");
-  await onPropertyValueUpdate;
+  yield onPropertyValueUpdate;
 
   info("wait for the color picker to be shown");
-  await onReady;
+  yield onReady;
 
   ok(true, "The color picker was shown on click of the color swatch");
   ok(!inplaceEditor(propEditor.valueSpan),

@@ -25,8 +25,8 @@ const NODES = [
    title: "clipPath#clip"},
 ];
 
-add_task(async function() {
-  let { inspector } = await openInspectorForURL(TEST_URI);
+add_task(function* () {
+  let { inspector } = yield openInspectorForURL(TEST_URI);
   let breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
   let container = breadcrumbs.querySelector(".html-arrowscrollbox-inner");
 
@@ -35,8 +35,8 @@ add_task(async function() {
 
     info("Selecting node and waiting for breadcrumbs to update");
     let breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
-    await selectNode(node.selector, inspector);
-    await breadcrumbsUpdated;
+    yield selectNode(node.selector, inspector);
+    yield breadcrumbsUpdated;
 
     info("Performing checks for node " + node.selector);
     let buttonsLabelIds = node.ids.split(" ");
@@ -67,33 +67,33 @@ add_task(async function() {
       "Node " + node.selector + " has the expected tooltip");
   }
 
-  await testPseudoElements(inspector, container);
-  await testComments(inspector, container);
+  yield testPseudoElements(inspector, container);
+  yield testComments(inspector, container);
 });
 
-async function testPseudoElements(inspector, container) {
+function* testPseudoElements(inspector, container) {
   info("Checking for pseudo elements");
 
-  let pseudoParent = await getNodeFront("#pseudo-container", inspector);
-  let children = await inspector.walker.children(pseudoParent);
+  let pseudoParent = yield getNodeFront("#pseudo-container", inspector);
+  let children = yield inspector.walker.children(pseudoParent);
   is(children.nodes.length, 2, "Pseudo children returned from walker");
 
   let beforeElement = children.nodes[0];
   let breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
-  await selectNode(beforeElement, inspector);
-  await breadcrumbsUpdated;
+  yield selectNode(beforeElement, inspector);
+  yield breadcrumbsUpdated;
   is(container.childNodes[3].textContent, "::before",
      "::before shows up in breadcrumb");
 
   let afterElement = children.nodes[1];
   breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
-  await selectNode(afterElement, inspector);
-  await breadcrumbsUpdated;
+  yield selectNode(afterElement, inspector);
+  yield breadcrumbsUpdated;
   is(container.childNodes[3].textContent, "::after",
      "::before shows up in breadcrumb");
 }
 
-async function testComments(inspector, container) {
+function* testComments(inspector, container) {
   info("Checking for comment elements");
 
   let breadcrumbs = inspector.breadcrumbs;
@@ -102,7 +102,7 @@ async function testComments(inspector, container) {
 
   let onBreadcrumbsUpdated = inspector.once("breadcrumbs-updated");
   button.click();
-  await onBreadcrumbsUpdated;
+  yield onBreadcrumbsUpdated;
 
   is(breadcrumbs.currentIndex, checkedButtonIndex, "New button is selected");
   ok(breadcrumbs.outer.hasAttribute("aria-activedescendant"),
@@ -113,7 +113,7 @@ async function testComments(inspector, container) {
 
   let onInspectorUpdated = inspector.once("inspector-updated");
   inspector.selection.setNodeFront(comment);
-  await onInspectorUpdated;
+  yield onInspectorUpdated;
 
   is(breadcrumbs.currentIndex, -1,
     "When comment is selected no breadcrumb should be checked");
@@ -123,7 +123,7 @@ async function testComments(inspector, container) {
   onInspectorUpdated = inspector.once("inspector-updated");
   onBreadcrumbsUpdated = inspector.once("breadcrumbs-updated");
   button.click();
-  await Promise.all([onInspectorUpdated, onBreadcrumbsUpdated]);
+  yield Promise.all([onInspectorUpdated, onBreadcrumbsUpdated]);
 
   is(breadcrumbs.currentIndex, checkedButtonIndex,
     "Same button is selected again");

@@ -19,14 +19,14 @@ const TEST_URI = `
   <h1 id='testid' class='testclass'>Styled Node</h1>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
-  await testFilterOverriddenProperty(inspector, view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
+  yield testFilterOverriddenProperty(inspector, view);
 });
 
-async function testFilterOverriddenProperty(inspector, ruleView) {
+function* testFilterOverriddenProperty(inspector, ruleView) {
   info("Check that the correct rules are visible");
   is(ruleView.element.children.length, 3, "Should have 3 rules.");
 
@@ -51,7 +51,7 @@ async function testFilterOverriddenProperty(inspector, ruleView) {
 
   info("Click the overridden search");
   textPropEditor.filterProperty.click();
-  await onRuleViewFiltered;
+  yield onRuleViewFiltered;
 
   info("Check that the overridden search is applied");
   is(searchField.value, "`width`", "The search field value is width.");

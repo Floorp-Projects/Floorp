@@ -17,27 +17,27 @@ const TEST_URI = `
   Testing the color picker tooltip!
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {view} = yield openRuleView();
   let value = getRuleViewProperty(view, "body", "background").valueSpan;
   let swatch = value.querySelectorAll(".ruleview-colorswatch")[0];
   let url = value.querySelector(".theme-link");
-  await testImageTooltipAfterColorChange(swatch, url, view);
+  yield testImageTooltipAfterColorChange(swatch, url, view);
 });
 
-async function testImageTooltipAfterColorChange(swatch, url, ruleView) {
+function* testImageTooltipAfterColorChange(swatch, url, ruleView) {
   info("First, verify that the image preview tooltip works");
-  let previewTooltip = await assertShowPreviewTooltip(ruleView, url);
-  await assertTooltipHiddenOnMouseOut(previewTooltip, url);
+  let previewTooltip = yield assertShowPreviewTooltip(ruleView, url);
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, url);
 
   info("Open the color picker tooltip and change the color");
   let picker = ruleView.tooltips.getTooltip("colorPicker");
   let onColorPickerReady = picker.once("ready");
   swatch.click();
-  await onColorPickerReady;
+  yield onColorPickerReady;
 
-  await simulateColorPickerChange(ruleView, picker, [0, 0, 0, 1], {
+  yield simulateColorPickerChange(ruleView, picker, [0, 0, 0, 1], {
     selector: "body",
     name: "background-image",
     value: 'url("chrome://global/skin/icons/warning-64.png"), linear-gradient(rgb(0, 0, 0), rgb(255, 0, 102) 400px)'
@@ -47,15 +47,15 @@ async function testImageTooltipAfterColorChange(swatch, url, ruleView) {
   let onHidden = picker.tooltip.once("hidden");
   let onModifications = ruleView.once("ruleview-changed");
   focusAndSendKey(spectrum.element.ownerDocument.defaultView, "RETURN");
-  await onHidden;
-  await onModifications;
+  yield onHidden;
+  yield onModifications;
 
   info("Verify again that the image preview tooltip works");
   // After a color change, the property is re-populated, we need to get the new
   // dom node
   url = getRuleViewProperty(ruleView, "body", "background").valueSpan
     .querySelector(".theme-link");
-  previewTooltip = await assertShowPreviewTooltip(ruleView, url);
+  previewTooltip = yield assertShowPreviewTooltip(ruleView, url);
 
-  await assertTooltipHiddenOnMouseOut(previewTooltip, url);
+  yield assertTooltipHiddenOnMouseOut(previewTooltip, url);
 }

@@ -48,15 +48,15 @@ const TEST_URL = `<span class="span" id="span">
                   <button class="bb bc" id="bb"></button>
                   <button class="bc" id="ba"></button>`;
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL("data:text/html;charset=utf-8," +
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL("data:text/html;charset=utf-8," +
                                               encodeURI(TEST_URL));
 
   let searchBox = inspector.panelWin.document.getElementById(
     "inspector-searchbox");
   let popup = inspector.searchSuggestions.searchPopup;
 
-  await focusSearchBoxUsingShortcut(inspector.panelWin);
+  yield focusSearchBoxUsingShortcut(inspector.panelWin);
 
   for (let [key, expectedSuggestions] of KEY_STATES) {
     info("pressing key " + key + " to get suggestions " +
@@ -64,10 +64,10 @@ add_task(async function() {
 
     let onCommand = once(searchBox, "input", true);
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
-    await onCommand;
+    yield onCommand;
 
     info("Waiting for the suggestions to be retrieved");
-    await inspector.searchSuggestions._lastQuery;
+    yield inspector.searchSuggestions._lastQuery;
 
     let actualSuggestions = popup.getItems();
     is(popup.isOpen ? actualSuggestions.length : 0, expectedSuggestions.length,

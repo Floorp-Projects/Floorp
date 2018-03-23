@@ -26,18 +26,18 @@ const ELEMENTS = ["box-model-root",
                   "box-model-infobar-pseudo-classes",
                   "box-model-infobar-dimensions"];
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Show the box-model highlighter");
-  let divFront = await getNodeFront("div", inspector);
-  await inspector.highlighter.showBoxModel(divFront);
+  let divFront = yield getNodeFront("div", inspector);
+  yield inspector.highlighter.showBoxModel(divFront);
 
   for (let id of ELEMENTS) {
-    let foundId = await testActor.getHighlighterNodeAttribute(id, "id");
+    let foundId = yield testActor.getHighlighterNodeAttribute(id, "id");
     is(foundId, id, "Element " + id + " found");
   }
 
   info("Hide the box-model highlighter");
-  await inspector.highlighter.hideBoxModel();
+  yield inspector.highlighter.hideBoxModel();
 });

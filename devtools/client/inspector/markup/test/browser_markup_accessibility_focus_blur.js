@@ -7,20 +7,20 @@
 // Test inspector markup view handling focus and blur when moving between markup
 // view, its root and other containers, and other parts of inspector.
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
   let markup = inspector.markup;
   let doc = markup.doc;
   let win = doc.defaultView;
 
-  let spanContainer = await getContainerForSelector("span", inspector);
+  let spanContainer = yield getContainerForSelector("span", inspector);
   let rootContainer = markup.getContainer(markup._rootNode);
 
   is(doc.activeElement, doc.body,
     "Keyboard focus by default is on document body");
 
-  await selectNode("span", inspector);
+  yield selectNode("span", inspector);
 
   is(doc.activeElement, doc.body,
     "Keyboard focus is still on document body");
@@ -34,13 +34,13 @@ add_task(async function() {
     "Keyboard focus should be on tag element of focused container");
 
   info("Focusing on search box, external to markup view document");
-  await focusSearchBoxUsingShortcut(inspector.panelWin);
+  yield focusSearchBoxUsingShortcut(inspector.panelWin);
 
   is(doc.activeElement, doc.body,
     "Keyboard focus should be removed from focused container");
 
   info("Selecting the test span node again");
-  await selectNode("span", inspector);
+  yield selectNode("span", inspector);
 
   is(doc.activeElement, doc.body,
     "Keyboard focus should again be on document body");
@@ -53,7 +53,7 @@ add_task(async function() {
   is(doc.activeElement, spanContainer.editor.tag,
     "Keyboard focus should again be on tag element of focused container");
 
-  await clickOnInspectMenuItem(testActor, "h1");
+  yield clickOnInspectMenuItem(testActor, "h1");
   is(doc.activeElement, rootContainer.elt,
     "When inspect menu item is used keyboard focus should move to tree.");
 });

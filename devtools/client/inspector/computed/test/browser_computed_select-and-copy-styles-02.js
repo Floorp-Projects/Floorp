@@ -8,14 +8,14 @@
 
 const TEST_URI = `<div style="text-align:left;width:25px;">Hello world</div>`;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
-  await selectNode("div", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openComputedView();
+  yield selectNode("div", inspector);
 
   let expectedPattern = "text-align: left;[\\r\\n]+" +
                         "width: 25px;[\\r\\n]*";
-  await copyAllAndCheckClipboard(view, expectedPattern);
+  yield copyAllAndCheckClipboard(view, expectedPattern);
 
   info("Testing expand then select all copy");
 
@@ -29,8 +29,8 @@ add_task(async function() {
                     "25px[\\r\\n]*";
 
   info("Expanding computed view properties");
-  await expandComputedViewPropertyByIndex(view, 0);
-  await expandComputedViewPropertyByIndex(view, 1);
+  yield expandComputedViewPropertyByIndex(view, 0);
+  yield expandComputedViewPropertyByIndex(view, 1);
 
-  await copyAllAndCheckClipboard(view, expectedPattern);
+  yield copyAllAndCheckClipboard(view, expectedPattern);
 });

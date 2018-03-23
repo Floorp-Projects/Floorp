@@ -18,35 +18,35 @@ const TEST_URI = `
   </style>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("body", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("body", inspector);
 
   let rule = getRuleViewRuleEditor(view, 1).rule;
   let prop = rule.textProps[0];
 
-  is((await getComputedStyleProperty("body", null, "background-color")),
+  is((yield getComputedStyleProperty("body", null, "background-color")),
     "rgb(0, 128, 0)", "green background color is set.");
 
-  await setProperty(view, prop, "red !important");
+  yield setProperty(view, prop, "red !important");
 
   is(prop.editor.valueSpan.textContent, "red !important",
     "'red !important' property value is correctly set.");
-  is((await getComputedStyleProperty("body", null, "background-color")),
+  is((yield getComputedStyleProperty("body", null, "background-color")),
     "rgb(255, 0, 0)", "red background color is set.");
 
   info("Disabling red background color property");
-  await togglePropStatus(view, prop);
+  yield togglePropStatus(view, prop);
 
-  is((await getComputedStyleProperty("body", null, "background-color")),
+  is((yield getComputedStyleProperty("body", null, "background-color")),
     "rgb(0, 128, 0)", "green background color is set.");
 
-  await setProperty(view, prop, "red");
+  yield setProperty(view, prop, "red");
 
   is(prop.editor.valueSpan.textContent, "red",
     "'red' property value is correctly set.");
   ok(prop.enabled, "red background-color property is enabled.");
-  is((await getComputedStyleProperty("body", null, "background-color")),
+  is((yield getComputedStyleProperty("body", null, "background-color")),
     "rgb(0, 128, 0)", "green background color is set.");
 });

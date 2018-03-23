@@ -49,23 +49,23 @@ const testData = [
   }
 ];
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
 
   for (let data of testData) {
-    await runTestData(view, data);
+    yield runTestData(view, data);
   }
 });
 
-async function runTestData(view, {value, commitKey, modifiers, expected}) {
+function* runTestData(view, {value, commitKey, modifiers, expected}) {
   let idRuleEditor = getRuleViewRuleEditor(view, 1);
   let propEditor = idRuleEditor.rule.textProps[0].editor;
 
   info("Focusing the inplace editor field");
 
-  let editor = await focusEditableField(view, propEditor.valueSpan);
+  let editor = yield focusEditableField(view, propEditor.valueSpan);
   is(inplaceEditor(propEditor.valueSpan), editor,
     "Focused editor should be the value span.");
 
@@ -73,14 +73,14 @@ async function runTestData(view, {value, commitKey, modifiers, expected}) {
   let onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.sendString(value, view.styleWindow);
   view.debounce.flush();
-  await onRuleViewChanged;
+  yield onRuleViewChanged;
 
   info("Entering the commit key " + commitKey + " " + modifiers);
   onRuleViewChanged = view.once("ruleview-changed");
   let onBlur = once(editor.input, "blur");
   EventUtils.synthesizeKey(commitKey, modifiers);
-  await onBlur;
-  await onRuleViewChanged;
+  yield onBlur;
+  yield onRuleViewChanged;
 
   if (commitKey === "VK_ESCAPE") {
     is(propEditor.valueSpan.textContent, expected,

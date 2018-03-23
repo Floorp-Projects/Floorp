@@ -16,15 +16,15 @@ const TEST_URI = `
   Updating a gradient declaration with the color picker tooltip
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {view} = yield openRuleView();
 
   info("Testing that the colors in gradient properties are parsed correctly");
   testColorParsing(view);
 
   info("Testing that changing one of the colors of a gradient property works");
-  await testPickingNewColor(view);
+  yield testPickingNewColor(view);
 });
 
 function testColorParsing(view) {
@@ -45,7 +45,7 @@ function testColorParsing(view) {
   }
 }
 
-async function testPickingNewColor(view) {
+function* testPickingNewColor(view) {
   // Grab the first color swatch and color in the gradient
   let ruleEl = getRuleViewProperty(view, "body", "background-image");
   let swatchEl = ruleEl.valueSpan.querySelector(".ruleview-colorswatch");
@@ -55,7 +55,7 @@ async function testPickingNewColor(view) {
   let cPicker = view.tooltips.getTooltip("colorPicker");
   let onColorPickerReady = cPicker.once("ready");
   swatchEl.click();
-  await onColorPickerReady;
+  yield onColorPickerReady;
 
   let change = {
     selector: "body",
@@ -63,15 +63,15 @@ async function testPickingNewColor(view) {
     value: "linear-gradient(to left, rgb(1, 1, 1) 25%, " +
            "rgb(51, 51, 51) 95%, rgb(0, 0, 0) 100%)"
   };
-  await simulateColorPickerChange(view, cPicker, [1, 1, 1, 1], change);
+  yield simulateColorPickerChange(view, cPicker, [1, 1, 1, 1], change);
 
   is(swatchEl.style.backgroundColor, "rgb(1, 1, 1)",
     "The color swatch's background was updated");
   is(colorEl.textContent, "#010101", "The color text was updated");
-  is((await getComputedStyleProperty("body", null, "background-image")),
+  is((yield getComputedStyleProperty("body", null, "background-image")),
     "linear-gradient(to left, rgb(1, 1, 1) 25%, rgb(51, 51, 51) 95%, " +
       "rgb(0, 0, 0) 100%)",
     "The gradient has been updated correctly");
 
-  await hideTooltipAndWaitForRuleViewChanged(cPicker, view);
+  yield hideTooltipAndWaitForRuleViewChanged(cPicker, view);
 }

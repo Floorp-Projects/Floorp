@@ -13,10 +13,10 @@ const osString = Services.appinfo.OS;
 
 const TEST_URI = URL_ROOT + "doc_copystyles.html";
 
-add_task(async function() {
-  await addTab(TEST_URI);
-  let { inspector, view } = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab(TEST_URI);
+  let { inspector, view } = yield openRuleView();
+  yield selectNode("#testid", inspector);
 
   let ruleEditor = getRuleViewRuleEditor(view, 1);
 
@@ -141,8 +141,8 @@ add_task(async function() {
       }
     },
     {
-      setup: async function() {
-        await disableProperty(view, 0);
+      setup: function* () {
+        yield disableProperty(view, 0);
       },
       desc: "Test Copy Rule with Disabled Property",
       node: ruleEditor.rule.textProps[2].editor.nameSpan,
@@ -164,8 +164,8 @@ add_task(async function() {
       }
     },
     {
-      setup: async function() {
-        await disableProperty(view, 4);
+      setup: function* () {
+        yield disableProperty(view, 4);
       },
       desc: "Test Copy Rule with Disabled Property with Comment",
       node: ruleEditor.rule.textProps[2].editor.nameSpan,
@@ -204,15 +204,15 @@ add_task(async function() {
 
   for (let { setup, desc, node, menuItemLabel, expectedPattern, visible } of data) {
     if (setup) {
-      await setup();
+      yield setup();
     }
 
     info(desc);
-    await checkCopyStyle(view, node, menuItemLabel, expectedPattern, visible);
+    yield checkCopyStyle(view, node, menuItemLabel, expectedPattern, visible);
   }
 });
 
-async function checkCopyStyle(view, node, menuItemLabel, expectedPattern, visible) {
+function* checkCopyStyle(view, node, menuItemLabel, expectedPattern, visible) {
   let allMenuItems = openStyleContextMenuAndGetAllItems(view, node);
   let menuItem = allMenuItems.find(item =>
     item.label === STYLE_INSPECTOR_L10N.getStr(menuItemLabel));
@@ -267,17 +267,17 @@ async function checkCopyStyle(view, node, menuItemLabel, expectedPattern, visibl
      visible.copyRule);
 
   try {
-    await waitForClipboardPromise(() => menuItem.click(),
+    yield waitForClipboardPromise(() => menuItem.click(),
       () => checkClipboardData(expectedPattern));
   } catch (e) {
     failedClipboard(expectedPattern);
   }
 }
 
-async function disableProperty(view, index) {
+function* disableProperty(view, index) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let textProp = ruleEditor.rule.textProps[index];
-  await togglePropStatus(view, textProp);
+  yield togglePropStatus(view, textProp);
 }
 
 function checkClipboardData(expectedPattern) {

@@ -7,19 +7,19 @@
 // Test that the box model view for elements within iframes also updates when they
 // change
 
-add_task(async function() {
-  await addTab(URL_ROOT + "doc_boxmodel_iframe1.html");
-  let {inspector, boxmodel, testActor} = await openLayoutView();
+add_task(function* () {
+  yield addTab(URL_ROOT + "doc_boxmodel_iframe1.html");
+  let {inspector, boxmodel, testActor} = yield openLayoutView();
 
-  await testResizingInIframe(inspector, boxmodel, testActor);
-  await testReflowsAfterIframeDeletion(inspector, boxmodel, testActor);
+  yield testResizingInIframe(inspector, boxmodel, testActor);
+  yield testReflowsAfterIframeDeletion(inspector, boxmodel, testActor);
 });
 
-async function testResizingInIframe(inspector, boxmodel, testActor) {
+function* testResizingInIframe(inspector, boxmodel, testActor) {
   info("Test that resizing an element in an iframe updates its box model");
 
   info("Selecting the nested test node");
-  await selectNodeInIframe2("div", inspector);
+  yield selectNodeInIframe2("div", inspector);
 
   info("Checking that the box model view shows the right value");
   let sizeElt = boxmodel.document.querySelector(".boxmodel-size > span");
@@ -27,25 +27,25 @@ async function testResizingInIframe(inspector, boxmodel, testActor) {
 
   info("Listening for box model view changes and modifying its size");
   let onUpdated = waitForUpdate(inspector);
-  await setStyleInIframe2(testActor, "div", "width", "200px");
-  await onUpdated;
+  yield setStyleInIframe2(testActor, "div", "width", "200px");
+  yield onUpdated;
   ok(true, "Box model view got updated");
 
   info("Checking that the box model view shows the right value after update");
   is(sizeElt.textContent, "200\u00D7200");
 }
 
-async function testReflowsAfterIframeDeletion(inspector, boxmodel, testActor) {
+function* testReflowsAfterIframeDeletion(inspector, boxmodel, testActor) {
   info("Test reflows are still sent to the box model view after deleting an " +
        "iframe");
 
   info("Deleting the iframe2");
   let onInspectorUpdated = inspector.once("inspector-updated");
-  await removeIframe2(testActor);
-  await onInspectorUpdated;
+  yield removeIframe2(testActor);
+  yield onInspectorUpdated;
 
   info("Selecting the test node in iframe1");
-  await selectNodeInIframe1("p", inspector);
+  yield selectNodeInIframe1("p", inspector);
 
   info("Checking that the box model view shows the right value");
   let sizeElt = boxmodel.document.querySelector(".boxmodel-size > span");
@@ -53,37 +53,37 @@ async function testReflowsAfterIframeDeletion(inspector, boxmodel, testActor) {
 
   info("Listening for box model view changes and modifying its size");
   let onUpdated = waitForUpdate(inspector);
-  await setStyleInIframe1(testActor, "p", "width", "200px");
-  await onUpdated;
+  yield setStyleInIframe1(testActor, "p", "width", "200px");
+  yield onUpdated;
   ok(true, "Box model view got updated");
 
   info("Checking that the box model view shows the right value after update");
   is(sizeElt.textContent, "200\u00D7100");
 }
 
-async function selectNodeInIframe1(selector, inspector) {
-  let iframe1 = await getNodeFront("iframe", inspector);
-  let node = await getNodeFrontInFrame(selector, iframe1, inspector);
-  await selectNode(node, inspector);
+function* selectNodeInIframe1(selector, inspector) {
+  let iframe1 = yield getNodeFront("iframe", inspector);
+  let node = yield getNodeFrontInFrame(selector, iframe1, inspector);
+  yield selectNode(node, inspector);
 }
 
-async function selectNodeInIframe2(selector, inspector) {
-  let iframe1 = await getNodeFront("iframe", inspector);
-  let iframe2 = await getNodeFrontInFrame("iframe", iframe1, inspector);
-  let node = await getNodeFrontInFrame(selector, iframe2, inspector);
-  await selectNode(node, inspector);
+function* selectNodeInIframe2(selector, inspector) {
+  let iframe1 = yield getNodeFront("iframe", inspector);
+  let iframe2 = yield getNodeFrontInFrame("iframe", iframe1, inspector);
+  let node = yield getNodeFrontInFrame(selector, iframe2, inspector);
+  yield selectNode(node, inspector);
 }
 
-async function setStyleInIframe1(testActor, selector, propertyName, value) {
-  await testActor.eval(`
+function* setStyleInIframe1(testActor, selector, propertyName, value) {
+  yield testActor.eval(`
     content.document.querySelector("iframe")
            .contentDocument.querySelector("${selector}")
            .style.${propertyName} = "${value}";
   `);
 }
 
-async function setStyleInIframe2(testActor, selector, propertyName, value) {
-  await testActor.eval(`
+function* setStyleInIframe2(testActor, selector, propertyName, value) {
+  yield testActor.eval(`
     content.document.querySelector("iframe")
            .contentDocument
            .querySelector("iframe")
@@ -92,8 +92,8 @@ async function setStyleInIframe2(testActor, selector, propertyName, value) {
   `);
 }
 
-async function removeIframe2(testActor) {
-  await testActor.eval(`
+function* removeIframe2(testActor) {
+  yield testActor.eval(`
     content.document.querySelector("iframe")
            .contentDocument
            .querySelector("iframe")

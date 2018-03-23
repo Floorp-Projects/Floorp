@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { Task } = require("devtools/shared/task");
 const { getCssProperties } = require("devtools/shared/fronts/css-properties");
 
 const { InplaceEditor } = require("devtools/client/shared/inplace-editor");
@@ -124,7 +125,7 @@ BoxModel.prototype = {
       this._updateReasons.push(reason);
     }
 
-    let lastRequest = ((async function() {
+    let lastRequest = Task.spawn((function* () {
       if (!this.inspector ||
           !this.isPanelVisible() ||
           !this.inspector.selection.isConnected() ||
@@ -134,11 +135,11 @@ BoxModel.prototype = {
 
       let node = this.inspector.selection.nodeFront;
 
-      let layout = await this.inspector.pageStyle.getLayout(node, {
+      let layout = yield this.inspector.pageStyle.getLayout(node, {
         autoMargins: true,
       });
 
-      let styleEntries = await this.inspector.pageStyle.getApplied(node, {
+      let styleEntries = yield this.inspector.pageStyle.getApplied(node, {
         // We don't need styles applied to pseudo elements of the current node.
         skipPseudo: true
       });
@@ -146,18 +147,18 @@ BoxModel.prototype = {
 
       // Update the layout properties with whether or not the element's position is
       // editable with the geometry editor.
-      let isPositionEditable = await this.inspector.pageStyle.isPositionEditable(node);
+      let isPositionEditable = yield this.inspector.pageStyle.isPositionEditable(node);
 
       layout = Object.assign({}, layout, {
         isPositionEditable,
       });
 
       const actorCanGetOffSetParent =
-        await this.inspector.target.actorHasMethod("domwalker", "getOffsetParent");
+        yield this.inspector.target.actorHasMethod("domwalker", "getOffsetParent");
 
       if (actorCanGetOffSetParent) {
         // Update the redux store with the latest offset parent DOM node
-        let offsetParent = await this.inspector.walker.getOffsetParent(node);
+        let offsetParent = yield this.inspector.walker.getOffsetParent(node);
         this.store.dispatch(updateOffsetParent(offsetParent));
       }
 
@@ -176,7 +177,7 @@ BoxModel.prototype = {
       this._updateReasons = [];
 
       return null;
-    }).bind(this))().catch(console.error);
+    }).bind(this)).catch(console.error);
 
     this._lastRequest = lastRequest;
   },

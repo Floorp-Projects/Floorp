@@ -34,25 +34,25 @@ registerCleanupFunction(() => {
   clipboard = null;
 });
 
-add_task(async function() {
-  let { inspector, testActor } = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let { inspector, testActor } = yield openInspectorForURL(TEST_URL);
 
-  await testPasteOuterHTMLMenu();
-  await testPasteInnerHTMLMenu();
-  await testPasteAdjacentHTMLMenu();
+  yield testPasteOuterHTMLMenu();
+  yield testPasteInnerHTMLMenu();
+  yield testPasteAdjacentHTMLMenu();
 
-  async function testPasteOuterHTMLMenu() {
+  function* testPasteOuterHTMLMenu() {
     info("Testing that 'Paste Outer HTML' menu item works.");
 
-    await SimpleTest.promiseClipboardChange("this was pasted (outerHTML)",
+    yield SimpleTest.promiseClipboardChange("this was pasted (outerHTML)",
       () => {
         clipboard.copyString("this was pasted (outerHTML)");
       });
 
     let outerHTMLSelector = "#paste-area h1";
 
-    let nodeFront = await getNodeFront(outerHTMLSelector, inspector);
-    await selectNode(nodeFront, inspector);
+    let nodeFront = yield getNodeFront(outerHTMLSelector, inspector);
+    yield selectNode(nodeFront, inspector);
 
     let allMenuItems = openContextMenuAndGetAllItems(inspector, {
       target: getContainerForNodeFront(nodeFront, inspector).tagLine,
@@ -62,29 +62,29 @@ add_task(async function() {
     allMenuItems.find(item => item.id === "node-menu-pasteouterhtml").click();
 
     info("Waiting for inspector selection to update");
-    await onNodeReselected;
+    yield onNodeReselected;
 
-    let outerHTML = await testActor.getProperty("body", "outerHTML");
+    let outerHTML = yield testActor.getProperty("body", "outerHTML");
     ok(outerHTML.includes(clipboard.getText()),
        "Clipboard content was pasted into the node's outer HTML.");
-    ok(!(await testActor.hasNode(outerHTMLSelector)),
+    ok(!(yield testActor.hasNode(outerHTMLSelector)),
       "The original node was removed.");
   }
 
-  async function testPasteInnerHTMLMenu() {
+  function* testPasteInnerHTMLMenu() {
     info("Testing that 'Paste Inner HTML' menu item works.");
 
-    await SimpleTest.promiseClipboardChange("this was pasted (innerHTML)",
+    yield SimpleTest.promiseClipboardChange("this was pasted (innerHTML)",
       () => {
         clipboard.copyString("this was pasted (innerHTML)");
       });
     let innerHTMLSelector = "#paste-area .inner";
     let getInnerHTML = () => testActor.getProperty(innerHTMLSelector,
                                                    "innerHTML");
-    let origInnerHTML = await getInnerHTML();
+    let origInnerHTML = yield getInnerHTML();
 
-    let nodeFront = await getNodeFront(innerHTMLSelector, inspector);
-    await selectNode(nodeFront, inspector);
+    let nodeFront = yield getNodeFront(innerHTMLSelector, inspector);
+    yield selectNode(nodeFront, inspector);
 
     let allMenuItems = openContextMenuAndGetAllItems(inspector, {
       target: getContainerForNodeFront(nodeFront, inspector).tagLine,
@@ -93,22 +93,22 @@ add_task(async function() {
     let onMutation = inspector.once("markupmutation");
     allMenuItems.find(item => item.id === "node-menu-pasteinnerhtml").click();
     info("Waiting for mutation to occur");
-    await onMutation;
+    yield onMutation;
 
-    ok((await getInnerHTML()) === clipboard.getText(),
+    ok((yield getInnerHTML()) === clipboard.getText(),
        "Clipboard content was pasted into the node's inner HTML.");
-    ok((await testActor.hasNode(innerHTMLSelector)),
+    ok((yield testActor.hasNode(innerHTMLSelector)),
        "The original node has been preserved.");
-    await undoChange(inspector);
-    ok((await getInnerHTML()) === origInnerHTML,
+    yield undoChange(inspector);
+    ok((yield getInnerHTML()) === origInnerHTML,
        "Previous innerHTML has been restored after undo");
   }
 
-  async function testPasteAdjacentHTMLMenu() {
+  function* testPasteAdjacentHTMLMenu() {
     let refSelector = "#paste-area .adjacent .ref";
     let adjacentNodeSelector = "#paste-area .adjacent";
-    let nodeFront = await getNodeFront(refSelector, inspector);
-    await selectNode(nodeFront, inspector);
+    let nodeFront = yield getNodeFront(refSelector, inspector);
+    yield selectNode(nodeFront, inspector);
     let markupTagLine = getContainerForNodeFront(nodeFront, inspector).tagLine;
 
     for (let { clipboardData, menuId } of PASTE_ADJACENT_HTML_DATA) {
@@ -117,7 +117,7 @@ add_task(async function() {
       });
       info(`Testing ${menuId} for ${clipboardData}`);
 
-      await SimpleTest.promiseClipboardChange(clipboardData,
+      yield SimpleTest.promiseClipboardChange(clipboardData,
         () => {
           clipboard.copyString(clipboardData);
         });
@@ -125,16 +125,16 @@ add_task(async function() {
       let onMutation = inspector.once("markupmutation");
       allMenuItems.find(item => item.id === menuId).click();
       info("Waiting for mutation to occur");
-      await onMutation;
+      yield onMutation;
     }
 
-    let html = await testActor.getProperty(adjacentNodeSelector, "innerHTML");
+    let html = yield testActor.getProperty(adjacentNodeSelector, "innerHTML");
     ok(html.trim() === "1<span class=\"ref\">234</span><span>5</span>",
        "The Paste as Last Child / as First Child / Before / After worked as " +
        "expected");
-    await undoChange(inspector);
+    yield undoChange(inspector);
 
-    html = await testActor.getProperty(adjacentNodeSelector, "innerHTML");
+    html = yield testActor.getProperty(adjacentNodeSelector, "innerHTML");
     ok(html.trim() === "1<span class=\"ref\">234</span>",
        "Undo works for paste adjacent HTML");
   }

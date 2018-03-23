@@ -10,15 +10,15 @@
 const SEARCH = "doc_urls_clickable.css: url";
 const TEST_URI = URL_ROOT + "doc_urls_clickable.html";
 
-add_task(async function() {
-  await addTab(TEST_URI);
-  let {inspector, view} = await openRuleView();
-  await selectNode(".relative1", inspector);
-  await testAddTextInFilter(inspector, view);
+add_task(function* () {
+  yield addTab(TEST_URI);
+  let {inspector, view} = yield openRuleView();
+  yield selectNode(".relative1", inspector);
+  yield testAddTextInFilter(inspector, view);
 });
 
-async function testAddTextInFilter(inspector, view) {
-  await setSearchFilter(view, SEARCH);
+function* testAddTextInFilter(inspector, view) {
+  yield setSearchFilter(view, SEARCH);
 
   info("Check that the correct rules are visible");
   is(view.element.children.length, 1, "Should have 1 rules.");

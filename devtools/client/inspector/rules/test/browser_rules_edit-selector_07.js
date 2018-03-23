@@ -22,21 +22,21 @@ const TEST_URI = `
   <span class="testclass">This is a span</span>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
-  await selectNode("#testid", inspector);
-  await testEditSelector(view, "span");
+  yield selectNode("#testid", inspector);
+  yield testEditSelector(view, "span");
 });
 
-async function testEditSelector(view, name) {
+function* testEditSelector(view, name) {
   info("Test editing existing selector fields");
 
   let ruleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
+  let editor = yield focusEditableField(view, ruleEditor.selectorText);
 
   is(inplaceEditor(ruleEditor.selectorText), editor,
     "The selector editor got focused");
@@ -47,7 +47,7 @@ async function testEditSelector(view, name) {
   info("Entering the commit key");
   let onRuleViewChanged = once(view, "ruleview-changed");
   EventUtils.synthesizeKey("KEY_Enter");
-  await onRuleViewChanged;
+  yield onRuleViewChanged;
 
   // Get the new rule editor that replaced the original
   ruleEditor = getRuleViewRuleEditor(view, 1);

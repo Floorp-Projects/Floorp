@@ -6,8 +6,8 @@
 // Test that depending where the user last clicked in the inspector, the right search
 // field is focused when ctrl+F is pressed.
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL("data:text/html;charset=utf-8,Search!");
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL("data:text/html;charset=utf-8,Search!");
 
   info("Check that by default, the inspector search field gets focused");
   pressCtrlF();
@@ -21,7 +21,7 @@ add_task(async function() {
   isInRuleViewSearchBox(inspector);
 
   info("Click in the inspector again");
-  await clickContainer("head", inspector);
+  yield clickContainer("head", inspector);
 
   info("Check that now we're back in the inspector, its search field gets focused");
   pressCtrlF();
@@ -36,7 +36,7 @@ add_task(async function() {
   isInComputedViewSearchBox(inspector);
 
   info("Click in the inspector yet again");
-  await clickContainer("body", inspector);
+  yield clickContainer("body", inspector);
 
   info("We're back in the inspector again, check the inspector search field focuses");
   pressCtrlF();

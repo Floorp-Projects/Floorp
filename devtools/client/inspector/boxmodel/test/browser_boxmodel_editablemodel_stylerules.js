@@ -15,21 +15,21 @@ const TEST_URI = "<style>" +
   "</style>" +
   "<div id='div1'></div><div id='div2'></div><div id='div3'></div>";
 
-add_task(async function() {
-  await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel, testActor} = await openLayoutView();
+add_task(function* () {
+  yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
+  let {inspector, boxmodel, testActor} = yield openLayoutView();
 
-  await testUnits(inspector, boxmodel, testActor);
-  await testValueComesFromStyleRule(inspector, boxmodel, testActor);
-  await testShorthandsAreParsed(inspector, boxmodel, testActor);
+  yield testUnits(inspector, boxmodel, testActor);
+  yield testValueComesFromStyleRule(inspector, boxmodel, testActor);
+  yield testShorthandsAreParsed(inspector, boxmodel, testActor);
 });
 
-async function testUnits(inspector, boxmodel, testActor) {
+function* testUnits(inspector, boxmodel, testActor) {
   info("Test that entering units works");
 
-  is((await getStyle(testActor, "#div1", "padding-top")), "",
+  is((yield getStyle(testActor, "#div1", "padding-top")), "",
      "Should have the right padding");
-  await selectNode("#div1", inspector);
+  yield selectNode("#div1", inspector);
 
   let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-top > span");
   is(span.textContent, 3, "Should have the right value in the box model.");
@@ -40,33 +40,33 @@ async function testUnits(inspector, boxmodel, testActor) {
   is(editor.value, "3px", "Should have the right value in the editor.");
 
   EventUtils.synthesizeKey("1", {}, boxmodel.document.defaultView);
-  await waitForUpdate(inspector);
+  yield waitForUpdate(inspector);
   EventUtils.synthesizeKey("e", {}, boxmodel.document.defaultView);
-  await waitForUpdate(inspector);
+  yield waitForUpdate(inspector);
 
-  is((await getStyle(testActor, "#div1", "padding-top")), "",
+  is((yield getStyle(testActor, "#div1", "padding-top")), "",
      "An invalid value is handled cleanly");
 
   EventUtils.synthesizeKey("m", {}, boxmodel.document.defaultView);
-  await waitForUpdate(inspector);
+  yield waitForUpdate(inspector);
 
   is(editor.value, "1em", "Should have the right value in the editor.");
-  is((await getStyle(testActor, "#div1", "padding-top")),
+  is((yield getStyle(testActor, "#div1", "padding-top")),
      "1em", "Should have updated the padding.");
 
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
-  is((await getStyle(testActor, "#div1", "padding-top")), "1em",
+  is((yield getStyle(testActor, "#div1", "padding-top")), "1em",
      "Should be the right padding.");
   is(span.textContent, 16, "Should have the right value in the box model.");
 }
 
-async function testValueComesFromStyleRule(inspector, boxmodel, testActor) {
+function* testValueComesFromStyleRule(inspector, boxmodel, testActor) {
   info("Test that we pick up the value from a higher style rule");
 
-  is((await getStyle(testActor, "#div2", "border-bottom-width")), "",
+  is((yield getStyle(testActor, "#div2", "border-bottom-width")), "",
      "Should have the right border-bottom-width");
-  await selectNode("#div2", inspector);
+  yield selectNode("#div2", inspector);
 
   let span = boxmodel.document.querySelector(".boxmodel-border.boxmodel-bottom > span");
   is(span.textContent, 16, "Should have the right value in the box model.");
@@ -77,25 +77,25 @@ async function testValueComesFromStyleRule(inspector, boxmodel, testActor) {
   is(editor.value, "1em", "Should have the right value in the editor.");
 
   EventUtils.synthesizeKey("0", {}, boxmodel.document.defaultView);
-  await waitForUpdate(inspector);
+  yield waitForUpdate(inspector);
 
   is(editor.value, "0", "Should have the right value in the editor.");
-  is((await getStyle(testActor, "#div2", "border-bottom-width")), "0px",
+  is((yield getStyle(testActor, "#div2", "border-bottom-width")), "0px",
      "Should have updated the border.");
 
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
-  is((await getStyle(testActor, "#div2", "border-bottom-width")), "0px",
+  is((yield getStyle(testActor, "#div2", "border-bottom-width")), "0px",
      "Should be the right border-bottom-width.");
   is(span.textContent, 0, "Should have the right value in the box model.");
 }
 
-async function testShorthandsAreParsed(inspector, boxmodel, testActor) {
+function* testShorthandsAreParsed(inspector, boxmodel, testActor) {
   info("Test that shorthand properties are parsed correctly");
 
-  is((await getStyle(testActor, "#div3", "padding-right")), "",
+  is((yield getStyle(testActor, "#div3", "padding-right")), "",
      "Should have the right padding");
-  await selectNode("#div3", inspector);
+  yield selectNode("#div3", inspector);
 
   let span = boxmodel.document.querySelector(".boxmodel-padding.boxmodel-right > span");
   is(span.textContent, 32, "Should have the right value in the box model.");
@@ -107,7 +107,7 @@ async function testShorthandsAreParsed(inspector, boxmodel, testActor) {
 
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
-  is((await getStyle(testActor, "#div3", "padding-right")), "",
+  is((yield getStyle(testActor, "#div3", "padding-right")), "",
      "Should be the right padding.");
   is(span.textContent, 32, "Should have the right value in the box model.");
 }

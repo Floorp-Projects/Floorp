@@ -16,20 +16,20 @@ const TEST_URI = `
   <div class="testclass">Styled Node</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode(".testclass", inspector);
-  await testEditSelector(view, "asd@:::!");
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode(".testclass", inspector);
+  yield testEditSelector(view, "asd@:::!");
 });
 
-async function testEditSelector(view, name) {
+function* testEditSelector(view, name) {
   info("Test editing existing selector fields");
 
   let ruleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
+  let editor = yield focusEditableField(view, ruleEditor.selectorText);
 
   is(inplaceEditor(ruleEditor.selectorText), editor,
     "The selector editor got focused");
@@ -38,7 +38,7 @@ async function testEditSelector(view, name) {
   editor.input.value = name;
   let onRuleViewChanged = once(view, "ruleview-invalid-selector");
   EventUtils.synthesizeKey("KEY_Enter");
-  await onRuleViewChanged;
+  yield onRuleViewChanged;
 
   is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
   is(getRuleViewRule(view, name), undefined,

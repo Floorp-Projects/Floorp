@@ -25,20 +25,20 @@ const HTML = `
 
 const TEST_URI = "data:text/html;charset=utf-8," + encodeURI(HTML);
 
-add_task(async function() {
-  let tab = await addTab(TEST_URI);
-  let testActor = await getTestActorWithoutToolbox(tab);
+add_task(function* () {
+  let tab = yield addTab(TEST_URI);
+  let testActor = yield getTestActorWithoutToolbox(tab);
 
-  await testToolboxInitialization(testActor, tab);
-  await testContextMenuInitialization(testActor);
-  await testContextMenuInspectorAlreadyOpen(testActor);
+  yield testToolboxInitialization(testActor, tab);
+  yield testContextMenuInitialization(testActor);
+  yield testContextMenuInspectorAlreadyOpen(testActor);
 });
 
-async function testToolboxInitialization(testActor, tab) {
+function* testToolboxInitialization(testActor, tab) {
   let target = TargetFactory.forTab(tab);
 
   info("Opening inspector with gDevTools.");
-  let toolbox = await gDevTools.showToolbox(target, "inspector");
+  let toolbox = yield gDevTools.showToolbox(target, "inspector");
   let inspector = toolbox.getCurrentPanel();
 
   ok(true, "Inspector started, and notification received.");
@@ -46,48 +46,48 @@ async function testToolboxInitialization(testActor, tab) {
   ok(inspector.isReady, "Inspector instance is ready.");
   is(inspector.target.tab, tab, "Valid target.");
 
-  await selectNode("p", inspector);
-  await testMarkupView("p", inspector);
-  await testBreadcrumbs("p", inspector);
+  yield selectNode("p", inspector);
+  yield testMarkupView("p", inspector);
+  yield testBreadcrumbs("p", inspector);
 
-  await testActor.scrollIntoView("span");
+  yield testActor.scrollIntoView("span");
 
-  await selectNode("span", inspector);
-  await testMarkupView("span", inspector);
-  await testBreadcrumbs("span", inspector);
+  yield selectNode("span", inspector);
+  yield testMarkupView("span", inspector);
+  yield testBreadcrumbs("span", inspector);
 
   info("Destroying toolbox");
-  await toolbox.destroy();
+  yield toolbox.destroy();
 
   ok("true", "'destroyed' notification received.");
   ok(!gDevTools.getToolbox(target), "Toolbox destroyed.");
 }
 
-async function testContextMenuInitialization(testActor) {
+function* testContextMenuInitialization(testActor) {
   info("Opening inspector by clicking on 'Inspect Element' context menu item");
-  await clickOnInspectMenuItem(testActor, "#salutation");
+  yield clickOnInspectMenuItem(testActor, "#salutation");
 
   info("Checking inspector state.");
-  await testMarkupView("#salutation");
-  await testBreadcrumbs("#salutation");
+  yield testMarkupView("#salutation");
+  yield testBreadcrumbs("#salutation");
 }
 
-async function testContextMenuInspectorAlreadyOpen(testActor) {
+function* testContextMenuInspectorAlreadyOpen(testActor) {
   info("Changing node by clicking on 'Inspect Element' context menu item");
 
   let inspector = getActiveInspector();
   ok(inspector, "Inspector is active");
 
-  await clickOnInspectMenuItem(testActor, "#closing");
+  yield clickOnInspectMenuItem(testActor, "#closing");
 
   ok(true, "Inspector was updated when 'Inspect Element' was clicked.");
-  await testMarkupView("#closing", inspector);
-  await testBreadcrumbs("#closing", inspector);
+  yield testMarkupView("#closing", inspector);
+  yield testBreadcrumbs("#closing", inspector);
 }
 
-async function testMarkupView(selector, inspector) {
+function* testMarkupView(selector, inspector) {
   inspector = inspector || getActiveInspector();
-  let nodeFront = await getNodeFront(selector, inspector);
+  let nodeFront = yield getNodeFront(selector, inspector);
   try {
     is(inspector.selection.nodeFront, nodeFront,
        "Right node is selected in the markup view");
@@ -97,9 +97,9 @@ async function testMarkupView(selector, inspector) {
   }
 }
 
-async function testBreadcrumbs(selector, inspector) {
+function* testBreadcrumbs(selector, inspector) {
   inspector = inspector || getActiveInspector();
-  let nodeFront = await getNodeFront(selector, inspector);
+  let nodeFront = yield getNodeFront(selector, inspector);
 
   let b = inspector.breadcrumbs;
   let expectedText = b.prettyPrintNodeAsText(nodeFront);

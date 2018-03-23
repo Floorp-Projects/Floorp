@@ -24,30 +24,30 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
   info("Select the DIV node and verify the rule-view shows rules");
-  await selectNode("div", inspector);
+  yield selectNode("div", inspector);
   ok(view.element.querySelectorAll(".ruleview-rule").length,
     "The rule-view shows rules for the div element");
 
   info("Select various MathML nodes and verify the rule-view is empty");
-  await selectNode("math", inspector);
+  yield selectNode("math", inspector);
   ok(!view.element.querySelectorAll(".ruleview-rule").length,
     "The rule-view is empty for the math element");
 
-  await selectNode("msubsup", inspector);
+  yield selectNode("msubsup", inspector);
   ok(!view.element.querySelectorAll(".ruleview-rule").length,
     "The rule-view is empty for the msubsup element");
 
-  await selectNode("mn", inspector);
+  yield selectNode("mn", inspector);
   ok(!view.element.querySelectorAll(".ruleview-rule").length,
     "The rule-view is empty for the mn element");
 
   info("Select again the DIV node and verify the rule-view shows rules");
-  await selectNode("div", inspector);
+  yield selectNode("div", inspector);
   ok(view.element.querySelectorAll(".ruleview-rule").length,
     "The rule-view shows rules for the div element");
 });

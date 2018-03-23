@@ -20,12 +20,12 @@ const TEST_URI = `
 
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
   let highlighters = view.highlighters;
 
-  await selectNode("#shape", inspector);
+  yield selectNode("#shape", inspector);
   let container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
   let shapesToggle = container.querySelector(".ruleview-shapeswatch");
 
@@ -40,7 +40,7 @@ add_task(async function() {
   info("Toggling ON the CSS shapes highlighter from the rule-view.");
   let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
   shapesToggle.click();
-  await onHighlighterShown;
+  yield onHighlighterShown;
 
   info("Checking the CSS shapes highlighter is created and toggle button is active in " +
     "the rule-view.");
@@ -53,7 +53,7 @@ add_task(async function() {
   info("Toggling OFF the CSS shapes highlighter from the rule-view.");
   let onHighlighterHidden = highlighters.once("shapes-highlighter-hidden");
   shapesToggle.click();
-  await onHighlighterHidden;
+  yield onHighlighterHidden;
 
   info("Checking the CSS shapes highlighter is not shown and toggle button is not " +
     "active in the rule-view.");

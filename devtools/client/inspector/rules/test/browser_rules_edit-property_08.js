@@ -15,10 +15,10 @@ const TEST_URI = `
   <div style='color: red' id='testid'>Styled Node</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
 
   info("Get the color property editor");
   let ruleEditor = getRuleViewRuleEditor(view, 0);
@@ -26,7 +26,7 @@ add_task(async function() {
   is(ruleEditor.rule.textProps[0].name, "color");
 
   info("Focus the property name field");
-  await focusEditableField(ruleEditor.ruleView, propEditor.nameSpan, 32, 1);
+  yield focusEditableField(ruleEditor.ruleView, propEditor.nameSpan, 32, 1);
 
   info("Rename the property to background-color");
   // Expect 3 events: the value editor being focused, the ruleview-changed event
@@ -37,21 +37,21 @@ add_task(async function() {
   let onRuleViewChanged = ruleEditor.ruleView.once("ruleview-changed");
   let onMutation = inspector.once("markupmutation");
   EventUtils.sendString("background-color:", ruleEditor.doc.defaultView);
-  await onValueFocus;
-  await onRuleViewChanged;
-  await onMutation;
+  yield onValueFocus;
+  yield onRuleViewChanged;
+  yield onMutation;
 
   is(ruleEditor.rule.textProps[0].name, "background-color");
-  await waitForComputedStyleProperty("#testid", null, "background-color",
+  yield waitForComputedStyleProperty("#testid", null, "background-color",
     "rgb(255, 0, 0)");
 
-  is((await getComputedStyleProperty("#testid", null, "color")),
+  is((yield getComputedStyleProperty("#testid", null, "color")),
     "rgb(255, 255, 255)", "color is white");
 
   // The value field is still focused. Blur it now and wait for the
   // ruleview-changed event to avoid pending requests.
   onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.synthesizeKey("KEY_Escape");
-  await onRuleViewChanged;
+  yield onRuleViewChanged;
 });
 
