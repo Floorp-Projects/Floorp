@@ -8,7 +8,7 @@ description: >
     Asian characters (value is 'SD咕噜')
 ---*/
 
-        var str = "SD咕噜";
+var str = "SD咕噜";
 
 assert.sameValue(str.trim(), str, 'str.trim()');
 

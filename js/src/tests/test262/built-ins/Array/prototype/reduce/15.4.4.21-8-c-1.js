@@ -9,13 +9,12 @@ description: >
     initialValue is not present
 ---*/
 
-  function callbackfn(prevVal, curVal, idx, obj)
-  {
-  }
+function callbackfn(prevVal, curVal, idx, obj)
+{}
 
-  var arr = new Array(10);
+var arr = new Array(10);
 assert.throws(TypeError, function() {
-    arr.reduce(callbackfn);
+  arr.reduce(callbackfn);
 });
 
 reportCompare(0, 0);

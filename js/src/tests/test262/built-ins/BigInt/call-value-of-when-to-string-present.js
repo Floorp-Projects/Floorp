@@ -24,5 +24,4 @@ let o = {
 
 assert.sameValue(BigInt(o), 44n);
 
-
 reportCompare(0, 0);

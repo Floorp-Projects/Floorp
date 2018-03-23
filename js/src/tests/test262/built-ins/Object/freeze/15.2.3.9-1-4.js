@@ -8,6 +8,6 @@ description: >
     string primitive
 ---*/
 
-    Object.freeze("abc");
+Object.freeze("abc");
 
 reportCompare(0, 0);

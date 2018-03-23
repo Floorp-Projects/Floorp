@@ -8,6 +8,6 @@ description: >
     undefined
 ---*/
 
-    Object.preventExtensions(undefined);
+Object.preventExtensions(undefined);
 
 reportCompare(0, 0);

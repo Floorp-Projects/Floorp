@@ -17,15 +17,15 @@ info: |
 
 var target = {};
 var p = new Proxy(target, {
-    defineProperty: function(t, prop, desc) {
-        return true;
-    }
+  defineProperty: function(t, prop, desc) {
+    return true;
+  }
 });
 
 assert.throws(TypeError, function() {
-    Object.defineProperty(p, "foo", {
-        configurable: false
-    });
+  Object.defineProperty(p, "foo", {
+    configurable: false
+  });
 });
 
 reportCompare(0, 0);

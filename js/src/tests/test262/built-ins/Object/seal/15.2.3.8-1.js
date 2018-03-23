@@ -8,6 +8,6 @@ description: >
     Object
 ---*/
 
-    Object.seal(0);
+Object.seal(0);
 
 reportCompare(0, 0);

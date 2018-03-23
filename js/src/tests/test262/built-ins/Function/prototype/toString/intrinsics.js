@@ -20,7 +20,7 @@ for (let intrinsicName in intrinsics) {
   let str = Function.prototype.toString.call(intrinsic);
   assert.sameValue(typeof str, "string");
   assert(RegExp('\\b' + intrinsicName + '\\b').test(str), "contains its name");
-  assert(NATIVE_FUNCTION_RE.test(str), "looks pretty much like a NativeFunction");
+  assertNativeFunction(intrinsic);
 }
 
 reportCompare(0, 0);

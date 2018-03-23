@@ -16,11 +16,11 @@ info: |
 ---*/
 
 var p = new Proxy({}, {
-    deleteProperty: {}
+  deleteProperty: {}
 });
 
 assert.throws(TypeError, function() {
-    delete p.attr;
+  delete p.attr;
 });
 
 reportCompare(0, 0);

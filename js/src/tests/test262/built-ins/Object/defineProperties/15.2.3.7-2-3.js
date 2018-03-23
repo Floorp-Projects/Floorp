@@ -8,8 +8,8 @@ description: >
     value is false
 ---*/
 
-        var obj = {};
-        var obj1 = Object.defineProperties(obj, false);
+var obj = {};
+var obj1 = Object.defineProperties(obj, false);
 
 assert.sameValue(obj, obj1, 'obj');
 

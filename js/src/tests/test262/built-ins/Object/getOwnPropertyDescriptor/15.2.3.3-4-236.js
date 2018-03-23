@@ -9,11 +9,13 @@ description: >
     'writable' attribute
 ---*/
 
-        var obj = { "property": "ownDataProperty" };
+var obj = {
+  "property": "ownDataProperty"
+};
 
-        var desc = Object.getOwnPropertyDescriptor(obj, "property");
+var desc = Object.getOwnPropertyDescriptor(obj, "property");
 
-            desc.writable = "overwriteDataProperty";
+desc.writable = "overwriteDataProperty";
 
 assert.sameValue(desc.writable, "overwriteDataProperty", 'desc.writable');
 

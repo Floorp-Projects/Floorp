@@ -16,9 +16,9 @@ var arrObj = [];
 arrObj.property = 12; // default value of attributes: writable: true, configurable: true, enumerable: true
 
 Object.defineProperty(arrObj, "property", {
-    writable: false,
-    enumerable: false,
-    configurable: false
+  writable: false,
+  enumerable: false,
+  configurable: false
 });
 
 verifyEqualTo(arrObj, "property", 12);
@@ -28,6 +28,5 @@ verifyNotWritable(arrObj, "property");
 verifyNotEnumerable(arrObj, "property");
 
 verifyNotConfigurable(arrObj, "property");
-
 
 reportCompare(0, 0);

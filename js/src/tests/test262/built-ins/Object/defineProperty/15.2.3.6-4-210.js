@@ -23,5 +23,4 @@ verifyEnumerable(arrObj, "0");
 
 verifyConfigurable(arrObj, "0");
 
-
 reportCompare(0, 0);

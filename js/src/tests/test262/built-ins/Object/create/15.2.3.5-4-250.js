@@ -9,15 +9,15 @@ description: >
     (8.10.5 step 7.a)
 ---*/
 
-        var regObj = new RegExp();
+var regObj = new RegExp();
 
-        regObj.get = function () {
-            return "VerifyRegExpObject";
-        };
+regObj.get = function() {
+  return "VerifyRegExpObject";
+};
 
-        var newObj = Object.create({}, {
-            prop: regObj
-        });
+var newObj = Object.create({}, {
+  prop: regObj
+});
 
 assert.sameValue(newObj.prop, "VerifyRegExpObject", 'newObj.prop');
 

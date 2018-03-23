@@ -76,5 +76,4 @@ verifyWritable(receiver, 'p');
 verifyEnumerable(receiver, 'p');
 verifyConfigurable(receiver, 'p');
 
-
 reportCompare(0, 0);

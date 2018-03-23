@@ -8,19 +8,19 @@ description: >
     object whose primitive value is true
 ---*/
 
-        var obj = {};
-        var props = new Boolean(true);
-        var result = false;
+var obj = {};
+var props = new Boolean(true);
+var result = false;
 
-        Object.defineProperty(props, "prop", {
-            get: function () {
-                result = this instanceof Boolean;
-                return {};
-            },
-            enumerable: true
-        });
+Object.defineProperty(props, "prop", {
+  get: function() {
+    result = this instanceof Boolean;
+    return {};
+  },
+  enumerable: true
+});
 
-        Object.defineProperties(obj, props);
+Object.defineProperties(obj, props);
 
 assert(result, 'result !== true');
 

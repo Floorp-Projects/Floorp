@@ -14,6 +14,4 @@ info: |
 
 assert.sameValue(new Date(NaN).toDateString(), "Invalid Date");
 
-
-
 reportCompare(0, 0);

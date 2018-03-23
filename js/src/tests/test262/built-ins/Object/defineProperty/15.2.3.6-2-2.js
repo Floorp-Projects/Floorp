@@ -8,8 +8,8 @@ description: >
     string 'null'
 ---*/
 
-        var obj = {};
-        Object.defineProperty(obj, null, {});
+var obj = {};
+Object.defineProperty(obj, null, {});
 
 assert(obj.hasOwnProperty("null"), 'obj.hasOwnProperty("null") !== true');
 

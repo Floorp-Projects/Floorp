@@ -8,8 +8,8 @@ description: >
     a string (value is 123.456)
 ---*/
 
-        var obj = {};
-        Object.defineProperty(obj, 123.456, {});
+var obj = {};
+Object.defineProperty(obj, 123.456, {});
 
 assert(obj.hasOwnProperty("123.456"), 'obj.hasOwnProperty("123.456") !== true');
 

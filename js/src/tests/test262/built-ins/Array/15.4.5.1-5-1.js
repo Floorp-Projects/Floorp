@@ -8,8 +8,8 @@ description: >
     element)
 ---*/
 
-  var a =[];
-  a[4294967295] = "not an array element" ;
+var a = [];
+a[4294967295] = "not an array element";
 
 assert.sameValue(a[4294967295], "not an array element", 'a[4294967295]');
 

@@ -24,7 +24,7 @@ var p = new Proxy(eval, {});
 p(); // the Proxy object is callable
 
 assert.throws(TypeError, function() {
-    new p();
+  new p();
 });
 
 reportCompare(0, 0);

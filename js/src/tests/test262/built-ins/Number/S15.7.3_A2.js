@@ -7,7 +7,7 @@ es5id: 15.7.3_A2
 description: Checking existence of the property "MAX_VALUE"
 ---*/
 
-if(!Number.hasOwnProperty("MAX_VALUE")){
+if (!Number.hasOwnProperty("MAX_VALUE")) {
   $ERROR('#1: The Number constructor has the property "MAX_VALUE"');
 }
 

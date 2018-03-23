@@ -9,13 +9,13 @@ description: >
     7.a)
 ---*/
 
-        var obj = {};
+var obj = {};
 
-            Math.get = function () {
-                return "mathGetProperty";
-            };
+Math.get = function() {
+  return "mathGetProperty";
+};
 
-            Object.defineProperty(obj, "property", Math);
+Object.defineProperty(obj, "property", Math);
 
 assert.sameValue(obj.property, "mathGetProperty", 'obj.property');
 

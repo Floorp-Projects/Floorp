@@ -7,11 +7,11 @@ description: >
 ---*/
 
 var p = new Proxy({}, {
-    getPrototypeOf: {}
+  getPrototypeOf: {}
 });
 
 assert.throws(TypeError, function() {
-    Object.getPrototypeOf(p);
+  Object.getPrototypeOf(p);
 });
 
 reportCompare(0, 0);

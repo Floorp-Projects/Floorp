@@ -8,19 +8,19 @@ description: >
     object 'O' is not pushed into the returned array.
 ---*/
 
-            var arr = [0, 1, 2];
+var arr = [0, 1, 2];
 
-            Object.defineProperty(Array.prototype, "protoProperty", {
-                get: function () {
-                    return "protoArray";
-                },
-                configurable: true
-            });
+Object.defineProperty(Array.prototype, "protoProperty", {
+  get: function() {
+    return "protoArray";
+  },
+  configurable: true
+});
 
-            var result = Object.getOwnPropertyNames(arr);
+var result = Object.getOwnPropertyNames(arr);
 
-            for (var p in result) {
-                assert.notSameValue(result[p], "protoProperty", 'result[p]');
-            }
+for (var p in result) {
+  assert.notSameValue(result[p], "protoProperty", 'result[p]');
+}
 
 reportCompare(0, 0);

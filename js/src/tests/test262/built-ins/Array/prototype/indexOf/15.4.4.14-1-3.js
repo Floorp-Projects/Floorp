@@ -7,10 +7,10 @@ es5id: 15.4.4.14-1-3
 description: Array.prototype.indexOf applied to boolean primitive
 ---*/
 
-        var targetObj = {};
+var targetObj = {};
 
-            Boolean.prototype[1] = targetObj;
-            Boolean.prototype.length = 2;
+Boolean.prototype[1] = targetObj;
+Boolean.prototype.length = 2;
 
 assert.sameValue(Array.prototype.indexOf.call(true, targetObj), 1, 'Array.prototype.indexOf.call(true, targetObj)');
 

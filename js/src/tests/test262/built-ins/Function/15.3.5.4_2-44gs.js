@@ -10,19 +10,19 @@ description: >
 flags: [noStrict]
 ---*/
 
-var f1 = function () {
-    return (function () {
-        "use strict";
-        gNonStrict();
-    })();
+var f1 = function() {
+  return (function() {
+    "use strict";
+    gNonStrict();
+  })();
 }
 
 assert.throws(TypeError, function() {
-    f1();
+  f1();
 });
 
 function gNonStrict() {
-    return gNonStrict.caller || gNonStrict.caller.throwTypeError;
+  return gNonStrict.caller || gNonStrict.caller.throwTypeError;
 }
 
 reportCompare(0, 0);

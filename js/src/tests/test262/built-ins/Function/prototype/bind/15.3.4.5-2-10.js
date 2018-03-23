@@ -8,7 +8,7 @@ description: Function.prototype.bind throws TypeError if 'Target' is undefined
 
 
 assert.throws(TypeError, function() {
-            Function.prototype.bind.call(undefined);
+  Function.prototype.bind.call(undefined);
 });
 
 reportCompare(0, 0);

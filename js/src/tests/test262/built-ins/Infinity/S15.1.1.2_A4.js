@@ -10,7 +10,7 @@ description: Use for-in statement
 // CHECK#1
 for (var prop in this) {
   if (prop === "Infinity") {
-	$ERROR('#1: The Infinity is DontEnum');
+    $ERROR('#1: The Infinity is DontEnum');
   }
 }
 

@@ -11,7 +11,7 @@ description: >
     less than 0
 ---*/
 
-  var s = String("hello world");
+var s = String("hello world");
 
 assert.sameValue(s[-1], undefined, 's[-1]');
 
