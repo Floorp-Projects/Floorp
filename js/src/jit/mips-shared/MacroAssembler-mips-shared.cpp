@@ -601,7 +601,7 @@ MacroAssemblerMIPSShared::ma_load_unaligned(const wasm::MemoryAccessDesc& access
         MOZ_CRASH("Invalid argument for ma_load");
     }
 
-    append(access, load.getOffset(), asMasm().framePushed());
+    append(access, load.getOffset());
 }
 
 void
@@ -747,7 +747,7 @@ MacroAssemblerMIPSShared::ma_store_unaligned(const wasm::MemoryAccessDesc& acces
       default:
         MOZ_CRASH("Invalid argument for ma_store");
     }
-    append(access, store.getOffset(), asMasm().framePushed());
+    append(access, store.getOffset());
 }
 
 // Branches when done from within mips-specific code.
@@ -2105,7 +2105,7 @@ MacroAssemblerMIPSShared::wasmLoadImpl(const wasm::MemoryAccessDesc& access, Reg
         asMasm().ma_load(output.gpr(), address, static_cast<LoadStoreSize>(8 * byteSize),
                          isSigned ? SignExtend : ZeroExtend);
     }
-    asMasm().append(access, asMasm().size() - 4, asMasm().framePushed());
+    asMasm().append(access, asMasm().size() - 4);
     asMasm().memoryBarrierAfter(access.sync());
 }
 
@@ -2169,7 +2169,7 @@ MacroAssemblerMIPSShared::wasmStoreImpl(const wasm::MemoryAccessDesc& access, An
                       isSigned ? SignExtend : ZeroExtend);
     }
     // Only the last emitted instruction is a memory access.
-    asMasm().append(access, asMasm().size() - 4, asMasm().framePushed());
+    asMasm().append(access, asMasm().size() - 4);
     asMasm().memoryBarrierAfter(access.sync());
 }
 

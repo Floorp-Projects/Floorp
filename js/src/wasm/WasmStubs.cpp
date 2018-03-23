@@ -19,7 +19,6 @@
 #include "wasm/WasmStubs.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/EnumeratedRange.h"
 
 #include "wasm/WasmCode.h"
 #include "wasm/WasmGenerator.h"
@@ -32,7 +31,6 @@ using namespace js::jit;
 using namespace js::wasm;
 
 using mozilla::ArrayLength;
-using mozilla::MakeEnumeratedRange;
 
 typedef Vector<jit::MIRType, 8, SystemAllocPolicy> MIRTypeVector;
 typedef jit::ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
@@ -996,9 +994,6 @@ GenerateImportFunction(jit::MacroAssembler& masm, const FuncImport& fi, SigIdDes
     masm.loadWasmPinnedRegsFromTls();
 
     GenerateFunctionEpilogue(masm, framePushed, offsets);
-
-    masm.wasmEmitOldTrapOutOfLineCode();
-
     return FinishOffsets(masm, offsets);
 }
 
@@ -1568,43 +1563,6 @@ GenerateTrapExit(MacroAssembler& masm, Label* throwLabel, Offsets* offsets)
     return FinishOffsets(masm, offsets);
 }
 
-// Generate a stub that calls into WasmOldReportTrap with the right trap reason.
-// This stub is called with ABIStackAlignment by a trap out-of-line path. An
-// exit prologue/epilogue is used so that stack unwinding picks up the
-// current JitActivation. Unwinding will begin at the caller of this trap exit.
-static bool
-GenerateOldTrapExit(MacroAssembler& masm, Trap trap, Label* throwLabel, CallableOffsets* offsets)
-{
-    AssertExpectedSP(masm);
-    masm.haltingAlign(CodeAlignment);
-
-    masm.setFramePushed(0);
-
-    MIRTypeVector args;
-    MOZ_ALWAYS_TRUE(args.append(MIRType::Int32));
-
-    uint32_t framePushed = StackDecrementForCall(masm, ABIStackAlignment, args);
-
-    GenerateExitPrologue(masm, framePushed, ExitReason::Fixed::Trap, offsets);
-
-    ABIArgMIRTypeIter i(args);
-    if (i->kind() == ABIArg::GPR)
-        masm.move32(Imm32(int32_t(trap)), i->gpr());
-    else
-        masm.store32(Imm32(int32_t(trap)), Address(masm.getStackPointer(), i->offsetFromArgBase()));
-    i++;
-    MOZ_ASSERT(i.done());
-
-    masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(SymbolicAddress::OldReportTrap);
-
-    masm.jump(throwLabel);
-
-    GenerateExitEpilogue(masm, framePushed, ExitReason::Fixed::Trap, offsets);
-
-    return FinishOffsets(masm, offsets);
-}
-
 // Generate a stub which is only used by the signal handlers to handle out of
 // bounds access by experimental SIMD.js and Atomics and unaligned accesses on
 // ARM. This stub is executed by direct PC transfer from the faulting memory
@@ -1809,39 +1767,9 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
             return false;
     }
 
-    JitSpew(JitSpew_Codegen, "# Emitting wasm trap stubs");
-
-    for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
-        switch (trap) {
-          case Trap::Unreachable:
-          case Trap::IntegerOverflow:
-          case Trap::InvalidConversionToInteger:
-          case Trap::IntegerDivideByZero:
-          case Trap::IndirectCallToNull:
-          case Trap::IndirectCallBadSig:
-          case Trap::ImpreciseSimdConversion:
-          case Trap::StackOverflow:
-          case Trap::CheckInterrupt:
-          case Trap::ThrowReported:
-            break;
-          // The TODO list of "old" traps to convert to new traps:
-          case Trap::OutOfBounds:
-          case Trap::UnalignedAccess: {
-            CallableOffsets offsets;
-            if (!GenerateOldTrapExit(masm, trap, &throwLabel, &offsets))
-                return false;
-            if (!code->codeRanges.emplaceBack(trap, offsets))
-                return false;
-            break;
-          }
-          case Trap::Limit:
-            MOZ_CRASH("impossible");
-        }
-    }
+    JitSpew(JitSpew_Codegen, "# Emitting wasm exit stubs");
 
     Offsets offsets;
-
-    JitSpew(JitSpew_Codegen, "# Emitting wasm exit stubs");
 
     if (!GenerateOutOfBoundsExit(masm, &throwLabel, &offsets))
         return false;
