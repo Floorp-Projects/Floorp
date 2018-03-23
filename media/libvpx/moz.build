@@ -17,8 +17,12 @@ if CONFIG['CPU_ARCH'] == 'x86_64':
     EXPORTS.vpx += files['X64_EXPORTS']
     SOURCES += files['X64_SOURCES']
     if CONFIG['OS_TARGET'] == 'WINNT':
-        ASFLAGS += [ '-I%s/media/libvpx/config/win/x64/' % TOPSRCDIR ]
-        LOCAL_INCLUDES += [ '/media/libvpx/config/win/x64/' ]
+        if CONFIG['CC_TYPE'] == 'gcc':
+            ASFLAGS += [ '-I%s/media/libvpx/config/win/mingw64/' % TOPSRCDIR ]
+            LOCAL_INCLUDES += [ '/media/libvpx/config/win/mingw64/' ]
+        else:
+            ASFLAGS += [ '-I%s/media/libvpx/config/win/x64/' % TOPSRCDIR ]
+            LOCAL_INCLUDES += [ '/media/libvpx/config/win/x64/' ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libvpx/config/mac/x64/' % TOPSRCDIR ]
         LOCAL_INCLUDES += [ '/media/libvpx/config/mac/x64/' ]
