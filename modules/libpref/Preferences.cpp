@@ -2868,10 +2868,13 @@ HaveExistingCacheFor(void* aPtr)
   }
   return false;
 }
+#endif
 
 static void
 AssertNotAlreadyCached(const char* aPrefType, const char* aPref, void* aPtr)
 {
+#ifdef DEBUG
+  MOZ_ASSERT(aPtr);
   if (HaveExistingCacheFor(aPtr)) {
     fprintf_stderr(
       stderr,
@@ -2883,8 +2886,8 @@ AssertNotAlreadyCached(const char* aPrefType, const char* aPref, void* aPtr)
     MOZ_ASSERT(false,
                "Should not have an existing pref cache for this address");
   }
-}
 #endif
+}
 
 // Although this is a member of Preferences, it measures sPreferences and
 // several other global structures.
@@ -4735,10 +4738,7 @@ BoolVarChanged(const char* aPref, void* aClosure)
 /* static */ nsresult
 Preferences::AddBoolVarCache(bool* aCache, const char* aPref, bool aDefault)
 {
-  MOZ_ASSERT(aCache);
-#ifdef DEBUG
   AssertNotAlreadyCached("bool", aPref, aCache);
-#endif
   *aCache = GetBool(aPref, aDefault);
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4767,10 +4767,7 @@ Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache,
                                    const char* aPref,
                                    bool aDefault)
 {
-  MOZ_ASSERT(aCache);
-#ifdef DEBUG
   AssertNotAlreadyCached("bool", aPref, aCache);
-#endif
   *aCache = Preferences::GetBool(aPref, aDefault);
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4797,10 +4794,7 @@ Preferences::AddIntVarCache(int32_t* aCache,
                             const char* aPref,
                             int32_t aDefault)
 {
-  MOZ_ASSERT(aCache);
-#ifdef DEBUG
   AssertNotAlreadyCached("int", aPref, aCache);
-#endif
   *aCache = Preferences::GetInt(aPref, aDefault);
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4826,10 +4820,7 @@ Preferences::AddAtomicIntVarCache(Atomic<int32_t, Order>* aCache,
                                   const char* aPref,
                                   int32_t aDefault)
 {
-  MOZ_ASSERT(aCache);
-#ifdef DEBUG
   AssertNotAlreadyCached("int", aPref, aCache);
-#endif
   *aCache = Preferences::GetInt(aPref, aDefault);
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4856,10 +4847,7 @@ Preferences::AddUintVarCache(uint32_t* aCache,
                              const char* aPref,
                              uint32_t aDefault)
 {
-  MOZ_ASSERT(aCache);
-#ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
-#endif
   *aCache = Preferences::GetUint(aPref, aDefault);
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4888,10 +4876,7 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
                                    const char* aPref,
                                    uint32_t aDefault)
 {
-  MOZ_ASSERT(aCache);
-#ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
-#endif
   *aCache = Preferences::GetUint(aPref, aDefault);
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
@@ -4947,10 +4932,7 @@ FloatVarChanged(const char* aPref, void* aClosure)
 /* static */ nsresult
 Preferences::AddFloatVarCache(float* aCache, const char* aPref, float aDefault)
 {
-  MOZ_ASSERT(aCache);
-#ifdef DEBUG
   AssertNotAlreadyCached("float", aPref, aCache);
-#endif
   *aCache = Preferences::GetFloat(aPref, aDefault);
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
