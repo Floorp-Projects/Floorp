@@ -72,6 +72,8 @@ loader.lazyRequireGetter(this, "StyleSheetsFront",
   "devtools/shared/fronts/stylesheets", true);
 loader.lazyRequireGetter(this, "buildHarLog",
   "devtools/client/netmonitor/src/har/har-builder-utils", true);
+loader.lazyRequireGetter(this, "getKnownDeviceFront",
+  "devtools/shared/fronts/device", true);
 
 loader.lazyGetter(this, "domNodeConstants", () => {
   return require("devtools/shared/dom-node-constants");
@@ -2795,6 +2797,14 @@ Toolbox.prototype = {
     if (this._styleSheets) {
       this._styleSheets.destroy();
       this._styleSheets = null;
+    }
+
+    // Destroy the device front for the current client if any.
+    // A given DeviceFront instance can cached and shared between different panels, so
+    // destroying it is the responsibility of the toolbox.
+    let deviceFront = getKnownDeviceFront(this.target.client);
+    if (deviceFront) {
+      deviceFront.destroy();
     }
 
     // Detach the thread
