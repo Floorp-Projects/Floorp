@@ -317,10 +317,6 @@ public:
         // normal windows.
         static gfxFontEntry* GetFont(const gfxFontFaceSrc&, const gfxUserFontEntry&);
 
-        // Generation number that is incremented whenever an entry is added to
-        // the cache.  (Removals don't increment it.)
-        static uint32_t Generation() { return sGeneration; }
-
         // Clear everything so that we don't leak URIs and Principals.
         static void Shutdown();
 
@@ -454,8 +450,6 @@ public:
         };
 
         static nsTHashtable<Entry>* sUserFonts;
-
-        static uint32_t sGeneration;
     };
 
     void SetLocalRulesUsed() {
