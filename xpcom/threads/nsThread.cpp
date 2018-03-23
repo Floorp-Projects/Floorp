@@ -900,7 +900,7 @@ void canary_alarm_handler(int signum)
     }                                                                          \
   } while(0)
 
-#ifndef RELEASE_OR_BETA
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
 static bool
 GetLabeledRunnableName(nsIRunnable* aEvent,
                        nsACString& aName,
@@ -1011,7 +1011,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
         HangMonitor::NotifyActivity();
       }
 
-#ifndef RELEASE_OR_BETA
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
       bool schedulerLoggingEnabled = GetSchedulerLoggingEnabled();
       if (schedulerLoggingEnabled
           && mNestedEventLoopDepth > mCurrentEventLoopDepth

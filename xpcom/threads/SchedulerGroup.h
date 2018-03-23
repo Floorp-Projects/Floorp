@@ -122,7 +122,9 @@ public:
     SchedulerGroup* Group() const { return mGroup; }
     dom::DocGroup* DocGroup() const;
 
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
     NS_IMETHOD GetName(nsACString& aName) override;
+#endif
 
     bool IsBackground() const { return mGroup->IsBackground(); }
 

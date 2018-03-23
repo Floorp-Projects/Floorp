@@ -145,7 +145,9 @@ public:
     return NS_OK;
   }
 
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   NS_IMETHOD GetName(nsACString& aName) override;
+#endif
 
   nsTimerEvent()
     : mozilla::CancelableRunnable("nsTimerEvent")
@@ -263,6 +265,7 @@ nsTimerEvent::DeleteAllocatorIfNeeded()
   }
 }
 
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
 NS_IMETHODIMP
 nsTimerEvent::GetName(nsACString& aName)
 {
@@ -272,6 +275,7 @@ nsTimerEvent::GetName(nsACString& aName)
   mTimer->GetName(aName);
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 nsTimerEvent::Run()
