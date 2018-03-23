@@ -1825,7 +1825,7 @@ BrowserGlue.prototype = {
 
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 64;
+    const UI_VERSION = 65;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2321,7 +2321,12 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (currentUIVersion < 63 &&
+    if (currentUIVersion < 64) {
+      OS.File.remove(OS.Path.join(OS.Constants.Path.profileDir,
+                                  "directoryLinks.json"), {ignoreAbsent: true});
+    }
+
+    if (currentUIVersion < 65 &&
         Services.prefs.getCharPref("general.config.filename", "") == "dsengine.cfg") {
       let searchInitializedPromise = new Promise(resolve => {
         if (Services.search.isInitialized) {
@@ -2338,7 +2343,7 @@ BrowserGlue.prototype = {
       });
       searchInitializedPromise.then(() => {
         let engineNames = ["Bing Search Engine",
-                           "Yahoo Search Engine",
+                           "Yahoo! Search Engine",
                            "Yandex Search Engine"];
         for (let engineName of engineNames) {
           let engine = Services.search.getEngineByName(engineName);
@@ -2347,11 +2352,6 @@ BrowserGlue.prototype = {
           }
         }
       });
-    }
-
-    if (currentUIVersion < 64) {
-      OS.File.remove(OS.Path.join(OS.Constants.Path.profileDir,
-                                  "directoryLinks.json"), {ignoreAbsent: true});
     }
 
     // Update the migration version.
