@@ -1475,8 +1475,7 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
   if (!aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Background)))
     return;
 
-  if (!aData->PropertyIsSet(eCSSProperty_background_image) &&
-      !aData->ShouldIgnoreColors()) {
+  if (!aData->PropertyIsSet(eCSSProperty_background_image)) {
     // background
     nsAttrValue* value =
       const_cast<nsAttrValue*>(aAttributes->GetAttr(nsGkAtoms::background));
@@ -1493,8 +1492,7 @@ nsGenericHTMLElement::MapBGColorInto(const nsMappedAttributes* aAttributes,
   if (!aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Background)))
     return;
 
-  if (!aData->PropertyIsSet(eCSSProperty_background_color) &&
-      !aData->ShouldIgnoreColors()) {
+  if (!aData->PropertyIsSet(eCSSProperty_background_color)) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::bgcolor);
     nscolor color;
     if (value && value->GetColorValue(color)) {
