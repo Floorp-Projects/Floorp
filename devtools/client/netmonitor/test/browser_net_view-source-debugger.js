@@ -25,10 +25,8 @@ add_task(async function() {
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
 
-  let waitForContentRequests = waitForNetworkEvents(monitor, 2);
-  await ContentTask.spawn(tab.linkedBrowser, {},
-    () => content.wrappedJSObject.performRequests());
-  await waitForContentRequests;
+  // Execute requests.
+  await performRequests(monitor, tab, 2);
 
   info("Clicking stack-trace tab and waiting for stack-trace panel to open");
   let wait = waitForDOM(document, "#stack-trace-panel .frame-link", 5);
@@ -72,4 +70,3 @@ async function checkClickOnNode(toolbox, frameLinkNode) {
     "expected source url"
   );
 }
-

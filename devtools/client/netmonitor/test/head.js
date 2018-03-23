@@ -5,7 +5,7 @@
 /* exported Toolbox, restartNetMonitor, teardown, waitForExplicitFinish,
    verifyRequestItemTarget, waitFor, testFilterButtons,
    performRequestsInContent, waitForNetworkEvents, selectIndexAndWaitForSourceEditor,
-   testColumnsAlignment, hideColumn, showColumn */
+   testColumnsAlignment, hideColumn, showColumn, performRequests */
 
 "use strict";
 
@@ -744,4 +744,17 @@ async function selectIndexAndWaitForSourceEditor(monitor, index) {
     await waitDOM;
   }
   await onResponseContent;
+}
+
+/**
+ * Helper function for executing XHRs on a test page.
+ *
+ * @param {Number} count Number of requests to be executed.
+ */
+async function performRequests(monitor, tab, count) {
+  let wait = waitForNetworkEvents(monitor, count);
+  await ContentTask.spawn(tab.linkedBrowser, count, requestCount => {
+    content.wrappedJSObject.performRequests(requestCount);
+  });
+  await wait;
 }

@@ -891,12 +891,10 @@ txErrorFunctionCall::isSensitiveTo(ContextSensitivity aContext)
 }
 
 #ifdef TX_TO_STRING
-nsresult
-txErrorFunctionCall::getNameAtom(nsAtom** aAtom)
+void
+txErrorFunctionCall::appendName(nsAString& aDest)
 {
-    NS_IF_ADDREF(*aAtom = mName);
-
-    return NS_OK;
+    aDest.Append(mName->GetUTF16String());
 }
 #endif
 

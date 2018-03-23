@@ -276,7 +276,16 @@ SourceClient.prototype = {
 
       return doSetBreakpoint(cleanUp);
     });
-  }
+  },
+
+  setPausePoints: function(pausePoints) {
+    const packet = {
+      to: this._form.actor,
+      type: "setPausePoints",
+      pausePoints
+    };
+    return this._client.request(packet);
+  },
 };
 
 module.exports = SourceClient;

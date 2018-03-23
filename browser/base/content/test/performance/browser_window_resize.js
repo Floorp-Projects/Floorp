@@ -129,10 +129,10 @@ add_task(async function() {
 
   await resizeWindow(win, STARTING_WIDTH, STARTING_HEIGHT);
 
-  await withReflowObserver(async function() {
+  await withPerfObserver(async function() {
     await resizeWindow(win, SMALL_WIDTH, SMALL_HEIGHT);
     await resizeWindow(win, STARTING_WIDTH, STARTING_HEIGHT);
-  }, EXPECTED_REFLOWS, win);
+  }, {expectedReflows: EXPECTED_REFLOWS, frames: {filter: () => []}}, win);
 
   await BrowserTestUtils.closeWindow(win);
 });

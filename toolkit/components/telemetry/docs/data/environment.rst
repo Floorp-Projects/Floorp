@@ -264,7 +264,7 @@ Structure:
             },
             ...
         },
-        activeExperiment: { // section is empty if there's no active experiment
+        activeExperiment: { // obsolete in firefox 61, section is empty if there's no active experiment
             id: <string>, // id
             branch: <string>, // branch name
         },
@@ -417,4 +417,4 @@ Just like activePlugins, this will report dummy values until the blocklist is lo
 
 experiments
 -----------
-For each experiment we collect the ``id`` and the ``branch`` the client is enrolled in. Both fields are truncated to 100 characters and a warning is printed when that happens. This section will eventually supersede ``addons/activeExperiment``.
+For each experiment we collect the ``id`` and the ``branch`` the client is enrolled in. Both fields are truncated to 100 characters and a warning is printed when that happens.

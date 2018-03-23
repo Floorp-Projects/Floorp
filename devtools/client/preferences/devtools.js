@@ -74,6 +74,8 @@ pref("devtools.eventsview.enabled", false);
 pref("devtools.flexboxinspector.enabled", false);
 // Enable the new Animation Inspector
 pref("devtools.new-animationinspector.enabled", false);
+// Enable the Variable Fonts editor
+pref("devtools.inspector.fonteditor.enabled", false);
 
 // Grid highlighter preferences
 pref("devtools.gridinspector.gridOutlineMaxColumns", 50);

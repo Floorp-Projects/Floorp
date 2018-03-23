@@ -488,6 +488,12 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
         if (NS_FAILED(rv)) {
             return rv;
         }
+        nsCString csp;
+        rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-security-policy"),
+                                            csp);
+        if (NS_SUCCEEDED(rv)) {
+          mRootContentSecurityPolicy = csp;
+        }
     } else {
         // try asking the channel directly
         rv = mChannel->GetContentType(contentType);
@@ -528,6 +534,10 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
       mTokenizer.AddCustomToken("content-range", mTokenizer.CASE_INSENSITIVE, false);
     mHeaderTokens[HEADER_RANGE] =
       mTokenizer.AddCustomToken("range", mTokenizer.CASE_INSENSITIVE, false);
+    mHeaderTokens[HEADER_CONTENT_SECURITY_POLICY] =
+      mTokenizer.AddCustomToken("content-security-policy",
+                                mTokenizer.CASE_INSENSITIVE,
+                                false);
 
     mLFToken = mTokenizer.AddCustomToken("\n", mTokenizer.CASE_SENSITIVE, false);
     mCRLFToken = mTokenizer.AddCustomToken("\r\n", mTokenizer.CASE_SENSITIVE, false);
@@ -1001,6 +1011,7 @@ nsMultiMixedConv::HeadersToDefault()
     mContentLength = UINT64_MAX;
     mContentType.Truncate();
     mContentDisposition.Truncate();
+    mContentSecurityPolicy.Truncate();
     mIsByteRangeRequest = false;
 }
 
@@ -1050,6 +1061,31 @@ nsMultiMixedConv::ProcessHeader()
       mIsByteRangeRequest = true;
       if (mContentLength == UINT64_MAX) {
         mContentLength = uint64_t(mByteRangeEnd - mByteRangeStart + 1);
+      }
+      break;
+    }
+    case HEADER_CONTENT_SECURITY_POLICY: {
+      mContentSecurityPolicy = mResponseHeaderValue;
+      mContentSecurityPolicy.CompressWhitespace();
+      nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+      if (httpChannel) {
+        nsCString resultCSP = mRootContentSecurityPolicy;
+        if (!mContentSecurityPolicy.IsEmpty()) {
+          // We are updating the root channel CSP header respectively for
+          // each part as: CSP-root + CSP-partN, where N is the part number.
+          // Here we append current part's CSP to root CSP and reset CSP
+          // header for each part.
+          if (!resultCSP.IsEmpty()) {
+            resultCSP.Append(";");
+          }
+          resultCSP.Append(mContentSecurityPolicy);
+        }
+        nsresult rv = httpChannel->SetResponseHeader(
+                        NS_LITERAL_CSTRING("Content-Security-Policy"),
+                        resultCSP, false);
+        if (NS_FAILED(rv)) {
+          return NS_ERROR_CORRUPTED_CONTENT;
+        }
       }
       break;
     }

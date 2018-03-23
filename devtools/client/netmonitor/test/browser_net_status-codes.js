@@ -98,11 +98,8 @@ add_task(async function() {
     }
   ];
 
-  let wait = waitForNetworkEvents(monitor, 5);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    content.wrappedJSObject.performRequests();
-  });
-  await wait;
+  // Execute requests.
+  await performRequests(monitor, tab, 5);
 
   info("Performing tests");
   await verifyRequests();

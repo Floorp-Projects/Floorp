@@ -20,11 +20,8 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, 2);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    content.wrappedJSObject.performRequests();
-  });
-  await wait;
+  // Execute requests.
+  await performRequests(monitor, tab, 2);
 
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelectorAll(".request-list-item")[0]);
