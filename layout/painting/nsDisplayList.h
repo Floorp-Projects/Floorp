@@ -44,6 +44,7 @@
 #include "nsPresArena.h"
 #include "nsAutoLayoutPhase.h"
 #include "nsDisplayItemTypes.h"
+#include "RetainedDisplayListHelpers.h"
 
 #include <stdint.h>
 #include "nsTHashtable.h"
@@ -1096,11 +1097,11 @@ public:
         aBuilder->mCurrentAGR = aBuilder->FindAnimatedGeometryRootFor(aForChild);
       }
       MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(aBuilder->RootReferenceFrame(), *aBuilder->mCurrentAGR));
+      aBuilder->mInInvalidSubtree = aBuilder->mInInvalidSubtree || aForChild->IsFrameModified();
       aBuilder->mCurrentFrame = aForChild;
       aBuilder->mVisibleRect = aVisibleRect;
-      aBuilder->mDirtyRect = aDirtyRect;
+      aBuilder->mDirtyRect = aBuilder->mInInvalidSubtree ? aVisibleRect : aDirtyRect;
       aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
-      aBuilder->mInInvalidSubtree = aBuilder->mInInvalidSubtree || aForChild->IsFrameModified();
     }
     void SetReferenceFrameAndCurrentOffset(const nsIFrame* aFrame, const nsPoint& aOffset) {
       mBuilder->mCurrentReferenceFrame = aFrame;
@@ -1740,6 +1741,7 @@ public:
   {
     if (MarkFrameModifiedDuringBuilding(const_cast<nsIFrame*>(mCurrentFrame))) {
       mInInvalidSubtree = true;
+      mDirtyRect = mVisibleRect;
       return true;
     }
     return false;
@@ -2016,6 +2018,7 @@ private:
 
 class nsDisplayItem;
 class nsDisplayList;
+class RetainedDisplayList;
 /**
  * nsDisplayItems are put in singly-linked lists rooted in an nsDisplayList.
  * nsDisplayItemLink holds the link. The lists are linked from lowest to
@@ -2655,7 +2658,7 @@ public:
    * If this has a child list, return it, even if the children are in
    * a different coordinate system to this item.
    */
-  virtual nsDisplayList* GetChildren() const { return nullptr; }
+  virtual RetainedDisplayList* GetChildren() const { return nullptr; }
 
   /**
    * Returns the visible rect.
@@ -3326,6 +3329,59 @@ private:
   nsDisplayList mLists[6];
 };
 
+/**
+ * A display list that also retains the partial build
+ * information (in the form of a DAG) used to create it.
+ *
+ * Display lists built from a partial list aren't necessarily
+ * in the same order as a full build, and the DAG retains
+ * the information needing to interpret the current
+ * order correctly.
+ */
+class RetainedDisplayList : public nsDisplayList {
+public:
+  RetainedDisplayList() {}
+  RetainedDisplayList(RetainedDisplayList&& aOther)
+  {
+    AppendToTop(&aOther);
+    mDAG = mozilla::Move(aOther.mDAG);
+    mKeyLookup.SwapElements(aOther.mKeyLookup);
+  }
+  ~RetainedDisplayList()
+  {
+    MOZ_ASSERT(mOldItems.IsEmpty(), "Must empty list before destroying");
+  }
+
+  RetainedDisplayList& operator=(RetainedDisplayList&& aOther)
+  {
+    MOZ_ASSERT(!Count(), "Can only move into an empty list!");
+    MOZ_ASSERT(mOldItems.IsEmpty(), "Can only move into an empty list!");
+    AppendToTop(&aOther);
+    mDAG = mozilla::Move(aOther.mDAG);
+    mKeyLookup.SwapElements(aOther.mKeyLookup);
+    return *this;
+  }
+
+  void DeleteAll(nsDisplayListBuilder* aBuilder)
+  {
+    for (OldItemInfo& i : mOldItems) {
+      if (i.mItem) {
+        i.mItem->Destroy(aBuilder);
+      }
+    }
+    mOldItems.Clear();
+    nsDisplayList::DeleteAll(aBuilder);
+  }
+
+  void ClearDAG();
+
+  DirectedAcyclicGraph<MergedListUnits> mDAG;
+  nsDataHashtable<DisplayItemHashEntry, size_t> mKeyLookup;
+
+  // Temporary state initialized during the preprocess pass
+  // of RetainedDisplayListBuilder and then used during merging.
+  nsTArray<OldItemInfo> mOldItems;
+};
 
 class nsDisplayImageContainer : public nsDisplayItem {
 public:
@@ -5005,7 +5061,7 @@ public:
     return mListPtr;
   }
 
-  virtual nsDisplayList* GetChildren() const override { return mListPtr; }
+  virtual RetainedDisplayList* GetChildren() const override { return mListPtr; }
 
   virtual int32_t ZIndex() const override
   {
@@ -5051,8 +5107,8 @@ protected:
     mMergedFrames.AppendElements(aOther->mMergedFrames);
   }
 
-  nsDisplayList mList;
-  nsDisplayList* mListPtr;
+  RetainedDisplayList mList;
+  RetainedDisplayList* mListPtr;
   // The active scrolled root for the frame that created this
   // wrap list.
   RefPtr<const ActiveScrolledRoot> mFrameActiveScrolledRoot;
@@ -6186,7 +6242,7 @@ public:
     return GetBounds(aBuilder, &snap);
   }
 
-  virtual nsDisplayList* GetChildren() const override
+  virtual RetainedDisplayList* GetChildren() const override
   {
     return mStoredList.GetChildren();
   }
@@ -6586,7 +6642,7 @@ public:
     return mList.GetChildren();
   }
 
-  virtual nsDisplayList* GetChildren() const override
+  virtual RetainedDisplayList* GetChildren() const override
   {
     return mList.GetChildren();
   }
