@@ -294,6 +294,19 @@ const getDurationAndRate = function(animationInspector, panel, pixels) {
 };
 
 /**
+ * Select animation inspector in sidebar and toolbar.
+ *
+ * @param {InspectorPanel} inspector
+ */
+const selectAnimationInspector = async function(inspector) {
+  await inspector.toolbox.selectTool("inspector");
+  const onUpdated = inspector.once("inspector-updated");
+  inspector.sidebar.select("newanimationinspector");
+  await onUpdated;
+  await waitForRendering(inspector.animationinspector);
+};
+
+/**
  * Set the inspector's current selection to a node or to the first match of the
  * given css selector and wait for the animations to be displayed
  *
