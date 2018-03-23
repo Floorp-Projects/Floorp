@@ -191,11 +191,7 @@ TransactionManager::Redo()
 NS_IMETHODIMP
 TransactionManager::Clear()
 {
-  nsresult rv = ClearRedoStack();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  return ClearUndoStack();
+  return ClearUndoRedo() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -295,55 +291,73 @@ TransactionManager::GetMaxTransactionCount(int32_t* aMaxCount)
 NS_IMETHODIMP
 TransactionManager::SetMaxTransactionCount(int32_t aMaxCount)
 {
-  // It is illegal to call SetMaxTransactionCount() while the transaction
-  // manager is executing a  transaction's DoTransaction() method because
-  // the undo and redo stacks might get pruned! If this happens, the
-  // SetMaxTransactionCount() request is ignored, and we return
-  // NS_ERROR_FAILURE.
-  if (!mDoStack.IsEmpty()) {
-    return NS_ERROR_FAILURE;
+  return EnableUndoRedo(aMaxCount) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+bool
+TransactionManager::EnableUndoRedo(int32_t aMaxTransactionCount)
+{
+  // It is illegal to call EnableUndoRedo() while the transaction manager is
+  // executing a transaction's DoTransaction() method because the undo and redo
+  // stacks might get pruned.  If this happens, the EnableUndoRedo() request is
+  // ignored, and we return false.
+  if (NS_WARN_IF(!mDoStack.IsEmpty())) {
+    return false;
   }
 
-  // If aMaxCount is less than zero, the user wants unlimited
-  // levels of undo! No need to prune the undo or redo stacks!
-  if (aMaxCount < 0) {
+  // If aMaxTransactionCount is 0, it means to disable undo/redo.
+  if (!aMaxTransactionCount) {
+    mUndoStack.Clear();
+    mRedoStack.Clear();
+    mMaxTransactionCount = 0;
+    return true;
+  }
+
+  // If aMaxTransactionCount is less than zero, the user wants unlimited
+  // levels of undo! No need to prune the undo or redo stacks.
+  if (aMaxTransactionCount < 0) {
     mMaxTransactionCount = -1;
-    return NS_OK;
+    return true;
   }
 
-  // If aMaxCount is greater than the number of transactions that currently
-  // exist on the undo and redo stack, there is no need to prune the
-  // undo or redo stacks!
-  int32_t numUndoItems = mUndoStack.GetSize();
-  int32_t numRedoItems = mRedoStack.GetSize();
-  int32_t total = numUndoItems + numRedoItems;
-  if (aMaxCount > total) {
-    mMaxTransactionCount = aMaxCount;
-    return NS_OK;
+  // If new max transaction count is greater than or equal to current max
+  // transaction count, we don't need to remove any transactions.
+  if (mMaxTransactionCount >= 0 &&
+      mMaxTransactionCount <= aMaxTransactionCount) {
+    mMaxTransactionCount = aMaxTransactionCount;
+    return true;
+  }
+
+  // If aMaxTransactionCount is greater than the number of transactions that
+  // currently exist on the undo and redo stack, there is no need to prune the
+  // undo or redo stacks.
+  size_t numUndoItems = NumberOfUndoItems();
+  size_t numRedoItems = NumberOfRedoItems();
+  size_t total = numUndoItems + numRedoItems;
+  size_t newMaxTransactionCount = static_cast<size_t>(aMaxTransactionCount);
+  if (newMaxTransactionCount > total) {
+    mMaxTransactionCount = aMaxTransactionCount;
+    return true;
   }
 
   // Try getting rid of some transactions on the undo stack! Start at
   // the bottom of the stack and pop towards the top.
-  while (numUndoItems > 0 && (numRedoItems + numUndoItems) > aMaxCount) {
+  for (; numUndoItems && (numRedoItems + numUndoItems) > newMaxTransactionCount;
+       numUndoItems--) {
     RefPtr<TransactionItem> transactionItem = mUndoStack.PopBottom();
-    if (!transactionItem) {
-      return NS_ERROR_FAILURE;
-    }
-    --numUndoItems;
+    MOZ_ASSERT(transactionItem);
   }
 
   // If necessary, get rid of some transactions on the redo stack! Start at
   // the bottom of the stack and pop towards the top.
-  while (numRedoItems > 0 && (numRedoItems + numUndoItems) > aMaxCount) {
+  for (; numRedoItems && (numRedoItems + numUndoItems) > newMaxTransactionCount;
+       numRedoItems--) {
     RefPtr<TransactionItem> transactionItem = mRedoStack.PopBottom();
-    if (!transactionItem) {
-      return NS_ERROR_FAILURE;
-    }
-    --numRedoItems;
+    MOZ_ASSERT(transactionItem);
   }
 
-  mMaxTransactionCount = aMaxCount;
-  return NS_OK;
+  mMaxTransactionCount = aMaxTransactionCount;
+  return true;
 }
 
 NS_IMETHODIMP
@@ -435,6 +449,9 @@ TransactionManager::RemoveListener(nsITransactionListener* aListener)
 NS_IMETHODIMP
 TransactionManager::ClearUndoStack()
 {
+  if (NS_WARN_IF(!mDoStack.IsEmpty())) {
+    return NS_ERROR_FAILURE;
+  }
   mUndoStack.Clear();
   return NS_OK;
 }
@@ -442,6 +459,9 @@ TransactionManager::ClearUndoStack()
 NS_IMETHODIMP
 TransactionManager::ClearRedoStack()
 {
+  if (NS_WARN_IF(!mDoStack.IsEmpty())) {
+    return NS_ERROR_FAILURE;
+  }
   mRedoStack.Clear();
   return NS_OK;
 }
@@ -700,10 +720,7 @@ TransactionManager::EndTransaction(bool aAllowEmpty)
   }
 
   // The transaction succeeded, so clear the redo stack.
-  rv = ClearRedoStack();
-  if (NS_FAILED(rv)) {
-    // XXX: What do we do if this fails?
-  }
+  mRedoStack.Clear();
 
   // Check if we can coalesce this transaction with the one at the top
   // of the undo stack.
