@@ -7166,10 +7166,6 @@ nsContentUtils::PersistentLayerManagerForDocument(nsIDocument *aDoc)
 bool
 nsContentUtils::AllowXULXBLForPrincipal(nsIPrincipal* aPrincipal)
 {
-  if (!aPrincipal) {
-    return false;
-  }
-
   if (IsSystemPrincipal(aPrincipal)) {
     return true;
   }
@@ -10128,14 +10124,13 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
 
   MOZ_ASSERT_IF(aDefinition, isCustomElement);
 
-  bool customElementEnabled = CustomElementRegistry::IsCustomElementEnabled(nodeInfo->GetDocument());
-
   // https://dom.spec.whatwg.org/#concept-create-element
   // We only handle the "synchronous custom elements flag is set" now.
   // For the unset case (e.g. cloning a node), see bug 1319342 for that.
   // Step 4.
   CustomElementDefinition* definition = aDefinition;
-  if (customElementEnabled && isCustomElement && !definition) {
+  if (CustomElementRegistry::IsCustomElementEnabled() && isCustomElement &&
+      !definition) {
     MOZ_ASSERT(nodeInfo->NameAtom()->Equals(nodeInfo->LocalName()));
     definition =
       nsContentUtils::LookupCustomElementDefinition(nodeInfo->GetDocument(),
@@ -10242,7 +10237,7 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (customElementEnabled && isCustomElement) {
+  if (CustomElementRegistry::IsCustomElementEnabled() && isCustomElement) {
     (*aResult)->SetCustomElementData(new CustomElementData(typeAtom));
   }
 
