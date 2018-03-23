@@ -1750,6 +1750,7 @@ function RuleViewTool(inspector, window) {
   this.refresh = this.refresh.bind(this);
   this.onDetachedFront = this.onDetachedFront.bind(this);
   this.onPanelSelected = this.onPanelSelected.bind(this);
+  this.onDetachedFront = this.onDetachedFront.bind(this);
   this.onSelected = this.onSelected.bind(this);
   this.onViewRefreshed = this.onViewRefreshed.bind(this);
 
