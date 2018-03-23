@@ -3497,7 +3497,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  aStyle = aStyle | NSTexturedBackgroundWindowMask;
   if ((self = [super initWithContentRect:aContentRect styleMask:aStyle backing:aBufferingType defer:aFlag])) {
     mUnifiedToolbarHeight = 22.0f;
     mSheetAttachmentPosition = aContentRect.size.height;
