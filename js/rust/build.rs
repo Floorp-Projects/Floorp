@@ -245,7 +245,7 @@ const WHITELIST_VARS: &'static [&'static str] = &[
     "JS_STRUCTURED_CLONE_VERSION",
     "JSCLASS_.*",
     "JSFUN_.*",
-    "JSID_VOID",
+    "JSID_TYPE_VOID",
     "JSITER_.*",
     "JSPROP_.*",
     "JS::FalseHandleValue",

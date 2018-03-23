@@ -541,8 +541,8 @@ impl JS::HandleObject {
 
 impl Default for jsid {
     fn default() -> jsid {
-        unsafe {
-            JSID_VOID
+        jsid {
+            asBits: JSID_TYPE_VOID as usize,
         }
     }
 }
@@ -567,7 +567,7 @@ pub trait GCMethods {
 }
 
 impl GCMethods for jsid {
-    unsafe fn initial() -> jsid { JSID_VOID }
+    unsafe fn initial() -> jsid { Default::default() }
     unsafe fn post_barrier(_: *mut jsid, _: jsid, _: jsid) {}
 }
 
