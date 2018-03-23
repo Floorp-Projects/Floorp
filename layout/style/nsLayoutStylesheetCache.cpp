@@ -821,67 +821,6 @@ nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
 }
 
 /* static */ void
-nsLayoutStylesheetCache::InvalidateSheet(RefPtr<StyleSheet>* aGeckoSheet,
-                                         RefPtr<StyleSheet>* aServoSheet)
-{
-  MOZ_ASSERT(gCSSLoader_Gecko || gCSSLoader_Servo,
-             "pref changed before we loaded a sheet?");
-
-  const bool gotGeckoSheet = aGeckoSheet && *aGeckoSheet;
-  const bool gotServoSheet = aServoSheet && *aServoSheet;
-
-  // Make sure sheets have the expected types
-  MOZ_ASSERT(!gotGeckoSheet || (*aGeckoSheet)->IsGecko());
-  MOZ_ASSERT(!gotServoSheet || (*aServoSheet)->IsServo());
-  // Make sure the URIs match
-  MOZ_ASSERT(!gotServoSheet || !gotGeckoSheet ||
-             (*aGeckoSheet)->GetSheetURI() == (*aServoSheet)->GetSheetURI(),
-             "Sheets passed should have the same URI");
-
-  nsIURI* uri;
-  if (gotGeckoSheet) {
-    uri = (*aGeckoSheet)->GetSheetURI();
-  } else if (gotServoSheet) {
-    uri = (*aServoSheet)->GetSheetURI();
-  } else {
-    return;
-  }
-
-  if (gCSSLoader_Gecko) {
-    gCSSLoader_Gecko->ObsoleteSheet(uri);
-  }
-  if (gCSSLoader_Servo) {
-    gCSSLoader_Servo->ObsoleteSheet(uri);
-  }
-  if (gotGeckoSheet) {
-    *aGeckoSheet = nullptr;
-  }
-  if (gotServoSheet) {
-    *aServoSheet = nullptr;
-  }
-}
-
-/* static */ void
-nsLayoutStylesheetCache::DependentPrefChanged(const char* aPref, void* aData)
-{
-  MOZ_ASSERT(gStyleCache_Gecko || gStyleCache_Servo,
-             "pref changed after shutdown?");
-
-  // Cause any UA style sheets whose parsing depends on the value of prefs
-  // to be re-parsed by dropping the sheet from gCSSLoader_{Gecko,Servo}'s cache
-  // then setting our cached sheet pointer to null.  This will only work for
-  // sheets that are loaded lazily.
-
-#define INVALIDATE(sheet_) \
-  InvalidateSheet(gStyleCache_Gecko ? &gStyleCache_Gecko->sheet_ : nullptr, \
-                  gStyleCache_Servo ? &gStyleCache_Servo->sheet_ : nullptr);
-
-  // INVALIDATE(mUASheet);  // for layout.css.example-pref.enabled
-
-#undef INVALIDATE
-}
-
-/* static */ void
 nsLayoutStylesheetCache::InvalidatePreferenceSheets()
 {
   if (gStyleCache_Gecko) {
@@ -998,14 +937,10 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<StyleSheet>* aSheet,
                "kPreallocSize should be big enough to build preference style "
                "sheet without reallocation");
 
-  if (sheet->IsGecko()) {
-    MOZ_CRASH("old style system disabled");
-  } else {
-    ServoStyleSheet* servoSheet = sheet->AsServo();
-    // NB: The pref sheet never has @import rules.
-    servoSheet->ParseSheetSync(
-      nullptr, sheetText, uri, uri, nullptr, /* aLoadData = */ nullptr, 0, eCompatibility_FullStandards);
-  }
+  ServoStyleSheet* servoSheet = sheet->AsServo();
+  // NB: The pref sheet never has @import rules.
+  servoSheet->ParseSheetSync(
+    nullptr, sheetText, uri, uri, nullptr, /* aLoadData = */ nullptr, 0, eCompatibility_FullStandards);
 
 #undef NS_GET_R_G_B
 }

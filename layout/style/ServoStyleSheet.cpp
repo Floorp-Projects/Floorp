@@ -208,7 +208,6 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
 {
   MOZ_ASSERT(mParsePromise.IsEmpty());
   RefPtr<StyleSheetParsePromise> p = mParsePromise.Ensure(__func__);
-  MOZ_ASSERT(!mMedia || mMedia->IsServo());
   Inner()->mURLData = new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal); // RefPtr
   Inner()->mContents = Servo_StyleSheet_FromUTF8Bytes(aLoader,
                                                       this,
@@ -237,7 +236,6 @@ ServoStyleSheet::ParseSheetSync(css::Loader* aLoader,
                                 nsCompatibility aCompatMode,
                                 css::LoaderReusableStyleSheets* aReusableSheets)
 {
-  MOZ_ASSERT(!mMedia || mMedia->IsServo());
   Inner()->mURLData = new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal); // RefPtr
 
   Inner()->mContents = Servo_StyleSheet_FromUTF8Bytes(aLoader,
@@ -375,9 +373,6 @@ ServoStyleSheet::StyleSheetLoaded(StyleSheet* aSheet,
                                   bool aWasAlternate,
                                   nsresult aStatus)
 {
-  MOZ_ASSERT(aSheet->IsServo(),
-             "why we were called back with a CSSStyleSheet?");
-
   ServoStyleSheet* sheet = aSheet->AsServo();
   if (!sheet->GetParentSheet()) {
     return NS_OK; // ignore if sheet has been detached already

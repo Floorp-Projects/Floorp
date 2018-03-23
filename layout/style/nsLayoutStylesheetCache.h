@@ -100,9 +100,6 @@ private:
   void LoadSheet(nsIURI* aURI, RefPtr<mozilla::StyleSheet>* aSheet,
                  mozilla::css::SheetParsingMode aParsingMode,
                  mozilla::css::FailureAction aFailureAction);
-  static void InvalidateSheet(RefPtr<mozilla::StyleSheet>* aGeckoSheet,
-                              RefPtr<mozilla::StyleSheet>* aServoSheet);
-  static void DependentPrefChanged(const char* aPref, void* aData);
   void BuildPreferenceSheet(RefPtr<mozilla::StyleSheet>* aSheet,
                             nsPresContext* aPresContext);
 
