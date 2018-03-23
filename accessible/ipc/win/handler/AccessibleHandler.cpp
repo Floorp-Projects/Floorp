@@ -207,6 +207,7 @@ AccessibleHandler::MaybeUpdateCachedData()
 
   uint32_t gen = ctl->GetCacheGen();
   if (gen == mCacheGen) {
+    // Cache is already up to date.
     return S_OK;
   }
 
@@ -214,7 +215,13 @@ AccessibleHandler::MaybeUpdateCachedData()
     return E_POINTER;
   }
 
-  return mCachedData.mGeckoBackChannel->Refresh(&mCachedData.mDynamicData);
+  HRESULT hr =  mCachedData.mGeckoBackChannel->Refresh(&mCachedData.mDynamicData);
+  if (SUCCEEDED(hr)) {
+    // We just updated the cache, so update this object's cache generation
+    // so we only update the cache again after the next change.
+    mCacheGen = gen;
+  }
+  return hr;
 }
 
 HRESULT
