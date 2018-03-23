@@ -1637,15 +1637,16 @@ Simulator::handleWasmSegFault(int32_t addr, unsigned numBytes)
     if (!instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes))
         return false;
 
-    const wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
-    if (!memoryAccess) {
-        act->asJit()->startWasmTrap(wasm::Trap::OutOfBounds, 0, registerState());
+    wasm::Trap trap;
+    wasm::BytecodeOffset bytecode;
+    if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode)) {
+        act->startWasmTrap(wasm::Trap::OutOfBounds, 0, registerState());
         set_pc(int32_t(moduleSegment->outOfBoundsCode()));
         return true;
     }
 
-    MOZ_ASSERT(memoryAccess->hasTrapOutOfLineCode());
-    set_pc(int32_t(memoryAccess->trapOutOfLineCode(moduleSegment->base())));
+    act->startWasmTrap(wasm::Trap::OutOfBounds, bytecode.offset(), registerState());
+    set_pc(int32_t(moduleSegment->trapCode()));
     return true;
 }
 
@@ -1668,7 +1669,7 @@ Simulator::handleWasmIllFault()
     if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode))
         return false;
 
-    act->startWasmTrap(trap, bytecode.offset, registerState());
+    act->startWasmTrap(trap, bytecode.offset(), registerState());
     set_pc(int32_t(moduleSegment->trapCode()));
     return true;
 }

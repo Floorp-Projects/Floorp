@@ -53,7 +53,6 @@ CompiledCode::swap(MacroAssembler& masm)
     oldTrapSites.swap(masm.oldTrapSites());
     callFarJumps.swap(masm.callFarJumps());
     oldTrapFarJumps.swap(masm.oldTrapFarJumps());
-    memoryAccesses.swap(masm.memoryAccesses());
     symbolicAccesses.swap(masm.symbolicAccesses());
     codeLabels.swap(masm.codeLabels());
     return true;
@@ -218,12 +217,12 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
     if (!metadataTier_->codeRanges.reserve(2 * env_->numFuncDefs()))
         return false;
 
-    const size_t ByteCodesPerCallSite = 10;
+    const size_t ByteCodesPerCallSite = 50;
     if (!metadataTier_->callSites.reserve(codeSectionSize / ByteCodesPerCallSite))
         return false;
 
-    const size_t MemoryAccessesPerByteCode = 10;
-    if (!metadataTier_->memoryAccesses.reserve(codeSectionSize / MemoryAccessesPerByteCode))
+    const size_t ByteCodesPerOOBTrap = 10;
+    if (!metadataTier_->trapSites[Trap::OutOfBounds].reserve(codeSectionSize / ByteCodesPerOOBTrap))
         return false;
 
     // Allocate space in TlsData for declarations that need it.
@@ -627,10 +626,6 @@ ModuleGenerator::linkCompiledCode(const CompiledCode& code)
     if (!AppendForEach(&callFarJumps_, code.callFarJumps, callFarJumpOp))
         return false;
 
-    auto memoryOp = [=](uint32_t, MemoryAccess* ma) { ma->offsetBy(offsetInModule); };
-    if (!AppendForEach(&metadataTier_->memoryAccesses, code.memoryAccesses, memoryOp))
-        return false;
-
     for (const SymbolicAccess& access : code.symbolicAccesses) {
         uint32_t patchAt = offsetInModule + access.patchAt.offset();
         if (!linkDataTier_->symbolicLinks[access.target].append(patchAt))
@@ -842,7 +837,6 @@ ModuleGenerator::finishCode()
     MOZ_ASSERT(masm_.oldTrapSites().empty());
     MOZ_ASSERT(masm_.oldTrapFarJumps().empty());
     MOZ_ASSERT(masm_.callFarJumps().empty());
-    MOZ_ASSERT(masm_.memoryAccesses().empty());
     MOZ_ASSERT(masm_.symbolicAccesses().empty());
     MOZ_ASSERT(masm_.codeLabels().empty());
 
@@ -901,11 +895,13 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
     // These Vectors can get large and the excess capacity can be significant,
     // so realloc them down to size.
 
-    metadataTier_->memoryAccesses.podResizeToFit();
     metadataTier_->codeRanges.podResizeToFit();
+    metadataTier_->callSites.podResizeToFit();
     metadataTier_->trapSites.podResizeToFit();
     metadataTier_->debugTrapFarJumpOffsets.podResizeToFit();
     metadataTier_->debugFuncToCodeRange.podResizeToFit();
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+        metadataTier_->trapSites[trap].podResizeToFit();
 
     // Complete function exports and element segments with code range indices,
     // now that every function has a code range.

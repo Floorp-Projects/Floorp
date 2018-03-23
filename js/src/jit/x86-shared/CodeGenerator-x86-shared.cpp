@@ -436,7 +436,10 @@ CodeGenerator::visitWasmAddOffset(LWasmAddOffset* lir)
         masm.move32(base, out);
     masm.add32(Imm32(mir->offset()), out);
 
-    masm.j(Assembler::CarrySet, oldTrap(mir, wasm::Trap::OutOfBounds));
+    Label ok;
+    masm.j(Assembler::CarryClear, &ok);
+    masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
+    masm.bind(&ok);
 }
 
 void

@@ -2079,7 +2079,10 @@ CodeGenerator::visitWasmAddOffset(LWasmAddOffset* lir)
     ScratchRegisterScope scratch(masm);
     masm.ma_add(base, Imm32(mir->offset()), out, scratch, SetCC);
 
-    masm.ma_b(oldTrap(mir, wasm::Trap::OutOfBounds), Assembler::CarrySet);
+    Label ok;
+    masm.ma_b(&ok, Assembler::CarryClear);
+    masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
+    masm.bind(&ok);
 }
 
 template <typename T>

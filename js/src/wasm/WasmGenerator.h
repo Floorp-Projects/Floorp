@@ -68,7 +68,6 @@ struct CompiledCode
     OldTrapSiteVector    oldTrapSites;
     OldTrapFarJumpVector oldTrapFarJumps;
     CallFarJumpVector    callFarJumps;
-    MemoryAccessVector   memoryAccesses;
     SymbolicAccessVector symbolicAccesses;
     jit::CodeLabelVector codeLabels;
 
@@ -83,7 +82,6 @@ struct CompiledCode
         oldTrapSites.clear();
         oldTrapFarJumps.clear();
         callFarJumps.clear();
-        memoryAccesses.clear();
         symbolicAccesses.clear();
         codeLabels.clear();
         MOZ_ASSERT(empty());
@@ -98,7 +96,6 @@ struct CompiledCode
                oldTrapSites.empty() &&
                oldTrapFarJumps.empty() &&
                callFarJumps.empty() &&
-               memoryAccesses.empty() &&
                symbolicAccesses.empty() &&
                codeLabels.empty();
     }
