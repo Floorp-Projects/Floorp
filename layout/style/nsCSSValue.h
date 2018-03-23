@@ -1206,11 +1206,10 @@ struct nsCSSValueSharedList final {
   {
   }
 
-private:
-  // Private destructor, to discourage deletion outside of Release():
+  // FIXME(bug 1448384): Should be private, to discourage deletion outside of
+  // Release(), but MSVC isn't happy with that.
   ~nsCSSValueSharedList();
 
-public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsCSSValueSharedList)
 
   void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
