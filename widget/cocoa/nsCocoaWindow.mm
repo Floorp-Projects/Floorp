@@ -2829,6 +2829,14 @@ nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType,
   return YES;
 }
 
+- (NSRect)window:(NSWindow*)window willPositionSheet:(NSWindow*)sheet usingRect:(NSRect)rect
+{
+  if ([window isKindOfClass:[ToolbarWindow class]]) {
+    rect.origin.y = [(ToolbarWindow*)window sheetAttachmentPosition];
+  }
+  return rect;
+}
+
 - (void)didEndSheet:(NSWindow*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -3492,6 +3500,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   aStyle = aStyle | NSTexturedBackgroundWindowMask;
   if ((self = [super initWithContentRect:aContentRect styleMask:aStyle backing:aBufferingType defer:aFlag])) {
     mUnifiedToolbarHeight = 22.0f;
+    mSheetAttachmentPosition = aContentRect.size.height;
     mWindowButtonsRect = NSZeroRect;
     mFullScreenButtonRect = NSZeroRect;
 
@@ -3499,9 +3508,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
     // we respond to it just in case.
     if ([self respondsToSelector:@selector(setBottomCornerRounded:)])
       [self setBottomCornerRounded:YES];
-
-    [self setAutorecalculatesContentBorderThickness:NO forEdge:NSMaxYEdge];
-    [self setContentBorderThickness:0.0f forEdge:NSMaxYEdge];
   }
   return self;
 
@@ -3605,8 +3611,12 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 - (void)setSheetAttachmentPosition:(CGFloat)aY
 {
-  CGFloat topMargin = aY - [self titlebarHeight];
-  [self setContentBorderThickness:topMargin forEdge:NSMaxYEdge];
+  mSheetAttachmentPosition = aY;
+}
+
+- (CGFloat)sheetAttachmentPosition
+{
+  return mSheetAttachmentPosition;
 }
 
 - (void)placeWindowButtons:(NSRect)aRect

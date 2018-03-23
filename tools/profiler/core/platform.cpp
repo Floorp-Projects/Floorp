@@ -1008,7 +1008,7 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
       } else {
         MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
                    jsFrame.kind == JS::ProfilingFrameIterator::Frame_Baseline);
-        aCollector.CollectJitReturnAddr(jsFrames[jsIndex].returnAddress);
+        aCollector.CollectJitReturnAddr(jsFrame.returnAddress);
       }
 
       jsIndex--;
