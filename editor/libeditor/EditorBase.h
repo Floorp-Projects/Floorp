@@ -1132,6 +1132,34 @@ public:
   }
 
   /**
+   * Enables or disables undo/redo feature.  Returns true if it succeeded,
+   * otherwise, e.g., we're undoing or redoing, returns false.
+   */
+  bool EnableUndoRedo(int32_t aMaxTransactionCount = -1)
+  {
+    if (!mTransactionManager) {
+      mTransactionManager = new TransactionManager();
+    }
+    return mTransactionManager->EnableUndoRedo(aMaxTransactionCount);
+  }
+  bool DisableUndoRedo()
+  {
+    if (!mTransactionManager) {
+      return true;
+    }
+    // XXX Even we clear the transaction manager, IsUndoRedoEnabled() keep
+    //     returning true...
+    return mTransactionManager->DisableUndoRedo();
+  }
+  bool ClearUndoRedo()
+  {
+    if (!mTransactionManager) {
+      return true;
+    }
+    return mTransactionManager->ClearUndoRedo();
+  }
+
+  /**
    * From html rules code - migration in progress.
    */
   static nsAtom* GetTag(nsIDOMNode* aNode);

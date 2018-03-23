@@ -526,7 +526,9 @@ EditorBase::PreDestroy(bool aDestroyingFrames)
   // Transaction may grab this instance.  Therefore, they should be released
   // here for stopping the circular reference with this instance.
   if (mTransactionManager) {
-    mTransactionManager->Clear();
+    DebugOnly<bool> disabledUndoRedo = DisableUndoRedo();
+    NS_WARNING_ASSERTION(disabledUndoRedo,
+      "Failed to disable undo/redo transactions");
     mTransactionManager = nullptr;
   }
 
@@ -811,17 +813,17 @@ EditorBase::DoTransaction(Selection* aSelection, nsITransaction* aTxn)
 NS_IMETHODIMP
 EditorBase::EnableUndo(bool aEnable)
 {
+  // XXX Should we return NS_ERROR_FAILURE if EdnableUndoRedo() or
+  //     DisableUndoRedo() returns false?
   if (aEnable) {
-    if (!mTransactionManager) {
-      mTransactionManager = new TransactionManager();
-    }
-    mTransactionManager->SetMaxTransactionCount(-1);
-  } else if (mTransactionManager) {
-    // disable the transaction manager if it is enabled
-    mTransactionManager->Clear();
-    mTransactionManager->SetMaxTransactionCount(0);
+    DebugOnly<bool> enabledUndoRedo = EnableUndoRedo();
+    NS_WARNING_ASSERTION(enabledUndoRedo,
+      "Failed to enable undo/redo transactions");
+    return NS_OK;
   }
-
+  DebugOnly<bool> disabledUndoRedo = DisableUndoRedo();
+  NS_WARNING_ASSERTION(disabledUndoRedo,
+    "Failed to disable undo/redo transactions");
   return NS_OK;
 }
 

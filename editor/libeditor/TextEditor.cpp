@@ -212,8 +212,8 @@ TextEditor::EndEditorInit()
   }
   // Throw away the old transaction manager if this is not the first time that
   // we're initializing the editor.
-  EnableUndo(false);
-  EnableUndo(true);
+  ClearUndoRedo();
+  EnableUndoRedo();
   return NS_OK;
 }
 
