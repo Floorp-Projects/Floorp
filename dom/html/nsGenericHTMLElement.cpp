@@ -2959,13 +2959,7 @@ nsGenericHTMLElement::NewURIFromString(const nsAString& aURISpec,
 static bool
 IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
 {
-  if (aPresShell->StyleSet()->IsServo()) {
-    return !aElement->HasServoData() || Servo_Element_IsDisplayNone(aElement);
-  }
-
-  MOZ_CRASH("Old style system disabled");
-
-  return false;
+  return !aElement->HasServoData() || Servo_Element_IsDisplayNone(aElement);
 }
 
 void

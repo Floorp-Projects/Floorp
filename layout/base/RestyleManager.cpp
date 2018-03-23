@@ -374,7 +374,7 @@ RestyleManager::ContentRemoved(nsINode* aContainer,
 {
   // Computed style data isn't useful for detached nodes, and we'll need to
   // recompute it anyway if we ever insert the nodes back into a document.
-  if (IsServo() && aOldChild->IsElement()) {
+  if (aOldChild->IsElement()) {
     ServoRestyleManager::ClearServoDataFromSubtree(aOldChild->AsElement());
   }
 
@@ -629,13 +629,9 @@ static bool gInApplyRenderingChangeToTree = false;
 void
 RestyleManager::DebugVerifyStyleTree(nsIFrame* aFrame)
 {
-  if (IsServo()) {
-    // XXXheycam For now, we know that we don't use the same inheritance
-    // hierarchy for certain cases, so just skip these assertions until
-    // we work out what we want to assert (bug 1322570).
-    return;
-  }
-  MOZ_CRASH("old style system disabled");
+  // XXXheycam For now, we know that we don't use the same inheritance
+  // hierarchy for certain cases, so just skip these assertions until
+  // we work out what we want to assert (bug 1322570).
 }
 
 #endif // DEBUG
@@ -1750,14 +1746,9 @@ RestyleManager::IncrementAnimationGeneration()
   // We update the animation generation at start of each call to
   // ProcessPendingRestyles so we should ignore any subsequent (redundant)
   // calls that occur while we are still processing restyles.
-  if (IsGecko()) {
-    MOZ_CRASH("old style system disabled");
-  } else {
-    if (mInStyleRefresh) {
-      return;
-    }
+  if (!mInStyleRefresh) {
+    ++mAnimationGeneration;
   }
-  ++mAnimationGeneration;
 }
 
 /* static */ void

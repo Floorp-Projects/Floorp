@@ -138,20 +138,12 @@ ErrorReporter::ReleaseGlobals()
   NS_IF_RELEASE(sSpecCache);
 }
 
-ErrorReporter::ErrorReporter(const nsCSSScanner& aScanner,
-                             const StyleSheet* aSheet,
+ErrorReporter::ErrorReporter(const StyleSheet* aSheet,
                              const Loader* aLoader,
                              nsIURI* aURI)
-  : mScanner(&aScanner), mSheet(aSheet), mLoader(aLoader), mURI(aURI),
-    mInnerWindowID(0), mErrorLineNumber(0), mPrevErrorLineNumber(0),
-    mErrorColNumber(0)
-{
-}
-
-ErrorReporter::ErrorReporter(const ServoStyleSheet* aSheet,
-                             const Loader* aLoader,
-                             nsIURI* aURI)
-  : mScanner(nullptr), mSheet(aSheet), mLoader(aLoader), mURI(aURI),
+  : mSheet(aSheet)
+  , mLoader(aLoader)
+  , mURI(aURI),
     mInnerWindowID(0), mErrorLineNumber(0), mPrevErrorLineNumber(0),
     mErrorColNumber(0)
 {
@@ -288,23 +280,6 @@ ErrorReporter::AddToError(const nsString &aErrorText)
 
   if (mError.IsEmpty()) {
     mError = aErrorText;
-    // If this error reporter is being used from Stylo, the equivalent operation occurs
-    // in the OutputError variant that provides source information.
-    if (!IsServo()) {
-      mErrorLineNumber = mScanner->GetLineNumber();
-      mErrorColNumber = mScanner->GetColumnNumber();
-      // Retrieve the error line once per line, and reuse the same nsString
-      // for all errors on that line.  That causes the text of the line to
-      // be shared among all the nsIScriptError objects.
-      if (mErrorLine.IsEmpty() || mErrorLineNumber != mPrevErrorLineNumber) {
-        // Be careful here: the error line might be really long and OOM
-        // when we try to make a copy here.  If so, just leave it empty.
-        if (!mErrorLine.Assign(mScanner->GetCurrentLine(), fallible)) {
-          mErrorLine.Truncate();
-        }
-        mPrevErrorLineNumber = mErrorLineNumber;
-      }
-    }
   } else {
     mError.AppendLiteral("  ");
     mError.Append(aErrorText);
@@ -426,12 +401,6 @@ ErrorReporter::ReportUnexpectedEOF(char16_t aExpected)
   sStringBundle->FormatStringFromName("PEUnexpEOF2", params,
                                       ArrayLength(params), str);
   AddToError(str);
-}
-
-bool
-ErrorReporter::IsServo() const
-{
-  return !mScanner;
 }
 
 } // namespace css
