@@ -6,8 +6,8 @@
 const TEST_URI = "data:text/html;charset=UTF-8," +
   "<h1>browser_inspector_sidebarstate.js</h1>";
 
-add_task(function* () {
-  let { inspector, toolbox } = yield openInspectorForURL(TEST_URI);
+add_task(async function() {
+  let { inspector, toolbox } = await openInspectorForURL(TEST_URI);
 
   info("Selecting ruleview.");
   inspector.sidebar.select("ruleview");
@@ -20,17 +20,17 @@ add_task(function* () {
 
   // Finish initialization of the computed panel before
   // destroying the toolbox.
-  yield waitForTick();
+  await waitForTick();
 
   info("Closing inspector.");
-  yield toolbox.destroy();
+  await toolbox.destroy();
 
   info("Re-opening inspector.");
-  inspector = (yield openInspector()).inspector;
+  inspector = (await openInspector()).inspector;
 
   if (!inspector.sidebar.getCurrentTabID()) {
     info("Default sidebar still to be selected, adding select listener.");
-    yield inspector.sidebar.once("select");
+    await inspector.sidebar.once("select");
   }
 
   is(inspector.sidebar.getCurrentTabID(), "computedview",

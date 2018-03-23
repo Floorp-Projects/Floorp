@@ -17,27 +17,27 @@ const TEST_URI = `
   <span>This is a span</span>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#testid", inspector);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
+  await selectNode("#testid", inspector);
 
-  yield addNewRuleAndDismissEditor(inspector, view, "#testid", 1);
+  await addNewRuleAndDismissEditor(inspector, view, "#testid", 1);
 
   info("Adding a new property to the new rule");
-  yield testAddingProperty(view, 1);
+  await testAddingProperty(view, 1);
 
   info("Editing existing selector field");
-  yield testEditSelector(view, "span");
+  await testEditSelector(view, "span");
 
   info("Selecting the modified element");
-  yield selectNode("span", inspector);
+  await selectNode("span", inspector);
 
   info("Check new rule and property exist in the modified element");
-  yield checkModifiedElement(view, "span", 1);
+  await checkModifiedElement(view, "span", 1);
 });
 
-function* testAddingProperty(view, index) {
+function testAddingProperty(view, index) {
   let ruleEditor = getRuleViewRuleEditor(view, index);
   ruleEditor.addProperty("font-weight", "bold", "", true);
   let textProps = ruleEditor.rule.textProps;
@@ -46,11 +46,11 @@ function* testAddingProperty(view, index) {
   is(lastRule.value, "bold", "Last rule value is bold");
 }
 
-function* testEditSelector(view, name) {
+async function testEditSelector(view, name) {
   let idRuleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = yield focusEditableField(view, idRuleEditor.selectorText);
+  let editor = await focusEditableField(view, idRuleEditor.selectorText);
 
   is(inplaceEditor(idRuleEditor.selectorText), editor,
     "The selector editor got focused");
@@ -63,12 +63,12 @@ function* testEditSelector(view, name) {
 
   info("Entering the commit key");
   EventUtils.synthesizeKey("KEY_Enter");
-  yield onRuleViewChanged;
+  await onRuleViewChanged;
 
   is(view._elementStyle.rules.length, 3, "Should have 3 rules.");
 }
 
-function* checkModifiedElement(view, name, index) {
+function checkModifiedElement(view, name, index) {
   is(view._elementStyle.rules.length, 2, "Should have 2 rules.");
   ok(getRuleViewRule(view, name), "Rule with " + name + " selector exists.");
 

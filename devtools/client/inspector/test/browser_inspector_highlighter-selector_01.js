@@ -39,25 +39,25 @@ const TEST_DATA = [{
 
 requestLongerTimeout(5);
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
-  let highlighter = yield front.getHighlighterByType("SelectorHighlighter");
+  let highlighter = await front.getHighlighterByType("SelectorHighlighter");
 
-  let contextNode = yield getNodeFront("body", inspector);
+  let contextNode = await getNodeFront("body", inspector);
 
   for (let {selector, containerCount} of TEST_DATA) {
     info("Showing the highlighter on " + selector + ". Expecting " +
       containerCount + " highlighter containers");
 
-    yield highlighter.show(contextNode, {selector});
+    await highlighter.show(contextNode, {selector});
 
-    let nb = yield testActor.getSelectorHighlighterBoxNb(highlighter.actorID);
+    let nb = await testActor.getSelectorHighlighterBoxNb(highlighter.actorID);
     ok(nb !== null, "The number of highlighters was retrieved");
 
     is(nb, containerCount, "The correct number of highlighers were created");
-    yield highlighter.hide();
+    await highlighter.hide();
   }
 
-  yield highlighter.finalize();
+  await highlighter.finalize();
 });

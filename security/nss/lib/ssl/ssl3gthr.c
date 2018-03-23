@@ -350,7 +350,7 @@ dtls_GatherData(sslSocket *ss, sslGather *gs, int flags)
     } else if (headerLen == 7) {
         gs->remainder = (gs->hdr[5] << 8) | gs->hdr[6];
     } else {
-        PORT_Assert(headerLen = 2);
+        PORT_Assert(headerLen == 2);
         gs->remainder = gs->dtlsPacket.len - gs->dtlsPacketOffset;
     }
 

@@ -13,34 +13,34 @@ const LONG_ATTRIBUTE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-AB
 const LONG_ATTRIBUTE_COLLAPSED = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEF\u2026UVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 /* eslint-enable */
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
-  yield inspector.markup.expandAll();
-  yield testCollapsedLongAttribute(inspector, testActor);
-  yield testModifyInlineStyleWithQuotes(inspector, testActor);
-  yield testEditingAttributeWithMixedQuotes(inspector, testActor);
+  await inspector.markup.expandAll();
+  await testCollapsedLongAttribute(inspector, testActor);
+  await testModifyInlineStyleWithQuotes(inspector, testActor);
+  await testEditingAttributeWithMixedQuotes(inspector, testActor);
 });
 
-function* testCollapsedLongAttribute(inspector, testActor) {
+async function testCollapsedLongAttribute(inspector, testActor) {
   info("Try to modify the collapsed long attribute, making sure it expands.");
 
   info("Adding test attributes to the node");
   let onMutation = inspector.once("markupmutation");
-  yield testActor.setAttribute("#node24", "class", "");
-  yield onMutation;
+  await testActor.setAttribute("#node24", "class", "");
+  await onMutation;
 
   onMutation = inspector.once("markupmutation");
-  yield testActor.setAttribute("#node24", "data-long", LONG_ATTRIBUTE);
-  yield onMutation;
+  await testActor.setAttribute("#node24", "data-long", LONG_ATTRIBUTE);
+  await onMutation;
 
-  yield assertAttributes("#node24", {
+  await assertAttributes("#node24", {
     id: "node24",
     "class": "",
     "data-long": LONG_ATTRIBUTE
   }, testActor);
 
-  let {editor} = yield focusNode("#node24", inspector);
+  let {editor} = await focusNode("#node24", inspector);
   let attr = editor.attrElements.get("data-long").querySelector(".editable");
 
   // Check to make sure it has expanded after focus
@@ -51,13 +51,13 @@ function* testCollapsedLongAttribute(inspector, testActor) {
   EventUtils.sendKey("escape", inspector.panelWin);
 
   setEditableFieldValue(attr, input.value + ' data-short="ABC"', inspector);
-  yield inspector.once("markupmutation");
+  await inspector.once("markupmutation");
 
   let visibleAttrText = editor.attrElements.get("data-long")
                               .querySelector(".attr-value").textContent;
   is(visibleAttrText, LONG_ATTRIBUTE_COLLAPSED);
 
-  yield assertAttributes("#node24", {
+  await assertAttributes("#node24", {
     id: "node24",
     class: "",
     "data-long": LONG_ATTRIBUTE,
@@ -65,16 +65,16 @@ function* testCollapsedLongAttribute(inspector, testActor) {
   }, testActor);
 }
 
-function* testModifyInlineStyleWithQuotes(inspector, testActor) {
+async function testModifyInlineStyleWithQuotes(inspector, testActor) {
   info("Modify inline style containing \"");
 
-  yield assertAttributes("#node26", {
+  await assertAttributes("#node26", {
     id: "node26",
     style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.org%2F");'
   }, testActor);
 
   let onMutated = inspector.once("markupmutation");
-  let {editor} = yield focusNode("#node26", inspector);
+  let {editor} = await focusNode("#node26", inspector);
   let attr = editor.attrElements.get("style").querySelector(".editable");
 
   attr.focus();
@@ -93,24 +93,24 @@ function* testModifyInlineStyleWithQuotes(inspector, testActor) {
 
   EventUtils.sendKey("return", inspector.panelWin);
 
-  yield onMutated;
+  await onMutated;
 
-  yield assertAttributes("#node26", {
+  await assertAttributes("#node26", {
     id: "node26",
     style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.com%2F");'
   }, testActor);
 }
 
-function* testEditingAttributeWithMixedQuotes(inspector, testActor) {
+async function testEditingAttributeWithMixedQuotes(inspector, testActor) {
   info("Modify class containing \" and \'");
 
-  yield assertAttributes("#node27", {
+  await assertAttributes("#node27", {
     "id": "node27",
     "class": 'Double " and single \''
   }, testActor);
 
   let onMutated = inspector.once("markupmutation");
-  let {editor} = yield focusNode("#node27", inspector);
+  let {editor} = await focusNode("#node27", inspector);
   let attr = editor.attrElements.get("class").querySelector(".editable");
 
   attr.focus();
@@ -126,9 +126,9 @@ function* testEditingAttributeWithMixedQuotes(inspector, testActor) {
 
   EventUtils.sendKey("return", inspector.panelWin);
 
-  yield onMutated;
+  await onMutated;
 
-  yield assertAttributes("#node27", {
+  await assertAttributes("#node27", {
     id: "node27",
     class: '" " and \' \''
   }, testActor);

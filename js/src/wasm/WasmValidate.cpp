@@ -1150,8 +1150,10 @@ GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable)
         return d.fail("unexpected variable type in global import/export");
     }
 
+#if !(defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER))
     if (isMutable)
         return d.fail("can't import/export mutable globals in the MVP");
+#endif
 
     return true;
 }
@@ -1559,8 +1561,9 @@ DecodeExport(Decoder& d, ModuleEnvironment* env, CStringSet* dupSet)
         if (globalIndex >= env->globals.length())
             return d.fail("exported global index out of bounds");
 
-        const GlobalDesc& global = env->globals[globalIndex];
-        if (!GlobalIsJSCompatible(d, global.type(), global.isMutable()))
+        GlobalDesc* global = &env->globals[globalIndex];
+        global->setIsExport();
+        if (!GlobalIsJSCompatible(d, global->type(), global->isMutable()))
             return false;
 
         return env->exports.emplaceBack(Move(fieldName), globalIndex, DefinitionKind::Global);

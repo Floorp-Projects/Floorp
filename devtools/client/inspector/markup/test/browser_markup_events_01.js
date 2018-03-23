@@ -85,10 +85,10 @@ const TEST_DATA = [ // eslint-disable-line
   },
   {
     selector: "#noevents",
-    beforeTest: function* (inspector, testActor) {
+    beforeTest: async function(inspector, testActor) {
       let nodeMutated = inspector.once("markupmutation");
-      yield testActor.eval("window.wrappedJSObject.addNoeventsClickHandler();");
-      yield nodeMutated;
+      await testActor.eval("window.wrappedJSObject.addNoeventsClickHandler();");
+      await nodeMutated;
     },
     expected: [
       {
@@ -106,11 +106,11 @@ const TEST_DATA = [ // eslint-disable-line
   },
   {
     selector: "#noevents",
-    beforeTest: function* (inspector, testActor) {
+    beforeTest: async function(inspector, testActor) {
       let nodeMutated = inspector.once("markupmutation");
-      yield testActor.eval(
+      await testActor.eval(
         "window.wrappedJSObject.removeNoeventsClickHandler();");
-      yield nodeMutated;
+      await nodeMutated;
     },
     expected: []
   },
@@ -148,6 +148,6 @@ const TEST_DATA = [ // eslint-disable-line
   }
 ];
 
-add_task(function* () {
-  yield runEventPopupTests(TEST_URL, TEST_DATA);
+add_task(async function() {
+  await runEventPopupTests(TEST_URL, TEST_DATA);
 });

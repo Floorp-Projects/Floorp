@@ -6,26 +6,26 @@
 
 // Test that hovering over nodes in the markup-view shows the highlighter over
 // those nodes
-add_task(function* () {
+add_task(async function() {
   info("Loading the test document and opening the inspector");
-  let {toolbox, inspector, testActor} = yield openInspectorForURL(
+  let {toolbox, inspector, testActor} = await openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
 
-  let isVisible = yield testActor.isHighlighting(toolbox);
+  let isVisible = await testActor.isHighlighting(toolbox);
   ok(!isVisible, "The highlighter is hidden by default");
 
   info("Selecting the test node");
-  yield selectNode("span", inspector);
-  let container = yield getContainerForSelector("h1", inspector);
+  await selectNode("span", inspector);
+  let container = await getContainerForSelector("h1", inspector);
 
   let onHighlighterReady = toolbox.once("highlighter-ready");
   EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mousemove"},
                                      inspector.markup.doc.defaultView);
-  yield onHighlighterReady;
+  await onHighlighterReady;
 
-  isVisible = yield testActor.isHighlighting();
+  isVisible = await testActor.isHighlighting();
   ok(isVisible, "The highlighter is shown on a markup container hover");
 
-  ok((yield testActor.assertHighlightedNode("h1")),
+  ok((await testActor.assertHighlightedNode("h1")),
      "The highlighter highlights the right node");
 });

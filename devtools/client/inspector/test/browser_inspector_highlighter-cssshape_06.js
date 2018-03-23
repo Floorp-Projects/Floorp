@@ -10,68 +10,68 @@ const TEST_URL = URL_ROOT + "doc_inspector_highlighter_cssshapes.html";
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 const SHAPE_IDS = ["#polygon-transform", "#circle", "#ellipse", "#inset"];
 
-add_task(function* () {
-  let inspector = yield openInspectorForURL(TEST_URL);
-  let helper = yield getHighlighterHelperFor(HIGHLIGHTER_TYPE)(inspector);
+add_task(async function() {
+  let inspector = await openInspectorForURL(TEST_URL);
+  let helper = await getHighlighterHelperFor(HIGHLIGHTER_TYPE)(inspector);
   let {testActor} = inspector;
 
-  yield testTranslate(testActor, helper);
-  yield testScale(testActor, helper);
+  await testTranslate(testActor, helper);
+  await testScale(testActor, helper);
 
   helper.finalize();
 });
 
-function* testTranslate(testActor, helper) {
+async function testTranslate(testActor, helper) {
   for (let shape of SHAPE_IDS) {
     info(`Displaying ${shape}`);
-    yield helper.show(shape, {mode: "cssClipPath", transformMode: true});
+    await helper.show(shape, {mode: "cssClipPath", transformMode: true});
     let { mouse } = helper;
 
-    let { center, width, height } = yield getBoundingBoxInPx(testActor, helper, shape);
+    let { center, width, height } = await getBoundingBoxInPx(testActor, helper, shape);
     let [x, y] = center;
     let dx = width / 10;
     let dy = height / 10;
 
     info(`Translating ${shape}`);
-    yield mouse.down(x, y, shape);
-    yield mouse.move(x + dx, y + dy, shape);
-    yield mouse.up(x + dx, y + dy, shape);
-    yield testActor.reflow();
+    await mouse.down(x, y, shape);
+    await mouse.move(x + dx, y + dy, shape);
+    await mouse.up(x + dx, y + dy, shape);
+    await testActor.reflow();
 
-    let newBB = yield getBoundingBoxInPx(testActor, helper);
+    let newBB = await getBoundingBoxInPx(testActor, helper);
     isnot(newBB.center[0], x, `${shape} translated on y axis`);
     isnot(newBB.center[1], y, `${shape} translated on x axis`);
 
     info(`Translating ${shape} back`);
-    yield mouse.down(x + dx, y + dy, shape);
-    yield mouse.move(x, y, shape);
-    yield mouse.up(x, y, shape);
-    yield testActor.reflow();
+    await mouse.down(x + dx, y + dy, shape);
+    await mouse.move(x, y, shape);
+    await mouse.up(x, y, shape);
+    await testActor.reflow();
 
-    newBB = yield getBoundingBoxInPx(testActor, helper, shape);
+    newBB = await getBoundingBoxInPx(testActor, helper, shape);
     is(newBB.center[0], x, `${shape} translated back on x axis`);
     is(newBB.center[1], y, `${shape} translated back on y axis`);
   }
 }
 
-function* testScale(testActor, helper) {
+async function testScale(testActor, helper) {
   for (let shape of SHAPE_IDS) {
     info(`Displaying ${shape}`);
-    yield helper.show(shape, {mode: "cssClipPath", transformMode: true});
+    await helper.show(shape, {mode: "cssClipPath", transformMode: true});
     let { mouse } = helper;
 
     let { nw, width,
-          height, center } = yield getBoundingBoxInPx(testActor, helper, shape);
+          height, center } = await getBoundingBoxInPx(testActor, helper, shape);
 
     // if the top or left edges are not visible, move the shape so it is.
     if (nw[0] < 0 || nw[1] < 0) {
       let [x, y] = center;
       let dx = Math.max(0, -nw[0]);
       let dy = Math.max(0, -nw[1]);
-      yield mouse.down(x, y, shape);
-      yield mouse.move(x + dx, y + dy, shape);
-      yield mouse.up(x + dx, y + dy, shape);
-      yield testActor.reflow();
+      await mouse.down(x, y, shape);
+      await mouse.move(x + dx, y + dy, shape);
+      await mouse.up(x + dx, y + dy, shape);
+      await testActor.reflow();
       nw[0] += dx;
       nw[1] += dy;
     }
@@ -79,48 +79,48 @@ function* testScale(testActor, helper) {
     let dy = height / 10;
 
     info("Scaling from nw");
-    yield mouse.down(nw[0], nw[1], shape);
-    yield mouse.move(nw[0] + dx, nw[1] + dy, shape);
-    yield mouse.up(nw[0] + dx, nw[1] + dy, shape);
-    yield testActor.reflow();
+    await mouse.down(nw[0], nw[1], shape);
+    await mouse.move(nw[0] + dx, nw[1] + dy, shape);
+    await mouse.up(nw[0] + dx, nw[1] + dy, shape);
+    await testActor.reflow();
 
-    let nwBB = yield getBoundingBoxInPx(testActor, helper, shape);
+    let nwBB = await getBoundingBoxInPx(testActor, helper, shape);
     isnot(nwBB.nw[0], nw[0], `${shape} nw moved right after nw scale`);
     isnot(nwBB.nw[1], nw[1], `${shape} nw moved down after nw scale`);
     isnot(nwBB.width, width, `${shape} width reduced after nw scale`);
     isnot(nwBB.height, height, `${shape} height reduced after nw scale`);
 
     info("Scaling from ne");
-    yield mouse.down(nwBB.ne[0], nwBB.ne[1], shape);
-    yield mouse.move(nwBB.ne[0] - dx, nwBB.ne[1] + dy, shape);
-    yield mouse.up(nwBB.ne[0] - dx, nwBB.ne[1] + dy, shape);
-    yield testActor.reflow();
+    await mouse.down(nwBB.ne[0], nwBB.ne[1], shape);
+    await mouse.move(nwBB.ne[0] - dx, nwBB.ne[1] + dy, shape);
+    await mouse.up(nwBB.ne[0] - dx, nwBB.ne[1] + dy, shape);
+    await testActor.reflow();
 
-    let neBB = yield getBoundingBoxInPx(testActor, helper, shape);
+    let neBB = await getBoundingBoxInPx(testActor, helper, shape);
     isnot(neBB.ne[0], nwBB.ne[0], `${shape} ne moved right after ne scale`);
     isnot(neBB.ne[1], nwBB.ne[1], `${shape} ne moved down after ne scale`);
     isnot(neBB.width, nwBB.width, `${shape} width reduced after ne scale`);
     isnot(neBB.height, nwBB.height, `${shape} height reduced after ne scale`);
 
     info("Scaling from sw");
-    yield mouse.down(neBB.sw[0], neBB.sw[1], shape);
-    yield mouse.move(neBB.sw[0] + dx, neBB.sw[1] - dy, shape);
-    yield mouse.up(neBB.sw[0] + dx, neBB.sw[1] - dy, shape);
-    yield testActor.reflow();
+    await mouse.down(neBB.sw[0], neBB.sw[1], shape);
+    await mouse.move(neBB.sw[0] + dx, neBB.sw[1] - dy, shape);
+    await mouse.up(neBB.sw[0] + dx, neBB.sw[1] - dy, shape);
+    await testActor.reflow();
 
-    let swBB = yield getBoundingBoxInPx(testActor, helper, shape);
+    let swBB = await getBoundingBoxInPx(testActor, helper, shape);
     isnot(swBB.sw[0], neBB.sw[0], `${shape} sw moved right after sw scale`);
     isnot(swBB.sw[1], neBB.sw[1], `${shape} sw moved down after sw scale`);
     isnot(swBB.width, neBB.width, `${shape} width reduced after sw scale`);
     isnot(swBB.height, neBB.height, `${shape} height reduced after sw scale`);
 
     info("Scaling from se");
-    yield mouse.down(swBB.se[0], swBB.se[1], shape);
-    yield mouse.move(swBB.se[0] - dx, swBB.se[1] - dy, shape);
-    yield mouse.up(swBB.se[0] - dx, swBB.se[1] - dy, shape);
-    yield testActor.reflow();
+    await mouse.down(swBB.se[0], swBB.se[1], shape);
+    await mouse.move(swBB.se[0] - dx, swBB.se[1] - dy, shape);
+    await mouse.up(swBB.se[0] - dx, swBB.se[1] - dy, shape);
+    await testActor.reflow();
 
-    let seBB = yield getBoundingBoxInPx(testActor, helper, shape);
+    let seBB = await getBoundingBoxInPx(testActor, helper, shape);
     isnot(seBB.se[0], swBB.se[0], `${shape} se moved right after se scale`);
     isnot(seBB.se[1], swBB.se[1], `${shape} se moved down after se scale`);
     isnot(seBB.width, swBB.width, `${shape} width reduced after se scale`);
@@ -128,15 +128,15 @@ function* testScale(testActor, helper) {
   }
 }
 
-function* getBoundingBoxInPx(testActor, helper, shape = "#polygon") {
-  let quads = yield testActor.getAllAdjustedQuads(shape);
+async function getBoundingBoxInPx(testActor, helper, shape = "#polygon") {
+  let quads = await testActor.getAllAdjustedQuads(shape);
   let { width, height } = quads.content[0].bounds;
-  let computedStyle = yield helper.highlightedNode.getComputedStyle();
+  let computedStyle = await helper.highlightedNode.getComputedStyle();
   let paddingTop = parseFloat(computedStyle["padding-top"].value);
   let paddingLeft = parseFloat(computedStyle["padding-left"].value);
 
   // path is always of form "Mx y Lx y Lx y Lx y Z", where x/y are numbers
-  let path = yield helper.getElementAttribute("shapes-bounding-box", "d");
+  let path = await helper.getElementAttribute("shapes-bounding-box", "d");
   let coords = path.replace(/[MLZ]/g, "").split(" ").map((n, i) => {
     return i % 2 === 0 ? paddingLeft + width * n / 100 : paddingTop + height * n / 100;
   });

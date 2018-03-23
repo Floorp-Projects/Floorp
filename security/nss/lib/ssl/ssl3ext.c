@@ -681,7 +681,11 @@ ssl_CallCustomExtensionSenders(sslSocket *ss, sslBuffer *buf,
         }
     }
 
-    sslBuffer_Append(buf, tail.buf, tail.len);
+    rv = sslBuffer_Append(buf, tail.buf, tail.len);
+    if (rv != SECSuccess) {
+        goto loser; /* Code already set. */
+    }
+
     sslBuffer_Clear(&tail);
     return SECSuccess;
 

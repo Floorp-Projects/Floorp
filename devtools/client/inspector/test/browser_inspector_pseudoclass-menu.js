@@ -11,16 +11,16 @@ const TEST_URI = "data:text/html;charset=UTF-8," +
                  "<div>test div</div>";
 const PSEUDOS = ["hover", "active", "focus"];
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URI);
-  yield selectNode("div", inspector);
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(TEST_URI);
+  await selectNode("div", inspector);
 
   let allMenuItems = openContextMenuAndGetAllItems(inspector);
 
-  yield testMenuItems(testActor, allMenuItems, inspector);
+  await testMenuItems(testActor, allMenuItems, inspector);
 });
 
-function* testMenuItems(testActor, allMenuItems, inspector) {
+async function testMenuItems(testActor, allMenuItems, inspector) {
   for (let pseudo of PSEUDOS) {
     let menuItem =
       allMenuItems.find(item => item.id === "node-menu-pseudo-" + pseudo);
@@ -36,11 +36,11 @@ function* testMenuItems(testActor, allMenuItems, inspector) {
 
     menuItem.click();
 
-    yield onPseudo;
-    yield onRefresh;
-    yield onMutations;
+    await onPseudo;
+    await onRefresh;
+    await onMutations;
 
-    let hasLock = yield testActor.hasPseudoClassLock("div", ":" + pseudo);
+    let hasLock = await testActor.hasPseudoClassLock("div", ":" + pseudo);
     ok(hasLock, "pseudo-class lock has been applied");
   }
 }

@@ -72,15 +72,15 @@ const TEST_DATA = [{
   isLinkCopyItemVisible: false
 }];
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(TEST_URL);
 
   for (let test of TEST_DATA) {
     info("Selecting test node " + test.selector);
-    yield selectNode(test.selector, inspector);
+    await selectNode(test.selector, inspector);
 
     info("Finding the popupNode to anchor the context-menu to");
-    let {editor} = yield getContainerForSelector(test.selector, inspector);
+    let {editor} = await getContainerForSelector(test.selector, inspector);
     let popupNode = editor.attrElements.get(test.attributeName)
                     .querySelector(test.popupNodeSelector);
     ok(popupNode, "Found the popupNode in attribute " + test.attributeName);

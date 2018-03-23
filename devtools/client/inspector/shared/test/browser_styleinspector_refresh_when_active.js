@@ -11,11 +11,11 @@ const TEST_URI = `
   <div id="two" style="color:blue;">two</div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
 
-  yield selectNode("#one", inspector);
+  await selectNode("#one", inspector);
 
   is(getRuleViewPropertyValue(view, "element", "color"), "red",
     "The rule-view shows the properties for test node one");
@@ -23,14 +23,14 @@ add_task(function* () {
   info("Switching to the computed-view");
   let onComputedViewReady = inspector.once("computed-view-refreshed");
   selectComputedView(inspector);
-  yield onComputedViewReady;
+  await onComputedViewReady;
   let cView = inspector.getPanel("computedview").computedView;
 
   ok(getComputedViewPropertyValue(cView, "color"), "#F00",
     "The computed-view shows the properties for test node one");
 
   info("Selecting test node two");
-  yield selectNode("#two", inspector);
+  await selectNode("#two", inspector);
 
   ok(getComputedViewPropertyValue(cView, "color"), "#00F",
     "The computed-view shows the properties for test node two");

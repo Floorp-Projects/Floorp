@@ -14,14 +14,14 @@ PromiseTestUtils.expectUncaughtRejection(/NS_ERROR_NOT_INITIALIZED/);
 
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
-add_task(function* () {
-  let {toolbox, inspector} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {toolbox, inspector} = await openInspectorForURL(TEST_URL);
 
   info("Select a node with a cssresource attribute");
-  yield selectNode("link", inspector);
+  await selectNode("link", inspector);
 
   info("Set the popupNode to the node that contains the uri");
-  let {editor} = yield getContainerForSelector("link", inspector);
+  let {editor} = await getContainerForSelector("link", inspector);
   openContextMenuAndGetAllItems(inspector, {
     target: editor.attrElements.get("href").querySelector(".link"),
   });
@@ -29,20 +29,20 @@ add_task(function* () {
   info("Follow the link and wait for the style-editor to open");
   let onStyleEditorReady = toolbox.once("styleeditor-ready");
   inspector.onFollowLink();
-  yield onStyleEditorReady;
+  await onStyleEditorReady;
 
   // No real need to test that the editor opened on the right file here as this
   // is already tested in /framework/test/browser_toolbox_view_source_*
   ok(true, "The style-editor was open");
 
   info("Switch back to the inspector");
-  yield toolbox.selectTool("inspector");
+  await toolbox.selectTool("inspector");
 
   info("Select a node with a jsresource attribute");
-  yield selectNode("script", inspector);
+  await selectNode("script", inspector);
 
   info("Set the popupNode to the node that contains the uri");
-  ({editor} = yield getContainerForSelector("script", inspector));
+  ({editor} = await getContainerForSelector("script", inspector));
   openContextMenuAndGetAllItems(inspector, {
     target: editor.attrElements.get("src").querySelector(".link"),
   });
@@ -50,7 +50,7 @@ add_task(function* () {
   info("Follow the link and wait for the debugger to open");
   let onDebuggerReady = toolbox.once("jsdebugger-ready");
   inspector.onFollowLink();
-  yield onDebuggerReady;
+  await onDebuggerReady;
 
   // No real need to test that the debugger opened on the right file here as
   // this is already tested in /framework/test/browser_toolbox_view_source_*

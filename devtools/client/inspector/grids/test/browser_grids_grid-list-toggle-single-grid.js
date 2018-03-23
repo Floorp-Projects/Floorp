@@ -17,13 +17,13 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { gridInspector, inspector } = yield openLayoutView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let { gridInspector, inspector } = await openLayoutView();
   let { document: doc } = gridInspector;
   let { highlighters, store } = inspector;
 
-  yield selectNode("#grid", inspector);
+  await selectNode("#grid", inspector);
   let gridList = doc.getElementById("grid-list");
   let checkbox = gridList.children[0].querySelector("input");
 
@@ -40,8 +40,8 @@ add_task(function* () {
     state.grids.length == 1 &&
     state.grids[0].highlighted);
   checkbox.click();
-  yield onHighlighterShown;
-  yield onCheckboxChange;
+  await onHighlighterShown;
+  await onCheckboxChange;
 
   info("Checking the CSS grid highlighter is created.");
   ok(highlighters.highlighters[HIGHLIGHTER_TYPE],
@@ -54,8 +54,8 @@ add_task(function* () {
     state.grids.length == 1 &&
     !state.grids[0].highlighted);
   checkbox.click();
-  yield onHighlighterHidden;
-  yield onCheckboxChange;
+  await onHighlighterHidden;
+  await onCheckboxChange;
 
   info("Checking the CSS grid highlighter is not shown.");
   ok(!highlighters.gridHighlighterShown, "No CSS grid highlighter is shown.");

@@ -20,22 +20,22 @@ const RULERS_MAX_Y_AXIS = 15000;
 // currently the unit is in pixel.
 const RULERS_TEXT_STEP = 100;
 
-add_task(function* () {
-  let { inspector, testActor } = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let { inspector, testActor } = await openInspectorForURL(TEST_URL);
   let front = inspector.inspector;
 
-  let highlighter = yield front.getHighlighterByType("RulersHighlighter");
+  let highlighter = await front.getHighlighterByType("RulersHighlighter");
 
-  yield isHiddenByDefault(highlighter, inspector, testActor);
-  yield hasRightLabelsContent(highlighter, inspector, testActor);
+  await isHiddenByDefault(highlighter, inspector, testActor);
+  await hasRightLabelsContent(highlighter, inspector, testActor);
 
-  yield highlighter.finalize();
+  await highlighter.finalize();
 });
 
-function* isHiddenByDefault(highlighterFront, inspector, testActor) {
+async function isHiddenByDefault(highlighterFront, inspector, testActor) {
   info("Checking the highlighter is hidden by default");
 
-  let hidden = yield testActor.getHighlighterNodeAttribute(
+  let hidden = await testActor.getHighlighterNodeAttribute(
       ID + "elements", "hidden", highlighterFront);
 
   is(hidden, "true", "highlighter is hidden by default");
@@ -43,21 +43,21 @@ function* isHiddenByDefault(highlighterFront, inspector, testActor) {
   info("Checking the highlighter is displayed when asked");
   // the rulers doesn't need any node, but as highligher it seems mandatory
   // ones, so the body is given
-  let body = yield getNodeFront("body", inspector);
-  yield highlighterFront.show(body);
+  let body = await getNodeFront("body", inspector);
+  await highlighterFront.show(body);
 
-  hidden = yield testActor.getHighlighterNodeAttribute(
+  hidden = await testActor.getHighlighterNodeAttribute(
       ID + "elements", "hidden", highlighterFront);
 
   isnot(hidden, "true", "highlighter is visible after show");
 }
 
-function* hasRightLabelsContent(highlighterFront, inspector, testActor) {
+async function hasRightLabelsContent(highlighterFront, inspector, testActor) {
   info("Checking the rulers have the proper text, based on rulers' size");
 
-  let contentX = yield testActor.getHighlighterNodeTextContent(
+  let contentX = await testActor.getHighlighterNodeTextContent(
     `${ID}x-axis-text`, highlighterFront);
-  let contentY = yield testActor.getHighlighterNodeTextContent(
+  let contentY = await testActor.getHighlighterNodeTextContent(
     `${ID}y-axis-text`, highlighterFront);
 
   let expectedX = "";

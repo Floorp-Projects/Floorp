@@ -21,10 +21,10 @@ const TEST_URI = `
   <div class="test">Testing the cubic-bezier tooltip!</div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("div", inspector);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
+  await selectNode("div", inspector);
 
   let swatches = [];
   swatches.push(
@@ -46,11 +46,11 @@ add_task(function* () {
 
   for (let swatch of swatches) {
     info("Testing that the cubic-bezier appears on cubicswatch click");
-    yield testAppears(view, swatch);
+    await testAppears(view, swatch);
   }
 });
 
-function* testAppears(view, swatch) {
+async function testAppears(view, swatch) {
   ok(swatch, "The cubic-swatch exists");
 
   let bezier = view.tooltips.getTooltip("cubicBezier");
@@ -61,10 +61,10 @@ function* testAppears(view, swatch) {
 
   let onBezierWidgetReady = bezier.once("ready");
   swatch.click();
-  yield onBezierWidgetReady;
+  await onBezierWidgetReady;
 
   ok(true, "The cubic-bezier tooltip was shown on click of the cibuc swatch");
   ok(!inplaceEditor(swatch.parentNode),
     "The inplace editor wasn't shown as a result of the cibuc swatch click");
-  yield hideTooltipAndWaitForRuleViewChanged(bezier, view);
+  await hideTooltipAndWaitForRuleViewChanged(bezier, view);
 }

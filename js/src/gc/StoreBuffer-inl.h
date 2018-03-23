@@ -65,20 +65,26 @@ ArenaCellSet::check() const
 }
 
 inline void
-StoreBuffer::putWholeCell(Cell* cell)
+StoreBuffer::WholeCellBuffer::put(const Cell* cell)
 {
     MOZ_ASSERT(cell->isTenured());
 
     Arena* arena = cell->asTenured().arena();
     ArenaCellSet* cells = arena->bufferedCells();
     if (cells->isEmpty()) {
-        cells = AllocateWholeCellSet(arena);
+        cells = allocateCellSet(arena);
         if (!cells)
             return;
     }
 
     cells->putCell(&cell->asTenured());
     cells->check();
+}
+
+inline void
+StoreBuffer::putWholeCell(Cell* cell)
+{
+    bufferWholeCell.put(cell);
 }
 
 } // namespace gc

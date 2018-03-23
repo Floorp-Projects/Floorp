@@ -373,26 +373,14 @@ txMozillaXSLTProcessor::SetTransformObserver(nsITransformObserver* aObserver)
     return NS_OK;
 }
 
-nsresult
-txMozillaXSLTProcessor::SetSourceContentModel(nsIDocument* aDocument,
-                                              const nsTArray<nsCOMPtr<nsIContent>>& aSource)
+NS_IMETHODIMP
+txMozillaXSLTProcessor::SetSourceContentModel(nsINode* aSource)
 {
+    mSource = aSource;
+
     if (NS_FAILED(mTransformResult)) {
         notifyError();
         return NS_OK;
-    }
-
-    mSource = aDocument->CreateDocumentFragment();
-
-    ErrorResult rv;
-    for (nsIContent* child : aSource) {
-        // XPath data model doesn't have DocumentType nodes.
-        if (child->NodeType() != nsINode::DOCUMENT_TYPE_NODE) {
-            mSource->AppendChild(*child, rv);
-            if (rv.Failed()) {
-                return rv.StealNSResult();
-            }
-        }
     }
 
     if (mStylesheet) {
@@ -492,7 +480,7 @@ txMozillaXSLTProcessor::AddXSLTParam(const nsString& aName,
                                      const nsString& aNamespace,
                                      const nsString& aSelect,
                                      const nsString& aValue,
-                                     nsIDOMNode* aContext)
+                                     nsINode* aContext)
 {
     nsresult rv = NS_OK;
 

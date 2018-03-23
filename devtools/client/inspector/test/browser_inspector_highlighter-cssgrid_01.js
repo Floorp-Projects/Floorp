@@ -38,40 +38,40 @@ const TEST_URL = `
 
 const HIGHLIGHTER_TYPE = "CssGridHighlighter";
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URL));
   let front = inspector.inspector;
-  let highlighter = yield front.getHighlighterByType(HIGHLIGHTER_TYPE);
+  let highlighter = await front.getHighlighterByType(HIGHLIGHTER_TYPE);
 
-  yield isHiddenByDefault(testActor, highlighter);
-  yield isVisibleWhenShown(testActor, inspector, highlighter);
+  await isHiddenByDefault(testActor, highlighter);
+  await isVisibleWhenShown(testActor, inspector, highlighter);
 
-  yield highlighter.finalize();
+  await highlighter.finalize();
 });
 
-function* isHiddenByDefault(testActor, highlighterFront) {
+async function isHiddenByDefault(testActor, highlighterFront) {
   info("Checking that the highlighter is hidden by default");
 
-  let hidden = yield testActor.getHighlighterNodeAttribute(
+  let hidden = await testActor.getHighlighterNodeAttribute(
     "css-grid-canvas", "hidden", highlighterFront);
   ok(hidden, "The highlighter is hidden by default");
 }
 
-function* isVisibleWhenShown(testActor, inspector, highlighterFront) {
+async function isVisibleWhenShown(testActor, inspector, highlighterFront) {
   info("Asking to show the highlighter on the test node");
 
-  let node = yield getNodeFront("#grid", inspector);
-  yield highlighterFront.show(node);
+  let node = await getNodeFront("#grid", inspector);
+  await highlighterFront.show(node);
 
-  let hidden = yield testActor.getHighlighterNodeAttribute(
+  let hidden = await testActor.getHighlighterNodeAttribute(
     "css-grid-canvas", "hidden", highlighterFront);
   ok(!hidden, "The highlighter is visible");
 
   info("Hiding the highlighter");
-  yield highlighterFront.hide();
+  await highlighterFront.hide();
 
-  hidden = yield testActor.getHighlighterNodeAttribute(
+  hidden = await testActor.getHighlighterNodeAttribute(
     "css-grid-canvas", "hidden", highlighterFront);
   ok(hidden, "The highlighter is hidden");
 }

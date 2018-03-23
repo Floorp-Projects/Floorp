@@ -8,24 +8,24 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_toggle.html";
 
-add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
 
   info("Getting the container for the UL parent element");
-  let container = yield getContainerForSelector("ul", inspector);
+  let container = await getContainerForSelector("ul", inspector);
 
   info("Dbl-clicking on the UL parent expander, and waiting for children");
   let onChildren = waitForChildrenUpdated(inspector);
   let onUpdated = inspector.once("inspector-updated");
   EventUtils.synthesizeMouseAtCenter(container.tagLine, {clickCount: 2},
     inspector.markup.doc.defaultView);
-  yield onChildren;
-  yield onUpdated;
+  await onChildren;
+  await onUpdated;
 
   info("Checking that child LI elements have been created");
-  let numLi = yield testActor.getNumberOfElementMatches("li");
+  let numLi = await testActor.getNumberOfElementMatches("li");
   for (let i = 0; i < numLi; i++) {
-    let liContainer = yield getContainerForSelector(
+    let liContainer = await getContainerForSelector(
       "li:nth-child(" + (i + 1) + ")", inspector);
     ok(liContainer, "A container for the child LI element was created");
   }
@@ -38,9 +38,9 @@ add_task(function* () {
     inspector.markup.doc.defaultView);
 
   info("Checking that child LI elements have been hidden");
-  numLi = yield testActor.getNumberOfElementMatches("li");
+  numLi = await testActor.getNumberOfElementMatches("li");
   for (let i = 0; i < numLi; i++) {
-    let liContainer = yield getContainerForSelector(
+    let liContainer = await getContainerForSelector(
       "li:nth-child(" + (i + 1) + ")", inspector);
     is(liContainer.elt.getClientRects().length, 0,
       "The container for the child LI element was hidden");
