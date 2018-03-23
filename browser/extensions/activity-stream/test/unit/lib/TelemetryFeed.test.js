@@ -194,6 +194,7 @@ describe("TelemetryFeed", () => {
       const session = instance.addSession(portID, "about:home");
       instance.saveSessionPerfData("foo", {
         topsites_icon_stats: {
+          "custom_screenshot": 0,
           "screenshot_with_icon": 2,
           "screenshot": 1,
           "tippytop": 2,

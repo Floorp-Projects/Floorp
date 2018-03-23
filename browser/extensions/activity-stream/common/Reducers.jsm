@@ -90,9 +90,46 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       }
       return Object.assign({}, prevState, {initialized: true, rows: action.data});
     case at.TOP_SITES_EDIT:
-      return Object.assign({}, prevState, {editForm: {index: action.data.index}});
+      return Object.assign({}, prevState, {
+        editForm: {
+          index: action.data.index,
+          previewResponse: null
+        }
+      });
     case at.TOP_SITES_CANCEL_EDIT:
       return Object.assign({}, prevState, {editForm: null});
+    case at.PREVIEW_RESPONSE:
+      if (!prevState.editForm || action.data.url !== prevState.editForm.previewUrl) {
+        return prevState;
+      }
+      return Object.assign({}, prevState, {
+        editForm: {
+          index: prevState.editForm.index,
+          previewResponse: action.data.preview,
+          previewUrl: action.data.url
+        }
+      });
+    case at.PREVIEW_REQUEST:
+      if (!prevState.editForm) {
+        return prevState;
+      }
+      return Object.assign({}, prevState, {
+        editForm: {
+          index: prevState.editForm.index,
+          previewResponse: null,
+          previewUrl: action.data.url
+        }
+      });
+    case at.PREVIEW_REQUEST_CANCEL:
+      if (!prevState.editForm) {
+        return prevState;
+      }
+      return Object.assign({}, prevState, {
+        editForm: {
+          index: prevState.editForm.index,
+          previewResponse: null
+        }
+      });
     case at.SCREENSHOT_UPDATED:
       newRows = prevState.rows.map(row => {
         if (row && row.url === action.data.url) {

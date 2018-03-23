@@ -9,7 +9,7 @@ describe("ActivityStreamStorage", () => {
   let storage;
   beforeEach(() => {
     sandbox = sinon.sandbox.create();
-    indexedDB = {open: sandbox.stub().returns(Promise.resolve())};
+    indexedDB = {open: sandbox.stub().returns(Promise.resolve({}))};
     overrider.set({IndexedDB: indexedDB});
     storage = new ActivityStreamStorage("storage_test");
   });
@@ -18,6 +18,10 @@ describe("ActivityStreamStorage", () => {
   });
   it("should throw an error if you try to use it without init", () => {
     assert.throws(() => storage.db);
+  });
+  it("should not throw an error if you called init", async () => {
+    await storage.init();
+    assert.ok(storage.db);
   });
   it("should revert key value parameters for put", () => {
     const stub = sandbox.stub();

@@ -44,6 +44,48 @@ describe("Reducers", () => {
       const nextState = TopSites(undefined, {type: at.TOP_SITES_CANCEL_EDIT});
       assert.isNull(nextState.editForm);
     });
+    it("should preserve the editForm.index", () => {
+      const actionTypes = [at.PREVIEW_RESPONSE, at.PREVIEW_REQUEST, at.PREVIEW_REQUEST_CANCEL];
+      actionTypes.forEach(type => {
+        const oldState = {editForm: {index: 0, previewUrl: "foo"}};
+        const action = {type, data: {url: "foo"}};
+        const nextState = TopSites(oldState, action);
+        assert.equal(nextState.editForm.index, 0);
+      });
+    });
+    it("should set previewResponse on PREVIEW_RESPONSE", () => {
+      const oldState = {editForm: {previewUrl: "url"}};
+      const action = {type: at.PREVIEW_RESPONSE, data: {preview: "data:123", url: "url"}};
+      const nextState = TopSites(oldState, action);
+      assert.propertyVal(nextState.editForm, "previewResponse", "data:123");
+    });
+    it("should return previous state if action url does not match expected", () => {
+      const oldState = {editForm: {previewUrl: "foo"}};
+      const action = {type: at.PREVIEW_RESPONSE, data: {url: "bar"}};
+      const nextState = TopSites(oldState, action);
+      assert.equal(nextState, oldState);
+    });
+    it("should return previous state if editForm is not set", () => {
+      const actionTypes = [at.PREVIEW_RESPONSE, at.PREVIEW_REQUEST, at.PREVIEW_REQUEST_CANCEL];
+      actionTypes.forEach(type => {
+        const oldState = {editForm: null};
+        const action = {type, data: {url: "bar"}};
+        const nextState = TopSites(oldState, action);
+        assert.equal(nextState, oldState, type);
+      });
+    });
+    it("should set previewResponse to null on PREVIEW_REQUEST", () => {
+      const oldState = {editForm: {previewResponse: "foo"}};
+      const action = {type: at.PREVIEW_REQUEST, data: {}};
+      const nextState = TopSites(oldState, action);
+      assert.propertyVal(nextState.editForm, "previewResponse", null);
+    });
+    it("should set previewUrl on PREVIEW_REQUEST", () => {
+      const oldState = {editForm: {}};
+      const action = {type: at.PREVIEW_REQUEST, data: {url: "bar"}};
+      const nextState = TopSites(oldState, action);
+      assert.propertyVal(nextState.editForm, "previewUrl", "bar");
+    });
     it("should add screenshots for SCREENSHOT_UPDATED", () => {
       const oldState = {rows: [{url: "foo.com"}, {url: "bar.com"}]};
       const action = {type: at.SCREENSHOT_UPDATED, data: {url: "bar.com", screenshot: "data:123"}};
