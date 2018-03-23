@@ -388,7 +388,6 @@ PointerEventHandler::PreHandlePointerEventsPreventDefault(
     return;
   }
   aMouseOrTouchEvent->PreventDefault(false);
-  aMouseOrTouchEvent->mFlags.mOnlyChromeDispatch = true;
   if (aPointerEvent->mMessage == ePointerUp) {
     pointerInfo->mPreventMouseEventByContent = false;
   }
@@ -418,7 +417,6 @@ PointerEventHandler::PostHandlePointerEventsPreventDefault(
     return;
   }
   aMouseOrTouchEvent->PreventDefault(false);
-  aMouseOrTouchEvent->mFlags.mOnlyChromeDispatch = true;
   pointerInfo->mPreventMouseEventByContent = true;
 }
 
