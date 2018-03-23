@@ -1207,9 +1207,7 @@ nsPresContext::CompatibilityModeChanged()
   }
 
   StyleSetHandle styleSet = mShell->StyleSet();
-  if (styleSet->IsServo()) {
-    styleSet->AsServo()->CompatibilityModeChanged();
-  }
+  styleSet->AsServo()->CompatibilityModeChanged();
 
   if (doc->IsSVGDocument()) {
     // SVG documents never load quirk.css.
