@@ -845,10 +845,6 @@ dropmarker {
 
 /********** splitter **********/
 
-grippy {
-  -moz-binding: url("chrome://global/content/bindings/splitter.xml#grippy");
-}
-
 .tree-splitter {
   width: 0px;
   max-width: 0px;

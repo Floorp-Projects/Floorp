@@ -16,17 +16,6 @@
 }
 
 
-/* Places tree */
-#placesTreechildren::-moz-tree-row(selected),
-#placesTreechildren::-moz-tree-row(grippyRow) {
-  background: #999;
-}
-
-#placesTreechildren::-moz-tree-cell-text(selected) {
-  color: #111;
-}
-
-
 /* Sanitize everything warning box */
 #sanitizeEverythingWarningBox {
   background-color: Window;

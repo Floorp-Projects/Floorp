@@ -666,6 +666,11 @@ pref("media.cubeb.logging_level", "");
 // Cubeb sandbox (remoting) control
 #ifdef XP_LINUX
 pref("media.cubeb.sandbox", true);
+// The cubeb pulse audio backend effectively serializes callbacks so
+// only 1 thread is required.
+pref("media.audioipc.pool_size", 1);
+// 64 kB stack per pool thread.
+pref("media.audioipc.stack_size", 65536);
 #else
 pref("media.cubeb.sandbox", false);
 #endif
@@ -2702,6 +2707,7 @@ pref("security.allow_chrome_frames_inside_content", false);
 
 // Services security settings
 pref("services.settings.server", "https://firefox.settings.services.mozilla.com/v1");
+pref("services.settings.changes.path", "/buckets/monitor/collections/changes/records");
 
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);
@@ -2718,7 +2724,6 @@ pref("extensions.blocklist.itemURL", "https://blocked.cdn.mozilla.net/%blockID%.
 // blocking them.
 pref("extensions.blocklist.level", 2);
 // Blocklist via settings server (Kinto)
-pref("services.blocklist.changes.path", "/buckets/monitor/collections/changes/records");
 pref("services.blocklist.bucket", "blocklists");
 pref("services.blocklist.onecrl.collection", "certificates");
 pref("services.blocklist.onecrl.checked", 0);
@@ -2732,14 +2737,8 @@ pref("services.blocklist.pinning.collection", "pins");
 pref("services.blocklist.pinning.checked", 0);
 pref("services.blocklist.gfx.collection", "gfx");
 pref("services.blocklist.gfx.checked", 0);
-
-// Controls whether signing should be enforced on signature-capable blocklist
-// collections.
-pref("services.blocklist.signing.enforced", true);
-
 // Enable blocklists via the services settings mechanism
 pref("services.blocklist.update_enabled", true);
-
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
