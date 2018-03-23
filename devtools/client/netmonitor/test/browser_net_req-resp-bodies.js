@@ -23,11 +23,7 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   // Perform first batch of requests.
-  let wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    content.wrappedJSObject.performRequests();
-  });
-  await wait;
+  await performRequests(monitor, tab, 1);
 
   await verifyRequest(0);
 
@@ -47,11 +43,7 @@ add_task(async function() {
   await wait;
 
   // Perform another batch of requests.
-  wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    content.wrappedJSObject.performRequests();
-  });
-  await wait;
+  await performRequests(monitor, tab, 1);
 
   await verifyRequest(1);
 

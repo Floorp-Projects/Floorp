@@ -79,6 +79,17 @@ exports.fontOptions = {
   previewText: PropTypes.string,
 };
 
+exports.fontEditor = {
+  // Font currently being edited
+  font: PropTypes.shape(font),
+
+  // Whether or not the font editor is visible
+  isVisible: PropTypes.bool,
+
+  // Selector text of the rule where font properties will be written
+  selector: PropTypes.string,
+};
+
 /**
  * Font data.
  */

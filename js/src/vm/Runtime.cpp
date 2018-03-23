@@ -914,11 +914,12 @@ js::CurrentThreadCanAccessRuntime(const JSRuntime* rt)
 bool
 js::CurrentThreadCanAccessZone(Zone* zone)
 {
-    if (CurrentThreadCanAccessRuntime(zone->runtime_))
-        return true;
+    // Helper thread zones can only be used by their owning thread.
+    if (zone->usedByHelperThread())
+        return zone->group()->ownedByCurrentThread();
 
-    // Only zones marked for use by a helper thread can be used off thread.
-    return zone->usedByHelperThread() && zone->group()->ownedByCurrentThread();
+    // Other zones can only be accessed by the runtime's active context.
+    return CurrentThreadCanAccessRuntime(zone->runtime_);
 }
 
 #ifdef DEBUG

@@ -144,7 +144,7 @@ add_task(async function() {
 
   URLBar.focus();
   URLBar.value = SEARCH_TERM;
-  let testFn = async function(dirtyFrameFn) {
+  let testFn = async function() {
     let oldInvalidate = popup.invalidate.bind(popup);
     let oldResultsAdded = popup.onResultsAdded.bind(popup);
     let oldSetTimeout = win.setTimeout;
@@ -154,18 +154,18 @@ add_task(async function() {
     // URL bar occur without firing JS events (which is how we
     // normally know to dirty the frame tree).
     popup.invalidate = (reason) => {
-      dirtyFrameFn();
+      dirtyFrame(win);
       oldInvalidate(reason);
     };
 
     popup.onResultsAdded = () => {
-      dirtyFrameFn();
+      dirtyFrame(win);
       oldResultsAdded();
     };
 
     win.setTimeout = (fn, ms) => {
       return oldSetTimeout(() => {
-        dirtyFrameFn();
+        dirtyFrame(win);
         fn();
       }, ms);
     };
@@ -195,11 +195,31 @@ add_task(async function() {
     await hiddenPromise;
   };
 
+  let dropmarkerRect = document.getAnonymousElementByAttribute(gURLBar,
+    "anonid", "historydropmarker").getBoundingClientRect();
+  let textBoxRect = document.getAnonymousElementByAttribute(gURLBar,
+    "anonid", "textbox-input-box").getBoundingClientRect();
+  let expectedRects = {
+    filter: rects => rects.filter(r => !(
+      // We put text into the urlbar so expect its textbox to change.
+      (r.x1 >= textBoxRect.left && r.x2 <= textBoxRect.right &&
+       r.y1 >= textBoxRect.top && r.y2 <= textBoxRect.bottom) ||
+      // The dropmarker is displayed as active during some of the test.
+      // dropmarkerRect.left isn't always an integer, hence the - 1 and + 1
+      (r.x1 >= dropmarkerRect.left - 1 && r.x2 <= dropmarkerRect.right + 1 &&
+       r.y1 >= dropmarkerRect.top && r.y2 <= dropmarkerRect.bottom)
+      // XXX For some reason the awesomebar panel isn't in our screenshots,
+      // but that's where we actually expect many changes.
+    ))
+  };
+
   info("First opening");
-  await withReflowObserver(testFn, EXPECTED_REFLOWS_FIRST_OPEN, win);
+  await withPerfObserver(testFn, {expectedReflows: EXPECTED_REFLOWS_FIRST_OPEN,
+                                  frames: expectedRects}, win);
 
   info("Second opening");
-  await withReflowObserver(testFn, EXPECTED_REFLOWS_SECOND_OPEN, win);
+  await withPerfObserver(testFn, {expectedReflows: EXPECTED_REFLOWS_SECOND_OPEN,
+                                  frames: expectedRects}, win);
 
   await BrowserTestUtils.closeWindow(win);
 });

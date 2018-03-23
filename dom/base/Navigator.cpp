@@ -1513,7 +1513,7 @@ Navigator::ServiceWorker()
   MOZ_ASSERT(mWindow);
 
   if (!mServiceWorkerContainer) {
-    mServiceWorkerContainer = new ServiceWorkerContainer(mWindow);
+    mServiceWorkerContainer = ServiceWorkerContainer::Create(mWindow->AsGlobal());
   }
 
   RefPtr<ServiceWorkerContainer> ref = mServiceWorkerContainer;

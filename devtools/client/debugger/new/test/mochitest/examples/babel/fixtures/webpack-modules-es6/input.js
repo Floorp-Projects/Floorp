@@ -13,6 +13,9 @@ import { aNamed3 } from "./src/mod10";
 import { original as anAliased3 } from "./src/mod11";
 import * as aNamespace3 from "./src/mod12";
 
+import optimizedOut from "./src/optimized-out";
+optimizedOut();
+
 export default function root() {
   console.log("pause here", root);
 

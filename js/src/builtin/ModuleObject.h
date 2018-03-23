@@ -392,6 +392,10 @@ class MOZ_STACK_CLASS ModuleBuilder
 
     ImportEntryObject* importEntryFor(JSAtom* localName) const;
 
+    bool processExportBinding(frontend::ParseNode* pn);
+    bool processExportArrayBinding(frontend::ParseNode* pn);
+    bool processExportObjectBinding(frontend::ParseNode* pn);
+
     bool appendExportEntry(HandleAtom exportName, HandleAtom localName,
                            frontend::ParseNode* node = nullptr);
     bool appendExportFromEntry(HandleAtom exportName, HandleAtom moduleRequest,

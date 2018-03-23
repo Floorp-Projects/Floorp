@@ -1497,7 +1497,7 @@ LeaveParseTaskZone(JSRuntime* rt, ParseTask* task)
 {
     // Mark the zone as no longer in use by a helper thread, and available
     // to be collected by the GC.
-    rt->clearUsedByHelperThread(task->parseGlobal->zone());
+    rt->clearUsedByHelperThread(task->parseGlobal->zoneFromAnyThread());
 }
 
 ParseTask*

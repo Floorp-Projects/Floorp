@@ -22,11 +22,8 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, 1);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    content.wrappedJSObject.performRequests();
-  });
-  await wait;
+  // Execute requests.
+  await performRequests(monitor, tab, 1);
 
   let requestItem = document.querySelector(".request-list-item");
   let requestsListStatus = requestItem.querySelector(".requests-list-status");

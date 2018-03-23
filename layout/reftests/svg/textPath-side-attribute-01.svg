@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <path id="path1" d="M100 100 h 300"/>
+    <!-- path2 is drawn in the same place but the opposite direction to path1
+         so using it should give the same result as side="right" -->
+    <path id="path2" d="M400 100 h -300"/>
+  </defs>
+
+  <rect fill="lime" width="100%" height="100%"/>
+
+  <text font-size="30" fill="red">
+    <textPath side="right" href="#path1">Text on a path.</textPath>
+  </text>
+
+  <text font-size="30" fill="lime" stroke="lime" stroke-width="4">
+    <textPath href="#path2">Text on a path.</textPath>
+  </text>
+
+  <text transform="translate(0, 50)" font-size="30" fill="red">
+    <textPath href="#path2">Text on a path.</textPath>
+  </text>
+
+  <text transform="translate(0, 50)" font-size="30" fill="lime" stroke="lime" stroke-width="4">
+    <textPath side="right" href="#path1">Text on a path.</textPath>
+  </text>
+
+  <text transform="translate(0, 100)" font-size="30" fill="red">
+    <textPath href="#path2">Text on a path.</textPath>
+  </text>
+
+  <text transform="translate(0, 100)" font-size="30" fill="lime" stroke="lime" stroke-width="4">
+    <textPath href="#path1">Text on a path.
+      <set attributeName="side" to="right"/>
+    </textPath>
+  </text>
+
+  <text transform="translate(0, 150)" font-size="30" fill="red">
+    <textPath href="#path1">Text on a path.</textPath>
+  </text>
+
+  <text transform="translate(0, 150)" font-size="30" fill="lime" stroke="lime" stroke-width="4">
+    <textPath side="left" href="#path1">Text on a path.</textPath>
+  </text>
+
+</svg>

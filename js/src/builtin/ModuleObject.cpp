@@ -1382,14 +1382,25 @@ ModuleBuilder::processExport(frontend::ParseNode* pn)
       case ParseNodeKind::Const:
       case ParseNodeKind::Let: {
         MOZ_ASSERT(kid->isArity(PN_LIST));
-        for (ParseNode* var = kid->pn_head; var; var = var->pn_next) {
-            if (var->isKind(ParseNodeKind::Assign))
-                var = var->pn_left;
-            MOZ_ASSERT(var->isKind(ParseNodeKind::Name));
-            RootedAtom localName(cx_, var->pn_atom);
-            RootedAtom exportName(cx_, isDefault ? cx_->names().default_ : localName.get());
-            if (!appendExportEntry(exportName, localName))
-                return false;
+        for (ParseNode* binding = kid->pn_head; binding; binding = binding->pn_next) {
+            if (binding->isKind(ParseNodeKind::Assign))
+                binding = binding->pn_left;
+            else
+                MOZ_ASSERT(binding->isKind(ParseNodeKind::Name));
+
+            if (binding->isKind(ParseNodeKind::Name)) {
+                RootedAtom localName(cx_, binding->pn_atom);
+                RootedAtom exportName(cx_, isDefault ? cx_->names().default_ : localName.get());
+                if (!appendExportEntry(exportName, localName))
+                    return false;
+            } else if (binding->isKind(ParseNodeKind::Array)) {
+                if (!processExportArrayBinding(binding))
+                    return false;
+            } else {
+                MOZ_ASSERT(binding->isKind(ParseNodeKind::Object));
+                if (!processExportObjectBinding(binding))
+                    return false;
+            }
         }
         break;
       }
@@ -1407,6 +1418,68 @@ ModuleBuilder::processExport(frontend::ParseNode* pn)
 
       default:
         MOZ_CRASH("Unexpected parse node");
+    }
+
+    return true;
+}
+
+bool
+ModuleBuilder::processExportBinding(frontend::ParseNode* binding)
+{
+    if (binding->isKind(ParseNodeKind::Name)) {
+        RootedAtom name(cx_, binding->pn_atom);
+        return appendExportEntry(name, name);
+    }
+
+    if (binding->isKind(ParseNodeKind::Array))
+        return processExportArrayBinding(binding);
+
+    MOZ_ASSERT(binding->isKind(ParseNodeKind::Object));
+    return processExportObjectBinding(binding);
+}
+
+bool
+ModuleBuilder::processExportArrayBinding(frontend::ParseNode* pn)
+{
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::Array));
+    MOZ_ASSERT(pn->isArity(PN_LIST));
+
+    for (ParseNode* node = pn->pn_head; node; node = node->pn_next) {
+        if (node->isKind(ParseNodeKind::Elision))
+            continue;
+
+        if (node->isKind(ParseNodeKind::Spread))
+            node = node->pn_kid;
+        else if (node->isKind(ParseNodeKind::Assign))
+            node = node->pn_left;
+
+        if (!processExportBinding(node))
+            return false;
+    }
+
+    return true;
+}
+
+bool
+ModuleBuilder::processExportObjectBinding(frontend::ParseNode* pn)
+{
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::Object));
+    MOZ_ASSERT(pn->isArity(PN_LIST));
+
+    for (ParseNode* node = pn->pn_head; node; node = node->pn_next) {
+        MOZ_ASSERT(node->isKind(ParseNodeKind::MutateProto) ||
+                   node->isKind(ParseNodeKind::Colon) ||
+                   node->isKind(ParseNodeKind::Shorthand));
+
+        ParseNode* target = node->isKind(ParseNodeKind::MutateProto)
+            ? node->pn_kid
+            : node->pn_right;
+
+        if (target->isKind(ParseNodeKind::Assign))
+            target = target->pn_left;
+
+        if (!processExportBinding(target))
+            return false;
     }
 
     return true;

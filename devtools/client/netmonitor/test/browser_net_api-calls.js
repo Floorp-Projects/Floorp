@@ -29,11 +29,8 @@ add_task(async function() {
     "http://example.com/api/search/?q=search%E2%98%A2"
   ];
 
-  let wait = waitForNetworkEvents(monitor, 5);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-    content.wrappedJSObject.performRequests();
-  });
-  await wait;
+  // Execute requests.
+  await performRequests(monitor, tab, 5);
 
   REQUEST_URIS.forEach(function(uri, index) {
     verifyRequestItemTarget(

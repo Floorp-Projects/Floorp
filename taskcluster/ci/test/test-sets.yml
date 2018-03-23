@@ -303,6 +303,7 @@ desktop-instrumentation:
 android-common-tests:
     - cppunit
     - crashtest
+    # - jittest # not ready yet: bug 1098508
     - jsreftest
     - mochitest
     - mochitest-chrome

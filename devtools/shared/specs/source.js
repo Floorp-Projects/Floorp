@@ -21,6 +21,11 @@ const sourceSpec = generateActorSpec({
     disablePrettyPrint: {
       response: RetVal("json")
     },
+    setPausePoints: {
+      request: {
+        pausePoints: Arg(0, "json"),
+      }
+    },
     blackbox: { response: { pausedInSource: RetVal("boolean") } },
     unblackbox: {},
     setBreakpoint: {

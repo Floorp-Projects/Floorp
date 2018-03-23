@@ -19,18 +19,24 @@ const INSPECTOR_L10N =
 
 const { updateFonts } = require("./actions/fonts");
 const { updatePreviewText } = require("./actions/font-options");
+const { toggleFontEditor } = require("./actions/font-editor");
+
+const FONT_EDITOR_ID = "fonteditor";
 
 class FontInspector {
   constructor(inspector, window) {
     this.document = window.document;
     this.inspector = inspector;
     this.pageStyle = this.inspector.pageStyle;
+    this.ruleView = this.inspector.getPanel("ruleview").view;
+    this.selectedRule = null;
     this.store = this.inspector.store;
 
     this.update = this.update.bind(this);
-
     this.onNewNode = this.onNewNode.bind(this);
     this.onPreviewFonts = this.onPreviewFonts.bind(this);
+    this.onRuleSelected = this.onRuleSelected.bind(this);
+    this.onRuleUnselected = this.onRuleUnselected.bind(this);
     this.onThemeChanged = this.onThemeChanged.bind(this);
 
     this.init();
@@ -57,6 +63,8 @@ class FontInspector {
 
     this.inspector.selection.on("new-node-front", this.onNewNode);
     this.inspector.sidebar.on("fontinspector-selected", this.onNewNode);
+    this.ruleView.on("ruleview-rule-selected", this.onRuleSelected);
+    this.ruleView.on("ruleview-rule-unselected", this.onRuleUnselected);
 
     // Listen for theme changes as the color of the previews depend on the theme
     gDevTools.on("theme-switched", this.onThemeChanged);
@@ -89,11 +97,15 @@ class FontInspector {
   destroy() {
     this.inspector.selection.off("new-node-front", this.onNewNode);
     this.inspector.sidebar.off("fontinspector-selected", this.onNewNode);
+    this.ruleView.off("ruleview-rule-selected", this.onRuleSelected);
+    this.ruleView.off("ruleview-rule-unselected", this.onRuleUnselected);
     gDevTools.off("theme-switched", this.onThemeChanged);
 
     this.document = null;
     this.inspector = null;
     this.pageStyle = null;
+    this.ruleView = null;
+    this.selectedRule = null;
     this.store = null;
   }
 
@@ -148,6 +160,45 @@ class FontInspector {
   onPreviewFonts(value) {
     this.store.dispatch(updatePreviewText(value));
     this.update();
+  }
+
+  /**
+   * Handler for "ruleview-rule-selected" event emitted from the rule view when a rule is
+   * marked as selected for an editor.
+   * If selected for the font editor, hold a reference to the rule so we know where to
+   * put property changes coming from the font editor and show the font editor panel.
+   *
+   * @param {Object} eventData
+   *        Data payload for the event. Contains:
+   *        - {String} editorId - id of the editor for which the rule was selected
+   *        - {Rule} rule - reference to rule that was selected
+   */
+  onRuleSelected(eventData) {
+    const { editorId, rule } = eventData;
+    if (editorId === FONT_EDITOR_ID) {
+      const selector = rule.matchedSelectors[0];
+      this.selectedRule = rule;
+      this.store.dispatch(toggleFontEditor(true, selector));
+    }
+  }
+
+  /**
+   * Handler for "ruleview-rule-unselected" event emitted from the rule view when a rule
+   * was released from being selected for an editor.
+   * If previously selected for the font editor, release the reference to the rule and
+   * hide the font editor panel.
+   *
+   * @param {Object} eventData
+   *        Data payload for the event. Contains:
+   *        - {String} editorId - id of the editor for which the rule was released
+   *        - {Rule} rule - reference to rule that was released
+   */
+  onRuleUnselected(eventData) {
+    const { editorId, rule } = eventData;
+    if (editorId === FONT_EDITOR_ID && rule == this.selectedRule) {
+      this.selectedRule = null;
+      this.store.dispatch(toggleFontEditor(false));
+    }
   }
 
   /**

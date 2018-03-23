@@ -132,6 +132,83 @@ public:
   }
 };
 
+class APZCPinchLockingTester : public APZCPinchTester {
+private:
+  static const int mDPI = 160;
+
+  ScreenIntPoint mFocus;
+  float mSpan;
+
+public:
+  APZCPinchLockingTester()
+    : APZCPinchTester(AsyncPanZoomController::USE_GESTURE_DETECTOR)
+    , mFocus(ScreenIntPoint(200, 300))
+    , mSpan(10.0)
+  {
+  }
+
+  virtual void SetUp() {
+    APZCPinchTester::SetUp();
+    tm->SetDPI(mDPI);
+    apzc->SetFrameMetrics(GetPinchableFrameMetrics());
+    MakeApzcZoomable();
+
+    apzc->ReceiveInputEvent(
+        CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_START,
+                                mFocus, mSpan, mSpan),
+        nullptr);
+  }
+
+  void twoFingerPan() {
+    ScreenCoord panDistance
+      = gfxPrefs::APZPinchLockScrollLockThreshold() * 1.2 * tm->GetDPI();
+
+    mFocus = ScreenIntPoint(
+      (int) (mFocus.x + panDistance),
+      (int) (mFocus.y)
+    );
+
+    apzc->ReceiveInputEvent(
+        CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
+                                mFocus, mSpan, mSpan),
+        nullptr);
+  }
+
+  void twoFingerZoom() {
+    float pinchDistance
+      = gfxPrefs::APZPinchLockSpanBreakoutThreshold() * 1.2 * tm->GetDPI();
+
+    float newSpan = mSpan + pinchDistance;
+
+    apzc->ReceiveInputEvent(
+        CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
+                                mFocus, newSpan, mSpan),
+        nullptr);
+    mSpan = newSpan;
+  }
+
+  bool isPinchLockActive() {
+    FrameMetrics originalMetrics = apzc->GetFrameMetrics();
+
+    // Send a small scale input to the APZC
+    float pinchDistance
+      = gfxPrefs::APZPinchLockSpanBreakoutThreshold() * 0.8 * tm->GetDPI();
+    apzc->ReceiveInputEvent(
+        CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
+                                mFocus, mSpan + pinchDistance, mSpan),
+        nullptr);
+
+    FrameMetrics result = apzc->GetFrameMetrics();
+    bool lockActive = originalMetrics.GetZoom() == result.GetZoom()
+      && originalMetrics.GetScrollOffset().x == result.GetScrollOffset().x
+      && originalMetrics.GetScrollOffset().y == result.GetScrollOffset().y;
+
+    // Avoid side effects, reset to original frame metrics
+    apzc->SetFrameMetrics(originalMetrics);
+    return lockActive;
+  }
+};
+
 TEST_F(APZCPinchTester, Pinch_DefaultGestures_NoTouchAction) {
   SCOPED_GFX_PREF(TouchActionEnabled, bool, false);
   DoPinchTest(true);
@@ -322,3 +399,50 @@ TEST_F(APZCPinchTester, Pinch_TwoFinger_APZZoom_Disabled_Bug1354185) {
                               aSecondFocus, 10.0 * aScale, 10.0),
       nullptr);
 }
+
+TEST_F(APZCPinchLockingTester, Pinch_Locking_Free) {
+  SCOPED_GFX_PREF(APZPinchLockMode, int32_t, 0); // PINCH_FREE
+
+  twoFingerPan();
+  EXPECT_FALSE(isPinchLockActive());
+}
+
+TEST_F(APZCPinchLockingTester, Pinch_Locking_Normal_Lock) {
+  SCOPED_GFX_PREF(APZPinchLockMode, int32_t, 1); // PINCH_NORMAL
+
+  twoFingerPan();
+  EXPECT_TRUE(isPinchLockActive());
+}
+
+TEST_F(APZCPinchLockingTester, Pinch_Locking_Normal_Lock_Break) {
+  SCOPED_GFX_PREF(APZPinchLockMode, int32_t, 1); // PINCH_NORMAL
+
+  twoFingerPan();
+  twoFingerZoom();
+  EXPECT_TRUE(isPinchLockActive());
+}
+
+TEST_F(APZCPinchLockingTester, Pinch_Locking_Sticky_Lock) {
+  SCOPED_GFX_PREF(APZPinchLockMode, int32_t, 2); // PINCH_STICKY
+
+  twoFingerPan();
+  EXPECT_TRUE(isPinchLockActive());
+}
+
+TEST_F(APZCPinchLockingTester, Pinch_Locking_Sticky_Lock_Break) {
+  SCOPED_GFX_PREF(APZPinchLockMode, int32_t, 2); // PINCH_STICKY
+
+  twoFingerPan();
+  twoFingerZoom();
+  EXPECT_FALSE(isPinchLockActive());
+}
+
+TEST_F(APZCPinchLockingTester, Pinch_Locking_Sticky_Lock_Break_Lock) {
+  SCOPED_GFX_PREF(APZPinchLockMode, int32_t, 2); // PINCH_STICKY
+
+  twoFingerPan();
+  twoFingerZoom();
+  twoFingerPan();
+  EXPECT_TRUE(isPinchLockActive());
+}
+

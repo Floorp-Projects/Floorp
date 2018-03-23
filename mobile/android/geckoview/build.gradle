@@ -149,8 +149,8 @@ android {
 }
 
 dependencies {
-    implementation "com.android.support:support-v4:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
-    implementation "com.android.support:palette-v7:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+    implementation "com.android.support:support-v4:$support_library_version"
+    implementation "com.android.support:palette-v7:$support_library_version"
 
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     testImplementation 'junit:junit:4.12'
@@ -161,7 +161,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:0.5'
     androidTestImplementation 'com.android.support.test:rules:0.5'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:2.2.2'
-    androidTestImplementation "com.android.support:support-annotations:${mozconfig.substs.ANDROID_SUPPORT_LIBRARY_VERSION}"
+    androidTestImplementation "com.android.support:support-annotations:$support_library_version"
 }
 
 apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"
