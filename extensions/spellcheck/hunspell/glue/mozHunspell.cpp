@@ -168,10 +168,17 @@ NS_IMETHODIMP mozHunspell::SetDictionary(const char16_t *aDictionary)
   nsAutoString affFileNameU;
   nsresult rv = affFile->GetPath(affFileNameU);
   NS_ENSURE_SUCCESS(rv, rv);
-  // Hunspell 1.5+ supports UTF-8 file paths on Windows
+  // Hunspell 1.3.3+ supports UTF-8 file paths on Windows
   // by prefixing "\\\\?\\".
-  affFileName.AssignLiteral("\\\\?\\");
-  AppendUTF16toUTF8(affFileNameU, affFileName);
+  if (StringBeginsWith(affFileNameU, NS_LITERAL_STRING("\\\\"))) {
+    CopyUTF16toUTF8(affFileNameU, affFileName);
+    if (affFileNameU.CharAt(2) != u'?') {
+      affFileName.InsertLiteral("?\\UNC\\", 2);
+    }
+  } else {
+    affFileName.AssignLiteral("\\\\?\\");
+    AppendUTF16toUTF8(affFileNameU, affFileName);
+  }
 #else
   nsresult rv = affFile->GetNativePath(affFileName);
   NS_ENSURE_SUCCESS(rv, rv);
