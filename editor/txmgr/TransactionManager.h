@@ -48,6 +48,21 @@ public:
     return mRedoStack.GetSize();
   }
 
+  bool EnableUndoRedo(int32_t aMaxTransactionCount = -1);
+  bool DisableUndoRedo()
+  {
+    return EnableUndoRedo(0);
+  }
+  bool ClearUndoRedo()
+  {
+    if (NS_WARN_IF(!mDoStack.IsEmpty())) {
+      return false;
+    }
+    mUndoStack.Clear();
+    mRedoStack.Clear();
+    return true;
+  }
+
   nsresult WillDoNotify(nsITransaction* aTransaction, bool* aInterrupt);
   nsresult DidDoNotify(nsITransaction* aTransaction, nsresult aExecuteResult);
   nsresult WillUndoNotify(nsITransaction* aTransaction, bool* aInterrupt);
