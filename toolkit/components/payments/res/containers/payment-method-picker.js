@@ -8,7 +8,7 @@
 
 /**
  * <payment-method-picker></payment-method-picker>
- * Container around <rich-select> (eventually providing add/edit links) with
+ * Container around add/edit links and <rich-select> with
  * <basic-card-option> listening to savedBasicCards.
  */
 
@@ -22,12 +22,23 @@ class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTMLElement) {
     this.securityCodeInput.autocomplete = "off";
     this.securityCodeInput.size = 3;
     this.securityCodeInput.addEventListener("change", this);
+    this.addLink = document.createElement("a");
+    this.addLink.href = "javascript:void(0)";
+    this.addLink.textContent = this.dataset.addLinkLabel;
+    this.addLink.addEventListener("click", this);
+    this.editLink = document.createElement("a");
+    this.editLink.href = "javascript:void(0)";
+    this.editLink.textContent = this.dataset.editLinkLabel;
+    this.editLink.addEventListener("click", this);
   }
 
   connectedCallback() {
     this.appendChild(this.dropdown);
     this.appendChild(this.spacerText);
     this.appendChild(this.securityCodeInput);
+    this.appendChild(this.addLink);
+    this.append(" ");
+    this.appendChild(this.editLink);
     super.connectedCallback();
   }
 
@@ -74,6 +85,10 @@ class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTMLElement) {
         this.onChange(event);
         break;
       }
+      case "click": {
+        this.onClick(event);
+        break;
+      }
     }
   }
 
@@ -103,6 +118,29 @@ class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTMLElement) {
     }
 
     this.requestStore.setState(stateChange);
+  }
+
+  onClick({target}) {
+    let nextState = {
+      page: {
+        id: "basic-card-page",
+      },
+    };
+
+    switch (target) {
+      case this.addLink: {
+        nextState.selectedPaymentCard = null;
+        break;
+      }
+      case this.editLink: {
+        break;
+      }
+      default: {
+        throw new Error("Unexpected onClick");
+      }
+    }
+
+    this.requestStore.setState(nextState);
   }
 }
 

@@ -8,7 +8,7 @@
  * Communicates with privileged code via DOM Events.
  */
 
-/* import-globals-from log.js */
+/* import-globals-from unprivileged-fallbacks.js */
 
 "use strict";
 
