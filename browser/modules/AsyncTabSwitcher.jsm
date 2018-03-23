@@ -959,22 +959,29 @@ class AsyncTabSwitcher {
     this._processing = true;
     this.preActions();
 
-    if (event.type == "MozLayerTreeReady") {
-      this.onLayersReady(event.originalTarget);
-    }
-    if (event.type == "MozAfterPaint") {
-      this.onPaint();
-    } else if (event.type == "MozLayerTreeCleared") {
-      this.onLayersCleared(event.originalTarget);
-    } else if (event.type == "TabRemotenessChange") {
-      this.onRemotenessChange(event.target);
-    } else if (event.type == "sizemodechange" ||
-      event.type == "occlusionstatechange") {
-      this.onSizeModeOrOcclusionStateChange();
-    } else if (event.type == "SwapDocShells") {
-      this.onSwapDocShells(event.originalTarget, event.detail);
-    } else if (event.type == "EndSwapDocShells") {
-      this.onEndSwapDocShells(event.originalTarget, event.detail);
+    switch (event.type) {
+      case "MozLayerTreeReady":
+        this.onLayersReady(event.originalTarget);
+        break;
+      case "MozAfterPaint":
+        this.onPaint();
+        break;
+      case "MozLayerTreeCleared":
+        this.onLayersCleared(event.originalTarget);
+        break;
+      case "TabRemotenessChange":
+        this.onRemotenessChange(event.target);
+        break;
+      case "sizemodechange":
+      case "occlusionstatechange":
+        this.onSizeModeOrOcclusionStateChange();
+        break;
+      case "SwapDocShells":
+        this.onSwapDocShells(event.originalTarget, event.detail);
+        break;
+      case "EndSwapDocShells":
+        this.onEndSwapDocShells(event.originalTarget, event.detail);
+        break;
     }
 
     this.postActions();
