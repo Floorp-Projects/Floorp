@@ -14,7 +14,6 @@
 #include "mozilla/dom/DocGroup.h"
 #include "nsHTMLTags.h"
 #include "jsapi.h"
-#include "nsGlobalWindow.h"
 
 namespace mozilla {
 namespace dom {
@@ -281,26 +280,6 @@ CustomElementRegistry::CustomElementRegistry(nsPIDOMWindowInner* aWindow)
 CustomElementRegistry::~CustomElementRegistry()
 {
   mozilla::DropJSObjects(this);
-}
-
-bool
-CustomElementRegistry::IsCustomElementEnabled(JSContext* aCx, JSObject* aObject)
-{
-  if (nsContentUtils::IsCustomElementsEnabled()) {
-    return true;
-  }
-
-  return XRE_IsParentProcess() && nsContentUtils::AllowXULXBLForPrincipal(nsContentUtils::ObjectPrincipal(aObject));
-}
-
-bool
-CustomElementRegistry::IsCustomElementEnabled(nsIDocument* aDoc)
-{
-  if (nsContentUtils::IsCustomElementsEnabled()) {
-    return true;
-  }
-
-  return XRE_IsParentProcess() && nsContentUtils::AllowXULXBLForPrincipal(aDoc->NodePrincipal());
 }
 
 CustomElementDefinition*
