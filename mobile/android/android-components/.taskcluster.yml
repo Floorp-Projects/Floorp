@@ -31,6 +31,27 @@ tasks:
           && git config advice.detachedHead false
           && git checkout {{event.head.sha}}
           && ./gradlew --no-daemon clean assemble test detektCheck ktlint lint
+      artifacts:
+        'public/reports':
+          type: 'directory'
+          path: '/build/android-components/build/reports'
+          expires: "{{ '1 week' | $fromNow }}"
+        'public/browser-errorpages/reports':
+          type: 'directory'
+          path: '/build/android-components/components/browser/errorpages/build/reports'
+          expires: "{{ '1 week' | $fromNow }}"
+        'public/support-ktx/reports':
+          type: 'directory'
+          path: '/build/android-components/components/support/ktx/build/reports'
+          expires: "{{ '1 week' | $fromNow }}"
+        'public/support-utils/reports':
+          type: 'directory'
+          path: '/build/android-components/components/support/utils/build/reports'
+          expires: "{{ '1 week' | $fromNow }}"
+        'public/ui-colors/reports':
+          type: 'directory'
+          path: '/build/android-components/components/ui/colors/build/reports'
+          expires: "{{ '1 week' | $fromNow }}"
     metadata:
       name: Android Components - Pull Request
       description: Building and testing Android components - triggered by a pull request.
