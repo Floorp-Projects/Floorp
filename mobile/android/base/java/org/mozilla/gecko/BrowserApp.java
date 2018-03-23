@@ -216,7 +216,6 @@ public class BrowserApp extends GeckoApp
 
     private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
     private static final String STATE_ADDON_MENU_ITEM_CACHE = "menuitems_cache";
-    private static final String STATE_BROWSER_ACTION_ITEM_CACHE = "browseractions_cache";
     private static final String STATE_ADDON_MENU_NEXT_ID = "menuitems_nextId";
 
     private static final String BROWSER_SEARCH_TAG = "browser_search";
@@ -338,7 +337,6 @@ public class BrowserApp extends GeckoApp
     }
 
     private ArrayList<MenuItemInfo> mAddonMenuItemsCache;
-    private ArrayList<MenuItemInfo> mBrowserActionItemsCache;
     private int mAddonMenuNextID = ADDON_MENU_OFFSET;
     private PropertyAnimator mMainLayoutAnimator;
 
@@ -751,7 +749,6 @@ public class BrowserApp extends GeckoApp
         // Gecko and the add-ons are starting up.
         if (savedInstanceState != null && mIsRestoringActivity) {
             mAddonMenuItemsCache = savedInstanceState.getParcelableArrayList(STATE_ADDON_MENU_ITEM_CACHE);
-            mBrowserActionItemsCache = savedInstanceState.getParcelableArrayList(STATE_BROWSER_ACTION_ITEM_CACHE);
             mAddonMenuNextID = savedInstanceState.getInt(STATE_ADDON_MENU_NEXT_ID);
         }
 
@@ -2445,7 +2442,6 @@ public class BrowserApp extends GeckoApp
         // For now we'll only guard against the case where BrowserApp is destroyed and later re-
         // created while Gecko keeps running throughout, and leave the full solution to bug 1414084.
         outState.putParcelableArrayList(STATE_ADDON_MENU_ITEM_CACHE, mAddonMenuItemsCache);
-        outState.putParcelableArrayList(STATE_BROWSER_ACTION_ITEM_CACHE, mBrowserActionItemsCache);
         outState.putInt(STATE_ADDON_MENU_NEXT_ID, mAddonMenuNextID);
     }
 
@@ -3364,12 +3360,12 @@ public class BrowserApp extends GeckoApp
      * Adds a WebExtension browser action to the menu.
      */
     private void addBrowserActionMenuItem(final MenuItemInfo info) {
-        if (mBrowserActionItemsCache == null) {
-            mBrowserActionItemsCache = new ArrayList<>();
+        if (mAddonMenuItemsCache == null) {
+            mAddonMenuItemsCache = new ArrayList<>();
         }
 
         // Always cache so we can rebuild after a locale switch.
-        mBrowserActionItemsCache.add(info);
+        mAddonMenuItemsCache.add(info);
 
         if (mMenu == null) {
             return;
@@ -3385,11 +3381,11 @@ public class BrowserApp extends GeckoApp
         int id = -1;
 
         // Remove browser action menu item from cache, if available.
-        if (mBrowserActionItemsCache != null && !mBrowserActionItemsCache.isEmpty()) {
-            for (MenuItemInfo item : mBrowserActionItemsCache) {
+        if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
+            for (MenuItemInfo item : mAddonMenuItemsCache) {
                 if (item.uuid.equals(uuid)) {
                     id = item.id;
-                    mBrowserActionItemsCache.remove(item);
+                    mAddonMenuItemsCache.remove(item);
                     break;
                 }
             }
@@ -3412,8 +3408,8 @@ public class BrowserApp extends GeckoApp
         int id = -1;
 
         // Set attribute for the menu item in cache, if available
-        if (mBrowserActionItemsCache != null && !mBrowserActionItemsCache.isEmpty()) {
-            for (MenuItemInfo item : mBrowserActionItemsCache) {
+        if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
+            for (MenuItemInfo item : mAddonMenuItemsCache) {
                 if (item.uuid.equals(uuid)) {
                     id = item.id;
                     item.label = options.getString("name", item.label);
@@ -3445,13 +3441,6 @@ public class BrowserApp extends GeckoApp
 
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.browser_app_menu, mMenu);
-
-        // Add browser action menu items, if any exist.
-        if (mBrowserActionItemsCache != null && !mBrowserActionItemsCache.isEmpty()) {
-            for (MenuItemInfo item : mBrowserActionItemsCache) {
-                addBrowserActionMenuItemToMenu(mMenu, item);
-            }
-        }
 
         // Add add-on menu items, if any exist.
         if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
