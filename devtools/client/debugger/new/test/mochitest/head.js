@@ -264,7 +264,9 @@ function waitForSelectedSource(dbg, url) {
       }
 
       // wait for async work to be done
-      return dbg.selectors.hasSymbols(state, source.toJS());
+      const hasSymbols = dbg.selectors.hasSymbols(state, source);
+      const hasSourceMetaData = dbg.selectors.hasSourceMetaData(state, source.id);
+      return hasSymbols && hasSourceMetaData;
     },
     "selected source"
   );
