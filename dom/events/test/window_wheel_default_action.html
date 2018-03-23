@@ -68,6 +68,7 @@ SimpleTest.waitForFocus(function() {
   });
 }, window);
 
+SimpleTest.requestLongerTimeout(6);
 SimpleTest.requestFlakyTimeout("untriaged");
 
 var winUtils = SpecialPowers.getDOMWindowUtils(window);
@@ -361,7 +362,7 @@ function doTestScroll(aSettings, aCallback)
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollDown },
     { description: "Scroll to top by page scroll even if lineOrPageDelta is 0",
-      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.0, deltaY: -0.5, deltaZ: 0.0,
                lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
@@ -1164,7 +1165,7 @@ function doTestHorizontalizedScroll(aSettings, aCallback)
                shiftKey: true, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
       expected: kScrollRight },
     { description: "Scroll to left by page scroll even if lineOrPageDelta is 0",
-      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.0, deltaY: -0.5, deltaZ: 0.0,
                lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
                expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
@@ -1285,6 +1286,1245 @@ function doTestHorizontalizedScroll(aSettings, aCallback)
           ok(gScrollableElement.scrollLeft > 1000, description + "not scrolled to right, got " + gScrollableElement.scrollLeft);
         } else {
           is(gScrollableElement.scrollLeft, 1000, description + "scrolled horizontal");
+        }
+      }
+      if (currentTest.cleanup) {
+        currentTest.cleanup(nextStep);
+      } else {
+        nextStep();
+      }
+
+      function nextStep() {
+        winUtils.advanceTimeAndRefresh(100);
+        doNextTest();
+      }
+    });
+  }
+  doNextTest();
+}
+
+// It will take *freaking* long time(maybe *hours*) to test all the writing mode
+// combinations for the scroll target and its root, because there are altogether
+// *one hundred* combinations (10 x 10)!
+//
+// So unless you really don't care a snap on time-consuming testing or a strict
+// criteria is required for testing, it is strongly recommeneded that you
+// comment out at least the writing modes which are marked as "peculiar" before
+// running this test, you are encouraged to also comment out those "uncommon"
+// writing modes in order to further shorten testing time.
+//
+// Note that if you are going to run time-consuming tests without commenting out
+// most of the writing modes, don't forget to increase the value of the
+// parameter in SimpleTest.requestLongerTimeout in this file; otherwise it'll
+// most likely lead you to a timed-out failure.
+//
+// Also note that |isBTT| has nothing to do with the behaviour of auto-dir
+// scrolling, it's just used to set the sign of |kOrigScrollTop|.
+const kWritingModes = [
+  {
+    isRTL: true,
+    isBTT: false,
+    styles: [
+      {
+        writingMode: "horizontal-tb",
+        direction:   "rtl",
+      },
+      {
+        writingMode: "vertical-rl",
+        direction:   "ltr",
+      },
+      // uncommon
+      //{
+      //  writingMode: "sideways-rl",
+      //  direction:   "ltr",
+      //},
+    ],
+  },
+  {
+    isRTL: false,
+    isBTT: false,
+    styles: [
+      {
+        writingMode: "horizontal-tb",
+        direction:   "ltr",
+      },
+      // uncommon
+      //{
+      //  writingMode: "vertical-lr",
+      //  direction:   "ltr",
+      //},
+      // uncommon
+      //{
+      //  writingMode: "sideways-lr",
+      //  direction:   "ltr",
+      //},
+    ],
+  },
+  {
+    isRTL: true,
+    isBTT: true,
+    styles: [
+      // peculiar
+      //{
+      //  writingMode: "vertical-rl",
+      //  direction:   "rtl",
+      //},
+      // peculiar
+      //{
+      //  writingMode: "sideways-rl",
+      //  direction:   "rtl",
+      //},
+    ],
+  },
+  {
+    isRTL: false,
+    isBTT: true,
+    styles: [
+      // peculiar
+      //{
+      //  writingMode: "vertical-lr",
+      //  direction:   "rtl",
+      //},
+      // peculiar
+      //{
+      //  writingMode: "sideways-lr",
+      //  direction:   "rtl",
+      //},
+    ],
+  },
+];
+
+function getFirstWritingModeStyle()
+{
+  if (kWritingModes.length < 1) {
+    return false;
+  }
+  let typeIndex = 0;
+  while (!kWritingModes[typeIndex].styles.length) {
+    typeIndex++;
+    if (typeIndex >= kWritingModes.length) {
+      return false;
+    }
+  }
+  return {typeIndex: typeIndex, styleIndex: 0};
+}
+
+function getNextWritingModeStyle(curStyle)
+{
+  let typeIndex  = curStyle.typeIndex;
+  let styleIndex = curStyle.styleIndex + 1;
+  while (typeIndex < kWritingModes.length) {
+    if (styleIndex < kWritingModes[typeIndex].styles.length) {
+      return {typeIndex: typeIndex, styleIndex: styleIndex};
+    }
+    typeIndex++;
+    styleIndex = 0;
+  }
+  return false;
+}
+
+function doTestAutoDirScroll(aSettings, aAutoDirTrait, aCallback)
+{
+  // Go through all the writing-mode combinations for the scroll target and its
+  // root.
+
+  let firstStyle = getFirstWritingModeStyle();
+  if (!firstStyle) {
+    // The whole writing mode list is empty, no need to do any test for auto-dir
+    // scrolling. Go ahead with the subsequent tests.
+    SimpleTest.executeSoon(aCallback);
+    return;
+  }
+
+  // Begin with the first style for both the root and the scroll target.
+  // doTestAutoDirScroll2 will recursively call itself back for every
+  // style combination with getNextWritingModeStyle until all combinations have
+  // been enumerated, and then it will call SimpleTest.executeSoon(aCallback).
+  doTestAutoDirScroll2(aSettings, aAutoDirTrait,
+                       firstStyle, firstStyle,
+                       aCallback);
+}
+
+function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
+                              aStyleForRoot, aStyleForTarget,
+                              aCallback)
+{
+  const kStyleTypeForRoot   = kWritingModes[aStyleForRoot.typeIndex];
+  const kStyleTypeForTarget = kWritingModes[aStyleForTarget.typeIndex];
+
+  const kStyleForRoot   = kStyleTypeForRoot.styles[aStyleForRoot.styleIndex];
+  const kStyleForTarget = kStyleTypeForTarget.styles[aStyleForTarget.styleIndex];
+
+  const kIsRootRTL   = kStyleTypeForRoot.isRTL;
+  const kIsTargetRTL = kStyleTypeForTarget.isRTL;
+  // Just used to set the sign of |kOrigScrollTop|, not related to the auto-dir
+  // behaviour.
+  const kIsTargetBTT = kStyleTypeForTarget.isBTT;
+
+  const kOldStyleForRoot   = {};
+  const kOldStyleForTarget = {};
+
+  const kHonoursRoot = Boolean(aAutoDirTrait.honoursRoot);
+
+  const kNoScroll    = 0x00;
+  const kScrollUp    = 0x01;
+  const kScrollDown  = 0x02;
+  const kScrollLeft  = 0x04;
+  const kScrollRight = 0x08;
+
+  // The four constants indicate the expected result if the scroll direction is
+  // adjusted.
+  const kAdjustedForUp    = {};
+  const kAdjustedForDown  = {};
+  const kAdjustedForLeft  = {};
+  const kAdjustedForRight = {};
+  if (kHonoursRoot ? kIsRootRTL : kIsTargetRTL) {
+    kAdjustedForUp.result    = kScrollRight;
+    kAdjustedForUp.desc      = "right";
+    kAdjustedForDown.result  = kScrollLeft;
+    kAdjustedForDown.desc    = "left";
+    kAdjustedForLeft.result  = kScrollDown;
+    kAdjustedForLeft.desc    = "bottom";
+    kAdjustedForRight.result = kScrollUp;
+    kAdjustedForRight.desc   = "top";
+  } else {
+    kAdjustedForUp.result    = kScrollLeft;
+    kAdjustedForUp.desc      = "left";
+    kAdjustedForDown.result  = kScrollRight;
+    kAdjustedForDown.desc    = "right";
+    kAdjustedForLeft.result  = kScrollUp;
+    kAdjustedForLeft.desc    = "top";
+    kAdjustedForRight.result = kScrollDown;
+    kAdjustedForRight.desc   = "bottom";
+  }
+
+  const kTests = [
+    // Tests:   Test pixel scrolling towards four edges when the target
+    //          overflows in both the two directions.
+    // Results: All are unadjusted.
+    // Reason:  Auto-dir adjustment never applies to a target which overflows in
+    //          both the two directions.
+    { description: "auto-dir scroll to bottom by pixel scroll even if lineOrPageDelta is 0",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown,
+      prepare: function (cb) {
+                 // Static contents will not start from the topleft side in some
+                 // writing modes, for ease of coding, we simply absolutely
+                 // position the target to the topleft in every case.
+                 gScrollableElement.style.position = "absolute";
+                 gScrollableElement.style.top      = "10px";
+                 gScrollableElement.style.left     = "10px";
+                 SpecialPowers.pushPrefEnv({
+                   "set": [["mousewheel.autodir.enabled", true],
+                           ["mousewheel.autodir.honourroot", kHonoursRoot]]
+                 }, cb);
+               } },
+    { description: "auto-dir scroll to bottom by pixel scroll when lineOrPageDelta is 1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown },
+    { description: "auto-dir scroll to top by pixel scroll even if lineOrPageDelta is 0",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp },
+    { description: "auto-dir scroll to top by pixel scroll when lineOrPageDelta is -1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp },
+    { description: "auto-dir scroll to right by pixel scroll even if lineOrPageDelta is 0",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollRight },
+    { description: "auto-dir scroll to right by pixel scroll when lineOrPageDelta is 1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollRight },
+    { description: "auto-dir scroll to left by pixel scroll even if lineOrPageDelta is 0",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollLeft },
+    { description: "auto-dir scroll to left by pixel scroll when lineOrPageDelta is -1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollLeft },
+
+    // Tests:   Test diagonal pixel scrolling when the target overflows in both
+    //          the two directions.
+    // Results: All are unadjusted.
+    // Reason:  Auto-dir adjustment never applies to a target which overflows in
+    //          both the two directions, furthermore, it never applies to
+    //          diagonal scrolling.
+    { description: "auto-dir scroll to bottom-right by pixel scroll",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 8.0, deltaY: 8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown | kScrollRight },
+    { description: "auto-dir scroll to bottom-left by pixel scroll",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -8.0, deltaY: 8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown | kScrollLeft },
+    { description: "auto-dir scroll to top-left by pixel scroll",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -8.0, deltaY: -8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp | kScrollLeft },
+    { description: "auto-dir scroll to top-right by pixel scroll",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 8.0, deltaY: -8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp | kScrollRight },
+
+    // Tests:   Test line scrolling towards four edges when the target overflows
+    //          in both the two directions.
+    // Results: All are unadjusted.
+    // Reason:  Auto-dir adjustment never applies to a target which overflows in
+    //          both the two directions.
+    { description: "auto-dir scroll to bottom by line scroll even if lineOrPageDelta is 0",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown },
+    { description: "auto-dir scroll to bottom by line scroll when lineOrPageDelta is 1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown },
+    { description: "auto-dir scroll to top by line scroll even if lineOrPageDelta is 0",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp },
+    { description: "auto-dir scroll to top by line scroll when lineOrPageDelta is -1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp },
+    { description: "auto-dir scroll to right by line scroll even if lineOrPageDelta is 0",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollRight },
+    { description: "auto-dir scroll to right by line scroll when lineOrPageDelta is 1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollRight },
+    { description: "auto-dir scroll to left by line scroll even if lineOrPageDelta is 0",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollLeft },
+    { description: "auto-dir scroll to left by line scroll when lineOrPageDelta is -1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollLeft },
+
+    // Tests:   Test diagonal line scrolling when the target overflows in both
+    //          the two directions.
+    // Results: All are unadjusted.
+    // Reason:  Auto-dir adjustment never applies to a target which overflows in
+    //          both the two directions, furthermore, it never applies to
+    //          diagonal scrolling.
+    { description: "auto-dir scroll to bottom-right by line scroll",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown | kScrollRight },
+    { description: "auto-dir scroll to bottom-left by line scroll",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -0.5, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown | kScrollLeft },
+    { description: "auto-dir scroll to top-left by line scroll",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -0.5, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp | kScrollLeft },
+    { description: "auto-dir scroll to top-right by line scroll",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp | kScrollRight },
+
+    // Tests:   Test page scrolling towards four edges when the target overflows
+    //          in both the two directions.
+    // Results: All are unadjusted.
+    // Reason:  Auto-dir adjustment never applies to a target which overflows in
+    //          both the two directions.
+    { description: "auto-dir scroll to bottom by page scroll even if lineOrPageDelta is 0",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown },
+    { description: "auto-dir scroll to bottom by page scroll when lineOrPageDelta is 1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown },
+    { description: "auto-dir scroll to top by page scroll even if lineOrPageDelta is 0",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp },
+    { description: "auto-dir scroll to top by page scroll when lineOrPageDelta is -1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp },
+    { description: "auto-dir scroll to right by page scroll even if lineOrPageDelta is 0",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollRight },
+    { description: "auto-dir scroll to right by page scroll when lineOrPageDelta is 1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollRight },
+    { description: "auto-dir scroll to left by page scroll even if lineOrPageDelta is 0",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollLeft },
+    { description: "auto-dir scroll to left by page scroll when lineOrPageDelta is -1",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollLeft },
+
+    // Tests:   Test diagonal page scrolling when the target overflows in both
+    //          the two directions.
+    // Results: All are unadjusted.
+    // Reason:  Auto-dir adjustment never applies to a target which overflows in
+    //          both the two directions, furthermore, it never applies to
+    //          diagonal scrolling.
+    { description: "auto-dir scroll to bottom-right by page scroll",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.5, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown | kScrollRight },
+    { description: "auto-dir scroll to bottom-left by page scroll",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -0.5, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown | kScrollLeft },
+    { description: "auto-dir scroll to top-left by page scroll",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -0.5, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp | kScrollLeft },
+    { description: "auto-dir scroll to top-right by page scroll",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.5, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp | kScrollRight },
+
+    // The tests above in this function are all for testing a target with two
+    // scrollbars. All of them should not be adjustable.
+    // From here on, the tests below in this function are all for testing a
+    // target with only one scrollbar, either a vertical scrollbar or horizontal
+    // scrollbar. Some of them are adjustable.
+
+    // Tests:   Test pixel scrolling towards four edges when the target
+    //          overflows only in the horizontal direction.
+    // Results: Vertical wheel scrolls are adjusted to be horizontal whereas the
+    //          horizontal wheel scrolls are unadjusted.
+    // Reason:  Auto-dir adjustment applies to a target if the target overflows
+    //          in only one direction and the direction is orthogonal to the
+    //          wheel and deltaZ is zero.
+    { description: "auto-dir scroll to " + kAdjustedForDown.desc +
+                   "(originally bottom) by pixel scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForDown.result,
+      prepare: function (cb) {
+                 gScrollableElement.style.overflowX = "auto";
+                 gScrollableElement.style.overflowY = "hidden";
+                 cb();
+               } },
+    { description: "auto-dir scroll to " + kAdjustedForDown.desc +
+                   "(originally bottom) by pixel scroll when lineOrPageDelta is 1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForDown.result },
+    { description: "auto-dir scroll to " + kAdjustedForUp.desc +
+                   "(originally top) by pixel scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForUp.result },
+    { description: "auto-dir scroll to " + kAdjustedForUp.desc +
+                   "(originally top) by pixel scroll when lineOrPageDelta is -1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForUp.result },
+    { description: "auto-dir scroll to right by pixel scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollRight },
+    { description: "auto-dir scroll to right by pixel scroll when lineOrPageDelta is 1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollRight },
+    { description: "auto-dir scroll to left by pixel scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollLeft },
+    { description: "auto-dir scroll to left by pixel scroll when lineOrPageDelta is -1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollLeft },
+
+    // Tests:   Test pixel scrolling towards four edges when the target
+    //          overflows only in the vertical direction.
+    // Results: Horizontal wheel scrolls are adjusted to be vertical whereas the
+    //          vertical wheel scrolls are unadjusted.
+    // Reason:  Auto-dir adjustment applies to a target if the target overflows
+    //          in only one direction and the direction is orthogonal to the
+    //          wheel and deltaZ is zero.
+    { description: "auto-dir scroll to bottom by pixel scroll even if lineOrPageDelta is 0, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown,
+      prepare: function (cb) {
+                 gScrollableElement.style.overflowX = "hidden";
+                 gScrollableElement.style.overflowY = "auto";
+                 cb();
+               } },
+    { description: "auto-dir scroll to bottom by pixel scroll when lineOrPageDelta is 1, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown },
+    { description: "auto-dir scroll to top by pixel scroll even if lineOrPageDelta is 0, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp },
+    { description: "auto-dir scroll to top by pixel scroll when lineOrPageDelta is -1, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp },
+    { description: "auto-dir scroll to " + kAdjustedForRight.desc +
+                   "(originally right) by pixel scroll even if lineOrPageDelta is 0, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForRight.result },
+    { description: "auto-dir scroll to " + kAdjustedForRight.desc +
+                   "(originally right) by pixel scroll when lineOrPageDelta is 1, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForRight.result },
+    { description: "auto-dir scroll to " + kAdjustedForLeft.desc +
+                   "(originally left) by pixel scroll even if lineOrPageDelta is 0, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForLeft.result },
+    { description: "auto-dir scroll to " + kAdjustedForLeft.desc +
+                   "(originally left) by pixel scroll when lineOrPageDelta is -1, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForLeft.result },
+
+    // Tests:   Test line scrolling towards four edges when the target overflows
+    //          only in the horizontal direction.
+    // Results: Vertical wheel scrolls are adjusted to be horizontal whereas the
+    //          horizontal wheel scrolls are unadjusted.
+    // Reason:  Auto-dir adjustment applies to a target if the target overflows
+    //          in only one direction and the direction is orthogonal to the
+    //          wheel and deltaZ is zero.
+    { description: "auto-dir scroll to " + kAdjustedForDown.desc +
+                   "(originally bottom) by line scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForDown.result,
+      prepare: function (cb) {
+                 gScrollableElement.style.overflowX = "auto";
+                 gScrollableElement.style.overflowY = "hidden";
+                 cb();
+               } },
+    { description: "auto-dir scroll to " + kAdjustedForDown.desc +
+                   "(originally bottom) by line scroll when lineOrPageDelta is 1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForDown.result },
+    { description: "auto-dir scroll to " + kAdjustedForUp.desc +
+                   "(originally top) by line scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForUp.result },
+    { description: "auto-dir scroll to " + kAdjustedForUp.desc +
+                   "(originally top) by line scroll when lineOrPageDelta is -1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForUp.result },
+    { description: "auto-dir scroll to right by line scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollRight },
+    { description: "auto-dir scroll to right by line scroll when lineOrPageDelta is 1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollRight },
+    { description: "auto-dir scroll to left by line scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollLeft },
+    { description: "auto-dir scroll to left by line scroll when lineOrPageDelta is -1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollLeft },
+
+    // Tests:   Test line scrolling towards four edges when the target overflows
+    //          only in the vertical direction.
+    // Results: Horizontal wheel scrolls are adjusted to be vertical whereas the
+    //          vertical wheel scrolls are unadjusted.
+    // Reason:  Auto-dir adjustment applies to a target if the target overflows
+    //          in only one direction and the direction is orthogonal to the
+    //          wheel and deltaZ is zero.
+    { description: "auto-dir scroll to bottom by line scroll even if lineOrPageDelta is 0, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown,
+      prepare: function (cb) {
+                 gScrollableElement.style.overflowX = "hidden";
+                 gScrollableElement.style.overflowY = "auto";
+                 cb();
+               } },
+    { description: "auto-dir scroll to bottom by line scroll when lineOrPageDelta is 1, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown },
+    { description: "auto-dir scroll to top by line scroll even if lineOrPageDelta is 0, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp },
+    { description: "auto-dir scroll to top by line scroll when lineOrPageDelta is -1, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.0, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp },
+    { description: "auto-dir scroll to " + kAdjustedForRight.desc +
+                   "(originally right) by line scroll even if lineOrPageDelta is 0, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForRight.result },
+    { description: "auto-dir scroll to " + kAdjustedForRight.desc +
+                   "(originally right) by line scroll when lineOrPageDelta is 1, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: 0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForRight.result },
+    { description: "auto-dir scroll to " + kAdjustedForLeft.desc +
+                   "(originally left) by line scroll even if lineOrPageDelta is 0, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForLeft.result },
+    { description: "auto-dir scroll to " + kAdjustedForLeft.desc +
+                   "(originally left) by line scroll when lineOrPageDelta is -1, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
+               deltaX: -0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForLeft.result },
+
+    // Tests:   Test page scrolling towards four edges when the target overflows
+    //          only in the horizontal direction.
+    // Results: Vertical wheel scrolls are adjusted to be horizontal whereas the
+    //          horizontal wheel scrolls are unadjusted.
+    // Reason:  Auto-dir adjustment applies to a target if the target overflows
+    //          in only one direction and the direction is orthogonal to the
+    //          wheel and deltaZ is zero.
+    { description: "auto-dir scroll to " + kAdjustedForDown.desc +
+                   "(originally bottom) by page scroll when lineOrPageDelta is 1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForDown.result,
+      prepare: function (cb) {
+                 gScrollableElement.style.overflowX = "auto";
+                 gScrollableElement.style.overflowY = "hidden";
+                 cb();
+               } },
+    { description: "auto-dir scroll to " + kAdjustedForDown.desc +
+                   "(originally bottom) by page scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForDown.result },
+    { description: "auto-dir scroll to " + kAdjustedForUp.desc +
+                   "(originally top) by page scroll when lineOrPageDelta is -1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForUp.result },
+    { description: "auto-dir scroll to " + kAdjustedForUp.desc +
+                   "(originally top) by page scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForUp.result },
+    { description: "auto-dir scroll to right by page scroll when lineOrPageDelta is 1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollRight },
+    { description: "auto-dir scroll to right by page scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollRight },
+    { description: "auto-dir scroll to left by page scroll when lineOrPageDelta is -1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollLeft },
+    { description: "auto-dir scroll to left by page scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollLeft },
+
+    // Tests:   Test page scrolling towards four edges when the target overflows
+    //          only in the vertical direction.
+    // Results: Horizontal wheel scrolls are adjusted to be vertical whereas the
+    //          vertical wheel scrolls are unadjusted.
+    // Reason:  Auto-dir adjustment applies to a target if the target overflows
+    //          in only one direction and the direction is orthogonal to the
+    //          wheel and deltaZ is zero.
+    { description: "auto-dir scroll to bottom by page scroll when lineOrPageDelta is 1, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown,
+      prepare: function (cb) {
+                 gScrollableElement.style.overflowX = "hidden";
+                 gScrollableElement.style.overflowY = "auto";
+                 cb();
+               } },
+    { description: "auto-dir scroll to bottom by page scroll even if lineOrPageDelta is 0, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: 0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollDown },
+    { description: "auto-dir scroll to top by page scroll when lineOrPageDelta is -1, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp },
+    { description: "auto-dir scroll to top by page scroll even if lineOrPageDelta is 0, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.0, deltaY: -0.5, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollUp },
+    { description: "auto-dir scroll to " + kAdjustedForRight.desc +
+                   "(originally right) by page scroll when lineOrPageDelta is 1, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForRight.result },
+    { description: "auto-dir scroll to " + kAdjustedForRight.desc +
+                   "(originally right) by page scroll even if lineOrPageDelta is 0, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: 0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForRight.result },
+    { description: "auto-dir scroll to " + kAdjustedForLeft.desc +
+                   "(originally left) by page scroll when lineOrPageDelta is -1, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForLeft.result },
+    { description: "auto-dir scroll to " + kAdjustedForLeft.desc +
+                   "(originally left) by page scroll even if lineOrPageDelta is 0, " +
+                   "no horizontal scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+               deltaX: -0.5, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForLeft.result,
+      cleanup: function (cb) {
+                 gScrollableElement.style.position = "static";
+                 gScrollableElement.style.top = "auto";
+                 gScrollableElement.style.left = "auto";
+                 gScrollableElement.style.overflow = "auto";
+                 Object.assign(document.body.style, kOldStyleForRoot);
+                 Object.assign(gScrollableElement.style, kOldStyleForTarget);
+                 SpecialPowers.pushPrefEnv({"set":
+                                               [["mousewheel.autodir.enabled",
+                                                 false]]},
+                                            cb);
+               } },
+  ];
+
+  let styleDescForRoot = "";
+  let styleDescForTarget = "";
+  Object.keys(kStyleForRoot).forEach(function(property)
+  {
+    kOldStyleForRoot[property] = document.body.style[property];
+    document.body.style[property] = kStyleForRoot[property];
+    if ("" !== styleDescForRoot) {
+      styleDescForRoot += " ";
+    }
+    styleDescForRoot += property + ": " + kStyleForRoot[property] + ";";
+  });
+  Object.keys(kStyleForTarget).forEach(function(property)
+  {
+    kOldStyleForTarget[property] = gScrollableElement.style[property];
+    gScrollableElement.style[property] = kStyleForTarget[property];
+    if ("" !== styleDescForTarget) {
+      styleDescForTarget += " ";
+    }
+    styleDescForTarget += property + ": " +
+                            kStyleForTarget[property] + ";";
+  });
+
+  let description;
+  let currentTestIndex = -1;
+  let isXReverted = aSettings.deltaMultiplierX < 0;
+  let isYReverted = aSettings.deltaMultiplierY < 0;
+
+  // We are doing a "trick" here:
+  // If the `kHonoursRoot` is true and the scroll target and the root's contents
+  // are both LTR or both RTL, we can safely skip these tests, because the same
+  // behavior is tested when the `kHonoursRoot` is false.
+  if (kHonoursRoot && kIsRootRTL === kIsTargetRTL) {
+    currentTestIndex = kTests.length;
+  }
+
+  const kOrigScrollLeft = kIsTargetRTL ? -1000 : 1000;
+  const kOrigScrollTop = kIsTargetBTT ? -1000 : 1000;
+
+  function doNextTest()
+  {
+    if (++currentTestIndex >= kTests.length) {
+      // The tests for the current writing mode combination have been finished.
+      // Continue the tests for the next writing mode combination, if any.
+      let nextStyleForRoot;
+      let nextStyleForTarget;
+      nextStyleForTarget = getNextWritingModeStyle(aStyleForTarget);
+      if (nextStyleForTarget) {
+        nextStyleForRoot = aStyleForRoot;
+      } else {
+        nextStyleForRoot = getNextWritingModeStyle(aStyleForRoot);
+        if (!nextStyleForRoot) {
+          // All writing mode combinations have been enumerated, so stop
+          // recursively calling doTestAutoDirScroll2, and go ahead with the
+          // subsequent tests.
+          SimpleTest.executeSoon(aCallback);
+          return;
+        }
+        nextStyleForTarget = getFirstWritingModeStyle();
+      }
+      doTestAutoDirScroll2(aSettings, aAutoDirTrait,
+                           nextStyleForRoot, nextStyleForTarget,
+                           aCallback);
+      return;
+    }
+
+    gScrollableElement.scrollTop = kOrigScrollTop;
+    gScrollableElement.scrollLeft = kOrigScrollLeft;
+
+    var currentTest = kTests[currentTestIndex];
+    description = "doTestAutoDirScroll(aSettings=" + aSettings.description + ", ";
+    if (kHonoursRoot) {
+      description += "{honoursRoot: true}), ";
+    } else {
+      description += "{honoursRoot: false}), ";
+    }
+    description += "root = " + styleDescForRoot + " ";
+    description += "target = " + styleDescForTarget + " ";
+    if (currentTest.adjusted) {
+      description += "adjusted ";
+    } else {
+      description += "unadjusted ";
+    }
+    description += currentTest.description + ": ";
+    if (currentTest.prepare) {
+      currentTest.prepare(doTestCurrentScroll);
+    } else {
+      doTestCurrentScroll();
+    }
+  }
+
+  function doTestCurrentScroll() {
+    var currentTest = kTests[currentTestIndex];
+    sendWheelAndWait(100, 100, currentTest.event, function () {
+      if (currentTest.expected == kNoScroll) {
+        is(gScrollableElement.scrollTop, kOrigScrollTop, description + "scrolled vertical");
+        is(gScrollableElement.scrollLeft, kOrigScrollLeft, description + "scrolled horizontal");
+      } else {
+        // If auto-dir adjustment occurs, temporarily swap |isYReverted| and
+        // |isXReverted|.
+        if (currentTest.adjusted) {
+          [isYReverted, isXReverted] = [isXReverted, isYReverted];
+        }
+        let scrollUp = !isYReverted ? (currentTest.expected & kScrollUp) :
+                                      (currentTest.expected & kScrollDown);
+        let scrollDown = !isYReverted ? (currentTest.expected & kScrollDown) :
+                                        (currentTest.expected & kScrollUp);
+        if (scrollUp) {
+          ok(gScrollableElement.scrollTop < kOrigScrollTop,
+             description + "not scrolled up, got " + gScrollableElement.scrollTop);
+        } else if (scrollDown) {
+          ok(gScrollableElement.scrollTop > kOrigScrollTop,
+             description + "not scrolled down, got " + gScrollableElement.scrollTop);
+        } else {
+          is(gScrollableElement.scrollTop, kOrigScrollTop,
+             description + "scrolled vertical");
+        }
+        var scrollLeft = !isXReverted ? (currentTest.expected & kScrollLeft) :
+                                        (currentTest.expected & kScrollRight);
+        var scrollRight = !isXReverted ? (currentTest.expected & kScrollRight) :
+                                         (currentTest.expected & kScrollLeft);
+        if (scrollLeft) {
+          ok(gScrollableElement.scrollLeft < kOrigScrollLeft,
+             description + "not scrolled to left, got " + gScrollableElement.scrollLeft);
+        } else if (scrollRight) {
+          ok(gScrollableElement.scrollLeft > kOrigScrollLeft,
+             description + "not scrolled to right, got " + gScrollableElement.scrollLeft);
+        } else {
+          is(gScrollableElement.scrollLeft, kOrigScrollLeft,
+             description + "scrolled horizontal");
+        }
+        // |isYReverted| and |isXReverted| have been temporarily swaped for
+        // auto-dir adjustment, restore them.
+        if (currentTest.adjusted) {
+          [isYReverted, isXReverted] = [isXReverted, isYReverted];
         }
       }
       if (currentTest.cleanup) {
@@ -1488,8 +2728,7 @@ function doTestZoom(aSettings, aCallback)
   var isXReverted = (aSettings.deltaMultiplierX < 0);
   var isYReverted = (aSettings.deltaMultiplierY < 0);
 
-  function doNextTest()
-  {
+  function doNextTest() {
     if (++currentTestIndex >= kTests.length) {
       SimpleTest.executeSoon(aCallback);
       return;
@@ -2196,20 +3435,26 @@ function runTests2()
       deltaMultiplierX: -1.0, deltaMultiplierY:  1.0, deltaMultiplierZ:  1.0 },
     { description: "deltaY is reverted",
       deltaMultiplierX:  1.0, deltaMultiplierY: -1.0, deltaMultiplierZ:  1.0 },
-    { description: "deltaZ is reverted",
-      deltaMultiplierX:  1.0, deltaMultiplierY:  1.0, deltaMultiplierZ: -1.0 },
+    // Unless you really don't care a snap on time-consuming testing or a strict
+    // criteria is required for testing, it is strongly recommeneded that you
+    // comment the unrealistic case out.
+    //{ description: "deltaZ is reverted",
+    //  deltaMultiplierX:  1.0, deltaMultiplierY:  1.0, deltaMultiplierZ: -1.0 },*/
     { description: "deltaX is 2.0",
       deltaMultiplierX:  2.0, deltaMultiplierY:  1.0, deltaMultiplierZ:  1.0 },
     { description: "deltaY is 2.0",
       deltaMultiplierX:  1.0, deltaMultiplierY:  2.0, deltaMultiplierZ:  1.0 },
-    { description: "deltaZ is 2.0",
-      deltaMultiplierX:  1.0, deltaMultiplierY:  1.0, deltaMultiplierZ:  2.0 },
-    { description: "deltaX is -2.0",
-      deltaMultiplierX: -2.0, deltaMultiplierY:  1.0, deltaMultiplierZ:  1.0 },
-    { description: "deltaY is -2.0",
-      deltaMultiplierX:  1.0, deltaMultiplierY: -2.0, deltaMultiplierZ:  1.0 },
-    { description: "deltaZ is -2.0",
-      deltaMultiplierX:  1.0, deltaMultiplierY:  1.0, deltaMultiplierZ: -2.0 },
+    // Unless you really don't care a snap on time-consuming testing or a strict
+    // criteria is required for testing, it is strongly recommeneded that you
+    // comment the unrealistic case out.
+    //{ description: "deltaZ is 2.0",
+    //  deltaMultiplierX:  1.0, deltaMultiplierY:  1.0, deltaMultiplierZ:  2.0 },
+    //{ description: "deltaX is -2.0",
+    //  deltaMultiplierX: -2.0, deltaMultiplierY:  1.0, deltaMultiplierZ:  1.0 },
+    //{ description: "deltaY is -2.0",
+    //  deltaMultiplierX:  1.0, deltaMultiplierY: -2.0, deltaMultiplierZ:  1.0 },
+    //{ description: "deltaZ is -2.0",
+    //  deltaMultiplierX:  1.0, deltaMultiplierY:  1.0, deltaMultiplierZ: -2.0 },
   ];
 
   var index = 0;
@@ -2217,21 +3462,25 @@ function runTests2()
   function doTest() {
     setDeltaMultiplierSettings(kSettings[index], function () {
       doTestScroll(kSettings[index], function () {
-        doTestHorizontalizedScroll(kSettings[index], function() {
-          doTestZoom(kSettings[index], function() {
-            if (++index == kSettings.length) {
-              setDeltaMultiplierSettings(kSettings[0], function() {
-                doTestZoomedScroll(function() {
-                  doTestWholeScroll(function() {
-                    doTestActionOverride(function() {
-                      finishTests();
+        doTestAutoDirScroll(kSettings[index], {honoursRoot: false}, function () {
+          doTestAutoDirScroll(kSettings[index], {honoursRoot: true}, function () {
+            doTestHorizontalizedScroll(kSettings[index], function() {
+              doTestZoom(kSettings[index], function() {
+                if (++index == kSettings.length) {
+                  setDeltaMultiplierSettings(kSettings[0], function() {
+                    doTestZoomedScroll(function() {
+                      doTestWholeScroll(function() {
+                        doTestActionOverride(function() {
+                          finishTests();
+                        });
+                      });
                     });
                   });
-                });
+                } else {
+                  doTest();
+                }
               });
-            } else {
-              doTest();
-            }
+            });
           });
         });
       });
