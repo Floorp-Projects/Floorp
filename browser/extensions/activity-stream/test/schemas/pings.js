@@ -76,10 +76,12 @@ export const UserEventAction = Joi.object().keys({
       "BOOKMARK_DELETE",
       "BOOKMARK_ADD",
       "PIN",
+      "PREVIEW_REQUEST",
       "UNPIN",
       "SAVE_TO_POCKET",
       "SECTION_MENU_MOVE_UP",
       "SECTION_MENU_MOVE_DOWN",
+      "SCREENSHOT_REQUEST",
       "SECTION_MENU_REMOVE",
       "SECTION_MENU_COLLAPSE",
       "SECTION_MENU_EXPAND",
@@ -170,6 +172,7 @@ export const SessionPing = Joi.object().keys(Object.assign({}, baseKeys, {
 
     // Information about the quality of TopSites images and icons.
     topsites_icon_stats: Joi.object().keys({
+      custom_screenshot: Joi.number(),
       rich_icon: Joi.number(),
       screenshot: Joi.number(),
       screenshot_with_icon: Joi.number(),
