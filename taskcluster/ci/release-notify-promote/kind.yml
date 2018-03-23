@@ -29,39 +29,21 @@ job-defaults:
          - -c
          - echo "Dummy task"
    notifications:
-      completed:
-         subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is in the candidates directory"
-         message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is in the candidates directory"
-         plugins: ["ses"]
-         emails:
-            by-project:
-               mozilla-beta: ["release-signoff@mozilla.org"]
-               mozilla-release: ["release-signoff@mozilla.org"]
-               try: ["{task_def[metadata][owner]}"]
-               maple: ["release+tcstaging@mozilla.com"]
-               default: []
-   routes:
-      - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.email-{channel}
-      - index.releases.v1.{branch}.latest.{product}.latest.email-{channel}
-   index:
-      type: release
-      channel:
+      subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is in the candidates directory"
+      message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} is in the candidates directory"
+      emails:
          by-project:
-            mozilla-beta: beta-candidates
-            mozilla-release: release-candidates
-            maple: maple-candidates
-            default: unknown
+            mozilla-beta: ["release-signoff@mozilla.org"]
+            mozilla-release: ["release-signoff@mozilla.org"]
+            try: ["{task_def[metadata][owner]}"]
+            maple: ["release+tcstaging@mozilla.com"]
+            birch: ["release+tcstaging@mozilla.com"]
+            default: []
 
 jobs:
    fennec:
       shipping-product: fennec
-      index:
-         product: fennec
    firefox:
       shipping-product: firefox
-      index:
-         product: firefox
    devedition:
       shipping-product: devedition
-      index:
-         product: devedition
