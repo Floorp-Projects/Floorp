@@ -17,3 +17,12 @@ exports.reloadInspectorAndLog = async function(label, toolbox) {
 
   await reloadPageAndLog(label + ".inspector", toolbox, onReload);
 };
+
+/*
+ * Helper to select a node front and wait for the ruleview to be refreshed.
+ */
+exports.selectNodeFront = function(inspector, nodeFront) {
+  let onRuleViewRefreshed = inspector.once("rule-view-refreshed");
+  inspector.selection.setNodeFront(nodeFront);
+  return onRuleViewRefreshed;
+};

@@ -339,14 +339,6 @@ var StarUI = {
   }
 };
 
-// Checks if an element is visible without flushing layout changes.
-function isVisible(element) {
-  let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindowUtils);
-  let bounds = windowUtils.getBoundsWithoutFlushing(element);
-  return bounds.height > 0 && bounds.width > 0;
-}
-
 var PlacesCommandHook = {
   /**
    * Adds a bookmark to the page loaded in the given browser.
@@ -1572,69 +1564,6 @@ var BookmarkingUI = {
     this._initMobileBookmarks(document.getElementById("menu_mobileBookmarks"));
   },
 
-  _showBookmarkedNotification: function BUI_showBookmarkedNotification() {
-    function getCenteringTransformForRects(rectToPosition, referenceRect) {
-      let topDiff = referenceRect.top - rectToPosition.top;
-      let leftDiff = referenceRect.left - rectToPosition.left;
-      let heightDiff = referenceRect.height - rectToPosition.height;
-      let widthDiff = referenceRect.width - rectToPosition.width;
-      return [(leftDiff + .5 * widthDiff) + "px", (topDiff + .5 * heightDiff) + "px"];
-    }
-
-    if (this._notificationTimeout) {
-      clearTimeout(this._notificationTimeout);
-    }
-
-    if (this.notifier.style.transform == "") {
-      // Get all the relevant nodes and computed style objects
-      let dropmarker = document.getAnonymousElementByAttribute(this.button, "anonid", "dropmarker");
-      let dropmarkerIcon = document.getAnonymousElementByAttribute(dropmarker, "class", "dropmarker-icon");
-      let dropmarkerStyle = getComputedStyle(dropmarkerIcon);
-
-      // Check for RTL and get bounds
-      let isRTL = getComputedStyle(this.button).direction == "rtl";
-      let buttonRect = this.button.getBoundingClientRect();
-      let notifierRect = this.notifier.getBoundingClientRect();
-      let dropmarkerRect = dropmarkerIcon.getBoundingClientRect();
-      let dropmarkerNotifierRect = this.dropmarkerNotifier.getBoundingClientRect();
-
-      // Compute, but do not set, transform for star icon
-      let [translateX, translateY] = getCenteringTransformForRects(notifierRect, buttonRect);
-      let starIconTransform = "translate(" + translateX + ", " + translateY + ")";
-      if (isRTL) {
-        starIconTransform += " scaleX(-1)";
-      }
-
-      // Compute, but do not set, transform for dropmarker
-      [translateX, translateY] = getCenteringTransformForRects(dropmarkerNotifierRect, dropmarkerRect);
-      let dropmarkerTransform = "translate(" + translateX + ", " + translateY + ")";
-
-      // Do all layout invalidation in one go:
-      this.notifier.style.transform = starIconTransform;
-      this.dropmarkerNotifier.style.transform = dropmarkerTransform;
-
-      let dropmarkerAnimationNode = this.dropmarkerNotifier.firstChild;
-      dropmarkerAnimationNode.style.listStyleImage = dropmarkerStyle.listStyleImage;
-      dropmarkerAnimationNode.style.fill = dropmarkerStyle.fill;
-    }
-
-    let isInOverflowPanel = this.button.getAttribute("overflowedItem") == "true";
-    if (!isInOverflowPanel) {
-      this.notifier.setAttribute("notification", "finish");
-      this.button.setAttribute("notification", "finish");
-      this.dropmarkerNotifier.setAttribute("notification", "finish");
-    }
-
-    this._notificationTimeout = setTimeout( () => {
-      this.notifier.removeAttribute("notification");
-      this.dropmarkerNotifier.removeAttribute("notification");
-      this.button.removeAttribute("notification");
-
-      this.dropmarkerNotifier.style.transform = "";
-      this.notifier.style.transform = "";
-    }, 1000);
-  },
-
   showSubView(anchor) {
     this._showSubView(null, anchor);
   },
@@ -1727,17 +1656,6 @@ var BookmarkingUI = {
     this._panelMenuView.uninit();
     delete this._panelMenuView;
     aEvent.target.removeEventListener("ViewHiding", this);
-  },
-
-  onPanelMenuViewCommand: function BUI_onPanelMenuViewCommand(aEvent) {
-    let target = aEvent.originalTarget;
-    if (!target._placesNode)
-      return;
-    if (PlacesUtils.nodeIsContainer(target._placesNode))
-      PlacesCommandHook.showPlacesOrganizer([ "BookmarksMenu", target._placesNode.itemId ]);
-    else
-      PlacesUIUtils.openNodeWithEvent(target._placesNode, aEvent);
-    PanelUI.hide();
   },
 
   showBookmarkingTools(triggerNode) {

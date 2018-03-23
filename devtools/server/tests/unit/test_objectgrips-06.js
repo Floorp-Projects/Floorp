@@ -57,10 +57,11 @@ function test_object_grip() {
     });
   });
 
+  /* eslint-disable no-undef */
   gDebuggee.eval("(" + function() {
     let obj1 = {};
     Object.seal(obj1);
     stopMe(obj1, {});
   } + "())");
+  /* eslint-enable no-undef */
 }
-

@@ -230,9 +230,10 @@ public:
    * @return                The new <br> node.  If failed to create new <br>
    *                        node, returns nullptr.
    */
+  template<typename PT, typename CT>
   already_AddRefed<dom::Element>
   InsertBreak(Selection& aSelection,
-              const EditorRawDOMPoint& aPointToInsert,
+              const EditorDOMPointBase<PT, CT>& aPointToInsert,
               nsIEditor::EDirection aSelect);
 
   /**
@@ -256,9 +257,10 @@ public:
    *                        does nothing during composition, returns NS_OK.
    *                        Otherwise, an error code.
    */
+  template<typename PT, typename CT>
   nsresult InsertText(nsIDocument& aDocument,
                       const nsAString& aStringToInsert,
-                      const EditorRawDOMPoint& aPointToInsert,
+                      const EditorDOMPointBase<PT, CT>& aPointToInsert,
                       EditorRawDOMPoint* aPointAfterInsertedString = nullptr);
 
   // DeleteWSBackward deletes a single visible piece of ws before the ws
@@ -381,8 +383,9 @@ protected:
    * When aEndPoint is in a text node, removes the text data before the point.
    * Removes any nodes between them.
    */
-  nsresult DeleteRange(const EditorRawDOMPoint& aStartPoint,
-                       const EditorRawDOMPoint& aEndPoint);
+  template<typename PT1, typename CT1, typename PT2, typename CT2>
+  nsresult DeleteRange(const EditorDOMPointBase<PT1, CT1>& aStartPoint,
+                       const EditorDOMPointBase<PT2, CT2>& aEndPoint);
 
   /**
    * GetNextCharPoint() returns next character's point of aPoint.  If there is
@@ -486,8 +489,10 @@ protected:
    * @param aPoint      Current insertion point.  Its previous character is
    *                    unnecessary NBSP will be checked.
    */
-  nsresult ReplacePreviousNBSPIfUnncessary(WSFragment* aRun,
-                                           const EditorRawDOMPoint& aPoint);
+  template<typename PT, typename CT>
+  nsresult
+  ReplacePreviousNBSPIfUnncessary(WSFragment* aRun,
+                                  const EditorDOMPointBase<PT, CT>& aPoint);
 
   nsresult CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode,
                             int32_t aOffset);

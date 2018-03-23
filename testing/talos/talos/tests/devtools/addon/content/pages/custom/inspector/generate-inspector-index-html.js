@@ -53,6 +53,22 @@ for (i = 0; i < CSS_RULES_COUNT; i++) {
     margin: 20px;
   }`;
 }
+let expandManyChildren = new Array(100).join("  <div attr='my-attr'>content</div>\n");
+
+let maxBalancedDepth = 8;
+function createBalancedMarkup(level = 0) {
+  let tab = new Array(level + 1).join("  ");
+  if (level < maxBalancedDepth) {
+    let child = createBalancedMarkup(level + 1);
+    return `${tab}<div>
+${child}
+${child}
+${tab}</div>`;
+  } else {
+    return tab + "<div class='leaf'>leaf</div>";
+  }
+}
+let expandBalanced = createBalancedMarkup();
 
 console.log(`
 <!DOCTYPE html>
@@ -87,6 +103,16 @@ console.log(`
 <!-- Elements for custom.inspector.manyrules tests -->
 <div class="no-css-rules"></div>
 <div class="many-css-rules"></div>
+<div class="expand-many-children">
+`);
+console.log(expandManyChildren);
+console.log(`
+</div>
+<div class="expand-balanced">
+`);
+console.log(expandBalanced);
+console.log(`
+</div>
 </body>
 </html>`);
 

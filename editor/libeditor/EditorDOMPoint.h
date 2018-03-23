@@ -629,14 +629,6 @@ public:
     return mChild->IsHTMLElement(nsGkAtoms::br);
   }
 
-  // Convenience methods for switching between the two types
-  // of EditorDOMPointBase.
-  EditorDOMPointBase<nsINode*, nsIContent*>
-  AsRaw() const
-  {
-    return EditorRawDOMPoint(*this);
-  }
-
   template<typename A, typename B>
   EditorDOMPointBase& operator=(const RangeBoundaryBase<A,B>& aOther)
   {

@@ -28,6 +28,16 @@ using namespace dom;
  * { {startnode, startoffset} , {endnode, endoffset} } tuples.  Can't store
  * ranges since dom gravity will possibly change the ranges.
  ******************************************************************************/
+
+template nsresult
+RangeUpdater::SelAdjCreateNode(const EditorDOMPoint& aPoint);
+template nsresult
+RangeUpdater::SelAdjCreateNode(const EditorRawDOMPoint& aPoint);
+template nsresult
+RangeUpdater::SelAdjInsertNode(const EditorDOMPoint& aPoint);
+template nsresult
+RangeUpdater::SelAdjInsertNode(const EditorRawDOMPoint& aPoint);
+
 SelectionState::SelectionState()
 {
 }
@@ -211,8 +221,9 @@ RangeUpdater::DropSelectionState(SelectionState& aSelState)
 
 // gravity methods:
 
+template<typename PT, typename CT>
 nsresult
-RangeUpdater::SelAdjCreateNode(const EditorRawDOMPoint& aPoint)
+RangeUpdater::SelAdjCreateNode(const EditorDOMPointBase<PT, CT>& aPoint)
 {
   if (mLock) {
     // lock set by Will/DidReplaceParent, etc...
@@ -243,8 +254,9 @@ RangeUpdater::SelAdjCreateNode(const EditorRawDOMPoint& aPoint)
   return NS_OK;
 }
 
+template<typename PT, typename CT>
 nsresult
-RangeUpdater::SelAdjInsertNode(const EditorRawDOMPoint& aPoint)
+RangeUpdater::SelAdjInsertNode(const EditorDOMPointBase<PT, CT>& aPoint)
 {
   return SelAdjCreateNode(aPoint);
 }

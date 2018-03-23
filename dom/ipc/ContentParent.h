@@ -750,7 +750,7 @@ private:
   // Returns false if the process fails to start.
   bool LaunchSubprocess(hal::ProcessPriority aInitialPriority = hal::PROCESS_PRIORITY_FOREGROUND);
 
-  // Common initialization after sub process launch or adoption.
+  // Common initialization after sub process launch.
   void InitInternal(ProcessPriority aPriority);
 
   virtual ~ContentParent();

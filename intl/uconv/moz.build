@@ -15,7 +15,8 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'uconv'
 
 EXPORTS += [
-	'nsUConvCID.h',
+    'nsConverterInputStream.h',
+    'nsUConvCID.h',
 ]
 
 UNIFIED_SOURCES += [

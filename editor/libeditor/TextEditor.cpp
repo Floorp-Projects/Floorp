@@ -63,6 +63,13 @@ namespace mozilla {
 
 using namespace dom;
 
+template already_AddRefed<Element>
+TextEditor::CreateBR(const EditorDOMPoint& aPointToInsert,
+                     EDirection aSelect);
+template already_AddRefed<Element>
+TextEditor::CreateBR(const EditorRawDOMPoint& aPointToInsert,
+                     EDirection aSelect);
+
 TextEditor::TextEditor()
   : mWrapColumn(0)
   , mMaxTextLength(-1)
@@ -408,8 +415,9 @@ TextEditor::TypedText(const nsAString& aString, ETypingAction aAction)
   }
 }
 
+template<typename PT, typename CT>
 already_AddRefed<Element>
-TextEditor::CreateBR(const EditorRawDOMPoint& aPointToInsert,
+TextEditor::CreateBR(const EditorDOMPointBase<PT, CT>& aPointToInsert,
                      EDirection aSelect /* = eNone */)
 {
   RefPtr<Selection> selection = GetSelection();
@@ -420,9 +428,10 @@ TextEditor::CreateBR(const EditorRawDOMPoint& aPointToInsert,
   return CreateBRImpl(*selection, aPointToInsert, aSelect);
 }
 
+template<typename PT, typename CT>
 already_AddRefed<Element>
 TextEditor::CreateBRImpl(Selection& aSelection,
-                         const EditorRawDOMPoint& aPointToInsert,
+                         const EditorDOMPointBase<PT, CT>& aPointToInsert,
                          EDirection aSelect)
 {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
@@ -462,7 +471,7 @@ TextEditor::CreateBRImpl(Selection& aSelection,
       pointInContainer.Set(aPointToInsert.GetContainer());
     }
     // Create a <br> node.
-    newBRElement = CreateNode(nsGkAtoms::br, pointInContainer.AsRaw());
+    newBRElement = CreateNode(nsGkAtoms::br, pointInContainer);
     if (NS_WARN_IF(!newBRElement)) {
       return nullptr;
     }
