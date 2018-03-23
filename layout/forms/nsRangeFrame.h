@@ -183,7 +183,7 @@ private:
   nsCOMPtr<Element> mThumbDiv;
 
   /**
-   * Cached style context for -moz-focus-outer CSS pseudo-element style.
+   * Cached ComputedStyle for -moz-focus-outer CSS pseudo-element style.
    */
   RefPtr<ComputedStyle> mOuterFocusStyle;
 

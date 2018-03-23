@@ -800,7 +800,7 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
 {
   nsMargin border = aStyleBorder.GetComputedBorder();
 
-  // Get our style context's color struct.
+  // Get our ComputedStyle's color struct.
   const nsStyleColor* ourColor = aComputedStyle->StyleColor();
 
   // In NavQuirks mode we want to use the parent's context as a starting point
@@ -903,8 +903,8 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
   PrintAsStringNewline("++ PaintBorder");
 
   // Check to see if we have an appearance defined.  If so, we let the theme
-  // renderer draw the border.  DO not get the data from aForFrame, since the passed in style context
-  // may be different!  Always use |aComputedStyle|!
+  // renderer draw the border.  DO not get the data from aForFrame, since the
+  // passed in ComputedStyle may be different!  Always use |aComputedStyle|!
   const nsStyleDisplay* displayData = aComputedStyle->StyleDisplay();
   if (displayData->mAppearance) {
     nsITheme *theme = aPresContext->GetTheme();
@@ -1051,7 +1051,7 @@ nsCSSRendering::CreateBorderRendererForOutline(nsPresContext* aPresContext,
 {
   nscoord             twipsRadii[8];
 
-  // Get our style context's color struct.
+  // Get our ComputedStyle's color struct.
   const nsStyleOutline* ourOutline = aComputedStyle->StyleOutline();
 
   if (!ourOutline->ShouldPaintOutline()) {
@@ -1224,7 +1224,7 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
   // should not be used.  Therefore, we provide a value that will
   // be blatantly wrong if it ever does get used.  (If this becomes
   // something that CSS can style, this function will then have access
-  // to a style context and can use the same logic that PaintBorder
+  // to a ComputedStyle and can use the same logic that PaintBorder
   // and PaintOutline do.)
   //
   // WebRender layers-free mode don't use PaintFocus function. Just assign
@@ -1408,7 +1408,7 @@ nsCSSRendering::FindBackgroundStyleFrame(nsIFrame* aForFrame)
  *    and for SGML-based HTML documents only.
  *
  * |FindBackground| returns true if a background should be painted, and
- * the resulting style context to use for the background information
+ * the resulting ComputedStyle to use for the background information
  * will be filled in to |aBackground|.
  */
 ComputedStyle*

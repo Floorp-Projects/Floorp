@@ -543,7 +543,7 @@ Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
     return true;
   }
 
-  // Get the computed -moz-binding directly from the style context
+  // Get the computed -moz-binding directly from the ComputedStyle
   RefPtr<ComputedStyle> sc =
     nsComputedDOMStyle::GetComputedStyleNoFlush(this, nullptr);
   NS_ENSURE_TRUE(sc, false);
@@ -581,7 +581,7 @@ Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
     return obj;
   }
 
-  // Make sure the style context goes away _before_ we load the binding
+  // Make sure the ComputedStyle goes away _before_ we load the binding
   // since that can destroy the relevant presshell.
 
   {

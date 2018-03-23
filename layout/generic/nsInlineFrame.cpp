@@ -360,9 +360,9 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
         const nsFrameList::Slice& newFrames =
           mFrames.InsertFrames(this, nullptr, *prevOverflowFrames);
         // If our prev in flow was under the first continuation of a first-line
-        // frame then we need to reparent the style contexts to remove the
+        // frame then we need to reparent the ComputedStyles to remove the
         // the special first-line styling. In the lazilySetParentPointer case
-        // we reparent the style contexts when we set their parents in
+        // we reparent the ComputedStyles when we set their parents in
         // nsInlineFrame::ReflowFrames and nsInlineFrame::ReflowInlineFrame.
         if (aReflowInput.mLineLayout->GetInFirstLine()) {
           ReparentChildListStyle(aPresContext, newFrames, this);
@@ -960,12 +960,12 @@ nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
   ComputedStyle* ourStyle = Style();
 
   // The anonymous block's style inherits from ours, and we already have our new
-  // style context.
+  // ComputedStyle.
   RefPtr<ComputedStyle> newContext =
     aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(
       nsCSSAnonBoxes::mozBlockInsideInlineWrapper, ourStyle);
 
-  // We're guaranteed that newContext only differs from the old style context on
+  // We're guaranteed that newContext only differs from the old ComputedStyle on
   // the block in things they might inherit from us.  And changehint processing
   // guarantees walking the continuation and ib-sibling chains, so our existing
   // changehint being in aChangeList is good enough.  So we don't need to touch
@@ -977,10 +977,10 @@ nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
 
     MOZ_ASSERT(blockFrame->Style()->GetPseudo() ==
                nsCSSAnonBoxes::mozBlockInsideInlineWrapper,
-               "Unexpected kind of style context");
+               "Unexpected kind of ComputedStyle");
 
     // We don't want to just walk through using GetNextContinuationWithSameStyle
-    // here, because we want to set updated style contexts on both our
+    // here, because we want to set updated ComputedStyles on both our
     // ib-sibling blocks and inlines.
     for (nsIFrame* cont = blockFrame; cont; cont = cont->GetNextContinuation()) {
       cont->SetComputedStyle(newContext);
@@ -1026,12 +1026,12 @@ nsFirstLineFrame::Init(nsIContent*       aContent,
     return;
   }
 
-  // This frame is a continuation - fixup the style context if aPrevInFlow
+  // This frame is a continuation - fixup the computed style if aPrevInFlow
   // is the first-in-flow (the only one with a ::first-line pseudo).
   if (aPrevInFlow->Style()->GetPseudo() == nsCSSPseudoElements::firstLine) {
     MOZ_ASSERT(FirstInFlow() == aPrevInFlow);
-    // Create a new style context that is a child of the parent
-    // style context thus removing the ::first-line style. This way
+    // Create a new ComputedStyle that is a child of the parent
+    // ComputedStyle thus removing the ::first-line style. This way
     // we behave as if an anonymous (unstyled) span was the child
     // of the parent frame.
     ComputedStyle* parentContext = aParent->Style();
@@ -1088,7 +1088,7 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
     AutoFrameListPtr prevOverflowFrames(aPresContext,
                                         prevInFlow->StealOverflowFrames());
     if (prevOverflowFrames) {
-      // Reparent the new frames and their style contexts.
+      // Reparent the new frames and their ComputedStyles.
       const nsFrameList::Slice& newFrames =
         mFrames.InsertFrames(this, nullptr, *prevOverflowFrames);
       ReparentChildListStyle(aPresContext, newFrames, this);

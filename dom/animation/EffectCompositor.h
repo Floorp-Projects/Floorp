@@ -244,7 +244,7 @@ private:
   // When |aBackendType| is StyleBackendType::Gecko, we determine which
   // properties are specified using the provided |aComputedStyle| and
   // |aElement| and |aPseudoType| are ignored. If |aComputedStyle| is nullptr,
-  // we automatically look up the style context of primary frame of the
+  // we automatically look up the ComputedStyle of primary frame of the
   // (pseudo-)element.
   //
   // When |aBackendType| is StyleBackendType::Servo, we use the |StrongRuleNode|

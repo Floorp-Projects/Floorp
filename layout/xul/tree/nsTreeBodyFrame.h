@@ -284,7 +284,7 @@ protected:
                                const nsRect&        aDirtyRect,
                                nsPoint              aPt);
 
-  // This method is called with a specific style context and rect to
+  // This method is called with a specific ComputedStyle and rect to
   // paint the background rect as if it were a full-blown frame.
   ImgDrawResult PaintBackgroundLayer(ComputedStyle*      aComputedStyle,
                                      nsPresContext*       aPresContext,
@@ -353,7 +353,7 @@ protected:
   // Calculate the total width of our scrollable portion
   nscoord CalcHorzWidth(const ScrollParts& aParts);
 
-  // Looks up a style context in the style cache.  On a cache miss we resolve
+  // Looks up a ComputedStyle in the style cache.  On a cache miss we resolve
   // the pseudo-styles passed in and place them into the cache.
   ComputedStyle* GetPseudoComputedStyle(nsICSSAnonBoxPseudo* aPseudoElement);
 
@@ -574,19 +574,19 @@ protected: // Data Members
   // from the view.
   nsCOMPtr<nsITreeView> mView;
 
-  // A cache of all the style contexts we have seen for rows and cells of the tree.  This is a mapping from
-  // a list of atoms to a corresponding style context.  This cache stores every combination that
+  // A cache of all the ComputedStyles we have seen for rows and cells of the tree.  This is a mapping from
+  // a list of atoms to a corresponding ComputedStyle.  This cache stores every combination that
   // occurs in the tree, so for n distinct properties, this cache could have 2 to the n entries
   // (the power set of all row properties).
   nsTreeStyleCache mStyleCache;
 
   // A hashtable that maps from URLs to image request/listener pairs.  The URL
-  // is provided by the view or by the style context. The style context
+  // is provided by the view or by the ComputedStyle. The ComputedStyle
   // represents a resolved :-moz-tree-cell-image (or twisty) pseudo-element.
   // It maps directly to an imgIRequest.
   nsDataHashtable<nsStringHashKey, nsTreeImageCacheEntry> mImageCache;
 
-  // A scratch array used when looking up cached style contexts.
+  // A scratch array used when looking up cached ComputedStyles.
   mozilla::AtomArray mScratchArray;
 
   // The index of the first visible row and the # of rows visible onscreen.
