@@ -25,7 +25,4 @@ const ThemeVariableMap = [
   ["--lwt-toolbarbutton-hover-background", "button_background_hover"],
   ["--lwt-toolbarbutton-active-background", "button_background_active"],
   ["--lwt-selected-tab-background-color", "tab_selected"],
-  ["--lwt-toolbar-field-focus", "toolbar_field_focus"],
-  ["--lwt-toolbar-field-focus-color", "toolbar_field_text_focus"],
-  ["--lwt-toolbar-field-focus-border-color", "toolbar_field_border_focus"],
 ];

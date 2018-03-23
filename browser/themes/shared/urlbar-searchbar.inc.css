@@ -59,15 +59,10 @@
 }
 
 #urlbar:-moz-lwtheme:hover,
-#navigator-toolbox .searchbar-textbox:-moz-lwtheme:hover {
-  background-color: var(--url-and-searchbar-background-color, white);
-}
-
 #urlbar:-moz-lwtheme[focused="true"],
+#navigator-toolbox .searchbar-textbox:-moz-lwtheme:hover,
 #navigator-toolbox .searchbar-textbox:-moz-lwtheme[focused="true"] {
-  background-color: var(--lwt-toolbar-field-focus, var(--url-and-searchbar-background-color, white));
-  color: var(--lwt-toolbar-field-focus-color, var(--url-and-searchbar-color, black));
-  border-color: var(--lwt-toolbar-field-focus-border-color, var(--lwt-toolbar-field-border-color, @fieldBorderColor@));
+  background-color: var(--url-and-searchbar-background-color, white);
 }
 
 :root[uidensity=compact] #urlbar,
