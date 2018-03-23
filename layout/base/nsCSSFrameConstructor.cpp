@@ -10877,10 +10877,10 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
 
       sc =
         mPresShell->StyleSet()->AsServo()->ReparentComputedStyle(
-          sc->AsServo(),
-          parentComputedStyle->AsServo(),
-          parentIgnoringFirstLine->Style()->AsServo(),
-          parentComputedStyle->AsServo(),
+          sc,
+          parentComputedStyle,
+          parentIgnoringFirstLine->Style(),
+          parentComputedStyle,
           blockContent->AsElement());
     }
 
