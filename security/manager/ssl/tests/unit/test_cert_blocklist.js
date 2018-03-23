@@ -203,8 +203,8 @@ function test_is_revoked(certList, issuerString, serialString, subjectString,
 }
 
 function fetch_blocklist() {
-  Services.prefs.setBoolPref("services.blocklist.load_dump", false);
-  Services.prefs.setBoolPref("services.blocklist.signing.enforced", false);
+  Services.prefs.setBoolPref("services.settings.load_dump", false);
+  Services.prefs.setBoolPref("services.settings.verify_signature", false);
   Services.prefs.setCharPref("services.settings.server",
                              `http://localhost:${port}/v1`);
   Services.prefs.setCharPref("extensions.blocklist.url",
@@ -213,15 +213,14 @@ function fetch_blocklist() {
                     .getService(Ci.nsITimerCallback);
 
   return new Promise((resolve) => {
-    let certblockObserver = {
+    const e = "remote-settings-changes-polled";
+    const changesPolledObserver = {
       observe(aSubject, aTopic, aData) {
-        Services.obs.removeObserver(this, "blocklist-updater-versions-checked");
+        Services.obs.removeObserver(this, e);
         resolve();
       }
     };
-
-    Services.obs.addObserver(certblockObserver, "blocklist-updater-versions-checked");
-
+    Services.obs.addObserver(changesPolledObserver, e);
     blocklist.notify(null);
   });
 }
@@ -353,9 +352,7 @@ function run_test() {
   });
 
   // blocklist load is async so we must use add_test from here
-  add_task(function () {
-    return fetch_blocklist();
-  });
+  add_task(fetch_blocklist);
 
   add_test(function() {
     // The blocklist will be loaded now. Let's check the data is sane.

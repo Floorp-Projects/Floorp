@@ -157,43 +157,13 @@ HistoryEngine.prototype = {
 
 function HistoryStore(name, engine) {
   Store.call(this, name, engine);
-
-  // Explicitly nullify our references to our cached services so we don't leak
-  Svc.Obs.add("places-shutdown", function() {
-    for (let query in this._stmts) {
-      let stmt = this._stmts[query];
-      stmt.finalize();
-    }
-    this._stmts = {};
-  }, this);
 }
+
 HistoryStore.prototype = {
   __proto__: Store.prototype,
 
-  __asyncHistory: null,
-
   // We try and only update this many visits at one time.
   MAX_VISITS_PER_INSERT: 500,
-
-  get _asyncHistory() {
-    if (!this.__asyncHistory) {
-      this.__asyncHistory = Cc["@mozilla.org/browser/history;1"]
-                              .getService(Ci.mozIAsyncHistory);
-    }
-    return this.__asyncHistory;
-  },
-
-  _stmts: {},
-  _getStmt(query) {
-    if (query in this._stmts) {
-      return this._stmts[query];
-    }
-
-    this._log.trace("Creating SQL statement: " + query);
-    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                        .DBConnection;
-    return this._stmts[query] = db.createAsyncStatement(query);
-  },
 
   // Some helper functions to handle GUIDs
   async setGUID(uri, guid) {

@@ -1,20 +1,17 @@
 "use strict";
 
-ChromeUtils.import("resource://services-common/blocklist-updater.js");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm", {});
-const { OneCRLBlocklistClient } = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
+const BlocklistClients = ChromeUtils.import("resource://services-common/blocklist-clients.js", {});
 const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js", {});
 
 let server;
 
-const PREF_BLOCKLIST_ENFORCE_SIGNING   = "services.blocklist.signing.enforced";
+const PREF_SETTINGS_VERIFY_SIGNATURE   = "services.settings.verify_signature";
 const PREF_SETTINGS_SERVER             = "services.settings.server";
 const PREF_SIGNATURE_ROOT              = "security.content.signature.root_hash";
-
-// Telemetry reports.
-const TELEMETRY_HISTOGRAM_KEY = OneCRLBlocklistClient.identifier;
 
 const CERT_DIR = "test_blocklist_signatures/";
 const CHAIN_FILES =
@@ -53,8 +50,8 @@ function getCertChain() {
   return chain.join("\n");
 }
 
-async function checkRecordCount(count) {
-  await OneCRLBlocklistClient.openCollection(async (collection) => {
+async function checkRecordCount(client, count) {
+  await client.openCollection(async (collection) => {
     // Check we have the expected number of records
     const records = await collection.list();
     Assert.equal(count, records.data.length);
@@ -65,6 +62,11 @@ async function checkRecordCount(count) {
 // document contains information on when a collection was last modified
 add_task(async function test_check_signatures() {
   const port = server.identity.primaryPort;
+
+  const OneCRLBlocklistClient = BlocklistClients.OneCRLBlocklistClient;
+
+  // Telemetry reports.
+  const TELEMETRY_HISTOGRAM_KEY = OneCRLBlocklistClient.identifier;
 
   // a response to give the client when the cert chain is expected
   function makeMetaResponseBody(lastModified, signature) {
@@ -462,7 +464,7 @@ add_task(async function test_check_signatures() {
   };
 
   // ensure our collection hasn't been replaced with an older, empty one
-  await checkRecordCount(2);
+  await checkRecordCount(OneCRLBlocklistClient, 2);
 
   registerHandlers(badSigGoodOldResponses);
   await OneCRLBlocklistClient.maybeSync(5000, startTime);
@@ -488,7 +490,7 @@ add_task(async function test_check_signatures() {
     await OneCRLBlocklistClient.maybeSync(6000, startTime);
     do_throw("Sync should fail (the signature is intentionally bad)");
   } catch (e) {
-    await checkRecordCount(2);
+    await checkRecordCount(OneCRLBlocklistClient, 2);
   }
 
   // Ensure that the failure is reflected in the accumulated telemetry:
@@ -498,8 +500,10 @@ add_task(async function test_check_signatures() {
 });
 
 function run_test() {
+  BlocklistClients.initialize();
+
   // ensure signatures are enforced
-  Services.prefs.setBoolPref(PREF_BLOCKLIST_ENFORCE_SIGNING, true);
+  Services.prefs.setBoolPref(PREF_SETTINGS_VERIFY_SIGNATURE, true);
 
   // get a signature verifier to ensure nsNSSComponent is initialized
   Cc["@mozilla.org/security/contentsignatureverifier;1"]

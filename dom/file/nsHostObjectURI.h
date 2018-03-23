@@ -71,6 +71,7 @@ protected:
 
   nsresult SetScheme(const nsACString &aProtocol) override;
   bool Deserialize(const mozilla::ipc::URIParams&);
+  nsresult ReadPrivate(nsIObjectInputStream *stream);
 
 public:
   class Mutator final

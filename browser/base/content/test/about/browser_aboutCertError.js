@@ -165,7 +165,7 @@ add_task(async function checkAppBuildIDIsDate() {
   ok(day >= 1 && day <= 31, "appBuildID contains a valid day");
 });
 
-const PREF_BLOCKLIST_CLOCK_SKEW_SECONDS = "services.blocklist.clock_skew_seconds";
+const PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS = "services.settings.clock_skew_seconds";
 
 add_task(async function checkWrongSystemTimeWarning() {
   async function setUpPage() {
@@ -207,7 +207,7 @@ add_task(async function checkWrongSystemTimeWarning() {
   let localDateFmt = formatter.format(new Date());
 
   let skew = Math.floor((Date.now() - serverDate.getTime()) / 1000);
-  await SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
+  await SpecialPowers.pushPrefEnv({set: [[PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS, skew]]});
 
   info("Loading a bad cert page with a skewed clock");
   let message = await setUpPage();
@@ -228,7 +228,7 @@ add_task(async function checkWrongSystemTimeWarning() {
   serverDateFmt = formatter.format(serverDate);
 
   skew = Math.floor((Date.now() - serverDate.getTime()) / 1000);
-  await SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
+  await SpecialPowers.pushPrefEnv({set: [[PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS, skew]]});
 
   info("Loading a bad cert page with a skewed clock");
   message = await setUpPage();
@@ -244,7 +244,7 @@ add_task(async function checkWrongSystemTimeWarning() {
 
   // pretend we only have a slightly skewed system time, four hours
   skew = 60 * 60 * 4;
-  await SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
+  await SpecialPowers.pushPrefEnv({set: [[PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS, skew]]});
 
   info("Loading a bad cert page with an only slightly skewed clock");
   message = await setUpPage();
@@ -255,7 +255,7 @@ add_task(async function checkWrongSystemTimeWarning() {
 
   // now pretend we have no skewed system time
   skew = 0;
-  await SpecialPowers.pushPrefEnv({set: [[PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, skew]]});
+  await SpecialPowers.pushPrefEnv({set: [[PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS, skew]]});
 
   info("Loading a bad cert page with no skewed clock");
   message = await setUpPage();

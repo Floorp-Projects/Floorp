@@ -76,8 +76,8 @@ const SEC_ERROR_OCSP_OLD_RESPONSE                  = SEC_ERROR_BASE + 132;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 5;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 6;
 
-const PREF_BLOCKLIST_CLOCK_SKEW_SECONDS = "services.blocklist.clock_skew_seconds";
-const PREF_BLOCKLIST_LAST_FETCHED = "services.blocklist.last_update_seconds";
+const PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS = "services.settings.clock_skew_seconds";
+const PREF_SERVICES_SETTINGS_LAST_FETCHED       = "services.settings.last_update_seconds";
 
 const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.", "security.ssl3."];
 
@@ -294,7 +294,8 @@ var AboutNetAndCertErrorListener = {
         break;
 
       // In case the certificate expired we make sure the system clock
-      // matches the blocklist ping (Kinto) time and is not before the build date.
+      // matches the remote-settings service (blocklist via Kinto) ping time
+      // and is not before the build date.
       case SEC_ERROR_EXPIRED_CERTIFICATE:
       case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
       case SEC_ERROR_OCSP_FUTURE_RESPONSE:
@@ -302,10 +303,10 @@ var AboutNetAndCertErrorListener = {
       case MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE:
       case MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE:
 
-        // We check against Kinto time first if available, because that allows us
+        // We check against the remote-settings server time first if available, because that allows us
         // to give the user an approximation of what the correct time is.
-        let difference = Services.prefs.getIntPref(PREF_BLOCKLIST_CLOCK_SKEW_SECONDS, 0);
-        let lastFetched = Services.prefs.getIntPref(PREF_BLOCKLIST_LAST_FETCHED, 0) * 1000;
+        let difference = Services.prefs.getIntPref(PREF_SERVICES_SETTINGS_CLOCK_SKEW_SECONDS, 0);
+        let lastFetched = Services.prefs.getIntPref(PREF_SERVICES_SETTINGS_LAST_FETCHED, 0) * 1000;
 
         let now = Date.now();
         let certRange = this._getCertValidityRange(docShell);

@@ -12,7 +12,7 @@ splitter {
   cursor: ew-resize;
   min-width: 9px;
   min-height: 9px;
-  background: url("chrome://global/skin/splitter/dimple.png") transparent no-repeat center;  
+  background: url("chrome://global/skin/splitter/dimple.png") transparent no-repeat center;
 }
 
 splitter[state="collapsed"][collapse="before"],
@@ -39,7 +39,7 @@ splitter[orient="vertical"] {
   cursor: ns-resize;
   min-width: 0px;
   min-height: 9px;
-  min-width: 9px;  
+  min-width: 9px;
   background: url("chrome://global/skin/splitter/dimple.png") transparent no-repeat center;
 }
 
@@ -56,69 +56,3 @@ splitter[orient="vertical"][state="collapsed"][substate="after"] {
 splitter[disabled="true"] {
   cursor: default !important;
 }
-
-/* ::::: splitter grippy ::::: */
-  
-grippy {
-  cursor: pointer;
-  margin: 0px 1px;
-  min-width: 4px;
-  min-height: 115px;
-  background-color: transparent;
-  background-repeat: no-repeat;
-}
-
-grippy:hover {
-  background-color: ThreeDHighlight;
-}
-
-splitter[orient="vertical"] > grippy {
-  margin: 1px 0px;
-  min-width: 115px;
-  min-height: 4px;
-}
-
-/* ..... normal state ..... */
-
-/* vertical grippies */
-splitter[collapse="before"] > grippy,
-splitter[collapse="after"] > grippy:-moz-locale-dir(rtl) {
-  background-image: url("chrome://global/skin/splitter/grip-left.gif");
-}
-
-splitter[collapse="after"] > grippy,
-splitter[collapse="before"] > grippy:-moz-locale-dir(rtl) {
-  background-image: url("chrome://global/skin/splitter/grip-right.gif");
-}
-
-/* horizontal grippies */
-splitter[collapse="before"][orient="vertical"] > grippy {
-  background-image: url("chrome://global/skin/splitter/grip-top.gif");
-}
-
-splitter[collapse="after"][orient="vertical"] > grippy {
-  background-image: url("chrome://global/skin/splitter/grip-bottom.gif");
-}
-
-/* ..... collapsed state ..... */
-
-/* vertical grippies */
-splitter[collapse="before"][state="collapsed"] > grippy,
-splitter[collapse="after"][state="collapsed"] > grippy:-moz-locale-dir(rtl) {
-  background-image: url("chrome://global/skin/splitter/grip-right.gif");
-}
-
-splitter[collapse="after"][state="collapsed"] > grippy,
-splitter[collapse="before"][state="collapsed"] > grippy:-moz-locale-dir(rtl) {
-  background-image: url("chrome://global/skin/splitter/grip-left.gif");
-}
-
-/* horizontal grippies */
-splitter[collapse="before"][state="collapsed"][orient="vertical"] > grippy {
-  background-image: url("chrome://global/skin/splitter/grip-bottom.gif");
-}
-
-splitter[collapse="after"][state="collapsed"][orient="vertical"] > grippy {
-  background-image: url("chrome://global/skin/splitter/grip-top.gif");
-}
-

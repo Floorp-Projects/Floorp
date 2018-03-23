@@ -63,6 +63,13 @@ nsHostObjectURI::GetPrincipalUri(nsIURI** aUri)
 NS_IMETHODIMP
 nsHostObjectURI::Read(nsIObjectInputStream* aStream)
 {
+  NS_NOTREACHED("Use nsIURIMutator.read() instead");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+nsHostObjectURI::ReadPrivate(nsIObjectInputStream *aStream)
+{
   nsresult rv = mozilla::net::nsSimpleURI::ReadPrivate(aStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
