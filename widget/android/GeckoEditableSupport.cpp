@@ -700,6 +700,11 @@ GeckoEditableSupport::SendIMEDummyKeyEvent(nsIWidget* aWidget, EventMessage msg)
     //       keyboard event.
     event.mKeyCode = NS_VK_PROCESSKEY;
     event.mKeyNameIndex = KEY_NAME_INDEX_Process;
+    // KeyboardEvents marked as "processed by IME" shouldn't cause any edit
+    // actions.  So, we should set their native key binding to none before
+    // dispatch to avoid crash on PuppetWidget and avoid running redundant
+    // path to look for native key bindings.
+    event.PreventNativeKeyBindings();
     NS_ENSURE_SUCCESS_VOID(BeginInputTransaction(mDispatcher));
     mDispatcher->DispatchKeyboardEvent(msg, event, status);
 }
