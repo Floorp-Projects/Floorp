@@ -57,7 +57,7 @@ class AnimationInspector {
     this.onElementPickerStarted = this.onElementPickerStarted.bind(this);
     this.onElementPickerStopped = this.onElementPickerStopped.bind(this);
     this.onSidebarResized = this.onSidebarResized.bind(this);
-    this.onSidebarSelect = this.onSidebarSelect.bind(this);
+    this.onSidebarSelectionChanged = this.onSidebarSelectionChanged.bind(this);
 
     EventEmitter.decorate(this);
     this.emit = this.emit.bind(this);
@@ -134,22 +134,20 @@ class AnimationInspector {
     );
     this.provider = provider;
 
-    this.inspector.selection.on("new-node-front", this.update);
-    this.inspector.sidebar.on("newanimationinspector-selected", this.onSidebarSelect);
-    this.inspector.toolbox.on("inspector-sidebar-resized", this.onSidebarResized);
+    this.inspector.sidebar.on("select", this.onSidebarSelectionChanged);
     this.inspector.toolbox.on("picker-started", this.onElementPickerStarted);
     this.inspector.toolbox.on("picker-stopped", this.onElementPickerStopped);
-
-    this.animationsFront.on("mutations", this.onAnimationsMutation);
+    this.inspector.toolbox.on("select", this.onSidebarSelectionChanged);
   }
 
   destroy() {
     this.setAnimationStateChangedListenerEnabled(false);
     this.inspector.selection.off("new-node-front", this.update);
-    this.inspector.sidebar.off("newanimationinspector-selected", this.onSidebarSelect);
+    this.inspector.sidebar.off("select", this.onSidebarSelectionChanged);
     this.inspector.toolbox.off("inspector-sidebar-resized", this.onSidebarResized);
     this.inspector.toolbox.off("picker-started", this.onElementPickerStarted);
     this.inspector.toolbox.off("picker-stopped", this.onElementPickerStopped);
+    this.inspector.toolbox.off("select", this.onSidebarSelectionChanged);
 
     this.animationsFront.off("mutations", this.onAnimationsMutation);
 
@@ -289,9 +287,11 @@ class AnimationInspector {
     for (const {type, player: animation} of changes) {
       if (type === "added") {
         animations.push(animation);
+        animation.on("changed", this.onAnimationStateChanged);
       } else if (type === "removed") {
         const index = animations.indexOf(animation);
         animations.splice(index, 1);
+        animation.off("changed", this.onAnimationStateChanged);
       }
     }
 
@@ -306,16 +306,33 @@ class AnimationInspector {
     this.inspector.store.dispatch(updateElementPickerEnabled(false));
   }
 
-  onSidebarSelect() {
-    this.update();
-    this.onSidebarResized(this.inspector.getSidebarSize());
-  }
+  async onSidebarSelectionChanged() {
+    const isPanelVisibled = this.isPanelVisible();
 
-  onSidebarResized(size) {
-    if (!this.isPanelVisible()) {
+    if (this.wasPanelVisibled === isPanelVisibled) {
+      // onSidebarSelectionChanged is called some times even same state
+      // from sidebar and toolbar.
       return;
     }
 
+    this.wasPanelVisibled = isPanelVisibled;
+
+    if (this.isPanelVisible()) {
+      await this.update();
+      this.onSidebarResized(null, this.inspector.getSidebarSize());
+      this.animationsFront.on("mutations", this.onAnimationsMutation);
+      this.inspector.selection.on("new-node-front", this.update);
+      this.inspector.toolbox.on("inspector-sidebar-resized", this.onSidebarResized);
+    } else {
+      this.stopAnimationsCurrentTimeTimer();
+      this.animationsFront.off("mutations", this.onAnimationsMutation);
+      this.inspector.selection.off("new-node-front", this.update);
+      this.inspector.toolbox.off("inspector-sidebar-resized", this.onSidebarResized);
+      this.setAnimationStateChangedListenerEnabled(false);
+    }
+  }
+
+  onSidebarResized(size) {
     this.inspector.store.dispatch(updateSidebarSize(size));
   }
 
@@ -511,11 +528,6 @@ class AnimationInspector {
   }
 
   async update() {
-    if (!this.inspector || !this.isPanelVisible()) {
-      // AnimationInspector was destroyed already or the panel is hidden.
-      return;
-    }
-
     const done = this.inspector.updating("newanimationinspector");
 
     const selection = this.inspector.selection;
@@ -527,6 +539,7 @@ class AnimationInspector {
 
     if (!currentAnimations || !isAllAnimationEqual(currentAnimations, nextAnimations)) {
       this.updateState(nextAnimations);
+      this.setAnimationStateChangedListenerEnabled(true);
     }
 
     done();
@@ -559,8 +572,6 @@ class AnimationInspector {
     this.stopAnimationsCurrentTimeTimer();
 
     this.inspector.store.dispatch(updateAnimations(animations));
-
-    this.setAnimationStateChangedListenerEnabled(true);
 
     if (hasRunningAnimation(animations)) {
       this.startAnimationsCurrentTimeTimer();

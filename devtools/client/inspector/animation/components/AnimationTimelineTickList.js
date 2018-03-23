@@ -95,7 +95,7 @@ class AnimationTimelineTickList extends PureComponent {
 
 const mapStateToProps = state => {
   return {
-    sidebarWidth: state.animations.sidebarSize.width
+    sidebarWidth: state.animations.sidebarSize ? state.animations.sidebarSize.width : 0
   };
 };
 
