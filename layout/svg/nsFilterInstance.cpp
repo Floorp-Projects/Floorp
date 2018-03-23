@@ -608,8 +608,7 @@ nsFilterInstance::FrameSpaceToFilterSpace(const nsRegion* aRegion) const
   nsIntRegion result;
   for (auto iter = aRegion->RectIter(); !iter.Done(); iter.Next()) {
     // FrameSpaceToFilterSpace rounds out, so this works.
-    nsRect rect = iter.Get();
-    result.Or(result, FrameSpaceToFilterSpace(&rect));
+    result.Or(result, FrameSpaceToFilterSpace(&iter.Get()));
   }
   return result;
 }
