@@ -20,13 +20,13 @@ const TEST_URI = `
 
 const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
   let highlighters = view.highlighters;
 
   info("Selecting the first shape container.");
-  yield selectNode("#shape1", inspector);
+  await selectNode("#shape1", inspector);
   let container = getRuleViewProperty(view, ".shape", "clip-path").valueSpan;
   let shapeToggle = container.querySelector(".ruleview-shapeswatch");
 
@@ -43,7 +43,7 @@ add_task(function* () {
     "rule-view.");
   let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
   shapeToggle.click();
-  yield onHighlighterShown;
+  await onHighlighterShown;
 
   info("Checking the CSS shapes highlighter is created and toggle button is active in " +
     "the rule-view.");
@@ -54,7 +54,7 @@ add_task(function* () {
   ok(highlighters.shapesHighlighterShown, "CSS shapes highlighter is shown.");
 
   info("Selecting the second shapes container.");
-  yield selectNode("#shape2", inspector);
+  await selectNode("#shape2", inspector);
   let firstShapesHighlighterShown = highlighters.shapesHighlighterShown;
   container = getRuleViewProperty(view, ".shape", "clip-path").valueSpan;
   shapeToggle = container.querySelector(".ruleview-shapeswatch");
@@ -70,7 +70,7 @@ add_task(function* () {
     "from the rule-view.");
   onHighlighterShown = highlighters.once("shapes-highlighter-shown");
   shapeToggle.click();
-  yield onHighlighterShown;
+  await onHighlighterShown;
 
   info("Checking the CSS shapes highlighter is created for the second shapes container " +
     "and toggle button is active in the rule-view.");
@@ -80,7 +80,7 @@ add_task(function* () {
     "shapes highlighter for the second shapes container is shown.");
 
   info("Selecting the first shapes container.");
-  yield selectNode("#shape1", inspector);
+  await selectNode("#shape1", inspector);
   container = getRuleViewProperty(view, ".shape", "clip-path").valueSpan;
   shapeToggle = container.querySelector(".ruleview-shapeswatch");
 

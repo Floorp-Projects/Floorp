@@ -18,22 +18,22 @@ const TEST_URI = `
   <div class="testclass">Styled Node</div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  yield selectNode(".testclass", inspector);
-  yield testEditClassSelector(view);
-  yield testEditDivSelector(view);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
+  await selectNode(".testclass", inspector);
+  await testEditClassSelector(view);
+  await testEditDivSelector(view);
 });
 
-function* testEditClassSelector(view) {
+async function testEditClassSelector(view) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let editor = yield focusEditableField(view, ruleEditor.selectorText);
+  let editor = await focusEditableField(view, ruleEditor.selectorText);
 
   editor.input.value = "body";
   let onRuleViewChanged = once(view, "ruleview-changed");
   EventUtils.synthesizeKey("KEY_Enter");
-  yield onRuleViewChanged;
+  await onRuleViewChanged;
 
   // Get the new rule editor that replaced the original
   ruleEditor = getRuleViewRuleEditor(view, 1);
@@ -51,14 +51,14 @@ function* testEditClassSelector(view) {
      "Focus should have moved to the property name.");
 }
 
-function* testEditDivSelector(view) {
+async function testEditDivSelector(view) {
   let ruleEditor = getRuleViewRuleEditor(view, 2);
-  let editor = yield focusEditableField(view, ruleEditor.selectorText);
+  let editor = await focusEditableField(view, ruleEditor.selectorText);
 
   editor.input.value = "asdf";
   let onRuleViewChanged = once(view, "ruleview-changed");
   EventUtils.synthesizeKey("KEY_Enter");
-  yield onRuleViewChanged;
+  await onRuleViewChanged;
 
   // Get the new rule editor that replaced the original
   ruleEditor = getRuleViewRuleEditor(view, 2);

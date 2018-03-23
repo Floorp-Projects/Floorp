@@ -24,103 +24,103 @@ const WIDTH = 160;
 const HEIGHT = 100;
 const HYPOTENUSE = Math.hypot(WIDTH, HEIGHT).toFixed(2);
 
-add_task(function* () {
-  let helper = yield openInspectorForURL(TEST_URL)
+add_task(async function() {
+  let helper = await openInspectorForURL(TEST_URL)
                        .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
 
   let { show, finalize } = helper;
 
   helper.prefix = PREFIX;
 
-  yield show();
+  await show();
 
-  yield hasNoLabelsWhenStarts(helper);
-  yield hasSizeLabelWhenMoved(helper);
-  yield hasCorrectSizeLabelValue(helper);
-  yield hasSizeLabelAndGuidesWhenStops(helper);
-  yield hasCorrectSizeLabelValue(helper);
+  await hasNoLabelsWhenStarts(helper);
+  await hasSizeLabelWhenMoved(helper);
+  await hasCorrectSizeLabelValue(helper);
+  await hasSizeLabelAndGuidesWhenStops(helper);
+  await hasCorrectSizeLabelValue(helper);
 
-  yield finalize();
+  await finalize();
 });
 
-function* hasNoLabelsWhenStarts({isElementHidden, synthesizeMouse}) {
+async function hasNoLabelsWhenStarts({isElementHidden, synthesizeMouse}) {
   info("Checking highlighter has no labels when we start to select");
 
-  yield synthesizeMouse({
+  await synthesizeMouse({
     selector: ":root",
     options: {type: "mousedown"},
     x: X,
     y: Y
   });
 
-  let hidden = yield isElementHidden("label-size");
+  let hidden = await isElementHidden("label-size");
   ok(hidden, "label's size still hidden");
 
-  hidden = yield isElementHidden("label-position");
+  hidden = await isElementHidden("label-position");
   ok(hidden, "label's position still hidden");
 
   info("Checking highlighter has no guides when we start to select");
 
   let guidesHidden = true;
   for (let side of SIDES) {
-    guidesHidden = guidesHidden && (yield isElementHidden("guide-" + side));
+    guidesHidden = guidesHidden && (await isElementHidden("guide-" + side));
   }
 
   ok(guidesHidden, "guides are hidden during dragging");
 }
 
-function* hasSizeLabelWhenMoved({isElementHidden, synthesizeMouse}) {
+async function hasSizeLabelWhenMoved({isElementHidden, synthesizeMouse}) {
   info("Checking highlighter has size label when we select the area");
 
-  yield synthesizeMouse({
+  await synthesizeMouse({
     selector: ":root",
     options: {type: "mousemove"},
     x: X + WIDTH,
     y: Y + HEIGHT
   });
 
-  let hidden = yield isElementHidden("label-size");
+  let hidden = await isElementHidden("label-size");
   is(hidden, false, "label's size is visible during selection");
 
-  hidden = yield isElementHidden("label-position");
+  hidden = await isElementHidden("label-position");
   ok(hidden, "label's position still hidden");
 
   info("Checking highlighter has no guides when we select the area");
 
   let guidesHidden = true;
   for (let side of SIDES) {
-    guidesHidden = guidesHidden && (yield isElementHidden("guide-" + side));
+    guidesHidden = guidesHidden && (await isElementHidden("guide-" + side));
   }
 
   ok(guidesHidden, "guides are hidden during selection");
 }
 
-function* hasSizeLabelAndGuidesWhenStops({isElementHidden, synthesizeMouse}) {
+async function hasSizeLabelAndGuidesWhenStops({isElementHidden, synthesizeMouse}) {
   info("Checking highlighter has size label and guides when we stop");
 
-  yield synthesizeMouse({
+  await synthesizeMouse({
     selector: ":root",
     options: {type: "mouseup"},
     x: X + WIDTH,
     y: Y + HEIGHT
   });
 
-  let hidden = yield isElementHidden("label-size");
+  let hidden = await isElementHidden("label-size");
   is(hidden, false, "label's size is visible when the selection is done");
 
-  hidden = yield isElementHidden("label-position");
+  hidden = await isElementHidden("label-position");
   ok(hidden, "label's position still hidden");
 
   let guidesVisible = true;
   for (let side of SIDES) {
-    guidesVisible = guidesVisible && !(yield isElementHidden("guide-" + side));
+    guidesVisible = guidesVisible && !(await isElementHidden("guide-" + side));
   }
 
   ok(guidesVisible, "guides are visible when the selection is done");
 }
 
-function* hasCorrectSizeLabelValue({getElementTextContent}) {
-  let text = yield getElementTextContent("label-size");
+async function hasCorrectSizeLabelValue({getElementTextContent}) {
+  let text = await getElementTextContent("label-size");
 
   let [width, height, hypot] = text.match(/\d.*px/g);
 

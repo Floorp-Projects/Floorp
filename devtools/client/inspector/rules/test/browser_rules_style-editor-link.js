@@ -50,26 +50,26 @@ const DOCUMENT_URL = "data:text/html;charset=utf-8," + encodeURIComponent(`
   </html>
 `);
 
-add_task(function* () {
-  yield addTab(DOCUMENT_URL);
-  let {toolbox, inspector, view, testActor} = yield openRuleView();
-  yield selectNode("div", inspector);
+add_task(async function() {
+  await addTab(DOCUMENT_URL);
+  let {toolbox, inspector, view, testActor} = await openRuleView();
+  await selectNode("div", inspector);
 
-  yield testInlineStyle(view);
-  yield testFirstInlineStyleSheet(view, toolbox, testActor);
-  yield testSecondInlineStyleSheet(view, toolbox, testActor);
-  yield testExternalStyleSheet(view, toolbox, testActor);
-  yield testDisabledStyleEditor(view, toolbox);
+  await testInlineStyle(view);
+  await testFirstInlineStyleSheet(view, toolbox, testActor);
+  await testSecondInlineStyleSheet(view, toolbox, testActor);
+  await testExternalStyleSheet(view, toolbox, testActor);
+  await testDisabledStyleEditor(view, toolbox);
 });
 
-function* testInlineStyle(view) {
+async function testInlineStyle(view) {
   info("Testing inline style");
 
   let onTab = waitForTab();
   info("Clicking on the first link in the rule-view");
   clickLinkByIndex(view, 0);
 
-  let tab = yield onTab;
+  let tab = await onTab;
 
   let tabURI = tab.linkedBrowser.documentURI.spec;
   ok(tabURI.startsWith("view-source:"), "View source tab is open");
@@ -77,7 +77,7 @@ function* testInlineStyle(view) {
   gBrowser.removeTab(tab);
 }
 
-function* testFirstInlineStyleSheet(view, toolbox, testActor) {
+async function testFirstInlineStyleSheet(view, toolbox, testActor) {
   info("Testing inline stylesheet");
 
   info("Listening for toolbox switch to the styleeditor");
@@ -85,14 +85,14 @@ function* testFirstInlineStyleSheet(view, toolbox, testActor) {
 
   info("Clicking an inline stylesheet");
   clickLinkByIndex(view, 4);
-  let editor = yield onSwitch;
+  let editor = await onSwitch;
 
   ok(true, "Switched to the style-editor panel in the toolbox");
 
-  yield validateStyleEditorSheet(editor, 0, testActor);
+  await validateStyleEditorSheet(editor, 0, testActor);
 }
 
-function* testSecondInlineStyleSheet(view, toolbox, testActor) {
+async function testSecondInlineStyleSheet(view, toolbox, testActor) {
   info("Testing second inline stylesheet");
 
   info("Waiting for the stylesheet editor to be selected");
@@ -100,19 +100,19 @@ function* testSecondInlineStyleSheet(view, toolbox, testActor) {
   let onSelected = panel.UI.once("editor-selected");
 
   info("Switching back to the inspector panel in the toolbox");
-  yield toolbox.selectTool("inspector");
+  await toolbox.selectTool("inspector");
 
   info("Clicking on second inline stylesheet link");
   testRuleViewLinkLabel(view);
   clickLinkByIndex(view, 3);
-  let editor = yield onSelected;
+  let editor = await onSelected;
 
   is(toolbox.currentToolId, "styleeditor",
     "The style editor is selected again");
-  yield validateStyleEditorSheet(editor, 1, testActor);
+  await validateStyleEditorSheet(editor, 1, testActor);
 }
 
-function* testExternalStyleSheet(view, toolbox, testActor) {
+async function testExternalStyleSheet(view, toolbox, testActor) {
   info("Testing external stylesheet");
 
   info("Waiting for the stylesheet editor to be selected");
@@ -120,37 +120,37 @@ function* testExternalStyleSheet(view, toolbox, testActor) {
   let onSelected = panel.UI.once("editor-selected");
 
   info("Switching back to the inspector panel in the toolbox");
-  yield toolbox.selectTool("inspector");
+  await toolbox.selectTool("inspector");
 
   info("Clicking on an external stylesheet link");
   testRuleViewLinkLabel(view);
   clickLinkByIndex(view, 1);
-  let editor = yield onSelected;
+  let editor = await onSelected;
 
   is(toolbox.currentToolId, "styleeditor",
     "The style editor is selected again");
-  yield validateStyleEditorSheet(editor, 2, testActor);
+  await validateStyleEditorSheet(editor, 2, testActor);
 }
 
-function* validateStyleEditorSheet(editor, expectedSheetIndex, testActor) {
+async function validateStyleEditorSheet(editor, expectedSheetIndex, testActor) {
   info("validating style editor stylesheet");
   is(editor.styleSheet.styleSheetIndex, expectedSheetIndex,
      "loaded stylesheet index matches document stylesheet");
 
   let href = editor.styleSheet.href || editor.styleSheet.nodeHref;
 
-  let expectedHref = yield testActor.eval(
+  let expectedHref = await testActor.eval(
     `content.document.styleSheets[${expectedSheetIndex}].href ||
      content.document.location.href`);
 
   is(href, expectedHref, "loaded stylesheet href matches document stylesheet");
 }
 
-function* testDisabledStyleEditor(view, toolbox) {
+async function testDisabledStyleEditor(view, toolbox) {
   info("Testing with the style editor disabled");
 
   info("Switching to the inspector panel in the toolbox");
-  yield toolbox.selectTool("inspector");
+  await toolbox.selectTool("inspector");
 
   info("Disabling the style editor");
   Services.prefs.setBoolPref("devtools.styleeditor.enabled", false);
@@ -169,7 +169,7 @@ function* testDisabledStyleEditor(view, toolbox) {
   info("Clicking on a link");
   let onStyleEditorSelected = toolbox.once("styleeditor-selected");
   clickLinkByIndex(view, 1);
-  yield onStyleEditorSelected;
+  await onStyleEditorSelected;
   is(toolbox.currentToolId, "styleeditor", "Style Editor should be selected");
 
   Services.prefs.clearUserPref("devtools.styleeditor.enabled");

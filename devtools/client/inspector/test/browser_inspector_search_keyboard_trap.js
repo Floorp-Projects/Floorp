@@ -70,13 +70,13 @@ const TEST_DATA = [
   }
 ];
 
-add_task(function* () {
-  let { inspector } = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let { inspector } = await openInspectorForURL(TEST_URL);
   let { searchBox } = inspector;
   let doc = inspector.panelDoc;
 
-  yield selectNode("#b1", inspector);
-  yield focusSearchBoxUsingShortcut(inspector.panelWin);
+  await selectNode("#b1", inspector);
+  await focusSearchBoxUsingShortcut(inspector.panelWin);
 
   // Ensure a searchbox is focused.
   ok(containsFocus(doc, searchBox), "Focus is in a searchbox");
@@ -87,7 +87,7 @@ add_task(function* () {
       let done = !focused ?
         inspector.searchSuggestions.once("processing-done") : Promise.resolve();
       EventUtils.synthesizeKey(key, options);
-      yield done;
+      await done;
     }
     is(containsFocus(doc, searchBox), focused, "Focus is set correctly");
   }

@@ -21,31 +21,31 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openComputedView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openComputedView();
   let propertyViews = view.propertyViews;
 
   info("Select the #matches node");
-  let matchesNode = yield getNodeFront("#matches", inspector);
+  let matchesNode = await getNodeFront("#matches", inspector);
   let onRefresh = inspector.once("computed-view-refreshed");
-  yield selectNode(matchesNode, inspector);
-  yield onRefresh;
+  await selectNode(matchesNode, inspector);
+  await onRefresh;
 
   ok(propertyViews.filter(p => p.visible).length > 0, "CSS properties are displayed");
   ok(view.noResults.hasAttribute("hidden"), "no-results message is hidden");
 
   info("Select a comment node");
-  let commentNode = yield inspector.walker.previousSibling(matchesNode);
-  yield selectNode(commentNode, inspector);
+  let commentNode = await inspector.walker.previousSibling(matchesNode);
+  await selectNode(commentNode, inspector);
 
   is(propertyViews.filter(p => p.visible).length, 0, "No properties displayed");
   ok(!view.noResults.hasAttribute("hidden"), "no-results message is displayed");
 
   info("Select the #matches node again");
   onRefresh = inspector.once("computed-view-refreshed");
-  yield selectNode(matchesNode, inspector);
-  yield onRefresh;
+  await selectNode(matchesNode, inspector);
+  await onRefresh;
 
   ok(propertyViews.filter(p => p.visible).length > 0, "CSS properties are displayed");
   ok(view.noResults.hasAttribute("hidden"), "no-results message is hidden");
@@ -54,7 +54,7 @@ add_task(function* () {
   let searchField = view.searchField;
   searchField.focus();
   synthesizeKeys("will-not-match", view.styleWindow);
-  yield inspector.once("computed-view-refreshed");
+  await inspector.once("computed-view-refreshed");
 
   is(propertyViews.filter(p => p.visible).length, 0, "No properties displayed");
   ok(!view.noResults.hasAttribute("hidden"), "no-results message is displayed");

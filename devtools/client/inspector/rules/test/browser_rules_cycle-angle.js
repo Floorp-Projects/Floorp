@@ -18,16 +18,16 @@ const TEST_URI = `
   <body><div>Test</div>cycling angle units in the rule view!</body>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
   let container = getRuleViewProperty(
     view, "body", "image-orientation").valueSpan;
-  yield checkAngleCycling(container, view);
-  yield checkAngleCyclingPersist(inspector, view);
+  await checkAngleCycling(container, view);
+  await checkAngleCyclingPersist(inspector, view);
 });
 
-function* checkAngleCycling(container, view) {
+async function checkAngleCycling(container, view) {
   let valueNode = container.querySelector(".ruleview-angle");
   let win = view.styleWindow;
 
@@ -49,12 +49,12 @@ function* checkAngleCycling(container, view) {
   }];
 
   for (let test of tests) {
-    yield checkSwatchShiftClick(container, win, test.value, test.comment);
+    await checkSwatchShiftClick(container, win, test.value, test.comment);
   }
 }
 
-function* checkAngleCyclingPersist(inspector, view) {
-  yield selectNode("div", inspector);
+async function checkAngleCyclingPersist(inspector, view) {
+  await selectNode("div", inspector);
   let container = getRuleViewProperty(
     view, "div", "image-orientation").valueSpan;
   let valueNode = container.querySelector(".ruleview-angle");
@@ -62,14 +62,14 @@ function* checkAngleCyclingPersist(inspector, view) {
 
   is(valueNode.textContent, "180deg", "Angle displayed as a degree value.");
 
-  yield checkSwatchShiftClick(container, win,
+  await checkSwatchShiftClick(container, win,
     `${Math.round(Math.PI * 10000) / 10000}rad`,
     "Angle displayed as a radian value.");
 
   // Select the body and reselect the div to see
   // if the new angle unit persisted
-  yield selectNode("body", inspector);
-  yield selectNode("div", inspector);
+  await selectNode("body", inspector);
+  await selectNode("div", inspector);
 
   // We have to query for the container and the swatch because
   // they've been re-generated
@@ -79,7 +79,7 @@ function* checkAngleCyclingPersist(inspector, view) {
     "Angle still displayed as a radian value.");
 }
 
-function* checkSwatchShiftClick(container, win, expectedValue, comment) {
+async function checkSwatchShiftClick(container, win, expectedValue, comment) {
   let swatch = container.querySelector(".ruleview-angleswatch");
   let valueNode = container.querySelector(".ruleview-angle");
 
@@ -88,6 +88,6 @@ function* checkSwatchShiftClick(container, win, expectedValue, comment) {
     type: "mousedown",
     shiftKey: true
   }, win);
-  yield onUnitChange;
+  await onUnitChange;
   is(valueNode.textContent, expectedValue, comment);
 }

@@ -32,10 +32,10 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openComputedView();
-  yield selectNode("span", inspector);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openComputedView();
+  await selectNode("span", inspector);
 
   info("Selecting the first computed style in the list");
   let firstStyle = view.styleDocument.querySelector(".computed-property-view");
@@ -46,7 +46,7 @@ add_task(function* () {
   let onExpanded = inspector.once("computed-view-property-expanded");
   EventUtils.synthesizeKey("KEY_Tab");
   EventUtils.synthesizeKey("KEY_Enter");
-  yield onExpanded;
+  await onExpanded;
 
   info("Verify the 2nd style has been expanded");
   let secondStyleSelectors = view.styleDocument.querySelectorAll(
@@ -57,7 +57,7 @@ add_task(function* () {
   onExpanded = inspector.once("computed-view-property-expanded");
   EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
   EventUtils.synthesizeKey(" ");
-  yield onExpanded;
+  await onExpanded;
 
   info("Verify the 1st style has been expanded too");
   let firstStyleSelectors = view.styleDocument.querySelectorAll(

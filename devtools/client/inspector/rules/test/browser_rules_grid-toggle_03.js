@@ -24,13 +24,13 @@ const TEST_URI = `
 
 const HIGHLIGHTER_TYPE = "CssGridHighlighter";
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
   let highlighters = view.highlighters;
 
   info("Selecting the first grid container.");
-  yield selectNode("#grid1", inspector);
+  await selectNode("#grid1", inspector);
   let container = getRuleViewProperty(view, ".grid", "display").valueSpan;
   let gridToggle = container.querySelector(".ruleview-grid");
 
@@ -47,7 +47,7 @@ add_task(function* () {
     "rule-view.");
   let onHighlighterShown = highlighters.once("grid-highlighter-shown");
   gridToggle.click();
-  yield onHighlighterShown;
+  await onHighlighterShown;
 
   info("Checking the CSS grid highlighter is created and toggle button is active in " +
     "the rule-view.");
@@ -58,7 +58,7 @@ add_task(function* () {
   ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
 
   info("Selecting the second grid container.");
-  yield selectNode("#grid2", inspector);
+  await selectNode("#grid2", inspector);
   let firstGridHighterShown = highlighters.gridHighlighterShown;
   container = getRuleViewProperty(view, ".grid", "display").valueSpan;
   gridToggle = container.querySelector(".ruleview-grid");
@@ -74,7 +74,7 @@ add_task(function* () {
     "rule-view.");
   onHighlighterShown = highlighters.once("grid-highlighter-shown");
   gridToggle.click();
-  yield onHighlighterShown;
+  await onHighlighterShown;
 
   info("Checking the CSS grid highlighter is created for the second grid container and " +
     "toggle button is active in the rule-view.");
@@ -84,7 +84,7 @@ add_task(function* () {
     "Grid highlighter for the second grid container is shown.");
 
   info("Selecting the first grid container.");
-  yield selectNode("#grid1", inspector);
+  await selectNode("#grid1", inspector);
   container = getRuleViewProperty(view, ".grid", "display").valueSpan;
   gridToggle = container.querySelector(".ruleview-grid");
 

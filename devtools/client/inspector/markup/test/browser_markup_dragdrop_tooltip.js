@@ -7,29 +7,29 @@
 
 const TEST_URL = "data:text/html;charset=utf8,<img src=\"about:logo\" /><div>";
 
-add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let {inspector} = await openInspectorForURL(TEST_URL);
   let {markup} = inspector;
 
   info("Get the tooltip target element for the image's src attribute");
-  let img = yield getContainerForSelector("img", inspector);
+  let img = await getContainerForSelector("img", inspector);
   let target = img.editor.getAttributeElement("src").querySelector(".link");
 
   info("Check that the src attribute of the image is a valid tooltip target");
-  yield assertTooltipShownOnHover(markup.imagePreviewTooltip, target);
-  yield assertTooltipHiddenOnMouseOut(markup.imagePreviewTooltip, target);
+  await assertTooltipShownOnHover(markup.imagePreviewTooltip, target);
+  await assertTooltipHiddenOnMouseOut(markup.imagePreviewTooltip, target);
 
   info("Start dragging the test div");
-  yield simulateNodeDrag(inspector, "div");
+  await simulateNodeDrag(inspector, "div");
 
   info("Now check that the src attribute of the image isn't a valid target");
-  let isValid = yield markup.imagePreviewTooltip._toggle.isValidHoverTarget(target);
+  let isValid = await markup.imagePreviewTooltip._toggle.isValidHoverTarget(target);
   ok(!isValid, "The element is not a valid tooltip target");
 
   info("Stop dragging the test div");
-  yield simulateNodeDrop(inspector, "div");
+  await simulateNodeDrop(inspector, "div");
 
   info("Check again the src attribute of the image");
-  yield assertTooltipShownOnHover(markup.imagePreviewTooltip, target);
-  yield assertTooltipHiddenOnMouseOut(markup.imagePreviewTooltip, target);
+  await assertTooltipShownOnHover(markup.imagePreviewTooltip, target);
+  await assertTooltipHiddenOnMouseOut(markup.imagePreviewTooltip, target);
 });

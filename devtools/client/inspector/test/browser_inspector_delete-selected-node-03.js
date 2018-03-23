@@ -8,20 +8,20 @@
 
 const TEST_URL = URL_ROOT + "doc_inspector_delete-selected-node-01.html";
 
-add_task(function* () {
-  let { inspector } = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let { inspector } = await openInspectorForURL(TEST_URL);
 
-  let iframe = yield getNodeFront("iframe", inspector);
-  let node = yield getNodeFrontInFrame("span", iframe, inspector);
-  yield selectNode(node, inspector);
+  let iframe = await getNodeFront("iframe", inspector);
+  let node = await getNodeFrontInFrame("span", iframe, inspector);
+  await selectNode(node, inspector);
 
   info("Removing iframe.");
-  yield inspector.walker.removeNode(iframe);
-  yield inspector.selection.once("detached-front");
+  await inspector.walker.removeNode(iframe);
+  await inspector.selection.once("detached-front");
 
-  let body = yield getNodeFront("body", inspector);
+  let body = await getNodeFront("body", inspector);
 
   is(inspector.selection.nodeFront, body, "Selection is now the body node");
 
-  yield inspector.once("inspector-updated");
+  await inspector.once("inspector-updated");
 });

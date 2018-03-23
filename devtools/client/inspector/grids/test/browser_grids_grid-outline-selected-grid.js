@@ -18,10 +18,10 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  let { inspector, gridInspector } = yield openLayoutView();
+  let { inspector, gridInspector } = await openLayoutView();
   let { document: doc } = gridInspector;
   let { highlighters, store } = inspector;
 
@@ -39,9 +39,9 @@ add_task(function* () {
     state.grids[0].highlighted);
   let onGridOutlineRendered = waitForDOM(doc, "#grid-cell-group rect", 3);
   checkbox.click();
-  yield onHighlighterShown;
-  yield onCheckboxChange;
-  let elements = yield onGridOutlineRendered;
+  await onHighlighterShown;
+  await onCheckboxChange;
+  let elements = await onGridOutlineRendered;
 
   info("Checking the grid outline is shown.");
   is(elements.length, 3, "Grid outline is shown.");
