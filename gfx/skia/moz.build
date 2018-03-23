@@ -754,6 +754,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'skia/src/fonts/SkRemotableFontMgr.cpp',
     ]
 
+# Work around a crash when jumping into assembly on platforms where
+# Clang has 4-byte stack alignment (BSDs, Windows).
+if CONFIG['CPU_ARCH'] == 'x86' and CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
+    SOURCES['skia/src/jumper/SkJumper.cpp'].flags += [
+        '-mstack-alignment=16',
+        '-mstackrealign'
+    ]
+
 # We should autogenerate these SSE related flags.
 
 if CONFIG['INTEL_ARCHITECTURE'] and (CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc')):
