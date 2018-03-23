@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef widget_windows_InProcessCompositorWidgetParent_h
-#define widget_windows_InProcessCompositorWidgetParent_h
+#ifndef widget_windows_InProcessWinCompositorWidget_h
+#define widget_windows_InProcessWinCompositorWidget_h
 
 #include "WinCompositorWidget.h"
 
@@ -34,4 +34,4 @@ private:
 } // namespace widget
 } // namespace mozilla
 
-#endif // widget_windows_InProcessCompositorWidgetParent_h
+#endif // widget_windows_InProcessWinCompositorWidget_h

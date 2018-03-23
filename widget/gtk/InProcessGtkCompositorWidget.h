@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef widget_gtk_InProcessGtkCompositorWidgetParent_h
-#define widget_gtk_InProcessGtkCompositorWidgetParent_h
+#ifndef widget_gtk_InProcessGtkCompositorWidget_h
+#define widget_gtk_InProcessGtkCompositorWidget_h
 
 #include "GtkCompositorWidget.h"
 
@@ -28,4 +28,4 @@ public:
 } // namespace widget
 } // namespace mozilla
 
-#endif // widget_gtk_InProcessGtkCompositorWidgetParent_h
+#endif // widget_gtk_InProcessGtkCompositorWidget_h
