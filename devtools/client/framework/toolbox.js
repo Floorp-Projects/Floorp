@@ -3050,18 +3050,23 @@ Toolbox.prototype = {
   /**
    * Returns data (HAR) collected by the Network panel.
    */
-  getHARFromNetMonitor: function() {
+  getHARFromNetMonitor: async function() {
     let netPanel = this.getPanel("netmonitor");
 
     // The panel doesn't have to exist (it must be selected
     // by the user at least once to be created).
-    // Return default empty HAR file in such case.
+    // Return default empty HAR log in such case.
     if (!netPanel) {
-      return Promise.resolve(buildHarLog(Services.appinfo));
+      let har = await buildHarLog(Services.appinfo);
+      return har.log;
     }
 
     // Use Netmonitor object to get the current HAR log.
-    return netPanel.panelWin.Netmonitor.getHar();
+    let har = await netPanel.panelWin.Netmonitor.getHar();
+
+    // Return the log directly to be compatible with
+    // Chrome WebExtension API.
+    return har.log;
   },
 
   /**
