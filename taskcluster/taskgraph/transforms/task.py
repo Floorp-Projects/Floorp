@@ -53,36 +53,6 @@ taskref_or_string = Any(
     {Required('task-reference'): basestring},
 )
 
-# For more details look at https://github.com/mozilla-releng/pulse-notify#task-definition
-#
-# Notification fields are keyed by project, which lets you use
-# `by-project` and define different messages or recepients for each
-# project.
-notification_schema = Schema({
-    # notification routes for this task status
-    # https://github.com/mozilla-releng/pulse-notify/tree/master/pulsenotify/plugins
-    Optional('plugins'): optionally_keyed_by('project', [basestring]),
-
-    # notification subject
-    Optional('subject'): optionally_keyed_by('project', basestring),
-
-    # notification message
-    Optional('message'): optionally_keyed_by('project', basestring),
-
-    # emails to be notified (for ses and smtp plugins only)
-    Optional('emails'): optionally_keyed_by('project', [basestring]),
-
-    # IRC nicknames to notify (for irc plugin only)
-    Optional('nicks'): optionally_keyed_by('project', [basestring]),
-
-    # IRC channels to send a notification to (for irc plugin only)
-    Optional('channels'): optionally_keyed_by('project', [basestring]),
-
-    # notify a 'name' based on a configuration in the service
-    # https://github.com/mozilla-releng/pulse-notify/blob/production/pulsenotify/id_configs/prod.yml
-    Optional('ids'): optionally_keyed_by('project', [basestring]),
-})
-
 # A task description is a general description of a TaskCluster task
 task_description_schema = Schema({
     # the label for this task
@@ -245,22 +215,6 @@ task_description_schema = Schema({
 
     # Whether the job should use sccache compiler caching.
     Required('needs-sccache'): bool,
-
-    # Send notifications using pulse-notifier[1] service:
-    #
-    #     https://github.com/mozilla-releng/pulse-notify
-    #
-    # Notifications are send uppon task completion, failure or when exception
-    # is raised.
-    Optional('notifications'): {
-        Optional('defined'): notification_schema,
-        Optional('pending'): notification_schema,
-        Optional('running'): notification_schema,
-        Optional('artifact-created'): notification_schema,
-        Optional('completed'): notification_schema,
-        Optional('failed'): notification_schema,
-        Optional('exception'): notification_schema,
-    },
 
     # information specific to the worker implementation that will run this task
     'worker': Any({
@@ -1668,45 +1622,6 @@ def build_task(config, tasks):
             if payload:
                 env = payload.setdefault('env', {})
                 env['MOZ_AUTOMATION'] = '1'
-
-        notifications = task.get('notifications')
-        if notifications:
-            release_config = get_release_config(config)
-            task_def['extra'].setdefault('notifications', {})
-            for notification_event, notification in notifications.items():
-
-                for notification_option, notification_option_value in notification.items():
-
-                    # resolve by-project
-                    resolve_keyed_by(
-                        notification,
-                        notification_option,
-                        'notifications',
-                        project=config.params['project'],
-                    )
-
-                    # resolve formatting for each of the fields
-                    format_kwargs = dict(
-                            task=task,
-                            task_def=task_def,
-                            config=config.__dict__,
-                            release_config=release_config,
-                    )
-                    if isinstance(notification_option_value, basestring):
-                        notification[notification_option] = notification_option_value.format(
-                            **format_kwargs
-                        )
-                    elif isinstance(notification_option_value, list):
-                        notification[notification_option] = [
-                            i.format(**format_kwargs) for i in notification_option_value
-                        ]
-
-                # change event to correct event
-                if notification_event != 'artifact-created':
-                    notification_event = 'task-' + notification_event
-
-                # update notifications
-                task_def['extra']['notifications'][notification_event] = notification
 
         yield {
             'label': task['label'],
