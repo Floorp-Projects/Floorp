@@ -3530,19 +3530,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 // This class allows us to exercise control over the window's title bar. This
 // allows for a "unified toolbar" look without having to extend the content
-// area into the title bar. It works like this:
-// 1) We set the window's style to textured.
-// 2) Because of this, the background color applies to the entire window, including
-//     the titlebar area. For normal textured windows, the default pattern is a 
-//    "brushed metal" image on Tiger and a unified gradient on Leopard.
-// 3) We set the background color to a custom NSColor subclass that knows how tall the window is.
-//    When -set is called on it, it sets a pattern (with a draw callback) as the fill. In that callback,
-//    it paints the the titlebar and background colors in the correct areas of the context it's given,
-//    which will fill the entire window (CG will tile it horizontally for us).
-// 4) Whenever the window's main state changes and when [window display] is called,
-//    Cocoa redraws the titlebar using the patternDraw callback function.
-//
-// This class also provides us with a pill button to show/hide the toolbar up to 10.6.
+// area into the title bar.
 //
 // Drawing the unified gradient in the titlebar and the toolbar works like this:
 // 1) In the style sheet we set the toolbar's -moz-appearance to toolbar.
@@ -3575,11 +3563,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
   aStyle = aStyle | NSTexturedBackgroundWindowMask;
   if ((self = [super initWithContentRect:aContentRect styleMask:aStyle backing:aBufferingType defer:aFlag])) {
-    mColor = [[TitlebarAndBackgroundColor alloc] initWithWindow:self];
-    // Bypass our guard method below.
-    [super setBackgroundColor:mColor];
-    mBackgroundColor = [[NSColor whiteColor] retain];
-
     mUnifiedToolbarHeight = 22.0f;
     mWindowButtonsRect = NSZeroRect;
     mFullScreenButtonRect = NSZeroRect;
@@ -3597,34 +3580,10 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-- (void)dealloc
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  [super setBackgroundColor:[NSColor whiteColor]];
-  [mColor release];
-  [mBackgroundColor release];
-  [super dealloc];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
 - (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive
 {
   [super setTitlebarColor:aColor forActiveWindow:aActive];
   [self setTitlebarNeedsDisplayInRect:[self titlebarRect]];
-}
-
-- (void)setBackgroundColor:(NSColor*)aColor
-{
-  [aColor retain];
-  [mBackgroundColor release];
-  mBackgroundColor = aColor;
-}
-
-- (NSColor*)windowBackgroundColor
-{
-  return mBackgroundColor;
 }
 
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect
@@ -3851,87 +3810,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   }
 
   [super sendEvent:anEvent];
-}
-
-@end
-
-// Custom NSColor subclass where most of the work takes place for drawing in
-// the titlebar area. Not used in drawsContentsIntoWindowFrame mode.
-@implementation TitlebarAndBackgroundColor
-
-- (id)initWithWindow:(ToolbarWindow*)aWindow
-{
-  if ((self = [super init])) {
-    mWindow = aWindow; // weak ref to avoid a cycle
-  }
-  return self;
-}
-
-static void
-DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
-                   CGFloat aUnifiedToolbarHeight, BOOL aIsMain)
-{
-  nsNativeThemeCocoa::DrawNativeTitlebar(aContext, aTitlebarRect, aUnifiedToolbarHeight, aIsMain, NO);
-
-  // The call to CUIDraw doesn't draw the top pixel strip at some window widths.
-  // We don't want to have a flickering transparent line, so we overdraw it.
-  CGContextSetRGBFillColor(aContext, 0.95, 0.95, 0.95, 1);
-  CGContextFillRect(aContext, CGRectMake(0, CGRectGetMaxY(aTitlebarRect) - 1,
-                                           aTitlebarRect.size.width, 1));
-}
-
-// Pattern draw callback for standard titlebar gradients and solid titlebar colors
-static void
-TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
-{
-  ToolbarWindow *window = (ToolbarWindow*)aInfo;
-  if (![window drawsContentsIntoWindowFrame]) {
-    NSRect titlebarRect = [window titlebarRect];
-    BOOL isMain = [window isMainWindow];
-    NSColor *titlebarColor = [window titlebarColorForActiveWindow:isMain];
-    if (!titlebarColor) {
-      // If the titlebar color is nil, draw the default titlebar shading.
-      DrawNativeTitlebar(aContext, NSRectToCGRect(titlebarRect),
-                         [window unifiedToolbarHeight], isMain);
-    } else {
-      // If the titlebar color is not nil, just set and draw it normally.
-      [NSGraphicsContext saveGraphicsState];
-      [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:aContext flipped:NO]];
-      [titlebarColor set];
-      NSRectFill(titlebarRect);
-      [NSGraphicsContext restoreGraphicsState];
-    }
-  }
-}
-
-- (void)setFill
-{
-  float patternWidth = [mWindow frame].size.width;
-
-  CGPatternCallbacks callbacks = {0, &TitlebarDrawCallback, NULL};
-  CGPatternRef pattern = CGPatternCreate(mWindow, CGRectMake(0.0f, 0.0f, patternWidth, [mWindow frame].size.height),
-                                         CGAffineTransformIdentity, patternWidth, [mWindow frame].size.height,
-                                         kCGPatternTilingConstantSpacing, true, &callbacks);
-
-  // Set the pattern as the fill, which is what we were asked to do. All our
-  // drawing will take place in the patternDraw callback.
-  CGColorSpaceRef patternSpace = CGColorSpaceCreatePattern(NULL);
-  CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-  CGContextSetFillColorSpace(context, patternSpace);
-  CGColorSpaceRelease(patternSpace);
-  CGFloat component = 1.0f;
-  CGContextSetFillPattern(context, pattern, &component);
-  CGPatternRelease(pattern);
-}
-
-- (void)set
-{
-  [self setFill];
-}
-
-- (NSString*)colorSpaceName
-{
-  return NSDeviceRGBColorSpace;
 }
 
 @end
