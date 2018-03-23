@@ -227,7 +227,19 @@ pref("dom.keyboardevent.dispatch_during_composition", false);
 // If this is true, TextEventDispatcher dispatches keypress event with setting
 // WidgetEvent::mFlags::mOnlySystemGroupDispatchInContent to true if it won't
 // cause inputting printable character.
+#ifdef NIGHTLY_BUILD
+pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", true);
+// Blacklist of domains of web apps which are not aware of strict keypress
+// dispatching behavior.  This is comma separated list.  If you need to match
+// all sub-domains, you can specify it as "*.example.com".  Additionally, you
+// can limit the path.  E.g., "example.com/foo" means "example.com/foo*".  So,
+// if you need to limit under a directory, the path should end with "/" like
+// "example.com/foo/".  Note that this cannot limit port number for now.
+pref("dom.keyboardevent.keypress.hack.dispatch_non_printable_keys",
+     "docs.google.com,mail.google.com");
+#else
 pref("dom.keyboardevent.keypress.dispatch_non_printable_keys_only_system_group_in_content", false);
+#endif
 
 // Whether the WebMIDI API is enabled
 pref("dom.webmidi.enabled", false);
