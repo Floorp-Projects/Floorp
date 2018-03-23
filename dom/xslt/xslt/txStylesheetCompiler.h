@@ -152,6 +152,8 @@ public:
                fcp();
     }
 
+    static void shutdown();
+
 
     RefPtr<txStylesheet> mStylesheet;
     txHandlerTable* mHandlerTable;

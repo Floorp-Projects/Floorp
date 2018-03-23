@@ -1,0 +1,18 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{ C++
+class txAExprResult;
+%}
+
+[ptr] native txAExprResultPtr(txAExprResult);
+
+[scriptable, uuid(67706346-dece-4c9b-9fc2-57cf19071014)]
+interface txIXPathObject : nsISupports
+{
+    [noscript, notxpcom] txAExprResultPtr getResult();
+};
