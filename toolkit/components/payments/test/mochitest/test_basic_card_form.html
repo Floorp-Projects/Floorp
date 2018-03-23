@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the basic-card-form element
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the basic-card-form element</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="sinon-2.3.2.js"></script>
+  <script src="payments_common.js"></script>
+  <script src="custom-elements.min.js"></script>
+  <script src="unprivileged-fallbacks.js"></script>
+  <script src="PaymentsStore.js"></script>
+  <script src="PaymentStateSubscriberMixin.js"></script>
+  <script src="autofillEditForms.js"></script>
+  <script src="basic-card-form.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="paymentRequest.css"/>
+</head>
+<body>
+  <p id="display">
+  </p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<script type="application/javascript">
+/** Test the basic-card-form element **/
+
+/* global sinon */
+/* import-globals-from payments_common.js */
+/* import-globals-from ../../res/mixins/PaymentStateSubscriberMixin.js */
+
+let display = document.getElementById("display");
+
+function checkCCForm(customEl, expectedCard) {
+  const CC_PROPERTY_NAMES = [
+    "cc-number",
+    "cc-name",
+    "cc-exp-month",
+    "cc-exp-year",
+  ];
+  for (let propName of CC_PROPERTY_NAMES) {
+    let expectedVal = expectedCard[propName] || "";
+    is(document.getElementById(propName).value,
+       expectedVal.toString(),
+       `Check ${propName}`);
+  }
+}
+
+add_task(async function test_initialState() {
+  let form = document.createElement("basic-card-form");
+  let {page} = form.requestStore.getState();
+  is(page.id, "payment-summary", "Check initial page");
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+  is(page.id, "payment-summary", "Check initial page after appending");
+  form.remove();
+});
+
+add_task(async function test_backButton() {
+  let form = document.createElement("basic-card-form");
+  form.dataset.backButtonLabel = "Back";
+  await form.requestStore.setState({
+    page: {
+      id: "test-page",
+    },
+  });
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  let stateChangePromise = promiseStateChange(form.requestStore);
+  is(form.backButton.textContent, "Back", "Check label");
+  synthesizeMouseAtCenter(form.backButton, {});
+
+  let {page} = await stateChangePromise;
+  is(page.id, "payment-summary", "Check initial page after appending");
+
+  form.remove();
+});
+
+add_task(async function test_record() {
+  let form = document.createElement("basic-card-form");
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  info("test year before current");
+  let card1 = deepClone(PTU.BasicCards.JohnDoe);
+  card1.guid = "9864798564";
+  card1["cc-exp-year"] = 2011;
+
+  await form.requestStore.setState({
+    selectedPaymentCard: card1.guid,
+    savedBasicCards: {
+      [card1.guid]: deepClone(card1),
+    },
+  });
+  await asyncElementRendered();
+  checkCCForm(form, card1);
+
+  info("test future year");
+  card1["cc-exp-year"] = 2100;
+
+  await form.requestStore.setState({
+    savedBasicCards: {
+      [card1.guid]: deepClone(card1),
+    },
+  });
+  await asyncElementRendered();
+  checkCCForm(form, card1);
+
+  info("test change to minimal record");
+  let minimalCard = {
+    // no expiration date or name
+    "cc-number": "1234567690123",
+    guid: "9gnjdhen46",
+  };
+  await form.requestStore.setState({
+    selectedPaymentCard: minimalCard.guid,
+    savedBasicCards: {
+      [minimalCard.guid]: deepClone(minimalCard),
+    },
+  });
+  await asyncElementRendered();
+  checkCCForm(form, minimalCard);
+
+  info("change to no selected card");
+  await form.requestStore.setState({
+    selectedPaymentCard: null,
+  });
+  await asyncElementRendered();
+  checkCCForm(form, {});
+
+  form.remove();
+});
+</script>
+
+</body>
+</html>
