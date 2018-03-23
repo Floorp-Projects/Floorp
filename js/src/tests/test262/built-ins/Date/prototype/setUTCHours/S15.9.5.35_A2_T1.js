@@ -8,11 +8,11 @@ es5id: 15.9.5.35_A2_T1
 description: The "length" property of the "setUTCHours" is 4
 ---*/
 
-if(Date.prototype.setUTCHours.hasOwnProperty("length") !== true){
+if (Date.prototype.setUTCHours.hasOwnProperty("length") !== true) {
   $ERROR('#1: The setUTCHours has a "length" property');
 }
 
-if(Date.prototype.setUTCHours.length !== 4){
+if (Date.prototype.setUTCHours.length !== 4) {
   $ERROR('#2: The "length" property of the setUTCHours is 4');
 }
 

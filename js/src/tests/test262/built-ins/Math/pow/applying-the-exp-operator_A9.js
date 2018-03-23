@@ -17,8 +17,7 @@ base[4] = -0.5;
 base[5] = -0.999999999999999;
 var basenum = 6;
 
-for (var i = 0; i < basenum; i++)
-{
+for (var i = 0; i < basenum; i++) {
   assert.sameValue(Math.pow(base[i], exponent), 0, exponent);
 }
 

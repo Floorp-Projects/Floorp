@@ -8,13 +8,13 @@ description: >
     (8.10.5 step 7)
 ---*/
 
-        var obj = {};
+var obj = {};
 
-        Object.defineProperty(obj, "property", {
-            get: function () {
-                return "present";
-            }
-        });
+Object.defineProperty(obj, "property", {
+  get: function() {
+    return "present";
+  }
+});
 
 assert.sameValue(obj.property, "present", 'obj.property');
 

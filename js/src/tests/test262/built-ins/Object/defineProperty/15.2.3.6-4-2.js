@@ -12,16 +12,18 @@ description: >
     values (data properties)(8.12.9 step 4.a.i)
 ---*/
 
-  var o = {};
+var o = {};
 
-  var desc = { value: 1 };
-  Object.defineProperty(o, "foo", desc);
+var desc = {
+  value: 1
+};
+Object.defineProperty(o, "foo", desc);
 
-  var propDesc = Object.getOwnPropertyDescriptor(o, "foo");
+var propDesc = Object.getOwnPropertyDescriptor(o, "foo");
 
-assert.sameValue(propDesc.value, 1, 'propDesc.value');                    // this is the value that was set
-assert.sameValue(propDesc.writable, false, 'propDesc.writable');          // false by default
-assert.sameValue(propDesc.enumerable, false, 'propDesc.enumerable');      // false by default
-assert.sameValue(propDesc.configurable, false, 'propDesc.configurable');  // false by default
+assert.sameValue(propDesc.value, 1, 'propDesc.value'); // this is the value that was set
+assert.sameValue(propDesc.writable, false, 'propDesc.writable'); // false by default
+assert.sameValue(propDesc.enumerable, false, 'propDesc.enumerable'); // false by default
+assert.sameValue(propDesc.configurable, false, 'propDesc.configurable'); // false by default
 
 reportCompare(0, 0);

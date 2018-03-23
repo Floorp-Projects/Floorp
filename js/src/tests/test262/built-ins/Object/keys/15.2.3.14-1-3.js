@@ -8,6 +8,6 @@ description: >
     Object (string)
 ---*/
 
-    Object.keys('abc');
+Object.keys('abc');
 
 reportCompare(0, 0);

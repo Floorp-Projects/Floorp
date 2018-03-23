@@ -8,6 +8,6 @@ description: >
     string primitive
 ---*/
 
-    Object.seal("abc");
+Object.seal("abc");
 
 reportCompare(0, 0);

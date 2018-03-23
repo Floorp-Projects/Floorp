@@ -8,6 +8,6 @@ description: >
     not Object
 ---*/
 
-    Object.isSealed(0);
+Object.isSealed(0);
 
 reportCompare(0, 0);

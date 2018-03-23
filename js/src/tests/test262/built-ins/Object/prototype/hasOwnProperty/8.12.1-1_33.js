@@ -8,8 +8,13 @@ description: >
     setter property)
 ---*/
 
-    var o = {};
-    Object.defineProperty(o, "foo", {set: function() {;}, enumerable:true, configurable:true});
+var o = {};
+Object.defineProperty(o, "foo", {
+  set: function() {;
+  },
+  enumerable: true,
+  configurable: true
+});
 
 assert(o.hasOwnProperty("foo"), 'o.hasOwnProperty("foo") !== true');
 

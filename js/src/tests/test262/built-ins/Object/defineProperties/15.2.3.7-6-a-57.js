@@ -13,23 +13,22 @@ includes: [propertyHelper.js]
 var obj = {};
 
 function get_Func() {
-    return 10;
+  return 10;
 }
 
 Object.defineProperty(obj, "foo", {
-    get: get_Func
+  get: get_Func
 });
 
 Object.defineProperties(obj, {
-    foo: {
-        get: get_Func
-    }
+  foo: {
+    get: get_Func
+  }
 });
 
 verifyNotEnumerable(obj, "foo");
 assert.sameValue(obj.foo, 10);
 
 verifyNotConfigurable(obj, "foo")
-
 
 reportCompare(0, 0);

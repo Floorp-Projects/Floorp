@@ -11,19 +11,19 @@ includes: [propertyHelper.js]
 
 var proto = {};
 Object.defineProperty(proto, "prop", {
-    value: 11,
-    configurable: false
+  value: 11,
+  configurable: false
 });
-var Con = function () { };
+var Con = function() {};
 Con.prototype = proto;
 
 var obj = new Con();
 
 Object.defineProperties(obj, {
-    prop: {
-        value: 12,
-        configurable: true
-    }
+  prop: {
+    value: 12,
+    configurable: true
+  }
 });
 
 verifyEqualTo(obj, "prop", 12);
@@ -33,6 +33,5 @@ verifyNotWritable(obj, "prop");
 verifyNotEnumerable(obj, "prop");
 
 verifyConfigurable(obj, "prop");
-
 
 reportCompare(0, 0);

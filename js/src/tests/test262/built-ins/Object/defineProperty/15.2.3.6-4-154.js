@@ -9,11 +9,11 @@ description: >
     value 2^32 - 2 (15.4.5.1 step 3.c)
 ---*/
 
-        var arrObj = [];
+var arrObj = [];
 
-        Object.defineProperty(arrObj, "length", {
-            value: 4294967294 
-        });
+Object.defineProperty(arrObj, "length", {
+  value: 4294967294
+});
 
 assert.sameValue(arrObj.length, 4294967294, 'arrObj.length');
 

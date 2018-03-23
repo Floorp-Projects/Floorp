@@ -9,9 +9,9 @@ description: >
     unreferenced
 ---*/
 
-  var arr = new Array(10);
+var arr = new Array(10);
 assert.throws(ReferenceError, function() {
-    arr.forEach(foo);
+  arr.forEach(foo);
 });
 
 reportCompare(0, 0);

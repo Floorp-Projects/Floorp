@@ -11,18 +11,18 @@ description: >
 flags: [onlyStrict]
 ---*/
 
-var f1 = function () {
-    (function () {
-        gNonStrict();
-    })();
+var f1 = function() {
+  (function() {
+    gNonStrict();
+  })();
 }
 
 assert.throws(TypeError, function() {
-    f1();
+  f1();
 });
 
 function gNonStrict() {
-    return gNonStrict.caller;
+  return gNonStrict.caller;
 }
 
 reportCompare(0, 0);

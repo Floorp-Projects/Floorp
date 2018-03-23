@@ -17,18 +17,17 @@ includes: [propertyHelper.js]
 var arr = [];
 
 Object.defineProperty(arr, "1", {
-    get: undefined
+  get: undefined
 });
 
 Object.defineProperties(arr, {
-    "1": {
-        get: undefined
-    }
+  "1": {
+    get: undefined
+  }
 });
 
 verifyNotEnumerable(arr, "1");
 
 verifyNotConfigurable(arr, "1");
-
 
 reportCompare(0, 0);

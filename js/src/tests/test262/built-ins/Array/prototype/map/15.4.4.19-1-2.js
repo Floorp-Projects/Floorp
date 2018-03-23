@@ -9,7 +9,7 @@ description: Array.prototype.map - applied to null
 
 
 assert.throws(TypeError, function() {
-            Array.prototype.map.call(null); // TypeError is thrown if value is null
+  Array.prototype.map.call(null); // TypeError is thrown if value is null
 });
 
 reportCompare(0, 0);

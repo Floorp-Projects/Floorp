@@ -23,5 +23,4 @@ verifyEnumerable(obj, "foo");
 
 verifyConfigurable(obj, "foo");
 
-
 reportCompare(0, 0);

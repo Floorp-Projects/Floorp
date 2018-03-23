@@ -20,5 +20,4 @@ assert.sameValue(BigInt("   7   "), 7n);
 assert.sameValue(BigInt("   -197   "), -197n);
 assert.sameValue(BigInt("     "), 0n);
 
-
 reportCompare(0, 0);

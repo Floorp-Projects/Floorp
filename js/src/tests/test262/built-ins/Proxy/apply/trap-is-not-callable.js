@@ -7,11 +7,11 @@ description: >
 ---*/
 
 var p = new Proxy(function() {}, {
-    apply: {}
+  apply: {}
 });
 
 assert.throws(TypeError, function() {
-    p();
+  p();
 });
 
 reportCompare(0, 0);

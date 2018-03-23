@@ -9,15 +9,15 @@ description: >
     7.a)
 ---*/
 
-        var obj = {};
+var obj = {};
 
-        var arrObj = [];
+var arrObj = [];
 
-        arrObj.get = function () {
-            return "arrayGetProperty";
-        };
+arrObj.get = function() {
+  return "arrayGetProperty";
+};
 
-        Object.defineProperty(obj, "property", arrObj);
+Object.defineProperty(obj, "property", arrObj);
 
 assert.sameValue(obj.property, "arrayGetProperty", 'obj.property');
 

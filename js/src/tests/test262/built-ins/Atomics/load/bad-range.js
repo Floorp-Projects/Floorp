@@ -19,11 +19,11 @@ if (typeof BigInt !== "undefined") {
 }
 
 testWithTypedArrayConstructors(function(View) {
-    let view = new View(sab);
-    testWithAtomicsOutOfBoundsIndices(function(IdxGen) {
-        let Idx = IdxGen(view);
-        assert.throws(RangeError, () => Atomics.load(view, Idx));
-    });
+  let view = new View(sab);
+  testWithAtomicsOutOfBoundsIndices(function(IdxGen) {
+    let Idx = IdxGen(view);
+    assert.throws(RangeError, () => Atomics.load(view, Idx));
+  });
 }, views);
 
 reportCompare(0, 0);

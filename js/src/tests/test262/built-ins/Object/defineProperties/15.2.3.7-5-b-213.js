@@ -9,17 +9,17 @@ description: >
     step 7.a)
 ---*/
 
-        var obj = {};
+var obj = {};
 
-        var descObj = new Error();
+var descObj = new Error();
 
-        descObj.get = function () {
-            return "Error";
-        };
+descObj.get = function() {
+  return "Error";
+};
 
-        Object.defineProperties(obj, {
-            property: descObj
-        });
+Object.defineProperties(obj, {
+  property: descObj
+});
 
 assert.sameValue(obj.property, "Error", 'obj.property');
 
