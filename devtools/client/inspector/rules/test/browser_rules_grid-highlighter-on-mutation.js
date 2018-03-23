@@ -19,19 +19,19 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view, testActor} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view, testActor} = await openRuleView();
   let highlighters = view.highlighters;
 
-  yield selectNode("#grid", inspector);
+  await selectNode("#grid", inspector);
   let container = getRuleViewProperty(view, "#grid", "display").valueSpan;
   let gridToggle = container.querySelector(".ruleview-grid");
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");
   let onHighlighterShown = highlighters.once("grid-highlighter-shown");
   gridToggle.click();
-  yield onHighlighterShown;
+  await onHighlighterShown;
   ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
 
   let onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
@@ -39,6 +39,6 @@ add_task(function* () {
   testActor.eval(`
     document.querySelector("#grid").remove();
   `);
-  yield onHighlighterHidden;
+  await onHighlighterHidden;
   ok(!highlighters.gridHighlighterShown, "CSS grid highlighter is hidden.");
 });

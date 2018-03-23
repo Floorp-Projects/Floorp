@@ -13,13 +13,13 @@ const URL = "data:text/html;charset=UTF-8," +
             encodeURI('<iframe src="' + FrameURL +
                       '"></iframe><div id="top">top</div>');
 
-add_task(function* () {
+add_task(async function() {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
 
-  let {inspector, toolbox, testActor} = yield openInspectorForURL(URL);
+  let {inspector, toolbox, testActor} = await openInspectorForURL(URL);
 
   // Verify we are on the top level document
-  ok((yield testActor.hasNode("#top")),
+  ok((await testActor.hasNode("#top")),
      "We have the test node on the top level document");
 
   assertMarkupViewIsLoaded(inspector);
@@ -29,8 +29,8 @@ add_task(function* () {
   ok(!btn.firstChild, "The frame list button doesn't have any children");
 
   // Open frame menu and wait till it's available on the screen.
-  let menu = yield toolbox.showFramesMenu({target: btn});
-  yield once(menu, "open");
+  let menu = await toolbox.showFramesMenu({target: btn});
+  await once(menu, "open");
 
   // Verify that the menu is popuplated.
   let frames = menu.items.slice();
@@ -52,25 +52,25 @@ add_task(function* () {
   // Only select the iframe after we are able to select an element from the top
   // level document.
   let newRoot = inspector.once("new-root");
-  yield selectNode("#top", inspector);
+  await selectNode("#top", inspector);
   info("Select the iframe");
   frames[0].click();
 
-  yield willNavigate;
-  yield newRoot;
+  await willNavigate;
+  await newRoot;
 
   info("Navigation to the iframe is done, the inspector should be back up");
 
   // Verify we are on page one
-  ok(!(yield testActor.hasNode("iframe")),
+  ok(!(await testActor.hasNode("iframe")),
     "We not longer have access to the top frame elements");
-  ok((yield testActor.hasNode("#frame")),
+  ok((await testActor.hasNode("#frame")),
     "But now have direct access to the iframe elements");
 
   // On page 2 load, verify we have the right content
   assertMarkupViewIsLoaded(inspector);
 
-  yield selectNode("#frame", inspector);
+  await selectNode("#frame", inspector);
 
   Services.prefs.clearUserPref("devtools.command-button-frames.enabled");
 });

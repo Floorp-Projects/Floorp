@@ -15,16 +15,16 @@ Services.scriptloader.loadSubScript(
 
 const TEST_URI = URL_ROOT + "doc_inspector_gcli-inspect-command.html";
 
-add_task(function* () {
-  return helpers.addTabWithToolbar(TEST_URI, Task.async(function* (options) {
-    let {inspector} = yield openInspector();
+add_task(async function() {
+  return helpers.addTabWithToolbar(TEST_URI, async function(options) {
+    let {inspector} = await openInspector();
 
-    let checkSelection = Task.async(function* (selector) {
-      let node = yield getNodeFront(selector, inspector);
+    let checkSelection = async function(selector) {
+      let node = await getNodeFront(selector, inspector);
       is(inspector.selection.nodeFront, node, "the current selection is correct");
-    });
+    };
 
-    yield helpers.audit(options, [
+    await helpers.audit(options, [
       {
         setup: "inspect",
         check: {
@@ -121,5 +121,5 @@ add_task(function* () {
         post: () => checkSelection(":root"),
       },
     ]);
-  }));
+  });
 });

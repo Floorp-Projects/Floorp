@@ -9,29 +9,29 @@
 
 const TEST_URI = URL_ROOT + "doc_content_stylesheet.html";
 
-add_task(function* () {
-  yield addTab(TEST_URI);
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#target", inspector);
+add_task(async function() {
+  await addTab(TEST_URI);
+  let {inspector, view} = await openRuleView();
+  await selectNode("#target", inspector);
 
   info("Setting a font-weight property on all rules");
-  yield setPropertyOnAllRules(view);
+  await setPropertyOnAllRules(view);
 
   info("Reselecting the element");
-  yield selectNode("body", inspector);
-  yield selectNode("#target", inspector);
+  await selectNode("body", inspector);
+  await selectNode("#target", inspector);
 
   checkPropertyOnAllRules(view);
 });
 
-function* setPropertyOnAllRules(view) {
+async function setPropertyOnAllRules(view) {
   // Wait for the properties to be properly created on the backend and for the
   // view to be updated.
   let onRefreshed = view.once("ruleview-refreshed");
   for (let rule of view._elementStyle.rules) {
     rule.editor.addProperty("font-weight", "bold", "", true);
   }
-  yield onRefreshed;
+  await onRefreshed;
 }
 
 function checkPropertyOnAllRules(view) {

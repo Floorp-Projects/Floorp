@@ -27,10 +27,10 @@ const TEST_URI = `
 
 const TYPE = "CssTransformHighlighter";
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  yield selectNode(".test", inspector);
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
+  await selectNode(".test", inspector);
 
   let hs = view.highlighters;
 
@@ -44,7 +44,7 @@ add_task(function* () {
   let classRuleEditor = getRuleViewRuleEditor(view, 1);
   let propEditor = classRuleEditor.rule.textProps[0].editor;
   propEditor.enable.click();
-  yield classRuleEditor.rule._applyingModifications;
+  await classRuleEditor.rule._applyingModifications;
 
   info("Faking a mousemove on the disabled property");
   ({valueSpan} = getRuleViewProperty(view, ".test", "transform"));
@@ -56,5 +56,5 @@ add_task(function* () {
   ({valueSpan} = getRuleViewProperty(view, "div", "transform"));
   let onHighlighterShown = hs.once("highlighter-shown");
   hs.onMouseMove({target: valueSpan});
-  yield onHighlighterShown;
+  await onHighlighterShown;
 });

@@ -94,22 +94,22 @@ const TEST_DATA = [
   }
 ];
 
-add_task(function* () {
-  let { inspector } = yield openInspectorForURL(TEST_URL);
+add_task(async function() {
+  let { inspector } = await openInspectorForURL(TEST_URL);
   let searchBox = inspector.searchBox;
   let popup = inspector.searchSuggestions.searchPopup;
 
-  yield focusSearchBoxUsingShortcut(inspector.panelWin);
+  await focusSearchBoxUsingShortcut(inspector.panelWin);
 
   for (let { key, suggestions } of TEST_DATA) {
     info("Pressing " + key + " to get " + formatSuggestions(suggestions));
 
     let command = once(searchBox, "input");
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
-    yield command;
+    await command;
 
     info("Waiting for search query to complete");
-    yield inspector.searchSuggestions._lastQuery;
+    await inspector.searchSuggestions._lastQuery;
 
     info("Query completed. Performing checks for input '" +
          searchBox.value + "'");

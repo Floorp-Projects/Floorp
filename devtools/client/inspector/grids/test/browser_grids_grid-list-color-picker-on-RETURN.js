@@ -18,9 +18,9 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, gridInspector } = yield openLayoutView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let { inspector, gridInspector } = await openLayoutView();
   let { document: doc } = gridInspector;
   let { store } = inspector;
   let cPicker = gridInspector.getSwatchColorPickerTooltip();
@@ -38,9 +38,9 @@ add_task(function* () {
   info("Opening the color picker by clicking on the #grid color swatch.");
   let onColorPickerReady = cPicker.once("ready");
   swatch.click();
-  yield onColorPickerReady;
+  await onColorPickerReady;
 
-  yield simulateColorPickerChange(cPicker, [0, 255, 0, .5]);
+  await simulateColorPickerChange(cPicker, [0, 255, 0, .5]);
 
   is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
     "The color swatch's background was updated.");
@@ -50,8 +50,8 @@ add_task(function* () {
     state.grids[0].color === "#00FF0080");
   let onColorPickerHidden = cPicker.tooltip.once("hidden");
   focusAndSendKey(spectrum.element.ownerDocument.defaultView, "RETURN");
-  yield onColorPickerHidden;
-  yield onGridColorUpdate;
+  await onColorPickerHidden;
+  await onGridColorUpdate;
 
   is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
     "The color swatch's background was kept after RETURN.");

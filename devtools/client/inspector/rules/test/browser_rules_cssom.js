@@ -9,10 +9,10 @@
 
 const TEST_URI = URL_ROOT + "doc_cssom.html";
 
-add_task(function* () {
-  yield addTab(TEST_URI);
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#target", inspector);
+add_task(async function() {
+  await addTab(TEST_URI);
+  let {inspector, view} = await openRuleView();
+  await selectNode("#target", inspector);
 
   let elementStyle = view._elementStyle;
   let rule;

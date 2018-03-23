@@ -40,9 +40,9 @@ const TEST_ARRAY = [{
   expectedClasses: ["class", "a", "class2", "class3", "class4", "class5"]
 }];
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8,");
-  let {testActor, inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8,");
+  let {testActor, inspector, view} = await openRuleView();
 
   info("Open the class panel");
   view.showClassPanel();
@@ -69,13 +69,13 @@ add_task(function* () {
 
     if (!expectNoMutation) {
       info("Wait for the DOM to change");
-      yield onMutation;
+      await onMutation;
     }
 
-    yield onEmpty;
+    await onEmpty;
 
     info("Check the state of the DOM node");
-    let className = yield testActor.getAttribute("body", "class");
+    let className = await testActor.getAttribute("body", "class");
     let expectedClassName = expectedClasses.length ? expectedClasses.join(" ") : null;
     is(className, expectedClassName, "The DOM node has the right className");
 

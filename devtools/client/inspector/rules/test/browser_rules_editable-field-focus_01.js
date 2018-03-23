@@ -22,26 +22,26 @@ const TEST_URI = `
   <div id='testid'>Styled Node</div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
-  yield selectNode("#testid", inspector);
-  yield testEditableFieldFocus(inspector, view, "KEY_Enter");
-  yield testEditableFieldFocus(inspector, view, "KEY_Tab");
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
+  await selectNode("#testid", inspector);
+  await testEditableFieldFocus(inspector, view, "KEY_Enter");
+  await testEditableFieldFocus(inspector, view, "KEY_Tab");
 });
 
-function* testEditableFieldFocus(inspector, view, commitKey) {
+async function testEditableFieldFocus(inspector, view, commitKey) {
   info("Click on the selector of the inline style ('element')");
   let ruleEditor = getRuleViewRuleEditor(view, 0);
   let onFocus = once(ruleEditor.element, "focus", true);
   ruleEditor.selectorText.click();
-  yield onFocus;
+  await onFocus;
   assertEditor(view, ruleEditor.newPropSpan,
     "Focus should be in the element property span");
 
   info("Focus the next field with " + commitKey);
   ruleEditor = getRuleViewRuleEditor(view, 1);
-  yield focusNextEditableField(view, ruleEditor, commitKey);
+  await focusNextEditableField(view, ruleEditor, commitKey);
   assertEditor(view, ruleEditor.selectorText,
     "Focus should have moved to the next rule selector");
 
@@ -54,27 +54,27 @@ function* testEditableFieldFocus(inspector, view, commitKey) {
     // to the next property name (which occurs after the first iteration, as for
     // i=0, the previous field is the selector).
     let onRuleViewChanged = i > 0 ? view.once("ruleview-changed") : null;
-    yield focusNextEditableField(view, ruleEditor, commitKey);
-    yield onRuleViewChanged;
+    await focusNextEditableField(view, ruleEditor, commitKey);
+    await onRuleViewChanged;
     assertEditor(view, propEditor.nameSpan,
       "Focus should have moved to the property name");
 
     info("Focus the next field with " + commitKey);
-    yield focusNextEditableField(view, ruleEditor, commitKey);
+    await focusNextEditableField(view, ruleEditor, commitKey);
     assertEditor(view, propEditor.valueSpan,
       "Focus should have moved to the property value");
   }
 
   // Expect a ruleview-changed event again as we're bluring a property value.
   let onRuleViewChanged = view.once("ruleview-changed");
-  yield focusNextEditableField(view, ruleEditor, commitKey);
-  yield onRuleViewChanged;
+  await focusNextEditableField(view, ruleEditor, commitKey);
+  await onRuleViewChanged;
   assertEditor(view, ruleEditor.newPropSpan,
     "Focus should have moved to the new property span");
 
   ruleEditor = getRuleViewRuleEditor(view, 2);
 
-  yield focusNextEditableField(view, ruleEditor, commitKey);
+  await focusNextEditableField(view, ruleEditor, commitKey);
   assertEditor(view, ruleEditor.selectorText,
     "Focus should have moved to the next rule selector");
 
@@ -82,10 +82,10 @@ function* testEditableFieldFocus(inspector, view, commitKey) {
   EventUtils.synthesizeKey("KEY_Escape");
 }
 
-function* focusNextEditableField(view, ruleEditor, commitKey) {
+async function focusNextEditableField(view, ruleEditor, commitKey) {
   let onFocus = once(ruleEditor.element, "focus", true);
   EventUtils.synthesizeKey(commitKey, {}, view.styleWindow);
-  yield onFocus;
+  await onFocus;
 }
 
 function assertEditor(view, element, message) {

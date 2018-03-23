@@ -14,17 +14,17 @@ const TEST_ACTOR_URL = CHROME_URL_ROOT + "actor_events_form.js";
 
 var {EventsFormFront} = require(TEST_ACTOR_URL);
 
-add_task(function* () {
+add_task(async function() {
   info("Opening the Toolbox");
-  let tab = yield addTab(TEST_PAGE_URL);
-  let toolbox = yield openToolboxForTab(tab, "webconsole");
+  let tab = await addTab(TEST_PAGE_URL);
+  let toolbox = await openToolboxForTab(tab, "webconsole");
 
   info("Registering test actor");
-  let {registrar, front} = yield registerTestActor(toolbox);
+  let {registrar, front} = await registerTestActor(toolbox);
 
   info("Selecting the Inspector panel");
-  let inspector = yield toolbox.selectTool("inspector");
-  let container = yield getContainerForSelector("#container", inspector);
+  let inspector = await toolbox.selectTool("inspector");
+  let container = await getContainerForSelector("#container", inspector);
   isnot(container, null, "There must be requested container");
 
   let nodeFront = container.node;
@@ -32,7 +32,7 @@ add_task(function* () {
   is(value, "test-value", "There must be custom property");
 
   info("Unregistering actor");
-  yield unregisterActor(registrar, front);
+  await unregisterActor(registrar, front);
 });
 
 function registerTestActor(toolbox) {

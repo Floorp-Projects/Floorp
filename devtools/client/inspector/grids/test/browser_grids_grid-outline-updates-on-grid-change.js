@@ -20,10 +20,10 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
-  let { inspector, gridInspector, testActor } = yield openLayoutView();
+  let { inspector, gridInspector, testActor } = await openLayoutView();
   let { document: doc } = gridInspector;
   let { highlighters, store } = inspector;
 
@@ -37,9 +37,9 @@ add_task(function* () {
 
   checkbox.click();
 
-  yield onHighlighterShown;
-  yield onCheckboxChange;
-  let elements = yield onGridOutlineRendered;
+  await onHighlighterShown;
+  await onCheckboxChange;
+  let elements = await onGridOutlineRendered;
 
   info("Checking the grid outline is shown.");
   is(elements.length, 2, "Grid outline is shown.");
@@ -62,8 +62,8 @@ add_task(function* () {
     document.querySelector(".container").appendChild(div);
   `);
 
-  yield onReflow;
-  elements = yield onGridOutlineChanged;
+  await onReflow;
+  elements = await onGridOutlineChanged;
 
   info("Checking the grid outline is correct.");
   is(elements.length, 4, "Grid outline was changed.");

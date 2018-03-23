@@ -19,28 +19,28 @@ const TEST_URI = `
   </div>
 `;
 
-add_task(function* () {
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = yield openRuleView();
+add_task(async function() {
+  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = await openRuleView();
   let highlighters = view.highlighters;
 
-  yield selectNode("#grid", inspector);
+  await selectNode("#grid", inspector);
   let container = getRuleViewProperty(view, "#grid", "display").valueSpan;
   let gridToggle = container.querySelector(".ruleview-grid");
 
   info("Toggling ON the CSS grid highlighter from the rule-view.");
   let onHighlighterShown = highlighters.once("grid-highlighter-shown");
   gridToggle.click();
-  yield onHighlighterShown;
+  await onHighlighterShown;
 
   info("Edit the 'grid' property value to 'block'.");
-  let editor = yield focusEditableField(view, container);
+  let editor = await focusEditableField(view, container);
   let onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
   let onDone = view.once("ruleview-changed");
   editor.input.value = "block;";
   EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
-  yield onHighlighterHidden;
-  yield onDone;
+  await onHighlighterHidden;
+  await onDone;
 
   info("Check the grid highlighter and grid toggle button are hidden.");
   gridToggle = container.querySelector(".ruleview-grid");

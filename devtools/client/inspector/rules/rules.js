@@ -8,7 +8,6 @@
 
 const promise = require("promise");
 const Services = require("Services");
-const {Task} = require("devtools/shared/task");
 const {l10n} = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const OutputParser = require("devtools/client/shared/output-parser");
@@ -221,7 +220,7 @@ CssRuleView.prototype = {
    *
    * @return {Promise} Resolves to the instance of the highlighter.
    */
-  getSelectorHighlighter: Task.async(function* () {
+  async getSelectorHighlighter() {
     if (!this.inspector) {
       return null;
     }
@@ -236,7 +235,7 @@ CssRuleView.prototype = {
     }
 
     try {
-      let h = yield utils.getHighlighterByType("SelectorHighlighter");
+      let h = await utils.getHighlighterByType("SelectorHighlighter");
       this.selectorHighlighter = h;
       return h;
     } catch (e) {
@@ -244,7 +243,7 @@ CssRuleView.prototype = {
       // current target.  It could be an older server, or a XUL page.
       return null;
     }
-  }),
+  },
 
   /**
    * Highlight/unhighlight all the nodes that match a given set of selectors
@@ -262,18 +261,18 @@ CssRuleView.prototype = {
    * @param {String} selector
    *        The selector used to find nodes in the page.
    */
-  toggleSelectorHighlighter: Task.async(function* (selectorIcon, selector) {
+  async toggleSelectorHighlighter(selectorIcon, selector) {
     if (this.lastSelectorIcon) {
       this.lastSelectorIcon.classList.remove("highlighted");
     }
     selectorIcon.classList.remove("highlighted");
 
-    let highlighter = yield this.getSelectorHighlighter();
+    let highlighter = await this.getSelectorHighlighter();
     if (!highlighter) {
       return;
     }
 
-    yield highlighter.hide();
+    await highlighter.hide();
 
     if (selector !== this.highlighters.selectorHighlighterShown) {
       this.highlighters.selectorHighlighterShown = selector;
@@ -282,7 +281,7 @@ CssRuleView.prototype = {
 
       let node = this.inspector.selection.nodeFront;
 
-      yield highlighter.show(node, {
+      await highlighter.show(node, {
         hideInfoBar: true,
         hideGuides: true,
         selector
@@ -293,7 +292,7 @@ CssRuleView.prototype = {
       this.highlighters.selectorHighlighterShown = null;
       this.emit("ruleview-selectorhighlighter-toggled", false);
     }
-  }),
+  },
 
   /**
    * Get the type of a given node in the rule-view
