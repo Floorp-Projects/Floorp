@@ -50,6 +50,7 @@ class nsINode;
 class nsIPresShell;
 class nsISupports;
 class nsITransaction;
+class nsITransactionListener;
 class nsIWidget;
 class nsRange;
 
@@ -1160,6 +1161,27 @@ public:
   }
 
   /**
+   * Adds or removes transaction listener to or from the transaction manager.
+   * Note that TransactionManager does not check if the listener is in the
+   * array.  So, caller of AddTransactionListener() needs to manage if it's
+   * already been registered to the transaction manager.
+   */
+  bool AddTransactionListener(nsITransactionListener& aListener)
+  {
+    if (!mTransactionManager) {
+      return false;
+    }
+    return mTransactionManager->AddTransactionListener(aListener);
+  }
+  bool RemoveTransactionListener(nsITransactionListener& aListener)
+  {
+    if (!mTransactionManager) {
+      return false;
+    }
+    return mTransactionManager->RemoveTransactionListener(aListener);
+  }
+
+  /**
    * From html rules code - migration in progress.
    */
   static nsAtom* GetTag(nsIDOMNode* aNode);
@@ -1449,12 +1471,6 @@ public:
     // (IsMailEditor()), but false for webpages.
     return !IsInteractionAllowed() || IsMailEditor();
   }
-
-  /**
-   * GetTransactionManager() returns transaction manager associated with the
-   * editor.  This may return nullptr if undo/redo hasn't been enabled.
-   */
-  already_AddRefed<nsITransactionManager> GetTransactionManager() const;
 
   /**
    * Get the input event target. This might return null.

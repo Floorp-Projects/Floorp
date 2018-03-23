@@ -844,25 +844,16 @@ EditorBase::GetNumberOfRedoItems(int32_t* aNumItems)
 }
 
 NS_IMETHODIMP
-EditorBase::GetTransactionManager(nsITransactionManager** aTxnManager)
+EditorBase::GetTransactionManager(nsITransactionManager** aTransactionManager)
 {
-  // NOTE: If you need to override this method, you need to make
-  //       GetTransactionManager() virtual.
-  if (NS_WARN_IF(!aTxnManager)) {
+  if (NS_WARN_IF(!aTransactionManager)) {
     return NS_ERROR_INVALID_ARG;
   }
-  *aTxnManager = GetTransactionManager().take();
-  if (NS_WARN_IF(!*aTxnManager)) {
+  if (NS_WARN_IF(!mTransactionManager)) {
     return NS_ERROR_FAILURE;
   }
+  NS_IF_ADDREF(*aTransactionManager = mTransactionManager);
   return NS_OK;
-}
-
-already_AddRefed<nsITransactionManager>
-EditorBase::GetTransactionManager() const
-{
-  nsCOMPtr<nsITransactionManager> transactionManager(mTransactionManager);
-  return transactionManager.forget();
 }
 
 NS_IMETHODIMP

@@ -435,15 +435,19 @@ TransactionManager::RemoveTopUndo()
 NS_IMETHODIMP
 TransactionManager::AddListener(nsITransactionListener* aListener)
 {
-  NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
-  return mListeners.AppendObject(aListener) ? NS_OK : NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!aListener)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return AddTransactionListener(*aListener) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 TransactionManager::RemoveListener(nsITransactionListener* aListener)
 {
-  NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
-  return mListeners.RemoveObject(aListener) ? NS_OK : NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!aListener)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return RemoveTransactionListener(*aListener) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
