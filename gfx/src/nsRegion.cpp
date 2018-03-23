@@ -10,73 +10,6 @@
 #include "gfxUtils.h"
 #include "mozilla/ToString.h"
 
-using namespace std;
-
-void
-nsRegion::AssertStateInternal() const
-{
-  bool failed = false;
-  // Verify consistent state inside the region.
-  int32_t lastY = INT32_MIN;
-  int32_t lowestX = INT32_MAX;
-  int32_t highestX = INT32_MIN;
-  for (auto iter = mBands.begin(); iter != mBands.end(); iter++) {
-    const Band& band = *iter;
-    if (band.bottom <= band.top) {
-      failed = true;
-      break;
-    }
-    if (band.top < lastY) {
-      failed = true;
-      break;
-    }
-    lastY = band.bottom;
-
-    lowestX = std::min(lowestX, band.mStrips.begin()->left);
-    highestX = std::max(highestX, band.mStrips.LastElement().right);
-
-    int32_t lastX = INT32_MIN;
-    if (iter != mBands.begin()) {
-      auto prev = iter;
-      prev--;
-
-      if (prev->bottom == iter->top) {
-        if (band.EqualStrips(*prev)) {
-          failed = true;
-          break;
-        }
-      }
-    }
-    for (const Strip& strip : band.mStrips) {
-      if (strip.right <= strip.left) {
-        failed = true;
-        break;
-      }
-      if (strip.left <= lastX) {
-        failed = true;
-        break;
-      }
-      lastX = strip.right;
-    }
-    if (failed) {
-      break;
-    }
-  }
-
-  if (!(mBounds == CalculateBounds())) {
-    failed = true;
-  }
-
-  if (failed) {
-#ifdef DEBUG_REGIONS
-    if (mCurrentOpGenerator) {
-      mCurrentOpGenerator->OutputOp();
-    }
-#endif
-    MOZ_ASSERT(false);
-  }
-}
-
 bool nsRegion::Contains(const nsRegion& aRgn) const
 {
   // XXX this could be made faster by iterating over
@@ -91,92 +24,76 @@ bool nsRegion::Contains(const nsRegion& aRgn) const
 
 bool nsRegion::Intersects(const nsRect& aRect) const
 {
-  if (mBands.IsEmpty()) {
-    return mBounds.Intersects(aRect);
-  }
-
-  if (!mBounds.Intersects(aRect)) {
-    return false;
-  }
-
-  Strip rectStrip(aRect.X(), aRect.XMost());
-
-  auto iter = mBands.begin();
-  while (iter != mBands.end()) {
-    if (iter->top >= aRect.YMost()) {
-      return false;
+  // XXX this could be made faster by using pixman_region32_contains_rect
+  for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
+    if (iter.Get().Intersects(aRect)) {
+      return true;
     }
-
-    if (iter->bottom <= aRect.Y()) {
-      // This band is entirely before aRect, move on.
-      iter++;
-      continue;
-    }
-
-    if (!iter->Intersects(rectStrip)) {
-      // This band does not intersect aRect horizontally. Move on.
-      iter++;
-      continue;
-    }
-
-    // This band intersects with aRect.
-    return true;
   }
-
   return false;
 }
 
 void nsRegion::Inflate(const nsMargin& aMargin)
 {
-  nsRegion newRegion;
-  for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
-    nsRect rect = iter.Get();
+  int n;
+  pixman_box32_t *boxes = pixman_region32_rectangles(&mImpl, &n);
+  for (int i=0; i<n; i++) {
+    nsRect rect = BoxToRect(boxes[i]);
     rect.Inflate(aMargin);
-    newRegion.AddRect(rect);
+    boxes[i] = RectToBox(rect);
   }
 
-  *this = std::move(newRegion);
+  pixman_region32_t region;
+  // This will union all of the rectangles and runs in about O(n lg(n))
+  pixman_region32_init_rects(&region, boxes, n);
+
+  pixman_region32_fini(&mImpl);
+  mImpl = region;
 }
 
 void nsRegion::SimplifyOutward (uint32_t aMaxRects)
 {
   MOZ_ASSERT(aMaxRects >= 1, "Invalid max rect count");
 
-  if (GetNumRects() <= aMaxRects) {
+  if (GetNumRects() <= aMaxRects)
     return;
-  }
+
+  pixman_box32_t *boxes;
+  int n;
+  boxes = pixman_region32_rectangles(&mImpl, &n);
 
   // Try combining rects in horizontal bands into a single rect
-  // The goal here is to try to keep groups of rectangles that are vertically
-  // discontiguous as separate rectangles in the final region. This is
-  // simple and fast to implement and page contents tend to vary more
-  // vertically than horizontally (which is why our rectangles are stored
-  // sorted by y-coordinate, too).
-  //
-  // Note: if boxes share y1 because of the canonical representation they
-  // will share y2
-
-  size_t idx = 0;
-
-  while (idx < mBands.Length()) {
-    size_t oldIdx = idx;
-    mBands[idx].mStrips.begin()->right = mBands[idx].mStrips.LastElement().right;
-    mBands[idx].mStrips.TruncateLength(1);
-    idx++;
-
-    // Merge any bands with the same bounds.
-    while (idx < mBands.Length() &&
-           mBands[idx].mStrips.begin()->left == mBands[oldIdx].mStrips.begin()->left &&
-           mBands[idx].mStrips.LastElement().right == mBands[oldIdx].mStrips.begin()->right) {
-      mBands[oldIdx].bottom = mBands[idx].bottom;
-      mBands.RemoveElementAt(idx);
+  int dest = 0;
+  for (int src = 1; src < n; src++)
+  {
+    // The goal here is to try to keep groups of rectangles that are vertically
+    // discontiguous as separate rectangles in the final region. This is
+    // simple and fast to implement and page contents tend to vary more
+    // vertically than horizontally (which is why our rectangles are stored
+    // sorted by y-coordinate, too).
+    //
+    // Note: if boxes share y1 because of the canonical representation they
+    // will share y2
+    while ((src < (n)) && boxes[dest].y1 == boxes[src].y1) {
+      // merge box[i] and box[i+1]
+      boxes[dest].x2 = boxes[src].x2;
+      src++;
+    }
+    if (src < n) {
+      dest++;
+      boxes[dest] = boxes[src];
     }
   }
 
-  AssertState();
-
-  // mBands.size() is now equal to our rect count.
-  if (mBands.Length() > aMaxRects) {
+  uint32_t reducedCount = dest+1;
+  // pixman has a special representation for
+  // regions of 1 rectangle. So just use the
+  // bounds in that case
+  if (reducedCount > 1 && reducedCount <= aMaxRects) {
+    // reach into pixman and lower the number
+    // of rects stored in data.
+    mImpl.data->numRects = reducedCount;
+  } else {
     *this = GetBounds();
   }
 }
@@ -185,271 +102,443 @@ void nsRegion::SimplifyOutward (uint32_t aMaxRects)
 // by iterating over both rows simultaneously and adding up
 // the additional increase in area caused by extending each
 // of the rectangles to the combined height of both rows
-uint32_t
-nsRegion::ComputeMergedAreaIncrease(const Band& aTopBand,
-                                    const Band& aBottomBand)
+static uint32_t ComputeMergedAreaIncrease(pixman_box32_t *topRects,
+		                     pixman_box32_t *topRectsEnd,
+		                     pixman_box32_t *bottomRects,
+		                     pixman_box32_t *bottomRectsEnd)
 {
   uint32_t totalArea = 0;
+  struct pt {
+    int32_t x, y;
+  };
 
-  uint32_t topHeight = aBottomBand.top - aTopBand.top;
-  uint32_t bottomHeight = aBottomBand.bottom - aTopBand.bottom;
-  uint32_t currentStripBottom = 0;
 
-  // This could be done with slightly better worse case performance by merging these two
-  // for-loops, but this makes the code a lot easier to understand.
-  for (auto& strip : aTopBand.mStrips) {
-    if (currentStripBottom == aBottomBand.mStrips.Length() || strip.right < aBottomBand.mStrips[currentStripBottom].left) {
-      totalArea += bottomHeight * strip.Size();
-      continue;
-    }
+  pt *i = (pt*)topRects;
+  pt *end_i = (pt*)topRectsEnd;
+  pt *j = (pt*)bottomRects;
+  pt *end_j = (pt*)bottomRectsEnd;
+  bool top = false;
+  bool bottom = false;
 
-    int32_t currentX = strip.left;
-    while (currentStripBottom != aBottomBand.mStrips.Length() && aBottomBand.mStrips[currentStripBottom].left < strip.right) {
-      if (currentX >= strip.right) {
-        break;
-      }
-      if (currentX < aBottomBand.mStrips[currentStripBottom].left) {
-        // Add the part that's not intersecting.
-        totalArea += (aBottomBand.mStrips[currentStripBottom].left - currentX) * bottomHeight;
-      }
-
-      currentX = std::max(aBottomBand.mStrips[currentStripBottom].right, currentX);
-      currentStripBottom++;
-    }
-
-    // Add remainder of this strip.
-    if (currentX < strip.right) {
-      totalArea += (strip.right - currentX) * bottomHeight;
-    }
-    if (currentStripBottom) {
-      currentStripBottom--;
-    }
+  int cur_x = i->x;
+  bool top_next = top;
+  bool bottom_next = bottom;
+  //XXX: we could probably simplify this condition and perhaps move it into the loop below
+  if (j->x < cur_x) {
+    cur_x = j->x;
+    j++;
+    bottom_next = !bottom;
+  } else if (j->x == cur_x) {
+    i++;
+    top_next = !top;
+    bottom_next = !bottom;
+    j++;
+  } else {
+    top_next = !top;
+    i++;
   }
-  uint32_t currentStripTop = 0;
-  for (auto& strip : aBottomBand.mStrips) {
-    if (currentStripTop == aTopBand.mStrips.Length() || strip.right < aTopBand.mStrips[currentStripTop].left) {
-      totalArea += topHeight * strip.Size();
-      continue;
-    }
 
-    int32_t currentX = strip.left;
-    while (currentStripTop != aTopBand.mStrips.Length() && aTopBand.mStrips[currentStripTop].left < strip.right) {
-      if (currentX >= strip.right) {
-        break;
-      }
-      if (currentX < aTopBand.mStrips[currentStripTop].left) {
-        // Add the part that's not intersecting.
-        totalArea += (aTopBand.mStrips[currentStripTop].left - currentX) * topHeight;
-      }
+  int topRectsHeight = topRects->y2 - topRects->y1;
+  int bottomRectsHeight = bottomRects->y2 - bottomRects->y1;
+  int inbetweenHeight = bottomRects->y1 - topRects->y2;
+  int width = cur_x;
+  // top and bottom are the in-status to the left of cur_x
+  do {
+    if (top && !bottom) {
+      totalArea += (inbetweenHeight+bottomRectsHeight)*width;
+    } else if (bottom && !top) {
+      totalArea += (inbetweenHeight+topRectsHeight)*width;
+    } else if (bottom && top) {
+      totalArea += (inbetweenHeight)*width;
+    }
+    top = top_next;
+    bottom = bottom_next;
+    // find the next edge
+    if (i->x < j->x) {
+      top_next = !top;
+      width = i->x - cur_x;
+      cur_x = i->x;
+      i++;
+    } else if (j->x < i->x) {
+      bottom_next = !bottom;
+      width = j->x - cur_x;
+      cur_x = j->x;
+      j++;
+    } else { // i->x == j->x
+      top_next = !top;
+      bottom_next = !bottom;
+      width = i->x - cur_x;
+      cur_x = i->x;
+      i++;
+      j++;
+    }
+  } while (i < end_i && j < end_j);
 
-      currentX = std::max(aTopBand.mStrips[currentStripTop].right, currentX);
-      currentStripTop++;
-    }
+  // handle any remaining rects
+  while (i < end_i) {
+    width = i->x - cur_x;
+    cur_x = i->x;
+    i++;
+    if (top)
+      totalArea += (inbetweenHeight+bottomRectsHeight)*width;
+    top = !top;
+  }
 
-    // Add remainder of this strip.
-    if (currentX < strip.right) {
-      totalArea += (strip.right - currentX) * topHeight;
-    }
-    if (currentStripTop) {
-      currentStripTop--;
-    }
+  while (j < end_j) {
+    width = j->x - cur_x;
+    cur_x = j->x;
+    j++;
+    if (bottom)
+      totalArea += (inbetweenHeight+topRectsHeight)*width;
+    bottom = !bottom;
   }
   return totalArea;
 }
 
+static pixman_box32_t *
+CopyRow(pixman_box32_t *dest_it, pixman_box32_t *src_start, pixman_box32_t *src_end)
+{
+    // XXX: std::copy
+    pixman_box32_t *src_it = src_start;
+    while (src_it < src_end) {
+        *dest_it++ = *src_it++;
+    }
+    return dest_it;
+}
+
+
+#define WRITE_RECT(x1, x2, y1, y2) \
+    do {                    \
+         tmpRect->x1 = x1;  \
+         tmpRect->x2 = x2;  \
+         tmpRect->y1 = y1;  \
+         tmpRect->y2 = y2;  \
+         tmpRect++;         \
+    } while (0)
+
+/* If 'r' overlaps the current rect, then expand the current rect to include
+ * it. Otherwise write the current rect out to tmpRect, and set r as the
+ * updated current rect. */
+#define MERGE_RECT(r)                 \
+    do {                              \
+      if (r->x1 <= x2) {              \
+          if (x2 < r->x2)             \
+              x2 = r->x2;             \
+      } else {                        \
+          WRITE_RECT(x1, x2, y1, y2); \
+          x1 = r->x1;                 \
+          x2 = r->x2;                 \
+      }                               \
+      r++;                            \
+    } while (0)
+
+
+/* Can we merge two sets of rects without extra space?
+ * Yes, but not easily. We can even do it stably
+ * but we don't need that property.
+ *
+ * This is written in the style of pixman_region_union_o */
+static pixman_box32_t *
+MergeRects(pixman_box32_t *r1,
+           pixman_box32_t *r1_end,
+           pixman_box32_t *r2,
+           pixman_box32_t *r2_end,
+           pixman_box32_t *tmpRect)
+{
+    /* This routine works by maintaining the current
+     * rectangle in x1,x2,y1,y2 and either merging
+     * in the left most rectangle if it overlaps or
+     * outputing the current rectangle and setting
+     * it to the the left most one */
+    const int y1 = r1->y1;
+    const int y2 = r2->y2;
+    int x1;
+    int x2;
+
+    /* Find the left-most edge */
+    if (r1->x1 < r2->x1) {
+        x1 = r1->x1;
+        x2 = r1->x2;
+        r1++;
+    } else {
+        x1 = r2->x1;
+        x2 = r2->x2;
+        r2++;
+    }
+
+    while (r1 != r1_end && r2 != r2_end) {
+        /* Find and merge the left-most rectangle */
+        if (r1->x1 < r2->x1)
+            MERGE_RECT (r1);
+        else
+            MERGE_RECT (r2);
+    }
+
+    /* Finish up any left overs */
+    if (r1 != r1_end) {
+        do {
+            MERGE_RECT (r1);
+        } while (r1 != r1_end);
+    } else if (r2 != r2_end) {
+        do {
+            MERGE_RECT(r2);
+        } while (r2 != r2_end);
+    }
+
+    /* Finish up the last rectangle */
+    WRITE_RECT(x1, x2, y1, y2);
+
+    return tmpRect;
+}
+
 void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold)
 {
-  if (mBands.Length() < 2) {
-    // We have only one or no row and we're done.
+
+  pixman_box32_t *boxes;
+  int n;
+  boxes = pixman_region32_rectangles(&mImpl, &n);
+
+  // if we have no rectangles then we're done
+  if (!n)
     return;
+
+  pixman_box32_t *end = boxes + n;
+  pixman_box32_t *topRectsEnd = boxes+1;
+  pixman_box32_t *topRects = boxes;
+
+  // we need some temporary storage for merging both rows of rectangles
+  AutoTArray<pixman_box32_t, 10> tmpStorage;
+  tmpStorage.SetCapacity(n);
+  pixman_box32_t *tmpRect = tmpStorage.Elements();
+
+  pixman_box32_t *destRect = boxes;
+  pixman_box32_t *rect = tmpRect;
+  // find the end of the first span of rectangles
+  while (topRectsEnd < end && topRectsEnd->y1 == topRects->y1) {
+    topRectsEnd++;
   }
 
-  uint32_t currentBand = 0;
-  do {
-    Band& band = mBands[currentBand];
+  // if we only have one row we are done
+  if (topRectsEnd == end)
+    return;
 
-    uint32_t totalArea = ComputeMergedAreaIncrease(band, mBands[currentBand + 1]);
+  pixman_box32_t *bottomRects = topRectsEnd;
+  pixman_box32_t *bottomRectsEnd = bottomRects+1;
+  do {
+    // find the end of the bottom span of rectangles
+    while (bottomRectsEnd < end && bottomRectsEnd->y1 == bottomRects->y1) {
+      bottomRectsEnd++;
+    }
+    uint32_t totalArea = ComputeMergedAreaIncrease(topRects, topRectsEnd,
+                                                   bottomRects, bottomRectsEnd);
 
     if (totalArea <= aThreshold) {
-      for (Strip& strip : mBands[currentBand + 1].mStrips) {
-        // This could use an optimized function to merge two bands.
-        band.InsertStrip(strip);
-      }
-      band.bottom = mBands[currentBand + 1].bottom;
-      mBands.RemoveElementAt(currentBand + 1);
-    } else {
-      currentBand++;
-    }
-  } while (currentBand + 1 < mBands.Length());
+      // merge the rects into tmpRect
+      rect = MergeRects(topRects, topRectsEnd, bottomRects, bottomRectsEnd, tmpRect);
 
-  EnsureSimplified();
-  AssertState();
+      // set topRects to where the newly merged rects will be so that we use them
+      // as our next set of topRects
+      topRects = destRect;
+      // copy the merged rects back into the destination
+      topRectsEnd = CopyRow(destRect, tmpRect, rect);
+    } else {
+      // copy the unmerged rects
+      destRect = CopyRow(destRect, topRects, topRectsEnd);
+
+      topRects = bottomRects;
+      topRectsEnd = bottomRectsEnd;
+      if (bottomRectsEnd == end) {
+        // copy the last row when we are done
+        topRectsEnd = CopyRow(destRect, topRects, topRectsEnd);
+      }
+    }
+    bottomRects = bottomRectsEnd;
+  } while (bottomRectsEnd != end);
+
+
+  uint32_t reducedCount = topRectsEnd - pixman_region32_rectangles(&this->mImpl, &n);
+  // pixman has a special representation for
+  // regions of 1 rectangle. So just use the
+  // bounds in that case
+  if (reducedCount > 1) {
+    // reach into pixman and lower the number
+    // of rects stored in data.
+    this->mImpl.data->numRects = reducedCount;
+  } else {
+    *this = GetBounds();
+  }
 }
 
 
 typedef void (*visit_fn)(void *closure, VisitSide side, int x1, int y1, int x2, int y2);
 
+static bool VisitNextEdgeBetweenRect(visit_fn visit, void *closure, VisitSide side,
+				     pixman_box32_t *&r1, pixman_box32_t *&r2, const int y, int &x1)
+{
+  // check for overlap
+  if (r1->x2 >= r2->x1) {
+    MOZ_ASSERT(r2->x1 >= x1);
+    visit(closure, side, x1, y, r2->x1, y);
+
+    // find the rect that ends first or always drop the one that comes first?
+    if (r1->x2 < r2->x2) {
+      x1 = r1->x2;
+      r1++;
+    } else {
+      x1 = r2->x2;
+      r2++;
+    }
+    return true;
+  } else {
+    MOZ_ASSERT(r1->x2 < r2->x2);
+    // we handle the corners by just extending the top and bottom edges
+    visit(closure, side, x1, y, r1->x2+1, y);
+    r1++;
+    // we assign x1 because we can assume that x1 <= r2->x1 - 1
+    // However the caller may know better and if so, may update
+    // x1 to r1->x1
+    x1 = r2->x1 - 1;
+    return false;
+  }
+}
+
+//XXX: if we need to this can compute the end of the row
+static void
+VisitSides(visit_fn visit, void *closure, pixman_box32_t *r, pixman_box32_t *r_end)
+{
+  // XXX: we can drop LEFT/RIGHT and just use the orientation
+  // of the line if it makes sense
+  while (r != r_end) {
+    visit(closure, VisitSide::LEFT, r->x1, r->y1, r->x1, r->y2);
+    visit(closure, VisitSide::RIGHT, r->x2, r->y1, r->x2, r->y2);
+    r++;
+  }
+}
+
+static void
+VisitAbove(visit_fn visit, void *closure, pixman_box32_t *r, pixman_box32_t *r_end)
+{
+  while (r != r_end) {
+    visit(closure, VisitSide::TOP, r->x1-1, r->y1, r->x2+1, r->y1);
+    r++;
+  }
+}
+
+static void
+VisitBelow(visit_fn visit, void *closure, pixman_box32_t *r, pixman_box32_t *r_end)
+{
+  while (r != r_end) {
+    visit(closure, VisitSide::BOTTOM, r->x1-1, r->y2, r->x2+1, r->y2);
+    r++;
+  }
+}
+
+static pixman_box32_t *
+VisitInbetween(visit_fn visit, void *closure, pixman_box32_t *r1,
+               pixman_box32_t *r1_end,
+               pixman_box32_t *r2,
+               pixman_box32_t *r2_end)
+{
+  const int y = r1->y2;
+  int x1;
+
+  bool overlap = false;
+  while (r1 != r1_end && r2 != r2_end) {
+    if (!overlap) {
+      /* Find the left-most edge */
+      if (r1->x1 < r2->x1) {
+	x1 = r1->x1 - 1;
+      } else {
+	x1 = r2->x1 - 1;
+      }
+    }
+
+    MOZ_ASSERT((x1 >= (r1->x1 - 1)) || (x1 >= (r2->x1 - 1)));
+    if (r1->x1 < r2->x1) {
+      overlap = VisitNextEdgeBetweenRect(visit, closure, VisitSide::BOTTOM, r1, r2, y, x1);
+    } else {
+      overlap = VisitNextEdgeBetweenRect(visit, closure, VisitSide::TOP, r2, r1, y, x1);
+    }
+  }
+
+  /* Finish up which ever row has remaining rects*/
+  if (r1 != r1_end) {
+    // top row
+    do {
+      visit(closure, VisitSide::BOTTOM, x1, y, r1->x2 + 1, y);
+      r1++;
+      if (r1 == r1_end)
+	break;
+      x1 = r1->x1 - 1;
+    } while (true);
+  } else if (r2 != r2_end) {
+    // bottom row
+    do {
+      visit(closure, VisitSide::TOP, x1, y, r2->x2 + 1, y);
+      r2++;
+      if (r2 == r2_end)
+	break;
+      x1 = r2->x1 - 1;
+    } while (true);
+  }
+
+  return 0;
+}
+
 void nsRegion::VisitEdges (visit_fn visit, void *closure)
 {
-  if (mBands.IsEmpty()) {
-    visit(closure, VisitSide::LEFT, mBounds.X(), mBounds.Y(), mBounds.X(), mBounds.YMost());
-    visit(closure, VisitSide::RIGHT, mBounds.XMost(), mBounds.Y(), mBounds.XMost(), mBounds.YMost());
-    visit(closure, VisitSide::TOP, mBounds.X() - 1, mBounds.Y(), mBounds.XMost() + 1, mBounds.Y());
-    visit(closure, VisitSide::BOTTOM, mBounds.X() - 1, mBounds.YMost(), mBounds.XMost() + 1, mBounds.YMost());
+  pixman_box32_t *boxes;
+  int n;
+  boxes = pixman_region32_rectangles(&mImpl, &n);
+
+  // if we have no rectangles then we're done
+  if (!n)
     return;
+
+  pixman_box32_t *end = boxes + n;
+  pixman_box32_t *topRectsEnd = boxes + 1;
+  pixman_box32_t *topRects = boxes;
+
+  // find the end of the first span of rectangles
+  while (topRectsEnd < end && topRectsEnd->y1 == topRects->y1) {
+    topRectsEnd++;
   }
 
-  auto band = std::begin(mBands);
-  auto bandFinal = std::end(mBands);
-  bandFinal--;
-  for (const Strip& strip : band->mStrips) {
-    visit(closure, VisitSide::LEFT, strip.left, band->top, strip.left, band->bottom);
-    visit(closure, VisitSide::RIGHT, strip.right, band->top, strip.right, band->bottom);
-    visit(closure, VisitSide::TOP, strip.left - 1, band->top, strip.right + 1, band->top);
-  }
+  // In order to properly handle convex corners we always visit the sides first
+  // that way when we visit the corners we can pad using the value from the sides
+  VisitSides(visit, closure, topRects, topRectsEnd);
 
-  if (band != bandFinal) {
+  VisitAbove(visit, closure, topRects, topRectsEnd);
+
+  pixman_box32_t *bottomRects = topRects;
+  pixman_box32_t *bottomRectsEnd = topRectsEnd;
+  if (topRectsEnd != end) {
     do {
-      Band& topBand = *band;
-      band++;
-
-      for (const Strip& strip : band->mStrips) {
-        visit(closure, VisitSide::LEFT, strip.left, band->top, strip.left, band->bottom);
-        visit(closure, VisitSide::RIGHT, strip.right, band->top, strip.right, band->bottom);
+      // find the next row of rects
+      bottomRects = topRectsEnd;
+      bottomRectsEnd = topRectsEnd + 1;
+      while (bottomRectsEnd < end && bottomRectsEnd->y1 == bottomRects->y1) {
+        bottomRectsEnd++;
       }
 
-      if (band->top == topBand.bottom) {
-        // Two bands touching each other vertically.
-        Band& bottomBand = *band;
-        auto topStrip = std::begin(topBand.mStrips);
-        auto bottomStrip = std::begin(bottomBand.mStrips);
+      VisitSides(visit, closure, bottomRects, bottomRectsEnd);
 
-        int y = topBand.bottom;
-
-        // State from this point on along the vertical edge:
-        // 0 - Empty
-        // 1 - Touched by top rect
-        // 2 - Touched by bottom rect
-        // 3 - Touched on both sides
-        int state;
-        const int TouchedByNothing = 0;
-        const int TouchedByTop = 1;
-        const int TouchedByBottom = 2;
-        // We always start with nothing.
-        int oldState = TouchedByNothing;
-        // Last state change, adjusted by -1 if the last state change was
-        // a change away from 0.
-        int lastX = std::min(topStrip->left, bottomStrip->left) - 1;
-
-        // Current edge being considered for top and bottom, 0 - left, 1 - right.
-        bool topEdgeIsLeft = true;
-        bool bottomEdgeIsLeft = true;
-        while (topStrip != std::end(topBand.mStrips) && bottomStrip != std::end(bottomBand.mStrips)) {
-          int topPos;
-          int bottomPos;
-          if (topEdgeIsLeft) {
-            topPos = topStrip->left;
-          } else {
-            topPos = topStrip->right;
-          }
-          if (bottomEdgeIsLeft) {
-            bottomPos = bottomStrip->left;
-          } else {
-            bottomPos = bottomStrip->right;
-          }
-
-          int currentX = std::min(topPos, bottomPos);
-          if (topPos < bottomPos) {
-            if (topEdgeIsLeft) {
-              state = oldState | TouchedByTop;
-            } else {
-              state = oldState ^ TouchedByTop;
-              topStrip++;
-            }
-            topEdgeIsLeft = !topEdgeIsLeft;
-          } else if (bottomPos < topPos) {
-            if (bottomEdgeIsLeft) {
-              state = oldState | TouchedByBottom;
-            } else {
-              state = oldState ^ TouchedByBottom;
-              bottomStrip++;
-            }
-            bottomEdgeIsLeft = !bottomEdgeIsLeft;
-          } else {
-            // bottomPos == topPos
-            state = TouchedByNothing;
-            if (bottomEdgeIsLeft) {
-              state = TouchedByBottom;
-            } else {
-              bottomStrip++;
-            }
-            if (topEdgeIsLeft) {
-              state |= TouchedByTop;
-            } else {
-              topStrip++;
-            }
-            topEdgeIsLeft = !topEdgeIsLeft;
-            bottomEdgeIsLeft = !bottomEdgeIsLeft;
-          }
-
-          MOZ_ASSERT(state != oldState);
-          if (oldState == TouchedByNothing) {
-            // We had nothing before, make sure the left edge will be padded.
-            lastX = currentX - 1;
-          } else if (oldState == TouchedByTop) {
-            if (state == TouchedByNothing) {
-              visit(closure, VisitSide::BOTTOM, lastX, y, currentX + 1, y);
-            } else {
-              visit(closure, VisitSide::BOTTOM, lastX, y, currentX, y);
-              lastX = currentX;
-            }
-          } else if (oldState == TouchedByBottom) {
-            if (state == TouchedByNothing) {
-              visit(closure, VisitSide::TOP, lastX, y, currentX + 1, y);
-            } else {
-              visit(closure, VisitSide::TOP, lastX, y, currentX, y);
-              lastX = currentX;
-            }
-          } else {
-            lastX = currentX;
-          }
-          oldState = state;
-        }
-
-        MOZ_ASSERT(!state || (topEdgeIsLeft || bottomEdgeIsLeft));
-        if (topStrip != std::end(topBand.mStrips)) {
-          if (!topEdgeIsLeft) {
-            visit(closure, VisitSide::BOTTOM, lastX, y, topStrip->right + 1, y);
-            topStrip++;
-          }
-          while (topStrip != std::end(topBand.mStrips)) {
-            visit(closure, VisitSide::BOTTOM, topStrip->left - 1, y, topStrip->right + 1, y);
-            topStrip++;
-          }
-        } else if (bottomStrip != std::end(bottomBand.mStrips)) {
-          if (!bottomEdgeIsLeft) {
-            visit(closure, VisitSide::TOP, lastX, y, bottomStrip->right + 1, y);
-            bottomStrip++;
-          }
-          while (bottomStrip != std::end(bottomBand.mStrips)) {
-            visit(closure, VisitSide::TOP, bottomStrip->left - 1, y, bottomStrip->right + 1, y);
-            bottomStrip++;
-          }
-        }
+      if (topRects->y2 == bottomRects->y1) {
+        VisitInbetween(visit, closure, topRects, topRectsEnd,
+                                       bottomRects, bottomRectsEnd);
       } else {
-        for (const Strip& strip : topBand.mStrips) {
-          visit(closure, VisitSide::BOTTOM, strip.left - 1, topBand.bottom, strip.right + 1, topBand.bottom);
-        }
-        for (const Strip& strip : band->mStrips) {
-          visit(closure, VisitSide::TOP, strip.left - 1, band->top, strip.right + 1, band->top);
-        }
+        VisitBelow(visit, closure, topRects, topRectsEnd);
+        VisitAbove(visit, closure, bottomRects, bottomRectsEnd);
       }
-    } while (band != bandFinal);
+
+      topRects = bottomRects;
+      topRectsEnd = bottomRectsEnd;
+    } while (bottomRectsEnd != end);
   }
 
-  for (const Strip& strip : band->mStrips) {
-    visit(closure, VisitSide::BOTTOM, strip.left - 1, band->bottom, strip.right + 1, band->bottom);
-  }
+  // the bottom of the region doesn't touch anything else so we
+  // can always visit it at the end
+  VisitBelow(visit, closure, bottomRects, bottomRectsEnd);
 }
 
 
@@ -465,18 +554,11 @@ void nsRegion::SimplifyInward (uint32_t aMaxRects)
 
 uint64_t nsRegion::Area () const
 {
-  if (mBands.IsEmpty()) {
-    return mBounds.Area();
-  }
-
   uint64_t area = 0;
-  for (const Band& band : mBands) {
-    uint32_t height = band.bottom - band.top;
-    for (const Strip& strip : band.mStrips) {
-      area += (strip.right - strip.left) * height;
-    }
+  for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
+    const nsRect& rect = iter.Get();
+    area += uint64_t(rect.Width()) * rect.Height();
   }
-
   return area;
 }
 
@@ -487,27 +569,39 @@ nsRegion& nsRegion::ScaleRoundOut (float aXScale, float aYScale)
     return *this;
   }
 
-  nsRegion newRegion;
-  for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
-    nsRect rect = iter.Get();
+  int n;
+  pixman_box32_t *boxes = pixman_region32_rectangles(&mImpl, &n);
+  for (int i=0; i<n; i++) {
+    nsRect rect = BoxToRect(boxes[i]);
     rect.ScaleRoundOut(aXScale, aYScale);
-    newRegion.AddRect(rect);
+    boxes[i] = RectToBox(rect);
   }
 
-  *this = std::move(newRegion);
+  pixman_region32_t region;
+  // This will union all of the rectangles and runs in about O(n lg(n))
+  pixman_region32_init_rects(&region, boxes, n);
+
+  pixman_region32_fini(&mImpl);
+  mImpl = region;
   return *this;
 }
 
 nsRegion& nsRegion::ScaleInverseRoundOut (float aXScale, float aYScale)
 {
-  nsRegion newRegion;
-  for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
-    nsRect rect = iter.Get();
+  int n;
+  pixman_box32_t *boxes = pixman_region32_rectangles(&mImpl, &n);
+  for (int i=0; i<n; i++) {
+    nsRect rect = BoxToRect(boxes[i]);
     rect.ScaleInverseRoundOut(aXScale, aYScale);
-    newRegion.AddRect(rect);
+    boxes[i] = RectToBox(rect);
   }
 
-  *this = std::move(newRegion);
+  pixman_region32_t region;
+  // This will union all of the rectangles and runs in about O(n lg(n))
+  pixman_region32_init_rects(&region, boxes, n);
+
+  pixman_region32_fini(&mImpl);
+  mImpl = region;
   return *this;
 }
 
@@ -532,13 +626,19 @@ TransformRect(const mozilla::gfx::IntRect& aRect, const mozilla::gfx::Matrix4x4&
 
 nsRegion& nsRegion::Transform (const mozilla::gfx::Matrix4x4 &aTransform)
 {
-  nsRegion newRegion;
-  for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
-    nsRect rect = nsIntRegion::ToRect(TransformRect(nsIntRegion::FromRect(iter.Get()), aTransform));
-    newRegion.AddRect(rect);
+  int n;
+  pixman_box32_t *boxes = pixman_region32_rectangles(&mImpl, &n);
+  for (int i=0; i<n; i++) {
+    nsRect rect = BoxToRect(boxes[i]);
+    boxes[i] = RectToBox(nsIntRegion::ToRect(TransformRect(nsIntRegion::FromRect(rect), aTransform)));
   }
 
-  *this = std::move(newRegion);
+  pixman_region32_t region;
+  // This will union all of the rectangles and runs in about O(n lg(n))
+  pixman_region32_init_rects(&region, boxes, n);
+
+  pixman_region32_fini(&mImpl);
+  mImpl = region;
   return *this;
 }
 
@@ -548,14 +648,23 @@ nsRegion nsRegion::ScaleToOtherAppUnitsRoundOut (int32_t aFromAPP, int32_t aToAP
   if (aFromAPP == aToAPP) {
     return *this;
   }
-  nsRegion newRegion;
-  for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
-    nsRect rect = iter.Get();
+
+  nsRegion region = *this;
+  int n;
+  pixman_box32_t *boxes = pixman_region32_rectangles(&region.mImpl, &n);
+  for (int i=0; i<n; i++) {
+    nsRect rect = BoxToRect(boxes[i]);
     rect = rect.ScaleToOtherAppUnitsRoundOut(aFromAPP, aToAPP);
-    newRegion.AddRect(rect);
+    boxes[i] = RectToBox(rect);
   }
 
-  return newRegion;
+  pixman_region32_t pixmanRegion;
+  // This will union all of the rectangles and runs in about O(n lg(n))
+  pixman_region32_init_rects(&pixmanRegion, boxes, n);
+
+  pixman_region32_fini(&region.mImpl);
+  region.mImpl = pixmanRegion;
+  return region;
 }
 
 nsRegion nsRegion::ScaleToOtherAppUnitsRoundIn (int32_t aFromAPP, int32_t aToAPP) const
@@ -564,28 +673,44 @@ nsRegion nsRegion::ScaleToOtherAppUnitsRoundIn (int32_t aFromAPP, int32_t aToAPP
     return *this;
   }
 
-  nsRegion newRegion;
-  for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
-    nsRect rect = iter.Get();
+  nsRegion region = *this;
+  int n;
+  pixman_box32_t *boxes = pixman_region32_rectangles(&region.mImpl, &n);
+  for (int i=0; i<n; i++) {
+    nsRect rect = BoxToRect(boxes[i]);
     rect = rect.ScaleToOtherAppUnitsRoundIn(aFromAPP, aToAPP);
-    newRegion.AddRect(rect);
+    boxes[i] = RectToBox(rect);
   }
 
-  return newRegion;
+  pixman_region32_t pixmanRegion;
+  // This will union all of the rectangles and runs in about O(n lg(n))
+  pixman_region32_init_rects(&pixmanRegion, boxes, n);
+
+  pixman_region32_fini(&region.mImpl);
+  region.mImpl = pixmanRegion;
+  return region;
 }
 
 nsIntRegion nsRegion::ToPixels (nscoord aAppUnitsPerPixel, bool aOutsidePixels) const
 {
-  nsIntRegion intRegion;
-  for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
+  nsRegion region = *this;
+  int n;
+  pixman_box32_t *boxes = pixman_region32_rectangles(&region.mImpl, &n);
+  for (int i=0; i<n; i++) {
+    nsRect rect = BoxToRect(boxes[i]);
     mozilla::gfx::IntRect deviceRect;
-    nsRect rect = iter.Get();
     if (aOutsidePixels)
       deviceRect = rect.ToOutsidePixels(aAppUnitsPerPixel);
     else
       deviceRect = rect.ToNearestPixels(aAppUnitsPerPixel);
-    intRegion.OrWith(deviceRect);
+
+    boxes[i] = RectToBox(deviceRect);
   }
+
+  nsIntRegion intRegion;
+  pixman_region32_fini(&intRegion.mImpl.mImpl);
+  // This will union all of the rectangles and runs in about O(n lg(n))
+  pixman_region32_init_rects(&intRegion.mImpl.mImpl, boxes, n);
 
   return intRegion;
 }
@@ -616,12 +741,23 @@ nsIntRegion nsRegion::ScaleToOutsidePixels (float aScaleX, float aScaleY,
                                             nscoord aAppUnitsPerPixel) const
 {
   // make a copy of the region so that we can mutate it inplace
-  nsIntRegion intRegion;
-  for (RectIterator iter = RectIterator(*this); !iter.Done(); iter.Next()) {
-    nsRect rect = iter.Get();
-    intRegion.OrWith(rect.ScaleToOutsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel));
+  nsRegion region = *this;
+  int n;
+  pixman_box32_t *boxes = pixman_region32_rectangles(&region.mImpl, &n);
+  boxes = pixman_region32_rectangles(&region.mImpl, &n);
+  for (int i=0; i<n; i++) {
+    nsRect rect = BoxToRect(boxes[i]);
+    mozilla::gfx::IntRect irect = rect.ScaleToOutsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
+    boxes[i] = RectToBox(irect);
   }
-  return intRegion;
+
+  nsIntRegion iRegion;
+  // clear out the initial pixman_region so that we can replace it below
+  pixman_region32_fini(&iRegion.mImpl.mImpl);
+  // This will union all of the rectangles and runs in about O(n lg(n))
+  pixman_region32_init_rects(&iRegion.mImpl.mImpl, boxes, n);
+
+  return iRegion;
 }
 
 nsIntRegion nsRegion::ScaleToInsidePixels (float aScaleX, float aScaleY,
@@ -640,51 +776,57 @@ nsIntRegion nsRegion::ScaleToInsidePixels (float aScaleX, float aScaleY,
    * for the first rect.
    */
 
-  if (mBands.IsEmpty()) {
-    nsIntRect rect = mBounds.ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
-    return nsIntRegion(rect);
-  }
+  // make a copy of this region so that we can mutate it in place
+  nsRegion region = *this;
+  int n;
+  pixman_box32_t *boxes = pixman_region32_rectangles(&region.mImpl, &n);
 
   nsIntRegion intRegion;
-  RectIterator iter = RectIterator(*this);
+  if (n) {
+    nsRect first = BoxToRect(boxes[0]);
+    mozilla::gfx::IntRect firstDeviceRect =
+      first.ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
 
-  nsRect first = iter.Get();
+    for (int i=1; i<n; i++) {
+      nsRect rect = nsRect(boxes[i].x1, boxes[i].y1,
+	  boxes[i].x2 - boxes[i].x1,
+	  boxes[i].y2 - boxes[i].y1);
+      mozilla::gfx::IntRect deviceRect =
+	rect.ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
 
-  mozilla::gfx::IntRect firstDeviceRect =
-    first.ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
-
-  for (iter.Next(); !iter.Done(); iter.Next()) {
-    nsRect rect = iter.Get();
-    mozilla::gfx::IntRect deviceRect =
-                          rect.ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
-
-    if (rect.Y() <= first.YMost()) {
-      if (rect.XMost() == first.X() && rect.YMost() <= first.YMost()) {
-        // rect is touching on the left edge of the first rect and contained within
-        // the length of its left edge
-        deviceRect.SetRightEdge(firstDeviceRect.X());
-      } else if (rect.X() == first.XMost() && rect.YMost() <= first.YMost()) {
-        // rect is touching on the right edge of the first rect and contained within
-        // the length of its right edge
-        deviceRect.SetLeftEdge(firstDeviceRect.XMost());
-      } else if (rect.Y() == first.YMost()) {
-        // The bottom of the first rect is on the same line as the top of rect, but
-        // they aren't necessarily contained.
-        if (rect.X() <= first.X() && rect.XMost() >= first.XMost()) {
-          // The top of rect contains the bottom of the first rect
-          firstDeviceRect.SetBottomEdge(deviceRect.Y());
-        } else if (rect.X() >= first.X() && rect.XMost() <= first.XMost()) {
-          // The bottom of the first contains the top of rect
-          deviceRect.SetTopEdge(firstDeviceRect.YMost());
-        }
+      if (rect.Y() <= first.YMost()) {
+	if (rect.XMost() == first.X() && rect.YMost() <= first.YMost()) {
+	  // rect is touching on the left edge of the first rect and contained within
+	  // the length of its left edge
+	  deviceRect.SetRightEdge(firstDeviceRect.X());
+	} else if (rect.X() == first.XMost() && rect.YMost() <= first.YMost()) {
+	  // rect is touching on the right edge of the first rect and contained within
+	  // the length of its right edge
+	  deviceRect.SetLeftEdge(firstDeviceRect.XMost());
+	} else if (rect.Y() == first.YMost()) {
+	  // The bottom of the first rect is on the same line as the top of rect, but
+	  // they aren't necessarily contained.
+	  if (rect.X() <= first.X() && rect.XMost() >= first.XMost()) {
+	    // The top of rect contains the bottom of the first rect
+	    firstDeviceRect.SetBottomEdge(deviceRect.Y());
+	  } else if (rect.X() >= first.X() && rect.XMost() <= first.XMost()) {
+	    // The bottom of the first contains the top of rect
+	    deviceRect.SetTopEdge(firstDeviceRect.YMost());
+	  }
+	}
       }
+
+      boxes[i] = RectToBox(deviceRect);
     }
 
-    intRegion.OrWith(deviceRect);
-  }
+    boxes[0] = RectToBox(firstDeviceRect);
 
-  intRegion.OrWith(firstDeviceRect);
+    pixman_region32_fini(&intRegion.mImpl.mImpl);
+    // This will union all of the rectangles and runs in about O(n lg(n))
+    pixman_region32_init_rects(&intRegion.mImpl.mImpl, boxes, n);
+  }
   return intRegion;
+
 }
 
 // A cell's "value" is a pair consisting of
@@ -987,33 +1129,17 @@ nsRect nsRegion::GetLargestRectangle (const nsRect& aContainingRect) const {
 std::ostream& operator<<(std::ostream& stream, const nsRegion& m) {
   stream << "[";
 
-  bool first = true;
-  for (auto iter = m.RectIter(); !iter.Done(); iter.Next()) {
-    if (!first) {
+  int n;
+  pixman_box32_t *boxes = pixman_region32_rectangles(const_cast<pixman_region32_t*>(&m.mImpl), &n);
+  for (int i=0; i<n; i++) {
+    if (i != 0) {
       stream << "; ";
-    } else {
-      first = true;
     }
-    const nsRect& rect = iter.Get();
-    stream << rect.X() << "," << rect.Y() << "," << rect.XMost() << "," << rect.YMost();
+    stream << boxes[i].x1 << "," << boxes[i].y1 << "," << boxes[i].x2 << "," << boxes[i].y2;
   }
 
   stream << "]";
   return stream;
-}
-
-void
-nsRegion::OutputToStream(std::string aObjName, std::ostream& stream) const
-{
-  auto iter = RectIter();
-  nsRect r = iter.Get();
-  stream << "nsRegion " << aObjName << "(nsRect(" << r.X() << ", " << r.Y() << ", " << r.Width() << ", " << r.Height() << "));\n";
-  iter.Next();
-
-  for (; !iter.Done(); iter.Next()) {
-    nsRect r = iter.Get();
-    stream << aObjName << ".OrWith(nsRect(" << r.X() << ", " << r.Y() << ", " << r.Width() << ", " << r.Height() << "));\n";
-  }
 }
 
 nsCString
