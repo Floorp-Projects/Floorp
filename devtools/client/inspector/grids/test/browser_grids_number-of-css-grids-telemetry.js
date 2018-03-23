@@ -24,18 +24,18 @@ const TEST_URI2 = `
 
 const CSS_GRID_COUNT_HISTOGRAM_ID = "DEVTOOLS_NUMBER_OF_CSS_GRIDS_IN_A_PAGE";
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI1));
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI1));
 
-  let { inspector } = await openLayoutView();
+  let { inspector } = yield openLayoutView();
   let { store } = inspector;
 
   info("Navigate to TEST_URI2");
 
   let onGridListUpdate = waitUntilState(store, state => state.grids.length == 1);
-  await navigateTo(inspector,
+  yield navigateTo(inspector,
     "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI2));
-  await onGridListUpdate;
+  yield onGridListUpdate;
 
   let histogram = Services.telemetry.getHistogramById(CSS_GRID_COUNT_HISTOGRAM_ID);
   let snapshot = histogram.snapshot();

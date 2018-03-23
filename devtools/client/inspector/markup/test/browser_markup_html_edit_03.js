@@ -20,181 +20,181 @@ const NEW_HTML = '<div id="keyboard">Edited</div>';
 
 requestLongerTimeout(2);
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   inspector.markup._frame.focus();
 
   info("Check that pressing escape cancels edits");
-  await testEscapeCancels(inspector, testActor);
+  yield testEscapeCancels(inspector, testActor);
 
   info("Check that pressing F2 commits edits");
-  await testF2Commits(inspector, testActor);
+  yield testF2Commits(inspector, testActor);
 
   info("Check that editing the <body> element works like other nodes");
-  await testBody(inspector, testActor);
+  yield testBody(inspector, testActor);
 
   info("Check that editing the <head> element works like other nodes");
-  await testHead(inspector, testActor);
+  yield testHead(inspector, testActor);
 
   info("Check that editing the <html> element works like other nodes");
-  await testDocumentElement(inspector, testActor);
+  yield testDocumentElement(inspector, testActor);
 
   info("Check (again) that editing the <html> element works like other nodes");
-  await testDocumentElement2(inspector, testActor);
+  yield testDocumentElement2(inspector, testActor);
 });
 
-async function testEscapeCancels(inspector, testActor) {
-  await selectNode(SELECTOR, inspector);
+function* testEscapeCancels(inspector, testActor) {
+  yield selectNode(SELECTOR, inspector);
 
   let onHtmlEditorCreated = once(inspector.markup, "begin-editing");
   EventUtils.sendKey("F2", inspector.markup._frame.contentWindow);
-  await onHtmlEditorCreated;
+  yield onHtmlEditorCreated;
   ok(inspector.markup.htmlEditor._visible, "HTML Editor is visible");
 
-  is((await testActor.getProperty(SELECTOR, "outerHTML")), OLD_HTML,
+  is((yield testActor.getProperty(SELECTOR, "outerHTML")), OLD_HTML,
      "The node is starting with old HTML.");
 
   inspector.markup.htmlEditor.editor.setText(NEW_HTML);
 
   let onEditorHiddem = once(inspector.markup.htmlEditor, "popuphidden");
   EventUtils.sendKey("ESCAPE", inspector.markup.htmlEditor.doc.defaultView);
-  await onEditorHiddem;
+  yield onEditorHiddem;
   ok(!inspector.markup.htmlEditor._visible, "HTML Editor is not visible");
 
-  is((await testActor.getProperty(SELECTOR, "outerHTML")), OLD_HTML,
+  is((yield testActor.getProperty(SELECTOR, "outerHTML")), OLD_HTML,
      "Escape cancels edits");
 }
 
-async function testF2Commits(inspector, testActor) {
+function* testF2Commits(inspector, testActor) {
   let onEditorShown = once(inspector.markup.htmlEditor, "popupshown");
   inspector.markup._frame.contentDocument.documentElement.focus();
   EventUtils.sendKey("F2", inspector.markup._frame.contentWindow);
-  await onEditorShown;
+  yield onEditorShown;
   ok(inspector.markup.htmlEditor._visible, "HTML Editor is visible");
 
-  is((await testActor.getProperty(SELECTOR, "outerHTML")), OLD_HTML,
+  is((yield testActor.getProperty(SELECTOR, "outerHTML")), OLD_HTML,
      "The node is starting with old HTML.");
 
   let onMutations = inspector.once("markupmutation");
   inspector.markup.htmlEditor.editor.setText(NEW_HTML);
   EventUtils.sendKey("F2", inspector.markup._frame.contentWindow);
-  await onMutations;
+  yield onMutations;
 
   ok(!inspector.markup.htmlEditor._visible, "HTML Editor is not visible");
 
-  is((await testActor.getProperty(SELECTOR, "outerHTML")), NEW_HTML,
+  is((yield testActor.getProperty(SELECTOR, "outerHTML")), NEW_HTML,
      "F2 commits edits - the node has new HTML.");
 }
 
-async function testBody(inspector, testActor) {
-  let currentBodyHTML = await testActor.getProperty("body", "outerHTML");
+function* testBody(inspector, testActor) {
+  let currentBodyHTML = yield testActor.getProperty("body", "outerHTML");
   let bodyHTML = '<body id="updated"><p></p></body>';
-  let bodyFront = await getNodeFront("body", inspector);
+  let bodyFront = yield getNodeFront("body", inspector);
 
   let onUpdated = inspector.once("inspector-updated");
   let onReselected = inspector.markup.once("reselectedonremoved");
-  await inspector.markup.updateNodeOuterHTML(bodyFront, bodyHTML,
+  yield inspector.markup.updateNodeOuterHTML(bodyFront, bodyHTML,
                                              currentBodyHTML);
-  await onReselected;
-  await onUpdated;
+  yield onReselected;
+  yield onUpdated;
 
-  let newBodyHTML = await testActor.getProperty("body", "outerHTML");
+  let newBodyHTML = yield testActor.getProperty("body", "outerHTML");
   is(newBodyHTML, bodyHTML, "<body> HTML has been updated");
 
-  let headsNum = await testActor.getNumberOfElementMatches("head");
+  let headsNum = yield testActor.getNumberOfElementMatches("head");
   is(headsNum, 1, "no extra <head>s have been added");
 }
 
-async function testHead(inspector, testActor) {
-  await selectNode("head", inspector);
+function* testHead(inspector, testActor) {
+  yield selectNode("head", inspector);
 
-  let currentHeadHTML = await testActor.getProperty("head", "outerHTML");
+  let currentHeadHTML = yield testActor.getProperty("head", "outerHTML");
   let headHTML = "<head id=\"updated\"><title>New Title</title>" +
                  "<script>window.foo=\"bar\";</script></head>";
-  let headFront = await getNodeFront("head", inspector);
+  let headFront = yield getNodeFront("head", inspector);
 
   let onUpdated = inspector.once("inspector-updated");
   let onReselected = inspector.markup.once("reselectedonremoved");
-  await inspector.markup.updateNodeOuterHTML(headFront, headHTML,
+  yield inspector.markup.updateNodeOuterHTML(headFront, headHTML,
                                              currentHeadHTML);
-  await onReselected;
-  await onUpdated;
+  yield onReselected;
+  yield onUpdated;
 
-  is((await testActor.eval("document.title")), "New Title",
+  is((yield testActor.eval("document.title")), "New Title",
      "New title has been added");
-  is((await testActor.eval("window.foo")), undefined,
+  is((yield testActor.eval("window.foo")), undefined,
      "Script has not been executed");
-  is((await testActor.getProperty("head", "outerHTML")), headHTML,
+  is((yield testActor.getProperty("head", "outerHTML")), headHTML,
      "<head> HTML has been updated");
-  is((await testActor.getNumberOfElementMatches("body")), 1,
+  is((yield testActor.getNumberOfElementMatches("body")), 1,
      "no extra <body>s have been added");
 }
 
-async function testDocumentElement(inspector, testActor) {
-  let currentDocElementOuterHMTL = await testActor.eval(
+function* testDocumentElement(inspector, testActor) {
+  let currentDocElementOuterHMTL = yield testActor.eval(
     "document.documentElement.outerHMTL");
   let docElementHTML = "<html id=\"updated\" foo=\"bar\"><head>" +
                        "<title>Updated from document element</title>" +
                        "<script>window.foo=\"bar\";</script></head><body>" +
                        "<p>Hello</p></body></html>";
-  let docElementFront = await inspector.markup.walker.documentElement();
+  let docElementFront = yield inspector.markup.walker.documentElement();
 
   let onReselected = inspector.markup.once("reselectedonremoved");
-  await inspector.markup.updateNodeOuterHTML(docElementFront, docElementHTML,
+  yield inspector.markup.updateNodeOuterHTML(docElementFront, docElementHTML,
     currentDocElementOuterHMTL);
-  await onReselected;
+  yield onReselected;
 
-  is((await testActor.eval("document.title")),
+  is((yield testActor.eval("document.title")),
      "Updated from document element", "New title has been added");
-  is((await testActor.eval("window.foo")),
+  is((yield testActor.eval("window.foo")),
      undefined, "Script has not been executed");
-  is((await testActor.getAttribute("html", "id")),
+  is((yield testActor.getAttribute("html", "id")),
      "updated", "<html> ID has been updated");
-  is((await testActor.getAttribute("html", "class")),
+  is((yield testActor.getAttribute("html", "class")),
      null, "<html> class has been updated");
-  is((await testActor.getAttribute("html", "foo")),
+  is((yield testActor.getAttribute("html", "foo")),
      "bar", "<html> attribute has been updated");
-  is((await testActor.getProperty("html", "outerHTML")),
+  is((yield testActor.getProperty("html", "outerHTML")),
      docElementHTML, "<html> HTML has been updated");
-  is((await testActor.getNumberOfElementMatches("head")),
+  is((yield testActor.getNumberOfElementMatches("head")),
      1, "no extra <head>s have been added");
-  is((await testActor.getNumberOfElementMatches("body")),
+  is((yield testActor.getNumberOfElementMatches("body")),
      1, "no extra <body>s have been added");
-  is((await testActor.getProperty("body", "textContent")),
+  is((yield testActor.getProperty("body", "textContent")),
      "Hello", "document.body.textContent has been updated");
 }
 
-async function testDocumentElement2(inspector, testActor) {
-  let currentDocElementOuterHMTL = await testActor.eval(
+function* testDocumentElement2(inspector, testActor) {
+  let currentDocElementOuterHMTL = yield testActor.eval(
     "document.documentElement.outerHMTL");
   let docElementHTML = "<html id=\"somethingelse\" class=\"updated\"><head>" +
                        "<title>Updated again from document element</title>" +
                        "<script>window.foo=\"bar\";</script></head><body>" +
                        "<p>Hello again</p></body></html>";
-  let docElementFront = await inspector.markup.walker.documentElement();
+  let docElementFront = yield inspector.markup.walker.documentElement();
 
   let onReselected = inspector.markup.once("reselectedonremoved");
   inspector.markup.updateNodeOuterHTML(docElementFront, docElementHTML,
     currentDocElementOuterHMTL);
-  await onReselected;
+  yield onReselected;
 
-  is((await testActor.eval("document.title")),
+  is((yield testActor.eval("document.title")),
      "Updated again from document element", "New title has been added");
-  is((await testActor.eval("window.foo")),
+  is((yield testActor.eval("window.foo")),
      undefined, "Script has not been executed");
-  is((await testActor.getAttribute("html", "id")),
+  is((yield testActor.getAttribute("html", "id")),
      "somethingelse", "<html> ID has been updated");
-  is((await testActor.getAttribute("html", "class")),
+  is((yield testActor.getAttribute("html", "class")),
      "updated", "<html> class has been updated");
-  is((await testActor.getAttribute("html", "foo")),
+  is((yield testActor.getAttribute("html", "foo")),
      null, "<html> attribute has been removed");
-  is((await testActor.getProperty("html", "outerHTML")),
+  is((yield testActor.getProperty("html", "outerHTML")),
      docElementHTML, "<html> HTML has been updated");
-  is((await testActor.getNumberOfElementMatches("head")),
+  is((yield testActor.getNumberOfElementMatches("head")),
      1, "no extra <head>s have been added");
-  is((await testActor.getNumberOfElementMatches("body")),
+  is((yield testActor.getNumberOfElementMatches("body")),
      1, "no extra <body>s have been added");
-  is((await testActor.getProperty("body", "textContent")),
+  is((yield testActor.getProperty("body", "textContent")),
      "Hello again", "document.body.textContent has been updated");
 }

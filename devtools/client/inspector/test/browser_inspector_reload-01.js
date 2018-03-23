@@ -12,21 +12,21 @@
 // is selected (bug 1002280).
 const TEST_URI = "data:text/html,<p id='1'>p</p>";
 
-add_task(async function() {
-  let { inspector, testActor } = await openInspectorForURL(TEST_URI);
-  await selectNode("p", inspector);
+add_task(function* () {
+  let { inspector, testActor } = yield openInspectorForURL(TEST_URI);
+  yield selectNode("p", inspector);
 
   let markupLoaded = inspector.once("markuploaded");
 
   info("Reloading page.");
-  await testActor.eval("location.reload()");
+  yield testActor.eval("location.reload()");
 
   info("Waiting for markupview to load after reload.");
-  await markupLoaded;
+  yield markupLoaded;
 
-  let nodeFront = await getNodeFront("p", inspector);
+  let nodeFront = yield getNodeFront("p", inspector);
   is(inspector.selection.nodeFront, nodeFront, "<p> selected after reload.");
 
   info("Selecting a node to see that inspector still works.");
-  await selectNode("body", inspector);
+  yield selectNode("body", inspector);
 });

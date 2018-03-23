@@ -18,20 +18,20 @@ const TEST_URI = `
   <div id='testid' class='testclass'>Styled Node</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
 
   let elementRuleEditor = getRuleViewRuleEditor(view, 0);
-  let editor = await focusNewRuleViewProperty(elementRuleEditor);
+  let editor = yield focusNewRuleViewProperty(elementRuleEditor);
   is(inplaceEditor(elementRuleEditor.newPropSpan), editor,
     "The new property editor got focused");
 
   info("Escape the new property editor");
   let onBlur = once(editor.input, "blur");
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
-  await onBlur;
+  yield onBlur;
 
   info("Checking the state of cancelling a new property name editor");
   is(elementRuleEditor.rule.textProps.length, 0,

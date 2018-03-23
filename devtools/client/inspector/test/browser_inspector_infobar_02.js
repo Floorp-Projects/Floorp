@@ -20,8 +20,8 @@ const XHTML = `
 
 const TEST_URI = "data:application/xhtml+xml;charset=utf-8," + encodeURI(XHTML);
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URI);
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URI);
 
   let testData = [
     {
@@ -35,16 +35,16 @@ add_task(async function() {
   ];
 
   for (let currTest of testData) {
-    await testNode(currTest, inspector, testActor);
+    yield testNode(currTest, inspector, testActor);
   }
 });
 
-async function testNode(test, inspector, testActor) {
+function* testNode(test, inspector, testActor) {
   info("Testing " + test.selector);
 
-  await selectAndHighlightNode(test.selector, inspector);
+  yield selectAndHighlightNode(test.selector, inspector);
 
-  let tag = await testActor.getHighlighterNodeTextContent(
+  let tag = yield testActor.getHighlighterNodeTextContent(
     "box-model-infobar-tagname");
   is(tag, test.tag, "node " + test.selector + ": tagName matches.");
 }

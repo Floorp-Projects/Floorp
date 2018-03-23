@@ -12,43 +12,43 @@ const PREF = "devtools.source-map.client-service.enabled";
 const SCSS_LOC = "doc_sourcemaps.scss:4";
 const CSS_LOC = "doc_sourcemaps.css:1";
 
-add_task(async function() {
+add_task(function* () {
   info("Turning the pref " + PREF + " on");
   Services.prefs.setBoolPref(PREF, true);
 
-  await addTab(TESTCASE_URI);
-  let {toolbox, inspector, view} = await openComputedView();
+  yield addTab(TESTCASE_URI);
+  let {toolbox, inspector, view} = yield openComputedView();
   let onLinksUpdated = inspector.once("computed-view-sourcelinks-updated");
-  await selectNode("div", inspector);
+  yield selectNode("div", inspector);
 
   info("Expanding the first property");
-  await expandComputedViewPropertyByIndex(view, 0);
+  yield expandComputedViewPropertyByIndex(view, 0);
 
   info("Verifying the link text");
-  await onLinksUpdated;
+  yield onLinksUpdated;
   verifyLinkText(view, SCSS_LOC);
 
   info("Toggling the pref");
   onLinksUpdated = inspector.once("computed-view-sourcelinks-updated");
   Services.prefs.setBoolPref(PREF, false);
-  await onLinksUpdated;
+  yield onLinksUpdated;
 
   info("Verifying that the link text has changed after the pref change");
-  await verifyLinkText(view, CSS_LOC);
+  yield verifyLinkText(view, CSS_LOC);
 
   info("Toggling the pref again");
   onLinksUpdated = inspector.once("computed-view-sourcelinks-updated");
   Services.prefs.setBoolPref(PREF, true);
-  await onLinksUpdated;
+  yield onLinksUpdated;
 
   info("Testing that clicking on the link works");
-  await testClickingLink(toolbox, view);
+  yield testClickingLink(toolbox, view);
 
   info("Turning the pref " + PREF + " off");
   Services.prefs.clearUserPref(PREF);
 });
 
-async function testClickingLink(toolbox, view) {
+function* testClickingLink(toolbox, view) {
   let onEditor = waitForStyleEditor(toolbox, "doc_sourcemaps.scss");
 
   info("Clicking the computedview stylesheet link");
@@ -56,7 +56,7 @@ async function testClickingLink(toolbox, view) {
   link.scrollIntoView();
   link.click();
 
-  let editor = await onEditor;
+  let editor = yield onEditor;
 
   let {line} = editor.sourceEditor.getCursor();
   is(line, 3, "cursor is at correct line number in original source");

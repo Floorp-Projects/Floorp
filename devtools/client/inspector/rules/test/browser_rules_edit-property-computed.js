@@ -16,21 +16,21 @@ const TEST_URI = `
   <div id="testid">Styled Node</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
-  await editAndCheck(view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
+  yield editAndCheck(view);
 });
 
-async function editAndCheck(view) {
+function* editAndCheck(view) {
   let idRuleEditor = getRuleViewRuleEditor(view, 1);
   let prop = idRuleEditor.rule.textProps[0];
   let propEditor = prop.editor;
   let newPaddingValue = "20px";
 
   info("Focusing the inplace editor field");
-  let editor = await focusEditableField(view, propEditor.valueSpan);
+  let editor = yield focusEditableField(view, propEditor.valueSpan);
   is(inplaceEditor(propEditor.valueSpan), editor,
     "Focused editor should be the value span.");
 
@@ -45,10 +45,10 @@ async function editAndCheck(view) {
     "changes to document");
 
   view.debounce.flush();
-  await onPropertyChange;
+  yield onPropertyChange;
 
   info("Waiting for ruleview-refreshed after previewValue was applied.");
-  await onRefreshAfterPreview;
+  yield onRefreshAfterPreview;
 
   let onBlur = once(editor.input, "blur");
 
@@ -56,10 +56,10 @@ async function editAndCheck(view) {
   EventUtils.synthesizeKey("KEY_Enter");
 
   info("Waiting for blur on the field");
-  await onBlur;
+  yield onBlur;
 
   info("Waiting for the style changes to be applied");
-  await once(view, "ruleview-changed");
+  yield once(view, "ruleview-changed");
 
   let computed = prop.computed;
   let propNames = [

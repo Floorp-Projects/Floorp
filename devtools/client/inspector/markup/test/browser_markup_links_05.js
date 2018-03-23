@@ -9,14 +9,14 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   info("Select a node with a URI attribute");
-  await selectNode("video", inspector);
+  yield selectNode("video", inspector);
 
   info("Set the popupNode to the node that contains the uri");
-  let {editor} = await getContainerForSelector("video", inspector);
+  let {editor} = yield getContainerForSelector("video", inspector);
   openContextMenuAndGetAllItems(inspector, {
     target: editor.attrElements.get("poster").querySelector(".link"),
   });
@@ -24,8 +24,8 @@ add_task(async function() {
   info("Follow the link and wait for the new tab to open");
   let onTabOpened = once(gBrowser.tabContainer, "TabOpen");
   inspector.onFollowLink();
-  let {target: tab} = await onTabOpened;
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  let {target: tab} = yield onTabOpened;
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   ok(true, "A new tab opened");
   is(tab.linkedBrowser.currentURI.spec, URL_ROOT + "doc_markup_tooltip.png",
@@ -33,10 +33,10 @@ add_task(async function() {
   gBrowser.removeTab(tab);
 
   info("Select a node with a IDREF attribute");
-  await selectNode("label", inspector);
+  yield selectNode("label", inspector);
 
   info("Set the popupNode to the node that contains the ref");
-  ({editor} = await getContainerForSelector("label", inspector));
+  ({editor} = yield getContainerForSelector("label", inspector));
   openContextMenuAndGetAllItems(inspector, {
     target: editor.attrElements.get("for").querySelector(".link"),
   });
@@ -44,16 +44,16 @@ add_task(async function() {
   info("Follow the link and wait for the new node to be selected");
   let onSelection = inspector.selection.once("new-node-front");
   inspector.onFollowLink();
-  await onSelection;
+  yield onSelection;
 
   ok(true, "A new node was selected");
   is(inspector.selection.nodeFront.id, "name", "The right node was selected");
 
   info("Select a node with an invalid IDREF attribute");
-  await selectNode("output", inspector);
+  yield selectNode("output", inspector);
 
   info("Set the popupNode to the node that contains the ref");
-  ({editor} = await getContainerForSelector("output", inspector));
+  ({editor} = yield getContainerForSelector("output", inspector));
   openContextMenuAndGetAllItems(inspector, {
     target: editor.attrElements.get("for").querySelectorAll(".link")[2],
   });
@@ -61,7 +61,7 @@ add_task(async function() {
   info("Try to follow the link and check that no new node were selected");
   let onFailed = inspector.once("idref-attribute-link-failed");
   inspector.onFollowLink();
-  await onFailed;
+  yield onFailed;
 
   ok(true, "The node selection failed");
   is(inspector.selection.nodeFront.tagName.toLowerCase(), "output",

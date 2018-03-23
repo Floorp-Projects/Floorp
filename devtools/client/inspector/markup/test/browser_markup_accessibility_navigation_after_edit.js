@@ -102,14 +102,14 @@ const TESTS = [
 
 let elms = {};
 
-add_task(async function() {
+add_task(function* () {
   let url = `data:text/html;charset=utf-8,${TEST_URI}`;
-  let { inspector } = await openInspectorForURL(url);
+  let { inspector } = yield openInspectorForURL(url);
 
   elms.docBody = inspector.markup.doc.body;
   elms.root = inspector.markup.getContainer(inspector.markup._rootNode);
-  elms.div = await getContainerForSelector("div", inspector);
-  elms.body = await getContainerForSelector("body", inspector);
+  elms.div = yield getContainerForSelector("div", inspector);
+  elms.body = yield getContainerForSelector("body", inspector);
 
   // Initial focus is on root element and active descendant should be set on
   // body tag line.
@@ -119,7 +119,7 @@ add_task(async function() {
   elms.root.elt.focus();
 
   for (let testData of TESTS) {
-    await runAccessibilityNavigationTest(inspector, elms, testData);
+    yield runAccessibilityNavigationTest(inspector, elms, testData);
   }
 
   elms = null;

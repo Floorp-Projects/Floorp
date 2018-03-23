@@ -10,18 +10,18 @@ const {PropertyView} =
       require("devtools/client/inspector/computed/computed");
 const TEST_URI = URL_ROOT + "doc_matched_selectors.html";
 
-add_task(async function() {
-  await addTab(TEST_URI);
-  let {inspector, view} = await openComputedView();
+add_task(function* () {
+  yield addTab(TEST_URI);
+  let {inspector, view} = yield openComputedView();
 
-  await selectNode("#test", inspector);
-  await testMatchedSelectors(view, inspector);
+  yield selectNode("#test", inspector);
+  yield testMatchedSelectors(view, inspector);
 });
 
-async function testMatchedSelectors(view, inspector) {
+function* testMatchedSelectors(view, inspector) {
   info("checking selector counts, matched rules and titles");
 
-  let nodeFront = await getNodeFront("#test", inspector);
+  let nodeFront = yield getNodeFront("#test", inspector);
   is(nodeFront, view._viewedElement,
     "style inspector node matches the selected node");
 
@@ -30,7 +30,7 @@ async function testMatchedSelectors(view, inspector) {
   propertyView.buildSelectorContainer();
   propertyView.matchedExpanded = true;
 
-  await propertyView.refreshMatchedSelectors();
+  yield propertyView.refreshMatchedSelectors();
 
   let numMatchedSelectors = propertyView.matchedSelectors.length;
   is(numMatchedSelectors, 6,

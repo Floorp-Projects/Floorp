@@ -18,19 +18,19 @@ const TEST_URI = `
   <div id='testid'>Styled Node</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
 
   info("Getting the first property in the #testid rule");
   let rule = getRuleViewRuleEditor(view, 1).rule;
   let prop = rule.textProps[0];
 
   info("Deleting the name of that property to remove the property");
-  await removeProperty(view, prop, false);
+  yield removeProperty(view, prop, false);
 
-  let newValue = await executeInContent("Test:GetRulePropertyValue", {
+  let newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
     name: "background-color"
@@ -46,9 +46,9 @@ add_task(async function() {
 
   info("Deleting the name of that property to remove the property");
   view.styleDocument.activeElement.blur();
-  await removeProperty(view, prop, false);
+  yield removeProperty(view, prop, false);
 
-  newValue = await executeInContent("Test:GetRulePropertyValue", {
+  newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
     name: "color"

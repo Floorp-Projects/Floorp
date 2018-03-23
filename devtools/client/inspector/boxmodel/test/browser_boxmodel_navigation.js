@@ -15,18 +15,18 @@ const TEST_URI = `
   </style><div></div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel} = await openLayoutView();
-  await selectNode("div", inspector);
+add_task(function* () {
+  yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
+  let {inspector, boxmodel} = yield openLayoutView();
+  yield selectNode("div", inspector);
 
-  await testInitialFocus(inspector, boxmodel);
-  await testChangingLevels(inspector, boxmodel);
-  await testTabbingWrapAround(inspector, boxmodel);
-  await testChangingLevelsByClicking(inspector, boxmodel);
+  yield testInitialFocus(inspector, boxmodel);
+  yield testChangingLevels(inspector, boxmodel);
+  yield testTabbingWrapAround(inspector, boxmodel);
+  yield testChangingLevelsByClicking(inspector, boxmodel);
 });
 
-function testInitialFocus(inspector, boxmodel) {
+function* testInitialFocus(inspector, boxmodel) {
   info("Test that the focus is(on margin layout.");
   let doc = boxmodel.document;
   let container = doc.querySelector(".boxmodel-container");
@@ -37,7 +37,7 @@ function testInitialFocus(inspector, boxmodel) {
     "Should be set to the position layout.");
 }
 
-function testChangingLevels(inspector, boxmodel) {
+function* testChangingLevels(inspector, boxmodel) {
   info("Test that using arrow keys updates level.");
   let doc = boxmodel.document;
   let container = doc.querySelector(".boxmodel-container");
@@ -78,7 +78,7 @@ function testChangingLevels(inspector, boxmodel) {
     "Should be set to the position layout.");
 }
 
-function testTabbingWrapAround(inspector, boxmodel) {
+function* testTabbingWrapAround(inspector, boxmodel) {
   info("Test that using arrow keys updates level.");
   let doc = boxmodel.document;
   let container = doc.querySelector(".boxmodel-container");
@@ -100,7 +100,7 @@ function testTabbingWrapAround(inspector, boxmodel) {
   is(editBoxes[3], doc.activeElement, "Left edit box should have focus.");
 }
 
-function testChangingLevelsByClicking(inspector, boxmodel) {
+function* testChangingLevelsByClicking(inspector, boxmodel) {
   info("Test that clicking on levels updates level.");
   let doc = boxmodel.document;
   let container = doc.querySelector(".boxmodel-container");

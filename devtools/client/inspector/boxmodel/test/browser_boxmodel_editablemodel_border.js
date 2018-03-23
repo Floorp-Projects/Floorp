@@ -14,15 +14,15 @@ const TEST_URI = "<style>" +
   "</style>" +
   "<div id='div1'></div><div id='div2'></div><div id='div3'></div>";
 
-add_task(async function() {
-  await addTab("data:text/html," + encodeURIComponent(TEST_URI));
-  let {inspector, boxmodel, testActor} = await openLayoutView();
+add_task(function* () {
+  yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
+  let {inspector, boxmodel, testActor} = yield openLayoutView();
 
-  is((await getStyle(testActor, "#div1", "border-top-width")), "",
+  is((yield getStyle(testActor, "#div1", "border-top-width")), "",
      "Should have the right border");
-  is((await getStyle(testActor, "#div1", "border-top-style")), "",
+  is((yield getStyle(testActor, "#div1", "border-top-style")), "",
      "Should have the right border");
-  await selectNode("#div1", inspector);
+  yield selectNode("#div1", inspector);
 
   let span = boxmodel.document.querySelector(".boxmodel-border.boxmodel-top > span");
   is(span.textContent, 0, "Should have the right value in the box model.");
@@ -33,20 +33,20 @@ add_task(async function() {
   is(editor.value, "0", "Should have the right value in the editor.");
 
   EventUtils.synthesizeKey("1", {}, boxmodel.document.defaultView);
-  await waitForUpdate(inspector);
+  yield waitForUpdate(inspector);
 
   is(editor.value, "1", "Should have the right value in the editor.");
-  is((await getStyle(testActor, "#div1", "border-top-width")), "1px",
+  is((yield getStyle(testActor, "#div1", "border-top-width")), "1px",
      "Should have the right border");
-  is((await getStyle(testActor, "#div1", "border-top-style")), "solid",
+  is((yield getStyle(testActor, "#div1", "border-top-style")), "solid",
      "Should have the right border");
 
   EventUtils.synthesizeKey("VK_ESCAPE", {}, boxmodel.document.defaultView);
-  await waitForUpdate(inspector);
+  yield waitForUpdate(inspector);
 
-  is((await getStyle(testActor, "#div1", "border-top-width")), "",
+  is((yield getStyle(testActor, "#div1", "border-top-width")), "",
      "Should be the right padding.");
-  is((await getStyle(testActor, "#div1", "border-top-style")), "",
+  is((yield getStyle(testActor, "#div1", "border-top-style")), "",
      "Should have the right border");
   is(span.textContent, 0, "Should have the right value in the box model.");
 });

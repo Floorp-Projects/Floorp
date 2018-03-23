@@ -10,10 +10,10 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_search.html";
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
-  let container = await getContainerForSelector("em", inspector, true);
+  let container = yield getContainerForSelector("em", inspector, true);
   ok(!container, "The <em> tag isn't present yet in the markup-view");
 
   // Searching for the innermost element first makes sure that the inspector
@@ -22,30 +22,30 @@ add_task(async function() {
   // node, and only the parents up to the ROOT are known, and its direct
   // children.
   info("searching for the innermost child: <em>");
-  await searchFor("em", inspector);
+  yield searchFor("em", inspector);
 
-  container = await getContainerForSelector("em", inspector);
+  container = yield getContainerForSelector("em", inspector);
   ok(container, "The <em> tag is now imported in the markup-view");
 
-  let nodeFront = await getNodeFront("em", inspector);
+  let nodeFront = yield getNodeFront("em", inspector);
   is(inspector.selection.nodeFront, nodeFront,
     "The <em> tag is the currently selected node");
 
   info("searching for other nodes too");
   for (let node of ["span", "li", "ul"]) {
-    await searchFor(node, inspector);
+    yield searchFor(node, inspector);
 
-    nodeFront = await getNodeFront(node, inspector);
+    nodeFront = yield getNodeFront(node, inspector);
     is(inspector.selection.nodeFront, nodeFront,
       "The <" + node + "> tag is the currently selected node");
   }
 });
 
-async function searchFor(selector, inspector) {
+function* searchFor(selector, inspector) {
   let onNewNodeFront = inspector.selection.once("new-node-front");
 
   searchUsingSelectorSearch(selector, inspector);
 
-  await onNewNodeFront;
-  await inspector.once("inspector-updated");
+  yield onNewNodeFront;
+  yield inspector.once("inspector-updated");
 }

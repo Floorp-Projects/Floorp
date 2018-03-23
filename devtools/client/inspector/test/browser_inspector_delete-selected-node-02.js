@@ -12,91 +12,91 @@
 const TEST_PAGE = URL_ROOT +
   "doc_inspector_delete-selected-node-02.html";
 
-add_task(async function() {
-  let { inspector } = await openInspectorForURL(TEST_PAGE);
+add_task(function* () {
+  let { inspector } = yield openInspectorForURL(TEST_PAGE);
 
-  await testManuallyDeleteSelectedNode();
-  await testAutomaticallyDeleteSelectedNode();
-  await testDeleteSelectedNodeContainerFrame();
-  await testDeleteWithNonElementNode();
+  yield testManuallyDeleteSelectedNode();
+  yield testAutomaticallyDeleteSelectedNode();
+  yield testDeleteSelectedNodeContainerFrame();
+  yield testDeleteWithNonElementNode();
 
-  async function testManuallyDeleteSelectedNode() {
+  function* testManuallyDeleteSelectedNode() {
     info("Selecting a node, deleting it via context menu and checking that " +
           "its parent node is selected and breadcrumbs are updated.");
 
-    await deleteNodeWithContextMenu("#deleteManually");
+    yield deleteNodeWithContextMenu("#deleteManually");
 
     info("Performing checks.");
-    await assertNodeSelectedAndPanelsUpdated("#selectedAfterDelete",
+    yield assertNodeSelectedAndPanelsUpdated("#selectedAfterDelete",
                                              "li#selectedAfterDelete");
   }
 
-  async function testAutomaticallyDeleteSelectedNode() {
+  function* testAutomaticallyDeleteSelectedNode() {
     info("Selecting a node, deleting it via javascript and checking that " +
          "its parent node is selected and breadcrumbs are updated.");
 
-    let div = await getNodeFront("#deleteAutomatically", inspector);
-    await selectNode(div, inspector);
+    let div = yield getNodeFront("#deleteAutomatically", inspector);
+    yield selectNode(div, inspector);
 
     info("Deleting selected node via javascript.");
-    await inspector.walker.removeNode(div);
+    yield inspector.walker.removeNode(div);
 
     info("Waiting for inspector to update.");
-    await inspector.once("inspector-updated");
+    yield inspector.once("inspector-updated");
 
     info("Inspector updated, performing checks.");
-    await assertNodeSelectedAndPanelsUpdated("#deleteChildren",
+    yield assertNodeSelectedAndPanelsUpdated("#deleteChildren",
                                              "ul#deleteChildren");
   }
 
-  async function testDeleteSelectedNodeContainerFrame() {
+  function* testDeleteSelectedNodeContainerFrame() {
     info("Selecting a node inside iframe, deleting the iframe via javascript " +
          "and checking the parent node of the iframe is selected and " +
          "breadcrumbs are updated.");
 
     info("Selecting an element inside iframe.");
-    let iframe = await getNodeFront("#deleteIframe", inspector);
-    let div = await getNodeFrontInFrame("#deleteInIframe", iframe, inspector);
-    await selectNode(div, inspector);
+    let iframe = yield getNodeFront("#deleteIframe", inspector);
+    let div = yield getNodeFrontInFrame("#deleteInIframe", iframe, inspector);
+    yield selectNode(div, inspector);
 
     info("Deleting selected node via javascript.");
-    await inspector.walker.removeNode(iframe);
+    yield inspector.walker.removeNode(iframe);
 
     info("Waiting for inspector to update.");
-    await inspector.once("inspector-updated");
+    yield inspector.once("inspector-updated");
 
     info("Inspector updated, performing checks.");
-    await assertNodeSelectedAndPanelsUpdated("body", "body");
+    yield assertNodeSelectedAndPanelsUpdated("body", "body");
   }
 
-  async function testDeleteWithNonElementNode() {
+  function* testDeleteWithNonElementNode() {
     info("Selecting a node, deleting it via context menu and checking that " +
          "its parent node is selected and breadcrumbs are updated " +
          "when the node is followed by a non-element node");
 
-    await deleteNodeWithContextMenu("#deleteWithNonElement");
+    yield deleteNodeWithContextMenu("#deleteWithNonElement");
 
     let expectedCrumbs = ["html", "body", "div#deleteToMakeSingleTextNode"];
-    await assertNodeSelectedAndCrumbsUpdated(expectedCrumbs,
+    yield assertNodeSelectedAndCrumbsUpdated(expectedCrumbs,
                                              Node.TEXT_NODE);
 
     // Delete node with key, as cannot delete text node with
     // context menu at this time.
     inspector.markup._frame.focus();
     EventUtils.synthesizeKey("KEY_Delete");
-    await inspector.once("inspector-updated");
+    yield inspector.once("inspector-updated");
 
     expectedCrumbs = ["html", "body", "div#deleteToMakeSingleTextNode"];
-    await assertNodeSelectedAndCrumbsUpdated(expectedCrumbs,
+    yield assertNodeSelectedAndCrumbsUpdated(expectedCrumbs,
                                              Node.ELEMENT_NODE);
   }
 
-  async function deleteNodeWithContextMenu(selector) {
-    await selectNode(selector, inspector);
+  function* deleteNodeWithContextMenu(selector) {
+    yield selectNode(selector, inspector);
     let nodeToBeDeleted = inspector.selection.nodeFront;
 
     info("Getting the node container in the markup view.");
-    let container = await getContainerForSelector(selector, inspector);
+    let container = yield getContainerForSelector(selector, inspector);
 
     let allMenuItems = openContextMenuAndGetAllItems(inspector, {
       target: container.tagLine,
@@ -111,7 +111,7 @@ add_task(async function() {
     EventUtils.synthesizeKey("KEY_Escape");
 
     info("Waiting for inspector to update.");
-    await inspector.once("inspector-updated");
+    yield inspector.once("inspector-updated");
 
     // Since the mutations are sent asynchronously from the server, the
     // inspector-updated event triggered by the deletion might happen before
@@ -119,13 +119,13 @@ add_task(async function() {
     // breadcrumbs. See bug 1284125.
     if (inspector.breadcrumbs.indexOf(nodeToBeDeleted) > -1) {
       info("Crumbs haven't seen deletion. Waiting for breadcrumbs-updated.");
-      await inspector.once("breadcrumbs-updated");
+      yield inspector.once("breadcrumbs-updated");
     }
 
     return menuItem;
   }
 
-  function assertNodeSelectedAndCrumbsUpdated(expectedCrumbs,
+  function* assertNodeSelectedAndCrumbsUpdated(expectedCrumbs,
                                                expectedNodeType) {
     info("Performing checks");
     let actualNodeType = inspector.selection.nodeFront.nodeType;
@@ -141,8 +141,8 @@ add_task(async function() {
     }
   }
 
-  async function assertNodeSelectedAndPanelsUpdated(selector, crumbLabel) {
-    let nodeFront = await getNodeFront(selector, inspector);
+  function* assertNodeSelectedAndPanelsUpdated(selector, crumbLabel) {
+    let nodeFront = yield getNodeFront(selector, inspector);
     is(inspector.selection.nodeFront, nodeFront, "The right node is selected");
 
     let breadcrumbs = inspector.panelDoc.querySelector(

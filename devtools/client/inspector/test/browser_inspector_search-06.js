@@ -9,57 +9,57 @@
 
 const TEST_URL = URL_ROOT + "doc_inspector_search.html";
 
-add_task(async function() {
-  let { inspector, testActor } = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let { inspector, testActor } = yield openInspectorForURL(TEST_URL);
 
   info("Searching for test node #d1");
-  await focusSearchBoxUsingShortcut(inspector.panelWin);
-  await synthesizeKeys(["#", "d", "1", "VK_RETURN"], inspector);
+  yield focusSearchBoxUsingShortcut(inspector.panelWin);
+  yield synthesizeKeys(["#", "d", "1", "VK_RETURN"], inspector);
 
-  await inspector.search.once("search-result");
+  yield inspector.search.once("search-result");
   assertHasResult(inspector, true);
 
   info("Removing node #d1");
   // Expect an inspector-updated event here, because removing #d1 causes the
   // breadcrumbs to update (since #d1 is displayed in it).
   let onUpdated = inspector.once("inspector-updated");
-  await mutatePage(inspector, testActor,
+  yield mutatePage(inspector, testActor,
                    "document.getElementById(\"d1\").remove()");
-  await onUpdated;
+  yield onUpdated;
 
   info("Pressing return button to search again for node #d1.");
-  await synthesizeKeys("VK_RETURN", inspector);
+  yield synthesizeKeys("VK_RETURN", inspector);
 
-  await inspector.search.once("search-result");
+  yield inspector.search.once("search-result");
   assertHasResult(inspector, false);
 
   info("Emptying the field and searching for a node that doesn't exist: #d3");
   let keys = ["VK_BACK_SPACE", "VK_BACK_SPACE", "VK_BACK_SPACE", "#", "d", "3",
               "VK_RETURN"];
-  await synthesizeKeys(keys, inspector);
+  yield synthesizeKeys(keys, inspector);
 
-  await inspector.search.once("search-result");
+  yield inspector.search.once("search-result");
   assertHasResult(inspector, false);
 
   info("Create the #d3 node in the page");
   // No need to expect an inspector-updated event here, Creating #d3 isn't going
   // to update the breadcrumbs in any ways.
-  await mutatePage(inspector, testActor,
+  yield mutatePage(inspector, testActor,
                    `document.getElementById("d2").insertAdjacentHTML(
                     "afterend", "<div id=d3></div>")`);
 
   info("Pressing return button to search again for node #d3.");
-  await synthesizeKeys("VK_RETURN", inspector);
+  yield synthesizeKeys("VK_RETURN", inspector);
 
-  await inspector.search.once("search-result");
+  yield inspector.search.once("search-result");
   assertHasResult(inspector, true);
 
   // Catch-all event for remaining server requests when searching for the new
   // node.
-  await inspector.once("inspector-updated");
+  yield inspector.once("inspector-updated");
 });
 
-async function synthesizeKeys(keys, inspector) {
+function* synthesizeKeys(keys, inspector) {
   if (typeof keys === "string") {
     keys = [keys];
   }
@@ -68,9 +68,9 @@ async function synthesizeKeys(keys, inspector) {
     info("Synthesizing key " + key + " in the search box");
     let eventHandled = once(inspector.searchBox, "keypress", true);
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
-    await eventHandled;
+    yield eventHandled;
     info("Waiting for the search query to complete");
-    await inspector.searchSuggestions._lastQuery;
+    yield inspector.searchSuggestions._lastQuery;
   }
 }
 
@@ -80,8 +80,8 @@ function assertHasResult(inspector, expectResult) {
      "There are" + (expectResult ? "" : " no") + " search results");
 }
 
-async function mutatePage(inspector, testActor, expression) {
+function* mutatePage(inspector, testActor, expression) {
   let onMutation = inspector.once("markupmutation");
-  await testActor.eval(expression);
-  await onMutation;
+  yield testActor.eval(expression);
+  yield onMutation;
 }

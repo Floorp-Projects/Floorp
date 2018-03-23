@@ -4,6 +4,7 @@
 
 "use strict";
 
+const {Task} = require("devtools/shared/task");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
 const {flashElementOn, flashElementOff} =
       require("devtools/client/inspector/markup/utils");
@@ -562,7 +563,7 @@ MarkupContainer.prototype = {
    * On mouse up, stop dragging.
    * This handler is called from the markup view, to reduce number of listeners.
    */
-  async onMouseUp() {
+  onMouseUp: Task.async(function* () {
     this._isPreDragging = false;
     this.markup._draggedContainer = null;
 
@@ -575,11 +576,11 @@ MarkupContainer.prototype = {
         return;
       }
 
-      await this.markup.walker.insertBefore(this.node, dropTargetNodes.parent,
+      yield this.markup.walker.insertBefore(this.node, dropTargetNodes.parent,
                                             dropTargetNodes.nextSibling);
       this.markup.emit("drop-completed");
     }
-  },
+  }),
 
   /**
    * On mouse move, move the dragged element and indicate the drop target.

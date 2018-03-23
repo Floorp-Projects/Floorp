@@ -17,23 +17,23 @@ const TEST_URI = `
 
 var PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 
-add_task(async function() {
+add_task(function* () {
   info("Starting the test with the pref set to true before toolbox is opened");
   Services.prefs.setBoolPref(PREF_UA_STYLES, true);
 
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
-  await userAgentStylesUneditable(inspector, view);
+  yield userAgentStylesUneditable(inspector, view);
 
   info("Resetting " + PREF_UA_STYLES);
   Services.prefs.clearUserPref(PREF_UA_STYLES);
 });
 
-async function userAgentStylesUneditable(inspector, view) {
+function* userAgentStylesUneditable(inspector, view) {
   info("Making sure that UI is not editable for user agent styles");
 
-  await selectNode("a", inspector);
+  yield selectNode("a", inspector);
   let uaRules = view._elementStyle.rules.filter(rule=>!rule.editor.isEditable);
 
   for (let rule of uaRules) {

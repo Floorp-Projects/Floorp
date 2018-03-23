@@ -16,40 +16,40 @@ const TEST_URI = `
   <p>Test the selector highlighter</p>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("p", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("p", inspector);
 
   ok(!view.selectorHighlighter,
     "No selectorhighlighter exist in the rule-view");
 
-  await testSelectorHighlight(view, "p");
-  await testEditSelector(view, "body");
-  await testSelectorHighlight(view, "body");
+  yield testSelectorHighlight(view, "p");
+  yield testEditSelector(view, "body");
+  yield testSelectorHighlight(view, "body");
 });
 
-async function testSelectorHighlight(view, name) {
+function* testSelectorHighlight(view, name) {
   info("Test creating selector highlighter");
 
   info("Clicking on a selector icon");
-  let icon = await getRuleViewSelectorHighlighterIcon(view, name);
+  let icon = yield getRuleViewSelectorHighlighterIcon(view, name);
 
   let onToggled = view.once("ruleview-selectorhighlighter-toggled");
   EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
-  let isVisible = await onToggled;
+  let isVisible = yield onToggled;
 
   ok(view.selectorHighlighter, "The selectorhighlighter instance was created");
   ok(isVisible, "The toggle event says the highlighter is visible");
 }
 
-async function testEditSelector(view, name) {
+function* testEditSelector(view, name) {
   info("Test editing existing selector fields");
 
   let ruleEditor = getRuleViewRuleEditor(view, 1);
 
   info("Focusing an existing selector name in the rule-view");
-  let editor = await focusEditableField(view, ruleEditor.selectorText);
+  let editor = yield focusEditableField(view, ruleEditor.selectorText);
 
   is(inplaceEditor(ruleEditor.selectorText), editor,
     "The selector editor got focused");
@@ -61,7 +61,7 @@ async function testEditSelector(view, name) {
   editor.input.value = name;
   EventUtils.synthesizeKey("KEY_Enter");
 
-  let isVisible = await onToggled;
+  let isVisible = yield onToggled;
 
   ok(!view.highlighters.selectorHighlighterShown,
     "The selectorHighlighterShown instance was removed");

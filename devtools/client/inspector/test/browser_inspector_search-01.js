@@ -58,32 +58,32 @@ const KEY_STATES = [
   ["VK_RETURN", "p1", false],        // .c1P
 ];
 
-add_task(async function() {
-  let { inspector } = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let { inspector } = yield openInspectorForURL(TEST_URL);
   let { searchBox } = inspector;
 
-  await selectNode("#b1", inspector);
-  await focusSearchBoxUsingShortcut(inspector.panelWin);
+  yield selectNode("#b1", inspector);
+  yield focusSearchBoxUsingShortcut(inspector.panelWin);
 
   let index = 0;
   for (let [ key, id, isValid ] of KEY_STATES) {
     info(index + ": Pressing key " + key + " to get id " + id + ".");
     let done = inspector.searchSuggestions.once("processing-done");
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
-    await done;
+    yield done;
     info("Got processing-done event");
 
     if (key === "VK_RETURN") {
       info("Waiting for " + (isValid ? "NO " : "") + "results");
-      await inspector.search.once("search-result");
+      yield inspector.search.once("search-result");
     }
 
     info("Waiting for search query to complete");
-    await inspector.searchSuggestions._lastQuery;
+    yield inspector.searchSuggestions._lastQuery;
 
     info(inspector.selection.nodeFront.id + " is selected with text " +
          searchBox.value);
-    let nodeFront = await getNodeFront("#" + id, inspector);
+    let nodeFront = yield getNodeFront("#" + id, inspector);
     is(inspector.selection.nodeFront, nodeFront,
        "Correct node is selected for state " + index);
 

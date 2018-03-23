@@ -7,31 +7,31 @@
 // Test that image nodes have the "copy data-uri" contextual menu item enabled
 // and that clicking it puts the image data into the clipboard
 
-add_task(async function() {
-  await addTab(URL_ROOT + "doc_markup_image_and_canvas.html");
-  let {inspector, testActor} = await openInspector();
+add_task(function* () {
+  yield addTab(URL_ROOT + "doc_markup_image_and_canvas.html");
+  let {inspector, testActor} = yield openInspector();
 
-  await selectNode("div", inspector);
-  await assertCopyImageDataNotAvailable(inspector);
+  yield selectNode("div", inspector);
+  yield assertCopyImageDataNotAvailable(inspector);
 
-  await selectNode("img", inspector);
-  await assertCopyImageDataAvailable(inspector);
-  let expectedSrc = await testActor.getAttribute("img", "src");
-  await triggerCopyImageUrlAndWaitForClipboard(expectedSrc, inspector);
+  yield selectNode("img", inspector);
+  yield assertCopyImageDataAvailable(inspector);
+  let expectedSrc = yield testActor.getAttribute("img", "src");
+  yield triggerCopyImageUrlAndWaitForClipboard(expectedSrc, inspector);
 
-  await selectNode("canvas", inspector);
-  await assertCopyImageDataAvailable(inspector);
-  let expectedURL = await testActor.eval(`
+  yield selectNode("canvas", inspector);
+  yield assertCopyImageDataAvailable(inspector);
+  let expectedURL = yield testActor.eval(`
     document.querySelector(".canvas").toDataURL();`);
-  await triggerCopyImageUrlAndWaitForClipboard(expectedURL, inspector);
+  yield triggerCopyImageUrlAndWaitForClipboard(expectedURL, inspector);
 
   // Check again that the menu isn't available on the DIV (to make sure our
   // menu updating mechanism works)
-  await selectNode("div", inspector);
-  await assertCopyImageDataNotAvailable(inspector);
+  yield selectNode("div", inspector);
+  yield assertCopyImageDataNotAvailable(inspector);
 });
 
-function assertCopyImageDataNotAvailable(inspector) {
+function* assertCopyImageDataNotAvailable(inspector) {
   let allMenuItems = openContextMenuAndGetAllItems(inspector);
   let item = allMenuItems.find(i => i.id === "node-menu-copyimagedatauri");
 
@@ -39,7 +39,7 @@ function assertCopyImageDataNotAvailable(inspector) {
   ok(item.disabled, "The menu item is disabled");
 }
 
-function assertCopyImageDataAvailable(inspector) {
+function* assertCopyImageDataAvailable(inspector) {
   let allMenuItems = openContextMenuAndGetAllItems(inspector);
   let item = allMenuItems.find(i => i.id === "node-menu-copyimagedatauri");
 

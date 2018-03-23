@@ -15,19 +15,19 @@ const TEST_URI = `
   <span id="matches" class="matches">Some styled text</span>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openComputedView();
-  await selectNode("#matches", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openComputedView();
+  yield selectNode("#matches", inspector);
 
-  await enterInvalidFilter(inspector, view);
+  yield enterInvalidFilter(inspector, view);
   checkNoResultsPlaceholderShown(view);
 
-  await clearFilterText(inspector, view);
+  yield clearFilterText(inspector, view);
   checkNoResultsPlaceholderHidden(view);
 });
 
-async function enterInvalidFilter(inspector, computedView) {
+function* enterInvalidFilter(inspector, computedView) {
   let searchbar = computedView.searchField;
   let searchTerm = "xxxxx";
 
@@ -36,7 +36,7 @@ async function enterInvalidFilter(inspector, computedView) {
   let onRefreshed = inspector.once("computed-view-refreshed");
   searchbar.focus();
   synthesizeKeys(searchTerm, computedView.styleWindow);
-  await onRefreshed;
+  yield onRefreshed;
 }
 
 function checkNoResultsPlaceholderShown(computedView) {
@@ -48,7 +48,7 @@ function checkNoResultsPlaceholderShown(computedView) {
   is(display, "block", "placeholder is visible");
 }
 
-async function clearFilterText(inspector, computedView) {
+function* clearFilterText(inspector, computedView) {
   info("Clearing the filter text");
 
   let searchbar = computedView.searchField;
@@ -57,7 +57,7 @@ async function clearFilterText(inspector, computedView) {
   searchbar.focus();
   searchbar.value = "";
   EventUtils.synthesizeKey("c", {}, computedView.styleWindow);
-  await onRefreshed;
+  yield onRefreshed;
 }
 
 function checkNoResultsPlaceholderHidden(computedView) {

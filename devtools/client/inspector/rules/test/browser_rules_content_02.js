@@ -17,12 +17,12 @@ const CONTENT = `
   </body>
 `;
 
-add_task(async function() {
-  let tab = await addTab("data:text/html;charset=utf-8," + CONTENT);
+add_task(function* () {
+  let tab = yield addTab("data:text/html;charset=utf-8," + CONTENT);
 
-  let testActor = await getTestActorWithoutToolbox(tab);
-  let inspector = await clickOnInspectMenuItem(testActor, "span");
-  await getRuleViewSelectorHighlighterIcon(inspector.getPanel("ruleview").view,
+  let testActor = yield getTestActorWithoutToolbox(tab);
+  let inspector = yield clickOnInspectMenuItem(testActor, "span");
+  yield getRuleViewSelectorHighlighterIcon(inspector.getPanel("ruleview").view,
                                            "element", 3);
 
   checkRuleViewContent(inspector.getPanel("ruleview").view);

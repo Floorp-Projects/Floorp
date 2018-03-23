@@ -16,19 +16,19 @@ const TEST_URI = `
   <div id="testid">Styled Node</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
 
   info("Test click on background-image url while editing property name");
 
-  await selectNode("#testid", inspector);
+  yield selectNode("#testid", inspector);
   let ruleEditor = getRuleViewRuleEditor(view, 1);
   let propEditor = ruleEditor.rule.textProps[0].editor;
   let anchor = propEditor.valueSpan.querySelector(".ruleview-propertyvalue .theme-link");
 
   info("Focus the background name span");
-  await focusEditableField(view, propEditor.nameSpan);
+  yield focusEditableField(view, propEditor.nameSpan);
   let editor = inplaceEditor(propEditor.doc.activeElement);
 
   info("Modify the property to background to trigger the " +
@@ -46,13 +46,13 @@ add_task(async function() {
   EventUtils.synthesizeMouse(anchor, 2, rect.height - 2, {}, propEditor.doc.defaultView);
 
   info("wait for ruleview-changed event to be triggered to prevent pending requests");
-  await onRuleViewChanged;
+  yield onRuleViewChanged;
 
   info("wait for the property value to be updated");
-  await onPropertyValueUpdate;
+  yield onPropertyValueUpdate;
 
   info("wait for the image to be open in a new tab");
-  let tab = await onTabOpened;
+  let tab = yield onTabOpened;
   ok(true, "A new tab opened");
 
   is(tab.linkedBrowser.currentURI.spec, anchor.href,

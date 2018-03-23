@@ -10,43 +10,43 @@
 const TEST_URI = `data:text/html;charset=utf-8,
                   <p id="one">one</p><p id="two">two</p><p id="three">three</p>`;
 
-add_task(async function() {
-  let {inspector, toolbox, testActor} = await openInspectorForURL(TEST_URI);
+add_task(function* () {
+  let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URI);
 
-  let body = await getNodeFront("body", inspector);
+  let body = yield getNodeFront("body", inspector);
   is(inspector.selection.nodeFront, body, "By default the body node is selected");
 
   info("Start the element picker");
-  await startPicker(toolbox);
+  yield startPicker(toolbox);
 
   info("Shift-clicking element #one should select it but keep the picker ON");
-  await clickElement("#one", testActor, inspector, true);
-  await checkElementSelected("#one", inspector);
+  yield clickElement("#one", testActor, inspector, true);
+  yield checkElementSelected("#one", inspector);
   checkPickerMode(toolbox, true);
 
   info("Shift-clicking element #two should select it but keep the picker ON");
-  await clickElement("#two", testActor, inspector, true);
-  await checkElementSelected("#two", inspector);
+  yield clickElement("#two", testActor, inspector, true);
+  yield checkElementSelected("#two", inspector);
   checkPickerMode(toolbox, true);
 
   info("Clicking element #three should select it and turn the picker OFF");
-  await clickElement("#three", testActor, inspector, false);
-  await checkElementSelected("#three", inspector);
+  yield clickElement("#three", testActor, inspector, false);
+  yield checkElementSelected("#three", inspector);
   checkPickerMode(toolbox, false);
 });
 
-async function clickElement(selector, testActor, inspector, isShift) {
+function* clickElement(selector, testActor, inspector, isShift) {
   let onSelectionChanged = inspector.once("inspector-updated");
-  await testActor.synthesizeMouse({
+  yield testActor.synthesizeMouse({
     selector: selector,
     center: true,
     options: { shiftKey: isShift }
   });
-  await onSelectionChanged;
+  yield onSelectionChanged;
 }
 
-async function checkElementSelected(selector, inspector) {
-  let el = await getNodeFront(selector, inspector);
+function* checkElementSelected(selector, inspector) {
+  let el = yield getNodeFront(selector, inspector);
   is(inspector.selection.nodeFront, el, `The element ${selector} is now selected`);
 }
 

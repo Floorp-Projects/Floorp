@@ -50,10 +50,10 @@ const TEST_DATA = [{
   pseudo: "after"
 }];
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   for (let data of TEST_DATA) {
-    await checkDeleteAndSelection(inspector, "delete", data);
+    yield checkDeleteAndSelection(inspector, "delete", data);
   }
 });

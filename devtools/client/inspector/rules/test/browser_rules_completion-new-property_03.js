@@ -9,27 +9,27 @@
 
 const TEST_URI = "<h1 style='color: red'>Header</h1>";
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {toolbox, inspector, view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {toolbox, inspector, view} = yield openRuleView();
 
   info("Test autocompletion for background-color");
-  await runAutocompletionTest(toolbox, inspector, view);
+  yield runAutocompletionTest(toolbox, inspector, view);
 });
 
-async function runAutocompletionTest(toolbox, inspector, view) {
+function* runAutocompletionTest(toolbox, inspector, view) {
   info("Selecting the test node");
-  await selectNode("h1", inspector);
+  yield selectNode("h1", inspector);
 
   info("Focusing the new property editable field");
   let ruleEditor = getRuleViewRuleEditor(view, 0);
-  let editor = await focusNewRuleViewProperty(ruleEditor);
+  let editor = yield focusNewRuleViewProperty(ruleEditor);
 
   info("Sending \"background\" to the editable field");
   for (let key of "background") {
     let onSuggest = editor.once("after-suggest");
     EventUtils.synthesizeKey(key, {}, view.styleWindow);
-    await onSuggest;
+    yield onSuggest;
   }
 
   const itemIndex = 4;

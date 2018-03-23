@@ -19,20 +19,20 @@ const TEST_URI = `
   <h1 id='testid'>Styled Node</h1>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
-  await testModifyPropertyValueFilter(inspector, view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
+  yield testModifyPropertyValueFilter(inspector, view);
 });
 
-async function testModifyPropertyValueFilter(inspector, view) {
-  await setSearchFilter(view, SEARCH);
+function* testModifyPropertyValueFilter(inspector, view) {
+  yield setSearchFilter(view, SEARCH);
 
   let rule = getRuleViewRuleEditor(view, 1).rule;
   let propEditor = rule.textProps[0].editor;
   let computed = propEditor.computed;
-  let editor = await focusEditableField(view, propEditor.valueSpan);
+  let editor = yield focusEditableField(view, propEditor.valueSpan);
 
   info("Check that the correct rules are visible");
   is(rule.selectorText, "#testid", "Second rule is #testid.");
@@ -46,8 +46,8 @@ async function testModifyPropertyValueFilter(inspector, view) {
   let onModification = view.once("ruleview-changed");
   EventUtils.sendString("4px 0px", view.styleWindow);
   EventUtils.synthesizeKey("KEY_Enter");
-  await onBlur;
-  await onModification;
+  yield onBlur;
+  yield onModification;
 
   ok(propEditor.container.classList.contains("ruleview-highlight"),
     "margin text property is correctly highlighted.");

@@ -17,14 +17,14 @@ const TEST_URI = `
   <div id="test2"><div id="test1">Styled Node</div></div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#test1", inspector);
-  await simpleInherit(inspector, view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#test1", inspector);
+  yield simpleInherit(inspector, view);
 });
 
-function simpleInherit(inspector, view) {
+function* simpleInherit(inspector, view) {
   let elementStyle = view._elementStyle;
   is(elementStyle.rules.length, 2, "Should have 2 rules.");
 

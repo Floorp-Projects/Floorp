@@ -18,23 +18,23 @@ const TEST_URI = `
   <div id='testid'>Styled Node</div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
 
   info("Getting the second property in the rule");
   let rule = getRuleViewRuleEditor(view, 1).rule;
   let prop = rule.textProps[1];
 
   info("Clearing the property value and pressing shift-tab");
-  let editor = await focusEditableField(view, prop.editor.valueSpan);
+  let editor = yield focusEditableField(view, prop.editor.valueSpan);
   let onValueDone = view.once("ruleview-changed");
   editor.input.value = "";
   EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
-  await onValueDone;
+  yield onValueDone;
 
-  let newValue = await executeInContent("Test:GetRulePropertyValue", {
+  let newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
     name: "color"
@@ -46,7 +46,7 @@ add_task(async function() {
   info("Pressing shift-tab again to focus the previous property value");
   let onValueFocused = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
-  await onValueFocused;
+  yield onValueFocused;
 
   info("Getting the first property in the rule");
   prop = rule.textProps[0];
@@ -58,15 +58,15 @@ add_task(async function() {
   info("Pressing shift-tab again to focus the property name");
   let onNameFocused = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
-  await onNameFocused;
+  yield onNameFocused;
 
   info("Removing the name and pressing shift-tab to focus the selector");
   let onNameDeleted = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_DELETE", {}, view.styleWindow);
   EventUtils.synthesizeKey("VK_TAB", {shiftKey: true}, view.styleWindow);
-  await onNameDeleted;
+  yield onNameDeleted;
 
-  newValue = await executeInContent("Test:GetRulePropertyValue", {
+  newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
     name: "background-color"

@@ -24,13 +24,13 @@ const TEST_DATA = [{
   attribute: "data-id"
 }];
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL(TEST_URL);
   let {walker} = inspector;
 
   for (let {selector, attribute} of TEST_DATA) {
     info("Get the container for node " + selector);
-    let {editor} = await getContainerForSelector(selector, inspector);
+    let {editor} = yield getContainerForSelector(selector, inspector);
 
     info("Focus attribute " + attribute);
     let attr = editor.attrElements.get(attribute).querySelector(".editable");
@@ -39,22 +39,22 @@ add_task(async function() {
     info("Delete the attribute by pressing delete");
     let mutated = inspector.once("markupmutation");
     EventUtils.sendKey("delete", inspector.panelWin);
-    await mutated;
+    yield mutated;
 
     info("Check that the node is still here");
-    let node = await walker.querySelector(walker.rootNode, selector);
+    let node = yield walker.querySelector(walker.rootNode, selector);
     ok(node, "The node hasn't been deleted");
 
     info("Check that the attribute has been deleted");
-    node = await walker.querySelector(walker.rootNode,
+    node = yield walker.querySelector(walker.rootNode,
                                       selector + "[" + attribute + "]");
     ok(!node, "The attribute does not exist anymore in the DOM");
     ok(!editor.attrElements.get(attribute),
        "The attribute has been removed from the container");
 
     info("Undo the change");
-    await undoChange(inspector);
-    node = await walker.querySelector(walker.rootNode,
+    yield undoChange(inspector);
+    node = yield walker.querySelector(walker.rootNode,
                                       selector + "[" + attribute + "]");
     ok(node, "The attribute is back in the DOM");
     ok(editor.attrElements.get(attribute),

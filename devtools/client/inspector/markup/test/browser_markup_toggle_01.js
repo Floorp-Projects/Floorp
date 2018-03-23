@@ -8,17 +8,17 @@
 
 const TEST_URL = URL_ROOT + "doc_markup_toggle.html";
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
 
   info("Getting the container for the html element");
-  let container = await getContainerForSelector("html", inspector);
+  let container = yield getContainerForSelector("html", inspector);
   ok(container.mustExpand, "HTML element mustExpand");
   ok(container.canExpand, "HTML element canExpand");
   is(container.expander.style.visibility, "hidden", "HTML twisty is hidden");
 
   info("Getting the container for the UL parent element");
-  container = await getContainerForSelector("ul", inspector);
+  container = yield getContainerForSelector("ul", inspector);
   ok(!container.mustExpand, "UL element !mustExpand");
   ok(container.canExpand, "UL element canExpand");
   is(container.expander.style.visibility, "visible", "HTML twisty is visible");
@@ -28,13 +28,13 @@ add_task(async function() {
   let onUpdated = inspector.once("inspector-updated");
   EventUtils.synthesizeMouseAtCenter(container.expander, {},
     inspector.markup.doc.defaultView);
-  await onChildren;
-  await onUpdated;
+  yield onChildren;
+  yield onUpdated;
 
   info("Checking that child LI elements have been created");
-  let numLi = await testActor.getNumberOfElementMatches("li");
+  let numLi = yield testActor.getNumberOfElementMatches("li");
   for (let i = 0; i < numLi; i++) {
-    let liContainer = await getContainerForSelector(
+    let liContainer = yield getContainerForSelector(
       `li:nth-child(${i + 1})`, inspector);
     ok(liContainer, "A container for the child LI element was created");
   }
@@ -47,9 +47,9 @@ add_task(async function() {
     inspector.markup.doc.defaultView);
 
   info("Checking that child LI elements have been hidden");
-  numLi = await testActor.getNumberOfElementMatches("li");
+  numLi = yield testActor.getNumberOfElementMatches("li");
   for (let i = 0; i < numLi; i++) {
-    let liContainer = await getContainerForSelector(
+    let liContainer = yield getContainerForSelector(
       `li:nth-child(${i + 1})`, inspector);
     is(liContainer.elt.getClientRects().length, 0,
       "The container for the child LI element was hidden");

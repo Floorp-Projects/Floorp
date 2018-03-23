@@ -69,8 +69,8 @@ const TEST_DATA = [
    -1, -1, false]
 ];
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
-  await runStyleAttributeAutocompleteTests(inspector, TEST_DATA);
+  yield runStyleAttributeAutocompleteTests(inspector, TEST_DATA);
 });

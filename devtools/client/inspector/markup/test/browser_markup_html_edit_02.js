@@ -14,13 +14,13 @@ const TEST_DATA = [
     selector: "#badMarkup1",
     oldHTML: "<div id=\"badMarkup1\">badMarkup1</div>",
     newHTML: "<div id=\"badMarkup1\">badMarkup1</div> hanging</div>",
-    validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
+    validate: function* ({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      let textNodeName = await testActor.eval(`
+      let textNodeName = yield testActor.eval(`
         document.querySelector("#badMarkup1").nextSibling.nodeName
       `);
-      let textNodeData = await testActor.eval(`
+      let textNodeData = yield testActor.eval(`
         document.querySelector("#badMarkup1").nextSibling.data
       `);
       is(textNodeName, "#text", "Sibling is a text element");
@@ -32,13 +32,13 @@ const TEST_DATA = [
     oldHTML: "<div id=\"badMarkup2\">badMarkup2</div>",
     newHTML: "<div id=\"badMarkup2\">badMarkup2</div> hanging<div></div>" +
              "</div></div></body>",
-    validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
+    validate: function* ({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      let textNodeName = await testActor.eval(`
+      let textNodeName = yield testActor.eval(`
         document.querySelector("#badMarkup2").nextSibling.nodeName
       `);
-      let textNodeData = await testActor.eval(`
+      let textNodeData = yield testActor.eval(`
         document.querySelector("#badMarkup2").nextSibling.data
       `);
       is(textNodeName, "#text", "Sibling is a text element");
@@ -50,11 +50,11 @@ const TEST_DATA = [
     oldHTML: "<div id=\"badMarkup3\">badMarkup3</div>",
     newHTML: "<div id=\"badMarkup3\">badMarkup3 <em>Emphasized <strong> " +
              "and strong</div>",
-    validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
+    validate: function* ({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      let emText = await testActor.getProperty("#badMarkup3 em", "textContent");
-      let strongText = await testActor.getProperty("#badMarkup3 strong",
+      let emText = yield testActor.getProperty("#badMarkup3 em", "textContent");
+      let strongText = yield testActor.getProperty("#badMarkup3 strong",
                                                    "textContent");
       is(emText, "Emphasized  and strong", "<em> was auto created");
       is(strongText, " and strong", "<strong> was auto created");
@@ -64,14 +64,14 @@ const TEST_DATA = [
     selector: "#badMarkup4",
     oldHTML: "<div id=\"badMarkup4\">badMarkup4</div>",
     newHTML: "<div id=\"badMarkup4\">badMarkup4</p>",
-    validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
+    validate: function* ({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      let divText = await testActor.getProperty("#badMarkup4", "textContent");
-      let divTag = await testActor.getProperty("#badMarkup4", "tagName");
+      let divText = yield testActor.getProperty("#badMarkup4", "textContent");
+      let divTag = yield testActor.getProperty("#badMarkup4", "tagName");
 
-      let pText = await testActor.getProperty("#badMarkup4 p", "textContent");
-      let pTag = await testActor.getProperty("#badMarkup4 p", "tagName");
+      let pText = yield testActor.getProperty("#badMarkup4 p", "textContent");
+      let pTag = yield testActor.getProperty("#badMarkup4 p", "tagName");
 
       is(divText, "badMarkup4", "textContent is correct");
       is(divTag, "DIV", "did not change to <p> tag");
@@ -83,17 +83,17 @@ const TEST_DATA = [
     selector: "#badMarkup5",
     oldHTML: "<p id=\"badMarkup5\">badMarkup5</p>",
     newHTML: "<p id=\"badMarkup5\">badMarkup5 <div>with a nested div</div></p>",
-    validate: async function({pageNodeFront, selectedNodeFront, testActor}) {
+    validate: function* ({pageNodeFront, selectedNodeFront, testActor}) {
       is(pageNodeFront, selectedNodeFront, "Original element is selected");
 
-      let num = await testActor.getNumberOfElementMatches("#badMarkup5 div");
+      let num = yield testActor.getNumberOfElementMatches("#badMarkup5 div");
 
-      let pText = await testActor.getProperty("#badMarkup5", "textContent");
-      let pTag = await testActor.getProperty("#badMarkup5", "tagName");
+      let pText = yield testActor.getProperty("#badMarkup5", "textContent");
+      let pTag = yield testActor.getProperty("#badMarkup5", "tagName");
 
-      let divText = await testActor.getProperty("#badMarkup5 ~ div",
+      let divText = yield testActor.getProperty("#badMarkup5 ~ div",
                                                 "textContent");
-      let divTag = await testActor.getProperty("#badMarkup5 ~ div", "tagName");
+      let divTag = yield testActor.getProperty("#badMarkup5 ~ div", "tagName");
 
       is(num, 0, "The invalid markup got created as a sibling");
       is(pText, "badMarkup5 ", "The p tag does not take in the div content");
@@ -112,8 +112,8 @@ const TEST_URL = "data:text/html," +
   "</body>" +
   "</html>";
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
   inspector.markup._frame.focus();
-  await runEditOuterHTMLTests(TEST_DATA, inspector, testActor);
+  yield runEditOuterHTMLTests(TEST_DATA, inspector, testActor);
 });

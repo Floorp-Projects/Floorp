@@ -9,14 +9,14 @@
 const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
 const TEST_DATA = ["html", "head", "body"];
 
-add_task(async function() {
-  let {inspector} = await openInspectorForURL(TEST_URL);
+add_task(function* () {
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   for (let selector of TEST_DATA) {
     info("Try to drag/drop node " + selector);
-    await simulateNodeDrag(inspector, selector);
+    yield simulateNodeDrag(inspector, selector);
 
-    let container = await getContainerForSelector(selector, inspector);
+    let container = yield getContainerForSelector(selector, inspector);
     ok(!container.isDragging, "The container hasn't been marked as dragging");
   }
 });

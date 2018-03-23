@@ -21,11 +21,11 @@
  */
 function runEditOuterHTMLTests(tests, inspector, testActor) {
   info("Running " + tests.length + " edit-outer-html tests");
-  return (async function() {
+  return Task.spawn(function* () {
     for (let step of tests) {
-      await runEditOuterHTMLTest(step, inspector, testActor);
+      yield runEditOuterHTMLTest(step, inspector, testActor);
     }
-  })();
+  });
 }
 
 /**
@@ -42,37 +42,37 @@ function runEditOuterHTMLTests(tests, inspector, testActor) {
  * @param {TestActorFront} testActor The current TestActorFront instance
  * opened
  */
-async function runEditOuterHTMLTest(test, inspector, testActor) {
+function* runEditOuterHTMLTest(test, inspector, testActor) {
   info("Running an edit outerHTML test on '" + test.selector + "'");
-  await selectNode(test.selector, inspector);
+  yield selectNode(test.selector, inspector);
 
   let onUpdated = inspector.once("inspector-updated");
 
   info("Listen for reselectedonremoved and edit the outerHTML");
   let onReselected = inspector.markup.once("reselectedonremoved");
-  await inspector.markup.updateNodeOuterHTML(inspector.selection.nodeFront,
+  yield inspector.markup.updateNodeOuterHTML(inspector.selection.nodeFront,
                                              test.newHTML, test.oldHTML);
-  await onReselected;
+  yield onReselected;
 
   // Typically selectedNode will === pageNode, but if a new element has been
   // injected in front of it, this will not be the case. If this happens.
   let selectedNodeFront = inspector.selection.nodeFront;
-  let pageNodeFront = await inspector.walker.querySelector(
+  let pageNodeFront = yield inspector.walker.querySelector(
     inspector.walker.rootNode, test.selector);
 
   if (test.validate) {
-    await test.validate({pageNodeFront, selectedNodeFront,
+    yield test.validate({pageNodeFront, selectedNodeFront,
                          inspector, testActor});
   } else {
     is(pageNodeFront, selectedNodeFront,
        "Original node (grabbed by selector) is selected");
-    let {outerHTML} = await testActor.getNodeInfo(test.selector);
+    let {outerHTML} = yield testActor.getNodeInfo(test.selector);
     is(outerHTML, test.newHTML, "Outer HTML has been updated");
   }
 
   // Wait for the inspector to be fully updated to avoid causing errors by
   // abruptly closing hanging requests when the test ends
-  await onUpdated;
+  yield onUpdated;
 
   let closeTagLine = inspector.markup.getContainer(pageNodeFront).closeTagLine;
   if (closeTagLine) {

@@ -55,27 +55,27 @@ var TEST_DATA = [
   }
 ];
 
-add_task(async function() {
-  let { inspector, toolbox, testActor } = await openInspectorForURL(PAGE_1);
+add_task(function* () {
+  let { inspector, toolbox, testActor } = yield openInspectorForURL(PAGE_1);
 
   for (let { url, nodeToSelect, selectedNode } of TEST_DATA) {
     if (nodeToSelect) {
       info("Selecting node " + nodeToSelect + " before navigation.");
-      await selectNode(nodeToSelect, inspector);
+      yield selectNode(nodeToSelect, inspector);
     }
 
-    await navigateToAndWaitForNewRoot(url);
+    yield navigateToAndWaitForNewRoot(url);
 
-    let nodeFront = await getNodeFront(selectedNode, inspector);
+    let nodeFront = yield getNodeFront(selectedNode, inspector);
     ok(nodeFront, "Got expected node front");
     is(inspector.selection.nodeFront, nodeFront,
        selectedNode + " is selected after navigation.");
   }
 
-  async function navigateToAndWaitForNewRoot(url) {
+  function* navigateToAndWaitForNewRoot(url) {
     info("Navigating and waiting for new-root event after navigation.");
 
-    let current = await testActor.eval("location.href");
+    let current = yield testActor.eval("location.href");
     if (url == current) {
       info("Reloading page.");
       let markuploaded = inspector.once("markuploaded");
@@ -83,13 +83,13 @@ add_task(async function() {
       let onUpdated = inspector.once("inspector-updated");
 
       let activeTab = toolbox.target.activeTab;
-      await activeTab.reload();
+      yield activeTab.reload();
       info("Waiting for inspector to be ready.");
-      await markuploaded;
-      await onNewRoot;
-      await onUpdated;
+      yield markuploaded;
+      yield onNewRoot;
+      yield onUpdated;
     } else {
-      await navigateTo(inspector, url);
+      yield navigateTo(inspector, url);
     }
   }
 });

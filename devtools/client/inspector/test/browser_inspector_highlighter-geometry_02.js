@@ -73,20 +73,20 @@ const POSITIONED_ELEMENT_TESTS = [{
   ]
 }];
 
-add_task(async function() {
-  let helper = await openInspectorForURL(TEST_URL)
+add_task(function* () {
+  let helper = yield openInspectorForURL(TEST_URL)
                        .then(getHighlighterHelperFor(HIGHLIGHTER_TYPE));
 
   helper.prefix = ID;
 
   let { finalize } = helper;
 
-  await positionLabelsAreCorrect(helper);
+  yield positionLabelsAreCorrect(helper);
 
-  await finalize();
+  yield finalize();
 });
 
-async function positionLabelsAreCorrect(
+function* positionLabelsAreCorrect(
   {show, hide, isElementHidden, getElementTextContent}
 ) {
   info("Highlight nodes and check position labels");
@@ -94,16 +94,16 @@ async function positionLabelsAreCorrect(
   for (let {selector, expectedLabels} of POSITIONED_ELEMENT_TESTS) {
     info("Testing node " + selector);
 
-    await show(selector);
+    yield show(selector);
 
     for (let {side, visible, label} of expectedLabels) {
       let id = "label-" + side;
 
-      let hidden = await isElementHidden(id);
+      let hidden = yield isElementHidden(id);
       if (visible) {
         ok(!hidden, "The " + side + " label is visible");
 
-        let value = await getElementTextContent(id);
+        let value = yield getElementTextContent(id);
         is(value, label, "The " + side + " label textcontent is correct");
       } else {
         ok(hidden, "The " + side + " label is hidden");
@@ -111,6 +111,6 @@ async function positionLabelsAreCorrect(
     }
 
     info("Hiding the highlighter");
-    await hide();
+    yield hide();
   }
 }

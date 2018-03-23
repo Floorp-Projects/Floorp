@@ -10,13 +10,13 @@ const TESTCASE_URI = "data:text/html;charset=utf-8," +
                      "<div id=\"testdiv\" style=\"font-size:10px;\">" +
                      "Test div!</div>";
 
-add_task(async function() {
-  await addTab(TESTCASE_URI);
+add_task(function* () {
+  yield addTab(TESTCASE_URI);
 
   info("Opening the rule view and selecting the test node");
-  let {inspector, view} = await openRuleView();
-  let testdiv = await getNodeFront("#testdiv", inspector);
-  await selectNode(testdiv, inspector);
+  let {inspector, view} = yield openRuleView();
+  let testdiv = yield getNodeFront("#testdiv", inspector);
+  yield selectNode(testdiv, inspector);
 
   let htmlBefore = view.element.innerHTML;
   ok(htmlBefore.indexOf("font-size") > -1,
@@ -30,7 +30,7 @@ add_task(async function() {
      "The rule view is unchanged during selection.");
   ok(view.element.classList.contains("non-interactive"),
      "The rule view is marked non-interactive.");
-  await p;
+  yield p;
 
   info("node refreshed");
   ok(!view.element.classList.contains("non-interactive"),

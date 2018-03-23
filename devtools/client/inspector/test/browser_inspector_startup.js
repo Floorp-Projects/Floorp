@@ -31,8 +31,8 @@ const TEST_URL = "data:text/html," +
   "</body>" +
   "</html>";
 
-add_task(async function() {
-  let {inspector, tab} = await openInspectorForURL("about:blank");
+add_task(function* () {
+  let {inspector, tab} = yield openInspectorForURL("about:blank");
 
   let domContentLoaded = waitForLinkedBrowserEvent(tab, "DOMContentLoaded");
   let pageLoaded = waitForLinkedBrowserEvent(tab, "load");
@@ -42,22 +42,22 @@ add_task(async function() {
 
   info("Navigate to the slow loading page");
   let activeTab = inspector.toolbox.target.activeTab;
-  await activeTab.navigateTo(TEST_URL);
+  yield activeTab.navigateTo(TEST_URL);
 
   info("Wait for request made to the image");
-  let response = await onRequest;
+  let response = yield onRequest;
 
   // The request made to the image shouldn't block the DOMContentLoaded event
   info("Wait for DOMContentLoaded");
-  await domContentLoaded;
+  yield domContentLoaded;
 
   // Nor does it prevent the inspector from loading
   info("Wait for markup-loaded");
-  await markupLoaded;
+  yield markupLoaded;
 
   ok(inspector.markup, "There is a markup view");
   is(inspector.markup._elt.children.length, 1, "The markup view is rendering");
-  is(await contentReadyState(tab), "interactive",
+  is(yield contentReadyState(tab), "interactive",
      "Page is still loading but the inspector is ready");
 
   // Ends page load by unblocking the image request
@@ -65,7 +65,7 @@ add_task(async function() {
 
   // We should then receive the page load event
   info("Wait for load");
-  await pageLoaded;
+  yield pageLoaded;
 });
 
 function waitForLinkedBrowserEvent(tab, event) {

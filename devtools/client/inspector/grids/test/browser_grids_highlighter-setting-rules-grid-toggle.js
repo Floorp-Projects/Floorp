@@ -20,9 +20,9 @@ const TEST_URI = `
 
 const SHOW_INFINITE_LINES_PREF = "devtools.gridinspector.showInfiniteLines";
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let { inspector, gridInspector } = await openLayoutView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let { inspector, gridInspector } = yield openLayoutView();
   let { document: doc } = gridInspector;
   let { store } = inspector;
 
@@ -35,13 +35,13 @@ add_task(async function() {
   let onCheckboxChange = waitUntilState(store, state =>
     state.highlighterSettings.showInfiniteLines);
   checkbox.click();
-  await onCheckboxChange;
+  yield onCheckboxChange;
 
   info("Selecting the rule view.");
   let ruleView = selectRuleView(inspector);
   let highlighters = ruleView.highlighters;
 
-  await selectNode("#grid", inspector);
+  yield selectNode("#grid", inspector);
 
   let container = getRuleViewProperty(ruleView, "#grid", "display").valueSpan;
   let gridToggle = container.querySelector(".ruleview-grid");
@@ -64,7 +64,7 @@ add_task(async function() {
     }
   );
   gridToggle.click();
-  await onHighlighterShown;
+  yield onHighlighterShown;
 
   Services.prefs.clearUserPref(SHOW_INFINITE_LINES_PREF);
 });

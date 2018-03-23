@@ -18,19 +18,19 @@ const TEST_URI = `
   <div id="shape"></div>
 `;
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view, testActor} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view, testActor} = yield openRuleView();
   let highlighters = view.highlighters;
 
-  await selectNode("#shape", inspector);
+  yield selectNode("#shape", inspector);
   let container = getRuleViewProperty(view, "#shape", "clip-path").valueSpan;
   let shapeToggle = container.querySelector(".ruleview-shapeswatch");
 
   info("Toggling ON the CSS shapes highlighter from the rule-view.");
   let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
   shapeToggle.click();
-  await onHighlighterShown;
+  yield onHighlighterShown;
   ok(highlighters.shapesHighlighterShown, "CSS shapes highlighter is shown.");
 
   let onHighlighterHidden = highlighters.once("shapes-highlighter-hidden");
@@ -38,6 +38,6 @@ add_task(async function() {
   testActor.eval(`
     document.querySelector("#shape").remove();
   `);
-  await onHighlighterHidden;
+  yield onHighlighterHidden;
   ok(!highlighters.shapesHighlighterShown, "CSS shapes highlighter is hidden.");
 });

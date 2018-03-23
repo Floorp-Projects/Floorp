@@ -6,24 +6,24 @@
 
 // Test that hovering over nodes on the breadcrumb buttons in the inspector
 // shows the highlighter over those nodes
-add_task(async function() {
+add_task(function* () {
   info("Loading the test document and opening the inspector");
-  let {toolbox, inspector, testActor} = await openInspectorForURL(
+  let {toolbox, inspector, testActor} = yield openInspectorForURL(
     "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
   info("Selecting the test node");
-  await selectNode("span", inspector);
+  yield selectNode("span", inspector);
   let bcButtons = inspector.breadcrumbs.container;
 
   let onNodeHighlighted = toolbox.once("node-highlight");
   let button = bcButtons.childNodes[1];
   EventUtils.synthesizeMouseAtCenter(button, {type: "mousemove"},
     button.ownerDocument.defaultView);
-  await onNodeHighlighted;
+  yield onNodeHighlighted;
 
-  let isVisible = await testActor.isHighlighting();
+  let isVisible = yield testActor.isHighlighting();
   ok(isVisible, "The highlighter is shown on a markup container hover");
 
-  ok((await testActor.assertHighlightedNode("body")),
+  ok((yield testActor.assertHighlightedNode("body")),
      "The highlighter highlights the right node");
 
   let onNodeUnhighlighted = toolbox.once("node-unhighlight");
@@ -31,17 +31,17 @@ add_task(async function() {
   EventUtils.synthesizeMouseAtCenter(inspector.addNodeButton,
     {type: "mousemove"},
     inspector.addNodeButton.ownerDocument.defaultView);
-  await onNodeUnhighlighted;
+  yield onNodeUnhighlighted;
 
   onNodeHighlighted = toolbox.once("node-highlight");
   button = bcButtons.childNodes[2];
   EventUtils.synthesizeMouseAtCenter(button, {type: "mousemove"},
     button.ownerDocument.defaultView);
-  await onNodeHighlighted;
+  yield onNodeHighlighted;
 
-  isVisible = await testActor.isHighlighting();
+  isVisible = yield testActor.isHighlighting();
   ok(isVisible, "The highlighter is shown on a markup container hover");
 
-  ok((await testActor.assertHighlightedNode("span")),
+  ok((yield testActor.assertHighlightedNode("span")),
      "The highlighter highlights the right node");
 });

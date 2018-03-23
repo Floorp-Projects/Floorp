@@ -10,26 +10,26 @@ const TEST_URI = "data:text/html;charset=utf-8," +
   "browser_inspector_invalidate.js\n" +
   "<div style=\"width: 100px; height: 100px; background:yellow;\"></div>";
 
-add_task(async function() {
-  let {inspector, testActor} = await openInspectorForURL(TEST_URI);
-  let divFront = await getNodeFront("div", inspector);
+add_task(function* () {
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URI);
+  let divFront = yield getNodeFront("div", inspector);
 
   info("Waiting for highlighter to activate");
-  await inspector.highlighter.showBoxModel(divFront);
+  yield inspector.highlighter.showBoxModel(divFront);
 
-  let rect = await testActor.getSimpleBorderRect();
+  let rect = yield testActor.getSimpleBorderRect();
   is(rect.width, 100, "The highlighter has the right width.");
 
   info("Changing the test element's size and waiting for the highlighter " +
        "to update");
-  await testActor.changeHighlightedNodeWaitForUpdate(
+  yield testActor.changeHighlightedNodeWaitForUpdate(
     "style",
     "width: 200px; height: 100px; background:yellow;"
   );
 
-  rect = await testActor.getSimpleBorderRect();
+  rect = yield testActor.getSimpleBorderRect();
   is(rect.width, 200, "The highlighter has the right width after update");
 
   info("Waiting for highlighter to hide");
-  await inspector.highlighter.hideBoxModel();
+  yield inspector.highlighter.hideBoxModel();
 });

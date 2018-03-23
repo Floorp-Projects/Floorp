@@ -10,18 +10,18 @@
 const TEST_URI = "data:text/html;charset=UTF-8," +
   "testing the highlighter goes away on tool selection";
 
-add_task(async function() {
-  let { toolbox } = await openInspectorForURL(TEST_URI);
+add_task(function* () {
+  let { toolbox } = yield openInspectorForURL(TEST_URI);
   let pickerStopped = toolbox.once("picker-stopped");
 
   info("Starting the inspector picker");
-  await startPicker(toolbox);
+  yield startPicker(toolbox);
 
   info("Selecting another tool than the inspector in the toolbox");
-  await toolbox.selectNextTool();
+  yield toolbox.selectNextTool();
 
   info("Waiting for the picker-stopped event to be fired");
-  await pickerStopped;
+  yield pickerStopped;
 
   ok(true, "picker-stopped event fired after switch tools; picker is closed");
 });

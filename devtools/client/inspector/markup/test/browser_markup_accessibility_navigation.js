@@ -241,8 +241,8 @@ const TESTS = [
 let containerID = 0;
 let elms = {};
 
-add_task(async function() {
-  let { inspector } = await openInspectorForURL(`data:text/html;charset=utf-8,
+add_task(function* () {
+  let { inspector } = yield openInspectorForURL(`data:text/html;charset=utf-8,
     <h1 id="some-id" class="some-class">foo<span>Child span<span></h1>`);
 
   // Record containers that are created after inspector is initialized to be
@@ -254,8 +254,8 @@ add_task(async function() {
 
   elms.docBody = inspector.markup.doc.body;
   elms.root = inspector.markup.getContainer(inspector.markup._rootNode);
-  elms.header = await getContainerForSelector("h1", inspector);
-  elms.body = await getContainerForSelector("body", inspector);
+  elms.header = yield getContainerForSelector("h1", inspector);
+  elms.body = yield getContainerForSelector("body", inspector);
 
   // Initial focus is on root element and active descendant should be set on
   // body tag line.
@@ -265,7 +265,7 @@ add_task(async function() {
   elms.root.elt.focus();
 
   for (let testData of TESTS) {
-    await runAccessibilityNavigationTest(inspector, elms, testData);
+    yield runAccessibilityNavigationTest(inspector, elms, testData);
   }
 
   elms = null;

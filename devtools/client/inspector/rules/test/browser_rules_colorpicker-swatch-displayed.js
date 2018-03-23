@@ -56,9 +56,9 @@ const TESTS = [
   {selector: "*", propertyName: "box-shadow", nb: 2},
 ];
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {view} = await openRuleView();
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {view} = yield openRuleView();
 
   for (let {selector, propertyName, nb} of TESTS) {
     info("Looking for color swatches in property " + propertyName +

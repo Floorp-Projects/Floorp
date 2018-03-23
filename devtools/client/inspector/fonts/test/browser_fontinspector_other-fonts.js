@@ -10,15 +10,15 @@
 
 const TEST_URI = URL_ROOT + "browser_fontinspector.html";
 
-add_task(async function() {
-  const { inspector, view } = await openFontInspectorForURL(TEST_URI);
+add_task(function* () {
+  const { inspector, view } = yield openFontInspectorForURL(TEST_URI);
   const viewDoc = view.document;
 
   let otherFontsAccordion = viewDoc.querySelector("#font-container .accordion");
   ok(otherFontsAccordion, "There's an accordion in the panel");
   is(otherFontsAccordion.textContent, "Other fonts in page", "It has the right title");
 
-  await expandOtherFontsAccordion(viewDoc);
+  yield expandOtherFontsAccordion(viewDoc);
   let otherFontsEls = getOtherFontsEls(viewDoc);
 
   is(otherFontsEls.length, 1, "There is one font listed in the other fonts section");
@@ -28,8 +28,8 @@ add_task(async function() {
      "The other font listed is the right one");
 
   info("Checking that fonts of the current element aren't listed");
-  await selectNode(".bold-text", inspector);
-  await expandOtherFontsAccordion(viewDoc);
+  yield selectNode(".bold-text", inspector);
+  yield expandOtherFontsAccordion(viewDoc);
   otherFontsEls = getOtherFontsEls(viewDoc);
 
   for (let otherFontEl of otherFontsEls) {

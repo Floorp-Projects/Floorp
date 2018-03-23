@@ -43,23 +43,23 @@ const TEST_DATA = [
   },
 ];
 
-add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {inspector, view} = await openRuleView();
-  await selectNode("#testid", inspector);
-  await testAddTextInFilter(inspector, view);
+add_task(function* () {
+  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  let {inspector, view} = yield openRuleView();
+  yield selectNode("#testid", inspector);
+  yield testAddTextInFilter(inspector, view);
 });
 
-async function testAddTextInFilter(inspector, view) {
+function* testAddTextInFilter(inspector, view) {
   for (let data of TEST_DATA) {
     info(data.desc);
-    await setSearchFilter(view, data.search);
-    await checkRules(view);
-    await clearSearchAndCheckRules(view);
+    yield setSearchFilter(view, data.search);
+    yield checkRules(view);
+    yield clearSearchAndCheckRules(view);
   }
 }
 
-function checkRules(view) {
+function* checkRules(view) {
   info("Check that the correct rules are visible");
   is(view.element.children.length, 2, "Should have 2 rules.");
   is(getRuleViewRuleEditor(view, 0).rule.selectorText, "element",
@@ -73,7 +73,7 @@ function checkRules(view) {
     "background-color text property is correctly highlighted.");
 }
 
-async function clearSearchAndCheckRules(view) {
+function* clearSearchAndCheckRules(view) {
   let doc = view.styleDocument;
   let win = view.styleWindow;
   let searchField = view.searchField;
@@ -81,7 +81,7 @@ async function clearSearchAndCheckRules(view) {
 
   info("Clearing the search filter");
   EventUtils.synthesizeMouseAtCenter(searchClearButton, {}, win);
-  await view.inspector.once("ruleview-filtered");
+  yield view.inspector.once("ruleview-filtered");
 
   info("Check the search filter is cleared and no rules are highlighted");
   is(view.element.children.length, 3, "Should have 3 rules.");
