@@ -1488,9 +1488,6 @@ var gBrowserInit = {
 
     UpdateUrlbarSearchSplitterState();
 
-    // Enable/Disable auto-hide tabbar
-    gBrowser.tabContainer.updateVisibility();
-
     BookmarkingUI.init();
     AutoShowBookmarksToolbar.init();
 
