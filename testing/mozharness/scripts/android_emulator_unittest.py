@@ -116,6 +116,8 @@ class AndroidEmulatorTest(TestingMixin, EmulatorMixin, BaseScript, MozbaseMixin)
         dirs = {}
         dirs['abs_test_install_dir'] = os.path.join(
             abs_dirs['abs_work_dir'], 'tests')
+        dirs['abs_test_bin_dir'] = os.path.join(
+            abs_dirs['abs_work_dir'], 'tests', 'bin')
         dirs['abs_xre_dir'] = os.path.join(
             abs_dirs['abs_work_dir'], 'hostutils')
         dirs['abs_modules_dir'] = os.path.join(

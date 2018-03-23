@@ -52,11 +52,6 @@
 #include "vm/SymbolType.h"
 #include "wasm/WasmTypes.h"
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4100) /* Silence unreferenced formal parameter warnings */
-#endif
-
 namespace js {
 
 class AutoAssertNoContentJS;
@@ -1227,9 +1222,5 @@ ZoneGroup::storeBuffer()
 extern mozilla::Atomic<JS::LargeAllocationFailureCallback> OnLargeAllocationFailure;
 
 } /* namespace js */
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 #endif /* vm_Runtime_h */

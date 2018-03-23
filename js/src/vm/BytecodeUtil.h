@@ -391,12 +391,6 @@ struct JSCodeSpec {
     uint32_t type() const { return JOF_TYPE(format); }
 };
 
-/* Silence unreferenced formal parameter warnings */
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4100)
-#endif
-
 namespace js {
 
 extern const JSCodeSpec CodeSpec[];
@@ -578,10 +572,6 @@ ReconstructStackDepth(JSContext* cx, JSScript* script, jsbytecode* pc, uint32_t*
 #endif
 
 }  /* namespace js */
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 #define JSDVG_IGNORE_STACK      0
 #define JSDVG_SEARCH_STACK      1

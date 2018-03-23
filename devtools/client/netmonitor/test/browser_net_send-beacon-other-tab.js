@@ -24,7 +24,7 @@ add_task(async function() {
 
   let wait = waitForNetworkEvents(monitor, 1);
   await ContentTask.spawn(beaconTab.linkedBrowser, {}, async function() {
-    content.wrappedJSObject.performRequest();
+    content.wrappedJSObject.performRequests();
   });
   tab.linkedBrowser.reload();
   await wait;

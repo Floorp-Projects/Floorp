@@ -33,13 +33,6 @@
 #include "vm/StringType.h"
 #include "vm/SymbolType.h"
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4800)
-#pragma warning(push)
-#pragma warning(disable:4100) /* Silence unreferenced formal parameter warnings */
-#endif
-
 /*
  * In isolation, a Shape represents a property that exists in one or more
  * objects; it has an id, flags, etc. (But it doesn't represent the property's
@@ -1641,11 +1634,6 @@ ReshapeForAllocKind(JSContext* cx, Shape* shape, TaggedProto proto,
                     gc::AllocKind allocKind);
 
 } // namespace js
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#pragma warning(pop)
-#endif
 
 // JS::ubi::Nodes can point to Shapes and BaseShapes; they're js::gc::Cell
 // instances that occupy a compartment.

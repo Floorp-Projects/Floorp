@@ -5,7 +5,7 @@ code, and optionally help with indentation.
 
 # Upgrade
 
-Currently used version is 5.35.0. To upgrade: download a new version of
+Currently used version is 5.36.0. To upgrade: download a new version of
 CodeMirror from the project's page [1] and replace all JavaScript and
 CSS files inside the codemirror directory [2].
 
@@ -112,7 +112,7 @@ diff --git a/devtools/client/sourceeditor/codemirror/addon/search/search.js b/de
      cm.removeOverlay(state.overlay);
      if (state.annotate) { state.annotate.clear(); state.annotate = null; }
    });}
- 
+
 -  var replaceQueryDialog =
 -    ' <input type="text" style="width: 10em" class="CodeMirror-search-field"/> <span style="color: #888" class="CodeMirror-search-hint">(Use /re/ syntax for regexp search)</span>';
 -  var replacementQueryDialog = '<span class="CodeMirror-search-label">With:</span> <input type="text" style="width: 10em" class="CodeMirror-search-field"/>';
@@ -128,7 +128,7 @@ diff --git a/devtools/client/sourceeditor/codemirror/addon/search/search.js b/de
        }
      });
    }
- 
+
    function replace(cm, all) {
      if (cm.getOption("readOnly")) return;
      var query = cm.getSelection() || getSearchState(cm).lastQuery;

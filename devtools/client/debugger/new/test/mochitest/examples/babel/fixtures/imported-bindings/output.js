@@ -112,9 +112,15 @@ var _mod15 = __webpack_require__(12);
 
 var aNamespace3 = _interopRequireWildcard(_mod15);
 
+var _optimizedOut = __webpack_require__(13);
+
+var _optimizedOut2 = _interopRequireDefault(_optimizedOut);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+(0, _optimizedOut2.default)();
 
 function root() {
   console.log("pause here", root);
@@ -292,6 +298,20 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = "a-default3";
 var aNamed = exports.aNamed = "a-named3";
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = optimizedOut;
+function optimizedOut() {}
+module.exports = exports["default"];
 
 /***/ })
 /******/ ]);

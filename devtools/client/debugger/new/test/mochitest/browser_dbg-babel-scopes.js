@@ -58,7 +58,7 @@ async function breakpointScopes(dbg, fixture, { line, column }, scopes) {
 async function expandAllScopes(dbg) {
   const scopes = await waitForElement(dbg, "scopes");
   const scopeElements = scopes.querySelectorAll(
-    `.tree-node[aria-level="0"][data-expandable="true"]:not([aria-expanded="true"])`
+    `.tree-node[aria-level="1"][data-expandable="true"]:not([aria-expanded="true"])`
   );
   const indices = Array.from(scopeElements, el => {
     return Array.prototype.indexOf.call(el.parentNode.childNodes, el);
@@ -160,7 +160,7 @@ add_task(async function() {
 
   // Babel 6's imports aren't fully mapped, so they show as unavailable.
   // The call-based ones work, but the single-identifier ones do not.
-  await breakpointScopes(dbg, "imported-bindings", { line: 17, column: 2 }, [
+  await breakpointScopes(dbg, "imported-bindings", { line: 20, column: 2 }, [
     "Module",
     ["aDefault", '"a-default"'],
     ["aDefault2", '"a-default2"'],
@@ -174,6 +174,7 @@ add_task(async function() {
     ["aNamespace", "{\u2026}"],
     ["aNamespace2", "{\u2026}"],
     ["aNamespace3", "{\u2026}"],
+    ["optimizedOut", "(optimized away)"],
     "root()"
   ]);
 
@@ -307,7 +308,7 @@ add_task(async function() {
     "root()"
   ]);
 
-  await breakpointScopes(dbg, "webpack-modules", { line: 17, column: 2 }, [
+  await breakpointScopes(dbg, "webpack-modules", { line: 20, column: 2 }, [
     "Module",
     ["aDefault", '"a-default"'],
     ["aDefault2", '"a-default2"'],
@@ -321,10 +322,11 @@ add_task(async function() {
     ["aNamespace", "{\u2026}"],
     ["aNamespace2", "{\u2026}"],
     ["aNamespace3", "{\u2026}"],
+    ["optimizedOut", "(optimized away)"],
     "root()"
   ]);
 
-  await breakpointScopes(dbg, "webpack-modules-es6", { line: 17, column: 2 }, [
+  await breakpointScopes(dbg, "webpack-modules-es6", { line: 20, column: 2 }, [
     "Module",
     ["aDefault", '"a-default"'],
     ["aDefault2", '"a-default2"'],
@@ -338,6 +340,7 @@ add_task(async function() {
     ["aNamespace", "{\u2026}"],
     ["aNamespace2", "{\u2026}"],
     ["aNamespace3", "{\u2026}"],
+    ["optimizedOut", "(optimized away)"],
     "root()"
   ]);
 
