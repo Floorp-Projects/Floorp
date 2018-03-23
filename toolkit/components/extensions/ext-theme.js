@@ -164,9 +164,6 @@ class Theme {
         case "popup":
         case "popup_text":
         case "popup_border":
-        case "toolbar_field_focus":
-        case "toolbar_field_text_focus":
-        case "toolbar_field_border_focus":
           this.lwtStyles[color] = cssColor;
           break;
       }
