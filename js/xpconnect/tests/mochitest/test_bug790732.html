@@ -9,6 +9,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=790732
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+async function doTest() {
+  await SpecialPowers.pushPrefEnv({set: [["dom.use_components_shim", true]]})
 
   // Basic stuff
   ok(Components, "Components shim exists!");
@@ -38,6 +42,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=790732
   is(Ci.nsIDOMRange, Range);
   is(Ci.nsIDOMNodeFilter, NodeFilter);
   is(Ci.nsIDOMXPathResult, XPathResult);
+
+  SimpleTest.finish();
+}
+
+doTest();
   </script>
 </head>
 <body>
