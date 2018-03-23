@@ -4009,10 +4009,10 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
   // changed.
   // We do handle changes to transition-property, but we don't need to
   // bother with anything here, since the transition manager is notified
-  // of any style context change anyway.
+  // of any ComputedStyle change anyway.
 
   // Note: Likewise, for animation-*, the animation manager gets
-  // notified about every new style context constructed, and it uses
+  // notified about every new ComputedStyle constructed, and it uses
   // that opportunity to handle dynamic changes appropriately.
 
   // But we still need to return nsChangeHint_NeutralChange for these

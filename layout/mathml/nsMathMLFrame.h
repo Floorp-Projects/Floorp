@@ -104,8 +104,8 @@ public:
     return false;
   }
 
-  // helper to give a style context suitable for doing the stretching to the
-  // MathMLChar. Frame classes that use this should make the extra style contexts
+  // helper to give a ComputedStyle suitable for doing the stretching to the
+  // MathMLChar. Frame classes that use this should make the extra ComputedStyle
   // accessible to the Style System via Get/Set AdditionalmComputedStyle.
   static void
   ResolveMathMLCharStyle(nsPresContext* aPresContext,

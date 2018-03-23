@@ -32,11 +32,11 @@ getComputedStyle(a, "").marginTop;
 // has been conditionally (on font size) cached on their shared rule node.
 var b = document.getElementById("b");
 
-// force style context construction and computation of the font struct on
+// force ComputedStyle construction and computation of the font struct on
 // B's parent
 getComputedStyle(b.parentNode, "").fontSize;
 
-// force style context construction (and computation of the color
+// force ComputedStyle construction (and computation of the color
 // struct) on B, but not the margin struct or font struct
 getComputedStyle(b, "").color;
 

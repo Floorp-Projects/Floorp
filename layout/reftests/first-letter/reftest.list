@@ -2,7 +2,7 @@
 == basic-1.html basic-ref.html
 == basic-2.html basic-ref.html
 
-# parent style context correct
+# parent ComputedStyle correct
 == parent-style-1.html parent-style-1-ref.html
 
 # others

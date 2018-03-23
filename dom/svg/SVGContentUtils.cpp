@@ -279,7 +279,7 @@ SVGContentUtils::GetFontSize(Element *aElement)
     nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
   if (!computedStyle) {
     // ReportToConsole
-    NS_WARNING("Couldn't get style context for content in GetFontStyle");
+    NS_WARNING("Couldn't get ComputedStyle for content in GetFontStyle");
     return 1.0f;
   }
 
@@ -296,7 +296,7 @@ SVGContentUtils::GetFontSize(nsIFrame *aFrame)
 float
 SVGContentUtils::GetFontSize(ComputedStyle *aComputedStyle)
 {
-  MOZ_ASSERT(aComputedStyle, "NULL style context in GetFontSize");
+  MOZ_ASSERT(aComputedStyle, "NULL ComputedStyle in GetFontSize");
 
   nsPresContext *presContext = aComputedStyle->PresContext();
   MOZ_ASSERT(presContext, "NULL pres context in GetFontSize");
@@ -316,7 +316,7 @@ SVGContentUtils::GetFontXHeight(Element *aElement)
     nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
   if (!computedStyle) {
     // ReportToConsole
-    NS_WARNING("Couldn't get style context for content in GetFontStyle");
+    NS_WARNING("Couldn't get ComputedStyle for content in GetFontStyle");
     return 1.0f;
   }
 
@@ -333,7 +333,7 @@ SVGContentUtils::GetFontXHeight(nsIFrame *aFrame)
 float
 SVGContentUtils::GetFontXHeight(ComputedStyle *aComputedStyle)
 {
-  MOZ_ASSERT(aComputedStyle, "NULL style context in GetFontXHeight");
+  MOZ_ASSERT(aComputedStyle, "NULL ComputedStyle in GetFontXHeight");
 
   nsPresContext *presContext = aComputedStyle->PresContext();
   MOZ_ASSERT(presContext, "NULL pres context in GetFontXHeight");

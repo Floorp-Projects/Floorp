@@ -2057,7 +2057,7 @@ nsTreeBodyFrame::GetTwistyRect(int32_t aRowIndex,
                                ComputedStyle* aTwistyContext)
 {
   // The twisty rect extends all the way to the end of the cell.  This is incorrect.  We need to
-  // determine the twisty rect's true width.  This is done by examining the style context for
+  // determine the twisty rect's true width.  This is done by examining the ComputedStyle for
   // a width first.  If it has one, we use that.  If it doesn't, we use the image's natural width.
   // If the image hasn't loaded and if no width is specified, then we just bail. If there is
   // a -moz-appearance involved, adjust the rect by the minimum widget size provided by
@@ -2110,7 +2110,7 @@ nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol, bool aUseContex
     aAllowImageRegions = false;
   }
   else {
-    // Obtain the URL from the style context.
+    // Obtain the URL from the ComputedStyle.
     aAllowImageRegions = true;
     styleRequest = aComputedStyle->StyleList()->GetListStyleImage();
     if (!styleRequest)
@@ -2222,7 +2222,7 @@ nsRect nsTreeBodyFrame::GetImageSize(int32_t aRowIndex, nsTreeColumn* aCol, bool
   // XXX We should respond to visibility rules for collapsed vs. hidden.
 
   // This method returns the width of the twisty INCLUDING borders and padding.
-  // It first checks the style context for a width.  If none is found, it tries to
+  // It first checks the ComputedStyle for a width.  If none is found, it tries to
   // use the default image width for the twisty.  If no image is found, it defaults
   // to border+padding.
   nsRect r(0,0,0,0);

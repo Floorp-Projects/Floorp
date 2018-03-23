@@ -285,7 +285,7 @@
       document.documentElement.appendChild(link);
       navigator.serviceWorker.addEventListener("message", function onMessage(e) {
         if (e.data.data == "style") {
-          is(e.data.context, "style", "Expected the style context on a request coming from a stylesheet");
+          is(e.data.context, "style", "Expected the ComputedStyle on a request coming from a stylesheet");
           navigator.serviceWorker.removeEventListener("message", onMessage);
           resolve();
         }
