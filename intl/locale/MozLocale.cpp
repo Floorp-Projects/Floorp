@@ -49,13 +49,24 @@ Locale::Locale(const nsACString& aLocale)
    *           ["-" script]        4ALPHA
    *           ["-" region]        2ALPHA
    *           *("-" variant)      3*8alphanum
+   *           ["-"] privateuse]   "x" 1*("-" (1*8alphanum))
    *
    * The `position` variable represents the currently expected section of the tag
    * and intentionally skips positions (like `extlang`) which may be added later.
+   *
+   *  language-extlangs-script-region-variant-extension-privateuse
+   *  --- 0 -- --- 1 -- -- 2 - -- 3 - -- 4 -- --- x --- ---- 6 ---
    */
   for (const nsACString& subTag : normLocale.Split('-')) {
     auto slen = subTag.Length();
-    if (position == 0) {
+    if (slen > 8) {
+      mIsValid = false;
+      return;
+    } else if (position == 6) {
+      mPrivateUse.AppendElement(subTag);
+    } else if (subTag.LowerCaseEqualsLiteral("x")) {
+      position = 6;
+    } else if (position == 0) {
       if (slen < 2 || slen > 3) {
         mIsValid = false;
         return;
@@ -110,6 +121,19 @@ Locale::AsString() const
   for (const auto& variant : mVariants) {
     tag.AppendLiteral("-");
     tag.Append(variant);
+  }
+
+  if (!mPrivateUse.IsEmpty()) {
+    if (tag.IsEmpty()) {
+      tag.AppendLiteral("x");
+    } else {
+      tag.AppendLiteral("-x");
+    }
+
+    for (const auto& subTag : mPrivateUse) {
+      tag.AppendLiteral("-");
+      tag.Append(subTag);
+    }
   }
   return tag;
 }

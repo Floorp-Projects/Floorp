@@ -9,6 +9,7 @@ describe("Screenshots", () => {
   let globals;
   let sandbox;
   let fakeServices;
+  let testFile;
 
   beforeEach(() => {
     globals = new GlobalOverrider();
@@ -24,9 +25,13 @@ describe("Screenshots", () => {
       }
     };
     globals.set("BackgroundPageThumbs", {captureIfMissing: sandbox.spy(() => Promise.resolve())});
-    globals.set("PageThumbs", {getThumbnailPath: sandbox.spy(() => Promise.resolve(FAKE_THUMBNAIL_PATH))});
+    globals.set("PageThumbs", {
+      _store: sandbox.stub(),
+      getThumbnailPath: sandbox.spy(() => Promise.resolve(FAKE_THUMBNAIL_PATH))
+    });
     globals.set("PrivateBrowsingUtils", {isWindowPrivate: sandbox.spy(() => false)});
-    globals.set("OS", {File: {open: sandbox.spy(() => Promise.resolve({read: () => [], close: () => {}}))}});
+    testFile = [0];
+    globals.set("OS", {File: {open: sandbox.spy(() => Promise.resolve({read: () => testFile, close: () => {}}))}});
     globals.set("FileUtils", {File: sandbox.spy(() => {})});
     globals.set("MIMEService", {getTypeFromFile: sandbox.spy(() => {})});
     globals.set("Services", fakeServices);
@@ -56,9 +61,20 @@ describe("Screenshots", () => {
       await Screenshots.getScreenshotForURL(URL);
       assert.calledOnce(global.MIMEService.getTypeFromFile);
     });
-    it("should throw if something goes wrong", async () => {
+    it("should get null if something goes wrong", async () => {
       globals.set("BackgroundPageThumbs", {captureIfMissing: () => new Error("Cannot capture tumbnail")});
+
       const screenshot = await Screenshots.getScreenshotForURL(URL);
+
+      assert.calledOnce(global.PageThumbs._store);
+      assert.equal(screenshot, null);
+    });
+    it("should get null without storing if existing thumbnail is empty", async () => {
+      testFile.length = 0;
+
+      const screenshot = await Screenshots.getScreenshotForURL(URL);
+
+      assert.notCalled(global.PageThumbs._store);
       assert.equal(screenshot, null);
     });
   });

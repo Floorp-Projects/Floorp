@@ -81,16 +81,21 @@ describe("SnippetsFeed", () => {
       .withArgs("devtools.selfxss.count")
       .returns(5);
     sandbox.stub(global.AddonManager, "getActiveAddons")
-      .returns(Promise.resolve({
+      .resolves({
         addons: [
           Object.assign({id: "foo"}, FAKE_ADDONS.foo),
           Object.assign({id: "bar"}, FAKE_ADDONS.bar)
         ],
         fullData: true
-      }));
+      });
 
     const feed = new SnippetsFeed();
     feed.store = {dispatch: sandbox.stub()};
+    sandbox.stub(feed._storage, "get")
+      .withArgs("previousSessionEnd")
+      .resolves(42)
+      .withArgs("blockList")
+      .resolves([1]);
 
     clock.tick(WEEK_IN_MS * 2);
 
@@ -113,6 +118,8 @@ describe("SnippetsFeed", () => {
     assert.propertyVal(action.data, "defaultBrowser", true);
     assert.propertyVal(action.data, "isDevtoolsUser", true);
     assert.deepEqual(action.data.addonInfo, FAKE_ADDONS);
+    assert.deepEqual(action.data.blockList, [1]);
+    assert.propertyVal(action.data, "previousSessionEnd", 42);
   });
   it("should call .init on an INIT action", () => {
     const feed = new SnippetsFeed();
@@ -125,6 +132,7 @@ describe("SnippetsFeed", () => {
   it("should call .uninit on an UNINIT action", () => {
     const feed = new SnippetsFeed();
     sandbox.stub(feed, "uninit");
+    sandbox.stub(feed._storage, "set");
     feed.store = {dispatch: sandbox.stub()};
 
     feed.onAction({type: at.UNINIT});
@@ -133,6 +141,7 @@ describe("SnippetsFeed", () => {
   it("should broadcast a SNIPPETS_RESET on uninit", () => {
     const feed = new SnippetsFeed();
     feed.store = {dispatch: sandbox.stub()};
+    sandbox.stub(feed._storage, "set");
 
     feed.uninit();
 
@@ -245,5 +254,16 @@ describe("SnippetsFeed", () => {
     const feed = new SnippetsFeed();
     const result = feed.isDevtoolsUser();
     assert.isFalse(result);
+  });
+  it("should set _previousSessionEnd on uninit", async () => {
+    const feed = new SnippetsFeed();
+    feed.store = {dispatch: sandbox.stub()};
+    feed._previousSessionEnd = null;
+    const stub = sandbox.stub(feed._storage, "set");
+
+    feed.uninit();
+
+    assert.calledOnce(stub);
+    assert.calledWithExactly(stub, "previousSessionEnd", Date.now());
   });
 });
