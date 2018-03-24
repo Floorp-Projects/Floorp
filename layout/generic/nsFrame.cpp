@@ -7820,9 +7820,9 @@ nsFrame::MakeFrameName(const nsAString& aType, nsAString& aResult) const
     aResult.Append(buf);
     aResult.Append(')');
   }
-  char buf[40];
-  SprintfLiteral(buf, "(%d)", ContentIndexInContainer(this));
-  AppendASCIItoUTF16(buf, aResult);
+  aResult.Append('(');
+  aResult.AppendInt(ContentIndexInContainer(this));
+  aResult.Append(')');
   return NS_OK;
 }
 

@@ -482,7 +482,7 @@ static void GetColorsForProperty(const uint32_t aParserVariant,
     const char * const *allColorNames = NS_AllColorNames(&size);
     nsString* utf16Names = aArray.AppendElements(size);
     for (size_t i = 0; i < size; i++) {
-      CopyASCIItoUTF16(allColorNames[i], utf16Names[i]);
+      utf16Names[i].AssignASCII(allColorNames[i]);
     }
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("currentColor"));
   }
