@@ -4418,9 +4418,11 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
       return false;
     };
 
-    // Sort the collected items on span length, shortest first.
-    std::stable_sort(step2Items.begin(), step2Items.end(),
-                     Step2ItemData::IsSpanLessThan);
+    // Sort the collected items on span length, shortest first.  There's no need
+    // for a stable sort here since the sizing isn't order dependent within
+    // a group of items with the same span length.
+    std::sort(step2Items.begin(), step2Items.end(),
+              Step2ItemData::IsSpanLessThan);
 
     nsTArray<uint32_t> tracks(maxSpan);
     nsTArray<TrackSize> plan(mSizes.Length());
