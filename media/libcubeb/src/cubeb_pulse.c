@@ -7,14 +7,14 @@
 #undef NDEBUG
 #include <assert.h>
 #include <dlfcn.h>
-#include <stdlib.h>
 #include <pulse/pulseaudio.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
+#include "cubeb/cubeb.h"
 #include "cubeb_mixer.h"
 #include "cubeb_strings.h"
-#include <stdio.h>
 
 #ifdef DISABLE_LIBPULSE_DLOPEN
 #define WRAP(x) x
@@ -511,44 +511,45 @@ stream_update_timing_info(cubeb_stream * stm)
 static pa_channel_position_t
 cubeb_channel_to_pa_channel(cubeb_channel channel)
 {
-  assert(channel != CHANNEL_INVALID);
-
-  // This variable may be used for multiple times, so we should avoid to
-  // allocate it in stack, or it will be created and removed repeatedly.
-  // Use static to allocate this local variable in data space instead of stack.
-  static pa_channel_position_t map[CHANNEL_MAX] = {
-    // PA_CHANNEL_POSITION_INVALID,      // CHANNEL_INVALID
-    PA_CHANNEL_POSITION_MONO,         // CHANNEL_MONO
-    PA_CHANNEL_POSITION_FRONT_LEFT,   // CHANNEL_LEFT
-    PA_CHANNEL_POSITION_FRONT_RIGHT,  // CHANNEL_RIGHT
-    PA_CHANNEL_POSITION_FRONT_CENTER, // CHANNEL_CENTER
-    PA_CHANNEL_POSITION_SIDE_LEFT,    // CHANNEL_LS
-    PA_CHANNEL_POSITION_SIDE_RIGHT,   // CHANNEL_RS
-    PA_CHANNEL_POSITION_REAR_LEFT,    // CHANNEL_RLS
-    PA_CHANNEL_POSITION_REAR_CENTER,  // CHANNEL_RCENTER
-    PA_CHANNEL_POSITION_REAR_RIGHT,   // CHANNEL_RRS
-    PA_CHANNEL_POSITION_LFE           // CHANNEL_LFE
-  };
-
-  return map[channel];
-}
-
-static cubeb_channel
-pa_channel_to_cubeb_channel(pa_channel_position_t channel)
-{
-  assert(channel != PA_CHANNEL_POSITION_INVALID);
-  switch(channel) {
-    case PA_CHANNEL_POSITION_MONO: return CHANNEL_MONO;
-    case PA_CHANNEL_POSITION_FRONT_LEFT: return CHANNEL_LEFT;
-    case PA_CHANNEL_POSITION_FRONT_RIGHT: return CHANNEL_RIGHT;
-    case PA_CHANNEL_POSITION_FRONT_CENTER: return CHANNEL_CENTER;
-    case PA_CHANNEL_POSITION_SIDE_LEFT: return CHANNEL_LS;
-    case PA_CHANNEL_POSITION_SIDE_RIGHT: return CHANNEL_RS;
-    case PA_CHANNEL_POSITION_REAR_LEFT: return CHANNEL_RLS;
-    case PA_CHANNEL_POSITION_REAR_CENTER: return CHANNEL_RCENTER;
-    case PA_CHANNEL_POSITION_REAR_RIGHT: return CHANNEL_RRS;
-    case PA_CHANNEL_POSITION_LFE: return CHANNEL_LFE;
-    default: return CHANNEL_INVALID;
+  switch (channel) {
+    case CHANNEL_FRONT_LEFT:
+      return PA_CHANNEL_POSITION_FRONT_LEFT;
+    case CHANNEL_FRONT_RIGHT:
+      return PA_CHANNEL_POSITION_FRONT_RIGHT;
+    case CHANNEL_FRONT_CENTER:
+      return PA_CHANNEL_POSITION_FRONT_CENTER;
+    case CHANNEL_LOW_FREQUENCY:
+      return PA_CHANNEL_POSITION_LFE;
+    case CHANNEL_BACK_LEFT:
+      return PA_CHANNEL_POSITION_REAR_LEFT;
+    case CHANNEL_BACK_RIGHT:
+      return PA_CHANNEL_POSITION_REAR_RIGHT;
+    case CHANNEL_FRONT_LEFT_OF_CENTER:
+      return PA_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER;
+    case CHANNEL_FRONT_RIGHT_OF_CENTER:
+      return PA_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER;
+    case CHANNEL_BACK_CENTER:
+      return PA_CHANNEL_POSITION_REAR_CENTER;
+    case CHANNEL_SIDE_LEFT:
+      return PA_CHANNEL_POSITION_SIDE_LEFT;
+    case CHANNEL_SIDE_RIGHT:
+      return PA_CHANNEL_POSITION_SIDE_RIGHT;
+    case CHANNEL_TOP_CENTER:
+      return PA_CHANNEL_POSITION_TOP_CENTER;
+    case CHANNEL_TOP_FRONT_LEFT:
+      return PA_CHANNEL_POSITION_TOP_FRONT_LEFT;
+    case CHANNEL_TOP_FRONT_CENTER:
+      return PA_CHANNEL_POSITION_TOP_FRONT_CENTER;
+    case CHANNEL_TOP_FRONT_RIGHT:
+      return PA_CHANNEL_POSITION_TOP_FRONT_RIGHT;
+    case CHANNEL_TOP_BACK_LEFT:
+      return PA_CHANNEL_POSITION_TOP_REAR_LEFT;
+    case CHANNEL_TOP_BACK_CENTER:
+      return PA_CHANNEL_POSITION_TOP_REAR_CENTER;
+    case CHANNEL_TOP_BACK_RIGHT:
+      return PA_CHANNEL_POSITION_TOP_REAR_RIGHT;
+    default:
+      return PA_CHANNEL_POSITION_INVALID;
   }
 }
 
@@ -558,21 +559,18 @@ layout_to_channel_map(cubeb_channel_layout layout, pa_channel_map * cm)
   assert(cm && layout != CUBEB_LAYOUT_UNDEFINED);
 
   WRAP(pa_channel_map_init)(cm);
-  cm->channels = CUBEB_CHANNEL_LAYOUT_MAPS[layout].channels;
-  for (uint8_t i = 0 ; i < cm->channels ; ++i) {
-    cm->map[i] = cubeb_channel_to_pa_channel(CHANNEL_INDEX_TO_ORDER[layout][i]);
-  }
-}
 
-static cubeb_channel_layout
-channel_map_to_layout(pa_channel_map * cm)
-{
-  cubeb_channel_map cubeb_map;
-  cubeb_map.channels = cm->channels;
-  for (uint32_t i = 0 ; i < cm->channels ; ++i) {
-    cubeb_map.map[i] = pa_channel_to_cubeb_channel(cm->map[i]);
+  uint32_t channels = 0;
+  cubeb_channel_layout channelMap = layout;
+  for (uint32_t i = 0 ; channelMap != 0; ++i) {
+    uint32_t channel = (channelMap & 1) << i;
+    if (channel != 0) {
+      cm->map[channels] = cubeb_channel_to_pa_channel(channel);
+      channels++;
+    }
+    channelMap = channelMap >> 1;
   }
-  return cubeb_channel_map_to_layout(&cubeb_map);
+  cm->channels = cubeb_channel_layout_nb_channels(layout);
 }
 
 static void pulse_context_destroy(cubeb * ctx);
@@ -581,6 +579,8 @@ static void pulse_destroy(cubeb * ctx);
 static int
 pulse_context_init(cubeb * ctx)
 {
+  int r;
+
   if (ctx->context) {
     assert(ctx->error == 1);
     pulse_context_destroy(ctx);
@@ -594,9 +594,9 @@ pulse_context_init(cubeb * ctx)
   WRAP(pa_context_set_state_callback)(ctx->context, context_state_callback, ctx);
 
   WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
-  WRAP(pa_context_connect)(ctx->context, NULL, 0, NULL);
+  r = WRAP(pa_context_connect)(ctx->context, NULL, 0, NULL);
 
-  if (wait_until_context_ready(ctx) != 0) {
+  if (r < 0 || wait_until_context_ready(ctx) != 0) {
     WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
     pulse_context_destroy(ctx);
     ctx->context = NULL;
@@ -715,20 +715,6 @@ pulse_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
 }
 
 static int
-pulse_get_preferred_channel_layout(cubeb * ctx, cubeb_channel_layout * layout)
-{
-  assert(ctx && layout);
-  (void)ctx;
-
-  if (!ctx->default_sink_info)
-    return CUBEB_ERROR;
-
-  *layout = channel_map_to_layout(&ctx->default_sink_info->channel_map);
-
-  return CUBEB_OK;
-}
-
-static int
 pulse_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_frames)
 {
   (void)ctx;
@@ -808,7 +794,7 @@ create_pa_stream(cubeb_stream * stm,
   assert(&stm->input_stream == pa_stm || (&stm->output_stream == pa_stm &&
          (stream_params->layout == CUBEB_LAYOUT_UNDEFINED ||
          (stream_params->layout != CUBEB_LAYOUT_UNDEFINED &&
-         CUBEB_CHANNEL_LAYOUT_MAPS[stream_params->layout].channels == stream_params->channels))));
+         cubeb_channel_layout_nb_channels(stream_params->layout) == stream_params->channels))));
   if (stream_params->prefs & CUBEB_STREAM_PREF_LOOPBACK) {
     return CUBEB_ERROR_NOT_SUPPORTED;
   }
@@ -1279,7 +1265,7 @@ pulse_sink_info_cb(pa_context * context, const pa_sink_info * info,
 
   device_id = info->name;
   if (intern_device_id(list_data->context, &device_id) != CUBEB_OK) {
-    assert(false);
+    assert(NULL);
     return;
   }
 
@@ -1348,7 +1334,7 @@ pulse_source_info_cb(pa_context * context, const pa_source_info * info,
 
   device_id = info->name;
   if (intern_device_id(list_data->context, &device_id) != CUBEB_OK) {
-    assert(false);
+    assert(NULL);
     return;
   }
 
@@ -1588,7 +1574,6 @@ static struct cubeb_ops const pulse_ops = {
   .get_max_channel_count = pulse_get_max_channel_count,
   .get_min_latency = pulse_get_min_latency,
   .get_preferred_sample_rate = pulse_get_preferred_sample_rate,
-  .get_preferred_channel_layout = pulse_get_preferred_channel_layout,
   .enumerate_devices = pulse_enumerate_devices,
   .device_collection_destroy = pulse_device_collection_destroy,
   .destroy = pulse_destroy,

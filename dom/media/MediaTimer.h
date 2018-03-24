@@ -13,6 +13,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Unused.h"
 #include "nsITimer.h"
 #include <queue>
 

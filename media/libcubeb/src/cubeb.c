@@ -280,20 +280,6 @@ cubeb_get_preferred_sample_rate(cubeb * context, uint32_t * rate)
   return context->ops->get_preferred_sample_rate(context, rate);
 }
 
-int
-cubeb_get_preferred_channel_layout(cubeb * context, cubeb_channel_layout * layout)
-{
-  if (!context || !layout) {
-    return CUBEB_ERROR_INVALID_PARAMETER;
-  }
-
-  if (!context->ops->get_preferred_channel_layout) {
-    return CUBEB_ERROR_NOT_SUPPORTED;
-  }
-
-  return context->ops->get_preferred_channel_layout(context, layout);
-}
-
 void
 cubeb_destroy(cubeb * context)
 {

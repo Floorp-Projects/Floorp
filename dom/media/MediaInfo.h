@@ -11,6 +11,7 @@
 #include "nsDataHashtable.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "AudioConfig.h"
 #include "ImageTypes.h"
 #include "MediaData.h"
 #include "TrackID.h" // for TrackID
@@ -38,9 +39,6 @@ public:
 };
 
 typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
-
-  // Maximum channel number we can currently handle (7.1)
-#define MAX_AUDIO_CHANNELS 8
 
 class TrackInfo
 {
@@ -357,6 +355,7 @@ public:
                 EmptyString(), EmptyString(), true, 1)
     , mRate(0)
     , mChannels(0)
+    , mChannelMap(AudioConfig::ChannelLayout::UNKNOWN_MAP)
     , mBitDepth(0)
     , mProfile(0)
     , mExtendedProfile(0)
@@ -369,6 +368,7 @@ public:
     : TrackInfo(aOther)
     , mRate(aOther.mRate)
     , mChannels(aOther.mChannels)
+    , mChannelMap(aOther.mChannelMap)
     , mBitDepth(aOther.mBitDepth)
     , mProfile(aOther.mProfile)
     , mExtendedProfile(aOther.mExtendedProfile)
@@ -381,8 +381,7 @@ public:
 
   bool IsValid() const override
   {
-    return mChannels > 0 && mChannels <= MAX_AUDIO_CHANNELS &&
-           mRate > 0 && mRate <= MAX_RATE;
+    return mChannels > 0 && mRate > 0 && mRate <= MAX_RATE;
   }
 
   AudioInfo* GetAsAudioInfo() override
@@ -405,6 +404,11 @@ public:
 
   // Number of audio channels.
   uint32_t mChannels;
+  // The AudioConfig::ChannelLayout map. Channels are ordered as per SMPTE
+  // definition. A value of UNKNOWN_MAP indicates unknown layout.
+  // ChannelMap is an unsigned bitmap compatible with Windows' WAVE and FFmpeg
+  // channel map.
+  AudioConfig::ChannelLayout::ChannelMap mChannelMap;
 
   // Bits per sample.
   uint32_t mBitDepth;
@@ -611,169 +615,6 @@ private:
 
 public:
   const nsCString& mMimeType;
-};
-
-class AudioConfig
-{
-public:
-  enum Channel
-  {
-    CHANNEL_INVALID = -1,
-    CHANNEL_MONO = 0,
-    CHANNEL_LEFT,
-    CHANNEL_RIGHT,
-    CHANNEL_CENTER,
-    CHANNEL_LS,
-    CHANNEL_RS,
-    CHANNEL_RLS,
-    CHANNEL_RCENTER,
-    CHANNEL_RRS,
-    CHANNEL_LFE,
-  };
-
-  class ChannelLayout
-  {
-  public:
-    ChannelLayout() : mChannelMap(0), mValid(false) { }
-    explicit ChannelLayout(uint32_t aChannels)
-      : ChannelLayout(aChannels, SMPTEDefault(aChannels))
-    {
-    }
-    ChannelLayout(uint32_t aChannels, const Channel* aConfig)
-      : ChannelLayout()
-    {
-      if (!aConfig) {
-        mValid = false;
-        return;
-      }
-      mChannels.AppendElements(aConfig, aChannels);
-      UpdateChannelMap();
-    }
-    bool operator==(const ChannelLayout& aOther) const
-    {
-      return mChannels == aOther.mChannels;
-    }
-    bool operator!=(const ChannelLayout& aOther) const
-    {
-      return mChannels != aOther.mChannels;
-    }
-    const Channel& operator[](uint32_t aIndex) const
-    {
-      return mChannels[aIndex];
-    }
-    uint32_t Count() const
-    {
-      return mChannels.Length();
-    }
-    uint32_t Map() const
-    {
-      return mChannelMap;
-    }
-    // Calculate the mapping table from the current layout to aOther such that
-    // one can easily go from one layout to the other by doing:
-    // out[channel] = in[map[channel]].
-    // Returns true if the reordering is possible or false otherwise.
-    // If true, then aMap, if set, will be updated to contain the mapping table
-    // allowing conversion from the current layout to aOther.
-    // If aMap is nullptr, then MappingTable can be used to simply determine if
-    // the current layout can be easily reordered to aOther.
-    // aMap must be an array of size MAX_AUDIO_CHANNELS.
-    bool MappingTable(const ChannelLayout& aOther, uint8_t* aMap = nullptr) const;
-    bool IsValid() const { return mValid; }
-    bool HasChannel(Channel aChannel) const
-    {
-      return mChannelMap & (1 << aChannel);
-    }
-  private:
-    void UpdateChannelMap();
-    const Channel* SMPTEDefault(uint32_t aChannels) const;
-    AutoTArray<Channel, MAX_AUDIO_CHANNELS> mChannels;
-    uint32_t mChannelMap;
-    bool mValid;
-  };
-
-  enum SampleFormat
-  {
-    FORMAT_NONE = 0,
-    FORMAT_U8,
-    FORMAT_S16,
-    FORMAT_S24LSB,
-    FORMAT_S24,
-    FORMAT_S32,
-    FORMAT_FLT,
-#if defined(MOZ_SAMPLE_TYPE_FLOAT32)
-    FORMAT_DEFAULT = FORMAT_FLT
-#elif defined(MOZ_SAMPLE_TYPE_S16)
-    FORMAT_DEFAULT = FORMAT_S16
-#else
-#error "Not supported audio type"
-#endif
-  };
-
-  AudioConfig(const ChannelLayout& aChannelLayout, uint32_t aRate,
-              AudioConfig::SampleFormat aFormat = FORMAT_DEFAULT,
-              bool aInterleaved = true);
-  // Will create a channel configuration from default SMPTE ordering.
-  AudioConfig(uint32_t aChannels, uint32_t aRate,
-              AudioConfig::SampleFormat aFormat = FORMAT_DEFAULT,
-              bool aInterleaved = true);
-
-  const ChannelLayout& Layout() const
-  {
-    return mChannelLayout;
-  }
-  uint32_t Channels() const
-  {
-    if (!mChannelLayout.IsValid()) {
-      return mChannels;
-    }
-    return mChannelLayout.Count();
-  }
-  uint32_t Rate() const
-  {
-    return mRate;
-  }
-  SampleFormat Format() const
-  {
-    return mFormat;
-  }
-  bool Interleaved() const
-  {
-    return mInterleaved;
-  }
-  bool operator==(const AudioConfig& aOther) const
-  {
-    return mChannelLayout == aOther.mChannelLayout && mRate == aOther.mRate &&
-           mFormat == aOther.mFormat && mInterleaved == aOther.mInterleaved;
-  }
-  bool operator!=(const AudioConfig& aOther) const
-  {
-    return !(*this == aOther);
-  }
-
-  bool IsValid() const
-  {
-    return mChannelLayout.IsValid() && Format() != FORMAT_NONE && Rate() > 0;
-  }
-
-  static const char* FormatToString(SampleFormat aFormat);
-  static uint32_t SampleSize(SampleFormat aFormat);
-  static uint32_t FormatToBits(SampleFormat aFormat);
-
-private:
-  // Channels configuration.
-  ChannelLayout mChannelLayout;
-
-  // Channel count.
-  uint32_t mChannels;
-
-  // Sample rate.
-  uint32_t mRate;
-
-  // Sample format.
-  SampleFormat mFormat;
-
-  bool mInterleaved;
 };
 
 } // namespace mozilla
