@@ -5,101 +5,147 @@
 
 use ffi;
 
-/// SMPTE channel layout (also known as wave order)
-///
-/// ---------------------------------------------------
-/// Name          | Channels
-/// ---------------------------------------------------
-/// DUAL-MONO     | L   R
-/// DUAL-MONO-LFE | L   R   LFE
-/// MONO          | M
-/// MONO-LFE      | M   LFE
-/// STEREO        | L   R
-/// STEREO-LFE    | L   R   LFE
-/// 3F            | L   R   C
-/// 3F-LFE        | L   R   C    LFE
-/// 2F1           | L   R   S
-/// 2F1-LFE       | L   R   LFE  S
-/// 3F1           | L   R   C    S
-/// 3F1-LFE       | L   R   C    LFE S
-/// 2F2           | L   R   LS   RS
-/// 2F2-LFE       | L   R   LFE  LS   RS
-/// 3F2           | L   R   C    LS   RS
-/// 3F2-LFE       | L   R   C    LFE  LS   RS
-/// 3F3R-LFE      | L   R   C    LFE  RC   LS   RS
-/// 3F4-LFE       | L   R   C    LFE  RLS  RRS  LS   RS
-/// ---------------------------------------------------
-///
-/// The abbreviation of channel name is defined in following table:
-/// ---------------------------
-/// Abbr | Channel name
-/// ---------------------------
-/// M    | Mono
-/// L    | Left
-/// R    | Right
-/// C    | Center
-/// LS   | Left Surround
-/// RS   | Right Surround
-/// RLS  | Rear Left Surround
-/// RC   | Rear Center
-/// RRS  | Rear Right Surround
-/// LFE  | Low Frequency Effects
-/// ---------------------------
-#[cfg_attr(target_env = "msvc", repr(i32))]
-#[cfg_attr(not(target_env = "msvc"), repr(u32))]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ChannelLayout {
-    Undefined = ffi::CUBEB_LAYOUT_UNDEFINED,
-    DualMono = ffi::CUBEB_LAYOUT_DUAL_MONO,
-    DualMonoLfe = ffi::CUBEB_LAYOUT_DUAL_MONO_LFE,
-    Mono = ffi::CUBEB_LAYOUT_MONO,
-    MonoLfe = ffi::CUBEB_LAYOUT_MONO_LFE,
-    Stereo = ffi::CUBEB_LAYOUT_STEREO,
-    StereoLfe = ffi::CUBEB_LAYOUT_STEREO_LFE,
-    Layout3F = ffi::CUBEB_LAYOUT_3F,
-    Layout3FLfe = ffi::CUBEB_LAYOUT_3F_LFE,
-    Layout2F1 = ffi::CUBEB_LAYOUT_2F1,
-    Layout2F1Lfe = ffi::CUBEB_LAYOUT_2F1_LFE,
-    Layout3F1 = ffi::CUBEB_LAYOUT_3F1,
-    Layout3F1Lfe = ffi::CUBEB_LAYOUT_3F1_LFE,
-    Layout2F2 = ffi::CUBEB_LAYOUT_2F2,
-    Layout2F2Lfe = ffi::CUBEB_LAYOUT_2F2_LFE,
-    Layout3F2 = ffi::CUBEB_LAYOUT_3F2,
-    Layout3F2Lfe = ffi::CUBEB_LAYOUT_3F2_LFE,
-    Layout3F3RLfe = ffi::CUBEB_LAYOUT_3F3R_LFE,
-    Layout3F4Lfe = ffi::CUBEB_LAYOUT_3F4_LFE,
-}
-
-impl From<ffi::cubeb_channel_layout> for ChannelLayout {
-    fn from(x: ffi::cubeb_channel_layout) -> ChannelLayout {
-        match x {
-            ffi::CUBEB_LAYOUT_DUAL_MONO => ChannelLayout::DualMono,
-            ffi::CUBEB_LAYOUT_DUAL_MONO_LFE => ChannelLayout::DualMonoLfe,
-            ffi::CUBEB_LAYOUT_MONO => ChannelLayout::Mono,
-            ffi::CUBEB_LAYOUT_MONO_LFE => ChannelLayout::MonoLfe,
-            ffi::CUBEB_LAYOUT_STEREO => ChannelLayout::Stereo,
-            ffi::CUBEB_LAYOUT_STEREO_LFE => ChannelLayout::StereoLfe,
-            ffi::CUBEB_LAYOUT_3F => ChannelLayout::Layout3F,
-            ffi::CUBEB_LAYOUT_3F_LFE => ChannelLayout::Layout3FLfe,
-            ffi::CUBEB_LAYOUT_2F1 => ChannelLayout::Layout2F1,
-            ffi::CUBEB_LAYOUT_2F1_LFE => ChannelLayout::Layout2F1Lfe,
-            ffi::CUBEB_LAYOUT_3F1 => ChannelLayout::Layout3F1,
-            ffi::CUBEB_LAYOUT_3F1_LFE => ChannelLayout::Layout3F1Lfe,
-            ffi::CUBEB_LAYOUT_2F2 => ChannelLayout::Layout2F2,
-            ffi::CUBEB_LAYOUT_2F2_LFE => ChannelLayout::Layout2F2Lfe,
-            ffi::CUBEB_LAYOUT_3F2 => ChannelLayout::Layout3F2,
-            ffi::CUBEB_LAYOUT_3F2_LFE => ChannelLayout::Layout3F2Lfe,
-            ffi::CUBEB_LAYOUT_3F3R_LFE => ChannelLayout::Layout3F3RLfe,
-            ffi::CUBEB_LAYOUT_3F4_LFE => ChannelLayout::Layout3F4Lfe,
-            // TODO: Implement TryFrom
-            // Everything else is just undefined.
-            _ => ChannelLayout::Undefined,
-        }
+bitflags! {
+    /// Some common layout definitions
+    pub struct ChannelLayout: ffi::cubeb_channel_layout {
+        ///
+        const FRONT_LEFT = ffi::CHANNEL_FRONT_LEFT;
+        const FRONT_RIGHT = ffi::CHANNEL_FRONT_RIGHT;
+        const FRONT_CENTER = ffi::CHANNEL_FRONT_CENTER;
+        const LOW_FREQUENCY = ffi::CHANNEL_LOW_FREQUENCY;
+        const BACK_LEFT = ffi::CHANNEL_BACK_LEFT;
+        const BACK_RIGHT = ffi::CHANNEL_BACK_RIGHT;
+        const FRONT_LEFT_OF_CENTER = ffi::CHANNEL_FRONT_LEFT_OF_CENTER;
+        const FRONT_RIGHT_OF_CENTER = ffi::CHANNEL_FRONT_RIGHT_OF_CENTER;
+        const BACK_CENTER = ffi::CHANNEL_BACK_CENTER;
+        const SIDE_LEFT = ffi::CHANNEL_SIDE_LEFT;
+        const SIDE_RIGHT = ffi::CHANNEL_SIDE_RIGHT;
+        const TOP_CENTER = ffi::CHANNEL_TOP_CENTER;
+        const TOP_FRONT_LEFT = ffi::CHANNEL_TOP_FRONT_LEFT;
+        const TOP_FRONT_CENTER = ffi::CHANNEL_TOP_FRONT_CENTER;
+        const TOP_FRONT_RIGHT = ffi::CHANNEL_TOP_FRONT_RIGHT;
+        const TOP_BACK_LEFT = ffi::CHANNEL_TOP_BACK_LEFT;
+        const TOP_BACK_CENTER = ffi::CHANNEL_TOP_BACK_CENTER;
+        const TOP_BACK_RIGHT = ffi::CHANNEL_TOP_BACK_RIGHT;
     }
 }
 
-impl Into<ffi::cubeb_channel_layout> for ChannelLayout {
-    fn into(self) -> ffi::cubeb_channel_layout {
-        self as ffi::cubeb_channel_layout
+macro_rules! bits {
+    ($($x:ident => $y:ident),*) => {
+        $(pub const $x: ChannelLayout = ChannelLayout { bits: ffi::$y };)*
+    }
+}
+
+impl ChannelLayout {
+    bits!(UNDEFINED => CUBEB_LAYOUT_UNDEFINED,
+          MONO => CUBEB_LAYOUT_MONO,
+          MONO_LFE => CUBEB_LAYOUT_MONO_LFE,
+          STEREO => CUBEB_LAYOUT_STEREO,
+          STEREO_LFE => CUBEB_LAYOUT_STEREO_LFE,
+          _3F => CUBEB_LAYOUT_3F,
+          _3F_LFE => CUBEB_LAYOUT_3F_LFE,
+          _2F1 => CUBEB_LAYOUT_2F1,
+          _2F1_LFE => CUBEB_LAYOUT_2F1_LFE,
+          _3F1 => CUBEB_LAYOUT_3F1,
+          _3F1_LFE => CUBEB_LAYOUT_3F1_LFE,
+          _2F2 => CUBEB_LAYOUT_2F2,
+          _2F2_LFE => CUBEB_LAYOUT_2F2_LFE,
+          QUAD => CUBEB_LAYOUT_QUAD,
+          QUAD_LFE => CUBEB_LAYOUT_QUAD_LFE,
+          _3F2 => CUBEB_LAYOUT_3F2,
+          _3F2_LFE => CUBEB_LAYOUT_3F2_LFE,
+          _3F2_BACK => CUBEB_LAYOUT_3F2_BACK,
+          _3F2_LFE_BACK => CUBEB_LAYOUT_3F2_LFE_BACK,
+          _3F3R_LFE => CUBEB_LAYOUT_3F3R_LFE,
+          _3F4_LFE => CUBEB_LAYOUT_3F4_LFE
+    );
+}
+
+impl From<ffi::cubeb_channel> for ChannelLayout {
+    fn from(x: ffi::cubeb_channel) -> Self {
+        ChannelLayout::from_bits_truncate(x)
+    }
+}
+
+impl Into<ffi::cubeb_channel> for ChannelLayout {
+    fn into(self) -> ffi::cubeb_channel {
+        self.bits()
+    }
+}
+
+impl ChannelLayout {
+    pub fn num_channels(&self) -> u32 {
+        let layout = *self;
+        unsafe { ffi::cubeb_channel_layout_nb_channels(layout.into()) }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use ffi;
+
+    #[test]
+    fn channel_layout_from_raw() {
+        macro_rules! check(
+            ($($raw:ident => $real:ident),*) => (
+                $(let x = super::ChannelLayout::from(ffi::$raw);;
+                  assert_eq!(x, super::ChannelLayout::$real);
+                )*
+            ) );
+
+        check!(CUBEB_LAYOUT_UNDEFINED => UNDEFINED,
+               CUBEB_LAYOUT_MONO => MONO,
+               CUBEB_LAYOUT_MONO_LFE => MONO_LFE,
+               CUBEB_LAYOUT_STEREO => STEREO,
+               CUBEB_LAYOUT_STEREO_LFE => STEREO_LFE,
+               CUBEB_LAYOUT_3F => _3F,
+               CUBEB_LAYOUT_3F_LFE => _3F_LFE,
+               CUBEB_LAYOUT_2F1 => _2F1,
+               CUBEB_LAYOUT_2F1_LFE => _2F1_LFE,
+               CUBEB_LAYOUT_3F1 => _3F1,
+               CUBEB_LAYOUT_3F1_LFE => _3F1_LFE,
+               CUBEB_LAYOUT_2F2 => _2F2,
+               CUBEB_LAYOUT_2F2_LFE => _2F2_LFE,
+               CUBEB_LAYOUT_QUAD => QUAD,
+               CUBEB_LAYOUT_QUAD_LFE => QUAD_LFE,
+               CUBEB_LAYOUT_3F2 => _3F2,
+               CUBEB_LAYOUT_3F2_LFE => _3F2_LFE,
+               CUBEB_LAYOUT_3F2_BACK => _3F2_BACK,
+               CUBEB_LAYOUT_3F2_LFE_BACK => _3F2_LFE_BACK,
+               CUBEB_LAYOUT_3F3R_LFE => _3F3R_LFE,
+               CUBEB_LAYOUT_3F4_LFE => _3F4_LFE);
+    }
+
+    #[test]
+    fn channel_layout_into_raw() {
+        macro_rules! check(
+            ($($real:ident => $raw:ident),*) => (
+                $(let x = super::ChannelLayout::$real;
+                  let x: ffi::cubeb_channel_layout = x.into();
+                  assert_eq!(x, ffi::$raw);
+                )*
+            ) );
+
+        check!(UNDEFINED => CUBEB_LAYOUT_UNDEFINED,
+               MONO => CUBEB_LAYOUT_MONO,
+               MONO_LFE => CUBEB_LAYOUT_MONO_LFE,
+               STEREO => CUBEB_LAYOUT_STEREO,
+               STEREO_LFE => CUBEB_LAYOUT_STEREO_LFE,
+               _3F => CUBEB_LAYOUT_3F,
+               _3F_LFE => CUBEB_LAYOUT_3F_LFE,
+               _2F1 => CUBEB_LAYOUT_2F1,
+               _2F1_LFE=> CUBEB_LAYOUT_2F1_LFE,
+               _3F1 => CUBEB_LAYOUT_3F1,
+               _3F1_LFE =>  CUBEB_LAYOUT_3F1_LFE,
+               _2F2 => CUBEB_LAYOUT_2F2,
+               _2F2_LFE => CUBEB_LAYOUT_2F2_LFE,
+               QUAD => CUBEB_LAYOUT_QUAD,
+               QUAD_LFE => CUBEB_LAYOUT_QUAD_LFE,
+               _3F2 => CUBEB_LAYOUT_3F2,
+               _3F2_LFE => CUBEB_LAYOUT_3F2_LFE,
+               _3F2_BACK => CUBEB_LAYOUT_3F2_BACK,
+               _3F2_LFE_BACK => CUBEB_LAYOUT_3F2_LFE_BACK,
+               _3F3R_LFE => CUBEB_LAYOUT_3F3R_LFE,
+               _3F4_LFE => CUBEB_LAYOUT_3F4_LFE);
     }
 }

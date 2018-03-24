@@ -85,35 +85,7 @@ impl StreamParamsRef {
     }
 
     pub fn layout(&self) -> ChannelLayout {
-        macro_rules! check( ($($raw:ident => $real:ident),*) => {{
-            let layout = self.get_ref().layout;
-            $(if layout == ffi::$raw {
-                ChannelLayout::$real
-            }) else *
-            else {
-                panic!("unknown channel layout: {}", layout)
-            }
-        }} );
-
-        check!(CUBEB_LAYOUT_UNDEFINED => Undefined,
-               CUBEB_LAYOUT_DUAL_MONO => DualMono,
-               CUBEB_LAYOUT_DUAL_MONO_LFE => DualMonoLfe,
-               CUBEB_LAYOUT_MONO => Mono,
-               CUBEB_LAYOUT_MONO_LFE => MonoLfe,
-               CUBEB_LAYOUT_STEREO => Stereo,
-               CUBEB_LAYOUT_STEREO_LFE => StereoLfe,
-               CUBEB_LAYOUT_3F => Layout3F,
-               CUBEB_LAYOUT_3F_LFE => Layout3FLfe,
-               CUBEB_LAYOUT_2F1 => Layout2F1,
-               CUBEB_LAYOUT_2F1_LFE => Layout2F1Lfe,
-               CUBEB_LAYOUT_3F1 => Layout3F1,
-               CUBEB_LAYOUT_3F1_LFE => Layout3F1Lfe,
-               CUBEB_LAYOUT_2F2 => Layout2F2,
-               CUBEB_LAYOUT_2F2_LFE => Layout2F2Lfe,
-               CUBEB_LAYOUT_3F2 => Layout3F2,
-               CUBEB_LAYOUT_3F2_LFE => Layout3F2Lfe,
-               CUBEB_LAYOUT_3F3R_LFE => Layout3F3RLfe,
-               CUBEB_LAYOUT_3F4_LFE => Layout3F4Lfe)
+        ChannelLayout::from(self.get_ref().layout)
     }
 
     pub fn prefs(&self) -> StreamPrefs {
@@ -297,25 +269,27 @@ mod tests {
                 )*
             ) );
 
-        check!(CUBEB_LAYOUT_UNDEFINED => Undefined,
-               CUBEB_LAYOUT_DUAL_MONO => DualMono,
-               CUBEB_LAYOUT_DUAL_MONO_LFE => DualMonoLfe,
-               CUBEB_LAYOUT_MONO => Mono,
-               CUBEB_LAYOUT_MONO_LFE => MonoLfe,
-               CUBEB_LAYOUT_STEREO => Stereo,
-               CUBEB_LAYOUT_STEREO_LFE => StereoLfe,
-               CUBEB_LAYOUT_3F => Layout3F,
-               CUBEB_LAYOUT_3F_LFE => Layout3FLfe,
-               CUBEB_LAYOUT_2F1 => Layout2F1,
-               CUBEB_LAYOUT_2F1_LFE => Layout2F1Lfe,
-               CUBEB_LAYOUT_3F1 => Layout3F1,
-               CUBEB_LAYOUT_3F1_LFE => Layout3F1Lfe,
-               CUBEB_LAYOUT_2F2 => Layout2F2,
-               CUBEB_LAYOUT_2F2_LFE => Layout2F2Lfe,
-               CUBEB_LAYOUT_3F2 => Layout3F2,
-               CUBEB_LAYOUT_3F2_LFE => Layout3F2Lfe,
-               CUBEB_LAYOUT_3F3R_LFE => Layout3F3RLfe,
-               CUBEB_LAYOUT_3F4_LFE => Layout3F4Lfe);
+        check!(CUBEB_LAYOUT_UNDEFINED => UNDEFINED,
+               CUBEB_LAYOUT_MONO => MONO,
+               CUBEB_LAYOUT_MONO_LFE => MONO_LFE,
+               CUBEB_LAYOUT_STEREO => STEREO,
+               CUBEB_LAYOUT_STEREO_LFE => STEREO_LFE,
+               CUBEB_LAYOUT_3F => _3F,
+               CUBEB_LAYOUT_3F_LFE => _3F_LFE,
+               CUBEB_LAYOUT_2F1 => _2F1,
+               CUBEB_LAYOUT_2F1_LFE => _2F1_LFE,
+               CUBEB_LAYOUT_3F1 => _3F1,
+               CUBEB_LAYOUT_3F1_LFE => _3F1_LFE,
+               CUBEB_LAYOUT_2F2 => _2F2,
+               CUBEB_LAYOUT_2F2_LFE => _2F2_LFE,
+               CUBEB_LAYOUT_QUAD => QUAD,
+               CUBEB_LAYOUT_QUAD_LFE => QUAD_LFE,
+               CUBEB_LAYOUT_3F2 => _3F2,
+               CUBEB_LAYOUT_3F2_LFE => _3F2_LFE,
+               CUBEB_LAYOUT_3F2_BACK => _3F2_BACK,
+               CUBEB_LAYOUT_3F2_LFE_BACK => _3F2_LFE_BACK,
+               CUBEB_LAYOUT_3F3R_LFE => _3F3R_LFE,
+               CUBEB_LAYOUT_3F4_LFE => _3F4_LFE);
     }
 
     #[test]

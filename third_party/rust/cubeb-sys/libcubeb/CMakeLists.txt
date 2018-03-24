@@ -59,6 +59,7 @@ add_library(cubeb
   src/cubeb_panner.cpp
   src/cubeb_log.cpp
   src/cubeb_strings.c
+  src/cubeb_utils.cpp
    $<TARGET_OBJECTS:speex>)
 target_include_directories(cubeb
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
@@ -181,7 +182,8 @@ endif()
 check_include_files(SLES/OpenSLES.h USE_OPENSL)
 if(USE_OPENSL)
   target_sources(cubeb PRIVATE
-    src/cubeb_opensl.c)
+    src/cubeb_opensl.c
+    src/cubeb-jni.cpp)
   target_compile_definitions(cubeb PRIVATE USE_OPENSL)
   target_link_libraries(cubeb PRIVATE OpenSLES)
 endif()
@@ -237,6 +239,7 @@ if(BUILD_TESTS)
   cubeb_add_test(audio)
   cubeb_add_test(record)
   cubeb_add_test(devices)
+  cubeb_add_test(callback_ret)
 
   add_executable(test_resampler test/test_resampler.cpp src/cubeb_resampler.cpp $<TARGET_OBJECTS:speex>)
   target_include_directories(test_resampler PRIVATE ${gtest_SOURCE_DIR}/include)
@@ -260,27 +263,6 @@ if(BUILD_TESTS)
   cubeb_add_test(latency test_latency)
   cubeb_add_test(ring_array)
 
-  add_executable(test_mixer test/test_mixer.cpp src/cubeb_mixer.cpp)
-  if(USE_AUDIOUNIT)
-    target_compile_definitions(test_mixer PRIVATE USE_AUDIOUNIT)
-  endif()
-  target_include_directories(test_mixer PRIVATE ${gtest_SOURCE_DIR}/include)
-  target_include_directories(test_mixer PRIVATE src)
-  target_link_libraries(test_mixer PRIVATE cubeb gtest_main)
-  add_test(mixer test_mixer)
-  add_sanitizers(test_mixer)
-  install(TARGETS test_mixer DESTINATION ${CMAKE_INSTALL_PREFIX})
-
   cubeb_add_test(utils)
   cubeb_add_test(ring_buffer)
-
-  if(USE_AUDIOUNIT)
-    add_executable(test_deadlock test/test_deadlock.cpp)
-    target_include_directories(test_deadlock PRIVATE ${gtest_SOURCE_DIR}/include)
-    target_include_directories(test_deadlock PRIVATE src)
-    target_link_libraries(test_deadlock PRIVATE cubeb gtest_main)
-    add_test(deadlock test_deadlock)
-    add_sanitizers(test_deadlock)
-    install(TARGETS test_deadlock DESTINATION ${CMAKE_INSTALL_PREFIX})
-  endif()
 endif()

@@ -9,8 +9,8 @@ use audioipc::{messages, ClientMessage, ServerMessage};
 use audioipc::{core, rpc};
 use audioipc::codec::LengthDelimitedCodec;
 use audioipc::fd_passing::{framed_with_fds, FramedWithFds};
-use cubeb_backend::{ffi, ChannelLayout, Context, ContextOps, DeviceCollectionRef, DeviceId,
-                    DeviceType, Error, Ops, Result, Stream, StreamParams, StreamParamsRef};
+use cubeb_backend::{ffi, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceType, Error,
+                    Ops, Result, Stream, StreamParams, StreamParamsRef};
 use futures::Future;
 use futures_cpupool::{self, CpuPool};
 use libc;
@@ -145,15 +145,6 @@ impl ContextOps for ClientContext {
     fn preferred_sample_rate(&mut self) -> Result<u32> {
         assert_not_in_callback();
         send_recv!(self.rpc(), ContextGetPreferredSampleRate => ContextPreferredSampleRate())
-    }
-
-    fn preferred_channel_layout(&mut self) -> Result<ChannelLayout> {
-        assert_not_in_callback();
-        send_recv!(self.rpc(),
-                   ContextGetPreferredChannelLayout => ContextPreferredChannelLayout())
-            .map(|l| {
-            ChannelLayout::from(l)
-        })
     }
 
     fn enumerate_devices(
