@@ -5233,7 +5233,7 @@ pref("dom.streams.enabled", false);
 pref("dom.push.enabled", false);
 pref("dom.push.alwaysConnect", false);
 
-pref("dom.push.loglevel", "error");
+pref("dom.push.loglevel", "Error");
 
 pref("dom.push.serverURL", "wss://push.services.mozilla.com/");
 pref("dom.push.userAgentID", "");
