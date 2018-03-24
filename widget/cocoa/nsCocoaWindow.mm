@@ -2920,6 +2920,7 @@ nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType,
 - (NSPoint)FrameView__closeButtonOrigin;
 - (NSPoint)FrameView__fullScreenButtonOrigin;
 - (BOOL)FrameView__wantsFloatingTitlebar;
+- (NSRect)FrameView__unifiedToolbarFrame;
 @end
 
 @implementation NSView(FrameViewMethodSwizzling)
@@ -2945,6 +2946,19 @@ nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType,
 - (BOOL)FrameView__wantsFloatingTitlebar
 {
   return NO;
+}
+
+- (NSRect)FrameView__unifiedToolbarFrame
+{
+  NSRect defaultFrame = [self FrameView__unifiedToolbarFrame];
+  if ([[self window] isKindOfClass:[ToolbarWindow class]]) {
+    CGFloat unifiedToolbarHeight = [(ToolbarWindow*)[self window] unifiedToolbarHeight];
+    CGFloat topEdge = NSMaxY(defaultFrame);
+    CGFloat bottomEdge = topEdge - unifiedToolbarHeight;
+    return NSMakeRect(defaultFrame.origin.x, bottomEdge,
+                      defaultFrame.size.width, unifiedToolbarHeight);
+  }
+  return defaultFrame;
 }
 
 @end
@@ -3024,6 +3038,9 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
   static IMP our_wantsFloatingTitlebar =
     class_getMethodImplementation([NSView class],
                                   @selector(FrameView__wantsFloatingTitlebar));
+  static IMP our_unifiedToolbarFrame =
+    class_getMethodImplementation([NSView class],
+                                  @selector(FrameView__unifiedToolbarFrame));
 
   if (![gSwizzledFrameViewClasses containsObject:frameViewClass]) {
     // Either of these methods might be implemented in both a subclass of
@@ -3053,6 +3070,14 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
         _wantsFloatingTitlebar != our_wantsFloatingTitlebar) {
       nsToolkit::SwizzleMethods(frameViewClass, @selector(_wantsFloatingTitlebar),
                                 @selector(FrameView__wantsFloatingTitlebar));
+    }
+    IMP _unifiedToolbarFrame =
+      class_getMethodImplementation(frameViewClass,
+                                    @selector(_unifiedToolbarFrame));
+    if (_unifiedToolbarFrame &&
+        _unifiedToolbarFrame != our_unifiedToolbarFrame) {
+      nsToolkit::SwizzleMethods(frameViewClass, @selector(_unifiedToolbarFrame),
+                                @selector(FrameView__unifiedToolbarFrame));
     }
     [gSwizzledFrameViewClasses addObject:frameViewClass];
   }
