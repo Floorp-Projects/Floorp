@@ -8,9 +8,8 @@
 #[macro_use]
 extern crate cubeb_backend;
 
-use cubeb_backend::{ffi, ChannelLayout, Context, ContextOps, DeviceCollectionRef, DeviceId,
-                    DeviceRef, DeviceType, Ops, Result, Stream, StreamOps, StreamParams,
-                    StreamParamsRef};
+use cubeb_backend::{ffi, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceRef,
+                    DeviceType, Ops, Result, Stream, StreamOps, StreamParams, StreamParamsRef};
 use std::ffi::CStr;
 use std::os::raw::c_void;
 use std::ptr;
@@ -40,9 +39,6 @@ impl ContextOps for TestContext {
     }
     fn preferred_sample_rate(&mut self) -> Result<u32> {
         Ok(0u32)
-    }
-    fn preferred_channel_layout(&mut self) -> Result<ChannelLayout> {
-        Ok(ChannelLayout::Mono as _)
     }
     fn enumerate_devices(
         &mut self,
@@ -169,17 +165,6 @@ fn test_ops_context_preferred_sample_rate() {
         ffi::CUBEB_OK
     );
     assert_eq!(rate, 0);
-}
-
-#[test]
-fn test_ops_context_preferred_channel_layout() {
-    let c: *mut ffi::cubeb = ptr::null_mut();
-    let mut layout = ChannelLayout::Undefined;
-    assert_eq!(
-        unsafe { OPS.get_preferred_channel_layout.unwrap()(c, &mut layout as *mut _ as *mut _) },
-        ffi::CUBEB_OK
-    );
-    assert_eq!(layout, ChannelLayout::Mono);
 }
 
 #[test]

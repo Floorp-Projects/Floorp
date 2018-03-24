@@ -1241,7 +1241,7 @@ protected:
     RefPtr<AudioData> data(new AudioData(
       aAudio->mOffset, mSeekJob.mTarget->GetTime(),
       duration, frames, Move(audioData), channels,
-      aAudio->mRate));
+      aAudio->mRate, aAudio->mChannelMap));
     MOZ_ASSERT(AudioQueue().GetSize() == 0,
                "Should be the 1st sample after seeking");
     mMaster->PushAudio(data);

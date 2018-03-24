@@ -6,6 +6,7 @@
 #if !defined(MediaData_h)
 #define MediaData_h
 
+#include "AudioConfig.h"
 #include "AudioSampleFormat.h"
 #include "ImageTypes.h"
 #include "SharedBuffer.h"
@@ -394,9 +395,11 @@ public:
             uint32_t aFrames,
             AlignedAudioBuffer&& aData,
             uint32_t aChannels,
-            uint32_t aRate)
+            uint32_t aRate,
+            uint32_t aChannelMap = AudioConfig::ChannelLayout::UNKNOWN_MAP)
     : MediaData(sType, aOffset, aTime, aDuration, aFrames)
     , mChannels(aChannels)
+    , mChannelMap(aChannelMap)
     , mRate(aRate)
     , mAudioData(Move(aData))
   {
@@ -424,6 +427,11 @@ public:
   bool IsAudible() const;
 
   const uint32_t mChannels;
+  // The AudioConfig::ChannelLayout map. Channels are ordered as per SMPTE
+  // definition. A value of UNKNOWN_MAP indicates unknown layout.
+  // ChannelMap is an unsigned bitmap compatible with Windows' WAVE and FFmpeg
+  // channel map.
+  const AudioConfig::ChannelLayout::ChannelMap mChannelMap;
   const uint32_t mRate;
   // At least one of mAudioBuffer/mAudioData must be non-null.
   // mChannels channels, each with mFrames frames

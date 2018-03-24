@@ -12,7 +12,7 @@
 
 [package]
 name = "cubeb-sys"
-version = "0.4.1"
+version = "0.5.0"
 authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
 build = "build.rs"
 links = "cubeb"

@@ -38,8 +38,6 @@ macro_rules! capi_new(
             get_max_channel_count: Some($crate::capi::capi_get_max_channel_count::<$ctx>),
             get_min_latency: Some($crate::capi::capi_get_min_latency::<$ctx>),
             get_preferred_sample_rate: Some($crate::capi::capi_get_preferred_sample_rate::<$ctx>),
-            get_preferred_channel_layout:
-                Some($crate::capi::capi_get_preferred_channel_layout::<$ctx>),
             enumerate_devices: Some($crate::capi::capi_enumerate_devices::<$ctx>),
             device_collection_destroy: Some($crate::capi::capi_device_collection_destroy::<$ctx>),
             destroy: Some($crate::capi::capi_destroy::<$ctx>),
@@ -106,16 +104,6 @@ pub unsafe extern "C" fn capi_get_preferred_sample_rate<CTX: ContextOps>(
     let ctx = &mut *(c as *mut CTX);
 
     *rate = _try!(ctx.preferred_sample_rate());
-    ffi::CUBEB_OK
-}
-
-pub unsafe extern "C" fn capi_get_preferred_channel_layout<CTX: ContextOps>(
-    c: *mut ffi::cubeb,
-    layout: *mut ffi::cubeb_channel_layout,
-) -> c_int {
-    let ctx = &mut *(c as *mut CTX);
-
-    *layout = _try!(ctx.preferred_channel_layout()) as _;
     ffi::CUBEB_OK
 }
 

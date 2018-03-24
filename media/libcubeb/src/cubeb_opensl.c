@@ -1534,7 +1534,6 @@ static struct cubeb_ops const opensl_ops = {
   .get_max_channel_count = opensl_get_max_channel_count,
   .get_min_latency = NULL,
   .get_preferred_sample_rate = NULL,
-  .get_preferred_channel_layout = NULL,
   .enumerate_devices = NULL,
   .device_collection_destroy = NULL,
   .destroy = opensl_destroy,

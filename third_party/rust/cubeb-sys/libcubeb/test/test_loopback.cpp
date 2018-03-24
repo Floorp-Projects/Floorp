@@ -294,7 +294,7 @@ void run_loopback_duplex_test(bool is_float)
     cleanup_stream_at_exit(stream, cubeb_stream_destroy);
 
   cubeb_stream_start(stream);
-  delay(150);
+  delay(300);
   cubeb_stream_stop(stream);
 
   /* access after stop should not happen, but lock just in case and to appease sanitization tools */
@@ -377,7 +377,7 @@ void run_loopback_separate_streams_test(bool is_float)
 
   cubeb_stream_start(input_stream);
   cubeb_stream_start(output_stream);
-  delay(150);
+  delay(300);
   cubeb_stream_stop(output_stream);
   cubeb_stream_stop(input_stream);
 
@@ -444,7 +444,7 @@ void run_loopback_silence_test(bool is_float)
     cleanup_input_stream_at_exit(input_stream, cubeb_stream_destroy);
 
   cubeb_stream_start(input_stream);
-  delay(50);
+  delay(300);
   cubeb_stream_stop(input_stream);
 
   /* access after stop should not happen, but lock just in case and to appease sanitization tools */
@@ -453,7 +453,7 @@ void run_loopback_silence_test(bool is_float)
 
   /* expect to have at least ~50ms of frames */
   ASSERT_GE(input_frames.size(), SAMPLE_FREQUENCY / 20);
-  double EPISILON = 0.000001;
+  double EPISILON = 0.0001;
   /* frames should be 0.0, but use epsilon to avoid possible issues with impls
   that may use ~0.0 silence values. */
   for (double frame : input_frames) {
@@ -544,7 +544,7 @@ void run_loopback_device_selection_test(bool is_float)
 
   cubeb_stream_start(input_stream);
   cubeb_stream_start(output_stream);
-  delay(150);
+  delay(300);
   cubeb_stream_stop(output_stream);
   cubeb_stream_stop(input_stream);
 
