@@ -3294,8 +3294,6 @@ class BaseCompiler final : public BaseCompilerInterface
         if (!generateOutOfLineCode())
             return false;
 
-        masm.wasmEmitOldTrapOutOfLineCode();
-
         offsets_.end = masm.currentOffset();
 
         if (!fr.checkStackHeight())
@@ -4170,8 +4168,10 @@ class BaseCompiler final : public BaseCompilerInterface
         if (access->offset() >= OffsetGuardLimit ||
             (access->isAtomic() && !check->omitAlignmentCheck && !check->onlyPointerAlignment))
         {
-            masm.branchAdd32(Assembler::CarrySet, Imm32(access->offset()), ptr,
-                             oldTrap(Trap::OutOfBounds));
+            Label ok;
+            masm.branchAdd32(Assembler::CarryClear, Imm32(access->offset()), ptr, &ok);
+            masm.wasmTrap(Trap::OutOfBounds, bytecodeOffset());
+            masm.bind(&ok);
             access->clearOffset();
             check->onlyPointerAlignment = true;
         }
@@ -4181,8 +4181,10 @@ class BaseCompiler final : public BaseCompilerInterface
         if (access->isAtomic() && !check->omitAlignmentCheck) {
             MOZ_ASSERT(check->onlyPointerAlignment);
             // We only care about the low pointer bits here.
-            masm.branchTest32(Assembler::NonZero, ptr, Imm32(access->byteSize() - 1),
-                              oldTrap(Trap::UnalignedAccess));
+            Label ok;
+            masm.branchTest32(Assembler::Zero, ptr, Imm32(access->byteSize() - 1), &ok);
+            masm.wasmTrap(Trap::UnalignedAccess, bytecodeOffset());
+            masm.bind(&ok);
         }
 
         // Ensure no tls if we don't need it.
@@ -4201,9 +4203,12 @@ class BaseCompiler final : public BaseCompilerInterface
 
 #ifndef WASM_HUGE_MEMORY
         if (!check->omitBoundsCheck) {
-            masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr,
+            Label ok;
+            masm.wasmBoundsCheck(Assembler::Below, ptr,
                                  Address(tls, offsetof(TlsData, boundsCheckLimit)),
-                                 oldTrap(Trap::OutOfBounds));
+                                 &ok);
+            masm.wasmTrap(Trap::OutOfBounds, bytecodeOffset());
+            masm.bind(&ok);
         }
 #endif
     }
@@ -5341,13 +5346,6 @@ class BaseCompiler final : public BaseCompilerInterface
 
     void trap(Trap t) const {
         masm.wasmTrap(t, bytecodeOffset());
-    }
-
-    OldTrapDesc oldTrap(Trap t) const {
-        // Use masm.framePushed() because the value needed by the trap machinery
-        // is the size of the frame overall, not the height of the stack area of
-        // the frame.
-        return OldTrapDesc(bytecodeOffset(), t, masm.framePushed());
     }
 
     ////////////////////////////////////////////////////////////
@@ -8268,7 +8266,7 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
     if (deadCode_)
         return true;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(bytecodeOffset()));
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
     return loadCommon(&access, type);
 }
 
@@ -8343,7 +8341,7 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
     if (deadCode_)
         return true;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(bytecodeOffset()));
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
     return storeCommon(&access, resultType);
 }
 
@@ -8602,7 +8600,7 @@ BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType)
     if (deadCode_)
         return true;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(bytecodeOffset()),
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
                             /*numSimdExprs=*/ 0, Synchronization::Full());
 
     if (Scalar::byteSize(viewType) <= 4) {
@@ -8658,7 +8656,7 @@ BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType)
     if (deadCode_)
         return true;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(bytecodeOffset()),
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
                             /*numSimdElems=*/ 0, Synchronization::Load());
 
     if (Scalar::byteSize(viewType) <= sizeof(void*))
@@ -8702,7 +8700,7 @@ BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType, AtomicOp op)
     if (deadCode_)
         return true;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(bytecodeOffset()),
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
                             /*numSimdElems=*/ 0, Synchronization::Full());
 
     if (Scalar::byteSize(viewType) <= 4) {
@@ -8765,7 +8763,7 @@ BaseCompiler::emitAtomicStore(ValType type, Scalar::Type viewType)
     if (deadCode_)
         return true;
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(bytecodeOffset()),
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
                             /*numSimdElems=*/ 0, Synchronization::Store());
 
     if (Scalar::byteSize(viewType) <= sizeof(void*))
@@ -8793,7 +8791,7 @@ BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType)
         return true;
 
     AccessCheck check;
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(bytecodeOffset()),
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
                             /*numSimdElems=*/ 0, Synchronization::Full());
 
     if (Scalar::byteSize(viewType) <= 4) {

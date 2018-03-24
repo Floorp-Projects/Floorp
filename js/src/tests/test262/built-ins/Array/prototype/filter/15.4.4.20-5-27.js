@@ -9,7 +9,7 @@ description: >
     is the returned array
 ---*/
 
-        var newArr = [11].filter(function () { });
+var newArr = [11].filter(function() {});
 
 assert(Array.isArray(newArr), 'Array.isArray(newArr) !== true');
 

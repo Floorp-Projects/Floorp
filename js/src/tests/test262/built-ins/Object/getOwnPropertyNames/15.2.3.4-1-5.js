@@ -8,6 +8,6 @@ description: >
     string
 ---*/
 
-    Object.getOwnPropertyNames("abc");
+Object.getOwnPropertyNames("abc");
 
 reportCompare(0, 0);

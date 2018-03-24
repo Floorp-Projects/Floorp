@@ -265,15 +265,16 @@ Simulator::handle_wasm_seg_fault(uintptr_t addr, unsigned numBytes)
     if (!instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes))
         return false;
 
-    const js::wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc);
-    if (!memoryAccess) {
+    js::wasm::Trap trap;
+    js::wasm::BytecodeOffset bytecode;
+    if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode)) {
         act->startWasmTrap(js::wasm::Trap::OutOfBounds, 0, registerState());
         set_pc((Instruction*)moduleSegment->outOfBoundsCode());
         return true;
     }
 
-    MOZ_ASSERT(memoryAccess->hasTrapOutOfLineCode());
-    set_pc((Instruction*)memoryAccess->trapOutOfLineCode(moduleSegment->base()));
+    act->startWasmTrap(js::wasm::Trap::OutOfBounds, bytecode.offset(), registerState());
+    set_pc((Instruction*)moduleSegment->trapCode());
     return true;
 }
 
@@ -438,7 +439,7 @@ Simulator::handle_wasm_ill_fault()
     if (!moduleSegment->code().lookupTrap(pc, &trap, &bytecode))
         return false;
 
-    act->startWasmTrap(trap, bytecode.offset, registerState());
+    act->startWasmTrap(trap, bytecode.offset(), registerState());
     set_pc((Instruction*)moduleSegment->trapCode());
     return true;
 }

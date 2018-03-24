@@ -2388,7 +2388,10 @@ CodeGenerator::visitWasmAddOffset(LWasmAddOffset* lir)
     Register base = ToRegister(lir->base());
     Register out = ToRegister(lir->output());
 
-    masm.ma_addTestCarry(out, base, Imm32(mir->offset()), oldTrap(mir, wasm::Trap::OutOfBounds));
+    Label ok;
+    masm.ma_addTestCarryClear(out, base, Imm32(mir->offset()), &ok);
+    masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
+    masm.bind(&ok);
 }
 
 

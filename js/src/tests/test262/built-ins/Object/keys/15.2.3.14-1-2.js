@@ -8,6 +8,6 @@ description: >
     Object (boolean)
 ---*/
 
-    Object.keys(true);
+Object.keys(true);
 
 reportCompare(0, 0);

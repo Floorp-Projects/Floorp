@@ -7,7 +7,7 @@ description: Object.defineProperties throws TypeError if 'O' is a string
 ---*/
 
 assert.throws(TypeError, function() {
-            Object.defineProperties("abc", {});
+  Object.defineProperties("abc", {});
 });
 
 reportCompare(0, 0);

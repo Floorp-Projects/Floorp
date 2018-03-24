@@ -12,29 +12,30 @@ includes: [propertyHelper.js]
 
 var obj = {};
 
-var proto = { value: 120 };
+var proto = {
+  value: 120
+};
 
 Object.defineProperty(proto, "writable", {
-    get: function () {
-        return true;
-    }
+  get: function() {
+    return true;
+  }
 });
 
-var Con = function () { };
+var Con = function() {};
 Con.prototype = proto;
 
 var descObj = new Con();
 
 Object.defineProperty(descObj, "writable", {
-    value: false
+  value: false
 });
 
 Object.defineProperties(obj, {
-    property: descObj
+  property: descObj
 });
 
 assert(obj.hasOwnProperty("property"));
 verifyNotWritable(obj, "property");
-
 
 reportCompare(0, 0);

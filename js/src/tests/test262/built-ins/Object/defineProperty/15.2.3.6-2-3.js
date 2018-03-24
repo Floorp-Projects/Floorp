@@ -8,8 +8,8 @@ description: >
     false
 ---*/
 
-        var obj = {};
-        Object.defineProperty(obj, false, {});
+var obj = {};
+Object.defineProperty(obj, false, {});
 
 assert(obj.hasOwnProperty("false"), 'obj.hasOwnProperty("false") !== true');
 

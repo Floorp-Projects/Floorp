@@ -195,6 +195,12 @@ var testData = [
     initialVal: "2016-01-01",
     expectedVal: "2016-01-01"
   },
+  {
+    // Incomplete value maps to empty .value.
+    keys: ["1111"],
+    initialVal: "",
+    expectedVal: ""
+  },
 ];
 
 function sendKeys(aKeys) {
@@ -215,10 +221,10 @@ function test() {
     elem.focus();
     elem.value = initialVal;
     sendKeys(keys);
-    elem.blur();
     is(elem.value, expectedVal,
        "Test with " + keys + ", result should be " + expectedVal);
     elem.value = "";
+    elem.blur();
   }
 }
 

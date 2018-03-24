@@ -11,7 +11,7 @@ description: Compare Boolean.prototype.constructor with Boolean
 ---*/
 
 //CHECK#1
-if(Boolean.prototype.constructor !== Boolean){
+if (Boolean.prototype.constructor !== Boolean) {
   $ERROR('#1: Boolean.prototype.constructor === Boolean');
 }
 

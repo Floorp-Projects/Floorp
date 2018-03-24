@@ -8,7 +8,7 @@ description: Object.create throws TypeError if 'O' is a boolean primitive
 
 
 assert.throws(TypeError, function() {
-            Object.create(true);
+  Object.create(true);
 });
 
 reportCompare(0, 0);

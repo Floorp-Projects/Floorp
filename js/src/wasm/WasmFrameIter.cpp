@@ -764,7 +764,6 @@ ProfilingFrameIterator::initFromExitFP(const Frame* fp)
       case CodeRange::ImportInterpExit:
       case CodeRange::BuiltinThunk:
       case CodeRange::TrapExit:
-      case CodeRange::OldTrapExit:
       case CodeRange::DebugTrap:
       case CodeRange::OutOfBoundsExit:
       case CodeRange::UnalignedExit:
@@ -842,7 +841,6 @@ js::wasm::StartUnwinding(const RegisterState& registers, UnwindState* unwindStat
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
       case CodeRange::BuiltinThunk:
-      case CodeRange::OldTrapExit:
       case CodeRange::DebugTrap:
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         if (offsetFromEntry < PushedFP || codeRange->isThunk()) {
@@ -1100,7 +1098,6 @@ ProfilingFrameIterator::operator++()
       case CodeRange::ImportInterpExit:
       case CodeRange::BuiltinThunk:
       case CodeRange::TrapExit:
-      case CodeRange::OldTrapExit:
       case CodeRange::DebugTrap:
       case CodeRange::OutOfBoundsExit:
       case CodeRange::UnalignedExit:
@@ -1129,7 +1126,6 @@ ThunkedNativeToDescription(SymbolicAddress func)
       case SymbolicAddress::HandleDebugTrap:
       case SymbolicAddress::HandleThrow:
       case SymbolicAddress::HandleTrap:
-      case SymbolicAddress::OldReportTrap:
       case SymbolicAddress::ReportOutOfBounds:
       case SymbolicAddress::ReportUnalignedAccess:
       case SymbolicAddress::CallImport_Void:
@@ -1276,7 +1272,6 @@ ProfilingFrameIterator::label() const
       case CodeRange::BuiltinThunk:      return builtinNativeDescription;
       case CodeRange::ImportInterpExit:  return importInterpDescription;
       case CodeRange::TrapExit:          return trapDescription;
-      case CodeRange::OldTrapExit:       return trapDescription;
       case CodeRange::DebugTrap:         return debugTrapDescription;
       case CodeRange::OutOfBoundsExit:   return "out-of-bounds stub (in wasm)";
       case CodeRange::UnalignedExit:     return "unaligned trap stub (in wasm)";

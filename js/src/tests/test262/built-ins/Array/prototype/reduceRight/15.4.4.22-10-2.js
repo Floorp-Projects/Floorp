@@ -9,11 +9,11 @@ description: >
     indices
 ---*/
 
-  function callbackfn(prevVal, curVal,  idx, obj)
-  {
-    return prevVal + curVal;
-  }
-  var srcArr = ['1','2','3','4','5'];
+function callbackfn(prevVal, curVal, idx, obj)
+{
+  return prevVal + curVal;
+}
+var srcArr = ['1', '2', '3', '4', '5'];
 
 assert.sameValue(srcArr.reduceRight(callbackfn), '54321', 'srcArr.reduceRight(callbackfn)');
 

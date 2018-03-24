@@ -8,7 +8,7 @@ description: Object.create throws TypeError if 'O' is a number primitive
 
 
 assert.throws(TypeError, function() {
-            Object.create(2);
+  Object.create(2);
 });
 
 reportCompare(0, 0);

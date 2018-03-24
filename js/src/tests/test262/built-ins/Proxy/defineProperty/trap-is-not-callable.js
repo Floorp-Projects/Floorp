@@ -19,13 +19,13 @@ info: |
 
 var target = {};
 var p = new Proxy(target, {
-    defineProperty: {}
+  defineProperty: {}
 });
 
 assert.throws(TypeError, function() {
-    Object.defineProperty(p, "foo", {
-        value: 1
-    });
+  Object.defineProperty(p, "foo", {
+    value: 1
+  });
 });
 
 reportCompare(0, 0);

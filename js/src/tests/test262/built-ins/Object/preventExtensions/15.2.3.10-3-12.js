@@ -19,5 +19,4 @@ verifyNotWritable(obj, "exName", "nocheck");
 
 assert(!obj.hasOwnProperty("exName"));
 
-
 reportCompare(0, 0);

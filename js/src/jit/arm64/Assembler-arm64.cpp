@@ -315,19 +315,6 @@ Assembler::bind(RepatchLabel* label)
 }
 
 void
-Assembler::bindLater(Label* label, wasm::OldTrapDesc target)
-{
-    if (label->used()) {
-        BufferOffset b(label);
-        do {
-            append(wasm::OldTrapSite(target, b.getOffset()));
-            b = NextLink(b);
-        } while (b.assigned());
-    }
-    label->reset();
-}
-
-void
 Assembler::addJumpRelocation(BufferOffset src, Relocation::Kind reloc)
 {
     // Only JITCODE relocations are patchable at runtime.

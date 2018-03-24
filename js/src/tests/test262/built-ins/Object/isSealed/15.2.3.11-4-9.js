@@ -8,7 +8,7 @@ description: >
     (String.prototype)
 ---*/
 
-  var b = Object.isSealed(String.prototype);
+var b = Object.isSealed(String.prototype);
 
 assert.sameValue(b, false, 'b');
 

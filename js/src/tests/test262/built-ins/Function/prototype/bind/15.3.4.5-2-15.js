@@ -10,7 +10,7 @@ description: >
 
 
 assert.throws(TypeError, function() {
-            Function.prototype.bind.call({});
+  Function.prototype.bind.call({});
 });
 
 reportCompare(0, 0);

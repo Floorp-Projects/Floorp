@@ -8,6 +8,6 @@ description: >
     boolean primitive value
 ---*/
 
-    Object.preventExtensions(true);
+Object.preventExtensions(true);
 
 reportCompare(0, 0);

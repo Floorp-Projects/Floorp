@@ -13,11 +13,11 @@ info: |
 ---*/
 
 assert.throws(TypeError, function() {
-    WeakSet();
+  WeakSet();
 });
 
 assert.throws(TypeError, function() {
-    WeakSet([]);
+  WeakSet([]);
 });
 
 reportCompare(0, 0);

@@ -13,11 +13,11 @@ flags: [noStrict]
 var f = Function("\"use strict\";\ngNonStrict();");
 
 assert.throws(TypeError, function() {
-    f();
+  f();
 });
 
 function gNonStrict() {
-    return gNonStrict.caller || gNonStrict.caller.throwTypeError;
+  return gNonStrict.caller || gNonStrict.caller.throwTypeError;
 }
 
 reportCompare(0, 0);

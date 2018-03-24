@@ -594,7 +594,7 @@ MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr, 
 {
     memoryBarrierBefore(access.sync());
 
-    size_t loadOffset = size();
+    append(access, size());
     switch (access.type()) {
       case Scalar::Int8:
         movsbl(srcAddr, out.gpr());
@@ -652,7 +652,6 @@ MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr, 
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");
     }
-    append(access, loadOffset, framePushed());
 
     memoryBarrierAfter(access.sync());
 }
@@ -664,7 +663,7 @@ MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAdd
 
     MOZ_ASSERT(!access.isSimd());
 
-    size_t loadOffset = size();
+    append(access, size());
     switch (access.type()) {
       case Scalar::Int8:
         movsbq(srcAddr, out.reg);
@@ -699,7 +698,6 @@ MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAdd
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");
     }
-    append(access, loadOffset, framePushed());
 
     memoryBarrierAfter(access.sync());
 }
@@ -709,7 +707,7 @@ MacroAssembler::wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister valu
 {
     memoryBarrierBefore(access.sync());
 
-    size_t storeOffset = size();
+    append(access, masm.size());
     switch (access.type()) {
       case Scalar::Int8:
       case Scalar::Uint8:
@@ -764,7 +762,6 @@ MacroAssembler::wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister valu
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");
     }
-    append(access, storeOffset, framePushed());
 
     memoryBarrierAfter(access.sync());
 }

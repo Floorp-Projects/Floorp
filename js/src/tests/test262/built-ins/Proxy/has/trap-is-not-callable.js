@@ -19,11 +19,11 @@ info: |
 
 var target = {};
 var p = new Proxy(target, {
-    has: {}
+  has: {}
 });
 
 assert.throws(TypeError, function() {
-    "attr" in p;
+  "attr" in p;
 });
 
 reportCompare(0, 0);

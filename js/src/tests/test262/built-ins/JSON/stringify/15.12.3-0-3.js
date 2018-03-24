@@ -10,8 +10,8 @@ es5id: 15.12.3-0-3
 description: JSON.stringify must be deletable (configurable)
 ---*/
 
-  var o = JSON;
-  var desc = Object.getOwnPropertyDescriptor(o, "stringify");
+var o = JSON;
+var desc = Object.getOwnPropertyDescriptor(o, "stringify");
 
 assert.sameValue(desc.configurable, true, 'desc.configurable');
 

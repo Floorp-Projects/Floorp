@@ -12,15 +12,15 @@ includes: [propertyHelper.js]
 
 var obj = {};
 try {
-    Date.prototype.writable = true;
+  Date.prototype.writable = true;
 
-    var dateObj = new Date();
+  var dateObj = new Date();
 
-    Object.defineProperty(obj, "property", dateObj);
-    verifyWritable(obj, "property");
+  Object.defineProperty(obj, "property", dateObj);
+  verifyWritable(obj, "property");
 
 } finally {
-    delete Date.prototype.writable;
+  delete Date.prototype.writable;
 }
 
 reportCompare(0, 0);

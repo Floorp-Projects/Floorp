@@ -10,11 +10,11 @@ description: >
 
 
 assert.throws(TypeError, function() {
-            Object.create({}, {
-                prop: {
-                    set: "abc"
-                }
-            });
+  Object.create({}, {
+    prop: {
+      set: "abc"
+    }
+  });
 });
 
 reportCompare(0, 0);

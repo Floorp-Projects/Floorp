@@ -8,10 +8,10 @@ description: >
     expected args (target provided extra args)
 ---*/
 
-  function foo() { }
-  var o = {};
-  
-  var bf = foo.bind(o, 42);
+function foo() {}
+var o = {};
+
+var bf = foo.bind(o, 42);
 
 assert.sameValue(bf.length, 0, 'bf.length');
 

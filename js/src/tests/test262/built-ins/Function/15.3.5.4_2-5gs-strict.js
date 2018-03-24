@@ -12,13 +12,13 @@ flags: [onlyStrict]
 ---*/
 
 assert.throws(TypeError, function() {
-    (function () {
-        gNonStrict();
-    })();
+  (function() {
+    gNonStrict();
+  })();
 });
 
 function gNonStrict() {
-    return gNonStrict.caller;
+  return gNonStrict.caller;
 }
 
 reportCompare(0, 0);

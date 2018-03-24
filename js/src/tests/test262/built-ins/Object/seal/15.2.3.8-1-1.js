@@ -8,6 +8,6 @@ description: >
     undefined
 ---*/
 
-    Object.seal(undefined);
+Object.seal(undefined);
 
 reportCompare(0, 0);

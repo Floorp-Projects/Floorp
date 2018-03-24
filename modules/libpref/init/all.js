@@ -1386,6 +1386,13 @@ pref("dom.input.skip_cursor_move_for_same_value_set", true);
 
 pref("dom.cycle_collector.incremental", true);
 
+// Whether to shim a Components object on untrusted windows.
+#ifdef NIGHTLY_BUILD
+pref("dom.use_components_shim", false);
+#else // NIGHTLY_BUILD
+pref("dom.use_components_shim", true);
+#endif // NIGHTLY_BUILD
+
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
 pref("content.sink.pending_event_mode", 0);
@@ -2976,6 +2983,12 @@ pref("layout.css.moz-document.content.enabled",  false);
 pref("layout.css.moz-document.url-prefix-hack.enabled", false);
 #else
 pref("layout.css.moz-document.url-prefix-hack.enabled", true);
+#endif
+
+#ifdef NIGHTLY_BUILD
+pref("layout.css.getPropertyCSSValue.enabled", false);
+#else
+pref("layout.css.getPropertyCSSValue.enabled", true);
 #endif
 
 // Override DPI. A value of -1 means use the maximum of 96 and the system DPI.
@@ -5220,7 +5233,7 @@ pref("dom.streams.enabled", false);
 pref("dom.push.enabled", false);
 pref("dom.push.alwaysConnect", false);
 
-pref("dom.push.loglevel", "error");
+pref("dom.push.loglevel", "Error");
 
 pref("dom.push.serverURL", "wss://push.services.mozilla.com/");
 pref("dom.push.userAgentID", "");

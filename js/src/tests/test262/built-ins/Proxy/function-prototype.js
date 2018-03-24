@@ -8,9 +8,9 @@ description: >
 ---*/
 
 assert.sameValue(
-    Object.getPrototypeOf(Proxy),
-    Function.prototype,
-    "`Object.getPrototypeOf(Proxy)` returns `Function.prototype`"
+  Object.getPrototypeOf(Proxy),
+  Function.prototype,
+  "`Object.getPrototypeOf(Proxy)` returns `Function.prototype`"
 );
 
 reportCompare(0, 0);

@@ -21,12 +21,12 @@ info: |
 features: [generators]
 ---*/
 
-var GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor;
+var GeneratorFunction = Object.getPrototypeOf(function*() {}).constructor;
 
 var instance = GeneratorFunction();
 
 assert.throws(TypeError, function() {
-    new instance();
+  new instance();
 })
 
 reportCompare(0, 0);

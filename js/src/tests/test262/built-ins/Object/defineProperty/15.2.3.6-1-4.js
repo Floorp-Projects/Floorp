@@ -9,7 +9,7 @@ description: >
 ---*/
 
 assert.throws(TypeError, function() {
-            Object.defineProperty("hello\nworld\\!", "foo", {});
+  Object.defineProperty("hello\nworld\\!", "foo", {});
 });
 
 reportCompare(0, 0);

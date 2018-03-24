@@ -9,15 +9,15 @@ description: >
     step 7.a)
 ---*/
 
-        var dateObj = new Date();
+var dateObj = new Date();
 
-        dateObj.get = function () {
-            return "VerifyDateObject";
-        };
+dateObj.get = function() {
+  return "VerifyDateObject";
+};
 
-        var newObj = Object.create({}, {
-            prop: dateObj 
-        });
+var newObj = Object.create({}, {
+  prop: dateObj
+});
 
 assert.sameValue(newObj.prop, "VerifyDateObject", 'newObj.prop');
 

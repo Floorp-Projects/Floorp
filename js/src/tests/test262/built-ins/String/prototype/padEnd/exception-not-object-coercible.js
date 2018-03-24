@@ -9,22 +9,22 @@ description: >
 author: Jordan Harband
 ---*/
 
-assert.throws(TypeError, function () {
-    String.prototype.padEnd.call(null);
+assert.throws(TypeError, function() {
+  String.prototype.padEnd.call(null);
 });
 
-assert.throws(TypeError, function () {
-    String.prototype.padEnd.call(undefined);
+assert.throws(TypeError, function() {
+  String.prototype.padEnd.call(undefined);
 });
 
 var notCoercible = {
-    toString: function () {
-        throw new Test262Error('attempted toString');
-    }
+  toString: function() {
+    throw new Test262Error('attempted toString');
+  }
 };
 
-assert.throws(Test262Error, function () {
-    String.prototype.padEnd.call(notCoercible);
+assert.throws(Test262Error, function() {
+  String.prototype.padEnd.call(notCoercible);
 });
 
 reportCompare(0, 0);

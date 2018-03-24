@@ -7,6 +7,6 @@ author: Ryan Lewis
 description: Math.hypot should return 5 if called with 3 and 4.
 ---*/
 
-assert.sameValue(Math.hypot(3,4), 5, 'Math.hypot(3,4)');
+assert.sameValue(Math.hypot(3, 4), 5, 'Math.hypot(3,4)');
 
 reportCompare(0, 0);

@@ -42,7 +42,7 @@ class Outer {
     return class extends Outer {
       #x = 'not42';
       f() {
-	self.#x = 1;
+        self.#x = 1;
       }
     }
   }

@@ -8,11 +8,11 @@ description: >
     toString method
 ---*/
 
-        var obj = {
-            toString: function () {
-                return "abc";
-            }
-        };
+var obj = {
+  toString: function() {
+    return "abc";
+  }
+};
 
 assert.sameValue(String.prototype.trim.call(obj), "abc", 'String.prototype.trim.call(obj)');
 

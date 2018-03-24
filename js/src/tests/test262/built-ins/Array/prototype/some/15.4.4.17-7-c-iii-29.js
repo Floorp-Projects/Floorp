@@ -9,9 +9,9 @@ description: >
     callbackfn is treated as true value
 ---*/
 
-        function callbackfn() {
-            return new Boolean(false);
-        }
+function callbackfn() {
+  return new Boolean(false);
+}
 
 assert([11].some(callbackfn), '[11].some(callbackfn) !== true');
 

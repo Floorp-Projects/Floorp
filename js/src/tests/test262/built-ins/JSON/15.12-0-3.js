@@ -10,9 +10,9 @@ es5id: 15.12-0-3
 description: JSON must not support the [[Call]] method
 ---*/
 
-  var o = JSON;
+var o = JSON;
 assert.throws(TypeError, function() {
-    var j = JSON();
+  var j = JSON();
 });
 
 reportCompare(0, 0);

@@ -9,18 +9,18 @@ description: >
     property (8.10.5 step 3.a)
 ---*/
 
-        var accessed = false;
+var accessed = false;
 
-            JSON.enumerable = true;
+JSON.enumerable = true;
 
-            var newObj = Object.create({}, {
-                prop: JSON
-            });
-            for (var property in newObj) {
-                if (property === "prop") {
-                    accessed = true;
-                }
-            }
+var newObj = Object.create({}, {
+  prop: JSON
+});
+for (var property in newObj) {
+  if (property === "prop") {
+    accessed = true;
+  }
+}
 
 assert(accessed, 'accessed !== true');
 

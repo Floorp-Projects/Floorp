@@ -8,7 +8,7 @@ description: >
     a string
 ---*/
 
-        var regObj = new RegExp(/test/);
+var regObj = new RegExp(/test/);
 
 assert.sameValue(String.prototype.trim.call(regObj), "/test/", 'String.prototype.trim.call(regObj)');
 

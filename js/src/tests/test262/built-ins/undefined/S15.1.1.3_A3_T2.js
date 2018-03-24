@@ -12,7 +12,7 @@ flags: [noStrict]
 
 // CHECK#1
 if (delete undefined !== false) {
-	$ERROR('#1: delete undefined === false. Actual: ' + (delete undefined));
+  $ERROR('#1: delete undefined === false. Actual: ' + (delete undefined));
 }
 
 reportCompare(0, 0);

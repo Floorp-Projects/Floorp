@@ -50,10 +50,7 @@ CompiledCode::swap(MacroAssembler& masm)
     callSites.swap(masm.callSites());
     callSiteTargets.swap(masm.callSiteTargets());
     trapSites.swap(masm.trapSites());
-    oldTrapSites.swap(masm.oldTrapSites());
     callFarJumps.swap(masm.callFarJumps());
-    oldTrapFarJumps.swap(masm.oldTrapFarJumps());
-    memoryAccesses.swap(masm.memoryAccesses());
     symbolicAccesses.swap(masm.symbolicAccesses());
     codeLabels.swap(masm.codeLabels());
     return true;
@@ -78,7 +75,6 @@ ModuleGenerator::ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
     masmAlloc_(&lifo_),
     masm_(masmAlloc_),
-    oldTrapCodeOffsets_(),
     debugTrapCodeOffset_(),
     lastPatchedCallSite_(0),
     startOfUnpatchedCallsites_(0),
@@ -89,7 +85,6 @@ ModuleGenerator::ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env
     finishedFuncDefs_(false)
 {
     MOZ_ASSERT(IsCompilingWasm());
-    std::fill(oldTrapCodeOffsets_.begin(), oldTrapCodeOffsets_.end(), 0);
 }
 
 ModuleGenerator::~ModuleGenerator()
@@ -218,12 +213,12 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
     if (!metadataTier_->codeRanges.reserve(2 * env_->numFuncDefs()))
         return false;
 
-    const size_t ByteCodesPerCallSite = 10;
+    const size_t ByteCodesPerCallSite = 50;
     if (!metadataTier_->callSites.reserve(codeSectionSize / ByteCodesPerCallSite))
         return false;
 
-    const size_t MemoryAccessesPerByteCode = 10;
-    if (!metadataTier_->memoryAccesses.reserve(codeSectionSize / MemoryAccessesPerByteCode))
+    const size_t ByteCodesPerOOBTrap = 10;
+    if (!metadataTier_->trapSites[Trap::OutOfBounds].reserve(codeSectionSize / ByteCodesPerOOBTrap))
         return false;
 
     // Allocate space in TlsData for declarations that need it.
@@ -463,26 +458,6 @@ ModuleGenerator::linkCallSites()
             masm_.patchCall(callerOffset, p->value());
             break;
           }
-          case CallSiteDesc::OldTrapExit: {
-            if (!existingTrapFarJumps[target.trap()]) {
-                // See MacroAssembler::wasmEmitOldTrapOutOfLineCode for why we must
-                // reload the TLS register on this path.
-                Offsets offsets;
-                offsets.begin = masm_.currentOffset();
-                masm_.loadPtr(Address(FramePointer, offsetof(Frame, tls)), WasmTlsReg);
-                if (!oldTrapFarJumps_.emplaceBack(target.trap(), masm_.farJumpWithPatch()))
-                    return false;
-                offsets.end = masm_.currentOffset();
-                if (masm_.oom())
-                    return false;
-                if (!metadataTier_->codeRanges.emplaceBack(CodeRange::FarJumpIsland, offsets))
-                    return false;
-                existingTrapFarJumps[target.trap()] = Some(offsets.begin);
-            }
-
-            masm_.patchCall(callerOffset, *existingTrapFarJumps[target.trap()]);
-            break;
-          }
           case CallSiteDesc::Breakpoint:
           case CallSiteDesc::EnterFrame:
           case CallSiteDesc::LeaveFrame: {
@@ -533,10 +508,6 @@ ModuleGenerator::noteCodeRange(uint32_t codeRangeIndex, const CodeRange& codeRan
         break;
       case CodeRange::ImportInterpExit:
         metadataTier_->funcImports[codeRange.funcIndex()].initInterpExitOffset(codeRange.begin());
-        break;
-      case CodeRange::OldTrapExit:
-        MOZ_ASSERT(!oldTrapCodeOffsets_[codeRange.trap()]);
-        oldTrapCodeOffsets_[codeRange.trap()] = codeRange.begin();
         break;
       case CodeRange::DebugTrap:
         MOZ_ASSERT(!debugTrapCodeOffset_);
@@ -617,18 +588,8 @@ ModuleGenerator::linkCompiledCode(const CompiledCode& code)
             return false;
     }
 
-    MOZ_ASSERT(code.oldTrapSites.empty());
-
-    auto trapFarJumpOp = [=](uint32_t, OldTrapFarJump* tfj) { tfj->offsetBy(offsetInModule); };
-    if (!AppendForEach(&oldTrapFarJumps_, code.oldTrapFarJumps, trapFarJumpOp))
-        return false;
-
     auto callFarJumpOp = [=](uint32_t, CallFarJump* cfj) { cfj->offsetBy(offsetInModule); };
     if (!AppendForEach(&callFarJumps_, code.callFarJumps, callFarJumpOp))
-        return false;
-
-    auto memoryOp = [=](uint32_t, MemoryAccess* ma) { ma->offsetBy(offsetInModule); };
-    if (!AppendForEach(&metadataTier_->memoryAccesses, code.memoryAccesses, memoryOp))
         return false;
 
     for (const SymbolicAccess& access : code.symbolicAccesses) {
@@ -828,9 +789,6 @@ ModuleGenerator::finishCode()
     for (CallFarJump far : callFarJumps_)
         masm_.patchFarJump(far.jump, funcCodeRange(far.funcIndex).funcNormalEntry());
 
-    for (OldTrapFarJump far : oldTrapFarJumps_)
-        masm_.patchFarJump(far.jump, oldTrapCodeOffsets_[far.trap]);
-
     for (CodeOffset farJump : debugTrapFarJumps_)
         masm_.patchFarJump(farJump, debugTrapCodeOffset_);
 
@@ -839,10 +797,7 @@ ModuleGenerator::finishCode()
     MOZ_ASSERT(masm_.callSites().empty());
     MOZ_ASSERT(masm_.callSiteTargets().empty());
     MOZ_ASSERT(masm_.trapSites().empty());
-    MOZ_ASSERT(masm_.oldTrapSites().empty());
-    MOZ_ASSERT(masm_.oldTrapFarJumps().empty());
     MOZ_ASSERT(masm_.callFarJumps().empty());
-    MOZ_ASSERT(masm_.memoryAccesses().empty());
     MOZ_ASSERT(masm_.symbolicAccesses().empty());
     MOZ_ASSERT(masm_.codeLabels().empty());
 
@@ -901,11 +856,13 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
     // These Vectors can get large and the excess capacity can be significant,
     // so realloc them down to size.
 
-    metadataTier_->memoryAccesses.podResizeToFit();
     metadataTier_->codeRanges.podResizeToFit();
+    metadataTier_->callSites.podResizeToFit();
     metadataTier_->trapSites.podResizeToFit();
     metadataTier_->debugTrapFarJumpOffsets.podResizeToFit();
     metadataTier_->debugFuncToCodeRange.podResizeToFit();
+    for (Trap trap : MakeEnumeratedRange(Trap::Limit))
+        metadataTier_->trapSites[trap].podResizeToFit();
 
     // Complete function exports and element segments with code range indices,
     // now that every function has a code range.

@@ -9,7 +9,7 @@ description: >
     property that overrides an inherited data property on an Array
 ---*/
 
-            Array.prototype[0] = Object;
+Array.prototype[0] = Object;
 
 assert.sameValue([Object.prototype].lastIndexOf(Object.prototype), 0, '[Object.prototype].lastIndexOf(Object.prototype)');
 
