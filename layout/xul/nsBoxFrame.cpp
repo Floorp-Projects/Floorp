@@ -770,7 +770,8 @@ nsBoxFrame::GetXULPrefSize(nsBoxLayoutState& aBoxLayoutState)
   nsSize size(0,0);
   DISPLAY_PREF_SIZE(this, size);
   if (!DoesNeedRecalc(mPrefSize)) {
-     return mPrefSize;
+    size = mPrefSize;
+    return size;
   }
 
 #ifdef DEBUG_LAYOUT
@@ -833,7 +834,8 @@ nsBoxFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState)
   nsSize size(0,0);
   DISPLAY_MIN_SIZE(this, size);
   if (!DoesNeedRecalc(mMinSize)) {
-    return mMinSize;
+    size = mMinSize;
+    return size;
   }
 
 #ifdef DEBUG_LAYOUT
@@ -873,7 +875,8 @@ nsBoxFrame::GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState)
   nsSize size(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
   DISPLAY_MAX_SIZE(this, size);
   if (!DoesNeedRecalc(mMaxSize)) {
-    return mMaxSize;
+    size = mMaxSize;
+    return size;
   }
 
 #ifdef DEBUG_LAYOUT
