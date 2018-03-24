@@ -348,7 +348,7 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
 }
 
 #ifdef DEBUG
-void ComputedStyle::List(FILE* out, int32_t aIndent, bool)
+void ComputedStyle::List(FILE* out, int32_t aIndent)
 {
   nsAutoCString str;
   // Indent
