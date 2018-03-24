@@ -25,10 +25,6 @@ pub struct Ops {
     >,
     pub get_preferred_sample_rate:
         Option<unsafe extern "C" fn(context: *mut ffi::cubeb, rate: *mut u32) -> c_int>,
-    pub get_preferred_channel_layout: Option<
-        unsafe extern "C" fn(context: *mut ffi::cubeb, layout: *mut ffi::cubeb_channel_layout)
-            -> c_int,
-    >,
     pub enumerate_devices: Option<
         unsafe extern "C" fn(
             context: *mut ffi::cubeb,

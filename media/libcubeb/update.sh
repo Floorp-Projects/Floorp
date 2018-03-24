@@ -37,6 +37,7 @@ cp $1/src/cubeb_sndio.c src
 cp $1/src/cubeb_strings.c src
 cp $1/src/cubeb_strings.h src
 cp $1/src/cubeb_utils.h src
+cp $1/src/cubeb_utils.cpp src
 cp $1/src/cubeb_utils_unix.h src
 cp $1/src/cubeb_utils_win.h src
 cp $1/src/cubeb_wasapi.cpp src
@@ -47,7 +48,6 @@ cp $1/test/test_devices.cpp gtest
 cp $1/test/test_duplex.cpp gtest
 cp $1/test/test_latency.cpp gtest
 cp $1/test/test_loopback.cpp gtest
-cp $1/test/test_mixer.cpp gtest
 cp $1/test/test_overload_callback.cpp gtest
 cp $1/test/test_record.cpp gtest
 cp $1/test/test_resampler.cpp gtest

@@ -13,7 +13,8 @@ SOURCES += [
     'cubeb_log.cpp',
     'cubeb_mixer.cpp',
     'cubeb_panner.cpp',
-    'cubeb_strings.c'
+    'cubeb_strings.c',
+    'cubeb_utils.cpp'
 ]
 
 if CONFIG['MOZ_ALSA']:

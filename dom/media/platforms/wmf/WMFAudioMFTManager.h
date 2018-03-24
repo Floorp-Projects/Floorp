@@ -45,6 +45,7 @@ private:
   HRESULT UpdateOutputType();
 
   uint32_t mAudioChannels;
+  AudioConfig::ChannelLayout::ChannelMap mChannelsMap;
   uint32_t mAudioRate;
   nsTArray<BYTE> mUserData;
 

@@ -30,9 +30,6 @@ uint32_t MaxNumberOfChannels();
 // Get the sample rate the hardware/mixer runs at. Thread safe.
 uint32_t PreferredSampleRate();
 
-// Get the bit mask of the connected audio device's preferred layout.
-uint32_t PreferredChannelMap(uint32_t aChannels);
-
 enum Side {
   Input,
   Output
@@ -46,12 +43,9 @@ void ReportCubebBackendUsed();
 uint32_t GetCubebPlaybackLatencyInMilliseconds();
 uint32_t GetCubebMSGLatencyInFrames(cubeb_stream_params * params);
 bool CubebLatencyPrefSet();
-cubeb_channel_layout ConvertChannelMapToCubebLayout(uint32_t aChannelMap);
 void GetCurrentBackend(nsAString& aBackend);
-void GetPreferredChannelLayout(nsAString& aLayout);
 void GetDeviceCollection(nsTArray<RefPtr<AudioDeviceInfo>>& aDeviceInfos,
                          Side aSide);
-cubeb_channel_layout GetPreferredChannelLayoutOrSMPTE(cubeb* context, uint32_t aChannels);
 
 #ifdef MOZ_WIDGET_ANDROID
 uint32_t AndroidGetAudioOutputSampleRate();

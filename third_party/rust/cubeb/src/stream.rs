@@ -20,7 +20,7 @@
 //!         .format(cubeb::SampleFormat::Float32LE)
 //!         .rate(44_100)
 //!         .channels(1)
-//!         .layout(cubeb::ChannelLayout::Mono)
+//!         .layout(cubeb::ChannelLayout::MONO)
 //!         .prefs(cubeb::StreamPrefs::NONE)
 //!         .take();
 //!

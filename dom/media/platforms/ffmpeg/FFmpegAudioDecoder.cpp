@@ -10,8 +10,6 @@
 #include "TimeUnits.h"
 #include "VideoUtils.h"
 
-#define MAX_CHANNELS 16
-
 namespace mozilla {
 
 FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
@@ -59,8 +57,6 @@ FFmpegAudioDecoder<LIBAV_VER>::InitCodecContext()
 static AlignedAudioBuffer
 CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumAFrames)
 {
-  MOZ_ASSERT(aNumChannels <= MAX_CHANNELS);
-
   AlignedAudioBuffer audio(aNumChannels * aNumAFrames);
   if (!audio) {
     return audio;
@@ -180,6 +176,8 @@ CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumAFrames)
   return audio;
 }
 
+typedef AudioConfig::ChannelLayout ChannelLayout;
+
 MediaResult
 FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
                                         uint8_t* aData,
@@ -230,13 +228,6 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
             "FFmpeg audio decoder outputs unsupported audio format"));
       }
       uint32_t numChannels = mCodecContext->channels;
-      AudioConfig::ChannelLayout layout(numChannels);
-      if (!layout.IsValid()) {
-        return MediaResult(
-          NS_ERROR_DOM_MEDIA_FATAL_ERR,
-          RESULT_DETAIL("Unsupported channel layout:%u", numChannels));
-      }
-
       uint32_t samplingRate = mCodecContext->sample_rate;
 
       AlignedAudioBuffer audio =
@@ -259,9 +250,14 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
           RESULT_DETAIL("Invalid count of accumulated audio samples"));
       }
 
-      aResults.AppendElement(new AudioData(
-        samplePosition, pts, duration,
-        mFrame->nb_samples, Move(audio), numChannels, samplingRate));
+      aResults.AppendElement(new AudioData(samplePosition,
+                                           pts,
+                                           duration,
+                                           mFrame->nb_samples,
+                                           Move(audio),
+                                           numChannels,
+                                           samplingRate,
+                                           mCodecContext->channel_layout));
 
       pts = newpts;
 

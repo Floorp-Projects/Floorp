@@ -114,7 +114,6 @@ TEST(cubeb, context_variables)
   int r;
   cubeb * ctx;
   uint32_t value;
-  cubeb_channel_layout layout;
   cubeb_stream_params params;
 
   r = common_init(&ctx, "test_context_variables");
@@ -138,11 +137,6 @@ TEST(cubeb, context_variables)
   if (r == CUBEB_OK) {
     ASSERT_TRUE(value > 0);
   }
-
-  r = cubeb_get_preferred_channel_layout(ctx, &layout);
-  ASSERT_TRUE(r == CUBEB_ERROR_NOT_SUPPORTED ||
-              (r == CUBEB_OK && layout != CUBEB_LAYOUT_UNDEFINED) ||
-              (r == CUBEB_ERROR && layout == CUBEB_LAYOUT_UNDEFINED));
 
   cubeb_destroy(ctx);
 }
