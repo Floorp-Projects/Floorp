@@ -27,19 +27,18 @@
 class txStringToDouble
 {
 public:
-    typedef char16_t input_type;
-    typedef char16_t value_type;
     txStringToDouble(): mState(eWhitestart), mSign(ePositive) {}
 
     void
-    write(const input_type* aSource, uint32_t aSourceLength)
+    Parse(const nsAString& aSource)
     {
         if (mState == eIllegal) {
             return;
         }
         uint32_t i = 0;
         char16_t c;
-        for ( ; i < aSourceLength; ++i) {
+        auto len = aSource.Length();
+        for ( ; i < len; ++i) {
             c = aSource[i];
             switch (mState) {
                 case eWhitestart:
@@ -127,8 +126,7 @@ private:
 double txDouble::toDouble(const nsAString& aSrc)
 {
     txStringToDouble sink;
-    nsAString::const_iterator fromBegin, fromEnd;
-    copy_string(aSrc.BeginReading(fromBegin), aSrc.EndReading(fromEnd), sink);
+    sink.Parse(aSrc);
     return sink.getDouble();
 }
 
