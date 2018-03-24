@@ -225,7 +225,7 @@ def run_test_harness(log, parser, options):
             runner.cleanup()
         except Exception:
             # ignore device error while cleaning up
-            pass
+            traceback.print_exc()
     return result
 
 
