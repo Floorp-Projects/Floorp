@@ -90,6 +90,7 @@ using mozilla::DataStorageType from "ipc/DataStorageIPCUtils.h";
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
+using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::Telemetry::HistogramAccumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedHistogramAccumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
@@ -891,8 +892,8 @@ parent:
 
     // Tell the compositor to allocate a layer tree id for nested remote mozbrowsers.
     sync AllocateLayerTreeId(ContentParentId cpId, TabId tabId)
-        returns (uint64_t id);
-    async DeallocateLayerTreeId(ContentParentId cpId, uint64_t id);
+        returns (LayersId id);
+    async DeallocateLayerTreeId(ContentParentId cpId, LayersId id);
 
     /**
      * Notifies the parent about a recording device is starting or shutdown.

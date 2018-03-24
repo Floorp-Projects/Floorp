@@ -44,34 +44,34 @@ public:
   explicit APZSampler(const RefPtr<APZCTreeManager>& aApz);
 
   void ClearTree();
-  void UpdateFocusState(uint64_t aRootLayerTreeId,
-                        uint64_t aOriginatingLayersId,
+  void UpdateFocusState(LayersId aRootLayerTreeId,
+                        LayersId aOriginatingLayersId,
                         const FocusTarget& aFocusTarget);
-  void UpdateHitTestingTree(uint64_t aRootLayerTreeId,
+  void UpdateHitTestingTree(LayersId aRootLayerTreeId,
                             Layer* aRoot,
                             bool aIsFirstPaint,
-                            uint64_t aOriginatingLayersId,
+                            LayersId aOriginatingLayersId,
                             uint32_t aPaintSequenceNumber);
-  void UpdateHitTestingTree(uint64_t aRootLayerTreeId,
+  void UpdateHitTestingTree(LayersId aRootLayerTreeId,
                             const WebRenderScrollData& aScrollData,
                             bool aIsFirstPaint,
-                            uint64_t aOriginatingLayersId,
+                            LayersId aOriginatingLayersId,
                             uint32_t aPaintSequenceNumber);
 
-  void NotifyLayerTreeAdopted(uint64_t aLayersId,
+  void NotifyLayerTreeAdopted(LayersId aLayersId,
                               const RefPtr<APZSampler>& aOldSampler);
-  void NotifyLayerTreeRemoved(uint64_t aLayersId);
+  void NotifyLayerTreeRemoved(LayersId aLayersId);
 
   bool PushStateToWR(wr::TransactionBuilder& aTxn,
                      const TimeStamp& aSampleTime,
                      nsTArray<wr::WrTransformProperty>& aTransformArray);
 
-  bool GetAPZTestData(uint64_t aLayersId, APZTestData* aOutData);
+  bool GetAPZTestData(LayersId aLayersId, APZTestData* aOutData);
 
-  void SetTestAsyncScrollOffset(uint64_t aLayersId,
+  void SetTestAsyncScrollOffset(LayersId aLayersId,
                                 const FrameMetrics::ViewID& aScrollId,
                                 const CSSPoint& aOffset);
-  void SetTestAsyncZoom(uint64_t aLayersId,
+  void SetTestAsyncZoom(LayersId aLayersId,
                         const FrameMetrics::ViewID& aScrollId,
                         const LayerToParentLayerScale& aZoom);
 

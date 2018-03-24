@@ -23,8 +23,8 @@ friend class UiCompositorControllerChild;
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UiCompositorControllerParent)
 
-  static RefPtr<UiCompositorControllerParent> GetFromRootLayerTreeId(const uint64_t& aRootLayerTreeId);
-  static RefPtr<UiCompositorControllerParent> Start(const uint64_t& aRootLayerTreeId, Endpoint<PUiCompositorControllerParent>&& aEndpoint);
+  static RefPtr<UiCompositorControllerParent> GetFromRootLayerTreeId(const LayersId& aRootLayerTreeId);
+  static RefPtr<UiCompositorControllerParent> Start(const LayersId& aRootLayerTreeId, Endpoint<PUiCompositorControllerParent>&& aEndpoint);
 
   // PUiCompositorControllerParent functions
   mozilla::ipc::IPCResult RecvPause() override;
@@ -50,7 +50,7 @@ public:
   bool AllocPixelBuffer(const int32_t aSize, Shmem* aMem);
 
 private:
-  explicit UiCompositorControllerParent(const uint64_t& aRootLayerTreeId);
+  explicit UiCompositorControllerParent(const LayersId& aRootLayerTreeId);
   ~UiCompositorControllerParent();
   void InitializeForSameProcess();
   void InitializeForOutOfProcess();
@@ -58,7 +58,7 @@ private:
   void Open(Endpoint<PUiCompositorControllerParent>&& aEndpoint);
   void Shutdown();
 
-  uint64_t mRootLayerTreeId;
+  LayersId mRootLayerTreeId;
 
 #if defined(MOZ_WIDGET_ANDROID)
   RefPtr<AndroidDynamicToolbarAnimator> mAnimator;

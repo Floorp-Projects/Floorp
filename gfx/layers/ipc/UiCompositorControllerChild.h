@@ -25,7 +25,7 @@ class UiCompositorControllerChild final : protected PUiCompositorControllerChild
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UiCompositorControllerChild)
 
-  static RefPtr<UiCompositorControllerChild> CreateForSameProcess(const int64_t& aRootLayerTreeId);
+  static RefPtr<UiCompositorControllerChild> CreateForSameProcess(const LayersId& aRootLayerTreeId);
   static RefPtr<UiCompositorControllerChild> CreateForGPUProcess(const uint64_t& aProcessToken,
                                                                  Endpoint<PUiCompositorControllerChild>&& aEndpoint);
 

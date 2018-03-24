@@ -40,6 +40,7 @@ class RenderFrameParent : public PRenderFrameParent
   typedef mozilla::layers::ContainerLayer ContainerLayer;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
+  typedef mozilla::layers::LayersId LayersId;
   typedef mozilla::layers::TargetConfig TargetConfig;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::layers::TextureFactoryIdentifier TextureFactoryIdentifier;
@@ -79,7 +80,7 @@ public:
 
   void GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier);
 
-  inline uint64_t GetLayersId() const { return mLayersId; }
+  inline LayersId GetLayersId() const { return mLayersId; }
   inline bool IsLayersConnected() const { return mLayersConnected; }
   inline CompositorOptions GetCompositorOptions() const { return mCompositorOptions; }
 
@@ -101,7 +102,7 @@ private:
   // When our child frame is pushing transactions directly to the
   // compositor, this is the ID of its layer tree in the compositor's
   // context.
-  uint64_t mLayersId;
+  LayersId mLayersId;
   // A flag that indicates whether or not the compositor knows about the
   // layers id. In some cases this RenderFrameParent is not connected to the
   // compositor and so this flag is false.
@@ -168,7 +169,7 @@ public:
   virtual bool UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
                                 mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
 
-  uint64_t GetRemoteLayersId() const;
+  mozilla::layers::LayersId GetRemoteLayersId() const;
 
   NS_DISPLAY_DECL_NAME("Remote", TYPE_REMOTE)
 

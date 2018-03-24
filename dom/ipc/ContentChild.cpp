@@ -971,7 +971,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     nsTArray<FrameScriptInfo> frameScripts(info.frameScripts());
     nsCString urlToLoad = info.urlToLoad();
     TextureFactoryIdentifier textureFactoryIdentifier = info.textureFactoryIdentifier();
-    uint64_t layersId = info.layersId();
+    layers::LayersId layersId = info.layersId();
     CompositorOptions compositorOptions = info.compositorOptions();
     uint32_t maxTouchPoints = info.maxTouchPoints();
     DimensionInfo dimensionInfo = info.dimensions();
@@ -1000,7 +1000,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
       return;
     }
 
-    if (layersId == 0) { // if renderFrame is invalid.
+    if (!layersId.IsValid()) { // if renderFrame is invalid.
       renderFrame = nullptr;
     }
 
@@ -1460,7 +1460,7 @@ ContentChild::RecvReinitRendering(Endpoint<PCompositorManagerChild>&& aComposito
 
   // Zap all the old layer managers we have lying around.
   for (const auto& tabChild : tabs) {
-    if (tabChild->LayersId()) {
+    if (tabChild->GetLayersId().IsValid()) {
       tabChild->InvalidateLayers();
     }
   }
@@ -1482,7 +1482,7 @@ ContentChild::RecvReinitRendering(Endpoint<PCompositorManagerChild>&& aComposito
 
   // Establish new PLayerTransactions.
   for (const auto& tabChild : tabs) {
-    if (tabChild->LayersId()) {
+    if (tabChild->GetLayersId().IsValid()) {
       tabChild->ReinitRendering();
     }
   }
@@ -1507,7 +1507,7 @@ ContentChild::RecvReinitRenderingForDeviceReset()
 
   nsTArray<RefPtr<TabChild>> tabs = TabChild::GetAll();
   for (const auto& tabChild : tabs) {
-    if (tabChild->LayersId()) {
+    if (tabChild->GetLayersId().IsValid()) {
       tabChild->ReinitRenderingForDeviceReset();
     }
   }

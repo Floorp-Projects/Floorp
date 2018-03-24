@@ -263,7 +263,7 @@ public:
         PixelCastJustification::MovingDownToChildren);
   }
 
-  Maybe<uint64_t> GetReferentId() const
+  Maybe<LayersId> GetReferentId() const
   {
     MOZ_ASSERT(IsValid());
 

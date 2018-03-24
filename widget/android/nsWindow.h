@@ -344,7 +344,7 @@ private:
     void CreateLayerManager(int aCompositorWidth, int aCompositorHeight);
     void RedrawAll();
 
-    int64_t GetRootLayerId() const;
+    mozilla::layers::LayersId GetRootLayerId() const;
     RefPtr<mozilla::layers::UiCompositorControllerChild> GetUiCompositorControllerChild();
 };
 

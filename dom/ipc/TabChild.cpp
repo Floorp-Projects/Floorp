@@ -404,7 +404,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mChromeFlags(aChromeFlags)
   , mMaxTouchPoints(0)
   , mActiveSuppressDisplayport(0)
-  , mLayersId(0)
+  , mLayersId{0}
   , mBeforeUnloadListeners(0)
   , mDidFakeShow(false)
   , mNotified(false)
@@ -1085,16 +1085,16 @@ TabChild::DestroyWindow()
     }
 
 
-    if (mLayersId != 0) {
+    if (mLayersId.IsValid()) {
       StaticMutexAutoLock lock(sTabChildrenMutex);
 
       MOZ_ASSERT(sTabChildren);
-      sTabChildren->Remove(mLayersId);
+      sTabChildren->Remove(uint64_t(mLayersId));
       if (!sTabChildren->Count()) {
         delete sTabChildren;
         sTabChildren = nullptr;
       }
-      mLayersId = 0;
+      mLayersId = layers::LayersId{0};
     }
 }
 
@@ -1176,7 +1176,7 @@ TabChild::RecvLoadURL(const nsCString& aURI,
 
 void
 TabChild::DoFakeShow(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
-                     const uint64_t& aLayersId,
+                     const layers::LayersId& aLayersId,
                      const CompositorOptions& aCompositorOptions,
                      PRenderFrameChild* aRenderFrame, const ShowInfo& aShowInfo)
 {
@@ -1272,7 +1272,7 @@ TabChild::RecvShow(const ScreenIntSize& aSize,
 
 mozilla::ipc::IPCResult
 TabChild::RecvInitRendering(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
-                            const uint64_t& aLayersId,
+                            const layers::LayersId& aLayersId,
                             const CompositorOptions& aCompositorOptions,
                             const bool& aLayersConnected,
                             PRenderFrameChild* aRenderFrame)
@@ -2767,7 +2767,7 @@ TabChild::InitTabChildGlobal()
 
 void
 TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
-                             const uint64_t& aLayersId,
+                             const layers::LayersId& aLayersId,
                              const CompositorOptions& aCompositorOptions,
                              PRenderFrameChild* aRenderFrame)
 {
@@ -2779,7 +2779,7 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
       return;
     }
 
-    MOZ_ASSERT(aLayersId != 0);
+    MOZ_ASSERT(aLayersId.IsValid());
     mTextureFactoryIdentifier = aTextureFactoryIdentifier;
 
     // Pushing layers transactions directly to a separate
@@ -2794,14 +2794,14 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
     mCompositorOptions = Some(aCompositorOptions);
 
     mRemoteFrame = static_cast<RenderFrameChild*>(aRenderFrame);
-    if (aLayersId != 0) {
+    if (aLayersId.IsValid()) {
       StaticMutexAutoLock lock(sTabChildrenMutex);
 
       if (!sTabChildren) {
         sTabChildren = new TabChildMap;
       }
-      MOZ_ASSERT(!sTabChildren->Get(aLayersId));
-      sTabChildren->Put(aLayersId, this);
+      MOZ_ASSERT(!sTabChildren->Get(uint64_t(aLayersId)));
+      sTabChildren->Put(uint64_t(aLayersId), this);
       mLayersId = aLayersId;
     }
 
@@ -2850,7 +2850,7 @@ TabChild::CreateRemoteLayerManager(mozilla::layers::PCompositorBridgeChild* aCom
     });
   } else {
     nsTArray<LayersBackend> ignored;
-    PLayerTransactionChild* shadowManager = aCompositorChild->SendPLayerTransactionConstructor(ignored, LayersId());
+    PLayerTransactionChild* shadowManager = aCompositorChild->SendPLayerTransactionConstructor(ignored, GetLayersId());
     if (shadowManager &&
         shadowManager->SendGetTextureFactoryIdentifier(&mTextureFactoryIdentifier) &&
         mTextureFactoryIdentifier.mParentBackend != LayersBackend::LAYERS_NONE)
@@ -3106,13 +3106,13 @@ TabChild::GetFrom(nsIPresShell* aPresShell)
 }
 
 TabChild*
-TabChild::GetFrom(uint64_t aLayersId)
+TabChild::GetFrom(layers::LayersId aLayersId)
 {
   StaticMutexAutoLock lock(sTabChildrenMutex);
   if (!sTabChildren) {
     return nullptr;
   }
-  return sTabChildren->Get(aLayersId);
+  return sTabChildren->Get(uint64_t(aLayersId));
 }
 
 void
@@ -3176,7 +3176,7 @@ TabChild::InvalidateLayers()
 void
 TabChild::ReinitRendering()
 {
-  MOZ_ASSERT(mLayersId);
+  MOZ_ASSERT(mLayersId.IsValid());
 
   // Before we establish a new PLayerTransaction, we must connect our layer tree
   // id, CompositorBridge, and the widget compositor all together again.

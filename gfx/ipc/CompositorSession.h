@@ -67,7 +67,7 @@ public:
   }
 
   // Return the id of the root layer tree.
-  uint64_t RootLayerTreeId() const {
+  LayersId RootLayerTreeId() const {
     return mRootLayerTreeId;
   }
 
@@ -85,13 +85,13 @@ public:
 protected:
   CompositorSession(CompositorWidgetDelegate* aDelegate,
                     CompositorBridgeChild* aChild,
-                    const uint64_t& aRootLayerTreeId);
+                    const LayersId& aRootLayerTreeId);
   virtual ~CompositorSession();
 
 protected:
   CompositorWidgetDelegate* mCompositorWidgetDelegate;
   RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
-  uint64_t mRootLayerTreeId;
+  LayersId mRootLayerTreeId;
 #if defined(MOZ_WIDGET_ANDROID)
   RefPtr<UiCompositorControllerChild> mUiCompositorControllerChild;
 #endif // defined(MOZ_WIDGET_ANDROID)

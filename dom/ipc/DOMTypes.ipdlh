@@ -27,6 +27,7 @@ using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientation.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
+using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 
 namespace mozilla {
 namespace dom {
@@ -118,7 +119,7 @@ struct CreatedWindowInfo
   FrameScriptInfo[] frameScripts;
   nsCString urlToLoad;
   TextureFactoryIdentifier textureFactoryIdentifier;
-  uint64_t layersId;
+  LayersId layersId;
   CompositorOptions compositorOptions;
   uint32_t maxTouchPoints;
   DimensionInfo dimensions;

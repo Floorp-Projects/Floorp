@@ -39,8 +39,6 @@ public:
     }
   };
 
-  typedef uint64_t RefLayerId;
-
   // We need this to represent the case where mData has no focus target data
   // because we can't have an empty variant
   struct NoFocusTarget {
@@ -70,7 +68,7 @@ public:
   // in the event target chain of the focused element
   bool mFocusHasKeyEventListeners;
 
-  mozilla::Variant<RefLayerId, ScrollTargets, NoFocusTarget> mData;
+  mozilla::Variant<LayersId, ScrollTargets, NoFocusTarget> mData;
 };
 
 } // namespace layers

@@ -316,7 +316,7 @@ GPUProcessManager::EnsureVRManager()
 
 #if defined(MOZ_WIDGET_ANDROID)
 already_AddRefed<UiCompositorControllerChild>
-GPUProcessManager::CreateUiCompositorController(nsBaseWidget* aWidget, const uint64_t aId)
+GPUProcessManager::CreateUiCompositorController(nsBaseWidget* aWidget, const LayersId aId)
 {
   RefPtr<UiCompositorControllerChild> result;
 
@@ -736,7 +736,7 @@ GPUProcessManager::CreateTopLevelCompositor(nsBaseWidget* aWidget,
 {
   MOZ_ASSERT(aRetryOut);
 
-  uint64_t layerTreeId = AllocateLayerTreeId();
+  LayersId layerTreeId = AllocateLayerTreeId();
 
   EnsureProtocolsReady();
 
@@ -784,7 +784,7 @@ GPUProcessManager::CreateTopLevelCompositor(nsBaseWidget* aWidget,
 RefPtr<CompositorSession>
 GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
                                        LayerManager* aLayerManager,
-                                       const uint64_t& aRootLayerTreeId,
+                                       const LayersId& aRootLayerTreeId,
                                        CSSToLayoutDeviceScale aScale,
                                        const CompositorOptions& aOptions,
                                        bool aUseExternalSurfaceSize,
@@ -822,7 +822,7 @@ GPUProcessManager::CreateRemoteSession(nsBaseWidget* aWidget,
 
   RefPtr<APZCTreeManagerChild> apz = nullptr;
   if (aOptions.UseAPZ()) {
-    PAPZCTreeManagerChild* papz = child->SendPAPZCTreeManagerConstructor(0);
+    PAPZCTreeManagerChild* papz = child->SendPAPZCTreeManagerConstructor(LayersId{0});
     if (!papz) {
       return nullptr;
     }
@@ -1005,7 +1005,7 @@ GPUProcessManager::CreateContentVideoDecoderManager(base::ProcessId aOtherProces
 }
 
 void
-GPUProcessManager::MapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningId)
+GPUProcessManager::MapLayerTreeId(LayersId aLayersId, base::ProcessId aOwningId)
 {
   LayerTreeOwnerTracker::Get()->Map(aLayersId, aOwningId);
 
@@ -1015,7 +1015,7 @@ GPUProcessManager::MapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningId)
 }
 
 void
-GPUProcessManager::UnmapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningId)
+GPUProcessManager::UnmapLayerTreeId(LayersId aLayersId, base::ProcessId aOwningId)
 {
   LayerTreeOwnerTracker::Get()->Unmap(aLayersId, aOwningId);
 
@@ -1027,12 +1027,12 @@ GPUProcessManager::UnmapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningI
 }
 
 bool
-GPUProcessManager::IsLayerTreeIdMapped(uint64_t aLayersId, base::ProcessId aRequestingId)
+GPUProcessManager::IsLayerTreeIdMapped(LayersId aLayersId, base::ProcessId aRequestingId)
 {
   return LayerTreeOwnerTracker::Get()->IsMapped(aLayersId, aRequestingId);
 }
 
-uint64_t
+LayersId
 GPUProcessManager::AllocateLayerTreeId()
 {
   // Allocate tree id by using id namespace.
@@ -1048,7 +1048,7 @@ GPUProcessManager::AllocateLayerTreeId()
 
   uint64_t layerTreeId = mIdNamespace;
   layerTreeId = (layerTreeId << 32) | mResourceId;
-  return layerTreeId;
+  return LayersId{layerTreeId};
 }
 
 uint32_t
@@ -1061,10 +1061,10 @@ GPUProcessManager::AllocateNamespace()
 bool
 GPUProcessManager::AllocateAndConnectLayerTreeId(PCompositorBridgeChild* aCompositorBridge,
                                                  base::ProcessId aOtherPid,
-                                                 uint64_t* aOutLayersId,
+                                                 LayersId* aOutLayersId,
                                                  CompositorOptions* aOutCompositorOptions)
 {
-  uint64_t layersId = AllocateLayerTreeId();
+  LayersId layersId = AllocateLayerTreeId();
   *aOutLayersId = layersId;
 
   if (!mGPUChild || !aCompositorBridge) {

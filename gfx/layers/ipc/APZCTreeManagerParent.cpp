@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace layers {
 
-APZCTreeManagerParent::APZCTreeManagerParent(uint64_t aLayersId, RefPtr<APZCTreeManager> aAPZCTreeManager)
+APZCTreeManagerParent::APZCTreeManagerParent(LayersId aLayersId, RefPtr<APZCTreeManager> aAPZCTreeManager)
   : mLayersId(aLayersId)
   , mTreeManager(aAPZCTreeManager)
 {

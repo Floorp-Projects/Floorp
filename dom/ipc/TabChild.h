@@ -317,7 +317,7 @@ public:
 
   virtual mozilla::ipc::IPCResult
   RecvInitRendering(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
-                    const uint64_t& aLayersId,
+                    const layers::LayersId& aLayersId,
                     const mozilla::layers::CompositorOptions& aCompositorOptions,
                     const bool& aLayersConnected,
                     PRenderFrameChild* aRenderFrame) override;
@@ -538,9 +538,9 @@ public:
   }
 
   static TabChild* GetFrom(nsIPresShell* aPresShell);
-  static TabChild* GetFrom(uint64_t aLayersId);
+  static TabChild* GetFrom(layers::LayersId aLayersId);
 
-  uint64_t LayersId() { return mLayersId; }
+  layers::LayersId GetLayersId() { return mLayersId; }
   Maybe<bool> IsLayersConnected() { return mLayersConnected; }
 
   void DidComposite(uint64_t aTransactionId,
@@ -618,7 +618,7 @@ public:
 
   // Call RecvShow(nsIntSize(0, 0)) and block future calls to RecvShow().
   void DoFakeShow(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
-                  const uint64_t& aLayersId,
+                  const layers::LayersId& aLayersId,
                   const mozilla::layers::CompositorOptions& aCompositorOptions,
                   PRenderFrameChild* aRenderFrame,
                   const ShowInfo& aShowInfo);
@@ -774,7 +774,7 @@ private:
   bool InitTabChildGlobal();
 
   void InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
-                          const uint64_t& aLayersId,
+                          const layers::LayersId& aLayersId,
                           const mozilla::layers::CompositorOptions& aCompositorOptions,
                           PRenderFrameChild* aRenderFrame);
   void InitAPZState();
@@ -830,7 +830,7 @@ private:
   uint32_t mChromeFlags;
   uint32_t mMaxTouchPoints;
   int32_t mActiveSuppressDisplayport;
-  uint64_t mLayersId;
+  layers::LayersId mLayersId;
   int64_t mBeforeUnloadListeners;
   CSSRect mUnscaledOuterRect;
   nscolor mLastBackgroundColor;

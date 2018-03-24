@@ -34,6 +34,11 @@
 namespace IPC {
 
 template <>
+struct ParamTraits<mozilla::layers::LayersId>
+  : public PlainOldDataSerializer<mozilla::layers::LayersId>
+{};
+
+template <>
 struct ParamTraits<mozilla::layers::LayersBackend>
   : public ContiguousEnumSerializer<
              mozilla::layers::LayersBackend,

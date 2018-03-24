@@ -1562,7 +1562,7 @@ ContentParent::ProcessingError(Result aCode, const char* aReason)
 
 /* static */
 bool
-ContentParent::AllocateLayerTreeId(TabParent* aTabParent, uint64_t* aId)
+ContentParent::AllocateLayerTreeId(TabParent* aTabParent, layers::LayersId* aId)
 {
   return AllocateLayerTreeId(aTabParent->Manager()->AsContentParent(),
                              aTabParent, aTabParent->GetTabId(), aId);
@@ -1572,7 +1572,7 @@ ContentParent::AllocateLayerTreeId(TabParent* aTabParent, uint64_t* aId)
 bool
 ContentParent::AllocateLayerTreeId(ContentParent* aContent,
                                    TabParent* aTopLevel, const TabId& aTabId,
-                                   uint64_t* aId)
+                                   layers::LayersId* aId)
 {
   GPUProcessManager* gpu = GPUProcessManager::Get();
 
@@ -1589,7 +1589,7 @@ ContentParent::AllocateLayerTreeId(ContentParent* aContent,
 
 mozilla::ipc::IPCResult
 ContentParent::RecvAllocateLayerTreeId(const ContentParentId& aCpId,
-                                       const TabId& aTabId, uint64_t* aId)
+                                       const TabId& aTabId, layers::LayersId* aId)
 {
   // Protect against spoofing by a compromised child. aCpId must either
   // correspond to the process that this ContentParent represents or be a
@@ -1614,7 +1614,7 @@ ContentParent::RecvAllocateLayerTreeId(const ContentParentId& aCpId,
 
 mozilla::ipc::IPCResult
 ContentParent::RecvDeallocateLayerTreeId(const ContentParentId& aCpId,
-                                         const uint64_t& aId)
+                                         const layers::LayersId& aId)
 {
   GPUProcessManager* gpu = GPUProcessManager::Get();
 
@@ -4894,7 +4894,7 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
 
   // We always expect to open a new window here. If we don't, it's an error.
   cwi.windowOpened() = true;
-  cwi.layersId() = 0;
+  cwi.layersId() = LayersId{0};
   cwi.maxTouchPoints() = 0;
 
   // Make sure to resolve the resolver when this function exits, even if we
