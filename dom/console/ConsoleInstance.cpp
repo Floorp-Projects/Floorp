@@ -25,22 +25,33 @@ NS_INTERFACE_MAP_END
 namespace {
 
 ConsoleLogLevel
-PrefToValue(const nsCString& aPref)
+PrefToValue(const nsAString& aPref)
 {
   if (!NS_IsMainThread()) {
     NS_WARNING("Console.maxLogLevelPref is not supported on workers!");
     return ConsoleLogLevel::All;
   }
 
+  NS_ConvertUTF16toUTF8 pref(aPref);
   nsAutoCString value;
-  nsresult rv = Preferences::GetCString(aPref.get(), value);
+  nsresult rv = Preferences::GetCString(pref.get(), value);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    nsString message;
+    message.AssignLiteral("Console.maxLogLevelPref used with a non-existing pref: ");
+    message.Append(aPref);
+
+    nsContentUtils::LogSimpleConsoleError(message, "chrome", false);
     return ConsoleLogLevel::All;
   }
 
   int index = FindEnumStringIndexImpl(value.get(), value.Length(),
                                       ConsoleLogLevelValues::strings);
   if (NS_WARN_IF(index < 0)) {
+    nsString message;
+    message.AssignLiteral("Invalid Console.maxLogLevelPref value: ");
+    message.Append(NS_ConvertUTF8toUTF16(value));
+
+    nsContentUtils::LogSimpleConsoleError(message, "chrome", false);
     return ConsoleLogLevel::All;
   }
 
@@ -89,7 +100,7 @@ ConsoleInstance::ConsoleInstance(JSContext* aCx,
 
   if (!aOptions.mMaxLogLevelPref.IsEmpty()) {
     mConsole->mMaxLogLevel =
-      PrefToValue(NS_ConvertUTF16toUTF8(aOptions.mMaxLogLevelPref));
+      PrefToValue(aOptions.mMaxLogLevelPref);
   }
 }
 
