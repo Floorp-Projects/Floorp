@@ -186,7 +186,7 @@ BrowserElementParent::OpenWindowOOP(TabParent* aOpenerTabParent,
                                     const nsAString& aName,
                                     const nsAString& aFeatures,
                                     TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                    uint64_t* aLayersId)
+                                    layers::LayersId* aLayersId)
 {
   // Create an iframe owned by the same document which owns openerFrameElement.
   nsCOMPtr<Element> openerFrameElement = aOpenerTabParent->GetOwnerElement();

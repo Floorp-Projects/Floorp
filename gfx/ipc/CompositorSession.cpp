@@ -20,7 +20,7 @@ using namespace widget;
 
 CompositorSession::CompositorSession(CompositorWidgetDelegate* aDelegate,
                                      CompositorBridgeChild* aChild,
-                                     const uint64_t& aRootLayerTreeId)
+                                     const LayersId& aRootLayerTreeId)
  : mCompositorWidgetDelegate(aDelegate),
    mCompositorBridgeChild(aChild),
    mRootLayerTreeId(aRootLayerTreeId)

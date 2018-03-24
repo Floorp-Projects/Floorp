@@ -174,7 +174,7 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
              mFocusHasKeyEventListeners,
              rfp->GetLayersId());
 
-      mData = AsVariant<RefLayerId>(rfp->GetLayersId());
+      mData = AsVariant<LayersId>(rfp->GetLayersId());
       return;
     }
 
@@ -234,8 +234,8 @@ FocusTarget::operator==(const FocusTarget& aRhs) const
 const char*
 FocusTarget::Type() const
 {
-  if (mData.is<RefLayerId>()) {
-    return "RefLayerId";
+  if (mData.is<LayersId>()) {
+    return "LayersId";
   }
   if (mData.is<ScrollTargets>()) {
     return "ScrollTargets";

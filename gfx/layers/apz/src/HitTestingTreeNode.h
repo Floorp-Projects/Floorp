@@ -56,8 +56,8 @@ private:
   ~HitTestingTreeNode();
 public:
   HitTestingTreeNode(AsyncPanZoomController* aApzc, bool aIsPrimaryHolder,
-                     uint64_t aLayersId);
-  void RecycleWith(AsyncPanZoomController* aApzc, uint64_t aLayersId);
+                     LayersId aLayersId);
+  void RecycleWith(AsyncPanZoomController* aApzc, LayersId aLayersId);
   void Destroy();
 
   /* Tree construction methods */
@@ -81,7 +81,7 @@ public:
   AsyncPanZoomController* GetApzc() const;
   AsyncPanZoomController* GetNearestContainingApzc() const;
   bool IsPrimaryHolder() const;
-  uint64_t GetLayersId() const;
+  LayersId GetLayersId() const;
 
   /* Hit test related methods */
 
@@ -138,7 +138,7 @@ private:
   RefPtr<AsyncPanZoomController> mApzc;
   bool mIsPrimaryApzcHolder;
 
-  uint64_t mLayersId;
+  LayersId mLayersId;
 
   // This is set for both scroll track and scroll thumb Container layers, and
   // represents the scroll id of the scroll frame scrolled by the scrollbar.

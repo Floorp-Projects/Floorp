@@ -48,7 +48,7 @@ namespace layers {
 LayerTransactionParent::LayerTransactionParent(HostLayerManager* aManager,
                                                CompositorBridgeParentBase* aBridge,
                                                CompositorAnimationStorage* aAnimStorage,
-                                               uint64_t aId)
+                                               LayersId aId)
   : mLayerManager(aManager)
   , mCompositorBridge(aBridge)
   , mAnimStorage(aAnimStorage)
@@ -59,7 +59,7 @@ LayerTransactionParent::LayerTransactionParent(HostLayerManager* aManager,
   , mDestroyed(false)
   , mIPCOpen(false)
 {
-  MOZ_ASSERT(mId != 0);
+  MOZ_ASSERT(mId.IsValid());
 }
 
 LayerTransactionParent::~LayerTransactionParent()

@@ -244,7 +244,7 @@ ZoomConstraintsClient::RefreshZoomConstraints()
     rcdrsf->SetZoomableByAPZ(zoomConstraints.mAllowZoom);
   }
 
-  ScrollableLayerGuid newGuid(0, presShellId, viewId);
+  ScrollableLayerGuid newGuid(LayersId{0}, presShellId, viewId);
   if (mGuid && mGuid.value() != newGuid) {
     ZCC_LOG("Clearing old constraints in %p for { %u, %" PRIu64 " }\n",
       this, mGuid->mPresShellId, mGuid->mScrollId);
