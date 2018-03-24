@@ -4983,7 +4983,7 @@ nsGlobalWindowOuter::HomeOuter(nsIPrincipal& aSubjectPrincipal, ErrorResult& aEr
 #ifdef DEBUG_seth
     printf("all else failed.  using %s as the home page\n", DEFAULT_HOME_PAGE);
 #endif
-    CopyASCIItoUTF16(DEFAULT_HOME_PAGE, homeURL);
+    homeURL = NS_LITERAL_STRING(DEFAULT_HOME_PAGE);
   }
 
 #ifdef MOZ_PHOENIX
