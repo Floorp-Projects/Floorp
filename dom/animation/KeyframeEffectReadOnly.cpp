@@ -1543,11 +1543,8 @@ KeyframeEffectReadOnly::CalculateCumulativeChangeHint(StyleType* aComputedStyle)
       }
 
       uint32_t equalStructs = 0;
-      uint32_t samePointerStructs = 0;
       nsChangeHint changeHint =
-        fromContext->CalcStyleDifference(toContext,
-                                         &equalStructs,
-                                         &samePointerStructs);
+        fromContext->CalcStyleDifference(toContext, &equalStructs);
 
       mCumulativeChangeHint |= changeHint;
     }

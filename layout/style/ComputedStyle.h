@@ -297,14 +297,12 @@ public:
    * aEqualStructs must not be null.  Into it will be stored a bitfield
    * representing which structs were compared to be non-equal.
    *
-   * aIgnoreVariables indicates whether to skip comparing the Variables
-   * struct.  This must only be true for Servo style contexts.  When
-   * true, the Variables bit in aEqualStructs will be set.
+   * CSS Variables are not compared here. Instead, the caller is responsible for
+   * that when needed (basically only for elements). The Variables bit in
+   * aEqualStructs is always set.
    */
   nsChangeHint CalcStyleDifference(ComputedStyle* aNewContext,
-                                   uint32_t* aEqualStructs,
-                                   uint32_t* aSamePointerStructs,
-				   bool aIgnoreVariables = false);
+                                   uint32_t* aEqualStructs);
 
 public:
   /**
