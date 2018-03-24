@@ -4020,11 +4020,8 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
   nsTArray<ItemBaselineData> lastBaselineItems;
   WritingMode wm = aState.mWM;
   ComputedStyle* containerSC = aState.mFrame->Style();
-  CSSOrderAwareFrameIterator& iter = aState.mIter;
-  iter.Reset();
-  for (; !iter.AtEnd(); iter.Next()) {
-    nsIFrame* child = *iter;
-    GridItemInfo& gridItem = aGridItems[iter.ItemIndex()];
+  for (GridItemInfo& gridItem : aGridItems) {
+    nsIFrame* child = gridItem.mFrame;
     uint32_t baselineTrack = kAutoLine;
     auto state = ItemState(0);
     auto childWM = child->GetWritingMode();
