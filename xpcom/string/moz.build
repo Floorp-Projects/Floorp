@@ -61,11 +61,4 @@ if CONFIG['BUILD_ARM_NEON'] or CONFIG['CPU_ARCH'] == 'aarch64':
     SOURCES += ['nsUTF8UtilsNEON.cpp']
     SOURCES['nsUTF8UtilsNEON.cpp'].flags += CONFIG['NEON_FLAGS']
 
-# MSVC 2017 has a bug that incorrectly generates C5037 warning which
-# hits the template string code. We need to disable this warning as a
-# workaround. See https://developercommunity.visualstudio.com/
-# content/problem/81223/incorrect-error-c5037-with-permissive.html
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
-    CXXFLAGS += ['-wd5037']
-
 FINAL_LIBRARY = 'xul'
