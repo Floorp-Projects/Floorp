@@ -434,7 +434,7 @@ main {
     box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
     position: absolute; }
   .top-site-outer .rich-icon {
-    background-size: 96px;
+    background-size: cover;
     height: 100%;
     offset-inline-start: 0;
     top: 0;
@@ -527,7 +527,7 @@ main {
 .topsite-form .form-input-container {
   max-width: 492px;
   margin: 0 auto;
-  padding: 32px 32px 40px; }
+  padding: 32px; }
   .topsite-form .form-input-container .top-site-outer {
     padding: 0;
     margin: 24px 0 0;
@@ -553,26 +553,66 @@ main {
       transform: translateY(-50%);
       top: 50%;
       offset-inline-end: 8px; }
-      .topsite-form .form-wrapper .field .icon-clear-input + input:dir(ltr) {
-        padding-right: 32px; }
-      .topsite-form .form-wrapper .field .icon-clear-input + input:dir(rtl) {
-        padding-left: 32px; }
-  .topsite-form .form-wrapper .url input:not(:placeholder-shown):dir(rtl) {
-    direction: ltr;
-    text-align: right; }
+  .topsite-form .form-wrapper .url input:dir(ltr) {
+    padding-right: 32px; }
+  .topsite-form .form-wrapper .url input:dir(rtl) {
+    padding-left: 32px; }
+    .topsite-form .form-wrapper .url input:dir(rtl):not(:placeholder-shown) {
+      direction: ltr;
+      text-align: right; }
+  .topsite-form .form-wrapper .enable-custom-image-input {
+    display: inline-block;
+    font-size: 13px;
+    margin-top: 4px;
+    cursor: pointer; }
+    .topsite-form .form-wrapper .enable-custom-image-input:hover {
+      text-decoration: underline;
+      color: #0060DF; }
+  .topsite-form .form-wrapper .custom-image-input-container {
+    margin-top: 4px; }
+    .topsite-form .form-wrapper .custom-image-input-container .loading-container {
+      width: 16px;
+      height: 16px;
+      overflow: hidden;
+      position: absolute;
+      transform: translateY(-50%);
+      top: 50%;
+      offset-inline-end: 8px; }
+    .topsite-form .form-wrapper .custom-image-input-container .loading-animation {
+      width: 960px;
+      height: 16px;
+      -moz-context-properties: fill;
+      fill: #0A84FF;
+      background-image: url("chrome://browser/skin/tabbrowser/loading.svg");
+      animation: tab-throbber-animation 1.05s steps(60) infinite; }
+
+@keyframes tab-throbber-animation {
+  100% {
+    transform: translateX(-960px); } }
+
+@keyframes tab-throbber-animation-rtl {
+  100% {
+    transform: translateX(960px); } }
+      .topsite-form .form-wrapper .custom-image-input-container .loading-animation:dir(rtl) {
+        animation-name: tab-throbber-animation-rtl; }
   .topsite-form .form-wrapper input[type='text'] {
     border: solid 1px rgba(12, 12, 13, 0.2);
     border-radius: 2px;
     margin: 8px 0;
     padding: 0 8px;
     height: 32px;
-    width: 100%; }
+    width: 100%;
+    font-size: 15px; }
     .topsite-form .form-wrapper input[type='text']:focus {
       border: solid 1px #0A84FF;
-      box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.35); }
+      box-shadow: 0 0 0 1px #0A84FF, 0 0 0 4px rgba(10, 132, 255, 0.3); }
+    .topsite-form .form-wrapper input[type='text'][disabled] {
+      border: solid 1px rgba(12, 12, 13, 0.2);
+      box-shadow: none;
+      opacity: 0.4; }
   .topsite-form .form-wrapper .invalid input[type='text'] {
     border: solid 1px #D70022;
-    box-shadow: 0 0 0 2px rgba(215, 0, 34, 0.35); }
+    box-shadow: 0 0 0 1px #D70022, 0 0 0 4px rgba(215, 0, 34, 0.3); }
   .topsite-form .form-wrapper .error-tooltip {
     animation: fade-up-tt 450ms;
     background: #D70022;
@@ -1103,7 +1143,7 @@ main {
       border: 0;
       cursor: pointer;
       fill: #737373;
-      height: 27px;
+      height: 20px;
       offset-inline-end: 0;
       opacity: 0;
       position: absolute;

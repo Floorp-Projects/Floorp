@@ -43,8 +43,14 @@ this.Screenshots = {
     return str;
   },
 
+  /**
+   * Get a screenshot / thumbnail for a url. Either returns the disk cached
+   * image or initiates a background request for the url.
+   *
+   * @param url {string} The url to get a thumbnail
+   * @return {Promise} Resolves a data uri string or null if failed
+   */
   async getScreenshotForURL(url) {
-    let screenshot = null;
     try {
       await BackgroundPageThumbs.captureIfMissing(url, {backgroundColor: GREY_10});
       const imgPath = PageThumbs.getThumbnailPath(url);
@@ -52,18 +58,35 @@ this.Screenshots = {
       // OS.File object used to easily read off-thread
       const file = await OS.File.open(imgPath, {read: true, existing: true});
 
+      // Check if the file is empty, which indicates there isn't actually a
+      // thumbnail, so callers can show a failure state.
+      const bytes = await file.read();
+      if (bytes.length === 0) {
+        return null;
+      }
+
       // nsIFile object needed for MIMEService
       const nsFile = FileUtils.File(imgPath);
-
       const contentType = MIMEService.getTypeFromFile(nsFile);
-      const bytes = await file.read();
+
       const encodedData = btoa(this._bytesToString(bytes));
       file.close();
-      screenshot = `data:${contentType};base64,${encodedData}`;
+      return `data:${contentType};base64,${encodedData}`;
     } catch (err) {
-      Cu.reportError(`getScreenshot error: ${err}`);
+      Cu.reportError(`getScreenshot(${url}) failed: ${err}`);
     }
-    return screenshot;
+
+    // We must have failed to get the screenshot, so persist the failure by
+    // storing an empty file. Future calls will then skip requesting and return
+    // failure, so do the same thing here. The empty file should not expire with
+    // the usual filtering process to avoid repeated background requests, which
+    // can cause unwanted high CPU, network and memory usage - Bug 1384094
+    try {
+      await PageThumbs._store(url, url, null, true);
+    } catch (err) {
+      // Probably failed to create the empty file, but not much more we can do.
+    }
+    return null;
   },
 
   /**
