@@ -425,10 +425,6 @@ const SNAPSHOT_SCHEMA = {
           required: true,
           type: "number",
         },
-        currentPreferredChannelLayout: {
-          required: true,
-          type: "string",
-        },
         currentPreferredSampleRate: {
           required: true,
           type: "number",

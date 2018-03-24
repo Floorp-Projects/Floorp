@@ -25,7 +25,7 @@ fn main() {
         .format(STREAM_FORMAT)
         .rate(SAMPLE_FREQUENCY)
         .channels(1)
-        .layout(cubeb::ChannelLayout::Mono)
+        .layout(cubeb::ChannelLayout::MONO)
         .take();
 
     let mut position = 0u32;

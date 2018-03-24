@@ -335,7 +335,9 @@ int AudioStream::InvokeCubeb(Function aFunction, Args&&... aArgs)
 }
 
 nsresult
-AudioStream::Init(uint32_t aNumChannels, uint32_t aChannelMap, uint32_t aRate)
+AudioStream::Init(uint32_t aNumChannels,
+                  AudioConfig::ChannelLayout::ChannelMap aChannelMap,
+                  uint32_t aRate)
 {
   auto startTime = TimeStamp::Now();
 
@@ -348,7 +350,7 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aChannelMap, uint32_t aRate)
   cubeb_stream_params params;
   params.rate = aRate;
   params.channels = mOutChannels;
-  params.layout = CubebUtils::ConvertChannelMapToCubebLayout(aChannelMap);
+  params.layout = static_cast<uint32_t>(aChannelMap);
   params.format = ToCubebFormat<AUDIO_OUTPUT_FORMAT>::value;
   params.prefs = CUBEB_STREAM_PREF_NONE;
 
