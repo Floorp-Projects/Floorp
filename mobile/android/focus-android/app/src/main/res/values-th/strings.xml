@@ -81,7 +81,7 @@
   <string name="preference_search_remove">เอาออก</string>
   <string name="tutorial_search_manually_add">เพิ่มด้วยตนเอง</string>
   <string name="tutorial_search_title">เพิ่มเครื่องมือค้นหา</string>
-  <string name="tutorial_search_step1">1. ไปที่หน้าแรกของเครื่องมือค้นหา</string>
+  <string name="tutorial_search_step1">1. ไปยังหน้าแรกของเครื่องมือค้นหา</string>
   <string name="tutorial_search_step2">2. แตะที่ช่องค้นหาของเครื่องมือค้นหา</string>
   <string name="tutorial_search_step2_alternative">2. กดค้างที่ช่องค้นหาของเครื่องมือค้นหา</string>
   <string name="tutorial_search_step3">3. แตะไอคอนแว่นขยายด้านบนแป้นพิมพ์เพื่อเพิ่มเครื่องมือค้นหา</string>
