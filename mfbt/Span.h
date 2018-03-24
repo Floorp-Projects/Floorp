@@ -412,7 +412,8 @@ private:
  *
  * A Span<const char> or Span<const char16_t> can be obtained for const char*
  * or const char16_t pointing to a zero-terminated string using the
- * MakeStringSpan() function. Corresponding implicit constructor does not exist
+ * MakeStringSpan() function (which treats a nullptr argument equivalently
+ * to the empty string). Corresponding implicit constructor does not exist
  * in order to avoid accidental construction in cases where const char* or
  * const char16_t* do not point to a zero-terminated string.
  *
@@ -1061,20 +1062,28 @@ MakeSpan(Ptr& aPtr, size_t aLength)
 }
 
 /**
- * Create span from C string.
+ * Create span from a zero-terminated C string. nullptr is
+ * treated as the empty string.
  */
 inline Span<const char>
 MakeStringSpan(const char* aZeroTerminated)
 {
+  if (!aZeroTerminated) {
+    return Span<const char>();
+  }
   return Span<const char>(aZeroTerminated, std::strlen(aZeroTerminated));
 }
 
 /**
- * Create span from UTF-16 C string.
+ * Create span from a zero-terminated UTF-16 C string. nullptr is
+ * treated as the empty string.
  */
 inline Span<const char16_t>
 MakeStringSpan(const char16_t* aZeroTerminated)
 {
+  if (!aZeroTerminated) {
+    return Span<const char16_t>();
+  }
   return Span<const char16_t>(aZeroTerminated, span_details::strlen16(aZeroTerminated));
 }
 
