@@ -11951,23 +11951,24 @@ void DR_State::ParseRulesFile()
   char* path = PR_GetEnv("GECKO_DISPLAY_REFLOW_RULES_FILE");
   if (path) {
     FILE* inFile = fopen(path, "r");
-    if (inFile) {
-      for (DR_Rule* rule = ParseRule(inFile); rule; rule = ParseRule(inFile)) {
-        if (rule->mTarget) {
-          LayoutFrameType fType = rule->mTarget->mFrameType;
-          if (fType != LayoutFrameType::None) {
-            DR_FrameTypeInfo* info = GetFrameTypeInfo(fType);
-            AddRule(info->mRules, *rule);
-          }
-          else {
-            AddRule(mWildRules, *rule);
-          }
-          mActive = true;
-        }
-      }
-
-      fclose(inFile);
+    if (!inFile) {
+      MOZ_CRASH("Failed to open the specified rules file");
     }
+    for (DR_Rule* rule = ParseRule(inFile); rule; rule = ParseRule(inFile)) {
+      if (rule->mTarget) {
+        LayoutFrameType fType = rule->mTarget->mFrameType;
+        if (fType != LayoutFrameType::None) {
+          DR_FrameTypeInfo* info = GetFrameTypeInfo(fType);
+          AddRule(info->mRules, *rule);
+        }
+        else {
+          AddRule(mWildRules, *rule);
+        }
+        mActive = true;
+      }
+    }
+
+    fclose(inFile);
   }
 }
 
