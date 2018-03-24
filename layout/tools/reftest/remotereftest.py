@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import logging
 import os
+import posixpath
 import psutil
 import signal
 import sys
@@ -13,7 +13,7 @@ import traceback
 import urllib2
 from contextlib import closing
 
-import mozdevice
+from mozdevice import ADBAndroid
 import mozinfo
 from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
@@ -54,14 +54,13 @@ class ReftestServer:
 
     def __init__(self, automation, options, scriptDir):
         self.automation = automation
-        self._utilityPath = options.utilityPath
-        self._xrePath = options.xrePath
-        self._profileDir = options.serverProfilePath
+        self.utilityPath = options.utilityPath
+        self.xrePath = options.xrePath
+        self.profileDir = options.serverProfilePath
         self.webServer = options.remoteWebServer
         self.httpPort = options.httpPort
         self.scriptDir = scriptDir
-        self.pidFile = options.pidFile
-        self._httpdPath = os.path.abspath(options.httpdPath)
+        self.httpdPath = os.path.abspath(options.httpdPath)
         if options.remoteWebServer == "10.0.2.2":
             # probably running an Android emulator and 10.0.2.2 will
             # not be visible from host
@@ -74,20 +73,20 @@ class ReftestServer:
     def start(self):
         "Run the Refest server, returning the process ID of the server."
 
-        env = self.automation.environment(xrePath=self._xrePath)
+        env = self.automation.environment(xrePath=self.xrePath)
         env["XPCOM_DEBUG_BREAK"] = "warn"
         if self.automation.IS_WIN32:
-            env["PATH"] = env["PATH"] + ";" + self._xrePath
+            env["PATH"] = env["PATH"] + ";" + self.xrePath
 
-        args = ["-g", self._xrePath,
-                "-f", os.path.join(self._httpdPath, "httpd.js"),
+        args = ["-g", self.xrePath,
+                "-f", os.path.join(self.httpdPath, "httpd.js"),
                 "-e", "const _PROFILE_PATH = '%(profile)s';const _SERVER_PORT = "
                       "'%(port)s'; const _SERVER_ADDR ='%(server)s';" % {
-                      "profile": self._profileDir.replace('\\', '\\\\'), "port": self.httpPort,
+                      "profile": self.profileDir.replace('\\', '\\\\'), "port": self.httpPort,
                       "server": self.webServer},
                 "-f", os.path.join(self.scriptDir, "server.js")]
 
-        xpcshell = os.path.join(self._utilityPath,
+        xpcshell = os.path.join(self.utilityPath,
                                 "xpcshell" + self.automation.BIN_SUFFIX)
 
         if not os.access(xpcshell, os.F_OK):
@@ -104,15 +103,10 @@ class ReftestServer:
             return 2
         self.automation.log.info("INFO | remotereftests.py | Server pid: %d", pid)
 
-        if (self.pidFile != ""):
-            f = open(self.pidFile + ".xpcshell.pid", 'w')
-            f.write("%s" % pid)
-            f.close()
-
     def ensureReady(self, timeout):
         assert timeout >= 0
 
-        aliveFile = os.path.join(self._profileDir, "server_alive.txt")
+        aliveFile = os.path.join(self.profileDir, "server_alive.txt")
         i = 0
         while i < timeout:
             if os.path.exists(aliveFile):
@@ -143,36 +137,73 @@ class ReftestServer:
 
 class RemoteReftest(RefTest):
     use_marionette = False
-    remoteApp = ''
     resolver_cls = RemoteReftestResolver
 
-    def __init__(self, automation, devicemanager, options, scriptDir):
+    def __init__(self, options, scriptDir):
         RefTest.__init__(self, options.suite)
         self.run_by_manifest = False
-        self.automation = automation
-        self._devicemanager = devicemanager
         self.scriptDir = scriptDir
-        self.remoteApp = options.app
+        self.localLogName = options.localLogName
+
+        verbose = False
+        if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
+            verbose = True
+            print "set verbose!"
+        self.device = ADBAndroid(adb=options.adb_path,
+                                 device=options.deviceSerial,
+                                 test_root=options.remoteTestRoot,
+                                 verbose=verbose)
+
+        if options.remoteTestRoot is None:
+            options.remoteTestRoot = posixpath.join(self.device.test_root, "reftest")
+        options.remoteProfile = posixpath.join(options.remoteTestRoot, "profile")
+        options.remoteLogFile = posixpath.join(options.remoteTestRoot, "reftest.log")
+        options.logFile = options.remoteLogFile
         self.remoteProfile = options.remoteProfile
         self.remoteTestRoot = options.remoteTestRoot
-        self.remoteLogFile = options.remoteLogFile
-        self.remoteCache = os.path.join(options.remoteTestRoot, "cache/")
-        self.localLogName = options.localLogName
-        self.pidFile = options.pidFile
-        if self.automation.IS_DEBUG_BUILD:
-            self.SERVER_STARTUP_TIMEOUT = 180
-        else:
-            self.SERVER_STARTUP_TIMEOUT = 90
-        self.automation.deleteANRs()
-        self.automation.deleteTombstones()
-        self._devicemanager.removeDir(self.remoteCache)
+
+        if not options.ignoreWindowSize:
+            parts = self.device.get_info(
+                'screen')['screen'][0].split()
+            width = int(parts[0].split(':')[1])
+            height = int(parts[1].split(':')[1])
+            if (width < 1366 or height < 1050):
+                self.error("ERROR: Invalid screen resolution %sx%s, "
+                           "please adjust to 1366x1050 or higher" % (
+                            width, height))
 
         self._populate_logger(options)
         self.outputHandler = OutputHandler(self.log, options.utilityPath, options.symbolsPath)
         # RemoteAutomation.py's 'messageLogger' is also used by mochitest. Mimic a mochitest
         # MessageLogger object to re-use this code path.
         self.outputHandler.write = self.outputHandler.__call__
+        self.automation = RemoteAutomation(self.device, options.app, self.remoteProfile,
+                                           options.remoteLogFile, processArgs=None)
         self.automation._processArgs['messageLogger'] = self.outputHandler
+
+        self.environment = self.automation.environment
+        if self.automation.IS_DEBUG_BUILD:
+            self.SERVER_STARTUP_TIMEOUT = 180
+        else:
+            self.SERVER_STARTUP_TIMEOUT = 90
+
+        self.remoteCache = os.path.join(options.remoteTestRoot, "cache/")
+
+        # Check that Firefox is installed
+        expected = options.app.split('/')[-1]
+        if not self.device.is_app_installed(expected):
+            raise Exception("%s is not installed on this device" % expected)
+
+        self.automation.deleteANRs()
+        self.automation.deleteTombstones()
+        self.device.clear_logcat()
+
+        self.device.rm(self.remoteCache, force=True, recursive=True)
+
+        procName = options.app.split('/')[-1]
+        self.device.pkill(procName)
+        if self.device.process_exist(procName):
+            self.log.error("unable to kill %s before starting tests!" % procName)
 
     def findPath(self, paths, filename=None):
         for path in paths:
@@ -283,9 +314,9 @@ class RemoteReftest(RefTest):
         profile.set_preferences(prefs)
 
         try:
-            self._devicemanager.pushDir(profileDir, options.remoteProfile)
-            self._devicemanager.chmodDir(options.remoteProfile)
-        except mozdevice.DMError:
+            self.device.push(profileDir, options.remoteProfile)
+            self.device.chmod(options.remoteProfile, recursive=True)
+        except Exception:
             print "Automation Error: Failed to copy profiledir to device"
             raise
 
@@ -294,20 +325,21 @@ class RemoteReftest(RefTest):
     def copyExtraFilesToProfile(self, options, profile):
         profileDir = profile.profile
         RefTest.copyExtraFilesToProfile(self, options, profile)
-        try:
-            self._devicemanager.pushDir(profileDir, options.remoteProfile)
-            self._devicemanager.chmodDir(options.remoteProfile)
-        except mozdevice.DMError:
-            print "Automation Error: Failed to copy extra files to device"
-            raise
+        if len(os.listdir(profileDir)) > 0:
+            try:
+                self.device.push(profileDir, options.remoteProfile)
+                self.device.chmod(options.remoteProfile, recursive=True)
+            except Exception:
+                print "Automation Error: Failed to copy extra files to device"
+                raise
 
     def printDeviceInfo(self, printLogcat=False):
         try:
             if printLogcat:
-                logcat = self._devicemanager.getLogcat(filterOutRegexps=fennecLogcatFilters)
+                logcat = self.device.get_logcat(filter_out_regexps=fennecLogcatFilters)
                 print ''.join(logcat)
             print "Device info:"
-            devinfo = self._devicemanager.getInfo()
+            devinfo = self.device.get_info()
             for category in devinfo:
                 if type(devinfo[category]) is list:
                     print "  %s:" % category
@@ -315,9 +347,9 @@ class RemoteReftest(RefTest):
                         print "     %s" % item
                 else:
                     print "  %s: %s" % (category, devinfo[category])
-            print "Test root: %s" % self._devicemanager.deviceRoot
-        except mozdevice.DMError:
-            print "WARNING: Error getting device information"
+            print "Test root: %s" % self.device.test_root
+        except Exception as e:
+            print "WARNING: Error getting device information: %s" % str(e)
 
     def environment(self, **kwargs):
         return self.automation.environment(**kwargs)
@@ -358,64 +390,15 @@ class RemoteReftest(RefTest):
         return status
 
     def cleanup(self, profileDir):
-        # Pull results back from device
-        if self.remoteLogFile and \
-                self._devicemanager.fileExists(self.remoteLogFile):
-            self._devicemanager.getFile(self.remoteLogFile, self.localLogName)
-        else:
-            print "WARNING: Unable to retrieve log file (%s) from remote " \
-                "device" % self.remoteLogFile
-        self._devicemanager.removeDir(self.remoteProfile)
-        self._devicemanager.removeDir(self.remoteCache)
-        self._devicemanager.removeDir(self.remoteTestRoot)
+        self.device.rm(self.remoteTestRoot,  force=True, recursive=True)
+        self.device.rm(self.remoteProfile, force=True, recursive=True)
+        self.device.rm(self.remoteCache, force=True, recursive=True)
         RefTest.cleanup(self, profileDir)
-        if (self.pidFile != ""):
-            try:
-                os.remove(self.pidFile)
-                os.remove(self.pidFile + ".xpcshell.pid")
-            except Exception:
-                print ("Warning: cleaning up pidfile '%s' was unsuccessful "
-                       "from the test harness" % self.pidFile)
 
 
 def run_test_harness(parser, options):
-    dm_args = {
-        'deviceRoot': options.remoteTestRoot,
-        'host': options.deviceIP,
-        'port': options.devicePort,
-    }
-
-    dm_args['adbPath'] = options.adb_path
-    if not dm_args['host']:
-        dm_args['deviceSerial'] = options.deviceSerial
-    if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
-        dm_args['logLevel'] = logging.DEBUG
-
-    try:
-        dm = mozdevice.DroidADB(**dm_args)
-    except mozdevice.DMError:
-        traceback.print_exc()
-        print ("Automation Error: exception while initializing devicemanager.  "
-               "Most likely the device is not in a testable state.")
-        return 1
-
-    automation = RemoteAutomation(None)
-    automation.setDeviceManager(dm)
-
-    # Set up the defaults and ensure options are set
-    parser.validate_remote(options, automation)
-
-    # Check that Firefox is installed
-    expected = options.app.split('/')[-1]
-    installed = dm.shellCheckOutput(['pm', 'list', 'packages', expected])
-    if expected not in installed:
-        print "%s is not installed on this device" % expected
-        return 1
-
-    automation.setAppName(options.app)
-    automation.setRemoteProfile(options.remoteProfile)
-    automation.setRemoteLog(options.remoteLogFile)
-    reftest = RemoteReftest(automation, dm, options, SCRIPT_DIRECTORY)
+    reftest = RemoteReftest(options, SCRIPT_DIRECTORY)
+    parser.validate_remote(options, reftest.automation)
     parser.validate(options, reftest)
 
     if mozinfo.info['debug']:
@@ -438,20 +421,11 @@ def run_test_harness(parser, options):
     if retVal:
         return retVal
 
-    procName = options.app.split('/')[-1]
-    dm.killProcess(procName)
-    if dm.processExist(procName):
-        print "unable to kill %s before starting tests!" % procName
-
     if options.printDeviceInfo:
         reftest.printDeviceInfo()
 
-# an example manifest name to use on the cli
-# manifest = "http://" + options.remoteWebServer +
-# "/reftests/layout/reftests/reftest-sanity/reftest.list"
     retVal = 0
     try:
-        dm.recordLogcat()
         if options.verify:
             retVal = reftest.verifyTests(options.tests, options)
         else:
