@@ -737,7 +737,6 @@ protected:
     nsresult HideWindowChrome(bool aShouldHide);
     void SetChromeMargins(const nsAttrValue* aValue);
     void ResetChromeMargins();
-    void SetTitlebarColor(nscolor aColor, bool aActive);
 
     void SetDrawsInTitlebar(bool aState);
     void SetDrawsTitle(bool aState);
