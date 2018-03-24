@@ -113,15 +113,15 @@ public:
   }
 
 private:
-  void GetActiveState(nsAString& astate)
+  void GetActiveState(nsAString& aState)
   {
     if (mActive) {
-      CopyASCIItoUTF16("active", astate);
+      aState.AssignLiteral("active");
     } else {
       if(mReason == AudioChannelService::AudibleChangedReasons::ePauseStateChanged) {
-        CopyASCIItoUTF16("inactive-pause", astate);
+        aState.AssignLiteral("inactive-pause");
       } else {
-        CopyASCIItoUTF16("inactive-nonaudible", astate);
+        aState.AssignLiteral("inactive-nonaudible");
       }
     }
   }
