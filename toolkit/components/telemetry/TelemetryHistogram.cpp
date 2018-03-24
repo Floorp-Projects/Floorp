@@ -1587,43 +1587,31 @@ internal_JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
 
   // If we don't have an argument for the count histogram, assume an increment of 1.
   // Otherwise, make sure to run some sanity checks on the argument.
-  uint32_t value = 1;
-  if ((type != nsITelemetry::HISTOGRAM_COUNT) || (args.length() == 2)) {
-    if (args.length() < 2) {
+
+  // Special case of only key argument and count histogram
+  if (args.length() == 1) {
+    if (!(type == nsITelemetry::HISTOGRAM_COUNT)) {
       LogToBrowserConsole(nsIScriptError::errorFlag,
-                          NS_LITERAL_STRING("Expected two arguments for this histogram type"));
+          NS_LITERAL_STRING("Need at least one argument for non count type histogram"));
       return true;
     }
 
-    if (type == nsITelemetry::HISTOGRAM_CATEGORICAL && args[1].isString()) {
-      // For categorical histograms we allow passing a string argument that specifies the label.
-
-      // Get label string.
-      nsAutoJSString label;
-      if (!label.init(cx, args[1])) {
-        LogToBrowserConsole(nsIScriptError::errorFlag, NS_LITERAL_STRING("Invalid string parameter"));
-        return true;
-      }
-
-      // Get label id value.
-      nsresult rv = gHistogramInfos[id].label_id(NS_ConvertUTF16toUTF8(label).get(), &value);
-      if (NS_FAILED(rv)) {
-        LogToBrowserConsole(nsIScriptError::errorFlag,
-                            NS_LITERAL_STRING("Unknown label for categorical histogram"));
-        return true;
-      }
-    } else {
-      // All other accumulations expect one numerical argument.
-      if (!(args[1].isNumber() || args[1].isBoolean())) {
-        LogToBrowserConsole(nsIScriptError::errorFlag, NS_LITERAL_STRING("Not a number"));
-        return true;
-      }
-
-      if (!JS::ToUint32(cx, args[1], &value)) {
-        LogToBrowserConsole(nsIScriptError::errorFlag, NS_LITERAL_STRING("Failed to convert argument"));
-        return true;
-      }
+    {
+      StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+      internal_Accumulate(id, NS_ConvertUTF16toUTF8(key), 1);
     }
+    return true;
+  }
+
+  if (args.length() < 2) {
+    LogToBrowserConsole(nsIScriptError::errorFlag,
+                        NS_LITERAL_STRING("Expected two arguments for this histogram type"));
+    return true;
+  }
+
+  uint32_t value = 0;
+  if (!internal_JSHistogram_CoerceValue(cx, args[1], id, type, value)) {
+    return true;
   }
 
   {
