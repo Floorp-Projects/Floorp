@@ -114,7 +114,9 @@ WebRenderLayerScrollData::Dump(const WebRenderScrollData& aOwner) const
     Stringify(mVisibleRegion).c_str());
   printf_stderr("  event regions: %s override: 0x%x\n",
     Stringify(mEventRegions).c_str(), mEventRegionsOverride);
-  printf_stderr("  ref layers id: 0x%" PRIx64 "\n", mReferentId.valueOr(0));
+  if (mReferentId) {
+    printf_stderr("  ref layers id: 0x%" PRIx64 "\n", uint64_t(*mReferentId));
+  }
   //printf_stderr("  scroll thumb: %s animation: %" PRIu64 "\n",
   //  Stringify(mScrollThumbData).c_str(), mScrollbarAnimationId);
   printf_stderr("  scroll container: %d target: %" PRIu64 "\n",

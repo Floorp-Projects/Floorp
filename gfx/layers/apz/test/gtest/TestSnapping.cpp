@@ -35,8 +35,8 @@ TEST_F(APZCSnappingTester, Bug1265510)
   metadata.SetSnapInfo(ScrollSnapInfo(snap));
   root->SetScrollMetadata(metadata);
 
-  UniquePtr<ScopedLayerTreeRegistration> registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-  manager->UpdateHitTestingTree(0, root, false, 0, 0);
+  UniquePtr<ScopedLayerTreeRegistration> registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
+  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
 
   TestAsyncPanZoomController* outer = ApzcOf(layers[0]);
   TestAsyncPanZoomController* inner = ApzcOf(layers[1]);
@@ -90,8 +90,8 @@ TEST_F(APZCSnappingTester, Snap_After_Pinch)
   metadata.GetMetrics().SetIsRootContent(true);
   root->SetScrollMetadata(metadata);
 
-  UniquePtr<ScopedLayerTreeRegistration> registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-  manager->UpdateHitTestingTree(0, root, false, 0, 0);
+  UniquePtr<ScopedLayerTreeRegistration> registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
+  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
 
   RefPtr<TestAsyncPanZoomController> apzc = ApzcOf(root);
 

@@ -19,10 +19,10 @@ class APZCTreeManagerParent
 {
 public:
 
-  explicit APZCTreeManagerParent(uint64_t aLayersId, RefPtr<APZCTreeManager> aAPZCTreeManager);
+  explicit APZCTreeManagerParent(LayersId aLayersId, RefPtr<APZCTreeManager> aAPZCTreeManager);
   virtual ~APZCTreeManagerParent();
 
-  uint64_t LayersId() const { return mLayersId; }
+  LayersId GetLayersId() const { return mLayersId; }
 
   /**
    * Called when the layer tree that this protocol is connected to
@@ -82,7 +82,7 @@ public:
   ActorDestroy(ActorDestroyReason aWhy) override { }
 
 private:
-  uint64_t mLayersId;
+  LayersId mLayersId;
   RefPtr<APZCTreeManager> mTreeManager;
 };
 

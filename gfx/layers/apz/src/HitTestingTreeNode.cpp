@@ -24,7 +24,7 @@ using gfx::CompositorHitTestInfo;
 
 HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
                                        bool aIsPrimaryHolder,
-                                       uint64_t aLayersId)
+                                       LayersId aLayersId)
   : mApzc(aApzc)
   , mIsPrimaryApzcHolder(aIsPrimaryHolder)
   , mLayersId(aLayersId)
@@ -41,7 +41,7 @@ if (mIsPrimaryApzcHolder) {
 
 void
 HitTestingTreeNode::RecycleWith(AsyncPanZoomController* aApzc,
-                                uint64_t aLayersId)
+                                LayersId aLayersId)
 {
   MOZ_ASSERT(!mIsPrimaryApzcHolder);
   Destroy(); // clear out tree pointers
@@ -72,7 +72,7 @@ HitTestingTreeNode::Destroy()
     mApzc = nullptr;
   }
 
-  mLayersId = 0;
+  mLayersId = LayersId{0};
 }
 
 void
@@ -252,7 +252,7 @@ HitTestingTreeNode::IsPrimaryHolder() const
   return mIsPrimaryApzcHolder;
 }
 
-uint64_t
+LayersId
 HitTestingTreeNode::GetLayersId() const
 {
   return mLayersId;
@@ -377,7 +377,7 @@ HitTestingTreeNode::Dump(const char* aPrefix) const
   }
   printf_stderr("%sHitTestingTreeNode (%p) APZC (%p) g=(%s) %s%s%sr=(%s) t=(%s) c=(%s)%s%s\n",
     aPrefix, this, mApzc.get(),
-    mApzc ? Stringify(mApzc->GetGuid()).c_str() : nsPrintfCString("l=0x%" PRIx64, mLayersId).get(),
+    mApzc ? Stringify(mApzc->GetGuid()).c_str() : nsPrintfCString("l=0x%" PRIx64, uint64_t(mLayersId)).get(),
     (mOverride & EventRegionsOverride::ForceDispatchToContent) ? "fdtc " : "",
     (mOverride & EventRegionsOverride::ForceEmptyHitRegion) ? "fehr " : "",
     (mFixedPosTarget != FrameMetrics::NULL_SCROLL_ID) ? nsPrintfCString("fixed=%" PRIu64 " ", mFixedPosTarget).get() : "",

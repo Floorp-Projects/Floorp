@@ -20,7 +20,7 @@ FocusState::FocusState()
   , mLastContentProcessedEvent(0)
   , mFocusHasKeyEventListeners(false)
   , mReceivedUpdate(false)
-  , mFocusLayersId(0)
+  , mFocusLayersId{0}
   , mFocusHorizontalTarget(FrameMetrics::NULL_SCROLL_ID)
   , mFocusVerticalTarget(FrameMetrics::NULL_SCROLL_ID)
 {
@@ -66,8 +66,8 @@ FocusState::ReceiveFocusChangingEvent()
 }
 
 void
-FocusState::Update(uint64_t aRootLayerTreeId,
-                   uint64_t aOriginatingLayersId,
+FocusState::Update(LayersId aRootLayerTreeId,
+                   LayersId aOriginatingLayersId,
                    const FocusTarget& aState)
 {
   APZThreadUtils::AssertOnSamplerThread();
@@ -132,7 +132,7 @@ FocusState::Update(uint64_t aRootLayerTreeId,
         return true;
       }
 
-      bool match(const FocusTarget::RefLayerId aRefLayerId) {
+      bool match(const LayersId& aRefLayerId) {
         // Guard against infinite loops
         MOZ_ASSERT(mFocusState.mFocusLayersId != aRefLayerId);
         if (mFocusState.mFocusLayersId == aRefLayerId) {
@@ -180,7 +180,7 @@ FocusState::Update(uint64_t aRootLayerTreeId,
 }
 
 void
-FocusState::RemoveFocusTarget(uint64_t aLayersId)
+FocusState::RemoveFocusTarget(LayersId aLayersId)
 {
   APZThreadUtils::AssertOnSamplerThread();
   MutexAutoLock lock(mMutex);

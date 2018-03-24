@@ -164,7 +164,7 @@ GPUParent::NotifyDeviceReset()
 }
 
 PAPZInputBridgeParent*
-GPUParent::AllocPAPZInputBridgeParent(const uint64_t& aLayersId)
+GPUParent::AllocPAPZInputBridgeParent(const LayersId& aLayersId)
 {
   APZInputBridgeParent* parent = new APZInputBridgeParent(aLayersId);
   parent->AddRef();
@@ -294,7 +294,7 @@ GPUParent::RecvInitVRManager(Endpoint<PVRManagerParent>&& aEndpoint)
 }
 
 mozilla::ipc::IPCResult
-GPUParent::RecvInitUiCompositorController(const uint64_t& aRootLayerTreeId, Endpoint<PUiCompositorControllerParent>&& aEndpoint)
+GPUParent::RecvInitUiCompositorController(const LayersId& aRootLayerTreeId, Endpoint<PUiCompositorControllerParent>&& aEndpoint)
 {
   UiCompositorControllerParent::Start(aRootLayerTreeId, Move(aEndpoint));
   return IPC_OK();

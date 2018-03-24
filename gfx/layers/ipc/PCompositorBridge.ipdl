@@ -21,6 +21,7 @@ include "mozilla/layers/LayersMessageUtils.h";
 include "mozilla/layers/WebRenderMessageUtils.h";
 
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+using struct mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
@@ -88,14 +89,14 @@ child:
   // The child should invalidate retained layers. This is used for local
   // compositor device resets, such as in CompositorD3D9, and ensures that
   // TextureSources are recreated.
-  async InvalidateLayers(uint64_t layersId);
+  async InvalidateLayers(LayersId layersId);
 
   // The compositor completed a layers transaction. id is the layers id
   // of the child layer tree that was composited (or 0 when notifying
   // the root layer tree).
   // transactionId is the id of the transaction before this composite, or 0
   // if there was no transaction since the last composite.
-  async DidComposite(uint64_t id, uint64_t transactionId,
+  async DidComposite(LayersId id, uint64_t transactionId,
                      TimeStamp compositeStart, TimeStamp compositeEnd);
 
   /**
@@ -131,7 +132,7 @@ child:
 
   async ParentAsyncMessages(AsyncParentMessageData[] aMessages);
 
-  async ObserveLayerUpdate(uint64_t aLayersId, uint64_t aEpoch, bool aActive);
+  async ObserveLayerUpdate(LayersId aLayersId, uint64_t aEpoch, bool aActive);
 
 parent:
   async __delete__();
@@ -140,11 +141,11 @@ parent:
   async PCompositorWidget(CompositorWidgetInitData aInitData);
 
   // When out-of-process, this must be called to finish initialization.
-  sync Initialize(uint64_t rootLayerTreeId);
+  sync Initialize(LayersId rootLayerTreeId);
 
   // Must be called after Initialize(), and only succeeds if AsyncPanZoomEnabled() is true.
-  async PAPZ(uint64_t layersId);
-  async PAPZCTreeManager(uint64_t layersId);
+  async PAPZ(LayersId layersId);
+  async PAPZCTreeManager(LayersId layersId);
 
   /**
    * Confirmation callback for UpdatePluginConfigurations and HideAllPlugins.
@@ -165,23 +166,23 @@ parent:
 
   // See bug 1316632 comment #33 for why this has to be sync. Otherwise,
   // there are ordering issues with SendPLayerTransactionConstructor.
-  sync NotifyChildCreated(uint64_t id)
+  sync NotifyChildCreated(LayersId id)
     returns (CompositorOptions compositorOptions);
 
   // This version of NotifyChildCreated also performs a layer tree mapping.
   //
   // See bug 1316632 comment #33 for why this has to be sync. Otherwise,
   // there are ordering issues with SendPLayerTransactionConstructor.
-  sync MapAndNotifyChildCreated(uint64_t id, ProcessId owner)
+  sync MapAndNotifyChildCreated(LayersId id, ProcessId owner)
     returns (CompositorOptions compositorOptions);
 
-  async AdoptChild(uint64_t id);
+  async AdoptChild(LayersId id);
 
   // Same as NotifyChildCreated, but used when child processes need to
   // reassociate layers. This must be synchronous to ensure that the
   // association happens before PLayerTransactions are sent over the
   // cross-process bridge.
-  sync NotifyChildRecreated(uint64_t id)
+  sync NotifyChildRecreated(LayersId id)
     returns (CompositorOptions compositorOptions);
 
   // Make a snapshot of the content that would have been drawn to our
@@ -217,7 +218,7 @@ parent:
   // layersBackendHints is an ordered list of preffered backends where
   // layersBackendHints[0] is the best backend. If any hints are LayersBackend::LAYERS_NONE
   // that hint is ignored.
-  async PLayerTransaction(LayersBackend[] layersBackendHints, uint64_t id);
+  async PLayerTransaction(LayersBackend[] layersBackendHints, LayersId id);
 
   // Notify the compositor that a region of the screen has been invalidated.
   async NotifyRegionInvalidated(nsIntRegion region);
@@ -235,7 +236,7 @@ parent:
    */
   async AllPluginsCaptured();
 
-  async PTexture(SurfaceDescriptor aSharedData, ReadLockDescriptor aReadLock, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t id, uint64_t aSerial, MaybeExternalImageId aExternalImageId);
+  async PTexture(SurfaceDescriptor aSharedData, ReadLockDescriptor aReadLock, LayersBackend aBackend, TextureFlags aTextureFlags, LayersId id, uint64_t aSerial, MaybeExternalImageId aExternalImageId);
 
   sync SyncWithCompositor();
 
@@ -249,7 +250,7 @@ parent:
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can
   // update progressively.
-  async SharedCompositorFrameMetrics(Handle metrics, CrossProcessMutexHandle mutex, uint64_t aLayersId, uint32_t aAPZCId);
+  async SharedCompositorFrameMetrics(Handle metrics, CrossProcessMutexHandle mutex, LayersId aLayersId, uint32_t aAPZCId);
   async ReleaseSharedCompositorFrameMetrics(ViewID aId, uint32_t aAPZCId);
   async NotifyWebRenderError(WebRenderError error);
 };

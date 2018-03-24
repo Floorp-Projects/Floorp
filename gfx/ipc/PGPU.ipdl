@@ -25,6 +25,7 @@ using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::gfx::Feature from "gfxFeature.h";
 using mozilla::gfx::Fallback from "gfxFallback.h";
+using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 
 namespace mozilla {
 namespace gfx {
@@ -43,7 +44,7 @@ struct GfxPrefSetting {
 };
 
 struct LayerTreeIdMapping {
-  uint64_t layersId;
+  LayersId layersId;
   ProcessId ownerId;
 };
 
@@ -57,7 +58,7 @@ sync protocol PGPU
 parent:
   // Sent from the UI process to initialize a new APZ input bridge when a new
   // top-level compositor is created.
-  async PAPZInputBridge(uint64_t aLayersId);
+  async PAPZInputBridge(LayersId aLayersId);
 
   // Sent by the UI process to initiate core settings.
   async Init(GfxPrefSetting[] prefs,
@@ -69,7 +70,7 @@ parent:
   async InitVsyncBridge(Endpoint<PVsyncBridgeParent> endpoint);
   async InitImageBridge(Endpoint<PImageBridgeParent> endpoint);
   async InitVRManager(Endpoint<PVRManagerParent> endpoint);
-  async InitUiCompositorController(uint64_t rootLayerTreeId, Endpoint<PUiCompositorControllerParent> endpoint);
+  async InitUiCompositorController(LayersId rootLayerTreeId, Endpoint<PUiCompositorControllerParent> endpoint);
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
 
   // Called to update a gfx preference or variable.
