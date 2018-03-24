@@ -505,6 +505,26 @@ struct NotableScriptSourceInfo : public ScriptSourceInfo
 };
 
 /**
+ * Measurements that not associated with any individual runtime.
+ */
+struct GlobalStats
+{
+#define FOR_EACH_SIZE(macro) \
+    macro(_, MallocHeap, tracelogger)
+
+    explicit GlobalStats(mozilla::MallocSizeOf mallocSizeOf)
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        mallocSizeOf_(mallocSizeOf)
+    { }
+
+    FOR_EACH_SIZE(DECL_SIZE)
+
+    mozilla::MallocSizeOf mallocSizeOf_;
+
+#undef FOR_EACH_SIZE
+};
+
+/**
  * These measurements relate directly to the JSRuntime, and not to zones,
  * compartments, and realms within it.
  */
@@ -954,6 +974,9 @@ class ObjectPrivateVisitor
 };
 
 extern JS_PUBLIC_API(bool)
+CollectGlobalStats(GlobalStats* gStats);
+
+extern JS_PUBLIC_API(bool)
 CollectRuntimeStats(JSContext* cx, RuntimeStats* rtStats, ObjectPrivateVisitor* opv, bool anonymize);
 
 extern JS_PUBLIC_API(size_t)
@@ -972,9 +995,6 @@ AddSizeOfTab(JSContext* cx, JS::HandleObject obj, mozilla::MallocSizeOf mallocSi
 extern JS_PUBLIC_API(bool)
 AddServoSizeOf(JSContext* cx, mozilla::MallocSizeOf mallocSizeOf,
                ObjectPrivateVisitor* opv, ServoSizes* sizes);
-
-extern JS_PUBLIC_API(void)
-CollectTraceLoggerStateStats(RuntimeStats* rtStats);
 
 } // namespace JS
 
