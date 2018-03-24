@@ -11,12 +11,12 @@ description: >
 
 
 assert.throws(TypeError, function() {
-            Object.create({}, {
-                prop: {
-                    get: function () { },
-                    writable: true
-                }
-            });
+  Object.create({}, {
+    prop: {
+      get: function() {},
+      writable: true
+    }
+  });
 });
 
 reportCompare(0, 0);

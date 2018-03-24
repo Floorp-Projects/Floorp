@@ -8,6 +8,8 @@ description: >
     value can return undefined.
 ---*/
 
-assert.sameValue(JSON.stringify(42, function(k, v) { return undefined }), undefined, 'JSON.stringify(42, function(k, v) { return undefined })');
+assert.sameValue(JSON.stringify(42, function(k, v) {
+  return undefined
+}), undefined, 'JSON.stringify(42, function(k, v) { return undefined })');
 
 reportCompare(0, 0);

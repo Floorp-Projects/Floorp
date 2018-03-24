@@ -31,7 +31,7 @@ diff --git a/include/ffi.h.in b/include/ffi.h.in
 index 70c6179..ebed0aa 100644
 --- a/include/ffi.h.in
 +++ b/include/ffi.h.in
-@@ -68,7 +68,7 @@ extern "C" {
+@@ -68,7 +68,13 @@
  
  #ifndef LIBFFI_ASM
  
@@ -39,6 +39,12 @@ index 70c6179..ebed0aa 100644
 +#if defined(_MSC_VER) && !defined(__clang__)
  #define __attribute__(X)
  #endif
++
++/* Disable regparm under clang-cl because the assembly thunks were
++   written for MSVC and pass all parameters on the stack. */
++#if defined(_MSC_VER) && defined(__clang__)
++#define regparm(X)
++#endif
  
 diff --git a/msvcc.sh b/msvcc.sh
 index 9208076..4a65b0b 100755

@@ -8,7 +8,7 @@ description: >
     a string
 ---*/
 
-        var errObj = new Error("test");
+var errObj = new Error("test");
 
 assert.sameValue(String.prototype.trim.call(errObj), "Error: test", 'String.prototype.trim.call(errObj)');
 

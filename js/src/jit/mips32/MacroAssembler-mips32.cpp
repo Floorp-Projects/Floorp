@@ -209,9 +209,8 @@ MacroAssemblerMIPS::ma_liPatchable(Register dest, ImmWord imm)
 // Arithmetic-based ops.
 
 // Add.
-template <typename L>
 void
-MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Register rt, L overflow)
+MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Register rt, Label* overflow)
 {
     Label goodAddition;
     as_addu(rd, rs, rt);
@@ -226,16 +225,8 @@ MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Register rt, L 
     bind(&goodAddition);
 }
 
-template void
-MacroAssemblerMIPS::ma_addTestOverflow<Label*>(Register rd, Register rs,
-                                               Register rt, Label* overflow);
-template void
-MacroAssemblerMIPS::ma_addTestOverflow<wasm::OldTrapDesc>(Register rd, Register rs, Register rt,
-                                                          wasm::OldTrapDesc overflow);
-
-template <typename L>
 void
-MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Imm32 imm, L overflow)
+MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow)
 {
     // Check for signed range because of as_addiu
     // Check for unsigned range because of as_xori
@@ -257,13 +248,6 @@ MacroAssemblerMIPS::ma_addTestOverflow(Register rd, Register rs, Imm32 imm, L ov
         ma_addTestOverflow(rd, rs, ScratchRegister, overflow);
     }
 }
-
-template void
-MacroAssemblerMIPS::ma_addTestOverflow<Label*>(Register rd, Register rs,
-                                               Imm32 imm, Label* overflow);
-template void
-MacroAssemblerMIPS::ma_addTestOverflow<wasm::OldTrapDesc>(Register rd, Register rs, Imm32 imm,
-                                                          wasm::OldTrapDesc overflow);
 
 // Subtract.
 void
@@ -1130,27 +1114,26 @@ MacroAssemblerMIPSCompat::loadUnalignedDouble(const wasm::MemoryAccessDesc& acce
     MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
     computeScaledAddress(src, SecondScratchReg);
 
-    uint32_t framePushed = asMasm().framePushed();
     BufferOffset load;
     if (Imm16::IsInSignedRange(src.offset) && Imm16::IsInSignedRange(src.offset + 7)) {
         load = as_lwl(temp, SecondScratchReg, src.offset + INT64LOW_OFFSET + 3);
         as_lwr(temp, SecondScratchReg, src.offset + INT64LOW_OFFSET);
-        append(access, load.getOffset(), framePushed);
+        append(access, load.getOffset());
         moveToDoubleLo(temp, dest);
         load = as_lwl(temp, SecondScratchReg, src.offset + INT64HIGH_OFFSET + 3);
         as_lwr(temp, SecondScratchReg, src.offset + INT64HIGH_OFFSET);
-        append(access, load.getOffset(), framePushed);
+        append(access, load.getOffset());
         moveToDoubleHi(temp, dest);
     } else {
         ma_li(ScratchRegister, Imm32(src.offset));
         as_daddu(ScratchRegister, SecondScratchReg, ScratchRegister);
         load = as_lwl(temp, ScratchRegister, INT64LOW_OFFSET + 3);
         as_lwr(temp, ScratchRegister, INT64LOW_OFFSET);
-        append(access, load.getOffset(), framePushed);
+        append(access, load.getOffset());
         moveToDoubleLo(temp, dest);
         load = as_lwl(temp, ScratchRegister, INT64HIGH_OFFSET + 3);
         as_lwr(temp, ScratchRegister, INT64HIGH_OFFSET);
-        append(access, load.getOffset(), framePushed);
+        append(access, load.getOffset());
         moveToDoubleHi(temp, dest);
     }
 }
@@ -1171,7 +1154,7 @@ MacroAssemblerMIPSCompat::loadUnalignedFloat32(const wasm::MemoryAccessDesc& acc
         load = as_lwl(temp, ScratchRegister, 3);
         as_lwr(temp, ScratchRegister, 0);
     }
-    append(access, load.getOffset(), asMasm().framePushed());
+    append(access, load.getOffset());
     moveToFloat32(temp, dest);
 }
 
@@ -1326,7 +1309,7 @@ MacroAssemblerMIPSCompat::storeUnalignedFloat32(const wasm::MemoryAccessDesc& ac
         store = as_swl(temp, ScratchRegister, 3);
         as_swr(temp, ScratchRegister, 0);
     }
-    append(access, store.getOffset(), asMasm().framePushed());
+    append(access, store.getOffset());
 }
 
 void
@@ -1336,7 +1319,6 @@ MacroAssemblerMIPSCompat::storeUnalignedDouble(const wasm::MemoryAccessDesc& acc
     MOZ_ASSERT(MOZ_LITTLE_ENDIAN, "Wasm-only; wasm is disabled on big-endian.");
     computeScaledAddress(dest, SecondScratchReg);
 
-    uint32_t framePushed = asMasm().framePushed();
     BufferOffset store;
     if (Imm16::IsInSignedRange(dest.offset) && Imm16::IsInSignedRange(dest.offset + 7)) {
         moveFromDoubleHi(src, temp);
@@ -1356,7 +1338,7 @@ MacroAssemblerMIPSCompat::storeUnalignedDouble(const wasm::MemoryAccessDesc& acc
         as_swl(temp, ScratchRegister, INT64LOW_OFFSET + 3);
         as_swr(temp, ScratchRegister, INT64LOW_OFFSET);
     }
-    append(access, store.getOffset(), framePushed);
+    append(access, store.getOffset());
 }
 
 void
@@ -2491,6 +2473,20 @@ MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType value
 
 
 void
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, Label* label)
+{
+     ma_b(index, boundsCheckLimit, label, cond);
+}
+
+void
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    load32(boundsCheckLimit,SecondScratchReg);
+    ma_b(index, SecondScratchReg, label, cond);
+}
+
+void
 MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, bool isSaturating,
                                            Label* oolEntry)
 {
@@ -2632,7 +2628,7 @@ MacroAssemblerMIPSCompat::wasmLoadI64Impl(const wasm::MemoryAccessDesc& access, 
     if (byteSize <= 4) {
         asMasm().ma_load(output.low, address, static_cast<LoadStoreSize>(8 * byteSize),
                          isSigned ? SignExtend : ZeroExtend);
-        asMasm().append(access, asMasm().size() - 4 , asMasm().framePushed());
+        asMasm().append(access, asMasm().size() - 4);
         if (!isSigned)
             asMasm().move32(Imm32(0), output.high);
         else
@@ -2640,9 +2636,9 @@ MacroAssemblerMIPSCompat::wasmLoadI64Impl(const wasm::MemoryAccessDesc& access, 
     } else {
         MOZ_ASSERT(output.low != ptr);
         asMasm().ma_load(output.low, BaseIndex(HeapReg, ptr, TimesOne), SizeWord);
-        asMasm().append(access, asMasm().size() - 4 , asMasm().framePushed());
+        asMasm().append(access, asMasm().size() - 4);
         asMasm().ma_load(output.high, BaseIndex(HeapReg, ptr, TimesOne, INT64HIGH_OFFSET), SizeWord);
-        asMasm().append(access, asMasm().size() - 4 , asMasm().framePushed());
+        asMasm().append(access, asMasm().size() - 4);
     }
     asMasm().memoryBarrierAfter(access.sync());
 }
@@ -2695,11 +2691,11 @@ MacroAssemblerMIPSCompat::wasmStoreI64Impl(const wasm::MemoryAccessDesc& access,
     asMasm().memoryBarrierBefore(access.sync());
     if (byteSize <= 4) {
         asMasm().ma_store(value.low, address, static_cast<LoadStoreSize>(8 * byteSize));
-        asMasm().append(access, asMasm().size() - 4, asMasm().framePushed());
+        asMasm().append(access, asMasm().size() - 4);
     } else {
         asMasm().ma_store(value.high, BaseIndex(HeapReg, ptr, TimesOne, INT64HIGH_OFFSET),
                           SizeWord);
-        asMasm().append(access, asMasm().size() - 4, asMasm().framePushed());
+        asMasm().append(access, asMasm().size() - 4);
         asMasm().ma_store(value.low, address, SizeWord);
     }
     asMasm().memoryBarrierAfter(access.sync());

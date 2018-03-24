@@ -6,11 +6,11 @@ es5id: 15.12.3_4-1-1
 description: JSON.stringify a circular object throws a error
 ---*/
 
-  var obj = {};
-  obj.prop = obj;
+var obj = {};
+obj.prop = obj;
 
 assert.throws(TypeError, function() {
-     JSON.stringify(obj);
+  JSON.stringify(obj);
 });
 
 reportCompare(0, 0);

@@ -192,7 +192,8 @@ config = {
         "gtest": []
     },
     "all_jittest_suites": {
-        "jittest": []
+        "jittest": [],
+        "jittest-chunked": []
     },
     "all_mozbase_suites": {
         "mozbase": []

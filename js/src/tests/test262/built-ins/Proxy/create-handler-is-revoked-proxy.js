@@ -16,7 +16,7 @@ var revocable = Proxy.revocable({}, {});
 revocable.revoke();
 
 assert.throws(TypeError, function() {
-    new Proxy({}, revocable.proxy);
+  new Proxy({}, revocable.proxy);
 });
 
 reportCompare(0, 0);

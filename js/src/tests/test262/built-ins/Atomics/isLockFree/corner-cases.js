@@ -1,3 +1,4 @@
+// |reftest| skip-if(!this.hasOwnProperty('Atomics')) -- Atomics is not enabled unconditionally
 // Copyright (C) 2017 Mozilla Corporation.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -5,6 +6,7 @@
 esid: sec-atomics.islockfree
 description: >
   Test isLockFree on various non-intuitive arguments
+features: [Atomics]
 ---*/
 
 assert.sameValue(false, Atomics.isLockFree(hide(3, Number.NaN)));
@@ -23,10 +25,9 @@ assert.sameValue(Atomics.isLockFree(1), Atomics.isLockFree({toString: () => '1'}
 assert.sameValue(Atomics.isLockFree(3), Atomics.isLockFree({toString: () => '3'}));
 
 function hide(k, x) {
-    if (k)
-        return hide(k-3, x) + x;
-    return 0;
+  if (k)
+    return hide(k - 3, x) + x;
+  return 0;
 }
-
 
 reportCompare(0, 0);

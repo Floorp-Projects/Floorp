@@ -13,25 +13,25 @@ includes: [propertyHelper.js]
 flags: [noStrict]
 ---*/
 
-(function (a, b, c) {
-    Object.defineProperty(arguments, "0", {
-        value: 20,
-        writable: false,
-        enumerable: false,
-        configurable: false
-    });
+(function(a, b, c) {
+  Object.defineProperty(arguments, "0", {
+    value: 20,
+    writable: false,
+    enumerable: false,
+    configurable: false
+  });
 
-    if (a !== 20) {
-        $ERROR('Expected a === 20, actually ' + a);
-    }
+  if (a !== 20) {
+    $ERROR('Expected a === 20, actually ' + a);
+  }
 
-    verifyEqualTo(arguments, "0", 20);
+  verifyEqualTo(arguments, "0", 20);
 
-    verifyNotWritable(arguments, "0");
+  verifyNotWritable(arguments, "0");
 
-    verifyNotEnumerable(arguments, "0");
+  verifyNotEnumerable(arguments, "0");
 
-    verifyNotConfigurable(arguments, "0");
+  verifyNotConfigurable(arguments, "0");
 }(0, 1, 2));
 
 reportCompare(0, 0);

@@ -16,23 +16,23 @@ info: |
 ---*/
 
 var target = {
-    foo: 1
+  foo: 1
 };
 
 Object.defineProperty(target, "attr", {
-    configurable: false,
-    enumerable: true,
-    value: true
+  configurable: false,
+  enumerable: true,
+  value: true
 });
 
 var p = new Proxy(target, {
-    ownKeys: function() {
-        return ["foo"];
-    }
+  ownKeys: function() {
+    return ["foo"];
+  }
 });
 
 assert.throws(TypeError, function() {
-    Object.keys(p);
+  Object.keys(p);
 });
 
 reportCompare(0, 0);

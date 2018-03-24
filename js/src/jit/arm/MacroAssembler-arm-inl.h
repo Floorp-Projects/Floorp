@@ -1635,9 +1635,9 @@ MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src, Register dest, La
     ma_b(fail, Assembler::Equal);
 }
 
-template <typename T, typename L>
+template <typename T>
 void
-MacroAssembler::branchAdd32(Condition cond, T src, Register dest, L label)
+MacroAssembler::branchAdd32(Condition cond, T src, Register dest, Label* label)
 {
     add32(src, dest);
     as_b(label, cond);
@@ -2296,32 +2296,6 @@ MacroAssembler::clampIntToUint8(Register reg)
     as_mov(scratch, asr(reg, 8), SetCC);
     ma_mov(Imm32(0xff), reg, NotEqual);
     ma_mov(Imm32(0), reg, Signed);
-}
-
-// ========================================================================
-// wasm support
-
-template <class L>
-void
-MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, L label)
-{
-    as_cmp(index, O2Reg(boundsCheckLimit));
-    as_b(label, cond);
-    if (JitOptions.spectreIndexMasking)
-        ma_mov(boundsCheckLimit, index, LeaveCC, cond);
-}
-
-template <class L>
-void
-MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, L label)
-{
-    ScratchRegisterScope scratch(*this);
-    MOZ_ASSERT(boundsCheckLimit.offset == offsetof(wasm::TlsData, boundsCheckLimit));
-    ma_ldr(DTRAddr(boundsCheckLimit.base, DtrOffImm(boundsCheckLimit.offset)), scratch);
-    as_cmp(index, O2Reg(scratch));
-    as_b(label, cond);
-    if (JitOptions.spectreIndexMasking)
-        ma_mov(scratch, index, LeaveCC, cond);
 }
 
 //}}} check_macroassembler_style

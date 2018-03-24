@@ -8,8 +8,8 @@ description: >
     a string (value is -0)
 ---*/
 
-        var obj = {};
-        Object.defineProperty(obj, -0, {});
+var obj = {};
+Object.defineProperty(obj, -0, {});
 
 assert(obj.hasOwnProperty("0"), 'obj.hasOwnProperty("0") !== true');
 

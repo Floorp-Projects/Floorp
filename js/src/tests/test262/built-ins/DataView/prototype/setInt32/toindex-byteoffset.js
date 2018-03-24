@@ -107,4 +107,5 @@ assert.sameValue(sample.getInt32(0), 42, "undefined");
 sample.setInt32(0, 7);
 sample.setInt32();
 assert.sameValue(sample.getInt32(0), 0, "no arg");
+
 reportCompare(0, 0);

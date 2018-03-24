@@ -1054,8 +1054,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchFloat32NotInInt64Range(Address src, Register temp, Label* fail);
     inline void branchFloat32NotInUInt64Range(Address src, Register temp, Label* fail);
 
-    template <typename T, typename L>
-    inline void branchAdd32(Condition cond, T src, Register dest, L label) PER_SHARED_ARCH;
+    template <typename T>
+    inline void branchAdd32(Condition cond, T src, Register dest, Label* label) PER_SHARED_ARCH;
     template <typename T>
     inline void branchSub32(Condition cond, T src, Register dest, Label* label) PER_SHARED_ARCH;
 
@@ -1465,18 +1465,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     // 'cond' holds. Required when WASM_HUGE_MEMORY is not defined. If
     // JitOptions.spectreMaskIndex is true, in speculative executions 'index' is
     // saturated in-place to 'boundsCheckLimit'.
-    template <class L>
-    inline void wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, L label)
+    void wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, Label* label)
         DEFINED_ON(arm, arm64, mips32, mips64, x86);
 
-    template <class L>
-    inline void wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, L label)
+    void wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, Label* label)
         DEFINED_ON(arm, arm64, mips32, mips64, x86);
 
-    // On x86, each instruction adds its own wasm::MemoryAccess's to the
-    // wasm::MemoryAccessVector (there can be multiple when i64 is involved).
-    // On x64, only some asm.js accesses need a wasm::MemoryAccess so the caller
-    // is responsible for doing this instead.
+    // Each wasm load/store instruction appends its own wasm::Trap::OutOfBounds.
     void wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr, AnyRegister out) DEFINED_ON(x86, x64);
     void wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAddr, Register64 out) DEFINED_ON(x86, x64);
     void wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister value, Operand dstAddr) DEFINED_ON(x86, x64);
@@ -1590,11 +1585,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     // (TLS & pinned regs are non-volatile registers in the system ABI).
     void wasmCallBuiltinInstanceMethod(const wasm::CallSiteDesc& desc, const ABIArg& instanceArg,
                                        wasm::SymbolicAddress builtin);
-
-    // Emit the out-of-line trap code to which trapping jumps/branches are
-    // bound. This should be called once per function after all other codegen,
-    // including "normal" OutOfLineCode.
-    void wasmEmitOldTrapOutOfLineCode();
 
     // As enterFakeExitFrame(), but using register conventions appropriate for
     // wasm stubs.

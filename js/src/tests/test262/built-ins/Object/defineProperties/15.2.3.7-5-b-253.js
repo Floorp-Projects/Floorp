@@ -8,13 +8,13 @@ description: >
     primitive values null (8.10.5 step 8.b)
 ---*/
 
-        var obj = {};
+var obj = {};
 assert.throws(TypeError, function() {
-            Object.defineProperties(obj, {
-                prop: {
-                    set: null
-                }
-            });
+  Object.defineProperties(obj, {
+    prop: {
+      set: null
+    }
+  });
 });
 
 reportCompare(0, 0);

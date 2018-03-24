@@ -8,7 +8,7 @@ description: >
     (Number.prototype)
 ---*/
 
-  var b = Object.isFrozen(Number.prototype);
+var b = Object.isFrozen(Number.prototype);
 
 assert.sameValue(b, false, 'b');
 

@@ -13,7 +13,7 @@ var p = Proxy.revocable({}, {});
 p.revoke();
 
 assert.throws(TypeError, function() {
-    Object.keys(p.proxy);
+  Object.keys(p.proxy);
 });
 
 reportCompare(0, 0);

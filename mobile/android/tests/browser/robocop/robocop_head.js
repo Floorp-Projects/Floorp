@@ -14,7 +14,7 @@
 // is whether the property is read-only or not.
 {
   let c = Object.getOwnPropertyDescriptor(this, "Components");
-  if ((!c.value || c.writable) && typeof SpecialPowers === "object")
+  if ((!c || !c.value || c.writable) && typeof SpecialPowers === "object")
     Components = SpecialPowers.wrap(SpecialPowers.Components);
 }
 

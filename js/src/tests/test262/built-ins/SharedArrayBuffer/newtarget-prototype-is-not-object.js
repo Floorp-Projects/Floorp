@@ -1,3 +1,4 @@
+// |reftest| skip-if(!this.hasOwnProperty('SharedArrayBuffer')) -- SharedArrayBuffer is not enabled unconditionally
 // Copyright (C) 2015 André Bargull. All rights reserved.
 // Copyright (C) 2017 Mozilla Foundation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
@@ -18,10 +19,10 @@ info: |
     1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%SharedArrayBufferPrototype%",
        «[[ArrayBufferData]], [[ArrayBufferByteLength]]» ).
     ...
-features: [Symbol, Reflect.construct]
+features: [SharedArrayBuffer, Symbol, Reflect.construct]
 ---*/
 
-function newTarget() { }
+function newTarget() {}
 
 newTarget.prototype = undefined;
 var arrayBuffer = Reflect.construct(SharedArrayBuffer, [1], newTarget);

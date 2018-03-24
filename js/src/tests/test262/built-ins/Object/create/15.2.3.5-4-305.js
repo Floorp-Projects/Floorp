@@ -8,11 +8,11 @@ description: >
     'Properties' is generic descriptor (8.12.9 step 4.a)
 ---*/
 
-            var newObj = Object.create({}, {
-                prop: {
-                    enumerable: true
-                }
-            });
+var newObj = Object.create({}, {
+  prop: {
+    enumerable: true
+  }
+});
 
 assert(newObj.hasOwnProperty("prop"), 'newObj.hasOwnProperty("prop") !== true');
 

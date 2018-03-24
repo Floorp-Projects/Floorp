@@ -1,3 +1,4 @@
+// |reftest| skip-if(!this.hasOwnProperty('Atomics')) -- Atomics is not enabled unconditionally
 // Copyright (C) 2017 Mozilla Corporation.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -7,6 +8,7 @@ description: >
   Test that Atomics.wait returns the right result when it timed out and that
   the time to time out is reasonable.
 includes: [atomicsHelper.js]
+features: [Atomics]
 ---*/
 
 $262.agent.start(
@@ -24,13 +26,14 @@ var ia = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT));
 
 $262.agent.broadcast(ia.buffer);
 assert.sameValue(getReport(), "timed-out");
-assert.sameValue((getReport()|0) >= 500 - $ATOMICS_MAX_TIME_EPSILON, true);
+assert.sameValue((getReport() | 0) >= 500 - $ATOMICS_MAX_TIME_EPSILON, true);
+
 
 function getReport() {
-    var r;
-    while ((r = $262.agent.getReport()) == null)
-        $262.agent.sleep(100);
-    return r;
+  var r;
+  while ((r = $262.agent.getReport()) == null)
+    $262.agent.sleep(100);
+  return r;
 }
 
 reportCompare(0, 0);

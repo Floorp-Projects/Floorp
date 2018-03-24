@@ -8,7 +8,7 @@ description: Function.prototype.bind throws TypeError if 'Target' is NULL
 
 
 assert.throws(TypeError, function() {
-            Function.prototype.bind.call(null);
+  Function.prototype.bind.call(null);
 });
 
 reportCompare(0, 0);

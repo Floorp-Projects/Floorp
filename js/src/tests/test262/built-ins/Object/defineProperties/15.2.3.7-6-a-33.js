@@ -11,22 +11,21 @@ includes: [propertyHelper.js]
 ---*/
 
 var obj = {};
-var setFun = function (value) {
-    obj.setVerifyHelpProp = value;
+var setFun = function(value) {
+  obj.setVerifyHelpProp = value;
 };
 
 Object.defineProperties(obj, {
-    prop: {
-        set: setFun,
-        enumerable: true,
-        configurable: true
-    }
+  prop: {
+    set: setFun,
+    enumerable: true,
+    configurable: true
+  }
 });
 verifyWritable(obj, "prop", "setVerifyHelpProp");
 
 verifyEnumerable(obj, "prop");
 
 verifyConfigurable(obj, "prop");
-
 
 reportCompare(0, 0);

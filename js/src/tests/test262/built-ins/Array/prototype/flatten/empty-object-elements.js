@@ -8,11 +8,17 @@ includes: [compareArray.js]
 features: [Array.prototype.flatten]
 ---*/
 
-var a = {}, b = {};
+var a = {},
+  b = {};
 
 assert.compareArray([a].flatten(), [a]);
 assert.compareArray([a, [b]].flatten(), [a, b]);
-assert.compareArray([[a], b].flatten(), [a, b]);
-assert.compareArray([[a], [b]].flatten(), [a, b]);
+assert.compareArray([
+  [a], b
+].flatten(), [a, b]);
+assert.compareArray([
+  [a],
+  [b]
+].flatten(), [a, b]);
 
 reportCompare(0, 0);

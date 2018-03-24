@@ -22,9 +22,9 @@ description: >
 var p1 = new Proxy({}, {});
 
 assert.sameValue(
-    typeof p1,
-    'object',
-    'Return a newly created Object'
+  typeof p1,
+  'object',
+  'Return a newly created Object'
 );
 
 reportCompare(0, 0);

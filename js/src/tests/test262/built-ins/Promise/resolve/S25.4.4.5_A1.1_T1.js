@@ -10,7 +10,7 @@ description: Promise.resolve is a function
 ---*/
 
 if ((typeof Promise.resolve) !== "function") {
-    $ERROR("Expected Promise.resolve to be a function");
+  $ERROR("Expected Promise.resolve to be a function");
 }
 
 reportCompare(0, 0);

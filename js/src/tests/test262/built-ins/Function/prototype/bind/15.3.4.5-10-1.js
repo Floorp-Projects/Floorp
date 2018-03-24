@@ -8,9 +8,9 @@ description: >
     set as Function
 ---*/
 
-        var foo = function () { };
+var foo = function() {};
 
-        var obj = foo.bind({});
+var obj = foo.bind({});
 
 assert.sameValue(Object.prototype.toString.call(obj), "[object Function]", 'Object.prototype.toString.call(obj)');
 

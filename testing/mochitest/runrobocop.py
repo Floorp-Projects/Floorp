@@ -4,6 +4,7 @@
 
 import json
 import os
+import posixpath
 import sys
 import tempfile
 import traceback
@@ -21,7 +22,8 @@ from mochitest_options import MochitestArgumentParser
 
 from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_slice
-import mozdevice
+from mozdevice import ADBAndroid
+import mozfile
 import mozinfo
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
@@ -33,40 +35,50 @@ class RobocopTestRunner(MochitestDesktop):
        based on the Robotium test framework. This harness leverages some functionality
        from mochitest, for convenience.
     """
-    auto = None
-    dm = None
     # Some robocop tests run for >60 seconds without generating any output.
     NO_OUTPUT_TIMEOUT = 180
 
-    def __init__(self, automation, devmgr, options):
+    def __init__(self, options, message_logger):
         """
            Simple one-time initialization.
         """
         MochitestDesktop.__init__(self, options.flavor, vars(options))
 
-        self.auto = automation
-        self.dm = devmgr
-        self.dm.default_timeout = 320
+        verbose = False
+        if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
+            verbose = True
+        self.device = ADBAndroid(adb=options.adbPath,
+                                 device=options.deviceSerial,
+                                 test_root=options.remoteTestRoot,
+                                 verbose=verbose)
+
+        # Check that Firefox is installed
+        expected = options.app.split('/')[-1]
+        if not self.device.is_app_installed(expected):
+            raise Exception("%s is not installed on this device" % expected)
+
+        options.logFile = "robocop.log"
+        if options.remoteTestRoot is None:
+            options.remoteTestRoot = self.device.test_root
+        self.remoteProfile = posixpath.join(options.remoteTestRoot, "profile")
+        self.remoteProfileCopy = posixpath.join(options.remoteTestRoot, "profile-copy")
+
+        self.remoteConfigFile = posixpath.join(options.remoteTestRoot, "robotium.config")
+        self.remoteLogFile = posixpath.join(options.remoteTestRoot, "logs", "robocop.log")
+
         self.options = options
-        self.options.logFile = "robocop.log"
+
+        process_args = {'messageLogger': message_logger}
+        self.auto = RemoteAutomation(self.device, options.remoteappname, self.remoteProfile,
+                                     self.remoteLogFile, processArgs=process_args)
         self.environment = self.auto.environment
-        self.deviceRoot = self.dm.getDeviceRoot()
-        self.remoteProfile = options.remoteTestRoot + "/profile"
-        self.remoteProfileCopy = options.remoteTestRoot + "/profile-copy"
-        self.auto.setRemoteProfile(self.remoteProfile)
-        self.remoteConfigFile = os.path.join(
-            self.deviceRoot, "robotium.config")
-        self.remoteLog = options.remoteLogFile
-        self.auto.setRemoteLog(self.remoteLog)
+
         self.remoteScreenshots = "/mnt/sdcard/Robotium-Screenshots"
-        self.remoteMozLog = os.path.join(options.remoteTestRoot, "mozlog")
-        self.auto.setServerInfo(
-            self.options.webServer, self.options.httpPort, self.options.sslPort)
+        self.remoteMozLog = posixpath.join(options.remoteTestRoot, "mozlog")
+
         self.localLog = options.logFile
         self.localProfile = None
-        self.auto.setAppName(self.options.remoteappname)
         self.certdbNew = True
-        self.remoteCopyAvailable = True
         self.passed = 0
         self.failed = 0
         self.todo = 0
@@ -85,23 +97,23 @@ class RobocopTestRunner(MochitestDesktop):
         self.auto.deleteANRs()
         self.auto.deleteTombstones()
         procName = self.options.app.split('/')[-1]
-        self.dm.killProcess(procName)
-        if self.dm.processExist(procName):
+        self.device.pkill(procName)
+        if self.device.process_exist(procName):
             self.log.warning("unable to kill %s before running tests!" % procName)
-        self.dm.removeDir(self.remoteScreenshots)
-        self.dm.removeDir(self.remoteMozLog)
-        self.dm.mkDir(self.remoteMozLog)
-        self.dm.mkDir(os.path.dirname(self.options.remoteLogFile))
+        self.device.rm(self.remoteScreenshots, force=True, recursive=True)
+        self.device.rm(self.remoteMozLog, force=True, recursive=True)
+        self.device.mkdir(self.remoteMozLog)
+        logParent = posixpath.dirname(self.remoteLogFile)
+        self.device.rm(logParent, force=True, recursive=True)
+        self.device.mkdir(logParent)
         # Add Android version (SDK level) to mozinfo so that manifest entries
         # can be conditional on android_version.
-        androidVersion = self.dm.shellCheckOutput(
-            ['getprop', 'ro.build.version.sdk'])
         self.log.info(
             "Android sdk version '%s'; will use this to filter manifests" %
-            str(androidVersion))
-        mozinfo.info['android_version'] = androidVersion
+            str(self.device.version))
+        mozinfo.info['android_version'] = str(self.device.version)
         if self.options.robocopApk:
-            self.dm._checkCmd(["install", "-r", self.options.robocopApk])
+            self.device.install_app(self.options.robocopApk, replace=True)
             self.log.debug("Robocop APK %s installed" %
                            self.options.robocopApk)
         # Display remote diagnostics; if running in mach, keep output terse.
@@ -122,23 +134,22 @@ class RobocopTestRunner(MochitestDesktop):
         """
         self.log.debug("Cleaning up...")
         self.stopServers()
-        self.dm.killProcess(self.options.app.split('/')[-1])
-        blobberUploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
-        if blobberUploadDir:
+        self.device.pkill(self.options.app.split('/')[-1])
+        uploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
+        if uploadDir:
             self.log.debug("Pulling any remote moz logs and screenshots to %s." %
-                           blobberUploadDir)
-            self.dm.getDirectory(self.remoteMozLog, blobberUploadDir)
-            self.dm.getDirectory(self.remoteScreenshots, blobberUploadDir)
+                           uploadDir)
+            self.device.pull(self.remoteMozLog, uploadDir)
+            self.device.pull(self.remoteScreenshots, uploadDir)
         MochitestDesktop.cleanup(self, self.options)
         if self.localProfile:
-            os.system("rm -Rf %s" % self.localProfile)
-        self.dm.removeDir(self.remoteProfile)
-        self.dm.removeDir(self.remoteProfileCopy)
-        self.dm.removeDir(self.remoteScreenshots)
-        self.dm.removeDir(self.remoteMozLog)
-        self.dm.removeFile(self.remoteConfigFile)
-        if self.dm.fileExists(self.remoteLog):
-            self.dm.removeFile(self.remoteLog)
+            mozfile.remove(self.localProfile)
+        self.device.rm(self.remoteProfile, force=True, recursive=True)
+        self.device.rm(self.remoteProfileCopy, force=True, recursive=True)
+        self.device.rm(self.remoteScreenshots, force=True, recursive=True)
+        self.device.rm(self.remoteMozLog, force=True, recursive=True)
+        self.device.rm(self.remoteConfigFile, force=True)
+        self.device.rm(self.remoteLogFile, force=True)
         self.log.debug("Cleanup complete.")
 
     def findPath(self, paths, filename=None):
@@ -236,8 +247,8 @@ class RobocopTestRunner(MochitestDesktop):
         # some files are not needed for robocop; save time by not pushing
         os.remove(os.path.join(self.localProfile, 'userChrome.css'))
         try:
-            self.dm.pushDir(self.localProfile, self.remoteProfileCopy)
-        except mozdevice.DMError:
+            self.device.push(self.localProfile, self.remoteProfileCopy)
+        except Exception:
             self.log.error(
                 "Automation Error: Unable to copy profile to device.")
             raise
@@ -249,20 +260,8 @@ class RobocopTestRunner(MochitestDesktop):
            Remove any remote profile and re-create it.
         """
         self.log.debug("Updating remote profile at %s" % self.remoteProfile)
-        self.dm.removeDir(self.remoteProfile)
-        if self.remoteCopyAvailable:
-            try:
-                self.dm.shellCheckOutput(
-                    ['cp', '-r', self.remoteProfileCopy, self.remoteProfile],
-                    root=True, timeout=60)
-            except mozdevice.DMError:
-                # For instance, cp is not available on some older versions of
-                # Android.
-                self.log.info(
-                    "Unable to copy remote profile; falling back to push.")
-                self.remoteCopyAvailable = False
-        if not self.remoteCopyAvailable:
-            self.dm.pushDir(self.localProfile, self.remoteProfile)
+        self.device.rm(self.remoteProfile, force=True, recursive=True)
+        self.device.cp(self.remoteProfileCopy, self.remoteProfile, recursive=True)
 
     def parseLocalLog(self):
         """
@@ -328,7 +327,7 @@ class RobocopTestRunner(MochitestDesktop):
         """
         try:
             if printLogcat:
-                logcat = self.dm.getLogcat(
+                logcat = self.device.get_logcat(
                     filterOutRegexps=fennecLogcatFilters)
                 self.log.info(
                     '\n' +
@@ -336,7 +335,7 @@ class RobocopTestRunner(MochitestDesktop):
                         'utf-8',
                         'replace'))
             self.log.info("Device info:")
-            devinfo = self.dm.getInfo()
+            devinfo = self.device.get_info()
             for category in devinfo:
                 if type(devinfo[category]) is list:
                     self.log.info("  %s:" % category)
@@ -344,9 +343,9 @@ class RobocopTestRunner(MochitestDesktop):
                         self.log.info("     %s" % item)
                 else:
                     self.log.info("  %s: %s" % (category, devinfo[category]))
-            self.log.info("Test root: %s" % self.dm.deviceRoot)
-        except mozdevice.DMError:
-            self.log.warning("Error getting device information")
+            self.log.info("Test root: %s" % self.device.test_root)
+        except Exception as e:
+            self.log.warning("Error getting device information: %s" % str(e))
 
     def setupRobotiumConfig(self, browserEnv):
         """
@@ -356,8 +355,8 @@ class RobocopTestRunner(MochitestDesktop):
                                               prefix='robotium-',
                                               dir=os.getcwd(),
                                               delete=False)
-        fHandle.write("profile=%s\n" % (self.remoteProfile))
-        fHandle.write("logfile=%s\n" % (self.options.remoteLogFile))
+        fHandle.write("profile=%s\n" % self.remoteProfile)
+        fHandle.write("logfile=%s\n" % self.remoteLogFile)
         fHandle.write("host=http://mochi.test:8888/tests\n")
         fHandle.write(
             "rawhost=http://%s:%s/tests\n" %
@@ -377,8 +376,8 @@ class RobocopTestRunner(MochitestDesktop):
                     delim = ","
             fHandle.write("envvars=%s\n" % envstr)
         fHandle.close()
-        self.dm.removeFile(self.remoteConfigFile)
-        self.dm.pushFile(fHandle.name, self.remoteConfigFile)
+        self.device.rm(self.remoteConfigFile, force=True)
+        self.device.push(fHandle.name, self.remoteConfigFile)
         os.unlink(fHandle.name)
 
     def buildBrowserEnv(self):
@@ -419,15 +418,15 @@ class RobocopTestRunner(MochitestDesktop):
         self.setupRobotiumConfig(browserEnv)
         self.setupRemoteProfile()
         self.options.app = "am"
+        timeout = None
         if self.options.autorun:
             # This launches a test (using "am instrument") and instructs
             # Fennec to /quit/ the browser (using Robocop:Quit) and to
             # /finish/ all opened activities.
             browserArgs = [
                 "instrument",
-                "-w",
                 "-e", "quit_and_finish", "1",
-                "-e", "deviceroot", self.deviceRoot,
+                "-e", "deviceroot", self.device.test_root,
                 "-e", "class",
                 "org.mozilla.gecko.tests.%s" % test['name'].split('/')[-1].split('.java')[0],
                 "org.mozilla.roboexample.test/org.mozilla.gecko.FennecInstrumentationTestRunner"]
@@ -438,7 +437,8 @@ class RobocopTestRunner(MochitestDesktop):
             browserArgs = ["start", "-n",
                            "org.mozilla.roboexample.test/org.mozilla."
                            "gecko.LaunchFennecWithConfigurationActivity", "&&", "cat"]
-            self.dm.default_timeout = sys.maxint  # Forever.
+            timeout = sys.maxint  # Forever.
+
             self.log.info("")
             self.log.info("Serving mochi.test Robocop root at http://%s:%s/tests/robocop/" %
                           (self.options.remoteWebServer, self.options.httpPort))
@@ -446,8 +446,9 @@ class RobocopTestRunner(MochitestDesktop):
         result = -1
         log_result = -1
         try:
-            self.dm.recordLogcat()
-            timeout = self.options.timeout
+            self.device.clear_logcat()
+            if not timeout:
+                timeout = self.options.timeout
             if not timeout:
                 timeout = self.NO_OUTPUT_TIMEOUT
             result, _ = self.auto.runApp(
@@ -456,15 +457,9 @@ class RobocopTestRunner(MochitestDesktop):
             self.log.debug("runApp completes with status %d" % result)
             if result != 0:
                 self.log.error("runApp() exited with code %s" % result)
-            if self.dm.fileExists(self.remoteLog):
-                self.dm.getFile(self.remoteLog, self.localLog)
-                self.dm.removeFile(self.remoteLog)
-                self.log.debug("Remote log %s retrieved to %s" %
-                               (self.remoteLog, self.localLog))
-            else:
-                self.log.warning(
-                    "Unable to retrieve log file (%s) from remote device" %
-                    self.remoteLog)
+            if self.device.is_file(self.remoteLogFile):
+                self.device.pull(self.remoteLogFile, self.localLog)
+                self.device.rm(self.remoteLogFile)
             log_result = self.parseLocalLog()
             if result != 0 or log_result != 0:
                 # Display remote diagnostics; if running in mach, keep output
@@ -486,7 +481,7 @@ class RobocopTestRunner(MochitestDesktop):
             mp = self.options.manifestFile
         else:
             mp = TestManifest(strict=False)
-            mp.read(self.options.robocopIni)
+            mp.read("robocop.ini")
         filters = []
         if self.options.totalChunks:
             filters.append(
@@ -537,18 +532,8 @@ def run_test_harness(parser, options):
         raise ValueError(
             "Invalid options specified, use --help for a list of valid options")
     message_logger = MessageLogger(logger=None)
-    process_args = {'messageLogger': message_logger}
-    auto = RemoteAutomation(None, "fennec", processArgs=process_args)
-    auto.setDeviceManager(options.dm)
     runResult = -1
-    robocop = RobocopTestRunner(auto, options.dm, options)
-
-    # Check that Firefox is installed
-    expected = options.app.split('/')[-1]
-    installed = options.dm.shellCheckOutput(['pm', 'list', 'packages', expected])
-    if expected not in installed:
-        robocop.log.error("%s is not installed on this device" % expected)
-        return 1
+    robocop = RobocopTestRunner(options, message_logger)
 
     try:
         message_logger.logger = robocop.log
@@ -567,9 +552,9 @@ def run_test_harness(parser, options):
     finally:
         try:
             robocop.cleanup()
-        except mozdevice.DMError:
+        except Exception:
             # ignore device error while cleaning up
-            pass
+            traceback.print_exc()
         message_logger.finish()
     return runResult
 

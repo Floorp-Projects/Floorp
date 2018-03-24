@@ -242,9 +242,6 @@ class IndexedDB {
    *        The schema version with which the database needs to be opened. If
    *        the database does not exist, or its current schema version does
    *        not match, the `onupgradeneeded` function will be called.
-   * @param {string} [options.storage]
-   *        The storage type of the database. If present, may be one of
-   *        "temporary" or "persistent".
    * @param {function} [onupgradeneeded]
    *        A function which will be called with an IndexedDB object as its
    *        first parameter when the database needs to be created, or its

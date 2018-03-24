@@ -11,7 +11,7 @@ description: >
 
 
 assert.throws(TypeError, function() {
-            Date.prototype.toISOString.call([]);
+  Date.prototype.toISOString.call([]);
 });
 
 reportCompare(0, 0);

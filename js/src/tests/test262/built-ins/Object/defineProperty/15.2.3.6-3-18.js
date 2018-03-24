@@ -9,7 +9,7 @@ description: >
 ---*/
 
 assert.throws(TypeError, function() {
-            Object.defineProperty({}, "property", 12);
+  Object.defineProperty({}, "property", 12);
 });
 
 reportCompare(0, 0);

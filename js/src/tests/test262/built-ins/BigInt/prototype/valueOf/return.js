@@ -9,7 +9,7 @@ description: >
 info: |
   BigInt.prototype.valueOf ( )
 
-  Return ? thisBigIntValue(this value). 
+  Return ? thisBigIntValue(this value).
 features: [BigInt]
 ---*/
 

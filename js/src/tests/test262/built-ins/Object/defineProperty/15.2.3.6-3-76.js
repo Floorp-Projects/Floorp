@@ -9,13 +9,13 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-var obj = { };
+var obj = {};
 
 var proto = {
-    configurable: false
+  configurable: false
 };
 
-var ConstructFun = function () { };
+var ConstructFun = function() {};
 ConstructFun.prototype = proto;
 
 var child = new ConstructFun();
@@ -28,6 +28,6 @@ verifyNotConfigurable(obj, "property");
 
 assert(obj.hasOwnProperty("property"));
 
-assert.sameValue(typeof (obj.property), "undefined");
+assert.sameValue(typeof(obj.property), "undefined");
 
 reportCompare(0, 0);

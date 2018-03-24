@@ -8,6 +8,6 @@ description: >
     of first param is not Object
 ---*/
 
-    Object.getOwnPropertyDescriptor(0, "foo");
+Object.getOwnPropertyDescriptor(0, "foo");
 
 reportCompare(0, 0);

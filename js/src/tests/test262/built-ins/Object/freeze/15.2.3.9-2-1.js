@@ -8,9 +8,9 @@ description: >
     no own property
 ---*/
 
-        var obj = {};
+var obj = {};
 
-        Object.freeze(obj);
+Object.freeze(obj);
 
 assert.sameValue(Object.isExtensible(obj), false, 'Object.isExtensible(obj)');
 

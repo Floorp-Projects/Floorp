@@ -112,38 +112,38 @@ skip script test262/built-ins/TypedArray/prototype/map/callbackfn-detachbuffer.j
 skip script test262/built-ins/TypedArray/prototype/reduceRight/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArray/prototype/reduce/callbackfn-detachbuffer.js
 skip script test262/built-ins/TypedArray/prototype/some/callbackfn-detachbuffer.js
-skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/detached-buffer.js
-skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/tonumber-value-detached-buffer.js
-skip script test262/built-ins/TypedArrays/internals/Get/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrays/internals/Get/detached-buffer.js
-skip script test262/built-ins/TypedArrays/internals/Get/infinity-detached-buffer.js
-skip script test262/built-ins/TypedArrays/internals/GetOwnProperty/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrays/internals/GetOwnProperty/detached-buffer.js
-skip script test262/built-ins/TypedArrays/internals/GetOwnProperty/enumerate-detached-buffer.js
-skip script test262/built-ins/TypedArrays/internals/HasProperty/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrays/internals/HasProperty/detached-buffer.js
-skip script test262/built-ins/TypedArrays/internals/HasProperty/infinity-with-detached-buffer.js
-skip script test262/built-ins/TypedArrays/internals/Set/detached-buffer-realm.js
-skip script test262/built-ins/TypedArrays/internals/Set/detached-buffer.js
-skip script test262/built-ins/TypedArrays/internals/Set/tonumber-value-detached-buffer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/detached-buffer-realm.js
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/detached-buffer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/tonumber-value-detached-buffer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Get/detached-buffer-realm.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Get/detached-buffer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Get/infinity-detached-buffer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/detached-buffer-realm.js
+skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/detached-buffer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/enumerate-detached-buffer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/detached-buffer-realm.js
+skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/detached-buffer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/infinity-with-detached-buffer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/detached-buffer-realm.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/detached-buffer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/tonumber-value-detached-buffer.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1129202
-skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/key-is-greater-than-last-index.js
-skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/key-is-lower-than-zero.js
-skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/key-is-minus-zero.js
-skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrays/internals/DefineOwnProperty/key-is-not-integer.js
-skip script test262/built-ins/TypedArrays/internals/Get/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrays/internals/Get/key-is-not-integer.js
-skip script test262/built-ins/TypedArrays/internals/GetOwnProperty/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrays/internals/HasProperty/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrays/internals/HasProperty/key-is-not-integer.js
-skip script test262/built-ins/TypedArrays/internals/Set/key-is-minus-zero.js
-skip script test262/built-ins/TypedArrays/internals/Set/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrays/internals/Set/key-is-not-integer.js
-skip script test262/built-ins/TypedArrays/internals/Set/key-is-out-of-bounds.js
-skip script test262/built-ins/TypedArrays/internals/Set/tonumber-value-throws.js
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-greater-than-last-index.js
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-lower-than-zero.js
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-minus-zero.js
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-not-canonical-index.js
+skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-not-integer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Get/key-is-not-canonical-index.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Get/key-is-not-integer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/key-is-not-canonical-index.js
+skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/key-is-not-canonical-index.js
+skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/key-is-not-integer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-minus-zero.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-not-canonical-index.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-not-integer.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-out-of-bounds.js
+skip script test262/built-ins/TypedArrayConstructors/internals/Set/tonumber-value-throws.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1140152
 skip script test262/built-ins/TypedArray/prototype/slice/bit-precision.js
@@ -279,14 +279,14 @@ skip script test262/built-ins/RegExp/proto-from-ctor-realm.js
 skip script test262/built-ins/Set/proto-from-ctor-realm.js
 skip script test262/built-ins/SharedArrayBuffer/proto-from-ctor-realm.js
 skip script test262/built-ins/String/proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrays/buffer-arg-proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrays/buffer-arg-proto-from-ctor-realm-sab.js
-skip script test262/built-ins/TypedArrays/length-arg-proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrays/no-args-proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrays/object-arg-proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrays/typedarray-arg-other-ctor-buffer-ctor-custom-species-proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrays/typedarray-arg-proto-from-ctor-realm.js
-skip script test262/built-ins/TypedArrays/typedarray-arg-same-ctor-buffer-ctor-species-custom-proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrayConstructors/ctors/buffer-arg/proto-from-ctor-realm-sab.js
+skip script test262/built-ins/TypedArrayConstructors/ctors/length-arg/proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrayConstructors/ctors/no-args/proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrayConstructors/ctors/object-arg/proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrayConstructors/ctors/typedarray-arg/other-ctor-buffer-ctor-custom-species-proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrayConstructors/ctors/typedarray-arg/proto-from-ctor-realm.js
+skip script test262/built-ins/TypedArrayConstructors/ctors/typedarray-arg/same-ctor-buffer-ctor-species-custom-proto-from-ctor-realm.js
 skip script test262/built-ins/WeakMap/proto-from-ctor-realm.js
 skip script test262/built-ins/WeakSet/proto-from-ctor-realm.js
 
@@ -440,6 +440,12 @@ skip script test262/language/expressions/assignment/destructuring/iterator-destr
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1321616
 skip script test262/annexB/built-ins/Function/createdynfn-html-close-comment-params.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1334813
+skip script test262/built-ins/DataView/length.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1440468
+skip script test262/built-ins/Function/prototype/toString/proxy.js
 
 
 ###########################################################

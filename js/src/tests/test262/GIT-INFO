@@ -1,5 +1,7 @@
-commit 82c6148980332febe92a544a1fb653718e9fdb57
+commit ea6c18c5e21189acd2fd26961ea6dc6d2a1947ac
 Author: André Bargull <andre.bargull@gmail.com>
-Date:   Thu Feb 1 11:04:51 2018 -0800
+Date:   Thu Mar 22 17:20:29 2018 -0700
 
-    Add missing closing parenthesis and remove invalid async flag (#1402)
+    Don't compute NaN values in functions (#1503)
+    
+    `function nan() { return /* expression to compute NaN */ }` may not return the same implementation-distinguishable NaN value before and after JIT compilation.

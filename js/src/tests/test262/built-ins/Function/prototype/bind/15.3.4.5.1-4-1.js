@@ -9,11 +9,11 @@ description: >
     [[TargetFunction]] when 'F' is called
 ---*/
 
-        var func = function (x, y, z) {
-            return x + y + z;
-        };
+var func = function(x, y, z) {
+  return x + y + z;
+};
 
-        var newFunc = Function.prototype.bind.call(func, {}, "a", "b", "c");
+var newFunc = Function.prototype.bind.call(func, {}, "a", "b", "c");
 
 assert.sameValue(newFunc(), "abc", 'newFunc()');
 

@@ -7,9 +7,9 @@ description: >
 features: [Symbol]
 ---*/
 assert.sameValue(
-    Object.getPrototypeOf(Symbol('66')),
-    Symbol.prototype,
-    "`Object.getPrototypeOf(Symbol('66'))` returns `Symbol.prototype`"
+  Object.getPrototypeOf(Symbol('66')),
+  Symbol.prototype,
+  "`Object.getPrototypeOf(Symbol('66'))` returns `Symbol.prototype`"
 );
 
 reportCompare(0, 0);

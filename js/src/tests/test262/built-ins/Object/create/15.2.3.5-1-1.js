@@ -8,7 +8,7 @@ description: Object.create throws TypeError if 'O' is undefined
 
 
 assert.throws(TypeError, function() {
-            Object.create(undefined);
+  Object.create(undefined);
 });
 
 reportCompare(0, 0);

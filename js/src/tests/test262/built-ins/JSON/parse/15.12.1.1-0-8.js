@@ -9,7 +9,7 @@ description: >
 ---*/
 
 assert.throws(SyntaxError, function() {
-    JSON.parse('\u2028\u20291234'); // should produce a syntax error 
+  JSON.parse('\u2028\u20291234'); // should produce a syntax error 
 });
 
 reportCompare(0, 0);

@@ -14537,7 +14537,7 @@ class MAsmJSMemoryAccess
 
     wasm::MemoryAccessDesc access() const {
         return wasm::MemoryAccessDesc(accessType_, Scalar::byteSize(accessType_), offset_,
-                                      mozilla::Nothing());
+                                      wasm::BytecodeOffset());
     }
 
     void removeBoundsCheck() { needsBoundsCheck_ = false; }

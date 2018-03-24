@@ -774,7 +774,7 @@ public:
    */
   void ForgetSharedBuffer()
   {
-    if (base_string_type::mDataFlags & DataFlags::SHARED) {
+    if (base_string_type::mDataFlags & DataFlags::REFCOUNTED) {
       SetToEmptyBuffer();
     }
   }

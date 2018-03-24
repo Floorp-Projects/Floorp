@@ -1100,29 +1100,6 @@ MacroAssembler::truncateDoubleToUInt64(Address src, Address dest, Register temp,
     bind(&done);
 }
 
-// ========================================================================
-// wasm support
-
-template <class L>
-void
-MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, L label)
-{
-    cmp32(index, boundsCheckLimit);
-    j(cond, label);
-    if (JitOptions.spectreIndexMasking)
-        cmovCCl(cond, Operand(boundsCheckLimit), index);
-}
-
-template <class L>
-void
-MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, L label)
-{
-    cmp32(index, Operand(boundsCheckLimit));
-    j(cond, label);
-    if (JitOptions.spectreIndexMasking)
-        cmovCCl(cond, Operand(boundsCheckLimit), index);
-}
-
 //}}} check_macroassembler_style
 // ===============================================================
 

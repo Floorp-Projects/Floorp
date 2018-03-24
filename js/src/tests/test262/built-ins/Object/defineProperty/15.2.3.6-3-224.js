@@ -9,15 +9,15 @@ description: >
     7.a)
 ---*/
 
-        var obj = {};
+var obj = {};
 
-        var dateObj = new Date();
+var dateObj = new Date();
 
-        dateObj.get = function () {
-            return "dateGetProperty";
-        };
+dateObj.get = function() {
+  return "dateGetProperty";
+};
 
-        Object.defineProperty(obj, "property", dateObj);
+Object.defineProperty(obj, "property", dateObj);
 
 assert.sameValue(obj.property, "dateGetProperty", 'obj.property');
 

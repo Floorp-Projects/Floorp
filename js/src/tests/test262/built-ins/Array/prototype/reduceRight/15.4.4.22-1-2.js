@@ -9,7 +9,7 @@ description: Array.prototype.reduceRight applied to null throws a TypeError
 
 
 assert.throws(TypeError, function() {
-            Array.prototype.reduceRight.call(null);
+  Array.prototype.reduceRight.call(null);
 });
 
 reportCompare(0, 0);

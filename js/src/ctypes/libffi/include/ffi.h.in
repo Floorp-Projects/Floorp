@@ -72,6 +72,12 @@ extern "C" {
 #define __attribute__(X)
 #endif
 
+/* Disable regparm under clang-cl because the assembly thunks were
+   written for MSVC and pass all parameters on the stack. */
+#if defined(_MSC_VER) && defined(__clang__)
+#define regparm(X)
+#endif
+
 #include <stddef.h>
 #include <limits.h>
 
