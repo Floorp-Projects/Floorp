@@ -63,7 +63,7 @@ window.gActivityStreamStrings = {
   "topsites_form_title_label": "ชื่อเรื่อง",
   "topsites_form_title_placeholder": "ป้อนชื่อเรื่อง",
   "topsites_form_url_label": "URL",
-  "topsites_form_image_url_label": "Custom Image URL",
+  "topsites_form_image_url_label": "URL ภาพที่กำหนดเอง",
   "topsites_form_url_placeholder": "พิมพ์หรือวาง URL",
   "topsites_form_use_image_link": "ใช้ภาพที่กำหนดเอง…",
   "topsites_form_preview_button": "แสดงตัวอย่าง",

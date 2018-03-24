@@ -345,7 +345,7 @@ public:
   static uint32_t GetBitForSID(const nsStyleStructID aSID) { return 1 << aSID; }
 
 #ifdef DEBUG
-  void List(FILE* out, int32_t aIndent, bool aListDescendants = true);
+  void List(FILE* out, int32_t aIndent);
   static const char* StructName(nsStyleStructID aSID);
   static bool LookupStruct(const nsACString& aName, nsStyleStructID& aResult);
 #endif

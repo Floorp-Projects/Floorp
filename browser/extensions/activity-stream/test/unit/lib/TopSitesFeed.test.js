@@ -60,7 +60,7 @@ describe("Top Sites Feed", () => {
     };
     fakeScreenshot = {
       getScreenshotForURL: sandbox.spy(() => Promise.resolve(FAKE_SCREENSHOT)),
-      maybeCacheScreenshot: Screenshots.maybeCacheScreenshot,
+      maybeCacheScreenshot: sandbox.spy(Screenshots.maybeCacheScreenshot),
       _shouldGetScreenshots: sinon.stub().returns(true)
     };
     filterAdultStub = sinon.stub().returns([]);
@@ -138,14 +138,14 @@ describe("Top Sites Feed", () => {
   });
   describe("#filterForThumbnailExpiration", () => {
     it("should pass rows.urls to the callback provided", () => {
-      const rows = [{url: "foo.com"}, {"url": "bar.com"}];
+      const rows = [{url: "foo.com"}, {"url": "bar.com", "customScreenshotURL": "custom"}];
       feed.store.state.TopSites = {rows};
       const stub = sinon.stub();
 
       feed.filterForThumbnailExpiration(stub);
 
       assert.calledOnce(stub);
-      assert.calledWithExactly(stub, rows.map(r => r.url));
+      assert.calledWithExactly(stub, ["foo.com", "bar.com", "custom"]);
     });
   });
   describe("#getLinksWithDefaults", () => {
@@ -154,9 +154,6 @@ describe("Top Sites Feed", () => {
     });
 
     describe("general", () => {
-      beforeEach(() => {
-        sandbox.stub(fakeScreenshot, "maybeCacheScreenshot");
-      });
       it("should get the links from NewTabUtils", async () => {
         const result = await feed.getLinksWithDefaults();
         const reference = links.map(site => Object.assign({}, site, {hostname: shortURLStub(site)}));
@@ -395,6 +392,15 @@ describe("Top Sites Feed", () => {
         assert.calledWith(feed._fetchIcon, link);
       });
     });
+    it("should call _fetchScreenshot when customScreenshotURL is set", async () => {
+      links = [];
+      fakeNewTabUtils.pinnedLinks.links = [{url: "foo", customScreenshotURL: "custom"}];
+      sinon.stub(feed, "_fetchScreenshot");
+
+      await feed.getLinksWithDefaults();
+
+      assert.calledWith(feed._fetchScreenshot, sinon.match.object, "custom");
+    });
   });
   describe("#refresh", () => {
     beforeEach(() => {
@@ -439,6 +445,27 @@ describe("Top Sites Feed", () => {
         type: at.TOP_SITES_UPDATED,
         data: []
       }));
+    });
+  });
+  describe("#getScreenshotPreview", () => {
+    it("should dispatch preview if request is succesful", async () => {
+      await feed.getScreenshotPreview("custom", 1234);
+
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWithExactly(feed.store.dispatch, ac.OnlyToOneContent({
+        data: {preview: FAKE_SCREENSHOT, url: "custom"},
+        type: at.PREVIEW_RESPONSE
+      }, 1234));
+    });
+    it("should return empty string if request fails", async () => {
+      fakeScreenshot.getScreenshotForURL = sandbox.stub().returns(Promise.resolve(null));
+      await feed.getScreenshotPreview("custom", 1234);
+
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWithExactly(feed.store.dispatch, ac.OnlyToOneContent({
+        data: {preview: "", url: "custom"},
+        type: at.PREVIEW_RESPONSE
+      }, 1234));
     });
   });
   describe("#_fetchIcon", () => {
@@ -510,7 +537,33 @@ describe("Top Sites Feed", () => {
       assert.notProperty(link, "tippyTopIcon");
     });
   });
+  describe("#_fetchScreenshot", () => {
+    it("should call maybeCacheScreenshot", async () => {
+      const updateLink = sinon.stub();
+      const link = {customScreenshotURL: "custom", __sharedCache: {updateLink}};
+      await feed._fetchScreenshot(link, "custom");
+
+      assert.calledOnce(fakeScreenshot.maybeCacheScreenshot);
+      assert.calledWithExactly(fakeScreenshot.maybeCacheScreenshot, link, link.customScreenshotURL,
+        "screenshot", sinon.match.func);
+    });
+    it("should not call maybeCacheScreenshot if screenshot is set", async () => {
+      const updateLink = sinon.stub();
+      const link = {customScreenshotURL: "custom", __sharedCache: {updateLink}, screenshot: true};
+      await feed._fetchScreenshot(link, "custom");
+
+      assert.notCalled(fakeScreenshot.maybeCacheScreenshot);
+    });
+  });
   describe("#onAction", () => {
+    it("should call getScreenshotPreview on PREVIEW_REQUEST", () => {
+      sandbox.stub(feed, "getScreenshotPreview");
+
+      feed.onAction({type: at.PREVIEW_REQUEST, data: {url: "foo"}, meta: {fromTarget: 1234}});
+
+      assert.calledOnce(feed.getScreenshotPreview);
+      assert.calledWithExactly(feed.getScreenshotPreview, "foo", 1234);
+    });
     it("should refresh on SYSTEM_TICK", async () => {
       sandbox.stub(feed, "refresh");
 
@@ -528,19 +581,35 @@ describe("Top Sites Feed", () => {
       assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, pinAction.data.site, pinAction.data.index);
     });
-    it("should trigger refresh on TOP_SITES_PIN", () => {
-      sinon.stub(feed, "refresh");
+    it("should call pin on TOP_SITES_PIN", () => {
+      sinon.stub(feed, "pin");
       const pinExistingAction = {type: at.TOP_SITES_PIN, data: {site: FAKE_LINKS[4], index: 4}};
 
       feed.onAction(pinExistingAction);
 
+      assert.calledOnce(feed.pin);
+    });
+    it("should trigger refresh on TOP_SITES_PIN", async () => {
+      sinon.stub(feed, "refresh");
+      const pinExistingAction = {type: at.TOP_SITES_PIN, data: {site: FAKE_LINKS[4], index: 4}};
+
+      await feed.pin(pinExistingAction);
+
       assert.calledOnce(feed.refresh);
     });
-    it("should trigger refresh on TOP_SITES_INSERT", () => {
-      sinon.stub(feed, "refresh");
+    it("should call insert on TOP_SITES_INSERT", async () => {
+      sinon.stub(feed, "insert");
       const addAction = {type: at.TOP_SITES_INSERT, data: {site: {url: "foo.com"}}};
 
       feed.onAction(addAction);
+
+      assert.calledOnce(feed.insert);
+    });
+    it("should trigger refresh on TOP_SITES_INSERT", async () => {
+      sinon.stub(feed, "refresh");
+      const addAction = {type: at.TOP_SITES_INSERT, data: {site: {url: "foo.com"}}};
+
+      await feed.insert(addAction);
 
       assert.calledOnce(feed.refresh);
     });
@@ -675,11 +744,35 @@ describe("Top Sites Feed", () => {
     });
   });
   describe("#pin", () => {
-    it("should pin site in specified slot empty pinned list", () => {
-      const site = {url: "foo.bar", label: "foo"};
-      feed.pin({data: {index: 2, site}});
+    it("should pin site in specified slot empty pinned list", async () => {
+      const site = {url: "foo.bar", label: "foo", customScreenshotURL: "screenshot"};
+      await feed.pin({data: {index: 2, site}});
       assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
       assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 2);
+    });
+    it("should lookup the link object to update the custom screenshot", async () => {
+      const site = {url: "foo.bar", label: "foo", customScreenshotURL: "screenshot"};
+      sandbox.spy(feed.pinnedCache, "request");
+
+      await feed.pin({data: {index: 2, site}});
+
+      assert.calledOnce(feed.pinnedCache.request);
+    });
+    it("should lookup the link object to update the custom screenshot", async () => {
+      const site = {url: "foo.bar", label: "foo", customScreenshotURL: null};
+      sandbox.spy(feed.pinnedCache, "request");
+
+      await feed.pin({data: {index: 2, site}});
+
+      assert.calledOnce(feed.pinnedCache.request);
+    });
+    it("should not do a link object lookup if custom screenshot field is not set", async () => {
+      const site = {url: "foo.bar", label: "foo"};
+      sandbox.spy(feed.pinnedCache, "request");
+
+      await feed.pin({data: {index: 2, site}});
+
+      assert.notCalled(feed.pinnedCache.request);
     });
     it("should pin site in specified slot of pinned list that is free", () => {
       fakeNewTabUtils.pinnedLinks.links = [null, {url: "example.com"}];
@@ -731,6 +824,34 @@ describe("Top Sites Feed", () => {
       feed.pin(action);
 
       assert.notCalled(feed.insert);
+    });
+  });
+  describe("clearLinkCustomScreenshot", () => {
+    it("should remove cached screenshot if custom url changes", async () => {
+      const stub = sandbox.stub();
+      sandbox.stub(feed.pinnedCache, "request").returns(Promise.resolve([{
+        url: "foo",
+        customScreenshotURL: "old_screenshot",
+        __sharedCache: {updateLink: stub}
+      }]));
+
+      await feed._clearLinkCustomScreenshot({url: "foo", customScreenshotURL: "new_screenshot"});
+
+      assert.calledOnce(stub);
+      assert.calledWithExactly(stub, "screenshot", undefined);
+    });
+    it("should remove cached screenshot if custom url is removed", async () => {
+      const stub = sandbox.stub();
+      sandbox.stub(feed.pinnedCache, "request").returns(Promise.resolve([{
+        url: "foo",
+        customScreenshotURL: "old_screenshot",
+        __sharedCache: {updateLink: stub}
+      }]));
+
+      await feed._clearLinkCustomScreenshot({url: "foo", customScreenshotURL: "new_screenshot"});
+
+      assert.calledOnce(stub);
+      assert.calledWithExactly(stub, "screenshot", undefined);
     });
   });
   describe("#drop", () => {

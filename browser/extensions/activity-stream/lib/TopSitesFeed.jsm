@@ -26,7 +26,7 @@ const DEFAULT_SITES_PREF = "default.sites";
 const DEFAULT_TOP_SITES = [];
 const FRECENCY_THRESHOLD = 100 + 1; // 1 visit (skip first-run/one-time pages)
 const MIN_FAVICON_SIZE = 96;
-const CACHED_LINK_PROPS_TO_MIGRATE = ["screenshot"];
+const CACHED_LINK_PROPS_TO_MIGRATE = ["screenshot", "customScreenshot"];
 const PINNED_FAVICON_PROPS_TO_MIGRATE = ["favicon", "faviconRef", "faviconSize"];
 
 this.TopSitesFeed = class TopSitesFeed {
@@ -69,7 +69,13 @@ this.TopSitesFeed = class TopSitesFeed {
 
   filterForThumbnailExpiration(callback) {
     const {rows} = this.store.getState().TopSites;
-    callback(rows.map(site => site.url));
+    callback(rows.reduce((acc, site) => {
+      acc.push(site.url);
+      if (site.customScreenshotURL) {
+        acc.push(site.customScreenshotURL);
+      }
+      return acc;
+    }, []));
   }
 
   async getLinksWithDefaults(action) {
@@ -131,7 +137,12 @@ this.TopSitesFeed = class TopSitesFeed {
     // Now, get a tippy top icon, a rich icon, or screenshot for every item
     for (const link of withPinned) {
       if (link) {
-        this._fetchIcon(link);
+        // If there is a custom screenshot this is the only image we display
+        if (link.customScreenshotURL) {
+          this._fetchScreenshot(link, link.customScreenshotURL);
+        } else {
+          this._fetchIcon(link);
+        }
 
         // Remove internal properties that might be updated after dispatch
         delete link.__sharedCache;
@@ -180,14 +191,36 @@ this.TopSitesFeed = class TopSitesFeed {
     this._requestRichIcon(link.url);
 
     // Also request a screenshot if we don't have one yet
-    if (!link.screenshot) {
-      const {url} = link;
-      await Screenshots.maybeCacheScreenshot(link, url, "screenshot",
-        screenshot => this.store.dispatch(ac.BroadcastToContent({
-          data: {screenshot, url},
-          type: at.SCREENSHOT_UPDATED
-        })));
+    await this._fetchScreenshot(link, link.url);
+  }
+
+  /**
+   * Fetch, cache and broadcast a screenshot for a specific topsite.
+   * @param link cached topsite object
+   * @param url where to fetch the image from
+   */
+  async _fetchScreenshot(link, url) {
+    if (link.screenshot) {
+      return;
     }
+    await Screenshots.maybeCacheScreenshot(link, url, "screenshot",
+      screenshot => this.store.dispatch(ac.BroadcastToContent({
+        data: {screenshot, url: link.url},
+        type: at.SCREENSHOT_UPDATED
+      })));
+  }
+
+  /**
+   * Dispatch screenshot preview to target or notify if request failed.
+   * @param customScreenshotURL {string} The URL used to capture the screenshot
+   * @param target {string} Id of content process where to dispatch the result
+   */
+  async getScreenshotPreview(url, target) {
+    const preview = await Screenshots.getScreenshotForURL(url) || "";
+    this.store.dispatch(ac.OnlyToOneContent({
+      data: {url, preview},
+      type: at.PREVIEW_RESPONSE
+    }, target));
   }
 
   _requestRichIcon(url) {
@@ -210,23 +243,41 @@ this.TopSitesFeed = class TopSitesFeed {
 
   /**
    * Pin a site at a specific position saving only the desired keys.
+   * @param customScreenshotURL {string} User set URL of preview image for site
+   * @param label {string} User set string of custom site name
    */
-  _pinSiteAt({label, url}, index) {
+  async _pinSiteAt({customScreenshotURL, label, url}, index) {
     const toPin = {url};
     if (label) {
       toPin.label = label;
     }
+    if (customScreenshotURL) {
+      toPin.customScreenshotURL = customScreenshotURL;
+    }
     NewTabUtils.pinnedLinks.pin(toPin, index);
+
+    await this._clearLinkCustomScreenshot({customScreenshotURL, url});
+  }
+
+  async _clearLinkCustomScreenshot(site) {
+    // If screenshot url changed or was removed we need to update the cached link obj
+    if (site.customScreenshotURL !== undefined) {
+      const pinned = await this.pinnedCache.request();
+      const link = pinned.find(pin => pin && pin.url === site.url);
+      if (link && link.customScreenshotURL !== site.customScreenshotURL) {
+        link.__sharedCache.updateLink("screenshot", undefined);
+      }
+    }
   }
 
   /**
    * Handle a pin action of a site to a position.
    */
-  pin(action) {
+  async pin(action) {
     const {site, index} = action.data;
     // If valid index provided, pin at that position
     if (index >= 0) {
-      this._pinSiteAt(site, index);
+      await this._pinSiteAt(site, index);
       this._broadcastPinnedSitesUpdated();
     } else {
       this.insert(action);
@@ -287,7 +338,7 @@ this.TopSitesFeed = class TopSitesFeed {
   /**
    * Handle an insert (drop/add) action of a site.
    */
-  insert(action) {
+  async insert(action) {
     let {index} = action.data;
     // Treat invalid pin index values (e.g., -1, undefined) as insert in the first position
     if (!(index > 0)) {
@@ -299,6 +350,8 @@ this.TopSitesFeed = class TopSitesFeed {
     this._insertPin(
       action.data.site, index,
       action.data.draggedFromIndex !== undefined ? action.data.draggedFromIndex : this.store.getState().Prefs.values.topSitesRows * TOP_SITES_MAX_SITES_PER_ROW);
+
+    await this._clearLinkCustomScreenshot(action.data.site);
     this._broadcastPinnedSitesUpdated();
   }
 
@@ -338,6 +391,9 @@ this.TopSitesFeed = class TopSitesFeed {
         break;
       case at.TOP_SITES_INSERT:
         this.insert(action);
+        break;
+      case at.PREVIEW_REQUEST:
+        this.getScreenshotPreview(action.data.url, action.meta.fromTarget);
         break;
       case at.UNINIT:
         this.uninit();
