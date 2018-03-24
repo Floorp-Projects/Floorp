@@ -150,11 +150,6 @@ impl CubebServer {
                 .map(ClientMessage::ContextPreferredSampleRate)
                 .unwrap_or_else(error),
 
-            ServerMessage::ContextGetPreferredChannelLayout => context
-                .preferred_channel_layout()
-                .map(|l| ClientMessage::ContextPreferredChannelLayout(l as _))
-                .unwrap_or_else(error),
-
             ServerMessage::ContextGetDeviceEnumeration(device_type) => context
                 .enumerate_devices(cubeb::DeviceType::from_bits_truncate(device_type))
                 .map(|devices| {

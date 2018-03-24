@@ -4,9 +4,8 @@
 // accompanying file LICENSE for details.
 
 use backend::*;
-use cubeb_backend::{ffi, log_enabled, ChannelLayout, Context, ContextOps, DeviceCollectionRef,
-                    DeviceId, DeviceType, Error, Ops, Result, Stream, StreamParams,
-                    StreamParamsRef};
+use cubeb_backend::{ffi, log_enabled, Context, ContextOps, DeviceCollectionRef, DeviceId,
+                    DeviceType, Error, Ops, Result, Stream, StreamParams, StreamParamsRef};
 use pulse::{self, ProplistExt};
 use pulse_ffi::*;
 use semver;
@@ -16,38 +15,6 @@ use std::ffi::{CStr, CString};
 use std::mem;
 use std::os::raw::c_void;
 use std::ptr;
-
-fn pa_channel_to_cubeb_channel(channel: pulse::ChannelPosition) -> ffi::cubeb_channel {
-    use cubeb_backend::ffi::*;
-    use pulse::ChannelPosition;
-    assert_ne!(channel, ChannelPosition::Invalid);
-    match channel {
-        ChannelPosition::Mono => CHANNEL_MONO,
-        ChannelPosition::FrontLeft => CHANNEL_LEFT,
-        ChannelPosition::FrontRight => CHANNEL_RIGHT,
-        ChannelPosition::FrontCenter => CHANNEL_CENTER,
-        ChannelPosition::SideLeft => CHANNEL_LS,
-        ChannelPosition::SideRight => CHANNEL_RS,
-        ChannelPosition::RearLeft => CHANNEL_RLS,
-        ChannelPosition::RearCenter => CHANNEL_RCENTER,
-        ChannelPosition::RearRight => CHANNEL_RRS,
-        ChannelPosition::LowFreqEffects => CHANNEL_LFE,
-        _ => CHANNEL_INVALID,
-    }
-}
-
-fn channel_map_to_layout(cm: &pulse::ChannelMap) -> ChannelLayout {
-    use cubeb_backend::ffi::{cubeb_channel_map, cubeb_channel_map_to_layout};
-    use pulse::ChannelPosition;
-    let mut cubeb_map: cubeb_channel_map = unsafe { mem::zeroed() };
-    cubeb_map.channels = u32::from(cm.channels);
-    for i in 0usize..cm.channels as usize {
-        cubeb_map.map[i] = pa_channel_to_cubeb_channel(
-            ChannelPosition::try_from(cm.map[i]).unwrap_or(ChannelPosition::Invalid),
-        );
-    }
-    ChannelLayout::from(unsafe { cubeb_channel_map_to_layout(&cubeb_map) })
-}
 
 #[derive(Debug)]
 pub struct DefaultInfo {
@@ -70,7 +37,8 @@ pub struct PulseContext {
     pub error: bool,
     pub version_2_0_0: bool,
     pub version_0_9_8: bool,
-    #[cfg(feature = "pulse-dlopen")] pub libpulse: LibLoader,
+    #[cfg(feature = "pulse-dlopen")]
+    pub libpulse: LibLoader,
     devids: RefCell<Intern>,
 }
 
@@ -118,7 +86,11 @@ impl PulseContext {
     }
 
     fn new(name: Option<&CStr>) -> Result<Box<Self>> {
-        fn server_info_cb(context: &pulse::Context, info: Option<&pulse::ServerInfo>, u: *mut c_void) {
+        fn server_info_cb(
+            context: &pulse::Context,
+            info: Option<&pulse::ServerInfo>,
+            u: *mut c_void,
+        ) {
             fn sink_info_cb(
                 _: &pulse::Context,
                 i: *const pulse::SinkInfo,
@@ -214,13 +186,6 @@ impl ContextOps for PulseContext {
     fn preferred_sample_rate(&mut self) -> Result<u32> {
         match self.default_sink_info {
             Some(ref info) => Ok(info.sample_spec.rate),
-            None => Err(Error::error()),
-        }
-    }
-
-    fn preferred_channel_layout(&mut self) -> Result<ChannelLayout> {
-        match self.default_sink_info {
-            Some(ref info) => Ok(channel_map_to_layout(&info.channel_map)),
             None => Err(Error::error()),
         }
     }
@@ -596,12 +561,16 @@ impl PulseContext {
         }
 
         self.mainloop.lock();
-        if let Some(ref context) = self.context {
+        let connected = if let Some(ref context) = self.context {
             context.set_state_callback(error_state, context_ptr);
-            let _ = context.connect(None, pulse::ContextFlags::empty(), ptr::null());
-        }
+            context
+                .connect(None, pulse::ContextFlags::empty(), ptr::null())
+                .is_ok()
+        } else {
+            false
+        };
 
-        if !self.wait_until_context_ready() {
+        if !connected || !self.wait_until_context_ready() {
             self.mainloop.unlock();
             self.context_destroy();
             return Err(Error::error());
