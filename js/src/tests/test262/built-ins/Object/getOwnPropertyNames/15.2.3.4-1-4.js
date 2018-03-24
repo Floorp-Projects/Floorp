@@ -8,6 +8,6 @@ description: >
     boolean
 ---*/
 
-    Object.getOwnPropertyNames(true);
+Object.getOwnPropertyNames(true);
 
 reportCompare(0, 0);

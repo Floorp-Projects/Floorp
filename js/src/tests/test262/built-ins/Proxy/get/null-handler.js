@@ -13,11 +13,11 @@ var p = Proxy.revocable({}, {});
 p.revoke();
 
 assert.throws(TypeError, function() {
-    p.proxy.attr;
+  p.proxy.attr;
 });
 
 assert.throws(TypeError, function() {
-    p.proxy['attr'];
+  p.proxy['attr'];
 });
 
 reportCompare(0, 0);

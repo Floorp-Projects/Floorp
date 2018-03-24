@@ -7,6 +7,6 @@ description: >
   Number.prototype.toFixed returns a string value
 ---*/
 
-assert.sameValue(typeof (123.456).toFixed(), "string");
+assert.sameValue(typeof(123.456).toFixed(), "string");
 
 reportCompare(0, 0);

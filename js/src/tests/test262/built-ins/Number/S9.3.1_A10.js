@@ -11,7 +11,7 @@ description: Compare Number('.12345') with +('12345')*1e-5
 ---*/
 
 // CHECK#1
-if (Number(".12345") !== +("12345")*1e-5) {
+if (Number(".12345") !== +("12345") * 1e-5) {
   $ERROR('#1: Number(".12345") === +("12345")*1e-5');
 }
 

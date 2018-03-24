@@ -9,12 +9,12 @@ description: >
     5.a)
 ---*/
 
-        var props = new RegExp();
-        props.prop = {
-            value: 12,
-            enumerable: true
-        };
-        var newObj = Object.create({}, props);
+var props = new RegExp();
+props.prop = {
+  value: 12,
+  enumerable: true
+};
+var newObj = Object.create({}, props);
 
 assert(newObj.hasOwnProperty("prop"), 'newObj.hasOwnProperty("prop") !== true');
 

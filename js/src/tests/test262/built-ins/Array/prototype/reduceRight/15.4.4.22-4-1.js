@@ -9,9 +9,9 @@ description: >
     undefined
 ---*/
 
-  var arr = new Array(10);
+var arr = new Array(10);
 assert.throws(TypeError, function() {
-    arr.reduceRight();
+  arr.reduceRight();
 });
 
 reportCompare(0, 0);

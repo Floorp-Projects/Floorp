@@ -14,7 +14,7 @@ var p = new Proxy({}, {
 });
 
 assert.throws(TypeError, function() {
-    Object.getPrototypeOf(p);
+  Object.getPrototypeOf(p);
 });
 
 reportCompare(0, 0);

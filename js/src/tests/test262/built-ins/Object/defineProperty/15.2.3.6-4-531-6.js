@@ -13,14 +13,14 @@ includes: [propertyHelper.js]
 var obj = [];
 
 var verifySetFunc = "data";
-var getFunc = function () {
-    return verifySetFunc;
+var getFunc = function() {
+  return verifySetFunc;
 };
 
 Object.defineProperty(obj, "0", {
-    get: getFunc,
-    enumerable: true,
-    configurable: true
+  get: getFunc,
+  enumerable: true,
+  configurable: true
 });
 
 verifyNotWritable(obj, "0");
@@ -29,6 +29,5 @@ assert(obj.hasOwnProperty("0"));
 var desc = Object.getOwnPropertyDescriptor(obj, "0");
 
 assert.sameValue(typeof desc.set, "undefined");
-
 
 reportCompare(0, 0);

@@ -8,6 +8,6 @@ description: >
     or arrays..
 ---*/
 
-assert.sameValue(JSON.stringify([42],{}), '[42]', 'JSON.stringify([42],{})');
+assert.sameValue(JSON.stringify([42], {}), '[42]', 'JSON.stringify([42],{})');
 
 reportCompare(0, 0);

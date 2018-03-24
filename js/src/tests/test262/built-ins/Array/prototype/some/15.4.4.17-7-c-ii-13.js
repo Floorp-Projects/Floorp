@@ -9,9 +9,9 @@ description: >
     get parameter value
 ---*/
 
-        function callbackfn() {
-            return arguments[2][arguments[1]] === arguments[0];
-        }
+function callbackfn() {
+  return arguments[2][arguments[1]] === arguments[0];
+}
 
 assert([9, 12].some(callbackfn), '[9, 12].some(callbackfn) !== true');
 

@@ -11,9 +11,9 @@ description: >
 ---*/
 
 assert.sameValue(
-    Object.getPrototypeOf(Set.prototype),
-    Object.prototype,
-    "`Object.getPrototypeOf(Set.prototype)` returns `Object.prototype`"
+  Object.getPrototypeOf(Set.prototype),
+  Object.prototype,
+  "`Object.getPrototypeOf(Set.prototype)` returns `Object.prototype`"
 );
 
 reportCompare(0, 0);

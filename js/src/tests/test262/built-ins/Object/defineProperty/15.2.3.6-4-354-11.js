@@ -15,13 +15,13 @@ includes: [propertyHelper.js]
 var obj = [];
 
 Object.defineProperty(obj, "prop", {
-    value: 1001,
-    writable: false,
-    configurable: true
+  value: 1001,
+  writable: false,
+  configurable: true
 });
 
 Object.defineProperty(obj, "prop", {
-    value: 1002
+  value: 1002
 });
 
 verifyEqualTo(obj, "prop", 1002);
@@ -31,6 +31,5 @@ verifyNotWritable(obj, "prop");
 verifyNotEnumerable(obj, "prop");
 
 verifyConfigurable(obj, "prop");
-
 
 reportCompare(0, 0);

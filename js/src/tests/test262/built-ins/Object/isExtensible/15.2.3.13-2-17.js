@@ -8,7 +8,7 @@ description: >
     (Boolean.prototype)
 ---*/
 
-  var e = Object.isExtensible(Boolean.prototype);
+var e = Object.isExtensible(Boolean.prototype);
 
 assert.sameValue(e, true, 'e');
 

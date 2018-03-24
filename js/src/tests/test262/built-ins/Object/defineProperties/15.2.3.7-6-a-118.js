@@ -10,15 +10,15 @@ description: >
     step 3.a.i)
 ---*/
 
-        var arr = [];
+var arr = [];
 assert.throws(TypeError, function() {
-            Object.defineProperties(arr, {
-                length: {
-                    get: function () {
-                        return 2;
-                    }
-                }
-            });
+  Object.defineProperties(arr, {
+    length: {
+      get: function() {
+        return 2;
+      }
+    }
+  });
 });
 assert.sameValue(arr.length, 0, 'arr.length');
 

@@ -9,9 +9,9 @@ description: >
     without a Call internal method
 ---*/
 
-  var arr = new Array(10);
+var arr = new Array(10);
 assert.throws(TypeError, function() {
-    arr.some(new Object());
+  arr.some(new Object());
 });
 
 reportCompare(0, 0);

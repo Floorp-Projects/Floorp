@@ -2315,7 +2315,10 @@ public:
       if (clientInfo.isSome()) {
         char buf[NSID_LENGTH];
         clientInfo.ref().Id().ToProvidedString(buf);
-        CopyUTF8toUTF16(nsDependentCString(buf), clientId);
+        NS_ConvertASCIItoUTF16 uuid(buf);
+
+        // Remove {} and the null terminator
+        clientId.Assign(Substring(uuid, 1, NSID_LENGTH - 3));
       }
     }
 

@@ -14,16 +14,16 @@ description: >
     thrown (15.4.5.1 step 3.i.iii)
 ---*/
 
-        var arrObj = [0, 1, 2];
+var arrObj = [0, 1, 2];
 assert.throws(TypeError, function() {
-            Object.defineProperty(arrObj, "1", {
-                configurable: false
-            });
+  Object.defineProperty(arrObj, "1", {
+    configurable: false
+  });
 
-            Object.defineProperty(arrObj, "length", {
-                value: 0,
-                writable: false
-            });
+  Object.defineProperty(arrObj, "length", {
+    value: 0,
+    writable: false
+  });
 });
 assert.sameValue(arrObj.length, 2, 'arrObj.length');
 

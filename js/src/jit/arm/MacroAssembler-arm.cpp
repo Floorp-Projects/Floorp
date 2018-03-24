@@ -1367,12 +1367,6 @@ MacroAssemblerARM::ma_b(Label* dest, Assembler::Condition c)
     return as_b(dest, c);
 }
 
-BufferOffset
-MacroAssemblerARM::ma_b(wasm::OldTrapDesc target, Assembler::Condition c)
-{
-    return as_b(target, c);
-}
-
 void
 MacroAssemblerARM::ma_bx(Register dest, Assembler::Condition c)
 {
@@ -4885,6 +4879,27 @@ MacroAssembler::wasmTrapInstruction()
 }
 
 void
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, Label* label)
+{
+    as_cmp(index, O2Reg(boundsCheckLimit));
+    as_b(label, cond);
+    if (JitOptions.spectreIndexMasking)
+        ma_mov(boundsCheckLimit, index, LeaveCC, cond);
+}
+
+void
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, Label* label)
+{
+    ScratchRegisterScope scratch(*this);
+    MOZ_ASSERT(boundsCheckLimit.offset == offsetof(wasm::TlsData, boundsCheckLimit));
+    ma_ldr(DTRAddr(boundsCheckLimit.base, DtrOffImm(boundsCheckLimit.offset)), scratch);
+    as_cmp(index, O2Reg(scratch));
+    as_b(label, cond);
+    if (JitOptions.spectreIndexMasking)
+        ma_mov(scratch, index, LeaveCC, cond);
+}
+
+void
 MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output,
                                            bool isSaturating, Label* oolEntry)
 {
@@ -5946,22 +5961,21 @@ MacroAssemblerARM::wasmLoadImpl(const wasm::MemoryAccessDesc& access, Register m
 
     asMasm().memoryBarrierBefore(access.sync());
 
-    uint32_t framePushed = asMasm().framePushed();
     BufferOffset load;
     if (out64 != Register64::Invalid()) {
         if (type == Scalar::Int64) {
             MOZ_ASSERT(INT64LOW_OFFSET == 0);
 
             load = ma_dataTransferN(IsLoad, 32, /* signed = */ false, memoryBase, ptr, out64.low);
-            append(access, load.getOffset(), framePushed);
+            append(access, load.getOffset());
 
             as_add(ptr, ptr, Imm8(INT64HIGH_OFFSET));
 
             load = ma_dataTransferN(IsLoad, 32, isSigned, memoryBase, ptr, out64.high);
-            append(access, load.getOffset(), framePushed);
+            append(access, load.getOffset());
         } else {
             load = ma_dataTransferN(IsLoad, byteSize * 8, isSigned, memoryBase, ptr, out64.low);
-            append(access, load.getOffset(), framePushed);
+            append(access, load.getOffset());
 
             if (isSigned)
                 ma_asr(Imm32(31), out64.low, out64.high);
@@ -5976,10 +5990,10 @@ MacroAssemblerARM::wasmLoadImpl(const wasm::MemoryAccessDesc& access, Register m
             ma_add(memoryBase, ptr, scratch);
 
             load = ma_vldr(Operand(Address(scratch, 0)).toVFPAddr(), output.fpu());
-            append(access, load.getOffset(), framePushed);
+            append(access, load.getOffset());
         } else {
             load = ma_dataTransferN(IsLoad, byteSize * 8, isSigned, memoryBase, ptr, output.gpr());
-            append(access, load.getOffset(), framePushed);
+            append(access, load.getOffset());
         }
     }
 
@@ -6008,21 +6022,19 @@ MacroAssemblerARM::wasmStoreImpl(const wasm::MemoryAccessDesc& access, AnyRegist
 
     asMasm().memoryBarrierAfter(access.sync());
 
-    uint32_t framePushed = asMasm().framePushed();
-
     BufferOffset store;
     if (type == Scalar::Int64) {
         MOZ_ASSERT(INT64LOW_OFFSET == 0);
 
         store = ma_dataTransferN(IsStore, 32 /* bits */, /* signed */ false, memoryBase, ptr,
                                  val64.low);
-        append(access, store.getOffset(), framePushed);
+        append(access, store.getOffset());
 
         as_add(ptr, ptr, Imm8(INT64HIGH_OFFSET));
 
         store = ma_dataTransferN(IsStore, 32 /* bits */, /* signed */ true, memoryBase, ptr,
                                  val64.high);
-        append(access, store.getOffset(), framePushed);
+        append(access, store.getOffset());
     } else {
         if (value.isFloat()) {
             ScratchRegisterScope scratch(asMasm());
@@ -6031,14 +6043,14 @@ MacroAssemblerARM::wasmStoreImpl(const wasm::MemoryAccessDesc& access, AnyRegist
             ma_add(memoryBase, ptr, scratch);
 
             store = ma_vstr(val, Operand(Address(scratch, 0)).toVFPAddr());
-            append(access, store.getOffset(), framePushed);
+            append(access, store.getOffset());
         } else {
             bool isSigned = type == Scalar::Uint32 || type == Scalar::Int32; // see AsmJSStoreHeap;
             Register val = value.gpr();
 
             store = ma_dataTransferN(IsStore, 8 * byteSize /* bits */, isSigned, memoryBase, ptr,
                                      val);
-            append(access, store.getOffset(), framePushed);
+            append(access, store.getOffset());
         }
     }
 

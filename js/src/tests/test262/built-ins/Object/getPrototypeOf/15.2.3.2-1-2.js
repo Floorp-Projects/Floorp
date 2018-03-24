@@ -8,7 +8,7 @@ description: Object.getPrototypeOf throws TypeError if 'O' is null
 
 
 assert.throws(TypeError, function() {
-            Object.getPrototypeOf(null);
+  Object.getPrototypeOf(null);
 });
 
 reportCompare(0, 0);

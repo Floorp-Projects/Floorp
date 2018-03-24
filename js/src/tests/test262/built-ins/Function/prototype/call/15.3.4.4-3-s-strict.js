@@ -11,9 +11,9 @@ description: >
 flags: [onlyStrict]
 ---*/
 
-        function fun() {
-            return (this instanceof Boolean);
-        }
+function fun() {
+  return (this instanceof Boolean);
+}
 
 assert.sameValue(fun.call(false), false, 'fun.call(false)');
 

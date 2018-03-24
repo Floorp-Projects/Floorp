@@ -9,7 +9,10 @@ description: >
     is +0)
 ---*/
 
-        var obj = { 0: +0, length: +0 };
+var obj = {
+  0: +0,
+  length: +0
+};
 
 assert.sameValue(Array.prototype.lastIndexOf.call(obj, +0), -1, 'Array.prototype.lastIndexOf.call(obj, +0)');
 

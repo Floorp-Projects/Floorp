@@ -8,6 +8,6 @@ description: >
     param is not Object
 ---*/
 
-    Object.isExtensible(0);
+Object.isExtensible(0);
 
 reportCompare(0, 0);

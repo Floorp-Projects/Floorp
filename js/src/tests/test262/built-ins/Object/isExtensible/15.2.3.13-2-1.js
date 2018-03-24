@@ -10,5 +10,4 @@ var global = this;
 
 assert(Object.isExtensible(global));
 
-
 reportCompare(0, 0);

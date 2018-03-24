@@ -12,7 +12,7 @@ description: Checking Object.prototype.valueOf when called as a global function.
 var v = Object.prototype.valueOf;
 
 assert.throws(TypeError, function() {
-    v();
+  v();
 });
 
 reportCompare(0, 0);

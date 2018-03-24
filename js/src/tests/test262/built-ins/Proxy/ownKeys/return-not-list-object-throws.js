@@ -22,13 +22,13 @@ features: [Symbol]
 
 var target = {};
 var p = new Proxy(target, {
-    ownKeys: function() {
-        return undefined;
-    }
+  ownKeys: function() {
+    return undefined;
+  }
 });
 
 assert.throws(TypeError, function() {
-    Object.keys(p);
+  Object.keys(p);
 });
 
 reportCompare(0, 0);

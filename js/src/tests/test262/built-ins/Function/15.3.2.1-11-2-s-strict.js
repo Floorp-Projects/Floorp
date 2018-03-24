@@ -10,6 +10,6 @@ description: >
 flags: [onlyStrict]
 ---*/
 
-    Function('a','a','return;');
+Function('a', 'a', 'return;');
 
 reportCompare(0, 0);

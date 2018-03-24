@@ -170,11 +170,9 @@ static void Expect(const char* aContext, int aCounter, int aMaxExpected)
 
 static void ExpectRunnableName(Runnable* aRunnable, const char* aExpectedName)
 {
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   nsAutoCString name;
   EXPECT_TRUE(NS_SUCCEEDED(aRunnable->GetName(name))) << "Runnable::GetName()";
-#ifdef RELEASE_OR_BETA
-  EXPECT_TRUE(name.IsEmpty()) << "Runnable name shall be empty in RELEASE or BETA!";
-#else
   EXPECT_TRUE(name.EqualsASCII(aExpectedName)) << "Verify Runnable name";
 #endif
 }

@@ -326,9 +326,8 @@ MacroAssemblerMIPSShared::ma_addu(Register rd, Imm32 imm)
     ma_addu(rd, rd, imm);
 }
 
-template <typename L>
 void
-MacroAssemblerMIPSShared::ma_addTestCarry(Register rd, Register rs, Register rt, L overflow)
+MacroAssemblerMIPSShared::ma_addTestCarry(Register rd, Register rs, Register rt, Label* overflow)
 {
     MOZ_ASSERT_IF(rd == rs, rt != rd);
     as_addu(rd, rs, rt);
@@ -336,27 +335,12 @@ MacroAssemblerMIPSShared::ma_addTestCarry(Register rd, Register rs, Register rt,
     ma_b(SecondScratchReg, SecondScratchReg, overflow, Assembler::NonZero);
 }
 
-template void
-MacroAssemblerMIPSShared::ma_addTestCarry<Label*>(Register rd, Register rs,
-                                                  Register rt, Label* overflow);
-template void
-MacroAssemblerMIPSShared::ma_addTestCarry<wasm::OldTrapDesc>(Register rd, Register rs, Register rt,
-                                                             wasm::OldTrapDesc overflow);
-
-template <typename L>
 void
-MacroAssemblerMIPSShared::ma_addTestCarry(Register rd, Register rs, Imm32 imm, L overflow)
+MacroAssemblerMIPSShared::ma_addTestCarry(Register rd, Register rs, Imm32 imm, Label* overflow)
 {
     ma_li(ScratchRegister, imm);
     ma_addTestCarry(rd, rs, ScratchRegister, overflow);
 }
-
-template void
-MacroAssemblerMIPSShared::ma_addTestCarry<Label*>(Register rd, Register rs,
-                                                  Imm32 imm, Label* overflow);
-template void
-MacroAssemblerMIPSShared::ma_addTestCarry<wasm::OldTrapDesc>(Register rd, Register rs, Imm32 imm,
-                                                             wasm::OldTrapDesc overflow);
 
 // Subtract.
 void
@@ -601,7 +585,7 @@ MacroAssemblerMIPSShared::ma_load_unaligned(const wasm::MemoryAccessDesc& access
         MOZ_CRASH("Invalid argument for ma_load");
     }
 
-    append(access, load.getOffset(), asMasm().framePushed());
+    append(access, load.getOffset());
 }
 
 void
@@ -747,7 +731,7 @@ MacroAssemblerMIPSShared::ma_store_unaligned(const wasm::MemoryAccessDesc& acces
       default:
         MOZ_CRASH("Invalid argument for ma_store");
     }
-    append(access, store.getOffset(), asMasm().framePushed());
+    append(access, store.getOffset());
 }
 
 // Branches when done from within mips-specific code.
@@ -808,38 +792,10 @@ MacroAssemblerMIPSShared::ma_b(Register lhs, ImmPtr imm, Label* l, Condition c, 
     asMasm().ma_b(lhs, ImmWord(uintptr_t(imm.value)), l, c, jumpKind);
 }
 
-template <typename T>
-void
-MacroAssemblerMIPSShared::ma_b(Register lhs, T rhs, wasm::OldTrapDesc target, Condition c,
-                               JumpKind jumpKind)
-{
-    Label label;
-    ma_b(lhs, rhs, &label, c, jumpKind);
-    bindLater(&label, target);
-}
-
-template void MacroAssemblerMIPSShared::ma_b<Register>(Register lhs, Register rhs,
-                                                       wasm::OldTrapDesc target, Condition c,
-                                                       JumpKind jumpKind);
-template void MacroAssemblerMIPSShared::ma_b<Imm32>(Register lhs, Imm32 rhs,
-                                                       wasm::OldTrapDesc target, Condition c,
-                                                       JumpKind jumpKind);
-template void MacroAssemblerMIPSShared::ma_b<ImmTag>(Register lhs, ImmTag rhs,
-                                                       wasm::OldTrapDesc target, Condition c,
-                                                       JumpKind jumpKind);
-
 void
 MacroAssemblerMIPSShared::ma_b(Label* label, JumpKind jumpKind)
 {
     asMasm().branchWithCode(getBranchCode(BranchIsJump), label, jumpKind);
-}
-
-void
-MacroAssemblerMIPSShared::ma_b(wasm::OldTrapDesc target, JumpKind jumpKind)
-{
-    Label label;
-    asMasm().branchWithCode(getBranchCode(BranchIsJump), &label, jumpKind);
-    bindLater(&label, target);
 }
 
 Assembler::Condition
@@ -2105,7 +2061,7 @@ MacroAssemblerMIPSShared::wasmLoadImpl(const wasm::MemoryAccessDesc& access, Reg
         asMasm().ma_load(output.gpr(), address, static_cast<LoadStoreSize>(8 * byteSize),
                          isSigned ? SignExtend : ZeroExtend);
     }
-    asMasm().append(access, asMasm().size() - 4, asMasm().framePushed());
+    asMasm().append(access, asMasm().size() - 4);
     asMasm().memoryBarrierAfter(access.sync());
 }
 
@@ -2169,7 +2125,7 @@ MacroAssemblerMIPSShared::wasmStoreImpl(const wasm::MemoryAccessDesc& access, An
                       isSigned ? SignExtend : ZeroExtend);
     }
     // Only the last emitted instruction is a memory access.
-    asMasm().append(access, asMasm().size() - 4, asMasm().framePushed());
+    asMasm().append(access, asMasm().size() - 4);
     asMasm().memoryBarrierAfter(access.sync());
 }
 

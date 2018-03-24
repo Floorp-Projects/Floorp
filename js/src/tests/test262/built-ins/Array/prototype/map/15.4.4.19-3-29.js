@@ -9,17 +9,17 @@ description: >
     1)
 ---*/
 
-        function callbackfn(val, idx, obj) {
-            return val > 10;
-        }
+function callbackfn(val, idx, obj) {
+  return val > 10;
+}
 
-        var obj = {
-            0: 11,
-            1: 9,
-            length: 4294967297
-        };
+var obj = {
+  0: 11,
+  1: 9,
+  length: 4294967297
+};
 assert.throws(RangeError, function() {
-            var newArr = Array.prototype.map.call(obj, callbackfn);
+  var newArr = Array.prototype.map.call(obj, callbackfn);
 });
 
 reportCompare(0, 0);

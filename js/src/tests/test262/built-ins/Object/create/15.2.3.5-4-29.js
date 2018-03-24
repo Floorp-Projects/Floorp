@@ -9,12 +9,12 @@ description: >
     5.a)
 ---*/
 
-        var props = [];
-        props.prop = {
-            value: {},
-            enumerable: true
-        };
-        var newObj = Object.create({}, props);
+var props = [];
+props.prop = {
+  value: {},
+  enumerable: true
+};
+var newObj = Object.create({}, props);
 
 assert(newObj.hasOwnProperty("prop"), 'newObj.hasOwnProperty("prop") !== true');
 

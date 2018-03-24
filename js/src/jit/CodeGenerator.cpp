@@ -10072,8 +10072,6 @@ CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::BytecodeOffset trapOffs
     if (!generateOutOfLineCode())
         return false;
 
-    masm.wasmEmitOldTrapOutOfLineCode();
-
     masm.flush();
     if (masm.oom())
         return false;
@@ -12954,8 +12952,10 @@ CodeGenerator::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
     const MWasmBoundsCheck* mir = ins->mir();
     Register ptr = ToRegister(ins->ptr());
     Register boundsCheckLimit = ToRegister(ins->boundsCheckLimit());
-    masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, boundsCheckLimit,
-                         oldTrap(mir, wasm::Trap::OutOfBounds));
+    Label ok;
+    masm.wasmBoundsCheck(Assembler::Below, ptr, boundsCheckLimit, &ok);
+    masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
+    masm.bind(&ok);
 #endif
 }
 
@@ -12964,8 +12964,10 @@ CodeGenerator::visitWasmAlignmentCheck(LWasmAlignmentCheck* ins)
 {
     const MWasmAlignmentCheck* mir = ins->mir();
     Register ptr = ToRegister(ins->ptr());
-    masm.branchTest32(Assembler::NonZero, ptr, Imm32(mir->byteSize() - 1),
-                      oldTrap(mir, wasm::Trap::UnalignedAccess));
+    Label ok;
+    masm.branchTest32(Assembler::Zero, ptr, Imm32(mir->byteSize() - 1), &ok);
+    masm.wasmTrap(wasm::Trap::UnalignedAccess, mir->bytecodeOffset());
+    masm.bind(&ok);
 }
 
 void

@@ -9,15 +9,15 @@ description: >
     (8.10.5 step 7.a)
 ---*/
 
-        var arrayObj = [1, 2, 3];
+var arrayObj = [1, 2, 3];
 
-        arrayObj.get = function () {
-            return "VerifyArrayObject";
-        };
+arrayObj.get = function() {
+  return "VerifyArrayObject";
+};
 
-        var newObj = Object.create({}, {
-            prop: arrayObj
-        });
+var newObj = Object.create({}, {
+  prop: arrayObj
+});
 
 assert.sameValue(newObj.prop, "VerifyArrayObject", 'newObj.prop');
 

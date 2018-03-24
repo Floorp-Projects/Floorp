@@ -6,8 +6,8 @@ es5id: 15.3.4.5-2-16
 description: Function.prototype.bind - 'Target' is a function
 ---*/
 
-        function testFunc() {}
+function testFunc() {}
 
-            testFunc.bind();
+testFunc.bind();
 
 reportCompare(0, 0);

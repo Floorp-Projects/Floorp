@@ -8,7 +8,7 @@ description: >
     (ReferenceError)
 ---*/
 
-  var b = Object.isFrozen(ReferenceError);
+var b = Object.isFrozen(ReferenceError);
 
 assert.sameValue(b, false, 'b');
 

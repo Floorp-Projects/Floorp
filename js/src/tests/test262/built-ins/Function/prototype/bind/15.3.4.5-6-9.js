@@ -8,14 +8,14 @@ description: >
     a get function
 ---*/
 
-        var foo = function () { };
+var foo = function() {};
 
-        var obj = foo.bind({});
-        Object.defineProperty(obj, "property", {
-            set: function () {}
-        });
+var obj = foo.bind({});
+Object.defineProperty(obj, "property", {
+  set: function() {}
+});
 
 assert(obj.hasOwnProperty("property"), 'obj.hasOwnProperty("property") !== true');
-assert.sameValue(typeof (obj.property), "undefined", 'typeof (obj.property)');
+assert.sameValue(typeof(obj.property), "undefined", 'typeof (obj.property)');
 
 reportCompare(0, 0);

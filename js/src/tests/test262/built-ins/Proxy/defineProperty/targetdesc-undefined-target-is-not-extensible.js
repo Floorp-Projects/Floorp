@@ -16,15 +16,15 @@ info: |
 
 var target = {};
 var p = new Proxy(target, {
-    defineProperty: function(t, prop, desc) {
-        return true;
-    }
+  defineProperty: function(t, prop, desc) {
+    return true;
+  }
 });
 
 Object.preventExtensions(target);
 
 assert.throws(TypeError, function() {
-    Object.defineProperty(p, "foo", {});
+  Object.defineProperty(p, "foo", {});
 });
 
 reportCompare(0, 0);

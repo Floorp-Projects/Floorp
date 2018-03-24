@@ -8,8 +8,8 @@ description: >
     a string (value is 1e-6)
 ---*/
 
-        var obj = {};
-        Object.defineProperty(obj, 1e-6, {});
+var obj = {};
+Object.defineProperty(obj, 1e-6, {});
 
 assert(obj.hasOwnProperty("0.000001"), 'obj.hasOwnProperty("0.000001") !== true');
 

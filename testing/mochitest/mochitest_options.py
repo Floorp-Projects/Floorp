@@ -8,12 +8,10 @@ from distutils.util import strtobool
 from distutils import spawn
 from itertools import chain
 from urlparse import urlparse
-import logging
 import json
 import os
 import tempfile
 
-from mozdevice import DroidADB
 from mozprofile import DEFAULT_PORTS
 import mozinfo
 import mozlog
@@ -850,18 +848,6 @@ class AndroidArguments(ArgumentContainer):
     """Android specific arguments."""
 
     args = [
-        [["--remote-app-path"],
-         {"dest": "remoteAppPath",
-          "help": "Path to remote executable relative to device root using \
-                   only forward slashes. Either this or app must be specified \
-                   but not both.",
-          "default": None,
-          }],
-        [["--deviceIP"],
-         {"dest": "deviceIP",
-          "help": "ip address of remote device to test",
-          "default": None,
-          }],
         [["--deviceSerial"],
          {"dest": "deviceSerial",
           "help": "ip address of remote device to test",
@@ -869,21 +855,9 @@ class AndroidArguments(ArgumentContainer):
           }],
         [["--adbpath"],
          {"dest": "adbPath",
-          "default": None,
+          "default": "adb",
           "help": "Path to adb binary.",
           "suppress": True,
-          }],
-        [["--devicePort"],
-         {"dest": "devicePort",
-          "type": int,
-          "default": 20701,
-          "help": "port of remote device to test",
-          }],
-        [["--remote-logfile"],
-         {"dest": "remoteLogFile",
-          "default": None,
-          "help": "Name of log file on the device relative to the device \
-                   root. PLEASE ONLY USE A FILENAME.",
           }],
         [["--remote-webserver"],
          {"dest": "remoteWebServer",
@@ -902,11 +876,6 @@ class AndroidArguments(ArgumentContainer):
           "help": "ssl port of the remote web server",
           "suppress": True,
           }],
-        [["--robocop-ini"],
-         {"dest": "robocopIni",
-          "default": "",
-          "help": "name of the .ini file containing the list of tests to run",
-          }],
         [["--robocop-apk"],
          {"dest": "robocopApk",
           "default": "",
@@ -922,7 +891,6 @@ class AndroidArguments(ArgumentContainer):
     ]
 
     defaults = {
-        'dm': None,
         # we don't want to exclude specialpowers on android just yet
         'extensionsToExclude': [],
         # mochijar doesn't get installed via marionette on android
@@ -937,21 +905,6 @@ class AndroidArguments(ArgumentContainer):
         if build_obj:
             options.log_mach = '-'
 
-        device_args = {'deviceRoot': options.remoteTestRoot}
-        device_args['adbPath'] = options.adbPath
-        if options.deviceIP:
-            device_args['host'] = options.deviceIP
-            device_args['port'] = options.devicePort
-        elif options.deviceSerial:
-            device_args['deviceSerial'] = options.deviceSerial
-
-        if options.log_tbpl_level == 'debug' or options.log_mach_level == 'debug':
-            device_args['logLevel'] = logging.DEBUG
-        options.dm = DroidADB(**device_args)
-
-        if not options.remoteTestRoot:
-            options.remoteTestRoot = options.dm.deviceRoot
-
         if options.remoteWebServer is None:
             if os.name != "nt":
                 options.remoteWebServer = moznetwork.get_ip()
@@ -961,24 +914,10 @@ class AndroidArguments(ArgumentContainer):
 
         options.webServer = options.remoteWebServer
 
-        if options.remoteLogFile is None:
-            options.remoteLogFile = options.remoteTestRoot + \
-                '/logs/mochitest.log'
-
-        if options.remoteLogFile.count('/') < 1:
-            options.remoteLogFile = options.remoteTestRoot + \
-                '/' + options.remoteLogFile
-
-        if options.remoteAppPath and options.app:
-            parser.error(
-                "You cannot specify both the remoteAppPath and the app setting")
-        elif options.remoteAppPath:
-            options.app = options.remoteTestRoot + "/" + options.remoteAppPath
-        elif options.app is None:
+        if options.app is None:
             if build_obj:
                 options.app = build_obj.substs['ANDROID_PACKAGE_NAME']
             else:
-                # Neither remoteAppPath nor app are set -- error
                 parser.error("You must specify either appPath or app")
 
         if build_obj and 'MOZ_HOST_BIN' in os.environ:
@@ -996,16 +935,8 @@ class AndroidArguments(ArgumentContainer):
             f.write("%s" % os.getpid())
             f.close()
 
-        # Robocop specific options
-        if options.robocopIni != "":
-            if not os.path.exists(options.robocopIni):
-                parser.error(
-                    "Unable to find specified robocop .ini manifest '%s'" %
-                    options.robocopIni)
-            options.robocopIni = os.path.abspath(options.robocopIni)
-
-            if not options.robocopApk and build_obj:
-                options.robocopApk = build_obj.substs.get('GRADLE_ANDROID_APP_ANDROIDTEST_APK')
+        if not options.robocopApk and build_obj:
+            options.robocopApk = build_obj.substs.get('GRADLE_ANDROID_APP_ANDROIDTEST_APK')
 
         if options.robocopApk != "":
             if not os.path.exists(options.robocopApk):

@@ -10,6 +10,6 @@ description: >
     body
 ---*/
 
-        var foo = new Function("baz", "baz", "baz", "return 0;");
+var foo = new Function("baz", "baz", "baz", "return 0;");
 
 reportCompare(0, 0);

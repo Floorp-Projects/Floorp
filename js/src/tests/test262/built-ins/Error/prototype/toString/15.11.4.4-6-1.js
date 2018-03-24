@@ -8,7 +8,7 @@ description: >
     absent and empty string is returned when 'msg' is undefined
 ---*/
 
-        var errObj = new Error();
+var errObj = new Error();
 
 assert.sameValue(errObj.toString(), "Error", 'errObj.toString()');
 

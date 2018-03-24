@@ -260,13 +260,20 @@ AnimationHelper::SampleAnimationForEachNode(
   return activeAnimations;
 }
 
-static inline void
+struct BogusAnimation {};
+
+static inline Result<Ok, BogusAnimation>
 SetCSSAngle(const CSSAngle& aAngle, nsCSSValue& aValue)
 {
   aValue.SetFloatValue(aAngle.value(), nsCSSUnit(aAngle.unit()));
+  if (!aValue.IsAngularUnit()) {
+    NS_ERROR("Bogus animation from IPC");
+    return Err(BogusAnimation { });
+  }
+  return Ok();
 }
 
-static nsCSSValueSharedList*
+static Result<nsCSSValueSharedList*, BogusAnimation>
 CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
 {
   nsAutoPtr<nsCSSValueList> result;
@@ -278,8 +285,8 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
       {
         const CSSAngle& angle = aFunctions[i].get_RotationX().angle();
         arr = AnimationValue::AppendTransformFunction(eCSSKeyword_rotatex,
-                                                    resultTail);
-        SetCSSAngle(angle, arr->Item(1));
+                                                      resultTail);
+        MOZ_TRY(SetCSSAngle(angle, arr->Item(1)));
         break;
       }
       case TransformFunction::TRotationY:
@@ -287,7 +294,7 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
         const CSSAngle& angle = aFunctions[i].get_RotationY().angle();
         arr = AnimationValue::AppendTransformFunction(eCSSKeyword_rotatey,
                                                       resultTail);
-        SetCSSAngle(angle, arr->Item(1));
+        MOZ_TRY(SetCSSAngle(angle, arr->Item(1)));
         break;
       }
       case TransformFunction::TRotationZ:
@@ -295,7 +302,7 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
         const CSSAngle& angle = aFunctions[i].get_RotationZ().angle();
         arr = AnimationValue::AppendTransformFunction(eCSSKeyword_rotatez,
                                                       resultTail);
-        SetCSSAngle(angle, arr->Item(1));
+        MOZ_TRY(SetCSSAngle(angle, arr->Item(1)));
         break;
       }
       case TransformFunction::TRotation:
@@ -303,7 +310,7 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
         const CSSAngle& angle = aFunctions[i].get_Rotation().angle();
         arr = AnimationValue::AppendTransformFunction(eCSSKeyword_rotate,
                                                       resultTail);
-        SetCSSAngle(angle, arr->Item(1));
+        MOZ_TRY(SetCSSAngle(angle, arr->Item(1)));
         break;
       }
       case TransformFunction::TRotation3D:
@@ -317,7 +324,7 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
         arr->Item(1).SetFloatValue(x, eCSSUnit_Number);
         arr->Item(2).SetFloatValue(y, eCSSUnit_Number);
         arr->Item(3).SetFloatValue(z, eCSSUnit_Number);
-        SetCSSAngle(angle, arr->Item(4));
+        MOZ_TRY(SetCSSAngle(angle, arr->Item(4)));
         break;
       }
       case TransformFunction::TScale:
@@ -343,7 +350,7 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
         const CSSAngle& x = aFunctions[i].get_SkewX().x();
         arr = AnimationValue::AppendTransformFunction(eCSSKeyword_skewx,
                                                       resultTail);
-        SetCSSAngle(x, arr->Item(1));
+        MOZ_TRY(SetCSSAngle(x, arr->Item(1)));
         break;
       }
       case TransformFunction::TSkewY:
@@ -351,7 +358,7 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
         const CSSAngle& y = aFunctions[i].get_SkewY().y();
         arr = AnimationValue::AppendTransformFunction(eCSSKeyword_skewy,
                                                       resultTail);
-        SetCSSAngle(y, arr->Item(1));
+        MOZ_TRY(SetCSSAngle(y, arr->Item(1)));
         break;
       }
       case TransformFunction::TSkew:
@@ -360,8 +367,8 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
         const CSSAngle& y = aFunctions[i].get_Skew().y();
         arr = AnimationValue::AppendTransformFunction(eCSSKeyword_skew,
                                                       resultTail);
-        SetCSSAngle(x, arr->Item(1));
-        SetCSSAngle(y, arr->Item(2));
+        MOZ_TRY(SetCSSAngle(x, arr->Item(1)));
+        MOZ_TRY(SetCSSAngle(y, arr->Item(2)));
         break;
       }
       case TransformFunction::TTransformMatrix:
@@ -416,20 +423,22 @@ ToAnimationValue(const Animatable& aAnimatable)
     case Animatable::Tnull_t:
       break;
     case Animatable::TArrayOfTransformFunction: {
-        const InfallibleTArray<TransformFunction>& transforms =
-          aAnimatable.get_ArrayOfTransformFunction();
-        RefPtr<nsCSSValueSharedList> list(CreateCSSValueList(transforms));
+      const InfallibleTArray<TransformFunction>& transforms =
+        aAnimatable.get_ArrayOfTransformFunction();
+      auto listOrError = CreateCSSValueList(transforms);
+      if (listOrError.isOk()) {
+        RefPtr<nsCSSValueSharedList> list = listOrError.unwrap();
         MOZ_ASSERT(list, "Transform list should be non null");
         result = AnimationValue::Transform(backend, *list);
       }
       break;
+    }
     case Animatable::Tfloat:
       result = AnimationValue::Opacity(backend, aAnimatable.get_float());
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported type");
   }
-
   return result;
 }
 

@@ -11,12 +11,12 @@ description: >
     callable (but an instance of Function)
 ---*/
 
-  foo.prototype = Function.prototype;
-  // dummy function
-  function foo() {}
-  var f = new foo();
+foo.prototype = Function.prototype;
+// dummy function
+function foo() {}
+var f = new foo();
 assert.throws(TypeError, function() {
-    f.bind();
+  f.bind();
 });
 
 reportCompare(0, 0);
