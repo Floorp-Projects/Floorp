@@ -75,7 +75,7 @@ HistoryEngine.prototype = {
     this._log.debug("Checking if server sync ID ${newSyncID} matches existing",
                     { newSyncID });
     await PlacesSyncUtils.history.ensureCurrentSyncId(newSyncID);
-    super.setSyncIDPref(newSyncID); // Remove in bug 1443021.
+    await super.ensureCurrentSyncID(newSyncID); // Remove in bug 1443021.
     return newSyncID;
   },
 
@@ -91,12 +91,8 @@ HistoryEngine.prototype = {
   async resetLocalSyncID() {
     let newSyncID = await PlacesSyncUtils.history.resetSyncId();
     this._log.debug("Assigned new sync ID ${newSyncID}", { newSyncID });
-    await super.setSyncIDPref(newSyncID); // Remove in bug 1443021.
+    await super.ensureCurrentSyncID(newSyncID); // Remove in bug 1443021.
     return newSyncID;
-  },
-
-  setSyncIDPref(syncID) {
-    throw new Error("Use ensureCurrentSyncID or resetLocalSyncID");
   },
 
   async getLastSync() {
