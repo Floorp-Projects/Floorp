@@ -4355,9 +4355,10 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         gridItem.mState[mAxis] |= ItemState::eApplyAutoMinSize;
       }
 
-      if ((state & (TrackSize::eIntrinsicMinSizing |
-                    TrackSize::eIntrinsicMaxSizing)) &&
-          !(state & TrackSize::eFlexMaxSizing)) {
+      if (state & TrackSize::eFlexMaxSizing) {
+        gridItem.mState[mAxis] |= ItemState::eIsFlexing;
+      } else if (state & (TrackSize::eIntrinsicMinSizing |
+                          TrackSize::eIntrinsicMaxSizing)) {
         // Collect data for Step 2.
         maxSpan = std::max(maxSpan, span);
         if (span >= perSpanData.Length()) {
@@ -4367,10 +4368,8 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         perSpanData[span].mStateBits |= state;
         CachedIntrinsicSizes cache;
         // Calculate data for "Automatic Minimum Size" clamping, if needed.
-        bool needed = ((state & TrackSize::eIntrinsicMinSizing) ||
-                       aConstraint == SizingConstraint::eNoConstraint) &&
-                      (gridItem.mState[mAxis] & ItemState::eApplyAutoMinSize);
-        if (needed && TrackSize::IsDefiniteMaxSizing(state)) {
+        if (TrackSize::IsDefiniteMaxSizing(state) &&
+            (gridItem.mState[mAxis] & ItemState::eApplyAutoMinSize)) {
           nscoord minSizeClamp = 0;
           for (auto i : lineRange.Range()) {
             auto maxCoord = aFunctions.MaxSizingFor(i);
@@ -4400,14 +4399,6 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         step2Items.AppendElement(
           Step2ItemData({span, state, lineRange, minSize,
                          minContent, maxContent, *iter}));
-      } else {
-        if (state & TrackSize::eFlexMaxSizing) {
-          gridItem.mState[mAxis] |= ItemState::eIsFlexing;
-        } else if (aConstraint == SizingConstraint::eNoConstraint &&
-                   TrackSize::IsDefiniteMaxSizing(state) &&
-                   (gridItem.mState[mAxis] & ItemState::eApplyAutoMinSize)) {
-          gridItem.mState[mAxis] |= ItemState::eClampMarginBoxMinSize;
-        }
       }
     }
     MOZ_ASSERT(!(gridItem.mState[mAxis] & ItemState::eClampMarginBoxMinSize) ||
