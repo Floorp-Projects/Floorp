@@ -127,13 +127,13 @@ const HistorySyncUtils = PlacesSyncUtils.history = Object.freeze({
           db, HistorySyncUtils.SYNC_ID_META_KEY);
 
         if (existingSyncId == newSyncId) {
-          HistorySyncLog.debug("History sync ID up-to-date",
+          HistorySyncLog.trace("History sync ID up-to-date",
                                { existingSyncId });
           return;
         }
 
-        HistorySyncLog.debug("History sync ID changed; resetting metadata",
-                             { existingSyncId, newSyncId });
+        HistorySyncLog.info("History sync ID changed; resetting metadata",
+                            { existingSyncId, newSyncId });
         await db.executeTransaction(function() {
           return setHistorySyncId(db, newSyncId);
         });
@@ -475,14 +475,14 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
         // If we don't have a sync ID, take the server's without resetting
         // sync statuses.
         if (!existingSyncId) {
-          BookmarkSyncLog.debug("Taking new bookmarks sync ID", { newSyncId });
+          BookmarkSyncLog.info("Taking new bookmarks sync ID", { newSyncId });
           await db.executeTransaction(() => setBookmarksSyncId(db, newSyncId));
           return;
         }
 
         // If the existing sync ID matches the server, great!
         if (existingSyncId == newSyncId) {
-          BookmarkSyncLog.debug("Bookmarks sync ID up-to-date",
+          BookmarkSyncLog.trace("Bookmarks sync ID up-to-date",
                                 { existingSyncId });
           return;
         }
@@ -490,8 +490,8 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
         // Otherwise, we have a sync ID, but it doesn't match, so we were likely
         // node reassigned. Take the server's sync ID and reset all items to
         // "UNKNOWN" so that we can merge.
-        BookmarkSyncLog.debug("Bookmarks sync ID changed; resetting sync " +
-                              "statuses", { existingSyncId, newSyncId });
+        BookmarkSyncLog.info("Bookmarks sync ID changed; resetting sync " +
+                             "statuses", { existingSyncId, newSyncId });
         await db.executeTransaction(async function() {
           await setBookmarksSyncId(db, newSyncId);
           await resetAllSyncStatuses(db,

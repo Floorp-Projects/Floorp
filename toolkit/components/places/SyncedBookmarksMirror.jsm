@@ -209,13 +209,13 @@ class SyncedBookmarksMirror {
     // before we call `setCollectionLastModified`. We subtract one second, the
     // maximum time precision guaranteed by the server, so that we don't miss
     // other records with the same time as the newest one we downloaded.
-    let rows = await this.db.execute(`
+    let rows = await this.db.executeCached(`
       SELECT MAX(
         IFNULL((SELECT MAX(serverModified) - 1000 FROM items), 0),
         IFNULL((SELECT CAST(value AS INTEGER) FROM meta
                 WHERE key = :modifiedKey), 0)
       ) AS highWaterMark`,
-      { modifiedKey: SyncedBookmarksMirror.META.MODIFIED });
+      { modifiedKey: SyncedBookmarksMirror.META_KEY.LAST_MODIFIED });
     let highWaterMark = rows[0].getResultByName("highWaterMark");
     return highWaterMark / 1000;
   }
@@ -234,10 +234,63 @@ class SyncedBookmarksMirror {
     }
     await this.db.executeBeforeShutdown(
       "SyncedBookmarksMirror: setCollectionLastModified",
-      db => db.execute(`
+      db => db.executeCached(`
         REPLACE INTO meta(key, value)
         VALUES(:modifiedKey, :lastModified)`,
-        { modifiedKey: SyncedBookmarksMirror.META.MODIFIED, lastModified })
+        { modifiedKey: SyncedBookmarksMirror.META_KEY.LAST_MODIFIED,
+          lastModified })
+    );
+  }
+
+  /**
+   * Returns the bookmarks collection sync ID. This corresponds to
+   * `PlacesSyncUtils.bookmarks.getSyncId`.
+   *
+   * @return {String}
+   *         The sync ID, or `""` if one isn't set.
+   */
+  async getSyncId() {
+    let rows = await this.db.executeCached(`
+      SELECT value FROM meta WHERE key = :syncIdKey`,
+      { syncIdKey: SyncedBookmarksMirror.META_KEY.SYNC_ID });
+    return rows.length ? rows[0].getResultByName("value") : "";
+  }
+
+  /**
+   * Ensures that the sync ID in the mirror is up-to-date with the server and
+   * Places, and discards the mirror on mismatch.
+   *
+   * The bookmarks engine store the same sync ID in Places and the mirror to
+   * "tie" the two together. This allows Sync to do the right thing if the
+   * database files are copied between profiles connected to different accounts.
+   *
+   * See `PlacesSyncUtils.bookmarks.ensureCurrentSyncId` for an explanation of
+   * how Places handles sync ID mismatches.
+   *
+   * @param {String} newSyncId
+   *        The server's sync ID.
+   */
+  async ensureCurrentSyncId(newSyncId) {
+    if (!newSyncId || typeof newSyncId != "string") {
+      throw new TypeError("Invalid new bookmarks sync ID");
+    }
+    let existingSyncId = await this.getSyncId();
+    if (existingSyncId == newSyncId) {
+      MirrorLog.trace("Sync ID up-to-date in mirror", { existingSyncId });
+      return;
+    }
+    MirrorLog.info("Sync ID changed from ${existingSyncId} to " +
+                   "${newSyncId}; resetting mirror",
+                   { existingSyncId, newSyncId });
+    await this.db.executeBeforeShutdown(
+      "SyncedBookmarksMirror: ensureCurrentSyncId",
+      db => db.executeTransaction(async function() {
+        await resetMirror(db);
+        await db.execute(`
+          REPLACE INTO meta(key, value)
+          VALUES(:syncIdKey, :newSyncId)`,
+          { syncIdKey: SyncedBookmarksMirror.META_KEY.SYNC_ID, newSyncId });
+      })
     );
   }
 
@@ -480,18 +533,7 @@ class SyncedBookmarksMirror {
   async reset() {
     await this.db.executeBeforeShutdown(
       "SyncedBookmarksMirror: reset",
-      async function(db) {
-        await db.executeTransaction(async function() {
-          await db.execute(`DELETE FROM meta`);
-          await db.execute(`DELETE FROM structure`);
-          await db.execute(`DELETE FROM items`);
-          await db.execute(`DELETE FROM urls`);
-
-          // Since we need to reset the modified times for the syncable roots,
-          // we simply delete and recreate them.
-          await createMirrorRoots(db);
-        });
-      }
+      db => db.executeTransaction(() => resetMirror(db))
     );
   }
 
@@ -1898,9 +1940,10 @@ SyncedBookmarksMirror.KIND = {
   SEPARATOR: 5,
 };
 
-/** Valid key types for the key-value `meta` table. */
-SyncedBookmarksMirror.META = {
-  MODIFIED: 1,
+/** Key names for the key-value `meta` table. */
+SyncedBookmarksMirror.META_KEY = {
+  LAST_MODIFIED: "collection/lastModified",
+  SYNC_ID: "collection/syncId",
 };
 
 /**
@@ -1943,12 +1986,11 @@ async function migrateMirrorSchema(db) {
  *        The mirror database connection.
  */
 async function initializeMirrorDatabase(db) {
-  // Key-value metadata table. Currently stores just the server collection
-  // last modified time.
+  // Key-value metadata table. Stores the server collection last modified time
+  // and sync ID.
   await db.execute(`CREATE TABLE mirror.meta(
-    key INTEGER PRIMARY KEY,
+    key TEXT PRIMARY KEY,
     value NOT NULL
-    CHECK(key = ${SyncedBookmarksMirror.META.MODIFIED})
   )`);
 
   await db.execute(`CREATE TABLE mirror.items(
@@ -2617,6 +2659,17 @@ async function initializeTempMirrorEntities(db) {
                               ON DELETE CASCADE,
     position INTEGER NOT NULL
   ) WITHOUT ROWID`);
+}
+
+async function resetMirror(db) {
+  await db.execute(`DELETE FROM meta`);
+  await db.execute(`DELETE FROM structure`);
+  await db.execute(`DELETE FROM items`);
+  await db.execute(`DELETE FROM urls`);
+
+  // Since we need to reset the modified times and merge flags for the syncable
+  // roots, we simply delete and recreate them.
+  await createMirrorRoots(db);
 }
 
 // Converts a Sync record ID to a Places GUID. Returns `null` if the ID is

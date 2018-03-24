@@ -334,7 +334,7 @@ BaseBookmarksEngine.prototype = {
       if (existingSyncID) {
         this._log.debug("Migrating existing sync ID ${existingSyncID} from " +
                         "prefs", { existingSyncID });
-        await PlacesSyncUtils.bookmarks.ensureCurrentSyncId(existingSyncID);
+        await this._ensureCurrentSyncID(existingSyncID);
       }
       if (migrateLastSync) {
         let existingLastSync = await super.getLastSync();
@@ -349,16 +349,22 @@ BaseBookmarksEngine.prototype = {
     this._migratedSyncMetadata = true;
   },
 
+  // Exposed so that the buffered engine can override to store the sync ID in
+  // the mirror.
+  _ensureCurrentSyncID(newSyncID) {
+    return PlacesSyncUtils.bookmarks.ensureCurrentSyncId(newSyncID);
+  },
+
   async ensureCurrentSyncID(newSyncID) {
     let shouldWipeRemote = await PlacesSyncUtils.bookmarks.shouldWipeRemote();
     if (!shouldWipeRemote) {
       this._log.debug("Checking if server sync ID ${newSyncID} matches " +
                       "existing", { newSyncID });
-      await PlacesSyncUtils.bookmarks.ensureCurrentSyncId(newSyncID);
+      await this._ensureCurrentSyncID(newSyncID);
       // Update the sync ID in prefs to allow downgrading to older Firefox
       // releases that don't store Sync metadata in Places. This can be removed
       // in bug 1443021.
-      super.setSyncIDPref(newSyncID);
+      await super.ensureCurrentSyncID(newSyncID);
       return newSyncID;
     }
     // We didn't take the new sync ID because we need to wipe the server
@@ -380,12 +386,8 @@ BaseBookmarksEngine.prototype = {
   async resetLocalSyncID() {
     let newSyncID = await PlacesSyncUtils.bookmarks.resetSyncId();
     this._log.debug("Assigned new sync ID ${newSyncID}", { newSyncID });
-    super.setSyncIDPref(newSyncID); // Remove in bug 1443021.
+    await super.ensureCurrentSyncID(newSyncID); // Remove in bug 1443021.
     return newSyncID;
-  },
-
-  setSyncIDPref(syncID) {
-    throw new Error("Use ensureCurrentSyncID or resetLocalSyncID");
   },
 
   async _syncFinish() {
@@ -422,6 +424,10 @@ BaseBookmarksEngine.prototype = {
     this._noteDeletedId(id);
   },
 
+  // The bookmarks engine rarely calls this method directly, except in tests or
+  // when handling a `reset{All, Engine}` command from another client. We
+  // usually reset local Sync metadata on a sync ID mismatch, which both engines
+  // override with logic that lives in Places and the mirror.
   async _resetClient() {
     await super._resetClient();
     await PlacesSyncUtils.bookmarks.reset();
@@ -782,14 +788,20 @@ BufferedBookmarksEngine.prototype = {
     await super._syncStartup();
   },
 
+  async _ensureCurrentSyncID(newSyncID) {
+    await super._ensureCurrentSyncID(newSyncID);
+    let buf = await this._store.ensureOpenMirror();
+    await buf.ensureCurrentSyncId(newSyncID);
+  },
+
   async getSyncID() {
     return PlacesSyncUtils.bookmarks.getSyncId();
   },
 
   async resetLocalSyncID() {
-    let buf = await this._store.ensureOpenMirror();
-    await buf.reset();
     let newSyncID = await super.resetLocalSyncID();
+    let buf = await this._store.ensureOpenMirror();
+    await buf.ensureCurrentSyncId(newSyncID);
     return newSyncID;
   },
 
