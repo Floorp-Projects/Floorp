@@ -38,8 +38,6 @@ typedef struct _nsCocoaWindowList {
   // Data Storage
   NSMutableDictionary* mState;
   BOOL mDrawsIntoWindowFrame;
-  NSColor* mActiveTitlebarColor;
-  NSColor* mInactiveTitlebarColor;
 
   // Invalidation disabling
   BOOL mDisabledNeedsDisplay;
@@ -58,8 +56,6 @@ typedef struct _nsCocoaWindowList {
 - (NSMutableDictionary*)exportState;
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState;
 - (BOOL)drawsContentsIntoWindowFrame;
-- (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
-- (NSColor*)titlebarColorForActiveWindow:(BOOL)aActive;
 
 
 - (void)mouseEntered:(NSEvent*)aEvent;
@@ -179,8 +175,6 @@ typedef struct _nsCocoaWindowList {
   NSRect mWindowButtonsRect;
   NSRect mFullScreenButtonRect;
 }
-// Pass nil here to get the default appearance.
-- (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive;
 - (void)setUnifiedToolbarHeight:(CGFloat)aHeight;
 - (CGFloat)unifiedToolbarHeight;
 - (CGFloat)titlebarHeight;
@@ -309,7 +303,6 @@ public:
     virtual void SetDrawsTitle(bool aDrawTitle) override;
     virtual void SetUseBrightTitlebarForeground(bool aBrightForeground) override;
     virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
-    virtual void SetWindowTitlebarColor(nscolor aColor, bool aActive) override;
     virtual void SetDrawsInTitlebar(bool aState) override;
     virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;
     virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,

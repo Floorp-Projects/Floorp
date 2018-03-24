@@ -256,8 +256,6 @@ public:
                           { return NS_OK; }
   virtual bool            HasPendingInputEvent() override;
   virtual void            SetIcon(const nsAString &aIconSpec) override {}
-  virtual void            SetWindowTitlebarColor(nscolor aColor, bool aActive)
-                            override {}
   virtual void            SetDrawsInTitlebar(bool aState) override {}
   virtual bool            ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) override;
   virtual void            FreeNativeData(void * data, uint32_t aDataType) override {}
