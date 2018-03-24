@@ -509,14 +509,6 @@ public:
   static nsIDocument* GetSubdocumentWithOuterWindowId(nsIDocument *aDocument,
                                                       uint64_t aOuterWindowId);
 
-  static uint32_t CopyNewlineNormalizedUnicodeTo(const nsAString& aSource,
-                                                 uint32_t aSrcOffset,
-                                                 char16_t* aDest,
-                                                 uint32_t aLength,
-                                                 bool& aLastCharCR);
-
-  static uint32_t CopyNewlineNormalizedUnicodeTo(nsReadingIterator<char16_t>& aSrcStart, const nsReadingIterator<char16_t>& aSrcEnd, nsAString& aDest);
-
   static const nsDependentSubstring TrimCharsInSet(const char* aSet,
                                                    const nsAString& aValue);
 
