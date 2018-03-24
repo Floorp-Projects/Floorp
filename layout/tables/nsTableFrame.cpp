@@ -8198,12 +8198,9 @@ nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
   // NOTE(emilio): We can't use the ChangesHandledFor optimization (and we
   // assert against that), because the table wrapper is up in the frame tree
   // compared to the owner frame.
-  uint32_t equalStructs, samePointerStructs; // Not used, actually.
-  nsChangeHint wrapperHint = aWrapperFrame->Style()->CalcStyleDifference(
-    newStyle,
-    &equalStructs,
-    &samePointerStructs,
-    /* aIgnoreVariables = */ true);
+  uint32_t equalStructs; // Not used, actually.
+  nsChangeHint wrapperHint =
+    aWrapperFrame->Style()->CalcStyleDifference(newStyle, &equalStructs);
 
   // CalcStyleDifference will handle caching structs on the new style context,
   // but only if we're not on a style worker thread.
