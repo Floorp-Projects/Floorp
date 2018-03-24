@@ -365,13 +365,10 @@ Gecko_CalcStyleDifference(ComputedStyleBorrowed aOldStyle,
   MOZ_ASSERT(aNewStyle);
 
   uint32_t equalStructs;
-  uint32_t samePointerStructs;  // unused
   nsChangeHint result = const_cast<mozilla::ComputedStyle*>(aOldStyle)->
     CalcStyleDifference(
       const_cast<mozilla::ComputedStyle*>(aNewStyle),
-      &equalStructs,
-      &samePointerStructs,
-      /* aIgnoreVariables = */ true);
+      &equalStructs);
 
   *aAnyStyleChanged = equalStructs != NS_STYLE_INHERIT_MASK;
 
