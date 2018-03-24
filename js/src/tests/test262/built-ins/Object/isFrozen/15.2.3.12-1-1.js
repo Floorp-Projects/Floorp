@@ -8,6 +8,6 @@ description: >
     is undefined
 ---*/
 
-    Object.isFrozen(undefined);
+Object.isFrozen(undefined);
 
 reportCompare(0, 0);

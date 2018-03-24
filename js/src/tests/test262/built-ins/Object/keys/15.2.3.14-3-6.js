@@ -8,9 +8,9 @@ description: >
     Array)
 ---*/
 
-        var obj = {};
+var obj = {};
 
-        var arr = Object.keys(obj);
+var arr = Object.keys(obj);
 
 assert(arr instanceof Array, 'arr instanceof Array !== true');
 

@@ -8,10 +8,10 @@ description: >
     property in  'F' is thrower
 ---*/
 
-        function foo() { }
-        var obj = foo.bind({});
+function foo() {}
+var obj = foo.bind({});
 assert.throws(TypeError, function() {
-            obj.arguments = 12;
+  obj.arguments = 12;
 });
 
 reportCompare(0, 0);

@@ -72,10 +72,18 @@ assert.sameValue([].includes.call(obj, "a"), false, "false");
 obj.length = true;
 assert.sameValue([].includes.call(obj, "a"), true, "true");
 
-obj.length = { valueOf: function() { return 2; } };
+obj.length = {
+  valueOf: function() {
+    return 2;
+  }
+};
 assert.sameValue([].includes.call(obj, "b"), true, "ordinary object.valueOf");
 
-obj.length = { toString: function() { return 2; } };
+obj.length = {
+  toString: function() {
+    return 2;
+  }
+};
 assert.sameValue([].includes.call(obj, "b"), true, "ordinary object.toString");
 
 reportCompare(0, 0);

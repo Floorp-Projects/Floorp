@@ -8,7 +8,7 @@ description: >
     (Object object)
 ---*/
 
-        var obj = {};
+var obj = {};
 
 assert.sameValue(Object.getPrototypeOf(obj), Object.prototype, 'Object.getPrototypeOf(obj)');
 

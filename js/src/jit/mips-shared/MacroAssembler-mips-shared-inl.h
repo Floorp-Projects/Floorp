@@ -629,9 +629,9 @@ MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src, Register dest, La
     MOZ_CRASH();
 }
 
-template <typename T, typename L>
+template <typename T>
 void
-MacroAssembler::branchAdd32(Condition cond, T src, Register dest, L overflow)
+MacroAssembler::branchAdd32(Condition cond, T src, Register dest, Label* overflow)
 {
     switch (cond) {
       case Overflow:

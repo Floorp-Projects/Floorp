@@ -9,13 +9,13 @@ description: >
     step 5.a)
 ---*/
 
-        var obj = { };
+var obj = {};
 
-        var dateObj = new Date();
+var dateObj = new Date();
 
-        dateObj.value = "Date";
+dateObj.value = "Date";
 
-        Object.defineProperty(obj, "property", dateObj);
+Object.defineProperty(obj, "property", dateObj);
 
 assert.sameValue(obj.property, "Date", 'obj.property');
 

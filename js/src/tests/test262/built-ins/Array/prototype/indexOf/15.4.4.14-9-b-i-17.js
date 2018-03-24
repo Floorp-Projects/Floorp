@@ -9,11 +9,11 @@ description: >
     property without a get function on an Array
 ---*/
 
-        var arr = [];
-        Object.defineProperty(arr, "0", {
-            set: function () { },
-            configurable: true
-        });
+var arr = [];
+Object.defineProperty(arr, "0", {
+  set: function() {},
+  configurable: true
+});
 
 assert.sameValue(arr.indexOf(undefined), 0, 'arr.indexOf(undefined)');
 

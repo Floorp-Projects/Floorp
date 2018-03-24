@@ -11,8 +11,8 @@ features: [Symbol.species]
 ---*/
 
 function getGetterName(obj, name) {
-    var getter = Object.getOwnPropertyDescriptor(obj, Symbol.species).get;
-    return getter && getter.name;
+  var getter = Object.getOwnPropertyDescriptor(obj, Symbol.species).get;
+  return getter && getter.name;
 }
 
 assert.sameValue(getGetterName(Array, Symbol.species), "get [Symbol.species]");
@@ -20,6 +20,5 @@ assert.sameValue(getGetterName(Map, Symbol.species), "get [Symbol.species]");
 assert.sameValue(getGetterName(Promise, Symbol.species), "get [Symbol.species]");
 assert.sameValue(getGetterName(RegExp, Symbol.species), "get [Symbol.species]");
 assert.sameValue(getGetterName(Set, Symbol.species), "get [Symbol.species]");
-
 
 reportCompare(0, 0);

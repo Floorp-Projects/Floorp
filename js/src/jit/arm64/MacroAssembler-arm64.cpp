@@ -60,17 +60,6 @@ MacroAssemblerCompat::asVIXL() const
     return *static_cast<const vixl::MacroAssembler*>(this);
 }
 
-void
-MacroAssemblerCompat::B(wasm::OldTrapDesc target, Condition cond)
-{
-    Label l;
-    if (cond == Always)
-        B(&l);
-    else
-        B(&l, cond);
-    bindLater(&l, target);
-}
-
 BufferOffset
 MacroAssemblerCompat::movePatchablePtr(ImmPtr ptr, Register dest)
 {
@@ -294,7 +283,8 @@ MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access, Registe
     asMasm().memoryBarrierBefore(access.sync());
 
     MemOperand srcAddr(memoryBase, ptr);
-    size_t loadOffset = asMasm().currentOffset();
+
+    append(access, asMasm().currentOffset());
     switch (access.type()) {
       case Scalar::Int8:
         Ldrsb(SelectGPReg(outany, out64), srcAddr);
@@ -334,7 +324,6 @@ MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access, Registe
       case Scalar::Int16x8:
         MOZ_CRASH("unexpected array type");
     }
-    append(access, loadOffset, framePushed());
 
     asMasm().memoryBarrierAfter(access.sync());
 }
@@ -357,7 +346,8 @@ MacroAssemblerCompat::wasmStoreImpl(const wasm::MemoryAccessDesc& access, AnyReg
     asMasm().memoryBarrierBefore(access.sync());
 
     MemOperand dstAddr(memoryBase, ptr);
-    size_t storeOffset = asMasm().currentOffset();
+
+    append(access, asMasm().currentOffset());
     switch (access.type()) {
       case Scalar::Int8:
       case Scalar::Uint8:
@@ -388,7 +378,6 @@ MacroAssemblerCompat::wasmStoreImpl(const wasm::MemoryAccessDesc& access, AnyReg
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");
     }
-    append(access, storeOffset, framePushed());
 
     asMasm().memoryBarrierAfter(access.sync());
 }
@@ -1082,6 +1071,20 @@ MacroAssembler::wasmTrapInstruction()
     CodeOffset offs(currentOffset());
     Unreachable();
     return offs;
+}
+
+void
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, Label* label)
+{
+    // Not used on ARM64, we rely on signal handling instead
+    MOZ_CRASH("NYI - wasmBoundsCheck");
+}
+
+void
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, Label* label)
+{
+    // Not used on ARM64, we rely on signal handling instead
+    MOZ_CRASH("NYI - wasmBoundsCheck");
 }
 
 // FCVTZU behaves as follows:

@@ -752,25 +752,6 @@ MacroAssembler::branchTruncateFloat32MaybeModUint32(FloatRegister src, Register 
     as_sll(dest, dest, 0);
 }
 
-// ========================================================================
-// wasm support
-
-template <class L>
-void
-MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, L label)
-{
-    ma_b(index, boundsCheckLimit, label, cond);
-}
-
-template <class L>
-void
-MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, L label)
-{
-    SecondScratchRegisterScope scratch2(*this);
-    load32(boundsCheckLimit, SecondScratchReg);
-    ma_b(index, SecondScratchReg, label, cond);
-}
-
 //}}} check_macroassembler_style
 // ===============================================================
 

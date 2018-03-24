@@ -16,7 +16,7 @@ if (String(false) !== "false") {
 
 // CHECK#2
 if (String(true) !== "true") {
-  $ERROR('#2: String(true) === "true". Actual: ' + (String(true)));	
+  $ERROR('#2: String(true) === "true". Actual: ' + (String(true)));
 }
 
 reportCompare(0, 0);

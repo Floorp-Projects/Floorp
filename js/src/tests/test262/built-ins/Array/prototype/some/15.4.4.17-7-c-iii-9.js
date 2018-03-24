@@ -9,9 +9,9 @@ description: >
     (value is negative number)
 ---*/
 
-        function callbackfn(val, idx, obj) {
-            return -5;
-        }
+function callbackfn(val, idx, obj) {
+  return -5;
+}
 
 assert([11].some(callbackfn), '[11].some(callbackfn) !== true');
 

@@ -11,21 +11,20 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-(function (a, b, c) {
-    Object.defineProperty(arguments, "genericProperty", {
-        value: 1001,
-        writable: true,
-        enumerable: true,
-        configurable: true
-    });
-    verifyEqualTo(arguments, "genericProperty", 1001);
+(function(a, b, c) {
+  Object.defineProperty(arguments, "genericProperty", {
+    value: 1001,
+    writable: true,
+    enumerable: true,
+    configurable: true
+  });
+  verifyEqualTo(arguments, "genericProperty", 1001);
 
-    verifyWritable(arguments, "genericProperty");
+  verifyWritable(arguments, "genericProperty");
 
-    verifyEnumerable(arguments, "genericProperty");
+  verifyEnumerable(arguments, "genericProperty");
 
-    verifyConfigurable(arguments, "genericProperty");
+  verifyConfigurable(arguments, "genericProperty");
 }(1, 2, 3));
-
 
 reportCompare(0, 0);

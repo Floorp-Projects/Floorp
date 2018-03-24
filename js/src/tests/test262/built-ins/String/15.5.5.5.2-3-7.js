@@ -11,7 +11,7 @@ description: >
     (Infinity) is not an array index
 ---*/
 
-  var s = String("hello world");
+var s = String("hello world");
 
 assert.sameValue(s[Infinity], undefined, 's[Infinity]');
 

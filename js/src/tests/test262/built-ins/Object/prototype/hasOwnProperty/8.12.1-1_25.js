@@ -8,8 +8,14 @@ description: >
     property)
 ---*/
 
-    var base = { get foo() { return 42;}, set foo(x) {;} };
-    var o = Object.create(base);
+var base = {
+  get foo() {
+    return 42;
+  },
+  set foo(x) {;
+  }
+};
+var o = Object.create(base);
 
 assert.sameValue(o.hasOwnProperty("foo"), false, 'o.hasOwnProperty("foo")');
 

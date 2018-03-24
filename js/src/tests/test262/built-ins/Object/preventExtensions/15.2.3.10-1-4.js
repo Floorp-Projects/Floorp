@@ -8,6 +8,6 @@ description: >
     string primitive value
 ---*/
 
-    Object.preventExtensions("abc");
+Object.preventExtensions("abc");
 
 reportCompare(0, 0);

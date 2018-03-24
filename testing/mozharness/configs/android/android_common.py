@@ -148,7 +148,6 @@ config = {
                 "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--robocop-apk=../../robocop.apk",
-                "--robocop-ini=robocop.ini",
             ],
         },
         "reftest": {

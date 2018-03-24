@@ -10,13 +10,13 @@ description: >
 ---*/
 
 // CHECK#1
-for (var i=-1000; i<1000; i++)
+for (var i = -1000; i < 1000; i++)
 {
-	var x = i/10.0;
-	if (-Math.ceil(-x) !== Math.floor(x))
-	{
-		$ERROR("#1: 'x = " + x + "; Math.floor(x) !== -Math.ceil(-x)'");
-	}
+  var x = i / 10.0;
+  if (-Math.ceil(-x) !== Math.floor(x))
+  {
+    $ERROR("#1: 'x = " + x + "; Math.floor(x) !== -Math.ceil(-x)'");
+  }
 }
 
 reportCompare(0, 0);

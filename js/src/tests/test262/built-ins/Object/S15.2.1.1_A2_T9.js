@@ -19,10 +19,12 @@ if (typeof func !== 'function') {
 var n_obj = Object(func);
 
 //CHECK#2
-if ((n_obj !== func)||(n_obj()!==1)) {
+if ((n_obj !== func) || (n_obj() !== 1)) {
   $ERROR('#2: Object(function) returns function');
 }
 
-function func(){return 1;};
+function func() {
+  return 1;
+};
 
 reportCompare(0, 0);

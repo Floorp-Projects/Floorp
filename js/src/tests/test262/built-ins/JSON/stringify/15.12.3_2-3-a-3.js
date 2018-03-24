@@ -8,6 +8,8 @@ description: >
     replacer functions to literal numbers.
 ---*/
 
-assert.sameValue(JSON.stringify([42], function(k,v) {return v===42? new Boolean(false):v}), '[false]', 'JSON.stringify([42], function(k,v) {return v===42? new Boolean(false):v})');
+assert.sameValue(JSON.stringify([42], function(k, v) {
+  return v === 42 ? new Boolean(false) : v
+}), '[false]', 'JSON.stringify([42], function(k,v) {return v===42? new Boolean(false):v})');
 
 reportCompare(0, 0);

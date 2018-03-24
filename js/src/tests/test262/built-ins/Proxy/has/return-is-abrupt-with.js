@@ -15,15 +15,15 @@ flags: [noStrict]
 ---*/
 
 var p = new Proxy({}, {
-    has: function() {
-        throw new Test262Error();
-    }
+  has: function() {
+    throw new Test262Error();
+  }
 });
 
 assert.throws(Test262Error, function() {
-    with (p) {
-        (attr);
-    }
+  with(p) {
+    (attr);
+  }
 });
 
 reportCompare(0, 0);

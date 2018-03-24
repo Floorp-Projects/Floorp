@@ -425,26 +425,39 @@ enum RunnableKind
   IdleWithTimer
 };
 
+// Implementing nsINamed on Runnable bloats vtables for the hundreds of
+// Runnable subclasses that we have, so we want to avoid that overhead
+// when we're not using nsINamed for anything.
+#ifndef RELEASE_OR_BETA
+#define MOZ_COLLECTING_RUNNABLE_TELEMETRY
+#endif
+
 // This class is designed to be subclassed.
-class Runnable : public nsIRunnable, public nsINamed
+class Runnable
+  : public nsIRunnable
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+  , public nsINamed
+#endif
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   NS_DECL_NSINAMED
+#endif
 
   Runnable() = delete;
 
-#ifdef RELEASE_OR_BETA
-  explicit Runnable(const char* aName) {}
-#else
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   explicit Runnable(const char* aName) : mName(aName) {}
+#else
+  explicit Runnable(const char* aName) {}
 #endif
 
 protected:
   virtual ~Runnable() {}
 
-#ifndef RELEASE_OR_BETA
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   const char* mName = nullptr;
 #endif
 
@@ -503,7 +516,9 @@ public:
   PrioritizableRunnable(already_AddRefed<nsIRunnable>&& aRunnable,
                         uint32_t aPriority);
 
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   NS_IMETHOD GetName(nsACString& aName) override;
+#endif
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE

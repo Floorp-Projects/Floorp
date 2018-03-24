@@ -9,13 +9,13 @@ description: >
 ---*/
 
 var p = Proxy.revocable({
-    attr: 1
+  attr: 1
 }, {});
 
 p.revoke();
 
 assert.throws(TypeError, function() {
-    delete p.proxy.attr;
+  delete p.proxy.attr;
 });
 
 reportCompare(0, 0);

@@ -11,7 +11,7 @@ features: [DataView, ArrayBuffer, Symbol, BigInt, arrow-function]
 var getBigUint64 = DataView.prototype.getBigUint64;
 
 assert.throws(TypeError, () => getBigUint64.call(undefined),
-              "undefined");
+  "undefined");
 
 assert.throws(TypeError, () => getBigUint64.call(null), "null");
 

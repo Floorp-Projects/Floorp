@@ -8,7 +8,7 @@ description: >
     (SyntaxError)
 ---*/
 
-  var b = Object.isSealed(SyntaxError);
+var b = Object.isSealed(SyntaxError);
 
 assert.sameValue(b, false, 'b');
 

@@ -14,7 +14,7 @@ eval("\"use strict\";\ngNonStrict();");
 
 
 function gNonStrict() {
-    return gNonStrict.caller;
+  return gNonStrict.caller;
 }
 
 reportCompare(0, 0);

@@ -9,21 +9,21 @@ description: >
     step 1 )
 ---*/
 
-        var arg = function () {
-            return arguments;
-        }();
+var arg = function() {
+  return arguments;
+}();
 
-        Object.defineProperty(arg, "prop", {
-            value: 11,
-            configurable: false
-        });
+Object.defineProperty(arg, "prop", {
+  value: 11,
+  configurable: false
+});
 assert.throws(TypeError, function() {
-            Object.defineProperties(arg, {
-                prop: {
-                    value: 12,
-                    configurable: true
-                }
-            });
+  Object.defineProperties(arg, {
+    prop: {
+      value: 12,
+      configurable: true
+    }
+  });
 });
 
 reportCompare(0, 0);

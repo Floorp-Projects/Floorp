@@ -10,9 +10,9 @@ description: >
 ---*/
 
 assert.sameValue(
-    Set.prototype.constructor,
-    Set,
-    "The value of `Set.prototype.constructor` is `Set`"
+  Set.prototype.constructor,
+  Set,
+  "The value of `Set.prototype.constructor` is `Set`"
 );
 
 reportCompare(0, 0);

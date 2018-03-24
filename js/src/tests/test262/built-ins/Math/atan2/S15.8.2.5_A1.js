@@ -24,16 +24,16 @@ var valnum = 7;
 var args = new Array();
 for (var i = 0; i < 2; i++)
 {
-	args[i] = NaN;
-	for (var j = 0; j < valnum; j++)
-	{
-		args[1-i] = vals[j];
-		assert.sameValue(
-			Math.atan2(args[0], args[1]),
-			NaN,
-			"(" + args[0] + ", " + args[1] + ")"
-		);
-	}
+  args[i] = NaN;
+  for (var j = 0; j < valnum; j++)
+  {
+    args[1 - i] = vals[j];
+    assert.sameValue(
+      Math.atan2(args[0], args[1]),
+      NaN,
+      "(" + args[0] + ", " + args[1] + ")"
+    );
+  }
 }
 
 reportCompare(0, 0);

@@ -8,7 +8,7 @@ es5id: 15.9.5_A30_T1
 description: The Date.prototype has the property "setSeconds"
 ---*/
 
-if(Date.prototype.hasOwnProperty("setSeconds") !== true){
+if (Date.prototype.hasOwnProperty("setSeconds") !== true) {
   $ERROR('#1: The Date.prototype has the property "setSeconds"');
 }
 

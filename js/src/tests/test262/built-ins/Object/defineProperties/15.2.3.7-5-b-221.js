@@ -8,13 +8,13 @@ description: >
     primitive values( value is string) (8.10.5 step 7.b)
 ---*/
 
-        var obj = {};
+var obj = {};
 assert.throws(TypeError, function() {
-            Object.defineProperties(obj, {
-                property: {
-                    get: "string"
-                }
-            });
+  Object.defineProperties(obj, {
+    property: {
+      get: "string"
+    }
+  });
 });
 
 reportCompare(0, 0);

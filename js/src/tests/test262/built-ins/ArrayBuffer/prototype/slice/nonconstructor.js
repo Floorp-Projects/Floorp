@@ -18,6 +18,8 @@ info: |
 assert.sameValue(Object.prototype.hasOwnProperty.call(ArrayBuffer.prototype.slice, "prototype"), false);
 
 var arrayBuffer = new ArrayBuffer(8);
-assert.throws(TypeError, function() { new arrayBuffer.slice(); });
+assert.throws(TypeError, function() {
+  new arrayBuffer.slice();
+});
 
 reportCompare(0, 0);

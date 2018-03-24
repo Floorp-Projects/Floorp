@@ -9,17 +9,17 @@ description: >
     step 7.a)
 ---*/
 
-        var obj = {};
+var obj = {};
 
-        var descObj = new Boolean(false);
+var descObj = new Boolean(false);
 
-        descObj.get = function () {
-            return "Boolean";
-        };
+descObj.get = function() {
+  return "Boolean";
+};
 
-        Object.defineProperties(obj, {
-            property: descObj
-        });
+Object.defineProperties(obj, {
+  property: descObj
+});
 
 assert.sameValue(obj.property, "Boolean", 'obj.property');
 

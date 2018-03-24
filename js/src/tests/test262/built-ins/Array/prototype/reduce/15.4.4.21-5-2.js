@@ -10,14 +10,15 @@ description: >
     no initVal
 ---*/
 
-  foo.prototype = new Array(1, 2, 3);
-  function foo() {}
-  var f = new foo();
-  f.length = null;
+foo.prototype = new Array(1, 2, 3);
 
-  function cb(){}
+function foo() {}
+var f = new foo();
+f.length = null;
+
+function cb() {}
 assert.throws(TypeError, function() {
-    f.reduce(cb);
+  f.reduce(cb);
 });
 
 reportCompare(0, 0);

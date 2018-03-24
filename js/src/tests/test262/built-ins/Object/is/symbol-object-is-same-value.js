@@ -14,6 +14,4 @@ assert.sameValue(Object.is(symA, symA), true, "`Object.is(symA, symA)` returns `
 assert.sameValue(Object.is(symB, symB), true, "`Object.is(symB, symB)` returns `true`");
 assert.sameValue(Object.is(symA, symB), false, "`Object.is(symA, symB)` returns `false`");
 
-
-
 reportCompare(0, 0);

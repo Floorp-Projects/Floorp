@@ -1886,26 +1886,6 @@ AssemblerMIPSShared::bind(Label* label, BufferOffset boff)
 }
 
 void
-AssemblerMIPSShared::bindLater(Label* label, wasm::OldTrapDesc target)
-{
-    if (label->used()) {
-        int32_t next;
-
-        BufferOffset b(label);
-        do {
-            Instruction* inst = editSrc(b);
-
-            append(wasm::OldTrapSite(target, b.getOffset()));
-            next = inst[1].encode();
-            inst[1].makeNop();
-
-            b = BufferOffset(next);
-        } while (next != LabelBase::INVALID_OFFSET);
-    }
-    label->reset();
-}
-
-void
 AssemblerMIPSShared::retarget(Label* label, Label* target)
 {
     spew("retarget %p -> %p", label, target);
