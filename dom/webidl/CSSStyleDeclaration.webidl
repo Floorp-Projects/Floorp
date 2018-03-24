@@ -20,7 +20,7 @@ interface CSSStyleDeclaration {
   [Throws]
   DOMString getPropertyValue(DOMString property);
   // Mozilla extension, sort of
-  [Throws]
+  [Throws, Pref="layout.css.getPropertyCSSValue.enabled"]
   CSSValue? getPropertyCSSValue(DOMString property);
   DOMString getPropertyPriority(DOMString property);
   [CEReactions, NeedsSubjectPrincipal=NonSystem, Throws]

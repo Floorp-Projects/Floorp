@@ -8,6 +8,6 @@ description: >
     boolean primitive
 ---*/
 
-    Object.seal(false);
+Object.seal(false);
 
 reportCompare(0, 0);

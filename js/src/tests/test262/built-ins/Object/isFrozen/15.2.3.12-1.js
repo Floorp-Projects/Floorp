@@ -8,6 +8,6 @@ description: >
     not Object
 ---*/
 
-    Object.isFrozen(0);
+Object.isFrozen(0);
 
 reportCompare(0, 0);

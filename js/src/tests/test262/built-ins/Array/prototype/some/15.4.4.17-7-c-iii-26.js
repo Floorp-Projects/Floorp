@@ -10,9 +10,10 @@ description: >
 ---*/
 
 var global = this;
-        function callbackfn(val, idx, obj) {
-            return global;
-        }
+
+function callbackfn(val, idx, obj) {
+  return global;
+}
 
 assert([11].some(callbackfn), '[11].some(callbackfn) !== true');
 

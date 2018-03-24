@@ -10,8 +10,12 @@ description: >
     Array-like object
 ---*/
 
-            Object.prototype[0] = false;
+Object.prototype[0] = false;
 
-assert.sameValue(Array.prototype.lastIndexOf.call({ 0: true, 1: 1, length: 2 }, true), 0, 'Array.prototype.lastIndexOf.call({ 0: true, 1: 1, length: 2 }, true)');
+assert.sameValue(Array.prototype.lastIndexOf.call({
+  0: true,
+  1: 1,
+  length: 2
+}, true), 0, 'Array.prototype.lastIndexOf.call({ 0: true, 1: 1, length: 2 }, true)');
 
 reportCompare(0, 0);

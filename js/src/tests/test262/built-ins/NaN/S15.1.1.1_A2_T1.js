@@ -11,7 +11,7 @@ includes: [propertyHelper.js]
 // CHECK#1
 verifyNotWritable(this, "NaN", null, true);
 if (typeof(NaN) === "boolean") {
-	$ERROR('#1: NaN = true; typeof(NaN) !== "boolean". Actual: ' + (typeof(NaN)));
+  $ERROR('#1: NaN = true; typeof(NaN) !== "boolean". Actual: ' + (typeof(NaN)));
 }
 
 reportCompare(0, 0);

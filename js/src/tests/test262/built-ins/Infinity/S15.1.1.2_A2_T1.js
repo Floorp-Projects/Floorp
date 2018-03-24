@@ -11,7 +11,7 @@ includes: [propertyHelper.js]
 // CHECK#1
 verifyNotWritable(this, "Infinity", null, true);
 if (typeof(Infinity) === "boolean") {
-	$ERROR('#1: Infinity = true; typeof(Infinity) !== "boolean". Actual: ' + (typeof(Infinity)));
+  $ERROR('#1: Infinity = true; typeof(Infinity) !== "boolean". Actual: ' + (typeof(Infinity)));
 }
 
 reportCompare(0, 0);

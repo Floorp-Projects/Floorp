@@ -22,11 +22,11 @@ var body = "return true;";
 
 //CHECK#1
 try {
-  var f = new Function(null,body);
+  var f = new Function(null, body);
   $ERROR('#1: If P is not parsable as a FormalParameterList_opt then throw a SyntaxError exception');
 } catch (e) {
   if (!(e instanceof SyntaxError)) {
-  	$ERROR('#1.1: If P is not parsable as a FormalParameterList_opt then throw a SyntaxError exception');
+    $ERROR('#1.1: If P is not parsable as a FormalParameterList_opt then throw a SyntaxError exception');
   }
 }
 

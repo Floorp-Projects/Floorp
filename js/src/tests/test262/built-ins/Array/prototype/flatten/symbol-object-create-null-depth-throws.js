@@ -15,5 +15,4 @@ assert.throws(TypeError, function() {
   [].flatten(Object.create(null));
 }, 'object create null');
 
-
 reportCompare(0, 0);

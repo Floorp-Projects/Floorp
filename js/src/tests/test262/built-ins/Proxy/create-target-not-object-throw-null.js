@@ -10,7 +10,7 @@ description: >
 ---*/
 
 assert.throws(TypeError, function() {
-    new Proxy(null, {});
+  new Proxy(null, {});
 });
 
 reportCompare(0, 0);

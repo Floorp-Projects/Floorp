@@ -1,3 +1,4 @@
+// |reftest| skip-if(!this.hasOwnProperty('Atomics')) -- Atomics is not enabled unconditionally
 // Copyright (C) 2017 Mozilla Corporation.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -6,6 +7,7 @@ esid: sec-atomics.wait
 description: >
   Test Atomics.wait on arrays that allow atomic operations,
   in an Agent that is allowed to wait.
+features: [Atomics]
 ---*/
 
 // Let's assume 'wait' is not allowed on the main thread,
@@ -47,13 +49,13 @@ assert.sameValue(getReport(), "A timed-out");
 assert.sameValue(getReport(), "B not-equal"); // Even with zero timeout
 var r;
 while ((r = getReport()) != "done")
-    assert.sameValue(r, "C not-equal");
+  assert.sameValue(r, "C not-equal");
 
 function getReport() {
-    var r;
-    while ((r = $262.agent.getReport()) == null)
-        $262.agent.sleep(100);
-    return r;
+  var r;
+  while ((r = $262.agent.getReport()) == null)
+    $262.agent.sleep(100);
+  return r;
 }
 
 reportCompare(0, 0);

@@ -80,8 +80,8 @@ TEST(Strings, DependentStrings)
     auto data = tmp.Data();
     nsDependentCString foo(tmp);
     // Neither string should be using a shared buffer.
-    EXPECT_FALSE(tmp.GetDataFlags() & DataFlags::SHARED);
-    EXPECT_FALSE(foo.GetDataFlags() & DataFlags::SHARED);
+    EXPECT_FALSE(tmp.GetDataFlags() & DataFlags::REFCOUNTED);
+    EXPECT_FALSE(foo.GetDataFlags() & DataFlags::REFCOUNTED);
     // Both strings should be pointing to the original buffer.
     EXPECT_EQ(data, tmp.Data());
     EXPECT_EQ(data, foo.Data());
@@ -92,8 +92,8 @@ TEST(Strings, DependentStrings)
     auto data = tmp.Data();
     nsDependentCString foo(mozilla::Move(tmp));
     // Neither string should be using a shared buffer.
-    EXPECT_FALSE(tmp.GetDataFlags() & DataFlags::SHARED);
-    EXPECT_FALSE(foo.GetDataFlags() & DataFlags::SHARED);
+    EXPECT_FALSE(tmp.GetDataFlags() & DataFlags::REFCOUNTED);
+    EXPECT_FALSE(foo.GetDataFlags() & DataFlags::REFCOUNTED);
     // First string should be reset, the second should be pointing to the
     // original buffer.
     EXPECT_NE(data, tmp.Data());
@@ -106,8 +106,8 @@ TEST(Strings, DependentStrings)
     auto data = tmp.Data();
     nsCString foo(tmp);
     // Original string should not be shared, copy should be shared.
-    EXPECT_FALSE(tmp.GetDataFlags() & DataFlags::SHARED);
-    EXPECT_TRUE(foo.GetDataFlags() & DataFlags::SHARED);
+    EXPECT_FALSE(tmp.GetDataFlags() & DataFlags::REFCOUNTED);
+    EXPECT_TRUE(foo.GetDataFlags() & DataFlags::REFCOUNTED);
     // First string should remain the same, the second should be pointing to
     // a new buffer.
     EXPECT_EQ(data, tmp.Data());

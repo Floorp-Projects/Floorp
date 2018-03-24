@@ -9,8 +9,8 @@ description: >
     is 0 and 'initialValue' is present
 ---*/
 
-        var initialValue = 10;
+var initialValue = 10;
 
-assert.sameValue([].reduceRight(function () { }, initialValue), initialValue, '[].reduceRight(function () { }, initialValue)');
+assert.sameValue([].reduceRight(function() {}, initialValue), initialValue, '[].reduceRight(function () { }, initialValue)');
 
 reportCompare(0, 0);

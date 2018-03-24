@@ -17,14 +17,14 @@ description: >
 
 assert.sameValue(Object.is('', ''), true, "`Object.is('', '')` returns `true`");
 assert.sameValue(
-    Object.is('foo', 'foo'),
-    true,
-    "`Object.is('foo', 'foo')` returns `true`"
+  Object.is('foo', 'foo'),
+  true,
+  "`Object.is('foo', 'foo')` returns `true`"
 );
 assert.sameValue(
-    Object.is(String('foo'), String('foo')),
-    true,
-    "`Object.is(String('foo'), String('foo'))` returns `true`"
+  Object.is(String('foo'), String('foo')),
+  true,
+  "`Object.is(String('foo'), String('foo'))` returns `true`"
 );
 
 reportCompare(0, 0);

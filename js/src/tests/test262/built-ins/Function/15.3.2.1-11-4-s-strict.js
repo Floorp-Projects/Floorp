@@ -11,6 +11,6 @@ description: >
 flags: [onlyStrict]
 ---*/
 
-     Function('eval', 'return;');
+Function('eval', 'return;');
 
 reportCompare(0, 0);

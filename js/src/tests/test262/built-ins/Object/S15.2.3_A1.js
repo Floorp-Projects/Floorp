@@ -7,7 +7,7 @@ es5id: 15.2.3_A1
 description: Checking existence of the property "prototype"
 ---*/
 
-if(!Object.hasOwnProperty("prototype")){
+if (!Object.hasOwnProperty("prototype")) {
   $ERROR('#1: The Object constructor has the property "prototype"');
 }
 

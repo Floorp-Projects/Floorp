@@ -8,7 +8,7 @@ description: The test uses hasOwnProperty() method
 ---*/
 
 //CHECK#1
-if(Number.prototype.hasOwnProperty("toFixed") !== true){
+if (Number.prototype.hasOwnProperty("toFixed") !== true) {
   $ERROR('#1: The Number prototype object has the property toFixed');
 }
 

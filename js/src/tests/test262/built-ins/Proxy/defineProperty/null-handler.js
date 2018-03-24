@@ -11,10 +11,10 @@ var p = Proxy.revocable({}, {});
 p.revoke();
 
 assert.throws(TypeError, function() {
-    Object.defineProperty(p.proxy, "foo", {
-        configurable: true,
-        enumerable: true
-    });
+  Object.defineProperty(p.proxy, "foo", {
+    configurable: true,
+    enumerable: true
+  });
 });
 
 reportCompare(0, 0);

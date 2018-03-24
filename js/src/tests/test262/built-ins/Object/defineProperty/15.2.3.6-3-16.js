@@ -7,7 +7,7 @@ description: Object.defineProperty - 'Attributes' is null (8.10.5 step 1)
 ---*/
 
 assert.throws(TypeError, function() {
-            Object.defineProperty({}, "property", null);
+  Object.defineProperty({}, "property", null);
 });
 
 reportCompare(0, 0);

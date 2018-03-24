@@ -12,9 +12,9 @@ var p = Proxy.revocable({}, {});
 p.revoke();
 
 assert.throws(TypeError, function() {
-    with (p.proxy) {
-        (attr);
-    }
+  with(p.proxy) {
+    (attr);
+  }
 });
 
 reportCompare(0, 0);

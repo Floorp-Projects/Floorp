@@ -12,13 +12,16 @@ info: |
 ---*/
 
 var executorFunction;
+
 function NotPromise(executor) {
   executorFunction = executor;
-  executor(function(){}, function(){});
+  executor(function() {}, function() {});
 }
 Promise.resolve.call(NotPromise);
 
 assert.sameValue(Object.prototype.hasOwnProperty.call(executorFunction, "prototype"), false);
-assert.throws(TypeError, function() { new executorFunction(); });
+assert.throws(TypeError, function() {
+  new executorFunction();
+});
 
 reportCompare(0, 0);

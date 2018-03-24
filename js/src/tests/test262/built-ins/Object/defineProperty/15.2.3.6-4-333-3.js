@@ -12,18 +12,18 @@ includes: [propertyHelper.js]
 ---*/
 
 
-var obj = (function () {
-    return arguments;
+var obj = (function() {
+  return arguments;
 }());
 
 Object.defineProperty(obj, "property", {
-    value: 1001,
-    writable: true,
-    configurable: false
+  value: 1001,
+  writable: true,
+  configurable: false
 });
 
 Object.defineProperty(obj, "property", {
-    value: 1002
+  value: 1002
 });
 
 verifyEqualTo(obj, "property", 1002);
@@ -33,6 +33,5 @@ verifyWritable(obj, "property");
 verifyNotEnumerable(obj, "property");
 
 verifyNotConfigurable(obj, "property");
-
 
 reportCompare(0, 0);

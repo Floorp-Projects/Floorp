@@ -9,10 +9,8 @@ div[hidetabs=true] .tabs .tabs-navigation {
 }
 
 .tabs .tabs-navigation {
+  display: flex;
   line-height: 15px;
-}
-
-.tabs .tabs-navigation {
   height: 24px;
 }
 

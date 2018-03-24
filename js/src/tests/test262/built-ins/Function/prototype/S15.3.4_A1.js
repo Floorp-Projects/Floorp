@@ -11,7 +11,7 @@ description: Object.prototype.toString returns [object+[[Class]]+]
 
 if (Object.prototype.toString.call(Function.prototype) !== "[object Function]") {
   $ERROR('#2: The Function prototype object is itself a Function ' +
-         'object (its [[Class]] is "Function") (15.3.4)');
+    'object (its [[Class]] is "Function") (15.3.4)');
 }
 
 reportCompare(0, 0);

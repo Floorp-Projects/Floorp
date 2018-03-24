@@ -14,13 +14,13 @@ info: |
 ---*/
 
 var p = new Proxy({}, {
-    preventExtensions: function(t) {
-        throw new Test262Error();
-    }
+  preventExtensions: function(t) {
+    throw new Test262Error();
+  }
 });
 
 assert.throws(Test262Error, function() {
-    Object.preventExtensions(p);
+  Object.preventExtensions(p);
 });
 
 reportCompare(0, 0);

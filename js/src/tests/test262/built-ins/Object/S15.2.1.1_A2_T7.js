@@ -29,7 +29,7 @@ if (typeof obj !== "object") {
 }
 
 //CHECK#4
-if ((obj != "")||(obj === "")) {
+if ((obj != "") || (obj === "")) {
   $ERROR('#4: Object("") returns ToObject("")');
 }
 

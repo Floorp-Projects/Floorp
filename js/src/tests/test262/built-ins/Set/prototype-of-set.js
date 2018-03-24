@@ -8,9 +8,9 @@ description: >
 ---*/
 
 assert.sameValue(
-    Object.getPrototypeOf(Set),
-    Function.prototype,
-    "`Object.getPrototypeOf(Set)` returns `Function.prototype`"
+  Object.getPrototypeOf(Set),
+  Function.prototype,
+  "`Object.getPrototypeOf(Set)` returns `Function.prototype`"
 );
 
 reportCompare(0, 0);

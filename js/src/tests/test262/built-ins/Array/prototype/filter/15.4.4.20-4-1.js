@@ -7,9 +7,9 @@ es5id: 15.4.4.20-4-1
 description: Array.prototype.filter throws TypeError if callbackfn is undefined
 ---*/
 
-  var arr = new Array(10);
+var arr = new Array(10);
 assert.throws(TypeError, function() {
-    arr.filter();
+  arr.filter();
 });
 
 reportCompare(0, 0);

@@ -9,15 +9,15 @@ description: >
     here
 ---*/
 
-        var arr = { };
+var arr = {};
 
-        Object.defineProperty(arr, "length", {
-            get: function () {
-                arr[2] = "length";
-                return 3;
-            },
-            configurable: true
-        });
+Object.defineProperty(arr, "length", {
+  get: function() {
+    arr[2] = "length";
+    return 3;
+  },
+  configurable: true
+});
 
 assert.sameValue(Array.prototype.indexOf.call(arr, "length"), 2, 'Array.prototype.indexOf.call(arr, "length")');
 

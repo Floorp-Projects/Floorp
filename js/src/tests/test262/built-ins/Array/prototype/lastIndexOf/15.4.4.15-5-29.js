@@ -9,24 +9,24 @@ description: >
     visible when an exception occurs
 ---*/
 
-        var stepFiveOccurs = false;
+var stepFiveOccurs = false;
 
-        var obj = {};
-        Object.defineProperty(obj, "length", {
-            get: function () {
-                throw new RangeError();
-            },
-            configurable: true
-        });
+var obj = {};
+Object.defineProperty(obj, "length", {
+  get: function() {
+    throw new RangeError();
+  },
+  configurable: true
+});
 
-        var fromIndex = {
-            valueOf: function () {
-                stepFiveOccurs = true;
-                return 0;
-            }
-        };
+var fromIndex = {
+  valueOf: function() {
+    stepFiveOccurs = true;
+    return 0;
+  }
+};
 assert.throws(RangeError, function() {
-            Array.prototype.lastIndexOf.call(obj, undefined, fromIndex);
+  Array.prototype.lastIndexOf.call(obj, undefined, fromIndex);
 });
 assert.sameValue(stepFiveOccurs, false, 'stepFiveOccurs');
 

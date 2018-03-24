@@ -11,7 +11,7 @@ description: >
 
 
 assert.throws(TypeError, function() {
-        Date.prototype.setFullYear(2012);
+  Date.prototype.setFullYear(2012);
 });
 
 reportCompare(0, 0);

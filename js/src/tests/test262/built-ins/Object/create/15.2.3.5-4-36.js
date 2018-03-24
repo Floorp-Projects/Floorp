@@ -9,11 +9,11 @@ description: >
     5.a)
 ---*/
 
-            JSON.prop = {
-                value: 12,
-                enumerable: true
-            };
-            var newObj = Object.create({}, JSON);
+JSON.prop = {
+  value: 12,
+  enumerable: true
+};
+var newObj = Object.create({}, JSON);
 
 assert(newObj.hasOwnProperty("prop"), 'newObj.hasOwnProperty("prop") !== true');
 

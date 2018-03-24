@@ -607,8 +607,17 @@ description: |
     weak basis for assertions regarding the consistent canonicalization of NaN
     values in Array buffers.
 ---*/
-var distinctNaNs = [
-  0/0, Infinity/Infinity, -(0/0), Math.pow(-1, 0.5), -Math.pow(-1, 0.5)
+
+var NaNs = [
+  NaN,
+  Number.NaN,
+  NaN * 0,
+  0/0,
+  Infinity/Infinity,
+  -(0/0),
+  Math.pow(-1, 0.5),
+  -Math.pow(-1, 0.5),
+  Number("Not-a-Number"),
 ];
 
 // file: nativeFunctionMatcher.js
@@ -620,6 +629,20 @@ description: |
     the NativeFunction grammar production without requiring a correct tokeniser.
 ---*/
 const NATIVE_FUNCTION_RE = /\bfunction\b[\s\S]*\([\s\S]*\)[\s\S]*\{[\s\S]*\[[\s\S]*\bnative\b[\s\S]+\bcode\b[\s\S]*\][\s\S]*\}/;
+
+const assertToStringOrNativeFunction = function(fn, expected) {
+  const actual = "" + fn;
+  try {
+    assert.sameValue(actual, expected);
+  } catch (unused) {
+    assertNativeFunction(fn);
+  }
+};
+
+const assertNativeFunction = function(fn) {
+  const actual = "" + fn;
+  assert(NATIVE_FUNCTION_RE.test(actual), "looks pretty much like a NativeFunction");
+};
 
 // file: promiseHelper.js
 // Copyright (C) 2017 Ecma International.  All rights reserved.

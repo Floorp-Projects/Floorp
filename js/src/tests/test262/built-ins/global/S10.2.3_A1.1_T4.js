@@ -10,7 +10,7 @@ description: Global execution context - Other Properties
 ---*/
 
 //CHECK#27
-if ( Math === null ) {
+if (Math === null) {
   $ERROR("#27: Math === null");
 }
 

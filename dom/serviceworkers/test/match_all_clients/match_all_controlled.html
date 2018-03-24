@@ -24,6 +24,9 @@
 
   window.onload = function() {
     navigator.serviceWorker.ready.then(function(swr) {
+        // Send a message to our SW that will cause it to do clients.matchAll()
+        // and send a message *to each client about themselves* (rather than
+        // replying directly to us with all the clients it finds).
         swr.active.postMessage("Start");
     });
   }
@@ -37,8 +40,10 @@
     testWindow.postMessage(response, "*");
   }
 
-  navigator.serviceWorker.onmessage = function(msg) {
-    // worker message;
+  navigator.serviceWorker.onmessage = async function(msg) {
+    // ## Verify the contents of the SW's serialized rep of our client info.
+    // Clients are opaque identifiers at a spec level, but we want to verify
+    // that they are UUID's *without wrapping "{}" characters*.
     result = re.test(msg.data.id);
     postResult(result, "Client id test");
 
@@ -56,6 +61,16 @@
 
     result = msg.data.type === "window";
     postResult(result, "Client type test. expected=window");
+
+    // ## Verify the FetchEvent.clientId
+    // In bug 1446225 it turned out we provided UUID's wrapped with {}'s.  We
+    // now also get coverage by forcing our clients.get() to forbid UUIDs
+    // with that form.
+
+    const clientIdResp = await fetch('clientId');
+    const fetchClientId = await clientIdResp.text();
+    result = re.test(fetchClientId);
+    postResult(result, "Fetch clientId test");
 
     postResult(true, "DONE");
     window.close();

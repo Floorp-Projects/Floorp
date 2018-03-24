@@ -8,15 +8,15 @@ description: >
     present  (8.10.5 step 5)
 ---*/
 
-        var obj = { };
+var obj = {};
 
-        var attr = {
-            writable: true
-        };
+var attr = {
+  writable: true
+};
 
-        Object.defineProperty(obj, "property", attr);
+Object.defineProperty(obj, "property", attr);
 
 assert(obj.hasOwnProperty("property"), 'obj.hasOwnProperty("property") !== true');
-assert.sameValue(typeof (obj.property), "undefined", 'typeof (obj.property)');
+assert.sameValue(typeof(obj.property), "undefined", 'typeof (obj.property)');
 
 reportCompare(0, 0);

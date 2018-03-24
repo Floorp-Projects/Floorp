@@ -9,15 +9,15 @@ description: >
     7.a)
 ---*/
 
-        var obj = {};
+var obj = {};
 
-        var regObj = new RegExp();
+var regObj = new RegExp();
 
-        regObj.get = function () {
-            return "regExpGetProperty";
-        };
+regObj.get = function() {
+  return "regExpGetProperty";
+};
 
-        Object.defineProperty(obj, "property", regObj);
+Object.defineProperty(obj, "property", regObj);
 
 assert.sameValue(obj.property, "regExpGetProperty", 'obj.property');
 

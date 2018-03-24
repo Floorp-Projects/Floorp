@@ -9,7 +9,7 @@ description: Array.prototype.reduce applied to undefined
 
 
 assert.throws(TypeError, function() {
-            Array.prototype.reduce.call(undefined);
+  Array.prototype.reduce.call(undefined);
 });
 
 reportCompare(0, 0);

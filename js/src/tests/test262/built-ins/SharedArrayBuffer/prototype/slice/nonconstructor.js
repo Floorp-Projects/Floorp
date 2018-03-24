@@ -1,3 +1,4 @@
+// |reftest| skip-if(!this.hasOwnProperty('SharedArrayBuffer')) -- SharedArrayBuffer is not enabled unconditionally
 // Copyright (C) 2015 André Bargull. All rights reserved.
 // Copyright (C) 2017 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
@@ -12,11 +13,14 @@ info: |
     Built-in function objects that are not identified as constructors do not
     implement the [[Construct]] internal method unless otherwise specified
     in the description of a particular function.
+features: [SharedArrayBuffer]
 ---*/
 
 assert.sameValue(Object.prototype.hasOwnProperty.call(SharedArrayBuffer.prototype.slice, "prototype"), false);
 
 var arrayBuffer = new SharedArrayBuffer(8);
-assert.throws(TypeError, function() { new arrayBuffer.slice(); });
+assert.throws(TypeError, function() {
+  new arrayBuffer.slice();
+});
 
 reportCompare(0, 0);

@@ -9,11 +9,11 @@ description: >
     field of 'desc' is boundary value 2^32 + 1 (15.4.5.1 step 3.c)
 ---*/
 
-        var arrObj = [];
+var arrObj = [];
 assert.throws(RangeError, function() {
-            Object.defineProperty(arrObj, "length", {
-                value: 4294967297
-            });
+  Object.defineProperty(arrObj, "length", {
+    value: 4294967297
+  });
 });
 
 reportCompare(0, 0);
