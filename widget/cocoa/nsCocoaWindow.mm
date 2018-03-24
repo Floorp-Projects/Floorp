@@ -2430,44 +2430,6 @@ nsCocoaWindow::SetNonClientMargins(LayoutDeviceIntMargin &margins)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void
-nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, bool aActive)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!mWindow)
-    return;
-
-  // If they pass a color with a complete transparent alpha component, use the
-  // native titlebar appearance.
-  if (NS_GET_A(aColor) == 0) {
-    [mWindow setTitlebarColor:nil forActiveWindow:(BOOL)aActive]; 
-  } else {
-    // Transform from sRGBA to monitor RGBA. This seems like it would make trying
-    // to match the system appearance lame, so probably we just shouldn't color 
-    // correct chrome.
-    if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
-      qcms_transform *transform = gfxPlatform::GetCMSRGBATransform();
-      if (transform) {
-        uint8_t color[3];
-        color[0] = NS_GET_R(aColor);
-        color[1] = NS_GET_G(aColor);
-        color[2] = NS_GET_B(aColor);
-        qcms_transform_data(transform, color, color, 1);
-        aColor = NS_RGB(color[0], color[1], color[2]);
-      }
-    }
-
-    [mWindow setTitlebarColor:[NSColor colorWithDeviceRed:NS_GET_R(aColor)/255.0
-                                                    green:NS_GET_G(aColor)/255.0
-                                                     blue:NS_GET_B(aColor)/255.0
-                                                    alpha:NS_GET_A(aColor)/255.0]
-              forActiveWindow:(BOOL)aActive];
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
 void nsCocoaWindow::SetDrawsInTitlebar(bool aState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -3095,8 +3057,6 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
   mDrawsIntoWindowFrame = NO;
   [super initWithContentRect:aContentRect styleMask:aStyle backing:aBufferingType defer:aFlag];
   mState = nil;
-  mActiveTitlebarColor = nil;
-  mInactiveTitlebarColor = nil;
   mDisabledNeedsDisplay = NO;
   mTrackingArea = nil;
   mDirtyRect = NSZeroRect;
@@ -3186,8 +3146,6 @@ GetMenuMaskImage()
 
 - (void)dealloc
 {
-  [mActiveTitlebarColor release];
-  [mInactiveTitlebarColor release];
   [self removeTrackingArea];
   ChildViewMouseTracker::OnDestroyWindow(self);
   [super dealloc];
@@ -3195,8 +3153,6 @@ GetMenuMaskImage()
 
 static const NSString* kStateTitleKey = @"title";
 static const NSString* kStateDrawsContentsIntoWindowFrameKey = @"drawsContentsIntoWindowFrame";
-static const NSString* kStateActiveTitlebarColorKey = @"activeTitlebarColor";
-static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor";
 static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
@@ -3206,8 +3162,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
     [self setTitle:title];
   }
   [self setDrawsContentsIntoWindowFrame:[[aState objectForKey:kStateDrawsContentsIntoWindowFrameKey] boolValue]];
-  [self setTitlebarColor:[aState objectForKey:kStateActiveTitlebarColorKey] forActiveWindow:YES];
-  [self setTitlebarColor:[aState objectForKey:kStateInactiveTitlebarColorKey] forActiveWindow:NO];
   [self setShowsToolbarButton:[[aState objectForKey:kStateShowsToolbarButton] boolValue]];
   [self setCollectionBehavior:[[aState objectForKey:kStateCollectionBehavior] unsignedIntValue]];
 }
@@ -3220,14 +3174,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   }
   [state setObject:[NSNumber numberWithBool:[self drawsContentsIntoWindowFrame]]
             forKey:kStateDrawsContentsIntoWindowFrameKey];
-  NSColor* activeTitlebarColor = [self titlebarColorForActiveWindow:YES];
-  if (activeTitlebarColor) {
-    [state setObject:activeTitlebarColor forKey:kStateActiveTitlebarColorKey];
-  }
-  NSColor* inactiveTitlebarColor = [self titlebarColorForActiveWindow:NO];
-  if (inactiveTitlebarColor) {
-    [state setObject:inactiveTitlebarColor forKey:kStateInactiveTitlebarColorKey];
-  }
   [state setObject:[NSNumber numberWithBool:[self showsToolbarButton]]
             forKey:kStateShowsToolbarButton];
   [state setObject:[NSNumber numberWithUnsignedInt: [self collectionBehavior]]
@@ -3276,24 +3222,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 - (BOOL)useBrightTitlebarForeground
 {
   return mBrightTitlebarForeground;
-}
-
-// Pass nil here to get the default appearance.
-- (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive
-{
-  [aColor retain];
-  if (aActive) {
-    [mActiveTitlebarColor release];
-    mActiveTitlebarColor = aColor;
-  } else {
-    [mInactiveTitlebarColor release];
-    mInactiveTitlebarColor = aColor;
-  }
-}
-
-- (NSColor*)titlebarColorForActiveWindow:(BOOL)aActive
-{
-  return aActive ? mActiveTitlebarColor : mInactiveTitlebarColor;
 }
 
 - (NSView*)trackingAreaView
@@ -3578,12 +3506,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   return self;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-- (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive
-{
-  [super setTitlebarColor:aColor forActiveWindow:aActive];
-  [self setTitlebarNeedsDisplayInRect:[self titlebarRect]];
 }
 
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect
