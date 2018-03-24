@@ -4317,7 +4317,6 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
   };
   AutoTArray<PerSpanData, 16> perSpanData;
   nsTArray<Step2ItemData> step2Items;
-  CSSOrderAwareFrameIterator& iter = aState.mIter;
   gfxContext* rc = &aState.mRenderingContext;
   WritingMode wm = aState.mWM;
   uint32_t maxSpan = 0; // max span of the step2Items items
@@ -4330,9 +4329,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
     aConstraint == SizingConstraint::eMaxContent ?
     (TrackSize::eMaxContentMinSizing | TrackSize::eAutoMinSizing) :
     TrackSize::eMaxContentMinSizing;
-  iter.Reset();
-  for (; !iter.AtEnd(); iter.Next()) {
-    auto& gridItem = aGridItems[iter.ItemIndex()];
+  for (auto& gridItem : aGridItems) {
     MOZ_ASSERT(!(gridItem.mState[mAxis] &
                  (ItemState::eApplyAutoMinSize | ItemState::eIsFlexing |
                   ItemState::eClampMarginBoxMinSize)),
@@ -4398,7 +4395,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         }
         step2Items.AppendElement(
           Step2ItemData({span, state, lineRange, minSize,
-                         minContent, maxContent, *iter}));
+                         minContent, maxContent, gridItem.mFrame}));
       }
     }
     MOZ_ASSERT(!(gridItem.mState[mAxis] & ItemState::eClampMarginBoxMinSize) ||
