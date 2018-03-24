@@ -10,7 +10,7 @@ description: >
 
 
 assert.throws(TypeError, function() {
-    Object.keys(null);
+  Object.keys(null);
 });
 
 reportCompare(0, 0);

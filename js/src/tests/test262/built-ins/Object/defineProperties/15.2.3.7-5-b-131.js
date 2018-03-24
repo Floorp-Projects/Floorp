@@ -9,15 +9,15 @@ description: >
     step 5.a)
 ---*/
 
-        var obj = {};
+var obj = {};
 
-        var descObj = new Date();
+var descObj = new Date();
 
-        descObj.value = "Date";
+descObj.value = "Date";
 
-        Object.defineProperties(obj, {
-            property: descObj
-        });
+Object.defineProperties(obj, {
+  property: descObj
+});
 
 assert.sameValue(obj.property, "Date", 'obj.property');
 

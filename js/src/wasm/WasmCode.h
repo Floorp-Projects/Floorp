@@ -480,7 +480,6 @@ struct MetadataTier
 
     const Tier            tier;
 
-    MemoryAccessVector    memoryAccesses;
     CodeRangeVector       codeRanges;
     CallSiteVector        callSites;
     TrapSiteVectorArray   trapSites;
@@ -773,7 +772,6 @@ class Code : public ShareableBase<Code>
 
     const CallSite* lookupCallSite(void* returnAddress) const;
     const CodeRange* lookupFuncRange(void* pc) const;
-    const MemoryAccess* lookupMemoryAccess(void* pc) const;
     bool containsCodePC(const void* pc) const;
     bool lookupTrap(void* pc, Trap* trap, BytecodeOffset* bytecode) const;
 

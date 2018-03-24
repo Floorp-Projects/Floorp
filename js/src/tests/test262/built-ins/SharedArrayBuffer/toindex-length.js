@@ -1,3 +1,4 @@
+// |reftest| skip-if(!this.hasOwnProperty('SharedArrayBuffer')) -- SharedArrayBuffer is not enabled unconditionally
 // Copyright (C) 2016 The V8 Project authors. All rights reserved.
 // Copyright (C) 2016 Mozilla Corporation. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
@@ -23,6 +24,7 @@ info: |
     c. Let index be ! ToLength(integerIndex).
     d. If SameValueZero(integerIndex, index) is false, throw a RangeError exception.
   3. Return index.
+features: [SharedArrayBuffer]
 ---*/
 
 var obj1 = {

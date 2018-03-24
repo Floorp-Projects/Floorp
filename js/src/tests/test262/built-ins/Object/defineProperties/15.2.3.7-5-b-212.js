@@ -9,15 +9,15 @@ description: >
     step 7.a)
 ---*/
 
-        var obj = {};
+var obj = {};
 
-            JSON.get = function () {
-                return "JSON";
-            };
+JSON.get = function() {
+  return "JSON";
+};
 
-            Object.defineProperties(obj, {
-                property: JSON
-            });
+Object.defineProperties(obj, {
+  property: JSON
+});
 
 assert.sameValue(obj.property, "JSON", 'obj.property');
 

@@ -9,7 +9,10 @@ description: >
     (value is NaN)
 ---*/
 
-        var obj = { 0: 0, length: NaN };
+var obj = {
+  0: 0,
+  length: NaN
+};
 
 assert.sameValue(Array.prototype.indexOf.call(obj, 0), -1, 'Array.prototype.indexOf.call(obj, 0)');
 

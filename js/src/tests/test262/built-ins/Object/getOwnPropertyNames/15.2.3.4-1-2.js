@@ -8,7 +8,7 @@ description: Object.getOwnPropertyNames throws TypeError if 'O' is undefined
 
 
 assert.throws(TypeError, function() {
-            Object.getOwnPropertyNames(undefined);
+  Object.getOwnPropertyNames(undefined);
 });
 
 reportCompare(0, 0);

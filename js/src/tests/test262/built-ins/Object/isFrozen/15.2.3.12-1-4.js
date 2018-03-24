@@ -8,6 +8,6 @@ description: >
     is a string
 ---*/
 
-    Object.isFrozen("abc");
+Object.isFrozen("abc");
 
 reportCompare(0, 0);

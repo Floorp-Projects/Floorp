@@ -8,7 +8,7 @@ description: >
     (Function.prototype)
 ---*/
 
-  var e = Object.isExtensible(Function.prototype);
+var e = Object.isExtensible(Function.prototype);
 
 assert.sameValue(e, true, 'e');
 

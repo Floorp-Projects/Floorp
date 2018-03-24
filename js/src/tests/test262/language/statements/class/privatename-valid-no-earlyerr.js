@@ -38,7 +38,7 @@ class outer {
     var self = this;
     return class inner {
       g() {
-	return self.#x;
+        return self.#x;
       }
     }
   }

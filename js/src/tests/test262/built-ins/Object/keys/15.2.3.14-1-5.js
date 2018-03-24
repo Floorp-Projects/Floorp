@@ -10,7 +10,7 @@ description: >
 
 
 assert.throws(TypeError, function() {
-    Object.keys(undefined);
+  Object.keys(undefined);
 });
 
 reportCompare(0, 0);

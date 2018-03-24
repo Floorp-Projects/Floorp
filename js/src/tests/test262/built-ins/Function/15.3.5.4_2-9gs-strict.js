@@ -14,11 +14,11 @@ flags: [onlyStrict]
 var f = new Function("return gNonStrict();");
 
 assert.throws(TypeError, function() {
-    f();
+  f();
 });
 
 function gNonStrict() {
-    return gNonStrict.caller;
+  return gNonStrict.caller;
 }
 
 reportCompare(0, 0);

@@ -7,9 +7,9 @@ es5id: 15.4.4.21-4-3
 description: Array.prototype.reduce throws TypeError if callbackfn is null
 ---*/
 
-  var arr = new Array(10);
+var arr = new Array(10);
 assert.throws(TypeError, function() {
-    arr.reduce(null);
+  arr.reduce(null);
 });
 
 reportCompare(0, 0);

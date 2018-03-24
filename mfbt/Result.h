@@ -225,7 +225,7 @@ template <typename T> struct HasFreeLSB { static const bool value = false; };
 // type is greater than byte-aligned. That bit is free to use if it's masked
 // out of such pointers before they're dereferenced.
 template <typename T> struct HasFreeLSB<T*> {
-  static const bool value = (MOZ_ALIGNOF(T) & 1) == 0;
+  static const bool value = (alignof(T) & 1) == 0;
 };
 
 // We store references as pointers, so they have a free bit if a pointer would

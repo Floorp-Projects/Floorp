@@ -8,7 +8,7 @@ description: >
   %AsyncFunction% is extensible
 ---*/
 
-var AsyncFunction = async function() { }.constructor;
+var AsyncFunction = async function() {}.constructor;
 AsyncFunction.x = 1;
 assert.sameValue(AsyncFunction.x, 1);
 

@@ -34,7 +34,7 @@
 #define DEFAULT_CHUNK_SIZE (4096 * 16)  // bytes
 #define DEFAULT_INTERVAL    60          // seconds
 
-#define UPDATE_PROGRESS_INTERVAL PRTime(500 * PR_USEC_PER_MSEC) // 500ms
+#define UPDATE_PROGRESS_INTERVAL PRTime(100 * PR_USEC_PER_MSEC) // 100ms
 
 // Number of times to retry a failed byte-range request.
 #define MAX_RETRY_COUNT 20

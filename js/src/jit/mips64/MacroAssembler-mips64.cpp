@@ -397,25 +397,16 @@ MacroAssemblerMIPS64::ma_daddu(Register rd, Imm32 imm)
     ma_daddu(rd, rd, imm);
 }
 
-template <typename L>
 void
-MacroAssemblerMIPS64::ma_addTestOverflow(Register rd, Register rs, Register rt, L overflow)
+MacroAssemblerMIPS64::ma_addTestOverflow(Register rd, Register rs, Register rt, Label* overflow)
 {
     as_daddu(SecondScratchReg, rs, rt);
     as_addu(rd, rs, rt);
     ma_b(rd, SecondScratchReg, overflow, Assembler::NotEqual);
 }
 
-template void
-MacroAssemblerMIPS64::ma_addTestOverflow<Label*>(Register rd, Register rs,
-                                                 Register rt, Label* overflow);
-template void
-MacroAssemblerMIPS64::ma_addTestOverflow<wasm::OldTrapDesc>(Register rd, Register rs, Register rt,
-                                                            wasm::OldTrapDesc overflow);
-
-template <typename L>
 void
-MacroAssemblerMIPS64::ma_addTestOverflow(Register rd, Register rs, Imm32 imm, L overflow)
+MacroAssemblerMIPS64::ma_addTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow)
 {
     // Check for signed range because of as_daddiu
     if (Imm16::IsInSignedRange(imm.value)) {
@@ -427,13 +418,6 @@ MacroAssemblerMIPS64::ma_addTestOverflow(Register rd, Register rs, Imm32 imm, L 
         ma_addTestOverflow(rd, rs, ScratchRegister, overflow);
     }
 }
-
-template void
-MacroAssemblerMIPS64::ma_addTestOverflow<Label*>(Register rd, Register rs,
-                                                 Imm32 imm, Label* overflow);
-template void
-MacroAssemblerMIPS64::ma_addTestOverflow<wasm::OldTrapDesc>(Register rd, Register rs, Imm32 imm,
-                                                            wasm::OldTrapDesc overflow);
 
 // Subtract.
 void
@@ -1101,7 +1085,7 @@ MacroAssemblerMIPS64Compat::loadUnalignedDouble(const wasm::MemoryAccessDesc& ac
         load = as_ldl(temp, ScratchRegister, 7);
         as_ldr(temp, ScratchRegister, 0);
     }
-    append(access, load.getOffset(), asMasm().framePushed());
+    append(access, load.getOffset());
     moveToDouble(temp, dest);
 }
 
@@ -1120,7 +1104,7 @@ MacroAssemblerMIPS64Compat::loadUnalignedFloat32(const wasm::MemoryAccessDesc& a
         load = as_lwl(temp, ScratchRegister, 3);
         as_lwr(temp, ScratchRegister, 0);
     }
-    append(access, load.getOffset(), asMasm().framePushed());
+    append(access, load.getOffset());
     moveToFloat32(temp, dest);
 }
 
@@ -1273,7 +1257,7 @@ MacroAssemblerMIPS64Compat::storeUnalignedFloat32(const wasm::MemoryAccessDesc& 
         store = as_swl(temp, ScratchRegister, 3);
         as_swr(temp, ScratchRegister, 0);
     }
-    append(access, store.getOffset(), asMasm().framePushed());
+    append(access, store.getOffset());
 }
 
 void
@@ -1293,7 +1277,7 @@ MacroAssemblerMIPS64Compat::storeUnalignedDouble(const wasm::MemoryAccessDesc& a
         store = as_sdl(temp, ScratchRegister, 7);
         as_sdr(temp, ScratchRegister, 0);
     }
-    append(access, store.getOffset(), asMasm().framePushed());
+    append(access, store.getOffset());
 }
 
 void
@@ -2326,6 +2310,20 @@ MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType value
 
 
 void
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Register boundsCheckLimit, Label* label)
+{
+    ma_b(index, boundsCheckLimit, label, cond);
+}
+
+void
+MacroAssembler::wasmBoundsCheck(Condition cond, Register index, Address boundsCheckLimit, Label* label)
+{
+    SecondScratchRegisterScope scratch2(*this);
+    load32(boundsCheckLimit, SecondScratchReg);
+    ma_b(index, SecondScratchReg, label, cond);
+}
+
+void
 MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, bool isSaturating,
                                            Label* oolEntry)
 {
@@ -2532,7 +2530,7 @@ MacroAssemblerMIPS64Compat::wasmLoadI64Impl(const wasm::MemoryAccessDesc& access
     asMasm().memoryBarrierBefore(access.sync());
     asMasm().ma_load(output.reg, address, static_cast<LoadStoreSize>(8 * byteSize),
                      isSigned ? SignExtend : ZeroExtend);
-    asMasm().append(access, asMasm().size() - 4, asMasm().framePushed());
+    asMasm().append(access, asMasm().size() - 4);
     asMasm().memoryBarrierAfter(access.sync());
 }
 
@@ -2577,7 +2575,7 @@ MacroAssemblerMIPS64Compat::wasmStoreI64Impl(const wasm::MemoryAccessDesc& acces
     asMasm().memoryBarrierBefore(access.sync());
     asMasm().ma_store(value.reg, address, static_cast<LoadStoreSize>(8 * byteSize),
                       isSigned ? SignExtend : ZeroExtend);
-    asMasm().append(access, asMasm().size() - 4, asMasm().framePushed());
+    asMasm().append(access, asMasm().size() - 4);
     asMasm().memoryBarrierAfter(access.sync());
 }
 

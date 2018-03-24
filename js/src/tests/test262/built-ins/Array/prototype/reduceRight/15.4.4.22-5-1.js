@@ -9,9 +9,9 @@ description: >
     (empty array), no initVal
 ---*/
 
-  function cb(){}
+function cb() {}
 assert.throws(TypeError, function() {
-    [].reduceRight(cb);
+  [].reduceRight(cb);
 });
 
 reportCompare(0, 0);

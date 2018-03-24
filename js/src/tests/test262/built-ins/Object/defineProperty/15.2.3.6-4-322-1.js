@@ -12,33 +12,33 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-(function (a, b, c) {
-    function setFunc(value) {
-        this.genericPropertyString = value;
-    }
+(function(a, b, c) {
+  function setFunc(value) {
+    this.genericPropertyString = value;
+  }
+  Object.defineProperty(arguments, "genericProperty", {
+    set: setFunc,
+    configurable: false
+  });
+  try {
     Object.defineProperty(arguments, "genericProperty", {
-        set: setFunc,
-        configurable: false
+      set: function(value) {
+        this.genericPropertyString1 = value;
+      }
     });
-    try {
-        Object.defineProperty(arguments, "genericProperty", {
-            set: function (value) {
-                this.genericPropertyString1 = value;
-            }
-        });
-        $ERROR("Expected an exception.");
-    } catch (e) {
-        verifyWritable(arguments, "genericProperty", "genericPropertyString");
+    $ERROR("Expected an exception.");
+  } catch (e) {
+    verifyWritable(arguments, "genericProperty", "genericPropertyString");
 
-        verifyNotEnumerable(arguments, "genericProperty");
+    verifyNotEnumerable(arguments, "genericProperty");
 
-        verifyNotConfigurable(arguments, "genericProperty");
+    verifyNotConfigurable(arguments, "genericProperty");
 
-        if (!(e instanceof TypeError)) {
-            $ERROR("Expected TypeError, got " + e);
-        }
-
+    if (!(e instanceof TypeError)) {
+      $ERROR("Expected TypeError, got " + e);
     }
+
+  }
 }(1, 2, 3));
 
 reportCompare(0, 0);

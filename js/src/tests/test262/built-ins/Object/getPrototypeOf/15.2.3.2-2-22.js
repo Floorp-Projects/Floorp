@@ -8,7 +8,7 @@ description: >
     (String object)
 ---*/
 
-        var obj = new String("abc");
+var obj = new String("abc");
 
 assert.sameValue(Object.getPrototypeOf(obj), String.prototype, 'Object.getPrototypeOf(obj)');
 

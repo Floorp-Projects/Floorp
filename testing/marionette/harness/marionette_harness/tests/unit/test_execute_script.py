@@ -268,7 +268,7 @@ class TestExecuteContent(MarionetteTestCase):
             exists = send("return typeof {} != 'undefined'".format(property))
             self.assertTrue(exists, "property {} is undefined".format(property))
 
-        self.assertTrue(send("return typeof Components.utils == 'undefined'"))
+        self.assertTrue(send("return (typeof Components == 'undefined') || (typeof Components.utils == 'undefined')"))
         self.assertTrue(send("return typeof window.wrappedJSObject == 'undefined'"))
 
     def test_no_callback(self):

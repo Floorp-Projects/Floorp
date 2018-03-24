@@ -8,7 +8,7 @@ description: >
     (RegExp.prototype)
 ---*/
 
-  var e = Object.isExtensible(RegExp.prototype);
+var e = Object.isExtensible(RegExp.prototype);
 
 assert.sameValue(e, true, 'e');
 

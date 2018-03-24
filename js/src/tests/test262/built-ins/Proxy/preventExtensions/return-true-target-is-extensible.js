@@ -17,13 +17,13 @@ info: |
 ---*/
 
 var p = new Proxy({}, {
-    preventExtensions: function(t) {
-        return true;
-    }
+  preventExtensions: function(t) {
+    return true;
+  }
 });
 
 assert.throws(TypeError, function() {
-    Object.preventExtensions(p);
+  Object.preventExtensions(p);
 });
 
 reportCompare(0, 0);

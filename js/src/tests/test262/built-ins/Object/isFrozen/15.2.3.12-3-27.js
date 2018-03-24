@@ -6,7 +6,7 @@ es5id: 15.2.3.12-3-27
 description: Object.isFrozen returns false for all built-in objects (JSON)
 ---*/
 
-  var b = Object.isFrozen(JSON);
+var b = Object.isFrozen(JSON);
 
 assert.sameValue(b, false, 'b');
 

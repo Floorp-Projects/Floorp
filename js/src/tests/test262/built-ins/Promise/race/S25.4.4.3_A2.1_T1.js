@@ -11,7 +11,7 @@ description: Promise.race returns a new promise
 var p = Promise.race([]);
 
 if (!(p instanceof Promise)) {
-    $ERROR("Expected Promise.race([]) to return a promise.");
+  $ERROR("Expected Promise.race([]) to return a promise.");
 }
 
 reportCompare(0, 0);

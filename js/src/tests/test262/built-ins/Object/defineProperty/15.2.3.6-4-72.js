@@ -12,12 +12,18 @@ includes: [propertyHelper.js]
 
 var obj = {};
 
-var obj1 = { length: 10 };
+var obj1 = {
+  length: 10
+};
 obj.foo = obj1; // default value of attributes: writable: true, configurable: true, enumerable: true
 
-var obj2 = { length: 20 };
+var obj2 = {
+  length: 20
+};
 
-Object.defineProperty(obj, "foo", { value: obj2 });
+Object.defineProperty(obj, "foo", {
+  value: obj2
+});
 verifyEqualTo(obj, "foo", obj2);
 
 verifyWritable(obj, "foo");
@@ -25,6 +31,5 @@ verifyWritable(obj, "foo");
 verifyEnumerable(obj, "foo");
 
 verifyConfigurable(obj, "foo");
-
 
 reportCompare(0, 0);

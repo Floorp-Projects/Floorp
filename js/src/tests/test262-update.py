@@ -27,10 +27,12 @@ UNSUPPORTED_FEATURES = set([
                             "regexp-lookbehind",
                             "regexp-named-groups",
                             "regexp-unicode-property-escapes",
+                            "numeric-separator-literal",
                        ])
 FEATURE_CHECK_NEEDED = {
                          "Atomics": "!this.hasOwnProperty('Atomics')",
                          "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
+                         "CannotSuspendMainAgent": "xulRuntime.shell",
                        }
 RELEASE_OR_BETA = set()
 
