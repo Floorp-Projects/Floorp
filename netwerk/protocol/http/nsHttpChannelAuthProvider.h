@@ -37,7 +37,6 @@ public:
     NS_DECL_NSIHTTPAUTHENTICATORCALLBACK
 
     nsHttpChannelAuthProvider();
-    static void InitializePrefs();
 private:
     virtual ~nsHttpChannelAuthProvider();
 
@@ -182,12 +181,6 @@ private:
 
     RefPtr<nsHttpHandler>           mHttpHandler;  // keep gHttpHandler alive
 
-    // A variable holding the preference settings to whether to open HTTP
-    // authentication credentials dialogs for sub-resources and cross-origin
-    // sub-resources.
-    static uint32_t                   sAuthAllowPref;
-    static bool                       sImgCrossOriginAuthAllowPref;
-    static bool                       sNonWebContentTriggeredAuthAllow;
     nsCOMPtr<nsICancelable>           mGenerateCredentialsCancelable;
 };
 
