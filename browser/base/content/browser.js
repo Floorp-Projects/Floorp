@@ -1021,7 +1021,7 @@ function handleUriInChrome(aBrowser, aUri) {
 
 // A shared function used by both remote and non-remote browser XBL bindings to
 // load a URI or redirect it to the correct process.
-function _loadURIWithFlags(browser, uri, params) {
+function _loadURI(browser, uri, params = {}) {
   let tab = gBrowser.getTabForBrowser(browser);
   // Preloaded browsers don't have tabs, so we ignore those.
   if (tab) {
@@ -1031,12 +1031,15 @@ function _loadURIWithFlags(browser, uri, params) {
   if (!uri) {
     uri = "about:blank";
   }
-  let triggeringPrincipal = params.triggeringPrincipal || null;
-  let flags = params.flags || 0;
-  let referrer = params.referrerURI;
-  let referrerPolicy = ("referrerPolicy" in params ? params.referrerPolicy :
-                        Ci.nsIHttpChannel.REFERRER_POLICY_UNSET);
-  let postData = params.postData;
+
+  let {
+    flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
+    referrerURI,
+    referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+    triggeringPrincipal,
+    postData,
+    userContextId,
+  } = params || {};
 
   let currentRemoteType = browser.remoteType;
   let requiredRemoteType;
@@ -1082,12 +1085,12 @@ function _loadURIWithFlags(browser, uri, params) {
   }
   try {
     if (!mustChangeProcess) {
-      if (params.userContextId) {
-        browser.webNavigation.setOriginAttributesBeforeLoading({ userContextId: params.userContextId });
+      if (userContextId) {
+        browser.webNavigation.setOriginAttributesBeforeLoading({ userContextId });
       }
 
       browser.webNavigation.loadURIWithOptions(uri, flags,
-                                               referrer, referrerPolicy,
+                                               referrerURI, referrerPolicy,
                                                postData, null, null, triggeringPrincipal);
     } else {
       // Check if the current browser is allowed to unload.
@@ -1106,15 +1109,15 @@ function _loadURIWithFlags(browser, uri, params) {
           ? gSerializationHelper.serializeToString(triggeringPrincipal)
           : null,
         flags,
-        referrer: referrer ? referrer.spec : null,
+        referrer: referrerURI ? referrerURI.spec : null,
         referrerPolicy,
         remoteType: requiredRemoteType,
         postData,
         newFrameloader,
       };
 
-      if (params.userContextId) {
-        loadParams.userContextId = params.userContextId;
+      if (userContextId) {
+        loadParams.userContextId = userContextId;
       }
 
       LoadInOtherProcess(browser, loadParams);
@@ -1129,11 +1132,11 @@ function _loadURIWithFlags(browser, uri, params) {
       Cu.reportError(e);
       gBrowser.updateBrowserRemotenessByURL(browser, uri);
 
-      if (params.userContextId) {
-        browser.webNavigation.setOriginAttributesBeforeLoading({ userContextId: params.userContextId });
+      if (userContextId) {
+        browser.webNavigation.setOriginAttributesBeforeLoading({ userContextId });
       }
 
-      browser.webNavigation.loadURIWithOptions(uri, flags, referrer, referrerPolicy,
+      browser.webNavigation.loadURIWithOptions(uri, flags, referrerURI, referrerPolicy,
                                                postData, null, null, triggeringPrincipal);
     } else {
       throw e;
@@ -3171,9 +3174,9 @@ var BrowserOnClick = {
     // Allow users to override and continue through to the site,
     // but add a notify bar as a reminder, so that they don't lose
     // track after, e.g., tab switching.
-    gBrowser.loadURIWithFlags(gBrowser.currentURI.spec,
-                              Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
-                              null, null, null);
+    gBrowser.loadURI(gBrowser.currentURI.spec, {
+      flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
+    });
 
     Services.perms.add(gBrowser.currentURI, "safe-browsing",
                        Ci.nsIPermissionManager.ALLOW_ACTION,
@@ -3296,13 +3299,13 @@ function BrowserReloadWithFlags(reloadFlags) {
     // If the remoteness has changed, the new browser doesn't have any
     // information of what was loaded before, so we need to load the previous
     // URL again.
-    gBrowser.loadURIWithFlags(url, reloadFlags);
+    gBrowser.loadURI(url, { flags: reloadFlags });
     return;
   }
 
   // Do this after the above case where we might flip remoteness.
   // Unfortunately, we'll count the remoteness flip case as a
-  // "newURL" load, since we're using loadURIWithFlags, but hopefully
+  // "newURL" load, since we're using loadURI, but hopefully
   // that's rare enough to not matter.
   maybeRecordAbandonmentTelemetry(gBrowser.selectedTab, "reload");
 
@@ -5340,8 +5343,8 @@ nsBrowserAccess.prototype = {
           let loadflags = isExternal ?
                             Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
                             Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-          gBrowser.loadURIWithFlags(aURI.spec, {
-            aTriggeringPrincipal,
+          gBrowser.loadURI(aURI.spec, {
+            triggeringPrincipal: aTriggeringPrincipal,
             flags: loadflags,
             referrerURI: referrer,
             referrerPolicy,

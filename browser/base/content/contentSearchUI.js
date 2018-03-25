@@ -627,12 +627,18 @@ ContentSearchUIController.prototype = {
       return;
     }
     let searchWithHeader = document.getElementById("contentSearchSearchWithHeader");
+    let labels = searchWithHeader.querySelectorAll("label");
     if (this.input.value) {
-      // eslint-disable-next-line no-unsanitized/property
-      searchWithHeader.innerHTML = this._strings.searchForSomethingWith;
-      searchWithHeader.querySelector(".contentSearchSearchWithHeaderSearchText").textContent = this.input.value;
+      let header = this._strings.searchForSomethingWith2;
+      // Translators can use both %S and %1$S.
+      header = header.replace("%1$S", "%S").split("%S");
+      labels[0].textContent = header[0];
+      labels[1].textContent = this.input.value;
+      labels[2].textContent = header[1];
     } else {
-      searchWithHeader.textContent = this._strings.searchWithHeader;
+      labels[0].textContent = this._strings.searchWithHeader;
+      labels[1].textContent = "";
+      labels[2].textContent = "";
     }
   },
 
@@ -790,6 +796,13 @@ ContentSearchUIController.prototype = {
     header.setAttribute("class", "contentSearchHeader");
     headerRow.appendChild(header);
     header.id = "contentSearchSearchWithHeader";
+    let start = document.createElement("label");
+    let inputLabel = document.createElement("label");
+    inputLabel.setAttribute("class", "contentSearchSearchWithHeaderSearchText");
+    let end = document.createElement("label");
+    header.appendChild(start);
+    header.appendChild(inputLabel);
+    header.appendChild(end);
     this._oneOffsTable.appendChild(headerRow);
 
     let button = document.createElementNS(HTML_NS, "button");
