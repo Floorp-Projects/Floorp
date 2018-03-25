@@ -151,28 +151,24 @@ DocumentNeedsRestyle(
     }
   }
 
-  if (styleSet->IsServo()) {
-    // For Servo, we need to process the restyle-hint-invalidations first, to
-    // expand LaterSiblings hint, so that we can look whether ancestors need
-    // restyling.
-    ServoRestyleManager* restyleManager =
-      presContext->RestyleManager()->AsServo();
-    restyleManager->ProcessAllPendingAttributeAndStateInvalidations();
+  // For Servo, we need to process the restyle-hint-invalidations first, to
+  // expand LaterSiblings hint, so that we can look whether ancestors need
+  // restyling.
+  ServoRestyleManager* restyleManager =
+    presContext->RestyleManager()->AsServo();
+  restyleManager->ProcessAllPendingAttributeAndStateInvalidations();
 
-    if (!presContext->EffectCompositor()->HasPendingStyleUpdates() &&
-        !aDocument->GetServoRestyleRoot()) {
-      return false;
-    }
-
-    // Then if there is a restyle root, we check if the root is an ancestor of
-    // this content. If it is not, then we don't need to restyle immediately.
-    // Note this is different from Gecko: we only check if any ancestor needs
-    // to restyle _itself_, not descendants, since dirty descendants can be
-    // another subtree.
-    return restyleManager->HasPendingRestyleAncestor(aElement);
+  if (!presContext->EffectCompositor()->HasPendingStyleUpdates() &&
+      !aDocument->GetServoRestyleRoot()) {
+    return false;
   }
 
-    MOZ_CRASH("old style system disabled");
+  // Then if there is a restyle root, we check if the root is an ancestor of
+  // this content. If it is not, then we don't need to restyle immediately.
+  // Note this is different from Gecko: we only check if any ancestor needs
+  // to restyle _itself_, not descendants, since dirty descendants can be
+  // another subtree.
+  return restyleManager->HasPendingRestyleAncestor(aElement);
 }
 
 /**
@@ -425,7 +421,7 @@ nsComputedDOMStyle::Length()
   // properties.
   UpdateCurrentStyleSources(false);
   if (mComputedStyle) {
-    length += Servo_GetCustomPropertiesCount(mComputedStyle->AsServo());
+    length += Servo_GetCustomPropertiesCount(mComputedStyle);
   }
 
   ClearCurrentStyleSources();
@@ -511,16 +507,7 @@ nsComputedDOMStyle::DoGetComputedStyleNoFlush(Element* aElement,
   if (!presShell) {
     inDocWithShell = false;
     presShell = aPresShell;
-    if (!presShell)
-      return nullptr;
-
-    // In some edge cases, the caller document might be using a different style
-    // backend than the callee. This causes problems because the cached parsed
-    // style attributes in the callee document will be a different format than
-    // the caller expects. Supporting this would be a pain, and we're already
-    // in edge-case-squared, so we just return.
-    if (presShell->GetDocument()->GetStyleBackendType() !=
-        aElement->OwnerDoc()->GetStyleBackendType()) {
+    if (!presShell) {
       return nullptr;
     }
   }
@@ -565,21 +552,16 @@ nsComputedDOMStyle::DoGetComputedStyleNoFlush(Element* aElement,
         // The existing style may have animation styles so check if we need to
         // remove them.
         if (aAnimationFlag == eWithoutAnimation) {
-          nsPresContext* presContext = presShell->GetPresContext();
-          MOZ_ASSERT(presContext, "Should have a prescontext if we have a frame");
-          if (presContext && presContext->StyleSet()->IsGecko()) {
-            MOZ_CRASH("old style system disabled");
-          } else {
-            Element* elementOrPseudoElement =
-              EffectCompositor::GetElementToRestyle(aElement, pseudoType);
-            if (!elementOrPseudoElement) {
-              return nullptr;
-            }
-            return presContext->StyleSet()->AsServo()->
-              GetBaseContextForElement(elementOrPseudoElement,
-                                       presContext,
-                                       result->AsServo());
+          nsPresContext* presContext = frame->PresContext();
+          Element* elementOrPseudoElement =
+            EffectCompositor::GetElementToRestyle(aElement, pseudoType);
+          if (!elementOrPseudoElement) {
+            return nullptr;
           }
+          return presContext->StyleSet()->AsServo()->
+            GetBaseContextForElement(elementOrPseudoElement,
+                                     presContext,
+                                     result);
         }
 
         RefPtr<ComputedStyle> ret = result;
@@ -592,8 +574,9 @@ nsComputedDOMStyle::DoGetComputedStyleNoFlush(Element* aElement,
   // for the default style, so resolve the style ourselves.
 
   nsPresContext* presContext = presShell->GetPresContext();
-  if (!presContext)
+  if (!presContext) {
     return nullptr;
+  }
 
   ServoStyleSet* styleSet = presShell->StyleSet()->AsServo();
 
@@ -990,17 +973,12 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
                  "should not have pseudo-element data");
   }
 
-  if (mAnimationFlag == eWithoutAnimation) {
-    MOZ_CRASH("old style system disabled");
-  }
-
   // mExposeVisitedStyle is set to true only by testing APIs that
   // require chrome privilege.
   MOZ_ASSERT(!mExposeVisitedStyle || nsContentUtils::IsCallerChrome(),
              "mExposeVisitedStyle set incorrectly");
   if (mExposeVisitedStyle && mComputedStyle->RelevantLinkVisited()) {
-    ComputedStyle *styleIfVisited = mComputedStyle->GetStyleIfVisited();
-    if (styleIfVisited) {
+    if (ComputedStyle* styleIfVisited = mComputedStyle->GetStyleIfVisited()) {
       mComputedStyle = styleIfVisited;
     }
   }
@@ -1151,7 +1129,7 @@ nsComputedDOMStyle::IndexedGetter(uint32_t   aIndex,
   if (index < count) {
     aFound = true;
     nsString varName;
-    Servo_GetCustomPropertyNameAt(mComputedStyle->AsServo(), index, &varName);
+    Servo_GetCustomPropertyNameAt(mComputedStyle, index, &varName);
     aPropName.AssignLiteral("--");
     aPropName.Append(varName);
   } else {
@@ -7169,8 +7147,7 @@ nsComputedDOMStyle::DoGetCustomProperty(const nsAString& aPropertyName)
   const nsAString& name = Substring(aPropertyName,
                                     CSS_CUSTOM_NAME_PREFIX_LENGTH);
   bool present =
-    Servo_GetCustomPropertyValue(mComputedStyle->AsServo(), &name,
-                                 &variableValue);
+    Servo_GetCustomPropertyValue(mComputedStyle, &name, &variableValue);
   if (!present) {
     return nullptr;
   }
