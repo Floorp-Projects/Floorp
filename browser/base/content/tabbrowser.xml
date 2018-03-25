@@ -2311,24 +2311,12 @@
       <field name="tabModalPromptBox">null</field>
 
       <!-- throws exception for unknown schemes -->
-      <method name="loadURIWithFlags">
+      <method name="loadURI">
         <parameter name="aURI"/>
-        <parameter name="aFlags"/>
-        <parameter name="aReferrerURI"/>
-        <parameter name="aCharset"/>
-        <parameter name="aPostData"/>
+        <parameter name="aParams"/>
         <body>
           <![CDATA[
-            var params = arguments[1];
-            if (typeof(params) == "number") {
-              params = {
-                flags: aFlags,
-                referrerURI: aReferrerURI,
-                charset: aCharset,
-                postData: aPostData,
-              };
-            }
-            _loadURIWithFlags(this, aURI, params);
+            _loadURI(this, aURI, aParams);
           ]]>
         </body>
       </method>
@@ -2341,24 +2329,12 @@
       <field name="tabModalPromptBox">null</field>
 
       <!-- throws exception for unknown schemes -->
-      <method name="loadURIWithFlags">
+      <method name="loadURI">
         <parameter name="aURI"/>
-        <parameter name="aFlags"/>
-        <parameter name="aReferrerURI"/>
-        <parameter name="aCharset"/>
-        <parameter name="aPostData"/>
+        <parameter name="aParams"/>
         <body>
           <![CDATA[
-            var params = arguments[1];
-            if (typeof(params) == "number") {
-              params = {
-                flags: aFlags,
-                referrerURI: aReferrerURI,
-                charset: aCharset,
-                postData: aPostData,
-              };
-            }
-            _loadURIWithFlags(this, aURI, params);
+            _loadURI(this, aURI, aParams);
           ]]>
         </body>
       </method>
