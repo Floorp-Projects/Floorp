@@ -1505,10 +1505,10 @@ Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements)
   // generate a nsGridContainerFrame during layout.
   auto IsDisplayGrid = [](Element* aElement) -> bool
   {
-    RefPtr<ComputedStyle> computedStyle =
+    RefPtr<ComputedStyle> styleContext =
       nsComputedDOMStyle::GetComputedStyle(aElement, nullptr);
-    if (computedStyle) {
-      const nsStyleDisplay* display = computedStyle->StyleDisplay();
+    if (styleContext) {
+      const nsStyleDisplay* display = styleContext->StyleDisplay();
       return (display->mDisplay == StyleDisplay::Grid ||
               display->mDisplay == StyleDisplay::InlineGrid);
     }

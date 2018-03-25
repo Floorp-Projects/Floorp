@@ -175,19 +175,19 @@ SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
                                   SVGContextPaint* aContextPaint,
                                   StrokeOptionFlags aFlags)
 {
-  RefPtr<ComputedStyle> computedStyle;
+  RefPtr<ComputedStyle> styleContext;
   if (aComputedStyle) {
-    computedStyle = aComputedStyle;
+    styleContext = aComputedStyle;
   } else {
-    computedStyle =
+    styleContext =
       nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
   }
 
-  if (!computedStyle) {
+  if (!styleContext) {
     return;
   }
 
-  const nsStyleSVG* styleSVG = computedStyle->StyleSVG();
+  const nsStyleSVG* styleSVG = styleContext->StyleSVG();
 
   bool checkedDashAndStrokeIsDashed = false;
   if (aFlags != eIgnoreStrokeDashing) {
@@ -207,7 +207,7 @@ SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
   }
 
   aStrokeOptions->mLineWidth =
-    GetStrokeWidth(aElement, computedStyle, aContextPaint);
+    GetStrokeWidth(aElement, styleContext, aContextPaint);
 
   aStrokeOptions->mMiterLimit = Float(styleSVG->mStrokeMiterlimit);
 
@@ -248,19 +248,19 @@ SVGContentUtils::GetStrokeWidth(nsSVGElement* aElement,
                                 ComputedStyle* aComputedStyle,
                                 SVGContextPaint* aContextPaint)
 {
-  RefPtr<ComputedStyle> computedStyle;
+  RefPtr<ComputedStyle> styleContext;
   if (aComputedStyle) {
-    computedStyle = aComputedStyle;
+    styleContext = aComputedStyle;
   } else {
-    computedStyle =
+    styleContext =
       nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
   }
 
-  if (!computedStyle) {
+  if (!styleContext) {
     return 0.0f;
   }
 
-  const nsStyleSVG* styleSVG = computedStyle->StyleSVG();
+  const nsStyleSVG* styleSVG = styleContext->StyleSVG();
 
   if (aContextPaint && styleSVG->StrokeWidthFromObject()) {
     return aContextPaint->GetStrokeWidth();
@@ -275,15 +275,15 @@ SVGContentUtils::GetFontSize(Element *aElement)
   if (!aElement)
     return 1.0f;
 
-  RefPtr<ComputedStyle> computedStyle =
+  RefPtr<ComputedStyle> styleContext =
     nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
-  if (!computedStyle) {
+  if (!styleContext) {
     // ReportToConsole
     NS_WARNING("Couldn't get style context for content in GetFontStyle");
     return 1.0f;
   }
 
-  return GetFontSize(computedStyle);
+  return GetFontSize(styleContext);
 }
 
 float
@@ -312,15 +312,15 @@ SVGContentUtils::GetFontXHeight(Element *aElement)
   if (!aElement)
     return 1.0f;
 
-  RefPtr<ComputedStyle> computedStyle =
+  RefPtr<ComputedStyle> styleContext =
     nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
-  if (!computedStyle) {
+  if (!styleContext) {
     // ReportToConsole
     NS_WARNING("Couldn't get style context for content in GetFontStyle");
     return 1.0f;
   }
 
-  return GetFontXHeight(computedStyle);
+  return GetFontXHeight(styleContext);
 }
 
 float

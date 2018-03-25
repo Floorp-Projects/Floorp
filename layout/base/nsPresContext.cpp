@@ -2220,15 +2220,15 @@ nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
     return false;
   }
 
-  ComputedStyle* computedStyle = aFrame->Style();
-  CSSPseudoElementType pseudoType = computedStyle->GetPseudoType();
+  ComputedStyle* styleContext = aFrame->Style();
+  CSSPseudoElementType pseudoType = styleContext->GetPseudoType();
   // Anonymous boxes are more complicated, and we just assume that they
   // cannot have any author-specified rules here.
   if (pseudoType == CSSPseudoElementType::InheritingAnonBox ||
       pseudoType == CSSPseudoElementType::NonInheritingAnonBox) {
     return false;
   }
-  return Servo_HasAuthorSpecifiedRules(computedStyle->AsServo(),
+  return Servo_HasAuthorSpecifiedRules(styleContext->AsServo(),
                                        elem, pseudoType,
                                        aRuleTypeMask,
                                        UseDocumentColors());

@@ -720,10 +720,10 @@ nsXHTMLContentSerializer::IsElementPreformatted(nsIContent* aNode)
   if (!aNode->IsElement()) {
     return false;
   }
-  RefPtr<ComputedStyle> computedStyle =
+  RefPtr<ComputedStyle> styleContext =
     nsComputedDOMStyle::GetComputedStyleNoFlush(aNode->AsElement(), nullptr);
-  if (computedStyle) {
-    const nsStyleText* textStyle = computedStyle->StyleText();
+  if (styleContext) {
+    const nsStyleText* textStyle = styleContext->StyleText();
     return textStyle->WhiteSpaceOrNewlineIsSignificant();
   }
   return false;
