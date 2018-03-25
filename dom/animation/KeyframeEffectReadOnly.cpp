@@ -411,7 +411,6 @@ KeyframeEffectReadOnly::EnsureBaseStyle(
     aBaseComputedStyle =
       aPresContext->StyleSet()->AsServo()->GetBaseContextForElement(
           animatingElement,
-          aPresContext,
           aComputedStyle);
   }
   RefPtr<RawServoAnimationValue> baseValue =

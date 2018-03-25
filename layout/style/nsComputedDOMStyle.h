@@ -86,11 +86,6 @@ public:
     eAll // Includes all stylesheets
   };
 
-  enum AnimationFlag {
-    eWithAnimation,
-    eWithoutAnimation,
-  };
-
   nsComputedDOMStyle(mozilla::dom::Element* aElement,
                      const nsAString& aPseudoElt,
                      nsIPresShell* aPresShell,
@@ -111,23 +106,14 @@ public:
                           StyleType aStyleType = eAll)
   {
     return DoGetComputedStyleNoFlush(aElement,
-                                    aPseudo,
-                                    aElement->OwnerDoc()->GetShell(),
-                                    aStyleType,
-                                    eWithAnimation);
+                                     aPseudo,
+                                     aElement->OwnerDoc()->GetShell(),
+                                     aStyleType);
   }
 
   static already_AddRefed<mozilla::ComputedStyle>
   GetUnanimatedComputedStyleNoFlush(mozilla::dom::Element* aElement,
-                                    nsAtom* aPseudo,
-                                    StyleType aStyleType = eAll)
-  {
-    return DoGetComputedStyleNoFlush(aElement,
-                                     aPseudo,
-                                     aElement->OwnerDoc()->GetShell(),
-                                     aStyleType,
-                                     eWithoutAnimation);
-  }
+                                    nsAtom* aPseudo);
 
   // Helper for nsDOMWindowUtils::GetVisitedDependentComputedStyle
   void SetExposeVisitedStyle(bool aExpose) {
@@ -186,10 +172,9 @@ private:
 
   static already_AddRefed<mozilla::ComputedStyle>
   DoGetComputedStyleNoFlush(mozilla::dom::Element* aElement,
-                           nsAtom* aPseudo,
-                           nsIPresShell* aPresShell,
-                           StyleType aStyleType,
-                           AnimationFlag aAnimationFlag);
+                            nsAtom* aPseudo,
+                            nsIPresShell* aPresShell,
+                            StyleType aStyleType);
 
 #define STYLE_STRUCT(name_, checkdata_cb_)                              \
   const nsStyle##name_ * Style##name_() {                               \
