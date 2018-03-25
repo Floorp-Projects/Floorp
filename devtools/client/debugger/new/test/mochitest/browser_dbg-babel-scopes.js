@@ -93,6 +93,19 @@ add_task(async function() {
 
   const dbg = await initDebugger("doc-babel.html");
 
+  await breakpointScopes(dbg, "eval-source-maps", { line: 14, column: 4 }, [
+    "Block",
+    ["three", "5"],
+    ["two", "4"],
+    "Block",
+    ["three", "3"],
+    ["two", "2"],
+    "root",
+    ["one", "1"],
+    "Module",
+    "root()"
+  ]);
+
   await breakpointScopes(dbg, "for-of", { line: 5, column: 4 }, [
     "For",
     ["x", "1"],

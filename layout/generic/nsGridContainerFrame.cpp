@@ -4020,11 +4020,8 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
   nsTArray<ItemBaselineData> lastBaselineItems;
   WritingMode wm = aState.mWM;
   ComputedStyle* containerSC = aState.mFrame->Style();
-  CSSOrderAwareFrameIterator& iter = aState.mIter;
-  iter.Reset();
-  for (; !iter.AtEnd(); iter.Next()) {
-    nsIFrame* child = *iter;
-    GridItemInfo& gridItem = aGridItems[iter.ItemIndex()];
+  for (GridItemInfo& gridItem : aGridItems) {
+    nsIFrame* child = gridItem.mFrame;
     uint32_t baselineTrack = kAutoLine;
     auto state = ItemState(0);
     auto childWM = child->GetWritingMode();
@@ -4317,7 +4314,6 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
   };
   AutoTArray<PerSpanData, 16> perSpanData;
   nsTArray<Step2ItemData> step2Items;
-  CSSOrderAwareFrameIterator& iter = aState.mIter;
   gfxContext* rc = &aState.mRenderingContext;
   WritingMode wm = aState.mWM;
   uint32_t maxSpan = 0; // max span of the step2Items items
@@ -4330,9 +4326,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
     aConstraint == SizingConstraint::eMaxContent ?
     (TrackSize::eMaxContentMinSizing | TrackSize::eAutoMinSizing) :
     TrackSize::eMaxContentMinSizing;
-  iter.Reset();
-  for (; !iter.AtEnd(); iter.Next()) {
-    auto& gridItem = aGridItems[iter.ItemIndex()];
+  for (auto& gridItem : aGridItems) {
     MOZ_ASSERT(!(gridItem.mState[mAxis] &
                  (ItemState::eApplyAutoMinSize | ItemState::eIsFlexing |
                   ItemState::eClampMarginBoxMinSize)),
@@ -4355,9 +4349,10 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         gridItem.mState[mAxis] |= ItemState::eApplyAutoMinSize;
       }
 
-      if ((state & (TrackSize::eIntrinsicMinSizing |
-                    TrackSize::eIntrinsicMaxSizing)) &&
-          !(state & TrackSize::eFlexMaxSizing)) {
+      if (state & TrackSize::eFlexMaxSizing) {
+        gridItem.mState[mAxis] |= ItemState::eIsFlexing;
+      } else if (state & (TrackSize::eIntrinsicMinSizing |
+                          TrackSize::eIntrinsicMaxSizing)) {
         // Collect data for Step 2.
         maxSpan = std::max(maxSpan, span);
         if (span >= perSpanData.Length()) {
@@ -4367,10 +4362,8 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         perSpanData[span].mStateBits |= state;
         CachedIntrinsicSizes cache;
         // Calculate data for "Automatic Minimum Size" clamping, if needed.
-        bool needed = ((state & TrackSize::eIntrinsicMinSizing) ||
-                       aConstraint == SizingConstraint::eNoConstraint) &&
-                      (gridItem.mState[mAxis] & ItemState::eApplyAutoMinSize);
-        if (needed && TrackSize::IsDefiniteMaxSizing(state)) {
+        if (TrackSize::IsDefiniteMaxSizing(state) &&
+            (gridItem.mState[mAxis] & ItemState::eApplyAutoMinSize)) {
           nscoord minSizeClamp = 0;
           for (auto i : lineRange.Range()) {
             auto maxCoord = aFunctions.MaxSizingFor(i);
@@ -4399,15 +4392,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         }
         step2Items.AppendElement(
           Step2ItemData({span, state, lineRange, minSize,
-                         minContent, maxContent, *iter}));
-      } else {
-        if (state & TrackSize::eFlexMaxSizing) {
-          gridItem.mState[mAxis] |= ItemState::eIsFlexing;
-        } else if (aConstraint == SizingConstraint::eNoConstraint &&
-                   TrackSize::IsDefiniteMaxSizing(state) &&
-                   (gridItem.mState[mAxis] & ItemState::eApplyAutoMinSize)) {
-          gridItem.mState[mAxis] |= ItemState::eClampMarginBoxMinSize;
-        }
+                         minContent, maxContent, gridItem.mFrame}));
       }
     }
     MOZ_ASSERT(!(gridItem.mState[mAxis] & ItemState::eClampMarginBoxMinSize) ||
@@ -4430,9 +4415,11 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
       return false;
     };
 
-    // Sort the collected items on span length, shortest first.
-    std::stable_sort(step2Items.begin(), step2Items.end(),
-                     Step2ItemData::IsSpanLessThan);
+    // Sort the collected items on span length, shortest first.  There's no need
+    // for a stable sort here since the sizing isn't order dependent within
+    // a group of items with the same span length.
+    std::sort(step2Items.begin(), step2Items.end(),
+              Step2ItemData::IsSpanLessThan);
 
     nsTArray<uint32_t> tracks(maxSpan);
     nsTArray<TrackSize> plan(mSizes.Length());
@@ -4590,12 +4577,9 @@ nsGridContainerFrame::Tracks::FindUsedFlexFraction(
   }
   WritingMode wm = aState.mWM;
   gfxContext* rc = &aState.mRenderingContext;
-  CSSOrderAwareFrameIterator& iter = aState.mIter;
-  iter.Reset();
   // ... the result of 'finding the size of an fr' for each item that spans
   // a flex track with its max-content contribution as 'space to fill'
-  for (; !iter.AtEnd(); iter.Next()) {
-    const GridItemInfo& item = aGridItems[iter.ItemIndex()];
+  for (const GridItemInfo& item : aGridItems) {
     if (item.mState[mAxis] & ItemState::eIsFlexing) {
       // XXX optimize: bug 1194446
       auto pb = Some(aState.PercentageBasisFor(mAxis, item));

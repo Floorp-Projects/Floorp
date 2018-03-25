@@ -1355,7 +1355,8 @@ html[dir="rtl"] .tree-node img.arrow {
   display: block;
 }
 
-.sources-list-custom-root .sources-list {
+.sources-list-custom-root .sources-list,
+.sources-list-custom-root .no-sources-message {
   position: absolute;
   top: 26px;
   right: 0;
@@ -1366,6 +1367,96 @@ html[dir="rtl"] .tree-node img.arrow {
 /* Removes start margin when a custom root is used */
 .sources-list-custom-root .tree > .tree-node[data-expandable="false"][aria-level="0"] {
   padding-inline-start: 4px;
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+menu {
+  display: inline;
+  padding: 0;
+}
+
+menu > menuitem::after {
+  content: "\25BA";
+  float: right;
+  padding-left: 5px;
+}
+
+menu > menupopup {
+  display: none;
+}
+
+menu > menuitem:hover + menupopup,
+menu > menupopup:hover {
+  display: block;
+}
+
+menupopup {
+  position: fixed;
+  z-index: 10000;
+  background: white;
+  border: 1px solid #cccccc;
+  padding: 5px 0;
+  background: #f2f2f2;
+  border-radius: 5px;
+  color: #585858;
+  box-shadow: 0 0 4px 0 rgba(190, 190, 190, 0.8);
+  min-width: 130px;
+}
+
+menuitem {
+  display: block;
+  padding: 0 20px;
+  line-height: 20px;
+  font-weight: 500;
+  font-size: 13px;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+menuitem:hover {
+  background: #3780fb;
+  color: white;
+  cursor: pointer;
+}
+
+menuitem[disabled=true] {
+  color: #cccccc;
+}
+
+menuitem[disabled=true]:hover {
+  background-color: transparent;
+  cursor: default;
+}
+
+menuitem[type=checkbox]::before {
+  content: "";
+  width: 10px;
+  display: inline-block;
+}
+
+menuitem[type=checkbox][checked=true]::before {
+  content: "\2713";
+  left: -8px;
+  position: relative;
+}
+
+menuseparator {
+  border-bottom: 1px solid #cacdd3;
+  width: 100%;
+  height: 5px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+#contextmenu-mask.show {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1497,96 +1588,6 @@ html[dir="rtl"] .tree-node img.arrow {
 
 .function-signature .comma {
   color: var(--object-color);
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-menu {
-  display: inline;
-  padding: 0;
-}
-
-menu > menuitem::after {
-  content: "\25BA";
-  float: right;
-  padding-left: 5px;
-}
-
-menu > menupopup {
-  display: none;
-}
-
-menu > menuitem:hover + menupopup,
-menu > menupopup:hover {
-  display: block;
-}
-
-menupopup {
-  position: fixed;
-  z-index: 10000;
-  background: white;
-  border: 1px solid #cccccc;
-  padding: 5px 0;
-  background: #f2f2f2;
-  border-radius: 5px;
-  color: #585858;
-  box-shadow: 0 0 4px 0 rgba(190, 190, 190, 0.8);
-  min-width: 130px;
-}
-
-menuitem {
-  display: block;
-  padding: 0 20px;
-  line-height: 20px;
-  font-weight: 500;
-  font-size: 13px;
-  -moz-user-select: none;
-  user-select: none;
-}
-
-menuitem:hover {
-  background: #3780fb;
-  color: white;
-  cursor: pointer;
-}
-
-menuitem[disabled=true] {
-  color: #cccccc;
-}
-
-menuitem[disabled=true]:hover {
-  background-color: transparent;
-  cursor: default;
-}
-
-menuitem[type=checkbox]::before {
-  content: "";
-  width: 10px;
-  display: inline-block;
-}
-
-menuitem[type=checkbox][checked=true]::before {
-  content: "\2713";
-  left: -8px;
-  position: relative;
-}
-
-menuseparator {
-  border-bottom: 1px solid #cacdd3;
-  width: 100%;
-  height: 5px;
-  display: block;
-  margin-bottom: 5px;
-}
-
-#contextmenu-mask.show {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 999;
 }
 .command-bar-button {
   appearance: none;
@@ -3137,6 +3138,7 @@ html .breakpoints-list .breakpoint.paused {
   background-color: var(--theme-tab-toolbar-background);
   width: 100%;
   font-size: inherit;
+  color: inherit;
 }
 
 .show-more:hover {
@@ -4037,6 +4039,10 @@ html .welcomebox .toggle-button-end.collapsed {
 .result-item .title .highlight {
   font-weight: bold;
   background-color: transparent;
+}
+
+.selected .highlight {
+  color: white;
 }
 
 .result-item .subtitle .highlight {
