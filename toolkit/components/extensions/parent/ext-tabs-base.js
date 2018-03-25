@@ -1414,10 +1414,12 @@ class WindowTrackerBase extends EventEmitter {
       return this.getCurrentWindow(context);
     }
 
-    for (let window of this.browserWindows(true)) {
-      if (this.getId(window) === id) {
-        return window;
-      }
+    let window = Services.wm.getOuterWindowWithId(id);
+    if (window && !window.closed && (window.document.readyState !== "complete"
+        || this.isBrowserWindow(window))) {
+      // Tolerate incomplete windows because isBrowserWindow is only reliable
+      // once the window is fully loaded.
+      return window;
     }
 
     if (strict) {
