@@ -28,13 +28,14 @@ struct DOMPointInit;
 class DOMMatrixReadOnly : public nsWrapperCache
 {
 public:
-  DOMMatrixReadOnly(nsISupports* aParent, bool aIsServo)
-    : mParent(aParent), mMatrix2D(new gfx::Matrix()), mIsServo(aIsServo)
+  explicit DOMMatrixReadOnly(nsISupports* aParent)
+    : mParent(aParent)
+    , mMatrix2D(new gfx::Matrix())
   {
   }
 
   DOMMatrixReadOnly(nsISupports* aParent, const DOMMatrixReadOnly& other)
-    : mParent(aParent), mIsServo(other.mIsServo)
+    : mParent(aParent)
   {
     if (other.mMatrix2D) {
       mMatrix2D = new gfx::Matrix(*other.mMatrix2D);
@@ -43,10 +44,8 @@ public:
     }
   }
 
-  DOMMatrixReadOnly(nsISupports* aParent,
-                    const gfx::Matrix4x4& aMatrix,
-                    bool aIsServo)
-    : mParent(aParent), mIsServo(aIsServo)
+  DOMMatrixReadOnly(nsISupports* aParent, const gfx::Matrix4x4& aMatrix)
+    : mParent(aParent)
   {
     mMatrix3D = new gfx::Matrix4x4(aMatrix);
   }
@@ -143,7 +142,6 @@ protected:
   nsCOMPtr<nsISupports>     mParent;
   nsAutoPtr<gfx::Matrix>    mMatrix2D;
   nsAutoPtr<gfx::Matrix4x4> mMatrix3D;
-  bool mIsServo;
 
   virtual ~DOMMatrixReadOnly() {}
 
@@ -156,16 +154,16 @@ private:
 class DOMMatrix : public DOMMatrixReadOnly
 {
 public:
-  DOMMatrix(nsISupports* aParent, bool aIsServo)
-    : DOMMatrixReadOnly(aParent, aIsServo)
+  explicit DOMMatrix(nsISupports* aParent)
+    : DOMMatrixReadOnly(aParent)
   {}
 
   DOMMatrix(nsISupports* aParent, const DOMMatrixReadOnly& other)
     : DOMMatrixReadOnly(aParent, other)
   {}
 
-  DOMMatrix(nsISupports* aParent, const gfx::Matrix4x4& aMatrix, bool aIsServo)
-    : DOMMatrixReadOnly(aParent, aMatrix, aIsServo)
+  DOMMatrix(nsISupports* aParent, const gfx::Matrix4x4& aMatrix)
+    : DOMMatrixReadOnly(aParent, aMatrix)
   {}
 
   static already_AddRefed<DOMMatrix>

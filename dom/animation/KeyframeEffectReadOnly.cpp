@@ -1009,7 +1009,6 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
     return;
   }
 
-  bool isServo = mDocument->IsStyledByServo();
   bool isCSSAnimation = mAnimation && mAnimation->AsCSSAnimation();
 
   // For Servo, when we have CSS Animation @keyframes with variables, we convert
@@ -1024,7 +1023,7 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
   // enough context to do so). For that we need to grab the style context so we
   // know what custom property values to provide.
   RefPtr<ComputedStyle> computedStyle;
-  if (isServo && isCSSAnimation) {
+  if (isCSSAnimation) {
     // The following will flush style but that's ok since if you update
     // a variable's computed value, you expect to see that updated value in the
     // result of getKeyframes().
@@ -1065,7 +1064,7 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
     // keyframe are stored in a servo's declaration block. Find the declaration
     // block to resolve CSS variables in the keyframe.
     // This workaround will be solved by bug 1391537.
-    if (isServo && isCSSAnimation) {
+    if (isCSSAnimation) {
       for (const PropertyValuePair& propertyValue : keyframe.mPropertyValues) {
         if (propertyValue.mProperty ==
               nsCSSPropertyID::eCSSPropertyExtra_variable) {
@@ -1078,31 +1077,27 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
     JS::Rooted<JSObject*> keyframeObject(aCx, &keyframeJSValue.toObject());
     for (const PropertyValuePair& propertyValue : keyframe.mPropertyValues) {
       nsAutoString stringValue;
-      if (isServo) {
-        // Don't serialize the custom properties for this keyframe.
-        if (propertyValue.mProperty ==
-              nsCSSPropertyID::eCSSPropertyExtra_variable) {
-          continue;
-        }
-        if (propertyValue.mServoDeclarationBlock) {
-          Servo_DeclarationBlock_SerializeOneValue(
-            propertyValue.mServoDeclarationBlock,
-            propertyValue.mProperty,
-            &stringValue,
-            computedStyle,
-            customProperties);
-        } else {
-          RawServoAnimationValue* value =
-            mBaseStyleValuesForServo.GetWeak(propertyValue.mProperty);
-
-          if (value) {
-            Servo_AnimationValue_Serialize(value,
-                                           propertyValue.mProperty,
-                                           &stringValue);
-          }
-        }
+      // Don't serialize the custom properties for this keyframe.
+      if (propertyValue.mProperty ==
+            nsCSSPropertyID::eCSSPropertyExtra_variable) {
+        continue;
+      }
+      if (propertyValue.mServoDeclarationBlock) {
+        Servo_DeclarationBlock_SerializeOneValue(
+          propertyValue.mServoDeclarationBlock,
+          propertyValue.mProperty,
+          &stringValue,
+          computedStyle,
+          customProperties);
       } else {
-        MOZ_CRASH("old style system disabled");
+        RawServoAnimationValue* value =
+          mBaseStyleValuesForServo.GetWeak(propertyValue.mProperty);
+
+        if (value) {
+          Servo_AnimationValue_Serialize(value,
+                                         propertyValue.mProperty,
+                                         &stringValue);
+        }
       }
 
       const char* name = nsCSSProps::PropertyIDLName(propertyValue.mProperty);
