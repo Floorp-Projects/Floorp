@@ -125,6 +125,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Alignment.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
@@ -4685,11 +4686,11 @@ typedef HMODULE replace_malloc_handle_t;
 static replace_malloc_handle_t
 replace_malloc_handle()
 {
-  char replace_malloc_lib[1024];
-  if (GetEnvironmentVariableA("MOZ_REPLACE_MALLOC_LIB",
+  wchar_t replace_malloc_lib[1024];
+  if (GetEnvironmentVariableW(L"MOZ_REPLACE_MALLOC_LIB",
                               replace_malloc_lib,
-                              sizeof(replace_malloc_lib)) > 0) {
-    return LoadLibraryA(replace_malloc_lib);
+                              ArrayLength(replace_malloc_lib)) > 0) {
+    return LoadLibraryW(replace_malloc_lib);
   }
   return nullptr;
 }
