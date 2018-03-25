@@ -447,6 +447,56 @@ function isNightlyChannel() {
   return channel != "aurora" && channel != "beta" && channel != "release" && channel != "esr";
 }
 
+
+/**
+ * Returns a map of Addon objects for installed add-ons with the given
+ * IDs. The returned map contains a key for the ID of each add-on that
+ * is found. IDs for add-ons which do not exist are not present in the
+ * map.
+ *
+ * @param {sequence<string>} ids
+ *        The list of add-on IDs to get.
+ * @returns {Promise<string, Addon>}
+ *        Map of add-ons that were found.
+ */
+async function getAddons(ids) {
+  let addons = new Map();
+  for (let addon of await AddonManager.getAddonsByIDs(ids)) {
+    if (addon) {
+      addons.set(addon.id, addon);
+    }
+  }
+  return addons;
+}
+
+/**
+ * Checks that the given add-on has the given expected properties.
+ *
+ * @param {string} id
+ *        The id of the add-on.
+ * @param {Addon?} addon
+ *        The add-on object, or null if the add-on does not exist.
+ * @param {object?} expected
+ *        An object containing the expected values for properties of the
+ *        add-on, or null if the add-on is expected not to exist.
+ */
+function checkAddon(id, addon, expected) {
+  info(`Checking state of addon ${id}`);
+
+  if (expected === null) {
+    ok(!addon, `Addon ${id} should not exist`);
+  } else {
+    ok(addon, `Addon ${id} should exist`);
+    for (let [key, value] of Object.entries(expected)) {
+      if (value && typeof value === "object") {
+        deepEqual(addon[key], value, `Expected value of addon.${key}`);
+      } else {
+        equal(addon[key], value, `Expected value of addon.${key}`);
+      }
+    }
+  }
+}
+
 /**
  * Tests that an add-on does appear in the crash report annotations, if
  * crash reporting is enabled. The test will fail if the add-on is not in the
