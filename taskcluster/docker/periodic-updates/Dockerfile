@@ -4,28 +4,21 @@ MAINTAINER Simon Fraser <sfraser@mozilla.com>
 # Required software
 ENV DEBIAN_FRONTEND noninteractive
 
-# Chain apt-get commands with apt-get clean in a single docker RUN
-# to make sure that files are removed within a single docker layer
+# %include python/mozbuild/mozbuild/action/tooltool.py
+ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /setup/tooltool.py
 
-RUN apt-get update -q && \
-    apt-get install -y --no-install-recommends \
-    arcanist=0~git20170812-1 \
-    bzip2=1.0.6-8.1 \
-    ca-certificates=20170717 \
-    curl=7.58.0-2ubuntu2 \
-    jq=1.5+dfsg-2 \
-    libdbus-glib-1-2=0.110-2 \
-    libgtk-3-0=3.22.28-1ubuntu3 \
-    libxml2-utils=2.9.4+dfsg1-6.1ubuntu1 \
-    libxt6=1:1.1.5-1 \
-    mercurial=4.3.1-2 \
-    python3=3.6.4-1 \
-    shellcheck=0.4.6-1 \
-    unzip=6.0-21ubuntu1 \
-    wget=1.19.4-1ubuntu2 \
-    && apt-get clean
+# %include testing/mozharness/external_tools/robustcheckout.py
+ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
 
-RUN useradd -d /home/worker -s /bin/bash -m worker
+# %include taskcluster/docker/recipes/hgrc
+COPY topsrcdir/taskcluster/docker/recipes/hgrc /etc/mercurial/hgrc.d/mozilla.rc
+
+# %include taskcluster/docker/recipes/install-mercurial.sh
+ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
+
+ADD setup.sh /setup/setup.sh
+
+RUN cd /setup && ./setup.sh
 
 COPY runme.sh /
 COPY scripts/* /home/worker/scripts/
