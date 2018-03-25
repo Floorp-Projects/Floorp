@@ -550,15 +550,15 @@ nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
     return;
   }
 
-  RefPtr<ComputedStyle> computedStyle =
+  RefPtr<ComputedStyle> styleContext =
     nsComputedDOMStyle::GetComputedStyle(aTargetElement, nullptr);
-  if (!computedStyle) {
+  if (!styleContext) {
     return;
   }
 
   ServoAnimationValues parsedValues =
     ValueFromStringHelper(aPropID, aTargetElement, presContext,
-                          computedStyle, aString);
+                          styleContext, aString);
   if (aIsContextSensitive) {
     // FIXME: Bug 1358955 - detect context-sensitive values and set this value
     // appropriately.

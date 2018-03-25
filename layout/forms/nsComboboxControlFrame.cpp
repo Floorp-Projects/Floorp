@@ -1386,9 +1386,9 @@ nsComboboxControlFrame::CreateFrameForDisplayNode()
   nsIPresShell *shell = PresShell();
   StyleSetHandle styleSet = shell->StyleSet();
 
-  // create the ComputedStyle for the anonymous block frame and text frame
-  RefPtr<ComputedStyle> computedStyle;
-  computedStyle = styleSet->
+  // create the style contexts for the anonymous block frame and text frame
+  RefPtr<ComputedStyle> styleContext;
+  styleContext = styleSet->
     ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
                                        mComputedStyle);
 
@@ -1397,7 +1397,7 @@ nsComboboxControlFrame::CreateFrameForDisplayNode()
     styleSet->ResolveStyleForText(mDisplayContent, mComputedStyle);
 
   // Start by creating our anonymous block frame
-  mDisplayFrame = new (shell) nsComboboxDisplayFrame(computedStyle, this);
+  mDisplayFrame = new (shell) nsComboboxDisplayFrame(styleContext, this);
   mDisplayFrame->Init(mContent, this, nullptr);
 
   // Create a text frame and put it inside the block frame
