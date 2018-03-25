@@ -469,8 +469,6 @@ nsHttpHandler::Init()
         PrefsChanged(prefBranch, nullptr);
     }
 
-    nsHttpChannelAuthProvider::InitializePrefs();
-
     mMisc.AssignLiteral("rv:" MOZILLA_UAVERSION);
 
     mCompatFirefox.AssignLiteral("Firefox/" MOZILLA_UAVERSION);
