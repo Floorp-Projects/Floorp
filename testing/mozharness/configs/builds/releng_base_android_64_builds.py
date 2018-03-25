@@ -77,6 +77,8 @@ config = {
     'enable_talos_sendchange': False,
     'enable_unittest_sendchange': True,
     'multi_locale': True,
+    'find_links': ['http://pypi.pub.build.mozilla.org/pub'],
+    'pip_index': False,
     #########################################################################
 
 
