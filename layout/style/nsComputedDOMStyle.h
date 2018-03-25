@@ -94,8 +94,7 @@ public:
   nsComputedDOMStyle(mozilla::dom::Element* aElement,
                      const nsAString& aPseudoElt,
                      nsIPresShell* aPresShell,
-                     StyleType aStyleType,
-                     AnimationFlag aFlag = eWithAnimation);
+                     StyleType aStyleType);
 
   virtual nsINode *GetParentObject() override
   {
@@ -801,11 +800,6 @@ private:
    */
   bool mResolvedComputedStyle;
 
-  /**
-   * Whether we include animation rules in the computed style.
-   */
-  AnimationFlag mAnimationFlag;
-
 #ifdef DEBUG
   bool mFlushedPendingReflows;
 #endif
@@ -816,8 +810,6 @@ NS_NewComputedDOMStyle(mozilla::dom::Element* aElement,
                        const nsAString& aPseudoElt,
                        nsIPresShell* aPresShell,
                        nsComputedDOMStyle::StyleType aStyleType =
-                         nsComputedDOMStyle::eAll,
-                       nsComputedDOMStyle::AnimationFlag aFlag =
-                         nsComputedDOMStyle::eWithAnimation);
+                         nsComputedDOMStyle::eAll);
 
 #endif /* nsComputedDOMStyle_h__ */
