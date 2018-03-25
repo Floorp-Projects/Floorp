@@ -4800,6 +4800,7 @@ exports.getPausePoints = getPausePoints;
 exports.getOutOfScopeLocations = getOutOfScopeLocations;
 exports.getPreview = getPreview;
 exports.getSourceMetaData = getSourceMetaData;
+exports.hasSourceMetaData = hasSourceMetaData;
 exports.getInScopeLines = getInScopeLines;
 exports.isLineInScope = isLineInScope;
 
@@ -4961,6 +4962,10 @@ function getPreview(state) {
 const emptySourceMetaData = {};
 function getSourceMetaData(state, sourceId) {
   return state.ast.getIn(["sourceMetaData", sourceId]) || emptySourceMetaData;
+}
+
+function hasSourceMetaData(state, sourceId) {
+  return state.ast.hasIn(["sourceMetaData", sourceId]);
 }
 
 function getInScopeLines(state) {
@@ -6112,7 +6117,7 @@ function toggleBreakpoint(line, column) {
     const state = getState();
     const selectedSource = (0, _selectors.getSelectedSource)(state);
     const bp = (0, _selectors.getBreakpointAtLocation)(state, { line, column });
-    const isEmptyLine = (0, _ast.isEmptyLineInSource)(state, line, selectedSource.toJS());
+    const isEmptyLine = (0, _ast.isEmptyLineInSource)(state, line, selectedSource);
 
     if (!bp && isEmptyLine || bp && bp.loading) {
       return;
@@ -6403,13 +6408,8 @@ var _promise = __webpack_require__(1653);
 
 function setSourceMetaData(sourceId) {
   return async ({ dispatch, getState }) => {
-    const sourceRecord = (0, _selectors.getSource)(getState(), sourceId);
-    if (!sourceRecord) {
-      return;
-    }
-
-    const source = sourceRecord.toJS();
-    if (!source.text || source.isWasm) {
+    const source = (0, _selectors.getSource)(getState(), sourceId);
+    if (!source || !source.text || source.isWasm) {
       return;
     }
 
@@ -6426,19 +6426,14 @@ function setSourceMetaData(sourceId) {
 
 function setSymbols(sourceId) {
   return async ({ dispatch, getState }) => {
-    const sourceRecord = (0, _selectors.getSource)(getState(), sourceId);
-    if (!sourceRecord) {
-      return;
-    }
-
-    const source = sourceRecord.toJS();
-    if (!source.text || source.isWasm || (0, _selectors.hasSymbols)(getState(), source)) {
+    const source = (0, _selectors.getSource)(getState(), sourceId);
+    if (!source || !source.text || source.isWasm || (0, _selectors.hasSymbols)(getState(), source)) {
       return;
     }
 
     await dispatch({
       type: "SET_SYMBOLS",
-      source,
+      source: source.toJS(),
       [_promise.PROMISE]: (0, _parser.getSymbols)(source.id)
     });
 
@@ -6471,21 +6466,18 @@ function setOutOfScopeLocations() {
 }
 
 function setPausePoints(sourceId) {
-  return async ({ dispatch, getState }) => {
-    const sourceRecord = (0, _selectors.getSource)(getState(), sourceId);
-    if (!sourceRecord) {
-      return;
-    }
-
-    const source = sourceRecord.toJS();
-    if (!source.text || source.isWasm) {
+  return async ({ dispatch, getState, client }) => {
+    const source = (0, _selectors.getSource)(getState(), sourceId);
+    if (!source || !source.text || source.isWasm) {
       return;
     }
 
     const pausePoints = await (0, _parser.getPausePoints)(source.id);
+    await client.setPausePoints(source.id, pausePoints);
+
     dispatch({
       type: "SET_PAUSE_POINTS",
-      source,
+      source: source.toJS(),
       pausePoints
     });
   };
@@ -8866,64 +8858,6 @@ function createBreakpointLocation(location, actualLocation) {
     sourceUrl: actualLocation.source.url,
     line: actualLocation.line,
     column: actualLocation.column
-  };
-}
-
-/***/ }),
-
-/***/ 1429:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.fromServerLocation = fromServerLocation;
-exports.toServerLocation = toServerLocation;
-exports.createFrame = createFrame;
-exports.createLoadedObject = createLoadedObject;
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function fromServerLocation(serverLocation) {
-  if (serverLocation) {
-    return {
-      sourceId: serverLocation.scriptId,
-      line: serverLocation.lineNumber + 1,
-      column: serverLocation.columnNumber,
-      sourceUrl: ""
-    };
-  }
-}
-
-function toServerLocation(location) {
-  return {
-    scriptId: location.sourceId,
-    lineNumber: location.line - 1
-  };
-}
-
-function createFrame(frame) {
-  return {
-    id: frame.callFrameId,
-    displayName: frame.functionName,
-    scopeChain: frame.scopeChain,
-    generatedLocation: frame.location,
-    location: fromServerLocation(frame.location)
-  };
-}
-
-function createLoadedObject(serverObject, parentId) {
-  const { value, name } = serverObject;
-
-  return {
-    objectId: value.objectId,
-    parentId,
-    name,
-    value
   };
 }
 
@@ -12193,10 +12127,6 @@ var _firefox = __webpack_require__(1500);
 
 var firefox = _interopRequireWildcard(_firefox);
 
-var _chrome = __webpack_require__(1507);
-
-var chrome = _interopRequireWildcard(_chrome);
-
 var _prefs = __webpack_require__(226);
 
 var _dbg = __webpack_require__(2246);
@@ -12205,18 +12135,15 @@ var _bootstrap = __webpack_require__(1430);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 function loadFromPrefs(actions) {
   const { pauseOnExceptions, ignoreCaughtExceptions } = _prefs.prefs;
   if (pauseOnExceptions || ignoreCaughtExceptions) {
     return actions.pauseOnExceptions(pauseOnExceptions, ignoreCaughtExceptions);
   }
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function getClient(connection) {
-  const { tab: { clientType } } = connection;
-  return clientType == "firefox" ? firefox : chrome;
 }
 
 async function onConnect(connection, { services, toolboxActions }) {
@@ -12225,22 +12152,22 @@ async function onConnect(connection, { services, toolboxActions }) {
     return;
   }
 
-  const client = getClient(connection);
-  const commands = client.clientCommands;
+  const commands = firefox.clientCommands;
   const { store, actions, selectors } = (0, _bootstrap.bootstrapStore)(commands, {
     services,
     toolboxActions
   });
 
   (0, _bootstrap.bootstrapWorkers)();
-  await client.onConnect(connection, actions);
+  await firefox.onConnect(connection, actions);
   await loadFromPrefs(actions);
 
   (0, _dbg.setupHelper)({
     store,
     actions,
     selectors,
-    client: client.clientCommands
+    connection,
+    client: firefox.clientCommands
   });
 
   (0, _bootstrap.bootstrapApp)(store);
@@ -12351,11 +12278,10 @@ var _breakpoint = __webpack_require__(1364);
 
 var _create = __webpack_require__(1428);
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+let bpClients; /* This Source Code Form is subject to the terms of the Mozilla Public
+                * License, v. 2.0. If a copy of the MPL was not distributed with this
+                * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-let bpClients;
 let threadClient;
 let tabTarget;
 let debuggerClient;
@@ -12369,6 +12295,10 @@ function setupCommands(dependencies) {
   bpClients = {};
 
   return { bpClients };
+}
+
+function sendPacket(packet, callback) {
+  debuggerClient.request(packet).then(callback);
 }
 
 function resume() {
@@ -12577,6 +12507,10 @@ function disablePrettyPrint(sourceId) {
   return sourceClient.disablePrettyPrint();
 }
 
+async function setPausePoints(sourceId, pausePoints) {
+  return sendPacket({ to: sourceId, type: "setPausePoints", pausePoints });
+}
+
 function interrupt() {
   return threadClient.interrupt();
 }
@@ -12636,7 +12570,9 @@ const clientCommands = {
   prettyPrint,
   disablePrettyPrint,
   fetchSources,
-  fetchWorkers
+  fetchWorkers,
+  sendPacket,
+  setPausePoints
 };
 
 exports.setupCommands = setupCommands;
@@ -12843,9 +12779,15 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.isSelectedFrameVisible = isSelectedFrameVisible;
 
+var _devtoolsSourceMap = __webpack_require__(1360);
+
 var _pause = __webpack_require__(1394);
 
 var _sources = __webpack_require__(1369);
+
+function visibleSourceId(location) {
+  return (0, _devtoolsSourceMap.isOriginalId)(location.sourceId) ? (0, _devtoolsSourceMap.originalToGeneratedId)(location.sourceId) : location.sourceId;
+}
 
 /*
  * Checks to if the selected frame's source is currently
@@ -12859,7 +12801,11 @@ function isSelectedFrameVisible(state) {
   const selectedLocation = (0, _sources.getSelectedLocation)(state);
   const selectedFrame = (0, _pause.getSelectedFrame)(state);
 
-  return selectedFrame && selectedLocation && selectedFrame.location.sourceId == selectedLocation.sourceId;
+  if (!selectedFrame || !selectedLocation) {
+    return false;
+  }
+
+  return visibleSourceId(selectedLocation) === visibleSourceId(selectedFrame.location);
 }
 
 /***/ }),
@@ -12964,317 +12910,6 @@ const clientEvents = {
 };
 
 exports.setupEvents = setupEvents;
-exports.clientEvents = clientEvents;
-
-/***/ }),
-
-/***/ 1507:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.clientEvents = exports.clientCommands = undefined;
-exports.onConnect = onConnect;
-
-var _commands = __webpack_require__(1508);
-
-var _events = __webpack_require__(1509);
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-async function onConnect(connection, actions) {
-  const { tabConnection, connTarget: { type } } = connection;
-  const { Debugger, Runtime, Page } = tabConnection;
-
-  Debugger.enable();
-  Debugger.setPauseOnExceptions({ state: "none" });
-  Debugger.setAsyncCallStackDepth({ maxDepth: 0 });
-
-  if (type == "chrome") {
-    Page.frameNavigated(_events.pageEvents.frameNavigated);
-    Page.frameStartedLoading(_events.pageEvents.frameStartedLoading);
-    Page.frameStoppedLoading(_events.pageEvents.frameStoppedLoading);
-  }
-
-  Debugger.scriptParsed(_events.clientEvents.scriptParsed);
-  Debugger.scriptFailedToParse(_events.clientEvents.scriptFailedToParse);
-  Debugger.paused(_events.clientEvents.paused);
-  Debugger.resumed(_events.clientEvents.resumed);
-
-  (0, _commands.setupCommands)({ Debugger, Runtime, Page });
-  (0, _events.setupEvents)({ actions, Page, type, Runtime });
-  return {};
-}
-
-exports.clientCommands = _commands.clientCommands;
-exports.clientEvents = _events.clientEvents;
-
-/***/ }),
-
-/***/ 1508:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.clientCommands = exports.setupCommands = undefined;
-
-var _create = __webpack_require__(1429);
-
-let debuggerAgent; /* This Source Code Form is subject to the terms of the Mozilla Public
-                    * License, v. 2.0. If a copy of the MPL was not distributed with this
-                    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-let runtimeAgent;
-let pageAgent;
-
-function setupCommands({ Debugger, Runtime, Page }) {
-  debuggerAgent = Debugger;
-  runtimeAgent = Runtime;
-  pageAgent = Page;
-}
-
-function resume() {
-  return debuggerAgent.resume();
-}
-
-function stepIn() {
-  return debuggerAgent.stepInto();
-}
-
-function stepOver() {
-  return debuggerAgent.stepOver();
-}
-
-function stepOut() {
-  return debuggerAgent.stepOut();
-}
-
-function pauseOnExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions) {
-  if (!shouldPauseOnExceptions) {
-    return debuggerAgent.setPauseOnExceptions({ state: "none" });
-  }
-  const state = shouldIgnoreCaughtExceptions ? "uncaught" : "all";
-  return debuggerAgent.setPauseOnExceptions({ state });
-}
-
-function breakOnNext() {
-  return debuggerAgent.pause();
-}
-
-function sourceContents(sourceId) {
-  return debuggerAgent.getScriptSource({ scriptId: sourceId }).then(({ scriptSource }) => ({
-    source: scriptSource,
-    contentType: null
-  }));
-}
-
-async function setBreakpoint(location, condition) {
-  const {
-    breakpointId,
-    serverLocation
-  } = await debuggerAgent.setBreakpoint({
-    location: (0, _create.toServerLocation)(location),
-    columnNumber: location.column
-  });
-
-  const actualLocation = (0, _create.fromServerLocation)(serverLocation) || location;
-
-  return {
-    id: breakpointId,
-    actualLocation: actualLocation
-  };
-}
-
-function removeBreakpoint(breakpointId) {
-  return debuggerAgent.removeBreakpoint({ breakpointId });
-}
-
-async function getProperties(object) {
-  const { result } = await runtimeAgent.getProperties({
-    objectId: object.objectId
-  });
-
-  const loadedObjects = result.map(_create.createLoadedObject);
-
-  return { loadedObjects };
-}
-
-function evaluate(script) {
-  return runtimeAgent.evaluate({ expression: script });
-}
-
-function debuggeeCommand(script) {
-  evaluate(script);
-  return Promise.resolve();
-}
-
-function navigate(url) {
-  return pageAgent.navigate({ url });
-}
-
-const clientCommands = {
-  resume,
-  stepIn,
-  stepOut,
-  stepOver,
-  pauseOnExceptions,
-  breakOnNext,
-  sourceContents,
-  setBreakpoint,
-  removeBreakpoint,
-  evaluate,
-  debuggeeCommand,
-  navigate,
-  getProperties
-};
-
-exports.setupCommands = setupCommands;
-exports.clientCommands = clientCommands;
-
-/***/ }),
-
-/***/ 1509:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.clientEvents = exports.pageEvents = exports.setupEvents = undefined;
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-var _create = __webpack_require__(1429);
-
-let actions;
-let pageAgent;
-let clientType;
-let runtimeAgent;
-
-function setupEvents(dependencies) {
-  actions = dependencies.actions;
-  pageAgent = dependencies.Page;
-  clientType = dependencies.clientType;
-  runtimeAgent = dependencies.Runtime;
-}
-
-// Debugger Events
-function scriptParsed({
-  scriptId,
-  url,
-  startLine,
-  startColumn,
-  endLine,
-  endColumn,
-  executionContextId,
-  hash,
-  isContentScript,
-  isInternalScript,
-  isLiveEdit,
-  sourceMapURL,
-  hasSourceURL,
-  deprecatedCommentWasUsed
-}) {
-  if (isContentScript) {
-    return;
-  }
-
-  if (clientType == "node") {
-    sourceMapURL = undefined;
-  }
-
-  actions.newSource({
-    id: scriptId,
-    url,
-    sourceMapURL,
-    isPrettyPrinted: false
-  });
-}
-
-function scriptFailedToParse() {}
-
-async function paused({
-  callFrames,
-  reason,
-  data,
-  hitBreakpoints,
-  asyncStackTrace
-}) {
-  const frames = callFrames.map(_create.createFrame);
-  const frame = frames[0];
-  const why = _extends({ type: reason }, data);
-
-  const objectId = frame.scopeChain[0].object.objectId;
-  const { result } = await runtimeAgent.getProperties({
-    objectId
-  });
-
-  const loadedObjects = result.map(_create.createLoadedObject);
-
-  if (clientType == "chrome") {
-    pageAgent.configureOverlay({ message: "Paused in debugger.html" });
-  }
-
-  await actions.paused({ frame, why, frames, loadedObjects });
-}
-
-function resumed() {
-  if (clientType == "chrome") {
-    pageAgent.configureOverlay({ suspended: false });
-  }
-
-  actions.resumed();
-}
-
-function globalObjectCleared() {}
-
-// Page Events
-function frameNavigated(frame) {
-  actions.navigated();
-}
-
-function frameStartedLoading() {
-  actions.willNavigate();
-}
-
-function domContentEventFired() {}
-
-function loadEventFired() {}
-
-function frameStoppedLoading() {}
-
-const clientEvents = {
-  scriptParsed,
-  scriptFailedToParse,
-  paused,
-  resumed,
-  globalObjectCleared
-};
-
-const pageEvents = {
-  frameNavigated,
-  frameStartedLoading,
-  domContentEventFired,
-  loadEventFired,
-  frameStoppedLoading
-};
-
-exports.setupEvents = setupEvents;
-exports.pageEvents = pageEvents;
 exports.clientEvents = clientEvents;
 
 /***/ }),
@@ -13771,9 +13406,8 @@ exports.default = async function addBreakpoint(getState, client, sourceMaps, { b
   const state = getState();
 
   const source = (0, _selectors.getSource)(state, breakpoint.location.sourceId);
-  const sourceRecord = source.toJS();
-  const location = _extends({}, breakpoint.location, { sourceUrl: source.get("url") });
-  const generatedLocation = await (0, _sourceMaps.getGeneratedLocation)(state, sourceRecord, location, sourceMaps);
+  const location = _extends({}, breakpoint.location, { sourceUrl: source.url });
+  const generatedLocation = await (0, _sourceMaps.getGeneratedLocation)(state, source.toJS(), location, sourceMaps);
 
   (0, _breakpoint.assertLocation)(location);
   (0, _breakpoint.assertLocation)(generatedLocation);
@@ -13789,8 +13423,8 @@ exports.default = async function addBreakpoint(getState, client, sourceMaps, { b
   const newGeneratedLocation = actualLocation || generatedLocation;
   const newLocation = await sourceMaps.getOriginalLocation(newGeneratedLocation);
 
-  const symbols = (0, _selectors.getSymbols)(getState(), sourceRecord);
-  const astLocation = await (0, _breakpoint.getASTLocation)(sourceRecord, symbols, newLocation);
+  const symbols = (0, _selectors.getSymbols)(getState(), source);
+  const astLocation = await (0, _breakpoint.getASTLocation)(source, symbols, newLocation);
 
   const newBreakpoint = {
     id,
@@ -16632,7 +16266,13 @@ var _react2 = _interopRequireDefault(_react);
 
 var _redux = __webpack_require__(3593);
 
+var _devtoolsContextmenu = __webpack_require__(1413);
+
 var _reactRedux = __webpack_require__(3592);
+
+var _clipboard = __webpack_require__(1388);
+
+var _function = __webpack_require__(1597);
 
 var _actions = __webpack_require__(1354);
 
@@ -16650,10 +16290,6 @@ var _lodash = __webpack_require__(2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 class Outline extends _react.Component {
   selectItem(location) {
     const { selectedSource, selectLocation } = this.props;
@@ -16663,6 +16299,45 @@ class Outline extends _react.Component {
     const selectedSourceId = selectedSource.get("id");
     const startLine = location.start.line;
     selectLocation({ sourceId: selectedSourceId, line: startLine });
+  }
+
+  onContextMenu(event, func) {
+    event.stopPropagation();
+    event.preventDefault();
+
+    const {
+      selectedSource,
+      getFunctionText,
+      flashLineRange,
+      selectedLocation
+    } = this.props;
+
+    const copyFunctionKey = L10N.getStr("copyFunction.accesskey");
+    const copyFunctionLabel = L10N.getStr("copyFunction.label");
+
+    if (!selectedSource) {
+      return;
+    }
+
+    const sourceLine = func.location.start.line;
+    const functionText = getFunctionText(sourceLine);
+
+    const copyFunctionItem = {
+      id: "node-menu-copy-function",
+      label: copyFunctionLabel,
+      accesskey: copyFunctionKey,
+      disabled: !functionText,
+      click: () => {
+        flashLineRange({
+          start: func.location.start.line,
+          end: func.location.end.line,
+          sourceId: selectedLocation.sourceId
+        });
+        return (0, _clipboard.copyToTheClipboard)(functionText);
+      }
+    };
+    const menuOptions = [copyFunctionItem];
+    (0, _devtoolsContextmenu.showMenu)(event, menuOptions);
   }
 
   renderPlaceholder() {
@@ -16691,7 +16366,8 @@ class Outline extends _react.Component {
       {
         key: `${name}:${location.start.line}:${location.start.column}`,
         className: "outline-list__element",
-        onClick: () => this.selectItem(location)
+        onClick: () => this.selectItem(location),
+        onContextMenu: e => this.onContextMenu(e, func)
       },
       _react2.default.createElement(
         "span",
@@ -16796,12 +16472,17 @@ class Outline extends _react.Component {
   }
 }
 
-exports.Outline = Outline;
+exports.Outline = Outline; /* This Source Code Form is subject to the terms of the Mozilla Public
+                            * License, v. 2.0. If a copy of the MPL was not distributed with this
+                            * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 exports.default = (0, _reactRedux.connect)(state => {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
   return {
     symbols: (0, _selectors.getSymbols)(state, selectedSource && selectedSource.toJS()),
-    selectedSource
+    selectedSource,
+    selectedLocation: (0, _selectors.getSelectedLocation)(state),
+    getFunctionText: line => (0, _function.findFunctionText)(line, selectedSource.toJS(), (0, _selectors.getSymbols)(state, selectedSource.toJS()))
   };
 }, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Outline);
 
@@ -16943,6 +16624,14 @@ class SourcesTree extends _react.Component {
     }
   }
 
+  renderEmptyElement(message) {
+    return _react2.default.createElement(
+      "div",
+      { className: "no-sources-message" },
+      message
+    );
+  }
+
   render() {
     const { expanded, projectRoot } = this.props;
     const {
@@ -16961,6 +16650,8 @@ class SourcesTree extends _react.Component {
       this.props.setExpandedState(expandedState);
     };
 
+    const isEmpty = sourceTree.contents.length === 0;
+
     const isCustomRoot = projectRoot !== "";
     let roots = () => sourceTree.contents;
 
@@ -16968,7 +16659,13 @@ class SourcesTree extends _react.Component {
 
     // The "sourceTree.contents[0]" check ensures that there are contents
     // A custom root with no existing sources will be ignored
-    if (isCustomRoot && sourceTree.contents[0]) {
+    if (isCustomRoot) {
+      let rootLabel = projectRoot.split("/").pop();
+      if (sourceTree.contents[0]) {
+        rootLabel = sourceTree.contents[0].name;
+        roots = () => sourceTree.contents[0].contents;
+      }
+
       clearProjectRootButton = _react2.default.createElement(
         "button",
         {
@@ -16981,13 +16678,15 @@ class SourcesTree extends _react.Component {
         _react2.default.createElement(
           "span",
           { className: "sources-clear-root-label" },
-          sourceTree.contents[0].name
+          rootLabel
         )
       );
-      roots = () => sourceTree.contents[0].contents;
     }
 
-    const isEmpty = sourceTree.contents.length === 0;
+    if (isEmpty && !isCustomRoot) {
+      return this.renderEmptyElement(L10N.getStr("sources.noSourcesAvailable"));
+    }
+
     const treeProps = {
       autoExpandAll: false,
       autoExpandDepth: expanded ? 0 : 1,
@@ -17008,14 +16707,6 @@ class SourcesTree extends _react.Component {
 
     const tree = _react2.default.createElement(_ManagedTree2.default, treeProps);
 
-    if (isEmpty) {
-      return _react2.default.createElement(
-        "div",
-        { className: "no-sources-message" },
-        L10N.getStr("sources.noSourcesAvailable")
-      );
-    }
-
     const onKeyDown = e => {
       if (e.keyCode === 13 && focusedItem) {
         this.selectItem(focusedItem);
@@ -17034,7 +16725,7 @@ class SourcesTree extends _react.Component {
         { className: "sources-clear-root-container" },
         clearProjectRootButton
       ) : null,
-      _react2.default.createElement(
+      isEmpty ? this.renderEmptyElement(L10N.getStr("sources.noSourcesAvailableRoot")) : _react2.default.createElement(
         "div",
         { className: "sources-list", onKeyDown: onKeyDown },
         tree
@@ -25942,6 +25633,8 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 exports.mapScopes = mapScopes;
 
+var _lodash = __webpack_require__(2);
+
 var _selectors = __webpack_require__(3590);
 
 var _loadSourceText = __webpack_require__(1435);
@@ -26190,20 +25883,28 @@ async function findGeneratedBinding(sourceMaps, client, source, name, originalBi
 }
 
 function buildGeneratedBindingList(scopes, generatedAstScopes, thisBinding) {
-  const clientScopes = [];
-  for (let s = scopes; s; s = s.parent) {
-    clientScopes.push(s);
-  }
-
   // The server's binding data doesn't include general 'this' binding
   // information, so we manually inject the one 'this' binding we have into
   // the normal binding data we are working with.
   const frameThisOwner = generatedAstScopes.find(generated => "this" in generated.bindings);
 
-  const generatedBindings = clientScopes.reverse().map((s, i) => {
-    const generated = generatedAstScopes[generatedAstScopes.length - 1 - i];
-
+  const clientScopes = [];
+  for (let s = scopes; s; s = s.parent) {
     const bindings = s.bindings ? Object.assign({}, ...s.bindings.arguments, s.bindings.variables) : {};
+
+    clientScopes.push(bindings);
+  }
+
+  const generatedMainScopes = generatedAstScopes.slice(0, -2);
+  const generatedGlobalScopes = generatedAstScopes.slice(-2);
+
+  const clientMainScopes = clientScopes.slice(0, generatedMainScopes.length);
+  const clientGlobalScopes = clientScopes.slice(generatedMainScopes.length);
+
+  // Map the main parsed script body using the nesting hierarchy of the
+  // generated and client scopes.
+  const generatedBindings = generatedMainScopes.reduce((acc, generated, i) => {
+    const bindings = clientMainScopes[i];
 
     if (generated === frameThisOwner && thisBinding) {
       bindings.this = {
@@ -26211,31 +25912,42 @@ function buildGeneratedBindingList(scopes, generatedAstScopes, thisBinding) {
       };
     }
 
-    return {
-      generated,
-      client: _extends({}, s, {
-        bindings
-      })
-    };
-  }).slice(2).reduce((acc, { client: { bindings }, generated }) => {
-    // If the parser worker's result didn't match the client scopes,
-    // there might not be a generated scope that matches.
-    if (generated) {
-      for (const name of Object.keys(generated.bindings)) {
-        const { refs } = generated.bindings[name];
-        for (const loc of refs) {
-          acc.push({
+    for (const name of Object.keys(generated.bindings)) {
+      const { refs } = generated.bindings[name];
+      for (const loc of refs) {
+        acc.push({
+          name,
+          loc,
+          desc: bindings[name] || null
+        });
+      }
+    }
+    return acc;
+  }, []);
+
+  // Bindings in the global/lexical global of the generated code may or
+  // may not be the real global if the generated code is running inside
+  // of an evaled context. To handle this, we just look up the client scope
+  // hierarchy to find the closest binding with that name.
+  for (const generated of generatedGlobalScopes) {
+    for (const name of Object.keys(generated.bindings)) {
+      const { refs } = generated.bindings[name];
+      for (const loc of refs) {
+        const bindings = clientGlobalScopes.find(b => (0, _lodash.has)(b, name));
+
+        if (bindings) {
+          generatedBindings.push({
             name,
             loc,
-            desc: bindings[name] || null
+            desc: bindings[name]
           });
         }
       }
     }
-    return acc;
-  }, [])
+  }
+
   // Sort so we can binary-search.
-  .sort((a, b) => {
+  return generatedBindings.sort((a, b) => {
     const aStart = a.loc.start;
     const bStart = a.loc.start;
 
@@ -26244,8 +25956,6 @@ function buildGeneratedBindingList(scopes, generatedAstScopes, thisBinding) {
     }
     return aStart.line - bStart.line;
   });
-
-  return generatedBindings;
 }
 
 /***/ }),
@@ -26701,7 +26411,7 @@ function findEmptyLines(selectedSource, pausePoints) {
     return [];
   }
   const lineCount = selectedSource.text.split("\n").length;
-  const sourceLines = (0, _lodash.range)(1, lineCount);
+  const sourceLines = (0, _lodash.range)(1, lineCount + 1);
   return (0, _lodash.without)(sourceLines, ...breakpointLines);
 }
 
@@ -27638,6 +27348,7 @@ class QuickOpenModal extends _react.Component {
       }
 
       if (["ArrowUp", "ArrowDown"].includes(e.key)) {
+        e.preventDefault();
         return this.traverseResults(e);
       }
     };
@@ -31773,10 +31484,10 @@ function selectSourceURL(url, options = {}) {
  * @memberof actions/sources
  * @static
  */
-function selectSource(sourceId, tabIndex = "") {
+function selectSource(sourceId) {
   return async ({ dispatch }) => {
     const location = (0, _location.createLocation)({ sourceId });
-    return await dispatch(selectLocation(location, tabIndex));
+    return await dispatch(selectLocation(location));
   };
 }
 
@@ -31784,7 +31495,7 @@ function selectSource(sourceId, tabIndex = "") {
  * @memberof actions/sources
  * @static
  */
-function selectLocation(location, tabIndex = "") {
+function selectLocation(location) {
   return async ({ dispatch, getState, client }) => {
     if (!client) {
       // No connection, do nothing. This happens when the debugger is
@@ -31808,7 +31519,6 @@ function selectLocation(location, tabIndex = "") {
     dispatch({
       type: "SELECT_SOURCE",
       source: source.toJS(),
-      tabIndex,
       location
     });
 
@@ -34022,6 +33732,8 @@ var _prefs = __webpack_require__(226);
 
 var _devtoolsConfig = __webpack_require__(1355);
 
+var _pausePoints = __webpack_require__(3622);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function findSource(dbg, url) {
@@ -34036,7 +33748,11 @@ function findSource(dbg, url) {
 }
 
 function sendPacket(dbg, packet, callback) {
-  dbg.connection.tabConnection.debuggerClient.request(packet).then(callback || console.log);
+  dbg.client.sendPacket(packet, callback || console.log);
+}
+
+function sendPacketToThread(dbg, packet, callback) {
+  sendPacket(dbg, _extends({ to: dbg.connection.tabConnection.threadClient.actor }, packet), callback);
 }
 
 function evaluate(dbg, expression, callback) {
@@ -34055,6 +33771,12 @@ function getCM() {
   return cm && cm.CodeMirror;
 }
 
+function _formatPausePoints(dbg, url) {
+  const source = dbg.helpers.findSource(url);
+  const pausePoints = dbg.selectors.getPausePoints(source);
+  console.log((0, _pausePoints.formatPausePoints)(source.text, pausePoints));
+}
+
 function setupHelper(obj) {
   const selectors = bindSelectors(obj);
   const actions = (0, _redux.bindActionCreators)(obj.actions, obj.store.dispatch);
@@ -34068,7 +33790,11 @@ function setupHelper(obj) {
     helpers: {
       findSource: url => findSource(dbg, url),
       evaluate: (expression, cbk) => evaluate(dbg, expression, cbk),
+      sendPacketToThread: (packet, cbk) => sendPacketToThread(dbg, packet, cbk),
       sendPacket: (packet, cbk) => sendPacket(dbg, packet, cbk)
+    },
+    formatters: {
+      pausePoints: url => _formatPausePoints(dbg, url)
     }
   });
 
@@ -38540,6 +38266,41 @@ function reducer(state = {}, action) {
 
 
 module.exports = reducer;
+
+/***/ }),
+
+/***/ 3622:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.formatPausePoints = formatPausePoints;
+
+var _lodash = __webpack_require__(2);
+
+function insertStrtAt(string, index, newString) {
+  const start = string.slice(0, index);
+  const end = string.slice(index);
+  return `${start}${newString}${end}`;
+}
+
+function formatPausePoints(text, nodes) {
+  nodes = (0, _lodash.reverse)((0, _lodash.sortBy)(nodes, ["location.line", "location.column"]));
+  const lines = text.split("\n");
+  nodes.forEach((node, index) => {
+    const { line, column } = node.location;
+    const { breakpoint, stepOver } = node.types;
+    const num = nodes.length - index;
+    const types = `${breakpoint ? "b" : ""}${stepOver ? "s" : ""}`;
+    lines[line - 1] = insertStrtAt(lines[line - 1], column, `/*${types} ${num}*/`);
+  });
+
+  return lines.join("\n");
+}
 
 /***/ }),
 

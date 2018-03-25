@@ -448,6 +448,11 @@ AudioSession::OnSessionDisconnected(AudioSessionDisconnectReason aReason)
 nsresult
 AudioSession::OnSessionDisconnectedInternal()
 {
+  // When successful, UnregisterAudioSessionNotification will decrement the
+  // refcount of 'this'.  Start will re-increment it.  In the interim,
+  // we'll need to reference ourselves.
+  RefPtr<AudioSession> kungFuDeathGrip(this);
+
   {
     // We need to release the mutex before we call Start().
     MutexAutoLock lock(mMutex);
@@ -455,10 +460,6 @@ AudioSession::OnSessionDisconnectedInternal()
     if (!mAudioSessionControl)
       return NS_OK;
 
-    // When successful, UnregisterAudioSessionNotification will decrement the
-    // refcount of 'this'.  Start will re-increment it.  In the interim,
-    // we'll need to reference ourselves.
-    RefPtr<AudioSession> kungFuDeathGrip(this);
     mAudioSessionControl->UnregisterAudioSessionNotification(this);
     mAudioSessionControl = nullptr;
   }

@@ -26,6 +26,7 @@ add_task(async function() {
 
   // Step through to another file and make sure it's paused in the
   // right place.
+  await stepOver(dbg);
   await stepIn(dbg);
   await waitForSelectedSource(dbg, "simple2");
   assertPausedLocation(dbg);

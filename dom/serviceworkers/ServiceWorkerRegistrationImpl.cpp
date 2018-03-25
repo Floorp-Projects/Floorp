@@ -395,10 +395,16 @@ public:
       }
 
       mDelayed = true;
+
       // We're storing the timer object on the calling service worker's private.
       // ServiceWorkerPrivate will drop the reference if the worker terminates,
       // which will cancel the timer.
-      worker->WorkerPrivate()->StoreISupports(timer);
+      if (!worker->WorkerPrivate()->MaybeStoreISupports(timer)) {
+        // The worker thread is already shutting down.  Just cancel the timer
+        // and let the update runnable be destroyed.
+        timer->Cancel();
+        return NS_OK;
+      }
 
       return NS_OK;
     }

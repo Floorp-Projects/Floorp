@@ -19145,6 +19145,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  *
  * "import"
  * Imported binding names exposed from other modules.
+ *
+ * "global"
+ * Variables that reference undeclared global values.
  */
 
 
@@ -19168,10 +19171,16 @@ function parseSourceScopes(sourceId) {
   t.traverse(ast, scopeCollectionVisitor, state);
 
   for (const [key, freeVariables] of state.freeVariables) {
-    const binding = global.bindings[key];
-    if (binding) {
-      binding.refs = freeVariables.concat(binding.refs);
+    let binding = global.bindings[key];
+    if (!binding) {
+      binding = {
+        type: "global",
+        refs: []
+      };
+      global.bindings[key] = binding;
     }
+
+    binding.refs = freeVariables.concat(binding.refs);
   }
 
   // TODO: This should probably check for ".mjs" extension on the
@@ -19302,30 +19311,6 @@ function createGlobalScope(ast, sourceId) {
   const global = createTempScope("object", "Global", null, {
     start: fromBabelLocation(ast.loc.start, sourceId),
     end: fromBabelLocation(ast.loc.end, sourceId)
-  });
-
-  // Include fake bindings to collect references to CommonJS
-  Object.assign(global.bindings, {
-    module: {
-      type: "var",
-      refs: []
-    },
-    exports: {
-      type: "var",
-      refs: []
-    },
-    __dirname: {
-      type: "var",
-      refs: []
-    },
-    __filename: {
-      type: "var",
-      refs: []
-    },
-    require: {
-      type: "var",
-      refs: []
-    }
   });
 
   const lexical = createTempScope("block", "Lexical Global", global, {
@@ -19669,7 +19654,9 @@ function buildMetaBindings(sourceId, node, ancestors, parentIndex = ancestors.le
 }
 
 function looksLikeCommonJS(rootScope) {
-  return rootScope.bindings.__dirname.refs.length > 0 || rootScope.bindings.__filename.refs.length > 0 || rootScope.bindings.require.refs.length > 0 || rootScope.bindings.exports.refs.length > 0 || rootScope.bindings.module.refs.length > 0;
+  const hasRefs = name => rootScope.bindings[name] && rootScope.bindings[name].refs.length > 0;
+
+  return hasRefs("__dirname") || hasRefs("__filename") || hasRefs("require") || hasRefs("exports") || hasRefs("module");
 }
 
 function stripModuleScope(rootScope) {
@@ -21069,6 +21056,7 @@ class SimplePath {
     }
     return null;
   }
+
   findParent(predicate) {
     if (!this.parentPath) {
       throw new Error("Cannot use findParent on root path");
@@ -21118,11 +21106,11 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 const isControlFlow = node => t.isForStatement(node) || t.isWhileStatement(node) || t.isIfStatement(node);
 
-const isAssignment = node => t.isVariableDeclaration(node) || t.isAssignmentExpression(node);
+const isAssignment = node => t.isVariableDeclarator(node) || t.isAssignmentExpression(node);
 
 const isImport = node => t.isImport(node) || t.isImportDeclaration(node);
 const isReturn = node => t.isReturnStatement(node);
-const inExpression = parent => t.isArrayExpression(parent.node) || t.isObjectProperty(parent.node) || t.isCallExpression(parent.node);
+const inExpression = parent => t.isArrayExpression(parent.node) || t.isObjectProperty(parent.node) || t.isCallExpression(parent.node) || t.isTemplateLiteral(parent.node);
 
 function getPausePoints(sourceId) {
   const state = [];
@@ -21137,8 +21125,16 @@ function formatNode(location, types) {
 function onEnter(node, ancestors, state) {
   const parent = ancestors[ancestors.length - 1];
 
-  if (isAssignment(node) || isImport(node) || isControlFlow(node) || isReturn(node)) {
+  if (isAssignment(node) || isImport(node) || isControlFlow(node)) {
     state.push(formatNode(node.loc.start, { breakpoint: true, stepOver: true }));
+  }
+
+  if (isReturn(node)) {
+    if (t.isCallExpression(node.argument)) {
+      state.push(formatNode(node.loc.start, { breakpoint: false, stepOver: false }));
+    } else {
+      state.push(formatNode(node.loc.start, { breakpoint: true, stepOver: true }));
+    }
   }
 
   if (t.isCallExpression(node)) {
@@ -21158,6 +21154,11 @@ function onEnter(node, ancestors, state) {
     const { line, column } = node.loc.end;
     state.push(formatNode(node.loc.start, { breakpoint: true }));
     state.push(formatNode({ line, column: column - 1 }, { breakpoint: true, stepOver: true }));
+  }
+
+  if (t.isProgram(node)) {
+    const lastStatement = node.body[node.body.length - 1];
+    state.push(formatNode(lastStatement.loc.end, { breakpoint: true, stepOver: true }));
   }
 }
 

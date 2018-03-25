@@ -1954,14 +1954,19 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   return NS_OK;
 }
 
-void
-ServiceWorkerPrivate::StoreISupports(nsISupports* aSupports)
+bool
+ServiceWorkerPrivate::MaybeStoreISupports(nsISupports* aSupports)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate);
-  MOZ_ASSERT(!mSupportsArray.Contains(aSupports));
 
+  if (!mWorkerPrivate) {
+    MOZ_DIAGNOSTIC_ASSERT(mSupportsArray.IsEmpty());
+    return false;
+  }
+
+  MOZ_ASSERT(!mSupportsArray.Contains(aSupports));
   mSupportsArray.AppendElement(aSupports);
+  return true;
 }
 
 void
