@@ -239,9 +239,9 @@ var ContentSearch = {
       // Since we're going to load the search in the same browser, blur the search
       // UI to prevent further interaction before we start loading.
       this._reply(msg, "Blur");
-      browser.loadURI(submission.uri.spec, {
-        postData: submission.postData
-      });
+      browser.loadURIWithFlags(submission.uri.spec,
+                               Ci.nsIWebNavigation.LOAD_FLAGS_NONE, null, null,
+                               submission.postData);
     } else {
       let params = {
         postData: submission.postData,
