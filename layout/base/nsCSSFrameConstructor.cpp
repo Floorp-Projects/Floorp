@@ -2436,14 +2436,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   if (!mTempFrameTreeState)
     state.mPresShell->CaptureHistoryState(getter_AddRefs(mTempFrameTreeState));
 
-  // Make sure that we'll handle restyles for this document element in
-  // the future.  We need this, because the document element might
-  // have stale restyle bits from a previous frame constructor for
-  // this document.  Unlike in AddFrameConstructionItems, it's safe to
-  // unset all element restyle flags, since we don't have any
-  // siblings.
-  aDocElement->UnsetRestyleFlagsIfGecko();
-
   // --------- CREATE AREA OR BOX FRAME -------
   if (ServoStyleSet* set = mPresShell->StyleSet()->GetAsServo()) {
     // Ensure the document element is styled at this point.
@@ -5564,17 +5556,6 @@ nsCSSFrameConstructor::ShouldCreateItemsForChild(nsFrameConstructorState& aState
                                                  nsContainerFrame* aParentFrame)
 {
   aContent->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
-  if (aContent->IsElement() && !aContent->IsStyledByServo()) {
-    // We can't just remove our pending restyle flags, since we may
-    // have restyle-later-siblings set on us.  But we _can_ remove the
-    // "is possible restyle root" flags, and need to.  Otherwise we can
-    // end up with stale such flags (e.g. if we used to have a
-    // display:none parent when our last restyle was posted and
-    // processed and now no longer do).
-    aContent->UnsetFlags(ELEMENT_ALL_RESTYLE_FLAGS &
-                         ~ELEMENT_PENDING_RESTYLE_FLAGS);
-  }
-
   // XXX the GetContent() != aContent check is needed due to bug 135040.
   // Remove it once that's fixed.
   if (aContent->GetPrimaryFrame() &&
@@ -7172,8 +7153,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
     // The Servo-backed style system handles this case like the lazy frame
     // construction case, except when we're already constructing frames, in
     // which case we shouldn't need to do anything else.
-    if (aContainer->IsStyledByServo() &&
-        aInsertionKind == InsertionKind::Async) {
+    if (aInsertionKind == InsertionKind::Async) {
       LazilyStyleNewChildRange(aFirstNewContent, nullptr);
     }
     return;
@@ -7181,16 +7161,14 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
 
   if (aInsertionKind == InsertionKind::Async &&
       MaybeConstructLazily(CONTENTAPPEND, aFirstNewContent)) {
-    if (aContainer->IsStyledByServo()) {
-      LazilyStyleNewChildRange(aFirstNewContent, nullptr);
-    }
+    LazilyStyleNewChildRange(aFirstNewContent, nullptr);
     return;
   }
 
   // We couldn't construct lazily. Make Servo eagerly traverse the new content
   // if needed (when aInsertionKind == InsertionKind::Sync, we know that the
   // styles are up-to-date already).
-  if (aInsertionKind == InsertionKind::Async && aContainer->IsStyledByServo()) {
+  if (aInsertionKind == InsertionKind::Async) {
     StyleNewChildRange(aFirstNewContent, nullptr);
   }
 
@@ -7544,11 +7522,10 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
 #endif
 
   auto styleNewChildRangeEagerly =
-    [this, aInsertionKind, aContainer, aStartChild, aEndChild]() {
+    [this, aInsertionKind, aStartChild, aEndChild]() {
       // When aInsertionKind == InsertionKind::Sync, we know that the
       // styles are up-to-date already.
-      if (aInsertionKind == InsertionKind::Async &&
-          aContainer->IsStyledByServo()) {
+      if (aInsertionKind == InsertionKind::Async) {
         StyleNewChildRange(aStartChild, aEndChild);
       }
     };
@@ -7636,8 +7613,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     // The Servo-backed style system handles this case like the lazy frame
     // construction case, except when we're already constructing frames, in
     // which case we shouldn't need to do anything else.
-    if (aContainer->IsStyledByServo() &&
-        aInsertionKind == InsertionKind::Async) {
+    if (aInsertionKind == InsertionKind::Async) {
       LazilyStyleNewChildRange(aStartChild, aEndChild);
     }
     return;
@@ -7651,9 +7627,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
 
   if (aInsertionKind == InsertionKind::Async &&
       MaybeConstructLazily(CONTENTINSERT, aStartChild)) {
-    if (aContainer->IsStyledByServo()) {
-      LazilyStyleNewChildRange(aStartChild, aEndChild);
-    }
+    LazilyStyleNewChildRange(aStartChild, aEndChild);
     return;
   }
 
@@ -10296,9 +10270,6 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
   for (uint32_t i = 0; i < aAnonymousItems.Length(); ++i) {
     nsIContent* content = aAnonymousItems[i].mContent;
     // Gecko-styled nodes should have no pending restyle flags.
-    MOZ_ASSERT(content->IsStyledByServo() ||
-               !content->IsElement() ||
-               !(content->GetFlags() & ELEMENT_ALL_RESTYLE_FLAGS));
     // Assert some things about this content
     MOZ_ASSERT(!(content->GetFlags() &
                  (NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME)),
@@ -10311,8 +10282,7 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
 
     // Make sure we eagerly performed the servo cascade when the anonymous
     // nodes were created.
-    MOZ_ASSERT(!content->IsStyledByServo() || !content->IsElement() ||
-               content->AsElement()->HasServoData());
+    MOZ_ASSERT(!content->IsElement() || content->AsElement()->HasServoData());
 
     RefPtr<ComputedStyle> computedStyle = ResolveComputedStyle(content);
 
@@ -10452,9 +10422,6 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
         MOZ_ASSERT(insertion.mContainer == GetInsertionPoint(child).mContainer);
       }
 
-      // Frame construction item construction should not post
-      // restyles, so removing restyle flags here is safe.
-      child->UnsetRestyleFlagsIfGecko();
       if (addChildItems) {
         AddFrameConstructionItems(aState, child, iter.XBLInvolved(), insertion,
                                   itemsToConstruct);
@@ -11666,14 +11633,7 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
         continue;
       }
 
-      // See comment explaining why we need to remove the "is possible
-      // restyle root" flags in AddFrameConstructionItems.  But note
-      // that we can remove all restyle flags, just like in
-      // ProcessChildren and for the same reason.
-      content->UnsetRestyleFlagsIfGecko();
-
       RefPtr<ComputedStyle> childContext = ResolveComputedStyle(content);
-
       AddFrameConstructionItemsInternal(aState, content, nullptr,
                                         content->NodeInfo()->NameAtom(),
                                         content->GetNameSpaceID(),

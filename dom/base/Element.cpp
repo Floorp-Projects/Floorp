@@ -1631,6 +1631,8 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // XXXbz sXBL/XBL2 issue!
 
+  MOZ_ASSERT(!HasAnyOfFlags(Element::kAllServoDescendantBits));
+
   // Finally, set the document
   if (aDocument) {
     // Notify XBL- & nsIAnonymousContentCreator-generated
@@ -1650,14 +1652,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     SetIsInDocument();
 
     // Clear the lazy frame construction bits.
-    UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
-               // And the restyle bits. These shouldn't even get set if we came
-               // from a Servo-styled document, but they may be set if the
-               // element comes from a Gecko-backed document, see bug 1394586.
-               //
-               // TODO(emilio): We can remove this and assert we don't have any
-               // of them when we remove the old style system.
-               ELEMENT_ALL_RESTYLE_FLAGS);
+    UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
   } else if (IsInShadowTree()) {
     // We're not in a document, but we did get inserted into a shadow tree.
     // Since we won't have any restyle data in the document's restyle trackers,
@@ -1667,8 +1662,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // inserted into a document.
     //
     // See the comment about the restyle bits above, it also applies.
-    UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
-               ELEMENT_ALL_RESTYLE_FLAGS);
+    UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
   } else {
     // If we're not in the doc and not in a shadow tree,
     // update our subtree pointer.
