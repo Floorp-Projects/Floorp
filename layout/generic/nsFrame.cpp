@@ -104,7 +104,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/gfx/Tools.h"
@@ -10721,8 +10720,7 @@ nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
 
   // Anon boxes inherit from their parent; that's us.
   RefPtr<ComputedStyle> newContext =
-    aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(pseudo,
-                                                                Style()->AsServo());
+    aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(pseudo, Style());
 
   nsChangeHint childHint =
     UpdateStyleOfOwnedChildFrame(aChildFrame, newContext, aRestyleState);

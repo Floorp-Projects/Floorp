@@ -83,7 +83,6 @@ EXPORTS.mozilla += [
     'MediaFeatureChange.h',
     'PostTraversalTask.h',
     'PreloadedStyleSheet.h',
-    'RuleNodeCacheConditions.h',
     'ServoArcTypeList.h',
     'ServoBindingList.h',
     'ServoBindings.h',

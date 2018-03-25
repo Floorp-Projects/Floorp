@@ -331,11 +331,6 @@ nsCSSProps::BuildShorthandsContainingTable()
       subpropCounts[shorthand - eCSSProperty_COUNT_no_shorthands];
     subpropCountsEntry.property = shorthand;
     subpropCountsEntry.count = 0;
-    if (nsCSSProps::PropHasFlags(shorthand, CSS_PROPERTY_IS_ALIAS)) {
-      // Don't put shorthands that are acting as aliases in the
-      // shorthands-containing lists.
-      continue;
-    }
     for (const nsCSSPropertyID* subprops = SubpropertyEntryFor(shorthand);
          *subprops != eCSSProperty_UNKNOWN;
          ++subprops) {
@@ -395,12 +390,6 @@ nsCSSProps::BuildShorthandsContainingTable()
            shorthandAndCount->count,
            nsCSSProps::GetStringValue(shorthandAndCount->property).get());
 #endif
-    if (nsCSSProps::PropHasFlags(shorthandAndCount->property,
-                                 CSS_PROPERTY_IS_ALIAS)) {
-      // Don't put shorthands that are acting as aliases in the
-      // shorthands-containing lists.
-      continue;
-    }
     for (const nsCSSPropertyID* subprops =
            SubpropertyEntryFor(shorthandAndCount->property);
          *subprops != eCSSProperty_UNKNOWN;
@@ -429,11 +418,6 @@ nsCSSProps::BuildShorthandsContainingTable()
   for (nsCSSPropertyID shorthand = eCSSProperty_COUNT_no_shorthands;
        shorthand < eCSSProperty_COUNT;
        shorthand = nsCSSPropertyID(shorthand + 1)) {
-    if (nsCSSProps::PropHasFlags(shorthand, CSS_PROPERTY_IS_ALIAS)) {
-      // Don't put shorthands that are acting as aliases in the
-      // shorthands-containing lists.
-      continue;
-    }
     for (const nsCSSPropertyID* subprops = SubpropertyEntryFor(shorthand);
          *subprops != eCSSProperty_UNKNOWN;
          ++subprops) {

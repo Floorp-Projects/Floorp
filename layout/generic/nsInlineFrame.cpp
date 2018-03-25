@@ -957,7 +957,7 @@ nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
   MOZ_ASSERT(blockFrame, "Why did we have an IB split?");
 
   // The later inlines need to get our style.
-  ComputedStyle* ourStyle = Style()->AsServo();
+  ComputedStyle* ourStyle = Style();
 
   // The anonymous block's style inherits from ours, and we already have our new
   // style context.
