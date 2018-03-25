@@ -1023,7 +1023,7 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
   // be consistent with Gecko, we just expand the variables (assuming we have
   // enough context to do so). For that we need to grab the style context so we
   // know what custom property values to provide.
-  RefPtr<ComputedStyle> computedStyle;
+  RefPtr<ComputedStyle> styleContext;
   if (isServo && isCSSAnimation) {
     // The following will flush style but that's ok since if you update
     // a variable's computed value, you expect to see that updated value in the
@@ -1033,7 +1033,7 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
     // we might end up returning variables as-is or empty string. That should be
     // acceptable however, since such a case is rare and this is only
     // short-term (and unshipped) behavior until bug 1391537 is fixed.
-    computedStyle = GetTargetComputedStyle();
+    styleContext = GetTargetComputedStyle();
   }
 
   for (const Keyframe& keyframe : mKeyframes) {
@@ -1086,7 +1086,7 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
         }
         if (propertyValue.mServoDeclarationBlock) {
           const ComputedStyle* servoComputedStyle =
-            computedStyle ? computedStyle->AsServo() : nullptr;
+            styleContext ? styleContext->AsServo() : nullptr;
           Servo_DeclarationBlock_SerializeOneValue(
             propertyValue.mServoDeclarationBlock,
             propertyValue.mProperty,

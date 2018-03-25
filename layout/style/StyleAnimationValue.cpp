@@ -10,6 +10,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
@@ -229,9 +230,9 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
 
   // GetComputedStyle() flushes style, so we shouldn't assume that any
   // non-owning references we have are still valid.
-  RefPtr<ComputedStyle> computedStyle =
+  RefPtr<ComputedStyle> styleContext =
     nsComputedDOMStyle::GetComputedStyle(aElement, nullptr);
-  MOZ_ASSERT(computedStyle);
+  MOZ_ASSERT(styleContext);
 
   RefPtr<RawServoDeclarationBlock> declarations =
     ServoCSSParser::ParseProperty(aProperty, aValue,
@@ -244,7 +245,7 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
   result.mServo =
     shell->StyleSet()->AsServo()->ComputeAnimationValue(aElement,
                                                         declarations,
-                                                        computedStyle);
+                                                        styleContext);
   return result;
 }
 

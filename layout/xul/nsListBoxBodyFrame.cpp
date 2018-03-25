@@ -714,17 +714,17 @@ nsListBoxBodyFrame::ComputeIntrinsicISize(nsBoxLayoutState& aBoxLayoutState)
 
   if (firstRowContent) {
     nsPresContext* presContext = aBoxLayoutState.PresContext();
-    RefPtr<ComputedStyle> computedStyle =
+    RefPtr<ComputedStyle> styleContext =
       presContext->StyleSet()->ResolveStyleFor(
           firstRowContent->AsElement(), nullptr, LazyComputeBehavior::Allow);
 
     nscoord width = 0;
     nsMargin margin(0,0,0,0);
 
-    if (computedStyle->StylePadding()->GetPadding(margin))
+    if (styleContext->StylePadding()->GetPadding(margin))
       width += margin.LeftRight();
-    width += computedStyle->StyleBorder()->GetComputedBorder().LeftRight();
-    if (computedStyle->StyleMargin()->GetMargin(margin))
+    width += styleContext->StyleBorder()->GetComputedBorder().LeftRight();
+    if (styleContext->StyleMargin()->GetMargin(margin))
       width += margin.LeftRight();
 
     FlattenedChildIterator iter(mContent);
@@ -741,7 +741,7 @@ nsListBoxBodyFrame::ComputeIntrinsicISize(nsBoxLayoutState& aBoxLayoutState)
           }
 
           RefPtr<nsFontMetrics> fm =
-            nsLayoutUtils::GetFontMetricsForComputedStyle(computedStyle);
+            nsLayoutUtils::GetFontMetricsForComputedStyle(styleContext);
 
           nscoord textWidth =
             nsLayoutUtils::AppUnitWidthOfStringBidi(value, this, *fm,
