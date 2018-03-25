@@ -397,12 +397,7 @@ InspectorUtils::GetCSSPropertyNames(GlobalObject& aGlobalObject,
   }
 
   for ( ; prop < eCSSProperty_COUNT; ++prop) {
-    // Some shorthands are also aliases
-    if (aOptions.mIncludeAliases ||
-        !nsCSSProps::PropHasFlags(nsCSSPropertyID(prop),
-                                  CSS_PROPERTY_IS_ALIAS)) {
-      DO_PROP(prop);
-    }
+    DO_PROP(prop);
   }
 
   if (aOptions.mIncludeAliases) {
