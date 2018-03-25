@@ -305,28 +305,35 @@ public:
   // pref.
   static nsresult AddBoolVarCache(bool* aVariable,
                                   const char* aPref,
-                                  bool aDefault = false);
+                                  bool aDefault = false,
+                                  bool aSkipAssignment = false);
   template<MemoryOrdering Order>
   static nsresult AddAtomicBoolVarCache(Atomic<bool, Order>* aVariable,
                                         const char* aPref,
-                                        bool aDefault = false);
+                                        bool aDefault = false,
+                                        bool aSkipAssignment = false);
   static nsresult AddIntVarCache(int32_t* aVariable,
                                  const char* aPref,
-                                 int32_t aDefault = 0);
+                                 int32_t aDefault = 0,
+                                 bool aSkipAssignment = false);
   template<MemoryOrdering Order>
   static nsresult AddAtomicIntVarCache(Atomic<int32_t, Order>* aVariable,
                                        const char* aPref,
-                                       int32_t aDefault = 0);
+                                       int32_t aDefault = 0,
+                                       bool aSkipAssignment = false);
   static nsresult AddUintVarCache(uint32_t* aVariable,
                                   const char* aPref,
-                                  uint32_t aDefault = 0);
+                                  uint32_t aDefault = 0,
+                                  bool aSkipAssignment = false);
   template<MemoryOrdering Order>
   static nsresult AddAtomicUintVarCache(Atomic<uint32_t, Order>* aVariable,
                                         const char* aPref,
-                                        uint32_t aDefault = 0);
+                                        uint32_t aDefault = 0,
+                                        bool aSkipAssignment = false);
   static nsresult AddFloatVarCache(float* aVariable,
                                    const char* aPref,
-                                   float aDefault = 0.0f);
+                                   float aDefault = 0.0f,
+                                   bool aSkipAssignment = false);
 
   // When a content process is created these methods are used to pass changed
   // prefs in bulk from the parent process, via shared memory.
@@ -394,7 +401,8 @@ public:
 
 private:
   static void SetupTelemetryPref();
-  static mozilla::Result<mozilla::Ok, const char*> InitInitialObjects();
+  static mozilla::Result<mozilla::Ok, const char*> InitInitialObjects(
+    bool aIsStartup);
 
   static nsresult RegisterCallback(PrefChangedFunc aCallback,
                                    const char* aPref,
