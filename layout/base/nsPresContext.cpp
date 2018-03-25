@@ -2228,7 +2228,7 @@ nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
       pseudoType == CSSPseudoElementType::NonInheritingAnonBox) {
     return false;
   }
-  return Servo_HasAuthorSpecifiedRules(computedStyle->AsServo(),
+  return Servo_HasAuthorSpecifiedRules(computedStyle,
                                        elem, pseudoType,
                                        aRuleTypeMask,
                                        UseDocumentColors());

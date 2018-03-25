@@ -23,7 +23,6 @@ struct nsSMILTargetIdentifier;
 class nsIDocument;
 
 namespace mozilla {
-class RestyleTracker;
 namespace dom {
 class Element;
 class SVGAnimationElement;
@@ -108,7 +107,6 @@ public:
     return mAnimationElementTable.Count() != 0;
   }
 
-  void AddStyleUpdatesTo(mozilla::RestyleTracker& aTracker);
   bool MightHavePendingStyleUpdates() const
   {
     return mMightHavePendingStyleUpdates;

@@ -1085,13 +1085,11 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
           continue;
         }
         if (propertyValue.mServoDeclarationBlock) {
-          const ComputedStyle* servoComputedStyle =
-            computedStyle ? computedStyle->AsServo() : nullptr;
           Servo_DeclarationBlock_SerializeOneValue(
             propertyValue.mServoDeclarationBlock,
             propertyValue.mProperty,
             &stringValue,
-            servoComputedStyle,
+            computedStyle,
             customProperties);
         } else {
           RawServoAnimationValue* value =
