@@ -1258,7 +1258,6 @@ ServoStyleSet::GetAnimationValues(
 already_AddRefed<ComputedStyle>
 ServoStyleSet::GetBaseContextForElement(
   Element* aElement,
-  nsPresContext* aPresContext,
   const ComputedStyle* aStyle)
 {
   return Servo_StyleSet_GetBaseComputedValuesForElement(mRawSet.get(),
