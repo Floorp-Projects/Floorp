@@ -9,9 +9,7 @@
 var TabsInTitlebar = {
   init() {},
   uninit() {},
-  allowedBy(condition, allow) {},
-  updateAppearance: function updateAppearance(aForce) {},
-  get enabled() {
-    return document.documentElement.getAttribute("tabsintitlebar") == "true";
-  },
+  allowedBy() {},
+  update() {},
+  enabled: false,
 };
