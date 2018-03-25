@@ -116,12 +116,8 @@ DOMIntersectionObserver::Constructor(const mozilla::dom::GlobalObject& aGlobal,
 bool
 DOMIntersectionObserver::SetRootMargin(const nsAString& aString)
 {
-  if (mDocument && mDocument->IsStyledByServo()) {
-    return ServoCSSParser::ParseIntersectionObserverRootMargin(aString,
-                                                               &mRootMargin);
-  }
-
-  MOZ_CRASH("old style system disabled");
+  return ServoCSSParser::ParseIntersectionObserverRootMargin(aString,
+                                                             &mRootMargin);
 }
 
 void

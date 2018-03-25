@@ -4360,8 +4360,7 @@ nsDOMWindowUtils::EnsureDirtyRootFrame()
 NS_IMETHODIMP
 nsDOMWindowUtils::GetIsStyledByServo(bool* aStyledByServo)
 {
-  nsIDocument* doc = GetDocument();
-  *aStyledByServo = doc && doc->IsStyledByServo();
+  *aStyledByServo = true;
   return NS_OK;
 }
 

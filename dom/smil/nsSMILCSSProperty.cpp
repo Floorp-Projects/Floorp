@@ -67,15 +67,11 @@ nsSMILCSSProperty::GetBaseValue() const
   }
 
   AnimationValue computedValue;
-  if (mElement->IsStyledByServo()) {
-    computedValue.mServo =
-      Servo_ComputedValues_ExtractAnimationValue(mBaseComputedStyle, mPropID)
-      .Consume();
-    if (!computedValue.mServo) {
-      return baseValue;
-    }
-  } else {
-    MOZ_CRASH("old style system disabled");
+  computedValue.mServo =
+    Servo_ComputedValues_ExtractAnimationValue(mBaseComputedStyle, mPropID)
+    .Consume();
+  if (!computedValue.mServo) {
+    return baseValue;
   }
 
   baseValue =

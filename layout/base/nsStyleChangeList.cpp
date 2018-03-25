@@ -33,7 +33,6 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
              aFrame->PresContext()->FrameConstructor()->
                GetDisplayContentsStyleFor(aContent->GetParent())) ||
              (aContent->IsNodeOfType(nsINode::eTEXT) &&
-              aContent->IsStyledByServo() &&
               aContent->HasFlag(NODE_NEEDS_FRAME) &&
               aHint & nsChangeHint_ReconstructFrame),
              "Shouldn't be trying to restyle non-elements directly, "

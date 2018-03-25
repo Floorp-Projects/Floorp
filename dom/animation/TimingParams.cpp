@@ -116,24 +116,18 @@ TimingParams::ParseEasing(const nsAString& aEasing,
 {
   MOZ_ASSERT(aDocument);
 
-  if (aDocument->IsStyledByServo()) {
-    nsTimingFunction timingFunction;
-    RefPtr<URLExtraData> url = ServoCSSParser::GetURLExtraData(aDocument);
-    if (!ServoCSSParser::ParseEasing(aEasing, url, timingFunction)) {
-      aRv.ThrowTypeError<dom::MSG_INVALID_EASING_ERROR>(aEasing);
-      return Nothing();
-    }
-
-    if (timingFunction.mType == nsTimingFunction::Type::Linear) {
-      return Nothing();
-    }
-
-    return Some(ComputedTimingFunction(timingFunction));
+  nsTimingFunction timingFunction;
+  RefPtr<URLExtraData> url = ServoCSSParser::GetURLExtraData(aDocument);
+  if (!ServoCSSParser::ParseEasing(aEasing, url, timingFunction)) {
+    aRv.ThrowTypeError<dom::MSG_INVALID_EASING_ERROR>(aEasing);
+    return Nothing();
   }
 
-  MOZ_CRASH("old style system disabled");
+  if (timingFunction.mType == nsTimingFunction::Type::Linear) {
+    return Nothing();
+  }
 
-  return Nothing();
+  return Some(ComputedTimingFunction(timingFunction));
 }
 
 bool
