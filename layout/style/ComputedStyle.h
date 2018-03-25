@@ -31,6 +31,7 @@ class ComputedStyle;
 extern "C" {
   void Servo_ComputedStyle_AddRef(const mozilla::ComputedStyle* aStyle);
   void Servo_ComputedStyle_Release(const mozilla::ComputedStyle* aStyle);
+  void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle*);
 }
 
 MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoComputedValuesMallocEnclosingSizeOf)
@@ -370,10 +371,12 @@ public:
     mCachedInheritingStyles.AddSizeOfIncludingThis(aSizes, aCVsSize);
   }
 
-  // Needs to be public so that we can call it from Servo.
-  ~ComputedStyle() = default;
-
 protected:
+  // Needs to be friend so that it can call the destructor without making it
+  // public.
+  friend void ::Gecko_ComputedStyle_Destroy(ComputedStyle*);
+
+  ~ComputedStyle() = default;
 
   nsPresContext* mPresContext;
 
