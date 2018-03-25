@@ -33,10 +33,10 @@ function checkTelemetryRecords(expectedValue) {
 function promiseStoppedLoad(expectedURL) {
   return new Promise(resolve => {
     let browser = gBrowser.selectedBrowser;
-    let original = browser.loadURIWithFlags;
-    browser.loadURIWithFlags = function(URI) {
+    let original = browser.loadURI;
+    browser.loadURI = function(URI) {
       if (URI == expectedURL) {
-        browser.loadURIWithFlags = original;
+        browser.loadURI = original;
         ok(true, "loaded expected url: " + URI);
         resolve();
         return;

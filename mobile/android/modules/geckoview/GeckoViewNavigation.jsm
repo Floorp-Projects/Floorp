@@ -54,7 +54,7 @@ class GeckoViewNavigation extends GeckoViewModule {
         this.browser.goForward();
         break;
       case "GeckoView:LoadUri":
-        const { uri, referrer, baseUri, flags } = aData;
+        const { uri, referrer, flags } = aData;
 
         let navFlags = 0;
 
@@ -75,9 +75,10 @@ class GeckoViewNavigation extends GeckoViewModule {
           navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_POPUPS;
         }
 
-        this.browser.loadURIWithFlags(uri, navFlags, referrer || null,
-                                      baseUri ? Services.io.newURI(baseUri) : null,
-                                      /* nsIPrincipal */ null);
+        this.browser.loadURI(uri, {
+          flags: navFlags,
+          referrerURI: referrer,
+        });
         break;
       case "GeckoView:Reload":
         this.browser.reload();
