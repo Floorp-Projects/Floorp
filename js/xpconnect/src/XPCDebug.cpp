@@ -14,6 +14,10 @@
 #include <windows.h>
 #endif
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
 static void DebugDump(const char* fmt, ...)
 {
   char buffer[2048];
@@ -30,6 +34,8 @@ static void DebugDump(const char* fmt, ...)
   if (IsDebuggerPresent()) {
     OutputDebugStringA(buffer);
   }
+#elif defined(ANDROID)
+  __android_log_write(ANDROID_LOG_DEBUG, "Gecko", buffer);
 #endif
   printf("%s", buffer);
 }
