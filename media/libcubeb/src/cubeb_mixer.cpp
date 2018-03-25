@@ -14,9 +14,6 @@
 #include <climits>
 #include <cmath>
 #include <cstdlib>
-#ifdef _MSC_VER
-#include <intrin.h>
-#endif
 #include <memory>
 #include <type_traits>
 #include "cubeb-internal.h"
@@ -80,8 +77,6 @@ unsigned int cubeb_channel_layout_nb_channels(cubeb_channel_layout x)
 {
 #if __GNUC__ || __clang__
   return __builtin_popcount (x);
-#elif _MSC_VER
-  return __popcnt(x);
 #else
   x -= (x >> 1) & 0x55555555;
   x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
@@ -90,6 +85,7 @@ unsigned int cubeb_channel_layout_nb_channels(cubeb_channel_layout x)
   return (x + (x >> 16)) & 0x3F;
 #endif
 }
+
 struct MixerContext {
   MixerContext(cubeb_sample_format f,
                uint32_t in_channels,
