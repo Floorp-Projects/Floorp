@@ -353,13 +353,8 @@ window._gBrowser = {
   /**
    * throws exception for unknown schemes
    */
-  loadURIWithFlags(aURI, aFlags, aReferrerURI, aCharset, aPostData) {
-    // Note - the callee understands both:
-    // (a) loadURIWithFlags(aURI, aFlags, ...)
-    // (b) loadURIWithFlags(aURI, { flags: aFlags, ... })
-    // Forwarding it as (a) here actually supports both (a) and (b),
-    // so you can call us either way too.
-    return this.selectedBrowser.loadURIWithFlags(aURI, aFlags, aReferrerURI, aCharset, aPostData);
+  loadURIWithFlags(aURI, aParams) {
+    return this.mCurrentBrowser.loadURIWithFlags(aURI, aParams);
   },
 
   gotoIndex(aIndex) {
@@ -4716,4 +4711,3 @@ var StatusPanel = {
     }
   }
 };
-

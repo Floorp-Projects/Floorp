@@ -3171,9 +3171,9 @@ var BrowserOnClick = {
     // Allow users to override and continue through to the site,
     // but add a notify bar as a reminder, so that they don't lose
     // track after, e.g., tab switching.
-    gBrowser.loadURIWithFlags(gBrowser.currentURI.spec,
-                              Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
-                              null, null, null);
+    gBrowser.loadURIWithFlags(gBrowser.currentURI.spec, {
+      flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
+    });
 
     Services.perms.add(gBrowser.currentURI, "safe-browsing",
                        Ci.nsIPermissionManager.ALLOW_ACTION,
@@ -3296,7 +3296,7 @@ function BrowserReloadWithFlags(reloadFlags) {
     // If the remoteness has changed, the new browser doesn't have any
     // information of what was loaded before, so we need to load the previous
     // URL again.
-    gBrowser.loadURIWithFlags(url, reloadFlags);
+    gBrowser.loadURIWithFlags(url, { flags: reloadFlags });
     return;
   }
 
@@ -5341,7 +5341,7 @@ nsBrowserAccess.prototype = {
                             Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
                             Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
           gBrowser.loadURIWithFlags(aURI.spec, {
-            aTriggeringPrincipal,
+            triggeringPrincipal: aTriggeringPrincipal,
             flags: loadflags,
             referrerURI: referrer,
             referrerPolicy,
