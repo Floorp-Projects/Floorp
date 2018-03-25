@@ -956,29 +956,19 @@ BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
   }
 }
 
-// MSVC 2015 has a bug that vtable pointer of constexpr objects is null,
-// which would cause startup crash. So const is used instead here for
-// pre-2017 version of MSVC to workaround this issue.
-#if !defined(_MSC_VER) || _MSC_VER >= 1910
-static constexpr BuiltinCounterStyle gBuiltinStyleTable[] =
-#else
-static const BuiltinCounterStyle gBuiltinStyleTable[] =
-#endif
-{
+static constexpr BuiltinCounterStyle gBuiltinStyleTable[] = {
 #define BUILTIN_COUNTER_STYLE(value_, atom_) \
   { NS_STYLE_LIST_STYLE_ ## value_, &nsGkAtoms::atom_ },
 #include "BuiltinCounterStyleList.h"
 #undef BUILTIN_COUNTER_STYLE
 };
 
-#if !defined(_MSC_VER) || _MSC_VER >= 1910
 #define BUILTIN_COUNTER_STYLE(value_, atom_) \
   static_assert(gBuiltinStyleTable[NS_STYLE_LIST_STYLE_ ## value_].GetStyle() \
                 == NS_STYLE_LIST_STYLE_ ## value_, "Builtin counter style " \
                 #atom_ " has unmatched index and value.");
 #include "BuiltinCounterStyleList.h"
 #undef BUILTIN_COUNTER_STYLE
-#endif
 
 class DependentBuiltinCounterStyle final : public BuiltinCounterStyle
 {
