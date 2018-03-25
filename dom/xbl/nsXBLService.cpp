@@ -389,7 +389,7 @@ nsXBLService::IsChromeOrResourceURI(nsIURI* aURI)
 static void
 EnsureSubtreeStyled(Element* aElement)
 {
-  if (!aElement->IsStyledByServo() || !aElement->HasServoData()) {
+  if (!aElement->HasServoData()) {
     return;
   }
 

@@ -113,18 +113,14 @@ ElementPropertyTransition::UpdateStartValueFromReplacedTransition()
     const AnimationValue& replacedFrom = mReplacedTransition->mFromValue;
     const AnimationValue& replacedTo = mReplacedTransition->mToValue;
     AnimationValue startValue;
-    if (mDocument->IsStyledByServo()) {
-      startValue.mServo =
-        Servo_AnimationValues_Interpolate(replacedFrom.mServo,
-                                          replacedTo.mServo,
-                                          valuePosition).Consume();
-      if (startValue.mServo) {
-        mKeyframes[0].mPropertyValues[0].mServoDeclarationBlock =
-          Servo_AnimationValue_Uncompute(startValue.mServo).Consume();
-        mProperties[0].mSegments[0].mFromValue = Move(startValue);
-      }
-    } else {
-      MOZ_CRASH("old style system disabled");
+    startValue.mServo =
+      Servo_AnimationValues_Interpolate(replacedFrom.mServo,
+                                        replacedTo.mServo,
+                                        valuePosition).Consume();
+    if (startValue.mServo) {
+      mKeyframes[0].mPropertyValues[0].mServoDeclarationBlock =
+        Servo_AnimationValue_Uncompute(startValue.mServo).Consume();
+      mProperties[0].mSegments[0].mFromValue = Move(startValue);
     }
   }
 
@@ -633,14 +629,9 @@ GetTransitionKeyframes(nsCSSPropertyID aProperty,
 }
 
 static bool
-IsTransitionable(nsCSSPropertyID aProperty, bool aIsServo)
+IsTransitionable(nsCSSPropertyID aProperty)
 {
-  if (aIsServo) {
-    return Servo_Property_IsTransitionable(aProperty);
-  }
-
-  // FIXME: This should also exclude discretely-animated properties.
-  return nsCSSProps::kAnimTypeTable[aProperty] != eStyleAnimType_None;
+  return Servo_Property_IsTransitionable(aProperty);
 }
 
 template<typename StyleType>
@@ -678,7 +669,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
     return;
   }
 
-  if (!IsTransitionable(aProperty, aElement->IsStyledByServo())) {
+  if (!IsTransitionable(aProperty)) {
     return;
   }
 

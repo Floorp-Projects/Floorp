@@ -240,13 +240,9 @@ ResponsiveImageSelector::SetSizesFromDescriptor(const nsAString & aSizes)
 {
   ClearSelectedCandidate();
 
-  if (Document()->IsStyledByServo()) {
-    NS_ConvertUTF16toUTF8 sizes(aSizes);
-    mServoSourceSizeList.reset(Servo_SourceSizeList_Parse(&sizes));
-    return !!mServoSourceSizeList;
-  }
-
-  MOZ_CRASH("old style system disabled");
+  NS_ConvertUTF16toUTF8 sizes(aSizes);
+  mServoSourceSizeList.reset(Servo_SourceSizeList_Parse(&sizes));
+  return !!mServoSourceSizeList;
 }
 
 void
@@ -444,13 +440,9 @@ ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(double *aWidth)
   if (!pctx) {
     return false;
   }
-  nscoord effectiveWidth;
-  if (doc->IsStyledByServo()) {
-    effectiveWidth = presShell->StyleSet()->AsServo()->EvaluateSourceSizeList(
+  nscoord effectiveWidth =
+    presShell->StyleSet()->AsServo()->EvaluateSourceSizeList(
       mServoSourceSizeList.get());
-  } else {
-    MOZ_CRASH("old style system disabled");
-  }
 
   *aWidth = nsPresContext::AppUnitsToDoubleCSSPixels(std::max(effectiveWidth, 0));
   return true;

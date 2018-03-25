@@ -2484,7 +2484,6 @@ nsINode::ParseServoSelectorList(
   ErrorResult& aRv)
 {
   nsIDocument* doc = OwnerDoc();
-  MOZ_ASSERT(doc->IsStyledByServo());
 
   nsIDocument::SelectorCache& cache =
     doc->GetSelectorCache(mozilla::StyleBackendType::Servo);
@@ -2752,12 +2751,6 @@ bool
 nsINode::IsNodeApzAwareInternal() const
 {
   return EventTarget::IsApzAware();
-}
-
-bool
-nsINode::IsStyledByServo() const
-{
-  return OwnerDoc()->IsStyledByServo();
 }
 
 DocGroup*

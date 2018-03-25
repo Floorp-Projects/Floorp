@@ -469,32 +469,26 @@ public:
 
   bool HasDirtyDescendantsForServo() const
   {
-    MOZ_ASSERT(IsStyledByServo());
     return HasFlag(ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
   }
 
   void SetHasDirtyDescendantsForServo() {
-    MOZ_ASSERT(IsStyledByServo());
     SetFlags(ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
   }
 
   void UnsetHasDirtyDescendantsForServo() {
-    MOZ_ASSERT(IsStyledByServo());
     UnsetFlags(ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
   }
 
   bool HasAnimationOnlyDirtyDescendantsForServo() const {
-    MOZ_ASSERT(IsStyledByServo());
     return HasFlag(ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO);
   }
 
   void SetHasAnimationOnlyDirtyDescendantsForServo() {
-    MOZ_ASSERT(IsStyledByServo());
     SetFlags(ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO);
   }
 
   void UnsetHasAnimationOnlyDirtyDescendantsForServo() {
-    MOZ_ASSERT(IsStyledByServo());
     UnsetFlags(ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO);
   }
 
