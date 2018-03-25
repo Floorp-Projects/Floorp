@@ -9,10 +9,6 @@
  * the end of the test, there is an assertion that all items have been
  * removed from the whitelist, thus ensuring there are no stale entries. */
 let gWhitelist = [{
-    file: "search.properties",
-    key: "searchForSomethingWith",
-    type: "single-quote"
-  }, {
     file: "netError.dtd",
     key: "certerror.introPara",
     type: "single-quote"
