@@ -75,9 +75,10 @@ class GeckoViewNavigation extends GeckoViewModule {
           navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_POPUPS;
         }
 
-        this.browser.loadURIWithFlags(uri, navFlags, referrer || null,
-                                      baseUri ? Services.io.newURI(baseUri) : null,
-                                      /* nsIPrincipal */ null);
+        this.browser.loadURIWithFlags(uri, {
+          flags: navFlags,
+          referrerURI: referrer,
+        });
         break;
       case "GeckoView:Reload":
         this.browser.reload();
