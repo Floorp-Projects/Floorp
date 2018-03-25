@@ -56,7 +56,7 @@
     // 6) Start reloading first tab.
     function loadFirstTab() {
       var browser = document.getElementById("tab1browser");
-      browser.loadURI("data:text/html;charset=utf-8,<body><h2>First Tab</h2><p><input type='submit' value='Button' id='button1'/></body>", null, null);
+      browser.loadURI("data:text/html;charset=utf-8,<body><h2>First Tab</h2><p><input type='submit' value='Button' id='button1'/></body>");
     }
 
     function configureFirstTab() {
@@ -81,7 +81,7 @@
     // 8) Start loading second tab.
     function loadSecondTab() {
       var browser = document.getElementById("tab2browser");
-      browser.loadURI("data:text/html;charset=utf-8,<body><h2>Second Tab</h2><p><input type='submit' value='Button' id='button1'/></body>", null, null);
+      browser.loadURI("data:text/html;charset=utf-8,<body><h2>Second Tab</h2><p><input type='submit' value='Button' id='button1'/></body>");
     }
 
     function configureSecondTab() {

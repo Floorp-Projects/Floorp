@@ -58,8 +58,9 @@ function replaceUrlInTab(gBrowser, tab, url) {
       },
     });
   });
-  gBrowser.loadURIWithFlags(
-    url, {flags: Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY});
+  gBrowser.loadURI(url, {
+    flags: Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY,
+  });
   return loaded;
 }
 

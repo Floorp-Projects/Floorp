@@ -1172,7 +1172,12 @@ var BrowserApp = {
     }
 
     try {
-      aBrowser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
+      aBrowser.loadURI(aURI, {
+        flags,
+        referrerURI,
+        charset,
+        postData,
+      });
     } catch(e) {
       if (tab) {
         let message = {
@@ -3492,7 +3497,7 @@ nsBrowserAccess.prototype = {
       }
 
       let openerWindow = (aFlags & Ci.nsIBrowserDOMWindow.OPEN_NO_OPENER) ? null : aOpener;
-      // BrowserApp.addTab calls loadURIWithFlags with the appropriate params
+      // BrowserApp.addTab calls loadURI with the appropriate params
       let tab = BrowserApp.addTab(aURI ? aURI.spec : "about:blank", { flags: loadflags,
                                                                       referrerURI: referrer,
                                                                       external: isExternal,
@@ -3509,7 +3514,7 @@ nsBrowserAccess.prototype = {
     // OPEN_CURRENTWINDOW and illegal values
     let browser = BrowserApp.selectedBrowser;
     if (aURI && browser) {
-      browser.loadURIWithFlags(aURI.spec, {
+      browser.loadURI(aURI.spec, {
         flags: loadflags,
         referrerURI: referrer,
         triggeringPrincipal: aTriggeringPrincipal,
@@ -3775,7 +3780,12 @@ Tab.prototype = {
       this.isSearch = "isSearch" in aParams ? aParams.isSearch : false;
 
       try {
-        this.browser.loadURIWithFlags(aURL, flags, referrerURI, charset, postData);
+        this.browser.loadURI(aURL, {
+          flags,
+          referrerURI,
+          charset,
+          postData,
+        });
       } catch(e) {
         let message = {
           type: "Content:LoadError",
