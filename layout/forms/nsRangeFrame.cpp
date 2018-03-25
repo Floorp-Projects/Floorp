@@ -220,10 +220,10 @@ nsDisplayRangeFocusRing::GetBounds(nsDisplayListBuilder* aBuilder,
 
   // We want to paint as if specifying a border for ::-moz-focus-outer
   // specifies an outline for our frame, so inflate by the border widths:
-  ComputedStyle* styleContext =
+  ComputedStyle* computedStyle =
     static_cast<nsRangeFrame*>(mFrame)->mOuterFocusStyle;
-  MOZ_ASSERT(styleContext, "We only exist if mOuterFocusStyle is non-null");
-  rect.Inflate(styleContext->StyleBorder()->GetComputedBorder());
+  MOZ_ASSERT(computedStyle, "We only exist if mOuterFocusStyle is non-null");
+  rect.Inflate(computedStyle->StyleBorder()->GetComputedBorder());
 
   return rect;
 }
@@ -233,9 +233,9 @@ nsDisplayRangeFocusRing::Paint(nsDisplayListBuilder* aBuilder,
                                gfxContext* aCtx)
 {
   bool unused;
-  ComputedStyle* styleContext =
+  ComputedStyle* computedStyle =
     static_cast<nsRangeFrame*>(mFrame)->mOuterFocusStyle;
-  MOZ_ASSERT(styleContext, "We only exist if mOuterFocusStyle is non-null");
+  MOZ_ASSERT(computedStyle, "We only exist if mOuterFocusStyle is non-null");
 
   PaintBorderFlags flags = aBuilder->ShouldSyncDecodeImages()
                          ? PaintBorderFlags::SYNC_DECODE_IMAGES
@@ -244,7 +244,7 @@ nsDisplayRangeFocusRing::Paint(nsDisplayListBuilder* aBuilder,
   ImgDrawResult result =
     nsCSSRendering::PaintBorder(mFrame->PresContext(), *aCtx, mFrame,
                                 mVisibleRect, GetBounds(aBuilder, &unused),
-                                styleContext, flags);
+                                computedStyle, flags);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
 }

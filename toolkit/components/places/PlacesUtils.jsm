@@ -946,6 +946,11 @@ var PlacesUtils = {
       case this.TYPE_X_MOZ_URL: {
         if (aFeedURI || PlacesUtils.nodeIsURI(aNode))
           return (aFeedURI || aNode.uri) + NEWLINE + aNode.title;
+        if (PlacesUtils.nodeIsContainer(aNode)) {
+          return PlacesUtils.getURLsForContainerNode(aNode)
+            .map(item => item.uri + "\n" + item.title)
+            .join("\n");
+        }
         return "";
       }
       case this.TYPE_HTML: {
@@ -1382,7 +1387,11 @@ var PlacesUtils = {
     for (let i = 0; i < root.childCount; ++i) {
       let child = root.getChild(i);
       if (this.nodeIsURI(child))
-        urls.push({uri: child.uri, isBookmark: this.nodeIsBookmark(child)});
+        urls.push({
+          uri: child.uri,
+          isBookmark: this.nodeIsBookmark(child),
+          title: child.title,
+        });
     }
 
     if (!wasOpen) {
