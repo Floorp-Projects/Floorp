@@ -47,6 +47,8 @@ onmessage = async e => {
       text = await OS.File.read(e.data.filepath, {encoding: "utf-8"});
     } else if (e.data.url) {
       text = await fetchSymbolFile(e.data.url);
+    } else if (e.data.textBuffer) {
+      text = (new TextDecoder()).decode(e.data.textBuffer);
     }
 
     const result = parse(text);

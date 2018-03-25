@@ -22,7 +22,7 @@ browser.jar:
   skin/classic/browser/webRTC-indicator.css  (../shared/webRTC-indicator.css)
 * skin/classic/browser/controlcenter/panel.css        (controlcenter/panel.css)
 * skin/classic/browser/customizableui/panelUI.css (customizableui/panelUI.css)
-* skin/classic/browser/downloads/allDownloadsViewOverlay.css   (downloads/allDownloadsViewOverlay.css)
+* skin/classic/browser/downloads/allDownloadsView.css   (downloads/allDownloadsView.css)
 * skin/classic/browser/downloads/downloads.css        (downloads/downloads.css)
   skin/classic/browser/feeds/feedIcon.png             (feeds/feedIcon.png)
   skin/classic/browser/feeds/feedIcon16.png           (feeds/feedIcon16.png)
