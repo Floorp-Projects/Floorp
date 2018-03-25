@@ -5575,16 +5575,16 @@ nsTextFrame::UpdateTextEmphasis(WritingMode aWM, PropertyProvider& aProvider)
     return nsRect();
   }
 
-  ComputedStyle* styleContext = Style();
-  bool isTextCombined = styleContext->IsTextCombined();
+  ComputedStyle* computedStyle = Style();
+  bool isTextCombined = computedStyle->IsTextCombined();
   if (isTextCombined) {
-    styleContext = GetParent()->Style();
+    computedStyle = GetParent()->Style();
   }
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::
-    GetFontMetricsOfEmphasisMarks(styleContext, GetFontSizeInflation());
+    GetFontMetricsOfEmphasisMarks(computedStyle, GetFontSizeInflation());
   EmphasisMarkInfo* info = new EmphasisMarkInfo;
   info->textRun =
-    GenerateTextRunForEmphasisMarks(this, fm, styleContext, styleText);
+    GenerateTextRunForEmphasisMarks(this, fm, computedStyle, styleText);
   info->advance = info->textRun->GetAdvanceWidth();
 
   // Calculate the baseline offset

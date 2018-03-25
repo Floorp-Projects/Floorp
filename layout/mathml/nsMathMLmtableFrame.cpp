@@ -448,7 +448,7 @@ ExtractSpacingValues(const nsAString&   aString,
                      float              aFontSizeInflation)
 {
   nsPresContext* presContext = aFrame->PresContext();
-  ComputedStyle* styleContext = aFrame->Style();
+  ComputedStyle* computedStyle = aFrame->Style();
 
   const char16_t* start = aString.BeginReading();
   const char16_t* end = aString.EndReading();
@@ -483,7 +483,7 @@ ExtractSpacingValues(const nsAString&   aString,
       }
       nsMathMLFrame::ParseNumericValue(valueString, &newValue,
                                        nsMathMLElement::PARSE_ALLOW_UNITLESS,
-                                       presContext, styleContext,
+                                       presContext, computedStyle,
                                        aFontSizeInflation);
       aSpacingArray.AppendElement(newValue);
 

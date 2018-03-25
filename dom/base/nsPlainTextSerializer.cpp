@@ -1851,10 +1851,10 @@ nsPlainTextSerializer::IsInPre()
 bool
 nsPlainTextSerializer::IsElementPreformatted(Element* aElement)
 {
-  RefPtr<ComputedStyle> styleContext =
+  RefPtr<ComputedStyle> computedStyle =
     nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
-  if (styleContext) {
-    const nsStyleText* textStyle = styleContext->StyleText();
+  if (computedStyle) {
+    const nsStyleText* textStyle = computedStyle->StyleText();
     return textStyle->WhiteSpaceOrNewlineIsSignificant();
   }
   // Fall back to looking at the tag, in case there is no style information.
@@ -1864,10 +1864,10 @@ nsPlainTextSerializer::IsElementPreformatted(Element* aElement)
 bool
 nsPlainTextSerializer::IsElementBlock(Element* aElement)
 {
-  RefPtr<ComputedStyle> styleContext =
+  RefPtr<ComputedStyle> computedStyle =
     nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
-  if (styleContext) {
-    const nsStyleDisplay* displayStyle = styleContext->StyleDisplay();
+  if (computedStyle) {
+    const nsStyleDisplay* displayStyle = computedStyle->StyleDisplay();
     return displayStyle->IsBlockOutsideStyle();
   }
   // Fall back to looking at the tag, in case there is no style information.

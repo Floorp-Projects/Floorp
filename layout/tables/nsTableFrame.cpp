@@ -734,19 +734,16 @@ nsTableFrame::AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
   int32_t lastIndex  = startIndex + aNumColsToAdd - 1;
 
   for (int32_t childX = startIndex; childX <= lastIndex; childX++) {
-    nsIContent* iContent;
-    RefPtr<ComputedStyle> styleContext;
-
     // all anonymous cols that we create here use a pseudo style context of the
     // col group
-    iContent = aColGroupFrame->GetContent();
-    styleContext = shell->StyleSet()->
+    nsIContent* iContent = aColGroupFrame->GetContent();
+    RefPtr<ComputedStyle> computedStyle = shell->StyleSet()->
       ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableCol);
     // ASSERTION to check for bug 54454 sneaking back in...
     NS_ASSERTION(iContent, "null content in CreateAnonymousColFrames");
 
     // create the new col frame
-    nsIFrame* colFrame = NS_NewTableColFrame(shell, styleContext);
+    nsIFrame* colFrame = NS_NewTableColFrame(shell, computedStyle);
     ((nsTableColFrame *) colFrame)->SetColType(aColType);
     colFrame->Init(iContent, aColGroupFrame, nullptr);
 
@@ -8185,9 +8182,9 @@ nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
                nsCSSAnonBoxes::tableWrapper,
              "What happened to our parent?");
 
-  RefPtr<ComputedStyle> newContext =
+  RefPtr<ComputedStyle> newStyle =
     aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(
-      nsCSSAnonBoxes::tableWrapper, aOwningFrame->Style()->AsServo());
+      nsCSSAnonBoxes::tableWrapper, aOwningFrame->Style());
 
   // Figure out whether we have an actual change.  It's important that we do
   // this, even though all the wrapper's changes are due to properties it
@@ -8204,7 +8201,7 @@ nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
   // compared to the owner frame.
   uint32_t equalStructs, samePointerStructs; // Not used, actually.
   nsChangeHint wrapperHint = aWrapperFrame->Style()->CalcStyleDifference(
-    newContext,
+    newStyle,
     &equalStructs,
     &samePointerStructs,
     /* aIgnoreVariables = */ true);
@@ -8222,7 +8219,7 @@ nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
   }
 
   for (nsIFrame* cur = aWrapperFrame; cur; cur = cur->GetNextContinuation()) {
-    cur->SetComputedStyle(newContext);
+    cur->SetComputedStyle(newStyle);
   }
 
   MOZ_ASSERT(!(aWrapperFrame->GetStateBits() & NS_FRAME_OWNS_ANON_BOXES),
