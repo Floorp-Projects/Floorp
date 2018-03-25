@@ -46,7 +46,6 @@
 #include "nsDisplayList.h"
 #include "nsIScrollableFrame.h"
 #include "nsCSSProps.h"
-#include "RestyleTracker.h"
 #include "nsStyleChangeList.h"
 #include <algorithm>
 

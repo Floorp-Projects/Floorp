@@ -1045,8 +1045,6 @@ public:
    */
   bool IsStyledByServo() const;
 
-  inline void UnsetRestyleFlagsIfGecko();
-
   /**
    * Adds a mutation observer to be notified when this node, or any of its
    * descendants, are modified. The node will hold a weak reference to the
