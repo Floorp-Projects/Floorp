@@ -81,7 +81,6 @@
 #include "nsCaret.h"
 #include "nsISelection.h"
 #include "nsDOMTokenList.h"
-#include "mozilla/RuleNodeCacheConditions.h"
 #include "nsCSSProps.h"
 #include "nsSVGMaskFrame.h"
 #include "nsTableCellFrame.h"

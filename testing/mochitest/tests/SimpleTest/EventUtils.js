@@ -20,6 +20,7 @@
  *  synthesizeDragOver
  *  synthesizeDropAfterDragOver
  *  synthesizeDrop
+ *  synthesizePlainDragAndDrop
  *
  *  When adding methods to this file, please add a performance test for it.
  */
@@ -2688,6 +2689,91 @@ function synthesizeDrop(aSrcElement, aDestElement, aDragData, aDropEffect, aWind
                                        aDestWindow, aDragEvent);
   } finally {
     ds.endDragSession(true, _parseModifiers(aDragEvent));
+  }
+}
+
+/**
+ * Emulate a drag and drop by emulating a dragstart by mousedown and mousemove,
+ * and firing events dragenter, dragover, drop, and mouseup.
+ * This does not modify dataTransfer and tries to emulate the plain drag and
+ * drop as much as possible, compared to synthesizeDrop.
+ *
+ * @param aParams
+ *        {
+ *          srcElement:   The element to start dragging
+ *          destElement:  The element to drop on
+ *          srcX:         The initial x coordinate inside srcElement
+ *          srcY:         The initial y coordinate inside srcElement
+ *          stepX:        The x-axis step for mousemove inside srcElement
+ *          stepY:        The y-axis step for mousemove inside srcElement
+ *          destX:        The x coordinate inside destElement
+ *          destY:        The x coordinate inside destElement
+ *          srcWindow:    The window for dispatching event on srcElement,
+ *                        defaults to the current window object
+ *          destWindow:   The window for dispatching event on destElement,
+ *                        defaults to the current window object
+ *        }
+ */
+async function synthesizePlainDragAndDrop(aParams)
+{
+  let {
+    srcElement,
+    destElement,
+    srcX = 2,
+    srcY = 2,
+    stepX = 9,
+    stepY = 9,
+    destX = 2,
+    destY = 2,
+    srcWindow = window,
+    destWindow = window,
+  } = aParams;
+
+  const ds = _EU_Cc["@mozilla.org/widget/dragservice;1"]
+        .getService(_EU_Ci.nsIDragService);
+  ds.startDragSession();
+
+  try {
+    let dataTransfer = null;
+    function trapDrag(aEvent) {
+      dataTransfer = aEvent.dataTransfer;
+    }
+    srcElement.addEventListener("dragstart", trapDrag, true);
+    synthesizeMouse(srcElement, srcX, srcY, { type: "mousedown" }, srcWindow);
+
+    // Wait for the next event tick after each event dispatch, so that UI elements
+    // (e.g. menu) work like the real user input.
+    await new Promise(r => setTimeout(r, 0));
+
+    srcX += stepX; srcY += stepY;
+    synthesizeMouse(srcElement, srcX, srcY, { type: "mousemove" }, srcWindow);
+
+    await new Promise(r => setTimeout(r, 0));
+
+    srcX += stepX; srcY += stepY;
+    synthesizeMouse(srcElement, srcX, srcY, { type: "mousemove" }, srcWindow);
+
+    await new Promise(r => setTimeout(r, 0));
+
+    srcElement.removeEventListener("dragstart", trapDrag, true);
+
+    await new Promise(r => setTimeout(r, 0));
+
+    let event = createDragEventObject("dragover", destElement, destWindow,
+                                      dataTransfer, {});
+    sendDragEvent(event, destElement, destWindow);
+
+    await new Promise(r => setTimeout(r, 0));
+
+    event = createDragEventObject("drop", destElement, destWindow,
+                                  dataTransfer, {});
+    sendDragEvent(event, destElement, destWindow);
+
+    await new Promise(r => setTimeout(r, 0));
+
+    synthesizeMouseAtCenter(destElement, { type: "mouseup" }, destWindow);
+  } finally {
+    ds.endDragSession(true, 0);
   }
 }
 

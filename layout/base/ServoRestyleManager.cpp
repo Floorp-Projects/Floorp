@@ -507,17 +507,17 @@ public:
 
   void ComputeHintIfNeeded(nsIContent* aContent,
                            nsIFrame* aTextFrame,
-                           ComputedStyle& aNewContext)
+                           ComputedStyle& aNewStyle)
   {
     MOZ_ASSERT(aTextFrame);
-    MOZ_ASSERT(aNewContext.GetPseudo() == nsCSSAnonBoxes::mozText);
+    MOZ_ASSERT(aNewStyle.GetPseudo() == nsCSSAnonBoxes::mozText);
 
     if (MOZ_LIKELY(!mShouldPostHints)) {
       return;
     }
 
-    ComputedStyle* oldContext = aTextFrame->Style()->AsServo();
-    MOZ_ASSERT(oldContext->GetPseudo() == nsCSSAnonBoxes::mozText);
+    ComputedStyle* oldStyle = aTextFrame->Style();
+    MOZ_ASSERT(oldStyle->GetPseudo() == nsCSSAnonBoxes::mozText);
 
     // We rely on the fact that all the text children for the same element share
     // style to avoid recomputing style differences for all of them.
@@ -528,9 +528,9 @@ public:
       mShouldComputeHints = false;
       uint32_t equalStructs, samePointerStructs;
       mComputedHint =
-        oldContext->CalcStyleDifference(&aNewContext,
-                                        &equalStructs,
-                                        &samePointerStructs);
+        oldStyle->CalcStyleDifference(&aNewStyle,
+                                      &equalStructs,
+                                      &samePointerStructs);
       mComputedHint = NS_RemoveSubsumedHints(
         mComputedHint, mParentRestyleState.ChangesHandledFor(*aTextFrame));
     }
@@ -588,10 +588,10 @@ UpdateBackdropIfNeeded(nsIFrame* aFrame,
   MOZ_ASSERT(backdropFrame->Style()->GetPseudoType() ==
              CSSPseudoElementType::backdrop);
 
-  RefPtr<ComputedStyle> newContext =
+  RefPtr<ComputedStyle> newStyle =
     aStyleSet.ResolvePseudoElementStyle(aFrame->GetContent()->AsElement(),
                                         CSSPseudoElementType::backdrop,
-                                        aFrame->Style()->AsServo(),
+                                        aFrame->Style(),
                                         /* aPseudoElement = */ nullptr);
 
   // NOTE(emilio): We can't use the changes handled for the owner of the
@@ -601,7 +601,7 @@ UpdateBackdropIfNeeded(nsIFrame* aFrame,
              backdropFrame->GetParent()->IsCanvasFrame());
   nsTArray<nsIFrame*> wrappersToRestyle;
   ServoRestyleState state(aStyleSet, aChangeList, wrappersToRestyle);
-  nsIFrame::UpdateStyleOfOwnedChildFrame(backdropFrame, newContext, state);
+  nsIFrame::UpdateStyleOfOwnedChildFrame(backdropFrame, newStyle, state);
 }
 
 static void
@@ -636,16 +636,16 @@ UpdateOneAdditionalComputedStyle(nsIFrame* aFrame,
   MOZ_ASSERT(
       !nsCSSPseudoElements::PseudoElementSupportsUserActionState(pseudoType));
 
-  RefPtr<ComputedStyle> newContext =
+  RefPtr<ComputedStyle> newStyle =
     aRestyleState.StyleSet().ResolvePseudoElementStyle(
         aFrame->GetContent()->AsElement(),
         pseudoType,
-        aFrame->Style()->AsServo(),
+        aFrame->Style(),
         /* aPseudoElement = */ nullptr);
 
   uint32_t equalStructs, samePointerStructs; // Not used, actually.
   nsChangeHint childHint = aOldContext.CalcStyleDifference(
-    newContext,
+    newStyle,
     &equalStructs,
     &samePointerStructs);
   if (!aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
@@ -663,7 +663,7 @@ UpdateOneAdditionalComputedStyle(nsIFrame* aFrame,
         aFrame, aFrame->GetContent(), childHint);
   }
 
-  aFrame->SetAdditionalComputedStyle(aIndex, newContext);
+  aFrame->SetAdditionalComputedStyle(aIndex, newStyle);
 }
 
 static void
@@ -676,9 +676,9 @@ UpdateAdditionalComputedStyles(nsIFrame* aFrame,
   // FIXME(emilio): Consider adding a bit or something to avoid the initial
   // virtual call?
   uint32_t index = 0;
-  while (auto* oldContext = aFrame->GetAdditionalComputedStyle(index)) {
+  while (auto* oldStyle = aFrame->GetAdditionalComputedStyle(index)) {
     UpdateOneAdditionalComputedStyle(
-        aFrame, index++, *oldContext->AsServo(), aRestyleState);
+        aFrame, index++, *oldStyle, aRestyleState);
   }
 }
 
@@ -854,7 +854,7 @@ ServoRestyleManager::ProcessPostTraversal(
   // during the replacement. In practice it's not a huge deal, but better not
   // playing with dangling pointers if not needed.
   RefPtr<ComputedStyle> oldComputedStyle =
-    styleFrame ? styleFrame->Style()->AsServo() : nullptr;
+    styleFrame ? styleFrame->Style() : nullptr;
 
   ComputedStyle* displayContentsStyle = nullptr;
   // FIXME(emilio, bug 1303605): This can be simpler for Servo.
@@ -863,7 +863,7 @@ ServoRestyleManager::ProcessPostTraversal(
     displayContentsStyle =
       PresContext()->FrameConstructor()->GetDisplayContentsStyleFor(aElement);
     if (displayContentsStyle) {
-      oldComputedStyle = displayContentsStyle->AsServo();
+      oldComputedStyle = displayContentsStyle;
     }
   }
 
@@ -899,7 +899,7 @@ ServoRestyleManager::ProcessPostTraversal(
     // We want to walk all the continuations here, even the ones with different
     // styles.  In practice, the only reason we get continuations with different
     // styles here is ::first-line (::first-letter never affects element
-    // styles).  But in that case, newContext is the right context for the
+    // styles).  But in that case, newStyle is the right context for the
     // _later_ continuations anyway (the ones not affected by ::first-line), not
     // the earlier ones, so there is no point stopping right at the point when
     // we'd actually be setting the right ComputedStyle.
@@ -938,7 +938,7 @@ ServoRestyleManager::ProcessPostTraversal(
     //
     // We can sometimes reach this when the animated style is being removed.
     // Since AddLayerChangesForAnimation checks if |styleFrame| has a transform
-    // style or not, we need to call it *after* setting |newContext| to
+    // style or not, we need to call it *after* setting |newStyle| to
     // |styleFrame| to ensure the animated transform has been removed first.
     AddLayerChangesForAnimation(
       styleFrame, aElement, aRestyleState.ChangeList());
@@ -1045,13 +1045,13 @@ ServoRestyleManager::ProcessPostTraversalForText(
       ServoRestyleState::TableAwareParentFor(primaryFrame));
   }
 
-  ComputedStyle& newContext = aPostTraversalState.ComputeStyle(aTextNode);
-  aPostTraversalState.ComputeHintIfNeeded(aTextNode, primaryFrame, newContext);
+  ComputedStyle& newStyle = aPostTraversalState.ComputeStyle(aTextNode);
+  aPostTraversalState.ComputeHintIfNeeded(aTextNode, primaryFrame, newStyle);
 
   // We want to walk all the continuations here, even the ones with different
   // styles.  In practice, the only reasons we get continuations with different
   // styles are ::first-line and ::first-letter.  But in those cases,
-  // newContext is the right context for the _later_ continuations anyway (the
+  // newStyle is the right context for the _later_ continuations anyway (the
   // ones not affected by ::first-line/::first-letter), not the earlier ones,
   // so there is no point stopping right at the point when we'd actually be
   // setting the right ComputedStyle.
@@ -1060,7 +1060,7 @@ ServoRestyleManager::ProcessPostTraversalForText(
   // initial continuations; ::first-line/::first-letter fix that up after the
   // fact.
   for (nsIFrame* f = primaryFrame; f; f = f->GetNextContinuation()) {
-    f->SetComputedStyle(&newContext);
+    f->SetComputedStyle(&newStyle);
   }
 
   return true;
@@ -1591,7 +1591,7 @@ ServoRestyleManager::DoReparentComputedStyle(nsIFrame* aFrame,
   }
 
   nsIFrame* providerFrame;
-  ComputedStyle* newParentContext =
+  ComputedStyle* newParentStyle =
     aFrame->GetParentComputedStyle(&providerFrame);
   // If our provider is our child, we want to reparent it first, because we
   // inherit style from it.
@@ -1601,13 +1601,13 @@ ServoRestyleManager::DoReparentComputedStyle(nsIFrame* aFrame,
     DoReparentComputedStyle(providerFrame, aStyleSet);
     // Get the style again after ReparentComputedStyle() which might have
     // changed it.
-    newParentContext = providerFrame->Style();
+    newParentStyle = providerFrame->Style();
     providerChild = providerFrame;
     MOZ_ASSERT(!providerFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW),
                "Out of flow provider?");
   }
 
-  if (!newParentContext) {
+  if (!newParentStyle) {
     // No need to do anything here for this frame, but we should still reparent
     // its descendants, because those may have styles that inherit from the
     // parent of this frame (e.g. non-anonymous columns in an anonymous
@@ -1629,13 +1629,13 @@ ServoRestyleManager::DoReparentComputedStyle(nsIFrame* aFrame,
   // We don't try to do the fancy copying from previous continuations that
   // GeckoRestyleManager does here, because that relies on knowing the parents
   // of ComputedStyles, and we don't know those.
-  ComputedStyle* oldContext = aFrame->Style()->AsServo();
+  ComputedStyle* oldStyle = aFrame->Style();
   Element* ourElement =
-    oldContext->GetPseudoType() == CSSPseudoElementType::NotPseudo &&
+    oldStyle->GetPseudoType() == CSSPseudoElementType::NotPseudo &&
     isElement ?
       aFrame->GetContent()->AsElement() :
       nullptr;
-  ComputedStyle* newParent = newParentContext->AsServo();
+  ComputedStyle* newParent = newParentStyle;
 
   ComputedStyle* newParentIgnoringFirstLine;
   if (newParent->GetPseudoType() == CSSPseudoElementType::firstLine) {
@@ -1648,8 +1648,8 @@ ServoRestyleManager::DoReparentComputedStyle(nsIFrame* aFrame,
     // Use the resulting style for the "parent style ignoring ::first-line".
     nsIFrame* blockFrame = providerFrame->GetParent();
     nsIFrame* correctedFrame =
-      nsFrame::CorrectStyleParentFrame(blockFrame, oldContext->GetPseudo());
-    newParentIgnoringFirstLine = correctedFrame->Style()->AsServo();
+      nsFrame::CorrectStyleParentFrame(blockFrame, oldStyle->GetPseudo());
+    newParentIgnoringFirstLine = correctedFrame->Style();
   } else {
     newParentIgnoringFirstLine = newParent;
   }
@@ -1663,18 +1663,18 @@ ServoRestyleManager::DoReparentComputedStyle(nsIFrame* aFrame,
       aFrame->GetPlaceholderFrame()->GetLayoutParentStyleForOutOfFlow(&providerFrame);
     } else {
       providerFrame = nsFrame::CorrectStyleParentFrame(aFrame->GetParent(),
-                                                       oldContext->GetPseudo());
+                                                       oldStyle->GetPseudo());
     }
   }
-  ComputedStyle* layoutParent = providerFrame->Style()->AsServo();
+  ComputedStyle* layoutParent = providerFrame->Style();
 
-  RefPtr<ComputedStyle> newContext =
-    aStyleSet.ReparentComputedStyle(oldContext,
-                                   newParent,
-                                   newParentIgnoringFirstLine,
-                                   layoutParent,
-                                   ourElement);
-  aFrame->SetComputedStyle(newContext);
+  RefPtr<ComputedStyle> newStyle =
+    aStyleSet.ReparentComputedStyle(oldStyle,
+                                    newParent,
+                                    newParentIgnoringFirstLine,
+                                    layoutParent,
+                                    ourElement);
+  aFrame->SetComputedStyle(newStyle);
 
   // This logic somewhat mirrors the logic in
   // ServoRestyleManager::ProcessPostTraversal.
@@ -1683,14 +1683,13 @@ ServoRestyleManager::DoReparentComputedStyle(nsIFrame* aFrame,
     // ServoRestyleState and maintaining one of those during a _frametree_
     // traversal is basically impossible.
     uint32_t index = 0;
-    while (ComputedStyle* oldAdditionalContext =
-             aFrame->GetAdditionalComputedStyle(index)) {
+    while (auto* oldAdditionalStyle = aFrame->GetAdditionalComputedStyle(index)) {
       RefPtr<ComputedStyle> newAdditionalContext =
-        aStyleSet.ReparentComputedStyle(oldAdditionalContext->AsServo(),
-                                       newContext,
-                                       newContext,
-                                       newContext,
-                                       nullptr);
+        aStyleSet.ReparentComputedStyle(oldAdditionalStyle,
+                                        newStyle,
+                                        newStyle,
+                                        newStyle,
+                                        nullptr);
       aFrame->SetAdditionalComputedStyle(index, newAdditionalContext);
       ++index;
     }

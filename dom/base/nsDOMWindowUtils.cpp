@@ -2723,9 +2723,9 @@ nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  RefPtr<ComputedStyle> styleContext =
+  RefPtr<ComputedStyle> computedStyle =
     nsComputedDOMStyle::GetComputedStyle(element, nullptr);
-  *aResult = v1.ComputeDistance(property, v2, styleContext);
+  *aResult = v1.ComputeDistance(property, v2, computedStyle);
   return NS_OK;
 }
 
@@ -2821,14 +2821,14 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(nsIDOMElement* aElement,
   }
 
   RefPtr<nsAtom> pseudo = nsCSSPseudoElements::GetPseudoAtom(aPseudoElement);
-  RefPtr<ComputedStyle> styleContext =
+  RefPtr<ComputedStyle> computedStyle =
     nsComputedDOMStyle::GetUnanimatedComputedStyleNoFlush(element, pseudo);
-  if (!styleContext) {
+  if (!computedStyle) {
     return NS_ERROR_FAILURE;
   }
 
   RefPtr<RawServoAnimationValue> value =
-    Servo_ComputedValues_ExtractAnimationValue(styleContext->AsServo(),
+    Servo_ComputedValues_ExtractAnimationValue(computedStyle,
                                                propertyID).Consume();
   if (!value) {
     return NS_ERROR_FAILURE;

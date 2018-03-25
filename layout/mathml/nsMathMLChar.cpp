@@ -1945,7 +1945,7 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
   // for visual debug
   Sides skipSides;
   nsPresContext* presContext = mFrame->PresContext();
-  ComputedStyle* styleContext = mFrame->Style();
+  ComputedStyle* computedStyle = mFrame->Style();
   nsRect rect = mRect + ToReferenceFrame();
 
   PaintBorderFlags flags = aBuilder->ShouldSyncDecodeImages()
@@ -1956,10 +1956,10 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
   // tracking the ImgDrawResult.
   Unused <<
     nsCSSRendering::PaintBorder(presContext, *aCtx, mFrame, mVisibleRect,
-                                rect, styleContext, flags, skipSides);
+                                rect, computedStyle, flags, skipSides);
 
   nsCSSRendering::PaintOutline(presContext, *aCtx, mFrame,
-                               mVisibleRect, rect, styleContext);
+                               mVisibleRect, rect, computedStyle);
 }
 #endif
 
@@ -1971,19 +1971,20 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
                       uint32_t                aIndex,
                       const nsRect*           aSelectedRect)
 {
-  ComputedStyle* parentContext = aForFrame->Style();
-  ComputedStyle* styleContext = mComputedStyle;
+  bool usingParentStyle = false;
+  ComputedStyle* computedStyle = mComputedStyle;
 
   if (mDraw == DRAW_NORMAL) {
     // normal drawing if there is nothing special about this char
-    // Set default context to the parent context
-    styleContext = parentContext;
+    // Use our parent element's style
+    usingParentStyle = true;
+    computedStyle = aForFrame->Style();
   }
 
-  if (!styleContext->StyleVisibility()->IsVisible())
+  if (!computedStyle->StyleVisibility()->IsVisible())
     return;
 
-  // if the leaf style context that we use for stretchy chars has a background
+  // if the leaf computed style that we use for stretchy chars has a background
   // color we use it -- this feature is mostly used for testing and debugging
   // purposes. Normally, users will set the background on the container frame.
   // paint the selection background -- beware MathML frames overlap a lot
@@ -1992,12 +1993,12 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
       MakeDisplayItem<nsDisplayMathMLSelectionRect>(aBuilder, aForFrame, *aSelectedRect));
   }
   else if (mRect.width && mRect.height) {
-    if (styleContext != parentContext &&
-        NS_GET_A(styleContext->StyleBackground()->
-                 BackgroundColor(styleContext)) > 0) {
+    if (!usingParentStyle &&
+        NS_GET_A(computedStyle->StyleBackground()->
+                 BackgroundColor(computedStyle)) > 0) {
       nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
         aBuilder, aForFrame, mRect, aLists.BorderBackground(),
-        /* aAllowWillPaintBorderOptimization */ true, styleContext);
+        /* aAllowWillPaintBorderOptimization */ true, computedStyle);
     }
     //else
     //  our container frame will take care of painting its background
@@ -2049,18 +2050,17 @@ nsMathMLChar::PaintForeground(nsIFrame* aForFrame,
                               nsPoint aPt,
                               bool aIsSelected)
 {
-  ComputedStyle* parentContext = aForFrame->Style();
-  ComputedStyle* styleContext = mComputedStyle;
+  ComputedStyle* computedStyle = mComputedStyle;
   nsPresContext* presContext = aForFrame->PresContext();
 
   if (mDraw == DRAW_NORMAL) {
     // normal drawing if there is nothing special about this char
-    // Set default context to the parent context
-    styleContext = parentContext;
+    // Use our parent element's style
+    computedStyle = aForFrame->Style();
   }
 
   // Set color ...
-  nscolor fgColor = styleContext->
+  nscolor fgColor = computedStyle->
     GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor);
   if (aIsSelected) {
     // get color to use for selection from the look&feel object

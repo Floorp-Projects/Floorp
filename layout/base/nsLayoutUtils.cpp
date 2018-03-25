@@ -115,7 +115,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
@@ -4684,9 +4683,9 @@ nsLayoutUtils::ComputeObjectDestRect(const nsRect& aConstraintRect,
 already_AddRefed<nsFontMetrics>
 nsLayoutUtils::GetFontMetricsForFrame(const nsIFrame* aFrame, float aInflation)
 {
-  ComputedStyle* styleContext = aFrame->Style();
+  ComputedStyle* computedStyle = aFrame->Style();
   uint8_t variantWidth = NS_FONT_VARIANT_WIDTH_NORMAL;
-  if (styleContext->IsTextCombined()) {
+  if (computedStyle->IsTextCombined()) {
     MOZ_ASSERT(aFrame->IsTextFrame());
     auto textFrame = static_cast<const nsTextFrame*>(aFrame);
     auto clusters = textFrame->CountGraphemeClusters();
@@ -4698,7 +4697,7 @@ nsLayoutUtils::GetFontMetricsForFrame(const nsIFrame* aFrame, float aInflation)
       variantWidth = NS_FONT_VARIANT_WIDTH_QUARTER;
     }
   }
-  return GetFontMetricsForComputedStyle(styleContext, aInflation, variantWidth);
+  return GetFontMetricsForComputedStyle(computedStyle, aInflation, variantWidth);
 }
 
 already_AddRefed<nsFontMetrics>
