@@ -4,11 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* import-globals-from editBookmark.js */
-// Via allDownloadsViewOverlay.xul
 /* import-globals-from ../../../../toolkit/content/contentAreaUtils.js */
 /* import-globals-from ../PlacesUIUtils.jsm */
 /* import-globals-from ../../../../toolkit/components/places/PlacesUtils.jsm */
-/* import-globals-from ../../downloads/content/allDownloadsViewOverlay.js */
+/* import-globals-from ../../downloads/content/allDownloadsView.js */
 
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

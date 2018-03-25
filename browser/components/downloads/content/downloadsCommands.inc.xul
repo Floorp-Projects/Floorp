@@ -1,0 +1,27 @@
+<commandset id="downloadCommands"
+            commandupdater="true"
+            events="focus,select,contextmenu"
+            oncommandupdate="goUpdateDownloadCommands();">
+  <command id="downloadsCmd_pauseResume"
+           oncommand="goDoCommand('downloadsCmd_pauseResume')"/>
+  <command id="downloadsCmd_cancel"
+           oncommand="goDoCommand('downloadsCmd_cancel')"/>
+  <command id="downloadsCmd_unblock"
+           oncommand="goDoCommand('downloadsCmd_unblock')"/>
+  <command id="downloadsCmd_chooseUnblock"
+           oncommand="goDoCommand('downloadsCmd_chooseUnblock')"/>
+  <command id="downloadsCmd_chooseOpen"
+           oncommand="goDoCommand('downloadsCmd_chooseOpen')"/>
+  <command id="downloadsCmd_confirmBlock"
+           oncommand="goDoCommand('downloadsCmd_confirmBlock')"/>
+  <command id="downloadsCmd_open"
+           oncommand="goDoCommand('downloadsCmd_open')"/>
+  <command id="downloadsCmd_show"
+           oncommand="goDoCommand('downloadsCmd_show')"/>
+  <command id="downloadsCmd_retry"
+           oncommand="goDoCommand('downloadsCmd_retry')"/>
+  <command id="downloadsCmd_openReferrer"
+           oncommand="goDoCommand('downloadsCmd_openReferrer')"/>
+  <command id="downloadsCmd_clearDownloads"
+           oncommand="goDoCommand('downloadsCmd_clearDownloads')"/>
+</commandset>
