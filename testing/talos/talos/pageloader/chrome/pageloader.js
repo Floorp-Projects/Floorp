@@ -321,9 +321,7 @@ function startAndLoadURI(pageName) {
 
   start_time = Date.now();
   if (loadNoCache) {
-    content.loadURI(pageName, {
-      flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE
-    });
+    content.loadURIWithFlags(pageName, Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);
   } else {
     content.loadURI(pageName);
   }
