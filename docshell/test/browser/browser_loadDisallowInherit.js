@@ -22,7 +22,7 @@ function startTest() {
     BrowserTestUtils.browserLoaded(browser, false, url).then(() => {
       func();
     });
-    browser.loadURIWithFlags(url, flags, null, null, null);
+    browser.loadURIWithFlags(url, { flags });
   }
 
   // Load a normal http URL
@@ -68,4 +68,3 @@ function startTest() {
 
   nextTest();
 }
-
