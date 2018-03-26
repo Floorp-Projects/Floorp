@@ -2047,9 +2047,7 @@ MediaStream::RemoveAllListenersImpl()
   }
   mTrackListeners.Clear();
 
-  if (SourceMediaStream* source = AsSourceStream()) {
-    source->RemoveAllDirectListeners();
-  }
+  RemoveAllDirectListenersImpl();
 
   auto videoOutputs(mVideoOutputs);
   for (auto& l : videoOutputs) {
@@ -3272,7 +3270,7 @@ SourceMediaStream::EndAllTrackAndFinish()
 }
 
 void
-SourceMediaStream::RemoveAllDirectListeners()
+SourceMediaStream::RemoveAllDirectListenersImpl()
 {
   GraphImpl()->AssertOnGraphThreadOrNotRunning();
 
