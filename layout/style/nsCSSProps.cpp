@@ -63,9 +63,7 @@ extern const char* const kCSSRawProperties[];
 
 // define an array of all CSS properties
 const char* const kCSSRawProperties[eCSSProperty_COUNT_with_aliases] = {
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
-                 stylestruct_, stylestructoffset_, animtype_)                 \
-  #name_,
+#define CSS_PROP(name_, ...) #name_,
 #define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"
 #undef CSS_PROP_LIST_INCLUDE_LOGICAL
@@ -189,8 +187,7 @@ nsCSSProps::AddRefTable(void)
                                        pref_);                                \
         }
 
-      #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
-                       kwtable_, stylestruct_, stylestructoffset_, animtype_) \
+      #define CSS_PROP(name_, id_, method_, flags_, pref_, ...) \
         OBSERVE_PROP(pref_, eCSSProperty_##id_)
       #define CSS_PROP_LIST_INCLUDE_LOGICAL
       #include "nsCSSPropList.h"
@@ -2214,9 +2211,8 @@ nsCSSProps::ValueToKeyword(int32_t aValue, const KTableEntry aTable[])
 
 /* static */ const KTableEntry* const
 nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
-  #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
-                   kwtable_, stylestruct_, stylestructoffset_, animtype_) \
-    kwtable_,
+  #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, \
+                   kwtable_, ...) kwtable_,
   #define CSS_PROP_LIST_INCLUDE_LOGICAL
   #include "nsCSSPropList.h"
   #undef CSS_PROP_LIST_INCLUDE_LOGICAL
@@ -2262,8 +2258,8 @@ bool nsCSSProps::GetColorName(int32_t aPropValue, nsCString &aStr)
 }
 
 const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = {
-    #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
-                     kwtable_, stylestruct_, stylestructoffset_, animtype_) \
+    #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, \
+                     kwtable_, stylestruct_, ...) \
         eStyleStruct_##stylestruct_,
     #define CSS_PROP_LIST_INCLUDE_LOGICAL
 
@@ -2285,9 +2281,7 @@ nsCSSProps::kAnimTypeTable[eCSSProperty_COUNT_no_shorthands] = {
 };
 
 const uint32_t nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
-                 stylestruct_, stylestructoffset_, animtype_)                 \
-  flags_,
+#define CSS_PROP(name_, id_, method_, flags_, ...) flags_,
 #define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"
 #undef CSS_PROP_LIST_INCLUDE_LOGICAL
@@ -2300,9 +2294,7 @@ const uint32_t nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 static const nsCSSPropertyID gAllSubpropTable[] = {
 #define CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
 #define CSS_PROP_LIST_INCLUDE_LOGICAL
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
-                 stylestruct_, stylestructoffset_, animtype_)                 \
-  eCSSProperty_##id_,
+#define CSS_PROP(name_, id_, ...) eCSSProperty_##id_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP
 #undef CSS_PROP_LIST_INCLUDE_LOGICAL
@@ -2758,8 +2750,7 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
   #define IS_ENABLED_BY_DEFAULT(flags_) \
     (!((flags_) & CSS_PROPERTY_ENABLED_MASK))
 
-  #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
-                   kwtable_, stylestruct_, stylestructoffset_, animtype_) \
+  #define CSS_PROP(name_, id_, method_, flags_, ...) \
     IS_ENABLED_BY_DEFAULT(flags_),
   #define CSS_PROP_LIST_INCLUDE_LOGICAL
   #include "nsCSSPropList.h"
@@ -2785,8 +2776,7 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
 nsCSSProps::gPropertyUseCounter[eCSSProperty_COUNT_no_shorthands] = {
   #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) privatename_
   #define CSS_PROP_LIST_INCLUDE_LOGICAL
-  #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
-                   kwtable_, stylestruct_, stylestructoffset_, animtype_) \
+  #define CSS_PROP(name_, id_, method_, ...) \
     static_cast<UseCounter>(USE_COUNTER_FOR_CSS_PROPERTY_##method_),
   #include "nsCSSPropList.h"
   #undef CSS_PROP
@@ -2796,8 +2786,7 @@ nsCSSProps::gPropertyUseCounter[eCSSProperty_COUNT_no_shorthands] = {
 
 const uint32_t
 nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
-                 stylestruct_, stylestructoffset_, animtype_)                 \
+#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, ...) \
   parsevariant_,
 #define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"

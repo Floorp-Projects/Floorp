@@ -16,13 +16,11 @@
 
 #define DO_PROP(name, method, id, flags, pref, proptype) \
   [ #name, #method, #id, PROP_STRINGIFY(flags), pref, proptype ],
-#define CSS_PROP(name, id, method, flags, pref, parsevariant, kwtable, \
-		 stylestruct, stylestructoffset, animtype) \
+#define CSS_PROP(name, id, method, flags, pref, ...) \
   DO_PROP(name, method, id, flags, pref, "longhand")
 #define CSS_PROP_SHORTHAND(name, id, method, flags, pref) \
   DO_PROP(name, method, id, flags, pref, "shorthand")
-#define CSS_PROP_LOGICAL(name, id, method, flags, pref, parsevariant, kwtable, \
-     stylestruct, stylestructoffset, animtype) \
+#define CSS_PROP_LOGICAL(name, id, method, flags, pref, ...) \
   DO_PROP(name, method, id, flags, pref, "logical")
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
 

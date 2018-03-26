@@ -21,9 +21,7 @@
 enum nsCSSPropertyID {
   eCSSProperty_UNKNOWN = -1,
 
-  #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, \
-                   kwtable_, stylestruct_, stylestructoffset_, animtype_) \
-    eCSSProperty_##id_,
+  #define CSS_PROP(name_, id_, ...) eCSSProperty_##id_,
   #define CSS_PROP_LIST_INCLUDE_LOGICAL
   #include "nsCSSPropList.h"
   #undef CSS_PROP_LIST_INCLUDE_LOGICAL
@@ -33,8 +31,7 @@ enum nsCSSPropertyID {
   // Make the count continue where it left off:
   eCSSProperty_COUNT_DUMMY = eCSSProperty_COUNT_no_shorthands - 1,
 
-  #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_) \
-    eCSSProperty_##id_,
+  #define CSS_PROP_SHORTHAND(name_, id_, ...) eCSSProperty_##id_,
   #include "nsCSSPropList.h"
   #undef CSS_PROP_SHORTHAND
 
