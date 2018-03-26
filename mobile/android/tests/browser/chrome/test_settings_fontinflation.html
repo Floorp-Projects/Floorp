@@ -82,14 +82,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1328868
     is(getSystemFontScale(), 1.0, "system font scale is default");
     tab = BrowserApp.addTab(URL_mobile, { selected: true, parentId: BrowserApp.selectedTab.id });
     yield promiseBrowserEvent(tab.browser, "load");
-    is(tab.browser.effectiveTextZoom, 1.0, "text zoom is default value");
+    is(tab.browser.markupDocumentViewer.effectiveTextZoom, 1.0,
+       "text zoom is default value");
 
     setSystemFontScale(2.0);
     tab.reloadWithMode(tab.desktopMode);
     yield promiseBrowserEvent(tab.browser, "load");
 
     is(getSystemFontScale(), 2.0, "system font scale is enabled");
-    is(tab.browser.effectiveTextZoom, 2.0, "text zoom set through system font scale");
+    is(tab.browser.markupDocumentViewer.effectiveTextZoom, 2.0,
+       "text zoom set through system font scale");
     let fontScaleOn = snapshotWindow(tab.browser.contentWindow);
 
     // Reset the system font scale again
@@ -99,7 +101,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1328868
     tab.reloadWithMode(tab.desktopMode);
     yield promiseBrowserEvent(tab.browser, "load");
 
-    is(tab.browser.effectiveTextZoom, 1.0, "text zoom is back to default value");
+    is(tab.browser.markupDocumentViewer.effectiveTextZoom,
+       1.0, "text zoom is back to default value");
     let fontScaleOff = snapshotWindow(tab.browser.contentWindow);
     assertSnapshots(fontScaleOn, fontScaleOff, false, null, "fontScaleOn", "fontScaleOff");
 
@@ -115,7 +118,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1328868
     yield promiseBrowserEvent(tab.browser, "load");
 
     tab.browser.textZoom = 2.0;
-    is(tab.browser.effectiveTextZoom, 2.0, "text zoom is enabled");
+    is(tab.browser.markupDocumentViewer.effectiveTextZoom,
+       2.0, "text zoom is enabled");
 
     let textZoom = snapshotWindow(tab.browser.contentWindow);
     assertSnapshots(fontScaleOn, textZoom, true, null, "fontScaleOn", "textZoom");
@@ -132,7 +136,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1328868
     is(getSystemFontScale(), 1.0, "system font scale is default");
     tab = BrowserApp.addTab(URL_desktop, { selected: true, parentId: BrowserApp.selectedTab.id });
     yield promiseBrowserEvent(tab.browser, "load");
-    is(tab.browser.effectiveTextZoom, 1.0, "text zoom is default value");
+    is(tab.browser.markupDocumentViewer.effectiveTextZoom,
+       1.0, "text zoom is default value");
 
     let noZoom = snapshotWindow(tab.browser.contentWindow);
 
@@ -151,7 +156,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1328868
     yield promiseBrowserEvent(tab.browser, "load");
 
     is(getSystemFontScale(), 2.0, "system font scale is enabled");
-    is(tab.browser.effectiveTextZoom, 1.0, "text zoom remains at default value");
+    is(tab.browser.markupDocumentViewer.effectiveTextZoom,
+       1.0, "text zoom remains at default value");
     let fontScaleWithFontInflation = snapshotWindow(tab.browser.contentWindow);
     assertSnapshots(fontInflationOn, fontScaleWithFontInflation, true, null, "fontInflationOn", "fontScaleWithFontInflation");
 
@@ -160,7 +166,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1328868
     tab.reloadWithMode(tab.desktopMode);
     yield promiseBrowserEvent(tab.browser, "load");
 
-    is(tab.browser.effectiveTextZoom, 2.0, "text zoom set through system font scale zooming");
+    is(tab.browser.markupDocumentViewer.effectiveTextZoom, 2.0,
+       "text zoom set through system font scale zooming");
     let fontScaleNoFontInflation = snapshotWindow(tab.browser.contentWindow);
     assertSnapshots(noZoom, fontScaleNoFontInflation, false, null, "noZoom", "fontScaleNoFontInflation");
 
