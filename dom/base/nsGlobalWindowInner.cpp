@@ -3059,7 +3059,7 @@ nsGlobalWindowInner::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
       clazz = &ControllersShimClass;
     }
     MOZ_ASSERT(JS_IsGlobalObject(aObj));
-    JS::Rooted<JSObject*> shim(cx, JS_NewObject(cx, clazz));
+    JS::Rooted<JSObject*> shim(aCx, JS_NewObject(aCx, clazz));
     if (NS_WARN_IF(!shim)) {
       return false;
     }
