@@ -12,7 +12,7 @@ namespace widget {
 
 CompositorWidgetVsyncObserver::CompositorWidgetVsyncObserver(
     RefPtr<VsyncBridgeChild> aVsyncBridge,
-    const uint64_t& aRootLayerTreeId)
+    const layers::LayersId& aRootLayerTreeId)
  : mVsyncBridge(aVsyncBridge),
    mRootLayerTreeId(aRootLayerTreeId)
 {

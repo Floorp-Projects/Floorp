@@ -16,6 +16,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/TaskFactory.h"
 #include "mozilla/ipc/Transport.h"
+#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
@@ -68,6 +69,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener
   typedef layers::CompositorUpdateObserver CompositorUpdateObserver;
   typedef layers::IAPZCTreeManager IAPZCTreeManager;
   typedef layers::LayerManager LayerManager;
+  typedef layers::LayersId LayersId;
   typedef layers::PCompositorBridgeChild PCompositorBridgeChild;
   typedef layers::PCompositorManagerChild PCompositorManagerChild;
   typedef layers::PImageBridgeChild PImageBridgeChild;
@@ -109,21 +111,21 @@ public:
 
   // Maps the layer tree and process together so that aOwningPID is allowed
   // to access aLayersId across process.
-  void MapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningId);
+  void MapLayerTreeId(LayersId aLayersId, base::ProcessId aOwningId);
 
   // Release compositor-thread resources referred to by |aID|.
   //
   // Must run on the content main thread.
-  void UnmapLayerTreeId(uint64_t aLayersId, base::ProcessId aOwningId);
+  void UnmapLayerTreeId(LayersId aLayersId, base::ProcessId aOwningId);
 
   // Checks to see if aLayersId and aRequestingPID have been mapped by MapLayerTreeId
-  bool IsLayerTreeIdMapped(uint64_t aLayersId, base::ProcessId aRequestingId);
+  bool IsLayerTreeIdMapped(LayersId aLayersId, base::ProcessId aRequestingId);
 
   // Allocate an ID that can be used to refer to a layer tree and
   // associated resources that live only on the compositor thread.
   //
   // Must run on the browser main thread.
-  uint64_t AllocateLayerTreeId();
+  LayersId AllocateLayerTreeId();
 
   // Allocate an ID that can be used as Namespace and
   // Must run on the browser main thread.
@@ -137,7 +139,7 @@ public:
   bool AllocateAndConnectLayerTreeId(
     PCompositorBridgeChild* aCompositorBridge,
     base::ProcessId aOtherPid,
-    uint64_t* aOutLayersId,
+    LayersId* aOutLayersId,
     CompositorOptions* aOutCompositorOptions);
 
   // Destroy and recreate all of the compositors
@@ -230,13 +232,13 @@ private:
   void EnsureVRManager();
 
 #if defined(MOZ_WIDGET_ANDROID)
-  already_AddRefed<UiCompositorControllerChild> CreateUiCompositorController(nsBaseWidget* aWidget, const uint64_t aId);
+  already_AddRefed<UiCompositorControllerChild> CreateUiCompositorController(nsBaseWidget* aWidget, const LayersId aId);
 #endif // defined(MOZ_WIDGET_ANDROID)
 
   RefPtr<CompositorSession> CreateRemoteSession(
     nsBaseWidget* aWidget,
     LayerManager* aLayerManager,
-    const uint64_t& aRootLayerTreeId,
+    const LayersId& aRootLayerTreeId,
     CSSToLayoutDeviceScale aScale,
     const CompositorOptions& aOptions,
     bool aUseExternalSurfaceSize,

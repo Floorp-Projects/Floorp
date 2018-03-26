@@ -205,7 +205,7 @@ private:
   bool AddExternalImage(wr::ExternalImageId aExtId, wr::ImageKey aKey,
                         wr::TransactionBuilder& aResources);
 
-  uint64_t GetLayersId() const;
+  LayersId GetLayersId() const;
   void ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands);
 
   void ClearResources();

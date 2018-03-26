@@ -1489,10 +1489,10 @@ nsWindow::GetUiCompositorControllerChild()
     return mCompositorSession ? mCompositorSession->GetUiCompositorControllerChild() : nullptr;
 }
 
-int64_t
+mozilla::layers::LayersId
 nsWindow::GetRootLayerId() const
 {
-    return mCompositorSession ? mCompositorSession->RootLayerTreeId() : 0;
+    return mCompositorSession ? mCompositorSession->RootLayerTreeId() : mozilla::layers::LayersId{0};
 }
 
 void

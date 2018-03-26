@@ -511,7 +511,7 @@ WebRenderBridgeParent::UpdateAPZ(bool aUpdateHitTestingTree)
   if (!cbp) {
     return;
   }
-  uint64_t rootLayersId = cbp->RootLayerTreeId();
+  LayersId rootLayersId = cbp->RootLayerTreeId();
   RefPtr<WebRenderBridgeParent> rootWrbp = cbp->GetWebRenderBridgeParent();
   if (!rootWrbp) {
     return;
@@ -634,7 +634,7 @@ WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
     // Pretend we composited since someone is wating for this event,
     // though DisplayList was not pushed to webrender.
     TimeStamp now = TimeStamp::Now();
-    mCompositorBridge->DidComposite(wr::AsUint64(mPipelineId), now, now);
+    mCompositorBridge->DidComposite(GetLayersId(), now, now);
   }
 
   wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
@@ -692,7 +692,7 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     // send DidComposite now.
     if (sendDidComposite) {
       TimeStamp now = TimeStamp::Now();
-      mCompositorBridge->DidComposite(wr::AsUint64(mPipelineId), now, now);
+      mCompositorBridge->DidComposite(GetLayersId(), now, now);
     }
   }
 
@@ -1294,10 +1294,10 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, cons
   return id;
 }
 
-uint64_t
+LayersId
 WebRenderBridgeParent::GetLayersId() const
 {
-  return wr::AsUint64(mPipelineId);
+  return wr::AsLayersId(mPipelineId);
 }
 
 void

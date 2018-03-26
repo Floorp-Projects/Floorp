@@ -41,8 +41,8 @@ protected:
     regions.mHitRegion = nsIntRegion(IntRect(0, 100, 200, 100));
     layers[2]->SetEventRegions(regions);
 
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-    manager->UpdateHitTestingTree(0, root, false, 0, 0);
+    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
     rootApzc = ApzcOf(root);
   }
 
@@ -62,8 +62,8 @@ protected:
     regions.mHitRegion = nsIntRegion(IntRect(0, 150, 100, 100));
     layers[1]->SetEventRegions(regions);
 
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-    manager->UpdateHitTestingTree(0, root, false, 0, 0);
+    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
     rootApzc = ApzcOf(root);
   }
 
@@ -96,8 +96,8 @@ protected:
     regions.mHitRegion = nsIntRegion(IntRect(0, 100, 200, 100));
     layers[2]->SetEventRegions(regions);
 
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-    manager->UpdateHitTestingTree(0, root, false, 0, 0);
+    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
     rootApzc = ApzcOf(root);
   }
 
@@ -118,8 +118,8 @@ protected:
     SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID);
     SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID + 1);
 
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-    manager->UpdateHitTestingTree(0, root, false, 0, 0);
+    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
   }
 
   void CreateBug1117712LayerTree() {
@@ -155,8 +155,8 @@ protected:
     regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 0, 100, 100));
     layers[3]->SetEventRegions(regions);
 
-    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, 0, root, mcc);
-    manager->UpdateHitTestingTree(0, root, false, 0, 0);
+    registration = MakeUnique<ScopedLayerTreeRegistration>(manager, LayersId{0}, root, mcc);
+    manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
   }
 };
 
@@ -231,9 +231,9 @@ TEST_F(APZEventRegionsTester, Obscuration) {
   SCOPED_GFX_PREF(WebRenderHitTest, bool, false);
 
   CreateObscuringLayerTree();
-  ScopedLayerTreeRegistration registration(manager, 0, root, mcc);
+  ScopedLayerTreeRegistration registration(manager, LayersId{0}, root, mcc);
 
-  manager->UpdateHitTestingTree(0, root, false, 0, 0);
+  manager->UpdateHitTestingTree(LayersId{0}, root, false, LayersId{0}, 0);
 
   TestAsyncPanZoomController* parent = ApzcOf(layers[1]);
   TestAsyncPanZoomController* child = ApzcOf(layers[2]);

@@ -2636,9 +2636,9 @@ public:
    * CONSTRUCTION PHASE ONLY
    * Set the ID of the layer's referent.
    */
-  void SetReferentId(uint64_t aId)
+  void SetReferentId(LayersId aId)
   {
-    MOZ_ASSERT(aId != 0);
+    MOZ_ASSERT(aId.IsValid());
     if (mId != aId) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ReferentId", this));
       mId = aId;
@@ -2700,7 +2700,7 @@ public:
   // These getters can be used anytime.
   virtual RefLayer* AsRefLayer() override { return this; }
 
-  virtual uint64_t GetReferentId() { return mId; }
+  virtual LayersId GetReferentId() { return mId; }
 
   /**
    * DRAWING PHASE ONLY
@@ -2712,7 +2712,7 @@ public:
 protected:
   RefLayer(LayerManager* aManager, void* aImplData)
     : ContainerLayer(aManager, aImplData)
-    , mId(0)
+    , mId{0}
     , mEventRegionsOverride(EventRegionsOverride::NoOverride)
   {}
 
@@ -2721,7 +2721,7 @@ protected:
   virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) override;
 
   // 0 is a special value that means "no ID".
-  uint64_t mId;
+  LayersId mId;
   EventRegionsOverride mEventRegionsOverride;
 };
 

@@ -73,7 +73,7 @@ GPUChild::Init()
   devicePrefs.useD2D1() = gfxConfig::GetValue(Feature::DIRECT2D);
 
   nsTArray<LayerTreeIdMapping> mappings;
-  LayerTreeOwnerTracker::Get()->Iterate([&](uint64_t aLayersId, base::ProcessId aProcessId) {
+  LayerTreeOwnerTracker::Get()->Iterate([&](LayersId aLayersId, base::ProcessId aProcessId) {
     mappings.AppendElement(LayerTreeIdMapping(aLayersId, aProcessId));
   });
 
@@ -111,7 +111,7 @@ GPUChild::EnsureGPUReady()
 }
 
 PAPZInputBridgeChild*
-GPUChild::AllocPAPZInputBridgeChild(const uint64_t& aLayersId)
+GPUChild::AllocPAPZInputBridgeChild(const LayersId& aLayersId)
 {
   APZInputBridgeChild* child = new APZInputBridgeChild();
   child->AddRef();

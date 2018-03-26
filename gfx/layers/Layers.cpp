@@ -2189,8 +2189,8 @@ void
 RefLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   ContainerLayer::PrintInfo(aStream, aPrefix);
-  if (0 != mId) {
-    AppendToString(aStream, mId, " [id=", "]");
+  if (mId.IsValid()) {
+    AppendToString(aStream, uint64_t(mId), " [id=", "]");
   }
   if (mEventRegionsOverride & EventRegionsOverride::ForceDispatchToContent) {
     aStream << " [force-dtc]";
@@ -2208,7 +2208,7 @@ RefLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
   using namespace layerscope;
   LayersPacket::Layer* layer = aPacket->mutable_layer(aPacket->layer_size()-1);
   layer->set_type(LayersPacket::Layer::RefLayer);
-  layer->set_refid(mId);
+  layer->set_refid(uint64_t(mId));
 }
 
 void

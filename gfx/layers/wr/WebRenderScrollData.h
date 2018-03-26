@@ -73,8 +73,8 @@ public:
   EventRegionsOverride GetEventRegionsOverride() const { return mEventRegionsOverride; }
 
   const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
-  void SetReferentId(uint64_t aReferentId) { mReferentId = Some(aReferentId); }
-  Maybe<uint64_t> GetReferentId() const { return mReferentId; }
+  void SetReferentId(LayersId aReferentId) { mReferentId = Some(aReferentId); }
+  Maybe<LayersId> GetReferentId() const { return mReferentId; }
 
   void SetScrollThumbData(const ScrollThumbData& aData) { mScrollThumbData = aData; }
   const ScrollThumbData& GetScrollThumbData() const { return mScrollThumbData; }
@@ -112,7 +112,7 @@ private:
   bool mTransformIsPerspective;
   EventRegions mEventRegions;
   LayerIntRegion mVisibleRegion;
-  Maybe<uint64_t> mReferentId;
+  Maybe<LayersId> mReferentId;
   EventRegionsOverride mEventRegionsOverride;
   ScrollThumbData mScrollThumbData;
   uint64_t mScrollbarAnimationId;

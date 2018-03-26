@@ -22,7 +22,7 @@ namespace layers {
 typedef CompositorBridgeParent::LayerTreeState LayerTreeState;
 
 /* static */ RefPtr<UiCompositorControllerParent>
-UiCompositorControllerParent::GetFromRootLayerTreeId(const uint64_t& aRootLayerTreeId)
+UiCompositorControllerParent::GetFromRootLayerTreeId(const LayersId& aRootLayerTreeId)
 {
   RefPtr<UiCompositorControllerParent> controller;
   CompositorBridgeParent::CallWithIndirectShadowTree(aRootLayerTreeId,
@@ -33,7 +33,7 @@ UiCompositorControllerParent::GetFromRootLayerTreeId(const uint64_t& aRootLayerT
 }
 
 /* static */ RefPtr<UiCompositorControllerParent>
-UiCompositorControllerParent::Start(const uint64_t& aRootLayerTreeId, Endpoint<PUiCompositorControllerParent>&& aEndpoint)
+UiCompositorControllerParent::Start(const LayersId& aRootLayerTreeId, Endpoint<PUiCompositorControllerParent>&& aEndpoint)
 {
   RefPtr<UiCompositorControllerParent> parent = new UiCompositorControllerParent(aRootLayerTreeId);
 
@@ -235,7 +235,7 @@ UiCompositorControllerParent::AllocPixelBuffer(const int32_t aSize, ipc::Shmem* 
   return AllocShmem(aSize, ipc::SharedMemory::TYPE_BASIC, aMem);
 }
 
-UiCompositorControllerParent::UiCompositorControllerParent(const uint64_t& aRootLayerTreeId)
+UiCompositorControllerParent::UiCompositorControllerParent(const LayersId& aRootLayerTreeId)
   : mRootLayerTreeId(aRootLayerTreeId)
   , mMaxToolbarHeight(0)
 {

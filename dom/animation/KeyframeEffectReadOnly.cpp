@@ -39,7 +39,7 @@ namespace mozilla {
 bool
 PropertyValuePair::operator==(const PropertyValuePair& aOther) const
 {
-  if (mProperty != aOther.mProperty || mValue != aOther.mValue) {
+  if (mProperty != aOther.mProperty) {
     return false;
   }
   if (mServoDeclarationBlock == aOther.mServoDeclarationBlock) {

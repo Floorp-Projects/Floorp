@@ -95,14 +95,14 @@ public:
    * @param aOriginatingLayersId the layer tree ID that this focus target
                                  belongs to
    */
-  void Update(uint64_t aRootLayerTreeId,
-              uint64_t aOriginatingLayersId,
+  void Update(LayersId aRootLayerTreeId,
+              LayersId aOriginatingLayersId,
               const FocusTarget& aTarget);
 
   /**
    * Removes a focus target by its layer tree ID.
    */
-  void RemoveFocusTarget(uint64_t aLayersId);
+  void RemoveFocusTarget(LayersId aLayersId);
 
   /**
    * Gets the scrollable layer that should be horizontally scrolled for a key
@@ -142,7 +142,10 @@ private:
   mutable Mutex mMutex;
 
   // The set of focus targets received indexed by their layer tree ID
-  std::unordered_map<uint64_t, FocusTarget> mFocusTree;
+  std::unordered_map<LayersId,
+                     FocusTarget,
+                     LayersId::HashFn,
+                     LayersId::EqualFn> mFocusTree;
 
   // The focus sequence number of the last potentially focus changing event
   // processed by APZ. This number starts at one and increases monotonically.
@@ -161,7 +164,7 @@ private:
   bool mReceivedUpdate;
 
   // The layer tree ID which contains the scrollable frame of the focused element
-  uint64_t mFocusLayersId;
+  LayersId mFocusLayersId;
   // The scrollable layer corresponding to the scrollable frame that is used to
   // scroll the focused element. This depends on the direction the user is
   // scrolling.

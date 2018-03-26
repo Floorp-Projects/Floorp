@@ -381,7 +381,11 @@ NS_IMETHODIMP
 nsDOMWindowUtils::UpdateLayerTree()
 {
   if (nsIPresShell* presShell = GetPresShell()) {
-    presShell->FlushPendingNotifications(FlushType::Display);
+    // Don't flush throttled animations since it might fire MozAfterPaint event
+    // (in WebRender it constantly does), thus the reftest harness can't take
+    // any snapshot until the throttled animations finished.
+    presShell->FlushPendingNotifications(
+      ChangesToFlush(FlushType::Display, false /* flush animations */));
     RefPtr<nsViewManager> vm = presShell->GetViewManager();
     nsView* view = vm->GetRootView();
     if (view) {

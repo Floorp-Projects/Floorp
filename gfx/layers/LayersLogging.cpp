@@ -274,7 +274,7 @@ AppendToString(std::stringstream& aStream, const ScrollableLayerGuid& s,
                const char* pfx, const char* sfx)
 {
   aStream << pfx
-          << nsPrintfCString("{ l=0x%" PRIx64 ", p=%u, v=%" PRIu64 " }", s.mLayersId, s.mPresShellId, s.mScrollId).get()
+          << nsPrintfCString("{ l=0x%" PRIx64 ", p=%u, v=%" PRIu64 " }", uint64_t(s.mLayersId), s.mPresShellId, s.mScrollId).get()
           << sfx;
 }
 
