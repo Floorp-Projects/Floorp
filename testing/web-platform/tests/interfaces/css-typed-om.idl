@@ -54,7 +54,7 @@ interface CSSUnparsedValue : CSSStyleValue {
 typedef (DOMString or CSSVariableReferenceValue) CSSUnparsedSegment;
 
 [Exposed=(Window, Worker, PaintWorklet, LayoutWorklet),
- Constructor(DOMString variable, optional CSSUnparsedValue fallback)]
+ Constructor(DOMString variable, optional CSSUnparsedValue? fallback)]
 interface CSSVariableReferenceValue {
     attribute DOMString variable;
     readonly attribute CSSUnparsedValue? fallback;
