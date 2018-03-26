@@ -234,10 +234,13 @@ class MachCommands(MachCommandBase):
         self._ensure_state_subdir_exists('.')
 
         if not params.get('log'):
-            params['log'] = structured.commandline.setup_logging("XPCShellTests",
-                                                                 params,
-                                                                 {"mach": sys.stdout},
-                                                                 {"verbose": True})
+            log_defaults = {self._mach_context.settings['test']['format']: sys.stdout}
+            fmt_defaults = {
+                "level": self._mach_context.settings['test']['level'],
+                "verbose": True
+            }
+            params['log'] = structured.commandline.setup_logging(
+                "XPCShellTests", params, log_defaults, fmt_defaults)
 
         if not params['threadCount']:
             params['threadCount'] = int((cpu_count() * 3) / 2)
