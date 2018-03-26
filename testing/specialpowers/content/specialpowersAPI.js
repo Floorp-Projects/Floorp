@@ -180,6 +180,13 @@ function unwrapPrivileged(x) {
   return obj;
 }
 
+function specialPowersHasInstance(value) {
+  // Because we return wrapped versions of this function, when it's called its
+  // wrapper will unwrap the "this" as well as the function itself.  So our
+  // "this" is the unwrapped thing we started out with.
+  return value instanceof this;
+}
+
 function SpecialPowersHandler(wrappedObject) {
   this.wrappedObject = wrappedObject;
 }
@@ -224,7 +231,16 @@ SpecialPowersHandler.prototype = {
       return this.wrappedObject;
 
     let obj = waiveXraysIfAppropriate(this.wrappedObject, prop);
-    return wrapIfUnwrapped(Reflect.get(obj, prop));
+    let val = Reflect.get(obj, prop);
+    if (val === undefined && prop == Symbol.hasInstance) {
+      // Special-case Symbol.hasInstance to pass the hasInstance check on to our
+      // target.  We only do this when the target doesn't have its own
+      // Symbol.hasInstance already.  Once we get rid of JS engine class
+      // instance hooks (bug 1448218) and always use Symbol.hasInstance, we can
+      // remove this bit (bug 1448400).
+      return wrapPrivileged(specialPowersHasInstance);
+    }
+    return wrapIfUnwrapped(val);
   },
 
   set(target, prop, val, receiver) {
@@ -256,8 +272,19 @@ SpecialPowersHandler.prototype = {
     let obj = waiveXraysIfAppropriate(this.wrappedObject, prop);
     let desc = Reflect.getOwnPropertyDescriptor(obj, prop);
 
-    if (desc === undefined)
+    if (desc === undefined) {
+      if (prop == Symbol.hasInstance) {
+        // Special-case Symbol.hasInstance to pass the hasInstance check on to
+        // our target.  We only do this when the target doesn't have its own
+        // Symbol.hasInstance already.  Once we get rid of JS engine class
+        // instance hooks (bug 1448218) and always use Symbol.hasInstance, we
+        // can remove this bit (bug 1448400).
+        return { value: wrapPrivileged(specialPowersHasInstance),
+                 writeable: true, configurable: true, enumerable: false };
+      }
+
       return undefined;
+    }
 
     // Transitively maintain the wrapper membrane.
     function wrapIfExists(key) {
@@ -653,15 +680,10 @@ SpecialPowersAPI.prototype = {
   },
 
   /*
-   * Convenient shortcuts to the standard Components abbreviations. Note that
-   * we don't SpecialPowers-wrap Components.interfaces, because it's available
-   * to untrusted content, and wrapping it confuses QI and identity checks.
+   * Convenient shortcuts to the standard Components abbreviations.
    */
   get Cc() { return wrapPrivileged(this.getFullComponents().classes); },
-  get Ci() {
- return this.Components ? this.Components.interfaces
-                                    : Ci;
-},
+  get Ci() { return wrapPrivileged(this.getFullComponents().interfaces); },
   get Cu() { return wrapPrivileged(this.getFullComponents().utils); },
   get Cr() { return wrapPrivileged(this.Components.results); },
 
