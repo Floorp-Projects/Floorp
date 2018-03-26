@@ -839,10 +839,10 @@ class MuxHandlerTest(unittest.TestCase):
             None,
             dispatcher.channel_events[3].request.ws_protocol)
 
-    def test_add_channel_delta_encoding_permessage_compress(self):
-        # Enable permessage compress extension on the implicitly opened channel.
+    def test_add_channel_delta_encoding_permessage_deflate(self):
+        # Enable permessage deflate extension on the implicitly opened channel.
         extensions = common.parse_extensions(
-            '%s; method=deflate' % common.PERMESSAGE_COMPRESSION_EXTENSION)
+            common.PERMESSAGE_DEFLATE_EXTENSION)
         request = _create_mock_request(
             logical_channel_extensions=extensions)
         dispatcher = _MuxMockDispatcher()
@@ -892,9 +892,9 @@ class MuxHandlerTest(unittest.TestCase):
         self.assertEqual(compressed_hello, messages[0])
 
     def test_add_channel_delta_encoding_remove_extensions(self):
-        # Enable permessage compress extension on the implicitly opened channel.
+        # Enable permessage deflate extension on the implicitly opened channel.
         extensions = common.parse_extensions(
-            '%s; method=deflate' % common.PERMESSAGE_COMPRESSION_EXTENSION)
+            common.PERMESSAGE_DEFLATE_EXTENSION)
         request = _create_mock_request(
             logical_channel_extensions=extensions)
         dispatcher = _MuxMockDispatcher()
@@ -903,7 +903,7 @@ class MuxHandlerTest(unittest.TestCase):
         mux_handler.add_channel_slots(mux._INITIAL_NUMBER_OF_CHANNEL_SLOTS,
                                       mux._INITIAL_QUOTA_FOR_CLIENT)
 
-        # Remove permessage compress extension.
+        # Remove permessage deflate extension.
         delta = ('GET /echo HTTP/1.1\r\n'
                  'Sec-WebSocket-Extensions:\r\n'
                  '\r\n')
@@ -1912,7 +1912,7 @@ class MuxHandlerTest(unittest.TestCase):
         self.assertEqual(common.STATUS_INTERNAL_ENDPOINT_ERROR,
                          request.connection.server_close_code)
 
-    def test_permessage_compress(self):
+    def test_permessage_deflate(self):
         request = _create_mock_request()
         dispatcher = _MuxMockDispatcher()
         mux_handler = mux._MuxHandler(request, dispatcher)
@@ -1920,9 +1920,8 @@ class MuxHandlerTest(unittest.TestCase):
         mux_handler.add_channel_slots(mux._INITIAL_NUMBER_OF_CHANNEL_SLOTS,
                                       mux._INITIAL_QUOTA_FOR_CLIENT)
 
-        # Enable permessage compress extension on logical channel 2.
-        extensions = '%s; method=deflate' % (
-            common.PERMESSAGE_COMPRESSION_EXTENSION)
+        # Enable permessage deflate extension on logical channel 2.
+        extensions = common.PERMESSAGE_DEFLATE_EXTENSION
         encoded_handshake = _create_request_header(path='/echo',
                                                    extensions=extensions)
         add_channel_request = _create_add_channel_request_frame(
@@ -1966,9 +1965,9 @@ class MuxHandlerTest(unittest.TestCase):
         self.assertEqual(compressed_hello2, messages[1])
 
 
-    def test_permessage_compress_fragmented_message(self):
+    def test_permessage_deflate_fragmented_message(self):
         extensions = common.parse_extensions(
-            '%s; method=deflate' % common.PERMESSAGE_COMPRESSION_EXTENSION)
+            common.PERMESSAGE_DEFLATE_EXTENSION)
         request = _create_mock_request(
             logical_channel_extensions=extensions)
         dispatcher = _MuxMockDispatcher()

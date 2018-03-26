@@ -61,7 +61,7 @@ setup(author='Yuzo Fujishima',
               'mod_pywebsocket is an Apache HTTP Server extension for '
               'the WebSocket Protocol (RFC 6455). '
               'See mod_pywebsocket/__init__.py for more detail.'),
-      license='See COPYING',
+      license='See LICENSE',
       name=_PACKAGE_NAME,
       packages=[_PACKAGE_NAME, _PACKAGE_NAME + '.handshake'],
       url='http://code.google.com/p/pywebsocket/',

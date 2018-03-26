@@ -42,12 +42,13 @@ class XHRBenchmarkHandler(object):
         response_body = '%d' % content_length
         self.wfile.write(
             'HTTP/1.1 200 OK\r\n'
+            'Access-Control-Allow-Origin: *\r\n'
             'Content-Type: text/html\r\n'
             'Content-Length: %d\r\n'
             '\r\n%s' % (len(response_body), response_body))
         self.wfile.flush()
 
-    def do_receive(self):
+    def do_receive_and_parse(self):
         content_length = int(self.headers.getheader('Content-Length'))
         request_body = self.rfile.read(content_length)
 
@@ -63,7 +64,6 @@ class XHRBenchmarkHandler(object):
         except ValueError, e:
             self._logger.debug('Malformed size parameter: %r', bytes_to_send)
             return
-        self._logger.debug('Requested to send %s bytes', bytes_to_send)
 
         # Parse the transfer encoding parameter.
         chunked_mode = False
@@ -75,10 +75,22 @@ class XHRBenchmarkHandler(object):
             self._logger.debug('Invalid mode parameter: %r', mode_parameter)
             return
 
+        self.do_receive(bytes_to_send, chunked_mode, False)
+
+    def do_receive(self, bytes_to_send, chunked_mode, enable_cache):
+        self._logger.debug(
+            'Requested to send %s bytes (chunked: %s, cache: %s)',
+            bytes_to_send, chunked_mode, enable_cache)
         # Write a header
         response_header = (
             'HTTP/1.1 200 OK\r\n'
+            'Access-Control-Allow-Origin: *\r\n'
             'Content-Type: application/octet-stream\r\n')
+        if enable_cache:
+            response_header += 'Cache-Control: private, max-age=10\r\n'
+        else:
+            response_header += \
+                'Cache-Control: no-cache, no-store, must-revalidate\r\n'
         if chunked_mode:
             response_header += 'Transfer-Encoding: chunked\r\n\r\n'
         else:

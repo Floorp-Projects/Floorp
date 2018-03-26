@@ -69,79 +69,6 @@ class ExtensionsTest(unittest.TestCase):
                 ValueError, extensions._parse_window_bits, '10000000')
 
 
-class CompressionMethodParameterParserTest(unittest.TestCase):
-    """A unittest for _parse_compression_method which parses the compression
-    method description used by perframe-compression and permessage-compression
-    extension in their "method" extension parameter.
-    """
-
-    def test_parse_method_simple(self):
-        method_list = extensions._parse_compression_method('foo')
-        self.assertEqual(1, len(method_list))
-        method = method_list[0]
-        self.assertEqual('foo', method.name())
-        self.assertEqual(0, len(method.get_parameters()))
-
-    def test_parse_method_with_parameter(self):
-        method_list = extensions._parse_compression_method('foo; x; y=10')
-        self.assertEqual(1, len(method_list))
-        method = method_list[0]
-        self.assertEqual('foo', method.name())
-        self.assertEqual(2, len(method.get_parameters()))
-        self.assertTrue(method.has_parameter('x'))
-        self.assertEqual(None, method.get_parameter_value('x'))
-        self.assertTrue(method.has_parameter('y'))
-        self.assertEqual('10', method.get_parameter_value('y'))
-
-    def test_parse_method_with_quoted_parameter(self):
-        method_list = extensions._parse_compression_method(
-            'foo; x="Hello World"; y=10')
-        self.assertEqual(1, len(method_list))
-        method = method_list[0]
-        self.assertEqual('foo', method.name())
-        self.assertEqual(2, len(method.get_parameters()))
-        self.assertTrue(method.has_parameter('x'))
-        self.assertEqual('Hello World', method.get_parameter_value('x'))
-        self.assertTrue(method.has_parameter('y'))
-        self.assertEqual('10', method.get_parameter_value('y'))
-
-    def test_parse_method_multiple(self):
-        method_list = extensions._parse_compression_method('foo, bar')
-        self.assertEqual(2, len(method_list))
-        self.assertEqual('foo', method_list[0].name())
-        self.assertEqual(0, len(method_list[0].get_parameters()))
-        self.assertEqual('bar', method_list[1].name())
-        self.assertEqual(0, len(method_list[1].get_parameters()))
-
-    def test_parse_method_multiple_methods_with_quoted_parameter(self):
-        method_list = extensions._parse_compression_method(
-            'foo; x="Hello World", bar; y=10')
-        self.assertEqual(2, len(method_list))
-        self.assertEqual('foo', method_list[0].name())
-        self.assertEqual(1, len(method_list[0].get_parameters()))
-        self.assertTrue(method_list[0].has_parameter('x'))
-        self.assertEqual('Hello World',
-                         method_list[0].get_parameter_value('x'))
-        self.assertEqual('bar', method_list[1].name())
-        self.assertEqual(1, len(method_list[1].get_parameters()))
-        self.assertTrue(method_list[1].has_parameter('y'))
-        self.assertEqual('10', method_list[1].get_parameter_value('y'))
-
-    def test_create_method_desc_simple(self):
-        params = common.ExtensionParameter('foo')
-        desc = extensions._create_accepted_method_desc('foo',
-                                                       params.get_parameters())
-        self.assertEqual('foo', desc)
-
-    def test_create_method_desc_with_parameters(self):
-        params = common.ExtensionParameter('foo')
-        params.add_parameter('x', 'Hello, World')
-        params.add_parameter('y', '10')
-        desc = extensions._create_accepted_method_desc('foo',
-                                                       params.get_parameters())
-        self.assertEqual('foo; x="Hello, World"; y=10', desc)
-
-
 class DeflateFrameExtensionProcessorParsingTest(unittest.TestCase):
     """A unittest for checking that DeflateFrameExtensionProcessor parses given
     extension parameter correctly.
@@ -343,14 +270,6 @@ class PerMessageDeflateExtensionProcessorBuildingTest(unittest.TestCase):
         response = processor.get_extension_response()
         self.assertEqual('permessage-deflate', response.name())
         self.assertEqual(0, len(response.get_parameters()))
-
-
-class PerMessageCompressExtensionProcessorTest(unittest.TestCase):
-    def test_registry(self):
-        processor = extensions.get_extension_processor(
-                common.ExtensionParameter('permessage-compress'))
-        self.assertIsInstance(processor,
-                              extensions.PerMessageCompressExtensionProcessor)
 
 
 if __name__ == '__main__':

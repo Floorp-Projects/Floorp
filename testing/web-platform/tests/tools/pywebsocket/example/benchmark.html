@@ -52,65 +52,35 @@ function getConfig() {
     // If the size of each message is small, send/receive multiple messages
     // until the sum of sizes reaches this threshold.
     minTotal: getIntFromInput('mintotal'),
-    multipliers: getIntArrayFromInput('multipliers'),
-    verifyData: getBoolFromCheckBox('verifydata')
+    multipliers: getFloatArrayFromInput('multipliers'),
+    verifyData: getBoolFromCheckBox('verifydata'),
+    addToLog: addToLog,
+    addToSummary: addToSummary,
+    measureValue: measureValue,
+    notifyAbort: notifyAbort
   };
 }
 
-var worker = new Worker('benchmark.js');
-worker.onmessage = onMessage;
-
 function onSendBenchmark() {
   var config = getConfig();
-
-  if (getBoolFromCheckBox('worker')) {
-    worker.postMessage({type: 'sendBenchmark', config: config});
-  } else {
-    config.addToLog = addToLog;
-    config.addToSummary = addToSummary;
-    config.measureValue = measureValue;
-    sendBenchmark(config);
-  }
+  doAction(config, getBoolFromCheckBox('worker'), 'sendBenchmark');
 }
 
 function onReceiveBenchmark() {
   var config = getConfig();
-
-  if (getBoolFromCheckBox('worker')) {
-    worker.postMessage({type: 'receiveBenchmark', config: config});
-  } else {
-    config.addToLog = addToLog;
-    config.addToSummary = addToSummary;
-    config.measureValue = measureValue;
-    receiveBenchmark(config);
-  }
+  doAction(config, getBoolFromCheckBox('worker'), 'receiveBenchmark');
 }
 
 function onBatchBenchmark() {
   var config = getConfig();
-
-  if (getBoolFromCheckBox('worker')) {
-    worker.postMessage({type: 'batchBenchmark', config: config});
-  } else {
-    config.addToLog = addToLog;
-    config.addToSummary = addToSummary;
-    config.measureValue = measureValue;
-    batchBenchmark(config);
-  }
+  doAction(config, getBoolFromCheckBox('worker'), 'batchBenchmark');
 }
 
 function onStop() {
   var config = getConfig();
-
-  if (getBoolFromCheckBox('worker')) {
-    worker.postMessage({type: 'stop', config: config});
-  } else {
-    config.addToLog = addToLog;
-    config.addToSummary = addToSummary;
-    config.measureValue = measureValue;
-    stop(config);
-  }
+  doAction(config, getBoolFromCheckBox('worker'), 'stop');
 }
+
 function init() {
   addressBox = document.getElementById('address');
   logBox = document.getElementById('log');
@@ -128,6 +98,8 @@ function init() {
   if (!('WebSocket' in window)) {
     addToLog('WebSocket is not available');
   }
+
+  initWorker('WebSocket', '');
 }
 </script>
 </head>
