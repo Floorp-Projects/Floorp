@@ -88,14 +88,7 @@ define(function (require, exports, module) {
       return Rep(Object.assign({}, props, {
         cropLimit: 50,
         noGrip: true,
-        openLink(str) {
-          try {
-            let u = new URL(str);
-            if (u.protocol == "https:" || u.protocol == "http:") {
-              window.open(str, "_blank");
-            }
-          } catch (ex) { /* the link might be bust, then we do nothing */ }
-        },
+        omitLinkHref: false,
       }));
     }
 
