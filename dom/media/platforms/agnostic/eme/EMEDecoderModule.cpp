@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EMEDecoderModule.h"
+
+#include <inttypes.h>
+
 #include "Adts.h"
 #include "GMPDecoderModule.h"
 #include "GMPService.h"
@@ -44,6 +47,13 @@ public:
     , mProfile(aInfo.mProfile < 1 || aInfo.mProfile > 4 ? 2 : aInfo.mProfile)
     , mFrequencyIndex(Adts::GetFrequencyIndex(aInfo.mRate))
   {
+    EME_LOG("ADTSSampleConvertor(): aInfo.mProfile=%" PRIi8
+            " aInfo.mExtendedProfile=%" PRIi8, aInfo.mProfile,
+            aInfo.mExtendedProfile);
+    if (aInfo.mProfile < 1 || aInfo.mProfile > 4) {
+      EME_LOG("ADTSSampleConvertor(): Profile not in [1, 4]! Samples will "
+              "their profile set to 2!");
+    }
   }
   bool Convert(MediaRawData* aSample) const
   {
