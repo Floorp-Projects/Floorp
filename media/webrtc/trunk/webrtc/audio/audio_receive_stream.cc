@@ -161,7 +161,8 @@ void AudioReceiveStream::Stop() {
 }
 
 webrtc::AudioReceiveStream::Stats AudioReceiveStream::GetStats() const {
-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  // TODO: Mozilla - currently we run stats on the STS thread
+  //RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   webrtc::AudioReceiveStream::Stats stats;
   stats.remote_ssrc = config_.rtp.remote_ssrc;
 
