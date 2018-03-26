@@ -23,7 +23,6 @@ DIRS += ['xbl-marquee']
 TEST_DIRS += ['test']
 
 EXPORTS += [
-    '!nsStyleStructList.h',
     'AnimationCommon.h',
     'CounterStyleManager.h',
     'nsAnimationManager.h',
@@ -62,6 +61,7 @@ EXPORTS += [
     'nsStyleStruct.h',
     'nsStyleStructFwd.h',
     'nsStyleStructInlines.h',
+    'nsStyleStructList.h',
     'nsStyleTransformMatrix.h',
     'nsStyleUtil.h',
     'nsTimingFunction.h',
@@ -279,13 +279,6 @@ CONTENT_ACCESSIBLE_FILES += [
     'TopLevelImageDocument.css',
     'TopLevelVideoDocument.css',
 ]
-
-GENERATED_FILES += [
-    'nsStyleStructList.h',
-]
-
-style_struct_list = GENERATED_FILES['nsStyleStructList.h']
-style_struct_list.script = 'generate-stylestructlist.py'
 
 if CONFIG['COMPILE_ENVIRONMENT']:
     GENERATED_FILES += [

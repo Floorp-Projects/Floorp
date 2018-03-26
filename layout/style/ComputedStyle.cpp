@@ -50,14 +50,14 @@ namespace mozilla {
 // in nsStyleStructList.h, since when we set up the IDs, we include
 // the inherited and reset structs spearately from nsStyleStructList.h
 enum DebugStyleStruct {
-#define STYLE_STRUCT(name, checkdata_cb) eDebugStyleStruct_##name,
+#define STYLE_STRUCT(name) eDebugStyleStruct_##name,
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 };
 
-#define STYLE_STRUCT(name, checkdata_cb) \
+#define STYLE_STRUCT(name)                                    \
   static_assert(static_cast<int>(eDebugStyleStruct_##name) == \
-                  static_cast<int>(eStyleStruct_##name), \
+                  static_cast<int>(eStyleStruct_##name),      \
                 "Style struct IDs are not declared in order?");
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
@@ -194,10 +194,10 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
 
 #ifdef DEBUG
   #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
-  #define STYLE_STRUCT(name_, callback_)                                      \
-    MOZ_ASSERT(!!(structsFound & NS_STYLE_INHERIT_BIT(name_)) ==              \
-               (PEEK(name_) != nullptr),                                      \
-               "PeekStyleData results must not change in the middle of "      \
+  #define STYLE_STRUCT(name_)                                             \
+    MOZ_ASSERT(!!(structsFound & NS_STYLE_INHERIT_BIT(name_)) ==          \
+               (PEEK(name_) != nullptr),                                  \
+               "PeekStyleData results must not change in the middle of "  \
                "difference calculation.");
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
@@ -406,8 +406,8 @@ ComputedStyle::CombineVisitedColors(nscolor *aColors, bool aLinkIsVisited)
 ComputedStyle::StructName(nsStyleStructID aSID)
 {
   switch (aSID) {
-#define STYLE_STRUCT(name_, checkdata_cb)                                     \
-    case eStyleStruct_##name_:                                                \
+#define STYLE_STRUCT(name_)     \
+    case eStyleStruct_##name_:  \
       return #name_;
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
@@ -421,8 +421,8 @@ ComputedStyle::LookupStruct(const nsACString& aName, nsStyleStructID& aResult)
 {
   if (false)
     ;
-#define STYLE_STRUCT(name_, checkdata_cb_)                                    \
-  else if (aName.EqualsLiteral(#name_))                                       \
+#define STYLE_STRUCT(name_)             \
+  else if (aName.EqualsLiteral(#name_)) \
     aResult = eStyleStruct_##name_;
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
