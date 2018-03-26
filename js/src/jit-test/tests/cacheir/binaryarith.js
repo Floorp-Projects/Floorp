@@ -61,7 +61,7 @@ warmup(funSub3, [[7, false, 7], [7, true, 6], [false, 1, -1], [true,1,0]]);
 
 // Mul: Int32+  Int32 Overflow
 var funMul1 = (a, b) => { return a * b; }
-warmup(funMul1, [[1, 2, 2], [10, 21, 210], [3, 4, 12], [2147483649, 2, 4294967298]]);
+warmup(funMul1, [[1, 2, 2], [10, 21, 210], [3, 4, 12], [2147483649, 2, 4294967298], [1073741824, 1024, 1099511627776 ]]);
 
 // Mul: Doubles
 var funMul2 = (a, b) => { return a * b; }
