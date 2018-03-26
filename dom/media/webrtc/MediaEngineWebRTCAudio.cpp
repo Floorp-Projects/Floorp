@@ -488,8 +488,7 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
         uint32_t channelCount = 0;
         mAudioInput->GetChannelCount(channelCount);
         MOZ_ASSERT(channelCount > 0 && mLastPrefs.mChannels > 0);
-        if (mLastPrefs.mChannels != prefs.mChannels &&
-            !stream->OpenNewAudioCallbackDriver(mListener)) {
+        if (!stream->OpenNewAudioCallbackDriver(mListener)) {
           MOZ_LOG(GetMediaManagerLog(), LogLevel::Error, ("Could not open a new AudioCallbackDriver for input"));
           return NS_ERROR_FAILURE;
         }
