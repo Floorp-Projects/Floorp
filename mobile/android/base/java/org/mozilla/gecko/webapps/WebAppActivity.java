@@ -378,17 +378,20 @@ public class WebAppActivity extends AppCompatActivity
             // We can't really handle this, so deny it?
             Log.w(LOGTAG, "Failed to parse URL for navigation: " + urlStr);
             response.respond(true);
+            return;
         }
 
         if (mManifest.isInScope(uri) && target != TARGET_WINDOW_NEW) {
             // This is in scope and wants to load in the same frame, so
             // let Gecko handle it.
             response.respond(false);
+            return;
         }
 
         if ("javascript".equals(uri.getScheme())) {
             // These URIs will fail the scope check but should still be loaded in the PWA.
             response.respond(false);
+            return;
         }
 
         if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()) ||
