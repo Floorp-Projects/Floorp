@@ -23,7 +23,7 @@ public:
   static RefPtr<InProcessCompositorSession> Create(
     nsBaseWidget* baseWidget,
     LayerManager* aLayerManager,
-    const uint64_t& aRootLayerTreeId,
+    const LayersId& aRootLayerTreeId,
     CSSToLayoutDeviceScale aScale,
     const CompositorOptions& aOptions,
     bool aUseExternalSurfaceSize,

@@ -770,7 +770,7 @@ AsyncPanZoomController::InitializeGlobalState()
   gIsHighMemSystem = sysmem >= threshold;
 }
 
-AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
+AsyncPanZoomController::AsyncPanZoomController(LayersId aLayersId,
                                                APZCTreeManager* aTreeManager,
                                                const RefPtr<InputQueue>& aInputQueue,
                                                GeckoContentController* aGeckoContentController,

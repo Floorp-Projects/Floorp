@@ -1043,7 +1043,7 @@ nsBaseWidget::UpdateZoomConstraints(const uint32_t& aPresShellId,
     }
     return;
   }
-  uint64_t layersId = mCompositorSession->RootLayerTreeId();
+  LayersId layersId = mCompositorSession->RootLayerTreeId();
   mAPZC->UpdateZoomConstraints(ScrollableLayerGuid(layersId, aPresShellId, aViewId),
                                aConstraints);
 }
@@ -1430,7 +1430,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     bool success = false;
     if (!backendHints.IsEmpty()) {
       shadowManager =
-        mCompositorBridgeChild->SendPLayerTransactionConstructor(backendHints, 0);
+        mCompositorBridgeChild->SendPLayerTransactionConstructor(backendHints, LayersId{0});
       if (shadowManager->SendGetTextureFactoryIdentifier(&textureFactoryIdentifier) &&
           textureFactoryIdentifier.mParentBackend != LayersBackend::LAYERS_NONE)
       {
@@ -1933,7 +1933,7 @@ nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
   if (!mCompositorSession || !mAPZC) {
     return;
   }
-  uint64_t layerId = mCompositorSession->RootLayerTreeId();
+  LayersId layerId = mCompositorSession->RootLayerTreeId();
   APZThreadUtils::RunOnControllerThread(
     NewRunnableMethod<ScrollableLayerGuid, CSSRect, uint32_t>(
       "layers::IAPZCTreeManager::ZoomToRect",
@@ -1980,7 +1980,7 @@ nsBaseWidget::StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
 
   MOZ_ASSERT(XRE_IsParentProcess() && mCompositorSession);
 
-  uint64_t layersId = mCompositorSession->RootLayerTreeId();
+  LayersId layersId = mCompositorSession->RootLayerTreeId();
   ScrollableLayerGuid guid(layersId, aDragMetrics.mPresShellId, aDragMetrics.mViewId);
 
   APZThreadUtils::RunOnControllerThread(

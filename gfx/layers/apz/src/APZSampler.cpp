@@ -32,8 +32,8 @@ APZSampler::ClearTree()
 }
 
 void
-APZSampler::UpdateFocusState(uint64_t aRootLayerTreeId,
-                             uint64_t aOriginatingLayersId,
+APZSampler::UpdateFocusState(LayersId aRootLayerTreeId,
+                             LayersId aOriginatingLayersId,
                              const FocusTarget& aFocusTarget)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
@@ -41,10 +41,10 @@ APZSampler::UpdateFocusState(uint64_t aRootLayerTreeId,
 }
 
 void
-APZSampler::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
+APZSampler::UpdateHitTestingTree(LayersId aRootLayerTreeId,
                                  Layer* aRoot,
                                  bool aIsFirstPaint,
-                                 uint64_t aOriginatingLayersId,
+                                 LayersId aOriginatingLayersId,
                                  uint32_t aPaintSequenceNumber)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
@@ -53,10 +53,10 @@ APZSampler::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
 }
 
 void
-APZSampler::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
+APZSampler::UpdateHitTestingTree(LayersId aRootLayerTreeId,
                                  const WebRenderScrollData& aScrollData,
                                  bool aIsFirstPaint,
-                                 uint64_t aOriginatingLayersId,
+                                 LayersId aOriginatingLayersId,
                                  uint32_t aPaintSequenceNumber)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
@@ -65,7 +65,7 @@ APZSampler::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
 }
 
 void
-APZSampler::NotifyLayerTreeAdopted(uint64_t aLayersId,
+APZSampler::NotifyLayerTreeAdopted(LayersId aLayersId,
                                    const RefPtr<APZSampler>& aOldSampler)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
@@ -73,7 +73,7 @@ APZSampler::NotifyLayerTreeAdopted(uint64_t aLayersId,
 }
 
 void
-APZSampler::NotifyLayerTreeRemoved(uint64_t aLayersId)
+APZSampler::NotifyLayerTreeRemoved(LayersId aLayersId)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   mApz->NotifyLayerTreeRemoved(aLayersId);
@@ -90,7 +90,7 @@ APZSampler::PushStateToWR(wr::TransactionBuilder& aTxn,
 }
 
 bool
-APZSampler::GetAPZTestData(uint64_t aLayersId,
+APZSampler::GetAPZTestData(LayersId aLayersId,
                            APZTestData* aOutData)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
@@ -98,7 +98,7 @@ APZSampler::GetAPZTestData(uint64_t aLayersId,
 }
 
 void
-APZSampler::SetTestAsyncScrollOffset(uint64_t aLayersId,
+APZSampler::SetTestAsyncScrollOffset(LayersId aLayersId,
                                      const FrameMetrics::ViewID& aScrollId,
                                      const CSSPoint& aOffset)
 {
@@ -112,7 +112,7 @@ APZSampler::SetTestAsyncScrollOffset(uint64_t aLayersId,
 }
 
 void
-APZSampler::SetTestAsyncZoom(uint64_t aLayersId,
+APZSampler::SetTestAsyncZoom(LayersId aLayersId,
                              const FrameMetrics::ViewID& aScrollId,
                              const LayerToParentLayerScale& aZoom)
 {

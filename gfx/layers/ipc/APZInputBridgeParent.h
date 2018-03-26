@@ -19,7 +19,7 @@ class APZInputBridgeParent : public PAPZInputBridgeParent
   NS_INLINE_DECL_REFCOUNTING(APZInputBridgeParent)
 
 public:
-  explicit APZInputBridgeParent(const uint64_t& aLayersId);
+  explicit APZInputBridgeParent(const LayersId& aLayersId);
 
   mozilla::ipc::IPCResult
   RecvReceiveMultiTouchInputEvent(

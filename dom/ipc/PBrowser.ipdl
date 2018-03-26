@@ -40,6 +40,7 @@ using ScreenIntSize from "Units.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using struct mozilla::layers::ZoomConstraints from "FrameMetrics.h";
+using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::MaybeZoomConstraints from "FrameMetrics.h";
 using mozilla::layers::GeckoContentController::TapType from "mozilla/layers/GeckoContentController.h";
 using FrameMetrics::ViewID from "FrameMetrics.h";
@@ -597,7 +598,7 @@ child:
                nsSizeMode sizeMode);
 
     async InitRendering(TextureFactoryIdentifier textureFactoryIdentifier,
-                        uint64_t layersId,
+                        LayersId layersId,
                         CompositorOptions compositorOptions,
                         bool layersConnected,
                         nullable PRenderFrame renderFrame);

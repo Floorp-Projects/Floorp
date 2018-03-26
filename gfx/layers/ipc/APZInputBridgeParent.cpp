@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace layers {
 
-APZInputBridgeParent::APZInputBridgeParent(const uint64_t& aLayersId)
+APZInputBridgeParent::APZInputBridgeParent(const LayersId& aLayersId)
 {
   MOZ_ASSERT(XRE_IsGPUProcess());
   MOZ_ASSERT(NS_IsMainThread());

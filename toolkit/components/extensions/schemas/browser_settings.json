@@ -117,6 +117,10 @@
         "$ref": "types.Setting",
         "description": "Enables or disables the browser cache."
       },
+      "closeTabsByDoubleClick": {
+        "$ref": "types.Setting",
+        "description": "This boolean setting controls whether the selected tab can be closed with a double click."
+      },
       "contextMenuShowEvent": {
         "$ref": "types.Setting",
         "description": "Controls after which mouse event context menus popup. This setting's value is of type ContextMenuMouseEvent, which has possible values of <code>mouseup</code> and <code>mousedown</code>."

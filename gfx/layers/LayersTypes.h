@@ -47,6 +47,53 @@ class TextureHost;
 #undef NONE
 #undef OPAQUE
 
+struct LayersId {
+  uint64_t mId;
+
+  bool IsValid() const {
+    return mId != 0;
+  }
+
+  // Allow explicit cast to a uint64_t for now
+  explicit operator uint64_t() const
+  {
+    return mId;
+  }
+
+  // Implement some operators so this class can be used as a key in
+  // stdlib classes.
+  bool operator<(const LayersId& aOther) const
+  {
+    return mId < aOther.mId;
+  }
+
+  bool operator==(const LayersId& aOther) const
+  {
+    return mId == aOther.mId;
+  }
+
+  bool operator!=(const LayersId& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
+  // Helper operators that allow this class to be used as a key in
+  // std::unordered_map like so:
+  //   std::unordered_map<LayersId, ValueType, LayersId::HashFn, LayersId::EqualFn> myMap;
+  struct HashFn {
+    std::size_t operator()(const LayersId& aKey) const
+    {
+      return std::hash<uint64_t>{}(aKey.mId);
+    }
+  };
+  struct EqualFn {
+    bool operator()(const LayersId& lhs, const LayersId& rhs) const
+    {
+      return lhs.mId == rhs.mId;
+    }
+  };
+};
+
 enum class LayersBackend : int8_t {
   LAYERS_NONE = 0,
   LAYERS_BASIC,

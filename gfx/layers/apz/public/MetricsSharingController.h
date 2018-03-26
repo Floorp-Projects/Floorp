@@ -23,7 +23,7 @@ public:
   virtual base::ProcessId RemotePid() = 0;
   virtual bool StartSharingMetrics(mozilla::ipc::SharedMemoryBasic::Handle aHandle,
                                    CrossProcessMutexHandle aMutexHandle,
-                                   uint64_t aLayersId,
+                                   LayersId aLayersId,
                                    uint32_t aApzcId) = 0;
   virtual bool StopSharingMetrics(FrameMetrics::ViewID aScrollId,
                                   uint32_t aApzcId) = 0;

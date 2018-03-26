@@ -305,7 +305,7 @@ CompositorBridgeChild::CompositorIsInGPUProcess()
 }
 
 PLayerTransactionChild*
-CompositorBridgeChild::AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBackendHints, const uint64_t& aId)
+CompositorBridgeChild::AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBackendHints, const LayersId& aId)
 {
   LayerTransactionChild* c = new LayerTransactionChild(aId);
   c->AddIPDLReference();
@@ -326,7 +326,7 @@ CompositorBridgeChild::AllocPLayerTransactionChild(const nsTArray<LayersBackend>
 bool
 CompositorBridgeChild::DeallocPLayerTransactionChild(PLayerTransactionChild* actor)
 {
-  uint64_t childId = static_cast<LayerTransactionChild*>(actor)->GetId();
+  LayersId childId = static_cast<LayerTransactionChild*>(actor)->GetId();
 
   for (auto iter = mFrameMetricsTable.Iter(); !iter.Done(); iter.Next()) {
     nsAutoPtr<SharedFrameMetricsData>& data = iter.Data();
@@ -339,12 +339,12 @@ CompositorBridgeChild::DeallocPLayerTransactionChild(PLayerTransactionChild* act
 }
 
 mozilla::ipc::IPCResult
-CompositorBridgeChild::RecvInvalidateLayers(const uint64_t& aLayersId)
+CompositorBridgeChild::RecvInvalidateLayers(const LayersId& aLayersId)
 {
   if (mLayerManager) {
-    MOZ_ASSERT(aLayersId == 0);
+    MOZ_ASSERT(!aLayersId.IsValid());
     FrameLayerBuilder::InvalidateAllLayers(mLayerManager);
-  } else if (aLayersId != 0) {
+  } else if (aLayersId.IsValid()) {
     if (dom::TabChild* child = dom::TabChild::GetFrom(aLayersId)) {
       child->InvalidateLayers();
     }
@@ -527,7 +527,7 @@ CompositorBridgeChild::RecvHideAllPlugins(const uintptr_t& aParentWidget)
 }
 
 mozilla::ipc::IPCResult
-CompositorBridgeChild::RecvDidComposite(const uint64_t& aId,
+CompositorBridgeChild::RecvDidComposite(const LayersId& aId,
                                         const uint64_t& aTransactionId,
                                         const TimeStamp& aCompositeStart,
                                         const TimeStamp& aCompositeEnd)
@@ -536,13 +536,13 @@ CompositorBridgeChild::RecvDidComposite(const uint64_t& aId,
   AutoTArray<RefPtr<TextureClientPool>,2> texturePools = mTexturePools;
 
   if (mLayerManager) {
-    MOZ_ASSERT(aId == 0);
+    MOZ_ASSERT(!aId.IsValid());
     MOZ_ASSERT(mLayerManager->GetBackendType() == LayersBackend::LAYERS_CLIENT ||
                mLayerManager->GetBackendType() == LayersBackend::LAYERS_WR);
     // Hold a reference to keep LayerManager alive. See Bug 1242668.
     RefPtr<LayerManager> m = mLayerManager;
     m->DidComposite(aTransactionId, aCompositeStart, aCompositeEnd);
-  } else if (aId != 0) {
+  } else if (aId.IsValid()) {
     RefPtr<dom::TabChild> child = dom::TabChild::GetFrom(aId);
     if (child) {
       child->DidComposite(aTransactionId, aCompositeStart, aCompositeEnd);
@@ -590,7 +590,7 @@ mozilla::ipc::IPCResult
 CompositorBridgeChild::RecvSharedCompositorFrameMetrics(
     const mozilla::ipc::SharedMemoryBasic::Handle& metrics,
     const CrossProcessMutexHandle& handle,
-    const uint64_t& aLayersId,
+    const LayersId& aLayersId,
     const uint32_t& aAPZCId)
 {
   SharedFrameMetricsData* data = new SharedFrameMetricsData(
@@ -618,7 +618,7 @@ CompositorBridgeChild::RecvReleaseSharedCompositorFrameMetrics(
 CompositorBridgeChild::SharedFrameMetricsData::SharedFrameMetricsData(
     const ipc::SharedMemoryBasic::Handle& metrics,
     const CrossProcessMutexHandle& handle,
-    const uint64_t& aLayersId,
+    const LayersId& aLayersId,
     const uint32_t& aAPZCId)
   : mMutex(nullptr)
   , mLayersId(aLayersId)
@@ -662,7 +662,7 @@ CompositorBridgeChild::SharedFrameMetricsData::GetViewID()
   return frame->GetScrollId();
 }
 
-uint64_t
+LayersId
 CompositorBridgeChild::SharedFrameMetricsData::GetLayersId() const
 {
   return mLayersId;
@@ -749,7 +749,7 @@ CompositorBridgeChild::SendResume()
 }
 
 bool
-CompositorBridgeChild::SendNotifyChildCreated(const uint64_t& id,
+CompositorBridgeChild::SendNotifyChildCreated(const LayersId& id,
                                               CompositorOptions* aOptions)
 {
   if (!mCanSend) {
@@ -759,7 +759,7 @@ CompositorBridgeChild::SendNotifyChildCreated(const uint64_t& id,
 }
 
 bool
-CompositorBridgeChild::SendAdoptChild(const uint64_t& id)
+CompositorBridgeChild::SendAdoptChild(const LayersId& id)
 {
   if (!mCanSend) {
     return false;
@@ -835,7 +835,7 @@ CompositorBridgeChild::AllocPTextureChild(const SurfaceDescriptor&,
                                           const ReadLockDescriptor&,
                                           const LayersBackend&,
                                           const TextureFlags&,
-                                          const uint64_t&,
+                                          const LayersId&,
                                           const uint64_t& aSerial,
                                           const wr::MaybeExternalImageId& aExternalImageId)
 {
@@ -869,13 +869,13 @@ CompositorBridgeChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessa
 }
 
 mozilla::ipc::IPCResult
-CompositorBridgeChild::RecvObserveLayerUpdate(const uint64_t& aLayersId,
+CompositorBridgeChild::RecvObserveLayerUpdate(const LayersId& aLayersId,
                                               const uint64_t& aEpoch,
                                               const bool& aActive)
 {
   // This message is sent via the window compositor, not the tab compositor -
   // however it still has a layers id.
-  MOZ_ASSERT(aLayersId);
+  MOZ_ASSERT(aLayersId.IsValid());
   MOZ_ASSERT(XRE_IsParentProcess());
 
   if (RefPtr<dom::TabParent> tab = dom::TabParent::GetTabParentFromLayersId(aLayersId)) {
@@ -993,7 +993,7 @@ CompositorBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
                                      nsIEventTarget* aTarget)
 {
   PTextureChild* textureChild = AllocPTextureChild(
-    aSharedData, aReadLock, aLayersBackend, aFlags, 0 /* FIXME */, aSerial, aExternalImageId);
+    aSharedData, aReadLock, aLayersBackend, aFlags, LayersId{0} /* FIXME */, aSerial, aExternalImageId);
 
   // Do the DOM labeling.
   if (aTarget) {
@@ -1001,7 +1001,7 @@ CompositorBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
   }
 
   return SendPTextureConstructor(
-    textureChild, aSharedData, aReadLock, aLayersBackend, aFlags, 0 /* FIXME? */, aSerial, aExternalImageId);
+    textureChild, aSharedData, aReadLock, aLayersBackend, aFlags, LayersId{0} /* FIXME? */, aSerial, aExternalImageId);
 }
 
 bool
@@ -1051,11 +1051,11 @@ CompositorBridgeChild::DeallocPCompositorWidgetChild(PCompositorWidgetChild* aAc
 }
 
 PAPZCTreeManagerChild*
-CompositorBridgeChild::AllocPAPZCTreeManagerChild(const uint64_t& aLayersId)
+CompositorBridgeChild::AllocPAPZCTreeManagerChild(const LayersId& aLayersId)
 {
   APZCTreeManagerChild* child = new APZCTreeManagerChild();
   child->AddRef();
-  if (aLayersId != 0) {
+  if (aLayersId.IsValid()) {
     TabChild* tabChild = TabChild::GetFrom(aLayersId);
     if (tabChild) {
       SetEventTargetForActor(
@@ -1068,7 +1068,7 @@ CompositorBridgeChild::AllocPAPZCTreeManagerChild(const uint64_t& aLayersId)
 }
 
 PAPZChild*
-CompositorBridgeChild::AllocPAPZChild(const uint64_t& aLayersId)
+CompositorBridgeChild::AllocPAPZChild(const LayersId& aLayersId)
 {
   // We send the constructor manually.
   MOZ_CRASH("Should not be called");
