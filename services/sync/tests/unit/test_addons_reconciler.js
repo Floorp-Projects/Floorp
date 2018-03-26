@@ -10,8 +10,37 @@ ChromeUtils.import("resource://services-sync/engines/addons.js");
 ChromeUtils.import("resource://services-sync/service.js");
 ChromeUtils.import("resource://services-sync/util.js");
 
-loadAddonTestFunctions();
-startupManager();
+AddonTestUtils.init(this);
+AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.awaitPromise(AddonTestUtils.promiseStartupManager());
+
+const ADDONS = {
+  test_bootstrap1_1: {
+    "install.rdf": {
+      id: "bootstrap1@tests.mozilla.org",
+      version: "1.0",
+      bootstrap: "true",
+      multiprocessCompatible: "true",
+      name: "Test Bootstrap 1",
+      description: "Test Description",
+
+      iconURL: "chrome://foo/skin/icon.png",
+      aboutURL: "chrome://foo/content/about.xul",
+      optionsURL: "chrome://foo/content/options.xul",
+
+      targetApplications: [{
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1"}],
+    },
+  },
+};
+
+const XPIS = {};
+for (let [name, files] of Object.entries(ADDONS)) {
+  XPIS[name] = AddonTestUtils.createTempXPIFile(files);
+}
 
 function makeAddonsReconciler() {
   const log = Service.engineManager.get("addons")._log;
@@ -59,7 +88,7 @@ add_task(async function test_install_detection() {
   reconciler.startListening();
 
   let before = new Date();
-  let addon = await installAddon("test_bootstrap1_1");
+  let addon = await installAddon(XPIS.test_bootstrap1_1);
   let after = new Date();
 
   Assert.equal(1, Object.keys(reconciler.addons).length);
@@ -100,7 +129,7 @@ add_task(async function test_uninstall_detection() {
   reconciler._addons = {};
   reconciler._changes = [];
 
-  let addon = await installAddon("test_bootstrap1_1");
+  let addon = await installAddon(XPIS.test_bootstrap1_1);
   let id = addon.id;
 
   reconciler._changes = [];

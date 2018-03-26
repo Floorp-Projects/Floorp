@@ -88,6 +88,9 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
     mMonitor("mozilla.ipc.GeckChildProcessHost.mMonitor"),
     mLaunchOptions(MakeUnique<base::LaunchOptions>()),
     mProcessState(CREATING_CHANNEL),
+#ifdef XP_WIN
+    mGroupId(u"-"),
+#endif
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
     mEnableSandboxLogging(false),
     mSandboxLevel(0),
@@ -317,9 +320,8 @@ void GeckoChildProcessHost::InitWindowsGroupID()
     taskbarInfo->GetAvailable(&isSupported);
     nsAutoString appId;
     if (isSupported && NS_SUCCEEDED(taskbarInfo->GetDefaultGroupId(appId))) {
-      mGroupId.Append(appId);
-    } else {
-      mGroupId.Assign('-');
+      MOZ_ASSERT(mGroupId.EqualsLiteral("-"));
+      mGroupId.Assign(appId);
     }
   }
 }

@@ -10,6 +10,11 @@ var AM_Cu = Cu;
 
 AM_Cu.importGlobalProperties(["TextEncoder"]);
 
+if (!_TEST_FILE[0].includes("toolkit/mozapps/extensions/test/xpcshell/")) {
+  ok(false, ("head_addons.js may not be loaded by tests outside of " +
+             "the add-on manager component."));
+}
+
 const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
 const CERTDB_CID = Components.ID("{fb0bbc5c-452e-4783-b32c-80124693d871}");
 
