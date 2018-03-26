@@ -2731,7 +2731,7 @@ nsXULPopupManager::KeyDown(KeyboardEvent* aKeyEvent)
     }
   }
 
-  aKeyEvent->AsEvent()->StopCrossProcessForwarding();
+  aKeyEvent->StopCrossProcessForwarding();
   return NS_OK;
 }
 
