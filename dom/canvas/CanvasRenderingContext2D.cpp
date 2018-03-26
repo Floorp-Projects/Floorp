@@ -2736,7 +2736,7 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
              "being destroyed.");
 
   RefPtr<ComputedStyle> sc =
-    styleSet->ResolveForDeclarations(parentStyle->AsServo(), declarations);
+    styleSet->ResolveForDeclarations(parentStyle, declarations);
 
   // The font getter is required to be reserialized based on what we
   // parsed (including having line-height removed).  (Older drafts of

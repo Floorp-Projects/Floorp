@@ -17,13 +17,11 @@ namespace mozilla {
 struct AtomsSizes
 {
   size_t mTable;
-  size_t mStaticAtomObjects;
   size_t mDynamicAtomObjects;
   size_t mDynamicUnsharedBuffers;
 
   AtomsSizes()
    : mTable(0)
-   , mStaticAtomObjects(0)
    , mDynamicAtomObjects(0)
    , mDynamicUnsharedBuffers(0)
   {}

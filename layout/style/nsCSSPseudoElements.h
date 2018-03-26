@@ -79,6 +79,25 @@ enum class CSSPseudoElementType : CSSPseudoElementTypeBase {
   MAX
 };
 
+namespace detail {
+
+struct CSSPseudoElementAtoms
+{
+  #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+    NS_STATIC_ATOM_DECL_STRING(name_, value_)
+  #include "nsCSSPseudoElementList.h"
+  #undef CSS_PSEUDO_ELEMENT
+
+  #define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+    NS_STATIC_ATOM_DECL_ATOM(name_)
+  #include "nsCSSPseudoElementList.h"
+  #undef CSS_PSEUDO_ELEMENT
+};
+
+extern const CSSPseudoElementAtoms gCSSPseudoElementAtoms;
+
+} // namespace detail
+
 } // namespace mozilla
 
 // Empty class derived from nsAtom so that function signatures can
@@ -105,8 +124,8 @@ public:
     return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_IS_CSS2);
   }
 
-#define CSS_PSEUDO_ELEMENT(_name, _value, _flags) \
-  NS_STATIC_ATOM_SUBCLASS_DECL(nsICSSPseudoElement, _name)
+#define CSS_PSEUDO_ELEMENT(name_, value_, flags_) \
+  NS_STATIC_ATOM_SUBCLASS_DECL_PTR(nsICSSPseudoElement, name_)
 #include "nsCSSPseudoElementList.h"
 #undef CSS_PSEUDO_ELEMENT
 

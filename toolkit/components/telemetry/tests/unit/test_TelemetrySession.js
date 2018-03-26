@@ -203,6 +203,12 @@ function checkPayloadInfo(data) {
               f + " must have the correct type and valid data " + data[f]);
   }
 
+  // Check for a valid revision.
+  if (data.revision != "") {
+    const revisionUrlRegEx = /^http[s]?:\/\/hg.mozilla.org(\/[a-z\S]+)+(\/rev\/[0-9a-z]+)$/g;
+    Assert.ok(revisionUrlRegEx.test(data.revision));
+  }
+
   // Previous buildId is not mandatory.
   if (data.previousBuildId) {
     Assert.ok(stringCheck(data.previousBuildId));

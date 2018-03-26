@@ -26,12 +26,11 @@
 #include "nsIDocument.h"
 #include "nsPrintfCString.h"
 #include "RubyUtils.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/ArenaObjectID.h"
+#include "mozilla/ComputedStyleInlines.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
-#include "mozilla/ComputedStyle.h"
-#include "mozilla/ComputedStyleInlines.h"
 
 #include "mozilla/ReflowInput.h"
 #include "nsLayoutUtils.h"
@@ -51,27 +50,17 @@ namespace mozilla {
 // in nsStyleStructList.h, since when we set up the IDs, we include
 // the inherited and reset structs spearately from nsStyleStructList.h
 enum DebugStyleStruct {
-#define STYLE_STRUCT(name, checkdata_cb) eDebugStyleStruct_##name,
+#define STYLE_STRUCT(name) eDebugStyleStruct_##name,
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 };
 
-#define STYLE_STRUCT(name, checkdata_cb) \
+#define STYLE_STRUCT(name)                                    \
   static_assert(static_cast<int>(eDebugStyleStruct_##name) == \
-                  static_cast<int>(eStyleStruct_##name), \
+                  static_cast<int>(eStyleStruct_##name),      \
                 "Style struct IDs are not declared in order?");
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
-
-const uint32_t ComputedStyle::sDependencyTable[] = {
-#define STYLE_STRUCT(name, checkdata_cb)
-#define STYLE_STRUCT_DEP(dep) NS_STYLE_INHERIT_BIT(dep) |
-#define STYLE_STRUCT_END() 0,
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-#undef STYLE_STRUCT_DEP
-#undef STYLE_STRUCT_END
-};
 
 #endif
 
@@ -99,20 +88,11 @@ ComputedStyle::ComputedStyle(nsPresContext* aPresContext,
   static_assert(NS_STYLE_INHERIT_MASK & NS_STYLE_INHERIT_BIT(LastItem),
                 "NS_STYLE_INHERIT_MASK must be bigger, and other bits shifted");
 #undef eStyleStruct_LastItem
-
-#ifdef DEBUG
-  static_assert(MOZ_ARRAY_LENGTH(ComputedStyle::sDependencyTable)
-                  == nsStyleStructID_Length,
-                "Number of items in dependency table doesn't match IDs");
-#endif
 }
 
-// TODO(stylo-everywhere): Remove aSamePointerStructs.
 nsChangeHint
 ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
-                                    uint32_t* aEqualStructs,
-                                    uint32_t* aSamePointerStructs,
-                                    bool aIgnoreVariables)
+                                   uint32_t* aEqualStructs)
 {
   AUTO_PROFILER_LABEL("ComputedStyle::CalcStyleDifference", CSS);
 
@@ -120,7 +100,6 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
                 "aEqualStructs is not big enough");
 
   *aEqualStructs = 0;
-  *aSamePointerStructs = 0;
 
   nsChangeHint hint = nsChangeHint(0);
   NS_ENSURE_TRUE(aNewContext, hint);
@@ -135,13 +114,7 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
 
   DebugOnly<uint32_t> structsFound = 0;
 
-  if (aIgnoreVariables ||
-      Servo_ComputedValues_EqualCustomProperties(
-        ComputedData(),
-        aNewContext->ComputedData())) {
-    *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
-  }
-
+  *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
   DebugOnly<int> styleStructCount = 1;  // count Variables already
 
   // Servo's optimization to stop the cascade when there are no style changes
@@ -153,13 +126,8 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
   // FIXME(emilio): Reintroduce that optimization either for all kind of structs
   // after bug 1368290 with a weak parent pointer from text, or just for reset
   // structs.
-  //
-  // For Gecko structs, we just defer to PeekStyleXXX.  But for Servo structs,
-  // we need to use the aRelevantStructs bitfield passed in to determine
-  // whether to return a struct or not, since this->mBits might not yet
-  // be correct (due to not calling ResolveSameStructsAs on it yet).
-#define PEEK(struct_)                                                         \
-   ComputedData()->GetStyle##struct_()                                        \
+#define PEEK(struct_) \
+   ComputedData()->GetStyle##struct_()
 
 #define EXPAND(...) __VA_ARGS__
 #define DO_STRUCT_DIFFERENCE_WITH_ARGS(struct_, extra_args_)                  \
@@ -226,37 +194,15 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
 
 #ifdef DEBUG
   #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
-  #define STYLE_STRUCT(name_, callback_)                                      \
-    MOZ_ASSERT(!!(structsFound & NS_STYLE_INHERIT_BIT(name_)) ==              \
-               (PEEK(name_) != nullptr),                                      \
-               "PeekStyleData results must not change in the middle of "      \
+  #define STYLE_STRUCT(name_)                                             \
+    MOZ_ASSERT(!!(structsFound & NS_STYLE_INHERIT_BIT(name_)) ==          \
+               (PEEK(name_) != nullptr),                                  \
+               "PeekStyleData results must not change in the middle of "  \
                "difference calculation.");
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
   #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #endif
-
-  // We check for struct pointer equality here rather than as part of the
-  // DO_STRUCT_DIFFERENCE calls, since those calls can result in structs
-  // we previously examined and found to be null on this style context
-  // getting computed by later DO_STRUCT_DIFFERENCE calls (which can
-  // happen when the nsRuleNode::ComputeXXXData method looks up another
-  // struct.)  This is important for callers in RestyleManager that
-  // need to know the equality or not of the final set of cached struct
-  // pointers.
-  *aSamePointerStructs = 0;
-
-#define STYLE_STRUCT_LIST_IGNORE_VARIABLES
-#define STYLE_STRUCT(name_, callback_)                                        \
-  {                                                                           \
-    const nsStyle##name_* data = PEEK(name_);                                 \
-    if (!data || data == aNewContext->ThreadsafeStyle##name_()) {             \
-      *aSamePointerStructs |= NS_STYLE_INHERIT_BIT(name_);                    \
-    }                                                                         \
-  }
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
-#undef STYLE_STRUCT
 
   // Note that we do not check whether this->RelevantLinkVisited() !=
   // aNewContext->RelevantLinkVisited(); we don't need to since
@@ -279,8 +225,7 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
   if (!thisVis != !otherVis) {
     // One style has a style-if-visited and the other doesn't.
     // Presume a difference.
-#define STYLE_STRUCT(name_, fields_)                                \
-    *aSamePointerStructs &= ~NS_STYLE_INHERIT_BIT(name_);           \
+#define STYLE_STRUCT(name_, fields_) \
     *aEqualStructs &= ~NS_STYLE_INHERIT_BIT(name_);
 #include "nsCSSVisitedDependentPropList.h"
 #undef STYLE_STRUCT
@@ -302,7 +247,6 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
       const nsStyle##name_* otherVisStruct =                            \
         otherVis->ThreadsafeStyle##name_();                             \
       if (MOZ_FOR_EACH_SEPARATED(STYLE_FIELD, (||), (), fields_)) {     \
-        *aSamePointerStructs &= ~NS_STYLE_INHERIT_BIT(name_);           \
         *aEqualStructs &= ~NS_STYLE_INHERIT_BIT(name_);                 \
         change = true;                                                  \
       }                                                                 \
@@ -462,8 +406,8 @@ ComputedStyle::CombineVisitedColors(nscolor *aColors, bool aLinkIsVisited)
 ComputedStyle::StructName(nsStyleStructID aSID)
 {
   switch (aSID) {
-#define STYLE_STRUCT(name_, checkdata_cb)                                     \
-    case eStyleStruct_##name_:                                                \
+#define STYLE_STRUCT(name_)     \
+    case eStyleStruct_##name_:  \
       return #name_;
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
@@ -477,8 +421,8 @@ ComputedStyle::LookupStruct(const nsACString& aName, nsStyleStructID& aResult)
 {
   if (false)
     ;
-#define STYLE_STRUCT(name_, checkdata_cb_)                                    \
-  else if (aName.EqualsLiteral(#name_))                                       \
+#define STYLE_STRUCT(name_)             \
+  else if (aName.EqualsLiteral(#name_)) \
     aResult = eStyleStruct_##name_;
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
