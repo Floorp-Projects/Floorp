@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <script>
+      try { frame = document.createElement('frame') } catch(e) { }
+      try { document.documentElement.appendChild(frame) } catch(e) { }
+      try { contentDocument = frame.contentDocument } catch(e) { }
+      try { contentDocument.writeln("<p contenteditable='true'>") } catch(e) { }
+      try { anotherDocument = document.implementation.createHTMLDocument(); } catch(e) { }
+      try { rootOfAnotherDocument = anotherDocument.documentElement; } catch(e) { }
+      try { document.replaceChild(rootOfAnotherDocument, document.documentElement); } catch(e) { }
+   </script>
+  </head>
+</html>
