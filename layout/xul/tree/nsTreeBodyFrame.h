@@ -490,9 +490,9 @@ protected:
 
 #ifdef ACCESSIBILITY
   /**
-   * Fires 'treeRowCountChanged' event asynchronously. The event supports
-   * nsIDOMCustomEvent interface that is used to expose the following
-   * information structures.
+   * Fires 'treeRowCountChanged' event asynchronously. The event is a
+   * CustomEvent that is used to expose the following information structures
+   * via a property bag.
    *
    * @param aIndex  the row index rows are added/removed from
    * @param aCount  the number of added/removed rows (the sign points to
@@ -501,9 +501,9 @@ protected:
   void FireRowCountChangedEvent(int32_t aIndex, int32_t aCount);
 
   /**
-   * Fires 'treeInvalidated' event asynchronously. The event supports
-   * nsIDOMCustomEvent interface that is used to expose the information
-   * structures described by method arguments.
+   * Fires 'treeInvalidated' event asynchronously. The event is a CustomEvent
+   * that is used to expose the information structures described by method
+   * arguments via a property bag.
    *
    * @param aStartRow  the start index of invalidated rows, -1 means that
    *                   columns have been invalidated only
