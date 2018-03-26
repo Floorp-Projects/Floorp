@@ -566,10 +566,7 @@ nsClipboardCommand::DoCommand(const char *aCommandName, nsISupports *aContext)
     sel->CollapseToEnd();
   }
 
-  if (actionTaken) {
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  return actionTaken ? NS_OK : NS_SUCCESS_DOM_NO_OPERATION;
 }
 
 NS_IMETHODIMP
