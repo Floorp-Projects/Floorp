@@ -18,10 +18,10 @@ const TEST_CASES = [
     targetClassName: "easing-step",
     expectedPath: [
       { x: 0, y: 0 },
-      { x: 49900, y: 0 },
-      { x: 50000, y: 50 },
-      { x: 99999, y: 50 },
-      { x: 100000, y: 0 },
+      { x: 499999, y: 0 },
+      { x: 500000, y: 50 },
+      { x: 999999, y: 50 },
+      { x: 1000000, y: 0 },
     ],
   },
   {

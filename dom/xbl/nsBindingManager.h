@@ -125,17 +125,9 @@ public:
   nsresult GetBindingImplementation(nsIContent* aContent, REFNSIID aIID, void** aResult);
 
 
-  // Do any processing that needs to happen as a result of a change in the
-  // characteristics of the medium, and return whether this rule processor's
-  // rules or the servo style set have changed (e.g., because of media
-  // queries).
-  bool MediumFeaturesChanged(nsPresContext* aPresContext,
-                             mozilla::MediaFeatureChangeReason);
-
   void AppendAllSheets(nsTArray<mozilla::StyleSheet*>& aArray);
 
-  void Traverse(nsIContent *aContent,
-                            nsCycleCollectionTraversalCallback &cb);
+  void Traverse(nsIContent *aContent, nsCycleCollectionTraversalCallback &cb);
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsBindingManager)
 

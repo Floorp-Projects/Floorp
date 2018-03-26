@@ -44,8 +44,8 @@ pub const CLSCTX_INPROC_HANDLER: CLSCTX = 0x2;
 pub const CLSCTX_LOCAL_SERVER: CLSCTX = 0x4;
 pub const CLSCTX_REMOTE_SERVER: CLSCTX = 0x10;
 
-pub const CLSCTX_ALL: CLSCTX = CLSCTX_INPROC_SERVER |
-    CLSCTX_INPROC_HANDLER | CLSCTX_LOCAL_SERVER | CLSCTX_REMOTE_SERVER;
+pub const CLSCTX_ALL: CLSCTX =
+    CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER | CLSCTX_LOCAL_SERVER | CLSCTX_REMOTE_SERVER;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -69,13 +69,17 @@ pub trait Interface {
 
 #[link(name = "ole32")]
 #[link(name = "oleaut32")]
-extern { }
+extern "C" {}
 
 extern "system" {
     pub fn CoInitializeEx(pvReserved: LPVOID, dwCoInit: DWORD) -> HRESULT;
-    pub fn CoCreateInstance(rclsid: REFCLSID, pUnkOuter: LPUNKNOWN,
-                            dwClsContext: DWORD, riid: REFIID,
-                            ppv: *mut LPVOID) -> HRESULT;
+    pub fn CoCreateInstance(
+        rclsid: REFCLSID,
+        pUnkOuter: LPUNKNOWN,
+        dwClsContext: DWORD,
+        riid: REFIID,
+        ppv: *mut LPVOID,
+    ) -> HRESULT;
     pub fn SysFreeString(bstrString: BSTR);
     pub fn SysStringLen(pbstr: BSTR) -> UINT;
 }

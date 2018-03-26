@@ -9,9 +9,9 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsDirectoryService.h"
-#include "nsDirectoryServiceDefs.h"
 #include "nsLocalFile.h"
 #include "nsDebug.h"
+#include "nsGkAtoms.h"
 #include "nsStaticAtom.h"
 #include "nsEnumeratorUtils.h"
 
@@ -105,17 +105,34 @@ nsDirectoryService::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   return gService->QueryInterface(aIID, aResult);
 }
 
-#define DIR_ATOM(name_, value_) NS_STATIC_ATOM_DEFN(nsDirectoryService, name_)
-#include "nsDirectoryServiceAtomList.h"
-#undef DIR_ATOM
+namespace mozilla {
+namespace detail {
 
-#define DIR_ATOM(name_, value_) NS_STATIC_ATOM_BUFFER(name_, value_)
+MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+extern constexpr DirectoryAtoms gDirectoryAtoms = {
+  #define DIR_ATOM(name_, value_) NS_STATIC_ATOM_INIT_STRING(value_)
+  #include "nsDirectoryServiceAtomList.h"
+  #undef DIR_ATOM
+
+  #define DIR_ATOM(name_, value_) \
+    NS_STATIC_ATOM_INIT_ATOM(DirectoryAtoms, name_, value_)
+  #include "nsDirectoryServiceAtomList.h"
+  #undef DIR_ATOM
+};
+MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+
+} // namespace detail
+} // namespace mozilla
+
+#define DIR_ATOM(name_, value_) \
+  NS_STATIC_ATOM_DEFN_PTR(nsDirectoryService, name_)
 #include "nsDirectoryServiceAtomList.h"
 #undef DIR_ATOM
 
 static const nsStaticAtomSetup sDirectoryServiceAtomSetup[] = {
   #define DIR_ATOM(name_, value_) \
-    NS_STATIC_ATOM_SETUP(nsDirectoryService, name_)
+    NS_STATIC_ATOM_SETUP( \
+      mozilla::detail::gDirectoryAtoms, nsDirectoryService, name_)
   #include "nsDirectoryServiceAtomList.h"
   #undef DIR_ATOM
 };

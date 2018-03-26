@@ -138,12 +138,7 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(Operation aOperation)
   }
 
   // cannot fail
-  RefPtr<DeclarationBlock> decl;
-  if (mElement->IsStyledByServo()) {
-    decl = new ServoDeclarationBlock();
-  } else {
-    MOZ_CRASH("old style system disabled");
-  }
+  RefPtr<DeclarationBlock> decl = new ServoDeclarationBlock();
 
   // this *can* fail (inside SetAttrAndNotify, at least).
   nsresult rv;

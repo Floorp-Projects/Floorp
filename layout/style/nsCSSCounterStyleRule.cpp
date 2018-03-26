@@ -124,16 +124,9 @@ nsCSSCounterStyleRule::GetName(nsAString& aName)
 void
 nsCSSCounterStyleRule::SetName(const nsAString& aName)
 {
-  RefPtr<nsAtom> name;
 
   nsIDocument* doc = GetDocument();
-  if (!doc || doc->IsStyledByServo()) {
-    name = ServoCSSParser::ParseCounterStyleName(aName);
-  } else {
-    MOZ_CRASH("old style system disabled");
-  }
-
-  if (name) {
+  if (RefPtr<nsAtom> name = ServoCSSParser::ParseCounterStyleName(aName)) {
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);
 
     mName = name;

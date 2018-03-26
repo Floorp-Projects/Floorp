@@ -28,28 +28,55 @@ using namespace mozilla;
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 
+namespace detail {
+
+struct CSSPseudoClassAtoms
+{
+  #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
+    NS_STATIC_ATOM_DECL_STRING(name_, value_)
+  #include "nsCSSPseudoClassList.h"
+  #undef CSS_PSEUDO_CLASS
+
+  #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
+    NS_STATIC_ATOM_DECL_ATOM(name_)
+  #include "nsCSSPseudoClassList.h"
+  #undef CSS_PSEUDO_CLASS
+};
+
+MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+static constexpr CSSPseudoClassAtoms sCSSPseudoClassAtoms = {
+  #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
+    NS_STATIC_ATOM_INIT_STRING(value_)
+  #include "nsCSSPseudoClassList.h"
+  #undef CSS_PSEUDO_CLASS
+
+  #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
+    NS_STATIC_ATOM_INIT_ATOM(CSSPseudoClassAtoms, name_, value_)
+  #include "nsCSSPseudoClassList.h"
+  #undef CSS_PSEUDO_CLASS
+};
+MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
+
+} // namespace detail
+
 class CSSPseudoClassAtoms
 {
 public:
   #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
-    NS_STATIC_ATOM_DECL(name_)
+    NS_STATIC_ATOM_DECL_PTR(name_)
   #include "nsCSSPseudoClassList.h"
   #undef CSS_PSEUDO_CLASS
 };
 
 #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
-  NS_STATIC_ATOM_DEFN(CSSPseudoClassAtoms, name_)
-#include "nsCSSPseudoClassList.h"
-#undef CSS_PSEUDO_CLASS
-
-#define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
-  NS_STATIC_ATOM_BUFFER(name_, value_)
+  NS_STATIC_ATOM_DEFN_PTR(CSSPseudoClassAtoms, name_)
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 
 static const nsStaticAtomSetup sCSSPseudoClassAtomSetup[] = {
   #define CSS_PSEUDO_CLASS(name_, value_, flags_, pref_) \
-    NS_STATIC_ATOM_SETUP(CSSPseudoClassAtoms, name_)
+    NS_STATIC_ATOM_SETUP( \
+      ::detail::sCSSPseudoClassAtoms, CSSPseudoClassAtoms, name_)
   #include "nsCSSPseudoClassList.h"
   #undef CSS_PSEUDO_CLASS
 };
