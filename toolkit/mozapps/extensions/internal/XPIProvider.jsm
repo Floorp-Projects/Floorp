@@ -3756,11 +3756,8 @@ var XPIProvider = {
    *         The ID of the newly enabled add-on
    * @param  aType
    *         The type of the newly enabled add-on
-   * @param  aPendingRestart
-   *         true if the newly enabled add-on will only become enabled after a
-   *         restart
    */
-  addonChanged(aId, aType, aPendingRestart) {
+  addonChanged(aId, aType) {
     // We only care about themes in this provider
     if (!isTheme(aType))
       return;
@@ -3782,7 +3779,7 @@ var XPIProvider = {
       let isChangedAddon = (theme.id == aId);
       if (isWebExtension(theme.type)) {
         if (!isChangedAddon)
-          this.updateAddonDisabledState(theme, true, undefined, aPendingRestart);
+          this.updateAddonDisabledState(theme, true, undefined);
       } else if (isChangedAddon) {
         newSkin = theme.internalName;
       } else if (!theme.userDisabled && !theme.pendingUninstall) {
@@ -3790,17 +3787,7 @@ var XPIProvider = {
       }
     }
 
-    if (aPendingRestart) {
-      Services.prefs.setBoolPref(PREF_SKIN_SWITCHPENDING, true);
-      Services.prefs.setCharPref(PREF_SKIN_TO_SELECT, newSkin);
-    } else if (newSkin == this.currentSkin) {
-      try {
-        Services.prefs.clearUserPref(PREF_SKIN_SWITCHPENDING);
-      } catch (e) { }
-      try {
-        Services.prefs.clearUserPref(PREF_SKIN_TO_SELECT);
-      } catch (e) { }
-    } else {
+    if (newSkin != this.currentSkin) {
       Services.prefs.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, newSkin);
       this.currentSkin = newSkin;
     }
@@ -3813,7 +3800,7 @@ var XPIProvider = {
     // Mark the previous theme as disabled. This won't cause recursion since
     // only enabled calls notifyAddonChanged.
     if (previousTheme)
-      this.updateAddonDisabledState(previousTheme, true, undefined, aPendingRestart);
+      this.updateAddonDisabledState(previousTheme, true, undefined);
   },
 
   /**
@@ -3932,156 +3919,6 @@ var XPIProvider = {
         break;
       }
     }
-  },
-
-  /**
-   * Tests whether enabling an add-on will require a restart.
-   *
-   * @param  aAddon
-   *         The add-on to test
-   * @return true if the operation requires a restart
-   */
-  enableRequiresRestart(aAddon) {
-    // If the platform couldn't have activated extensions then we can make
-    // changes without any restart.
-    if (!this.extensionsActive)
-      return false;
-
-    // If the application is in safe mode then any change can be made without
-    // restarting
-    if (Services.appinfo.inSafeMode)
-      return false;
-
-    // Anything that is active is already enabled
-    if (aAddon.active)
-      return false;
-
-    if (isTheme(aAddon.type)) {
-      if (isWebExtension(aAddon.type)) {
-        // Enabling a WebExtension type theme requires a restart ONLY when the
-        // theme-to-be-disabled requires a restart.
-        let theme = XPIDatabase.getVisibleAddonForInternalName(this.currentSkin);
-        return !theme || this.disableRequiresRestart(theme);
-      }
-
-      // If the theme is already the theme in use then no restart is necessary.
-      // This covers the case where the default theme is in use but a
-      // lightweight theme is considered active.
-      return aAddon.internalName != this.currentSkin;
-    }
-
-    return !aAddon.bootstrap;
-  },
-
-  /**
-   * Tests whether disabling an add-on will require a restart.
-   *
-   * @param  aAddon
-   *         The add-on to test
-   * @return true if the operation requires a restart
-   */
-  disableRequiresRestart(aAddon) {
-    // If the platform couldn't have activated up extensions then we can make
-    // changes without any restart.
-    if (!this.extensionsActive)
-      return false;
-
-    // If the application is in safe mode then any change can be made without
-    // restarting
-    if (Services.appinfo.inSafeMode)
-      return false;
-
-    // Anything that isn't active is already disabled
-    if (!aAddon.active)
-      return false;
-
-    if (aAddon.type == "theme") {
-      // Non-default themes always require a restart to disable since it will
-      // be switching from one theme to another or to the default theme and a
-      // lightweight theme.
-      if (aAddon.internalName != this.defaultSkin)
-        return true;
-
-      // The default theme requires a restart to disable if we are in the
-      // process of switching to a different theme. Note that this makes the
-      // disabled flag of operationsRequiringRestart incorrect for the default
-      // theme (it will be false most of the time). Bug 520124 would be required
-      // to fix it. For the UI this isn't a problem since we never try to
-      // disable or uninstall the default theme.
-      return this.selectedSkin != this.currentSkin;
-    }
-
-    return !aAddon.bootstrap;
-  },
-
-  /**
-   * Tests whether installing an add-on will require a restart.
-   *
-   * @param  aAddon
-   *         The add-on to test
-   * @return true if the operation requires a restart
-   */
-  installRequiresRestart(aAddon) {
-    // If the platform couldn't have activated up extensions then we can make
-    // changes without any restart.
-    if (!this.extensionsActive)
-      return false;
-
-    // If the application is in safe mode then any change can be made without
-    // restarting
-    if (Services.appinfo.inSafeMode)
-      return false;
-
-    // Add-ons that are already installed don't require a restart to install.
-    // This wouldn't normally be called for an already installed add-on (except
-    // for forming the operationsRequiringRestart flags) so is really here as
-    // a safety measure.
-    if (aAddon.inDatabase)
-      return false;
-
-    // If we have an AddonInstall for this add-on then we can see if there is
-    // an existing installed add-on with the same ID
-    if ("_install" in aAddon && aAddon._install) {
-      // If there is an existing installed add-on and uninstalling it would
-      // require a restart then installing the update will also require a
-      // restart
-      let existingAddon = aAddon._install.existingAddon;
-      if (existingAddon && this.uninstallRequiresRestart(existingAddon))
-        return true;
-    }
-
-    // If the add-on is not going to be active after installation then it
-    // doesn't require a restart to install.
-    if (aAddon.disabled)
-      return false;
-
-    // Themes will require a restart (even if dynamic switching is enabled due
-    // to some caching issues) and non-bootstrapped add-ons will require a
-    // restart
-    return aAddon.type == "theme" || !aAddon.bootstrap;
-  },
-
-  /**
-   * Tests whether uninstalling an add-on will require a restart.
-   *
-   * @param  aAddon
-   *         The add-on to test
-   * @return true if the operation requires a restart
-   */
-  uninstallRequiresRestart(aAddon) {
-    // If the platform couldn't have activated up extensions then we can make
-    // changes without any restart.
-    if (!this.extensionsActive)
-      return false;
-
-    // If the application is in safe mode then any change can be made without
-    // restarting
-    if (Services.appinfo.inSafeMode)
-      return false;
-
-    // If the add-on can be disabled without a restart then it can also be
-    // uninstalled without a restart
-    return this.disableRequiresRestart(aAddon);
   },
 
   /**
@@ -4346,16 +4183,13 @@ var XPIProvider = {
    * @param  aSoftDisabled
    *         Value for the softDisabled property. If undefined the value will
    *         not change. If true this will force userDisabled to be true
-   * @param  aPendingRestart
-   *         If the addon is updated whilst the disabled state of another non-
-   *         restartless addon is also set, we need to carry that forward.
    * @return a tri-state indicating the action taken for the add-on:
    *           - undefined: The add-on did not change state
    *           - true: The add-on because disabled
    *           - false: The add-on became enabled
    * @throws if addon is not a DBAddonInternal
    */
-  updateAddonDisabledState(aAddon, aUserDisabled, aSoftDisabled, aPendingRestart = false) {
+  updateAddonDisabledState(aAddon, aUserDisabled, aSoftDisabled) {
     if (!(aAddon.inDatabase))
       throw new Error("Can only update addon states for installed addons.");
     if (aUserDisabled !== undefined && aSoftDisabled !== undefined) {
@@ -4427,38 +4261,32 @@ var XPIProvider = {
       AddonManagerPrivate.callAddonListeners("onOperationCancelled", wrapper);
     } else {
       if (isDisabled) {
-        var needsRestart = aPendingRestart || this.disableRequiresRestart(aAddon);
-        AddonManagerPrivate.callAddonListeners("onDisabling", wrapper,
-                                               needsRestart);
+        AddonManagerPrivate.callAddonListeners("onDisabling", wrapper, false);
       } else {
-        needsRestart = this.enableRequiresRestart(aAddon);
-        AddonManagerPrivate.callAddonListeners("onEnabling", wrapper,
-                                               needsRestart);
+        AddonManagerPrivate.callAddonListeners("onEnabling", wrapper, false);
       }
 
-      if (!needsRestart) {
-        XPIDatabase.updateAddonActive(aAddon, !isDisabled);
+      XPIDatabase.updateAddonActive(aAddon, !isDisabled);
 
-        if (isDisabled) {
-          if (aAddon.bootstrap && this.activeAddons.has(aAddon.id)) {
-            this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "shutdown",
-                                     BOOTSTRAP_REASONS.ADDON_DISABLE);
-            this.unloadBootstrapScope(aAddon.id);
-          }
-          AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
-        } else {
-          if (aAddon.bootstrap) {
-            this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "startup",
-                                     BOOTSTRAP_REASONS.ADDON_ENABLE);
-          }
-          AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
+      if (isDisabled) {
+        if (aAddon.bootstrap && this.activeAddons.has(aAddon.id)) {
+          this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "shutdown",
+                                   BOOTSTRAP_REASONS.ADDON_DISABLE);
+          this.unloadBootstrapScope(aAddon.id);
         }
+        AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
+      } else {
+        if (aAddon.bootstrap) {
+          this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "startup",
+                                   BOOTSTRAP_REASONS.ADDON_ENABLE);
+        }
+        AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
       }
     }
 
     // Notify any other providers that a new theme has been enabled
     if (isTheme(aAddon.type) && !isDisabled) {
-      AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type, needsRestart);
+      AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type);
 
       if (xpiState) {
         xpiState.syncWithDB(aAddon);
@@ -4476,9 +4304,9 @@ var XPIProvider = {
    * @param  aAddon
    *         The DBAddonInternal to uninstall
    * @param  aForcePending
-   *         Force this addon into the pending uninstall state, even if
-   *         it isn't marked as requiring a restart (used e.g. while the
-   *         add-on manager is open and offering an "undo" button)
+   *         Force this addon into the pending uninstall state (used
+   *         e.g. while the add-on manager is open and offering an
+   *         "undo" button)
    * @throws if the addon cannot be uninstalled because it is in an install
    *         location that does not allow it
    */
@@ -4490,14 +4318,7 @@ var XPIProvider = {
       throw new Error("Cannot uninstall addon " + aAddon.id
           + " from locked install location " + aAddon._installLocation.name);
 
-    // Inactive add-ons don't require a restart to uninstall
-    let requiresRestart = this.uninstallRequiresRestart(aAddon);
-
-    // if makePending is true, we don't actually apply the uninstall,
-    // we just mark the addon as having a pending uninstall
-    let makePending = aForcePending || requiresRestart;
-
-    if (makePending && aAddon.pendingUninstall)
+    if (aForcePending && aAddon.pendingUninstall)
       throw new Error("Add-on is already marked to be uninstalled");
 
     aAddon._hasResourceCache.clear();
@@ -4509,7 +4330,7 @@ var XPIProvider = {
 
     let wasPending = aAddon.pendingUninstall;
 
-    if (makePending) {
+    if (aForcePending) {
       // We create an empty directory in the staging directory to indicate
       // that an uninstall is necessary on next startup. Temporary add-ons are
       // automatically uninstalled on shutdown anyway so there is no need to
@@ -4541,12 +4362,8 @@ var XPIProvider = {
 
     // If the add-on wasn't already pending uninstall then notify listeners.
     if (!wasPending) {
-      // Passing makePending as the requiresRestart parameter is a little
-      // strange as in some cases this operation can complete without a restart
-      // so really this is now saying that the uninstall isn't going to happen
-      // immediately but will happen later.
       AddonManagerPrivate.callAddonListeners("onUninstalling", wrapper,
-                                             makePending);
+                                             !!aForcePending);
     }
 
     let reason = BOOTSTRAP_REASONS.ADDON_UNINSTALL;
@@ -4558,7 +4375,7 @@ var XPIProvider = {
       callUpdate = isWebExtension(aAddon.type) && isWebExtension(existingAddon.type);
     }
 
-    if (!makePending) {
+    if (!aForcePending) {
       if (aAddon.bootstrap) {
         if (aAddon.active) {
           this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "shutdown",
@@ -4585,7 +4402,7 @@ var XPIProvider = {
           let wrappedAddon = existing.wrapper;
           AddonManagerPrivate.callAddonListeners("onInstalling", wrappedAddon, false);
 
-          if (!existing.disabled && !XPIProvider.enableRequiresRestart(existing)) {
+          if (!existing.disabled) {
             XPIDatabase.updateAddonActive(existing, true);
           }
 
@@ -4602,12 +4419,10 @@ var XPIProvider = {
             }
           }
 
-          // We always send onInstalled even if a restart is required to enable
-          // the revealed add-on
           AddonManagerPrivate.callAddonListeners("onInstalled", wrappedAddon);
         });
       }
-    } else if (aAddon.bootstrap && aAddon.active && !this.disableRequiresRestart(aAddon)) {
+    } else if (aAddon.bootstrap && aAddon.active) {
       this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "shutdown", reason);
       XPIStates.disableAddon(aAddon.id);
       this.unloadBootstrapScope(aAddon.id);
@@ -4616,7 +4431,7 @@ var XPIProvider = {
 
     // Notify any other providers that a new theme has been enabled
     if (isTheme(aAddon.type) && aAddon.active)
-      AddonManagerPrivate.notifyAddonChanged(null, aAddon.type, requiresRestart);
+      AddonManagerPrivate.notifyAddonChanged(null, aAddon.type);
   },
 
   /**
@@ -4650,7 +4465,7 @@ var XPIProvider = {
     let wrapper = aAddon.wrapper;
     AddonManagerPrivate.callAddonListeners("onOperationCancelled", wrapper);
 
-    if (aAddon.bootstrap && !aAddon.disabled && !this.enableRequiresRestart(aAddon)) {
+    if (aAddon.bootstrap && !aAddon.disabled) {
       this.callBootstrapMethod(aAddon, aAddon._sourceBundle, "startup",
                                BOOTSTRAP_REASONS.ADDON_INSTALL);
       XPIDatabase.updateAddonActive(aAddon, true);
@@ -5345,18 +5160,7 @@ AddonWrapper.prototype = {
   },
 
   get operationsRequiringRestart() {
-    let addon = addonFor(this);
-    let ops = 0;
-    if (XPIProvider.installRequiresRestart(addon))
-      ops |= AddonManager.OP_NEEDS_RESTART_INSTALL;
-    if (XPIProvider.uninstallRequiresRestart(addon))
-      ops |= AddonManager.OP_NEEDS_RESTART_UNINSTALL;
-    if (XPIProvider.enableRequiresRestart(addon))
-      ops |= AddonManager.OP_NEEDS_RESTART_ENABLE;
-    if (XPIProvider.disableRequiresRestart(addon))
-      ops |= AddonManager.OP_NEEDS_RESTART_DISABLE;
-
-    return ops;
+    return 0;
   },
 
   get isDebuggable() {
@@ -6400,11 +6204,6 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
   isValidAddon(aAddon) {
     if (aAddon.appDisabled) {
       logger.warn(`System add-on ${aAddon.id} isn't compatible with the application.`);
-      return false;
-    }
-
-    if (!aAddon.bootstrap) {
-      logger.warn(`System add-on ${aAddon.id} isn't restartless.`);
       return false;
     }
 

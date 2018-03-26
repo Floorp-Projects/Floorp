@@ -183,19 +183,6 @@ function DBAddonInternal(aLoaded) {
   }
 
   this._sourceBundle = aLoaded._sourceBundle;
-
-  XPCOMUtils.defineLazyGetter(this, "pendingUpgrade", function() {
-      for (let install of XPIProvider.installs) {
-        if (install.state == AddonManager.STATE_INSTALLED &&
-            !(install.addon.inDatabase) &&
-            install.addon.id == this.id &&
-            install.installLocation == this._installLocation) {
-          delete this.pendingUpgrade;
-          return this.pendingUpgrade = install.addon;
-        }
-      }
-      return null;
-    });
 }
 
 DBAddonInternal.prototype = Object.create(AddonInternal.prototype);
@@ -831,10 +818,7 @@ this.XPIDatabase = {
   getVisibleAddonsWithPendingOperations(aTypes, aCallback) {
     this.getAddonList(
         aAddon => (aAddon.visible &&
-                   (aAddon.pendingUninstall ||
-                    // Logic here is tricky. If we're active but disabled,
-                    // we're pending disable; !active && !disabled, we're pending enable
-                    (aAddon.active == aAddon.disabled)) &&
+                   aAddon.pendingUninstall &&
                    (!aTypes || (aTypes.length == 0) || (aTypes.indexOf(aAddon.type) > -1))),
         aCallback);
   },
@@ -1170,7 +1154,7 @@ this.XPIDatabaseReconcile = {
       logger.warn("addMetadata: Add-on " + aId + " is invalid", e);
 
       // Remove the invalid add-on from the install location if the install
-      // location isn't locked, no restart will be necessary
+      // location isn't locked
       if (aInstallLocation.isLinkedAddon(aId))
         logger.warn("Not uninstalling invalid item because it is a proxy file");
       else if (aInstallLocation.locked)
@@ -1228,9 +1212,8 @@ this.XPIDatabaseReconcile = {
   },
 
   /**
-   * Updates an add-on's metadata and determines if a restart of the
-   * application is necessary. This is called when either the add-on's
-   * install directory path or last modified time has changed.
+   * Updates an add-on's metadata and determines. This is called when either the
+   * add-on's install directory path or last modified time has changed.
    *
    * @param  aInstallLocation
    *         The install location containing the add-on
@@ -1252,12 +1235,6 @@ this.XPIDatabaseReconcile = {
       if (!aNewAddon) {
         let file = new nsIFile(aAddonState.path);
         aNewAddon = syncLoadManifestFromFile(file, aInstallLocation);
-
-        // Carry over any pendingUninstall state to add-ons modified directly
-        // in the profile. This is important when the attempt to remove the
-        // add-on in processPendingFileChanges failed and caused an mtime
-        // change to the add-ons files.
-        aNewAddon.pendingUninstall = aOldAddon.pendingUninstall;
 
         aNewAddon.updateBlocklistState({oldAddon: aOldAddon});
       }
