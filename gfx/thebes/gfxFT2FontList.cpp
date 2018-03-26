@@ -539,8 +539,11 @@ FT2FontEntry::ReadCMAP(FontInfoData *aFontInfoData)
                                     *charmap, mUVSOffset);
     }
 
-    if (NS_SUCCEEDED(rv) && !HasGraphiteTables()) {
-        // We assume a Graphite font knows what it's doing,
+    if (NS_SUCCEEDED(rv) && !mIsDataUserFont && !HasGraphiteTables()) {
+        // For downloadable fonts, trust the author and don't
+        // try to munge the cmap based on script shaping support.
+
+        // We also assume a Graphite font knows what it's doing,
         // and provides whatever shaping is needed for the
         // characters it supports, so only check/clear the
         // complex-script ranges for non-Graphite fonts
