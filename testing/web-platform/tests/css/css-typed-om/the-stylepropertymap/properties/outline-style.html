@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>'visibility' property</title>
+<title>'outline-style' property</title>
 <link rel="help" href="https://drafts.css-houdini.org/css-typed-om-1/#dom-stylepropertymap-get">
 <link rel="help" href="https://drafts.css-houdini.org/css-typed-om-1/#dom-stylepropertymap-set">
 <link rel="help" href="https://drafts.css-houdini.org/css-typed-om-1/#property-stle-value-normalization">
@@ -13,10 +13,17 @@
 <script>
 'use strict';
 
-runPropertyTests('visibility', [
-  { syntax: 'visible'},
-  { syntax: 'hidden' },
-  { syntax: 'collapse' },
+runPropertyTests('outline-style', [
+  { syntax: 'auto' },
+  { syntax: 'none' },
+  { syntax: 'dotted' },
+  { syntax: 'dashed' },
+  { syntax: 'solid' },
+  { syntax: 'double' },
+  { syntax: 'groove' },
+  { syntax: 'ridge' },
+  { syntax: 'inset' },
+  { syntax: 'outset' },
 ]);
 
 </script>
