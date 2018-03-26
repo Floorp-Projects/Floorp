@@ -1954,6 +1954,7 @@ CacheIRCompiler::emitLoadInt32ArrayLengthResult()
     EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
     return true;
 }
+
 bool
 CacheIRCompiler::emitDoubleAddResult()
 {
@@ -1979,6 +1980,19 @@ CacheIRCompiler::emitDoubleSubResult()
     allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
 
     masm.subDouble(FloatReg1, FloatReg0);
+    masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+
+    return true;
+}
+bool
+CacheIRCompiler::emitDoubleMulResult()
+{
+    AutoOutputRegister output(*this);
+
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg0);
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
+
+    masm.mulDouble(FloatReg1, FloatReg0);
     masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
 
     return true;
@@ -2014,6 +2028,34 @@ CacheIRCompiler::emitInt32SubResult()
     masm.branchSub32(Assembler::Overflow, rhs, lhs, failure->label());
     EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
 
+    return true;
+}
+
+bool
+CacheIRCompiler::emitInt32MulResult()
+{
+    AutoOutputRegister output(*this);
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Label maybeNegZero, done;
+    masm.mov(lhs, scratch);
+    masm.branchMul32(Assembler::Overflow, rhs, lhs, failure->label());
+    masm.branchTest32(Assembler::Zero, lhs, lhs, &maybeNegZero);
+    masm.jump(&done);
+
+    masm.bind(&maybeNegZero);
+    // Result is -0 if exactly one of lhs or rhs is negative.
+    masm.or32(rhs, scratch);
+    masm.branchTest32(Assembler::Signed, scratch, scratch, failure->label());
+
+    masm.bind(&done);
+    EmitStoreResult(masm, lhs, JSVAL_TYPE_INT32, output);
     return true;
 }
 bool
