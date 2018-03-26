@@ -136,13 +136,12 @@ HTMLScriptElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                             aNotify);
 }
 
-NS_IMETHODIMP
-HTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML)
+void
+HTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML, OOMReporter& aError)
 {
   if (!nsContentUtils::GetNodeTextContent(this, false, aInnerHTML, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    aError.ReportOOM();
   }
-  return NS_OK;
 }
 
 void
