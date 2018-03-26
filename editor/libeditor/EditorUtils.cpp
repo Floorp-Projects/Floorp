@@ -10,9 +10,6 @@
 #include "mozilla/dom/Selection.h"
 #include "nsComponentManagerUtils.h"
 #include "nsError.h"
-#include "nsIClipboardDragDropHookList.h"
-// hooks
-#include "nsIClipboardDragDropHooks.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMDocument.h"
@@ -20,7 +17,6 @@
 #include "nsIDocument.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsINode.h"
-#include "nsISimpleEnumerator.h"
 
 class nsISupports;
 class nsRange;
@@ -181,54 +177,6 @@ EditorUtils::IsDescendantOf(const nsINode& aNode,
   }
 
   return false;
-}
-
-/******************************************************************************
- * utility methods for drag/drop/copy/paste hooks
- *****************************************************************************/
-
-nsresult
-EditorHookUtils::GetHookEnumeratorFromDocument(nsIDOMDocument* aDoc,
-                                               nsISimpleEnumerator** aResult)
-{
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocShell> docShell = doc->GetDocShell();
-  nsCOMPtr<nsIClipboardDragDropHookList> hookObj = do_GetInterface(docShell);
-  NS_ENSURE_TRUE(hookObj, NS_ERROR_FAILURE);
-
-  return hookObj->GetHookEnumerator(aResult);
-}
-
-bool
-EditorHookUtils::DoInsertionHook(nsIDOMDocument* aDoc,
-                                 nsIDOMEvent* aDropEvent,
-                                 nsITransferable *aTrans)
-{
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  GetHookEnumeratorFromDocument(aDoc, getter_AddRefs(enumerator));
-  NS_ENSURE_TRUE(enumerator, true);
-
-  bool hasMoreHooks = false;
-  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks)) &&
-         hasMoreHooks) {
-    nsCOMPtr<nsISupports> isupp;
-    if (NS_FAILED(enumerator->GetNext(getter_AddRefs(isupp)))) {
-      break;
-    }
-
-    nsCOMPtr<nsIClipboardDragDropHooks> override = do_QueryInterface(isupp);
-    if (override) {
-      bool doInsert = true;
-      DebugOnly<nsresult> hookResult =
-        override->OnPasteOrDrop(aDropEvent, aTrans, &doInsert);
-      NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in OnPasteOrDrop");
-      NS_ENSURE_TRUE(doInsert, false);
-    }
-  }
-
-  return true;
 }
 
 } // namespace mozilla

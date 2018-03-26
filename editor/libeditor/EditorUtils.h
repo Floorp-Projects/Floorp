@@ -546,18 +546,6 @@ public:
                              EditorDOMPoint* aOutPoint);
 };
 
-class EditorHookUtils final
-{
-public:
-  static bool DoInsertionHook(nsIDOMDocument* aDoc, nsIDOMEvent* aEvent,
-                              nsITransferable* aTrans);
-
-private:
-  static nsresult GetHookEnumeratorFromDocument(
-                    nsIDOMDocument*aDoc,
-                    nsISimpleEnumerator** aEnumerator);
-};
-
 } // namespace mozilla
 
 #endif // #ifndef mozilla_EditorUtils_h
