@@ -55,7 +55,7 @@ function finish_failed_download() {
 
   // Give it the right hash this time
   setup_redirect({
-    "X-Target-Digest": "sha1:36ffb0acfd9c6e9682473aaebaab394d38b473c9",
+    "X-Target-Digest": "sha1:ee95834ad862245a9ef99ccecc2a857cadc16404",
     "Location": "http://example.com/browser/" + RELATIVE_DIR + "amosigned.xpi"
   });
 
