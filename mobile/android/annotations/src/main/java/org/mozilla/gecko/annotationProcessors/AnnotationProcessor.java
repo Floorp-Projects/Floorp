@@ -9,8 +9,14 @@ import org.mozilla.gecko.annotationProcessors.classloader.ClassWithOptions;
 import org.mozilla.gecko.annotationProcessors.classloader.IterableJarLoadingURLClassLoader;
 import org.mozilla.gecko.annotationProcessors.utils.GeneratableElementIterator;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -105,12 +111,15 @@ public class AnnotationProcessor {
                 "} /* mozilla */\n" +
                 "#endif // " + getHeaderGuardName(NATIVES_FILE) + "\n");
 
-        writeOutputFile(SOURCE_FILE, implementationFile);
-        writeOutputFile(HEADER_FILE, headerFile);
-        writeOutputFile(NATIVES_FILE, nativesFile);
+        int ret = 0;
+        ret |= writeOutputFile(SOURCE_FILE, implementationFile);
+        ret |= writeOutputFile(HEADER_FILE, headerFile);
+        ret |= writeOutputFile(NATIVES_FILE, nativesFile);
 
         long e = System.currentTimeMillis();
         System.out.println("Annotation processing complete in " + (e - s) + "ms");
+
+        System.exit(ret);
     }
 
     private static void generateClass(final ClassWithOptions annotatedClass) {
@@ -158,24 +167,32 @@ public class AnnotationProcessor {
         return name.replaceAll("\\W", "_");
     }
 
-    private static void writeOutputFile(final String name,
-                                        final StringBuilder content) {
-        FileOutputStream outStream = null;
+    private static int writeOutputFile(final String name, final StringBuilder content) {
+        final byte[] contentBytes = content.toString().getBytes(StandardCharsets.UTF_8);
+
         try {
-            outStream = new FileOutputStream(name);
-            outStream.write(content.toString().getBytes());
+            final byte[] existingBytes = Files.readAllBytes(new File(name).toPath());
+            if (Arrays.equals(contentBytes, existingBytes)) {
+                return 0;
+            }
+        } catch (FileNotFoundException e) {
+            // Pass.
+        } catch (NoSuchFileException e) {
+            // Pass.
+        } catch (IOException e) {
+            System.err.println("Unable to read " + name + ". Perhaps a permissions issue?");
+            e.printStackTrace(System.err);
+            return 1;
+        }
+
+        try (FileOutputStream outStream = new FileOutputStream(name)) {
+            outStream.write(contentBytes);
         } catch (IOException e) {
             System.err.println("Unable to write " + name + ". Perhaps a permissions issue?");
             e.printStackTrace(System.err);
-        } finally {
-            if (outStream != null) {
-                try {
-                    outStream.close();
-                } catch (IOException e) {
-                    System.err.println("Unable to close outStream due to "+e);
-                    e.printStackTrace(System.err);
-                }
-            }
+            return 1;
         }
+
+        return 0;
     }
 }
