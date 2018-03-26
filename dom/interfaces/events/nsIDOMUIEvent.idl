@@ -46,8 +46,6 @@ interface nsIDOMUIEvent : nsISupports
   readonly attribute long               pageX;
   readonly attribute long               pageY;
   readonly attribute unsigned long      which;
-  readonly attribute nsIDOMNode         rangeParent;
-  readonly attribute long               rangeOffset;
 
   [notxpcom, nostdcall] EventPtr AsEvent();
 };
