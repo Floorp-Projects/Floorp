@@ -494,19 +494,19 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
           return NS_ERROR_FAILURE;
         }
       }
-
-      if (MOZ_LOG_TEST(GetMediaManagerLog(), LogLevel::Debug)) {
-        if (mAllocations.IsEmpty()) {
-          LOG(("Audio device %d reallocated", mCapIndex));
-        } else {
-          LOG(("Audio device %d allocated shared", mCapIndex));
-        }
-      }
       break;
 
     default:
       LOG(("Audio device %d in ignored state %d", mCapIndex, mState));
       break;
+  }
+
+  if (MOZ_LOG_TEST(GetMediaManagerLog(), LogLevel::Debug)) {
+    if (mAllocations.IsEmpty()) {
+      LOG(("Audio device %d reallocated", mCapIndex));
+    } else {
+      LOG(("Audio device %d allocated shared", mCapIndex));
+    }
   }
 
   if (sChannelsOpen > 0) {
