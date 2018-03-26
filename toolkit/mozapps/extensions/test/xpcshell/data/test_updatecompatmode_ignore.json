@@ -10,7 +10,7 @@
             }
           },
           "version": "2.0",
-          "update_link": "https://localhost:%PORT%/addons/test1.xpi"
+          "update_link": "https://example.com/addons/test1.xpi"
         }
       ]
     }

@@ -7,12 +7,9 @@
 // successfully blocked.
 // Uses test_gfxBlacklist.xml
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-
-var gTestserver = new HttpServer();
-gTestserver.start(-1);
+var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 gPort = gTestserver.identity.primaryPort;
-mapFile("/data/test_gfxBlacklist.xml", gTestserver);
+gTestserver.registerDirectory("/data/", do_get_file("data"));
 
 function load_blocklist(file) {
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
@@ -72,7 +69,7 @@ function run_test() {
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
-    gTestserver.stop(do_test_finished);
+    do_test_finished();
   }
 
   Services.obs.addObserver(function(aSubject, aTopic, aData) {

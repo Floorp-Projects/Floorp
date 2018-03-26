@@ -7,12 +7,10 @@
 // blacklist entry is correctly allowed.
 // Uses test_gfxBlacklist.xml
 
-ChromeUtils.import("resource://testing-common/httpd.js");
+var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 
-var gTestserver = new HttpServer();
-gTestserver.start(-1);
 gPort = gTestserver.identity.primaryPort;
-mapFile("/data/test_gfxBlacklist.xml", gTestserver);
+gTestserver.registerDirectory("/data/", do_get_file("data"));
 
 function load_blocklist(file) {
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
