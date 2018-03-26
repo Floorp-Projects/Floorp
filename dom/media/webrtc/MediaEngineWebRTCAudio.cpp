@@ -586,7 +586,7 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
   AssertIsOnOwningThread();
   MOZ_ASSERT(aOutHandle);
   auto handle = MakeRefPtr<AllocationHandle>(aConstraints, aPrincipalInfo,
-                                             aPrefs, aDeviceId);
+                                             aDeviceId);
 
   LOG(("Mic source %p allocation %p Allocate()", this, handle.get()));
 
