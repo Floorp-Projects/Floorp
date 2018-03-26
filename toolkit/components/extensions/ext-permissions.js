@@ -59,6 +59,11 @@ this.permissions = class extends ExtensionAPI {
             }
           }
 
+          // Unfortunatelly, we treat <all_urls> as an API permission as well.
+          if (origins.includes("<all_urls>")) {
+            perms.permissions.push("<all_urls>");
+          }
+
           await ExtensionPermissions.add(context.extension, perms);
           return true;
         },
