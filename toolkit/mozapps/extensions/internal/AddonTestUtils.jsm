@@ -1258,15 +1258,25 @@ var AddonTestUtils = {
   },
 
   /**
+   * @property {number} updateReason
+   *        The default update reason for {@see promiseFindAddonUpdates}
+   *        calls. May be overwritten by tests which primarily check for
+   *        updates with a particular reason.
+   */
+  updateReason: AddonManager.UPDATE_WHEN_PERIODIC_UPDATE,
+
+  /**
    * Returns a promise that will be resolved when an add-on update check is
    * complete. The value resolved will be an AddonInstall if a new version was
    * found.
    *
    * @param {object} addon The add-on to find updates for.
    * @param {integer} reason The type of update to find.
+   * @param {Array} args Additional args to pass to `checkUpdates` after
+   *                     the update reason.
    * @return {Promise<object>} an object containing information about the update.
    */
-  promiseFindAddonUpdates(addon, reason = AddonManager.UPDATE_WHEN_PERIODIC_UPDATE) {
+  promiseFindAddonUpdates(addon, reason = AddonTestUtils.updateReason, ...args) {
     let equal = this.testScope.equal;
     return new Promise((resolve, reject) => {
       let result = {};
@@ -1312,7 +1322,7 @@ var AddonTestUtils = {
             reject(result);
           }
         }
-      }, reason);
+      }, reason, ...args);
     });
   },
 
