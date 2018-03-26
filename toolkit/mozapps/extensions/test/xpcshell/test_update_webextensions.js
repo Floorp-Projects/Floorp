@@ -195,7 +195,7 @@ add_task(async function checkUpdateToRDF() {
   let update = await checkUpdates({
     addon: { manifest: { version: "1.0" } },
     updates: {
-      "1.1": { addon: { rdf: true } },
+      "1.1": { addon: { rdf: true, bootstrap: true } },
     }
   });
 
