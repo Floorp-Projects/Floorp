@@ -262,17 +262,6 @@ intrinsic_SubstringKernel(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-intrinsic_OwnPropertyKeys(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-    MOZ_ASSERT(args[0].isObject());
-    RootedObject obj(cx, &args[0].toObject());
-    return GetOwnPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS,
-                              args.rval());
-}
-
 static void
 ThrowErrorWithType(JSContext* cx, JSExnType type, const CallArgs& args)
 {
@@ -2258,6 +2247,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("std_Reflect_getPrototypeOf", Reflect_getPrototypeOf,      1,0,
                     ReflectGetPrototypeOf),
     JS_FN("std_Reflect_isExtensible",            Reflect_isExtensible,         1,0),
+    JS_FN("std_Reflect_ownKeys",                 Reflect_ownKeys,              1,0),
 
     JS_FN("std_Set_has",                         SetObject::has,               1,0),
     JS_FN("std_Set_iterator",                    SetObject::values,            0,0),
@@ -2325,7 +2315,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("CreateModuleSyntaxError", intrinsic_CreateModuleSyntaxError, 4,0),
     JS_FN("AssertionFailed",         intrinsic_AssertionFailed,         1,0),
     JS_FN("DumpMessage",             intrinsic_DumpMessage,             1,0),
-    JS_FN("OwnPropertyKeys",         intrinsic_OwnPropertyKeys,         1,0),
     JS_FN("MakeDefaultConstructor",  intrinsic_MakeDefaultConstructor,  2,0),
     JS_FN("_ConstructorForTypedArray", intrinsic_ConstructorForTypedArray, 1,0),
     JS_FN("_NameForTypedArray",      intrinsic_NameForTypedArray, 1,0),
