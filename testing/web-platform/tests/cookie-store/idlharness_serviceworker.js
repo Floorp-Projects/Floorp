@@ -13,8 +13,12 @@ promise_test(async t => {
 
   const idl_array = new IdlArray();
 
-  idl_array.add_untested_idls('[Exposed=ServiceWorker] interface ServiceWorkerGlobalScope {};');
-  idl_array.add_untested_idls('[Exposed=Window] interface Window {};');
+  idl_array.add_untested_idls(
+    `[Global=ServiceWorker, Exposed=ServiceWorker]
+     interface ServiceWorkerGlobalScope {};`);
+  idl_array.add_untested_idls(
+    `[Global=Window, Exposed=Window]
+     interface Window {};`);
 
   idl_array.add_idls(cookie_store);
 
