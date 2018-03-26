@@ -549,33 +549,6 @@ private:
   static bool BuildShorthandsContainingTable();
 
 private:
-  // A table for logical property groups.  Indexes are
-  // nsCSSPropertyLogicalGroup values.
-  static const nsCSSPropertyID* const
-    kLogicalGroupTable[eCSSPropertyLogicalGroup_COUNT];
-
-public:
-  /**
-   * Returns an array of longhand physical properties which can be set by
-   * the argument, which must be a logical longhand property.  The returned
-   * array is terminated by an eCSSProperty_UNKNOWN value.  For example,
-   * given eCSSProperty_margin_block_start, returns an array of the four
-   * properties eCSSProperty_margin_top, eCSSProperty_margin_right,
-   * eCSSProperty_margin_bottom and eCSSProperty_margin_left, followed
-   * by the sentinel.
-   *
-   * When called with a property that has the CSS_PROPERTY_LOGICAL_AXIS
-   * flag, the returned array will have two values preceding the sentinel;
-   * otherwise it will have four.
-   *
-   * (Note that the running time of this function is proportional to the
-   * number of logical longhand properties that exist.  If we start
-   * getting too many of these properties, we should make kLogicalGroupTable
-   * be a simple array of eCSSProperty_COUNT length.)
-   */
-  static const nsCSSPropertyID* LogicalGroup(nsCSSPropertyID aProperty);
-
-private:
   static bool gPropertyEnabled[eCSSProperty_COUNT_with_aliases];
 
 private:
