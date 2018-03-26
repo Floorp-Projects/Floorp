@@ -13,6 +13,8 @@ from distutils.spawn import find_executable
 from io import BytesIO
 
 from utils import call, get, untar, unzip
+from mozdownload import FactoryScraper
+import mozinstall
 
 logger = logging.getLogger(__name__)
 
@@ -105,36 +107,29 @@ class Firefox(Browser):
 
         return "%s%s" % (platform, bits)
 
-    def latest_nightly_listing(self):
-        resp = get("https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central/")
-        resp.raise_for_status()
-        return resp.text
-
-    def get_nightly_link(self, index, platform):
-        pattern = re.compile("<a[^>]*>(firefox-(\d+)\.\d(?:\w\d)?.en-US.%s\.tar\.bz2)" % platform)
-        max_version = None
-        for match in pattern.finditer(index):
-            try:
-                version = int(match.group(2))
-            except ValueError:
-                continue
-            if max_version is None or version > max_version[0]:
-                max_version = (version, match.group(1))
-        if not max_version:
-            raise ValueError("Failed to find version to download")
-        return ("https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central/%s" %
-                max_version[1])
-
     def install(self, dest=None):
         """Install Firefox."""
+
         if dest is None:
             dest = os.getcwd()
 
-        nightly_link = self.get_nightly_link(self.latest_nightly_listing(),
-                                             self.platform_string())
-        resp = get(nightly_link)
-        resp.raise_for_status()
-        untar(resp.raw, dest=dest)
+        filename = FactoryScraper('daily', branch='mozilla-central', destination=dest).download()
+
+        try:
+            mozinstall.install(filename, dest)
+        except mozinstall.mozinstall.InstallError as e:
+            if uname[0] == "Darwin":
+                # mozinstall will fail here if nightly is already installed in the venv
+                # This only occurs on macOS because shutil.copy_tree() is called in
+                # mozinstall._install_dmg and will fail if the file already exists.
+                # copytree isn't used while installing on Windows/linux, so the same error
+                # won't be thrown if we try to rewrite there.
+                mozinstall.uninstall(dest+'/Firefox Nightly.app')
+                mozinstall.install(filename, dest)
+            else:
+                raise
+
+        os.remove(filename)
         return find_executable("firefox", os.path.join(dest, "firefox"))
 
     def find_binary(self):
