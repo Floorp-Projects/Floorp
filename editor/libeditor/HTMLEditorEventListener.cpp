@@ -112,14 +112,10 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
     NS_ENSURE_TRUE(selection, NS_OK);
 
     // Get location of mouse within target node
-    nsCOMPtr<nsIDOMNode> parent;
-    rv = aMouseEvent->GetRangeParent(getter_AddRefs(parent));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsINode> parent = aMouseEvent->GetRangeParent();
     NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
 
-    int32_t offset = 0;
-    rv = aMouseEvent->GetRangeOffset(&offset);
-    NS_ENSURE_SUCCESS(rv, rv);
+    int32_t offset = aMouseEvent->RangeOffset();
 
     // Detect if mouse point is within current selection for context click
     bool nodeIsInSelection = false;
@@ -133,7 +129,9 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
           continue;
         }
 
-        range->IsPointInRange(parent, offset, &nodeIsInSelection);
+        IgnoredErrorResult err;
+        nodeIsInSelection =
+          range->IsPointInRange(*parent, offset, err) && !err.Failed();
 
         // Done when we find a range that we are in
         if (nodeIsInSelection) {
