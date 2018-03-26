@@ -1,3 +1,14 @@
+function assert_is_unit(unit, result) {
+  assert_class_string(result, 'CSSUnitValue',
+    'relative lengths must compute to a CSSUnitValue');
+  assert_equals(result.unit, unit, 'unit');
+}
+
+function assert_is_calc_sum(result) {
+  assert_class_string(result, 'CSSMathSum',
+    'specified calc must be a CSSMathSum');
+}
+
 const gTestSyntaxExamples = {
   '<length>': {
     description: 'a length',
@@ -9,23 +20,23 @@ const gTestSyntaxExamples = {
       {
         description: "a negative em",
         input: new CSSUnitValue(-3.14, 'em'),
-        defaultComputed: value => {
-          // 'ems' are relative units, so just check that it computes to px
-          assert_class_string(value, 'CSSUnitValue',
-            '"em" lengths must compute to a CSSUnitValue');
-          assert_equals(value.unit, 'px', 'unit');
-        }
+        // 'ems' are relative units, so just check that it computes to px
+        defaultComputed: result => assert_is_unit('px', result)
       },
       {
         description: "a positive cm",
         input: new CSSUnitValue(3.14, 'cm'),
-        defaultComputed: value => {
-          // 'cms' are relative units, so just check that it computes to px
-          assert_class_string(value, 'CSSUnitValue',
-            '"cm" lengths must compute to a CSSUnitValue');
-          assert_equals(value.unit, 'px', 'unit');
-        }
+        // 'cms' are relative units, so just check that it computes to px
+        defaultComputed: result => assert_is_unit('px', result)
       },
+      {
+        description: "a calc length",
+        input: new CSSMathSum(new CSSUnitValue(0, 'px'), new CSSUnitValue(0, 'em')),
+        // Specified/computed calcs are usually simplified.
+        // FIXME: Test this properly
+        defaultSpecified: assert_is_calc_sum,
+        defaultComputed: result => assert_is_unit('px', result)
+      }
     ],
   },
   '<percentage>': {
@@ -43,6 +54,14 @@ const gTestSyntaxExamples = {
         description: "a positive percent",
         input: new CSSUnitValue(3.14, 'percent')
       },
+      {
+        description: "a calc percent",
+        input: new CSSMathSum(new CSSUnitValue(0, 'percent'), new CSSUnitValue(0, 'percent')),
+        // Specified/computed calcs are usually simplified.
+        // FIXME: Test this properly
+        defaultSpecified: assert_is_calc_sum,
+        defaultComputed: result => assert_is_unit('percent', result)
+      }
     ],
   },
   '<time>': {
@@ -60,6 +79,14 @@ const gTestSyntaxExamples = {
         description: "positive seconds",
         input: new CSSUnitValue(3.14, 's')
       },
+      {
+        description: "a calc time",
+        input: new CSSMathSum(new CSSUnitValue(0, 's'), new CSSUnitValue(0, 'ms')),
+        // Specified/computed calcs are usually simplified.
+        // FIXME: Test this properly
+        defaultSpecified: assert_is_calc_sum,
+        defaultComputed: result => assert_is_unit('s', result)
+      }
     ],
   },
   '<position>': {
