@@ -11,8 +11,10 @@ ChromeUtils.import("resource://services-sync/util.js");
 
 const PREFS_GUID = CommonUtils.encodeBase64URL(Services.appinfo.ID);
 
-loadAddonTestFunctions();
-startupManager();
+AddonTestUtils.init(this);
+AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.awaitPromise(AddonTestUtils.promiseStartupManager());
 
 function makePersona(id) {
   return {

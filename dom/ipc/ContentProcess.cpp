@@ -94,146 +94,132 @@ SetPrefsFd(int aFd)
 bool
 ContentProcess::Init(int aArgc, char* aArgv[])
 {
-  // If passed in grab the application path for xpcom init
-  bool foundAppdir = false;
-  bool foundChildID = false;
-  bool foundIsForBrowser = false;
-#ifdef XP_WIN
-  bool foundPrefsHandle = false;
-#endif
-  bool foundPrefsLen = false;
-  bool foundSchedulerPrefs = false;
-
-  uint64_t childID;
-  bool isForBrowser;
-
+  Maybe<uint64_t> childID;
+  Maybe<bool> isForBrowser;
+  Maybe<base::SharedMemoryHandle> prefsHandle;
+  Maybe<size_t> prefsLen;
+  Maybe<const char*> schedulerPrefs;
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
-  // If passed in grab the profile path for sandboxing
-  bool foundProfile = false;
   nsCOMPtr<nsIFile> profileDir;
 #endif
 
-  char* schedulerPrefs = nullptr;
-  base::SharedMemoryHandle prefsHandle = base::SharedMemory::NULLHandle();
-  size_t prefsLen = 0;
-  for (int idx = aArgc; idx > 0; idx--) {
-    if (!aArgv[idx]) {
+  for (int i = 1; i < aArgc; i++) {
+    if (!aArgv[i]) {
       continue;
     }
 
-    if (!strcmp(aArgv[idx], "-appdir")) {
-      MOZ_ASSERT(!foundAppdir);
-      if (foundAppdir) {
-        continue;
+    if (strcmp(aArgv[i], "-appdir") == 0) {
+      if (++i == aArgc) {
+        return false;
       }
-      nsCString appDir;
-      appDir.Assign(nsDependentCString(aArgv[idx+1]));
+      nsDependentCString appDir(aArgv[i]);
       mXREEmbed.SetAppDir(appDir);
-      foundAppdir = true;
-    } else if (!strcmp(aArgv[idx], "-childID")) {
-      MOZ_ASSERT(!foundChildID);
-      if (foundChildID) {
-        continue;
+
+    } else if (strcmp(aArgv[i], "-childID") == 0) {
+      if (++i == aArgc) {
+        return false;
       }
-      if (idx + 1 < aArgc) {
-        childID = strtoull(aArgv[idx + 1], nullptr, 10);
-        foundChildID = true;
+      char* str = aArgv[i];
+      childID = Some(strtoull(str, &str, 10));
+      if (str[0] != '\0') {
+        return false;
       }
-    } else if (!strcmp(aArgv[idx], "-isForBrowser") || !strcmp(aArgv[idx], "-notForBrowser")) {
-      MOZ_ASSERT(!foundIsForBrowser);
-      if (foundIsForBrowser) {
-        continue;
-      }
-      isForBrowser = strcmp(aArgv[idx], "-notForBrowser");
-      foundIsForBrowser = true;
+
+    } else if (strcmp(aArgv[i], "-isForBrowser") == 0) {
+      isForBrowser = Some(true);
+
+    } else if (strcmp(aArgv[i], "-notForBrowser") == 0) {
+      isForBrowser = Some(false);
+
 #ifdef XP_WIN
-    } else if (!strcmp(aArgv[idx], "-prefsHandle")) {
-      char* str = aArgv[idx + 1];
-      MOZ_ASSERT(str[0] != '\0');
-      // ContentParent uses %zu to print a word-sized unsigned integer. So even
-      // though strtoull() returns a long long int, it will fit in a uintptr_t.
-      prefsHandle = reinterpret_cast<HANDLE>(strtoull(str, &str, 10));
-      MOZ_ASSERT(str[0] == '\0');
-      foundPrefsHandle = true;
+    } else if (strcmp(aArgv[i], "-prefsHandle") == 0) {
+      if (++i == aArgc) {
+        return false;
+      }
+      // ContentParent uses %zu to print a word-sized unsigned integer. So
+      // even though strtoull() returns a long long int, it will fit in a
+      // uintptr_t.
+      char* str = aArgv[i];
+      prefsHandle = Some(reinterpret_cast<HANDLE>(strtoull(str, &str, 10)));
+      if (str[0] != '\0') {
+        return false;
+      }
 #endif
-    } else if (!strcmp(aArgv[idx], "-prefsLen")) {
-      char* str = aArgv[idx + 1];
-      MOZ_ASSERT(str[0] != '\0');
-      // ContentParent uses %zu to print a word-sized unsigned integer. So even
-      // though strtoull() returns a long long int, it will fit in a uintptr_t.
-      prefsLen = strtoull(str, &str, 10);
-      MOZ_ASSERT(str[0] == '\0');
-      foundPrefsLen = true;
-    } else if (!strcmp(aArgv[idx], "-schedulerPrefs")) {
-      schedulerPrefs = aArgv[idx + 1];
-      foundSchedulerPrefs = true;
-    } else if (!strcmp(aArgv[idx], "-safeMode")) {
+
+    } else if (strcmp(aArgv[i], "-prefsLen") == 0) {
+      if (++i == aArgc) {
+        return false;
+      }
+      // ContentParent uses %zu to print a word-sized unsigned integer. So
+      // even though strtoull() returns a long long int, it will fit in a
+      // uintptr_t.
+      char* str = aArgv[i];
+      prefsLen = Some(strtoull(str, &str, 10));
+      if (str[0] != '\0') {
+        return false;
+      }
+
+    } else if (strcmp(aArgv[i], "-schedulerPrefs") == 0) {
+      if (++i == aArgc) {
+        return false;
+      }
+      schedulerPrefs = Some(aArgv[i]);
+
+    } else if (strcmp(aArgv[i], "-safeMode") == 0) {
       gSafeMode = true;
-    }
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
-    else if (!strcmp(aArgv[idx], "-profile")) {
-      MOZ_ASSERT(!foundProfile);
-      if (foundProfile) {
-        continue;
+    } else if (strcmp(aArgv[i], "-profile") == 0) {
+      if (++i == aArgc) {
+        return false;
       }
       bool flag;
-      nsresult rv = XRE_GetFileFromPath(aArgv[idx+1], getter_AddRefs(profileDir));
-      if (NS_FAILED(rv) ||
-          NS_FAILED(profileDir->Exists(&flag)) || !flag) {
+      nsresult rv = XRE_GetFileFromPath(aArgv[i], getter_AddRefs(profileDir));
+      if (NS_FAILED(rv) || NS_FAILED(profileDir->Exists(&flag)) || !flag) {
         NS_WARNING("Invalid profile directory passed to content process.");
         profileDir = nullptr;
       }
-      foundProfile = true;
-    }
 #endif /* XP_MACOSX && MOZ_CONTENT_SANDBOX */
-
-    bool allFound = foundAppdir
-                 && foundChildID
-                 && foundIsForBrowser
-                 && foundPrefsLen
-                 && foundSchedulerPrefs
-#ifdef XP_WIN
-                 && foundPrefsHandle
-#endif
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
-                 && foundProfile
-#endif
-                 && true;
-
-    if (allFound) {
-      break;
     }
   }
 
 #ifdef ANDROID
   // Android is different; get the FD via gPrefsFd instead of a fixed fd.
   MOZ_RELEASE_ASSERT(gPrefsFd != -1);
-  prefsHandle = base::FileDescriptor(gPrefsFd, /* auto_close */ true);
+  prefsHandle = Some(base::FileDescriptor(gPrefsFd, /* auto_close */ true));
 #elif XP_UNIX
-  prefsHandle = base::FileDescriptor(kPrefsFileDescriptor,
-                                     /* auto_close */ true);
+  prefsHandle = Some(base::FileDescriptor(kPrefsFileDescriptor,
+                                          /* auto_close */ true));
 #endif
+
+  // Did we find all the mandatory flags?
+  if (childID.isNothing() ||
+      isForBrowser.isNothing() ||
+      prefsHandle.isNothing() ||
+      prefsLen.isNothing() ||
+      schedulerPrefs.isNothing()) {
+    return false;
+  }
 
   // Set up early prefs from the shared memory.
   base::SharedMemory shm;
-  if (!shm.SetHandle(prefsHandle, /* read_only */ true)) {
+  if (!shm.SetHandle(*prefsHandle, /* read_only */ true)) {
     NS_ERROR("failed to open shared memory in the child");
     return false;
   }
-  if (!shm.Map(prefsLen)) {
+  if (!shm.Map(*prefsLen)) {
     NS_ERROR("failed to map shared memory in the child");
     return false;
   }
   Preferences::DeserializePreferences(static_cast<char*>(shm.memory()),
-                                      prefsLen);
+                                      *prefsLen);
 
-  Scheduler::SetPrefs(schedulerPrefs);
+  Scheduler::SetPrefs(*schedulerPrefs);
   mContent.Init(IOThreadChild::message_loop(),
                 ParentPid(),
                 IOThreadChild::channel(),
-                childID,
-                isForBrowser);
+                *childID,
+                *isForBrowser);
   mXREEmbed.Start();
 #if (defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
   mContent.SetProfileDir(profileDir);

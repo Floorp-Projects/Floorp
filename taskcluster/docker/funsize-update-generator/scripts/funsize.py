@@ -218,29 +218,32 @@ def get_hash(path, hash_type="sha512"):
 
 class WorkEnv(object):
 
-    def __init__(self):
+    def __init__(self, mar=None, mbsdiff=None):
         self.workdir = tempfile.mkdtemp()
         self.paths = {
             'unwrap_full_update.pl': os.path.join(self.workdir, 'unwrap_full_update.pl'),
             'mar': os.path.join(self.workdir, 'mar'),
             'mbsdiff': os.path.join(self.workdir, 'mbsdiff')
         }
+        self.urls = {
+            'unwrap_full_update.pl': 'https://hg.mozilla.org/mozilla-central/raw-file/default/'
+            'tools/update-packaging/unwrap_full_update.pl',
+            'mar': 'https://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/'
+            'latest-mozilla-central/mar-tools/linux64/mar',
+            'mbsdiff': 'https://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/'
+            'latest-mozilla-central/mar-tools/linux64/mbsdiff'
+        }
+        if mar:
+            self.urls['mar'] = mar
+        if mbsdiff:
+            self.urls['mbsdiff'] = mbsdiff
 
-    async def setup(self):
-        await self.download_unwrap()
-        await self.download_martools()
-
-    async def clone(self, workenv):
-        for path in workenv.paths:
-            if os.path.exists(self.paths[path]):
-                os.unlink(self.paths[path])
-            os.link(workenv.paths[path], self.paths[path])
-
-    async def download_unwrap(self):
-        # unwrap_full_update.pl is not too sensitive to the revision
-        url = "https://hg.mozilla.org/mozilla-central/raw-file/default/" \
-            "tools/update-packaging/unwrap_full_update.pl"
-        await retry_download(url, dest=self.paths['unwrap_full_update.pl'], mode=0o755)
+    async def setup(self, mar=None, mbsdiff=None):
+        for filename, url in self.urls.items():
+            if filename not in self.paths:
+                log.info("Been told about %s but don't know where to download it to!", filename)
+                continue
+            await retry_download(url, dest=self.paths[filename], mode=0o755)
 
     async def download_buildsystem_bits(self, repo, revision):
         prefix = "{repo}/raw-file/{revision}/tools/update-packaging"
@@ -249,14 +252,6 @@ class WorkEnv(object):
             url = "{prefix}/{f}".format(prefix=prefix, f=f)
             await retry_download(url, dest=os.path.join(self.workdir, f), mode=0o755)
 
-    async def download_martools(self):
-        # TODO: check if the tools have to be branch specific
-        prefix = "https://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/" \
-            "latest-mozilla-central/mar-tools/linux64"
-        for f in ('mar', 'mbsdiff'):
-            url = "{prefix}/{f}".format(prefix=prefix, f=f)
-            await retry_download(url, dest=self.paths[f], mode=0o755)
-
     def cleanup(self):
         shutil.rmtree(self.workdir)
 
@@ -264,8 +259,8 @@ class WorkEnv(object):
     def env(self):
         my_env = os.environ.copy()
         my_env['LC_ALL'] = 'C'
-        my_env['MAR'] = os.path.join(self.workdir, "mar")
-        my_env['MBSDIFF'] = os.path.join(self.workdir, "mbsdiff")
+        my_env['MAR'] = self.paths['mar']
+        my_env['MBSDIFF'] = self.paths['mbsdiff']
         return my_env
 
 
@@ -401,14 +396,14 @@ async def manage_partial(partial_def, work_env, filename_template, artifacts_dir
 async def async_main(args, signing_certs):
     tasks = []
 
-    master_env = WorkEnv()
-    await master_env.setup()
-
     task = json.load(args.task_definition)
     # TODO: verify task["extra"]["funsize"]["partials"] with jsonschema
     for definition in task["extra"]["funsize"]["partials"]:
-        workenv = WorkEnv()
-        await workenv.clone(master_env)
+        workenv = WorkEnv(
+            mar=definition.get('mar_binary'),
+            mbsdiff=definition.get('mbsdiff_binary')
+        )
+        await workenv.setup()
         tasks.append(asyncio.ensure_future(manage_partial(
             partial_def=definition,
             filename_template=args.filename_template,
@@ -418,7 +413,6 @@ async def async_main(args, signing_certs):
         ))
 
     manifest = await asyncio.gather(*tasks)
-    master_env.cleanup()
     return manifest
 
 
