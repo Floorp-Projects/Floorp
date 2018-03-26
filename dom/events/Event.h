@@ -30,6 +30,7 @@ namespace mozilla {
 namespace dom {
 
 class BeforeUnloadEvent;
+class CustomEvent;
 class DragEvent;
 class EventTarget;
 class EventMessageAutoOverride;
@@ -144,6 +145,12 @@ public:
 
   // UIEvent has a non-autogeneratable initUIEvent.
   virtual UIEvent* AsUIEvent()
+  {
+    return nullptr;
+  }
+
+  // CustomEvent has a non-autogeneratable initCustomEvent.
+  virtual CustomEvent* AsCustomEvent()
   {
     return nullptr;
   }
