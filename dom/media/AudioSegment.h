@@ -181,19 +181,20 @@ struct AudioChunk {
     if (aOther.mBuffer != mBuffer) {
       return false;
     }
-    if (mBuffer) {
-      NS_ASSERTION(aOther.mBufferFormat == mBufferFormat,
-                   "Wrong metadata about buffer");
-      NS_ASSERTION(aOther.mChannelData.Length() == mChannelData.Length(),
-                   "Mismatched channel count");
-      if (mDuration > INT32_MAX) {
+    if (!mBuffer) {
+      return true;
+    }
+    NS_ASSERTION(aOther.mBufferFormat == mBufferFormat,
+                 "Wrong metadata about buffer");
+    NS_ASSERTION(aOther.mChannelData.Length() == mChannelData.Length(),
+                 "Mismatched channel count");
+    if (mDuration > INT32_MAX) {
+      return false;
+    }
+    for (uint32_t channel = 0; channel < mChannelData.Length(); ++channel) {
+      if (aOther.mChannelData[channel] != AddAudioSampleOffset(mChannelData[channel],
+          mBufferFormat, int32_t(mDuration))) {
         return false;
-      }
-      for (uint32_t channel = 0; channel < mChannelData.Length(); ++channel) {
-        if (aOther.mChannelData[channel] != AddAudioSampleOffset(mChannelData[channel],
-            mBufferFormat, int32_t(mDuration))) {
-          return false;
-        }
       }
     }
     return true;
