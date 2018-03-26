@@ -28,8 +28,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-"""This file exports public symbols.
-"""
+"""This file exports public symbols."""
 
 
 from mod_pywebsocket._stream_base import BadOperationException

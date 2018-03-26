@@ -28,8 +28,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-"""WebSocket utilities.
-"""
+"""WebSocket utilities."""
 
 
 import array
@@ -69,7 +68,6 @@ def get_stack_trace():
     TODO: Remove this when we only support Python 2.4 and above.
           Use traceback.format_exc instead.
     """
-
     out = StringIO.StringIO()
     traceback.print_exc(file=out)
     return out.getvalue()
@@ -77,7 +75,6 @@ def get_stack_trace():
 
 def prepend_message_to_exception(message, exc):
     """Prepend message to the exception."""
-
     exc.args = (message + str(exc),)
     return
 
@@ -104,7 +101,7 @@ def __translate_interp(interp, cygwin_path):
 
 
 def get_script_interp(script_path, cygwin_path=None):
-    """Gets #!-interpreter command line from the script.
+    r"""Get #!-interpreter command line from the script.
 
     It also fixes command path.  When Cygwin Python is used, e.g. in WebKit,
     it could run "/usr/bin/perl -wT hello.pl".
@@ -133,7 +130,6 @@ def wrap_popen3_for_win(cygwin_path):
       cygwin_path:  path for cygwin binary if command path is needed to be
                     translated.  None if no translation required.
     """
-
     __orig_popen3 = os.popen3
 
     def __wrap_popen3(cmd, mode='t', bufsize=-1):
@@ -151,27 +147,35 @@ def hexify(s):
 
 
 def get_class_logger(o):
+    """Return the logging class information."""
     return logging.getLogger(
         '%s.%s' % (o.__class__.__module__, o.__class__.__name__))
 
 
 class NoopMasker(object):
-    """A masking object that has the same interface as RepeatedXorMasker but
-    just returns the string passed in without making any change.
+    """A NoOp masking object.
+
+    This has the same interface as RepeatedXorMasker but just returns
+    the string passed in without making any change.
     """
 
     def __init__(self):
+        """NoOp."""
         pass
 
     def mask(self, s):
+        """NoOp."""
         return s
 
 
 class RepeatedXorMasker(object):
-    """A masking object that applies XOR on the string given to mask method
-    with the masking bytes given to the constructor repeatedly. This object
-    remembers the position in the masking bytes the last mask method call
-    ended and resumes from that point on the next mask method call.
+
+    """A masking object that applies XOR on the string.
+
+    Applies XOR on the string given to mask method with the masking bytes
+    given to the constructor repeatedly. This object remembers the position
+    in the masking bytes the last mask method call ended and resumes from
+    that point on the next mask method call.
     """
 
     def __init__(self, masking_key):
@@ -179,6 +183,7 @@ class RepeatedXorMasker(object):
         self._masking_key_index = 0
 
     def _mask_using_swig(self, s):
+        """Perform the mask via SWIG."""
         masked_data = fast_masking.mask(
                 s, self._masking_key, self._masking_key_index)
         self._masking_key_index = (
@@ -186,6 +191,7 @@ class RepeatedXorMasker(object):
         return masked_data
 
     def _mask_using_array(self, s):
+        """Perform the mask via python."""
         result = array.array('B')
         result.fromstring(s)
 
@@ -355,7 +361,9 @@ class _RFC1979Deflater(object):
 
 
 class _RFC1979Inflater(object):
-    """A decompressor class for byte sequence compressed and flushed following
+    """A decompressor class a la RFC1979.
+
+    A decompressor class for byte sequence compressed and flushed following
     the algorithm described in the RFC1979 section 2.1.
     """
 

@@ -72,6 +72,7 @@ _PYOPT_ALLOW_DRAFT75_DEFINITION = {'off': False, 'on': True}
 
 
 class ApacheLogHandler(logging.Handler):
+
     """Wrapper logging.Handler to emit log message to apache's error.log."""
 
     _LEVELS = {
@@ -136,6 +137,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _parse_option(name, value, definition):
+    """Return the meaning of a option value."""
     if value is None:
         return False
 
@@ -147,6 +149,7 @@ def _parse_option(name, value, definition):
 
 
 def _create_dispatcher():
+    """Initialize a dispatch.Dispatcher."""
     _LOGGER.info('Initializing Dispatcher')
 
     options = apache.main_server.get_options()
@@ -187,7 +190,6 @@ def headerparserhandler(request):
     This function is named headerparserhandler because it is the default
     name for a PythonHeaderParserHandler.
     """
-
     handshake_is_done = False
     try:
         # Fallback to default http handler for request paths for which
@@ -234,7 +236,8 @@ def headerparserhandler(request):
         request._dispatcher = _dispatcher
         _dispatcher.transfer_data(request)
     except handshake.AbortedByUserException, e:
-        request.log_error('mod_pywebsocket: Aborted: %s' % e, apache.APLOG_INFO)
+        request.log_error('mod_pywebsocket: Aborted: %s' % e,
+                          apache.APLOG_INFO)
     except Exception, e:
         # DispatchException can also be thrown if something is wrong in
         # pywebsocket code. It's caught here, then.

@@ -102,10 +102,8 @@ SEC_WEBSOCKET_LOCATION_HEADER = 'Sec-WebSocket-Location'
 
 # Extensions
 DEFLATE_FRAME_EXTENSION = 'deflate-frame'
-PERMESSAGE_COMPRESSION_EXTENSION = 'permessage-compress'
 PERMESSAGE_DEFLATE_EXTENSION = 'permessage-deflate'
 X_WEBKIT_DEFLATE_FRAME_EXTENSION = 'x-webkit-deflate-frame'
-X_WEBKIT_PERMESSAGE_COMPRESSION_EXTENSION = 'x-webkit-permessage-compress'
 MUX_EXTENSION = 'mux_DO_NOT_USE'
 
 # Status codes
@@ -153,9 +151,8 @@ def is_control_opcode(opcode):
 
 
 class ExtensionParameter(object):
-    """Holds information about an extension which is exchanged on extension
-    negotiation in opening handshake.
-    """
+
+    """This is exchanged on extension negotiation in opening handshake."""
 
     def __init__(self, name):
         self._name = name
@@ -166,30 +163,39 @@ class ExtensionParameter(object):
         self._parameters = []
 
     def name(self):
+        """Return the extension name."""
         return self._name
 
     def add_parameter(self, name, value):
+        """Add a parameter."""
         self._parameters.append((name, value))
 
     def get_parameters(self):
+        """Return the parameters."""
         return self._parameters
 
     def get_parameter_names(self):
+        """Return the names of the parameters."""
         return [name for name, unused_value in self._parameters]
 
     def has_parameter(self, name):
+        """Test if a parameter exists."""
         for param_name, param_value in self._parameters:
             if param_name == name:
                 return True
         return False
 
     def get_parameter_value(self, name):
+        """Get the value of a specific parameter."""
         for param_name, param_value in self._parameters:
             if param_name == name:
                 return param_value
 
 
 class ExtensionParsingException(Exception):
+
+    """Exception to handle errors in extension parsing."""
+
     def __init__(self, name):
         super(ExtensionParsingException, self).__init__(name)
 
@@ -244,12 +250,11 @@ def _parse_extension(state):
 
 
 def parse_extensions(data):
-    """Parses Sec-WebSocket-Extensions header value returns a list of
-    ExtensionParameter objects.
+    """Parse Sec-WebSocket-Extensions header value.
 
+    Returns a list of ExtensionParameter objects.
     Leading LWSes must be trimmed.
     """
-
     state = http_header_util.ParsingState(data)
 
     extension_list = []
@@ -279,8 +284,7 @@ def parse_extensions(data):
 
 
 def format_extension(extension):
-    """Formats an ExtensionParameter object."""
-
+    """Format an ExtensionParameter object."""
     formatted_params = [extension.name()]
     for param_name, param_value in extension.get_parameters():
         if param_value is None:
@@ -292,8 +296,7 @@ def format_extension(extension):
 
 
 def format_extensions(extension_list):
-    """Formats a list of ExtensionParameter objects."""
-
+    """Format a list of ExtensionParameter objects."""
     formatted_extension_list = []
     for extension in extension_list:
         formatted_extension_list.append(format_extension(extension))

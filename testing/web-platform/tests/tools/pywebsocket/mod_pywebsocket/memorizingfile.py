@@ -40,6 +40,7 @@ import sys
 
 
 class MemorizingFile(object):
+
     """MemorizingFile wraps a file and memorizes lines read by readline.
 
     Note that data read by other methods are not memorized. This behavior
@@ -56,7 +57,6 @@ class MemorizingFile(object):
                 Only the first max_memorized_lines are memorized.
                 Default: sys.maxint.
         """
-
         self._file = file_
         self._memorized_lines = []
         self._max_memorized_lines = max_memorized_lines
@@ -64,6 +64,11 @@ class MemorizingFile(object):
         self._buffered_line = None
 
     def __getattribute__(self, name):
+        """Return a file attribute.
+        
+        Returns the value overridden by this class for some attributes,
+        and forwards the call to _file for the other attributes.
+        """
         if name in ('_file', '_memorized_lines', '_max_memorized_lines',
                     '_buffered', '_buffered_line', 'readline',
                     'get_memorized_lines'):
@@ -77,7 +82,6 @@ class MemorizingFile(object):
         the whole line will be read out from underlying file object by
         subsequent readline calls.
         """
-
         if self._buffered:
             line = self._buffered_line
             self._buffered = False
