@@ -659,6 +659,14 @@ MacroAssembler::branchSub32(Condition cond, T src, Register dest, Label* label)
     j(cond, label);
 }
 
+template <typename T>
+void
+MacroAssembler::branchMul32(Condition cond, T src, Register dest, Label* label)
+{
+    mul32(src, dest);
+    j(cond, label);
+}
+
 void
 MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
 {
