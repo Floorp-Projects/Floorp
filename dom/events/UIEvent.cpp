@@ -144,13 +144,6 @@ UIEvent::GetView(mozIDOMWindowProxy** aView)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-UIEvent::GetDetail(int32_t* aDetail)
-{
-  *aDetail = mDetail;
-  return NS_OK;
-}
-
 void
 UIEvent::InitUIEvent(const nsAString& typeArg,
                      bool canBubbleArg,
@@ -369,9 +362,7 @@ UIEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
 
   Event::Serialize(aMsg, false);
 
-  int32_t detail = 0;
-  GetDetail(&detail);
-  IPC::WriteParam(aMsg, detail);
+  IPC::WriteParam(aMsg, Detail());
 }
 
 NS_IMETHODIMP_(bool)

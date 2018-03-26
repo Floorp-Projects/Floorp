@@ -99,9 +99,7 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
 
   bool isContextClick = buttonNumber == 2;
 
-  int32_t clickCount;
-  nsresult rv = aMouseEvent->GetDetail(&clickCount);
-  NS_ENSURE_SUCCESS(rv, rv);
+  int32_t clickCount = aMouseEvent->Detail();
 
   nsCOMPtr<nsIDOMEventTarget> target = aMouseEvent->GetExplicitOriginalTarget();
   NS_ENSURE_TRUE(target, NS_ERROR_NULL_POINTER);
@@ -148,7 +146,7 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
         } else {
           // Get enclosing link if in text so we can select the link
           nsCOMPtr<nsIDOMElement> linkElement;
-          rv = htmlEditor->GetElementOrParentByTagName(
+          nsresult rv = htmlEditor->GetElementOrParentByTagName(
                              NS_LITERAL_STRING("href"), node,
                              getter_AddRefs(linkElement));
           NS_ENSURE_SUCCESS(rv, rv);
