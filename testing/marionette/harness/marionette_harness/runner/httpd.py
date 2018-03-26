@@ -101,6 +101,11 @@ class FixtureServer(object):
         if port is None:
             port = 0
 
+        if not os.path.exists(ssl_cert):
+            raise ValueError("SSL certificate file not found: {}".format(ssl_cert))
+        if not os.path.exists(ssl_key):
+            raise ValueError("SSL key file not found: {}".format(ssl_key))
+
         routes = [("POST", "/file_upload", upload_handler),
                   ("GET", "/http_auth", http_auth_handler),
                   ("GET", "/slow", slow_loading_handler),
