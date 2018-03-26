@@ -469,11 +469,8 @@ private:
     RefPtr<GmpInitDoneRunnable> mInitDone;
   };
 
-  virtual int32_t Decode_g(const webrtc::EncodedImage& aInputImage,
-                           bool aMissingFrames,
-                           const webrtc::RTPFragmentationHeader* aFragmentation,
-                           const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                           int64_t aRenderTimeMs);
+  static void Decode_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
+                       nsAutoPtr<GMPDecodeData> aDecodeData);
 
   nsCOMPtr<mozIGeckoMediaPluginService> mMPS;
   nsCOMPtr<nsIThread> mGMPThread;
