@@ -303,3 +303,55 @@ add_task(async function testTabRemovalEvent() {
   await extension.awaitFinish("tabs-events");
   await extension.unload();
 });
+
+add_task(async function testTabCreateRelated() {
+  await SpecialPowers.pushPrefEnv({set: [
+    ["browser.tabs.opentabfor.middleclick", true],
+    ["browser.tabs.insertRelatedAfterCurrent", true],
+  ]});
+
+  async function background() {
+    let created;
+    browser.tabs.onCreated.addListener(tab => {
+      browser.test.log(`tabs.onCreated, index=${tab.index}`);
+      browser.test.assertEq(1, tab.index, "expecting tab index of 1");
+      created = tab.id;
+    });
+    browser.tabs.onMoved.addListener((id, info) => {
+      browser.test.log(`tabs.onMoved, from ${info.fromIndex} to ${info.toIndex}`);
+      browser.test.fail("tabMoved was received");
+    });
+    browser.tabs.onRemoved.addListener((tabId, info) => {
+      browser.test.assertEq(created, tabId, "removed id same as created");
+      browser.test.sendMessage("tabRemoved");
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+
+    background,
+  });
+
+  // Create a *opener* tab page which has a link to "example.com".
+  let pageURL = "http://example.com/browser/browser/components/extensions/test/browser/file_dummy.html";
+  let openerTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageURL);
+  gBrowser.moveTabTo(openerTab, 0);
+
+  await extension.startup();
+
+  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "http://example.com/#linkclick", true);
+  await BrowserTestUtils.synthesizeMouseAtCenter("#link_to_example_com",
+                                                 {button: 1}, gBrowser.selectedBrowser);
+  let openTab = await newTabPromise;
+  is(openTab.linkedBrowser.currentURI.spec, "http://example.com/#linkclick",
+     "Middle click should open site to correct url.");
+  BrowserTestUtils.removeTab(openTab);
+
+  await extension.awaitMessage("tabRemoved");
+  await extension.unload();
+
+  BrowserTestUtils.removeTab(openerTab);
+});
