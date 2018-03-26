@@ -1916,7 +1916,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Whether the current document is styled by Servo's style engine.
    *
-   * This calls nsIDocument::IsStyledByServo().
+   * Always true, pending removal.
    */
   readonly attribute boolean isStyledByServo;
 

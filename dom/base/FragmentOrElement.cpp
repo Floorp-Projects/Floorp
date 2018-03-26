@@ -1253,7 +1253,7 @@ FragmentOrElement::DestroyContent()
   //
   // TODO(emilio): I suspect this can be asserted against instead, with a bit of
   // effort to avoid calling nsDocument::Destroy with a shell...
-  if (IsElement() && document->IsStyledByServo()) {
+  if (IsElement()) {
     AsElement()->ClearServoData();
   }
 

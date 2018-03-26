@@ -1421,11 +1421,6 @@ public:
       "Memory used by the atom table.");
 
     MOZ_COLLECT_REPORT(
-      "explicit/atoms/static/atom-objects", KIND_HEAP, UNITS_BYTES,
-      sizes.mStaticAtomObjects,
-      "Memory used by static atom objects.");
-
-    MOZ_COLLECT_REPORT(
       "explicit/atoms/dynamic/atom-objects", KIND_HEAP, UNITS_BYTES,
       sizes.mDynamicAtomObjects,
       "Memory used by dynamic atom objects.");

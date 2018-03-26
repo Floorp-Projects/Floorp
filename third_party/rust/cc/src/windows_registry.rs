@@ -69,7 +69,11 @@ pub fn find_tool(target: &str, tool: &str) -> Option<Tool> {
     // should just find whatever that indicates.
     if env::var_os("VCINSTALLDIR").is_some() {
         return env::var_os("PATH")
-            .and_then(|path| env::split_paths(&path).map(|p| p.join(tool)).find(|p| p.exists()))
+            .and_then(|path| {
+                env::split_paths(&path)
+                    .map(|p| p.join(tool))
+                    .find(|p| p.exists())
+            })
             .map(|path| Tool::new(path.into()));
     }
 
@@ -119,19 +123,20 @@ pub fn find_vs_version() -> Result<VsVers, String> {
     use std::env;
 
     match env::var("VisualStudioVersion") {
-        Ok(version) => {
-            match &version[..] {
-                "15.0" => Ok(VsVers::Vs15),
-                "14.0" => Ok(VsVers::Vs14),
-                "12.0" => Ok(VsVers::Vs12),
-                vers => Err(format!("\n\n\
-                                     unsupported or unknown VisualStudio version: {}\n\
-                                     if another version is installed consider running \
-                                     the appropriate vcvars script before building this \
-                                     crate\n\
-                                     ", vers)),
-            }
-        }
+        Ok(version) => match &version[..] {
+            "15.0" => Ok(VsVers::Vs15),
+            "14.0" => Ok(VsVers::Vs14),
+            "12.0" => Ok(VsVers::Vs12),
+            vers => Err(format!(
+                "\n\n\
+                 unsupported or unknown VisualStudio version: {}\n\
+                 if another version is installed consider running \
+                 the appropriate vcvars script before building this \
+                 crate\n\
+                 ",
+                vers
+            )),
+        },
         _ => {
             // Check for the presense of a specific registry key
             // that indicates visual studio is installed.
@@ -142,12 +147,14 @@ pub fn find_vs_version() -> Result<VsVers, String> {
             } else if impl_::has_msbuild_version("12.0") {
                 Ok(VsVers::Vs12)
             } else {
-                Err(format!("\n\n\
-                             couldn't determine visual studio generator\n\
-                             if VisualStudio is installed, however, consider \
-                             running the appropriate vcvars script before building \
-                             this crate\n\
-                             "))
+                Err(format!(
+                    "\n\n\
+                     couldn't determine visual studio generator\n\
+                     if VisualStudio is installed, however, consider \
+                     running the appropriate vcvars script before building \
+                     this crate\n\
+                     "
+                ))
             }
         }
     }
@@ -185,7 +192,12 @@ mod impl_ {
         }
 
         fn into_tool(self) -> Tool {
-            let MsvcTool { tool, libs, path, include } = self;
+            let MsvcTool {
+                tool,
+                libs,
+                path,
+                include,
+            } = self;
             let mut tool = Tool::new(tool.into());
             add_env(&mut tool, "LIB", libs);
             add_env(&mut tool, "PATH", path);
@@ -217,11 +229,13 @@ mod impl_ {
         None
     }
 
-    fn tool_from_vs15_instance(tool: &str, target: &str,
-                               instance: &SetupInstance) -> Option<Tool> {
-        let (bin_path, host_dylib_path, lib_path, include_path) = otry!(vs15_vc_paths(target, instance));
+    fn tool_from_vs15_instance(tool: &str, target: &str, instance: &SetupInstance) -> Option<Tool> {
+        let (bin_path, host_dylib_path, lib_path, include_path) =
+            otry!(vs15_vc_paths(target, instance));
         let tool_path = bin_path.join(tool);
-        if !tool_path.exists() { return None };
+        if !tool_path.exists() {
+            return None;
+        };
 
         let mut tool = MsvcTool::new(tool_path);
         tool.path.push(host_dylib_path);
@@ -238,9 +252,13 @@ mod impl_ {
         Some(tool.into_tool())
     }
 
-    fn vs15_vc_paths(target: &str, instance: &SetupInstance) -> Option<(PathBuf, PathBuf, PathBuf, PathBuf)> {
+    fn vs15_vc_paths(
+        target: &str,
+        instance: &SetupInstance,
+    ) -> Option<(PathBuf, PathBuf, PathBuf, PathBuf)> {
         let instance_path: PathBuf = otry!(instance.installation_path().ok()).into();
-        let version_path = instance_path.join(r"VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt");
+        let version_path =
+            instance_path.join(r"VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt");
         let mut version_file = otry!(File::open(version_path).ok());
         let mut version = String::new();
         otry!(version_file.read_to_string(&mut version).ok());
@@ -255,11 +273,15 @@ mod impl_ {
         let path = instance_path.join(r"VC\Tools\MSVC").join(version);
         // This is the path to the toolchain for a particular target, running
         // on a given host
-        let bin_path = path.join("bin").join(&format!("Host{}", host)).join(&target);
+        let bin_path = path.join("bin")
+            .join(&format!("Host{}", host))
+            .join(&target);
         // But! we also need PATH to contain the target directory for the host
         // architecture, because it contains dlls like mspdb140.dll compiled for
         // the host architecture.
-        let host_dylib_path = path.join("bin").join(&format!("Host{}", host)).join(&host.to_lowercase());
+        let host_dylib_path = path.join("bin")
+            .join(&format!("Host{}", host))
+            .join(&host.to_lowercase());
         let lib_path = path.join("lib").join(&target);
         let include_path = path.join("include");
         Some((bin_path, host_dylib_path, lib_path, include_path))
@@ -288,7 +310,8 @@ mod impl_ {
         let sub = otry!(lib_subdir(target));
         let (ucrt, ucrt_version) = otry!(get_ucrt_dir());
 
-        tool.path.push(ucrt.join("bin").join(&ucrt_version).join(sub));
+        tool.path
+            .push(ucrt.join("bin").join(&ucrt_version).join(sub));
 
         let ucrt_include = ucrt.join("include").join(&ucrt_version);
         tool.include.push(ucrt_include.join("ucrt"));
@@ -353,7 +376,8 @@ mod impl_ {
         let prev = env::var_os(env).unwrap_or(OsString::new());
         let prev = env::split_paths(&prev);
         let new = paths.into_iter().chain(prev);
-        tool.env.push((env.to_string().into(), env::join_paths(new).unwrap()));
+        tool.env
+            .push((env.to_string().into(), env::join_paths(new).unwrap()));
     }
 
     // Given a possible MSVC installation directory, we look for the linker and
@@ -361,7 +385,12 @@ mod impl_ {
     fn get_tool(tool: &str, path: &Path, target: &str) -> Option<MsvcTool> {
         bin_subdir(target)
             .into_iter()
-            .map(|(sub, host)| (path.join("bin").join(sub).join(tool), path.join("bin").join(host)))
+            .map(|(sub, host)| {
+                (
+                    path.join("bin").join(sub).join(tool),
+                    path.join("bin").join(host),
+                )
+            })
             .filter(|&(ref path, _)| path.is_file())
             .map(|(path, host)| {
                 let mut tool = MsvcTool::new(path);
@@ -402,16 +431,17 @@ mod impl_ {
         let key = otry!(LOCAL_MACHINE.open(key.as_ref()).ok());
         let root = otry!(key.query_str("KitsRoot10").ok());
         let readdir = otry!(Path::new(&root).join("lib").read_dir().ok());
-        let max_libdir = otry!(readdir.filter_map(|dir| dir.ok())
-            .map(|dir| dir.path())
-            .filter(|dir| {
-                dir.components()
+        let max_libdir = otry!(
+            readdir
+                .filter_map(|dir| dir.ok())
+                .map(|dir| dir.path())
+                .filter(|dir| dir.components()
                     .last()
                     .and_then(|c| c.as_os_str().to_str())
                     .map(|c| c.starts_with("10.") && dir.join("ucrt").is_dir())
-                    .unwrap_or(false)
-            })
-            .max());
+                    .unwrap_or(false))
+                .max()
+        );
         let version = max_libdir.components().last().unwrap();
         let version = version.as_os_str().to_str().unwrap().to_string();
         Some((root.into(), version))
@@ -430,14 +460,17 @@ mod impl_ {
         let key = otry!(LOCAL_MACHINE.open(key.as_ref()).ok());
         let root = otry!(key.query_str("InstallationFolder").ok());
         let readdir = otry!(Path::new(&root).join("lib").read_dir().ok());
-        let mut dirs = readdir.filter_map(|dir| dir.ok())
+        let mut dirs = readdir
+            .filter_map(|dir| dir.ok())
             .map(|dir| dir.path())
             .collect::<Vec<_>>();
         dirs.sort();
-        let dir = otry!(dirs.into_iter()
-            .rev()
-            .filter(|dir| dir.join("um").join("x64").join("kernel32.lib").is_file())
-            .next());
+        let dir = otry!(
+            dirs.into_iter()
+                .rev()
+                .filter(|dir| dir.join("um").join("x64").join("kernel32.lib").is_file())
+                .next()
+        );
         let version = dir.components().last().unwrap();
         let version = version.as_os_str().to_str().unwrap().to_string();
         Some((root.into(), version))
@@ -497,6 +530,7 @@ mod impl_ {
             "i586" | "i686" => Some("x86"),
             "x86_64" => Some("x64"),
             "arm" => Some("arm"),
+            "aarch64" => Some("arm64"),
             _ => None,
         }
     }
@@ -508,6 +542,7 @@ mod impl_ {
             "i586" | "i686" => Some(""),
             "x86_64" => Some("amd64"),
             "arm" => Some("arm"),
+            "aarch64" => Some("arm64"),
             _ => None,
         }
     }
@@ -553,7 +588,8 @@ mod impl_ {
         let mut max_vers = 0;
         let mut max_key = None;
         for subkey in key.iter().filter_map(|k| k.ok()) {
-            let val = subkey.to_str()
+            let val = subkey
+                .to_str()
                 .and_then(|s| s.trim_left_matches("v").replace(".", "").parse().ok());
             let val = match val {
                 Some(s) => s,
@@ -572,15 +608,16 @@ mod impl_ {
     pub fn has_msbuild_version(version: &str) -> bool {
         match version {
             "15.0" => {
-                find_msbuild_vs15("x86_64-pc-windows-msvc").is_some() ||
-                    find_msbuild_vs15("i686-pc-windows-msvc").is_some()
+                find_msbuild_vs15("x86_64-pc-windows-msvc").is_some()
+                    || find_msbuild_vs15("i686-pc-windows-msvc").is_some()
             }
-            "12.0" | "14.0" => {
-                LOCAL_MACHINE.open(
-                    &OsString::from(format!("SOFTWARE\\Microsoft\\MSBuild\\ToolsVersions\\{}",
-                                            version))).is_ok()
-            }
-            _ => false
+            "12.0" | "14.0" => LOCAL_MACHINE
+                .open(&OsString::from(format!(
+                    "SOFTWARE\\Microsoft\\MSBuild\\ToolsVersions\\{}",
+                    version
+                )))
+                .is_ok(),
+            _ => false,
         }
     }
 
@@ -599,11 +636,10 @@ mod impl_ {
         // or that find_msvc_15 could just use this registry key
         // instead of the COM interface.
         let key = r"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7";
-        LOCAL_MACHINE.open(key.as_ref())
+        LOCAL_MACHINE
+            .open(key.as_ref())
             .ok()
-            .and_then(|key| {
-                key.query_str("15.0").ok()
-            })
+            .and_then(|key| key.query_str("15.0").ok())
             .map(|path| {
                 let path = PathBuf::from(path).join(r"MSBuild\15.0\Bin\MSBuild.exe");
                 let mut tool = Tool::new(path);
@@ -616,7 +652,8 @@ mod impl_ {
 
     fn find_old_msbuild(target: &str) -> Option<Tool> {
         let key = r"SOFTWARE\Microsoft\MSBuild\ToolsVersions";
-        LOCAL_MACHINE.open(key.as_ref())
+        LOCAL_MACHINE
+            .open(key.as_ref())
             .ok()
             .and_then(|key| {
                 max_version(&key).and_then(|(_vers, key)| key.query_str("MSBuildToolsPath").ok())

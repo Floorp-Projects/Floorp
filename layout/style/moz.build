@@ -23,7 +23,6 @@ DIRS += ['xbl-marquee']
 TEST_DIRS += ['test']
 
 EXPORTS += [
-    '!nsStyleStructList.h',
     'AnimationCommon.h',
     'CounterStyleManager.h',
     'nsAnimationManager.h',
@@ -62,6 +61,7 @@ EXPORTS += [
     'nsStyleStruct.h',
     'nsStyleStructFwd.h',
     'nsStyleStructInlines.h',
+    'nsStyleStructList.h',
     'nsStyleTransformMatrix.h',
     'nsStyleUtil.h',
     'nsTimingFunction.h',
@@ -186,7 +186,6 @@ UNIFIED_SOURCES += [
     'MediaQueryList.cpp',
     'nsAnimationManager.cpp',
     'nsComputedDOMStyle.cpp',
-    'nsCSSAnonBoxes.cpp',
     'nsCSSCounterStyleRule.cpp',
     'nsCSSFontFaceRule.cpp',
     'nsCSSKeywords.cpp',
@@ -241,6 +240,7 @@ UNIFIED_SOURCES += [
 ]
 
 SOURCES += [
+    'nsCSSAnonBoxes.cpp',
     # Both nsCSSPseudoElements.cpp and nsCSSPseudoClasses.cpp defined a
     # 'mozPlaceholder' static atom.
     'nsCSSPseudoElements.cpp',
@@ -248,6 +248,11 @@ SOURCES += [
     # windows.h.
     'nsLayoutStylesheetCache.cpp',
 ]
+if CONFIG['CC_TYPE'] == 'msvc':
+    # Needed for gCSSAnonBoxAtoms.
+    SOURCES['nsCSSAnonBoxes.cpp'].flags += ['-Zc:externConstexpr']
+    # Needed for gCSSPseudoElementAtoms.
+    SOURCES['nsCSSPseudoElements.cpp'].flags += ['-Zc:externConstexpr']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
@@ -279,13 +284,6 @@ CONTENT_ACCESSIBLE_FILES += [
     'TopLevelImageDocument.css',
     'TopLevelVideoDocument.css',
 ]
-
-GENERATED_FILES += [
-    'nsStyleStructList.h',
-]
-
-style_struct_list = GENERATED_FILES['nsStyleStructList.h']
-style_struct_list.script = 'generate-stylestructlist.py'
 
 if CONFIG['COMPILE_ENVIRONMENT']:
     GENERATED_FILES += [

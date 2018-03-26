@@ -183,9 +183,8 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
     return;
   }
 
-  ComputedStyle* servo = computedStyle->AsServo();
   nsTArray<const RawServoStyleRule*> rawRuleList;
-  Servo_ComputedValues_GetStyleRuleList(servo, &rawRuleList);
+  Servo_ComputedValues_GetStyleRuleList(computedStyle, &rawRuleList);
 
   AutoTArray<ServoStyleRuleMap*, 1> maps;
   {

@@ -261,14 +261,10 @@ public:
   {
     AnimationValue result;
     bool hasProperty = false;
-    if (mDocument->IsStyledByServo()) {
-      // We cannot use getters_AddRefs on RawServoAnimationValue because it is
-      // an incomplete type, so Get() doesn't work. Instead, use GetWeak, and
-      // then assign the raw pointer to a RefPtr.
-      result.mServo = mBaseStyleValuesForServo.GetWeak(aProperty, &hasProperty);
-    } else {
-      MOZ_CRASH("old style system disabled");
-    }
+    // We cannot use getters_AddRefs on RawServoAnimationValue because it is
+    // an incomplete type, so Get() doesn't work. Instead, use GetWeak, and
+    // then assign the raw pointer to a RefPtr.
+    result.mServo = mBaseStyleValuesForServo.GetWeak(aProperty, &hasProperty);
     MOZ_ASSERT(hasProperty || result.IsNull());
     return result;
   }

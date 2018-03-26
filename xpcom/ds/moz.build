@@ -118,10 +118,15 @@ UNIFIED_SOURCES += [
     'Tokenizer.cpp',
 ]
 
-# XXX: will be moved to UNIFIED_SOURCES in the next patch
 SOURCES += [
     'nsGkAtoms.cpp',
 ]
+if CONFIG['CC_TYPE'] == 'msvc':
+    # Needed for gGkAtoms.
+    SOURCES['nsGkAtoms.cpp'].flags += [
+        '-constexpr:steps300000',
+        '-Zc:externConstexpr',
+    ]
 
 EXTRA_COMPONENTS += [
     'nsINIProcessor.js',

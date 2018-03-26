@@ -10,7 +10,7 @@
 // * mouse drag on the scrubber
 
 add_task(async function() {
-  await addTab(URL_ROOT + "doc_multi_timings.html");
+  await addTab(URL_ROOT + "doc_simple_animation.html");
   const { animationInspector, inspector, panel } = await openAnimationInspector();
 
   info("Checking scrubber controller existence");
@@ -22,7 +22,7 @@ add_task(async function() {
   ok(scrubberEl, "scrubber should exist");
 
   info("Checking scrubber changes current time of animation and the position");
-  await selectNodeAndWaitForAnimations(".enddelay-with-iterations-infinity", inspector);
+  await selectNodeAndWaitForAnimations(".long", inspector);
   const duration = animationInspector.state.timeScale.getDuration();
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 0);
   assertAnimationsCurrentTime(animationInspector, 0);

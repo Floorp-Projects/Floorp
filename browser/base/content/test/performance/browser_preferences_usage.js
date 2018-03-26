@@ -94,7 +94,7 @@ add_task(async function startup() {
       max: 55,
     },
     "dom.max_chrome_script_run_time": {
-      min: 30,
+      min: 20,
       max: 55,
     },
     // This seems to get called frequently only on infra.

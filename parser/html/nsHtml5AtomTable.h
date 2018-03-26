@@ -21,7 +21,7 @@ public:
   inline nsAtom* GetAtom() { return mAtom; }
 
 private:
-  nsAtom* mAtom;
+  nsDynamicAtom* mAtom;
 };
 
 /**

@@ -23,7 +23,7 @@ if (Services.appinfo.OS == "WINNT") {
     {
       stack: [
         "verticalMargins@chrome://browser/content/browser-tabsintitlebar.js",
-        "_update@chrome://browser/content/browser-tabsintitlebar.js",
+        "update@chrome://browser/content/browser-tabsintitlebar.js",
         "onDOMContentLoaded@chrome://browser/content/browser-tabsintitlebar.js",
         "onDOMContentLoaded@chrome://browser/content/browser.js",
       ],
@@ -37,7 +37,7 @@ if (Services.appinfo.OS == "WINNT" || Services.appinfo.OS == "Darwin") {
     {
       stack: [
         "rect@chrome://browser/content/browser-tabsintitlebar.js",
-        "_update@chrome://browser/content/browser-tabsintitlebar.js",
+        "update@chrome://browser/content/browser-tabsintitlebar.js",
         "onDOMContentLoaded@chrome://browser/content/browser-tabsintitlebar.js",
         "onDOMContentLoaded@chrome://browser/content/browser.js",
       ],
@@ -114,6 +114,29 @@ add_task(async function() {
 
     await BrowserTestUtils.firstBrowserLoaded(win, false);
     await BrowserTestUtils.browserStopped(win.gBrowser.selectedBrowser, "about:home");
+
+    if (Services.appinfo.OS == "WINNT" && win.windowState == win.STATE_MAXIMIZED) {
+      // The reflows below are triggered by maximizing the window after
+      // layout. They should be fixed by bug 1447864.
+      EXPECTED_REFLOWS.push(
+        {
+          stack: [
+            "rect@chrome://browser/content/browser-tabsintitlebar.js",
+            "update@chrome://browser/content/browser-tabsintitlebar.js",
+            "handleEvent@chrome://browser/content/browser-tabsintitlebar.js",
+          ],
+          maxCount: 4,
+        },
+        {
+          stack: [
+            "verticalMargins@chrome://browser/content/browser-tabsintitlebar.js",
+            "update@chrome://browser/content/browser-tabsintitlebar.js",
+            "handleEvent@chrome://browser/content/browser-tabsintitlebar.js",
+          ],
+          maxCount: 2,
+        },
+      );
+    }
 
     await new Promise(resolve => {
       // 10 is an arbitrary value here, it needs to be at least 2 to avoid
