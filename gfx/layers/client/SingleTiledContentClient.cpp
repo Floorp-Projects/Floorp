@@ -188,10 +188,8 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 
   // If the old frontbuffer was discarded then attempt to copy what we
   // can from it to the new backbuffer.
-  bool copiedFromDiscarded = false;
-  nsIntRegion copyableRegion;
-
   if (discardedFrontBuffer) {
+    nsIntRegion copyableRegion;
     copyableRegion.And(aNewValidRegion, discardedValidRegion);
     copyableRegion.SubOut(aDirtyRegion);
 
@@ -254,22 +252,17 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 
         // We don't need to repaint valid content that was just copied.
         paintRegion.SubOut(copyableRegion);
-        copiedFromDiscarded = true;
+        copyableRegion.MoveBy(-mTilingOrigin);
+        tileDirtyRegion.SubOut(copyableRegion);
       }
     }
   }
 
   if (mode != SurfaceMode::SURFACE_OPAQUE) {
-    nsIntRegion regionToClear = tileDirtyRegion;
-    if (copiedFromDiscarded) {
-      copyableRegion.MoveBy(-mTilingOrigin);
-      regionToClear.SubOut(copyableRegion);
-    }
-
     auto clear = CapturedTiledPaintState::Clear{
       dt,
       dtOnWhite,
-      regionToClear,
+      tileDirtyRegion,
     };
 
     if (asyncPaint) {
