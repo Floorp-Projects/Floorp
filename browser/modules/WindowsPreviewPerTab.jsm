@@ -101,8 +101,8 @@ function _imageFromURI(uri, privateMode, callback) {
 
     try {
       let threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
-      imgTools.decodeImage(inputStream, channel.contentType, decodeCallback,
-                           threadManager.currentThread);
+      imgTools.decodeImageAsync(inputStream, channel.contentType,
+                                decodeCallback, threadManager.currentThread);
     } catch (e) {
       // We failed, so use the default favicon (only if this wasn't the default
       // favicon).
