@@ -428,6 +428,12 @@ public:
   void RemoveVideoOutputImpl(MediaStreamVideoSink* aSink, TrackID aID);
   void AddListenerImpl(already_AddRefed<MediaStreamListener> aListener);
   void RemoveListenerImpl(MediaStreamListener* aListener);
+
+  /**
+   * Removes all direct listeners and signals to them that they have been
+   * uninstalled.
+   */
+  virtual void RemoveAllDirectListenersImpl() {}
   void RemoveAllListenersImpl();
   virtual void AddTrackListenerImpl(already_AddRefed<MediaStreamTrackListener> aListener,
                                     TrackID aTrackID);
@@ -801,17 +807,13 @@ public:
     MediaStream::ApplyTrackDisabling(aTrackID, aSegment, aRawSegment);
   }
 
+  void RemoveAllDirectListenersImpl() override;
+
   /**
    * End all tracks and Finish() this stream.  Used to voluntarily revoke access
    * to a LocalMediaStream.
    */
   void EndAllTrackAndFinish();
-
-  /**
-   * Removes all direct listeners and signals to them that they have been
-   * uninstalled.
-   */
-  void RemoveAllDirectListeners();
 
   void RegisterForAudioMixing();
 
