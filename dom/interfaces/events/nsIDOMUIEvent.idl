@@ -31,7 +31,6 @@ class Event;
 interface nsIDOMUIEvent : nsISupports
 {
   readonly attribute mozIDOMWindowProxy view;
-  readonly attribute long               detail;
   void                      initUIEvent(in DOMString typeArg,
                                         in boolean canBubbleArg,
                                         in boolean cancelableArg,
