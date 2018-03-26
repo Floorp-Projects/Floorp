@@ -76,7 +76,7 @@ $(syms_targets): %/syms: %/target
 
 # Only hook symbols targets into the main compile graph in automation.
 ifdef MOZ_AUTOMATION
-ifdef MOZ_CRASHREPORTER
+ifeq (1,$(MOZ_AUTOMATION_BUILD_SYMBOLS))
 recurse_compile: $(syms_targets)
 endif
 endif
