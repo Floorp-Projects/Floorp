@@ -91,11 +91,10 @@ DisplayItemClip::IntersectWith(const DisplayItemClip& aOther)
 
 void
 DisplayItemClip::ApplyTo(gfxContext* aContext,
-                         int32_t A2D,
-                         uint32_t aBegin, uint32_t aEnd)
+                         int32_t A2D)
 {
   ApplyRectTo(aContext, A2D);
-  ApplyRoundedRectClipsTo(aContext, A2D, aBegin, aEnd);
+  ApplyRoundedRectClipsTo(aContext, A2D, 0, mRoundedClipRects.Length());
 }
 
 void
@@ -126,30 +125,27 @@ DisplayItemClip::ApplyRoundedRectClipsTo(gfxContext* aContext,
 void
 DisplayItemClip::FillIntersectionOfRoundedRectClips(gfxContext* aContext,
                                                     const Color& aColor,
-                                                    int32_t aAppUnitsPerDevPixel,
-                                                    uint32_t aBegin,
-                                                    uint32_t aEnd) const
+                                                    int32_t aAppUnitsPerDevPixel) const
 {
   DrawTarget& aDrawTarget = *aContext->GetDrawTarget();
 
-  aEnd = std::min<uint32_t>(aEnd, mRoundedClipRects.Length());
-
-  if (aBegin >= aEnd) {
+  uint32_t end = mRoundedClipRects.Length();
+  if (!end) {
     return;
   }
 
   // Push clips for any rects that come BEFORE the rect at |aEnd - 1|, if any:
-  ApplyRoundedRectClipsTo(aContext, aAppUnitsPerDevPixel, aBegin, aEnd - 1);
+  ApplyRoundedRectClipsTo(aContext, aAppUnitsPerDevPixel, 0, end - 1);
 
   // Now fill the rect at |aEnd - 1|:
   RefPtr<Path> roundedRect = MakeRoundedRectPath(aDrawTarget,
                                                  aAppUnitsPerDevPixel,
-                                                 mRoundedClipRects[aEnd - 1]);
+                                                 mRoundedClipRects[end - 1]);
   ColorPattern color(ToDeviceColor(aColor));
   aDrawTarget.Fill(roundedRect, color);
 
   // Finally, pop any clips that we may have pushed:
-  for (uint32_t i = aBegin; i < aEnd - 1; ++i) {
+  for (uint32_t i = 0; i < end - 1; ++i) {
     aContext->PopClip();
   }
 }
@@ -358,16 +354,13 @@ AccumulateRectDifference(const nsRect& aR1, const nsRect& aR2, const nsRect& aBo
 }
 
 void
-DisplayItemClip::AddOffsetAndComputeDifference(uint32_t aStart,
-                                               const nsPoint& aOffset,
+DisplayItemClip::AddOffsetAndComputeDifference(const nsPoint& aOffset,
                                                const nsRect& aBounds,
                                                const DisplayItemClip& aOther,
-                                               uint32_t aOtherStart,
                                                const nsRect& aOtherBounds,
                                                nsRegion* aDifference)
 {
   if (mHaveClipRect != aOther.mHaveClipRect ||
-      aStart != aOtherStart ||
       mRoundedClipRects.Length() != aOther.mRoundedClipRects.Length()) {
     aDifference->Or(*aDifference, aBounds);
     aDifference->Or(*aDifference, aOtherBounds);
@@ -378,7 +371,7 @@ DisplayItemClip::AddOffsetAndComputeDifference(uint32_t aStart,
                              aBounds.Union(aOtherBounds),
                              aDifference);
   }
-  for (uint32_t i = aStart; i < mRoundedClipRects.Length(); ++i) {
+  for (uint32_t i = 0; i < mRoundedClipRects.Length(); ++i) {
     if (mRoundedClipRects[i] + aOffset != aOther.mRoundedClipRects[i]) {
       // The corners make it tricky so we'll just add both rects here.
       aDifference->Or(*aDifference, mRoundedClipRects[i].mRect.Intersect(aBounds));
@@ -387,27 +380,10 @@ DisplayItemClip::AddOffsetAndComputeDifference(uint32_t aStart,
   }
 }
 
-uint32_t
-DisplayItemClip::GetCommonRoundedRectCount(const DisplayItemClip& aOther,
-                                           uint32_t aMax) const
-{
-  uint32_t end = std::min(std::min(mRoundedClipRects.Length(), size_t(aMax)),
-                          aOther.mRoundedClipRects.Length());
-  uint32_t clipCount = 0;
-  for (; clipCount < end; ++clipCount) {
-    if (mRoundedClipRects[clipCount] !=
-        aOther.mRoundedClipRects[clipCount]) {
-      return clipCount;
-    }
-  }
-  return clipCount;
-}
-
 void
-DisplayItemClip::AppendRoundedRects(nsTArray<RoundedRect>* aArray, uint32_t aCount) const
+DisplayItemClip::AppendRoundedRects(nsTArray<RoundedRect>* aArray) const
 {
-  size_t count = std::min(mRoundedClipRects.Length(), size_t(aCount));
-  aArray->AppendElements(mRoundedClipRects.Elements(), count);
+  aArray->AppendElements(mRoundedClipRects.Elements(), mRoundedClipRects.Length());
 }
 
 bool

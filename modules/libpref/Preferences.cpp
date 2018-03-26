@@ -3217,9 +3217,7 @@ CheckTelemetryPref()
   DebugOnly<bool> value;
   MOZ_ASSERT(NS_SUCCEEDED(Preferences::GetBool(kTelemetryPref, &value)) &&
              value == TelemetryPrefValue());
-  // njn: uncomment after bug 1436911 lands; it ensures that the locked status
-  //      is passed correctly
-  // MOZ_ASSERT(Preferences::IsLocked(kTelemetryPref));
+  MOZ_ASSERT(Preferences::IsLocked(kTelemetryPref));
 }
 
 #endif // MOZ_WIDGET_ANDROID

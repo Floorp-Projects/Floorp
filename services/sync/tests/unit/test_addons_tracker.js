@@ -9,8 +9,15 @@ ChromeUtils.import("resource://services-sync/constants.js");
 ChromeUtils.import("resource://services-sync/service.js");
 ChromeUtils.import("resource://services-sync/util.js");
 
-loadAddonTestFunctions();
-startupManager();
+AddonTestUtils.init(this);
+AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+AddonTestUtils.overrideCertDB();
+
+Services.prefs.setCharPref("extensions.minCompatibleAppVersion", "0");
+Services.prefs.setCharPref("extensions.minCompatiblePlatformVersion", "0");
+Services.prefs.setBoolPref("extensions.legacy.enabled", true);
+
+AddonTestUtils.awaitPromise(AddonTestUtils.promiseStartupManager());
 Svc.Prefs.set("engine.addons", true);
 
 let engine;
@@ -19,6 +26,33 @@ let store;
 let tracker;
 
 const addon1ID = "addon1@tests.mozilla.org";
+
+const ADDONS = {
+  test_bootstrap1_1: {
+    "install.rdf": {
+      id: "bootstrap1@tests.mozilla.org",
+      version: "1.0",
+      bootstrap: "true",
+      multiprocessCompatible: "true",
+      name: "Test Bootstrap 1",
+      description: "Test Description",
+
+      iconURL: "chrome://foo/skin/icon.png",
+      aboutURL: "chrome://foo/content/about.xul",
+      optionsURL: "chrome://foo/content/options.xul",
+
+      targetApplications: [{
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1"}],
+    },
+  },
+};
+
+const XPIS = {};
+for (let [name, files] of Object.entries(ADDONS)) {
+  XPIS[name] = AddonTestUtils.createTempXPIFile(files);
+}
 
 async function cleanup() {
   tracker.stop();
@@ -56,7 +90,7 @@ add_task(async function test_empty() {
 add_task(async function test_not_tracking() {
   _("Ensures the tracker doesn't do anything when it isn't tracking.");
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
   await uninstallAddon(addon, reconciler);
 
   Assert.equal(0, Object.keys((await tracker.getChangedIDs())).length);
@@ -73,7 +107,7 @@ add_task(async function test_track_install() {
   tracker.start();
 
   Assert.equal(0, tracker.score);
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
   let changed = await tracker.getChangedIDs();
 
   Assert.equal(1, Object.keys(changed).length);
@@ -89,7 +123,7 @@ add_task(async function test_track_uninstall() {
 
   reconciler.startListening();
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
   let guid = addon.syncGUID;
   Assert.equal(0, tracker.score);
 
@@ -109,7 +143,7 @@ add_task(async function test_track_user_disable() {
 
   reconciler.startListening();
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
   Assert.ok(!addon.userDisabled);
   Assert.ok(!addon.appDisabled);
   Assert.ok(addon.isActive);
@@ -153,7 +187,7 @@ add_task(async function test_track_enable() {
 
   reconciler.startListening();
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
   addon.userDisabled = true;
   await Async.promiseYield();
 
