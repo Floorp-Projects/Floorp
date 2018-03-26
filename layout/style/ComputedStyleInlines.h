@@ -21,61 +21,61 @@
 
 namespace mozilla {
 
-#define STYLE_STRUCT(name_, checkdata_cb_)                      \
-const nsStyle##name_ *                                          \
-ComputedStyle::Style##name_() {                                \
-  return DoGetStyle##name_<true>();                             \
-}                                                               \
-const nsStyle##name_ *                                          \
-ComputedStyle::ThreadsafeStyle##name_() {                      \
-  if (mozilla::ServoStyleSet::IsInServoTraversal()) {           \
-    return ComputedData()->GetStyle##name_();                   \
-  }                                                             \
-  return Style##name_();                                        \
-}                                                               \
-const nsStyle##name_ * ComputedStyle::PeekStyle##name_() {     \
-  return DoGetStyle##name_<false>();                            \
+#define STYLE_STRUCT(name_)                                 \
+const nsStyle##name_ *                                      \
+ComputedStyle::Style##name_() {                             \
+  return DoGetStyle##name_<true>();                         \
+}                                                           \
+const nsStyle##name_ *                                      \
+ComputedStyle::ThreadsafeStyle##name_() {                   \
+  if (mozilla::ServoStyleSet::IsInServoTraversal()) {       \
+    return ComputedData()->GetStyle##name_();               \
+  }                                                         \
+  return Style##name_();                                    \
+}                                                           \
+const nsStyle##name_ * ComputedStyle::PeekStyle##name_() {  \
+  return DoGetStyle##name_<false>();                        \
 }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
 // Helper functions for GetStyle* and PeekStyle*
-#define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                         \
-template<bool aComputeData>                                                  \
+#define STYLE_STRUCT_INHERITED(name_)                                       \
+template<bool aComputeData>                                                 \
 const nsStyle##name_ * ComputedStyle::DoGetStyle##name_() {                 \
-  const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));         \
-  if (!aComputeData && needToCompute) {                                      \
-    return nullptr;                                                          \
-  }                                                                          \
-                                                                             \
-  const nsStyle##name_* data = ComputedData()->GetStyle##name_();            \
-                                                                             \
-  /* perform any remaining main thread work on the struct */                 \
-  if (needToCompute) {                                                       \
-    MOZ_ASSERT(NS_IsMainThread());                                           \
-    MOZ_ASSERT(!mozilla::ServoStyleSet::IsInServoTraversal());               \
-    const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext(), nullptr);  \
-    /* the ComputedStyle owns the struct */                              \
-    AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                                \
-  }                                                                          \
-  return data;                                                               \
+  const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));        \
+  if (!aComputeData && needToCompute) {                                     \
+    return nullptr;                                                         \
+  }                                                                         \
+                                                                            \
+  const nsStyle##name_* data = ComputedData()->GetStyle##name_();           \
+                                                                            \
+  /* perform any remaining main thread work on the struct */                \
+  if (needToCompute) {                                                      \
+    MOZ_ASSERT(NS_IsMainThread());                                          \
+    MOZ_ASSERT(!mozilla::ServoStyleSet::IsInServoTraversal());              \
+    const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext(), nullptr); \
+    /* the ComputedStyle owns the struct */                                 \
+    AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                               \
+  }                                                                         \
+  return data;                                                              \
 }
 
-#define STYLE_STRUCT_RESET(name_, checkdata_cb_)                              \
-template<bool aComputeData>                                                   \
-const nsStyle##name_ * ComputedStyle::DoGetStyle##name_() {                  \
-  const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));          \
-  if (!aComputeData && needToCompute) {                                       \
-    return nullptr;                                                           \
-  }                                                                           \
-  const nsStyle##name_* data = ComputedData()->GetStyle##name_();             \
-  /* perform any remaining main thread work on the struct */                  \
-  if (needToCompute) {                                                        \
-    const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext(), nullptr);   \
-    /* the ComputedStyle owns the struct */                               \
-    AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                                 \
-  }                                                                           \
-  return data;                                                                \
+#define STYLE_STRUCT_RESET(name_)                                           \
+template<bool aComputeData>                                                 \
+const nsStyle##name_ * ComputedStyle::DoGetStyle##name_() {                 \
+  const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));        \
+  if (!aComputeData && needToCompute) {                                     \
+    return nullptr;                                                         \
+  }                                                                         \
+  const nsStyle##name_* data = ComputedData()->GetStyle##name_();           \
+  /* perform any remaining main thread work on the struct */                \
+  if (needToCompute) {                                                      \
+    const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext(), nullptr); \
+    /* the ComputedStyle owns the struct */                                 \
+    AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                               \
+  }                                                                         \
+  return data;                                                              \
 }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT_RESET
@@ -96,7 +96,7 @@ ComputedStyle::ResolveSameStructsAs(const ComputedStyle* aOther)
   uint64_t otherBits = aOther->mBits & NS_STYLE_INHERIT_MASK;
   uint64_t newBits = otherBits & ~ourBits & NS_STYLE_INHERIT_MASK;
 
-#define STYLE_STRUCT(name_, checkdata_cb)                                      \
+#define STYLE_STRUCT(name_)                                                    \
   if (nsStyle##name_::kHasFinishStyle &&                                       \
       (newBits & NS_STYLE_INHERIT_BIT(name_))) {                               \
     const nsStyle##name_* data = ComputedData()->GetStyle##name_();            \
