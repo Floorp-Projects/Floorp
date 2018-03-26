@@ -1090,24 +1090,16 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
   // -moz-binding is blacklisted.
   bool didSanitize = false;
   // Create a sheet to hold the parsed CSS
-  RefPtr<StyleSheet> sheet;
-  if (aDocument->IsStyledByServo()) {
-    sheet = new ServoStyleSheet(mozilla::css::eAuthorSheetFeatures,
-                                CORS_NONE, aDocument->GetReferrerPolicy(),
-                                SRIMetadata());
-  } else {
-    MOZ_CRASH("old style system disabled");
-  }
+  RefPtr<StyleSheet> sheet =
+    new ServoStyleSheet(mozilla::css::eAuthorSheetFeatures,
+                        CORS_NONE, aDocument->GetReferrerPolicy(),
+                        SRIMetadata());
   sheet->SetURIs(aDocument->GetDocumentURI(), nullptr, aBaseURI);
   sheet->SetPrincipal(aDocument->NodePrincipal());
-  if (aDocument->IsStyledByServo()) {
-    sheet->AsServo()->ParseSheetSync(
-      aDocument->CSSLoader(), NS_ConvertUTF16toUTF8(aOriginal),
-      aDocument->GetDocumentURI(), aBaseURI, aDocument->NodePrincipal(),
-      /* aLoadData = */ nullptr, 0, aDocument->GetCompatibilityMode());
-  } else {
-    MOZ_CRASH("old style system disabled");
-  }
+  sheet->AsServo()->ParseSheetSync(
+    aDocument->CSSLoader(), NS_ConvertUTF16toUTF8(aOriginal),
+    aDocument->GetDocumentURI(), aBaseURI, aDocument->NodePrincipal(),
+    /* aLoadData = */ nullptr, 0, aDocument->GetCompatibilityMode());
   NS_ENSURE_SUCCESS(rv, true);
   // Mark the sheet as complete.
   MOZ_ASSERT(!sheet->HasForcedUniqueInner(),
@@ -1177,20 +1169,16 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
 
     if (kNameSpaceID_None == attrNs) {
       if (aAllowStyle && nsGkAtoms::style == attrLocal) {
-        RefPtr<DeclarationBlock> decl;
         nsAutoString value;
         aElement->GetAttr(attrNs, attrLocal, value);
         nsIDocument* document = aElement->OwnerDoc();
-        if (document->IsStyledByServo()) {
-          RefPtr<URLExtraData> urlExtra(aElement->GetURLDataForStyleAttr());
-          decl = ServoDeclarationBlock::FromCssText(
-              value,
-              urlExtra,
-              document->GetCompatibilityMode(),
-              document->CSSLoader());
-        } else {
-          MOZ_CRASH("old style system disabled");
-        }
+        RefPtr<URLExtraData> urlExtra(aElement->GetURLDataForStyleAttr());
+        RefPtr<DeclarationBlock> decl =
+          ServoDeclarationBlock::FromCssText(
+            value,
+            urlExtra,
+            document->GetCompatibilityMode(),
+            document->CSSLoader());
         if (decl) {
           if (SanitizeStyleDeclaration(decl)) {
             nsAutoString cleanValue;

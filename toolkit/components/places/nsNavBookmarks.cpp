@@ -1584,7 +1584,7 @@ nsNavBookmarks::GetItemTitle(int64_t aItemId,
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsNavBookmarks::GetBookmarkURI(int64_t aItemId,
                                nsIURI** _URI)
 {

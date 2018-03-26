@@ -19,7 +19,7 @@ use winapi::CoInitializeEx;
 use winapi::COINIT_MULTITHREADED;
 use winapi::{SysFreeString, SysStringLen};
 use winapi::IUnknown;
-use winapi::{S_OK, S_FALSE, HRESULT};
+use winapi::{HRESULT, S_FALSE, S_OK};
 
 pub fn initialize() -> Result<(), HRESULT> {
     let err = unsafe { CoInitializeEx(null_mut(), COINIT_MULTITHREADED) };
@@ -30,8 +30,13 @@ pub fn initialize() -> Result<(), HRESULT> {
     Ok(())
 }
 
-pub struct ComPtr<T>(*mut T) where T: Interface;
-impl<T> ComPtr<T> where T: Interface {
+pub struct ComPtr<T>(*mut T)
+where
+    T: Interface;
+impl<T> ComPtr<T>
+where
+    T: Interface,
+{
     /// Creates a `ComPtr` to wrap a raw pointer.
     /// It takes ownership over the pointer which means it does __not__ call `AddRef`.
     /// `T` __must__ be a COM interface that inherits from `IUnknown`.
@@ -40,7 +45,11 @@ impl<T> ComPtr<T> where T: Interface {
         ComPtr(ptr)
     }
     /// Casts up the inheritance chain
-    pub fn up<U>(self) -> ComPtr<U> where T: Deref<Target=U>, U: Interface {
+    pub fn up<U>(self) -> ComPtr<U>
+    where
+        T: Deref<Target = U>,
+        U: Interface,
+    {
         ComPtr(self.into_raw() as *mut U)
     }
     /// Extracts the raw pointer.
@@ -55,20 +64,31 @@ impl<T> ComPtr<T> where T: Interface {
         unsafe { &*(self.0 as *mut IUnknown) }
     }
     /// Performs QueryInterface fun.
-    pub fn cast<U>(&self) -> Result<ComPtr<U>, i32> where U: Interface {
+    pub fn cast<U>(&self) -> Result<ComPtr<U>, i32>
+    where
+        U: Interface,
+    {
         let mut obj = null_mut();
         let err = unsafe { self.as_unknown().QueryInterface(&U::uuidof(), &mut obj) };
-        if err < 0 { return Err(err); }
+        if err < 0 {
+            return Err(err);
+        }
         Ok(unsafe { ComPtr::from_raw(obj as *mut U) })
     }
 }
-impl<T> Deref for ComPtr<T> where T: Interface {
+impl<T> Deref for ComPtr<T>
+where
+    T: Interface,
+{
     type Target = T;
     fn deref(&self) -> &T {
         unsafe { &*self.0 }
     }
 }
-impl<T> Clone for ComPtr<T> where T: Interface {
+impl<T> Clone for ComPtr<T>
+where
+    T: Interface,
+{
     fn clone(&self) -> Self {
         unsafe {
             self.as_unknown().AddRef();
@@ -76,9 +96,14 @@ impl<T> Clone for ComPtr<T> where T: Interface {
         }
     }
 }
-impl<T> Drop for ComPtr<T> where T: Interface {
+impl<T> Drop for ComPtr<T>
+where
+    T: Interface,
+{
     fn drop(&mut self) {
-        unsafe { self.as_unknown().Release(); }
+        unsafe {
+            self.as_unknown().Release();
+        }
     }
 }
 pub struct BStr(BSTR);
@@ -102,7 +127,10 @@ pub trait ToWide {
     fn to_wide(&self) -> Vec<u16>;
     fn to_wide_null(&self) -> Vec<u16>;
 }
-impl<T> ToWide for T where T: AsRef<OsStr> {
+impl<T> ToWide for T
+where
+    T: AsRef<OsStr>,
+{
     fn to_wide(&self) -> Vec<u16> {
         self.as_ref().encode_wide().collect()
     }
@@ -110,7 +138,10 @@ impl<T> ToWide for T where T: AsRef<OsStr> {
         self.as_ref().encode_wide().chain(Some(0)).collect()
     }
 }
-pub trait FromWide where Self: Sized {
+pub trait FromWide
+where
+    Self: Sized,
+{
     fn from_wide(wide: &[u16]) -> Self;
     fn from_wide_null(wide: &[u16]) -> Self {
         let len = wide.iter().take_while(|&&c| c != 0).count();
@@ -122,4 +153,3 @@ impl FromWide for OsString {
         OsStringExt::from_wide(wide)
     }
 }
-

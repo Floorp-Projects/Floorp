@@ -877,21 +877,17 @@ MakePropertyValuePair(nsCSSPropertyID aProperty, const nsAString& aStringValue,
   MOZ_ASSERT(aDocument);
   Maybe<PropertyValuePair> result;
 
-  if (aDocument->GetStyleBackendType() == StyleBackendType::Servo) {
-    ServoCSSParser::ParsingEnvironment env =
-      ServoCSSParser::GetParsingEnvironment(aDocument);
-    RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
-      ServoCSSParser::ParseProperty(aProperty, aStringValue, env);
+  ServoCSSParser::ParsingEnvironment env =
+    ServoCSSParser::GetParsingEnvironment(aDocument);
+  RefPtr<RawServoDeclarationBlock> servoDeclarationBlock =
+    ServoCSSParser::ParseProperty(aProperty, aStringValue, env);
 
-    if (servoDeclarationBlock) {
-      result.emplace(aProperty, Move(servoDeclarationBlock));
-    } else {
-      ReportInvalidPropertyValueToConsole(aProperty, aStringValue, aDocument);
-    }
-    return result;
+  if (servoDeclarationBlock) {
+    result.emplace(aProperty, Move(servoDeclarationBlock));
+  } else {
+    ReportInvalidPropertyValueToConsole(aProperty, aStringValue, aDocument);
   }
-
-  MOZ_CRASH("old style system disabled");
+  return result;
 }
 
 /**
@@ -948,7 +944,6 @@ GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
                           const ComputedStyle* aComputedStyle)
 {
   MOZ_ASSERT(aElement);
-  MOZ_ASSERT(aElement->IsStyledByServo());
 
   nsTArray<ComputedKeyframeValues> result;
 
@@ -1468,8 +1463,6 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
     }
   };
 
-  StyleBackendType styleBackend = aDocument->GetStyleBackendType();
-
   for (size_t i = 0, len = aKeyframes.Length(); i < len; i++) {
     const Keyframe& frame = aKeyframes[i];
 
@@ -1486,12 +1479,7 @@ RequiresAdditiveAnimation(const nsTArray<Keyframe>& aKeyframes,
 
     for (const PropertyValuePair& pair : frame.mPropertyValues) {
       if (nsCSSProps::IsShorthand(pair.mProperty)) {
-        if (styleBackend == StyleBackendType::Gecko) {
-          MOZ_CRASH("old style system disabled");
-        }
-
-        MOZ_ASSERT(styleBackend != StyleBackendType::Servo ||
-                   pair.mServoDeclarationBlock);
+        MOZ_ASSERT(pair.mServoDeclarationBlock);
         CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(
             prop, pair.mProperty, CSSEnabledState::eForAllContent) {
           addToPropertySets(*prop, offsetToUse);

@@ -8,9 +8,7 @@ mod support;
 #[test]
 fn gnu_smoke() {
     let test = Test::gnu();
-    test.gcc()
-        .file("foo.c")
-        .compile("foo");
+    test.gcc().file("foo.c").compile("foo");
 
     test.cmd(0)
         .must_have("-O2")
@@ -25,23 +23,15 @@ fn gnu_smoke() {
 #[test]
 fn gnu_opt_level_1() {
     let test = Test::gnu();
-    test.gcc()
-        .opt_level(1)
-        .file("foo.c")
-        .compile("foo");
+    test.gcc().opt_level(1).file("foo.c").compile("foo");
 
-    test.cmd(0)
-        .must_have("-O1")
-        .must_not_have("-O2");
+    test.cmd(0).must_have("-O1").must_not_have("-O2");
 }
 
 #[test]
 fn gnu_opt_level_s() {
     let test = Test::gnu();
-    test.gcc()
-        .opt_level_str("s")
-        .file("foo.c")
-        .compile("foo");
+    test.gcc().opt_level_str("s").file("foo.c").compile("foo");
 
     test.cmd(0)
         .must_have("-Os")
@@ -54,10 +44,7 @@ fn gnu_opt_level_s() {
 #[test]
 fn gnu_debug() {
     let test = Test::gnu();
-    test.gcc()
-        .debug(true)
-        .file("foo.c")
-        .compile("foo");
+    test.gcc().debug(true).file("foo.c").compile("foo");
     test.cmd(0).must_have("-g");
 }
 
@@ -81,8 +68,7 @@ fn gnu_warnings() {
         .file("foo.c")
         .compile("foo");
 
-    test.cmd(0).must_have("-Wall")
-               .must_have("-Wextra");
+    test.cmd(0).must_have("-Wall").must_have("-Wextra");
 }
 
 #[test]
@@ -94,7 +80,8 @@ fn gnu_warnings_overridable() {
         .file("foo.c")
         .compile("foo");
 
-    test.cmd(0).must_have_in_order("-Wall", "-Wno-missing-field-initializers");
+    test.cmd(0)
+        .must_have_in_order("-Wall", "-Wno-missing-field-initializers");
 }
 
 #[test]
@@ -108,9 +95,7 @@ fn gnu_x86_64() {
             .file("foo.c")
             .compile("foo");
 
-        test.cmd(0)
-            .must_have("-fPIC")
-            .must_have("-m64");
+        test.cmd(0).must_have("-fPIC").must_have("-m64");
     }
 }
 
@@ -141,8 +126,7 @@ fn gnu_i686() {
             .file("foo.c")
             .compile("foo");
 
-        test.cmd(0)
-            .must_have("-m32");
+        test.cmd(0).must_have("-m32");
     }
 }
 
@@ -176,10 +160,7 @@ fn gnu_set_stdlib() {
 #[test]
 fn gnu_include() {
     let test = Test::gnu();
-    test.gcc()
-        .include("foo/bar")
-        .file("foo.c")
-        .compile("foo");
+    test.gcc().include("foo/bar").file("foo.c").compile("foo");
 
     test.cmd(0).must_have("-I").must_have("foo/bar");
 }
@@ -199,9 +180,7 @@ fn gnu_define() {
 #[test]
 fn gnu_compile_assembly() {
     let test = Test::gnu();
-    test.gcc()
-        .file("foo.S")
-        .compile("foo");
+    test.gcc().file("foo.S").compile("foo");
     test.cmd(0).must_have("foo.S");
 }
 
@@ -214,15 +193,13 @@ fn gnu_shared() {
         .static_flag(false)
         .compile("foo");
 
-    test.cmd(0)
-        .must_have("-shared")
-        .must_not_have("-static");
+    test.cmd(0).must_have("-shared").must_not_have("-static");
 }
 
 #[test]
 fn gnu_flag_if_supported() {
     if cfg!(windows) {
-        return
+        return;
     }
     let test = Test::gnu();
     test.gcc()
@@ -241,7 +218,7 @@ fn gnu_flag_if_supported() {
 #[test]
 fn gnu_flag_if_supported_cpp() {
     if cfg!(windows) {
-        return
+        return;
     }
     let test = Test::gnu();
     test.gcc()
@@ -250,8 +227,7 @@ fn gnu_flag_if_supported_cpp() {
         .flag_if_supported("-std=c++11")
         .compile("foo");
 
-    test.cmd(0)
-        .must_have("-std=c++11");
+    test.cmd(0).must_have("-std=c++11");
 }
 
 #[test]
@@ -263,17 +239,13 @@ fn gnu_static() {
         .static_flag(true)
         .compile("foo");
 
-    test.cmd(0)
-        .must_have("-static")
-        .must_not_have("-shared");
+    test.cmd(0).must_have("-static").must_not_have("-shared");
 }
 
 #[test]
 fn msvc_smoke() {
     let test = Test::msvc();
-    test.gcc()
-        .file("foo.c")
-        .compile("foo");
+    test.gcc().file("foo.c").compile("foo");
 
     test.cmd(0)
         .must_have("/O2")
@@ -287,10 +259,7 @@ fn msvc_smoke() {
 #[test]
 fn msvc_opt_level_0() {
     let test = Test::msvc();
-    test.gcc()
-        .opt_level(0)
-        .file("foo.c")
-        .compile("foo");
+    test.gcc().opt_level(0).file("foo.c").compile("foo");
 
     test.cmd(0).must_not_have("/O2");
 }
@@ -298,20 +267,14 @@ fn msvc_opt_level_0() {
 #[test]
 fn msvc_debug() {
     let test = Test::msvc();
-    test.gcc()
-        .debug(true)
-        .file("foo.c")
-        .compile("foo");
+    test.gcc().debug(true).file("foo.c").compile("foo");
     test.cmd(0).must_have("/Z7");
 }
 
 #[test]
 fn msvc_include() {
     let test = Test::msvc();
-    test.gcc()
-        .include("foo/bar")
-        .file("foo.c")
-        .compile("foo");
+    test.gcc().include("foo/bar").file("foo.c").compile("foo");
 
     test.cmd(0).must_have("/I").must_have("foo/bar");
 }
@@ -331,10 +294,7 @@ fn msvc_define() {
 #[test]
 fn msvc_static_crt() {
     let test = Test::msvc();
-    test.gcc()
-        .static_crt(true)
-        .file("foo.c")
-        .compile("foo");
+    test.gcc().static_crt(true).file("foo.c").compile("foo");
 
     test.cmd(0).must_have("/MT");
 }
@@ -342,10 +302,7 @@ fn msvc_static_crt() {
 #[test]
 fn msvc_no_static_crt() {
     let test = Test::msvc();
-    test.gcc()
-        .static_crt(false)
-        .file("foo.c")
-        .compile("foo");
+    test.gcc().static_crt(false).file("foo.c").compile("foo");
 
     test.cmd(0).must_have("/MD");
 }

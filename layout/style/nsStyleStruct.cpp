@@ -57,7 +57,7 @@ static_assert((((1 << nsStyleStructID_Length) - 1) &
 // are allocated by Servo side with Arc, the total size doesn't exceed
 // 512 bytes, which minimizes allocator slop.
 static constexpr size_t kStyleStructSizeLimit = 504;
-#define STYLE_STRUCT(name_, checkdata_cb_) \
+#define STYLE_STRUCT(name_) \
   static_assert(sizeof(nsStyle##name_) <= kStyleStructSizeLimit, \
                 "nsStyle" #name_ " became larger than the size limit");
 #include "nsStyleStructList.h"

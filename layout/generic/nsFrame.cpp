@@ -10763,12 +10763,9 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(
   // 2) Content can change stylesheets that change the styles of pseudos, and
   //    extensions can add/remove stylesheets that change the styles of
   //    anonymous boxes directly.
-  uint32_t equalStructs, samePointerStructs; // Not used, actually.
-  nsChangeHint childHint = aChildFrame->Style()->CalcStyleDifference(
-    aNewComputedStyle,
-    &equalStructs,
-    &samePointerStructs,
-    /* aIgnoreVariables = */ true);
+  uint32_t equalStructs; // Not used, actually.
+  nsChangeHint childHint =
+    aChildFrame->Style()->CalcStyleDifference(aNewComputedStyle, &equalStructs);
 
   // CalcStyleDifference will handle caching structs on the new style, but only
   // if we're not on a style worker thread.

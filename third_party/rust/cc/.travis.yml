@@ -12,10 +12,16 @@ matrix:
       env: TARGET=i686-unknown-linux-gnu
     - os: osx
       env: TARGET=x86_64-apple-darwin NO_ADD=1
+    - os: osx
+      env: TARGET=aarch64-apple-ios NO_RUN=--no-run TARGET_SYSROOT=$(xcrun -sdk iphoneos --show-sdk-path)
     - rust: beta
       env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
     - rust: nightly
       env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+    - install: rustup component add rustfmt-preview
+      script:
+        - cargo fmt -- --write-mode diff
+        - (cd cc-test && cargo fmt -- --write-mode diff)
 
     - rust: nightly
       before_script:
@@ -31,11 +37,11 @@ install:
 
 script:
   - cargo build --verbose
-  - cargo test --verbose
-  - cargo test --verbose --features parallel
-  - cargo test --manifest-path cc-test/Cargo.toml --target $TARGET
-  - cargo test --manifest-path cc-test/Cargo.toml --target $TARGET --features parallel
-  - cargo test --manifest-path cc-test/Cargo.toml --target $TARGET --release
+  - cargo test --verbose $NO_RUN
+  - cargo test --verbose --features parallel $NO_RUN
+  - cargo test --manifest-path cc-test/Cargo.toml --target $TARGET $NO_RUN
+  - cargo test --manifest-path cc-test/Cargo.toml --target $TARGET --features parallel $NO_RUN
+  - cargo test --manifest-path cc-test/Cargo.toml --target $TARGET --release $NO_RUN
   - cargo doc
   - cargo clean && cargo build
   - rustdoc --test README.md -L target/debug -L target/debug/deps

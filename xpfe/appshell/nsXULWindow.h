@@ -157,6 +157,7 @@ protected:
    bool                    mContinueModalLoop;
    bool                    mDebuting;       // being made visible right now
    bool                    mChromeLoaded; // True when chrome has loaded
+   bool                    mSizingShellFromXUL; // true when in SizeShell()
    bool                    mShowAfterLoad;
    bool                    mIntrinsicallySized;
    bool                    mCenterAfterLoad;

@@ -85,7 +85,9 @@ impl Test {
             .unwrap()
             .read_to_string(&mut s)
             .unwrap();
-        Execution { args: s.lines().map(|s| s.to_string()).collect() }
+        Execution {
+            args: s.lines().map(|s| s.to_string()).collect(),
+        }
     }
 }
 
@@ -111,11 +113,18 @@ impl Execution {
     }
 
     pub fn must_have_in_order(&self, before: &str, after: &str) -> &Execution {
-        let before_position = self.args.iter().rposition(|x| OsStr::new(x) == OsStr::new(before));
-        let after_position = self.args.iter().rposition(|x| OsStr::new(x) == OsStr::new(after));
+        let before_position = self.args
+            .iter()
+            .rposition(|x| OsStr::new(x) == OsStr::new(before));
+        let after_position = self.args
+            .iter()
+            .rposition(|x| OsStr::new(x) == OsStr::new(after));
         match (before_position, after_position) {
-            (Some(b), Some(a)) if b < a => {},
-            (b, a) => { panic!("{:?} (last position: {:?}) did not appear before {:?} (last position: {:?})", before, b, after, a) },
+            (Some(b), Some(a)) if b < a => {}
+            (b, a) => panic!(
+                "{:?} (last position: {:?}) did not appear before {:?} (last position: {:?})",
+                before, b, after, a
+            ),
         };
         self
     }

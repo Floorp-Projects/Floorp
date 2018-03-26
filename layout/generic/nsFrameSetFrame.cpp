@@ -280,14 +280,10 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
       // the restyle flags, like nsCSSFrameConstructor::ProcessChildren does.
       for (; child; child = child->GetNextSibling()) {
         child->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
-        child->UnsetRestyleFlagsIfGecko();
       }
       break;
     }
     child->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
-    // Also clear the restyle flags in the child like
-    // nsCSSFrameConstructor::ProcessChildren does.
-    child->UnsetRestyleFlagsIfGecko();
 
     // IMPORTANT: This must match the conditions in
     // nsCSSFrameConstructor::ContentAppended/Inserted/Removed

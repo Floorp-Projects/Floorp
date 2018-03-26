@@ -15,8 +15,8 @@ namespace dom {
 class WebKitCSSMatrix final : public DOMMatrix
 {
 public:
-  WebKitCSSMatrix(nsISupports* aParent, bool aIsServo)
-    : DOMMatrix(aParent, aIsServo)
+  explicit WebKitCSSMatrix(nsISupports* aParent)
+    : DOMMatrix(aParent)
   {}
 
   WebKitCSSMatrix(nsISupports* aParent, const DOMMatrixReadOnly& other)

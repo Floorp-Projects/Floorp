@@ -124,7 +124,6 @@ add_task(async function test_bookmarks() {
   Assert.equal(bookmarksObserver._itemAddedParent, testRoot);
   Assert.equal(bookmarksObserver._itemAddedIndex, testStartIndex);
   Assert.ok(bookmarksObserver._itemAddedURI.equals(uri("http://google.com/")));
-  Assert.equal(bs.getBookmarkURI(newId).spec, "http://google.com/");
 
   // after just inserting, modified should not be set
   let lastModified = PlacesUtils.toPRTime((await PlacesUtils.bookmarks.fetch(
@@ -309,18 +308,6 @@ add_task(async function test_bookmarks() {
   lastModified -= 1000;
   bs.setItemLastModified(newId10, lastModified);
 
-  // test getBookmarkURI
-  let newId11 = bs.insertBookmark(testRoot, uri("http://foo10.com/"),
-                                  bs.DEFAULT_INDEX, "");
-  let bmURI = bs.getBookmarkURI(newId11);
-  Assert.equal("http://foo10.com/", bmURI.spec);
-
-  // test getBookmarkURI with non-bookmark items
-  try {
-    bs.getBookmarkURI(testRoot);
-    do_throw("getBookmarkURI() should throw for non-bookmark items!");
-  } catch (ex) {}
-
   // insert a bookmark with title ZZZXXXYYY and then search for it.
   // this test confirms that we can find bookmarks that we haven't visited
   // (which are "hidden") and that we can find by title.
@@ -329,7 +316,7 @@ add_task(async function test_bookmarks() {
                                   bs.DEFAULT_INDEX, "");
   Assert.equal(bookmarksObserver._itemAddedId, newId13);
   Assert.equal(bookmarksObserver._itemAddedParent, testRoot);
-  Assert.equal(bookmarksObserver._itemAddedIndex, 7);
+  Assert.equal(bookmarksObserver._itemAddedIndex, 6);
 
   // set bookmark title
   bs.setItemTitle(newId13, "ZZZXXXYYY");

@@ -52,7 +52,7 @@ struct nsStyleSizes
 {
   nsStyleSizes()
     :
-      #define STYLE_STRUCT(name_, cb_) \
+      #define STYLE_STRUCT(name_) \
         NS_STYLE_SIZES_FIELD(name_)(0),
       #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
       #include "nsStyleStructList.h"
@@ -64,7 +64,7 @@ struct nsStyleSizes
 
   void addToTabSizes(nsTabSizes* aSizes) const
   {
-    #define STYLE_STRUCT(name_, cb_) \
+    #define STYLE_STRUCT(name_) \
       aSizes->add(nsTabSizes::Style, NS_STYLE_SIZES_FIELD(name_));
     #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
     #include "nsStyleStructList.h"
@@ -76,7 +76,7 @@ struct nsStyleSizes
   {
     size_t total = 0;
 
-    #define STYLE_STRUCT(name_, cb_) \
+    #define STYLE_STRUCT(name_) \
       total += NS_STYLE_SIZES_FIELD(name_);
     #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
     #include "nsStyleStructList.h"
@@ -86,7 +86,7 @@ struct nsStyleSizes
     return total;
   }
 
-  #define STYLE_STRUCT(name_, cb_) \
+  #define STYLE_STRUCT(name_) \
     size_t NS_STYLE_SIZES_FIELD(name_);
   #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
   #include "nsStyleStructList.h"

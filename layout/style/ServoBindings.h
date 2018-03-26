@@ -82,12 +82,12 @@ const bool GECKO_IS_NIGHTLY = false;
 #endif
 
 namespace mozilla {
-  #define STYLE_STRUCT(name_, checkdata_cb_) struct Gecko##name_ {nsStyle##name_ gecko;};
+  #define STYLE_STRUCT(name_) struct Gecko##name_ {nsStyle##name_ gecko;};
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
 }
 
-#define STYLE_STRUCT(name_, checkdata_cb_) \
+#define STYLE_STRUCT(name_) \
   const nsStyle##name_* ServoComputedData::GetStyle##name_() const { return &name_.mPtr->gecko; }
 #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
@@ -657,12 +657,12 @@ void Gecko_AddPropertyToSet(nsCSSPropertyIDSetBorrowedMut, nsCSSPropertyID);
 int32_t Gecko_RegisterNamespace(nsAtom* ns);
 
 // Style-struct management.
-#define STYLE_STRUCT(name, checkdata_cb)                                       \
-  void Gecko_Construct_Default_nsStyle##name(                                  \
-    nsStyle##name* ptr,                                                        \
-    RawGeckoPresContextBorrowed pres_context);                                 \
-  void Gecko_CopyConstruct_nsStyle##name(nsStyle##name* ptr,                   \
-                                         const nsStyle##name* other);          \
+#define STYLE_STRUCT(name)                                            \
+  void Gecko_Construct_Default_nsStyle##name(                         \
+    nsStyle##name* ptr,                                               \
+    RawGeckoPresContextBorrowed pres_context);                        \
+  void Gecko_CopyConstruct_nsStyle##name(nsStyle##name* ptr,          \
+                                         const nsStyle##name* other); \
   void Gecko_Destroy_nsStyle##name(nsStyle##name* ptr);
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
