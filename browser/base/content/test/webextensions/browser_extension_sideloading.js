@@ -31,6 +31,7 @@ async function createXULExtension(details) {
       id: details.id,
       name: details.name,
       version: "0.1",
+      bootstrap: true,
       targetApplications: [{
         id: "toolkit@mozilla.org",
         minVersion: "0",

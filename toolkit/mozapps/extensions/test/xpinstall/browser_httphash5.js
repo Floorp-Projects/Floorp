@@ -11,7 +11,7 @@ function test() {
   Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, false);
 
   var url = "https://example.com/browser/" + RELATIVE_DIR + "hashRedirect.sjs";
-  url += "?sha1:36ffb0acfd9c6e9682473aaebaab394d38b473c9|";
+  url += "?sha1:ee95834ad862245a9ef99ccecc2a857cadc16404|";
   url += "https://example.com/browser/" + RELATIVE_DIR + "hashRedirect.sjs";
   url += "?sha1:foobar|" + TESTROOT + "amosigned.xpi";
 
