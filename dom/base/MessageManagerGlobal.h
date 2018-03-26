@@ -127,40 +127,10 @@ public:
   }
 
   // MessageManagerGlobal
-  void Dump(const nsAString& aStr, ErrorResult& aError)
-  {
-    if (!mMessageManager) {
-      aError.Throw(NS_ERROR_NULL_POINTER);
-      return;
-    }
-    aError = mMessageManager->Dump(aStr);
-  }
-  void PrivateNoteIntentionalCrash(ErrorResult& aError)
-  {
-    if (!mMessageManager) {
-      aError.Throw(NS_ERROR_NULL_POINTER);
-      return;
-    }
-    aError = mMessageManager->PrivateNoteIntentionalCrash();
-  }
-  void Atob(const nsAString& aAsciiString, nsAString& aBase64Data,
-            ErrorResult& aError)
-  {
-    if (!mMessageManager) {
-      aError.Throw(NS_ERROR_NULL_POINTER);
-      return;
-    }
-    aError = mMessageManager->Atob(aAsciiString, aBase64Data);
-  }
-  void Btoa(const nsAString& aBase64Data, nsAString& aAsciiString,
-            ErrorResult& aError)
-  {
-    if (!mMessageManager) {
-      aError.Throw(NS_ERROR_NULL_POINTER);
-      return;
-    }
-    aError = mMessageManager->Btoa(aBase64Data, aAsciiString);
-  }
+  void Dump(const nsAString& aStr);
+  void PrivateNoteIntentionalCrash(ErrorResult& aError);
+  void Atob(const nsAString& aAsciiString, nsAString& aBase64Data, ErrorResult& aError);
+  void Btoa(const nsAString& aBase64Data, nsAString& aAsciiString, ErrorResult& aError);
 
   bool MarkForCC()
   {

@@ -278,6 +278,7 @@ UNIFIED_SOURCES += [
     'Link.cpp',
     'Location.cpp',
     'MessageListenerManager.cpp',
+    'MessageManagerGlobal.cpp',
     'MessageSender.cpp',
     'Navigator.cpp',
     'NodeInfo.cpp',

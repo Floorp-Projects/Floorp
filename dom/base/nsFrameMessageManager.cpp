@@ -30,11 +30,9 @@
 #include "nsIScriptSecurityManager.h"
 #include "xpcpublic.h"
 #include "mozilla/CycleCollectedJSContext.h"
-#include "mozilla/IntentionalCrash.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ChildProcessMessageManager.h"
 #include "mozilla/dom/ChromeMessageBroadcaster.h"
 #include "mozilla/dom/ChromeMessageSender.h"
@@ -58,11 +56,7 @@
 #include <algorithm>
 #include "chrome/common/ipc_channel.h" // for IPC::Channel::kMaximumMessageSize
 
-#ifdef ANDROID
-#include <android/log.h>
-#endif
 #ifdef XP_WIN
-#include <windows.h>
 # if defined(SendMessage)
 #  undef SendMessage
 # endif
@@ -869,52 +863,6 @@ nsFrameMessageManager::ReleaseCachedProcesses()
 {
   ContentParent::ReleaseCachedProcesses();
   return NS_OK;
-}
-
-// nsIContentFrameMessageManager
-
-NS_IMETHODIMP
-nsFrameMessageManager::Dump(const nsAString& aStr)
-{
-  if (!DOMPrefs::DumpEnabled()) {
-    return NS_OK;
-  }
-
-#ifdef ANDROID
-  __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", NS_ConvertUTF16toUTF8(aStr).get());
-#endif
-#ifdef XP_WIN
-  if (IsDebuggerPresent()) {
-    OutputDebugStringW(PromiseFlatString(aStr).get());
-  }
-#endif
-  fputs(NS_ConvertUTF16toUTF8(aStr).get(), stdout);
-  fflush(stdout);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::PrivateNoteIntentionalCrash()
-{
-  if (XRE_IsContentProcess()) {
-    mozilla::NoteIntentionalCrash("tab");
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::Btoa(const nsAString& aBinaryData,
-                            nsAString& aAsciiBase64String)
-{
-  return nsContentUtils::Btoa(aBinaryData, aAsciiBase64String);
-}
-
-NS_IMETHODIMP
-nsFrameMessageManager::Atob(const nsAString& aAsciiString,
-                            nsAString& aBinaryData)
-{
-  return nsContentUtils::Atob(aAsciiString, aBinaryData);
 }
 
 class MMListenerRemover
