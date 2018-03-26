@@ -31,7 +31,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLStyleElement,
                                            nsGenericHTMLElement)
 
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) override;
+  void GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aRv) override;
   using nsGenericHTMLElement::SetInnerHTML;
   virtual void SetInnerHTML(const nsAString& aInnerHTML,
                             nsIPrincipal* aSubjectPrincipal,
