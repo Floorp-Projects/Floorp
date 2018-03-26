@@ -41,12 +41,6 @@ interface nsIPrincipal;
 #define kHTMLContext   "text/_moz_htmlcontext"
 #define kHTMLInfo      "text/_moz_htmlinfo"
 
-// Holds the MIME type from the image request. This is used to ensure the
-// local application handler for the request's MIME type accepts images with
-// the given filename extension (from kFilePromiseDestFilename). When the
-// image is dragged out, we replace the extension with a compatible extension.
-#define kImageRequestMime           "text/_moz_requestmime"
-
 // the source URL for a file promise
 #define kFilePromiseURLMime         "application/x-moz-file-promise-url"
 // the destination filename for a file promise
