@@ -136,14 +136,6 @@ UIEvent::GetMovementPoint()
   return current - last;
 }
 
-NS_IMETHODIMP
-UIEvent::GetView(mozIDOMWindowProxy** aView)
-{
-  *aView = mView;
-  NS_IF_ADDREF(*aView);
-  return NS_OK;
-}
-
 void
 UIEvent::InitUIEvent(const nsAString& typeArg,
                      bool canBubbleArg,
@@ -151,34 +143,14 @@ UIEvent::InitUIEvent(const nsAString& typeArg,
                      nsGlobalWindowInner* viewArg,
                      int32_t detailArg)
 {
-  auto* view = viewArg ? viewArg->AsInner() : nullptr;
-  InitUIEvent(typeArg, canBubbleArg, cancelableArg, view, detailArg);
-}
-
-NS_IMETHODIMP
-UIEvent::InitUIEvent(const nsAString& typeArg,
-                     bool canBubbleArg,
-                     bool cancelableArg,
-                     mozIDOMWindow* viewArg,
-                     int32_t detailArg)
-{
-  NS_ENSURE_TRUE(!mEvent->mFlags.mIsBeingDispatched, NS_OK);
+  if (NS_WARN_IF(mEvent->mFlags.mIsBeingDispatched)) {
+    return;
+  }
 
   Event::InitEvent(typeArg, canBubbleArg, cancelableArg);
 
   mDetail = detailArg;
-  mView = viewArg ? nsPIDOMWindowInner::From(viewArg)->GetOuterWindow() :
-                    nullptr;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-UIEvent::GetPageX(int32_t* aPageX)
-{
-  NS_ENSURE_ARG_POINTER(aPageX);
-  *aPageX = PageX();
-  return NS_OK;
+  mView = viewArg ? viewArg->GetOuterWindow() : nullptr;
 }
 
 int32_t
@@ -196,14 +168,6 @@ UIEvent::PageX() const
                               mClientPoint).x;
 }
 
-NS_IMETHODIMP
-UIEvent::GetPageY(int32_t* aPageY)
-{
-  NS_ENSURE_ARG_POINTER(aPageY);
-  *aPageY = PageY();
-  return NS_OK;
-}
-
 int32_t
 UIEvent::PageY() const
 {
@@ -217,14 +181,6 @@ UIEvent::PageY() const
 
   return Event::GetPageCoords(mPresContext, mEvent, mEvent->mRefPoint,
                               mClientPoint).y;
-}
-
-NS_IMETHODIMP
-UIEvent::GetWhich(uint32_t* aWhich)
-{
-  NS_ENSURE_ARG_POINTER(aWhich);
-  *aWhich = Which();
-  return NS_OK;
 }
 
 already_AddRefed<nsINode>
@@ -307,22 +263,6 @@ UIEvent::GetLayerPoint() const
   nsPoint pt(nsLayoutUtils::GetEventCoordinatesRelativeTo(mEvent, layer));
   return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
                     nsPresContext::AppUnitsToIntCSSPixels(pt.y));
-}
-
-NS_IMETHODIMP
-UIEvent::GetLayerX(int32_t* aLayerX)
-{
-  NS_ENSURE_ARG_POINTER(aLayerX);
-  *aLayerX = GetLayerPoint().x;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-UIEvent::GetLayerY(int32_t* aLayerY)
-{
-  NS_ENSURE_ARG_POINTER(aLayerY);
-  *aLayerY = GetLayerPoint().y;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
