@@ -828,22 +828,6 @@ EditorBase::EnableUndo(bool aEnable)
 }
 
 NS_IMETHODIMP
-EditorBase::GetNumberOfUndoItems(int32_t* aNumItems)
-{
-  *aNumItems = static_cast<int32_t>(NumberOfUndoItems());
-  MOZ_ASSERT(*aNumItems >= 0);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EditorBase::GetNumberOfRedoItems(int32_t* aNumItems)
-{
-  *aNumItems = static_cast<int32_t>(NumberOfRedoItems());
-  MOZ_ASSERT(*aNumItems >= 0);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 EditorBase::GetTransactionManager(nsITransactionManager** aTransactionManager)
 {
   if (NS_WARN_IF(!aTransactionManager)) {
