@@ -93,9 +93,6 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // Forward to Event
-  NS_FORWARD_TO_EVENT
-
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeviceMotionEvent, Event)
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
