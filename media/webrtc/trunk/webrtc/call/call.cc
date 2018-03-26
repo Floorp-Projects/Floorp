@@ -596,7 +596,8 @@ void Call::UpdateReceiveHistograms() {
 }
 
 PacketReceiver* Call::Receiver() {
-  RTC_DCHECK_CALLED_SEQUENTIALLY(&configuration_sequence_checker_);
+  //Mozilla: Called from STS thread while delivering packets
+  //RTC_DCHECK_CALLED_SEQUENTIALLY(&configuration_sequence_checker_);
   return this;
 }
 
@@ -1407,7 +1408,8 @@ PacketReceiver::DeliveryStatus Call::DeliverPacket(
     const uint8_t* packet,
     size_t length,
     const PacketTime& packet_time) {
-  RTC_DCHECK_CALLED_SEQUENTIALLY(&configuration_sequence_checker_);
+  //Mozilla: Called from STS thread while delivering packets
+  //RTC_DCHECK_CALLED_SEQUENTIALLY(&configuration_sequence_checker_);
   if (RtpHeaderParser::IsRtcp(packet, length))
     return DeliverRtcp(media_type, packet, length);
 
