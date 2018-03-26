@@ -30,16 +30,4 @@ class Event;
 [builtinclass, uuid(85ae52eb-37fa-4fd9-a2e6-c7d0f2a521b3)]
 interface nsIDOMUIEvent : nsISupports
 {
-  readonly attribute mozIDOMWindowProxy view;
-  void                      initUIEvent(in DOMString typeArg,
-                                        in boolean canBubbleArg,
-                                        in boolean cancelableArg,
-                                        in mozIDOMWindow viewArg,
-                                        in long detailArg);
-
-  readonly attribute long               layerX;
-  readonly attribute long               layerY;
-  readonly attribute long               pageX;
-  readonly attribute long               pageY;
-  readonly attribute unsigned long      which;
 };
