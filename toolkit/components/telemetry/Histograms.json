@@ -1086,7 +1086,7 @@
     "description": "Resident memory size (KB)"
   },
   "MEMORY_TOTAL": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1198209],
     "expires_in_version": "never",
