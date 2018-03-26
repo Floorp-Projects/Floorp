@@ -10,7 +10,7 @@ codespell:
         - browser/extensions/pocket/locale/en-US/
         - browser/extensions/webcompat-reporter/locales/en-US/
         - browser/locales/en-US/
-        - build/docs
+        - build/docs/
         - devtools/client/locales/en-US/
         - devtools/shared/locales/en-US/
         - devtools/startup/locales/en-US/
@@ -19,19 +19,19 @@ codespell:
         - layout/tools/layout-debug/ui/locale/en-US/
         - mobile/android/base/locales/en-US/
         - mobile/android/branding/
-        - mobile/android/docs
-        - python/docs
+        - mobile/android/docs/
         - mobile/android/locales/en-US/
         - mobile/locales/en-US/
         - netwerk/locales/en-US/
-        - python/mozlint
+        - python/docs/
+        - python/mozlint/
         - services/sync/locales/en-US/
-        - taskcluster/docs
-        - testing/mozbase/docs
-        - toolkit/components/extensions/docs
+        - taskcluster/docs/
+        - testing/mozbase/docs/
+        - toolkit/components/extensions/docs/
         - toolkit/components/telemetry/docs/
-        - toolkit/crashreporter/docs
-        - tools/lint
+        - toolkit/crashreporter/docs/
+        - tools/lint/
     exclude:
         - third_party
     # List of extensions coming from:
