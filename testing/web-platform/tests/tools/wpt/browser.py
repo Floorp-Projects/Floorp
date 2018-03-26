@@ -400,6 +400,31 @@ class InternetExplorer(Browser):
         raise NotImplementedError
 
 
+class Safari(Browser):
+    """Safari-specific interface.
+
+    Includes installation, webdriver installation, and wptrunner setup methods.
+    """
+
+    product = "safari"
+    requirements = "requirements_safari.txt"
+
+    def install(self, dest=None):
+        raise NotImplementedError
+
+    def find_binary(self):
+        raise NotImplementedError
+
+    def find_webdriver(self):
+        return find_executable("safaridriver")
+
+    def install_webdriver(self):
+        raise NotImplementedError
+
+    def version(self, root):
+        raise NotImplementedError
+
+
 class Servo(Browser):
     """Servo-specific interface."""
 
