@@ -304,10 +304,11 @@ int32_t RtpVideoStreamReceiver::OnInitializeDecoder(
 // This method handles both regular RTP packets and packets recovered
 // via FlexFEC.
 void RtpVideoStreamReceiver::OnRtpPacket(const RtpPacketReceived& packet) {
-  RTC_DCHECK_CALLED_SEQUENTIALLY(&worker_task_checker_);
-
-  if (!receiving_) {
-    return;
+  {
+    rtc::CritScope lock(&receive_cs_);
+    if (!receiving_) {
+      return;
+    }
   }
 
   if (!packet.recovered()) {
@@ -450,7 +451,7 @@ rtc::Optional<int64_t> RtpVideoStreamReceiver::LastReceivedKeyframePacketMs()
 }
 
 void RtpVideoStreamReceiver::AddSecondarySink(RtpPacketSinkInterface* sink) {
-  RTC_DCHECK_CALLED_SEQUENTIALLY(&worker_task_checker_);
+  rtc::CritScope lock(&receive_cs_);
   RTC_DCHECK(std::find(secondary_sinks_.cbegin(), secondary_sinks_.cend(),
                        sink) == secondary_sinks_.cend());
   secondary_sinks_.push_back(sink);
@@ -458,7 +459,7 @@ void RtpVideoStreamReceiver::AddSecondarySink(RtpPacketSinkInterface* sink) {
 
 void RtpVideoStreamReceiver::RemoveSecondarySink(
     const RtpPacketSinkInterface* sink) {
-  RTC_DCHECK_CALLED_SEQUENTIALLY(&worker_task_checker_);
+  rtc::CritScope lock(&receive_cs_);
   auto it = std::find(secondary_sinks_.begin(), secondary_sinks_.end(), sink);
   if (it == secondary_sinks_.end()) {
     // We might be rolling-back a call whose setup failed mid-way. In such a
@@ -490,7 +491,6 @@ void RtpVideoStreamReceiver::ReceivePacket(const uint8_t* packet,
 
 void RtpVideoStreamReceiver::ParseAndHandleEncapsulatingHeader(
     const uint8_t* packet, size_t packet_length, const RTPHeader& header) {
-  RTC_DCHECK_CALLED_SEQUENTIALLY(&worker_task_checker_);
   if (rtp_payload_registry_.IsRed(header)) {
     int8_t ulpfec_pt = rtp_payload_registry_.ulpfec_payload_type();
     if (packet[header.headerLength] == ulpfec_pt) {
@@ -546,10 +546,11 @@ void RtpVideoStreamReceiver::NotifyReceiverOfFecPacket(
 
 bool RtpVideoStreamReceiver::DeliverRtcp(const uint8_t* rtcp_packet,
                                          size_t rtcp_packet_length) {
-  RTC_DCHECK_CALLED_SEQUENTIALLY(&worker_task_checker_);
-
-  if (!receiving_) {
-    return false;
+  {
+    rtc::CritScope lock(&receive_cs_);
+    if (!receiving_) {
+      return false;
+    }
   }
 
   rtp_rtcp_->IncomingRtcpPacket(rtcp_packet, rtcp_packet_length);
@@ -619,12 +620,12 @@ void RtpVideoStreamReceiver::SignalNetworkState(NetworkState state) {
 }
 
 void RtpVideoStreamReceiver::StartReceive() {
-  RTC_DCHECK_CALLED_SEQUENTIALLY(&worker_task_checker_);
+  rtc::CritScope lock(&receive_cs_);
   receiving_ = true;
 }
 
 void RtpVideoStreamReceiver::StopReceive() {
-  RTC_DCHECK_CALLED_SEQUENTIALLY(&worker_task_checker_);
+  rtc::CritScope lock(&receive_cs_);
   receiving_ = false;
 }
 
