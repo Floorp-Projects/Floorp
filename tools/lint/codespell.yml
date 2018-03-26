@@ -3,10 +3,29 @@ codespell:
     description: Check code for common misspellings
     include:
         - browser/base/content/docs/
+        - browser/branding/
+        - browser/extensions/activity-stream/prerendered/locales/en-US/
+        - browser/extensions/formautofill/locales/en-US/
+        - browser/extensions/onboarding/locales/en-US/
+        - browser/extensions/pocket/locale/en-US/
+        - browser/extensions/webcompat-reporter/locales/en-US/
+        - browser/locales/en-US/
         - build/docs
+        - devtools/client/locales/en-US/
+        - devtools/shared/locales/en-US/
+        - devtools/startup/locales/en-US/
+        - dom/locales/en-US/
+        - intl/locales/en-US/
+        - layout/tools/layout-debug/ui/locale/en-US/
+        - mobile/android/base/locales/en-US/
+        - mobile/android/branding/
         - mobile/android/docs
         - python/docs
+        - mobile/android/locales/en-US/
+        - mobile/locales/en-US/
+        - netwerk/locales/en-US/
         - python/mozlint
+        - services/sync/locales/en-US/
         - taskcluster/docs
         - testing/mozbase/docs
         - toolkit/components/extensions/docs
