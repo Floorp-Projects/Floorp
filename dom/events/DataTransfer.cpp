@@ -898,7 +898,7 @@ DataTransfer::GetTransferable(uint32_t aIndex, nsILoadContext* aLoadContext)
     kPNGImageMime, kJPEGImageMime, kGIFImageMime, kNativeImageMime,
     kFileMime, kFilePromiseMime, kFilePromiseURLMime,
     kFilePromiseDestFilename, kFilePromiseDirectoryMime,
-    kMozTextInternal, kHTMLContext, kHTMLInfo, kImageRequestMime };
+    kMozTextInternal, kHTMLContext, kHTMLInfo };
 
   /*
    * Two passes are made here to iterate over all of the types. First, look for
@@ -1202,8 +1202,7 @@ nsresult
 DataTransfer::SetDataWithPrincipal(const nsAString& aFormat,
                                    nsIVariant* aData,
                                    uint32_t aIndex,
-                                   nsIPrincipal* aPrincipal,
-                                   bool aHidden)
+                                   nsIPrincipal* aPrincipal)
 {
   nsAutoString format;
   GetRealFormat(aFormat, format);
@@ -1212,7 +1211,7 @@ DataTransfer::SetDataWithPrincipal(const nsAString& aFormat,
   RefPtr<DataTransferItem> item =
     mItems->SetDataWithPrincipal(format, aData, aIndex, aPrincipal,
                                  /* aInsertOnly = */ false,
-                                 aHidden,
+                                 /* aHidden= */ false,
                                  rv);
   return rv.StealNSResult();
 }
