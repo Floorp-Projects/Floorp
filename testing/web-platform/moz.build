@@ -223,7 +223,7 @@ with Files("tests/css/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
 with Files("tests/css/css-backgrounds/**"):
-    BUG_COMPONENT = ("Core", "Layout: Text")
+    BUG_COMPONENT = ("Core", "Layout")
 
 with Files("tests/css/css-cascade/**"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
