@@ -250,7 +250,7 @@ MediaEngineWebRTCMicrophoneSource::Reconfigure(const RefPtr<AllocationHandle>& a
 
   size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
   MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex);
-  ApplySettings(mLastPrefs, mAllocations[i].mStream->GraphImpl());
+  ApplySettings(mNetPrefs, mAllocations[i].mStream->GraphImpl());
 
   return NS_OK;
 }
@@ -471,7 +471,7 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
 
     case kStarted:
     case kStopped:
-      if (prefs.mChannels != mLastPrefs.mChannels) {
+      if (prefs.mChannels != mNetPrefs.mChannels) {
         // If the channel count changed, tell the MSG to open a new driver with
         // the correct channel count.
         MOZ_ASSERT(!mAllocations.IsEmpty());
@@ -488,7 +488,7 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
         // Get validated number of channel
         uint32_t channelCount = 0;
         mAudioInput->GetChannelCount(channelCount);
-        MOZ_ASSERT(channelCount > 0 && mLastPrefs.mChannels > 0);
+        MOZ_ASSERT(channelCount > 0 && mNetPrefs.mChannels > 0);
         if (!stream->OpenNewAudioCallbackDriver(mListener)) {
           MOZ_LOG(GetMediaManagerLog(), LogLevel::Error, ("Could not open a new AudioCallbackDriver for input"));
           return NS_ERROR_FAILURE;
@@ -519,7 +519,7 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
     config.Set<webrtc::DelayAgnostic>(new webrtc::DelayAgnostic(mDelayAgnostic));
     mAudioProcessing->SetExtraOptions(config);
   }
-  mLastPrefs = prefs;
+  mNetPrefs = prefs;
   return NS_OK;
 }
 
