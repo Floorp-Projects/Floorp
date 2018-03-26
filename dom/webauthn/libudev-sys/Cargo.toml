@@ -5,5 +5,5 @@ authors = ["Tim Taubert <ttaubert@mozilla.com>"]
 description = "FFI bindings to libudev"
 
 [dependencies]
-lazy_static = "0.2"
+lazy_static = "1.0"
 libc = "0.2"
