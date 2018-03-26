@@ -25,8 +25,8 @@ add_task(async function() {
   equal(GlobalManager.extensionMap.size, 1);
   ok(GlobalManager.extensionMap.has(ID));
 
-  let chromeReg = AM_Cc["@mozilla.org/chrome/chrome-registry;1"].
-                  getService(AM_Ci.nsIChromeRegistry);
+  let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                  getService(Ci.nsIChromeRegistry);
   try {
     chromeReg.convertChromeURL(NetUtil.newURI("chrome://webex/content/webex.xul"));
     do_throw("Chrome manifest should not have been registered");

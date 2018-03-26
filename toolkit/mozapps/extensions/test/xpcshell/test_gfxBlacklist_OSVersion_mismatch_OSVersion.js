@@ -7,12 +7,9 @@
 // only new OS versions.
 // Uses test_gfxBlacklist_OS.xml
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-
-var gTestserver = new HttpServer();
-gTestserver.start(-1);
+var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 gPort = gTestserver.identity.primaryPort;
-mapFile("/data/test_gfxBlacklist_OSVersion.xml", gTestserver);
+gTestserver.registerDirectory("/data/", do_get_file("data"));
 
 function load_blocklist(file) {
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +

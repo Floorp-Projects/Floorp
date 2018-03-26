@@ -8,7 +8,7 @@
  * Coverage may overlap with other tests in this folder.
  */
 
-const {LightweightThemeManager} = AM_Cu.import("resource://gre/modules/LightweightThemeManager.jsm", {});
+const {LightweightThemeManager} = ChromeUtils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
 const THEME_IDS = [
   "theme3@tests.mozilla.org",
   "theme2@personas.mozilla.org",
