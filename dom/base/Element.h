@@ -1348,7 +1348,7 @@ public:
                                     CSSPseudoElementType aPseudoType,
                                     nsTArray<RefPtr<Animation>>& aAnimations);
 
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
+  virtual void GetInnerHTML(nsAString& aInnerHTML, OOMReporter& aError);
   virtual void SetInnerHTML(const nsAString& aInnerHTML, nsIPrincipal* aSubjectPrincipal, ErrorResult& aError);
   void UnsafeSetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);
   void GetOuterHTML(nsAString& aOuterHTML);

@@ -3828,11 +3828,10 @@ Element::GetAnimationsUnsorted(Element* aElement,
   }
 }
 
-NS_IMETHODIMP
-Element::GetInnerHTML(nsAString& aInnerHTML)
+void
+Element::GetInnerHTML(nsAString& aInnerHTML, OOMReporter& aError)
 {
   GetMarkup(false, aInnerHTML);
-  return NS_OK;
 }
 
 void
