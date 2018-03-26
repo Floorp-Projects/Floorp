@@ -13,6 +13,11 @@ var gHistoryGrouping = "";
 var gSearching = false;
 
 function HistorySidebarInit() {
+  let uidensity = window.top.document.documentElement.getAttribute("uidensity");
+  if (uidensity) {
+    document.documentElement.setAttribute("uidensity", uidensity);
+  }
+
   gHistoryTree = document.getElementById("historyTree");
   gSearchBox = document.getElementById("search-box");
 
@@ -84,7 +89,7 @@ function searchHistory(aInput) {
     this.TelemetryStopwatch.start("HISTORY_LASTVISITED_TREE_QUERY_TIME_MS");
 
   // call load() on the tree manually
-  // instead of setting the place attribute in history-panel.xul
+  // instead of setting the place attribute in historySidebar.xul
   // otherwise, we will end up calling load() twice
   gHistoryTree.load(query, options);
 
