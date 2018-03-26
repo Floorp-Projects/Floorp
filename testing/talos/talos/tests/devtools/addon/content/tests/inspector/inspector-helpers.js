@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { reloadPageAndLog } = require("chrome://damp/content/tests/head");
+const { reloadPageAndLog } = require("../head");
 
 exports.reloadInspectorAndLog = async function(label, toolbox) {
   let onReload = async function() {

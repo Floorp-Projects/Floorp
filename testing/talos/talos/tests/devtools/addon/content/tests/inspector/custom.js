@@ -4,9 +4,9 @@
 
 "use strict";
 
-const { reloadInspectorAndLog, selectNodeFront } = require("chrome://damp/content/tests/inspector/inspector-helpers");
+const { reloadInspectorAndLog, selectNodeFront } = require("./inspector-helpers");
 const { openToolboxAndLog, closeToolboxAndLog, runTest, testSetup,
-        testTeardown, PAGES_BASE_URL } = require("chrome://damp/content/tests/head");
+        testTeardown, PAGES_BASE_URL } = require("../head");
 
 module.exports = async function() {
   await testSetup(PAGES_BASE_URL + "custom/inspector/index.html");
