@@ -644,10 +644,9 @@ def get_ports(config, ssl_environment):
 
 
 def normalise_config(config, ports):
-    host = config["host"]
+    host = config["external_host"] if config["external_host"] else config["host"]
     domains = get_subdomains(host)
     not_domains = get_not_subdomains(host)
-
     ports_ = {}
     for scheme, ports_used in ports.iteritems():
         ports_[scheme] = ports_used
@@ -667,6 +666,7 @@ def normalise_config(config, ports):
     # make a (shallow) copy of the config and update that, so that the
     # normalized config can be used in place of the original one.
     config_ = config.copy()
+    config_["host"] = host
     config_["domains"] = domains
     config_["not_domains"] = not_domains
     config_["ports"] = ports_
@@ -685,9 +685,8 @@ def get_ssl_config(config, ssl_environment):
             "cert_path": cert_path,
             "encrypt_after_connect": config["ssl"]["encrypt_after_connect"]}
 
-
 def start(config, ssl_environment, routes, **kwargs):
-    host = config.get("host_ip", config["host"])
+    host = config["host"]
     ports = get_ports(config, ssl_environment)
     paths = get_paths(config)
     bind_hostname = config["bind_hostname"]
