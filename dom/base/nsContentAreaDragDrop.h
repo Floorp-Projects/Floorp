@@ -76,7 +76,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFLAVORDATAPROVIDER
 
-  nsresult SaveURIToFile(nsIURI* inSourceURI,
+  nsresult SaveURIToFile(nsAString& inSourceURIString,
                          nsIFile* inDestFile, bool isPrivate);
 };
 
