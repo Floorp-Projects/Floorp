@@ -1,3 +1,6 @@
+// GENERATED CONTENT - DO NOT EDIT
+// Content of this file was automatically extracted from the File and Directory Entries API spec.
+// See https://wicg.github.io/entries-api/
 
 partial interface File {
     readonly attribute USVString webkitRelativePath;
@@ -12,9 +15,7 @@ partial interface DataTransferItem {
     FileSystemEntry? webkitGetAsEntry();
 };
 
-callback interface ErrorCallback {
-    void handleEvent(DOMException err);
-};
+callback ErrorCallback = void (DOMException err);
 
 interface FileSystemEntry {
     readonly attribute boolean isFile;
@@ -44,25 +45,19 @@ dictionary FileSystemFlags {
     boolean exclusive = false;
 };
 
-callback interface FileSystemEntryCallback {
-    void handleEvent(FileSystemEntry entry);
-};
+callback FileSystemEntryCallback = void (FileSystemEntry entry);
 
 interface FileSystemDirectoryReader {
     void readEntries(FileSystemEntriesCallback successCallback,
                      optional ErrorCallback errorCallback);
 };
-callback interface FileSystemEntriesCallback {
-    void handleEvent(sequence<FileSystemEntry> entries);
-};
+callback FileSystemEntriesCallback = void (sequence<FileSystemEntry> entries);
 
 interface FileSystemFileEntry : FileSystemEntry {
     void file(FileCallback successCallback,
               optional ErrorCallback errorCallback);
 };
-callback interface FileCallback {
-    void handleEvent(File file);
-};
+callback FileCallback = void (File file);
 
 interface FileSystem {
     readonly attribute USVString name;
