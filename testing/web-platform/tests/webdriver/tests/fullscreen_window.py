@@ -85,7 +85,7 @@ def test_handle_prompt_accept(new_session, add_browser_capabilites):
     response = fullscreen(session)
 
     assert_dialog_handled(session, "accept #3")
-    assert read_global(session, "accept3") == ""
+    assert read_global(session, "accept3") == "" or read_global(session, "accept3") == "undefined"
 
 
 def test_handle_prompt_missing_value(session, create_dialog):
