@@ -22,7 +22,7 @@
         },
         {
           "version": "2.0",
-          "update_link": "http://localhost:%PORT%/addons/test_update.xpi",
+          "update_link": "http://example.com/addons/test_update.xpi",
           "update_info_url": "http://example.com/updateInfo.xhtml",
           "applications": {
             "gecko": {
@@ -108,7 +108,7 @@
       "updates": [
         {
           "version": "2.0",
-          "update_link": "http://localhost:%PORT%/addons/test_update8.xpi",
+          "update_link": "http://example.com/addons/test_update8.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "1",
@@ -123,7 +123,7 @@
       "updates": [
         {
           "version": "2.0",
-          "update_link": "http://localhost:%PORT%/addons/test_update9_2.xpi",
+          "update_link": "http://example.com/addons/test_update9_2.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "1",
@@ -134,7 +134,7 @@
         {
           "_comment_": "Incompatible when strict compatibility is enabled",
           "version": "3.0",
-          "update_link": "http://localhost:%PORT%/addons/test_update9_3.xpi",
+          "update_link": "http://example.com/addons/test_update9_3.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "0.9",
@@ -145,7 +145,7 @@
         {
           "_comment_": "Incompatible due to compatibility override",
           "version": "4.0",
-          "update_link": "http://localhost:%PORT%/addons/test_update9_4.xpi",
+          "update_link": "http://example.com/addons/test_update9_4.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "0.9",
@@ -156,7 +156,7 @@
         {
           "_comment_": "Addon for future version of app",
           "version": "4.0",
-          "update_link": "http://localhost:%PORT%/addons/test_update9_5.xpi",
+          "update_link": "http://example.com/addons/test_update9_5.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "5",
@@ -171,7 +171,7 @@
       "updates": [
         {
           "version": "1.0",
-          "update_link": "http://localhost:%PORT%/addons/test_update10.xpi",
+          "update_link": "http://example.com/addons/test_update10.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "0.1",
@@ -186,7 +186,7 @@
       "updates": [
         {
           "version": "2.0",
-          "update_link": "http://localhost:%PORT%/addons/test_update11.xpi",
+          "update_link": "http://example.com/addons/test_update11.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "0.1",
@@ -201,7 +201,7 @@
       "updates": [
         {
           "version": "2.0",
-          "update_link": "http://localhost:%PORT%/addons/test_update12.xpi",
+          "update_link": "http://example.com/addons/test_update12.xpi",
           "applications": {
             "gecko": {
               "strict_min_version": "1",
