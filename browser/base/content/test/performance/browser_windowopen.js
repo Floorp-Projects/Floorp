@@ -23,7 +23,7 @@ if (Services.appinfo.OS == "WINNT") {
     {
       stack: [
         "verticalMargins@chrome://browser/content/browser-tabsintitlebar.js",
-        "_update@chrome://browser/content/browser-tabsintitlebar.js",
+        "update@chrome://browser/content/browser-tabsintitlebar.js",
         "onDOMContentLoaded@chrome://browser/content/browser-tabsintitlebar.js",
         "onDOMContentLoaded@chrome://browser/content/browser.js",
       ],
@@ -37,7 +37,7 @@ if (Services.appinfo.OS == "WINNT" || Services.appinfo.OS == "Darwin") {
     {
       stack: [
         "rect@chrome://browser/content/browser-tabsintitlebar.js",
-        "_update@chrome://browser/content/browser-tabsintitlebar.js",
+        "update@chrome://browser/content/browser-tabsintitlebar.js",
         "onDOMContentLoaded@chrome://browser/content/browser-tabsintitlebar.js",
         "onDOMContentLoaded@chrome://browser/content/browser.js",
       ],
@@ -122,18 +122,16 @@ add_task(async function() {
         {
           stack: [
             "rect@chrome://browser/content/browser-tabsintitlebar.js",
-            "_update@chrome://browser/content/browser-tabsintitlebar.js",
-            "updateAppearance@chrome://browser/content/browser-tabsintitlebar.js",
-            "handleEvent@chrome://browser/content/tabbrowser.xml",
+            "update@chrome://browser/content/browser-tabsintitlebar.js",
+            "handleEvent@chrome://browser/content/browser-tabsintitlebar.js",
           ],
           maxCount: 4,
         },
         {
           stack: [
             "verticalMargins@chrome://browser/content/browser-tabsintitlebar.js",
-            "_update@chrome://browser/content/browser-tabsintitlebar.js",
-            "updateAppearance@chrome://browser/content/browser-tabsintitlebar.js",
-            "handleEvent@chrome://browser/content/tabbrowser.xml",
+            "update@chrome://browser/content/browser-tabsintitlebar.js",
+            "handleEvent@chrome://browser/content/browser-tabsintitlebar.js",
           ],
           maxCount: 2,
         },
