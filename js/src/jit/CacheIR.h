@@ -292,8 +292,10 @@ extern const char* CacheKindNames[];
     _(LoadTypeOfObjectResult)             \
     _(DoubleAddResult)                    \
     _(DoubleSubResult)                    \
+    _(DoubleMulResult)                    \
     _(Int32AddResult)                     \
     _(Int32SubResult)                     \
+    _(Int32MulResult)                     \
     _(Int32BitOrResult)                   \
     _(Int32BitXorResult)                  \
     _(Int32BitAndResult)                  \
@@ -1009,12 +1011,20 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::DoubleSubResult, lhsId);
         writeOperandId(rhsId);
     }
+    void doubleMulResult(ValOperandId lhsId, ValOperandId rhsId) {
+        writeOpWithOperandId(CacheOp::DoubleMulResult, lhsId);
+        writeOperandId(rhsId);
+    }
     void int32AddResult(Int32OperandId lhs, Int32OperandId rhs) {
         writeOpWithOperandId(CacheOp::Int32AddResult, lhs);
         writeOperandId(rhs);
     }
     void int32SubResult(Int32OperandId lhs, Int32OperandId rhs) {
         writeOpWithOperandId(CacheOp::Int32SubResult, lhs);
+        writeOperandId(rhs);
+    }
+    void int32MulResult(Int32OperandId lhs, Int32OperandId rhs) {
+        writeOpWithOperandId(CacheOp::Int32MulResult, lhs);
         writeOperandId(rhs);
     }
     void int32BitOrResult(Int32OperandId lhs, Int32OperandId rhs) {

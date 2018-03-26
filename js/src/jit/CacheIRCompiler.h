@@ -54,8 +54,10 @@ namespace jit {
     _(LoadInt32ArrayLengthResult)         \
     _(DoubleAddResult)                    \
     _(DoubleSubResult)                    \
+    _(DoubleMulResult)                    \
     _(Int32AddResult)                     \
     _(Int32SubResult)                     \
+    _(Int32MulResult)                     \
     _(Int32BitOrResult)                   \
     _(Int32BitXorResult)                  \
     _(Int32BitAndResult)                  \
