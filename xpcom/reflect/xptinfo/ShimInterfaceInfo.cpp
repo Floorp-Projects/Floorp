@@ -23,7 +23,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMNotifyPaintEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMParser.h"
@@ -66,7 +65,6 @@
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/NodeListBinding.h"
 #include "mozilla/dom/NodeBinding.h"
-#include "mozilla/dom/NotifyPaintEventBinding.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/OfflineResourceListBinding.h"
 #include "mozilla/dom/PositionErrorBinding.h"
@@ -158,7 +156,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIMessageSender, MessageSender),
   DEFINE_SHIM(NodeList),
   DEFINE_SHIM(Node),
-  DEFINE_SHIM(NotifyPaintEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMNSEvent, Event),
   DEFINE_SHIM(OfflineResourceList),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMParser, DOMParser),
