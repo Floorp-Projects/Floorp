@@ -325,12 +325,6 @@ UIEvent::GetLayerY(int32_t* aLayerY)
   return NS_OK;
 }
 
-mozilla::dom::Event*
-UIEvent::AsEvent(void)
-{
-  return this;
-}
-
 NS_IMETHODIMP
 UIEvent::DuplicatePrivateData()
 {
