@@ -2253,8 +2253,7 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* aStackTop)
     if (ActivePS::FeatureJS(aLock)) {
       // This StartJSSampling() call is on-thread, so we can poll manually to
       // start JS sampling immediately.
-      registeredThread->StartJSSampling(
-        ActivePS::FeatureTrackOptimizations(aLock));
+      registeredThread->StartJSSampling();
       registeredThread->PollJSSampling();
       if (registeredThread->GetJSContext()) {
         profiledThreadData->NotifyReceivedJSContext(ActivePS::Buffer(aLock).mRangeEnd);
@@ -2853,8 +2852,7 @@ locked_profiler_start(PSLockRef aLock, uint32_t aEntries, double aInterval,
         ActivePS::AddLiveProfiledThread(aLock, registeredThread.get(),
           MakeUnique<ProfiledThreadData>(info, eventTarget));
       if (ActivePS::FeatureJS(aLock)) {
-        registeredThread->StartJSSampling(
-          ActivePS::FeatureTrackOptimizations(aLock));
+        registeredThread->StartJSSampling();
         if (info->ThreadId() == tid) {
           // We can manually poll the current thread so it starts sampling
           // immediately.
@@ -3482,8 +3480,7 @@ profiler_clear_js_context()
 
       // Tell the thread that we'd like to have JS sampling on this
       // thread again, once it gets a new JSContext (if ever).
-      registeredThread->StartJSSampling(
-        ActivePS::FeatureTrackOptimizations(lock));
+      registeredThread->StartJSSampling();
       return;
     }
   }
