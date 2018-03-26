@@ -7,13 +7,13 @@ interface CSSStyleValue {
 
 [Exposed=(Window, Worker, PaintWorklet, LayoutWorklet)]
 interface StylePropertyMapReadOnly {
-    readonly maplike<DOMString, sequence<CSSStyleValue>>;
+    iterable<DOMString, sequence<CSSStyleValue>>;
     any get(DOMString property);
     /* 'any' means (undefined or CSSStyleValue) here,
        see https://github.com/heycam/webidl/issues/60 */
     sequence<CSSStyleValue> getAll(DOMString property);
     boolean has(DOMString property);
-    stringifier;
+    readonly attribute long size;
 };
 
 callback UpdateFunction = CSSStyleValue (CSSStyleValue oldValue);
