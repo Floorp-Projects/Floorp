@@ -35,3 +35,7 @@ menupopup[placespopup="true"] {
     image-rendering: -moz-crisp-edges;
   }
 }
+
+#searchFilter {
+  max-width: 23em;
+}
