@@ -6,7 +6,7 @@ buildscript {
     ext.targetSdkVersion = 27
     ext.minSdkVersion = 21
 
-    ext.version = "0.2.1"
+    ext.version = "0.2.2"
 
     repositories {
         google()
