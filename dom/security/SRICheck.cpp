@@ -18,7 +18,6 @@
 #include "nsIProtocolHandler.h"
 #include "nsIScriptError.h"
 #include "nsIIncrementalStreamLoader.h"
-#include "nsIUnicharStreamLoader.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsWhitespaceTokenizer.h"
