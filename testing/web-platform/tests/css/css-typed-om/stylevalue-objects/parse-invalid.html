@@ -6,7 +6,7 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <body>
-<div id="log">
+<div id="log"></div>
 <script>
 'use strict';
 
@@ -25,5 +25,9 @@ test(() => {
 test(() => {
   assert_throws(new TypeError(), () => CSSStyleValue.parse('margin', '10deg'));
 }, 'CSSStyleValue.parse() with invalid value for shorthand property throws TypeError');
+
+test(() => {
+  assert_throws(new TypeError(), () => CSSStyleValue.parse('--foo', ''));
+}, 'CSSStyleValue.parse() with invalid value for custom property throws TypeError');
 
 </script>
