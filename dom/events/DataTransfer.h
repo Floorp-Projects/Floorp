@@ -374,8 +374,7 @@ public:
   nsresult SetDataWithPrincipal(const nsAString& aFormat,
                                 nsIVariant* aData,
                                 uint32_t aIndex,
-                                nsIPrincipal* aPrincipal,
-                                bool aHidden=false);
+                                nsIPrincipal* aPrincipal);
 
   // Variation of SetDataWithPrincipal with handles extracting
   // kCustomTypesMime data into separate types.
