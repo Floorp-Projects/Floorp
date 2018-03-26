@@ -748,11 +748,11 @@ mozTXTToHTMLConv::SmilyHit(const char16_t * aInString, int32_t aLength, bool col
     }
 
     outputHTML.AppendLiteral("<span class=\""); // <span class="
-    AppendASCIItoUTF16(imageName, outputHTML);  // e.g. smiley-frown
+    outputHTML.AppendASCII(imageName);          // e.g. smiley-frown
     outputHTML.AppendLiteral("\" title=\"");    // " title="
-    AppendASCIItoUTF16(tagTXT, outputHTML);     // smiley tooltip
+    outputHTML.AppendASCII(tagTXT);             // smiley tooltip
     outputHTML.AppendLiteral("\"><span>");      // "><span>
-    AppendASCIItoUTF16(tagTXT, outputHTML);     // original text
+    outputHTML.AppendASCII(tagTXT);             // original text
     outputHTML.AppendLiteral("</span></span>"); // </span></span>
     glyphTextLen = (col0 ? 0 : 1) + tagLen;
     return true;
