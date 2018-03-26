@@ -453,7 +453,7 @@ CollectWindowReports(nsGlobalWindowInner *aWindow,
 
   // This is the Gecko style structs, which are in the nsPresArena.
   size_t geckoStyleSundriesSize = 0;
-#define STYLE_STRUCT(name_, cb_) \
+#define STYLE_STRUCT(name_) \
   { \
     size_t size = \
       windowSizes.mArenaSizes.mGeckoStyleSizes.NS_STYLE_SIZES_FIELD(name_); \
@@ -712,7 +712,7 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
          "This is the sum of all windows' 'layout/style-contexts' numbers.");
 
   size_t geckoStyleTotal = 0;
-#define STYLE_STRUCT(name_, cb_) \
+#define STYLE_STRUCT(name_) \
   geckoStyleTotal += \
     windowTotalSizes.mArenaSizes.mGeckoStyleSizes.NS_STYLE_SIZES_FIELD(name_);
 #define STYLE_STRUCT_LIST_IGNORE_VARIABLES

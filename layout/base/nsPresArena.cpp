@@ -209,7 +209,7 @@ nsPresArena::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
       case eArenaObjectID_GeckoComputedStyle:
         aSizes.mArenaSizes.mComputedStyles += totalSize;
         break;
-#define STYLE_STRUCT(name_, cb_) \
+#define STYLE_STRUCT(name_) \
       case eArenaObjectID_nsStyle##name_: \
         aSizes.mArenaSizes.mGeckoStyleSizes.NS_STYLE_SIZES_FIELD(name_) += \
           totalSize; \
