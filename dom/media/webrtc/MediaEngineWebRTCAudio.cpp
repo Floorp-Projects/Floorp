@@ -248,7 +248,9 @@ MediaEngineWebRTCMicrophoneSource::Reconfigure(const RefPtr<AllocationHandle>& a
     return NS_ERROR_UNEXPECTED;
   }
 
-  ApplySettings(mLastPrefs);
+  size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
+  MOZ_DIAGNOSTIC_ASSERT(i != mAllocations.NoIndex);
+  ApplySettings(mLastPrefs, mAllocations[i].mStream->GraphImpl());
 
   return NS_OK;
 }
@@ -528,20 +530,14 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
 #undef HANDLE_APM_ERROR
 
 void
-MediaEngineWebRTCMicrophoneSource::ApplySettings(const MediaEnginePrefs& aPrefs)
+MediaEngineWebRTCMicrophoneSource::ApplySettings(const MediaEnginePrefs& aPrefs,
+                                                 RefPtr<MediaStreamGraphImpl> aGraph)
 {
   AssertIsOnOwningThread();
+  MOZ_DIAGNOSTIC_ASSERT(aGraph);
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  RefPtr<MediaStreamGraphImpl> graph;
-  for (const Allocation& allocation : mAllocations) {
-    if (allocation.mStream && allocation.mStream->GraphImpl()) {
-      graph = allocation.mStream->GraphImpl();
-      break;
-    }
-  }
-  MOZ_DIAGNOSTIC_ASSERT(graph);
-  NS_DispatchToMainThread(media::NewRunnableFrom([that, graph, aPrefs]() mutable {
+  NS_DispatchToMainThread(media::NewRunnableFrom([that, graph = Move(aGraph), aPrefs]() mutable {
     that->mSettings->mEchoCancellation.Value() = aPrefs.mAecOn;
     that->mSettings->mAutoGainControl.Value() = aPrefs.mAgcOn;
     that->mSettings->mNoiseSuppression.Value() = aPrefs.mNoiseOn;
@@ -734,7 +730,7 @@ MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& a
     mState = kStarted;
   }
 
-  ApplySettings(mLastPrefs);
+  ApplySettings(mNetPrefs, allocation.mStream->GraphImpl());
 
   return NS_OK;
 }
