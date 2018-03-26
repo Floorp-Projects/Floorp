@@ -10,6 +10,7 @@ ChromeUtils.import("resource://services-sync/engines/addons.js");
 ChromeUtils.import("resource://services-sync/service.js");
 ChromeUtils.import("resource://services-sync/util.js");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 const HTTP_PORT = 8888;
 
@@ -31,13 +32,85 @@ function loadSystemAddon() {
   systemAddonFile.lastModifiedTime = Date.now();
   // As we're not running in application, we need to setup the features directory
   // used by system add-ons.
-  registerDirectory("XREAppFeat", distroDir);
+  AddonTestUtils.registerDirectory("XREAppFeat", distroDir);
 }
 
-loadAddonTestFunctions();
+var resHandler = Services.io.getProtocolHandler("resource")
+                         .QueryInterface(Ci.nsISubstitutingProtocolHandler);
+var dataURI = NetUtil.newURI(do_get_file(ExtensionsTestPath("/data"), true));
+resHandler.setSubstitution("xpcshell-data", dataURI);
+
+AddonTestUtils.init(this);
+AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+AddonTestUtils.overrideCertDB();
+
+Services.prefs.setCharPref("extensions.minCompatibleAppVersion", "0");
+Services.prefs.setCharPref("extensions.minCompatiblePlatformVersion", "0");
+Services.prefs.setBoolPref("extensions.legacy.enabled", true);
+
 loadSystemAddon();
-awaitPromise(overrideBuiltIns({ "system": [SYSTEM_ADDON_ID] }));
-startupManager();
+
+AddonTestUtils.awaitPromise(AddonTestUtils.overrideBuiltIns({ "system": [SYSTEM_ADDON_ID] }));
+AddonTestUtils.awaitPromise(AddonTestUtils.promiseStartupManager());
+
+const ADDONS = {
+  test_install1: {
+    "install.rdf": {
+      id: "addon1@tests.mozilla.org",
+      version: "1.0",
+      name: "Test 1",
+      description: "Test Description",
+      bootstrap: true,
+
+      targetApplications: [{
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1"}],
+    },
+    "icon.png": "Fake icon image",
+    "icon64.png": "Fake icon image",
+  },
+  test_install3: {
+    "install.rdf": {
+      id: "addon3@tests.mozilla.org",
+      version: "1.0",
+      name: "Real Test 4",
+      description: "Test Description",
+      bootstrap: true,
+
+      updateURL: "http://example.com/data/test_install.rdf",
+
+      targetApplications: [{
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "0",
+          maxVersion: "0"}],
+    },
+  },
+  test_bootstrap1_1: {
+    "install.rdf": {
+      id: "bootstrap1@tests.mozilla.org",
+      version: "1.0",
+      bootstrap: "true",
+      multiprocessCompatible: "true",
+      name: "Test Bootstrap 1",
+      description: "Test Description",
+
+      iconURL: "chrome://foo/skin/icon.png",
+      aboutURL: "chrome://foo/content/about.xul",
+      optionsURL: "chrome://foo/content/options.xul",
+
+      targetApplications: [{
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1"}],
+    },
+  },
+};
+
+const XPIS = {};
+for (let [name, files] of Object.entries(ADDONS)) {
+  XPIS[name] = AddonTestUtils.createTempXPIFile(files);
+}
 
 let engine;
 let tracker;
@@ -87,11 +160,9 @@ function createAndStartHTTPServer(port) {
   try {
     let server = new HttpServer();
 
-    let bootstrap1XPI = ExtensionsTestPath("/addons/test_bootstrap1_1.xpi");
-
     server.registerFile("/search/guid:bootstrap1%40tests.mozilla.org",
                         do_get_file("bootstrap1-search.json"));
-    server.registerFile("/bootstrap1.xpi", do_get_file(bootstrap1XPI));
+    server.registerFile("/bootstrap1.xpi", XPIS.test_bootstrap1_1);
 
     server.registerFile("/search/guid:missing-xpi%40tests.mozilla.org",
                         do_get_file("missing-xpi-search.json"));
@@ -139,7 +210,7 @@ add_task(async function setup() {
 add_task(async function test_remove() {
   _("Ensure removing add-ons from deleted records works.");
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
   let record = createRecordForThisApp(addon.syncGUID, addon.id, true, true);
 
   let failed = await store.applyIncomingBatch([record]);
@@ -152,7 +223,7 @@ add_task(async function test_remove() {
 add_task(async function test_apply_enabled() {
   _("Ensures that changes to the userEnabled flag apply.");
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
   Assert.ok(addon.isActive);
   Assert.ok(!addon.userDisabled);
 
@@ -191,7 +262,7 @@ add_task(async function test_apply_enabled() {
 add_task(async function test_apply_enabled_appDisabled() {
   _("Ensures that changes to the userEnabled flag apply when the addon is appDisabled.");
 
-  let addon = await installAddon("test_install3"); // this addon is appDisabled by default.
+  let addon = await installAddon(XPIS.test_install3); // this addon is appDisabled by default.
   Assert.ok(addon.appDisabled);
   Assert.ok(!addon.isActive);
   Assert.ok(!addon.userDisabled);
@@ -224,7 +295,7 @@ add_task(async function test_ignore_different_appid() {
   _("Ensure that incoming records with a different application ID are ignored.");
 
   // We test by creating a record that should result in an update.
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
   Assert.ok(!addon.userDisabled);
 
   let record = createRecordForThisApp(addon.syncGUID, addon.id, false, false);
@@ -242,7 +313,7 @@ add_task(async function test_ignore_different_appid() {
 add_task(async function test_ignore_unknown_source() {
   _("Ensure incoming records with unknown source are ignored.");
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
 
   let record = createRecordForThisApp(addon.syncGUID, addon.id, false, false);
   record.source = "DUMMY_SOURCE";
@@ -259,7 +330,7 @@ add_task(async function test_ignore_unknown_source() {
 add_task(async function test_apply_uninstall() {
   _("Ensures that uninstalling an add-on from a record works.");
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
 
   let records = [];
   records.push(createRecordForThisApp(addon.syncGUID, addon.id, true, true));
@@ -278,7 +349,7 @@ add_task(async function test_addon_syncability() {
 
   Assert.ok(!(await store.isAddonSyncable(null)));
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
   Assert.ok((await store.isAddonSyncable(addon)));
 
   let dummy = {};
@@ -349,9 +420,9 @@ add_task(async function test_get_all_ids() {
   // So if any tests above ever add a new addon ID, they are going to need to
   // be added here too.
   // Assert.equal(0, Object.keys(store.getAllIDs()).length);
-  let addon1 = await installAddon("test_install1", reconciler);
-  let addon2 = await installAddon("test_bootstrap1_1", reconciler);
-  let addon3 = await installAddon("test_install3", reconciler);
+  let addon1 = await installAddon(XPIS.test_install1, reconciler);
+  let addon2 = await installAddon(XPIS.test_bootstrap1_1, reconciler);
+  let addon3 = await installAddon(XPIS.test_install3, reconciler);
 
   _("Ensure they're syncable.");
   Assert.ok((await store.isAddonSyncable(addon1)));
@@ -366,7 +437,7 @@ add_task(async function test_get_all_ids() {
   Assert.ok(addon2.syncGUID in ids);
   Assert.ok(addon3.syncGUID in ids);
 
-  addon1.install.cancel();
+  await uninstallAddon(addon1, reconciler);
   await uninstallAddon(addon2, reconciler);
   await uninstallAddon(addon3, reconciler);
 });
@@ -374,7 +445,7 @@ add_task(async function test_get_all_ids() {
 add_task(async function test_change_item_id() {
   _("Ensures that changeItemID() works properly.");
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
 
   let oldID = addon.syncGUID;
   let newID = Utils.makeGUID();
@@ -393,7 +464,7 @@ add_task(async function test_create() {
 
   let server = createAndStartHTTPServer(HTTP_PORT);
 
-  let addon = await installAddon("test_bootstrap1_1", reconciler);
+  let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
   let id = addon.id;
   await uninstallAddon(addon, reconciler);
 
@@ -506,7 +577,7 @@ add_task(async function test_incoming_system() {
 add_task(async function test_wipe() {
   _("Ensures that wiping causes add-ons to be uninstalled.");
 
-  let addon1 = await installAddon("test_bootstrap1_1", reconciler);
+  let addon1 = await installAddon(XPIS.test_bootstrap1_1, reconciler);
 
   await store.wipe();
 
@@ -520,7 +591,7 @@ add_task(async function test_wipe_and_install() {
   // This tests the reset sync flow where remote data is replaced by local. The
   // receiving client will see a wipe followed by a record which should undo
   // the wipe.
-  let installed = await installAddon("test_bootstrap1_1", reconciler);
+  let installed = await installAddon(XPIS.test_bootstrap1_1, reconciler);
 
   let record = createRecordForThisApp(installed.syncGUID, installed.id, true,
                                       false);
