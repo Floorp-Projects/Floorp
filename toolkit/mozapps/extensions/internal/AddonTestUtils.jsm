@@ -1046,7 +1046,15 @@ var AddonTestUtils = {
         let target = dir.clone();
         for (let part of entry.split("/"))
           target.append(part);
-        zip.extract(entry, target);
+        if (!target.parent.exists())
+          target.parent.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+        try {
+          zip.extract(entry, target);
+        } catch (e) {
+          if (e.result != Cr.NS_ERROR_FILE_DIR_NOT_EMPTY) {
+            throw e;
+          }
+        }
         target.permissions |= FileUtils.PERMS_FILE;
       }
       zip.close();
