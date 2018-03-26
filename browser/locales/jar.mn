@@ -55,8 +55,6 @@
     locale/browser/feeds/subscribe.properties       (%chrome/browser/feeds/subscribe.properties)
     locale/browser/migration/migration.dtd         (%chrome/browser/migration/migration.dtd)
     locale/browser/migration/migration.properties  (%chrome/browser/migration/migration.properties)
-    locale/browser/preferences/applicationManager.dtd     (%chrome/browser/preferences/applicationManager.dtd)
-    locale/browser/preferences/applicationManager.properties     (%chrome/browser/preferences/applicationManager.properties)
     locale/browser/preferences/blocklists.dtd         (%chrome/browser/preferences/blocklists.dtd)
     locale/browser/preferences/clearSiteData.dtd      (%chrome/browser/preferences/clearSiteData.dtd)
     locale/browser/preferences/clearSiteData.properties     (%chrome/browser/preferences/clearSiteData.properties)
