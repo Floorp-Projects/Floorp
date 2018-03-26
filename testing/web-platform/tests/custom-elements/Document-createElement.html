@@ -355,6 +355,7 @@ test(() => {
   // https://github.com/w3c/webcomponents/issues/608
   let div = document.createElement('div', { is: 'my-div' });
   assert_false(div instanceof MyElement);
+  assert_false(div.hasAttribute('is'));
 
   customElements.define('my-div', MyElement, { extends: 'div' });
   document.body.appendChild(div);

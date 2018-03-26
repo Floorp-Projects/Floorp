@@ -800,10 +800,8 @@ for (const t of testData) {
     test(() => {
       let customized = new t.klass();
       assert_equals(customized.constructor, t.klass);
-      // cloneNode() won't create a customized built-in element due to no
-      // 'is' attribute. https://github.com/whatwg/html/issues/3402
-      assert_not_equals(customized.cloneNode().constructor, t.klass,
-                        'Cloning a customized built-in element should NOT succeed.');
+      assert_equals(customized.cloneNode().constructor, t.klass,
+                    'Cloning a customized built-in element should succeed.');
     }, `${t.tag}: Operator 'new' should instantiate a customized built-in element`);
 
     test(() => {
