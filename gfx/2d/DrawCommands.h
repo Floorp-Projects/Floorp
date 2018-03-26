@@ -240,6 +240,13 @@ public:
     RefPtr<FilterNode> filter = mFilter;
     if (mFilter->GetBackendType() == FilterBackend::FILTER_BACKEND_CAPTURE) {
       filter = static_cast<FilterNodeCapture*>(filter.get())->Validate(aDT);
+
+      // This can happen if the FilterNodeCapture is unable to create a
+      // backing FilterNode on the target backend. Normally this would be
+      // handled by the painting code, but here there's not much we can do.
+      if (!filter) {
+        return;
+      }
     }
     aDT->DrawFilter(filter, mSourceRect, mDestPoint, mOptions);
   }
