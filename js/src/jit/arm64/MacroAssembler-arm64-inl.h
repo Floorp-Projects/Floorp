@@ -1308,6 +1308,15 @@ MacroAssembler::branchSub32(Condition cond, T src, Register dest, Label* label)
     branch(cond, label);
 }
 
+template <typename T>
+void
+MacroAssembler::branchMul32(Condition cond, T src, Register dest, Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Overflow);
+    vixl::UseScratchRegisterScope temps(this);
+    mul32(src, dest, dest, label, nullptr);
+}
+
 void
 MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
 {
