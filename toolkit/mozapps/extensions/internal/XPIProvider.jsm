@@ -34,7 +34,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
   DownloadAddonInstall: "resource://gre/modules/addons/XPIInstall.jsm",
   LocalAddonInstall: "resource://gre/modules/addons/XPIInstall.jsm",
-  StagedAddonInstall: "resource://gre/modules/addons/XPIInstall.jsm",
   UpdateChecker: "resource://gre/modules/addons/XPIInstall.jsm",
   loadManifestFromFile: "resource://gre/modules/addons/XPIInstall.jsm",
   verifyBundleSignedState: "resource://gre/modules/addons/XPIInstall.jsm",
@@ -1334,6 +1333,7 @@ class XPIStateLocation extends Map {
 
     this.name = name;
     this.path = path || saved.path || null;
+    this.staged = saved.staged || {};
     this.dir = this.path && new nsIFile(this.path);
 
     for (let [id, data] of Object.entries(saved.addons || {})) {
@@ -1348,7 +1348,10 @@ class XPIStateLocation extends Map {
    * data, to be saved to addonStartup.json.
    */
   toJSON() {
-    let json = { addons: {} };
+    let json = {
+      addons: {},
+      staged: this.staged,
+    };
 
     if (this.path) {
       json.path = this.path;
@@ -1364,6 +1367,13 @@ class XPIStateLocation extends Map {
       }
     }
     return json;
+  }
+
+  get hasStaged() {
+    for (let key in this.staged) {
+      return true;
+    }
+    return false;
   }
 
   _addState(addonId, saved) {
@@ -1400,6 +1410,42 @@ class XPIStateLocation extends Map {
     let xpiState = this._addState(addonId, {enabled: false, file: file.clone()});
     xpiState.getModTime(xpiState.file, addonId);
     return xpiState;
+  }
+
+  /**
+   * Adds metadata for a staged install which should be performed after
+   * the next restart.
+   *
+   * @param {string} addonId
+   *        The ID of the staged install. The leaf name of the XPI
+   *        within the location's staging directory must correspond to
+   *        this ID.
+   * @param {object} metadata
+   *        The JSON metadata of the parsed install, to be used during
+   *        the next startup.
+   */
+  stageAddon(addonId, metadata) {
+    this.staged[addonId] = metadata;
+    XPIStates.save();
+  }
+
+  /**
+   * Removes staged install metadata for the given add-on ID.
+   *
+   * @param {string} addonId
+   *        The ID of the staged install.
+   */
+  unstageAddon(addonId) {
+    if (addonId in this.staged) {
+      delete this.staged[addonId];
+      XPIStates.save();
+    }
+  }
+
+  * getStagedAddons() {
+    for (let [id, metadata] of Object.entries(this.staged)) {
+      yield [id, metadata];
+    }
   }
 
   /**
@@ -1727,7 +1773,7 @@ var XPIStates = {
   toJSON() {
     let data = {};
     for (let [key, loc] of this.db.entries()) {
-      if (key != TemporaryInstallLocation.name && loc.size) {
+      if (key != TemporaryInstallLocation.name && (loc.size || loc.hasStaged)) {
         data[key] = loc;
       }
     }
@@ -2680,149 +2726,46 @@ var XPIProvider = {
         continue;
       }
 
-      let stagingDir = location.getStagingDir();
+      let state = XPIStates.getLocation(location.name);
 
-      try {
-        if (!stagingDir || !stagingDir.exists() || !stagingDir.isDirectory())
-          continue;
-      } catch (e) {
-        logger.warn("Failed to find staging directory", e);
-        continue;
-      }
+      let cleanNames = [];
+      for (let [id, metadata] of state.getStagedAddons()) {
+        state.unstageAddon(id);
 
-      let seenFiles = [];
-      // Use a snapshot of the directory contents to avoid possible issues with
-      // iterating over a directory while removing files from it (the YAFFS2
-      // embedded filesystem has this issue, see bug 772238), and to remove
-      // normal files before their resource forks on OSX (see bug 733436).
-      let stagingDirEntries = getDirectoryEntries(stagingDir, true);
-      for (let stageDirEntry of stagingDirEntries) {
-        let id = stageDirEntry.leafName;
-
-        let isDir;
-        try {
-          isDir = stageDirEntry.isDirectory();
-        } catch (e) {
-          if (e.result != Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
-            throw e;
-          // If the file has already gone away then don't worry about it, this
-          // can happen on OSX where the resource fork is automatically moved
-          // with the data fork for the file. See bug 733436.
-          continue;
-        }
-
-        if (!isDir) {
-          if (id.substring(id.length - 4).toLowerCase() == ".xpi") {
-            id = id.substring(0, id.length - 4);
-          } else {
-            if (id.substring(id.length - 5).toLowerCase() != ".json") {
-              logger.warn("Ignoring file: " + stageDirEntry.path);
-              seenFiles.push(stageDirEntry.leafName);
-            }
-            continue;
-          }
-        }
+        let source = getFile(`${id}.xpi`, location.getStagingDir());
 
         // Check that the directory's name is a valid ID.
-        if (!gIDTest.test(id)) {
-          logger.warn("Ignoring directory whose name is not a valid add-on ID: " +
-               stageDirEntry.path);
-          seenFiles.push(stageDirEntry.leafName);
+        if (!gIDTest.test(id) || !source.exists() || !source.isFile()) {
+          logger.warn("Ignoring invalid staging directory entry: ${id}", {id});
+          cleanNames.push(source.leafName);
           continue;
         }
 
         changed = true;
-
-        if (isDir) {
-          // Check if the directory contains an install manifest.
-          let manifest = getManifestFileForDir(stageDirEntry);
-
-          // If the install manifest doesn't exist uninstall this add-on in this
-          // install location.
-          if (!manifest) {
-            logger.debug("Processing uninstall of " + id + " in " + location.name);
-
-            try {
-              let addonFile = location.getLocationForID(id);
-              let addonToUninstall = syncLoadManifestFromFile(addonFile, location);
-              if (addonToUninstall.bootstrap) {
-                this.callBootstrapMethod(addonToUninstall, addonToUninstall._sourceBundle,
-                                         "uninstall", BOOTSTRAP_REASONS.ADDON_UNINSTALL);
-              }
-            } catch (e) {
-              logger.warn("Failed to call uninstall for " + id, e);
-            }
-
-            try {
-              location.uninstallAddon(id);
-              XPIStates.removeAddon(location.name, id);
-              seenFiles.push(stageDirEntry.leafName);
-            } catch (e) {
-              logger.error("Failed to uninstall add-on " + id + " in " + location.name, e);
-            }
-            // The file check later will spot the removal and cleanup the database
-            continue;
-          }
-        }
-
         aManifests[location.name][id] = null;
-        let existingAddonID = id;
 
-        let jsonfile = getFile(`${id}.json`, stagingDir);
-        // Assume this was a foreign install if there is no cached metadata file
-        let foreignInstall = !jsonfile.exists();
         let addon;
-
         try {
-          addon = syncLoadManifestFromFile(stageDirEntry, location);
+          addon = syncLoadManifestFromFile(source, location);
         } catch (e) {
-          logger.error("Unable to read add-on manifest from " + stageDirEntry.path, e);
-          // This add-on can't be installed so just remove it now
-          seenFiles.push(stageDirEntry.leafName);
-          seenFiles.push(jsonfile.leafName);
+          logger.error(`Unable to read add-on manifest from ${source.path}`, e);
+          cleanNames.push(source.leafName);
           continue;
         }
 
         if (mustSign(addon.type) &&
             addon.signedState <= AddonManager.SIGNEDSTATE_MISSING) {
-          logger.warn("Refusing to install staged add-on " + id + " with signed state " + addon.signedState);
-          seenFiles.push(stageDirEntry.leafName);
-          seenFiles.push(jsonfile.leafName);
+          logger.warn(`Refusing to install staged add-on ${id} with signed state ${addon.signedState}`);
+          cleanNames.push(source.leafName);
           continue;
         }
 
-        // Check for a cached metadata for this add-on, it may contain updated
-        // compatibility information
-        if (!foreignInstall) {
-          logger.debug("Found updated metadata for " + id + " in " + location.name);
-          let fis = Cc["@mozilla.org/network/file-input-stream;1"].
-                       createInstance(Ci.nsIFileInputStream);
-          try {
-            fis.init(jsonfile, -1, 0, 0);
-
-            let bytes = NetUtil.readInputStream(fis, jsonfile.fileSize);
-            let metadata = JSON.parse(gTextDecoder.decode(bytes));
-            addon.importMetadata(metadata);
-
-            // Pass this through to addMetadata so it knows this add-on was
-            // likely installed through the UI
-            aManifests[location.name][id] = addon;
-          } catch (e) {
-            // If some data can't be recovered from the cached metadata then it
-            // is unlikely to be a problem big enough to justify throwing away
-            // the install, just log an error and continue
-            logger.error("Unable to read metadata from " + jsonfile.path, e);
-          } finally {
-            fis.close();
-          }
-        }
-        seenFiles.push(jsonfile.leafName);
-
-        existingAddonID = addon.existingAddonID || id;
+        addon.importMetadata(metadata);
+        aManifests[location.name][id] = addon;
 
         var oldBootstrap = null;
-        logger.debug("Processing install of " + id + " in " + location.name);
-        let existingAddon = XPIStates.findAddon(existingAddonID);
+        logger.debug(`Processing install of ${id} in ${location.name}`);
+        let existingAddon = XPIStates.findAddon(id);
         if (existingAddon && existingAddon.bootstrapped) {
           try {
             var file = existingAddon.file;
@@ -2838,27 +2781,22 @@ var XPIProvider = {
               this.callBootstrapMethod(existingAddon,
                                        file, "uninstall", uninstallReason,
                                        { newVersion });
-              this.unloadBootstrapScope(existingAddonID);
+              this.unloadBootstrapScope(id);
               flushChromeCaches();
             }
           } catch (e) {
+            Cu.reportError(e);
           }
         }
 
         try {
           addon._sourceBundle = location.installAddon({
-            id,
-            source: stageDirEntry,
-            existingAddonID
+            id, source, existingAddonID: id,
           });
           XPIStates.addAddon(addon);
         } catch (e) {
           logger.error("Failed to install staged add-on " + id + " in " + location.name,
                 e);
-          // Re-create the staged install
-          new StagedAddonInstall(location, stageDirEntry, addon);
-          // Make sure not to delete the cached manifest json file
-          seenFiles.pop();
 
           delete aManifests[location.name][id];
 
@@ -2867,15 +2805,16 @@ var XPIProvider = {
             this.callBootstrapMethod(oldBootstrap, existingAddon, "install",
                                      BOOTSTRAP_REASONS.ADDON_INSTALL);
           }
-          continue;
         }
       }
 
       try {
-        location.cleanStagingDir(seenFiles);
+        if (cleanNames.length) {
+          location.cleanStagingDir(cleanNames);
+        }
       } catch (e) {
         // Non-critical, just saves some perf on startup if we clean this up.
-        logger.debug("Error cleaning staging dir " + stagingDir.path, e);
+        logger.debug("Error cleaning staging dir", e);
       }
     }
     return changed;
