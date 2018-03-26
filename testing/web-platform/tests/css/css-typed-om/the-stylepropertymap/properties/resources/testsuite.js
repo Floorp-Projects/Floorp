@@ -62,6 +62,46 @@ const gTestSyntaxExamples = {
       },
     ],
   },
+  '<position>': {
+    description: 'a position',
+    examples: [
+      {
+        decription: "origin position",
+        input: new CSSPositionValue(new CSSUnitValue(0, 'px'), new CSSUnitValue(0, 'px'))
+      }
+    ],
+  },
+  '<image>': {
+    description: 'an image',
+    examples: [
+      {
+        description: "a PNG image",
+        input: new CSSURLImageValue('/media/1x1.png'),
+        defaultComputed: result => {
+          // URLs compute to absolute URLs
+          assert_true(result instanceof CSSURLImageValue,
+            'Computed value should be a CSSURLImageValue');
+          assert_true(result.url.endsWith('/media/1x1.png'),
+            'Computed value should be an absolute URL');
+        }
+      }
+    ],
+  },
+  '<transform>': {
+    description: 'a transform',
+    examples: [
+      {
+        description: 'a transform containing only a translate',
+        input: new CSSTransformValue([
+          new CSSTranslate(
+            new CSSUnitValue(0, 'px'),
+            new CSSUnitValue(1, 'px'),
+            new CSSUnitValue(2, 'px'),
+          )
+        ]),
+      }
+    ],
+  },
 };
 
 // Test setting a value in a style map and then getting it from the inline and
