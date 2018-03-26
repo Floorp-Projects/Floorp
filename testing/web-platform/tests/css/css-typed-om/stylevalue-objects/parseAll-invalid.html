@@ -19,11 +19,11 @@ test(() => {
 }, 'CSSStyleValue.parseAll() with unsupported property name throws TypeError');
 
 test(() => {
-  assert_throws(new TypeError(), () => CSSStyleValue.parseAll('background', 'red'));
-}, 'CSSStyleValue.parseAll() with shorthand property throws TypeError');
-
-test(() => {
   assert_throws(new TypeError(), () => CSSStyleValue.parseAll('width', '10deg'));
 }, 'CSSStyleValue.parseAll() with invalid value for valid property throws TypeError');
+
+test(() => {
+  assert_throws(new TypeError(), () => CSSStyleValue.parse('margin', '10deg'));
+}, 'CSSStyleValue.parseAll() with invalid value for shorthand property throws TypeError');
 
 </script>
