@@ -4,9 +4,9 @@
 
 "use strict";
 
-const { reloadInspectorAndLog } = require("chrome://damp/content/tests/inspector/inspector-helpers");
+const { reloadInspectorAndLog } = require("./inspector-helpers");
 const { openToolboxAndLog, closeToolboxAndLog, testSetup,
-        testTeardown, COMPLICATED_URL } = require("chrome://damp/content/tests/head");
+        testTeardown, COMPLICATED_URL } = require("../head");
 
 module.exports = async function() {
   await testSetup(COMPLICATED_URL);

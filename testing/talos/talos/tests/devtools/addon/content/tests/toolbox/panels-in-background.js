@@ -6,7 +6,7 @@
 
 const { EVENTS } = require("devtools/client/netmonitor/src/constants");
 const { openToolbox, closeToolbox, reloadPageAndLog, testSetup,
-        testTeardown, PAGES_BASE_URL } = require("chrome://damp/content/tests/head");
+        testTeardown, PAGES_BASE_URL } = require("../head");
 
 module.exports = async function() {
   await testSetup(PAGES_BASE_URL + "custom/panels-in-background/index.html");
