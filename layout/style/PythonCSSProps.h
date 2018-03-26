@@ -22,7 +22,7 @@
 #define CSS_PROP_SHORTHAND(name, id, method, flags, pref) \
   DO_PROP(name, method, id, flags, pref, "shorthand")
 #define CSS_PROP_LOGICAL(name, id, method, flags, pref, parsevariant, kwtable, \
-     group, stylestruct, stylestructoffset, animtype) \
+     stylestruct, stylestructoffset, animtype) \
   DO_PROP(name, method, id, flags, pref, "logical")
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
 

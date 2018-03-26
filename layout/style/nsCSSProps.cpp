@@ -3036,77 +3036,6 @@ nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shortha
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
 };
 
-
-static const nsCSSPropertyID gOffsetLogicalGroupTable[] = {
-  eCSSProperty_top,
-  eCSSProperty_right,
-  eCSSProperty_bottom,
-  eCSSProperty_left,
-  eCSSProperty_UNKNOWN
-};
-
-static const nsCSSPropertyID gMaxSizeLogicalGroupTable[] = {
-  eCSSProperty_max_height,
-  eCSSProperty_max_width,
-  eCSSProperty_UNKNOWN
-};
-
-static const nsCSSPropertyID gMinSizeLogicalGroupTable[] = {
-  eCSSProperty_min_height,
-  eCSSProperty_min_width,
-  eCSSProperty_UNKNOWN
-};
-
-static const nsCSSPropertyID gSizeLogicalGroupTable[] = {
-  eCSSProperty_height,
-  eCSSProperty_width,
-  eCSSProperty_UNKNOWN
-};
-
-const nsCSSPropertyID* const
-nsCSSProps::kLogicalGroupTable[eCSSPropertyLogicalGroup_COUNT] = {
-#define CSS_PROP_LOGICAL_GROUP_SHORTHAND(id_) g##id_##SubpropTable,
-#define CSS_PROP_LOGICAL_GROUP_AXIS(name_) g##name_##LogicalGroupTable,
-#define CSS_PROP_LOGICAL_GROUP_BOX(name_) g##name_##LogicalGroupTable,
-#include "nsCSSPropLogicalGroupList.h"
-#undef CSS_PROP_LOGICAL_GROUP_BOX
-#undef CSS_PROP_LOGICAL_GROUP_AXIS
-#undef CSS_PROP_LOGICAL_GROUP_SHORTHAND
-};
-
-// Mapping of logical longhand properties to their logical group (which
-// represents the physical longhands the logical properties an correspond
-// to).  The format is pairs of values, where the first is the logical
-// longhand property (an nsCSSPropertyID) and the second is the logical group
-// (an nsCSSPropertyLogicalGroup), stored in a flat array (like KTableEntry
-// arrays).
-static const int gLogicalGroupMappingTable[] = {
-#define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, \
-                         kwtable_, group_, stylestruct_,                    \
-                         stylestructoffset_, animtype_)                     \
-  eCSSProperty_##id_, eCSSPropertyLogicalGroup_##group_,
-#include "nsCSSPropList.h"
-#undef CSS_PROP_LOGICAL
-};
-
-/* static */ const nsCSSPropertyID*
-nsCSSProps::LogicalGroup(nsCSSPropertyID aProperty)
-{
-  MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
-             "out of range");
-  MOZ_ASSERT(nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOGICAL),
-             "aProperty must be a logical longhand property");
-
-  for (size_t i = 0; i < ArrayLength(gLogicalGroupMappingTable); i += 2) {
-    if (gLogicalGroupMappingTable[i] == aProperty) {
-      return kLogicalGroupTable[gLogicalGroupMappingTable[i + 1]];
-    }
-  }
-
-  MOZ_ASSERT(false, "missing gLogicalGroupMappingTable entry");
-  return nullptr;
-}
-
 /* static */ bool
 nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
   // If the property has any "ENABLED_IN" flag set, it is disabled by
@@ -3180,7 +3109,7 @@ nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
                 "only properties defined with CSS_PROP_LOGICAL can use "    \
                 "the CSS_PROPERTY_LOGICAL_END_EDGE flag");
 #define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, \
-                         kwtable_, group_, stylestruct_,                    \
+                         kwtable_, stylestruct_,                            \
                          stylestructoffset_, animtype_)                     \
   static_assert((flags_) & CSS_PROPERTY_LOGICAL,                            \
                 "properties defined with CSS_PROP_LOGICAL must also use "   \
