@@ -20,6 +20,7 @@
 
 #include "mozilla/dom/BorrowedAttrInfo.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/ErrorResult.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -431,7 +432,7 @@ sdnAccessible::get_innerHTML(BSTR __RPC_FAR* aInnerHTML)
     return S_FALSE;
 
   nsAutoString innerHTML;
-  mNode->AsElement()->GetInnerHTML(innerHTML);
+  mNode->AsElement()->GetInnerHTML(innerHTML, IgnoreErrors());
   if (innerHTML.IsEmpty())
     return S_FALSE;
 
