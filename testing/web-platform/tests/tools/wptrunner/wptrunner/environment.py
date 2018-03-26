@@ -144,12 +144,14 @@ class TestEnvironment(object):
                 "ws": [8888]
             },
             "check_subdomains": False,
-            "bind_hostname": self.options["bind_hostname"],
             "ssl": {}
         }
 
         if "host" in self.options:
             local_config["host"] = self.options["host"]
+
+        if "bind_hostname" in self.options:
+            local_config["bind_hostname"] = self.options["bind_hostname"]
 
         with open(default_config_path) as f:
             default_config = json.load(f)
