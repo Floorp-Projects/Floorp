@@ -635,9 +635,8 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
 
   mCachedModifiers = 0;
 
-  nsCOMPtr<nsIDOMUIEvent> domUiEvent = do_QueryInterface(aEvent);
-  if (domUiEvent) {
-    auto uiEvent = static_cast<UIEvent*>(domUiEvent.get());
+  UIEvent* uiEvent = aEvent ? aEvent->InternalDOMEvent()->AsUIEvent() : nullptr;
+  if (uiEvent) {
     mRangeParent = uiEvent->GetRangeParent();
     mRangeOffset = uiEvent->RangeOffset();
 
