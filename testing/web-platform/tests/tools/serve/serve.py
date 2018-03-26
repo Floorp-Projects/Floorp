@@ -234,8 +234,10 @@ class RoutesBuilder(object):
     def add_handler(self, method, route, handler):
         self.extra.append((str(method), str(route), handler))
 
-    def add_static(self, path, format_args, content_type, route):
-        handler = handlers.StaticHandler(path, format_args, content_type)
+    def add_static(self, path, format_args, content_type, route, headers=None):
+        if headers is None:
+            headers = {}
+        handler = handlers.StaticHandler(path, format_args, content_type, **headers)
         self.add_handler(b"GET", str(route), handler)
 
     def add_mount_point(self, url_base, path):

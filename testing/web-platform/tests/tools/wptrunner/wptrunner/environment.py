@@ -200,10 +200,14 @@ class TestEnvironment(object):
         for path, format_args, content_type, route in [
                 ("testharness_runner.html", {}, "text/html", "/testharness_runner.html"),
                 (self.options.get("testharnessreport", "testharnessreport.js"),
-                 {"output": self.pause_after_test}, "text/javascript",
+                 {"output": self.pause_after_test}, "text/javascript;charset=utf8",
                  "/resources/testharnessreport.js")]:
             path = os.path.normpath(os.path.join(here, path))
-            route_builder.add_static(path, format_args, content_type, route)
+            # Note that .headers. files don't apply to static routes, so we need to
+            # readd any static headers here.
+            headers = {"Cache-Control": "max-age=3600"}
+            route_builder.add_static(path, format_args, content_type, route,
+                                     headers=headers)
 
         data = b""
         with open(os.path.join(repo_root, "resources", "testdriver.js"), "rb") as fp:
