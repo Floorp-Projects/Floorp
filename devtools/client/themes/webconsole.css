@@ -1213,14 +1213,45 @@ body #output-container {
 }
 
 /*
- * Make the arrow the same color and approximately the same size of the twisty icon.
- * Should be properly fixed in https://bugzilla.mozilla.org/show_bug.cgi?id=1307937.
+ * Make console.group, exception and XHR message's arrow look the same as the arrow
+ * used in the ObjectInspector (same background-image, width, transition).
+ * Properties were copied from devtools/client/shared/components/reps/reps.css.
  */
-.webconsole-output-wrapper .object-inspector.tree .tree-node .arrow {
+.webconsole-output-wrapper img.collapse-button.arrow {
+  mask: url("chrome://devtools/skin/images/devtools-components/arrow.svg") no-repeat;
+  mask-size: 100%;
+  width: 9px;
+  height: 9px;
+  margin-block-start: 5px;
+  margin-inline-start: 4px;
+  margin-inline-end: 1px;
+  transform: rotate(-90deg);
+  transition: transform 0.125s ease;
+}
+
+/*
+ * We need to override the margin for group arrow in order to keep the alignment
+ * with the indent border.
+ */
+.webconsole-output-wrapper .message.startGroup img.collapse-button.arrow,
+.webconsole-output-wrapper .message.startGroupCollapsed img.collapse-button.arrow {
+  margin-inline-start: 2px;
+}
+
+html[dir="rtl"] .webconsole-output-wrapper img.collapse-button.arrow:not(.expanded) {
+  transform: rotate(90deg);
+}
+
+.webconsole-output-wrapper img.collapse-button.arrow.expanded {
+  transform: rotate(0deg);
+}
+
+/* Apply the same color to both message arrows and ObjectInspector ones. */
+.webconsole-output-wrapper .message img.arrow {
   background-color: #AFA8AB;
 }
 
-.theme-dark .webconsole-output-wrapper .object-inspector.tree .tree-node .arrow {
+.theme-dark .webconsole-output-wrapper .message img.arrow {
   background-color: #7F7E81;
 }
 
