@@ -530,8 +530,6 @@ MediaEngineWebRTCMicrophoneSource::ApplySettings(const MediaEnginePrefs& aPrefs)
 {
   AssertIsOnOwningThread();
 
-  mLastPrefs = aPrefs;
-
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   RefPtr<MediaStreamGraphImpl> graph;
   for (const Allocation& allocation : mAllocations) {
