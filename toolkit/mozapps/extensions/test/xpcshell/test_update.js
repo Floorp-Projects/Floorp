@@ -32,6 +32,7 @@ const ADDONS = {
     "install.rdf": {
       id: "addon1@tests.mozilla.org",
       version: "2.0",
+      bootstrap: true,
       name: "Test 1",
       description: "Test Description",
 
@@ -45,6 +46,7 @@ const ADDONS = {
     "install.rdf": {
       id: "addon8@tests.mozilla.org",
       version: "2.0",
+      bootstrap: true,
       name: "Test 8",
       description: "Test Description",
 
@@ -58,6 +60,7 @@ const ADDONS = {
     "install.rdf": {
       id: "addon12@tests.mozilla.org",
       version: "2.0",
+      bootstrap: true,
       name: "Test 12",
       description: "Test Description",
 
@@ -71,6 +74,7 @@ const ADDONS = {
     "install.rdf": {
       id: "addon2@tests.mozilla.org",
       version: "2.0",
+      bootstrap: true,
       name: "Real Test 2",
       description: "Test Description",
 
@@ -84,6 +88,7 @@ const ADDONS = {
     "install.rdf": {
       id: "addon2@tests.mozilla.org",
       version: "3.0",
+      bootstrap: true,
       name: "Real Test 3",
       description: "Test Description",
 
@@ -113,9 +118,11 @@ add_task(async function setup() {
 add_task(async function() {
   AddonTestUtils.updateReason = AddonManager.UPDATE_WHEN_USER_REQUESTED;
 
-  await promiseWriteInstallRDFForExtension({
+  await promiseStartupManager();
+  await promiseInstallXPI({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
     targetApplications: [{
       id: appId,
@@ -123,11 +130,12 @@ add_task(async function() {
       maxVersion: "1"
     }],
     name: "Test Addon 1",
-  }, profileDir);
+  });
 
-  await promiseWriteInstallRDFForExtension({
+  await promiseInstallXPI({
     id: "addon2@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
     targetApplications: [{
       id: appId,
@@ -135,11 +143,12 @@ add_task(async function() {
       maxVersion: "0"
     }],
     name: "Test Addon 2",
-  }, profileDir);
+  });
 
-  await promiseWriteInstallRDFForExtension({
+  await promiseInstallXPI({
     id: "addon3@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
     targetApplications: [{
       id: appId,
@@ -147,9 +156,7 @@ add_task(async function() {
       maxVersion: "5"
     }],
     name: "Test Addon 3",
-  }, profileDir);
-
-  await promiseStartupManager();
+  });
 });
 
 // Verify that an update is available and can be installed.
@@ -159,7 +166,6 @@ add_task(async function test_1() {
   equal(a1.version, "1.0");
   equal(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DEFAULT);
   equal(a1.releaseNotesURI, null);
-  ok(a1.foreignInstall);
   notEqual(a1.syncGUID, null);
 
   originalSyncGUID = a1.syncGUID;
@@ -228,7 +234,8 @@ add_task(async function test_1() {
   await new Promise(resolve => {
     prepare_test({
       "addon1@tests.mozilla.org": [
-        "onInstalling"
+        ["onInstalling", false],
+        "onInstalled",
       ]
     }, [
       "onInstallStarted",
@@ -239,28 +246,20 @@ add_task(async function test_1() {
 
   ensure_test_completed();
 
-  let olda1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   await AddonTestUtils.loadAddonsList(true);
-
-  notEqual(olda1, null);
-  equal(olda1.version, "1.0");
-  ok(isExtensionInAddonsList(profileDir, olda1.id));
-
-  await promiseRestartManager();
 
   // Grab the current time so we can check the mtime of the add-on below
   // without worrying too much about how long other tests take.
   let startupTime = Date.now();
 
-  ok(isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
+  ok(isExtensionInBootstrappedList(profileDir, "addon1@tests.mozilla.org"));
 
   a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   notEqual(a1, null);
   equal(a1.version, "2.0");
-  ok(isExtensionInAddonsList(profileDir, a1.id));
+  ok(isExtensionInBootstrappedList(profileDir, a1.id));
   equal(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DISABLE);
   equal(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
-  ok(a1.foreignInstall);
   notEqual(a1.syncGUID, null);
   equal(originalSyncGUID, a1.syncGUID);
 
@@ -270,13 +269,12 @@ add_task(async function test_1() {
   let difference = testFile.lastModifiedTime - startupTime;
   ok(Math.abs(difference) < MAX_TIME_DIFFERENCE);
 
+  end_test();
   a1.uninstall();
 });
 
 // Check that an update check finds compatibility updates and applies them
 add_task(async function test_3() {
-  await promiseRestartManager();
-
   let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
   notEqual(a2, null);
   ok(a2.isActive);
@@ -345,14 +343,15 @@ add_task(async function test_5() {
   ok(a3.appDisabled);
 
   a3.uninstall();
-  await promiseRestartManager();
+  end_test();
 });
 
 // Test that background update checks work
 add_task(async function test_6() {
-  await promiseWriteInstallRDFForExtension({
+  await promiseInstallXPI({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
     targetApplications: [{
       id: appId,
@@ -360,9 +359,7 @@ add_task(async function test_6() {
       maxVersion: "1"
     }],
     name: "Test Addon 1",
-  }, profileDir);
-
-  await promiseRestartManager();
+  });
 
   let install = await new Promise(resolve => {
     prepare_test({}, [
@@ -380,7 +377,8 @@ add_task(async function test_6() {
   await new Promise(resolve => {
     prepare_test({
       "addon1@tests.mozilla.org": [
-        "onInstalling"
+        ["onInstalling", false],
+        "onInstalled",
       ]
     }, [
       "onInstallStarted",
@@ -388,17 +386,13 @@ add_task(async function test_6() {
     ], resolve);
   });
 
-  equal(install.existingAddon.pendingUpgrade.install, install);
-
-  await promiseRestartManager();
-
   let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   notEqual(a1, null);
   equal(a1.version, "2.0");
   equal(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
-  a1.uninstall();
 
-  await promiseRestartManager();
+  end_test();
+  a1.uninstall();
 });
 
 const PARAMS = "?" + [
@@ -421,6 +415,7 @@ const PARAM_ADDONS = {
     "install.rdf": {
       id: "addon1@tests.mozilla.org",
       version: "5.0",
+      bootstrap: true,
       updateURL: "http://example.com/data/param_test.json" + PARAMS,
       targetApplications: [{
         id: appId,
@@ -443,6 +438,7 @@ const PARAM_ADDONS = {
     "install.rdf": {
       id: "addon2@tests.mozilla.org",
       version: "67.0.5b1",
+      bootstrap: true,
       updateURL: "http://example.com/data/param_test.json" + PARAMS,
       targetApplications: [{
         id: "toolkit@mozilla.org",
@@ -469,6 +465,7 @@ const PARAM_ADDONS = {
     "install.rdf": {
       id: "addon3@tests.mozilla.org",
       version: "1.3+",
+      bootstrap: true,
       updateURL: "http://example.com/data/param_test.json" + PARAMS,
       targetApplications: [{
         id: appId,
@@ -495,6 +492,7 @@ const PARAM_ADDONS = {
     "install.rdf": {
       id: "addon4@tests.mozilla.org",
       version: "0.5ab6",
+      bootstrap: true,
       updateURL: "http://example.com/data/param_test.json" + PARAMS,
       targetApplications: [{
         id: appId,
@@ -517,6 +515,7 @@ const PARAM_ADDONS = {
     "install.rdf": {
       id: "addon5@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       updateURL: "http://example.com/data/param_test.json" + PARAMS,
       targetApplications: [{
         id: appId,
@@ -540,6 +539,7 @@ const PARAM_ADDONS = {
     "install.rdf": {
       id: "addon6@tests.mozilla.org",
       version: "1.0",
+      bootstrap: true,
       updateURL: "http://example.com/data/param_test.json" + PARAMS,
       targetApplications: [{
         id: appId,
@@ -563,22 +563,14 @@ const PARAM_IDS = Object.keys(PARAM_ADDONS);
 
 // Verify the parameter escaping in update urls.
 add_task(async function test_8() {
-  await promiseShutdownManager();
-
-  for (let addon of Object.values(PARAM_ADDONS)) {
-    await promiseWriteInstallRDFForExtension(addon["install.rdf"], profileDir);
-  }
-
-  await promiseStartupManager();
-
   for (let [id, options] of Object.entries(PARAM_ADDONS)) {
+    await promiseInstallXPI(options["install.rdf"], profileDir);
+
     if (options.initialState) {
       let addon = await AddonManager.getAddonByID(id);
       Object.assign(addon, options.initialState);
     }
   }
-
-  await promiseRestartManager();
 
   let resultsPromise = new Promise(resolve => {
     let results = new Map();
@@ -631,15 +623,15 @@ add_task(async function test_8() {
   for (let [, addon] of await getAddons(PARAM_IDS)) {
     addon.uninstall();
   }
-  await promiseRestartManager();
 });
 
 // Tests that if an install.rdf claims compatibility then the add-on will be
 // seen as compatible regardless of what the update.rdf says.
 add_task(async function test_9() {
-  await promiseWriteInstallRDFForExtension({
+  await promiseInstallXPI({
     id: "addon4@tests.mozilla.org",
     version: "5.0",
+    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
     targetApplications: [{
       id: appId,
@@ -647,9 +639,7 @@ add_task(async function test_9() {
       maxVersion: "1"
     }],
     name: "Test Addon 1",
-  }, profileDir);
-
-  await promiseRestartManager();
+  });
 
   let a4 = await AddonManager.getAddonByID("addon4@tests.mozilla.org");
   ok(a4.isActive, "addon4 is active");
@@ -676,14 +666,11 @@ add_task(async function test_11() {
 
 // Check that the decreased maxVersion applied and disables the add-on
 add_task(async function test_12() {
-  await promiseRestartManager();
-
   let a4 = await AddonManager.getAddonByID("addon4@tests.mozilla.org");
   ok(a4.isActive);
   ok(a4.isCompatible);
 
   a4.uninstall();
-  await promiseRestartManager();
 });
 
 // Tests that a compatibility update is passed to the listener when there is
@@ -692,9 +679,10 @@ add_task(async function test_12() {
 // strict compatibility checking is disabled.
 add_task(async function test_13() {
   // Not initially compatible but the update check will make it compatible
-  await promiseWriteInstallRDFForExtension({
+  await promiseInstallXPI({
     id: "addon7@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
     targetApplications: [{
       id: appId,
@@ -702,9 +690,7 @@ add_task(async function test_13() {
       maxVersion: "0"
     }],
     name: "Test Addon 7",
-  }, profileDir);
-
-  await promiseRestartManager();
+  });
 
   let a7 = await AddonManager.getAddonByID("addon7@tests.mozilla.org");
   notEqual(a7, null);
@@ -729,16 +715,16 @@ add_task(async function test_13() {
   ok(!a7.appDisabled);
 
   a7.uninstall();
-  await promiseRestartManager();
 });
 
 // Test that background update checks doesn't update an add-on that isn't
 // allowed to update automatically.
 add_task(async function test_14() {
   // Have an add-on there that will be updated so we see some events from it
-  await promiseWriteInstallRDFForExtension({
+  await promiseInstallXPI({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
     targetApplications: [{
       id: appId,
@@ -746,11 +732,12 @@ add_task(async function test_14() {
       maxVersion: "1"
     }],
     name: "Test Addon 1",
-  }, profileDir);
+  });
 
-  await promiseWriteInstallRDFForExtension({
+  await promiseInstallXPI({
     id: "addon8@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
     targetApplications: [{
       id: appId,
@@ -758,9 +745,7 @@ add_task(async function test_14() {
       maxVersion: "1"
     }],
     name: "Test Addon 8",
-  }, profileDir);
-
-  await promiseRestartManager();
+  });
 
   let a8 = await AddonManager.getAddonByID("addon8@tests.mozilla.org");
   a8.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
@@ -798,7 +783,6 @@ add_task(async function test_14() {
 
       onInstallEnded(aInstall) {
         equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
-        equal(aInstall.existingAddon.pendingUpgrade.install, aInstall);
 
         resolve();
       },
@@ -815,8 +799,6 @@ add_task(async function test_14() {
     AddonManagerInternal.backgroundUpdateCheck();
   });
   AddonManager.removeInstallListener(listener);
-
-  await promiseRestartManager();
 
   let a1;
   [a1, a8] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
@@ -828,113 +810,12 @@ add_task(async function test_14() {
   notEqual(a8, null);
   equal(a8.version, "1.0");
   a8.uninstall();
-  await promiseRestartManager();
-});
-
-// Test that background update checks doesn't update an add-on that is
-// pending uninstall
-add_task(async function test_15() {
-  // Have an add-on there that will be updated so we see some events from it
-  await promiseWriteInstallRDFForExtension({
-    id: "addon1@tests.mozilla.org",
-    version: "1.0",
-    updateURL: "http://example.com/data/" + updateFile,
-    targetApplications: [{
-      id: appId,
-      minVersion: "1",
-      maxVersion: "1"
-    }],
-    name: "Test Addon 1",
-  }, profileDir);
-
-  await promiseWriteInstallRDFForExtension({
-    id: "addon8@tests.mozilla.org",
-    version: "1.0",
-    updateURL: "http://example.com/data/" + updateFile,
-    targetApplications: [{
-      id: appId,
-      minVersion: "1",
-      maxVersion: "1"
-    }],
-    name: "Test Addon 8",
-  }, profileDir);
-
-  await promiseRestartManager();
-
-  let a8 = await AddonManager.getAddonByID("addon8@tests.mozilla.org");
-  a8.uninstall();
-  ok(!hasFlag(a8.permissions, AddonManager.PERM_CAN_UPGRADE));
-
-  // The background update check will find updates for both add-ons but only
-  // proceed to install one of them.
-  let listener;
-  await new Promise(resolve => {
-    listener = {
-      onNewInstall(aInstall) {
-        let id = aInstall.existingAddon.id;
-        ok((id == "addon1@tests.mozilla.org" || id == "addon8@tests.mozilla.org"),
-           "Saw unexpected onNewInstall for " + id);
-      },
-
-      onDownloadStarted(aInstall) {
-        equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
-      },
-
-      onDownloadEnded(aInstall) {
-        equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
-      },
-
-      onDownloadFailed(aInstall) {
-        ok(false, "Should not have seen onDownloadFailed event");
-      },
-
-      onDownloadCancelled(aInstall) {
-        ok(false, "Should not have seen onDownloadCancelled event");
-      },
-
-      onInstallStarted(aInstall) {
-        equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
-      },
-
-      onInstallEnded(aInstall) {
-        equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
-        resolve();
-      },
-
-      onInstallFailed(aInstall) {
-        ok(false, "Should not have seen onInstallFailed event");
-      },
-
-      onInstallCancelled(aInstall) {
-        ok(false, "Should not have seen onInstallCancelled event");
-      },
-    };
-    AddonManager.addInstallListener(listener);
-    AddonManagerInternal.backgroundUpdateCheck();
-  });
-  AddonManager.removeInstallListener(listener);
-
-  await promiseRestartManager();
-
-  let a1;
-  [a1, a8] = await AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                                "addon8@tests.mozilla.org"]);
-  notEqual(a1, null);
-  equal(a1.version, "2.0");
-  a1.uninstall();
-
-  equal(a8, null);
-  await promiseRestartManager();
 });
 
 add_task(async function test_16() {
-  await promiseRestartManager();
-
   let url = "http://example.com/addons/test_install2_1.xpi";
   let install = await AddonManager.getInstallForURL(url, null, "application/x-xpinstall");
   await promiseCompleteInstall(install);
-
-  await promiseRestartManager();
 
   let a1 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
   notEqual(a1.syncGUID, null);
@@ -944,22 +825,20 @@ add_task(async function test_16() {
   let install_2 = await AddonManager.getInstallForURL(url_2, null, "application/x-xpinstall");
   await promiseCompleteInstall(install_2);
 
-  await promiseRestartManager();
-
   let a2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
   notEqual(a2.syncGUID, null);
   equal(oldGUID, a2.syncGUID);
 
   a2.uninstall();
-  await promiseRestartManager();
 });
 
 // Test that the update check correctly observes the
 // extensions.strictCompatibility pref and compatibility overrides.
 add_task(async function test_17() {
-  await promiseWriteInstallRDFForExtension({
+  await promiseInstallXPI({
     id: "addon9@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
     targetApplications: [{
       id: appId,
@@ -967,9 +846,7 @@ add_task(async function test_17() {
       maxVersion: "0.2"
     }],
     name: "Test Addon 9",
-  }, profileDir);
-
-  await promiseRestartManager();
+  });
 
   let listener;
   await new Promise(resolve => {
@@ -998,15 +875,15 @@ add_task(async function test_17() {
 
   let a9 = await AddonManager.getAddonByID("addon9@tests.mozilla.org");
   a9.uninstall();
-  await promiseRestartManager();
 });
 
 // Tests that compatibility updates are applied to addons when the updated
 // compatibility data wouldn't match with strict compatibility enabled.
 add_task(async function test_18() {
-  await promiseWriteInstallRDFForExtension({
+  await promiseInstallXPI({
     id: "addon10@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
     targetApplications: [{
       id: appId,
@@ -1014,9 +891,7 @@ add_task(async function test_18() {
       maxVersion: "0.2"
     }],
     name: "Test Addon 10",
-  }, profileDir);
-
-  await promiseRestartManager();
+  });
 
   let a10 = await AddonManager.getAddonByID("addon10@tests.mozilla.org");
   notEqual(a10, null);
@@ -1026,15 +901,15 @@ add_task(async function test_18() {
   ok(!result.updateAvailable, "Should not have seen a version update");
 
   a10.uninstall();
-  await promiseRestartManager();
 });
 
 // Test that the update check correctly observes when an addon opts-in to
 // strict compatibility checking.
 add_task(async function test_19() {
-  await promiseWriteInstallRDFForExtension({
+  await promiseInstallXPI({
     id: "addon11@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
     targetApplications: [{
       id: appId,
@@ -1042,9 +917,7 @@ add_task(async function test_19() {
       maxVersion: "0.2"
     }],
     name: "Test Addon 11",
-  }, profileDir);
-
-  await promiseRestartManager();
+  });
 
   let a11 = await AddonManager.getAddonByID("addon11@tests.mozilla.org");
   notEqual(a11, null);
@@ -1054,15 +927,15 @@ add_task(async function test_19() {
   ok(!result.updateAvailable, "Should not have seen a version update");
 
   a11.uninstall();
-  await promiseRestartManager();
 });
 
 // Test that the update succeeds when the update.rdf URN contains a type prefix
 // different from the add-on type
 add_task(async function test_20() {
-  await promiseWriteInstallRDFForExtension({
+  await promiseInstallXPI({
     id: "addon12@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://example.com/data/" + updateFile,
     targetApplications: [{
       id: appId,
@@ -1070,9 +943,7 @@ add_task(async function test_20() {
       maxVersion: "1"
     }],
     name: "Test Addon 12",
-  }, profileDir);
-
-  await promiseRestartManager();
+  });
 
   let install = await new Promise(resolve => {
     prepare_test({}, [
@@ -1090,7 +961,8 @@ add_task(async function test_20() {
   await new Promise(resolve => {
     prepare_test({
       "addon12@tests.mozilla.org": [
-        "onInstalling"
+        ["onInstalling", false],
+        "onInstalled",
       ]
     }, [
       "onInstallStarted",
@@ -1098,15 +970,13 @@ add_task(async function test_20() {
     ], resolve);
   });
 
-  equal(install.existingAddon.pendingUpgrade.install, install);
-
-  await promiseRestartManager();
   let a12 = await AddonManager.getAddonByID("addon12@tests.mozilla.org");
   notEqual(a12, null);
   equal(a12.version, "2.0");
   equal(a12.type, "extension");
+
+  end_test();
   a12.uninstall();
-  await promiseRestartManager();
 });
 
 add_task(async function cleanup() {
@@ -1114,8 +984,6 @@ add_task(async function cleanup() {
 
   for (let addon of addons)
     addon.uninstall();
-
-  await promiseRestartManager();
 });
 
 // Test that background update checks work for lightweight themes
@@ -1281,6 +1149,7 @@ add_task(async function run_test_locked_install() {
   await promiseWriteInstallRDFToXPI({
     id: "addon13@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://example.com/data/test_update.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",

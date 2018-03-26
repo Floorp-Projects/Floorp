@@ -980,6 +980,18 @@ var AddonTestUtils = {
   },
 
   /**
+   * Creates an XPI with the given files and installs it.
+   *
+   * @param {object} files
+   *        A files object as would be passed to {@see #createTempXPI}.
+   * @returns {Promise}
+   *        A promise which resolves when the add-on is installed.
+   */
+  promiseInstallXPI(files) {
+    return this.promiseInstallFile(this.createTempXPIFile(files));
+  },
+
+  /**
    * Creates an extension proxy file.
    * See: https://developer.mozilla.org/en-US/Add-ons/Setting_up_extension_development_environment#Firefox_extension_proxy_file
    *

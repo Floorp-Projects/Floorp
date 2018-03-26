@@ -76,7 +76,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
 // Whitelist existing tests that still use non-restartless extensions.
 const LEGACY_NON_RESTARTLESS_TESTS = new Set([
   "test_bug455906.js",
-  "test_update.js",
 ]);
 
 if (LEGACY_NON_RESTARTLESS_TESTS.has(_TEST_FILE[0].replace(/.*\//, ""))) {
@@ -871,6 +870,10 @@ function createTempXPIFile(aData, aExtraFile) {
   return AddonTestUtils.createTempXPIFile(files);
 }
 
+function promiseInstallXPI(installRDF) {
+  return AddonTestUtils.promiseInstallXPI({"install.rdf": installRDF});
+}
+
 var gExpectedEvents = {};
 var gExpectedInstalls = [];
 var gNext = null;
@@ -1085,6 +1088,11 @@ function prepare_test(aExpectedEvents, aExpectedInstalls, aNext) {
   gExpectedInstalls = aExpectedInstalls;
   gExpectedEvents = aExpectedEvents;
   gNext = aNext;
+}
+
+function end_test() {
+  AddonManager.removeAddonListener(AddonListener);
+  AddonManager.removeInstallListener(InstallListener);
 }
 
 // Checks if all expected events have been seen and if so calls the callback
