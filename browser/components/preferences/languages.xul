@@ -20,8 +20,6 @@
         title="&languages.customize.Header;"
         buttons="accept,cancel,help"
         persist="lastSelected screenX screenY"
-        closebuttonlabel="&preferencesCloseButton.label;"
-        closebuttonaccesskey="&preferencesCloseButton.accesskey;"
         role="dialog"
         onload="gLanguagesDialog.init();"
         helpTopic="prefs-languages"
