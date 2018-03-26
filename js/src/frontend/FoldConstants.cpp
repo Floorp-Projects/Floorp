@@ -1290,9 +1290,11 @@ FoldElement(JSContext* cx, ParseNode** nodePtr, PerHandlerParser<FullParseHandle
             // Optimization 2: We have something like expr[3.14]. The number
             // isn't an array index, so it converts to a string ("3.14"),
             // enabling optimization 3 below.
-            JSAtom* atom = ToAtom<NoGC>(cx, DoubleValue(number));
-            if (!atom)
+            JSAtom* atom = NumberToAtom(cx, number);
+            if (!atom) {
+                cx->recoverFromOutOfMemory();
                 return false;
+            }
             name = atom->asPropertyName();
         }
     }
