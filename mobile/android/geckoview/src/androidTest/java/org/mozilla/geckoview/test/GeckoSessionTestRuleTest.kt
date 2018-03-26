@@ -735,7 +735,8 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @Test fun wrapSession() {
-        val session = sessionRule.wrapSession(GeckoSession(sessionRule.session.settings))
+        val session = sessionRule.wrapSession(
+          GeckoSession(sessionRule.session.settings))
         sessionRule.openSession(session)
         session.reload()
         session.waitForPageStop()
