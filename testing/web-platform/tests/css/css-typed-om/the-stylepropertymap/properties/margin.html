@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>'margin-top' property</title>
+<title>margin properties</title>
 <link rel="help" href="https://drafts.css-houdini.org/css-typed-om-1/#dom-stylepropertymap-get">
 <link rel="help" href="https://drafts.css-houdini.org/css-typed-om-1/#dom-stylepropertymap-set">
 <link rel="help" href="https://drafts.css-houdini.org/css-typed-om-1/#property-stle-value-normalization">
@@ -9,15 +9,22 @@
 <script src="../../resources/testhelper.js"></script>
 <script src="resources/testsuite.js"></script>
 <body>
-<div id="log">
+<div id="log"></div>
 <script>
 'use strict';
 
-runPropertyTests('margin-top', [
-  { specified: '0' },
-  { specified: '<ident>', examples: [new CSSKeywordValue('auto')] },
-  { specified: '<percentage>' },
-  { specified: '<length>' },
-]);
+for (const suffix of ['top', 'left', 'right', 'bottom']) {
+  runPropertyTests('margin-' + suffix, [
+    {
+      syntax: 'auto',
+      // Depending on which CSS spec is implemented, the computed value
+      // can be 'auto' or a browser specific value.
+      // FIXME: Figure out how to test this.
+      computed: () => {}
+    },
+    { syntax: '<percentage>' },
+    { syntax: '<length>' },
+  ]);
+}
 
 </script>
