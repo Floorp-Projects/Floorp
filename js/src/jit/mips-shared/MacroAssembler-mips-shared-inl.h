@@ -639,6 +639,15 @@ MacroAssembler::branchSub32(Condition cond, T src, Register dest, Label* overflo
     }
 }
 
+template <typename T>
+void
+MacroAssembler::branchMul32(Condition cond, T src, Register dest, Label* overflow)
+{
+    MOZ_ASSERT(cond == Assembler::Overflow);
+    ma_mul_branch_overflow(dest, dest, src, overflow);
+}
+
+
 void
 MacroAssembler::decBranchPtr(Condition cond, Register lhs, Imm32 rhs, Label* label)
 {
