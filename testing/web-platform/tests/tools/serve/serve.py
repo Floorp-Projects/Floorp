@@ -17,7 +17,7 @@ import uuid
 from collections import defaultdict, OrderedDict
 from multiprocessing import Process, Event
 
-from ..localpaths import repo_root
+from localpaths import repo_root
 
 import sslutils
 from manifest.sourcefile import read_script_metadata, js_meta_re
