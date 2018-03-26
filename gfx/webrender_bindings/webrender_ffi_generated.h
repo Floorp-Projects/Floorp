@@ -1529,6 +1529,10 @@ void wr_resource_updates_update_image(ResourceUpdates *aResources,
 WR_FUNC;
 
 WR_INLINE
+uintptr_t wr_root_scroll_node_id()
+WR_FUNC;
+
+WR_INLINE
 void wr_set_item_tag(WrState *aState,
                      uint64_t aScrollId,
                      uint16_t aHitInfo)

@@ -2243,3 +2243,13 @@ pub extern "C" fn wr_init_external_log_handler(log_filter: WrLogLevelFilter) {
 #[no_mangle]
 pub extern "C" fn wr_shutdown_external_log_handler() {
 }
+
+#[no_mangle]
+pub extern "C" fn wr_root_scroll_node_id() -> usize {
+    // The PipelineId doesn't matter here, since we just want the numeric part of the id
+    // produced for any given root reference frame.
+    match ClipId::root_scroll_node(PipelineId(0, 0)) {
+        ClipId::Clip(id, _) => id,
+        _ => unreachable!("Got a non Clip ClipId for root reference frame."),
+    }
+}
