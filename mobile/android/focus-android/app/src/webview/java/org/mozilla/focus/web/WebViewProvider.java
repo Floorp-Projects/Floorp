@@ -130,6 +130,12 @@ public class WebViewProvider {
         settings.setJavaScriptEnabled(!Settings.getInstance(context).shouldBlockJavaScript());
     }
 
+    @SuppressLint("SetJavaScriptEnabled") // We explicitly want to enable JavaScript
+    public static void disableBlocking(WebSettings settings) {
+        settings.setBlockNetworkImage(false);
+        settings.setJavaScriptEnabled(true);
+    }
+
     /**
      * Build the browser specific portion of the UA String, based on the webview's existing UA String.
      */
