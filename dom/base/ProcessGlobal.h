@@ -26,7 +26,7 @@ namespace mozilla {
 namespace dom {
 
 class ProcessGlobal :
-  public nsIMessageManagerGlobal,
+  public nsISyncMessageSender,
   public nsMessageManagerScriptExecutor,
   public nsIGlobalObject,
   public nsIScriptObjectPrincipal,
@@ -52,7 +52,7 @@ public:
   static ProcessGlobal* Get();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ProcessGlobal, nsIMessageManagerGlobal)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ProcessGlobal, nsISyncMessageSender)
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override
@@ -72,10 +72,6 @@ public:
   using MessageManagerGlobal::GetRemoteType;
   using MessageManagerGlobal::SendSyncMessage;
   using MessageManagerGlobal::SendRpcMessage;
-  using MessageManagerGlobal::Dump;
-  using MessageManagerGlobal::PrivateNoteIntentionalCrash;
-  using MessageManagerGlobal::Atob;
-  using MessageManagerGlobal::Btoa;
 
   // ContentProcessMessageManager
   void GetInitialProcessData(JSContext* aCx,
@@ -92,7 +88,6 @@ public:
   NS_FORWARD_SAFE_NSIMESSAGELISTENERMANAGER(mMessageManager)
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
   NS_FORWARD_SAFE_NSISYNCMESSAGESENDER(mMessageManager)
-  NS_FORWARD_SAFE_NSIMESSAGEMANAGERGLOBAL(mMessageManager)
 
   virtual void LoadScript(const nsAString& aURL);
 
