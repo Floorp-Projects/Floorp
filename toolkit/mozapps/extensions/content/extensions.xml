@@ -467,10 +467,6 @@
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "install-remote-btn");
       </field>
-      <field name="_restartNeeded">
-        document.getAnonymousElementByAttribute(this, "anonid",
-                                                "restart-needed");
-      </field>
       <field name="_undo">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "undo-btn");
@@ -601,19 +597,6 @@
         ]]></body>
       </method>
 
-      <method name="undoAction">
-        <body><![CDATA[
-          if (!this.mAddon)
-            return;
-          var pending = this.mAddon.pendingOperations;
-          if (pending & AddonManager.PENDING_ENABLE)
-            this.mAddon.userDisabled = true;
-          else if (pending & AddonManager.PENDING_DISABLE)
-            this.mAddon.userDisabled = false;
-          this.refreshState();
-        ]]></body>
-      </method>
-
       <method name="onDownloadStarted">
         <body><![CDATA[
           this.refreshState();
@@ -684,14 +667,6 @@
         ]]></body>
       </method>
 
-      <method name="opRequiresRestart">
-        <parameter name="aOperation"/>
-        <body><![CDATA[
-          var operation = AddonManager["OP_NEEDS_RESTART_" + aOperation.toUpperCase()];
-          return !!(this.mAddon.operationsRequiringRestart & operation);
-        ]]></body>
-      </method>
-
       <method name="isPending">
         <parameter name="aAction"/>
         <body><![CDATA[
@@ -742,9 +717,6 @@
                 class="pending">
         <xul:image class="pending-icon"/>
         <xul:label anonid="pending" flex="1"/>
-        <xul:button anonid="restart-btn" class="button-link"
-                    label="&addon.restartNow.label;"
-                    oncommand="document.getBindingParent(this).restart();"/>
         <xul:button anonid="undo-btn" class="button-link"
                     label="&addon.undoAction.label;"
                     tooltipText="&addon.undoAction.tooltip;"
@@ -1150,22 +1122,15 @@
             gViewController.updateCommands();
 
           var pending = this.mAddon.pendingOperations;
-          if (pending != AddonManager.PENDING_NONE) {
+          if (pending & AddonManager.PENDING_UNINSTALL) {
             this.removeAttribute("notification");
 
-            pending = null;
-            const PENDING_OPERATIONS = ["enable", "disable", "install",
-                                        "uninstall", "upgrade"];
-            for (let op of PENDING_OPERATIONS) {
-              if (this.isPending(op))
-                pending = op;
-            }
-
-            this.setAttribute("pending", pending);
+            // We don't care about pending operations other than uninstall.
+            // They're transient, and cannot be undone.
+            this.setAttribute("pending", "uninstall");
             this._pending.textContent = gStrings.ext.formatStringFromName(
-              "notification." + pending,
-              [this.mAddon.name, gStrings.brandShortName], 2
-            );
+              "notification.restartless-uninstall",
+              [this.mAddon.name], 1);
           } else {
             this.removeAttribute("pending");
 
@@ -1483,12 +1448,6 @@
         ]]></body>
       </method>
 
-      <method name="restart">
-        <body><![CDATA[
-          gViewController.commands.cmd_restartApp.doCommand();
-        ]]></body>
-      </method>
-
       <method name="undo">
         <body><![CDATA[
           gViewController.commands.cmd_cancelOperation.doCommand(this.mAddon);
@@ -1497,11 +1456,12 @@
 
       <method name="uninstall">
         <body><![CDATA[
-          // If uninstalling does not require a restart and the type doesn't
-          // support undoing of restartless uninstalls, then we fake it by
-          // just disabling it it, and doing the real uninstall later.
-          if (!this.opRequiresRestart("uninstall") &&
-              !this.typeHasFlag("SUPPORTS_UNDO_RESTARTLESS_UNINSTALL")) {
+          // If the type doesn't support undoing of restartless uninstalls,
+          // then we fake it by just disabling it it, and doing the real
+          // uninstall later.
+          if (this.typeHasFlag("SUPPORTS_UNDO_RESTARTLESS_UNINSTALL")) {
+            this.mAddon.uninstall(true);
+          } else {
             this.setAttribute("wasDisabled", this.mAddon.userDisabled);
 
             // We must set userDisabled to true first, this will call
@@ -1510,8 +1470,6 @@
 
             // This won't update any other add-on manager views (bug 582002)
             this.setAttribute("pending", "uninstall");
-          } else {
-            this.mAddon.uninstall(true);
           }
         ]]></body>
       </method>
@@ -1591,7 +1549,6 @@
       </method>
 
       <method name="onUninstalling">
-        <parameter name="aRestartRequired"/>
         <body><![CDATA[
           this._updateState();
         ]]></body>
@@ -1634,17 +1591,11 @@
       <method name="onExternalInstall">
         <parameter name="aAddon"/>
         <parameter name="aExistingAddon"/>
-        <parameter name="aNeedsRestart"/>
         <body><![CDATA[
           if (aExistingAddon.id != this.mAddon.id)
             return;
 
-          // If the install completed without needing a restart then switch to
-          // using the new Addon
-          if (!aNeedsRestart)
-            this._initWithAddon(aAddon);
-          else
-            this._updateState();
+          this._initWithAddon(aAddon);
         ]]></body>
       </method>
 
@@ -1684,12 +1635,7 @@
         <parameter name="aInstall"/>
         <parameter name="aAddon"/>
         <body><![CDATA[
-          // If the install completed without needing a restart then switch to
-          // using the new Addon
-          if (!(aAddon.pendingOperations & AddonManager.PENDING_INSTALL))
-            this._initWithAddon(aAddon);
-          else
-            this._updateState();
+          this._initWithAddon(aAddon);
         ]]></body>
       </method>
 
@@ -1739,9 +1685,6 @@
       <xul:hbox class="pending">
         <xul:image class="pending-icon"/>
         <xul:label anonid="notice" flex="1"/>
-        <xul:button anonid="restart-btn" class="button-link"
-                    label="&addon.restartNow.label;"
-                    command="cmd_restartApp"/>
         <xul:button anonid="undo-btn" class="button-link"
                     label="&addon.undoRemove.label;"
                     tooltiptext="&addon.undoRemove.tooltip;"
@@ -1756,9 +1699,6 @@
                                                                      [this.mAddon.name],
                                                                      1);
 
-        if (!this.opRequiresRestart("uninstall"))
-          this._restartBtn.setAttribute("hidden", true);
-
         gEventManager.registerAddonListener(this, this.mAddon.id);
       ]]></constructor>
 
@@ -1768,9 +1708,6 @@
 
       <field name="_notice" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "notice");
-      </field>
-      <field name="_restartBtn" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "restart-btn");
       </field>
 
       <method name="cancelUninstall">
@@ -1788,17 +1725,9 @@
         ]]></body>
       </method>
 
-      <method name="onOperationCancelled">
-        <body><![CDATA[
-          if (!this.isPending("uninstall"))
-            this.removeAttribute("pending");
-        ]]></body>
-      </method>
-
       <method name="onExternalInstall">
         <parameter name="aAddon"/>
         <parameter name="aExistingAddon"/>
-        <parameter name="aNeedsRestart"/>
         <body><![CDATA[
           if (aExistingAddon.id != this.mAddon.id)
             return;
@@ -1807,10 +1736,7 @@
           if (this.hasAttribute("wasDisabled"))
             aAddon.userDisabled = this.getAttribute("wasDisabled") == "true";
 
-          // If the install completed without needing a restart then switch to
-          // using the new Addon
-          if (!aNeedsRestart)
-            this.mAddon = aAddon;
+          this.mAddon = aAddon;
 
           this.removeAttribute("pending");
         ]]></body>
@@ -1829,10 +1755,7 @@
         <parameter name="aInstall"/>
         <parameter name="aAddon"/>
         <body><![CDATA[
-          // If the install completed without needing a restart then switch to
-          // using the new Addon
-          if (!(aAddon.pendingOperations & AddonManager.PENDING_INSTALL))
-            this.mAddon = aAddon;
+          this.mAddon = aAddon;
 
           this.removeAttribute("pending");
         ]]></body>

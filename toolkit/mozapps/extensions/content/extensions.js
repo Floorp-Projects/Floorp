@@ -933,22 +933,6 @@ var gViewController = {
       }
     },
 
-    cmd_restartApp: {
-      isEnabled() {
-        return true;
-      },
-      doCommand() {
-        let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].
-                         createInstance(Ci.nsISupportsPRBool);
-        Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
-                                     "restart");
-        if (cancelQuit.data)
-          return; // somebody canceled our quit request
-
-        Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
-      }
-    },
-
     cmd_enableCheckCompatibility: {
       isEnabled() {
         return true;
@@ -1053,7 +1037,6 @@ var gViewController = {
         var pendingChecks = 0;
         var numUpdated = 0;
         var numManualUpdates = 0;
-        var restartNeeded = false;
 
         let updateStatus = () => {
           if (pendingChecks > 0)
@@ -1076,12 +1059,7 @@ var gViewController = {
             return;
           }
 
-          if (restartNeeded) {
-            document.getElementById("updates-downloaded").hidden = false;
-            document.getElementById("updates-restart-btn").hidden = false;
-          } else {
-            document.getElementById("updates-installed").hidden = false;
-          }
+          document.getElementById("updates-installed").hidden = false;
         };
 
         var updateInstallListener = {
@@ -1100,8 +1078,6 @@ var gViewController = {
           onInstallEnded(aInstall, aAddon) {
             pendingChecks--;
             numUpdated++;
-            if (isPending(aInstall.existingAddon, "upgrade"))
-              restartNeeded = true;
             updateStatus();
           }
         };
@@ -1238,8 +1214,6 @@ var gViewController = {
       getTooltip(aAddon) {
         if (!aAddon)
           return "";
-        if (aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_ENABLE)
-          return gStrings.ext.GetStringFromName("enableAddonRestartRequiredTooltip");
         return gStrings.ext.GetStringFromName("enableAddonTooltip");
       }
     },
@@ -1258,8 +1232,6 @@ var gViewController = {
       getTooltip(aAddon) {
         if (!aAddon)
           return "";
-        if (aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_DISABLE)
-          return gStrings.ext.GetStringFromName("disableAddonRestartRequiredTooltip");
         return gStrings.ext.GetStringFromName("disableAddonTooltip");
       }
     },
@@ -1301,8 +1273,6 @@ var gViewController = {
       getTooltip(aAddon) {
         if (!aAddon)
           return "";
-        if (aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL)
-          return gStrings.ext.GetStringFromName("uninstallAddonRestartRequiredTooltip");
         return gStrings.ext.GetStringFromName("uninstallAddonTooltip");
       }
     },
@@ -1372,16 +1342,8 @@ var gViewController = {
         return aAddon.pendingOperations != AddonManager.PENDING_NONE;
       },
       doCommand(aAddon) {
-        if (isPending(aAddon, "install")) {
-          aAddon.install.cancel();
-        } else if (isPending(aAddon, "upgrade")) {
-          aAddon.pendingUpgrade.install.cancel();
-        } else if (isPending(aAddon, "uninstall")) {
+        if (isPending(aAddon, "uninstall")) {
           aAddon.cancelUninstall();
-        } else if (isPending(aAddon, "enable")) {
-          aAddon.userDisabled = true;
-        } else if (isPending(aAddon, "disable")) {
-          aAddon.userDisabled = false;
         }
       }
     },
@@ -1785,8 +1747,7 @@ function doPendingUninstalls(aListBox) {
   var items = [];
   var listitem = aListBox.firstChild;
   while (listitem) {
-    if (listitem.getAttribute("pending") == "uninstall" &&
-        !(listitem.opRequiresRestart("UNINSTALL")))
+    if (listitem.getAttribute("pending") == "uninstall")
       items.push(listitem.mAddon);
     listitem = listitem.nextSibling;
   }
@@ -1925,7 +1886,7 @@ var gCategories = {
             this._maybeShowCategory(aAddon);
           },
 
-          onExternalInstall(aAddon, aExistingAddon, aRequiresRestart) {
+          onExternalInstall(aAddon, aExistingAddon) {
             this._maybeShowCategory(aAddon);
           },
 
@@ -2588,7 +2549,7 @@ var gListView = {
     sortList(this._listBox, aSortBy, aAscending);
   },
 
-  onExternalInstall(aAddon, aExistingAddon, aRequiresRestart) {
+  onExternalInstall(aAddon, aExistingAddon) {
     // The existing list item will take care of upgrade installs
     if (aExistingAddon)
       return;
@@ -2980,22 +2941,15 @@ var gDetailView = {
     gViewController.updateCommands();
 
     var pending = this._addon.pendingOperations;
-    if (pending != AddonManager.PENDING_NONE) {
+    if (pending & AddonManager.PENDING_UNINSTALL) {
       this.node.removeAttribute("notification");
 
-      pending = null;
-      const PENDING_OPERATIONS = ["enable", "disable", "install", "uninstall",
-                                  "upgrade"];
-      for (let op of PENDING_OPERATIONS) {
-        if (isPending(this._addon, op))
-          pending = op;
-      }
-
-      this.node.setAttribute("pending", pending);
+      // We don't care about pending operations other than uninstall.
+      // They're transient, and cannot be undone.
+      this.node.setAttribute("pending", "uninstall");
       document.getElementById("detail-pending").textContent = gStrings.ext.formatStringFromName(
-        "details.notification." + pending,
-        [this._addon.name, gStrings.brandShortName], 2
-      );
+        "details.notification.restartless-uninstall",
+        [this._addon.name], 1);
     } else {
       this.node.removeAttribute("pending");
 
@@ -3329,9 +3283,9 @@ var gDetailView = {
     this.fillSettingsRows();
   },
 
-  onDisabling(aNeedsRestart) {
+  onDisabling() {
     this.updateState();
-    if (!aNeedsRestart && hasInlineOptions(this._addon)) {
+    if (hasInlineOptions(this._addon)) {
       Services.obs.notifyObservers(document,
                                    AddonManager.OPTIONS_NOTIFICATION_HIDDEN,
                                    this._addon.id);
@@ -3368,15 +3322,12 @@ var gDetailView = {
       this.updateState();
   },
 
-  onExternalInstall(aAddon, aExistingAddon, aNeedsRestart) {
+  onExternalInstall(aAddon, aExistingAddon) {
     // Only care about upgrades for the currently displayed add-on
     if (!aExistingAddon || aExistingAddon.id != this._addon.id)
       return;
 
-    if (!aNeedsRestart)
-      this._updateView(aAddon, false);
-    else
-      this.updateState();
+    this._updateView(aAddon, false);
   },
 
   onInstallCancelled(aInstall) {
