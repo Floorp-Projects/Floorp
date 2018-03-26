@@ -27,8 +27,6 @@ struct PropertyValuePair
 {
   explicit PropertyValuePair(nsCSSPropertyID aProperty)
     : mProperty(aProperty) { }
-  PropertyValuePair(nsCSSPropertyID aProperty, nsCSSValue&& aValue)
-    : mProperty(aProperty), mValue(Move(aValue)) { }
   PropertyValuePair(nsCSSPropertyID aProperty,
                     RefPtr<RawServoDeclarationBlock>&& aValue)
     : mProperty(aProperty), mServoDeclarationBlock(Move(aValue))
@@ -37,10 +35,6 @@ struct PropertyValuePair
   }
 
   nsCSSPropertyID mProperty;
-  // The specified value for the property. For shorthand property values,
-  // we store the specified property value as a token stream (string).
-  // If this is uninitialized, we use the underlying value.
-  nsCSSValue mValue;
 
   // The specified value when using the Servo backend.
   RefPtr<RawServoDeclarationBlock> mServoDeclarationBlock;

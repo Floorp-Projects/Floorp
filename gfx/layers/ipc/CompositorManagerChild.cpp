@@ -261,7 +261,7 @@ already_AddRefed<nsIEventTarget>
 CompositorManagerChild::GetSpecificMessageEventTarget(const Message& aMsg)
 {
   if (aMsg.type() == PCompositorBridge::Msg_DidComposite__ID) {
-    uint64_t layersId;
+    LayersId layersId;
     PickleIterator iter(aMsg);
     if (!IPC::ReadParam(&aMsg, &iter, &layersId)) {
       return nullptr;

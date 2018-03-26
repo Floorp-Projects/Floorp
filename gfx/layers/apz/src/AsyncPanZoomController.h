@@ -179,7 +179,7 @@ public:
    */
   ScreenCoord GetSecondTapTolerance() const;
 
-  AsyncPanZoomController(uint64_t aLayersId,
+  AsyncPanZoomController(LayersId aLayersId,
                          APZCTreeManager* aTreeManager,
                          const RefPtr<InputQueue>& aInputQueue,
                          GeckoContentController* aController,
@@ -786,7 +786,7 @@ protected:
   // Common processing at the end of a touch block.
   void OnTouchEndOrCancel();
 
-  uint64_t mLayersId;
+  LayersId mLayersId;
   RefPtr<CompositorController> mCompositorController;
   RefPtr<MetricsSharingController> mMetricsSharingController;
 
@@ -1366,7 +1366,7 @@ public:
     return mAsyncTransformAppliedToContent;
   }
 
-  uint64_t GetLayersId() const
+  LayersId GetLayersId() const
   {
     return mLayersId;
   }

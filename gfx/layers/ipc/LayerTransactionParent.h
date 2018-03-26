@@ -48,7 +48,7 @@ public:
   LayerTransactionParent(HostLayerManager* aManager,
                          CompositorBridgeParentBase* aBridge,
                          CompositorAnimationStorage* aAnimStorage,
-                         uint64_t aId);
+                         LayersId aId);
 
 protected:
   ~LayerTransactionParent();
@@ -58,7 +58,7 @@ public:
 
   void SetLayerManager(HostLayerManager* aLayerManager, CompositorAnimationStorage* aAnimStorage);
 
-  uint64_t GetId() const { return mId; }
+  LayersId GetId() const { return mId; }
   Layer* GetRoot() const { return mRoot; }
 
   uint64_t GetChildEpoch() const { return mChildEpoch; }
@@ -185,7 +185,7 @@ private:
   // Mapping from LayerHandles to Layers.
   nsRefPtrHashtable<nsUint64HashKey, Layer> mLayerMap;
 
-  uint64_t mId;
+  LayersId mId;
 
   // These fields keep track of the latest epoch values in the child and the
   // parent. mChildEpoch is the latest epoch value received from the child.
