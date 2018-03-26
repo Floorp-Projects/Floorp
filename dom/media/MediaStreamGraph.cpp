@@ -2050,6 +2050,12 @@ MediaStream::RemoveAllListenersImpl()
   if (SourceMediaStream* source = AsSourceStream()) {
     source->RemoveAllDirectListeners();
   }
+
+  auto videoOutputs(mVideoOutputs);
+  for (auto& l : videoOutputs) {
+    l.mListener->NotifyRemoved();
+  }
+  mVideoOutputs.Clear();
 }
 
 void
