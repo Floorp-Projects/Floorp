@@ -86,11 +86,15 @@ property to true in Firefox.
 
   var onIceCandidateToFirst = test.step_func(function(event) {
     // If event.candidate is null = no more candidates.
-    gSecondConnection.addIceCandidate(event.candidate);
+    if (event.candidate) {
+      gSecondConnection.addIceCandidate(event.candidate);
+    }
   });
 
   var onIceCandidateToSecond = test.step_func(function(event) {
-    gFirstConnection.addIceCandidate(event.candidate);
+    if (event.candidate) {
+      gFirstConnection.addIceCandidate(event.candidate);
+    }
   });
 
   var onRemoteTrack = test.step_func(function(event) {
