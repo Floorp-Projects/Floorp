@@ -19,7 +19,7 @@ toolkit.jar:
    skin/classic/global/menulist.css
    skin/classic/global/netError.css
 *  skin/classic/global/notification.css
-   skin/classic/global/numberbox.css
+*  skin/classic/global/numberbox.css
    skin/classic/global/popup.css
    skin/classic/global/printPreview.css
    skin/classic/global/radio.css
