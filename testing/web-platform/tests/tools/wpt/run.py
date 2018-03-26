@@ -361,6 +361,17 @@ class Servo(BrowserSetup):
             kwargs["binary"] = binary
 
 
+class WebKit(BrowserSetup):
+    name = "webkit"
+    browser_cls = browser.WebKit
+
+    def install(self, venv):
+        raise NotImplementedError
+
+    def setup_kwargs(self, kwargs):
+        pass
+
+
 product_setup = {
     "firefox": Firefox,
     "chrome": Chrome,
@@ -371,6 +382,7 @@ product_setup = {
     "servo": Servo,
     "sauce": Sauce,
     "opera": Opera,
+    "webkit": WebKit,
 }
 
 

@@ -247,6 +247,10 @@ scheme host and port.""")
                              dest="sauce_connect_binary",
                              help="Path to Sauce Connect binary")
 
+    webkit_group = parser.add_argument_group("WebKit-specific")
+    webkit_group.add_argument("--webkit-port", dest="webkit_port",
+                             help="WebKit port")
+
     parser.add_argument("test_list", nargs="*",
                         help="List of URLs for tests to run, or paths including tests to run. "
                              "(equivalent to --include)")

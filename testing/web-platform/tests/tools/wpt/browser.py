@@ -467,3 +467,24 @@ class Sauce(Browser):
 
     def version(self, root):
         return None
+
+class WebKit(Browser):
+    """WebKit-specific interface."""
+
+    product = "webkit"
+    requirements = "requirements_webkit.txt"
+
+    def install(self, dest=None):
+        raise NotImplementedError
+
+    def find_binary(self, path=None):
+        return None
+
+    def find_webdriver(self):
+        return None
+
+    def install_webdriver(self):
+        raise NotImplementedError
+
+    def version(self, root):
+        return None
