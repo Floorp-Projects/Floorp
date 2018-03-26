@@ -604,9 +604,11 @@ private:
   // This is read and written to only on the MSG thread.
   bool mSkipProcessing;
 
-  // To only update microphone when needed, we keep track of previous settings.
+  // To only update microphone when needed, we keep track of the prefs
+  // representing the currently applied settings for this source. This is the
+  // net result of the prefs across all allocations.
   // Owning thread only.
-  MediaEnginePrefs mLastPrefs;
+  MediaEnginePrefs mNetPrefs;
 
   // Stores the mixed audio output for the reverse-stream of the AEC.
   AlignedFloatBuffer mOutputBuffer;
