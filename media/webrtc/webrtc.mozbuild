@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 if CONFIG['MOZ_WEBRTC']:
     DEFINES['HAVE_UINT64_T'] = True
+
     if CONFIG['OS_TARGET'] != 'WINNT':
         DEFINES['WEBRTC_POSIX'] = True
         DEFINES['WEBRTC_BUILD_LIBEVENT'] = True
@@ -20,6 +21,9 @@ if CONFIG['MOZ_WEBRTC']:
         DEFINES['WEBRTC_BSD'] = True
     elif CONFIG['OS_TARGET'] == 'Android':
         DEFINES['WEBRTC_ANDROID'] = True
+
+    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+        DEFINES['__PRETTY_FUNCTION__'] = '__FUNCSIG__'
 
     if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         CXXFLAGS += ['-Wno-error=shadow']
