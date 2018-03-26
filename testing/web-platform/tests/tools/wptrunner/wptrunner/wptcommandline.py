@@ -515,7 +515,7 @@ def create_parser_update(product_choices=None):
                         help="List of glob-style paths to exclude when syncing tests")
     parser.add_argument("--include", action="store", nargs="*",
                         help="List of glob-style paths to include which would otherwise be excluded when syncing tests")
-    parser.add_argument("--extra-property", action="append",
+    parser.add_argument("--extra-property", action="append", default=[],
                         help="Extra property from run_info.json to use in metadata update")
     # Should make this required iff run=logfile
     parser.add_argument("run_log", nargs="*", type=abs_path,
