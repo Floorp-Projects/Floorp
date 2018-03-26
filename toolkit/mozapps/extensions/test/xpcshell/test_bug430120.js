@@ -72,7 +72,7 @@ function pathHandler(metadata, response) {
                gOSVersion + "&1.9&distribution&distribution-version");
   gBlocklist.observe(null, "quit-application", "");
   gBlocklist.observe(null, "xpcom-shutdown", "");
-  testserver.stop(do_test_finished);
+  do_test_finished();
 }
 
 function run_test() {
@@ -91,11 +91,9 @@ function run_test() {
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
-  testserver = new HttpServer();
+  testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
   testserver.registerPathHandler("/1", failHandler);
   testserver.registerPathHandler("/2", pathHandler);
-  testserver.start(-1);
-  gPort = testserver.identity.primaryPort;
 
   // Initialise the blocklist service
   gBlocklist = Services.blocklist.QueryInterface(Ci.nsIObserver);
@@ -106,7 +104,7 @@ function run_test() {
   do_test_pending();
 
   // This should have no effect as the blocklist is disabled
-  Services.prefs.setCharPref(PREF_BLOCKLIST_URL, "http://localhost:" + gPort + "/1");
+  Services.prefs.setCharPref(PREF_BLOCKLIST_URL, "http://example.com/1");
   Services.prefs.setBoolPref(PREF_BLOCKLIST_ENABLED, false);
   timerService.fireTimer(BLOCKLIST_TIMER);
 
@@ -119,7 +117,7 @@ function run_test() {
   Services.locale.setRequestedLocales(["locale"]);
 
   // This should correctly escape everything
-  Services.prefs.setCharPref(PREF_BLOCKLIST_URL, "http://localhost:" + gPort + "/2?" +
+  Services.prefs.setCharPref(PREF_BLOCKLIST_URL, "http://example.com/2?" +
                      "%APP_ID%&%APP_VERSION%&%PRODUCT%&%VERSION%&%BUILD_ID%&" +
                      "%BUILD_TARGET%&%LOCALE%&%CHANNEL%&" +
                      "%OS_VERSION%&%PLATFORM_VERSION%&%DISTRIBUTION%&%DISTRIBUTION_VERSION%");

@@ -42,9 +42,9 @@ const gHaveSymlinks = AppConstants.platform != "win";
 
 
 function createSymlink(aSource, aDest) {
-  if (aSource instanceof AM_Ci.nsIFile)
+  if (aSource instanceof Ci.nsIFile)
     aSource = aSource.path;
-  if (aDest instanceof AM_Ci.nsIFile)
+  if (aDest instanceof Ci.nsIFile)
     aDest = aDest.path;
 
   return OS.File.unixSymLink(aSource, aDest);
@@ -52,7 +52,7 @@ function createSymlink(aSource, aDest) {
 
 function promiseWriteFile(aFile, aData) {
   if (!aFile.parent.exists())
-    aFile.parent.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+    aFile.parent.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
 
   return OS.File.writeAtomic(aFile.path, new TextEncoder().encode(aData));
 }
@@ -183,7 +183,7 @@ async function run_symlink_tests() {
 
   let tempFile = tempDirectory.clone();
   tempFile.append("test.txt");
-  tempFile.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
+  tempFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
 
   let addonDirectory = profileDir.clone();
   addonDirectory.append(METADATA.id);
