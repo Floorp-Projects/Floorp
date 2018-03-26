@@ -24,6 +24,7 @@ interface StylePropertyMap : StylePropertyMapReadOnly {
     void append(DOMString property, (CSSStyleValue or DOMString)... values);
     void delete(DOMString property);
     void set(DOMString property, (CSSStyleValue or DOMString)... values);
+    void clear();
 };
 
 [Exposed=(Window, Worker, PaintWorklet, LayoutWorklet)]
