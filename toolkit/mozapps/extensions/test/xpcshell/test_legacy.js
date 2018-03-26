@@ -18,13 +18,6 @@ add_task(async function test_disable() {
       version: "1.0",
       type: 256,
     },
-    {
-      id: "theme@tests.mozilla.org",
-      name: "Theme",
-      version: "1.0",
-      type: 4,
-      internalName: "mytheme/1.0",
-    },
   ];
 
   let nonLegacy = [

@@ -8,7 +8,7 @@
 /* globals ADDON_SIGNING, SIGNED_TYPES, BOOTSTRAP_REASONS, DB_SCHEMA,
           AddonInternal, XPIProvider, XPIStates, syncLoadManifestFromFile,
           isUsableAddon, recordAddonTelemetry,
-          flushChromeCaches, descriptorToPath */
+          flushChromeCaches, descriptorToPath, DEFAULT_SKIN */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -1178,7 +1178,7 @@ this.XPIDatabaseReconcile = {
     aNewAddon.appDisabled = !isUsableAddon(aNewAddon);
 
     // The default theme is never a foreign install
-    if (aNewAddon.type == "theme" && aNewAddon.internalName == XPIProvider.defaultSkin)
+    if (aNewAddon.type == "theme" && aNewAddon.internalName == DEFAULT_SKIN)
       aNewAddon.foreignInstall = false;
 
     if (isDetectedInstall && aNewAddon.foreignInstall) {
@@ -1524,7 +1524,6 @@ this.XPIDatabaseReconcile = {
 
     let previousVisible = this.getVisibleAddons(previousAddons);
     let currentVisible = this.flattenByID(currentAddons, hideLocation);
-    let sawActiveTheme = false;
 
     // Pass over the new set of visible add-ons, record any changes that occured
     // during startup and call bootstrap install/uninstall scripts as necessary
@@ -1548,9 +1547,12 @@ this.XPIDatabaseReconcile = {
         if (!wasStaged && XPIDatabase.activeBundles) {
           // For themes we know which is active by the current skin setting
           if (currentAddon.type == "theme")
-            isActive = currentAddon.internalName == XPIProvider.currentSkin;
+            isActive = currentAddon.internalName == DEFAULT_SKIN;
           else
             isActive = XPIDatabase.activeBundles.includes(currentAddon.path);
+
+          if (currentAddon.type == "webextension-theme")
+            currentAddon.userDisabled = !isActive;
 
           // If the add-on wasn't active and it isn't already disabled in some way
           // then it was probably either softDisabled or userDisabled
@@ -1620,9 +1622,6 @@ this.XPIDatabaseReconcile = {
 
       XPIDatabase.makeAddonVisible(currentAddon);
       currentAddon.active = isActive;
-
-      if (currentAddon.active && currentAddon.internalName == XPIProvider.selectedSkin)
-        sawActiveTheme = true;
     }
 
     // Pass over the set of previously visible add-ons that have now gone away
@@ -1654,13 +1653,6 @@ this.XPIDatabaseReconcile = {
         addon.visible = false;
         addon.active = false;
       }
-    }
-
-    // If a custom theme is selected and it wasn't seen in the new list of
-    // active add-ons then enable the default theme
-    if (XPIProvider.selectedSkin != XPIProvider.defaultSkin && !sawActiveTheme) {
-      logger.info("Didn't see selected skin " + XPIProvider.selectedSkin);
-      XPIProvider.enableDefaultTheme();
     }
 
     // Finally update XPIStates to match everything

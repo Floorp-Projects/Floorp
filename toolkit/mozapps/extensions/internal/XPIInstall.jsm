@@ -62,6 +62,8 @@ ChromeUtils.defineModuleGetter(this, "XPIProvider",
 
 const PREF_ALLOW_NON_RESTARTLESS      = "extensions.legacy.non-restartless.enabled";
 
+const DEFAULT_SKIN = "classic/1.0";
+
 /* globals AddonInternal, BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, KEY_APP_TEMPORARY, TEMPORARY_ADDON_SUFFIX, SIGNED_TYPES, TOOLKIT_ID, XPIDatabase, XPIStates, getExternalType, isTheme, isUsableAddon, isWebExtension, mustSign, recordAddonTelemetry */
 const XPI_INTERNAL_SYMBOLS = [
   "AddonInternal",
@@ -665,7 +667,7 @@ async function loadManifestFromRDF(aUri, aStream) {
   // is in effect since it would change the active theme.
   if (isTheme(addon.type)) {
     addon.userDisabled = !!LightweightThemeManager.currentTheme ||
-                         addon.internalName != XPIProvider.selectedSkin;
+                         addon.internalName != DEFAULT_SKIN;
   } else if (addon.type == "experiment") {
     // Experiments are disabled by default. It is up to the Experiments Manager
     // to enable them (it drives installation).

@@ -150,16 +150,16 @@ const ADDONS = {
 
   // The default theme
   "theme1@tests.mozilla.org": {
-    "install.rdf": {
-      id: "theme1@tests.mozilla.org",
-      version: "1.0",
+    manifest: {
+      manifest_version: 2,
       name: "Theme 1",
-      internalName: "classic/1.0",
-      targetApplications: [{
-        id: "xpcshell@tests.mozilla.org",
-        minVersion: "2",
-        maxVersion: "2"
-      }]
+      version: "1.0",
+      theme: { images: { headerURL: "example.png" } },
+      applications: {
+        gecko: {
+          id: "theme1@tests.mozilla.org",
+        },
+      },
     },
     desiredState: {
       isActive: false,
@@ -167,16 +167,8 @@ const ADDONS = {
       appDisabled: false,
       pendingOperations: 0,
     },
-    // Not correctly recovered, due to WebExtension themes disabling
-    // themselves on creation.
-    afterCorruption: {
-      isActive: true,
-      userDisabled: false,
-    },
-    afterSecondRestart: {
-      isActive: true,
-      userDisabled: false,
-    },
+    afterCorruption: {},
+    afterSecondRestart: {},
   },
 
   "theme2@tests.mozilla.org": {
@@ -200,17 +192,8 @@ const ADDONS = {
       appDisabled: false,
       pendingOperations: 0,
     },
-    // Not correctly recovered, due to WebExtension themes disabling
-    // themselves on creation.
-    afterCorruption: {
-      isActive: true,
-      userDisabled: true,
-      pendingOperations: 2,
-    },
-    afterSecondRestart: {
-      isActive: false,
-      userDisabled: true,
-    },
+    afterCorruption: {},
+    afterSecondRestart: {},
   },
 };
 
