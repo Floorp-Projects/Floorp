@@ -200,7 +200,6 @@ interface MessageManagerGlobal : SyncMessageSender
   /**
    * Print a string to stdout.
    */
-  [Throws]
   void dump(DOMString str);
 
   /**

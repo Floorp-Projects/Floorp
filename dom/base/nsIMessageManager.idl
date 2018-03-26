@@ -376,29 +376,8 @@ interface nsISyncMessageSender : nsIMessageSender
                        [optional] in nsIPrincipal principal);
 };
 
-[uuid(13f3555f-769e-44ea-b607-5239230c3162)]
-interface nsIMessageManagerGlobal : nsISyncMessageSender
-{
-  /**
-   * Print a string to stdout.
-   */
-  void dump(in DOMString aStr);
-
-  /**
-   * If leak detection is enabled, print a note to the leak log that this
-   * process will intentionally crash.
-   */
-  void privateNoteIntentionalCrash();
-
-  /**
-   * Ascii base64 data to binary data and vice versa
-   */
-  DOMString atob(in DOMString aAsciiString);
-  DOMString btoa(in DOMString aBase64Data);
-};
-
 [uuid(694e367c-aa25-4446-8499-2c527c4bd838)]
-interface nsIContentFrameMessageManager : nsIMessageManagerGlobal
+interface nsIContentFrameMessageManager : nsISyncMessageSender
 {
 };
 
