@@ -31,6 +31,13 @@ const gCssWideKeywordsExamples = [
   },
 ];
 
+const gVarReferenceExamples = [
+  {
+    description: 'a var() reference',
+    input: new CSSUnparsedValue([' ', new CSSVariableReferenceValue('--A')])
+  },
+];
+
 const gTestSyntaxExamples = {
   '<length>': {
     description: 'a length',
@@ -328,6 +335,13 @@ function runPropertyTests(propertyName, testCases) {
     null, // should be as specified
     () => {}, // could be anything
     'CSS-wide keywords');
+
+  // Every property should support values containing var() references.
+  testPropertyValid(propertyName,
+    gVarReferenceExamples,
+    null, // should be as specified
+    () => {}, // could compute to anything
+    'var() references');
 
   for (const testCase of testCases) {
     // <image> is a special case
