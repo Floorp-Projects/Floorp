@@ -13,7 +13,6 @@ const quitterObserver = {
   },
 
   uninit() {
-    Services.obs.removeObserver(this, "chrome-document-global-created");
     Services.mm.removeMessageListener("Quitter.Quit", this);
     Services.mm.removeDelayedFrameScript(CHILD_SCRIPT, true);
   },
