@@ -663,7 +663,7 @@ ProcessRawBytes(SECItem* data, nsAString& text, bool wantHeader = true)
   char buffer[5];
   for (i = 0; i < data->len; i++) {
     SprintfLiteral(buffer, "%02x ", data->data[i]);
-    AppendASCIItoUTF16(buffer, text);
+    text.AppendASCII(buffer);
     if ((i + 1) % 16 == 0) {
       text.AppendLiteral(SEPARATOR);
     }
@@ -1252,7 +1252,7 @@ ProcessUserNotice(SECItem* derNotice, nsAString& text)
         SprintfLiteral(buffer, "#%lu", number);
         if (itemList != notice->noticeReference.noticeNumbers)
           text.AppendLiteral(", ");
-        AppendASCIItoUTF16(buffer, text);
+        text.AppendASCII(buffer);
       }
       itemList++;
     }

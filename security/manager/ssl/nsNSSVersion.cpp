@@ -24,69 +24,69 @@ nsNSSVersion::~nsNSSVersion()
 NS_IMETHODIMP
 nsNSSVersion::GetNSPR_Version(nsAString & v)
 {
-    CopyUTF8toUTF16(PR_GetVersion(), v);
+    v.AssignASCII(PR_GetVersion());
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSVersion::GetNSS_Version(nsAString & v)
 {
-    CopyUTF8toUTF16(NSS_GetVersion(), v);
+    v.AssignASCII(NSS_GetVersion());
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSVersion::GetNSSUTIL_Version(nsAString & v)
 {
-    CopyUTF8toUTF16(NSSUTIL_GetVersion(), v);
+    v.AssignASCII(NSSUTIL_GetVersion());
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSVersion::GetNSSSSL_Version(nsAString & v)
 {
-    CopyUTF8toUTF16(NSSSSL_GetVersion(), v);
+    v.AssignASCII(NSSSSL_GetVersion());
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSVersion::GetNSSSMIME_Version(nsAString & v)
 {
-    CopyUTF8toUTF16(NSSSMIME_GetVersion(), v);
+    v.AssignASCII(NSSSMIME_GetVersion());
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSVersion::GetNSPR_MinVersion(nsAString & v)
 {
-    CopyUTF8toUTF16(PR_VERSION, v);
+    v.AssignLiteral(PR_VERSION);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSVersion::GetNSS_MinVersion(nsAString & v)
 {
-    CopyUTF8toUTF16(NSS_VERSION, v);
+    v.AssignLiteral(NSS_VERSION);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSVersion::GetNSSUTIL_MinVersion(nsAString & v)
 {
-    CopyUTF8toUTF16(NSSUTIL_VERSION, v);
+    v.AssignLiteral(NSSUTIL_VERSION);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSVersion::GetNSSSSL_MinVersion(nsAString & v)
 {
-    CopyUTF8toUTF16(NSS_VERSION, v);
+    v.AssignLiteral(NSS_VERSION);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNSSVersion::GetNSSSMIME_MinVersion(nsAString & v)
 {
-    CopyUTF8toUTF16(NSS_VERSION, v);
+    v.AssignLiteral(NSS_VERSION);
     return NS_OK;
 }
