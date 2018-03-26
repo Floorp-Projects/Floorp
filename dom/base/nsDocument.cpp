@@ -6986,14 +6986,6 @@ nsDOMAttributeMap::BlastSubtreeToPieces(nsINode *aNode)
   }
 }
 
-enum class StyleDataType
-{
-  InlineStyle,
-  SMILOverride,
-  RestyleBits,
-  ServoData,
-};
-
 nsINode*
 nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
 {
