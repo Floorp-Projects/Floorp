@@ -13,7 +13,7 @@ import mozprocess
 
 __all__ = ["SeleniumServer", "ChromeDriverServer", "OperaDriverServer",
            "GeckoDriverServer", "InternetExplorerDriverServer", "EdgeDriverServer",
-           "ServoDriverServer", "WebDriverServer"]
+           "ServoDriverServer", "WebKitDriverServer", "WebDriverServer"]
 
 
 class WebDriverServer(object):
@@ -205,6 +205,14 @@ class ServoDriverServer(WebDriverServer):
         if self.binary_args:
             command += self.binary_args
         return command
+
+
+class WebKitDriverServer(WebDriverServer):
+    def __init__(self, logger, binary=None, port=None, args=None):
+        WebDriverServer.__init__(self, logger, binary, port=port, args=args)
+
+    def make_command(self):
+        return [self.binary, "--port=%s" % str(self.port)] + self._args
 
 
 def cmd_arg(name, value=None):
