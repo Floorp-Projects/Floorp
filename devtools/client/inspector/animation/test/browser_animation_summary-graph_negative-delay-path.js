@@ -14,8 +14,8 @@ const TEST_CASES = [
   {
     targetClassName: "delay-negative",
     expectedPath: [
-      { x: -50000, y: 0 },
-      { x: -25000, y: 25 },
+      { x: -500000, y: 0 },
+      { x: -250000, y: 25 },
       { x: 0, y: 50 },
       { x: 0, y: 0 },
     ],

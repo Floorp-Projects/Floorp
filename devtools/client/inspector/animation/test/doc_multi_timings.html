@@ -10,11 +10,11 @@
     }
 
     .cssanimation-normal {
-      animation: cssanimation 100s;
+      animation: cssanimation 1000s;
     }
 
     .cssanimation-linear {
-      animation: cssanimation 100s linear;
+      animation: cssanimation 1000s linear;
     }
 
     @keyframes cssanimation {
@@ -33,7 +33,7 @@
     <script>
     "use strict";
 
-    const duration = 100000;
+    const duration = 1000000;
 
     function createAnimation(keyframes, effect, className) {
       const div = document.createElement("div");
@@ -44,11 +44,11 @@
     }
 
     createAnimation({ opacity: [0, 1] },
-                    { delay: 50000, id: "test-delay-animation" },
+                    { delay: 500000, id: "test-delay-animation" },
                     "delay-positive");
 
     createAnimation({ opacity: [0, 1] },
-                    { delay: -50000, id: "test-negative-delay-animation" },
+                    { delay: -500000, id: "test-negative-delay-animation" },
                     "delay-negative");
 
     createAnimation({ opacity: [0, 1] },
@@ -56,19 +56,19 @@
                     "easing-step");
 
     createAnimation({ opacity: [0, 1] },
-                    { endDelay: 50000 },
+                    { endDelay: 500000 },
                     "enddelay-positive");
 
     createAnimation({ opacity: [0, 1] },
-                    { endDelay: -50000 },
+                    { endDelay: -500000 },
                     "enddelay-negative");
 
     createAnimation({ opacity: [0, 1] },
-                    { endDelay: 50000, fill: "forwards" },
+                    { endDelay: 500000, fill: "forwards" },
                     "enddelay-with-fill-forwards");
 
     createAnimation({ opacity: [0, 1] },
-                    { endDelay: 50000, iterations: Infinity },
+                    { endDelay: 500000, iterations: Infinity },
                     "enddelay-with-iterations-infinity");
 
     createAnimation({ opacity: [0, 1] },
@@ -88,7 +88,7 @@
                     "fill-backwards");
 
     createAnimation({ opacity: [0, 1] },
-                    { fill: "backwards", delay: 50000, iterationStart: 0.5 },
+                    { fill: "backwards", delay: 500000, iterationStart: 0.5 },
                      "fill-backwards-with-delay-iterationstart");
 
     createAnimation({ opacity: [0, 1] },
@@ -96,7 +96,7 @@
                     "fill-both");
 
     createAnimation({ opacity: [0, 1] },
-                    { fill: "both", delay: 50000, iterationStart: 0.5 },
+                    { fill: "both", delay: 500000, iterationStart: 0.5 },
                     "fill-both-width-delay-iterationstart");
 
     createAnimation({ opacity: [0, 1] },
