@@ -13,8 +13,6 @@ from distutils.spawn import find_executable
 from io import BytesIO
 
 from utils import call, get, untar, unzip
-from mozdownload import FactoryScraper
-import mozinstall
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +107,9 @@ class Firefox(Browser):
 
     def install(self, dest=None):
         """Install Firefox."""
+
+        from mozdownload import FactoryScraper
+        import mozinstall
 
         if dest is None:
             dest = os.getcwd()
