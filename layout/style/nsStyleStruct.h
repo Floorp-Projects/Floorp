@@ -98,27 +98,6 @@ class ImageTracker;
 // See ComputedStyle::GetPseudoEnum
 #define NS_STYLE_CONTEXT_TYPE_SHIFT        37
 
-// Additional bits for nsRuleNode's mDependentBits:
-#define NS_RULE_NODE_IS_ANIMATION_RULE      0x01000000
-// Free bit                                 0x02000000
-#define NS_RULE_NODE_USED_DIRECTLY          0x04000000
-#define NS_RULE_NODE_IS_IMPORTANT           0x08000000
-#define NS_RULE_NODE_LEVEL_MASK             0xf0000000
-#define NS_RULE_NODE_LEVEL_SHIFT            28
-
-// Additional bits for nsRuleNode's mNoneBits:
-#define NS_RULE_NODE_HAS_ANIMATION_DATA     0x80000000
-
-static_assert(int(mozilla::SheetType::Count) - 1 <=
-                (NS_RULE_NODE_LEVEL_MASK >> NS_RULE_NODE_LEVEL_SHIFT),
-              "NS_RULE_NODE_LEVEL_MASK cannot fit SheetType");
-
-static_assert(NS_STYLE_INHERIT_MASK == (1 << nsStyleStructID_Length) - 1,
-              "NS_STYLE_INHERIT_MASK is not correct");
-
-static_assert((NS_RULE_NODE_IS_ANIMATION_RULE & NS_STYLE_INHERIT_MASK) == 0,
-  "NS_RULE_NODE_IS_ANIMATION_RULE must not overlap the style struct bits.");
-
 namespace mozilla {
 
 struct Position {
