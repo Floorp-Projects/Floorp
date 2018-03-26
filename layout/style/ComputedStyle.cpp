@@ -62,16 +62,6 @@ enum DebugStyleStruct {
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-const uint32_t ComputedStyle::sDependencyTable[] = {
-#define STYLE_STRUCT(name, checkdata_cb)
-#define STYLE_STRUCT_DEP(dep) NS_STYLE_INHERIT_BIT(dep) |
-#define STYLE_STRUCT_END() 0,
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-#undef STYLE_STRUCT_DEP
-#undef STYLE_STRUCT_END
-};
-
 #endif
 
 
@@ -98,12 +88,6 @@ ComputedStyle::ComputedStyle(nsPresContext* aPresContext,
   static_assert(NS_STYLE_INHERIT_MASK & NS_STYLE_INHERIT_BIT(LastItem),
                 "NS_STYLE_INHERIT_MASK must be bigger, and other bits shifted");
 #undef eStyleStruct_LastItem
-
-#ifdef DEBUG
-  static_assert(MOZ_ARRAY_LENGTH(ComputedStyle::sDependencyTable)
-                  == nsStyleStructID_Length,
-                "Number of items in dependency table doesn't match IDs");
-#endif
 }
 
 nsChangeHint
