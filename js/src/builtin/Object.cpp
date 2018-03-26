@@ -1755,32 +1755,6 @@ obj_getOwnPropertySymbols(JSContext* cx, unsigned argc, Value* vp)
                               args.rval());
 }
 
-/* ES6 draft rev 32 (2015 Feb 2) 19.1.2.4: Object.defineProperty(O, P, Attributes) */
-bool
-js::obj_defineProperty(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    // Steps 1-3.
-    RootedObject obj(cx);
-    if (!GetFirstArgumentAsObject(cx, args, "Object.defineProperty", &obj))
-        return false;
-    RootedId id(cx);
-    if (!ToPropertyKey(cx, args.get(1), &id))
-        return false;
-
-    // Steps 4-5.
-    Rooted<PropertyDescriptor> desc(cx);
-    if (!ToPropertyDescriptor(cx, args.get(2), true, &desc))
-        return false;
-
-    // Steps 6-8.
-    if (!DefineProperty(cx, obj, id, desc))
-        return false;
-    args.rval().setObject(*obj);
-    return true;
-}
-
 /* ES5 15.2.3.7: Object.defineProperties(O, Properties) */
 static bool
 obj_defineProperties(JSContext* cx, unsigned argc, Value* vp)
