@@ -37,9 +37,6 @@ interface nsIDOMUIEvent : nsISupports
                                         in mozIDOMWindow viewArg,
                                         in long detailArg);
 
-  const long SCROLL_PAGE_UP = -32768;
-  const long SCROLL_PAGE_DOWN = 32768;
-
   readonly attribute long               layerX;
   readonly attribute long               layerY;
   readonly attribute long               pageX;
