@@ -476,7 +476,7 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
         MOZ_ASSERT(!mAllocations.IsEmpty());
         RefPtr<SourceMediaStream> stream;
         for (const Allocation& allocation : mAllocations) {
-          if (allocation.mStream) {
+          if (allocation.mStream && allocation.mStream->GraphImpl()) {
             stream = allocation.mStream;
             break;
           }
