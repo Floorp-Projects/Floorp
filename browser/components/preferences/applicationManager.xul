@@ -5,17 +5,18 @@
 
 <?xml-stylesheet href="chrome://global/skin/"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/applicationManager.dtd">
-
 <dialog id="appManager"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         buttons="accept,cancel"
         onload="gAppManagerDialog.init();"
         ondialogaccept="gAppManagerDialog.onOK();"
         ondialogcancel="gAppManagerDialog.onCancel();"
-        title="&appManager.title;"
-        style="&appManager.style;"
+        data-l10n-id="app-manager-window"
+        data-l10n-attrs="title, style"
         persist="screenX screenY">
+
+  <link rel="localization" href="browser/preferences/applicationManager.ftl"/>
+  <script type="application/javascript" src="chrome://global/content/l10n.js"></script>
 
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
@@ -34,26 +35,22 @@
     <key id="delete" keycode="VK_DELETE" command="cmd_remove"/>
   </keyset>
 
-  <stringbundleset id="appManagerBundleset">
-    <stringbundle id="appManagerBundle"
-                  src="chrome://browser/locale/preferences/applicationManager.properties"/>
-  </stringbundleset>
-
-  <description id="appDescription"/>
+  <!-- The &#160; character is required here to calculate the dialog height -->
+  <description id="appDescription">&#160;</description>
   <separator class="thin"/>
   <hbox flex="1">
     <listbox id="appList" onselect="gAppManagerDialog.onSelect();" flex="1"/>
     <vbox>
       <button id="remove"
-              label="&remove.label;"
-              accesskey="&remove.accesskey;"
+              data-l10n-id="app-manager-remove"
               command="cmd_remove"/>
       <spacer flex="1"/>
     </vbox>
   </hbox>
   <vbox id="appDetails">
     <separator class="thin"/>
-    <label id="appType"/>
+    <!-- The &#160; character is required here to calculate the dialog height -->
+    <label id="appType">&#160;</label>
     <textbox id="appLocation" readonly="true" class="plain"/>
   </vbox>
 </dialog>

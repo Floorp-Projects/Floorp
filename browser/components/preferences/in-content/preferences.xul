@@ -102,11 +102,6 @@
   <stringbundle id="browserBundle"
                 src="chrome://browser/locale/browser.properties"/>
 
-  <stringbundleset id="appManagerBundleset">
-    <stringbundle id="appManagerBundle"
-                  src="chrome://browser/locale/preferences/applicationManager.properties"/>
-  </stringbundleset>
-
   <stack flex="1">
   <hbox flex="1">
 
