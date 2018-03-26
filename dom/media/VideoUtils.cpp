@@ -162,19 +162,6 @@ void DownmixStereoToMono(mozilla::AudioDataValue* aBuffer,
   }
 }
 
-uint32_t DecideAudioPlaybackChannels(const AudioInfo& info)
-{
-  if (MediaPrefs::MonoAudio()) {
-    return 1;
-  }
-
-  if (MediaPrefs::AudioSinkForceStereo()) {
-    return 2;
-  }
-
-  return info.mChannels;
-}
-
 bool
 IsVideoContentType(const nsCString& aContentType)
 {
