@@ -19,14 +19,6 @@ import org.junit.runner.RunWith
 @MediumTest
 class SessionLifecycleTest : BaseSessionTest() {
 
-    @Test fun open_allowNullContext() {
-        sessionRule.session.close()
-
-        sessionRule.session.open(null)
-        sessionRule.session.reload()
-        sessionRule.session.waitForPageStop()
-    }
-
     @Test fun open_interleaved() {
         val session1 = sessionRule.createOpenSession()
         val session2 = sessionRule.createOpenSession()
