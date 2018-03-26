@@ -21,8 +21,6 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         buttons="accept,cancel,help"
         persist="lastSelected screenX screenY"
-        closebuttonlabel="&preferencesCloseButton.label;"
-        closebuttonaccesskey="&preferencesCloseButton.accesskey;"
         role="dialog"
         ondialoghelp="openPrefsHelp()"
         style="width: &sanitizePrefs2.modal.width;"
