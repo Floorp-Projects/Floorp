@@ -696,16 +696,6 @@ nsBindingManager::EnumerateBoundContentBindings(
   return true;
 }
 
-
-bool
-nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
-                                        mozilla::MediaFeatureChangeReason aReason)
-{
-  MOZ_ASSERT(!mDocument->IsStyledByServo());
-  MOZ_CRASH("old style system disabled");
-  return false;
-}
-
 void
 nsBindingManager::AppendAllSheets(nsTArray<StyleSheet*>& aArray)
 {

@@ -526,11 +526,8 @@ public:
     // we'll cross that bridge when we support those in stylo.
     if (mShouldComputeHints) {
       mShouldComputeHints = false;
-      uint32_t equalStructs, samePointerStructs;
-      mComputedHint =
-        oldStyle->CalcStyleDifference(&aNewStyle,
-                                      &equalStructs,
-                                      &samePointerStructs);
+      uint32_t equalStructs;
+      mComputedHint = oldStyle->CalcStyleDifference(&aNewStyle, &equalStructs);
       mComputedHint = NS_RemoveSubsumedHints(
         mComputedHint, mParentRestyleState.ChangesHandledFor(*aTextFrame));
     }
@@ -643,11 +640,9 @@ UpdateOneAdditionalComputedStyle(nsIFrame* aFrame,
         aFrame->Style(),
         /* aPseudoElement = */ nullptr);
 
-  uint32_t equalStructs, samePointerStructs; // Not used, actually.
-  nsChangeHint childHint = aOldContext.CalcStyleDifference(
-    newStyle,
-    &equalStructs,
-    &samePointerStructs);
+  uint32_t equalStructs; // Not used, actually.
+  nsChangeHint childHint =
+    aOldContext.CalcStyleDifference(newStyle, &equalStructs);
   if (!aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
     childHint = NS_RemoveSubsumedHints(
         childHint, aRestyleState.ChangesHandledFor(*aFrame));

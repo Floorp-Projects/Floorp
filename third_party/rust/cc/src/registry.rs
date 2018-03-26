@@ -8,7 +8,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::ffi::{OsString, OsStr};
+use std::ffi::{OsStr, OsString};
 use std::io;
 use std::ops::RangeFrom;
 use std::os::raw;
@@ -36,28 +36,31 @@ const KEY_WOW64_32KEY: DWORD = 0x200;
 
 #[link(name = "advapi32")]
 extern "system" {
-    fn RegOpenKeyExW(key: HKEY,
-                     lpSubKey: LPCWSTR,
-                     ulOptions: DWORD,
-                     samDesired: REGSAM,
-                     phkResult: PHKEY)
-                     -> LONG;
-    fn RegEnumKeyExW(key: HKEY,
-                     dwIndex: DWORD,
-                     lpName: LPWSTR,
-                     lpcName: LPDWORD,
-                     lpReserved: LPDWORD,
-                     lpClass: LPWSTR,
-                     lpcClass: LPDWORD,
-                     lpftLastWriteTime: PFILETIME)
-                     -> LONG;
-    fn RegQueryValueExW(hKey: HKEY,
-                        lpValueName: LPCWSTR,
-                        lpReserved: LPDWORD,
-                        lpType: LPDWORD,
-                        lpData: LPBYTE,
-                        lpcbData: LPDWORD)
-                        -> LONG;
+    fn RegOpenKeyExW(
+        key: HKEY,
+        lpSubKey: LPCWSTR,
+        ulOptions: DWORD,
+        samDesired: REGSAM,
+        phkResult: PHKEY,
+    ) -> LONG;
+    fn RegEnumKeyExW(
+        key: HKEY,
+        dwIndex: DWORD,
+        lpName: LPWSTR,
+        lpcName: LPDWORD,
+        lpReserved: LPDWORD,
+        lpClass: LPWSTR,
+        lpcClass: LPDWORD,
+        lpftLastWriteTime: PFILETIME,
+    ) -> LONG;
+    fn RegQueryValueExW(
+        hKey: HKEY,
+        lpValueName: LPCWSTR,
+        lpReserved: LPDWORD,
+        lpType: LPDWORD,
+        lpData: LPBYTE,
+        lpcbData: LPDWORD,
+    ) -> LONG;
     fn RegCloseKey(hKey: HKEY) -> LONG;
 }
 
@@ -90,11 +93,13 @@ impl RegistryKey {
         let key = key.encode_wide().chain(Some(0)).collect::<Vec<_>>();
         let mut ret = 0 as *mut _;
         let err = unsafe {
-            RegOpenKeyExW(self.raw(),
-                          key.as_ptr(),
-                          0,
-                          KEY_READ | KEY_WOW64_32KEY,
-                          &mut ret)
+            RegOpenKeyExW(
+                self.raw(),
+                key.as_ptr(),
+                0,
+                KEY_READ | KEY_WOW64_32KEY,
+                &mut ret,
+            )
         };
         if err == ERROR_SUCCESS as LONG {
             Ok(RegistryKey(Repr::Owned(OwnedKey(ret))))
@@ -116,29 +121,36 @@ impl RegistryKey {
         let mut len = 0;
         let mut kind = 0;
         unsafe {
-            let err = RegQueryValueExW(self.raw(),
-                                       name.as_ptr(),
-                                       0 as *mut _,
-                                       &mut kind,
-                                       0 as *mut _,
-                                       &mut len);
+            let err = RegQueryValueExW(
+                self.raw(),
+                name.as_ptr(),
+                0 as *mut _,
+                &mut kind,
+                0 as *mut _,
+                &mut len,
+            );
             if err != ERROR_SUCCESS as LONG {
                 return Err(io::Error::from_raw_os_error(err as i32));
             }
             if kind != REG_SZ {
-                return Err(io::Error::new(io::ErrorKind::Other, "registry key wasn't a string"));
+                return Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    "registry key wasn't a string",
+                ));
             }
 
             // The length here is the length in bytes, but we're using wide
             // characters so we need to be sure to halve it for the capacity
             // passed in.
             let mut v = Vec::with_capacity(len as usize / 2);
-            let err = RegQueryValueExW(self.raw(),
-                                       name.as_ptr(),
-                                       0 as *mut _,
-                                       0 as *mut _,
-                                       v.as_mut_ptr() as *mut _,
-                                       &mut len);
+            let err = RegQueryValueExW(
+                self.raw(),
+                name.as_ptr(),
+                0 as *mut _,
+                0 as *mut _,
+                v.as_mut_ptr() as *mut _,
+                &mut len,
+            );
             if err != ERROR_SUCCESS as LONG {
                 return Err(io::Error::from_raw_os_error(err as i32));
             }
@@ -169,14 +181,16 @@ impl<'a> Iterator for Iter<'a> {
         self.idx.next().and_then(|i| unsafe {
             let mut v = Vec::with_capacity(256);
             let mut len = v.capacity() as DWORD;
-            let ret = RegEnumKeyExW(self.key.raw(),
-                                    i,
-                                    v.as_mut_ptr(),
-                                    &mut len,
-                                    0 as *mut _,
-                                    0 as *mut _,
-                                    0 as *mut _,
-                                    0 as *mut _);
+            let ret = RegEnumKeyExW(
+                self.key.raw(),
+                i,
+                v.as_mut_ptr(),
+                &mut len,
+                0 as *mut _,
+                0 as *mut _,
+                0 as *mut _,
+                0 as *mut _,
+            );
             if ret == ERROR_NO_MORE_ITEMS as LONG {
                 None
             } else if ret != ERROR_SUCCESS as LONG {

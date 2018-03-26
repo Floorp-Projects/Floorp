@@ -5595,7 +5595,7 @@ nsBlockFrame::UpdateFirstLetterStyle(ServoRestyleState& aRestyleState)
   nsIFrame* styleParent =
     CorrectStyleParentFrame(inFlowFrame->GetParent(),
                             nsCSSPseudoElements::firstLetter);
-  ComputedStyle* parentStyle = styleParent->Style()->AsServo();
+  ComputedStyle* parentStyle = styleParent->Style();
   RefPtr<ComputedStyle> firstLetterStyle =
     aRestyleState.StyleSet()
                  .ResolvePseudoElementStyle(mContent->AsElement(),
@@ -5615,7 +5615,7 @@ nsBlockFrame::UpdateFirstLetterStyle(ServoRestyleState& aRestyleState)
   nsIFrame* textFrame = letterFrame->PrincipalChildList().FirstChild();
   RefPtr<ComputedStyle> firstTextStyle =
     aRestyleState.StyleSet().ResolveStyleForText(textFrame->GetContent(),
-                                                 firstLetterStyle->AsServo());
+                                                 firstLetterStyle);
   textFrame->SetComputedStyle(firstTextStyle);
 
   // We don't need to update style for textFrame's continuations: it's already
@@ -7524,7 +7524,7 @@ nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState)
       CorrectStyleParentFrame(firstLineFrame->GetParent(),
                               nsCSSPseudoElements::firstLine);
 
-    ComputedStyle* parentStyle = styleParent->Style()->AsServo();
+    ComputedStyle* parentStyle = styleParent->Style();
     RefPtr<ComputedStyle> firstLineStyle =
       aRestyleState.StyleSet()
                    .ResolvePseudoElementStyle(mContent->AsElement(),

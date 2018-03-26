@@ -1115,7 +1115,8 @@ URLWorker::GetSearch(nsAString& aSearch, ErrorResult& aRv) const
 
     rv = mStdURL->GetQuery(search);
     if (NS_SUCCEEDED(rv) && !search.IsEmpty()) {
-      CopyUTF8toUTF16(NS_LITERAL_CSTRING("?") + search, aSearch);
+      aSearch.Assign(u'?');
+      AppendUTF8toUTF16(search, aSearch);
     }
     return;
   }

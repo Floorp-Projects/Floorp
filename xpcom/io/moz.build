@@ -98,7 +98,6 @@ UNIFIED_SOURCES += [
     'nsAnonymousTemporaryFile.cpp',
     'nsAppFileLocationProvider.cpp',
     'nsBinaryStream.cpp',
-    'nsDirectoryService.cpp',
     'nsEscape.cpp',
     'nsInputStreamTee.cpp',
     'nsIOUtil.cpp',
@@ -121,6 +120,13 @@ UNIFIED_SOURCES += [
     'SnappyUncompressInputStream.cpp',
     'SpecialSystemDirectory.cpp',
 ]
+
+SOURCES += [
+    'nsDirectoryService.cpp',
+]
+if CONFIG['CC_TYPE'] == 'msvc':
+    # Needed for gDirectoryAtoms.
+    SOURCES['nsDirectoryService.cpp'].flags += ['-Zc:externConstexpr']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     SOURCES += [

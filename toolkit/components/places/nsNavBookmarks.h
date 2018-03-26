@@ -119,6 +119,8 @@ public:
                    bool aHidden, uint32_t aVisitCount,
                    uint32_t aTyped, const nsAString& aLastKnownTitle);
 
+  nsresult GetBookmarkURI(int64_t aItemId, nsIURI** _URI);
+
   nsresult ResultNodeForContainer(int64_t aID,
                                   nsNavHistoryQueryOptions* aOptions,
                                   nsNavHistoryResultNode** aNode);

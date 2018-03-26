@@ -57,6 +57,13 @@ interface nsIXULStore: nsISupports
   void removeValue(in AString doc, in AString id, in AString attr);
 
   /**
+   * Removes all values related to the given document.
+   *
+   * @param doc - document URI
+   */
+  void removeDocument(in AString doc);
+
+  /**
    * Iterates over all of the ids associated with a given document uri that
    * have stored data.
    *

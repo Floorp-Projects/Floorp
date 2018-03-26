@@ -10,10 +10,11 @@
  */
 
 #include "StickyScrollContainer.h"
+
+#include "mozilla/OverflowChangedTracker.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
-#include "RestyleTracker.h"
 
 namespace mozilla {
 
