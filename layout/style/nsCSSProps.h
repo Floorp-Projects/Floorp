@@ -190,14 +190,6 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
                CSS_PROPERTY_VALUE_PARSER_FUNCTION) == 0,
               "didn't leave enough room for the parse property constants");
 
-#define CSS_PROPERTY_VALUE_RESTRICTION_MASK       (3<<13)
-// The parser (in particular, CSSParserImpl::ParseSingleValueProperty)
-// should enforce that the value of this property must be 0 or larger.
-#define CSS_PROPERTY_VALUE_NONNEGATIVE            (1<<13)
-// The parser (in particular, CSSParserImpl::ParseSingleValueProperty)
-// should enforce that the value of this property must be 1 or larger.
-#define CSS_PROPERTY_VALUE_AT_LEAST_ONE           (2<<13)
-
 // Does this property support the hashless hex color quirk in quirks mode?
 #define CSS_PROPERTY_HASHLESS_COLOR_QUIRK         (1<<15)
 
@@ -493,14 +485,6 @@ public:
                "out of range");
     return nsCSSProps::kFlagsTable[aProperty] &
            CSS_PROPERTY_PARSE_PROPERTY_MASK;
-  }
-
-  static inline uint32_t ValueRestrictions(nsCSSPropertyID aProperty)
-  {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
-               "out of range");
-    return nsCSSProps::kFlagsTable[aProperty] &
-           CSS_PROPERTY_VALUE_RESTRICTION_MASK;
   }
 
 private:
