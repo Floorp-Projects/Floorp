@@ -25,9 +25,13 @@ registerCleanupFunction(async function() {
   }
 });
 
+// Disable new animation inspector.
+Services.prefs.setBoolPref("devtools.new-animationinspector.enabled", false);
+
 // Clean-up all prefs that might have been changed during a test run
 // (safer here because if the test fails, then the pref is never reverted)
 registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("devtools.new-animationinspector.enabled");
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 

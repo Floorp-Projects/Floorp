@@ -15,14 +15,10 @@ const TAB_NAME = "newanimationinspector";
 const ANIMATION_L10N =
   new LocalizationHelper("devtools/client/locales/animationinspector.properties");
 
-// Enable new animation inspector.
-Services.prefs.setBoolPref("devtools.new-animationinspector.enabled", true);
-
 // Auto clean-up when a test ends.
 // Clean-up all prefs that might have been changed during a test run
 // (safer here because if the test fails, then the pref is never reverted)
 registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("devtools.new-animationinspector.enabled");
   Services.prefs.clearUserPref("devtools.toolsidebar-width.inspector");
 });
 
