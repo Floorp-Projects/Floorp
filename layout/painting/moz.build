@@ -22,7 +22,6 @@ EXPORTS += [
     'nsDisplayListInvalidation.h',
     'nsImageRenderer.h',
     'RetainedDisplayListBuilder.h',
-    'RetainedDisplayListHelpers.h',
 ]
 
 EXPORTS.mozilla += [
