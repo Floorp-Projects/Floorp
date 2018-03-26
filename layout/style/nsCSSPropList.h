@@ -413,7 +413,6 @@ CSS_PROP_DISPLAY(
     CSS_PROPERTY_PARSE_VALUE_LIST |
         // nonnegative per
         // http://lists.w3.org/Archives/Public/www-style/2011Mar/0355.html
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
     "",
     VARIANT_KEYWORD | VARIANT_NUMBER, // used by list parsing
@@ -618,7 +617,6 @@ CSS_PROP_BACKGROUND(
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     "",
     0,
@@ -640,7 +638,6 @@ CSS_PROP_LOGICAL(
     block_size,
     BlockSize,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
         CSS_PROPERTY_LOGICAL |
@@ -699,7 +696,6 @@ CSS_PROP_LOGICAL(
     border_block_end_width,
     BorderBlockEndWidth,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
         CSS_PROPERTY_LOGICAL |
@@ -750,7 +746,6 @@ CSS_PROP_LOGICAL(
     border_block_start_width,
     BorderBlockStartWidth,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_LOGICAL |
@@ -786,7 +781,6 @@ CSS_PROP_BORDER(
     BorderBottomLeftRadius,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     "",
     0,
@@ -799,7 +793,6 @@ CSS_PROP_BORDER(
     BorderBottomRightRadius,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     "",
     0,
@@ -822,7 +815,6 @@ CSS_PROP_BORDER(
     border_bottom_width,
     BorderBottomWidth,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
@@ -949,7 +941,6 @@ CSS_PROP_LOGICAL(
     border_inline_end_width,
     BorderInlineEndWidth,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
         CSS_PROPERTY_LOGICAL |
@@ -997,7 +988,6 @@ CSS_PROP_LOGICAL(
     border_inline_start_width,
     BorderInlineStartWidth,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_LOGICAL,
@@ -1043,7 +1033,6 @@ CSS_PROP_BORDER(
     BorderLeftWidth,
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     "",
@@ -1092,7 +1081,6 @@ CSS_PROP_BORDER(
     border_right_width,
     BorderRightWidth,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
@@ -1106,8 +1094,7 @@ CSS_PROP_TABLEBORDER(
     border_spacing,
     BorderSpacing,
     CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
-        CSS_PROPERTY_VALUE_NONNEGATIVE,
+        CSS_PROPERTY_UNITLESS_LENGTH_QUIRK,
     "",
     0,
     nullptr,
@@ -1144,7 +1131,6 @@ CSS_PROP_BORDER(
     BorderTopLeftRadius,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     "",
     0,
@@ -1157,7 +1143,6 @@ CSS_PROP_BORDER(
     BorderTopRightRadius,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     "",
     0,
@@ -1180,7 +1165,6 @@ CSS_PROP_BORDER(
     border_top_width,
     BorderTopWidth,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
@@ -1243,8 +1227,7 @@ CSS_PROP_XUL(
     -moz-box-flex,
     _moz_box_flex,
     CSS_PROP_DOMPROP_PREFIXED(BoxFlex),
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE,
+    CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HN,
     nullptr,
@@ -1254,8 +1237,7 @@ CSS_PROP_XUL(
     -moz-box-ordinal-group,
     _moz_box_ordinal_group,
     CSS_PROP_DOMPROP_PREFIXED(BoxOrdinalGroup),
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE,
+    CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HI,
     nullptr,
@@ -1418,10 +1400,7 @@ CSS_PROP_COLUMN(
     column-count,
     column_count,
     ColumnCount,
-    CSS_PROPERTY_PARSE_VALUE |
-        // Need to reject 0 in addition to negatives.  If we accept 0, we
-        // need to change NS_STYLE_COLUMN_COUNT_AUTO to something else.
-        CSS_PROPERTY_VALUE_AT_LEAST_ONE,
+    CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_AHI,
     nullptr,
@@ -1441,8 +1420,7 @@ CSS_PROP_COLUMN(
     column-gap,
     column_gap,
     ColumnGap,
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE,
+    CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HL | VARIANT_NORMAL | VARIANT_CALC,
     nullptr,
@@ -1479,8 +1457,7 @@ CSS_PROP_COLUMN(
     column-rule-width,
     column_rule_width,
     ColumnRuleWidth,
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE,
+    CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HKL | VARIANT_CALC,
     kBorderWidthKTable,
@@ -1500,8 +1477,7 @@ CSS_PROP_COLUMN(
     column-width,
     column_width,
     ColumnWidth,
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE,
+    CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_AHL | VARIANT_CALC,
     nullptr,
@@ -1695,7 +1671,6 @@ CSS_PROP_POSITION(
     flex_basis,
     FlexBasis,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     "",
     // NOTE: The parsing implementation for the 'flex' shorthand property has
@@ -1725,8 +1700,7 @@ CSS_PROP_POSITION(
     flex-grow,
     flex_grow,
     FlexGrow,
-    CSS_PROPERTY_PARSE_VALUE |
-      CSS_PROPERTY_VALUE_NONNEGATIVE,
+    CSS_PROPERTY_PARSE_VALUE,
     "",
     // NOTE: The parsing implementation for the 'flex' shorthand property has
     // its own code to parse each subproperty. It does not depend on the
@@ -1739,8 +1713,7 @@ CSS_PROP_POSITION(
     flex-shrink,
     flex_shrink,
     FlexShrink,
-    CSS_PROPERTY_PARSE_VALUE |
-      CSS_PROPERTY_VALUE_NONNEGATIVE,
+    CSS_PROPERTY_PARSE_VALUE,
     "",
     // NOTE: The parsing implementation for the 'flex' shorthand property has
     // its own code to parse each subproperty. It does not depend on the
@@ -1873,7 +1846,6 @@ CSS_PROP_FONT(
     font_size,
     FontSize,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK,
@@ -1889,7 +1861,6 @@ CSS_PROP_FONT(
     font_size_adjust,
     FontSizeAdjust,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
     "",
@@ -2062,8 +2033,7 @@ CSS_PROP_UIRESET(
     -moz-force-broken-image-icon,
     _moz_force_broken_image_icon,
     CSS_PROP_DOMPROP_PREFIXED(ForceBrokenImageIcon),
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE,
+    CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HI,
     nullptr,
@@ -2133,8 +2103,7 @@ CSS_PROP_POSITION(
     grid-column-gap,
     grid_column_gap,
     GridColumnGap,
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE,
+    CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HLP | VARIANT_CALC,
     nullptr,
@@ -2176,8 +2145,7 @@ CSS_PROP_POSITION(
     grid-row-gap,
     grid_row_gap,
     GridRowGap,
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE,
+    CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HLP | VARIANT_CALC,
     nullptr,
@@ -2238,7 +2206,6 @@ CSS_PROP_POSITION(
     height,
     Height,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
@@ -2314,7 +2281,6 @@ CSS_PROP_LOGICAL(
     inline_size,
     InlineSize,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
         CSS_PROPERTY_LOGICAL |
@@ -2423,7 +2389,6 @@ CSS_PROP_TEXT(
     line_height,
     LineHeight,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
@@ -2751,7 +2716,6 @@ CSS_PROP_SVGRESET(
     MaskSize,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     "",
     0,
@@ -2800,7 +2764,6 @@ CSS_PROP_LOGICAL(
     max_block_size,
     MaxBlockSize,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
         CSS_PROPERTY_LOGICAL |
@@ -2817,7 +2780,6 @@ CSS_PROP_POSITION(
     max_height,
     MaxHeight,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK,
     "",
@@ -2830,7 +2792,6 @@ CSS_PROP_LOGICAL(
     max_inline_size,
     MaxInlineSize,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
         CSS_PROPERTY_LOGICAL |
@@ -2846,7 +2807,6 @@ CSS_PROP_POSITION(
     max_width,
     MaxWidth,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK,
     "",
@@ -2859,7 +2819,6 @@ CSS_PROP_LOGICAL(
     min_block_size,
     MinBlockSize,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
         CSS_PROPERTY_LOGICAL |
@@ -2890,7 +2849,6 @@ CSS_PROP_POSITION(
     min_height,
     MinHeight,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK,
     "",
@@ -2903,7 +2861,6 @@ CSS_PROP_LOGICAL(
     min_inline_size,
     MinInlineSize,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
         CSS_PROPERTY_LOGICAL |
@@ -2919,7 +2876,6 @@ CSS_PROP_POSITION(
     min_width,
     MinWidth,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK,
     "",
@@ -3102,7 +3058,6 @@ CSS_PROP_OUTLINE(
     _moz_outline_radius_bottomleft,
     CSS_PROP_DOMPROP_PREFIXED(OutlineRadiusBottomleft),
     CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     "",
     0,
@@ -3114,7 +3069,6 @@ CSS_PROP_OUTLINE(
     _moz_outline_radius_bottomright,
     CSS_PROP_DOMPROP_PREFIXED(OutlineRadiusBottomright),
     CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     "",
     0,
@@ -3126,7 +3080,6 @@ CSS_PROP_OUTLINE(
     _moz_outline_radius_topleft,
     CSS_PROP_DOMPROP_PREFIXED(OutlineRadiusTopleft),
     CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     "",
     0,
@@ -3138,7 +3091,6 @@ CSS_PROP_OUTLINE(
     _moz_outline_radius_topright,
     CSS_PROP_DOMPROP_PREFIXED(OutlineRadiusTopright),
     CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     "",
     0,
@@ -3159,8 +3111,7 @@ CSS_PROP_OUTLINE(
     outline-width,
     outline_width,
     OutlineWidth,
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE,
+    CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HKL | VARIANT_CALC,
     kBorderWidthKTable,
@@ -3240,7 +3191,6 @@ CSS_PROP_LOGICAL(
     padding_block_end,
     PaddingBlockEnd,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         // This is required by the UA stylesheet and can't be overridden.
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
@@ -3260,7 +3210,6 @@ CSS_PROP_LOGICAL(
     padding_block_start,
     PaddingBlockStart,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         // This is required by the UA stylesheet and can't be overridden.
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
@@ -3279,7 +3228,6 @@ CSS_PROP_PADDING(
     padding_bottom,
     PaddingBottom,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         // This is required by the UA stylesheet and can't be overridden.
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
@@ -3296,7 +3244,6 @@ CSS_PROP_LOGICAL(
     padding_inline_end,
     PaddingInlineEnd,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         // This is required by the UA stylesheet and can't be overridden.
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
@@ -3315,7 +3262,6 @@ CSS_PROP_LOGICAL(
     padding_inline_start,
     PaddingInlineStart,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         // This is required by the UA stylesheet and can't be overridden.
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
@@ -3333,7 +3279,6 @@ CSS_PROP_PADDING(
     padding_left,
     PaddingLeft,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         // This is required by the UA stylesheet and can't be overridden.
@@ -3350,7 +3295,6 @@ CSS_PROP_PADDING(
     padding_right,
     PaddingRight,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         // This is required by the UA stylesheet and can't be overridden.
@@ -3367,7 +3311,6 @@ CSS_PROP_PADDING(
     padding_top,
     PaddingTop,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         // This is required by the UA stylesheet and can't be overridden.
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER |
@@ -3849,8 +3792,7 @@ CSS_PROP_SVG(
     stroke-miterlimit,
     stroke_miterlimit,
     StrokeMiterlimit,
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_AT_LEAST_ONE,
+    CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_HN,
     nullptr,
@@ -3871,7 +3813,6 @@ CSS_PROP_SVG(
     stroke_width,
     StrokeWidth,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_NUMBERS_ARE_PIXELS,
     "",
     VARIANT_HLPN | VARIANT_OPENTYPE_SVG_KEYWORD,
@@ -3897,8 +3838,7 @@ CSS_PROP_TEXT(
     -moz-tab-size,
     _moz_tab_size,
     CSS_PROP_DOMPROP_PREFIXED(TabSize),
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE,
+    CSS_PROPERTY_PARSE_VALUE,
     "",
     VARIANT_INHERIT | VARIANT_LNCALC,
     nullptr,
@@ -4158,7 +4098,6 @@ CSS_PROP_TEXT(
     _webkit_text_stroke_width,
     WebkitTextStrokeWidth,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
     "layout.css.prefixes.webkit",
@@ -4461,7 +4400,6 @@ CSS_PROP_POSITION(
     width,
     Width,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC |
         CSS_PROPERTY_UNITLESS_LENGTH_QUIRK |
         CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
