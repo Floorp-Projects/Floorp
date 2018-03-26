@@ -173,6 +173,12 @@ struct AudioChunk {
     if (!mBuffer) {
       return true;
     }
+    if (aOther.mVolume != mVolume) {
+      return false;
+    }
+    if (aOther.mPrincipalHandle != mPrincipalHandle) {
+      return false;
+    }
     NS_ASSERTION(aOther.mBufferFormat == mBufferFormat,
                  "Wrong metadata about buffer");
     NS_ASSERTION(aOther.mChannelData.Length() == mChannelData.Length(),
