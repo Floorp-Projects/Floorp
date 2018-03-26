@@ -220,7 +220,7 @@ ServoComputedData::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
   // to measure it with a function that can handle an interior pointer. We use
   // ServoStyleStructsEnclosingMallocSizeOf to clearly identify in DMD's
   // output the memory measured here.
-#define STYLE_STRUCT(name_, cb_) \
+#define STYLE_STRUCT(name_) \
   static_assert(alignof(nsStyle##name_) <= sizeof(size_t), \
                 "alignment will break AddSizeOfExcludingThis()"); \
   const void* p##name_ = GetStyle##name_(); \
@@ -2630,7 +2630,7 @@ NS_IMPL_FFI_REFCOUNTING(nsCSSCounterStyleRule, CSSCounterStyleRule);
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 
-#define STYLE_STRUCT(name, checkdata_cb)                                      \
+#define STYLE_STRUCT(name)                                                    \
                                                                               \
 void                                                                          \
 Gecko_Construct_Default_nsStyle##name(nsStyle##name* ptr,                     \

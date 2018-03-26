@@ -176,9 +176,9 @@ private:
                             nsIPresShell* aPresShell,
                             StyleType aStyleType);
 
-#define STYLE_STRUCT(name_, checkdata_cb_)                              \
-  const nsStyle##name_ * Style##name_() {                               \
-    return mComputedStyle->Style##name_();                               \
+#define STYLE_STRUCT(name_)                 \
+  const nsStyle##name_ * Style##name_() {   \
+    return mComputedStyle->Style##name_();  \
   }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
