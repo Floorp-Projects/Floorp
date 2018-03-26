@@ -1064,17 +1064,6 @@ NS_IMETHODIMP nsXULWindow::ForceRoundedDimensions()
   return NS_OK;
 }
 
-static LayoutDeviceIntSize
-GetWindowOuterInnerDiff(nsIWidget* aWindow)
-{
-  if (!aWindow) {
-    return LayoutDeviceIntSize();
-  }
-  LayoutDeviceIntSize baseSize(200, 200);
-  LayoutDeviceIntSize windowSize = aWindow->ClientToWindowSize(baseSize);
-  return windowSize - baseSize;
-}
-
 void nsXULWindow::OnChromeLoaded()
 {
   nsresult rv = EnsureContentTreeOwner();
@@ -1090,19 +1079,12 @@ void nsXULWindow::OnChromeLoaded()
 
     GetHasPrimaryContent(&isContent);
 
-    CSSIntSize windowDiff = mWindow
-      ? RoundedToInt(GetWindowOuterInnerDiff(mWindow) /
-                     mWindow->GetDefaultScale())
-      : CSSIntSize();
-
     // If this window has a primary content and fingerprinting resistance is
     // enabled, we enforce this window to rounded dimensions.
     if (isContent && nsContentUtils::ShouldResistFingerprinting()) {
       ForceRoundedDimensions();
     } else if (!mIgnoreXULSize) {
       gotSize = LoadSizeFromXUL(specWidth, specHeight);
-      specWidth += windowDiff.width;
-      specHeight += windowDiff.height;
     }
 
     bool positionSet = !mIgnoreXULPosition;
@@ -1141,8 +1123,8 @@ void nsXULWindow::OnChromeLoaded()
           if (NS_SUCCEEDED(cv->GetContentSize(&width, &height))) {
             treeOwner->SizeShellTo(docShellAsItem, width, height);
             // Update specified size for the final LoadPositionFromXUL call.
-            specWidth = width + windowDiff.width;
-            specHeight = height + windowDiff.height;
+            specWidth = width;
+            specHeight = height;
           }
         }
       }
@@ -1676,10 +1658,8 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   }
 
   if ((mPersistentAttributesDirty & PAD_SIZE) && gotRestoredBounds) {
-    LayoutDeviceIntSize winDiff = GetWindowOuterInnerDiff(mWindow);
     if (persistString.Find("width") >= 0) {
-      auto width = rect.Width() - winDiff.width;
-      SprintfLiteral(sizeBuf, "%d", NSToIntRound(width / sizeScale.scale));
+      SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.Width() / sizeScale.scale));
       CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
@@ -1688,8 +1668,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       }
     }
     if (persistString.Find("height") >= 0) {
-      auto height = rect.Height() - winDiff.height;
-      SprintfLiteral(sizeBuf, "%d", NSToIntRound(height / sizeScale.scale));
+      SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.Height() / sizeScale.scale));
       CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
