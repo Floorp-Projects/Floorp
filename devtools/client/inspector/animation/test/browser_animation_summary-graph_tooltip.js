@@ -10,14 +10,14 @@ const TEST_CASES = [
     targetClassName: "cssanimation-normal",
     expectedResult: {
       nameAndType: "cssanimation - CSS Animation",
-      duration: "100s",
+      duration: "1,000s",
     },
   },
   {
     targetClassName: "cssanimation-linear",
     expectedResult: {
       nameAndType: "cssanimation - CSS Animation",
-      duration: "100s",
+      duration: "1,000s",
       animationTimingFunction: "linear",
     },
   },
@@ -25,23 +25,23 @@ const TEST_CASES = [
     targetClassName: "delay-positive",
     expectedResult: {
       nameAndType: "test-delay-animation - Script Animation",
-      delay: "50s",
-      duration: "100s",
+      delay: "500s",
+      duration: "1,000s",
     },
   },
   {
     targetClassName: "delay-negative",
     expectedResult: {
       nameAndType: "test-negative-delay-animation - Script Animation",
-      delay: "-50s",
-      duration: "100s",
+      delay: "-500s",
+      duration: "1,000s",
     },
   },
   {
     targetClassName: "easing-step",
     expectedResult: {
       nameAndType: "Script Animation",
-      duration: "100s",
+      duration: "1,000s",
       easing: "steps(2)",
     },
   },
@@ -49,24 +49,24 @@ const TEST_CASES = [
     targetClassName: "enddelay-positive",
     expectedResult: {
       nameAndType: "Script Animation",
-      duration: "100s",
-      endDelay: "50s",
+      duration: "1,000s",
+      endDelay: "500s",
     },
   },
   {
     targetClassName: "enddelay-negative",
     expectedResult: {
       nameAndType: "Script Animation",
-      duration: "100s",
-      endDelay: "-50s",
+      duration: "1,000s",
+      endDelay: "-500s",
     },
   },
   {
     targetClassName: "enddelay-with-fill-forwards",
     expectedResult: {
       nameAndType: "Script Animation",
-      duration: "100s",
-      endDelay: "50s",
+      duration: "1,000s",
+      endDelay: "500s",
       fill: "forwards",
     },
   },
@@ -74,8 +74,8 @@ const TEST_CASES = [
     targetClassName: "enddelay-with-iterations-infinity",
     expectedResult: {
       nameAndType: "Script Animation",
-      duration: "100s",
-      endDelay: "50s",
+      duration: "1,000s",
+      endDelay: "500s",
       iterations: "\u221E",
     },
   },
@@ -83,7 +83,7 @@ const TEST_CASES = [
     targetClassName: "direction-alternate-with-iterations-infinity",
     expectedResult: {
       nameAndType: "Script Animation",
-      duration: "100s",
+      duration: "1,000s",
       direction: "alternate",
       iterations: "\u221E",
     },
@@ -92,7 +92,7 @@ const TEST_CASES = [
     targetClassName: "direction-alternate-reverse-with-iterations-infinity",
     expectedResult: {
       nameAndType: "Script Animation",
-      duration: "100s",
+      duration: "1,000s",
       direction: "alternate-reverse",
       iterations: "\u221E",
     },
@@ -101,7 +101,7 @@ const TEST_CASES = [
     targetClassName: "direction-reverse-with-iterations-infinity",
     expectedResult: {
       nameAndType: "Script Animation",
-      duration: "100s",
+      duration: "1,000s",
       direction: "reverse",
       iterations: "\u221E",
     },
@@ -110,7 +110,7 @@ const TEST_CASES = [
     targetClassName: "fill-backwards",
     expectedResult: {
       nameAndType: "Script Animation",
-      duration: "100s",
+      duration: "1,000s",
       fill: "backwards",
     },
   },
@@ -118,8 +118,8 @@ const TEST_CASES = [
     targetClassName: "fill-backwards-with-delay-iterationstart",
     expectedResult: {
       nameAndType: "Script Animation",
-      delay: "50s",
-      duration: "100s",
+      delay: "500s",
+      duration: "1,000s",
       fill: "backwards",
       iterationStart: "0.5",
     },
@@ -128,7 +128,7 @@ const TEST_CASES = [
     targetClassName: "fill-both",
     expectedResult: {
       nameAndType: "Script Animation",
-      duration: "100s",
+      duration: "1,000s",
       fill: "both",
     },
   },
@@ -136,8 +136,8 @@ const TEST_CASES = [
     targetClassName: "fill-both-width-delay-iterationstart",
     expectedResult: {
       nameAndType: "Script Animation",
-      delay: "50s",
-      duration: "100s",
+      delay: "500s",
+      duration: "1,000s",
       fill: "both",
       iterationStart: "0.5",
     },
@@ -146,7 +146,7 @@ const TEST_CASES = [
     targetClassName: "fill-forwards",
     expectedResult: {
       nameAndType: "Script Animation",
-      duration: "100s",
+      duration: "1,000s",
       fill: "forwards",
     },
   },
@@ -154,7 +154,7 @@ const TEST_CASES = [
     targetClassName: "iterationstart",
     expectedResult: {
       nameAndType: "Script Animation",
-      duration: "100s",
+      duration: "1,000s",
       iterationStart: "0.5",
     },
   },
@@ -162,14 +162,14 @@ const TEST_CASES = [
     targetClassName: "no-compositor",
     expectedResult: {
       nameAndType: "Script Animation",
-      duration: "100s",
+      duration: "1,000s",
     },
   },
   {
     targetClassName: "keyframes-easing-step",
     expectedResult: {
       nameAndType: "Script Animation",
-      duration: "100s",
+      duration: "1,000s",
     },
   },
 ];
