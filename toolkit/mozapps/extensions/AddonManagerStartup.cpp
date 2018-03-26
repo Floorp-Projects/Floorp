@@ -522,7 +522,7 @@ AddonManagerStartup::AddInstallLocation(Addon& addon)
   if (type == NS_SKIN_LOCATION) {
     mThemePaths.AppendElement(file);
   } else {
-    mExtensionPaths.AppendElement(file);
+    return Ok();
   }
 
   if (StringTail(path, 4).LowerCaseEqualsLiteral(".xpi")) {
