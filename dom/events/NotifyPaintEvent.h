@@ -11,7 +11,6 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/NotifyPaintEventBinding.h"
-#include "nsIDOMNotifyPaintEvent.h"
 #include "nsPresContext.h"
 
 namespace mozilla {
@@ -21,8 +20,7 @@ class DOMRect;
 class DOMRectList;
 class PaintRequestList;
 
-class NotifyPaintEvent : public Event,
-                         public nsIDOMNotifyPaintEvent
+class NotifyPaintEvent : public Event
 {
 
 public:
@@ -34,9 +32,7 @@ public:
                    uint64_t aTransactionId,
                    DOMHighResTimeStamp aTimeStamp);
 
-  NS_DECL_ISUPPORTS_INHERITED
-
-  NS_DECL_NSIDOMNOTIFYPAINTEVENT
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(NotifyPaintEvent, Event)
 
   NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) override;
   NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) override;
