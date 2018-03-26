@@ -17,6 +17,8 @@ const gInvalidTestCases = [
   { property: 'transition-duration', values: [CSS.px(10)], desc: 'an invalid CSSStyleValue' },
   { property: 'transition-duration', values: ['10px'], desc: 'an invalid String value' },
   { property: 'transition-duration', values: [CSS.s(1), '10px', CSS.px(10)], desc: 'a mix of valid and invalid values' },
+  { property: 'transition-duration', values: [new CSSUnparsedValue([])], desc: 'a CSSUnparsedValue' },
+  { property: 'transition-duration', values: ['var(--A)'], desc: 'a var ref' },
 ];
 
 for (const {property, values, desc} of gInvalidTestCases) {
