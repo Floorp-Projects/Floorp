@@ -38,12 +38,6 @@ public:
 
   NS_DECL_NSIDOMNOTIFYPAINTEVENT
 
-  // Forward to base class
-  NS_FORWARD_TO_EVENT_NO_SERIALIZATION_NO_DUPLICATION
-  NS_IMETHOD DuplicatePrivateData() override
-  {
-    return Event::DuplicatePrivateData();
-  }
   NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) override;
   NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, PickleIterator* aIter) override;
 
