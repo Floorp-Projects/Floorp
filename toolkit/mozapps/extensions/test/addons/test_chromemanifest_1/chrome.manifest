@@ -1,6 +1,0 @@
-content test-addon-1 chrome/content
-# comment!  
-  locale test-addon-1 en-US locale/en-US
-      # commentaire!  
-  locale test-addon-1    fr-FR locale/fr-FR  
-overlay	chrome://browser/content/browser.xul    chrome://test-addon-1/content/overlay.xul
