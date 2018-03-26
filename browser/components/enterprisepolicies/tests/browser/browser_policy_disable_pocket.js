@@ -24,13 +24,5 @@ add_task(async function test_disable_firefox_screenshots() {
     });
 
     await checkPocket(false);
-
-    // Clear the change made by the engine to restore Pocket.
-    // This is needed in case this test runs twice in a row
-    // (such as in test-verify), in order for the first sanity check
-    // to pass again.
-    await setupPolicyEngineWithJson("");
-    Services.prefs.unlockPref(PREF_POCKET);
-    Services.prefs.getDefaultBranch("").setBoolPref(PREF_POCKET, true);
   });
 });

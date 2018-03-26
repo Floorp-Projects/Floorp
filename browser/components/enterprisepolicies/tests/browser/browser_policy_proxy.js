@@ -2,32 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-function checkPref(prefName, expectedValue, expectedLockedness) {
-  let prefType, prefValue;
-  switch (typeof(expectedValue)) {
-    case "boolean":
-      prefType = Services.prefs.PREF_BOOL;
-      prefValue = Services.prefs.getBoolPref(prefName);
-      break;
-
-    case "number":
-      prefType = Services.prefs.PREF_INT;
-      prefValue = Services.prefs.getIntPref(prefName);
-      break;
-
-    case "string":
-      prefType = Services.prefs.PREF_STRING;
-      prefValue = Services.prefs.getStringPref(prefName);
-      break;
-  }
-
-  if (expectedLockedness !== undefined) {
-    is(Services.prefs.prefIsLocked(prefName), expectedLockedness, `Pref ${prefName} is correctly locked`);
-  }
-  is(Services.prefs.getPrefType(prefName), prefType, `Pref ${prefName} has the correct type`);
-  is(prefValue, expectedValue, `Pref ${prefName} has the correct value`);
-}
-
 add_task(async function test_proxy_modes_and_autoconfig() {
   // Directly test the proxy Mode and AutoconfigURL parameters through
   // the API instead of the policy engine, because the test harness
@@ -59,8 +33,8 @@ add_task(async function test_proxy_boolean_settings() {
     }
   });
 
-  checkPref("network.proxy.socks_remote_dns", false);
-  checkPref("signon.autologin.proxy", false);
+  checkUnlockedPref("network.proxy.socks_remote_dns", false);
+  checkUnlockedPref("signon.autologin.proxy", false);
 
   await setupPolicyEngineWithJson({
     "policies": {
@@ -71,8 +45,8 @@ add_task(async function test_proxy_boolean_settings() {
     }
   });
 
-  checkPref("network.proxy.socks_remote_dns", true);
-  checkPref("signon.autologin.proxy", true);
+  checkUnlockedPref("network.proxy.socks_remote_dns", true);
+  checkUnlockedPref("signon.autologin.proxy", true);
 });
 
 add_task(async function test_proxy_socks_and_passthrough() {
@@ -85,14 +59,14 @@ add_task(async function test_proxy_socks_and_passthrough() {
     }
   });
 
-  checkPref("network.proxy.socks_version", 4);
-  checkPref("network.proxy.no_proxies_on", "a, b, c");
+  checkUnlockedPref("network.proxy.socks_version", 4);
+  checkUnlockedPref("network.proxy.no_proxies_on", "a, b, c");
 });
 
 add_task(async function test_proxy_addresses() {
   function checkProxyPref(proxytype, address, port) {
-    checkPref(`network.proxy.${proxytype}`, address);
-    checkPref(`network.proxy.${proxytype}_port`, port);
+    checkUnlockedPref(`network.proxy.${proxytype}`, address);
+    checkUnlockedPref(`network.proxy.${proxytype}_port`, port);
   }
 
   await setupPolicyEngineWithJson({

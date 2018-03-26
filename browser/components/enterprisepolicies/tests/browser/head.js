@@ -4,14 +4,28 @@
 
 "use strict";
 
-const {EnterprisePolicyTesting} = ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm", {});
+const {
+  EnterprisePolicyTesting,
+  PoliciesPrefTracker,
+} = ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm", {});
+
+PoliciesPrefTracker.start();
 
 async function setupPolicyEngineWithJson(json, customSchema) {
+  PoliciesPrefTracker.restoreDefaultValues();
   if (typeof(json) != "object") {
     let filePath = getTestFilePath(json ? json : "non-existing-file.json");
     return EnterprisePolicyTesting.setupPolicyEngineWithJson(filePath, customSchema);
   }
   return EnterprisePolicyTesting.setupPolicyEngineWithJson(json, customSchema);
+}
+
+function checkLockedPref(prefName, prefValue) {
+  EnterprisePolicyTesting.checkPolicyPref(prefName, prefValue, true);
+}
+
+function checkUnlockedPref(prefName, prefValue) {
+  EnterprisePolicyTesting.checkPolicyPref(prefName, prefValue, false);
 }
 
 add_task(async function policies_headjs_startWithCleanSlate() {
@@ -26,4 +40,7 @@ registerCleanupFunction(async function policies_headjs_finishWithCleanSlate() {
     await setupPolicyEngineWithJson("");
   }
   is(Services.policies.status, Ci.nsIEnterprisePolicies.INACTIVE, "Engine is inactive at the end of the test");
+
+  EnterprisePolicyTesting.resetRunOnceState();
+  PoliciesPrefTracker.stop();
 });

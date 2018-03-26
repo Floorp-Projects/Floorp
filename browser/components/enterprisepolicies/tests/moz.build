@@ -12,6 +12,7 @@ BROWSER_CHROME_MANIFESTS += [
     'browser/disable_app_update/browser.ini',
     'browser/disable_default_bookmarks/browser.ini',
     'browser/disable_developer_tools/browser.ini',
+    'browser/disable_fxscreenshots/browser.ini',
 ]
 
 TESTING_JS_MODULES += [

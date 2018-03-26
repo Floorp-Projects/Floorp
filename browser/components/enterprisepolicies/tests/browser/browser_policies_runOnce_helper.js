@@ -16,7 +16,4 @@ add_task(async function test_runonce_helper() {
 
   runOnce("test_action", callback);
   is(runCount, 1, "Callback didn't run again.");
-
-  // clean-up
-  Services.prefs.clearUserPref("browser.policies.runonce.test_action");
 });
