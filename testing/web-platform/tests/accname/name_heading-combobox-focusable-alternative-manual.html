@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Name file-label-embedded-menu</title>
+    <title>Name  heading-combobox-focusable-alternative</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/resources/testharness.css">
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
@@ -22,7 +22,7 @@
                   "property",
                   "name",
                   "is",
-                  "Flash the screen times."
+                  "Country of origin: United States"
                ]
             ],
             "AXAPI" : [
@@ -30,7 +30,7 @@
                   "property",
                   "AXDescription",
                   "is",
-                  "Flash the screen times."
+                  "Country of origin: United States"
                ]
             ],
             "IAccessible2" : [
@@ -38,7 +38,7 @@
                   "property",
                   "accName",
                   "is",
-                  "Flash the screen times."
+                  "Country of origin: United States"
                ]
             ],
             "UIA" : [
@@ -46,7 +46,7 @@
                   "property",
                   "Name",
                   "is",
-                  "Flash the screen times."
+                  "Country of origin: United States"
                ]
             ]
          },
@@ -54,23 +54,18 @@
          "type" : "test"
       }
    ],
-   "title" : "Name file-label-embedded-menu"
+   "title" : "Name  heading-combobox-focusable-alternative"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for Name file-label-embedded-menu.</p>
-    <input type="file" id="test" />
-  <label for="test">Flash the screen
-    <span role="menu">
-      <span role="menuitem" aria-selected="true">1</span>
-      <span role="menuitem" hidden>2</span>
-      <span role="menuitem" hidden>3</span>
-    </span>
-    times.
-  </label>
+  <p>This test examines the ARIA properties for Name  heading-combobox-focusable-alternative.</p>
+    <h2 id="test">
+  Country of origin:
+  <input role="combobox" type="text" title="Choose your country." value="United States">
+  </h2>
 
   <div id="manualMode"></div>
   <div id="log"></div>
