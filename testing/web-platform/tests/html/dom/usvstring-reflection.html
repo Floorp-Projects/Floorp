@@ -105,6 +105,11 @@ test(() => {
 }, "sendBeacon URL: unpaired surrogate codepoint should not make any exceptions.")
 
 test(() => {
+  // This shouldn't throw an exception.
+  window.navigator.registerProtocolHandler('web+myprotocol', "custom-scheme\uD800/url=%s", "title");
+}, "RegisterPtotocolHandler URL: unpaired surrogate codepoint should not make any exceptions.")
+
+test(() => {
   var w = window.open("about:blank#\uD800");
   assert_equals(w.document.URL, 'about:blank#%EF%BF%BD');
   assert_equals(w.document.documentURI, 'about:blank#%EF%BF%BD');
