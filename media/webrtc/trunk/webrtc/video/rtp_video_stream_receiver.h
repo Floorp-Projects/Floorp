@@ -182,9 +182,9 @@ class RtpVideoStreamReceiver : public RtpData,
   ReceiveStatistics* const rtp_receive_statistics_;
   std::unique_ptr<UlpfecReceiver> ulpfec_receiver_;
 
-  rtc::SequencedTaskChecker worker_task_checker_;
-  bool receiving_ RTC_GUARDED_BY(worker_task_checker_);
-  int64_t last_packet_log_ms_ RTC_GUARDED_BY(worker_task_checker_);
+  rtc::CriticalSection receive_cs_;
+  bool receiving_ RTC_GUARDED_BY(receive_cs_);
+  int64_t last_packet_log_ms_ RTC_GUARDED_BY(receive_cs_);
 
   const std::unique_ptr<RtpRtcp> rtp_rtcp_;
 
@@ -208,7 +208,7 @@ class RtpVideoStreamReceiver : public RtpData,
   bool has_received_frame_;
 
   std::vector<RtpPacketSinkInterface*> secondary_sinks_
-      RTC_GUARDED_BY(worker_task_checker_);
+      RTC_GUARDED_BY(receive_cs_);
 };
 
 }  // namespace webrtc
