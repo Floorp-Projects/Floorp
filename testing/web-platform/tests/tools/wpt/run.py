@@ -226,6 +226,7 @@ class Chrome(BrowserSetup):
             else:
                 raise WptrunError("Unable to locate or install chromedriver binary")
 
+
 class ChromeAndroid(BrowserSetup):
     name = "chrome_android"
     browser_cls = browser.ChromeAndroid
