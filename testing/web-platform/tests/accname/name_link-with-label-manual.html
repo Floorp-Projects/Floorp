@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Name file-label-embedded-menu</title>
+    <title>Name link-with-label</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/resources/testharness.css">
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
@@ -22,7 +22,7 @@
                   "property",
                   "name",
                   "is",
-                  "Flash the screen times."
+                  "California"
                ]
             ],
             "AXAPI" : [
@@ -30,7 +30,7 @@
                   "property",
                   "AXDescription",
                   "is",
-                  "Flash the screen times."
+                  "California"
                ]
             ],
             "IAccessible2" : [
@@ -38,7 +38,7 @@
                   "property",
                   "accName",
                   "is",
-                  "Flash the screen times."
+                  "California"
                ]
             ],
             "UIA" : [
@@ -46,7 +46,7 @@
                   "property",
                   "Name",
                   "is",
-                  "Flash the screen times."
+                  "California"
                ]
             ]
          },
@@ -54,23 +54,15 @@
          "type" : "test"
       }
    ],
-   "title" : "Name file-label-embedded-menu"
+   "title" : "Name link-with-label"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for Name file-label-embedded-menu.</p>
-    <input type="file" id="test" />
-  <label for="test">Flash the screen
-    <span role="menu">
-      <span role="menuitem" aria-selected="true">1</span>
-      <span role="menuitem" hidden>2</span>
-      <span role="menuitem" hidden>3</span>
-    </span>
-    times.
-  </label>
+  <p>This test examines the ARIA properties for Name link-with-label.</p>
+    <a id="test" href="#" aria-label="California" title="San Francisco" >United States</a>
 
   <div id="manualMode"></div>
   <div id="log"></div>

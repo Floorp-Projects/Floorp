@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Name file-label-embedded-menu</title>
+    <title>Description link-with-label</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <link rel="stylesheet" href="/resources/testharness.css">
     <link rel="stylesheet" href="/wai-aria/scripts/manual.css">
@@ -20,33 +20,33 @@
             "ATK" : [
                [
                   "property",
-                  "name",
+                  "description",
                   "is",
-                  "Flash the screen times."
+                  "San Francisco"
                ]
             ],
             "AXAPI" : [
                [
                   "property",
-                  "AXDescription",
+                  "AXHelp",
                   "is",
-                  "Flash the screen times."
+                  "San Francisco"
                ]
             ],
             "IAccessible2" : [
                [
                   "property",
-                  "accName",
+                  "accDescription",
                   "is",
-                  "Flash the screen times."
+                  "San Francisco"
                ]
             ],
             "UIA" : [
                [
                   "property",
-                  "Name",
+                  "Description",
                   "is",
-                  "Flash the screen times."
+                  "San Francisco"
                ]
             ]
          },
@@ -54,23 +54,15 @@
          "type" : "test"
       }
    ],
-   "title" : "Name file-label-embedded-menu"
+   "title" : "Description link-with-label"
 }
 
     ) ;
     </script>
   </head>
   <body>
-  <p>This test examines the ARIA properties for Name file-label-embedded-menu.</p>
-    <input type="file" id="test" />
-  <label for="test">Flash the screen
-    <span role="menu">
-      <span role="menuitem" aria-selected="true">1</span>
-      <span role="menuitem" hidden>2</span>
-      <span role="menuitem" hidden>3</span>
-    </span>
-    times.
-  </label>
+  <p>This test examines the ARIA properties for Description link-with-label.</p>
+    <a id="test" href="#" aria-label="California" title="San Francisco" >United States</a>
 
   <div id="manualMode"></div>
   <div id="log"></div>
