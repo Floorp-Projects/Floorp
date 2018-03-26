@@ -263,26 +263,6 @@ UIEvent::GetRangeParent()
   return nullptr;
 }
 
-NS_IMETHODIMP
-UIEvent::GetRangeParent(nsIDOMNode** aRangeParent)
-{
-  NS_ENSURE_ARG_POINTER(aRangeParent);
-  *aRangeParent = nullptr;
-  nsCOMPtr<nsINode> n = GetRangeParent();
-  if (n) {
-    CallQueryInterface(n, aRangeParent);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-UIEvent::GetRangeOffset(int32_t* aRangeOffset)
-{
-  NS_ENSURE_ARG_POINTER(aRangeOffset);
-  *aRangeOffset = RangeOffset();
-  return NS_OK;
-}
-
 int32_t
 UIEvent::RangeOffset() const
 {
