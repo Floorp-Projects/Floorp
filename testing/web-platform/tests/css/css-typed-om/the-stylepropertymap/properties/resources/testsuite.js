@@ -9,6 +9,13 @@ function assert_is_calc_sum(result) {
     'specified calc must be a CSSMathSum');
 }
 
+function assert_is_equal_with_range_handling(input, result) {
+  if (input instanceof CSSUnitValue && input.value < 0)
+    assert_style_value_equals(result, new CSSMathSum(input));
+  else
+    assert_style_value_equals(result, input);
+}
+
 const gTestSyntaxExamples = {
   '<length>': {
     description: 'a length',
@@ -21,21 +28,21 @@ const gTestSyntaxExamples = {
         description: "a negative em",
         input: new CSSUnitValue(-3.14, 'em'),
         // 'ems' are relative units, so just check that it computes to px
-        defaultComputed: result => assert_is_unit('px', result)
+        defaultComputed: (_, result) => assert_is_unit('px', result)
       },
       {
         description: "a positive cm",
         input: new CSSUnitValue(3.14, 'cm'),
         // 'cms' are relative units, so just check that it computes to px
-        defaultComputed: result => assert_is_unit('px', result)
+        defaultComputed: (_, result) => assert_is_unit('px', result)
       },
       {
         description: "a calc length",
         input: new CSSMathSum(new CSSUnitValue(0, 'px'), new CSSUnitValue(0, 'em')),
         // Specified/computed calcs are usually simplified.
         // FIXME: Test this properly
-        defaultSpecified: assert_is_calc_sum,
-        defaultComputed: result => assert_is_unit('px', result)
+        defaultSpecified: (_, result) => assert_is_calc_sum(result),
+        defaultComputed: (_, result) => assert_is_unit('px', result)
       }
     ],
   },
@@ -59,8 +66,8 @@ const gTestSyntaxExamples = {
         input: new CSSMathSum(new CSSUnitValue(0, 'percent'), new CSSUnitValue(0, 'percent')),
         // Specified/computed calcs are usually simplified.
         // FIXME: Test this properly
-        defaultSpecified: assert_is_calc_sum,
-        defaultComputed: result => assert_is_unit('percent', result)
+        defaultSpecified: (_, result) => assert_is_calc_sum(result),
+        defaultComputed: (_, result) => assert_is_unit('percent', result)
       }
     ],
   },
@@ -84,8 +91,8 @@ const gTestSyntaxExamples = {
         input: new CSSMathSum(new CSSUnitValue(0, 's'), new CSSUnitValue(0, 'ms')),
         // Specified/computed calcs are usually simplified.
         // FIXME: Test this properly
-        defaultSpecified: assert_is_calc_sum,
-        defaultComputed: result => assert_is_unit('s', result)
+        defaultSpecified: (_, result) => assert_is_calc_sum(result),
+        defaultComputed: (_, result) => assert_is_unit('s', result)
       }
     ],
   },
@@ -104,7 +111,7 @@ const gTestSyntaxExamples = {
       {
         description: "a PNG image",
         input: new CSSURLImageValue('/media/1x1.png'),
-        defaultComputed: result => {
+        defaultComputed: (_, result) => {
           // URLs compute to absolute URLs
           assert_true(result instanceof CSSURLImageValue,
             'Computed value should be a CSSURLImageValue');
@@ -143,7 +150,7 @@ function testPropertyValid(propertyName, examples, specified, computed, descript
       // specified style
       const specifiedResult = element.attributeStyleMap.get(propertyName);
       if (specified || example.defaultSpecified) {
-        (specified || example.defaultSpecified)(specifiedResult);
+        (specified || example.defaultSpecified)(example.input, specifiedResult);
       } else {
         assert_not_equals(specifiedResult, null,
           'Specified value must not be null');
@@ -156,7 +163,7 @@ function testPropertyValid(propertyName, examples, specified, computed, descript
       // computed style
       const computedResult = element.computedStyleMap().get(propertyName);
       if (computed || example.defaultComputed) {
-        (computed || example.defaultComputed)(computedResult);
+        (computed || example.defaultComputed)(example.input, computedResult);
       } else {
         assert_not_equals(computedResult, null,
           'Computed value must not be null');
@@ -196,12 +203,20 @@ function createKeywordExample(keyword) {
 // }
 //
 // If a callback is passed to |specified|, then the callback will be passed
-// the result of calling get() on the inline style map (specified values).
+// two arguments:
+// 1. The input test case
+// 2. The result of calling get() on the inline style map (specified values).
+//
 // The callback should check if the result is expected using assert_* functions.
 // If no callback is passed, then we assert that the result is the same as
 // the input.
 //
 // Same goes for |computed|, but with the computed style map (computed values).
+//
+// FIXME: The reason we pass argument #2 is that it's sometimes difficult to
+// compute exactly what the expected result should be (e.g. browser-specific
+// values). Once we can do that, we can remove argument #2 and just return
+// the expected result.
 function runPropertyTests(propertyName, testCases) {
   let syntaxTested = new Set();
 
