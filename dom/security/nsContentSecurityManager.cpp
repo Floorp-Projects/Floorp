@@ -159,6 +159,54 @@ nsContentSecurityManager::AllowInsecureRedirectToDataURI(nsIChannel* aNewChannel
   return false;
 }
 
+/* static */ bool
+nsContentSecurityManager::AllowFTPSubresourceLoad(nsIChannel* aChannel)
+{
+  // We dissallow using FTP resources as a subresource everywhere.
+  // The only valid way to use FTP resources is loading it as
+  // a top level document.
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  if (!loadInfo) {
+    return true;
+  }
+
+  nsContentPolicyType type = loadInfo->GetExternalContentPolicyType();
+  if (type == nsIContentPolicy::TYPE_DOCUMENT) {
+    return true;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+  if (NS_FAILED(rv) || !uri) {
+    return true;
+  }
+
+  bool isFtpURI = (NS_SUCCEEDED(uri->SchemeIs("ftp", &isFtpURI)) && isFtpURI);
+  if (!isFtpURI) {
+    return true;
+  }
+
+  nsCOMPtr<nsIDocument> doc;
+  if (nsINode* node = loadInfo->LoadingNode()) {
+    doc = node->OwnerDoc();
+  }
+
+  nsAutoCString spec;
+  uri->GetSpec(spec);
+  NS_ConvertUTF8toUTF16 specUTF16(NS_UnescapeURL(spec));
+  const char16_t* params[] = { specUTF16.get() };
+
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("FTP_URI_BLOCKED"),
+                                  doc,
+                                  nsContentUtils::eSECURITY_PROPERTIES,
+                                  "BlockSubresourceFTP",
+                                  params, ArrayLength(params));
+
+  return false;
+}
+
 static nsresult
 ValidateSecurityFlags(nsILoadInfo* aLoadInfo)
 {
@@ -756,6 +804,10 @@ nsContentSecurityManager::CheckChannel(nsIChannel* aChannel)
     NS_ENSURE_SUCCESS(rv, rv);
     // TODO: Bug 1371237
     // consider calling SetBlockedRequest in nsContentSecurityManager::CheckChannel
+  }
+
+  if (!AllowFTPSubresourceLoad(aChannel)) {
+    return NS_ERROR_CONTENT_BLOCKED;
   }
 
   return NS_OK;
