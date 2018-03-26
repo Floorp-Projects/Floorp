@@ -27,7 +27,7 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) override;
+  void GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aRv) override;
   virtual void SetInnerHTML(const nsAString& aInnerHTML,
                             nsIPrincipal* aSubjectPrincipal,
                             mozilla::ErrorResult& aError) override;
