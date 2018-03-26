@@ -27,7 +27,7 @@ let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
 function clearAllImageCaches() {
   var tools = Cc["@mozilla.org/image/tools;1"]
-                .getService(SpecialPowers.Ci.imgITools);
+                .getService(Ci.imgITools);
   var imageCache = tools.getImgCacheForDocument(window.document);
   imageCache.clearCache(true); // true=chrome
   imageCache.clearCache(false); // false=content
