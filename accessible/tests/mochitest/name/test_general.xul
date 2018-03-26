@@ -53,7 +53,7 @@
 
       //////////////////////////////////////////////////////////////////////////
       // Name from subtree (single relation labelled_by).
-      
+
       // Gets the name from text nodes contained by nested elements.
       testName("btn_labelledby_mixed", "nomore text");
 
@@ -61,12 +61,12 @@
       // (other items are ignored).
       testName("btn_labelledby_mixed_menulist",
                "nomore text selected item more text");
-      
+
       // Gets the name from text nodes contained by nested elements, ignores
       // hidden elements (bug 443081).
       testName("btn_labelledby_mixed_hidden_child", "nomore text2");
 
-      // Gets the name from hidden text nodes contained by nested elements, 
+      // Gets the name from hidden text nodes contained by nested elements,
       // (label element is hidden entirely), (bug 443081)
       testName("btn_labelledby_mixed_hidden", "lala more hidden text");
 
@@ -234,7 +234,7 @@
   <checkbox id="rememberHistoryDays"
             label="Remember "
             aria-labelledby="rememberHistoryDays historyDays rememberAfter"/>
-  <textbox id="historyDays" type="number" size="3" value="3"
+  <textbox id="historyDays" type="number" value="3"
            aria-labelledby="rememberHistoryDays historyDays rememberAfter"/>
   <label id="rememberAfter">days</label>
 
@@ -313,8 +313,8 @@
        class="first"
        role="group"/>
 
-  <box id="box_label_anon2" 
-       class="second" 
+  <box id="box_label_anon2"
+       class="second"
        role="group"/>
 
   <!-- tooltiptext -->
@@ -379,4 +379,3 @@
   </vbox> <!-- close tests area -->
   </hbox> <!-- close main area -->
 </window>
-

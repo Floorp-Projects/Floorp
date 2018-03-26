@@ -19,3 +19,7 @@
   list-style-image: url("chrome://global/skin/icons/Print-preview.png");
   -moz-image-region: rect(0px 32px 16px 16px);
 }
+
+#pageNumber {
+  width: 3ch;
+}

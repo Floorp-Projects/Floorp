@@ -10,19 +10,19 @@
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <hbox>
-  <textbox id="n1" type="number" size="4"/>
+  <textbox id="n1" type="number"/>
   <textbox id="n2" type="number" value="10" min="5" max="15"/>
 </hbox>
 <hbox>
-  <textbox id="n4" type="number" size="4" value="-2" min="-8" max="18"/>
+  <textbox id="n4" type="number" value="-2" min="-8" max="18"/>
   <textbox id="n5" type="number" value="-17" min="-10" max="-3"/>
 </hbox>
 <hbox>
-  <textbox id="n6" type="number" size="4" value="9" min="12" max="8"/>
+  <textbox id="n6" type="number" value="9" min="12" max="8"/>
   <textbox id="n8" type="number" hidespinbuttons="true"/>
 </hbox>
 <hbox>
-  <textbox id="n9" type="number" size="4" oninput="updateInputEventCount();"/>
+  <textbox id="n9" type="number" oninput="updateInputEventCount();"/>
 </hbox>
 
   <!-- test results are displayed in the html:body -->
