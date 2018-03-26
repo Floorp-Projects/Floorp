@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1439014
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1439014</title>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1439014">Mozilla Bug 1439014</a>
+
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="profiler_test_utils.js"></script>
+<script type="application/javascript">
+/* globals runTest */
+
+"use strict";
+
+const settings = {
+  entries: 1000000, // 9MB
+  interval: 1, // ms
+  features: ["js", "threads", "trackopts"],
+  threads: ["GeckoMain"]
+};
+
+function innerFunction(x) {
+  return x * 0.7; // This is line 30.
+}
+
+function middleFunction(x) {
+  return innerFunction(x) * 1.4;
+}
+
+function outerFunction() {
+  let k = 0;
+  for (let i = 0; i < 1000000; i++) {
+    k += middleFunction(i); // This is line 40.
+  }
+  return k;
+}
+
+function workload() {
+  let m = 0;
+  for (let i = 0; i < 20; i++) {
+    m += outerFunction();
+  }
+  return m;
+}
+
+runTest(settings, workload, profile => {
+  const thisThread = profile.threads[0];
+  const { frameTable, stringTable } = thisThread;
+
+  function prettifyOptimizationSites(optimizationSites) {
+    return optimizationSites.map(optimizationSite => {
+      const result = {};
+      if (optimizationSite.site) {
+        result.site = stringTable[optimizationSite.site];
+      }
+      if (optimizationSite.mirType) {
+        result.mirType = stringTable[optimizationSite.mirType];
+      }
+      if (optimizationSite.typeset) {
+        result.typeset = optimizationSite.typeset.map(({ keyedBy, name }) => ({
+          keyedBy: stringTable[keyedBy],
+          name: stringTable[name],
+        }));
+      }
+      return result;
+    });
+  }
+  function prettifyAttempts(attempts) {
+    const { strategy, outcome } = attempts.schema;
+    return attempts.data.map(data => ({
+      strategy: stringTable[data[strategy]],
+      outcome: stringTable[data[outcome]],
+    }));
+  }
+  function prettifyOptimizations(optimizations) {
+    if (!optimizations) {
+      return null;
+    }
+    return {
+      types: prettifyOptimizationSites(optimizations.types),
+      attempts: prettifyAttempts(optimizations.attempts),
+      line: optimizations.line,
+      column: optimizations.column,
+    };
+  }
+  function framesForFunc(functionName) {
+    const { location, implementation, optimizations, line } = frameTable.schema;
+    return frameTable.data.filter(data => {
+      return stringTable[data[location]].startsWith(functionName + " ");
+    }).map(data => ({
+      implementation: stringTable[data[implementation]],
+      optimizations: prettifyOptimizations(data[optimizations]),
+      line: data[line],
+    }));
+  }
+
+  const outerFunctionFrames = framesForFunc("outerFunction");
+  const innerFunctionFrames = framesForFunc("innerFunction");
+
+  // console.log("outerFunction:", outerFunctionFrames);
+  // console.log("innerFunction:", innerFunctionFrames);
+  //
+  // Example output:
+  //
+  // console.log: "outerFunction:" [
+  //   {
+  //     implementation: "baseline",
+  //     optimizations: null,
+  //     line: undefined
+  //   },
+  //   {
+  //     implementation: "ion",
+  //     optimizations: null,
+  //     line: undefined
+  //   },
+  //   {
+  //     implementation: "ion",
+  //     optimizations: {
+  //       types: [
+  //         {
+  //           site: "Operand",
+  //           mirType: "Double",
+  //           typeset: [
+  //             { keyedBy: "primitive", name: "int" },
+  //             { keyedBy: "primitive", name: "float" }
+  //           ]
+  //         },
+  //         {
+  //           site: "Operand",
+  //           mirType: "Double"
+  //         }
+  //       ],
+  //       attempts: [
+  //         {
+  //           strategy: "BinaryArith_Concat",
+  //           outcome: "OperandNotString"
+  //         },
+  //         {
+  //           strategy: "BinaryArith_SpecializedTypes",
+  //           outcome: "GenericSuccess"
+  //         }
+  //       ],
+  //       line:40,
+  //       column:9
+  //     },
+  //     line: undefined
+  //   },
+  //   {
+  //     implementation: "ion",
+  //     optimizations: null,
+  //     line: undefined
+  //   }
+  // ]
+  // console.log: "innerFunction:" [
+  //   {
+  //     implementation: "ion",
+  //     optimizations: {
+  //       types: [
+  //         {
+  //           site: "Operand",
+  //           mirType: "Int32",
+  //           typeset: [
+  //             { keyedBy: "primitive", name: "int" }
+  //           ]
+  //         },
+  //         {
+  //           site: "Operand",
+  //           mirType: "Double"
+  //         }
+  //       ],
+  //       attempts: [
+  //         {
+  //           strategy: "BinaryArith_SpecializedTypes",
+  //           outcome: "GenericSuccess"
+  //         }
+  //       ],
+  //       line: 30,
+  //       column: 2
+  //     },
+  //     line: undefined
+  //   }
+  // ]
+
+  ok(outerFunctionFrames.length > 0, "should have sampled at least one frame of outerFunction() running");
+  const outerFunctionIonFrames = outerFunctionFrames.filter(frame => frame.implementation === "ion");
+  ok(outerFunctionIonFrames.length > 0, "should have observed outerFunction() running in ion");
+  const outerFunctionIonFramesWithOptimizations = outerFunctionIonFrames.filter(frame => frame.optimizations !== null);
+  ok(outerFunctionIonFramesWithOptimizations.length > 0, "should have optimizations info for some frames of outerFunction()");
+
+  // Try to check for one specific optimization. If the JS engine changes, this
+  // test may need changing. In this test we only care about the fact that we
+  // get useful optimization information, we don't care about how exactly this
+  // JS code was optimized.
+  ok(outerFunctionIonFramesWithOptimizations.some(frame => {
+    return frame.optimizations.line === 40 && frame.optimizations.attempts.some(attempt => {
+      return attempt.strategy === "BinaryArith_SpecializedTypes" &&
+             attempt.outcome === "GenericSuccess";
+    }) && frame.optimizations.types.some(optimizationSite => {
+      return optimizationSite.site === "Operand" &&
+             optimizationSite.mirType === "Double";
+    });
+  }), "should find a successful arithmetic specialization for the += operation on line 40");
+
+  ok(innerFunctionFrames.some(frame => {
+    return frame.implementation === "ion" &&
+           frame.optimizations !== null &&
+           frame.optimizations.line === 30;
+  }), "should find a piece of optimization info about innerFunction for line 30");
+});
+
+</script>
+</body>
+</html>
