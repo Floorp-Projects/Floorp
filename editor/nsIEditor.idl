@@ -169,16 +169,6 @@ interface nsIEditor  : nsISupports
     */
   void enableUndo(in boolean enable);
 
-  /**
-   * The number of items on the undo stack.
-   */
-  readonly attribute long numberOfUndoItems;
-
-  /**
-   * The number of items on the redo stack.
-   */
-  readonly attribute long numberOfRedoItems;
-
   /** undo reverses the effects of the last Do operation,
     * if Undo is enabled in the editor.
     * It is provided here so clients need no knowledge of whether
