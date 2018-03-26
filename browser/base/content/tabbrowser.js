@@ -370,10 +370,6 @@ window._gBrowser = {
     return this.selectedBrowser.webNavigation;
   },
 
-  get webBrowserFind() {
-    return this.selectedBrowser.webBrowserFind;
-  },
-
   get webProgress() {
     return this.selectedBrowser.webProgress;
   },
