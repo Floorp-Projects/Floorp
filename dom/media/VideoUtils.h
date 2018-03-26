@@ -158,10 +158,6 @@ ScaleDisplayByAspectRatio(gfx::IntSize& aDisplay, float aAspectRatio);
 void DownmixStereoToMono(mozilla::AudioDataValue* aBuffer,
                          uint32_t aFrames);
 
-// Decide the number of playback channels according to the
-// given AudioInfo and the prefs that are being set.
-uint32_t DecideAudioPlaybackChannels(const AudioInfo& info);
-
 bool IsVideoContentType(const nsCString& aContentType);
 
 // Returns true if it's safe to use aPicture as the picture to be
