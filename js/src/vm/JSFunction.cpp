@@ -2033,6 +2033,16 @@ js::NewScriptedFunction(JSContext* cx, unsigned nargs,
 }
 
 #ifdef DEBUG
+static JSObject*
+SkipEnvironmentObjects(JSObject* env)
+{
+    if (!env)
+        return nullptr;
+    while (env->is<EnvironmentObject>())
+        env = &env->as<EnvironmentObject>().enclosingEnvironment();
+    return env;
+}
+
 static bool
 NewFunctionEnvironmentIsWellFormed(JSContext* cx, HandleObject env)
 {
