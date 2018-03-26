@@ -471,10 +471,6 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
 
     case kStarted:
     case kStopped:
-      if (prefs == mLastPrefs) {
-        return NS_OK;
-      }
-
       if (prefs.mChannels != mLastPrefs.mChannels) {
         // If the channel count changed, tell the MSG to open a new driver with
         // the correct channel count.
