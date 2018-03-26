@@ -1309,12 +1309,6 @@ function createInterfaceMap(isXBLScope) {
 
   addInterfaces(ecmaGlobals);
   addInterfaces(interfaceNamesInGlobalScope);
-  if (isXBLScope) {
-    // We expose QueryInterface to XBL scopes. It's not an interface but we
-    // need to handle it because it's an own property of the global and the
-    // property name starts with an uppercase letter.
-    interfaceMap["QueryInterface"] = true;
-  }
 
   return interfaceMap;
 }
