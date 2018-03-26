@@ -7,7 +7,6 @@
 var EXPORTED_SYMBOLS = [
   "DownloadAddonInstall",
   "LocalAddonInstall",
-  "StagedAddonInstall",
   "UpdateChecker",
   "loadManifestFromFile",
   "verifyBundleSignedState",
@@ -200,32 +199,6 @@ function setFilePermissions(aFile, aPermissions) {
   } catch (e) {
     logger.warn("Failed to set permissions " + aPermissions.toString(8) + " on " +
          aFile.path, e);
-  }
-}
-
-/**
- * Write a given string to a file
- *
- * @param  file
- *         The nsIFile instance to write into
- * @param  string
- *         The string to write
- */
-function writeStringToFile(file, string) {
-  let stream = Cc["@mozilla.org/network/file-output-stream;1"].
-               createInstance(Ci.nsIFileOutputStream);
-  let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
-                  createInstance(Ci.nsIConverterOutputStream);
-
-  try {
-    stream.init(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
-                            FileUtils.MODE_TRUNCATE, FileUtils.PERMS_FILE,
-                           0);
-    converter.init(stream, "UTF-8");
-    converter.writeString(string);
-  } finally {
-    converter.close();
-    stream.close();
   }
 }
 
@@ -1431,8 +1404,7 @@ class AddonInstall {
       logger.debug("Cancelling install of " + this.addon.id);
       let xpi = getFile(`${this.addon.id}.xpi`, this.installLocation.getStagingDir());
       flushJarCache(xpi);
-      this.installLocation.cleanStagingDir([this.addon.id, this.addon.id + ".xpi",
-                                            this.addon.id + ".json"]);
+      this.installLocation.cleanStagingDir([this.addon.id, this.addon.id + ".xpi"]);
       this.state = AddonManager.STATE_CANCELLED;
       XPIProvider.removeActiveInstall(this);
 
@@ -1855,9 +1827,6 @@ class AddonInstall {
    * Stages an upgrade for next application restart.
    */
   async stageInstall(restartRequired, stagedAddon, isUpgrade) {
-    let stagedJSON = stagedAddon.clone();
-    stagedJSON.leafName = this.addon.id + ".json";
-
     // First stage the file regardless of whether restarting is necessary
     if (this.addon.unpack) {
       logger.debug("Addon " + this.addon.id + " will be installed as " +
@@ -1877,9 +1846,10 @@ class AddonInstall {
       this.addon._sourceBundle = stagedAddon;
 
       // Cache the AddonInternal as it may have updated compatibility info
-      writeStringToFile(stagedJSON, JSON.stringify(this.addon));
+      XPIStates.getLocation(this.installLocation.name).stageAddon(this.addon.id,
+                                                                  this.addon.toJSON());
 
-      logger.debug("Staged install of " + this.addon.id + " from " + this.sourceURI.spec + " ready; waiting for restart.");
+      logger.debug(`Staged install of ${this.addon.id} from ${this.sourceURI.spec} ready; waiting for restart.`);
       if (isUpgrade) {
         delete this.existingAddon.pendingUpgrade;
         this.existingAddon.pendingUpgrade = this.addon;
@@ -1891,10 +1861,7 @@ class AddonInstall {
    * Removes any previously staged upgrade.
    */
   async unstageInstall(stagedAddon) {
-    let stagedJSON = getFile(`${this.addon.id}.json`, stagedAddon);
-    if (stagedJSON.exists()) {
-      stagedJSON.remove(true);
-    }
+    XPIStates.getLocation(this.installLocation.name).unstageAddon(this.addon.id);
 
     await removeAsync(getFile(this.addon.id, stagedAddon));
 
@@ -2461,34 +2428,6 @@ var DownloadAddonInstall = class extends AddonInstall {
     }
 
     return this.badCertHandler.getInterface(iid);
-  }
-};
-
-/**
- * This class exists just for the specific case of staged add-ons that
- * fail to install at startup.  When that happens, the add-on remains
- * staged but we want to keep track of it like other installs so that we
- * can clean it up if the same add-on is installed again (see the comment
- * about "pending installs for the same add-on" in AddonInstall.startInstall)
- */
-var StagedAddonInstall = class extends AddonInstall {
-  constructor(installLocation, dir, manifest) {
-    super(installLocation, dir);
-
-    this.name = manifest.name;
-    this.type = manifest.type;
-    this.version = manifest.version;
-    this.icons = manifest.icons;
-    this.releaseNotesURI = manifest.releaseNotesURI ?
-                           Services.io.newURI(manifest.releaseNotesURI) :
-                           null;
-    this.sourceURI = manifest.sourceURI ?
-                     Services.io.newURI(manifest.sourceURI) :
-                     null;
-    this.file = null;
-    this.addon = manifest;
-
-    this.state = AddonManager.STATE_INSTALLED;
   }
 };
 
