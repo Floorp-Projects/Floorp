@@ -872,6 +872,8 @@ public:
   virtual void SetAdditionalComputedStyle(int32_t aIndex,
                                           ComputedStyle* aComputedStyle) = 0;
 
+  already_AddRefed<ComputedStyle> ComputeSelectionStyle() const;
+
   /**
    * Accessor functions for geometric parent.
    */
