@@ -402,16 +402,6 @@ protected:
   //  - It also stores the additional bits listed at the top of
   //    nsStyleStruct.h.
   uint64_t                mBits;
-
-#ifdef DEBUG
-  static bool DependencyAllowed(nsStyleStructID aOuterSID,
-                                nsStyleStructID aInnerSID)
-  {
-    return !!(sDependencyTable[aOuterSID] & GetBitForSID(aInnerSID));
-  }
-
-  static const uint32_t sDependencyTable[];
-#endif
 };
 
 } // namespace mozilla
