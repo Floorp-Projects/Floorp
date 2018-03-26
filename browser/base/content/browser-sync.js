@@ -53,7 +53,9 @@ var gSync = {
   // if any remote clients exist.
   get syncConfiguredAndLoading() {
     return UIState.get().status == UIState.STATUS_SIGNED_IN &&
-           (!this.syncReady || Weave.Service.clientsEngine.isFirstSync);
+           (!this.syncReady ||
+           // lastSync will be non-zero after the first sync
+           Weave.Service.clientsEngine.lastSync == 0);
   },
 
   get isSignedIn() {
