@@ -122,14 +122,22 @@ class TestEnvironment(object):
 
     def load_config(self):
         default_config_path = os.path.join(serve_path(self.test_paths), "config.default.json")
-        local_config_path = os.path.join(here, "config.json")
+        local_config = {
+            "ports": {
+                "http": [8000, 8001],
+                "https": [8443],
+                "ws": [8888]
+            },
+            "check_subdomains": False,
+            "bind_hostname": self.options["bind_hostname"],
+            "ssl": {}
+        }
+
+        if "host" in self.options:
+            local_config["host"] = self.options["host"]
 
         with open(default_config_path) as f:
             default_config = json.load(f)
-
-        with open(local_config_path) as f:
-            data = f.read()
-            local_config = json.loads(data % self.options)
 
         #TODO: allow non-default configuration for ssl
 
