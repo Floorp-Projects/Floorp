@@ -173,8 +173,8 @@ class Instance
 
 typedef UniquePtr<Instance> UniqueInstance;
 
-bool InitInstanceStaticData();
-void ShutDownInstanceStaticData();
+bool InitSignatureSet();
+void ReleaseSignatureSet();
 
 } // namespace wasm
 } // namespace js

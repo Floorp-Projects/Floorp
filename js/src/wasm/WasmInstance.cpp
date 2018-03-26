@@ -87,7 +87,7 @@ class SigIdSet
 ExclusiveData<SigIdSet>* sigIdSet = nullptr;
 
 bool
-js::wasm::InitInstanceStaticData()
+js::wasm::InitSignatureSet()
 {
     MOZ_ASSERT(!sigIdSet);
     sigIdSet = js_new<ExclusiveData<SigIdSet>>(mutexid::WasmSigIdSet);
@@ -95,7 +95,7 @@ js::wasm::InitInstanceStaticData()
 }
 
 void
-js::wasm::ShutDownInstanceStaticData()
+js::wasm::ReleaseSignatureSet()
 {
     MOZ_ASSERT(sigIdSet);
     js_delete(sigIdSet);
