@@ -12,15 +12,19 @@ https://developers.google.com/open-source/licenses/bsd
 <script src="util_main.js"></script>
 <script>
 var events = [];
+var startTime = 0;
 
 function run() {
   events = [];
+  startTime = Date.now();
 
   function pushToLog(type) {
+    var time = Date.now();
     if (events.length != 0 && type === events[events.length - 1].type) {
       events[events.length - 1].count += 1;
+      events[events.length - 1].last = time;
     } else {
-      events.push({type: type, count: 1});
+      events.push({type: type, count: 1, first: time, last: time});
     }
   }
 
@@ -85,14 +89,23 @@ function print() {
   var result = '';
   for (var i = 0; i < events.length; ++i) {
     var event = events[i];
-    result += event.type + ' * ' + event.count + '\n';
+    var line = '';
+    line += (event.first - startTime) + "ms";
+    if (event.count > 1)
+      line += "-" + (event.last - startTime) + "ms";
+    else
+      line += "        ";
+    while(line.length < 15)
+      line += " ";
+    line += ": " + event.type + ' * ' + event.count + '\n';
+    result += line;
   }
   document.getElementById('log').value = result;
 }
 </script>
 
 <body>
-  <textarea id="log" rows="10" cols="40" readonly></textarea>
+  <textarea id="log" rows="10" cols="70" readonly></textarea>
   <br/>
   Size: <input type="text" id="size" value="65536"><br/>
   <input type="checkbox" id="chunkedresponse">

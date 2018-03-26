@@ -33,27 +33,7 @@ function destroyAllXHRs() {
   // gc() might be needed for Chrome/Blob
 }
 
-function repeatString(str, count) {
-  var data = '';
-  var expChunk = str;
-  var remain = count;
-  while (true) {
-    if (remain % 2) {
-      data += expChunk;
-      remain = (remain - 1) / 2;
-    } else {
-      remain /= 2;
-    }
-
-    if (remain == 0)
-      break;
-
-    expChunk = expChunk + expChunk;
-  }
-  return data;
-}
-
-function sendBenchmarkStep(size, config) {
+function sendBenchmarkStep(size, config, isWarmUp) {
   timerID = null;
 
   benchmark.startTimeInMs = null;
@@ -68,12 +48,14 @@ function sendBenchmarkStep(size, config) {
     if (this.status != 200) {
       config.addToLog('Failed (status=' + this.status + ')');
       destroyAllXHRs();
+      config.notifyAbort();
       return;
     }
 
     if (config.verifyData &&
         !verifyAcknowledgement(config, this.response, size)) {
       destroyAllXHRs();
+      config.notifyAbort();
       return;
     }
 
@@ -86,10 +68,17 @@ function sendBenchmarkStep(size, config) {
     if (benchmark.startTimeInMs == null) {
       config.addToLog('startTimeInMs not set');
       destroyAllXHRs();
+      config.notifyAbort();
       return;
     }
 
-    calculateAndLogResult(config, size, benchmark.startTimeInMs, totalSize);
+    // Check and warn if proxy is enabled.
+    if (this.getResponseHeader('Via') !== null) {
+      config.addToLog('WARNING: proxy seems enabled.');
+    }
+
+    calculateAndLogResult(config, size, benchmark.startTimeInMs, totalSize,
+        isWarmUp);
 
     destroyAllXHRs();
 
@@ -134,7 +123,7 @@ function sendBenchmarkStep(size, config) {
   }
 }
 
-function receiveBenchmarkStep(size, config) {
+function receiveBenchmarkStep(size, config, isWarmUp) {
   timerID = null;
 
   benchmark.startTimeInMs = null;
@@ -145,6 +134,7 @@ function receiveBenchmarkStep(size, config) {
     if (!verificationResult) {
       config.addToLog('Response verification failed');
       destroyAllXHRs();
+      config.notifyAbort();
       return;
     }
 
@@ -157,10 +147,12 @@ function receiveBenchmarkStep(size, config) {
     if (benchmark.startTimeInMs == null) {
       config.addToLog('startTimeInMs not set');
       destroyAllXHRs();
+      config.notifyAbort();
       return;
     }
 
-    calculateAndLogResult(config, size, benchmark.startTimeInMs, totalSize);
+    calculateAndLogResult(config, size, benchmark.startTimeInMs, totalSize,
+        isWarmUp);
 
     destroyAllXHRs();
 
@@ -175,7 +167,13 @@ function receiveBenchmarkStep(size, config) {
     if (this.status != 200) {
       config.addToLog('Failed (status=' + this.status + ')');
       destroyAllXHRs();
+      config.notifyAbort();
       return;
+    }
+
+    // Check and warn if proxy is enabled.
+    if (this.getResponseHeader('Via') !== null) {
+      config.addToLog('WARNING: proxy seems enabled.');
     }
 
     var bytesReceived = -1;
@@ -190,6 +188,7 @@ function receiveBenchmarkStep(size, config) {
       config.addToLog('Expected ' + size +
           'B but received ' + bytesReceived + 'B');
       destroyAllXHRs();
+      config.notifyAbort();
       return;
     }
 
@@ -220,9 +219,21 @@ function receiveBenchmarkStep(size, config) {
 
   for (var i = 0; i < xhrs.length; ++i) {
     var xhr = xhrs[i];
-    xhr.open('POST', config.prefixUrl + '_receive', config.async);
-    xhr.responseType = config.dataType;
-    xhr.send(size + ' none');
+    if (config.methodAndCache === 'GET-NOCACHE') {
+      xhr.open('GET', config.prefixUrl + '_receive_getnocache?' + size,
+          config.async);
+      xhr.responseType = config.dataType;
+      xhr.send();
+    } else if (config.methodAndCache === 'GET-CACHE') {
+      xhr.open('GET', config.prefixUrl + '_receive_getcache?' + size,
+          config.async);
+      xhr.responseType = config.dataType;
+      xhr.send();
+    } else {
+      xhr.open('POST', config.prefixUrl + '_receive', config.async);
+      xhr.responseType = config.dataType;
+      xhr.send(size + ' none');
+    }
   }
 }
 
@@ -243,94 +254,6 @@ function startBenchmark(config) {
   destroyAllXHRs();
 
   runNextTask(config);
-}
-
-// TODO(hiroshige): the following code is the same as benchmark.html
-// and some of them should be merged into e.g. util.js
-
-var tasks = [];
-
-function runNextTask(config) {
-  var task = tasks.shift();
-  if (task == undefined) {
-    config.addToLog('Finished');
-    destroyAllXHRs();
-    return;
-  }
-  timerID = setTimeout(task, 0);
-}
-
-function buildLegendString(config) {
-  var legend = ''
-  if (config.printSize)
-    legend = 'Message size in KiB, Time/message in ms, ';
-  legend += 'Speed in kB/s';
-  return legend;
-}
-
-function addTasks(config, stepFunc) {
-  for (var i = 0;
-      i < config.numWarmUpIterations + config.numIterations; ++i) {
-    // Ignore the first |config.numWarmUpIterations| iterations.
-    if (i == config.numWarmUpIterations)
-      addResultClearingTask(config);
-
-    var multiplierIndex = 0;
-    for (var size = config.startSize;
-         size <= config.stopThreshold;
-         ++multiplierIndex) {
-      var task = stepFunc.bind(
-          null,
-          size,
-          config);
-      tasks.push(task);
-      size *= config.multipliers[
-          multiplierIndex % config.multipliers.length];
-    }
-  }
-}
-
-function addResultReportingTask(config, title) {
-  tasks.push(function(){
-      timerID = null;
-      config.addToSummary(title);
-      reportAverageData(config);
-      clearAverageData();
-      runNextTask(config);
-  });
-}
-
-function addResultClearingTask(config) {
-  tasks.push(function(){
-      timerID = null;
-      clearAverageData();
-      runNextTask(config);
-  });
-}
-
-// --------------------------------
-
-function sendBenchmark(config) {
-  config.addToLog('Send benchmark');
-  config.addToLog(buildLegendString(config));
-
-  tasks = [];
-  clearAverageData();
-  addTasks(config, sendBenchmarkStep);
-  addResultReportingTask(config, 'Send Benchmark ' + getConfigString(config));
-  startBenchmark(config);
-}
-
-function receiveBenchmark(config) {
-  config.addToLog('Receive benchmark');
-  config.addToLog(buildLegendString(config));
-
-  tasks = [];
-  clearAverageData();
-  addTasks(config, receiveBenchmarkStep);
-  addResultReportingTask(config,
-      'Receive Benchmark ' + getConfigString(config));
-  startBenchmark(config);
 }
 
 function batchBenchmark(originalConfig) {
@@ -365,25 +288,5 @@ function batchBenchmark(originalConfig) {
   startBenchmark(config);
 }
 
-
-function stop(config) {
-  destroyAllXHRs();
-  clearTimeout(timerID);
-  timerID = null;
-  config.addToLog('Stopped');
+function cleanup() {
 }
-
-onmessage = function (message) {
-  var config = message.data.config;
-  config.addToLog = workerAddToLog;
-  config.addToSummary = workerAddToSummary;
-  config.measureValue = workerMeasureValue;
-  if (message.data.type === 'sendBenchmark')
-    sendBenchmark(config);
-  else if (message.data.type === 'receiveBenchmark')
-    receiveBenchmark(config);
-  else if (message.data.type === 'batchBenchmark')
-    batchBenchmark(config);
-  else if (message.data.type === 'stop')
-    stop(config);
-};

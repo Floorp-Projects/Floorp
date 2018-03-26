@@ -172,6 +172,7 @@ import socket
 import sys
 import threading
 import time
+import urlparse
 
 from mod_pywebsocket import common
 from mod_pywebsocket import dispatch
@@ -732,21 +733,35 @@ class WebSocketRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
                 self._logger.info('Request basic authentication')
                 return False
 
-        host, port, resource = http_header_util.parse_uri(self.path)
-
         # Special paths for XMLHttpRequest benchmark
         xhr_benchmark_helper_prefix = '/073be001e10950692ccbf3a2ad21c245'
-        if resource == (xhr_benchmark_helper_prefix + '_send'):
+        parsed_path = urlparse.urlsplit(self.path)
+        if parsed_path.path == (xhr_benchmark_helper_prefix + '_send'):
             xhr_benchmark_handler = XHRBenchmarkHandler(
                 self.headers, self.rfile, self.wfile)
             xhr_benchmark_handler.do_send()
             return False
-        if resource == (xhr_benchmark_helper_prefix + '_receive'):
+        if parsed_path.path == (xhr_benchmark_helper_prefix + '_receive'):
             xhr_benchmark_handler = XHRBenchmarkHandler(
                 self.headers, self.rfile, self.wfile)
-            xhr_benchmark_handler.do_receive()
+            xhr_benchmark_handler.do_receive_and_parse()
+            return False
+        if parsed_path.path == (xhr_benchmark_helper_prefix +
+                                '_receive_getnocache'):
+            xhr_benchmark_handler = XHRBenchmarkHandler(
+                self.headers, self.rfile, self.wfile)
+            xhr_benchmark_handler.do_receive(
+                int(parsed_path.query), False, False)
+            return False
+        if parsed_path.path == (xhr_benchmark_helper_prefix +
+                                '_receive_getcache'):
+            xhr_benchmark_handler = XHRBenchmarkHandler(
+                self.headers, self.rfile, self.wfile)
+            xhr_benchmark_handler.do_receive(
+                int(parsed_path.query), False, True)
             return False
 
+        host, port, resource = http_header_util.parse_uri(self.path)
         if resource is None:
             self._logger.info('Invalid URI: %r', self.path)
             self._logger.info('Fallback to CGIHTTPRequestHandler')

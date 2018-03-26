@@ -104,23 +104,31 @@ _DROP_CODE_BAD_FRAGMENTATION = 3009
 
 
 class MuxUnexpectedException(Exception):
+
     """Exception in handling multiplexing extension."""
+
     pass
 
 
 # Temporary
 class MuxNotImplementedException(Exception):
+
     """Raised when a flow enters unimplemented code path."""
+
     pass
 
 
 class LogicalConnectionClosedException(Exception):
+
     """Raised when logical connection is gracefully closed."""
+
     pass
 
 
 class PhysicalConnectionError(Exception):
+
     """Raised when there is a physical connection error."""
+
     def __init__(self, drop_code, message=''):
         super(PhysicalConnectionError, self).__init__(
             'code=%d, message=%r' % (drop_code, message))
@@ -129,8 +137,11 @@ class PhysicalConnectionError(Exception):
 
 
 class LogicalChannelError(Exception):
+
     """Raised when there is a logical channel error."""
+
     def __init__(self, channel_id, drop_code, message=''):
+        """Initialize the error with a status message."""
         super(LogicalChannelError, self).__init__(
             'channel_id=%d, code=%d, message=%r' % (
                 channel_id, drop_code, message))
@@ -181,7 +192,7 @@ def _create_drop_channel(channel_id, code=None, message=''):
     first_byte = _MUX_OPCODE_DROP_CHANNEL << 5
     block = chr(first_byte) + _encode_channel_id(channel_id)
     if code is None:
-        block += _encode_number(0) # Reason size
+        block += _encode_number(0)  # Reason size
     else:
         reason = struct.pack('!H', code) + message
         reason_size = _encode_number(len(reason))
@@ -209,7 +220,7 @@ def _create_new_channel_slot(slots, send_quota):
 
 
 def _create_fallback_new_channel_slot():
-    first_byte = (_MUX_OPCODE_NEW_CHANNEL_SLOT << 5) | 1 # Set the F flag
+    first_byte = (_MUX_OPCODE_NEW_CHANNEL_SLOT << 5) | 1  # Set the F flag
     block = (chr(first_byte) + _encode_number(0) + _encode_number(0))
     return block
 
@@ -232,7 +243,9 @@ def _parse_request_text(request_text):
 
 
 class _ControlBlock(object):
+
     """A structure that holds parsing result of multiplexing control block.
+
     Control block specific attributes will be added by _MuxFramePayloadParser.
     (e.g. encoded_handshake will be added for AddChannelRequest and
     AddChannelResponse)
@@ -243,6 +256,7 @@ class _ControlBlock(object):
 
 
 class _MuxFramePayloadParser(object):
+
     """A class that parses multiplexed frame payload."""
 
     def __init__(self, payload):
@@ -251,13 +265,12 @@ class _MuxFramePayloadParser(object):
         self._logger = util.get_class_logger(self)
 
     def read_channel_id(self):
-        """Reads channel id.
+        """Read channel id.
 
         Raises:
             ValueError: when the payload doesn't contain
                 valid channel id.
         """
-
         remaining_length = len(self._data) - self._read_position
         pos = self._read_position
         if remaining_length == 0:
@@ -288,12 +301,11 @@ class _MuxFramePayloadParser(object):
         return channel_id
 
     def read_inner_frame(self):
-        """Reads an inner frame.
+        """Read an inner frame.
 
         Raises:
             PhysicalConnectionError: when the inner frame is invalid.
         """
-
         if len(self._data) == self._read_position:
             raise PhysicalConnectionError(
                 _DROP_CODE_ENCAPSULATED_FRAME_IS_TRUNCATED)
@@ -345,12 +357,11 @@ class _MuxFramePayloadParser(object):
         return number
 
     def _read_size_and_contents(self):
-        """Reads data that consists of followings:
+        """Read data that consists of the following:
             - the size of the contents encoded the same way as payload length
               of the WebSocket Protocol with 1 bit padding at the head.
             - the contents.
         """
-
         try:
             size = self._read_number()
         except ValueError, e:
@@ -455,14 +466,13 @@ class _MuxFramePayloadParser(object):
         return control_block
 
     def read_control_blocks(self):
-        """Reads control block(s).
+        """Read control block(s).
 
         Raises:
            PhysicalConnectionError: when the payload contains invalid control
                block(s).
            StopIteration: when no control blocks left.
         """
-
         while self._read_position < len(self._data):
             first_byte = ord(self._data[self._read_position])
             self._read_position += 1
@@ -488,17 +498,17 @@ class _MuxFramePayloadParser(object):
         raise StopIteration
 
     def remaining_data(self):
-        """Returns remaining data."""
-
+        """Return remaining data."""
         return self._data[self._read_position:]
 
 
 class _LogicalRequest(object):
+
     """Mimics mod_python request."""
 
     def __init__(self, channel_id, command, path, protocol, headers,
                  connection):
-        """Constructs an instance.
+        """Construct an instance.
 
         Args:
             channel_id: the channel id of the logical channel.
@@ -507,7 +517,6 @@ class _LogicalRequest(object):
             headers: HTTP headers.
             connection: _LogicalConnection instance.
         """
-
         self.channel_id = channel_id
         self.method = command
         self.uri = path
@@ -518,14 +527,16 @@ class _LogicalRequest(object):
         self.client_terminated = False
 
     def is_https(self):
-        """Mimics request.is_https(). Returns False because this method is
-        used only by old protocols (hixie and hybi00).
-        """
+        """Mimic request.is_https().
 
+        Returns False because this method is used only by old protocols
+        (hixie and hybi00).
+        """
         return False
 
 
 class _LogicalConnection(object):
+
     """Mimics mod_python mp_conn."""
 
     # For details, see the comment of set_read_state().
@@ -534,13 +545,12 @@ class _LogicalConnection(object):
     STATE_TERMINATED = 3
 
     def __init__(self, mux_handler, channel_id):
-        """Constructs an instance.
+        """Construct an instance.
 
         Args:
             mux_handler: _MuxHandler instance.
             channel_id: channel id of this connection.
         """
-
         self._mux_handler = mux_handler
         self._channel_id = channel_id
         self._incoming_data = ''
@@ -555,25 +565,23 @@ class _LogicalConnection(object):
 
     def get_local_addr(self):
         """Getter to mimic mp_conn.local_addr."""
-
         return self._mux_handler.physical_connection.get_local_addr()
     local_addr = property(get_local_addr)
 
     def get_remote_addr(self):
         """Getter to mimic mp_conn.remote_addr."""
-
         return self._mux_handler.physical_connection.get_remote_addr()
     remote_addr = property(get_remote_addr)
 
     def get_memorized_lines(self):
-        """Gets memorized lines. Not supported."""
-
+        """Get memorized lines. Not supported."""
         raise MuxUnexpectedException('_LogicalConnection does not support '
                                      'get_memorized_lines')
 
     def write(self, data):
-        """Writes data. mux_handler sends data asynchronously. The caller will
-        be suspended until write done.
+        """Write data. mux_handler sends data asynchronously.
+
+        The caller will be suspended until write done.
 
         Args:
             data: data to be written.
@@ -582,7 +590,6 @@ class _LogicalConnection(object):
             MuxUnexpectedException: when called before finishing the previous
                 write.
         """
-
         try:
             self._write_condition.acquire()
             if self._waiting_write_completion:
@@ -598,18 +605,18 @@ class _LogicalConnection(object):
             self._write_condition.release()
 
     def write_control_data(self, data):
-        """Writes data via the control channel. Don't wait finishing write
-        because this method can be called by mux dispatcher.
+        """Write data via the control channel.
+
+        Don't wait finishing write because this method can be called by
+        mux dispatcher.
 
         Args:
             data: data to be written.
         """
-
         self._mux_handler.send_control_data(data)
 
     def on_write_data_done(self):
         """Called when sending data is completed."""
-
         try:
             self._write_condition.acquire()
             if not self._waiting_write_completion:
@@ -623,7 +630,6 @@ class _LogicalConnection(object):
 
     def on_writer_done(self):
         """Called by the mux handler when the writer thread has finished."""
-
         try:
             self._write_condition.acquire()
             self._waiting_write_completion = False
@@ -631,23 +637,24 @@ class _LogicalConnection(object):
         finally:
             self._write_condition.release()
 
-
     def append_frame_data(self, frame_data):
-        """Appends incoming frame data. Called when mux_handler dispatches
-        frame data to the corresponding application.
+        """Append incoming frame data.
+
+        Called when mux_handler dispatches frame data to the corresponding
+        application.
 
         Args:
             frame_data: incoming frame data.
         """
-
         self._read_condition.acquire()
         self._incoming_data += frame_data
         self._read_condition.notify()
         self._read_condition.release()
 
     def read(self, length):
-        """Reads data. Blocks until enough data has arrived via physical
-        connection.
+        """Read data.
+
+        Blocks until enough data has arrived via physical connection.
 
         Args:
             length: length of data to be read.
@@ -657,7 +664,6 @@ class _LogicalConnection(object):
             ConnectionTerminatedException: when the physical connection has
                 closed, or an error is caused on the reader thread.
         """
-
         self._read_condition.acquire()
         while (self._read_state == self.STATE_ACTIVE and
                len(self._incoming_data) < length):
@@ -680,9 +686,9 @@ class _LogicalConnection(object):
         return value
 
     def set_read_state(self, new_state):
-        """Sets the state of this connection. Called when an event for this
-        connection has occurred.
+        """Set the state of this connection.
 
+        Called when an event for this connection has occurred.
         Args:
             new_state: state to be set. new_state must be one of followings:
             - STATE_GRACEFULLY_CLOSED: when closing handshake for this
@@ -690,7 +696,6 @@ class _LogicalConnection(object):
             - STATE_TERMINATED: when the physical connection has closed or
                 DropChannel of this connection has received.
         """
-
         self._read_condition.acquire()
         self._read_state = new_state
         self._read_condition.notify()
@@ -698,8 +703,8 @@ class _LogicalConnection(object):
 
 
 class _InnerMessage(object):
-    """Holds the result of _InnerMessageBuilder.build().
-    """
+
+    """Hold the result of _InnerMessageBuilder.build()."""
 
     def __init__(self, opcode, payload):
         self.opcode = opcode
@@ -707,7 +712,10 @@ class _InnerMessage(object):
 
 
 class _InnerMessageBuilder(object):
-    """A class that holds the context of inner message fragmentation and
+
+    """Class to build an _InnerMessage.
+
+    A class that holds the context of inner message fragmentation and
     builds a message from fragmented inner frame(s).
     """
 
@@ -791,8 +799,10 @@ class _InnerMessageBuilder(object):
         return _InnerMessage(opcode, payload)
 
     def build(self, frame):
-        """Build an inner message. Returns an _InnerMessage instance when
-        the given frame is the last fragmented frame. Returns None otherwise.
+        """Build an inner message.
+
+        Returns an _InnerMessage instance when the given frame is the last
+        fragmented frame. Returns None otherwise.
 
         Args:
             frame: an inner frame.
@@ -801,17 +811,18 @@ class _InnerMessageBuilder(object):
                 receiving non continuation data opcode but the fin flag of
                 the previous inner frame was not set.)
         """
-
         return self._frame_handler(frame)
 
 
 class _LogicalStream(Stream):
-    """Mimics the Stream class. This class interprets multiplexed WebSocket
-    frames.
+
+    """Mimics the Stream class.
+
+    This class interprets multiplexed WebSocket frames.
     """
 
     def __init__(self, request, stream_options, send_quota, receive_quota):
-        """Constructs an instance.
+        """Construct an instance.
 
         Args:
             request: _LogicalRequest instance.
@@ -819,7 +830,6 @@ class _LogicalStream(Stream):
             send_quota: Initial send quota.
             receive_quota: Initial receive quota.
         """
-
         # Physical stream is responsible for masking.
         stream_options.unmask_receive = False
         Stream.__init__(self, request, stream_options)
@@ -928,7 +938,6 @@ class _LogicalStream(Stream):
 
     def replenish_send_quota(self, send_quota):
         """Replenish send quota."""
-
         try:
             self._send_condition.acquire()
             if self._send_quota + send_quota > 0x7FFFFFFFFFFFFFFF:
@@ -943,8 +952,7 @@ class _LogicalStream(Stream):
             self._send_condition.release()
 
     def consume_receive_quota(self, amount):
-        """Consumes receive quota. Returns False on failure."""
-
+        """Consume receive quota. Returns False on failure."""
         if self._receive_quota < amount:
             self._logger.debug('Violate quota on channel id %d: %d < %d' %
                                (self._request.channel_id,
@@ -955,7 +963,6 @@ class _LogicalStream(Stream):
 
     def send_message(self, message, end=True, binary=False):
         """Override Stream.send_message."""
-
         if self._request.server_terminated:
             raise BadOperationException(
                 'Requested send_message after sending out a closing handshake')
@@ -985,14 +992,13 @@ class _LogicalStream(Stream):
         self._last_message_was_fragmented = not end
 
     def _receive_frame(self):
-        """Overrides Stream._receive_frame.
+        """Override Stream._receive_frame.
 
         In addition to call Stream._receive_frame, this method adds the amount
         of payload to receiving quota and sends FlowControl to the client.
         We need to do it here because Stream.receive_message() handles
         control frames internally.
         """
-
         opcode, payload, fin, rsv1, rsv2, rsv3 = Stream._receive_frame(self)
         amount = len(payload)
         # Replenish extra one octet when receiving the first fragmented frame.
@@ -1007,9 +1013,7 @@ class _LogicalStream(Stream):
         return opcode, payload, fin, rsv1, rsv2, rsv3
 
     def _get_message_from_frame(self, frame):
-        """Overrides Stream._get_message_from_frame.
-        """
-
+        """Override Stream._get_message_from_frame."""
         try:
             inner_message = self._inner_message_builder.build(frame)
         except InvalidFrameException:
@@ -1022,8 +1026,7 @@ class _LogicalStream(Stream):
         return inner_message.payload
 
     def receive_message(self):
-        """Overrides Stream.receive_message."""
-
+        """Override Stream.receive_message."""
         # Just call Stream.receive_message(), but catch
         # LogicalConnectionClosedException, which is raised when the logical
         # connection has closed gracefully.
@@ -1034,8 +1037,7 @@ class _LogicalStream(Stream):
             return None
 
     def _send_closing_handshake(self, code, reason):
-        """Overrides Stream._send_closing_handshake."""
-
+        """Override Stream._send_closing_handshake."""
         body = create_closing_handshake_body(code, reason)
         self._logger.debug('Sending closing handshake for %d: (%r, %r)' %
                            (self._request.channel_id, code, reason))
@@ -1044,8 +1046,7 @@ class _LogicalStream(Stream):
         self._request.server_terminated = True
 
     def send_ping(self, body=''):
-        """Overrides Stream.send_ping"""
-
+        """Override Stream.send_ping."""
         self._logger.debug('Sending ping on logical channel %d: %r' %
                            (self._request.channel_id, body))
         self._write_inner_frame(common.OPCODE_PING, body, end=True)
@@ -1053,23 +1054,20 @@ class _LogicalStream(Stream):
         self._ping_queue.append(body)
 
     def _send_pong(self, body):
-        """Overrides Stream._send_pong"""
-
+        """Override Stream._send_pong."""
         self._logger.debug('Sending pong on logical channel %d: %r' %
                            (self._request.channel_id, body))
         self._write_inner_frame(common.OPCODE_PONG, body, end=True)
 
     def close_connection(self, code=common.STATUS_NORMAL_CLOSURE, reason=''):
-        """Overrides Stream.close_connection."""
-
+        """Override Stream.close_connection."""
         # TODO(bashi): Implement
         self._logger.debug('Closing logical connection %d' %
                            self._request.channel_id)
         self._request.server_terminated = True
 
     def stop_sending(self):
-        """Stops accepting new send operation (_write_inner_frame)."""
-
+        """Stop accepting new send operation (_write_inner_frame)."""
         self._send_condition.acquire()
         self._send_closed = True
         self._send_condition.notify()
@@ -1077,7 +1075,10 @@ class _LogicalStream(Stream):
 
 
 class _OutgoingData(object):
-    """A structure that holds data to be sent via physical connection and
+
+    """Simple data/channel container.
+
+    A structure that holds data to be sent via physical connection and
     origin of the data.
     """
 
@@ -1087,6 +1088,7 @@ class _OutgoingData(object):
 
 
 class _PhysicalConnectionWriter(threading.Thread):
+
     """A thread that is responsible for writing data to physical connection.
 
     TODO(bashi): Make sure there is no thread-safety problem when the reader
@@ -1094,12 +1096,11 @@ class _PhysicalConnectionWriter(threading.Thread):
     """
 
     def __init__(self, mux_handler):
-        """Constructs an instance.
+        """Construct an instance.
 
         Args:
             mux_handler: _MuxHandler instance.
         """
-
         threading.Thread.__init__(self)
         self._logger = util.get_class_logger(self)
         self._mux_handler = mux_handler
@@ -1118,16 +1119,14 @@ class _PhysicalConnectionWriter(threading.Thread):
         self._deque_condition = threading.Condition()
 
     def put_outgoing_data(self, data):
-        """Puts outgoing data.
+        """Put outgoing data.
 
         Args:
             data: _OutgoingData instance.
-
         Raises:
             BadOperationException: when the thread has been requested to
                 terminate.
         """
-
         try:
             self._deque_condition.acquire()
             if self._stop_requested:
@@ -1193,8 +1192,7 @@ class _PhysicalConnectionWriter(threading.Thread):
             self._mux_handler.notify_writer_done()
 
     def stop(self, close_code=common.STATUS_NORMAL_CLOSURE):
-        """Stops the writer thread."""
-
+        """Stop the writer thread."""
         self._deque_condition.acquire()
         self._stop_requested = True
         self._close_code = close_code
@@ -1203,16 +1201,16 @@ class _PhysicalConnectionWriter(threading.Thread):
 
 
 class _PhysicalConnectionReader(threading.Thread):
+
     """A thread that is responsible for reading data from physical connection.
     """
 
     def __init__(self, mux_handler):
-        """Constructs an instance.
+        """Construct an instance.
 
         Args:
             mux_handler: _MuxHandler instance.
         """
-
         threading.Thread.__init__(self)
         self._logger = util.get_class_logger(self)
         self._mux_handler = mux_handler
@@ -1254,18 +1252,18 @@ class _PhysicalConnectionReader(threading.Thread):
 
 
 class _Worker(threading.Thread):
+
     """A thread that is responsible for running the corresponding application
     handler.
     """
 
     def __init__(self, mux_handler, request):
-        """Constructs an instance.
+        """Construct an instance.
 
         Args:
             mux_handler: _MuxHandler instance.
             request: _LogicalRequest instance.
         """
-
         threading.Thread.__init__(self)
         self._logger = util.get_class_logger(self)
         self._mux_handler = mux_handler
@@ -1286,19 +1284,20 @@ class _Worker(threading.Thread):
 
 
 class _MuxHandshaker(hybi.Handshaker):
+
     """Opening handshake processor for multiplexing."""
 
     _DUMMY_WEBSOCKET_KEY = 'dGhlIHNhbXBsZSBub25jZQ=='
 
     def __init__(self, request, dispatcher, send_quota, receive_quota):
-        """Constructs an instance.
+        """Construct an instance.
+
         Args:
             request: _LogicalRequest instance.
             dispatcher: Dispatcher instance (dispatch.Dispatcher).
             send_quota: Initial send quota.
             receive_quota: Initial receive quota.
         """
-
         hybi.Handshaker.__init__(self, request, dispatcher)
         self._send_quota = send_quota
         self._receive_quota = receive_quota
@@ -1316,7 +1315,6 @@ class _MuxHandshaker(hybi.Handshaker):
 
     def _create_stream(self, stream_options):
         """Override hybi.Handshaker._create_stream."""
-
         self._logger.debug('Creating logical stream for %d' %
                            self._request.channel_id)
         return _LogicalStream(
@@ -1325,7 +1323,6 @@ class _MuxHandshaker(hybi.Handshaker):
 
     def _create_handshake_response(self, accept):
         """Override hybi._create_handshake_response."""
-
         response = []
 
         response.append('HTTP/1.1 101 Switching Protocols\r\n')
@@ -1348,7 +1345,6 @@ class _MuxHandshaker(hybi.Handshaker):
 
     def _send_handshake(self, accept):
         """Override hybi.Handshaker._send_handshake."""
-
         # Don't send handshake response for the default channel
         if self._request.channel_id == _DEFAULT_CHANNEL_ID:
             return
@@ -1363,8 +1359,8 @@ class _MuxHandshaker(hybi.Handshaker):
 
 
 class _LogicalChannelData(object):
-    """A structure that holds information about logical channel.
-    """
+
+    """A structure that holds information about logical channel."""
 
     def __init__(self, request, worker):
         self.request = request

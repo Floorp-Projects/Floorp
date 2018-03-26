@@ -32,7 +32,7 @@ function destroyAllSockets() {
   sockets = [];
 }
 
-function sendBenchmarkStep(size, config) {
+function sendBenchmarkStep(size, config, isWarmUp) {
   timerID = null;
 
   var totalSize = 0;
@@ -41,6 +41,7 @@ function sendBenchmarkStep(size, config) {
   var onMessageHandler = function(event) {
     if (!verifyAcknowledgement(config, event.data, size)) {
       destroyAllSockets();
+      config.notifyAbort();
       return;
     }
 
@@ -50,7 +51,8 @@ function sendBenchmarkStep(size, config) {
       return;
     }
 
-    calculateAndLogResult(config, size, benchmark.startTimeInMs, totalSize);
+    calculateAndLogResult(config, size, benchmark.startTimeInMs, totalSize,
+        isWarmUp);
 
     runNextTask(config);
   };
@@ -89,7 +91,7 @@ function sendBenchmarkStep(size, config) {
   }
 }
 
-function receiveBenchmarkStep(size, config) {
+function receiveBenchmarkStep(size, config, isWarmUp) {
   timerID = null;
 
   var totalSize = 0;
@@ -101,12 +103,14 @@ function receiveBenchmarkStep(size, config) {
       config.addToLog('Expected ' + size + 'B but received ' +
           bytesReceived + 'B');
       destroyAllSockets();
+      config.notifyAbort();
       return;
     }
 
     if (config.verifyData && !verifyArrayBuffer(event.data, 0x61)) {
       config.addToLog('Response verification failed');
       destroyAllSockets();
+      config.notifyAbort();
       return;
     }
 
@@ -116,7 +120,8 @@ function receiveBenchmarkStep(size, config) {
       return;
     }
 
-    calculateAndLogResult(config, size, benchmark.startTimeInMs, totalSize);
+    calculateAndLogResult(config, size, benchmark.startTimeInMs, totalSize,
+        isWarmUp);
 
     runNextTask(config);
   };
@@ -153,11 +158,10 @@ function createSocket(config) {
   };
   socket.onclose = function(event) {
     config.addToLog('Closed');
+    config.notifyAbort();
   };
   return socket;
 }
-
-var tasks = [];
 
 function startBenchmark(config) {
   clearTimeout(timerID);
@@ -180,24 +184,6 @@ function startBenchmark(config) {
   }
 }
 
-function runNextTask(config) {
-  var task = tasks.shift();
-  if (task == undefined) {
-    config.addToLog('Finished');
-    destroyAllSockets();
-    return;
-  }
-  timerID = setTimeout(task, 0);
-}
-
-function buildLegendString(config) {
-  var legend = ''
-  if (config.printSize)
-    legend = 'Message size in KiB, Time/message in ms, ';
-  legend += 'Speed in kB/s';
-  return legend;
-}
-
 function getConfigString(config) {
   return '(WebSocket' +
     ', ' + (typeof importScripts !== "undefined" ? 'Worker' : 'Main') +
@@ -207,69 +193,6 @@ function getConfigString(config) {
     ', minTotal=' + config.minTotal +
     ', numWarmUpIterations=' + config.numWarmUpIterations +
     ')';
-}
-
-function addTasks(config, stepFunc) {
-  for (var i = 0;
-      i < config.numWarmUpIterations + config.numIterations; ++i) {
-    // Ignore the first |config.numWarmUpIterations| iterations.
-    if (i == config.numWarmUpIterations)
-      addResultClearingTask(config);
-
-    var multiplierIndex = 0;
-    for (var size = config.startSize;
-         size <= config.stopThreshold;
-         ++multiplierIndex) {
-      var task = stepFunc.bind(
-          null,
-          size,
-          config);
-      tasks.push(task);
-      size *= config.multipliers[
-          multiplierIndex % config.multipliers.length];
-    }
-  }
-}
-
-function addResultReportingTask(config, title) {
-  tasks.push(function(){
-      timerID = null;
-      config.addToSummary(title);
-      reportAverageData(config);
-      clearAverageData();
-      runNextTask(config);
-  });
-}
-
-function addResultClearingTask(config) {
-  tasks.push(function(){
-      timerID = null;
-      clearAverageData();
-      runNextTask(config);
-  });
-}
-
-function sendBenchmark(config) {
-  config.addToLog('Send benchmark');
-  config.addToLog(buildLegendString(config));
-
-  tasks = [];
-  clearAverageData();
-  addTasks(config, sendBenchmarkStep);
-  addResultReportingTask(config, 'Send Benchmark ' + getConfigString(config));
-  startBenchmark(config);
-}
-
-function receiveBenchmark(config) {
-  config.addToLog('Receive benchmark');
-  config.addToLog(buildLegendString(config));
-
-  tasks = [];
-  clearAverageData();
-  addTasks(config, receiveBenchmarkStep);
-  addResultReportingTask(config,
-      'Receive Benchmark ' + getConfigString(config));
-  startBenchmark(config);
 }
 
 function batchBenchmark(config) {
@@ -286,24 +209,6 @@ function batchBenchmark(config) {
   startBenchmark(config);
 }
 
-function stop(config) {
-  clearTimeout(timerID);
-  timerID = null;
-  config.addToLog('Stopped');
+function cleanup() {
   destroyAllSockets();
 }
-
-onmessage = function (message) {
-  var config = message.data.config;
-  config.addToLog = workerAddToLog;
-  config.addToSummary = workerAddToSummary;
-  config.measureValue = workerMeasureValue;
-  if (message.data.type === 'sendBenchmark')
-    sendBenchmark(config);
-  else if (message.data.type === 'receiveBenchmark')
-    receiveBenchmark(config);
-  else if (message.data.type === 'batchBenchmark')
-    batchBenchmark(config);
-  else if (message.data.type === 'stop')
-    stop(config);
-};

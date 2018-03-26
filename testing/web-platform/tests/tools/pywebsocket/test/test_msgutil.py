@@ -44,7 +44,6 @@ import set_sys_path  # Update sys.path to locate mod_pywebsocket module.
 
 from mod_pywebsocket import common
 from mod_pywebsocket.extensions import DeflateFrameExtensionProcessor
-from mod_pywebsocket.extensions import PerMessageCompressExtensionProcessor
 from mod_pywebsocket.extensions import PerMessageDeflateExtensionProcessor
 from mod_pywebsocket import msgutil
 from mod_pywebsocket.stream import InvalidUTF8Exception
@@ -81,7 +80,6 @@ def _install_extension_processor(processor, request, stream_options):
 def _create_request_from_rawdata(
         read_data,
         deflate_frame_request=None,
-        permessage_compression_request=None,
         permessage_deflate_request=None):
     req = mock.MockRequest(connection=mock.MockConn(''.join(read_data)))
     req.ws_version = common.VERSION_HYBI_LATEST
@@ -90,9 +88,6 @@ def _create_request_from_rawdata(
     processor = None
     if deflate_frame_request is not None:
         processor = DeflateFrameExtensionProcessor(deflate_frame_request)
-    elif permessage_compression_request is not None:
-        processor = PerMessageCompressExtensionProcessor(
-                permessage_compression_request)
     elif permessage_deflate_request is not None:
         processor = PerMessageDeflateExtensionProcessor(
                 permessage_deflate_request)
@@ -732,6 +727,33 @@ class DeflateFrameTest(unittest.TestCase):
 class PerMessageDeflateTest(unittest.TestCase):
     """Tests for permessage-deflate extension."""
 
+    def test_response_parameters(self):
+        extension = common.ExtensionParameter(
+            common.PERMESSAGE_DEFLATE_EXTENSION)
+        extension.add_parameter('server_no_context_takeover', None)
+        processor = PerMessageDeflateExtensionProcessor(extension)
+        response = processor.get_extension_response()
+        self.assertTrue(
+            response.has_parameter('server_no_context_takeover'))
+        self.assertEqual(
+            None, response.get_parameter_value('server_no_context_takeover'))
+
+        extension = common.ExtensionParameter(
+            common.PERMESSAGE_DEFLATE_EXTENSION)
+        extension.add_parameter('client_max_window_bits', None)
+        processor = PerMessageDeflateExtensionProcessor(extension)
+
+        processor.set_client_max_window_bits(8)
+        processor.set_client_no_context_takeover(True)
+        response = processor.get_extension_response()
+        self.assertEqual(
+            '8', response.get_parameter_value('client_max_window_bits'))
+        self.assertTrue(
+            response.has_parameter('client_no_context_takeover'))
+        self.assertEqual(
+            None,
+            response.get_parameter_value('client_no_context_takeover'))
+
     def test_send_message(self):
         extension = common.ExtensionParameter(
                 common.PERMESSAGE_DEFLATE_EXTENSION)
@@ -758,16 +780,12 @@ class PerMessageDeflateTest(unittest.TestCase):
 
         msgutil.send_message(request, '')
 
-        # Payload in binary: 0b00000010 0b00000000
+        # Payload in binary: 0b00000000
         # From LSB,
         # - 1 bit of BFINAL (0)
-        # - 2 bits of BTYPE (01 that means fixed Huffman)
-        # - 7 bits of the first code (0000000 that is the code for the
-        #   end-of-block)
-        # - 1 bit of BFINAL (0)
         # - 2 bits of BTYPE (no compression)
-        # - 3 bits of padding
-        self.assertEqual('\xc1\x02\x02\x00',
+        # - 5 bits of padding
+        self.assertEqual('\xc1\x01\x00',
                          request.connection.written_data())
 
     def test_send_message_with_null_character(self):
@@ -1170,34 +1188,6 @@ class PerMessageDeflateTest(unittest.TestCase):
         self.assertEqual(payload, msgutil.receive_message(request))
 
         self.assertEqual(None, msgutil.receive_message(request))
-
-
-class PerMessageCompressTest(unittest.TestCase):
-    """Tests for checking permessage-compression extension."""
-
-    def test_deflate_response_parameters(self):
-        extension = common.ExtensionParameter(
-            common.PERMESSAGE_COMPRESSION_EXTENSION)
-        extension.add_parameter('method', 'deflate')
-        processor = PerMessageCompressExtensionProcessor(extension)
-        response = processor.get_extension_response()
-        self.assertEqual('deflate',
-                         response.get_parameter_value('method'))
-
-        extension = common.ExtensionParameter(
-            common.PERMESSAGE_COMPRESSION_EXTENSION)
-        extension.add_parameter('method', 'deflate')
-        processor = PerMessageCompressExtensionProcessor(extension)
-
-        def _compression_processor_hook(compression_processor):
-            compression_processor.set_client_max_window_bits(8)
-            compression_processor.set_client_no_context_takeover(True)
-        processor.set_compression_processor_hook(
-            _compression_processor_hook)
-        response = processor.get_extension_response()
-        self.assertEqual(
-            'deflate; client_max_window_bits=8; client_no_context_takeover',
-            response.get_parameter_value('method'))
 
 
 class MessageTestHixie75(unittest.TestCase):

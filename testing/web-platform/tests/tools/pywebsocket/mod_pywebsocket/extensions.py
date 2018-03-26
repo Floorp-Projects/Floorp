@@ -327,103 +327,8 @@ _available_processors[common.X_WEBKIT_DEFLATE_FRAME_EXTENSION] = (
 _compression_extension_names.append(common.X_WEBKIT_DEFLATE_FRAME_EXTENSION)
 
 
-def _parse_compression_method(data):
-    """Parses the value of "method" extension parameter."""
-
-    return common.parse_extensions(data)
-
-
-def _create_accepted_method_desc(method_name, method_params):
-    """Creates accepted-method-desc from given method name and parameters"""
-
-    extension = common.ExtensionParameter(method_name)
-    for name, value in method_params:
-        extension.add_parameter(name, value)
-    return common.format_extension(extension)
-
-
-class CompressionExtensionProcessorBase(ExtensionProcessorInterface):
-    """Base class for perframe-compress and permessage-compress extension."""
-
-    _METHOD_PARAM = 'method'
-
-    def __init__(self, request):
-        ExtensionProcessorInterface.__init__(self, request)
-        self._logger = util.get_class_logger(self)
-        self._compression_method_name = None
-        self._compression_processor = None
-        self._compression_processor_hook = None
-
-    def name(self):
-        return ''
-
-    def _lookup_compression_processor(self, method_desc):
-        return None
-
-    def _get_compression_processor_response(self):
-        """Looks up the compression processor based on the self._request and
-           returns the compression processor's response.
-        """
-
-        method_list = self._request.get_parameter_value(self._METHOD_PARAM)
-        if method_list is None:
-            return None
-        methods = _parse_compression_method(method_list)
-        if methods is None:
-            return None
-        comression_processor = None
-        # The current implementation tries only the first method that matches
-        # supported algorithm. Following methods aren't tried even if the
-        # first one is rejected.
-        # TODO(bashi): Need to clarify this behavior.
-        for method_desc in methods:
-            compression_processor = self._lookup_compression_processor(
-                method_desc)
-            if compression_processor is not None:
-                self._compression_method_name = method_desc.name()
-                break
-        if compression_processor is None:
-            return None
-
-        if self._compression_processor_hook:
-            self._compression_processor_hook(compression_processor)
-
-        processor_response = compression_processor.get_extension_response()
-        if processor_response is None:
-            return None
-        self._compression_processor = compression_processor
-        return processor_response
-
-    def _get_extension_response_internal(self):
-        processor_response = self._get_compression_processor_response()
-        if processor_response is None:
-            return None
-
-        response = common.ExtensionParameter(self._request.name())
-        accepted_method_desc = _create_accepted_method_desc(
-                                   self._compression_method_name,
-                                   processor_response.get_parameters())
-        response.add_parameter(self._METHOD_PARAM, accepted_method_desc)
-        self._logger.debug(
-            'Enable %s extension (method: %s)' %
-            (self._request.name(), self._compression_method_name))
-        return response
-
-    def _setup_stream_options_internal(self, stream_options):
-        if self._compression_processor is None:
-            return
-        self._compression_processor.setup_stream_options(stream_options)
-
-    def set_compression_processor_hook(self, hook):
-        self._compression_processor_hook = hook
-
-    def get_compression_processor(self):
-        return self._compression_processor
-
-
 class PerMessageDeflateExtensionProcessor(ExtensionProcessorInterface):
-    """permessage-deflate extension processor. It's also used for
-    permessage-compress extension when the deflate method is chosen.
+    """permessage-deflate extension processor.
 
     Specification:
     http://tools.ietf.org/html/draft-ietf-hybi-permessage-compression-08
@@ -434,15 +339,8 @@ class PerMessageDeflateExtensionProcessor(ExtensionProcessorInterface):
     _CLIENT_MAX_WINDOW_BITS_PARAM = 'client_max_window_bits'
     _CLIENT_NO_CONTEXT_TAKEOVER_PARAM = 'client_no_context_takeover'
 
-    def __init__(self, request, draft08=True):
-        """Construct PerMessageDeflateExtensionProcessor
-
-        Args:
-            draft08: Follow the constraints on the parameters that were not
-                specified for permessage-compress but are specified for
-                permessage-deflate as on
-                draft-ietf-hybi-permessage-compression-08.
-        """
+    def __init__(self, request):
+        """Construct PerMessageDeflateExtensionProcessor."""
 
         ExtensionProcessorInterface.__init__(self, request)
         self._logger = util.get_class_logger(self)
@@ -450,22 +348,18 @@ class PerMessageDeflateExtensionProcessor(ExtensionProcessorInterface):
         self._preferred_client_max_window_bits = None
         self._client_no_context_takeover = False
 
-        self._draft08 = draft08
-
     def name(self):
+        # This method returns "deflate" (not "permessage-deflate") for
+        # compatibility.
         return 'deflate'
 
     def _get_extension_response_internal(self):
-        if self._draft08:
-            for name in self._request.get_parameter_names():
-                if name not in [self._SERVER_MAX_WINDOW_BITS_PARAM,
-                                self._SERVER_NO_CONTEXT_TAKEOVER_PARAM,
-                                self._CLIENT_MAX_WINDOW_BITS_PARAM]:
-                    self._logger.debug('Unknown parameter: %r', name)
-                    return None
-        else:
-            # Any unknown parameter will be just ignored.
-            pass
+        for name in self._request.get_parameter_names():
+            if name not in [self._SERVER_MAX_WINDOW_BITS_PARAM,
+                            self._SERVER_NO_CONTEXT_TAKEOVER_PARAM,
+                            self._CLIENT_MAX_WINDOW_BITS_PARAM]:
+                self._logger.debug('Unknown parameter: %r', name)
+                return None
 
         server_max_window_bits = None
         if self._request.has_parameter(self._SERVER_MAX_WINDOW_BITS_PARAM):
@@ -494,8 +388,7 @@ class PerMessageDeflateExtensionProcessor(ExtensionProcessorInterface):
         # accept client_max_window_bits from a server or not.
         client_client_max_window_bits = self._request.has_parameter(
             self._CLIENT_MAX_WINDOW_BITS_PARAM)
-        if (self._draft08 and
-            client_client_max_window_bits and
+        if (client_client_max_window_bits and
             self._request.get_parameter_value(
                 self._CLIENT_MAX_WINDOW_BITS_PARAM) is not None):
             self._logger.debug('%s parameter must not have a value in a '
@@ -529,7 +422,7 @@ class PerMessageDeflateExtensionProcessor(ExtensionProcessorInterface):
                 self._SERVER_NO_CONTEXT_TAKEOVER_PARAM, None)
 
         if self._preferred_client_max_window_bits is not None:
-            if self._draft08 and not client_client_max_window_bits:
+            if not client_client_max_window_bits:
                 self._logger.debug('Processor is configured to use %s but '
                                    'the client cannot accept it',
                                    self._CLIENT_MAX_WINDOW_BITS_PARAM)
@@ -765,33 +658,6 @@ _available_processors[common.PERMESSAGE_DEFLATE_EXTENSION] = (
 _compression_extension_names.append('deflate')
 
 
-class PerMessageCompressExtensionProcessor(
-    CompressionExtensionProcessorBase):
-    """permessage-compress extension processor.
-
-    Specification:
-    http://tools.ietf.org/html/draft-ietf-hybi-permessage-compression
-    """
-
-    _DEFLATE_METHOD = 'deflate'
-
-    def __init__(self, request):
-        CompressionExtensionProcessorBase.__init__(self, request)
-
-    def name(self):
-        return common.PERMESSAGE_COMPRESSION_EXTENSION
-
-    def _lookup_compression_processor(self, method_desc):
-        if method_desc.name() == self._DEFLATE_METHOD:
-            return PerMessageDeflateExtensionProcessor(method_desc, False)
-        return None
-
-
-_available_processors[common.PERMESSAGE_COMPRESSION_EXTENSION] = (
-    PerMessageCompressExtensionProcessor)
-_compression_extension_names.append(common.PERMESSAGE_COMPRESSION_EXTENSION)
-
-
 class MuxExtensionProcessor(ExtensionProcessorInterface):
     """WebSocket multiplexing extension processor."""
 
@@ -825,10 +691,9 @@ class MuxExtensionProcessor(ExtensionProcessorInterface):
             else:
                 # Mux extension should not be applied before any history-based
                 # compression extension.
-                if (name == common.DEFLATE_FRAME_EXTENSION or
-                    name == common.X_WEBKIT_DEFLATE_FRAME_EXTENSION or
-                    name == common.PERMESSAGE_COMPRESSION_EXTENSION or
-                    name == common.X_WEBKIT_PERMESSAGE_COMPRESSION_EXTENSION):
+                if (name == 'deflate' or
+                    name == common.DEFLATE_FRAME_EXTENSION or
+                    name == common.X_WEBKIT_DEFLATE_FRAME_EXTENSION):
                     self.set_active(False)
                     return
 
