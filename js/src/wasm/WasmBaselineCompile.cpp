@@ -7943,28 +7943,31 @@ BaseCompiler::emitGetGlobal()
         return true;
     }
 
-    ScratchI32 tmp(*this);
     switch (global.type()) {
       case ValType::I32: {
         RegI32 rv = needI32();
+        ScratchI32 tmp(*this);
         masm.load32(addressOfGlobalVar(global, tmp), rv);
         pushI32(rv);
         break;
       }
       case ValType::I64: {
         RegI64 rv = needI64();
+        ScratchI32 tmp(*this);
         masm.load64(addressOfGlobalVar(global, tmp), rv);
         pushI64(rv);
         break;
       }
       case ValType::F32: {
         RegF32 rv = needF32();
+        ScratchI32 tmp(*this);
         masm.loadFloat32(addressOfGlobalVar(global, tmp), rv);
         pushF32(rv);
         break;
       }
       case ValType::F64: {
         RegF64 rv = needF64();
+        ScratchI32 tmp(*this);
         masm.loadDouble(addressOfGlobalVar(global, tmp), rv);
         pushF64(rv);
         break;
