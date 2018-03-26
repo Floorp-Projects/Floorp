@@ -533,7 +533,8 @@ private:
   void UpdateAGCSettingsIfNeeded(bool aEnable, webrtc::AgcModes aMode);
   void UpdateNSSettingsIfNeeded(bool aEnable, webrtc::NsModes aMode);
 
-  void ApplySettings(const MediaEnginePrefs& aPrefs);
+  void ApplySettings(const MediaEnginePrefs& aPrefs,
+                     RefPtr<MediaStreamGraphImpl> aGraph);
 
   bool HasEnabledTrack() const;
 
