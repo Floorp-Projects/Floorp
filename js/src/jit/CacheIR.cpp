@@ -5118,7 +5118,8 @@ BinaryArithIRGenerator::tryAttachStub()
 bool
 BinaryArithIRGenerator::tryAttachDouble()
 {
-    if (op_ != JSOP_ADD && op_ != JSOP_SUB)
+    if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
+        op_ != JSOP_MUL)
         return false;
 
     if (!lhs_.isDouble() || !rhs_.isDouble() || !res_.isDouble())
@@ -5142,6 +5143,10 @@ BinaryArithIRGenerator::tryAttachDouble()
         writer.doubleSubResult(lhsId, rhsId);
         trackAttached("BinaryArith.Double.Sub");
         break;
+      case JSOP_MUL:
+        writer.doubleMulResult(lhsId, rhsId);
+        trackAttached("BinaryArith.Double.Mul");
+        break;
       default:
         MOZ_CRASH("Unhandled Op");
     }
@@ -5154,7 +5159,7 @@ BinaryArithIRGenerator::tryAttachInt32()
 {
     if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
         op_ != JSOP_BITOR && op_ != JSOP_BITAND &&
-        op_ != JSOP_BITXOR)
+        op_ != JSOP_BITXOR && op_ != JSOP_MUL)
     {
         return false;
     }
@@ -5176,6 +5181,10 @@ BinaryArithIRGenerator::tryAttachInt32()
       case JSOP_SUB:
         writer.int32SubResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.Int32.Sub");
+        break;
+      case JSOP_MUL:
+        writer.int32MulResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.Mul");
         break;
       case JSOP_BITOR:
         writer.int32BitOrResult(lhsIntId, rhsIntId);
@@ -5202,7 +5211,7 @@ BinaryArithIRGenerator::tryAttachBooleanWithInt32()
 {
     if (op_ != JSOP_ADD && op_ != JSOP_SUB &&
         op_ != JSOP_BITOR && op_ != JSOP_BITAND &&
-        op_ != JSOP_BITXOR)
+        op_ != JSOP_BITXOR && op_!= JSOP_MUL)
         return false;
 
     if (!(lhs_.isBoolean() && (rhs_.isBoolean() || rhs_.isInt32())) &&
@@ -5226,6 +5235,10 @@ BinaryArithIRGenerator::tryAttachBooleanWithInt32()
       case JSOP_SUB:
         writer.int32SubResult(lhsIntId, rhsIntId);
         trackAttached("BinaryArith.BooleanInt32.Sub");
+        break;
+      case JSOP_MUL:
+        writer.int32MulResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.BooleanInt32.Mul");
         break;
       case JSOP_BITOR:
         writer.int32BitOrResult(lhsIntId, rhsIntId);
