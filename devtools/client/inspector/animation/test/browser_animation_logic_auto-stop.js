@@ -11,11 +11,11 @@
 //   but iteration count is infinity
 
 add_task(async function() {
-  await addTab(URL_ROOT + "doc_multi_timings.html");
+  await addTab(URL_ROOT + "doc_simple_animation.html");
   const { animationInspector, inspector, panel } = await openAnimationInspector();
 
   info("Checking state after end of animation duration");
-  await selectNodeAndWaitForAnimations(".easing-step", inspector);
+  await selectNodeAndWaitForAnimations(".long", inspector);
   const pixelsData = getDurationAndRate(animationInspector, panel, 5);
   await clickOnCurrentTimeScrubberController(animationInspector,
                                              panel, 1 - pixelsData.rate);
@@ -26,7 +26,7 @@ add_task(async function() {
 
   info("Checking state after end of animation duration and infinity iterations");
   await clickOnPauseResumeButton(animationInspector, panel);
-  await selectNodeAndWaitForAnimations(".enddelay-with-iterations-infinity", inspector);
+  await selectNodeAndWaitForAnimations(".compositor-all", inspector);
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 1);
   await clickOnPauseResumeButton(animationInspector, panel);
   await assertStates(animationInspector, panel, true);

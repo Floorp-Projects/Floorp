@@ -9,7 +9,7 @@
 
 #include "mozilla/TypedEnumBits.h"
 
-#define STYLE_STRUCT(name_, checkdata_cb_) struct nsStyle##name_;
+#define STYLE_STRUCT(name_) struct nsStyle##name_;
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
@@ -163,7 +163,7 @@ struct ServoComputedValueFlags {
   uint16_t mFlags;
 };
 
-#define STYLE_STRUCT(name_, checkdata_cb_) struct Gecko##name_;
+#define STYLE_STRUCT(name_) struct Gecko##name_;
 #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
@@ -216,7 +216,7 @@ public:
   // Constructs via memcpy.  Will not move out of aValue.
   explicit ServoComputedData(const ServoComputedDataForgotten aValue);
 
-#define STYLE_STRUCT(name_, checkdata_cb_)                 \
+#define STYLE_STRUCT(name_)                                \
   mozilla::ServoRawOffsetArc<mozilla::Gecko##name_> name_; \
   inline const nsStyle##name_* GetStyle##name_() const;
   #define STYLE_STRUCT_LIST_IGNORE_VARIABLES

@@ -1631,6 +1631,8 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // XXXbz sXBL/XBL2 issue!
 
+  MOZ_ASSERT(!HasAnyOfFlags(Element::kAllServoDescendantBits));
+
   // Finally, set the document
   if (aDocument) {
     // Notify XBL- & nsIAnonymousContentCreator-generated
@@ -1650,14 +1652,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     SetIsInDocument();
 
     // Clear the lazy frame construction bits.
-    UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
-               // And the restyle bits. These shouldn't even get set if we came
-               // from a Servo-styled document, but they may be set if the
-               // element comes from a Gecko-backed document, see bug 1394586.
-               //
-               // TODO(emilio): We can remove this and assert we don't have any
-               // of them when we remove the old style system.
-               ELEMENT_ALL_RESTYLE_FLAGS);
+    UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
   } else if (IsInShadowTree()) {
     // We're not in a document, but we did get inserted into a shadow tree.
     // Since we won't have any restyle data in the document's restyle trackers,
@@ -1667,8 +1662,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // inserted into a document.
     //
     // See the comment about the restyle bits above, it also applies.
-    UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
-               ELEMENT_ALL_RESTYLE_FLAGS);
+    UnsetFlags(NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
   } else {
     // If we're not in the doc and not in a shadow tree,
     // update our subtree pointer.
@@ -1891,10 +1885,9 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   if (HasServoData()) {
     MOZ_ASSERT(document);
     MOZ_ASSERT(IsInAnonymousSubtree());
-    MOZ_ASSERT(document && document->IsStyledByServo());
   }
 
-  if (document && document->IsStyledByServo()) {
+  if (document) {
     ClearServoData(document);
   }
 
@@ -2066,7 +2059,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     shadowRoot->SetIsComposedDocParticipant(false);
   }
 
-  MOZ_ASSERT_IF(IsStyledByServo(), !HasAnyOfFlags(kAllServoDescendantBits));
+  MOZ_ASSERT(!HasAnyOfFlags(kAllServoDescendantBits));
   MOZ_ASSERT(!document || document->GetServoRestyleRoot() != this);
 }
 
@@ -3639,7 +3632,7 @@ Element::GetTransformToAncestor(Element& aAncestor)
       ancestorFrame, nsIFrame::IN_CSS_UNITS).GetMatrix();
   }
 
-  DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform, IsStyledByServo());
+  DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform);
   RefPtr<DOMMatrixReadOnly> result(matrix);
   return result.forget();
 }
@@ -3656,7 +3649,7 @@ Element::GetTransformToParent()
       parentFrame, nsIFrame::IN_CSS_UNITS).GetMatrix();
   }
 
-  DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform, IsStyledByServo());
+  DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform);
   RefPtr<DOMMatrixReadOnly> result(matrix);
   return result.forget();
 }
@@ -3671,7 +3664,7 @@ Element::GetTransformToViewport()
       nsLayoutUtils::GetDisplayRootFrame(primaryFrame), nsIFrame::IN_CSS_UNITS).GetMatrix();
   }
 
-  DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform, IsStyledByServo());
+  DOMMatrixReadOnly* matrix = new DOMMatrix(this, transform);
   RefPtr<DOMMatrixReadOnly> result(matrix);
   return result.forget();
 }
@@ -4306,7 +4299,6 @@ Element::UpdateIntersectionObservation(DOMIntersectionObserver* aObserver, int32
 
 void
 Element::ClearServoData(nsIDocument* aDoc) {
-  MOZ_ASSERT(IsStyledByServo());
   MOZ_ASSERT(aDoc);
   if (HasServoData()) {
     Servo_Element_ClearData(this);
@@ -4498,7 +4490,6 @@ static void
 NoteDirtyElement(Element* aElement, uint32_t aBits)
 {
   MOZ_ASSERT(aElement->IsInComposedDoc());
-  MOZ_ASSERT(aElement->IsStyledByServo());
 
   // Check the existing root early on, since it may allow us to short-circuit
   // before examining the parent chain.

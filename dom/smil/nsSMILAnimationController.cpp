@@ -21,7 +21,6 @@
 #include "nsSMILCompositor.h"
 #include "nsSMILCSSProperty.h"
 #include "nsSMILTimedElement.h"
-#include "RestyleTracker.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -695,29 +694,6 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
   aResult.mAttributeNamespaceID = attributeNamespaceID;
 
   return true;
-}
-
-void
-nsSMILAnimationController::AddStyleUpdatesTo(RestyleTracker& aTracker)
-{
-  MOZ_ASSERT(mMightHavePendingStyleUpdates,
-             "Should only add style updates when we think we might have some");
-
-  for (auto iter = mAnimationElementTable.Iter(); !iter.Done(); iter.Next()) {
-    SVGAnimationElement* animElement = iter.Get()->GetKey();
-
-    nsSMILTargetIdentifier key;
-    if (!GetTargetIdentifierForAnimation(animElement, key)) {
-      // Something's wrong/missing about animation's target; skip this animation
-      continue;
-    }
-
-    aTracker.AddPendingRestyle(key.mElement,
-                               eRestyle_StyleAttribute_Animations,
-                               nsChangeHint(0));
-  }
-
-  mMightHavePendingStyleUpdates = false;
 }
 
 bool

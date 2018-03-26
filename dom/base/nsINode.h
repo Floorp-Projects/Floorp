@@ -1040,14 +1040,6 @@ public:
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
   /**
-   * Returns true if this is a node belonging to a document that uses the Servo
-   * style system.
-   */
-  bool IsStyledByServo() const;
-
-  inline void UnsetRestyleFlagsIfGecko();
-
-  /**
    * Adds a mutation observer to be notified when this node, or any of its
    * descendants, are modified. The node will hold a weak reference to the
    * observer, which means that it is the responsibility of the observer to
@@ -2076,10 +2068,7 @@ protected:
     const ServoFunctor& aServoFunctor,
     const GeckoFunctor& aGeckoFunctor)
   {
-    if (IsStyledByServo()) {
-      return aServoFunctor(ParseServoSelectorList(aSelectorString, aRv));
-    }
-    MOZ_CRASH("old style system disabled");
+    return aServoFunctor(ParseServoSelectorList(aSelectorString, aRv));
   }
 
 public:
