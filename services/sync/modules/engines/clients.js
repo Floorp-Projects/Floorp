@@ -114,10 +114,6 @@ ClientEngine.prototype = {
     Services.prefs.setIntPref(LAST_MODIFIED_ON_PROCESS_COMMAND_PREF, value);
   },
 
-  get isFirstSync() {
-    return !this.lastRecordUpload;
-  },
-
   // Always sync client data as it controls other sync behavior
   get enabled() {
     return true;
@@ -367,16 +363,18 @@ ClientEngine.prototype = {
   },
 
   async _syncStartup() {
+    this.isFirstSync = !this.lastRecordUpload;
     // Reupload new client record periodically.
     if (Date.now() / 1000 - this.lastRecordUpload > CLIENTS_TTL_REFRESH) {
       await this._tracker.addChangedID(this.localID);
+      this.lastRecordUpload = Date.now() / 1000;
     }
     return SyncEngine.prototype._syncStartup.call(this);
   },
 
   async _processIncoming() {
     // Fetch all records from the server.
-    await this.resetLastSync();
+    await this.setLastSync(0);
     this._incomingClients = {};
     try {
       await SyncEngine.prototype._processIncoming.call(this);
@@ -455,9 +453,7 @@ ClientEngine.prototype = {
     // Record the response time as the server time for each item we uploaded.
     let lastSync = await this.getLastSync();
     for (let id of updatedIDs) {
-      if (id == this.localID) {
-        this.lastRecordUpload = lastSync;
-      } else {
+      if (id != this.localID) {
         this._store._remoteClients[id].serverLastModified = lastSync;
       }
     }
