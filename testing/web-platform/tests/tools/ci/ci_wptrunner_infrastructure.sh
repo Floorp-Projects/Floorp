@@ -16,10 +16,14 @@ test_infrastructure() {
 }
 
 main() {
-    hosts_fixup
     PRODUCTS=( "firefox" "chrome" )
     for PRODUCT in "${PRODUCTS[@]}"; do
-        if [ $(echo $PRODUCT | grep '^chrome') ]; then
+        if [ "$PRODUCT" != "firefox" ]; then
+            # Firefox is expected to work using pref settings for DNS
+            # Don't adjust the hostnames in that case to ensure this keeps working
+            hosts_fixup
+        fi
+        if [ "$PRODUCT" == "chrome" ]; then
             install_chrome dev
         fi
         test_infrastructure
