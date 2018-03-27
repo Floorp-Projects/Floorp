@@ -8,12 +8,20 @@
 
 #include "mozilla/TelemetryScalarEnums.h"
 #include "mozilla/TelemetryProcessEnums.h"
-#include "ipc/TelemetryComms.h"
 
 // This module is internal to Telemetry. It encapsulates Telemetry's
 // scalar accumulation and storage logic. It should only be used by
 // Telemetry.cpp. These functions should not be used anywhere else.
 // For the public interface to Telemetry functionality, see Telemetry.h.
+
+namespace mozilla {
+namespace Telemetry {
+  struct ScalarAction;
+  struct KeyedScalarAction;
+  struct DiscardedData;
+  struct DynamicScalarDefinition;
+} // namespace Telemetry
+} // namespace mozilla
 
 namespace TelemetryScalar {
 
