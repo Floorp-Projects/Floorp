@@ -13,6 +13,7 @@
 #include "mozAutoDocUpdate.h"
 #include "mozilla/IdleTaskRunner.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/css/Loader.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
@@ -922,18 +923,10 @@ nsHtml5TreeOpExecutor::GetViewSourceBaseURI()
   return mViewSourceBaseURI;
 }
 
-// static
-void
-nsHtml5TreeOpExecutor::InitializeStatics()
-{
-  mozilla::Preferences::AddBoolVarCache(&sExternalViewSource,
-                                        "view_source.editor.external");
-}
-
 bool
 nsHtml5TreeOpExecutor::IsExternalViewSource()
 {
-  if (!sExternalViewSource) {
+  if (!StaticPrefs::view_source_editor_external()) {
     return false;
   }
   bool isViewSource = false;
@@ -1192,4 +1185,3 @@ uint32_t nsHtml5TreeOpExecutor::sAppendBatchExaminations = 0;
 uint32_t nsHtml5TreeOpExecutor::sLongestTimeOffTheEventLoop = 0;
 uint32_t nsHtml5TreeOpExecutor::sTimesFlushLoopInterrupted = 0;
 #endif
-bool nsHtml5TreeOpExecutor::sExternalViewSource = false;
