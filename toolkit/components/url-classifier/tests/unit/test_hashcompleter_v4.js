@@ -230,6 +230,8 @@ function registerHandlerUpdateV4() {
 }
 
 function run_test() {
+  throwOnUpdateErrors();
+
   gHttpServV4 = new HttpServer();
   gHttpServV4.registerDirectory("/", do_get_cwd());
 
