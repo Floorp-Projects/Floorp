@@ -336,6 +336,10 @@ var ContentLinkHandler = {
           iconAdded = handleFaviconLink(link, isRichIcon, chromeGlobal, faviconLoads);
           break;
         case "search":
+          if (Services.policies &&
+              !Services.policies.isAllowed("installSearchEngine")) {
+            break;
+          }
           if (!searchAdded && event.type == "DOMLinkAdded") {
             var type = link.type && link.type.toLowerCase();
             type = type.replace(/^\s+|\s*(?:;.*)?$/g, "");

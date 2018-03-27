@@ -349,6 +349,63 @@ var Policies = {
       setAndLockPref("signon.rememberSignons", param);
     }
   },
+
+  "SearchEngines": {
+    onAllWindowsRestored(manager, param) {
+      Services.search.init(() => {
+        if (param.Add) {
+          // Only rerun if the list of engine names has changed.
+          let engineNameList = param.Add.map(engine => engine.Name);
+          runOncePerModification("addSearchEngines",
+                                 JSON.stringify(engineNameList),
+                                 () => {
+            for (let newEngine of param.Add) {
+              let newEngineParameters = {
+                template:    newEngine.URLTemplate,
+                iconURL:     newEngine.IconURL,
+                alias:       newEngine.Alias,
+                description: newEngine.Description,
+                method:      newEngine.Method,
+                suggestURL:  newEngine.SuggestURLTemplate,
+                extensionID: "set-via-policy"
+              };
+              try {
+                Services.search.addEngineWithDetails(newEngine.Name,
+                                                     newEngineParameters);
+              } catch (ex) {
+                log.error("Unable to add search engine", ex);
+              }
+            }
+          });
+        }
+        if (param.Default) {
+          runOnce("setDefaultSearchEngine", () => {
+            let defaultEngine;
+            try {
+              defaultEngine = Services.search.getEngineByName(param.Default);
+              if (!defaultEngine) {
+                throw "No engine by that name could be found";
+              }
+            } catch (ex) {
+              log.error(`Search engine lookup failed when attempting to set ` +
+                        `the default engine. Requested engine was ` +
+                        `"${param.Default}".`, ex);
+            }
+            if (defaultEngine) {
+              try {
+                Services.search.currentEngine = defaultEngine;
+              } catch (ex) {
+                log.error("Unable to set the default search engine", ex);
+              }
+            }
+          });
+        }
+        if (param.PreventInstalls) {
+          manager.disallowFeature("installSearchEngine");
+        }
+      });
+    }
+  }
 };
 
 /*

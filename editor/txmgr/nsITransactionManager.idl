@@ -7,11 +7,11 @@
 #include "nsITransaction.idl"
 #include "nsITransactionListener.idl"
 
-%{ C++
-
-#define NS_TRANSACTIONMANAGER_CONTRACTID "@mozilla.org/transactionmanager;1"
-
-%} C++
+%{C++
+namespace mozilla {
+class TransactionManager;
+} // namespace mozilla
+%}
 
 /**
  * The nsITransactionManager interface.
@@ -149,5 +149,25 @@ interface nsITransactionManager : nsISupports
    * @param aListener the lister to remove.
    */
   void RemoveListener(in nsITransactionListener aListener);
+
+%{C++
+  /**
+   * AsTransactionManager() returns a pointer to TransactionManager class.
+   *
+   * In order to avoid circular dependency issues, this method is defined
+   * in mozilla/TransactionManager.h.  Consumers need to #include that header.
+   */
+  inline mozilla::TransactionManager* AsTransactionManager();
+%}
 };
 
+%{ C++
+
+#define NS_TRANSACTIONMANAGER_CONTRACTID "@mozilla.org/transactionmanager;1"
+
+// 9C8F9601-801A-11d2-98BA-00805F297D89
+#define NS_TRANSACTIONMANAGER_CID                   \
+{ 0x9c8f9601, 0x801a, 0x11d2,                       \
+  { 0x98, 0xba, 0x0, 0x80, 0x5f, 0x29, 0x7d, 0x89 } }
+
+%} C++

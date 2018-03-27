@@ -324,7 +324,7 @@ var PerformanceView = {
   /**
    * When starting a recording has failed.
    */
-  _onNewRecordingFailed: function(e) {
+  _onNewRecordingFailed: function() {
     this._lockRecordButtons(false);
     this._toggleRecordButtons(false);
   },
@@ -369,7 +369,7 @@ var PerformanceView = {
   /**
    * Fired when a recording is selected. Used to toggle the profiler view state.
    */
-  _onRecordingSelected: function(_, recording) {
+  _onRecordingSelected: function(recording) {
     if (!recording) {
       this.setState("empty");
     } else if (recording.isRecording() && recording.isConsole()) {
@@ -385,7 +385,7 @@ var PerformanceView = {
    * Fired when the controller has updated information on the buffer's status.
    * Update the buffer status display if shown.
    */
-  _onProfilerStatusUpdated: function(_, profilerStatus) {
+  _onProfilerStatusUpdated: function(profilerStatus) {
     // We only care about buffer status here, so check to see
     // if it has position.
     if (!profilerStatus || profilerStatus.position === void 0) {
