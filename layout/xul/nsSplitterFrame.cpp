@@ -744,7 +744,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
      mChildInfosAfterCount = 0;
 
   int32_t c;
-  nsPoint pt = nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(mouseEvent->AsEvent(),
+  nsPoint pt = nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(mouseEvent,
                                                                mParentBox);
   if (isHorizontal) {
      c = pt.x;

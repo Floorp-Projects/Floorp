@@ -799,10 +799,9 @@ endif
 ifdef MOZ_CRASHREPORTER
 $(foreach file,$(DUMP_SYMS_TARGETS),$(eval $(call syms_template,$(file),$(notdir $(file))_syms.track)))
 else ifneq (,$(and $(LLVM_SYMBOLIZER),$(filter WINNT,$(OS_ARCH)),$(MOZ_AUTOMATION)))
-$(foreach file,$(DUMP_SYMS_TARGETS),$(eval $(call syms_template,$(file),$(addsuffix .pdb,$(basename $(file))))))
 PDB_FILES = $(addsuffix .pdb,$(basename $(DUMP_SYMS_TARGETS)))
 PDB_DEST ?= $(FINAL_TARGET)
-PDB_TARGET = target
+PDB_TARGET = syms
 INSTALL_TARGETS += PDB
 endif
 

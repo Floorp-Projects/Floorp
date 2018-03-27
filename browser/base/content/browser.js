@@ -580,36 +580,6 @@ const gStoragePressureObserver = {
   }
 };
 
-/**
- * Given a starting docshell and a URI to look up, find the docshell the URI
- * is loaded in.
- * @param   aDocument
- *          A document to find instead of using just a URI - this is more specific.
- * @param   aDocShell
- *          The doc shell to start at
- * @param   aSoughtURI
- *          The URI that we're looking for
- * @returns The doc shell that the sought URI is loaded in. Can be in
- *          subframes.
- */
-function findChildShell(aDocument, aDocShell, aSoughtURI) {
-  aDocShell.QueryInterface(Ci.nsIWebNavigation);
-  aDocShell.QueryInterface(Ci.nsIInterfaceRequestor);
-  var doc = aDocShell.getInterface(Ci.nsIDOMDocument);
-  if ((aDocument && doc == aDocument) ||
-      (aSoughtURI && aSoughtURI.spec == aDocShell.currentURI.spec))
-    return aDocShell;
-
-  var node = aDocShell.QueryInterface(Ci.nsIDocShellTreeItem);
-  for (var i = 0; i < node.childCount; ++i) {
-    var docShell = node.getChildAt(i);
-    docShell = findChildShell(aDocument, docShell, aSoughtURI);
-    if (docShell)
-      return docShell;
-  }
-  return null;
-}
-
 var gPopupBlockerObserver = {
   handleEvent(aEvent) {
     if (aEvent.originalTarget != gBrowser.selectedBrowser)

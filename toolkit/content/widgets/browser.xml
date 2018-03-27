@@ -166,10 +166,6 @@
                 onget="return this.contentDocument ? this.contentDocument.contentType : null;"
                 readonly="true"/>
 
-      <property name="preferences"
-                onget="return this.mPrefs.QueryInterface(Components.interfaces.nsIPrefService);"
-                readonly="true"/>
-
       <!--
         Weak reference to an optional frame loader that can be used to influence
         process selection for this browser.
@@ -492,14 +488,6 @@
                        return val;"
                 onget="return this.getAttribute('showresizer') == 'true';"/>
 
-      <property name="manifestURI"
-                readonly="true">
-        <getter><![CDATA[
-          return this.contentDocument.documentElement &&
-                 this.contentDocument.documentElement.getAttribute("manifest");
-        ]]></getter>
-      </property>
-
       <property name="fullZoom">
         <getter><![CDATA[
           return this.markupDocumentViewer.fullZoom;
@@ -509,13 +497,6 @@
         ]]></setter>
       </property>
 
-      <property name="deviceFullZoom"
-                readonly="true">
-        <getter><![CDATA[
-          return this.markupDocumentViewer.deviceFullZoom;
-        ]]></getter>
-      </property>
-
       <property name="textZoom">
         <getter><![CDATA[
           return this.markupDocumentViewer.textZoom;
@@ -523,13 +504,6 @@
         <setter><![CDATA[
           this.markupDocumentViewer.textZoom = val;
         ]]></setter>
-      </property>
-
-      <property name="effectiveTextZoom"
-                readonly="true">
-        <getter><![CDATA[
-          return this.markupDocumentViewer.effectiveTextZoom;
-        ]]></getter>
       </property>
 
       <property name="isSyntheticDocument">
@@ -583,27 +557,6 @@
           <![CDATA[
             this.webProgress.removeProgressListener(aListener);
          ]]>
-        </body>
-      </method>
-
-      <method name="findChildShell">
-        <parameter name="aDocShell"/>
-        <parameter name="aSoughtURI"/>
-        <body>
-          <![CDATA[
-            if (aDocShell.QueryInterface(Ci.nsIWebNavigation)
-                         .currentURI.spec == aSoughtURI.spec)
-              return aDocShell;
-            var node = aDocShell.QueryInterface(
-                                   Ci.nsIDocShellTreeItem);
-            for (var i = 0; i < node.childCount; ++i) {
-              var docShell = node.getChildAt(i);
-              docShell = this.findChildShell(docShell, aSoughtURI);
-              if (docShell)
-                return docShell;
-            }
-            return null;
-          ]]>
         </body>
       </method>
 
@@ -898,14 +851,6 @@
           return val;
         ]]></setter>
       </property>
-
-      <field name="mFormFillAttached">
-        false
-      </field>
-
-      <field name="isShowingMessage">
-        false
-      </field>
 
       <field name="droppedLinkHandler">
         null

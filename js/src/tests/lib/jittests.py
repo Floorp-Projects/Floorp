@@ -7,10 +7,10 @@
 # jit_test.py -- Python harness for JavaScript trace tests.
 
 from __future__ import print_function
-import os, posixpath, sys, tempfile, traceback, time
+import os, posixpath, sys, traceback
 import subprocess
 from collections import namedtuple
-import StringIO
+from datetime import datetime
 
 if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
     from tasks_unix import run_all_tests
@@ -357,6 +357,8 @@ def find_tests(substring=None):
     return ans
 
 def run_test_remote(test, device, prefix, options):
+    from mozdevice import ADBDevice, ADBProcessError
+
     if options.test_reflect_stringify:
         raise ValueError("can't run Reflect.stringify tests remotely")
     cmd = test.command(prefix,
@@ -372,14 +374,23 @@ def run_test_remote(test, device, prefix, options):
 
     env['LD_LIBRARY_PATH'] = options.remote_test_root
 
-    buf = StringIO.StringIO()
-    returncode = device.shell(cmd, buf, env=env, cwd=options.remote_test_root,
-                              timeout=int(options.timeout))
+    cmd = ADBDevice._escape_command_line(cmd)
+    start = datetime.now()
+    try:
+        out = device.shell_output(cmd, env=env,
+                                  cwd=options.remote_test_root,
+                                  timeout=int(options.timeout))
+        returncode = 0
+    except ADBProcessError as e:
+        out = e.adb_process.stdout
+        print("exception output: %s" % str(out))
+        returncode = e.adb_process.exitcode
 
-    out = buf.getvalue()
+    elapsed = (datetime.now() - start).total_seconds()
+
     # We can't distinguish between stdout and stderr so we pass
     # the same buffer to both.
-    return TestOutput(test, cmd, out, out, returncode, None, False)
+    return TestOutput(test, cmd, out, out, returncode, elapsed, False)
 
 def check_output(out, err, rc, timed_out, test, options):
     if timed_out:
@@ -669,14 +680,12 @@ def run_tests_local(tests, num_tests, prefix, options, slog):
     return ok
 
 def get_remote_results(tests, device, prefix, options):
-    from mozdevice import devicemanager
-
     try:
         for i in xrange(0, options.repeat):
             for test in tests:
                 yield run_test_remote(test, device, prefix, options)
-    except devicemanager.DMError as e:
-        # After a devicemanager error, the device is typically in a
+    except Exception as e:
+        # After a device error, the device is typically in a
         # state where all further tests will fail so there is no point in
         # continuing here.
         sys.stderr.write("Error running remote tests: {}".format(e.message))
@@ -690,55 +699,44 @@ def push_libs(options, device):
     for file in os.listdir(options.local_lib):
         if file in required_libs:
             remote_file = posixpath.join(options.remote_test_root, file)
-            device.pushFile(os.path.join(options.local_lib, file), remote_file)
+            device.push(os.path.join(options.local_lib, file), remote_file)
 
 def push_progs(options, device, progs):
     for local_file in progs:
         remote_file = posixpath.join(options.remote_test_root,
                                      os.path.basename(local_file))
-        device.pushFile(local_file, remote_file)
+        device.push(local_file, remote_file)
 
 def run_tests_remote(tests, num_tests, prefix, options, slog):
     # Setup device with everything needed to run our tests.
-    from mozdevice import devicemanagerADB
-
-    if options.device_ip:
-        dm = devicemanagerADB.DeviceManagerADB(
-            options.device_ip, options.device_port,
-            deviceSerial=options.device_serial,
-            packageName=None,
-            deviceRoot=options.remote_test_root)
-    else:
-        dm = devicemanagerADB.DeviceManagerADB(
-            deviceSerial=options.device_serial,
-            packageName=None,
-            deviceRoot=options.remote_test_root)
+    from mozdevice import ADBAndroid
+    device = ADBAndroid(device=options.device_serial,
+                        test_root=options.remote_test_root)
 
     # Update the test root to point to our test directory.
     jit_tests_dir = posixpath.join(options.remote_test_root, 'jit-tests')
     options.remote_test_root = posixpath.join(jit_tests_dir, 'jit-tests')
 
     # Push js shell and libraries.
-    if dm.dirExists(jit_tests_dir):
-        dm.removeDir(jit_tests_dir)
-    dm.mkDirs(options.remote_test_root)
-    push_libs(options, dm)
-    push_progs(options, dm, [prefix[0]])
-    dm.chmodDir(options.remote_test_root)
+    device.rm(jit_tests_dir, force=True, recursive=True)
+    device.mkdir(options.remote_test_root, parents=True)
+    push_libs(options, device)
+    push_progs(options, device, [prefix[0]])
+    device.chmod(options.remote_test_root, recursive=True)
 
     JitTest.CacheDir = posixpath.join(options.remote_test_root, '.js-cache')
-    dm.mkDir(JitTest.CacheDir)
+    device.mkdir(JitTest.CacheDir)
 
-    dm.pushDir(JS_TESTS_DIR, posixpath.join(jit_tests_dir, 'tests'),
-               timeout=600)
+    device.push(JS_TESTS_DIR, posixpath.join(jit_tests_dir, 'tests'),
+                timeout=600)
 
-    dm.pushDir(os.path.dirname(TEST_DIR), options.remote_test_root,
-               timeout=600)
+    device.push(os.path.dirname(TEST_DIR), options.remote_test_root,
+                timeout=600)
     prefix[0] = os.path.join(options.remote_test_root, 'js')
 
     # Run all tests.
     pb = create_progressbar(num_tests, options)
-    gen = get_remote_results(tests, dm, prefix, options)
+    gen = get_remote_results(tests, device, prefix, options)
     ok = process_test_results(gen, num_tests, pb, options, slog)
     return ok
 

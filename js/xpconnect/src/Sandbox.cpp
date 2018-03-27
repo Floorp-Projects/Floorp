@@ -1086,8 +1086,7 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
                 return NS_ERROR_XPC_UNEXPECTED;
         }
 
-        bool allowComponents = principal == nsXPConnect::SystemPrincipal() ||
-                               nsContentUtils::IsExpandedPrincipal(principal);
+        bool allowComponents = principal == nsXPConnect::SystemPrincipal();
         if (options.wantComponents && allowComponents &&
             !ObjectScope(sandbox)->AttachComponentsObject(cx))
             return NS_ERROR_XPC_UNEXPECTED;

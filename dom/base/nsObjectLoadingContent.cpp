@@ -18,7 +18,6 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocument.h"
-#include "nsIDOMCustomEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIExternalProtocolHandler.h"
 #include "nsIInterfaceRequestorUtils.h"

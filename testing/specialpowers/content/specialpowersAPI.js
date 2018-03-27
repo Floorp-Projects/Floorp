@@ -58,17 +58,6 @@ function bindDOMWindowUtils(aWindow) {
   return wrapPrivileged(util);
 }
 
-function getRawComponents(aWindow) {
-  // If we're running in automation that supports enablePrivilege, then we also
-  // provided access to the privileged Components.
-  try {
-    let win = Cu.waiveXrays(aWindow);
-    if (typeof win.netscape.security.PrivilegeManager == "object")
-      Cu.forcePrivilegedComponentsForScope(aWindow);
-  } catch (e) {}
-  return Cu.getComponentsForScope(aWindow);
-}
-
 function isWrappable(x) {
   if (typeof x === "object")
     return x !== null;
@@ -180,6 +169,13 @@ function unwrapPrivileged(x) {
   return obj;
 }
 
+function specialPowersHasInstance(value) {
+  // Because we return wrapped versions of this function, when it's called its
+  // wrapper will unwrap the "this" as well as the function itself.  So our
+  // "this" is the unwrapped thing we started out with.
+  return value instanceof this;
+}
+
 function SpecialPowersHandler(wrappedObject) {
   this.wrappedObject = wrappedObject;
 }
@@ -224,7 +220,16 @@ SpecialPowersHandler.prototype = {
       return this.wrappedObject;
 
     let obj = waiveXraysIfAppropriate(this.wrappedObject, prop);
-    return wrapIfUnwrapped(Reflect.get(obj, prop));
+    let val = Reflect.get(obj, prop);
+    if (val === undefined && prop == Symbol.hasInstance) {
+      // Special-case Symbol.hasInstance to pass the hasInstance check on to our
+      // target.  We only do this when the target doesn't have its own
+      // Symbol.hasInstance already.  Once we get rid of JS engine class
+      // instance hooks (bug 1448218) and always use Symbol.hasInstance, we can
+      // remove this bit (bug 1448400).
+      return wrapPrivileged(specialPowersHasInstance);
+    }
+    return wrapIfUnwrapped(val);
   },
 
   set(target, prop, val, receiver) {
@@ -256,8 +261,19 @@ SpecialPowersHandler.prototype = {
     let obj = waiveXraysIfAppropriate(this.wrappedObject, prop);
     let desc = Reflect.getOwnPropertyDescriptor(obj, prop);
 
-    if (desc === undefined)
+    if (desc === undefined) {
+      if (prop == Symbol.hasInstance) {
+        // Special-case Symbol.hasInstance to pass the hasInstance check on to
+        // our target.  We only do this when the target doesn't have its own
+        // Symbol.hasInstance already.  Once we get rid of JS engine class
+        // instance hooks (bug 1448218) and always use Symbol.hasInstance, we
+        // can remove this bit (bug 1448400).
+        return { value: wrapPrivileged(specialPowersHasInstance),
+                 writeable: true, configurable: true, enumerable: false };
+      }
+
       return undefined;
+    }
 
     // Transitively maintain the wrapper membrane.
     function wrapIfExists(key) {
@@ -628,52 +644,19 @@ SpecialPowersAPI.prototype = {
   },
 
   /*
-   * In general, any Components object created for unprivileged scopes is
-   * neutered (it implements nsIXPCComponentsBase, but not nsIXPCComponents).
-   * We override this in certain legacy automation configurations (see the
-   * implementation of getRawComponents() above), but don't want to support
-   * it in cases where it isn't already required.
-   *
-   * In scopes with neutered Components, we don't have a natural referent for
-   * things like SpecialPowers.Cc. So in those cases, we fall back to the
-   * Components object from the SpecialPowers scope. This doesn't quite behave
-   * the same way (in particular, SpecialPowers.Cc[foo].createInstance() will
-   * create an instance in the SpecialPowers scope), but SpecialPowers wrapping
-   * is already a YMMV / Whatever-It-Takes-To-Get-TBPL-Green sort of thing.
-   *
-   * It probably wouldn't be too much work to just make SpecialPowers.Components
-   * unconditionally point to the Components object in the SpecialPowers scope.
-   * Try will tell what needs to be fixed up.
+   * A getter for the privileged Components object we have.
    */
   getFullComponents() {
-    if (this.Components && typeof this.Components.classes == "object") {
-      return this.Components;
-    }
     return Components;
   },
 
   /*
-   * Convenient shortcuts to the standard Components abbreviations. Note that
-   * we don't SpecialPowers-wrap Components.interfaces, because it's available
-   * to untrusted content, and wrapping it confuses QI and identity checks.
+   * Convenient shortcuts to the standard Components abbreviations.
    */
   get Cc() { return wrapPrivileged(this.getFullComponents().classes); },
-  get Ci() {
- return this.Components ? this.Components.interfaces
-                                    : Ci;
-},
+  get Ci() { return wrapPrivileged(this.getFullComponents().interfaces); },
   get Cu() { return wrapPrivileged(this.getFullComponents().utils); },
-  get Cr() { return wrapPrivileged(this.Components.results); },
-
-  /*
-   * SpecialPowers.getRawComponents() allows content to get a reference to a
-   * naked (and, in certain automation configurations, privileged) Components
-   * object for its scope.
-   *
-   * SpecialPowers.getRawComponents(window) is defined as the global property
-   * window.SpecialPowers.Components for convenience.
-   */
-  getRawComponents,
+  get Cr() { return wrapPrivileged(this.getFullComponents().results); },
 
   getDOMWindowUtils(aWindow) {
     if (aWindow == this.window.get() && this.DOMWindowUtils != null)
@@ -2243,4 +2226,3 @@ SpecialPowersAPI.prototype = {
 
 this.SpecialPowersAPI = SpecialPowersAPI;
 this.bindDOMWindowUtils = bindDOMWindowUtils;
-this.getRawComponents = getRawComponents;

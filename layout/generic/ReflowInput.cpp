@@ -2895,7 +2895,7 @@ ReflowInput::CalcLineHeight(nsIContent* aContent,
                                   nscoord aBlockBSize,
                                   float aFontSizeInflation)
 {
-  NS_PRECONDITION(aComputedStyle, "Must have a style context");
+  NS_PRECONDITION(aComputedStyle, "Must have a ComputedStyle");
 
   nscoord lineHeight =
     ComputeLineHeight(aComputedStyle, aBlockBSize, aFontSizeInflation);

@@ -39,17 +39,17 @@ MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoComputedValuesMallocEnclosingSizeOf)
 /**
  * A ComputedStyle represents the computed style data for an element.  The
  * computed style data are stored in a set of structs (see nsStyleStruct.h) that
- * are cached either on the style context or in the rule tree (see nsRuleNode.h
+ * are cached either on the ComputedStyle or in the rule tree (see nsRuleNode.h
  * for a description of this caching and how the cached structs are shared).
  *
  * Since the data in |nsIStyleRule|s and |nsRuleNode|s are immutable (with a few
  * exceptions, like system color changes), the data in an ComputedStyle are also
  * immutable (with the additional exception of GetUniqueStyleData).  When style
- * data change, ElementRestyler::Restyle creates a new style context.
+ * data change, ElementRestyler::Restyle creates a new ComputedStyle.
  *
  * ComputedStyles are reference counted. References are generally held by:
- *  1. the |nsIFrame|s that are using the style context and
- *  2. any *child* style contexts (this might be the reverse of
+ *  1. the |nsIFrame|s that are using the ComputedStyle and
+ *  2. any *child* ComputedStyle (this might be the reverse of
  *     expectation, but it makes sense in this case)
  *
  * FIXME(emilio): This comment is somewhat outdated now.
@@ -78,11 +78,11 @@ public:
   void AddRef() { Servo_ComputedStyle_AddRef(this); }
   void Release() { Servo_ComputedStyle_Release(this); }
 
-  // Return the style context whose style data should be used for the R,
+  // Return the ComputedStyle whose style data should be used for the R,
   // G, and B components of color, background-color, and border-*-color
   // if RelevantLinkIsVisited().
   //
-  // GetPseudo() and GetPseudoType() on this style context return the
+  // GetPseudo() and GetPseudoType() on this ComputedStyle return the
   // same as on |this|, and its depth in the tree (number of GetParent()
   // calls until null is returned) is the same as |this|, since its
   // parent is either |this|'s parent or |this|'s parent's
@@ -132,7 +132,7 @@ public:
   bool IsPseudoElement() const { return mPseudoTag && !IsAnonBox(); }
 
 
-  // Does this style context or any of its ancestors have text
+  // Does this ComputedStyle or any of its ancestors have text
   // decoration lines?
   // Differs from nsStyleTextReset::HasTextDecorationLines, which tests
   // only the data for a single context.
@@ -149,17 +149,17 @@ public:
   bool ShouldSuppressLineBreak() const
     { return !!(mBits & NS_STYLE_SUPPRESS_LINEBREAK); }
 
-  // Does this style context or any of its ancestors have display:none set?
+  // Does this ComputedStyle or any of its ancestors have display:none set?
   bool IsInDisplayNoneSubtree() const
     { return !!(mBits & NS_STYLE_IN_DISPLAY_NONE_SUBTREE); }
 
   // Is this horizontal-in-vertical (tate-chu-yoko) text? This flag is
-  // only set on style contexts whose pseudo is nsCSSAnonBoxes::mozText.
+  // only set on ComputedStyles whose pseudo is nsCSSAnonBoxes::mozText.
   bool IsTextCombined() const
     { return !!(mBits & NS_STYLE_IS_TEXT_COMBINED); }
 
-  // Does this style context represent the style for a pseudo-element or
-  // inherit data from such a style context?  Whether this returns true
+  // Does this ComputedStyle represent the style for a pseudo-element or
+  // inherit data from such a ComputedStyle?  Whether this returns true
   // is equivalent to whether it or any of its ancestors returns
   // non-null for IsPseudoElement().
   bool HasPseudoElementData() const
@@ -169,38 +169,38 @@ public:
     { return mBits & NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE; }
 
   // Is the only link whose visitedness is allowed to influence the
-  // style of the node this style context is for (which is that element
+  // style of the node this ComputedStyle is for (which is that element
   // or its nearest ancestor that is a link) visited?
   bool RelevantLinkVisited() const
     { return !!(mBits & NS_STYLE_RELEVANT_LINK_VISITED); }
 
-  // Is this a style context for a link?
+  // Is this a ComputedStyle for a link?
   inline bool IsLinkContext() const;
 
-  // Is this style context the GetStyleIfVisited() for some other style
+  // Is this ComputedStyle the GetStyleIfVisited() for some other style
   // context?
   bool IsStyleIfVisited() const
     { return !!(mBits & NS_STYLE_IS_STYLE_IF_VISITED); }
 
-  // Tells this style context that it should return true from
+  // Tells this ComputedStyle that it should return true from
   // IsStyleIfVisited.
   void SetIsStyleIfVisited()
     { mBits |= NS_STYLE_IS_STYLE_IF_VISITED; }
 
-  // Does any descendant of this style context have any style values
-  // that were computed based on this style context's ancestors?
+  // Does any descendant of this ComputedStyle have any style values
+  // that were computed based on this ComputedStyle's ancestors?
   bool HasChildThatUsesGrandancestorStyle() const
     { return !!(mBits & NS_STYLE_CHILD_USES_GRANDANCESTOR_STYLE); }
 
-  // Is this style context shared with a sibling or cousin?
+  // Is this ComputedStyle shared with a sibling or cousin?
   // (See nsStyleSet::GetContext.)
   bool IsShared() const
     { return !!(mBits & NS_STYLE_IS_SHARED); }
 
   /**
-   * Returns whether this style context has cached style data for a
+   * Returns whether this ComputedStyle has cached style data for a
    * given style struct and it does NOT own that struct.  This can
-   * happen because it was inherited from the parent style context, or
+   * happen because it was inherited from the parent ComputedStyle, or
    * because it was stored conditionally on the rule node.
    */
   bool HasCachedDependentStyleData(nsStyleStructID aSID) {
@@ -273,7 +273,7 @@ public:
 
   /**
    * PeekStyle* is like Style* but doesn't trigger style
-   * computation if the data is not cached on either the style context
+   * computation if the data is not cached on either the ComputedStyle
    * or the rule node.
    *
    * Perhaps this shouldn't be a public ComputedStyle API.
@@ -327,7 +327,7 @@ public:
                                       bool aLinkIsVisited);
 
   /**
-   * Start the background image loads for this style context.
+   * Start the background image loads for this ComputedStyle.
    */
   inline void StartBackgroundImageLoads();
 
@@ -391,14 +391,14 @@ protected:
   #undef STYLE_STRUCT_RESET
   #undef STYLE_STRUCT_INHERITED
 
-  // If this style context is for a pseudo-element or anonymous box,
+  // If this ComputedStyle is for a pseudo-element or anonymous box,
   // the relevant atom.
   RefPtr<nsAtom> mPseudoTag;
 
   // mBits stores a number of things:
   //  - It records (using the style struct bits) which structs are
   //    inherited from the parent context or owned by the rule node (i.e.,
-  //    not owned by the style context).
+  //    not owned by the ComputedStyle).
   //  - It also stores the additional bits listed at the top of
   //    nsStyleStruct.h.
   uint64_t                mBits;

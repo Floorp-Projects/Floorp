@@ -4268,7 +4268,7 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     // Now those constructors or events might have posted restyle
     // events.  At the same time, we still need up-to-date style data.
     // In particular, reflow depends on style being completely up to
-    // date.  If it's not, then style context reparenting, which can
+    // date.  If it's not, then style reparenting, which can
     // happen during reflow, might suddenly pick up the new rules and
     // we'll end up with frames whose style doesn't match the frame
     // type.
@@ -9722,7 +9722,7 @@ PresShell::ListComputedStyles(FILE *out, int32_t aIndent)
     rootFrame->Style()->List(out, aIndent);
   }
 
-  // The root element's frame's style context is the root of a separate tree.
+  // The root element's frame's ComputedStyle is the root of a separate tree.
   Element* rootElement = mDocument->GetRootElement();
   if (rootElement) {
     nsIFrame* rootElementFrame = rootElement->GetPrimaryFrame();

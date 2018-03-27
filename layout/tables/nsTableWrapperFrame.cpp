@@ -216,14 +216,14 @@ ComputedStyle*
 nsTableWrapperFrame::GetParentComputedStyle(nsIFrame** aProviderFrame) const
 {
   // The table wrapper frame and the (inner) table frame split the style
-  // data by giving the table frame the style context associated with
-  // the table content node and creating a style context for the wrapper
-  // frame that is a *child* of the table frame's style context,
+  // data by giving the table frame the ComputedStyle associated with
+  // the table content node and creating a ComputedStyle for the wrapper
+  // frame that is a *child* of the table frame's ComputedStyle,
   // matching the ::-moz-table-wrapper pseudo-element. html.css has a
   // rule that causes that pseudo-element (and thus the wrapper table)
   // to inherit *some* style properties from the table frame.  The
   // children of the table inherit directly from the inner table, and
-  // the table wrapper's style context is a leaf.
+  // the table wrapper's ComputedStyle is a leaf.
 
   return (*aProviderFrame = InnerTableFrame())->Style();
 }

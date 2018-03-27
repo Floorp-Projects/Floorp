@@ -45,7 +45,6 @@ NS_IMPL_ADDREF_INHERITED(CustomEvent, Event)
 NS_IMPL_RELEASE_INHERITED(CustomEvent, Event)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CustomEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCustomEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
 already_AddRefed<CustomEvent>
@@ -58,7 +57,7 @@ CustomEvent::Constructor(const GlobalObject& aGlobal,
   RefPtr<CustomEvent> e = new CustomEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   JS::Rooted<JS::Value> detail(aGlobal.Context(), aParam.mDetail);
-  e->InitCustomEvent(aGlobal.Context(), aType, aParam.mBubbles, aParam.mCancelable, detail, aRv);
+  e->InitCustomEvent(aGlobal.Context(), aType, aParam.mBubbles, aParam.mCancelable, detail);
   e->SetTrusted(trusted);
   e->SetComposed(aParam.mComposed);
   return e.forget();
@@ -70,65 +69,17 @@ CustomEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
   return mozilla::dom::CustomEventBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMETHODIMP
-CustomEvent::InitCustomEvent(const nsAString& aType,
-                             bool aCanBubble,
-                             bool aCancelable,
-                             nsIVariant* aDetail)
-{
-  NS_ENSURE_TRUE(!mEvent->mFlags.mIsBeingDispatched, NS_OK);
-
-  AutoJSAPI jsapi;
-  NS_ENSURE_STATE(jsapi.Init(GetParentObject()));
-  JSContext* cx = jsapi.cx();
-  JS::Rooted<JS::Value> detail(cx);
-
-  if (!aDetail) {
-    detail = JS::NullValue();
-  } else if (NS_WARN_IF(!VariantToJsval(cx, aDetail, &detail))) {
-    JS_ClearPendingException(cx);
-    return NS_ERROR_FAILURE;
-  }
-
-  Event::InitEvent(aType, aCanBubble, aCancelable);
-  mDetail = detail;
-
-  return NS_OK;
-}
-
 void
 CustomEvent::InitCustomEvent(JSContext* aCx,
                              const nsAString& aType,
                              bool aCanBubble,
                              bool aCancelable,
-                             JS::Handle<JS::Value> aDetail,
-                             ErrorResult& aRv)
+                             JS::Handle<JS::Value> aDetail)
 {
   NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
 
   Event::InitEvent(aType, aCanBubble, aCancelable);
   mDetail = aDetail;
-}
-
-NS_IMETHODIMP
-CustomEvent::GetDetail(nsIVariant** aDetail)
-{
-  if (mDetail.isNull()) {
-    *aDetail = nullptr;
-    return NS_OK;
-  }
-
-  AutoJSAPI jsapi;
-  NS_ENSURE_STATE(jsapi.Init(GetParentObject()));
-  JSContext* cx = jsapi.cx();
-  JS::Rooted<JS::Value> detail(cx, mDetail);
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-
-  if (NS_WARN_IF(!xpc)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return xpc->JSToVariant(cx, detail, aDetail);
 }
 
 void

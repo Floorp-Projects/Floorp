@@ -637,8 +637,9 @@ MacroAssembler::branchAdd32(Condition cond, T src, Register dest, Label* overflo
       case Overflow:
         ma_addTestOverflow(dest, dest, src, overflow);
         break;
+      case CarryClear:
       case CarrySet:
-        ma_addTestCarry(dest, dest, src, overflow);
+        ma_addTestCarry(cond, dest, dest, src, overflow);
         break;
       default:
         MOZ_CRASH("NYI");

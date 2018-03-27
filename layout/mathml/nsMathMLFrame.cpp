@@ -90,9 +90,9 @@ nsMathMLFrame::UpdatePresentationData(uint32_t        aFlagsValues,
   return NS_OK;
 }
 
-// Helper to give a style context suitable for doing the stretching of
+// Helper to give a ComputedStyle suitable for doing the stretching of
 // a MathMLChar. Frame classes that use this should ensure that the
-// extra leaf style contexts given to the MathMLChars are accessible to
+// extra leaf ComputedStyle given to the MathMLChars are accessible to
 // the Style System via the Get/Set AdditionalComputedStyle() APIs.
 /* static */ void
 nsMathMLFrame::ResolveMathMLCharStyle(nsPresContext*  aPresContext,

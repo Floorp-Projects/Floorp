@@ -21,7 +21,6 @@
 
 class nsIDOMEvent;
 class nsIContent;
-class nsIDOMUIEvent;
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
 class nsXBLPrototypeBinding;
@@ -35,6 +34,7 @@ class AutoJSAPI;
 class EventTarget;
 class KeyboardEvent;
 class MouseEvent;
+class UIEvent;
 } // namespace dom
 
 namespace layers {
@@ -192,7 +192,7 @@ protected:
 
   void ReportKeyConflict(const char16_t* aKey, const char16_t* aModifiers, mozilla::dom::Element* aElement, const char *aMessageName);
   void GetEventType(nsAString& type);
-  bool ModifiersMatchMask(nsIDOMUIEvent* aEvent,
+  bool ModifiersMatchMask(mozilla::dom::UIEvent* aEvent,
                           const IgnoreModifierState& aIgnoreModifierState);
   nsresult DispatchXBLCommand(mozilla::dom::EventTarget* aTarget, nsIDOMEvent* aEvent);
   nsresult DispatchXULKeyCommand(nsIDOMEvent* aEvent);

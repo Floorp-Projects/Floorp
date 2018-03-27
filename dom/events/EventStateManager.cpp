@@ -23,6 +23,7 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/UIEvent.h"
+#include "mozilla/dom/UIEventBinding.h"
 #include "mozilla/dom/WheelEventBinding.h"
 
 #include "ContentEventHandler.h"
@@ -60,7 +61,6 @@
 #include "nsIDOMXULElement.h"
 #include "nsIObserverService.h"
 #include "nsIDocShell.h"
-#include "nsIDOMUIEvent.h"
 #include "nsIMozBrowserFrame.h"
 
 #include "nsSubDocumentFrame.h"
@@ -2331,12 +2331,12 @@ EventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
     case WheelEventBinding::DOM_DELTA_PAGE:
       scrollDeltaX =
         !aEvent->mLineOrPageDeltaX ? 0 :
-          (aEvent->mLineOrPageDeltaX > 0  ? nsIDOMUIEvent::SCROLL_PAGE_DOWN :
-                                            nsIDOMUIEvent::SCROLL_PAGE_UP);
+          (aEvent->mLineOrPageDeltaX > 0  ? UIEventBinding::SCROLL_PAGE_DOWN :
+                                            UIEventBinding::SCROLL_PAGE_UP);
       scrollDeltaY =
         !aEvent->mLineOrPageDeltaY ? 0 :
-          (aEvent->mLineOrPageDeltaY > 0  ? nsIDOMUIEvent::SCROLL_PAGE_DOWN :
-                                            nsIDOMUIEvent::SCROLL_PAGE_UP);
+          (aEvent->mLineOrPageDeltaY > 0  ? UIEventBinding::SCROLL_PAGE_DOWN :
+                                            UIEventBinding::SCROLL_PAGE_UP);
       pixelDeltaX = RoundDown(aEvent->mDeltaX * scrollAmountInCSSPixels.width);
       pixelDeltaY = RoundDown(aEvent->mDeltaY * scrollAmountInCSSPixels.height);
       break;

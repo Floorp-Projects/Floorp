@@ -7,7 +7,7 @@
 == out-of-flow-1c.html out-of-flow-1-ref.html
 == out-of-flow-1d.html out-of-flow-1-ref.html
 
-# parent style context correct
+# parent computed style correct
 == parent-style-1.html parent-style-1-ref.html
 == parent-style-2.html parent-style-2-ref.html
 == parent-style-3.html parent-style-3-ref.html
