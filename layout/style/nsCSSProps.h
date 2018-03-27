@@ -342,8 +342,6 @@ public:
   static const nsStyleStructID kSIDTable[eCSSProperty_COUNT_no_shorthands];
   static const KTableEntry* const kKeywordTableTable[eCSSProperty_COUNT_no_shorthands];
   static const nsStyleAnimType kAnimTypeTable[eCSSProperty_COUNT_no_shorthands];
-  static const ptrdiff_t
-    kStyleStructOffsetTable[eCSSProperty_COUNT_no_shorthands];
 
 private:
   static const uint32_t        kFlagsTable[eCSSProperty_COUNT];
