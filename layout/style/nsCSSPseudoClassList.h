@@ -125,7 +125,7 @@ CSS_PSEUDO_CLASS(mozBrowserFrame, ":-moz-browser-frame",
 
 // Matches whatever the contextual reference elements are for the
 // matching operation.
-CSS_PSEUDO_CLASS(scope, ":scope", 0, "layout.css.scope-pseudo.enabled")
+CSS_PSEUDO_CLASS(scope, ":scope", 0, "")
 
 // :not needs to come at the end of the non-bit pseudo-class list, since
 // it doesn't actually get directly matched on in SelectorMatches.
