@@ -843,25 +843,6 @@ nsRange::ParentChainChanged(nsIContent *aContent)
   DoSetRange(mStart.AsRaw(), mEnd.AsRaw(), newRoot);
 }
 
-/******************************************************
- * Utilities for comparing points: API from nsIDOMRange
- ******************************************************/
-NS_IMETHODIMP
-nsRange::IsPointInRange(nsIDOMNode* aContainer, uint32_t aOffset, bool* aResult)
-{
-  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
-  if (!container) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-  if (NS_WARN_IF(!IsValidOffset(aOffset))) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  ErrorResult rv;
-  *aResult = IsPointInRange(RawRangeBoundary(container, aOffset), rv);
-  return rv.StealNSResult();
-}
-
 bool
 nsRange::IsPointInRange(const RawRangeBoundary& aPoint, ErrorResult& aRv)
 {
@@ -873,20 +854,6 @@ nsRange::IsPointInRange(const RawRangeBoundary& aPoint, ErrorResult& aRv)
   }
 
   return compareResult == 0;
-}
-
-// returns -1 if point is before range, 0 if point is in range,
-// 1 if point is after range.
-NS_IMETHODIMP
-nsRange::ComparePoint(nsIDOMNode* aContainer, uint32_t aOffset,
-                      int16_t* aResult)
-{
-  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
-  NS_ENSURE_TRUE(container, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
-
-  ErrorResult rv;
-  *aResult = ComparePoint(RawRangeBoundary(container, aOffset), rv);
-  return rv.StealNSResult();
 }
 
 int16_t
@@ -929,20 +896,6 @@ nsRange::ComparePoint(const RawRangeBoundary& aPoint, ErrorResult& aRv)
   }
 
   return 0;
-}
-
-NS_IMETHODIMP
-nsRange::IntersectsNode(nsIDOMNode* aNode, bool* aResult)
-{
-  *aResult = false;
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  // TODO: This should throw a TypeError.
-  NS_ENSURE_ARG(node);
-
-  ErrorResult rv;
-  *aResult = IntersectsNode(*node, rv);
-  return rv.StealNSResult();
 }
 
 bool
@@ -1197,17 +1150,6 @@ nsRange::GetEndOffset(ErrorResult& aRv) const
   return mEnd.Offset();
 }
 
-NS_IMETHODIMP
-nsRange::GetCollapsed(bool* aIsCollapsed)
-{
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *aIsCollapsed = Collapsed();
-
-  return NS_OK;
-}
-
 nsINode*
 nsRange::GetCommonAncestorContainer(ErrorResult& aRv) const
 {
@@ -1381,19 +1323,6 @@ nsRange::SetStartBefore(nsINode& aNode, ErrorResult& aRv)
   aRv = SetStart(container, offset);
 }
 
-NS_IMETHODIMP
-nsRange::SetStartBefore(nsIDOMNode* aSibling)
-{
-  nsCOMPtr<nsINode> sibling = do_QueryInterface(aSibling);
-  if (!sibling) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-
-  ErrorResult rv;
-  SetStartBefore(*sibling, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsRange::SetStartAfterJS(nsINode& aNode, ErrorResult& aErr)
 {
@@ -1418,19 +1347,6 @@ nsRange::SetStartAfter(nsINode& aNode, ErrorResult& aRv)
   uint32_t offset = UINT32_MAX;
   nsINode* container = GetContainerAndOffsetAfter(&aNode, &offset);
   aRv = SetStart(container, offset);
-}
-
-NS_IMETHODIMP
-nsRange::SetStartAfter(nsIDOMNode* aSibling)
-{
-  nsCOMPtr<nsINode> sibling = do_QueryInterface(aSibling);
-  if (!sibling) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-
-  ErrorResult rv;
-  SetStartAfter(*sibling, rv);
-  return rv.StealNSResult();
 }
 
 void
@@ -1583,19 +1499,6 @@ nsRange::SetEndBefore(nsINode& aNode, ErrorResult& aRv)
   aRv = SetEnd(container, offset);
 }
 
-NS_IMETHODIMP
-nsRange::SetEndBefore(nsIDOMNode* aSibling)
-{
-  nsCOMPtr<nsINode> sibling = do_QueryInterface(aSibling);
-  if (!sibling) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-
-  ErrorResult rv;
-  SetEndBefore(*sibling, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsRange::SetEndAfterJS(nsINode& aNode, ErrorResult& aErr)
 {
@@ -1620,19 +1523,6 @@ nsRange::SetEndAfter(nsINode& aNode, ErrorResult& aRv)
   uint32_t offset = UINT32_MAX;
   nsINode* container = GetContainerAndOffsetAfter(&aNode, &offset);
   aRv = SetEnd(container, offset);
-}
-
-NS_IMETHODIMP
-nsRange::SetEndAfter(nsIDOMNode* aSibling)
-{
-  nsCOMPtr<nsINode> sibling = do_QueryInterface(aSibling);
-  if (!sibling) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-
-  ErrorResult rv;
-  SetEndAfter(*sibling, rv);
-  return rv.StealNSResult();
 }
 
 void
@@ -2407,16 +2297,6 @@ nsRange::DeleteContents(ErrorResult& aRv)
   aRv = CutContents(nullptr);
 }
 
-NS_IMETHODIMP
-nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  RefPtr<DocumentFragment> fragment;
-  nsresult rv = CutContents(getter_AddRefs(fragment));
-  fragment.forget(aReturn);
-  return rv;
-}
-
 already_AddRefed<DocumentFragment>
 nsRange::ExtractContents(ErrorResult& rv)
 {
@@ -2527,14 +2407,6 @@ nsRange::CloneParentsBetween(nsINode *aAncestor,
   NS_IF_ADDREF(*aFarthestAncestor);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
-{
-  ErrorResult rv;
-  *aReturn = CloneContents(rv).take();
-  return rv.StealNSResult();
 }
 
 already_AddRefed<DocumentFragment>
@@ -2743,19 +2615,6 @@ nsRange::CloneRange() const
   return range.forget();
 }
 
-NS_IMETHODIMP
-nsRange::InsertNode(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  if (!node) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-
-  ErrorResult rv;
-  InsertNode(*node, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
 {
@@ -2847,18 +2706,6 @@ nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
   if (Collapsed()) {
     aRv = SetEnd(referenceParentNode, newOffset);
   }
-}
-
-NS_IMETHODIMP
-nsRange::SurroundContents(nsIDOMNode* aNewParent)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNewParent);
-  if (!node) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-  ErrorResult rv;
-  SurroundContents(*node, rv);
-  return rv.StealNSResult();
 }
 
 void
@@ -3043,21 +2890,9 @@ nsRange::ToString(nsAString& aReturn, ErrorResult& aErr)
 #endif /* DEBUG */
 }
 
-NS_IMETHODIMP
+void
 nsRange::Detach()
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRange::CreateContextualFragment(const nsAString& aFragment,
-                                  nsIDOMDocumentFragment** aReturn)
-{
-  if (mIsPositioned) {
-    return nsContentUtils::CreateContextualFragment(mStart.Container(), aFragment,
-                                                    false, aReturn);
-  }
-  return NS_ERROR_FAILURE;
 }
 
 already_AddRefed<DocumentFragment>
