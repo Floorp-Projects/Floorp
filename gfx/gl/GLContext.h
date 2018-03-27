@@ -202,7 +202,7 @@ public:
     bool mUseTLSIsCurrent;
 
     class TlsScope final {
-        GLContext* const mGL;
+        const WeakPtr<GLContext> mGL;
         const bool mWasTlsOk;
     public:
         explicit TlsScope(GLContext* const gl)
@@ -213,7 +213,9 @@ public:
         }
 
         ~TlsScope() {
-            mGL->mUseTLSIsCurrent = mWasTlsOk;
+            if (mGL) {
+                mGL->mUseTLSIsCurrent = mWasTlsOk;
+            }
         }
     };
 
