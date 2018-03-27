@@ -14,7 +14,6 @@ kind-dependencies:
    - post-balrog-dummy
    - post-beetmover-dummy
    - release-secondary-balrog-submit-toplevel
-   - release-secondary-update-verify
 
 job-defaults:
    worker-type:
