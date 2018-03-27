@@ -126,7 +126,8 @@ public class SettingsScreenshots extends ScreenshotTest {
                 .check(matches(isEnabled()));
 
         Screengrab.screenshot("SearchEngine_Add_Search_Engine");
-        Espresso.pressBack();;
+        Espresso.pressBack();
+        Espresso.pressBack();
         Espresso.pressBack();
 
         /* Tap autocomplete menu */
