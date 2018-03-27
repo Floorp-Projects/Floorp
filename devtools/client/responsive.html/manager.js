@@ -7,7 +7,7 @@
 const { Ci } = require("chrome");
 const promise = require("promise");
 const Services = require("Services");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 const TOOL_URL = "chrome://devtools/content/responsive.html/index.xhtml";
 

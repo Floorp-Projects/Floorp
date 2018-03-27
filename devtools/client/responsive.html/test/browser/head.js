@@ -148,7 +148,7 @@ function waitForViewportResizeTo(ui, width, height) {
     // hang forever. See bug 1302879.
     let browser = ui.getViewportBrowser();
 
-    let onResize = (_, data) => {
+    let onResize = data => {
       if (!isSizeMatching(data)) {
         return;
       }

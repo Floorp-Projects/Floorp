@@ -101,7 +101,7 @@ function doFinalChecks(editor) {
 /* Helpers */
 function waitForResizeTo(rdmUI, type, value) {
   return new Promise(resolve => {
-    let onResize = (_, data) => {
+    let onResize = data => {
       if (data[type] != value) {
         return;
       }
