@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const nsIBLS = Ci.nsIBlocklistService;
-
 var PLUGINS = [{
   // Normal blacklisted plugin, before an invalid regexp
   name: "test_bug468528_1",
@@ -40,19 +38,18 @@ function run_test() {
   // We cannot force the blocklist to update so just copy our test list to the profile
   copyBlocklistToProfile(do_get_file("data/test_bug468528.xml"));
 
-  var blocklist = Cc["@mozilla.org/extensions/blocklist;1"]
-                    .getService(nsIBLS);
+  var {blocklist} = Services;
 
   // blocked (sanity check)
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_BLOCKED);
+  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == blocklist.STATE_BLOCKED);
 
   // not blocked - won't match due to invalid regexp
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[1], "1", "1.9") == nsIBLS.STATE_NOT_BLOCKED);
+  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[1], "1", "1.9") == blocklist.STATE_NOT_BLOCKED);
 
   // blocked - the invalid regexp for the previous item shouldn't affect this one
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[2], "1", "1.9") == nsIBLS.STATE_BLOCKED);
+  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[2], "1", "1.9") == blocklist.STATE_BLOCKED);
 
   // not blocked - the previous invalid regexp shouldn't act as a wildcard
-  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[3], "1", "1.9") == nsIBLS.STATE_NOT_BLOCKED);
+  Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[3], "1", "1.9") == blocklist.STATE_NOT_BLOCKED);
 
 }
