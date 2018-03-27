@@ -294,23 +294,7 @@ nsCSSPseudoClasses::StringPseudoMatches(const mozilla::dom::Element* aElement,
 /* static */ Maybe<bool>
 nsCSSPseudoClasses::MatchesElement(Type aType, const dom::Element* aElement)
 {
-  switch (aType) {
-    case CSSPseudoClassType::mozTableBorderNonzero: {
-      if (!aElement->IsHTMLElement(nsGkAtoms::table)) {
-        return Some(false);
-      }
-      const nsAttrValue *val = aElement->GetParsedAttr(nsGkAtoms::border);
-      return Some(val && (val->Type() != nsAttrValue::eInteger ||
-                          val->GetIntegerValue() != 0));
-    }
-    case CSSPseudoClassType::mozBrowserFrame: {
-      nsIMozBrowserFrame* browserFrame =
-        const_cast<Element*>(aElement)->GetAsMozBrowserFrame();
-      return Some(browserFrame && browserFrame->GetReallyIsBrowser());
-    }
-    default:
-      return Nothing();
-  }
+  return Nothing();
 }
 
 // The dependencies for all state dependent pseudo-classes (i.e. those declared

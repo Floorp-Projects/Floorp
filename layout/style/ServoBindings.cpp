@@ -29,6 +29,7 @@
 #include "nsILoadContext.h"
 #include "nsIFrame.h"
 #include "nsIMemoryReporter.h"
+#include "nsIMozBrowserFrame.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
@@ -298,13 +299,6 @@ bool
 Gecko_IsRootElement(RawGeckoElementBorrowed aElement)
 {
   return aElement->OwnerDoc()->GetRootElement() == aElement;
-}
-
-bool
-Gecko_MatchesElement(CSSPseudoClassType aType,
-                     RawGeckoElementBorrowed aElement)
-{
-  return nsCSSPseudoClasses::MatchesElement(aType, aElement).value();
 }
 
 // Dirtiness tracking.
@@ -877,6 +871,25 @@ nsIDocument::DocumentTheme
 Gecko_GetDocumentLWTheme(const nsIDocument* aDocument)
 {
   return aDocument->ThreadSafeGetDocumentLWTheme();
+}
+
+bool
+Gecko_IsTableBorderNonzero(RawGeckoElementBorrowed aElement)
+{
+  if (!aElement->IsHTMLElement(nsGkAtoms::table)) {
+    return false;
+  }
+  const nsAttrValue *val = aElement->GetParsedAttr(nsGkAtoms::border);
+  return val && (val->Type() != nsAttrValue::eInteger ||
+                 val->GetIntegerValue() != 0);
+}
+
+bool
+Gecko_IsBrowserFrame(RawGeckoElementBorrowed aElement)
+{
+  nsIMozBrowserFrame* browserFrame =
+    const_cast<Element*>(aElement)->GetAsMozBrowserFrame();
+  return browserFrame && browserFrame->GetReallyIsBrowser();
 }
 
 template <typename Implementor>
