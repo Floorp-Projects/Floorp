@@ -1635,11 +1635,11 @@ nsRange::SetEndAfter(nsIDOMNode* aSibling)
   return rv.StealNSResult();
 }
 
-NS_IMETHODIMP
+void
 nsRange::Collapse(bool aToStart)
 {
   if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
+    return;
 
   AutoInvalidateSelection atEndOfBlock(this);
   if (aToStart) {
@@ -1647,8 +1647,6 @@ nsRange::Collapse(bool aToStart)
   } else {
     DoSetRange(mEnd.AsRaw(), mEnd.AsRaw(), mRoot);
   }
-
-  return NS_OK;
 }
 
 void
@@ -1656,7 +1654,7 @@ nsRange::CollapseJS(bool aToStart)
 {
   AutoCalledByJSRestore calledByJSRestorer(*this);
   mCalledByJS = true;
-  Unused << Collapse(aToStart);
+  Collapse(aToStart);
 }
 
 NS_IMETHODIMP
@@ -2036,10 +2034,14 @@ CollapseRangeAfterDelete(nsRange* aRange)
   // immediately after a delete or extract that leaves no content
   // between the 2 end points!
 
-  if (startContainer == commonAncestor)
-    return aRange->Collapse(true);
-  if (endContainer == commonAncestor)
-    return aRange->Collapse(false);
+  if (startContainer == commonAncestor) {
+    aRange->Collapse(true);
+    return NS_OK;
+  }
+  if (endContainer == commonAncestor) {
+    aRange->Collapse(false);
+    return NS_OK;
+  }
 
   // End points are at differing levels. We want to collapse to the
   // point that is between the 2 subtrees that contain each point,
@@ -2062,7 +2064,8 @@ CollapseRangeAfterDelete(nsRange* aRange)
   aRange->SelectNode(*nodeToSelect, rv);
   if (rv.Failed()) return rv.StealNSResult();
 
-  return aRange->Collapse(false);
+  aRange->Collapse(false);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
