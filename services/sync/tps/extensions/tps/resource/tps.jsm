@@ -130,7 +130,7 @@ var TPS = {
   _tabsFinished: 0,
   _test: null,
   _triggeredSync: false,
-  _usSinceEpoch: 0,
+  _msSinceEpoch: 0,
   _requestedQuit: false,
   shouldValidateAddons: false,
   shouldValidateBookmarks: false,
@@ -377,7 +377,7 @@ var TPS = {
     for (let datum of data) {
       Logger.logInfo("executing action " + action.toUpperCase() +
                      " on form entry " + JSON.stringify(datum));
-      let formdata = new FormData(datum, this._usSinceEpoch);
+      let formdata = new FormData(datum, this._msSinceEpoch);
       switch (action) {
         case ACTION_ADD:
           await formdata.Create();
@@ -409,17 +409,17 @@ var TPS = {
                        " on history entry " + entryString);
         switch (action) {
           case ACTION_ADD:
-            await HistoryEntry.Add(entry, this._usSinceEpoch);
+            await HistoryEntry.Add(entry, this._msSinceEpoch);
             break;
           case ACTION_DELETE:
-            await HistoryEntry.Delete(entry, this._usSinceEpoch);
+            await HistoryEntry.Delete(entry, this._msSinceEpoch);
             break;
           case ACTION_VERIFY:
-            Logger.AssertTrue((await HistoryEntry.Find(entry, this._usSinceEpoch)),
+            Logger.AssertTrue((await HistoryEntry.Find(entry, this._msSinceEpoch)),
               "Uri visits not found in history database: " + entryString);
             break;
           case ACTION_VERIFY_NOT:
-            Logger.AssertTrue(!(await HistoryEntry.Find(entry, this._usSinceEpoch)),
+            Logger.AssertTrue(!(await HistoryEntry.Find(entry, this._msSinceEpoch)),
               "Uri visits found in history database, but they shouldn't be: " + entryString);
             break;
           default:
@@ -818,7 +818,7 @@ var TPS = {
         // Places dislikes it if we add visits in the future. We pretend the
         // real time is 1 minute ago to avoid issues caused by places using a
         // different clock than the one that set the seconds_since_epoch pref.
-        this._usSinceEpoch = (this.seconds_since_epoch - 60) * 1000 * 1000;
+        this._msSinceEpoch = (this.seconds_since_epoch - 60) * 1000;
       } else {
         this.DumpError("seconds-since-epoch not set");
         return;
