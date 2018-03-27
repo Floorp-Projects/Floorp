@@ -585,7 +585,7 @@ void printRange(nsRange *aDomRange)
 {
   if (!aDomRange)
   {
-    printf("NULL nsIDOMRange\n");
+    printf("NULL Range\n");
   }
   nsINode* startNode = aDomRange->GetStartContainer();
   nsINode* endNode = aDomRange->GetEndContainer();
