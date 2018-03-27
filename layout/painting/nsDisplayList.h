@@ -1651,8 +1651,7 @@ public:
   void SetContainsBlendMode(bool aContainsBlendMode) { mContainsBlendMode = aContainsBlendMode; }
   bool ContainsBlendMode() const { return mContainsBlendMode; }
 
-  void AllocatePerspectiveItemIndex() { ++mPerspectiveItemIndex; }
-  uint32_t PerspectiveItemIndex() const { return mPerspectiveItemIndex; }
+  uint32_t AllocatePerspectiveItemIndex() { return mPerspectiveItemIndex++; }
 
   DisplayListClipState& ClipState() { return mClipState; }
   const ActiveScrolledRoot* CurrentActiveScrolledRoot() { return mCurrentActiveScrolledRoot; }
