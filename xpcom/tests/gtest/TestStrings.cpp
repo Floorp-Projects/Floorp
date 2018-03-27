@@ -24,6 +24,111 @@ namespace TestStrings {
 using mozilla::fallible;
 using mozilla::BlackBox;
 
+#define TestExample1 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,\n totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi\r architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur\n aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui\r\n\r dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"
+
+#define TestExample2 "At vero eos et accusamus et iusto odio dignissimos ducimus\n\n qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt\r\r  \n mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda       est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat."
+
+#define TestExample3 " Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ac tellus eget velit viverra viverra id sit amet neque. Sed id consectetur mi, vestibulum aliquet arcu. Curabitur sagittis accumsan convallis. Sed eu condimentum ipsum, a laoreet tortor. Orci varius natoque penatibus et magnis dis    \r\r\n\n parturient montes, nascetur ridiculus mus. Sed non tellus nec ante sodales placerat a nec risus. Cras vel bibendum sapien, nec ullamcorper felis. Pellentesque congue eget nisi sit amet vehicula. Morbi pulvinar turpis justo, in commodo dolor vulputate id. Curabitur in dui urna. Vestibulum placerat dui in sem congue, ut faucibus nibh rutrum. Duis mattis turpis facilisis ullamcorper tincidunt. Vestibulum pharetra tortor at enim sagittis, dapibus consectetur ex blandit. Curabitur ac fringilla quam. In ornare lectus ut ipsum mattis venenatis. Etiam in mollis lectus, sed luctus risus.\nCras dapibus\f\t  \n finibus justo sit amet dictum. Aliquam non elit diam. Fusce magna nulla, bibendum in massa a, commodo finibus lectus. Sed rutrum a augue id imperdiet. Aliquam sagittis sodales felis, a tristique ligula. Aliquam erat volutpat. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Duis volutpat interdum lorem et congue. Phasellus porttitor posuere justo eget euismod. Nam a condimentum turpis, sit amet gravida lacus. Vestibulum dolor diam, lobortis ac metus et, convallis dapibus tellus. Ut nec metus in velit malesuada tincidunt et eget justo. Curabitur ut libero bibendum, porttitor diam vitae, aliquet justo. "
+
+#define TestExample4 " Donec feugiat volutpat massa. Cras ornare lacinia porta. Fusce in feugiat nunc. Praesent non felis varius diam feugiat ultrices ultricies a risus. Donec maximus nisi nisl, non consectetur nulla eleifend in. Nulla in massa interdum, eleifend orci a, vestibulum est. Mauris aliquet, massa et convallis mollis, felis augue vestibulum augue, in lobortis metus eros a quam. Nam              ac diam ornare, vestibulum elit sit amet, consectetur ante. Praesent massa mauris, pulvinar sit amet sapien vel, tempus gravida neque. Praesent id quam sit amet est maximus molestie eget at turpis. Nunc sit amet orci id arcu dapibus fermentum non eu erat.\f\tSuspendisse commodo nunc sem, eu congue eros condimentum vel. Nullam sit amet posuere arcu. Nulla facilisi. Mauris dapibus iaculis massa sed gravida. Nullam vitae urna at tortor feugiat auctor ut sit amet dolor. Proin rutrum at nunc et faucibus. Quisque suscipit id nibh a aliquet. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam a dapibus erat, id imperdiet mauris. Nulla blandit libero non magna dapibus tristique. Integer hendrerit imperdiet lorem, quis facilisis lacus semper ut. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae Nullam dignissim elit in congue ultricies. Quisque erat odio, maximus mollis laoreet id, iaculis at turpis. "
+
+#define TestExample5 "Donec id risus urna. Nunc consequat lacinia urna id bibendum. Nulla faucibus faucibus enim. Cras ex risus, ultrices id semper vitae, luctus ut nulla. Sed vehicula tellus sed purus imperdiet efficitur. Suspendisse feugiat\n\n\n     imperdiet odio, sed porta lorem feugiat nec. Curabitur laoreet massa venenatis\r\n risus ornare\r\n, vitae feugiat tortor accumsan. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas id scelerisque mauris, eget facilisis erat. Ut nec pulvinar risus, sed iaculis ante. Mauris tincidunt, risus et pretium elementum, leo nisi consectetur ligula, tincidunt suscipit erat velit eget libero. Sed ac est tempus, consequat dolor mattis, mattis mi. "
+
+// Setup overhead test
+#define OneASCII "a"
+
+// Maximal non-SIMD legth
+#define FifteenASCII "Lorem ipsum dol"
+
+// Around hundred is common length for IsUTF8 check
+#define HundredASCII "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ac tellus eget velit viverra viverra i"
+
+// Originally ReadVPXFile in TestVPXDecoding.cpp
+static void
+ReadFile(const char* aPath, nsACString& aBuffer)
+{
+  FILE* f = fopen(aPath, "rb");
+  ASSERT_NE(f, (FILE *) nullptr);
+
+  int r = fseek(f, 0, SEEK_END);
+  ASSERT_EQ(r, 0);
+
+  long size = ftell(f);
+  ASSERT_NE(size, -1);
+  aBuffer.SetLength(size);
+
+  r = fseek(f, 0, SEEK_SET);
+  ASSERT_EQ(r, 0);
+
+  size_t got = fread(aBuffer.BeginWriting(), 1, size, f);
+  ASSERT_EQ(got, size_t(size));
+
+  r = fclose(f);
+  ASSERT_EQ(r, 0);
+}
+
+class Strings : public ::testing::Test {
+protected:
+  void SetUp() override {
+    // Intentionally AssignASCII and not AssignLiteral
+    // to simulate the usual heap case.
+    mOneAsciiUtf8.AssignASCII(OneASCII);
+    mFifteenAsciiUtf8.AssignASCII(FifteenASCII);
+    mHundredAsciiUtf8.AssignASCII(HundredASCII);
+    mExample1Utf8.AssignASCII(TestExample1);
+    mExample2Utf8.AssignASCII(TestExample2);
+    mExample3Utf8.AssignASCII(TestExample3);
+    mExample4Utf8.AssignASCII(TestExample4);
+    mExample5Utf8.AssignASCII(TestExample5);
+
+    ReadFile("de.txt", mDeUtf8);
+    ReadFile("ru.txt", mRuUtf8);
+    ReadFile("th.txt", mThUtf8);
+    ReadFile("ja.txt", mJaUtf8);
+
+    CopyASCIItoUTF16(mOneAsciiUtf8, mOneAsciiUtf16);
+    CopyASCIItoUTF16(mFifteenAsciiUtf8, mFifteenAsciiUtf16);
+    CopyASCIItoUTF16(mHundredAsciiUtf8, mHundredAsciiUtf16);
+
+    CopyASCIItoUTF16(mExample1Utf8, mExample1Utf16);
+    CopyASCIItoUTF16(mExample2Utf8, mExample2Utf16);
+    CopyASCIItoUTF16(mExample3Utf8, mExample3Utf16);
+    CopyASCIItoUTF16(mExample4Utf8, mExample4Utf16);
+    CopyASCIItoUTF16(mExample5Utf8, mExample5Utf16);
+
+    CopyUTF8toUTF16(mDeUtf8, mDeUtf16);
+    CopyUTF8toUTF16(mRuUtf8, mRuUtf16);
+    CopyUTF8toUTF16(mThUtf8, mThUtf16);
+    CopyUTF8toUTF16(mJaUtf8, mJaUtf16);
+  }
+public:
+  nsCString mOneAsciiUtf8;
+  nsCString mFifteenAsciiUtf8;
+  nsCString mHundredAsciiUtf8;
+  nsCString mExample1Utf8;
+  nsCString mExample2Utf8;
+  nsCString mExample3Utf8;
+  nsCString mExample4Utf8;
+  nsCString mExample5Utf8;
+  nsCString mDeUtf8;
+  nsCString mRuUtf8;
+  nsCString mThUtf8;
+  nsCString mJaUtf8;
+
+  nsString mOneAsciiUtf16;
+  nsString mFifteenAsciiUtf16;
+  nsString mHundredAsciiUtf16;
+  nsString mExample1Utf16;
+  nsString mExample2Utf16;
+  nsString mExample3Utf16;
+  nsString mExample4Utf16;
+  nsString mExample5Utf16;
+  nsString mDeUtf16;
+  nsString mRuUtf16;
+  nsString mThUtf16;
+  nsString mJaUtf16;  
+};
+
 void test_assign_helper(const nsACString& in, nsACString &_retval)
 {
   _retval = in;
@@ -47,7 +152,7 @@ struct EnableTest
   bool IsChar(int dummy = 42) { return true; }
 };
 
-TEST(Strings, IsChar)
+TEST_F(Strings, IsChar)
 {
   EnableTest<char> charTest;
   EXPECT_TRUE(charTest.IsChar());
@@ -69,7 +174,7 @@ TEST(Strings, IsChar)
 #endif
 }
 
-TEST(Strings, DependentStrings)
+TEST_F(Strings, DependentStrings)
 {
   // A few tests that make sure copying nsTDependentStrings behaves properly.
   using DataFlags = mozilla::detail::StringDataFlags;
@@ -115,20 +220,20 @@ TEST(Strings, DependentStrings)
   }
 }
 
-TEST(Strings, assign)
+TEST_F(Strings, assign)
 {
   nsCString result;
   test_assign_helper(NS_LITERAL_CSTRING("a") + NS_LITERAL_CSTRING("b"), result);
   EXPECT_STREQ(result.get(), "ab");
 }
 
-TEST(Strings, assign_c)
+TEST_F(Strings, assign_c)
 {
   nsCString c; c.Assign('c');
   EXPECT_STREQ(c.get(), "c");
 }
 
-TEST(Strings, test1)
+TEST_F(Strings, test1)
 {
   NS_NAMED_LITERAL_STRING(empty, "");
   const nsAString& aStr = empty;
@@ -146,7 +251,7 @@ TEST(Strings, test1)
   EXPECT_EQ(n, kNotFound);
 }
 
-TEST(Strings, test2)
+TEST_F(Strings, test2)
 {
   nsCString data("hello world");
   const nsACString& aStr = data;
@@ -157,7 +262,7 @@ TEST(Strings, test2)
   EXPECT_STREQ(temp.get(), "world");
 }
 
-TEST(Strings, find)
+TEST_F(Strings, find)
 {
   nsCString src("<!DOCTYPE blah blah blah>");
 
@@ -165,7 +270,7 @@ TEST(Strings, find)
   EXPECT_EQ(i, 2);
 }
 
-TEST(Strings, rfind)
+TEST_F(Strings, rfind)
 {
   const char text[] = "<!DOCTYPE blah blah blah>";
   const char term[] = "bLaH";
@@ -185,7 +290,7 @@ TEST(Strings, rfind)
   EXPECT_EQ(i, 20);
 }
 
-TEST(Strings, rfind_2)
+TEST_F(Strings, rfind_2)
 {
   const char text[] = "<!DOCTYPE blah blah blah>";
   nsCString src(text);
@@ -193,7 +298,7 @@ TEST(Strings, rfind_2)
   EXPECT_EQ(i, 5);
 }
 
-TEST(Strings, rfind_3)
+TEST_F(Strings, rfind_3)
 {
   const char text[] = "urn:mozilla:locale:en-US:necko";
   nsAutoCString value(text);
@@ -201,14 +306,14 @@ TEST(Strings, rfind_3)
   EXPECT_EQ(i, 24);
 }
 
-TEST(Strings, rfind_4)
+TEST_F(Strings, rfind_4)
 {
   nsCString value("a.msf");
   int32_t i = value.RFind(".msf");
   EXPECT_EQ(i, 1);
 }
 
-TEST(Strings, findinreadable)
+TEST_F(Strings, findinreadable)
 {
   const char text[] = "jar:jar:file:///c:/software/mozilla/mozilla_2006_02_21.jar!/browser/chrome/classic.jar!/";
   nsAutoCString value(text);
@@ -273,7 +378,7 @@ TEST(Strings, findinreadable)
   EXPECT_EQ(delim_begin, delim_end);
 }
 
-TEST(Strings, rfindinreadable)
+TEST_F(Strings, rfindinreadable)
 {
   const char text[] = "jar:jar:file:///c:/software/mozilla/mozilla_2006_02_21.jar!/browser/chrome/classic.jar!/";
   nsAutoCString value(text);
@@ -340,7 +445,7 @@ TEST(Strings, rfindinreadable)
   EXPECT_EQ(delim_begin, delim_end);
 }
 
-TEST(Strings, distance)
+TEST_F(Strings, distance)
 {
   const char text[] = "abc-xyz";
   nsCString s(text);
@@ -351,7 +456,7 @@ TEST(Strings, distance)
   EXPECT_EQ(d, sizeof(text) - 1);
 }
 
-TEST(Strings, length)
+TEST_F(Strings, length)
 {
   const char text[] = "abc-xyz";
   nsCString s(text);
@@ -359,7 +464,7 @@ TEST(Strings, length)
   EXPECT_EQ(d, sizeof(text) - 1);
 }
 
-TEST(Strings, trim)
+TEST_F(Strings, trim)
 {
   const char text[] = " a\t    $   ";
   const char set[] = " \t$";
@@ -385,7 +490,7 @@ TEST(Strings, trim)
   EXPECT_STREQ(s.get(), "");
 }
 
-TEST(Strings, replace_substr)
+TEST_F(Strings, replace_substr)
 {
   const char text[] = "abc-ppp-qqq-ppp-xyz";
   nsCString s(text);
@@ -406,7 +511,7 @@ TEST(Strings, replace_substr)
   EXPECT_STREQ(s.get(), "fofoofooo");
 }
 
-TEST(Strings, replace_substr_2)
+TEST_F(Strings, replace_substr_2)
 {
   const char *oldName = nullptr;
   const char *newName = "user";
@@ -424,7 +529,7 @@ TEST(Strings, replace_substr_2)
   EXPECT_TRUE(newAcctName.Equals(acctName));
 }
 
-TEST(Strings, replace_substr_3)
+TEST_F(Strings, replace_substr_3)
 {
   nsCString s;
   s.AssignLiteral("abcabcabc");
@@ -492,7 +597,7 @@ TEST(Strings, replace_substr_3)
   EXPECT_STREQ(s.get(), "abcdabcdabcd");
 }
 
-TEST(Strings, strip_ws)
+TEST_F(Strings, strip_ws)
 {
   const char* texts[] = {"",
                          " a    $   ",
@@ -509,13 +614,13 @@ TEST(Strings, strip_ws)
   }
 }
 
-TEST(Strings, equals_ic)
+TEST_F(Strings, equals_ic)
 {
   nsCString s;
   EXPECT_FALSE(s.LowerCaseEqualsLiteral("view-source"));
 }
 
-TEST(Strings, concat)
+TEST_F(Strings, concat)
 {
   nsCString bar("bar");
   const nsACString& barRef = bar;
@@ -527,7 +632,7 @@ TEST(Strings, concat)
   EXPECT_STREQ(result.get(), "foo,bar");
 }
 
-TEST(Strings, concat_2)
+TEST_F(Strings, concat_2)
 {
   nsCString fieldTextStr("xyz");
   nsCString text("text");
@@ -538,7 +643,7 @@ TEST(Strings, concat_2)
   EXPECT_STREQ(result.get(), "xyztext");
 }
 
-TEST(Strings, concat_3)
+TEST_F(Strings, concat_3)
 {
   nsCString result;
   nsCString ab("ab"), c("c");
@@ -547,7 +652,7 @@ TEST(Strings, concat_3)
   EXPECT_STREQ(result.get(), "abc");
 }
 
-TEST(Strings, empty_assign)
+TEST_F(Strings, empty_assign)
 {
   nsCString a;
   a.AssignLiteral("");
@@ -558,7 +663,7 @@ TEST(Strings, empty_assign)
   b.SetCapacity(0);
 }
 
-TEST(Strings, set_length)
+TEST_F(Strings, set_length)
 {
   const char kText[] = "Default Plugin";
   nsCString buf;
@@ -568,7 +673,7 @@ TEST(Strings, set_length)
   EXPECT_STREQ(buf.get(), kText);
 }
 
-TEST(Strings, substring)
+TEST_F(Strings, substring)
 {
   nsCString super("hello world"), sub("hello");
 
@@ -599,7 +704,7 @@ TEST(Strings, substring)
   test_appendbase(str, prefix, int, suffix, base) \
   test_appendbase(cstr, prefix, int, suffix, base)
 
-TEST(Strings, appendint)
+TEST_F(Strings, appendint)
 {
   nsString str;
   nsCString cstr;
@@ -627,7 +732,7 @@ TEST(Strings, appendint)
   test_appendbases(0x, ffffffffffffffff, ULL, 16)
 }
 
-TEST(Strings, appendint64)
+TEST_F(Strings, appendint64)
 {
   nsCString str;
 
@@ -660,7 +765,7 @@ TEST(Strings, appendint64)
   EXPECT_TRUE(str.Equals(maxint_plus1_expected_x));
 }
 
-TEST(Strings, appendfloat)
+TEST_F(Strings, appendfloat)
 {
   nsCString str;
   double bigdouble = 11223344556.66;
@@ -678,7 +783,7 @@ TEST(Strings, appendfloat)
   EXPECT_TRUE(str.Equals(float_expected));
 }
 
-TEST(Strings, findcharinset)
+TEST_F(Strings, findcharinset)
 {
   nsCString buf("hello, how are you?");
 
@@ -692,7 +797,7 @@ TEST(Strings, findcharinset)
   EXPECT_EQ(index, (int32_t) buf.Length() - 1);
 }
 
-TEST(Strings, rfindcharinset)
+TEST_F(Strings, rfindcharinset)
 {
   nsCString buf("hello, how are you?");
 
@@ -729,7 +834,7 @@ TEST(Strings, rfindcharinset)
   EXPECT_EQ(index, 7);
 }
 
-TEST(Strings, stringbuffer)
+TEST_F(Strings, stringbuffer)
 {
   const char kData[] = "hello world";
 
@@ -752,7 +857,7 @@ TEST(Strings, stringbuffer)
   EXPECT_EQ(buf, buf2);
 }
 
-TEST(Strings, voided)
+TEST_F(Strings, voided)
 {
   const char kData[] = "hello world";
 
@@ -792,7 +897,7 @@ TEST(Strings, voided)
   EXPECT_STREQ(str.get(), "");
 }
 
-TEST(Strings, voided_autostr)
+TEST_F(Strings, voided_autostr)
 {
   const char kData[] = "hello world";
 
@@ -813,7 +918,7 @@ TEST(Strings, voided_autostr)
   EXPECT_STREQ(str.get(), kData);
 }
 
-TEST(Strings, voided_assignment)
+TEST_F(Strings, voided_assignment)
 {
   nsCString a, b;
   b.SetIsVoid(true);
@@ -822,7 +927,7 @@ TEST(Strings, voided_assignment)
   EXPECT_EQ(a.get(), b.get());
 }
 
-TEST(Strings, empty_assignment)
+TEST_F(Strings, empty_assignment)
 {
   nsCString a, b;
   a = b;
@@ -844,7 +949,7 @@ static const ToIntegerTest kToIntegerTests[] = {
   { nullptr, 0, 0, NS_OK }
 };
 
-TEST(Strings, string_tointeger)
+TEST_F(Strings, string_tointeger)
 {
   nsresult rv;
   for (const ToIntegerTest* t = kToIntegerTests; t->str; ++t) {
@@ -926,7 +1031,7 @@ TEST(String, strip_chars)
                           NS_LITERAL_STRING("foo"));
 }
 
-TEST(Strings, huge_capacity)
+TEST_F(Strings, huge_capacity)
 {
   nsString a, b, c, d, e, f, g, h, i, j, k, l, m, n;
   nsCString n1;
@@ -1017,7 +1122,7 @@ static void test_tofloat_helper(const nsString& aStr, float aExpected, bool aSuc
   }
 }
 
-TEST(Strings, tofloat)
+TEST_F(Strings, tofloat)
 {
   test_tofloat_helper(NS_LITERAL_STRING("42"), 42.f, true);
   test_tofloat_helper(NS_LITERAL_STRING("42.0"), 42.f, true);
@@ -1044,7 +1149,7 @@ static void test_todouble_helper(const nsString& aStr, double aExpected, bool aS
   }
 }
 
-TEST(Strings, todouble)
+TEST_F(Strings, todouble)
 {
   test_todouble_helper(NS_LITERAL_STRING("42"), 42, true);
   test_todouble_helper(NS_LITERAL_STRING("42.0"), 42, true);
@@ -1061,7 +1166,7 @@ TEST(Strings, todouble)
   test_todouble_helper(NS_LITERAL_STRING("foo"), 0, false);
 }
 
-TEST(Strings, Split)
+TEST_F(Strings, Split)
 {
    nsCString one("one"),
              two("one;two"),
@@ -1149,7 +1254,7 @@ constexpr bool TestSomeChars(char c)
   return c == 'a' || c == 'c' || c == 'e' || c == '7' ||
          c == 'G' || c == 'Z' || c == '\b' || c == '?';
 }
-TEST(Strings,ASCIIMask)
+TEST_F(Strings,ASCIIMask)
 {
   const ASCIIMaskArray& maskCRLF = mozilla::ASCIIMask::MaskCRLF();
   EXPECT_TRUE(maskCRLF['\n'] && mozilla::ASCIIMask::IsMasked(maskCRLF, '\n'));
@@ -1263,12 +1368,12 @@ CompressWhitespaceHelper()
   EXPECT_TRUE(s.EqualsLiteral(""));
 }
 
-TEST(Strings, CompressWhitespace)
+TEST_F(Strings, CompressWhitespace)
 {
   CompressWhitespaceHelper<nsCString>();
 }
 
-TEST(Strings, CompressWhitespaceW)
+TEST_F(Strings, CompressWhitespaceW)
 {
   CompressWhitespaceHelper<nsString>();
 
@@ -1324,12 +1429,12 @@ StripCRLFHelper()
   EXPECT_TRUE(s.EqualsLiteral(""));
 }
 
-TEST(Strings, StripCRLF)
+TEST_F(Strings, StripCRLF)
 {
   StripCRLFHelper<nsCString>();
 }
 
-TEST(Strings, StripCRLFW)
+TEST_F(Strings, StripCRLFW)
 {
   StripCRLFHelper<nsString>();
 
@@ -1340,23 +1445,13 @@ TEST(Strings, StripCRLFW)
   EXPECT_TRUE(str == result);
 }
 
-#define TestExample1 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,\n totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi\r architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur\n aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui\r\n\r dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"
-
-#define TestExample2 "At vero eos et accusamus et iusto odio dignissimos ducimus\n\n qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt\r\r  \n mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda       est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat."
-
-#define TestExample3 " Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ac tellus eget velit viverra viverra id sit amet neque. Sed id consectetur mi, vestibulum aliquet arcu. Curabitur sagittis accumsan convallis. Sed eu condimentum ipsum, a laoreet tortor. Orci varius natoque penatibus et magnis dis    \r\r\n\n parturient montes, nascetur ridiculus mus. Sed non tellus nec ante sodales placerat a nec risus. Cras vel bibendum sapien, nec ullamcorper felis. Pellentesque congue eget nisi sit amet vehicula. Morbi pulvinar turpis justo, in commodo dolor vulputate id. Curabitur in dui urna. Vestibulum placerat dui in sem congue, ut faucibus nibh rutrum. Duis mattis turpis facilisis ullamcorper tincidunt. Vestibulum pharetra tortor at enim sagittis, dapibus consectetur ex blandit. Curabitur ac fringilla quam. In ornare lectus ut ipsum mattis venenatis. Etiam in mollis lectus, sed luctus risus.\nCras dapibus\f\t  \n finibus justo sit amet dictum. Aliquam non elit diam. Fusce magna nulla, bibendum in massa a, commodo finibus lectus. Sed rutrum a augue id imperdiet. Aliquam sagittis sodales felis, a tristique ligula. Aliquam erat volutpat. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Duis volutpat interdum lorem et congue. Phasellus porttitor posuere justo eget euismod. Nam a condimentum turpis, sit amet gravida lacus. Vestibulum dolor diam, lobortis ac metus et, convallis dapibus tellus. Ut nec metus in velit malesuada tincidunt et eget justo. Curabitur ut libero bibendum, porttitor diam vitae, aliquet justo. "
-
-#define TestExample4 " Donec feugiat volutpat massa. Cras ornare lacinia porta. Fusce in feugiat nunc. Praesent non felis varius diam feugiat ultrices ultricies a risus. Donec maximus nisi nisl, non consectetur nulla eleifend in. Nulla in massa interdum, eleifend orci a, vestibulum est. Mauris aliquet, massa et convallis mollis, felis augue vestibulum augue, in lobortis metus eros a quam. Nam              ac diam ornare, vestibulum elit sit amet, consectetur ante. Praesent massa mauris, pulvinar sit amet sapien vel, tempus gravida neque. Praesent id quam sit amet est maximus molestie eget at turpis. Nunc sit amet orci id arcu dapibus fermentum non eu erat.\f\tSuspendisse commodo nunc sem, eu congue eros condimentum vel. Nullam sit amet posuere arcu. Nulla facilisi. Mauris dapibus iaculis massa sed gravida. Nullam vitae urna at tortor feugiat auctor ut sit amet dolor. Proin rutrum at nunc et faucibus. Quisque suscipit id nibh a aliquet. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam a dapibus erat, id imperdiet mauris. Nulla blandit libero non magna dapibus tristique. Integer hendrerit imperdiet lorem, quis facilisis lacus semper ut. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae Nullam dignissim elit in congue ultricies. Quisque erat odio, maximus mollis laoreet id, iaculis at turpis. "
-
-#define TestExample5 "Donec id risus urna. Nunc consequat lacinia urna id bibendum. Nulla faucibus faucibus enim. Cras ex risus, ultrices id semper vitae, luctus ut nulla. Sed vehicula tellus sed purus imperdiet efficitur. Suspendisse feugiat\n\n\n     imperdiet odio, sed porta lorem feugiat nec. Curabitur laoreet massa venenatis\r\n risus ornare\r\n, vitae feugiat tortor accumsan. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas id scelerisque mauris, eget facilisis erat. Ut nec pulvinar risus, sed iaculis ante. Mauris tincidunt, risus et pretium elementum, leo nisi consectetur ligula, tincidunt suscipit erat velit eget libero. Sed ac est tempus, consequat dolor mattis, mattis mi. "
-
 // Note the five calls in the loop, so divide by 100k
-MOZ_GTEST_BENCH(Strings, PerfStripWhitespace, [] {
-    nsCString test1(TestExample1);
-    nsCString test2(TestExample2);
-    nsCString test3(TestExample3);
-    nsCString test4(TestExample4);
-    nsCString test5(TestExample5);
+MOZ_GTEST_BENCH_F(Strings, PerfStripWhitespace, [this] {
+    nsCString test1(mExample1Utf8);
+    nsCString test2(mExample2Utf8);
+    nsCString test3(mExample3Utf8);
+    nsCString test4(mExample4Utf8);
+    nsCString test5(mExample5Utf8);
     for (int i = 0; i < 20000; i++) {
       test1.StripWhitespace();
       test2.StripWhitespace();
@@ -1366,14 +1461,14 @@ MOZ_GTEST_BENCH(Strings, PerfStripWhitespace, [] {
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfStripCharsWhitespace, [] {
+MOZ_GTEST_BENCH_F(Strings, PerfStripCharsWhitespace, [this] {
     // This is the unoptimized (original) version of
     // StripWhitespace using StripChars.
-    nsCString test1(TestExample1);
-    nsCString test2(TestExample2);
-    nsCString test3(TestExample3);
-    nsCString test4(TestExample4);
-    nsCString test5(TestExample5);
+    nsCString test1(mExample1Utf8);
+    nsCString test2(mExample2Utf8);
+    nsCString test3(mExample3Utf8);
+    nsCString test4(mExample4Utf8);
+    nsCString test5(mExample5Utf8);
     for (int i = 0; i < 20000; i++) {
       test1.StripChars("\f\t\r\n ");
       test2.StripChars("\f\t\r\n ");
@@ -1383,12 +1478,12 @@ MOZ_GTEST_BENCH(Strings, PerfStripCharsWhitespace, [] {
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfCompressWhitespace, [] {
-    nsCString test1(TestExample1);
-    nsCString test2(TestExample2);
-    nsCString test3(TestExample3);
-    nsCString test4(TestExample4);
-    nsCString test5(TestExample5);
+MOZ_GTEST_BENCH_F(Strings, PerfCompressWhitespace, [this] {
+    nsCString test1(mExample1Utf8);
+    nsCString test2(mExample2Utf8);
+    nsCString test3(mExample3Utf8);
+    nsCString test4(mExample4Utf8);
+    nsCString test5(mExample5Utf8);
     for (int i = 0; i < 20000; i++) {
       test1.CompressWhitespace();
       test2.CompressWhitespace();
@@ -1398,12 +1493,12 @@ MOZ_GTEST_BENCH(Strings, PerfCompressWhitespace, [] {
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfStripCRLF, [] {
-    nsCString test1(TestExample1);
-    nsCString test2(TestExample2);
-    nsCString test3(TestExample3);
-    nsCString test4(TestExample4);
-    nsCString test5(TestExample5);
+MOZ_GTEST_BENCH_F(Strings, PerfStripCRLF, [this] {
+    nsCString test1(mExample1Utf8);
+    nsCString test2(mExample2Utf8);
+    nsCString test3(mExample3Utf8);
+    nsCString test4(mExample4Utf8);
+    nsCString test5(mExample5Utf8);
     for (int i = 0; i < 20000; i++) {
       test1.StripCRLF();
       test2.StripCRLF();
@@ -1413,14 +1508,14 @@ MOZ_GTEST_BENCH(Strings, PerfStripCRLF, [] {
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfStripCharsCRLF, [] {
+MOZ_GTEST_BENCH_F(Strings, PerfStripCharsCRLF, [this] {
     // This is the unoptimized (original) version of
     // stripping \r\n using StripChars.
-    nsCString test1(TestExample1);
-    nsCString test2(TestExample2);
-    nsCString test3(TestExample3);
-    nsCString test4(TestExample4);
-    nsCString test5(TestExample5);
+    nsCString test1(mExample1Utf8);
+    nsCString test2(mExample2Utf8);
+    nsCString test3(mExample3Utf8);
+    nsCString test4(mExample4Utf8);
+    nsCString test5(mExample5Utf8);
     for (int i = 0; i < 20000; i++) {
       test1.StripChars("\r\n");
       test2.StripChars("\r\n");
@@ -1430,153 +1525,93 @@ MOZ_GTEST_BENCH(Strings, PerfStripCharsCRLF, [] {
     }
 });
 
-// Setup overhead test
-#define OneASCII "a"
-
-// Maximal non-SIMD legth
-#define FifteenASCII "Lorem ipsum dol"
-
-// Around hundred is common length for IsUTF8 check
-#define HundredASCII "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ac tellus eget velit viverra viverra i"
-
-MOZ_GTEST_BENCH(Strings, PerfIsUTF8One, [] {
-    nsCString test(OneASCII);
+MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8One, [this] {
     for (int i = 0; i < 200000; i++) {
-      bool b = IsUTF8(*BlackBox(&test));
+      bool b = IsUTF8(*BlackBox(&mOneAsciiUtf8));
       BlackBox(&b);
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfIsUTF8Fifteen, [] {
-    nsCString test(FifteenASCII);
+MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8Fifteen, [this] {
     for (int i = 0; i < 200000; i++) {
-      bool b = IsUTF8(*BlackBox(&test));
+      bool b = IsUTF8(*BlackBox(&mFifteenAsciiUtf8));
       BlackBox(&b);
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfIsUTF8Hundred, [] {
-    nsCString test(HundredASCII);
+MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8Hundred, [this] {
     for (int i = 0; i < 200000; i++) {
-      bool b = IsUTF8(*BlackBox(&test));
+      bool b = IsUTF8(*BlackBox(&mHundredAsciiUtf8));
       BlackBox(&b);
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfIsUTF8Example3, [] {
-    nsCString test(TestExample3);
+MOZ_GTEST_BENCH_F(Strings, PerfIsUTF8Example3, [this] {
     for (int i = 0; i < 100000; i++) {
-      bool b = IsUTF8(*BlackBox(&test));
+      bool b = IsUTF8(*BlackBox(&mExample3Utf8));
       BlackBox(&b);
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfIsASCII8One, [] {
-    nsCString test(OneASCII);
+MOZ_GTEST_BENCH_F(Strings, PerfIsASCII8One, [this] {
     for (int i = 0; i < 200000; i++) {
-      bool b = IsASCII(*BlackBox(&test));
+      bool b = IsASCII(*BlackBox(&mOneAsciiUtf8));
       BlackBox(&b);
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfIsASCIIFifteen, [] {
-    nsCString test(FifteenASCII);
+MOZ_GTEST_BENCH_F(Strings, PerfIsASCIIFifteen, [this] {
     for (int i = 0; i < 200000; i++) {
-      bool b = IsASCII(*BlackBox(&test));
+      bool b = IsASCII(*BlackBox(&mFifteenAsciiUtf8));
       BlackBox(&b);
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfIsASCIIHundred, [] {
-    nsCString test(HundredASCII);
+MOZ_GTEST_BENCH_F(Strings, PerfIsASCIIHundred, [this] {
     for (int i = 0; i < 200000; i++) {
-      bool b = IsASCII(*BlackBox(&test));
+      bool b = IsASCII(*BlackBox(&mHundredAsciiUtf8));
       BlackBox(&b);
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfIsASCIIExample3, [] {
-    nsCString test(TestExample3);
+MOZ_GTEST_BENCH_F(Strings, PerfIsASCIIExample3, [this] {
     for (int i = 0; i < 100000; i++) {
-      bool b = IsASCII(*BlackBox(&test));
+      bool b = IsASCII(*BlackBox(&mExample3Utf8));
       BlackBox(&b);
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfHasRTLCharsExample3, [] {
-    nsCString utf8(TestExample3);
-    nsString test;
-    CopyUTF8toUTF16(utf8, test);
+MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsExample3, [this] {
     for (int i = 0; i < 100000; i++) {
-      bool b = HasRTLChars(*BlackBox(&test));
+      bool b = HasRTLChars(*BlackBox(&mExample3Utf16));
       BlackBox(&b);
     }
 });
 
-// Originally ReadVPXFile in TestVPXDecoding.cpp
-static void
-ReadFile(const char* aPath, nsACString& aBuffer)
-{
-  FILE* f = fopen(aPath, "rb");
-  ASSERT_NE(f, (FILE *) nullptr);
-
-  int r = fseek(f, 0, SEEK_END);
-  ASSERT_EQ(r, 0);
-
-  long size = ftell(f);
-  ASSERT_NE(size, -1);
-  aBuffer.SetLength(size);
-
-  r = fseek(f, 0, SEEK_SET);
-  ASSERT_EQ(r, 0);
-
-  size_t got = fread(aBuffer.BeginWriting(), 1, size, f);
-  ASSERT_EQ(got, size_t(size));
-
-  r = fclose(f);
-  ASSERT_EQ(r, 0);
-}
-
-MOZ_GTEST_BENCH(Strings, PerfHasRTLCharsDE, [] {
-    nsCString utf8;
-    ReadFile("de.txt", utf8);
-    nsString test;
-    CopyUTF8toUTF16(utf8, test);
+MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsDE, [this] {
     for (int i = 0; i < 100000; i++) {
-      bool b = HasRTLChars(*BlackBox(&test));
+      bool b = HasRTLChars(*BlackBox(&mDeUtf16));
       BlackBox(&b);
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfHasRTLCharsRU, [] {
-    nsCString utf8;
-    ReadFile("ru.txt", utf8);
-    nsString test;
-    CopyUTF8toUTF16(utf8, test);
+MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsRU, [this] {
     for (int i = 0; i < 100000; i++) {
-      bool b = HasRTLChars(*BlackBox(&test));
+      bool b = HasRTLChars(*BlackBox(&mRuUtf16));
       BlackBox(&b);
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfHasRTLCharsTH, [] {
-    nsCString utf8;
-    ReadFile("th.txt", utf8);
-    nsString test;
-    CopyUTF8toUTF16(utf8, test);
+MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsTH, [this] {
     for (int i = 0; i < 100000; i++) {
-      bool b = HasRTLChars(*BlackBox(&test));
+      bool b = HasRTLChars(*BlackBox(&mThUtf16));
       BlackBox(&b);
     }
 });
 
-MOZ_GTEST_BENCH(Strings, PerfHasRTLCharsJA, [] {
-    nsCString utf8;
-    ReadFile("ja.txt", utf8);
-    nsString test;
-    CopyUTF8toUTF16(utf8, test);
+MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsJA, [this] {
     for (int i = 0; i < 100000; i++) {
-      bool b = HasRTLChars(*BlackBox(&test));
+      bool b = HasRTLChars(*BlackBox(&mJaUtf16));
       BlackBox(&b);
     }
 });
