@@ -45,6 +45,7 @@ DevToolsModules(
     'highlighters.js',
     'layout.js',
     'memory.js',
+    'network-event.js',
     'object.js',
     'pause-scoped.js',
     'perf.js',
