@@ -21,6 +21,8 @@ High-level components for building browser(-like) apps.
 
 * **Erropages** - Responsive browser error pages for Android apps.
 
+* **Toolbar** - A customizable toolbar for browsers.
+
 ## UI
 
 _Generic UI components for building apps._
