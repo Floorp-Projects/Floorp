@@ -14,4 +14,8 @@ else:
         'data',
         'i18n',
     ]
-    USE_LIBS += ['icudata']
+    if CONFIG['MOZ_ICU_DATA_ARCHIVE']:
+        DIRS += ['stubdata']
+        USE_LIBS += ['icustubdata']
+    else:
+        USE_LIBS += ['icudata']

@@ -812,6 +812,14 @@ class MOZ_NON_PARAM alignas(8) Value
         return toTag() == JSVAL_TAG_PRIVATE_GCTHING;
     }
 
+    const size_t* payloadWord() const {
+#if defined(JS_NUNBOX32)
+        return &data.s.payload.word;
+#elif defined(JS_PUNBOX64)
+        return &data.asWord;
+#endif
+    }
+
     const uintptr_t* payloadUIntPtr() const {
 #if defined(JS_NUNBOX32)
         return &data.s.payload.uintptr;
@@ -827,41 +835,11 @@ class MOZ_NON_PARAM alignas(8) Value
   private:
 #endif
 
+#if MOZ_LITTLE_ENDIAN
+# if defined(JS_NUNBOX32)
     union layout {
         uint64_t asBits;
-        double asDouble;
-        void* asPtr;
-#if defined(JS_PUNBOX64)
-        uintptr_t asUIntPtr;
-#endif // defined(JS_PUNBOX64)
-
-#if defined(JS_PUNBOX64) && !defined(_WIN64)
-        /* MSVC does not pack these correctly :-( */
         struct {
-#  if MOZ_LITTLE_ENDIAN
-            uint64_t   payload47 : 47;
-            JSValueTag tag : 17;
-#  else
-            JSValueTag tag : 17;
-            uint64_t   payload47 : 47;
-#  endif // MOZ_LITTLE_ENDIAN
-        } debugView;
-#endif // defined(JS_PUNBOX64) && !defined(_WIN64)
-
-        struct {
-#if defined(JS_PUNBOX64)
-#  if MOZ_BIG_ENDIAN
-            uint32_t padding;
-#  endif // MOZ_BIG_ENDIAN
-            union {
-                int32_t    i32;
-                uint32_t   u32;
-                JSWhyMagic why;
-            } payload;
-#else
-#  if MOZ_BIG_ENDIAN
-            JSValueTag tag;
-#  endif // MOZ_BIG_ENDIAN
             union {
                 int32_t        i32;
                 uint32_t       u32;
@@ -875,16 +853,95 @@ class MOZ_NON_PARAM alignas(8) Value
                 size_t         word;
                 uintptr_t      uintptr;
             } payload;
-#  if MOZ_LITTLE_ENDIAN
             JSValueTag tag;
-#  endif // MOZ_LITTLE_ENDIAN
-#endif // defined(JS_PUNBOX64)
         } s;
+        double asDouble;
+        void* asPtr;
 
         layout() : asBits(JSVAL_RAW64_UNDEFINED) {}
         explicit constexpr layout(uint64_t bits) : asBits(bits) {}
         explicit constexpr layout(double d) : asDouble(d) {}
     } data;
+# elif defined(JS_PUNBOX64)
+    union layout {
+        uint64_t asBits;
+#if !defined(_WIN64)
+        /* MSVC does not pack these correctly :-( */
+        struct {
+            uint64_t           payload47 : 47;
+            JSValueTag         tag : 17;
+        } debugView;
+#endif
+        struct {
+            union {
+                int32_t        i32;
+                uint32_t       u32;
+                JSWhyMagic     why;
+            } payload;
+        } s;
+        double asDouble;
+        void* asPtr;
+        size_t asWord;
+        uintptr_t asUIntPtr;
+
+        layout() : asBits(JSVAL_RAW64_UNDEFINED) {}
+        explicit constexpr layout(uint64_t bits) : asBits(bits) {}
+        explicit constexpr layout(double d) : asDouble(d) {}
+    } data;
+# endif  /* JS_PUNBOX64 */
+#else   /* MOZ_LITTLE_ENDIAN */
+# if defined(JS_NUNBOX32)
+    union layout {
+        uint64_t asBits;
+        struct {
+            JSValueTag tag;
+            union {
+                int32_t        i32;
+                uint32_t       u32;
+                uint32_t       boo;     // Don't use |bool| -- it must be four bytes.
+                JSString*      str;
+                JS::Symbol*    sym;
+                JSObject*      obj;
+                js::gc::Cell*  cell;
+                void*          ptr;
+                JSWhyMagic     why;
+                size_t         word;
+                uintptr_t      uintptr;
+            } payload;
+        } s;
+        double asDouble;
+        void* asPtr;
+
+        layout() : asBits(JSVAL_RAW64_UNDEFINED) {}
+        explicit constexpr layout(uint64_t bits) : asBits(bits) {}
+        explicit constexpr layout(double d) : asDouble(d) {}
+    } data;
+# elif defined(JS_PUNBOX64)
+    union layout {
+        uint64_t asBits;
+        struct {
+            JSValueTag         tag : 17;
+            uint64_t           payload47 : 47;
+        } debugView;
+        struct {
+            uint32_t           padding;
+            union {
+                int32_t        i32;
+                uint32_t       u32;
+                JSWhyMagic     why;
+            } payload;
+        } s;
+        double asDouble;
+        void* asPtr;
+        size_t asWord;
+        uintptr_t asUIntPtr;
+
+        layout() : asBits(JSVAL_RAW64_UNDEFINED) {}
+        explicit constexpr layout(uint64_t bits) : asBits(bits) {}
+        explicit constexpr layout(double d) : asDouble(d) {}
+    } data;
+# endif /* JS_PUNBOX64 */
+#endif  /* MOZ_LITTLE_ENDIAN */
 
   private:
     explicit constexpr Value(uint64_t asBits) : data(asBits) {}
@@ -972,14 +1029,10 @@ struct MOZ_NON_PARAM alignas(8) UninitializedValue
     }
 };
 
-static_assert(sizeof(Value) == 8,
-              "Value size must leave three tag bits, be a binary power, and "
-              "is ubiquitously depended upon everywhere");
+static_assert(sizeof(Value) == 8, "Value size must leave three tag bits, be a binary power, and is ubiquitously depended upon everywhere");
 
-static_assert(sizeof(UninitializedValue) == sizeof(Value),
-              "Value and UninitializedValue must be the same size");
-static_assert(alignof(UninitializedValue) == alignof(Value),
-              "Value and UninitializedValue must have same alignment");
+static_assert(sizeof(UninitializedValue) == sizeof(Value), "Value and UninitializedValue must be the same size");
+static_assert(alignof(UninitializedValue) == alignof(Value), "Value and UninitializedValue must have same alignment");
 
 inline bool
 IsOptimizedPlaceholderMagicValue(const Value& v)
