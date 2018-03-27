@@ -429,6 +429,17 @@ CacheRegisterAllocator::allocateFixedRegister(MacroAssembler& masm, Register reg
         return;
     }
 
+    // Register may be available only after spilling contents.
+    if (availableRegsAfterSpill_.has(reg)) {
+        availableRegsAfterSpill_.take(reg);
+        masm.push(reg);
+        stackPushed_ += sizeof(uintptr_t);
+
+        masm.propagateOOM(spilledRegs_.append(SpilledRegister(reg, stackPushed_)));
+        currentOpRegs_.add(reg);
+        return;
+    }
+
     // The register must be used by some operand. Spill it to the stack.
     for (size_t i = 0; i < operandLocations_.length(); i++) {
         OperandLocation& loc = operandLocations_[i];
