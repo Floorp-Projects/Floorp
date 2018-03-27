@@ -3,6 +3,7 @@
 // This test checks whether applied WebExtension themes that attempt to change
 // popup properties are applied correctly to the autocomplete bar.
 const POPUP_COLOR = "#85A400";
+const POPUP_BORDER_COLOR = "#220300";
 const POPUP_TEXT_COLOR_DARK = "#000000";
 const POPUP_TEXT_COLOR_BRIGHT = "#ffffff";
 const POPUP_SELECTED_COLOR = "#9400ff";
@@ -85,6 +86,7 @@ add_task(async function test_popup_url() {
           "accentcolor": ACCENT_COLOR,
           "textcolor": TEXT_COLOR,
           "popup": POPUP_COLOR,
+          "popup_border": POPUP_BORDER_COLOR,
           "popup_text": POPUP_TEXT_COLOR_DARK,
           "popup_highlight": POPUP_SELECTED_COLOR,
           "popup_highlight_text": POPUP_SELECTED_TEXT_COLOR,
@@ -127,6 +129,8 @@ add_task(async function test_popup_url() {
   Assert.equal(popupCS.backgroundColor,
                `rgb(${hexToRGB(POPUP_COLOR).join(", ")})`,
                `Popup background color should be set to ${POPUP_COLOR}`);
+
+  testBorderColor(popup, POPUP_BORDER_COLOR);
 
   Assert.equal(popupCS.color,
                `rgb(${hexToRGB(POPUP_TEXT_COLOR_DARK).join(", ")})`,
