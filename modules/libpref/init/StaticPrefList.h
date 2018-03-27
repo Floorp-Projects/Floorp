@@ -8,7 +8,7 @@
 // used entirely or mostly from C++ code.
 //
 // Prefs defined in this file should *not* be listed in a prefs data file such
-// as all.js. If they are, CheckForExistence() will issue an NS_ERROR.
+// as all.js. If they are, CheckForDoubleDefinition() will issue an NS_ERROR.
 //
 // The file is separated into sections, where the sections are determined by
 // the first segment of the prefnames within (e.g. "network.predictor.enabled"
@@ -26,7 +26,7 @@
 //
 // - <cpp-type> is one of bool, int32_t, float, or String (which is just a
 //   typedef for `const char*` in StaticPrefs.h). Note that float prefs are
-//   stored internally as floats.
+//   stored internally as strings.
 //
 // - <default-value> is the default value. Its type should match <cpp-type>.
 //
