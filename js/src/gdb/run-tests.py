@@ -104,7 +104,7 @@ class Summary(object):
 
         if self.failures:
 
-            print "tests failed:"
+            print("tests failed:")
             for test in self.failures:
                 test.show(sys.stdout)
 
@@ -129,7 +129,7 @@ class Summary(object):
                     sys.exit(1)
 
         if self.timeouts:
-            print "tests timed out:"
+            print("tests timed out:")
             for test in self.timeouts:
                 test.show(sys.stdout)
 
@@ -187,7 +187,7 @@ class Test(TaskPool.Task):
         self.summary.timeout(self)
 
     def show_cmd(self, out):
-        print "Command: ", make_shell_cmd(self.cmd())
+        out.write("Command: %s\n" % (make_shell_cmd(self.cmd()),))
 
     def show_output(self, out):
         if self.stdout:
@@ -200,7 +200,7 @@ class Test(TaskPool.Task):
     def show(self, out):
         out.write(self.name + '\n')
         if OPTIONS.write_failure_output:
-            out.write('Command: %s\n' % (make_shell_cmd(self.cmd()),))
+            self.show_cmd(out)
             self.show_output(out)
             out.write('GDB exit code: %r\n' % (self.returncode,))
 
