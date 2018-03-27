@@ -24,7 +24,7 @@ class nsZipArchive;
 class FT2FontEntry : public gfxFontEntry
 {
 public:
-    FT2FontEntry(const nsAString& aFaceName) :
+    explicit FT2FontEntry(const nsAString& aFaceName) :
         gfxFontEntry(aFaceName),
         mFTFace(nullptr),
         mFontFace(nullptr),
@@ -108,7 +108,7 @@ public:
 class FT2FontFamily : public gfxFontFamily
 {
 public:
-    FT2FontFamily(const nsAString& aName) :
+    explicit FT2FontFamily(const nsAString& aName) :
         gfxFontFamily(aName) { }
 
     // Append this family's faces to the IPC fontlist

@@ -27,7 +27,7 @@ public:
   using MediaDrmProxyNativeCallbacks::DisposeNative;
   using MediaDrmProxyNativeCallbacks::AttachNative;
 
-  MediaDrmJavaCallbacksSupport(DecryptorProxyCallback* aDecryptorProxyCallback)
+  explicit MediaDrmJavaCallbacksSupport(DecryptorProxyCallback* aDecryptorProxyCallback)
     : mDecryptorProxyCallback(aDecryptorProxyCallback)
   {
     MOZ_ASSERT(aDecryptorProxyCallback);

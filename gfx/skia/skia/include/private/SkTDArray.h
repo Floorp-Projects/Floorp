@@ -22,7 +22,7 @@ public:
         fReserve = fCount = 0;
         fArray = nullptr;
         if (count) {
-            fArray = (T*)sk_malloc_throw(count * sizeof(T));
+            fArray = (T*)sk_malloc_throw(count, sizeof(T));
             memcpy(fArray, src, sizeof(T) * count);
             fReserve = fCount = count;
         }
@@ -353,7 +353,7 @@ public:
 
     void shrinkToFit() {
         fReserve = fCount;
-        fArray = (T*)sk_realloc_throw(fArray, fReserve * sizeof(T));
+        fArray = (T*)sk_realloc_throw(fArray, fReserve, sizeof(T));
     }
 
 private:
@@ -366,6 +366,7 @@ private:
      *  This is the same as calling setCount(count() + delta).
      */
     void adjustCount(int delta) {
+        SkASSERT_RELEASE(fCount <= std::numeric_limits<int>::max() - delta);
         this->setCount(fCount + delta);
     }
 
@@ -379,9 +380,10 @@ private:
      */
     void resizeStorageToAtLeast(int count) {
         SkASSERT(count > fReserve);
+        SkASSERT_RELEASE(count <= std::numeric_limits<int>::max() - std::numeric_limits<int>::max() / 5 - 4);
         fReserve = count + 4;
         fReserve += fReserve / 4;
-        fArray = (T*)sk_realloc_throw(fArray, fReserve * sizeof(T));
+        fArray = (T*)sk_realloc_throw(fArray, fReserve, sizeof(T));
     }
 };
 

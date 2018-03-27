@@ -288,15 +288,17 @@ FunctionForwarder(JSContext* cx, unsigned argc, Value* vp)
     RootedValue v(cx, js::GetFunctionNativeReserved(&args.callee(), 0));
     RootedObject unwrappedFun(cx, js::UncheckedUnwrap(&v.toObject()));
 
-    RootedObject thisObj(cx, args.isConstructing() ? nullptr : JS_THIS_OBJECT(cx, vp));
+    RootedValue thisVal(cx, NullValue());
+    if (!args.isConstructing()) {
+        thisVal.set(args.computeThis(cx));
+    }
+
     {
         // We manually implement the contents of CrossCompartmentWrapper::call
         // here, because certain function wrappers (notably content->nsEP) are
         // not callable.
         JSAutoCompartment ac(cx, unwrappedFun);
-
-        RootedValue thisVal(cx, ObjectOrNullValue(thisObj));
-        if (!CheckSameOriginArg(cx, options, thisVal) || !JS_WrapObject(cx, &thisObj))
+        if (!CheckSameOriginArg(cx, options, thisVal) || !JS_WrapValue(cx, &thisVal))
             return false;
 
         for (size_t n = 0;  n < args.length(); ++n) {
@@ -311,7 +313,7 @@ FunctionForwarder(JSContext* cx, unsigned argc, Value* vp)
                 return false;
             args.rval().setObject(*obj);
         } else {
-            if (!JS_CallFunctionValue(cx, thisObj, fval, args, args.rval()))
+            if (!JS::Call(cx, thisVal, fval, args, args.rval()))
                 return false;
         }
     }

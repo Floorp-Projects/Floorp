@@ -184,7 +184,7 @@ LIRGenerator::visitTableSwitch(MTableSwitch* tableswitch)
 void
 LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed* ins)
 {
-    LCheckOverRecursed* lir = new(alloc()) LCheckOverRecursed(temp());
+    LCheckOverRecursed* lir = new(alloc()) LCheckOverRecursed();
     add(lir, ins);
     assignSafepoint(lir, ins);
 }
@@ -2733,7 +2733,7 @@ LIRGenerator::visitHomeObjectSuperBase(MHomeObjectSuperBase* ins)
 void
 LIRGenerator::visitInterruptCheck(MInterruptCheck* ins)
 {
-    LInstruction* lir = new(alloc()) LInterruptCheck(temp());
+    LInstruction* lir = new(alloc()) LInterruptCheck();
     add(lir, ins);
     assignSafepoint(lir, ins);
 }

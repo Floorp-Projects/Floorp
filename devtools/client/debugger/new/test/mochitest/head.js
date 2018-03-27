@@ -259,7 +259,7 @@ function waitForSelectedSource(dbg, url) {
       }
 
       const newSource = findSource(dbg, url, { silent: true });
-      if (newSource.id != source.get("id")) {
+      if (newSource.id != source.id) {
         return false;
       }
 
@@ -314,7 +314,7 @@ function assertDebugLine(dbg, line) {
   const lineInfo = getCM(dbg).lineInfo(line - 1);
   const source = dbg.selectors.getSelectedSource(dbg.getState());
   if (source && source.get("loadedState") == "loading") {
-    const url = source.get("url");
+    const url = source.url;
     ok(
       false,
       `Looks like the source ${url} is still loading. Try adding waitForLoadedSource in the test.`
@@ -466,7 +466,7 @@ function isSelectedFrameSelected(dbg, state) {
     return false;
   }
 
-  return source.get("id") == sourceId;
+  return source.id == sourceId;
 }
 
 function createDebuggerContext(toolbox) {

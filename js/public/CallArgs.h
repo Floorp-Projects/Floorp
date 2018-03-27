@@ -345,49 +345,4 @@ CallArgsFromSp(unsigned stackSlots, Value* sp, bool constructing = false,
 
 } // namespace JS
 
-/*
- * Macros to hide interpreter stack layout details from a JSNative using its
- * JS::Value* vp parameter.  DO NOT USE THESE!  Instead use JS::CallArgs and
- * friends, above.  These macros will be removed when we change JSNative to
- * take a const JS::CallArgs&.
- */
-
-/*
- * Return |this| if |this| is an object.  Otherwise, return the global object
- * if |this| is null or undefined, and finally return a boxed version of any
- * other primitive.
- *
- * Note: if this method returns null, an error has occurred and must be
- * propagated or caught.
- */
-MOZ_ALWAYS_INLINE JS::Value
-JS_THIS(JSContext* cx, JS::Value* vp)
-{
-    return vp[1].isPrimitive() ? JS::detail::ComputeThis(cx, vp) : vp[1];
-}
-
-/*
- * A note on JS_THIS_OBJECT: no equivalent method is part of the CallArgs
- * interface, and we're unlikely to add one (functions shouldn't be implicitly
- * exposing the global object to arbitrary callers).  Continue using |vp|
- * directly for this case, but be aware this API will eventually be replaced
- * with a function that operates directly upon |args.thisv()|.
- */
-#define JS_THIS_OBJECT(cx,vp)   (JS_THIS(cx,vp).toObjectOrNull())
-
-/*
- * |this| is passed to functions in ES5 without change.  Functions themselves
- * do any post-processing they desire to box |this|, compute the global object,
- * &c.  This macro retrieves a function's unboxed |this| value.
- *
- * This macro must not be used in conjunction with JS_THIS or JS_THIS_OBJECT,
- * or vice versa.  Either use the provided this value with this macro, or
- * compute the boxed |this| value using those.  JS_THIS_VALUE must not be used
- * if the function is being called as a constructor.
- *
- * But: DO NOT USE THIS!  Instead use JS::CallArgs::thisv(), above.
- *
- */
-#define JS_THIS_VALUE(cx,vp)    ((vp)[1])
-
 #endif /* js_CallArgs_h */

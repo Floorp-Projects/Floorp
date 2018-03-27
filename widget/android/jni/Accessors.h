@@ -16,15 +16,15 @@ namespace detail {
 // Helper class to convert an arbitrary type to a jvalue, e.g. Value(123).val.
 struct Value
 {
-    Value(jboolean z) { val.z = z; }
-    Value(jbyte b)    { val.b = b; }
-    Value(jchar c)    { val.c = c; }
-    Value(jshort s)   { val.s = s; }
-    Value(jint i)     { val.i = i; }
-    Value(jlong j)    { val.j = j; }
-    Value(jfloat f)   { val.f = f; }
-    Value(jdouble d)  { val.d = d; }
-    Value(jobject l)  { val.l = l; }
+    explicit Value(jboolean z) { val.z = z; }
+    explicit Value(jbyte b)    { val.b = b; }
+    explicit Value(jchar c)    { val.c = c; }
+    explicit Value(jshort s)   { val.s = s; }
+    explicit Value(jint i)     { val.i = i; }
+    explicit Value(jlong j)    { val.j = j; }
+    explicit Value(jfloat f)   { val.f = f; }
+    explicit Value(jdouble d)  { val.d = d; }
+    explicit Value(jobject l)  { val.l = l; }
 
     jvalue val;
 };

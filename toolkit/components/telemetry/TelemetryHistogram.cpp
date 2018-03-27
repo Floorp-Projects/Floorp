@@ -1193,21 +1193,22 @@ internal_JSHistogram_CoerceValue(JSContext* aCx, JS::Handle<JS::Value> aElement,
 bool
 internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  MOZ_ASSERT(obj);
-  if (!obj ||
-      JS_GetClass(obj) != &sJSHistogramClass) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.thisv().isObject() ||
+      JS_GetClass(&args.thisv().toObject()) != &sJSHistogramClass) {
     JS_ReportErrorASCII(cx, "Wrong JS class, expected JSHistogram class");
     return false;
   }
 
+  JSObject* obj = &args.thisv().toObject();
   JSHistogramData* data = static_cast<JSHistogramData*>(JS_GetPrivate(obj));
   MOZ_ASSERT(data);
   HistogramID id = data->histogramId;
   MOZ_ASSERT(internal_IsHistogramEnumId(id));
   uint32_t type = gHistogramInfos[id].histogramType;
 
-  JS::CallArgs args = CallArgsFromVp(argc, vp);
+
   // This function should always return |undefined| and never fail but
   // rather report failures using the console.
   args.rval().setUndefined();
@@ -1291,13 +1292,14 @@ bool
 internal_JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj ||
-      JS_GetClass(obj) != &sJSHistogramClass) {
+
+  if (!args.thisv().isObject() ||
+      JS_GetClass(&args.thisv().toObject()) != &sJSHistogramClass) {
     JS_ReportErrorASCII(cx, "Wrong JS class, expected JSHistogram class");
     return false;
   }
 
+  JSObject* obj = &args.thisv().toObject();
   JSHistogramData* data = static_cast<JSHistogramData*>(JS_GetPrivate(obj));
   MOZ_ASSERT(data);
   HistogramID id = data->histogramId;
@@ -1341,18 +1343,19 @@ internal_JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
 bool
 internal_JSHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj ||
-      JS_GetClass(obj) != &sJSHistogramClass) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (!args.thisv().isObject() ||
+      JS_GetClass(&args.thisv().toObject()) != &sJSHistogramClass) {
     JS_ReportErrorASCII(cx, "Wrong JS class, expected JSHistogram class");
     return false;
   }
 
+  JSObject* obj = &args.thisv().toObject();
   JSHistogramData* data = static_cast<JSHistogramData*>(JS_GetPrivate(obj));
   MOZ_ASSERT(data);
 
   bool onlySubsession = false;
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   // This function should always return |undefined| and never fail but
   // rather report failures using the console.
   args.rval().setUndefined();
@@ -1467,19 +1470,20 @@ internal_KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc,
                                      JS::Value *vp,
                                      bool subsession, bool clearSubsession)
 {
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj ||
-      JS_GetClass(obj) != &sJSKeyedHistogramClass) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (!args.thisv().isObject() ||
+      JS_GetClass(&args.thisv().toObject()) != &sJSKeyedHistogramClass) {
     JS_ReportErrorASCII(cx, "Wrong JS class, expected JSKeyedHistogram class");
     return false;
   }
 
+  JSObject *obj = &args.thisv().toObject();
   JSHistogramData* data = static_cast<JSHistogramData*>(JS_GetPrivate(obj));
   MOZ_ASSERT(data);
   HistogramID id = data->histogramId;
   MOZ_ASSERT(internal_IsHistogramEnumId(id));
 
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   // This function should always return |undefined| and never fail but
   // rather report failures using the console.
   args.rval().setUndefined();
@@ -1544,19 +1548,20 @@ internal_KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc,
 bool
 internal_JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj ||
-      JS_GetClass(obj) != &sJSKeyedHistogramClass) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (!args.thisv().isObject() ||
+      JS_GetClass(&args.thisv().toObject()) != &sJSKeyedHistogramClass) {
     JS_ReportErrorASCII(cx, "Wrong JS class, expected JSKeyedHistogram class");
     return false;
   }
 
+  JSObject *obj = &args.thisv().toObject();
   JSHistogramData* data = static_cast<JSHistogramData*>(JS_GetPrivate(obj));
   MOZ_ASSERT(data);
   HistogramID id = data->histogramId;
   MOZ_ASSERT(internal_IsHistogramEnumId(id));
 
-  JS::CallArgs args = CallArgsFromVp(argc, vp);
   // This function should always return |undefined| and never fail but
   // rather report failures using the console.
   args.rval().setUndefined();
@@ -1625,13 +1630,15 @@ internal_JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
 bool
 internal_JSKeyedHistogram_Keys(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj ||
-      JS_GetClass(obj) != &sJSKeyedHistogramClass) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (!args.thisv().isObject() ||
+      JS_GetClass(&args.thisv().toObject()) != &sJSKeyedHistogramClass) {
     JS_ReportErrorASCII(cx, "Wrong JS class, expected JSKeyedHistogram class");
     return false;
   }
 
+  JSObject *obj = &args.thisv().toObject();
   JSHistogramData* data = static_cast<JSHistogramData*>(JS_GetPrivate(obj));
   MOZ_ASSERT(data);
   HistogramID id = data->histogramId;
@@ -1652,7 +1659,6 @@ internal_JSKeyedHistogram_Keys(JSContext *cx, unsigned argc, JS::Value *vp)
     return false;
   }
 
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   return NS_SUCCEEDED(keyed->GetJSKeys(cx, args));
 }
 
@@ -1689,18 +1695,19 @@ internal_JSKeyedHistogram_SnapshotSubsessionAndClear(JSContext *cx,
 bool
 internal_JSKeyedHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj ||
-      JS_GetClass(obj) != &sJSKeyedHistogramClass) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (!args.thisv().isObject() ||
+      JS_GetClass(&args.thisv().toObject()) != &sJSKeyedHistogramClass) {
     JS_ReportErrorASCII(cx, "Wrong JS class, expected JSKeyedHistogram class");
     return false;
   }
 
+  JSObject *obj = &args.thisv().toObject();
   JSHistogramData* data = static_cast<JSHistogramData*>(JS_GetPrivate(obj));
   MOZ_ASSERT(data);
   HistogramID id = data->histogramId;
 
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   // This function should always return |undefined| and never fail but
   // rather report failures using the console.
   args.rval().setUndefined();

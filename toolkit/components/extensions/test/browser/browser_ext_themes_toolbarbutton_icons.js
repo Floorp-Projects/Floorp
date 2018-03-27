@@ -41,7 +41,7 @@ add_task(async function test_icons_properties() {
   let starComputedStyle = window.getComputedStyle(starButton);
   Assert.equal(
     starComputedStyle.getPropertyValue("--lwt-toolbarbutton-icon-fill-attention"),
-    ICONS_ATTENTION_COLOR,
+    `rgb(${hexToRGB(ICONS_ATTENTION_COLOR).join(", ")})`,
     "Variable is properly set"
   );
   Assert.equal(
@@ -101,4 +101,3 @@ add_task(async function test_no_icons_properties() {
 
   await extension.unload();
 });
-
