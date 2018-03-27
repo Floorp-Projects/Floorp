@@ -175,6 +175,10 @@ RtpPacketSinkInterface* RtpDemuxer::ResolveSink(
   }
   uint32_t ssrc = packet.Ssrc();
 
+  // Mid support is half-baked in branch 64. RtpStreamReceiverController only
+  // supports adding sinks by ssrc, so our mids will never show up in
+  // known_mids_, causing us to drop packets here.
+#if 0
   // The BUNDLE spec says to drop any packets with unknown MIDs, even if the
   // SSRC is known/latched.
   if (has_mid && known_mids_.find(packet_mid) == known_mids_.end()) {
@@ -248,6 +252,7 @@ RtpPacketSinkInterface* RtpDemuxer::ResolveSink(
     }
   }
 
+#endif
   // We trust signaled SSRC more than payload type which is likely to conflict
   // between streams.
   const auto ssrc_sink_it = sink_by_ssrc_.find(ssrc);
