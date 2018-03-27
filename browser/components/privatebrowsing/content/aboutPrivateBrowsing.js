@@ -33,7 +33,6 @@ document.addEventListener("DOMContentLoaded", function() {
   if (!aboutCapabilities.isWindowPrivate()) {
     document.documentElement.classList.remove("private");
     document.documentElement.classList.add("normal");
-    document.title = document.querySelector("title").getAttribute("notprivatetitle");
     document.getElementById("favicon").setAttribute("href", FAVICON_QUESTION);
     document.getElementById("startPrivateBrowsing").addEventListener("click", function() {
       aboutCapabilities.sendAsyncMessage("OpenPrivateWindow", null);
