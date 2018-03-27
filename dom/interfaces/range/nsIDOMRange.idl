@@ -22,7 +22,6 @@ interface nsIDOMRange : nsISupports
   void               setEndBefore(in nsIDOMNode refNode);
   void               setEndAfter(in nsIDOMNode refNode);
 
-  void               deleteContents();
   nsIDOMDocumentFragment extractContents();
   nsIDOMDocumentFragment cloneContents();
   void               insertNode(in nsIDOMNode newNode);
