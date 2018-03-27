@@ -258,22 +258,6 @@ public:
 
 #undef GETTER
 
-    const auto& ColorAttachment0() const {
-        return mColorAttachments[0];
-    }
-
-    const auto& AnyDepthAttachment() const {
-        if (mDepthStencilAttachment.IsDefined())
-            return mDepthStencilAttachment;
-        return mDepthAttachment;
-    }
-
-    const auto& AnyStencilAttachment() const {
-        if (mDepthStencilAttachment.IsDefined())
-            return mDepthStencilAttachment;
-        return mStencilAttachment;
-    }
-
     ////////////////
     // Invalidation
 
