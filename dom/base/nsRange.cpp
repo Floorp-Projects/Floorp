@@ -2401,12 +2401,6 @@ nsRange::CutContents(DocumentFragment** aFragment)
   return rv;
 }
 
-NS_IMETHODIMP
-nsRange::DeleteContents()
-{
-  return CutContents(nullptr);
-}
-
 void
 nsRange::DeleteContents(ErrorResult& aRv)
 {
