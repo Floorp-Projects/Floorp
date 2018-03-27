@@ -88,13 +88,8 @@ GetTopProfilingJitFrame(Activation* act)
 void
 GeckoProfilerRuntime::enable(bool enabled)
 {
-#ifdef DEBUG
-    // All cooperating contexts must have profile stacks installed before the
-    // profiler can be enabled. Cooperating threads created while the profiler
-    // is enabled must have stacks set before they execute any JS.
-    for (const CooperatingContext& target : rt->cooperatingContexts())
-        MOZ_ASSERT(target.context()->geckoProfiler().installed());
-#endif
+    JSContext* cx = rt->mainContextFromAnyThread();
+    MOZ_ASSERT(cx->geckoProfiler().installed());
 
     if (enabled_ == enabled)
         return;
@@ -112,12 +107,10 @@ GeckoProfilerRuntime::enable(bool enabled)
         rt->jitRuntime()->getJitcodeGlobalTable()->setAllEntriesAsExpired();
     rt->setProfilerSampleBufferRangeStart(0);
 
-    // Ensure that lastProfilingFrame is null for all threads before 'enabled' becomes true.
-    for (const CooperatingContext& target : rt->cooperatingContexts()) {
-        if (target.context()->jitActivation) {
-            target.context()->jitActivation->setLastProfilingFrame(nullptr);
-            target.context()->jitActivation->setLastProfilingCallSite(nullptr);
-        }
+    // Ensure that lastProfilingFrame is null for the main thread.
+    if (cx->jitActivation) {
+        cx->jitActivation->setLastProfilingFrame(nullptr);
+        cx->jitActivation->setLastProfilingCallSite(nullptr);
     }
 
     enabled_ = enabled;
@@ -132,28 +125,26 @@ GeckoProfilerRuntime::enable(bool enabled)
     /* Update lastProfilingFrame to point to the top-most JS jit-frame currently on
      * stack.
      */
-    for (const CooperatingContext& target : rt->cooperatingContexts()) {
-        if (target.context()->jitActivation) {
-            // Walk through all activations, and set their lastProfilingFrame appropriately.
-            if (enabled) {
-                Activation* act = target.context()->activation();
-                void* lastProfilingFrame = GetTopProfilingJitFrame(act);
+    if (cx->jitActivation) {
+        // Walk through all activations, and set their lastProfilingFrame appropriately.
+        if (enabled) {
+            Activation* act = cx->activation();
+            void* lastProfilingFrame = GetTopProfilingJitFrame(act);
 
-                jit::JitActivation* jitActivation = target.context()->jitActivation;
-                while (jitActivation) {
-                    jitActivation->setLastProfilingFrame(lastProfilingFrame);
-                    jitActivation->setLastProfilingCallSite(nullptr);
+            jit::JitActivation* jitActivation = cx->jitActivation;
+            while (jitActivation) {
+                jitActivation->setLastProfilingFrame(lastProfilingFrame);
+                jitActivation->setLastProfilingCallSite(nullptr);
 
-                    jitActivation = jitActivation->prevJitActivation();
-                    lastProfilingFrame = GetTopProfilingJitFrame(jitActivation);
-                }
-            } else {
-                jit::JitActivation* jitActivation = target.context()->jitActivation;
-                while (jitActivation) {
-                    jitActivation->setLastProfilingFrame(nullptr);
-                    jitActivation->setLastProfilingCallSite(nullptr);
-                    jitActivation = jitActivation->prevJitActivation();
-                }
+                jitActivation = jitActivation->prevJitActivation();
+                lastProfilingFrame = GetTopProfilingJitFrame(jitActivation);
+            }
+        } else {
+            jit::JitActivation* jitActivation = cx->jitActivation;
+            while (jitActivation) {
+                jitActivation->setLastProfilingFrame(nullptr);
+                jitActivation->setLastProfilingCallSite(nullptr);
+                jitActivation = jitActivation->prevJitActivation();
             }
         }
     }
@@ -431,12 +422,8 @@ ProfileEntry::script() const
     // If profiling is supressed then we can't trust the script pointers to be
     // valid as they could be in the process of being moved by a compacting GC
     // (although it's still OK to get the runtime from them).
-    //
-    // We only need to check the active context here, as
-    // AutoSuppressProfilerSampling prohibits the runtime's active context from
-    // being changed while it exists.
-    JSContext* cx = script->runtimeFromAnyThread()->activeContext();
-    if (!cx || !cx->isProfilerSamplingEnabled())
+    JSContext* cx = script->runtimeFromAnyThread()->mainContextFromAnyThread();
+    if (!cx->isProfilerSamplingEnabled())
         return nullptr;
 
     MOZ_ASSERT(!IsForwarded(script));
@@ -490,8 +477,7 @@ js::RegisterContextProfilingEventMarker(JSContext* cx, void (*fn)(const char*))
 AutoSuppressProfilerSampling::AutoSuppressProfilerSampling(JSContext* cx
                                                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
-    previouslyEnabled_(cx->isProfilerSamplingEnabled()),
-    prohibitContextChange_(cx->runtime())
+    previouslyEnabled_(cx->isProfilerSamplingEnabled())
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (previouslyEnabled_)

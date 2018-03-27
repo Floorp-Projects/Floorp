@@ -147,7 +147,7 @@ public:
         , mInstance(Forward<InstanceType>(aInstance))
     {}
 
-    WindowEvent(Lambda&& aLambda)
+    explicit WindowEvent(Lambda&& aLambda)
         : Runnable("nsWindowEvent")
         , mLambda(mozilla::Move(aLambda))
         , mInstance(mLambda.GetThisArg())
@@ -229,7 +229,7 @@ class nsWindow::NativePtr<Impl>::Locked final : private MutexAutoLock
     Impl* const mImpl;
 
 public:
-    Locked(NativePtr<Impl>& aPtr)
+    explicit Locked(NativePtr<Impl>& aPtr)
         : MutexAutoLock(aPtr.mImplLock)
         , mImpl(aPtr.mImpl)
     {}
@@ -795,7 +795,7 @@ class nsWindow::LayerViewSupport final
             return MakeUnique<LayerViewEvent>(mozilla::Move(event));
         }
 
-        LayerViewEvent(UniquePtr<Event>&& event)
+        explicit LayerViewEvent(UniquePtr<Event>&& event)
             : nsAppShell::ProxyEvent(mozilla::Move(event))
         {}
 
@@ -978,7 +978,7 @@ public:
             LayerSession::Compositor::GlobalRef mCompositor;
 
         public:
-            OnResumedEvent(LayerSession::Compositor::GlobalRef&& aCompositor)
+            explicit OnResumedEvent(LayerSession::Compositor::GlobalRef&& aCompositor)
                 : mCompositor(mozilla::Move(aCompositor))
             {}
 

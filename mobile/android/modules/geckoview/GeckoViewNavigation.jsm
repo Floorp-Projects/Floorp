@@ -250,11 +250,6 @@ class GeckoViewNavigation extends GeckoViewModule {
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
     debug("onLocationChange");
 
-    // We're only interested in reporting top level location changes via this API.
-    if (!aWebProgress.isTopLevel) {
-      return;
-    }
-
     let fixedURI = aLocationURI;
 
     try {
@@ -266,6 +261,7 @@ class GeckoViewNavigation extends GeckoViewModule {
       uri: fixedURI.displaySpec,
       canGoBack: this.browser.canGoBack,
       canGoForward: this.browser.canGoForward,
+      isTopLevel: aWebProgress.isTopLevel,
     };
 
     debug("dispatch " + JSON.stringify(message));

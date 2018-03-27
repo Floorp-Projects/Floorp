@@ -32,14 +32,6 @@ nsSoundProxy::Play(nsIURL *aURL)
 }
 
 NS_IMETHODIMP
-nsSoundProxy::PlaySystemSound(const nsAString &aSoundAlias)
-{
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Content);
-  MOZ_ASSERT(false, "PlaySystemSound is unimplemented.");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsSoundProxy::Beep()
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Content);

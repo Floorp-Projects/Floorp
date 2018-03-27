@@ -28,6 +28,8 @@ job-defaults:
 jobs:
    firefox-linux:
       label: firefox linux partner repacks
+      attributes:
+         build_platform: linux-nightly
       worker:
          properties:
             repack_manifests_url:
@@ -40,6 +42,8 @@ jobs:
 
    firefox-linux64:
       label: firefox linux64 partner repacks
+      attributes:
+         build_platform: linux64-nightly
       worker:
          properties:
             repack_manifests_url:
@@ -52,6 +56,8 @@ jobs:
 
    firefox-macosx:
       label: firefox macosx64 partner repacks
+      attributes:
+         build_platform: macosx64-nightly
       worker:
          properties:
             repack_manifests_url:
@@ -64,6 +70,8 @@ jobs:
 
    firefox-win32:
       label: firefox win32 partner repacks
+      attributes:
+         build_platform: win32-nightly
       worker:
          properties:
             repack_manifests_url:
@@ -76,6 +84,8 @@ jobs:
 
    firefox-win64:
       label: firefox win64 partner repacks
+      attributes:
+         build_platform: win64-nightly
       worker:
          properties:
             repack_manifests_url:
@@ -88,6 +98,8 @@ jobs:
 
    firefox-macosx-eme-free:
       label: firefox macosx64 EME-free repacks
+      attributes:
+         build_platform: macosx64-nightly
       worker:
          properties:
             repack_manifests_url:
@@ -100,6 +112,8 @@ jobs:
 
    firefox-win32-eme-free:
       label: firefox win32 EME-free repacks
+      attributes:
+         build_platform: win32-nightly
       worker:
          properties:
             repack_manifests_url:
@@ -112,6 +126,8 @@ jobs:
 
    firefox-win64-eme-free:
       label: firefox win64 EME-free repacks
+      attributes:
+         build_platform: win64-nightly
       worker:
          properties:
             repack_manifests_url:

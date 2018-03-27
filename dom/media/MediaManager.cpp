@@ -1831,7 +1831,7 @@ class GetUserMediaRunnableWrapper : public Runnable
 {
 public:
   // This object must take ownership of task
-  GetUserMediaRunnableWrapper(GetUserMediaTask* task)
+  explicit GetUserMediaRunnableWrapper(GetUserMediaTask* task)
     : Runnable("GetUserMediaRunnableWrapper")
     , mTask(task) {
   }

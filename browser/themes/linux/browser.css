@@ -45,6 +45,8 @@
   --toolbar-bgimage: none;
 
   --toolbox-border-bottom-color: rgba(0,0,0,.3);
+
+  --panel-separator-color: hsla(210,4%,10%,.14);
 }
 
 #menubar-items {

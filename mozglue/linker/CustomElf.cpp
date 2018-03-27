@@ -86,7 +86,7 @@ static int p_flags_to_mprot(Word flags)
  */
 class Mappable1stPagePtr: public GenericMappedPtr<Mappable1stPagePtr> {
 public:
-  Mappable1stPagePtr(Mappable *mappable)
+  explicit Mappable1stPagePtr(Mappable *mappable)
   : GenericMappedPtr<Mappable1stPagePtr>(
       mappable->mmap(nullptr, PageSize(), PROT_READ, MAP_PRIVATE, 0))
   , mappable(mappable)

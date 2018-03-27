@@ -131,7 +131,7 @@ class AndroidUiTask : public LinkedListElement<AndroidUiTask> {
     using TimeDuration = mozilla::TimeDuration;
 
 public:
-  AndroidUiTask(already_AddRefed<nsIRunnable> aTask)
+  explicit AndroidUiTask(already_AddRefed<nsIRunnable> aTask)
     : mTask(aTask)
     , mRunTime() // Null timestamp representing no delay.
   {}

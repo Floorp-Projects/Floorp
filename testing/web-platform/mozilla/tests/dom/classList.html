@@ -10,9 +10,6 @@
 // "LOCAL MODIFICATION".  Do not change this without changing the upstream test
 // as well!  Merging upstream changes here occasionally might also be nice.
 
-// BEGIN LOCAL MODIFICATION: XUL
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-// END LOCAL MODIFICATION
 const SVG_NS = "http://www.w3.org/2000/svg";
 const XHTML_NS = "http://www.w3.org/1999/xhtml"
 const MATHML_NS = "http://www.w3.org/1998/Math/MathML";
@@ -97,11 +94,6 @@ function checkModification(e, funcName, args, expectedRes, before, after,
     }
 
     var expectedAfter = after;
-    // BEGIN LOCAL MODIFICATION: XUL returns an empty string when getting a
-    // nonexistent class attribute.
-    if (e.namespaceURI == XUL_NS && expectedAfter === null)
-      expectedAfter = "";
-    // END LOCAL MODIFICATION
 
     assert_equals(e.getAttribute("class"), expectedAfter,
                   "wrong class after modification");
@@ -519,12 +511,6 @@ testClassList(htmlNode, " (HTML node)");
 var xhtmlNode = document.createElementNS(XHTML_NS, "div");
 content.appendChild(xhtmlNode);
 testClassList(xhtmlNode, " (XHTML node)");
-
-// LOCAL MODIFICATION
-var xulNode = document.createElementNS(XUL_NS, "box");
-content.appendChild(xulNode);
-testClassList(xulNode, " (XUL node)");
-// END LOCAL MODIFICATION
 
 var mathMLNode = document.createElementNS(MATHML_NS, "math");
 content.appendChild(mathMLNode);

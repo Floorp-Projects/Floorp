@@ -700,13 +700,7 @@ FakeSSLStatus.prototype = {
 
 // Helper function for add_cert_override_test. Probably doesn't need to be
 // called directly.
-function add_cert_override(aHost, aExpectedBits, aExpectedErrorRegexp,
-                           aSecurityInfo) {
-  if (aExpectedErrorRegexp) {
-    info(aSecurityInfo.errorMessage);
-    Assert.ok(aExpectedErrorRegexp.test(aSecurityInfo.errorMessage),
-              "Actual error message should match expected error regexp");
-  }
+function add_cert_override(aHost, aExpectedBits, aSecurityInfo) {
   let sslstatus = aSecurityInfo.QueryInterface(Ci.nsISSLStatusProvider)
                                .SSLStatus;
   let bits =
@@ -723,17 +717,14 @@ function add_cert_override(aHost, aExpectedBits, aExpectedErrorRegexp,
                                                true);
 }
 
-// Given a host, expected error bits (see nsICertOverrideService.idl), an
-// expected error code, and optionally a regular expression that the resulting
-// error message must match, tests that an initial connection to the host fails
+// Given a host, expected error bits (see nsICertOverrideService.idl), and an
+// expected error code, tests that an initial connection to the host fails
 // with the expected errors and that adding an override results in a subsequent
 // connection succeeding.
 function add_cert_override_test(aHost, aExpectedBits, aExpectedError,
-                                aExpectedErrorRegexp = undefined,
                                 aExpectedSSLStatus = undefined) {
   add_connection_test(aHost, aExpectedError, null,
-                      add_cert_override.bind(this, aHost, aExpectedBits,
-                                             aExpectedErrorRegexp));
+                      add_cert_override.bind(this, aHost, aExpectedBits));
   add_connection_test(aHost, PRErrorCodeSuccess, null, aSecurityInfo => {
     Assert.ok(aSecurityInfo.securityState &
               Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN,

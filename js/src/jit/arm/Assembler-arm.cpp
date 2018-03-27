@@ -715,7 +715,7 @@ class RelocationIterator
     uint32_t offset_;
 
   public:
-    RelocationIterator(CompactBufferReader& reader)
+    explicit RelocationIterator(CompactBufferReader& reader)
       : reader_(reader)
     { }
 
@@ -2822,7 +2822,7 @@ struct PoolHeader : Instruction
             ONES(0xffff)
         { }
 
-        Header(const Instruction* i) {
+        explicit Header(const Instruction* i) {
             JS_STATIC_ASSERT(sizeof(Header) == sizeof(uint32_t));
             memcpy(this, i, sizeof(Header));
             MOZ_ASSERT(ONES == 0xffff);

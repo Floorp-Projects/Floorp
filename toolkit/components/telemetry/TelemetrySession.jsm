@@ -1678,16 +1678,16 @@ var Impl = {
   },
 
    /**
-    * Save both the "saved-session" and the "shutdown" pings to disk.
+    * On Desktop: Save the "shutdown" ping to disk.
+    * On Android: Save the "saved-session" ping to disk.
     * This needs to be called after TelemetrySend shuts down otherwise pings
     * would be sent instead of getting persisted to disk.
     */
   saveShutdownPings() {
     this._log.trace("saveShutdownPings");
 
-    // We don't wait for "shutdown" pings to be written to disk before gathering the
-    // "saved-session" payload. Instead we append the promises to this list and wait
-    // on both to be saved after kicking off their collection.
+    // We append the promises to this list and wait
+    // on all pings to be saved after kicking off their collection.
     let p = [];
 
     if (IS_UNIFIED_TELEMETRY) {
@@ -1727,9 +1727,7 @@ var Impl = {
       }
     }
 
-    // As a temporary measure, we want to submit saved-session too if extended Telemetry is enabled
-    // to keep existing performance analysis working.
-    if (Telemetry.canRecordExtended) {
+    if (AppConstants.platform == "android" && Telemetry.canRecordExtended) {
       let payload = this.getSessionPayload(REASON_SAVED_SESSION, false);
 
       let options = {
@@ -1830,7 +1828,6 @@ var Impl = {
       // content-child-shutdown is only registered for content processes.
       this.uninstall();
       Telemetry.flushBatchedChildTelemetry();
-      this.sendContentProcessPing(REASON_SAVED_SESSION);
       break;
     case TOPIC_CYCLE_COLLECTOR_BEGIN:
       let now = new Date();

@@ -13,6 +13,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
 #include "mozilla/NSPRLogModulesParser.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/WindowsVersion.h"
@@ -50,6 +51,9 @@ static UniquePtr<nsString> sUserExtensionsDevDir;
 static UniquePtr<nsString> sUserExtensionsDir;
 #endif
 
+// Cached prefs which are needed off main thread.
+static bool sGmpWin32kDisable = false;
+
 static LazyLogModule sSandboxBrokerLog("SandboxBroker");
 
 #define LOG_E(...) MOZ_LOG(sSandboxBrokerLog, LogLevel::Error, (__VA_ARGS__))
@@ -64,22 +68,7 @@ SandboxBroker::Initialize(sandbox::BrokerServices* aBrokerServices)
 {
   sBrokerService = aBrokerServices;
 
-  wchar_t exePath[MAX_PATH];
-  if (!::GetModuleFileNameW(nullptr, exePath, MAX_PATH)) {
-    return;
-  }
-
-  std::wstring exeString(exePath);
-  if (!widget::WinUtils::ResolveJunctionPointsAndSymLinks(exeString)) {
-    return;
-  }
-
-  wchar_t volPath[MAX_PATH];
-  if (!::GetVolumePathNameW(exeString.c_str(), volPath, MAX_PATH)) {
-    return;
-  }
-
-  sRunningFromNetworkDrive = (::GetDriveTypeW(volPath) == DRIVE_REMOTE);
+  sRunningFromNetworkDrive = widget::WinUtils::RunningFromANetworkDrive();
 }
 
 static void
@@ -137,6 +126,10 @@ SandboxBroker::GeckoDependentInitialize()
   // main thread.
   sLaunchErrors = MakeUnique<nsTHashtable<nsCStringHashKey>>();
   ClearOnShutdown(&sLaunchErrors);
+
+  // Cache prefs that are needed off main thread.
+  Preferences::AddBoolVarCache(&sGmpWin32kDisable,
+                               "security.sandbox.gmp.win32k-disable");
 }
 
 SandboxBroker::SandboxBroker()
@@ -953,6 +946,15 @@ SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel)
     sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
     sandbox::MITIGATION_DEP_NO_ATL_THUNK |
     sandbox::MITIGATION_DEP;
+
+  // Chromium only implements win32k disable for PPAPI on Win10 or later,
+  // believed to be due to the interceptions required for OPM.
+  if (sGmpWin32kDisable && IsWin10OrLater()) {
+    mitigations |= sandbox::MITIGATION_WIN32K_DISABLE;
+    result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_WIN32K_LOCKDOWN,
+                              sandbox::TargetPolicy::IMPLEMENT_OPM_APIS, nullptr);
+    SANDBOX_ENSURE_SUCCESS(result, "Failed to set OPM policy.");
+  }
 
   result = mPolicy->SetProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result,

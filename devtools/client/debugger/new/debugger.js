@@ -2340,7 +2340,7 @@ function shouldPrettyPrint(source) {
   }
   const _isPretty = isPretty(source);
   const _isJavaScript = isJavaScript(source);
-  const isOriginal = (0, _devtoolsSourceMap.isOriginalId)(source.get("id"));
+  const isOriginal = (0, _devtoolsSourceMap.isOriginalId)(source.id);
   const hasSourceMap = source.get("sourceMapURL");
 
   if (_isPretty || isOriginal || hasSourceMap || !_isJavaScript) {
@@ -2361,8 +2361,8 @@ function shouldPrettyPrint(source) {
  * @static
  */
 function isJavaScript(source) {
-  const url = source.get("url");
-  const contentType = source.get("contentType");
+  const url = source.url;
+  const contentType = source.contentType;
   return url && /\.(jsm|js)?$/.test(trimUrlQuery(url)) || !!(contentType && contentType.includes("javascript"));
 }
 
@@ -2371,7 +2371,7 @@ function isJavaScript(source) {
  * @static
  */
 function isPretty(source) {
-  const url = source.get("url");
+  const url = source.url;
   return isPrettyURL(url);
 }
 
@@ -2380,7 +2380,7 @@ function isPrettyURL(url) {
 }
 
 function isThirdParty(source) {
-  const url = source.get("url");
+  const url = source.url;
   if (!source || !url) {
     return false;
   }
@@ -2695,7 +2695,6 @@ exports.toEditorPosition = toEditorPosition;
 exports.toEditorRange = toEditorRange;
 exports.toSourceLine = toSourceLine;
 exports.scrollToColumn = scrollToColumn;
-exports.toSourceLocation = toSourceLocation;
 exports.markText = markText;
 exports.lineAtHeight = lineAtHeight;
 exports.getSourceLocationFromMouseEvent = getSourceLocationFromMouseEvent;
@@ -2794,13 +2793,6 @@ function isVisible(codeMirror, top, left) {
   const inYView = withinBounds(top, scrollArea.top, scrollArea.top + scrollArea.clientHeight - fontHeight);
 
   return inXView && inYView;
-}
-
-function toSourceLocation(sourceId, location) {
-  return {
-    line: toSourceLine(sourceId, location.line),
-    column: (0, _wasm.isWasm)(sourceId) ? undefined : location.column
-  };
 }
 
 function markText(editor, className, { start, end }) {
@@ -3733,11 +3725,11 @@ function getNewSelectedSourceId(state, availableTabs) {
     return "";
   }
 
-  const tabUrls = state.sources.tabs.toJS();
+  const tabUrls = state.sources.tabs;
   const leftNeighborIndex = Math.max(tabUrls.indexOf(selectedTabUrl) - 1, 0);
   const lastAvailbleTabIndex = availableTabs.size - 1;
   const newSelectedTabIndex = Math.min(leftNeighborIndex, lastAvailbleTabIndex);
-  const availableTab = availableTabs.toJS()[newSelectedTabIndex];
+  const availableTab = availableTabs.get(newSelectedTabIndex);
   const tabSource = getSourceByUrlInSources(state.sources.sources, availableTab);
 
   if (tabSource) {
@@ -4918,7 +4910,7 @@ function hasSymbols(state, source) {
     return false;
   }
 
-  return !symbols.loading;
+  return !symbols.hasOwnProperty("loading");
 }
 
 function isSymbolsLoading(state, source) {
@@ -4927,7 +4919,7 @@ function isSymbolsLoading(state, source) {
     return false;
   }
 
-  return !!symbols.loading;
+  return symbols.hasOwnProperty("loading");
 }
 
 function isEmptyLineInSource(state, line, selectedSource) {
@@ -6326,7 +6318,7 @@ function deleteExpression(expression) {
  */
 function evaluateExpressions() {
   return async function ({ dispatch, getState, client }) {
-    const expressions = (0, _selectors.getExpressions)(getState()).toJS();
+    const expressions = (0, _selectors.getExpressions)(getState());
     for (const expression of expressions) {
       await dispatch(evaluateExpression(expression));
     }
@@ -7738,7 +7730,10 @@ function containsPosition(a, b) {
 
 function findClosestScope(functions, location) {
   return functions.reduce((found, currNode) => {
-    if (currNode.name === "anonymous" || !containsPosition(currNode.location, location)) {
+    if (currNode.name === "anonymous" || !containsPosition(currNode.location, {
+      line: location.line,
+      column: location.column || 0
+    })) {
       return found;
     }
 
@@ -9031,7 +9026,7 @@ async function prettyPrint({ source, url }) {
   return await _prettyPrint({
     url,
     indent,
-    sourceText: source.get("text")
+    sourceText: source.text
   });
 }
 
@@ -9135,10 +9130,10 @@ function searchSources(query) {
     await dispatch(addSearchQuery(query));
     dispatch(updateSearchStatus(_projectTextSearch.statusType.fetching));
     const sources = (0, _selectors.getSources)(getState());
-    const validSources = sources.valueSeq().filter(source => !(0, _selectors.hasPrettySource)(getState(), source.get("id")) && !(0, _source.isThirdParty)(source));
+    const validSources = sources.valueSeq().filter(source => !(0, _selectors.hasPrettySource)(getState(), source.id) && !(0, _source.isThirdParty)(source));
     for (const source of validSources) {
       await dispatch((0, _sources.loadSourceText)(source));
-      await dispatch(searchSource(source.get("id"), query));
+      await dispatch(searchSource(source.id, query));
     }
     dispatch(updateSearchStatus(_projectTextSearch.statusType.done));
   };
@@ -13532,7 +13527,7 @@ function createSyncData(id, pendingBreakpoint, location, generatedLocation, prev
 async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pendingBreakpoint) {
   (0, _breakpoint.assertPendingBreakpoint)(pendingBreakpoint);
 
-  const source = (0, _selectors.getSource)(getState(), sourceId).toJS();
+  const source = (0, _selectors.getSource)(getState(), sourceId);
   const generatedSourceId = sourceMaps.isOriginalId(sourceId) ? (0, _devtoolsSourceMap.originalToGeneratedId)(sourceId) : sourceId;
 
   const { location, astLocation } = pendingBreakpoint;
@@ -13540,7 +13535,7 @@ async function syncClientBreakpoint(getState, client, sourceMaps, sourceId, pend
 
   const scopedLocation = await makeScopedLocation(astLocation, previousLocation, source);
 
-  const scopedGeneratedLocation = await (0, _sourceMaps.getGeneratedLocation)(getState(), source, scopedLocation, sourceMaps);
+  const scopedGeneratedLocation = await (0, _sourceMaps.getGeneratedLocation)(getState(), source.toJS(), scopedLocation, sourceMaps);
 
   // this is the generatedLocation of the pending breakpoint, with
   // the source id updated to reflect the new connection
@@ -13634,7 +13629,7 @@ function SearchState() {
  * @memberof utils/source-search
  * @static
  */
-function getSearchState(cm, query, modifiers) {
+function getSearchState(cm, query) {
   const state = cm.state.search || (cm.state.search = new SearchState());
   return state;
 }
@@ -13740,11 +13735,11 @@ function doSearch(ctx, rev, query, keepSelection, modifiers) {
 
   return cm.operation(function () {
     if (!query || isWhitespace(query)) {
-      clearSearch(cm, query, modifiers);
+      clearSearch(cm, query);
       return;
     }
 
-    const state = getSearchState(cm, query, modifiers);
+    const state = getSearchState(cm, query);
     const isNewQuery = state.query !== query;
     state.query = query;
 
@@ -13774,7 +13769,7 @@ function searchNext(ctx, rev, query, newQuery, modifiers) {
   const { cm, ed } = ctx;
   let nextMatch;
   cm.operation(function () {
-    const state = getSearchState(cm, query, modifiers);
+    const state = getSearchState(cm, query);
     const pos = getCursorPos(newQuery, rev, state);
 
     if (!state.query) {
@@ -13811,8 +13806,8 @@ function searchNext(ctx, rev, query, newQuery, modifiers) {
  * @memberof utils/source-search
  * @static
  */
-function removeOverlay(ctx, query, modifiers) {
-  const state = getSearchState(ctx.cm, query, modifiers);
+function removeOverlay(ctx, query) {
+  const state = getSearchState(ctx.cm, query);
   ctx.cm.removeOverlay(state.overlay);
   const { line, ch } = ctx.cm.getCursor();
   ctx.cm.doc.setSelection({ line, ch }, { line, ch }, { scroll: false });
@@ -13824,8 +13819,8 @@ function removeOverlay(ctx, query, modifiers) {
  * @memberof utils/source-search
  * @static
  */
-function clearSearch(cm, query, modifiers) {
-  const state = getSearchState(cm, query, modifiers);
+function clearSearch(cm, query) {
+  const state = getSearchState(cm, query);
 
   state.results = [];
 
@@ -13843,7 +13838,7 @@ function clearSearch(cm, query, modifiers) {
  * @static
  */
 function find(ctx, query, keepSelection, modifiers) {
-  clearSearch(ctx.cm, query, modifiers);
+  clearSearch(ctx.cm, query);
   return doSearch(ctx, false, query, keepSelection, modifiers);
 }
 
@@ -14175,7 +14170,7 @@ var _ui = __webpack_require__(1385);
 function doSearch(query, editor) {
   return ({ getState, dispatch }) => {
     const selectedSource = (0, _selectors.getSelectedSource)(getState());
-    if (!selectedSource || !selectedSource.get("text")) {
+    if (!selectedSource || !selectedSource.text) {
       return;
     }
 
@@ -14214,13 +14209,13 @@ function searchContents(query, editor) {
     const modifiers = (0, _selectors.getFileSearchModifiers)(getState());
     const selectedSource = (0, _selectors.getSelectedSource)(getState());
 
-    if (!query || !editor || !selectedSource || !selectedSource.get("text") || !modifiers) {
+    if (!query || !editor || !selectedSource || !selectedSource.text || !modifiers) {
       return;
     }
 
     const ctx = { ed: editor, cm: editor.codeMirror };
     const _modifiers = modifiers.toJS();
-    const matches = await (0, _search.getMatches)(query, selectedSource.get("text"), _modifiers);
+    const matches = await (0, _search.getMatches)(query, selectedSource.text, _modifiers);
 
     const res = (0, _editor.find)(ctx, query, true, _modifiers);
     if (!res) {
@@ -14264,12 +14259,11 @@ function traverseResults(rev, editor) {
 
 function closeFileSearch(editor) {
   return ({ getState, dispatch }) => {
-    const modifiers = (0, _selectors.getFileSearchModifiers)(getState());
     const query = (0, _selectors.getFileSearchQuery)(getState());
 
-    if (editor && modifiers) {
+    if (editor) {
       const ctx = { ed: editor, cm: editor.codeMirror };
-      (0, _editor.removeOverlay)(ctx, query, modifiers.toJS());
+      (0, _editor.removeOverlay)(ctx, query);
     }
 
     dispatch(setFileSearchQuery(""));
@@ -16784,7 +16778,8 @@ var _initialiseProps = function () {
       }
 
       const sourceType = sourceTypes[(0, _sourcesTree.getExtension)(source)];
-      return _react2.default.createElement("img", { className: sourceType || "file" });
+      const classNames = (0, _classnames2.default)("source-icon", sourceType || "file");
+      return _react2.default.createElement("img", { className: classNames });
     }
 
     return _react2.default.createElement("img", { className: "folder" });
@@ -17077,7 +17072,7 @@ class Editor extends _react.PureComponent {
       } = this.props;
 
       // ignore right clicks in the gutter
-      if (ev.ctrlKey && ev.button === 0 || ev.which === 3 || selectedSource && selectedSource.get("isBlackBoxed") || !selectedSource) {
+      if (ev.ctrlKey && ev.button === 0 || ev.which === 3 || selectedSource && selectedSource.isBlackBoxed || !selectedSource) {
         return;
       }
 
@@ -17577,7 +17572,7 @@ class SourceFooter extends _react.PureComponent {
       return;
     }
 
-    const blackboxed = selectedSource.get("isBlackBoxed");
+    const blackboxed = selectedSource.isBlackBoxed;
 
     const tooltip = L10N.getStr("sourceFooter.blackbox");
     const type = "black-box";
@@ -17601,7 +17596,7 @@ class SourceFooter extends _react.PureComponent {
   blackBoxSummary() {
     const { selectedSource } = this.props;
 
-    if (!selectedSource || !selectedSource.get("isBlackBoxed")) {
+    if (!selectedSource || !selectedSource.isBlackBoxed) {
       return;
     }
 
@@ -17788,10 +17783,10 @@ class SearchBar extends _react.Component {
     };
 
     this.clearSearch = () => {
-      const { editor: ed, query, modifiers } = this.props;
-      if (ed && modifiers) {
+      const { editor: ed, query } = this.props;
+      if (ed) {
         const ctx = { ed, cm: ed.codeMirror };
-        (0, _editor.removeOverlay)(ctx, query, modifiers.toJS());
+        (0, _editor.removeOverlay)(ctx, query);
       }
     };
 
@@ -21986,7 +21981,7 @@ function getMenuItems(event, {
   const blackboxKey = L10N.getStr("sourceFooter.blackbox.accesskey");
   const blackboxLabel = L10N.getStr("sourceFooter.blackbox");
   const unblackboxLabel = L10N.getStr("sourceFooter.unblackbox");
-  const toggleBlackBoxLabel = selectedSource.get("isBlackBoxed") ? unblackboxLabel : blackboxLabel;
+  const toggleBlackBoxLabel = selectedSource.isBlackBoxed ? unblackboxLabel : blackboxLabel;
   const copyFunctionKey = L10N.getStr("copyFunction.accesskey");
   const copyFunctionLabel = L10N.getStr("copyFunction.label");
   const copySourceKey = L10N.getStr("copySource.accesskey");
@@ -22010,7 +22005,7 @@ function getMenuItems(event, {
     label: copyToClipboardLabel,
     accesskey: copyToClipboardKey,
     disabled: false,
-    click: () => (0, _clipboard.copyToTheClipboard)(selectedSource.get("text"))
+    click: () => (0, _clipboard.copyToTheClipboard)(selectedSource.text)
   };
 
   const copySourceItem = {
@@ -22026,7 +22021,7 @@ function getMenuItems(event, {
     label: copySourceUri2Label,
     accesskey: copySourceUri2Key,
     disabled: false,
-    click: () => (0, _clipboard.copyToTheClipboard)((0, _source.getRawSourceURL)(selectedSource.get("url")))
+    click: () => (0, _clipboard.copyToTheClipboard)((0, _source.getRawSourceURL)(selectedSource.url))
   };
 
   const sourceId = selectedSource.get("id");
@@ -22825,7 +22820,7 @@ function getBreakpointFilename(source) {
 
 function renderSourceLocation(source, line, column) {
   const filename = getBreakpointFilename(source);
-  const isWasm = source && source.get("isWasm");
+  const isWasm = source && source.isWasm;
   const columnVal = _prefs.features.columnBreakpoints && column ? `:${column}` : "";
   const bpLocation = isWasm ? `0x${line.toString(16).toUpperCase()}` : `${line}${columnVal}`;
 
@@ -22945,7 +22940,7 @@ function updateLocation(sources, frame, why, bp) {
   return localBP;
 }
 
-const _getBreakpoints = (0, _reselect.createSelector)(_selectors.getBreakpoints, _selectors.getSources, _selectors.getTopFrame, _selectors.getPauseReason, (breakpoints, sources, frame, why) => breakpoints.map(bp => updateLocation(sources, frame, why, bp)).filter(bp => bp.location.source && !bp.location.source.get("isBlackBoxed")));
+const _getBreakpoints = (0, _reselect.createSelector)(_selectors.getBreakpoints, _selectors.getSources, _selectors.getTopFrame, _selectors.getPauseReason, (breakpoints, sources, frame, why) => breakpoints.map(bp => updateLocation(sources, frame, why, bp)).filter(bp => bp.location.source && !bp.location.source.isBlackBoxed));
 
 exports.default = (0, _reactRedux.connect)((state, props) => ({ breakpoints: _getBreakpoints(state) }), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Breakpoints);
 
@@ -25001,10 +24996,10 @@ class Tabs extends _react.PureComponent {
       const { selectSource } = this.props;
       const filename = (0, _source.getFilename)(source.toJS());
 
-      const onClick = () => selectSource(source.get("id"));
+      const onClick = () => selectSpecificSource(source.id);
       return _react2.default.createElement(
         "li",
-        { key: source.get("id"), onClick: onClick },
+        { key: source.id, onClick: onClick },
         _react2.default.createElement("img", { className: `dropdown-icon ${this.getIconClass(source)}` }),
         filename
       );
@@ -25048,7 +25043,7 @@ class Tabs extends _react.PureComponent {
     const hiddenTabs = (0, _tabs.getHiddenTabs)(tabSources, sourceTabEls);
 
     if ((0, _ui.isVisible)() && hiddenTabs.indexOf(selectedSource) !== -1) {
-      return moveTab(selectedSource.get("url"), 0);
+      return moveTab(selectedSource.url, 0);
     }
 
     this.setState({ hiddenTabs });
@@ -25064,7 +25059,7 @@ class Tabs extends _react.PureComponent {
     if ((0, _source.isPretty)(source)) {
       return "prettyPrint";
     }
-    if (source.get("isBlackBoxed")) {
+    if (source.isBlackBoxed) {
       return "blackBox";
     }
     return "file";
@@ -25661,7 +25656,7 @@ function mapScopes(scopes, frame) {
 
     const sourceRecord = (0, _selectors.getSource)(getState(), frame.location.sourceId);
 
-    const shouldMapScopes = _prefs.features.mapScopes && !generatedSourceRecord.get("isWasm") && !sourceRecord.get("isPrettyPrinted") && !(0, _devtoolsSourceMap.isGeneratedId)(frame.location.sourceId);
+    const shouldMapScopes = _prefs.features.mapScopes && !generatedSourceRecord.isWasm && !sourceRecord.isPrettyPrinted && !(0, _devtoolsSourceMap.isGeneratedId)(frame.location.sourceId);
 
     await dispatch({
       type: "MAP_SCOPES",
@@ -26108,7 +26103,7 @@ function formatSymbol(symbol) {
 }
 
 function formatSymbols(symbols) {
-  if (!symbols) {
+  if (!symbols || symbols.loading) {
     return { variables: [], functions: [] };
   }
 
@@ -26138,13 +26133,13 @@ function formatShortcutResults() {
 
 function formatSources(sources) {
   return sources.valueSeq().filter(source => !(0, _source.isPretty)(source)).map(source => {
-    const sourcePath = (0, _source.getSourcePath)(source.get("url"));
+    const sourcePath = (0, _source.getSourcePath)(source.url);
     return {
       value: sourcePath,
-      title: sourcePath.split("/").pop(),
-      subtitle: (0, _utils.endTruncateStr)(sourcePath, 100),
-      id: source.get("id"),
-      url: source.get("url")
+      title: sourcePath.split("/").pop().split("?")[0],
+      subtitle: (0, _utils.endTruncateStr)(sourcePath, 100).replace(sourcePath.split("/").pop(), "").slice(1, -1),
+      id: source.id,
+      url: source.url
     };
   }).filter(({ value }) => value != "").toJS();
 }
@@ -26839,9 +26834,9 @@ var _commands = __webpack_require__(1637);
 
 function continueToHere(line) {
   return async function ({ dispatch, getState }) {
-    const source = (0, _selectors.getSelectedSource)(getState()).toJS();
+    const selectedSource = (0, _selectors.getSelectedSource)(getState());
 
-    if (!(0, _selectors.isPaused)(getState())) {
+    if (!(0, _selectors.isPaused)(getState()) || !selectedSource) {
       return;
     }
 
@@ -26856,7 +26851,7 @@ function continueToHere(line) {
     await dispatch((0, _breakpoints.addHiddenBreakpoint)({
       line,
       column: undefined,
-      sourceId: source.id
+      sourceId: selectedSource.id
     }));
 
     dispatch(action());
@@ -27395,9 +27390,7 @@ class QuickOpenModal extends _react.Component {
       return results.map(result => {
         return _extends({}, result, {
           title: this.renderHighlight(result.title, (0, _path.basename)(newQuery), "title")
-        }, result.subtitle != null && !this.isSymbolSearch() ? {
-          subtitle: this.renderHighlight(result.subtitle, newQuery, "subtitle")
-        } : null);
+        });
       });
     };
 
@@ -29892,8 +29885,8 @@ const CHARACTER_LIMIT = 250;
 const _minifiedCache = new Map();
 
 function isMinified(source) {
-  if (_minifiedCache.has(source.get("id"))) {
-    return _minifiedCache.get(source.get("id"));
+  if (_minifiedCache.has(source.id)) {
+    return _minifiedCache.get(source.id);
   }
 
   let text = source.get("text");
@@ -30281,7 +30274,7 @@ function updatePreview(target, editor) {
     }
 
     const source = (0, _selectors.getSelectedSource)(getState());
-    const symbols = (0, _selectors.getSymbols)(getState(), source.toJS());
+    const symbols = (0, _selectors.getSymbols)(getState(), source);
 
     let match;
     if (!symbols || symbols.loading) {
@@ -30295,6 +30288,11 @@ function updatePreview(target, editor) {
     }
 
     const { expression, location } = match;
+
+    if ((0, _preview.isConsole)(expression)) {
+      return;
+    }
+
     dispatch(setPreview(expression, location, tokenPos, cursorPos));
   };
 }
@@ -30930,7 +30928,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function createPrettySource(sourceId) {
   return async ({ dispatch, getState, sourceMaps }) => {
     const source = (0, _selectors.getSource)(getState(), sourceId);
-    const url = (0, _source.getPrettySourceURL)(source.get("url"));
+    const url = (0, _source.getPrettySourceURL)(source.url);
     const id = await sourceMaps.generatedToOriginalId(sourceId, url);
 
     const prettySource = {
@@ -30943,7 +30941,7 @@ function createPrettySource(sourceId) {
     dispatch({ type: "ADD_SOURCE", source: prettySource });
 
     const { code, mappings } = await (0, _prettyPrint.prettyPrint)({ source, url });
-    await sourceMaps.applySourceMap(source.get("id"), url, code, mappings);
+    await sourceMaps.applySourceMap(source.id, url, code, mappings);
 
     const loadedPrettySource = _extends({}, prettySource, {
       text: code,
@@ -30984,7 +30982,7 @@ function togglePrettyPrint(sourceId) {
     (0, _assert2.default)(sourceMaps.isGeneratedId(sourceId), "Pretty-printing only allowed on generated sources");
 
     const selectedLocation = (0, _selectors.getSelectedLocation)(getState());
-    const url = (0, _source.getPrettySourceURL)(source.get("url"));
+    const url = (0, _source.getPrettySourceURL)(source.url);
     const prettySource = (0, _selectors.getSourceByURL)(getState(), url);
 
     const options = {};
@@ -31461,7 +31459,7 @@ function selectSourceURL(url, options = {}) {
   return async ({ dispatch, getState }) => {
     const source = (0, _selectors.getSourceByURL)(getState(), url);
     if (source) {
-      const sourceId = source.get("id");
+      const sourceId = source.id;
       const location = (0, _location.createLocation)(_extends({}, options.location, { sourceId }));
       // flow is unable to comprehend that if an options.location object
       // exists, that we have a valid Location object, and if it doesnt,
@@ -31531,7 +31529,7 @@ function selectLocation(location) {
     const sourceId = selectedSource.get("id");
     if (_prefs.prefs.autoPrettyPrint && !(0, _selectors.getPrettySource)(getState(), sourceId) && (0, _source.shouldPrettyPrint)(selectedSource) && (0, _source.isMinified)(selectedSource)) {
       await dispatch((0, _prettyPrint.togglePrettyPrint)(sourceId));
-      dispatch((0, _tabs.closeTab)(source.get("url")));
+      dispatch((0, _tabs.closeTab)(source.url));
     }
 
     dispatch((0, _ast.setSymbols)(sourceId));
@@ -31889,6 +31887,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.isImmutable = isImmutable;
 exports.isReactComponent = isReactComponent;
+exports.isConsole = isConsole;
 
 
 const IMMUTABLE_FIELDS = ["_root", "__ownerID", "__altered", "__hash"]; /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -31919,6 +31918,11 @@ function isReactComponent(result) {
   }
 
   return Object.keys(ownProperties).includes("_reactInternalInstance") || Object.keys(ownProperties).includes("_reactInternalFiber");
+}
+
+function isConsole(expression) {
+  return (/^console/.test(expression)
+  );
 }
 
 /***/ }),
@@ -32781,7 +32785,7 @@ function getSourceAnnotation(source, sourceMetaData) {
   if ((0, _source.isPretty)(source)) {
     return _react2.default.createElement("img", { className: "prettyPrint" });
   }
-  if (source.get("isBlackBoxed")) {
+  if (source.isBlackBoxed) {
     return _react2.default.createElement("img", { className: "blackBox" });
   }
 }
@@ -33518,7 +33522,7 @@ class Tab extends _react.PureComponent {
     }, { item: { type: "separator" } }, {
       item: _extends({}, tabMenuItems.copyToClipboard, {
         disabled: selectedSource.get("id") !== tab,
-        click: () => (0, _clipboard.copyToTheClipboard)(sourceTab.get("text"))
+        click: () => (0, _clipboard.copyToTheClipboard)(sourceTab.text)
       })
     }, {
       item: _extends({}, tabMenuItems.copySourceUri2, {
@@ -33559,14 +33563,14 @@ class Tab extends _react.PureComponent {
     } = this.props;
     const src = source.toJS();
     const filename = (0, _source.getFilename)(src);
-    const sourceId = source.get("id");
+    const sourceId = source.id;
     const active = selectedSource && sourceId == selectedSource.get("id") && !this.isProjectSearchEnabled() && !this.isSourceSearchEnabled();
     const isPrettyCode = (0, _source.isPretty)(source);
     const sourceAnnotation = (0, _tabs.getSourceAnnotation)(source, sourceMetaData);
 
     function onClickClose(e) {
       e.stopPropagation();
-      closeTab(source.get("url"));
+      closeTab(source.url);
     }
 
     function handleTabClick(e) {
@@ -33575,7 +33579,7 @@ class Tab extends _react.PureComponent {
 
       // Accommodate middle click to close tab
       if (e.button === 1) {
-        return closeTab(source.get("url"));
+        return closeTab(source.url);
       }
 
       return selectSource(sourceId);
@@ -33614,7 +33618,7 @@ exports.default = (0, _reactRedux.connect)((state, props) => {
   return {
     tabSources: (0, _selectors.getSourcesForTabs)(state),
     selectedSource: selectedSource,
-    sourceMetaData: (0, _selectors.getSourceMetaData)(state, source.get("id")),
+    sourceMetaData: (0, _selectors.getSourceMetaData)(state, source.id),
     activeSearch: (0, _selectors.getActiveSearch)(state)
   };
 }, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Tab);
@@ -33638,10 +33642,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.getTokenLocation = getTokenLocation;
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 function getTokenLocation(codeMirror, tokenEl) {
   const { left, top, width, height } = tokenEl.getBoundingClientRect();
   const { line, ch } = codeMirror.coordsChar({
@@ -33653,7 +33653,9 @@ function getTokenLocation(codeMirror, tokenEl) {
     line: line + 1,
     column: ch
   };
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /***/ }),
 
