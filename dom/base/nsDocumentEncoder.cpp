@@ -968,7 +968,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
   if (mSelection) {
     uint32_t count = mSelection->RangeCount();
 
-    nsCOMPtr<nsIDOMNode> node, prevNode;
+    nsCOMPtr<nsINode> node, prevNode;
     uint32_t firstRangeStartDepth = 0;
     for (uint32_t i = 0; i < count; ++i) {
       RefPtr<nsRange> range = mSelection->GetRangeAt(i);
@@ -980,29 +980,27 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
       // Each separate block of <tr></tr> produced above will be wrapped by the
       // immediate context. This assumes that you can't select cells that are
       // multiple selections from two tables simultaneously.
-      range->GetStartContainer(getter_AddRefs(node));
+      node = range->GetStartContainer();
       NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
       if (node != prevNode) {
-        nsCOMPtr<nsINode> p;
         if (prevNode) {
-          p = do_QueryInterface(prevNode);
-          rv = SerializeNodeEnd(p, output);
+          rv = SerializeNodeEnd(prevNode, output);
           NS_ENSURE_SUCCESS(rv, rv);
         }
         nsCOMPtr<nsIContent> content = do_QueryInterface(node);
         if (content && content->IsHTMLElement(nsGkAtoms::tr) && !ParentIsTR(content)) {
-          nsINode* n = content;
           if (!prevNode) {
             // Went from a non-<tr> to a <tr>
             mCommonAncestors.Clear();
-            nsContentUtils::GetAncestors(n->GetParentNode(), mCommonAncestors);
+            nsContentUtils::GetAncestors(node->GetParentNode(),
+                                         mCommonAncestors);
             rv = SerializeRangeContextStart(mCommonAncestors, output);
             NS_ENSURE_SUCCESS(rv, rv);
             // Don't let SerializeRangeToString serialize the context again
             mDisableContextSerialize = true;
           }
 
-          rv = SerializeNodeStart(n, 0, -1, output);
+          rv = SerializeNodeStart(node, 0, -1, output);
           NS_ENSURE_SUCCESS(rv, rv);
           prevNode = node;
         } else if (prevNode) {
@@ -1014,8 +1012,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
         }
       }
 
-      nsRange* r = static_cast<nsRange*>(range.get());
-      rv = SerializeRangeToString(r, output);
+      rv = SerializeRangeToString(range, output);
       NS_ENSURE_SUCCESS(rv, rv);
       if (i == 0) {
         firstRangeStartDepth = mStartDepth;
@@ -1024,8 +1021,7 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
     mStartDepth = firstRangeStartDepth;
 
     if (prevNode) {
-      nsCOMPtr<nsINode> p = do_QueryInterface(prevNode);
-      rv = SerializeNodeEnd(p, output);
+      rv = SerializeNodeEnd(prevNode, output);
       NS_ENSURE_SUCCESS(rv, rv);
       mDisableContextSerialize = false;
       rv = SerializeRangeContextEnd(output);
@@ -1471,36 +1467,34 @@ nsHTMLCopyEncoder::IncludeInContext(nsINode *aNode)
 nsresult
 nsHTMLCopyEncoder::PromoteRange(nsRange* inRange)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDOMNode> startNode, endNode, common;
-  uint32_t startOffset, endOffset;
-
-  rv = inRange->GetCommonAncestorContainer(getter_AddRefs(common));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = inRange->GetStartContainer(getter_AddRefs(startNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = inRange->GetStartOffset(&startOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = inRange->GetEndContainer(getter_AddRefs(endNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = inRange->GetEndOffset(&endOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!inRange->IsPositioned()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  nsCOMPtr<nsINode> startNode = inRange->GetStartContainer();
+  uint32_t startOffset = inRange->StartOffset();
+  nsCOMPtr<nsINode> endNode = inRange->GetEndContainer();
+  uint32_t endOffset = inRange->EndOffset();
+  nsCOMPtr<nsINode> common = inRange->GetCommonAncestor();
 
   nsCOMPtr<nsIDOMNode> opStartNode;
   nsCOMPtr<nsIDOMNode> opEndNode;
   int32_t opStartOffset, opEndOffset;
 
   // examine range endpoints.
-  rv = GetPromotedPoint(kStart, startNode, static_cast<int32_t>(startOffset),
-                        address_of(opStartNode), &opStartOffset, common);
+  nsresult rv =
+    GetPromotedPoint(kStart, startNode->AsDOMNode(),
+                     static_cast<int32_t>(startOffset),
+                     address_of(opStartNode), &opStartOffset,
+                     common->AsDOMNode());
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = GetPromotedPoint(kEnd, endNode, static_cast<int32_t>(endOffset),
-                        address_of(opEndNode), &opEndOffset, common);
+  rv = GetPromotedPoint(kEnd, endNode->AsDOMNode(),
+                        static_cast<int32_t>(endOffset),
+                        address_of(opEndNode), &opEndOffset,
+                        common->AsDOMNode());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // if both range endpoints are at the common ancestor, check for possible inclusion of ancestors
-  if ( (opStartNode == common) && (opEndNode == common) )
-  {
+  if (opStartNode == common->AsDOMNode() && opEndNode == common->AsDOMNode()) {
     rv = PromoteAncestorChain(address_of(opStartNode), &opStartOffset, &opEndOffset);
     NS_ENSURE_SUCCESS(rv, rv);
     opEndNode = opStartNode;
