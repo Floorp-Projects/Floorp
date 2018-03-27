@@ -106,6 +106,9 @@ const ThemeVariableMap = [
       return `rgba(${r}, ${g}, ${b}, ${a})`;
     }
   }],
+  ["--autocomplete-popup-border-color", {
+    lwtProperty: "popup_border"
+  }],
   ["--autocomplete-popup-highlight-background", {
     lwtProperty: "popup_highlight"
   }],
