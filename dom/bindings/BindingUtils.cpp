@@ -3511,6 +3511,102 @@ GetDesiredProto(JSContext* aCx, const JS::CallArgs& aCallArgs,
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#htmlconstructor
+namespace binding_detail {
+bool
+HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
+                constructors::id::ID aConstructorId,
+                prototypes::id::ID aProtoId,
+                CreateInterfaceObjectsMethod aCreator)
+{
+  JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
+  JS::Rooted<JSObject*> obj(aCx, &args.callee());
+  if (!args.isConstructing()) {
+    return ThrowConstructorWithoutNew(aCx,
+                                      NamesOfInterfacesWithProtos(aProtoId));
+  }
+
+  GlobalObject global(aCx, obj);
+  if (global.Failed()) {
+    return false;
+  }
+
+  // The newTarget might be a cross-compartment wrapper. Get the underlying object
+  // so we can do the spec's object-identity checks.
+  JS::Rooted<JSObject*> newTarget(aCx, js::CheckedUnwrap(&args.newTarget().toObject()));
+  if (!newTarget) {
+    return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
+  }
+
+  // Step 2 of https://html.spec.whatwg.org/multipage/dom.html#htmlconstructor.
+  // Enter the compartment of our underlying newTarget object, so we end
+  // up comparing to the constructor object for our interface from that global.
+  {
+    JSAutoCompartment ac(aCx, newTarget);
+    JS::Handle<JSObject*> constructor =
+      GetPerInterfaceObjectHandle(aCx, aConstructorId, aCreator,
+                                  true);
+    if (!constructor) {
+      return false;
+    }
+    if (newTarget == constructor) {
+      return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
+    }
+  }
+
+  JS::Rooted<JSObject*> desiredProto(aCx);
+  if (!GetDesiredProto(aCx, args, &desiredProto)) {
+    return false;
+  }
+  if (!desiredProto) {
+    // Step 7 of https://html.spec.whatwg.org/multipage/dom.html#htmlconstructor.
+    // This fallback behavior is designed to match analogous behavior for the
+    // JavaScript built-ins. So we enter the compartment of our underlying
+    // newTarget object and fall back to the prototype object from that global.
+    // XXX The spec says to use GetFunctionRealm(), which is not actually
+    // the same thing as what we have here (e.g. in the case of scripted callable proxies
+    // whose target is not same-compartment with the proxy, or bound functions, etc).
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1317658
+    {
+      JSAutoCompartment ac(aCx, newTarget);
+      desiredProto = GetPerInterfaceObjectHandle(aCx, aProtoId, aCreator, true);
+      if (!desiredProto) {
+          return false;
+      }
+    }
+
+    // desiredProto is in the compartment of the underlying newTarget object.
+    // Wrap it into the context compartment.
+    if (!JS_WrapObject(aCx, &desiredProto)) {
+      return false;
+    }
+  }
+
+  bool objIsXray = xpc::WrapperFactory::IsXrayWrapper(obj);
+  Maybe<JSAutoCompartment> ac;
+  if (objIsXray) {
+    obj = js::CheckedUnwrap(obj);
+    if (!obj) {
+      return false;
+    }
+    ac.emplace(aCx, obj);
+    if (!JS_WrapObject(aCx, &desiredProto)) {
+      return false;
+    }
+  }
+  ErrorResult rv;
+  RefPtr<Element> result = CreateXULOrHTMLElement(global, args, desiredProto, rv);
+  if (MOZ_UNLIKELY(rv.MaybeSetPendingException(aCx))) {
+    return false;
+  }
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+  if (!GetOrCreateDOMReflector(aCx, result, args.rval(), desiredProto)) {
+    MOZ_ASSERT(JS_IsExceptionPending(aCx));
+    return false;
+  }
+  return true;
+}
+} // namespace binding_detail
+
 already_AddRefed<Element>
 CreateXULOrHTMLElement(const GlobalObject& aGlobal, const JS::CallArgs& aCallArgs,
                        JS::Handle<JSObject*> aGivenProto, ErrorResult& aRv)
