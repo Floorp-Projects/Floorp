@@ -2288,21 +2288,6 @@ Selection::RemoveAllRangesTemporarily()
   return result.StealNSResult();
 }
 
-/** AddRange adds the specified range to the selection
- *  @param aRange is the range to be added
- */
-NS_IMETHODIMP
-Selection::AddRange(nsIDOMRange* aDOMRange)
-{
-  if (!aDOMRange) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsRange* range = static_cast<nsRange*>(aDOMRange);
-  ErrorResult result;
-  AddRange(*range, result);
-  return result.StealNSResult();
-}
-
 void
 Selection::AddRangeJS(nsRange& aRange, ErrorResult& aRv)
 {
@@ -4078,9 +4063,8 @@ Selection::SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
     return;
   }
 
-  rv = AddRange(newRange);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  AddRange(*newRange, aRv);
+  if (aRv.Failed()) {
     return;
   }
 

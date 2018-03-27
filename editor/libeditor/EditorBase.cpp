@@ -3477,8 +3477,11 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
                                        range.mEndOffset,
                                        getter_AddRefs(newRange));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = range.mSelection->AddRange(newRange);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult err;
+    range.mSelection->AddRange(*newRange, err);
+    if (NS_WARN_IF(err.Failed())) {
+      return err.StealNSResult();
+    }
   }
 
   if (shouldSetSelection) {
@@ -4884,7 +4887,9 @@ EditorBase::AppendNodeToSelectionAsRange(nsIDOMNode* aNode)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
 
-  return selection->AddRange(range);
+  ErrorResult err;
+  selection->AddRange(*range, err);
+  return err.StealNSResult();
 }
 
 nsresult

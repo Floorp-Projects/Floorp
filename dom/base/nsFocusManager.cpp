@@ -2434,7 +2434,7 @@ nsFocusManager::MoveCaretToFocus(nsIPresShell* aPresShell, nsIContent* aContent)
   nsCOMPtr<nsIDocument> doc = aPresShell->GetDocument();
   if (doc) {
     RefPtr<nsFrameSelection> frameSelection = aPresShell->FrameSelection();
-    nsCOMPtr<nsISelection> domSelection =
+    RefPtr<Selection> domSelection =
       frameSelection->GetSelection(SelectionType::eNormal);
     if (domSelection) {
       // First clear the selection. This way, if there is no currently focused
@@ -2460,7 +2460,7 @@ nsFocusManager::MoveCaretToFocus(nsIPresShell* aPresShell, nsIContent* aContent)
           newRange->SetStartBefore(*aContent, IgnoreErrors());
           newRange->SetEndBefore(*aContent, IgnoreErrors());
         }
-        domSelection->AddRange(newRange);
+        domSelection->AddRange(*newRange, IgnoreErrors());
         domSelection->CollapseToStart();
       }
     }

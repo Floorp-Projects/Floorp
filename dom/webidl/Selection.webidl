@@ -20,6 +20,9 @@ interface Selection {
   readonly attribute DOMString     type;
   [Throws]
   Range     getRangeAt(unsigned long index);
+  /**
+   * Adds a range to the current selection.
+   */
   [Throws, BinaryName="addRangeJS"]
   void      addRange(Range range);
   [Throws]

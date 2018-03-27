@@ -325,8 +325,9 @@ CompositionTransaction::SetIMESelection(EditorBase& aEditorBase,
       break;
     }
 
-    rv = selectionOfIME->AddRange(clauseRange);
-    if (NS_FAILED(rv)) {
+    IgnoredErrorResult err;
+    selectionOfIME->AddRange(*clauseRange, err);
+    if (err.Failed()) {
       NS_WARNING("Failed to add selection range for a clause of composition");
       break;
     }

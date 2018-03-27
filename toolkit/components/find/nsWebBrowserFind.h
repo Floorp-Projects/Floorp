@@ -63,7 +63,7 @@ protected:
 
   nsresult OnFind(nsPIDOMWindowOuter* aFoundWindow);
 
-  void SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow, nsIDOMRange* aRange);
+  void SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow, nsRange* aRange);
 
   nsresult GetRootNode(nsIDOMDocument* aDomDoc, nsIDOMNode** aNode);
   nsresult GetSearchLimits(nsRange* aRange,

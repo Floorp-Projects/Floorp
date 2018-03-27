@@ -631,7 +631,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
       // Select the found text
       if (selection) {
         selection->RemoveAllRanges();
-        selection->AddRange(returnRange);
+        selection->AddRange(*returnRange, IgnoreErrors());
       }
 
       if (!mFoundEditable && fm) {
