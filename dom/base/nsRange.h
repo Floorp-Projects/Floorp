@@ -366,6 +366,7 @@ public:
   void SetStart(const RawRangeBoundary& aPoint, ErrorResult& aErr);
   void SetStartAfter(nsINode& aNode, ErrorResult& aErr);
   void SetStartBefore(nsINode& aNode, ErrorResult& aErr);
+  void Collapse(bool aToStart);
 
   static void GetInnerTextNoFlush(mozilla::dom::DOMString& aValue,
                                   mozilla::ErrorResult& aError,
