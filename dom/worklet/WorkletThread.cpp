@@ -110,9 +110,7 @@ public:
   {
   }
 
-  ~WorkletJSRuntime()
-  {
-  }
+  ~WorkletJSRuntime() override = default;
 
   virtual void
   PrepareForForgetSkippable() override
@@ -157,7 +155,7 @@ public:
     nsCycleCollector_startup();
   }
 
-  ~WorkletJSContext()
+  ~WorkletJSContext() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
 
