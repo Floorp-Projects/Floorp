@@ -74,6 +74,87 @@ WebGLContext::GetStencilBits(GLint* const out_stencilBits) const
     return true;
 }
 
+bool
+WebGLContext::GetChannelBits(const char* funcName, GLenum pname, GLint* const out_val)
+{
+    if (mBoundDrawFramebuffer) {
+        if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(funcName))
+            return false;
+    }
+
+    if (!mBoundDrawFramebuffer) {
+        switch (pname) {
+        case LOCAL_GL_RED_BITS:
+        case LOCAL_GL_GREEN_BITS:
+        case LOCAL_GL_BLUE_BITS:
+            *out_val = 8;
+            break;
+
+        case LOCAL_GL_ALPHA_BITS:
+            *out_val = (mOptions.alpha ? 8 : 0);
+            break;
+
+        case LOCAL_GL_DEPTH_BITS:
+            *out_val = (mOptions.depth ? 24 : 0);
+            break;
+
+        case LOCAL_GL_STENCIL_BITS:
+            *out_val = (mOptions.stencil ? 8 : 0);
+            break;
+
+        default:
+            MOZ_CRASH("GFX: bad pname");
+        }
+        return true;
+    }
+
+    if (!gl->IsCoreProfile()) {
+        gl->fGetIntegerv(pname, out_val);
+        return true;
+    }
+
+    GLenum fbAttachment = 0;
+    GLenum fbPName = 0;
+    switch (pname) {
+    case LOCAL_GL_RED_BITS:
+        fbAttachment = LOCAL_GL_COLOR_ATTACHMENT0;
+        fbPName = LOCAL_GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE;
+        break;
+
+    case LOCAL_GL_GREEN_BITS:
+        fbAttachment = LOCAL_GL_COLOR_ATTACHMENT0;
+        fbPName = LOCAL_GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE;
+        break;
+
+    case LOCAL_GL_BLUE_BITS:
+        fbAttachment = LOCAL_GL_COLOR_ATTACHMENT0;
+        fbPName = LOCAL_GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE;
+        break;
+
+    case LOCAL_GL_ALPHA_BITS:
+        fbAttachment = LOCAL_GL_COLOR_ATTACHMENT0;
+        fbPName = LOCAL_GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE;
+        break;
+
+    case LOCAL_GL_DEPTH_BITS:
+        fbAttachment = LOCAL_GL_DEPTH_ATTACHMENT;
+        fbPName = LOCAL_GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE;
+        break;
+
+    case LOCAL_GL_STENCIL_BITS:
+        fbAttachment = LOCAL_GL_STENCIL_ATTACHMENT;
+        fbPName = LOCAL_GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE;
+        break;
+
+    default:
+        MOZ_CRASH("GFX: bad pname");
+    }
+
+    gl->fGetFramebufferAttachmentParameteriv(LOCAL_GL_DRAW_FRAMEBUFFER, fbAttachment,
+                                             fbPName, out_val);
+    return true;
+}
+
 JS::Value
 WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 {
@@ -316,72 +397,12 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_ALPHA_BITS:
         case LOCAL_GL_DEPTH_BITS:
         case LOCAL_GL_STENCIL_BITS: {
-            const auto format = [&]() -> const webgl::FormatInfo* {
-                if (mBoundDrawFramebuffer) {
-                    const auto& fb = *mBoundDrawFramebuffer;
-                    const auto& attachment = [&]() {
-                        switch (pname) {
-                        case LOCAL_GL_DEPTH_BITS:
-                            return fb.AnyDepthAttachment();
+            // Deprecated and removed in GL Core profiles, so special handling required.
+            GLint val;
+            if (!GetChannelBits(funcName, pname, &val))
+                return JS::NullValue();
 
-                        case LOCAL_GL_STENCIL_BITS:
-                            return fb.AnyStencilAttachment();
-
-                        default:
-                            return fb.ColorAttachment0();
-                        }
-                    }();
-                    if (!attachment.HasImage())
-                        return nullptr;
-                    return attachment.Format()->format;
-                }
-
-                auto effFormat = webgl::EffectiveFormat::RGB8;
-                switch (pname) {
-                case LOCAL_GL_DEPTH_BITS:
-                    if (mOptions.depth) {
-                        effFormat = webgl::EffectiveFormat::DEPTH24_STENCIL8;
-                    }
-                    break;
-
-                case LOCAL_GL_STENCIL_BITS:
-                    if (mOptions.stencil) {
-                        effFormat = webgl::EffectiveFormat::DEPTH24_STENCIL8;
-                    }
-                    break;
-
-                default:
-                    if (mOptions.alpha) {
-                        effFormat = webgl::EffectiveFormat::RGBA8;
-                    }
-                    break;
-                }
-                return webgl::GetFormat(effFormat);
-            }();
-            int32_t ret = 0;
-            if (format) {
-                switch (pname) {
-                case LOCAL_GL_RED_BITS:
-                    ret = format->r;
-                    break;
-                case LOCAL_GL_GREEN_BITS:
-                    ret = format->g;
-                    break;
-                case LOCAL_GL_BLUE_BITS:
-                    ret = format->b;
-                    break;
-                case LOCAL_GL_ALPHA_BITS:
-                    ret = format->a;
-                    break;
-                case LOCAL_GL_DEPTH_BITS:
-                    ret = format->d;
-                    break;
-                case LOCAL_GL_STENCIL_BITS:
-                    ret = format->s;
-                    break;
-                }
-            }
-            return JS::Int32Value(ret);
+            return JS::Int32Value(val);
         }
 
         case LOCAL_GL_MAX_TEXTURE_SIZE:
