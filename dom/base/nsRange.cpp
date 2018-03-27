@@ -1219,20 +1219,6 @@ nsRange::GetCommonAncestorContainer(ErrorResult& aRv) const
   return nsContentUtils::GetCommonAncestor(mStart.Container(), mEnd.Container());
 }
 
-NS_IMETHODIMP
-nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
-{
-  ErrorResult rv;
-  nsINode* commonAncestor = GetCommonAncestorContainer(rv);
-  if (commonAncestor) {
-    NS_ADDREF(*aCommonParent = commonAncestor->AsDOMNode());
-  } else {
-    *aCommonParent = nullptr;
-  }
-
-  return rv.StealNSResult();
-}
-
 /* static */
 bool
 nsRange::IsValidOffset(nsINode* aNode, uint32_t aOffset)

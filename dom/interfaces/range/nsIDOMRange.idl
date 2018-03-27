@@ -16,7 +16,6 @@
 interface nsIDOMRange : nsISupports
 {
   readonly attribute boolean          collapsed;
-  readonly attribute nsIDOMNode       commonAncestorContainer;
 
   void               setStart(in nsIDOMNode refNode, in unsigned long offset);
   void               setEnd(in nsIDOMNode refNode, in unsigned long offset);

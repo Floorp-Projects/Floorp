@@ -1240,7 +1240,6 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   if (!aSelection)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDOMNode> commonParent;
   Selection* selection = aSelection->AsSelection();
   uint32_t rangeCount = selection->RangeCount();
 
@@ -1257,7 +1256,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
     // XXXbz can this happen given rangeCount > 0?
     return NS_ERROR_NULL_POINTER;
   }
-  range->GetCommonAncestorContainer(getter_AddRefs(commonParent));
+  nsINode* commonParent = range->GetCommonAncestor();
 
   for (nsCOMPtr<nsIContent> selContent(do_QueryInterface(commonParent));
        selContent;
