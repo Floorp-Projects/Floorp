@@ -37,6 +37,9 @@ interface Selection {
    */
   [Throws]
   void      removeRange(Range range);
+  /**
+   * Removes all ranges from the current selection.
+   */
   [Throws]
   void      removeAllRanges();
   [Throws, BinaryName="RemoveAllRanges"]

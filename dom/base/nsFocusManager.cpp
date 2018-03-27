@@ -2439,7 +2439,7 @@ nsFocusManager::MoveCaretToFocus(nsIPresShell* aPresShell, nsIContent* aContent)
     if (domSelection) {
       // First clear the selection. This way, if there is no currently focused
       // content, the selection will just be cleared.
-      domSelection->RemoveAllRanges();
+      domSelection->RemoveAllRanges(IgnoreErrors());
       if (aContent) {
         ErrorResult rv;
         RefPtr<nsRange> newRange = doc->CreateRange(rv);

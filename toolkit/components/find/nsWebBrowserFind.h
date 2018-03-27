@@ -27,6 +27,12 @@ class nsIDOMWindow;
 class nsIDocShell;
 class nsRange;
 
+namespace mozilla {
+namespace dom {
+class Selection;
+} // namespace dom
+} // namespace mozilla
+
 //*****************************************************************************
 // class nsWebBrowserFind
 //*****************************************************************************
@@ -58,7 +64,8 @@ protected:
   nsresult OnStartSearchFrame(nsPIDOMWindowOuter* aWindow);
   nsresult OnEndSearchFrame(nsPIDOMWindowOuter* aWindow);
 
-  already_AddRefed<nsISelection> GetFrameSelection(nsPIDOMWindowOuter* aWindow);
+  already_AddRefed<mozilla::dom::Selection>
+    GetFrameSelection(nsPIDOMWindowOuter* aWindow);
   nsresult ClearFrameSelection(nsPIDOMWindowOuter* aWindow);
 
   nsresult OnFind(nsPIDOMWindowOuter* aFoundWindow);

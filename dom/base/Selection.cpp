@@ -778,7 +778,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)
   // in JS!).
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionListeners)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedRange)
-  tmp->RemoveAllRanges();
+  tmp->RemoveAllRanges(IgnoreErrors());
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameSelection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -2224,16 +2224,6 @@ Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint)
   return NS_OK;
 }
 
-
-/** RemoveAllRanges zeroes the selection
- */
-NS_IMETHODIMP
-Selection::RemoveAllRanges()
-{
-  ErrorResult result;
-  RemoveAllRanges(result);
-  return result.StealNSResult();
-}
 
 void
 Selection::RemoveAllRanges(ErrorResult& aRv)
@@ -4025,7 +4015,6 @@ Selection::SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
     return;
   }
 
-  // Use non-virtual method instead of nsISelection::RemoveAllRanges().
   RemoveAllRanges(aRv);
   if (aRv.Failed()) {
     return;

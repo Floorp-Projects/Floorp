@@ -3444,8 +3444,11 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
 
     // If we have not seen the selection yet, clear all of its ranges.
     if (range.mSelection != previousSelection) {
-      nsresult rv = range.mSelection->RemoveAllRanges();
-      NS_ENSURE_SUCCESS(rv, rv);
+      ErrorResult rv;
+      range.mSelection->RemoveAllRanges(rv);
+      if (NS_WARN_IF(rv.Failed())) {
+        return rv.StealNSResult();
+      }
       previousSelection = range.mSelection;
     }
 
@@ -4897,7 +4900,9 @@ EditorBase::ClearSelection()
 {
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-  return selection->RemoveAllRanges();
+  ErrorResult rv;
+  selection->RemoveAllRanges(rv);
+  return rv.StealNSResult();
 }
 
 already_AddRefed<Element>
