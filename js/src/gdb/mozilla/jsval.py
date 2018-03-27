@@ -155,15 +155,24 @@ class jsvalTypeCache(object):
     def __init__(self, cache):
         # Capture the tag values.
         d = gdb.types.make_enum_dict(gdb.lookup_type('JSValueType'))
-        self.DOUBLE    = d['JSVAL_TYPE_DOUBLE']
-        self.INT32     = d['JSVAL_TYPE_INT32']
-        self.UNDEFINED = d['JSVAL_TYPE_UNDEFINED']
-        self.BOOLEAN   = d['JSVAL_TYPE_BOOLEAN']
-        self.MAGIC     = d['JSVAL_TYPE_MAGIC']
-        self.STRING    = d['JSVAL_TYPE_STRING']
-        self.SYMBOL    = d['JSVAL_TYPE_SYMBOL']
-        self.NULL      = d['JSVAL_TYPE_NULL']
-        self.OBJECT    = d['JSVAL_TYPE_OBJECT']
+
+        # The enum keys are prefixed when building with some compilers (clang at
+        # a minimum), so use a helper function to handle either key format.
+        def get(key):
+            val = d.get(key)
+            if val is not None:
+                return val
+            return d['JSValueType::' + key]
+
+        self.DOUBLE = get('JSVAL_TYPE_DOUBLE')
+        self.INT32 = get('JSVAL_TYPE_INT32')
+        self.UNDEFINED = get('JSVAL_TYPE_UNDEFINED')
+        self.BOOLEAN = get('JSVAL_TYPE_BOOLEAN')
+        self.MAGIC = get('JSVAL_TYPE_MAGIC')
+        self.STRING = get('JSVAL_TYPE_STRING')
+        self.SYMBOL = get('JSVAL_TYPE_SYMBOL')
+        self.NULL = get('JSVAL_TYPE_NULL')
+        self.OBJECT = get('JSVAL_TYPE_OBJECT')
 
         # Let self.magic_names be an array whose i'th element is the name of
         # the i'th magic value.
