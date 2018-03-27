@@ -2,16 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 
 const nsIBLS = Ci.nsIBlocklistService;
-const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
 var gBlocklist = null;
-var gTestserver = null;
-
-var gNextTestPart = null;
+var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+gTestserver.registerDirectory("/data/", do_get_file("data"));
 
 
 var PLUGINS = [{
@@ -42,91 +42,67 @@ var PluginHost = {
     return PLUGINS;
   },
 
-  QueryInterface(iid) {
-    if (iid.equals(Ci.nsIPluginHost)
-     || iid.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: XPCOMUtils.generateQI(["nsIPluginHost"]),
 };
 
-// Don't need the full interface, attempts to call other methods will just
-// throw which is just fine
-var WindowWatcher = {
-  openWindow(parent, url, name, features, args) {
-    // Should be called to list the newly blocklisted items
-    Assert.equal(url, URI_EXTENSION_BLOCKLIST_DIALOG);
+var BlocklistPrompt = {
+  prompt(list) {
     // Should only include one item
-    Assert.equal(args.wrappedJSObject.list.length, 1);
+    Assert.equal(list.length, 1);
     // And that item should be the blocked plugin, not the outdated one
-    var item = args.wrappedJSObject.list[0];
+    var item = list[0];
     Assert.ok(item.item instanceof Ci.nsIPluginTag);
     Assert.notEqual(item.name, "test_bug514327_outdated");
-
-    // Call the next test after the blocklist has finished up
-    do_timeout(0, gNextTestPart);
   },
 
-  QueryInterface(iid) {
-    if (iid.equals(Ci.nsIWindowWatcher)
-     || iid.equals(Ci.nsISupports))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  QueryInterface: XPCOMUtils.generateQI(["nsIBlocklistPrompt"]),
 };
 
-MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
-MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1", WindowWatcher);
 
+async function loadBlocklist(file) {
+  let blocklistUpdated = TestUtils.topicObserved("blocklist-updated");
 
-function do_update_blocklist(aDatafile, aNextPart) {
-  gNextTestPart = aNextPart;
+  Services.prefs.setCharPref("extensions.blocklist.url",
+                             "http://example.com/data/" + file);
+  Services.blocklist.QueryInterface(Ci.nsITimerCallback).notify(null);
 
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/" + aDatafile);
-  gBlocklist.QueryInterface(Ci.nsITimerCallback).notify(null);
+  await blocklistUpdated;
 }
 
-function run_test() {
+MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
+
+let factory = XPCOMUtils.generateSingletonFactory(function() { return BlocklistPrompt; });
+Cm.registerFactory(Components.ID("{26d32654-30c7-485d-b983-b4d2568aebba}"),
+                   "Blocklist Prompt",
+                   "@mozilla.org/addons/blocklist-prompt;1", factory);
+
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
-
-  gTestserver = new HttpServer();
-  gTestserver.registerDirectory("/data/", do_get_file("data"));
-  gTestserver.start(-1);
-  gPort = gTestserver.identity.primaryPort;
-
-  startupManager();
 
   // initialize the blocklist with no entries
   copyBlocklistToProfile(do_get_file("data/test_bug514327_3_empty.xml"));
 
-  gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(nsIBLS);
+  await promiseStartupManager();
+
+  gBlocklist = Services.blocklist;
 
   // should NOT be marked as outdated by the blocklist
   Assert.ok(gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_NOT_BLOCKED);
+});
 
-  do_test_pending();
-
+add_task(async function test_part_1() {
   // update blocklist with data that marks the plugin as outdated
-  do_update_blocklist("test_bug514327_3_outdated_1.xml", test_part_1);
-}
+  await loadBlocklist("test_bug514327_3_outdated_1.xml");
 
-function test_part_1() {
   // plugin should now be marked as outdated
   Assert.ok(gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_OUTDATED);
 
-  // update blocklist with data that marks the plugin as outdated
-  do_update_blocklist("test_bug514327_3_outdated_2.xml", test_part_2);
-}
+});
 
-function test_part_2() {
+add_task(async function test_part_2() {
+  // update blocklist with data that marks the plugin as outdated
+  await loadBlocklist("test_bug514327_3_outdated_2.xml");
+
   // plugin should still be marked as outdated
   Assert.ok(gBlocklist.getPluginBlocklistState(PLUGINS[0], "1", "1.9") == nsIBLS.STATE_OUTDATED);
-
-  finish();
-}
-
-function finish() {
-  gTestserver.stop(do_test_finished);
-}
+});
