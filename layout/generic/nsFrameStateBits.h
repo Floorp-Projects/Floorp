@@ -264,8 +264,8 @@ FRAME_STATE_BIT(Generic, 53, NS_FRAME_IS_NONDISPLAY)
 // Frame has a LayerActivityProperty property
 FRAME_STATE_BIT(Generic, 54, NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY)
 
-// Frame owns anonymous boxes whose style contexts it will need to update during
-// a stylo tree traversal.
+// Frame owns anonymous boxes whose ComputedStyles it will need to update
+// during a stylo tree traversal.
 FRAME_STATE_BIT(Generic, 55, NS_FRAME_OWNS_ANON_BOXES)
 
 // Frame maybe has a counter-reset/increment style

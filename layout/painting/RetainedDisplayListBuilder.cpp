@@ -22,7 +22,7 @@
  * have a defined ordering). Our display list is just one of a many possible linear
  * representations of this ordering.
  *
- * Each time a frame changes (gets a new style context, or has a size/position
+ * Each time a frame changes (gets a new ComputedStyle, or has a size/position
  * change), we schedule a paint (as we do currently), but also reord the frame that
  * changed.
  *

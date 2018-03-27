@@ -369,7 +369,7 @@ public:
 
   /**
    * Given a frame which is the primary frame for an element,
-   * return the frame that has the non-pseudoelement style context for
+   * return the frame that has the non-pseudoelement ComputedStyle for
    * the content.
    * This is aPrimaryFrame itself except for tableWrapper frames.
    *
@@ -381,7 +381,7 @@ public:
 
   /**
    * Given a content node,
-   * return the frame that has the non-pseudoelement style context for
+   * return the frame that has the non-pseudoelement ComputedStyle for
    * the content.  May return null.
    * This is aContent->GetPrimaryFrame() except for tableWrapper frames.
    */
@@ -677,7 +677,7 @@ public:
    * attached to it; returns false otherwise.
    *
    * @param aContent the content node we're looking at
-   * @param aComputedStyle aContent's style context
+   * @param aComputedStyle aContent's ComputedStyle
    * @param aPseudoElement the id of the pseudo style we care about
    * @param aPresContext the presentation context
    * @return whether aContent has aPseudoElement style attached to it
@@ -1835,7 +1835,7 @@ public:
    *   @param aRenderingContext Where to draw the image, set up with an
    *                            appropriate scale and transform for drawing in
    *                            app units.
-   *   @param aComputedStyle     The style context of the nsIFrame (or
+   *   @param aComputedStyle    The ComputedStyle of the nsIFrame (or
    *                            pseudo-element) for which this image is being
    *                            drawn.
    *   @param aImage            The image.

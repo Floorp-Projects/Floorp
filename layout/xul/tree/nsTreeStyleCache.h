@@ -71,11 +71,11 @@ protected:
   // under the key (S,i).
   //
   // Once the entire word has been consumed, the final state is used
-  // to reference the cache table to locate the style context.
+  // to reference the cache table to locate the ComputedStyle.
   nsAutoPtr<TransitionTable> mTransitionTable;
 
-  // The cache of all active style contexts.  This is a hash from
-  // a final state in the DFA, Sf, to the resultant style context.
+  // The cache of all active ComputedStyles.  This is a hash from
+  // a final state in the DFA, Sf, to the resultant ComputedStyle.
   typedef nsRefPtrHashtable<nsUint32HashKey, mozilla::ComputedStyle> ComputedStyleCache;
   nsAutoPtr<ComputedStyleCache> mCache;
 

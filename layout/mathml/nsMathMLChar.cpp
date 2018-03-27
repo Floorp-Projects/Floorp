@@ -761,7 +761,7 @@ nsMathMLChar::~nsMathMLChar()
 ComputedStyle*
 nsMathMLChar::GetComputedStyle() const
 {
-  NS_ASSERTION(mComputedStyle, "chars should always have style context");
+  NS_ASSERTION(mComputedStyle, "chars should always have a ComputedStyle");
   return mComputedStyle;
 }
 
@@ -819,9 +819,9 @@ nsMathMLChar::SetData(nsString& aData)
        be in different fonts. For eg., the base size for '(' should
        come from a normal ascii font if CMEX10 is used, since CMEX10
        only contains the stretched versions. Hence, there are two
-       style contexts in use throughout the process. The leaf style
+       ComputedStyles in use throughout the process. The leaf style
        context of the char holds fonts with which to try to stretch
-       the char. The parent style context of the char contains fonts
+       the char. The parent ComputedStyle of the char contains fonts
        for normal rendering. So the parent context is the one used
        to get the initial base size at the start of the pipeline.
     b) For operators that can be largeop's in display mode,
@@ -833,7 +833,7 @@ nsMathMLChar::SetData(nsString& aData)
  2) We search for the first larger variant of the char that fits the
     container' size.  We first search for larger variants using the glyph
     table corresponding to the first existing font specified in the list of
-    stretchy fonts held by the leaf style context (from -moz-math-stretchy in
+    stretchy fonts held by the leaf ComputedStyle (from -moz-math-stretchy in
     mathml.css).  Generic fonts are resolved by the preference
     "font.mathfont-family".
     Issues :
@@ -1095,7 +1095,7 @@ StretchEnumContext::TryVariants(nsGlyphTable* aGlyphTable,
                                 RefPtr<gfxFontGroup>* aFontGroup,
                                 const FontFamilyList& aFamilyList)
 {
-  // Use our stretchy style context now that stretching is in progress
+  // Use our stretchy ComputedStyle now that stretching is in progress
   ComputedStyle *sc = mChar->mComputedStyle;
   nsFont font = sc->StyleFont()->mFont;
   NormalizeDefaultFont(font, mFontSizeInflation);
@@ -1241,7 +1241,7 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable* aGlyphTable,
                                            RefPtr<gfxFontGroup>* aFontGroup,
                                            const FontFamilyList& aFamilyList)
 {
-  // Use our stretchy style context now that stretching is in progress
+  // Use our stretchy ComputedStyle now that stretching is in progress
   nsFont font = mChar->mComputedStyle->StyleFont()->mFont;
   NormalizeDefaultFont(font, mFontSizeInflation);
 

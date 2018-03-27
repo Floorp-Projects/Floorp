@@ -16,7 +16,7 @@
 // <mo> -- operator, fence, or separator - implementation
 //
 
-// additional style context to be used by our MathMLChar.
+// additional ComputedStyle to be used by our MathMLChar.
 #define NS_MATHML_CHAR_STYLE_CONTEXT_INDEX   0
 
 nsIFrame*
@@ -943,7 +943,7 @@ nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
 {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
-  // certain values use units that depend on our style context, so
+  // certain values use units that depend on our ComputedStyle, so
   // it is safer to just process the whole lot here
   ProcessOperatorData();
 
@@ -1091,8 +1091,8 @@ nsMathMLmoFrame::AttributeChanged(int32_t         aNameSpaceID,
 }
 
 // ----------------------
-// No need to track the style context given to our MathML char.
-// the Style System will use these to pass the proper style context to our MathMLChar
+// No need to track the ComputedStyle given to our MathML char.
+// the Style System will use these to pass the proper ComputedStyle to our MathMLChar
 ComputedStyle*
 nsMathMLmoFrame::GetAdditionalComputedStyle(int32_t aIndex) const
 {

@@ -93,7 +93,7 @@ class ImageTracker;
 #define NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE 0x400000000
 // See ComputedStyle::IsTextCombined
 #define NS_STYLE_IS_TEXT_COMBINED          0x800000000
-// Whether a style context is a Gecko or Servo context
+// Whether a ComputedStyle is a Gecko or Servo context
 #define NS_STYLE_CONTEXT_IS_GECKO          0x1000000000
 // See ComputedStyle::GetPseudoEnum
 #define NS_STYLE_CONTEXT_TYPE_SHIFT        37
@@ -1335,7 +1335,7 @@ protected:
 /**
  * An object that allows sharing of arrays that store 'quotes' property
  * values.  This is particularly important for inheritance, where we want
- * to share the same 'quotes' value with a parent style context.
+ * to share the same 'quotes' value with a parent ComputedStyle.
  */
 class nsStyleQuoteValues
 {
@@ -1610,7 +1610,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   //
   // They're effectively only different in this regard: mJustifyItems is set to
   // mSpecifiedJustifyItems, except when the latter is AUTO -- in that case,
-  // mJustifyItems is set to NORMAL, or to the parent style context's
+  // mJustifyItems is set to NORMAL, or to the parent ComputedStyle's
   // mJustifyItems if it has the legacy flag.
   //
   // This last part happens in ComputedStyle::ApplyStyleFixups.
@@ -2671,7 +2671,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
 
   /**
    * The same as IsAbsPosContainingBlock, except skipping the tests that
-   * are based on the frame rather than the style context (thus
+   * are based on the frame rather than the ComputedStyle (thus
    * potentially returning a false positive).
    *
    * FIXME(stylo-everywhere): Pretty sure the template can go here.
@@ -2696,7 +2696,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
 
   /**
    * The same as IsFixedPosContainingBlock, except skipping the tests that
-   * are based on the frame rather than the style context (thus
+   * are based on the frame rather than the ComputedStyle (thus
    * potentially returning a false positive).
    *
    * FIXME(stylo-everywhere): Pretty sure the template can go here.

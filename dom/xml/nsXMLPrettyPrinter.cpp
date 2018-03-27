@@ -21,6 +21,8 @@
 #include "nsVariant.h"
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/txMozillaXSLTProcessor.h"
 
 using namespace mozilla;
@@ -169,13 +171,19 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     RefPtr<CustomEvent> event =
       NS_NewDOMCustomEvent(rootElement, nullptr, nullptr);
     MOZ_ASSERT(event);
-    nsCOMPtr<nsIWritableVariant> resultFragmentVariant = new nsVariant();
-    rv = resultFragmentVariant->SetAsISupports(ToSupports(resultFragment.get()));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = event->InitCustomEvent(NS_LITERAL_STRING("prettyprint-dom-created"),
-                                /* bubbles = */ false, /* cancelable = */ false,
-                                /* detail = */ resultFragmentVariant);
-    NS_ENSURE_SUCCESS(rv, rv);
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(event->GetParentObject())) {
+        return NS_ERROR_UNEXPECTED;
+    }
+    JSContext* cx = jsapi.cx();
+    JS::Rooted<JS::Value> detail(cx);
+    if (!ToJSValue(cx, resultFragment, &detail)) {
+        return NS_ERROR_UNEXPECTED;
+    }
+    event->InitCustomEvent(cx, NS_LITERAL_STRING("prettyprint-dom-created"),
+                           /* bubbles = */ false, /* cancelable = */ false,
+                           detail);
+
     event->SetTrusted(true);
     bool dummy;
     rv = rootElement->DispatchEvent(event, &dummy);

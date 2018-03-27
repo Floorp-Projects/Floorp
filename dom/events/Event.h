@@ -30,6 +30,7 @@ namespace mozilla {
 namespace dom {
 
 class BeforeUnloadEvent;
+class CustomEvent;
 class DragEvent;
 class EventTarget;
 class EventMessageAutoOverride;
@@ -39,19 +40,14 @@ class ExtendableEvent;
 class KeyboardEvent;
 class MouseEvent;
 class TimeEvent;
+class UIEvent;
 class WantsPopupControlCheck;
 class XULCommandEvent;
 #define GENERATED_EVENT(EventClass_) class EventClass_;
 #include "mozilla/dom/GeneratedEventList.h"
 #undef GENERATED_EVENT
 
-// Dummy class so we can cast through it to get from nsISupports to
-// Event subclasses with only two non-ambiguous static casts.
-class EventBase : public nsIDOMEvent
-{
-};
-
-class Event : public EventBase,
+class Event : public nsIDOMEvent,
               public nsWrapperCache
 {
 public:
@@ -143,6 +139,18 @@ public:
   // MouseEvent has a non-autogeneratable initMouseEvent and other
   // non-autogeneratable methods.
   virtual MouseEvent* AsMouseEvent()
+  {
+    return nullptr;
+  }
+
+  // UIEvent has a non-autogeneratable initUIEvent.
+  virtual UIEvent* AsUIEvent()
+  {
+    return nullptr;
+  }
+
+  // CustomEvent has a non-autogeneratable initCustomEvent.
+  virtual CustomEvent* AsCustomEvent()
   {
     return nullptr;
   }
@@ -406,46 +414,6 @@ private:
 
 } // namespace dom
 } // namespace mozilla
-
-#define NS_FORWARD_TO_EVENT                                             \
-  NS_FORWARD_NSIDOMEVENT(Event::)                                       \
-  using Event::GetTarget; /* Because forwarding shadows. */             \
-  using Event::GetOriginalTarget; /* Because forwarding shadows. */     \
-  using Event::GetExplicitOriginalTarget; /* Because forwarding shadows. */ \
-  virtual void PreventDefault(JSContext* aCx, CallerType aCallerType) override { Event::PreventDefault(aCx, aCallerType); }
-
-#define NS_FORWARD_NSIDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION(_to) \
-  NS_IMETHOD GetType(nsAString& aType) override { return _to GetType(aType); } \
-  NS_IMETHOD GetTarget(nsIDOMEventTarget** aTarget) override { return _to GetTarget(aTarget); } \
-  using Event::GetTarget; /* Because forwarding shadows. */             \
-  NS_IMETHOD GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget) override { return _to GetCurrentTarget(aCurrentTarget); } \
-  NS_IMETHOD GetEventPhase(uint16_t* aEventPhase) override { return _to GetEventPhase(aEventPhase); } \
-  NS_IMETHOD GetBubbles(bool* aBubbles) override { return _to GetBubbles(aBubbles); } \
-  NS_IMETHOD GetCancelable(bool* aCancelable) override { return _to GetCancelable(aCancelable); } \
-  NS_IMETHOD GetTimeStamp(DOMTimeStamp* aTimeStamp) override { return _to GetTimeStamp(aTimeStamp); } \
-  NS_IMETHOD StopPropagation(void) override { return _to StopPropagation(); } \
-  NS_IMETHOD StopCrossProcessForwarding(void) override { return _to StopCrossProcessForwarding(); } \
-  NS_IMETHOD PreventDefault(void) override { return _to PreventDefault(); } \
-  void InitEvent(const nsAString& eventTypeArg, bool canBubbleArg, bool cancelableArg) override { _to InitEvent(eventTypeArg, canBubbleArg, cancelableArg); } \
-  NS_IMETHOD GetDefaultPrevented(bool* aDefaultPrevented) override { return _to GetDefaultPrevented(aDefaultPrevented); } \
-  NS_IMETHOD StopImmediatePropagation(void) override { return _to StopImmediatePropagation(); } \
-  NS_IMETHOD GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget) override { return _to GetOriginalTarget(aOriginalTarget); } \
-  using Event::GetOriginalTarget; /* Because forwarding shadows. */     \
-  NS_IMETHOD GetExplicitOriginalTarget(nsIDOMEventTarget** aExplicitOriginalTarget) override { return _to GetExplicitOriginalTarget(aExplicitOriginalTarget); } \
-  using Event::GetExplicitOriginalTarget; /* Because forwarding shadows. */ \
-  NS_IMETHOD GetIsTrusted(bool* aIsTrusted) override { return _to GetIsTrusted(aIsTrusted); } \
-  NS_IMETHOD SetTarget(nsIDOMEventTarget* aTarget) override { return _to SetTarget(aTarget); } \
-  NS_IMETHOD_(bool) IsDispatchStopped(void) override { return _to IsDispatchStopped(); } \
-  NS_IMETHOD_(WidgetEvent*) WidgetEventPtr(void) override { return _to WidgetEventPtr(); } \
-  NS_IMETHOD_(void) SetTrusted(bool aTrusted) override { _to SetTrusted(aTrusted); } \
-  NS_IMETHOD_(void) SetOwner(EventTarget* aOwner) override { _to SetOwner(aOwner); } \
-  NS_IMETHOD_(Event*) InternalDOMEvent() override { return _to InternalDOMEvent(); } \
-  NS_IMETHOD GetCancelBubble(bool* aCancelBubble) override { return _to GetCancelBubble(aCancelBubble); } \
-  NS_IMETHOD SetCancelBubble(bool aCancelBubble) override { return _to SetCancelBubble(aCancelBubble); }
-
-#define NS_FORWARD_TO_EVENT_NO_SERIALIZATION_NO_DUPLICATION \
-  NS_FORWARD_NSIDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION(Event::) \
-  virtual void PreventDefault(JSContext* aCx, CallerType aCallerType) override { Event::PreventDefault(aCx, aCallerType); }
 
 inline nsISupports*
 ToSupports(mozilla::dom::Event* e)

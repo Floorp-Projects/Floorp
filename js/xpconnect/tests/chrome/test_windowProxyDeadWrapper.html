@@ -50,7 +50,7 @@ function go() {
         frame.remove();
 
         TestUtils.topicObserved("outer-window-nuked", (subject, data) => {
-            let id = subject.QueryInterface(SpecialPowers.Ci.nsISupportsPRUint64).data;
+            let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
             return id == winID;
         }).then(() => {
             ok(checkDead(), "Expected a dead object wrapper");

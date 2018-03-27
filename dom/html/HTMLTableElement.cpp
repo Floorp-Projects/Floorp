@@ -940,7 +940,7 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   // WalkContentStyleRules so that this happens.)  This violates the
   // nsIStyleRule contract, since it's the same style rule object doing
   // the mapping in two different ways.  It's also incorrect since it's
-  // testing the display type of the style context rather than checking
+  // testing the display type of the ComputedStyle rather than checking
   // which *element* it's matching (style rules should not stop matching
   // when the display type is changed).
 

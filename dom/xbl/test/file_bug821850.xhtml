@@ -19,6 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           var win = XPCNativeWrapper.unwrap(window);
           SpecialPowers = win.SpecialPowers;
           Cu = SpecialPowers.Cu;
+          Ci = SpecialPowers.Ci;
           is = win.is;
           ok = win.ok;
           SimpleTest = win.SimpleTest;
@@ -57,9 +58,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
 
           // Check that here HTMLImageElement.QueryInterface works
           var img = document.querySelector("img");
-          ok("QueryInterface" in img,
+          ok("QueryInterface" in SpecialPowers.wrap(img),
              "Should have a img.QueryInterface here");
-          is(img.QueryInterface(Components.interfaces.nsIImageLoadingContent),
+          is(SpecialPowers.unwrap(SpecialPowers.wrap(img).QueryInterface(Ci.nsIImageLoadingContent)),
              img, "Should be able to QI the image");
 
           // Make sure standard constructors work right in the presence of

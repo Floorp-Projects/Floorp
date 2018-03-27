@@ -23,10 +23,6 @@ public:
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(InputEvent, UIEvent)
 
-  // Forward to base class
-  NS_FORWARD_TO_UIEVENT
-
-
   static already_AddRefed<InputEvent> Constructor(const GlobalObject& aGlobal,
                                                   const nsAString& aType,
                                                   const InputEventInit& aParam,
