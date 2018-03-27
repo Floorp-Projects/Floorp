@@ -2961,15 +2961,15 @@ nsRange::SurroundContents(nsINode& aNewParent, ErrorResult& aRv)
   SelectNode(aNewParent, aRv);
 }
 
-NS_IMETHODIMP
-nsRange::ToString(nsAString& aReturn)
+void
+nsRange::ToString(nsAString& aReturn, ErrorResult& aErr)
 {
   // clear the string
   aReturn.Truncate();
 
   // If we're unpositioned, return the empty string
   if (!mIsPositioned) {
-    return NS_OK;
+    return;
   }
 
 #ifdef DEBUG_range
@@ -2989,13 +2989,9 @@ nsRange::ToString(nsAString& aReturn)
 #endif /* DEBUG */
 
       // grab the text
-      IgnoredErrorResult rv;
       textNode->SubstringData(mStart.Offset(), mEnd.Offset() - mStart.Offset(),
-                              aReturn, rv);
-      if (rv.Failed()) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      return NS_OK;
+                              aReturn, aErr);
+      return;
     }
   }
 
@@ -3005,7 +3001,10 @@ nsRange::ToString(nsAString& aReturn)
 
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
   nsresult rv = iter->Init(this);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aErr.Throw(rv);
+    return;
+  }
 
   nsString tempString;
 
@@ -3042,10 +3041,7 @@ nsRange::ToString(nsAString& aReturn)
 #ifdef DEBUG_range
   printf("End Range dump: -----------------------\n");
 #endif /* DEBUG */
-  return NS_OK;
 }
-
-
 
 NS_IMETHODIMP
 nsRange::Detach()

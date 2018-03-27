@@ -332,6 +332,7 @@ public:
     return IsPointInRange(RawRangeBoundary(&aContainer, aOffset), aErr);
   }
   bool IsPointInRange(const RawRangeBoundary& aPoint, ErrorResult& aErr);
+  void ToString(nsAString& aReturn, ErrorResult& aErr);
 
   // *JS() methods are mapped to Range.*() of DOM.
   // They may move focus only when the range represents normal selection.
