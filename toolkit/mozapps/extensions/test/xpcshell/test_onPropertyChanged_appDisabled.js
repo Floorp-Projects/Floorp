@@ -12,6 +12,7 @@ function run_test() {
     id: "addon1@tests.mozilla.org",
     version: "1.0",
     name: "Test 1",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "0.1",

@@ -1180,7 +1180,7 @@ public:
    * frames.
    */
   virtual already_AddRefed<mozilla::gfx::SourceSurface>
-  RenderSelection(nsISelection* aSelection,
+  RenderSelection(mozilla::dom::Selection* aSelection,
                   const mozilla::LayoutDeviceIntPoint aPoint,
                   mozilla::LayoutDeviceIntRect* aScreenRect,
                   uint32_t aFlags) = 0;

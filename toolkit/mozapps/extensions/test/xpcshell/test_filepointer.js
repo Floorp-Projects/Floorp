@@ -9,6 +9,7 @@ var addon1 = {
   id: "addon1@tests.mozilla.org",
   version: "1.0",
   name: "Test 1",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -20,6 +21,7 @@ var addon1_2 = {
   id: "addon1@tests.mozilla.org",
   version: "2.0",
   name: "Test 1",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -31,6 +33,7 @@ var addon2 = {
   id: "addon2@tests.mozilla.org",
   version: "1.0",
   name: "Test 2",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -45,359 +48,305 @@ profileDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0o755);
 const sourceDir = gProfD.clone();
 sourceDir.append("source");
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-var testserver;
+var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+testserver.registerDirectory("/data/", do_get_file("data"));
+testserver.registerDirectory("/addons/", do_get_file("addons"));
+gPort = testserver.identity.primaryPort;
 
-function writePointer(aId, aName) {
-  let file = profileDir.clone();
-  file.append(aName ? aName : aId);
+function promiseWritePointer(aId, aName) {
+  let path = OS.Path.join(profileDir.path, aName || aId);
 
-  let target = sourceDir.clone();
-  target.append(do_get_expected_addon_name(aId));
+  let target = OS.Path.join(sourceDir.path,
+                            do_get_expected_addon_name(aId));
 
-  var fos = AM_Cc["@mozilla.org/network/file-output-stream;1"].
-            createInstance(AM_Ci.nsIFileOutputStream);
-  fos.init(file,
-           FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE,
-           FileUtils.PERMS_FILE, 0);
-  fos.write(target.path, target.path.length);
-  fos.close();
+  return OS.File.writeAtomic(path, new TextEncoder().encode(target));
 }
 
-function writeRelativePointer(aId, aName) {
-  let file = profileDir.clone();
-  file.append(aName ? aName : aId);
+function promiseWriteRelativePointer(aId, aName) {
+  let path = OS.Path.join(profileDir.path, aName || aId);
 
   let absTarget = sourceDir.clone();
   absTarget.append(do_get_expected_addon_name(aId));
 
-  var relTarget = absTarget.getRelativeDescriptor(profileDir);
+  let relTarget = absTarget.getRelativeDescriptor(profileDir);
 
-  var fos = AM_Cc["@mozilla.org/network/file-output-stream;1"].
-            createInstance(AM_Ci.nsIFileOutputStream);
-  fos.init(file,
-           FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE,
-           FileUtils.PERMS_FILE, 0);
-  fos.write(relTarget, relTarget.length);
-  fos.close();
+  return OS.File.writeAtomic(path, new TextEncoder().encode(relTarget));
 }
 
-function run_test() {
-  // pointer files only work with unpacked directories
-  if (!TEST_UNPACKED)
-    return;
+add_task(async function setup() {
+  ok(TEST_UNPACKED, "Pointer files only work with unpacked directories");
 
-  do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
-
-  // Create and configure the HTTP server.
-  testserver = new HttpServer();
-  testserver.registerDirectory("/data/", do_get_file("data"));
-  testserver.registerDirectory("/addons/", do_get_file("addons"));
-  testserver.start(-1);
-  gPort = testserver.identity.primaryPort;
-
-  run_test_1();
-}
-
-function end_test() {
-  testserver.stop(do_test_finished);
-}
+});
 
 // Tests that installing a new add-on by pointer works
-function run_test_1() {
-  writeInstallRDFForExtension(addon1, sourceDir);
-  writePointer(addon1.id);
+add_task(async function test_new_pointer_install() {
+  await promiseWriteInstallRDFForExtension(addon1, sourceDir);
+  await promiseWritePointer(addon1.id);
+  await promiseStartupManager();
 
-  startupManager();
+  let addon = await AddonManager.getAddonByID(addon1.id);
+  notEqual(addon, null);
+  equal(addon.version, "1.0");
 
-  AddonManager.getAddonByID(addon1.id, function(a1) {
-    Assert.notEqual(a1, null);
-    Assert.equal(a1.version, "1.0");
+  let file = addon.getResourceURI().QueryInterface(AM_Ci.nsIFileURL).file;
+  equal(file.parent.path, sourceDir.path);
 
-    let file = a1.getResourceURI().QueryInterface(AM_Ci.nsIFileURL).file;
-    Assert.equal(file.parent.path, sourceDir.path);
+  let rootUri = do_get_addon_root_uri(sourceDir, addon1.id);
+  let uri = addon.getResourceURI("/");
+  equal(uri.spec, rootUri);
+  uri = addon.getResourceURI("install.rdf");
+  equal(uri.spec, rootUri + "install.rdf");
 
-    let rootUri = do_get_addon_root_uri(sourceDir, addon1.id);
-    let uri = a1.getResourceURI("/");
-    Assert.equal(uri.spec, rootUri);
-    uri = a1.getResourceURI("install.rdf");
-    Assert.equal(uri.spec, rootUri + "install.rdf");
-
-    // Check that upgrade is disabled for addons installed by file-pointers.
-    Assert.equal(a1.permissions & AddonManager.PERM_CAN_UPGRADE, 0);
-    run_test_2();
-  });
-}
+  // Check that upgrade is disabled for addons installed by file-pointers.
+  equal(addon.permissions & AddonManager.PERM_CAN_UPGRADE, 0);
+});
 
 // Tests that installing the addon from some other source doesn't clobber
 // the original sources
-function run_test_2() {
+add_task(async function test_addon_over_pointer() {
   prepare_test({}, [
     "onNewInstall",
   ]);
 
-  let url = "http://localhost:" + gPort + "/addons/test_filepointer.xpi";
-  AddonManager.getInstallForURL(url, function(install) {
+  let xpi = AddonTestUtils.createTempXPIFile({
+    "install.rdf": {
+      id: "addon1@tests.mozilla.org",
+      version: "2.0",
+      name: "File Pointer Test",
+      bootstrap: true,
+
+      targetApplications: [{
+          id: "xpcshell@tests.mozilla.org",
+          minVersion: "1",
+          maxVersion: "1"}],
+    },
+  });
+
+  testserver.registerFile("/addons/test_filepointer.xpi", xpi);
+
+  let url = "http://example.com/addons/test_filepointer.xpi";
+  let install = await AddonManager.getInstallForURL(url, undefined, "application/x-xpinstall");
+  await new Promise(resolve => {
     ensure_test_completed();
 
     prepare_test({
       "addon1@tests.mozilla.org": [
-        "onInstalling"
+        ["onInstalling", false],
+        ["onInstalled", false],
       ]
     }, [
       "onDownloadStarted",
       "onDownloadEnded",
       "onInstallStarted",
       "onInstallEnded"
-    ], callback_soon(check_test_2));
+    ], callback_soon(resolve));
 
     install.install();
-  }, "application/x-xpinstall");
-}
-
-function check_test_2() {
-  restartManager();
-
-  AddonManager.getAddonByID(addon1.id, function(a1) {
-    Assert.notEqual(a1, null);
-    Assert.equal(a1.version, "2.0");
-
-    let file = a1.getResourceURI().QueryInterface(AM_Ci.nsIFileURL).file;
-    Assert.equal(file.parent.path, profileDir.path);
-
-    let rootUri = do_get_addon_root_uri(profileDir, addon1.id);
-    let uri = a1.getResourceURI("/");
-    Assert.equal(uri.spec, rootUri);
-    uri = a1.getResourceURI("install.rdf");
-    Assert.equal(uri.spec, rootUri + "install.rdf");
-
-    let source = sourceDir.clone();
-    source.append(addon1.id);
-    Assert.ok(source.exists());
-
-    a1.uninstall();
-
-    executeSoon(run_test_3);
   });
-}
+
+  await promiseRestartManager();
+
+  let addon = await AddonManager.getAddonByID(addon1.id);
+  notEqual(addon, null);
+  equal(addon.version, "2.0");
+
+  let file = addon.getResourceURI().QueryInterface(AM_Ci.nsIFileURL).file;
+  equal(file.parent.path, profileDir.path);
+
+  let rootUri = do_get_addon_root_uri(profileDir, addon1.id);
+  let uri = addon.getResourceURI("/");
+  equal(uri.spec, rootUri);
+  uri = addon.getResourceURI("install.rdf");
+  equal(uri.spec, rootUri + "install.rdf");
+
+  let source = sourceDir.clone();
+  source.append(addon1.id);
+  ok(source.exists());
+
+  addon.uninstall();
+});
 
 // Tests that uninstalling doesn't clobber the original sources
-function run_test_3() {
-  restartManager();
+add_task(async function test_uninstall_pointer() {
+  await promiseRestartManager();
+  await promiseWritePointer(addon1.id);
+  await promiseRestartManager();
 
-  writePointer(addon1.id);
+  let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  notEqual(addon, null);
+  equal(addon.version, "1.0");
 
-  restartManager();
+  addon.uninstall();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
-    Assert.notEqual(a1, null);
-    Assert.equal(a1.version, "1.0");
+  await promiseRestartManager();
 
-    a1.uninstall();
-
-    restartManager();
-
-    let source = sourceDir.clone();
-    source.append(addon1.id);
-    Assert.ok(source.exists());
-
-    executeSoon(run_test_4);
-  }));
-}
+  let source = sourceDir.clone();
+  source.append(addon1.id);
+  ok(source.exists());
+});
 
 // Tests that misnaming a pointer doesn't clobber the sources
-function run_test_4() {
-  writePointer("addon2@tests.mozilla.org", addon1.id);
+add_task(async function test_bad_pointer() {
+  await promiseWritePointer("addon2@tests.mozilla.org", addon1.id);
 
-  restartManager();
+  await promiseRestartManager();
 
-  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                               "addon2@tests.mozilla.org"], function([a1, a2]) {
-    Assert.equal(a1, null);
-    Assert.equal(a2, null);
+  let [a1, a2] = await AddonManager.getAddonsByIDs(
+    ["addon1@tests.mozilla.org", "addon2@tests.mozilla.org"]);
 
-    let source = sourceDir.clone();
-    source.append(addon1.id);
-    Assert.ok(source.exists());
+  equal(a1, null);
+  equal(a2, null);
 
-    let pointer = profileDir.clone();
-    pointer.append("addon2@tests.mozilla.org");
-    Assert.ok(!pointer.exists());
+  let source = sourceDir.clone();
+  source.append(addon1.id);
+  ok(source.exists());
 
-    executeSoon(run_test_5);
-  });
-}
+  let pointer = profileDir.clone();
+  pointer.append("addon2@tests.mozilla.org");
+  ok(!pointer.exists());
+});
 
 // Tests that changing the ID of an existing add-on doesn't clobber the sources
-function run_test_5() {
+add_task(async function test_bad_pointer_id() {
   var dest = writeInstallRDFForExtension(addon1, sourceDir);
   // Make sure the modification time changes enough to be detected.
   setExtensionModifiedTime(dest, dest.lastModifiedTime - 5000);
-  writePointer(addon1.id);
+  await promiseWritePointer(addon1.id);
+  await promiseRestartManager();
 
-  restartManager();
+  let addon = await AddonManager.getAddonByID(addon1.id);
+  notEqual(addon, null);
+  equal(addon.version, "1.0");
 
-  AddonManager.getAddonByID(addon1.id, callback_soon(function(a1) {
-    Assert.notEqual(a1, null);
-    Assert.equal(a1.version, "1.0");
+  writeInstallRDFForExtension(addon2, sourceDir, addon1.id);
 
-    writeInstallRDFForExtension(addon2, sourceDir, addon1.id);
+  await promiseRestartManager();
 
-    restartManager();
+  let [a1, a2] = await AddonManager.getAddonsByIDs(
+    ["addon1@tests.mozilla.org", "addon2@tests.mozilla.org"]);
 
-    AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                 "addon2@tests.mozilla.org"], function([a1_2, a2_2]) {
-      Assert.equal(a1_2, null);
-      Assert.equal(a2_2, null);
+  equal(a1, null);
+  equal(a2, null);
 
-      let source = sourceDir.clone();
-      source.append(addon1.id);
-      Assert.ok(source.exists());
+  let source = sourceDir.clone();
+  source.append(addon1.id);
+  ok(source.exists());
 
-      let pointer = profileDir.clone();
-      pointer.append(addon1.id);
-      Assert.ok(!pointer.exists());
-
-      executeSoon(run_test_6);
-    });
-  }));
-}
+  let pointer = profileDir.clone();
+  pointer.append(addon1.id);
+  ok(!pointer.exists());
+});
 
 // Removing the pointer file should uninstall the add-on
-function run_test_6() {
+add_task(async function test_remove_pointer() {
   var dest = writeInstallRDFForExtension(addon1, sourceDir);
   // Make sure the modification time changes enough to be detected in run_test_8.
   setExtensionModifiedTime(dest, dest.lastModifiedTime - 5000);
-  writePointer(addon1.id);
+  await promiseWritePointer(addon1.id);
 
-  restartManager();
+  await promiseRestartManager();
 
-  AddonManager.getAddonByID(addon1.id, callback_soon(function(a1) {
-    Assert.notEqual(a1, null);
-    Assert.equal(a1.version, "1.0");
+  let addon = await AddonManager.getAddonByID(addon1.id);
+  notEqual(addon, null);
+  equal(addon.version, "1.0");
 
-    let pointer = profileDir.clone();
-    pointer.append(addon1.id);
-    pointer.remove(false);
+  let pointer = profileDir.clone();
+  pointer.append(addon1.id);
+  pointer.remove(false);
 
-    restartManager();
+  await promiseRestartManager();
 
-    AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1_2) {
-      Assert.equal(a1_2, null);
-
-      executeSoon(run_test_7);
-    });
-  }));
-}
+  addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  equal(addon, null);
+});
 
 // Removing the pointer file and replacing it with a directory should work
-function run_test_7() {
-  writePointer(addon1.id);
+add_task(async function test_replace_pointer() {
+  await promiseWritePointer(addon1.id);
+  await promiseRestartManager();
 
-  restartManager();
+  let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  notEqual(addon, null);
+  equal(addon.version, "1.0");
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
-    Assert.notEqual(a1, null);
-    Assert.equal(a1.version, "1.0");
+  let pointer = profileDir.clone();
+  pointer.append(addon1.id);
+  pointer.remove(false);
 
-    let pointer = profileDir.clone();
-    pointer.append(addon1.id);
-    pointer.remove(false);
+  writeInstallRDFForExtension(addon1_2, profileDir);
 
-    writeInstallRDFForExtension(addon1_2, profileDir);
+  await promiseRestartManager();
 
-    restartManager();
+  addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  notEqual(addon, null);
+  equal(addon.version, "2.0");
 
-    AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1_2) {
-      Assert.notEqual(a1_2, null);
-      Assert.equal(a1_2.version, "2.0");
-
-      a1_2.uninstall();
-
-      executeSoon(run_test_8);
-    });
-  }));
-}
+  addon.uninstall();
+});
 
 // Changes to the source files should be detected
-function run_test_8() {
-  restartManager();
+add_task(async function test_change_pointer_sources() {
+  await promiseRestartManager();
+  await promiseWritePointer(addon1.id);
+  await promiseRestartManager();
 
-  writePointer(addon1.id);
+  let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  notEqual(addon, null);
+  equal(addon.version, "1.0");
 
-  restartManager();
+  writeInstallRDFForExtension(addon1_2, sourceDir);
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
-    Assert.notEqual(a1, null);
-    Assert.equal(a1.version, "1.0");
+  await promiseRestartManager();
 
-    writeInstallRDFForExtension(addon1_2, sourceDir);
+  addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  notEqual(addon, null);
+  equal(addon.version, "2.0");
 
-    restartManager();
-
-    AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1_2) {
-      Assert.notEqual(a1_2, null);
-      Assert.equal(a1_2.version, "2.0");
-
-      a1_2.uninstall();
-
-      executeSoon(run_test_9);
-    });
-  }));
-}
+  addon.uninstall();
+});
 
 // Removing the add-on the pointer file points at should uninstall the add-on
-function run_test_9() {
-  restartManager();
-
+add_task(async function test_remove_pointer_target() {
+  await promiseRestartManager();
   var dest = writeInstallRDFForExtension(addon1, sourceDir);
-  writePointer(addon1.id);
+  await promiseWritePointer(addon1.id);
+  await promiseRestartManager();
 
-  restartManager();
+  let addon = await AddonManager.getAddonByID(addon1.id);
+  notEqual(addon, null);
+  equal(addon.version, "1.0");
 
-  AddonManager.getAddonByID(addon1.id, callback_soon(function(a1) {
-    Assert.notEqual(a1, null);
-    Assert.equal(a1.version, "1.0");
+  dest.remove(true);
 
-    dest.remove(true);
+  await promiseRestartManager();
 
-    restartManager();
+  addon = await AddonManager.getAddonByID(addon1.id);
+  equal(addon, null);
 
-    AddonManager.getAddonByID(addon1.id, function(a1_2) {
-      Assert.equal(a1_2, null);
-
-      let pointer = profileDir.clone();
-      pointer.append(addon1.id);
-      Assert.ok(!pointer.exists());
-
-      executeSoon(run_test_10);
-    });
-  }));
-}
+  let pointer = profileDir.clone();
+  pointer.append(addon1.id);
+  ok(!pointer.exists());
+});
 
 // Tests that installing a new add-on by pointer with a relative path works
-function run_test_10() {
+add_task(async function test_new_relative_pointer() {
   writeInstallRDFForExtension(addon1, sourceDir);
-  writeRelativePointer(addon1.id);
+  await promiseWriteRelativePointer(addon1.id);
+  await promiseRestartManager();
 
-  restartManager();
+  let addon = await AddonManager.getAddonByID(addon1.id);
+  equal(addon.version, "1.0");
 
-  AddonManager.getAddonByID(addon1.id, function(a1) {
-    Assert.notEqual(a1, null);
-    Assert.equal(a1.version, "1.0");
+  let file = addon.getResourceURI().QueryInterface(AM_Ci.nsIFileURL).file;
+  equal(file.parent.path, sourceDir.path);
 
-    let file = a1.getResourceURI().QueryInterface(AM_Ci.nsIFileURL).file;
-    Assert.equal(file.parent.path, sourceDir.path);
+  let rootUri = do_get_addon_root_uri(sourceDir, addon1.id);
+  let uri = addon.getResourceURI("/");
+  equal(uri.spec, rootUri);
+  uri = addon.getResourceURI("install.rdf");
+  equal(uri.spec, rootUri + "install.rdf");
 
-    let rootUri = do_get_addon_root_uri(sourceDir, addon1.id);
-    let uri = a1.getResourceURI("/");
-    Assert.equal(uri.spec, rootUri);
-    uri = a1.getResourceURI("install.rdf");
-    Assert.equal(uri.spec, rootUri + "install.rdf");
-
-    // Check that upgrade is disabled for addons installed by file-pointers.
-    Assert.equal(a1.permissions & AddonManager.PERM_CAN_UPGRADE, 0);
-    end_test();
-  });
-}
+  // Check that upgrade is disabled for addons installed by file-pointers.
+  equal(addon.permissions & AddonManager.PERM_CAN_UPGRADE, 0);
+});

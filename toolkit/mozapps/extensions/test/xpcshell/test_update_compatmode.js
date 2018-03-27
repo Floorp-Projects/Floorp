@@ -28,6 +28,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "compatmode-normal@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://localhost:" + gPort + "/data/test_updatecompatmode_%COMPATIBILITY_MODE%.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -40,6 +41,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "compatmode-strict@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://localhost:" + gPort + "/data/test_updatecompatmode_%COMPATIBILITY_MODE%.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -52,6 +54,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "compatmode-strict-optin@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://localhost:" + gPort + "/data/test_updatecompatmode_%COMPATIBILITY_MODE%.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
@@ -65,6 +68,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "compatmode-ignore@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     updateURL: "http://localhost:" + gPort + "/data/test_updatecompatmode_%COMPATIBILITY_MODE%.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",

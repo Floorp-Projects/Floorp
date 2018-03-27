@@ -5,21 +5,14 @@
 
 /* The prefs in this file are shipped with the GRE and should apply to all
  * embedding situations. Application-specific preferences belong somewhere else,
- * for example xpfe/bootstrap/browser-prefs.js
+ * such as browser/app/profile/firefox.js or mobile/android/app/mobile.js.
  *
- * Platform-specific #ifdefs at the end of this file override the generic
- * entries at the top.
- */
-
-/*
- * SYNTAX HINTS:
+ * For the syntax used by this file, consult the comments at the top of
+ * modules/libpref/parser/src/lib.rs.
  *
- *  - Dashes are delimiters; use underscores instead.
- *  - The first character after a period must be alphabetic.
- *  - Computed values (e.g. 50 * 1024) don't work.
+ * Some prefs, especially VarCache prefs, are defined in StaticPrefList.h
+ * rather than this (or any other) data file.
  */
-
-pref("preferences.allow.omt-write", true);
 
 pref("keyword.enabled", false);
 pref("general.useragent.compatMode.firefox", false);
@@ -2263,26 +2256,6 @@ pref("network.automatic-ntlm-auth.trusted-uris", "");
 // that is listed in allowedWorkstations for the user's account in their
 // AD Domain.
 pref("network.generic-ntlm-auth.workstation", "WORKSTATION");
-
-// Sub-resources HTTP-authentication:
-//   0 - don't allow sub-resources to open HTTP authentication credentials
-//       dialogs
-//   1 - allow sub-resources to open HTTP authentication credentials dialogs,
-//       but don't allow it for cross-origin sub-resources
-//   2 - allow the cross-origin authentication as well.
-pref("network.auth.subresource-http-auth-allow", 2);
-
-// Sub-resources HTTP-authentication for cross-origin images:
-// true - it is allowed to present http auth. dialog for cross-origin images.
-// false - it is not allowed.
-// If network.auth.subresource-http-auth-allow has values 0 or 1 this pref does not
-// have any effect.
-pref("network.auth.subresource-img-cross-origin-http-auth-allow", false);
-
-// Resources that are triggered by some non-web-content:
-// true - they are allow to present http auth. dialog
-// false - they are not allow to present http auth. dialog.
-pref("network.auth.non-web-content-triggered-resources-http-auth-allow", false);
 
 // This preference controls whether to allow sending default credentials (SSO) to
 // NTLM/Negotiate servers allowed in the "trusted uri" list when navigating them

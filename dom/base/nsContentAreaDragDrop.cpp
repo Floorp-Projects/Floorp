@@ -358,7 +358,7 @@ DragDataProducer::GetNodeString(nsIContent* inNode,
   RefPtr<nsRange> range = doc->CreateRange(IgnoreErrors());
   if (range) {
     range->SelectNode(*node, IgnoreErrors());
-    range->ToString(outNodeString);
+    range->ToString(outNodeString, IgnoreErrors());
   }
 }
 

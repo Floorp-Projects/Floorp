@@ -10,7 +10,7 @@
             }
           },
           "version": "2.0",
-          "update_link": "http://localhost:%PORT%/addons/test_dictionary_3.xpi"
+          "update_link": "http://example.com/addons/test_dictionary_3.xpi"
         }
       ]
     },
@@ -24,7 +24,7 @@
             }
           },
           "version": "2.0",
-          "update_link": "http://localhost:%PORT%/addons/test_dictionary_5.xpi"
+          "update_link": "http://example.com/addons/test_dictionary_5.xpi"
         }
       ]
     },
@@ -38,7 +38,7 @@
             }
           },
           "version": "2.0",
-          "update_link": "http://localhost:%PORT%/addons/test_dictionary_4.xpi"
+          "update_link": "http://example.com/addons/test_dictionary_4.xpi"
         }
       ]
     }

@@ -22,6 +22,35 @@ function run_test() {
   run_next_test();
 }
 
+const ADDONS = [
+  {
+    id: "addon1@tests.mozilla.org",
+    version: "1.0",
+    name: "Test 1",
+    bootstrap: true,
+    description: "Test Description",
+
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"}],
+  },
+  {
+    id: "addon2@tests.mozilla.org",
+    version: "2.0",
+    name: "Real Test 2",
+    bootstrap: true,
+    description: "Test Description",
+
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"}],
+  },
+];
+
+const XPIS = ADDONS.map(addon => createTempXPIFile(addon));
+
 const UUID_PATTERN = /^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/i;
 
 add_test(function test_getter_and_setter() {
@@ -58,7 +87,7 @@ add_test(function test_getter_and_setter() {
 
   AddonManager.addInstallListener(listener);
 
-  AddonManager.getInstallForFile(do_get_addon("test_install1"),
+  AddonManager.getInstallForFile(XPIS[0],
                                  function(install) {
     install.install();
   });
@@ -111,8 +140,8 @@ add_test(function test_error_on_duplicate_syncguid_insert() {
   AddonManager.addInstallListener(listener);
   let getInstallCB = function(install) { install.install(); };
 
-  for (let name of installNames) {
-    AddonManager.getInstallForFile(do_get_addon(name), getInstallCB);
+  for (let xpi of XPIS) {
+    AddonManager.getInstallForFile(xpi, getInstallCB);
   }
 });
 

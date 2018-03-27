@@ -1107,16 +1107,17 @@ WebGLTexture::TexStorage(const char* funcName, TexTarget target, GLsizei levels,
 
     const TexImageTarget testTarget = IsCubeMap() ? LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X
                                                   : target.get();
-    const GLint testLevel = 0;
-
-    WebGLTexture::ImageInfo* testImageInfo;
-    if (!ValidateTexImageSpecification(funcName, testTarget, testLevel, width, height,
-                                       depth, &testImageInfo))
+    WebGLTexture::ImageInfo* baseImageInfo;
+    WebGLTexture::ImageInfo* lastImageInfo;
+    if (!ValidateTexImageSpecification(funcName, testTarget, 0, width, height, depth,
+                                       &baseImageInfo) ||
+        !ValidateTexImageSpecification(funcName, testTarget, levels-1, 1, 1, 1,
+                                       &lastImageInfo))
     {
         return;
     }
-    MOZ_ASSERT(testImageInfo);
-    mozilla::Unused << testImageInfo;
+    MOZ_ALWAYS_TRUE(baseImageInfo);
+    MOZ_ALWAYS_TRUE(lastImageInfo);
 
     auto dstUsage = mContext->mFormatUsage->GetSizedTexUsage(sizedFormat);
     if (!dstUsage) {
@@ -1130,9 +1131,8 @@ WebGLTexture::TexStorage(const char* funcName, TexTarget target, GLsizei levels,
         return;
 
     if (dstFormat->compression) {
-        if (!ValidateCompressedTexImageRestrictions(funcName, mContext, testTarget,
-                                                    testLevel, dstFormat, width, height,
-                                                    depth))
+        if (!ValidateCompressedTexImageRestrictions(funcName, mContext, testTarget, 0,
+                                                    dstFormat, width, height, depth))
         {
             return;
         }

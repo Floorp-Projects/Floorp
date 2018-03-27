@@ -603,21 +603,6 @@ class IgnoredErrorResult :
 {
 };
 
-// A class for use when an ErrorResult should just automatically be
-// ignored.  This is designed to be passed as a temporary only, like
-// so:
-//
-//    foo->Bar(IgnoreErrors());
-class MOZ_TEMPORARY_CLASS IgnoreErrors {
-public:
-  operator ErrorResult&() && { return mInner; }
-private:
-  // We don't use an ErrorResult member here so we don't make two separate calls
-  // to SuppressException (one from us, one from the ErrorResult destructor
-  // after asserting).
-  binding_danger::TErrorResult<binding_danger::JustSuppressCleanupPolicy> mInner;
-};
-
 namespace dom {
 namespace binding_detail {
 class FastErrorResult :
@@ -693,6 +678,22 @@ binding_danger::TErrorResult<CleanupPolicy>::operator OOMReporter&()
   return *static_cast<OOMReporter*>(
      reinterpret_cast<TErrorResult<JustAssertCleanupPolicy>*>(this));
 }
+
+// A class for use when an ErrorResult should just automatically be
+// ignored.  This is designed to be passed as a temporary only, like
+// so:
+//
+//    foo->Bar(IgnoreErrors());
+class MOZ_TEMPORARY_CLASS IgnoreErrors {
+public:
+  operator ErrorResult&() && { return mInner; }
+  operator OOMReporter&() && { return mInner; }
+private:
+  // We don't use an ErrorResult member here so we don't make two separate calls
+  // to SuppressException (one from us, one from the ErrorResult destructor
+  // after asserting).
+  binding_danger::TErrorResult<binding_danger::JustSuppressCleanupPolicy> mInner;
+};
 
 /******************************************************************************
  ** Macros for checking results

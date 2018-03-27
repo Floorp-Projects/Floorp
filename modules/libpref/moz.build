@@ -25,7 +25,9 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'pref'
 
 EXPORTS.mozilla += [
+    'init/StaticPrefList.h',
     'Preferences.h',
+    'StaticPrefs.h',
 ]
 
 UNIFIED_SOURCES += [

@@ -28,6 +28,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -44,6 +45,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "addon2@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -59,6 +61,7 @@ function run_test() {
   writeInstallRDFForExtension({
     id: "addon3@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "2",
@@ -71,6 +74,7 @@ function run_test() {
   var dest = writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
     version: "1.0",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -106,16 +110,16 @@ async function run_test_1() {
                                function([a1, a2, a3, a4]) {
 
     Assert.notEqual(a1, null);
-    Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
+    Assert.ok(isExtensionInBootstrappedList(profileDir, a1.id));
 
     Assert.notEqual(a2, null);
-    Assert.ok(isExtensionInAddonsList(profileDir, a2.id));
+    Assert.ok(isExtensionInBootstrappedList(profileDir, a2.id));
 
     Assert.notEqual(a3, null);
-    Assert.ok(!isExtensionInAddonsList(profileDir, a3.id));
+    Assert.ok(!isExtensionInBootstrappedList(profileDir, a3.id));
 
     Assert.notEqual(a4, null);
-    Assert.ok(isExtensionInAddonsList(globalDir, a4.id));
+    Assert.ok(isExtensionInBootstrappedList(globalDir, a4.id));
     Assert.equal(a4.version, "1.0");
 
     executeSoon(run_test_2);
@@ -128,6 +132,7 @@ async function run_test_2() {
   var dest = writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
     version: "2.0",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "2",
@@ -145,16 +150,16 @@ async function run_test_2() {
                                function([a1, a2, a3, a4]) {
 
     Assert.notEqual(a1, null);
-    Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
+    Assert.ok(isExtensionInBootstrappedList(profileDir, a1.id));
 
     Assert.notEqual(a2, null);
-    Assert.ok(isExtensionInAddonsList(profileDir, a2.id));
+    Assert.ok(isExtensionInBootstrappedList(profileDir, a2.id));
 
     Assert.notEqual(a3, null);
-    Assert.ok(isExtensionInAddonsList(profileDir, a3.id));
+    Assert.ok(isExtensionInBootstrappedList(profileDir, a3.id));
 
     Assert.notEqual(a4, null);
-    Assert.ok(isExtensionInAddonsList(globalDir, a4.id));
+    Assert.ok(isExtensionInBootstrappedList(globalDir, a4.id));
     Assert.equal(a4.version, "2.0");
 
     executeSoon(run_test_3);
@@ -167,6 +172,7 @@ function run_test_3() {
   var dest = writeInstallRDFForExtension({
     id: "addon4@tests.mozilla.org",
     version: "3.0",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "3",
@@ -188,17 +194,19 @@ function run_test_3() {
                                function([a1, a2, a3, a4]) {
 
     Assert.notEqual(a1, null);
-    Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
+    Assert.ok(isExtensionInBootstrappedList(profileDir, a1.id));
 
     Assert.notEqual(a2, null);
-    Assert.ok(isExtensionInAddonsList(profileDir, a2.id));
+    Assert.ok(isExtensionInBootstrappedList(profileDir, a2.id));
 
     Assert.notEqual(a3, null);
-    Assert.ok(isExtensionInAddonsList(profileDir, a3.id));
+    Assert.ok(isExtensionInBootstrappedList(profileDir, a3.id));
 
     Assert.notEqual(a4, null);
-    Assert.ok(isExtensionInAddonsList(globalDir, a4.id));
+    Assert.ok(isExtensionInBootstrappedList(globalDir, a4.id));
     Assert.equal(a4.version, "2.0");
+
+    shutdownManager();
 
     end_test();
   });

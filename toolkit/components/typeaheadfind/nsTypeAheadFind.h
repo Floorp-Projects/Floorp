@@ -24,6 +24,13 @@ class nsIPresShell;
 class nsPresContext;
 class nsRange;
 
+namespace mozilla {
+namespace dom {
+class Selection;
+} // namespace dom
+} // namespace mozilla
+
+
 #define TYPEAHEADFIND_NOTFOUND_WAV_URL \
         "chrome://global/content/notfound.wav"
 
@@ -54,15 +61,15 @@ protected:
                              bool *aIsInsideLink, bool *aIsStartingLink);
 
   void GetSelection(nsIPresShell *aPresShell, nsISelectionController **aSelCon,
-                    nsISelection **aDomSel);
+                    mozilla::dom::Selection **aDomSel);
   // *aNewRange may not be collapsed.  If you want to collapse it in a
   // particular way, you need to do it yourself.
   bool IsRangeVisible(nsIPresShell *aPresShell, nsPresContext *aPresContext,
-                        nsIDOMRange *aRange, bool aMustBeVisible,
-                        bool aGetTopVisibleLeaf, nsIDOMRange **aNewRange,
-                        bool *aUsesIndependentSelection);
+                      nsRange *aRange, bool aMustBeVisible,
+                      bool aGetTopVisibleLeaf, nsRange **aNewRange,
+                      bool *aUsesIndependentSelection);
   bool IsRangeRendered(nsIPresShell *aPresShell, nsPresContext *aPresContext,
-                          nsIDOMRange *aRange);
+                       nsRange *aRange);
   nsresult FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
                      bool aIsFirstVisiblePreferred, bool aFindPrev,
                      uint16_t* aResult);
@@ -89,7 +96,7 @@ protected:
   bool mDidAddObservers;
   nsCOMPtr<nsIDOMElement> mFoundLink;     // Most recent elem found, if a link
   nsCOMPtr<nsIDOMElement> mFoundEditable; // Most recent elem found, if editable
-  nsCOMPtr<nsIDOMRange> mFoundRange;      // Most recent range found
+  RefPtr<nsRange> mFoundRange;            // Most recent range found
   nsCOMPtr<nsPIDOMWindowInner> mCurrentWindow;
   // mLastFindLength is the character length of the last find string.  It is used for
   // disabling the "not found" sound when using backspace or delete
@@ -101,10 +108,10 @@ protected:
   bool mIsSoundInitialized;
 
   // where selection was when user started the find
-  nsCOMPtr<nsIDOMRange> mStartFindRange;
-  nsCOMPtr<nsIDOMRange> mSearchRange;
-  nsCOMPtr<nsIDOMRange> mStartPointRange;
-  nsCOMPtr<nsIDOMRange> mEndPointRange;
+  RefPtr<nsRange> mStartFindRange;
+  RefPtr<nsRange> mSearchRange;
+  RefPtr<nsRange> mStartPointRange;
+  RefPtr<nsRange> mEndPointRange;
 
   // Cached useful interfaces
   nsCOMPtr<nsIFind> mFind;

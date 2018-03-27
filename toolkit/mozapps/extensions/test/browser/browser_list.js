@@ -18,7 +18,7 @@ var gVersion = Services.appinfo.version;
 var gDate = new Date(2010, 7, 16);
 var infoURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons";
 
-const EXPECTED_ADDONS = 13;
+const EXPECTED_ADDONS = 11;
 
 var gLWTheme = {
                 id: "4",
@@ -60,13 +60,6 @@ add_task(async function() {
                  AddonManager.PERM_CAN_DISABLE |
                  AddonManager.PERM_CAN_UPGRADE
   }, {
-    id: "addon4@tests.mozilla.org",
-    blocklistURL: "http://example.com/addon4@tests.mozilla.org",
-    name: "Test add-on 4",
-    _userDisabled: true,
-    isActive: false,
-    blocklistState: Ci.nsIBlocklistService.STATE_SOFTBLOCKED
-  }, {
     id: "addon5@tests.mozilla.org",
     blocklistURL: "http://example.com/addon5@tests.mozilla.org",
     name: "Test add-on 5",
@@ -78,11 +71,6 @@ add_task(async function() {
     blocklistURL: "http://example.com/addon6@tests.mozilla.org",
     name: "Test add-on 6",
     operationsRequiringRestart: AddonManager.OP_NEEDS_RESTART_NONE
-  }, {
-    id: "addon7@tests.mozilla.org",
-    blocklistURL: "http://example.com/addon7@tests.mozilla.org",
-    name: "Test add-on 7",
-    blocklistState: Ci.nsIBlocklistService.STATE_OUTDATED,
   }, {
     id: "addon8@tests.mozilla.org",
     blocklistURL: "http://example.com/addon8@tests.mozilla.org",
@@ -155,84 +143,10 @@ add_task(async function() {
   let items = get_test_items();
   is(Object.keys(items).length, EXPECTED_ADDONS, "Should be the right number of add-ons installed");
 
-  info("Addon 1");
-  let addon = items["Test add-on"];
+  info("Addon 3");
+  let addon = items["Test add-on 3"];
   addon.parentNode.ensureElementIsVisible(addon);
   let { name, version } = await get_tooltip_info(addon);
-  is(get_node(addon, "name").value, "Test add-on", "Name should be correct");
-  is(name, "Test add-on", "Tooltip name should be correct");
-  is(version, "1.0", "Tooltip version should be correct");
-  is(get_node(addon, "description").value, "A test add-on", "Description should be correct");
-  is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
-  is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
-  is(get_node(addon, "date-updated").value, formatDate(gDate), "Update date should be correct");
-
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
-  is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_hidden(get_node(addon, "warning"), "Warning message should be hidden");
-  is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
-
-  info("Disabling");
-  EventUtils.synthesizeMouseAtCenter(get_node(addon, "disable-btn"), {}, gManagerWindow);
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
-  is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_hidden(get_node(addon, "warning"), "Warning message should be visible");
-  is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_visible(get_node(addon, "pending"), "Pending message should be visible");
-  is(get_node(addon, "pending").textContent, "Test add-on will be disabled after you restart " + gApp + ".", "Pending message should be correct");
-
-  info("Addon 2");
-  addon = items["Test add-on 2"];
-  addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = await get_tooltip_info(addon));
-  is(get_node(addon, "name").value, "Test add-on 2", "Name should be correct");
-  is(name, "Test add-on 2", "Tooltip name should be correct");
-  is(version, "2.0", "Tooltip version should be correct");
-  is_element_hidden(get_node(addon, "description"), "Description should be hidden");
-  is_element_visible(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be visible");
-  is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
-  is(get_node(addon, "date-updated").value, "Unknown", "Date should be correct");
-
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
-  is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_hidden(get_node(addon, "warning"), "Warning message should be hidden");
-  is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
-
-  info("Enabling");
-  EventUtils.synthesizeMouseAtCenter(get_node(addon, "enable-btn"), {}, gManagerWindow);
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
-  is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_hidden(get_node(addon, "warning"), "Warning message should be hidden");
-  is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_visible(get_node(addon, "pending"), "Pending message should be visible");
-  is(get_node(addon, "pending").textContent, "Test add-on 2 will be enabled after you restart " + gApp + ".", "Pending message should be correct");
-
-  info("Addon 3");
-  addon = items["Test add-on 3"];
-  addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = await get_tooltip_info(addon));
   is(get_node(addon, "name").value, "Test add-on 3", "Name should be correct");
   is(name, "Test add-on 3", "Tooltip name should be correct");
   is(version, undefined, "Tooltip version should be hidden");
@@ -248,41 +162,6 @@ add_task(async function() {
   is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
   is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
   is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
-
-  info("Addon 4");
-  addon = items["Test add-on 4"];
-  addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = await get_tooltip_info(addon));
-  is(get_node(addon, "name").value, "Test add-on 4", "Name should be correct");
-  is(name, "Test add-on 4", "Tooltip name should be correct");
-
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
-  is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_visible(get_node(addon, "warning"), "Warning message should be visible");
-  is(get_node(addon, "warning").textContent, "Test add-on 4 is known to cause security or stability issues.", "Warning message should be correct");
-  is_element_visible(get_node(addon, "warning-link"), "Warning link should be visible");
-  is(get_node(addon, "warning-link").value, "More Information", "Warning link text should be correct");
-  is(get_node(addon, "warning-link").href, "http://example.com/addon4@tests.mozilla.org", "Warning link should be correct");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
-
-  info("Enabling");
-  EventUtils.synthesizeMouseAtCenter(get_node(addon, "enable-btn"), {}, gManagerWindow);
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
-  is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_hidden(get_node(addon, "warning"), "Warning message should be hidden");
-  is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_visible(get_node(addon, "pending"), "Pending message should be visible");
-  is(get_node(addon, "pending").textContent, "Test add-on 4 will be enabled after you restart " + gApp + ".", "Pending message should be correct");
 
   info("Addon 5");
   addon = items["Test add-on 5"];
@@ -338,41 +217,6 @@ add_task(async function() {
   is_element_hidden(get_node(addon, "error"), "Error message should be visible");
   is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
   is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
-
-  info("Addon 7");
-  addon = items["Test add-on 7"];
-  addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = await get_tooltip_info(addon));
-  is(get_node(addon, "name").value, "Test add-on 7", "Name should be correct");
-  is(name, "Test add-on 7", "Tooltip name should be correct");
-
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
-  is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_visible(get_node(addon, "warning"), "Warning message should be hidden");
-  is(get_node(addon, "warning").textContent, "An important update is available for Test add-on 7.", "Warning message should be correct");
-  is_element_visible(get_node(addon, "warning-link"), "Warning link should be visible");
-  is(get_node(addon, "warning-link").value, "Update Now", "Warning link text should be correct");
-  is(get_node(addon, "warning-link").href, "http://example.com/addon7@tests.mozilla.org", "Warning link should be correct");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
-
-  info("Disabling");
-  EventUtils.synthesizeMouseAtCenter(get_node(addon, "disable-btn"), {}, gManagerWindow);
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
-  is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_hidden(get_node(addon, "warning"), "Warning message should be visible");
-  is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_visible(get_node(addon, "pending"), "Pending message should be visible");
-  is(get_node(addon, "pending").textContent, "Test add-on 7 will be disabled after you restart " + gApp + ".", "Pending message should be correct");
 
   info("Addon 8");
   addon = items["Test add-on 8"];
@@ -468,17 +312,6 @@ add_task(async function() {
   }
 });
 
-// Check the add-ons are now in the right state
-add_task(async function() {
-  let [a1, a2, a4] = await promiseAddonsByIDs(["addon1@tests.mozilla.org",
-                                               "addon2@tests.mozilla.org",
-                                               "addon4@tests.mozilla.org"]);
-
-  is(a1.pendingOperations, AddonManager.PENDING_DISABLE, "Add-on 1 should be pending disable");
-  is(a2.pendingOperations, AddonManager.PENDING_ENABLE, "Add-on 2 should be pending enable");
-  is(a4.pendingOperations, AddonManager.PENDING_ENABLE, "Add-on 4 should be pending enable");
-});
-
 // Reload the list to make sure the changes are still pending and that undoing
 // works
 add_task(async function() {
@@ -488,120 +321,10 @@ add_task(async function() {
   let items = get_test_items();
   is(Object.keys(items).length, EXPECTED_ADDONS, "Should be the right number of add-ons installed");
 
-  info("Addon 1");
-  let addon = items["Test add-on"];
-  addon.parentNode.ensureElementIsVisible(addon);
-  let { name, version } = await get_tooltip_info(addon);
-  is(get_node(addon, "name").value, "Test add-on", "Name should be correct");
-  is(name, "Test add-on", "Tooltip name should be correct");
-  is(version, "1.0", "Tooltip version should be correct");
-  is_element_visible(get_node(addon, "description"), "Description should be visible");
-  is(get_node(addon, "description").value, "A test add-on", "Description should be correct");
-  is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
-  is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
-  is(get_node(addon, "date-updated").value, formatDate(gDate), "Update date should be correct");
-
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
-  is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_hidden(get_node(addon, "warning"), "Warning message should be hidden");
-  is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_visible(get_node(addon, "pending"), "Pending message should be visible");
-  is(get_node(addon, "pending").textContent, "Test add-on will be disabled after you restart " + gApp + ".", "Pending message should be correct");
-
-  info("Undoing");
-  EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo-btn"), {}, gManagerWindow);
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
-  is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_hidden(get_node(addon, "warning"), "Warning message should be hidden");
-  is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
-
-  info("Addon 2");
-  addon = items["Test add-on 2"];
-  addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = await get_tooltip_info(addon));
-  is(get_node(addon, "name").value, "Test add-on 2", "Name should be correct");
-  is(name, "Test add-on 2", "Tooltip name should be correct");
-  is(version, "2.0", "Tooltip version should be correct");
-  is_element_hidden(get_node(addon, "description"), "Description should be hidden");
-  is_element_visible(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be visible");
-  is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
-  is(get_node(addon, "date-updated").value, "Unknown", "Date should be correct");
-
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
-  is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_hidden(get_node(addon, "warning"), "Warning message should be hidden");
-  is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_visible(get_node(addon, "pending"), "Pending message should be visible");
-  is(get_node(addon, "pending").textContent, "Test add-on 2 will be enabled after you restart " + gApp + ".", "Pending message should be correct");
-
-  info("Undoing");
-  EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo-btn"), {}, gManagerWindow);
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
-  is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_hidden(get_node(addon, "warning"), "Warning message should be hidden");
-  is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
-
-  info("Addon 4");
-  addon = items["Test add-on 4"];
-  addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = await get_tooltip_info(addon));
-  is(get_node(addon, "name").value, "Test add-on 4", "Name should be correct");
-  is(name, "Test add-on 4", "Tooltip name should be correct");
-
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
-  is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_hidden(get_node(addon, "warning"), "Warning message should be hidden");
-  is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_visible(get_node(addon, "pending"), "Pending message should be visible");
-  is(get_node(addon, "pending").textContent, "Test add-on 4 will be enabled after you restart " + gApp + ".", "Pending message should be correct");
-
-  info("Undoing");
-  EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo-btn"), {}, gManagerWindow);
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
-  is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_visible(get_node(addon, "warning"), "Warning message should be visible");
-  is(get_node(addon, "warning").textContent, "Test add-on 4 is known to cause security or stability issues.", "Warning message should be correct");
-  is_element_visible(get_node(addon, "warning-link"), "Warning link should be visible");
-  is(get_node(addon, "warning-link").value, "More Information", "Warning link text should be correct");
-  is(get_node(addon, "warning-link").href, "http://example.com/addon4@tests.mozilla.org", "Warning link should be correct");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
-
   info("Addon 6");
-  addon = items["Test add-on 6"];
+  let addon = items["Test add-on 6"];
   addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = await get_tooltip_info(addon));
+  let { name } = await get_tooltip_info(addon);
   is(get_node(addon, "name").value, "Test add-on 6", "Name should be correct");
   is(name, "Test add-on 6", "Tooltip name should be correct");
   is_element_visible(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be visible");
@@ -631,52 +354,6 @@ add_task(async function() {
   is_element_hidden(get_node(addon, "error"), "Error message should be visible");
   is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
   is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
-
-  info("Addon 7");
-  addon = items["Test add-on 7"];
-  addon.parentNode.ensureElementIsVisible(addon);
-  ({ name, version } = await get_tooltip_info(addon));
-  is(get_node(addon, "name").value, "Test add-on 7", "Name should be correct");
-  is(name, "Test add-on 7", "Tooltip name should be correct");
-
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
-  is_element_hidden(get_node(addon, "disable-btn"), "Disable button should be hidden");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_hidden(get_node(addon, "warning"), "Warning message should be visible");
-  is_element_hidden(get_node(addon, "warning-link"), "Warning link should be hidden");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_visible(get_node(addon, "pending"), "Pending message should be visible");
-  is(get_node(addon, "pending").textContent, "Test add-on 7 will be disabled after you restart " + gApp + ".", "Pending message should be correct");
-
-  info("Undoing");
-  EventUtils.synthesizeMouseAtCenter(get_node(addon, "undo-btn"), {}, gManagerWindow);
-  is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
-  is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
-  is_element_visible(get_node(addon, "disable-btn"), "Disable button should be visible");
-  is_element_visible(get_node(addon, "remove-btn"), "Remove button should be visible");
-
-  is_element_visible(get_node(addon, "warning"), "Warning message should be hidden");
-  is(get_node(addon, "warning").textContent, "An important update is available for Test add-on 7.", "Warning message should be correct");
-  is_element_visible(get_node(addon, "warning-link"), "Warning link should be visible");
-  is(get_node(addon, "warning-link").value, "Update Now", "Warning link text should be correct");
-  is(get_node(addon, "warning-link").href, "http://example.com/addon7@tests.mozilla.org", "Warning link should be correct");
-  is_element_hidden(get_node(addon, "error"), "Error message should be hidden");
-  is_element_hidden(get_node(addon, "error-link"), "Error link should be hidden");
-  is_element_hidden(get_node(addon, "pending"), "Pending message should be hidden");
-});
-
-// Check the add-ons are now in the right state
-add_task(async function() {
-  let [a1, a2, a4] = await promiseAddonsByIDs(["addon1@tests.mozilla.org",
-                                               "addon2@tests.mozilla.org",
-                                               "addon4@tests.mozilla.org"]);
-
-  is(a1.pendingOperations, 0, "Add-on 1 should not have any pending operations");
-  is(a2.pendingOperations, 0, "Add-on 1 should not have any pending operations");
-  is(a4.pendingOperations, 0, "Add-on 1 should not have any pending operations");
 });
 
 // Check that upgrades with onExternalInstall take effect immediately
@@ -738,6 +415,7 @@ add_task(async function() {
   Services.prefs.setBoolPref("accessibility.tabfocus_applies_to_xul", false);
 
   let items = get_test_items();
+  is(Object.keys(items).length, EXPECTED_ADDONS, "Should be the right number of add-ons installed");
 
   let addon = items["Test add-on 6"];
   addon.parentNode.ensureElementIsVisible(addon);

@@ -44,6 +44,7 @@ add_test(function() {
     name: "manually updating addon",
     version: "1.0",
     isCompatible: false,
+    operationsRequiringRestart: 0,
     blocklistState: Ci.nsIBlocklistService.STATE_BLOCKED,
     applyBackgroundUpdates: AddonManager.AUTOUPDATE_DISABLE
   }]);
@@ -177,7 +178,7 @@ add_test(function() {
       info("Install started");
       is_element_visible(item._installStatus, "Install progress widget should be visible");
     },
-    onInstallEnded() {
+    onInstallEnded(...args) {
       install.removeTestListener(this);
       info("Install ended");
       is_element_hidden(item._installStatus, "Install progress widget should be hidden");

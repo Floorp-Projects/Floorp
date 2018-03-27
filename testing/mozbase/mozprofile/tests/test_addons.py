@@ -7,7 +7,6 @@
 from __future__ import absolute_import
 
 import os
-import shutil
 import tempfile
 import unittest
 import zipfile
@@ -167,7 +166,7 @@ class TestAddonsManager(unittest.TestCase):
 
         # Generate a list of addons installed in the profile
         addons_installed = [str(x[:-len('.xpi')]) for x in os.listdir(os.path.join(
-                            self.profile.profile, 'extensions', 'staged'))]
+                            self.profile.profile, 'extensions'))]
         self.assertEqual(addons_to_install.sort(), addons_installed.sort())
 
     def test_install_from_path_folder(self):
@@ -244,7 +243,7 @@ class TestAddonsManager(unittest.TestCase):
         self.assertEqual(self.profile.addon_manager.installed_addons, [addon])
 
     def test_install_from_path_backup(self):
-        staged_path = os.path.join(self.profile_path, 'extensions', 'staged')
+        staged_path = os.path.join(self.profile_path, 'extensions')
 
         # Generate installer stubs for all possible types of addons
         addon_xpi = generate_addon('test-addon-1@mozilla.org',
@@ -332,7 +331,7 @@ class TestAddonsManager(unittest.TestCase):
         self.am.install_from_manifest(temp_manifest)
         # Generate a list of addons installed in the profile
         addons_installed = [str(x[:-len('.xpi')]) for x in os.listdir(os.path.join(
-                            self.profile.profile, 'extensions', 'staged'))]
+                            self.profile.profile, 'extensions'))]
         self.assertEqual(addons_installed.sort(), addons_to_install.sort())
 
         # Cleanup the temporary addon and manifest directories
@@ -372,7 +371,7 @@ class TestAddonsManager(unittest.TestCase):
 
         self.am.install_addons(addon_one)
         installed_addons = [str(x[:-len('.xpi')]) for x in os.listdir(os.path.join(
-                            self.profile.profile, 'extensions', 'staged'))]
+                            self.profile.profile, 'extensions'))]
 
         # Create a new profile based on an existing profile
         # Install an extra addon in the new profile
@@ -382,7 +381,7 @@ class TestAddonsManager(unittest.TestCase):
         duplicate_profile.addon_manager.clean()
 
         addons_after_cleanup = [str(x[:-len('.xpi')]) for x in os.listdir(os.path.join(
-                                duplicate_profile.profile, 'extensions', 'staged'))]
+                                duplicate_profile.profile, 'extensions'))]
         # New addons installed should be removed by clean_addons()
         self.assertEqual(installed_addons, addons_after_cleanup)
 
@@ -413,7 +412,7 @@ class TestAddonsManager(unittest.TestCase):
 
             # now its there
             self.assertEqual(os.listdir(profile), ['extensions'])
-            staging_folder = os.path.join(profile, 'extensions', 'staged')
+            staging_folder = os.path.join(profile, 'extensions')
             self.assertTrue(os.path.exists(staging_folder))
             self.assertEqual(len(os.listdir(staging_folder)), 2)
 
@@ -442,17 +441,13 @@ class TestAddonsManager(unittest.TestCase):
         self.am.install_from_path(self.tmpdir)
 
         extensions_path = os.path.join(self.profile_path, 'extensions')
-        staging_path = os.path.join(extensions_path, 'staged')
-
-        # Fake a run by virtually installing one of the staged add-ons
-        shutil.move(os.path.join(staging_path, 'test-addon-1@mozilla.org.xpi'),
-                    extensions_path)
+        staging_path = os.path.join(extensions_path)
 
         for addon in self.am._addons:
             self.am.remove_addon(addon)
 
         self.assertEqual(os.listdir(staging_path), [])
-        self.assertEqual(os.listdir(extensions_path), ['staged'])
+        self.assertEqual(os.listdir(extensions_path), [])
 
 
 if __name__ == '__main__':

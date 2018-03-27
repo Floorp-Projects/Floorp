@@ -60,15 +60,68 @@ var EXPECTED = [
   }
 ];
 
+const MANIFESTS = [
+  {
+    id: "bug335238_1@tests.mozilla.org",
+    version: "1.3.4",
+    name: "Bug 335238",
+    updateURL: "http://example.com/0?id=%ITEM_ID%&version=%ITEM_VERSION%&maxAppVersion=%ITEM_MAXAPPVERSION%&status=%ITEM_STATUS%&appId=%APP_ID%&appVersion=%APP_VERSION%&appOs=%APP_OS%&appAbi=%APP_ABI%&locale=%APP_LOCALE%&reqVersion=%REQ_VERSION%",
+    bootstrap: true,
+
+    targetApplications: [{
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "1",
+        maxVersion: "5"}],
+  },
+  {
+    id: "bug335238_2@tests.mozilla.org",
+    version: "28at",
+    name: "Bug 335238",
+    updateURL: "http://example.com/1?id=%ITEM_ID%&version=%ITEM_VERSION%&maxAppVersion=%ITEM_MAXAPPVERSION%&status=%ITEM_STATUS%&appId=%APP_ID%&appVersion=%APP_VERSION%&appOs=%APP_OS%&appAbi=%APP_ABI%&locale=%APP_LOCALE%&reqVersion=%REQ_VERSION%",
+    bootstrap: true,
+
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "7"}],
+  },
+  {
+    id: "bug335238_3@tests.mozilla.org",
+    version: "58",
+    name: "Bug 335238",
+    updateURL: "http://example.com/2?id=%ITEM_ID%&version=%ITEM_VERSION%&maxAppVersion=%ITEM_MAXAPPVERSION%&status=%ITEM_STATUS%&appId=%APP_ID%&appVersion=%APP_VERSION%&appOs=%APP_OS%&appAbi=%APP_ABI%&locale=%APP_LOCALE%&reqVersion=%REQ_VERSION%",
+    bootstrap: true,
+
+    targetApplications: [{
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "1",
+        maxVersion: "*"}],
+  },
+  {
+    id: "bug335238_4@tests.mozilla.org",
+    version: "4",
+    name: "Bug 335238",
+    updateURL: "http://example.com/3?id=%ITEM_ID%&version=%ITEM_VERSION%&maxAppVersion=%ITEM_MAXAPPVERSION%&status=%ITEM_STATUS%&appId=%APP_ID%&appVersion=%APP_VERSION%&appOs=%APP_OS%&appAbi=%APP_ABI%&locale=%APP_LOCALE%&reqVersion=%REQ_VERSION%",
+    bootstrap: true,
+
+    targetApplications: [{
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "1",
+        maxVersion: "2+"}],
+  },
+];
+
+const XPIS = MANIFESTS.map(manifest => createTempXPIFile(manifest));
+
 var ADDONS = [
   {id: "bug335238_1@tests.mozilla.org",
-   addon: "test_bug335238_1"},
+   addon: XPIS[0]},
   {id: "bug335238_2@tests.mozilla.org",
-   addon: "test_bug335238_2"},
+   addon: XPIS[1]},
   {id: "bug335238_3@tests.mozilla.org",
-   addon: "test_bug335238_3"},
+   addon: XPIS[2]},
   {id: "bug335238_4@tests.mozilla.org",
-   addon: "test_bug335238_4"}
+   addon: XPIS[3]}
 ];
 
 // This is a replacement for the blocklist service
@@ -155,7 +208,7 @@ function run_test() {
   Services.locale.setRequestedLocales(["en-US"]);
 
   startupManager();
-  installAllFiles(ADDONS.map(a => do_get_addon(a.addon)), function() {
+  installAllFiles(ADDONS.map(a => a.addon), function() {
 
     restartManager();
     AddonManager.getAddonByID(ADDONS[1].id, callback_soon(function(addon) {

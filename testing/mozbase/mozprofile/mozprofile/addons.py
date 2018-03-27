@@ -92,7 +92,7 @@ class AddonManager(object):
 
         # restore backups
         if self.backup_dir and os.path.isdir(self.backup_dir):
-            extensions_path = os.path.join(self.profile, 'extensions', 'staged')
+            extensions_path = os.path.join(self.profile, 'extensions')
 
             for backup in os.listdir(self.backup_dir):
                 backup_path = os.path.join(self.backup_dir, backup)
@@ -140,14 +140,10 @@ class AddonManager(object):
         :param addon_id: id of the add-on to retrieve the path from
         """
         # By default we should expect add-ons being located under the
-        # extensions folder. Only if the application hasn't been run and
-        # installed the add-ons yet, it will be located under 'staged'.
-        # Also add-ons could have been unpacked by the application.
+        # extensions folder.
         extensions_path = os.path.join(self.profile, 'extensions')
         paths = [os.path.join(extensions_path, addon_id),
-                 os.path.join(extensions_path, addon_id + '.xpi'),
-                 os.path.join(extensions_path, 'staged', addon_id),
-                 os.path.join(extensions_path, 'staged', addon_id + '.xpi')]
+                 os.path.join(extensions_path, addon_id + '.xpi')]
         for path in paths:
             if os.path.exists(path):
                 return path
@@ -406,7 +402,7 @@ class AddonManager(object):
                 mozfile.extract(orig_path, addon)
 
             # copy the addon to the profile
-            extensions_path = os.path.join(self.profile, 'extensions', 'staged')
+            extensions_path = os.path.join(self.profile, 'extensions')
             addon_path = os.path.join(extensions_path, addon_id)
 
             if os.path.isfile(addon):
