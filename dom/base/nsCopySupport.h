@@ -20,6 +20,12 @@ class nsITransferable;
 class nsIPresShell;
 class nsILoadContext;
 
+namespace mozilla {
+namespace dom {
+class Selection;
+} // namespace dom
+} // namespace mozilla
+
 class nsCopySupport
 {
   // class of static helper functions for copy support
@@ -56,7 +62,7 @@ class nsCopySupport
      * set to the document's selection and null will be returned.
      */
     static nsIContent* GetSelectionForCopy(nsIDocument* aDocument,
-                                           nsISelection** aSelection);
+                                           mozilla::dom::Selection** aSelection);
 
     /**
      * Returns true if a copy operation is currently permitted based on the
@@ -93,7 +99,7 @@ class nsCopySupport
     static bool FireClipboardEvent(mozilla::EventMessage aEventMessage,
                                    int32_t aClipboardType,
                                    nsIPresShell* aPresShell,
-                                   nsISelection* aSelection,
+                                   mozilla::dom::Selection* aSelection,
                                    bool* aActionTaken = nullptr);
 };
 
