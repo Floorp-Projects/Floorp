@@ -102,6 +102,7 @@ DrawEventRecorderMemory::FlushItem(IntRect aRect)
   // first.
   DetatchResources();
 
+  // See moz2d_renderer.rs for a description of the stream format
   WriteElement(mIndex, mOutputStream.mLength);
 
   // write out the fonts into the extra data section
@@ -113,6 +114,8 @@ DrawEventRecorderMemory::FlushItem(IntRect aRect)
   WriteElement(mIndex, aRect.XMost());
   WriteElement(mIndex, aRect.YMost());
   ClearResources();
+
+  // write out a new header for the next recording in the stream
   WriteHeader(mOutputStream);
 }
 
