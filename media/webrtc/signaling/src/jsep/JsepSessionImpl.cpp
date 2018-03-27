@@ -1095,25 +1095,21 @@ JsepSessionImpl::MakeNegotiatedTransceiver(const SdpMediaSection& remote,
   }
 
   transceiver->mSendTrack.SetActive(sending);
-  if (sending) {
-    transceiver->mSendTrack.Negotiate(answer, remote);
-  }
+  transceiver->mSendTrack.Negotiate(answer, remote);
 
   JsepTrack& recvTrack = transceiver->mRecvTrack;
   recvTrack.SetActive(receiving);
-  if (receiving) {
-    recvTrack.Negotiate(answer, remote);
+  recvTrack.Negotiate(answer, remote);
 
-    if (transceiver->HasBundleLevel() &&
-        recvTrack.GetSsrcs().empty() &&
-        recvTrack.GetMediaType() != SdpMediaSection::kApplication) {
-      // TODO(bug 1105005): Once we have urn:ietf:params:rtp-hdrext:sdes:mid
-      // support, we should only fire this warning if that extension was not
-      // negotiated.
-      MOZ_MTLOG(ML_ERROR, "[" << mName << "]: Bundled m-section has no ssrc "
-                          "attributes. This may cause media packets to be "
-                          "dropped.");
-    }
+  if (transceiver->HasBundleLevel() &&
+      recvTrack.GetSsrcs().empty() &&
+      recvTrack.GetMediaType() != SdpMediaSection::kApplication) {
+    // TODO(bug 1105005): Once we have urn:ietf:params:rtp-hdrext:sdes:mid
+    // support, we should only fire this warning if that extension was not
+    // negotiated.
+    MOZ_MTLOG(ML_ERROR, "[" << mName << "]: Bundled m-section has no ssrc "
+                        "attributes. This may cause media packets to be "
+                        "dropped.");
   }
 
   if (transceiver->mTransport->mComponents == 2) {
