@@ -301,10 +301,6 @@ public:
   static nsCSSCounterDesc LookupCounterDesc(const nsAString& aProperty);
   static nsCSSCounterDesc LookupCounterDesc(const nsACString& aProperty);
 
-  // For predefined counter styles which need to be lower-cased during parse
-  static bool IsPredefinedCounterStyle(const nsAString& aStyle);
-  static bool IsPredefinedCounterStyle(const nsACString& aStyle);
-
   // Given a property enum, get the string value
   static const nsCString& GetStringValue(nsCSSPropertyID aProperty);
   static const nsCString& GetStringValue(nsCSSFontDesc aFontDesc);
