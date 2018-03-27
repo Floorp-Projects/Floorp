@@ -1,12 +1,12 @@
+# needed by txws, and we'd like pip to get it from the local server before setuptools tries pypi
+six==1.10.0
+
 twisted==10.2.0
 
 # websocket adapter for twisted, might be built into twisted someday
 txws==0.9.1
 
 psutil==5.4.3
-
-# needed by txws, but pypi doesn't know about it
-six==1.10.0
 
 # Needed by iceserver
 ipaddr==2.1.11
