@@ -2378,18 +2378,6 @@ Selection::AddRangeInternal(nsRange& aRange, nsIDocument* aDocument,
 //    being removed, and cause them to set the selected bits back on their
 //    selected frames after we've cleared the bit from ours.
 
-nsresult
-Selection::RemoveRange(nsIDOMRange* aDOMRange)
-{
-  if (!aDOMRange) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  nsRange* range = static_cast<nsRange*>(aDOMRange);
-  ErrorResult result;
-  RemoveRange(*range, result);
-  return result.StealNSResult();
-}
-
 void
 Selection::RemoveRange(nsRange& aRange, ErrorResult& aRv)
 {
