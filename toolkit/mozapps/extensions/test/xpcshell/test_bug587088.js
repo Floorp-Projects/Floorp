@@ -8,17 +8,50 @@
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-function run_test() {
+const ADDONS = [
+  {
+    "install.rdf": {
+      "id": "addon1@tests.mozilla.org",
+      "version": "1.0",
+      "name": "Bug 587088 Test",
+      "targetApplications": [
+        {
+          "id": "xpcshell@tests.mozilla.org",
+          "minVersion": "1",
+          "maxVersion": "1"
+        }
+      ]
+    },
+    "testfile": "",
+    "testfile1": "",
+  },
+
+  {
+    "install.rdf": {
+      "id": "addon1@tests.mozilla.org",
+      "version": "2.0",
+      "name": "Bug 587088 Test",
+      "targetApplications": [
+        {
+          "id": "xpcshell@tests.mozilla.org",
+          "minVersion": "1",
+          "maxVersion": "1"
+        }
+      ]
+    },
+    "testfile": "",
+    "testfile2": "",
+  },
+];
+
+add_task(async function setup() {
   // This is only an issue on windows.
   if (!("nsIWindowsRegKey" in Ci))
     return;
 
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-
-  startupManager();
-  run_test_1();
-}
+});
 
 function check_addon(aAddon, aVersion) {
   Assert.notEqual(aAddon, null);
@@ -72,101 +105,88 @@ function check_addon_uninstalling(aAddon, aAfterRestart) {
   Assert.equal(aAddon.pendingOperations, AddonManager.PENDING_UNINSTALL);
 }
 
-function run_test_1() {
-  installAllFiles([do_get_addon("test_bug587088_1")], function() {
-    restartManager();
+add_task(async function test_1() {
+  await AddonTestUtils.promiseInstallXPI(ADDONS[0]);
 
-    AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-      check_addon(a1, "1.0");
+  await promiseRestartManager();
 
-      // Lock either install.rdf for unpacked add-ons or the xpi for packed add-ons.
-      let uri = a1.getResourceURI("install.rdf");
-      if (uri.schemeIs("jar"))
-        uri = a1.getResourceURI();
+  let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  check_addon(a1, "1.0");
 
-      let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                    createInstance(Ci.nsIFileInputStream);
-      fstream.init(uri.QueryInterface(Ci.nsIFileURL).file, -1, 0, 0);
+  // Lock either install.rdf for unpacked add-ons or the xpi for packed add-ons.
+  let uri = a1.getResourceURI("install.rdf");
+  if (uri.schemeIs("jar"))
+    uri = a1.getResourceURI();
 
-      installAllFiles([do_get_addon("test_bug587088_2")], function() {
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
+                createInstance(Ci.nsIFileInputStream);
+  fstream.init(uri.QueryInterface(Ci.nsIFileURL).file, -1, 0, 0);
 
-        check_addon_upgrading(a1);
+  await AddonTestUtils.promiseInstallXPI(ADDONS[1]);
 
-        restartManager();
+  check_addon_upgrading(a1);
 
-        AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1_2) {
-          check_addon_upgrading(a1_2);
+  await promiseRestartManager();
 
-          restartManager();
+  let a1_2 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  check_addon_upgrading(a1_2);
 
-          AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1_3) {
-            check_addon_upgrading(a1_3);
+  await promiseRestartManager();
 
-            fstream.close();
+  let a1_3 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  check_addon_upgrading(a1_3);
 
-            restartManager();
+  fstream.close();
 
-            AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1_4) {
-              check_addon(a1_4, "2.0");
+  await promiseRestartManager();
 
-              a1_4.uninstall();
-              executeSoon(run_test_2);
-            });
-          }));
-        }));
-      });
-    });
-  });
-}
+  let a1_4 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  check_addon(a1_4, "2.0");
+
+  a1_4.uninstall();
+});
 
 // Test that a failed uninstall gets rolled back
-function run_test_2() {
-  restartManager();
+add_task(async function test_2() {
+  await promiseRestartManager();
 
-  installAllFiles([do_get_addon("test_bug587088_1")], async function() {
-    await promiseRestartManager();
+  await AddonTestUtils.promiseInstallXPI(ADDONS[0]);
+  await promiseRestartManager();
 
-    AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(async function(a1) {
-      check_addon(a1, "1.0");
+  let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  check_addon(a1, "1.0");
 
-      // Lock either install.rdf for unpacked add-ons or the xpi for packed add-ons.
-      let uri = a1.getResourceURI("install.rdf");
-      if (uri.schemeIs("jar"))
-        uri = a1.getResourceURI();
+  // Lock either install.rdf for unpacked add-ons or the xpi for packed add-ons.
+  let uri = a1.getResourceURI("install.rdf");
+  if (uri.schemeIs("jar"))
+    uri = a1.getResourceURI();
 
-      let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                    createInstance(Ci.nsIFileInputStream);
-      fstream.init(uri.QueryInterface(Ci.nsIFileURL).file, -1, 0, 0);
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
+                createInstance(Ci.nsIFileInputStream);
+  fstream.init(uri.QueryInterface(Ci.nsIFileURL).file, -1, 0, 0);
 
-      a1.uninstall();
+  a1.uninstall();
 
-      check_addon_uninstalling(a1);
+  check_addon_uninstalling(a1);
 
-      await promiseRestartManager();
+  await promiseRestartManager();
 
-      AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(async function(a1_2) {
-        check_addon_uninstalling(a1_2, true);
+  let a1_2 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  check_addon_uninstalling(a1_2, true);
 
-        await promiseRestartManager();
+  await promiseRestartManager();
 
-        AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(async function(a1_3) {
-          check_addon_uninstalling(a1_3, true);
+  let a1_3 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  check_addon_uninstalling(a1_3, true);
 
-          fstream.close();
+  fstream.close();
 
-          await promiseRestartManager();
+  await promiseRestartManager();
 
-          AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1_4) {
-            Assert.equal(a1_4, null);
-            var dir = profileDir.clone();
-            dir.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
-            Assert.ok(!dir.exists());
-            Assert.ok(!isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
-
-            executeSoon(do_test_finished);
-          });
-        }));
-      }));
-    }));
-  });
-}
+  let a1_4 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
+  Assert.equal(a1_4, null);
+  var dir = profileDir.clone();
+  dir.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
+  Assert.ok(!dir.exists());
+  Assert.ok(!isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
+});
