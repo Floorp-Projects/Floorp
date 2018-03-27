@@ -300,60 +300,10 @@ nsCSSProps::ReleaseTable(void)
 }
 
 /* static */ bool
-nsCSSProps::IsInherited(nsCSSPropertyID aProperty)
-{
-  MOZ_ASSERT(!IsShorthand(aProperty));
-
-  nsStyleStructID sid = kSIDTable[aProperty];
-  return ComputedStyle::IsInherited(sid);
-}
-
-/* static */ bool
-nsCSSProps::IsCustomPropertyName(const nsACString& aProperty)
-{
-  // Custom properties don't need to have a character after the "--" prefix.
-  return aProperty.Length() >= CSS_CUSTOM_NAME_PREFIX_LENGTH &&
-         StringBeginsWith(aProperty, NS_LITERAL_CSTRING("--"));
-}
-
-/* static */ bool
 nsCSSProps::IsCustomPropertyName(const nsAString& aProperty)
 {
   return aProperty.Length() >= CSS_CUSTOM_NAME_PREFIX_LENGTH &&
          StringBeginsWith(aProperty, NS_LITERAL_STRING("--"));
-}
-
-nsCSSPropertyID
-nsCSSProps::LookupProperty(const nsACString& aProperty,
-                           EnabledState aEnabled)
-{
-  MOZ_ASSERT(gPropertyTable, "no lookup table, needs addref");
-
-  if (IsCustomPropertyName(aProperty)) {
-    return eCSSPropertyExtra_variable;
-  }
-
-  nsCSSPropertyID res = nsCSSPropertyID(gPropertyTable->Lookup(aProperty));
-  if (MOZ_LIKELY(res < eCSSProperty_COUNT)) {
-    if (res != eCSSProperty_UNKNOWN && !IsEnabled(res, aEnabled)) {
-      res = eCSSProperty_UNKNOWN;
-    }
-    return res;
-  }
-  MOZ_ASSERT(eCSSAliasCount != 0,
-             "'res' must be an alias at this point so we better have some!");
-  // We intentionally don't support CSSEnabledState::eInUASheets or
-  // CSSEnabledState::eInChrome for aliases yet because it's unlikely
-  // there will be a need for it.
-  if (IsEnabled(res) || aEnabled == CSSEnabledState::eIgnoreEnabledState) {
-    res = gAliases[res - eCSSProperty_COUNT];
-    MOZ_ASSERT(0 <= res && res < eCSSProperty_COUNT,
-               "aliases must not point to other aliases");
-    if (IsEnabled(res) || aEnabled == CSSEnabledState::eIgnoreEnabledState) {
-      return res;
-    }
-  }
-  return eCSSProperty_UNKNOWN;
 }
 
 nsCSSPropertyID
@@ -415,18 +365,6 @@ nsCSSProps::LookupPropertyByIDLName(const nsAString& aPropertyIDLName,
 }
 
 nsCSSFontDesc
-nsCSSProps::LookupFontDesc(const nsACString& aFontDesc)
-{
-  MOZ_ASSERT(gFontDescTable, "no lookup table, needs addref");
-  nsCSSFontDesc which = nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
-
-  if (which == eCSSFontDesc_Display && !StylePrefs::sFontDisplayEnabled) {
-    which = eCSSFontDesc_UNKNOWN;
-  }
-  return which;
-}
-
-nsCSSFontDesc
 nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
 {
   MOZ_ASSERT(gFontDescTable, "no lookup table, needs addref");
@@ -436,20 +374,6 @@ nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
     which = eCSSFontDesc_UNKNOWN;
   }
   return which;
-}
-
-nsCSSCounterDesc
-nsCSSProps::LookupCounterDesc(const nsAString& aProperty)
-{
-  MOZ_ASSERT(gCounterDescTable, "no lookup table, needs addref");
-  return nsCSSCounterDesc(gCounterDescTable->Lookup(aProperty));
-}
-
-nsCSSCounterDesc
-nsCSSProps::LookupCounterDesc(const nsACString& aProperty)
-{
-  MOZ_ASSERT(gCounterDescTable, "no lookup table, needs addref");
-  return nsCSSCounterDesc(gCounterDescTable->Lookup(aProperty));
 }
 
 const nsCString&
