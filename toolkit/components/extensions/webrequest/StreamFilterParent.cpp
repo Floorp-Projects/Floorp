@@ -355,8 +355,8 @@ StreamFilterParent::FinishDisconnect()
     self->FlushBufferedData();
 
     RunOnMainThread(FUNC, [=] {
-      if (mLoadGroup) {
-        Unused << mLoadGroup->RemoveRequest(this, nullptr, NS_OK);
+      if (self->mLoadGroup) {
+        Unused << self->mLoadGroup->RemoveRequest(self, nullptr, NS_OK);
       }
     });
 
