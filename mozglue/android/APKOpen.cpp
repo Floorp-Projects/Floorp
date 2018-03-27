@@ -36,6 +36,7 @@
 
 #include "mozilla/arm.h"
 #include "mozilla/Bootstrap.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "XREChildData.h"
@@ -462,7 +463,7 @@ IsMediaProcess()
 {
   pid_t pid = getpid();
   char str[256];
-  snprintf(str, sizeof(str), "/proc/%d/cmdline", pid);
+  SprintfLiteral(str, "/proc/%d/cmdline", pid);
   FILE* f = fopen(str, "r");
   if (f) {
     fgets(str, sizeof(str), f);
