@@ -238,6 +238,10 @@ FlacFrameParser::IsHeaderBlock(const uint8_t* aPacket, size_t aLength) const
 MetadataTags*
 FlacFrameParser::GetTags() const
 {
+  if (!mParser) {
+    return nullptr;
+  }
+
   MetadataTags* tags;
 
   tags = new MetadataTags;

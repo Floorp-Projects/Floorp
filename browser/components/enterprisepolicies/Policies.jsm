@@ -234,27 +234,25 @@ var Policies = {
 
   "DisplayBookmarksToolbar": {
     onBeforeUIStartup(manager, param) {
-      if (param) {
-        // This policy is meant to change the default behavior, not to force it.
-        // If this policy was alreay applied and the user chose to re-hide the
-        // bookmarks toolbar, do not show it again.
-        runOnce("displayBookmarksToolbar", () => {
-          gXulStore.setValue(BROWSER_DOCUMENT_URL, "PersonalToolbar", "collapsed", "false");
-        });
-      }
+      let value = (!param).toString();
+      // This policy is meant to change the default behavior, not to force it.
+      // If this policy was alreay applied and the user chose to re-hide the
+      // bookmarks toolbar, do not show it again.
+      runOncePerModification("displayBookmarksToolbar", value, () => {
+        gXulStore.setValue(BROWSER_DOCUMENT_URL, "PersonalToolbar", "collapsed", value);
+      });
     }
   },
 
   "DisplayMenuBar": {
     onBeforeUIStartup(manager, param) {
-      if (param) {
+      let value = (!param).toString();
         // This policy is meant to change the default behavior, not to force it.
         // If this policy was alreay applied and the user chose to re-hide the
         // menu bar, do not show it again.
-        runOnce("displayMenuBar", () => {
-          gXulStore.setValue(BROWSER_DOCUMENT_URL, "toolbar-menubar", "autohide", "false");
-        });
-      }
+      runOncePerModification("displayMenuBar", value, () => {
+        gXulStore.setValue(BROWSER_DOCUMENT_URL, "toolbar-menubar", "autohide", value);
+      });
     }
   },
 
@@ -514,6 +512,7 @@ function addAllowDenyPermissions(permissionName, allowList, blockList) {
  * @param {Functon} callback
  *        The callback to run only once.
  */
+ // eslint-disable-next-line no-unused-vars
 function runOnce(actionName, callback) {
   let prefName = `browser.policies.runonce.${actionName}`;
   if (Services.prefs.getBoolPref(prefName, false)) {

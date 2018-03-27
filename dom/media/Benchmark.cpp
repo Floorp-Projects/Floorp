@@ -176,8 +176,13 @@ BenchmarkPlayback::DemuxSamples()
     Thread(), __func__,
     [this, ref](nsresult aResult) {
       MOZ_ASSERT(OnThread());
-      mTrackDemuxer =
-        mDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
+      if (mDemuxer->GetNumberTracks(TrackInfo::kVideoTrack)) {
+        mTrackDemuxer =
+          mDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
+      } else if (mDemuxer->GetNumberTracks(TrackInfo::kAudioTrack)) {
+        mTrackDemuxer =
+          mDemuxer->GetTrackDemuxer(TrackInfo::kAudioTrack, 0);
+      }
       if (!mTrackDemuxer) {
         MainThreadShutdown();
         return;

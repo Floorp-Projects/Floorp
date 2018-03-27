@@ -4,6 +4,9 @@
 
 #include "VideoUtils.h"
 
+#include <functional>
+#include <stdint.h>
+
 #include "ImageContainer.h"
 #include "MediaContainerType.h"
 #include "MediaPrefs.h"
@@ -25,9 +28,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
-#include <functional>
-#include <stdint.h>
-
 namespace mozilla {
 
 NS_NAMED_LITERAL_CSTRING(kEMEKeySystemClearkey, "org.w3.clearkey");
@@ -36,10 +36,15 @@ NS_NAMED_LITERAL_CSTRING(kEMEKeySystemWidevine, "com.widevine.alpha");
 using layers::PlanarYCbCrImage;
 using media::TimeUnit;
 
-CheckedInt64 SaferMultDiv(int64_t aValue, uint32_t aMul, uint32_t aDiv) {
-  int64_t major = aValue / aDiv;
-  int64_t remainder = aValue % aDiv;
-  return CheckedInt64(remainder) * aMul / aDiv + CheckedInt64(major) * aMul;
+CheckedInt64 SaferMultDiv(int64_t aValue, uint64_t aMul, uint64_t aDiv) {
+  if (aMul > INT64_MAX || aDiv > INT64_MAX) {
+    return CheckedInt64(INT64_MAX) + 1; // Return an invalid checked int.
+  }
+  int64_t mul = aMul;
+  int64_t div = aDiv;
+  int64_t major = aValue / div;
+  int64_t remainder = aValue % div;
+  return CheckedInt64(remainder) * mul / div + CheckedInt64(major) * mul;
 }
 
 // Converts from number of audio frames to microseconds, given the specified
