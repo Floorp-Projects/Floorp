@@ -128,10 +128,7 @@ class TimeStamp;
   macro(8, "tasktracer", TaskTracer) \
   \
   /* Profile the registered secondary threads. */ \
-  macro(9, "threads", Threads) \
-  \
-  /* Have the JavaScript engine track JIT optimizations. */ \
-  macro(10, "trackopts", TrackOptimizations)
+  macro(9, "threads", Threads)
 
 struct ProfilerFeature
 {
