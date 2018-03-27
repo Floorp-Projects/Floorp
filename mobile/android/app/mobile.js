@@ -367,10 +367,6 @@ pref("geo.enabled", true);
 //pref("content.sink.perf_deflect_count", 1000000);
 //pref("content.sink.perf_parse_time", 50000000);
 
-// Disable the JS engine's gc on memory pressure, since we do one in the mobile
-// browser (bug 669346).
-pref("javascript.options.gc_on_memory_pressure", false);
-
 pref("javascript.options.mem.high_water_mark", 32);
 
 pref("dom.max_chrome_script_run_time", 0); // disable slow script dialog for chrome
