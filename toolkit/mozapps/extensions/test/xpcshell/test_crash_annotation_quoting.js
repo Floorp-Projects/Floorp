@@ -31,26 +31,18 @@ var addon4 = {
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-const profileDir = gProfD.clone();
-profileDir.append("extensions");
+add_task(async function run_test() {
+  await promiseStartupManager();
 
-function run_test() {
-  do_test_pending();
+  await promiseInstallXPI(addon3);
+  await promiseInstallXPI(addon4);
 
-  writeInstallRDFForExtension(addon3, profileDir);
-  writeInstallRDFForExtension(addon4, profileDir);
+  let [a3, a4] = await AddonManager.getAddonsByIDs(["addon3@tests.mozilla.org",
+                                                    "addon4@tests.mozilla.org"]);
 
-  startupManager();
+  Assert.notEqual(a3, null);
+  do_check_in_crash_annotation(addon3.id, addon3.version);
 
-  AddonManager.getAddonsByIDs(["addon3@tests.mozilla.org",
-                               "addon4@tests.mozilla.org"],
-                               function([a3, a4]) {
-
-    Assert.notEqual(a3, null);
-    do_check_in_crash_annotation(addon3.id, addon3.version);
-    Assert.notEqual(a4, null);
-    do_check_in_crash_annotation(addon4.id, addon4.version);
-
-    executeSoon(do_test_finished);
-  });
-}
+  Assert.notEqual(a4, null);
+  do_check_in_crash_annotation(addon4.id, addon4.version);
+});
