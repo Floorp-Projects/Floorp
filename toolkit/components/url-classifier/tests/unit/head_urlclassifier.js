@@ -451,6 +451,16 @@ function waitUntilMetaDataSaved(expectedState, expectedChecksum, callback) {
   });
 }
 
+function throwOnUpdateErrors() {
+  Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+    info("[" + aTopic + "] " + aData);
+    if (aData != "success") {
+      Services.obs.removeObserver(observer, aTopic);
+      updateError(aData);
+    }
+  }, "safebrowsing-update-finished");
+}
+
 cleanUp();
 
 registerCleanupFunction(function() {
