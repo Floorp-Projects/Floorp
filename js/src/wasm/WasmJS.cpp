@@ -134,6 +134,17 @@ ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v, Val* val)
         *val = Val(d);
         return true;
       }
+      case ValType::AnyRef: {
+        if (v.isNull()) {
+            *val = Val(ValType::AnyRef, nullptr);
+        } else {
+            JSObject* obj = ToObject(cx, v);
+            if (!obj)
+                return false;
+            *val = Val(ValType::AnyRef, obj);
+        }
+        return true;
+      }
       default: {
         MOZ_CRASH("unexpected import value type, caller must guard");
       }
@@ -150,6 +161,10 @@ ToJSValue(const Val& val)
         return DoubleValue(JS::CanonicalizeNaN(double(val.f32())));
       case ValType::F64:
         return DoubleValue(JS::CanonicalizeNaN(val.f64()));
+      case ValType::AnyRef:
+        if (!val.ptr())
+            return NullValue();
+        return ObjectValue(*(JSObject*)val.ptr());
       default:
         MOZ_CRASH("unexpected type when translating to a JS value");
     }
@@ -266,8 +281,16 @@ GetImports(JSContext* cx,
                 }
                 globalObjs[index] = obj;
                 val = obj->val();
-            } else
-            if (v.isNumber()) {
+            } else {
+                if (IsNumberType(global.type())) {
+                    if (!v.isNumber())
+                        return ThrowBadImportType(cx, import.field.get(), "Number");
+                } else {
+                    MOZ_ASSERT(global.type().isRefOrAnyRef());
+                    if (!v.isNull() && !v.isObject())
+                        return ThrowBadImportType(cx, import.field.get(), "Object-or-null");
+                }
+
                 if (global.type() == ValType::I64) {
                     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
                     return false;
@@ -280,8 +303,6 @@ GetImports(JSContext* cx,
 
                 if (!ToWebAssemblyValue(cx, global.type(), v, &val))
                     return false;
-            } else {
-                return ThrowBadImportType(cx, import.field.get(), "Number");
             }
 
             if (!globalImportValues->append(val))
@@ -2102,7 +2123,7 @@ const ClassOps WasmGlobalObject::classOps_ =
     nullptr, /* call */
     nullptr, /* hasInstance */
     nullptr, /* construct */
-    nullptr  /* trace */
+    WasmGlobalObject::trace
 };
 
 const Class WasmGlobalObject::class_ =
@@ -2112,6 +2133,19 @@ const Class WasmGlobalObject::class_ =
     JSCLASS_BACKGROUND_FINALIZE,
     &WasmGlobalObject::classOps_
 };
+
+/* static */ void
+WasmGlobalObject::trace(JSTracer* trc, JSObject* obj)
+{
+    WasmGlobalObject* global = reinterpret_cast<WasmGlobalObject*>(obj);
+    switch (global->type().code()) {
+      case ValType::AnyRef:
+        TraceNullableEdge(trc, &global->cell()->ptr, "wasm anyref global");
+        break;
+      default:
+        break;
+    }
+}
 
 /* static */ void
 WasmGlobalObject::finalize(FreeOp*, JSObject* obj)
@@ -2128,11 +2162,12 @@ WasmGlobalObject::create(JSContext* cx, const Val& val, bool isMutable)
         return nullptr;
 
     switch (val.type().code()) {
-      case ValType::I32: cell->i32 = val.i32(); break;
-      case ValType::I64: cell->i64 = val.i64(); break;
-      case ValType::F32: cell->f32 = val.f32(); break;
-      case ValType::F64: cell->f64 = val.f64(); break;
-      default:           MOZ_CRASH();
+      case ValType::I32:    cell->i32 = val.i32(); break;
+      case ValType::I64:    cell->i64 = val.i64(); break;
+      case ValType::F32:    cell->f32 = val.f32(); break;
+      case ValType::F64:    cell->f64 = val.f64(); break;
+      case ValType::AnyRef: cell->ptr = (JSObject*)val.ptr(); break;
+      default:              MOZ_CRASH();
     }
 
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmGlobal).toObject());
@@ -2141,6 +2176,8 @@ WasmGlobalObject::create(JSContext* cx, const Val& val, bool isMutable)
     RootedWasmGlobalObject obj(cx, NewObjectWithGivenProto<WasmGlobalObject>(cx, proto));
     if (!obj)
         return nullptr;
+
+    MOZ_ASSERT(obj->isTenured(), "assumed by set_global post barriers");
 
     obj->initReservedSlot(TYPE_SLOT, Int32Value(int32_t(val.type().bitsUnsafe())));
     obj->initReservedSlot(MUTABLE_SLOT, JS::BooleanValue(isMutable));
@@ -2190,6 +2227,10 @@ WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
         globalType = ValType::F32;
     } else if (StringEqualsAscii(typeLinearStr, "f64")) {
         globalType = ValType::F64;
+#ifdef ENABLE_WASM_GC
+    } else if (cx->options().wasmGc() && StringEqualsAscii(typeLinearStr, "anyref")) {
+        globalType = ValType::AnyRef;
+#endif
     } else {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GLOBAL_TYPE);
         return false;
@@ -2206,15 +2247,15 @@ WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
     Val globalVal = Val(uint32_t(0));
     if (args.length() >= 2) {
         RootedValue valueVal(cx, args.get(1));
-
         if (!ToWebAssemblyValue(cx, globalType, valueVal, &globalVal))
             return false;
     } else {
         switch (globalType.code()) {
-          case ValType::I32: /* set above */               break;
+          case ValType::I32:    /* set above */ break;
           case ValType::I64: globalVal = Val(uint64_t(0)); break;
-          case ValType::F32: globalVal = Val(float(0.0));  break;
-          case ValType::F64: globalVal = Val(double(0.0)); break;
+          case ValType::F32:    globalVal = Val(float(0.0)); break;
+          case ValType::F64:    globalVal = Val(double(0.0)); break;
+          case ValType::AnyRef: globalVal = Val(ValType::AnyRef, nullptr); break;
           default: MOZ_CRASH();
         }
     }
@@ -2240,6 +2281,7 @@ WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args)
       case ValType::I32:
       case ValType::F32:
       case ValType::F64:
+      case ValType::AnyRef:
         args.rval().set(args.thisv().toObject().as<WasmGlobalObject>().value());
         return true;
       case ValType::I64:
@@ -2277,10 +2319,11 @@ WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args)
 
     Cell* cell = global->cell();
     switch (global->type().code()) {
-      case ValType::I32: cell->i32 = val.i32(); break;
-      case ValType::F32: cell->f32 = val.f32(); break;
-      case ValType::F64: cell->f64 = val.f64(); break;
-      default:           MOZ_CRASH();
+      case ValType::I32:    cell->i32 = val.i32(); break;
+      case ValType::F32:    cell->f32 = val.f32(); break;
+      case ValType::F64:    cell->f64 = val.f64(); break;
+      case ValType::AnyRef: cell->ptr = (JSObject*)val.ptr(); break;
+      default:              MOZ_CRASH();
     }
 
     args.rval().setUndefined();
@@ -2328,11 +2371,12 @@ WasmGlobalObject::val() const
     Cell* cell = this->cell();
     Val val;
     switch (type().code()) {
-      case ValType::I32: val = Val(uint32_t(cell->i32)); break;
-      case ValType::I64: val = Val(uint64_t(cell->i64)); break;
-      case ValType::F32: val = Val(cell->f32); break;
-      case ValType::F64: val = Val(cell->f64); break;
-      default:           MOZ_CRASH();
+      case ValType::I32:    val = Val(uint32_t(cell->i32)); break;
+      case ValType::I64:    val = Val(uint64_t(cell->i64)); break;
+      case ValType::F32:    val = Val(cell->f32); break;
+      case ValType::F64:    val = Val(cell->f64); break;
+      case ValType::AnyRef: val = Val(ValType::AnyRef, (void*)cell->ptr); break;
+      default:              MOZ_CRASH();
     }
     return val;
 }
