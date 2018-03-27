@@ -2625,9 +2625,7 @@ Selection::CollapseToStartJS(ErrorResult& aRv)
 void
 Selection::CollapseToStart(ErrorResult& aRv)
 {
-  int32_t cnt;
-  nsresult rv = GetRangeCount(&cnt);
-  if (NS_FAILED(rv) || cnt <= 0) {
+  if (RangeCount() == 0) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -2674,9 +2672,8 @@ Selection::CollapseToEndJS(ErrorResult& aRv)
 void
 Selection::CollapseToEnd(ErrorResult& aRv)
 {
-  int32_t cnt;
-  nsresult rv = GetRangeCount(&cnt);
-  if (NS_FAILED(rv) || cnt <= 0) {
+  uint32_t cnt = RangeCount();
+  if (cnt == 0) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -2713,14 +2710,6 @@ Selection::GetIsCollapsed(bool* aIsCollapsed)
   NS_ENSURE_TRUE(aIsCollapsed, NS_ERROR_NULL_POINTER);
 
   *aIsCollapsed = IsCollapsed();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Selection::GetRangeCount(int32_t* aRangeCount)
-{
-  *aRangeCount = (int32_t)RangeCount();
-
   return NS_OK;
 }
 

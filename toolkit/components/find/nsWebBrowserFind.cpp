@@ -800,23 +800,17 @@ nsWebBrowserFind::GetFrameSelection(nsPIDOMWindowOuter* aWindow)
     focusedContent ? focusedContent->GetPrimaryFrame() : nullptr;
 
   nsCOMPtr<nsISelectionController> selCon;
-  nsCOMPtr<nsISelection> sel;
+  RefPtr<Selection> sel;
   if (frame) {
     frame->GetSelectionController(presContext, getter_AddRefs(selCon));
-    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                         getter_AddRefs(sel));
-    if (sel) {
-      int32_t count = -1;
-      sel->GetRangeCount(&count);
-      if (count > 0) {
-        return sel.forget();
-      }
+    sel = selCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+    if (sel && sel->RangeCount() > 0) {
+      return sel.forget();
     }
   }
 
   selCon = do_QueryInterface(presShell);
-  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                       getter_AddRefs(sel));
+  sel = selCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
   return sel.forget();
 }
 

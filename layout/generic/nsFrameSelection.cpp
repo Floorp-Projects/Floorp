@@ -2281,10 +2281,7 @@ printf("aTarget == %d\n", aTarget);
              mDragSelectingCells, mStartSelectedCell.get());
 #endif
       // First check if we are extending a block selection
-      int32_t rangeCount;
-      result = mDomSelections[index]->GetRangeCount(&rangeCount);
-      if (NS_FAILED(result))
-        return result;
+      uint32_t rangeCount = mDomSelections[index]->RangeCount();
 
       if (rangeCount > 0 && aMouseEvent->IsShift() &&
           mAppendStartSelectedCell && mAppendStartSelectedCell != childContent)
@@ -2328,7 +2325,7 @@ printf("aTarget == %d\n", aTarget);
 #ifdef DEBUG_TABLE_SELECTION
 printf("HandleTableSelection: Unselecting mUnselectCellOnMouseUp; rangeCount=%d\n", rangeCount);
 #endif
-        for( int32_t i = 0; i < rangeCount; i++)
+        for (uint32_t i = 0; i < rangeCount; i++)
         {
           // Strong reference, because sometimes we want to remove
           // this range, and then we might be the only owner.
