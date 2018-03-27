@@ -59,7 +59,7 @@ protected:
   // particular way, you need to do it yourself.
   bool IsRangeVisible(nsIPresShell *aPresShell, nsPresContext *aPresContext,
                       nsRange *aRange, bool aMustBeVisible,
-                      bool aGetTopVisibleLeaf, nsIDOMRange **aNewRange,
+                      bool aGetTopVisibleLeaf, nsRange **aNewRange,
                       bool *aUsesIndependentSelection);
   bool IsRangeRendered(nsIPresShell *aPresShell, nsPresContext *aPresContext,
                        nsRange *aRange);
@@ -103,8 +103,8 @@ protected:
   // where selection was when user started the find
   nsCOMPtr<nsIDOMRange> mStartFindRange;
   RefPtr<nsRange> mSearchRange;
-  nsCOMPtr<nsIDOMRange> mStartPointRange;
-  nsCOMPtr<nsIDOMRange> mEndPointRange;
+  RefPtr<nsRange> mStartPointRange;
+  RefPtr<nsRange> mEndPointRange;
 
   // Cached useful interfaces
   nsCOMPtr<nsIFind> mFind;

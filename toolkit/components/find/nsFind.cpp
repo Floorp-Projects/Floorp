@@ -127,7 +127,7 @@ protected:
   virtual ~nsFindContentIterator() {}
 
 private:
-  static already_AddRefed<nsIDOMRange> CreateRange(nsINode* aNode)
+  static already_AddRefed<nsRange> CreateRange(nsINode* aNode)
   {
     RefPtr<nsRange> range = new nsRange(aNode);
     range->SetMaySpanAnonymousSubtrees(true);
@@ -138,9 +138,9 @@ private:
   nsCOMPtr<nsIContentIterator> mInnerIterator;
   // Can't use a range here, since we want to represent part of the flattened
   // tree, including native anonymous content.
-  nsCOMPtr<nsIDOMNode> mStartNode;
+  nsCOMPtr<nsINode> mStartNode;
   int32_t mStartOffset;
-  nsCOMPtr<nsIDOMNode> mEndNode;
+  nsCOMPtr<nsINode> mEndNode;
   int32_t mEndOffset;
 
   nsCOMPtr<nsIContent> mStartOuterContent;
@@ -184,9 +184,9 @@ nsFindContentIterator::Init(nsIDOMNode* aStartNode, int32_t aStartOffset,
   }
 
   // Set up the search "range" that we will examine
-  mStartNode = aStartNode;
+  mStartNode = do_QueryInterface(aStartNode);
   mStartOffset = aStartOffset;
-  mEndNode = aEndNode;
+  mEndNode = do_QueryInterface(aEndNode);
   mEndOffset = aEndOffset;
 
   return NS_OK;
@@ -295,12 +295,12 @@ nsFindContentIterator::Reset()
   // Note: OK to just set up the outer iterator here; if our range has a native
   // anonymous endpoint we'll end up setting up an inner iterator, and reset the
   // outer one in the process.
-  nsCOMPtr<nsINode> node = do_QueryInterface(mStartNode);
+  nsCOMPtr<nsINode> node = mStartNode;
   NS_ENSURE_TRUE_VOID(node);
 
-  nsCOMPtr<nsIDOMRange> range = CreateRange(node);
-  range->SetStart(mStartNode, mStartOffset);
-  range->SetEnd(mEndNode, mEndOffset);
+  RefPtr<nsRange> range = CreateRange(node);
+  range->SetStart(*mStartNode, mStartOffset, IgnoreErrors());
+  range->SetEnd(*mEndNode, mEndOffset, IgnoreErrors());
   mOuterIterator->Init(range);
 
   if (!mFindBackward) {
@@ -392,8 +392,8 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
   nsCOMPtr<nsIDOMElement> rootElement;
   textEditor->GetRootElement(getter_AddRefs(rootElement));
 
-  nsCOMPtr<nsIDOMRange> innerRange = CreateRange(aContent);
-  nsCOMPtr<nsIDOMRange> outerRange = CreateRange(aContent);
+  RefPtr<nsRange> innerRange = CreateRange(aContent);
+  RefPtr<nsRange> outerRange = CreateRange(aContent);
   if (!innerRange || !outerRange) {
     return;
   }
@@ -407,28 +407,27 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
     // fix up the inner bounds, we may have to only lookup a portion
     // of the text control if the current node is a boundary point
     if (aContent == mStartOuterContent) {
-      innerRange->SetStart(mStartNode, mStartOffset);
+      innerRange->SetStart(*mStartNode, mStartOffset, IgnoreErrors());
     }
     if (aContent == mEndOuterContent) {
-      innerRange->SetEnd(mEndNode, mEndOffset);
+      innerRange->SetEnd(*mEndNode, mEndOffset, IgnoreErrors());
     }
     // Note: we just init here. We do First() or Last() later.
     mInnerIterator->Init(innerRange);
 
     // make sure to place the outer-iterator outside the text control so that we
     // don't go there again.
-    nsresult res1, res2;
-    nsCOMPtr<nsIDOMNode> outerNode(do_QueryInterface(aContent));
+    IgnoredErrorResult res1, res2;
     if (!mFindBackward) { // find forward
       // cut the outer-iterator after the current node
-      res1 = outerRange->SetEnd(mEndNode, mEndOffset);
-      res2 = outerRange->SetStartAfter(outerNode);
+      outerRange->SetEnd(*mEndNode, mEndOffset, res1);
+      outerRange->SetStartAfter(*aContent, res2);
     } else { // find backward
       // cut the outer-iterator before the current node
-      res1 = outerRange->SetStart(mStartNode, mStartOffset);
-      res2 = outerRange->SetEndBefore(outerNode);
+      outerRange->SetStart(*mStartNode, mStartOffset, res1);
+      outerRange->SetEndBefore(*aContent, res2);
     }
-    if (NS_FAILED(res1) || NS_FAILED(res2)) {
+    if (res1.Failed() || res2.Failed()) {
       // we are done with the outer-iterator, the inner-iterator will traverse
       // what we want
       outerRange->Collapse(true);
@@ -833,7 +832,7 @@ nsFind::IsBlockNode(nsIContent* aContent)
 }
 
 bool
-nsFind::IsVisibleNode(nsIDOMNode* aDOMNode)
+nsFind::IsVisibleNode(nsINode* aDOMNode)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
   if (!content) {
@@ -1249,8 +1248,8 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
 #endif
 
         // Make the range:
-        nsCOMPtr<nsIDOMNode> startParent;
-        nsCOMPtr<nsIDOMNode> endParent;
+        nsCOMPtr<nsINode> startParent;
+        nsCOMPtr<nsINode> endParent;
 
         // Check for word break (if necessary)
         if (mWordBreaker) {
@@ -1274,26 +1273,26 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
           }
         }
 
-        nsCOMPtr<nsIDOMRange> range = new nsRange(tc);
+        RefPtr<nsRange> range = new nsRange(tc);
         if (range) {
           int32_t matchStartOffset, matchEndOffset;
           // convert char index to range point:
           int32_t mao = matchAnchorOffset + (mFindBackward ? 1 : 0);
           if (mFindBackward) {
-            startParent = do_QueryInterface(tc);
-            endParent = matchAnchorNode->AsDOMNode();
+            startParent = tc;
+            endParent = matchAnchorNode;
             matchStartOffset = findex;
             matchEndOffset = mao;
           } else {
-            startParent = matchAnchorNode->AsDOMNode();
-            endParent = do_QueryInterface(tc);
+            startParent = matchAnchorNode;
+            endParent = tc;
             matchStartOffset = mao;
             matchEndOffset = findex + 1;
           }
           if (startParent && endParent &&
               IsVisibleNode(startParent) && IsVisibleNode(endParent)) {
-            range->SetStart(startParent, matchStartOffset);
-            range->SetEnd(endParent, matchEndOffset);
+            range->SetStart(*startParent, matchStartOffset, IgnoreErrors());
+            range->SetEnd(*endParent, matchEndOffset, IgnoreErrors());
             *aRangeRet = range.get();
             NS_ADDREF(*aRangeRet);
           } else {

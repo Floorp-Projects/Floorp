@@ -56,7 +56,7 @@ protected:
   // Utility routines:
   bool IsBlockNode(nsIContent* aNode);
   bool SkipNode(nsIContent* aNode);
-  bool IsVisibleNode(nsIDOMNode* aNode);
+  bool IsVisibleNode(nsINode* aNode);
 
   // Move in the right direction for our search:
   nsresult NextNode(nsRange* aSearchRange,

@@ -1330,19 +1330,6 @@ nsRange::SetStart(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
   SetStart(RawRangeBoundary(&aNode, aOffset), aRv);
 }
 
-NS_IMETHODIMP
-nsRange::SetStart(nsIDOMNode* aContainer, uint32_t aOffset)
-{
-  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
-  if (!container) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-
-  ErrorResult rv;
-  SetStart(*container, aOffset, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsRange::SetStart(const RawRangeBoundary& aPoint, ErrorResult& aRv)
 {
@@ -1464,19 +1451,6 @@ nsRange::SetEnd(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
   }
   AutoInvalidateSelection atEndOfBlock(this);
   SetEnd(RawRangeBoundary(&aNode, aOffset), aRv);
-}
-
-NS_IMETHODIMP
-nsRange::SetEnd(nsIDOMNode* aContainer, uint32_t aOffset)
-{
-  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
-  if (!container) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-
-  ErrorResult rv;
-  SetEnd(*container, aOffset, rv);
-  return rv.StealNSResult();
 }
 
 void

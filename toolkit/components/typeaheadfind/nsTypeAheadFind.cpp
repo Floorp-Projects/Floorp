@@ -6,6 +6,7 @@
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/Services.h"
 #include "nsIWebBrowserChrome.h"
@@ -30,6 +31,7 @@
 #include "nsIImageDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
+#include "nsIContent.h"
 #include "nsISelection.h"
 #include "nsTextFragment.h"
 #include "nsIDOMNSEditableElement.h"
@@ -56,6 +58,7 @@
 #include "nsTypeAheadFind.h"
 
 using mozilla::dom::Selection;
+using mozilla::IgnoreErrors;
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTypeAheadFind)
   NS_INTERFACE_MAP_ENTRY(nsITypeAheadFind)
@@ -499,7 +502,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
             mStartPointRange->Collapse(false);
           } else {
             // Start at the beginning of returnRange
-            returnRange->CloneRange(getter_AddRefs(mStartPointRange));
+            mStartPointRange = returnRange->CloneRange();
             mStartPointRange->Collapse(true);
           }
         } else {
@@ -515,7 +518,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
             mStartPointRange->Collapse(true);
           } else {
             // Start at the end of returnRange
-            returnRange->CloneRange(getter_AddRefs(mStartPointRange));
+            mStartPointRange = returnRange->CloneRange();
             mStartPointRange->Collapse(false);
           }
         }
@@ -705,8 +708,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
       if (aFindPrev) {
         // Reverse mode: swap start and end points, so that we start
         // at end of document and go to beginning
-        nsCOMPtr<nsIDOMRange> tempRange;
-        mStartPointRange->CloneRange(getter_AddRefs(tempRange));
+        RefPtr<nsRange> tempRange = mStartPointRange->CloneRange();
         if (!mEndPointRange) {
           mEndPointRange = new nsRange(presShell->GetDocument());
         }
@@ -796,18 +798,17 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
     rootContent = doc->GetBody();
   }
 
-  if (!rootContent)
+  if (!rootContent) {
     rootContent = doc->GetRootElement();
-
-  nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootContent));
-
-  if (!rootNode)
-    return NS_ERROR_FAILURE;
+    if (!rootContent) {
+      return NS_ERROR_FAILURE;
+    }
+  }
 
   if (!mSearchRange) {
     mSearchRange = new nsRange(doc);
   }
-  nsCOMPtr<nsIDOMNode> searchRootNode = rootNode;
+  nsCOMPtr<nsINode> searchRootNode(rootContent);
 
   // Hack for XMLPrettyPrinter. nsFind can't handle complex anonymous content.
   // If the root node has an XBL binding then there's not much we can do in
@@ -818,22 +819,21 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
   if (binding) {
     nsIContent* anonContent = binding->GetAnonymousContent();
     if (anonContent) {
-      searchRootNode = do_QueryInterface(anonContent->GetFirstChild());
+      searchRootNode = anonContent->GetFirstChild();
     }
   }
-  mSearchRange->SelectNodeContents(searchRootNode);
+  mSearchRange->SelectNodeContents(*searchRootNode, IgnoreErrors());
 
   if (!mStartPointRange) {
     mStartPointRange = new nsRange(doc);
   }
-  mStartPointRange->SetStart(searchRootNode, 0);
+  mStartPointRange->SetStart(*searchRootNode, 0, IgnoreErrors());
   mStartPointRange->Collapse(true); // collapse to start
 
   if (!mEndPointRange) {
     mEndPointRange = new nsRange(doc);
   }
-  nsCOMPtr<nsINode> searchRootTmp = do_QueryInterface(searchRootNode);
-  mEndPointRange->SetEnd(searchRootNode, searchRootTmp->Length());
+  mEndPointRange->SetEnd(*searchRootNode, searchRootNode->Length(), IgnoreErrors());
   mEndPointRange->Collapse(false); // collapse to end
 
   // Consider current selection as null if
@@ -866,16 +866,14 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
       startNode = currentSelectionRange->GetEndContainer();
       startOffset = currentSelectionRange->EndOffset();
     }
-    nsCOMPtr<nsIDOMNode> newStart;
-    if (startNode) {
-      newStart = startNode->AsDOMNode();
-    } else {
-      newStart = rootNode;
+
+    if (!startNode) {
+      startNode = rootContent;
     }
 
     // We need to set the start point this way, other methods haven't worked
-    mStartPointRange->SelectNode(newStart);
-    mStartPointRange->SetStart(newStart, startOffset);
+    mStartPointRange->SelectNode(*startNode, IgnoreErrors());
+    mStartPointRange->SetStart(*startNode, startOffset, IgnoreErrors());
   }
 
   mStartPointRange->Collapse(true); // collapse to start
@@ -1190,7 +1188,7 @@ nsTypeAheadFind::IsRangeVisible(nsIDOMRange *aRange,
     return NS_ERROR_UNEXPECTED;
   }
   RefPtr<nsPresContext> presContext = presShell->GetPresContext();
-  nsCOMPtr<nsIDOMRange> ignored;
+  RefPtr<nsRange> ignored;
   *aResult = IsRangeVisible(presShell, presContext, range,
                             aMustBeInViewPort, false,
                             getter_AddRefs(ignored),
@@ -1203,7 +1201,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
                                 nsPresContext *aPresContext,
                                 nsRange *aRange, bool aMustBeInViewPort,
                                 bool aGetTopVisibleLeaf,
-                                nsIDOMRange **aFirstVisibleRange,
+                                nsRange **aFirstVisibleRange,
                                 bool *aUsesIndependentSelection)
 {
   NS_ASSERTION(aPresShell && aPresContext && aRange && aFirstVisibleRange,
@@ -1213,7 +1211,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   // Otherwise, return the first visible range start
   // in aFirstVisibleRange
 
-  aRange->CloneRange(aFirstVisibleRange);
+  *aFirstVisibleRange = aRange->CloneRange().take();
 
   nsCOMPtr<nsIContent> content =
     do_QueryInterface(aRange->GetStartContainer());
@@ -1320,12 +1318,14 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   }
 
   if (frame) {
-    nsCOMPtr<nsIDOMNode> firstVisibleNode = do_QueryInterface(frame->GetContent());
+    nsINode* firstVisibleNode = frame->GetContent();
 
     if (firstVisibleNode) {
       frame->GetOffsets(startFrameOffset, endFrameOffset);
-      (*aFirstVisibleRange)->SetStart(firstVisibleNode, startFrameOffset);
-      (*aFirstVisibleRange)->SetEnd(firstVisibleNode, endFrameOffset);
+      (*aFirstVisibleRange)->SetStart(*firstVisibleNode, startFrameOffset,
+                                      IgnoreErrors());
+      (*aFirstVisibleRange)->SetEnd(*firstVisibleNode, endFrameOffset,
+                                    IgnoreErrors());
     }
   }
 

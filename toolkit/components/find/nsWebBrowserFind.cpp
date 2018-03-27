@@ -450,9 +450,9 @@ nsWebBrowserFind::GetRootNode(nsIDOMDocument* aDomDoc, nsIDOMNode** aNode)
 }
 
 nsresult
-nsWebBrowserFind::SetRangeAroundDocument(nsIDOMRange* aSearchRange,
-                                         nsIDOMRange* aStartPt,
-                                         nsIDOMRange* aEndPt,
+nsWebBrowserFind::SetRangeAroundDocument(nsRange* aSearchRange,
+                                         nsRange* aStartPt,
+                                         nsRange* aEndPt,
                                          nsIDOMDocument* aDoc)
 {
   nsCOMPtr<nsIDOMNode> bodyNode;
@@ -463,19 +463,19 @@ nsWebBrowserFind::SetRangeAroundDocument(nsIDOMRange* aSearchRange,
 
   uint32_t childCount = bodyContent->GetChildCount();
 
-  aSearchRange->SetStart(bodyNode, 0);
-  aSearchRange->SetEnd(bodyNode, childCount);
+  aSearchRange->SetStart(*bodyContent, 0, IgnoreErrors());
+  aSearchRange->SetEnd(*bodyContent, childCount, IgnoreErrors());
 
   if (mFindBackwards) {
-    aStartPt->SetStart(bodyNode, childCount);
-    aStartPt->SetEnd(bodyNode, childCount);
-    aEndPt->SetStart(bodyNode, 0);
-    aEndPt->SetEnd(bodyNode, 0);
+    aStartPt->SetStart(*bodyContent, childCount, IgnoreErrors());
+    aStartPt->SetEnd(*bodyContent, childCount, IgnoreErrors());
+    aEndPt->SetStart(*bodyContent, 0, IgnoreErrors());
+    aEndPt->SetEnd(*bodyContent, 0, IgnoreErrors());
   } else {
-    aStartPt->SetStart(bodyNode, 0);
-    aStartPt->SetEnd(bodyNode, 0);
-    aEndPt->SetStart(bodyNode, childCount);
-    aEndPt->SetEnd(bodyNode, childCount);
+    aStartPt->SetStart(*bodyContent, 0, IgnoreErrors());
+    aStartPt->SetEnd(*bodyContent, 0, IgnoreErrors());
+    aEndPt->SetStart(*bodyContent, childCount, IgnoreErrors());
+    aEndPt->SetEnd(*bodyContent, childCount, IgnoreErrors());
   }
 
   return NS_OK;
@@ -485,8 +485,8 @@ nsWebBrowserFind::SetRangeAroundDocument(nsIDOMRange* aSearchRange,
 // document (forward), or beginning to beginning (reverse). or around the whole
 // document if there's no selection.
 nsresult
-nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
-                                  nsIDOMRange* aStartPt, nsIDOMRange* aEndPt,
+nsWebBrowserFind::GetSearchLimits(nsRange* aSearchRange,
+                                  nsRange* aStartPt, nsRange* aEndPt,
                                   nsIDOMDocument* aDoc, nsISelection* aSel,
                                   bool aWrap)
 {
@@ -531,12 +531,12 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
     }
     offset = range->EndOffset();
 
-    aSearchRange->SetStart(node->AsDOMNode(), offset);
-    aSearchRange->SetEnd(bodyNode, childCount);
-    aStartPt->SetStart(node->AsDOMNode(), offset);
-    aStartPt->SetEnd(node->AsDOMNode(), offset);
-    aEndPt->SetStart(bodyNode, childCount);
-    aEndPt->SetEnd(bodyNode, childCount);
+    aSearchRange->SetStart(*node, offset, IgnoreErrors());
+    aSearchRange->SetEnd(*bodyContent, childCount, IgnoreErrors());
+    aStartPt->SetStart(*node, offset, IgnoreErrors());
+    aStartPt->SetEnd(*node, offset, IgnoreErrors());
+    aEndPt->SetStart(*bodyContent, childCount, IgnoreErrors());
+    aEndPt->SetEnd(*bodyContent, childCount, IgnoreErrors());
   }
   // Backward, not wrapping: DocStart to SelStart
   else if (mFindBackwards && !aWrap) {
@@ -550,12 +550,12 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
     }
     offset = range->StartOffset();
 
-    aSearchRange->SetStart(bodyNode, 0);
-    aSearchRange->SetEnd(bodyNode, childCount);
-    aStartPt->SetStart(node->AsDOMNode(), offset);
-    aStartPt->SetEnd(node->AsDOMNode(), offset);
-    aEndPt->SetStart(bodyNode, 0);
-    aEndPt->SetEnd(bodyNode, 0);
+    aSearchRange->SetStart(*bodyContent, 0, IgnoreErrors());
+    aSearchRange->SetEnd(*bodyContent, childCount, IgnoreErrors());
+    aStartPt->SetStart(*node, offset, IgnoreErrors());
+    aStartPt->SetEnd(*node, offset, IgnoreErrors());
+    aEndPt->SetStart(*bodyContent, 0, IgnoreErrors());
+    aEndPt->SetEnd(*bodyContent, 0, IgnoreErrors());
   }
   // Forward, wrapping: DocStart to SelEnd
   else if (!mFindBackwards && aWrap) {
@@ -569,12 +569,12 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
     }
     offset = range->EndOffset();
 
-    aSearchRange->SetStart(bodyNode, 0);
-    aSearchRange->SetEnd(bodyNode, childCount);
-    aStartPt->SetStart(bodyNode, 0);
-    aStartPt->SetEnd(bodyNode, 0);
-    aEndPt->SetStart(node->AsDOMNode(), offset);
-    aEndPt->SetEnd(node->AsDOMNode(), offset);
+    aSearchRange->SetStart(*bodyContent, 0, IgnoreErrors());
+    aSearchRange->SetEnd(*bodyContent, childCount, IgnoreErrors());
+    aStartPt->SetStart(*bodyContent, 0, IgnoreErrors());
+    aStartPt->SetEnd(*bodyContent, 0, IgnoreErrors());
+    aEndPt->SetStart(*node, offset, IgnoreErrors());
+    aEndPt->SetEnd(*node, offset, IgnoreErrors());
   }
   // Backward, wrapping: SelStart to DocEnd
   else if (mFindBackwards && aWrap) {
@@ -588,12 +588,12 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
     }
     offset = range->StartOffset();
 
-    aSearchRange->SetStart(bodyNode, 0);
-    aSearchRange->SetEnd(bodyNode, childCount);
-    aStartPt->SetStart(bodyNode, childCount);
-    aStartPt->SetEnd(bodyNode, childCount);
-    aEndPt->SetStart(node->AsDOMNode(), offset);
-    aEndPt->SetEnd(node->AsDOMNode(), offset);
+    aSearchRange->SetStart(*bodyContent, 0, IgnoreErrors());
+    aSearchRange->SetEnd(*bodyContent, childCount, IgnoreErrors());
+    aStartPt->SetStart(*bodyContent, childCount, IgnoreErrors());
+    aStartPt->SetEnd(*bodyContent, childCount, IgnoreErrors());
+    aEndPt->SetStart(*node, offset, IgnoreErrors());
+    aEndPt->SetEnd(*node, offset, IgnoreErrors());
   }
   return NS_OK;
 }
@@ -725,11 +725,9 @@ nsWebBrowserFind::SearchInFrame(nsPIDOMWindowOuter* aWindow, bool aWrapping,
   nsCOMPtr<nsISelection> sel = GetFrameSelection(aWindow);
   NS_ENSURE_ARG_POINTER(sel);
 
-  nsCOMPtr<nsIDOMRange> searchRange = new nsRange(theDoc);
-  NS_ENSURE_ARG_POINTER(searchRange);
-  nsCOMPtr<nsIDOMRange> startPt = new nsRange(theDoc);
-  NS_ENSURE_ARG_POINTER(startPt);
-  nsCOMPtr<nsIDOMRange> endPt = new nsRange(theDoc);
+  RefPtr<nsRange> searchRange = new nsRange(theDoc);
+  RefPtr<nsRange> startPt = new nsRange(theDoc);
+  RefPtr<nsRange> endPt = new nsRange(theDoc);
   NS_ENSURE_ARG_POINTER(endPt);
 
   nsCOMPtr<nsIDOMRange> foundRange;
