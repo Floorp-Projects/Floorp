@@ -88,7 +88,7 @@ namespace TelemetryIPCAccumulator = mozilla::TelemetryIPCAccumulator;
 namespace {
 
 const uint32_t kMaximumNumberOfKeys = 100;
-const uint32_t kMaximumKeyStringLength = 70;
+const uint32_t kMaximumKeyStringLength = 72;
 const uint32_t kMaximumStringValueLength = 50;
 // The category and scalar name maximum lengths are used by the dynamic
 // scalar registration function and must match the constants used by
@@ -922,7 +922,7 @@ internal_LogScalarError(const nsACString& aScalarName, ScalarResult aSr)
       errorMessage.AppendLiteral(u" - The key must not be empty.");
       break;
     case ScalarResult::KeyTooLong:
-      errorMessage.AppendLiteral(u" - The key length must be limited to 70 characters.");
+      errorMessage.AppendLiteral(u" - The key length must be limited to 72 characters.");
       break;
     case ScalarResult::TooManyKeys:
       errorMessage.AppendLiteral(u" - Keyed scalars cannot have more than 100 keys.");
