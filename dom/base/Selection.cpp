@@ -261,14 +261,6 @@ private:
 
 NS_IMPL_ISUPPORTS(nsAutoScrollTimer, nsITimerCallback, nsINamed)
 
-nsresult NS_NewDomSelection(nsISelection **aDomSelection)
-{
-  Selection* rlist = new Selection;
-  *aDomSelection = (nsISelection *)rlist;
-  NS_ADDREF(rlist);
-  return NS_OK;
-}
-
 /*
 The limiter is used specifically for the text areas and textfields
 In that case it is the DIV tag that is anonymously created for the text

@@ -34,7 +34,6 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIScriptError.h"
-#include "nsISelection.h"
 #include "nsCaret.h"
 #include "nsPlainTextSerializer.h"
 #include "nsXMLContentSerializer.h"
@@ -328,7 +327,6 @@ nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 
-nsresult NS_NewDomSelection(nsISelection** aResult);
 already_AddRefed<nsIContentViewer> NS_NewContentViewer();
 nsresult NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
 nsresult NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult);
@@ -401,7 +399,6 @@ MAKE_CTOR(CreateHTMLDocument,             nsIDocument,                 NS_NewHTM
 MAKE_CTOR(CreateXMLDocument,              nsIDocument,                 NS_NewXMLDocument)
 MAKE_CTOR(CreateSVGDocument,              nsIDocument,                 NS_NewSVGDocument)
 MAKE_CTOR(CreateImageDocument,            nsIDocument,                 NS_NewImageDocument)
-MAKE_CTOR(CreateDOMSelection,             nsISelection,                NS_NewDomSelection)
 MAKE_CTOR2(CreateContentIterator,         nsIContentIterator,          NS_NewContentIterator)
 MAKE_CTOR2(CreatePreContentIterator,      nsIContentIterator,          NS_NewPreContentIterator)
 MAKE_CTOR2(CreateSubtreeIterator,         nsIContentIterator,          NS_NewContentSubtreeIterator)
@@ -547,7 +544,6 @@ NS_DEFINE_NAMED_CID(NS_HTMLDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_XMLDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_SVGDOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_IMAGEDOCUMENT_CID);
-NS_DEFINE_NAMED_CID(NS_DOMSELECTION_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENTITERATOR_CID);
 NS_DEFINE_NAMED_CID(NS_PRECONTENTITERATOR_CID);
 NS_DEFINE_NAMED_CID(NS_SUBTREEITERATOR_CID);
@@ -796,7 +792,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_XMLDOCUMENT_CID, false, nullptr, CreateXMLDocument },
   { &kNS_SVGDOCUMENT_CID, false, nullptr, CreateSVGDocument },
   { &kNS_IMAGEDOCUMENT_CID, false, nullptr, CreateImageDocument },
-  { &kNS_DOMSELECTION_CID, false, nullptr, CreateDOMSelection },
   { &kNS_CONTENTITERATOR_CID, false, nullptr, CreateContentIterator },
   { &kNS_PRECONTENTITERATOR_CID, false, nullptr, CreatePreContentIterator },
   { &kNS_SUBTREEITERATOR_CID, false, nullptr, CreateSubtreeIterator },
@@ -908,7 +903,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/inspector/deep-tree-walker;1", &kIN_DEEPTREEWALKER_CID },
   { "@mozilla.org/xml/xml-document;1", &kNS_XMLDOCUMENT_CID },
   { "@mozilla.org/svg/svg-document;1", &kNS_SVGDOCUMENT_CID },
-  { "@mozilla.org/content/dom-selection;1", &kNS_DOMSELECTION_CID },
   { "@mozilla.org/content/post-content-iterator;1", &kNS_CONTENTITERATOR_CID },
   { "@mozilla.org/content/pre-content-iterator;1", &kNS_PRECONTENTITERATOR_CID },
   { "@mozilla.org/content/subtree-content-iterator;1", &kNS_SUBTREEITERATOR_CID },
