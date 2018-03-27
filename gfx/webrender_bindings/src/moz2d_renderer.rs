@@ -1,4 +1,3 @@
-#![allow(improper_ctypes)] // this is needed so that rustc doesn't complain about passing the &Arc<Vec> to an extern function
 use webrender::api::*;
 use bindings::{ByteSlice, MutByteSlice, wr_moz2d_render_cb, ArcVecU8};
 use rayon::ThreadPool;
@@ -448,8 +447,9 @@ impl BlobImageRenderer for Moz2dImageRenderer {
 }
 
 use bindings::WrFontKey;
+
+#[allow(improper_ctypes)] // this is needed so that rustc doesn't complain about passing the &Arc<Vec> to an extern function
 extern "C" {
-    #[allow(improper_ctypes)]
     fn AddFontData(key: WrFontKey, data: *const u8, size: usize, index: u32, vec: &ArcVecU8);
     fn AddNativeFontHandle(key: WrFontKey, handle: *mut c_void, index: u32);
     fn DeleteFontData(key: WrFontKey);
