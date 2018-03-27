@@ -377,7 +377,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
   if (!presContext)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsISelection> selection;
+  RefPtr<Selection> selection;
   nsCOMPtr<nsISelectionController> selectionController =
     do_QueryReferent(mSelectionController);
   if (!selectionController) {
@@ -385,8 +385,8 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
                  getter_AddRefs(selection)); // cache for reuse
     mSelectionController = do_GetWeakReference(selectionController);
   } else {
-    selectionController->GetSelection(
-      nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+    selection = selectionController->GetDOMSelection(
+      nsISelectionController::SELECTION_NORMAL);
   }
 
   nsCOMPtr<nsIDocShell> startingDocShell(presContext->GetDocShell());
@@ -594,9 +594,8 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
             editor->GetSelectionController(
               getter_AddRefs(selectionController));
             if (selectionController) {
-              selectionController->GetSelection(
-                nsISelectionController::SELECTION_NORMAL,
-                getter_AddRefs(selection));
+              selection = selectionController->GetDOMSelection(
+                nsISelectionController::SELECTION_NORMAL);
             }
             mFoundEditable = do_QueryInterface(node);
 
@@ -1017,7 +1016,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
     mPresShell = do_GetWeakReference(presShell);
   }
 
-  nsCOMPtr<nsISelection> selection;
+  RefPtr<Selection> selection;
   nsCOMPtr<nsISelectionController> selectionController =
     do_QueryReferent(mSelectionController);
   if (!selectionController) {
@@ -1025,8 +1024,8 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
                  getter_AddRefs(selection)); // cache for reuse
     mSelectionController = do_GetWeakReference(selectionController);
   } else {
-    selectionController->GetSelection(
-      nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+    selection = selectionController->GetDOMSelection(
+      nsISelectionController::SELECTION_NORMAL);
   }
 
   if (selection)
@@ -1123,10 +1122,10 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
 
       mStartFindRange = nullptr;
       if (selection) {
-        nsCOMPtr<nsIDOMRange> startFindRange;
-        selection->GetRangeAt(0, getter_AddRefs(startFindRange));
-        if (startFindRange)
-          startFindRange->CloneRange(getter_AddRefs(mStartFindRange));
+        RefPtr<nsRange> startFindRange = selection->GetRangeAt(0);
+        if (startFindRange) {
+          mStartFindRange = startFindRange->CloneRange();
+        }
       }
     }
   }
@@ -1143,7 +1142,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
 void
 nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell,
                               nsISelectionController **aSelCon,
-                              nsISelection **aDOMSel)
+                              Selection **aDOMSel)
 {
   if (!aPresShell)
     return;
@@ -1158,8 +1157,9 @@ nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell,
   if (presContext && frame) {
     frame->GetSelectionController(presContext, aSelCon);
     if (*aSelCon) {
-      (*aSelCon)->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                               aDOMSel);
+      RefPtr<Selection> sel =
+        (*aSelCon)->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+      sel.forget(aDOMSel);
     }
   }
 }
@@ -1173,7 +1173,7 @@ nsTypeAheadFind::GetFoundRange(nsIDOMRange** aFoundRange)
     return NS_OK;
   }
 
-  mFoundRange->CloneRange(aFoundRange);
+  *aFoundRange = mFoundRange->CloneRange().take();
   return NS_OK;
 }
 
