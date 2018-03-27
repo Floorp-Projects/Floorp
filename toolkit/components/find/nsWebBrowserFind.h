@@ -25,6 +25,7 @@ class nsISelection;
 class nsIDOMWindow;
 
 class nsIDocShell;
+class nsRange;
 
 //*****************************************************************************
 // class nsWebBrowserFind
@@ -65,13 +66,13 @@ protected:
   void SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow, nsIDOMRange* aRange);
 
   nsresult GetRootNode(nsIDOMDocument* aDomDoc, nsIDOMNode** aNode);
-  nsresult GetSearchLimits(nsIDOMRange* aRange,
-                           nsIDOMRange* aStartPt, nsIDOMRange* aEndPt,
+  nsresult GetSearchLimits(nsRange* aRange,
+                           nsRange* aStartPt, nsRange* aEndPt,
                            nsIDOMDocument* aDoc, nsISelection* aSel,
                            bool aWrap);
-  nsresult SetRangeAroundDocument(nsIDOMRange* aSearchRange,
-                                  nsIDOMRange* aStartPoint,
-                                  nsIDOMRange* aEndPoint,
+  nsresult SetRangeAroundDocument(nsRange* aSearchRange,
+                                  nsRange* aStartPoint,
+                                  nsRange* aEndPoint,
                                   nsIDOMDocument* aDoc);
 
 protected:

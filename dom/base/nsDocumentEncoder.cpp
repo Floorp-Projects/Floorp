@@ -1166,18 +1166,18 @@ protected:
   };
 
   nsresult PromoteRange(nsRange* inRange);
-  nsresult PromoteAncestorChain(nsCOMPtr<nsIDOMNode> *ioNode,
-                                int32_t *ioStartOffset,
-                                int32_t *ioEndOffset);
-  nsresult GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, int32_t aOffset,
-                            nsCOMPtr<nsIDOMNode> *outNode, int32_t *outOffset, nsIDOMNode *aCommon);
-  nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode *aParent, int32_t aOffset);
+  nsresult PromoteAncestorChain(nsCOMPtr<nsINode>* ioNode,
+                                int32_t* ioStartOffset,
+                                int32_t* ioEndOffset);
+  nsresult GetPromotedPoint(Endpoint aWhere, nsINode* aNode, int32_t aOffset,
+                            nsCOMPtr<nsINode>* outNode, int32_t* outOffset, nsINode* aCommon);
+  nsCOMPtr<nsINode> GetChildAt(nsINode *aParent, int32_t aOffset);
   bool IsMozBR(nsIDOMNode* aNode);
   bool IsMozBR(Element* aNode);
-  nsresult GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, int32_t *outOffset);
-  bool IsRoot(nsIDOMNode* aNode);
-  bool IsFirstNode(nsIDOMNode *aNode);
-  bool IsLastNode(nsIDOMNode *aNode);
+  nsresult GetNodeLocation(nsINode *inChild, nsCOMPtr<nsINode> *outParent, int32_t *outOffset);
+  bool IsRoot(nsINode* aNode);
+  bool IsFirstNode(nsINode *aNode);
+  bool IsLastNode(nsINode *aNode);
   bool IsEmptyTextContent(nsIDOMNode* aNode);
   virtual bool IncludeInContext(nsINode *aNode) override;
   virtual int32_t
@@ -1475,35 +1475,41 @@ nsHTMLCopyEncoder::PromoteRange(nsRange* inRange)
   uint32_t endOffset = inRange->EndOffset();
   nsCOMPtr<nsINode> common = inRange->GetCommonAncestor();
 
-  nsCOMPtr<nsIDOMNode> opStartNode;
-  nsCOMPtr<nsIDOMNode> opEndNode;
+  nsCOMPtr<nsINode> opStartNode;
+  nsCOMPtr<nsINode> opEndNode;
   int32_t opStartOffset, opEndOffset;
 
   // examine range endpoints.
   nsresult rv =
-    GetPromotedPoint(kStart, startNode->AsDOMNode(),
+    GetPromotedPoint(kStart, startNode,
                      static_cast<int32_t>(startOffset),
                      address_of(opStartNode), &opStartOffset,
-                     common->AsDOMNode());
+                     common);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = GetPromotedPoint(kEnd, endNode->AsDOMNode(),
+  rv = GetPromotedPoint(kEnd, endNode,
                         static_cast<int32_t>(endOffset),
                         address_of(opEndNode), &opEndOffset,
-                        common->AsDOMNode());
+                        common);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // if both range endpoints are at the common ancestor, check for possible inclusion of ancestors
-  if (opStartNode == common->AsDOMNode() && opEndNode == common->AsDOMNode()) {
+  if (opStartNode == common && opEndNode == common) {
     rv = PromoteAncestorChain(address_of(opStartNode), &opStartOffset, &opEndOffset);
     NS_ENSURE_SUCCESS(rv, rv);
     opEndNode = opStartNode;
   }
 
   // set the range to the new values
-  rv = inRange->SetStart(opStartNode, static_cast<uint32_t>(opStartOffset));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = inRange->SetEnd(opEndNode, static_cast<uint32_t>(opEndOffset));
-  return rv;
+  ErrorResult err;
+  inRange->SetStart(*opStartNode, static_cast<uint32_t>(opStartOffset), err);
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
+  }
+  inRange->SetEnd(*opEndNode, static_cast<uint32_t>(opEndOffset), err);
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
+  }
+  return NS_OK;
 }
 
 
@@ -1511,27 +1517,27 @@ nsHTMLCopyEncoder::PromoteRange(nsRange* inRange)
 // The promotion is different from that found in getPromotedPoint: it will only promote one endpoint if it can
 // promote the other.  Thus, instead of having a startnode/endNode, there is just the one ioNode.
 nsresult
-nsHTMLCopyEncoder::PromoteAncestorChain(nsCOMPtr<nsIDOMNode> *ioNode,
-                                        int32_t *ioStartOffset,
-                                        int32_t *ioEndOffset)
+nsHTMLCopyEncoder::PromoteAncestorChain(nsCOMPtr<nsINode>* ioNode,
+                                        int32_t* ioStartOffset,
+                                        int32_t* ioEndOffset)
 {
   if (!ioNode || !ioStartOffset || !ioEndOffset) return NS_ERROR_NULL_POINTER;
 
   nsresult rv = NS_OK;
   bool done = false;
 
-  nsCOMPtr<nsIDOMNode> frontNode, endNode, parent;
+  nsCOMPtr<nsINode> frontNode, endNode, parent;
   int32_t frontOffset, endOffset;
 
   //save the editable state of the ioNode, so we don't promote an ancestor if it has different editable state
-  nsCOMPtr<nsINode> node = do_QueryInterface(*ioNode);
+  nsCOMPtr<nsINode> node = *ioNode;
   bool isEditable = node->IsEditable();
 
   // loop for as long as we can promote both endpoints
   while (!done)
   {
-    node = do_QueryInterface(*ioNode);
-    parent = do_QueryInterface(node->GetParentNode());
+    node = *ioNode;
+    parent = node->GetParentNode();
     if (!parent) {
       done = true;
     } else {
@@ -1543,10 +1549,9 @@ nsHTMLCopyEncoder::PromoteAncestorChain(nsCOMPtr<nsIDOMNode> *ioNode,
       rv = GetPromotedPoint( kEnd, *ioNode, *ioEndOffset, address_of(endNode), &endOffset, parent);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsCOMPtr<nsINode> frontINode = do_QueryInterface(frontNode);
       // if both endpoints were promoted one level and isEditable is the same as the original node,
       // keep looping - otherwise we are done.
-      if ( (frontNode != parent) || (endNode != parent) || (frontINode->IsEditable() != isEditable) )
+      if ( (frontNode != parent) || (endNode != parent) || (frontNode->IsEditable() != isEditable) )
         done = true;
       else
       {
@@ -1560,12 +1565,13 @@ nsHTMLCopyEncoder::PromoteAncestorChain(nsCOMPtr<nsIDOMNode> *ioNode,
 }
 
 nsresult
-nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, int32_t aOffset,
-                                  nsCOMPtr<nsIDOMNode> *outNode, int32_t *outOffset, nsIDOMNode *common)
+nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsINode* aNode,
+                                    int32_t aOffset, nsCOMPtr<nsINode>* outNode,
+                                    int32_t* outOffset, nsINode* common)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOMNode> node = aNode;
-  nsCOMPtr<nsIDOMNode> parent = aNode;
+  nsCOMPtr<nsINode> node = aNode;
+  nsCOMPtr<nsINode> parent = aNode;
   int32_t offset = aOffset;
   bool    bResetPromotion = false;
 
@@ -1579,7 +1585,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, int32_t 
   if (aWhere == kStart)
   {
     // some special casing for text nodes
-    nsCOMPtr<nsINode> t = do_QueryInterface(aNode);
+    nsCOMPtr<nsINode> t = aNode;
     if (auto nodeAsText = t->GetAsText())
     {
       // if not at beginning of text node, we are done
@@ -1731,10 +1737,10 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, int32_t 
   return rv;
 }
 
-nsCOMPtr<nsIDOMNode>
-nsHTMLCopyEncoder::GetChildAt(nsIDOMNode *aParent, int32_t aOffset)
+nsCOMPtr<nsINode>
+nsHTMLCopyEncoder::GetChildAt(nsINode *aParent, int32_t aOffset)
 {
-  nsCOMPtr<nsIDOMNode> resultNode;
+  nsCOMPtr<nsINode> resultNode;
 
   if (!aParent)
     return resultNode;
@@ -1742,7 +1748,7 @@ nsHTMLCopyEncoder::GetChildAt(nsIDOMNode *aParent, int32_t aOffset)
   nsCOMPtr<nsIContent> content = do_QueryInterface(aParent);
   NS_PRECONDITION(content, "null content in nsHTMLCopyEncoder::GetChildAt");
 
-  resultNode = do_QueryInterface(content->GetChildAt_Deprecated(aOffset));
+  resultNode = content->GetChildAt_Deprecated(aOffset);
 
   return resultNode;
 }
@@ -1764,8 +1770,8 @@ nsHTMLCopyEncoder::IsMozBR(Element* aElement)
 }
 
 nsresult
-nsHTMLCopyEncoder::GetNodeLocation(nsIDOMNode *inChild,
-                                   nsCOMPtr<nsIDOMNode> *outParent,
+nsHTMLCopyEncoder::GetNodeLocation(nsINode *inChild,
+                                   nsCOMPtr<nsINode> *outParent,
                                    int32_t *outOffset)
 {
   NS_ASSERTION((inChild && outParent && outOffset), "bad args");
@@ -1781,7 +1787,7 @@ nsHTMLCopyEncoder::GetNodeLocation(nsIDOMNode *inChild,
       return NS_ERROR_NULL_POINTER;
     }
 
-    *outParent = do_QueryInterface(parent);
+    *outParent = parent;
     *outOffset = parent->ComputeIndexOf(child);
     return NS_OK;
   }
@@ -1789,7 +1795,7 @@ nsHTMLCopyEncoder::GetNodeLocation(nsIDOMNode *inChild,
 }
 
 bool
-nsHTMLCopyEncoder::IsRoot(nsIDOMNode* aNode)
+nsHTMLCopyEncoder::IsRoot(nsINode* aNode)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (!content) {
@@ -1806,15 +1812,14 @@ nsHTMLCopyEncoder::IsRoot(nsIDOMNode* aNode)
 }
 
 bool
-nsHTMLCopyEncoder::IsFirstNode(nsIDOMNode *aNode)
+nsHTMLCopyEncoder::IsFirstNode(nsINode *aNode)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   // need to check if any nodes before us are really visible.
   // Mike wrote something for me along these lines in nsSelectionController,
   // but I don't think it's ready for use yet - revisit.
   // HACK: for now, simply consider all whitespace text nodes to be
   // invisible formatting nodes.
-  for (nsIContent* sibling = node->GetPreviousSibling();
+  for (nsIContent* sibling = aNode->GetPreviousSibling();
        sibling;
        sibling = sibling->GetPreviousSibling()) {
     if (!sibling->TextIsOnlyWhitespace()) {
@@ -1826,15 +1831,14 @@ nsHTMLCopyEncoder::IsFirstNode(nsIDOMNode *aNode)
 }
 
 bool
-nsHTMLCopyEncoder::IsLastNode(nsIDOMNode *aNode)
+nsHTMLCopyEncoder::IsLastNode(nsINode *aNode)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   // need to check if any nodes after us are really visible.
   // Mike wrote something for me along these lines in nsSelectionController,
   // but I don't think it's ready for use yet - revisit.
   // HACK: for now, simply consider all whitespace text nodes to be
   // invisible formatting nodes.
-  for (nsIContent* sibling = node->GetNextSibling();
+  for (nsIContent* sibling = aNode->GetNextSibling();
        sibling;
        sibling = sibling->GetNextSibling()) {
     if (sibling->IsElement() && IsMozBR(sibling->AsElement())) {

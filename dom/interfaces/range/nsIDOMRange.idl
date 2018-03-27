@@ -17,8 +17,6 @@ interface nsIDOMRange : nsISupports
 {
   readonly attribute boolean          collapsed;
 
-  void               setStart(in nsIDOMNode refNode, in unsigned long offset);
-  void               setEnd(in nsIDOMNode refNode, in unsigned long offset);
   void               setStartBefore(in nsIDOMNode refNode);
   void               setStartAfter(in nsIDOMNode refNode);
   void               setEndBefore(in nsIDOMNode refNode);
