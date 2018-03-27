@@ -102,7 +102,6 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(IDBVERSIONCHANGEEVENT_IID)
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_TO_EVENT
 
   virtual JSObject*
   WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

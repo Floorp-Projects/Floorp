@@ -60,7 +60,7 @@ struct PropertyValuePair
  * overlapping shorthands/longhands, convert specified CSS values to computed
  * values, etc.
  *
- * When the target element or style context changes, however, we rebuild these
+ * When the target element or computed style changes, however, we rebuild these
  * per-property arrays from the original list of keyframes objects. As a result,
  * these objects represent the master definition of the effect's values.
  */

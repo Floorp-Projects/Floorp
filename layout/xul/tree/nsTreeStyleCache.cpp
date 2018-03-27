@@ -32,7 +32,7 @@ nsTreeStyleCache::Transition::Hash() const
 }
 
 
-// The style context cache impl
+// The ComputedStyle cache impl
 ComputedStyle*
 nsTreeStyleCache::GetComputedStyle(nsPresContext* aPresContext,
                                    nsIContent* aContent,
@@ -74,7 +74,7 @@ nsTreeStyleCache::GetComputedStyle(nsPresContext* aPresContext,
   }
 
   // We're in a final state.
-  // Look up our style context for this state.
+  // Look up our ComputedStyle for this state.
   ComputedStyle* result = nullptr;
   if (mCache) {
     result = mCache->GetWeak(currState);
@@ -85,7 +85,7 @@ nsTreeStyleCache::GetComputedStyle(nsPresContext* aPresContext,
         ResolveXULTreePseudoStyle(aContent->AsElement(),
                                   aPseudoElement, aStyle, aInputWord);
 
-    // Put the style context in our table, transferring the owning reference to the table.
+    // Put the ComputedStyle in our table, transferring the owning reference to the table.
     if (!mCache) {
       mCache = new ComputedStyleCache();
     }

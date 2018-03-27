@@ -13,6 +13,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/CustomEvent.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
@@ -1630,14 +1631,17 @@ nsPrintJob::FirePrintingErrorEvent(nsresult aPrintError)
     NS_NewDOMCustomEvent(doc, nullptr, nullptr);
 
   MOZ_ASSERT(event);
-  nsCOMPtr<nsIWritableVariant> resultVariant = new nsVariant();
-  // nsresults are Uint32_t's, but XPConnect will interpret it as a double
-  // when any JS attempts to access it, and will therefore interpret it
-  // incorrectly. We preempt this by casting and setting as a double.
-  resultVariant->SetAsDouble(static_cast<double>(aPrintError));
 
-  event->InitCustomEvent(NS_LITERAL_STRING("PrintingError"), false, false,
-                         resultVariant);
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(event->GetParentObject())) {
+    return;
+  }
+  JSContext* cx = jsapi.cx();
+
+  JS::Rooted<JS::Value> detail(cx,
+    JS::NumberValue(static_cast<double>(aPrintError)));
+  event->InitCustomEvent(cx, NS_LITERAL_STRING("PrintingError"), false, false,
+                         detail);
   event->SetTrusted(true);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =

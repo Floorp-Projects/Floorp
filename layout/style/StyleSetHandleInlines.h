@@ -74,7 +74,7 @@ StyleSetHandle::Ptr::EndUpdate()
   FORWARD(EndUpdate, ());
 }
 
-// resolve a style context
+// resolve a ComputedStyle
 already_AddRefed<ComputedStyle>
 StyleSetHandle::Ptr::ResolveStyleFor(dom::Element* aElement,
                                      ComputedStyle* aParentStyle,

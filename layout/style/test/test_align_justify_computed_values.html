@@ -133,7 +133,7 @@ function testNodeThatHasParent(elem) {
 function main() {
   // Test the root node
   // ==================
-  // (It's special because it has no parent style context.)
+  // (It's special because it has no parent ComputedStyle.)
 
   var rootNode = document.documentElement;
 
@@ -147,7 +147,7 @@ function main() {
 
   // Test the body node
   // ==================
-  // (It's special because it has no grandparent style context.)
+  // (It's special because it has no grandparent ComputedStyle.)
 
   var body = document.getElementsByTagName("body")[0];
   is(body.parentNode, document.documentElement,

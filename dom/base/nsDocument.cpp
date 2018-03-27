@@ -5688,7 +5688,7 @@ nsIDocument::CreateElement(const nsAString& aTagName,
     const ElementCreationOptions& options =
       aOptions.GetAsElementCreationOptions();
 
-    if (CustomElementRegistry::IsCustomElementEnabled() &&
+    if (CustomElementRegistry::IsCustomElementEnabled(this) &&
         options.mIs.WasPassed()) {
       is = &options.mIs.Value();
     }
@@ -5737,7 +5737,7 @@ nsIDocument::CreateElementNS(const nsAString& aNamespaceURI,
   }
 
   const nsString* is = nullptr;
-  if (CustomElementRegistry::IsCustomElementEnabled() &&
+  if (CustomElementRegistry::IsCustomElementEnabled(this) &&
       aOptions.IsElementCreationOptions()) {
     const ElementCreationOptions& options = aOptions.GetAsElementCreationOptions();
     if (options.mIs.WasPassed()) {

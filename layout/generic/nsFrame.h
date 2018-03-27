@@ -250,17 +250,17 @@ public:
   }
 
   /**
-   * Do the work for getting the parent style context frame so that
+   * Do the work for getting the parent ComputedStyle frame so that
    * other frame's |GetParentComputedStyle| methods can call this
    * method on *another* frame.  (This function handles out-of-flow
    * frames by using the frame manager's placeholder map and it also
    * handles block-within-inline and generated content wrappers.)
    *
    * @param aProviderFrame (out) the frame associated with the returned value
-   *     or null if the style context is for display:contents content.
-   * @return The style context that should be the parent of this frame's
-   *         style context.  Null is permitted, and means that this frame's
-   *         style context should be the root of the style context tree.
+   *   or null if the ComputedStyle is for display:contents content.
+   * @return The ComputedStyle that should be the parent of this frame's
+   *   ComputedStyle.  Null is permitted, and means that this frame's
+   *   ComputedStyle should be the root of the ComputedStyle tree.
    */
   ComputedStyle* DoGetParentComputedStyle(nsIFrame** aProviderFrame) const;
 
@@ -556,7 +556,7 @@ public:
                       const nsDisplayListSet& aLists);
 
   /**
-   * Adjust the given parent frame to the right style context parent frame for
+   * Adjust the given parent frame to the right ComputedStyle parent frame for
    * the child, given the pseudo-type of the prospective child.  This handles
    * things like walking out of table pseudos and so forth.
    *

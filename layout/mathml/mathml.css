@@ -204,7 +204,7 @@ mtable[framespacing] > mtr > mtd {
 }
 
 /**************************************************************************/
-/* This rule is used to give a style context suitable for nsMathMLChars.
+/* This rule is used to give a ComputedStyle suitable for nsMathMLChars.
    We don't actually style -moz-math-anonymous by default. */
 /*
 ::-moz-math-anonymous {

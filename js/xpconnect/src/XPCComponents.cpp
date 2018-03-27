@@ -2684,19 +2684,6 @@ nsXPCComponents_Utils::ForcePermissiveCOWs(JSContext* cx)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::ForcePrivilegedComponentsForScope(HandleValue vscope,
-                                                         JSContext* cx)
-{
-    if (!vscope.isObject())
-        return NS_ERROR_INVALID_ARG;
-    xpc::CrashIfNotInAutomation();
-    JSObject* scopeObj = js::UncheckedUnwrap(&vscope.toObject());
-    XPCWrappedNativeScope* scope = ObjectScope(scopeObj);
-    scope->ForcePrivilegedComponents();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPCComponents_Utils::GetComponentsForScope(HandleValue vscope, JSContext* cx,
                                              MutableHandleValue rval)
 {

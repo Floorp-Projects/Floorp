@@ -97,7 +97,7 @@ class RobocopTestRunner(MochitestDesktop):
         self.auto.deleteANRs()
         self.auto.deleteTombstones()
         procName = self.options.app.split('/')[-1]
-        self.device.pkill(procName)
+        self.device.stop_application(procName)
         if self.device.process_exist(procName):
             self.log.warning("unable to kill %s before running tests!" % procName)
         self.device.rm(self.remoteScreenshots, force=True, recursive=True)
@@ -134,7 +134,7 @@ class RobocopTestRunner(MochitestDesktop):
         """
         self.log.debug("Cleaning up...")
         self.stopServers()
-        self.device.pkill(self.options.app.split('/')[-1])
+        self.device.stop_application(self.options.app.split('/')[-1])
         uploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
         if uploadDir:
             self.log.debug("Pulling any remote moz logs and screenshots to %s." %

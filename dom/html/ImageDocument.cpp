@@ -732,7 +732,7 @@ ImageDocument::CreateSyntheticDocument()
 nsresult
 ImageDocument::CheckOverflowing(bool changeState)
 {
-  /* Create a scope so that the style context gets destroyed before we might
+  /* Create a scope so that the ComputedStyle gets destroyed before we might
    * call RebuildStyleData.  Also, holding onto pointers to the
    * presentation through style resolution is potentially dangerous.
    */

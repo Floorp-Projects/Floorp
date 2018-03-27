@@ -135,10 +135,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FetchEvent, ExtendableEvent)
 
-  // Note, we cannot use NS_FORWARD_TO_EVENT because we want a different
-  // PreventDefault(JSContext*, CallerType) override.
-  NS_FORWARD_NSIDOMEVENT(Event::)
-
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
     return FetchEventBinding::Wrap(aCx, this, aGivenProto);
@@ -188,6 +184,9 @@ public:
   already_AddRefed<Promise>
   Default();
 
+  // Pull in the nsIDOMEvent version of PreventDefault so we don't get
+  // shadowing warnings.
+  using Event::PreventDefault;
   void
   PreventDefault(JSContext* aCx, CallerType aCallerType) override;
 
@@ -237,7 +236,6 @@ protected:
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PushEvent, ExtendableEvent)
-  NS_FORWARD_TO_EVENT
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 

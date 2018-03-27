@@ -938,7 +938,7 @@ protected:
   // Remove and return the pushed floats list.
   nsFrameList* RemovePushedFloats();
 
-  // Resolve a style context for our bullet frame.  aType should be
+  // Resolve a ComputedStyle for our bullet frame.  aType should be
   // mozListBullet or mozListNumber.  Passing in the style set is an
   // optimization, because all callsites have it.
   already_AddRefed<ComputedStyle> ResolveBulletStyle(

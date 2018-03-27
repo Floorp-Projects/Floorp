@@ -481,7 +481,7 @@ public:
   { }
 
   /**
-   * Construct writing mode based on a style context
+   * Construct writing mode based on a ComputedStyle.
    */
   explicit WritingMode(ComputedStyle* aComputedStyle)
   {

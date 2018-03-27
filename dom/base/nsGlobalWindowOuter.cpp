@@ -3880,11 +3880,7 @@ nsGlobalWindowOuter::DispatchResizeEvent(const CSSIntSize& aSize)
                                NS_LITERAL_STRING("DOMWindowResize"),
                                /* aCanBubble = */ true,
                                /* aCancelable = */ true,
-                               detailValue,
-                               res);
-  if (res.Failed()) {
-    return false;
-  }
+                               detailValue);
 
   domEvent->SetTrusted(true);
   domEvent->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;

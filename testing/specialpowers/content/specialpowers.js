@@ -20,12 +20,8 @@ function SpecialPowers(window) {
   this._crashDumpDir = null;
   this.DOMWindowUtils = bindDOMWindowUtils(window);
   Object.defineProperty(this, "Components", {
-      configurable: true, enumerable: true, get() {
-          var win = this.window.get();
-          if (!win)
-              return null;
-          return getRawComponents(win);
-      }});
+      configurable: true, enumerable: true, value: this.getFullComponents()
+  });
   this._pongHandlers = [];
   this._messageListener = this._messageReceived.bind(this);
   this._grandChildFrameMM = null;

@@ -44,7 +44,7 @@ nsSMILCSSProperty::GetBaseValue() const
 
   // SPECIAL CASE: (a) Shorthands
   //               (b) 'display'
-  //               (c) No base style context
+  //               (c) No base ComputedStyle
   if (nsCSSProps::IsShorthand(mPropID) ||
       mPropID == eCSSProperty_display ||
       !mBaseComputedStyle) {
@@ -56,7 +56,7 @@ nsSMILCSSProperty::GetBaseValue() const
     // doing so involves clearing and resetting the property which can cause
     // frames to be recreated which we'd like to avoid.
     //
-    // Furthermore, if we don't (yet) have a base style context we obviously
+    // Furthermore, if we don't (yet) have a base ComputedStyle we obviously
     // can't resolve a base value.
     //
     // In any case, just return a dummy value (initialized with the right

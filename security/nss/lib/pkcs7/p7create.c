@@ -22,7 +22,7 @@ const int NSS_PBE_DEFAULT_ITERATION_COUNT = /* used in p12e.c too */
 #ifdef DEBUG
     10000
 #else
-    1000000
+    600000
 #endif
     ;
 

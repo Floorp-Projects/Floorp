@@ -543,7 +543,7 @@ Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
     return true;
   }
 
-  // Get the computed -moz-binding directly from the style context
+  // Get the computed -moz-binding directly from the ComputedStyle
   RefPtr<ComputedStyle> sc =
     nsComputedDOMStyle::GetComputedStyleNoFlush(this, nullptr);
   NS_ENSURE_TRUE(sc, false);
@@ -581,7 +581,7 @@ Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
     return obj;
   }
 
-  // Make sure the style context goes away _before_ we load the binding
+  // Make sure the ComputedStyle goes away _before_ we load the binding
   // since that can destroy the relevant presshell.
 
   {
@@ -1669,7 +1669,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     SetSubtreeRootPointer(aParent->SubtreeRoot());
   }
 
-  if (CustomElementRegistry::IsCustomElementEnabled() && IsInComposedDoc()) {
+  if (CustomElementRegistry::IsCustomElementEnabled(OwnerDoc()) && IsInComposedDoc()) {
     // Connected callback must be enqueued whenever a custom element becomes
     // connected.
     CustomElementData* data = GetCustomElementData();
@@ -2010,7 +2010,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
 
      // Disconnected must be enqueued whenever a connected custom element becomes
      // disconnected.
-    if (CustomElementRegistry::IsCustomElementEnabled()) {
+    if (CustomElementRegistry::IsCustomElementEnabled(OwnerDoc())) {
       CustomElementData* data  = GetCustomElementData();
       if (data) {
         if (data->mState == CustomElementData::State::eCustom) {
@@ -2682,7 +2682,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
     }
   }
 
-  if (CustomElementRegistry::IsCustomElementEnabled()) {
+  if (CustomElementRegistry::IsCustomElementEnabled(OwnerDoc())) {
     CustomElementDefinition* definition = GetCustomElementDefinition();
     // Only custom element which is in `custom` state could get the
     // CustomElementDefinition.
@@ -2856,7 +2856,7 @@ Element::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
                                 const nsAttrValueOrString& aValue,
                                 bool aNotify)
 {
-  if (CustomElementRegistry::IsCustomElementEnabled()) {
+  if (CustomElementRegistry::IsCustomElementEnabled(OwnerDoc())) {
     // Only custom element which is in `custom` state could get the
     // CustomElementDefinition.
     CustomElementDefinition* definition = GetCustomElementDefinition();
@@ -2989,7 +2989,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName,
     }
   }
 
-  if (CustomElementRegistry::IsCustomElementEnabled()) {
+  if (CustomElementRegistry::IsCustomElementEnabled(OwnerDoc())) {
     CustomElementDefinition* definition = GetCustomElementDefinition();
     // Only custom element which is in `custom` state could get the
     // CustomElementDefinition.

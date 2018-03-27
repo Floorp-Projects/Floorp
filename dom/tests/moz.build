@@ -180,6 +180,7 @@ MOCHITEST_CHROME_MANIFESTS += [
     'mochitest/localstorage/chrome.ini',
     'mochitest/sessionstorage/chrome.ini',
     'mochitest/webcomponents/chrome.ini',
+    'mochitest/webcomponents/chrome_disabled.ini',
     'mochitest/whatwg/chrome.ini',
 ]
 
