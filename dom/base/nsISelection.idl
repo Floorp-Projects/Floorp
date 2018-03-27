@@ -8,7 +8,6 @@
 /* THIS IS A PUBLIC INTERFACE */
 
 interface nsIDOMNode;
-interface nsIDOMRange;
 interface nsINode;
 
 %{C++
@@ -59,11 +58,6 @@ interface nsISelection : nsISupports
      * Returns the number of ranges in the selection.
      */
     readonly attribute long rangeCount;
-
-    /**
-     * Returns the range at the specified index.
-     */
-    nsIDOMRange getRangeAt(in long index);
 
     /**
      * Collapses the selection to a single point, at the specified offset
