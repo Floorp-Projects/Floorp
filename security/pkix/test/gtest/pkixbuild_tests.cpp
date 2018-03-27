@@ -49,7 +49,9 @@ CreateCert(const char* issuerCN, // null means "empty name"
            EndEntityOrCA endEntityOrCA,
            /*optional modified*/ std::map<ByteString, ByteString>*
              subjectDERToCertDER = nullptr,
-           /*optional*/ const ByteString* extension = nullptr)
+           /*optional*/ const ByteString* extension = nullptr,
+           /*optional*/ const TestKeyPair* issuerKeyPair = nullptr,
+           /*optional*/ const TestKeyPair* subjectKeyPair = nullptr)
 {
   static long serialNumberValue = 0;
   ++serialNumberValue;
@@ -75,7 +77,9 @@ CreateCert(const char* issuerCN, // null means "empty name"
   ByteString certDER(CreateEncodedCertificate(
                        v3, sha256WithRSAEncryption(), serialNumber, issuerDER,
                        oneDayBeforeNow, oneDayAfterNow, subjectDER,
-                       *reusedKey, extensions.data(), *reusedKey,
+                       subjectKeyPair ? *subjectKeyPair : *reusedKey,
+                       extensions.data(),
+                       issuerKeyPair ? *issuerKeyPair : *reusedKey,
                        sha256WithRSAEncryption()));
   EXPECT_FALSE(ENCODING_FAILED(certDER));
 
@@ -738,6 +742,148 @@ TEST_F(pkixbuild, RevokedEndEntityWithMultiplePaths)
   Input certDERInput;
   ASSERT_EQ(Success, certDERInput.Init(certDER.data(), certDER.length()));
   ASSERT_EQ(Result::ERROR_REVOKED_CERTIFICATE,
+            BuildCertChain(trustDomain, certDERInput, Now(),
+                           EndEntityOrCA::MustBeEndEntity,
+                           KeyUsage::noParticularKeyUsageRequired,
+                           KeyPurposeId::id_kp_serverAuth,
+                           CertPolicyId::anyPolicy,
+                           nullptr/*stapledOCSPResponse*/));
+}
+
+// This represents a collection of different certificates that all have the same
+// subject and issuer distinguished name.
+class SelfIssuedCertificatesTrustDomain final : public DefaultCryptoTrustDomain
+{
+public:
+  void SetUpCerts(size_t totalCerts)
+  {
+    ASSERT_TRUE(totalCerts > 0);
+    // First we generate a trust anchor.
+    ScopedTestKeyPair rootKeyPair(GenerateKeyPair());
+    rootCACertDER = CreateCert("DN", "DN", EndEntityOrCA::MustBeCA, nullptr,
+                               nullptr, rootKeyPair.get(), rootKeyPair.get());
+    ASSERT_FALSE(ENCODING_FAILED(rootCACertDER));
+    certs.push_back(rootCACertDER);
+    ScopedTestKeyPair issuerKeyPair(rootKeyPair.release());
+    size_t subCAsGenerated;
+    // Then we generate 6 sub-CAs (given that we were requested to generate at
+    // least that many).
+    for (subCAsGenerated = 0;
+         subCAsGenerated < totalCerts - 1 && subCAsGenerated < 6;
+         subCAsGenerated++) {
+      // Each certificate has to have a unique SPKI (mozilla::pkix does loop
+      // detection and stops searching if it encounters two certificates in a
+      // path with the same subject and SPKI).
+      ScopedTestKeyPair keyPair(GenerateKeyPair());
+      ByteString cert(CreateCert("DN", "DN", EndEntityOrCA::MustBeCA, nullptr,
+                                 nullptr, issuerKeyPair.get(), keyPair.get()));
+      ASSERT_FALSE(ENCODING_FAILED(cert));
+      certs.push_back(cert);
+      issuerKeyPair.reset(keyPair.release());
+    }
+    // We set firstIssuerKey here because we can't end up with a path that has
+    // more than 7 CAs in it (because mozilla::pkix limits the path length).
+    firstIssuerKey.reset(issuerKeyPair.release());
+    // For any more sub CAs we generate, it doesn't matter what their keys are
+    // as long as they're different.
+    for (; subCAsGenerated < totalCerts - 1; subCAsGenerated++) {
+      ScopedTestKeyPair keyPair(GenerateKeyPair());
+      ByteString cert(CreateCert("DN", "DN", EndEntityOrCA::MustBeCA, nullptr,
+                                 nullptr, keyPair.get(), keyPair.get()));
+      ASSERT_FALSE(ENCODING_FAILED(cert));
+      certs.insert(certs.begin(), cert);
+    }
+  }
+
+  const TestKeyPair* GetFirstIssuerKey()
+  {
+    return firstIssuerKey.get();
+  }
+
+private:
+  Result GetCertTrust(EndEntityOrCA, const CertPolicyId&, Input candidateCert,
+                      /*out*/ TrustLevel& trustLevel) override
+  {
+    trustLevel = InputEqualsByteString(candidateCert, rootCACertDER)
+               ? TrustLevel::TrustAnchor
+               : TrustLevel::InheritsTrust;
+    return Success;
+  }
+
+  Result FindIssuer(Input, IssuerChecker& checker, Time) override
+  {
+    bool keepGoing;
+    for (auto& cert: certs) {
+      Input certInput;
+      Result rv = certInput.Init(cert.data(), cert.length());
+      if (rv != Success) {
+        return rv;
+      }
+      rv = checker.Check(certInput, nullptr, keepGoing);
+      if (rv != Success || !keepGoing) {
+        return rv;
+      }
+    }
+    return Success;
+  }
+
+  Result CheckRevocation(EndEntityOrCA, const CertID&, Time, Duration,
+                         /*optional*/ const Input*, /*optional*/ const Input*)
+                         override
+  {
+    return Success;
+  }
+
+  Result IsChainValid(const DERArray&, Time, const CertPolicyId&) override
+  {
+    return Success;
+  }
+
+  std::vector<ByteString> certs;
+  ByteString rootCACertDER;
+  ScopedTestKeyPair firstIssuerKey;
+};
+
+TEST_F(pkixbuild, AvoidUnboundedPathSearchingFailure)
+{
+  SelfIssuedCertificatesTrustDomain trustDomain;
+  // This creates a few hundred million potential paths of length 8 (end entity
+  // + 6 sub-CAs + root). It would be prohibitively expensive to enumerate all
+  // of these, so we give mozilla::pkix a budget that is spent when searching
+  // paths. If the budget is exhausted, it simply returns an unknown issuer
+  // error. In the future it might be nice to return a specific error that would
+  // give the front-end a hint that maybe it shouldn't have so many certificates
+  // that all have the same subject and issuer DN but different SPKIs.
+  trustDomain.SetUpCerts(18);
+  ByteString certDER(CreateCert("DN", "DN", EndEntityOrCA::MustBeEndEntity,
+                                nullptr, nullptr,
+                                trustDomain.GetFirstIssuerKey()));
+  ASSERT_FALSE(ENCODING_FAILED(certDER));
+  Input certDERInput;
+  ASSERT_EQ(Success, certDERInput.Init(certDER.data(), certDER.length()));
+  ASSERT_EQ(Result::ERROR_UNKNOWN_ISSUER,
+            BuildCertChain(trustDomain, certDERInput, Now(),
+                           EndEntityOrCA::MustBeEndEntity,
+                           KeyUsage::noParticularKeyUsageRequired,
+                           KeyPurposeId::id_kp_serverAuth,
+                           CertPolicyId::anyPolicy,
+                           nullptr/*stapledOCSPResponse*/));
+}
+
+TEST_F(pkixbuild, AvoidUnboundedPathSearchingSuccess)
+{
+  SelfIssuedCertificatesTrustDomain trustDomain;
+  // This creates a few hundred thousand possible potential paths of length 8
+  // (end entity + 6 sub-CAs + root). This will nearly exhaust mozilla::pkix's
+  // search budget, so this should succeed.
+  trustDomain.SetUpCerts(10);
+  ByteString certDER(CreateCert("DN", "DN", EndEntityOrCA::MustBeEndEntity,
+                                nullptr, nullptr,
+                                trustDomain.GetFirstIssuerKey()));
+  ASSERT_FALSE(ENCODING_FAILED(certDER));
+  Input certDERInput;
+  ASSERT_EQ(Success, certDERInput.Init(certDER.data(), certDER.length()));
+  ASSERT_EQ(Success,
             BuildCertChain(trustDomain, certDERInput, Now(),
                            EndEntityOrCA::MustBeEndEntity,
                            KeyUsage::noParticularKeyUsageRequired,
