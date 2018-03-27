@@ -120,7 +120,7 @@ public:
             nsWindow* const mWindow;
 
         public:
-            Locked(WindowPtr<Impl>& aPtr)
+            explicit Locked(WindowPtr<Impl>& aPtr)
                 : mozilla::MutexAutoLock(aPtr.mWindowLock)
                 , mWindow(aPtr.mWindow)
             {}

@@ -200,7 +200,7 @@ public:
             bool mIdlePass;
 
         public:
-            IdleEvent(Functor&& aCall)
+            explicit IdleEvent(Functor&& aCall)
                 : Runnable("ThumbnailHelperIdle")
                 , mLambda(Move(aCall))
                 , mIdlePass(false)
