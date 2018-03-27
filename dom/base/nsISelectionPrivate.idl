@@ -10,6 +10,7 @@ interface nsIDOMNode;
 interface nsISelectionListener;
 interface nsIContent;
 interface nsINode;
+interface nsIDOMRange;
 
 %{C++
 class nsIFrame;

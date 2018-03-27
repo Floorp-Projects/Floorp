@@ -2736,15 +2736,6 @@ Selection::GetType(nsAString& aOutType) const
   }
 }
 
-NS_IMETHODIMP
-Selection::GetRangeAt(int32_t aIndex, nsIDOMRange** aReturn)
-{
-  ErrorResult result;
-  *aReturn = GetRangeAt(aIndex, result);
-  NS_IF_ADDREF(*aReturn);
-  return result.StealNSResult();
-}
-
 nsRange*
 Selection::GetRangeAt(uint32_t aIndex, ErrorResult& aRv)
 {
