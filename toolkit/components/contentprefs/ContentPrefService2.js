@@ -49,6 +49,18 @@ cache.set = function CPS_cache_set(group, name, val) {
 
 const privModeStorage = new ContentPrefStore();
 
+function executeStatementsInTransaction(conn, stmts) {
+  return conn.executeTransaction(async () => {
+    let rows = [];
+    for (let {sql, params, cachable} of stmts) {
+      let execute = cachable ? conn.executeCached : conn.execute;
+      let stmtRows = await execute.call(conn, sql, params);
+      rows = rows.concat(stmtRows);
+    }
+    return rows;
+  });
+}
+
 ContentPrefService2.prototype = {
   // XPCOM Plumbing
 
@@ -770,38 +782,37 @@ ContentPrefService2.prototype = {
    */
   _execStmts: async function CPS2__execStmts(stmts, callbacks) {
     let conn = await this.conn;
+    let rows;
     let ok = true;
-    let gotRow = false;
-    let { onRow, onError } = callbacks;
-    await conn.executeTransaction(async () => {
-      for (let {sql, params, cachable} of stmts) {
+    try {
+      rows = await executeStatementsInTransaction(conn, stmts);
+    } catch (e) {
+      ok = false;
+      if (callbacks.onError) {
         try {
-          let execute = cachable ? conn.executeCached : conn.execute;
-          await execute.call(conn, sql, params, row => {
-            gotRow = true;
-            if (onRow) {
-              try {
-                onRow(row);
-              } catch (e) {
-                Cu.reportError(e);
-              }
-            }
-          });
+          callbacks.onError(e);
         } catch (e) {
-          try {
-            onError(Cr.NS_ERROR_FAILURE);
-          } catch (err) {
-            ok = false;
-            Cu.reportError(e);
-          }
+          Cu.reportError(e);
+        }
+      } else {
+        Cu.reportError(e);
+      }
+    }
+
+    if (rows && callbacks.onRow) {
+      for (let row of rows) {
+        try {
+          callbacks.onRow(row);
+        } catch (e) {
+          Cu.reportError(e);
         }
       }
-    });
+    }
 
     try {
       callbacks.onDone(ok ? Ci.nsIContentPrefCallback2.COMPLETE_OK :
                        Ci.nsIContentPrefCallback2.COMPLETE_ERROR,
-                       ok, gotRow);
+                       ok, rows && rows.length > 0);
     } catch (e) {
       Cu.reportError(e);
     }
