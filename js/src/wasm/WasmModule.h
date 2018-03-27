@@ -149,9 +149,8 @@ class Module : public JS::WasmModule
     bool instantiateTable(JSContext* cx,
                           MutableHandleWasmTableObject table,
                           SharedTableVector* tables) const;
-    bool instantiateGlobalExports(JSContext* cx,
-                                  const ValVector& globalImportValues,
-                                  WasmGlobalObjectVector& globalObjs) const;
+    bool instantiateGlobals(JSContext* cx, const ValVector& globalImportValues,
+                            WasmGlobalObjectVector& globalObjs) const;
     bool initSegments(JSContext* cx,
                       HandleWasmInstanceObject instance,
                       Handle<FunctionVector> funcImports,
