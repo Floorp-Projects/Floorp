@@ -17,6 +17,7 @@
   <string name="menu_help">Chinchee</string>
   <string name="menu_rights">Yee yu\'u</string>
   <string name="menu_trackers_blocked_title">Ntasi nu kuu snuu kue ña\'a</string>
+  <string name="menu_custom_tab_branding">Nikuvai tsi %1$s</string>
   <string name="share_dialog_title">Kua’a nu\'u</string>
   <string name="notification_erase_text">Stòo ña ntukuku sata</string>
   <string name="notification_action_open">Kuna</string>

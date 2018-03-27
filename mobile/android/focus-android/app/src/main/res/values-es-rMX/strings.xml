@@ -8,6 +8,8 @@
   <string name="feedback_erase">Se ha eliminado tu historial de búsqueda.</string>
   <string name="search_hint">Buscar %1$s</string>
   <string name="menu_share">Compartir…</string>
+  <string name="menu_open_with_default_browser2">Abrir en %1$s</string>
+  <string name="menu_open_with_a_browser2">Abrir en…</string>
   <string name="menu_add_to_home_screen">Agregar a la pantalla de inicio</string>
   <string name="menu_whats_new">Novedades</string>
   <string name="menu_settings">Configuración</string>
@@ -15,6 +17,7 @@
   <string name="menu_help">Ayuda</string>
   <string name="menu_rights">Tus derechos</string>
   <string name="menu_trackers_blocked_title">Rastreadores bloqueados</string>
+  <string name="menu_custom_tab_branding">Impulsado por %1$s</string>
   <string name="share_dialog_title">Compartir vía</string>
   <string name="notification_erase_text">Eliminar historial de navegación</string>
   <string name="notification_action_open">Abrir</string>
@@ -181,4 +184,11 @@
   <string name="your_rights_content3"><![CDATA["No se le otorgan derechos o licencias a las marcas comerciales de la Fundación Mozilla o cualquier parte, incluyendo los nombres y logotipos de Mozilla, Firefox o %1$s. Se puede encontrar información adicional "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aqu&#237;</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["Otras "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencias</a>" de código abierto y gratuitas también incluyen código fuente adicional para %1$s."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s también utiliza las listas de bloqueo de DIsconnect, Inc. como trabajos separados e independientes bajo la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licencia P&#250;blica General de GNU v3</a>" y que puedes encontrar "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aqu&#237;</a>.]]></string>
+  <string name="gv_prompt_username_hint">Nombre de usuario</string>
+  <string name="gv_prompt_password_hint">Contraseña</string>
+  <string name="gv_prompt_clear">Limpiar</string>
+  <string name="security_popup_secure_connection">Conexión segura</string>
+  <string name="security_popup_insecure_connection">Conexión insegura</string>
+  <string name="security_popup_security_verified">Verificado por: %1$s</string>
+  <string name="site_security_icon_content_description">Seguridad del sitio</string>
 </resources>

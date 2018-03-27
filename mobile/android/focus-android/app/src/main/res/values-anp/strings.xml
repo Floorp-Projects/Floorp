@@ -1,22 +1,25 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+  <string name="action_cancel">रद करऽ</string>
   <string name="action_ok">ठीक</string>
   <string name="action_save">सेव करियै</string>
   <string name="urlbar_hint">खोजियै अथवा पता भरियै</string>
   <string name="teaser">स्वचालित निजी ब्रॉउजिंग. \nब्रॉउज. मेटाभोऽ. दोहराभोऽ.\n</string>
   <string name="feedback_erase">तोरोऽ ब्रॉउजिंग इतिहास के मेटाए देलोऽ गेलए.</string>
-  <string name="search_hint">" %1$s लेली खोजहोऽ"</string>
-  <string name="menu_share">शेयर करहोऽ…</string>
-  <string name="menu_add_to_home_screen">होम स्क्रीन मे जोड़होऽ</string>
+  <string name="search_hint">" %1$s लेली खोजऽ"</string>
+  <string name="menu_share">शेयर करऽ…</string>
+  <string name="menu_open_with_default_browser2">" %1$s में खोलऽ"</string>
+  <string name="menu_open_with_a_browser2">इकरा में खोलऽ</string>
+  <string name="menu_add_to_home_screen">होम स्क्रीन मे जोड़ऽ</string>
   <string name="menu_whats_new">नया कथि छहै</string>
   <string name="menu_settings">सेटिंग्स</string>
-  <string name="menu_about">के संबंध मे</string>
+  <string name="menu_about">के संबंध मेंं</string>
   <string name="menu_help">मदत</string>
   <string name="menu_rights">तोहरोऽ अधिकार</string>
   <string name="menu_trackers_blocked_title">ट्रैकर ब्लॉक भेलैऽ</string>
-  <string name="share_dialog_title">एकरा द्वारा शेयर करहोऽ</string>
+  <string name="share_dialog_title">एकरा द्वारा शेयर करऽ</string>
   <string name="notification_erase_text">ब्राउज़िंग इतिहास मेटाभोऽ</string>
-  <string name="notification_action_open">खोलहोऽ</string>
+  <string name="notification_action_open">खोलऽ</string>
   <string name="notification_action_erase_and_open">मेटाभोऽ आरू खोलहोऽ</string>
   <string name="shortcut_erase_short_label">मेटाभोऽ</string>
   <string name="shortcut_erase_long_label">ब्राउज़िंग इतिहास मेटाभोऽ</string>
@@ -47,4 +50,8 @@
   <string name="preference_dialog_title_search_engine">मूलभूत खोज</string>
   <string name="preference_category_privacy">गोपनीयता</string>
   <string name="preference_privacy_block_ads">विज्ञापन ट्रैकर्स के ब्लॉक करहोऽ</string>
+  <string name="preference_privacy_block_analytics">विश्लेषणट्रैकर्स ब्लौककरऽ</string>
+  <string name="preference_privacy_block_social">सामाजिक ट्रैकर्स ब्लौक करऽ</string>
+  <string name="preference_privacy_block_content">दोसरो कोंटेंट ट्रैकर्स ब्लौक करऽ</string>
+  <string name="preference_privacy_secure_mode">"गोपनीयता "</string>
 </resources>
