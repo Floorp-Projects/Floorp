@@ -2431,18 +2431,6 @@ nsRange::ExtractContents(ErrorResult& rv)
   return fragment.forget();
 }
 
-NS_IMETHODIMP
-nsRange::CompareBoundaryPoints(uint16_t aHow, nsIDOMRange* aOtherRange,
-                               int16_t* aCmpRet)
-{
-  nsRange* otherRange = static_cast<nsRange*>(aOtherRange);
-  NS_ENSURE_TRUE(otherRange, NS_ERROR_NULL_POINTER);
-
-  ErrorResult rv;
-  *aCmpRet = CompareBoundaryPoints(aHow, *otherRange, rv);
-  return rv.StealNSResult();
-}
-
 int16_t
 nsRange::CompareBoundaryPoints(uint16_t aHow, nsRange& aOtherRange,
                                ErrorResult& rv)
@@ -2456,25 +2444,25 @@ nsRange::CompareBoundaryPoints(uint16_t aHow, nsRange& aOtherRange,
   uint32_t ourOffset, otherOffset;
 
   switch (aHow) {
-    case nsIDOMRange::START_TO_START:
+    case RangeBinding::START_TO_START:
       ourNode = mStart.Container();
       ourOffset = mStart.Offset();
       otherNode = aOtherRange.GetStartContainer();
       otherOffset = aOtherRange.StartOffset();
       break;
-    case nsIDOMRange::START_TO_END:
+    case RangeBinding::START_TO_END:
       ourNode = mEnd.Container();
       ourOffset = mEnd.Offset();
       otherNode = aOtherRange.GetStartContainer();
       otherOffset = aOtherRange.StartOffset();
       break;
-    case nsIDOMRange::END_TO_START:
+    case RangeBinding::END_TO_START:
       ourNode = mStart.Container();
       ourOffset = mStart.Offset();
       otherNode = aOtherRange.GetEndContainer();
       otherOffset = aOtherRange.EndOffset();
       break;
-    case nsIDOMRange::END_TO_END:
+    case RangeBinding::END_TO_END:
       ourNode = mEnd.Container();
       ourOffset = mEnd.Offset();
       otherNode = aOtherRange.GetEndContainer();
