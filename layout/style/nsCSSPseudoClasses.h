@@ -123,12 +123,6 @@ public:
                                   mozilla::EventStates aStateMask,
                                   bool* const aDependence = nullptr);
 
-  static bool LangPseudoMatches(const mozilla::dom::Element* aElement,
-                                const nsAtom* aOverrideLang,
-                                bool aHasOverrideLang,
-                                const char16_t* aString,
-                                const nsIDocument* aDocument);
-
   static const mozilla::EventStates sPseudoClassStateDependences[size_t(Type::Count) + 2];
 
 private:
