@@ -257,7 +257,6 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                         // We start a transition only if a page was just loading before
                         // allowing to avoid issue #1179
                         backgroundTransitionGroup.startTransition(ANIMATION_DURATION);
-                        progressView.setProgress(progressView.getMax());
                         progressView.setVisibility(View.GONE);
                     }
                     swipeRefresh.setRefreshing(false);
