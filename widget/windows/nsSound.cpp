@@ -274,42 +274,6 @@ NS_IMETHODIMP nsSound::Init()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
-{
-  MOZ_ASSERT(mPlayerThread, "player thread should not be null ");
-  PurgeLastSound();
-
-  if (!NS_IsMozAliasSound(aSoundAlias)) {
-    if (aSoundAlias.IsEmpty())
-      return NS_OK;
-    nsCOMPtr<nsIRunnable> player = new nsSoundPlayer(aSoundAlias);
-    MOZ_ASSERT(player, "Could not create player");
-    nsresult rv = mPlayerThread->Dispatch(player, NS_DISPATCH_NORMAL);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
-  }
-
-  NS_WARNING("nsISound::playSystemSound is called with \"_moz_\" events, they are obsolete, use nsISound::playEventSound instead");
-
-  uint32_t eventId;
-  if (aSoundAlias.Equals(NS_SYSSOUND_MAIL_BEEP))
-    eventId = EVENT_NEW_MAIL_RECEIVED;
-  else if (aSoundAlias.Equals(NS_SYSSOUND_CONFIRM_DIALOG))
-    eventId = EVENT_CONFIRM_DIALOG_OPEN;
-  else if (aSoundAlias.Equals(NS_SYSSOUND_ALERT_DIALOG))
-    eventId = EVENT_ALERT_DIALOG_OPEN;
-  else if (aSoundAlias.Equals(NS_SYSSOUND_MENU_EXECUTE))
-    eventId = EVENT_MENU_EXECUTE;
-  else if (aSoundAlias.Equals(NS_SYSSOUND_MENU_POPUP))
-    eventId = EVENT_MENU_POPUP;
-  else
-    return NS_OK;
-
-  return PlayEventSound(eventId);
-}
-
 NS_IMETHODIMP nsSound::PlayEventSound(uint32_t aEventId)
 {
   MOZ_ASSERT(mPlayerThread, "player thread should not be null ");
