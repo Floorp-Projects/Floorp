@@ -20,6 +20,7 @@ add_task(async function test_ui_state_notification_calls_updateAllUI() {
 });
 
 add_task(async function test_ui_state_signedin() {
+  const relativeDateAnchor = new Date();
   let state = {
     status: UIState.STATUS_SIGNED_IN,
     email: "foo@bar.com",
@@ -27,6 +28,13 @@ add_task(async function test_ui_state_signedin() {
     avatarURL: "https://foo.bar",
     lastSync: new Date(),
     syncing: false
+  };
+
+  const origRelativeTimeFormat = gSync.relativeTimeFormat;
+  gSync.relativeTimeFormat = {
+    formatBestUnit(date) {
+      return origRelativeTimeFormat.formatBestUnit(date, {now: relativeDateAnchor});
+    }
   };
 
   gSync.updateAllUI(state);
@@ -43,6 +51,7 @@ add_task(async function test_ui_state_signedin() {
   });
   checkRemoteTabsPanel("PanelUI-remotetabs-main", false);
   checkMenuBarItem("sync-syncnowitem");
+  gSync.relativeTimeFormat = origRelativeTimeFormat;
 });
 
 add_task(async function test_ui_state_syncing() {

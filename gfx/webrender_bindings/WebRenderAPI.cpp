@@ -941,7 +941,7 @@ Maybe<wr::WrScrollId>
 DisplayListBuilder::GetScrollIdForDefinedScrollLayer(layers::FrameMetrics::ViewID aViewId) const
 {
   if (aViewId == layers::FrameMetrics::NULL_SCROLL_ID) {
-    return Some(wr::WrScrollId { 0 });
+    return Some(wr::WrScrollId::RootScrollNode());
   }
 
   auto it = mScrollIds.find(aViewId);
@@ -1320,7 +1320,7 @@ DisplayListBuilder::TopmostScrollId()
       return it->as<wr::WrScrollId>();
     }
   }
-  return wr::WrScrollId { 0 };
+  return wr::WrScrollId::RootScrollNode();
 }
 
 bool

@@ -83,8 +83,7 @@ public:
 
   // WebIDL interface for CSS2Properties
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,          \
-                 kwtable_, stylestruct_, stylestructoffset_, animtype_)      \
+#define CSS_PROP(name_, id_, method_, ...)                                   \
   void                                                                       \
   Get##method_(nsAString& aValue, mozilla::ErrorResult& rv)                  \
   {                                                                          \
@@ -100,12 +99,11 @@ public:
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
 #define CSS_PROP_LIST_INCLUDE_LOGICAL
-#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_)  \
-  CSS_PROP(name_, id_, method_, flags_, pref_, X, X, X, X, X)
+#define CSS_PROP_SHORTHAND(name_, id_, method_, ...)  CSS_PROP(name_, id_, method_, )
 #include "nsCSSPropList.h"
 
-#define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, pref_)  \
-  CSS_PROP(X, propid_, aliasmethod_, X, pref_, X, X, X, X, X)
+#define CSS_PROP_ALIAS(aliasname_, aliasid_, propid_, aliasmethod_, ...)  \
+  CSS_PROP(X, propid_, aliasmethod_, )
 #include "nsCSSPropAliasList.h"
 #undef CSS_PROP_ALIAS
 
