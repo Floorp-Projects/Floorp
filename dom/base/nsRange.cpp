@@ -843,25 +843,6 @@ nsRange::ParentChainChanged(nsIContent *aContent)
   DoSetRange(mStart.AsRaw(), mEnd.AsRaw(), newRoot);
 }
 
-/******************************************************
- * Utilities for comparing points: API from nsIDOMRange
- ******************************************************/
-NS_IMETHODIMP
-nsRange::IsPointInRange(nsIDOMNode* aContainer, uint32_t aOffset, bool* aResult)
-{
-  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
-  if (!container) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-  if (NS_WARN_IF(!IsValidOffset(aOffset))) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  ErrorResult rv;
-  *aResult = IsPointInRange(RawRangeBoundary(container, aOffset), rv);
-  return rv.StealNSResult();
-}
-
 bool
 nsRange::IsPointInRange(const RawRangeBoundary& aPoint, ErrorResult& aRv)
 {
@@ -873,20 +854,6 @@ nsRange::IsPointInRange(const RawRangeBoundary& aPoint, ErrorResult& aRv)
   }
 
   return compareResult == 0;
-}
-
-// returns -1 if point is before range, 0 if point is in range,
-// 1 if point is after range.
-NS_IMETHODIMP
-nsRange::ComparePoint(nsIDOMNode* aContainer, uint32_t aOffset,
-                      int16_t* aResult)
-{
-  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
-  NS_ENSURE_TRUE(container, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
-
-  ErrorResult rv;
-  *aResult = ComparePoint(RawRangeBoundary(container, aOffset), rv);
-  return rv.StealNSResult();
 }
 
 int16_t
@@ -929,20 +896,6 @@ nsRange::ComparePoint(const RawRangeBoundary& aPoint, ErrorResult& aRv)
   }
 
   return 0;
-}
-
-NS_IMETHODIMP
-nsRange::IntersectsNode(nsIDOMNode* aNode, bool* aResult)
-{
-  *aResult = false;
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  // TODO: This should throw a TypeError.
-  NS_ENSURE_ARG(node);
-
-  ErrorResult rv;
-  *aResult = IntersectsNode(*node, rv);
-  return rv.StealNSResult();
 }
 
 bool
@@ -1116,7 +1069,7 @@ nsRange::SetSelection(mozilla::dom::Selection* aSelection)
   // Extra step in case our parent failed to ensure the above
   // invariant.
   if (aSelection && mSelection) {
-    mSelection->RemoveRange(this);
+    mSelection->RemoveRange(*this, IgnoreErrors());
   }
 
   mSelection = aSelection;
@@ -1153,15 +1106,6 @@ nsRange::Reset()
  * public functionality
  ******************************************************/
 
-NS_IMETHODIMP
-nsRange::GetStartContainer(nsIDOMNode** aStartContainer)
-{
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  return CallQueryInterface(mStart.Container(), aStartContainer);
-}
-
 nsINode*
 nsRange::GetStartContainer(ErrorResult& aRv) const
 {
@@ -1171,17 +1115,6 @@ nsRange::GetStartContainer(ErrorResult& aRv) const
   }
 
   return mStart.Container();
-}
-
-NS_IMETHODIMP
-nsRange::GetStartOffset(uint32_t* aStartOffset)
-{
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *aStartOffset = mStart.Offset();
-
-  return NS_OK;
 }
 
 uint32_t
@@ -1195,15 +1128,6 @@ nsRange::GetStartOffset(ErrorResult& aRv) const
   return mStart.Offset();
 }
 
-NS_IMETHODIMP
-nsRange::GetEndContainer(nsIDOMNode** aEndContainer)
-{
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  return CallQueryInterface(mEnd.Container(), aEndContainer);
-}
-
 nsINode*
 nsRange::GetEndContainer(ErrorResult& aRv) const
 {
@@ -1213,17 +1137,6 @@ nsRange::GetEndContainer(ErrorResult& aRv) const
   }
 
   return mEnd.Container();
-}
-
-NS_IMETHODIMP
-nsRange::GetEndOffset(uint32_t* aEndOffset)
-{
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *aEndOffset = mEnd.Offset();
-
-  return NS_OK;
 }
 
 uint32_t
@@ -1237,17 +1150,6 @@ nsRange::GetEndOffset(ErrorResult& aRv) const
   return mEnd.Offset();
 }
 
-NS_IMETHODIMP
-nsRange::GetCollapsed(bool* aIsCollapsed)
-{
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *aIsCollapsed = Collapsed();
-
-  return NS_OK;
-}
-
 nsINode*
 nsRange::GetCommonAncestorContainer(ErrorResult& aRv) const
 {
@@ -1257,20 +1159,6 @@ nsRange::GetCommonAncestorContainer(ErrorResult& aRv) const
   }
 
   return nsContentUtils::GetCommonAncestor(mStart.Container(), mEnd.Container());
-}
-
-NS_IMETHODIMP
-nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
-{
-  ErrorResult rv;
-  nsINode* commonAncestor = GetCommonAncestorContainer(rv);
-  if (commonAncestor) {
-    NS_ADDREF(*aCommonParent = commonAncestor->AsDOMNode());
-  } else {
-    *aCommonParent = nullptr;
-  }
-
-  return rv.StealNSResult();
 }
 
 /* static */
@@ -1384,19 +1272,6 @@ nsRange::SetStart(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
   SetStart(RawRangeBoundary(&aNode, aOffset), aRv);
 }
 
-NS_IMETHODIMP
-nsRange::SetStart(nsIDOMNode* aContainer, uint32_t aOffset)
-{
-  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
-  if (!container) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-
-  ErrorResult rv;
-  SetStart(*container, aOffset, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsRange::SetStart(const RawRangeBoundary& aPoint, ErrorResult& aRv)
 {
@@ -1448,19 +1323,6 @@ nsRange::SetStartBefore(nsINode& aNode, ErrorResult& aRv)
   aRv = SetStart(container, offset);
 }
 
-NS_IMETHODIMP
-nsRange::SetStartBefore(nsIDOMNode* aSibling)
-{
-  nsCOMPtr<nsINode> sibling = do_QueryInterface(aSibling);
-  if (!sibling) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-
-  ErrorResult rv;
-  SetStartBefore(*sibling, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsRange::SetStartAfterJS(nsINode& aNode, ErrorResult& aErr)
 {
@@ -1487,19 +1349,6 @@ nsRange::SetStartAfter(nsINode& aNode, ErrorResult& aRv)
   aRv = SetStart(container, offset);
 }
 
-NS_IMETHODIMP
-nsRange::SetStartAfter(nsIDOMNode* aSibling)
-{
-  nsCOMPtr<nsINode> sibling = do_QueryInterface(aSibling);
-  if (!sibling) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-
-  ErrorResult rv;
-  SetStartAfter(*sibling, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsRange::SetEndJS(nsINode& aNode, uint32_t aOffset, ErrorResult& aErr)
 {
@@ -1518,19 +1367,6 @@ nsRange::SetEnd(nsINode& aNode, uint32_t aOffset, ErrorResult& aRv)
   }
   AutoInvalidateSelection atEndOfBlock(this);
   SetEnd(RawRangeBoundary(&aNode, aOffset), aRv);
-}
-
-NS_IMETHODIMP
-nsRange::SetEnd(nsIDOMNode* aContainer, uint32_t aOffset)
-{
-  nsCOMPtr<nsINode> container = do_QueryInterface(aContainer);
-  if (!container) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-
-  ErrorResult rv;
-  SetEnd(*container, aOffset, rv);
-  return rv.StealNSResult();
 }
 
 void
@@ -1663,19 +1499,6 @@ nsRange::SetEndBefore(nsINode& aNode, ErrorResult& aRv)
   aRv = SetEnd(container, offset);
 }
 
-NS_IMETHODIMP
-nsRange::SetEndBefore(nsIDOMNode* aSibling)
-{
-  nsCOMPtr<nsINode> sibling = do_QueryInterface(aSibling);
-  if (!sibling) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-
-  ErrorResult rv;
-  SetEndBefore(*sibling, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsRange::SetEndAfterJS(nsINode& aNode, ErrorResult& aErr)
 {
@@ -1702,24 +1525,11 @@ nsRange::SetEndAfter(nsINode& aNode, ErrorResult& aRv)
   aRv = SetEnd(container, offset);
 }
 
-NS_IMETHODIMP
-nsRange::SetEndAfter(nsIDOMNode* aSibling)
-{
-  nsCOMPtr<nsINode> sibling = do_QueryInterface(aSibling);
-  if (!sibling) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-
-  ErrorResult rv;
-  SetEndAfter(*sibling, rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
+void
 nsRange::Collapse(bool aToStart)
 {
   if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
+    return;
 
   AutoInvalidateSelection atEndOfBlock(this);
   if (aToStart) {
@@ -1727,8 +1537,6 @@ nsRange::Collapse(bool aToStart)
   } else {
     DoSetRange(mEnd.AsRaw(), mEnd.AsRaw(), mRoot);
   }
-
-  return NS_OK;
 }
 
 void
@@ -1736,18 +1544,7 @@ nsRange::CollapseJS(bool aToStart)
 {
   AutoCalledByJSRestore calledByJSRestorer(*this);
   mCalledByJS = true;
-  Unused << Collapse(aToStart);
-}
-
-NS_IMETHODIMP
-nsRange::SelectNode(nsIDOMNode* aN)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aN);
-  NS_ENSURE_TRUE(node, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
-
-  ErrorResult rv;
-  SelectNode(*node, rv);
-  return rv.StealNSResult();
+  Collapse(aToStart);
 }
 
 void
@@ -1789,17 +1586,6 @@ nsRange::SelectNode(nsINode& aNode, ErrorResult& aRv)
   AutoInvalidateSelection atEndOfBlock(this);
   DoSetRange(RawRangeBoundary(container, index),
              RawRangeBoundary(container, index + 1), newRoot);
-}
-
-NS_IMETHODIMP
-nsRange::SelectNodeContents(nsIDOMNode* aN)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aN);
-  NS_ENSURE_TRUE(node, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
-
-  ErrorResult rv;
-  SelectNodeContents(*node, rv);
-  return rv.StealNSResult();
 }
 
 void
@@ -2116,10 +1902,14 @@ CollapseRangeAfterDelete(nsRange* aRange)
   // immediately after a delete or extract that leaves no content
   // between the 2 end points!
 
-  if (startContainer == commonAncestor)
-    return aRange->Collapse(true);
-  if (endContainer == commonAncestor)
-    return aRange->Collapse(false);
+  if (startContainer == commonAncestor) {
+    aRange->Collapse(true);
+    return NS_OK;
+  }
+  if (endContainer == commonAncestor) {
+    aRange->Collapse(false);
+    return NS_OK;
+  }
 
   // End points are at differing levels. We want to collapse to the
   // point that is between the 2 subtrees that contain each point,
@@ -2142,7 +1932,8 @@ CollapseRangeAfterDelete(nsRange* aRange)
   aRange->SelectNode(*nodeToSelect, rv);
   if (rv.Failed()) return rv.StealNSResult();
 
-  return aRange->Collapse(false);
+  aRange->Collapse(false);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2500,26 +2291,10 @@ nsRange::CutContents(DocumentFragment** aFragment)
   return rv;
 }
 
-NS_IMETHODIMP
-nsRange::DeleteContents()
-{
-  return CutContents(nullptr);
-}
-
 void
 nsRange::DeleteContents(ErrorResult& aRv)
 {
   aRv = CutContents(nullptr);
-}
-
-NS_IMETHODIMP
-nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-  RefPtr<DocumentFragment> fragment;
-  nsresult rv = CutContents(getter_AddRefs(fragment));
-  fragment.forget(aReturn);
-  return rv;
 }
 
 already_AddRefed<DocumentFragment>
@@ -2528,18 +2303,6 @@ nsRange::ExtractContents(ErrorResult& rv)
   RefPtr<DocumentFragment> fragment;
   rv = CutContents(getter_AddRefs(fragment));
   return fragment.forget();
-}
-
-NS_IMETHODIMP
-nsRange::CompareBoundaryPoints(uint16_t aHow, nsIDOMRange* aOtherRange,
-                               int16_t* aCmpRet)
-{
-  nsRange* otherRange = static_cast<nsRange*>(aOtherRange);
-  NS_ENSURE_TRUE(otherRange, NS_ERROR_NULL_POINTER);
-
-  ErrorResult rv;
-  *aCmpRet = CompareBoundaryPoints(aHow, *otherRange, rv);
-  return rv.StealNSResult();
 }
 
 int16_t
@@ -2555,25 +2318,25 @@ nsRange::CompareBoundaryPoints(uint16_t aHow, nsRange& aOtherRange,
   uint32_t ourOffset, otherOffset;
 
   switch (aHow) {
-    case nsIDOMRange::START_TO_START:
+    case RangeBinding::START_TO_START:
       ourNode = mStart.Container();
       ourOffset = mStart.Offset();
       otherNode = aOtherRange.GetStartContainer();
       otherOffset = aOtherRange.StartOffset();
       break;
-    case nsIDOMRange::START_TO_END:
+    case RangeBinding::START_TO_END:
       ourNode = mEnd.Container();
       ourOffset = mEnd.Offset();
       otherNode = aOtherRange.GetStartContainer();
       otherOffset = aOtherRange.StartOffset();
       break;
-    case nsIDOMRange::END_TO_START:
+    case RangeBinding::END_TO_START:
       ourNode = mStart.Container();
       ourOffset = mStart.Offset();
       otherNode = aOtherRange.GetEndContainer();
       otherOffset = aOtherRange.EndOffset();
       break;
-    case nsIDOMRange::END_TO_END:
+    case RangeBinding::END_TO_END:
       ourNode = mEnd.Container();
       ourOffset = mEnd.Offset();
       otherNode = aOtherRange.GetEndContainer();
@@ -2644,14 +2407,6 @@ nsRange::CloneParentsBetween(nsINode *aAncestor,
   NS_IF_ADDREF(*aFarthestAncestor);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
-{
-  ErrorResult rv;
-  *aReturn = CloneContents(rv).take();
-  return rv.StealNSResult();
 }
 
 already_AddRefed<DocumentFragment>
@@ -2860,26 +2615,6 @@ nsRange::CloneRange() const
   return range.forget();
 }
 
-NS_IMETHODIMP
-nsRange::CloneRange(nsIDOMRange** aReturn)
-{
-  *aReturn = CloneRange().take();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRange::InsertNode(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  if (!node) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-
-  ErrorResult rv;
-  InsertNode(*node, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
 {
@@ -2971,18 +2706,6 @@ nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv)
   if (Collapsed()) {
     aRv = SetEnd(referenceParentNode, newOffset);
   }
-}
-
-NS_IMETHODIMP
-nsRange::SurroundContents(nsIDOMNode* aNewParent)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNewParent);
-  if (!node) {
-    return NS_ERROR_DOM_NOT_OBJECT_ERR;
-  }
-  ErrorResult rv;
-  SurroundContents(*node, rv);
-  return rv.StealNSResult();
 }
 
 void
@@ -3085,15 +2808,15 @@ nsRange::SurroundContents(nsINode& aNewParent, ErrorResult& aRv)
   SelectNode(aNewParent, aRv);
 }
 
-NS_IMETHODIMP
-nsRange::ToString(nsAString& aReturn)
+void
+nsRange::ToString(nsAString& aReturn, ErrorResult& aErr)
 {
   // clear the string
   aReturn.Truncate();
 
   // If we're unpositioned, return the empty string
   if (!mIsPositioned) {
-    return NS_OK;
+    return;
   }
 
 #ifdef DEBUG_range
@@ -3113,13 +2836,9 @@ nsRange::ToString(nsAString& aReturn)
 #endif /* DEBUG */
 
       // grab the text
-      IgnoredErrorResult rv;
       textNode->SubstringData(mStart.Offset(), mEnd.Offset() - mStart.Offset(),
-                              aReturn, rv);
-      if (rv.Failed()) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      return NS_OK;
+                              aReturn, aErr);
+      return;
     }
   }
 
@@ -3129,7 +2848,10 @@ nsRange::ToString(nsAString& aReturn)
 
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
   nsresult rv = iter->Init(this);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aErr.Throw(rv);
+    return;
+  }
 
   nsString tempString;
 
@@ -3166,26 +2888,11 @@ nsRange::ToString(nsAString& aReturn)
 #ifdef DEBUG_range
   printf("End Range dump: -----------------------\n");
 #endif /* DEBUG */
-  return NS_OK;
 }
 
-
-
-NS_IMETHODIMP
+void
 nsRange::Detach()
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRange::CreateContextualFragment(const nsAString& aFragment,
-                                  nsIDOMDocumentFragment** aReturn)
-{
-  if (mIsPositioned) {
-    return nsContentUtils::CreateContextualFragment(mStart.Container(), aFragment,
-                                                    false, aReturn);
-  }
-  return NS_ERROR_FAILURE;
 }
 
 already_AddRefed<DocumentFragment>

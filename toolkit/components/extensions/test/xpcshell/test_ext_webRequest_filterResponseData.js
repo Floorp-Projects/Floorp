@@ -23,6 +23,106 @@ server.registerPathHandler("/dummy", (request, response) => {
   response.write("ok");
 });
 
+server.registerPathHandler("/dummy.xhtml", (request, response) => {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "application/xhtml+xml");
+  response.write(String.raw`<?xml version="1.0"?>
+    <html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+      <head/>
+      <body/>
+    </html>
+  `);
+});
+
+// Tests that the stream filter request is added to the document's load
+// group, and blocks an XML document's load event until after the filter
+// stops sending data.
+add_task(async function test_xml_document_loadgroup_blocking() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.webRequest.onBeforeRequest.addListener(
+        request => {
+          let filter = browser.webRequest.filterResponseData(request.requestId);
+
+          let data = [];
+          filter.ondata = event => {
+            data.push(event.data);
+          };
+          filter.onstop = async () => {
+            browser.test.sendMessage("phase", "original-onstop");
+
+            // Make a few trips through the event loop.
+            for (let i = 0; i < 10; i++) {
+              await new Promise(resolve => setTimeout(resolve, 0));
+            }
+
+            for (let buffer of data) {
+              filter.write(buffer);
+            }
+            browser.test.sendMessage("phase", "filter-onstop");
+            filter.close();
+          };
+        }, {
+          urls: ["http://example.com/dummy.xhtml"],
+        },
+        ["blocking"]);
+    },
+
+    files: {
+      "content_script.js"() {
+        browser.test.sendMessage("phase", "content-script-start");
+        window.addEventListener("DOMContentLoaded", () => {
+          browser.test.sendMessage("phase", "content-script-domload");
+        }, {once: true});
+        window.addEventListener("load", () => {
+          browser.test.sendMessage("phase", "content-script-load");
+        }, {once: true});
+      },
+    },
+
+    manifest: {
+      permissions: [
+        "webRequest",
+        "webRequestBlocking",
+        "http://example.com/",
+      ],
+
+      content_scripts: [{
+        matches: ["http://example.com/dummy.xhtml"],
+        run_at: "document_start",
+        js: ["content_script.js"],
+      }],
+    },
+  });
+
+  await extension.startup();
+
+  const EXPECTED = [
+    "original-onstop",
+    "filter-onstop",
+    "content-script-start",
+    "content-script-domload",
+    "content-script-load",
+  ];
+
+  let done = new Promise(resolve => {
+    let phases = [];
+    extension.onMessage("phase", phase => {
+      phases.push(phase);
+      if (phases.length === EXPECTED.length) {
+        resolve(phases);
+      }
+    });
+  });
+
+  let contentPage = await ExtensionTestUtils.loadContentPage("http://example.com/dummy.xhtml");
+
+  deepEqual(await done, EXPECTED, "Things happened, and in the right order");
+
+  await contentPage.close();
+  await extension.unload();
+});
+
 add_task(async function() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {

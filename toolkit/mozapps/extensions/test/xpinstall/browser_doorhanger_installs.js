@@ -349,8 +349,8 @@ async function test_incompatible() {
 
   let notification = panel.childNodes[0];
   is(notification.getAttribute("label"),
-     "XPI Test could not be installed because it is not compatible with " +
-     gApp + " " + Services.appinfo.version + ".",
+     "The add-on downloaded from this site could not be installed " +
+     "because it appears to be corrupt.",
      "Should have seen the right message");
 
   Services.perms.remove(makeURI("http://example.com/"), "install");

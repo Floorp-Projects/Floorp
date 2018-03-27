@@ -5,14 +5,10 @@
 
 var ADDONS = [
   "test_bootstrap2_1", // restartless addon
-  "test_bootstrap1_4", // old-school addon
-  "test_jetpack"       // sdk addon
 ];
 
 var IDS = [
-  "bootstrap1@tests.mozilla.org",
   "bootstrap2@tests.mozilla.org",
-  "jetpack@tests.mozilla.org"
 ];
 
 function run_test() {
@@ -26,10 +22,8 @@ function run_test() {
   installAllFiles(ADDONS.map(do_get_addon), function() {
     restartManager();
 
-    AddonManager.getAddonsByIDs(IDS, function([a1, a2, a3]) {
-      Assert.equal(a1.isDebuggable, false);
-      Assert.equal(a2.isDebuggable, true);
-      Assert.equal(a3.isDebuggable, true);
+    AddonManager.getAddonsByIDs(IDS, function([a1]) {
+      Assert.equal(a1.isDebuggable, true);
       do_test_finished();
     });
   }, true);

@@ -6,6 +6,7 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>addon1@tests.mozilla.org</em:id>
     <em:version>1.0</em:version>
+    <em:bootstrap>true</em:bootstrap>
 
     <em:targetApplication>
       <Description>

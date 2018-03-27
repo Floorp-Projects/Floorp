@@ -27,6 +27,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -678,7 +679,7 @@ public:
                            PrefValue aValue,
                            bool aIsSticky,
                            bool aIsLocked,
-                           bool aFromFile,
+                           bool aFromInit,
                            bool* aValueChanged)
   {
     // Types must always match when setting the default value.
@@ -695,7 +696,7 @@ public:
       if (!ValueMatches(PrefValueKind::Default, aType, aValue)) {
         mDefaultValue.Replace(Type(), aType, aValue);
         mHasDefaultValue = true;
-        if (!aFromFile) {
+        if (!aFromInit) {
           mHasChangedSinceInit = true;
         }
         if (aIsSticky) {
@@ -713,7 +714,7 @@ public:
 
   nsresult SetUserValue(PrefType aType,
                         PrefValue aValue,
-                        bool aFromFile,
+                        bool aFromInit,
                         bool* aValueChanged)
   {
     // If we have a default value, types must match when setting the user
@@ -724,9 +725,9 @@ public:
 
     // Should we clear the user value, if present? Only if the new user value
     // matches the default value, and the pref isn't sticky, and we aren't
-    // force-setting it.
+    // force-setting it during initialization.
     if (ValueMatches(PrefValueKind::Default, aType, aValue) && !mIsSticky &&
-        !aFromFile) {
+        !aFromInit) {
       if (mHasUserValue) {
         ClearUserValue();
         if (!IsLocked()) {
@@ -740,7 +741,7 @@ public:
       mUserValue.Replace(Type(), aType, aValue);
       SetType(aType); // needed because we may have changed the type
       mHasUserValue = true;
-      if (!aFromFile) {
+      if (!aFromInit) {
         mHasChangedSinceInit = true;
       }
       if (!IsLocked()) {
@@ -1151,7 +1152,7 @@ pref_SetPref(const char* aPrefName,
              PrefValue aValue,
              bool aIsSticky,
              bool aIsLocked,
-             bool aFromFile)
+             bool aFromInit)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1174,10 +1175,10 @@ pref_SetPref(const char* aPrefName,
   nsresult rv;
   if (aKind == PrefValueKind::Default) {
     rv = pref->SetDefaultValue(
-      aType, aValue, aIsSticky, aIsLocked, aFromFile, &valueChanged);
+      aType, aValue, aIsSticky, aIsLocked, aFromInit, &valueChanged);
   } else {
     MOZ_ASSERT(!aIsLocked); // `locked` is disallowed in user pref files
-    rv = pref->SetUserValue(aType, aValue, aFromFile, &valueChanged);
+    rv = pref->SetUserValue(aType, aValue, aFromInit, &valueChanged);
   }
   if (NS_FAILED(rv)) {
     NS_WARNING(
@@ -1349,7 +1350,7 @@ private:
                  aValue,
                  aIsSticky,
                  aIsLocked,
-                 /* fromFile */ true);
+                 /* fromInit */ true);
   }
 
   static void HandleError(const char* aMsg)
@@ -2868,10 +2869,13 @@ HaveExistingCacheFor(void* aPtr)
   }
   return false;
 }
+#endif
 
 static void
 AssertNotAlreadyCached(const char* aPrefType, const char* aPref, void* aPtr)
 {
+#ifdef DEBUG
+  MOZ_ASSERT(aPtr);
   if (HaveExistingCacheFor(aPtr)) {
     fprintf_stderr(
       stderr,
@@ -2883,8 +2887,8 @@ AssertNotAlreadyCached(const char* aPrefType, const char* aPref, void* aPtr)
     MOZ_ASSERT(false,
                "Should not have an existing pref cache for this address");
   }
-}
 #endif
+}
 
 // Although this is a member of Preferences, it measures sPreferences and
 // several other global structures.
@@ -3243,7 +3247,10 @@ Preferences::GetInstanceForService()
   gTelemetryLoadData =
     new nsDataHashtable<nsCStringHashKey, TelemetryLoadData>();
 
-  Result<Ok, const char*> res = InitInitialObjects();
+  gCacheData = new nsTArray<nsAutoPtr<CacheData>>();
+  gCacheDataDesc = "set by GetInstanceForService() (1)";
+
+  Result<Ok, const char*> res = InitInitialObjects(/* isStartup */ true);
   if (res.isErr()) {
     sPreferences = nullptr;
     gCacheDataDesc = res.unwrapErr();
@@ -3298,8 +3305,7 @@ Preferences::GetInstanceForService()
     }
   }
 
-  gCacheData = new nsTArray<nsAutoPtr<CacheData>>();
-  gCacheDataDesc = "set by GetInstanceForService()";
+  gCacheDataDesc = "set by GetInstanceForService() (2)";
 
   // Preferences::GetInstanceForService() can be called from GetService(), and
   // RegisterStrongMemoryReporter calls GetService(nsIMemoryReporter).  To
@@ -3480,7 +3486,7 @@ Preferences::Observe(nsISupports* aSubject,
 
   } else if (!nsCRT::strcmp(aTopic, "reload-default-prefs")) {
     // Reload the default prefs from file.
-    Unused << InitInitialObjects();
+    Unused << InitInitialObjects(/* isStartup */ false);
 
   } else if (!nsCRT::strcmp(aTopic, "suspend_process_notification")) {
     // Our process is being suspended. The OS may wake our process later,
@@ -3526,7 +3532,8 @@ Preferences::ResetPrefs()
   gHashTable->ClearAndPrepareForLength(PREF_HASHTABLE_INITIAL_LENGTH);
   gPrefNameArena.Clear();
 
-  return InitInitialObjects().isOk() ? NS_OK : NS_ERROR_FAILURE;
+  return InitInitialObjects(/* isStartup */ false).isOk() ? NS_OK
+                                                          : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -4101,7 +4108,7 @@ pref_ReadPrefFromJar(nsZipArchive* aJarReader, const char* aName)
 // Initialize default preference JavaScript buffers from appropriate TEXT
 // resources.
 /* static */ Result<Ok, const char*>
-Preferences::InitInitialObjects()
+Preferences::InitInitialObjects(bool aIsStartup)
 {
   // In the omni.jar case, we load the following prefs:
   // - jar:$gre/omni.jar!/greprefs.js
@@ -4265,6 +4272,11 @@ Preferences::InitInitialObjects()
     }
   }
 
+  // We initialize static prefs after prefs from data files so that we can
+  // detect and complain if there are any static prefs that are also defined in
+  // data files.
+  StaticPrefs::InitAll(aIsStartup);
+
   if (XRE_IsParentProcess()) {
     SetupTelemetryPref();
   }
@@ -4410,7 +4422,7 @@ Preferences::SetCString(const char* aPrefName,
                       prefValue,
                       /* isSticky */ false,
                       /* isLocked */ false,
-                      /* fromFile */ false);
+                      /* fromInit */ false);
 }
 
 /* static */ nsresult
@@ -4427,7 +4439,7 @@ Preferences::SetBool(const char* aPrefName, bool aValue, PrefValueKind aKind)
                       prefValue,
                       /* isSticky */ false,
                       /* isLocked */ false,
-                      /* fromFile */ false);
+                      /* fromInit */ false);
 }
 
 /* static */ nsresult
@@ -4444,7 +4456,7 @@ Preferences::SetInt(const char* aPrefName, int32_t aValue, PrefValueKind aKind)
                       prefValue,
                       /* isSticky */ false,
                       /* isLocked */ false,
-                      /* fromFile */ false);
+                      /* fromInit */ false);
 }
 
 /* static */ nsresult
@@ -4733,13 +4745,15 @@ BoolVarChanged(const char* aPref, void* aClosure)
 }
 
 /* static */ nsresult
-Preferences::AddBoolVarCache(bool* aCache, const char* aPref, bool aDefault)
+Preferences::AddBoolVarCache(bool* aCache,
+                             const char* aPref,
+                             bool aDefault,
+                             bool aSkipAssignment)
 {
-  MOZ_ASSERT(aCache);
-#ifdef DEBUG
   AssertNotAlreadyCached("bool", aPref, aCache);
-#endif
-  *aCache = GetBool(aPref, aDefault);
+  if (!aSkipAssignment) {
+    *aCache = GetBool(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueBool = aDefault;
@@ -4765,13 +4779,13 @@ template<MemoryOrdering Order>
 /* static */ nsresult
 Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache,
                                    const char* aPref,
-                                   bool aDefault)
+                                   bool aDefault,
+                                   bool aSkipAssignment)
 {
-  MOZ_ASSERT(aCache);
-#ifdef DEBUG
   AssertNotAlreadyCached("bool", aPref, aCache);
-#endif
-  *aCache = Preferences::GetBool(aPref, aDefault);
+  if (!aSkipAssignment) {
+    *aCache = GetBool(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueBool = aDefault;
@@ -4795,13 +4809,13 @@ IntVarChanged(const char* aPref, void* aClosure)
 /* static */ nsresult
 Preferences::AddIntVarCache(int32_t* aCache,
                             const char* aPref,
-                            int32_t aDefault)
+                            int32_t aDefault,
+                            bool aSkipAssignment)
 {
-  MOZ_ASSERT(aCache);
-#ifdef DEBUG
   AssertNotAlreadyCached("int", aPref, aCache);
-#endif
-  *aCache = Preferences::GetInt(aPref, aDefault);
+  if (!aSkipAssignment) {
+    *aCache = GetInt(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueInt = aDefault;
@@ -4824,13 +4838,13 @@ template<MemoryOrdering Order>
 /* static */ nsresult
 Preferences::AddAtomicIntVarCache(Atomic<int32_t, Order>* aCache,
                                   const char* aPref,
-                                  int32_t aDefault)
+                                  int32_t aDefault,
+                                  bool aSkipAssignment)
 {
-  MOZ_ASSERT(aCache);
-#ifdef DEBUG
   AssertNotAlreadyCached("int", aPref, aCache);
-#endif
-  *aCache = Preferences::GetInt(aPref, aDefault);
+  if (!aSkipAssignment) {
+    *aCache = GetInt(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
@@ -4854,13 +4868,13 @@ UintVarChanged(const char* aPref, void* aClosure)
 /* static */ nsresult
 Preferences::AddUintVarCache(uint32_t* aCache,
                              const char* aPref,
-                             uint32_t aDefault)
+                             uint32_t aDefault,
+                             bool aSkipAssignment)
 {
-  MOZ_ASSERT(aCache);
-#ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
-#endif
-  *aCache = Preferences::GetUint(aPref, aDefault);
+  if (!aSkipAssignment) {
+    *aCache = GetUint(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
@@ -4886,13 +4900,13 @@ template<MemoryOrdering Order>
 /* static */ nsresult
 Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
                                    const char* aPref,
-                                   uint32_t aDefault)
+                                   uint32_t aDefault,
+                                   bool aSkipAssignment)
 {
-  MOZ_ASSERT(aCache);
-#ifdef DEBUG
   AssertNotAlreadyCached("uint", aPref, aCache);
-#endif
-  *aCache = Preferences::GetUint(aPref, aDefault);
+  if (!aSkipAssignment) {
+    *aCache = GetUint(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueUint = aDefault;
@@ -4909,32 +4923,40 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
 // need to explicitly specify the instantiations that are required. Currently
 // limited orders are needed and therefore implemented.
 template nsresult
-Preferences::AddAtomicBoolVarCache(Atomic<bool, Relaxed>*, const char*, bool);
+Preferences::AddAtomicBoolVarCache(Atomic<bool, Relaxed>*,
+                                   const char*,
+                                   bool,
+                                   bool);
 
 template nsresult
 Preferences::AddAtomicBoolVarCache(Atomic<bool, ReleaseAcquire>*,
                                    const char*,
+                                   bool,
                                    bool);
 
 template nsresult
 Preferences::AddAtomicBoolVarCache(Atomic<bool, SequentiallyConsistent>*,
                                    const char*,
+                                   bool,
                                    bool);
 
 template nsresult
 Preferences::AddAtomicIntVarCache(Atomic<int32_t, Relaxed>*,
                                   const char*,
-                                  int32_t);
+                                  int32_t,
+                                  bool);
 
 template nsresult
 Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Relaxed>*,
                                    const char*,
-                                   uint32_t);
+                                   uint32_t,
+                                   bool);
 
 template nsresult
 Preferences::AddAtomicUintVarCache(Atomic<uint32_t, ReleaseAcquire>*,
                                    const char*,
-                                   uint32_t);
+                                   uint32_t,
+                                   bool);
 
 static void
 FloatVarChanged(const char* aPref, void* aClosure)
@@ -4945,13 +4967,15 @@ FloatVarChanged(const char* aPref, void* aClosure)
 }
 
 /* static */ nsresult
-Preferences::AddFloatVarCache(float* aCache, const char* aPref, float aDefault)
+Preferences::AddFloatVarCache(float* aCache,
+                              const char* aPref,
+                              float aDefault,
+                              bool aSkipAssignment)
 {
-  MOZ_ASSERT(aCache);
-#ifdef DEBUG
   AssertNotAlreadyCached("float", aPref, aCache);
-#endif
-  *aCache = Preferences::GetFloat(aPref, aDefault);
+  if (!aSkipAssignment) {
+    *aCache = GetFloat(aPref, aDefault);
+  }
   CacheData* data = new CacheData();
   data->mCacheLocation = aCache;
   data->mDefaultValueFloat = aDefault;
@@ -4962,6 +4986,220 @@ Preferences::AddFloatVarCache(float* aCache, const char* aPref, float aDefault)
                                 Preferences::ExactMatch,
                                 /* isPriority */ true);
   return NS_OK;
+}
+
+// For a VarCache pref like this:
+//
+//   VARCACHE_PREF("my.varcache", my_varcache, int32_t, 99)
+//
+// we generate a static variable definition:
+//
+//   int32_t StaticPrefs::sVarCache_my_varcache(99);
+//
+#define PREF(name, cpp_type, value)
+#define VARCACHE_PREF(name, id, cpp_type, value)                               \
+  cpp_type StaticPrefs::sVarCache_##id(value);
+#include "mozilla/StaticPrefList.h"
+#undef PREF
+#undef VARCACHE_PREF
+
+static void
+CheckForDoubleDefinition(const char* aName, bool aIsStartup)
+{
+#ifdef DEBUG
+  // If this warning is hit, it's probably because a pref is present in both a
+  // data file (such as all.js) and StaticPrefsList.h, which is not desirable.
+  if (aIsStartup && Preferences::GetType(aName) != Preferences::PREF_INVALID) {
+    NS_ERROR(nsPrintfCString("'%s' already registered\n", aName).get());
+  }
+#endif
+}
+
+// The SetPref_*() functions below end in a `_<type>` suffix because they are
+// used by the PREF macro definition in InitAll() below.
+
+static void
+SetPref_bool(const char* aName, bool aDefaultValue, bool aIsStartup)
+{
+  CheckForDoubleDefinition(aName, aIsStartup);
+  PrefValue value;
+  value.mBoolVal = aDefaultValue;
+  pref_SetPref(aName,
+               PrefType::Bool,
+               PrefValueKind::Default,
+               value,
+               /* isSticky */ false,
+               /* isLocked */ false,
+               /* fromInit */ true);
+}
+
+static void
+SetPref_int32_t(const char* aName, int32_t aDefaultValue, bool aIsStartup)
+{
+  CheckForDoubleDefinition(aName, aIsStartup);
+  PrefValue value;
+  value.mIntVal = aDefaultValue;
+  pref_SetPref(aName,
+               PrefType::Int,
+               PrefValueKind::Default,
+               value,
+               /* isSticky */ false,
+               /* isLocked */ false,
+               /* fromInit */ true);
+}
+
+static void
+SetPref_float(const char* aName, float aDefaultValue, bool aIsStartup)
+{
+  CheckForDoubleDefinition(aName, aIsStartup);
+  PrefValue value;
+  nsPrintfCString defaultValue("%f", aDefaultValue);
+  value.mStringVal = defaultValue.get();
+  pref_SetPref(aName,
+               PrefType::String,
+               PrefValueKind::Default,
+               value,
+               /* isSticky */ false,
+               /* isLocked */ false,
+               /* fromInit */ true);
+}
+
+// XXX: this will eventually become used
+MOZ_MAYBE_UNUSED static void
+SetPref_String(const char* aName, const char* aDefaultValue, bool aIsStartup)
+{
+  CheckForDoubleDefinition(aName, aIsStartup);
+  PrefValue value;
+  value.mStringVal = aDefaultValue;
+  pref_SetPref(aName,
+               PrefType::String,
+               PrefValueKind::Default,
+               value,
+               /* isSticky */ false,
+               /* isLocked */ false,
+               /* fromInit */ true);
+}
+
+static void
+InitVarCachePref(const char* aName,
+                 bool* aCache,
+                 bool aDefaultValue,
+                 bool aIsStartup)
+{
+  SetPref_bool(aName, aDefaultValue, aIsStartup);
+  *aCache = aDefaultValue;
+  if (aIsStartup) {
+    Preferences::AddBoolVarCache(aCache, aName, aDefaultValue, true);
+  }
+}
+
+template<MemoryOrdering Order>
+static void
+InitVarCachePref(const char* aName,
+                 Atomic<bool, Order>* aCache,
+                 bool aDefaultValue,
+                 bool aIsStartup)
+{
+  SetPref_bool(aName, aDefaultValue, aIsStartup);
+  *aCache = aDefaultValue;
+  if (aIsStartup) {
+    Preferences::AddAtomicBoolVarCache(aCache, aName, aDefaultValue, true);
+  }
+}
+
+// XXX: this will eventually become used
+MOZ_MAYBE_UNUSED static void
+InitVarCachePref(const char* aName,
+                 int32_t* aCache,
+                 int32_t aDefaultValue,
+                 bool aIsStartup)
+{
+  SetPref_int32_t(aName, aDefaultValue, aIsStartup);
+  *aCache = aDefaultValue;
+  if (aIsStartup) {
+    Preferences::AddIntVarCache(aCache, aName, aDefaultValue, true);
+  }
+}
+
+template<MemoryOrdering Order>
+static void
+InitVarCachePref(const char* aName,
+                 Atomic<int32_t, Order>* aCache,
+                 int32_t aDefaultValue,
+                 bool aIsStartup)
+{
+  SetPref_int32_t(aName, aDefaultValue, aIsStartup);
+  *aCache = aDefaultValue;
+  if (aIsStartup) {
+    Preferences::AddAtomicIntVarCache(aCache, aName, aDefaultValue, true);
+  }
+}
+
+static void
+InitVarCachePref(const char* aName,
+                 uint32_t* aCache,
+                 uint32_t aDefaultValue,
+                 bool aIsStartup)
+{
+  SetPref_int32_t(aName, static_cast<int32_t>(aDefaultValue), aIsStartup);
+  *aCache = aDefaultValue;
+  if (aIsStartup) {
+    Preferences::AddUintVarCache(aCache, aName, aDefaultValue, true);
+  }
+}
+
+template<MemoryOrdering Order>
+static void
+InitVarCachePref(const char* aName,
+                 Atomic<uint32_t, Order>* aCache,
+                 uint32_t aDefaultValue,
+                 bool aIsStartup)
+{
+  SetPref_int32_t(aName, static_cast<int32_t>(aDefaultValue), aIsStartup);
+  *aCache = aDefaultValue;
+  if (aIsStartup) {
+    Preferences::AddAtomicUintVarCache(aCache, aName, aDefaultValue, true);
+  }
+}
+
+// XXX: this will eventually become used
+MOZ_MAYBE_UNUSED static void
+InitVarCachePref(const char* aName,
+                 float* aCache,
+                 float aDefaultValue,
+                 bool aIsStartup)
+{
+  SetPref_float(aName, aDefaultValue, aIsStartup);
+  *aCache = aDefaultValue;
+  if (aIsStartup) {
+    Preferences::AddFloatVarCache(aCache, aName, aDefaultValue, true);
+  }
+}
+
+/* static */ void
+StaticPrefs::InitAll(bool aIsStartup)
+{
+// For prefs like these:
+//
+//   PREF("foo.bar.baz", bool, true)
+//   VARCACHE_PREF("my.varcache", my_varcache, int32_t, 99)
+//
+// we generate registration calls:
+//
+//   SetPref_bool("foo.bar.baz", true, aIsStartup);
+//   InitVarCachePref("my.varcache", &StaticPrefs::sVarCache_my_varcache, 99,
+//                    aIsStartup);
+//
+// The SetPref_*() functions have a type suffix to avoid ambiguity between
+// prefs having int32_t and float default values. That suffix is not needed for
+// the InitVarCachePref() functions because they take a pointer parameter,
+// which prevents automatic int-to-float coercion.
+#define PREF(name, cpp_type, value) SetPref_##cpp_type(name, value, aIsStartup);
+#define VARCACHE_PREF(name, id, cpp_type, value)                               \
+  InitVarCachePref(name, &StaticPrefs::sVarCache_##id, value, aIsStartup);
+#include "mozilla/StaticPrefList.h"
+#undef PREF
+#undef VARCACHE_PREF
 }
 
 } // namespace mozilla

@@ -143,7 +143,9 @@ function escaped(strings, ...values) {
 class AddonsList {
   constructor(file) {
     this.extensions = [];
+    this.bootstrapped = [];
     this.themes = [];
+    this.xpis = [];
 
     if (!file.exists()) {
       return;
@@ -155,23 +157,27 @@ class AddonsList {
       let dir = loc.path && new nsFile(loc.path);
 
       for (let addon of Object.values(loc.addons)) {
-        if (addon.enabled && !addon.bootstrapped) {
-          let file;
-          if (dir) {
-            file = dir.clone();
-            try {
-              file.appendRelativePath(addon.path);
-            } catch (e) {
-              file = new nsFile(addon.path);
-            }
-          } else {
+        let file;
+        if (dir) {
+          file = dir.clone();
+          try {
+            file.appendRelativePath(addon.path);
+          } catch (e) {
             file = new nsFile(addon.path);
           }
+        } else {
+          file = new nsFile(addon.path);
+        }
 
+        this.xpis.push(file);
+
+        if (addon.enabled) {
           addon.type = addon.type || "extension";
 
           if (addon.type == "theme") {
             this.themes.push(file);
+          } else if (addon.bootstrapped) {
+            this.bootstrapped.push(file);
           } else {
             this.extensions.push(file);
           }
@@ -201,6 +207,10 @@ class AddonsList {
 
   hasTheme(dir, id) {
     return this.hasItem("themes", dir, id);
+  }
+
+  hasBootstrapped(dir, id) {
+    return this.hasItem("bootstrapped", dir, id);
   }
 
   hasExtension(dir, id) {
@@ -683,13 +693,19 @@ var AddonTestUtils = {
 
     Services.obs.notifyObservers(null, "quit-application-granted");
     return MockAsyncShutdown.hook()
-      .then(() => {
+      .then(async () => {
         this.emit("addon-manager-shutdown");
 
         this.addonIntegrationService = null;
 
         // Load the add-ons list as it was after application shutdown
-        this.loadAddonsList();
+        await this.loadAddonsList();
+
+        // Flush the jar cache entries for each bootstrapped XPI so that
+        // we don't run into file locking issues on Windows.
+        for (let file of this.addonsList.xpis) {
+          Services.obs.notifyObservers(file, "flush-cache-entry");
+        }
 
         // Clear any crash report annotations
         this.appInfo.annotations = {};
@@ -973,6 +989,18 @@ var AddonTestUtils = {
   },
 
   /**
+   * Creates an XPI with the given files and installs it.
+   *
+   * @param {object} files
+   *        A files object as would be passed to {@see #createTempXPI}.
+   * @returns {Promise}
+   *        A promise which resolves when the add-on is installed.
+   */
+  promiseInstallXPI(files) {
+    return this.promiseInstallFile(this.createTempXPIFile(files));
+  },
+
+  /**
    * Creates an extension proxy file.
    * See: https://developer.mozilla.org/en-US/Add-ons/Setting_up_extension_development_environment#Firefox_extension_proxy_file
    *
@@ -1027,7 +1055,16 @@ var AddonTestUtils = {
         let target = dir.clone();
         for (let part of entry.split("/"))
           target.append(part);
-        zip.extract(entry, target);
+        if (!target.parent.exists())
+          target.parent.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+        try {
+          zip.extract(entry, target);
+        } catch (e) {
+          if (e.result != Cr.NS_ERROR_FILE_DIR_NOT_EMPTY &&
+              !(target.exists() && target.isDirectory())) {
+            throw e;
+          }
+        }
         target.permissions |= FileUtils.PERMS_FILE;
       }
       zip.close();
@@ -1251,15 +1288,25 @@ var AddonTestUtils = {
   },
 
   /**
+   * @property {number} updateReason
+   *        The default update reason for {@see promiseFindAddonUpdates}
+   *        calls. May be overwritten by tests which primarily check for
+   *        updates with a particular reason.
+   */
+  updateReason: AddonManager.UPDATE_WHEN_PERIODIC_UPDATE,
+
+  /**
    * Returns a promise that will be resolved when an add-on update check is
    * complete. The value resolved will be an AddonInstall if a new version was
    * found.
    *
    * @param {object} addon The add-on to find updates for.
    * @param {integer} reason The type of update to find.
+   * @param {Array} args Additional args to pass to `checkUpdates` after
+   *                     the update reason.
    * @return {Promise<object>} an object containing information about the update.
    */
-  promiseFindAddonUpdates(addon, reason = AddonManager.UPDATE_WHEN_PERIODIC_UPDATE) {
+  promiseFindAddonUpdates(addon, reason = AddonTestUtils.updateReason, ...args) {
     let equal = this.testScope.equal;
     return new Promise((resolve, reject) => {
       let result = {};
@@ -1305,7 +1352,7 @@ var AddonTestUtils = {
             reject(result);
           }
         }
-      }, reason);
+      }, reason, ...args);
     });
   },
 

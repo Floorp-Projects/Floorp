@@ -284,6 +284,7 @@ function create_addon(addon) {
                    "  <Description about=\"urn:mozilla:install-manifest\">\n" +
                    "    <em:id>" + addon.id + "</em:id>\n" +
                    "    <em:version>" + addon.version + "</em:version>\n" +
+                   "    <em:bootstrap>true</em:bootstrap>\n" +
                    "    <em:targetApplication>\n" +
                    "      <Description>\n" +
                    "        <em:id>xpcshell@tests.mozilla.org</em:id>\n" +
@@ -326,14 +327,6 @@ function check_state(test, lastTest, callback) {
 
     if (lastTest) {
       var expected = 0;
-      for (i = 0; i < ADDONS.length; i++) {
-        if (ADDONS[i][test] && !ADDONS[i][lastTest]) {
-          if (!gNewBlocks.includes(ADDONS[i].name + " " + ADDONS[i].version))
-            do_throw("Addon " + (i + 1) + " should have been listed in the blocklist notification for test " + test);
-          expected++;
-        }
-      }
-
       for (i = 0; i < PLUGINS.length; i++) {
         if (PLUGINS[i][test] && !PLUGINS[i][lastTest]) {
           if (!gNewBlocks.includes(PLUGINS[i].name + " " + PLUGINS[i].version))

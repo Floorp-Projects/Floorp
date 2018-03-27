@@ -249,11 +249,8 @@ static nsresult GetSharedScriptableHelperForJSIID(nsIXPCScriptable** helper)
 { 0x00000000, 0x0000, 0x0000,                                                 \
   { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } }
 
-// We pass nsIClassInfo::DOM_OBJECT so that nsJSIID instances may be created
-// in unprivileged scopes.
 NS_DECL_CI_INTERFACE_GETTER(nsJSIID)
-NS_IMPL_CLASSINFO(nsJSIID, GetSharedScriptableHelperForJSIID,
-                  nsIClassInfo::DOM_OBJECT, NULL_CID)
+NS_IMPL_CLASSINFO(nsJSIID, GetSharedScriptableHelperForJSIID, 0, NULL_CID)
 
 NS_DECL_CI_INTERFACE_GETTER(nsJSCID)
 NS_IMPL_CLASSINFO(nsJSCID, nullptr, 0, NULL_CID)

@@ -14,7 +14,6 @@ async function getListenerEvents(browser) {
   return result.split("\n").map(JSON.parse);
 }
 
-const RESTART_ID = "restart@tests.mozilla.org";
 const RESTART_DISABLED_ID = "restart_disabled@tests.mozilla.org";
 const RESTARTLESS_ID = "restartless@tests.mozilla.org";
 const INSTALL_ID = "install@tests.mozilla.org";
@@ -22,10 +21,6 @@ const CANCEL_ID = "cancel@tests.mozilla.org";
 
 let provider = new MockProvider(false);
 provider.createAddons([
-  {
-    id: RESTART_ID,
-    name: "Add-on that requires restart",
-  },
   {
     id: RESTART_DISABLED_ID,
     name: "Disabled add-on that requires restart",
@@ -41,26 +36,6 @@ provider.createAddons([
     name: "Add-on for uninstall cancel",
   },
 ]);
-
-// Test disable of add-on requiring restart
-add_task(async function test_disable() {
-  await BrowserTestUtils.withNewTab(TESTPAGE, async function(browser) {
-    let addon = await promiseAddonByID(RESTART_ID);
-    is(addon.userDisabled, false, "addon is enabled");
-
-    // disable it
-    addon.userDisabled = true;
-    is(addon.userDisabled, true, "addon was disabled successfully");
-
-    let events = await getListenerEvents(browser);
-
-    // Just a single onDisabling since restart is needed to complete
-    let expected = [
-      {id: RESTART_ID, needsRestart: true, event: "onDisabling"},
-    ];
-    Assert.deepEqual(events, expected, "Got expected disable event");
-  });
-});
 
 // Test enable of add-on requiring restart
 add_task(async function test_enable() {

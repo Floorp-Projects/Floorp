@@ -13,6 +13,7 @@ var addon1 = {
   optionsURL: "chrome://foo/content/options.xul",
   aboutURL: "chrome://foo/content/about.xul",
   iconURL: "chrome://foo/content/icon.png",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -49,7 +50,7 @@ function run_test() {
       Assert.equal(newa1.aboutURL, null);
       Assert.equal(newa1.optionsURL, null);
       Assert.equal(newa1.iconURL, gIconURL);
-      Assert.ok(isExtensionInAddonsList(profileDir, newa1.id));
+      Assert.ok(isExtensionInBootstrappedList(profileDir, newa1.id));
       Assert.ok(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
       Assert.ok(!hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
       Assert.equal(newa1.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_NONE);

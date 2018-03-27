@@ -5,11 +5,14 @@
 
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
+ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 var gTestserver = new HttpServer();
 gTestserver.start(-1);
 gPort = gTestserver.identity.primaryPort;
+
+const {promiseObserved} = ExtensionUtils;
 
 // register static files with server and interpolate port numbers in them
 mapFile("/data/bug455906_warn.xml", gTestserver);
@@ -166,6 +169,7 @@ function create_addon(addon) {
                    "  <Description about=\"urn:mozilla:install-manifest\">\n" +
                    "    <em:id>" + addon.id + "</em:id>\n" +
                    "    <em:version>" + addon.version + "</em:version>\n" +
+                   "    <em:bootstrap>true</em:bootstrap>\n" +
                    "    <em:targetApplication>\n" +
                    "      <Description>\n" +
                    "        <em:id>xpcshell@tests.mozilla.org</em:id>\n" +
@@ -371,7 +375,7 @@ function run_test_pt3() {
 
 function check_notification_pt3(args) {
   dump("Checking notification pt 3\n");
-  Assert.equal(args.list.length, 6);
+  Assert.equal(args.list.length, 3);
 
   for (let addon of args.list) {
     if (addon.item instanceof Ci.nsIPluginTag) {
@@ -446,7 +450,8 @@ function check_test_pt3() {
 
     // Back to starting state
     gNotificationCheck = null;
-    gTestCheck = run_test_pt4;
+    gTestCheck = null;
+    promiseObserved("blocklist-updated").then(run_test_pt4);
     load_blocklist("bug455906_start.xml");
   });
 }
@@ -459,6 +464,7 @@ function run_test_pt4() {
     check_initial_state(function() {
       gNotificationCheck = check_notification_pt4;
       gTestCheck = check_test_pt4;
+      promiseObserved("blocklist-updated").then(check_test_pt4);
       load_blocklist("bug455906_empty.xml");
     });
   }));

@@ -261,14 +261,6 @@ private:
 
 NS_IMPL_ISUPPORTS(nsAutoScrollTimer, nsITimerCallback, nsINamed)
 
-nsresult NS_NewDomSelection(nsISelection **aDomSelection)
-{
-  Selection* rlist = new Selection;
-  *aDomSelection = (nsISelection *)rlist;
-  NS_ADDREF(rlist);
-  return NS_OK;
-}
-
 /*
 The limiter is used specifically for the text areas and textfields
 In that case it is the DIV tag that is anonymously created for the text
@@ -786,7 +778,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)
   // in JS!).
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionListeners)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedRange)
-  tmp->RemoveAllRanges();
+  tmp->RemoveAllRanges(IgnoreErrors());
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameSelection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -2233,16 +2225,6 @@ Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint)
 }
 
 
-/** RemoveAllRanges zeroes the selection
- */
-NS_IMETHODIMP
-Selection::RemoveAllRanges()
-{
-  ErrorResult result;
-  RemoveAllRanges(result);
-  return result.StealNSResult();
-}
-
 void
 Selection::RemoveAllRanges(ErrorResult& aRv)
 {
@@ -2293,21 +2275,6 @@ Selection::RemoveAllRangesTemporarily()
   if (result.Failed()) {
     mCachedRange = nullptr;
   }
-  return result.StealNSResult();
-}
-
-/** AddRange adds the specified range to the selection
- *  @param aRange is the range to be added
- */
-NS_IMETHODIMP
-Selection::AddRange(nsIDOMRange* aDOMRange)
-{
-  if (!aDOMRange) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsRange* range = static_cast<nsRange*>(aDOMRange);
-  ErrorResult result;
-  AddRange(*range, result);
   return result.StealNSResult();
 }
 
@@ -2400,18 +2367,6 @@ Selection::AddRangeInternal(nsRange& aRange, nsIDocument* aDocument,
 //    We therefore find any ranges that intersect the same nodes as the range
 //    being removed, and cause them to set the selected bits back on their
 //    selected frames after we've cleared the bit from ours.
-
-nsresult
-Selection::RemoveRange(nsIDOMRange* aDOMRange)
-{
-  if (!aDOMRange) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  nsRange* range = static_cast<nsRange*>(aDOMRange);
-  ErrorResult result;
-  RemoveRange(*range, result);
-  return result.StealNSResult();
-}
 
 void
 Selection::RemoveRange(nsRange& aRange, ErrorResult& aRv)
@@ -2660,9 +2615,7 @@ Selection::CollapseToStartJS(ErrorResult& aRv)
 void
 Selection::CollapseToStart(ErrorResult& aRv)
 {
-  int32_t cnt;
-  nsresult rv = GetRangeCount(&cnt);
-  if (NS_FAILED(rv) || cnt <= 0) {
+  if (RangeCount() == 0) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -2709,9 +2662,8 @@ Selection::CollapseToEndJS(ErrorResult& aRv)
 void
 Selection::CollapseToEnd(ErrorResult& aRv)
 {
-  int32_t cnt;
-  nsresult rv = GetRangeCount(&cnt);
-  if (NS_FAILED(rv) || cnt <= 0) {
+  uint32_t cnt = RangeCount();
+  if (cnt == 0) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -2751,14 +2703,6 @@ Selection::GetIsCollapsed(bool* aIsCollapsed)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-Selection::GetRangeCount(int32_t* aRangeCount)
-{
-  *aRangeCount = (int32_t)RangeCount();
-
-  return NS_OK;
-}
-
 void
 Selection::GetType(nsAString& aOutType) const
 {
@@ -2769,15 +2713,6 @@ Selection::GetType(nsAString& aOutType) const
   } else {
     aOutType.AssignLiteral("Range");
   }
-}
-
-NS_IMETHODIMP
-Selection::GetRangeAt(int32_t aIndex, nsIDOMRange** aReturn)
-{
-  ErrorResult result;
-  *aReturn = GetRangeAt(aIndex, result);
-  NS_IF_ADDREF(*aReturn);
-  return result.StealNSResult();
 }
 
 nsRange*
@@ -4080,15 +4015,13 @@ Selection::SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
     return;
   }
 
-  // Use non-virtual method instead of nsISelection::RemoveAllRanges().
   RemoveAllRanges(aRv);
   if (aRv.Failed()) {
     return;
   }
 
-  rv = AddRange(newRange);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  AddRange(*newRange, aRv);
+  if (aRv.Failed()) {
     return;
   }
 

@@ -40,6 +40,7 @@ var addon1 = {
   id: "addon1@tests.mozilla.org",
   version: "1.0",
   name: "Test 1",
+  bootstrap: true,
   updateURL: "http://localhost:" + gPort + "/data/test_bug655254.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -47,6 +48,36 @@ var addon1 = {
     maxVersion: "1"
   }]
 };
+
+const ADDONS = [
+  {
+    "install.rdf": {
+      id: "addon2@tests.mozilla.org",
+      version: "1.0",
+      name: "Test 2",
+      bootstrap: true,
+
+      targetApplications: [{
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "2",
+        maxVersion: "2"}],
+    },
+    "bootstrap.js": `
+      /* exported startup, shutdown */
+      ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+      function startup(data, reason) {
+        Services.prefs.setIntPref("bootstraptest.active_version", 1);
+      }
+
+      function shutdown(data, reason) {
+        Services.prefs.setIntPref("bootstraptest.active_version", 0);
+      }
+    `
+  },
+];
+
+const XPIS = ADDONS.map(addon => AddonTestUtils.createTempXPIFile(addon));
 
 // Set up the profile
 function run_test() {
@@ -63,7 +94,7 @@ async function run_test_1() {
   var dir = writeInstallRDFForExtension(addon1, userDir);
   setExtensionModifiedTime(dir, time);
 
-  manuallyInstall(do_get_addon("test_bug655254_2"), userDir, "addon2@tests.mozilla.org");
+  manuallyInstall(XPIS[0], userDir, "addon2@tests.mozilla.org");
 
   await promiseStartupManager();
 
@@ -72,12 +103,12 @@ async function run_test_1() {
     Assert.notEqual(a1, null);
     Assert.ok(a1.appDisabled);
     Assert.ok(!a1.isActive);
-    Assert.ok(!isExtensionInAddonsList(userDir, a1.id));
+    Assert.ok(!isExtensionInBootstrappedList(userDir, a1.id));
 
     Assert.notEqual(a2, null);
     Assert.ok(!a2.appDisabled);
     Assert.ok(a2.isActive);
-    Assert.ok(!isExtensionInAddonsList(userDir, a2.id));
+    Assert.ok(isExtensionInBootstrappedList(userDir, a2.id));
     Assert.equal(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
 
     a1.findUpdates({
@@ -88,7 +119,7 @@ async function run_test_1() {
           Assert.notEqual(a1_2, null);
           Assert.ok(!a1_2.appDisabled);
           Assert.ok(a1_2.isActive);
-          Assert.ok(isExtensionInAddonsList(userDir, a1_2.id));
+          Assert.ok(isExtensionInBootstrappedList(userDir, a1_2.id));
 
           shutdownManager();
 
@@ -107,12 +138,12 @@ async function run_test_1() {
             Assert.notEqual(a1_3, null);
             Assert.ok(!a1_3.appDisabled);
             Assert.ok(a1_3.isActive);
-            Assert.ok(isExtensionInAddonsList(userDir, a1_3.id));
+            Assert.ok(isExtensionInBootstrappedList(userDir, a1_3.id));
 
             Assert.notEqual(a2_3, null);
             Assert.ok(!a2_3.appDisabled);
             Assert.ok(a2_3.isActive);
-            Assert.ok(!isExtensionInAddonsList(userDir, a2_3.id));
+            Assert.ok(isExtensionInBootstrappedList(userDir, a2_3.id));
             Assert.equal(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
 
             executeSoon(run_test_2);
@@ -129,7 +160,7 @@ function run_test_2() {
    Assert.notEqual(a2, null);
    Assert.ok(!a2.appDisabled);
    Assert.ok(a2.isActive);
-   Assert.ok(!isExtensionInAddonsList(userDir, a2.id));
+   Assert.ok(isExtensionInBootstrappedList(userDir, a2.id));
    Assert.equal(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
 
    a2.userDisabled = true;
@@ -150,12 +181,12 @@ function run_test_2() {
      Assert.notEqual(a1_2, null);
      Assert.ok(!a1_2.appDisabled);
      Assert.ok(a1_2.isActive);
-     Assert.ok(isExtensionInAddonsList(userDir, a1_2.id));
+     Assert.ok(isExtensionInBootstrappedList(userDir, a1_2.id));
 
      Assert.notEqual(a2_2, null);
      Assert.ok(a2_2.userDisabled);
      Assert.ok(!a2_2.isActive);
-     Assert.ok(!isExtensionInAddonsList(userDir, a2_2.id));
+     Assert.ok(!isExtensionInBootstrappedList(userDir, a2_2.id));
      Assert.equal(Services.prefs.getIntPref("bootstraptest.active_version"), 0);
 
      end_test();

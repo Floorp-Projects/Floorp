@@ -3351,8 +3351,11 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
 
     // If we have not seen the selection yet, clear all of its ranges.
     if (range.mSelection != previousSelection) {
-      nsresult rv = range.mSelection->RemoveAllRanges();
-      NS_ENSURE_SUCCESS(rv, rv);
+      ErrorResult rv;
+      range.mSelection->RemoveAllRanges(rv);
+      if (NS_WARN_IF(rv.Failed())) {
+        return rv.StealNSResult();
+      }
       previousSelection = range.mSelection;
     }
 
@@ -3384,8 +3387,11 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
                                        range.mEndOffset,
                                        getter_AddRefs(newRange));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = range.mSelection->AddRange(newRange);
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult err;
+    range.mSelection->AddRange(*newRange, err);
+    if (NS_WARN_IF(err.Failed())) {
+      return err.StealNSResult();
+    }
   }
 
   if (shouldSetSelection) {
@@ -4791,7 +4797,9 @@ EditorBase::AppendNodeToSelectionAsRange(nsIDOMNode* aNode)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
 
-  return selection->AddRange(range);
+  ErrorResult err;
+  selection->AddRange(*range, err);
+  return err.StealNSResult();
 }
 
 nsresult
@@ -4799,7 +4807,9 @@ EditorBase::ClearSelection()
 {
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-  return selection->RemoveAllRanges();
+  ErrorResult rv;
+  selection->RemoveAllRanges(rv);
+  return rv.StealNSResult();
 }
 
 already_AddRefed<Element>

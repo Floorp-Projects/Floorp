@@ -2732,11 +2732,13 @@ NS_IMETHODIMP nsDocumentViewer::SelectAll()
   }
   if (!bodyNode) return NS_ERROR_FAILURE;
 
-  nsresult rv = selection->RemoveAllRanges();
-  if (NS_FAILED(rv)) return rv;
+  ErrorResult err;
+  selection->RemoveAllRanges(err);
+  if (err.Failed()) {
+    return err.StealNSResult();
+  }
 
   mozilla::dom::Selection::AutoUserInitiated userSelection(selection);
-  ErrorResult err;
   selection->SelectAllChildren(*bodyNode, err);
   return err.StealNSResult();
 }
@@ -2798,15 +2800,14 @@ NS_IMETHODIMP nsDocumentViewer::GetContents(const char *mimeType, bool selection
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_INITIALIZED);
 
   // Now we have the selection.  Make sure it's nonzero:
-  nsCOMPtr<nsISelection> sel;
+  RefPtr<Selection> sel;
   if (selectionOnly) {
     nsCopySupport::GetSelectionForCopy(mDocument, getter_AddRefs(sel));
     NS_ENSURE_TRUE(sel, NS_ERROR_FAILURE);
 
-    bool isCollapsed;
-    sel->GetIsCollapsed(&isCollapsed);
-    if (isCollapsed)
+    if (sel->IsCollapsed()) {
       return NS_OK;
+    }
   }
 
   // call the copy code

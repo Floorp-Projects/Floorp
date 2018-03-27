@@ -38,6 +38,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLLabelElement.h"
 #include "mozilla/dom/MouseEventBinding.h"
+#include "mozilla/dom/Selection.h"
 
 using namespace mozilla;
 
@@ -258,8 +259,9 @@ nsCoreUtils::ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
                                nsIPresShell::ScrollAxis aVertical,
                                nsIPresShell::ScrollAxis aHorizontal)
 {
-  if (!aFrame)
+  if (!aFrame || !aRange) {
     return NS_ERROR_FAILURE;
+  }
 
   nsPresContext *presContext = aFrame->PresContext();
 
@@ -267,13 +269,12 @@ nsCoreUtils::ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
   aFrame->GetSelectionController(presContext, getter_AddRefs(selCon));
   NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsISelection> selection;
-  selCon->GetSelection(nsISelectionController::SELECTION_ACCESSIBILITY,
-                       getter_AddRefs(selection));
+  RefPtr<dom::Selection> selection =
+    selCon->GetDOMSelection(nsISelectionController::SELECTION_ACCESSIBILITY);
 
-  nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(selection));
-  selection->RemoveAllRanges();
-  selection->AddRange(aRange);
+  nsCOMPtr<nsISelectionPrivate> privSel(do_QueryObject(selection));
+  selection->RemoveAllRanges(IgnoreErrors());
+  selection->AddRange(*aRange, IgnoreErrors());
 
   privSel->ScrollIntoViewInternal(
     nsISelectionController::SELECTION_ANCHOR_REGION,

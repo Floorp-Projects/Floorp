@@ -706,69 +706,6 @@ add_task(async function() {
   await promiseRestartManager();
 });
 
-// Installing a temporary add-on over a non-restartless add-on should fail.
-add_task(async function() {
-  await promiseInstallAllFiles([do_get_addon("test_install1")], true);
-
-  let non_restartless_ID = "addon1@tests.mozilla.org";
-
-  BootstrapMonitor.checkAddonNotInstalled(non_restartless_ID);
-  BootstrapMonitor.checkAddonNotStarted(non_restartless_ID);
-
-  restartManager();
-
-  BootstrapMonitor.checkAddonNotInstalled(non_restartless_ID);
-  BootstrapMonitor.checkAddonNotStarted(non_restartless_ID);
-
-  let addon = await promiseAddonByID(non_restartless_ID);
-
-  // non-restartless add-on is installed and started
-  Assert.notEqual(addon, null);
-  Assert.equal(addon.id, non_restartless_ID);
-  Assert.equal(addon.version, "1.0");
-  Assert.equal(addon.name, "Test 1");
-  Assert.ok(addon.isCompatible);
-  Assert.ok(!addon.appDisabled);
-  Assert.ok(addon.isActive);
-  Assert.equal(addon.type, "extension");
-  Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
-
-  let tempdir = gTmpD.clone();
-  writeInstallRDFToDir({
-    id: non_restartless_ID,
-    version: "2.0",
-    bootstrap: true,
-    unpack: true,
-    targetApplications: [{
-          id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1"
-        }],
-    name: "Test 1 (temporary)",
-  }, tempdir);
-
-  let unpacked_addon = tempdir.clone();
-  unpacked_addon.append(non_restartless_ID);
-
-  try {
-    await AddonManager.installTemporaryAddon(unpacked_addon);
-    do_throw("Installing over a non-restartless add-on should return"
-             + " a rejected promise");
-  } catch (err) {
-    Assert.equal(err.message,
-        "Non-restartless add-on with ID addon1@tests.mozilla.org is"
-        + " already installed");
-  }
-
-  unpacked_addon.remove(true);
-  addon.uninstall();
-
-  BootstrapMonitor.checkAddonNotInstalled(ID);
-  BootstrapMonitor.checkAddonNotStarted(ID);
-
-  await promiseRestartManager();
-});
-
 // Installing a temporary add-on when there is already a temporary
 // add-on should fail.
 add_task(async function() {
