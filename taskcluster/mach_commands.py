@@ -174,14 +174,14 @@ class MachCommands(MachCommandBase):
     @SubCommand('taskgraph', 'cron',
                 description="Run the cron task")
     @CommandArgument('--base-repository',
-                     required=True,
-                     help='URL for "base" repository to clone')
+                     required=False,
+                     help='(ignored)')
     @CommandArgument('--head-repository',
                      required=True,
                      help='URL for "head" repository to fetch')
     @CommandArgument('--head-ref',
-                     required=True,
-                     help='Reference to fetch in head-repository (usually "default")')
+                     required=False,
+                     help='(ignored)')
     @CommandArgument('--project',
                      required=True,
                      help='Project to use for creating tasks. Example: --project=mozilla-central')
