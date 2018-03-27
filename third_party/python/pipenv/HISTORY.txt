@@ -1,0 +1,821 @@
+11.9.0:
+ - Vastly improve markers capabilities.
+ - Support for environment variables in Pipfiles.
+ - Cache the Pipfile internally (for large Pipfiles).
+ - Remove pipenv --update.
+ - Export PYTHONDONTWRITEBYTECODE, to attempt to increase compatibility.
+11.8.2:
+ - Cleanup TOML.
+ - Improve documentation.
+ - Pass clear flag to resolver.
+ - Improved private git URL handling.
+11.8.1:
+ - Removed (unused) Safety DB (licensing concerns).
+11.8.0:
+ - Fix a major bug in locking resolution.
+11.7.4:
+ - Don't use JSON results — problematic.
+11.7.3:
+ - Increase compatibility with strange Python installations (concurrency.futures).
+11.7.2:
+ - Bugfixes.
+11.7.1:
+ - Windows bugfix.
+11.7.0:
+ - Improvements to lockfile generation with private indexes.
+11.6.9:
+ - Bugfixes.
+11.6.8:
+ - Fix a Windows bug.
+11.6.7:
+ - Fix a Windows bug.
+11.6.5:
+ - Fix graph resolution.
+ - May be some incompatibilities with private indexes and hashing. If so, it's worth it to fix graph resolution for now. Priorities. One thing at a time.
+11.6.4:
+ - Fix a bug.
+11.6.3:
+ - Depend on certifi.
+11.6.2:
+ - Properly vendor certifi.
+ - Better support for --extra-index-url for private PyPI servers.
+ - Bug fixes.
+11.6.1:
+ - Remove concurrent.futures, as it's not being used any longer, and is problematic.
+11.6.0:
+ - Vendor all of pip9, in preparation for the release of pip10.
+11.5.3:
+- Attempt to grab markers from -e – provided setup.py files.
+- Revert "rely on the underlying pipenv sync architecture to pick up dependencies".
+11.5.2:
+ - Fix bug with markers (e.g. responses package).
+11.5.1:
+ - Restore bare 'pipenv update' functionality.
+11.5.0:
+ - Properly resolve hashes for private indexes.
+ - Some subtle changes to the way resolution works — shouldn't affect you, but warrented a version bump.
+11.4.0:
+ - Stability.
+ - Don't install dependencies straight-away with pipenv–install — rely on the underlying pipenv sync architecture to pick up dependencies.
+ - Warn (abord) if requested update package is not in Pipfile.
+ - Don't configure the Pipfile for keep_outdated when update is used.
+11.3.3:
+ - Sorry for all the bugs.
+11.3.2:
+ - Bugfix, of the craziest, hardest to reproduce nature.
+11.3.1:
+ - Fix shell --fancy.
+11.3.0:
+ - Default to using the Python Pipenv was installed with for new virtualenvs.
+ - Report Python version of specified interpreter when creating virtualenv.
+ - Disable JSON API usage, for now. It appears to cause some minor bugs related to markers (working on it).
+11.2.2:
+ - Potential bugfix related to subprocess invocations and environment variables.
+11.2.1:
+ - Actually use the Warehouse JSON API.
+11.2.0:
+ - Reduce the number of "bad packages", internally (e.g. don't exclude `six` anymore).
+11.1.11:
+ - Help improvements.
+11.1.10:
+ - Help improvements.
+11.1.9:
+ - $ python -m pipenv.help
+11.1.8:
+ - Resolver improvements.
+11.1.7:
+ - Packaging fix.
+11.1.6:
+ - Support for 'py' interpreter (on Windows).
+ - Bugfixes.
+11.1.5:
+ - Vendor pew.
+ - Be specific about which version of psutil we want.
+ - Patch pip and pip-tools (further) like crazy, for hard-to-believe reasons, and the benefit of all.
+11.1.4:
+ - Resolve multiple extras when provided.
+ - Improve completion time.
+ - Remove vendored version of psutil (windows).
+ - Bugfixes.
+11.1.3:
+ - Bugfix.
+11.1.2:
+ - No longer include hashes in `lock -r`.
+ - Enable pew execution via python -m.
+11.1.1:
+ - Undo previous change.
+11.1.0:
+ - Default to the version of Python that Pipenv was installed with.
+11.0.9:
+ - PPA release.
+11.0.8:
+ - PPA release.
+11.0.7:
+ - PPA release.
+11.0.6:
+ - PPA release.
+11.0.5:
+ - PPA release.
+11.0.4:
+ - PPA release.
+11.0.3:
+ - PPA release.
+11.0.2:
+ - Hash order is deterministic now.
+ - Bugfix.
+11.0.1:
+ - Bugfix.
+11.0.0:
+ - Massive resolver improvements!
+ - Resolver now runs within virtual environments.
+ - Resolver now uses PyPI JSON metadata to provide additional dependency information.
+ - Environment information removed from `Pipfile.lock`.
+ - Clean up temporary files used during dependency resolution.
+10.1.2:
+ - Bugfix.
+10.1.1:
+ - Assume `PIPENV_VENV_IN_PROJECT` if `./.venv/` already exists.
+ - Use and generate hashes for PyPI mirrors and custom indexes.
+10.1.0:
+ - Default dependencies now take precidence over Develop dependencies when
+   creating a Pipfile.lock.
+ - Introducing `pipenv lock --keep-outdated`, which can also be passed to
+   `install` and `uninstall`.
+ - Introducing `pipenv install --selective-upgrade <package>`, which only
+   updates the given package in your Pipfile.lock.
+ - New Pipfile configuration option for [pipenv] section: `keep_outdated`.
+10.0.1:
+ - Add extra indexes from pip config files in Pipfile generation.
+ - Fix bug with `pipenv clean`.
+ - Install from Pipfile.lock after each successful `pipenv install`.
+ - Temporary file cleanup.
+10.0.0:
+ - Introduce `pipenv sync` command.
+ - Introduce `pipenv clean` command.
+ - Deprecate `pipenv update` command.
+ - Fully remove `check --style` functionality.
+ - Better `lock -r` functionality.
+ - Up-to-date security checks for `pipenv check`.
+9.1.0:
+ - Add --system flag to $ pipenv check.
+ - Removal of package name suggestions.
+ - Support for [scripts] in Pipfile.
+ - Comment out invalid (to pip's hash checking mode) packages from `$ pipenv lock -r`.
+ - Updated patched version of dotenv.
+ - Do not allow `$ pipenv install --system packagename `to be used.
+ - Deprecate the usage of `$ pipenv check --style`.
+ - Show pip install logs with --verbose.
+ - Allow -v as shorthand for --verbose for all commands.
+ - Prevent duplicate virtualenv creation on windows due to drive casing.
+ - Discard comments in output of `pip freeze` when running `pipenv update`.
+ - Ignore existing `requirements.txt` files when pipenv is called with the `--requirements` flag.
+ - Support `allow_global` during dependency resolution.
+ - Add virtualenv activation support for `sh` (see #1388).
+ - Improve startup times via lazy loading of imports.
+ - Improve parsing of extras, markers, and path requirements.
+ - Fix regression with VCS url parsing being treated as a normal path.
+ - Resolve an issue causing local paths with the same name as a PyPI package to prevent proper dependency resolution.
+9.0.3:
+ - v9.0.1.
+9.0.2:
+ - A mistake.
+9.0.1:
+ - Fixed issue with specifiers being treated as paths on Windows.
+ - Fixed regression causing development packages to always be installed.
+9.0.0:
+ - Fixed bug where packages beginning with vcs names (e.g. git) weren't installed correctly.
+ - Fixed url parsing for <vcs>+<vcs>:// style urls.
+ - Pipenv can now install relative file paths.
+ - Better messaging around failed installs.
+ - More resilient network io when retrieving data from PyPI.
+ - Fixed bug with bad dependency pinning via pip-tools.
+ - Prompt user to destroy and recreate virtualenvironment if they are in a currently activated environment.
+ - Added enhancement for pip-tools to resolve dependencies with specific versions of python
+ - Fixed bug where newlines were not escaped in .env files when loaded
+ - Sequentially install all local and vcs dependencies to avoid write race conditions.
+ - Fixed accidental exclusion of files from some VCS installs.
+8.3.2:
+ - Moved automated update check to once every 24 hours.
+ - Better default for PYENV_ROOT.
+ - Correctly support all pip --index specifiers.
+ - Fix bug where pre-releases of Python were chosen over finals.
+8.3.1:
+ - Fixed issues with calling block too many times on single subprocess.
+ - Updated vendored delegator.py.
+ - Changed --dev flag for the uninstall command to --all-dev to better represent what it does.
+8.3.0:
+ - Add support for installation from remote requirements file.
+ - Add --reverse to pipenv graph, displaying inverted dependency graph.
+ - VCS dependencies now install sequentially to avoid write lock conflicts.
+ - Allow PIPENV_IGNORE_VIRTUALENVS to work with pipenv shell on Windows.
+ - Enforce newline termination of Pipfile.
+ - More robust requirements.txt conversion experience.
+ - Respect allow_prereleases in all locking scenarios.
+ - Separated default and development dependency output when using lock -r and lock -r -d respectively.
+ - Print whole help message with pipenv --help.
+8.2.7:
+ - Add update --sequential.
+ - Fix unicode decode error on windows.
+ - Fix bug with non-editable installs.
+ - Update vendored setuptools.
+ - Improvements to check --unused.
+ - Fix install for local sdist packages.
+ - Updating the patched pip-tools with the wheel dependency bugfix.
+ - Fix git remote address modified changing underscore to a hyphen.
+ - Fix py2toml with dashes (dev-packages)
+ - Fix for --dry-run, reporting backwards.
+ - Fix installing with all release specifiers.
+ - Removed unused vendor libraries.
+8.2.6:
+ - Fix for some git remotes.
+ - Increased the default number of max rounds for pip-tools, made it user-configurable.
+ - Fix self-updating.
+8.2.5:
+ - Fixed bad attribute call on date checks.
+8.2.4:
+ - Enhanced sha messaging — lockfile short shas are now displayed.
+ - Improve Windows unicode output.
+ - General UX and other improvements.
+8.2.3:
+ - Don't show activation instructions when --deploy is used.
+8.2.2:
+ - Improve system pip detection.
+8.2.1:
+ - Enhanced pip resolver — hopefully that won't blow up in our faces.
+ - Fixed file links.
+8.2.0:
+ - Made things nicer.
+8.1.9:
+ - Fix logging bug.
+8.1.8:
+ - Fix dependencies with markers attached. That wasn't easy.
+ - Vendor (patch) pip-tools.
+ - Honor PIP_SRC if it is provided.
+8.1.7:
+ - Update Python 2.x default to 2.7.14.
+ - Deploy mode aborts if Python version doesn't match.
+8.1.6:
+ - Abort when Python installation appears to fail.
+8.1.5:
+ - Update pexcept to fix shellquote issues in subprocesses.
+8.1.4:
+ - Tell users in compatibility mode how to exit the shell.
+ - Updated patched pip's vendored pkg-resources.
+8.1.3:
+ - Further improve patched pip, for crazy setup.py files.
+8.1.2:
+ - chdir option for project, for really stubborn people.
+8.1.1:
+ - Better exception handling when a corrupt virtualenv is being used.
+8.1.0:
+ - Better path handling.
+8.0.9:
+ - Bug when -r is passed in a subdirectory.
+8.0.8:
+ - Add verbose mode to Pip.
+8.0.7:
+ - Fix --skip-lock when verify_ssl = false.
+ - Always quote pip path.
+ - Fix --update.
+8.0.6:
+ - Fix indexes.
+8.0.5:
+ - $ pipenv open :module
+8.0.4:
+ - $ pipenv install --deploy.
+8.0.3:
+ - Improvements to dependency resolution against various versions of Python.
+ - Fix issue with nested directories all containing Pipfiles.
+ - Fix issue with --py when run outside of a project.
+ - Refactoring of virtualenv detection.
+ - Improvements to crayons library.
+ - PIPENV_DOTENV_LOCATION.
+8.0.1:
+ - Fix weird edge case with ramuel.ordereddict.
+8.0.0:
+ - new [pipenv] settings, allows for allows_prereleases=True, automatically set when using install --pre.
+7.9.10:
+ - Use urllib3 directly, for exceptions handling.
+7.9.9:
+ - Fix argument parsing.
+7.9.8:
+ - Fix argument parsing.
+7.9.7:
+ - Fix help printout screen (and update it).
+ - Use urllib3's warning suppression directly.
+7.9.6:
+ - Did you mean?
+7.9.5:
+ - More usage examples in help output.
+7.9.4:
+ - Support for editable extras.
+7.9.3:
+ - Use foreground color instead of white.
+7.9.2:
+ - UX cleanup.
+7.9.1:
+ - Bug fix with indexes.
+7.9.0:
+ - Bug fix with indexes.
+7.8.9:
+ - Fix for Heroku.
+7.8.8:
+ - Make --fancy default for windows users.
+7.8.7:
+ - Make resolver use client python for setup.py egg_info (very fancy).
+ - Fix a nasty windows bug.
+ - add --completion.
+ - add --man.
+7.8.6:
+ - Don't import code automatically, only use -c ..
+7.8.5:
+ - Edge case.
+7.8.4:
+ - Flake8 checking with check --style!
+7.8.3:
+ - $ pipenv check --unused.
+7.8.2:
+ - Fallback to toml parser for absurdly large files.
+7.8.1:
+ - Catch all exceptions in pipreqs.
+7.8.0:
+ - Packaging fix.
+7.7.9:
+ - Ignore bad packages with -c.
+7.7.8:
+ - Minor bug fix.
+7.7.7:
+ - $ pipenv install -c .
+7.7.6:
+ - Fix a very very minor UX bug.
+7.7.5:
+ - No longer eat editables, as pip-tools does it for us now.
+7.7.4:
+ - Install VCS deps into the virtualenv's src directory, not into the current directory.
+7.7.3:
+ - Fix --three on Windows.
+7.7.2:
+ - Bug fixes.
+7.7.1:
+ - Bug fixes.
+ - Improvements to --index support for requirements imports.
+7.7.0:
+ - Improved update caching mechanism.
+ - Only prompt for spelling correction in interactive sessions.
+ - Cleanup -e.
+7.6.9:
+ - Change --two, and --three to use --python 2 and --python 3 under the hood.
+ - This restores --two / --three usage on windows.
+7.6.8:
+ - `pipenv install -r requirements.txt --dev` now works.
+7.6.7:
+ - New less-fancy progress bars (for linux users, specifically).
+ - Support --python 3.
+7.6.6:
+ - Packaging problem.
+7.6.5:
+ - Patched vendored 'safety' package to remove yaml dependency — should work on all Pythons now.
+7.6.4:
+ - Extensive integration test suite.
+ - Don't suggest autocorrections as often.
+ - Cleanups.
+ - Don't depend on setuptools anymore.
+7.6.3:
+ - Cleanups.
+7.6.2:
+ - Support for install/lock --pre.
+7.6.1:
+ - Fix a nasty bug.
+7.6.0:
+ - PEP 508 marker support for packages!
+ - Better verbose mode for install.
+ - Fix a nasty bug.
+7.5.1:
+ - Skip the resolver for pinned versions (this comes up a lot).
+ - Maximum subprocesses (configurable) is now 8.
+7.5.0:
+ - Deprecate shell -c mode.
+ - Make a new shell --fancy mode (old default mode).
+ - Introduce PIPENV_SHELL_FANCY.
+ - Introduce `pipenv --envs`.
+7.4.9:
+ - Improvements to PIPENV_DEFAULT_PYTHON_VERSION.
+ - Improvements to auto-suggestions.
+ - Fix nasty bug with failing dependencies.
+7.4.8:
+ - PIPENV_DEFAULT_PYTHON_VERSION
+7.4.7:
+ - install --sequential, for boring people.
+ - PIPENV_DONT_LOAD_ENV.
+ - Fix for prettytoml.
+ - Don't add -e reqs to lockfile, as they're already present.
+7.4.6:
+ - Specify a specific index for a specific dependency.
+7.4.5:
+ - Support for custom indexes!
+ - Random bugfixes.
+7.4.4:
+ - PIPENV_PIPFILE environment variable support.
+ - --site-packages flag, for the crazy at heart.
+ - Installation concurrency on Windows.
+ - make `graph --json` consistent with `graph`.
+ - Much better support for suggesting package names.
+ - Updated to pipfile spec 4, support for path= for relative package names.
+ - Import sources from requirements files.
+ - Cleanup stderr/stdout.
+ - 'pipenv check' only reports safety now for Python 3.
+7.4.3:
+ - Download/install things concurrently.
+7.4.2:
+ - Fix a nasty pyenv bug.
+7.4.1:
+ - `graph --json`.
+7.4.0:
+ - `pipenv --where` fix.
+ - Other general improvements.
+7.3.9:
+ - Packaging fix.
+7.3.8:
+ - Packaging fix.
+7.3.7:
+ - Automatic support for .env files!
+ - Fuzzy finding of popular package names, for typos. Auto-suggested corrections for popular packages.
+ - Bug fixes.
+7.3.6:
+ - Fix VCS dependency resolution.
+7.3.5:
+ - Fix packaging.
+7.3.4:
+ - An error occurred.
+7.3.3:
+ - Pipenv check now includes security vulnerability disclosures!
+7.3.2:
+ - Vastly improved support for VCS dependencies.
+7.3.1:
+ - Advanced pyenv minor version support.
+ - Added support for "full_python_version".
+ - Added support for specifying minor versions of Python with `--python`.
+ - Removed "considering this to be project home" messaging from `pipenv install`.
+7.3.0:
+ - Added support for grabbing dependencies from -e requirements into dependency graph.
+7.2.9:
+ - Bug fixes.
+7.2.8:
+ - Vast improvements to python finding abilities (multiple pythons with the same name are now detected).
+7.2.7:
+ - Automatically convert outline TOML tables to inline tables (losing comments in the process).
+ - Bug fixes.
+7.2.6:
+ - Fix pip execution from within existing virtualenvs.
+7.2.5:
+ - Always tell patched pip what version of Python we're using.
+7.2.4:
+ - Improve compatibility with --system.
+ - Improve automatic --system use within shell spawning (disallowing it).
+7.2.3:
+ - Courtesy notice when running in a virtualenv.
+7.2.2:
+ - Improvements to pyenv detection.
+ - Refactorings, and general improvements
+7.2.1:
+ - Bug fix.
+7.2.0:
+ - Automatically install Pythons, if they aren't available and pyenv is setup!
+ - Fixes for when a requirements.txt file contains an !.
+ - Support for relative package paths (that wasn't easy either).
+ - Bug fixes.
+7.1.1:
+ - Fixes for windows (full compatibility restored — sorry!).
+ - Catch if graph is being run outside of a project directory.
+ - Catch if self-updater doesn't get a clean response from PyPI.
+ - Support Miniconda's `python --version` format
+7.1.0:
+ - Inline TOML tables for things like requests[security]!
+ - Attempt to preserve comments in Pipfiles.
+7.0.6:
+ - NO_SPIN is now automatic when CI is set.
+ - Additionally, vendor pip (a patched version) for doing advanced dependency resolution.
+7.0.5:
+ - Depend on latest version of pip.
+7.0.4:
+ - Bug fix.
+7.0.3:
+ - Windows fixes.
+7.0.2:
+ - Tell pip we're using the required Python version, with trickery, for dependency resolution.
+ - Dev dependencies are now read from a lockfile before default dependencies, so
+   any mismatches will prefer default to develop.
+ - Add support for extras_require in Pipfile for vcs urls.
+ - Warn if 'which' is not found on the system.
+ - Warn if Pew or Virtualenv isn't in the PATH.
+ - More consistent stderr output.
+7.0.1:
+ - [requires] python_version is now set for new projects, automatically
+   if a version of Python was specified.
+ - That wasn't easy.
+7.0.0:
+ - New path handling for --python, versions like '3.6' are now supported.
+ - [requires] python_version is automatically honored.
+6.2.9:
+ - Bug fix.
+6.2.8:
+ - Bug fix.
+6.2.7:
+ - pip run --system is now default.
+6.2.6:
+ - Snakes, all the way down (and easter eggs for holidays!)
+ - Much improved CLI output.
+ - Introduction of PIPENV_HIDE_EMOJIS environment variable.
+ - Guide users to set LANG and LC_ALL.
+6.2.5:
+ - Bug fix for 2.7.
+6.2.4:
+ - UX Improvements.
+ - Install un-installable dependencies, anyway.
+6.2.3:
+ - Bug fixes and improvements.
+ - Add refs to lockfile for VCS dependencies.
+ - Don't re-capitalize URLs.
+ - Specify a requirements file to import from, with install --requirements / -r
+ - Install dependencies for VCS installs.
+6.2.2:
+ - Bug fix.
+ - Support for passwords in git URLs.
+6.2.1:
+ - Quick fix.
+6.2.0:
+ - Support for arbitrary files (e.g. pipenv install URL)!
+ - $ pipenv graph!
+ - $ pipenv run --system ipython.
+ - Skip virtualenv creation when --system is passed to install.
+ - Removal of lock --legacy.
+ - Improvements to locking mechanism integrity.
+ - Introduction of $ pipenv --jumbotron.
+ - Internal refactoring/code reduction.
+6.1.6:
+ - Fix for Windows.
+6.1.5:
+ - Grab hashes for un-grabbable hashes.
+6.1.4:
+ - New update via $ pipenv --update, instead.
+6.1.3:
+ - Skip validation of Pipfiles, massive speedup for far-away users.
+ - Other speed-ups.
+6.1.1:
+ - Bug fix.
+6.1.0:
+ - Self–updating! Very fancy. $ pipenv update.
+ - Verbose mode for update, install.
+6.0.3:
+ - Major bug fix.
+ - Fix for Daniel Ryan's weird corner case.
+6.0.2:
+ - Fix Python 2 regression.
+6.0.1:
+ - Minor (major) bug fix.
+6.0.0:
+ - New locking functionality — support for multiple hashes per release!
+ - Hashes are now default, everywhere, once again! We figured it out :)
+ - Pipenv talks to the PyPi (Warehouse) API now for grabbing hashes.
+ - --hashes flag removed.
+ - Upgraded to Pipfile spec 2.
+ - New --legacy mode for lock.
+5.4.3:
+ - Fix for windows.
+5.4.2:
+ - Compatibility improvement with `run`.
+5.4.1:
+ - Fix for packaging.
+ - $PIPENV_SKIP_VALIDATION.
+5.4.0:
+ - Automatically load PATH from virtualenv, before running `pipenv shell`.
+ - Addition of `pipenv lock --verbose`.
+ - Vendor 'background' library.
+5.3.5:
+ - Addition of update --dry-run.
+ - Removal of install --lock option.
+5.3.4:
+ - Fix pip index passing.
+5.3.3:
+ - Automatic notification of version updates.
+5.3.2:
+ - Automatic locking after install/uninstall (because it's fast now!)
+5.3.1:
+ - Improvements for windows.
+5.3.0:
+ - Mega fast pipenv lock!
+ - Drop of Python 2.6.
+5.2.0:
+ - Introduce install --skip-lock.
+ - Bugfixes.
+5.1.3:
+ - Updated delegator.py to 0.0.13
+5.1.2:
+ - Add missing cacerts.pem file to MANIFEST.in
+ - Improve error message when running `pipenv shell` multiple times.
+ - Fixed translation for editable installs from requirements.txt to Pipfile.
+5.1.1:
+ - Bug fix
+5.1.0:
+ - Add PIPENV_TIMEOUT environment variable for custom timeouts.
+ - Remove PIPENV_DEFAULT_THREE.
+5.0.0:
+ - Automatically utilize virtualenvs when they are activated.
+ - PIPENV_DEFAULT_THREE.
+4.1.4:
+ - Fix regression in `pipenv lock -r` functionality.
+4.1.3:
+ - Fix support for `pipenv install -e .`
+4.1.2:
+ - Lazy load requirements for speed improvements.
+ - Better messaging on failed installs.
+ - More accurate logging for installation progress.
+4.1.1:
+ - Remove old references
+4.1.0:
+ - Properly handle extras on requirements with versions.
+ - Accept the -e (editable) flag in pipenv install.
+ - Progress Bars!
+ - Minor optimizations to the install process.
+4.0.1:
+ - Pin Sphinx requirement at a Python 2.6 compatible version.
+4.0.0:
+ - Make --no-hashes default, introduce --hashes.
+ - Fix for key error when uninstalling [dev-]packages
+3.6.2:
+ - Fix bug introduced into `pipenv install` in 3.6.1.
+3.6.1:
+ - pipenv install now works if only a requirements.txt is present.
+ - `pipenv uninstall` now uninstalls from dev-packages as intended.
+3.6.0:
+ - Make --two/--three handling more consistent.
+ - Update vendored delegator.py.
+ - Fix erroneous error messages in certain command combinations.
+ - Better version number handling for post releases.
+ - Bug fixes for some Windows environments (specifically Appveyor).
+3.5.6:
+ - Fix broken help prompt.
+3.5.5:
+ - Automatically cleanup virtualenv on keyboard interrupt.
+ - General improvements.
+3.5.4:
+ - Bug fixes.
+ - Message formatting cleanup.
+3.5.3:
+ - Add six to vendored libraries.
+ - Support for --ignore-hashes added to install command.
+ - Support for --no-hashes for lock command.
+3.5.2:
+ - Vendor all the things!
+ - get-pipenv.py.
+3.5.1:
+ - Basic Windows support!
+3.5.0
+ - Fully support multiple sources in Pipfile.
+ - Support multiple project directories with same name.
+ - Better support for non-standard project directory names.
+ - Support for VCS dependencies.
+3.4.2
+ - Attempt installing from all sources in Pipfile.
+ - Fix bug with accidental deletion of Pipfile contents.
+ - Update dependencies to work correctly with pipsi.
+3.4.1
+ - --no-interactive mode now activates automatically when needed.
+3.4.0
+ - --no-interactive mode added.
+ - Properly handle non-standard versioning schemes including Epochs.
+ - Handle percent-encoded filenames.
+ - Fixed Bug with Pipfile initializations.
+ - Streamlined file locations for projects.
+ - Improved package name resolution.
+ - Testing!
+3.3.6:
+ - $ pipenv --venv option.
+ - $ pipenv --rm option.
+3.3.5:
+- Disable spinner by setting PIPENV_NOSPIN=1 environment variable.
+3.3.4:
+ - Fix PIPENV_VENV_IN_PROJECT mode.
+ - Fix PIPENV_SHELL_COMPAT mode.
+3.3.3:
+ - Spinners!
+ - Shell compatibility mode ($ pipenv shell -c).
+ - Classic virtualenv location (within project) mode.
+ - Removal of $ pipenv install --requirements.
+ - Addition of $ pipenv lock -r.
+3.3.2:
+ - User-configurable max-depth for Pipfile searching.
+ - Bugfix.
+3.3.1:
+ - Bugfix for install.
+3.3.0:
+ - Use pew to manage virtual environments.
+ - Improved dashed version parsing.
+3.2.14:
+ - Give --python precedence over --three/--two.
+ - Improvements for lockfile output for specific problematic packages.
+ - Bug fixes.
+3.2.13:
+ - Improved stderr output for --requirements.
+ - Bug fixes.
+3.2.12:
+ - Disable colors by setting PIPENV_COLORBLIND=1 environment variable.
+3.2.11:
+ - Properly use pinned versions from Pipfile in Pipfile.lock
+3.2.10:
+ - Fix bugs.
+3.2.9:
+ - Remove temporary requirements.txt after installation.
+ - Add support for --python option, for specifying any version of Python.
+ - Read source Pipfile.lock.
+3.2.8:
+ - Lock before installing all dependencies, if lockfile isn't present.
+3.2.7:
+ - Cache proper names for great speed increases.
+3.2.6:
+ - Bug fixes.
+3.2.5:
+ - Significant speed improvements for pipenv run and pipenv shell.
+ - Shell completion via click-completion.
+ - Perform package name normalization as best effort attempt.
+3.2.4:
+ - $ pipenv uninstall --all
+ - Don't uninstall setuptools, wheel, pip, or six.
+ - Improvements to Pipfile re-ordering when writing.
+ - Fix proper casing mechanism.
+ - Prevent invalid shebangs with Homebrew Python.
+ - Fix parsing issues with https://pypi.org/simple.
+ - Depend on 'pipfile' package.
+3.2.3:
+ - $ pip uninstall --dev
+ - Minor refactoring.
+ - Improved error messaging for missing SHELL environment variables.
+3.2.2:
+ - Better support for fish terminal.
+3.2.1:
+ - Ensure proper casing of all Pipfile-specified packages.
+3.2.0:
+ - Improved proper casing handling for mis-named packages.
+ - Support for $ pipenv install django-debug-toolbar.
+ - Minor cleanups.
+ - Fix for Python 3.
+3.1.9:
+ - Bug fix.
+3.1.8:
+ - Bug fix.
+3.1.7:
+ - Actual Python 3 fix.
+3.1.6:
+ - Python 3 fix.
+3.1.5:
+ - Proper name resolver!
+3.1.4:
+ - $ pip install --requirements.
+3.1.3:
+ - Python 3 fix.
+3.1.2:
+ - Python 3 fix.
+3.1.1:
+ - Improved pip output (integrate with tool better).
+ - Pass exit code of $ pipenv run commands.
+3.1.0:
+ - Check hashes upon installation!
+3.0.1:
+ - Oops, version jump.
+ - Fix for $ pip uninstall --lock.
+3.0.0:
+ - Speed of locking improved.
+ - Lock now uses downloads instead of installation functionality.
+ - Lock fix.
+ - Removed $ pipenv install -r functionality.
+ - Removal of $ pipenv lock --dev.
+ - Addition of $ pipenv install/uninstall --lock.
+ - Preliminary (non-enforced) hash functionality.
+0.2.9:
+ - Enhanced–enhanced PEP 508 checking capabilities!
+0.2.8:
+ - Enhanced PEP 508 checking capabilities!
+0.2.7:
+ - Better workflow options for --three / --two.
+0.2.6:
+ - Fix for bash shell invocation.
+ - Better support for comments in requirements.txt files.
+ - Support for Pipfile's [[source]].
+ - Pretty colors for help.
+ - Refactors.
+0.2.5:
+ - Enhanced terminal resizing.
+ - Cleanups from PRs: typos.
+ - Better --where output when no Pipfile is present.
+ - Fix for Python 3.
+ - Rely directly on pexpect.
+0.2.4:
+ - Fix for bash shell.
+0.2.3:
+ - Support for Fish and Csh shells.
+0.2.1:
+ - Trove classifiers.
+0.2.0:
+ - Added support for $ pipenv --three / --two, for initializing virtualenvs with a specific Python version.
+ - Added support for VCS-backed installs, including editables.
+ - TODO: Still need to support non-git-backed VCS installations in Pipfiles.
