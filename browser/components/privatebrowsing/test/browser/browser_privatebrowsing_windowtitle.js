@@ -23,14 +23,14 @@ add_task(async function test() {
   if (isOSX) {
     page_with_title = test_title;
     page_without_title = app_name;
-    about_pb_title = app_name;
+    about_pb_title = "Open a private window?";
     pb_page_with_title = test_title + " - (Private Browsing)";
     pb_page_without_title = app_name + " - (Private Browsing)";
     pb_about_pb_title = app_name + " - (Private Browsing)";
   } else {
     page_with_title = test_title + " - " + app_name;
     page_without_title = app_name;
-    about_pb_title = app_name;
+    about_pb_title = "Open a private window? - " + app_name;
     pb_page_with_title = test_title + " - " + app_name + " (Private Browsing)";
     pb_page_without_title = app_name + " (Private Browsing)";
     pb_about_pb_title = app_name + " (Private Browsing)";
