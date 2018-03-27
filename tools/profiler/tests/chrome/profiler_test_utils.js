@@ -42,38 +42,12 @@ function end(error) {
   SimpleTest.finish();
 }
 
-function getBufferInfo() {
-  let position = {}, totalSize = {}, generation = {};
-  Services.profiler.GetBufferInfo(position, totalSize, generation);
-  return {
-    position: position.value,
-    totalSize: totalSize.value,
-    generation: generation.value
-  };
-}
-
-async function runTest(settings, workload,
-                       checkProfileCallback = function(profile) {}) {
+async function runTest(settings, workload) {
   SimpleTest.waitForExplicitFinish();
   try {
     await startProfiler(settings);
-
-    // Run workload() one or more times until at least one sample has been taken.
-    const bufferInfoAtStart = getBufferInfo();
-    while (true) {
-      await workload();
-      const bufferInfoAfterWorkload = getBufferInfo();
-      if (bufferInfoAfterWorkload.generation > bufferInfoAtStart.generation ||
-          bufferInfoAfterWorkload.position > bufferInfoAtStart.position) {
-        // The buffer position advanced, so we've either added a marker or a
-        // sample. It would be better to have conclusive evidence that we
-        // actually have a sample...
-        break;
-      }
-    }
-
-    const profile = await getProfile();
-    await checkProfileCallback(profile);
+    await workload();
+    await getProfile();
     await stopProfiler();
     await end();
   } catch (e) {
