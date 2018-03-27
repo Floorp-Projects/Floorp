@@ -2,11 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-function run_test() {
+add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  startupManager();
-  run_next_test();
-}
+  await promiseStartupManager();
+});
 
 add_task(async function() {
   let profileDir = OS.Constants.Path.profileDir;
