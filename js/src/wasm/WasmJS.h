@@ -126,6 +126,7 @@ class WasmGlobalObject : public NativeObject
 
     static const ClassOps classOps_;
     static void finalize(FreeOp*, JSObject* obj);
+    static void trace(JSTracer* trc, JSObject* obj);
 
     static bool valueGetterImpl(JSContext* cx, const CallArgs& args);
     static bool valueGetter(JSContext* cx, unsigned argc, Value* vp);
@@ -136,10 +137,14 @@ class WasmGlobalObject : public NativeObject
     // For exposed globals the Cell holds the value of the global; the
     // instance's global area holds a pointer to the Cell.
     union Cell {
-        int32_t i32;
-        int64_t i64;
-        float   f32;
-        double  f64;
+        int32_t     i32;
+        int64_t     i64;
+        float       f32;
+        double      f64;
+        GCPtrObject ptr;
+
+        Cell() : i64(0) {}
+        ~Cell() {}
     };
 
     static const unsigned RESERVED_SLOTS = 3;
