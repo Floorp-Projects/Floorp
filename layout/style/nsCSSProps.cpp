@@ -3082,33 +3082,4 @@ nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
 #undef CSS_PROP
 };
 
-// Check that all logical property flags are used appropriately.
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,         \
-                 kwtable_, stylestruct_, stylestructoffset_, animtype_)     \
-  static_assert(!((flags_) & CSS_PROPERTY_LOGICAL),                         \
-                "only properties defined with CSS_PROP_LOGICAL can use "    \
-                "the CSS_PROPERTY_LOGICAL flag");                           \
-  static_assert(!((flags_) & CSS_PROPERTY_LOGICAL_AXIS),                    \
-                "only properties defined with CSS_PROP_LOGICAL can use "    \
-                "the CSS_PROPERTY_LOGICAL_AXIS flag");                      \
-  static_assert(!((flags_) & CSS_PROPERTY_LOGICAL_BLOCK_AXIS),              \
-                "only properties defined with CSS_PROP_LOGICAL can use "    \
-                "the CSS_PROPERTY_LOGICAL_BLOCK_AXIS flag");                \
-  static_assert(!((flags_) & CSS_PROPERTY_LOGICAL_END_EDGE),                \
-                "only properties defined with CSS_PROP_LOGICAL can use "    \
-                "the CSS_PROPERTY_LOGICAL_END_EDGE flag");
-#define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, \
-                         kwtable_, stylestruct_,                            \
-                         stylestructoffset_, animtype_)                     \
-  static_assert((flags_) & CSS_PROPERTY_LOGICAL,                            \
-                "properties defined with CSS_PROP_LOGICAL must also use "   \
-                "the CSS_PROPERTY_LOGICAL flag");                           \
-  static_assert(!(((flags_) & CSS_PROPERTY_LOGICAL_AXIS) &&                 \
-                  ((flags_) & CSS_PROPERTY_LOGICAL_END_EDGE)),              \
-                "CSS_PROPERTY_LOGICAL_END_EDGE makes no sense when used "   \
-                "with CSS_PROPERTY_LOGICAL_AXIS");
-#include "nsCSSPropList.h"
-#undef CSS_PROP_LOGICAL
-#undef CSS_PROP
-
 #include "nsCSSPropsGenerated.inc"
