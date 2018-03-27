@@ -138,7 +138,7 @@ private:
   RefPtr<CustomElementDefinition> mCustomElementDefinition;
 };
 
-#define ALEADY_CONSTRUCTED_MARKER nullptr
+#define ALREADY_CONSTRUCTED_MARKER nullptr
 
 // The required information for a custom element as defined in:
 // https://html.spec.whatwg.org/multipage/scripting.html#custom-element-definition
