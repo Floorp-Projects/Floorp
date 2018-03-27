@@ -318,8 +318,12 @@
       ];
 
       this.invoke = function insertReferredElm_invoke() {
-        this.containerNode.unsafeSetInnerHTML(
-          "<span id='insertReferredElms_span'></span><input aria-labelledby='insertReferredElms_span'>");
+        let span = document.createElement("span");
+        span.setAttribute("id", "insertReferredElms_span");
+        let input = document.createElement("input");
+        input.setAttribute("aria-labelledby", "insertReferredElms_span");
+        this.containerNode.appendChild(span);
+        this.containerNode.appendChild(input);
       };
 
       this.getID = function insertReferredElm_getID() {
