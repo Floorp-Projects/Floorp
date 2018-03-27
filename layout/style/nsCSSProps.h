@@ -126,46 +126,12 @@
 
 #define CSS_PROPERTY_VALUE_LIST_USES_COMMAS       (1<<1) /* otherwise spaces */
 
-#define CSS_PROPERTY_APPLIES_TO_FIRST_LETTER      (1<<2)
-#define CSS_PROPERTY_APPLIES_TO_FIRST_LINE        (1<<3)
-#define CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE \
-  (CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_APPLIES_TO_FIRST_LINE)
-
-// A property that needs to have image loads started when a URL value
-// for the property is used for an element.  This is supported only
-// for a few possible value formats: image directly in the value; list
-// of images; and with CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0, image in slot
-// 0 of an array, or list of such arrays.
-#define CSS_PROPERTY_START_IMAGE_LOADS            (1<<5)
-
-// Should be set only for properties with START_IMAGE_LOADS.  Indicates
-// that the property has an array value with a URL/image value at index
-// 0 in the array, rather than the URL/image being in the value or value
-// list.
-#define CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0          (1<<6)
-
-// This property allows calc() between lengths and percentages and
-// stores such calc() expressions in its style structs (typically in an
-// nsStyleCoord, although this is not the case for 'background-position'
-// and 'background-size').
-#define CSS_PROPERTY_STORES_CALC                  (1<<8)
-
 // Define what mechanism the CSS parser uses for parsing the property.
 // See CSSParserImpl::ParseProperty(nsCSSPropertyID).  Don't use 0 so that
 // we can verify that every property sets one of the values.
-//
-// CSS_PROPERTY_PARSE_FUNCTION must be used for shorthand properties,
-// since it's the only mechanism that allows appending values for
-// separate properties.  Longhand properties that require custom parsing
-// functions should prefer using CSS_PROPERTY_PARSE_VALUE (or
-// CSS_PROPERTY_PARSE_VALUE_LIST) and
-// CSS_PROPERTY_VALUE_PARSER_FUNCTION, though a number of existing
-// longhand properties use CSS_PROPERTY_PARSE_FUNCTION instead.
 #define CSS_PROPERTY_PARSE_PROPERTY_MASK          (7<<9)
 #define CSS_PROPERTY_PARSE_INACCESSIBLE           (1<<9)
 #define CSS_PROPERTY_PARSE_FUNCTION               (2<<9)
-#define CSS_PROPERTY_PARSE_VALUE                  (3<<9)
-#define CSS_PROPERTY_PARSE_VALUE_LIST             (4<<9)
 
 // See CSSParserImpl::ParseSingleValueProperty and comment above
 // CSS_PROPERTY_PARSE_FUNCTION (which is different).
@@ -174,26 +140,11 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
                CSS_PROPERTY_VALUE_PARSER_FUNCTION) == 0,
               "didn't leave enough room for the parse property constants");
 
-// Does this property support the hashless hex color quirk in quirks mode?
-#define CSS_PROPERTY_HASHLESS_COLOR_QUIRK         (1<<15)
-
-// Does this property support the unitless length quirk in quirks mode?
-#define CSS_PROPERTY_UNITLESS_LENGTH_QUIRK        (1<<16)
-
 // There's a free bit here.
-
-// Does the property apply to ::placeholder?
-#define CSS_PROPERTY_APPLIES_TO_PLACEHOLDER       (1<<18)
-
-// This property is allowed in an @page rule.
-#define CSS_PROPERTY_APPLIES_TO_PAGE_RULE         (1<<19)
 
 // This property's getComputedStyle implementation requires layout to be
 // flushed.
 #define CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH     (1<<20)
-
-// This property requires a stacking context.
-#define CSS_PROPERTY_CREATES_STACKING_CONTEXT     (1<<21)
 
 // The following two flags along with the pref defines where the this
 // property can be used:
@@ -217,9 +168,6 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 #define CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME \
   (CSS_PROPERTY_ENABLED_IN_UA_SHEETS | CSS_PROPERTY_ENABLED_IN_CHROME)
 
-// This property's unitless values are pixels.
-#define CSS_PROPERTY_NUMBERS_ARE_PIXELS           (1<<24)
-
 // This property can be animated on the compositor.
 #define CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR    (1<<27)
 
@@ -227,11 +175,6 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // in the DOM.  Properties with this flag must be defined in an #ifndef
 // CSS_PROP_LIST_EXCLUDE_INTERNAL section of nsCSSPropList.h.
 #define CSS_PROPERTY_INTERNAL                     (1<<28)
-
-// This property should add Cross Origin Request headers to any loads
-// that it triggers. Currently this is only used for properties that
-// also use CSS_PROPERTY_START_IMAGE_LOADS.
-#define CSS_PROPERTY_LOAD_USE_CORS                (1U<<31)
 
 /**
  * Types of animatable values.
