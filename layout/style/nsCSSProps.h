@@ -124,9 +124,6 @@
 
 // Flags for the kFlagsTable bitfield (flags_ in nsCSSPropList.h)
 
-// This property is a logical property (such as padding-inline-start).
-#define CSS_PROPERTY_LOGICAL                      (1<<0)
-
 #define CSS_PROPERTY_VALUE_LIST_USES_COMMAS       (1<<1) /* otherwise spaces */
 
 #define CSS_PROPERTY_APPLIES_TO_FIRST_LETTER      (1<<2)
@@ -146,15 +143,6 @@
 // 0 in the array, rather than the URL/image being in the value or value
 // list.
 #define CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0          (1<<6)
-
-// This is a logical property that represents some value associated with
-// a logical axis rather than a logical box side, and thus has two
-// corresponding physical properties it could set rather than four.  For
-// example, the block-size logical property has this flag set, as it
-// represents the size in either the block or inline axis dimensions, and
-// has two corresponding physical properties, width and height.  Must not
-// be used in conjunction with CSS_PROPERTY_LOGICAL_END_EDGE.
-#define CSS_PROPERTY_LOGICAL_AXIS                 (1<<7)
 
 // This property allows calc() between lengths and percentages and
 // stores such calc() expressions in its style structs (typically in an
@@ -231,21 +219,6 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 
 // This property's unitless values are pixels.
 #define CSS_PROPERTY_NUMBERS_ARE_PIXELS           (1<<24)
-
-// This property is a logical property for one of the two block axis
-// sides (such as margin-block-start or margin-block-end).  Must only be
-// set if CSS_PROPERTY_LOGICAL is set.  When not set, the logical
-// property is for one of the two inline axis sides (such as
-// margin-inline-start or margin-inline-end).
-#define CSS_PROPERTY_LOGICAL_BLOCK_AXIS           (1<<25)
-
-// This property is a logical property for the "end" edge of the
-// axis determined by the presence or absence of
-// CSS_PROPERTY_LOGICAL_BLOCK_AXIS (such as margin-block-end or
-// margin-inline-end).  Must only be set if CSS_PROPERTY_LOGICAL is set.
-// When not set, the logical property is for the "start" edge (such as
-// margin-block-start or margin-inline-start).
-#define CSS_PROPERTY_LOGICAL_END_EDGE             (1<<26)
 
 // This property can be animated on the compositor.
 #define CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR    (1<<27)
