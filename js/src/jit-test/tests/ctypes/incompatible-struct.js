@@ -2,7 +2,7 @@ load(libdir + 'asserts.js');
 
 function test() {
   assertTypeErrorMessage(() => { ctypes.StructType("a").define.call(1); },
-                         "StructType.prototype.define called on incompatible object, got the object (new Number(1))");
+                         "StructType.prototype.define called on incompatible object, got the number 1");
   assertTypeErrorMessage(() => { ctypes.StructType("a").define.call(ctypes.int32_t); },
                          "StructType.prototype.define called on non-StructType, got ctypes.int32_t");
 
@@ -22,7 +22,7 @@ function test() {
                          "StructType property setter called on non-StructType CData, got ctypes.int32_t(0)");
 
   assertTypeErrorMessage(() => { ctypes.StructType("a", [])().addressOfField.call(1); },
-                         "StructType.prototype.addressOfField called on incompatible object, got the object (new Number(1))");
+                         "StructType.prototype.addressOfField called on incompatible object, got the number 1");
   assertTypeErrorMessage(() => { ctypes.StructType("a", [])().addressOfField.call(ctypes.int32_t(0)); },
                          "StructType.prototype.addressOfField called on non-StructType CData, got ctypes.int32_t(0)");
 }

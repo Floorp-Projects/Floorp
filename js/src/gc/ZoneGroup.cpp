@@ -17,8 +17,7 @@ namespace js {
 
 ZoneGroup::ZoneGroup(JSRuntime* runtime)
   : runtime(runtime),
-    ownerContext_(TlsContext.get()),
-    enterCount(1),
+    helperThreadOwnerContext_(nullptr),
     zones_(this),
     helperThreadUse(HelperThreadUse::None),
 #ifdef DEBUG
@@ -60,51 +59,18 @@ ZoneGroup::~ZoneGroup()
 }
 
 void
-ZoneGroup::enter(JSContext* cx)
+ZoneGroup::setHelperThreadOwnerContext(JSContext* cx)
 {
-    if (ownerContext().context() == cx) {
-        MOZ_ASSERT(enterCount);
-    } else {
-        if (useExclusiveLocking()) {
-            MOZ_ASSERT(!usedByHelperThread());
-            while (ownerContext().context() != nullptr) {
-                cx->yieldToEmbedding();
-            }
-        }
-        MOZ_RELEASE_ASSERT(ownerContext().context() == nullptr);
-        MOZ_ASSERT(enterCount == 0);
-        ownerContext_ = CooperatingContext(cx);
-        if (cx->generationalDisabled)
-            nursery().disable();
-
-        // Finish any Ion compilations in this zone group, in case compilation
-        // finished for some script in this group while no thread was in this
-        // group.
-        jit::AttachFinishedCompilations(this, nullptr);
-    }
-    enterCount++;
-}
-
-void
-ZoneGroup::leave()
-{
-    MOZ_ASSERT(ownedByCurrentThread());
-    MOZ_ASSERT(enterCount);
-    if (--enterCount == 0)
-        ownerContext_ = CooperatingContext(nullptr);
+    MOZ_ASSERT_IF(cx, TlsContext.get() == cx);
+    helperThreadOwnerContext_ = cx;
 }
 
 bool
-ZoneGroup::canEnterWithoutYielding(JSContext* cx)
+ZoneGroup::ownedByCurrentHelperThread()
 {
-    return ownerContext().context() == cx || ownerContext().context() == nullptr;
-}
-
-bool
-ZoneGroup::ownedByCurrentThread()
-{
+    MOZ_ASSERT(usedByHelperThread());
     MOZ_ASSERT(TlsContext.get());
-    return ownerContext().context() == TlsContext.get();
+    return helperThreadOwnerContext_ == TlsContext.get();
 }
 
 ZoneGroup::IonBuilderList&
@@ -156,26 +122,3 @@ ZoneGroup::deleteEmptyZone(Zone* zone)
 }
 
 } // namespace js
-
-JS::AutoRelinquishZoneGroups::AutoRelinquishZoneGroups(JSContext* cx)
-  : cx(cx)
-{
-    MOZ_ASSERT(cx == TlsContext.get());
-
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    for (ZoneGroupsIter group(cx->runtime()); !group.done(); group.next()) {
-        while (group->ownerContext().context() == cx) {
-            group->leave();
-            if (!enterList.append(group))
-                oomUnsafe.crash("AutoRelinquishZoneGroups");
-        }
-    }
-}
-
-JS::AutoRelinquishZoneGroups::~AutoRelinquishZoneGroups()
-{
-    for (size_t i = 0; i < enterList.length(); i++) {
-        ZoneGroup* group = static_cast<ZoneGroup*>(enterList[i]);
-        group->enter(cx);
-    }
-}

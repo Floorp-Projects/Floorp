@@ -88,10 +88,8 @@ public:
     after_cert_verification
   };
   void SetCertVerificationWaiting();
-  // Use errorCode == 0 to indicate success; in that case, errorMessageType is
-  // ignored.
-  void SetCertVerificationResult(PRErrorCode errorCode,
-              ::mozilla::psm::SSLErrorMessageType errorMessageType);
+  // Use errorCode == 0 to indicate success;
+  void SetCertVerificationResult(PRErrorCode errorCode);
 
   // for logging only
   PRBool IsWaitingForCertVerification() const

@@ -102,9 +102,21 @@ CompileRuntime::wellKnownSymbols()
 }
 
 const void*
-CompileRuntime::addressOfActiveJSContext()
+CompileRuntime::mainContextPtr()
 {
-    return runtime()->addressOfActiveContext();
+    return runtime()->mainContextFromAnyThread();
+}
+
+const void*
+CompileRuntime::addressOfJitStackLimit()
+{
+    return runtime()->mainContextFromAnyThread()->addressOfJitStackLimit();
+}
+
+const void*
+CompileRuntime::addressOfInterrupt()
+{
+    return runtime()->mainContextFromAnyThread()->addressOfInterrupt();
 }
 
 #ifdef DEBUG
@@ -158,12 +170,6 @@ CompileZone::addressOfIonBailAfter()
     return zone()->group()->addressOfIonBailAfter();
 }
 #endif
-
-const void*
-CompileZone::addressOfJSContext()
-{
-    return zone()->group()->addressOfOwnerContext();
-}
 
 const void*
 CompileZone::addressOfNeedsIncrementalBarrier()

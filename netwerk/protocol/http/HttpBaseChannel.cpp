@@ -3632,6 +3632,11 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   rv = httpChannel->SetTopLevelOuterContentWindowId(mTopLevelOuterContentWindowId);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
+  // Not setting this flag would break carrying permissions down to the child process
+  // when the channel is artificially forced to be a main document load.
+  rv = httpChannel->SetIsMainDocumentChannel(mForceMainDocumentChannel);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
   // Preserve the loading order
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(newChannel);
   if (p) {

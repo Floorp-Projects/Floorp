@@ -583,7 +583,7 @@ class JavaCallbackDelegate final : public nsIAndroidEventCallback
     }
 
 public:
-    JavaCallbackDelegate(java::EventCallback::Param aCallback)
+    explicit JavaCallbackDelegate(java::EventCallback::Param aCallback)
         : mCallback(jni::GetGeckoThreadEnv(), aCallback)
     {}
 

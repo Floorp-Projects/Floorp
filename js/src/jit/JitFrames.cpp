@@ -1301,9 +1301,9 @@ TraceJitActivation(JSTracer* trc, JitActivation* activation)
 }
 
 void
-TraceJitActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc)
+TraceJitActivations(JSContext* cx, JSTracer* trc)
 {
-    for (JitActivationIterator activations(cx, target); !activations.done(); ++activations)
+    for (JitActivationIterator activations(cx); !activations.done(); ++activations)
         TraceJitActivation(trc, activations->asJit());
 }
 
@@ -1312,12 +1312,10 @@ UpdateJitActivationsForMinorGC(JSRuntime* rt)
 {
     MOZ_ASSERT(JS::CurrentThreadIsHeapMinorCollecting());
     JSContext* cx = TlsContext.get();
-    for (const CooperatingContext& target : rt->cooperatingContexts()) {
-        for (JitActivationIterator activations(cx, target); !activations.done(); ++activations) {
-            for (OnlyJSJitFrameIter iter(activations); !iter.done(); ++iter) {
-                if (iter.frame().type() == JitFrame_IonJS)
-                    UpdateIonJSFrameForMinorGC(iter.frame());
-            }
+    for (JitActivationIterator activations(cx); !activations.done(); ++activations) {
+        for (OnlyJSJitFrameIter iter(activations); !iter.done(); ++iter) {
+            if (iter.frame().type() == JitFrame_IonJS)
+                UpdateIonJSFrameForMinorGC(iter.frame());
         }
     }
 }
