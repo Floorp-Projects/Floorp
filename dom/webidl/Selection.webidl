@@ -18,6 +18,10 @@ interface Selection {
   readonly attribute boolean       isCollapsed;
   readonly attribute unsigned long rangeCount;
   readonly attribute DOMString     type;
+  /**
+   * Returns the range at the specified index.  Throws if the index is
+   * out of range.
+   */
   [Throws]
   Range     getRangeAt(unsigned long index);
   /**
