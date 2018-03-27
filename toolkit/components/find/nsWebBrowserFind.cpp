@@ -353,7 +353,7 @@ IsInNativeAnonymousSubtree(nsIContent* aContent)
 
 void
 nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
-                                        nsIDOMRange* aRange)
+                                        nsRange* aRange)
 {
   nsCOMPtr<nsIDocument> doc = aWindow->GetDoc();
   if (!doc) {
@@ -365,9 +365,7 @@ nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
     return;
   }
 
-  nsRange* range = static_cast<nsRange*>(aRange);
-
-  nsCOMPtr<nsINode> node = range->GetStartContainer();
+  nsCOMPtr<nsINode> node = aRange->GetStartContainer();
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
   nsIFrame* frame = content->GetPrimaryFrame();
   if (!frame) {
@@ -391,14 +389,12 @@ nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
     }
   }
 
-  nsCOMPtr<nsISelection> selection;
-
   selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                       getter_AddRefs(selection));
+  RefPtr<Selection> selection =
+    selCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
   if (selection) {
     selection->RemoveAllRanges();
-    selection->AddRange(aRange);
+    selection->AddRange(*aRange, IgnoreErrors());
 
     nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
     if (fm) {
@@ -754,7 +750,7 @@ nsWebBrowserFind::SearchInFrame(nsPIDOMWindowOuter* aWindow, bool aWrapping,
     sel->RemoveAllRanges();
     // Beware! This may flush notifications via synchronous
     // ScrollSelectionIntoView.
-    SetSelectionAndScroll(aWindow, foundRange);
+    SetSelectionAndScroll(aWindow, static_cast<nsRange*>(foundRange.get()));
   }
 
   return rv;

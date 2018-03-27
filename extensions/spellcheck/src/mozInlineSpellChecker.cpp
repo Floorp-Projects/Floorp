@@ -962,11 +962,10 @@ mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, int32_t aOffset,
 
     AutoPlaceholderBatch phb(mTextEditor, nullptr);
 
-    nsCOMPtr<nsISelection> selection;
-    res = mTextEditor->GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(res, res);
+    RefPtr<Selection> selection = mTextEditor->GetSelection();
+    NS_ENSURE_TRUE(selection, NS_ERROR_UNEXPECTED);
     selection->RemoveAllRanges();
-    selection->AddRange(editorRange);
+    selection->AddRange(*editorRange, IgnoreErrors());
 
     MOZ_ASSERT(mTextEditor);
     mTextEditor->InsertText(newword);
@@ -1711,8 +1710,8 @@ mozInlineSpellChecker::RemoveRange(Selection *aSpellCheckSelection,
 //    bound, stop adding the ranges
 
 nsresult
-mozInlineSpellChecker::AddRange(nsISelection* aSpellCheckSelection,
-                                nsIDOMRange* aRange)
+mozInlineSpellChecker::AddRange(Selection* aSpellCheckSelection,
+                                nsRange* aRange)
 {
   NS_ENSURE_ARG_POINTER(aSpellCheckSelection);
   NS_ENSURE_ARG_POINTER(aRange);
@@ -1721,9 +1720,13 @@ mozInlineSpellChecker::AddRange(nsISelection* aSpellCheckSelection,
 
   if (!SpellCheckSelectionIsFull())
   {
-    rv = aSpellCheckSelection->AddRange(aRange);
-    if (NS_SUCCEEDED(rv))
+    IgnoredErrorResult err;
+    aSpellCheckSelection->AddRange(*aRange, err);
+    if (err.Failed()) {
+      rv = err.StealNSResult();
+    } else {
       mNumWordsInSpellSelection++;
+    }
   }
 
   return rv;

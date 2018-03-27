@@ -88,9 +88,10 @@ SelectionState::RestoreSelection(Selection* aSel)
     RefPtr<nsRange> range = mArray[i]->GetRange();
     NS_ENSURE_TRUE(range, NS_ERROR_UNEXPECTED);
 
-    nsresult rv = aSel->AddRange(range);
-    if (NS_FAILED(rv)) {
-      return rv;
+    ErrorResult rv;
+    aSel->AddRange(*range, rv);
+    if (rv.Failed()) {
+      return rv.StealNSResult();
     }
   }
   return NS_OK;

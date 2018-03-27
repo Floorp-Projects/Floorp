@@ -31,6 +31,7 @@
 #include "nsRange.h" //for selection setting helper func
 #include "nsINode.h"
 #include "nsPIDOMWindow.h" //needed for notify selection changed to update the menus ect.
+#include "nsQueryObject.h"
 
 #include "nsFocusManager.h"
 #include "nsPresState.h"
@@ -875,11 +876,11 @@ nsTextControlFrame::SetSelectionInternal(nsINode* aStartNode,
   nsISelectionController* selCon = txtCtrl->GetSelectionController();
   NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsISelection> selection;
-  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+  RefPtr<Selection> selection =
+    selCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection, &rv);
+  nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryObject(selection, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsDirection direction;
@@ -893,8 +894,11 @@ nsTextControlFrame::SetSelectionInternal(nsINode* aStartNode,
   rv = selection->RemoveAllRanges();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = selection->AddRange(range);  // NOTE: can destroy the world
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult err;
+  selection->AddRange(*range, err);  // NOTE: can destroy the world
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
+  }
 
   selPriv->SetSelectionDirection(direction);
   return rv;

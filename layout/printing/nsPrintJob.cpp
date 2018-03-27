@@ -2171,7 +2171,7 @@ nsPrintJob::UpdateSelectionAndShrinkPrintObject(nsPrintObject* aPO,
     int32_t cnt = selection->RangeCount();
     int32_t inx;
     for (inx = 0; inx < cnt; ++inx) {
-        selectionPS->AddRange(selection->GetRangeAt(inx));
+      selectionPS->AddRange(*selection->GetRangeAt(inx), IgnoreErrors());
     }
   }
 
@@ -2592,7 +2592,7 @@ DeleteUnselectedNodes(nsIDocument* aOrigDoc, nsIDocument* aDoc)
                                        endOffset, getter_AddRefs(range));
 
     if (NS_SUCCEEDED(rv) && !range->Collapsed()) {
-      selection->AddRange(range);
+      selection->AddRange(*range, IgnoreErrors());
 
       // Unless we've already added an ellipsis at the start, if we ended mid
       // text node then add ellipsis.
@@ -2628,7 +2628,7 @@ DeleteUnselectedNodes(nsIDocument* aOrigDoc, nsIDocument* aDoc)
                                      bodyNode->GetChildCount(),
                                      getter_AddRefs(lastRange));
   if (NS_SUCCEEDED(rv) && !lastRange->Collapsed()) {
-    selection->AddRange(lastRange);
+    selection->AddRange(*lastRange, IgnoreErrors());
   }
 
   selection->DeleteFromDocument();
