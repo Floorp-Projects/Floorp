@@ -195,7 +195,7 @@ public:
              uint32_t aFlags) override;
 
   already_AddRefed<SourceSurface>
-  RenderSelection(nsISelection* aSelection,
+  RenderSelection(dom::Selection* aSelection,
                   const LayoutDeviceIntPoint aPoint,
                   LayoutDeviceIntRect* aScreenRect,
                   uint32_t aFlags) override;
@@ -529,7 +529,7 @@ private:
   // create a RangePaintInfo for the range aRange containing the
   // display list needed to paint the range to a surface
   UniquePtr<RangePaintInfo>
-  CreateRangePaintInfo(nsIDOMRange* aRange,
+  CreateRangePaintInfo(nsRange* aRange,
                        nsRect& aSurfaceRect,
                        bool aForPrimarySelection);
 
