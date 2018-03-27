@@ -507,7 +507,7 @@ SizeOf(ValType vt)
         return 16;
       case ValType::AnyRef:
       case ValType::Ref:
-        MOZ_CRASH("unexpected ref/anyref");
+        return sizeof(intptr_t);
     }
     MOZ_CRASH("Invalid ValType");
 }
@@ -785,6 +785,7 @@ class Val
         I16x8 i16x8_;
         I32x4 i32x4_;
         F32x4 f32x4_;
+        intptr_t ptr_;
     } u;
 
   public:
@@ -795,6 +796,11 @@ class Val
 
     explicit Val(float f32) : type_(ValType::F32) { u.f32_ = f32; }
     explicit Val(double f64) : type_(ValType::F64) { u.f64_ = f64; }
+
+    explicit Val(ValType refType, void* ptr) : type_(refType) {
+        MOZ_ASSERT(refType.isRefOrAnyRef());
+        u.ptr_ = intptr_t(ptr);
+    }
 
     explicit Val(const I8x16& i8x16, ValType type = ValType::I8x16) : type_(type) {
         MOZ_ASSERT(type_ == ValType::I8x16 || type_ == ValType::B8x16);
@@ -820,6 +826,7 @@ class Val
     uint64_t i64() const { MOZ_ASSERT(type_ == ValType::I64); return u.i64_; }
     const float& f32() const { MOZ_ASSERT(type_ == ValType::F32); return u.f32_; }
     const double& f64() const { MOZ_ASSERT(type_ == ValType::F64); return u.f64_; }
+    intptr_t ptr() const { MOZ_ASSERT(type_.isRefOrAnyRef()); return u.ptr_; }
 
     const I8x16& i8x16() const {
         MOZ_ASSERT(type_ == ValType::I8x16 || type_ == ValType::B8x16);
@@ -992,7 +999,7 @@ class InitExpr
 
     ValType type() const {
         switch (kind()) {
-          case Kind::Constant: return u.val_.type();
+          case Kind::Constant:  return u.val_.type();
           case Kind::GetGlobal: return u.global.type_;
         }
         MOZ_CRASH("unexpected initExpr type");
@@ -1125,7 +1132,8 @@ class GlobalDesc
         }
     }
 
-    explicit GlobalDesc(ValType type, bool isMutable, uint32_t importIndex, ModuleKind kind = ModuleKind::Wasm)
+    explicit GlobalDesc(ValType type, bool isMutable, uint32_t importIndex,
+                        ModuleKind kind = ModuleKind::Wasm)
       : kind_(GlobalKind::Import)
     {
         u.var.val.import.type_ = type;
@@ -1942,6 +1950,7 @@ enum class SymbolicAddress
     Wake,
     MemCopy,
     MemFill,
+    PostBarrier,
 #if defined(JS_CODEGEN_MIPS32)
     js_jit_gAtomic64Lock,
 #endif
@@ -2062,6 +2071,10 @@ struct TlsData
 
     // Set to 1 when wasm should call CheckForInterrupt.
     Atomic<uint32_t, mozilla::Relaxed> interrupt;
+
+#ifdef ENABLE_WASM_GC
+    uint8_t* addressOfNeedsIncrementalBarrier;
+#endif
 
     // Methods to set, test and clear the above two fields. Both interrupt
     // fields are Relaxed and so no consistency/ordering can be assumed.
@@ -2518,6 +2531,48 @@ class DebugFrame
     static const unsigned Alignment = 8;
     static void alignmentStaticAsserts();
 };
+
+# ifdef ENABLE_WASM_GC
+// A packed format for an argument to the Instance::postBarrier function.
+class PostBarrierArg
+{
+  public:
+    enum class Type {
+        Global = 0x0,
+        Last = Global
+    };
+
+  private:
+    uint32_t type_: 1;
+    uint32_t payload_: 31;
+
+    PostBarrierArg(uint32_t payload, Type type)
+      : type_(uint32_t(type)),
+        payload_(payload)
+    {
+        MOZ_ASSERT(payload < (UINT32_MAX >> 1));
+        MOZ_ASSERT(uint32_t(type) <= uint32_t(Type::Last));
+    }
+
+  public:
+    static PostBarrierArg Global(uint32_t globalIndex) {
+        return PostBarrierArg(globalIndex, Type::Global);
+    }
+
+    Type type() const {
+        MOZ_ASSERT(type_ <= uint32_t(Type::Last));
+        return Type(type_);
+    }
+    uint32_t globalIndex() const {
+        MOZ_ASSERT(type() == Type::Global);
+        return payload_;
+    }
+
+    uint32_t rawPayload() const {
+        return (payload_ << 1) | type_;
+    }
+};
+# endif
 
 } // namespace wasm
 } // namespace js
