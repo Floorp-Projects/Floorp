@@ -103,6 +103,8 @@ WorkerRef::Notify()
   MOZ_ASSERT(mHolder);
   NS_ASSERT_OWNINGTHREAD(WorkerRef);
 
+  mHolder = nullptr;
+
   if (!mCallback) {
     return;
   }
@@ -148,8 +150,6 @@ void
 WeakWorkerRef::Notify()
 {
   WorkerRef::Notify();
-
-  mHolder = nullptr;
   mWorkerPrivate = nullptr;
 }
 
@@ -196,11 +196,7 @@ StrongWorkerRef::StrongWorkerRef(WorkerPrivate* aWorkerPrivate)
   : WorkerRef(aWorkerPrivate)
 {}
 
-StrongWorkerRef::~StrongWorkerRef()
-{
-  MOZ_ASSERT(mHolder);
-  NS_ASSERT_OWNINGTHREAD(StrongWorkerRef);
-}
+StrongWorkerRef::~StrongWorkerRef() = default;
 
 WorkerPrivate*
 StrongWorkerRef::Private() const
@@ -209,9 +205,6 @@ StrongWorkerRef::Private() const
   NS_ASSERT_OWNINGTHREAD(StrongWorkerRef);
   return mWorkerPrivate;
 }
-
-// ----------------------------------------------------------------------------
-// ThreadSafeWorkerRef
 
 ThreadSafeWorkerRef::ThreadSafeWorkerRef(StrongWorkerRef* aRef)
   : mRef(aRef)
