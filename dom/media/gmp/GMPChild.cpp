@@ -17,6 +17,7 @@
 #include "gmp-video-decode.h"
 #include "gmp-video-encode.h"
 #include "GMPPlatform.h"
+#include "mozilla/Algorithm.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "GMPUtils.h"
@@ -281,21 +282,26 @@ GMPChild::RecvPreloadLibs(const nsCString& aLibs)
   // Pre-load DLLs that need to be used by the EME plugin but that can't be
   // loaded after the sandbox has started
   // Items in this must be lowercase!
-  static const char *const whitelist[] = {
-    "dxva2.dll", // Get monitor information
-    "evr.dll", // MFGetStrideForBitmapInfoHeader
-    "mfplat.dll", // MFCreateSample, MFCreateAlignedMemoryBuffer, MFCreateMediaType
-    "msmpeg2vdec.dll", // H.264 decoder
-    "psapi.dll", // For GetMappedFileNameW, see bug 1383611
+  constexpr static const char16_t* whitelist[] = {
+    u"dxva2.dll", // Get monitor information
+    u"evr.dll", // MFGetStrideForBitmapInfoHeader
+    u"mfplat.dll", // MFCreateSample, MFCreateAlignedMemoryBuffer, MFCreateMediaType
+    u"msmpeg2vdec.dll", // H.264 decoder
+    u"psapi.dll", // For GetMappedFileNameW, see bug 1383611
   };
+  constexpr static bool (*IsASCII)(const char16_t*) = NS_ConstExprIsAscii;
+  static_assert(AllOf(std::begin(whitelist), std::end(whitelist), IsASCII),
+                "Items in the whitelist must not contain non-ASCII "
+                "characters!");
 
   nsTArray<nsCString> libs;
   SplitAt(", ", aLibs, libs);
   for (nsCString lib : libs) {
     ToLowerCase(lib);
-    for (const char* whiteListedLib : whitelist) {
-      if (lib.EqualsASCII(whiteListedLib)) {
-        LoadLibraryA(lib.get());
+    for (const char16_t* whiteListedLib : whitelist) {
+      if (nsDependentString(whiteListedLib).EqualsASCII(lib.Data(),
+                                                        lib.Length())) {
+        LoadLibraryW(char16ptr_t(whiteListedLib));
         break;
       }
     }
