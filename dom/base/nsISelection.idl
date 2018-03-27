@@ -114,11 +114,6 @@ interface nsISelection : nsISupports
     void selectAllChildren(in nsIDOMNode parentNode); 
 
     /**
-     * Adds a range to the current selection.
-     */
-    void addRange(in nsIDOMRange range);
- 
-    /**
      * Removes a range from the current selection.
      */
     void removeRange(in nsIDOMRange range);

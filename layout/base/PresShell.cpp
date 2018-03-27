@@ -3188,7 +3188,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
     RefPtr<Selection> sel = mSelection->GetSelection(SelectionType::eNormal);
     if (sel) {
       sel->RemoveAllRanges();
-      sel->AddRange(jumpToRange);
+      sel->AddRange(*jumpToRange, IgnoreErrors());
       if (!selectAnchor) {
         // Use a caret (collapsed selection) at the start of the anchor
         sel->CollapseToStart();
