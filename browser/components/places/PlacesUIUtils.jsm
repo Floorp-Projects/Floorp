@@ -922,61 +922,6 @@ var PlacesUIUtils = {
   },
 
   /**
-   * Constructs a Places Transaction for the drop or paste of a blob of data
-   * into a container.
-   *
-   * @param   aData
-   *          The unwrapped data blob of dropped or pasted data.
-   * @param   aNewParentGuid
-   *          GUID of the container the data was dropped or pasted into.
-   * @param   aIndex
-   *          The index within the container the item was dropped or pasted at.
-   * @param   aCopy
-   *          The drag action was copy, so don't move folders or links.
-   *
-   * @return  a Places Transaction that can be transacted for performing the
-   *          move/insert command.
-   */
-  getTransactionForData(aData, aNewParentGuid, aIndex, aCopy) {
-    if (!this.SUPPORTED_FLAVORS.includes(aData.type))
-      throw new Error(`Unsupported '${aData.type}' data type`);
-
-    if ("itemGuid" in aData && "instanceId" in aData &&
-        aData.instanceId == PlacesUtils.instanceId) {
-      if (!this.PLACES_FLAVORS.includes(aData.type))
-        throw new Error(`itemGuid unexpectedly set on ${aData.type} data`);
-
-      let info = { guid: aData.itemGuid,
-                   newParentGuid: aNewParentGuid,
-                   newIndex: aIndex };
-      if (aCopy) {
-        info.excludingAnnotation = "Places/SmartBookmark";
-        return PlacesTransactions.Copy(info);
-      }
-      return PlacesTransactions.Move(info);
-    }
-
-    // Since it's cheap and harmless, we allow the paste of separators and
-    // bookmarks from builds that use legacy transactions (i.e. when itemGuid
-    // was not set on PLACES_FLAVORS data). Containers are a different story,
-    // and thus disallowed.
-    if (aData.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER)
-      throw new Error("Can't copy a container from a legacy-transactions build");
-
-    if (aData.type == PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) {
-      return PlacesTransactions.NewSeparator({ parentGuid: aNewParentGuid,
-                                               index: aIndex });
-    }
-
-    let title = aData.type != PlacesUtils.TYPE_UNICODE ? aData.title
-                                                       : aData.uri;
-    return PlacesTransactions.NewBookmark({ url: Services.io.newURI(aData.uri),
-                                            title,
-                                            parentGuid: aNewParentGuid,
-                                            index: aIndex });
-  },
-
-  /**
    * Processes a set of transfer items that have been dropped or pasted.
    * Batching will be applied where necessary.
    *
@@ -999,7 +944,7 @@ var PlacesUIUtils = {
       let insertionIndex = await insertionPoint.getIndex();
       itemsCount = items.length;
       transactions = await getTransactionsForTransferItems(
-        items, insertionIndex, insertionPoint.guid, doCopy);
+        items, insertionIndex, insertionPoint.guid, !doCopy);
     }
 
     // Check if we actually have something to add, if we don't it probably wasn't
@@ -1198,6 +1143,7 @@ function getResultForBatching(viewOrElement) {
   return null;
 }
 
+
 /**
  * Processes a set of transfer items and returns transactions to insert or
  * move them.
@@ -1206,12 +1152,58 @@ function getResultForBatching(viewOrElement) {
  * @param {Integer} insertionIndex The requested index for insertion.
  * @param {String} insertionParentGuid The guid of the parent folder to insert
  *                                     or move the items to.
- * @param {Boolean} doCopy Set to true to copy the items, false will move them
- *                         if possible.
+ * @param {Boolean} doMove Set to true to MOVE the items if possible, false will
+ *                         copy them.
  * @return {Array} Returns an array of created PlacesTransactions.
  */
 async function getTransactionsForTransferItems(items, insertionIndex,
-                                               insertionParentGuid, doCopy) {
+                                               insertionParentGuid, doMove) {
+  let canMove = true;
+  for (let item of items) {
+    if (!PlacesUIUtils.SUPPORTED_FLAVORS.includes(item.type)) {
+      throw new Error(`Unsupported '${item.type}' data type`);
+    }
+
+    // Work out if this is data from the same app session we're running in.
+    if ("instanceId" in item && item.instanceId == PlacesUtils.instanceId) {
+      if ("itemGuid" in item && !PlacesUIUtils.PLACES_FLAVORS.includes(item.type)) {
+        throw new Error(`itemGuid unexpectedly set on ${item.type} data`);
+      }
+    } else {
+      if (item.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
+        throw new Error("Can't copy a container from a legacy-transactions build");
+      }
+
+      // We can never move from an external copy.
+      canMove = false;
+    }
+
+    if (doMove && canMove) {
+      canMove = canMoveUnwrappedNode(item);
+    }
+  }
+
+  if (doMove && !canMove) {
+    Cu.reportError("Tried to move an unmovable Places " +
+                   "node, reverting to a copy operation.");
+    doMove = false;
+  }
+
+  return doMove ? getTransactionsForMove(items, insertionIndex, insertionParentGuid) :
+                  getTransactionsForCopy(items, insertionIndex, insertionParentGuid);
+}
+
+/**
+ * Processes a set of transfer items and returns an array of transactions.
+ *
+ * @param {Array} items A list of unwrapped nodes to get transactions for.
+ * @param {Integer} insertionIndex The requested index for insertion.
+ * @param {String} insertionParentGuid The guid of the parent folder to insert
+ *                                     or move the items to.
+ * @return {Array} Returns an array of created PlacesTransactions.
+ */
+async function getTransactionsForMove(items, insertionIndex,
+                                      insertionParentGuid) {
   let transactions = [];
   let index = insertionIndex;
 
@@ -1237,20 +1229,62 @@ async function getTransactionsForTransferItems(items, insertionIndex,
       }
     }
 
-    // If this is not a copy, check for safety that we can move the
-    // source, otherwise report an error and fallback to a copy.
-    if (!doCopy && !canMoveUnwrappedNode(item)) {
-      Cu.reportError("Tried to move an unmovable Places " +
-                     "node, reverting to a copy operation.");
-      doCopy = true;
-    }
-    transactions.push(
-      PlacesUIUtils.getTransactionForData(item,
-                                          insertionParentGuid,
-                                          index,
-                                          doCopy));
+    transactions.push(PlacesTransactions.Move({
+      guid: item.itemGuid,
+      newIndex: index,
+      newParentGuid: insertionParentGuid,
+    }));
 
     if (index != -1 && item.itemGuid) {
+      index++;
+    }
+  }
+  return transactions;
+}
+
+/**
+ * Processes a set of transfer items and returns an array of transactions.
+ *
+ * @param {Array} items A list of unwrapped nodes to get transactions for.
+ * @param {Integer} insertionIndex The requested index for insertion.
+ * @param {String} insertionParentGuid The guid of the parent folder to insert
+ *                                     or move the items to.
+ * @return {Array} Returns an array of created PlacesTransactions.
+ */
+async function getTransactionsForCopy(items, insertionIndex,
+                                      insertionParentGuid) {
+  let transactions = [];
+  let index = insertionIndex;
+
+  for (let item of items) {
+    let transaction;
+
+    if ("itemGuid" in item && "instanceId" in item &&
+        item.instanceId == PlacesUtils.instanceId) {
+      transaction = PlacesTransactions.Copy({
+        excludingAnnotation: "Places/SmartBookmark",
+        guid: item.itemGuid,
+        newIndex: index,
+        newParentGuid: insertionParentGuid,
+      });
+    } else if (item.type == PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) {
+      transaction = PlacesTransactions.NewSeparator({
+        index,
+        parentGuid: insertionParentGuid,
+      });
+    } else {
+      let title = item.type != PlacesUtils.TYPE_UNICODE ? item.title : item.uri;
+      transaction = PlacesTransactions.NewBookmark({
+        index,
+        parentGuid: insertionParentGuid,
+        title,
+        url: item.uri,
+      });
+    }
+
+    transactions.push(transaction);
+
+    if (index != -1) {
       index++;
     }
   }

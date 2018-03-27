@@ -85,7 +85,7 @@ async function run_drag_test(startBookmarkIndex, newParentGuid) {
     await PlacesControllerDragHelper.onDrop(ip, dt);
 
     Assert.ok(PlacesTransactions.Tag.calledOnce,
-      "Should have called getTransactionForData at least once.");
+      "Should have called PlacesTransactions.Tag at least once.");
 
     let arg = PlacesTransactions.Tag.args[0][0];
 
