@@ -527,6 +527,28 @@ class VirtualenvManager(object):
         subprocess.check_call([os.path.join(self.bin_path, 'pip')] + args,
             stderr=subprocess.STDOUT)
 
+    def activate_pipenv(self, pipfile):
+        """Install a Pipfile located at path and activate environment"""
+        pipenv = os.path.join(self.bin_path, 'pipenv')
+        env = os.environ.copy()
+        env.update({
+            'PIPENV_IGNORE_VIRTUALENVS': '1',
+            'PIPENV_PIPFILE': pipfile,
+            'WORKON_HOME': os.path.join(self.topobjdir, '_virtualenvs'),
+        })
+
+        subprocess.check_call(
+            [pipenv, 'install', '--deploy'],
+            stderr=subprocess.STDOUT,
+            env=env)
+
+        self.virtualenv_root = subprocess.check_output(
+            [pipenv, '--venv'],
+            stderr=subprocess.STDOUT,
+            env=env).rstrip()
+
+        self.activate()
+
 
 def verify_python_version(log_handle):
     """Ensure the current version of Python is sufficient."""
@@ -569,4 +591,3 @@ if __name__ == '__main__':
         manager.populate()
     else:
         manager.ensure()
-
