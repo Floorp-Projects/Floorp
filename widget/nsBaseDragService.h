@@ -35,6 +35,7 @@ class SourceSurface;
 
 namespace dom {
 class DataTransfer;
+class Selection;
 } // namespace dom
 } // namespace mozilla
 
@@ -176,7 +177,7 @@ protected:
   mozilla::CSSIntPoint mImageOffset;
 
   // set if a selection is being dragged
-  nsCOMPtr<nsISelection> mSelection;
+  RefPtr<mozilla::dom::Selection> mSelection;
 
   // set if the image in mImage is a popup. If this case, the popup will be opened
   // and moved instead of using a drag image.
