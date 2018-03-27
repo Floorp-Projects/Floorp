@@ -25,6 +25,7 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmModule.h"
 
+#include "gc/StoreBuffer-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/JSObject-inl.h"
 
@@ -484,6 +485,28 @@ Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value, uint3
     return -1;
 }
 
+/* static */ void
+Instance::postBarrier(Instance* instance, PostBarrierArg arg)
+{
+    gc::Cell** cell = nullptr;
+    switch (arg.type()) {
+      case PostBarrierArg::Type::Global: {
+        const GlobalDesc& global = instance->metadata().globals[arg.globalIndex()];
+        MOZ_ASSERT(!global.isConstant());
+        MOZ_ASSERT(global.type().isRefOrAnyRef());
+        uint8_t* globalAddr = instance->globalData() + global.offset();
+        if (global.isIndirect())
+            globalAddr = *(uint8_t**)globalAddr;
+        MOZ_ASSERT(*(JSObject**)globalAddr, "shouldn't call postbarrier if null");
+        cell = (gc::Cell**) globalAddr;
+        break;
+      }
+    }
+
+    MOZ_ASSERT(cell);
+    TlsContext.get()->runtime()->gc.storeBuffer().putCell(cell);
+}
+
 Instance::Instance(JSContext* cx,
                    Handle<WasmInstanceObject*> object,
                    SharedCode code,
@@ -518,6 +541,10 @@ Instance::Instance(JSContext* cx,
     tlsData()->cx = cx;
     tlsData()->resetInterrupt(cx);
     tlsData()->jumpTable = code_->tieringJumpTable();
+#ifdef ENABLE_WASM_GC
+    tlsData()->addressOfNeedsIncrementalBarrier =
+        (uint8_t*)cx->compartment()->zone()->addressOfNeedsIncrementalBarrier();
+#endif
 
     Tier callerTier = code_->bestTier();
 
@@ -641,6 +668,7 @@ Instance::init(JSContext* cx)
         return false;
     jsJitArgsRectifier_ = jitRuntime->getArgumentsRectifier();
     jsJitExceptionHandler_ = jitRuntime->getExceptionTail();
+    preBarrierCode_ = jitRuntime->preBarrier(MIRType::Object);
     return true;
 }
 
@@ -707,6 +735,16 @@ Instance::tracePrivate(JSTracer* trc)
 
     for (const SharedTable& table : tables_)
         table->trace(trc);
+
+#ifdef ENABLE_WASM_GC
+    for (const GlobalDesc& global : code().metadata().globals) {
+        // Indirect anyref global get traced by the owning WebAssembly.Global.
+        if (global.type() != ValType::AnyRef || global.isConstant() || global.isIndirect())
+            continue;
+        GCPtrObject* obj = (GCPtrObject*)(globalData() + global.offset());
+        TraceNullableEdge(trc, obj, "wasm anyref global");
+    }
+#endif
 
     TraceNullableEdge(trc, &memory_, "wasm buffer");
 }
