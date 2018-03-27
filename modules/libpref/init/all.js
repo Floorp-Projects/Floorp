@@ -918,6 +918,10 @@ pref("gfx.webrender.force-angle", true);
 pref("gfx.webrender.program-binary", true);
 #endif
 
+#ifdef XP_MACOSX
+pref("gfx.compositor.glcontext.opaque", false);
+#endif
+
 pref("gfx.webrender.highlight-painted-layers", false);
 pref("gfx.webrender.blob-images", 1);
 pref("gfx.webrender.blob.invalidation", false);

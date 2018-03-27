@@ -3850,8 +3850,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   CGLLockContext((CGLContextObj)[mGLContext CGLContextObj]);
   // Make the context opaque for fullscreen (since it performs better), and transparent
-  // for windowed (since we need it for rounded corners).
-  GLint opaque = aOpaque ? 1 : 0;
+  // for windowed (since we need it for rounded corners), but allow overriding
+  // it to opaque for testing purposes, even if that breaks the rounded corners.
+  GLint opaque = aOpaque || gfxPrefs::CompositorGLContextOpaque();
   [mGLContext setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
   CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
 }
