@@ -51,9 +51,7 @@ class Documentation(MachCommandBase):
         except which.WhichError:
             return die('jsdoc not found - please install from npm.')
 
-        self._activate_virtualenv()
-        self.virtualenv_manager.install_pip_requirements(
-            os.path.join(here, 'requirements.txt'), quiet=True)
+        self.activate_pipenv(os.path.join(here, 'Pipfile'))
 
         import moztreedocs
         import webbrowser
