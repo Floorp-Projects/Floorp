@@ -3,8 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/TransactionManager.h"
+
 #include "mozilla/Assertions.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/TransactionStack.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
@@ -13,49 +16,45 @@
 #include "nsITransaction.h"
 #include "nsITransactionListener.h"
 #include "nsIWeakReference.h"
-#include "nsTransactionItem.h"
-#include "nsTransactionManager.h"
-#include "nsTransactionStack.h"
+#include "TransactionItem.h"
 
-nsTransactionManager::nsTransactionManager(int32_t aMaxTransactionCount)
+namespace mozilla {
+
+TransactionManager::TransactionManager(int32_t aMaxTransactionCount)
   : mMaxTransactionCount(aMaxTransactionCount)
-  , mDoStack(nsTransactionStack::FOR_UNDO)
-  , mUndoStack(nsTransactionStack::FOR_UNDO)
-  , mRedoStack(nsTransactionStack::FOR_REDO)
+  , mDoStack(TransactionStack::FOR_UNDO)
+  , mUndoStack(TransactionStack::FOR_UNDO)
+  , mRedoStack(TransactionStack::FOR_REDO)
 {
 }
 
-nsTransactionManager::~nsTransactionManager()
-{
-}
+NS_IMPL_CYCLE_COLLECTION_CLASS(TransactionManager)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsTransactionManager)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsTransactionManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TransactionManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mListeners)
   tmp->mDoStack.DoUnlink();
   tmp->mUndoStack.DoUnlink();
   tmp->mRedoStack.DoUnlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsTransactionManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TransactionManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListeners)
   tmp->mDoStack.DoTraverse(cb);
   tmp->mUndoStack.DoTraverse(cb);
   tmp->mRedoStack.DoTraverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTransactionManager)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransactionManager)
   NS_INTERFACE_MAP_ENTRY(nsITransactionManager)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITransactionManager)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTransactionManager)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTransactionManager)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(TransactionManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(TransactionManager)
 
 NS_IMETHODIMP
-nsTransactionManager::DoTransaction(nsITransaction *aTransaction)
+TransactionManager::DoTransaction(nsITransaction* aTransaction)
 {
   NS_ENSURE_TRUE(aTransaction, NS_ERROR_NULL_POINTER);
 
@@ -88,26 +87,33 @@ nsTransactionManager::DoTransaction(nsITransaction *aTransaction)
 }
 
 NS_IMETHODIMP
-nsTransactionManager::UndoTransaction()
+TransactionManager::UndoTransaction()
 {
-  // It is illegal to call UndoTransaction() while the transaction manager is
-  // executing a  transaction's DoTransaction() method! If this happens,
-  // the UndoTransaction() request is ignored, and we return NS_ERROR_FAILURE.
+  return Undo();
+}
+
+nsresult
+TransactionManager::Undo()
+{
+  // It's possible to be called Undo() again while the transaction manager is
+  // executing a transaction's DoTransaction() method.  If this happens,
+  // the Undo() request is ignored, and we return NS_ERROR_FAILURE.  This
+  // may occur if a mutation event listener calls document.execCommand("undo").
   if (!mDoStack.IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
 
   // Peek at the top of the undo stack. Don't remove the transaction
   // until it has successfully completed.
-  RefPtr<nsTransactionItem> tx = mUndoStack.Peek();
-  if (!tx) {
+  RefPtr<TransactionItem> transactionItem = mUndoStack.Peek();
+  if (!transactionItem) {
     // Bail if there's nothing on the stack.
     return NS_OK;
   }
 
-  nsCOMPtr<nsITransaction> t = tx->GetTransaction();
+  nsCOMPtr<nsITransaction> transaction = transactionItem->GetTransaction();
   bool doInterrupt = false;
-  nsresult rv = WillUndoNotify(t, &doInterrupt);
+  nsresult rv = WillUndoNotify(transaction, &doInterrupt);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -115,13 +121,13 @@ nsTransactionManager::UndoTransaction()
     return NS_OK;
   }
 
-  rv = tx->UndoTransaction(this);
+  rv = transactionItem->UndoTransaction(this);
   if (NS_SUCCEEDED(rv)) {
-    tx = mUndoStack.Pop();
-    mRedoStack.Push(tx.forget());
+    transactionItem = mUndoStack.Pop();
+    mRedoStack.Push(transactionItem.forget());
   }
 
-  nsresult rv2 = DidUndoNotify(t, rv);
+  nsresult rv2 = DidUndoNotify(transaction, rv);
   if (NS_SUCCEEDED(rv)) {
     rv = rv2;
   }
@@ -132,26 +138,33 @@ nsTransactionManager::UndoTransaction()
 }
 
 NS_IMETHODIMP
-nsTransactionManager::RedoTransaction()
+TransactionManager::RedoTransaction()
 {
-  // It is illegal to call RedoTransaction() while the transaction manager is
-  // executing a  transaction's DoTransaction() method! If this happens,
-  // the RedoTransaction() request is ignored, and we return NS_ERROR_FAILURE.
+  return Redo();
+}
+
+nsresult
+TransactionManager::Redo()
+{
+  // It's possible to be called Redo() again while the transaction manager is
+  // executing a transaction's DoTransaction() method.  If this happens,
+  // the Redo() request is ignored, and we return NS_ERROR_FAILURE.  This
+  // may occur if a mutation event listener calls document.execCommand("redo").
   if (!mDoStack.IsEmpty()) {
     return NS_ERROR_FAILURE;
   }
 
   // Peek at the top of the redo stack. Don't remove the transaction
   // until it has successfully completed.
-  RefPtr<nsTransactionItem> tx = mRedoStack.Peek();
-  if (!tx) {
+  RefPtr<TransactionItem> transactionItem = mRedoStack.Peek();
+  if (!transactionItem) {
     // Bail if there's nothing on the stack.
     return NS_OK;
   }
 
-  nsCOMPtr<nsITransaction> t = tx->GetTransaction();
+  nsCOMPtr<nsITransaction> transaction = transactionItem->GetTransaction();
   bool doInterrupt = false;
-  nsresult rv = WillRedoNotify(t, &doInterrupt);
+  nsresult rv = WillRedoNotify(transaction, &doInterrupt);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -159,13 +172,13 @@ nsTransactionManager::RedoTransaction()
     return NS_OK;
   }
 
-  rv = tx->RedoTransaction(this);
+  rv = transactionItem->RedoTransaction(this);
   if (NS_SUCCEEDED(rv)) {
-    tx = mRedoStack.Pop();
-    mUndoStack.Push(tx.forget());
+    transactionItem = mRedoStack.Pop();
+    mUndoStack.Push(transactionItem.forget());
   }
 
-  nsresult rv2 = DidRedoNotify(t, rv);
+  nsresult rv2 = DidRedoNotify(transaction, rv);
   if (NS_SUCCEEDED(rv)) {
     rv = rv2;
   }
@@ -176,17 +189,13 @@ nsTransactionManager::RedoTransaction()
 }
 
 NS_IMETHODIMP
-nsTransactionManager::Clear()
+TransactionManager::Clear()
 {
-  nsresult rv = ClearRedoStack();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  return ClearUndoStack();
+  return ClearUndoRedo() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsTransactionManager::BeginBatch(nsISupports* aData)
+TransactionManager::BeginBatch(nsISupports* aData)
 {
   // We can batch independent transactions together by simply pushing
   // a dummy transaction item on the do stack. This dummy transaction item
@@ -214,7 +223,7 @@ nsTransactionManager::BeginBatch(nsISupports* aData)
 }
 
 NS_IMETHODIMP
-nsTransactionManager::EndBatch(bool aAllowEmpty)
+TransactionManager::EndBatch(bool aAllowEmpty)
 {
   // XXX: Need to add some mechanism to detect the case where the transaction
   //      at the top of the do stack isn't the dummy transaction, so we can
@@ -226,12 +235,12 @@ nsTransactionManager::EndBatch(bool aAllowEmpty)
   //      transaction, it should be nullptr. This may not be true in the
   //      future when we allow users to execute a transaction when beginning
   //      a batch!!!!
-  RefPtr<nsTransactionItem> tx = mDoStack.Peek();
-  nsCOMPtr<nsITransaction> ti;
-  if (tx) {
-    ti = tx->GetTransaction();
+  RefPtr<TransactionItem> transactionItem = mDoStack.Peek();
+  if (!transactionItem) {
+    return NS_ERROR_FAILURE;
   }
-  if (!tx || ti) {
+  nsCOMPtr<nsITransaction> transaction = transactionItem->GetTransaction();
+  if (transaction) {
     return NS_ERROR_FAILURE;
   }
 
@@ -256,21 +265,23 @@ nsTransactionManager::EndBatch(bool aAllowEmpty)
 }
 
 NS_IMETHODIMP
-nsTransactionManager::GetNumberOfUndoItems(int32_t *aNumItems)
+TransactionManager::GetNumberOfUndoItems(int32_t* aNumItems)
 {
-  *aNumItems = mUndoStack.GetSize();
+  *aNumItems = static_cast<int32_t>(NumberOfUndoItems());
+  MOZ_ASSERT(*aNumItems >= 0);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTransactionManager::GetNumberOfRedoItems(int32_t *aNumItems)
+TransactionManager::GetNumberOfRedoItems(int32_t* aNumItems)
 {
-  *aNumItems = mRedoStack.GetSize();
+  *aNumItems = static_cast<int32_t>(NumberOfRedoItems());
+  MOZ_ASSERT(*aNumItems >= 0);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTransactionManager::GetMaxTransactionCount(int32_t *aMaxCount)
+TransactionManager::GetMaxTransactionCount(int32_t* aMaxCount)
 {
   NS_ENSURE_TRUE(aMaxCount, NS_ERROR_NULL_POINTER);
   *aMaxCount = mMaxTransactionCount;
@@ -278,61 +289,79 @@ nsTransactionManager::GetMaxTransactionCount(int32_t *aMaxCount)
 }
 
 NS_IMETHODIMP
-nsTransactionManager::SetMaxTransactionCount(int32_t aMaxCount)
+TransactionManager::SetMaxTransactionCount(int32_t aMaxCount)
 {
-  // It is illegal to call SetMaxTransactionCount() while the transaction
-  // manager is executing a  transaction's DoTransaction() method because
-  // the undo and redo stacks might get pruned! If this happens, the
-  // SetMaxTransactionCount() request is ignored, and we return
-  // NS_ERROR_FAILURE.
-  if (!mDoStack.IsEmpty()) {
-    return NS_ERROR_FAILURE;
+  return EnableUndoRedo(aMaxCount) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+bool
+TransactionManager::EnableUndoRedo(int32_t aMaxTransactionCount)
+{
+  // It is illegal to call EnableUndoRedo() while the transaction manager is
+  // executing a transaction's DoTransaction() method because the undo and redo
+  // stacks might get pruned.  If this happens, the EnableUndoRedo() request is
+  // ignored, and we return false.
+  if (NS_WARN_IF(!mDoStack.IsEmpty())) {
+    return false;
   }
 
-  // If aMaxCount is less than zero, the user wants unlimited
-  // levels of undo! No need to prune the undo or redo stacks!
-  if (aMaxCount < 0) {
+  // If aMaxTransactionCount is 0, it means to disable undo/redo.
+  if (!aMaxTransactionCount) {
+    mUndoStack.Clear();
+    mRedoStack.Clear();
+    mMaxTransactionCount = 0;
+    return true;
+  }
+
+  // If aMaxTransactionCount is less than zero, the user wants unlimited
+  // levels of undo! No need to prune the undo or redo stacks.
+  if (aMaxTransactionCount < 0) {
     mMaxTransactionCount = -1;
-    return NS_OK;
+    return true;
   }
 
-  // If aMaxCount is greater than the number of transactions that currently
-  // exist on the undo and redo stack, there is no need to prune the
-  // undo or redo stacks!
-  int32_t numUndoItems = mUndoStack.GetSize();
-  int32_t numRedoItems = mRedoStack.GetSize();
-  int32_t total = numUndoItems + numRedoItems;
-  if (aMaxCount > total) {
-    mMaxTransactionCount = aMaxCount;
-    return NS_OK;
+  // If new max transaction count is greater than or equal to current max
+  // transaction count, we don't need to remove any transactions.
+  if (mMaxTransactionCount >= 0 &&
+      mMaxTransactionCount <= aMaxTransactionCount) {
+    mMaxTransactionCount = aMaxTransactionCount;
+    return true;
+  }
+
+  // If aMaxTransactionCount is greater than the number of transactions that
+  // currently exist on the undo and redo stack, there is no need to prune the
+  // undo or redo stacks.
+  size_t numUndoItems = NumberOfUndoItems();
+  size_t numRedoItems = NumberOfRedoItems();
+  size_t total = numUndoItems + numRedoItems;
+  size_t newMaxTransactionCount = static_cast<size_t>(aMaxTransactionCount);
+  if (newMaxTransactionCount > total) {
+    mMaxTransactionCount = aMaxTransactionCount;
+    return true;
   }
 
   // Try getting rid of some transactions on the undo stack! Start at
   // the bottom of the stack and pop towards the top.
-  while (numUndoItems > 0 && (numRedoItems + numUndoItems) > aMaxCount) {
-    RefPtr<nsTransactionItem> tx = mUndoStack.PopBottom();
-    if (!tx) {
-      return NS_ERROR_FAILURE;
-    }
-    --numUndoItems;
+  for (; numUndoItems && (numRedoItems + numUndoItems) > newMaxTransactionCount;
+       numUndoItems--) {
+    RefPtr<TransactionItem> transactionItem = mUndoStack.PopBottom();
+    MOZ_ASSERT(transactionItem);
   }
 
   // If necessary, get rid of some transactions on the redo stack! Start at
   // the bottom of the stack and pop towards the top.
-  while (numRedoItems > 0 && (numRedoItems + numUndoItems) > aMaxCount) {
-    RefPtr<nsTransactionItem> tx = mRedoStack.PopBottom();
-    if (!tx) {
-      return NS_ERROR_FAILURE;
-    }
-    --numRedoItems;
+  for (; numRedoItems && (numRedoItems + numUndoItems) > newMaxTransactionCount;
+       numRedoItems--) {
+    RefPtr<TransactionItem> transactionItem = mRedoStack.PopBottom();
+    MOZ_ASSERT(transactionItem);
   }
 
-  mMaxTransactionCount = aMaxCount;
-  return NS_OK;
+  mMaxTransactionCount = aMaxTransactionCount;
+  return true;
 }
 
 NS_IMETHODIMP
-nsTransactionManager::PeekUndoStack(nsITransaction **aTransaction)
+TransactionManager::PeekUndoStack(nsITransaction** aTransaction)
 {
   MOZ_ASSERT(aTransaction);
   *aTransaction = PeekUndoStack().take();
@@ -340,17 +369,17 @@ nsTransactionManager::PeekUndoStack(nsITransaction **aTransaction)
 }
 
 already_AddRefed<nsITransaction>
-nsTransactionManager::PeekUndoStack()
+TransactionManager::PeekUndoStack()
 {
-  RefPtr<nsTransactionItem> tx = mUndoStack.Peek();
-  if (!tx) {
+  RefPtr<TransactionItem> transactionItem = mUndoStack.Peek();
+  if (!transactionItem) {
     return nullptr;
   }
-  return tx->GetTransaction();
+  return transactionItem->GetTransaction();
 }
 
 NS_IMETHODIMP
-nsTransactionManager::PeekRedoStack(nsITransaction** aTransaction)
+TransactionManager::PeekRedoStack(nsITransaction** aTransaction)
 {
   MOZ_ASSERT(aTransaction);
   *aTransaction = PeekRedoStack().take();
@@ -358,30 +387,27 @@ nsTransactionManager::PeekRedoStack(nsITransaction** aTransaction)
 }
 
 already_AddRefed<nsITransaction>
-nsTransactionManager::PeekRedoStack()
+TransactionManager::PeekRedoStack()
 {
-  RefPtr<nsTransactionItem> tx = mRedoStack.Peek();
-  if (!tx) {
+  RefPtr<TransactionItem> transactionItem = mRedoStack.Peek();
+  if (!transactionItem) {
     return nullptr;
   }
-  return tx->GetTransaction();
+  return transactionItem->GetTransaction();
 }
 
 nsresult
-nsTransactionManager::BatchTopUndo()
+TransactionManager::BatchTopUndo()
 {
   if (mUndoStack.GetSize() < 2) {
     // Not enough transactions to merge into one batch.
     return NS_OK;
   }
 
-  RefPtr<nsTransactionItem> lastUndo;
-  RefPtr<nsTransactionItem> previousUndo;
-
-  lastUndo = mUndoStack.Pop();
+  RefPtr<TransactionItem> lastUndo = mUndoStack.Pop();
   MOZ_ASSERT(lastUndo, "There should be at least two transactions.");
 
-  previousUndo = mUndoStack.Peek();
+  RefPtr<TransactionItem> previousUndo = mUndoStack.Peek();
   MOZ_ASSERT(previousUndo, "There should be at least two transactions.");
 
   nsresult rv = previousUndo->AddChild(lastUndo);
@@ -396,46 +422,57 @@ nsTransactionManager::BatchTopUndo()
 }
 
 nsresult
-nsTransactionManager::RemoveTopUndo()
+TransactionManager::RemoveTopUndo()
 {
   if (mUndoStack.IsEmpty()) {
     return NS_OK;
   }
 
-  RefPtr<nsTransactionItem> lastUndo = mUndoStack.Pop();
+  RefPtr<TransactionItem> lastUndo = mUndoStack.Pop();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTransactionManager::AddListener(nsITransactionListener *aListener)
+TransactionManager::AddListener(nsITransactionListener* aListener)
 {
-  NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
-  return mListeners.AppendObject(aListener) ? NS_OK : NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!aListener)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return AddTransactionListener(*aListener) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsTransactionManager::RemoveListener(nsITransactionListener *aListener)
+TransactionManager::RemoveListener(nsITransactionListener* aListener)
 {
-  NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
-  return mListeners.RemoveObject(aListener) ? NS_OK : NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!aListener)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  return RemoveTransactionListener(*aListener) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsTransactionManager::ClearUndoStack()
+TransactionManager::ClearUndoStack()
 {
+  if (NS_WARN_IF(!mDoStack.IsEmpty())) {
+    return NS_ERROR_FAILURE;
+  }
   mUndoStack.Clear();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTransactionManager::ClearRedoStack()
+TransactionManager::ClearRedoStack()
 {
+  if (NS_WARN_IF(!mDoStack.IsEmpty())) {
+    return NS_ERROR_FAILURE;
+  }
   mRedoStack.Clear();
   return NS_OK;
 }
 
 nsresult
-nsTransactionManager::WillDoNotify(nsITransaction *aTransaction, bool *aInterrupt)
+TransactionManager::WillDoNotify(nsITransaction* aTransaction,
+                                 bool* aInterrupt)
 {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
@@ -450,7 +487,8 @@ nsTransactionManager::WillDoNotify(nsITransaction *aTransaction, bool *aInterrup
 }
 
 nsresult
-nsTransactionManager::DidDoNotify(nsITransaction *aTransaction, nsresult aDoResult)
+TransactionManager::DidDoNotify(nsITransaction* aTransaction,
+                                nsresult aDoResult)
 {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
@@ -465,7 +503,8 @@ nsTransactionManager::DidDoNotify(nsITransaction *aTransaction, nsresult aDoResu
 }
 
 nsresult
-nsTransactionManager::WillUndoNotify(nsITransaction *aTransaction, bool *aInterrupt)
+TransactionManager::WillUndoNotify(nsITransaction* aTransaction,
+                                   bool* aInterrupt)
 {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
@@ -480,7 +519,8 @@ nsTransactionManager::WillUndoNotify(nsITransaction *aTransaction, bool *aInterr
 }
 
 nsresult
-nsTransactionManager::DidUndoNotify(nsITransaction *aTransaction, nsresult aUndoResult)
+TransactionManager::DidUndoNotify(nsITransaction* aTransaction,
+                                  nsresult aUndoResult)
 {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
@@ -495,7 +535,8 @@ nsTransactionManager::DidUndoNotify(nsITransaction *aTransaction, nsresult aUndo
 }
 
 nsresult
-nsTransactionManager::WillRedoNotify(nsITransaction *aTransaction, bool *aInterrupt)
+TransactionManager::WillRedoNotify(nsITransaction* aTransaction,
+                                   bool* aInterrupt)
 {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
@@ -510,7 +551,8 @@ nsTransactionManager::WillRedoNotify(nsITransaction *aTransaction, bool *aInterr
 }
 
 nsresult
-nsTransactionManager::DidRedoNotify(nsITransaction *aTransaction, nsresult aRedoResult)
+TransactionManager::DidRedoNotify(nsITransaction* aTransaction,
+                                  nsresult aRedoResult)
 {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
@@ -525,7 +567,7 @@ nsTransactionManager::DidRedoNotify(nsITransaction *aTransaction, nsresult aRedo
 }
 
 nsresult
-nsTransactionManager::WillBeginBatchNotify(bool *aInterrupt)
+TransactionManager::WillBeginBatchNotify(bool* aInterrupt)
 {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
@@ -540,7 +582,7 @@ nsTransactionManager::WillBeginBatchNotify(bool *aInterrupt)
 }
 
 nsresult
-nsTransactionManager::DidBeginBatchNotify(nsresult aResult)
+TransactionManager::DidBeginBatchNotify(nsresult aResult)
 {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
@@ -555,7 +597,7 @@ nsTransactionManager::DidBeginBatchNotify(nsresult aResult)
 }
 
 nsresult
-nsTransactionManager::WillEndBatchNotify(bool *aInterrupt)
+TransactionManager::WillEndBatchNotify(bool* aInterrupt)
 {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
@@ -570,7 +612,7 @@ nsTransactionManager::WillEndBatchNotify(bool *aInterrupt)
 }
 
 nsresult
-nsTransactionManager::DidEndBatchNotify(nsresult aResult)
+TransactionManager::DidEndBatchNotify(nsresult aResult)
 {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
@@ -585,7 +627,9 @@ nsTransactionManager::DidEndBatchNotify(nsresult aResult)
 }
 
 nsresult
-nsTransactionManager::WillMergeNotify(nsITransaction *aTop, nsITransaction *aTransaction, bool *aInterrupt)
+TransactionManager::WillMergeNotify(nsITransaction* aTop,
+                                    nsITransaction* aTransaction,
+                                    bool* aInterrupt)
 {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
@@ -600,10 +644,10 @@ nsTransactionManager::WillMergeNotify(nsITransaction *aTop, nsITransaction *aTra
 }
 
 nsresult
-nsTransactionManager::DidMergeNotify(nsITransaction *aTop,
-                                     nsITransaction *aTransaction,
-                                     bool aDidMerge,
-                                     nsresult aMergeResult)
+TransactionManager::DidMergeNotify(nsITransaction* aTop,
+                                   nsITransaction* aTransaction,
+                                   bool aDidMerge,
+                                   nsresult aMergeResult)
 {
   for (int32_t i = 0, lcount = mListeners.Count(); i < lcount; i++) {
     nsITransactionListener* listener = mListeners[i];
@@ -619,45 +663,42 @@ nsTransactionManager::DidMergeNotify(nsITransaction *aTop,
 }
 
 nsresult
-nsTransactionManager::BeginTransaction(nsITransaction *aTransaction,
-                                       nsISupports *aData)
+TransactionManager::BeginTransaction(nsITransaction* aTransaction,
+                                     nsISupports* aData)
 {
   // XXX: POSSIBLE OPTIMIZATION
   //      We could use a factory that pre-allocates/recycles transaction items.
-  RefPtr<nsTransactionItem> tx = new nsTransactionItem(aTransaction);
-  if (!tx) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  RefPtr<TransactionItem> transactionItem = new TransactionItem(aTransaction);
 
   if (aData) {
-    nsCOMArray<nsISupports>& data = tx->GetData();
+    nsCOMArray<nsISupports>& data = transactionItem->GetData();
     data.AppendObject(aData);
   }
 
-  mDoStack.Push(tx);
+  mDoStack.Push(transactionItem);
 
-  nsresult rv = tx->DoTransaction();
+  nsresult rv = transactionItem->DoTransaction();
   if (NS_FAILED(rv)) {
-    tx = mDoStack.Pop();
+    transactionItem = mDoStack.Pop();
     return rv;
   }
   return NS_OK;
 }
 
 nsresult
-nsTransactionManager::EndTransaction(bool aAllowEmpty)
+TransactionManager::EndTransaction(bool aAllowEmpty)
 {
-  RefPtr<nsTransactionItem> tx = mDoStack.Pop();
-  if (!tx) {
+  RefPtr<TransactionItem> transactionItem = mDoStack.Pop();
+  if (!transactionItem) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsITransaction> tint = tx->GetTransaction();
-  if (!tint && !aAllowEmpty) {
+  nsCOMPtr<nsITransaction> transaction = transactionItem->GetTransaction();
+  if (!transaction && !aAllowEmpty) {
     // If we get here, the transaction must be a dummy batch transaction
     // created by BeginBatch(). If it contains no children, get rid of it!
     int32_t nc = 0;
-    tx->GetNumberOfChildren(&nc);
+    transactionItem->GetNumberOfChildren(&nc);
     if (!nc) {
       return NS_OK;
     }
@@ -666,10 +707,7 @@ nsTransactionManager::EndTransaction(bool aAllowEmpty)
   // Check if the transaction is transient. If it is, there's nothing
   // more to do, just return.
   bool isTransient = false;
-  nsresult rv = NS_OK;
-  if (tint) {
-    rv = tint->GetIsTransient(&isTransient);
-  }
+  nsresult rv = transaction ? transaction->GetIsTransient(&isTransient) : NS_OK;
   if (NS_FAILED(rv) || isTransient || !mMaxTransactionCount) {
     // XXX: Should we be clearing the redo stack if the transaction
     //      is transient and there is nothing on the do stack?
@@ -679,31 +717,31 @@ nsTransactionManager::EndTransaction(bool aAllowEmpty)
   // Check if there is a transaction on the do stack. If there is,
   // the current transaction is a "sub" transaction, and should
   // be added to the transaction at the top of the do stack.
-  RefPtr<nsTransactionItem> top = mDoStack.Peek();
-  if (top) {
-    return top->AddChild(tx); // XXX: What do we do if this fails?
+  RefPtr<TransactionItem> topTransactionItem = mDoStack.Peek();
+  if (topTransactionItem) {
+    // XXX: What do we do if this fails?
+    return topTransactionItem->AddChild(transactionItem);
   }
 
   // The transaction succeeded, so clear the redo stack.
-  rv = ClearRedoStack();
-  if (NS_FAILED(rv)) {
-    // XXX: What do we do if this fails?
-  }
+  mRedoStack.Clear();
 
   // Check if we can coalesce this transaction with the one at the top
   // of the undo stack.
-  top = mUndoStack.Peek();
-  if (tint && top) {
+  topTransactionItem = mUndoStack.Peek();
+  if (transaction && topTransactionItem) {
     bool didMerge = false;
-    nsCOMPtr<nsITransaction> topTransaction = top->GetTransaction();
+    nsCOMPtr<nsITransaction> topTransaction =
+      topTransactionItem->GetTransaction();
     if (topTransaction) {
       bool doInterrupt = false;
-      rv = WillMergeNotify(topTransaction, tint, &doInterrupt);
+      rv = WillMergeNotify(topTransaction, transaction, &doInterrupt);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (!doInterrupt) {
-        rv = topTransaction->Merge(tint, &didMerge);
-        nsresult rv2 = DidMergeNotify(topTransaction, tint, didMerge, rv);
+        rv = topTransaction->Merge(transaction, &didMerge);
+        nsresult rv2 =
+          DidMergeNotify(topTransaction, transaction, didMerge, rv);
         if (NS_SUCCEEDED(rv)) {
           rv = rv2;
         }
@@ -721,10 +759,12 @@ nsTransactionManager::EndTransaction(bool aAllowEmpty)
   // pop the bottom transaction off the undo stack and release it!
   int32_t sz = mUndoStack.GetSize();
   if (mMaxTransactionCount > 0 && sz >= mMaxTransactionCount) {
-    RefPtr<nsTransactionItem> overflow = mUndoStack.PopBottom();
+    RefPtr<TransactionItem> overflow = mUndoStack.PopBottom();
   }
 
   // Push the transaction on the undo stack:
-  mUndoStack.Push(tx.forget());
+  mUndoStack.Push(transactionItem.forget());
   return NS_OK;
 }
+
+} // namespace mozilla

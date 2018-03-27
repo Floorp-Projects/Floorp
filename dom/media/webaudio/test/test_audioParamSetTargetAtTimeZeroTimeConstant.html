@@ -47,7 +47,10 @@ var gTest = {
   },
 };
 
-runTest();
+SimpleTest.waitForExplicitFinish();
+// Comparing different AudioContexts may result in different timing reated information being reported
+// when we jitter time, as they are on different Relative Timelines.
+SpecialPowers.pushPrefEnv({"set": [["privacy.resistFingerprinting.reduceTimerPrecision.jitter", false]]}, runTest);
 
 </script>
 </pre>

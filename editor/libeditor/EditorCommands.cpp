@@ -68,8 +68,8 @@ UndoCommand::IsCommandEnabled(const char* aCommandName,
   if (!textEditor->IsSelectionEditable()) {
     return NS_OK;
   }
-  bool isEnabled = false;
-  return editor->CanUndo(&isEnabled, aIsEnabled);
+  *aIsEnabled = textEditor->CanUndo();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -127,8 +127,8 @@ RedoCommand::IsCommandEnabled(const char* aCommandName,
   if (!textEditor->IsSelectionEditable()) {
     return NS_OK;
   }
-  bool isEnabled = false;
-  return editor->CanRedo(&isEnabled, aIsEnabled);
+  *aIsEnabled = textEditor->CanRedo();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -195,8 +195,10 @@ ClearUndoCommand::DoCommand(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  textEditor->EnableUndo(false); // Turning off undo clears undo/redo stacks.
-  textEditor->EnableUndo(true);  // This re-enables undo/redo.
+  // XXX Should we return NS_ERROR_FAILURE if ClearUndoRedo() returns false?
+  DebugOnly<bool> clearedUndoRedo = textEditor->ClearUndoRedo();
+  NS_WARNING_ASSERTION(clearedUndoRedo,
+    "Failed to clear undo/redo transactions");
   return NS_OK;
 }
 

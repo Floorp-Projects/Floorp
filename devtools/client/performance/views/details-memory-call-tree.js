@@ -56,7 +56,7 @@ var MemoryCallTreeView = extend(DetailsSubview, {
   /**
    * Fired on the "link" event for the call tree in this container.
    */
-  _onLink: function(_, treeItem) {
+  _onLink: function(treeItem) {
     let { url, line } = treeItem.frame.getInfo();
     gToolbox.viewSourceInDebugger(url, line).then(success => {
       if (success) {

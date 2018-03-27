@@ -61,7 +61,6 @@
 #include "nsStringStream.h"
 #include "nsISyncStreamListener.h"
 #include "nsITransport.h"
-#include "nsIUnicharStreamLoader.h"
 #include "nsIURIWithPrincipal.h"
 #include "nsIURLParser.h"
 #include "nsIUUIDGenerator.h"
@@ -1134,23 +1133,6 @@ NS_NewStreamLoader(nsIStreamLoader        **outStream,
                                     aCallbacks,
                                     aLoadFlags,
                                     aReferrer);
-}
-
-nsresult
-NS_NewUnicharStreamLoader(nsIUnicharStreamLoader        **result,
-                          nsIUnicharStreamLoaderObserver *observer)
-{
-    nsresult rv;
-    nsCOMPtr<nsIUnicharStreamLoader> loader =
-        do_CreateInstance(NS_UNICHARSTREAMLOADER_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = loader->Init(observer);
-        if (NS_SUCCEEDED(rv)) {
-            *result = nullptr;
-            loader.swap(*result);
-        }
-    }
-    return rv;
 }
 
 nsresult

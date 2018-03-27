@@ -15,6 +15,7 @@
 #include "mozilla/SelectionState.h"     // for RangeUpdater, etc.
 #include "mozilla/StyleSheet.h"         // for StyleSheet
 #include "mozilla/TextEditRules.h"      // for TextEditRules
+#include "mozilla/TransactionManager.h" // for TransactionManager
 #include "mozilla/WeakPtr.h"            // for WeakPtr
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
@@ -49,9 +50,9 @@ class nsINode;
 class nsIPresShell;
 class nsISupports;
 class nsITransaction;
+class nsITransactionListener;
 class nsIWidget;
 class nsRange;
-class nsTransactionManager;
 
 namespace mozilla {
 class AddStyleSheetTransaction;
@@ -1100,11 +1101,85 @@ public:
   bool ShouldHandleIMEComposition() const;
 
   /**
-   * Returns number of undo or redo items.  If TransactionManager returns
-   * unexpected error, returns -1.
+   * Returns number of undo or redo items.
    */
-  int32_t NumberOfUndoItems() const;
-  int32_t NumberOfRedoItems() const;
+  size_t NumberOfUndoItems() const
+  {
+    return mTransactionManager ? mTransactionManager->NumberOfUndoItems() : 0;
+  }
+  size_t NumberOfRedoItems() const
+  {
+    return mTransactionManager ? mTransactionManager->NumberOfRedoItems() : 0;
+  }
+
+  /**
+   * Returns true if this editor can store transactions for undo/redo.
+   */
+  bool IsUndoRedoEnabled() const
+  {
+    return !!mTransactionManager;
+  }
+
+  /**
+   * Return true if it's possible to undo/redo right now.
+   */
+  bool CanUndo() const
+  {
+    return IsUndoRedoEnabled() && NumberOfUndoItems() > 0;
+  }
+  bool CanRedo() const
+  {
+    return IsUndoRedoEnabled() && NumberOfRedoItems() > 0;
+  }
+
+  /**
+   * Enables or disables undo/redo feature.  Returns true if it succeeded,
+   * otherwise, e.g., we're undoing or redoing, returns false.
+   */
+  bool EnableUndoRedo(int32_t aMaxTransactionCount = -1)
+  {
+    if (!mTransactionManager) {
+      mTransactionManager = new TransactionManager();
+    }
+    return mTransactionManager->EnableUndoRedo(aMaxTransactionCount);
+  }
+  bool DisableUndoRedo()
+  {
+    if (!mTransactionManager) {
+      return true;
+    }
+    // XXX Even we clear the transaction manager, IsUndoRedoEnabled() keep
+    //     returning true...
+    return mTransactionManager->DisableUndoRedo();
+  }
+  bool ClearUndoRedo()
+  {
+    if (!mTransactionManager) {
+      return true;
+    }
+    return mTransactionManager->ClearUndoRedo();
+  }
+
+  /**
+   * Adds or removes transaction listener to or from the transaction manager.
+   * Note that TransactionManager does not check if the listener is in the
+   * array.  So, caller of AddTransactionListener() needs to manage if it's
+   * already been registered to the transaction manager.
+   */
+  bool AddTransactionListener(nsITransactionListener& aListener)
+  {
+    if (!mTransactionManager) {
+      return false;
+    }
+    return mTransactionManager->AddTransactionListener(aListener);
+  }
+  bool RemoveTransactionListener(nsITransactionListener& aListener)
+  {
+    if (!mTransactionManager) {
+      return false;
+    }
+    return mTransactionManager->RemoveTransactionListener(aListener);
+  }
 
   /**
    * From html rules code - migration in progress.
@@ -1398,12 +1473,6 @@ public:
   }
 
   /**
-   * GetTransactionManager() returns transaction manager associated with the
-   * editor.  This may return nullptr if undo/redo hasn't been enabled.
-   */
-  already_AddRefed<nsITransactionManager> GetTransactionManager() const;
-
-  /**
    * Get the input event target. This might return null.
    */
   virtual already_AddRefed<nsIContent> GetInputEventTargetContent() = 0;
@@ -1513,7 +1582,7 @@ protected:
   // Reference to text services document for mInlineSpellChecker.
   RefPtr<TextServicesDocument> mTextServicesDocument;
 
-  RefPtr<nsTransactionManager> mTxnMgr;
+  RefPtr<TransactionManager> mTransactionManager;
   // Cached root node.
   nsCOMPtr<Element> mRootElement;
   // The form field as an event receiver.

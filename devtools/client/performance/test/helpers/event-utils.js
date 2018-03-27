@@ -49,17 +49,14 @@ exports.times = function(target, eventName, receiveCount, options = {}) {
 
     target[add](eventName, function onEvent(...args) {
       if ("expectedArgs" in options) {
-        for (let index of Object.keys(options.expectedArgs)) {
+        for (let [index, expectedValue] of options.expectedArgs.entries()) {
+          const isExpectedValueRegExp = expectedValue instanceof RegExp;
           if (
-            // Expected argument matches this regexp.
-            (options.expectedArgs[index] instanceof RegExp &&
-             !options.expectedArgs[index].exec(args[index])) ||
-            // Expected argument is not a regexp and equal to the received arg.
-            (!(options.expectedArgs[index] instanceof RegExp) &&
-             options.expectedArgs[index] != args[index])
+            (isExpectedValueRegExp && !expectedValue.exec(args[index])) ||
+            (!isExpectedValueRegExp && expectedValue != args[index])
           ) {
             dump(`Ignoring event '${eventName}' with unexpected argument at index ` +
-                 `${index}: ${args[index]}\n`);
+                 `${index}: ${args[index]} - expected ${expectedValue}\n`);
             return;
           }
         }

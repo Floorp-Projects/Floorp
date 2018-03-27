@@ -30,21 +30,21 @@ add_task(async function() {
   let viewChanged = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED,
                          { spreadArgs: true });
   command($("toolbarbutton[data-view='js-calltree']"));
-  let [, viewName] = await viewChanged;
+  let [viewName] = await viewChanged;
   is(viewName, "js-calltree", "UI_DETAILS_VIEW_SELECTED fired with view name");
   checkViews(DetailsView, $, "js-calltree");
 
   // Select js flamegraph view.
   viewChanged = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED, { spreadArgs: true });
   command($("toolbarbutton[data-view='js-flamegraph']"));
-  [, viewName] = await viewChanged;
+  [viewName] = await viewChanged;
   is(viewName, "js-flamegraph", "UI_DETAILS_VIEW_SELECTED fired with view name");
   checkViews(DetailsView, $, "js-flamegraph");
 
   // Select waterfall view.
   viewChanged = once(DetailsView, EVENTS.UI_DETAILS_VIEW_SELECTED, { spreadArgs: true });
   command($("toolbarbutton[data-view='waterfall']"));
-  [, viewName] = await viewChanged;
+  [viewName] = await viewChanged;
   is(viewName, "waterfall", "UI_DETAILS_VIEW_SELECTED fired with view name");
   checkViews(DetailsView, $, "waterfall");
 

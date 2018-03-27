@@ -11,7 +11,6 @@ const MARKER_NAMES = ["document::DOMContentLoaded", "document::Load"];
 
 add_task(async function() {
   let browser = await addTab(MAIN_DOMAIN + "doc_innerHTML.html");
-  let doc = browser.contentDocumentAsCPOW;
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());
@@ -23,7 +22,9 @@ add_task(async function() {
     ok(false, "Should not be emitting doc-loading events.");
   });
 
-  executeSoon(() => doc.location.reload());
+  ContentTask.spawn(browser, null, function() {
+    content.location.reload();
+  });
 
   await waitForMarkerType(front, MARKER_NAMES, () => true, e => e, "markers");
   await front.stop(rec);

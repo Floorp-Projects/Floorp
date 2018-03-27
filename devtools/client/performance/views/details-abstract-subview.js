@@ -111,7 +111,7 @@ var DetailsSubview = {
   /**
    * Called when recording stops or is selected.
    */
-  _onRecordingStoppedOrSelected: function(_, state, recording) {
+  _onRecordingStoppedOrSelected: function(state, recording) {
     if (typeof state !== "string") {
       recording = state;
     }
@@ -132,7 +132,7 @@ var DetailsSubview = {
   /**
    * Fired when a range is selected or cleared in the OverviewView.
    */
-  _onOverviewRangeChange: function(_, interval) {
+  _onOverviewRangeChange: function(interval) {
     if (!this.requiresUpdateOnRangeChange) {
       return;
     }
@@ -165,7 +165,7 @@ var DetailsSubview = {
   /**
    * Fired when a preference in `devtools.performance.ui.` is changed.
    */
-  _onPrefChanged: function(_, prefName, prefValue) {
+  _onPrefChanged: function(prefName, prefValue) {
     if (~this.observedPrefs.indexOf(prefName) && this._onObservedPrefChange) {
       this._onObservedPrefChange(prefName);
     }

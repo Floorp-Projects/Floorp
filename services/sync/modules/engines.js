@@ -879,7 +879,8 @@ SyncEngine.prototype = {
       return existingSyncID;
     }
     this._log.debug("Engine syncIDs: " + [newSyncID, existingSyncID]);
-    this.setSyncIDPref(newSyncID);
+    Svc.Prefs.set(this.name + ".syncID", newSyncID);
+    Svc.Prefs.set(this.name + ".lastSync", "0");
     return newSyncID;
   },
 
@@ -902,13 +903,7 @@ SyncEngine.prototype = {
    * @return the new sync ID.
    */
   async resetLocalSyncID() {
-    return this.setSyncIDPref(Utils.makeGUID());
-  },
-
-  setSyncIDPref(syncID) {
-    Svc.Prefs.set(this.name + ".syncID", syncID);
-    Svc.Prefs.set(this.name + ".lastSync", "0");
-    return syncID;
+    return this.ensureCurrentSyncID(Utils.makeGUID());
   },
 
   /*

@@ -240,7 +240,7 @@ var DetailsView = {
   /**
    * Called when recording stops or is selected.
    */
-  _onRecordingStoppedOrSelected: function(_, state, recording) {
+  _onRecordingStoppedOrSelected: function(state, recording) {
     if (typeof state === "string" && state !== "recording-stopped") {
       return;
     }
