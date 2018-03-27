@@ -3492,19 +3492,24 @@ nsTreeBodyFrame::PaintTwisty(int32_t              aRowIndex,
       bool useImageRegion = true;
       GetImage(aRowIndex, aColumn, true, twistyContext, useImageRegion, getter_AddRefs(image));
       if (image) {
-        nsPoint pt = twistyRect.TopLeft();
+        nsPoint anchorPoint = twistyRect.TopLeft();
 
         // Center the image. XXX Obey vertical-align style prop?
         if (imageSize.height < twistyRect.height) {
-          pt.y += (twistyRect.height - imageSize.height)/2;
+          anchorPoint.y += (twistyRect.height - imageSize.height)/2;
         }
+
+        // Apply context paint if applicable
+        Maybe<SVGImageContext> svgContext;
+        SVGImageContext::MaybeStoreContextPaint(svgContext, twistyContext,
+                                                image);
 
         // Paint the image.
         result &=
           nsLayoutUtils::DrawSingleUnscaledImage(
               aRenderingContext, aPresContext, image,
-              SamplingFilter::POINT, pt, &aDirtyRect,
-              imgIContainer::FLAG_NONE, &imageSize);
+              SamplingFilter::POINT, anchorPoint, &aDirtyRect,
+              svgContext, imgIContainer::FLAG_NONE, &imageSize);
       }
     }
   }
@@ -3879,12 +3884,16 @@ nsTreeBodyFrame::PaintCheckbox(int32_t              aRowIndex,
       pt.x += (checkboxRect.width - imageSize.width)/2;
     }
 
+    // Apply context paint if applicable
+    Maybe<SVGImageContext> svgContext;
+    SVGImageContext::MaybeStoreContextPaint(svgContext, checkboxContext,
+                                            image);
     // Paint the image.
     result &=
       nsLayoutUtils::DrawSingleUnscaledImage(aRenderingContext,
         aPresContext,
         image, SamplingFilter::POINT, pt, &aDirtyRect,
-        imgIContainer::FLAG_NONE, &imageSize);
+        svgContext, imgIContainer::FLAG_NONE, &imageSize);
   }
 
   return result;
