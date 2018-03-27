@@ -358,7 +358,7 @@ var ExtensionsUI = {
         } else if (topic == "swapping") {
           return true;
         }
-        if (topic == "removed") {
+        if (topic == "removed" || topic == "dismissed") {
           Services.tm.dispatchToMainThread(() => {
             resolve(false);
           });
