@@ -41,8 +41,6 @@ EXPORTS += [
     'nsCSSPropertyIDSet.h',
     'nsCSSPropList.h',
     'nsCSSProps.h',
-    'nsCSSPseudoClasses.h',
-    'nsCSSPseudoClassList.h',
     'nsCSSPseudoElementList.h',
     'nsCSSPseudoElements.h',
     'nsCSSScanner.h',
@@ -189,7 +187,6 @@ UNIFIED_SOURCES += [
     'nsCSSFontFaceRule.cpp',
     'nsCSSKeywords.cpp',
     'nsCSSProps.cpp',
-    'nsCSSPseudoClasses.cpp',
     'nsCSSScanner.cpp',
     'nsCSSValue.cpp',
     'nsDOMCSSAttrDeclaration.cpp',
@@ -240,8 +237,6 @@ UNIFIED_SOURCES += [
 
 SOURCES += [
     'nsCSSAnonBoxes.cpp',
-    # Both nsCSSPseudoElements.cpp and nsCSSPseudoClasses.cpp defined a
-    # 'mozPlaceholder' static atom.
     'nsCSSPseudoElements.cpp',
     # nsLayoutStylesheetCache.cpp uses nsExceptionHandler.h, which includes
     # windows.h.

@@ -19,7 +19,6 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/ComputedTimingFunction.h"
 #include "nsChangeHint.h"
-#include "nsCSSPseudoClasses.h"
 #include "nsIDocument.h"
 #include "nsStyleStruct.h"
 
