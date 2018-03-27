@@ -26,20 +26,36 @@ add_task(async function run_test() {
   await promiseStartupManager();
 });
 
+function checkActive(expected) {
+  let target = { active: false };
+  let load = () => {
+    Services.scriptloader.loadSubScript("chrome://bug675371/content/test.js", target);
+  };
+
+  if (expected) {
+    load();
+  } else {
+    Assert.throws(load);
+  }
+  equal(target.active, expected, "Manifest is active?");
+}
+
 add_task(async function test() {
   let {addon} = await AddonTestUtils.promiseInstallXPI(ADDON);
 
   Assert.ok(addon.isActive);
 
   // Tests that chrome.manifest is registered when the addon is installed.
-  var target = { active: false };
-  Services.scriptloader.loadSubScript("chrome://bug675371/content/test.js", target);
-  Assert.ok(target.active);
+  checkActive(true);
+
+  addon.userDisabled = true;
+  checkActive(false);
+
+  addon.userDisabled = false;
+  checkActive(true);
 
   await promiseShutdownManager();
 
   // Tests that chrome.manifest remains registered at app shutdown.
-  target.active = false;
-  Services.scriptloader.loadSubScript("chrome://bug675371/content/test.js", target);
-  Assert.ok(target.active);
+  checkActive(true);
 });
