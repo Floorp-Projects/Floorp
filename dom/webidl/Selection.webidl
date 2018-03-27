@@ -25,6 +25,9 @@ interface Selection {
    */
   [Throws, BinaryName="addRangeJS"]
   void      addRange(Range range);
+  /**
+   * Removes a range from the current selection.
+   */
   [Throws]
   void      removeRange(Range range);
   [Throws]

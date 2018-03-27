@@ -2377,7 +2377,9 @@ printf("HandleTableSelection: Removing cell from multi-cell selection\n");
                mAppendStartSelectedCell = nullptr;
 
             // Deselect cell by removing its range from selection
-            return mDomSelections[index]->RemoveRange(range);
+            ErrorResult err;
+            mDomSelections[index]->RemoveRange(*range, err);
+            return err.StealNSResult();
           }
         }
         mUnselectCellOnMouseUp = nullptr;
@@ -2465,7 +2467,7 @@ nsFrameSelection::UnselectCells(nsIContent *aTableContent,
         if (curRowIndex < minRowIndex || curRowIndex > maxRowIndex ||
             curColIndex < minColIndex || curColIndex > maxColIndex) {
 
-          mDomSelections[index]->RemoveRange(range);
+          mDomSelections[index]->RemoveRange(*range, IgnoreErrors());
           // Since we've removed the range, decrement pointer to next range
           mSelectedCellIndex--;
         }
@@ -2487,7 +2489,7 @@ nsFrameSelection::UnselectCells(nsIContent *aTableContent,
             origColIndex <= static_cast<uint32_t>(maxColIndex) && maxColIndex >= 0 &&
             origColIndex + actualColSpan - 1 >= static_cast<uint32_t>(minColIndex)) {
 
-          mDomSelections[index]->RemoveRange(range);
+          mDomSelections[index]->RemoveRange(*range, IgnoreErrors());
           // Since we've removed the range, decrement pointer to next range
           mSelectedCellIndex--;
         }
