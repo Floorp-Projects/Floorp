@@ -28,7 +28,7 @@ public:
   NS_DECL_NSIMIMEINFO
   NS_DECL_NSIHANDLERINFO
 
-  nsMIMEInfoAndroid(const nsACString& aMIMEType);
+  explicit nsMIMEInfoAndroid(const nsACString& aMIMEType);
 
 private:
   ~nsMIMEInfoAndroid() {}
@@ -48,7 +48,7 @@ public:
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIHANDLERAPP
-    SystemChooser(nsMIMEInfoAndroid* aOuter): mOuter(aOuter) {}
+    explicit SystemChooser(nsMIMEInfoAndroid* aOuter): mOuter(aOuter) {}
 
   private:
     ~SystemChooser() {}

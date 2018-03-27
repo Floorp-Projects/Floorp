@@ -747,7 +747,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
         for (auto& entry : tenureCounts.entries) {
             if (entry.count >= 3000) {
                 ObjectGroup* group = entry.group;
-                if (group->canPreTenure() && group->zone()->group()->canEnterWithoutYielding(cx)) {
+                if (group->canPreTenure()) {
                     AutoCompartment ac(cx, group);
                     group->setShouldPreTenure(cx);
                     pretenureCount++;
@@ -757,7 +757,6 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     }
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         if (shouldPretenure && zone->allocNurseryStrings && zone->tenuredStrings >= 30 * 1000) {
-            JSRuntime::AutoProhibitActiveContextChange apacc(rt);
             CancelOffThreadIonCompile(zone);
             bool preserving = zone->isPreservingCode();
             zone->setPreservingCode(false);

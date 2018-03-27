@@ -71,5 +71,7 @@ job-defaults:
 jobs:
    firefox:
       shipping-product: firefox
+      attributes:
+         build_platform: linux64-nightly
       treeherder:
          symbol: Snap(BF)

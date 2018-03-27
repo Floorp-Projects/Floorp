@@ -677,6 +677,17 @@ namespace mozilla {
 namespace ipc {
 namespace windows {
 
+static bool
+ProcessTypeRequiresWinEventHook()
+{
+  switch (XRE_GetProcessType()) {
+    case GeckoProcessType_GMPlugin:
+      return false;
+    default:
+      return true;
+  }
+}
+
 void
 InitUIThread()
 {
@@ -690,16 +701,16 @@ InitUIThread()
   MOZ_ASSERT(gUIThreadId == GetCurrentThreadId(),
              "Called InitUIThread multiple times on different threads!");
 
-  if (!gWinEventHook) {
+  if (!gWinEventHook && ProcessTypeRequiresWinEventHook()) {
     gWinEventHook = SetWinEventHook(EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY,
                                     NULL, &WinEventHook, GetCurrentProcessId(),
                                     gUIThreadId, WINEVENT_OUTOFCONTEXT);
+    MOZ_ASSERT(gWinEventHook);
 
     // We need to execute this after setting the hook in case the OLE window
     // already existed.
     gCOMWindow = FindCOMWindow();
   }
-  MOZ_ASSERT(gWinEventHook);
 }
 
 } // namespace windows

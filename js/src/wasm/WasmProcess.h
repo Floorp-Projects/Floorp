@@ -52,8 +52,14 @@ RegisterCodeSegment(const CodeSegment* cs);
 void
 UnregisterCodeSegment(const CodeSegment* cs);
 
+// Called once before/after the last VM execution which could execute or compile
+// wasm.
+
+bool
+Init();
+
 void
-ShutDownProcessStaticData();
+ShutDown();
 
 } // namespace wasm
 } // namespace js

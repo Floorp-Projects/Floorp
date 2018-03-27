@@ -285,7 +285,7 @@ void HandleException(ResumeFromException* rfe);
 
 void EnsureBareExitFrame(JitActivation* act, JitFrameLayout* frame);
 
-void TraceJitActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc);
+void TraceJitActivations(JSContext* cx, JSTracer* trc);
 
 void UpdateJitActivationsForMinorGC(JSRuntime* rt);
 

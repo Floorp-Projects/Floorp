@@ -436,7 +436,7 @@ nsNSSSocketInfo::DriveHandshake()
       return NS_BASE_STREAM_WOULD_BLOCK;
     }
 
-    SetCanceled(errorCode, SSLErrorMessageType::Plain);
+    SetCanceled(errorCode);
     return GetXPCOMFromNSSError(errorCode);
   }
   return NS_OK;
@@ -666,8 +666,7 @@ nsNSSSocketInfo::SetCertVerificationWaiting()
 // attempt to acquire locks that are already held by libssl when it calls
 // callbacks.
 void
-nsNSSSocketInfo::SetCertVerificationResult(PRErrorCode errorCode,
-                                           SSLErrorMessageType errorMessageType)
+nsNSSSocketInfo::SetCertVerificationResult(PRErrorCode errorCode)
 {
   MOZ_ASSERT(mCertVerificationState == waiting_for_cert_verification,
              "Invalid state transition to cert_verification_finished");
@@ -677,7 +676,6 @@ nsNSSSocketInfo::SetCertVerificationResult(PRErrorCode errorCode,
     // Only replace errorCode if there was originally no error
     if (rv != SECSuccess && errorCode == 0) {
       errorCode = PR_GetError();
-      errorMessageType = SSLErrorMessageType::Plain;
       if (errorCode == 0) {
         NS_ERROR("SSL_AuthCertificateComplete didn't set error code");
         errorCode = PR_INVALID_STATE_ERROR;
@@ -687,7 +685,7 @@ nsNSSSocketInfo::SetCertVerificationResult(PRErrorCode errorCode,
 
   if (errorCode) {
     mFailedVerification = true;
-    SetCanceled(errorCode, errorMessageType);
+    SetCanceled(errorCode);
   }
 
   if (mPlaintextBytesRead && !errorCode) {
@@ -719,7 +717,6 @@ void nsSSLIOLayerHelpers::Cleanup()
 
 static void
 nsHandleSSLError(nsNSSSocketInfo* socketInfo,
-                 ::mozilla::psm::SSLErrorMessageType errtype,
                  PRErrorCode err)
 {
   if (!NS_IsMainThread()) {
@@ -737,15 +734,8 @@ nsHandleSSLError(nsNSSSocketInfo* socketInfo,
     return;
   }
 
-  // We must cancel first, which sets the error code.
-  socketInfo->SetCanceled(err, SSLErrorMessageType::Plain);
-  nsAutoString errorString;
-  socketInfo->GetErrorLogMessage(err, errtype, errorString);
-
-  if (!errorString.IsEmpty()) {
-    nsContentUtils::LogSimpleConsoleError(errorString, "SSL",
-                                          !!socketInfo->GetOriginAttributes().mPrivateBrowsingId);
-  }
+  // We must cancel, which sets the error code.
+  socketInfo->SetCanceled(err);
 }
 
 namespace {
@@ -1075,21 +1065,18 @@ class SSLErrorRunnable : public SyncRunnableBase
 {
  public:
   SSLErrorRunnable(nsNSSSocketInfo* infoObject,
-                   ::mozilla::psm::SSLErrorMessageType errtype,
                    PRErrorCode errorCode)
     : mInfoObject(infoObject)
-    , mErrType(errtype)
     , mErrorCode(errorCode)
   {
   }
 
   virtual void RunOnTargetThread() override
   {
-    nsHandleSSLError(mInfoObject, mErrType, mErrorCode);
+    nsHandleSSLError(mInfoObject, mErrorCode);
   }
 
   RefPtr<nsNSSSocketInfo> mInfoObject;
-  ::mozilla::psm::SSLErrorMessageType mErrType;
   const PRErrorCode mErrorCode;
 };
 
@@ -1303,7 +1290,7 @@ checkHandshake(int32_t bytesTransfered, bool wasReading,
     if (!wantRetry && mozilla::psm::IsNSSErrorCode(err) &&
         !socketInfo->GetErrorCode()) {
       RefPtr<SyncRunnableBase> runnable(
-        new SSLErrorRunnable(socketInfo, SSLErrorMessageType::Plain, err));
+        new SSLErrorRunnable(socketInfo, err));
       (void) runnable->DispatchToMainThreadAndWait();
     }
   } else if (wasReading && 0 == bytesTransfered) {
@@ -1341,7 +1328,7 @@ checkHandshake(int32_t bytesTransfered, bool wasReading,
     // this socket. Note that we use the original error because if we use
     // PR_CONNECT_RESET_ERROR, we'll repeated try to reconnect.
     if (originalError != PR_WOULD_BLOCK_ERROR && !socketInfo->GetErrorCode()) {
-      socketInfo->SetCanceled(originalError, SSLErrorMessageType::Plain);
+      socketInfo->SetCanceled(originalError);
     }
     PR_SetError(err, 0);
   }

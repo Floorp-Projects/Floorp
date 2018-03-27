@@ -485,19 +485,19 @@ JS_NewContext(uint32_t maxbytes, uint32_t maxNurseryBytes, JSRuntime* parentRunt
 JS_PUBLIC_API(JSContext*)
 JS_NewCooperativeContext(JSContext* siblingContext)
 {
-    return NewCooperativeContext(siblingContext);
+    MOZ_CRASH("Cooperative scheduling is unsupported");
 }
 
 JS_PUBLIC_API(void)
 JS_YieldCooperativeContext(JSContext* cx)
 {
-    YieldCooperativeContext(cx);
+    MOZ_CRASH("Cooperative scheduling is unsupported");
 }
 
 JS_PUBLIC_API(void)
 JS_ResumeCooperativeContext(JSContext* cx)
 {
-    ResumeCooperativeContext(cx);
+    MOZ_CRASH("Cooperative scheduling is unsupported");
 }
 
 JS_PUBLIC_API(void)
@@ -577,15 +577,6 @@ JS_PUBLIC_API(JSRuntime*)
 JS_GetRuntime(JSContext* cx)
 {
     return cx->runtime();
-}
-
-JS_PUBLIC_API(void)
-JS::SetSingleThreadedExecutionCallbacks(JSContext* cx,
-                                        BeginSingleThreadedExecutionCallback begin,
-                                        EndSingleThreadedExecutionCallback end)
-{
-    cx->runtime()->beginSingleThreadedExecutionCallback = begin;
-    cx->runtime()->endSingleThreadedExecutionCallback = end;
 }
 
 JS_PUBLIC_API(JS::ContextOptions&)

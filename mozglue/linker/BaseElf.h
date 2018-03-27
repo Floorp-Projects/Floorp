@@ -33,7 +33,7 @@ public:
    */
   const Elf::Sym *GetSymbol(const char *symbol, unsigned long hash) const;
 
-  BaseElf(const char *path, Mappable *mappable = nullptr)
+  explicit BaseElf(const char *path, Mappable *mappable = nullptr)
   : LibHandle(path)
   , mappable(mappable)
   {
@@ -118,7 +118,7 @@ public:
                                                  void *base_addr);
 
 private:
-  LoadedElf(const char *path)
+  explicit LoadedElf(const char *path)
   : BaseElf(path) { }
 
   ~LoadedElf()

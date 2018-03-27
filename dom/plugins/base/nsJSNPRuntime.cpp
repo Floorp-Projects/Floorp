@@ -1600,10 +1600,11 @@ static bool
 CallNPMethod(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  JS::Rooted<JSObject*> obj(cx, JS_THIS_OBJECT(cx, vp));
-  if (!obj)
-      return false;
-
+  if (!args.thisv().isObject()) {
+    ThrowJSExceptionASCII(cx, "plug-in method called on incompatible non-object");
+    return false;
+  }
+  JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
   return CallNPMethodInternal(cx, obj, args.length(), args.array(), vp, false);
 }
 

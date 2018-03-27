@@ -1867,6 +1867,28 @@ WinUtils::ResolveJunctionPointsAndSymLinks(nsIFile* aPath)
 
 /* static */
 bool
+WinUtils::RunningFromANetworkDrive()
+{
+  wchar_t exePath[MAX_PATH];
+  if (!::GetModuleFileNameW(nullptr, exePath, MAX_PATH)) {
+    return false;
+  }
+
+  std::wstring exeString(exePath);
+  if (!widget::WinUtils::ResolveJunctionPointsAndSymLinks(exeString)) {
+    return false;
+  }
+
+  wchar_t volPath[MAX_PATH];
+  if (!::GetVolumePathNameW(exeString.c_str(), volPath, MAX_PATH)) {
+    return false;
+  }
+
+  return (::GetDriveTypeW(volPath) == DRIVE_REMOTE);
+}
+
+/* static */
+bool
 WinUtils::SanitizePath(const wchar_t* aInputPath, nsAString& aOutput)
 {
   aOutput.Truncate();

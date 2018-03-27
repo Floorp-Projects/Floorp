@@ -34,7 +34,7 @@ public:
   using NativeCallbacks::DisposeNative;
   using NativeCallbacks::AttachNative;
 
-  HLSResourceCallbacksSupport(HLSDecoder* aResource);
+  explicit HLSResourceCallbacksSupport(HLSDecoder* aResource);
   void Detach();
   void OnDataArrived();
   void OnError(int aErrorCode);

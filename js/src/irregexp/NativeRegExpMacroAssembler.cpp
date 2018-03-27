@@ -167,9 +167,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
     // avoid failing repeatedly when the regex code is called from Ion JIT code,
     // see bug 1208819.
     Label stack_ok;
-    void* context_addr = cx->zone()->group()->addressOfOwnerContext();
-    masm.loadPtr(AbsoluteAddress(context_addr), temp0);
-    Address limit_addr(temp0, offsetof(JSContext, jitStackLimitNoInterrupt));
+    AbsoluteAddress limit_addr(cx->addressOfJitStackLimitNoInterrupt());
     masm.branchStackPtrRhs(Assembler::Below, limit_addr, &stack_ok);
 
     // Exit with an exception. There is not enough space on the stack
@@ -284,9 +282,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
     }
 
     // Initialize backtrack stack pointer.
-    size_t baseOffset = offsetof(JSContext, regexpStack) + RegExpStack::offsetOfBase();
-    masm.loadPtr(AbsoluteAddress(context_addr), backtrack_stack_pointer);
-    masm.loadPtr(Address(backtrack_stack_pointer, baseOffset), backtrack_stack_pointer);
+    masm.loadPtr(AbsoluteAddress(cx->regexpStack.ref().addressOfBase()), backtrack_stack_pointer);
     masm.storePtr(backtrack_stack_pointer,
                   Address(masm.getStackPointer(), offsetof(FrameData, backtrackStackBase)));
 
@@ -491,10 +487,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
         Address backtrackStackBaseAddress(temp2, offsetof(FrameData, backtrackStackBase));
         masm.subPtr(backtrackStackBaseAddress, backtrack_stack_pointer);
 
-        void* context_addr = cx->zone()->group()->addressOfOwnerContext();
-        size_t baseOffset = offsetof(JSContext, regexpStack) + RegExpStack::offsetOfBase();
-        masm.loadPtr(AbsoluteAddress(context_addr), temp1);
-        masm.loadPtr(Address(temp1, baseOffset), temp1);
+        masm.loadPtr(AbsoluteAddress(cx->regexpStack.ref().addressOfBase()), temp1);
         masm.storePtr(temp1, backtrackStackBaseAddress);
         masm.addPtr(temp1, backtrack_stack_pointer);
 
@@ -575,10 +568,8 @@ NativeRegExpMacroAssembler::Backtrack()
 
     // Check for an interrupt.
     Label noInterrupt;
-    void* contextAddr = cx->zone()->group()->addressOfOwnerContext();
-    masm.loadPtr(AbsoluteAddress(contextAddr), temp0);
     masm.branch32(Assembler::Equal,
-                  Address(temp0, offsetof(JSContext, interruptRegExpJit_)),
+                  AbsoluteAddress(cx->addressOfInterruptRegExpJit()),
                   Imm32(0),
                   &noInterrupt);
     masm.movePtr(ImmWord(RegExpRunStatus_Error), temp0);
@@ -1145,11 +1136,10 @@ NativeRegExpMacroAssembler::CheckBacktrackStackLimit()
     JitSpew(SPEW_PREFIX "CheckBacktrackStackLimit");
 
     Label no_stack_overflow;
-    void* context_addr = cx->zone()->group()->addressOfOwnerContext();
-    size_t limitOffset = offsetof(JSContext, regexpStack) + RegExpStack::offsetOfLimit();
-    masm.loadPtr(AbsoluteAddress(context_addr), temp1);
-    masm.branchPtr(Assembler::AboveOrEqual, Address(temp1, limitOffset),
-                   backtrack_stack_pointer, &no_stack_overflow);
+    masm.branchPtr(Assembler::AboveOrEqual,
+                   AbsoluteAddress(cx->regexpStack.ref().addressOfLimit()),
+                   backtrack_stack_pointer,
+                   &no_stack_overflow);
 
     // Copy the stack pointer before the call() instruction modifies it.
     masm.moveStackPtrTo(temp2);
