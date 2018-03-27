@@ -944,7 +944,7 @@ EncodeSourceSurfaceInternal(SourceSurface* aSurface,
                            const nsAString& aOutputOptions,
                            gfxUtils::BinaryOrData aBinaryOrData,
                            FILE* aFile,
-                           nsCString* aStrOut)
+                           nsACString* aStrOut)
 {
   MOZ_ASSERT(aBinaryOrData == gfxUtils::eDataURIEncode || aFile || aStrOut,
              "Copying binary encoding to clipboard not currently supported");
@@ -1057,7 +1057,9 @@ EncodeSourceSurfaceInternal(SourceSurface* aSurface,
   rv = Base64Encode(Substring(imgData.begin(), imgSize), encodedImg);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCString string("data:");
+  nsCString stringBuf;
+  nsACString& string = aStrOut ? *aStrOut : stringBuf;
+  string.AppendLiteral("data:");
   string.Append(aMimeType);
   string.AppendLiteral(";base64,");
   string.Append(encodedImg);
@@ -1078,9 +1080,7 @@ EncodeSourceSurfaceInternal(SourceSurface* aSurface,
     }
 #endif
     fprintf(aFile, "%s", string.BeginReading());
-  } else if (aStrOut) {
-    *aStrOut = string;
-  } else {
+  } else if (!aStrOut) {
     nsCOMPtr<nsIClipboardHelper> clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
     if (clipboard) {
       clipboard->CopyString(NS_ConvertASCIItoUTF16(string));
