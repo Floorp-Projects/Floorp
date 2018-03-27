@@ -485,18 +485,21 @@ JS_NewContext(uint32_t maxbytes, uint32_t maxNurseryBytes, JSRuntime* parentRunt
 JS_PUBLIC_API(JSContext*)
 JS_NewCooperativeContext(JSContext* siblingContext)
 {
+    MOZ_CRASH("Cooperative scheduling is unsupported");
     return NewCooperativeContext(siblingContext);
 }
 
 JS_PUBLIC_API(void)
 JS_YieldCooperativeContext(JSContext* cx)
 {
+    MOZ_CRASH("Cooperative scheduling is unsupported");
     YieldCooperativeContext(cx);
 }
 
 JS_PUBLIC_API(void)
 JS_ResumeCooperativeContext(JSContext* cx)
 {
+    MOZ_CRASH("Cooperative scheduling is unsupported");
     ResumeCooperativeContext(cx);
 }
 
