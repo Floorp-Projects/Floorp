@@ -46,6 +46,7 @@
 #include "nsSVGElement.h"
 #include "nsTArray.h"
 #include "nsTransitionManager.h"
+#include "nsWindowSizes.h"
 
 #include "mozilla/CORSMode.h"
 #include "mozilla/DeclarationBlockInlines.h"

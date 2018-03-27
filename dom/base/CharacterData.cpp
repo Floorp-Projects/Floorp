@@ -37,6 +37,7 @@
 #include "nsBidiUtils.h"
 #include "PLDHashTable.h"
 #include "mozilla/Sprintf.h"
+#include "nsWindowSizes.h"
 #include "nsWrapperCacheInlines.h"
 
 namespace mozilla {

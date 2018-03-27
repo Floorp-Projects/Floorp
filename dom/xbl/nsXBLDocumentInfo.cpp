@@ -23,6 +23,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
+#include "nsWindowSizes.h"
 #include "mozilla/Services.h"
 #include "xpcpublic.h"
 #include "mozilla/scache/StartupCache.h"
