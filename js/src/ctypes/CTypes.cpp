@@ -10,22 +10,24 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Vector.h"
+#include "mozilla/WrappingOperations.h"
 
-#include <limits>
-#include <math.h>
-#include <stdint.h>
+#if defined(XP_UNIX)
+# include <errno.h>
+#endif
 #if defined(XP_WIN)
 # include <float.h>
 #endif
 #if defined(SOLARIS)
 # include <ieeefp.h>
 #endif
+#include <limits>
+#include <math.h>
+#include <stdint.h>
 #ifdef HAVE_SSIZE_T
 # include <sys/types.h>
 #endif
-#if defined(XP_UNIX)
-# include <errno.h>
-#endif
+#include <type_traits>
 
 #include "jsexn.h"
 #include "jsnum.h"
@@ -2575,54 +2577,58 @@ JS_STATIC_ASSERT(sizeof(float) == 4);
 JS_STATIC_ASSERT(sizeof(PRFuncPtr) == sizeof(void*));
 JS_STATIC_ASSERT(numeric_limits<double>::is_signed);
 
-// Templated helper to convert FromType to TargetType, for the default case
-// where the trivial POD constructor will do.
-template<class TargetType, class FromType>
-struct ConvertImpl {
-  static MOZ_ALWAYS_INLINE TargetType Convert(FromType d) {
-    return TargetType(d);
+template<typename TargetType,
+         typename FromType,
+         bool FromIsIntegral = std::is_integral<FromType>::value>
+struct ConvertImpl;
+
+template<typename TargetType, typename FromType>
+struct ConvertImpl<TargetType, FromType, false>
+{
+  static MOZ_ALWAYS_INLINE TargetType Convert(FromType input) {
+    return JS::ToSignedOrUnsignedInteger<TargetType>(input);
   }
 };
 
-#ifdef _MSC_VER
-// MSVC can't perform double to unsigned __int64 conversion when the
-// double is greater than 2^63 - 1. Help it along a little.
-template<>
-struct ConvertImpl<uint64_t, double> {
-  static MOZ_ALWAYS_INLINE uint64_t Convert(double d) {
-    return d > 0x7fffffffffffffffui64 ?
-           uint64_t(d - 0x8000000000000000ui64) + 0x8000000000000000ui64 :
-           uint64_t(d);
-  }
-};
-#endif
-
-// C++ doesn't guarantee that exact values are the only ones that will
-// round-trip. In fact, on some platforms, including SPARC, there are pairs of
-// values, a uint64_t and a double, such that neither value is exactly
-// representable in the other type, but they cast to each other.
-#if defined(SPARC) || defined(__powerpc__)
-// Simulate x86 overflow behavior
-template<>
-struct ConvertImpl<uint64_t, double> {
-  static MOZ_ALWAYS_INLINE uint64_t Convert(double d) {
-    return d >= 0xffffffffffffffff ?
-           0x8000000000000000 : uint64_t(d);
+template<typename TargetType>
+struct ConvertUnsignedTargetTo
+{
+  static TargetType
+  convert(typename std::make_unsigned<TargetType>::type input)
+  {
+    return std::is_signed<TargetType>::value ? mozilla::WrapToSigned(input) : input;
   }
 };
 
 template<>
-struct ConvertImpl<int64_t, double> {
-  static MOZ_ALWAYS_INLINE int64_t Convert(double d) {
-    return d >= 0x7fffffffffffffff ?
-           0x8000000000000000 : int64_t(d);
+struct ConvertUnsignedTargetTo<char16_t>
+{
+  static char16_t
+  convert(char16_t input)
+  {
+    // mozilla::WrapToSigned can't be used on char16_t.
+    return input;
   }
 };
-#endif
+
+template<typename TargetType, typename FromType>
+struct ConvertImpl<TargetType, FromType, true>
+{
+  static MOZ_ALWAYS_INLINE TargetType Convert(FromType input) {
+    using UnsignedTargetType = typename std::make_unsigned<TargetType>::type;
+    auto resultUnsigned = static_cast<UnsignedTargetType>(input);
+
+    return ConvertUnsignedTargetTo<TargetType>::convert(resultUnsigned);
+  }
+};
 
 template<class TargetType, class FromType>
 static MOZ_ALWAYS_INLINE TargetType Convert(FromType d)
 {
+  static_assert(std::is_integral<FromType>::value !=
+                std::is_floating_point<FromType>::value,
+                "should only be converting from floating/integral type");
+
   return ConvertImpl<TargetType, FromType>::Convert(d);
 }
 
@@ -2685,8 +2691,8 @@ struct IsExactImpl<TargetType, FromType, true, false> {
 template<class TargetType, class FromType>
 static MOZ_ALWAYS_INLINE bool ConvertExact(FromType i, TargetType* result)
 {
-  // Require that TargetType is integral, to simplify conversion.
-  JS_STATIC_ASSERT(numeric_limits<TargetType>::is_exact);
+  static_assert(std::numeric_limits<TargetType>::is_exact,
+                "TargetType must be exact to simplify conversion");
 
   *result = Convert<TargetType>(i);
 
@@ -3105,9 +3111,11 @@ jsvalToIntegerExplicit(HandleValue val, IntegerType* result)
   JS_STATIC_ASSERT(numeric_limits<IntegerType>::is_exact);
 
   if (val.isDouble()) {
-    // Convert -Inf, Inf, and NaN to 0; otherwise, convert by C-style cast.
+    // Convert using ToInt32-style semantics: non-finite numbers become 0, and
+    // everything else rounds toward zero then maps into |IntegerType| with
+    // wraparound semantics.
     double d = val.toDouble();
-    *result = mozilla::IsFinite(d) ? IntegerType(d) : 0;
+    *result = JS::ToSignedOrUnsignedInteger<IntegerType>(d);
     return true;
   }
   if (val.isObject()) {
