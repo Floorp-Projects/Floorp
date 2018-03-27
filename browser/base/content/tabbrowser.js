@@ -2283,7 +2283,7 @@ window._gBrowser = {
       t._tPos = position;
       this.tabContainer._setPositionalAttributes();
 
-      this.tabContainer.updateVisibility();
+      TabBarVisibility.update();
 
       // If we don't have a preferred remote type, and we have a remote
       // opener, use the opener's remote type.
@@ -2757,7 +2757,7 @@ window._gBrowser = {
     if (newTab)
       this.addTab(BROWSER_NEW_TAB_URL, { skipAnimation: true });
     else
-      this.tabContainer.updateVisibility();
+      TabBarVisibility.update();
 
     // We're committed to closing the tab now.
     // Dispatch a notification.
@@ -4702,5 +4702,30 @@ var StatusPanel = {
       this.panel.setAttribute("sizelimit", "true");
       this._mouseTargetRect = null;
     }
+  }
+};
+
+var TabBarVisibility = {
+  _initialUpdateDone: false,
+
+  update() {
+    let toolbar = document.getElementById("TabsToolbar");
+    let collapse = false;
+    if (gBrowser.tabs.length - gBrowser._removingTabs.length == 1) {
+      collapse = !window.toolbar.visible;
+    }
+
+    if (collapse == toolbar.collapsed && this._initialUpdateDone) {
+      return;
+    }
+    this._initialUpdateDone = true;
+
+    toolbar.collapsed = collapse;
+
+    document.getElementById("menu_closeWindow").hidden = collapse;
+    document.getElementById("menu_close").setAttribute("label",
+      gTabBrowserBundle.GetStringFromName(collapse ? "tabs.close" : "tabs.closeTab"));
+
+    TabsInTitlebar.allowedBy("tabs-visible", !collapse);
   }
 };

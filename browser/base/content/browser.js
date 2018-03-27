@@ -1281,7 +1281,7 @@ var gBrowserInit = {
 
     this._setInitialFocus();
 
-    gBrowser.tabContainer.updateVisibility();
+    window.TabBarVisibility.update();
     TabsInTitlebar.onDOMContentLoaded();
   },
 
