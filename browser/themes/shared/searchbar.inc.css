@@ -115,9 +115,9 @@
 }
 
 .searchbar-engine-one-off-item[selected] {
-  background-color: Highlight;
+  background-color: var(--autocomplete-popup-highlight-background);
   background-image: none;
-  color: HighlightText;
+  color: var(--autocomplete-popup-highlight-color);
 }
 
 .searchbar-engine-one-off-item > .button-box {
@@ -152,8 +152,8 @@
 }
 
 .addengine-item[selected] {
-  background-color: Highlight;
-  color: HighlightText;
+  background-color: var(--autocomplete-popup-highlight-background);
+  color: var(--autocomplete-popup-highlight-color);
 }
 
 .addengine-item[type=menu][selected] {
