@@ -127,11 +127,11 @@ struct FloatRegister
     bool operator == (FloatRegister) const { MOZ_CRASH(); }
     bool aliases(FloatRegister) const { MOZ_CRASH(); }
     uint32_t numAliased() const { MOZ_CRASH(); }
-    void aliased(uint32_t, FloatRegister*) { MOZ_CRASH(); }
+    FloatRegister aliased(uint32_t) { MOZ_CRASH(); }
     bool equiv(FloatRegister) const { MOZ_CRASH(); }
     uint32_t size() const { MOZ_CRASH(); }
     uint32_t numAlignedAliased() const { MOZ_CRASH(); }
-    void alignedAliased(uint32_t, FloatRegister*) { MOZ_CRASH(); }
+    FloatRegister alignedAliased(uint32_t) { MOZ_CRASH(); }
     SetType alignedOrDominatedAliasedSet() const { MOZ_CRASH(); }
 
     static constexpr RegTypeName DefaultType = RegTypeName::Float64;
