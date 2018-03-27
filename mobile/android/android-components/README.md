@@ -21,6 +21,8 @@ High-level components for building browser(-like) apps.
 
 * **Erropages** - Responsive browser error pages for Android apps.
 
+* **Session** - A generic representation of a browser session.
+
 * **Toolbar** - A customizable toolbar for browsers.
 
 ## UI

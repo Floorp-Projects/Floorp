@@ -15,6 +15,9 @@ project(':browser-engine-gecko').projectDir = new File(rootDir, 'components/brow
 include ':browser-errorpages'
 project(':browser-errorpages').projectDir = new File(rootDir, 'components/browser/errorpages')
 
+include ':browser-session'
+project(':browser-session').projectDir = new File(rootDir, 'components/browser/session')
+
 include ':browser-toolbar'
 project(':browser-toolbar').projectDir = new File(rootDir, 'components/browser/toolbar')
 
