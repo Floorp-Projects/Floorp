@@ -854,7 +854,7 @@ window._gBrowser = {
       docTitle = tab.getAttribute("label").replace(/\0/g, "");
     }
 
-    if (!docTitle || docTitle == this.tabContainer.emptyTabTitle)
+    if (!docTitle)
       docTitle = docElement.getAttribute("titledefault");
 
     var modifier = docElement.getAttribute("titlemodifier");
