@@ -241,6 +241,61 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// JavaScript prefs
+//---------------------------------------------------------------------------
+
+// nsJSEnvironmentObserver observes the memory-pressure notifications and
+// forces a garbage collection and cycle collection when it happens, if the
+// appropriate pref is set.
+#ifdef ANDROID
+  // Disable the JS engine's GC on memory pressure, since we do one in the
+  // mobile browser (bug 669346).
+  // XXX: this value possibly should be changed, or the pref removed entirely.
+  //      See bug 1450787.
+# define PREF_VALUE false
+#else
+# define PREF_VALUE true
+#endif
+VARCACHE_PREF(
+  "javascript.options.gc_on_memory_pressure",
+   javascript_options_gc_on_memory_pressure,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
+
+VARCACHE_PREF(
+  "javascript.options.compact_on_user_inactive",
+   javascript_options_compact_on_user_inactive,
+  bool, true
+)
+
+// The default amount of time to wait from the user being idle to starting a
+// shrinking GC.
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE  15000  // ms
+#else
+# define PREF_VALUE 300000  // ms
+#endif
+VARCACHE_PREF(
+  "javascript.options.compact_on_user_inactive_delay",
+   javascript_options_compact_on_user_inactive_delay,
+   uint32_t, PREF_VALUE
+)
+#undef PREF_VALUE
+
+VARCACHE_PREF(
+  "javascript.options.mem.log",
+   javascript_options_mem_log,
+  bool, false
+)
+
+VARCACHE_PREF(
+  "javascript.options.mem.notify",
+   javascript_options_mem_notify,
+  bool, false
+)
+
+//---------------------------------------------------------------------------
 // Network prefs
 //---------------------------------------------------------------------------
 
