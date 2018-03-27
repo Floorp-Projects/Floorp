@@ -21,8 +21,6 @@
         title="&connectionsDialog.title;"
         buttons="accept,cancel,help"
         persist="lastSelected screenX screenY"
-        closebuttonlabel="&preferencesCloseButton.label;"
-        closebuttonaccesskey="&preferencesCloseButton.accesskey;"
         role="dialog"
         onbeforeaccept="return gConnectionsDialog.beforeAccept();"
         onload="gConnectionsDialog.checkForSystemProxy();"

@@ -367,6 +367,54 @@
       "first_available": "60.0",
 
       "type": "boolean"
+    },
+
+    "SearchEngines": {
+      "description": "Modifies the list of search engines built into Firefox",
+      "first_available": "60.0",
+      "enterprise_only": true,
+
+      "type": "object",
+      "properties": {
+        "Add": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["Name", "URLTemplate"],
+
+            "properties": {
+              "Name": {
+                "type": "string"
+              },
+              "IconURL": {
+                "type": "URLorEmpty"
+              },
+              "Alias": {
+                "type": "string"
+              },
+              "Description": {
+                "type": "string"
+              },
+              "Method": {
+                "type": "string",
+                "enum": ["GET", "POST"]
+              },
+              "URLTemplate": {
+                "type": "string"
+              },
+              "SuggestURLTemplate": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "Default": {
+          "type": "string"
+        },
+        "PreventInstalls": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

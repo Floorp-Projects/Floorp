@@ -802,7 +802,7 @@ nsAccessibilityService::GetStringRole(uint32_t aRole, nsAString& aString)
 #define ROLE(geckoRole, stringRole, atkRole, \
              macRole, msaaRole, ia2Role, nameRule) \
   case roles::geckoRole: \
-    CopyUTF8toUTF16(stringRole, aString); \
+    aString.AssignLiteral(stringRole); \
     return;
 
   switch (aRole) {
@@ -992,7 +992,7 @@ nsAccessibilityService::GetStringEventType(uint32_t aEventType,
     return;
   }
 
-  CopyUTF8toUTF16(kEventTypeNames[aEventType], aString);
+  aString.AssignASCII(kEventTypeNames[aEventType]);
 }
 
 void

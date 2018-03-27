@@ -172,16 +172,23 @@ public:
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mTextEditor);
 
-    bool canUndo;
-    DebugOnly<nsresult> rv = mTextEditor->CanUndo(&mPreviousEnabled, &canUndo);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    mTextEditor->EnableUndo(false);
+    mPreviousEnabled = mTextEditor->IsUndoRedoEnabled();
+    DebugOnly<bool> disabledUndoRedo = mTextEditor->DisableUndoRedo();
+    NS_WARNING_ASSERTION(disabledUndoRedo,
+      "Failed to disable undo/redo transactions");
   }
 
   ~AutoDisableUndo()
   {
-    mTextEditor->EnableUndo(mPreviousEnabled);
+    if (mPreviousEnabled) {
+      DebugOnly<bool> enabledUndoRedo = mTextEditor->EnableUndoRedo();
+      NS_WARNING_ASSERTION(enabledUndoRedo,
+        "Failed to enable undo/redo transactions");
+    } else {
+      DebugOnly<bool> disabledUndoRedo = mTextEditor->DisableUndoRedo();
+      NS_WARNING_ASSERTION(disabledUndoRedo,
+        "Failed to disable undo/redo transactions");
+    }
   }
 
 private:
@@ -987,8 +994,8 @@ TextInputListener::OnEditActionHandled()
   RefPtr<TextEditor> textEditor = frame->GetTextEditor();
 
   // Get the number of undo / redo items
-  int32_t numUndoItems = textEditor->NumberOfUndoItems();
-  int32_t numRedoItems = textEditor->NumberOfRedoItems();
+  size_t numUndoItems = textEditor->NumberOfUndoItems();
+  size_t numRedoItems = textEditor->NumberOfRedoItems();
   if ((numUndoItems && !mHadUndoItems) || (!numUndoItems && mHadUndoItems) ||
       (numRedoItems && !mHadRedoItems) || (!numRedoItems && mHadRedoItems)) {
     // Modify the menu if undo or redo items are different
@@ -1508,22 +1515,20 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsITransactionManager> transactionManager =
-    newTextEditor->GetTransactionManager();
-  if (NS_WARN_IF(!transactionManager)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  transactionManager->SetMaxTransactionCount(
-                        nsITextControlElement::DEFAULT_UNDO_CAP);
-
   if (IsPasswordTextControl()) {
-    // Disable undo for password textfields.  Note that we want to do this at
-    // the very end of InitEditor, so the calls to EnableUndo when setting the
-    // default value don't screw us up.
-    // Since changing the control type does a reframe, we don't have to worry
-    // about dynamic type changes here.
-    newTextEditor->EnableUndo(false);
+    // Disable undo for <input type="password">.  Note that we want to do this
+    // at the very end of InitEditor(), so the calls to EnableUndoRedo() when
+    // setting the default value don't screw us up.  Since changing the
+    // control type does a reframe, we don't have to worry about dynamic type
+    // changes here.
+    DebugOnly<bool> disabledUndoRedo = newTextEditor->DisableUndoRedo();
+    NS_WARNING_ASSERTION(disabledUndoRedo,
+      "Failed to disable undo/redo transaction");
+  } else {
+    DebugOnly<bool> enabledUndoRedo =
+      newTextEditor->EnableUndoRedo(nsITextControlElement::DEFAULT_UNDO_CAP);
+    NS_WARNING_ASSERTION(enabledUndoRedo,
+      "Failed to enable undo/redo transaction");
   }
 
   if (!mEditorInitialized) {

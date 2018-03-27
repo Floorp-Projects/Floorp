@@ -7,6 +7,7 @@
 #include "mozilla/ComposerCommandsUpdater.h"
 
 #include "mozilla/mozalloc.h"           // for operator new
+#include "mozilla/TransactionManager.h" // for TransactionManager
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
@@ -116,8 +117,7 @@ ComposerCommandsUpdater::DidDo(nsITransactionManager* aManager,
                                nsresult aDoResult)
 {
   // only need to update if the status of the Undo menu item changes.
-  int32_t undoCount;
-  aManager->GetNumberOfUndoItems(&undoCount);
+  size_t undoCount = aManager->AsTransactionManager()->NumberOfUndoItems();
   if (undoCount == 1) {
     if (mFirstDoOfFirstUndo) {
       UpdateCommandGroup(NS_LITERAL_STRING("undo"));
@@ -142,11 +142,10 @@ ComposerCommandsUpdater::DidUndo(nsITransactionManager* aManager,
                                  nsITransaction* aTransaction,
                                  nsresult aUndoResult)
 {
-  int32_t undoCount;
-  aManager->GetNumberOfUndoItems(&undoCount);
-  if (undoCount == 0)
+  size_t undoCount = aManager->AsTransactionManager()->NumberOfUndoItems();
+  if (!undoCount) {
     mFirstDoOfFirstUndo = true;    // reset the state for the next do
-
+  }
   UpdateCommandGroup(NS_LITERAL_STRING("undo"));
   return NS_OK;
 }

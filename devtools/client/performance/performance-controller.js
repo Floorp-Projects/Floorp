@@ -44,7 +44,7 @@ var RecordingListItem = React.createFactory(require("devtools/client/performance
 var Services = require("Services");
 var promise = require("promise");
 const defer = require("devtools/shared/defer");
-var EventEmitter = require("devtools/shared/old-event-emitter");
+var EventEmitter = require("devtools/shared/event-emitter");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var flags = require("devtools/shared/flags");
 var system = require("devtools/shared/system");
@@ -127,8 +127,14 @@ var PerformanceController = {
     this._onRecordingSelectFromView = this._onRecordingSelectFromView.bind(this);
     this._onPrefChanged = this._onPrefChanged.bind(this);
     this._onThemeChanged = this._onThemeChanged.bind(this);
-    this._onFrontEvent = this._onFrontEvent.bind(this);
-    this._pipe = this._pipe.bind(this);
+    this._onDetailsViewSelected = this._onDetailsViewSelected.bind(this);
+    this._onProfilerStatus = this._onProfilerStatus.bind(this);
+    this._onRecordingStarted =
+      this._emitRecordingStateChange.bind(this, "recording-started");
+    this._onRecordingStopping =
+      this._emitRecordingStateChange.bind(this, "recording-stopping");
+    this._onRecordingStopped =
+      this._emitRecordingStateChange.bind(this, "recording-stopped");
 
     // Store data regarding if e10s is enabled.
     this._e10s = Services.appinfo.browserTabsRemoteAutostart;
@@ -145,7 +151,7 @@ var PerformanceController = {
     PerformanceView.on(EVENTS.UI_CLEAR_RECORDINGS, this.clearRecordings);
     RecordingsView.on(EVENTS.UI_EXPORT_RECORDING, this.exportRecording);
     RecordingsView.on(EVENTS.UI_RECORDING_SELECTED, this._onRecordingSelectFromView);
-    DetailsView.on(EVENTS.UI_DETAILS_VIEW_SELECTED, this._pipe);
+    DetailsView.on(EVENTS.UI_DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
 
     this._prefObserver = new PrefObserver("devtools.");
     this._prefObserver.on("devtools.theme", this._onThemeChanged);
@@ -166,7 +172,7 @@ var PerformanceController = {
     PerformanceView.off(EVENTS.UI_CLEAR_RECORDINGS, this.clearRecordings);
     RecordingsView.off(EVENTS.UI_EXPORT_RECORDING, this.exportRecording);
     RecordingsView.off(EVENTS.UI_RECORDING_SELECTED, this._onRecordingSelectFromView);
-    DetailsView.off(EVENTS.UI_DETAILS_VIEW_SELECTED, this._pipe);
+    DetailsView.off(EVENTS.UI_DETAILS_VIEW_SELECTED, this._onDetailsViewSelected);
 
     this._prefObserver.off("devtools.theme", this._onThemeChanged);
     this._prefObserver.destroy();
@@ -183,14 +189,20 @@ var PerformanceController = {
    * listeners are added too soon.
    */
   enableFrontEventListeners: function() {
-    gFront.on("*", this._onFrontEvent);
+    gFront.on("profiler-status", this._onProfilerStatus);
+    gFront.on("recording-started", this._onRecordingStarted);
+    gFront.on("recording-stopping", this._onRecordingStopping);
+    gFront.on("recording-stopped", this._onRecordingStopped);
   },
 
   /**
    * Disables front event listeners.
    */
   disableFrontEventListeners: function() {
-    gFront.off("*", this._onFrontEvent);
+    gFront.off("profiler-status", this._onProfilerStatus);
+    gFront.off("recording-started", this._onRecordingStarted);
+    gFront.off("recording-stopping", this._onRecordingStopping);
+    gFront.off("recording-stopped", this._onRecordingStopped);
   },
 
   /**
@@ -298,7 +310,7 @@ var PerformanceController = {
    * @param nsIFile file
    *        The file to stream the data into.
    */
-  async exportRecording(_, recording, file) {
+  async exportRecording(recording, file) {
     await recording.exportRecording(file);
     this.emit(EVENTS.RECORDING_EXPORTED, recording, file);
   },
@@ -342,7 +354,7 @@ var PerformanceController = {
    * @param nsIFile file
    *        The file to import the data from.
    */
-  async importRecording(_, file) {
+  async importRecording(file) {
     let recording = await gFront.importRecording(file);
     this._addRecordingIfUnknown(recording);
 
@@ -388,7 +400,7 @@ var PerformanceController = {
    * Fired from RecordingsView, we listen on the PerformanceController so we can
    * set it here and re-emit on the controller, where all views can listen.
    */
-  _onRecordingSelectFromView: function(_, recording) {
+  _onRecordingSelectFromView: function(recording) {
     this.setCurrentRecording(recording);
   },
 
@@ -396,7 +408,7 @@ var PerformanceController = {
    * Fired when the ToolbarView fires a PREF_CHANGED event.
    * with the value.
    */
-  _onPrefChanged: function(_, prefName, prefValue) {
+  _onPrefChanged: function(prefName, prefValue) {
     this.emit(EVENTS.PREF_CHANGED, prefName, prefValue);
   },
 
@@ -408,23 +420,13 @@ var PerformanceController = {
     this.emit(EVENTS.THEME_CHANGED, newValue);
   },
 
-  /**
-   * Fired from the front on any event. Propagates to other handlers from here.
-   */
-  _onFrontEvent: function(eventName, ...data) {
-    switch (eventName) {
-      case "profiler-status":
-        let [profilerStatus] = data;
-        this.emit(EVENTS.RECORDING_PROFILER_STATUS_UPDATE, profilerStatus);
-        break;
-      case "recording-started":
-      case "recording-stopping":
-      case "recording-stopped":
-        let [recordingModel] = data;
-        this._addRecordingIfUnknown(recordingModel);
-        this.emit(EVENTS.RECORDING_STATE_CHANGE, eventName, recordingModel);
-        break;
-    }
+  _onProfilerStatus: function(status) {
+    this.emit(EVENTS.RECORDING_PROFILER_STATUS_UPDATE, status);
+  },
+
+  _emitRecordingStateChange(eventName, recordingModel) {
+    this._addRecordingIfUnknown(recordingModel);
+    this.emit(EVENTS.RECORDING_STATE_CHANGE, eventName, recordingModel);
   },
 
   /**
@@ -561,10 +563,10 @@ var PerformanceController = {
   },
 
   /**
-   * Pipes an event from some source to the PerformanceController.
+   * Pipes EVENTS.UI_DETAILS_VIEW_SELECTED to the PerformanceController.
    */
-  _pipe: function(eventName, ...data) {
-    this.emit(eventName, ...data);
+  _onDetailsViewSelected: function(...data) {
+    this.emit(EVENTS.UI_DETAILS_VIEW_SELECTED, ...data);
   },
 
   toString: () => "[object PerformanceController]"

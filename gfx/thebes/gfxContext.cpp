@@ -212,13 +212,6 @@ void gfxContext::SetPath(Path* path)
   mTransformChanged = false;
 }
 
-gfxPoint
-gfxContext::CurrentPoint()
-{
-  EnsurePathBuilder();
-  return ThebesPoint(mPathBuilder->CurrentPoint());
-}
-
 void
 gfxContext::Fill()
 {

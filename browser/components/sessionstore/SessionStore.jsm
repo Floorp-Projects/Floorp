@@ -3426,7 +3426,8 @@ var SessionStoreInternal = {
                                   skipAnimation: true,
                                   noInitialLabel: true,
                                   userContextId,
-                                  skipBackgroundNotify: true });
+                                  skipBackgroundNotify: true,
+                                  bulkOrderedOpen: this._browserSetState });
 
         if (select) {
           let leftoverTab = tabbrowser.selectedTab;

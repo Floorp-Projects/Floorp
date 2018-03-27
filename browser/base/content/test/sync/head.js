@@ -17,7 +17,7 @@ function promiseSyncReady() {
 function setupSendTabMocks({ syncReady, clientsSynced, remoteClients, state, isSendableURI }) {
   const sandbox = sinon.sandbox.create();
   sandbox.stub(gSync, "syncReady").get(() => syncReady);
-  sandbox.stub(Weave.Service.clientsEngine, "lastSync").get(() => clientsSynced ? Date.now() : 0);
+  sandbox.stub(Weave.Service.clientsEngine, "isFirstSync").get(() => !clientsSynced);
   sandbox.stub(gSync, "remoteClients").get(() => remoteClients);
   sandbox.stub(UIState, "get").returns({ status: state });
   sandbox.stub(gSync, "isSendableURI").returns(isSendableURI);

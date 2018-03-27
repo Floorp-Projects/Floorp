@@ -213,7 +213,7 @@ add_task(async function sendToDevice_syncNotReady_other_states() {
     await promiseSyncReady();
     const sandbox = sinon.sandbox.create();
     sandbox.stub(gSync, "syncReady").get(() => false);
-    sandbox.stub(Weave.Service.clientsEngine, "lastSync").get(() => 0);
+    sandbox.stub(Weave.Service.clientsEngine, "isFirstSync").get(() => true);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_NOT_VERIFIED });
     sandbox.stub(gSync, "isSendableURI").returns(true);
 
@@ -270,7 +270,7 @@ add_task(async function sendToDevice_syncNotReady_configured() {
     await promiseSyncReady();
     const sandbox = sinon.sandbox.create();
     const syncReady = sandbox.stub(gSync, "syncReady").get(() => false);
-    const lastSync = sandbox.stub(Weave.Service.clientsEngine, "lastSync").get(() => 0);
+    const lastSync = sandbox.stub(Weave.Service.clientsEngine, "isFirstSync").get(() => true);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
 
@@ -410,7 +410,7 @@ add_task(async function sendToDevice_noDevices() {
     await promiseSyncReady();
     const sandbox = sinon.sandbox.create();
     sandbox.stub(gSync, "syncReady").get(() => true);
-    sandbox.stub(Weave.Service.clientsEngine, "lastSync").get(() => Date.now());
+    sandbox.stub(Weave.Service.clientsEngine, "isFirstSync").get(() => false);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
     sandbox.stub(gSync, "remoteClients").get(() => []);
@@ -475,7 +475,7 @@ add_task(async function sendToDevice_devices() {
     await promiseSyncReady();
     const sandbox = sinon.sandbox.create();
     sandbox.stub(gSync, "syncReady").get(() => true);
-    sandbox.stub(Weave.Service.clientsEngine, "lastSync").get(() => Date.now());
+    sandbox.stub(Weave.Service.clientsEngine, "isFirstSync").get(() => false);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
     sandbox.stub(gSync, "remoteClients").get(() => mockRemoteClients);
@@ -539,7 +539,7 @@ add_task(async function sendToDevice_inUrlbar() {
     await promiseSyncReady();
     const sandbox = sinon.sandbox.create();
     sandbox.stub(gSync, "syncReady").get(() => true);
-    sandbox.stub(Weave.Service.clientsEngine, "lastSync").get(() => Date.now());
+    sandbox.stub(Weave.Service.clientsEngine, "isFirstSync").get(() => false);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
     sandbox.stub(gSync, "remoteClients").get(() => mockRemoteClients);
