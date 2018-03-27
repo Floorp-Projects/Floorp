@@ -9,4 +9,4 @@ proc-macro = true
 [dependencies]
 syn = "0.11"
 quote = "0.3"
-lazy_static = "0.2"
+lazy_static = "1.0"

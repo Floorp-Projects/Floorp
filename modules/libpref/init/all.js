@@ -1430,7 +1430,7 @@ pref("privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts", true);
 //   File.lastModified, audioContext.currentTime, canvas.captureStream.currentTime
 pref("privacy.reduceTimerPrecision", true);
 // Dynamically tune the resolution of the timer reduction for both of the two above prefs
-pref("privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 2000);
+pref("privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 100);
 // Enable jittering the clock one precision value forward
 pref("privacy.resistFingerprinting.reduceTimerPrecision.jitter", true);
 // Lower the priority of network loads for resources on the tracking protection list.

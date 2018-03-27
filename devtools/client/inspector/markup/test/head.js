@@ -546,14 +546,14 @@ async function simulateNodeDragAndDrop(inspector, selector, xOffset, yOffset) {
 /**
  * Waits until the element has not scrolled for 30 consecutive frames.
  */
-function* waitForScrollStop(doc) {
+async function waitForScrollStop(doc) {
   let el = doc.documentElement;
   let win = doc.defaultView;
   let lastScrollTop = el.scrollTop;
   let stopFrameCount = 0;
   while (stopFrameCount < 30) {
     // Wait for a frame.
-    yield new Promise(resolve => win.requestAnimationFrame(resolve));
+    await new Promise(resolve => win.requestAnimationFrame(resolve));
 
     // Check if the element has scrolled.
     if (lastScrollTop == el.scrollTop) {

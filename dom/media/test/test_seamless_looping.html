@@ -123,8 +123,8 @@
         return;
       }
       analyser.getFloatFrequencyData(frequencyBuf);
-      // There is an unrelated click at start, skip it.
-      if (loopCount != 0) {
+      // Let things stabilize at the beginning. See bug bug 1441509.
+      if (loopCount > 1) {
         doAnalysis(frequencyBuf, ac.sampleRate);
       }
 

@@ -2430,44 +2430,6 @@ nsCocoaWindow::SetNonClientMargins(LayoutDeviceIntMargin &margins)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-void
-nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, bool aActive)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (!mWindow)
-    return;
-
-  // If they pass a color with a complete transparent alpha component, use the
-  // native titlebar appearance.
-  if (NS_GET_A(aColor) == 0) {
-    [mWindow setTitlebarColor:nil forActiveWindow:(BOOL)aActive]; 
-  } else {
-    // Transform from sRGBA to monitor RGBA. This seems like it would make trying
-    // to match the system appearance lame, so probably we just shouldn't color 
-    // correct chrome.
-    if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
-      qcms_transform *transform = gfxPlatform::GetCMSRGBATransform();
-      if (transform) {
-        uint8_t color[3];
-        color[0] = NS_GET_R(aColor);
-        color[1] = NS_GET_G(aColor);
-        color[2] = NS_GET_B(aColor);
-        qcms_transform_data(transform, color, color, 1);
-        aColor = NS_RGB(color[0], color[1], color[2]);
-      }
-    }
-
-    [mWindow setTitlebarColor:[NSColor colorWithDeviceRed:NS_GET_R(aColor)/255.0
-                                                    green:NS_GET_G(aColor)/255.0
-                                                     blue:NS_GET_B(aColor)/255.0
-                                                    alpha:NS_GET_A(aColor)/255.0]
-              forActiveWindow:(BOOL)aActive];
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
 void nsCocoaWindow::SetDrawsInTitlebar(bool aState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -2867,6 +2829,14 @@ nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType,
   return YES;
 }
 
+- (NSRect)window:(NSWindow*)window willPositionSheet:(NSWindow*)sheet usingRect:(NSRect)rect
+{
+  if ([window isKindOfClass:[ToolbarWindow class]]) {
+    rect.origin.y = [(ToolbarWindow*)window sheetAttachmentPosition];
+  }
+  return rect;
+}
+
 - (void)didEndSheet:(NSWindow*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -2950,6 +2920,7 @@ nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType,
 - (NSPoint)FrameView__closeButtonOrigin;
 - (NSPoint)FrameView__fullScreenButtonOrigin;
 - (BOOL)FrameView__wantsFloatingTitlebar;
+- (NSRect)FrameView__unifiedToolbarFrame;
 @end
 
 @implementation NSView(FrameViewMethodSwizzling)
@@ -2975,6 +2946,19 @@ nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType,
 - (BOOL)FrameView__wantsFloatingTitlebar
 {
   return NO;
+}
+
+- (NSRect)FrameView__unifiedToolbarFrame
+{
+  NSRect defaultFrame = [self FrameView__unifiedToolbarFrame];
+  if ([[self window] isKindOfClass:[ToolbarWindow class]]) {
+    CGFloat unifiedToolbarHeight = [(ToolbarWindow*)[self window] unifiedToolbarHeight];
+    CGFloat topEdge = NSMaxY(defaultFrame);
+    CGFloat bottomEdge = topEdge - unifiedToolbarHeight;
+    return NSMakeRect(defaultFrame.origin.x, bottomEdge,
+                      defaultFrame.size.width, unifiedToolbarHeight);
+  }
+  return defaultFrame;
 }
 
 @end
@@ -3054,6 +3038,9 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
   static IMP our_wantsFloatingTitlebar =
     class_getMethodImplementation([NSView class],
                                   @selector(FrameView__wantsFloatingTitlebar));
+  static IMP our_unifiedToolbarFrame =
+    class_getMethodImplementation([NSView class],
+                                  @selector(FrameView__unifiedToolbarFrame));
 
   if (![gSwizzledFrameViewClasses containsObject:frameViewClass]) {
     // Either of these methods might be implemented in both a subclass of
@@ -3084,6 +3071,14 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
       nsToolkit::SwizzleMethods(frameViewClass, @selector(_wantsFloatingTitlebar),
                                 @selector(FrameView__wantsFloatingTitlebar));
     }
+    IMP _unifiedToolbarFrame =
+      class_getMethodImplementation(frameViewClass,
+                                    @selector(_unifiedToolbarFrame));
+    if (_unifiedToolbarFrame &&
+        _unifiedToolbarFrame != our_unifiedToolbarFrame) {
+      nsToolkit::SwizzleMethods(frameViewClass, @selector(_unifiedToolbarFrame),
+                                @selector(FrameView__unifiedToolbarFrame));
+    }
     [gSwizzledFrameViewClasses addObject:frameViewClass];
   }
 
@@ -3095,8 +3090,6 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
   mDrawsIntoWindowFrame = NO;
   [super initWithContentRect:aContentRect styleMask:aStyle backing:aBufferingType defer:aFlag];
   mState = nil;
-  mActiveTitlebarColor = nil;
-  mInactiveTitlebarColor = nil;
   mDisabledNeedsDisplay = NO;
   mTrackingArea = nil;
   mDirtyRect = NSZeroRect;
@@ -3186,8 +3179,6 @@ GetMenuMaskImage()
 
 - (void)dealloc
 {
-  [mActiveTitlebarColor release];
-  [mInactiveTitlebarColor release];
   [self removeTrackingArea];
   ChildViewMouseTracker::OnDestroyWindow(self);
   [super dealloc];
@@ -3195,8 +3186,6 @@ GetMenuMaskImage()
 
 static const NSString* kStateTitleKey = @"title";
 static const NSString* kStateDrawsContentsIntoWindowFrameKey = @"drawsContentsIntoWindowFrame";
-static const NSString* kStateActiveTitlebarColorKey = @"activeTitlebarColor";
-static const NSString* kStateInactiveTitlebarColorKey = @"inactiveTitlebarColor";
 static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
@@ -3206,8 +3195,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
     [self setTitle:title];
   }
   [self setDrawsContentsIntoWindowFrame:[[aState objectForKey:kStateDrawsContentsIntoWindowFrameKey] boolValue]];
-  [self setTitlebarColor:[aState objectForKey:kStateActiveTitlebarColorKey] forActiveWindow:YES];
-  [self setTitlebarColor:[aState objectForKey:kStateInactiveTitlebarColorKey] forActiveWindow:NO];
   [self setShowsToolbarButton:[[aState objectForKey:kStateShowsToolbarButton] boolValue]];
   [self setCollectionBehavior:[[aState objectForKey:kStateCollectionBehavior] unsignedIntValue]];
 }
@@ -3220,14 +3207,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   }
   [state setObject:[NSNumber numberWithBool:[self drawsContentsIntoWindowFrame]]
             forKey:kStateDrawsContentsIntoWindowFrameKey];
-  NSColor* activeTitlebarColor = [self titlebarColorForActiveWindow:YES];
-  if (activeTitlebarColor) {
-    [state setObject:activeTitlebarColor forKey:kStateActiveTitlebarColorKey];
-  }
-  NSColor* inactiveTitlebarColor = [self titlebarColorForActiveWindow:NO];
-  if (inactiveTitlebarColor) {
-    [state setObject:inactiveTitlebarColor forKey:kStateInactiveTitlebarColorKey];
-  }
   [state setObject:[NSNumber numberWithBool:[self showsToolbarButton]]
             forKey:kStateShowsToolbarButton];
   [state setObject:[NSNumber numberWithUnsignedInt: [self collectionBehavior]]
@@ -3276,24 +3255,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 - (BOOL)useBrightTitlebarForeground
 {
   return mBrightTitlebarForeground;
-}
-
-// Pass nil here to get the default appearance.
-- (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive
-{
-  [aColor retain];
-  if (aActive) {
-    [mActiveTitlebarColor release];
-    mActiveTitlebarColor = aColor;
-  } else {
-    [mInactiveTitlebarColor release];
-    mInactiveTitlebarColor = aColor;
-  }
-}
-
-- (NSColor*)titlebarColorForActiveWindow:(BOOL)aActive
-{
-  return aActive ? mActiveTitlebarColor : mInactiveTitlebarColor;
 }
 
 - (NSView*)trackingAreaView
@@ -3530,19 +3491,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 // This class allows us to exercise control over the window's title bar. This
 // allows for a "unified toolbar" look without having to extend the content
-// area into the title bar. It works like this:
-// 1) We set the window's style to textured.
-// 2) Because of this, the background color applies to the entire window, including
-//     the titlebar area. For normal textured windows, the default pattern is a 
-//    "brushed metal" image on Tiger and a unified gradient on Leopard.
-// 3) We set the background color to a custom NSColor subclass that knows how tall the window is.
-//    When -set is called on it, it sets a pattern (with a draw callback) as the fill. In that callback,
-//    it paints the the titlebar and background colors in the correct areas of the context it's given,
-//    which will fill the entire window (CG will tile it horizontally for us).
-// 4) Whenever the window's main state changes and when [window display] is called,
-//    Cocoa redraws the titlebar using the patternDraw callback function.
-//
-// This class also provides us with a pill button to show/hide the toolbar up to 10.6.
+// area into the title bar.
 //
 // Drawing the unified gradient in the titlebar and the toolbar works like this:
 // 1) In the style sheet we set the toolbar's -moz-appearance to toolbar.
@@ -3573,14 +3522,9 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  aStyle = aStyle | NSTexturedBackgroundWindowMask;
   if ((self = [super initWithContentRect:aContentRect styleMask:aStyle backing:aBufferingType defer:aFlag])) {
-    mColor = [[TitlebarAndBackgroundColor alloc] initWithWindow:self];
-    // Bypass our guard method below.
-    [super setBackgroundColor:mColor];
-    mBackgroundColor = [[NSColor whiteColor] retain];
-
     mUnifiedToolbarHeight = 22.0f;
+    mSheetAttachmentPosition = aContentRect.size.height;
     mWindowButtonsRect = NSZeroRect;
     mFullScreenButtonRect = NSZeroRect;
 
@@ -3588,54 +3532,10 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
     // we respond to it just in case.
     if ([self respondsToSelector:@selector(setBottomCornerRounded:)])
       [self setBottomCornerRounded:YES];
-
-    [self setAutorecalculatesContentBorderThickness:NO forEdge:NSMaxYEdge];
-    [self setContentBorderThickness:0.0f forEdge:NSMaxYEdge];
   }
   return self;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
-- (void)dealloc
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  [super setBackgroundColor:[NSColor whiteColor]];
-  [mColor release];
-  [mBackgroundColor release];
-  [mTitlebarView release];
-  [super dealloc];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)setTitlebarColor:(NSColor*)aColor forActiveWindow:(BOOL)aActive
-{
-  [super setTitlebarColor:aColor forActiveWindow:aActive];
-  [self setTitlebarNeedsDisplayInRect:[self titlebarRect]];
-}
-
-- (void)setBackgroundColor:(NSColor*)aColor
-{
-  [aColor retain];
-  [mBackgroundColor release];
-  mBackgroundColor = aColor;
-}
-
-- (NSColor*)windowBackgroundColor
-{
-  return mBackgroundColor;
-}
-
-- (void)setTemporaryBackgroundColor
-{
-  [super setBackgroundColor:[NSColor whiteColor]];
-}
-
-- (void)restoreBackgroundColor
-{
-  [super setBackgroundColor:mBackgroundColor];
 }
 
 - (void)setTitlebarNeedsDisplayInRect:(NSRect)aRect
@@ -3735,8 +3635,12 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
 - (void)setSheetAttachmentPosition:(CGFloat)aY
 {
-  CGFloat topMargin = aY - [self titlebarHeight];
-  [self setContentBorderThickness:topMargin forEdge:NSMaxYEdge];
+  mSheetAttachmentPosition = aY;
+}
+
+- (CGFloat)sheetAttachmentPosition
+{
+  return mSheetAttachmentPosition;
 }
 
 - (void)placeWindowButtons:(NSRect)aRect
@@ -3862,87 +3766,6 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   }
 
   [super sendEvent:anEvent];
-}
-
-@end
-
-// Custom NSColor subclass where most of the work takes place for drawing in
-// the titlebar area. Not used in drawsContentsIntoWindowFrame mode.
-@implementation TitlebarAndBackgroundColor
-
-- (id)initWithWindow:(ToolbarWindow*)aWindow
-{
-  if ((self = [super init])) {
-    mWindow = aWindow; // weak ref to avoid a cycle
-  }
-  return self;
-}
-
-static void
-DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
-                   CGFloat aUnifiedToolbarHeight, BOOL aIsMain)
-{
-  nsNativeThemeCocoa::DrawNativeTitlebar(aContext, aTitlebarRect, aUnifiedToolbarHeight, aIsMain, NO);
-
-  // The call to CUIDraw doesn't draw the top pixel strip at some window widths.
-  // We don't want to have a flickering transparent line, so we overdraw it.
-  CGContextSetRGBFillColor(aContext, 0.95, 0.95, 0.95, 1);
-  CGContextFillRect(aContext, CGRectMake(0, CGRectGetMaxY(aTitlebarRect) - 1,
-                                           aTitlebarRect.size.width, 1));
-}
-
-// Pattern draw callback for standard titlebar gradients and solid titlebar colors
-static void
-TitlebarDrawCallback(void* aInfo, CGContextRef aContext)
-{
-  ToolbarWindow *window = (ToolbarWindow*)aInfo;
-  if (![window drawsContentsIntoWindowFrame]) {
-    NSRect titlebarRect = [window titlebarRect];
-    BOOL isMain = [window isMainWindow];
-    NSColor *titlebarColor = [window titlebarColorForActiveWindow:isMain];
-    if (!titlebarColor) {
-      // If the titlebar color is nil, draw the default titlebar shading.
-      DrawNativeTitlebar(aContext, NSRectToCGRect(titlebarRect),
-                         [window unifiedToolbarHeight], isMain);
-    } else {
-      // If the titlebar color is not nil, just set and draw it normally.
-      [NSGraphicsContext saveGraphicsState];
-      [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:aContext flipped:NO]];
-      [titlebarColor set];
-      NSRectFill(titlebarRect);
-      [NSGraphicsContext restoreGraphicsState];
-    }
-  }
-}
-
-- (void)setFill
-{
-  float patternWidth = [mWindow frame].size.width;
-
-  CGPatternCallbacks callbacks = {0, &TitlebarDrawCallback, NULL};
-  CGPatternRef pattern = CGPatternCreate(mWindow, CGRectMake(0.0f, 0.0f, patternWidth, [mWindow frame].size.height),
-                                         CGAffineTransformIdentity, patternWidth, [mWindow frame].size.height,
-                                         kCGPatternTilingConstantSpacing, true, &callbacks);
-
-  // Set the pattern as the fill, which is what we were asked to do. All our
-  // drawing will take place in the patternDraw callback.
-  CGColorSpaceRef patternSpace = CGColorSpaceCreatePattern(NULL);
-  CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-  CGContextSetFillColorSpace(context, patternSpace);
-  CGColorSpaceRelease(patternSpace);
-  CGFloat component = 1.0f;
-  CGContextSetFillPattern(context, pattern, &component);
-  CGPatternRelease(pattern);
-}
-
-- (void)set
-{
-  [self setFill];
-}
-
-- (NSString*)colorSpaceName
-{
-  return NSDeviceRGBColorSpace;
 }
 
 @end

@@ -197,13 +197,14 @@ public:
   // Request that this thread start JS sampling. JS sampling won't actually
   // start until a subsequent PollJSSampling() call occurs *and* mContext has
   // been set.
-  void StartJSSampling()
+  void StartJSSampling(bool aTrackOptimizations)
   {
     // This function runs on-thread or off-thread.
 
     MOZ_RELEASE_ASSERT(mJSSampling == INACTIVE ||
                        mJSSampling == INACTIVE_REQUESTED);
     mJSSampling = ACTIVE_REQUESTED;
+    mJSTrackOptimizations = aTrackOptimizations;
   }
 
   // Request that this thread stop JS sampling. JS sampling won't actually stop
@@ -236,6 +237,8 @@ public:
       if (mJSSampling == ACTIVE_REQUESTED) {
         mJSSampling = ACTIVE;
         js::EnableContextProfilingStack(mContext, true);
+        JS_SetGlobalJitCompilerOption(mContext, JSJITCOMPILER_TRACK_OPTIMIZATIONS,
+                                      mJSTrackOptimizations);
         js::RegisterContextProfilingEventMarker(mContext, profiler_add_marker);
 
       } else if (mJSSampling == INACTIVE_REQUESTED) {
@@ -304,6 +307,8 @@ private:
     ACTIVE = 2,
     INACTIVE_REQUESTED = 3,
   } mJSSampling;
+
+  bool mJSTrackOptimizations;
 };
 
 #endif  // RegisteredThread_h

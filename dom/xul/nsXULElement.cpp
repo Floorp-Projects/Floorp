@@ -1111,24 +1111,11 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                     MaybeUpdatePrivateLifetime();
                 }
             }
-            // title, (in)activetitlebarcolor and drawintitlebar are settable on
+            // title and drawintitlebar are settable on
             // any root node (windows, dialogs, etc)
             if (document && document->GetRootElement() == this) {
                 if (aName == nsGkAtoms::title) {
                     document->NotifyPossibleTitleChange(false);
-                } else if ((aName == nsGkAtoms::activetitlebarcolor ||
-                            aName == nsGkAtoms::inactivetitlebarcolor)) {
-                    nscolor color = NS_RGBA(0, 0, 0, 0);
-                    if (aValue->Type() == nsAttrValue::eColor) {
-                        aValue->GetColorValue(color);
-                    } else {
-                        nsAutoString tmp;
-                        nsAttrValue attrValue;
-                        aValue->ToString(tmp);
-                        attrValue.ParseColor(tmp);
-                        attrValue.GetColorValue(color);
-                    }
-                    SetTitlebarColor(color, aName == nsGkAtoms::activetitlebarcolor);
                 } else if (aName == nsGkAtoms::drawintitlebar) {
                     SetDrawsInTitlebar(
                         aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
@@ -1168,11 +1155,7 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
 
             nsIDocument* doc = GetUncomposedDoc();
             if (doc && doc->GetRootElement() == this) {
-                if ((aName == nsGkAtoms::activetitlebarcolor ||
-                     aName == nsGkAtoms::inactivetitlebarcolor)) {
-                    // Use 0, 0, 0, 0 as the "none" color.
-                    SetTitlebarColor(NS_RGBA(0, 0, 0, 0), aName == nsGkAtoms::activetitlebarcolor);
-                } else if (aName == nsGkAtoms::localedir) {
+                if (aName == nsGkAtoms::localedir) {
                     // if the localedir changed on the root element, reset the document direction
                     XULDocument* xuldoc = doc->AsXULDocument();
                     if (xuldoc) {
@@ -1813,15 +1796,6 @@ nsXULElement::GetWindowWidget()
         }
     }
     return nullptr;
-}
-
-void
-nsXULElement::SetTitlebarColor(nscolor aColor, bool aActive)
-{
-    nsIWidget* mainWidget = GetWindowWidget();
-    if (mainWidget) {
-        mainWidget->SetWindowTitlebarColor(aColor, aActive);
-    }
 }
 
 class SetDrawInTitleBarEvent : public Runnable
