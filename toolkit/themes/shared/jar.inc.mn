@@ -55,6 +55,7 @@ toolkit.jar:
   skin/classic/global/narrate/slow.svg                     (../../shared/narrate/slow.svg)
   skin/classic/global/narrate/start.svg                    (../../shared/narrate/start.svg)
   skin/classic/global/narrate/stop.svg                     (../../shared/narrate/stop.svg)
+  skin/classic/global/narrate/waveform.svg                 (../../shared/narrate/waveform.svg)
   skin/classic/global/in-content/check.svg                 (../../shared/in-content/check.svg)
   skin/classic/global/in-content/check-partial.svg         (../../shared/in-content/check-partial.svg)
   skin/classic/global/in-content/dropdown.svg              (../../shared/in-content/dropdown.svg)
