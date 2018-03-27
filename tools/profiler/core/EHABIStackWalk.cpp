@@ -82,7 +82,7 @@ public:
   bool unwind(const EHEntry *aEntry, const void *stackBase);
   uint32_t &operator[](int i) { return mRegs[i]; }
   const uint32_t &operator[](int i) const { return mRegs[i]; }
-  EHState(const mcontext_t &);
+  explicit EHState(const mcontext_t &);
 };
 
 enum {
