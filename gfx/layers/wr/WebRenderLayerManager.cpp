@@ -245,7 +245,6 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
                                                   const nsTArray<wr::WrFilterOp>& aFilters)
 {
   MOZ_ASSERT(aDisplayList && aDisplayListBuilder);
-  WrBridge()->RemoveExpiredFontKeys();
 
   AUTO_PROFILER_TRACING("Paint", "RenderLayers");
 
@@ -300,6 +299,8 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   }
   mImageKeysToDelete.Clear();
   mImageKeysToDelete.SwapElements(mImageKeysToDeleteLater);
+
+  WrBridge()->RemoveExpiredFontKeys(resourceUpdates);
 
   // Skip the synchronization for buffer since we also skip the painting during
   // device-reset status.
