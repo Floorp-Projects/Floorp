@@ -159,10 +159,12 @@ TEST(cubeb, duplex_collection_change)
   input_params.rate = 48000;
   input_params.channels = 1;
   input_params.layout = CUBEB_LAYOUT_MONO;
+  input_params.prefs = CUBEB_STREAM_PREF_NONE;
   output_params.format = STREAM_FORMAT;
   output_params.rate = 48000;
   output_params.channels = 2;
   output_params.layout = CUBEB_LAYOUT_STEREO;
+  output_params.prefs = CUBEB_STREAM_PREF_NONE;
 
   r = cubeb_get_min_latency(ctx, &output_params, &latency_frames);
   ASSERT_EQ(r, CUBEB_OK) << "Could not get minimal latency";
