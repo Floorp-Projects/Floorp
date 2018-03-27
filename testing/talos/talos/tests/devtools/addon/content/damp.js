@@ -21,6 +21,9 @@ XPCOMUtils.defineLazyGetter(this, "TargetFactory", function() {
 // "verbose".
 const DEBUG_ALLOCATIONS = env.get("DEBUG_DEVTOOLS_ALLOCATIONS");
 
+// Maximum time spent in one test, in milliseconds
+const TEST_TIMEOUT = 5 * 60000;
+
 function getMostRecentBrowserWindow() {
   return Services.wm.getMostRecentWindow("navigator:browser");
 }
@@ -189,6 +192,9 @@ Damp.prototype = {
     // Force freeing memory now so that it doesn't happen during the next test
     await this.garbageCollect();
 
+    let duration = Math.round(performance.now() - this._startTime);
+    dump(`${this._currentTest} took ${duration}ms.\n`);
+
     this._runNextTest();
   },
 
@@ -202,19 +208,47 @@ Damp.prototype = {
   _nextTestIndex: 0,
   _tests: [],
   _onSequenceComplete: 0,
+
+  // Timeout ID to guard against current test never finishing
+  _timeout: null,
+
+  // The unix time at which the current test started (ms)
+  _startTime: null,
+
+  // Name of the test currently executed (i.e. path from /tests folder)
+  _currentTest: null,
+
+  // Is DAMP finished executing? Help preventing async execution when DAMP had an error
+  _done: false,
+
   _runNextTest() {
+    window.clearTimeout(this._timeout);
+
     if (this._nextTestIndex >= this._tests.length) {
       this._onSequenceComplete();
       return;
     }
 
     let test = this._tests[this._nextTestIndex++];
+    this._startTime = performance.now();
+    this._currentTest = test;
 
-    dump("Loading test : " + test + "\n");
+    dump(`Loading test '${test}'\n`);
     let testMethod = require("chrome://damp/content/tests/" + test);
 
-    dump("Executing test : " + test + "\n");
-    testMethod();
+    this._timeout = window.setTimeout(() => {
+      this.error("Test timed out");
+    }, TEST_TIMEOUT);
+
+    dump(`Executing test '${test}'\n`);
+    let promise = testMethod();
+
+    // If test method is an async function, ensure catching its exceptions
+    if (promise && typeof(promise.catch) == "function") {
+      promise.catch(e => {
+        this.exception(e);
+      });
+    }
   },
   // Each command at the array a function which must call nextCommand once it's done
   _doSequence(tests, onComplete) {
@@ -264,13 +298,22 @@ Damp.prototype = {
   _onTestComplete: null,
 
   _doneInternal() {
+    // Ignore any duplicated call to this method
+    if (this._done) {
+      return;
+    }
+    this._done = true;
+
     if (this.allocationTracker) {
       this.allocationTracker.stop();
       this.allocationTracker = null;
     }
-    this._logLine("DAMP_RESULTS_JSON=" + JSON.stringify(this._results));
-    this._reportAllResults();
     this._win.gBrowser.selectedTab = this._dampTab;
+
+    if (this._results) {
+      this._logLine("DAMP_RESULTS_JSON=" + JSON.stringify(this._results));
+      this._reportAllResults();
+    }
 
     if (this._onTestComplete) {
       this._onTestComplete(JSON.parse(JSON.stringify(this._results))); // Clone results
@@ -282,55 +325,82 @@ Damp.prototype = {
     return allocationTracker();
   },
 
+  error(message) {
+    // Log a unique prefix in order to be interpreted as an error and stop DAMP from
+    // testing/talos/talos/talos_process.py
+    dump("TEST-UNEXPECTED-FAIL | damp | ");
+
+    // Print the currently executed test, if we already started executing one
+    if (this._currentTest) {
+      dump(this._currentTest + ": ");
+    }
+
+    dump(message + "\n");
+
+    // Stop further test execution and immediatly close DAMP
+    this._tests = [];
+    this._results = null;
+    this._doneInternal();
+  },
+
+  exception(e) {
+    this.error(e);
+    dump(e.stack + "\n");
+  },
+
   startTest(doneCallback, config) {
-    dump("Initialize the head file with a reference to this DAMP instance\n");
-    let head = require("chrome://damp/content/tests/head.js");
-    head.initialize(this);
+    try {
+      dump("Initialize the head file with a reference to this DAMP instance\n");
+      let head = require("chrome://damp/content/tests/head.js");
+      head.initialize(this);
 
-    this._onTestComplete = function(results) {
-      TalosParentProfiler.pause("DAMP - end");
-      doneCallback(results);
-    };
-    this._config = config;
+      this._onTestComplete = function(results) {
+        TalosParentProfiler.pause("DAMP - end");
+        doneCallback(results);
+      };
+      this._config = config;
 
-    this._win = Services.wm.getMostRecentWindow("navigator:browser");
-    this._dampTab = this._win.gBrowser.selectedTab;
-    this._win.gBrowser.selectedBrowser.focus(); // Unfocus the URL bar to avoid caret blink
+      this._win = Services.wm.getMostRecentWindow("navigator:browser");
+      this._dampTab = this._win.gBrowser.selectedTab;
+      this._win.gBrowser.selectedBrowser.focus(); // Unfocus the URL bar to avoid caret blink
 
-    TalosParentProfiler.resume("DAMP - start");
+      TalosParentProfiler.resume("DAMP - start");
 
-    // Filter tests via `./mach --subtests filter` command line argument
-    let filter = Services.prefs.getCharPref("talos.subtests", "");
+      // Filter tests via `./mach --subtests filter` command line argument
+      let filter = Services.prefs.getCharPref("talos.subtests", "");
 
-    let tests = config.subtests.filter(test => !test.disabled)
-                               .filter(test => test.name.includes(filter));
+      let tests = config.subtests.filter(test => !test.disabled)
+                                 .filter(test => test.name.includes(filter));
 
-    if (tests.length === 0) {
-      dump("ERROR: Unable to find any test matching '" + filter + "'\n");
-    }
-
-    // Run cold test only once
-    let topWindow = getMostRecentBrowserWindow();
-    if (topWindow.coldRunDAMPDone) {
-      tests = tests.filter(test => !test.cold);
-    } else {
-      topWindow.coldRunDAMPDone = true;
-    }
-
-    // Construct the sequence array while filtering tests
-    let sequenceArray = [];
-    for (let test of tests) {
-      for (let r = 0; r < config.repeat; r++) {
-        sequenceArray.push(test.path);
+      if (tests.length === 0) {
+        this.error(`Unable to find any test matching '${filter}'`);
       }
-    }
 
-    // Free memory before running the first test, otherwise we may have a GC
-    // related to Firefox startup or DAMP setup during the first test.
-    this.garbageCollect().then(() => {
-      this._doSequence(sequenceArray, this._doneInternal);
-    }).catch(e => {
-      dump("Exception while running DAMP tests: " + e + "\n" + e.stack + "\n");
-    });
+      // Run cold test only once
+      let topWindow = getMostRecentBrowserWindow();
+      if (topWindow.coldRunDAMPDone) {
+        tests = tests.filter(test => !test.cold);
+      } else {
+        topWindow.coldRunDAMPDone = true;
+      }
+
+      // Construct the sequence array while filtering tests
+      let sequenceArray = [];
+      for (let test of tests) {
+        for (let r = 0; r < config.repeat; r++) {
+          sequenceArray.push(test.path);
+        }
+      }
+
+      // Free memory before running the first test, otherwise we may have a GC
+      // related to Firefox startup or DAMP setup during the first test.
+      this.garbageCollect().then(() => {
+        this._doSequence(sequenceArray, this._doneInternal);
+      }).catch(e => {
+        this.exception(e);
+      });
+    } catch (e) {
+      this.exception(e);
+    }
   }
 };
