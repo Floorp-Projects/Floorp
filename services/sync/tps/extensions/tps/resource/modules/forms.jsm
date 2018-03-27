@@ -118,12 +118,12 @@ var FormDB = {
  *
  * Initializes instance properties.
  */
-function FormData(props, usSinceEpoch) {
+function FormData(props, msSinceEpoch) {
   this.fieldname = null;
   this.value = null;
   this.date = 0;
   this.newvalue = null;
-  this.usSinceEpoch = usSinceEpoch;
+  this.usSinceEpoch = msSinceEpoch * 1000;
 
   for (var prop in props) {
     if (prop in this)
