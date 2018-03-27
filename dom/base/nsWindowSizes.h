@@ -175,13 +175,13 @@ class nsWindowSizes
   macro(DOM,   mDOMOtherSize) \
   macro(Style, mLayoutStyleSheetsSize) \
   macro(Other, mLayoutPresShellSize) \
-  macro(Style, mLayoutServoStyleSetsStylistRuleTree) \
-  macro(Style, mLayoutServoStyleSetsStylistElementAndPseudosMaps) \
-  macro(Style, mLayoutServoStyleSetsStylistInvalidationMap) \
-  macro(Style, mLayoutServoStyleSetsStylistRevalidationSelectors) \
-  macro(Style, mLayoutServoStyleSetsStylistOther) \
-  macro(Style, mLayoutServoStyleSetsOther) \
-  macro(Style, mLayoutServoElementDataObjects) \
+  macro(Style, mLayoutStyleSetsStylistRuleTree) \
+  macro(Style, mLayoutStyleSetsStylistElementAndPseudosMaps) \
+  macro(Style, mLayoutStyleSetsStylistInvalidationMap) \
+  macro(Style, mLayoutStyleSetsStylistRevalidationSelectors) \
+  macro(Style, mLayoutStyleSetsStylistOther) \
+  macro(Style, mLayoutStyleSetsOther) \
+  macro(Style, mLayoutElementDataObjects) \
   macro(Other, mLayoutTextRunsSize) \
   macro(Other, mLayoutPresContextSize) \
   macro(Other, mLayoutFramePropertiesSize) \
@@ -199,14 +199,14 @@ public:
       mDOMEventTargetsCount(0),
       mDOMEventListenersCount(0),
       mArenaSizes(),
-      mServoStyleSizes(),
+      mStyleSizes(),
       mState(aState)
   {}
 
   void addToTabSizes(nsTabSizes* aSizes) const {
     FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
     mArenaSizes.addToTabSizes(aSizes);
-    mServoStyleSizes.addToTabSizes(aSizes);
+    mStyleSizes.addToTabSizes(aSizes);
   }
 
   size_t getTotalSize() const
@@ -215,7 +215,7 @@ public:
 
     FOR_EACH_SIZE(ADD_TO_TOTAL_SIZE)
     total += mArenaSizes.getTotalSize();
-    total += mServoStyleSizes.getTotalSize();
+    total += mStyleSizes.getTotalSize();
 
     return total;
   }
@@ -227,7 +227,7 @@ public:
 
   nsArenaSizes mArenaSizes;
 
-  nsStyleSizes mServoStyleSizes;
+  nsStyleSizes mStyleSizes;
 
   mozilla::SizeOfState& mState;
 
