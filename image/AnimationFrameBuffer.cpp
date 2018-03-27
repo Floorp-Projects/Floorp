@@ -77,29 +77,34 @@ AnimationFrameBuffer::Insert(RawAccessFrameRef&& aFrame)
       MOZ_ASSERT(!mFrames[mInsertIndex]);
       mFrames[mInsertIndex] = Move(aFrame);
     }
-  } else {
-    if (mInsertIndex == mFrames.Length()) {
-      // We are still on the first pass of the animation decoding, so this is
-      // the first time we have seen this frame.
-      mFrames.AppendElement(Move(aFrame));
-    } else if (mInsertIndex > 0) {
-      // We were forced to restart an animation before we decoded the last
-      // frame. Thus we might need to insert, even on a "first pass."
-      MOZ_ASSERT(mInsertIndex < mFrames.Length());
-      MOZ_ASSERT(!mFrames[mInsertIndex]);
-      mFrames[mInsertIndex] = Move(aFrame);
-    }
+  } else if (mInsertIndex == mFrames.Length()) {
+    // We are still on the first pass of the animation decoding, so this is
+    // the first time we have seen this frame.
+    mFrames.AppendElement(Move(aFrame));
 
     if (mInsertIndex == mThreshold) {
-      // We just tripped over the threshold, and on the first pass of the
-      // decoding; this is our chance to do any clearing of already displayed
-      // frames. After this, we only need to release as we advance.
+      // We just tripped over the threshold for the first time. This is our
+      // chance to do any clearing of already displayed frames. After this,
+      // we only need to release as we advance or force a restart.
       MOZ_ASSERT(MayDiscard());
       MOZ_ASSERT(mGetIndex < mInsertIndex);
       for (size_t i = 1; i < mGetIndex; ++i) {
         RawAccessFrameRef discard = Move(mFrames[i]);
       }
     }
+  } else if (mInsertIndex > 0) {
+    // We were forced to restart an animation before we decoded the last
+    // frame. If we were discarding frames, then we tossed what we had
+    // except for the first frame.
+    MOZ_ASSERT(mInsertIndex < mFrames.Length());
+    MOZ_ASSERT(!mFrames[mInsertIndex]);
+    MOZ_ASSERT(MayDiscard());
+    mFrames[mInsertIndex] = Move(aFrame);
+  } else { // mInsertIndex == 0
+    // We were forced to restart an animation before we decoded the last
+    // frame. We don't need the redecoded first frame because we always keep
+    // the original.
+    MOZ_ASSERT(MayDiscard());
   }
 
   MOZ_ASSERT(mFrames[mInsertIndex]);
