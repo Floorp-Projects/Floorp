@@ -177,37 +177,6 @@ inline bool isInIgnoredNamespaceForImplicitConversion(const Decl *Declaration) {
          Name == "testing";           // gtest
 }
 
-inline bool isIgnoredPathForImplicitCtor(const Decl *Declaration) {
-  SourceLocation Loc = Declaration->getLocation();
-  const SourceManager &SM = Declaration->getASTContext().getSourceManager();
-  SmallString<1024> FileName = SM.getFilename(Loc);
-  llvm::sys::fs::make_absolute(FileName);
-  llvm::sys::path::reverse_iterator Begin = llvm::sys::path::rbegin(FileName),
-                                    End = llvm::sys::path::rend(FileName);
-  for (; Begin != End; ++Begin) {
-    if (Begin->compare_lower(StringRef("skia")) == 0 ||
-        Begin->compare_lower(StringRef("sfntly")) == 0 ||
-        Begin->compare_lower(StringRef("angle")) == 0 ||
-        Begin->compare_lower(StringRef("harfbuzz")) == 0 ||
-        Begin->compare_lower(StringRef("hunspell")) == 0 ||
-        Begin->compare_lower(StringRef("scoped_ptr.h")) == 0 ||
-        Begin->compare_lower(StringRef("graphite2")) == 0 ||
-        Begin->compare_lower(StringRef("icu")) == 0 ||
-        Begin->compare_lower(StringRef("libcubeb")) == 0 ||
-        Begin->compare_lower(StringRef("libstagefright")) == 0 ||
-        Begin->compare_lower(StringRef("cairo")) == 0 ||
-        Begin->compare_lower(StringRef("pdfium")) == 0) {
-      return true;
-    }
-    if (Begin->compare_lower(StringRef("chromium")) == 0) {
-      // Ignore security/sandbox/chromium but not ipc/chromium.
-      ++Begin;
-      return Begin != End && Begin->compare_lower(StringRef("sandbox")) == 0;
-    }
-  }
-  return false;
-}
-
 inline bool isIgnoredPathForImplicitConversion(const Decl *Declaration) {
   Declaration = Declaration->getCanonicalDecl();
   SourceLocation Loc = Declaration->getLocation();
