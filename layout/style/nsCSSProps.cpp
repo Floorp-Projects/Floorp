@@ -3103,9 +3103,6 @@ nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
   static_assert((flags_) & CSS_PROPERTY_LOGICAL,                            \
                 "properties defined with CSS_PROP_LOGICAL must also use "   \
                 "the CSS_PROPERTY_LOGICAL flag");                           \
-  static_assert(!((flags_) & CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED),    \
-                "CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED has no effect "  \
-                "on logical properties");                                   \
   static_assert(!(((flags_) & CSS_PROPERTY_LOGICAL_AXIS) &&                 \
                   ((flags_) & CSS_PROPERTY_LOGICAL_END_EDGE)),              \
                 "CSS_PROPERTY_LOGICAL_END_EDGE makes no sense when used "   \

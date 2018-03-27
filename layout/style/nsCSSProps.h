@@ -134,10 +134,6 @@
 #define CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE \
   (CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_APPLIES_TO_FIRST_LINE)
 
-// Note that 'background-color' is ignored differently from the other
-// properties that have this set, but that's just special-cased.
-#define CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED (1<<4)
-
 // A property that needs to have image loads started when a URL value
 // for the property is used for an element.  This is supported only
 // for a few possible value formats: image directly in the value; list
