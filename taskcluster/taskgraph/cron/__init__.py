@@ -127,12 +127,7 @@ def taskgraph_cron(options):
         'job_name': '..',
 
         # repositories
-        'base_repository': options['base_repository'],
         'head_repository': options['head_repository'],
-
-        # the symbolic ref this should run against (which happens to be what
-        # run-task checked out for us)
-        'head_ref': options['head_ref'],
 
         # *calculated* head_rev; this is based on the current meaning of this
         # reference in the working copy
