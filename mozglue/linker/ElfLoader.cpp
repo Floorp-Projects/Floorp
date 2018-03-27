@@ -878,7 +878,7 @@ class EnsureWritable
 {
 public:
   template <typename T>
-  EnsureWritable(T *ptr, size_t length_ = sizeof(T))
+  explicit EnsureWritable(T *ptr, size_t length_ = sizeof(T))
   {
     MOZ_ASSERT(length_ < PageSize());
     prot = -1;
