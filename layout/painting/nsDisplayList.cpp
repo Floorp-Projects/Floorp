@@ -8523,6 +8523,15 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
   }
 
   nsTArray<mozilla::wr::WrFilterOp> filters;
+  Maybe<Matrix4x4> transformForScrollData;
+  if (!mFrame->HasPerspective()) {
+    // If it has perspective, we create a new scroll data via the
+    // UpdateScrollData call because that scenario is more complex. Otherwise
+    // we can just stash the transform on the StackingContextHelper and
+    // apply it to any scroll data that are created inside this
+    // nsDisplayTransform.
+    transformForScrollData = Some(GetTransform().GetMatrix());
+  }
   StackingContextHelper sc(aSc,
                            aBuilder,
                            filters,
@@ -8534,7 +8543,8 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
                            nullptr,
                            gfx::CompositionOp::OP_OVER,
                            !BackfaceIsHidden(),
-                           mFrame->Extend3DContext() && !mNoExtendContext);
+                           mFrame->Extend3DContext() && !mNoExtendContext,
+                           transformForScrollData);
 
   return mStoredList.CreateWebRenderCommands(aBuilder, aResources, sc,
                                              aManager, aDisplayListBuilder);
@@ -8544,9 +8554,9 @@ bool
 nsDisplayTransform::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
                                      mozilla::layers::WebRenderLayerScrollData* aLayerData)
 {
-  if (aLayerData) {
+  if (aLayerData && mFrame->HasPerspective()) {
     aLayerData->SetTransform(GetTransform().GetMatrix());
-    aLayerData->SetTransformIsPerspective(mFrame->HasPerspective());
+    aLayerData->SetTransformIsPerspective(true);
   }
   return true;
 }

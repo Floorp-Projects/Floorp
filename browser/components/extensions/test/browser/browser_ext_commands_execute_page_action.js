@@ -163,7 +163,16 @@ add_task(async function test_execute_page_action_with_matching() {
   await extension.startup();
   let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, "http://example.com/");
   EventUtils.synthesizeKey("j", {altKey: true, shiftKey: true});
+  info("Waiting for pageAction open.");
   await extension.awaitFinish("page-action-with-popup");
+
+  // Bug 1447796 make sure the key command can close the page action
+  let panel = document.getElementById(`${makeWidgetId(extension.id)}-panel`);
+  let hidden = promisePopupHidden(panel);
+  EventUtils.synthesizeKey("j", {altKey: true, shiftKey: true});
+  info("Waiting for pageAction close.");
+  await hidden;
+
   await extension.unload();
   BrowserTestUtils.removeTab(tab);
 });

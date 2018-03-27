@@ -38,7 +38,8 @@ public:
                         gfx::Matrix4x4* aPerspectivePtr = nullptr,
                         const gfx::CompositionOp& aMixBlendMode = gfx::CompositionOp::OP_OVER,
                         bool aBackfaceVisible = true,
-                        bool aIsPreserve3D = false);
+                        bool aIsPreserve3D = false,
+                        const Maybe<gfx::Matrix4x4>& aTransformForScrollData = Nothing());
   // This version of the constructor should only be used at the root level
   // of the tree, so that we have a StackingContextHelper to pass down into
   // the RenderLayer traversal, but don't actually want it to push a stacking
@@ -74,6 +75,8 @@ public:
     return mInheritedTransform;
   }
 
+  gfx::Matrix4x4 GetTransformForScrollData() const;
+
   bool AffectsClipPositioning() const { return mAffectsClipPositioning; }
 
 private:
@@ -81,6 +84,7 @@ private:
   gfx::Size mScale;
   gfx::Matrix mInheritedTransform;
   bool mAffectsClipPositioning;
+  Maybe<gfx::Matrix4x4> mTransformForScrollData;
 };
 
 } // namespace layers
