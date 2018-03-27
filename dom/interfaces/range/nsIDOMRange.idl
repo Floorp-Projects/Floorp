@@ -21,8 +21,6 @@ interface nsIDOMRange : nsISupports
   void               setStartAfter(in nsIDOMNode refNode);
   void               setEndBefore(in nsIDOMNode refNode);
   void               setEndAfter(in nsIDOMNode refNode);
-  void               selectNode(in nsIDOMNode refNode);
-  void               selectNodeContents(in nsIDOMNode refNode);
 
   // CompareHow
   const unsigned short      START_TO_START                 = 0;
