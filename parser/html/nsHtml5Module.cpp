@@ -6,6 +6,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsHtml5AttributeName.h"
 #include "nsHtml5ElementName.h"
 #include "nsHtml5HtmlAttributes.h"
@@ -21,7 +22,6 @@
 using namespace mozilla;
 
 // static
-bool nsHtml5Module::sOffMainThread = true;
 nsIThread* nsHtml5Module::sStreamParserThread = nullptr;
 nsIThread* nsHtml5Module::sMainThread = nullptr;
 
@@ -29,7 +29,6 @@ nsIThread* nsHtml5Module::sMainThread = nullptr;
 void
 nsHtml5Module::InitializeStatics()
 {
-  Preferences::AddBoolVarCache(&sOffMainThread, "html5.offmainthread");
   nsHtml5AttributeName::initializeStatics();
   nsHtml5ElementName::initializeStatics();
   nsHtml5HtmlAttributes::initializeStatics();
@@ -39,7 +38,6 @@ nsHtml5Module::InitializeStatics()
   nsHtml5Tokenizer::initializeStatics();
   nsHtml5TreeBuilder::initializeStatics();
   nsHtml5UTF16Buffer::initializeStatics();
-  nsHtml5StreamParser::InitializeStatics();
   nsHtml5TreeOpExecutor::InitializeStatics();
 #ifdef DEBUG
   sNsHtml5ModuleInitialized = true;
@@ -118,7 +116,7 @@ NS_IMPL_ISUPPORTS(nsHtml5ParserThreadTerminator, nsIObserver)
 nsIThread*
 nsHtml5Module::GetStreamParserThread()
 {
-  if (sOffMainThread) {
+  if (StaticPrefs::html5_offmainthread()) {
     if (!sStreamParserThread) {
       NS_NewNamedThread("HTML5 Parser", &sStreamParserThread);
       NS_ASSERTION(sStreamParserThread, "Thread creation failed!");
