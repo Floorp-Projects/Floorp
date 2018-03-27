@@ -71,7 +71,7 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: linux
+         build_platform: linux-nightly
       extra:
          platform: linux-i686
          updater-platform: linux-x86_64
@@ -83,7 +83,7 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: linux64
+         build_platform: linux64-nightly
       extra:
          platform: linux-x86_64
          updater-platform: linux-x86_64
@@ -95,7 +95,7 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: macosx64
+         build_platform: macosx64-nightly
       extra:
          platform: mac
          updater-platform: linux-x86_64
@@ -107,7 +107,7 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: win32
+         build_platform: win32-nightly
       extra:
          platform: win32
          updater-platform: linux-x86_64
@@ -119,7 +119,7 @@ jobs:
          kind: test
          tier: 1
       attributes:
-         build_platform: win64
+         build_platform: win64-nightly
       extra:
          platform: win64
          updater-platform: linux-x86_64
