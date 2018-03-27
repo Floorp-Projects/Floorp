@@ -481,6 +481,12 @@ public:
   static bool ResolveJunctionPointsAndSymLinks(std::wstring& aPath);
   static bool ResolveJunctionPointsAndSymLinks(nsIFile* aPath);
 
+
+  /**
+   * Returns true if executable's path is on a network drive.
+   */
+  static bool RunningFromANetworkDrive();
+
   static void Initialize();
 
   static bool ShouldHideScrollbars();
