@@ -34,8 +34,6 @@ extern "C" {
   void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle*);
 }
 
-MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoComputedValuesMallocEnclosingSizeOf)
-
 /**
  * A ComputedStyle represents the computed style data for an element.  The
  * computed style data are stored in a set of structs (see nsStyleStruct.h) that

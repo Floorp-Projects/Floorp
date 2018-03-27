@@ -448,6 +448,8 @@ ComputedStyle::GetCachedLazyPseudoStyle(CSSPseudoElementType aPseudo) const
   return mCachedInheritingStyles.Lookup(nsCSSPseudoElements::GetPseudoAtom(aPseudo));
 }
 
+MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoComputedValuesMallocEnclosingSizeOf)
+
 void
 ComputedStyle::AddSizeOfIncludingThis(nsWindowSizes& aSizes,
                                       size_t* aCVsSize) const
