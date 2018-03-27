@@ -4,6 +4,9 @@
 
 "use strict";
 
+const protocol = require("devtools/shared/protocol");
+const { networkEventSpec } = require("devtools/shared/specs/network-event");
+
 /**
  * Creates an actor for a network event.
  *
@@ -11,46 +14,49 @@
  * @param object webConsoleActor
  *        The parent WebConsoleActor instance for this object.
  */
-function NetworkEventActor(webConsoleActor) {
-  this.parent = webConsoleActor;
-  this.conn = this.parent.conn;
+const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
+  initialize(webConsoleActor) {
+    // Necessary to get the events to work
+    protocol.Actor.prototype.initialize.call(this, webConsoleActor.conn);
 
-  this._request = {
-    method: null,
-    url: null,
-    httpVersion: null,
-    headers: [],
-    cookies: [],
-    headersSize: null,
-    postData: {},
-  };
+    this.webConsoleActor = webConsoleActor;
+    this.conn = this.webConsoleActor.conn;
 
-  this._response = {
-    headers: [],
-    cookies: [],
-    content: {},
-  };
+    this._request = {
+      method: null,
+      url: null,
+      httpVersion: null,
+      headers: [],
+      cookies: [],
+      headersSize: null,
+      postData: {},
+    };
 
-  this._timings = {};
-  this._stackTrace = {};
+    this._response = {
+      headers: [],
+      cookies: [],
+      content: {},
+    };
 
-  // Keep track of LongStringActors owned by this NetworkEventActor.
-  this._longStringActors = new Set();
-}
+    this._timings = {};
+    this._stackTrace = {};
 
-NetworkEventActor.prototype =
-{
+    this._discardRequestBody = false;
+    this._discardResponseBody = false;
+
+    // Keep track of LongStringActors owned by this NetworkEventActor.
+    this._longStringActors = new Set();
+  },
+
   _request: null,
   _response: null,
   _timings: null,
   _longStringActors: null,
 
-  actorPrefix: "netEvent",
-
   /**
    * Returns a grip for this actor for returning in a protocol message.
    */
-  grip: function() {
+  form() {
     return {
       actor: this.actorID,
       startedDateTime: this._startedDateTime,
@@ -68,30 +74,36 @@ NetworkEventActor.prototype =
   /**
    * Releases this actor from the pool.
    */
-  release: function() {
+  destroy(conn) {
     for (let grip of this._longStringActors) {
-      let actor = this.parent.getActorByID(grip.actor);
+      let actor = this.webConsoleActor.getActorByID(grip.actor);
       if (actor) {
-        this.parent.releaseActor(actor);
+        this.webConsoleActor.releaseActor(actor);
       }
     }
     this._longStringActors = new Set();
 
+    if (!this.webConsoleActor) {
+      return;
+    }
     if (this._request.url) {
-      this.parent._networkEventActorsByURL.delete(this._request.url);
+      this.webConsoleActor._networkEventActorsByURL.delete(this._request.url);
     }
     if (this.channel) {
-      this.parent._netEvents.delete(this.channel);
+      this.webConsoleActor._netEvents.delete(this.channel);
     }
-    this.parent.releaseActor(this);
+
+    // Nullify webConsoleActor before calling releaseActor as it will recall this method
+    // To be removed once WebConsoleActor switches to protocol.js
+    let actor = this.webConsoleActor;
+    this.webConsoleActor = null;
+    actor.releaseActor(this);
+
+    protocol.Actor.prototype.destroy.call(this, conn);
   },
 
-  /**
-   * Handle a protocol request to release a grip.
-   */
-  onRelease: function() {
-    this.release();
-    return {};
+  release() {
+    // Per spec, destroy is automatically going to be called after this request
   },
 
   /**
@@ -101,7 +113,7 @@ NetworkEventActor.prototype =
    * @param object networkEvent
    *        The network event associated with this actor.
    */
-  init: function(networkEvent) {
+  init(networkEvent) {
     this._startedDateTime = networkEvent.startedDateTime;
     this._isXHR = networkEvent.isXHR;
     this._cause = networkEvent.cause;
@@ -120,8 +132,10 @@ NetworkEventActor.prototype =
       this._request[prop] = networkEvent[prop];
     }
 
-    this._discardRequestBody = networkEvent.discardRequestBody;
-    this._discardResponseBody = networkEvent.discardResponseBody;
+    // Consider as not discarded if networkEvent.discard*Body is undefined
+    this._discardRequestBody = !!networkEvent.discardRequestBody;
+    this._discardResponseBody = !!networkEvent.discardResponseBody;
+
     this._truncated = false;
     this._private = networkEvent.private;
   },
@@ -132,9 +146,8 @@ NetworkEventActor.prototype =
    * @return object
    *         The response packet - network request headers.
    */
-  onGetRequestHeaders: function() {
+  getRequestHeaders() {
     return {
-      from: this.actorID,
       headers: this._request.headers,
       headersSize: this._request.headersSize,
       rawHeaders: this._request.rawHeaders,
@@ -147,9 +160,8 @@ NetworkEventActor.prototype =
    * @return object
    *         The response packet - network request cookies.
    */
-  onGetRequestCookies: function() {
+  getRequestCookies() {
     return {
-      from: this.actorID,
       cookies: this._request.cookies,
     };
   },
@@ -160,9 +172,8 @@ NetworkEventActor.prototype =
    * @return object
    *         The response packet - network POST data.
    */
-  onGetRequestPostData: function() {
+  getRequestPostData() {
     return {
-      from: this.actorID,
       postData: this._request.postData,
       postDataDiscarded: this._discardRequestBody,
     };
@@ -174,9 +185,8 @@ NetworkEventActor.prototype =
    * @return object
    *         The response packet - connection security information.
    */
-  onGetSecurityInfo: function() {
+  getSecurityInfo() {
     return {
-      from: this.actorID,
       securityInfo: this._securityInfo,
     };
   },
@@ -187,9 +197,8 @@ NetworkEventActor.prototype =
    * @return object
    *         The response packet - network response headers.
    */
-  onGetResponseHeaders: function() {
+  getResponseHeaders() {
     return {
-      from: this.actorID,
       headers: this._response.headers,
       headersSize: this._response.headersSize,
       rawHeaders: this._response.rawHeaders,
@@ -202,9 +211,8 @@ NetworkEventActor.prototype =
    * @return object
    *         The cache packet - network cache information.
    */
-  onGetResponseCache: function() {
+  getResponseCache: function() {
     return {
-      from: this.actorID,
       cache: this._response.responseCache,
     };
   },
@@ -215,9 +223,8 @@ NetworkEventActor.prototype =
    * @return object
    *         The response packet - network response cookies.
    */
-  onGetResponseCookies: function() {
+  getResponseCookies() {
     return {
-      from: this.actorID,
       cookies: this._response.cookies,
     };
   },
@@ -228,9 +235,8 @@ NetworkEventActor.prototype =
    * @return object
    *         The response packet - network response content.
    */
-  onGetResponseContent: function() {
+  getResponseContent() {
     return {
-      from: this.actorID,
       content: this._response.content,
       contentDiscarded: this._discardResponseBody,
     };
@@ -242,9 +248,8 @@ NetworkEventActor.prototype =
    * @return object
    *         The response packet - network event timings.
    */
-  onGetEventTimings: function() {
+  getEventTimings() {
     return {
-      from: this.actorID,
       timings: this._timings,
       totalTime: this._totalTime,
       offsets: this._offsets
@@ -257,9 +262,8 @@ NetworkEventActor.prototype =
    * @return object
    *         The response packet - stack trace.
    */
-  onGetStackTrace: function() {
+  getStackTrace() {
     return {
-      from: this.actorID,
       stacktrace: this._stackTrace,
     };
   },
@@ -276,25 +280,20 @@ NetworkEventActor.prototype =
    * @param string rawHeaders
    *        The raw headers source.
    */
-  addRequestHeaders: function(headers, rawHeaders) {
+  addRequestHeaders(headers, rawHeaders) {
     this._request.headers = headers;
     this._prepareHeaders(headers);
 
-    rawHeaders = this.parent._createStringGrip(rawHeaders);
+    rawHeaders = this.webConsoleActor._createStringGrip(rawHeaders);
     if (typeof rawHeaders == "object") {
       this._longStringActors.add(rawHeaders);
     }
     this._request.rawHeaders = rawHeaders;
 
-    let packet = {
-      from: this.actorID,
-      type: "networkEventUpdate",
-      updateType: "requestHeaders",
+    this.emit("network-event-update:headers", "requestHeaders", {
       headers: headers.length,
       headersSize: this._request.headersSize,
-    };
-
-    this.conn.send(packet);
+    });
   },
 
   /**
@@ -303,18 +302,13 @@ NetworkEventActor.prototype =
    * @param array cookies
    *        The request cookies array.
    */
-  addRequestCookies: function(cookies) {
+  addRequestCookies(cookies) {
     this._request.cookies = cookies;
     this._prepareHeaders(cookies);
 
-    let packet = {
-      from: this.actorID,
-      type: "networkEventUpdate",
-      updateType: "requestCookies",
+    this.emit("network-event-update:cookies", "requestCookies", {
       cookies: cookies.length,
-    };
-
-    this.conn.send(packet);
+    });
   },
 
   /**
@@ -323,22 +317,17 @@ NetworkEventActor.prototype =
    * @param object postData
    *        The request POST data.
    */
-  addRequestPostData: function(postData) {
+  addRequestPostData(postData) {
     this._request.postData = postData;
-    postData.text = this.parent._createStringGrip(postData.text);
+    postData.text = this.webConsoleActor._createStringGrip(postData.text);
     if (typeof postData.text == "object") {
       this._longStringActors.add(postData.text);
     }
 
-    let packet = {
-      from: this.actorID,
-      type: "networkEventUpdate",
-      updateType: "requestPostData",
+    this.emit("network-event-update:post-data", "requestPostData", {
       dataSize: postData.text.length,
       discardRequestBody: this._discardRequestBody,
-    };
-
-    this.conn.send(packet);
+    });
   },
 
   /**
@@ -349,8 +338,8 @@ NetworkEventActor.prototype =
    * @param string rawHeaders
    *        The raw headers source.
    */
-  addResponseStart: function(info, rawHeaders) {
-    rawHeaders = this.parent._createStringGrip(rawHeaders);
+  addResponseStart(info, rawHeaders) {
+    rawHeaders = this.webConsoleActor._createStringGrip(rawHeaders);
     if (typeof rawHeaders == "object") {
       this._longStringActors.add(rawHeaders);
     }
@@ -360,16 +349,12 @@ NetworkEventActor.prototype =
     this._response.status = info.status;
     this._response.statusText = info.statusText;
     this._response.headersSize = info.headersSize;
-    this._discardResponseBody = info.discardResponseBody;
+    // Consider as not discarded if info.discardResponseBody is undefined
+    this._discardResponseBody = !!info.discardResponseBody;
 
-    let packet = {
-      from: this.actorID,
-      type: "networkEventUpdate",
-      updateType: "responseStart",
+    this.emit("network-event-update:response-start", "responseStart", {
       response: info
-    };
-
-    this.conn.send(packet);
+    });
   },
 
   /**
@@ -378,17 +363,12 @@ NetworkEventActor.prototype =
    * @param object info
    *        The object containing security information.
    */
-  addSecurityInfo: function(info) {
+  addSecurityInfo(info) {
     this._securityInfo = info;
 
-    let packet = {
-      from: this.actorID,
-      type: "networkEventUpdate",
-      updateType: "securityInfo",
+    this.emit("network-event-update:security-info", "securityInfo", {
       state: info.state,
-    };
-
-    this.conn.send(packet);
+    });
   },
 
   /**
@@ -397,19 +377,14 @@ NetworkEventActor.prototype =
    * @param array headers
    *        The response headers array.
    */
-  addResponseHeaders: function(headers) {
+  addResponseHeaders(headers) {
     this._response.headers = headers;
     this._prepareHeaders(headers);
 
-    let packet = {
-      from: this.actorID,
-      type: "networkEventUpdate",
-      updateType: "responseHeaders",
+    this.emit("network-event-update:headers", "responseHeaders", {
       headers: headers.length,
       headersSize: this._response.headersSize,
-    };
-
-    this.conn.send(packet);
+    });
   },
 
   /**
@@ -418,18 +393,13 @@ NetworkEventActor.prototype =
    * @param array cookies
    *        The response cookies array.
    */
-  addResponseCookies: function(cookies) {
+  addResponseCookies(cookies) {
     this._response.cookies = cookies;
     this._prepareHeaders(cookies);
 
-    let packet = {
-      from: this.actorID,
-      type: "networkEventUpdate",
-      updateType: "responseCookies",
+    this.emit("network-event-update:cookies", "responseCookies", {
       cookies: cookies.length,
-    };
-
-    this.conn.send(packet);
+    });
   },
 
   /**
@@ -443,36 +413,26 @@ NetworkEventActor.prototype =
    *        - boolean truncated
    *          Tells if the some of the response content is missing.
    */
-  addResponseContent: function(content, {discardResponseBody, truncated}) {
+  addResponseContent(content, {discardResponseBody, truncated}) {
     this._truncated = truncated;
     this._response.content = content;
-    content.text = this.parent._createStringGrip(content.text);
+    content.text = this.webConsoleActor._createStringGrip(content.text);
     if (typeof content.text == "object") {
       this._longStringActors.add(content.text);
     }
 
-    let packet = {
-      from: this.actorID,
-      type: "networkEventUpdate",
-      updateType: "responseContent",
+    this.emit("network-event-update:response-content", "responseContent", {
       mimeType: content.mimeType,
       contentSize: content.size,
       encoding: content.encoding,
       transferredSize: content.transferredSize,
       discardResponseBody,
-    };
-
-    this.conn.send(packet);
+    });
   },
 
   addResponseCache: function(content) {
     this._response.responseCache = content.responseCache;
-    let packet = {
-      from: this.actorID,
-      type: "networkEventUpdate",
-      updateType: "responseCache",
-    };
-    this.conn.send(packet);
+    this.emit("network-event-update:response-cache", "responseCache");
   },
 
   /**
@@ -483,19 +443,14 @@ NetworkEventActor.prototype =
    * @param object timings
    *        Timing details about the network event.
    */
-  addEventTimings: function(total, timings, offsets) {
+  addEventTimings(total, timings, offsets) {
     this._totalTime = total;
     this._timings = timings;
     this._offsets = offsets;
 
-    let packet = {
-      from: this.actorID,
-      type: "networkEventUpdate",
-      updateType: "eventTimings",
+    this.emit("network-event-update:event-timings", "eventTimings", {
       totalTime: total
-    };
-
-    this.conn.send(packet);
+    });
   },
 
   /**
@@ -505,29 +460,14 @@ NetworkEventActor.prototype =
    * @private
    * @param array aHeaders
    */
-  _prepareHeaders: function(headers) {
+  _prepareHeaders(headers) {
     for (let header of headers) {
-      header.value = this.parent._createStringGrip(header.value);
+      header.value = this.webConsoleActor._createStringGrip(header.value);
       if (typeof header.value == "object") {
         this._longStringActors.add(header.value);
       }
     }
   },
-};
-
-NetworkEventActor.prototype.requestTypes =
-{
-  "release": NetworkEventActor.prototype.onRelease,
-  "getRequestHeaders": NetworkEventActor.prototype.onGetRequestHeaders,
-  "getRequestCookies": NetworkEventActor.prototype.onGetRequestCookies,
-  "getRequestPostData": NetworkEventActor.prototype.onGetRequestPostData,
-  "getResponseHeaders": NetworkEventActor.prototype.onGetResponseHeaders,
-  "getResponseCookies": NetworkEventActor.prototype.onGetResponseCookies,
-  "getResponseCache": NetworkEventActor.prototype.onGetResponseCache,
-  "getResponseContent": NetworkEventActor.prototype.onGetResponseContent,
-  "getEventTimings": NetworkEventActor.prototype.onGetEventTimings,
-  "getSecurityInfo": NetworkEventActor.prototype.onGetSecurityInfo,
-  "getStackTrace": NetworkEventActor.prototype.onGetStackTrace,
-};
+});
 
 exports.NetworkEventActor = NetworkEventActor;
