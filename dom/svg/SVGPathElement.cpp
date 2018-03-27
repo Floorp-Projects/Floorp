@@ -20,6 +20,7 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsStyleStruct.h"
+#include "nsWindowSizes.h"
 #include "SVGContentUtils.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Path)
