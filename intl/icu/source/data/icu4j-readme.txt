@@ -19,10 +19,11 @@ In the following,
 
 1. Download and build ICU4C. For more instructions on downloading and building
         ICU4C, see the ICU4C readme at:
-        http://source.icu-project.org/repos/icu/icu/trunk/readme.html#HowToBuild
-	(Windows: build as x86, Release otherwise you will have to set 'CFG' differently below.)
+        http://source.icu-project.org/repos/icu/trunk/icu4c/readme.html#HowToBuild
+        (Windows: build as 'x86, Release' otherwise you will have to set 'CFG' differently below.)
 
-	*NOTE* You should do a full rebuild after any data changes.
+    *NOTE* You should do a full rebuild after any data changes.
+    
 1a.  If you didn't download from Subversion, you will also need the "icu4c-*-data.zip" file.  Unpack this file and replace the icu/source/data directory's contents with the contents of the data directory from the zip file.  
 
 

@@ -608,6 +608,10 @@ gsw{
         }
         MRO{
             "MRO",
+            "Ouguiya (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Ouguiya",
         }
         MTL{
@@ -836,6 +840,10 @@ gsw{
         }
         STD{
             "STD",
+            "Dobra (1977–2017)",
+        }
+        STN{
+            "STN",
             "Dobra",
         }
         SUR{
@@ -1661,6 +1669,10 @@ gsw{
             other{"Pataca"}
         }
         MRO{
+            one{"Ouguiya (1973–2017)"}
+            other{"Ouguiya (1973–2017)"}
+        }
+        MRU{
             one{"Ouguiya"}
             other{"Ouguiya"}
         }
@@ -1889,6 +1901,10 @@ gsw{
             other{"Süüdsudaneesischi Pfund"}
         }
         STD{
+            one{"Dobra (1977–2017)"}
+            other{"Dobra (1977–2017)"}
+        }
+        STN{
             one{"Dobra"}
             other{"Dobra"}
         }
@@ -2137,5 +2153,5 @@ gsw{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
 }

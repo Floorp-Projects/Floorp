@@ -18,6 +18,10 @@ de_CH{
             "PEN",
             "Peruanischer Neuer Sol",
         }
+        STN{
+            "STN",
+            "São-toméischer Dobra (2018)",
+        }
     }
     Currencies%narrow{
         EUR{"EUR"}
@@ -34,6 +38,10 @@ de_CH{
         PEN{
             one{"Peruanischer Neuer Sol"}
         }
+        STN{
+            one{"São-toméischer Dobra (2018)"}
+            other{"São-toméischer Dobra (2018)"}
+        }
     }
-    Version{"2.1.37.8"}
+    Version{"2.1.39.37"}
 }

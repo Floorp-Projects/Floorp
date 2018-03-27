@@ -34,7 +34,7 @@ tg{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.4"}
+    Version{"2.1.38.71"}
     calendar{
         generic{
             DateTimePatterns{
@@ -143,7 +143,7 @@ tg{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    other{"'ҳафтаи' w, Y"}
+                    other{"'ҳафтаи' w, y"}
                 }
             }
             dayNames{

@@ -254,7 +254,7 @@ pa{
         minimumGroupingDigits{"1"}
         native{"guru"}
     }
-    Version{"2.1.37.22"}
+    Version{"2.1.39.11"}
     calendar{
         buddhist{
             DateTimePatterns{

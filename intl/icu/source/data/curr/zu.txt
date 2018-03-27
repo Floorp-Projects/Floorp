@@ -380,6 +380,10 @@ zu{
         }
         MRO{
             "MRO",
+            "i-Mauritanian Ouguiya (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "i-Mauritanian Ouguiya",
         }
         MUR{
@@ -528,6 +532,10 @@ zu{
         }
         STD{
             "STD",
+            "i-São Tomé kanye ne-Príncipe Dobra (1977–2017)",
+        }
+        STN{
+            "STN",
             "i-São Tomé kanye ne-Príncipe Dobra",
         }
         SYP{
@@ -726,7 +734,7 @@ zu{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1112,6 +1120,10 @@ zu{
             other{"i-Macanese Pataca"}
         }
         MRO{
+            one{"i-Mauritanian Ouguiya (1973–2017)"}
+            other{"i-Mauritanian Ouguiya (1973–2017)"}
+        }
+        MRU{
             one{"i-Mauritanian Ouguiya"}
             other{"i-Mauritanian Ouguiya"}
         }
@@ -1260,6 +1272,10 @@ zu{
             other{"i-South Sudanese Pound"}
         }
         STD{
+            one{"i-São Tomé kanye ne-Príncipe Dobra (1977–2017)"}
+            other{"i-São Tomé kanye ne-Príncipe Dobra (1977–2017)"}
+        }
+        STN{
             one{"i-São Tomé kanye ne-Príncipe Dobra"}
             other{"i-São Tomé kanye ne-Príncipe Dobra"}
         }
@@ -1380,5 +1396,5 @@ zu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
 }

@@ -209,7 +209,7 @@ sw{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.34"}
+    Version{"2.1.39.11"}
     calendar{
         generic{
             DateTimePatterns{
@@ -864,14 +864,14 @@ sw{
         divination_symbols{"alama za kugawa"}
         downwards_arrows{"mishale inayoelekea chini"}
         downwards_upwards_arrows{"mishale ya kuwili"}
-        east_asian_scripts{"hati za mashariki wa Asia"}
+        east_asian_scripts{"hati za mashariki ya Asia"}
         emoji{"emoji"}
         european_scripts{"hati za Ulaya"}
         female{"mwanamke"}
         flag{"bendera"}
         flags{"bendera"}
         food_drink{"vyakula na vinywaji"}
-        format{"miundo"}
+        format{"muundo"}
         format_whitespace{"miundo na sehemu wazi"}
         full_width_form_variant{"sehemu za fomu ya upana kamili"}
         geometric_shapes{"maumbo ya jiometri"}
@@ -884,14 +884,14 @@ sw{
         heart{"moyo"}
         historic_scripts{"hati za kihistoria"}
         ideographic_desc_characters{"herufi za maelezo ya idiografia"}
-        japanese_kana{"herufi za kijapani"}
+        japanese_kana{"herufi za kijapani (kana)"}
         kanbun{"herufi za kanbun"}
-        kanji{"kanji"}
+        kanji{"herufi za kijapani (kanji)"}
         keycap{"kitufe"}
         leftwards_arrows{"mishale inayoelekea kushoto"}
         leftwards_rightwards_arrows{"mishale inayoelekea kulia na kushoto"}
-        letterlike_symbols{"alama Zinazofanana na Herufi"}
-        limited_use{"matumizi machache"}
+        letterlike_symbols{"alama zinazofanana na herufi"}
+        limited_use{"matumizi finyu"}
         male{"mwanamume"}
         math_symbols{"alama za hesabu"}
         middle_eastern_scripts{"hati za mashariki ya kati"}
@@ -929,7 +929,7 @@ sw{
         variant_forms{"maumbo mbalimbali"}
         vocalic_jamo{"vibambo vya jamo vya sauti"}
         weather{"hali ya hewa"}
-        western_asian_scripts{"hati za magharibi wa Asia"}
+        western_asian_scripts{"hati za magharibi mwa Asia"}
         whitespace{"sehemu wazi"}
     }
     delimiters{

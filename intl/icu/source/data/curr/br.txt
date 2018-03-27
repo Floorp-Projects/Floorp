@@ -680,6 +680,10 @@ br{
         }
         MRO{
             "MRO",
+            "ouguiya Maouritania (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "ouguiya Maouritania",
         }
         MTL{
@@ -912,6 +916,10 @@ br{
         }
         STD{
             "STD",
+            "dobra São Tomé ha Príncipe (1977–2017)",
+        }
+        STN{
+            "STN",
             "dobra São Tomé ha Príncipe",
         }
         SUR{
@@ -1262,7 +1270,7 @@ br{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"$ T"}
@@ -2314,6 +2322,13 @@ br{
             two{"bataca Macau"}
         }
         MRO{
+            few{"ouguiya Maouritania (1973–2017)"}
+            many{"a ouguiyaoù Maouritania (1973–2017)"}
+            one{"ouguiya Maouritania (1973–2017)"}
+            other{"ouguiya Maouritania (1973–2017)"}
+            two{"ouguiya Maouritania (1973–2017)"}
+        }
+        MRU{
             few{"ouguiya Maouritania"}
             many{"a ouguiyaoù Maouritania"}
             one{"ouguiya Maouritania"}
@@ -2706,6 +2721,13 @@ br{
             two{"lur Susoudan"}
         }
         STD{
+            few{"dobra São Tomé ha Príncipe (1977–2017)"}
+            many{"a zobraoù São Tomé ha Príncipe (1977–2017)"}
+            one{"dobra São Tomé ha Príncipe (1977–2017)"}
+            other{"dobra São Tomé ha Príncipe (1977–2017)"}
+            two{"zobra São Tomé ha Príncipe (1977–2017)"}
+        }
+        STN{
             few{"dobra São Tomé ha Príncipe"}
             many{"a zobraoù São Tomé ha Príncipe"}
             one{"dobra São Tomé ha Príncipe"}
@@ -3105,5 +3127,5 @@ br{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
 }

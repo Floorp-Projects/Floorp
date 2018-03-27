@@ -19,6 +19,10 @@ es_MX{
             "MYR",
             "ringit",
         }
+        STN{
+            "STN",
+            "dobra santotomense",
+        }
         THB{
             "THB",
             "baht tailandés",
@@ -55,6 +59,10 @@ es_MX{
             one{"ringit"}
             other{"ringits"}
         }
+        STN{
+            one{"dobra santotomense"}
+            other{"dobra santotomense"}
+        }
         THB{
             one{"baht tailandés"}
             other{"bats"}
@@ -71,5 +79,5 @@ es_MX{
             other{"kwachas zambianos"}
         }
     }
-    Version{"2.1.37.32"}
+    Version{"2.1.38.73"}
 }

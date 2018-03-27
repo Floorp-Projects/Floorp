@@ -23,5 +23,5 @@ jgo{
             "ntɛ-ŋkáp yi pɛ́ ká kɛ́ jínɛ",
         }
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.38.69"}
 }

@@ -248,7 +248,7 @@ ro{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.20"}
     calendar{
         buddhist{
             eras{
@@ -1717,6 +1717,12 @@ ro{
         weather{"vreme"}
         western_asian_scripts{"scriere vest-asiatică"}
         whitespace{"spațiu alb"}
+    }
+    contextTransforms{
+        typographicNames:intvector{
+            1,
+            1,
+        }
     }
     delimiters{
         alternateQuotationEnd{"»"}

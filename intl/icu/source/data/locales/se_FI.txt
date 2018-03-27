@@ -1,7 +1,68 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 se_FI{
-    Version{"2.1.37.6"}
+    NumberElements{
+        latn{
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        other{"0 duháhat"}
+                        two{"0 dt"}
+                    }
+                    10000{
+                        one{"00 duháhat"}
+                        two{"00 dt"}
+                    }
+                    100000{
+                        one{"000 duháhat"}
+                        two{"000 dt"}
+                    }
+                    1000000{
+                        two{"0 mn"}
+                    }
+                    10000000{
+                        one{"00 miljonat"}
+                        two{"00 mn"}
+                    }
+                    100000000{
+                        one{"000 miljonat"}
+                        two{"000 mn"}
+                    }
+                    1000000000{
+                        one{"0 miljárda"}
+                        other{"0 miljárdat"}
+                        two{"0 miljárdat"}
+                    }
+                    10000000000{
+                        one{"00 miljárdat"}
+                        other{"00 miljárdat"}
+                        two{"00 md"}
+                    }
+                    100000000000{
+                        one{"000 miljárdat"}
+                        other{"000 miljárdat"}
+                        two{"000 md"}
+                    }
+                    1000000000000{
+                        one{"0 biljovdna"}
+                        other{"0 biljovdnat"}
+                        two{"0 bn"}
+                    }
+                    10000000000000{
+                        one{"00 biljovdnat"}
+                        other{"00 biljovdnat"}
+                        two{"00 bn"}
+                    }
+                    100000000000000{
+                        one{"000 biljovdnat"}
+                        other{"000 biljovdnat"}
+                        two{"000 bn"}
+                    }
+                }
+            }
+        }
+    }
+    Version{"2.1.38.73"}
     calendar{
         generic{
             DateTimePatterns{
@@ -482,20 +543,30 @@ se_FI{
             }
         }
         fri-narrow{
+            relative{
+                "-1"{"mannan be"}
+                "0"{"dán be"}
+                "1"{"boahtte be"}
+            }
             relativeTime{
                 future{
-                    one{"boahtte be"}
+                    one{"boahtte {0} be"}
                     other{"boahtte {0} be"}
                     two{"boahtte {0} bearjadaga"}
                 }
                 past{
-                    one{"mannan be"}
+                    one{"{0} mannan be"}
                     other{"-{0} be dás ovdal"}
                     two{"ovddet bearjadaga"}
                 }
             }
         }
         fri-short{
+            relative{
+                "-1"{"mannan be"}
+                "0"{"dán be"}
+                "1"{"boahtte be"}
+            }
             relativeTime{
                 future{
                     one{"boahtte be"}
@@ -623,6 +694,11 @@ se_FI{
             }
         }
         mon-narrow{
+            relative{
+                "-1"{"mannan má"}
+                "0"{"dán má"}
+                "1"{"boahtte má"}
+            }
             relativeTime{
                 future{
                     one{"{0} boahtte má"}
@@ -630,13 +706,18 @@ se_FI{
                     two{"{0} boahtte mánnodaga"}
                 }
                 past{
-                    one{"mannan má"}
+                    one{"{0} mannan má"}
                     other{"{0} má dás ovdal"}
                     two{"ovddet má"}
                 }
             }
         }
         mon-short{
+            relative{
+                "-1"{"mannan má"}
+                "0"{"dán má"}
+                "1"{"boahtte má"}
+            }
             relativeTime{
                 future{
                     one{"{0} boahtte má"}
@@ -769,6 +850,11 @@ se_FI{
             }
         }
         sat-narrow{
+            relative{
+                "-1"{"mannan lá"}
+                "0"{"dán lá"}
+                "1"{"boahtte lá"}
+            }
             relativeTime{
                 future{
                     one{"+{0} boahtte lá"}
@@ -776,13 +862,18 @@ se_FI{
                     two{"boahtte {0} lá"}
                 }
                 past{
-                    one{"mannan lá"}
+                    one{"{0} mannan lá"}
                     other{"-{0} lá dás ovdal"}
                     two{"ovddet lá"}
                 }
             }
         }
         sat-short{
+            relative{
+                "-1"{"mannan lá"}
+                "0"{"dán lá"}
+                "1"{"boahtte lá"}
+            }
             relativeTime{
                 future{
                     one{"+{0} boahtte lá"}
@@ -863,6 +954,11 @@ se_FI{
             }
         }
         sun-narrow{
+            relative{
+                "-1"{"mannan so"}
+                "0"{"dán so"}
+                "1"{"boahtte so"}
+            }
             relativeTime{
                 future{
                     one{"{0} boahtte so"}
@@ -870,13 +966,18 @@ se_FI{
                     two{"boahtte {0} sotnabeaivve"}
                 }
                 past{
-                    one{"mannan so"}
+                    one{"{0} mannan so"}
                     other{"{0} so dás ovdal"}
                     two{"ovddet sotnabeaivve"}
                 }
             }
         }
         sun-short{
+            relative{
+                "-1"{"mannan so"}
+                "0"{"dán so"}
+                "1"{"boahtte so"}
+            }
             relativeTime{
                 future{
                     one{"boahtte so"}
@@ -910,20 +1011,30 @@ se_FI{
             }
         }
         thu-narrow{
+            relative{
+                "-1"{"mannan du"}
+                "0"{"dán du"}
+                "1"{"boahtte du"}
+            }
             relativeTime{
                 future{
-                    one{"boahtte du"}
+                    one{"{0} boahtte du"}
                     other{"+{0} boahtte du"}
                     two{"+{0} boahtte duorastaga"}
                 }
                 past{
-                    one{"mannan du"}
+                    one{"{0} mannan du"}
                     other{"{0} du dás ovdal"}
                     two{"ovddet duorastaga"}
                 }
             }
         }
         thu-short{
+            relative{
+                "-1"{"mannan du"}
+                "0"{"dán du"}
+                "1"{"boahtte du"}
+            }
             relativeTime{
                 future{
                     one{"boahtte du"}
@@ -957,20 +1068,30 @@ se_FI{
             }
         }
         tue-narrow{
+            relative{
+                "-1"{"mannan di"}
+                "0"{"dán di"}
+                "1"{"boahtte di"}
+            }
             relativeTime{
                 future{
-                    one{"boahtte di"}
+                    one{"{0} boahtte di"}
                     other{"{0} boahtte di"}
                     two{"{0} boahtte disdaga"}
                 }
                 past{
-                    one{"mannan di"}
+                    one{"{0} mannan di"}
                     other{"{0} di dás ovdal"}
                     two{"ovddet disdaga"}
                 }
             }
         }
         tue-short{
+            relative{
+                "-1"{"mannan di"}
+                "0"{"dán di"}
+                "1"{"boahtte di"}
+            }
             relativeTime{
                 future{
                     one{"boahtte di"}
@@ -1004,20 +1125,30 @@ se_FI{
             }
         }
         wed-narrow{
+            relative{
+                "-1"{"mannan ga"}
+                "0"{"dán ga"}
+                "1"{"boahtte ga"}
+            }
             relativeTime{
                 future{
-                    one{"boahtte ga"}
+                    one{"{0} boahtte ga"}
                     other{"{0} boahtte ga"}
                     two{"{0} boahtte gaskavahku"}
                 }
                 past{
-                    one{"mannan ga"}
+                    one{"{0} mannan ga"}
                     other{"{0} ga dás ovdal"}
                     two{"ovddet gaskavahku"}
                 }
             }
         }
         wed-short{
+            relative{
+                "-1"{"mannan ga"}
+                "0"{"dán ga"}
+                "1"{"boahtte ga"}
+            }
             relativeTime{
                 future{
                     one{"boahtte ga"}

@@ -680,6 +680,10 @@ ee{
         }
         MRO{
             "MRO",
+            "mɔritaniaga ouguiya (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "mɔritaniaga ouguiya",
         }
         MTL{
@@ -876,6 +880,10 @@ ee{
         }
         STD{
             "STD",
+            "são tomé kple príncipega dobra (1977–2017)",
+        }
+        STN{
+            "STN",
             "são tomé kple príncipega dobra",
         }
         SUR{
@@ -1890,6 +1898,10 @@ ee{
             other{"makanesega pataca"}
         }
         MRO{
+            one{"mɔritaniaga ouguiya (1973–2017)"}
+            other{"mɔritaniaga ouguiya (1973–2017)"}
+        }
+        MRU{
             one{"mɔritaniaga ouguiya"}
             other{"mɔritaniaga ouguiya"}
         }
@@ -2086,6 +2098,10 @@ ee{
             other{"surinamega guilder"}
         }
         STD{
+            one{"são tomé kple príncipega dobra (1977–2017)"}
+            other{"são tomé kple príncipega dobra (1977–2017)"}
+        }
+        STN{
             one{"são tomé kple príncipega dobra"}
             other{"são tomé kple príncipega dobra"}
         }
@@ -2366,5 +2382,5 @@ ee{
         one{"{1} {0}"}
         other{"{1} {0}"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
 }

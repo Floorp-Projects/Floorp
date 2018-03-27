@@ -92,7 +92,7 @@ es_MX{
             }
         }
     }
-    Version{"2.1.37.32"}
+    Version{"2.1.38.73"}
     calendar{
         generic{
             DateTimePatterns{
@@ -180,8 +180,6 @@ es_MX{
                 GyMMMd{"d MMM y G"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
-                Hmsv{"H:mm:ss v"}
-                Hmv{"H:mm v"}
                 MMMEd{"E d 'de' MMM"}
                 MMd{"d/MM"}
                 MMdd{"dd/MM"}
