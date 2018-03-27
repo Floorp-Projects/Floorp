@@ -731,20 +731,12 @@ IsInsideRuby(nsINode* aNode)
 }
 
 static bool
-IsSelectionInsideRuby(nsISelection* aSelection)
+IsSelectionInsideRuby(Selection* aSelection)
 {
-  int32_t rangeCount;
-  nsresult rv = aSelection->GetRangeCount(&rangeCount);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
+  uint32_t rangeCount = aSelection->RangeCount();;
   for (auto i : IntegerRange(rangeCount)) {
-    nsCOMPtr<nsIDOMRange> range;
-    aSelection->GetRangeAt(i, getter_AddRefs(range));
-    nsCOMPtr<nsIDOMNode> node;
-    range->GetCommonAncestorContainer(getter_AddRefs(node));
-    nsCOMPtr<nsINode> n = do_QueryInterface(node);
-    if (!IsInsideRuby(n)) {
+    nsRange* range = aSelection->GetRangeAt(i);
+    if (!IsInsideRuby(range->GetCommonAncestor())) {
       return false;
     }
   }

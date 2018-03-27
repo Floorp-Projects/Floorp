@@ -1345,22 +1345,20 @@ nsTypeAheadFind::IsRangeRendered(nsIDOMRange *aRange,
     return NS_ERROR_UNEXPECTED;
   }
   RefPtr<nsPresContext> presContext = presShell->GetPresContext();
-  *aResult = IsRangeRendered(presShell, presContext, aRange);
+  *aResult = IsRangeRendered(presShell, presContext, range);
   return NS_OK;
 }
 
 bool
 nsTypeAheadFind::IsRangeRendered(nsIPresShell *aPresShell,
                                  nsPresContext *aPresContext,
-                                 nsIDOMRange *aRange)
+                                 nsRange *aRange)
 {
   NS_ASSERTION(aPresShell && aPresContext && aRange,
                "params are invalid");
 
-  nsCOMPtr<nsIDOMNode> node;
-  aRange->GetCommonAncestorContainer(getter_AddRefs(node));
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+  nsCOMPtr<nsIContent> content =
+    do_QueryInterface(aRange->GetCommonAncestor());
   if (!content) {
     return false;
   }

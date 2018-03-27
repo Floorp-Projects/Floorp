@@ -62,7 +62,7 @@ protected:
                       bool aGetTopVisibleLeaf, nsIDOMRange **aNewRange,
                       bool *aUsesIndependentSelection);
   bool IsRangeRendered(nsIPresShell *aPresShell, nsPresContext *aPresContext,
-                          nsIDOMRange *aRange);
+                       nsRange *aRange);
   nsresult FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
                      bool aIsFirstVisiblePreferred, bool aFindPrev,
                      uint16_t* aResult);
