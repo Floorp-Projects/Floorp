@@ -8,7 +8,6 @@
 /* THIS IS A PUBLIC INTERFACE */
 
 interface nsIDOMNode;
-interface nsIDOMRange;
 interface nsINode;
 
 %{C++
@@ -56,16 +55,6 @@ interface nsISelection : nsISupports
     [noscript,notxpcom,nostdcall] boolean collapsed();
 
     /**
-     * Returns the number of ranges in the selection.
-     */
-    readonly attribute long rangeCount;
-
-    /**
-     * Returns the range at the specified index.
-     */
-    nsIDOMRange getRangeAt(in long index);
-
-    /**
      * Collapses the selection to a single point, at the specified offset
      * in the given DOM node. When the selection is collapsed, and the content
      * is focused and editable, the caret will blink there.
@@ -111,22 +100,7 @@ interface nsISelection : nsISupports
      * Adds all children of the specified node to the selection.
      * @param parentNode  the parent of the children to be added to the selection.
      */
-    void selectAllChildren(in nsIDOMNode parentNode); 
-
-    /**
-     * Adds a range to the current selection.
-     */
-    void addRange(in nsIDOMRange range);
- 
-    /**
-     * Removes a range from the current selection.
-     */
-    void removeRange(in nsIDOMRange range);
-
-    /**
-     * Removes all ranges from the current selection.
-     */
-    void removeAllRanges();
+    void selectAllChildren(in nsIDOMNode parentNode);
 
     /**
      * Deletes this selection from document the nodes belong to.

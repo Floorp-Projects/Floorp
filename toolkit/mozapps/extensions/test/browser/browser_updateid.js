@@ -8,8 +8,6 @@ var gProvider;
 var gManagerWindow;
 var gCategoryUtilities;
 
-var gApp = document.getElementById("bundle_brand").getString("brandShortName");
-
 function test() {
   waitForExplicitFinish();
 
@@ -64,21 +62,4 @@ add_test(function() {
       run_next_test();
     });
   });
-});
-
-add_test(function() {
-  var item = get_addon_element(gManagerWindow, "addon1@tests.mozilla.org");
-  var update = gManagerWindow.document.getAnonymousElementByAttribute(item, "anonid", "update-btn");
-  EventUtils.synthesizeMouseAtCenter(update, { }, gManagerWindow);
-
-  var pending = gManagerWindow.document.getAnonymousElementByAttribute(item, "anonid", "pending");
-  is_element_visible(pending, "Pending message should be visible");
-  is(pending.textContent,
-     get_string("notification.upgrade", "manually updating addon", gApp),
-     "Pending message should be correct");
-
-  item = get_addon_element(gManagerWindow, "addon2@tests.mozilla.org");
-  is(item, null, "Should not show the new version in the list");
-
-  run_next_test();
 });

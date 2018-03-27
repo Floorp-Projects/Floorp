@@ -10,7 +10,7 @@
             }
           },
           "version": "2",
-          "update_link": "http://localhost:%PORT%/addons/blocklist_soft1_2.xpi"
+          "update_link": "http://example.com/addons/blocklist_soft1_2.xpi"
         }
       ]
     },
@@ -24,7 +24,7 @@
             }
           },
           "version": "2",
-          "update_link": "http://localhost:%PORT%/addons/blocklist_soft3_2.xpi"
+          "update_link": "http://example.com/addons/blocklist_soft3_2.xpi"
         }
       ]
     },
@@ -38,7 +38,7 @@
             }
           },
           "version": "2",
-          "update_link": "http://localhost:%PORT%/addons/blocklist_soft5_2.xpi"
+          "update_link": "http://example.com/addons/blocklist_soft5_2.xpi"
         }
       ]
     },
@@ -52,7 +52,7 @@
             }
           },
           "version": "2",
-          "update_link": "http://localhost:%PORT%/addons/blocklist_soft4_2.xpi"
+          "update_link": "http://example.com/addons/blocklist_soft4_2.xpi"
         }
       ]
     },
@@ -66,7 +66,7 @@
             }
           },
           "version": "2",
-          "update_link": "http://localhost:%PORT%/addons/blocklist_soft2_2.xpi"
+          "update_link": "http://example.com/addons/blocklist_soft2_2.xpi"
         }
       ]
     },
@@ -80,7 +80,7 @@
             }
           },
           "version": "2",
-          "update_link": "http://localhost:%PORT%/addons/blocklist_regexp1_2.xpi"
+          "update_link": "http://example.com/addons/blocklist_regexp1_2.xpi"
         }
       ]
     },
@@ -94,7 +94,7 @@
             }
           },
           "version": "2",
-          "update_link": "http://localhost:%PORT%/addons/blocklist_hard1_2.xpi"
+          "update_link": "http://example.com/addons/blocklist_hard1_2.xpi"
         }
       ]
     }

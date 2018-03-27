@@ -8,7 +8,7 @@
 /* globals ADDON_SIGNING, SIGNED_TYPES, BOOTSTRAP_REASONS, DB_SCHEMA,
           AddonInternal, XPIProvider, XPIStates, syncLoadManifestFromFile,
           isUsableAddon, recordAddonTelemetry,
-          flushChromeCaches, descriptorToPath */
+          flushChromeCaches, descriptorToPath, DEFAULT_SKIN */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -183,19 +183,6 @@ function DBAddonInternal(aLoaded) {
   }
 
   this._sourceBundle = aLoaded._sourceBundle;
-
-  XPCOMUtils.defineLazyGetter(this, "pendingUpgrade", function() {
-      for (let install of XPIProvider.installs) {
-        if (install.state == AddonManager.STATE_INSTALLED &&
-            !(install.addon.inDatabase) &&
-            install.addon.id == this.id &&
-            install.installLocation == this._installLocation) {
-          delete this.pendingUpgrade;
-          return this.pendingUpgrade = install.addon;
-        }
-      }
-      return null;
-    });
 }
 
 DBAddonInternal.prototype = Object.create(AddonInternal.prototype);
@@ -831,10 +818,7 @@ this.XPIDatabase = {
   getVisibleAddonsWithPendingOperations(aTypes, aCallback) {
     this.getAddonList(
         aAddon => (aAddon.visible &&
-                   (aAddon.pendingUninstall ||
-                    // Logic here is tricky. If we're active but disabled,
-                    // we're pending disable; !active && !disabled, we're pending enable
-                    (aAddon.active == aAddon.disabled)) &&
+                   aAddon.pendingUninstall &&
                    (!aTypes || (aTypes.length == 0) || (aTypes.indexOf(aAddon.type) > -1))),
         aCallback);
   },
@@ -1170,7 +1154,7 @@ this.XPIDatabaseReconcile = {
       logger.warn("addMetadata: Add-on " + aId + " is invalid", e);
 
       // Remove the invalid add-on from the install location if the install
-      // location isn't locked, no restart will be necessary
+      // location isn't locked
       if (aInstallLocation.isLinkedAddon(aId))
         logger.warn("Not uninstalling invalid item because it is a proxy file");
       else if (aInstallLocation.locked)
@@ -1194,7 +1178,7 @@ this.XPIDatabaseReconcile = {
     aNewAddon.appDisabled = !isUsableAddon(aNewAddon);
 
     // The default theme is never a foreign install
-    if (aNewAddon.type == "theme" && aNewAddon.internalName == XPIProvider.defaultSkin)
+    if (aNewAddon.type == "theme" && aNewAddon.internalName == DEFAULT_SKIN)
       aNewAddon.foreignInstall = false;
 
     if (isDetectedInstall && aNewAddon.foreignInstall) {
@@ -1228,9 +1212,8 @@ this.XPIDatabaseReconcile = {
   },
 
   /**
-   * Updates an add-on's metadata and determines if a restart of the
-   * application is necessary. This is called when either the add-on's
-   * install directory path or last modified time has changed.
+   * Updates an add-on's metadata and determines. This is called when either the
+   * add-on's install directory path or last modified time has changed.
    *
    * @param  aInstallLocation
    *         The install location containing the add-on
@@ -1252,12 +1235,6 @@ this.XPIDatabaseReconcile = {
       if (!aNewAddon) {
         let file = new nsIFile(aAddonState.path);
         aNewAddon = syncLoadManifestFromFile(file, aInstallLocation);
-
-        // Carry over any pendingUninstall state to add-ons modified directly
-        // in the profile. This is important when the attempt to remove the
-        // add-on in processPendingFileChanges failed and caused an mtime
-        // change to the add-ons files.
-        aNewAddon.pendingUninstall = aOldAddon.pendingUninstall;
 
         aNewAddon.updateBlocklistState({oldAddon: aOldAddon});
       }
@@ -1547,7 +1524,6 @@ this.XPIDatabaseReconcile = {
 
     let previousVisible = this.getVisibleAddons(previousAddons);
     let currentVisible = this.flattenByID(currentAddons, hideLocation);
-    let sawActiveTheme = false;
 
     // Pass over the new set of visible add-ons, record any changes that occured
     // during startup and call bootstrap install/uninstall scripts as necessary
@@ -1571,9 +1547,12 @@ this.XPIDatabaseReconcile = {
         if (!wasStaged && XPIDatabase.activeBundles) {
           // For themes we know which is active by the current skin setting
           if (currentAddon.type == "theme")
-            isActive = currentAddon.internalName == XPIProvider.currentSkin;
+            isActive = currentAddon.internalName == DEFAULT_SKIN;
           else
             isActive = XPIDatabase.activeBundles.includes(currentAddon.path);
+
+          if (currentAddon.type == "webextension-theme")
+            currentAddon.userDisabled = !isActive;
 
           // If the add-on wasn't active and it isn't already disabled in some way
           // then it was probably either softDisabled or userDisabled
@@ -1643,9 +1622,6 @@ this.XPIDatabaseReconcile = {
 
       XPIDatabase.makeAddonVisible(currentAddon);
       currentAddon.active = isActive;
-
-      if (currentAddon.active && currentAddon.internalName == XPIProvider.selectedSkin)
-        sawActiveTheme = true;
     }
 
     // Pass over the set of previously visible add-ons that have now gone away
@@ -1677,13 +1653,6 @@ this.XPIDatabaseReconcile = {
         addon.visible = false;
         addon.active = false;
       }
-    }
-
-    // If a custom theme is selected and it wasn't seen in the new list of
-    // active add-ons then enable the default theme
-    if (XPIProvider.selectedSkin != XPIProvider.defaultSkin && !sawActiveTheme) {
-      logger.info("Didn't see selected skin " + XPIProvider.selectedSkin);
-      XPIProvider.enableDefaultTheme();
     }
 
     // Finally update XPIStates to match everything

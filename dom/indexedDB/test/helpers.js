@@ -18,7 +18,7 @@ var testGenerator = testSteps();
 var c = Object.getOwnPropertyDescriptor(this, "Components");
 if ((!c || !c.value || c.writable) && typeof SpecialPowers === "object") {
   // eslint-disable-next-line no-native-reassign
-  Components = SpecialPowers.Components;
+  Components = SpecialPowers.wrap(SpecialPowers.Components);
 }
 
 function executeSoon(aFun)

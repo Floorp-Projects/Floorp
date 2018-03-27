@@ -1,0 +1,12 @@
+{
+  "manifest_version": 2,
+
+  "applications": {
+    "gecko": {
+      "id": "dragdrop-2@tests.mozilla.org"
+    }
+  },
+
+  "name": "Drag Drop test 2",
+  "version": "1.1"
+}

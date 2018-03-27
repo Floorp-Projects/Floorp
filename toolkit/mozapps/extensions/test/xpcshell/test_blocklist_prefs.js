@@ -78,6 +78,7 @@ function run_test() {
     id: "block1@tests.mozilla.org",
     version: "1.0",
     name: "Blocked add-on-1 with to-be-reset prefs",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -89,6 +90,7 @@ function run_test() {
     id: "block2@tests.mozilla.org",
     version: "1.0",
     name: "Blocked add-on-2 with to-be-reset prefs",
+    bootstrap: true,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",

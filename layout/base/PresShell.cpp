@@ -60,7 +60,6 @@
 #include "nsISelection.h"
 #include "mozilla/dom/Selection.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
@@ -3180,18 +3179,16 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
     // Even if select anchor pref is false, we must still move the
     // caret there. That way tabbing will start from the new
     // location
-    RefPtr<nsIDOMRange> jumpToRange = new nsRange(mDocument);
+    RefPtr<nsRange> jumpToRange = new nsRange(mDocument);
     while (content && content->GetFirstChild()) {
       content = content->GetFirstChild();
     }
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-    NS_ASSERTION(node, "No nsIDOMNode for descendant of anchor");
-    jumpToRange->SelectNodeContents(node);
+    jumpToRange->SelectNodeContents(*content, IgnoreErrors());
     // Select the anchor
     RefPtr<Selection> sel = mSelection->GetSelection(SelectionType::eNormal);
     if (sel) {
-      sel->RemoveAllRanges();
-      sel->AddRange(jumpToRange);
+      sel->RemoveAllRanges(IgnoreErrors());
+      sel->AddRange(*jumpToRange, IgnoreErrors());
       if (!selectAnchor) {
         // Use a caret (collapsed selection) at the start of the anchor
         sel->CollapseToStart();
@@ -4872,19 +4869,18 @@ static bool gDumpRangePaintList = false;
 #endif
 
 UniquePtr<RangePaintInfo>
-PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
+PresShell::CreateRangePaintInfo(nsRange* aRange,
                                 nsRect& aSurfaceRect,
                                 bool aForPrimarySelection)
 {
-  nsRange* range = static_cast<nsRange*>(aRange);
   nsIFrame* ancestorFrame;
   nsIFrame* rootFrame = GetRootFrame();
 
   // If the start or end of the range is the document, just use the root
   // frame, otherwise get the common ancestor of the two endpoints of the
   // range.
-  nsINode* startContainer = range->GetStartContainer();
-  nsINode* endContainer = range->GetEndContainer();
+  nsINode* startContainer = aRange->GetStartContainer();
+  nsINode* endContainer = aRange->GetEndContainer();
   nsIDocument* doc = startContainer->GetComposedDoc();
   if (startContainer == doc || endContainer == doc) {
     ancestorFrame = rootFrame;
@@ -4912,7 +4908,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
   }
 
   // get a display list containing the range
-  auto info = MakeUnique<RangePaintInfo>(range, ancestorFrame);
+  auto info = MakeUnique<RangePaintInfo>(aRange, ancestorFrame);
   info->mBuilder.SetIncludeAllOutOfFlows();
   if (aForPrimarySelection) {
     info->mBuilder.SetSelectedFramesOnly();
@@ -4920,7 +4916,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
   info->mBuilder.EnterPresShell(ancestorFrame);
 
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentSubtreeIterator();
-  nsresult rv = iter->Init(range);
+  nsresult rv = iter->Init(aRange);
   if (NS_FAILED(rv)) {
     return nullptr;
   }
@@ -4956,7 +4952,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
   }
 #endif
 
-  nsRect rangeRect = ClipListToRange(&info->mBuilder, &info->mList, range);
+  nsRect rangeRect = ClipListToRange(&info->mBuilder, &info->mList, aRange);
 
   info->mBuilder.LeavePresShell(ancestorFrame, &info->mList);
 
@@ -5156,8 +5152,11 @@ PresShell::RenderNode(nsIDOMNode* aNode,
     return nullptr;
 
   RefPtr<nsRange> range = new nsRange(node);
-  if (NS_FAILED(range->SelectNode(aNode)))
+  IgnoredErrorResult rv;
+  range->SelectNode(*node, rv);
+  if (rv.Failed()) {
     return nullptr;
+  }
 
   UniquePtr<RangePaintInfo> info = CreateRangePaintInfo(range, area, false);
   if (info && !rangeItems.AppendElement(Move(info))) {
@@ -5185,7 +5184,7 @@ PresShell::RenderNode(nsIDOMNode* aNode,
 }
 
 already_AddRefed<SourceSurface>
-PresShell::RenderSelection(nsISelection* aSelection,
+PresShell::RenderSelection(Selection* aSelection,
                            const LayoutDeviceIntPoint aPoint,
                            LayoutDeviceIntRect* aScreenRect,
                            uint32_t aFlags)
@@ -5198,14 +5197,12 @@ PresShell::RenderSelection(nsISelection* aSelection,
   // iterate over each range and collect them into the rangeItems array.
   // This is done so that the size of selection can be determined so as
   // to allocate a surface area
-  int32_t numRanges;
-  aSelection->GetRangeCount(&numRanges);
+  uint32_t numRanges = aSelection->RangeCount();
   NS_ASSERTION(numRanges > 0, "RenderSelection called with no selection");
 
-  for (int32_t r = 0; r < numRanges; r++)
+  for (uint32_t r = 0; r < numRanges; r++)
   {
-    nsCOMPtr<nsIDOMRange> range;
-    aSelection->GetRangeAt(r, getter_AddRefs(range));
+    RefPtr<nsRange> range = aSelection->GetRangeAt(r);
 
     UniquePtr<RangePaintInfo> info = CreateRangePaintInfo(range, area, true);
     if (info && !rangeItems.AppendElement(Move(info))) {

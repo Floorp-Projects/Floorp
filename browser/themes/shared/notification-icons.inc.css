@@ -228,9 +228,6 @@ html|*#webRTC-previewVideo {
   list-style-image: url(chrome://browser/skin/addons/addon-install-installed.svg);
 }
 
-.popup-notification-icon[popupid="addon-install-restart"] {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-restart.svg);
-}
 /* OFFLINE APPS */
 
 .popup-notification-icon[popupid*="offline-app-requested"],

@@ -14,6 +14,7 @@ var addon1 = {
   id: "addon1@tests.mozilla.org",
   version: "1.0",
   name: "Test 1",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -25,6 +26,7 @@ var addon2 = {
   id: "addon2@tests.mozilla.org",
   version: "2.0",
   name: "Test 2",
+  bootstrap: true,
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",

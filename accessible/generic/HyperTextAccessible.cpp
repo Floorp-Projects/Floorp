@@ -1340,7 +1340,7 @@ HyperTextAccessible::SetSelectionRange(int32_t aStartPos, int32_t aEndPos)
 
   // Set up the selection.
   for (int32_t idx = domSel->RangeCount() - 1; idx > 0; idx--)
-    domSel->RemoveRange(domSel->GetRangeAt(idx));
+    domSel->RemoveRange(*domSel->GetRangeAt(idx), IgnoreErrors());
   SetSelectionBoundsAt(0, aStartPos, aEndPos);
 
   // Make sure it is visible
@@ -1661,11 +1661,16 @@ HyperTextAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
 
   // If new range was created then add it, otherwise notify selection listeners
   // that existing selection range was changed.
-  if (aSelectionNum == static_cast<int32_t>(rangeCount))
-    return NS_SUCCEEDED(domSel->AddRange(range));
+  if (aSelectionNum == static_cast<int32_t>(rangeCount)) {
+    IgnoredErrorResult err;
+    domSel->AddRange(*range, err);
+    return !err.Failed();
+  }
 
-  domSel->RemoveRange(range);
-  return NS_SUCCEEDED(domSel->AddRange(range));
+  domSel->RemoveRange(*range, IgnoreErrors());
+  IgnoredErrorResult err;
+  domSel->AddRange(*range, err);
+  return !err.Failed();
 }
 
 bool
@@ -1678,7 +1683,7 @@ HyperTextAccessible::RemoveFromSelection(int32_t aSelectionNum)
   if (aSelectionNum < 0 || aSelectionNum >= static_cast<int32_t>(domSel->RangeCount()))
     return false;
 
-  domSel->RemoveRange(domSel->GetRangeAt(aSelectionNum));
+  domSel->RemoveRange(*domSel->GetRangeAt(aSelectionNum), IgnoreErrors());
   return true;
 }
 

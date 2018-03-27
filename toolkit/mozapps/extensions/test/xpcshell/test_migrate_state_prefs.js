@@ -24,16 +24,11 @@ add_task(async function test_migrate_prefs() {
 
   const ID1 = "bootstrapped-enabled@xpcshell.mozilla.org";
   const ID2 = "bootstrapped-disabled@xpcshell.mozilla.org";
-  const ID3 = "restartful-enabled@xpcshell.mozilla.org";
-  const ID4 = "restartful-disabled@xpcshell.mozilla.org";
 
   let targetApplications = [{ id: "toolkit@mozilla.org", "minVersion": "0", "maxVersion": "*" }];
 
-  let file1 = await installExtension(ID1, { "install.rdf": { id: ID1, name: ID1, bootstrapped: true, version: "0.1", targetApplications } });
-  let file2 = await installExtension(ID2, { "install.rdf": { id: ID2, name: ID2, bootstrapped: true, version: "0.2", targetApplications } });
-
-  let file3 = await installExtension(ID3, { "install.rdf": { id: ID3, name: ID1, bootstrapped: false, version: "0.3", targetApplications } });
-  let file4 = await installExtension(ID4, { "install.rdf": { id: ID4, name: ID2, bootstrapped: false, version: "0.4", targetApplications } });
+  let file1 = await installExtension(ID1, { "install.rdf": { id: ID1, name: ID1, bootstrap: true, version: "0.1", targetApplications } });
+  let file2 = await installExtension(ID2, { "install.rdf": { id: ID2, name: ID2, bootstrap: true, version: "0.2", targetApplications } });
 
   function mt(file) {
     let f = file.clone();
@@ -55,8 +50,6 @@ add_task(async function test_migrate_prefs() {
     "app-profile": {
       [ID1]: {e: true, d: file1.persistentDescriptor, v: "0.1", mt: mt(file1)},
       [ID2]: {e: false, d: file2.persistentDescriptor, v: "0.2", mt: mt(file2)},
-      [ID3]: {e: true, d: file3.persistentDescriptor, v: "0.3", mt: mt(file3)},
-      [ID4]: {e: false, d: file4.persistentDescriptor, v: "0.4", mt: mt(file4)},
     }
   }));
 
@@ -87,20 +80,6 @@ add_task(async function test_migrate_prefs() {
   equal(addon2.version, "0.2", "Addon 2 has the correct version");
   equal(addon2.mtime, mt(file2), "Addon 2 has the correct timestamp");
   ok(!addon2.hasEmbeddedWebExtension, "Addon 2 no embedded WebExtension");
-
-  let addon3 = states.findAddon(ID3);
-  ok(addon3.enabled, "Addon 3 should be enabled");
-  ok(!addon3.bootstrapped, "Addon 3 should not be bootstrapped");
-  equal(addon3.version, "0.3", "Addon 3 has the correct version");
-  equal(addon3.mtime, mt(file3), "Addon 3 has the correct timestamp");
-  ok(!addon3.hasEmbeddedWebExtension, "Addon 3 no embedded WebExtension");
-
-  let addon4 = states.findAddon(ID4);
-  ok(!addon4.enabled, "Addon 4 should not be enabled");
-  ok(!addon4.bootstrapped, "Addon 4 should not be bootstrapped");
-  equal(addon4.version, "0.4", "Addon 4 has the correct version");
-  equal(addon4.mtime, mt(file4), "Addon 4 has the correct timestamp");
-  ok(!addon4.hasEmbeddedWebExtension, "Addon 4 no embedded WebExtension");
 
   // Check that legacy prefs and files have been removed.
   ok(!Preferences.has("extensions.xpiState"), "No xpiState pref left behind");

@@ -1,0 +1,13 @@
+{
+  "manifest_version": 2,
+
+  "applications": {
+    "gecko": {
+      "id": "dragdrop-incompat@tests.mozilla.org",
+      "strict_max_version": "45.0"
+    }
+  },
+
+  "name": "Incomatible Drag Drop test",
+  "version": "1.1"
+}
