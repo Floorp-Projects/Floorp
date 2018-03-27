@@ -289,6 +289,8 @@ async function run_test_1() {
 // Test that modified items are detected and items in other install locations
 // are ignored
 async function run_test_2() {
+  await promiseShutdownManager();
+
   addon1.version = "1.1";
   writeInstallRDFForExtension(addon1, userDir);
   addon2.version = "2.1";
@@ -302,7 +304,7 @@ async function run_test_2() {
   dest.remove(true);
 
   gCachePurged = false;
-  await promiseRestartManager();
+  await promiseStartupManager(false);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon2@tests.mozilla.org"]);
@@ -370,7 +372,7 @@ async function run_test_3() {
   writeInstallRDFForExtension(addon3, profileDir, "addon4@tests.mozilla.org");
 
   gCachePurged = false;
-  await promiseStartupManager();
+  await promiseStartupManager(false);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon1@tests.mozilla.org",
@@ -559,6 +561,8 @@ async function run_test_6() {
 
 // Check that items in the profile hide the others again.
 async function run_test_7() {
+  await promiseShutdownManager();
+
   addon1.version = "1.2";
   writeInstallRDFForExtension(addon1, profileDir);
   var dest = userDir.clone();
@@ -566,7 +570,7 @@ async function run_test_7() {
   dest.remove(true);
 
   gCachePurged = false;
-  await promiseRestartManager();
+  await promiseStartupManager(false);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon1@tests.mozilla.org",
@@ -661,6 +665,8 @@ async function run_test_8() {
 async function run_test_9() {
   Services.prefs.clearUserPref("extensions.enabledScopes");
 
+  await promiseShutdownManager();
+
   var dest = userDir.clone();
   dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
   dest.remove(true);
@@ -671,7 +677,7 @@ async function run_test_9() {
   writeInstallRDFForExtension(addon2, profileDir);
 
   gCachePurged = false;
-  await promiseRestartManager();
+  await promiseStartupManager(false);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, ["addon2@tests.mozilla.org"]);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
@@ -722,6 +728,8 @@ async function run_test_9() {
 // Checks that a removal from one location and an addition in another location
 // for the same item is handled
 async function run_test_10() {
+  await promiseShutdownManager();
+
   var dest = profileDir.clone();
   dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
   dest.remove(true);
@@ -729,7 +737,7 @@ async function run_test_10() {
   writeInstallRDFForExtension(addon1, userDir);
 
   gCachePurged = false;
-  await promiseRestartManager();
+  await promiseStartupManager(false);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon1@tests.mozilla.org"]);
@@ -779,6 +787,8 @@ async function run_test_10() {
 
 // This should remove any remaining items
 async function run_test_11() {
+  await promiseShutdownManager();
+
   var dest = userDir.clone();
   dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
   dest.remove(true);
@@ -787,7 +797,7 @@ async function run_test_11() {
   dest.remove(true);
 
   gCachePurged = false;
-  await promiseRestartManager();
+  await promiseStartupManager(false);
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
@@ -835,11 +845,13 @@ async function run_test_11() {
 function run_test_12() {
   Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_USER);
 
+  shutdownManager();
+
   writeInstallRDFForExtension(addon1, profileDir);
   writeInstallRDFForExtension(addon2, userDir);
   writeInstallRDFForExtension(addon3, globalDir);
 
-  restartManager();
+  startupManager(false);
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
@@ -862,6 +874,8 @@ function run_test_12() {
     Assert.ok(a3.seen);
     Assert.ok(a3.isActive);
 
+    shutdownManager();
+
     var dest = profileDir.clone();
     dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
     dest.remove(true);
@@ -872,7 +886,8 @@ function run_test_12() {
     dest.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
     dest.remove(true);
 
-    restartManager();
+    startupManager(false);
+    shutdownManager();
 
     Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_SYSTEM);
 
@@ -880,7 +895,7 @@ function run_test_12() {
     writeInstallRDFForExtension(addon2, userDir);
     writeInstallRDFForExtension(addon3, globalDir);
 
-    restartManager();
+    startupManager(false);
 
     AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                  "addon2@tests.mozilla.org",
@@ -903,6 +918,8 @@ function run_test_12() {
       Assert.ok(!a3_2.seen);
       Assert.ok(!a3_2.isActive);
 
+      shutdownManager();
+
       var dest2 = profileDir.clone();
       dest2.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
       dest2.remove(true);
@@ -913,7 +930,8 @@ function run_test_12() {
       dest2.append(do_get_expected_addon_name("addon3@tests.mozilla.org"));
       dest2.remove(true);
 
-      restartManager();
+      startupManager(false);
+      shutdownManager();
 
       Services.prefs.setIntPref("extensions.autoDisableScopes", AddonManager.SCOPE_USER + AddonManager.SCOPE_SYSTEM);
 
@@ -921,7 +939,7 @@ function run_test_12() {
       writeInstallRDFForExtension(addon2, userDir);
       writeInstallRDFForExtension(addon3, globalDir);
 
-      restartManager();
+      startupManager(false);
 
       AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                    "addon2@tests.mozilla.org",
@@ -943,6 +961,8 @@ function run_test_12() {
         Assert.ok(a3_3.userDisabled);
         Assert.ok(!a3_3.seen);
         Assert.ok(!a3_3.isActive);
+
+        shutdownManager();
 
         executeSoon(end_test);
       });
