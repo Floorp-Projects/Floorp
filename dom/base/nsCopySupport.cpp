@@ -69,8 +69,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsresult NS_NewDomSelection(nsISelection **aDomSelection);
-
 static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_CID(kHTMLConverterCID,        NS_HTMLFORMATCONVERTER_CID);
@@ -333,16 +331,14 @@ nsCopySupport::GetTransferableForNode(nsINode* aNode,
                                       nsIDocument* aDoc,
                                       nsITransferable** aTransferable)
 {
-  nsCOMPtr<nsISelection> selection;
   // Make a temporary selection with aNode in a single range.
   // XXX We should try to get rid of the Selection object here.
   // XXX bug 1245883
-  nsresult rv = NS_NewDomSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsISelection> selection = new Selection();
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
   RefPtr<nsRange> range = new nsRange(aNode);
-  rv = range->SelectNode(node);
+  nsresult rv = range->SelectNode(node);
   NS_ENSURE_SUCCESS(rv, rv);
   ErrorResult result;
   selection->AsSelection()->AddRangeInternal(*range, aDoc, result);
