@@ -40,6 +40,6 @@ add_task(async function() {
   is(getSource(getState(), simple1.id).get("loadedState"), "loading");
 
   await waitForSelectedSource(dbg, "simple1.js");
-  ok(getSource(getState(), simple1.id).get("text"));
+  ok(getSource(getState(), simple1.id).text);
   assertHighlightLocation(dbg, "simple1.js", 6);
 });

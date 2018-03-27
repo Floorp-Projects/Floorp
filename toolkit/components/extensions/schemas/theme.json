@@ -184,6 +184,14 @@
               "toolbar_field_border_focus": {
                 "$ref": "ThemeColor",
                 "optional": true
+              },
+              "popup_highlight": {
+                "$ref": "ThemeColor",
+                "optional": true
+              },
+              "popup_highlight_text": {
+                "$ref": "ThemeColor",
+                "optional": true
               }
             },
             "additionalProperties": { "$ref": "UnrecognizedProperty" }

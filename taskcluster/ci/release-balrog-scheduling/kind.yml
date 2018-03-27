@@ -12,7 +12,6 @@ transforms:
 
 kind-dependencies:
    - release-bouncer-check
-   - release-update-verify
 
 job-defaults:
    worker-type:

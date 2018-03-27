@@ -76,7 +76,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICURSORCONTINUECALLBACK
 
-    MessageCursorContinueCallback(int aRequestId)
+    explicit MessageCursorContinueCallback(int aRequestId)
         : mRequestId(aRequestId)
     {
     }
@@ -258,7 +258,7 @@ public:
 
 class AutoJObject {
 public:
-    AutoJObject(JNIEnv* aJNIEnv = nullptr) : mObject(nullptr)
+    explicit AutoJObject(JNIEnv* aJNIEnv = nullptr) : mObject(nullptr)
     {
         mJNIEnv = aJNIEnv ? aJNIEnv : jni::GetGeckoThreadEnv();
     }
@@ -292,7 +292,7 @@ private:
 
 class AutoLocalJNIFrame {
 public:
-    AutoLocalJNIFrame(int nEntries = 15)
+    explicit AutoLocalJNIFrame(int nEntries = 15)
         : mEntries(nEntries)
         , mJNIEnv(jni::GetGeckoThreadEnv())
         , mHasFrameBeenPushed(false)
@@ -301,7 +301,7 @@ public:
         Push();
     }
 
-    AutoLocalJNIFrame(JNIEnv* aJNIEnv, int nEntries = 15)
+    explicit AutoLocalJNIFrame(JNIEnv* aJNIEnv, int nEntries = 15)
         : mEntries(nEntries)
         , mJNIEnv(aJNIEnv ? aJNIEnv : jni::GetGeckoThreadEnv())
         , mHasFrameBeenPushed(false)

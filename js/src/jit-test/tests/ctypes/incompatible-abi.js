@@ -2,7 +2,7 @@ load(libdir + 'asserts.js');
 
 function test() {
   assertTypeErrorMessage(() => { ctypes.default_abi.toSource.call(1); },
-                         "ABI.prototype.toSource called on incompatible Number");
+                         "ABI.prototype.toSource called on incompatible object, got the number 1");
 }
 
 if (typeof ctypes === "object")

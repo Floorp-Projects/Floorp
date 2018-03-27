@@ -49,7 +49,7 @@ class GeckoEditableSupport final
     {
         GeckoEditableSupport* const mGES;
     public:
-        AutoIMESynchronize(GeckoEditableSupport* ges) : mGES(ges) {}
+        explicit AutoIMESynchronize(GeckoEditableSupport* ges) : mGES(ges) {}
         ~AutoIMESynchronize() { mGES->OnImeSynchronize(); }
     };
 
@@ -59,7 +59,7 @@ class GeckoEditableSupport final
         IMETextChange() :
             mStart(-1), mOldEnd(-1), mNewEnd(-1) {}
 
-        IMETextChange(const IMENotification& aIMENotification)
+        explicit IMETextChange(const IMENotification& aIMENotification)
             : mStart(aIMENotification.mTextChangeData.mStartOffset)
             , mOldEnd(aIMENotification.mTextChangeData.mRemovedEndOffset)
             , mNewEnd(aIMENotification.mTextChangeData.mAddedEndOffset)
@@ -143,7 +143,7 @@ public:
     {
         struct IMEEvent : nsAppShell::LambdaEvent<Functor>
         {
-            IMEEvent(Functor&& l) : nsAppShell::LambdaEvent<Functor>(Move(l)) {}
+            explicit IMEEvent(Functor&& l) : nsAppShell::LambdaEvent<Functor>(Move(l)) {}
 
             nsAppShell::Event::Type ActivityType() const override
             {
@@ -189,7 +189,7 @@ public:
     }
 
     // Constructor for content process GeckoEditableChild.
-    GeckoEditableSupport(java::GeckoEditableChild::Param aEditableChild)
+    explicit GeckoEditableSupport(java::GeckoEditableChild::Param aEditableChild)
         : GeckoEditableSupport(nullptr, nullptr, aEditableChild)
     {
     }

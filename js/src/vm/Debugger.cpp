@@ -718,9 +718,9 @@ Debugger::~Debugger()
     if (onNewGlobalObjectWatchersLink.mPrev ||
         onNewGlobalObjectWatchersLink.mNext ||
         cx->runtime()->onNewGlobalObjectWatchers().begin() == JSRuntime::WatchersList::Iterator(this))
+    {
         cx->runtime()->onNewGlobalObjectWatchers().remove(this);
-
-    cx->runtime()->endSingleThreadedExecution(cx);
+    }
 }
 
 bool
@@ -2611,24 +2611,22 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
     //
     // Mark active baseline scripts in the observable set so that they don't
     // get discarded. They will be recompiled.
-    for (const CooperatingContext& target : cx->runtime()->cooperatingContexts()) {
-        for (JitActivationIterator actIter(cx, target); !actIter.done(); ++actIter) {
-            if (actIter->compartment()->zone() != zone)
-                continue;
+    for (JitActivationIterator actIter(cx); !actIter.done(); ++actIter) {
+        if (actIter->compartment()->zone() != zone)
+            continue;
 
-            for (OnlyJSJitFrameIter iter(actIter); !iter.done(); ++iter) {
-                const jit::JSJitFrameIter& frame = iter.frame();
-                switch (frame.type()) {
-                  case JitFrame_BaselineJS:
-                    MarkBaselineScriptActiveIfObservable(frame.script(), obs);
-                    break;
-                  case JitFrame_IonJS:
-                    MarkBaselineScriptActiveIfObservable(frame.script(), obs);
-                    for (InlineFrameIterator inlineIter(cx, &frame); inlineIter.more(); ++inlineIter)
-                        MarkBaselineScriptActiveIfObservable(inlineIter.script(), obs);
-                    break;
-                  default:;
-                }
+        for (OnlyJSJitFrameIter iter(actIter); !iter.done(); ++iter) {
+            const jit::JSJitFrameIter& frame = iter.frame();
+            switch (frame.type()) {
+              case JitFrame_BaselineJS:
+                MarkBaselineScriptActiveIfObservable(frame.script(), obs);
+                break;
+              case JitFrame_IonJS:
+                MarkBaselineScriptActiveIfObservable(frame.script(), obs);
+                for (InlineFrameIterator inlineIter(cx, &frame); inlineIter.more(); ++inlineIter)
+                    MarkBaselineScriptActiveIfObservable(inlineIter.script(), obs);
+                break;
+              default:;
             }
         }
     }
@@ -3939,24 +3937,11 @@ Debugger::construct(JSContext* cx, unsigned argc, Value* vp)
         obj->setReservedSlot(slot, proto->getReservedSlot(slot));
     obj->setReservedSlot(JSSLOT_DEBUG_MEMORY_INSTANCE, NullValue());
 
-    // Debuggers currently require single threaded execution. A debugger may be
-    // used to debug content in other zone groups, and may be used to observe
-    // all activity in the runtime via hooks like OnNewGlobalObject.
-    if (!cx->runtime()->beginSingleThreadedExecution(cx)) {
-        JS_ReportErrorASCII(cx, "Cannot ensure single threaded execution in Debugger");
-        return false;
-    }
-
     Debugger* debugger;
     {
         /* Construct the underlying C++ object. */
         auto dbg = cx->make_unique<Debugger>(cx, obj.get());
-        if (!dbg) {
-            JS::AutoSuppressGCAnalysis nogc; // Suppress warning about |dbg|.
-            cx->runtime()->endSingleThreadedExecution(cx);
-            return false;
-        }
-        if (!dbg->init(cx))
+        if (!dbg || !dbg->init(cx))
             return false;
 
         debugger = dbg.release();

@@ -68,6 +68,12 @@ interface nsIX509Cert : nsISupports {
   readonly attribute AString subjectName;
 
   /**
+   *  The subject alternative names of the certificate.
+   *  It's a comma separated string of subject alt names.
+   */
+  readonly attribute AString subjectAltNames;
+
+  /**
    *  The subject's common name.
    */
   readonly attribute AString commonName;

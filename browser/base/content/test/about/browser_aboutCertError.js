@@ -148,6 +148,17 @@ add_task(async function checkBadStsCert() {
 
     ok(exceptionButtonHidden, "Exception button is hidden");
 
+    let message = await ContentTask.spawn(browser, {frame: useFrame}, async function({frame}) {
+      let doc = frame ? content.document.querySelector("iframe").contentDocument : content.document;
+      let advancedButton = doc.getElementById("advancedButton");
+      advancedButton.click();
+      return doc.getElementById("badCertTechnicalInfo").textContent;
+    });
+    ok(message.includes("SSL_ERROR_BAD_CERT_DOMAIN"), "Didn't find SSL_ERROR_BAD_CERT_DOMAIN.");
+    ok(message.includes("The certificate is only valid for"), "Didn't find error message.");
+    ok(message.includes("uses an invalid security certificate"), "Didn't find error message.");
+    ok(message.includes("badchain.include-subdomains.pinning.example.com"), "Didn't find domain in error message.");
+
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 });

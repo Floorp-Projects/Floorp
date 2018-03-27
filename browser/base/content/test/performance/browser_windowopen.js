@@ -87,7 +87,7 @@ add_task(async function() {
       },
       exceptions: [
         {name: "bug 1421463 - reload toolbar icon shouldn't flicker",
-         condition: r => r.h == 13 && inRange(r.w, 14, 16) && // icon size
+         condition: r => inRange(r.h, 13, 14) && inRange(r.w, 14, 16) && // icon size
                          inRange(r.y1, 40, 80) && // in the toolbar
                          // near the left side of the screen
                          // The reload icon is shifted on devedition builds

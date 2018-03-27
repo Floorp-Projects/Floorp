@@ -4620,9 +4620,6 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
       } else if (securityState & nsIWebProgressListener::STATE_USES_WEAK_CRYPTO) {
         error = "weakCryptoUsed";
         addHostPort = true;
-      } else {
-        // Usually we should have aFailedChannel and get a detailed message
-        tsi->GetErrorMessage(getter_Copies(messageStr));
       }
     } else {
       // No channel, let's obtain the generic error message
@@ -4630,78 +4627,79 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
         nsserr->GetErrorMessage(aError, messageStr);
       }
     }
-    if (!messageStr.IsEmpty()) {
-      if (errorClass == nsINSSErrorsService::ERROR_CLASS_BAD_CERT) {
-        error = "nssBadCert";
+    // We don't have a message string here anymore but DisplayLoadError
+    // requires a non-empty messageStr.
+    messageStr.Truncate();
+    messageStr.AssignLiteral(u" ");
+    if (errorClass == nsINSSErrorsService::ERROR_CLASS_BAD_CERT) {
+      error = "nssBadCert";
 
-        // If this is an HTTP Strict Transport Security host or a pinned host
-        // and the certificate is bad, don't allow overrides (RFC 6797 section
-        // 12.1, HPKP draft spec section 2.6).
-        uint32_t flags =
-          UsePrivateBrowsing() ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
-        bool isStsHost = false;
-        bool isPinnedHost = false;
-        if (XRE_IsParentProcess()) {
-          nsCOMPtr<nsISiteSecurityService> sss =
-            do_GetService(NS_SSSERVICE_CONTRACTID, &rv);
-          NS_ENSURE_SUCCESS(rv, rv);
-          rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI,
-                                flags, mOriginAttributes, nullptr, nullptr,
-                                &isStsHost);
-          NS_ENSURE_SUCCESS(rv, rv);
-          rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HPKP, aURI,
-                                flags, mOriginAttributes, nullptr, nullptr,
-                                &isPinnedHost);
-          NS_ENSURE_SUCCESS(rv, rv);
-        } else {
-          mozilla::dom::ContentChild* cc =
-            mozilla::dom::ContentChild::GetSingleton();
-          mozilla::ipc::URIParams uri;
-          SerializeURI(aURI, uri);
-          cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HSTS, uri, flags,
-                              mOriginAttributes, &isStsHost);
-          cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HPKP, uri, flags,
-                              mOriginAttributes, &isPinnedHost);
-        }
-
-        if (Preferences::GetBool(
-              "browser.xul.error_pages.expert_bad_cert", false)) {
-          cssClass.AssignLiteral("expertBadCert");
-        }
-
-        // HSTS/pinning takes precedence over the expert bad cert pref. We
-        // never want to show the "Add Exception" button for these sites.
-        // In the future we should differentiate between an HSTS host and a
-        // pinned host and display a more informative message to the user.
-        if (isStsHost || isPinnedHost) {
-          cssClass.AssignLiteral("badStsCert");
-        }
-
-        uint32_t bucketId;
-        if (isStsHost) {
-          // measuring STS separately allows us to measure click through
-          // rates easily
-          bucketId = nsISecurityUITelemetry::WARNING_BAD_CERT_TOP_STS;
-        } else {
-          bucketId = nsISecurityUITelemetry::WARNING_BAD_CERT_TOP;
-        }
-
-        // See if an alternate cert error page is registered
-        nsAutoCString alternateErrorPage;
-        nsresult rv =
-          Preferences::GetCString("security.alternate_certificate_error_page",
-                                  alternateErrorPage);
-        if (NS_SUCCEEDED(rv)) {
-          errorPage.Assign(alternateErrorPage);
-        }
-
-        if (!IsFrame() && errorPage.EqualsIgnoreCase("certerror")) {
-          Telemetry::Accumulate(mozilla::Telemetry::SECURITY_UI, bucketId);
-        }
-
+      // If this is an HTTP Strict Transport Security host or a pinned host
+      // and the certificate is bad, don't allow overrides (RFC 6797 section
+      // 12.1, HPKP draft spec section 2.6).
+      uint32_t flags =
+        UsePrivateBrowsing() ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
+      bool isStsHost = false;
+      bool isPinnedHost = false;
+      if (XRE_IsParentProcess()) {
+        nsCOMPtr<nsISiteSecurityService> sss =
+          do_GetService(NS_SSSERVICE_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI,
+                              flags, mOriginAttributes, nullptr, nullptr,
+                              &isStsHost);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HPKP, aURI,
+                              flags, mOriginAttributes, nullptr, nullptr,
+                              &isPinnedHost);
+        NS_ENSURE_SUCCESS(rv, rv);
       } else {
-        error = "nssFailure2";
+        mozilla::dom::ContentChild* cc =
+          mozilla::dom::ContentChild::GetSingleton();
+        mozilla::ipc::URIParams uri;
+        SerializeURI(aURI, uri);
+        cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HSTS, uri, flags,
+                            mOriginAttributes, &isStsHost);
+        cc->SendIsSecureURI(nsISiteSecurityService::HEADER_HPKP, uri, flags,
+                            mOriginAttributes, &isPinnedHost);
       }
+
+      if (Preferences::GetBool(
+            "browser.xul.error_pages.expert_bad_cert", false)) {
+        cssClass.AssignLiteral("expertBadCert");
+      }
+
+      // HSTS/pinning takes precedence over the expert bad cert pref. We
+      // never want to show the "Add Exception" button for these sites.
+      // In the future we should differentiate between an HSTS host and a
+      // pinned host and display a more informative message to the user.
+      if (isStsHost || isPinnedHost) {
+        cssClass.AssignLiteral("badStsCert");
+      }
+
+      uint32_t bucketId;
+      if (isStsHost) {
+        // measuring STS separately allows us to measure click through
+        // rates easily
+        bucketId = nsISecurityUITelemetry::WARNING_BAD_CERT_TOP_STS;
+      } else {
+        bucketId = nsISecurityUITelemetry::WARNING_BAD_CERT_TOP;
+      }
+
+      // See if an alternate cert error page is registered
+      nsAutoCString alternateErrorPage;
+      nsresult rv =
+        Preferences::GetCString("security.alternate_certificate_error_page",
+                                alternateErrorPage);
+      if (NS_SUCCEEDED(rv)) {
+        errorPage.Assign(alternateErrorPage);
+      }
+
+      if (!IsFrame() && errorPage.EqualsIgnoreCase("certerror")) {
+        Telemetry::Accumulate(mozilla::Telemetry::SECURITY_UI, bucketId);
+      }
+    } else {
+      error = "nssFailure2";
     }
   } else if (NS_ERROR_PHISHING_URI == aError ||
              NS_ERROR_MALWARE_URI == aError ||
