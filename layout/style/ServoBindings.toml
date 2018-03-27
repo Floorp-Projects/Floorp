@@ -515,7 +515,6 @@ structs-types = [
     "RawServoSourceSizeList",
     "RefPtr",
     "RustString",
-    "CSSPseudoClassType",
     "CSSPseudoElementType",
     "ServoTraversalFlags",
     "ComputedTimingFunction_BeforeFlag",
