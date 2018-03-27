@@ -21,7 +21,6 @@
 #include "nsCSSKeywords.h"
 #include "nsCSSParser.h"
 #include "nsCSSProps.h"
-#include "nsCSSPseudoClasses.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRendering.h"
 #include "nsGenericHTMLFrameElement.h"
@@ -144,7 +143,6 @@ nsLayoutStatics::Initialize()
   // Register static atoms. Note that nsGkAtoms must be initialized earlier
   // than here, so it's done in NS_InitAtomTable() instead.
   nsCSSAnonBoxes::RegisterStaticAtoms();
-  nsCSSPseudoClasses::RegisterStaticAtoms();
   nsCSSPseudoElements::RegisterStaticAtoms();
   nsCSSKeywords::AddRefTable();
   nsCSSProps::AddRefTable();

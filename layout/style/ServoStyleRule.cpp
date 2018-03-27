@@ -12,7 +12,6 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoDeclarationBlock.h"
 #include "mozilla/dom/CSSStyleRuleBinding.h"
-#include "nsCSSPseudoClasses.h"
 
 #include "mozAutoDocUpdate.h"
 
