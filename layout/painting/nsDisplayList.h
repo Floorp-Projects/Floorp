@@ -1182,10 +1182,11 @@ public:
 
   class AutoSaveRestorePerspectiveIndex {
   public:
-    AutoSaveRestorePerspectiveIndex(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+    AutoSaveRestorePerspectiveIndex(nsDisplayListBuilder* aBuilder,
+                                    const bool aChildrenHavePerspective)
       : mBuilder(nullptr)
     {
-      if (aFrame->ChildrenHavePerspective()) {
+      if (aChildrenHavePerspective) {
         mBuilder = aBuilder;
         mCachedItemIndex = aBuilder->mPerspectiveItemIndex;
         aBuilder->mPerspectiveItemIndex = 0;
