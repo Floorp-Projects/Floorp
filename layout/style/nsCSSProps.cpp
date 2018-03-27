@@ -84,7 +84,6 @@ static int32_t gPropertyTableRefCount;
 static nsStaticCaseInsensitiveNameTable* gPropertyTable;
 static nsStaticCaseInsensitiveNameTable* gFontDescTable;
 static nsStaticCaseInsensitiveNameTable* gCounterDescTable;
-static nsStaticCaseInsensitiveNameTable* gPredefinedCounterStyleTable;
 static nsDataHashtable<nsCStringHashKey,nsCSSPropertyID>* gPropertyIDLNameTable;
 
 static const char* const kCSSRawFontDescs[] = {
@@ -163,7 +162,6 @@ nsCSSProps::AddRefTable(void)
     MOZ_ASSERT(!gPropertyTable, "pre existing array!");
     MOZ_ASSERT(!gFontDescTable, "pre existing array!");
     MOZ_ASSERT(!gCounterDescTable, "pre existing array!");
-    MOZ_ASSERT(!gPredefinedCounterStyleTable, "pre existing array!");
     MOZ_ASSERT(!gPropertyIDLNameTable, "pre existing array!");
 
     gPropertyTable = CreateStaticTable(
@@ -171,9 +169,6 @@ nsCSSProps::AddRefTable(void)
     gFontDescTable = CreateStaticTable(kCSSRawFontDescs, eCSSFontDesc_COUNT);
     gCounterDescTable = CreateStaticTable(
         kCSSRawCounterDescs, eCSSCounterDesc_COUNT);
-    gPredefinedCounterStyleTable = CreateStaticTable(
-        kCSSRawPredefinedCounterStyles,
-        ArrayLength(kCSSRawPredefinedCounterStyles));
 
     gPropertyIDLNameTable = new nsDataHashtable<nsCStringHashKey,nsCSSPropertyID>;
     for (nsCSSPropertyID p = nsCSSPropertyID(0);
@@ -298,9 +293,6 @@ nsCSSProps::ReleaseTable(void)
 
     delete gCounterDescTable;
     gCounterDescTable = nullptr;
-
-    delete gPredefinedCounterStyleTable;
-    gPredefinedCounterStyleTable = nullptr;
 
     delete gPropertyIDLNameTable;
     gPropertyIDLNameTable = nullptr;
@@ -458,24 +450,6 @@ nsCSSProps::LookupCounterDesc(const nsACString& aProperty)
 {
   MOZ_ASSERT(gCounterDescTable, "no lookup table, needs addref");
   return nsCSSCounterDesc(gCounterDescTable->Lookup(aProperty));
-}
-
-bool
-nsCSSProps::IsPredefinedCounterStyle(const nsAString& aStyle)
-{
-  MOZ_ASSERT(gPredefinedCounterStyleTable,
-             "no lookup table, needs addref");
-  return gPredefinedCounterStyleTable->Lookup(aStyle) !=
-    nsStaticCaseInsensitiveNameTable::NOT_FOUND;
-}
-
-bool
-nsCSSProps::IsPredefinedCounterStyle(const nsACString& aStyle)
-{
-  MOZ_ASSERT(gPredefinedCounterStyleTable,
-             "no lookup table, needs addref");
-  return gPredefinedCounterStyleTable->Lookup(aStyle) !=
-    nsStaticCaseInsensitiveNameTable::NOT_FOUND;
 }
 
 const nsCString&
