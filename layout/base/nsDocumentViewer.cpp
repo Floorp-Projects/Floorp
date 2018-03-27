@@ -2732,11 +2732,13 @@ NS_IMETHODIMP nsDocumentViewer::SelectAll()
   }
   if (!bodyNode) return NS_ERROR_FAILURE;
 
-  nsresult rv = selection->RemoveAllRanges();
-  if (NS_FAILED(rv)) return rv;
+  ErrorResult err;
+  selection->RemoveAllRanges(err);
+  if (err.Failed()) {
+    return err.StealNSResult();
+  }
 
   mozilla::dom::Selection::AutoUserInitiated userSelection(selection);
-  ErrorResult err;
   selection->SelectAllChildren(*bodyNode, err);
   return err.StealNSResult();
 }

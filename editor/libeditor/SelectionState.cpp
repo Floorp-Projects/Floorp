@@ -80,7 +80,7 @@ SelectionState::RestoreSelection(Selection* aSel)
   NS_ENSURE_TRUE(aSel, NS_ERROR_NULL_POINTER);
 
   // clear out selection
-  aSel->RemoveAllRanges();
+  aSel->RemoveAllRanges(IgnoreErrors());
 
   // set the selection ranges anew
   size_t arrayCount = mArray.Length();

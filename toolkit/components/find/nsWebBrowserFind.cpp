@@ -393,7 +393,7 @@ nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
   RefPtr<Selection> selection =
     selCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
   if (selection) {
-    selection->RemoveAllRanges();
+    selection->RemoveAllRanges(IgnoreErrors());
     selection->AddRange(*aRange, IgnoreErrors());
 
     nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
@@ -718,7 +718,7 @@ nsWebBrowserFind::SearchInFrame(nsPIDOMWindowOuter* aWindow, bool aWrapping,
   // selection) models are up to date.
   theDoc->FlushPendingNotifications(FlushType::Frames);
 
-  nsCOMPtr<nsISelection> sel = GetFrameSelection(aWindow);
+  RefPtr<Selection> sel = GetFrameSelection(aWindow);
   NS_ENSURE_ARG_POINTER(sel);
 
   RefPtr<nsRange> searchRange = new nsRange(theDoc);
@@ -747,7 +747,7 @@ nsWebBrowserFind::SearchInFrame(nsPIDOMWindowOuter* aWindow, bool aWrapping,
 
   if (NS_SUCCEEDED(rv) && foundRange) {
     *aDidFind = true;
-    sel->RemoveAllRanges();
+    sel->RemoveAllRanges(IgnoreErrors());
     // Beware! This may flush notifications via synchronous
     // ScrollSelectionIntoView.
     SetSelectionAndScroll(aWindow, static_cast<nsRange*>(foundRange.get()));
@@ -773,7 +773,7 @@ nsWebBrowserFind::OnEndSearchFrame(nsPIDOMWindowOuter* aWindow)
   return NS_OK;
 }
 
-already_AddRefed<nsISelection>
+already_AddRefed<Selection>
 nsWebBrowserFind::GetFrameSelection(nsPIDOMWindowOuter* aWindow)
 {
   nsCOMPtr<nsIDocument> doc = aWindow->GetDoc();
@@ -818,9 +818,9 @@ nsresult
 nsWebBrowserFind::ClearFrameSelection(nsPIDOMWindowOuter* aWindow)
 {
   NS_ENSURE_ARG(aWindow);
-  nsCOMPtr<nsISelection> selection = GetFrameSelection(aWindow);
+  RefPtr<Selection> selection = GetFrameSelection(aWindow);
   if (selection) {
-    selection->RemoveAllRanges();
+    selection->RemoveAllRanges(IgnoreErrors());
   }
 
   return NS_OK;

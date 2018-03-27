@@ -2165,7 +2165,7 @@ nsPrintJob::UpdateSelectionAndShrinkPrintObject(nsPrintObject* aPO,
   // Reset all existing selection ranges that might have been added by calling
   // this function before.
   if (selectionPS) {
-    selectionPS->RemoveAllRanges();
+    selectionPS->RemoveAllRanges(IgnoreErrors());
   }
   if (selection && selectionPS) {
     int32_t cnt = selection->RangeCount();

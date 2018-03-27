@@ -2043,7 +2043,9 @@ nsFrameSelection::ClearNormalSelection()
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
-  return mDomSelections[index]->RemoveAllRanges();
+  ErrorResult err;
+  mDomSelections[index]->RemoveAllRanges(err);
+  return err.StealNSResult();
 }
 
 static nsIContent*
@@ -2160,7 +2162,7 @@ printf("HandleTableSelection: Dragged into a new cell\n");
           {
             // Force new selection block
             mStartSelectedCell = nullptr;
-            mDomSelections[index]->RemoveAllRanges();
+            mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
 
             if (startRowIndex == curRowIndex)
               mSelectingTableCellMode = nsISelectionPrivate::TABLESELECTION_ROW;
@@ -2208,7 +2210,7 @@ printf("HandleTableSelection: Mouse down event\n");
         else
         {
           // No cells selected -- remove non-cell selection
-          mDomSelections[index]->RemoveAllRanges();
+          mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
         }
         mDragSelectingCells = true;    // Signal to start drag-cell-selection
         mSelectingTableCellMode = aTarget;
@@ -2232,7 +2234,7 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
           if (previousCellNode &&
               !IsInSameTable(previousCellNode, childContent))
           {
-            mDomSelections[index]->RemoveAllRanges();
+            mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
             // Reset selection mode that is cleared in RemoveAllRanges
             mSelectingTableCellMode = aTarget;
           }
@@ -2252,7 +2254,7 @@ printf("HandleTableSelection: Saving mUnselectCellOnMouseUp\n");
         mEndSelectedCell = nullptr;
 
         // Remove existing selection and select the table
-        mDomSelections[index]->RemoveAllRanges();
+        mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
         return CreateAndAddRange(aParentContent, aContentOffset);
       }
       else if (aTarget == nsISelectionPrivate::TABLESELECTION_ROW || aTarget == nsISelectionPrivate::TABLESELECTION_COLUMN)
@@ -2268,7 +2270,7 @@ printf("aTarget == %d\n", aTarget);
 
         // Force new selection block
         mStartSelectedCell = nullptr;
-        mDomSelections[index]->RemoveAllRanges();
+        mDomSelections[index]->RemoveAllRanges(IgnoreErrors());
         // Always do this AFTER RemoveAllRanges
         mSelectingTableCellMode = aTarget;
         return SelectRowOrColumn(childContent, aTarget);
