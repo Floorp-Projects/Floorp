@@ -5197,11 +5197,10 @@ PresShell::RenderSelection(Selection* aSelection,
   // iterate over each range and collect them into the rangeItems array.
   // This is done so that the size of selection can be determined so as
   // to allocate a surface area
-  int32_t numRanges;
-  aSelection->GetRangeCount(&numRanges);
+  uint32_t numRanges = aSelection->RangeCount();
   NS_ASSERTION(numRanges > 0, "RenderSelection called with no selection");
 
-  for (int32_t r = 0; r < numRanges; r++)
+  for (uint32_t r = 0; r < numRanges; r++)
   {
     RefPtr<nsRange> range = aSelection->GetRangeAt(r);
 

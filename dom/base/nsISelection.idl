@@ -55,11 +55,6 @@ interface nsISelection : nsISupports
     [noscript,notxpcom,nostdcall] boolean collapsed();
 
     /**
-     * Returns the number of ranges in the selection.
-     */
-    readonly attribute long rangeCount;
-
-    /**
      * Collapses the selection to a single point, at the specified offset
      * in the given DOM node. When the selection is collapsed, and the content
      * is focused and editable, the caret will blink there.
