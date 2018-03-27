@@ -4,10 +4,6 @@
 
 loader: taskgraph.loader.transform:loader
 
-kind-dependencies:
-   # For the $platform_info.txt files.
-   - post-beetmover-dummy
-
 transforms:
    - taskgraph.transforms.release_deps:transforms
    - taskgraph.transforms.worker_type:transforms
