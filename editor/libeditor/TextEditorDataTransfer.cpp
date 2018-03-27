@@ -22,7 +22,6 @@
 #include "nsIContent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
@@ -70,7 +69,7 @@ TextEditor::PrepareTransferable(nsITransferable** transferable)
 
 nsresult
 TextEditor::InsertTextAt(const nsAString& aStringToInsert,
-                         nsIDOMNode* aDestinationNode,
+                         nsINode* aDestinationNode,
                          int32_t aDestOffset,
                          bool aDoDeleteSelection)
 {
@@ -78,7 +77,7 @@ TextEditor::InsertTextAt(const nsAString& aStringToInsert,
     RefPtr<Selection> selection = GetSelection();
     NS_ENSURE_STATE(selection);
 
-    nsCOMPtr<nsIDOMNode> targetNode = aDestinationNode;
+    nsCOMPtr<nsINode> targetNode = aDestinationNode;
     int32_t targetOffset = aDestOffset;
 
     if (aDoDeleteSelection) {
@@ -97,10 +96,7 @@ TextEditor::InsertTextAt(const nsAString& aStringToInsert,
 }
 
 nsresult
-TextEditor::InsertTextFromTransferable(nsITransferable* aTransferable,
-                                       nsIDOMNode* aDestinationNode,
-                                       int32_t aDestOffset,
-                                       bool aDoDeleteSelection)
+TextEditor::InsertTextFromTransferable(nsITransferable* aTransferable)
 {
   nsresult rv = NS_OK;
   nsAutoCString bestFlavor;
@@ -123,7 +119,7 @@ TextEditor::InsertTextFromTransferable(nsITransferable* aTransferable,
       nsContentUtils::PlatformToDOMLineBreaks(stuffToPaste);
 
       AutoPlaceholderBatch beginBatching(this);
-      rv = InsertTextAt(stuffToPaste, aDestinationNode, aDestOffset, aDoDeleteSelection);
+      rv = InsertTextAt(stuffToPaste, nullptr, 0, true);
     }
   }
 
@@ -140,7 +136,7 @@ nsresult
 TextEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
                                    int32_t aIndex,
                                    nsIDOMDocument* aSourceDoc,
-                                   nsIDOMNode* aDestinationNode,
+                                   nsINode* aDestinationNode,
                                    int32_t aDestOffset,
                                    bool aDoDeleteSelection)
 {
@@ -280,7 +276,7 @@ TextEditor::InsertFromDrop(DragEvent* aDropEvent)
 
   for (uint32_t i = 0; i < numItems; ++i) {
     InsertFromDataTransfer(dataTransfer, i, srcdomdoc,
-                           newSelectionParent->AsDOMNode(),
+                           newSelectionParent,
                            newSelectionOffset, deleteSelection);
   }
 
@@ -310,7 +306,7 @@ TextEditor::Paste(int32_t aSelectionType)
     // Get the Data from the clipboard
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) &&
         IsModifiable()) {
-      rv = InsertTextFromTransferable(trans, nullptr, 0, true);
+      rv = InsertTextFromTransferable(trans);
     }
   }
 
@@ -330,7 +326,7 @@ TextEditor::PasteTransferable(nsITransferable* aTransferable)
     return NS_OK;
   }
 
-  return InsertTextFromTransferable(aTransferable, nullptr, 0, true);
+  return InsertTextFromTransferable(aTransferable);
 }
 
 NS_IMETHODIMP

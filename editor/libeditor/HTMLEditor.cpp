@@ -824,24 +824,13 @@ HTMLEditor::NodeIsBlockStatic(const nsINode* aElement)
     nsHTMLTags::AtomTagToId(aElement->NodeInfo()->NameAtom()));
 }
 
-nsresult
-HTMLEditor::NodeIsBlockStatic(nsIDOMNode* aNode,
-                              bool* aIsBlock)
-{
-  if (!aNode || !aIsBlock) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsCOMPtr<dom::Element> element = do_QueryInterface(aNode);
-  *aIsBlock = element && NodeIsBlockStatic(element);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 HTMLEditor::NodeIsBlock(nsIDOMNode* aNode,
                         bool* aIsBlock)
 {
-  return NodeIsBlockStatic(aNode, aIsBlock);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  *aIsBlock = IsBlockNode(node);
+  return NS_OK;
 }
 
 bool
@@ -3658,10 +3647,7 @@ HTMLEditor::CollapseAdjacentTextNodes(nsRange* aInRange)
     // get the prev sibling of the right node, and see if its leftTextNode
     nsCOMPtr<nsINode> prevSibOfRightNode = rightTextNode->GetPreviousSibling();
     if (prevSibOfRightNode && prevSibOfRightNode == leftTextNode) {
-      nsCOMPtr<nsINode> parent = rightTextNode->GetParentNode();
-      NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
-      rv = JoinNodes(leftTextNode->AsDOMNode(), rightTextNode->AsDOMNode(),
-                     parent->AsDOMNode());
+      rv = JoinNodes(*leftTextNode, *rightTextNode);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -4030,18 +4016,6 @@ HTMLEditor::IsVisibleTextNode(Text& aText)
  * children and still be considered empty, if the children are empty or
  * non-editable.
  */
-nsresult
-HTMLEditor::IsEmptyNode(nsIDOMNode*aNode,
-                        bool* outIsEmptyNode,
-                        bool aSingleBRDoesntCount,
-                        bool aListOrCellNotEmpty,
-                        bool aSafeToAskFrames)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  return IsEmptyNode(node, outIsEmptyNode, aSingleBRDoesntCount,
-                     aListOrCellNotEmpty, aSafeToAskFrames);
-}
-
 nsresult
 HTMLEditor::IsEmptyNode(nsINode* aNode,
                         bool* outIsEmptyNode,

@@ -17,8 +17,6 @@
 #include "nsString.h"
 #include "nscore.h"
 
-class nsIDOMNode;
-
 namespace mozilla {
 
 class AutoLockRulesSniffing;

@@ -18,7 +18,6 @@
 class nsIContent;
 class nsIDOMDocument;
 class nsIDOMEvent;
-class nsIDOMNode;
 class nsIDocumentEncoder;
 class nsIOutputStream;
 class nsISelectionController;
@@ -144,14 +143,14 @@ public:
   NS_IMETHOD TypedText(const nsAString& aString, ETypingAction aAction);
 
   nsresult InsertTextAt(const nsAString& aStringToInsert,
-                        nsIDOMNode* aDestinationNode,
+                        nsINode* aDestinationNode,
                         int32_t aDestOffset,
                         bool aDoDeleteSelection);
 
   virtual nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
                                           int32_t aIndex,
                                           nsIDOMDocument* aSourceDoc,
-                                          nsIDOMNode* aDestinationNode,
+                                          nsINode* aDestinationNode,
                                           int32_t aDestOffset,
                                           bool aDoDeleteSelection) override;
 
@@ -248,10 +247,7 @@ protected:
    * (drag&drop or clipboard).
    */
   NS_IMETHOD PrepareTransferable(nsITransferable** transferable);
-  nsresult InsertTextFromTransferable(nsITransferable* transferable,
-                                      nsIDOMNode* aDestinationNode,
-                                      int32_t aDestOffset,
-                                      bool aDoDeleteSelection);
+  nsresult InsertTextFromTransferable(nsITransferable* transferable);
 
   /**
    * Shared outputstring; returns whether selection is collapsed and resulting

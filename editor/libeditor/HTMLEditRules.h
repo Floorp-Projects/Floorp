@@ -18,8 +18,6 @@
 #include "nscore.h"
 
 class nsAtom;
-class nsIDOMDocument;
-class nsIDOMNode;
 class nsIEditor;
 class nsINode;
 class nsRange;
@@ -275,8 +273,8 @@ protected:
   nsresult DidMakeBasicBlock(Selection* aSelection, RulesInfo* aInfo,
                              nsresult aResult);
   nsresult DidAbsolutePosition();
-  nsresult AlignInnerBlocks(nsINode& aNode, const nsAString* alignType);
-  nsresult AlignBlockContents(nsIDOMNode* aNode, const nsAString* alignType);
+  nsresult AlignInnerBlocks(nsINode& aNode, const nsAString& aAlignType);
+  nsresult AlignBlockContents(nsINode& aNode, const nsAString& aAlignType);
   nsresult AppendInnerFormatNodes(nsTArray<OwningNonNull<nsINode>>& aArray,
                                   nsINode* aNode);
   nsresult GetFormatString(nsINode* aNode, nsAString &outFormat);
@@ -369,8 +367,6 @@ protected:
   Element* CheckForInvisibleBR(Element& aBlock, BRLocation aWhere,
                                int32_t aOffset = 0);
   nsresult ExpandSelectionForDeletion(Selection& aSelection);
-  bool IsFirstNode(nsIDOMNode* aNode);
-  bool IsLastNode(nsIDOMNode* aNode);
   nsresult NormalizeSelection(Selection* aSelection);
   EditorDOMPoint GetPromotedPoint(RulesEndpoint aWhere, nsINode& aNode,
                                   int32_t aOffset, EditAction actionID);
@@ -463,7 +459,6 @@ protected:
                     nsAtom& aTag,
                     const EditorDOMPointBase<PT, CT>& aStartOfDeepestRightNode);
 
-  nsresult AddTerminatingBR(nsIDOMNode *aBlock);
   EditorDOMPoint JoinNodesSmart(nsIContent& aNodeLeft,
                                 nsIContent& aNodeRight);
   Element* GetTopEnclosingMailCite(nsINode& aNode);
@@ -502,7 +497,6 @@ protected:
    * The nodes count as being their own descendants for this purpose, so a
    * table element is its own nearest table element ancestor.
    */
-  bool InDifferentTableElements(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
   bool InDifferentTableElements(nsINode* aNode1, nsINode* aNode2);
   nsresult RemoveEmptyNodes();
   nsresult SelectionEndpointInNode(nsINode* aNode, bool* aResult);
