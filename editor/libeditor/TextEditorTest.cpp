@@ -14,8 +14,6 @@
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsINodeList.h"

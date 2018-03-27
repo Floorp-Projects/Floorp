@@ -19,7 +19,6 @@
 #include "nsIContent.h"
 #include "nsID.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"

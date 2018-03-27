@@ -17,7 +17,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMNode.h"
 #include "nsISupportsImpl.h"
 #include "nsLiteralString.h"
 #include "nsQueryObject.h"
@@ -137,7 +136,7 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
         }
       }
     }
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(target);
+    nsCOMPtr<nsINode> node = do_QueryInterface(target);
     if (node && !nodeIsInSelection) {
       if (!element) {
         if (isContextClick) {
@@ -145,13 +144,11 @@ HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent)
           selection->Collapse(parent, offset);
         } else {
           // Get enclosing link if in text so we can select the link
-          nsCOMPtr<nsIDOMElement> linkElement;
-          nsresult rv = htmlEditor->GetElementOrParentByTagName(
-                             NS_LITERAL_STRING("href"), node,
-                             getter_AddRefs(linkElement));
-          NS_ENSURE_SUCCESS(rv, rv);
+          RefPtr<Element> linkElement =
+            htmlEditor->GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
+                                                    node);
           if (linkElement) {
-            element = linkElement;
+            element = do_QueryInterface(linkElement);
           }
         }
       }
