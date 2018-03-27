@@ -206,6 +206,8 @@ function run_test_3() {
     Assert.ok(isExtensionInBootstrappedList(globalDir, a4.id));
     Assert.equal(a4.version, "2.0");
 
+    shutdownManager();
+
     end_test();
   });
 }
