@@ -22,14 +22,6 @@ interface nsIDOMRange : nsISupports
   void               setEndBefore(in nsIDOMNode refNode);
   void               setEndAfter(in nsIDOMNode refNode);
 
-  // CompareHow
-  const unsigned short      START_TO_START                 = 0;
-  const unsigned short      START_TO_END                   = 1;
-  const unsigned short      END_TO_END                     = 2;
-  const unsigned short      END_TO_START                   = 3;
-
-  short              compareBoundaryPoints(in unsigned short how,
-                                           in nsIDOMRange sourceRange);
   void               deleteContents();
   nsIDOMDocumentFragment extractContents();
   nsIDOMDocumentFragment cloneContents();
