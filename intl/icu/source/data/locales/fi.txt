@@ -214,7 +214,7 @@ fi{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.67"}
+    Version{"2.1.39.20"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1450,7 +1450,7 @@ fi{
         }
     }
     characterLabel{
-        activities{"toiminnot"}
+        activities{"toiminta"}
         african_scripts{"afrikkalaiset kirjoitusjärjestelmät"}
         american_scripts{"amerikkalaiset kirjoitusjärjestelmät"}
         animal{"eläin"}
@@ -1544,6 +1544,10 @@ fi{
         }
         relative:intvector{
             0,
+            1,
+        }
+        typographicNames:intvector{
+            1,
             1,
         }
     }

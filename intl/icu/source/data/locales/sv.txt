@@ -251,7 +251,7 @@ sv{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.20"}
     calendar{
         buddhist{
             eras{
@@ -1836,6 +1836,10 @@ sv{
             1,
         }
         languages:intvector{
+            1,
+            1,
+        }
+        typographicNames:intvector{
             1,
             1,
         }

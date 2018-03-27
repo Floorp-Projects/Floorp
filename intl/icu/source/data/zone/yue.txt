@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yue{
-    Version{"2.1.37.33"}
+    Version{"2.1.39.11"}
     zoneStrings{
         "meta:Acre"{
             ld{"艾克夏令時間"}

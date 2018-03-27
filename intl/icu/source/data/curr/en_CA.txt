@@ -14,5 +14,5 @@ en_CA{
             other{"Israeli new sheqels"}
         }
     }
-    Version{"2.1.37.22"}
+    Version{"2.1.38.73"}
 }

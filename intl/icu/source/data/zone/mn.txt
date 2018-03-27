@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 mn{
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"Афганистаны цаг"}
@@ -470,7 +470,7 @@ mn{
         "meta:Pierre_Miquelon"{
             ld{"Сен-Пьер ба Микелоны зуны цаг"}
             lg{"Сен-Пьер ба Микелоны цаг"}
-            ls{"Сен-Пьер ба Микелоны стандарт цаг"}
+            ls{"Сент-Пьер ба Микелоны стандарт цаг"}
         }
         "meta:Pitcairn"{
             ls{"Питкернийн цаг"}

@@ -300,7 +300,7 @@ he{
         native{"latn"}
         traditional{"hebr"}
     }
-    Version{"2.1.37.22"}
+    Version{"2.1.39.20"}
     calendar{
         buddhist{
             eras{
@@ -2014,7 +2014,7 @@ he{
         miscellaneous{"שונות"}
         modern_scripts{"סקריפטים מודרניים"}
         modifier{"סימן מחליף"}
-        musical_symbols{"סמלים מוסיקליים"}
+        musical_symbols{"סמלים מוזיקליים"}
         nature{"טבע"}
         nonspacing{"ללא ריווח"}
         numbers{"מספרים"}
@@ -2045,6 +2045,7 @@ he{
         variant_forms{"חלופות"}
         vocalic_jamo{"ג׳אמו ווקאלי"}
         weather{"מזג אוויר"}
+        western_asian_scripts{"סקריפטים ממערב אסיה"}
         whitespace{"רווח לבן"}
     }
     delimiters{
@@ -3104,5 +3105,32 @@ he{
         UK{"אימפריאלי"}
         US{"ארה״ב"}
         metric{"מטרי"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }
