@@ -145,6 +145,7 @@ class AddonsList {
     this.extensions = [];
     this.bootstrapped = [];
     this.themes = [];
+    this.xpis = [];
 
     if (!file.exists()) {
       return;
@@ -156,19 +157,21 @@ class AddonsList {
       let dir = loc.path && new nsFile(loc.path);
 
       for (let addon of Object.values(loc.addons)) {
-        if (addon.enabled) {
-          let file;
-          if (dir) {
-            file = dir.clone();
-            try {
-              file.appendRelativePath(addon.path);
-            } catch (e) {
-              file = new nsFile(addon.path);
-            }
-          } else {
+        let file;
+        if (dir) {
+          file = dir.clone();
+          try {
+            file.appendRelativePath(addon.path);
+          } catch (e) {
             file = new nsFile(addon.path);
           }
+        } else {
+          file = new nsFile(addon.path);
+        }
 
+        this.xpis.push(file);
+
+        if (addon.enabled) {
           addon.type = addon.type || "extension";
 
           if (addon.type == "theme") {
@@ -700,7 +703,7 @@ var AddonTestUtils = {
 
         // Flush the jar cache entries for each bootstrapped XPI so that
         // we don't run into file locking issues on Windows.
-        for (let file of this.addonsList.bootstrapped.values()) {
+        for (let file of this.addonsList.xpis) {
           Services.obs.notifyObservers(file, "flush-cache-entry");
         }
 
