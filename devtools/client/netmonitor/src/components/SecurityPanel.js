@@ -174,9 +174,7 @@ class SecurityPanel extends Component {
       };
     } else {
       object = {
-        [ERROR_LABEL]:
-          new DOMParser().parseFromString(securityInfo.errorMessage, "text/html")
-            .body.textContent || NOT_AVAILABLE
+        [ERROR_LABEL]: securityInfo.errorMessage || NOT_AVAILABLE
       };
     }
 

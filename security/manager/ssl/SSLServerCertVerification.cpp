@@ -200,19 +200,6 @@ void StopSSLServerCertVerificationThreads()
 
 namespace {
 
-void
-LogInvalidCertError(nsNSSSocketInfo* socketInfo,
-                    PRErrorCode errorCode,
-                    ::mozilla::psm::SSLErrorMessageType errorMessageType)
-{
-  nsString message;
-  socketInfo->GetErrorLogMessage(errorCode, errorMessageType, message);
-  if (!message.IsEmpty()) {
-    nsContentUtils::LogSimpleConsoleError(message, "SSL",
-                                          !!socketInfo->GetOriginAttributes().mPrivateBrowsingId);
-  }
-}
-
 // Dispatched to the STS thread to notify the infoObject of the verification
 // result.
 //
@@ -227,16 +214,13 @@ public:
   SSLServerCertVerificationResult(nsNSSSocketInfo* infoObject,
                                   PRErrorCode errorCode,
                                   Telemetry::HistogramID telemetryID = Telemetry::HistogramCount,
-                                  uint32_t telemetryValue = -1,
-                                  SSLErrorMessageType errorMessageType =
-                                    SSLErrorMessageType::Plain);
+                                  uint32_t telemetryValue = -1);
 
   void Dispatch();
 private:
   const RefPtr<nsNSSSocketInfo> mInfoObject;
 public:
   const PRErrorCode mErrorCode;
-  const SSLErrorMessageType mErrorMessageType;
   const Telemetry::HistogramID mTelemetryID;
   const uint32_t mTelemetryValue;
 };
@@ -645,12 +629,7 @@ CertErrorRunnable::CheckCertOverrides()
     new SSLServerCertVerificationResult(mInfoObject,
                                         errorCodeToReport,
                                         Telemetry::HistogramCount,
-                                        -1,
-                                        SSLErrorMessageType::OverridableCert);
-
-  LogInvalidCertError(mInfoObject,
-                      result->mErrorCode,
-                      result->mErrorMessageType);
+                                        -1);
 
   return result;
 }
@@ -1800,13 +1779,7 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
         return SECSuccess; // cert error override occurred.
       }
 
-      // We must call SetCanceled here to set the error message type
-      // in case it isn't SSLErrorMessageType::Plain, which is what we would
-      // default to if we just called
-      // PR_SetError(runnable->mResult->mErrorCode, 0) and returned
-      // SECFailure without doing this.
-      socketInfo->SetCanceled(runnable->mResult->mErrorCode,
-                              runnable->mResult->mErrorMessageType);
+      socketInfo->SetCanceled(runnable->mResult->mErrorCode);
       error = runnable->mResult->mErrorCode;
     }
   }
@@ -1824,12 +1797,10 @@ SSLServerCertVerificationResult::SSLServerCertVerificationResult(
   nsNSSSocketInfo* infoObject,
   PRErrorCode errorCode,
   Telemetry::HistogramID telemetryID,
-  uint32_t telemetryValue,
-  SSLErrorMessageType errorMessageType)
+  uint32_t telemetryValue)
   : Runnable("psm::SSLServerCertVerificationResult")
   , mInfoObject(infoObject)
   , mErrorCode(errorCode)
-  , mErrorMessageType(errorMessageType)
   , mTelemetryID(telemetryID)
   , mTelemetryValue(telemetryValue)
 {
@@ -1860,7 +1831,7 @@ SSLServerCertVerificationResult::Run()
   if (mTelemetryID != Telemetry::HistogramCount) {
      Telemetry::Accumulate(mTelemetryID, mTelemetryValue);
   }
-  mInfoObject->SetCertVerificationResult(mErrorCode, mErrorMessageType);
+  mInfoObject->SetCertVerificationResult(mErrorCode);
   return NS_OK;
 }
 

@@ -109,14 +109,6 @@ let gWhitelist = [{
     key: "PatternAttributeCompileFailure",
     type: "single-quote"
   }, {
-    file: "pipnss.properties",
-    key: "certErrorMismatchSingle2",
-    type: "double-quote"
-  }, {
-    file: "pipnss.properties",
-    key: "certErrorCodePrefix2",
-    type: "double-quote"
-  }, {
     file: "aboutSupport.dtd",
     key: "aboutSupport.pageSubtitle",
     type: "single-quote"
