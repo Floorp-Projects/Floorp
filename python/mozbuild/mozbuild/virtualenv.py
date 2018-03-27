@@ -488,7 +488,7 @@ class VirtualenvManager(object):
 
         return self._run_pip(args)
 
-    def install_pip_requirements(self, path, require_hashes=True, quiet=False):
+    def install_pip_requirements(self, path, require_hashes=True, quiet=False, vendored=False):
         """Install a pip requirements.txt file.
 
         The supplied path is a text file containing pip requirement
@@ -513,6 +513,12 @@ class VirtualenvManager(object):
 
         if quiet:
             args.append('--quiet')
+
+        if vendored:
+            args.extend([
+                '--no-deps',
+                '--no-index',
+            ])
 
         return self._run_pip(args)
 
