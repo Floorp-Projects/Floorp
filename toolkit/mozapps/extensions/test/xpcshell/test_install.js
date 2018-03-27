@@ -211,15 +211,9 @@ add_task(async function test_1() {
   } else {
     let iconFile = uri.QueryInterface(Ci.nsIFileURL).file;
     ok(iconFile.exists());
-    // Make the iconFile predictably old.
-    iconFile.lastModifiedTime = Date.now() - MAKE_FILE_OLD_DIFFERENCE;
   }
 
-  // Make the pending install have a sensible date
   let updateDate = Date.now();
-  let extURI = addon.getResourceURI("");
-  let ext = extURI.QueryInterface(Ci.nsIFileURL).file;
-  setExtensionModifiedTime(ext, updateDate);
 
   ok(!hasFlag(addon.permissions, AddonManager.PERM_CAN_ENABLE));
   ok(hasFlag(addon.permissions, AddonManager.PERM_CAN_DISABLE));
@@ -330,11 +324,7 @@ add_task(async function test_2() {
     install.install();
   });
 
-  // Make the pending install have a sensible date
   let updateDate = Date.now();
-  let extURI = install.addon.getResourceURI("");
-  let ext = extURI.QueryInterface(Ci.nsIFileURL).file;
-  setExtensionModifiedTime(ext, updateDate);
 
   ensure_test_completed();
   let olda2 = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
@@ -355,7 +345,7 @@ add_task(async function test_2() {
   ok(XPIS.test_install2_1.exists());
   do_check_in_crash_annotation(a2.id, a2.version);
   equal(a2.sourceURI.spec,
-               "http://example.com/addons/test_install2_1.xpi");
+        "http://example.com/addons/test_install2_1.xpi");
 
   let difference = a2.installDate.getTime() - updateDate;
   if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
