@@ -688,7 +688,7 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
 #endif // XP_WIN
 
 nsIContent*
-nsCopySupport::GetSelectionForCopy(nsIDocument* aDocument, nsISelection** aSelection)
+nsCopySupport::GetSelectionForCopy(nsIDocument* aDocument, Selection** aSelection)
 {
   *aSelection = nullptr;
 
@@ -704,8 +704,9 @@ nsCopySupport::GetSelectionForCopy(nsIDocument* aDocument, nsISelection** aSelec
     return nullptr;
   }
 
-  selectionController->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                                    aSelection);
+  RefPtr<Selection> sel =
+    selectionController->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+  sel.forget(aSelection);
   return focusedContent;
 }
 
@@ -715,13 +716,11 @@ nsCopySupport::CanCopy(nsIDocument* aDocument)
   if (!aDocument)
     return false;
 
-  nsCOMPtr<nsISelection> sel;
+  RefPtr<Selection> sel;
   GetSelectionForCopy(aDocument, getter_AddRefs(sel));
   NS_ENSURE_TRUE(sel, false);
 
-  bool isCollapsed;
-  sel->GetIsCollapsed(&isCollapsed);
-  return !isCollapsed;
+  return !sel->IsCollapsed();
 }
 
 static bool
@@ -760,7 +759,7 @@ bool
 nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
                                   int32_t aClipboardType,
                                   nsIPresShell* aPresShell,
-                                  nsISelection* aSelection,
+                                  Selection* aSelection,
                                   bool* aActionTaken)
 {
   if (aActionTaken) {
@@ -790,9 +789,10 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
 
   // if a selection was not supplied, try to find it
   nsCOMPtr<nsIContent> content;
-  nsCOMPtr<nsISelection> sel = aSelection;
-  if (!sel)
+  RefPtr<Selection> sel = aSelection;
+  if (!sel) {
     content = GetSelectionForCopy(doc, getter_AddRefs(sel));
+  }
 
   // retrieve the event target node from the start of the selection
   nsresult rv;
