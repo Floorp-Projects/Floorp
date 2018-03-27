@@ -6,11 +6,13 @@
 
 package org.mozilla.gecko.telemetry;
 
+import android.accessibilityservice.AccessibilityServiceInfo;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
+import android.view.accessibility.AccessibilityManager;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoProfile;
@@ -31,6 +33,7 @@ import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * An activity-lifecycle delegate for uploading the core ping.
@@ -185,6 +188,16 @@ public class TelemetryCorePingDelegate extends BrowserAppDelegateWithReference
         final String campaignId = CampaignIdMeasurements.getCampaignIdFromPrefs(context);
         if (campaignId != null) {
             pingBuilder.setOptCampaignId(campaignId);
+        }
+
+        final AccessibilityManager accessibilityManager = (AccessibilityManager)
+            context.getSystemService(Context.ACCESSIBILITY_SERVICE);
+        if (accessibilityManager != null) {
+            final List<AccessibilityServiceInfo> enabledServices =
+                accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK);
+            if (enabledServices.size() > 0) {
+                pingBuilder.setOptAccessibility(enabledServices);
+            }
         }
     }
 
