@@ -217,12 +217,6 @@ NS_IsLower(char aChar)
 }
 
 bool
-NS_IsAscii(char16_t aChar)
-{
-  return (0x0080 > aChar);
-}
-
-bool
 NS_IsAscii(const char16_t* aString)
 {
   while (*aString) {
@@ -257,28 +251,6 @@ NS_IsAscii(const char* aString, uint32_t aLength)
     ++aString;
   }
   return true;
-}
-
-bool
-NS_IsAsciiAlpha(char16_t aChar)
-{
-  return (aChar >= 'A' && aChar <= 'Z') ||
-         (aChar >= 'a' && aChar <= 'z');
-}
-
-bool
-NS_IsAsciiWhitespace(char16_t aChar)
-{
-  return aChar == ' ' ||
-         aChar == '\r' ||
-         aChar == '\n' ||
-         aChar == '\t';
-}
-
-bool
-NS_IsAsciiDigit(char16_t aChar)
-{
-  return aChar >= '0' && aChar <= '9';
 }
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
