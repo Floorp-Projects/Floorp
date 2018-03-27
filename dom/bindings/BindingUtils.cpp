@@ -3519,27 +3519,64 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
                 CreateInterfaceObjectsMethod aCreator)
 {
   JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
-  JS::Rooted<JSObject*> obj(aCx, &args.callee());
+
+  // Per spec, this is technically part of step 3, but doing the check
+  // directly lets us provide a better error message.  And then in
+  // step 2 we can work with newTarget in a simpler way because we
+  // know it's an object.
   if (!args.isConstructing()) {
     return ThrowConstructorWithoutNew(aCx,
                                       NamesOfInterfacesWithProtos(aProtoId));
   }
 
-  GlobalObject global(aCx, obj);
+  JS::Rooted<JSObject*> callee(aCx, &args.callee());
+  // 'callee' is not a function here; it's either an Xray for our interface
+  // object or the interface object itself.  So caling XrayAwareCalleeGlobal on
+  // it is not safe.  But since in the Xray case it's a wrapper for our
+  // interface object, we can just construct our GlobalObject from it and end
+  // up with the right thing.
+  GlobalObject global(aCx, callee);
   if (global.Failed()) {
     return false;
   }
 
-  // The newTarget might be a cross-compartment wrapper. Get the underlying object
-  // so we can do the spec's object-identity checks.
+  // Now we start the [HTMLConstructor] algorithm steps from
+  // https://html.spec.whatwg.org/multipage/dom.html#htmlconstructor
+
+  // Step 1.
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global.GetAsSupports());
+  if (!window) {
+    // This means we ended up with an HTML Element interface object defined in
+    // a non-Window scope.  That's ... pretty unexpected.
+    return Throw(aCx, NS_ERROR_UNEXPECTED);
+  }
+  RefPtr<mozilla::dom::CustomElementRegistry> registry(window->CustomElements());
+
+  // Technically, per spec, a window always has a document.  In Gecko, a
+  // sufficiently torn-down window might not, so check for that case.  We're
+  // going to need a document to create an element.
+  nsIDocument* doc = window->GetExtantDoc();
+  if (!doc) {
+    return Throw(aCx, NS_ERROR_UNEXPECTED);
+  }
+
+  // Step 2.
+
+  // The newTarget might be a cross-compartment wrapper. Get the underlying
+  // object so we can do the spec's object-identity checks.  If we ever stop
+  // unwrapping here, carefully audit uses of newTarget below!
   JS::Rooted<JSObject*> newTarget(aCx, js::CheckedUnwrap(&args.newTarget().toObject()));
   if (!newTarget) {
     return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
   }
 
-  // Step 2 of https://html.spec.whatwg.org/multipage/dom.html#htmlconstructor.
   // Enter the compartment of our underlying newTarget object, so we end
   // up comparing to the constructor object for our interface from that global.
+  // XXXbz This is not what the spec says to do, and it's not super-clear to me
+  // at this point why we're doing it.  Why not just compare |newTarget| and
+  // |callee| if the intent is just to prevent registration of HTML interface
+  // objects as constructors?  Of course it's not clear that the spec check
+  // makes sense to start with: https://github.com/whatwg/html/issues/3575
   {
     JSAutoCompartment ac(aCx, newTarget);
     JS::Handle<JSObject*> constructor =
@@ -3553,12 +3590,90 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     }
   }
 
+  // Step 3.
+  CustomElementDefinition* definition =
+    registry->LookupCustomElementDefinition(aCx, newTarget);
+  if (!definition) {
+    return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
+  }
+
+  // Steps 4 and 5 do some sanity checks on our callee.  We add to those a
+  // determination of what sort of element we're planning to construct.
+  // Technically, this should happen (implicitly) in step 8, but this
+  // determination is side-effect-free, so it's OK.
+  int32_t ns = doc->GetDefaultNamespaceID();
+  if (ns != kNameSpaceID_XUL) {
+    ns = kNameSpaceID_XHTML;
+  }
+
+  int32_t tag = eHTMLTag_userdefined;
+  if (!definition->IsCustomBuiltIn()) {
+    // Step 4.
+    // If the definition is for an autonomous custom element, the active
+    // function should be HTMLElement or XULElement.  We want to get the actual
+    // functions to compare to from our global's compartment, not the caller
+    // compartment.
+    JSAutoCompartment ac(aCx, global.Get());
+
+    JS::Rooted<JSObject*> constructor(aCx);
+    if (ns == kNameSpaceID_XUL) {
+      constructor = XULElementBinding::GetConstructorObject(aCx);
+    } else {
+      constructor = HTMLElementBinding::GetConstructorObject(aCx);
+    }
+
+    if (!constructor) {
+      return false;
+    }
+
+    if (constructor != js::CheckedUnwrap(callee)) {
+      return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
+    }
+  } else {
+    // Step 5.
+    // If the definition is for a customized built-in element, the localName
+    // should be one of the ones defined in the specification for this interface.
+
+    // Customized built-in elements are not supported for XUL yet.
+    if (ns == kNameSpaceID_XUL) {
+      return Throw(aCx, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    }
+
+    tag = nsHTMLTags::CaseSensitiveAtomTagToId(definition->mLocalName);
+    if (tag == eHTMLTag_userdefined) {
+      return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
+    }
+
+    MOZ_ASSERT(tag <= NS_HTML_TAG_MAX, "tag is out of bounds");
+
+    // If the definition is for a customized built-in element, the active
+    // function should be the localname's element interface.
+    constructorGetterCallback cb = sConstructorGetterCallback[tag];
+    if (!cb) {
+      return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
+    }
+
+    // We want to get the constructor from our global's compartment, not the
+    // caller compartment.
+    JSAutoCompartment ac(aCx, global.Get());
+    JS::Rooted<JSObject*> constructor(aCx, cb(aCx));
+    if (!constructor) {
+      return false;
+    }
+
+    if (constructor != js::CheckedUnwrap(callee)) {
+      return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
+    }
+  }
+
+  // Step 6.
   JS::Rooted<JSObject*> desiredProto(aCx);
   if (!GetDesiredProto(aCx, args, &desiredProto)) {
     return false;
   }
+
+  // Step 7.
   if (!desiredProto) {
-    // Step 7 of https://html.spec.whatwg.org/multipage/dom.html#htmlconstructor.
     // This fallback behavior is designed to match analogous behavior for the
     // JavaScript built-ins. So we enter the compartment of our underlying
     // newTarget object and fall back to the prototype object from that global.
@@ -3581,207 +3696,83 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     }
   }
 
-  bool objIsXray = xpc::WrapperFactory::IsXrayWrapper(obj);
-  Maybe<JSAutoCompartment> ac;
-  if (objIsXray) {
-    obj = js::CheckedUnwrap(obj);
-    if (!obj) {
-      return false;
-    }
-    ac.emplace(aCx, obj);
-    if (!JS_WrapObject(aCx, &desiredProto)) {
-      return false;
-    }
-  }
-  ErrorResult rv;
-  RefPtr<Element> result = CreateXULOrHTMLElement(global, args, desiredProto, rv);
-  if (MOZ_UNLIKELY(rv.MaybeSetPendingException(aCx))) {
-    return false;
-  }
-  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
-  if (!GetOrCreateDOMReflector(aCx, result, args.rval(), desiredProto)) {
-    MOZ_ASSERT(JS_IsExceptionPending(aCx));
-    return false;
-  }
-  return true;
-}
-} // namespace binding_detail
-
-already_AddRefed<Element>
-CreateXULOrHTMLElement(const GlobalObject& aGlobal, const JS::CallArgs& aCallArgs,
-                       JS::Handle<JSObject*> aGivenProto, ErrorResult& aRv)
-{
-  // Step 1.
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
-  if (!window) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  nsIDocument* doc = window->GetExtantDoc();
-  if (!doc) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  int32_t ns = doc->GetDefaultNamespaceID();
-  if (ns != kNameSpaceID_XUL) {
-    ns = kNameSpaceID_XHTML;
-  }
-
-  RefPtr<mozilla::dom::CustomElementRegistry> registry(window->CustomElements());
-  if (!registry) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  // Step 2 is in the code output by CGClassConstructor.
-  // Step 3.
-  JSContext* cx = aGlobal.Context();
-  JS::Rooted<JSObject*> newTarget(cx, &aCallArgs.newTarget().toObject());
-  CustomElementDefinition* definition =
-    registry->LookupCustomElementDefinition(cx, newTarget);
-  if (!definition) {
-    aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
-    return nullptr;
-  }
-
-  // The callee might be an Xray. Unwrap it to get actual callee.
-  JS::Rooted<JSObject*> callee(cx, js::CheckedUnwrap(&aCallArgs.callee()));
-  if (!callee) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
-
-  // And the actual callee might be in different compartment, so enter its
-  // compartment before getting the standard constructor object to compare to,
-  // so we get it from the same global as callee itself.
-  JSAutoCompartment ac(cx, callee);
-  int32_t tag = eHTMLTag_userdefined;
-  if (!definition->IsCustomBuiltIn()) {
-    // Step 4.
-    // If the definition is for an autonomous custom element, the active
-    // function should be HTMLElement or XULElement
-    JS::Rooted<JSObject*> constructor(cx);
-    if (ns == kNameSpaceID_XUL) {
-      constructor = XULElementBinding::GetConstructorObject(cx);
-    } else {
-      constructor = HTMLElementBinding::GetConstructorObject(cx);
-    }
-
-    if (!constructor) {
-      aRv.NoteJSContextException(cx);
-      return nullptr;
-    }
-
-    if (callee != constructor) {
-      aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
-      return nullptr;
-    }
-  } else {
-    // Step 5.
-    // If the definition is for a customized built-in element, the localName
-    // should be defined in the specification.
-
-    // Customized built-in elements are not supported for XUL yet.
-    if (ns == kNameSpaceID_XUL) {
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-      return nullptr;
-    }
-
-    tag = nsHTMLTags::CaseSensitiveAtomTagToId(definition->mLocalName);
-    if (tag == eHTMLTag_userdefined) {
-      aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
-      return nullptr;
-    }
-
-    MOZ_ASSERT(tag <= NS_HTML_TAG_MAX, "tag is out of bounds");
-
-    // If the definition is for a customized built-in element, the active
-    // function should be the localname's element interface.
-    constructorGetterCallback cb = sConstructorGetterCallback[tag];
-    if (!cb) {
-      aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
-      return nullptr;
-    }
-
-    JS::Rooted<JSObject*> constructor(cx, cb(cx));
-    if (!constructor) {
-      aRv.NoteJSContextException(cx);
-      return nullptr;
-    }
-
-    if (callee != constructor) {
-      aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
-      return nullptr;
-    }
-  }
-
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo =
-    doc->NodeInfoManager()->GetNodeInfo(definition->mLocalName,
-                                        nullptr,
-                                        ns,
-                                        nsINode::ELEMENT_NODE);
-  if (!nodeInfo) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  // Step 6 and Step 7 are in the code output by CGClassConstructor.
-  // Step 8.
+  // We need to do some work to actually return an Element, so we do step 8 on
+  // one branch and steps 9-12 on another branch, then common up the "return
+  // element" work.
+  RefPtr<Element> element;
   nsTArray<RefPtr<Element>>& constructionStack =
     definition->mConstructionStack;
   if (constructionStack.IsEmpty()) {
-    RefPtr<Element> newElement;
+    // Step 8.
+    // Now we go to construct an element.  We want to do this in global's
+    // compartment, not caller compartment (the normal constructor behavior),
+    // just in case those elements create JS things.
+    JSAutoCompartment ac(aCx, global.Get());
+
+    RefPtr<NodeInfo> nodeInfo =
+      doc->NodeInfoManager()->GetNodeInfo(definition->mLocalName,
+                                          nullptr,
+                                          ns,
+                                          nsINode::ELEMENT_NODE);
+    MOZ_ASSERT(nodeInfo);
+
     if (ns == kNameSpaceID_XUL) {
-      newElement = new nsXULElement(nodeInfo.forget());
+      element = new nsXULElement(nodeInfo.forget());
     } else {
       if (tag == eHTMLTag_userdefined) {
         // Autonomous custom element.
-        newElement = NS_NewHTMLElement(nodeInfo.forget());
+        element = NS_NewHTMLElement(nodeInfo.forget());
       } else {
         // Customized built-in element.
-        newElement = CreateHTMLElement(tag, nodeInfo.forget(), NOT_FROM_PARSER);
+        element = CreateHTMLElement(tag, nodeInfo.forget(), NOT_FROM_PARSER);
       }
     }
 
-    newElement->SetCustomElementData(
+    element->SetCustomElementData(
       new CustomElementData(definition->mType, CustomElementData::State::eCustom));
 
-    newElement->SetCustomElementDefinition(definition);
+    element->SetCustomElementDefinition(definition);
+  } else {
+    // Step 9.
+    element = constructionStack.LastElement();
 
-    return newElement.forget();
-  }
-
-  // Step 9.
-  RefPtr<Element>& element = constructionStack.LastElement();
-
-  // Step 10.
-  if (element == ALEADY_CONSTRUCTED_MARKER) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  // Step 11.
-  // Do prototype swizzling for upgrading a custom element here, for cases when
-  // we have a reflector already.  If we don't have one yet, our caller will
-  // create it with the right proto (by calling DoGetOrCreateDOMReflector with
-  // that proto).
-  JS::Rooted<JSObject*> reflector(cx, element->GetWrapper());
-  if (reflector) {
-    // reflector might be in different compartment.
-    JSAutoCompartment ac(cx, reflector);
-    JS::Rooted<JSObject*> givenProto(cx, aGivenProto);
-    if (!JS_WrapObject(cx, &givenProto) ||
-        !JS_SetPrototype(cx, reflector, givenProto)) {
-      aRv.NoteJSContextException(cx);
-      return nullptr;
+    // Step 10.
+    if (element == ALREADY_CONSTRUCTED_MARKER) {
+      return Throw(aCx, NS_ERROR_DOM_INVALID_STATE_ERR);
     }
+
+    // Step 11.
+    // Do prototype swizzling for upgrading a custom element here, for cases
+    // when we have a reflector already.  If we don't have one yet, we will
+    // create it with the right proto (by calling DoGetOrCreateDOMReflector with
+    // that proto).
+    JS::Rooted<JSObject*> reflector(aCx, element->GetWrapper());
+    if (reflector) {
+      // reflector might be in different compartment.
+      JSAutoCompartment ac(aCx, reflector);
+      JS::Rooted<JSObject*> givenProto(aCx, desiredProto);
+      if (!JS_WrapObject(aCx, &givenProto) ||
+          !JS_SetPrototype(aCx, reflector, givenProto)) {
+        return false;
+      }
+    }
+
+    // Step 12.
+    constructionStack.LastElement() = ALREADY_CONSTRUCTED_MARKER;
   }
 
-  // Step 12 and Step 13.
-  return element.forget();
+  // Tail end of step 8 and step 13: returning the element.  We want to do this
+  // part in the global's compartment, though in practice it won't matter much
+  // because Element always knows which compartment it should be created in.
+  JSAutoCompartment ac(aCx, global.Get());
+  if (!js::IsObjectInContextCompartment(desiredProto, aCx) &&
+      !JS_WrapObject(aCx, &desiredProto)) {
+    return false;
+  }
+
+  return GetOrCreateDOMReflector(aCx, element, args.rval(), desiredProto);
 }
+} // namespace binding_detail
 
 #ifdef DEBUG
 namespace binding_detail {
