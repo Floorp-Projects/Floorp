@@ -59,9 +59,7 @@
                 onget="return this.treeBoxObject.columns;"/>
 
       <property name="view"
-                onget="return this.treeBoxObject.view ?
-                       this.treeBoxObject.view.QueryInterface(Components.interfaces.nsITreeView) :
-                       null;"
+                onget="return this.treeBoxObject.view"
                 onset="return this.treeBoxObject.view = val;"/>
 
       <property name="body"

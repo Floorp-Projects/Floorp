@@ -201,7 +201,7 @@ class RemoteReftest(RefTest):
         self.device.rm(self.remoteCache, force=True, recursive=True)
 
         procName = options.app.split('/')[-1]
-        self.device.pkill(procName)
+        self.device.stop_application(procName)
         if self.device.process_exist(procName):
             self.log.error("unable to kill %s before starting tests!" % procName)
 

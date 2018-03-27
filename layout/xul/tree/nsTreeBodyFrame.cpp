@@ -34,7 +34,6 @@
 #include "nsIContent.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsIBoxObject.h"
-#include "nsIDOMCustomEvent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULElement.h"
@@ -61,7 +60,10 @@
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsDisplayList.h"
+#include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/TreeBoxObject.h"
 #include "nsIScriptableRegion.h"
 #include <algorithm>
@@ -2055,7 +2057,7 @@ nsTreeBodyFrame::GetTwistyRect(int32_t aRowIndex,
                                ComputedStyle* aTwistyContext)
 {
   // The twisty rect extends all the way to the end of the cell.  This is incorrect.  We need to
-  // determine the twisty rect's true width.  This is done by examining the style context for
+  // determine the twisty rect's true width.  This is done by examining the ComputedStyle for
   // a width first.  If it has one, we use that.  If it doesn't, we use the image's natural width.
   // If the image hasn't loaded and if no width is specified, then we just bail. If there is
   // a -moz-appearance involved, adjust the rect by the minimum widget size provided by
@@ -2108,7 +2110,7 @@ nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol, bool aUseContex
     aAllowImageRegions = false;
   }
   else {
-    // Obtain the URL from the style context.
+    // Obtain the URL from the ComputedStyle.
     aAllowImageRegions = true;
     styleRequest = aComputedStyle->StyleList()->GetListStyleImage();
     if (!styleRequest)
@@ -2220,7 +2222,7 @@ nsRect nsTreeBodyFrame::GetImageSize(int32_t aRowIndex, nsTreeColumn* aCol, bool
   // XXX We should respond to visibility rules for collapsed vs. hidden.
 
   // This method returns the width of the twisty INCLUDING borders and padding.
-  // It first checks the style context for a width.  If none is found, it tries to
+  // It first checks the ComputedStyle for a width.  If none is found, it tries to
   // use the default image width for the twisty.  If no image is found, it defaults
   // to border+padding.
   nsRect r(0,0,0,0);
@@ -4644,6 +4646,26 @@ nsTreeBodyFrame::RemoveTreeImageListener(nsTreeImageListener* aListener)
 }
 
 #ifdef ACCESSIBILITY
+static void
+InitCustomEvent(CustomEvent* aEvent, const nsAString& aType,
+                nsIWritablePropertyBag2* aDetail)
+{
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(aEvent->GetParentObject())) {
+    return;
+  }
+
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JS::Value> detail(cx);
+  if (!ToJSValue(cx, aDetail, &detail)) {
+    jsapi.ClearException();
+    return;
+  }
+
+  aEvent->InitCustomEvent(cx, aType, /* aCanBubble = */ true,
+                          /* aCancelable = */ false, detail);
+}
+
 void
 nsTreeBodyFrame::FireRowCountChangedEvent(int32_t aIndex, int32_t aCount)
 {
@@ -4654,18 +4676,19 @@ nsTreeBodyFrame::FireRowCountChangedEvent(int32_t aIndex, int32_t aCount)
   nsCOMPtr<nsIDocument> doc = content->OwnerDoc();
   MOZ_ASSERT(doc);
 
-  IgnoredErrorResult ignored;
   RefPtr<Event> event = doc->CreateEvent(NS_LITERAL_STRING("customevent"),
-                                         CallerType::System, ignored);
+                                         CallerType::System, IgnoreErrors());
 
-  nsCOMPtr<nsIDOMCustomEvent> treeEvent(do_QueryInterface(event));
-  if (!treeEvent)
+  CustomEvent* treeEvent = event->AsCustomEvent();
+  if (!treeEvent) {
     return;
+  }
 
   nsCOMPtr<nsIWritablePropertyBag2> propBag(
     do_CreateInstance("@mozilla.org/hash-property-bag;1"));
-  if (!propBag)
+  if (!propBag) {
     return;
+  }
 
   // Set 'index' data - the row index rows are changed from.
   propBag->SetPropertyAsInt32(NS_LITERAL_STRING("index"), aIndex);
@@ -4673,11 +4696,8 @@ nsTreeBodyFrame::FireRowCountChangedEvent(int32_t aIndex, int32_t aCount)
   // Set 'count' data - the number of changed rows.
   propBag->SetPropertyAsInt32(NS_LITERAL_STRING("count"), aCount);
 
-  RefPtr<nsVariant> detailVariant(new nsVariant());
-
-  detailVariant->SetAsISupports(propBag);
-  treeEvent->InitCustomEvent(NS_LITERAL_STRING("TreeRowCountChanged"),
-                             true, false, detailVariant);
+  InitCustomEvent(treeEvent, NS_LITERAL_STRING("TreeRowCountChanged"),
+                  propBag);
 
   event->SetTrusted(true);
 
@@ -4697,18 +4717,19 @@ nsTreeBodyFrame::FireInvalidateEvent(int32_t aStartRowIdx, int32_t aEndRowIdx,
 
   nsCOMPtr<nsIDocument> doc = content->OwnerDoc();
 
-  IgnoredErrorResult ignored;
   RefPtr<Event> event = doc->CreateEvent(NS_LITERAL_STRING("customevent"),
-                                         CallerType::System, ignored);
+                                         CallerType::System, IgnoreErrors());
 
-  nsCOMPtr<nsIDOMCustomEvent> treeEvent(do_QueryInterface(event));
-  if (!treeEvent)
+  CustomEvent* treeEvent = event->AsCustomEvent();
+  if (!treeEvent) {
     return;
+  }
 
   nsCOMPtr<nsIWritablePropertyBag2> propBag(
     do_CreateInstance("@mozilla.org/hash-property-bag;1"));
-  if (!propBag)
+  if (!propBag){
     return;
+  }
 
   if (aStartRowIdx != -1 && aEndRowIdx != -1) {
     // Set 'startrow' data - the start index of invalidated rows.
@@ -4740,11 +4761,8 @@ nsTreeBodyFrame::FireInvalidateEvent(int32_t aStartRowIdx, int32_t aEndRowIdx,
                                 endColIdx);
   }
 
-  RefPtr<nsVariant> detailVariant(new nsVariant());
-
-  detailVariant->SetAsISupports(propBag);
-  treeEvent->InitCustomEvent(NS_LITERAL_STRING("TreeInvalidated"),
-                             true, false, detailVariant);
+  InitCustomEvent(treeEvent, NS_LITERAL_STRING("TreeInvalidated"),
+                  propBag);
 
   event->SetTrusted(true);
 
