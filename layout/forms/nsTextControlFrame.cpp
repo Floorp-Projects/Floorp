@@ -797,15 +797,15 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
   // document since the focus is now on our independent selection.
 
   nsCOMPtr<nsISelectionController> selcon = do_QueryInterface(presShell);
-  nsCOMPtr<nsISelection> docSel;
-  selcon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-    getter_AddRefs(docSel));
-  if (!docSel) return;
+  RefPtr<Selection> docSel =
+    selcon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+  if (!docSel) {
+    return;
+  }
 
-  bool isCollapsed = false;
-  docSel->GetIsCollapsed(&isCollapsed);
-  if (!isCollapsed)
-    docSel->RemoveAllRanges();
+  if (!docSel->IsCollapsed()) {
+    docSel->RemoveAllRanges(IgnoreErrors());
+  }
 }
 
 nsresult nsTextControlFrame::SetFormProperty(nsAtom* aName, const nsAString& aValue)
@@ -891,10 +891,12 @@ nsTextControlFrame::SetSelectionInternal(nsINode* aStartNode,
     direction = (aDirection == eBackward) ? eDirPrevious : eDirNext;
   }
 
-  rv = selection->RemoveAllRanges();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   ErrorResult err;
+  selection->RemoveAllRanges(err);
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
+  }
+
   selection->AddRange(*range, err);  // NOTE: can destroy the world
   if (NS_WARN_IF(err.Failed())) {
     return err.StealNSResult();

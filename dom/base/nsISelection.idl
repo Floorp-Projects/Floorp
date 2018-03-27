@@ -100,12 +100,7 @@ interface nsISelection : nsISupports
      * Adds all children of the specified node to the selection.
      * @param parentNode  the parent of the children to be added to the selection.
      */
-    void selectAllChildren(in nsIDOMNode parentNode); 
-
-    /**
-     * Removes all ranges from the current selection.
-     */
-    void removeAllRanges();
+    void selectAllChildren(in nsIDOMNode parentNode);
 
     /**
      * Deletes this selection from document the nodes belong to.

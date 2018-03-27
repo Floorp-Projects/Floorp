@@ -273,7 +273,7 @@ nsCoreUtils::ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
     selCon->GetDOMSelection(nsISelectionController::SELECTION_ACCESSIBILITY);
 
   nsCOMPtr<nsISelectionPrivate> privSel(do_QueryObject(selection));
-  selection->RemoveAllRanges();
+  selection->RemoveAllRanges(IgnoreErrors());
   selection->AddRange(*aRange, IgnoreErrors());
 
   privSel->ScrollIntoViewInternal(

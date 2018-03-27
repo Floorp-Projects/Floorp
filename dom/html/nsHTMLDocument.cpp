@@ -103,6 +103,7 @@
 #include "nsIImageDocument.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLDocumentBinding.h"
+#include "mozilla/dom/Selection.h"
 #include "nsCharsetSource.h"
 #include "nsIStringBundle.h"
 #include "nsDOMClassInfo.h"
@@ -2548,12 +2549,11 @@ nsHTMLDocument::EditingStateChanged()
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsISelection> spellCheckSelection;
-    rv = selectionController->GetSelection(
-                                nsISelectionController::SELECTION_SPELLCHECK,
-                                getter_AddRefs(spellCheckSelection));
-    if (NS_SUCCEEDED(rv)) {
-      spellCheckSelection->RemoveAllRanges();
+    RefPtr<Selection> spellCheckSelection =
+      selectionController->GetDOMSelection(
+        nsISelectionController::SELECTION_SPELLCHECK);
+    if (spellCheckSelection) {
+      spellCheckSelection->RemoveAllRanges(IgnoreErrors());
     }
   }
   htmlEditor->SyncRealTimeSpell();

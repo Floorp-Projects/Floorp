@@ -245,14 +245,11 @@ CompositionTransaction::SetIMESelection(EditorBase& aEditorBase,
 
   nsresult rv = NS_OK;
   for (uint32_t i = 0; i < ArrayLength(kIMESelections); ++i) {
-    nsCOMPtr<nsISelection> selectionOfIME;
-    if (NS_FAILED(selCon->GetSelection(kIMESelections[i],
-                                       getter_AddRefs(selectionOfIME)))) {
+    RefPtr<Selection> selectionOfIME = selCon->GetDOMSelection(kIMESelections[i]);
+    if (!selectionOfIME) {
       continue;
     }
-    rv = selectionOfIME->RemoveAllRanges();
-    NS_ASSERTION(NS_SUCCEEDED(rv),
-                 "Failed to remove all ranges of IME selection");
+    selectionOfIME->RemoveAllRanges(IgnoreErrors());
   }
 
   // Set caret position and selection of IME composition with TextRangeArray.
