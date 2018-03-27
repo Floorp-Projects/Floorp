@@ -170,51 +170,6 @@ nsCSSPseudoClasses::IsUserActionPseudoClass(Type aType)
 }
 
 /* static */ bool
-nsCSSPseudoClasses::LangPseudoMatches(const mozilla::dom::Element* aElement,
-                                      const nsAtom* aOverrideLang,
-                                      bool aHasOverrideLang,
-                                      const char16_t* aString,
-                                      const nsIDocument* aDocument)
-{
-  NS_ASSERTION(aString, "null lang parameter");
-  if (!aString || !*aString) {
-    return false;
-  }
-
-  // We have to determine the language of the current element.  Since
-  // this is currently no property and since the language is inherited
-  // from the parent we have to be prepared to look at all parent
-  // nodes.  The language itself is encoded in the LANG attribute.
-  if (auto* language = aHasOverrideLang ? aOverrideLang : aElement->GetLang()) {
-    return nsStyleUtil::DashMatchCompare(nsDependentAtomString(language),
-                                         nsDependentString(aString),
-                                         nsASCIICaseInsensitiveStringComparator());
-  }
-
-  if (!aDocument) {
-    return false;
-  }
-
-  // Try to get the language from the HTTP header or if this
-  // is missing as well from the preferences.
-  // The content language can be a comma-separated list of
-  // language codes.
-  nsAutoString language;
-  aDocument->GetContentLanguage(language);
-
-  nsDependentString langString(aString);
-  language.StripWhitespace();
-  for (auto const& lang : language.Split(char16_t(','))) {
-    if (nsStyleUtil::DashMatchCompare(lang,
-                                      langString,
-                                      nsASCIICaseInsensitiveStringComparator())) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/* static */ bool
 nsCSSPseudoClasses::StringPseudoMatches(const mozilla::dom::Element* aElement,
                                         CSSPseudoClassType aPseudo,
                                         const char16_t* aString,
@@ -279,12 +234,6 @@ nsCSSPseudoClasses::StringPseudoMatches(const mozilla::dom::Element* aElement,
         }
       }
       break;
-
-    case CSSPseudoClassType::lang:
-      if (LangPseudoMatches(aElement, nullptr, false, aString, aDocument)) {
-        break;
-      }
-      return false;
 
     default: MOZ_ASSERT_UNREACHABLE("Called StringPseudoMatches() with unknown string-like pseudo");
   }
