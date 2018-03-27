@@ -786,12 +786,8 @@ KeyedScalar::GetScalarForKey(const nsAString& aKey, ScalarBase** aRet)
     return ScalarResult::KeyIsEmpty;
   }
 
-  if (aKey.Length() >= kMaximumKeyStringLength) {
+  if (aKey.Length() > kMaximumKeyStringLength) {
     return ScalarResult::KeyTooLong;
-  }
-
-  if (mScalarKeys.Count() >= kMaximumNumberOfKeys) {
-    return ScalarResult::TooManyKeys;
   }
 
   NS_ConvertUTF16toUTF8 utf8Key(aKey);
@@ -800,6 +796,10 @@ KeyedScalar::GetScalarForKey(const nsAString& aKey, ScalarBase** aRet)
   if (mScalarKeys.Get(utf8Key, &scalar)) {
     *aRet = scalar;
     return ScalarResult::Ok;
+  }
+
+  if (mScalarKeys.Count() >= kMaximumNumberOfKeys) {
+    return ScalarResult::TooManyKeys;
   }
 
   scalar = internal_ScalarAllocate(mScalarKind);
