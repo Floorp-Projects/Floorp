@@ -200,22 +200,22 @@ event.sendKey = function(key, window = undefined) {
 event.parseModifiers_ = function(modifiers) {
   let mval = 0;
   if (modifiers.shiftKey) {
-    mval |= Ci.nsIDOMNSEvent.SHIFT_MASK;
+    mval |= Ci.nsIDOMWindowUtils.MODIFIER_SHIFT;
   }
   if (modifiers.ctrlKey) {
-    mval |= Ci.nsIDOMNSEvent.CONTROL_MASK;
+    mval |= Ci.nsIDOMWindowUtils.MODIFIER_CONTROL;
   }
   if (modifiers.altKey) {
-    mval |= Ci.nsIDOMNSEvent.ALT_MASK;
+    mval |= Ci.nsIDOMWindowUtils.MODIFIER_ALT;
   }
   if (modifiers.metaKey) {
-    mval |= Ci.nsIDOMNSEvent.META_MASK;
+    mval |= Ci.nsIDOMWindowUtils.MODIFIER_META;
   }
   if (modifiers.accelKey) {
     if (navigator.platform.includes("Mac")) {
-      mval |= Ci.nsIDOMNSEvent.META_MASK;
+      mval |= Ci.nsIDOMWindowUtils.MODIFIER_META;
     } else {
-      mval |= Ci.nsIDOMNSEvent.CONTROL_MASK;
+      mval |= Ci.nsIDOMWindowUtils.MODIFIER_CONTROL;
     }
   }
   return mval;

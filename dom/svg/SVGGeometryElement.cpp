@@ -150,7 +150,7 @@ SVGGeometryElement::GetFillRule()
     }
   } else {
     // ReportToConsole
-    NS_WARNING("Couldn't get style context for content in GetFillRule");
+    NS_WARNING("Couldn't get ComputedStyle for content in GetFillRule");
   }
 
   return fillRule;

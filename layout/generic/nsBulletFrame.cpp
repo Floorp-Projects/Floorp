@@ -148,7 +148,7 @@ nsBulletFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
       RegisterImageRequest(/* aKnownToBeAnimated = */ false);
     }
   } else {
-    // No image request on the new style context.
+    // No image request on the new ComputedStyle.
     DeregisterAndCancelImageRequest();
   }
 

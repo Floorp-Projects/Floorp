@@ -484,13 +484,6 @@ interface nsIXPCComponents_Utils : nsISupports
     void forcePermissiveCOWs();
 
     /*
-     * Forces the usage of a privileged |Components| object for a potentially-
-     * unprivileged scope. This will crash if used outside of automation.
-     */
-    [implicit_jscontext]
-    void forcePrivilegedComponentsForScope(in jsval vscope);
-
-    /*
      * This seemingly-paradoxical API allows privileged code to explicitly give
      * unprivileged code a reference to its own Components object (whereas it's
      * normally hidden away on a scope chain visible only to XBL methods). See

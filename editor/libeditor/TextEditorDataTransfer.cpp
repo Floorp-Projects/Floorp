@@ -23,7 +23,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMUIEvent.h"
 #include "nsIDocument.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"

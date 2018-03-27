@@ -855,9 +855,9 @@ AddSizeOfIncludingThis(nsWindowSizes& aSizes, bool aIsServo) const
     }
     for (const UndisplayedNode* node = list->getFirst();
           node; node = node->getNext()) {
-      ComputedStyle* sc = node->mStyle;
-      if (!aSizes.mState.HaveSeenPtr(sc)) {
-        sc->AddSizeOfIncludingThis(
+      ComputedStyle* computedStyle = node->mStyle;
+      if (!aSizes.mState.HaveSeenPtr(computedStyle)) {
+        computedStyle->AddSizeOfIncludingThis(
           staleSizes, &aSizes.mLayoutComputedValuesStale);
       }
     }

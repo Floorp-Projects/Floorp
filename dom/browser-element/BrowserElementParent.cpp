@@ -87,16 +87,12 @@ DispatchCustomDOMEvent(Element* aFrameElement, const nsAString& aEventName,
   RefPtr<CustomEvent> event =
     NS_NewDOMCustomEvent(aFrameElement, presContext, nullptr);
 
-  ErrorResult res;
   event->InitCustomEvent(cx,
                          aEventName,
                          /* aCanBubble = */ true,
                          /* aCancelable = */ true,
-                         aDetailValue,
-                         res);
-  if (res.Failed()) {
-    return false;
-  }
+                         aDetailValue);
+
   event->SetTrusted(true);
   // Dispatch the event.
   // We don't initialize aStatus here, as our callers have already done so.

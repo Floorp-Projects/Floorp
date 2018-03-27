@@ -98,7 +98,7 @@ public:
 
   /**
    * Clears all currently registered ArenaRefPtrs for the given ArenaObjectID.
-   * This is called when we reconstruct the rule tree so that style contexts
+   * This is called when we reconstruct the rule tree so that ComputedStyles
    * pointing into the old rule tree aren't released afterwards, triggering an
    * assertion in ~ComputedStyle.
    */

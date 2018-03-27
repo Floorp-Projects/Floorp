@@ -303,7 +303,7 @@ function waitForContentPresented(browser, lastTransactionId) {
   return new Promise((resolve) => {
     let win = browser.ownerGlobal;
     win.addEventListener("MozAfterPaint", function onPaint(event) {
-      if (event instanceof Ci.nsIDOMNotifyPaintEvent) {
+      if (ChromeUtils.getClassName(event) === "NotifyPaintEvent") {
         TalosParentProfiler.mark("Content saw transaction id: " + event.transactionId);
         if (event.transactionId > lastTransactionId) {
           win.removeEventListener("MozAfterPaint", onPaint);

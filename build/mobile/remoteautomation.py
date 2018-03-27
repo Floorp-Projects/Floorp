@@ -416,6 +416,6 @@ class RemoteAutomation(Automation):
                 except:
                     print "%s still alive after SIGKILL!" % self.procName
                 if self.device.process_exist(self.procName):
-                    self.device.pkill(self.procName)
+                    self.device.stop_application(self.procName)
             else:
-                self.device.pkill(self.procName)
+                self.device.stop_application(self.procName)

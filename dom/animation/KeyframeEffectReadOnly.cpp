@@ -1019,7 +1019,7 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
   // We should just store shorthands as-is (bug 1391537) and then return the
   // variable references, but for now, since we don't do that, and in order to
   // be consistent with Gecko, we just expand the variables (assuming we have
-  // enough context to do so). For that we need to grab the style context so we
+  // enough context to do so). For that we need to grab the ComputedStyle so we
   // know what custom property values to provide.
   RefPtr<ComputedStyle> computedStyle;
   if (isCSSAnimation) {

@@ -15,7 +15,7 @@ SimpleTest.waitForExplicitFinish();
 var utils = SpecialPowers.getDOMWindowUtils(window);
 function test_sendMouseEventDefaults() {
   var x = 1, y = 2, button = 1, clickCount = 2,
-      modifiers = SpecialPowers.Ci.nsIDOMNSEvent.SHIFT_MASK;
+      modifiers = SpecialPowers.Ci.nsIDOMWindowUtils.MODIFIER_SHIFT;
 
   window.addEventListener("mousedown", function(evt) {
     // Mandatory args
@@ -40,7 +40,7 @@ function test_sendMouseEventDefaults() {
 
 function test_sendMouseEventOptionals() {
   var x = 1, y = 2, button = 1, clickCount = 3,
-      modifiers = SpecialPowers.Ci.nsIDOMNSEvent.SHIFT_MASK,
+      modifiers = SpecialPowers.Ci.nsIDOMWindowUtils.MODIFIER_SHIFT,
       pressure = 0.5,
       source = MouseEvent.MOZ_SOURCE_KEYBOARD;
 

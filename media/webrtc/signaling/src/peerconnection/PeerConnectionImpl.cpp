@@ -102,7 +102,6 @@
 #include "rlogconnector.h"
 #include "WebrtcGlobalInformation.h"
 #include "mozilla/dom/Event.h"
-#include "nsIDOMCustomEvent.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/net/DataChannelProtocol.h"
 

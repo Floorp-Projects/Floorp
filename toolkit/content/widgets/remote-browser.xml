@@ -276,11 +276,6 @@
         ]]></getter>
       </property>
 
-      <field name="_manifestURI"/>
-      <property name="manifestURI"
-                onget="return this._manifestURI"
-                readonly="true"/>
-
       <field name="mDestroyed">false</field>
 
       <field name="_permitUnloadId">0</field>
