@@ -55,6 +55,10 @@ public:
   /// same as the number of decoding threads we're actually using.
   static uint32_t NumberOfCores();
 
+  /// True if the DecodePool is being shutdown. This may only be called by
+  /// threads from the pool to check if they should keep working or not.
+  bool IsShuttingDown() const;
+
   /// Ask the DecodePool to run @aTask asynchronously and return immediately.
   void AsyncRun(IDecodingTask* aTask);
 
