@@ -8,13 +8,46 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
+const toolkitVariableMap = [
+  ["--lwt-accent-color", {
+    lwtProperty: "accentcolor",
+    processColor(rgbaChannels, element) {
+      if (!rgbaChannels) {
+        return "white";
+      }
+      // Remove the alpha channel
+      const {r, g, b} = rgbaChannels;
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+  }],
+  ["--lwt-text-color", {
+    lwtProperty: "textcolor",
+    processColor(rgbaChannels, element) {
+      if (!rgbaChannels) {
+        element.removeAttribute("lwthemetextcolor");
+        element.removeAttribute("lwtheme");
+        return null;
+      }
+      const {r, g, b, a} = rgbaChannels;
+      const luminance = 0.2125 * r + 0.7154 * g + 0.0721 * b;
+      element.setAttribute("lwthemetextcolor", luminance <= 110 ? "dark" : "bright");
+      element.setAttribute("lwtheme", "true");
+      return `rgba(${r}, ${g}, ${b}, ${a})` || "black";
+    }
+  }],
+  ["--arrowpanel-background", {
+    lwtProperty: "popup"
+  }],
+  ["--arrowpanel-color", {
+    lwtProperty: "popup_text"
+  }],
+  ["--arrowpanel-border-color", {
+    lwtProperty: "popup_border"
+  }],
+];
+
 // Get the theme variables from the app resource directory.
 // This allows per-app variables.
-const toolkitVariableMap = [
-  ["--arrowpanel-background", "popup"],
-  ["--arrowpanel-color", "popup_text"],
-  ["--arrowpanel-border-color", "popup_border"],
-];
 ChromeUtils.import("resource:///modules/ThemeVariableMap.jsm");
 
 ChromeUtils.defineModuleGetter(this, "LightweightThemeImageOptimizer",
@@ -93,30 +126,6 @@ LightweightThemeConsumer.prototype = {
       return;
 
     let root = this._doc.documentElement;
-    let active = !!aData.accentcolor;
-
-    // We need to clear these either way: either because the theme is being removed,
-    // or because we are applying a new theme and the data might be bogus CSS,
-    // so if we don't reset first, it'll keep the old value.
-    root.style.removeProperty("--lwt-text-color");
-    root.style.removeProperty("--lwt-accent-color");
-    let textcolor = aData.textcolor || "black";
-    _setProperty(root, active, "--lwt-text-color", textcolor);
-    _setProperty(root, active, "--lwt-accent-color", this._sanitizeCSSColor(aData.accentcolor) || "white");
-
-    _inferPopupColorsFromText(root, active, this._sanitizeCSSColor(aData.popup_text));
-
-    if (active) {
-      let dummy = this._doc.createElement("dummy");
-      dummy.style.color = textcolor;
-      let [r, g, b] = _parseRGB(this._win.getComputedStyle(dummy).color);
-      let luminance = 0.2125 * r + 0.7154 * g + 0.0721 * b;
-      root.setAttribute("lwthemetextcolor", luminance <= 110 ? "dark" : "bright");
-      root.setAttribute("lwtheme", "true");
-    } else {
-      root.removeAttribute("lwthemetextcolor");
-      root.removeAttribute("lwtheme");
-    }
 
     if (aData.headerURL) {
       root.setAttribute("lwtheme-image", "true");
@@ -124,6 +133,7 @@ LightweightThemeConsumer.prototype = {
       root.removeAttribute("lwtheme-image");
     }
 
+    let active = !!aData.accentcolor;
     this._active = active;
 
     if (aData.icons) {
@@ -148,20 +158,6 @@ LightweightThemeConsumer.prototype = {
 
     Services.obs.notifyObservers(this._win, "lightweight-theme-window-updated",
                                  JSON.stringify(aData));
-  },
-
-  _sanitizeCSSColor(cssColor) {
-    // style.color normalizes color values and rejects invalid ones, so a
-    // simple round trip gets us a sanitized color value.
-    let span = this._doc.createElementNS("http://www.w3.org/1999/xhtml", "span");
-    span.style.color = cssColor;
-    cssColor = this._win.getComputedStyle(span).color;
-    if (cssColor == "rgba(0, 0, 0, 0)" ||
-        !cssColor) {
-      return "";
-    }
-    // Remove alpha channel from color
-    return `rgb(${_parseRGB(cssColor).join(", ")})`;
   }
 };
 
@@ -180,37 +176,55 @@ function _setProperty(elem, active, variableName, value) {
   }
 }
 
-function _setProperties(root, active, vars) {
+function _setProperties(root, active, themeData) {
   for (let map of [toolkitVariableMap, ThemeVariableMap]) {
-    for (let [cssVarName, varsKey, optionalElementID] of map) {
+    for (let [cssVarName, definition] of map) {
+      const {
+        lwtProperty,
+        optionalElementID,
+        processColor,
+        isColor = true
+      } = definition;
       let elem = optionalElementID ? root.ownerDocument.getElementById(optionalElementID)
                                    : root;
-      _setProperty(elem, active, cssVarName, vars[varsKey]);
+
+      let val = themeData[lwtProperty];
+      if (isColor) {
+        val = _sanitizeCSSColor(root.ownerDocument, val);
+        if (processColor) {
+          val = processColor(_parseRGBA(val), elem);
+        }
+      }
+      _setProperty(elem, active, cssVarName, val);
     }
   }
 }
 
-function _parseRGB(aColorString) {
-  var rgb = aColorString.match(/^rgba?\((\d+), (\d+), (\d+)/);
-  rgb.shift();
-  return rgb.map(x => parseInt(x));
+function _sanitizeCSSColor(doc, cssColor) {
+  if (!cssColor) {
+    return null;
+  }
+  // style.color normalizes color values and rejects invalid ones, so a
+  // simple round trip gets us a sanitized color value.
+  let span = doc.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  span.style.color = cssColor;
+  cssColor = doc.defaultView.getComputedStyle(span).color;
+  if (cssColor == "rgba(0, 0, 0, 0)") {
+    return null;
+  }
+  return cssColor;
 }
 
-function _inferPopupColorsFromText(element, active, color) {
-  if (!color) {
-    element.removeAttribute("lwt-popup-brighttext");
-    _setProperty(element, active, "--autocomplete-popup-secondary-color");
-    return;
+function _parseRGBA(aColorString) {
+  if (!aColorString) {
+    return null;
   }
-
-  let [r, g, b] = _parseRGB(color);
-  let luminance = 0.2125 * r + 0.7154 * g + 0.0721 * b;
-
-  if (luminance <= 110) {
-    element.removeAttribute("lwt-popup-brighttext");
-  } else {
-    element.setAttribute("lwt-popup-brighttext", "true");
-  }
-
-  _setProperty(element, active, "--autocomplete-popup-secondary-color", `rgba(${r}, ${g}, ${b}, 0.5)`);
+  var rgba = aColorString.replace(/(rgba?\()|(\)$)/g, "").split(",");
+  rgba = rgba.map(x => parseFloat(x));
+  return {
+    r: rgba[0],
+    g: rgba[1],
+    b: rgba[2],
+    a: rgba[3] || 1,
+  };
 }
