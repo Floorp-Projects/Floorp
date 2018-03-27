@@ -12,7 +12,6 @@ transforms:
 
 kind-dependencies:
    - release-generate-checksums
-   - release-update-verify
 
 job-defaults:
    worker-type:
