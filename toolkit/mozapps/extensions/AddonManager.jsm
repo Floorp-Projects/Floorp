@@ -38,7 +38,6 @@ const PREF_WEBAPI_TESTING             = "extensions.webapi.testing";
 const PREF_WEBEXT_PERM_PROMPTS        = "extensions.webextPermissionPrompts";
 
 const UPDATE_REQUEST_VERSION          = 2;
-const CATEGORY_UPDATE_PARAMS          = "extension-update-params";
 
 const XMLURI_BLOCKLIST                = "http://www.mozilla.org/2006/addons-blocklist";
 
@@ -1276,24 +1275,6 @@ var AddonManagerInternal = {
     uri = uri.replace(/%APP_ABI%/g, xpcomABI);
     uri = uri.replace(/%APP_LOCALE%/g, getLocale());
     uri = uri.replace(/%CURRENT_APP_VERSION%/g, Services.appinfo.version);
-
-    // Replace custom parameters (names of custom parameters must have at
-    // least 3 characters to prevent lookups for something like %D0%C8)
-    var catMan = null;
-    uri = uri.replace(/%(\w{3,})%/g, function(aMatch, aParam) {
-      if (!catMan) {
-        catMan = Cc["@mozilla.org/categorymanager;1"].
-                 getService(Ci.nsICategoryManager);
-      }
-
-      try {
-        var contractID = catMan.getCategoryEntry(CATEGORY_UPDATE_PARAMS, aParam);
-        var paramHandler = Cc[contractID].getService(Ci.nsIPropertyBag2);
-        return paramHandler.getPropertyAsAString(aParam);
-      } catch (e) {
-        return aMatch;
-      }
-    });
 
     // escape() does not properly encode + symbols in any embedded FVF strings.
     return uri.replace(/\+/g, "%2B");
