@@ -92,7 +92,7 @@ class MochiRemote(MochitestDesktop):
         self.device.mkdir(self.remoteChromeTestDir)
 
         procName = options.app.split('/')[-1]
-        self.device.pkill(procName)
+        self.device.stop_application(procName)
         if self.device.process_exist(procName):
             self.log.warning("unable to kill %s before running tests!" % procName)
 

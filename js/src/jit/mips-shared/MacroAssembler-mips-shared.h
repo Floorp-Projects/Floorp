@@ -130,8 +130,8 @@ class MacroAssemblerMIPSShared : public Assembler
     void ma_addu(Register rd, Register rs, Imm32 imm);
     void ma_addu(Register rd, Register rs);
     void ma_addu(Register rd, Imm32 imm);
-    void ma_addTestCarry(Register rd, Register rs, Register rt, Label* overflow);
-    void ma_addTestCarry(Register rd, Register rs, Imm32 imm, Label* overflow);
+    void ma_addTestCarry(Condition cond, Register rd, Register rs, Register rt, Label* overflow);
+    void ma_addTestCarry(Condition cond, Register rd, Register rs, Imm32 imm, Label* overflow);
 
     // subtract
     void ma_subu(Register rd, Register rs, Imm32 imm);

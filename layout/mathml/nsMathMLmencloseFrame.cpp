@@ -65,7 +65,7 @@ nsresult nsMathMLmencloseFrame::AllocateMathMLChar(nsMencloseNotation mask)
       (mask == NOTATION_RADICAL && mRadicalCharIndex >= 0))
     return NS_OK;
 
-  // No need to track the style context given to our MathML chars.
+  // No need to track the ComputedStyle given to our MathML chars.
   // The Style System will use Get/SetAdditionalComputedStyle() to keep it
   // up-to-date if dynamic changes arise.
   uint32_t i = mMathMLChar.Length();
@@ -726,7 +726,7 @@ nsMathMLmencloseFrame::AttributeChanged(int32_t         aNameSpaceID,
 }
 
 //////////////////
-// the Style System will use these to pass the proper style context to our
+// the Style System will use these to pass the proper ComputedStyle to our
 // MathMLChar
 ComputedStyle*
 nsMathMLmencloseFrame::GetAdditionalComputedStyle(int32_t aIndex) const

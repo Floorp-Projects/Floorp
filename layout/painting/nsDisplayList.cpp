@@ -1799,7 +1799,7 @@ nsDisplayListBuilder::IsAnimatedGeometryRoot(nsIFrame* aFrame,
     // For SVG containers, they always have
     // NS_FRAME_MAY_BE_TRANSFORMED bit.  However, they would be
     // affected by the fragement identifiers in the svgView form at
-    // runtime without a new style context.
+    // runtime without a new ComputedStyle.
     // For example, layout/reftests/svg/fragmentIdentifier-01.xhtml
     //
     // see https://www.w3.org/TR/SVG/linking.html#SVGFragmentIdentifiers

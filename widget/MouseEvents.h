@@ -470,7 +470,7 @@ public:
   // The delta value of mouse scroll event.
   // If the event message is eLegacyMouseLineOrPageScroll, the value indicates
   // scroll amount in lines.  However, if the value is
-  // nsIDOMUIEvent::SCROLL_PAGE_UP or nsIDOMUIEvent::SCROLL_PAGE_DOWN, the
+  // UIEvent::SCROLL_PAGE_UP or UIEvent::SCROLL_PAGE_DOWN, the
   // value inducates one page scroll.  If the event message is
   // eLegacyMousePixelScroll, the value indicates scroll amount in pixels.
   int32_t mDelta;

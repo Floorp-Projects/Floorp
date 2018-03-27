@@ -138,7 +138,7 @@ nsTableFrame::GetParentComputedStyle(nsIFrame** aProviderFrame) const
 
   NS_PRECONDITION(GetParent(), "table constructed without table wrapper");
   if (!mContent->GetParent() && !Style()->GetPseudo()) {
-    // We're the root.  We have no style context parent.
+    // We're the root.  We have no ComputedStyle parent.
     *aProviderFrame = nullptr;
     return nullptr;
   }
@@ -733,7 +733,7 @@ nsTableFrame::AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
   int32_t lastIndex  = startIndex + aNumColsToAdd - 1;
 
   for (int32_t childX = startIndex; childX <= lastIndex; childX++) {
-    // all anonymous cols that we create here use a pseudo style context of the
+    // all anonymous cols that we create here use a pseudo ComputedStyle of the
     // col group
     nsIContent* iContent = aColGroupFrame->GetContent();
     RefPtr<ComputedStyle> computedStyle = shell->StyleSet()->
@@ -5107,7 +5107,7 @@ bool
 nsTableFrame::BCRecalcNeeded(ComputedStyle* aOldComputedStyle,
                              ComputedStyle* aNewComputedStyle)
 {
-  // Attention: the old style context is the one we're forgetting,
+  // Attention: the old ComputedStyle is the one we're forgetting,
   // and hence possibly completely bogus for GetStyle* purposes.
   // We use PeekStyleData instead.
 
@@ -8202,7 +8202,7 @@ nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
   nsChangeHint wrapperHint =
     aWrapperFrame->Style()->CalcStyleDifference(newStyle, &equalStructs);
 
-  // CalcStyleDifference will handle caching structs on the new style context,
+  // CalcStyleDifference will handle caching structs on the new ComputedStyle,
   // but only if we're not on a style worker thread.
   MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal(),
              "if we can get in here from style worker threads, then we need "

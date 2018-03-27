@@ -237,7 +237,7 @@ nsImageFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
 
   nsStyleImageOrientation newOrientation = StyleVisibility()->mImageOrientation;
 
-  // We need to update our orientation either if we had no style context before
+  // We need to update our orientation either if we had no ComputedStyle before
   // because this is the first time it's been set, or if the image-orientation
   // property changed from its previous value.
   bool shouldUpdateOrientation =
@@ -2108,7 +2108,7 @@ nsImageFrame::GetCursor(const nsPoint& aPoint,
     nsCOMPtr<nsIContent> area = map->GetArea(p.x, p.y);
     if (area) {
       // Use the cursor from the style of the *area* element.
-      // XXX Using the image as the parent style context isn't
+      // XXX Using the image as the parent ComputedStyle isn't
       // technically correct, but it's probably the right thing to do
       // here, since it means that areas on which the cursor isn't
       // specified will inherit the style from the image.

@@ -327,19 +327,23 @@ MacroAssemblerMIPSShared::ma_addu(Register rd, Imm32 imm)
 }
 
 void
-MacroAssemblerMIPSShared::ma_addTestCarry(Register rd, Register rs, Register rt, Label* overflow)
+MacroAssemblerMIPSShared::ma_addTestCarry(Condition cond, Register rd, Register rs, Register rt,
+                                          Label* overflow)
 {
+    MOZ_ASSERT(cond == Assembler::CarrySet || cond == Assembler::CarryClear);
     MOZ_ASSERT_IF(rd == rs, rt != rd);
     as_addu(rd, rs, rt);
-    as_sltu(SecondScratchReg, rd, rd == rs? rt : rs);
-    ma_b(SecondScratchReg, SecondScratchReg, overflow, Assembler::NonZero);
+    as_sltu(SecondScratchReg, rd, rd == rs ? rt : rs);
+    ma_b(SecondScratchReg, SecondScratchReg, overflow,
+         cond == Assembler::CarrySet ? Assembler::NonZero : Assembler:: Zero);
 }
 
 void
-MacroAssemblerMIPSShared::ma_addTestCarry(Register rd, Register rs, Imm32 imm, Label* overflow)
+MacroAssemblerMIPSShared::ma_addTestCarry(Condition cond, Register rd, Register rs, Imm32 imm,
+                                          Label* overflow)
 {
     ma_li(ScratchRegister, imm);
-    ma_addTestCarry(rd, rs, ScratchRegister, overflow);
+    ma_addTestCarry(cond, rd, rs, ScratchRegister, overflow);
 }
 
 // Subtract.

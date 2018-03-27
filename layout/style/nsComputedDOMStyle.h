@@ -730,19 +730,19 @@ private:
   nsCOMPtr<nsIContent> mContent;
 
   /**
-   * Strong reference to the style context we access data from.  This can be
-   * either a style context we resolved ourselves or a style context we got
+   * Strong reference to the ComputedStyle we access data from.  This can be
+   * either a ComputedStyle we resolved ourselves or a ComputedStyle we got
    * from our frame.
    *
-   * If we got the style context from the frame, we clear out mComputedStyle
+   * If we got the ComputedStyle from the frame, we clear out mComputedStyle
    * in ClearCurrentStyleSources.  If we resolved one ourselves, then
    * ClearCurrentStyleSources leaves it in mComputedStyle for use the next
    * time this nsComputedDOMStyle object is queried.  UpdateCurrentStyleSources
-   * in this case will check that the style context is still valid to be used,
+   * in this case will check that the ComputedStyle is still valid to be used,
    * by checking whether flush styles results in any restyles having been
    * processed.
    *
-   * Since an ArenaRefPtr is used to hold the style context, it will be cleared
+   * Since an ArenaRefPtr is used to hold the ComputedStyle, it will be cleared
    * if the pres arena from which it was allocated goes away.
    */
   mozilla::ArenaRefPtr<mozilla::ComputedStyle> mComputedStyle;
@@ -780,7 +780,7 @@ private:
   bool mExposeVisitedStyle;
 
   /**
-   * Whether we resolved a style context last time we called
+   * Whether we resolved a ComputedStyle last time we called
    * UpdateCurrentStyleSources.  Initially false.
    */
   bool mResolvedComputedStyle;

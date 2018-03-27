@@ -30,7 +30,8 @@ using mozilla::Move;
 class nsMIMEInputStream : public nsIMIMEInputStream,
                           public nsISeekableStream,
                           public nsIIPCSerializableInputStream,
-                          public nsIAsyncInputStream
+                          public nsIAsyncInputStream,
+                          public nsIInputStreamCallback
 {
     virtual ~nsMIMEInputStream();
 
@@ -43,6 +44,7 @@ public:
     NS_DECL_NSISEEKABLESTREAM
     NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
     NS_DECL_NSIASYNCINPUTSTREAM
+    NS_DECL_NSIINPUTSTREAMCALLBACK
 
 private:
 
@@ -64,6 +66,8 @@ private:
 
     nsCOMPtr<nsIInputStream> mStream;
     bool mStartedReading;
+
+    nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
 };
 
 NS_IMPL_ADDREF(nsMIMEInputStream)
@@ -79,6 +83,8 @@ NS_INTERFACE_MAP_BEGIN(nsMIMEInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
                                      IsIPCSerializable())
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStream,
+                                     IsAsyncInputStream())
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIInputStreamCallback,
                                      IsAsyncInputStream())
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMIMEInputStream)
   NS_IMPL_QUERY_CLASSINFO(nsMIMEInputStream)
@@ -242,8 +248,32 @@ nsMIMEInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 {
     INITSTREAMS;
     nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(mStream);
-    return asyncStream->AsyncWait(
-        aCallback, aFlags, aRequestedCount, aEventTarget);
+    if (NS_WARN_IF(!asyncStream)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (mAsyncWaitCallback && aCallback) {
+      return NS_ERROR_FAILURE;
+    }
+
+    mAsyncWaitCallback = aCallback;
+
+    return asyncStream->AsyncWait(this, aFlags, aRequestedCount, aEventTarget);
+}
+
+// nsIInputStreamCallback
+
+NS_IMETHODIMP
+nsMIMEInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
+{
+  // We have been canceled in the meanwhile.
+  if (!mAsyncWaitCallback) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIInputStreamCallback> callback = mAsyncWaitCallback;
+  mAsyncWaitCallback = nullptr;
+  return callback->OnInputStreamReady(this);
 }
 
 // nsISeekableStream

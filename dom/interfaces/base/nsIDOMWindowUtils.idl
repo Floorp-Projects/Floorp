@@ -261,7 +261,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Following modifiers are for sent*Event() except sendNative*Event().
    * NOTE: MODIFIER_ALT, MODIFIER_CONTROL, MODIFIER_SHIFT and MODIFIER_META
-   *       are must be same values as nsIDOMNSEvent::*_MASK for backward
+   *       are must be same values as EventBinding::*_MASK for backward
    *       compatibility.
    */
   const long MODIFIER_ALT        = 0x0001;
@@ -723,7 +723,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aY y offset in CSS pixels
    * @param aDirection direction, using constants defined in SimpleGestureEvent.webidl
    * @param aDelta  amount of magnification or rotation for magnify and rotation events
-   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   * @param aModifiers modifiers pressed, using constants defined in Event.webidl
    * @param aClickCount For tap gestures, the number of taps.
    */
   void sendSimpleGestureEvent(in AString aType,

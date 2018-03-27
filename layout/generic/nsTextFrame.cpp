@@ -254,7 +254,7 @@ static const nsFrameState TEXT_WHITESPACE_FLAGS =
  * TEXT_IS_SIMPLE_FLOW and TEXT_MIGHT_HAVE_GLYPH_CHANGES flags.
  *
  * We go to considerable effort to make sure things work even if in-flow
- * siblings have different style contexts (i.e., first-letter and first-line).
+ * siblings have different ComputedStyles (i.e., first-letter and first-line).
  *
  * Our convention is that unsigned integer character offsets are offsets into
  * the transformed string. Signed integer character offsets are offsets into

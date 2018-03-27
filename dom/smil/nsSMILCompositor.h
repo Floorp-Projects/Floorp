@@ -75,7 +75,7 @@ public:
  private:
   // Create a nsISMILAttr for my target, on the heap.
   //
-  // @param aBaseComputedStyle  An optional style context which, if set, will be
+  // @param aBaseComputedStyle  An optional ComputedStyle which, if set, will be
   //                           used when fetching the base style.
   mozilla::UniquePtr<nsISMILAttr>
   CreateSMILAttr(mozilla::ComputedStyle* aBaseComputedStyle);

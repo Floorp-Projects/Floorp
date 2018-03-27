@@ -147,7 +147,7 @@ ProcessTranslatePart(const nsCSSValue& aValue,
   } else if (aValue.GetUnit() == eCSSUnit_Pixel ||
              aValue.GetUnit() == eCSSUnit_Number) {
     // Handle this here (even though nsRuleNode::CalcLength handles it
-    // fine) so that callers are allowed to pass a null style context
+    // fine) so that callers are allowed to pass a null ComputedStyle
     // and pres context to SetToTransformFunction if they know (as
     // StyleAnimationValue does) that all lengths within the transform
     // function have already been computed to pixels and percents.

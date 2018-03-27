@@ -455,7 +455,7 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
       // editor shouldn't handle this click event.
       if (mMouseDownOrUpConsumedByIME) {
         mMouseDownOrUpConsumedByIME = false;
-        mouseEvent->AsEvent()->PreventDefault();
+        mouseEvent->PreventDefault();
         return NS_OK;
       }
       return MouseClick(mouseEvent);
@@ -694,14 +694,8 @@ EditorEventListener::HandleMiddleClickPaste(MouseEvent* aMouseEvent)
   }
 
   // Set the selection to the point under the mouse cursor:
-  nsCOMPtr<nsIDOMNode> parent;
-  if (NS_FAILED(aMouseEvent->GetRangeParent(getter_AddRefs(parent)))) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  int32_t offset = 0;
-  if (NS_FAILED(aMouseEvent->GetRangeOffset(&offset))) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  nsCOMPtr<nsINode> parent = aMouseEvent->GetRangeParent();
+  int32_t offset = aMouseEvent->RangeOffset();
 
   RefPtr<TextEditor> textEditor = mEditorBase->AsTextEditor();
   MOZ_ASSERT(textEditor);

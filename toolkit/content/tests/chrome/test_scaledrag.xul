@@ -168,8 +168,8 @@ function runTests() {
 
   // test dragging a slider by tapping off the thumb and holding shift
   // modifiers don't affect touch events
-  var mods = /Mac/.test(navigator.platform) ? Ci.nsIDOMNSEvent.ALT_MASK :
-                                              Ci.nsIDOMNSEvent.SHIFT_MASK;
+  var mods = /Mac/.test(navigator.platform) ? Ci.nsIDOMWindowUtils.MODIFIER_ALT :
+                                              Ci.nsIDOMWindowUtils.MODIFIER_SHIFT;
   testTouchDragSlider("TouchDrag Slider Left+Shift", "scale1", "left", isMac ? 1 : 0, isMac ? 2 : 0, mods);
   testTouchDragSlider("TouchDrag Slider Right+Shift", "scale1", "right", isMac ? 3 : 4, isMac ? 2 : 4, mods);
   testMouseDragSlider("MouseDrag Slider Left+Shift", "scale1", "left", isMac ? 0 : 1, isMac ? 0 : 2, mods);
