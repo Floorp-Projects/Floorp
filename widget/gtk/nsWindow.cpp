@@ -3641,6 +3641,7 @@ nsWindow::Create(nsIWidget* aParent,
         if (Preferences::GetBool("mozilla.widget.use-argb-visuals", false))
             useAlphaVisual = true;
 
+#ifdef GL_PROVIDER_GLX
         bool useWebRender = gfxPlatform::Initialized() &&
             gfx::gfxVars::UseWebRender() &&
             AllowWebRenderForThisWindow();
@@ -3654,7 +3655,6 @@ nsWindow::Create(nsIWidget* aParent,
             auto screen = gtk_widget_get_screen(mShell);
             int screenNumber = GDK_SCREEN_XNUMBER(screen);
             int visualId = 0;
-
             if (GLContextGLX::FindVisual(display, screenNumber,
                                          useWebRender, useAlphaVisual,
                                          &visualId)) {
@@ -3664,11 +3664,15 @@ nsWindow::Create(nsIWidget* aParent,
                                       gdk_x11_screen_lookup_visual(screen,
                                                                    visualId));
             }
-        } else if (useAlphaVisual) {
-            GdkScreen *screen = gtk_widget_get_screen(mShell);
-            if (gdk_screen_is_composited(screen)) {
-                GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
-                gtk_widget_set_visual(mShell, visual);
+        } else
+#endif // GL_PROVIDER_GLX
+        {
+            if (useAlphaVisual) {
+                GdkScreen *screen = gtk_widget_get_screen(mShell);
+                if (gdk_screen_is_composited(screen)) {
+                    GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
+                    gtk_widget_set_visual(mShell, visual);
+                }
             }
         }
 
