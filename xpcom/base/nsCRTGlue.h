@@ -98,13 +98,63 @@ NS_ToLower(char aChar)
 bool NS_IsUpper(char aChar);
 bool NS_IsLower(char aChar);
 
-bool NS_IsAscii(char16_t aChar);
+constexpr bool
+NS_IsAscii(char16_t aChar)
+{
+  return (0x0080 > aChar);
+}
+
 bool NS_IsAscii(const char16_t* aString);
-bool NS_IsAsciiAlpha(char16_t aChar);
-bool NS_IsAsciiDigit(char16_t aChar);
-bool NS_IsAsciiWhitespace(char16_t aChar);
 bool NS_IsAscii(const char* aString);
 bool NS_IsAscii(const char* aString, uint32_t aLength);
+
+// These three functions are `constexpr` alternatives to NS_IsAscii. It should
+// only be used for compile-time computation because it uses recursion.
+// XXX: once support for GCC 4.9 is dropped, this function should be removed
+// and NS_IsAscii should be made `constexpr`.
+constexpr bool
+NS_ConstExprIsAscii(const char16_t* aString)
+{
+  return !*aString ? true :
+    !NS_IsAscii(*aString) ? false : NS_ConstExprIsAscii(aString + 1);
+}
+
+constexpr bool
+NS_ConstExprIsAscii(const char* aString)
+{
+  return !*aString ? true :
+    !NS_IsAscii(*aString) ? false : NS_ConstExprIsAscii(aString + 1);
+}
+
+constexpr bool
+NS_ConstExprIsAscii(const char* aString, uint32_t aLength)
+{
+  return aLength == 0 ? true :
+    !NS_IsAscii(*aString) ? false :
+    NS_ConstExprIsAscii(aString + 1, aLength - 1);
+}
+
+constexpr bool
+NS_IsAsciiAlpha(char16_t aChar)
+{
+  return (aChar >= 'A' && aChar <= 'Z') ||
+         (aChar >= 'a' && aChar <= 'z');
+}
+
+constexpr bool
+NS_IsAsciiWhitespace(char16_t aChar)
+{
+  return aChar == ' ' ||
+         aChar == '\r' ||
+         aChar == '\n' ||
+         aChar == '\t';
+}
+
+constexpr bool
+NS_IsAsciiDigit(char16_t aChar)
+{
+  return aChar >= '0' && aChar <= '9';
+}
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 void NS_MakeRandomString(char* aBuf, int32_t aBufLen);
