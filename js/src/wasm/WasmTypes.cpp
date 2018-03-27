@@ -83,9 +83,10 @@ Val::writePayload(uint8_t* dst) const
         return;
       case ValType::Ref:
       case ValType::AnyRef:
-        // TODO
-        MOZ_CRASH("writing imported value of Ref/AnyRef in global NYI");
+        memcpy(dst, &u.ptr_, sizeof(intptr_t));
+        return;
     }
+    MOZ_CRASH("unexpected Val type");
 }
 
 bool
