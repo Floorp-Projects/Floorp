@@ -30,13 +30,13 @@ class ExecutionRunnable final : public Runnable
 {
 public:
   ExecutionRunnable(WorkletFetchHandler* aHandler, Worklet::WorkletType aType,
-                    char16_t* aScriptBuffer, size_t aScriptLength,
+                    JS::UniqueTwoByteChars aScriptBuffer, size_t aScriptLength,
                     const WorkletLoadInfo& aWorkletLoadInfo)
     : Runnable("Worklet::ExecutionRunnable")
     , mHandler(aHandler)
+    , mScriptBuffer(Move(aScriptBuffer))
+    , mScriptLength(aScriptLength)
     , mWorkletType(aType)
-    , mBuffer(aScriptBuffer, aScriptLength,
-              JS::SourceBufferHolder::GiveOwnership)
     , mResult(NS_ERROR_FAILURE)
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -53,8 +53,9 @@ private:
   RunOnMainThread();
 
   RefPtr<WorkletFetchHandler> mHandler;
+  JS::UniqueTwoByteChars mScriptBuffer;
+  size_t mScriptLength;
   Worklet::WorkletType mWorkletType;
-  JS::SourceBufferHolder mBuffer;
   nsresult mResult;
 };
 
@@ -210,7 +211,7 @@ public:
       return NS_OK;
     }
 
-    char16_t* scriptTextBuf;
+    JS::UniqueTwoByteChars scriptTextBuf;
     size_t scriptTextLength;
     nsresult rv =
       ScriptLoader::ConvertToUTF16(nullptr, aString, aStringLen,
@@ -223,7 +224,7 @@ public:
 
     // Moving the ownership of the buffer
     nsCOMPtr<nsIRunnable> runnable =
-      new ExecutionRunnable(this, mWorklet->Type(), scriptTextBuf,
+      new ExecutionRunnable(this, mWorklet->Type(), Move(scriptTextBuf),
                             scriptTextLength, mWorklet->LoadInfo());
 
     RefPtr<WorkletThread> thread = mWorklet->GetOrCreateThread();
@@ -400,8 +401,10 @@ ExecutionRunnable::RunOnWorkletThread()
 
   JSAutoCompartment comp(cx, globalObj);
 
+  JS::SourceBufferHolder buffer(mScriptBuffer.release(), mScriptLength,
+                                JS::SourceBufferHolder::GiveOwnership);
   JS::Rooted<JS::Value> unused(cx);
-  if (!JS::Evaluate(cx, compileOptions, mBuffer, &unused)) {
+  if (!JS::Evaluate(cx, compileOptions, buffer, &unused)) {
     ErrorResult error;
     error.MightThrowJSException();
     error.StealExceptionFromJSContext(cx);
