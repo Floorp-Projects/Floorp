@@ -17,6 +17,7 @@
 
 class JSLinearString;
 class JSRope;
+class JSTracer;
 
 namespace js {
 class BaseShape;
