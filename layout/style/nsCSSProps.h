@@ -124,64 +124,14 @@
 
 // Flags for the kFlagsTable bitfield (flags_ in nsCSSPropList.h)
 
-// This property is a logical property (such as padding-inline-start).
-#define CSS_PROPERTY_LOGICAL                      (1<<0)
-
 #define CSS_PROPERTY_VALUE_LIST_USES_COMMAS       (1<<1) /* otherwise spaces */
-
-#define CSS_PROPERTY_APPLIES_TO_FIRST_LETTER      (1<<2)
-#define CSS_PROPERTY_APPLIES_TO_FIRST_LINE        (1<<3)
-#define CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE \
-  (CSS_PROPERTY_APPLIES_TO_FIRST_LETTER | CSS_PROPERTY_APPLIES_TO_FIRST_LINE)
-
-// Note that 'background-color' is ignored differently from the other
-// properties that have this set, but that's just special-cased.
-#define CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED (1<<4)
-
-// A property that needs to have image loads started when a URL value
-// for the property is used for an element.  This is supported only
-// for a few possible value formats: image directly in the value; list
-// of images; and with CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0, image in slot
-// 0 of an array, or list of such arrays.
-#define CSS_PROPERTY_START_IMAGE_LOADS            (1<<5)
-
-// Should be set only for properties with START_IMAGE_LOADS.  Indicates
-// that the property has an array value with a URL/image value at index
-// 0 in the array, rather than the URL/image being in the value or value
-// list.
-#define CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0          (1<<6)
-
-// This is a logical property that represents some value associated with
-// a logical axis rather than a logical box side, and thus has two
-// corresponding physical properties it could set rather than four.  For
-// example, the block-size logical property has this flag set, as it
-// represents the size in either the block or inline axis dimensions, and
-// has two corresponding physical properties, width and height.  Must not
-// be used in conjunction with CSS_PROPERTY_LOGICAL_END_EDGE.
-#define CSS_PROPERTY_LOGICAL_AXIS                 (1<<7)
-
-// This property allows calc() between lengths and percentages and
-// stores such calc() expressions in its style structs (typically in an
-// nsStyleCoord, although this is not the case for 'background-position'
-// and 'background-size').
-#define CSS_PROPERTY_STORES_CALC                  (1<<8)
 
 // Define what mechanism the CSS parser uses for parsing the property.
 // See CSSParserImpl::ParseProperty(nsCSSPropertyID).  Don't use 0 so that
 // we can verify that every property sets one of the values.
-//
-// CSS_PROPERTY_PARSE_FUNCTION must be used for shorthand properties,
-// since it's the only mechanism that allows appending values for
-// separate properties.  Longhand properties that require custom parsing
-// functions should prefer using CSS_PROPERTY_PARSE_VALUE (or
-// CSS_PROPERTY_PARSE_VALUE_LIST) and
-// CSS_PROPERTY_VALUE_PARSER_FUNCTION, though a number of existing
-// longhand properties use CSS_PROPERTY_PARSE_FUNCTION instead.
 #define CSS_PROPERTY_PARSE_PROPERTY_MASK          (7<<9)
 #define CSS_PROPERTY_PARSE_INACCESSIBLE           (1<<9)
 #define CSS_PROPERTY_PARSE_FUNCTION               (2<<9)
-#define CSS_PROPERTY_PARSE_VALUE                  (3<<9)
-#define CSS_PROPERTY_PARSE_VALUE_LIST             (4<<9)
 
 // See CSSParserImpl::ParseSingleValueProperty and comment above
 // CSS_PROPERTY_PARSE_FUNCTION (which is different).
@@ -190,34 +140,11 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
                CSS_PROPERTY_VALUE_PARSER_FUNCTION) == 0,
               "didn't leave enough room for the parse property constants");
 
-#define CSS_PROPERTY_VALUE_RESTRICTION_MASK       (3<<13)
-// The parser (in particular, CSSParserImpl::ParseSingleValueProperty)
-// should enforce that the value of this property must be 0 or larger.
-#define CSS_PROPERTY_VALUE_NONNEGATIVE            (1<<13)
-// The parser (in particular, CSSParserImpl::ParseSingleValueProperty)
-// should enforce that the value of this property must be 1 or larger.
-#define CSS_PROPERTY_VALUE_AT_LEAST_ONE           (2<<13)
-
-// Does this property support the hashless hex color quirk in quirks mode?
-#define CSS_PROPERTY_HASHLESS_COLOR_QUIRK         (1<<15)
-
-// Does this property support the unitless length quirk in quirks mode?
-#define CSS_PROPERTY_UNITLESS_LENGTH_QUIRK        (1<<16)
-
 // There's a free bit here.
-
-// Does the property apply to ::placeholder?
-#define CSS_PROPERTY_APPLIES_TO_PLACEHOLDER       (1<<18)
-
-// This property is allowed in an @page rule.
-#define CSS_PROPERTY_APPLIES_TO_PAGE_RULE         (1<<19)
 
 // This property's getComputedStyle implementation requires layout to be
 // flushed.
 #define CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH     (1<<20)
-
-// This property requires a stacking context.
-#define CSS_PROPERTY_CREATES_STACKING_CONTEXT     (1<<21)
 
 // The following two flags along with the pref defines where the this
 // property can be used:
@@ -241,24 +168,6 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 #define CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME \
   (CSS_PROPERTY_ENABLED_IN_UA_SHEETS | CSS_PROPERTY_ENABLED_IN_CHROME)
 
-// This property's unitless values are pixels.
-#define CSS_PROPERTY_NUMBERS_ARE_PIXELS           (1<<24)
-
-// This property is a logical property for one of the two block axis
-// sides (such as margin-block-start or margin-block-end).  Must only be
-// set if CSS_PROPERTY_LOGICAL is set.  When not set, the logical
-// property is for one of the two inline axis sides (such as
-// margin-inline-start or margin-inline-end).
-#define CSS_PROPERTY_LOGICAL_BLOCK_AXIS           (1<<25)
-
-// This property is a logical property for the "end" edge of the
-// axis determined by the presence or absence of
-// CSS_PROPERTY_LOGICAL_BLOCK_AXIS (such as margin-block-end or
-// margin-inline-end).  Must only be set if CSS_PROPERTY_LOGICAL is set.
-// When not set, the logical property is for the "start" edge (such as
-// margin-block-start or margin-inline-start).
-#define CSS_PROPERTY_LOGICAL_END_EDGE             (1<<26)
-
 // This property can be animated on the compositor.
 #define CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR    (1<<27)
 
@@ -266,27 +175,6 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // in the DOM.  Properties with this flag must be defined in an #ifndef
 // CSS_PROP_LIST_EXCLUDE_INTERNAL section of nsCSSPropList.h.
 #define CSS_PROPERTY_INTERNAL                     (1<<28)
-
-// This property has values that can establish a containing block for
-// fixed positioned and absolutely positioned elements.
-// This should be set for any properties that can cause an element to be
-// such a containing block, as implemented in
-// nsStyleDisplay::IsFixedPosContainingBlock.
-#define CSS_PROPERTY_FIXPOS_CB                    (1<<29)
-
-// This property has values that can establish a containing block for
-// absolutely positioned elements.
-// This should be set for any properties that can cause an element to be
-// such a containing block, as implemented in
-// nsStyleDisplay::IsAbsPosContainingBlock.
-// It does not need to be set for properties that also have
-// CSS_PROPERTY_FIXPOS_CB set.
-#define CSS_PROPERTY_ABSPOS_CB                    (1<<30)
-
-// This property should add Cross Origin Request headers to any loads
-// that it triggers. Currently this is only used for properties that
-// also use CSS_PROPERTY_START_IMAGE_LOADS.
-#define CSS_PROPERTY_LOAD_USE_CORS                (1U<<31)
 
 /**
  * Types of animatable values.
@@ -380,8 +268,6 @@ public:
   // then eCSSPropertyExtra_variable will be returned.
   static nsCSSPropertyID LookupProperty(const nsAString& aProperty,
                                       EnabledState aEnabled);
-  static nsCSSPropertyID LookupProperty(const nsACString& aProperty,
-                                      EnabledState aEnabled);
   // As above, but looked up using a property's IDL name.
   // eCSSPropertyExtra_variable won't be returned from these methods.
   static nsCSSPropertyID LookupPropertyByIDLName(
@@ -394,7 +280,6 @@ public:
   // Returns whether aProperty is a custom property name, i.e. begins with
   // "--".  This assumes that the CSS Variables pref has been enabled.
   static bool IsCustomPropertyName(const nsAString& aProperty);
-  static bool IsCustomPropertyName(const nsACString& aProperty);
 
   static inline bool IsShorthand(nsCSSPropertyID aProperty) {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
@@ -402,20 +287,8 @@ public:
     return (aProperty >= eCSSProperty_COUNT_no_shorthands);
   }
 
-  // Must be given a longhand property.
-  static bool IsInherited(nsCSSPropertyID aProperty);
-
   // Same but for @font-face descriptors
   static nsCSSFontDesc LookupFontDesc(const nsAString& aProperty);
-  static nsCSSFontDesc LookupFontDesc(const nsACString& aProperty);
-
-  // For @counter-style descriptors
-  static nsCSSCounterDesc LookupCounterDesc(const nsAString& aProperty);
-  static nsCSSCounterDesc LookupCounterDesc(const nsACString& aProperty);
-
-  // For predefined counter styles which need to be lower-cased during parse
-  static bool IsPredefinedCounterStyle(const nsAString& aStyle);
-  static bool IsPredefinedCounterStyle(const nsACString& aStyle);
 
   // Given a property enum, get the string value
   static const nsCString& GetStringValue(nsCSSPropertyID aProperty);
@@ -469,8 +342,6 @@ public:
   static const nsStyleStructID kSIDTable[eCSSProperty_COUNT_no_shorthands];
   static const KTableEntry* const kKeywordTableTable[eCSSProperty_COUNT_no_shorthands];
   static const nsStyleAnimType kAnimTypeTable[eCSSProperty_COUNT_no_shorthands];
-  static const ptrdiff_t
-    kStyleStructOffsetTable[eCSSProperty_COUNT_no_shorthands];
 
 private:
   static const uint32_t        kFlagsTable[eCSSProperty_COUNT];
@@ -493,14 +364,6 @@ public:
                "out of range");
     return nsCSSProps::kFlagsTable[aProperty] &
            CSS_PROPERTY_PARSE_PROPERTY_MASK;
-  }
-
-  static inline uint32_t ValueRestrictions(nsCSSPropertyID aProperty)
-  {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
-               "out of range");
-    return nsCSSProps::kFlagsTable[aProperty] &
-           CSS_PROPERTY_VALUE_RESTRICTION_MASK;
   }
 
 private:
@@ -528,75 +391,6 @@ public:
     return nsCSSProps::kSubpropertyTable[aProperty -
                                          eCSSProperty_COUNT_no_shorthands];
   }
-
-  // Returns an eCSSProperty_UNKNOWN-terminated array of the shorthand
-  // properties containing |aProperty|, sorted from those that contain
-  // the most properties to those that contain the least.
-  static const nsCSSPropertyID * ShorthandsContaining(nsCSSPropertyID aProperty) {
-    MOZ_ASSERT(gShorthandsContainingPool, "uninitialized");
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
-               "out of range");
-    return gShorthandsContainingTable[aProperty];
-  }
-private:
-  // gShorthandsContainingTable is an array of the return values for
-  // ShorthandsContaining (arrays of nsCSSPropertyID terminated by
-  // eCSSProperty_UNKNOWN) pointing into memory in
-  // gShorthandsContainingPool (which contains all of those arrays in a
-  // single allocation, and is the one pointer that should be |free|d).
-  static nsCSSPropertyID *gShorthandsContainingTable[eCSSProperty_COUNT_no_shorthands];
-  static nsCSSPropertyID* gShorthandsContainingPool;
-  static bool BuildShorthandsContainingTable();
-
-private:
-  static const size_t gPropertyCountInStruct[nsStyleStructID_Length];
-  static const size_t gPropertyIndexInStruct[eCSSProperty_COUNT_no_shorthands];
-public:
-  /**
-   * Return the number of properties that must be cascaded when
-   * nsRuleNode builds the nsStyle* for aSID.
-   */
-  static size_t PropertyCountInStruct(nsStyleStructID aSID) {
-    MOZ_ASSERT(0 <= aSID && aSID < nsStyleStructID_Length,
-               "out of range");
-    return gPropertyCountInStruct[aSID];
-  }
-  /**
-   * Return an index for aProperty that is unique within its SID and in
-   * the range 0 <= index < PropertyCountInStruct(aSID).
-   */
-  static size_t PropertyIndexInStruct(nsCSSPropertyID aProperty) {
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
-               "out of range");
-    return gPropertyIndexInStruct[aProperty];
-  }
-
-private:
-  // A table for logical property groups.  Indexes are
-  // nsCSSPropertyLogicalGroup values.
-  static const nsCSSPropertyID* const
-    kLogicalGroupTable[eCSSPropertyLogicalGroup_COUNT];
-
-public:
-  /**
-   * Returns an array of longhand physical properties which can be set by
-   * the argument, which must be a logical longhand property.  The returned
-   * array is terminated by an eCSSProperty_UNKNOWN value.  For example,
-   * given eCSSProperty_margin_block_start, returns an array of the four
-   * properties eCSSProperty_margin_top, eCSSProperty_margin_right,
-   * eCSSProperty_margin_bottom and eCSSProperty_margin_left, followed
-   * by the sentinel.
-   *
-   * When called with a property that has the CSS_PROPERTY_LOGICAL_AXIS
-   * flag, the returned array will have two values preceding the sentinel;
-   * otherwise it will have four.
-   *
-   * (Note that the running time of this function is proportional to the
-   * number of logical longhand properties that exist.  If we start
-   * getting too many of these properties, we should make kLogicalGroupTable
-   * be a simple array of eCSSProperty_COUNT length.)
-   */
-  static const nsCSSPropertyID* LogicalGroup(nsCSSPropertyID aProperty);
 
 private:
   static bool gPropertyEnabled[eCSSProperty_COUNT_with_aliases];

@@ -44,6 +44,13 @@ uint32_t AudioInputCubeb::sUserChannelCount = 0;
 
 void AudioInputCubeb::UpdateDeviceList()
 {
+  // We keep all the device names, but wipe the mappings and rebuild them.
+  // Do this first so that if cubeb has failed we've unmapped our devices
+  // before we early return. Otherwise we'd keep the old list.
+  for (auto& device_index : (*mDeviceIndexes)) {
+    device_index = -1; // unmapped
+  }
+
   cubeb* cubebContext = CubebUtils::GetCubebContext();
   if (!cubebContext) {
     return;
@@ -56,11 +63,6 @@ void AudioInputCubeb::UpdateDeviceList()
                                           &devices)) {
     return;
   }
-
-  for (auto& device_index : (*mDeviceIndexes)) {
-    device_index = -1; // unmapped
-  }
-  // We keep all the device names, but wipe the mappings and rebuild them
 
   // Calculate translation from existing mDevices to new devices. Note we
   // never end up with less devices than before, since people have

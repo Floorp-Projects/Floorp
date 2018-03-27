@@ -63,9 +63,7 @@ extern const char* const kCSSRawProperties[];
 
 // define an array of all CSS properties
 const char* const kCSSRawProperties[eCSSProperty_COUNT_with_aliases] = {
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
-                 stylestruct_, stylestructoffset_, animtype_)                 \
-  #name_,
+#define CSS_PROP(name_, ...) #name_,
 #define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"
 #undef CSS_PROP_LIST_INCLUDE_LOGICAL
@@ -84,12 +82,7 @@ static int32_t gPropertyTableRefCount;
 static nsStaticCaseInsensitiveNameTable* gPropertyTable;
 static nsStaticCaseInsensitiveNameTable* gFontDescTable;
 static nsStaticCaseInsensitiveNameTable* gCounterDescTable;
-static nsStaticCaseInsensitiveNameTable* gPredefinedCounterStyleTable;
 static nsDataHashtable<nsCStringHashKey,nsCSSPropertyID>* gPropertyIDLNameTable;
-
-/* static */ nsCSSPropertyID *
-  nsCSSProps::gShorthandsContainingTable[eCSSProperty_COUNT_no_shorthands];
-/* static */ nsCSSPropertyID* nsCSSProps::gShorthandsContainingPool = nullptr;
 
 static const char* const kCSSRawFontDescs[] = {
 #define CSS_FONT_DESC(name_, method_) #name_,
@@ -131,27 +124,6 @@ static const char* const kCSSRawPredefinedCounterStyles[] = {
   "ethiopic-numeric"
 };
 
-struct PropertyAndCount {
-  nsCSSPropertyID property;
-  uint32_t count;
-};
-
-static int
-SortPropertyAndCount(const void* s1, const void* s2, void *closure)
-{
-  const PropertyAndCount *pc1 = static_cast<const PropertyAndCount*>(s1);
-  const PropertyAndCount *pc2 = static_cast<const PropertyAndCount*>(s2);
-
-  // Primary sort by count (lowest to highest)
-  if (pc1->count != pc2->count) {
-    return AssertedCast<int32_t>(pc1->count) -
-           AssertedCast<int32_t>(pc2->count);
-  }
-
-  // Secondary sort by property index (highest to lowest)
-  return pc2->property - pc1->property;
-}
-
 // We need eCSSAliasCount so we can make gAliases nonzero size when there
 // are no aliases.
 enum {
@@ -188,7 +160,6 @@ nsCSSProps::AddRefTable(void)
     MOZ_ASSERT(!gPropertyTable, "pre existing array!");
     MOZ_ASSERT(!gFontDescTable, "pre existing array!");
     MOZ_ASSERT(!gCounterDescTable, "pre existing array!");
-    MOZ_ASSERT(!gPredefinedCounterStyleTable, "pre existing array!");
     MOZ_ASSERT(!gPropertyIDLNameTable, "pre existing array!");
 
     gPropertyTable = CreateStaticTable(
@@ -196,9 +167,6 @@ nsCSSProps::AddRefTable(void)
     gFontDescTable = CreateStaticTable(kCSSRawFontDescs, eCSSFontDesc_COUNT);
     gCounterDescTable = CreateStaticTable(
         kCSSRawCounterDescs, eCSSCounterDesc_COUNT);
-    gPredefinedCounterStyleTable = CreateStaticTable(
-        kCSSRawPredefinedCounterStyles,
-        ArrayLength(kCSSRawPredefinedCounterStyles));
 
     gPropertyIDLNameTable = new nsDataHashtable<nsCStringHashKey,nsCSSPropertyID>;
     for (nsCSSPropertyID p = nsCSSPropertyID(0);
@@ -208,8 +176,6 @@ nsCSSProps::AddRefTable(void)
         gPropertyIDLNameTable->Put(nsDependentCString(kIDLNameTable[p]), p);
       }
     }
-
-    BuildShorthandsContainingTable();
 
     static bool prefObserversInited = false;
     if (!prefObserversInited) {
@@ -221,8 +187,7 @@ nsCSSProps::AddRefTable(void)
                                        pref_);                                \
         }
 
-      #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
-                       kwtable_, stylestruct_, stylestructoffset_, animtype_) \
+      #define CSS_PROP(name_, id_, method_, flags_, pref_, ...) \
         OBSERVE_PROP(pref_, eCSSProperty_##id_)
       #define CSS_PROP_LIST_INCLUDE_LOGICAL
       #include "nsCSSPropList.h"
@@ -313,151 +278,6 @@ nsCSSProps::AddRefTable(void)
 
 #undef  DEBUG_SHORTHANDS_CONTAINING
 
-bool
-nsCSSProps::BuildShorthandsContainingTable()
-{
-  uint32_t occurrenceCounts[eCSSProperty_COUNT_no_shorthands];
-  memset(occurrenceCounts, 0, sizeof(occurrenceCounts));
-  PropertyAndCount subpropCounts[eCSSProperty_COUNT -
-                                   eCSSProperty_COUNT_no_shorthands];
-  for (nsCSSPropertyID shorthand = eCSSProperty_COUNT_no_shorthands;
-       shorthand < eCSSProperty_COUNT;
-       shorthand = nsCSSPropertyID(shorthand + 1)) {
-#ifdef DEBUG_SHORTHANDS_CONTAINING
-    printf("Considering shorthand property '%s'.\n",
-           nsCSSProps::GetStringValue(shorthand).get());
-#endif
-    PropertyAndCount &subpropCountsEntry =
-      subpropCounts[shorthand - eCSSProperty_COUNT_no_shorthands];
-    subpropCountsEntry.property = shorthand;
-    subpropCountsEntry.count = 0;
-    for (const nsCSSPropertyID* subprops = SubpropertyEntryFor(shorthand);
-         *subprops != eCSSProperty_UNKNOWN;
-         ++subprops) {
-      MOZ_ASSERT(0 <= *subprops && *subprops < eCSSProperty_COUNT_no_shorthands,
-                 "subproperty must be a longhand");
-      ++occurrenceCounts[*subprops];
-      ++subpropCountsEntry.count;
-    }
-  }
-
-  uint32_t poolEntries = 0;
-  for (nsCSSPropertyID longhand = nsCSSPropertyID(0);
-       longhand < eCSSProperty_COUNT_no_shorthands;
-       longhand = nsCSSPropertyID(longhand + 1)) {
-    uint32_t count = occurrenceCounts[longhand];
-    if (count > 0)
-      // leave room for terminator
-      poolEntries += count + 1;
-  }
-
-  gShorthandsContainingPool = new nsCSSPropertyID[poolEntries];
-  if (!gShorthandsContainingPool)
-    return false;
-
-  // Initialize all entries to point to their null-terminator.
-  {
-    nsCSSPropertyID *poolCursor = gShorthandsContainingPool - 1;
-    nsCSSPropertyID *lastTerminator =
-      gShorthandsContainingPool + poolEntries - 1;
-    for (nsCSSPropertyID longhand = nsCSSPropertyID(0);
-         longhand < eCSSProperty_COUNT_no_shorthands;
-         longhand = nsCSSPropertyID(longhand + 1)) {
-      uint32_t count = occurrenceCounts[longhand];
-      if (count > 0) {
-        poolCursor += count + 1;
-        gShorthandsContainingTable[longhand] = poolCursor;
-        *poolCursor = eCSSProperty_UNKNOWN;
-      } else {
-        gShorthandsContainingTable[longhand] = lastTerminator;
-      }
-    }
-    MOZ_ASSERT(poolCursor == lastTerminator, "miscalculation");
-  }
-
-  // Sort with lowest count at the start and highest at the end, and
-  // within counts sort in reverse property index order.
-  NS_QuickSort(&subpropCounts, ArrayLength(subpropCounts),
-               sizeof(subpropCounts[0]), SortPropertyAndCount, nullptr);
-
-  // Fill in all the entries in gShorthandsContainingTable
-  for (const PropertyAndCount *shorthandAndCount = subpropCounts,
-                           *shorthandAndCountEnd = ArrayEnd(subpropCounts);
-       shorthandAndCount < shorthandAndCountEnd;
-       ++shorthandAndCount) {
-#ifdef DEBUG_SHORTHANDS_CONTAINING
-    printf("Entering %u subprops for '%s'.\n",
-           shorthandAndCount->count,
-           nsCSSProps::GetStringValue(shorthandAndCount->property).get());
-#endif
-    for (const nsCSSPropertyID* subprops =
-           SubpropertyEntryFor(shorthandAndCount->property);
-         *subprops != eCSSProperty_UNKNOWN;
-         ++subprops) {
-      *(--gShorthandsContainingTable[*subprops]) = shorthandAndCount->property;
-    }
-  }
-
-#ifdef DEBUG_SHORTHANDS_CONTAINING
-  for (nsCSSPropertyID longhand = nsCSSPropertyID(0);
-       longhand < eCSSProperty_COUNT_no_shorthands;
-       longhand = nsCSSPropertyID(longhand + 1)) {
-    printf("Property %s is in %d shorthands.\n",
-           nsCSSProps::GetStringValue(longhand).get(),
-           occurrenceCounts[longhand]);
-    for (const nsCSSPropertyID *shorthands = ShorthandsContaining(longhand);
-         *shorthands != eCSSProperty_UNKNOWN;
-         ++shorthands) {
-      printf("  %s\n", nsCSSProps::GetStringValue(*shorthands).get());
-    }
-  }
-#endif
-
-#ifdef DEBUG
-  // Verify that all values that should be are present.
-  for (nsCSSPropertyID shorthand = eCSSProperty_COUNT_no_shorthands;
-       shorthand < eCSSProperty_COUNT;
-       shorthand = nsCSSPropertyID(shorthand + 1)) {
-    for (const nsCSSPropertyID* subprops = SubpropertyEntryFor(shorthand);
-         *subprops != eCSSProperty_UNKNOWN;
-         ++subprops) {
-      uint32_t count = 0;
-      for (const nsCSSPropertyID *shcont = ShorthandsContaining(*subprops);
-           *shcont != eCSSProperty_UNKNOWN;
-           ++shcont) {
-        if (*shcont == shorthand)
-          ++count;
-      }
-      MOZ_ASSERT(count == 1,
-                 "subproperty of shorthand should have shorthand"
-                 " in its ShorthandsContaining() table");
-    }
-  }
-
-  // Verify that there are no extra values
-  for (nsCSSPropertyID longhand = nsCSSPropertyID(0);
-       longhand < eCSSProperty_COUNT_no_shorthands;
-       longhand = nsCSSPropertyID(longhand + 1)) {
-    for (const nsCSSPropertyID *shorthands = ShorthandsContaining(longhand);
-         *shorthands != eCSSProperty_UNKNOWN;
-         ++shorthands) {
-      uint32_t count = 0;
-      for (const nsCSSPropertyID* subprops = SubpropertyEntryFor(*shorthands);
-           *subprops != eCSSProperty_UNKNOWN;
-           ++subprops) {
-        if (*subprops == longhand)
-          ++count;
-      }
-      MOZ_ASSERT(count == 1,
-                 "longhand should be in subproperty table of "
-                 "property in its ShorthandsContaining() table");
-    }
-  }
-#endif
-
-  return true;
-}
-
 void
 nsCSSProps::ReleaseTable(void)
 {
@@ -471,32 +291,9 @@ nsCSSProps::ReleaseTable(void)
     delete gCounterDescTable;
     gCounterDescTable = nullptr;
 
-    delete gPredefinedCounterStyleTable;
-    gPredefinedCounterStyleTable = nullptr;
-
     delete gPropertyIDLNameTable;
     gPropertyIDLNameTable = nullptr;
-
-    delete [] gShorthandsContainingPool;
-    gShorthandsContainingPool = nullptr;
   }
-}
-
-/* static */ bool
-nsCSSProps::IsInherited(nsCSSPropertyID aProperty)
-{
-  MOZ_ASSERT(!IsShorthand(aProperty));
-
-  nsStyleStructID sid = kSIDTable[aProperty];
-  return ComputedStyle::IsInherited(sid);
-}
-
-/* static */ bool
-nsCSSProps::IsCustomPropertyName(const nsACString& aProperty)
-{
-  // Custom properties don't need to have a character after the "--" prefix.
-  return aProperty.Length() >= CSS_CUSTOM_NAME_PREFIX_LENGTH &&
-         StringBeginsWith(aProperty, NS_LITERAL_CSTRING("--"));
 }
 
 /* static */ bool
@@ -504,39 +301,6 @@ nsCSSProps::IsCustomPropertyName(const nsAString& aProperty)
 {
   return aProperty.Length() >= CSS_CUSTOM_NAME_PREFIX_LENGTH &&
          StringBeginsWith(aProperty, NS_LITERAL_STRING("--"));
-}
-
-nsCSSPropertyID
-nsCSSProps::LookupProperty(const nsACString& aProperty,
-                           EnabledState aEnabled)
-{
-  MOZ_ASSERT(gPropertyTable, "no lookup table, needs addref");
-
-  if (IsCustomPropertyName(aProperty)) {
-    return eCSSPropertyExtra_variable;
-  }
-
-  nsCSSPropertyID res = nsCSSPropertyID(gPropertyTable->Lookup(aProperty));
-  if (MOZ_LIKELY(res < eCSSProperty_COUNT)) {
-    if (res != eCSSProperty_UNKNOWN && !IsEnabled(res, aEnabled)) {
-      res = eCSSProperty_UNKNOWN;
-    }
-    return res;
-  }
-  MOZ_ASSERT(eCSSAliasCount != 0,
-             "'res' must be an alias at this point so we better have some!");
-  // We intentionally don't support CSSEnabledState::eInUASheets or
-  // CSSEnabledState::eInChrome for aliases yet because it's unlikely
-  // there will be a need for it.
-  if (IsEnabled(res) || aEnabled == CSSEnabledState::eIgnoreEnabledState) {
-    res = gAliases[res - eCSSProperty_COUNT];
-    MOZ_ASSERT(0 <= res && res < eCSSProperty_COUNT,
-               "aliases must not point to other aliases");
-    if (IsEnabled(res) || aEnabled == CSSEnabledState::eIgnoreEnabledState) {
-      return res;
-    }
-  }
-  return eCSSProperty_UNKNOWN;
 }
 
 nsCSSPropertyID
@@ -598,18 +362,6 @@ nsCSSProps::LookupPropertyByIDLName(const nsAString& aPropertyIDLName,
 }
 
 nsCSSFontDesc
-nsCSSProps::LookupFontDesc(const nsACString& aFontDesc)
-{
-  MOZ_ASSERT(gFontDescTable, "no lookup table, needs addref");
-  nsCSSFontDesc which = nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
-
-  if (which == eCSSFontDesc_Display && !StylePrefs::sFontDisplayEnabled) {
-    which = eCSSFontDesc_UNKNOWN;
-  }
-  return which;
-}
-
-nsCSSFontDesc
 nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
 {
   MOZ_ASSERT(gFontDescTable, "no lookup table, needs addref");
@@ -619,38 +371,6 @@ nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
     which = eCSSFontDesc_UNKNOWN;
   }
   return which;
-}
-
-nsCSSCounterDesc
-nsCSSProps::LookupCounterDesc(const nsAString& aProperty)
-{
-  MOZ_ASSERT(gCounterDescTable, "no lookup table, needs addref");
-  return nsCSSCounterDesc(gCounterDescTable->Lookup(aProperty));
-}
-
-nsCSSCounterDesc
-nsCSSProps::LookupCounterDesc(const nsACString& aProperty)
-{
-  MOZ_ASSERT(gCounterDescTable, "no lookup table, needs addref");
-  return nsCSSCounterDesc(gCounterDescTable->Lookup(aProperty));
-}
-
-bool
-nsCSSProps::IsPredefinedCounterStyle(const nsAString& aStyle)
-{
-  MOZ_ASSERT(gPredefinedCounterStyleTable,
-             "no lookup table, needs addref");
-  return gPredefinedCounterStyleTable->Lookup(aStyle) !=
-    nsStaticCaseInsensitiveNameTable::NOT_FOUND;
-}
-
-bool
-nsCSSProps::IsPredefinedCounterStyle(const nsACString& aStyle)
-{
-  MOZ_ASSERT(gPredefinedCounterStyleTable,
-             "no lookup table, needs addref");
-  return gPredefinedCounterStyleTable->Lookup(aStyle) !=
-    nsStaticCaseInsensitiveNameTable::NOT_FOUND;
 }
 
 const nsCString&
@@ -2491,9 +2211,8 @@ nsCSSProps::ValueToKeyword(int32_t aValue, const KTableEntry aTable[])
 
 /* static */ const KTableEntry* const
 nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
-  #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
-                   kwtable_, stylestruct_, stylestructoffset_, animtype_) \
-    kwtable_,
+  #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, \
+                   kwtable_, ...) kwtable_,
   #define CSS_PROP_LIST_INCLUDE_LOGICAL
   #include "nsCSSPropList.h"
   #undef CSS_PROP_LIST_INCLUDE_LOGICAL
@@ -2539,8 +2258,8 @@ bool nsCSSProps::GetColorName(int32_t aPropValue, nsCString &aStr)
 }
 
 const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = {
-    #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
-                     kwtable_, stylestruct_, stylestructoffset_, animtype_) \
+    #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, \
+                     kwtable_, stylestruct_, ...) \
         eStyleStruct_##stylestruct_,
     #define CSS_PROP_LIST_INCLUDE_LOGICAL
 
@@ -2552,8 +2271,8 @@ const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = 
 
 const nsStyleAnimType
 nsCSSProps::kAnimTypeTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
-                 stylestruct_, stylestructoffset_, animtype_)                 \
+#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, \
+                 kwtable_, stylestruct_, animtype_)                 \
   animtype_,
 #define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"
@@ -2561,21 +2280,8 @@ nsCSSProps::kAnimTypeTable[eCSSProperty_COUNT_no_shorthands] = {
 #undef CSS_PROP
 };
 
-const ptrdiff_t
-nsCSSProps::kStyleStructOffsetTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
-                 stylestruct_, stylestructoffset_, animtype_)                 \
-  stylestructoffset_,
-#define CSS_PROP_LIST_INCLUDE_LOGICAL
-#include "nsCSSPropList.h"
-#undef CSS_PROP_LIST_INCLUDE_LOGICAL
-#undef CSS_PROP
-};
-
 const uint32_t nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
-                 stylestruct_, stylestructoffset_, animtype_)                 \
-  flags_,
+#define CSS_PROP(name_, id_, method_, flags_, ...) flags_,
 #define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"
 #undef CSS_PROP_LIST_INCLUDE_LOGICAL
@@ -2588,9 +2294,7 @@ const uint32_t nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 static const nsCSSPropertyID gAllSubpropTable[] = {
 #define CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
 #define CSS_PROP_LIST_INCLUDE_LOGICAL
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
-                 stylestruct_, stylestructoffset_, animtype_)                 \
-  eCSSProperty_##id_,
+#define CSS_PROP(name_, id_, ...) eCSSProperty_##id_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP
 #undef CSS_PROP_LIST_INCLUDE_LOGICAL
@@ -3036,278 +2740,6 @@ nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shortha
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
 };
 
-
-static const nsCSSPropertyID gOffsetLogicalGroupTable[] = {
-  eCSSProperty_top,
-  eCSSProperty_right,
-  eCSSProperty_bottom,
-  eCSSProperty_left,
-  eCSSProperty_UNKNOWN
-};
-
-static const nsCSSPropertyID gMaxSizeLogicalGroupTable[] = {
-  eCSSProperty_max_height,
-  eCSSProperty_max_width,
-  eCSSProperty_UNKNOWN
-};
-
-static const nsCSSPropertyID gMinSizeLogicalGroupTable[] = {
-  eCSSProperty_min_height,
-  eCSSProperty_min_width,
-  eCSSProperty_UNKNOWN
-};
-
-static const nsCSSPropertyID gSizeLogicalGroupTable[] = {
-  eCSSProperty_height,
-  eCSSProperty_width,
-  eCSSProperty_UNKNOWN
-};
-
-const nsCSSPropertyID* const
-nsCSSProps::kLogicalGroupTable[eCSSPropertyLogicalGroup_COUNT] = {
-#define CSS_PROP_LOGICAL_GROUP_SHORTHAND(id_) g##id_##SubpropTable,
-#define CSS_PROP_LOGICAL_GROUP_AXIS(name_) g##name_##LogicalGroupTable,
-#define CSS_PROP_LOGICAL_GROUP_BOX(name_) g##name_##LogicalGroupTable,
-#include "nsCSSPropLogicalGroupList.h"
-#undef CSS_PROP_LOGICAL_GROUP_BOX
-#undef CSS_PROP_LOGICAL_GROUP_AXIS
-#undef CSS_PROP_LOGICAL_GROUP_SHORTHAND
-};
-
-// Mapping of logical longhand properties to their logical group (which
-// represents the physical longhands the logical properties an correspond
-// to).  The format is pairs of values, where the first is the logical
-// longhand property (an nsCSSPropertyID) and the second is the logical group
-// (an nsCSSPropertyLogicalGroup), stored in a flat array (like KTableEntry
-// arrays).
-static const int gLogicalGroupMappingTable[] = {
-#define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, \
-                         kwtable_, group_, stylestruct_,                    \
-                         stylestructoffset_, animtype_)                     \
-  eCSSProperty_##id_, eCSSPropertyLogicalGroup_##group_,
-#include "nsCSSPropList.h"
-#undef CSS_PROP_LOGICAL
-};
-
-/* static */ const nsCSSPropertyID*
-nsCSSProps::LogicalGroup(nsCSSPropertyID aProperty)
-{
-  MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
-             "out of range");
-  MOZ_ASSERT(nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOGICAL),
-             "aProperty must be a logical longhand property");
-
-  for (size_t i = 0; i < ArrayLength(gLogicalGroupMappingTable); i += 2) {
-    if (gLogicalGroupMappingTable[i] == aProperty) {
-      return kLogicalGroupTable[gLogicalGroupMappingTable[i + 1]];
-    }
-  }
-
-  MOZ_ASSERT(false, "missing gLogicalGroupMappingTable entry");
-  return nullptr;
-}
-
-
-#define ENUM_DATA_FOR_PROPERTY(name_, id_, method_, flags_, pref_,          \
-                               parsevariant_, kwtable_, stylestructoffset_, \
-                               animtype_)                                   \
-  ePropertyIndex_for_##id_,
-
-// The order of these enums must match the g*Flags arrays in nsRuleNode.cpp.
-
-enum FontCheckCounter {
-  #define CSS_PROP_FONT ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_FONT
-  ePropertyCount_for_Font
-};
-
-enum DisplayCheckCounter {
-  #define CSS_PROP_DISPLAY ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_DISPLAY
-  ePropertyCount_for_Display
-};
-
-enum VisibilityCheckCounter {
-  #define CSS_PROP_VISIBILITY ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_VISIBILITY
-  ePropertyCount_for_Visibility
-};
-
-enum MarginCheckCounter {
-  #define CSS_PROP_MARGIN ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_MARGIN
-  ePropertyCount_for_Margin
-};
-
-enum BorderCheckCounter {
-  #define CSS_PROP_BORDER ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_BORDER
-  ePropertyCount_for_Border
-};
-
-enum PaddingCheckCounter {
-  #define CSS_PROP_PADDING ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_PADDING
-  ePropertyCount_for_Padding
-};
-
-enum OutlineCheckCounter {
-  #define CSS_PROP_OUTLINE ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_OUTLINE
-  ePropertyCount_for_Outline
-};
-
-enum ListCheckCounter {
-  #define CSS_PROP_LIST ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_LIST
-  ePropertyCount_for_List
-};
-
-enum ColorCheckCounter {
-  #define CSS_PROP_COLOR ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_COLOR
-  ePropertyCount_for_Color
-};
-
-enum BackgroundCheckCounter {
-  #define CSS_PROP_BACKGROUND ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_BACKGROUND
-  ePropertyCount_for_Background
-};
-
-enum PositionCheckCounter {
-  #define CSS_PROP_POSITION ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_POSITION
-  ePropertyCount_for_Position
-};
-
-enum TableCheckCounter {
-  #define CSS_PROP_TABLE ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_TABLE
-  ePropertyCount_for_Table
-};
-
-enum TableBorderCheckCounter {
-  #define CSS_PROP_TABLEBORDER ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_TABLEBORDER
-  ePropertyCount_for_TableBorder
-};
-
-enum ContentCheckCounter {
-  #define CSS_PROP_CONTENT ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_CONTENT
-  ePropertyCount_for_Content
-};
-
-enum TextCheckCounter {
-  #define CSS_PROP_TEXT ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_TEXT
-  ePropertyCount_for_Text
-};
-
-enum TextResetCheckCounter {
-  #define CSS_PROP_TEXTRESET ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_TEXTRESET
-  ePropertyCount_for_TextReset
-};
-
-enum UserInterfaceCheckCounter {
-  #define CSS_PROP_USERINTERFACE ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_USERINTERFACE
-  ePropertyCount_for_UserInterface
-};
-
-enum UIResetCheckCounter {
-  #define CSS_PROP_UIRESET ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_UIRESET
-  ePropertyCount_for_UIReset
-};
-
-enum XULCheckCounter {
-  #define CSS_PROP_XUL ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_XUL
-  ePropertyCount_for_XUL
-};
-
-enum SVGCheckCounter {
-  #define CSS_PROP_SVG ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_SVG
-  ePropertyCount_for_SVG
-};
-
-enum SVGResetCheckCounter {
-  #define CSS_PROP_SVGRESET ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_SVGRESET
-  ePropertyCount_for_SVGReset
-};
-
-enum ColumnCheckCounter {
-  #define CSS_PROP_COLUMN ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_COLUMN
-  ePropertyCount_for_Column
-};
-
-enum VariablesCheckCounter {
-  #define CSS_PROP_VARIABLES ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_VARIABLES
-  ePropertyCount_for_Variables
-};
-
-enum EffectsCheckCounter {
-  #define CSS_PROP_EFFECTS ENUM_DATA_FOR_PROPERTY
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_EFFECTS
-  ePropertyCount_for_Effects
-};
-
-#undef ENUM_DATA_FOR_PROPERTY
-
-/* static */ const size_t
-nsCSSProps::gPropertyCountInStruct[nsStyleStructID_Length] = {
-  #define STYLE_STRUCT(name) ePropertyCount_for_##name,
-  #include "nsStyleStructList.h"
-  #undef STYLE_STRUCT
-};
-
-/* static */ const size_t
-nsCSSProps::gPropertyIndexInStruct[eCSSProperty_COUNT_no_shorthands] = {
-
-  #define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, \
-                           kwtable_, group_, stylestruct_,                    \
-                           stylestructoffset_, animtype_)                     \
-      size_t(-1),
-  #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
-                   kwtable_, stylestruct_, stylestructoffset_, animtype_) \
-    ePropertyIndex_for_##id_,
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP
-  #undef CSS_PROP_LOGICAL
-
-};
-
 /* static */ bool
 nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
   // If the property has any "ENABLED_IN" flag set, it is disabled by
@@ -3318,8 +2750,7 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
   #define IS_ENABLED_BY_DEFAULT(flags_) \
     (!((flags_) & CSS_PROPERTY_ENABLED_MASK))
 
-  #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
-                   kwtable_, stylestruct_, stylestructoffset_, animtype_) \
+  #define CSS_PROP(name_, id_, method_, flags_, ...) \
     IS_ENABLED_BY_DEFAULT(flags_),
   #define CSS_PROP_LIST_INCLUDE_LOGICAL
   #include "nsCSSPropList.h"
@@ -3345,8 +2776,7 @@ nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
 nsCSSProps::gPropertyUseCounter[eCSSProperty_COUNT_no_shorthands] = {
   #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) privatename_
   #define CSS_PROP_LIST_INCLUDE_LOGICAL
-  #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
-                   kwtable_, stylestruct_, stylestructoffset_, animtype_) \
+  #define CSS_PROP(name_, id_, method_, ...) \
     static_cast<UseCounter>(USE_COUNTER_FOR_CSS_PROPERTY_##method_),
   #include "nsCSSPropList.h"
   #undef CSS_PROP
@@ -3356,45 +2786,12 @@ nsCSSProps::gPropertyUseCounter[eCSSProperty_COUNT_no_shorthands] = {
 
 const uint32_t
 nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
-                 stylestruct_, stylestructoffset_, animtype_)                 \
+#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, ...) \
   parsevariant_,
 #define CSS_PROP_LIST_INCLUDE_LOGICAL
 #include "nsCSSPropList.h"
 #undef CSS_PROP_LIST_INCLUDE_LOGICAL
 #undef CSS_PROP
 };
-
-// Check that all logical property flags are used appropriately.
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,         \
-                 kwtable_, stylestruct_, stylestructoffset_, animtype_)     \
-  static_assert(!((flags_) & CSS_PROPERTY_LOGICAL),                         \
-                "only properties defined with CSS_PROP_LOGICAL can use "    \
-                "the CSS_PROPERTY_LOGICAL flag");                           \
-  static_assert(!((flags_) & CSS_PROPERTY_LOGICAL_AXIS),                    \
-                "only properties defined with CSS_PROP_LOGICAL can use "    \
-                "the CSS_PROPERTY_LOGICAL_AXIS flag");                      \
-  static_assert(!((flags_) & CSS_PROPERTY_LOGICAL_BLOCK_AXIS),              \
-                "only properties defined with CSS_PROP_LOGICAL can use "    \
-                "the CSS_PROPERTY_LOGICAL_BLOCK_AXIS flag");                \
-  static_assert(!((flags_) & CSS_PROPERTY_LOGICAL_END_EDGE),                \
-                "only properties defined with CSS_PROP_LOGICAL can use "    \
-                "the CSS_PROPERTY_LOGICAL_END_EDGE flag");
-#define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, \
-                         kwtable_, group_, stylestruct_,                    \
-                         stylestructoffset_, animtype_)                     \
-  static_assert((flags_) & CSS_PROPERTY_LOGICAL,                            \
-                "properties defined with CSS_PROP_LOGICAL must also use "   \
-                "the CSS_PROPERTY_LOGICAL flag");                           \
-  static_assert(!((flags_) & CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED),    \
-                "CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED has no effect "  \
-                "on logical properties");                                   \
-  static_assert(!(((flags_) & CSS_PROPERTY_LOGICAL_AXIS) &&                 \
-                  ((flags_) & CSS_PROPERTY_LOGICAL_END_EDGE)),              \
-                "CSS_PROPERTY_LOGICAL_END_EDGE makes no sense when used "   \
-                "with CSS_PROPERTY_LOGICAL_AXIS");
-#include "nsCSSPropList.h"
-#undef CSS_PROP_LOGICAL
-#undef CSS_PROP
 
 #include "nsCSSPropsGenerated.inc"

@@ -124,7 +124,7 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
   // nested ScrollingLayersHelper may rely on things like TopmostScrollId and
   // TopmostClipId, so now we need to push at most two things onto the stack.
 
-  wr::WrScrollId rootId = wr::WrScrollId { 0 };
+  wr::WrScrollId rootId = wr::WrScrollId::RootScrollNode();
   wr::WrScrollId leafmostId = ids.first.valueOr(rootId);
 
   FrameMetrics::ViewID viewId = aItem->GetActiveScrolledRoot()
@@ -301,7 +301,7 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
     MOZ_ASSERT(!ancestorIds.second);
     FrameMetrics::ViewID viewId = aChain->mASR ? aChain->mASR->GetViewId() : FrameMetrics::NULL_SCROLL_ID;
 
-    wr::WrScrollId rootId = wr::WrScrollId { 0 };
+    wr::WrScrollId rootId = wr::WrScrollId::RootScrollNode();
     auto scrollId = mBuilder->GetScrollIdForDefinedScrollLayer(viewId).valueOr(rootId);
     if (mBuilder->TopmostScrollId() == scrollId) {
       if (mBuilder->TopmostIsClip()) {

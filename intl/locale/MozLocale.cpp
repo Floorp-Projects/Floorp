@@ -63,7 +63,7 @@ Locale::Locale(const nsACString& aLocale)
       mIsValid = false;
       return;
     } else if (position == 6) {
-      mPrivateUse.AppendElement(subTag);
+      ToLowerCase(*mPrivateUse.AppendElement(subTag));
     } else if (subTag.LowerCaseEqualsLiteral("x")) {
       position = 6;
     } else if (position == 0) {
