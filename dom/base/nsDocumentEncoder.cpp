@@ -23,7 +23,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsRange.h"
-#include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
@@ -158,7 +157,7 @@ protected:
   };
 
   nsCOMPtr<nsIDocument>          mDocument;
-  nsCOMPtr<nsISelection>         mSelection;
+  RefPtr<Selection>              mSelection;
   RefPtr<nsRange>              mRange;
   nsCOMPtr<nsINode>              mNode;
   nsCOMPtr<nsIOutputStream>      mStream;
@@ -284,7 +283,7 @@ nsDocumentEncoder::SetWrapColumn(uint32_t aWC)
 NS_IMETHODIMP
 nsDocumentEncoder::SetSelection(nsISelection* aSelection)
 {
-  mSelection = aSelection;
+  mSelection = aSelection->AsSelection();
   return NS_OK;
 }
 
@@ -967,16 +966,12 @@ nsDocumentEncoder::EncodeToStringWithMaxLength(uint32_t aMaxLength,
     mFlags, mWrapColumn, mEncoding, mIsCopying, rewriteEncodingDeclaration, &mNeedsPreformatScanning);
 
   if (mSelection) {
-    nsCOMPtr<nsIDOMRange> range;
-    int32_t i, count = 0;
-
-    rv = mSelection->GetRangeCount(&count);
-    NS_ENSURE_SUCCESS(rv, rv);
+    uint32_t count = mSelection->RangeCount();
 
     nsCOMPtr<nsIDOMNode> node, prevNode;
     uint32_t firstRangeStartDepth = 0;
-    for (i = 0; i < count; i++) {
-      mSelection->GetRangeAt(i, getter_AddRefs(range));
+    for (uint32_t i = 0; i < count; ++i) {
+      RefPtr<nsRange> range = mSelection->GetRangeAt(i);
 
       // Bug 236546: newlines not added when copying table cells into clipboard
       // Each selected cell shows up as a range containing a row with a single cell
@@ -1174,7 +1169,7 @@ protected:
     kEnd
   };
 
-  nsresult PromoteRange(nsIDOMRange *inRange);
+  nsresult PromoteRange(nsRange* inRange);
   nsresult PromoteAncestorChain(nsCOMPtr<nsIDOMNode> *ioNode,
                                 int32_t *ioStartOffset,
                                 int32_t *ioEndOffset);
@@ -1249,22 +1244,23 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   if (!aSelection)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDOMRange> range;
   nsCOMPtr<nsIDOMNode> commonParent;
   Selection* selection = aSelection->AsSelection();
   uint32_t rangeCount = selection->RangeCount();
 
   // if selection is uninitialized return
-  if (!rangeCount)
+  if (!rangeCount) {
     return NS_ERROR_FAILURE;
+  }
 
   // we'll just use the common parent of the first range.  Implicit assumption
   // here that multi-range selections are table cell selections, in which case
   // the common parent is somewhere in the table and we don't really care where.
-  nsresult rv = aSelection->GetRangeAt(0, getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!range)
+  RefPtr<nsRange> range = selection->GetRangeAt(0);
+  if (!range) {
+    // XXXbz can this happen given rangeCount > 0?
     return NS_ERROR_NULL_POINTER;
+  }
   range->GetCommonAncestorContainer(getter_AddRefs(commonParent));
 
   for (nsCOMPtr<nsIContent> selContent(do_QueryInterface(commonParent));
@@ -1323,7 +1319,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   // normalize selection if we are not in a widget
   if (mIsTextWidget)
   {
-    mSelection = aSelection;
+    mSelection = selection;
     mMimeType.AssignLiteral("text/plain");
     return NS_OK;
   }
@@ -1335,7 +1331,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
   if (!(htmlDoc && mDocument->IsHTMLDocument())) {
     mIsTextWidget = true;
-    mSelection = aSelection;
+    mSelection = selection;
     // mMimeType is set to text/plain when encoding starts.
     return NS_OK;
   }
@@ -1349,17 +1345,15 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
     range = selection->GetRangeAt(rangeIdx);
     NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIDOMRange> myRange;
-    range->CloneRange(getter_AddRefs(myRange));
-    NS_ENSURE_TRUE(myRange, NS_ERROR_FAILURE);
+    RefPtr<nsRange> myRange = range->CloneRange();
+    MOZ_ASSERT(myRange);
 
     // adjust range to include any ancestors who's children are entirely selected
-    rv = PromoteRange(myRange);
+    nsresult rv = PromoteRange(myRange);
     NS_ENSURE_SUCCESS(rv, rv);
 
     ErrorResult result;
-    nsRange* r = static_cast<nsRange*>(myRange.get());
-    mSelection->AsSelection()->AddRangeInternal(*r, mDocument, result);
+    mSelection->AddRangeInternal(*myRange, mDocument, result);
     rv = result.StealNSResult();
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1475,12 +1469,8 @@ nsHTMLCopyEncoder::IncludeInContext(nsINode *aNode)
 
 
 nsresult
-nsHTMLCopyEncoder::PromoteRange(nsIDOMRange *inRange)
+nsHTMLCopyEncoder::PromoteRange(nsRange* inRange)
 {
-  RefPtr<nsRange> range = static_cast<nsRange*>(inRange);
-  if (!range) {
-    return NS_ERROR_NULL_POINTER;
-  }
   nsresult rv;
   nsCOMPtr<nsIDOMNode> startNode, endNode, common;
   uint32_t startOffset, endOffset;
