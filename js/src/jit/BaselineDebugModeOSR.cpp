@@ -344,7 +344,7 @@ SpewPatchStubFrame(ICStub* oldStub, ICStub* newStub)
 }
 
 static void
-PatchBaselineFramesForDebugMode(JSContext* cx, const CooperatingContext& target,
+PatchBaselineFramesForDebugMode(JSContext* cx,
                                 const Debugger::ExecutionObservableSet& obs,
                                 const ActivationIterator& activation,
                                 DebugModeOSREntryVector& entries, size_t* start)
@@ -420,7 +420,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx, const CooperatingContext& target,
                 uint8_t* retAddr = bl->returnAddressForIC(bl->icEntryFromPCOffset(pcOffset));
                 SpewPatchBaselineFrame(prev->returnAddress(), retAddr, script, kind, pc);
                 DebugModeOSRVolatileJitFrameIter::forwardLiveIterators(
-                    target, prev->returnAddress(), retAddr);
+                    cx, prev->returnAddress(), retAddr);
                 prev->setReturnAddress(retAddr);
                 entryIndex++;
                 break;
@@ -449,7 +449,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx, const CooperatingContext& target,
                 SpewPatchBaselineFrameFromExceptionHandler(prev->returnAddress(), retAddr,
                                                            script, pc);
                 DebugModeOSRVolatileJitFrameIter::forwardLiveIterators(
-                    target, prev->returnAddress(), retAddr);
+                    cx, prev->returnAddress(), retAddr);
                 prev->setReturnAddress(retAddr);
                 entryIndex++;
                 break;
@@ -850,15 +850,13 @@ jit::RecompileOnStackBaselineScriptsForDebugMode(JSContext* cx,
     // frames.
     Vector<DebugModeOSREntry> entries(cx);
 
-    for (const CooperatingContext& target : cx->runtime()->cooperatingContexts()) {
-        for (ActivationIterator iter(cx, target); !iter.done(); ++iter) {
-            if (iter->isJit()) {
-                if (!CollectJitStackScripts(cx, obs, iter, entries))
-                    return false;
-            } else if (iter->isInterpreter()) {
-                if (!CollectInterpreterStackScripts(cx, obs, iter, entries))
-                    return false;
-            }
+    for (ActivationIterator iter(cx); !iter.done(); ++iter) {
+        if (iter->isJit()) {
+            if (!CollectJitStackScripts(cx, obs, iter, entries))
+                return false;
+        } else if (iter->isInterpreter()) {
+            if (!CollectInterpreterStackScripts(cx, obs, iter, entries))
+                return false;
         }
     }
 
@@ -907,13 +905,11 @@ jit::RecompileOnStackBaselineScriptsForDebugMode(JSContext* cx,
     }
 
     size_t processed = 0;
-    for (const CooperatingContext& target : cx->runtime()->cooperatingContexts()) {
-        for (ActivationIterator iter(cx, target); !iter.done(); ++iter) {
-            if (iter->isJit())
-                PatchBaselineFramesForDebugMode(cx, target, obs, iter, entries, &processed);
-            else if (iter->isInterpreter())
-                SkipInterpreterFrameEntries(obs, iter, &processed);
-        }
+    for (ActivationIterator iter(cx); !iter.done(); ++iter) {
+        if (iter->isJit())
+            PatchBaselineFramesForDebugMode(cx, obs, iter, entries, &processed);
+        else if (iter->isInterpreter())
+            SkipInterpreterFrameEntries(obs, iter, &processed);
     }
     MOZ_ASSERT(processed == entries.length());
 
@@ -1182,10 +1178,10 @@ JitRuntime::generateBaselineDebugModeOSRHandler(JSContext* cx, uint32_t* noFrame
 }
 
 /* static */ void
-DebugModeOSRVolatileJitFrameIter::forwardLiveIterators(const CooperatingContext& cx,
+DebugModeOSRVolatileJitFrameIter::forwardLiveIterators(JSContext* cx,
                                                        uint8_t* oldAddr, uint8_t* newAddr)
 {
     DebugModeOSRVolatileJitFrameIter* iter;
-    for (iter = cx.context()->liveVolatileJitFrameIter_; iter; iter = iter->prev)
+    for (iter = cx->liveVolatileJitFrameIter_; iter; iter = iter->prev)
         iter->asJSJit().exchangeReturnAddressIfMatch(oldAddr, newAddr);
 }

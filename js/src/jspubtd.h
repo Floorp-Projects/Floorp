@@ -93,8 +93,6 @@ class AutoTraceSession;
 class StoreBuffer;
 } // namespace gc
 
-class CooperatingContext;
-
 inline JSCompartment* GetContextCompartment(const JSContext* cx);
 inline JS::Zone* GetContextZone(const JSContext* cx);
 

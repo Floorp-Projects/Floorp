@@ -82,6 +82,9 @@ class RegExpStack
     static size_t offsetOfBase() { return offsetof(RegExpStack, base_); }
     static size_t offsetOfLimit() { return offsetof(RegExpStack, limit_); }
 
+    void* addressOfBase() { return &base_; }
+    void* addressOfLimit() { return &limit_; }
+
     void* base() { return base_; }
     void* limit() { return limit_; }
 
