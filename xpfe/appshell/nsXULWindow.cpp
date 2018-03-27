@@ -2357,7 +2357,8 @@ nsXULWindow::SizeShell()
 
   LoadMiscPersistentAttributesFromXUL();
 
-  if (mChromeLoaded && mCenterAfterLoad && !positionSet) {
+  if (mChromeLoaded && mCenterAfterLoad && !positionSet &&
+      mWindow->SizeMode() == nsSizeMode_Normal) {
     Center(parentWindow, parentWindow ? false : true, false);
   }
 }
