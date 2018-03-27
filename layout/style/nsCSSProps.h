@@ -268,8 +268,6 @@ public:
   // then eCSSPropertyExtra_variable will be returned.
   static nsCSSPropertyID LookupProperty(const nsAString& aProperty,
                                       EnabledState aEnabled);
-  static nsCSSPropertyID LookupProperty(const nsACString& aProperty,
-                                      EnabledState aEnabled);
   // As above, but looked up using a property's IDL name.
   // eCSSPropertyExtra_variable won't be returned from these methods.
   static nsCSSPropertyID LookupPropertyByIDLName(
@@ -282,7 +280,6 @@ public:
   // Returns whether aProperty is a custom property name, i.e. begins with
   // "--".  This assumes that the CSS Variables pref has been enabled.
   static bool IsCustomPropertyName(const nsAString& aProperty);
-  static bool IsCustomPropertyName(const nsACString& aProperty);
 
   static inline bool IsShorthand(nsCSSPropertyID aProperty) {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
@@ -290,16 +287,8 @@ public:
     return (aProperty >= eCSSProperty_COUNT_no_shorthands);
   }
 
-  // Must be given a longhand property.
-  static bool IsInherited(nsCSSPropertyID aProperty);
-
   // Same but for @font-face descriptors
   static nsCSSFontDesc LookupFontDesc(const nsAString& aProperty);
-  static nsCSSFontDesc LookupFontDesc(const nsACString& aProperty);
-
-  // For @counter-style descriptors
-  static nsCSSCounterDesc LookupCounterDesc(const nsAString& aProperty);
-  static nsCSSCounterDesc LookupCounterDesc(const nsACString& aProperty);
 
   // Given a property enum, get the string value
   static const nsCString& GetStringValue(nsCSSPropertyID aProperty);
