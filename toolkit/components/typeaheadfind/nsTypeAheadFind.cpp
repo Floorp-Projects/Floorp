@@ -51,14 +51,15 @@
 #include "nsFocusManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Link.h"
+#include "mozilla/dom/RangeBinding.h"
 #include "mozilla/dom/Selection.h"
 #include "nsRange.h"
 #include "nsXBLBinding.h"
 
 #include "nsTypeAheadFind.h"
 
-using mozilla::dom::Selection;
-using mozilla::IgnoreErrors;
+using namespace mozilla;
+using namespace mozilla::dom;
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTypeAheadFind)
   NS_INTERFACE_MAP_ENTRY(nsITypeAheadFind)
@@ -435,12 +436,14 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
     return NS_ERROR_FAILURE;
   }
 
-  int16_t rangeCompareResult = 0;
   if (!mStartPointRange) {
     mStartPointRange = new nsRange(presShell->GetDocument());
   }
 
-  mStartPointRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START, mSearchRange, &rangeCompareResult);
+  // XXXbz Should this really be ignoring errors?
+  int16_t rangeCompareResult =
+    mStartPointRange->CompareBoundaryPoints(RangeBinding::START_TO_START,
+                                            *mSearchRange, IgnoreErrors());
   // No need to wrap find in doc if starting at beginning
   bool hasWrapped = (rangeCompareResult < 0);
 
@@ -493,11 +496,11 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
           // We can continue at the end of mStartPointRange if its end is before
           // the start of returnRange or coincides with it.  Otherwise, we need
           // to continue at the start of returnRange.
-          int16_t compareResult;
-          nsresult rv =
-            mStartPointRange->CompareBoundaryPoints(nsIDOMRange::START_TO_END,
-                                                    returnRange, &compareResult);
-          if (NS_SUCCEEDED(rv) && compareResult <= 0) {
+          IgnoredErrorResult rv;
+          int16_t compareResult =
+            mStartPointRange->CompareBoundaryPoints(RangeBinding::START_TO_END,
+                                                    *returnRange, rv);
+          if (!rv.Failed() && compareResult <= 0) {
             // OK to start at the end of mStartPointRange
             mStartPointRange->Collapse(false);
           } else {
@@ -509,11 +512,11 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
           // We can continue at the start of mStartPointRange if its start is
           // after the end of returnRange or coincides with it.  Otherwise, we
           // need to continue at the end of returnRange.
-          int16_t compareResult;
-          nsresult rv =
-            mStartPointRange->CompareBoundaryPoints(nsIDOMRange::END_TO_START,
-                                                    returnRange, &compareResult);
-          if (NS_SUCCEEDED(rv) && compareResult >= 0) {
+          IgnoredErrorResult rv;
+          int16_t compareResult =
+            mStartPointRange->CompareBoundaryPoints(RangeBinding::END_TO_START,
+                                                    *returnRange, rv);
+          if (!rv.Failed() && compareResult >= 0) {
             // OK to start at the start of mStartPointRange
             mStartPointRange->Collapse(true);
           } else {
