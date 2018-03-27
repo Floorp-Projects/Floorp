@@ -60,6 +60,8 @@ public:
 
   using nsTHashtable<EntryType>::Contains;
   using nsTHashtable<EntryType>::GetGeneration;
+  using nsTHashtable<EntryType>::SizeOfExcludingThis;
+  using nsTHashtable<EntryType>::SizeOfIncludingThis;
 
   nsBaseHashtable() {}
   explicit nsBaseHashtable(uint32_t aInitLength)
