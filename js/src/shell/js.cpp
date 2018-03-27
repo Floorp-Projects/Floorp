@@ -1740,9 +1740,6 @@ ConvertTranscodeResultToJSException(JSContext* cx, JS::TranscodeResult rv)
 }
 
 static bool
-CooperativeThreadMayYield(JSContext* cx);
-
-static bool
 Evaluate(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1825,52 +1822,6 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
                                           "\"global\" passed to evaluate()", "not a global object");
                 return false;
             }
-        }
-
-        if (!JS_GetProperty(cx, opts, "zoneGroup", &v))
-            return false;
-        if (!v.isUndefined()) {
-            if (global != JS_GetGlobalForObject(cx, &args.callee())) {
-                JS_ReportErrorASCII(cx, "zoneGroup and global cannot both be specified.");
-                return false;
-            }
-
-            // Find all eligible globals to execute in.
-            JS::AutoObjectVector eligibleGlobals(cx);
-            for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {
-                // Compartments without globals and the self hosting global may
-                // not be entered.
-                if (!c->maybeGlobal() || cx->runtime()->isSelfHostingGlobal(c->maybeGlobal()))
-                    continue;
-
-                // Globals in zone groups which are not in use by a cooperative
-                // thread may be entered.
-                if (!c->zone()->group()->ownerContext().context()) {
-                    if (!eligibleGlobals.append(c->maybeGlobal()))
-                        return false;
-                }
-
-                // Globals in zone groups which use exclusive locking may be
-                // entered, in which case this thread will yield until the zone
-                // group is available.
-                if (c->zone()->group()->useExclusiveLocking() && CooperativeThreadMayYield(cx)) {
-                    if (!eligibleGlobals.append(c->maybeGlobal()))
-                        return false;
-                }
-            }
-
-            if (eligibleGlobals.empty()) {
-                JS_ReportErrorASCII(cx, "zoneGroup can only be used if another"
-                                    " cooperative thread has called cooperativeYield(true).");
-                return false;
-            }
-
-            // Pick an eligible global to use based on the value of the zoneGroup property.
-            int32_t which;
-            if (!ToInt32(cx, v, &which))
-                return false;
-            which = Min<int32_t>(Max(which, 0), eligibleGlobals.length() - 1);
-            global = eligibleGlobals[which];
         }
 
         if (!JS_GetProperty(cx, opts, "catchTermination", &v))
@@ -3540,151 +3491,6 @@ EvalInContext(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-struct CooperationState
-{
-    CooperationState()
-      : lock(mutexid::ShellThreadCooperation)
-      , idle(false)
-      , numThreads(0)
-      , yieldCount(0)
-      , singleThreaded(false)
-    {}
-
-    Mutex lock;
-    ConditionVariable cvar;
-    bool idle;
-    size_t numThreads;
-    uint64_t yieldCount;
-    bool singleThreaded;
-};
-static CooperationState* cooperationState = nullptr;
-
-static void
-CooperativeBeginWait(JSContext* cx)
-{
-    MOZ_ASSERT(cx == TlsContext.get());
-    JS_YieldCooperativeContext(cx);
-}
-
-static void
-CooperativeEndWait(JSContext* cx)
-{
-    MOZ_ASSERT(cx == TlsContext.get());
-    LockGuard<Mutex> lock(cooperationState->lock);
-
-    cooperationState->cvar.wait(lock, [&] { return cooperationState->idle; });
-
-    JS_ResumeCooperativeContext(cx);
-    cooperationState->idle = false;
-    cooperationState->yieldCount++;
-    cooperationState->cvar.notify_all();
-}
-
-static void
-CooperativeYield(bool terminating = false)
-{
-    LockGuard<Mutex> lock(cooperationState->lock);
-    MOZ_ASSERT(!cooperationState->idle);
-    cooperationState->idle = true;
-    cooperationState->cvar.notify_all();
-
-    // Wait until another thread takes over control before returning, if there
-    // is another thread to do so.
-    if (!terminating && cooperationState->numThreads) {
-        uint64_t count = cooperationState->yieldCount;
-        cooperationState->cvar.wait(lock, [&] { return cooperationState->yieldCount != count; });
-    }
-}
-
-static bool
-CooperativeThreadMayYield(JSContext* cx)
-{
-    if (!cx->runtime()->gc.canChangeActiveContext(cx))
-        return false;
-
-    if (GetShellContext(cx)->isWorker)
-        return false;
-
-    if (cooperationState->singleThreaded)
-        return false;
-
-    // To avoid contention issues between threads, yields are not allowed while
-    // a thread has access to zone groups other than its original one, i.e. if
-    // the thread is inside an evaluate() call with a different zone group.
-    // This is not a limit which the browser has, but is necessary in the
-    // shell: the shell can have arbitrary interleavings between cooperative
-    // threads, whereas the browser has more control over which threads are
-    // running at different times.
-    for (ZoneGroupsIter group(cx->runtime()); !group.done(); group.next()) {
-        if (group->ownerContext().context() == cx && group != cx->zone()->group())
-            return false;
-    }
-
-    return true;
-}
-
-static void
-CooperativeYieldCallback(JSContext* cx)
-{
-    MOZ_ASSERT(CooperativeThreadMayYield(cx));
-    CooperativeBeginWait(cx);
-    CooperativeYield();
-    CooperativeEndWait(cx);
-}
-
-static bool
-CooperativeYieldThread(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (!CooperativeThreadMayYield(cx)) {
-        JS_ReportErrorASCII(cx, "Yielding is not currently allowed");
-        return false;
-    }
-
-    {
-        Maybe<JS::AutoRelinquishZoneGroups> artzg;
-        if ((args.length() > 0) && ToBoolean(args[0]))
-            artzg.emplace(cx);
-
-        CooperativeBeginWait(cx);
-        CooperativeYield();
-        CooperativeEndWait(cx);
-    }
-
-    args.rval().setUndefined();
-    return true;
-}
-
-static void
-CooperativeBeginSingleThreadedExecution(JSContext* cx)
-{
-    MOZ_ASSERT(!cooperationState->singleThreaded);
-
-    // Yield until all other threads have exited any zone groups they are in.
-    while (true) {
-        bool done = true;
-        for (ZoneGroupsIter group(cx->runtime()); !group.done(); group.next()) {
-            if (!group->ownedByCurrentThread() && group->ownerContext().context())
-                done = false;
-        }
-        if (done)
-            break;
-        CooperativeBeginWait(cx);
-        CooperativeYield();
-        CooperativeEndWait(cx);
-    }
-
-    cooperationState->singleThreaded = true;
-}
-
-static void
-CooperativeEndSingleThreadedExecution(JSContext* cx)
-{
-    if (cooperationState)
-        cooperationState->singleThreaded = false;
-}
-
 static bool
 EnsureGeckoProfilingStackInstalled(JSContext* cx, ShellContext* sc)
 {
@@ -3707,16 +3513,11 @@ EnsureGeckoProfilingStackInstalled(JSContext* cx, ShellContext* sc)
 struct WorkerInput
 {
     JSRuntime* parentRuntime;
-    JSContext* siblingContext;
     char16_t* chars;
     size_t length;
 
     WorkerInput(JSRuntime* parentRuntime, char16_t* chars, size_t length)
-      : parentRuntime(parentRuntime), siblingContext(nullptr), chars(chars), length(length)
-    {}
-
-    WorkerInput(JSContext* siblingContext, char16_t* chars, size_t length)
-      : parentRuntime(nullptr), siblingContext(siblingContext), chars(chars), length(length)
+      : parentRuntime(parentRuntime), chars(chars), length(length)
     {}
 
     ~WorkerInput() {
@@ -3731,15 +3532,11 @@ static void
 WorkerMain(void* arg)
 {
     WorkerInput* input = (WorkerInput*) arg;
-    MOZ_ASSERT(!!input->parentRuntime != !!input->siblingContext);
+    MOZ_ASSERT(input->parentRuntime);
 
-    JSContext* cx = input->parentRuntime
-         ? JS_NewContext(8L * 1024L * 1024L, 2L * 1024L * 1024L, input->parentRuntime)
-         : JS_NewCooperativeContext(input->siblingContext);
+    JSContext* cx = JS_NewContext(8L * 1024L * 1024L, 2L * 1024L * 1024L, input->parentRuntime);
     if (!cx)
         return;
-
-    SetCooperativeYieldCallback(cx, CooperativeYieldCallback);
 
     ShellContext* sc = js_new<ShellContext>(cx);
     if (!sc)
@@ -3749,10 +3546,6 @@ WorkerMain(void* arg)
         CancelOffThreadJobsForContext(cx);
         JS_DestroyContext(cx);
         js_delete(sc);
-        if (input->siblingContext) {
-            cooperationState->numThreads--;
-            CooperativeYield(/* terminating = */ true);
-        }
         js_delete(input);
     });
 
@@ -3790,8 +3583,6 @@ WorkerMain(void* arg)
 
         JS::CompartmentOptions compartmentOptions;
         SetStandardCompartmentOptions(compartmentOptions);
-        if (input->siblingContext)
-            compartmentOptions.creationOptions().setNewZoneInNewZoneGroup();
 
         RootedObject global(cx, NewGlobalObject(cx, compartmentOptions, nullptr));
         if (!global)
@@ -3831,7 +3622,7 @@ class MOZ_RAII AutoLockWorkerThreads : public LockGuard<Mutex>
 };
 
 static bool
-EvalInThread(JSContext* cx, unsigned argc, Value* vp, bool cooperative)
+EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
 {
     if (!CanUseExtraThreads()) {
         JS_ReportErrorASCII(cx, "Can't create threads with --no-threads");
@@ -3850,25 +3641,6 @@ EvalInThread(JSContext* cx, unsigned argc, Value* vp, bool cooperative)
         return false;
     }
 #endif
-
-    if (cooperative && GetShellContext(cx)->isWorker) {
-        // Disallowing cooperative multithreading in worker runtimes allows
-        // yield state to be process wide, and some other simplifications.
-        // When we have a better idea of how cooperative multithreading will be
-        // used in the browser this restriction might be relaxed.
-        JS_ReportErrorASCII(cx, "Cooperative multithreading in worker runtimes is not supported");
-        return false;
-    }
-
-    if (cooperative && !cx->runtime()->gc.canChangeActiveContext(cx)) {
-        JS_ReportErrorASCII(cx, "Cooperating multithreading context switches are not currently allowed");
-        return false;
-    }
-
-    if (cooperative && cooperationState->singleThreaded) {
-        JS_ReportErrorASCII(cx, "Creating cooperative threads is not allowed while single threaded");
-        return false;
-    }
 
     if (!args[0].toString()->ensureLinear(cx))
         return false;
@@ -3891,18 +3663,10 @@ EvalInThread(JSContext* cx, unsigned argc, Value* vp, bool cooperative)
 
     CopyChars(chars, *str);
 
-    WorkerInput* input =
-        cooperative
-        ? js_new<WorkerInput>(cx, chars, str->length())
-        : js_new<WorkerInput>(JS_GetParentRuntime(cx), chars, str->length());
+    WorkerInput* input = js_new<WorkerInput>(JS_GetParentRuntime(cx), chars, str->length());
     if (!input) {
         ReportOutOfMemory(cx);
         return false;
-    }
-
-    if (cooperative) {
-        cooperationState->numThreads++;
-        CooperativeBeginWait(cx);
     }
 
     Thread* thread;
@@ -3913,31 +3677,15 @@ EvalInThread(JSContext* cx, unsigned argc, Value* vp, bool cooperative)
             oomUnsafe.crash("EvalInThread");
     }
 
-    if (cooperative) {
-        CooperativeEndWait(cx);
-    } else {
-        AutoLockWorkerThreads alwt;
-        if (!workerThreads.append(thread)) {
-            ReportOutOfMemory(cx);
-            thread->join();
-            return false;
-        }
+    AutoLockWorkerThreads alwt;
+    if (!workerThreads.append(thread)) {
+        ReportOutOfMemory(cx);
+        thread->join();
+        return false;
     }
 
     args.rval().setUndefined();
     return true;
-}
-
-static bool
-EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
-{
-    return EvalInThread(cx, argc, vp, false);
-}
-
-static bool
-EvalInCooperativeThread(JSContext* cx, unsigned argc, Value* vp)
-{
-    return EvalInThread(cx, argc, vp, true);
 }
 
 static bool
@@ -4122,13 +3870,6 @@ KillWorkerThreads(JSContext* cx)
 {
     MOZ_ASSERT_IF(!CanUseExtraThreads(), workerThreads.empty());
 
-    // Yield until all other cooperative threads in the main runtime finish.
-    while (cooperationState->numThreads) {
-        CooperativeBeginWait(cx);
-        CooperativeYield();
-        CooperativeEndWait(cx);
-    }
-
     if (!workerThreadsLock) {
         MOZ_ASSERT(workerThreads.empty());
         return;
@@ -4152,9 +3893,6 @@ KillWorkerThreads(JSContext* cx)
 
     js_delete(workerThreadsLock);
     workerThreadsLock = nullptr;
-
-    js_delete(cooperationState);
-    cooperationState = nullptr;
 }
 
 static void
@@ -6972,16 +6710,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "evalInWorker(str)",
 "  Evaluate 'str' in a separate thread with its own runtime.\n"),
 
-    JS_FN_HELP("evalInCooperativeThread", EvalInCooperativeThread, 1, 0,
-"evalInCooperativeThread(str)",
-"  Evaluate 'str' in a separate cooperatively scheduled thread using the same runtime.\n"),
-
-    JS_FN_HELP("cooperativeYield", CooperativeYieldThread, 1, 0,
-"cooperativeYield(leaveZoneGroup)",
-"  Yield execution to another cooperatively scheduled thread using the same runtime.\n"
-"  If leaveZoneGroup is specified then other threads may execute code in the\n"
-"  current thread's zone group via evaluate(..., {zoneGroup:N}).\n"),
-
     JS_FN_HELP("getSharedArrayBuffer", GetSharedArrayBuffer, 0, 0,
 "getSharedArrayBuffer()",
 "  Retrieve the SharedArrayBuffer object from the cross-worker mailbox.\n"
@@ -9418,12 +9146,6 @@ main(int argc, char** argv, char** envp)
 #endif
 
     js::SetPreserveWrapperCallback(cx, DummyPreserveWrapperCallback);
-
-    cooperationState = js_new<CooperationState>();
-    JS::SetSingleThreadedExecutionCallbacks(cx,
-                                            CooperativeBeginSingleThreadedExecution,
-                                            CooperativeEndSingleThreadedExecution);
-    SetCooperativeYieldCallback(cx, CooperativeYieldCallback);
 
     result = Shell(cx, &op, envp);
 
