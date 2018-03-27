@@ -359,6 +359,8 @@ async function run_test_2() {
 
 // Check that removing items from the profile reveals their hidden versions.
 async function run_test_3() {
+  await promiseShutdownManager();
+
   var dest = profileDir.clone();
   dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
   dest.remove(true);
@@ -368,7 +370,7 @@ async function run_test_3() {
   writeInstallRDFForExtension(addon3, profileDir, "addon4@tests.mozilla.org");
 
   gCachePurged = false;
-  await promiseRestartManager();
+  await promiseStartupManager();
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, ["addon1@tests.mozilla.org",
