@@ -16,6 +16,9 @@ interface Selection {
   readonly attribute Node?         focusNode;
   readonly attribute unsigned long focusOffset;
   readonly attribute boolean       isCollapsed;
+  /**
+   * Returns the number of ranges in the selection.
+   */
   readonly attribute unsigned long rangeCount;
   readonly attribute DOMString     type;
   /**
