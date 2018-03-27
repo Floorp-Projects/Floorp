@@ -358,38 +358,36 @@ CollectWindowReports(nsGlobalWindowInner *aWindow,
               "allocated in its arena and not measured elsewhere, "
               "within a window.");
 
-  REPORT_SIZE("/layout/servo-style-sets/stylist/rule-tree",
-              mLayoutServoStyleSetsStylistRuleTree,
-              "Memory used by rule trees within Servo style sets within a "
-              "window.");
+  REPORT_SIZE("/layout/style-sets/stylist/rule-tree",
+              mLayoutStyleSetsStylistRuleTree,
+              "Memory used by rule trees within style sets within a window.");
 
-  REPORT_SIZE("/layout/servo-style-sets/stylist/element-and-pseudos-maps",
-              mLayoutServoStyleSetsStylistElementAndPseudosMaps,
-              "Memory used by element and pseudos maps within Servo style "
+  REPORT_SIZE("/layout/style-sets/stylist/element-and-pseudos-maps",
+              mLayoutStyleSetsStylistElementAndPseudosMaps,
+              "Memory used by element and pseudos maps within style "
               "sets within a window.");
 
-  REPORT_SIZE("/layout/servo-style-sets/stylist/invalidation-map",
-              mLayoutServoStyleSetsStylistInvalidationMap,
-              "Memory used by invalidation maps within Servo style sets "
+  REPORT_SIZE("/layout/style-sets/stylist/invalidation-map",
+              mLayoutStyleSetsStylistInvalidationMap,
+              "Memory used by invalidation maps within style sets "
               "within a window.");
 
-  REPORT_SIZE("/layout/servo-style-sets/stylist/revalidation-selectors",
-              mLayoutServoStyleSetsStylistRevalidationSelectors,
-              "Memory used by selectors for cache revalidation within Servo "
+  REPORT_SIZE("/layout/style-sets/stylist/revalidation-selectors",
+              mLayoutStyleSetsStylistRevalidationSelectors,
+              "Memory used by selectors for cache revalidation within "
               "style sets within a window.");
 
-  REPORT_SIZE("/layout/servo-style-sets/stylist/other",
-              mLayoutServoStyleSetsStylistOther,
-              "Memory used by other Stylist data within Servo style sets "
+  REPORT_SIZE("/layout/style-sets/stylist/other",
+              mLayoutStyleSetsStylistOther,
+              "Memory used by other Stylist data within style sets "
               "within a window.");
 
-  REPORT_SIZE("/layout/servo-style-sets/other", mLayoutServoStyleSetsOther,
-              "Memory used by other parts of Servo style sets within a "
-              "window.");
+  REPORT_SIZE("/layout/style-sets/other", mLayoutStyleSetsOther,
+              "Memory used by other parts of style sets within a window.");
 
-  REPORT_SIZE("/layout/servo-element-data-objects",
-              mLayoutServoElementDataObjects,
-              "Memory used for Servo ElementData objects, but not the things"
+  REPORT_SIZE("/layout/element-data-objects",
+              mLayoutElementDataObjects,
+              "Memory used for ElementData objects, but not the things"
               "hanging off them.");
 
   REPORT_SIZE("/layout/text-runs", mLayoutTextRunsSize,
@@ -479,29 +477,29 @@ CollectWindowReports(nsGlobalWindowInner *aWindow,
       "individually.");
   }
 
-  // This is the Servo style structs.
-  size_t servoStyleSundriesSize = 0;
+  // This is the style structs.
+  size_t styleSundriesSize = 0;
 #define STYLE_STRUCT(name_) \
   { \
-    size_t size = windowSizes.mServoStyleSizes.NS_STYLE_SIZES_FIELD(name_); \
+    size_t size = windowSizes.mStyleSizes.NS_STYLE_SIZES_FIELD(name_); \
     if (size < STYLE_SUNDRIES_THRESHOLD) { \
-      servoStyleSundriesSize += size; \
+      styleSundriesSize += size; \
     } else { \
       REPORT_SUM_SIZE( \
-        "/layout/servo-style-structs/" # name_, size, \
-        "Memory used by the " #name_ " Servo style structs within a window."); \
+        "/layout/style-structs/" # name_, size, \
+        "Memory used by the " #name_ " style structs within a window."); \
     } \
-    aWindowTotalSizes->mServoStyleSizes.NS_STYLE_SIZES_FIELD(name_) += size; \
+    aWindowTotalSizes->mStyleSizes.NS_STYLE_SIZES_FIELD(name_) += size; \
   }
 #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 
-  if (servoStyleSundriesSize > 0) {
+  if (styleSundriesSize > 0) {
     REPORT_SUM_SIZE(
-      "/layout/servo-style-structs/sundries", servoStyleSundriesSize,
-      "The sum of all memory used by Servo style structs which were too "
+      "/layout/style-structs/sundries", styleSundriesSize,
+      "The sum of all memory used by style structs which were too "
       "small to be shown individually.");
   }
 
@@ -629,18 +627,18 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
          windowTotalSizes.mLayoutPresShellSize,
          "This is the sum of all windows' 'layout/arenas' numbers.");
 
-  REPORT("window-objects/layout/servo-style-sets",
-         windowTotalSizes.mLayoutServoStyleSetsStylistRuleTree +
-         windowTotalSizes.mLayoutServoStyleSetsStylistElementAndPseudosMaps +
-         windowTotalSizes.mLayoutServoStyleSetsStylistInvalidationMap +
-         windowTotalSizes.mLayoutServoStyleSetsStylistRevalidationSelectors +
-         windowTotalSizes.mLayoutServoStyleSetsStylistOther +
-         windowTotalSizes.mLayoutServoStyleSetsOther,
-         "This is the sum of all windows' 'layout/servo-style-sets/' numbers.");
+  REPORT("window-objects/layout/style-sets",
+         windowTotalSizes.mLayoutStyleSetsStylistRuleTree +
+         windowTotalSizes.mLayoutStyleSetsStylistElementAndPseudosMaps +
+         windowTotalSizes.mLayoutStyleSetsStylistInvalidationMap +
+         windowTotalSizes.mLayoutStyleSetsStylistRevalidationSelectors +
+         windowTotalSizes.mLayoutStyleSetsStylistOther +
+         windowTotalSizes.mLayoutStyleSetsOther,
+         "This is the sum of all windows' 'layout/style-sets/' numbers.");
 
-  REPORT("window-objects/layout/servo-element-data-objects",
-         windowTotalSizes.mLayoutServoElementDataObjects,
-         "This is the sum of all windows' 'layout/servo-element-data-objects' "
+  REPORT("window-objects/layout/element-data-objects",
+         windowTotalSizes.mLayoutElementDataObjects,
+         "This is the sum of all windows' 'layout/element-data-objects' "
          "numbers.");
 
   REPORT("window-objects/layout/text-runs", windowTotalSizes.mLayoutTextRunsSize,
@@ -688,18 +686,18 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
          "Memory used for layout frames within windows. "
          "This is the sum of all windows' 'layout/frames/' numbers.");
 
-  size_t servoStyleTotal = 0;
+  size_t styleTotal = 0;
 #define STYLE_STRUCT(name_) \
-  servoStyleTotal += \
-    windowTotalSizes.mServoStyleSizes.NS_STYLE_SIZES_FIELD(name_);
+  styleTotal += \
+    windowTotalSizes.mStyleSizes.NS_STYLE_SIZES_FIELD(name_);
 #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 
-  REPORT("window-objects/layout/servo-style-structs", servoStyleTotal,
+  REPORT("window-objects/layout/style-structs", styleTotal,
          "Memory used for style structs within windows. This is the sum of "
-         "all windows' 'layout/servo-style-structs/' numbers.");
+         "all windows' 'layout/style-structs/' numbers.");
 
 #undef REPORT
 

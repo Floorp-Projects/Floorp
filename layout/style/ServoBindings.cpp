@@ -226,7 +226,7 @@ ServoComputedData::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
                 "alignment will break AddSizeOfExcludingThis()"); \
   const void* p##name_ = GetStyle##name_(); \
   if (!aSizes.mState.HaveSeenPtr(p##name_)) { \
-    aSizes.mServoStyleSizes.NS_STYLE_SIZES_FIELD(name_) += \
+    aSizes.mStyleSizes.NS_STYLE_SIZES_FIELD(name_) += \
       ServoStyleStructsMallocEnclosingSizeOf(p##name_); \
   }
   #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
