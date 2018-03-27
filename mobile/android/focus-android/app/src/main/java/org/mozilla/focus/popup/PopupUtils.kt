@@ -20,6 +20,7 @@ import mozilla.components.ktx.android.graphics.drawable.toBitmap
 import mozilla.components.utils.DrawableUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.session.Session
+import java.net.MalformedURLException
 import java.net.URL
 
 object PopupUtils {
@@ -68,8 +69,11 @@ object PopupUtils {
         if (origin != null) {
             hostInfo.text = origin
         } else {
-            val newURL: URL? = URL(url)
-            hostInfo.text = if (newURL != null) newURL.host else url
+            hostInfo.text = try {
+                URL(url).host
+            } catch (e: MalformedURLException) {
+                url
+            }
         }
     }
 
