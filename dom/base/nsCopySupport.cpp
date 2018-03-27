@@ -335,15 +335,16 @@ nsCopySupport::GetTransferableForNode(nsINode* aNode,
   // XXX We should try to get rid of the Selection object here.
   // XXX bug 1245883
   nsCOMPtr<nsISelection> selection = new Selection();
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
   RefPtr<nsRange> range = new nsRange(aNode);
-  nsresult rv = range->SelectNode(node);
-  NS_ENSURE_SUCCESS(rv, rv);
   ErrorResult result;
+  range->SelectNode(*aNode, result);
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
   selection->AsSelection()->AddRangeInternal(*range, aDoc, result);
-  rv = result.StealNSResult();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
   // It's not the primary selection - so don't skip invisible content.
   uint32_t flags = 0;
   return SelectionCopyHelper(selection, aDoc, false, 0, flags,

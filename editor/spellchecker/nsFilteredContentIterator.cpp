@@ -67,10 +67,7 @@ nsFilteredContentIterator::Init(nsINode* aRoot)
   mCurrentIterator = mPreIterator;
 
   mRange = new nsRange(aRoot);
-  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aRoot));
-  if (domNode) {
-    mRange->SelectNode(domNode);
-  }
+  mRange->SelectNode(*aRoot, IgnoreErrors());
 
   nsresult rv = mPreIterator->Init(mRange);
   NS_ENSURE_SUCCESS(rv, rv);

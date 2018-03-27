@@ -3180,13 +3180,11 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
     // Even if select anchor pref is false, we must still move the
     // caret there. That way tabbing will start from the new
     // location
-    RefPtr<nsIDOMRange> jumpToRange = new nsRange(mDocument);
+    RefPtr<nsRange> jumpToRange = new nsRange(mDocument);
     while (content && content->GetFirstChild()) {
       content = content->GetFirstChild();
     }
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-    NS_ASSERTION(node, "No nsIDOMNode for descendant of anchor");
-    jumpToRange->SelectNodeContents(node);
+    jumpToRange->SelectNodeContents(*content, IgnoreErrors());
     // Select the anchor
     RefPtr<Selection> sel = mSelection->GetSelection(SelectionType::eNormal);
     if (sel) {
@@ -5156,8 +5154,11 @@ PresShell::RenderNode(nsIDOMNode* aNode,
     return nullptr;
 
   RefPtr<nsRange> range = new nsRange(node);
-  if (NS_FAILED(range->SelectNode(aNode)))
+  IgnoredErrorResult rv;
+  range->SelectNode(*node, rv);
+  if (rv.Failed()) {
     return nullptr;
+  }
 
   UniquePtr<RangePaintInfo> info = CreateRangePaintInfo(range, area, false);
   if (info && !rangeItems.AppendElement(Move(info))) {
