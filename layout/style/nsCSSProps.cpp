@@ -87,10 +87,6 @@ static nsStaticCaseInsensitiveNameTable* gCounterDescTable;
 static nsStaticCaseInsensitiveNameTable* gPredefinedCounterStyleTable;
 static nsDataHashtable<nsCStringHashKey,nsCSSPropertyID>* gPropertyIDLNameTable;
 
-/* static */ nsCSSPropertyID *
-  nsCSSProps::gShorthandsContainingTable[eCSSProperty_COUNT_no_shorthands];
-/* static */ nsCSSPropertyID* nsCSSProps::gShorthandsContainingPool = nullptr;
-
 static const char* const kCSSRawFontDescs[] = {
 #define CSS_FONT_DESC(name_, method_) #name_,
 #include "nsCSSFontDescList.h"
@@ -130,27 +126,6 @@ static const char* const kCSSRawPredefinedCounterStyles[] = {
   // 7.2 Ethiopic Numeric Counter Style
   "ethiopic-numeric"
 };
-
-struct PropertyAndCount {
-  nsCSSPropertyID property;
-  uint32_t count;
-};
-
-static int
-SortPropertyAndCount(const void* s1, const void* s2, void *closure)
-{
-  const PropertyAndCount *pc1 = static_cast<const PropertyAndCount*>(s1);
-  const PropertyAndCount *pc2 = static_cast<const PropertyAndCount*>(s2);
-
-  // Primary sort by count (lowest to highest)
-  if (pc1->count != pc2->count) {
-    return AssertedCast<int32_t>(pc1->count) -
-           AssertedCast<int32_t>(pc2->count);
-  }
-
-  // Secondary sort by property index (highest to lowest)
-  return pc2->property - pc1->property;
-}
 
 // We need eCSSAliasCount so we can make gAliases nonzero size when there
 // are no aliases.
@@ -208,8 +183,6 @@ nsCSSProps::AddRefTable(void)
         gPropertyIDLNameTable->Put(nsDependentCString(kIDLNameTable[p]), p);
       }
     }
-
-    BuildShorthandsContainingTable();
 
     static bool prefObserversInited = false;
     if (!prefObserversInited) {
@@ -313,151 +286,6 @@ nsCSSProps::AddRefTable(void)
 
 #undef  DEBUG_SHORTHANDS_CONTAINING
 
-bool
-nsCSSProps::BuildShorthandsContainingTable()
-{
-  uint32_t occurrenceCounts[eCSSProperty_COUNT_no_shorthands];
-  memset(occurrenceCounts, 0, sizeof(occurrenceCounts));
-  PropertyAndCount subpropCounts[eCSSProperty_COUNT -
-                                   eCSSProperty_COUNT_no_shorthands];
-  for (nsCSSPropertyID shorthand = eCSSProperty_COUNT_no_shorthands;
-       shorthand < eCSSProperty_COUNT;
-       shorthand = nsCSSPropertyID(shorthand + 1)) {
-#ifdef DEBUG_SHORTHANDS_CONTAINING
-    printf("Considering shorthand property '%s'.\n",
-           nsCSSProps::GetStringValue(shorthand).get());
-#endif
-    PropertyAndCount &subpropCountsEntry =
-      subpropCounts[shorthand - eCSSProperty_COUNT_no_shorthands];
-    subpropCountsEntry.property = shorthand;
-    subpropCountsEntry.count = 0;
-    for (const nsCSSPropertyID* subprops = SubpropertyEntryFor(shorthand);
-         *subprops != eCSSProperty_UNKNOWN;
-         ++subprops) {
-      MOZ_ASSERT(0 <= *subprops && *subprops < eCSSProperty_COUNT_no_shorthands,
-                 "subproperty must be a longhand");
-      ++occurrenceCounts[*subprops];
-      ++subpropCountsEntry.count;
-    }
-  }
-
-  uint32_t poolEntries = 0;
-  for (nsCSSPropertyID longhand = nsCSSPropertyID(0);
-       longhand < eCSSProperty_COUNT_no_shorthands;
-       longhand = nsCSSPropertyID(longhand + 1)) {
-    uint32_t count = occurrenceCounts[longhand];
-    if (count > 0)
-      // leave room for terminator
-      poolEntries += count + 1;
-  }
-
-  gShorthandsContainingPool = new nsCSSPropertyID[poolEntries];
-  if (!gShorthandsContainingPool)
-    return false;
-
-  // Initialize all entries to point to their null-terminator.
-  {
-    nsCSSPropertyID *poolCursor = gShorthandsContainingPool - 1;
-    nsCSSPropertyID *lastTerminator =
-      gShorthandsContainingPool + poolEntries - 1;
-    for (nsCSSPropertyID longhand = nsCSSPropertyID(0);
-         longhand < eCSSProperty_COUNT_no_shorthands;
-         longhand = nsCSSPropertyID(longhand + 1)) {
-      uint32_t count = occurrenceCounts[longhand];
-      if (count > 0) {
-        poolCursor += count + 1;
-        gShorthandsContainingTable[longhand] = poolCursor;
-        *poolCursor = eCSSProperty_UNKNOWN;
-      } else {
-        gShorthandsContainingTable[longhand] = lastTerminator;
-      }
-    }
-    MOZ_ASSERT(poolCursor == lastTerminator, "miscalculation");
-  }
-
-  // Sort with lowest count at the start and highest at the end, and
-  // within counts sort in reverse property index order.
-  NS_QuickSort(&subpropCounts, ArrayLength(subpropCounts),
-               sizeof(subpropCounts[0]), SortPropertyAndCount, nullptr);
-
-  // Fill in all the entries in gShorthandsContainingTable
-  for (const PropertyAndCount *shorthandAndCount = subpropCounts,
-                           *shorthandAndCountEnd = ArrayEnd(subpropCounts);
-       shorthandAndCount < shorthandAndCountEnd;
-       ++shorthandAndCount) {
-#ifdef DEBUG_SHORTHANDS_CONTAINING
-    printf("Entering %u subprops for '%s'.\n",
-           shorthandAndCount->count,
-           nsCSSProps::GetStringValue(shorthandAndCount->property).get());
-#endif
-    for (const nsCSSPropertyID* subprops =
-           SubpropertyEntryFor(shorthandAndCount->property);
-         *subprops != eCSSProperty_UNKNOWN;
-         ++subprops) {
-      *(--gShorthandsContainingTable[*subprops]) = shorthandAndCount->property;
-    }
-  }
-
-#ifdef DEBUG_SHORTHANDS_CONTAINING
-  for (nsCSSPropertyID longhand = nsCSSPropertyID(0);
-       longhand < eCSSProperty_COUNT_no_shorthands;
-       longhand = nsCSSPropertyID(longhand + 1)) {
-    printf("Property %s is in %d shorthands.\n",
-           nsCSSProps::GetStringValue(longhand).get(),
-           occurrenceCounts[longhand]);
-    for (const nsCSSPropertyID *shorthands = ShorthandsContaining(longhand);
-         *shorthands != eCSSProperty_UNKNOWN;
-         ++shorthands) {
-      printf("  %s\n", nsCSSProps::GetStringValue(*shorthands).get());
-    }
-  }
-#endif
-
-#ifdef DEBUG
-  // Verify that all values that should be are present.
-  for (nsCSSPropertyID shorthand = eCSSProperty_COUNT_no_shorthands;
-       shorthand < eCSSProperty_COUNT;
-       shorthand = nsCSSPropertyID(shorthand + 1)) {
-    for (const nsCSSPropertyID* subprops = SubpropertyEntryFor(shorthand);
-         *subprops != eCSSProperty_UNKNOWN;
-         ++subprops) {
-      uint32_t count = 0;
-      for (const nsCSSPropertyID *shcont = ShorthandsContaining(*subprops);
-           *shcont != eCSSProperty_UNKNOWN;
-           ++shcont) {
-        if (*shcont == shorthand)
-          ++count;
-      }
-      MOZ_ASSERT(count == 1,
-                 "subproperty of shorthand should have shorthand"
-                 " in its ShorthandsContaining() table");
-    }
-  }
-
-  // Verify that there are no extra values
-  for (nsCSSPropertyID longhand = nsCSSPropertyID(0);
-       longhand < eCSSProperty_COUNT_no_shorthands;
-       longhand = nsCSSPropertyID(longhand + 1)) {
-    for (const nsCSSPropertyID *shorthands = ShorthandsContaining(longhand);
-         *shorthands != eCSSProperty_UNKNOWN;
-         ++shorthands) {
-      uint32_t count = 0;
-      for (const nsCSSPropertyID* subprops = SubpropertyEntryFor(*shorthands);
-           *subprops != eCSSProperty_UNKNOWN;
-           ++subprops) {
-        if (*subprops == longhand)
-          ++count;
-      }
-      MOZ_ASSERT(count == 1,
-                 "longhand should be in subproperty table of "
-                 "property in its ShorthandsContaining() table");
-    }
-  }
-#endif
-
-  return true;
-}
-
 void
 nsCSSProps::ReleaseTable(void)
 {
@@ -476,9 +304,6 @@ nsCSSProps::ReleaseTable(void)
 
     delete gPropertyIDLNameTable;
     gPropertyIDLNameTable = nullptr;
-
-    delete [] gShorthandsContainingPool;
-    gShorthandsContainingPool = nullptr;
   }
 }
 
