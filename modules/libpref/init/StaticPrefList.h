@@ -78,6 +78,34 @@
 // clang-format off
 
 //---------------------------------------------------------------------------
+// HTML5 parser prefs
+//---------------------------------------------------------------------------
+
+// Toggle which thread the HTML5 parser uses for stream parsing.
+VARCACHE_PREF(
+  "html5.offmainthread",
+   html5_offmainthread,
+  bool, true
+)
+
+// Time in milliseconds between the time a network buffer is seen and the timer
+// firing when the timer hasn't fired previously in this parse in the
+// off-the-main-thread HTML5 parser.
+VARCACHE_PREF(
+  "html5.flushtimer.initialdelay",
+   html5_flushtimer_initialdelay,
+  int32_t, 120
+)
+
+// Time in milliseconds between the time a network buffer is seen and the timer
+// firing when the timer has already fired previously in this parse.
+VARCACHE_PREF(
+  "html5.flushtimer.subsequentdelay",
+   html5_flushtimer_subsequentdelay,
+  int32_t, 120
+)
+
+//---------------------------------------------------------------------------
 // Network prefs
 //---------------------------------------------------------------------------
 
