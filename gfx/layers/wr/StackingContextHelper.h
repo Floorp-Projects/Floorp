@@ -85,6 +85,7 @@ private:
   gfx::Matrix mInheritedTransform;
   bool mAffectsClipPositioning;
   Maybe<gfx::Matrix4x4> mTransformForScrollData;
+  bool mIsPreserve3D;
 };
 
 } // namespace layers
