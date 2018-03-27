@@ -917,6 +917,7 @@ pref("gfx.webrender.program-binary", true);
 
 pref("gfx.webrender.highlight-painted-layers", false);
 pref("gfx.webrender.blob-images", 1);
+pref("gfx.webrender.blob.invalidation", false);
 pref("gfx.webrender.hit-test", true);
 
 // WebRender debugging utilities.
