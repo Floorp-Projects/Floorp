@@ -294,7 +294,10 @@ AnimationSurfaceProvider::CheckForNewFrameAtYield()
     AnnounceSurfaceAvailable();
   }
 
-  return continueDecoding;
+  // If we are shutting down, we want to ensure we release the thread as soon
+  // as possible. The animation may advance even during shutdown, which keeps
+  // us decoding, and thus blocking the decode pool during teardown.
+  return continueDecoding && !DecodePool::Singleton()->IsShuttingDown();
 }
 
 bool
@@ -344,7 +347,10 @@ AnimationSurfaceProvider::CheckForNewFrameAtTerminalState()
     AnnounceSurfaceAvailable();
   }
 
-  return continueDecoding;
+  // If we are shutting down, we want to ensure we release the thread as soon
+  // as possible. The animation may advance even during shutdown, which keeps
+  // us decoding, and thus blocking the decode pool during teardown.
+  return continueDecoding && !DecodePool::Singleton()->IsShuttingDown();
 }
 
 void
