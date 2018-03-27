@@ -81,11 +81,11 @@ XPTInterfaceInfoManager::XPTInterfaceInfoManager()
     :   mWorkingSet(),
         mResolveLock("XPTInterfaceInfoManager.mResolveLock")
 {
-    xptiTypelibGuts* typelib = xptiTypelibGuts::Create(&XPTHeader::kHeader);
+    xptiTypelibGuts* typelib = xptiTypelibGuts::Create();
 
     ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
-    for (uint16_t k = 0; k < XPTHeader::kHeader.mNumInterfaces; k++) {
-        VerifyAndAddEntryIfNew(XPTHeader::kHeader.mInterfaceDirectory + k, k, typelib);
+    for (uint16_t k = 0; k < XPTHeader::kNumInterfaces; k++) {
+        VerifyAndAddEntryIfNew(XPTHeader::kInterfaceDirectory + k, k, typelib);
     }
 }
 

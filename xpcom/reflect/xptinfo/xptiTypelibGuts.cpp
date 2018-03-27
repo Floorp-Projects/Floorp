@@ -20,15 +20,14 @@ CheckNoVTable<xptiTypelibGuts> gChecker;
 
 // static
 xptiTypelibGuts*
-xptiTypelibGuts::Create(const XPTHeader* aHeader)
+xptiTypelibGuts::Create()
 {
-    NS_ASSERTION(aHeader, "bad param");
     size_t n = sizeof(xptiTypelibGuts) +
-               sizeof(xptiInterfaceEntry*) * (aHeader->mNumInterfaces - 1);
+               sizeof(xptiInterfaceEntry*) * (XPTHeader::kNumInterfaces - 1);
     void* place = XPT_CALLOC8(gXPTIStructArena, n);
     if (!place)
         return nullptr;
-    return new(place) xptiTypelibGuts(aHeader);
+    return new(place) xptiTypelibGuts();
 }
 
 xptiInterfaceEntry*
@@ -37,14 +36,13 @@ xptiTypelibGuts::GetEntryAt(uint16_t i)
     static const nsID zeroIID =
         { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } };
 
-    NS_ASSERTION(mHeader, "bad state");
     NS_ASSERTION(i < GetEntryCount(), "bad index");
 
     xptiInterfaceEntry* r = mEntryArray[i];
     if (r)
         return r;
 
-    const XPTInterfaceDirectoryEntry* iface = mHeader->mInterfaceDirectory + i;
+    const XPTInterfaceDirectoryEntry* iface = XPTHeader::kInterfaceDirectory + i;
 
     XPTInterfaceInfoManager::xptiWorkingSet& set =
         XPTInterfaceInfoManager::GetSingleton()->mWorkingSet;
@@ -66,10 +64,9 @@ xptiTypelibGuts::GetEntryAt(uint16_t i)
 const char*
 xptiTypelibGuts::GetEntryNameAt(uint16_t i)
 {
-    NS_ASSERTION(mHeader, "bad state");
     NS_ASSERTION(i < GetEntryCount(), "bad index");
 
-    const XPTInterfaceDirectoryEntry* iface = mHeader->mInterfaceDirectory + i;
+    const XPTInterfaceDirectoryEntry* iface = XPTHeader::kInterfaceDirectory + i;
 
     return iface->Name();
 }
