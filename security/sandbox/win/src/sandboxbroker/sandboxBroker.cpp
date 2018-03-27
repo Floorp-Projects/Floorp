@@ -64,22 +64,7 @@ SandboxBroker::Initialize(sandbox::BrokerServices* aBrokerServices)
 {
   sBrokerService = aBrokerServices;
 
-  wchar_t exePath[MAX_PATH];
-  if (!::GetModuleFileNameW(nullptr, exePath, MAX_PATH)) {
-    return;
-  }
-
-  std::wstring exeString(exePath);
-  if (!widget::WinUtils::ResolveJunctionPointsAndSymLinks(exeString)) {
-    return;
-  }
-
-  wchar_t volPath[MAX_PATH];
-  if (!::GetVolumePathNameW(exeString.c_str(), volPath, MAX_PATH)) {
-    return;
-  }
-
-  sRunningFromNetworkDrive = (::GetDriveTypeW(volPath) == DRIVE_REMOTE);
+  sRunningFromNetworkDrive = widget::WinUtils::RunningFromANetworkDrive();
 }
 
 static void
