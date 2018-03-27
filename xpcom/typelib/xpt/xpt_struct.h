@@ -25,10 +25,8 @@ struct XPTTypeDescriptor;
 struct XPTTypeDescriptorPrefix;
 
 struct XPTHeader {
-  uint16_t mNumInterfaces;
-  const XPTInterfaceDirectoryEntry* mInterfaceDirectory;
-
-  static const XPTHeader kHeader;
+  static const uint16_t kNumInterfaces;
+  static const XPTInterfaceDirectoryEntry kInterfaceDirectory[];
 };
 
 /*
