@@ -26,7 +26,6 @@ interface nsIDOMRange : nsISupports
   nsIDOMDocumentFragment cloneContents();
   void               insertNode(in nsIDOMNode newNode);
   void               surroundContents(in nsIDOMNode newParent);
-  DOMString          toString();
   void               detach();
   
   // This method comes from
