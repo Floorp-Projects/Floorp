@@ -75,13 +75,12 @@ extern XPTArena* gXPTIStructArena;
 class xptiTypelibGuts
 {
 public:
-    static xptiTypelibGuts* Create(const XPTHeader* aHeader);
+    static xptiTypelibGuts* Create();
 
-    uint16_t GetEntryCount() const {return mHeader->mNumInterfaces;}
+    uint16_t GetEntryCount() const { return XPTHeader::kNumInterfaces; }
 
     void                SetEntryAt(uint16_t i, xptiInterfaceEntry* ptr)
     {
-        NS_ASSERTION(mHeader,"bad state!");
         NS_ASSERTION(i < GetEntryCount(),"bad param!");
         mEntryArray[i] = ptr;
     }
@@ -90,13 +89,10 @@ public:
     const char* GetEntryNameAt(uint16_t i);
 
 private:
-    explicit xptiTypelibGuts(const XPTHeader* aHeader)
-        : mHeader(aHeader)
-    { }
+    xptiTypelibGuts() = default;
     ~xptiTypelibGuts();
 
 private:
-    const XPTHeader*     mHeader;        // hold pointer into arena
     xptiInterfaceEntry*  mEntryArray[1]; // Always last. Sized to fit.
 };
 
