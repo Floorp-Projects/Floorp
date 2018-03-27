@@ -1153,15 +1153,6 @@ nsRange::Reset()
  * public functionality
  ******************************************************/
 
-NS_IMETHODIMP
-nsRange::GetStartContainer(nsIDOMNode** aStartContainer)
-{
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  return CallQueryInterface(mStart.Container(), aStartContainer);
-}
-
 nsINode*
 nsRange::GetStartContainer(ErrorResult& aRv) const
 {
@@ -1171,17 +1162,6 @@ nsRange::GetStartContainer(ErrorResult& aRv) const
   }
 
   return mStart.Container();
-}
-
-NS_IMETHODIMP
-nsRange::GetStartOffset(uint32_t* aStartOffset)
-{
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *aStartOffset = mStart.Offset();
-
-  return NS_OK;
 }
 
 uint32_t
@@ -1195,15 +1175,6 @@ nsRange::GetStartOffset(ErrorResult& aRv) const
   return mStart.Offset();
 }
 
-NS_IMETHODIMP
-nsRange::GetEndContainer(nsIDOMNode** aEndContainer)
-{
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  return CallQueryInterface(mEnd.Container(), aEndContainer);
-}
-
 nsINode*
 nsRange::GetEndContainer(ErrorResult& aRv) const
 {
@@ -1213,17 +1184,6 @@ nsRange::GetEndContainer(ErrorResult& aRv) const
   }
 
   return mEnd.Container();
-}
-
-NS_IMETHODIMP
-nsRange::GetEndOffset(uint32_t* aEndOffset)
-{
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  *aEndOffset = mEnd.Offset();
-
-  return NS_OK;
 }
 
 uint32_t
