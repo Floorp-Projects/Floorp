@@ -24,11 +24,6 @@
 
 namespace mozilla { namespace psm {
 
-enum class SSLErrorMessageType {
-  OverridableCert = 1, // for *overridable* certificate errors
-  Plain = 2,           // all other errors (or "no error")
-};
-
 class TransportSecurityInfo : public nsITransportSecurityInfo
                             , public nsIInterfaceRequestor
                             , public nsISSLStatusProvider
@@ -63,12 +58,7 @@ public:
   }
   void SetOriginAttributes(const OriginAttributes& aOriginAttributes);
 
-  void GetErrorLogMessage(PRErrorCode errorCode,
-                          ::mozilla::psm::SSLErrorMessageType errorMessageType,
-                          nsString &result);
-
-  void SetCanceled(PRErrorCode errorCode,
-                   ::mozilla::psm::SSLErrorMessageType errorMessageType);
+  void SetCanceled(PRErrorCode errorCode);
 
   /* Set SSL Status values */
   void SetSSLStatus(nsSSLStatus* aSSLStatus);
@@ -89,13 +79,6 @@ private:
   int32_t mSubRequestsNoSecurity;
 
   PRErrorCode mErrorCode;
-  ::mozilla::psm::SSLErrorMessageType mErrorMessageType;
-  nsString mErrorMessageCached;
-  nsresult formatErrorMessage(::mozilla::MutexAutoLock const & proofOfLock,
-                              PRErrorCode errorCode,
-                              ::mozilla::psm::SSLErrorMessageType errorMessageType,
-                              bool wantsHtml, bool suppressPort443,
-                              nsString &result);
 
   int32_t mPort;
   nsCString mHostName;

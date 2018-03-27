@@ -11,8 +11,9 @@ interface nsIX509CertList;
 [builtinclass, scriptable, uuid(216112d3-28bc-4671-b057-f98cc09ba1ea)]
 interface nsITransportSecurityInfo : nsISupports {
     readonly attribute unsigned long securityState;
-    readonly attribute wstring errorMessage;
     [infallible] readonly attribute long errorCode; // PRErrorCode
+    // errorCode as string (e.g. "SEC_ERROR_UNKNOWN_ISSUER")
+    readonly attribute AString errorCodeString;
 
     /**
      * If certificate verification failed, this will be the peer certificate
