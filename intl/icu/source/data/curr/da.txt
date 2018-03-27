@@ -604,6 +604,10 @@ da{
         }
         MRO{
             "MRO",
+            "mauritansk ouguiya (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "mauritansk ouguiya",
         }
         MTL{
@@ -824,6 +828,10 @@ da{
         }
         STD{
             "STD",
+            "dobra fra Sao Tome og Principe (1977–2017)",
+        }
+        STN{
+            "STN",
             "dobra fra Sao Tome og Principe",
         }
         SUR{
@@ -1159,7 +1167,7 @@ da{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1781,6 +1789,10 @@ da{
             other{"macaoske pataca"}
         }
         MRO{
+            one{"mauritansk ouguiya (1973–2017)"}
+            other{"mauritanske ouguiya (1973–2017)"}
+        }
+        MRU{
             one{"mauritansk ouguiya"}
             other{"mauritanske ouguiya"}
         }
@@ -2001,6 +2013,10 @@ da{
             other{"sydsudanske pund"}
         }
         STD{
+            one{"dobra fra Sao Tome og Principe (1977–2017)"}
+            other{"dobra fra Sao Tome og Principe (1977–2017)"}
+        }
+        STN{
             one{"dobra fra Sao Tome og Principe"}
             other{"dobra fra Sao Tome og Principe"}
         }
@@ -2225,5 +2241,5 @@ da{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.20"}
 }

@@ -612,6 +612,10 @@ lb{
         }
         MRO{
             "MRO",
+            "Mauretaneschen Ouguiya (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Mauretaneschen Ouguiya",
         }
         MTL{
@@ -840,6 +844,10 @@ lb{
         }
         STD{
             "STD",
+            "São-toméeschen Dobra (1977–2017)",
+        }
+        STN{
+            "STN",
             "São-toméeschen Dobra",
         }
         SUR{
@@ -1729,6 +1737,10 @@ lb{
             other{"Macau-Pataca"}
         }
         MRO{
+            one{"Mauretaneschen Ouguiya (1973–2017)"}
+            other{"Mauretanesch Ouguiya (1973–2017)"}
+        }
+        MRU{
             one{"Mauretaneschen Ouguiya"}
             other{"Mauretanesch Ouguiya"}
         }
@@ -1957,6 +1969,10 @@ lb{
             other{"Südsudanesesch Pond"}
         }
         STD{
+            one{"São-toméeschen Dobra (1977–2017)"}
+            other{"São-toméesch Dobra (1977–2017)"}
+        }
+        STN{
             one{"São-toméeschen Dobra"}
             other{"São-toméesch Dobra"}
         }
@@ -2225,5 +2241,5 @@ lb{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
 }

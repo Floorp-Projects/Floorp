@@ -157,8 +157,8 @@ gl{
                         other{"00 mill'.'"}
                     }
                     100000000{
-                        one{"000 mill'.'"}
-                        other{"000 mill'.'"}
+                        one{"000 mill"}
+                        other{"000 mill"}
                     }
                     1000000000{
                         one{"0"}
@@ -213,7 +213,7 @@ gl{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
     calendar{
         generic{
             DateTimePatterns{

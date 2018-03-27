@@ -212,7 +212,7 @@ ky{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.11"}
     calendar{
         generic{
             DateTimePatterns{
@@ -804,36 +804,36 @@ ky{
         }
     }
     characterLabel{
-        activities{"Аракеттер"}
-        african_scripts{"Африка жазуулары"}
-        american_scripts{"Америка жазуулары"}
+        activities{"аракеттер"}
+        african_scripts{"африка жазуулары"}
+        american_scripts{"америка жазуулары"}
         animal{"жаныбар"}
-        animals_nature{"Жаныбарлар жана жаратылыш"}
-        arrows{"Жебелер"}
+        animals_nature{"жаныбарлар же жаратылыш"}
+        arrows{"жебелер"}
         body{"дене"}
-        box_drawing{"Кутуча чийүү"}
+        box_drawing{"кутуча чийүү"}
         braille{"Брайль"}
         building{"имарат"}
-        bullets_stars{"Маркерлер/Жылдызчалар"}
-        consonantal_jamo{"Үнсүз Жамо"}
-        currency_symbols{"Валюта белгилери"}
-        dash_connector{"Тире/Байламта"}
-        digits{"Сандар"}
-        dingbats{"Полиграфиялык белгилер"}
-        divination_symbols{"Төлгө белгилери"}
-        downwards_arrows{"Төмөн караган жебелер"}
-        downwards_upwards_arrows{"Төмөн жана жогору караган жебелер"}
+        bullets_stars{"маркерлер/жылдызчалар"}
+        consonantal_jamo{"үнсүз жамо"}
+        currency_symbols{"валюта белгилери"}
+        dash_connector{"тире/байламта"}
+        digits{"сандар"}
+        dingbats{"полиграфиялык белгилер"}
+        divination_symbols{"төлгө белгиси"}
+        downwards_arrows{"төмөн караган жебе"}
+        downwards_upwards_arrows{"төмөн жана жогору караган жебе"}
         east_asian_scripts{"Чыгыш Азия өлкөлөрүнүн жазуулары"}
-        emoji{"Быйтыкчалар"}
+        emoji{"быйтыкча"}
         european_scripts{"Европа өлкөлөрүнүн жазуулары"}
         female{"аял"}
         flag{"желек"}
-        flags{"Желекчелер"}
-        food_drink{"Тамак-аш жана суусундуктар"}
-        format{"Формат"}
-        format_whitespace{"Формат жана боштук"}
+        flags{"желектер"}
+        food_drink{"тамак-аш жана суусундуктар"}
+        format{"формат"}
+        format_whitespace{"формат жана боштук"}
         full_width_form_variant{"Толук жазы формасынын варианттары"}
-        geometric_shapes{"Геометриялык фигуралар"}
+        geometric_shapes{"геометриялык фигуралар"}
         half_width_form_variant{"Жарым жазы формасынын варианттары"}
         han_characters{"Хань белгилери"}
         han_radicals{"Хань уңгулары"}
@@ -841,8 +841,8 @@ ky{
         hanzi_simplified{"Ханьзи (Жөнөкөйлөштүрүлгөн)"}
         hanzi_traditional{"Ханьзи (Салттуу)"}
         heart{"жүрөк"}
-        historic_scripts{"Тарыхый жазуулар"}
-        ideographic_desc_characters{"Идеографиялык сүрөттөө белгилери"}
+        historic_scripts{"тарыхый жазуулар"}
+        ideographic_desc_characters{"ideographic desc. character"}
         japanese_kana{"Жапон Канасы"}
         kanbun{"Канбун"}
         kanji{"Кандзи"}

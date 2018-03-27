@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en{
-    Version{"2.1.37.44"}
+    Version{"2.1.39.27"}
     zoneStrings{
         "meta:Acre"{
             ld{"Acre Summer Time"}
@@ -556,7 +556,7 @@ en{
             ls{"Qyzylorda Standard Time"}
         }
         "meta:Reunion"{
-            ls{"Reunion Time"}
+            ls{"Réunion Time"}
         }
         "meta:Rothera"{
             ls{"Rothera Time"}

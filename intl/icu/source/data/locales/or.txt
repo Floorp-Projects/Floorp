@@ -202,6 +202,15 @@ or{
                 superscriptingExponent{"×"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"ଡାହାଣରେ ଥିବା {0} ନିଅନ୍ତୁ"}
+            }
+            plural{
+                one{"{0} ଦିନ"}
+                other{"{0} ଦିନଗୁଡ଼ିକ"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"orya"}
         orya{
@@ -225,7 +234,7 @@ or{
             }
         }
     }
-    Version{"2.1.37.57"}
+    Version{"2.1.39.11"}
     calendar{
         generic{
             DateTimePatterns{
@@ -360,8 +369,8 @@ or{
                 "PM",
             }
             AmPmMarkersAbbr{
-                "am",
-                "pm",
+                "AM",
+                "PM",
             }
             AmPmMarkersNarrow{
                 "ପୂ",
@@ -791,15 +800,15 @@ or{
         arrows{"ତୀର"}
         body{"ଶରୀର"}
         box_drawing{"ବକ୍ସ ଅଙ୍କନ କରିବା"}
-        braille{"ବ୍ରେଲି"}
+        braille{"ବ୍ରେଲ୍"}
         building{"ଅଟ୍ଟାଳିକା"}
         bullets_stars{"ବୁଲେଟ୍‍ କିମ୍ବା ତାରା"}
         consonantal_jamo{"ବ୍ୟଞ୍ଜନ ବର୍ଣ୍ଣ ସମ୍ବନ୍ଧୀୟ ଜାମୋ"}
-        currency_symbols{"ମୁଦ୍ରା ସଙ୍କେତ"}
+        currency_symbols{"ମୁଦ୍ରା ଚିହ୍ନ"}
         dash_connector{"ଡ୍ୟାଶ୍‍ କିମ୍ବା ସଂଯୋଜକ"}
         digits{"ଅଙ୍କ"}
         dingbats{"ଡିଙ୍ଗବ୍ୟାଟ୍‍"}
-        divination_symbols{"ଅଲୌକିକ ସଙ୍କେତ"}
+        divination_symbols{"ଅଲୌକିକ ଚିହ୍ନ"}
         downwards_arrows{"ନିମ୍ନାଭିମୁଖୀ ତୀର"}
         downwards_upwards_arrows{"ନିମ୍ନାଭିମୁଖୀ ଉର୍ଦ୍ଧ୍ୱମୁଖୀ ତୀର"}
         east_asian_scripts{"ପୂର୍ବ ଏସିୟ ସ୍କ୍ରିପ୍ଟ"}
@@ -807,15 +816,15 @@ or{
         european_scripts{"ୟୁରୋପିୟ ସ୍କ୍ରିପ୍ଟ"}
         female{"ମହିଳା"}
         flag{"ପତାକା"}
-        flags{"ପତାକାଗୁଡିକ"}
+        flags{"ପତାକାଗୁଡ଼ିକ"}
         food_drink{"ଖାଦ୍ୟ ଏବଂ ପାନୀୟ"}
         format{"ଫର୍ମାଟ୍‍"}
         format_whitespace{"ଫର୍ମାଟ୍‍ ଏବଂ ଧଳା ଖାଲି ସ୍ଥାନ"}
-        full_width_form_variant{"ପୂର୍ଣ୍ଣ-ପ୍ରସ୍ଥ ଭାରିଏଣ୍ଟ"}
+        full_width_form_variant{"ପୂର୍ଣ୍ଣ-ପ୍ରସ୍ଥ ଭିନ୍ନତା"}
         geometric_shapes{"ଜ୍ୟାମିତିକ ଆକୃତି"}
-        half_width_form_variant{"ଅର୍ଦ୍ଧ-ପ୍ରସ୍ଥ ଭାରିଏଣ୍ଟ"}
+        half_width_form_variant{"ଅର୍ଦ୍ଧ-ପ୍ରସ୍ଥ ଭିନ୍ନତା"}
         han_characters{"ହାନ୍‍ ବର୍ଣ୍ଣ"}
-        han_radicals{"ହାନ୍‍ ମୂଳ ରାଶି"}
+        han_radicals{"ହାନ୍‍ ରାଡିକାଲ୍"}
         hanja{"ହାଞ୍ଜା"}
         hanzi_simplified{"ହାଞ୍ଜି (ସରଳୀକୃତ)"}
         hanzi_traditional{"ହାଞ୍ଜି (ପାରମ୍ପରିକ)"}
@@ -828,43 +837,43 @@ or{
         keycap{"କୀକ୍ୟାପ୍‍"}
         leftwards_arrows{"ବାମମୁଖୀ ତୀର"}
         leftwards_rightwards_arrows{"ବାମମୁଖୀ ଡାହାଣମୁଖୀ ତୀର"}
-        letterlike_symbols{"ଅକ୍ଷର ପରି ସଙ୍କେତ"}
-        limited_use{"ସୀମିତ ବ୍ୟବହାର"}
+        letterlike_symbols{"ଅକ୍ଷରପରି ଚିହ୍ନ"}
+        limited_use{"ସୀମିତ-ବ୍ୟବହାର"}
         male{"ପୁରୁଷ"}
-        math_symbols{"ଗାଣିତିକ ସଙ୍କେତ"}
-        middle_eastern_scripts{"ମଧ୍ୟ ପୂର୍ବ ସ୍କ୍ରିପ୍ଟ"}
+        math_symbols{"ଗାଣିତିକ ଚିହ୍ନ"}
+        middle_eastern_scripts{"ମଧ୍ୟପ୍ରାଚ୍ୟ ସ୍କ୍ରିପ୍ଟ"}
         miscellaneous{"ବିବିଧ"}
         modern_scripts{"ଆଧୁନିକ ସ୍କ୍ରିପ୍ଟ"}
         modifier{"ସଂଶୋଧକ"}
-        musical_symbols{"ସଙ୍ଗୀତ ସମ୍ବନ୍ଧୀୟ ସଙ୍କେତ"}
+        musical_symbols{"ସାଙ୍ଗୀତିକ ଚିହ୍ନ"}
         nature{"ପ୍ରକୃତି"}
         nonspacing{"ଅଣବ୍ୟବଧାନୀକରଣ"}
-        numbers{"ସଂଖ୍ୟାଗୁଡିକ"}
+        numbers{"ସଂଖ୍ୟାଗୁଡ଼ିକ"}
         objects{"ପଦାର୍ଥ"}
         other{"ଅନ୍ୟ"}
-        paired{"ଯୋଡା"}
+        paired{"ଯୋଡ଼ା"}
         person{"ବ୍ୟକ୍ତି"}
         phonetic_alphabet{"ଫୋନେଟିକ୍‍ ବର୍ଣ୍ଣମାଳା"}
-        pictographs{"ଚିତ୍ର ପ୍ରତୀକ"}
+        pictographs{"ପିକ୍ଟୋଗ୍ରାଫ୍"}
         place{"ସ୍ଥାନ"}
-        plant{"ଉଦ୍ଭିଦ"}
+        plant{"ଗଛ"}
         punctuation{"ବିରାମ ଚିହ୍ନ"}
         rightwards_arrows{"ଡାହାଣମୁଖୀ ତୀର"}
         sign_standard_symbols{"ଚିହ୍ନ କିମ୍ବା ସଙ୍କେତ"}
-        small_form_variant{"ଛୋଟ ଭାରିଏଣ୍ଟ"}
+        small_form_variant{"ଛୋଟ ଭିନ୍ନତା"}
         smiley{"ସ୍ମାଇଲି"}
         smileys_people{"ସ୍ମାଇଲି କିମ୍ବା ବ୍ୟକ୍ତି"}
         south_asian_scripts{"ଦକ୍ଷିଣ ଏସିୟ ସ୍କ୍ରିପ୍ଟ"}
         southeast_asian_scripts{"ଦକ୍ଷିଣପୂର୍ବ ଏସିୟ ସ୍କ୍ରିପ୍ଟ"}
         spacing{"ବ୍ୟବଧାନୀକରଣ"}
-        sport{"କ୍ରୀଡା"}
+        sport{"କ୍ରୀଡ଼ା"}
         symbols{"ସଙ୍କେତ"}
-        technical_symbols{"ବୈଷୟିକ ସଙ୍କେତ"}
+        technical_symbols{"ବୈଷୟିକ ଚିହ୍ନ"}
         tone_marks{"ସ୍ୱର ଚିହ୍ନ"}
         travel{"ଯାତ୍ରା"}
         travel_places{"ଯାତ୍ରା କିମ୍ବା ସ୍ଥାନ"}
-        upwards_arrows{"ଉର୍ଦ୍ଧ୍ୱମୁଖୀ ତୀରଗୁଡିକ"}
-        variant_forms{"ଭାରିଏଣ୍ଟ"}
+        upwards_arrows{"ଉର୍ଦ୍ଧ୍ୱମୁଖୀ ତୀରଗୁଡ଼ିକ"}
+        variant_forms{"ଭିନ୍ନତା"}
         vocalic_jamo{"ସ୍ୱରବର୍ଣ୍ଣ ସମ୍ବନ୍ଧୀୟ ଜାମୋ"}
         weather{"ପାଣିପାଗ"}
         western_asian_scripts{"ପଶ୍ଚିମ ଏସିୟ ସ୍କ୍ରିପ୍ଟ"}
@@ -1689,5 +1698,32 @@ or{
         UK{"ୟୁକେ"}
         US{"ୟୁଏସ୍‌"}
         metric{"ମେଟ୍ରିକ୍‌"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

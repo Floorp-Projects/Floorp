@@ -3,13 +3,14 @@
 ar_SA{
     ExemplarCharactersNumbers{"[\u200E \\- , . ٪ ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
+        default{"arab"}
         latn{
             symbols{
                 percentSign{"٪"}
             }
         }
     }
-    Version{"2.1.37.6"}
+    Version{"2.1.38.80"}
     calendar{
         default{"islamic-umalqura"}
         gregorian{

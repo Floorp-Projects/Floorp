@@ -236,7 +236,7 @@ hi{
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"2.1.36.86"}
+    Version{"2.1.39.11"}
     calendar{
         ethiopic{
             monthNames{

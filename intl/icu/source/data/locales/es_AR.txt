@@ -14,7 +14,7 @@ es_AR{
             }
         }
     }
-    Version{"2.1.37.22"}
+    Version{"2.1.38.39"}
     calendar{
         generic{
             availableFormats{

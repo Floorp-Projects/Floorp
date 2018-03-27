@@ -64,7 +64,7 @@ scientificnumberformattertest.o datadrivennumberformattestsuite.o \
 numberformattesttuple.o numberformat2test.o pluralmaptest.o \
 numbertest_affixutils.o numbertest_api.o numbertest_decimalquantity.o \
 numbertest_modifiers.o numbertest_patternmodifier.o numbertest_patternstring.o \
-numbertest_stringbuilder.o
+numbertest_stringbuilder.o numbertest_doubleconversion.o
 
 DEPS = $(OBJECTS:.o=.d)
 

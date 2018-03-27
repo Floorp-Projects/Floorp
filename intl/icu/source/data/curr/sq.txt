@@ -40,7 +40,7 @@ sq{
         }
         AZN{
             "AZN",
-            "Manata e Azerbajxhanit",
+            "Manata azerbajxhanase",
         }
         BAM{
             "BAM",
@@ -124,7 +124,7 @@ sq{
         }
         CNH{
             "CNH",
-            "Juani kinez (tregu i jashtëm)",
+            "Juani kinez (për treg të jashtëm)",
         }
         CNY{
             "CN¥",
@@ -152,7 +152,7 @@ sq{
         }
         CZK{
             "CZK",
-            "Koruna e Republikës Çeke",
+            "Koruna e Çekisë",
         }
         DJF{
             "DJF",
@@ -172,7 +172,7 @@ sq{
         }
         EGP{
             "EGP",
-            "Stërlina egjiptiane",
+            "Sterlina egjiptiane",
         }
         ERN{
             "ERN",
@@ -376,6 +376,10 @@ sq{
         }
         MRO{
             "MRO",
+            "Ugija mauritane (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Ugija mauritane",
         }
         MUR{
@@ -492,7 +496,7 @@ sq{
         }
         SDG{
             "SDG",
-            "Stërlina sudaneze",
+            "Sterlina sudaneze",
         }
         SEK{
             "SEK",
@@ -504,7 +508,7 @@ sq{
         }
         SHP{
             "SHP",
-            "Stërlina e Ishullit të Shën-Helenës",
+            "Sterlina e Ishullit të Shën-Helenës",
         }
         SLL{
             "SLL",
@@ -520,10 +524,14 @@ sq{
         }
         SSP{
             "SSP",
-            "Stërlina e Sudanit të Jugut",
+            "Sterlina sudanezo-jugore",
         }
         STD{
             "STD",
+            "Dobra e Sao-Tomes dhe Prinsipes (1977–2017)",
+        }
+        STN{
+            "STN",
             "Dobra e Sao-Tomes dhe Prinsipes",
         }
         SYP{
@@ -681,8 +689,8 @@ sq{
             other{"florinë aruban"}
         }
         AZN{
-            one{"manatë azere"}
-            other{"manata azere"}
+            one{"manatë azerbajxhanase"}
+            other{"manata azerbajxhanase"}
         }
         BAM{
             one{"markë e Bosnjë-Hercegovinës [e shkëmbyeshme]"}
@@ -765,8 +773,8 @@ sq{
             other{"peso kiliane"}
         }
         CNH{
-            one{"juan kinez (tregu i jashtëm)"}
-            other{"juanë kinez (tregu i jashtëm)"}
+            one{"juan kinez (për treg të jashtëm)"}
+            other{"juanë kinez (për treg të jashtëm)"}
         }
         CNY{
             one{"juan kinez"}
@@ -813,8 +821,8 @@ sq{
             other{"dinarë algjerian"}
         }
         EGP{
-            one{"stërlinë egjiptiane"}
-            other{"stërlina egjiptiane"}
+            one{"sterlinë egjiptiane"}
+            other{"sterlina egjiptiane"}
         }
         ERN{
             one{"nakfë eritreje"}
@@ -1017,6 +1025,10 @@ sq{
             other{"pataka të Makaos"}
         }
         MRO{
+            one{"ugijë mauritane (1973–2017)"}
+            other{"ugija mauritane (1973–2017)"}
+        }
+        MRU{
             one{"ugijë mauritane"}
             other{"ugija mauritane"}
         }
@@ -1133,8 +1145,8 @@ sq{
             other{"rupi të Ishujve Sishelë"}
         }
         SDG{
-            one{"stërlinë sudaneze"}
-            other{"stërlina sudaneze"}
+            one{"sterlinë sudaneze"}
+            other{"sterlina sudaneze"}
         }
         SEK{
             one{"koronë suedeze"}
@@ -1145,8 +1157,8 @@ sq{
             other{"dollarë singapori"}
         }
         SHP{
-            one{"stërlinë e Ishullit të Shën-Helenës"}
-            other{"stërlina të Ishullit të Shën-Helenës"}
+            one{"sterlinë e Ishullit të Shën-Helenës"}
+            other{"sterlina e Ishullit të Shën-Helenës"}
         }
         SLL{
             one{"leon i Sierra-Leones"}
@@ -1161,10 +1173,14 @@ sq{
             other{"dollarë surinamez"}
         }
         SSP{
-            one{"stërlinë e Sudanit të Jugut"}
-            other{"stërlina të Sudanit të Jugut"}
+            one{"sterlinë sudanezo-jugore"}
+            other{"sterlina sudanezo-jugore"}
         }
         STD{
+            one{"dobër e Sao-Tomes dhe Prinsipes (1977–2017)"}
+            other{"dobra të Sao-Tomes dhe Prinsipes (1977–2017)"}
+        }
+        STN{
             one{"dobër e Sao-Tomes dhe Prinsipes"}
             other{"dobra të Sao-Tomes dhe Prinsipes"}
         }
@@ -1285,5 +1301,5 @@ sq{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
 }

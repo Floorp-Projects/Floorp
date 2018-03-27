@@ -78,3 +78,52 @@ Link Asia/Ho_Chi_Minh VST
 #
 Link America/Regina Canada/East-Saskatchewan # removed from backward in 2017c
 
+
+# Note:
+#   Following section was added for tz database 2018a and 2018b.
+# ICU has a bug handling negative DST, and we also don't want to
+# flip sumer time name and winter time name for Dublin at least for
+# now. Because the change had major impacts to tz database external
+# consumers, the tz database maintainer once reverted the Europe/Dublin
+# rules (same as 2017c or older) in 2018c. The tz database maintainer
+# thinks the changes in 2018a should be brought back when external
+# tz database consumers are ready to adopt the change. We don't know
+# what CLDR TC want to do with this for now. But if tz database brings
+# back the change, and CLDR TC (and ICU TC) want to keep the display name
+# unchanged, then we can uncomment the block below to restore ICU
+# custom override. (Yoshito 2018-01-23)
+
+#
+# tzdata2018a changed Europe/Dublin to use IST (UTC+1) as the standard time
+# of the region, and GMT (UTC) as the daylight saving time with negative
+# offset (-1 hour) in winter. ICU SimpleTimeZone rejects a zone with negative
+# daylight saving time offset. We could remove the restriction in newer version
+# of ICU, but such data does not work well with older ICU runtime without
+# fixing the issue. For now, we define our own Europe/Dubin in ICU, replacing
+# Europe/Dublin data from the tz database.
+#
+
+# Rule	NAME	FROM	TO	TYPE	IN	ON	AT	SAVE	LETTER/S
+# Rule	Eire--ICU	1971	only	-	Oct	31	 2:00u	0	GMT
+# Rule	Eire--ICU	1972	1980	-	Mar	Sun>=16	 2:00u	1:00	IST
+# Rule	Eire--ICU	1972	1980	-	Oct	Sun>=23	 2:00u	0	GMT
+# Rule	Eire--ICU	1981	max	-	Mar	lastSun	 1:00u	1:00	IST
+# Rule	Eire--ICU	1981	1989	-	Oct	Sun>=23	 1:00u	0	GMT
+# Rule	Eire--ICU	1990	1995	-	Oct	Sun>=22	 1:00u	0	GMT
+# Rule	Eire--ICU	1996	max	-	Oct	lastSun	 1:00u	0	GMT
+
+# Zone	NAME		GMTOFF	RULES	FORMAT	[UNTIL]
+# Zone	Europe/Dublin--ICU	-0:25:00 -	LMT	1880 Aug  2
+# 			-0:25:21 -	DMT	1916 May 21  2:00s
+# 			-0:25:21 1:00	IST	1916 Oct  1  2:00s
+# 			 0:00	GB-Eire	%s	1921 Dec  6 # independence
+# 			 0:00	GB-Eire	GMT/IST	1940 Feb 25  2:00s
+# 			 0:00	1:00	IST	1946 Oct  6  2:00s
+# 			 0:00	-	GMT	1947 Mar 16  2:00s
+# 			 0:00	1:00	IST	1947 Nov  2  2:00s
+# 			 0:00	-	GMT	1948 Apr 18  2:00s
+# 			 0:00	GB-Eire	GMT/IST	1968 Oct 27
+# 			 0:00	Eire--ICU	GMT/IST
+
+# Link Europe/Dublin--ICU Eire--ICU
+

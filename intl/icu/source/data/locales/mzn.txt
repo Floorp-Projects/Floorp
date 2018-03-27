@@ -21,7 +21,7 @@ mzn{
         default{"arabext"}
         native{"arabext"}
     }
-    Version{"2.1.31.86"}
+    Version{"2.1.39.11"}
     calendar{
         default{"persian"}
         gregorian{

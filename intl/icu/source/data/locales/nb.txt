@@ -1277,7 +1277,7 @@ nb{
             }
         }
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.20"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -6488,6 +6488,10 @@ nb{
             0,
             1,
         }
+        typographicNames:intvector{
+            1,
+            1,
+        }
     }
     delimiters{
         alternateQuotationEnd{"’"}
@@ -6520,8 +6524,10 @@ nb{
             dn{"d."}
             relative{
                 "-1"{"i går"}
+                "-2"{"-2 d."}
                 "0"{"i dag"}
                 "1"{"i morgen"}
+                "2"{"+2 d."}
             }
             relativeTime{
                 future{

@@ -213,7 +213,7 @@ es{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.37.22"}
+    Version{"2.1.39.20"}
     calendar{
         buddhist{
             eras{
@@ -751,8 +751,8 @@ es{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ 'de' y"}
                 yw{
-                    one{"'semana' w 'de' Y"}
-                    other{"'semana' w 'de' Y"}
+                    one{"'semana' w 'de' y"}
+                    other{"'semana' w 'de' y"}
                 }
             }
             dayNames{
@@ -1715,6 +1715,10 @@ es{
             1,
         }
         month-standalone-except-narrow:intvector{
+            1,
+            1,
+        }
+        typographicNames:intvector{
             1,
             1,
         }
