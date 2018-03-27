@@ -2197,8 +2197,7 @@ nsHTMLDocument::DeferredContentEditableCountChange(nsIContent *aElement)
   if (oldState == mEditingState && mEditingState == eContentEditable) {
     // We just changed the contentEditable state of a node, we need to reset
     // the spellchecking state of that node.
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
-    if (node) {
+    if (aElement) {
       nsPIDOMWindowOuter *window = GetWindow();
       if (!window)
         return;
@@ -2210,8 +2209,9 @@ nsHTMLDocument::DeferredContentEditableCountChange(nsIContent *aElement)
       RefPtr<HTMLEditor> htmlEditor = docshell->GetHTMLEditor();
       if (htmlEditor) {
         RefPtr<nsRange> range = new nsRange(aElement);
-        rv = range->SelectNode(node);
-        if (NS_FAILED(rv)) {
+        IgnoredErrorResult res;
+        range->SelectNode(*aElement, res);
+        if (res.Failed()) {
           // The node might be detached from the document at this point,
           // which would cause this call to fail.  In this case, we can
           // safely ignore the contenteditable count change.

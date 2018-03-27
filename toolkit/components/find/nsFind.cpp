@@ -392,6 +392,11 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
   nsCOMPtr<nsIDOMElement> rootElement;
   textEditor->GetRootElement(getter_AddRefs(rootElement));
 
+  nsCOMPtr<nsINode> rootNode = do_QueryInterface(rootElement);
+  if (!rootNode) {
+    return;
+  }
+
   RefPtr<nsRange> innerRange = CreateRange(aContent);
   RefPtr<nsRange> outerRange = CreateRange(aContent);
   if (!innerRange || !outerRange) {
@@ -402,7 +407,7 @@ nsFindContentIterator::SetupInnerIterator(nsIContent* aContent)
   mInnerIterator = do_CreateInstance(kCPreContentIteratorCID);
 
   if (mInnerIterator) {
-    innerRange->SelectNodeContents(rootElement);
+    innerRange->SelectNodeContents(*rootNode, IgnoreErrors());
 
     // fix up the inner bounds, we may have to only lookup a portion
     // of the text control if the current node is a boundary point

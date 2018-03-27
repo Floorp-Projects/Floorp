@@ -1657,17 +1657,6 @@ nsRange::CollapseJS(bool aToStart)
   Collapse(aToStart);
 }
 
-NS_IMETHODIMP
-nsRange::SelectNode(nsIDOMNode* aN)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aN);
-  NS_ENSURE_TRUE(node, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
-
-  ErrorResult rv;
-  SelectNode(*node, rv);
-  return rv.StealNSResult();
-}
-
 void
 nsRange::SelectNodeJS(nsINode& aNode, ErrorResult& aErr)
 {
@@ -1707,17 +1696,6 @@ nsRange::SelectNode(nsINode& aNode, ErrorResult& aRv)
   AutoInvalidateSelection atEndOfBlock(this);
   DoSetRange(RawRangeBoundary(container, index),
              RawRangeBoundary(container, index + 1), newRoot);
-}
-
-NS_IMETHODIMP
-nsRange::SelectNodeContents(nsIDOMNode* aN)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aN);
-  NS_ENSURE_TRUE(node, NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
-
-  ErrorResult rv;
-  SelectNodeContents(*node, rv);
-  return rv.StealNSResult();
 }
 
 void
