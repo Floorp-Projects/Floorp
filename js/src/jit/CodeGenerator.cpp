@@ -5262,13 +5262,9 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed* lir)
     CheckOverRecursedFailure* ool = new(alloc()) CheckOverRecursedFailure(lir);
     addOutOfLineCode(ool, lir->mir());
 
-    Register temp = ToRegister(lir->temp());
-
     // Conditional forward (unlikely) branch to failure.
-    const void* contextAddr = gen->compartment->zone()->addressOfJSContext();
-    masm.loadPtr(AbsoluteAddress(contextAddr), temp);
-    masm.branchStackPtrRhs(Assembler::AboveOrEqual,
-                           Address(temp, offsetof(JSContext, jitStackLimit)), ool->entry());
+    const void* limitAddr = gen->runtime->addressOfJitStackLimit();
+    masm.branchStackPtrRhs(Assembler::AboveOrEqual, AbsoluteAddress(limitAddr), ool->entry());
     masm.bind(ool->rejoin());
 }
 
@@ -12917,12 +12913,8 @@ CodeGenerator::visitInterruptCheck(LInterruptCheck* lir)
 
     OutOfLineCode* ool = oolCallVM(InterruptCheckInfo, lir, ArgList(), StoreNothing());
 
-    Register temp = ToRegister(lir->temp());
-
-    const void* contextAddr = gen->compartment->zone()->addressOfJSContext();
-    masm.loadPtr(AbsoluteAddress(contextAddr), temp);
-    masm.branch32(Assembler::NotEqual, Address(temp, offsetof(JSContext, interrupt_)),
-                  Imm32(0), ool->entry());
+    const void* interruptAddr = gen->runtime->addressOfInterrupt();
+    masm.branch32(Assembler::NotEqual, AbsoluteAddress(interruptAddr), Imm32(0), ool->entry());
     masm.bind(ool->rejoin());
 }
 

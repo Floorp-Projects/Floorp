@@ -1481,20 +1481,14 @@ class LInitPropGetterSetter : public LCallInstructionHelper<0, 2, 0>
     }
 };
 
-class LCheckOverRecursed : public LInstructionHelper<0, 0, 1>
+class LCheckOverRecursed : public LInstructionHelper<0, 0, 0>
 {
   public:
     LIR_HEADER(CheckOverRecursed)
 
-    explicit LCheckOverRecursed(const LDefinition& temp)
+    LCheckOverRecursed()
       : LInstructionHelper(classOpcode)
-    {
-        setTemp(0, temp);
-    }
-
-    const LDefinition* temp() {
-        return getTemp(0);
-    }
+    {}
 
     MCheckOverRecursed* mir() const {
         return mir_->toCheckOverRecursed();
@@ -1617,7 +1611,7 @@ class LRotateI64 : public details::RotateBase<INT64_PIECES, INT64_PIECES + 1, 1>
     LAllocation* count() { return getOperand(Count); }
 };
 
-class LInterruptCheck : public LInstructionHelper<0, 0, 1>
+class LInterruptCheck : public LInstructionHelper<0, 0, 0>
 {
     Label* oolEntry_;
 
@@ -1629,13 +1623,11 @@ class LInterruptCheck : public LInstructionHelper<0, 0, 1>
   public:
     LIR_HEADER(InterruptCheck)
 
-    explicit LInterruptCheck(const LDefinition& temp)
+    LInterruptCheck()
       : LInstructionHelper(classOpcode),
         oolEntry_(nullptr),
         implicit_(false)
-    {
-        setTemp(0, temp);
-    }
+    {}
 
     Label* oolEntry() {
         MOZ_ASSERT(implicit_);
@@ -1652,14 +1644,9 @@ class LInterruptCheck : public LInstructionHelper<0, 0, 1>
 
     void setImplicit() {
         implicit_ = true;
-        setTemp(0, LDefinition::BogusTemp());
     }
     bool implicit() const {
         return implicit_;
-    }
-
-    const LDefinition* temp() {
-        return getTemp(0);
     }
 };
 

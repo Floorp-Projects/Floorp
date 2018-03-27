@@ -92,12 +92,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     updateChildRuntimeCount(parentRuntime),
     initialized_(false),
 #endif
-    activeContext_(nullptr),
-    activeContextChangeProhibited_(0),
-    singleThreadedExecutionRequired_(0),
-    startingSingleThreadedExecution_(false),
-    beginSingleThreadedExecutionCallback(nullptr),
-    endSingleThreadedExecutionCallback(nullptr),
+    mainContext_(nullptr),
     profilerSampleBufferRangeStart_(0),
     telemetryCallback(nullptr),
     consumeStreamCallback(nullptr),
@@ -211,9 +206,7 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (CanUseExtraThreads() && !EnsureHelperThreadsInitialized())
         return false;
 
-    activeContext_ = cx;
-    if (!cooperatingContexts().append(cx))
-        return false;
+    mainContext_ = cx;
 
     defaultFreeOp_ = js_new<js::FreeOp>(this);
     if (!defaultFreeOp_)
@@ -348,89 +341,6 @@ JSRuntime::destroyRuntime()
 #endif
 }
 
-static void
-CheckCanChangeActiveContext(JSRuntime* rt)
-{
-    // The runtime might not currently have an active context, in which case
-    // the accesses below to ActiveThreadData data would not normally be
-    // allowed. Suppress protected data checks so these accesses will be
-    // tolerated --- if the active context is null then we're about to set it
-    // to the current thread.
-    AutoNoteSingleThreadedRegion anstr;
-
-    MOZ_RELEASE_ASSERT(!rt->activeContextChangeProhibited());
-    MOZ_RELEASE_ASSERT(!rt->activeContext() || rt->gc.canChangeActiveContext(rt->activeContext()));
-
-    if (rt->singleThreadedExecutionRequired()) {
-        for (ZoneGroupsIter group(rt); !group.done(); group.next())
-            MOZ_RELEASE_ASSERT(group->ownerContext().context() == nullptr);
-    }
-}
-
-void
-JSRuntime::setActiveContext(JSContext* cx)
-{
-    CheckCanChangeActiveContext(this);
-    MOZ_ASSERT_IF(cx, cx->isCooperativelyScheduled());
-
-    activeContext_ = cx;
-}
-
-void
-JSRuntime::setNewbornActiveContext(JSContext* cx)
-{
-    CheckCanChangeActiveContext(this);
-
-    activeContext_ = cx;
-
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (!cooperatingContexts().append(cx))
-        oomUnsafe.crash("Add cooperating context");
-}
-
-void
-JSRuntime::deleteActiveContext(JSContext* cx)
-{
-    CheckCanChangeActiveContext(this);
-    MOZ_ASSERT(cx == activeContext());
-
-    js_delete_poison(cx);
-    activeContext_ = nullptr;
-}
-
-bool
-JSRuntime::beginSingleThreadedExecution(JSContext* cx)
-{
-    if (singleThreadedExecutionRequired_ == 0) {
-        if (startingSingleThreadedExecution_)
-            return false;
-        startingSingleThreadedExecution_ = true;
-        if (beginSingleThreadedExecutionCallback)
-            beginSingleThreadedExecutionCallback(cx);
-        MOZ_ASSERT(startingSingleThreadedExecution_);
-        startingSingleThreadedExecution_ = false;
-    }
-
-    singleThreadedExecutionRequired_++;
-
-    for (ZoneGroupsIter group(this); !group.done(); group.next()) {
-        MOZ_RELEASE_ASSERT(group->ownedByCurrentThread() ||
-                           group->ownerContext().context() == nullptr);
-    }
-
-    return true;
-}
-
-void
-JSRuntime::endSingleThreadedExecution(JSContext* cx)
-{
-    MOZ_ASSERT(singleThreadedExecutionRequired_);
-    if (--singleThreadedExecutionRequired_ == 0) {
-        if (endSingleThreadedExecutionCallback)
-            endSingleThreadedExecutionCallback(cx);
-    }
-}
-
 void
 JSRuntime::addTelemetry(int id, uint32_t sample, const char* key)
 {
@@ -474,17 +384,15 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
         rtSizes->atomsTable += permanentAtoms->sizeOfIncludingThis(mallocSizeOf);
     }
 
-    for (const CooperatingContext& target : cooperatingContexts()) {
-        JSContext* cx = target.context();
-        rtSizes->contexts += mallocSizeOf(cx);
-        rtSizes->contexts += cx->sizeOfExcludingThis(mallocSizeOf);
-        rtSizes->temporary += cx->tempLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
-        rtSizes->interpreterStack += cx->interpreterStack().sizeOfExcludingThis(mallocSizeOf);
+    JSContext* cx = mainContextFromAnyThread();
+    rtSizes->contexts += mallocSizeOf(cx);
+    rtSizes->contexts += cx->sizeOfExcludingThis(mallocSizeOf);
+    rtSizes->temporary += cx->tempLifoAlloc().sizeOfExcludingThis(mallocSizeOf);
+    rtSizes->interpreterStack += cx->interpreterStack().sizeOfExcludingThis(mallocSizeOf);
 #ifdef JS_TRACE_LOGGING
-        if (cx->traceLogger)
-            rtSizes->tracelogger += cx->traceLogger->sizeOfIncludingThis(mallocSizeOf);
+    if (cx->traceLogger)
+        rtSizes->tracelogger += cx->traceLogger->sizeOfIncludingThis(mallocSizeOf);
 #endif
-    }
 
     if (MathCache* cache = caches().maybeGetMathCache())
         rtSizes->mathCache += cache->sizeOfIncludingThis(mallocSizeOf);
@@ -629,7 +537,7 @@ JSRuntime::setDefaultLocale(const char* locale)
     if (!locale)
         return false;
     resetDefaultLocale();
-    defaultLocale = JS_strdup(activeContextFromOwnThread(), locale);
+    defaultLocale = JS_strdup(mainContextFromOwnThread(), locale);
     return defaultLocale != nullptr;
 }
 
@@ -652,7 +560,7 @@ JSRuntime::getDefaultLocale()
     if (!locale || !strcmp(locale, "C"))
         locale = "und";
 
-    char* lang = JS_strdup(activeContextFromOwnThread(), locale);
+    char* lang = JS_strdup(mainContextFromOwnThread(), locale);
     if (!lang)
         return nullptr;
 
@@ -908,7 +816,7 @@ JSRuntime::clearUsedByHelperThread(Zone* zone)
 bool
 js::CurrentThreadCanAccessRuntime(const JSRuntime* rt)
 {
-    return rt->activeContext() == TlsContext.get();
+    return rt->mainContextFromAnyThread() == TlsContext.get();
 }
 
 bool
@@ -916,7 +824,7 @@ js::CurrentThreadCanAccessZone(Zone* zone)
 {
     // Helper thread zones can only be used by their owning thread.
     if (zone->usedByHelperThread())
-        return zone->group()->ownedByCurrentThread();
+        return zone->group()->ownedByCurrentHelperThread();
 
     // Other zones can only be accessed by the runtime's active context.
     return CurrentThreadCanAccessRuntime(zone->runtime_);
