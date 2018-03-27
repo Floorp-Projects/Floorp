@@ -10,8 +10,6 @@
 var EXPORTED_SYMBOLS = ["AddonTestUtils", "MockAsyncShutdown"];
 
 const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
-const CERTDB_CID = Components.ID("{fb0bbc5c-452e-4783-b32c-80124693d871}");
-
 
 Cu.importGlobalProperties(["fetch", "TextEncoder"]);
 
@@ -35,6 +33,8 @@ ChromeUtils.defineModuleGetter(this, "FileTestUtils",
                                "resource://testing-common/FileTestUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "HttpServer",
                                "resource://testing-common/httpd.js");
+ChromeUtils.defineModuleGetter(this, "MockRegistrar",
+                               "resource://testing-common/MockRegistrar.jsm");
 
 XPCOMUtils.defineLazyServiceGetters(this, {
   aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
@@ -101,6 +101,53 @@ var MockAsyncShutdown = {
 };
 
 AMscope.AsyncShutdown = MockAsyncShutdown;
+
+class MockBlocklist {
+  constructor(addons) {
+    if (ChromeUtils.getClassName(addons) === "Object") {
+      addons = new Map(Object.entries(addons));
+    }
+    this.addons = addons;
+  }
+
+  get contractID() {
+    return "@mozilla.org/extensions/blocklist;1";
+  }
+
+  register() {
+    this.originalCID = MockRegistrar.register(this.contractID, this);
+  }
+
+  unregister() {
+    MockRegistrar.unregister(this.originalCID);
+  }
+
+  getAddonBlocklistState(addon, appVersion, toolkitVersion) {
+    return this.addons.get(addon.id, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+  }
+
+  getAddonBlocklistEntry(addon, appVersion, toolkitVersion) {
+    let state = this.getAddonBlocklistState(addon, appVersion, toolkitVersion);
+    if (state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
+      return {
+        state,
+        url: "http://example.com/",
+      };
+    }
+    return null;
+  }
+
+  getPluginBlocklistState(plugin, version, appVersion, toolkitVersion) {
+    return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
+  }
+
+  isAddonBlocklisted(addon, appVersion, toolkitVersion) {
+    return this.getAddonBlocklistState(addon, appVersion, toolkitVersion) ==
+           Ci.nsIBlocklistService.STATE_BLOCKED;
+  }
+}
+
+MockBlocklist.prototype.QueryInterface = XPCOMUtils.generateQI(["nsIBlocklistService"]);
 
 
 /**
@@ -575,16 +622,6 @@ var AddonTestUtils = {
   },
 
   overrideCertDB() {
-    // Unregister the real database. This only works because the add-ons manager
-    // hasn't started up and grabbed the certificate database yet.
-    let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-    let factory = registrar.getClassObject(CERTDB_CID, Ci.nsIFactory);
-    registrar.unregisterFactory(CERTDB_CID, factory);
-
-    // Get the real DB
-    let realCertDB = factory.createInstance(null, Ci.nsIX509CertDB);
-
-
     let verifyCert = async (file, result, cert, callback) => {
       if (result == Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED &&
           !this.useRealCertChecks && callback.wrappedJSObject) {
@@ -618,20 +655,20 @@ var AddonTestUtils = {
       return [callback, result, cert];
     };
 
+    let FakeCertDB = {
+      init() {
+        for (let property of Object.keys(this._genuine.QueryInterface(Ci.nsIX509CertDB))) {
+          if (property in this)
+            continue;
 
-    function FakeCertDB() {
-      for (let property of Object.keys(realCertDB)) {
-        if (property in this)
-          continue;
+          if (typeof this._genuine[property] == "function")
+            this[property] = this._genuine[property].bind(this._genuine);
+        }
+      },
 
-        if (typeof realCertDB[property] == "function")
-          this[property] = realCertDB[property].bind(realCertDB);
-      }
-    }
-    FakeCertDB.prototype = {
       openSignedAppFileAsync(root, file, callback) {
         // First try calling the real cert DB
-        realCertDB.openSignedAppFileAsync(root, file, (result, zipReader, cert) => {
+        this._genuine.openSignedAppFileAsync(root, file, (result, zipReader, cert) => {
           verifyCert(file.clone(), result, cert, callback)
             .then(([callback, result, cert]) => {
               callback.openSignedAppFileFinished(result, zipReader, cert);
@@ -641,7 +678,7 @@ var AddonTestUtils = {
 
       verifySignedDirectoryAsync(root, dir, callback) {
         // First try calling the real cert DB
-        realCertDB.verifySignedDirectoryAsync(root, dir, (result, cert) => {
+        this._genuine.verifySignedDirectoryAsync(root, dir, (result, cert) => {
           verifyCert(dir.clone(), result, cert, callback)
             .then(([callback, result, cert]) => {
               callback.verifySignedDirectoryFinished(result, cert);
@@ -652,9 +689,29 @@ var AddonTestUtils = {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIX509CertDB]),
     };
 
-    let certDBFactory = XPCOMUtils.generateSingletonFactory(FakeCertDB);
-    registrar.registerFactory(CERTDB_CID, "CertDB",
-                              CERTDB_CONTRACTID, certDBFactory);
+    // Unregister the real database. This only works because the add-ons manager
+    // hasn't started up and grabbed the certificate database yet.
+    MockRegistrar.register(CERTDB_CONTRACTID, FakeCertDB);
+
+    // Initialize the mock service.
+    Cc[CERTDB_CONTRACTID].getService();
+    FakeCertDB.init();
+  },
+
+  /**
+   * Overrides the blocklist service, and returns the given blocklist
+   * states for the given add-ons.
+   *
+   * @param {object|Map} addons
+   *        A mapping of add-on IDs to their blocklist states.
+   * @returns {MockBlocklist}
+   *        A mock blocklist service, which should be unregistered when
+   *        the test is complete.
+   */
+  overrideBlocklist(addons) {
+    let mock = new MockBlocklist(addons);
+    mock.register();
+    return mock;
   },
 
   /**
