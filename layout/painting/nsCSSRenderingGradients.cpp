@@ -939,17 +939,6 @@ nsCSSGradientRenderer::Paint(gfxContext& aContext,
   nscoord xEnd = forceRepeatToCoverTiles ? xStart + aDest.width : dirty.XMost();
   nscoord yEnd = forceRepeatToCoverTiles ? yStart + aDest.height : dirty.YMost();
 
-  if (TryPaintTilesWithExtendMode(aContext,
-                                  gradientPattern,
-                                  xStart,
-                                  yStart,
-                                  dirtyAreaToFill,
-                                  aDest,
-                                  aRepeatSize,
-                                  forceRepeatToCoverTiles)) {
-    return;
-  }
-
   // x and y are the top-left corner of the tile to draw
   for (nscoord y = yStart; y < yEnd; y += aRepeatSize.height) {
     for (nscoord x = xStart; x < xEnd; x += aRepeatSize.width) {
@@ -1006,92 +995,6 @@ nsCSSGradientRenderer::Paint(gfxContext& aContext,
       aContext.SetMatrix(ctm);
     }
   }
-}
-
-bool
-nsCSSGradientRenderer::TryPaintTilesWithExtendMode(gfxContext& aContext,
-                                                   gfxPattern* aGradientPattern,
-                                                   nscoord aXStart,
-                                                   nscoord aYStart,
-                                                   const gfxRect& aDirtyAreaToFill,
-                                                   const nsRect& aDest,
-                                                   const nsSize& aRepeatSize,
-                                                   bool aForceRepeatToCoverTiles)
-{
-  // If we have forced a non-repeating gradient to repeat to cover tiles,
-  // then it will be faster to just paint it once using that optimization
-  if (aForceRepeatToCoverTiles) {
-    return false;
-  }
-
-  nscoord appUnitsPerDevPixel = mPresContext->AppUnitsPerDevPixel();
-
-  // We can only use this fast path if we don't have to worry about pixel
-  // snapping, and there is no spacing between tiles. We could handle spacing
-  // by increasing the size of tileSurface and leaving it transparent, but I'm
-  // not sure it's worth it
-  bool canUseExtendModeForTiling =
-    (aXStart % appUnitsPerDevPixel == 0) &&
-    (aYStart % appUnitsPerDevPixel == 0) &&
-    (aDest.width % appUnitsPerDevPixel == 0) &&
-    (aDest.height % appUnitsPerDevPixel == 0) &&
-    (aRepeatSize.width == aDest.width) &&
-    (aRepeatSize.height == aDest.height);
-
-  if (!canUseExtendModeForTiling) {
-    return false;
-  }
-
-  IntSize tileSize {
-    NSAppUnitsToIntPixels(aDest.width, appUnitsPerDevPixel),
-    NSAppUnitsToIntPixels(aDest.height, appUnitsPerDevPixel),
-  };
-
-  // We only want to do this when there are enough tiles to justify the
-  // overhead of painting to an offscreen surface. The heuristic here
-  // is when we will be painting at least 16 tiles or more, this is kind
-  // of arbitrary
-  bool shouldUseExtendModeForTiling =
-    aDirtyAreaToFill.Area() > (tileSize.width * tileSize.height) * 16.0;
-
-  if (!shouldUseExtendModeForTiling) {
-    return false;
-  }
-
-  // Draw the gradient pattern into a surface for our single tile
-  RefPtr<gfx::SourceSurface> tileSurface;
-  {
-    RefPtr<gfx::DrawTarget> tileTarget = aContext.
-      GetDrawTarget()->
-      CreateSimilarDrawTarget(tileSize, gfx::SurfaceFormat::B8G8R8A8);
-    if (!tileTarget || !tileTarget->IsValid()) {
-      return false;
-    }
-
-    RefPtr<gfxContext> tileContext = gfxContext::CreateOrNull(tileTarget);
-
-    tileContext->SetPattern(aGradientPattern);
-    tileContext->Paint();
-
-    tileContext = nullptr;
-    tileSurface = tileTarget->Snapshot();
-    tileTarget = nullptr;
-  }
-
-  // Draw the gradient using tileSurface as a repeating pattern masked by
-  // the dirtyRect
-  Matrix tileTransform = Matrix::Translation(
-    NSAppUnitsToFloatPixels(aXStart, appUnitsPerDevPixel),
-    NSAppUnitsToFloatPixels(aYStart, appUnitsPerDevPixel));
-
-  aContext.NewPath();
-  aContext.Rectangle(aDirtyAreaToFill);
-  aContext.Fill(SurfacePattern(
-    tileSurface,
-    ExtendMode::REPEAT,
-    tileTransform));
-
-  return true;
 }
 
 void

@@ -92,23 +92,6 @@ public:
 private:
   nsCSSGradientRenderer() {}
 
-  /**
-   * Attempts to paint the tiles for a gradient by painting it once to an
-   * offscreen surface and then painting that offscreen surface with
-   * ExtendMode::Repeat to cover all tiles.
-   *
-   * Returns false if the optimization wasn't able to be used, in which case
-   * a fallback should be used.
-   */
-  bool TryPaintTilesWithExtendMode(gfxContext& aContext,
-                                   gfxPattern* aGradientPattern,
-                                   nscoord aXStart,
-                                   nscoord aYStart,
-                                   const gfxRect& aDirtyAreaToFill,
-                                   const nsRect& aDest,
-                                   const nsSize& aRepeatSize,
-                                   bool aForceRepeatToCoverTiles);
-
   nsPresContext* mPresContext;
   nsStyleGradient* mGradient;
   nsTArray<ColorStop> mStops;
