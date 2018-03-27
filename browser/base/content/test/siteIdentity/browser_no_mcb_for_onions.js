@@ -23,7 +23,8 @@ add_task(async function allowOnionMixedContent() {
   await SpecialPowers.pushPrefEnv({set: [[PREF_BLOCK_ACTIVE, true]]});
   await SpecialPowers.pushPrefEnv({set: [[PREF_ONION_WHITELIST, true]]});
 
-  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL).
+    catch(Cu.reportError);
   const browser = gBrowser.getBrowserForTab(tab);
 
   await ContentTask.spawn(browser, null, function() {
