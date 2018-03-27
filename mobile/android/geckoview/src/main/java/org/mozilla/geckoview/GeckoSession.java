@@ -160,8 +160,10 @@ public class GeckoSession extends LayerSession
                                       final GeckoBundle message,
                                       final EventCallback callback) {
                 if ("GeckoView:LocationChange".equals(event)) {
-                    delegate.onLocationChange(GeckoSession.this,
-                                              message.getString("uri"));
+                    if (message.getBoolean("isTopLevel")) {
+                        delegate.onLocationChange(GeckoSession.this,
+                                                  message.getString("uri"));
+                    }
                     delegate.onCanGoBack(GeckoSession.this,
                                          message.getBoolean("canGoBack"));
                     delegate.onCanGoForward(GeckoSession.this,
