@@ -25,7 +25,7 @@ const ADDONS = {
       }]
     },
     // No info in blocklist, shouldn't be blocked
-    notBlocklisted: ["1", "1.9"],
+    notBlocklisted: [["1", "1.9"], [null, null]],
   },
 
   "test_bug393285_2@tests.mozilla.org": {
@@ -41,7 +41,7 @@ const ADDONS = {
       }]
     },
     // Should always be blocked
-    blocklisted: ["1", "1.9"],
+    blocklisted: [["1", "1.9"], [null, null]],
   },
 
   "test_bug393285_3a@tests.mozilla.org": {
@@ -57,7 +57,7 @@ const ADDONS = {
       }]
     },
     // Only version 1 should be blocked
-    blocklisted: ["1", "1.9"],
+    blocklisted: [["1", "1.9"], [null, null]],
   },
 
   "test_bug393285_3b@tests.mozilla.org": {
@@ -73,7 +73,7 @@ const ADDONS = {
       }]
     },
     // Only version 1 should be blocked
-    notBlocklisted: ["1", "1.9"],
+    notBlocklisted: [["1", "1.9"]],
   },
 
   "test_bug393285_4@tests.mozilla.org": {
@@ -89,8 +89,8 @@ const ADDONS = {
       }]
     },
     // Should be blocked for app version 1
-    blocklisted: ["1", "1.9"],
-    notBlocklisted: ["2", "1.9"],
+    blocklisted: [["1", "1.9"], [null, null]],
+    notBlocklisted: [["2", "1.9"]],
   },
 
   "test_bug393285_5@tests.mozilla.org": {
@@ -106,7 +106,7 @@ const ADDONS = {
       }]
     },
     // Not blocklisted because we are a different OS
-    notBlocklisted: ["2", "1.9"],
+    notBlocklisted: [["2", "1.9"]],
   },
 
   "test_bug393285_6@tests.mozilla.org": {
@@ -122,7 +122,7 @@ const ADDONS = {
       }]
     },
     // Blocklisted based on OS
-    blocklisted: ["2", "1.9"],
+    blocklisted: [["2", "1.9"]],
   },
 
   "test_bug393285_7@tests.mozilla.org": {
@@ -138,7 +138,7 @@ const ADDONS = {
       }]
     },
     // Blocklisted based on OS
-    blocklisted: ["2", "1.9"],
+    blocklisted: [["2", "1.9"]],
   },
 
   "test_bug393285_8@tests.mozilla.org": {
@@ -154,7 +154,7 @@ const ADDONS = {
       }]
     },
     // Not blocklisted because we are a different ABI
-    notBlocklisted: ["2", "1.9"],
+    notBlocklisted: [["2", "1.9"]],
   },
 
   "test_bug393285_9@tests.mozilla.org": {
@@ -170,7 +170,7 @@ const ADDONS = {
       }]
     },
     // Blocklisted based on ABI
-    blocklisted: ["2", "1.9"],
+    blocklisted: [["2", "1.9"]],
   },
 
   "test_bug393285_10@tests.mozilla.org": {
@@ -186,7 +186,7 @@ const ADDONS = {
       }]
     },
     // Blocklisted based on ABI
-    blocklisted: ["2", "1.9"],
+    blocklisted: [["2", "1.9"]],
   },
 
   "test_bug393285_11@tests.mozilla.org": {
@@ -202,7 +202,7 @@ const ADDONS = {
       }]
     },
     // Doesn't match both os and abi so not blocked
-    notBlocklisted: ["2", "1.9"],
+    notBlocklisted: [["2", "1.9"]],
   },
 
   "test_bug393285_12@tests.mozilla.org": {
@@ -218,7 +218,7 @@ const ADDONS = {
       }]
     },
     // Doesn't match both os and abi so not blocked
-    notBlocklisted: ["2", "1.9"],
+    notBlocklisted: [["2", "1.9"]],
   },
 
   "test_bug393285_13@tests.mozilla.org": {
@@ -234,7 +234,7 @@ const ADDONS = {
       }]
     },
     // Doesn't match both os and abi so not blocked
-    notBlocklisted: ["2", "1.9"],
+    notBlocklisted: [["2", "1.9"]],
   },
 
   "test_bug393285_14@tests.mozilla.org": {
@@ -250,7 +250,7 @@ const ADDONS = {
       }]
     },
     // Matches both os and abi so blocked
-    blocklisted: ["2", "1.9"],
+    blocklisted: [["2", "1.9"]],
   },
 };
 
@@ -287,13 +287,13 @@ add_task(async function test_1() {
 
   let addons = await getAddons(ADDON_IDS);
   for (let [id, options] of Object.entries(ADDONS)) {
-    if (options.blocklisted) {
-      ok(Services.blocklist.isAddonBlocklisted(addons.get(id), ...options.blocklisted),
-         `Add-on ${id} should be blocklisted in app/platform version ${options.blocklisted}`);
+    for (let blocklisted of options.blocklisted || []) {
+      ok(Services.blocklist.isAddonBlocklisted(addons.get(id), ...blocklisted),
+         `Add-on ${id} should be blocklisted in app/platform version ${blocklisted}`);
     }
-    if (options.notBlocklisted) {
-      ok(!Services.blocklist.isAddonBlocklisted(addons.get(id), ...options.notBlocklisted),
-         `Add-on ${id} should not be blocklisted in app/platform version ${options.notBlocklisted}`);
+    for (let notBlocklisted of options.notBlocklisted || []) {
+      ok(!Services.blocklist.isAddonBlocklisted(addons.get(id), ...notBlocklisted),
+         `Add-on ${id} should not be blocklisted in app/platform version ${notBlocklisted}`);
     }
   }
 });
