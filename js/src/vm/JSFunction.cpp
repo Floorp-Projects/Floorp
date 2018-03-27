@@ -2147,7 +2147,17 @@ NewFunctionClone(JSContext* cx, HandleFunction fun, NewObjectKind newKind,
         return nullptr;
     RootedFunction clone(cx, &cloneobj->as<JSFunction>());
 
-    uint16_t flags = fun->flags() & ~JSFunction::EXTENDED;
+    // JSFunction::HAS_INFERRED_NAME can be set at compile-time and at
+    // runtime. In the latter case we should actually clear the flag before
+    // cloning the function, but since we can't differentiate between both
+    // cases here, we'll end up with a momentarily incorrect function name.
+    // This will be fixed up in SetFunctionNameIfNoOwnName(), which should
+    // happen through JSOP_SETFUNNAME directly after JSOP_LAMBDA.
+    constexpr uint16_t NonCloneableFlags = JSFunction::EXTENDED |
+                                           JSFunction::RESOLVED_LENGTH |
+                                           JSFunction::RESOLVED_NAME;
+
+    uint16_t flags = fun->flags() & ~NonCloneableFlags;
     if (allocKind == AllocKind::FUNCTION_EXTENDED)
         flags |= JSFunction::EXTENDED;
 
@@ -2380,6 +2390,14 @@ js::SetFunctionNameIfNoOwnName(JSContext* cx, HandleFunction fun, HandleValue na
 {
     MOZ_ASSERT(name.isString() || name.isSymbol() || name.isNumber());
 
+    // An inferred name may already be set if this function is a clone of a
+    // singleton function. Clear the inferred name in all cases, even if we
+    // end up not adding a new inferred name if |fun| is a class constructor.
+    if (fun->hasInferredName()) {
+        MOZ_ASSERT(fun->isSingleton());
+        fun->clearInferredName();
+    }
+
     if (fun->isClassConstructor()) {
         // A class may have static 'name' method or accessor.
         if (fun->contains(cx, cx->names().name))
@@ -2401,7 +2419,13 @@ js::SetFunctionNameIfNoOwnName(JSContext* cx, HandleFunction fun, HandleValue na
     if (!funNameAtom)
         return false;
 
+    // RESOLVED_NAME shouldn't yet be set, at least as long as we don't
+    // support the "static public fields" or "decorators" proposal.
+    // These two proposals allow to access class constructors before
+    // JSOP_SETFUNNAME is executed, which means user code may have set the
+    // RESOLVED_NAME flag when we reach this point.
     MOZ_ASSERT(!fun->hasResolvedName());
+
     fun->setInferredName(funNameAtom);
 
     return true;
