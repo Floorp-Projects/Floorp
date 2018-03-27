@@ -104,6 +104,7 @@ nsNSSCertificate::InitFromDER(char* certDER, int derLen)
   }
 
   mCert.reset(aCert);
+  GetSubjectAltNames();
   return true;
 }
 
@@ -111,9 +112,11 @@ nsNSSCertificate::nsNSSCertificate(CERTCertificate* cert)
   : mCert(nullptr)
   , mPermDelete(false)
   , mCertType(CERT_TYPE_NOT_YET_INITIALIZED)
+  , mSubjectAltNames()
 {
   if (cert) {
     mCert.reset(CERT_DupCertificate(cert));
+    GetSubjectAltNames();
   }
 }
 
@@ -121,6 +124,7 @@ nsNSSCertificate::nsNSSCertificate()
   : mCert(nullptr)
   , mPermDelete(false)
   , mCertType(CERT_TYPE_NOT_YET_INITIALIZED)
+  , mSubjectAltNames()
 {
 }
 
@@ -631,6 +635,96 @@ nsNSSCertificate::GetSubjectName(nsAString& _subjectName)
   _subjectName.Truncate();
   if (mCert->subjectName) {
     _subjectName = NS_ConvertUTF8toUTF16(mCert->subjectName);
+  }
+  return NS_OK;
+}
+
+// Reads dNSName and iPAddress entries encountered in the subject alternative
+// name extension of the certificate and stores them in mSubjectAltNames.
+void
+nsNSSCertificate::GetSubjectAltNames()
+{
+  mSubjectAltNames.clear();
+
+  ScopedAutoSECItem altNameExtension;
+  SECStatus rv = CERT_FindCertExtension(mCert.get(),
+                                        SEC_OID_X509_SUBJECT_ALT_NAME,
+                                        &altNameExtension);
+  if (rv != SECSuccess) {
+    return;
+  }
+  UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
+    return;
+  }
+  CERTGeneralName* sanNameList(CERT_DecodeAltNameExtension(arena.get(),
+                                                           &altNameExtension));
+  if (!sanNameList) {
+    return;
+  }
+
+  CERTGeneralName* current = sanNameList;
+  do {
+    nsAutoString name;
+    switch (current->type) {
+      case certDNSName:
+        {
+          nsDependentCSubstring nameFromCert(BitwiseCast<char*, unsigned char*>(
+                                             current->name.other.data),
+                                             current->name.other.len);
+          // dNSName fields are defined as type IA5String and thus should
+          // be limited to ASCII characters.
+          if (IsASCII(nameFromCert)) {
+            name.Assign(NS_ConvertASCIItoUTF16(nameFromCert));
+            mSubjectAltNames.push_back(name);
+          }
+        }
+        break;
+
+      case certIPAddress:
+        {
+          char buf[INET6_ADDRSTRLEN];
+          PRNetAddr addr;
+          if (current->name.other.len == 4) {
+            addr.inet.family = PR_AF_INET;
+            memcpy(&addr.inet.ip, current->name.other.data,
+                   current->name.other.len);
+            PR_NetAddrToString(&addr, buf, sizeof(buf));
+            name.AssignASCII(buf);
+          } else if (current->name.other.len == 16) {
+            addr.ipv6.family = PR_AF_INET6;
+            memcpy(&addr.ipv6.ip, current->name.other.data,
+                   current->name.other.len);
+            PR_NetAddrToString(&addr, buf, sizeof(buf));
+            name.AssignASCII(buf);
+          } else {
+            /* invalid IP address */
+          }
+          if (!name.IsEmpty()) {
+            mSubjectAltNames.push_back(name);
+          }
+          break;
+        }
+
+      default: // all other types of names are ignored
+        break;
+    }
+    current = CERT_GetNextGeneralName(current);
+  } while (current != sanNameList); // double linked
+
+  return;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::GetSubjectAltNames(nsAString& _subjectAltNames)
+{
+  _subjectAltNames.Truncate();
+
+  for (auto altName : mSubjectAltNames) {
+    if (!_subjectAltNames.IsEmpty()) {
+      _subjectAltNames.Append(',');
+    }
+    _subjectAltNames.Append(altName);
   }
   return NS_OK;
 }

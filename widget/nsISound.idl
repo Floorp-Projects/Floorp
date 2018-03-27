@@ -12,13 +12,6 @@ interface nsIURL;
 interface nsISound : nsISupports
 {
   void play(in nsIURL aURL);
-  /**
-   * for playing system sounds
-   *
-   * NS_SYSSOUND_* params are obsolete. The new events will not be supported by
-   * this method.  You should use playEventSound method instaed.
-   */
-  void playSystemSound(in AString soundAlias);  
   void beep();
 
   /**
@@ -45,23 +38,3 @@ interface nsISound : nsISupports
   const unsigned long EVENT_EDITOR_MAX_LEN              = 7;
   void playEventSound(in unsigned long aEventId);
 };
-
-%{C++
-
-/**
- * NS_SYSSOUND_* can be used for playSystemSound but they are obsolete.
- * Use nsISound::playEventSound instead.
- */
-#define NS_SYSSOUND_PREFIX          NS_LITERAL_STRING("_moz_")
-#define NS_SYSSOUND_MAIL_BEEP       NS_LITERAL_STRING("_moz_mailbeep")
-#define NS_SYSSOUND_ALERT_DIALOG    NS_LITERAL_STRING("_moz_alertdialog")
-#define NS_SYSSOUND_CONFIRM_DIALOG  NS_LITERAL_STRING("_moz_confirmdialog")
-#define NS_SYSSOUND_PROMPT_DIALOG   NS_LITERAL_STRING("_moz_promptdialog")
-#define NS_SYSSOUND_SELECT_DIALOG   NS_LITERAL_STRING("_moz_selectdialog")
-#define NS_SYSSOUND_MENU_EXECUTE    NS_LITERAL_STRING("_moz_menucommand")
-#define NS_SYSSOUND_MENU_POPUP      NS_LITERAL_STRING("_moz_menupopup")
-
-#define NS_IsMozAliasSound(aSoundAlias) \
-          StringBeginsWith(aSoundAlias, NS_SYSSOUND_PREFIX)
-
-%}

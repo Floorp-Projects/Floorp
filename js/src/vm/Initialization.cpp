@@ -31,8 +31,7 @@
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
 #include "vtune/VTuneWrapper.h"
-#include "wasm/WasmBuiltins.h"
-#include "wasm/WasmInstance.h"
+#include "wasm/WasmProcess.h"
 
 using JS::detail::InitState;
 using JS::detail::libraryInitState;
@@ -106,7 +105,7 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
 
     RETURN_IF_FAIL(js::Mutex::Init());
 
-    RETURN_IF_FAIL(js::wasm::InitInstanceStaticData());
+    RETURN_IF_FAIL(js::wasm::Init());
 
     js::gc::InitMemorySubsystem(); // Ensure gc::SystemPageSize() works.
 
@@ -173,8 +172,7 @@ JS_ShutDown(void)
 
     js::MemoryProtectionExceptionHandler::uninstall();
 
-    js::wasm::ShutDownInstanceStaticData();
-    js::wasm::ShutDownProcessStaticData();
+    js::wasm::ShutDown();
 
     js::Mutex::ShutDown();
 
@@ -200,7 +198,6 @@ JS_ShutDown(void)
     js::FinishDateTimeState();
 
     if (!JSRuntime::hasLiveRuntimes()) {
-        js::wasm::ReleaseBuiltinThunks();
         js::jit::ReleaseProcessExecutableMemory();
         MOZ_ASSERT(!js::LiveMappedBufferCount());
     }

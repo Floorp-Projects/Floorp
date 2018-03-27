@@ -47,7 +47,7 @@ static const char* wmcLogTag ="WebrtcMediaCodecVP8VideoCodec";
 class CallbacksSupport final : public JavaCallbacksSupport
 {
 public:
-  CallbacksSupport(webrtc::EncodedImageCallback* aCallback)
+  explicit CallbacksSupport(webrtc::EncodedImageCallback* aCallback)
     : mCallback(aCallback)
     , mCritSect(webrtc::CriticalSectionWrapper::CreateCriticalSection())
     , mPictureId(0) {
@@ -635,7 +635,7 @@ private:
 class OutputDrain : public MediaCodecOutputDrain
   {
   public:
-    OutputDrain(WebrtcAndroidMediaCodec* aMediaCodec)
+    explicit OutputDrain(WebrtcAndroidMediaCodec* aMediaCodec)
       : MediaCodecOutputDrain()
       , mMediaCodec(aMediaCodec)
     {}

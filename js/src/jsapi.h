@@ -865,23 +865,6 @@ JS_ResumeCooperativeContext(JSContext* cx);
 extern JS_PUBLIC_API(JSContext*)
 JS_NewCooperativeContext(JSContext* siblingContext);
 
-namespace JS {
-
-// Class to relinquish exclusive access to all zone groups in use by this
-// thread. This allows other cooperative threads to enter the zone groups
-// and modify their contents.
-struct AutoRelinquishZoneGroups
-{
-    explicit AutoRelinquishZoneGroups(JSContext* cx);
-    ~AutoRelinquishZoneGroups();
-
-  private:
-    JSContext* cx;
-    mozilla::Vector<void*> enterList;
-};
-
-} // namespace JS
-
 // Destroy a context allocated with JS_NewContext or JS_NewCooperativeContext.
 // The context must be the current active context in the runtime, and after
 // this call the runtime will have no active context.
@@ -908,31 +891,6 @@ JS_EndRequest(JSContext* cx);
 
 extern JS_PUBLIC_API(void)
 JS_SetFutexCanWait(JSContext* cx);
-
-namespace JS {
-
-// Single threaded execution callbacks are used to notify API clients that a
-// feature is in use on a context's runtime that is not yet compatible with
-// cooperatively multithreaded execution.
-//
-// Between a call to BeginSingleThreadedExecutionCallback and a corresponding
-// call to EndSingleThreadedExecutionCallback, only one thread at a time may
-// enter compartments in the runtime. The begin callback may yield as necessary
-// to permit other threads to finish up what they're doing, while the end
-// callback may not yield or otherwise operate on the runtime (it may be called
-// during GC).
-//
-// These callbacks may be left unspecified for runtimes which only ever have a
-// single context.
-typedef void (*BeginSingleThreadedExecutionCallback)(JSContext* cx);
-typedef void (*EndSingleThreadedExecutionCallback)(JSContext* cx);
-
-extern JS_PUBLIC_API(void)
-SetSingleThreadedExecutionCallbacks(JSContext* cx,
-                                    BeginSingleThreadedExecutionCallback begin,
-                                    EndSingleThreadedExecutionCallback end);
-
-} // namespace JS
 
 namespace js {
 

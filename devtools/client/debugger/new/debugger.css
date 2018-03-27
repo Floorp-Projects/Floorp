@@ -89,6 +89,7 @@
   display: flex;
   justify-content: space-between;
   border: 1px solid transparent;
+  white-space: pre;
 }
 
 @media (max-width: 640px) {
@@ -586,15 +587,17 @@ menuseparator {
   fill: var(--theme-splitter-color);
 }
 
-.file,
 .folder,
-.domain {
+.domain,
+.source-icon,
+.file {
   background-color: var(--theme-comment);
 }
 
 .worker,
 .file,
-.folder {
+.folder,
+.source-icon {
   position: relative;
   top: 2px;
 }
@@ -615,7 +618,8 @@ menuseparator {
 }
 
 img.domain,
-img.folder {
+img.folder,
+img.source-icon {
   width: 15px;
   height: 15px;
 }
@@ -628,6 +632,22 @@ img.folder {
   mask: url("chrome://devtools/skin/images/debugger/folder.svg") no-repeat;
 }
 
+img.coffeescript {
+  mask: url("chrome://devtools/skin/images/debugger/coffeescript.svg") no-repeat;
+}
+
+img.javascript {
+  mask: url("chrome://devtools/skin/images/debugger/javascript.svg") no-repeat;
+}
+
+img.react {
+  mask: url("chrome://devtools/skin/images/debugger/react.svg") no-repeat;
+}
+
+img.typescript {
+  mask: url("chrome://devtools/skin/images/debugger/typescript.svg") no-repeat;
+}
+
 img.file {
   mask: url("chrome://devtools/skin/images/debugger/file.svg") no-repeat;
   width: 13px;
@@ -636,7 +656,8 @@ img.file {
 
 img.domain,
 img.folder,
-img.file {
+img.file,
+img.source-icon {
   mask-size: 100%;
   margin-inline-end: 5px;
   display: inline-block;
@@ -3665,6 +3686,8 @@ img.ignore-exceptions {
   flex: 1;
   white-space: nowrap;
   --breakpoint-expression-right-clear-space: 36px;
+  -moz-user-select: none;
+  user-select: none;
 }
 
 /*
@@ -3951,12 +3974,11 @@ html .welcomebox .toggle-button-end.collapsed {
   color: var(--theme-body-color);
   padding: 4px 13px;
   display: flex;
-  justify-content: space-between;
 }
 
 .result-list.big li {
   padding: 10px;
-  flex-direction: column;
+  flex-direction: row;
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
@@ -3988,6 +4010,9 @@ html .welcomebox .toggle-button-end.collapsed {
 .result-list li .title {
   line-height: 1.5em;
   word-break: break-all;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .result-list li.selected .title {
@@ -4011,6 +4036,10 @@ html .welcomebox .toggle-button-end.collapsed {
 .result-list.big li .subtitle {
   word-break: break-all;
   color: var(--theme-body-color-inactive);
+  margin-left: 15px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .result-list.big li .subtitle {

@@ -21,7 +21,7 @@ using namespace mozilla;
 class AndroidInputStream : public nsIInputStream
 {
 public:
-    AndroidInputStream(jni::Object::Param connection) {
+    explicit AndroidInputStream(jni::Object::Param connection) {
         mBridgeInputStream = java::GeckoAppShell::CreateInputStream(connection);
         mBridgeChannel = AndroidBridge::ChannelCreate(mBridgeInputStream);
     }

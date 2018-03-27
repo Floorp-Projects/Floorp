@@ -86,7 +86,7 @@ private:
 
 class MOZ_STACK_CLASS AutoObjectMapperFaultyLib : public AutoObjectMapperPOSIX {
 public:
-  AutoObjectMapperFaultyLib(void(*aLog)(const char*));
+  explicit AutoObjectMapperFaultyLib(void(*aLog)(const char*));
 
   ~AutoObjectMapperFaultyLib();
 

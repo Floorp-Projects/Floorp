@@ -1022,11 +1022,6 @@ WasmInstanceObject::create(JSContext* cx,
         return nullptr;
     }
 
-    AutoSetNewObjectMetadata metadata(cx);
-    RootedWasmInstanceObject obj(cx, NewObjectWithGivenProto<WasmInstanceObject>(cx, proto));
-    if (!obj)
-        return nullptr;
-
     uint32_t indirectGlobals = 0;
 
 #if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
@@ -1036,9 +1031,12 @@ WasmInstanceObject::create(JSContext* cx,
     }
 #endif
 
-    Rooted<UniquePtr<WasmGlobalObjectVector>> indirectGlobalObjs(cx, js::MakeUnique<WasmGlobalObjectVector>());
-    if (!indirectGlobalObjs || !indirectGlobalObjs->resize(indirectGlobals))
+    Rooted<UniquePtr<WasmGlobalObjectVector>> indirectGlobalObjs(cx,
+        js::MakeUnique<WasmGlobalObjectVector>());
+    if (!indirectGlobalObjs || !indirectGlobalObjs->resize(indirectGlobals)) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
 #if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     {
@@ -1050,13 +1048,22 @@ WasmInstanceObject::create(JSContext* cx,
     }
 #endif
 
-    obj->setReservedSlot(EXPORTS_SLOT, PrivateValue(exports.release()));
-    obj->setReservedSlot(SCOPES_SLOT, PrivateValue(scopes.release()));
-    obj->setReservedSlot(GLOBALS_SLOT, PrivateValue(indirectGlobalObjs.release()));
-    obj->setReservedSlot(INSTANCE_SCOPE_SLOT, UndefinedValue());
-    MOZ_ASSERT(obj->isNewborn());
+    AutoSetNewObjectMetadata metadata(cx);
+    RootedWasmInstanceObject obj(cx, NewObjectWithGivenProto<WasmInstanceObject>(cx, proto));
+    if (!obj)
+        return nullptr;
 
     MOZ_ASSERT(obj->isTenured(), "assumed by WasmTableObject write barriers");
+
+    // Finalization assumes these slots are always initialized:
+    obj->initReservedSlot(EXPORTS_SLOT, PrivateValue(exports.release()));
+    obj->initReservedSlot(SCOPES_SLOT, PrivateValue(scopes.release()));
+    obj->initReservedSlot(GLOBALS_SLOT, PrivateValue(indirectGlobalObjs.release()));
+    obj->initReservedSlot(INSTANCE_SCOPE_SLOT, UndefinedValue());
+
+    // The INSTANCE_SLOT may not be initialized if Instance allocation fails,
+    // leading to an observable "newborn" state in tracing/finalization.
+    MOZ_ASSERT(obj->isNewborn());
 
     // Root the Instance via WasmInstanceObject before any possible GC.
     auto* instance = cx->new_<Instance>(cx,

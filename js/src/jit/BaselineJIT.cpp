@@ -1218,10 +1218,8 @@ jit::MarkActiveBaselineScripts(Zone* zone)
     if (zone->isAtomsZone())
         return;
     JSContext* cx = TlsContext.get();
-    for (const CooperatingContext& target : cx->runtime()->cooperatingContexts()) {
-        for (JitActivationIterator iter(cx, target); !iter.done(); ++iter) {
-            if (iter->compartment()->zone() == zone)
-                MarkActiveBaselineScripts(cx, iter);
-        }
+    for (JitActivationIterator iter(cx); !iter.done(); ++iter) {
+        if (iter->compartment()->zone() == zone)
+            MarkActiveBaselineScripts(cx, iter);
     }
 }

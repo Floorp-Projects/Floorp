@@ -181,7 +181,7 @@ AST_MATCHER(CXXConstructorDecl, isInterestingImplicitCtor) {
       !ASTIsInSystemHeader(Declaration->getASTContext(), *Declaration) &&
       // Skip ignored namespaces and paths
       !isInIgnoredNamespaceForImplicitCtor(Declaration) &&
-      !isIgnoredPathForImplicitCtor(Declaration) &&
+      !inThirdPartyPath(Declaration) &&
       // We only want Converting constructors
       Declaration->isConvertingConstructor(false) &&
       // We don't want copy of move constructors, as those are allowed to be

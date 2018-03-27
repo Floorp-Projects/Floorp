@@ -997,7 +997,10 @@ function _parse(code, opts) {
 
 const sourceOptions = {
   generated: {
-    tokens: true
+    tokens: true,
+    plugins: [
+      "objectRestSpread"
+    ]
   },
   original: {
     sourceType: "unambiguous",
@@ -1045,6 +1048,11 @@ function getAst(sourceId) {
   } else if (contentType && contentType.match(/(javascript|jsx)/)) {
     const type = source.id.includes("original") ? "original" : "generated";
     const options = sourceOptions[type];
+    ast = parse(source.text, options);
+  } else if (contentType && contentType.match(/typescript/)) {
+    const options = _extends({}, sourceOptions.original, {
+      plugins: [...sourceOptions.original.plugins.filter(p => p !== "flow" && p !== "decorators" && p !== "decorators2"), "decorators", "typescript"]
+    });
     ast = parse(source.text, options);
   }
 
@@ -1293,12 +1301,7 @@ function getVariables(dec) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getClosestExpression = getClosestExpression;
 exports.getClosestPath = getClosestPath;
-
-var _types = __webpack_require__(2268);
-
-var t = _interopRequireWildcard(_types);
 
 var _simplePath = __webpack_require__(3591);
 
@@ -1306,51 +1309,9 @@ var _simplePath2 = _interopRequireDefault(_simplePath);
 
 var _ast = __webpack_require__(1375);
 
-var _helpers = __webpack_require__(1411);
-
 var _contains = __webpack_require__(1456);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-function getNodeValue(node) {
-  if (t.isThisExpression(node)) {
-    return "this";
-  }
-
-  return node.name;
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function getClosestMemberExpression(sourceId, token, location) {
-  const closest = getClosestPath(sourceId, location).find(path => t.isMemberExpression(path.node) && path.node.property.name === token);
-
-  if (closest) {
-    const memberExpression = (0, _helpers.getMemberExpression)(closest.node);
-    return {
-      expression: memberExpression,
-      location: closest.node.loc
-    };
-  }
-  return null;
-}
-
-function getClosestExpression(sourceId, token, location) {
-  const memberExpression = getClosestMemberExpression(sourceId, token, location);
-  if (memberExpression) {
-    return memberExpression;
-  }
-
-  const path = getClosestPath(sourceId, location);
-  if (!path || !path.node) {
-    return;
-  }
-
-  const { node } = path;
-  return { expression: getNodeValue(node), location: node.loc };
-}
 
 function getClosestPath(sourceId, location) {
   let closestPath = null;
@@ -1372,7 +1333,9 @@ function getClosestPath(sourceId, location) {
   }
 
   return closestPath;
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /***/ }),
 
@@ -1908,8 +1871,6 @@ function clearSources() {
 "use strict";
 
 
-var _closest = __webpack_require__(1455);
-
 var _getSymbols = __webpack_require__(1457);
 
 var _ast = __webpack_require__(1375);
@@ -1942,12 +1903,13 @@ var _devtoolsUtils = __webpack_require__(1363);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const { workerHandler } = _devtoolsUtils.workerUtils; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                       * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                       * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const { workerHandler } = _devtoolsUtils.workerUtils;
 
 self.onmessage = workerHandler({
-  getClosestExpression: _closest.getClosestExpression,
   findOutOfScopeLocations: _findOutOfScopeLocations2.default,
   getSymbols: _getSymbols.getSymbols,
   getScopes: _getScopes2.default,
@@ -2314,8 +2276,6 @@ var _types = __webpack_require__(2268);
 
 var t = _interopRequireWildcard(_types);
 
-var _types2 = __webpack_require__(1627);
-
 var _closest = __webpack_require__(1455);
 
 var _helpers = __webpack_require__(1411);
@@ -2336,7 +2296,7 @@ function getNextStep(sourceId, pausedPosition) {
     throw new Error("Assertion failure - this should always find at least Program");
   }
 
-  return _getNextStep(currentStatement, pausedPosition);
+  return _getNextStep(currentStatement, sourceId, pausedPosition);
 }
 
 function getSteppableExpression(sourceId, pausedPosition) {
@@ -2353,24 +2313,16 @@ function getSteppableExpression(sourceId, pausedPosition) {
   return closestPath.find(p => t.isAwaitExpression(p.node) || t.isYieldExpression(p.node));
 }
 
-function _getNextStep(statement, position) {
+function _getNextStep(statement, sourceId, position) {
   const nextStatement = statement.getSibling(1);
   if (nextStatement) {
     return _extends({}, nextStatement.node.loc.start, {
-      sourceId: position.sourceId
+      sourceId: sourceId
     });
   }
 
   return null;
 }
-
-/***/ }),
-
-/***/ 1627:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
 
 /***/ }),
 
@@ -19493,7 +19445,23 @@ const scopeCollectionVisitor = {
           };
         }
       });
-    } else if (t.isIdentifier(node) && t.isReferenced(node, parentNode)) {
+    } else if (t.isTSEnumDeclaration(node)) {
+      state.scope.bindings[node.id.name] = {
+        type: "const",
+        refs: [{
+          type: "decl",
+          start: fromBabelLocation(node.id.loc.start, state.sourceId),
+          end: fromBabelLocation(node.id.loc.end, state.sourceId),
+          declaration: {
+            start: fromBabelLocation(node.loc.start, state.sourceId),
+            end: fromBabelLocation(node.loc.end, state.sourceId)
+          }
+        }]
+      };
+    } else if (t.isIdentifier(node) && t.isReferenced(node, parentNode) &&
+    // Babel doesn't cover this in 'isReferenced' yet, but it should
+    // eventually.
+    !t.isTSEnumMember(parentNode, { id: node })) {
       let freeVariables = state.freeVariables.get(node.name);
       if (!freeVariables) {
         freeVariables = [];
@@ -21104,6 +21072,10 @@ var t = _interopRequireWildcard(_types);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 const isControlFlow = node => t.isForStatement(node) || t.isWhileStatement(node) || t.isIfStatement(node);
 
 const isAssignment = node => t.isVariableDeclarator(node) || t.isAssignmentExpression(node);
@@ -21118,48 +21090,56 @@ function getPausePoints(sourceId) {
   return state;
 }
 
-function formatNode(location, types) {
-  return { location, types };
-}
-
 function onEnter(node, ancestors, state) {
   const parent = ancestors[ancestors.length - 1];
 
-  if (isAssignment(node) || isImport(node) || isControlFlow(node)) {
-    state.push(formatNode(node.loc.start, { breakpoint: true, stepOver: true }));
+  if (isAssignment(node) || isImport(node) || isControlFlow(node) || t.isDebuggerStatement(node)) {
+    addPoint(state, node.loc.start);
   }
 
   if (isReturn(node)) {
     if (t.isCallExpression(node.argument)) {
-      state.push(formatNode(node.loc.start, { breakpoint: false, stepOver: false }));
+      addEmptyPoint(state, node.loc.start);
     } else {
-      state.push(formatNode(node.loc.start, { breakpoint: true, stepOver: true }));
+      addPoint(state, node.loc.start);
     }
   }
 
   if (t.isCallExpression(node)) {
-    state.push(formatNode(node.loc.start, {
+    addPoint(state, node.loc.start, {
       breakpoint: true,
 
       // NOTE: we do not want to land inside an expression e.g. [], {}, call
       stepOver: !inExpression(parent)
-    }));
-  }
-
-  if (t.isDebuggerStatement(node)) {
-    state.push(formatNode(node.loc.start, { breakpoint: true, stepOver: true }));
+    });
   }
 
   if (t.isFunction(node)) {
     const { line, column } = node.loc.end;
-    state.push(formatNode(node.loc.start, { breakpoint: true }));
-    state.push(formatNode({ line, column: column - 1 }, { breakpoint: true, stepOver: true }));
+    addBreakPoint(state, node.loc.start);
+    addPoint(state, { line, column: column - 1 });
   }
 
   if (t.isProgram(node)) {
     const lastStatement = node.body[node.body.length - 1];
-    state.push(formatNode(lastStatement.loc.end, { breakpoint: true, stepOver: true }));
+    addPoint(state, lastStatement.loc.end);
   }
+}
+
+function formatNode(location, types) {
+  return { location, types };
+}
+
+function addPoint(state, location, types = { breakpoint: true, stepOver: true }) {
+  state.push(formatNode(location, types));
+}
+
+function addEmptyPoint(state, location) {
+  addPoint(state, location, { breakpoint: false, stepOver: false });
+}
+
+function addBreakPoint(state, location) {
+  addPoint(state, location, { breakpoint: true, stepOver: false });
 }
 
 /***/ }),
