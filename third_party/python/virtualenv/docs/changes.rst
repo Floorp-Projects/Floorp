@@ -1,6 +1,50 @@
 Release History
 ===============
 
+15.2.0 (2018-03-21)
+-------------------
+
+* Upgrade setuptools to 39.0.1.
+
+* Upgrade pip to 9.0.3.
+
+* Upgrade wheel to 0.30.0.
+
+
+15.1.0 (2016-11-15)
+-------------------
+
+* Support Python 3.6.
+
+* Upgrade setuptools to 28.0.0.
+
+* Upgrade pip to 9.0.1.
+
+* Don't install pre-release versions of pip, setuptools, or wheel from PyPI.
+
+
+15.0.3 (2016-08-05)
+-------------------
+
+* Test for given python path actually being an executable *file*, :issue:`939`
+
+* Only search for copy actual existing Tcl/Tk directories (:pull:`937`)
+
+* Generically search for correct Tcl/Tk version (:pull:`926`, :pull:`933`)
+
+* Upgrade setuptools to 22.0.5
+
+15.0.2 (2016-05-28)
+-------------------
+
+* Copy Tcl/Tk libs on Windows to allow them to run,
+  fixes :issue:`93` (:pull:`888`)
+
+* Upgrade setuptools to 21.2.1.
+
+* Upgrade pip to 8.1.2.
+
+
 15.0.1 (2016-03-17)
 -------------------
 
