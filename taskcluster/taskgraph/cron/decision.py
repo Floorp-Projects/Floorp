@@ -60,7 +60,7 @@ def make_decision_task(params, symbol, arguments=[], head_rev=None):
             # remainder are fake values, but the decision task expects them anyway
             'pushlog_id': -1,
             'pushdate': 0,
-            'owner': 'nobody',
+            'owner': 'cron',
             'comment': '',
         },
         'cron': {
