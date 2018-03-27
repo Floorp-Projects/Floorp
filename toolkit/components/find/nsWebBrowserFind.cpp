@@ -34,8 +34,10 @@
 #include "nsFind.h"
 #include "nsError.h"
 #include "nsFocusManager.h"
+#include "nsRange.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Selection.h"
 #include "nsISimpleEnumerator.h"
 #include "nsContentUtils.h"
 #include "nsGenericHTMLElement.h"
@@ -44,6 +46,8 @@
 #include "nsIWebNavigation.h"
 #include "nsString.h"
 #endif
+
+using mozilla::dom::Selection;
 
 nsWebBrowserFind::nsWebBrowserFind()
   : mFindBackwards(false)
@@ -361,8 +365,9 @@ nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
     return;
   }
 
-  nsCOMPtr<nsIDOMNode> node;
-  aRange->GetStartContainer(getter_AddRefs(node));
+  nsRange* range = static_cast<nsRange*>(aRange);
+
+  nsCOMPtr<nsINode> node = range->GetStartContainer();
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
   nsIFrame* frame = content->GetPrimaryFrame();
   if (!frame) {
@@ -487,17 +492,17 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
 {
   NS_ENSURE_ARG_POINTER(aSel);
 
+  Selection* sel = aSel->AsSelection();
+
   // There is a selection.
-  int32_t count = -1;
-  nsresult rv = aSel->GetRangeCount(&count);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t count = sel->RangeCount();
   if (count < 1) {
     return SetRangeAroundDocument(aSearchRange, aStartPt, aEndPt, aDoc);
   }
 
   // Need bodyNode, for the start/end of the document
   nsCOMPtr<nsIDOMNode> bodyNode;
-  rv = GetRootNode(aDoc, getter_AddRefs(bodyNode));
+  nsresult rv = GetRootNode(aDoc, getter_AddRefs(bodyNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> bodyContent(do_QueryInterface(bodyNode));
@@ -508,87 +513,87 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
   // There are four possible range endpoints we might use:
   // DocumentStart, SelectionStart, SelectionEnd, DocumentEnd.
 
-  nsCOMPtr<nsIDOMRange> range;
-  nsCOMPtr<nsIDOMNode> node;
+  RefPtr<nsRange> range;
+  nsCOMPtr<nsINode> node;
   uint32_t offset;
 
   // Forward, not wrapping: SelEnd to DocEnd
   if (!mFindBackwards && !aWrap) {
     // This isn't quite right, since the selection's ranges aren't
     // necessarily in order; but they usually will be.
-    aSel->GetRangeAt(count - 1, getter_AddRefs(range));
+    range = sel->GetRangeAt(count - 1);
     if (!range) {
       return NS_ERROR_UNEXPECTED;
     }
-    range->GetEndContainer(getter_AddRefs(node));
+    node = range->GetEndContainer();
     if (!node) {
       return NS_ERROR_UNEXPECTED;
     }
-    range->GetEndOffset(&offset);
+    offset = range->EndOffset();
 
-    aSearchRange->SetStart(node, offset);
+    aSearchRange->SetStart(node->AsDOMNode(), offset);
     aSearchRange->SetEnd(bodyNode, childCount);
-    aStartPt->SetStart(node, offset);
-    aStartPt->SetEnd(node, offset);
+    aStartPt->SetStart(node->AsDOMNode(), offset);
+    aStartPt->SetEnd(node->AsDOMNode(), offset);
     aEndPt->SetStart(bodyNode, childCount);
     aEndPt->SetEnd(bodyNode, childCount);
   }
   // Backward, not wrapping: DocStart to SelStart
   else if (mFindBackwards && !aWrap) {
-    aSel->GetRangeAt(0, getter_AddRefs(range));
+    range = sel->GetRangeAt(0);
     if (!range) {
       return NS_ERROR_UNEXPECTED;
     }
-    range->GetStartContainer(getter_AddRefs(node));
+    node = range->GetStartContainer();
     if (!node) {
       return NS_ERROR_UNEXPECTED;
     }
-    range->GetStartOffset(&offset);
+    offset = range->StartOffset();
 
     aSearchRange->SetStart(bodyNode, 0);
     aSearchRange->SetEnd(bodyNode, childCount);
-    aStartPt->SetStart(node, offset);
-    aStartPt->SetEnd(node, offset);
+    aStartPt->SetStart(node->AsDOMNode(), offset);
+    aStartPt->SetEnd(node->AsDOMNode(), offset);
     aEndPt->SetStart(bodyNode, 0);
     aEndPt->SetEnd(bodyNode, 0);
   }
   // Forward, wrapping: DocStart to SelEnd
   else if (!mFindBackwards && aWrap) {
-    aSel->GetRangeAt(count - 1, getter_AddRefs(range));
+    range = sel->GetRangeAt(count - 1);
     if (!range) {
       return NS_ERROR_UNEXPECTED;
     }
-    range->GetEndContainer(getter_AddRefs(node));
+    node = range->GetEndContainer();
     if (!node) {
       return NS_ERROR_UNEXPECTED;
     }
-    range->GetEndOffset(&offset);
+    offset = range->EndOffset();
 
     aSearchRange->SetStart(bodyNode, 0);
     aSearchRange->SetEnd(bodyNode, childCount);
     aStartPt->SetStart(bodyNode, 0);
     aStartPt->SetEnd(bodyNode, 0);
-    aEndPt->SetStart(node, offset);
-    aEndPt->SetEnd(node, offset);
+    aEndPt->SetStart(node->AsDOMNode(), offset);
+    aEndPt->SetEnd(node->AsDOMNode(), offset);
   }
   // Backward, wrapping: SelStart to DocEnd
   else if (mFindBackwards && aWrap) {
-    aSel->GetRangeAt(0, getter_AddRefs(range));
+    range = sel->GetRangeAt(0);
     if (!range) {
       return NS_ERROR_UNEXPECTED;
     }
-    range->GetStartContainer(getter_AddRefs(node));
+    node = range->GetStartContainer();
     if (!node) {
       return NS_ERROR_UNEXPECTED;
     }
-    range->GetStartOffset(&offset);
+    offset = range->StartOffset();
 
     aSearchRange->SetStart(bodyNode, 0);
     aSearchRange->SetEnd(bodyNode, childCount);
     aStartPt->SetStart(bodyNode, childCount);
     aStartPt->SetEnd(bodyNode, childCount);
-    aEndPt->SetStart(node, offset);
-    aEndPt->SetEnd(node, offset);
+    aEndPt->SetStart(node->AsDOMNode(), offset);
+    aEndPt->SetEnd(node->AsDOMNode(), offset);
   }
   return NS_OK;
 }
