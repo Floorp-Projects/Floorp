@@ -21,6 +21,7 @@ public:
     virtual const char* GetClipboardData(const char* aMimeType,
                                          int32_t aWhichClipboard,
                                          uint32_t* aContentLength) = 0;
+    virtual const char* GetClipboardText(int32_t aWhichClipboard) = 0;
     virtual void ReleaseClipboardData(const char* aClipboardData) = 0;
 
     virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
