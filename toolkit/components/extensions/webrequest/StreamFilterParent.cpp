@@ -483,7 +483,9 @@ NS_IMETHODIMP
 StreamFilterParent::GetLoadFlags(nsLoadFlags* aLoadFlags)
 {
   MOZ_ASSERT(mChannel);
-  return mChannel->GetLoadFlags(aLoadFlags);
+  MOZ_TRY(mChannel->GetLoadFlags(aLoadFlags));
+  *aLoadFlags &= ~nsIChannel::LOAD_DOCUMENT_URI;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -803,7 +805,6 @@ NS_INTERFACE_MAP_BEGIN(StreamFilterParent)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
-  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIChannel, mChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
 NS_INTERFACE_MAP_END
 
