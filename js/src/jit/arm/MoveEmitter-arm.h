@@ -50,7 +50,7 @@ class MoveEmitterARM
     void emit(const MoveOp& move);
 
   public:
-    MoveEmitterARM(MacroAssembler& masm);
+    explicit MoveEmitterARM(MacroAssembler& masm);
     ~MoveEmitterARM();
     void emit(const MoveResolver& moves);
     void finish();
