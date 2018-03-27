@@ -2118,6 +2118,18 @@ MacroAssemblerCompat::branchStackPtrRhs(Condition cond, Address lhs, Label* labe
     B(label, Assembler::InvertCondition(cond));
 }
 
+void
+MacroAssemblerCompat::branchStackPtrRhs(Condition cond, AbsoluteAddress lhs, Label* label)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const ARMRegister scratch = temps.AcquireX();
+    movePtr(ImmPtr(lhs.addr), scratch.asUnsized());
+    // Cmp disallows SP as the rhs, so flip the operands and invert the
+    // condition.
+    Cmp(GetStackPointer64(), scratch);
+    B(label, Assembler::InvertCondition(cond));
+}
+
 // If source is a double, load into dest.
 // If source is int32, convert to double and store in dest.
 // Else, branch to failure.

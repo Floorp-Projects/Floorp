@@ -58,7 +58,6 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
 #endif
     global_(nullptr),
     enterCompartmentDepth(0),
-    globalHolds(0),
     performanceMonitoring(runtime_),
     data(nullptr),
     realmData(nullptr),

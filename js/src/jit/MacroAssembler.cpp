@@ -1778,19 +1778,7 @@ void
 MacroAssembler::loadJSContext(Register dest)
 {
     JitContext* jcx = GetJitContext();
-    CompileCompartment* compartment = jcx->compartment;
-    if (compartment->zone()->isAtomsZone()) {
-        // If we are in the atoms zone then we are generating a runtime wide
-        // trampoline which can run in any zone. Load the context which is
-        // currently running using cooperative scheduling in the runtime.
-        // (This will need to be fixed when we have preemptive scheduling,
-        // bug 1323066).
-        loadPtr(AbsoluteAddress(jcx->runtime->addressOfActiveJSContext()), dest);
-    } else {
-        // If we are in a specific zone then the current context will be stored
-        // in the containing zone group.
-        loadPtr(AbsoluteAddress(compartment->zone()->addressOfJSContext()), dest);
-    }
+    movePtr(ImmPtr(jcx->runtime->mainContextPtr()), dest);
 }
 
 void

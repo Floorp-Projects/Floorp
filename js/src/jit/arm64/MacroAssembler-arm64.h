@@ -986,6 +986,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     inline void branchTestStackPtr(Condition cond, Imm32 rhs, Label* label);
     inline void branchStackPtr(Condition cond, Register rhs, Label* label);
     inline void branchStackPtrRhs(Condition cond, Address lhs, Label* label);
+    inline void branchStackPtrRhs(Condition cond, AbsoluteAddress lhs, Label* label);
 
     void testPtr(Register lhs, Register rhs) {
         Tst(ARMRegister(lhs, 64), Operand(ARMRegister(rhs, 64)));
