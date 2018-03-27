@@ -409,25 +409,6 @@ public:
                                          eCSSProperty_COUNT_no_shorthands];
   }
 
-  // Returns an eCSSProperty_UNKNOWN-terminated array of the shorthand
-  // properties containing |aProperty|, sorted from those that contain
-  // the most properties to those that contain the least.
-  static const nsCSSPropertyID * ShorthandsContaining(nsCSSPropertyID aProperty) {
-    MOZ_ASSERT(gShorthandsContainingPool, "uninitialized");
-    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
-               "out of range");
-    return gShorthandsContainingTable[aProperty];
-  }
-private:
-  // gShorthandsContainingTable is an array of the return values for
-  // ShorthandsContaining (arrays of nsCSSPropertyID terminated by
-  // eCSSProperty_UNKNOWN) pointing into memory in
-  // gShorthandsContainingPool (which contains all of those arrays in a
-  // single allocation, and is the one pointer that should be |free|d).
-  static nsCSSPropertyID *gShorthandsContainingTable[eCSSProperty_COUNT_no_shorthands];
-  static nsCSSPropertyID* gShorthandsContainingPool;
-  static bool BuildShorthandsContainingTable();
-
 private:
   static bool gPropertyEnabled[eCSSProperty_COUNT_with_aliases];
 
