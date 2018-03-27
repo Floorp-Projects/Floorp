@@ -22,6 +22,10 @@ job-defaults:
    shipping-phase: promote
    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
    worker:
+      artifacts:
+         - name: 'public/build/diff-summary.log'
+           path: '/builds/worker/tools/release/updates/diff-summary.log'
+           type: file
       implementation: docker-worker
       os: linux
       docker-image:
