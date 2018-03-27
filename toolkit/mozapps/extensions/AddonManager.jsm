@@ -31,7 +31,6 @@ const PREF_EM_STRICT_COMPATIBILITY    = "extensions.strictCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
 const PREF_APP_UPDATE_ENABLED         = "app.update.enabled";
 const PREF_APP_UPDATE_AUTO            = "app.update.auto";
-const UNKNOWN_XPCOM_ABI               = "unknownABI";
 
 const PREF_MIN_WEBEXT_PLATFORM_VERSION = "extensions.webExtensionsMinPlatformVersion";
 const PREF_WEBAPI_TESTING             = "extensions.webapi.testing";
@@ -1253,28 +1252,27 @@ var AddonManagerInternal = {
 
     if (!aAddon.isCompatible)
       addonStatus += ",incompatible";
-    if (aAddon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
+
+    let {blocklistState} = aAddon;
+    if (blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
       addonStatus += ",blocklisted";
-    if (aAddon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED)
+    if (blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED)
       addonStatus += ",softblocked";
 
-    try {
-      var xpcomABI = Services.appinfo.XPCOMABI;
-    } catch (ex) {
-      xpcomABI = UNKNOWN_XPCOM_ABI;
-    }
+    let params = new Map(Object.entries({
+      ITEM_ID: aAddon.id,
+      ITEM_VERSION: aAddon.version,
+      ITEM_STATUS: addonStatus,
+      APP_ID: Services.appinfo.ID,
+      APP_VERSION: aAppVersion ? aAppVersion : Services.appinfo.version,
+      REQ_VERSION: UPDATE_REQUEST_VERSION,
+      APP_OS: Services.appinfo.OS,
+      APP_ABI: Services.appinfo.XPCOMABI,
+      APP_LOCALE: getLocale(),
+      CURRENT_APP_VERSION: Services.appinfo.version,
+    }));
 
-    let uri = aUri.replace(/%ITEM_ID%/g, aAddon.id);
-    uri = uri.replace(/%ITEM_VERSION%/g, aAddon.version);
-    uri = uri.replace(/%ITEM_STATUS%/g, addonStatus);
-    uri = uri.replace(/%APP_ID%/g, Services.appinfo.ID);
-    uri = uri.replace(/%APP_VERSION%/g, aAppVersion ? aAppVersion :
-                                                      Services.appinfo.version);
-    uri = uri.replace(/%REQ_VERSION%/g, UPDATE_REQUEST_VERSION);
-    uri = uri.replace(/%APP_OS%/g, Services.appinfo.OS);
-    uri = uri.replace(/%APP_ABI%/g, xpcomABI);
-    uri = uri.replace(/%APP_LOCALE%/g, getLocale());
-    uri = uri.replace(/%CURRENT_APP_VERSION%/g, Services.appinfo.version);
+    let uri = aUri.replace(/%([A-Z_]+)%/g, (m0, m1) => params.get(m1) || m0);
 
     // escape() does not properly encode + symbols in any embedded FVF strings.
     return uri.replace(/\+/g, "%2B");
