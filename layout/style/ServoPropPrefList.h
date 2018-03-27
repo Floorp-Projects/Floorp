@@ -9,8 +9,7 @@
 
 namespace mozilla {
 
-#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
-                 stylestruct_, stylestructoffset_, animtype_)                 \
+#define CSS_PROP(name_, id_, method_, flags_, pref_, ...) \
     const bool SERVO_PREF_ENABLED_##id_ = !(sizeof(pref_) == 1);
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_, pref_)  \
     const bool SERVO_PREF_ENABLED_##id_ = !(sizeof(pref_) == 1);

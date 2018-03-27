@@ -31,9 +31,11 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              gfx::Matrix4x4* aPerspectivePtr,
                                              const gfx::CompositionOp& aMixBlendMode,
                                              bool aBackfaceVisible,
-                                             bool aIsPreserve3D)
+                                             bool aIsPreserve3D,
+                                             const Maybe<gfx::Matrix4x4>& aTransformForScrollData)
   : mBuilder(&aBuilder)
   , mScale(1.0f, 1.0f)
+  , mTransformForScrollData(aTransformForScrollData)
 {
   // Compute scale for fallback rendering.
   gfx::Matrix transform2d;
@@ -70,6 +72,12 @@ StackingContextHelper::ToRelativeLayoutRect(const LayoutDeviceRect& aRect) const
   auto rect = aRect;
   rect.Round();
   return wr::ToLayoutRect(rect);
+}
+
+gfx::Matrix4x4
+StackingContextHelper::GetTransformForScrollData() const
+{
+  return mTransformForScrollData.valueOr(gfx::Matrix4x4());
 }
 
 } // namespace layers
