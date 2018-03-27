@@ -230,9 +230,6 @@ class nsNSSErrors
 public:
   static const char* getDefaultErrorStringName(PRErrorCode err);
   static const char* getOverrideErrorStringName(PRErrorCode aErrorCode);
-  static nsresult getErrorMessageFromCode(PRErrorCode err,
-                                          nsINSSComponent* component,
-                                          nsString& returnedMessage);
 };
 
 #endif // _nsNSSComponent_h_
