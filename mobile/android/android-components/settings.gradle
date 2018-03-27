@@ -6,6 +6,12 @@
 // Browser components
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+include ':browser-engine'
+project(':browser-engine').projectDir = new File(rootDir, 'components/browser/engine')
+
+include ':browser-engine-gecko'
+project(':browser-engine-gecko').projectDir = new File(rootDir, 'components/browser/engine-gecko')
+
 include ':browser-errorpages'
 project(':browser-errorpages').projectDir = new File(rootDir, 'components/browser/errorpages')
 
