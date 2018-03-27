@@ -23,12 +23,7 @@ static void DebugDump(const char* fmt, ...)
   char buffer[2048];
   va_list ap;
   va_start(ap, fmt);
-#ifdef XPWIN
-  _vsnprintf(buffer, sizeof(buffer), fmt, ap);
-  buffer[sizeof(buffer)-1] = '\0';
-#else
   VsprintfLiteral(buffer, fmt, ap);
-#endif
   va_end(ap);
 #ifdef XP_WIN
   if (IsDebuggerPresent()) {
