@@ -64,6 +64,7 @@ function handleRequest(request, response)
   response.setHeader("Content-Length", contentLength, false);
   response.setHeader("Content-Type", type, false);
   response.setHeader("Accept-Ranges", "bytes", false);
+  response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   if (redirected && useCors) {
     response.setHeader("Access-Control-Allow-Origin", "*");
   }
