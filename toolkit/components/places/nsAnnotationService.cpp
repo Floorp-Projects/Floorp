@@ -738,6 +738,39 @@ nsAnnotationService::GetPageAnnotation(nsIURI* aURI,
   return rv;
 }
 
+nsresult
+nsAnnotationService::GetValueFromStatement(nsCOMPtr<mozIStorageStatement>& aStatement,
+                                           nsIVariant** _retval)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIWritableVariant> value = new nsVariant();
+  int32_t type = aStatement->AsInt32(kAnnoIndex_Type);
+  switch (type) {
+    case nsIAnnotationService::TYPE_INT32:
+    case nsIAnnotationService::TYPE_INT64:
+    case nsIAnnotationService::TYPE_DOUBLE: {
+      rv = value->SetAsDouble(aStatement->AsDouble(kAnnoIndex_Content));
+      break;
+    }
+    case nsIAnnotationService::TYPE_STRING: {
+      nsAutoString valueString;
+      rv = aStatement->GetString(kAnnoIndex_Content, valueString);
+      if (NS_SUCCEEDED(rv))
+        rv = value->SetAsAString(valueString);
+      break;
+    }
+    default: {
+      rv = NS_ERROR_UNEXPECTED;
+      break;
+    }
+  }
+  if (NS_SUCCEEDED(rv)) {
+    value.forget(_retval);
+  }
+  return rv;
+}
+
 
 NS_IMETHODIMP
 nsAnnotationService::GetItemAnnotation(int64_t aItemId,
@@ -754,35 +787,8 @@ nsAnnotationService::GetItemAnnotation(int64_t aItemId,
 
   mozStorageStatementScoper scoper(statement);
 
-  nsCOMPtr<nsIWritableVariant> value = new nsVariant();
-  int32_t type = statement->AsInt32(kAnnoIndex_Type);
-  switch (type) {
-    case nsIAnnotationService::TYPE_INT32:
-    case nsIAnnotationService::TYPE_INT64:
-    case nsIAnnotationService::TYPE_DOUBLE: {
-      rv = value->SetAsDouble(statement->AsDouble(kAnnoIndex_Content));
-      break;
-    }
-    case nsIAnnotationService::TYPE_STRING: {
-      nsAutoString valueString;
-      rv = statement->GetString(kAnnoIndex_Content, valueString);
-      if (NS_SUCCEEDED(rv))
-        rv = value->SetAsAString(valueString);
-      break;
-    }
-    default: {
-      rv = NS_ERROR_UNEXPECTED;
-      break;
-    }
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    value.forget(_retval);
-  }
-
-  return rv;
+  return GetValueFromStatement(statement, _retval);
 }
-
 
 NS_IMETHODIMP
 nsAnnotationService::GetPageAnnotationInt32(nsIURI* aURI,
@@ -986,11 +992,13 @@ nsAnnotationService::GetPageAnnotationInfo(nsIURI* aURI,
 NS_IMETHODIMP
 nsAnnotationService::GetItemAnnotationInfo(int64_t aItemId,
                                            const nsACString& aName,
+                                           nsIVariant** _value,
                                            int32_t* _flags,
                                            uint16_t* _expiration,
                                            uint16_t* _storageType)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
+  NS_ENSURE_ARG_POINTER(_value);
   NS_ENSURE_ARG_POINTER(_flags);
   NS_ENSURE_ARG_POINTER(_expiration);
   NS_ENSURE_ARG_POINTER(_storageType);
@@ -1013,7 +1021,7 @@ nsAnnotationService::GetItemAnnotationInfo(int64_t aItemId,
     *_storageType = type;
   }
 
-  return NS_OK;
+  return GetValueFromStatement(statement, _value);
 }
 
 
