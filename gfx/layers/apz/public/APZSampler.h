@@ -7,11 +7,7 @@
 #ifndef mozilla_layers_APZSampler_h
 #define mozilla_layers_APZSampler_h
 
-#include "base/message_loop.h"
-#include "LayersTypes.h"
-#include "mozilla/layers/APZTestData.h"
 #include "mozilla/layers/AsyncCompositionManager.h" // for AsyncTransform
-#include "mozilla/Maybe.h"
 #include "nsTArray.h"
 #include "Units.h"
 
@@ -27,16 +23,13 @@ struct WrTransformProperty;
 namespace layers {
 
 class APZCTreeManager;
-class FocusTarget;
-class Layer;
 class LayerMetricsWrapper;
 struct ScrollThumbData;
-class WebRenderScrollData;
 
 /**
- * This interface is used to interact with the APZ code from the compositor
- * thread. It internally redispatches the functions to the sampler thread
- * in the case where the two threads are not the same.
+ * This interface exposes APZ methods related to "sampling" (i.e. reading the
+ * async transforms produced by APZ). These methods should all be called on
+ * the sampler thread.
  */
 class APZSampler {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(APZSampler)
@@ -44,39 +37,9 @@ class APZSampler {
 public:
   explicit APZSampler(const RefPtr<APZCTreeManager>& aApz);
 
-  bool HasTreeManager(const RefPtr<APZCTreeManager>& aApz);
-
-  void ClearTree();
-  void UpdateFocusState(LayersId aRootLayerTreeId,
-                        LayersId aOriginatingLayersId,
-                        const FocusTarget& aFocusTarget);
-  void UpdateHitTestingTree(LayersId aRootLayerTreeId,
-                            Layer* aRoot,
-                            bool aIsFirstPaint,
-                            LayersId aOriginatingLayersId,
-                            uint32_t aPaintSequenceNumber);
-  void UpdateHitTestingTree(LayersId aRootLayerTreeId,
-                            const WebRenderScrollData& aScrollData,
-                            bool aIsFirstPaint,
-                            LayersId aOriginatingLayersId,
-                            uint32_t aPaintSequenceNumber);
-
-  void NotifyLayerTreeAdopted(LayersId aLayersId,
-                              const RefPtr<APZSampler>& aOldSampler);
-  void NotifyLayerTreeRemoved(LayersId aLayersId);
-
   bool PushStateToWR(wr::TransactionBuilder& aTxn,
                      const TimeStamp& aSampleTime,
                      nsTArray<wr::WrTransformProperty>& aTransformArray);
-
-  bool GetAPZTestData(LayersId aLayersId, APZTestData* aOutData);
-
-  void SetTestAsyncScrollOffset(LayersId aLayersId,
-                                const FrameMetrics::ViewID& aScrollId,
-                                const CSSPoint& aOffset);
-  void SetTestAsyncZoom(LayersId aLayersId,
-                        const FrameMetrics::ViewID& aScrollId,
-                        const LayerToParentLayerScale& aZoom);
 
   bool SampleAnimations(const LayerMetricsWrapper& aLayer,
                         const TimeStamp& aSampleTime);
@@ -115,26 +78,9 @@ public:
   void AssertOnSamplerThread();
 
   /**
-   * Runs the given task on the APZ "sampler thread" for this APZSampler. If
-   * this function is called from the sampler thread itself then the task is
-   * run immediately without getting queued.
-   */
-  void RunOnSamplerThread(already_AddRefed<Runnable> aTask);
-
-  /**
    * Returns true if currently on the APZSampler's "sampler thread".
    */
   bool IsSamplerThread();
-
-  /**
-   * Dispatches the given task to the APZ "controller thread", but does it *from*
-   * the sampler thread. That is, if the thread on which this function is called
-   * is not the sampler thread, the task is first dispatched to the sampler thread.
-   * When the sampler thread runs it (or if this is called directly on the sampler
-   * thread), that is when the task gets dispatched to the controller thread.
-   * The controller thread then actually runs the task.
-   */
-  void RunOnControllerThread(already_AddRefed<Runnable> aTask);
 
 protected:
   virtual ~APZSampler();

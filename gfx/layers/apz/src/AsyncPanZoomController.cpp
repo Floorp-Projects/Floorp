@@ -848,7 +848,7 @@ AsyncPanZoomController::GetInputQueue() const {
 void
 AsyncPanZoomController::Destroy()
 {
-  AssertOnSamplerThread();
+  AssertOnUpdaterThread();
 
   CancelAnimation(CancelAnimationFlags::ScrollSnap);
 
@@ -3819,7 +3819,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
                                                  bool aIsFirstPaint,
                                                  bool aThisLayerTreeUpdated)
 {
-  AssertOnSamplerThread();
+  AssertOnUpdaterThread();
 
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   bool isDefault = mScrollMetadata.IsDefault();
@@ -4088,6 +4088,14 @@ AsyncPanZoomController::AssertOnSamplerThread() const
 {
   if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
     treeManagerLocal->AssertOnSamplerThread();
+  }
+}
+
+void
+AsyncPanZoomController::AssertOnUpdaterThread() const
+{
+  if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
+    treeManagerLocal->AssertOnUpdaterThread();
   }
 }
 
@@ -4445,7 +4453,7 @@ void AsyncPanZoomController::UpdateSharedCompositorFrameMetrics()
 
 void AsyncPanZoomController::ShareCompositorFrameMetrics()
 {
-  AssertOnSamplerThread();
+  AssertOnUpdaterThread();
 
   // Only create the shared memory buffer if it hasn't already been created,
   // we are using progressive tile painting, and we have a
