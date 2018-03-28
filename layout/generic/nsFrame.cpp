@@ -4253,7 +4253,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   // starting a new selection since the user may be trying to
   // drag the selected region to some other app.
 
-  if (GetContent()->IsSelectionDescendant())
+  if (GetContent() && GetContent()->IsSelectionDescendant())
   {
     bool inSelection = false;
     UniquePtr<SelectionDetails> details
