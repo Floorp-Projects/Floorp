@@ -18,6 +18,7 @@
 #include "nsPrintfCString.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PContent.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
@@ -28,6 +29,7 @@
 #include "ipc/TelemetryComms.h"
 #include "ipc/TelemetryIPCAccumulator.h"
 
+using mozilla::Preferences;
 using mozilla::StaticAutoPtr;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
@@ -2552,6 +2554,12 @@ TelemetryScalar::SummarizeEvent(const nsCString& aUniqueEventName,
     NS_WARNING("NS_FAILED getting keyed scalar telemetry.event_counts. Wut.");
     return;
   }
+
+  static uint32_t sMaxEventSummaryKeys =
+    Preferences::GetUint("toolkit.telemetry.maxEventSummaryKeys", 500);
+
+  // Set this each time as it may have been cleared and recreated between calls
+  scalar->SetMaximumNumberOfKeys(sMaxEventSummaryKeys);
 
   scalar->AddValue(NS_ConvertASCIItoUTF16(aUniqueEventName), 1);
 }
