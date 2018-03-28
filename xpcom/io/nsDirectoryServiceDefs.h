@@ -112,11 +112,9 @@
   #define NS_WIN_PRINTERS_DIR                 "Prnts"
   #define NS_WIN_PERSONAL_DIR                 "Pers"
   #define NS_WIN_FAVORITES_DIR                "Favs"
-  #define NS_WIN_STARTUP_DIR                  "Strt"
   #define NS_WIN_RECENT_DIR                   "Rcnt"
   #define NS_WIN_SEND_TO_DIR                  "SndTo"
   #define NS_WIN_BITBUCKET_DIR                "Buckt"
-  #define NS_WIN_STARTMENU_DIR                "Strt"
 // This gives the same thing as NS_OS_DESKTOP_DIR
   #define NS_WIN_DESKTOP_DIRECTORY            "DeskP" // file sys dir which physically stores objects on desktop
   #define NS_WIN_DRIVES_DIR                   "Drivs"
@@ -124,9 +122,7 @@
   #define NS_WIN_NETHOOD_DIR                  "netH"
   #define NS_WIN_FONTS_DIR                    "Fnts"
   #define NS_WIN_TEMPLATES_DIR                "Tmpls"
-  #define NS_WIN_COMMON_STARTMENU_DIR         "CmStrt"
   #define NS_WIN_COMMON_PROGRAMS_DIR          "CmPrgs"
-  #define NS_WIN_COMMON_STARTUP_DIR           "CmStrt"
   #define NS_WIN_COMMON_DESKTOP_DIRECTORY     "CmDeskP"
   #define NS_WIN_COMMON_APPDATA_DIR           "CmAppData"
   #define NS_WIN_APPDATA_DIR                  "AppData"
