@@ -8,6 +8,7 @@
 
 #include "APZCTreeManager.h"
 #include "AsyncPanZoomController.h"
+#include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "TreeTraversal.h"
@@ -211,6 +212,39 @@ APZSampler::HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer)
   return apzc
       && !apzc->GetAsyncTransformAppliedToContent()
       && !AsyncTransformComponentMatrix(apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing)).IsIdentity();
+}
+
+void
+APZSampler::AssertOnSamplerThread()
+{
+  if (APZThreadUtils::GetThreadAssertionsEnabled()) {
+    MOZ_ASSERT(IsSamplerThread());
+  }
+}
+
+void
+APZSampler::RunOnSamplerThread(already_AddRefed<Runnable> aTask)
+{
+  RefPtr<Runnable> task = aTask;
+
+  MessageLoop* loop = CompositorThreadHolder::Loop();
+  if (!loop) {
+    // Could happen during startup
+    NS_WARNING("Dropping task posted to sampler thread");
+    return;
+  }
+
+  if (IsSamplerThread()) {
+    task->Run();
+  } else {
+    loop->PostTask(task.forget());
+  }
+}
+
+bool
+APZSampler::IsSamplerThread()
+{
+  return CompositorThreadHolder::IsInCompositorThread();
 }
 
 } // namespace layers

@@ -526,9 +526,14 @@ public:
       bool aScrollbarIsDescendant,
       AsyncTransformComponentMatrix* aOutClipTransform);
 
+  // Assert that the current thread is the sampler thread for this APZCTM.
+  void AssertOnSamplerThread();
+
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~APZCTreeManager();
+
+  APZSampler* GetSampler() const;
 
   // Protected hooks for gtests subclass
   virtual AsyncPanZoomController* NewAPZCInstance(LayersId aLayersId,

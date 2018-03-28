@@ -260,7 +260,7 @@ void
 APZCTreeManager::NotifyLayerTreeAdopted(LayersId aLayersId,
                                         const RefPtr<APZCTreeManager>& aOldApzcTreeManager)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnSamplerThread();
 
   if (aOldApzcTreeManager) {
     aOldApzcTreeManager->mFocusState.RemoveFocusTarget(aLayersId);
@@ -287,7 +287,7 @@ APZCTreeManager::NotifyLayerTreeAdopted(LayersId aLayersId,
 void
 APZCTreeManager::NotifyLayerTreeRemoved(LayersId aLayersId)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnSamplerThread();
 
   mFocusState.RemoveFocusTarget(aLayersId);
 
@@ -482,7 +482,7 @@ APZCTreeManager::UpdateFocusState(LayersId aRootLayerTreeId,
                                   LayersId aOriginatingLayersId,
                                   const FocusTarget& aFocusTarget)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnSamplerThread();
 
   if (!gfxPrefs::APZKeyboardEnabled()) {
     return;
@@ -500,7 +500,7 @@ APZCTreeManager::UpdateHitTestingTree(LayersId aRootLayerTreeId,
                                       LayersId aOriginatingLayersId,
                                       uint32_t aPaintSequenceNumber)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnSamplerThread();
 
   LayerMetricsWrapper root(aRoot);
   UpdateHitTestingTreeImpl(aRootLayerTreeId, root, aIsFirstPaint,
@@ -514,7 +514,7 @@ APZCTreeManager::UpdateHitTestingTree(LayersId aRootLayerTreeId,
                                       LayersId aOriginatingLayersId,
                                       uint32_t aPaintSequenceNumber)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnSamplerThread();
 
   WebRenderScrollDataWrapper wrapper(&aScrollData);
   UpdateHitTestingTreeImpl(aRootLayerTreeId, wrapper, aIsFirstPaint,
@@ -526,7 +526,7 @@ APZCTreeManager::PushStateToWR(wr::TransactionBuilder& aTxn,
                                const TimeStamp& aSampleTime,
                                nsTArray<wr::WrTransformProperty>& aTransformArray)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnSamplerThread();
 
   RecursiveMutexAutoLock lock(mTreeLock);
 
@@ -1960,13 +1960,13 @@ void
 APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
                                        const Maybe<ZoomConstraints>& aConstraints)
 {
-  if (!APZThreadUtils::IsSamplerThread()) {
+  if (!GetSampler()->IsSamplerThread()) {
     // This can happen if we're in the UI process and got a call directly from
     // nsBaseWidget (as opposed to over PAPZCTreeManager). We want this function
     // to run on the sampler thread, so bounce it over.
     MOZ_ASSERT(XRE_IsParentProcess());
 
-    APZThreadUtils::RunOnSamplerThread(
+    GetSampler()->RunOnSamplerThread(
         NewRunnableMethod<ScrollableLayerGuid, Maybe<ZoomConstraints>>(
             "APZCTreeManager::UpdateZoomConstraints",
             this,
@@ -1976,7 +1976,7 @@ APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
     return;
   }
 
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnSamplerThread();
 
   RecursiveMutexAutoLock lock(mTreeLock);
   RefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, nullptr);
@@ -2071,7 +2071,7 @@ APZCTreeManager::AdjustScrollForSurfaceShift(const ScreenPoint& aShift)
 void
 APZCTreeManager::ClearTree()
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnSamplerThread();
 
 #if defined(MOZ_WIDGET_ANDROID)
   mToolbarAnimator->ClearTreeManager();
@@ -3027,7 +3027,7 @@ bool
 APZCTreeManager::GetAPZTestData(LayersId aLayersId,
                                 APZTestData* aOutData)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnSamplerThread();
   MutexAutoLock lock(mTestDataLock);
   auto it = mTestData.find(aLayersId);
   if (it == mTestData.end()) {
@@ -3197,6 +3197,21 @@ APZCTreeManager::ComputeTransformForScrollThumb(
   transform = transform * compensation;
 
   return transform;
+}
+
+APZSampler*
+APZCTreeManager::GetSampler() const
+{
+  // We should always have a sampler here, since in practice the sampler
+  // is destroyed at the same time that this APZCTreeMAnager instance is.
+  MOZ_ASSERT(mSampler);
+  return mSampler;
+}
+
+void
+APZCTreeManager::AssertOnSamplerThread()
+{
+  GetSampler()->AssertOnSamplerThread();
 }
 
 void

@@ -104,6 +104,25 @@ public:
   void MarkAsyncTransformAppliedToContent(const LayerMetricsWrapper& aLayer);
   bool HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer);
 
+  /**
+   * This can be used to assert that the current thread is the
+   * sampler thread (which samples the async transform).
+   * This does nothing if thread assertions are disabled.
+   */
+  void AssertOnSamplerThread();
+
+  /**
+   * Runs the given task on the APZ "sampler thread" for this APZSampler. If
+   * this function is called from the sampler thread itself then the task is
+   * run immediately without getting queued.
+   */
+  void RunOnSamplerThread(already_AddRefed<Runnable> aTask);
+
+  /**
+   * Returns true if currently on the APZSampler's "sampler thread".
+   */
+  bool IsSamplerThread();
+
 protected:
   virtual ~APZSampler();
 
