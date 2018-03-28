@@ -12,7 +12,6 @@
 #include "nsLocalFile.h"
 #include "nsDebug.h"
 #include "nsGkAtoms.h"
-#include "nsStaticAtom.h"
 #include "nsEnumeratorUtils.h"
 
 #include "nsICategoryManager.h"
