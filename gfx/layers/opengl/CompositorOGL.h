@@ -157,6 +157,7 @@ public:
 
   virtual void SetRenderTarget(CompositingRenderTarget *aSurface) override;
   virtual CompositingRenderTarget* GetCurrentRenderTarget() const override;
+  virtual CompositingRenderTarget* GetWindowRenderTarget() const override;
 
   virtual bool
   ReadbackRenderTarget(CompositingRenderTarget* aSource,
@@ -290,9 +291,8 @@ private:
 
   /** Currently bound render target */
   RefPtr<CompositingRenderTargetOGL> mCurrentRenderTarget;
-#ifdef DEBUG
+
   CompositingRenderTargetOGL* mWindowRenderTarget;
-#endif
 
   /**
    * VBO that has some basics in it for a textured quad, including vertex

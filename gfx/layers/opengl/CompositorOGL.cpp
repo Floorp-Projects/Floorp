@@ -682,6 +682,12 @@ CompositorOGL::GetCurrentRenderTarget() const
   return mCurrentRenderTarget;
 }
 
+CompositingRenderTarget*
+CompositorOGL::GetWindowRenderTarget() const
+{
+  return mWindowRenderTarget;
+}
+
 already_AddRefed<AsyncReadbackBuffer>
 CompositorOGL::CreateAsyncReadbackBuffer(const IntSize& aSize)
 {
@@ -816,10 +822,7 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
     CompositingRenderTargetOGL::RenderTargetForWindow(this,
                                                       IntSize(width, height));
   SetRenderTarget(rt);
-
-#ifdef DEBUG
   mWindowRenderTarget = mCurrentRenderTarget;
-#endif
 
   if (aClipRectOut && !aClipRectIn) {
     aClipRectOut->SetRect(0, 0, width, height);
@@ -1752,11 +1755,13 @@ CompositorOGL::EndFrame()
   if (mTarget) {
     CopyToTarget(mTarget, mTargetBounds.TopLeft(), Matrix());
     mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+    mWindowRenderTarget = nullptr;
     mCurrentRenderTarget = nullptr;
     Compositor::EndFrame();
     return;
   }
 
+  mWindowRenderTarget = nullptr;
   mCurrentRenderTarget = nullptr;
 
   if (mTexturePool) {
