@@ -21,7 +21,7 @@ function run_test() {
   Services.prefs.setCharPref("xpinstall.whitelist.add.test5", "https://test5.com");
 
   Services.perms.add(NetUtil.newURI("https://www.test9.com"), "install",
-                     Ci.nsIPermissionManager.ALLOW_ACTION);
+                     AM_Ci.nsIPermissionManager.ALLOW_ACTION);
 
   startupManager();
 

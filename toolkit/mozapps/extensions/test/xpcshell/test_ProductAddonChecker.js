@@ -4,7 +4,7 @@ ChromeUtils.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-const LocalFile = new Components.Constructor("@mozilla.org/file/local;1", Ci.nsIFile, "initWithPath");
+const LocalFile = new Components.Constructor("@mozilla.org/file/local;1", AM_Ci.nsIFile, "initWithPath");
 
 var testserver = new HttpServer();
 testserver.registerDirectory("/data/", do_get_file("data/productaddons"));
@@ -38,13 +38,13 @@ function compareBinaryData(arr1, arr2) {
  * @return array of bytes for the data in the file.
 */
 function getBinaryFileData(file) {
-  let fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
-                   createInstance(Ci.nsIFileInputStream);
+  let fileStream = AM_Cc["@mozilla.org/network/file-input-stream;1"].
+                   createInstance(AM_Ci.nsIFileInputStream);
   // Open as RD_ONLY with default permissions.
   fileStream.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
 
-  let stream = Cc["@mozilla.org/binaryinputstream;1"].
-               createInstance(Ci.nsIBinaryInputStream);
+  let stream = AM_Cc["@mozilla.org/binaryinputstream;1"].
+               createInstance(AM_Ci.nsIBinaryInputStream);
   stream.setInputStream(fileStream);
   let bytes = stream.readByteArray(stream.available());
   fileStream.close();

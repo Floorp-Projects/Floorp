@@ -17,7 +17,7 @@ const ADDONS = {
 const WORKING = "signed_bootstrap_1.xpi";
 const ID = "test@tests.mozilla.org";
 
-var gServer = createHttpServer({port: 4444});
+var gServer = createHttpServer(4444);
 
 // Creates an add-on with a broken signature by changing an existing file
 function createBrokenAddonModify(file) {
@@ -25,14 +25,14 @@ function createBrokenAddonModify(file) {
   brokenFile.append("broken.xpi");
   file.copyTo(brokenFile.parent, brokenFile.leafName);
 
-  var stream = Cc["@mozilla.org/io/string-input-stream;1"].
-               createInstance(Ci.nsIStringInputStream);
+  var stream = AM_Cc["@mozilla.org/io/string-input-stream;1"].
+               createInstance(AM_Ci.nsIStringInputStream);
   stream.setData("FOOBAR", -1);
-  var zipW = Cc["@mozilla.org/zipwriter;1"].
-             createInstance(Ci.nsIZipWriter);
+  var zipW = AM_Cc["@mozilla.org/zipwriter;1"].
+             createInstance(AM_Ci.nsIZipWriter);
   zipW.open(brokenFile, FileUtils.MODE_RDWR | FileUtils.MODE_APPEND);
   zipW.removeEntry("test.txt", false);
-  zipW.addEntryStream("test.txt", 0, Ci.nsIZipWriter.COMPRESSION_NONE,
+  zipW.addEntryStream("test.txt", 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
                       stream, false);
   zipW.close();
 
@@ -45,13 +45,13 @@ function createBrokenAddonAdd(file) {
   brokenFile.append("broken.xpi");
   file.copyTo(brokenFile.parent, brokenFile.leafName);
 
-  var stream = Cc["@mozilla.org/io/string-input-stream;1"].
-               createInstance(Ci.nsIStringInputStream);
+  var stream = AM_Cc["@mozilla.org/io/string-input-stream;1"].
+               createInstance(AM_Ci.nsIStringInputStream);
   stream.setData("FOOBAR", -1);
-  var zipW = Cc["@mozilla.org/zipwriter;1"].
-             createInstance(Ci.nsIZipWriter);
+  var zipW = AM_Cc["@mozilla.org/zipwriter;1"].
+             createInstance(AM_Ci.nsIZipWriter);
   zipW.open(brokenFile, FileUtils.MODE_RDWR | FileUtils.MODE_APPEND);
-  zipW.addEntryStream("test2.txt", 0, Ci.nsIZipWriter.COMPRESSION_NONE,
+  zipW.addEntryStream("test2.txt", 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
                       stream, false);
   zipW.close();
 
@@ -64,11 +64,11 @@ function createBrokenAddonRemove(file) {
   brokenFile.append("broken.xpi");
   file.copyTo(brokenFile.parent, brokenFile.leafName);
 
-  var stream = Cc["@mozilla.org/io/string-input-stream;1"].
-               createInstance(Ci.nsIStringInputStream);
+  var stream = AM_Cc["@mozilla.org/io/string-input-stream;1"].
+               createInstance(AM_Ci.nsIStringInputStream);
   stream.setData("FOOBAR", -1);
-  var zipW = Cc["@mozilla.org/zipwriter;1"].
-             createInstance(Ci.nsIZipWriter);
+  var zipW = AM_Cc["@mozilla.org/zipwriter;1"].
+             createInstance(AM_Ci.nsIZipWriter);
   zipW.open(brokenFile, FileUtils.MODE_RDWR | FileUtils.MODE_APPEND);
   zipW.removeEntry("test.txt", false);
   zipW.close();

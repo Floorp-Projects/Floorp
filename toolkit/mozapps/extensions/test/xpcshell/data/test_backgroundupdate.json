@@ -10,7 +10,7 @@
             }
           },
           "version": "2",
-          "update_link": "http://example.com/broken.xpi"
+          "update_link": "http://localhost:%PORT%/broken.xpi"
         }
       ]
     },
@@ -24,7 +24,7 @@
             }
           },
           "version": "2",
-          "update_link": "http://example.com/broken.xpi"
+          "update_link": "http://localhost:%PORT%/broken.xpi"
         }
       ]
     },
@@ -38,7 +38,7 @@
             }
           },
           "version": "2",
-          "update_link": "http://example.com/broken.xpi"
+          "update_link": "http://localhost:%PORT%/broken.xpi"
         }
       ]
     }

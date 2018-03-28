@@ -8,14 +8,14 @@ Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 var testserver = createHttpServer();
 gPort = testserver.identity.primaryPort;
 
-const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+const uuidGenerator = AM_Cc["@mozilla.org/uuid-generator;1"].getService(AM_Ci.nsIUUIDGenerator);
 
 const extensionsDir = gProfD.clone();
 extensionsDir.append("extensions");
 
 const addonsDir = gTmpD.clone();
 addonsDir.append("addons");
-addonsDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+addonsDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0o755);
 
 registerCleanupFunction(() => addonsDir.remove(true));
 

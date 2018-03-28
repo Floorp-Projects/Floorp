@@ -15,8 +15,8 @@ var gNextTest = null;
 var gTestserver = null;
 
 function notify_blocklist() {
-  var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
-                  getService(Ci.nsITimerCallback);
+  var blocklist = AM_Cc["@mozilla.org/extensions/blocklist;1"].
+                  getService(AM_Ci.nsITimerCallback);
   blocklist.notify(null);
 }
 

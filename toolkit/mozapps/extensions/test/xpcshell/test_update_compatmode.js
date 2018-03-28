@@ -9,8 +9,13 @@
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
-var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
-testserver.registerDirectory("/data/", do_get_file("data"));
+ChromeUtils.import("resource://testing-common/httpd.js");
+var testserver = new HttpServer();
+testserver.start(-1);
+gPort = testserver.identity.primaryPort;
+mapFile("/data/test_updatecompatmode_ignore.json", testserver);
+mapFile("/data/test_updatecompatmode_normal.json", testserver);
+mapFile("/data/test_updatecompatmode_strict.json", testserver);
 testserver.registerDirectory("/addons/", do_get_file("addons"));
 
 const profileDir = gProfD.clone();
@@ -24,7 +29,7 @@ function run_test() {
     id: "compatmode-normal@tests.mozilla.org",
     version: "1.0",
     bootstrap: true,
-    updateURL: "http://example.com/data/test_updatecompatmode_%COMPATIBILITY_MODE%.json",
+    updateURL: "http://localhost:" + gPort + "/data/test_updatecompatmode_%COMPATIBILITY_MODE%.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -37,7 +42,7 @@ function run_test() {
     id: "compatmode-strict@tests.mozilla.org",
     version: "1.0",
     bootstrap: true,
-    updateURL: "http://example.com/data/test_updatecompatmode_%COMPATIBILITY_MODE%.json",
+    updateURL: "http://localhost:" + gPort + "/data/test_updatecompatmode_%COMPATIBILITY_MODE%.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -50,7 +55,7 @@ function run_test() {
     id: "compatmode-strict-optin@tests.mozilla.org",
     version: "1.0",
     bootstrap: true,
-    updateURL: "http://example.com/data/test_updatecompatmode_%COMPATIBILITY_MODE%.json",
+    updateURL: "http://localhost:" + gPort + "/data/test_updatecompatmode_%COMPATIBILITY_MODE%.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -64,7 +69,7 @@ function run_test() {
     id: "compatmode-ignore@tests.mozilla.org",
     version: "1.0",
     bootstrap: true,
-    updateURL: "http://example.com/data/test_updatecompatmode_%COMPATIBILITY_MODE%.json",
+    updateURL: "http://localhost:" + gPort + "/data/test_updatecompatmode_%COMPATIBILITY_MODE%.json",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -78,7 +83,7 @@ function run_test() {
 }
 
 function end_test() {
-  do_test_finished();
+  testserver.stop(do_test_finished);
 }
 
 
