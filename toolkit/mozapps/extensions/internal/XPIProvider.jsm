@@ -4726,6 +4726,12 @@ AddonInternal.prototype = {
       permissions |= AddonManager.PERM_CAN_UNINSTALL;
     }
 
+    if (Services.policies &&
+        !Services.policies.isAllowed(`modify-extension:${this.id}`)) {
+      permissions &= ~AddonManager.PERM_CAN_UNINSTALL;
+      permissions &= ~AddonManager.PERM_CAN_DISABLE;
+    }
+
     return permissions;
   },
 };
