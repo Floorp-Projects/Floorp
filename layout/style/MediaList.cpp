@@ -70,17 +70,10 @@ MediaList::DoMediaChange(Func aCallback)
 }
 
 /* static */ already_AddRefed<MediaList>
-MediaList::Create(
-    StyleBackendType aBackendType,
-    const nsAString& aMedia,
-    CallerType aCallerType)
+MediaList::Create(const nsAString& aMedia, CallerType aCallerType)
 {
-  if (aBackendType == StyleBackendType::Servo) {
-    RefPtr<ServoMediaList> mediaList = new ServoMediaList(aMedia, aCallerType);
-    return mediaList.forget();
-  }
-
-  MOZ_CRASH("old style system disabled");
+  RefPtr<ServoMediaList> mediaList = new ServoMediaList(aMedia, aCallerType);
+  return mediaList.forget();
 }
 
 void

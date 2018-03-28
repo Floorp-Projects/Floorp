@@ -224,8 +224,7 @@ nsStyleLinkElement::CheckPreloadAttrs(const nsAttrValue& aAs,
 
   // Check if media attribute is valid.
   if (!aMedia.IsEmpty()) {
-    RefPtr<MediaList> mediaList = MediaList::Create(aDocument->GetStyleBackendType(),
-                                                    aMedia);
+    RefPtr<MediaList> mediaList = MediaList::Create(aMedia);
     nsPresContext* presContext = aDocument->GetPresContext();
     if (!presContext) {
       return false;
