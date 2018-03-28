@@ -33,8 +33,6 @@ class nsCopySupport
     static nsresult ClearSelectionCache();
     static nsresult HTMLCopy(nsISelection *aSel, nsIDocument *aDoc,
                              int16_t aClipboardID, bool aWithRubyAnnotation);
-    static nsresult DoHooks(nsIDocument *aDoc, nsITransferable *aTrans,
-                            bool *aDoPutOnClipboard);
 
     // Get the selection, or entire document, in the format specified by the mime type
     // (text/html or text/plain). If aSel is non-null, use it, otherwise get the entire

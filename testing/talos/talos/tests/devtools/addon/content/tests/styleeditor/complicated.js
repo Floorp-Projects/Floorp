@@ -5,7 +5,7 @@
 "use strict";
 
 const { openToolboxAndLog, closeToolboxAndLog, reloadPageAndLog, testSetup,
-        testTeardown, COMPLICATED_URL } = require("chrome://damp/content/tests/head");
+        testTeardown, COMPLICATED_URL } = require("../head");
 
 module.exports = async function() {
   await testSetup(COMPLICATED_URL);

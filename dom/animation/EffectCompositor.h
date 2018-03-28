@@ -153,20 +153,11 @@ public:
   // the change in the set of effects or a change in one of the effects'
   // "in effect" state.
   //
-  // When |aBackendType| is StyleBackendType::Gecko, |aComputedStyle| is used to
-  // find overridden properties. If it is nullptr, the ComputedStyle of the
-  // primary frame of the specified (pseudo-)element, if available, is used.
-  //
-  // When |aBackendType| is StyleBackendType::Servo, we fetch the rule node
-  // from the |aElement| (i.e. |aComputedStyle| is ignored).
-  //
   // This method does NOT detect if other styles that apply above the
   // animation level of the cascade have changed.
   static void
-  MaybeUpdateCascadeResults(StyleBackendType aBackendType,
-                            dom::Element* aElement,
-                            CSSPseudoElementType aPseudoType,
-                            ComputedStyle* aComputedStyle);
+  MaybeUpdateCascadeResults(dom::Element* aElement,
+                            CSSPseudoElementType aPseudoType);
 
   // Update the mPropertiesWithImportantRules and
   // mPropertiesForAnimationsLevel members of the given EffectSet, and also
@@ -180,16 +171,10 @@ public:
   // when we detect changes to the cascade on the Servo side we can't call
   // MarkCascadeNeedsUpdate during the traversal so instead we call this as part
   // of a follow-up sequential task.
-  //
-  // As with MaybeUpdateCascadeResults, |aComputedStyle| is only used
-  // when |aBackendType| is StyleBackendType::Gecko. When |aBackendType| is
-  // StyleBackendType::Servo, it is ignored.
   static void
-  UpdateCascadeResults(StyleBackendType aBackendType,
-                       EffectSet& aEffectSet,
+  UpdateCascadeResults(EffectSet& aEffectSet,
                        dom::Element* aElement,
-                       CSSPseudoElementType aPseudoType,
-                       ComputedStyle* aComputedStyle);
+                       CSSPseudoElementType aPseudoType);
 
   // Helper to fetch the corresponding element and pseudo-type from a frame.
   //
@@ -240,21 +225,10 @@ private:
   // Get the properties in |aEffectSet| that we are able to animate on the
   // compositor but which are also specified at a higher level in the cascade
   // than the animations level.
-  //
-  // When |aBackendType| is StyleBackendType::Gecko, we determine which
-  // properties are specified using the provided |aComputedStyle| and
-  // |aElement| and |aPseudoType| are ignored. If |aComputedStyle| is nullptr,
-  // we automatically look up the ComputedStyle of primary frame of the
-  // (pseudo-)element.
-  //
-  // When |aBackendType| is StyleBackendType::Servo, we use the |StrongRuleNode|
-  // stored on the (pseudo-)element indicated by |aElement| and |aPseudoType|.
   static nsCSSPropertyIDSet
-  GetOverriddenProperties(StyleBackendType aBackendType,
-                          EffectSet& aEffectSet,
+  GetOverriddenProperties(EffectSet& aEffectSet,
                           dom::Element* aElement,
-                          CSSPseudoElementType aPseudoType,
-                          ComputedStyle* aComputedStyle);
+                          CSSPseudoElementType aPseudoType);
 
   static nsPresContext* GetPresContext(dom::Element* aElement);
 

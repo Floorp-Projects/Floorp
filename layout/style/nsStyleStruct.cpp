@@ -168,13 +168,6 @@ nsStyleFont::nsStyleFont(const nsPresContext* aContext)
 }
 
 void
-nsStyleFont::Destroy(nsPresContext* aContext) {
-  this->~nsStyleFont();
-  aContext->PresShell()->
-    FreeByObjectID(eArenaObjectID_nsStyleFont, this);
-}
-
-void
 nsStyleFont::EnableZoom(nsPresContext* aContext, bool aEnable)
 {
   if (mAllowZoom == aEnable) {
@@ -277,13 +270,6 @@ nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc)
   MOZ_COUNT_CTOR(nsStyleMargin);
 }
 
-void
-nsStyleMargin::Destroy(nsPresContext* aContext) {
-  this->~nsStyleMargin();
-  aContext->PresShell()->
-    FreeByObjectID(eArenaObjectID_nsStyleMargin, this);
-}
-
 nsChangeHint
 nsStyleMargin::CalcDifference(const nsStyleMargin& aNewData) const
 {
@@ -310,13 +296,6 @@ nsStylePadding::nsStylePadding(const nsStylePadding& aSrc)
   : mPadding(aSrc.mPadding)
 {
   MOZ_COUNT_CTOR(nsStylePadding);
-}
-
-void
-nsStylePadding::Destroy(nsPresContext* aContext) {
-  this->~nsStylePadding();
-  aContext->PresShell()->
-    FreeByObjectID(eArenaObjectID_nsStylePadding, this);
 }
 
 nsChangeHint
@@ -396,7 +375,6 @@ void
 nsStyleBorder::FinishStyle(nsPresContext* aPresContext, const nsStyleBorder* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
   mBorderImageSource.ResolveImage(
     aPresContext, aOldStyle ? &aOldStyle->mBorderImageSource : nullptr);
@@ -427,14 +405,6 @@ nsStyleBorder::GetImageOutset() const
     outset.Side(s) = value;
   }
   return outset;
-}
-
-void
-nsStyleBorder::Destroy(nsPresContext* aContext)
-{
-  this->~nsStyleBorder();
-  aContext->PresShell()->
-    FreeByObjectID(eArenaObjectID_nsStyleBorder, this);
 }
 
 nsChangeHint
@@ -617,7 +587,6 @@ void
 nsStyleList::FinishStyle(nsPresContext* aPresContext, const nsStyleList* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
   if (mListStyleImage && !mListStyleImage->IsResolved()) {
     mListStyleImage->Resolve(
@@ -1294,18 +1263,9 @@ nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
 }
 
 void
-nsStyleSVGReset::Destroy(nsPresContext* aContext)
-{
-  this->~nsStyleSVGReset();
-  aContext->PresShell()->
-    FreeByObjectID(mozilla::eArenaObjectID_nsStyleSVGReset, this);
-}
-
-void
 nsStyleSVGReset::FinishStyle(nsPresContext* aPresContext, const nsStyleSVGReset* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mMask) {
     nsStyleImage& image = mMask.mLayers[i].mImage;
@@ -3361,19 +3321,10 @@ nsStyleBackground::~nsStyleBackground()
 }
 
 void
-nsStyleBackground::Destroy(nsPresContext* aContext)
-{
-  this->~nsStyleBackground();
-  aContext->PresShell()->
-    FreeByObjectID(eArenaObjectID_nsStyleBackground, this);
-}
-
-void
 nsStyleBackground::FinishStyle(
   nsPresContext* aPresContext, const nsStyleBackground* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
   mImage.ResolveImages(aPresContext, aOldStyle ? &aOldStyle->mImage : nullptr);
 }
@@ -3753,7 +3704,6 @@ nsStyleDisplay::FinishStyle(
     nsPresContext* aPresContext, const nsStyleDisplay* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
   if (mShapeOutside.GetType() == StyleShapeSourceType::Image) {
     const UniquePtr<nsStyleImage>& shapeImage = mShapeOutside.GetShapeImage();
@@ -4281,13 +4231,6 @@ nsStyleContent::~nsStyleContent()
 }
 
 void
-nsStyleContent::Destroy(nsPresContext* aContext)
-{
-  this->~nsStyleContent();
-  aContext->PresShell()->FreeByObjectID(eArenaObjectID_nsStyleContent, this);
-}
-
-void
 nsStyleContent::FinishStyle(nsPresContext* aPresContext, const nsStyleContent* aOldStyle)
 {
   for (size_t i = 0; i < mContents.Length(); ++i) {
@@ -4677,7 +4620,6 @@ nsStyleUserInterface::FinishStyle(
   nsPresContext* aPresContext, const nsStyleUserInterface* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
   for (size_t i = 0; i < mCursorImages.Length(); ++i) {
     nsCursorImage& cursor = mCursorImages[i];

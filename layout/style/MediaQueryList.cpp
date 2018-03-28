@@ -27,10 +27,7 @@ MediaQueryList::MediaQueryList(nsIDocument* aDocument,
   , mMatches(false)
   , mMatchesValid(false)
 {
-  mMediaList =
-    MediaList::Create(aDocument->GetStyleBackendType(),
-                      aMediaQueryList,
-                      aCallerType);
+  mMediaList = MediaList::Create(aMediaQueryList, aCallerType);
 
   KeepAliveIfHasListenersFor(ONCHANGE_STRING);
 }

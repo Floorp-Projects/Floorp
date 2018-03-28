@@ -990,7 +990,7 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // bordercolor
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::bordercolor);
     nscolor color;
-    if (value && !aData->ShouldIgnoreColors() && value->GetColorValue(color)) {
+    if (value && value->GetColorValue(color)) {
       aData->SetColorValueIfUnset(eCSSProperty_border_top_color, color);
       aData->SetColorValueIfUnset(eCSSProperty_border_left_color, color);
       aData->SetColorValueIfUnset(eCSSProperty_border_bottom_color, color);

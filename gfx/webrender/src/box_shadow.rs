@@ -19,7 +19,8 @@ pub struct BoxShadowClipSource {
     pub shadow_radius: BorderRadius,
     pub blur_radius: f32,
     pub clip_mode: BoxShadowClipMode,
-    pub stretch_mode: BoxShadowStretchMode,
+    pub stretch_mode_x: BoxShadowStretchMode,
+    pub stretch_mode_y: BoxShadowStretchMode,
 
     // The current cache key (in device-pixels), and handles
     // to the cached clip region and blurred texture.

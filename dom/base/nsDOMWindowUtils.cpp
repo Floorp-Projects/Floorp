@@ -3541,7 +3541,7 @@ nsDOMWindowUtils::AddSheet(nsIPreloadedStyleSheet* aSheet, uint32_t aSheetType)
 
   StyleSheet* sheet = nullptr;
   auto preloadedSheet = static_cast<PreloadedStyleSheet*>(aSheet);
-  nsresult rv = preloadedSheet->GetSheet(doc->GetStyleBackendType(), &sheet);
+  nsresult rv = preloadedSheet->GetSheet(&sheet);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(sheet, NS_ERROR_FAILURE);
 

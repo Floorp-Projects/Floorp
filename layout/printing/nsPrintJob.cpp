@@ -2350,7 +2350,7 @@ nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO)
   if (aPO->mDocument->IsSVGDocument()) {
     // The SVG document only loads minimal-xul.css, so it doesn't apply other
     // styles. We should add ua.css for applying style which related to print.
-    auto cache = nsLayoutStylesheetCache::For(aPO->mDocument->GetStyleBackendType());
+    auto cache = nsLayoutStylesheetCache::Singleton();
     styleSet->PrependStyleSheet(SheetType::Agent, cache->UASheet());
   }
 

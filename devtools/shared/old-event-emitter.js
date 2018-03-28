@@ -7,7 +7,7 @@
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
 const { describeNthCaller } = require("devtools/shared/platform/stack");
-let loggingEnabled = true;
+let loggingEnabled = false;
 
 if (!isWorker) {
   loggingEnabled = Services.prefs.getBoolPref("devtools.dump.emit");

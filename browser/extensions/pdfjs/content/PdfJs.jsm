@@ -49,6 +49,8 @@ ChromeUtils.defineModuleGetter(this, "PdfjsChromeUtils",
                                "resource://pdf.js/PdfjsChromeUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PdfjsContentUtils",
                                "resource://pdf.js/PdfjsContentUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "PdfJsDefaultPreferences",
+  "resource://pdf.js/PdfJsDefaultPreferences.jsm");
 
 function getBoolPref(aPref, aDefaultValue) {
   try {
@@ -75,35 +77,10 @@ function isDefaultHandler() {
 }
 
 function initializeDefaultPreferences() {
-  /* eslint-disable semi */
-  var DEFAULT_PREFERENCES =
-{
-  "showPreviousViewOnLoad": true,
-  "defaultZoomValue": "",
-  "sidebarViewOnLoad": 0,
-  "cursorToolOnLoad": 0,
-  "enableWebGL": false,
-  "pdfBugEnabled": false,
-  "disableRange": false,
-  "disableStream": false,
-  "disableAutoFetch": false,
-  "disableFontFace": false,
-  "textLayerMode": 1,
-  "useOnlyCssZoom": false,
-  "externalLinkTarget": 0,
-  "renderer": "canvas",
-  "renderInteractiveForms": false,
-  "enablePrintAutoRotate": false,
-  "disablePageMode": false,
-  "disablePageLabels": false
-}
-
-  /* eslint-enable semi */
-
   var defaultBranch = Services.prefs.getDefaultBranch(PREF_PREFIX + ".");
   var defaultValue;
-  for (var key in DEFAULT_PREFERENCES) {
-    defaultValue = DEFAULT_PREFERENCES[key];
+  for (var key in PdfJsDefaultPreferences) {
+    defaultValue = PdfJsDefaultPreferences[key];
     switch (typeof defaultValue) {
       case "boolean":
         defaultBranch.setBoolPref(key, defaultValue);

@@ -362,12 +362,6 @@ nsCSSFontFaceRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-/* virtual */ int32_t
-nsCSSFontFaceRule::GetType() const
-{
-  return Rule::FONT_FACE_RULE;
-}
-
 uint16_t
 nsCSSFontFaceRule::Type() const
 {

@@ -75,12 +75,6 @@ nsCSSCounterStyleRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-/* virtual */ int32_t
-nsCSSCounterStyleRule::GetType() const
-{
-  return Rule::COUNTER_STYLE_RULE;
-}
-
 uint16_t
 nsCSSCounterStyleRule::Type() const
 {
@@ -389,19 +383,12 @@ nsCSSCounterStyleRule::SetDescriptor(nsCSSCounterDesc aDescID,
                                      const nsAString& aValue)
 {
   nsCSSValue value;
-  bool ok;
 
   StyleSheet* sheet = GetStyleSheet();
 
-  bool useServo = !sheet || sheet->IsServo();
-
-  if (useServo) {
-    URLExtraData* data = sheet ? sheet->AsServo()->URLData() : nullptr;
-    ok = ServoCSSParser::ParseCounterStyleDescriptor(aDescID, aValue, data,
-                                                     value);
-  } else {
-    MOZ_CRASH("old style system disabled");
-  }
+  URLExtraData* data = sheet ? sheet->AsServo()->URLData() : nullptr;
+  bool ok = ServoCSSParser::ParseCounterStyleDescriptor(aDescID, aValue, data,
+                                                        value);
 
   if (ok && CheckDescValue(GetSystem(), aDescID, value)) {
     SetDesc(aDescID, value);

@@ -5,8 +5,4 @@ Makefile.in build files for the Mozilla build system.
 
 The audioipc-2 git repository is: https://github.com/djg/audioipc-2.git
 
-The git commit ID used was 2a48416231f906ad797d3a94ca4719963c7b9fb4 (2018-03-22 11:18:36 +1000)
-A custom version was creating excluding commits:
-ead320ae24fdf8540efa909f35bec9b78925186a
-b93386611d7d9689c4f0177a4704f0adc16bc2d1
-94eb08a062e1e84e867c20bd56cd250c8aeec7ce
+The git commit ID used was b93386611d7d9689c4f0177a4704f0adc16bc2d1 (2018-03-09 14:45:24 +1000)

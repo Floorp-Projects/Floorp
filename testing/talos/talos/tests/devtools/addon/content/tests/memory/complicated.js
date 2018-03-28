@@ -5,8 +5,8 @@
 "use strict";
 
 const { openToolboxAndLog, closeToolboxAndLog, reloadPageAndLog, testSetup,
-        testTeardown, COMPLICATED_URL } = require("chrome://damp/content/tests/head");
-const { saveHeapSnapshot, readHeapSnapshot, takeCensus } = require("chrome://damp/content/tests/memory/memory-helpers");
+        testTeardown, COMPLICATED_URL } = require("../head");
+const { saveHeapSnapshot, readHeapSnapshot, takeCensus } = require("./memory-helpers");
 
 module.exports = async function() {
   await testSetup(COMPLICATED_URL);

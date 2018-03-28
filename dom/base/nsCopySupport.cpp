@@ -26,8 +26,6 @@
 
 #include "nsIDocShell.h"
 #include "nsIContentViewerEdit.h"
-#include "nsIClipboardDragDropHooks.h"
-#include "nsIClipboardDragDropHookList.h"
 #include "nsIClipboardHelper.h"
 #include "nsISelectionController.h"
 
@@ -279,12 +277,8 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
       }
 
       if (doPutOnClipboard && clipboard) {
-        bool actuallyPutOnClipboard = true;
-        nsCopySupport::DoHooks(aDoc, trans, &actuallyPutOnClipboard);
-
         // put the transferable on the clipboard
-        if (actuallyPutOnClipboard)
-          clipboard->SetData(trans, nullptr, aClipboardID);
+        clipboard->SetData(trans, nullptr, aClipboardID);
       }
 
       // Return the transferable to the caller if requested.
@@ -349,49 +343,6 @@ nsCopySupport::GetTransferableForNode(nsINode* aNode,
   uint32_t flags = 0;
   return SelectionCopyHelper(selection, aDoc, false, 0, flags,
                              aTransferable);
-}
-
-nsresult nsCopySupport::DoHooks(nsIDocument *aDoc, nsITransferable *aTrans,
-                                bool *aDoPutOnClipboard)
-{
-  NS_ENSURE_ARG(aDoc);
-
-  *aDoPutOnClipboard = true;
-
-  nsCOMPtr<nsISupports> container = aDoc->GetContainer();
-  nsCOMPtr<nsIClipboardDragDropHookList> hookObj = do_GetInterface(container);
-  if (!hookObj) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  hookObj->GetHookEnumerator(getter_AddRefs(enumerator));
-  if (!enumerator) return NS_ERROR_FAILURE;
-
-  // the logic here should follow the behavior specified in
-  // nsIClipboardDragDropHooks.h
-
-  nsCOMPtr<nsIClipboardDragDropHooks> override;
-  nsCOMPtr<nsISupports> isupp;
-  bool hasMoreHooks = false;
-  nsresult rv = NS_OK;
-  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMoreHooks))
-         && hasMoreHooks)
-  {
-    rv = enumerator->GetNext(getter_AddRefs(isupp));
-    if (NS_FAILED(rv)) break;
-    override = do_QueryInterface(isupp);
-    if (override)
-    {
-#ifdef DEBUG
-      nsresult hookResult =
-#endif
-      override->OnCopyOrDrag(nullptr, aTrans, aDoPutOnClipboard);
-      NS_ASSERTION(NS_SUCCEEDED(hookResult), "OnCopyOrDrag hook failed");
-      if (!*aDoPutOnClipboard)
-        break;
-    }
-  }
-
-  return rv;
 }
 
 nsresult

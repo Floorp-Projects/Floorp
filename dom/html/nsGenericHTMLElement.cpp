@@ -1475,8 +1475,7 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
   if (!aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Background)))
     return;
 
-  if (!aData->PropertyIsSet(eCSSProperty_background_image) &&
-      !aData->ShouldIgnoreColors()) {
+  if (!aData->PropertyIsSet(eCSSProperty_background_image)) {
     // background
     nsAttrValue* value =
       const_cast<nsAttrValue*>(aAttributes->GetAttr(nsGkAtoms::background));
@@ -1493,8 +1492,7 @@ nsGenericHTMLElement::MapBGColorInto(const nsMappedAttributes* aAttributes,
   if (!aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Background)))
     return;
 
-  if (!aData->PropertyIsSet(eCSSProperty_background_color) &&
-      !aData->ShouldIgnoreColors()) {
+  if (!aData->PropertyIsSet(eCSSProperty_background_color)) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::bgcolor);
     nscolor color;
     if (value && value->GetColorValue(color)) {
@@ -2959,13 +2957,7 @@ nsGenericHTMLElement::NewURIFromString(const nsAString& aURISpec,
 static bool
 IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
 {
-  if (aPresShell->StyleSet()->IsServo()) {
-    return !aElement->HasServoData() || Servo_Element_IsDisplayNone(aElement);
-  }
-
-  MOZ_CRASH("Old style system disabled");
-
-  return false;
+  return !aElement->HasServoData() || Servo_Element_IsDisplayNone(aElement);
 }
 
 void

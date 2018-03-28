@@ -33,10 +33,6 @@ public:
 
   bool Matches(nsPresContext*) const final;
 
-#ifdef DEBUG
-  bool IsServo() const final { return true; }
-#endif
-
   RawServoMediaList& RawList() { return *mRawList; }
 
 protected:

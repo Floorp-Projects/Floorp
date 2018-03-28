@@ -1739,16 +1739,12 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
     }
   }
 
-  RefPtr<DeclarationBlock> decl;
-  if (ownerDoc->GetStyleBackendType() == StyleBackendType::Servo) {
-    RefPtr<URLExtraData> data = new URLExtraData(baseURI, docURI,
-                                                 principal);
-    decl = ServoDeclarationBlock::FromCssText(aString, data,
-                                              ownerDoc->GetCompatibilityMode(),
-                                              ownerDoc->CSSLoader());
-  } else {
-    MOZ_CRASH("old style system disabled");
-  }
+  RefPtr<URLExtraData> data = new URLExtraData(baseURI, docURI,
+                                                principal);
+  RefPtr<DeclarationBlock> decl = ServoDeclarationBlock::
+    FromCssText(aString, data,
+                ownerDoc->GetCompatibilityMode(),
+                ownerDoc->CSSLoader());
   if (!decl) {
     return false;
   }

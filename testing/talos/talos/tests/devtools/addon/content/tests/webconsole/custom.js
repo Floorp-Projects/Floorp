@@ -5,8 +5,8 @@
 "use strict";
 
 const { openToolboxAndLog, closeToolboxAndLog, testSetup,
-        testTeardown, PAGES_BASE_URL } = require("chrome://damp/content/tests/head");
-const { reloadConsoleAndLog } = require("chrome://damp/content/tests/webconsole/webconsole-helpers");
+        testTeardown, PAGES_BASE_URL } = require("../head");
+const { reloadConsoleAndLog } = require("./webconsole-helpers");
 
 module.exports = async function() {
   // These numbers controls the number of console api calls we do in the test

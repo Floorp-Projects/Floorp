@@ -5,8 +5,8 @@
 "use strict";
 
 const { openToolboxAndLog, closeToolboxAndLog, testSetup,
-        testTeardown, SIMPLE_URL } = require("chrome://damp/content/tests/head");
-const { reloadConsoleAndLog } = require("chrome://damp/content/tests/webconsole/webconsole-helpers");
+        testTeardown, SIMPLE_URL } = require("../head");
+const { reloadConsoleAndLog } = require("./webconsole-helpers");
 
 const EXPECTED_MESSAGES = 1;
 

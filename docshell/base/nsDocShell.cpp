@@ -176,7 +176,6 @@
 #include "nsDocShellEnumerator.h"
 #include "nsDocShellLoadInfo.h"
 #include "nsDocShellLoadTypes.h"
-#include "nsDocShellTransferableHooks.h"
 #include "nsDOMCID.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsDSURIContentListener.h"
@@ -629,11 +628,6 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
     GetEditingSession(getter_AddRefs(es));
     es.forget(aSink);
     return *aSink ? NS_OK : NS_NOINTERFACE;
-  } else if (aIID.Equals(NS_GET_IID(nsIClipboardDragDropHookList)) &&
-             NS_SUCCEEDED(EnsureTransferableHookData())) {
-    *aSink = mTransferableHookData;
-    NS_ADDREF((nsISupports*)*aSink);
-    return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsISelectionDisplay))) {
     nsIPresShell* shell = GetPresShell();
     if (shell) {
@@ -5509,8 +5503,6 @@ nsDocShell::Destroy()
   Stop(nsIWebNavigation::STOP_ALL);
 
   mEditorData = nullptr;
-
-  mTransferableHookData = nullptr;
 
   // Save the state of the current document, before destroying the window.
   // This is needed to capture the state of a frameset when the new document
@@ -12997,18 +12989,6 @@ nsDocShell::EnsureEditorData()
   }
 
   return mEditorData ? NS_OK : NS_ERROR_NOT_AVAILABLE;
-}
-
-nsresult
-nsDocShell::EnsureTransferableHookData()
-{
-  MOZ_ASSERT(!mIsBeingDestroyed);
-
-  if (!mTransferableHookData) {
-    mTransferableHookData = new nsTransferableHookData();
-  }
-
-  return NS_OK;
 }
 
 nsresult
