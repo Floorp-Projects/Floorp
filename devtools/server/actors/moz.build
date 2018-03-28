@@ -34,7 +34,6 @@ DevToolsModules(
     'emulation.js',
     'environment.js',
     'errordocs.js',
-    'eventlooplag.js',
     'frame.js',
     'framerate.js',
     'gcli.js',
