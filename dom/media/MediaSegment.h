@@ -57,6 +57,16 @@ typedef MediaTime GraphTime;
 const GraphTime GRAPH_TIME_MAX = MEDIA_TIME_MAX;
 
 /**
+ * The number of chunks allocated by default for a MediaSegment.
+ * Appending more chunks than this will cause further allocations.
+ *
+ * 16 is an arbitrary number intended to cover the most common cases in the
+ * MediaStreamGraph (1 with silence and 1-2 with data for a realtime track)
+ * with some margin.
+ */
+const size_t DEFAULT_SEGMENT_CAPACITY = 16;
+
+/**
  * We pass the principal through the MediaStreamGraph by wrapping it in a thread
  * safe nsMainThreadPtrHandle, since it cannot be used directly off the main
  * thread. We can compare two PrincipalHandles to each other on any thread, but
@@ -354,7 +364,8 @@ public:
   void Clear() override
   {
     mDuration = 0;
-    mChunks.Clear();
+    mChunks.ClearAndRetainStorage();
+    mChunks.SetCapacity(DEFAULT_SEGMENT_CAPACITY);
   }
 
   class ChunkIterator {
@@ -436,7 +447,10 @@ public:
   }
 
 protected:
-  explicit MediaSegmentBase(Type aType) : MediaSegment(aType) {}
+  explicit MediaSegmentBase(Type aType)
+    : MediaSegment(aType)
+    , mChunks(DEFAULT_SEGMENT_CAPACITY)
+  {}
 
   MediaSegmentBase(MediaSegmentBase&& aSegment)
     : MediaSegment(Move(aSegment))
