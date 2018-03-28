@@ -74,10 +74,10 @@ StackingContextHelper::ToRelativeLayoutRect(const LayoutDeviceRect& aRect) const
   return wr::ToLayoutRect(rect);
 }
 
-gfx::Matrix4x4
+const Maybe<gfx::Matrix4x4>&
 StackingContextHelper::GetTransformForScrollData() const
 {
-  return mTransformForScrollData.valueOr(gfx::Matrix4x4());
+  return mTransformForScrollData;
 }
 
 } // namespace layers
