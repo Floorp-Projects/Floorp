@@ -12,8 +12,5 @@
     "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
     "python_path": "c:/mozilla-build/python/python.exe",
     "cc": "cl.exe",
-    "cxx": "cl.exe",
-    "patches": [
-      "clang-tidy-cxx14.patch"
-    ]
+    "cxx": "cl.exe"
 }
