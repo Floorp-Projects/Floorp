@@ -216,7 +216,8 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   }
 
   if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Color))) {
-    if (!aData->PropertyIsSet(eCSSProperty_color)) {
+    if (!aData->PropertyIsSet(eCSSProperty_color) &&
+        !aData->ShouldIgnoreColors()) {
       // color: color
       nscolor color;
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::text);

@@ -80,7 +80,11 @@ StyleSheet::LastRelease()
   MOZ_ASSERT(mInner->mSheets.Contains(this), "Our mInner should include us.");
 
   UnparentChildren();
-  AsServo()->LastRelease();
+  if (IsGecko()) {
+    MOZ_CRASH("old style system disabled");
+  } else {
+    AsServo()->LastRelease();
+  }
 
   mInner->RemoveSheet(this);
   mInner = nullptr;
@@ -393,10 +397,14 @@ StyleSheet::EnsureUniqueInner()
   mInner->RemoveSheet(this);
   mInner = clone;
 
-  // Fixup the child lists and parent links in the Servo sheet. This is done
-  // here instead of in StyleSheetInner::CloneFor, because it's just more
-  // convenient to do so instead.
-  AsServo()->BuildChildListAfterInnerClone();
+  if (IsGecko()) {
+    MOZ_CRASH("old style system disabled");
+  } else {
+    // Fixup the child lists and parent links in the Servo sheet. This is done
+    // here instead of in StyleSheetInner::CloneFor, because it's just more
+    // convenient to do so instead.
+    AsServo()->BuildChildListAfterInnerClone();
+  }
 
   // let our containing style sets know that if we call
   // nsPresContext::EnsureSafeToHandOutCSSRules we will need to restyle the
@@ -417,7 +425,10 @@ StyleSheet::AppendAllChildSheets(nsTArray<StyleSheet*>& aArray)
 // WebIDL CSSStyleSheet API
 
 #define FORWARD_INTERNAL(method_, args_) \
-  return AsServo()->method_ args_;
+  if (IsServo()) { \
+    return AsServo()->method_ args_; \
+  } \
+  MOZ_CRASH("old style system disabled");
 
 dom::CSSRuleList*
 StyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal,
@@ -593,8 +604,12 @@ StyleSheet::InsertRuleIntoGroup(const nsAString& aRule,
 
   WillDirty();
 
-  nsresult result =
-    AsServo()->InsertRuleIntoGroupInternal(aRule, aGroup, aIndex);
+  nsresult result;
+  if (IsGecko()) {
+    MOZ_CRASH("old style system disabled");
+  } else {
+    result = AsServo()->InsertRuleIntoGroupInternal(aRule, aGroup, aIndex);
+  }
   NS_ENSURE_SUCCESS(result, result);
   RuleAdded(*aGroup->GetStyleRuleAt(aIndex));
 

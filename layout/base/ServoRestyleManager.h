@@ -305,6 +305,9 @@ private:
 
   inline ServoStyleSet* StyleSet() const
   {
+    MOZ_ASSERT(PresContext()->StyleSet()->IsServo(),
+               "ServoRestyleManager should only be used with a Servo-flavored "
+               "style backend");
     return PresContext()->StyleSet()->AsServo();
   }
 

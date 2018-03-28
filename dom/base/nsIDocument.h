@@ -1505,7 +1505,8 @@ public:
       {
       public:
         SelectorList()
-          : mGecko(nullptr)
+          : mIsServo(false)
+          , mGecko(nullptr)
         {}
 
         SelectorList(SelectorList&& aOther)
@@ -1516,15 +1517,21 @@ public:
         SelectorList& operator=(SelectorList&& aOther)
         {
           Reset();
-          mServo = aOther.mServo;
-          aOther.mServo = nullptr;
+          mIsServo = aOther.mIsServo;
+          if (mIsServo) {
+            mServo = aOther.mServo;
+            aOther.mServo = nullptr;
+          } else {
+            MOZ_CRASH("old style system disabled");
+          }
           return *this;
         }
 
         SelectorList(const SelectorList& aOther) = delete;
 
         explicit SelectorList(mozilla::UniquePtr<RawServoSelectorList>&& aList)
-          : mServo(aList.release())
+          : mIsServo(true)
+          , mServo(aList.release())
         {}
 
 
@@ -1532,23 +1539,30 @@ public:
           Reset();
         }
 
+        bool IsServo() const { return mIsServo; }
+        bool IsGecko() const { return !IsServo(); }
+
         explicit operator bool() const
         {
-          return !!AsServo();
+          return IsServo() ? !!AsServo() : !!AsGecko();
         }
 
         nsCSSSelectorList* AsGecko() const
         {
+          MOZ_ASSERT(IsGecko());
           return mGecko;
         }
 
         RawServoSelectorList* AsServo() const
         {
+          MOZ_ASSERT(IsServo());
           return mServo;
         }
 
       private:
         void Reset();
+
+        bool mIsServo;
 
         union {
           nsCSSSelectorList* mGecko;

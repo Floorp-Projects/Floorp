@@ -57,6 +57,10 @@ public:
   virtual void SetText(const nsAString& aMediaText) = 0;
   virtual bool Matches(nsPresContext* aPresContext) const = 0;
 
+#ifdef DEBUG
+  virtual bool IsServo() const = 0;
+#endif
+
   void SetStyleSheet(StyleSheet* aSheet);
 
   // WebIDL

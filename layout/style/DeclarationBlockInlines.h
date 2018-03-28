@@ -28,13 +28,21 @@ DeclarationBlock::Release()
 already_AddRefed<DeclarationBlock>
 DeclarationBlock::Clone() const
 {
-  return do_AddRef(new ServoDeclarationBlock(*AsServo()));
+  RefPtr<DeclarationBlock> result;
+  if (IsGecko()) {
+    MOZ_CRASH("old style system disabled");
+  } else {
+    result = new ServoDeclarationBlock(*AsServo());
+  }
+  return result.forget();
 }
 
 already_AddRefed<DeclarationBlock>
 DeclarationBlock::EnsureMutable()
 {
-  if (!IsDirty()) {
+#ifdef DEBUG
+#endif
+  if (IsServo() && !IsDirty()) {
     // In stylo, the old DeclarationBlock is stored in element's rule node tree
     // directly, to avoid new values replacing the DeclarationBlock in the tree
     // directly, we need to copy the old one here if we haven't yet copied.

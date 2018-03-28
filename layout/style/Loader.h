@@ -301,6 +301,9 @@ public:
    *                    parent sheet.
    * @param aURL the URL of the child sheet
    * @param aMedia the already-parsed media list for the child sheet
+   * @param aGeckoParentRule the @import rule importing this child, when using
+   *                         Gecko's style system. This is used to properly
+   *                         order the child sheet list of aParentSheet.
    * @param aSavedSheets any saved style sheets which could be reused
    *              for this load
    */
@@ -308,6 +311,7 @@ public:
                           SheetLoadData* aParentData,
                           nsIURI* aURL,
                           dom::MediaList* aMedia,
+                          ImportRule* aGeckoParentRule,
                           LoaderReusableStyleSheets* aSavedSheets);
 
   /**
@@ -527,7 +531,8 @@ private:
                             nsIDocument* aDocument);
 
   nsresult InsertChildSheet(StyleSheet* aSheet,
-                            StyleSheet* aParentSheet);
+                            StyleSheet* aParentSheet,
+                            ImportRule* aGeckoParentRule);
 
   nsresult InternalLoadNonDocumentSheet(
     nsIURI* aURL,

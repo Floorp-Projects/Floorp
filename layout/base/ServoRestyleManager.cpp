@@ -1151,7 +1151,7 @@ ServoRestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags)
   while (styleSet->StyleDocument(aFlags)) {
     ClearSnapshots();
 
-    nsStyleChangeList currentChanges;
+    nsStyleChangeList currentChanges(StyleBackendType::Servo);
     bool anyStyleChanged = false;
 
     // Recreate styles , and queue up change hints (which also handle lazy frame
