@@ -3427,7 +3427,7 @@ LIRGenerator::visitStoreElementHole(MStoreElementHole* ins)
 
     const LUse object = useRegister(ins->object());
     const LUse elements = useRegister(ins->elements());
-    const LAllocation index = useRegisterOrConstant(ins->index());
+    const LAllocation index = useRegister(ins->index());
 
     LInstruction* lir;
     switch (ins->value()->type()) {
@@ -3455,7 +3455,7 @@ LIRGenerator::visitFallibleStoreElement(MFallibleStoreElement* ins)
 
     const LUse object = useRegister(ins->object());
     const LUse elements = useRegister(ins->elements());
-    const LAllocation index = useRegisterOrConstant(ins->index());
+    const LAllocation index = useRegister(ins->index());
 
     LInstruction* lir;
     switch (ins->value()->type()) {
