@@ -55,13 +55,18 @@ add_task(async function() {
 
   info("Click on the animation inspector tab");
   let onHighlighterHidden = toolbox.once("node-unhighlight");
-  let onTabInspectorSelected = inspector.sidebar.once("animationinspector-selected");
-  let animationInspectorTab = inspector.panelDoc.querySelector("#animationinspector-tab");
+  let onTabInspectorSelected = inspector.sidebar.once("newanimationinspector-selected");
+  let onInspectorUpdated = inspector.once("inspector-updated");
+  let animationInspectorTab =
+    inspector.panelDoc.querySelector("#newanimationinspector-tab");
   EventUtils.synthesizeMouseAtCenter(animationInspectorTab, {},
     inspector.panelDoc.defaultView);
 
   await onTabInspectorSelected;
   info("animation inspector was selected");
+
+  await onInspectorUpdated;
+  info("animation inspector was updated");
 
   await onHighlighterHidden;
   info("box model highlighter hidden after moving the mouse out of the markup view");

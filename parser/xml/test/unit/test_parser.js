@@ -1,4 +1,6 @@
-function updateDocumentSourceMaps(source) {
+ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+
+function updateDocumentSourceMaps(src) {
   const nsIDOMNode = Ci.nsIDOMNode;
 
   const nsISAXXMLReader = Ci.nsISAXXMLReader;
@@ -76,7 +78,34 @@ function updateDocumentSourceMaps(source) {
   saxReader.contentHandler = contentHandler;
   saxReader.errorHandler   = errorHandler;
 
-  saxReader.parseFromString(source, "application/xml");
+  let type = "application/xml";
+  let uri = NetUtil.newURI("http://example.org/");
+
+  let sStream = Cc["@mozilla.org/io/string-input-stream;1"]
+               .createInstance(Ci.nsIStringInputStream);
+  sStream.setData(src, src.length);
+  var bStream = Cc["@mozilla.org/network/buffered-input-stream;1"]
+                .createInstance(Ci.nsIBufferedInputStream);
+  bStream.init(sStream, 4096);
+
+  let channel = Cc["@mozilla.org/network/input-stream-channel;1"].
+    createInstance(Ci.nsIInputStreamChannel);
+  channel.setURI(uri);
+  channel.contentStream = bStream;
+  channel.QueryInterface(Ci.nsIChannel);
+  channel.contentType = type;
+
+  saxReader.parseAsync(null, uri);
+  saxReader.onStartRequest(channel, uri);
+
+  let pos = 0;
+  let count = bStream.available();
+  while (count > 0) {
+    saxReader.onDataAvailable(channel, null, bStream, pos, count);
+    pos += count;
+    count = bStream.available();
+  }
+  saxReader.onStopRequest(channel, null, Cr.NS_OK);
 
   // Just in case it leaks.
   saxReader.contentHandler = null;
@@ -97,6 +126,7 @@ function run_test() {
   src = "<!DOCTYPE foo>\n<!-- all your foo are belong to bar -->";
   src += "<foo id='foo'>\n<?foo wooly bully?>\nfoo";
   src += "<![CDATA[foo fighters]]></foo>\n";
+
   var parseErrorLog = updateDocumentSourceMaps(src);
 
   if (parseErrorLog.length > 0) {

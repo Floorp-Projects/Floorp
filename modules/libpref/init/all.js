@@ -3062,9 +3062,6 @@ pref("layout.css.prefixes.webkit", true);
 // pref is set to false.)
 pref("layout.css.prefixes.device-pixel-ratio-webkit", false);
 
-// Is support for the :scope selector enabled?
-pref("layout.css.scope-pseudo.enabled", true);
-
 // Is support for background-blend-mode enabled?
 pref("layout.css.background-blend-mode.enabled", true);
 

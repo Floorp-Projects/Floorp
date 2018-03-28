@@ -25,58 +25,6 @@
 
 using namespace mozilla;
 
-/* Object Identifier constants */
-#define CONST_OID static const unsigned char
-#define MICROSOFT_OID 0x2b, 0x6, 0x1, 0x4, 0x1, 0x82, 0x37
-#define PKIX_OID 0x2b, 0x6, 0x01, 0x05, 0x05, 0x07
-CONST_OID msCertExtCerttype[] = { MICROSOFT_OID, 20, 2 };
-CONST_OID msNTPrincipalName[] = { MICROSOFT_OID, 20, 2, 3 };
-CONST_OID msCertsrvCAVersion[] = { MICROSOFT_OID, 21, 1 };
-CONST_OID msNTDSReplication[] = { MICROSOFT_OID, 25, 1 };
-CONST_OID pkixLogotype[] = { PKIX_OID, 1, 12 };
-
-#define OI(x)                                                                  \
-  {                                                                            \
-    siDEROID, (unsigned char*)x, sizeof x                                      \
-  }
-#define OD(oid, desc, mech, ext)                                               \
-  {                                                                            \
-    OI(oid), SEC_OID_UNKNOWN, desc, mech, ext                                  \
-  }
-#define SEC_OID(tag) more_oids[tag].offset
-
-static SECOidData more_oids[] = {
-/* Microsoft OIDs */
-#define MS_CERT_EXT_CERTTYPE 0
-  OD(msCertExtCerttype,
-     "Microsoft Certificate Template Name",
-     CKM_INVALID_MECHANISM,
-     INVALID_CERT_EXTENSION),
-
-#define MS_NT_PRINCIPAL_NAME 1
-  OD(msNTPrincipalName,
-     "Microsoft Principal Name",
-     CKM_INVALID_MECHANISM,
-     INVALID_CERT_EXTENSION),
-
-#define MS_CERTSERV_CA_VERSION 2
-  OD(msCertsrvCAVersion,
-     "Microsoft CA Version",
-     CKM_INVALID_MECHANISM,
-     INVALID_CERT_EXTENSION),
-
-#define MS_NTDS_REPLICATION 3
-  OD(msNTDSReplication,
-     "Microsoft Domain GUID",
-     CKM_INVALID_MECHANISM,
-     INVALID_CERT_EXTENSION),
-
-#define PKIX_LOGOTYPE 4
-  OD(pkixLogotype, "Logotype", CKM_INVALID_MECHANISM, INVALID_CERT_EXTENSION),
-};
-
-static const unsigned int numOids = (sizeof more_oids) / (sizeof more_oids[0]);
-
 static nsresult
 GetPIPNSSBundle(nsIStringBundle** pipnssBundle)
 {
@@ -591,19 +539,7 @@ GetOIDText(SECItem* oid, nsAString& text)
       bundlekey = "CertDumpECsect571r1";
       break;
     default:
-      if (oidTag == SEC_OID(MS_CERT_EXT_CERTTYPE)) {
-        bundlekey = "CertDumpMSCerttype";
-        break;
-      }
-      if (oidTag == SEC_OID(MS_CERTSERV_CA_VERSION)) {
-        bundlekey = "CertDumpMSCAVersion";
-        break;
-      }
-      if (oidTag == SEC_OID(PKIX_LOGOTYPE)) {
-        bundlekey = "CertDumpLogotype";
-        break;
-      }
-      /* fallthrough */
+      break;
   }
 
   if (bundlekey) {
@@ -945,24 +881,6 @@ AppendBMPtoUTF16(const UniquePLArenaPool& arena,
 }
 
 static nsresult
-ProcessBMPString(SECItem* extData, nsAString& text)
-{
-  UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
-  if (!arena) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  SECItem item;
-  if (SEC_ASN1DecodeItem(
-        arena.get(), &item, SEC_ASN1_GET(SEC_BMPStringTemplate), extData) !=
-      SECSuccess) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return AppendBMPtoUTF16(arena, item.data, item.len, text);
-}
-
-static nsresult
 ProcessGeneralName(const UniquePLArenaPool& arena, CERTGeneralName* current,
                    nsAString& text)
 {
@@ -973,69 +891,13 @@ ProcessGeneralName(const UniquePLArenaPool& arena, CERTGeneralName* current,
   nsresult rv = NS_OK;
 
   switch (current->type) {
-    case certOtherName: {
-      SECOidTag oidTag = SECOID_FindOIDTag(&current->name.OthName.oid);
-      if (oidTag == SEC_OID(MS_NT_PRINCIPAL_NAME)) {
-        /* The type of this name is apparently nowhere explicitly
-         documented. However, in the generated templates, it is always
-         UTF-8. So try to decode this as UTF-8; if that fails, dump the
-         raw data. */
-        SECItem decoded;
-        GetPIPNSSBundleString("CertDumpMSNTPrincipal", key);
-        if (SEC_ASN1DecodeItem(arena.get(),
-                               &decoded,
-                               SEC_ASN1_GET(SEC_UTF8StringTemplate),
-                               &current->name.OthName.name) == SECSuccess) {
-          AppendUTF8toUTF16(nsAutoCString((char*)decoded.data, decoded.len),
-                            value);
-        } else {
-          ProcessRawBytes(&current->name.OthName.name, value);
-        }
-        break;
-      } else if (oidTag == SEC_OID(MS_NTDS_REPLICATION)) {
-        /* This should be a 16-byte GUID */
-        SECItem guid;
-        GetPIPNSSBundleString("CertDumpMSDomainGUID", key);
-        if (SEC_ASN1DecodeItem(arena.get(),
-                               &guid,
-                               SEC_ASN1_GET(SEC_OctetStringTemplate),
-                               &current->name.OthName.name) == SECSuccess &&
-            guid.len == 16) {
-          char buf[40];
-          unsigned char* d = guid.data;
-          SprintfLiteral(buf,
-                         "{%.2x%.2x%.2x%.2x-%.2x%.2x-%.2x%.2x-%.2x%.2x-%.2x%"
-                         ".2x%.2x%.2x%.2x%.2x}",
-                         d[3],
-                         d[2],
-                         d[1],
-                         d[0],
-                         d[5],
-                         d[4],
-                         d[7],
-                         d[6],
-                         d[8],
-                         d[9],
-                         d[10],
-                         d[11],
-                         d[12],
-                         d[13],
-                         d[14],
-                         d[15]);
-          value.AssignASCII(buf);
-        } else {
-          ProcessRawBytes(&current->name.OthName.name, value);
-        }
-      } else {
-        rv = GetDefaultOIDFormat(
-          &current->name.OthName.oid, key, ' ');
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-        ProcessRawBytes(&current->name.OthName.name, value);
+    case certOtherName:
+      rv = GetDefaultOIDFormat(&current->name.OthName.oid, key, ' ');
+      if (NS_FAILED(rv)) {
+        return rv;
       }
+      ProcessRawBytes(&current->name.OthName.name, value);
       break;
-    }
     case certRFC822Name:
       GetPIPNSSBundleString("CertDumpRFC822Name", key);
       value.AssignASCII((char*)current->name.other.data,
@@ -1494,38 +1356,6 @@ ProcessAuthInfoAccess(SECItem* extData, nsAString& text)
 }
 
 static nsresult
-ProcessMSCAVersion(SECItem* extData, nsAString& text)
-{
-  MOZ_ASSERT(extData);
-  NS_ENSURE_ARG(extData);
-
-  ScopedAutoSECItem decoded;
-  if (SEC_ASN1DecodeItem(
-        nullptr, &decoded, SEC_ASN1_GET(SEC_IntegerTemplate), extData) !=
-      SECSuccess) {
-    /* This extension used to be an Integer when this code
-       was written, but apparently isn't anymore. Display
-       the raw bytes instead. */
-    return ProcessRawBytes(extData, text);
-  }
-
-  unsigned long version;
-  if (SEC_ASN1DecodeInteger(&decoded, &version) != SECSuccess) {
-    /* Value out of range, display raw bytes */
-    return ProcessRawBytes(extData, text);
-  }
-
-  /* Apparently, the encoding is <minor><major>, with 16 bits each */
-  char buf[50];
-  if (SprintfLiteral(buf, "%lu.%lu", version & 0xFFFF, version >> 16) <= 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  text.AppendASCII(buf);
-  return NS_OK;
-}
-
-static nsresult
 ProcessExtensionData(SECOidTag oidTag, SECItem* extData, nsAString& text)
 {
   nsresult rv;
@@ -1559,14 +1389,6 @@ ProcessExtensionData(SECOidTag oidTag, SECItem* extData, nsAString& text)
       rv = ProcessAuthInfoAccess(extData, text);
       break;
     default:
-      if (oidTag == SEC_OID(MS_CERT_EXT_CERTTYPE)) {
-        rv = ProcessBMPString(extData, text);
-        break;
-      }
-      if (oidTag == SEC_OID(MS_CERTSERV_CA_VERSION)) {
-        rv = ProcessMSCAVersion(extData, text);
-        break;
-      }
       rv = ProcessRawBytes(extData, text);
       break;
   }
@@ -1809,34 +1631,9 @@ ProcessExtensions(CERTCertExtension** extensions,
   return NS_OK;
 }
 
-static bool registered;
-static SECStatus
-RegisterDynamicOids()
-{
-  unsigned int i;
-  SECStatus rv = SECSuccess;
-
-  if (registered)
-    return rv;
-
-  for (i = 0; i < numOids; i++) {
-    SECOidTag tag = SECOID_AddEntry(&more_oids[i]);
-    if (tag == SEC_OID_UNKNOWN) {
-      rv = SECFailure;
-      continue;
-    }
-    more_oids[i].offset = tag;
-  }
-  registered = true;
-  return rv;
-}
-
 nsresult
 nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence)
 {
-  if (RegisterDynamicOids() != SECSuccess)
-    return NS_ERROR_FAILURE;
-
   //
   //   TBSCertificate  ::=  SEQUENCE  {
   //        version         [0]  EXPLICIT Version DEFAULT v1,

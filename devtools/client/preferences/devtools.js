@@ -72,8 +72,12 @@ pref("devtools.changesview.enabled", false);
 pref("devtools.eventsview.enabled", false);
 // Enable the Flexbox Inspector panel
 pref("devtools.flexboxinspector.enabled", false);
-// Enable the new Animation Inspector
+// Enable the new Animation Inspector in Nightly only
+#if defined(NIGHTLY_BUILD)
+pref("devtools.new-animationinspector.enabled", true);
+#else
 pref("devtools.new-animationinspector.enabled", false);
+#endif
 // Enable the Variable Fonts editor
 pref("devtools.inspector.fonteditor.enabled", false);
 

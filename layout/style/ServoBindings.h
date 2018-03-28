@@ -19,7 +19,6 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/ComputedTimingFunction.h"
 #include "nsChangeHint.h"
-#include "nsCSSPseudoClasses.h"
 #include "nsIDocument.h"
 #include "nsStyleStruct.h"
 
@@ -190,12 +189,13 @@ Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
 // Selector Matching.
 uint64_t Gecko_ElementState(RawGeckoElementBorrowed element);
 bool Gecko_IsRootElement(RawGeckoElementBorrowed element);
-bool Gecko_MatchesElement(mozilla::CSSPseudoClassType type, RawGeckoElementBorrowed element);
 bool Gecko_MatchLang(RawGeckoElementBorrowed element,
                      nsAtom* override_lang, bool has_override_lang,
                      const char16_t* value);
 nsAtom* Gecko_GetXMLLangValue(RawGeckoElementBorrowed element);
 nsIDocument::DocumentTheme Gecko_GetDocumentLWTheme(const nsIDocument* aDocument);
+bool Gecko_IsTableBorderNonzero(RawGeckoElementBorrowed element);
+bool Gecko_IsBrowserFrame(RawGeckoElementBorrowed element);
 
 // Attributes.
 #define SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(prefix_, implementor_)  \

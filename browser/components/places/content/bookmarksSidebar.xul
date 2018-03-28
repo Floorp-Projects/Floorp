@@ -1,29 +1,27 @@
-<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<?xml version="1.0"?> <!-- -*- Mode: xml; indent-tabs-mode: nil; -*- -->
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 
 <!DOCTYPE page [
 <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
 %placesDTD;
-<!ENTITY % editMenuOverlayDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
-%editMenuOverlayDTD;
+<!ENTITY % editMenuDTD SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+%editMenuDTD;
 ]>
 
 <page id="bookmarksPanel"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="init();"
-      onunload="SidebarUtils.setMouseoverURL('');">
+      onunload="PlacesUIUtils.setMouseoverURL('', window);">
 
   <script type="application/javascript"
-          src="chrome://browser/content/bookmarks/sidebarUtils.js"/>
-  <script type="application/javascript"
-          src="chrome://browser/content/bookmarks/bookmarksPanel.js"/>
+          src="chrome://browser/content/places/bookmarksSidebar.js"/>
   <script type="application/javascript"
           src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript"
@@ -56,18 +54,20 @@
              oncommand="searchBookmarks(this.value);"/>
   </hbox>
 
-  <tree id="bookmarks-view" class="sidebar-placesTree" type="places"
+  <tree id="bookmarks-view"
+        class="sidebar-placesTree"
+        type="places"
         flex="1"
         hidecolumnpicker="true"
         context="placesContext"
-        onkeypress="SidebarUtils.handleTreeKeyPress(event);"
-        onclick="SidebarUtils.handleTreeClick(this, event, true);"
-        onmousemove="SidebarUtils.handleTreeMouseMove(event);"
-        onmouseout="SidebarUtils.setMouseoverURL('');">
+        onkeypress="PlacesUIUtils.onSidebarTreeKeyPress(event);"
+        onclick="PlacesUIUtils.onSidebarTreeClick(event);"
+        onmousemove="PlacesUIUtils.onSidebarTreeMouseMove(event);"
+        onmouseout="PlacesUIUtils.setMouseoverURL('', window);">
     <treecols>
       <treecol id="title" flex="1" primary="true" hideheader="true"/>
     </treecols>
-    <treechildren id="bookmarks-view-children" view="bookmarks-view"
+    <treechildren view="bookmarks-view"
                   class="sidebar-placesTreechildren" flex="1" tooltip="bhTooltip"/>
   </tree>
 </page>
