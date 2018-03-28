@@ -342,7 +342,8 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitArrayPopShiftV(LArrayPopShiftV* lir);
     void visitArrayPopShiftT(LArrayPopShiftT* lir);
     void emitArrayPush(LInstruction* lir, Register obj,
-                       const ConstantOrRegister& value, Register elementsTemp, Register length);
+                       const ConstantOrRegister& value, Register elementsTemp, Register length,
+                       Register spectreTemp);
     void visitArrayPushV(LArrayPushV* lir);
     void visitArrayPushT(LArrayPushT* lir);
     void visitArraySlice(LArraySlice* lir);
