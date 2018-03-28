@@ -123,7 +123,6 @@ public:
   void CancelAllPendingReflows() override;
   void DoFlushPendingNotifications(FlushType aType) override;
   void DoFlushPendingNotifications(ChangesToFlush aType) override;
-  void DestroyFramesForAndRestyle(dom::Element* aElement) override;
 
   /**
    * Post a callback that should be handled after reflow has finished.

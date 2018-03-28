@@ -503,19 +503,11 @@ ShadowRoot::MaybeReassignElement(Element* aElement)
     return;
   }
 
-  // If the old slot is about to become empty, let layout know that it needs to
-  // do work.
-  if (oldSlot && oldSlot->AssignedNodes().Length() == 1) {
-    InvalidateStyleAndLayoutOnSubtree(oldSlot);
+  if (IsComposedDocParticipant()) {
+    if (nsIPresShell* shell = OwnerDoc()->GetShell()) {
+      shell->SlotAssignmentWillChange(*aElement, oldSlot, assignment.mSlot);
+    }
   }
-  // Ditto if the new slot will stop showing fallback content.
-  if (assignment.mSlot && assignment.mSlot->AssignedNodes().IsEmpty()) {
-    InvalidateStyleAndLayoutOnSubtree(assignment.mSlot);
-  }
-
-  // Otherwise we only need to care about the reassigned element. Note that this
-  // is a no-op if we hit the `oldSlot` path above.
-  InvalidateStyleAndLayoutOnSubtree(aElement);
 
   if (oldSlot) {
     oldSlot->RemoveAssignedNode(aElement);
