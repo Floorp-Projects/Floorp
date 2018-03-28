@@ -2,13 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define VECS_PER_SPECIFIC_BRUSH 2
+#include shared,prim_shared,clip_shared
 
-#include shared,prim_shared,brush
+varying vec3 vLocalPos;
 
-varying vec2 vLocalPos;
-
-flat varying vec4 vColor;
 flat varying int vStyle;
 flat varying float vAxisSelect;
 flat varying vec4 vParams;
@@ -19,51 +16,50 @@ flat varying vec2 vLocalOrigin;
 #define LINE_ORIENTATION_VERTICAL       0
 #define LINE_ORIENTATION_HORIZONTAL     1
 
-struct Line {
-    vec4 color;
+struct LineDecorationData {
+    RectWithSize local_rect;
     float wavyLineThickness;
     float style;
     float orientation;
 };
 
-Line fetch_line(int address) {
-    vec4 data[2] = fetch_from_resource_cache_2(address);
-    return Line(data[0], data[1].x, data[1].y, data[1].z);
+LineDecorationData fetch_data(ivec2 address) {
+    vec4 data[2] = fetch_from_resource_cache_2_direct(address);
+    RectWithSize local_rect = RectWithSize(data[0].xy, data[0].zw);
+    LineDecorationData line_data = LineDecorationData(
+        local_rect,
+        data[1].x,
+        data[1].y,
+        data[1].z
+    );
+    return line_data;
 }
 
-void brush_vs(
-    VertexInfo vi,
-    int prim_address,
-    RectWithSize local_rect,
-    ivec3 user_data,
-    PictureTask pic_task
-) {
+void main(void) {
+    ClipMaskInstance cmi = fetch_clip_item();
+    ClipArea area = fetch_clip_area(cmi.render_task_address);
+    ClipScrollNode scroll_node = fetch_clip_scroll_node(cmi.scroll_node_id);
+    LineDecorationData data = fetch_data(cmi.clip_data_address);
+
+    ClipVertexInfo vi = write_clip_tile_vertex(data.local_rect,
+                                               scroll_node,
+                                               area);
+
+
     vLocalPos = vi.local_pos;
-
-    // Note: `line` name is reserved in HLSL
-    Line line_prim = fetch_line(prim_address);
-
-    switch (int(abs(pic_task.pic_kind_and_raster_mode))) {
-        case PIC_TYPE_TEXT_SHADOW:
-            vColor = pic_task.color;
-            break;
-        default:
-            vColor = line_prim.color;
-            break;
-    }
 
     vec2 pos, size;
 
-    switch (int(line_prim.orientation)) {
+    switch (int(data.orientation)) {
         case LINE_ORIENTATION_HORIZONTAL:
             vAxisSelect = 0.0;
-            pos = local_rect.p0;
-            size = local_rect.size;
+            pos = data.local_rect.p0;
+            size = data.local_rect.size;
             break;
         case LINE_ORIENTATION_VERTICAL:
             vAxisSelect = 1.0;
-            pos = local_rect.p0.yx;
-            size = local_rect.size.yx;
+            pos = data.local_rect.p0.yx;
+            size = data.local_rect.size.yx;
             break;
         default:
             vAxisSelect = 0.0;
@@ -71,7 +67,7 @@ void brush_vs(
     }
 
     vLocalOrigin = pos;
-    vStyle = int(line_prim.style);
+    vStyle = int(data.style);
 
     switch (vStyle) {
         case LINE_STYLE_SOLID: {
@@ -98,7 +94,7 @@ void brush_vs(
         }
         case LINE_STYLE_WAVY: {
             // This logic copied from gecko to get the same results
-            float line_thickness = max(line_prim.wavyLineThickness, 1.0);
+            float line_thickness = max(data.wavyLineThickness, 1.0);
             // Difference in height between peaks and troughs
             // (and since slopes are 45 degrees, the length of each slope)
             float slope_length = size.y - line_thickness;
@@ -121,9 +117,9 @@ void brush_vs(
 
 #define MAGIC_WAVY_LINE_AA_SNAP         0.5
 
-vec4 brush_fs() {
+void main(void) {
     // Find the appropriate distance to apply the step over.
-    vec2 local_pos = vLocalPos;
+    vec2 local_pos = vLocalPos.xy / vLocalPos.z;
     float aa_range = compute_aa_range(local_pos);
     float alpha = 1.0;
 
@@ -200,6 +196,6 @@ vec4 brush_fs() {
         default: break;
     }
 
-    return vColor * alpha;
+    oFragColor = vec4(alpha);
 }
 #endif

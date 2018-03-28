@@ -11,9 +11,8 @@ use clip_scroll_tree::{ClipScrollTree, ClipScrollNodeIndex};
 use device::{FrameId, Texture};
 use gpu_cache::{GpuCache};
 use gpu_types::{BlurDirection, BlurInstance};
-use gpu_types::{ClipScrollNodeData};
+use gpu_types::{ClipScrollNodeData, ZBufferIdGenerator};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
-use picture::PictureKind;
 use prim_store::{CachedGradient, PrimitiveIndex, PrimitiveKind, PrimitiveStore};
 use prim_store::{BrushKind, DeferredResolve};
 use profiler::FrameProfileCounters;
@@ -314,6 +313,7 @@ impl RenderTarget for ColorRenderTarget {
         deferred_resolves: &mut Vec<DeferredResolve>,
     ) {
         let mut merged_batches = AlphaBatchContainer::new(None);
+        let mut z_generator = ZBufferIdGenerator::new();
 
         for task_id in &self.alpha_tasks {
             let task = &render_tasks[*task_id];
@@ -336,6 +336,7 @@ impl RenderTarget for ColorRenderTarget {
                                 gpu_cache,
                                 render_tasks,
                                 deferred_resolves,
+                                &mut z_generator,
                             );
 
                             if let Some(batch_container) = batch_builder.build(&mut merged_batches) {
@@ -395,15 +396,13 @@ impl RenderTarget for ColorRenderTarget {
 
                         self.alpha_tasks.push(task_id);
 
-                        if let PictureKind::Image { frame_output_pipeline_id, .. } = pic.kind {
-                            // If this pipeline is registered as a frame output
-                            // store the information necessary to do the copy.
-                            if let Some(pipeline_id) = frame_output_pipeline_id {
-                                self.outputs.push(FrameOutput {
-                                    pipeline_id,
-                                    task_id,
-                                });
-                            }
+                        // If this pipeline is registered as a frame output
+                        // store the information necessary to do the copy.
+                        if let Some(pipeline_id) = pic.frame_output_pipeline_id {
+                            self.outputs.push(FrameOutput {
+                                pipeline_id,
+                                task_id,
+                            });
                         }
                     }
                     _ => {

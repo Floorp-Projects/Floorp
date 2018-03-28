@@ -9,25 +9,26 @@ use clip::{ClipSource, ClipStore, ClipWorkItem};
 use clip_scroll_tree::CoordinateSystemId;
 use device::TextureFilter;
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
-use gpu_types::{ImageSource, PictureType, RasterizationSpace};
+use gpu_types::{ImageSource, RasterizationSpace};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 use prim_store::{PrimitiveIndex, ImageCacheKey};
 #[cfg(feature = "debugger")]
 use print_tree::{PrintTreePrinter};
+use render_backend::FrameId;
 use resource_cache::{CacheItem, ResourceCache};
 use std::{cmp, ops, usize, f32, i32};
 use texture_cache::{TextureCache, TextureCacheHandle};
 use tiling::{RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind};
 
-const FLOATS_PER_RENDER_TASK_INFO: usize = 12;
+const FLOATS_PER_RENDER_TASK_INFO: usize = 8;
 pub const MAX_BLUR_STD_DEVIATION: f32 = 4.0;
 pub const MIN_DOWNSCALING_RT_SIZE: i32 = 128;
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct RenderTaskId(pub u32); // TODO(gw): Make private when using GPU cache!
+pub struct RenderTaskId(pub u32, FrameId); // TODO(gw): Make private when using GPU cache!
 
 #[derive(Debug, Copy, Clone)]
 #[repr(C)]
@@ -42,24 +43,27 @@ pub struct RenderTaskTree {
     pub tasks: Vec<RenderTask>,
     pub task_data: Vec<RenderTaskData>,
     next_saved: SavedTargetIndex,
+    frame_id: FrameId,
 }
 
 impl RenderTaskTree {
-    pub fn new() -> Self {
+    pub fn new(frame_id: FrameId) -> Self {
         RenderTaskTree {
             tasks: Vec::new(),
             task_data: Vec::new(),
             next_saved: SavedTargetIndex(0),
+            frame_id,
         }
     }
 
     pub fn add(&mut self, task: RenderTask) -> RenderTaskId {
-        let id = RenderTaskId(self.tasks.len() as u32);
+        let id = self.tasks.len();
         self.tasks.push(task);
-        id
+        RenderTaskId(id as _, self.frame_id)
     }
 
     pub fn max_depth(&self, id: RenderTaskId, depth: usize, max_depth: &mut usize) {
+        debug_assert_eq!(self.frame_id, id.1);
         let depth = depth + 1;
         *max_depth = cmp::max(*max_depth, depth);
         let task = &self.tasks[id.0 as usize];
@@ -74,6 +78,7 @@ impl RenderTaskTree {
         pass_index: usize,
         passes: &mut Vec<RenderPass>,
     ) {
+        debug_assert_eq!(self.frame_id, id.1);
         let task = &self.tasks[id.0 as usize];
 
         for child in &task.children {
@@ -106,6 +111,7 @@ impl RenderTaskTree {
     }
 
     pub fn get_task_address(&self, id: RenderTaskId) -> RenderTaskAddress {
+        debug_assert_eq!(self.frame_id, id.1);
         RenderTaskAddress(id.0)
     }
 
@@ -125,12 +131,14 @@ impl RenderTaskTree {
 impl ops::Index<RenderTaskId> for RenderTaskTree {
     type Output = RenderTask;
     fn index(&self, id: RenderTaskId) -> &RenderTask {
+        debug_assert_eq!(self.frame_id, id.1);
         &self.tasks[id.0 as usize]
     }
 }
 
 impl ops::IndexMut<RenderTaskId> for RenderTaskTree {
     fn index_mut(&mut self, id: RenderTaskId) -> &mut RenderTask {
+        debug_assert_eq!(self.frame_id, id.1);
         &mut self.tasks[id.0 as usize]
     }
 }
@@ -168,7 +176,6 @@ pub struct PictureTask {
     pub target_kind: RenderTargetKind,
     pub content_origin: DeviceIntPoint,
     pub color: PremultipliedColorF,
-    pub pic_type: PictureType,
     pub uv_rect_handle: GpuCacheHandle,
 }
 
@@ -262,7 +269,6 @@ impl RenderTask {
         color: PremultipliedColorF,
         clear_mode: ClearMode,
         children: Vec<RenderTaskId>,
-        pic_type: PictureType,
     ) -> Self {
         RenderTask {
             children,
@@ -272,7 +278,6 @@ impl RenderTask {
                 target_kind,
                 content_origin,
                 color,
-                pic_type,
                 uv_rect_handle: GpuCacheHandle::new(),
             }),
             clear_mode,
@@ -385,6 +390,7 @@ impl RenderTask {
                     ClipSource::Rectangle(..) |
                     ClipSource::RoundedRectangle(..) |
                     ClipSource::Image(..) |
+                    ClipSource::LineDecoration(..) |
                     ClipSource::BorderCorner(..) => {}
                 }
             }
@@ -523,56 +529,41 @@ impl RenderTask {
         //           more type-safe. Although, it will always need
         //           to be kept in sync with the GLSL code anyway.
 
-        let (data1, data2) = match self.kind {
+        let data = match self.kind {
             RenderTaskKind::Picture(ref task) => {
-                (
-                    // Note: has to match `PICTURE_TYPE_*` in shaders
-                    [
-                        task.content_origin.x as f32,
-                        task.content_origin.y as f32,
-                        task.pic_type as u32 as f32,
-                    ],
-                    task.color.to_array()
-                )
+                // Note: has to match `PICTURE_TYPE_*` in shaders
+                [
+                    task.content_origin.x as f32,
+                    task.content_origin.y as f32,
+                    0.0,
+                ]
             }
             RenderTaskKind::CacheMask(ref task) => {
-                (
-                    [
-                        task.actual_rect.origin.x as f32,
-                        task.actual_rect.origin.y as f32,
-                        RasterizationSpace::Screen as i32 as f32,
-                    ],
-                    [0.0; 4],
-                )
+                [
+                    task.actual_rect.origin.x as f32,
+                    task.actual_rect.origin.y as f32,
+                    RasterizationSpace::Screen as i32 as f32,
+                ]
             }
             RenderTaskKind::ClipRegion(..) => {
-                (
-                    [
-                        0.0,
-                        0.0,
-                        RasterizationSpace::Local as i32 as f32,
-                    ],
-                    [0.0; 4],
-                )
+                [
+                    0.0,
+                    0.0,
+                    RasterizationSpace::Local as i32 as f32,
+                ]
             }
             RenderTaskKind::VerticalBlur(ref task) |
             RenderTaskKind::HorizontalBlur(ref task) => {
-                (
-                    [
-                        task.blur_std_deviation,
-                        0.0,
-                        0.0,
-                    ],
-                    [0.0; 4],
-                )
+                [
+                    task.blur_std_deviation,
+                    0.0,
+                    0.0,
+                ]
             }
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Blit(..) => {
-                (
-                    [0.0; 3],
-                    [0.0; 4],
-                )
+                [0.0; 3]
             }
         };
 
@@ -585,13 +576,9 @@ impl RenderTask {
                 target_rect.size.width as f32,
                 target_rect.size.height as f32,
                 target_index.0 as f32,
-                data1[0],
-                data1[1],
-                data1[2],
-                data2[0],
-                data2[1],
-                data2[2],
-                data2[3],
+                data[0],
+                data[1],
+                data[2],
             ]
         }
     }
