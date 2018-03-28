@@ -43,6 +43,8 @@ class APZSampler {
 public:
   explicit APZSampler(const RefPtr<APZCTreeManager>& aApz);
 
+  bool HasTreeManager(const RefPtr<APZCTreeManager>& aApz);
+
   void ClearTree();
   void UpdateFocusState(LayersId aRootLayerTreeId,
                         LayersId aOriginatingLayersId,

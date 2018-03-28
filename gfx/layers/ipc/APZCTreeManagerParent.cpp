@@ -7,16 +7,22 @@
 #include "mozilla/layers/APZCTreeManagerParent.h"
 
 #include "apz/src/APZCTreeManager.h"
+#include "mozilla/layers/APZSampler.h"
 #include "mozilla/layers/APZThreadUtils.h"
 
 namespace mozilla {
 namespace layers {
 
-APZCTreeManagerParent::APZCTreeManagerParent(LayersId aLayersId, RefPtr<APZCTreeManager> aAPZCTreeManager)
+APZCTreeManagerParent::APZCTreeManagerParent(LayersId aLayersId,
+                                             RefPtr<APZCTreeManager> aAPZCTreeManager,
+                                             RefPtr<APZSampler> aAPZSampler)
   : mLayersId(aLayersId)
-  , mTreeManager(aAPZCTreeManager)
+  , mTreeManager(Move(aAPZCTreeManager))
+  , mSampler(Move(aAPZSampler))
 {
-  MOZ_ASSERT(aAPZCTreeManager != nullptr);
+  MOZ_ASSERT(mTreeManager != nullptr);
+  MOZ_ASSERT(mSampler != nullptr);
+  MOZ_ASSERT(mSampler->HasTreeManager(mTreeManager));
 }
 
 APZCTreeManagerParent::~APZCTreeManagerParent()
@@ -24,10 +30,14 @@ APZCTreeManagerParent::~APZCTreeManagerParent()
 }
 
 void
-APZCTreeManagerParent::ChildAdopted(RefPtr<APZCTreeManager> aAPZCTreeManager)
+APZCTreeManagerParent::ChildAdopted(RefPtr<APZCTreeManager> aAPZCTreeManager,
+                                    RefPtr<APZSampler> aAPZSampler)
 {
   MOZ_ASSERT(aAPZCTreeManager != nullptr);
-  mTreeManager = aAPZCTreeManager;
+  MOZ_ASSERT(aAPZSampler != nullptr);
+  MOZ_ASSERT(aAPZSampler->HasTreeManager(aAPZCTreeManager));
+  mTreeManager = Move(aAPZCTreeManager);
+  mSampler = Move(aAPZSampler);
 }
 
 mozilla::ipc::IPCResult
