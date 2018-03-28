@@ -60,9 +60,6 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     static bool allowTypedElementHoleCheck() {
         return true;
     }
-    static bool allowStaticTypedArrayAccesses() {
-        return true;
-    }
 };
 
 typedef LIRGeneratorX86 LIRGeneratorSpecific;

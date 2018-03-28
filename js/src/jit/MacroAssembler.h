@@ -820,10 +820,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void divFloat32(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
     inline void divDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 
-    inline void inc32(RegisterOrInt32Constant* key);
     inline void inc64(AbsoluteAddress dest) PER_ARCH;
-
-    inline void dec32(RegisterOrInt32Constant* key);
 
     inline void neg32(Register reg) PER_SHARED_ARCH;
     inline void neg64(Register64 reg) DEFINED_ON(x86, x64, arm, mips32, mips64);
@@ -938,13 +935,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branch32(Condition cond, Register lhs, Register rhs, L label) PER_SHARED_ARCH;
     template <class L>
     inline void branch32(Condition cond, Register lhs, Imm32 rhs, L label) PER_SHARED_ARCH;
-    inline void branch32(Condition cond, Register length, const RegisterOrInt32Constant& key,
-                         Label* label);
 
     inline void branch32(Condition cond, const Address& lhs, Register rhs, Label* label) PER_SHARED_ARCH;
     inline void branch32(Condition cond, const Address& lhs, Imm32 rhs, Label* label) PER_SHARED_ARCH;
-    inline void branch32(Condition cond, const Address& length, const RegisterOrInt32Constant& key,
-                         Label* label);
 
     inline void branch32(Condition cond, const AbsoluteAddress& lhs, Register rhs, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
@@ -1278,11 +1271,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
   private:
 
-    // Implementation for branch* methods.
-    template <typename T>
-    inline void branch32Impl(Condition cond, const T& length, const RegisterOrInt32Constant& key,
-                             Label* label);
-
     template <typename T, typename S, typename L>
     inline void branchPtrImpl(Condition cond, const T& lhs, const S& rhs, L label)
         DEFINED_ON(x86_shared);
@@ -1362,12 +1350,20 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Performs a bounds check and zeroes the index register if out-of-bounds
     // (to mitigate Spectre).
-    inline void spectreBoundsCheck32(Register index, Register length, Register scratch,
+  private:
+
+    inline void spectreBoundsCheck32(Register index, const Operand& length, Register maybeScratch,
                                      Label* failure)
-        DEFINED_ON(arm, arm64, mips_shared, x86_shared);
-    inline void spectreBoundsCheck32(Register index, const Address& length, Register scratch,
+        DEFINED_ON(x86);
+
+  public:
+
+    inline void spectreBoundsCheck32(Register index, Register length, Register maybeScratch,
                                      Label* failure)
-        DEFINED_ON(arm, arm64, mips_shared, x86_shared);
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
+    inline void spectreBoundsCheck32(Register index, const Address& length, Register maybeScratch,
+                                     Label* failure)
+        DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
     // ========================================================================
     // Canonicalization primitives.
@@ -2120,14 +2116,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     inline void storeCallResultValue(TypedOrValueRegister dest);
-
-    using MacroAssemblerSpecific::store32;
-    void store32(const RegisterOrInt32Constant& key, const Address& dest) {
-        if (key.isRegister())
-            store32(key.reg(), dest);
-        else
-            store32(Imm32(key.constant()), dest);
-    }
 
     template <typename T>
     void guardedCallPreBarrier(const T& address, MIRType type) {

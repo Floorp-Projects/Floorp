@@ -49,13 +49,29 @@ if not CONFIG['JS_DISABLE_SHELL']:
 TEST_DIRS += ['jsapi-tests', 'tests', 'gdb']
 
 if CONFIG['FUZZING_INTERFACES']:
-    if CONFIG['LIBFUZZER']:
-        # Add trace-pc coverage for libfuzzer
-        CFLAGS += ['-fsanitize-coverage=trace-pc-guard']
-        CXXFLAGS += ['-fsanitize-coverage=trace-pc-guard']
-
     TEST_DIRS += [
         'fuzz-tests',
+    ]
+
+if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
+    # In addition to regular coverage provided by trace-pc-guard,
+    # LibFuzzer can use trace-cmp to instrument various compare instructions.
+    # Only use this feature on source files that do a lot of constant
+    # comparisons that would otherwise be hard to guess by LibFuzzer,
+    # as it comes with a larger overhead (requires -use_value_profile=1).
+    libfuzzer_flags = ['-fsanitize-coverage=trace-pc-guard']
+    libfuzzer_flags_cmp = ['-fsanitize-coverage=trace-pc-guard', '-fsanitize-coverage=trace-cmp']
+
+    # Any files that are targeted by LibFuzzer should be added here so they can
+    # be built with the necessary instrumentation flags, rather than just building
+    # the whole JS engine with instrumentation, to reduce the amount of noise.
+    SOURCES += [
+        'vm/StructuredClone.cpp',
+    ]
+    SOURCES['vm/StructuredClone.cpp'].flags += libfuzzer_flags_cmp
+else:
+    UNIFIED_SOURCES += [
+        'vm/StructuredClone.cpp',
     ]
 
 CONFIGURE_SUBST_FILES += [
@@ -374,7 +390,6 @@ UNIFIED_SOURCES += [
     'vm/Stack.cpp',
     'vm/Stopwatch.cpp',
     'vm/StringType.cpp',
-    'vm/StructuredClone.cpp',
     'vm/SymbolType.cpp',
     'vm/TaggedProto.cpp',
     'vm/Time.cpp',
@@ -697,9 +712,9 @@ if CONFIG['JS_BUILD_BINAST']:
 
     # Instrument BinAST files for fuzzing as we have a fuzzing target for BinAST.
     if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
-        SOURCES['frontend/BinSource.cpp'].flags += ['-fsanitize-coverage=trace-pc-guard']
-        SOURCES['frontend/BinToken.cpp'].flags += ['-fsanitize-coverage=trace-pc-guard']
-        SOURCES['frontend/BinTokenReaderTester.cpp'].flags += ['-fsanitize-coverage=trace-pc-guard']
+        SOURCES['frontend/BinSource.cpp'].flags += libfuzzer_flags_cmp
+        SOURCES['frontend/BinToken.cpp'].flags += libfuzzer_flags_cmp
+        SOURCES['frontend/BinTokenReaderTester.cpp'].flags += libfuzzer_flags_cmp
 
 # Wasm code should use WASM_HUGE_MEMORY instead of JS_CODEGEN_X64
 # so that it is easy to use the huge-mapping optimization for other

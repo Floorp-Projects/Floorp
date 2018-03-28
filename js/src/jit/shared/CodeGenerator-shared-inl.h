@@ -184,14 +184,6 @@ ToAnyRegister(const LDefinition* def)
     return ToAnyRegister(def->output());
 }
 
-static inline RegisterOrInt32Constant
-ToRegisterOrInt32Constant(const LAllocation* a)
-{
-    if (a->isConstant())
-        return RegisterOrInt32Constant(ToInt32(a));
-    return RegisterOrInt32Constant(ToRegister(a));
-}
-
 static inline ValueOperand
 ToOutValue(LInstruction* ins)
 {
