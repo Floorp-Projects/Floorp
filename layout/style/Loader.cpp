@@ -1095,7 +1095,7 @@ Loader::PrepareSheet(StyleSheet* aSheet,
   if (!aMediaString.IsEmpty()) {
     NS_ASSERTION(!aMediaList,
                  "must not provide both aMediaString and aMediaList");
-    mediaList = MediaList::Create(GetStyleBackendType(), aMediaString);
+    mediaList = MediaList::Create(aMediaString);
   }
 
   aSheet->SetMedia(mediaList);
