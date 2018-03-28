@@ -52,6 +52,10 @@ let MockClientsEngine = {
     }
     return tabsEngine.clients[id].clientName;
   },
+
+  getClientType(id) {
+    return "desktop";
+  }
 };
 
 function configureClients(clients, clientSettings = {}) {
