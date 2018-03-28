@@ -1,0 +1,24 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+
+DIRS += [
+    'actions',
+    'components',
+    'reducers',
+    'utils'
+]
+
+DevToolsModules(
+    'accessibility-panel.js',
+    'accessibility-view.js',
+    'accessibility.css',
+    'constants.js',
+    'picker.js',
+    'provider.js',
+)
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Accessibility')
