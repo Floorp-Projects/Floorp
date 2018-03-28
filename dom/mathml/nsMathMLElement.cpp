@@ -112,7 +112,7 @@ nsMathMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       // Enable MathML and setup the style sheet during binding, not element
       // construction, because we could move a MathML element from the document
       // that created it to another document.
-      auto cache = nsLayoutStylesheetCache::For(doc->GetStyleBackendType());
+      auto cache = nsLayoutStylesheetCache::Singleton();
       doc->SetMathMLEnabled();
       doc->EnsureOnDemandBuiltInUASheet(cache->MathMLSheet());
 
