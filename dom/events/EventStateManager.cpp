@@ -1439,11 +1439,6 @@ EventStateManager::HandleCrossProcessEvent(WidgetEvent* aEvent,
       continue;
     }
 
-    if (frameLoader->EventMode() ==
-          FrameLoaderBinding::EVENT_MODE_DONT_FORWARD_TO_CHILD) {
-      continue;
-    }
-
     DispatchCrossProcessEvent(aEvent, frameLoader, aStatus);
   }
   return aEvent->HasBeenPostedToRemoteProcess();
