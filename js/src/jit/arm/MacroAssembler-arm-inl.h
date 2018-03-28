@@ -2194,37 +2194,31 @@ MacroAssembler::spectreZeroRegister(Condition cond, Register, Register dest)
 }
 
 void
-MacroAssembler::spectreBoundsCheck32(Register index, Register length, Register scratch,
+MacroAssembler::spectreBoundsCheck32(Register index, Register length, Register maybeScratch,
                                      Label* failure)
 {
     MOZ_ASSERT(index != length);
-    MOZ_ASSERT(length != scratch);
-    MOZ_ASSERT(index != scratch);
-
-    if (JitOptions.spectreIndexMasking)
-        move32(Imm32(0), scratch);
+    MOZ_ASSERT(length != maybeScratch);
+    MOZ_ASSERT(index != maybeScratch);
 
     branch32(Assembler::BelowOrEqual, length, index, failure);
 
     if (JitOptions.spectreIndexMasking)
-        ma_mov(scratch, index, LeaveCC, Assembler::BelowOrEqual);
+        ma_mov(Imm32(0), index, Assembler::BelowOrEqual);
 }
 
 void
-MacroAssembler::spectreBoundsCheck32(Register index, const Address& length, Register scratch,
+MacroAssembler::spectreBoundsCheck32(Register index, const Address& length, Register maybeScratch,
                                      Label* failure)
 {
     MOZ_ASSERT(index != length.base);
-    MOZ_ASSERT(length.base != scratch);
-    MOZ_ASSERT(index != scratch);
-
-    if (JitOptions.spectreIndexMasking)
-        move32(Imm32(0), scratch);
+    MOZ_ASSERT(length.base != maybeScratch);
+    MOZ_ASSERT(index != maybeScratch);
 
     branch32(Assembler::BelowOrEqual, length, index, failure);
 
     if (JitOptions.spectreIndexMasking)
-        ma_mov(scratch, index, LeaveCC, Assembler::BelowOrEqual);
+        ma_mov(Imm32(0), index, Assembler::BelowOrEqual);
 }
 
 // ========================================================================

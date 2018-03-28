@@ -5405,6 +5405,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
  */
 
 exports.getPauseReason = getPauseReason;
+exports.getPauseCommand = getPauseCommand;
 exports.isStepping = isStepping;
 exports.isPaused = isPaused;
 exports.getPreviousPauseFrameLocation = getPreviousPauseFrameLocation;
@@ -5414,6 +5415,7 @@ exports.getIsWaitingOnBreak = getIsWaitingOnBreak;
 exports.getShouldPauseOnExceptions = getShouldPauseOnExceptions;
 exports.getShouldIgnoreCaughtExceptions = getShouldIgnoreCaughtExceptions;
 exports.getCanRewind = getCanRewind;
+exports.getExtra = getExtra;
 exports.getFrames = getFrames;
 exports.getGeneratedFrameScope = getGeneratedFrameScope;
 exports.getOriginalFrameScope = getOriginalFrameScope;
@@ -5435,6 +5437,7 @@ var _prefs = __webpack_require__(226);
 var _sources = __webpack_require__(1369);
 
 const createPauseState = exports.createPauseState = () => ({
+  extra: {},
   why: null,
   isWaitingOnBreak: false,
   frames: undefined,
@@ -5449,7 +5452,7 @@ const createPauseState = exports.createPauseState = () => ({
   shouldIgnoreCaughtExceptions: _prefs.prefs.ignoreCaughtExceptions,
   canRewind: false,
   debuggeeUrl: "",
-  command: "",
+  command: null,
   previousLocation: null
 });
 
@@ -5495,7 +5498,7 @@ function update(state = createPauseState(), action) {
 
     case "ADD_SCOPES":
       {
-        const { frame, status, value } = action;
+        const { frame, extra, status, value } = action;
         const selectedFrameId = frame.id;
 
         const generated = _extends({}, state.frameScopes.generated, {
@@ -5505,6 +5508,7 @@ function update(state = createPauseState(), action) {
           }
         });
         return _extends({}, state, {
+          extra: extra,
           frameScopes: _extends({}, state.frameScopes, {
             generated
           })
@@ -5578,7 +5582,7 @@ function update(state = createPauseState(), action) {
         return action.status === "start" ? _extends({}, state, emptyPauseState, {
           command: action.command,
           previousLocation: buildPreviousLocation(state, action)
-        }) : _extends({}, state, { command: "" });
+        }) : _extends({}, state, { command: null });
       }
 
     case "RESUME":
@@ -5588,7 +5592,7 @@ function update(state = createPauseState(), action) {
 
     case "EVALUATE_EXPRESSION":
       return _extends({}, state, {
-        command: action.status === "start" ? "expression" : ""
+        command: action.status === "start" ? "expression" : null
       });
 
     case "NAVIGATE":
@@ -5635,8 +5639,12 @@ function getPauseReason(state) {
   return state.pause.why;
 }
 
+function getPauseCommand(state) {
+  return state.pause && state.pause.command;
+}
+
 function isStepping(state) {
-  return ["stepIn", "stepOver", "stepOut"].includes(state.pause.command);
+  return ["stepIn", "stepOver", "stepOut"].includes(getPauseCommand(state));
 }
 
 function isPaused(state) {
@@ -5669,6 +5677,10 @@ function getShouldIgnoreCaughtExceptions(state) {
 
 function getCanRewind(state) {
   return state.pause.canRewind;
+}
+
+function getExtra(state) {
+  return state.pause.extra;
 }
 
 function getFrames(state) {
@@ -6388,15 +6400,13 @@ exports.setPausePoints = setPausePoints;
 
 var _selectors = __webpack_require__(3590);
 
+var _pause = __webpack_require__(1639);
+
 var _setInScopeLines = __webpack_require__(1781);
 
 var _parser = __webpack_require__(1365);
 
 var _promise = __webpack_require__(1653);
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function setSourceMetaData(sourceId) {
   return async ({ dispatch, getState }) => {
@@ -6414,7 +6424,9 @@ function setSourceMetaData(sourceId) {
       }
     });
   };
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function setSymbols(sourceId) {
   return async ({ dispatch, getState }) => {
@@ -6428,6 +6440,10 @@ function setSymbols(sourceId) {
       source: source.toJS(),
       [_promise.PROMISE]: (0, _parser.getSymbols)(source.id)
     });
+
+    if ((0, _selectors.isPaused)(getState())) {
+      await dispatch((0, _pause.mapFrames)());
+    }
 
     await dispatch(setPausePoints(sourceId));
     await dispatch(setSourceMetaData(sourceId));
@@ -7712,45 +7728,16 @@ module.exports = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.containsPosition = containsPosition;
-exports.findClosestScope = findClosestScope;
 exports.getASTLocation = getASTLocation;
 exports.findScopeByName = findScopeByName;
 
 var _parser = __webpack_require__(1365);
 
-function containsPosition(a, b) {
-  const startsBefore = a.start.line < b.line || a.start.line === b.line && a.start.column <= b.column;
-  const endsAfter = a.end.line > b.line || a.end.line === b.line && a.end.column >= b.column;
+var _ast = __webpack_require__(1638);
 
-  return startsBefore && endsAfter;
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-function findClosestScope(functions, location) {
-  return functions.reduce((found, currNode) => {
-    if (currNode.name === "anonymous" || !containsPosition(currNode.location, {
-      line: location.line,
-      column: location.column || 0
-    })) {
-      return found;
-    }
-
-    if (!found) {
-      return currNode;
-    }
-
-    if (found.location.start.line > currNode.location.start.line) {
-      return found;
-    }
-    if (found.location.start.line === currNode.location.start.line && found.location.start.column > currNode.location.start.column) {
-      return found;
-    }
-
-    return currNode;
-  }, null);
-}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function getASTLocation(source, symbols, location) {
   if (source.isWasm || !symbols || symbols.loading) {
@@ -7759,7 +7746,7 @@ function getASTLocation(source, symbols, location) {
 
   const functions = [...symbols.functions];
 
-  const scope = findClosestScope(functions, location);
+  const scope = (0, _ast.findClosestFunction)(functions, location);
   if (scope) {
     // we only record the line, but at some point we may
     // also do column offsets
@@ -21930,7 +21917,7 @@ var _clipboard = __webpack_require__(1388);
 
 var _function = __webpack_require__(1597);
 
-var _astBreakpointLocation = __webpack_require__(1416);
+var _ast = __webpack_require__(1638);
 
 var _editor = __webpack_require__(1358);
 
@@ -22138,8 +22125,8 @@ exports.default = (0, _reactRedux.connect)(state => {
     selectedSource,
     hasPrettyPrint: !!(0, _selectors.getPrettySource)(state, selectedSource.get("id")),
     contextMenu: (0, _selectors.getContextMenu)(state),
-    getFunctionText: line => (0, _function.findFunctionText)(line, selectedSource.toJS(), (0, _selectors.getSymbols)(state, selectedSource.toJS())),
-    getFunctionLocation: line => (0, _astBreakpointLocation.findClosestScope)((0, _selectors.getSymbols)(state, selectedSource.toJS()).functions, {
+    getFunctionText: line => (0, _function.findFunctionText)(line, selectedSource.toJS(), (0, _selectors.getSymbols)(state, selectedSource)),
+    getFunctionLocation: line => (0, _ast.findClosestFunction)((0, _selectors.getSymbols)(state, selectedSource).functions, {
       line,
       column: Infinity
     })
@@ -22167,7 +22154,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.findFunctionText = findFunctionText;
 
-var _astBreakpointLocation = __webpack_require__(1416);
+var _ast = __webpack_require__(1638);
 
 var _indentation = __webpack_require__(1438);
 
@@ -22176,7 +22163,10 @@ var _indentation = __webpack_require__(1438);
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function findFunctionText(line, source, symbols) {
-  const func = (0, _astBreakpointLocation.findClosestScope)(symbols.functions, { line, column: Infinity });
+  const func = (0, _ast.findClosestFunction)(symbols.functions, {
+    line,
+    column: Infinity
+  });
   if (!func) {
     return null;
   }
@@ -22471,6 +22461,10 @@ var _BreakpointsDropdown = __webpack_require__(1790);
 
 var _BreakpointsDropdown2 = _interopRequireDefault(_BreakpointsDropdown);
 
+var _FrameworkComponent = __webpack_require__(3623);
+
+var _FrameworkComponent2 = _interopRequireDefault(_FrameworkComponent);
+
 var _ChromeScopes = __webpack_require__(1610);
 
 var _ChromeScopes2 = _interopRequireDefault(_ChromeScopes);
@@ -22483,11 +22477,9 @@ __webpack_require__(1342);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-const Scopes = _prefs.features.chromeScopes ? _ChromeScopes2.default : _Scopes3.default;
+const Scopes = _prefs.features.chromeScopes ? _ChromeScopes2.default : _Scopes3.default; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                          * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                          * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function debugBtn(onClick, type, className, tooltip) {
   return _react2.default.createElement(
@@ -22554,6 +22546,20 @@ class SecondaryPanes extends _react.Component {
       opened: _prefs.prefs.scopesVisible,
       onToggle: opened => {
         _prefs.prefs.scopesVisible = opened;
+      }
+    };
+  }
+
+  getComponentItem() {
+    const { extra: { react } } = this.props;
+
+    return {
+      header: react.displayName,
+      className: "component-pane",
+      component: _react2.default.createElement(_FrameworkComponent2.default, null),
+      opened: _prefs.prefs.componentVisible,
+      onToggle: opened => {
+        _prefs.prefs.componentVisible = opened;
       }
     };
   }
@@ -22625,7 +22631,7 @@ class SecondaryPanes extends _react.Component {
   }
 
   getStartItems() {
-    const { workers } = this.props;
+    const { extra, workers } = this.props;
 
     const items = [];
     if (this.props.horizontal) {
@@ -22640,7 +22646,12 @@ class SecondaryPanes extends _react.Component {
 
     if (this.props.hasFrames) {
       items.push(this.getCallStackItem());
+
       if (this.props.horizontal) {
+        if (extra && extra.react) {
+          items.push(this.getComponentItem());
+        }
+
         items.push(this.getScopeItem());
       }
     }
@@ -22661,7 +22672,7 @@ class SecondaryPanes extends _react.Component {
   }
 
   getEndItems() {
-    const { workers } = this.props;
+    const { extra, workers } = this.props;
 
     let items = [];
 
@@ -22674,6 +22685,10 @@ class SecondaryPanes extends _react.Component {
     }
 
     items.push(this.getWatchItem());
+
+    if (extra && extra.react) {
+      items.push(this.getComponentItem());
+    }
 
     if (this.props.hasFrames) {
       items = [...items, this.getScopeItem()];
@@ -22728,6 +22743,7 @@ SecondaryPanes.contextTypes = {
 };
 
 exports.default = (0, _reactRedux.connect)(state => ({
+  extra: (0, _selectors.getExtra)(state),
   hasFrames: !!(0, _selectors.getTopFrame)(state),
   breakpoints: (0, _selectors.getBreakpoints)(state),
   breakpointsDisabled: (0, _selectors.getBreakpointsDisabled)(state),
@@ -26375,6 +26391,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.findBestMatchExpression = findBestMatchExpression;
 exports.findEmptyLines = findEmptyLines;
+exports.containsPosition = containsPosition;
+exports.findClosestFunction = findClosestFunction;
 
 var _lodash = __webpack_require__(2);
 
@@ -26408,6 +26426,37 @@ function findEmptyLines(selectedSource, pausePoints) {
   const lineCount = selectedSource.text.split("\n").length;
   const sourceLines = (0, _lodash.range)(1, lineCount + 1);
   return (0, _lodash.without)(sourceLines, ...breakpointLines);
+}
+
+function containsPosition(a, b) {
+  const startsBefore = a.start.line < b.line || a.start.line === b.line && a.start.column <= b.column;
+  const endsAfter = a.end.line > b.line || a.end.line === b.line && a.end.column >= b.column;
+
+  return startsBefore && endsAfter;
+}
+
+function findClosestFunction(functions, location) {
+  return functions.reduce((found, currNode) => {
+    if (currNode.name === "anonymous" || !containsPosition(currNode.location, {
+      line: location.line,
+      column: location.column || 0
+    })) {
+      return found;
+    }
+
+    if (!found) {
+      return currNode;
+    }
+
+    if (found.location.start.line > currNode.location.start.line) {
+      return found;
+    }
+    if (found.location.start.line === currNode.location.start.line && found.location.start.column > currNode.location.start.column) {
+      return found;
+    }
+
+    return currNode;
+  }, null);
 }
 
 /***/ }),
@@ -27179,7 +27228,10 @@ class QuickOpenModal extends _react.Component {
       let results = functions;
       if (this.isVariableQuery()) {
         results = variables;
+      } else {
+        results = results.filter(result => result.title !== "anonymous");
       }
+
       if (query === "@" || query === "#") {
         return this.setState({ results });
       }
@@ -27595,7 +27647,13 @@ var _selectors = __webpack_require__(3590);
 
 var _mapScopes = __webpack_require__(1634);
 
+var _preview = __webpack_require__(1786);
+
 var _promise = __webpack_require__(1653);
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function fetchScopes() {
   return async function ({ dispatch, getState, client, sourceMaps }) {
@@ -27604,17 +27662,18 @@ function fetchScopes() {
       return;
     }
 
+    const extra = await dispatch((0, _preview.getExtra)("this;", frame.this, frame));
+
     const scopes = dispatch({
       type: "ADD_SCOPES",
       frame,
+      extra,
       [_promise.PROMISE]: client.getFrameScopes(frame)
     });
 
     await dispatch((0, _mapScopes.mapScopes)(scopes, frame));
   };
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 /***/ }),
 
@@ -30168,6 +30227,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
                                                                                                                                                                                                                                                                    * License, v. 2.0. If a copy of the MPL was not distributed with this
                                                                                                                                                                                                                                                                    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+exports.getExtra = getExtra;
 exports.updatePreview = updatePreview;
 exports.setPreview = setPreview;
 exports.clearPreview = clearPreview;
@@ -30240,6 +30300,14 @@ function isInvalidTarget(target) {
   const invalidTarget = target.parentElement && !target.parentElement.closest(".CodeMirror-line") || cursorPos.top == 0;
 
   return invalidTarget || invalidToken || invaildType;
+}
+
+function getExtra(expression, result, selectedFrame) {
+  return async ({ dispatch, getState, client, sourceMaps }) => {
+    const extra = await getExtraProps(expression, result, expr => client.evaluateInFrame(selectedFrame.id, expr));
+
+    return extra;
+  };
 }
 
 function updatePreview(target, editor) {
@@ -30322,7 +30390,7 @@ function setPreview(expression, location, tokenPos, cursorPos) {
           return;
         }
 
-        const extra = await getExtraProps(expression, result, expr => client.evaluateInFrame(selectedFrame.id, expr));
+        const extra = await dispatch(getExtra(expression, result, selectedFrame));
 
         return {
           expression,
@@ -30750,27 +30818,61 @@ function isDocumentReady(selectedSource, selectedLocation) {
   return selectedLocation && (0, _source.isLoaded)(selectedSource) && (0, _sourceDocuments.hasDocument)(selectedLocation.sourceId);
 }
 
-class HighlightLine extends _react.PureComponent {
+class HighlightLine extends _react.Component {
+  constructor(...args) {
+    var _temp;
+
+    return _temp = super(...args), this.isStepping = false, this.previousEditorLine = null, _temp;
+  }
+
+  shouldComponentUpdate(nextProps) {
+    const { selectedLocation, selectedSource } = nextProps;
+    return this.shouldSetHighlightLine(selectedLocation, selectedSource);
+  }
+
+  shouldSetHighlightLine(selectedLocation, selectedSource) {
+    const { sourceId, line } = selectedLocation;
+    const editorLine = (0, _editor.toEditorLine)(sourceId, line);
+
+    if (!isDocumentReady(selectedSource, selectedLocation)) {
+      return false;
+    }
+
+    if (this.isStepping && editorLine === this.previousEditorLine) {
+      return false;
+    }
+
+    return true;
+  }
+
   componentDidUpdate(prevProps) {
-    const { selectedLocation, selectedFrame, selectedSource } = this.props;
+    const {
+      pauseCommand,
+      selectedLocation,
+      selectedFrame,
+      selectedSource
+    } = this.props;
+    if (pauseCommand) {
+      this.isStepping = true;
+    }
 
     this.clearHighlightLine(prevProps.selectedLocation, prevProps.selectedSource);
-
     this.setHighlightLine(selectedLocation, selectedFrame, selectedSource);
   }
 
   setHighlightLine(selectedLocation, selectedFrame, selectedSource) {
-    if (!isDocumentReady(selectedSource, selectedLocation)) {
+    const { sourceId, line } = selectedLocation;
+    if (!this.shouldSetHighlightLine(selectedLocation, selectedSource)) {
       return;
     }
-
-    const { sourceId, line } = selectedLocation;
+    this.isStepping = false;
+    const editorLine = (0, _editor.toEditorLine)(sourceId, line);
+    this.previousEditorLine = editorLine;
 
     if (!line || isDebugLine(selectedFrame, selectedLocation)) {
       return;
     }
 
-    const editorLine = (0, _editor.toEditorLine)(sourceId, line);
     const doc = (0, _sourceDocuments.getDocument)(sourceId);
     doc.addLineClass(editorLine, "line", "highlight-line");
   }
@@ -30793,6 +30895,7 @@ class HighlightLine extends _react.PureComponent {
 
 exports.HighlightLine = HighlightLine;
 exports.default = (0, _reactRedux.connect)(state => ({
+  pauseCommand: (0, _selectors.getPauseCommand)(state),
   selectedFrame: (0, _selectors.getVisibleSelectedFrame)(state),
   selectedLocation: (0, _selectors.getSelectedLocation)(state),
   selectedSource: (0, _selectors.getSelectedSource)(state)
@@ -31581,9 +31684,12 @@ Object.defineProperty(exports, "__esModule", {
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 exports.updateFrameLocation = updateFrameLocation;
+exports.mapDisplayNames = mapDisplayNames;
 exports.mapFrames = mapFrames;
 
 var _selectors = __webpack_require__(3590);
+
+var _ast = __webpack_require__(1638);
 
 function updateFrameLocation(frame, sourceMaps) {
   return sourceMaps.getOriginalLocation(frame.location).then(loc => _extends({}, frame, {
@@ -31600,12 +31706,32 @@ function updateFrameLocations(frames, sourceMaps) {
   return Promise.all(frames.map(frame => updateFrameLocation(frame, sourceMaps)));
 }
 
+function mapDisplayNames(frames, getState) {
+  return frames.map(frame => {
+    const source = (0, _selectors.getSource)(getState(), frame.location.sourceId);
+    const symbols = (0, _selectors.getSymbols)(getState(), source);
+
+    if (!symbols || !symbols.functions) {
+      return frame;
+    }
+
+    const originalFunction = (0, _ast.findClosestFunction)(symbols.functions, frame.location);
+
+    if (!originalFunction) {
+      return frame;
+    }
+
+    const originalDisplayName = originalFunction.name;
+    return _extends({}, frame, { originalDisplayName });
+  });
+}
+
 /**
- * Map call stack frame locations to original locations.
+ * Map call stack frame locations and display names to originals.
  * e.g.
  * 1. When the debuggee pauses
  * 2. When a source is pretty printed
- *
+ * 3. When symbols are loaded
  * @memberof actions/pause
  * @static
  */
@@ -31616,7 +31742,8 @@ function mapFrames() {
       return;
     }
 
-    const mappedFrames = await updateFrameLocations(frames, sourceMaps);
+    let mappedFrames = await updateFrameLocations(frames, sourceMaps);
+    mappedFrames = mapDisplayNames(mappedFrames, getState);
 
     dispatch({
       type: "MAP_FRAMES",
@@ -33926,6 +34053,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.ignore-caught-exceptions", false);
   pref("devtools.debugger.call-stack-visible", true);
   pref("devtools.debugger.scopes-visible", true);
+  pref("devtools.debugger.component-visible", true);
   pref("devtools.debugger.workers-visible", true);
   pref("devtools.debugger.expressions-visible", true);
   pref("devtools.debugger.breakpoints-visible", true);
@@ -33968,6 +34096,7 @@ const prefs = new PrefsHelper("devtools", {
   ignoreCaughtExceptions: ["Bool", "debugger.ignore-caught-exceptions"],
   callStackVisible: ["Bool", "debugger.call-stack-visible"],
   scopesVisible: ["Bool", "debugger.scopes-visible"],
+  componentVisible: ["Bool", "debugger.component-visible"],
   workersVisible: ["Bool", "debugger.workers-visible"],
   breakpointsVisible: ["Bool", "debugger.breakpoints-visible"],
   expressionsVisible: ["Bool", "debugger.expressions-visible"],
@@ -37221,9 +37350,22 @@ function annotateBabelAsyncFrames(frames) {
 // Receives an array of frames and looks for babel async
 // call stack groups.
 function getBabelFrameIndexes(frames) {
-  const startIndexes = getFrameIndices(frames, (displayName, url) => url.match(/regenerator-runtime/i) && displayName === "tryCatch");
+  const startIndexes = frames.reduce((accumulator, frame, index) => {
+    if ((0, _getFrameUrl.getFrameUrl)(frame).match(/regenerator-runtime/i) && frame.displayName === "tryCatch") {
+      return [...accumulator, index];
+    }
+    return accumulator;
+  }, []);
 
-  const endIndexes = getFrameIndices(frames, (displayName, url) => displayName === "_asyncToGenerator/<" || url.match(/_microtask/i) && displayName === "flush");
+  const endIndexes = frames.reduce((accumulator, frame, index) => {
+    if ((0, _getFrameUrl.getFrameUrl)(frame).match(/_microtask/i) && frame.displayName === "flush") {
+      return [...accumulator, index];
+    }
+    if (frame.displayName === "_asyncToGenerator/<") {
+      return [...accumulator, index + 1];
+    }
+    return accumulator;
+  }, []);
 
   if (startIndexes.length != endIndexes.length || startIndexes.length === 0) {
     return frames;
@@ -37233,10 +37375,6 @@ function getBabelFrameIndexes(frames) {
   // an array of async call stack index ranges.
   // e.g. [[1,3], [5,7]] => [[1,2,3], [5,6,7]]
   return (0, _lodash.flatMap)((0, _lodash.zip)(startIndexes, endIndexes), ([startIndex, endIndex]) => (0, _lodash.range)(startIndex, endIndex + 1));
-}
-
-function getFrameIndices(frames, predicate) {
-  return frames.reduce((accumulator, frame, index) => predicate(frame.displayName, (0, _getFrameUrl.getFrameUrl)(frame)) ? [...accumulator, index] : accumulator, []);
 }
 
 /***/ }),
@@ -37402,7 +37540,8 @@ function mapDisplayNames(frame, library) {
 }
 
 function formatDisplayName(frame, { shouldMapDisplayName = true } = {}) {
-  let { displayName, library } = frame;
+  let { displayName, originalDisplayName, library } = frame;
+  displayName = originalDisplayName || displayName;
   if (library && shouldMapDisplayName) {
     displayName = mapDisplayNames(frame, library);
   }
@@ -38303,6 +38442,111 @@ function formatPausePoints(text, nodes) {
 
   return lines.join("\n");
 }
+
+/***/ }),
+
+/***/ 3623:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _redux = __webpack_require__(3593);
+
+var _reactRedux = __webpack_require__(3592);
+
+var _actions = __webpack_require__(1354);
+
+var _actions2 = _interopRequireDefault(_actions);
+
+var _firefox = __webpack_require__(1500);
+
+var _selectors = __webpack_require__(3590);
+
+var _devtoolsReps = __webpack_require__(1408);
+
+var _preview = __webpack_require__(1807);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+const { createNode, getChildren } = _devtoolsReps.ObjectInspectorUtils.node;
+const { loadItemProperties } = _devtoolsReps.ObjectInspectorUtils.loadProperties;
+
+class FrameworkComponent extends _react.PureComponent {
+  async componentWillMount() {
+    const expression = "this;";
+    const { selectedFrame, setPopupObjectProperties } = this.props;
+    const value = selectedFrame.this;
+
+    const root = createNode(null, expression, expression, { value });
+    const properties = await loadItemProperties(root, _firefox.createObjectClient);
+    if (properties) {
+      setPopupObjectProperties(value, properties);
+    }
+  }
+
+  renderReactComponent() {
+    const { selectedFrame, popupObjectProperties } = this.props;
+    const expression = "this;";
+    const value = selectedFrame.this;
+    const root = {
+      name: expression,
+      path: expression,
+      contents: { value }
+    };
+
+    const loadedRootProperties = popupObjectProperties[value.actor];
+
+    let roots = getChildren({
+      item: root,
+      loadedProperties: new Map([[root.path, loadedRootProperties]])
+    });
+
+    roots = roots.filter(r => ["state", "props"].includes(r.name));
+
+    return _react2.default.createElement(
+      "div",
+      { className: "pane framework-component" },
+      _react2.default.createElement(_devtoolsReps.ObjectInspector, {
+        roots: roots,
+        autoExpandAll: false,
+        autoExpandDepth: 0,
+        disableWrap: true,
+        disabledFocus: true,
+        dimTopLevelWindow: true,
+        createObjectClient: grip => (0, _firefox.createObjectClient)(grip)
+      })
+    );
+  }
+
+  render() {
+    const { selectedFrame } = this.props;
+    if ((0, _preview.isReactComponent)(selectedFrame.this)) {
+      return this.renderReactComponent();
+    }
+
+    return null;
+  }
+}
+
+exports.default = (0, _reactRedux.connect)(state => {
+  return {
+    selectedFrame: (0, _selectors.getSelectedFrame)(state),
+    popupObjectProperties: (0, _selectors.getAllPopupObjectProperties)(state)
+  };
+}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(FrameworkComponent);
 
 /***/ }),
 

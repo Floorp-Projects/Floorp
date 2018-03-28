@@ -569,18 +569,6 @@ getBase(U* mir)
 }
 
 void
-CodeGenerator::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins)
-{
-    MOZ_CRASH("CodeGenerator::visitLoadTypedArrayElementStatic");
-}
-
-void
-CodeGenerator::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins)
-{
-    MOZ_CRASH("CodeGenerator::visitStoreTypedArrayElementStatic");
-}
-
-void
 CodeGenerator::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
 {
     MOZ_CRASH("visitAsmJSLoadHeap");

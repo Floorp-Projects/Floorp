@@ -38,7 +38,6 @@ namespace JS {
                                                         \
     _(GetElem_TypedObject)                              \
     _(GetElem_Dense)                                    \
-    _(GetElem_TypedStatic)                              \
     _(GetElem_TypedArray)                               \
     _(GetElem_String)                                   \
     _(GetElem_Arguments)                                \
@@ -47,7 +46,6 @@ namespace JS {
     _(GetElem_InlineCache)                              \
                                                         \
     _(SetElem_TypedObject)                              \
-    _(SetElem_TypedStatic)                              \
     _(SetElem_TypedArray)                               \
     _(SetElem_Dense)                                    \
     _(SetElem_Arguments)                                \
@@ -123,8 +121,6 @@ namespace JS {
     _(OperandNotStringOrNumber)                                         \
     _(OperandNotSimpleArith)                                            \
     _(OperandNotEasilyCoercibleToString)                                \
-    _(StaticTypedArrayUint32)                                           \
-    _(StaticTypedArrayCantComputeMask)                                  \
     _(OutOfBounds)                                                      \
     _(GetElemStringNotCached)                                           \
     _(NonNativeReceiver)                                                \

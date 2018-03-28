@@ -1875,12 +1875,12 @@ MacroAssembler::spectreZeroRegister(Condition cond, Register, Register dest)
 }
 
 void
-MacroAssembler::spectreBoundsCheck32(Register index, Register length, Register scratch,
+MacroAssembler::spectreBoundsCheck32(Register index, Register length, Register maybeScratch,
                                      Label* failure)
 {
     MOZ_ASSERT(index != length);
-    MOZ_ASSERT(length != scratch);
-    MOZ_ASSERT(index != scratch);
+    MOZ_ASSERT(length != maybeScratch);
+    MOZ_ASSERT(index != maybeScratch);
 
     branch32(Assembler::BelowOrEqual, length, index, failure);
 
@@ -1889,12 +1889,12 @@ MacroAssembler::spectreBoundsCheck32(Register index, Register length, Register s
 }
 
 void
-MacroAssembler::spectreBoundsCheck32(Register index, const Address& length, Register scratch,
+MacroAssembler::spectreBoundsCheck32(Register index, const Address& length, Register maybeScratch,
                                      Label* failure)
 {
     MOZ_ASSERT(index != length.base);
-    MOZ_ASSERT(length.base != scratch);
-    MOZ_ASSERT(index != scratch);
+    MOZ_ASSERT(length.base != maybeScratch);
+    MOZ_ASSERT(index != maybeScratch);
 
     branch32(Assembler::BelowOrEqual, length, index, failure);
 
