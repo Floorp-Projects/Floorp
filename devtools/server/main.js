@@ -495,11 +495,6 @@ var DebuggerServer = {
       constructor: "FramerateActor",
       type: { tab: true }
     });
-    this.registerModule("devtools/server/actors/eventlooplag", {
-      prefix: "eventLoopLag",
-      constructor: "EventLoopLagActor",
-      type: { tab: true }
-    });
     this.registerModule("devtools/server/actors/reflow", {
       prefix: "reflow",
       constructor: "ReflowActor",
