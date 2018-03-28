@@ -28,6 +28,23 @@ function checkUnlockedPref(prefName, prefValue) {
   EnterprisePolicyTesting.checkPolicyPref(prefName, prefValue, false);
 }
 
+// Checks that a page was blocked by seeing if it was replaced with about:neterror
+async function checkBlockedPage(url, expectedBlocked) {
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url,
+    waitForLoad: false,
+    waitForStateStop: true,
+  }, async function() {
+    await BrowserTestUtils.waitForCondition(async function() {
+      let blocked = await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
+        return content.document.documentURI.startsWith("about:neterror");
+      });
+      return blocked == expectedBlocked;
+    }, `Page ${url} block was correct (expected=${expectedBlocked}).`);
+  });
+}
+
 add_task(async function policies_headjs_startWithCleanSlate() {
   if (Services.policies.status != Ci.nsIEnterprisePolicies.INACTIVE) {
     await setupPolicyEngineWithJson("");
