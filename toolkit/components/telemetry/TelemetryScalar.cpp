@@ -628,7 +628,10 @@ class KeyedScalar
 public:
   typedef mozilla::Pair<nsCString, nsCOMPtr<nsIVariant>> KeyValuePair;
 
-  explicit KeyedScalar(uint32_t aScalarKind) : mScalarKind(aScalarKind) {};
+  explicit KeyedScalar(uint32_t aScalarKind)
+    : mScalarKind(aScalarKind)
+    , mMaximumNumberOfKeys(kMaximumNumberOfKeys)
+  { };
   ~KeyedScalar() = default;
 
   // Set, Add and SetMaximum functions as described in the Telemetry IDL.
@@ -650,11 +653,18 @@ public:
   // To measure the memory stats.
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
+  // To permit more keys than normal.
+  void SetMaximumNumberOfKeys(uint32_t aMaximumNumberOfKeys)
+  {
+    mMaximumNumberOfKeys = aMaximumNumberOfKeys;
+  };
+
 private:
   typedef nsClassHashtable<nsCStringHashKey, ScalarBase> ScalarKeysMapType;
 
   ScalarKeysMapType mScalarKeys;
   const uint32_t mScalarKind;
+  uint32_t mMaximumNumberOfKeys;
 
   ScalarResult GetScalarForKey(const nsAString& aKey, ScalarBase** aRet);
 };
@@ -798,7 +808,7 @@ KeyedScalar::GetScalarForKey(const nsAString& aKey, ScalarBase** aRet)
     return ScalarResult::Ok;
   }
 
-  if (mScalarKeys.Count() >= kMaximumNumberOfKeys) {
+  if (mScalarKeys.Count() >= mMaximumNumberOfKeys) {
     return ScalarResult::TooManyKeys;
   }
 
