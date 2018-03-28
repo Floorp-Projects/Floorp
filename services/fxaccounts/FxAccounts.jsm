@@ -1644,12 +1644,6 @@ FxAccountsInternal.prototype = {
   // you'll have to bump the DEVICE_REGISTRATION_VERSION number to force older
   // devices to re-register when Firefox updates
   async _registerOrUpdateDevice(signedInUser) {
-    // Allow tests to skip device registration because it makes remote requests
-    // to the auth server and _getDeviceName does not work from xpcshell.
-    if (Services.prefs.getBoolPref("identity.fxaccounts.skipDeviceRegistration", false)) {
-      return null;
-    }
-
     const {sessionToken, device: currentDevice} = signedInUser;
     if (!sessionToken) {
       throw new Error("_registerOrUpdateDevice called without a session token");
