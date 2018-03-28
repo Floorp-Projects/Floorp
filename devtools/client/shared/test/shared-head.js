@@ -256,30 +256,29 @@ function synthesizeKeyShortcut(key, target) {
 function waitForNEvents(target, eventName, numTimes, useCapture = false) {
   info("Waiting for event: '" + eventName + "' on " + target + ".");
 
-  let deferred = defer();
   let count = 0;
 
-  for (let [add, remove] of [
-    ["on", "off"],
-    ["addEventListener", "removeEventListener"],
-    ["addListener", "removeListener"],
-  ]) {
-    if ((add in target) && (remove in target)) {
-      target[add](eventName, function onEvent(...aArgs) {
-        if (typeof info === "function") {
-          info("Got event: '" + eventName + "' on " + target + ".");
-        }
+  return new Promise(resolve => {
+    for (let [add, remove] of [
+      ["on", "off"],
+      ["addEventListener", "removeEventListener"],
+      ["addListener", "removeListener"],
+    ]) {
+      if ((add in target) && (remove in target)) {
+        target[add](eventName, function onEvent(...args) {
+          if (typeof info === "function") {
+            info("Got event: '" + eventName + "' on " + target + ".");
+          }
 
-        if (++count == numTimes) {
-          target[remove](eventName, onEvent, useCapture);
-          deferred.resolve.apply(deferred, aArgs);
-        }
-      }, useCapture);
-      break;
+          if (++count == numTimes) {
+            target[remove](eventName, onEvent, useCapture);
+            resolve(...args);
+          }
+        }, useCapture);
+        break;
+      }
     }
-  }
-
-  return deferred.promise;
+  });
 }
 
 /**
@@ -353,9 +352,7 @@ function loadHelperScript(filePath) {
  * @return {Promise}
  */
 function waitForTick() {
-  let deferred = defer();
-  executeSoon(deferred.resolve);
-  return deferred.promise;
+  return new Promise(resolve => executeSoon(resolve));
 }
 
 /**
@@ -506,32 +503,31 @@ function evalInDebuggee(script, browser = gBrowser.selectedBrowser) {
  *         callback is invoked.
  */
 function waitForContextMenu(popup, button, onShown, onHidden) {
-  let deferred = defer();
+  return new Promise(resolve => {
+    function onPopupShown() {
+      info("onPopupShown");
+      popup.removeEventListener("popupshown", onPopupShown);
 
-  function onPopupShown() {
-    info("onPopupShown");
-    popup.removeEventListener("popupshown", onPopupShown);
+      onShown && onShown();
 
-    onShown && onShown();
+      // Use executeSoon() to get out of the popupshown event.
+      popup.addEventListener("popuphidden", onPopupHidden);
+      executeSoon(() => popup.hidePopup());
+    }
+    function onPopupHidden() {
+      info("onPopupHidden");
+      popup.removeEventListener("popuphidden", onPopupHidden);
 
-    // Use executeSoon() to get out of the popupshown event.
-    popup.addEventListener("popuphidden", onPopupHidden);
-    executeSoon(() => popup.hidePopup());
-  }
-  function onPopupHidden() {
-    info("onPopupHidden");
-    popup.removeEventListener("popuphidden", onPopupHidden);
+      onHidden && onHidden();
 
-    onHidden && onHidden();
+      resolve(popup);
+    }
 
-    deferred.resolve(popup);
-  }
+    popup.addEventListener("popupshown", onPopupShown);
 
-  popup.addEventListener("popupshown", onPopupShown);
-
-  info("wait for the context menu to open");
-  synthesizeContextMenuEvent(button);
-  return deferred.promise;
+    info("wait for the context menu to open");
+    synthesizeContextMenuEvent(button);
+  });
 }
 
 function synthesizeContextMenuEvent(el) {
@@ -657,14 +653,14 @@ function isWindows() {
  * Wait for a given toolbox to get its title updated.
  */
 function waitForTitleChange(toolbox) {
-  let deferred = defer();
-  toolbox.win.parent.addEventListener("message", function onmessage(event) {
-    if (event.data.name == "set-host-title") {
-      toolbox.win.parent.removeEventListener("message", onmessage);
-      deferred.resolve();
-    }
+  return new Promise(resolve => {
+    toolbox.win.parent.addEventListener("message", function onmessage(event) {
+      if (event.data.name == "set-host-title") {
+        toolbox.win.parent.removeEventListener("message", onmessage);
+        resolve();
+      }
+    });
   });
-  return deferred.promise;
 }
 
 /**
@@ -687,11 +683,7 @@ function createTestHTTPServer() {
   let server = new HttpServer();
 
   registerCleanupFunction(async function cleanup() {
-    let destroyed = defer();
-    server.stop(() => {
-      destroyed.resolve();
-    });
-    await destroyed.promise;
+    await new Promise(resolve => server.stop(resolve));
   });
 
   server.start(-1);
