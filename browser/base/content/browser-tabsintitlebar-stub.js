@@ -8,6 +8,7 @@
 
 var TabsInTitlebar = {
   init() {},
+  whenWindowLayoutReady() {},
   uninit() {},
   allowedBy() {},
   update() {},
