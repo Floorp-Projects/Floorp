@@ -6873,19 +6873,21 @@ class LStoreUnboxedScalar : public LInstructionHelper<0, 3, 0>
     }
 };
 
-class LStoreTypedArrayElementHole : public LInstructionHelper<0, 4, 0>
+class LStoreTypedArrayElementHole : public LInstructionHelper<0, 4, 1>
 {
   public:
     LIR_HEADER(StoreTypedArrayElementHole)
 
     LStoreTypedArrayElementHole(const LAllocation& elements, const LAllocation& length,
-                                const LAllocation& index, const LAllocation& value)
+                                const LAllocation& index, const LAllocation& value,
+                                const LDefinition& spectreTemp)
       : LInstructionHelper(classOpcode)
     {
         setOperand(0, elements);
         setOperand(1, length);
         setOperand(2, index);
         setOperand(3, value);
+        setTemp(0, spectreTemp);
     }
 
     const MStoreTypedArrayElementHole* mir() const {
@@ -6902,6 +6904,9 @@ class LStoreTypedArrayElementHole : public LInstructionHelper<0, 4, 0>
     }
     const LAllocation* value() {
         return getOperand(3);
+    }
+    const LDefinition* spectreTemp() {
+        return getTemp(0);
     }
 };
 
