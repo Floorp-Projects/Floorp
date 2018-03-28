@@ -282,41 +282,6 @@ class ConstantOrRegister
     }
 };
 
-struct RegisterOrInt32Constant {
-    bool isRegister_;
-    union {
-        Register reg_;
-        int32_t constant_;
-    };
-
-    explicit RegisterOrInt32Constant(Register reg)
-      : isRegister_(true), reg_(reg)
-    { }
-
-    explicit RegisterOrInt32Constant(int32_t index)
-      : isRegister_(false), constant_(index)
-    { }
-
-    inline void bumpConstant(int diff) {
-        MOZ_ASSERT(!isRegister_);
-        constant_ += diff;
-    }
-    inline Register reg() const {
-        MOZ_ASSERT(isRegister_);
-        return reg_;
-    }
-    inline int32_t constant() const {
-        MOZ_ASSERT(!isRegister_);
-        return constant_;
-    }
-    inline bool isRegister() const {
-        return isRegister_;
-    }
-    inline bool isConstant() const {
-        return !isRegister_;
-    }
-};
-
 template <typename T>
 class TypedRegisterSet
 {
