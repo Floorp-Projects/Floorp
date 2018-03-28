@@ -1,27 +1,31 @@
 const CLASS_ID = Components.ID("{12345678-1234-1234-1234-123456789abc}");
 const CONTRACT_ID = "@mozilla.org/test-parameter-source;1";
 
-var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+// Get and create the HTTP server.
+ChromeUtils.import("resource://testing-common/httpd.js");
+var testserver = new HttpServer();
+testserver.start(-1);
+gPort = testserver.identity.primaryPort;
 
-var gTestURL = "http://example.com/update.json?itemID=%ITEM_ID%&custom1=%CUSTOM1%&custom2=%CUSTOM2%";
+var gTestURL = "http://127.0.0.1:" + gPort + "/update.json?itemID=%ITEM_ID%&custom1=%CUSTOM1%&custom2=%CUSTOM2%";
 var gExpectedQuery = "itemID=test@mozilla.org&custom1=custom_parameter_1&custom2=custom_parameter_2";
 var gSeenExpectedURL = false;
 
-var gComponentRegistrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-var gCategoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+var gComponentRegistrar = Components.manager.QueryInterface(AM_Ci.nsIComponentRegistrar);
+var gCategoryManager = AM_Cc["@mozilla.org/categorymanager;1"].getService(AM_Ci.nsICategoryManager);
 
 // Factory for our parameter handler
 var paramHandlerFactory = {
   QueryInterface(iid) {
-    if (iid.equals(Ci.nsIFactory) || iid.equals(Ci.nsISupports))
+    if (iid.equals(AM_Ci.nsIFactory) || iid.equals(AM_Ci.nsISupports))
       return this;
 
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
   createInstance(outer, iid) {
-    var bag = Cc["@mozilla.org/hash-property-bag;1"].
-              createInstance(Ci.nsIWritablePropertyBag);
+    var bag = AM_Cc["@mozilla.org/hash-property-bag;1"].
+              createInstance(AM_Ci.nsIWritablePropertyBag);
     bag.setProperty("CUSTOM1", "custom_parameter_1");
     bag.setProperty("CUSTOM2", "custom_parameter_2");
     return bag.QueryInterface(iid);

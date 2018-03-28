@@ -4,11 +4,12 @@
 
 // Checks that we rebuild something sensible from a database with a bad schema
 
-var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+var testserver = AddonTestUtils.createHttpServer();
+gPort = testserver.identity.primaryPort;
 
 // register files with server
 testserver.registerDirectory("/addons/", do_get_file("addons"));
-testserver.registerDirectory("/data/", do_get_file("data"));
+mapFile("/data/test_corrupt.json", testserver);
 
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
@@ -68,7 +69,7 @@ const ADDONS = {
       version: "1.0",
       name: "Test 3",
       bootstrap: true,
-      updateURL: "http://example.com/data/test_corrupt.json",
+      updateURL: "http://localhost:" + gPort + "/data/test_corrupt.json",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
@@ -92,7 +93,7 @@ const ADDONS = {
       version: "1.0",
       name: "Test 4",
       bootstrap: true,
-      updateURL: "http://example.com/data/test_corrupt.json",
+      updateURL: "http://localhost:" + gPort + "/data/test_corrupt.json",
       targetApplications: [{
         id: "xpcshell@tests.mozilla.org",
         minVersion: "1",
@@ -282,7 +283,7 @@ add_task(async function test_after_restart() {
 add_task(async function test_after_schema_version_change() {
   // After restarting the database won't be open so we can alter
   // the schema
-  await changeXPIDBVersion(100);
+  changeXPIDBVersion(100);
 
   await promiseStartupManager(false);
 

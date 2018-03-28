@@ -6,13 +6,13 @@
 
 ChromeUtils.import("resource://gre/modules/addons/AddonRepository.jsm");
 
-var gServer = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+var gServer = AddonTestUtils.createHttpServer();
 
 const PREF_GETADDONS_BROWSEADDONS        = "extensions.getAddons.browseAddons";
 const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseURL";
 
 const PORT          = gServer.identity.primaryPort;
-const BASE_URL      = "http://example.com";
+const BASE_URL      = "http://localhost:" + PORT;
 const DEFAULT_URL   = "about:blank";
 
 const ADDONS = [
@@ -171,12 +171,14 @@ add_task(async function setup() {
   gServer.registerFile(INSTALL_URL3, xpis[2]);
 
   // Register files used to test search failure
-  gServer.registerFile(GET_TEST.failedURL,
-                       do_get_file("data/test_AddonRepository_fail.json"));
+  mapUrlToFile(GET_TEST.failedURL,
+               do_get_file("data/test_AddonRepository_fail.json"),
+               gServer);
 
   // Register files used to test search success
-  gServer.registerFile(GET_TEST.successfulURL,
-                       do_get_file("data/test_AddonRepository_getAddonsByIDs.json"));
+  mapUrlToFile(GET_TEST.successfulURL,
+               do_get_file("data/test_AddonRepository_getAddonsByIDs.json"),
+               gServer);
 
   await promiseStartupManager();
 

@@ -13,8 +13,11 @@ Services.prefs.setIntPref("extensions.enabledScopes",
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "1.9.2");
 
-var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
-testserver.registerDirectory("/data/", do_get_file("data"));
+ChromeUtils.import("resource://testing-common/httpd.js");
+var testserver = new HttpServer();
+testserver.start(-1);
+gPort = testserver.identity.primaryPort;
+mapFile("/data/test_bug655254.json", testserver);
 
 var userDir = gProfD.clone();
 userDir.append("extensions2");
@@ -28,8 +31,8 @@ var dirProvider = {
     return null;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider,
-                                         Ci.nsISupports])
+  QueryInterface: XPCOMUtils.generateQI([AM_Ci.nsIDirectoryServiceProvider,
+                                         AM_Ci.nsISupports])
 };
 Services.dirsvc.registerProvider(dirProvider);
 
@@ -38,7 +41,7 @@ var addon1 = {
   version: "1.0",
   name: "Test 1",
   bootstrap: true,
-  updateURL: "http://example.com/data/test_bug655254.json",
+  updateURL: "http://localhost:" + gPort + "/data/test_bug655254.json",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
     minVersion: "1",
@@ -83,7 +86,7 @@ function run_test() {
 }
 
 function end_test() {
-  do_test_finished();
+  testserver.stop(do_test_finished);
 }
 
 async function run_test_1() {

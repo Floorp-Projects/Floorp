@@ -11,9 +11,12 @@ const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 
-var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
-testserver.registerDirectory("/data/", do_get_file("data"));
-testserver.registerDirectory("/data/", do_get_file("data"));
+var testserver = createHttpServer();
+gPort = testserver.identity.primaryPort;
+mapFile("/data/test_update.json", testserver);
+mapFile("/data/test_update_addons.json", testserver);
+mapFile("/data/test_update_compat.json", testserver);
+testserver.registerDirectory("/addons/", do_get_file("addons"));
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
@@ -30,7 +33,7 @@ add_test(function() {
   writeInstallRDFForExtension({
     id: "addon9@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://example.com/data/" + updateFile,
+    updateURL: "http://localhost:" + gPort + "/data/" + updateFile,
     targetApplications: [{
       id: appId,
       minVersion: "0.1",
@@ -53,9 +56,9 @@ add_test(function() {
   });
 
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS,
-                             `http://example.com/data/test_update_addons.json`);
+                             `http://localhost:${gPort}/data/test_update_addons.json`);
   Services.prefs.setCharPref(PREF_COMPAT_OVERRIDES,
-                             `http://example.com/data/test_update_compat.json`);
+                             `http://localhost:${gPort}/data/test_update_compat.json`);
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
 
   AddonManagerInternal.backgroundUpdateCheck();
@@ -67,7 +70,7 @@ add_test(function() {
   writeInstallRDFForExtension({
     id: "addon11@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://example.com/data/" + updateFile,
+    updateURL: "http://localhost:" + gPort + "/data/" + updateFile,
     targetApplications: [{
       id: appId,
       minVersion: "0.1",

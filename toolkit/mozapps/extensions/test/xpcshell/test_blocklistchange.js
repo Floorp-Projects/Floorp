@@ -32,6 +32,7 @@ ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
 var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+gPort = testserver.identity.primaryPort;
 
 testserver.registerDirectory("/data/", do_get_file("data"));
 
@@ -629,7 +630,7 @@ function Pmanual_update(aVersion) {
   for (let name of ["soft1", "soft2", "soft3", "soft4", "hard1", "regexp1"]) {
     Pinstalls.push(
       AddonManager.getInstallForURL(
-        `http://example.com/addons/blocklist_${name}_${aVersion}.xpi`,
+        `http://localhost:${gPort}/addons/blocklist_${name}_${aVersion}.xpi`,
         null, "application/x-xpinstall"));
   }
 
@@ -802,7 +803,7 @@ add_task(async function run_app_update_schema_test() {
 add_task(async function update_schema_2() {
   await promiseShutdownManager();
 
-  await changeXPIDBVersion(100);
+  changeXPIDBVersion(100);
   gAppInfo.version = "2";
   startupManager(true);
 
@@ -826,7 +827,7 @@ add_task(async function update_schema_3() {
   await promiseRestartManager();
 
   await promiseShutdownManager();
-  await changeXPIDBVersion(100);
+  changeXPIDBVersion(100);
   gAppInfo.version = "2.5";
   startupManager(true);
 
@@ -843,7 +844,7 @@ add_task(async function update_schema_3() {
 add_task(async function update_schema_4() {
   await promiseShutdownManager();
 
-  await changeXPIDBVersion(100);
+  changeXPIDBVersion(100);
   startupManager(false);
 
   let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
@@ -859,7 +860,7 @@ add_task(async function update_schema_4() {
 add_task(async function update_schema_5() {
   await promiseShutdownManager();
 
-  await changeXPIDBVersion(100);
+  changeXPIDBVersion(100);
   gAppInfo.version = "1";
   startupManager(true);
 
