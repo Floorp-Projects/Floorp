@@ -13,5 +13,8 @@
     "python_path": "c:/mozilla-build/python/python.exe",
     "cc": "cl.exe",
     "cxx": "cl.exe",
-    "ml": "ml64.exe"
+    "ml": "ml64.exe",
+    "patches": [
+      "clang-tidy-cxx14.patch"
+    ]
 }

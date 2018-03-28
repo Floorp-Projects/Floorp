@@ -49,6 +49,7 @@ function NewWebConsoleFrame(webConsoleOwner) {
   this.window = this.owner.iframeWindow;
 
   this._onToolboxPrefChanged = this._onToolboxPrefChanged.bind(this);
+  this._onPanelSelected = this._onPanelSelected.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -228,6 +229,10 @@ NewWebConsoleFrame.prototype = {
     this._onToolboxPrefChanged();
 
     this._initShortcuts();
+
+    if (toolbox) {
+      toolbox.on("webconsole-selected", this._onPanelSelected);
+    }
   },
 
   _initShortcuts: function() {
@@ -307,6 +312,15 @@ NewWebConsoleFrame.prototype = {
   _onToolboxPrefChanged: function() {
     let newValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
     this.newConsoleOutput.dispatchTimestampsToggle(newValue);
+  },
+
+  /**
+   * Sets the focus to JavaScript input field when the web console tab is
+   * selected or when there is a split console present.
+   * @private
+   */
+  _onPanelSelected: function() {
+    this.jsterm.focus();
   },
 
   /**

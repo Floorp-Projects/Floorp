@@ -405,12 +405,6 @@ Gecko_GetStyleAttrDeclarationBlock(RawGeckoElementBorrowed aElement)
   if (!decl) {
     return nullptr;
   }
-  if (decl->IsGecko()) {
-    // XXX This can happen when nodes are adopted from a Gecko-style-backend
-    //     document into a Servo-style-backend document.  See bug 1330051.
-    NS_WARNING("stylo: requesting a Gecko declaration block?");
-    return nullptr;
-  }
   return decl->AsServo()->RefRawStrong();
 }
 
@@ -419,12 +413,6 @@ Gecko_UnsetDirtyStyleAttr(RawGeckoElementBorrowed aElement)
 {
   DeclarationBlock* decl = aElement->GetInlineStyleDeclaration();
   if (!decl) {
-    return;
-  }
-  if (decl->IsGecko()) {
-    // XXX This can happen when nodes are adopted from a Gecko-style-backend
-    //     document into a Servo-style-backend document.  See bug 1330051.
-    NS_WARNING("stylo: requesting a Gecko declaration block?");
     return;
   }
   decl->UnsetDirty();
@@ -670,11 +658,9 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
       // it since we avoid mutating state as part of the Servo parallel
       // traversal.
       presContext->EffectCompositor()
-                 ->UpdateCascadeResults(StyleBackendType::Servo,
-                                        *effectSet,
+                 ->UpdateCascadeResults(*effectSet,
                                         const_cast<Element*>(aElement),
-                                        pseudoType,
-                                        nullptr);
+                                        pseudoType);
     }
   }
 
@@ -2542,7 +2528,7 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
 
   StyleSheet* previousFirstChild = aParent->GetFirstChild();
   if (NS_SUCCEEDED(rv)) {
-    rv = aLoader->LoadChildSheet(aParent, aParentLoadData, uri, media, nullptr, aReusableSheets);
+    rv = aLoader->LoadChildSheet(aParent, aParentLoadData, uri, media, aReusableSheets);
   }
 
   if (NS_FAILED(rv) ||

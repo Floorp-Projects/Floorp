@@ -416,7 +416,6 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
 static AnimationValue
 ToAnimationValue(const Animatable& aAnimatable)
 {
-  StyleBackendType backend = StyleBackendType::Servo;
   AnimationValue result;
 
   switch (aAnimatable.type()) {
@@ -429,12 +428,12 @@ ToAnimationValue(const Animatable& aAnimatable)
       if (listOrError.isOk()) {
         RefPtr<nsCSSValueSharedList> list = listOrError.unwrap();
         MOZ_ASSERT(list, "Transform list should be non null");
-        result = AnimationValue::Transform(backend, *list);
+        result = AnimationValue::Transform(*list);
       }
       break;
     }
     case Animatable::Tfloat:
-      result = AnimationValue::Opacity(backend, aAnimatable.get_float());
+      result = AnimationValue::Opacity(aAnimatable.get_float());
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported type");

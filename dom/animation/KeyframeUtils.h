@@ -105,8 +105,7 @@ public:
    *                  if the property is animatable or not.
    * @return true if |aProperty| is animatable.
    */
-  static bool IsAnimatableProperty(nsCSSPropertyID aProperty,
-                                   StyleBackendType aBackend);
+  static bool IsAnimatableProperty(nsCSSPropertyID aProperty);
 };
 
 } // namespace mozilla

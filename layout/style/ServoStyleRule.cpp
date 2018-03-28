@@ -72,8 +72,6 @@ ServoStyleRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
 {
   ServoStyleRule* rule = Rule();
   if (RefPtr<StyleSheet> sheet = rule->GetStyleSheet()) {
-    MOZ_ASSERT(sheet->IsServo(), "Servo style rules should have "
-                                 "servo stylesheets.");
     nsCOMPtr<nsIDocument> doc = sheet->GetAssociatedDocument();
     mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, true);
     if (aDecl != mDecls) {
@@ -194,12 +192,6 @@ ServoStyleRule::List(FILE* out, int32_t aIndent) const
 #endif
 
 /* CSSRule implementation */
-
-uint16_t
-ServoStyleRule::Type() const
-{
-  return CSSRuleBinding::STYLE_RULE;
-}
 
 void
 ServoStyleRule::GetCssText(nsAString& aCssText) const

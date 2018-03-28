@@ -18,13 +18,13 @@ function CollapseButton(props) {
     title = messageToggleDetails,
   } = props;
 
-  let classes = ["theme-twisty"];
+  let classes = ["arrow", "collapse-button"];
 
   if (open) {
-    classes.push("open");
+    classes.push("expanded");
   }
 
-  return dom.a({
+  return dom.img({
     className: classes.join(" "),
     onClick,
     title: title,

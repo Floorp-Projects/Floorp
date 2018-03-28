@@ -367,12 +367,10 @@ LoaderReusableStyleSheets::FindReusableStyleSheet(nsIURI* aURL,
  * Loader Implementation *
  *************************/
 
-Loader::Loader(StyleBackendType aType, DocGroup* aDocGroup)
+Loader::Loader()
   : mDocument(nullptr)
-  , mDocGroup(aDocGroup)
   , mDatasToNotifyOn(0)
   , mCompatMode(eCompatibility_FullStandards)
-  , mStyleBackendType(Some(aType))
   , mEnabled(true)
   , mReporter(new ConsoleReportCollector())
 #ifdef DEBUG
@@ -381,16 +379,16 @@ Loader::Loader(StyleBackendType aType, DocGroup* aDocGroup)
 {
 }
 
-Loader::Loader(nsIDocument* aDocument)
-  : mDocument(aDocument)
-  , mDatasToNotifyOn(0)
-  , mCompatMode(eCompatibility_FullStandards)
-  , mEnabled(true)
-  , mReporter(new ConsoleReportCollector())
-#ifdef DEBUG
-  , mSyncCallback(false)
-#endif
+Loader::Loader(DocGroup* aDocGroup)
+  : Loader()
 {
+  mDocGroup = aDocGroup;
+}
+
+Loader::Loader(nsIDocument* aDocument)
+  : Loader()
+{
+  mDocument = aDocument;
   MOZ_ASSERT(mDocument, "We should get a valid document from the caller!");
 
   // We can just use the preferred set, since there are no sheets in the
@@ -922,7 +920,7 @@ Loader::CreateSheet(nsIURI* aURI,
     if (IsChromeURI(aURI)) {
       nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
       if (cache && cache->IsEnabled()) {
-        sheet = cache->GetStyleSheet(aURI, GetStyleBackendType());
+        sheet = cache->GetStyleSheet(aURI);
         LOG(("  From XUL cache: %p", sheet.get()));
       }
     }
@@ -1061,11 +1059,7 @@ Loader::CreateSheet(nsIURI* aURI,
                                   &sriMetadata);
     }
 
-    if (GetStyleBackendType() == StyleBackendType::Gecko) {
-      MOZ_CRASH("old style system disabled");
-    } else {
-      *aSheet = new ServoStyleSheet(aParsingMode, aCORSMode, aReferrerPolicy, sriMetadata);
-    }
+    *aSheet = new ServoStyleSheet(aParsingMode, aCORSMode, aReferrerPolicy, sriMetadata);
     (*aSheet)->SetURIs(sheetURI, originalURI, baseURI);
   }
 
@@ -1095,7 +1089,7 @@ Loader::PrepareSheet(StyleSheet* aSheet,
   if (!aMediaString.IsEmpty()) {
     NS_ASSERTION(!aMediaList,
                  "must not provide both aMediaString and aMediaList");
-    mediaList = MediaList::Create(GetStyleBackendType(), aMediaString);
+    mediaList = MediaList::Create(aMediaString);
   }
 
   aSheet->SetMedia(mediaList);
@@ -1198,20 +1192,15 @@ Loader::InsertSheetInDoc(StyleSheet* aSheet,
  */
 nsresult
 Loader::InsertChildSheet(StyleSheet* aSheet,
-                         StyleSheet* aParentSheet,
-                         ImportRule* aGeckoParentRule)
+                         StyleSheet* aParentSheet)
 {
   LOG(("css::Loader::InsertChildSheet"));
   MOZ_ASSERT(aSheet, "Nothing to insert");
   MOZ_ASSERT(aParentSheet, "Need a parent to insert into");
-  MOZ_ASSERT(aSheet->IsGecko() == !!aGeckoParentRule);
 
   // child sheets should always start out enabled, even if they got
   // cloned off of top-level sheets which were disabled
   aSheet->SetEnabled(true);
-  if (aGeckoParentRule) {
-    MOZ_CRASH("old style system disabled");
-  }
   aParentSheet->PrependStyleSheet(aSheet);
 
   LOG(("  Inserting into parent sheet"));
@@ -1807,11 +1796,11 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, LoadDataArray& aDatasToNotify)
     if (IsChromeURI(aLoadData->mURI)) {
       nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
       if (cache && cache->IsEnabled()) {
-        if (!cache->GetStyleSheet(aLoadData->mURI, GetStyleBackendType())) {
+        if (!cache->GetStyleSheet(aLoadData->mURI)) {
           LOG(("  Putting sheet in XUL prototype cache"));
           NS_ASSERTION(sheet->IsComplete(),
                        "Should only be caching complete sheets");
-          cache->PutStyleSheet(sheet, GetStyleBackendType());
+          cache->PutStyleSheet(sheet);
         }
       }
     }
@@ -2086,13 +2075,11 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
                        SheetLoadData* aParentData,
                        nsIURI* aURL,
                        dom::MediaList* aMedia,
-                       ImportRule* aGeckoParentRule,
                        LoaderReusableStyleSheets* aReusableSheets)
 {
   LOG(("css::Loader::LoadChildSheet"));
   NS_PRECONDITION(aURL, "Must have a URI to load");
   NS_PRECONDITION(aParentSheet, "Must have a parent sheet");
-  MOZ_ASSERT(aParentSheet->IsGecko() == !!aGeckoParentRule);
 
   if (!mEnabled) {
     LOG_WARN(("  Not enabled"));
@@ -2158,9 +2145,6 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
   RefPtr<StyleSheet> sheet;
   StyleSheetState state;
   if (aReusableSheets && aReusableSheets->FindReusableStyleSheet(aURL, sheet)) {
-    if (aParentSheet->IsGecko()) {
-      MOZ_CRASH("old style system disabled");
-    }
     state = eSheetComplete;
   } else {
     bool isAlternate;
@@ -2177,7 +2161,7 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
     PrepareSheet(sheet, empty, empty, aMedia, isAlternate);
   }
 
-  rv = InsertChildSheet(sheet, aParentSheet, aGeckoParentRule);
+  rv = InsertChildSheet(sheet, aParentSheet);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (state == eSheetComplete) {
@@ -2611,18 +2595,6 @@ Loader::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   // - mPreferredSheet, because it can be a shared string
 
   return n;
-}
-
-StyleBackendType
-Loader::GetStyleBackendType() const
-{
-  MOZ_ASSERT(mStyleBackendType || mDocument,
-             "you must construct a Loader with a document or set a "
-             "StyleBackendType on it before calling GetStyleBackendType");
-  if (mStyleBackendType) {
-    return *mStyleBackendType;
-  }
-  return mDocument->GetStyleBackendType();
 }
 
 void
