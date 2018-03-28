@@ -313,7 +313,7 @@ BasicCompositor::CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect, c
     }
     rt = new BasicCompositingRenderTarget(mDrawTarget, windowRect);
     if (!aClearRect.IsEmpty()) {
-      IntRect clearRect = aRect.ToUnknownRect();
+      IntRect clearRect = aClearRect.ToUnknownRect();
       mDrawTarget->ClearRect(Rect(clearRect - rt->GetOrigin()));
     }
   }
