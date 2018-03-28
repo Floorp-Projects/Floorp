@@ -7,11 +7,10 @@
 var EXPORTED_SYMBOLS = [
   "PageActions",
   // PageActions.Action
-  // PageActions.Button
-  // PageActions.Subview
   // PageActions.ACTION_ID_BOOKMARK
   // PageActions.ACTION_ID_BOOKMARK_SEPARATOR
   // PageActions.ACTION_ID_BUILT_IN_SEPARATOR
+  // PageActions.ACTION_ID_TRANSIENT_SEPARATOR
 ];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -28,6 +27,7 @@ ChromeUtils.defineModuleGetter(this, "BinarySearch",
 const ACTION_ID_BOOKMARK = "bookmark";
 const ACTION_ID_BOOKMARK_SEPARATOR = "bookmarkSeparator";
 const ACTION_ID_BUILT_IN_SEPARATOR = "builtInSeparator";
+const ACTION_ID_TRANSIENT_SEPARATOR = "transientSeparator";
 
 const PREF_PERSISTED_ACTIONS = "browser.pageActions.persistedActions";
 const PERSISTED_ACTIONS_CURRENT_VERSION = 1;
@@ -84,41 +84,55 @@ var PageActions = {
   _deferredAddActionCalls: [],
 
   /**
-   * The list of Action objects, sorted in the order in which they should be
-   * placed in the page action panel.  If there are both built-in and non-built-
-   * in actions, then the list will include the separator between the two.  The
-   * list is not live.  (array of Action objects)
+   * A list of all Action objects, not in any particular order.  Not live.
+   * (array of Action objects)
    */
   get actions() {
-    let actions = this.builtInActions;
-    if (this.nonBuiltInActions.length) {
-      // There are non-built-in actions, so include them too.
+    let lists = [
+      this._builtInActions,
+      this._nonBuiltInActions,
+      this._transientActions,
+    ];
+    return lists.reduce((memo, list) => memo.concat(list), []);
+  },
+
+  /**
+   * The list of Action objects that should appear in the panel for a given
+   * window, sorted in the order in which they appear.  If there are both
+   * built-in and non-built-in actions, then the list will include the separator
+   * between the two.  The list is not live.  (array of Action objects)
+   *
+   * @param  browserWindow (DOM window, required)
+   *         This window's actions will be returned.
+   * @return (array of PageAction.Action objects) The actions currently in the
+   *         given window's panel.
+   */
+  actionsInPanel(browserWindow) {
+    function filter(action) {
+      return action.shouldShowInPanel(browserWindow);
+    }
+    let actions = this._builtInActions.filter(filter);
+    let nonBuiltInActions = this._nonBuiltInActions.filter(filter);
+    if (nonBuiltInActions.length) {
       if (actions.length) {
-        // There are both built-in and non-built-in actions.  Add a separator
-        // between the two groups so that the returned array looks like:
-        // [...built-ins, separator, ...non-built-ins]
         actions.push(new Action({
           id: ACTION_ID_BUILT_IN_SEPARATOR,
           _isSeparator: true,
         }));
       }
-      actions.push(...this.nonBuiltInActions);
+      actions.push(...nonBuiltInActions);
+    }
+    let transientActions = this._transientActions.filter(filter);
+    if (transientActions.length) {
+      if (actions.length) {
+        actions.push(new Action({
+          id: ACTION_ID_TRANSIENT_SEPARATOR,
+          _isSeparator: true,
+        }));
+      }
+      actions.push(...transientActions);
     }
     return actions;
-  },
-
-  /**
-   * The list of built-in actions.  Not live.  (array of Action objects)
-   */
-  get builtInActions() {
-    return this._builtInActions.slice();
-  },
-
-  /**
-   * The list of non-built-in actions.  Not live.  (array of Action objects)
-   */
-  get nonBuiltInActions() {
-    return this._nonBuiltInActions.slice();
   },
 
   /**
@@ -175,25 +189,10 @@ var PageActions = {
       this._deferredAddActionCalls.push(() => this.addAction(action));
       return action;
     }
-
-    let hadSep = this.actions.some(a => a.id == ACTION_ID_BUILT_IN_SEPARATOR);
-
     this._registerAction(action);
-
-    let sep = null;
-    if (!hadSep) {
-      sep = this.actions.find(a => a.id == ACTION_ID_BUILT_IN_SEPARATOR);
-    }
-
     for (let bpa of allBrowserPageActions()) {
-      if (sep) {
-        // There are now both built-in and non-built-in actions, so place the
-        // separator between the two groups.
-        bpa.placeAction(sep);
-      }
       bpa.placeAction(action);
     }
-
     return action;
   },
 
@@ -218,10 +217,13 @@ var PageActions = {
           return a.id == action.__insertBeforeActionID;
         });
       if (index < 0) {
-        // Append the action.
-        index = this._builtInActions.length;
+        // Append the action (excluding transient actions).
+        index = this._builtInActions.filter(a => !a.__transient).length;
       }
       this._builtInActions.splice(index, 0, action);
+    } else if (action.__transient) {
+      // A transient action.
+      this._transientActions.push(action);
     } else if (gBuiltInActions.find(a => a.id == action.id)) {
       // A built-in action.  These are always added on init before all other
       // actions, one after the other, so just push onto the array.
@@ -269,70 +271,8 @@ var PageActions = {
   // These keep track of currently registered actions.
   _builtInActions: [],
   _nonBuiltInActions: [],
+  _transientActions: [],
   _actionsByID: new Map(),
-
-  /**
-   * Returns the ID of the action before which the given action should be
-   * inserted in the urlbar.
-   *
-   * @param  action (Action object, required)
-   *         The action you're inserting.
-   * @return The ID of the reference action, or null if your action should be
-   *         appended.
-   */
-  nextActionIDInUrlbar(browserWindow, action) {
-    // Actions in the urlbar are always inserted before the bookmark action,
-    // which always comes last if it's present.
-    if (action.id == ACTION_ID_BOOKMARK) {
-      return null;
-    }
-    let id = this._nextActionID(action, this.actionsInUrlbar(browserWindow));
-    return id || ACTION_ID_BOOKMARK;
-  },
-
-  /**
-   * Returns the ID of the action before which the given action should be
-   * inserted in the panel.
-   *
-   * @param  action (Action object, required)
-   *         The action you're inserting.
-   * @return The ID of the reference action, or null if your action should be
-   *         appended.
-   */
-  nextActionIDInPanel(action) {
-    return this._nextActionID(action, this.actions);
-  },
-
-  /**
-   * The DOM nodes of actions should be ordered properly, both in the panel and
-   * the urlbar.  This method returns the ID of the action that comes after the
-   * given action in the given array.  You can use the returned ID to get a DOM
-   * node ID to pass to node.insertBefore().
-   *
-   * Pass PageActions.actions to get the ID of the next action in the panel.
-   * Pass PageActions.actionsInUrlbar to get the ID of the next action in the
-   * urlbar.
-   *
-   * @param  action
-   *         The action whose node you want to insert into your DOM.
-   * @param  actionArray
-   *         The relevant array of actions, either PageActions.actions or
-   *         actionsInUrlbar.
-   * @return The ID of the action before which the given action should be
-   *         inserted.  If the given action should be inserted last, returns
-   *         null.
-   */
-  _nextActionID(action, actionArray) {
-    let index = actionArray.findIndex(a => a.id == action.id);
-    if (index < 0) {
-      return null;
-    }
-    let nextAction = actionArray[index + 1];
-    if (!nextAction) {
-      return null;
-    }
-    return nextAction.id;
-  },
 
   /**
    * Call this when an action is removed.
@@ -347,7 +287,12 @@ var PageActions = {
     }
 
     this._actionsByID.delete(action.id);
-    for (let list of [this._nonBuiltInActions, this._builtInActions]) {
+    let lists = [
+      this._builtInActions,
+      this._nonBuiltInActions,
+      this._transientActions,
+    ];
+    for (let list of lists) {
       let index = list.findIndex(a => a.id == action.id);
       if (index >= 0) {
         list.splice(index, 1);
@@ -401,6 +346,7 @@ var PageActions = {
     PageActions._purgeUnregisteredPersistedActions();
     PageActions._builtInActions = [];
     PageActions._nonBuiltInActions = [];
+    PageActions._transientActions = [];
     PageActions._actionsByID = new Map();
   },
 
@@ -471,6 +417,7 @@ var PageActions = {
     idsInUrlbar: [],
   },
 };
+
 
 /**
  * A single page action.
@@ -556,13 +503,18 @@ var PageActions = {
  *        Called when a browser window's page action panel is showing:
  *        onShowingInPanel(buttonNode)
  *        * buttonNode: The action's node in the page action panel.
+ * @param onSubviewPlaced (function, optional)
+ *        Called when the action's subview is added to its parent panel in a
+ *        browser window:
+ *        onSubviewPlaced(panelViewNode)
+ *        * panelViewNode: The subview's panelview node.
+ * @param onSubviewShowing (function, optional)
+ *        Called when the action's subview is showing in a browser window:
+ *        onSubviewShowing(panelViewNode)
+ *        * panelViewNode: The subview's panelview node.
  * @param pinnedToUrlbar (bool, optional)
  *        Pass true to pin the action to the urlbar.  An action is shown in the
  *        urlbar if it's pinned and not disabled.  False by default.
- * @param subview (object, optional)
- *        An options object suitable for passing to the Subview constructor, if
- *        you'd like the action to have a subview.  See the subview constructor
- *        for info on this object's properties.
  * @param tooltip (string, optional)
  *        The action's button tooltip text.
  * @param urlbarIDOverride (string, optional)
@@ -572,6 +524,8 @@ var PageActions = {
  * @param wantsIframe (bool, optional)
  *        Pass true to make an action that shows an iframe in a panel when
  *        clicked.
+ * @param wantsSubview (bool, optional)
+ *        Pass true to make an action that shows a panel subview when clicked.
  */
 function Action(options) {
   setProperties(this, options, {
@@ -593,11 +547,13 @@ function Action(options) {
     onPlacedInUrlbar: false,
     onRemovedFromWindow: false,
     onShowingInPanel: false,
+    onSubviewPlaced: false,
+    onSubviewShowing: false,
     pinnedToUrlbar: false,
-    subview: false,
     tooltip: false,
     urlbarIDOverride: false,
     wantsIframe: false,
+    wantsSubview: false,
 
     // private
 
@@ -612,6 +568,12 @@ function Action(options) {
     _isSeparator: false,
 
     // (bool, optional)
+    // Transient actions have a couple of special properties: (1) They stick to
+    // the bottom of the panel, and (2) they're hidden in the panel when they're
+    // disabled.  Other than that they behave like other actions.
+    _transient: false,
+
+    // (bool, optional)
     // True if the action's urlbar button is defined in markup.  In that case, a
     // node with the action's urlbar node ID should already exist in the DOM
     // (either the auto-generated ID or urlbarIDOverride).  That node will be
@@ -619,9 +581,6 @@ function Action(options) {
     // is removed from the urlbar.
     _urlbarNodeInMarkup: false,
   });
-  if (this._subview) {
-    this._subview = new Subview(options.subview);
-  }
 
   /**
    * A cache of the pre-computed CSS variable values for a given icon
@@ -638,6 +597,7 @@ function Action(options) {
     iconProps: this._createIconProperties(this._iconURL),
     title: this._title,
     tooltip: this._tooltip,
+    wantsSubview: this._wantsSubview,
   };
 
   /**
@@ -649,14 +609,14 @@ function Action(options) {
 
 Action.prototype = {
   /**
-   * The ID of the action's parent extension (string, nullable)
+   * The ID of the action's parent extension (string)
    */
   get extensionID() {
     return this._extensionID;
   },
 
   /**
-   * The action's ID (string, nonnull)
+   * The action's ID (string)
    */
   get id() {
     return this._id;
@@ -664,7 +624,7 @@ Action.prototype = {
 
   /**
    * Attribute name => value mapping to set on nodes created for this action
-   * (object, nullable)
+   * (object)
    */
   get nodeAttributes() {
     return this._nodeAttributes;
@@ -672,7 +632,7 @@ Action.prototype = {
 
   /**
    * True if the action is pinned to the urlbar.  The action is shown in the
-   * urlbar if it's pinned and not disabled.  (bool, nonnull)
+   * urlbar if it's pinned and not disabled.  (bool)
    */
   get pinnedToUrlbar() {
     return this._pinnedToUrlbar || false;
@@ -686,7 +646,7 @@ Action.prototype = {
   },
 
   /**
-   * The action's disabled state (bool, nonnull)
+   * The action's disabled state (bool)
    */
   getDisabled(browserWindow = null) {
     return !!this._getProperties(browserWindow).disabled;
@@ -697,7 +657,7 @@ Action.prototype = {
 
   /**
    * The action's icon URL string, or an object mapping sizes to URL strings
-   * (string or object, nullable)
+   * (string or object)
    */
   getIconURL(browserWindow = null) {
     return this._getProperties(browserWindow).iconURL;
@@ -739,7 +699,7 @@ Action.prototype = {
   },
 
   /**
-   * The action's title (string, nonnull)
+   * The action's title (string)
    */
   getTitle(browserWindow = null) {
     return this._getProperties(browserWindow).title;
@@ -749,13 +709,23 @@ Action.prototype = {
   },
 
   /**
-   * The action's tooltip (string, nullable)
+   * The action's tooltip (string)
    */
   getTooltip(browserWindow = null) {
     return this._getProperties(browserWindow).tooltip;
   },
   setTooltip(value, browserWindow = null) {
     return this._setProperty("tooltip", value, browserWindow);
+  },
+
+  /**
+   * Whether the action wants a subview (bool)
+   */
+  getWantsSubview(browserWindow = null) {
+    return !!this._getProperties(browserWindow).wantsSubview;
+  },
+  setWantsSubview(value, browserWindow = null) {
+    return this._setProperty("wantsSubview", !!value, browserWindow);
   },
 
   /**
@@ -781,7 +751,7 @@ Action.prototype = {
     // This may be called before the action has been added.
     if (PageActions.actionForID(this.id)) {
       for (let bpa of allBrowserPageActions(browserWindow)) {
-        bpa.updateAction(this, name, value);
+        bpa.updateAction(this, name, { value });
       }
     }
   },
@@ -812,32 +782,24 @@ Action.prototype = {
   },
 
   /**
-   * Override for the ID of the action's activated-action panel anchor (string,
-   * nullable)
+   * Override for the ID of the action's activated-action panel anchor (string)
    */
   get anchorIDOverride() {
     return this._anchorIDOverride;
   },
 
   /**
-   * Override for the ID of the action's urlbar node (string, nullable)
+   * Override for the ID of the action's urlbar node (string)
    */
   get urlbarIDOverride() {
     return this._urlbarIDOverride;
   },
 
   /**
-   * True if the action is shown in an iframe (bool, nonnull)
+   * True if the action is shown in an iframe (bool)
    */
   get wantsIframe() {
     return this._wantsIframe || false;
-  },
-
-  /**
-   * A Subview object if the action wants a subview (Subview, nullable)
-   */
-  get subview() {
-    return this._subview;
   },
 
   get labelForHistogram() {
@@ -1031,6 +993,31 @@ Action.prototype = {
   },
 
   /**
+   * Call this when a panelview node for the action's subview is added to the
+   * DOM.
+   *
+   * @param  panelViewNode (DOM node, required)
+   *         The subview's panelview node.
+   */
+  onSubviewPlaced(panelViewNode) {
+    if (this._onSubviewPlaced) {
+      this._onSubviewPlaced(panelViewNode);
+    }
+  },
+
+  /**
+   * Call this when a panelview node for the action's subview is showing.
+   *
+   * @param  panelViewNode (DOM node, required)
+   *         The subview's panelview node.
+   */
+  onSubviewShowing(panelViewNode) {
+    if (this._onSubviewShowing) {
+      this._onSubviewShowing(panelViewNode);
+    }
+  },
+
+  /**
    * Removes the action's DOM nodes from all browser windows.
    *
    * PageActions will remember the action's urlbar placement, if any, after this
@@ -1040,6 +1027,19 @@ Action.prototype = {
    */
   remove() {
     PageActions.onActionRemoved(this);
+  },
+
+  /**
+   * Returns whether the action should be shown in a given window's panel.
+   *
+   * @param  browserWindow (DOM window, required)
+   *         The window.
+   * @return True if the action should be shown and false otherwise.  Actions
+   *         are always shown in the panel unless they're both transient and
+   *         disabled.
+   */
+  shouldShowInPanel(browserWindow) {
+    return !this.__transient || !this.getDisabled(browserWindow);
   },
 
   /**
@@ -1066,157 +1066,13 @@ Action.prototype = {
 
 this.PageActions.Action = Action;
 
-
-/**
- * A Subview represents a PanelUI panelview that your actions can show.
- * `options` is a required object with the following properties.
- *
- * @param buttons (array, optional)
- *        An array of buttons to show in the subview.  Each item in the array
- *        must be an options object suitable for passing to the Button
- *        constructor.  See the Button constructor for information on these
- *        objects' properties.
- * @param onPlaced (function, optional)
- *        Called when the subview is added to its parent panel in a browser
- *        window:
- *        onPlaced(panelViewNode)
- *        * panelViewNode: The panelview node represented by this Subview.
- * @param onShowing (function, optional)
- *        Called when the subview is showing in a browser window:
- *        onShowing(panelViewNode)
- *        * panelViewNode: The panelview node represented by this Subview.
- */
-function Subview(options) {
-  setProperties(this, options, {
-    buttons: false,
-    onPlaced: false,
-    onShowing: false,
-  });
-  this._buttons = (this._buttons || []).map(buttonOptions => {
-    return new Button(buttonOptions);
-  });
-}
-
-Subview.prototype = {
-  /**
-   * The subview's buttons (array of Button objects, nonnull)
-   */
-  get buttons() {
-    return this._buttons;
-  },
-
-  /**
-   * Call this when a DOM node for the subview is added to the DOM.
-   *
-   * @param  panelViewNode (DOM node, required)
-   *         The subview's panelview node.
-   */
-  onPlaced(panelViewNode) {
-    if (this._onPlaced) {
-      this._onPlaced(panelViewNode);
-    }
-  },
-
-  /**
-   * Call this when a DOM node for the subview is showing.
-   *
-   * @param  panelViewNode (DOM node, required)
-   *         The subview's panelview node.
-   */
-  onShowing(panelViewNode) {
-    if (this._onShowing) {
-      this._onShowing(panelViewNode);
-    }
-  }
-};
-
-this.PageActions.Subview = Subview;
-
-
-/**
- * A button that can be shown in a subview.  `options` is a required object with
- * the following properties.
- *
- * @param id (string, required)
- *        The button's ID.  This will not become the ID of a DOM node by itself,
- *        but it will be used to generate DOM node IDs.  But in terms of spaces
- *        and weird characters and such, do treat this like a DOM node ID.
- * @param title (string, required)
- *        The button's title.
- * @param disabled (bool, required)
- *        Pass true to disable the button.
- * @param onCommand (function, optional)
- *        Called when the button is clicked:
- *        onCommand(event, buttonNode)
- *        * event: The triggering event.
- *        * buttonNode: The node that was clicked.
- * @param shortcut (string, optional)
- *        The button's shortcut text.
- */
-function Button(options) {
-  setProperties(this, options, {
-    id: true,
-    title: true,
-    disabled: false,
-    onCommand: false,
-    shortcut: false,
-  });
-}
-
-Button.prototype = {
-  /**
-   * True if the button is disabled (bool, nonnull)
-   */
-  get disabled() {
-    return this._disabled || false;
-  },
-
-  /**
-   * The button's ID (string, nonnull)
-   */
-  get id() {
-    return this._id;
-  },
-
-  /**
-   * The button's shortcut (string, nullable)
-   */
-  get shortcut() {
-    return this._shortcut;
-  },
-
-  /**
-   * The button's title (string, nonnull)
-   */
-  get title() {
-    return this._title;
-  },
-
-  /**
-   * Call this when the user clicks the button.
-   *
-   * @param  event (DOM event, required)
-   *         The triggering event.
-   * @param  buttonNode (DOM node, required)
-   *         The button's DOM node that was clicked.
-   */
-  onCommand(event, buttonNode) {
-    if (this._onCommand) {
-      this._onCommand(event, buttonNode);
-    }
-  }
-};
-
-this.PageActions.Button = Button;
-
+this.PageActions.ACTION_ID_BUILT_IN_SEPARATOR = ACTION_ID_BUILT_IN_SEPARATOR;
+this.PageActions.ACTION_ID_TRANSIENT_SEPARATOR = ACTION_ID_TRANSIENT_SEPARATOR;
 
 // These are only necessary so that Pocket and the test can use them.
 this.PageActions.ACTION_ID_BOOKMARK = ACTION_ID_BOOKMARK;
 this.PageActions.ACTION_ID_BOOKMARK_SEPARATOR = ACTION_ID_BOOKMARK_SEPARATOR;
 this.PageActions.PREF_PERSISTED_ACTIONS = PREF_PERSISTED_ACTIONS;
-
-// This is only necessary so that the test can access it.
-this.PageActions.ACTION_ID_BUILT_IN_SEPARATOR = ACTION_ID_BUILT_IN_SEPARATOR;
 
 
 // Sorted in the order in which they should appear in the page action panel.
@@ -1275,7 +1131,7 @@ var gBuiltInActions = [
     onCommand(event, buttonNode) {
       browserPageActions(buttonNode).emailLink.onCommand(event, buttonNode);
     },
-  }
+  },
 ];
 
 if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
@@ -1290,22 +1146,14 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
     onLocationChange(browserWindow) {
       browserPageActions(browserWindow).sendToDevice.onLocationChange();
     },
-    subview: {
-      buttons: [
-        {
-          id: "notReady",
-          title: "sendToDevice-notReadyTitle",
-          disabled: true,
-        },
-      ],
-      onPlaced(panelViewNode) {
-        browserPageActions(panelViewNode).sendToDevice
-          .onSubviewPlaced(panelViewNode);
-      },
-      onShowing(panelViewNode) {
-        browserPageActions(panelViewNode).sendToDevice
-          .onShowingSubview(panelViewNode);
-      },
+    wantsSubview: true,
+    onSubviewPlaced(panelViewNode) {
+      browserPageActions(panelViewNode).sendToDevice
+        .onSubviewPlaced(panelViewNode);
+    },
+    onSubviewShowing(panelViewNode) {
+      browserPageActions(panelViewNode).sendToDevice
+        .onShowingSubview(panelViewNode);
     },
   });
 }
