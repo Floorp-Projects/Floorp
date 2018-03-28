@@ -48,7 +48,7 @@ const ThemeVariableMap = [
   ["--lwt-toolbar-field-focus-color", {
     lwtProperty: "toolbar_field_text_focus"
   }],
-  ["--lwt-toolbar-field-focus-border-color", {
+  ["--toolbar-field-focus-border-color", {
     lwtProperty: "toolbar_field_border_focus"
   }],
   ["--urlbar-separator-color", {
