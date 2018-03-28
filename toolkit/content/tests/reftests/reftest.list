@@ -1,4 +1,4 @@
-fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!isDebugBuild) random-if(cocoaWidget||/^Windows\x20NT\x206\.2/.test(http.oscpu)||(/^Windows\x20NT\x2010\.0/.test(http.oscpu))) == bug-442419-progressmeter-max.xul bug-442419-progressmeter-max-ref.xul # fails most of the time on Mac because progress meter animates; Bug 1439988
+== bug-442419-progressmeter-max.xul bug-442419-progressmeter-max-ref.xul
 != textbox-multiline-default-value.xul textbox-multiline-empty.xul
 == videocontrols-dynamically-add-cc.html videocontrols-dynamically-add-cc-ref.html
 == audio-with-bogus-url.html audio-with-bogus-url-ref.html

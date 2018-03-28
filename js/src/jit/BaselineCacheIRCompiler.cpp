@@ -1380,9 +1380,11 @@ BaselineCacheIRCompiler::emitStoreDenseElement()
     // Load obj->elements in scratch.
     masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
 
-    // Bounds check.
+    // Bounds check. Unfortunately we don't have more registers available on
+    // x86, so use InvalidReg and emit slightly slower code on x86.
+    Register spectreTemp = InvalidReg;
     Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
-    masm.branch32(Assembler::BelowOrEqual, initLength, index, failure->label());
+    masm.spectreBoundsCheck32(index, initLength, spectreTemp, failure->label());
 
     // Hole check.
     BaseObjectElementIndex element(scratch, index);
@@ -1471,18 +1473,30 @@ BaselineCacheIRCompiler::emitStoreDenseElementHole()
                             ObjectElements::FROZEN),
                       failure->label());
 
+    // We don't have enough registers on x86 so use InvalidReg. This will emit
+    // slightly less efficient code on x86.
+    Register spectreTemp = InvalidReg;
+
     if (handleAdd) {
-        // Fail if index > initLength.
-        masm.branch32(Assembler::Below, initLength, index, failure->label());
+        // Bounds check.
+        Label capacityOk, outOfBounds;
+        masm.spectreBoundsCheck32(index, initLength, spectreTemp, &outOfBounds);
+        masm.jump(&capacityOk);
+
+        // If we're out-of-bounds, only handle the index == initLength case.
+        masm.bind(&outOfBounds);
+        masm.branch32(Assembler::NotEqual, initLength, index, failure->label());
 
         // If index < capacity, we can add a dense element inline. If not we
         // need to allocate more elements.
-        Label capacityOk;
+        Label allocElement;
         Address capacity(scratch, ObjectElements::offsetOfCapacity());
-        masm.branch32(Assembler::Above, capacity, index, &capacityOk);
+        masm.spectreBoundsCheck32(index, capacity, spectreTemp, &allocElement);
+        masm.jump(&capacityOk);
 
         // Check for non-writable array length. We only have to do this if
         // index >= capacity.
+        masm.bind(&allocElement);
         masm.branchTest32(Assembler::NonZero, elementsFlags,
                           Imm32(ObjectElements::NONWRITABLE_ARRAY_LENGTH),
                           failure->label());
@@ -1510,7 +1524,7 @@ BaselineCacheIRCompiler::emitStoreDenseElementHole()
         // the type update code doesn't read uninitialized memory.
     } else {
         // Fail if index >= initLength.
-        masm.branch32(Assembler::BelowOrEqual, initLength, index, failure->label());
+        masm.spectreBoundsCheck32(index, initLength, spectreTemp, failure->label());
     }
 
     // Check if we have to convert a double element.
@@ -1595,10 +1609,9 @@ BaselineCacheIRCompiler::emitArrayPush()
 
     // Load obj->elements in scratch.
     masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
-    masm.load32(Address(scratch, ObjectElements::offsetOfLength()), scratchLength);
 
-    BaseObjectElementIndex element(scratch, scratchLength);
-    Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
+    Address elementsInitLength(scratch, ObjectElements::offsetOfInitializedLength());
+    Address elementsLength(scratch, ObjectElements::offsetOfLength());
     Address elementsFlags(scratch, ObjectElements::offsetOfFlags());
 
     // Check for copy-on-write or frozen elements.
@@ -1608,16 +1621,19 @@ BaselineCacheIRCompiler::emitArrayPush()
                       failure->label());
 
     // Fail if length != initLength.
-    masm.branch32(Assembler::NotEqual, initLength, scratchLength, failure->label());
+    masm.load32(elementsInitLength, scratchLength);
+    masm.branch32(Assembler::NotEqual, elementsLength, scratchLength, failure->label());
 
     // If scratchLength < capacity, we can add a dense element inline. If not we
     // need to allocate more elements.
-    Label capacityOk;
+    Label capacityOk, allocElement;
     Address capacity(scratch, ObjectElements::offsetOfCapacity());
-    masm.branch32(Assembler::Above, capacity, scratchLength, &capacityOk);
+    masm.spectreBoundsCheck32(scratchLength, capacity, InvalidReg, &allocElement);
+    masm.jump(&capacityOk);
 
     // Check for non-writable array length. We only have to do this if
     // index >= capacity.
+    masm.bind(&allocElement);
     masm.branchTest32(Assembler::NonZero, elementsFlags,
                       Imm32(ObjectElements::NONWRITABLE_ARRAY_LENGTH),
                       failure->label());
@@ -1672,12 +1688,12 @@ BaselineCacheIRCompiler::emitArrayPush()
     masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
 
     // Increment initLength and length.
-    Address length(scratch, ObjectElements::offsetOfLength());
-    masm.add32(Imm32(1), initLength);
-    masm.load32(length, scratchLength);
-    masm.add32(Imm32(1), length);
+    masm.add32(Imm32(1), elementsInitLength);
+    masm.load32(elementsLength, scratchLength);
+    masm.add32(Imm32(1), elementsLength);
 
     // Store the value.
+    BaseObjectElementIndex element(scratch, scratchLength);
     masm.storeValue(val, element);
     emitPostBarrierElement(obj, val, scratch, scratchLength);
 
@@ -1708,7 +1724,11 @@ BaselineCacheIRCompiler::emitStoreTypedElement()
     // Bounds check.
     Label done;
     LoadTypedThingLength(masm, layout, obj, scratch1);
-    masm.branch32(Assembler::BelowOrEqual, scratch1, index, handleOOB ? &done : failure->label());
+
+    // Unfortunately we don't have more registers available on x86, so use
+    // InvalidReg and emit slightly slower code on x86.
+    Register spectreTemp = InvalidReg;
+    masm.spectreBoundsCheck32(index, scratch1, spectreTemp, handleOOB ? &done : failure->label());
 
     // Load the elements vector.
     LoadTypedThingData(masm, layout, obj, scratch1);

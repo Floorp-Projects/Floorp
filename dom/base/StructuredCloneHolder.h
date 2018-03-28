@@ -88,6 +88,10 @@ public:
                             void* aContent,
                             uint64_t aExtraData);
 
+  virtual bool
+  CustomCanTransferHandler(JSContext* aCx,
+                           JS::Handle<JSObject*> aObj);
+
   // These methods are what you should use to read/write data.
 
   // Execute the serialization of aValue using the Structured Clone Algorithm.
@@ -282,6 +286,9 @@ public:
                                          JS::TransferableOwnership aOwnership,
                                          void* aContent,
                                          uint64_t aExtraData) override;
+
+  virtual bool CustomCanTransferHandler(JSContext* aCx,
+                                        JS::Handle<JSObject*> aObj) override;
 
   // These 2 static methods are useful to read/write fully serializable objects.
   // They can be used by custom StructuredCloneHolderBase classes to

@@ -1218,6 +1218,7 @@ html[dir="rtl"] .tree-node img.arrow {
 .sources-list {
   flex: 1;
   display: flex;
+  overflow: hidden;
 }
 
 .sources-list .tree:focus {
@@ -3980,6 +3981,10 @@ html .welcomebox .toggle-button-end.collapsed {
   padding: 10px;
   flex-direction: row;
   border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.result-list.small li {
+  justify-content: space-between;
 }
 
 .result-list li:hover {

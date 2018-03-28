@@ -262,17 +262,6 @@ intrinsic_SubstringKernel(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-intrinsic_OwnPropertyKeys(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-    MOZ_ASSERT(args[0].isObject());
-    RootedObject obj(cx, &args[0].toObject());
-    return GetOwnPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS,
-                              args.rval());
-}
-
 static void
 ThrowErrorWithType(JSContext* cx, JSExnType type, const CallArgs& args)
 {
@@ -2159,6 +2148,59 @@ intrinsic_PromiseResolve(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+intrinsic_CopyDataPropertiesOrGetOwnKeys(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 3);
+    MOZ_ASSERT(args[0].isObject());
+    MOZ_ASSERT(args[1].isObject());
+    MOZ_ASSERT(args[2].isObjectOrNull());
+
+    RootedObject target(cx, &args[0].toObject());
+    RootedObject from(cx, &args[1].toObject());
+    RootedObject excludedItems(cx, args[2].toObjectOrNull());
+
+    if (from->isNative() &&
+        target->is<PlainObject>() &&
+        (!excludedItems || excludedItems->is<PlainObject>()))
+    {
+        bool optimized;
+        if (!CopyDataPropertiesNative(cx, target.as<PlainObject>(), from.as<NativeObject>(),
+                                      (excludedItems ? excludedItems.as<PlainObject>() : nullptr),
+                                      &optimized))
+        {
+            return false;
+        }
+
+        if (optimized) {
+            args.rval().setNull();
+            return true;
+        }
+    }
+
+    if (from->is<UnboxedPlainObject>() &&
+        target->is<PlainObject>() &&
+        (!excludedItems || excludedItems->is<PlainObject>()))
+    {
+        bool optimized;
+        if (!CopyDataPropertiesNative(cx, target.as<PlainObject>(), from.as<UnboxedPlainObject>(),
+                                      (excludedItems ? excludedItems.as<PlainObject>() : nullptr),
+                                      &optimized))
+        {
+            return false;
+        }
+
+        if (optimized) {
+            args.rval().setNull();
+            return true;
+        }
+    }
+
+    return GetOwnPropertyKeys(cx, from, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS,
+                              args.rval());
+}
+
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -2205,6 +2247,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("std_Reflect_getPrototypeOf", Reflect_getPrototypeOf,      1,0,
                     ReflectGetPrototypeOf),
     JS_FN("std_Reflect_isExtensible",            Reflect_isExtensible,         1,0),
+    JS_FN("std_Reflect_ownKeys",                 Reflect_ownKeys,              1,0),
 
     JS_FN("std_Set_has",                         SetObject::has,               1,0),
     JS_FN("std_Set_iterator",                    SetObject::values,            0,0),
@@ -2272,7 +2315,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("CreateModuleSyntaxError", intrinsic_CreateModuleSyntaxError, 4,0),
     JS_FN("AssertionFailed",         intrinsic_AssertionFailed,         1,0),
     JS_FN("DumpMessage",             intrinsic_DumpMessage,             1,0),
-    JS_FN("OwnPropertyKeys",         intrinsic_OwnPropertyKeys,         1,0),
     JS_FN("MakeDefaultConstructor",  intrinsic_MakeDefaultConstructor,  2,0),
     JS_FN("_ConstructorForTypedArray", intrinsic_ConstructorForTypedArray, 1,0),
     JS_FN("_NameForTypedArray",      intrinsic_NameForTypedArray, 1,0),
@@ -2284,6 +2326,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("AddContentTelemetry",     intrinsic_AddContentTelemetry,     2,0),
     JS_FN("_DefineDataProperty",     intrinsic_DefineDataProperty,      4,0),
     JS_FN("_DefineProperty",         intrinsic_DefineProperty,          6,0),
+    JS_FN("CopyDataPropertiesOrGetOwnKeys", intrinsic_CopyDataPropertiesOrGetOwnKeys, 3,0),
 
     JS_INLINABLE_FN("_IsConstructing", intrinsic_IsConstructing,        0,0,
                     IntrinsicIsConstructing),

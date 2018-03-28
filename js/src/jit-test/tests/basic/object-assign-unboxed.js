@@ -10,7 +10,8 @@ function tryCreateUnboxedObject() {
     for (var i = 0; i < 1000; ++i) {
         obj = new Unboxed();
     }
-
+    if (unboxedObjectsEnabled())
+        assertEq(isUnboxedObject(obj), true);
     return obj;
 }
 
