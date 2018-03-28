@@ -1169,6 +1169,12 @@ async function getTransactionsForTransferItems(items, insertionIndex,
       if (item.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
         throw new Error("Can't copy a container from a legacy-transactions build");
       }
+      // Only log if this is one of "our" types as external items, e.g. drag from
+      // url bar to toolbar, shouldn't complain.
+      if (PlacesUIUtils.PLACES_FLAVORS.includes(item.type)) {
+        Cu.reportError("Tried to move an unmovable Places " +
+                       "node, reverting to a copy operation.");
+      }
 
       // We can never move from an external copy.
       canMove = false;
@@ -1180,8 +1186,6 @@ async function getTransactionsForTransferItems(items, insertionIndex,
   }
 
   if (doMove && !canMove) {
-    Cu.reportError("Tried to move an unmovable Places " +
-                   "node, reverting to a copy operation.");
     doMove = false;
   }
 
