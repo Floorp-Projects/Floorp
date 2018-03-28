@@ -878,7 +878,7 @@ StyleSheet::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 /* static */ bool
 StyleSheet::RuleHasPendingChildSheet(css::Rule* aRule)
 {
-  MOZ_ASSERT(aRule->GetType() == css::Rule::IMPORT_RULE);
+  MOZ_ASSERT(aRule->Type() == dom::CSSRuleBinding::IMPORT_RULE);
   auto rule = static_cast<dom::CSSImportRule*>(aRule);
   if (StyleSheet* childSheet = rule->GetStyleSheet()) {
     return !childSheet->IsComplete();
