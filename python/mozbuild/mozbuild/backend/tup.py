@@ -512,6 +512,14 @@ class TupOnly(CommonBackend, PartialBackend):
             outputs.extend(obj.outputs)
             outputs.append('%s.pp' % obj.outputs[0])
 
+            extra_exports = {
+                'buildid.h': ['MOZ_BUILD_DATE'],
+            }
+            for f in obj.outputs:
+                exports = extra_exports.get(f)
+                if exports:
+                    backend_file.export(exports)
+
             if any(f in obj.outputs for f in ('source-repo.h', 'buildid.h')):
                 extra_outputs = [self._early_generated_files]
             else:
