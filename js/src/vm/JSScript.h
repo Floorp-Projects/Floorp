@@ -856,19 +856,29 @@ class SharedScriptData
 
 struct ScriptBytecodeHasher
 {
-    typedef SharedScriptData Lookup;
+    class Lookup {
+        friend struct ScriptBytecodeHasher;
+
+        SharedScriptData* scriptData;
+        HashNumber hash;
+
+      public:
+        explicit Lookup(SharedScriptData* data);
+        ~Lookup();
+    };
 
     static HashNumber hash(const Lookup& l) {
-        return mozilla::HashBytes(l.data(), l.dataLength());
+        return l.hash;
     }
     static bool match(SharedScriptData* entry, const Lookup& lookup) {
-        if (entry->natoms() != lookup.natoms())
+        const SharedScriptData* data = lookup.scriptData;
+        if (entry->natoms() != data->natoms())
             return false;
-        if (entry->codeLength() != lookup.codeLength())
+        if (entry->codeLength() != data->codeLength())
             return false;
-        if (entry->numNotes() != lookup.numNotes())
+        if (entry->numNotes() != data->numNotes())
             return false;
-        return mozilla::PodEqual<uint8_t>(entry->data(), lookup.data(), lookup.dataLength());
+        return mozilla::PodEqual<uint8_t>(entry->data(), data->data(), data->dataLength());
     }
 };
 
