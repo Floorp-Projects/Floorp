@@ -79,9 +79,14 @@ server.TCPListener = class {
   set acceptConnections(value) {
     if (value) {
       if (!this.socket) {
-        const flags = KeepWhenOffline | LoopbackOnly;
-        const backlog = 1;
-        this.socket = new ServerSocket(this.port, flags, backlog);
+        try {
+          const flags = KeepWhenOffline | LoopbackOnly;
+          const backlog = 1;
+          this.socket = new ServerSocket(this.port, flags, backlog);
+        } catch (e) {
+          throw new Error(`Could not bind to port ${this.port} (${e.name})`);
+        }
+
         this.port = this.socket.port;
 
         this.socket.asyncListen(this);
