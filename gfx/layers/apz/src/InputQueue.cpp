@@ -20,9 +20,7 @@
 namespace mozilla {
 namespace layers {
 
-InputQueue::InputQueue()
-{
-}
+InputQueue::InputQueue() = default;
 
 InputQueue::~InputQueue() {
   mQueuedInputs.Clear();

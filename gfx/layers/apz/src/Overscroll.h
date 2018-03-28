@@ -69,7 +69,7 @@ private:
 // Base class for different overscroll effects;
 class OverscrollEffectBase {
 public:
-  virtual ~OverscrollEffectBase() {}
+  virtual ~OverscrollEffectBase() = default;
   virtual void ConsumeOverscroll(ParentLayerPoint& aOverscroll,
                                  bool aShouldOverscrollX,
                                  bool aShouldOverscrollY) = 0;
