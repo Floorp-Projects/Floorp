@@ -2317,14 +2317,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
   // this should eventually get expanded to allow for creating
   // different sets for different media
 
-  StyleBackendType backendType = aDocument->GetStyleBackendType();
-
-  StyleSetHandle styleSet;
-  if (backendType == StyleBackendType::Gecko) {
-    MOZ_CRASH("old style system disabled");
-  } else {
-    styleSet = new ServoStyleSet();
-  }
+  StyleSetHandle styleSet = new ServoStyleSet();
 
   styleSet->BeginUpdate();
 
@@ -2344,7 +2337,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
     return styleSet;
   }
 
-  auto cache = nsLayoutStylesheetCache::For(backendType);
+  auto cache = nsLayoutStylesheetCache::Singleton();
 
   // Handle the user sheets.
   StyleSheet* sheet = nullptr;
@@ -2378,7 +2371,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
       elt->GetAttribute(NS_LITERAL_STRING("usechromesheets"), sheets);
       if (!sheets.IsEmpty() && baseURI) {
         RefPtr<css::Loader> cssLoader =
-          new css::Loader(backendType, aDocument->GetDocGroup());
+          new css::Loader(aDocument->GetDocGroup());
 
         char *str = ToNewCString(sheets);
         char *newStr = str;
@@ -2487,11 +2480,10 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
 
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
   if (sheetService) {
-    for (StyleSheet* sheet : *sheetService->AgentStyleSheets(backendType)) {
+    for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
       styleSet->AppendStyleSheet(SheetType::Agent, sheet);
     }
-    for (StyleSheet* sheet :
-           Reversed(*sheetService->UserStyleSheets(backendType))) {
+    for (StyleSheet* sheet : Reversed(*sheetService->UserStyleSheets())) {
       styleSet->PrependStyleSheet(SheetType::User, sheet);
     }
   }

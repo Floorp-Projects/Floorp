@@ -74,6 +74,7 @@ protected:
                                   TrackID aTrackID) override;
   void RemoveDirectTrackListenerImpl(DirectMediaStreamTrackListener* aListener,
                                      TrackID aTrackID) override;
+  void RemoveAllDirectListenersImpl() override;
 
   nsTArray<TrackMapEntry> mTrackMap;
 

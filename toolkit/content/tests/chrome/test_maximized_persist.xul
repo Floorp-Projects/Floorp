@@ -96,6 +96,13 @@
     await changeSizeMode(() => win.maximize());
     win.close();
 
+    // Open a new window again with centerscreen which shouldn't revert
+    // the persisted sizemode.
+    win = openWindow("centerscreen");
+    await SimpleTest.promiseFocus(win);
+    checkWindow("when open with centerscreen", win, win.STATE_MAXIMIZED);
+    win.close();
+
     // Linux doesn't seem to persist sizemode across opening window
     // with specified size, so mark it expected fail for now.
     let todo = navigator.platform.includes('Linux');

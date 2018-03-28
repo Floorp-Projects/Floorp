@@ -109,7 +109,6 @@ EXPORTS.mozilla += [
     'ServoUtils.h',
     'SheetType.h',
     'StyleAnimationValue.h',
-    'StyleBackendType.h',
     'StyleComplexColor.h',
     'StylePrefs.h',
     'StyleSetHandle.h',

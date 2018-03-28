@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { openToolboxAndLog, reloadPageAndLog } = require("chrome://damp/content/tests/head");
+const { openToolboxAndLog, reloadPageAndLog } = require("../head");
 
 /*
  * These methods are used for working with debugger state changes in order

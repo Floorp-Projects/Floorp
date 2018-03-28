@@ -768,14 +768,6 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
   if (IsPrimaryFrame()) {
     // This needs to happen before we clear our Properties() table.
     ActiveLayerTracker::TransferActivityToContent(this, mContent);
-
-    // Unfortunately, we need to do this for all frames being reframed
-    // and not only those whose current style involves CSS transitions,
-    // because what matters is whether the new style (not the old)
-    // specifies CSS transitions.
-    if (presContext->RestyleManager()->IsGecko()) {
-      MOZ_CRASH("old style system disabled");
-    }
   }
 
   if (HasCSSAnimations() || HasCSSTransitions() ||

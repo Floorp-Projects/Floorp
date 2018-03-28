@@ -24,9 +24,6 @@ public:
   bool IsCCLeaf() const final {
     return Rule::IsCCLeaf();
   }
-  int32_t GetType() const final {
-    return Rule::NAMESPACE_RULE;
-  }
 
   virtual nsAtom* GetPrefix() const = 0;
   virtual void GetURLSpec(nsString& aURLSpec) const = 0;

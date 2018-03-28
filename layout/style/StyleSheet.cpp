@@ -25,13 +25,12 @@
 
 namespace mozilla {
 
-StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMode)
+StyleSheet::StyleSheet(css::SheetParsingMode aParsingMode)
   : mParent(nullptr)
   , mDocument(nullptr)
   , mOwningNode(nullptr)
   , mOwnerRule(nullptr)
   , mParsingMode(aParsingMode)
-  , mType(aType)
   , mDisabled(false)
   , mDirtyFlags(0)
   , mDocumentAssociationMode(NotOwnedByDocument)
@@ -50,7 +49,6 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
   , mOwningNode(aOwningNodeToUse)
   , mOwnerRule(aOwnerRuleToUse)
   , mParsingMode(aCopy.mParsingMode)
-  , mType(aCopy.mType)
   , mDisabled(aCopy.mDisabled)
   , mDirtyFlags(aCopy.mDirtyFlags)
   // We only use this constructor during cloning.  It's the cloner's
@@ -80,11 +78,7 @@ StyleSheet::LastRelease()
   MOZ_ASSERT(mInner->mSheets.Contains(this), "Our mInner should include us.");
 
   UnparentChildren();
-  if (IsGecko()) {
-    MOZ_CRASH("old style system disabled");
-  } else {
-    AsServo()->LastRelease();
-  }
+  AsServo()->LastRelease();
 
   mInner->RemoveSheet(this);
   mInner = nullptr;
@@ -397,14 +391,10 @@ StyleSheet::EnsureUniqueInner()
   mInner->RemoveSheet(this);
   mInner = clone;
 
-  if (IsGecko()) {
-    MOZ_CRASH("old style system disabled");
-  } else {
-    // Fixup the child lists and parent links in the Servo sheet. This is done
-    // here instead of in StyleSheetInner::CloneFor, because it's just more
-    // convenient to do so instead.
-    AsServo()->BuildChildListAfterInnerClone();
-  }
+  // Fixup the child lists and parent links in the Servo sheet. This is done
+  // here instead of in StyleSheetInner::CloneFor, because it's just more
+  // convenient to do so instead.
+  AsServo()->BuildChildListAfterInnerClone();
 
   // let our containing style sets know that if we call
   // nsPresContext::EnsureSafeToHandOutCSSRules we will need to restyle the
@@ -425,10 +415,7 @@ StyleSheet::AppendAllChildSheets(nsTArray<StyleSheet*>& aArray)
 // WebIDL CSSStyleSheet API
 
 #define FORWARD_INTERNAL(method_, args_) \
-  if (IsServo()) { \
-    return AsServo()->method_ args_; \
-  } \
-  MOZ_CRASH("old style system disabled");
+  return AsServo()->method_ args_;
 
 dom::CSSRuleList*
 StyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal,
@@ -604,12 +591,8 @@ StyleSheet::InsertRuleIntoGroup(const nsAString& aRule,
 
   WillDirty();
 
-  nsresult result;
-  if (IsGecko()) {
-    MOZ_CRASH("old style system disabled");
-  } else {
-    result = AsServo()->InsertRuleIntoGroupInternal(aRule, aGroup, aIndex);
-  }
+  nsresult result =
+    AsServo()->InsertRuleIntoGroupInternal(aRule, aGroup, aIndex);
   NS_ENSURE_SUCCESS(result, result);
   RuleAdded(*aGroup->GetStyleRuleAt(aIndex));
 
@@ -860,7 +843,7 @@ dom::MediaList*
 StyleSheet::Media()
 {
   if (!mMedia) {
-    mMedia = dom::MediaList::Create(mType, nsString());
+    mMedia = dom::MediaList::Create(nsString());
     mMedia->SetStyleSheet(this);
   }
 
@@ -878,7 +861,7 @@ StyleSheet::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 /* static */ bool
 StyleSheet::RuleHasPendingChildSheet(css::Rule* aRule)
 {
-  MOZ_ASSERT(aRule->GetType() == css::Rule::IMPORT_RULE);
+  MOZ_ASSERT(aRule->Type() == dom::CSSRuleBinding::IMPORT_RULE);
   auto rule = static_cast<dom::CSSImportRule*>(aRule);
   if (StyleSheet* childSheet = rule->GetStyleSheet()) {
     return !childSheet->IsComplete();

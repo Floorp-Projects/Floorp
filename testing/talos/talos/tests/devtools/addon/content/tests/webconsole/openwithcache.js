@@ -5,7 +5,7 @@
 "use strict";
 
 const { openToolboxAndLog, closeToolbox, testSetup,
-        testTeardown, SIMPLE_URL } = require("chrome://damp/content/tests/head");
+        testTeardown, SIMPLE_URL } = require("../head");
 
 const TOTAL_MESSAGES = 100;
 
