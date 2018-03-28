@@ -2102,15 +2102,6 @@ FragmentOrElement::TextLength() const
   return 0;
 }
 
-nsresult
-FragmentOrElement::AppendText(const char16_t* aBuffer, uint32_t aLength,
-                             bool aNotify)
-{
-  NS_ERROR("called FragmentOrElement::AppendText");
-
-  return NS_ERROR_FAILURE;
-}
-
 bool
 FragmentOrElement::TextIsOnlyWhitespace()
 {
