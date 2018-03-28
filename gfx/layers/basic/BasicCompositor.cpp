@@ -1038,12 +1038,7 @@ BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd)
   if (mRenderTarget->mDrawTarget != mDrawTarget) {
     // Note: Most platforms require us to buffer drawing to the widget surface.
     // That's why we don't draw to mDrawTarget directly.
-    RefPtr<SourceSurface> source;
-    if (mRenderTarget->mDrawTarget != mDrawTarget) {
-      source = mWidget->EndBackBufferDrawing();
-    } else {
-      source = mRenderTarget->mDrawTarget->Snapshot();
-    }
+    RefPtr<SourceSurface> source = mWidget->EndBackBufferDrawing();
     RefPtr<DrawTarget> dest(mTarget ? mTarget : mDrawTarget);
 
     nsIntPoint offset = mTarget ? mTargetBounds.TopLeft() : nsIntPoint();
