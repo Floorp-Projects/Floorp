@@ -31,6 +31,8 @@
 #define fopen(path,mode)      hnjFopen(path,mode)
 #define fclose(file)          hnjFclose(file)
 #define fgets(buf,count,file) hnjFgets(buf,count,file)
+#define feof(file)            hnjFeof(file)
+#define fgetc(file)           hnjFgetc(file)
 
 typedef struct hnjFile_ hnjFile;
 
@@ -43,6 +45,10 @@ hnjFile* hnjFopen(const char* aURISpec, const char* aMode);
 int hnjFclose(hnjFile* f);
 
 char* hnjFgets(char* s, int n, hnjFile* f);
+
+int hnjFeof(hnjFile* f);
+
+int hnjFgetc(hnjFile* f);
 
 #ifdef __cplusplus
 }
