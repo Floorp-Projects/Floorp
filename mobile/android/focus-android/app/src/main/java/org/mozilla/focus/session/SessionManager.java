@@ -17,13 +17,14 @@ import org.mozilla.focus.architecture.NonNullMutableLiveData;
 import org.mozilla.focus.customtabs.CustomTabConfig;
 import org.mozilla.focus.shortcut.HomeScreen;
 import org.mozilla.focus.utils.UrlUtils;
-import org.mozilla.focus.utils.WebURLFinder;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import mozilla.components.utils.SafeIntent;
+import mozilla.components.utils.WebURLFinder;
+
 
 /**
  * Sessions are managed by this global SessionManager instance.
