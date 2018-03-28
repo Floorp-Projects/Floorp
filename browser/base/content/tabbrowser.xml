@@ -369,50 +369,6 @@
       <field name="_dragOverDelay">350</field>
       <field name="_dragTime">0</field>
 
-      <field name="_container" readonly="true"><![CDATA[
-        this.parentNode && this.parentNode.localName == "toolbar" ? this.parentNode : this;
-      ]]></field>
-
-      <field name="_propagatedVisibilityOnce">false</field>
-
-      <property name="visible"
-                onget="return !this._container.collapsed;">
-        <setter><![CDATA[
-          if (val == this.visible &&
-              this._propagatedVisibilityOnce)
-            return val;
-
-          this._container.collapsed = !val;
-
-          this._propagateVisibility();
-          this._propagatedVisibilityOnce = true;
-
-          return val;
-        ]]></setter>
-      </property>
-
-      <method name="_propagateVisibility">
-        <body><![CDATA[
-          let visible = this.visible;
-
-          document.getElementById("menu_closeWindow").hidden = !visible;
-          document.getElementById("menu_close").setAttribute("label",
-            gTabBrowserBundle.GetStringFromName(visible ? "tabs.closeTab" : "tabs.close"));
-
-          TabsInTitlebar.allowedBy("tabs-visible", visible);
-        ]]></body>
-      </method>
-
-      <method name="updateVisibility">
-        <body><![CDATA[
-          if (this.childNodes.length - gBrowser._removingTabs.length == 1) {
-            this.visible = window.toolbar.visible;
-          } else {
-            this.visible = true;
-          }
-        ]]></body>
-      </method>
-
       <field name="_closeButtonsUpdatePending">false</field>
       <method name="_updateCloseButtons">
         <body><![CDATA[

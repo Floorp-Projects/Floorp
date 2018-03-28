@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 <?xml-stylesheet href="chrome://browser/content/places/places.css"?>
-<?xml-stylesheet href="chrome://browser/content/places/organizer.css"?>
 
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
@@ -353,6 +352,7 @@
       <spacer id="libraryToolbarSpacer" flex="1"/>
 
       <textbox id="searchFilter"
+               flex="1"
                type="search"
                aria-controls="placeContent"
                oncommand="PlacesSearchBox.search(this.value);"

@@ -820,6 +820,8 @@ SERVO_BINDING_FUNC(Servo_ParseFontShorthandForMatching, bool,
 
 SERVO_BINDING_FUNC(Servo_Property_IsShorthand, bool,
                    const nsACString* name, bool* found);
+SERVO_BINDING_FUNC(Servo_PseudoClass_GetStates, uint64_t,
+                   const nsACString* name)
 
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \

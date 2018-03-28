@@ -29,6 +29,7 @@
 #include "nsILoadContext.h"
 #include "nsIFrame.h"
 #include "nsIMemoryReporter.h"
+#include "nsIMozBrowserFrame.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
@@ -299,13 +300,6 @@ bool
 Gecko_IsRootElement(RawGeckoElementBorrowed aElement)
 {
   return aElement->OwnerDoc()->GetRootElement() == aElement;
-}
-
-bool
-Gecko_MatchesElement(CSSPseudoClassType aType,
-                     RawGeckoElementBorrowed aElement)
-{
-  return nsCSSPseudoClasses::MatchesElement(aType, aElement).value();
 }
 
 // Dirtiness tracking.
@@ -851,11 +845,38 @@ Gecko_MatchLang(RawGeckoElementBorrowed aElement,
 {
   MOZ_ASSERT(!(aOverrideLang && !aHasOverrideLang),
              "aHasOverrideLang should only be set when aOverrideLang is null");
+  MOZ_ASSERT(aValue, "null lang parameter");
+  if (!aValue || !*aValue) {
+    return false;
+  }
 
-  return nsCSSPseudoClasses::LangPseudoMatches(
-      aElement,
-      aHasOverrideLang ? aOverrideLang : nullptr,
-      aHasOverrideLang, aValue, aElement->OwnerDoc());
+  // We have to determine the language of the current element.  Since
+  // this is currently no property and since the language is inherited
+  // from the parent we have to be prepared to look at all parent
+  // nodes.  The language itself is encoded in the LANG attribute.
+  if (auto* language = aHasOverrideLang ? aOverrideLang : aElement->GetLang()) {
+    return nsStyleUtil::DashMatchCompare(nsDependentAtomString(language),
+                                         nsDependentString(aValue),
+                                         nsASCIICaseInsensitiveStringComparator());
+  }
+
+  // Try to get the language from the HTTP header or if this
+  // is missing as well from the preferences.
+  // The content language can be a comma-separated list of
+  // language codes.
+  nsAutoString language;
+  aElement->OwnerDoc()->GetContentLanguage(language);
+
+  nsDependentString langString(aValue);
+  language.StripWhitespace();
+  for (auto const& lang : language.Split(char16_t(','))) {
+    if (nsStyleUtil::DashMatchCompare(lang,
+                                      langString,
+                                      nsASCIICaseInsensitiveStringComparator())) {
+      return true;
+    }
+  }
+  return false;
 }
 
 nsAtom*
@@ -878,6 +899,25 @@ nsIDocument::DocumentTheme
 Gecko_GetDocumentLWTheme(const nsIDocument* aDocument)
 {
   return aDocument->ThreadSafeGetDocumentLWTheme();
+}
+
+bool
+Gecko_IsTableBorderNonzero(RawGeckoElementBorrowed aElement)
+{
+  if (!aElement->IsHTMLElement(nsGkAtoms::table)) {
+    return false;
+  }
+  const nsAttrValue *val = aElement->GetParsedAttr(nsGkAtoms::border);
+  return val && (val->Type() != nsAttrValue::eInteger ||
+                 val->GetIntegerValue() != 0);
+}
+
+bool
+Gecko_IsBrowserFrame(RawGeckoElementBorrowed aElement)
+{
+  nsIMozBrowserFrame* browserFrame =
+    const_cast<Element*>(aElement)->GetAsMozBrowserFrame();
+  return browserFrame && browserFrame->GetReallyIsBrowser();
 }
 
 template <typename Implementor>
