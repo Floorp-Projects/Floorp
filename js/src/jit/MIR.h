@@ -1218,7 +1218,7 @@ class MInstruction
 
     // Instructions needing to hook into type analysis should return a
     // TypePolicy.
-    virtual TypePolicy* typePolicy() = 0;
+    virtual const TypePolicy* typePolicy() = 0;
     virtual MIRType typePolicySpecialization() = 0;
 };
 
@@ -1230,7 +1230,7 @@ class MInstruction
 
 #define INSTRUCTION_HEADER(opcode)                                          \
     INSTRUCTION_HEADER_WITHOUT_TYPEPOLICY(opcode)                           \
-    virtual TypePolicy* typePolicy() override;                              \
+    virtual const TypePolicy* typePolicy() override;                        \
     virtual MIRType typePolicySpecialization() override;
 
 #define ALLOW_CLONE(typename)                                               \
@@ -7938,7 +7938,7 @@ class MPhi final
 
   public:
     INSTRUCTION_HEADER_WITHOUT_TYPEPOLICY(Phi)
-    virtual TypePolicy* typePolicy();
+    virtual const TypePolicy* typePolicy();
     virtual MIRType typePolicySpecialization();
 
     MPhi(TempAllocator& alloc, MIRType resultType)
