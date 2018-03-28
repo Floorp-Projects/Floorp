@@ -167,7 +167,7 @@ public:
                    mozilla::ErrorResult& rv);
   void GetSupportedNames(nsTArray<nsString>& aNames);
   already_AddRefed<nsIDocument> Open(JSContext* cx,
-                                     const nsAString& aType,
+                                     const mozilla::dom::Optional<nsAString>& /* unused */,
                                      const nsAString& aReplace,
                                      mozilla::ErrorResult& aError);
   already_AddRefed<nsPIDOMWindowOuter>
