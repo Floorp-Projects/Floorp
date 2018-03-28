@@ -7,20 +7,22 @@
 #ifndef mozilla_dom_CSSKeyframesRule_h
 #define mozilla_dom_CSSKeyframesRule_h
 
-#include "mozilla/css/GroupRule.h"
+#include "mozilla/css/Rule.h"
 #include "mozilla/dom/CSSKeyframeRule.h"
 
 namespace mozilla {
 namespace dom {
 
-class CSSKeyframesRule : public css::GroupRule
+class CSSKeyframesRule : public css::Rule
 {
 protected:
-  using css::GroupRule::GroupRule;
+  using css::Rule::Rule;
   virtual ~CSSKeyframesRule() {}
 
 public:
   int32_t GetType() const final { return Rule::KEYFRAMES_RULE; }
+  // Let's not worry for now about sorting out whether we're a leaf or not.
+  bool IsCCLeaf() const override { return false; }
 
   // WebIDL interface
   uint16_t Type() const final { return CSSRuleBinding::KEYFRAMES_RULE; }
