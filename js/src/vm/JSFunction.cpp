@@ -2331,6 +2331,31 @@ SymbolToFunctionName(JSContext* cx, JS::Symbol* symbol, FunctionPrefixKind prefi
     return sb.finishAtom();
 }
 
+static JSAtom*
+NameToFunctionName(JSContext* cx, HandleValue name, FunctionPrefixKind prefixKind)
+{
+    MOZ_ASSERT(name.isString() || name.isNumber());
+
+    if (prefixKind == FunctionPrefixKind::None)
+        return ToAtom<CanGC>(cx, name);
+
+    JSString* nameStr = ToString(cx, name);
+    if (!nameStr)
+        return nullptr;
+
+    StringBuffer sb(cx);
+    if (prefixKind == FunctionPrefixKind::Get) {
+        if (!sb.append("get "))
+            return nullptr;
+    } else {
+        if (!sb.append("set "))
+            return nullptr;
+    }
+    if (!sb.append(nameStr))
+        return nullptr;
+    return sb.finishAtom();
+}
+
 /*
  * Return an atom for use as the name of a builtin method with the given
  * property id.
@@ -2345,6 +2370,8 @@ JSAtom*
 js::IdToFunctionName(JSContext* cx, HandleId id,
                      FunctionPrefixKind prefixKind /* = FunctionPrefixKind::None */)
 {
+    MOZ_ASSERT(JSID_IS_STRING(id) || JSID_IS_SYMBOL(id) || JSID_IS_INT(id));
+
     // No prefix fastpath.
     if (JSID_IS_ATOM(id) && prefixKind == FunctionPrefixKind::None)
         return JSID_TO_ATOM(id);
@@ -2355,33 +2382,9 @@ js::IdToFunctionName(JSContext* cx, HandleId id,
     if (JSID_IS_SYMBOL(id))
         return SymbolToFunctionName(cx, JSID_TO_SYMBOL(id), prefixKind);
 
-    RootedValue idv(cx, IdToValue(id));
-    RootedAtom name(cx, ToAtom<CanGC>(cx, idv));
-    if (!name)
-        return nullptr;
-
     // Step 5.
-    return NameToFunctionName(cx, name, prefixKind);
-}
-
-JSAtom*
-js::NameToFunctionName(JSContext* cx, HandleAtom name,
-                       FunctionPrefixKind prefixKind /* = FunctionPrefixKind::None */)
-{
-    if (prefixKind == FunctionPrefixKind::None)
-        return name;
-
-    StringBuffer sb(cx);
-    if (prefixKind == FunctionPrefixKind::Get) {
-        if (!sb.append("get "))
-            return nullptr;
-    } else {
-        if (!sb.append("set "))
-            return nullptr;
-    }
-    if (!sb.append(name))
-        return nullptr;
-    return sb.finishAtom();
+    RootedValue idv(cx, IdToValue(id));
+    return NameToFunctionName(cx, idv, prefixKind);
 }
 
 bool
@@ -2407,16 +2410,10 @@ js::SetFunctionNameIfNoOwnName(JSContext* cx, HandleFunction fun, HandleValue na
         MOZ_ASSERT(!fun->containsPure(cx->names().name));
     }
 
-    JSAtom* funNameAtom;
-    if (name.isSymbol()) {
-        funNameAtom = SymbolToFunctionName(cx, name.toSymbol(), prefixKind);
-    } else {
-        RootedAtom nameAtom(cx, ToAtom<CanGC>(cx, name));
-        if (!nameAtom)
-            return false;
-        funNameAtom = NameToFunctionName(cx, nameAtom, prefixKind);
-    }
-    if (!funNameAtom)
+    JSAtom* funName = name.isSymbol()
+                      ? SymbolToFunctionName(cx, name.toSymbol(), prefixKind)
+                      : NameToFunctionName(cx, name, prefixKind);
+    if (!funName)
         return false;
 
     // RESOLVED_NAME shouldn't yet be set, at least as long as we don't
@@ -2426,7 +2423,7 @@ js::SetFunctionNameIfNoOwnName(JSContext* cx, HandleFunction fun, HandleValue na
     // RESOLVED_NAME flag when we reach this point.
     MOZ_ASSERT(!fun->hasResolvedName());
 
-    fun->setInferredName(funNameAtom);
+    fun->setInferredName(funName);
 
     return true;
 }
