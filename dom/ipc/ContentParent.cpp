@@ -2415,19 +2415,19 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
     // The URIs of the Gecko and Servo sheets should be the same, so it
     // shouldn't matter which we look at.
 
-    for (StyleSheet* sheet : *sheetService->AgentStyleSheets(backendType)) {
+    for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AGENT_SHEET);
     }
 
-    for (StyleSheet* sheet : *sheetService->UserStyleSheets(backendType)) {
+    for (StyleSheet* sheet : *sheetService->UserStyleSheets()) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::USER_SHEET);
     }
 
-    for (StyleSheet* sheet : *sheetService->AuthorStyleSheets(backendType)) {
+    for (StyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
       URIParams uri;
       SerializeURI(sheet->GetSheetURI(), uri);
       Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AUTHOR_SHEET);
