@@ -94,6 +94,7 @@
 #include "nsRegion.h"
 #include "nsIFrameInlines.h"
 #include "nsStyleChangeList.h"
+#include "nsWindowSizes.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/EffectCompositor.h"

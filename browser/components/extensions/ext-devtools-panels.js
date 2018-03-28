@@ -509,8 +509,9 @@ this.devtools_panels = class extends ExtensionAPI {
     // (used by Sidebar.setExpression).
     let waitForInspectedWindowFront;
 
-    // TODO(rpl): retrive a more detailed callerInfo object, like the filename and
-    // lineNumber of the actual extension called, in the child process.
+    // TODO - Bug 1448878: retrive a more detailed callerInfo object,
+    // like the filename and lineNumber of the actual extension called
+    // in the child process.
     const callerInfo = {
       addonId: context.extension.id,
       url: context.extension.baseURI.spec,

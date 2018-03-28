@@ -364,15 +364,14 @@ WebRenderBridgeChild::GetFontKeyForUnscaledFont(gfx::UnscaledFont* aUnscaled)
 }
 
 void
-WebRenderBridgeChild::RemoveExpiredFontKeys()
+WebRenderBridgeChild::RemoveExpiredFontKeys(wr::IpcResourceUpdateQueue& aResourceUpdates)
 {
   uint32_t counter = gfx::ScaledFont::DeletionCounter();
-  wr::IpcResourceUpdateQueue resources(this);
   if (mFontInstanceKeysDeleted != counter) {
     mFontInstanceKeysDeleted = counter;
     for (auto iter = mFontInstanceKeys.Iter(); !iter.Done(); iter.Next()) {
       if (!iter.Key()) {
-        resources.DeleteFontInstance(iter.Data());
+        aResourceUpdates.DeleteFontInstance(iter.Data());
         iter.Remove();
       }
     }
@@ -382,12 +381,11 @@ WebRenderBridgeChild::RemoveExpiredFontKeys()
     mFontKeysDeleted = counter;
     for (auto iter = mFontKeys.Iter(); !iter.Done(); iter.Next()) {
       if (!iter.Key()) {
-        resources.DeleteFont(iter.Data());
+        aResourceUpdates.DeleteFont(iter.Data());
         iter.Remove();
       }
     }
   }
-  UpdateResources(resources);
 }
 
 CompositorBridgeChild*

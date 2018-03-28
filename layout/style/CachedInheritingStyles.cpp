@@ -9,6 +9,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "nsCOMPtr.h"
 #include "nsIMemoryReporter.h"
+#include "nsWindowSizes.h"
 
 namespace mozilla {
 

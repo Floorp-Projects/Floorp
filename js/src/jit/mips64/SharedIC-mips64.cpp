@@ -154,37 +154,5 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
     return true;
 }
 
-bool
-ICUnaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    Label failure;
-    masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
-
-    switch (op) {
-      case JSOP_BITNOT:
-        masm.not32(R0.valueReg());
-        masm.tagValue(JSVAL_TYPE_INT32, R0.valueReg(), R0);
-        break;
-      case JSOP_NEG:
-        masm.unboxInt32(R0, ExtractTemp0);
-        // Guard against 0 and MIN_INT, both result in a double.
-        masm.branchTest32(Assembler::Zero, ExtractTemp0, Imm32(INT32_MAX), &failure);
-
-        masm.neg32(ExtractTemp0);
-        masm.tagValue(JSVAL_TYPE_INT32, ExtractTemp0, R0);
-        break;
-      default:
-        MOZ_CRASH("Unexpected op");
-        return false;
-    }
-
-    EmitReturnFromIC(masm);
-
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-
 } // namespace jit
 } // namespace js

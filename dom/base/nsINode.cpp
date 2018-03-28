@@ -2405,6 +2405,13 @@ nsINode::AddSizeOfExcludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
   //   non-owning
 }
 
+void
+nsINode::AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
+{
+  *aNodeSize += aSizes.mState.mMallocSizeOf(this);
+  AddSizeOfExcludingThis(aSizes, aNodeSize);
+}
+
 #define EVENT(name_, id_, type_, struct_)                                    \
   EventHandlerNonNull* nsINode::GetOn##name_() {                             \
     EventListenerManager *elm = GetExistingListenerManager();                \

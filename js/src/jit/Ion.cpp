@@ -185,8 +185,8 @@ jit::InitializeIon()
 
 #ifdef JS_CACHEIR_SPEW
     const char* env = getenv("CACHEIR_LOGS");
-    if (env && env[0])
-        CacheIRSpewer::singleton().init();
+    if (env && env[0] && env[0] != '0')
+        CacheIRSpewer::singleton().init(env);
 #endif
 
 #if defined(JS_CODEGEN_ARM)

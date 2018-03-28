@@ -5171,6 +5171,8 @@ public:
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
 
+  float GetOpacity() { return mOpacity; }
+
 private:
   float mOpacity;
   bool mForEventsAndPluginsOnly;
@@ -5234,6 +5236,7 @@ public:
   {
     return false;
   }
+  mozilla::gfx::CompositionOp BlendMode();
 
   NS_DISPLAY_DECL_NAME("BlendMode", TYPE_BLEND_MODE)
 

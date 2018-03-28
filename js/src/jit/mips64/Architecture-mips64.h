@@ -171,28 +171,23 @@ class FloatRegister : public FloatRegisterMIPSShared
     uint32_t numAliased() const {
         return 2;
     }
-    void aliased(uint32_t aliasIdx, FloatRegister* ret) {
-        if (aliasIdx == 0) {
-            *ret = *this;
-            return;
-        }
+    FloatRegister aliased(uint32_t aliasIdx) {
+        if (aliasIdx == 0)
+            return *this;
         MOZ_ASSERT(aliasIdx == 1);
         if (isDouble())
-          *ret = singleOverlay();
-        else
-          *ret = doubleOverlay();
+            return singleOverlay();
+        return doubleOverlay();
     }
     uint32_t numAlignedAliased() const {
         return 2;
     }
-    void alignedAliased(uint32_t aliasIdx, FloatRegister* ret) {
+    FloatRegister alignedAliased(uint32_t aliasIdx) {
         MOZ_ASSERT(isDouble());
-        if (aliasIdx == 0) {
-            *ret = *this;
-            return;
-        }
+        if (aliasIdx == 0)
+            return *this;
         MOZ_ASSERT(aliasIdx == 1);
-        *ret = singleOverlay();
+        return singleOverlay();
     }
 
     SetType alignedOrDominatedAliasedSet() const {

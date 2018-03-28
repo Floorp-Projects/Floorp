@@ -30,6 +30,7 @@
 #include "GeckoProfiler.h"
 #include "nsIStatefulFrame.h"
 #include "nsContainerFrame.h"
+#include "nsWindowSizes.h"
 
 #include "mozilla/MemoryReporting.h"
 

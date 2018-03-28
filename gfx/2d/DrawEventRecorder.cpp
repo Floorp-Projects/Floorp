@@ -102,6 +102,7 @@ DrawEventRecorderMemory::FlushItem(IntRect aRect)
   // first.
   DetatchResources();
 
+  // See moz2d_renderer.rs for a description of the stream format
   WriteElement(mIndex, mOutputStream.mLength);
 
   // write out the fonts into the extra data section
@@ -113,19 +114,25 @@ DrawEventRecorderMemory::FlushItem(IntRect aRect)
   WriteElement(mIndex, aRect.XMost());
   WriteElement(mIndex, aRect.YMost());
   ClearResources();
+
+  // write out a new header for the next recording in the stream
   WriteHeader(mOutputStream);
 }
 
-void
+bool
 DrawEventRecorderMemory::Finish()
 {
+  // this length might be 0, and things should still work.
+  // for example if there are no items in a particular area
   size_t indexOffset = mOutputStream.mLength;
   // write out the index
   mOutputStream.write(mIndex.mData, mIndex.mLength);
+  bool hasItems = mIndex.mLength != 0;
   mIndex = MemStream();
   // write out the offset of the Index to the end of the output stream
   WriteElement(mOutputStream, indexOffset);
   ClearResources();
+  return hasItems;
 }
 
 

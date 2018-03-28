@@ -17,6 +17,8 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::BitwiseCast;
+
 ValueOperand
 CacheRegisterAllocator::useValueRegister(MacroAssembler& masm, ValOperandId op)
 {
@@ -1310,6 +1312,29 @@ CacheIRCompiler::emitGuardIsSymbol()
 }
 
 bool
+CacheIRCompiler::emitGuardIsInt32()
+{
+    ValOperandId inputId = reader.valOperandId();
+    Register output = allocator.defineRegister(masm, reader.int32OperandId());
+
+    if (allocator.knownType(inputId) == JSVAL_TYPE_INT32) {
+        Register input = allocator.useRegister(masm, Int32OperandId(inputId.id()));
+        masm.move32(input, output);
+        return true;
+    }
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Label notInt32, done;
+    masm.branchTestInt32(Assembler::NotEqual, input, failure->label());
+    masm.unboxInt32(input, output);
+    return true;
+}
+
+bool
 CacheIRCompiler::emitGuardIsInt32Index()
 {
     ValOperandId inputId = reader.valOperandId();
@@ -1791,6 +1816,101 @@ CacheIRCompiler::emitLoadInt32ArrayLengthResult()
     // Guard length fits in an int32.
     masm.branchTest32(Assembler::Signed, scratch, scratch, failure->label());
     EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitInt32NegationResult()
+{
+    AutoOutputRegister output(*this);
+    Register val = allocator.useRegister(masm, reader.int32OperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Guard against 0 and MIN_INT by checking if low 31-bits are all zero.
+    // Both of these result in a double.
+    masm.branchTest32(Assembler::Zero, val, Imm32(0x7fffffff), failure->label());
+    masm.neg32(val);
+    masm.tagValue(JSVAL_TYPE_INT32, val, output.valueReg());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitInt32NotResult()
+{
+    AutoOutputRegister output(*this);
+    Register val = allocator.useRegister(masm, reader.int32OperandId());
+    masm.not32(val);
+    masm.tagValue(JSVAL_TYPE_INT32, val, output.valueReg());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitDoubleNegationResult()
+{
+    AutoOutputRegister output(*this);
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // If we're compiling a Baseline IC, FloatReg0 is always available.
+    Label failurePopReg, done;
+    if (mode_ != Mode::Baseline)
+        masm.push(FloatReg0);
+
+    masm.ensureDouble(val, FloatReg0, (mode_ != Mode::Baseline) ? &failurePopReg : failure->label());
+    masm.negateDouble(FloatReg0);
+    masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+
+    if (mode_ != Mode::Baseline) {
+        masm.pop(FloatReg0);
+        masm.jump(&done);
+
+        masm.bind(&failurePopReg);
+        masm.pop(FloatReg0);
+        masm.jump(failure->label());
+    }
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitTruncateDoubleToUInt32()
+{
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    Register res = allocator.defineRegister(masm, reader.int32OperandId());
+
+    Label doneTruncate,  truncateABICall;
+    if (mode_ != Mode::Baseline)
+        masm.push(FloatReg0);
+
+    masm.unboxDouble(val, FloatReg0);
+    masm.branchTruncateDoubleMaybeModUint32(FloatReg0, res, &truncateABICall);
+    masm.jump(&doneTruncate);
+
+    masm.bind(&truncateABICall);
+    LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    save.takeUnchecked(FloatReg0);
+    masm.PushRegsInMask(save);
+
+    masm.setupUnalignedABICall(res);
+    masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+    masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32),
+                     MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+    masm.storeCallInt32Result(res);
+
+    LiveRegisterSet ignore;
+    ignore.add(res);
+    masm.PopRegsInMaskIgnore(save, ignore);
+
+    masm.bind(&doneTruncate);
+    if (mode_ != Mode::Baseline)
+        masm.pop(FloatReg0);
     return true;
 }
 
