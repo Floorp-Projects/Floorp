@@ -721,7 +721,7 @@ MessagePort::Disentangle()
   UpdateMustKeepAlive();
 }
 
-void
+bool
 MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
 {
   MOZ_ASSERT(mIdentifier);
@@ -732,14 +732,14 @@ MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
   aIdentifier.neutered() = true;
 
   if (mState > eStateEntangled) {
-    return;
+    return false;
   }
 
   // We already have a 'next step'. We have to consider this port as already
   // cloned/closed/disentangled.
   if (mState == eStateEntanglingForDisentangle ||
       mState == eStateEntanglingForClose) {
-    return;
+    return false;
   }
 
   aIdentifier.uuid() = mIdentifier->uuid();
@@ -755,7 +755,7 @@ MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
     // Disconnect the entangled port and connect it to PBackground.
     if (!mUnshippedEntangledPort->ConnectToPBackground()) {
       // We are probably shutting down. We cannot proceed.
-      return;
+      return false;
     }
 
     mUnshippedEntangledPort = nullptr;
@@ -766,27 +766,28 @@ MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
 
       mState = eStateDisentangled;
       UpdateMustKeepAlive();
-      return;
+      return true;
     }
 
     // Register this component to PBackground.
     if (!ConnectToPBackground()) {
       // We are probably shutting down. We cannot proceed.
-      return;
+      return false;
     }
 
     mState = eStateEntanglingForDisentangle;
-    return;
+    return true;
   }
 
   // Not entangled yet, we have to wait.
   if (mState == eStateEntangling) {
     mState = eStateEntanglingForDisentangle;
-    return;
+    return true;
   }
 
   MOZ_ASSERT(mState == eStateEntangled);
   StartDisentangling();
+  return true;
 }
 
 void

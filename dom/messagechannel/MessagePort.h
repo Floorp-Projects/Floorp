@@ -74,7 +74,7 @@ public:
 
   void UnshippedEntangle(MessagePort* aEntangledPort);
 
-  void CloneAndDisentangle(MessagePortIdentifier& aIdentifier);
+  bool CloneAndDisentangle(MessagePortIdentifier& aIdentifier);
 
   void CloseForced();
 
