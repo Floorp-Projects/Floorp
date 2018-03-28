@@ -1118,42 +1118,6 @@ MacroAssembler::spectreZeroRegister(Condition cond, Register scratch, Register d
     spectreMovePtr(cond, scratch, dest);
 }
 
-void
-MacroAssembler::spectreBoundsCheck32(Register index, Register length, Register scratch,
-                                     Label* failure)
-{
-    MOZ_ASSERT(index != length);
-    MOZ_ASSERT(length != scratch);
-    MOZ_ASSERT(index != scratch);
-
-    if (JitOptions.spectreIndexMasking)
-        move32(Imm32(0), scratch);
-
-    cmp32(index, length);
-    j(Assembler::AboveOrEqual, failure);
-
-    if (JitOptions.spectreIndexMasking)
-        cmovCCl(Assembler::AboveOrEqual, scratch, index);
-}
-
-void
-MacroAssembler::spectreBoundsCheck32(Register index, const Address& length, Register scratch,
-                                     Label* failure)
-{
-    MOZ_ASSERT(index != length.base);
-    MOZ_ASSERT(length.base != scratch);
-    MOZ_ASSERT(index != scratch);
-
-    if (JitOptions.spectreIndexMasking)
-        move32(Imm32(0), scratch);
-
-    cmp32(index, Operand(length));
-    j(Assembler::AboveOrEqual, failure);
-
-    if (JitOptions.spectreIndexMasking)
-        cmovCCl(Assembler::AboveOrEqual, scratch, index);
-}
-
 // ========================================================================
 // Canonicalization primitives.
 void
