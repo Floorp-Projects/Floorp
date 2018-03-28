@@ -1254,6 +1254,7 @@ var gBrowserInit = {
       remoteType, sameProcessAsFrameLoader
     });
 
+    new LightweightThemeConsumer(document);
     gUIDensity.init();
 
     if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
@@ -1332,7 +1333,6 @@ var gBrowserInit = {
     }
 
     // Misc. inits.
-    new LightweightThemeConsumer(document);
     TabletModeUpdater.init();
     CombinedStopReload.ensureInitialized();
     gPrivateBrowsingUI.init();
