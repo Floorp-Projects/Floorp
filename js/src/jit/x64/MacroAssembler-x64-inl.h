@@ -852,6 +852,50 @@ MacroAssembler::spectreMovePtr(Condition cond, Register src, Register dest)
     cmovCCq(cond, Operand(src), dest);
 }
 
+void
+MacroAssembler::spectreBoundsCheck32(Register index, Register length, Register maybeScratch,
+                                     Label* failure)
+{
+    MOZ_ASSERT(index != length);
+    MOZ_ASSERT(length != maybeScratch);
+    MOZ_ASSERT(index != maybeScratch);
+
+    ScratchRegisterScope scratch(*this);
+    MOZ_ASSERT(index != scratch);
+    MOZ_ASSERT(length != scratch);
+
+    if (JitOptions.spectreIndexMasking)
+        move32(Imm32(0), scratch);
+
+    cmp32(index, length);
+    j(Assembler::AboveOrEqual, failure);
+
+    if (JitOptions.spectreIndexMasking)
+        cmovCCl(Assembler::AboveOrEqual, scratch, index);
+}
+
+void
+MacroAssembler::spectreBoundsCheck32(Register index, const Address& length, Register maybeScratch,
+                                     Label* failure)
+{
+    MOZ_ASSERT(index != length.base);
+    MOZ_ASSERT(length.base != maybeScratch);
+    MOZ_ASSERT(index != maybeScratch);
+
+    ScratchRegisterScope scratch(*this);
+    MOZ_ASSERT(index != scratch);
+    MOZ_ASSERT(length.base != scratch);
+
+    if (JitOptions.spectreIndexMasking)
+        move32(Imm32(0), scratch);
+
+    cmp32(index, Operand(length));
+    j(Assembler::AboveOrEqual, failure);
+
+    if (JitOptions.spectreIndexMasking)
+        cmovCCl(Assembler::AboveOrEqual, scratch, index);
+}
+
 // ========================================================================
 // Truncate floating point.
 
