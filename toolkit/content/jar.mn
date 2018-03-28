@@ -1,7 +1,6 @@
 toolkit.jar:
 %  content global %content/global/ contentaccessible=yes
 *  content/global/license.html
-   content/global/XPCNativeWrapper.js
    content/global/minimal-xul.css
 *  content/global/xul.css
    content/global/components.css
