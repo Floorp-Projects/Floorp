@@ -234,6 +234,13 @@
       "type": "boolean"
     },
 
+    "DisableProfileRefresh": {
+      "description": "Disables the \"Refresh Firefox\" button in about:support",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
     "DisableSafeMode": {
       "description": "Prevents ability to restart in safe mode.",
       "first_available": "60.0",
