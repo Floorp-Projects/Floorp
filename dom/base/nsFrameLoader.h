@@ -173,12 +173,6 @@ public:
 
   already_AddRefed<nsIMessageSender> GetMessageManager();
 
-  uint32_t EventMode() const { return mEventMode; }
-  void SetEventMode(uint32_t aEventMode)
-  {
-    mEventMode = aEventMode;
-  }
-
   already_AddRefed<Element> GetOwnerElement();
 
   uint32_t LazyWidth() const;
@@ -478,10 +472,6 @@ private:
   uint64_t mChildID;
 
   int32_t mJSPluginID;
-
-  // See FrameLoader.webidl. EVENT_MODE_NORMAL_DISPATCH automatically
-  // forwards some input events to out-of-process content.
-  uint32_t mEventMode;
 
   // Holds the last known size of the frame.
   mozilla::ScreenIntSize mLazySize;

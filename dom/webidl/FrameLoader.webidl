@@ -117,25 +117,6 @@ interface FrameLoader {
              optional nsIWebProgressListener? aProgressListener = null);
 
   /**
-   * The default event mode automatically forwards the events
-   * handled in EventStateManager::HandleCrossProcessEvent to
-   * the child content process when these events are targeted to
-   * the remote browser element.
-   *
-   * Used primarly for input events (mouse, keyboard)
-   */
-  const unsigned long EVENT_MODE_NORMAL_DISPATCH = 0x00000000;
-
-  /**
-   * With this event mode, it's the application's responsability to
-   * convert and forward events to the content process
-   */
-  const unsigned long EVENT_MODE_DONT_FORWARD_TO_CHILD = 0x00000001;
-
-  [Pure]
-  attribute unsigned long eventMode;
-
-  /**
    * If false, then the subdocument is not clipped to its CSS viewport, and the
    * subdocument's viewport scrollbar(s) are not rendered.
    * Defaults to true.
