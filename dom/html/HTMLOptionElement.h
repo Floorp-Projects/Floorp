@@ -34,7 +34,6 @@ public:
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLOptionElement, nsGenericHTMLElement)
 
-  using mozilla::dom::Element::SetText;
   using mozilla::dom::Element::GetText;
 
   bool Selected() const

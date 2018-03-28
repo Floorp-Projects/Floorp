@@ -59,6 +59,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/Text.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/XULCommandEvent.h"
@@ -5297,7 +5298,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     // Let's remove nodes until we find a eTEXT.
     while (aContent->HasChildren()) {
       nsIContent* child = aContent->GetFirstChild();
-      if (child->IsNodeOfType(nsINode::eTEXT)) {
+      if (child->IsText()) {
         break;
       }
       aContent->RemoveChildNode(child, true);
@@ -5306,8 +5307,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     // If we have a node, it must be a eTEXT and we reuse it.
     if (aContent->HasChildren()) {
       nsIContent* child = aContent->GetFirstChild();
-      MOZ_ASSERT(child->IsNodeOfType(nsINode::eTEXT));
-      nsresult rv = child->SetText(aValue, true);
+      nsresult rv = child->AsText()->SetText(aValue, true);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // All the following nodes, if they exist, must be deleted.

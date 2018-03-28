@@ -38,14 +38,24 @@ public:
 
 inline mozilla::dom::Text* nsINode::GetAsText()
 {
-  return IsText()  ? static_cast<mozilla::dom::Text*>(this)
-                   : nullptr;
+  return IsText() ? AsText() : nullptr;
 }
 
 inline const mozilla::dom::Text* nsINode::GetAsText() const
 {
-  return IsText() ? static_cast<const mozilla::dom::Text*>(this)
-                  : nullptr;
+  return IsText() ? AsText() : nullptr;
+}
+
+inline mozilla::dom::Text* nsINode::AsText()
+{
+  MOZ_ASSERT(IsText());
+  return static_cast<mozilla::dom::Text*>(this);
+}
+
+inline const mozilla::dom::Text* nsINode::AsText() const
+{
+  MOZ_ASSERT(IsText());
+  return static_cast<const mozilla::dom::Text*>(this);
 }
 
 #endif // mozilla_dom_Text_h
