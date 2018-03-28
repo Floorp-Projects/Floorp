@@ -812,14 +812,6 @@ class MOZ_NON_PARAM alignas(8) Value
         return toTag() == JSVAL_TAG_PRIVATE_GCTHING;
     }
 
-    const uintptr_t* payloadUIntPtr() const {
-#if defined(JS_NUNBOX32)
-        return &data.s.payload.uintptr;
-#elif defined(JS_PUNBOX64)
-        return &data.asUIntPtr;
-#endif
-    }
-
 #if !defined(_MSC_VER) && !defined(__sparc)
   // Value must be POD so that MSVC will pass it by value and not in memory
   // (bug 689101); the same is true for SPARC as well (bug 737344).  More
@@ -830,10 +822,6 @@ class MOZ_NON_PARAM alignas(8) Value
     union layout {
         uint64_t asBits;
         double asDouble;
-        void* asPtr;
-#if defined(JS_PUNBOX64)
-        uintptr_t asUIntPtr;
-#endif // defined(JS_PUNBOX64)
 
 #if defined(JS_PUNBOX64) && !defined(_WIN64)
         /* MSVC does not pack these correctly :-( */
@@ -872,7 +860,6 @@ class MOZ_NON_PARAM alignas(8) Value
                 js::gc::Cell*  cell;
                 void*          ptr;
                 JSWhyMagic     why;
-                uintptr_t      uintptr;
             } payload;
 #  if MOZ_LITTLE_ENDIAN
             JSValueTag tag;
