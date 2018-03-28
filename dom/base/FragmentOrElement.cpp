@@ -2120,24 +2120,6 @@ FragmentOrElement::HasTextForTranslation()
   return false;
 }
 
-void
-FragmentOrElement::AppendTextTo(nsAString& aResult)
-{
-  // We can remove this assertion if it turns out to be useful to be able
-  // to depend on this appending nothing.
-  NS_NOTREACHED("called FragmentOrElement::TextLength");
-}
-
-bool
-FragmentOrElement::AppendTextTo(nsAString& aResult, const mozilla::fallible_t&)
-{
-  // We can remove this assertion if it turns out to be useful to be able
-  // to depend on this appending nothing.
-  NS_NOTREACHED("called FragmentOrElement::TextLength");
-
-  return false;
-}
-
 uint32_t
 FragmentOrElement::GetChildCount() const
 {

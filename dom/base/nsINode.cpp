@@ -25,6 +25,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
@@ -908,10 +909,12 @@ nsINode::IsEqualNode(nsINode* aOther)
       case CDATA_SECTION_NODE:
       case PROCESSING_INSTRUCTION_NODE:
       {
+        MOZ_ASSERT(node1->IsCharacterData());
+        MOZ_ASSERT(node2->IsCharacterData());
         string1.Truncate();
-        static_cast<nsIContent*>(node1)->AppendTextTo(string1);
+        static_cast<CharacterData*>(node1)->AppendTextTo(string1);
         string2.Truncate();
-        static_cast<nsIContent*>(node2)->AppendTextTo(string2);
+        static_cast<CharacterData*>(node2)->AppendTextTo(string2);
 
         if (!string1.Equals(string2)) {
           return false;

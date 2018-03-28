@@ -5356,8 +5356,8 @@ AppendNodeTextContentsRecurse(nsINode* aNode, nsAString& aResult,
         return false;
       }
     }
-    else if (child->IsNodeOfType(nsINode::eTEXT)) {
-      bool ok = child->AppendTextTo(aResult, aFallible);
+    else if (Text* text = child->GetAsText()) {
+      bool ok = text->AppendTextTo(aResult, aFallible);
       if (!ok) {
         return false;
       }
@@ -5373,9 +5373,8 @@ nsContentUtils::AppendNodeTextContent(nsINode* aNode, bool aDeep,
                                       nsAString& aResult,
                                       const fallible_t& aFallible)
 {
-  if (aNode->IsNodeOfType(nsINode::eTEXT)) {
-    return static_cast<nsIContent*>(aNode)->AppendTextTo(aResult,
-                                                         aFallible);
+  if (Text* text = aNode->GetAsText()) {
+    return text->AppendTextTo(aResult, aFallible);
   }
   if (aDeep) {
     return AppendNodeTextContentsRecurse(aNode, aResult, aFallible);
@@ -5384,8 +5383,8 @@ nsContentUtils::AppendNodeTextContent(nsINode* aNode, bool aDeep,
   for (nsIContent* child = aNode->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->IsNodeOfType(nsINode::eTEXT)) {
-      bool ok = child->AppendTextTo(aResult, fallible);
+    if (Text* text = child->GetAsText()) {
+      bool ok = text->AppendTextTo(aResult, fallible);
       if (!ok) {
         return false;
       }
