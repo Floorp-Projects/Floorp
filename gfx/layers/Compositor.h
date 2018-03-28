@@ -135,6 +135,7 @@ class CompositorD3D11;
 class BasicCompositor;
 class TextureReadLock;
 struct GPUStats;
+class AsyncReadbackBuffer;
 
 enum SurfaceInitMode
 {
@@ -261,6 +262,23 @@ public:
   CreateRenderTargetFromSource(const gfx::IntRect& aRect,
                                const CompositingRenderTarget* aSource,
                                const gfx::IntPoint& aSourcePoint) = 0;
+
+  /**
+   * Grab a snapshot of aSource and store it in aDest, so that the pixels can
+   * be read on the CPU by mapping aDest at some point in the future.
+   * aSource and aDest must have the same size.
+   * If this is a GPU compositor, this call must not block on the GPU.
+   * Returns whether the operation was successful.
+   */
+  virtual bool
+  ReadbackRenderTarget(CompositingRenderTarget* aSource,
+                       AsyncReadbackBuffer* aDest) { return false; }
+
+  /**
+   * Create an AsyncReadbackBuffer of the specified size. Can return null.
+   */
+  virtual already_AddRefed<AsyncReadbackBuffer>
+  CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) { return nullptr; }
 
   /**
    * Sets the given surface as the target for subsequent calls to DrawQuad.
@@ -624,6 +642,22 @@ BlendOpIsMixBlendMode(gfx::CompositionOp aOp)
     return false;
   }
 }
+
+class AsyncReadbackBuffer
+{
+public:
+  NS_INLINE_DECL_REFCOUNTING(AsyncReadbackBuffer)
+
+  gfx::IntSize GetSize() const { return mSize; }
+  virtual bool MapAndCopyInto(gfx::DataSourceSurface* aSurface,
+                              const gfx::IntSize& aReadSize) const=0;
+
+protected:
+  explicit AsyncReadbackBuffer(const gfx::IntSize& aSize) : mSize(aSize) {}
+  virtual ~AsyncReadbackBuffer() {}
+
+  gfx::IntSize mSize;
+};
 
 struct TexturedVertex
 {
