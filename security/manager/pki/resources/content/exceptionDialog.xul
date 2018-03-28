@@ -14,11 +14,9 @@
         buttons="cancel,extra1,extra2"
         buttonlabelextra1="&exceptionMgr.exceptionButton.label;"
         buttonaccesskeyextra1="&exceptionMgr.exceptionButton.accesskey;"
-        style="width: 46em; min-height: 38em;"
         onload="initExceptionDialog();"
         ondialogextra1="addException();"
         ondialogextra2="checkCert();"
-        persist="screenX screenY width height"
         defaultButton="extra2">
 
   <stringbundleset id="stringbundleset">

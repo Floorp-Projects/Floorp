@@ -59,6 +59,7 @@ function initExceptionDialog() {
     // Set out parameter to false by default
     args[0].exceptionAdded = false;
   }
+  window.sizeToContent();
 }
 
 /**
@@ -150,6 +151,7 @@ function resetDialog() {
   setText("status2LongDescription", "");
   setText("status3Description", "");
   setText("status3LongDescription", "");
+  window.sizeToContent();
 }
 
 /**
@@ -275,7 +277,6 @@ function updateCertStatus() {
   }
 
   window.sizeToContent();
-
   gNeedReset = true;
 }
 
