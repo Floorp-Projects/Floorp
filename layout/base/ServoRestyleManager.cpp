@@ -316,7 +316,7 @@ ServoRestyleState::TableAwareParentFor(const nsIFrame* aChild)
 }
 
 ServoRestyleManager::ServoRestyleManager(nsPresContext* aPresContext)
-  : RestyleManager(StyleBackendType::Servo, aPresContext)
+  : RestyleManager(aPresContext)
   , mReentrantChanges(nullptr)
 {
 }

@@ -16,7 +16,6 @@
 #include "mozilla/ServoUtils.h"
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
-#include "StyleBackendType.h"
 
 class nsAttrValue;
 struct nsRuleData;
@@ -32,9 +31,8 @@ class ServoSpecifiedValues;
 class GenericSpecifiedValues
 {
 protected:
-  explicit GenericSpecifiedValues(StyleBackendType aType, nsIDocument* aDoc, uint32_t aSIDs)
-    : mType(aType)
-    , mDocument(aDoc)
+  explicit GenericSpecifiedValues(nsIDocument* aDoc, uint32_t aSIDs)
+    : mDocument(aDoc)
     , mSIDs(aSIDs)
   {}
 
@@ -119,7 +117,6 @@ public:
   inline void SetTextDecorationColorOverride();
   inline void SetBackgroundImage(nsAttrValue& value);
 
-  const mozilla::StyleBackendType mType;
   nsIDocument* const mDocument;
   const uint32_t mSIDs;
 };

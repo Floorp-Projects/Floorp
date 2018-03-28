@@ -5896,7 +5896,7 @@ nsIDocument::ResolveScheduledSVGPresAttrs()
 {
   for (auto iter = mLazySVGPresElements.Iter(); !iter.Done(); iter.Next()) {
     nsSVGElement* svg = iter.Get()->GetKey();
-    svg->UpdateContentDeclarationBlock(StyleBackendType::Servo);
+    svg->UpdateContentDeclarationBlock();
   }
   mLazySVGPresElements.Clear();
 }
@@ -9564,7 +9564,6 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
 
       clonedDoc->mOriginalDocument->mStaticCloneCount++;
 
-      MOZ_ASSERT(GetStyleBackendType() == clonedDoc->GetStyleBackendType());
       size_t sheetsCount = SheetCount();
       for (size_t i = 0; i < sheetsCount; ++i) {
         RefPtr<StyleSheet> sheet = SheetAt(i);

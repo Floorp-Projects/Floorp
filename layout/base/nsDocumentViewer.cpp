@@ -2317,14 +2317,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
   // this should eventually get expanded to allow for creating
   // different sets for different media
 
-  StyleBackendType backendType = aDocument->GetStyleBackendType();
-
-  StyleSetHandle styleSet;
-  if (backendType == StyleBackendType::Gecko) {
-    MOZ_CRASH("old style system disabled");
-  } else {
-    styleSet = new ServoStyleSet();
-  }
+  StyleSetHandle styleSet = new ServoStyleSet();
 
   styleSet->BeginUpdate();
 

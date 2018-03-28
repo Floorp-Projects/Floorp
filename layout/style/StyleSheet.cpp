@@ -25,13 +25,12 @@
 
 namespace mozilla {
 
-StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMode)
+StyleSheet::StyleSheet(css::SheetParsingMode aParsingMode)
   : mParent(nullptr)
   , mDocument(nullptr)
   , mOwningNode(nullptr)
   , mOwnerRule(nullptr)
   , mParsingMode(aParsingMode)
-  , mType(aType)
   , mDisabled(false)
   , mDirtyFlags(0)
   , mDocumentAssociationMode(NotOwnedByDocument)
@@ -50,7 +49,6 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
   , mOwningNode(aOwningNodeToUse)
   , mOwnerRule(aOwnerRuleToUse)
   , mParsingMode(aCopy.mParsingMode)
-  , mType(aCopy.mType)
   , mDisabled(aCopy.mDisabled)
   , mDirtyFlags(aCopy.mDirtyFlags)
   // We only use this constructor during cloning.  It's the cloner's

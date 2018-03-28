@@ -10,7 +10,6 @@
 #include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/dom/CSSStyleSheetBinding.h"
 #include "mozilla/net/ReferrerPolicy.h"
-#include "mozilla/StyleBackendType.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/ServoUtils.h"
 #include "nsICSSLoaderObserver.h"
@@ -49,7 +48,7 @@ class StyleSheet : public nsICSSLoaderObserver
                  , public nsWrapperCache
 {
 protected:
-  StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMode);
+  explicit StyleSheet(css::SheetParsingMode aParsingMode);
   StyleSheet(const StyleSheet& aCopy,
              StyleSheet* aParentToUse,
              dom::CSSImportRule* aOwnerRuleToUse,
@@ -353,7 +352,6 @@ protected:
   // and/or useful in user sheets.
   css::SheetParsingMode mParsingMode;
 
-  const StyleBackendType mType;
   bool                  mDisabled;
 
   enum dirtyFlagAttributes {
