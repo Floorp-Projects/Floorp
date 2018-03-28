@@ -47,6 +47,7 @@ class WhatsNew {
             if (wasUpdatedRecently == null) {
                 wasUpdatedRecently = wasUpdatedRecentlyInner(context)
             }
+
             return wasUpdatedRecently!!
         }
 
@@ -83,7 +84,14 @@ class WhatsNew {
                 return false
             }
 
-            return !lastKnownAppVersionName.equals(context.appVersionName)
+            val getMajorVersion: (String?) -> Int = { version ->
+                version?.split(".")?.first()?.toInt() ?: 0
+            }
+
+            val lastMajorVersion = getMajorVersion(lastKnownAppVersionName)
+            val currentMajorVersion = getMajorVersion(context.appVersionName)
+
+            return currentMajorVersion > lastMajorVersion
         }
 
         private fun getLastKnownAppVersionName(context: Context): String? {
