@@ -240,6 +240,10 @@ public:
   bool UpdateAnimation(const TimeStamp& aSampleTime,
                        nsTArray<RefPtr<Runnable>>* aOutDeferredTasks);
 
+  // --------------------------------------------------------------------------
+  // These methods must only be called on the updater thread.
+  //
+
   /**
    * A shadow layer update has arrived. |aScrollMetdata| is the new ScrollMetadata
    * for the container layer corresponding to this APZC.
@@ -754,6 +758,7 @@ protected:
   APZCTreeManager* GetApzcTreeManager() const;
 
   void AssertOnSamplerThread() const;
+  void AssertOnUpdaterThread() const;
 
   /**
    * Convert ScreenPoint relative to the screen to LayoutDevicePoint relative
@@ -794,7 +799,7 @@ protected:
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
      since they are accessed on the UI thread but can be cleared on the
-     sampler thread. */
+     updater thread. */
   RefPtr<GeckoContentController> mGeckoContentController;
   RefPtr<GestureEventListener> mGestureEventListener;
   mutable Monitor mRefPtrMonitor;

@@ -30,104 +30,6 @@ APZSampler::~APZSampler()
 }
 
 bool
-APZSampler::HasTreeManager(const RefPtr<APZCTreeManager>& aApz)
-{
-  return aApz.get() == mApz.get();
-}
-
-void
-APZSampler::ClearTree()
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  RunOnSamplerThread(NewRunnableMethod(
-      "APZSampler::ClearTree",
-      mApz,
-      &APZCTreeManager::ClearTree));
-}
-
-void
-APZSampler::UpdateFocusState(LayersId aRootLayerTreeId,
-                             LayersId aOriginatingLayersId,
-                             const FocusTarget& aFocusTarget)
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  RunOnSamplerThread(NewRunnableMethod<LayersId, LayersId, FocusTarget>(
-      "APZSampler::UpdateFocusState",
-      mApz,
-      &APZCTreeManager::UpdateFocusState,
-      aRootLayerTreeId,
-      aOriginatingLayersId,
-      aFocusTarget));
-}
-
-void
-APZSampler::UpdateHitTestingTree(LayersId aRootLayerTreeId,
-                                 Layer* aRoot,
-                                 bool aIsFirstPaint,
-                                 LayersId aOriginatingLayersId,
-                                 uint32_t aPaintSequenceNumber)
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  AssertOnSamplerThread();
-  mApz->UpdateHitTestingTree(aRootLayerTreeId, aRoot, aIsFirstPaint,
-      aOriginatingLayersId, aPaintSequenceNumber);
-}
-
-void
-APZSampler::UpdateHitTestingTree(LayersId aRootLayerTreeId,
-                                 const WebRenderScrollData& aScrollData,
-                                 bool aIsFirstPaint,
-                                 LayersId aOriginatingLayersId,
-                                 uint32_t aPaintSequenceNumber)
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  // use the local variable to resolve the function overload.
-  auto func = static_cast<void (APZCTreeManager::*)(LayersId,
-                                                    const WebRenderScrollData&,
-                                                    bool,
-                                                    LayersId,
-                                                    uint32_t)>
-      (&APZCTreeManager::UpdateHitTestingTree);
-  RunOnSamplerThread(NewRunnableMethod<LayersId,
-                                       WebRenderScrollData,
-                                       bool,
-                                       LayersId,
-                                       uint32_t>(
-      "APZSampler::UpdateHitTestingTree",
-      mApz,
-      func,
-      aRootLayerTreeId,
-      aScrollData,
-      aIsFirstPaint,
-      aOriginatingLayersId,
-      aPaintSequenceNumber));
-}
-
-void
-APZSampler::NotifyLayerTreeAdopted(LayersId aLayersId,
-                                   const RefPtr<APZSampler>& aOldSampler)
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  RunOnSamplerThread(NewRunnableMethod<LayersId, RefPtr<APZCTreeManager>>(
-      "APZSampler::NotifyLayerTreeAdopted",
-      mApz,
-      &APZCTreeManager::NotifyLayerTreeAdopted,
-      aLayersId,
-      aOldSampler ? aOldSampler->mApz : nullptr));
-}
-
-void
-APZSampler::NotifyLayerTreeRemoved(LayersId aLayersId)
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  RunOnSamplerThread(NewRunnableMethod<LayersId>(
-      "APZSampler::NotifyLayerTreeRemoved",
-      mApz,
-      &APZCTreeManager::NotifyLayerTreeRemoved,
-      aLayersId));
-}
-
-bool
 APZSampler::PushStateToWR(wr::TransactionBuilder& aTxn,
                           const TimeStamp& aSampleTime,
                           nsTArray<wr::WrTransformProperty>& aTransformArray)
@@ -135,69 +37,6 @@ APZSampler::PushStateToWR(wr::TransactionBuilder& aTxn,
   // This function will be removed eventually since we'll have WR pull
   // the transforms from APZ instead.
   return mApz->PushStateToWR(aTxn, aSampleTime, aTransformArray);
-}
-
-bool
-APZSampler::GetAPZTestData(LayersId aLayersId,
-                           APZTestData* aOutData)
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-
-  RefPtr<APZCTreeManager> apz = mApz;
-  bool ret = false;
-  SynchronousTask waiter("APZSampler::GetAPZTestData");
-  RunOnSamplerThread(NS_NewRunnableFunction(
-    "APZSampler::GetAPZTestData",
-    [&]() {
-      AutoCompleteTask notifier(&waiter);
-      ret = apz->GetAPZTestData(aLayersId, aOutData);
-    }
-  ));
-
-  // Wait until the task posted above has run and populated aOutData and ret
-  waiter.Wait();
-
-  return ret;
-}
-
-void
-APZSampler::SetTestAsyncScrollOffset(LayersId aLayersId,
-                                     const FrameMetrics::ViewID& aScrollId,
-                                     const CSSPoint& aOffset)
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  RefPtr<APZCTreeManager> apz = mApz;
-  RunOnSamplerThread(NS_NewRunnableFunction(
-    "APZSampler::SetTestAsyncScrollOffset",
-    [=]() {
-      RefPtr<AsyncPanZoomController> apzc = apz->GetTargetAPZC(aLayersId, aScrollId);
-      if (apzc) {
-        apzc->SetTestAsyncScrollOffset(aOffset);
-      } else {
-        NS_WARNING("Unable to find APZC in SetTestAsyncScrollOffset");
-      }
-    }
-  ));
-}
-
-void
-APZSampler::SetTestAsyncZoom(LayersId aLayersId,
-                             const FrameMetrics::ViewID& aScrollId,
-                             const LayerToParentLayerScale& aZoom)
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  RefPtr<APZCTreeManager> apz = mApz;
-  RunOnSamplerThread(NS_NewRunnableFunction(
-    "APZSampler::SetTestAsyncZoom",
-    [=]() {
-      RefPtr<AsyncPanZoomController> apzc = apz->GetTargetAPZC(aLayersId, aScrollId);
-      if (apzc) {
-        apzc->SetTestAsyncZoom(aZoom);
-      } else {
-        NS_WARNING("Unable to find APZC in SetTestAsyncZoom");
-      }
-    }
-  ));
 }
 
 bool
@@ -314,40 +153,10 @@ APZSampler::AssertOnSamplerThread()
   }
 }
 
-void
-APZSampler::RunOnSamplerThread(already_AddRefed<Runnable> aTask)
-{
-  RefPtr<Runnable> task = aTask;
-
-  MessageLoop* loop = CompositorThreadHolder::Loop();
-  if (!loop) {
-    // Could happen during startup
-    NS_WARNING("Dropping task posted to sampler thread");
-    return;
-  }
-
-  if (IsSamplerThread()) {
-    task->Run();
-  } else {
-    loop->PostTask(task.forget());
-  }
-}
-
 bool
 APZSampler::IsSamplerThread()
 {
   return CompositorThreadHolder::IsInCompositorThread();
-}
-
-void
-APZSampler::RunOnControllerThread(already_AddRefed<Runnable> aTask)
-{
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-
-  RunOnSamplerThread(NewRunnableFunction(
-      "APZSampler::RunOnControllerThread",
-      &APZThreadUtils::RunOnControllerThread,
-      Move(aTask)));
 }
 
 } // namespace layers

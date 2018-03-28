@@ -70,7 +70,7 @@ FocusState::Update(LayersId aRootLayerTreeId,
                    LayersId aOriginatingLayersId,
                    const FocusTarget& aState)
 {
-  // This runs on the sampler thread, it's not worth passing around extra raw
+  // This runs on the updater thread, it's not worth passing around extra raw
   // pointers just to assert it.
 
   MutexAutoLock lock(mMutex);
@@ -184,7 +184,7 @@ FocusState::Update(LayersId aRootLayerTreeId,
 void
 FocusState::RemoveFocusTarget(LayersId aLayersId)
 {
-  // This runs on the sampler thread, it's not worth passing around extra raw
+  // This runs on the updater thread, it's not worth passing around extra raw
   // pointers just to assert it.
   MutexAutoLock lock(mMutex);
 
