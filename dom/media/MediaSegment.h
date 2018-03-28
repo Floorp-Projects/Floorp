@@ -454,11 +454,17 @@ protected:
 
   MediaSegmentBase(MediaSegmentBase&& aSegment)
     : MediaSegment(Move(aSegment))
-    , mChunks(Move(aSegment.mChunks))
+    , mChunks(aSegment.mChunks.Capacity())
 #ifdef MOZILLA_INTERNAL_API
     , mTimeStamp(Move(aSegment.mTimeStamp))
 #endif
-  {}
+  {
+    mChunks.SwapElements(aSegment.mChunks);
+    MOZ_ASSERT(mChunks.Capacity() >= DEFAULT_SEGMENT_CAPACITY,
+               "Capacity must be retained in self after swap");
+    MOZ_ASSERT(aSegment.mChunks.Capacity() >= DEFAULT_SEGMENT_CAPACITY,
+               "Capacity must be retained in other after swap");
+  }
 
   /**
    * Appends the contents of aSource to this segment, clearing aSource.
@@ -468,12 +474,20 @@ protected:
     MOZ_ASSERT(aSource->mDuration >= 0);
     mDuration += aSource->mDuration;
     aSource->mDuration = 0;
+    size_t offset = 0;
     if (!mChunks.IsEmpty() && !aSource->mChunks.IsEmpty() &&
         mChunks[mChunks.Length() - 1].CanCombineWithFollowing(aSource->mChunks[0])) {
       mChunks[mChunks.Length() - 1].mDuration += aSource->mChunks[0].mDuration;
-      aSource->mChunks.RemoveElementAt(0);
+      offset = 1;
     }
-    mChunks.AppendElements(Move(aSource->mChunks));
+
+    for (; offset < aSource->mChunks.Length(); ++offset) {
+      mChunks.AppendElement(Move(aSource->mChunks[offset]));
+    }
+
+    aSource->mChunks.ClearAndRetainStorage();
+    MOZ_ASSERT(aSource->mChunks.Capacity() >= DEFAULT_SEGMENT_CAPACITY,
+               "Capacity must be retained after appending from aSource");
   }
 
   void AppendSliceInternal(const MediaSegmentBase<C, Chunk>& aSource,
@@ -526,8 +540,15 @@ protected:
       t -= c->GetDuration();
       chunksToRemove = i + 1 - aStartIndex;
     }
-    mChunks.RemoveElementsAt(aStartIndex, chunksToRemove);
+    if (aStartIndex == 0 && chunksToRemove == mChunks.Length()) {
+      mChunks.ClearAndRetainStorage();
+    } else {
+      mChunks.RemoveElementsAt(aStartIndex, chunksToRemove);
+    }
     mDuration -= aDuration - t;
+
+    MOZ_ASSERT(mChunks.Capacity() >= DEFAULT_SEGMENT_CAPACITY,
+               "Capacity must be retained after removing chunks");
   }
 
   void RemoveTrailing(StreamTime aKeep, uint32_t aStartIndex)
@@ -549,6 +570,8 @@ protected:
     if (i+1 < mChunks.Length()) {
       mChunks.RemoveElementsAt(i+1, mChunks.Length() - (i+1));
     }
+    MOZ_ASSERT(mChunks.Capacity() >= DEFAULT_SEGMENT_CAPACITY,
+               "Capacity must be retained after removing chunks");
     // Caller must adjust mDuration
   }
 
