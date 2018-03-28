@@ -164,9 +164,9 @@ add_task(async function simple() {
                    initialActionsInUrlbar,
                    "Actions in urlbar after adding the action");
 
-  // Check the list of all actions.
-  Assert.deepEqual(PageActions.actions,
-                   initialActions.concat([action]),
+  // Check the set of all actions.
+  Assert.deepEqual(new Set(PageActions.actions),
+                   new Set(initialActions.concat([action])),
                    "All actions after adding the action");
 
   Assert.deepEqual(PageActions.actionForID(action.id), action,
@@ -817,15 +817,15 @@ add_task(async function nonBuiltFirst() {
 
   // Check the actions.
   Assert.deepEqual(
-    PageActions.actions.map(a => a.id),
-    initialActions.map(a => a.id).concat(
+    new Set(PageActions.actions.map(a => a.id)),
+    new Set(initialActions.map(a => a.id).concat(
       [action.id]
-    ),
+    )),
     "All actions should be in PageActions.actions"
   );
   Assert.deepEqual(
     PageActions._builtInActions.map(a => a.id),
-    initialActions.map(a => a.id),
+    initialActions.filter(a => !a.__transient).map(a => a.id),
     "PageActions._builtInActions should be initial actions"
   );
   Assert.deepEqual(
@@ -866,7 +866,7 @@ add_task(async function nonBuiltFirst() {
   );
   Assert.deepEqual(
     PageActions._builtInActions.map(a => a.id),
-    initialActions.map(a => a.id),
+    initialActions.filter(a => !a.__transient).map(a => a.id),
     "PageActions._builtInActions should be initial actions"
   );
   Assert.deepEqual(

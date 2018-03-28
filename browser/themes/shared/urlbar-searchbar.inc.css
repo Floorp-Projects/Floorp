@@ -163,6 +163,23 @@
   list-style-image: url("chrome://browser/skin/sync.svg");
 }
 
+#pageAction-panel-addSearchEngine > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+#pageAction-panel-addSearchEngine > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  display: -moz-box;
+  background: url(chrome://browser/skin/search-indicator-badge-add.svg) no-repeat center;
+  box-shadow: none;
+  /* "!important" is necessary to override the rule in toolbarbutton.css */
+  margin: -4px 0 0 !important;
+  margin-inline-end: -4px !important;
+  width: 11px;
+  height: 11px;
+  min-width: 11px;
+  min-height: 11px;
+}
+
 /* URL bar and page action buttons */
 
 #page-action-buttons {
