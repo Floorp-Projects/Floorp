@@ -353,6 +353,11 @@ var Policies = {
   },
 
   "SearchEngines": {
+    onBeforeUIStartup(manager, param) {
+      if (param.PreventInstalls) {
+        manager.disallowFeature("installSearchEngine", true);
+      }
+    },
     onAllWindowsRestored(manager, param) {
       Services.search.init(() => {
         if (param.Add) {
@@ -401,9 +406,6 @@ var Policies = {
               }
             }
           });
-        }
-        if (param.PreventInstalls) {
-          manager.disallowFeature("installSearchEngine");
         }
       });
     }
