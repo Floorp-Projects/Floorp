@@ -553,10 +553,11 @@ nsClipboardCommand::DoCommand(const char *aCommandName, nsISupports *aContext)
     eventMessage = ePaste;
   }
 
+  bool actionTaken = false;
   bool notCancelled =
     nsCopySupport::FireClipboardEvent(eventMessage,
                                       nsIClipboard::kGlobalClipboard,
-                                      presShell, nullptr);
+                                      presShell, nullptr, &actionTaken);
 
   if (notCancelled && !strcmp(aCommandName, "cmd_copyAndCollapseToEnd")) {
     dom::Selection *sel =
@@ -565,8 +566,10 @@ nsClipboardCommand::DoCommand(const char *aCommandName, nsISupports *aContext)
     sel->CollapseToEnd();
   }
 
-  // Avoid returning NS_ERROR_FAILURE because clipboard commands should always succeed.
-  return NS_OK;
+  if (actionTaken) {
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
