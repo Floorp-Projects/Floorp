@@ -922,7 +922,7 @@ Loader::CreateSheet(nsIURI* aURI,
     if (IsChromeURI(aURI)) {
       nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
       if (cache && cache->IsEnabled()) {
-        sheet = cache->GetStyleSheet(aURI, GetStyleBackendType());
+        sheet = cache->GetStyleSheet(aURI);
         LOG(("  From XUL cache: %p", sheet.get()));
       }
     }
@@ -1802,11 +1802,11 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, LoadDataArray& aDatasToNotify)
     if (IsChromeURI(aLoadData->mURI)) {
       nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
       if (cache && cache->IsEnabled()) {
-        if (!cache->GetStyleSheet(aLoadData->mURI, GetStyleBackendType())) {
+        if (!cache->GetStyleSheet(aLoadData->mURI)) {
           LOG(("  Putting sheet in XUL prototype cache"));
           NS_ASSERTION(sheet->IsComplete(),
                        "Should only be caching complete sheets");
-          cache->PutStyleSheet(sheet, GetStyleBackendType());
+          cache->PutStyleSheet(sheet);
         }
       }
     }
