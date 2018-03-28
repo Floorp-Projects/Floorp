@@ -4711,8 +4711,7 @@ var TabBarVisibility = {
   update() {
     let toolbar = document.getElementById("TabsToolbar");
     let collapse = false;
-    if (!gBrowser /* gBrowser isn't initialized yet */ ||
-        gBrowser.tabs.length - gBrowser._removingTabs.length == 1) {
+    if (gBrowser.tabs.length - gBrowser._removingTabs.length == 1) {
       collapse = !window.toolbar.visible;
     }
 
