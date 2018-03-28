@@ -3789,16 +3789,19 @@ LIRGenerator::visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole* ins)
     }
 
     LUse elements = useRegister(ins->elements());
-    LAllocation length = useAnyOrConstant(ins->length());
-    LAllocation index = useRegisterOrConstant(ins->index());
-    LAllocation value;
-
+    LAllocation length = useAny(ins->length());
+    LAllocation index = useRegister(ins->index());
     // For byte arrays, the value has to be in a byte register on x86.
+    LAllocation value;
     if (ins->isByteWrite())
         value = useByteOpRegisterOrNonDoubleConstant(ins->value());
     else
         value = useRegisterOrNonDoubleConstant(ins->value());
-    add(new(alloc()) LStoreTypedArrayElementHole(elements, length, index, value), ins);
+
+    LDefinition spectreTemp = JitOptions.spectreIndexMasking ? temp() : LDefinition::BogusTemp();
+    auto* lir =
+        new(alloc()) LStoreTypedArrayElementHole(elements, length, index, value, spectreTemp);
+    add(lir, ins);
 }
 
 void
