@@ -56,6 +56,9 @@ Structure:
                             // e.g.: { "yahoo.suggestion": 3, "other.listitem": 1 }
       "experiments": [<string>, /* … */], // Optional, array of identifiers
                                     // for the active experiments
+      "accessibilityServices": [<string>, /* … */], // Optional, array of identifiers for
+                                                    // enabled accessibility services that
+                                                    // interact with our android products.
       "flashUsage": <integer>, // number of times flash plugin is played since last upload
       "defaultBrowser": <boolean> // true if the user has set Firefox as default browser
 
@@ -174,6 +177,11 @@ we only record the search engine name when:
 * suggestion: the user clicks on a search suggestion or, in the case that
   suggestions are disabled, the row corresponding with the main engine
 
+accessibilityServices
+~~~~~~~~~~~~~~~~~~~~~
+This describes which accessibility services are currently enabled on user's device and could be interacting with out
+products. This is optional because users often do not have any accessibility services enabled. If present, the value is
+a list of accessibility service ids.
 
 Other parameters
 ----------------
@@ -189,7 +197,7 @@ et al (e.g. "Tue, 01 Feb 2011 14:00:00 GMT").
 Version history
 ---------------
 * v10: added ``defaultBrowser`` to know if the user has set Firefox as default browser
-* v9: changed ``arch`` to contain device arch rather than the one we built against
+* v9: changed ``arch`` to contain device arch rather than the one we built against & ``accessibilityServices``
 * v8: added ``flashUsage``
 * v7: added ``sessionCount`` & ``sessionDuration``  & ``campaignId``
 * v6: added ``searches``
