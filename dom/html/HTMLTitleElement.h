@@ -21,7 +21,6 @@ class HTMLTitleElement final : public nsGenericHTMLElement,
 {
 public:
   using Element::GetText;
-  using Element::SetText;
 
   explicit HTMLTitleElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 

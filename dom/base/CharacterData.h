@@ -130,13 +130,22 @@ public:
 
   virtual const nsTextFragment *GetText() override;
   virtual uint32_t TextLength() const override;
-  virtual nsresult SetText(const char16_t* aBuffer, uint32_t aLength,
-                           bool aNotify) override;
-  // Need to implement this here too to avoid hiding.
+
+  /**
+   * Set the text to the given value. If aNotify is true then
+   * the document is notified of the content change.
+   */
+  nsresult SetText(const char16_t* aBuffer, uint32_t aLength,
+                   bool aNotify);
+  /**
+   * Append the given value to the current text. If aNotify is true then
+   * the document is notified of the content change.
+   */
   nsresult SetText(const nsAString& aStr, bool aNotify)
   {
     return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
   }
+
   virtual nsresult AppendText(const char16_t* aBuffer, uint32_t aLength,
                               bool aNotify) override;
   virtual bool TextIsOnlyWhitespace() override;

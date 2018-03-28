@@ -376,30 +376,12 @@ public:
   }
 
   /**
-   * Set the text to the given value. If aNotify is true then
-   * the document is notified of the content change.
-   * NOTE: For elements this always ASSERTS and returns NS_ERROR_FAILURE
-   */
-  virtual nsresult SetText(const char16_t* aBuffer, uint32_t aLength,
-                           bool aNotify) = 0;
-
-  /**
    * Append the given value to the current text. If aNotify is true then
    * the document is notified of the content change.
    * NOTE: For elements this always ASSERTS and returns NS_ERROR_FAILURE
    */
   virtual nsresult AppendText(const char16_t* aBuffer, uint32_t aLength,
                               bool aNotify) = 0;
-
-  /**
-   * Set the text to the given value. If aNotify is true then
-   * the document is notified of the content change.
-   * NOTE: For elements this always asserts and returns NS_ERROR_FAILURE
-   */
-  nsresult SetText(const nsAString& aStr, bool aNotify)
-  {
-    return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
-  }
 
   /**
    * Query method to see if the frame is nothing but whitespace

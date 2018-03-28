@@ -2103,15 +2103,6 @@ FragmentOrElement::TextLength() const
 }
 
 nsresult
-FragmentOrElement::SetText(const char16_t* aBuffer, uint32_t aLength,
-                          bool aNotify)
-{
-  NS_ERROR("called FragmentOrElement::SetText");
-
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
 FragmentOrElement::AppendText(const char16_t* aBuffer, uint32_t aLength,
                              bool aNotify)
 {
