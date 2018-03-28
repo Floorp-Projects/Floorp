@@ -11820,42 +11820,20 @@ CodeGenerator::visitStoreTypedArrayElementHole(LStoreTypedArrayElementHole* lir)
     Scalar::Type arrayType = lir->mir()->arrayType();
     int width = Scalar::byteSize(arrayType);
 
-    const LAllocation* index = lir->index();
+    Register index = ToRegister(lir->index());
     const LAllocation* length = lir->length();
+    Register spectreTemp = ToTempRegisterOrInvalid(lir->spectreTemp());
 
-    bool guardLength = true;
-    if (index->isConstant() && length->isConstant()) {
-        uint32_t idx = ToInt32(index);
-        uint32_t len = ToInt32(length);
-        if (idx >= len)
-            return;
-        guardLength = false;
-    }
     Label skip;
-    if (index->isConstant()) {
-        uint32_t idx = ToInt32(index);
-        if (guardLength) {
-            if (length->isRegister())
-                masm.branch32(Assembler::BelowOrEqual, ToRegister(length), Imm32(idx), &skip);
-            else
-                masm.branch32(Assembler::BelowOrEqual, ToAddress(length), Imm32(idx), &skip);
-        }
-        Address dest(elements, idx * width);
-        StoreToTypedArray(masm, arrayType, value, dest);
-    } else {
-        Register idxReg = ToRegister(index);
-        MOZ_ASSERT(guardLength);
-        if (length->isConstant())
-            masm.branch32(Assembler::AboveOrEqual, idxReg, Imm32(ToInt32(length)), &skip);
-        else if (length->isRegister())
-            masm.branch32(Assembler::BelowOrEqual, ToRegister(length), idxReg, &skip);
-        else
-            masm.branch32(Assembler::BelowOrEqual, ToAddress(length), idxReg, &skip);
-        BaseIndex dest(elements, ToRegister(index), ScaleFromElemWidth(width));
-        StoreToTypedArray(masm, arrayType, value, dest);
-    }
-    if (guardLength)
-        masm.bind(&skip);
+    if (length->isRegister())
+        masm.spectreBoundsCheck32(index, ToRegister(length), spectreTemp, &skip);
+    else
+        masm.spectreBoundsCheck32(index, ToAddress(length), spectreTemp, &skip);
+
+    BaseIndex dest(elements, index, ScaleFromElemWidth(width));
+    StoreToTypedArray(masm, arrayType, value, dest);
+
+    masm.bind(&skip);
 }
 
 void
