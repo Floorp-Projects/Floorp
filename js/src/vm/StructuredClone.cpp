@@ -1102,21 +1102,40 @@ JSStructuredCloneWriter::parseTransferable()
             return reportDataCloneError(JS_SCERR_TRANSFERABLE);
         tObj = &v.toObject();
 
+        RootedObject unwrappedObj(cx, CheckedUnwrap(tObj));
+        if (!unwrappedObj) {
+            ReportAccessDenied(cx);
+            return false;
+        }
+
         // Shared memory cannot be transferred because it is not possible (nor
         // desirable) to detach the memory in agents that already hold a
         // reference to it.
 
-        if (tObj->is<SharedArrayBufferObject>())
+        if (unwrappedObj->is<SharedArrayBufferObject>())
             return reportDataCloneError(JS_SCERR_SHMEM_TRANSFERABLE);
 
-        if (tObj->is<WasmMemoryObject>() && tObj->as<WasmMemoryObject>().isShared())
-            return reportDataCloneError(JS_SCERR_SHMEM_TRANSFERABLE);
+        else if (unwrappedObj->is<WasmMemoryObject>()) {
+            if (unwrappedObj->as<WasmMemoryObject>().isShared())
+                return reportDataCloneError(JS_SCERR_SHMEM_TRANSFERABLE);
+        }
 
         // External array buffers may be able to be transferred in the future,
         // but that is not currently implemented.
 
-        if (tObj->is<ArrayBufferObject>() && tObj->as<ArrayBufferObject>().isExternal())
-            return reportDataCloneError(JS_SCERR_TRANSFERABLE);
+        else if (unwrappedObj->is<ArrayBufferObject>()) {
+            if (unwrappedObj->as<ArrayBufferObject>().isExternal())
+                return reportDataCloneError(JS_SCERR_TRANSFERABLE);
+        }
+
+        else  {
+            if (!callbacks || !callbacks->canTransfer)
+                return reportDataCloneError(JS_SCERR_TRANSFERABLE);
+
+            JSAutoCompartment ac(cx, unwrappedObj);
+            if (!callbacks->canTransfer(cx, unwrappedObj, closure))
+                return false;
+        }
 
         // No duplicates allowed
         auto p = transferableObjects.lookupForAdd(tObj);
@@ -1686,6 +1705,12 @@ JSStructuredCloneWriter::transferOwnership()
             // lend itself well to generic manipulation via proxies.
             Rooted<ArrayBufferObject*> arrayBuffer(cx, &CheckedUnwrap(obj)->as<ArrayBufferObject>());
             JSAutoCompartment ac(cx, arrayBuffer);
+
+            if (arrayBuffer->isDetached()) {
+                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+                return false;
+            }
+
             size_t nbytes = arrayBuffer->byteLength();
 
             if (arrayBuffer->isWasm() || arrayBuffer->isPreparedForAsmJS()) {
