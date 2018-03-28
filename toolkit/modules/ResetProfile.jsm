@@ -19,6 +19,9 @@ var ResetProfile = {
    * @return boolean whether reset is supported.
    */
   resetSupported() {
+    if (Services.policies && !Services.policies.isAllowed("profileRefresh")) {
+      return false;
+    }
     // Reset is only supported if the self-migrator used for reset exists.
     let migrator = "@mozilla.org/profile/migrator;1?app=" + MOZ_BUILD_APP +
                    "&type=" + MOZ_APP_NAME;
