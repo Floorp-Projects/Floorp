@@ -13,6 +13,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gXulStore",
 XPCOMUtils.defineLazyModuleGetters(this, {
   BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.jsm",
   ProxyPolicies: "resource:///modules/policies/ProxyPolicies.jsm",
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
 });
 
 const PREF_LOGLEVEL           = "browser.policies.loglevel";
@@ -275,6 +276,63 @@ var Policies = {
       } else {
         setAndLockPref("privacy.trackingprotection.enabled", false);
         setAndLockPref("privacy.trackingprotection.pbmode.enabled", false);
+      }
+    }
+  },
+
+  "Extensions": {
+    onBeforeUIStartup(manager, param) {
+      if ("Install" in param) {
+        runOncePerModification("extensionsInstall", JSON.stringify(param.Install), () => {
+          for (let location of param.Install) {
+            let url;
+            if (location.includes("://")) {
+              // Assume location is an URI
+              url = location;
+            } else {
+              // Assume location is a file path
+              let xpiFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+              try {
+                xpiFile.initWithPath(location);
+              } catch (e) {
+                log.error(`Invalid extension path location - ${location}`);
+                continue;
+              }
+              url = Services.io.newFileURI(xpiFile).spec;
+            }
+            AddonManager.getInstallForURL(url, (install) => {
+              let listener = {
+                onDownloadFailed: () => {
+                  log.error(`Download failed - ${location}`);
+                },
+                onInstallFailed: () => {
+                  log.error(`Installation failed - ${location}`);
+                },
+                onInstallEnded: () => {
+                  log.debug(`Installation succeeded - ${location}`);
+                }
+              };
+              install.addListener(listener);
+              install.install();
+            }, "application/x-xpinstall");
+          }
+        });
+      }
+      if ("Uninstall" in param) {
+        runOncePerModification("extensionsUninstall", JSON.stringify(param.Uninstall), () => {
+          AddonManager.getAddonsByIDs(param.Uninstall, (addons) => {
+            for (let addon of addons) {
+              if (addon) {
+                addon.uninstall();
+              }
+            }
+          });
+        });
+      }
+      if ("Locked" in param) {
+        for (let ID of param.Locked) {
+          manager.disallowFeature(`modify-extension:${ID}`);
+        }
       }
     }
   },

@@ -222,6 +222,34 @@
       "required": ["Value"]
     },
 
+    "Extensions": {
+      "description": "Install, uninstall or lock extensions. The Install option takes URLs or paths as parameters. The Uninstall and Locked options take extension IDs.",
+      "first_available": "60.0",
+      "enterprise_only": true,
+
+      "type": "object",
+      "properties": {
+        "Install" : {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Uninstall" : {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Locked" : {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+
     "FlashPlugin": {
       "description": "Allow or deny flash plugin usage.",
       "first_available": "60.0",
