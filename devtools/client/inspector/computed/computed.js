@@ -1414,16 +1414,13 @@ function ComputedViewTool(inspector, window) {
   this.onSelected = this.onSelected.bind(this);
   this.refresh = this.refresh.bind(this);
   this.onPanelSelected = this.onPanelSelected.bind(this);
-  this.onMutations = this.onMutations.bind(this);
-  this.onResized = this.onResized.bind(this);
 
   this.inspector.selection.on("detached-front", this.onDetachedFront);
   this.inspector.selection.on("new-node-front", this.onSelected);
   this.inspector.selection.on("pseudoclass", this.refresh);
   this.inspector.sidebar.on("computedview-selected", this.onPanelSelected);
   this.inspector.pageStyle.on("stylesheet-updated", this.refresh);
-  this.inspector.walker.on("mutations", this.onMutations);
-  this.inspector.walker.on("resize", this.onResized);
+  this.inspector.styleChangeTracker.on("style-changed", this.refresh);
 
   this.computedView.selectElement(null);
 
@@ -1487,31 +1484,8 @@ ComputedViewTool.prototype = {
     }
   },
 
-  /**
-   * When markup mutations occur, if an attribute of the selected node changes,
-   * we need to refresh the view as that might change the node's styles.
-   */
-  onMutations: function(mutations) {
-    for (let {type, target} of mutations) {
-      if (target === this.inspector.selection.nodeFront &&
-          type === "attributes") {
-        this.refresh();
-        break;
-      }
-    }
-  },
-
-  /**
-   * When the window gets resized, this may cause media-queries to match, and
-   * therefore, different styles may apply.
-   */
-  onResized: function() {
-    this.refresh();
-  },
-
   destroy: function() {
-    this.inspector.walker.off("mutations", this.onMutations);
-    this.inspector.walker.off("resize", this.onResized);
+    this.inspector.styleChangeTracker.off("style-changed", this.refresh);
     this.inspector.sidebar.off("computedview-selected", this.refresh);
     this.inspector.selection.off("pseudoclass", this.refresh);
     this.inspector.selection.off("new-node-front", this.onSelected);
