@@ -7,14 +7,14 @@
 // except according to those terms.
 
 // See https://users.rust-lang.org/t/psa-dealing-with-warning-unused-import-std-ascii-asciiext-in-today-s-nightly/13726
-#[allow(unused_imports)]
+#[allow(deprecated, unused_imports)]
 use std::ascii::AsciiExt;
 
 use std::str::FromStr;
 
 use self::RenameRule::*;
 
-#[derive(Debug, PartialEq)]
+#[derive(PartialEq)]
 pub enum RenameRule {
     /// Don't apply a default rename rule.
     None,
