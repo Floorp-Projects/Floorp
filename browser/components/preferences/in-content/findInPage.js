@@ -242,11 +242,12 @@ var gSearchResultsPane = {
         rootPreferencesChildren = rootPreferencesChildren.filter(el => !el.hidden);
       }
 
-      // Mark all the children to check be visible to bind JS, Access Keys, etc,
-      // but don't really show them by setting their visibility to hidden in CSS.
+      // Attach the bindings for all children if they were not already visible.
       for (let child of rootPreferencesChildren) {
-        child.classList.add("visually-hidden");
-        child.hidden = false;
+        if (child.hidden) {
+          child.classList.add("visually-hidden");
+          child.hidden = false;
+        }
       }
 
       let ts = performance.now();
@@ -279,7 +280,7 @@ var gSearchResultsPane = {
           }
 
           resultsFound = true;
-        } else {
+        } else if (!child.hidden) {
           child.hidden = true;
         }
       }
@@ -313,7 +314,9 @@ var gSearchResultsPane = {
 
       // Hide some special second level headers in normal view
       for (let element of document.querySelectorAll("caption.search-header")) {
-        element.hidden = true;
+        if (!element.hidden) {
+          element.hidden = true;
+        }
       }
     }
 
