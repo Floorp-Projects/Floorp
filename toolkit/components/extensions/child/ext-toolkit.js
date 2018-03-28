@@ -37,7 +37,7 @@ extensions.registerModules({
     ],
   },
   i18n: {
-    url: "chrome://extensions/content/ext-i18n.js",
+    url: "chrome://extensions/content/parent/ext-i18n.js",
     scopes: ["addon_child", "content_child", "devtools_child", "proxy_script"],
     paths: [
       ["i18n"],
