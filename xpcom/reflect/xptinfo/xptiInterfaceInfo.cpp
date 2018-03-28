@@ -365,45 +365,6 @@ xptiInterfaceEntry::GetShimForParam(uint16_t methodIndex,
 }
 
 nsresult
-xptiInterfaceEntry::GetInfoForParam(uint16_t methodIndex,
-                                    const nsXPTParamInfo *param,
-                                    nsIInterfaceInfo** info)
-{
-    xptiInterfaceEntry* entry;
-    nsresult rv = GetEntryForParam(methodIndex, param, &entry);
-    if (NS_FAILED(rv)) {
-        RefPtr<ShimInterfaceInfo> shim = GetShimForParam(methodIndex, param);
-        if (!shim) {
-            return rv;
-        }
-
-        shim.forget(info);
-        return NS_OK;
-    }
-
-    *info = entry->InterfaceInfo().take();
-
-    return NS_OK;
-}
-
-nsresult
-xptiInterfaceEntry::GetIIDForParam(uint16_t methodIndex,
-                                   const nsXPTParamInfo* param, nsIID** iid)
-{
-    xptiInterfaceEntry* entry;
-    nsresult rv = GetEntryForParam(methodIndex, param, &entry);
-    if (NS_FAILED(rv)) {
-        RefPtr<ShimInterfaceInfo> shim = GetShimForParam(methodIndex, param);
-        if (!shim) {
-            return rv;
-        }
-
-        return shim->GetInterfaceIID(iid);
-    }
-    return entry->GetIID(iid);
-}
-
-nsresult
 xptiInterfaceEntry::GetIIDForParamNoAlloc(uint16_t methodIndex,
                                           const nsXPTParamInfo * param,
                                           nsIID *iid)
