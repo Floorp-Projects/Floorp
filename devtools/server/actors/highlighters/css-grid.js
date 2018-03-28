@@ -1300,32 +1300,27 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     height *= displayPixelRatio;
 
     // Check if the x or y position of the line number's arrow is too close to the edge
-    // of the window.  If it is too close, flip the arrow around (by reflecting the box
-    // edge we're thinking of) and adjust the position by 2 x padding since we're now
-    // going the opposite direction.
+    // of the window.  If it is too close, adjust the position by 2 x boxWidth or
+    // boxHeight since we're now going the opposite direction.
     switch (boxEdge) {
       case "left":
         if (x < minOffsetFromEdge) {
-          boxEdge = reflectEdge(boxEdge);
-          x += 2 * padding;
+          x += 2 * boxWidth;
         }
         break;
       case "right":
         if ((width - x) < minOffsetFromEdge) {
-          boxEdge = reflectEdge(boxEdge);
-          x -= 2 * padding;
+          x -= 2 * boxWidth;
         }
         break;
       case "top":
         if (y < minOffsetFromEdge) {
-          boxEdge = reflectEdge(boxEdge);
-          y += 2 * padding;
+          y += 2 * boxHeight;
         }
         break;
       case "bottom":
         if ((height - y) < minOffsetFromEdge) {
-          boxEdge = reflectEdge(boxEdge);
-          y -= 2 * padding;
+          y -= 2 * boxHeight;
         }
         break;
     }
