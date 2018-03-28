@@ -305,9 +305,7 @@
     _(FallibleStoreElementV)        \
     _(FallibleStoreElementT)        \
     _(LoadTypedArrayElementHole)    \
-    _(LoadTypedArrayElementStatic)  \
     _(StoreTypedArrayElementHole)   \
-    _(StoreTypedArrayElementStatic) \
     _(AtomicIsLockFree)             \
     _(GuardSharedTypedArray)        \
     _(CompareExchangeTypedArrayElement) \
