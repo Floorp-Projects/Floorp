@@ -205,9 +205,15 @@ APZCTreeManagerParent::RecvStopAutoscroll(const ScrollableLayerGuid& aGuid)
 }
 
 mozilla::ipc::IPCResult
-APZCTreeManagerParent::RecvSetLongTapEnabled(const bool& aTapGestureEnabled)
+APZCTreeManagerParent::RecvSetLongTapEnabled(const bool& aLongTapEnabled)
 {
-  mTreeManager->SetLongTapEnabled(aTapGestureEnabled);
+  APZThreadUtils::RunOnControllerThread(
+      NewRunnableMethod<bool>(
+        "layers::IAPZCTreeManager::SetLongTapEnabled",
+        mTreeManager,
+        &IAPZCTreeManager::SetLongTapEnabled,
+        aLongTapEnabled));
+
   return IPC_OK();
 }
 

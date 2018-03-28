@@ -2534,9 +2534,8 @@ APZCTreeManager::BuildOverscrollHandoffChain(const RefPtr<AsyncPanZoomController
 void
 APZCTreeManager::SetLongTapEnabled(bool aLongTapEnabled)
 {
-  APZThreadUtils::RunOnControllerThread(
-    NewRunnableFunction("SetLongTapEnabledRunnable",
-                        GestureEventListener::SetLongTapEnabled, aLongTapEnabled));
+  APZThreadUtils::AssertOnControllerThread();
+  GestureEventListener::SetLongTapEnabled(aLongTapEnabled);
 }
 
 RefPtr<HitTestingTreeNode>
