@@ -965,10 +965,29 @@ var BrowserPageActionFeedback = {
     return this.feedbackLabel = document.getElementById("pageActionFeedbackMessage");
   },
 
-  show(action, event, textContentOverride) {
-    this.feedbackLabel.textContent = this.panelNode.getAttribute((textContentOverride || action.id) + "Feedback");
+  /**
+   * Shows the feedback popup for an action.
+   *
+   * @param  action (PageActions.Action, required)
+   *         The action associated with the feedback.
+   * @param  opts (object, optional)
+   *         An object with the following optional properties:
+   *         - event (DOM event): The event that triggered the feedback.
+   *         - textAttributeOverride (string): Normally the feedback text is
+   *           taken from an attribute on the feedback panel.  The attribute's
+   *           name is `${action.id}Feedback`.  Use this to override the
+   *           action.id part of the name.
+   *         - text (string): The text string.  If not given, an attribute on
+   *           panel is assumed to contain the text, as described above.
+   */
+  show(action, opts = {}) {
+    this.feedbackLabel.textContent =
+      opts.text ||
+      this.panelNode.getAttribute((opts.textAttributeOverride || action.id) +
+                                  "Feedback");
     this.panelNode.hidden = false;
 
+    let event = opts.event || null;
     let anchor = BrowserPageActions.panelAnchorNodeForAction(action, event);
     PanelMultiView.openPopup(this.panelNode, anchor, {
       position: "bottomcenter topright",
@@ -1019,7 +1038,9 @@ BrowserPageActions.copyURL = {
       .getService(Ci.nsIClipboardHelper)
       .copyString(gURLBar.makeURIReadable(gBrowser.selectedBrowser.currentURI).displaySpec);
     let action = PageActions.actionForID("copyURL");
-    BrowserPageActionFeedback.show(action, event);
+    BrowserPageActionFeedback.show(action, {
+      event,
+    });
   },
 };
 
@@ -1096,8 +1117,11 @@ BrowserPageActions.sendToDevice = {
         // in", "Learn about Sync", etc.  Device items will be .sendtab-target.
         if (event.target.classList.contains("sendtab-target")) {
           let action = PageActions.actionForID("sendToDevice");
-          let textOverride = gSync.offline && "sendToDeviceOffline";
-          BrowserPageActionFeedback.show(action, event, textOverride);
+          let textAttributeOverride = gSync.offline && "sendToDeviceOffline";
+          BrowserPageActionFeedback.show(action, {
+            event,
+            textAttributeOverride,
+          });
         }
       });
       return item;
@@ -1118,5 +1142,120 @@ BrowserPageActions.sendToDevice = {
         }
       });
     }
+  },
+};
+
+// add search engine
+BrowserPageActions.addSearchEngine = {
+  get action() {
+    return PageActions.actionForID("addSearchEngine");
+  },
+
+  get engines() {
+    return gBrowser.selectedBrowser.engines || [];
+  },
+
+  get strings() {
+    delete this.strings;
+    let uri = "chrome://browser/locale/search.properties";
+    return this.strings = Services.strings.createBundle(uri);
+  },
+
+  updateEngines() {
+    // As a slight optimization, if the action isn't in the urlbar, don't do
+    // anything here except disable it.  The action's panel nodes are updated
+    // when the panel is shown.
+    this.action.setDisabled(!this.engines.length, window);
+    if (this.action.shouldShowInUrlbar(window)) {
+      this._updateTitleAndIcon();
+    }
+  },
+
+  _updateTitleAndIcon() {
+    if (!this.engines.length) {
+      return;
+    }
+    let title =
+      this.engines.length == 1 ?
+      this.strings.formatStringFromName("searchAddFoundEngine",
+                                        [this.engines[0].title], 1) :
+      this.strings.GetStringFromName("searchAddFoundEngineMenu");
+    this.action.setTitle(title, window);
+    this.action.setIconURL(this.engines[0].icon, window);
+  },
+
+  onShowingInPanel() {
+    this._updateTitleAndIcon();
+    this.action.setWantsSubview(this.engines.length > 1, window);
+    let button = BrowserPageActions.panelButtonNodeForActionID(this.action.id);
+    button.classList.add("badged-button");
+    button.setAttribute("image", this.engines[0].icon);
+    button.setAttribute("uri", this.engines[0].uri);
+    button.setAttribute("crop", "center");
+  },
+
+  onSubviewShowing(panelViewNode) {
+    let body = panelViewNode.querySelector(".panel-subview-body");
+    while (body.firstChild) {
+      body.firstChild.remove();
+    }
+    for (let engine of this.engines) {
+      let button = document.createElement("toolbarbutton");
+      button.classList.add("subviewbutton", "subviewbutton-iconic");
+      button.setAttribute("label", engine.title);
+      button.setAttribute("image", engine.icon);
+      button.setAttribute("uri", engine.uri);
+      button.addEventListener("command", event => {
+        PanelMultiView.hidePopup(BrowserPageActions.panelNode);
+        this._handleClickOnEngineButton(button);
+      });
+      body.appendChild(button);
+    }
+  },
+
+  onCommand(event, buttonNode) {
+    if (!buttonNode.closest("panel")) {
+      // The urlbar button was clicked.  It should have a subview if there are
+      // many engines.
+      let manyEngines = this.engines.length > 1;
+      this.action.setWantsSubview(manyEngines, window);
+      if (manyEngines) {
+        return;
+      }
+    }
+    this._handleClickOnEngineButton(buttonNode);
+  },
+
+  _handleClickOnEngineButton(button) {
+    this._installEngine(button.getAttribute("uri"),
+                        button.getAttribute("image"));
+  },
+
+  _installEngine(uri, image) {
+    Services.search.addEngine(uri, null, image, false, {
+      onSuccess: engine => {
+        BrowserPageActionFeedback.show(this.action, {
+          text: this.strings.GetStringFromName("searchAddedFoundEngine"),
+        });
+      },
+      onError(errorCode) {
+        if (errorCode != Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE) {
+          // Download error is shown by the search service
+          return;
+        }
+        const kSearchBundleURI = "chrome://global/locale/search/search.properties";
+        let searchBundle = Services.strings.createBundle(kSearchBundleURI);
+        let brandBundle = document.getElementById("bundle_brand");
+        let brandName = brandBundle.getString("brandShortName");
+        let title = searchBundle.GetStringFromName("error_invalid_engine_title");
+        let text = searchBundle.formatStringFromName("error_duplicate_engine_msg",
+                                                     [brandName, uri], 2);
+        Services.prompt.QueryInterface(Ci.nsIPromptFactory);
+        let prompt = Services.prompt.getPrompt(gBrowser.contentWindow, Ci.nsIPrompt);
+        prompt.QueryInterface(Ci.nsIWritablePropertyBag2);
+        prompt.setPropertyAsBool("allowTabModal", true);
+        prompt.alert(title, text);
+      },
+    });
   },
 };
