@@ -10,7 +10,6 @@
 #define _ComputedStyle_h_
 
 #include "nsIMemoryReporter.h"
-#include "nsWindowSizes.h"
 #include <algorithm>
 #include "mozilla/Assertions.h"
 #include "mozilla/RestyleLogging.h"
@@ -22,6 +21,7 @@
 
 class nsAtom;
 class nsPresContext;
+class nsWindowSizes;
 
 namespace mozilla {
 
@@ -33,8 +33,6 @@ extern "C" {
   void Servo_ComputedStyle_Release(const mozilla::ComputedStyle* aStyle);
   void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle*);
 }
-
-MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoComputedValuesMallocEnclosingSizeOf)
 
 /**
  * A ComputedStyle represents the computed style data for an element.  The
@@ -354,16 +352,7 @@ public:
   // The |aCVsSize| outparam on this function is where the actual CVs size
   // value is added. It's done that way because the callers know which value
   // the size should be added to.
-  void AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aCVsSize) const
-  {
-    // Note: |this| sits within a servo_arc::Arc, i.e. it is preceded by a
-    // refcount. So we need to measure it with a function that can handle an
-    // interior pointer. We use ServoComputedValuesMallocEnclosingSizeOf to
-    // clearly identify in DMD's output the memory measured here.
-    *aCVsSize += ServoComputedValuesMallocEnclosingSizeOf(this);
-    mSource.AddSizeOfExcludingThis(aSizes);
-    mCachedInheritingStyles.AddSizeOfIncludingThis(aSizes, aCVsSize);
-  }
+  void AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aCVsSize) const;
 
 protected:
   // Needs to be friend so that it can call the destructor without making it

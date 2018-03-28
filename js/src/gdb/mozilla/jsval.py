@@ -1,4 +1,4 @@
-# Pretty-printers for SpiderMonkey jsvals.
+# Pretty-printers for SpiderMonkey's JS::Value.
 
 import gdb
 import gdb.types
@@ -8,7 +8,7 @@ from mozilla.prettyprinters import pretty_printer, ptr_pretty_printer
 # Forget any printers from previous loads of this module.
 mozilla.prettyprinters.clear_module_printers(__name__)
 
-# Summary of the JS::Value (also known as jsval) type:
+# Summary of the JS::Value type:
 #
 # Viewed abstractly, JS::Value is a 64-bit discriminated union, with
 # JSString *, JSObject *, IEEE 64-bit floating-point, and 32-bit integer
@@ -69,39 +69,14 @@ mozilla.prettyprinters.clear_module_printers(__name__)
 # effectively 47 bits long, and thus fit nicely in the available portion of
 # the fraction field.
 #
-#
-# In detail:
-#
-# - jsval (Value.h) is a typedef for JS::Value.
-#
-# - JS::Value (Value.h) is a class with a lot of methods and a single data
-#   member, of type jsval_layout.
-#
-# - jsval_layout (Value.h) is a helper type for picking apart values. This
-#   is always 64 bits long, with a variant for each address size (32 bits
-#   or 64 bits) and endianness (little- or big-endian).
-#
-#   jsval_layout is a union with 'asBits', 'asDouble', and 'asPtr'
-#   branches, and an 's' branch, which is a struct that tries to break out
-#   the bitfields a little for the non-double types. On 64-bit machines,
-#   jsval_layout also has an 'asUIntPtr' branch.
-#
-#   On 32-bit platforms, the 's' structure has a 'tag' member at the
-#   exponent end of the 's' struct, and a 'payload' union at the mantissa
-#   end. The 'payload' union's branches are things like JSString *,
-#   JSObject *, and so on: the natural representations of the tags.
-#
-#   On 64-bit platforms, the payload is 47 bits long; since C++ doesn't let
-#   us declare bitfields that hold unions, we can't break it down so
-#   neatly. In this case, we apply bit-shifting tricks to the 'asBits'
-#   branch of the union to extract the tag.
+# See Value.h for full details.
 
 class Box(object):
     def __init__(self, asBits, jtc):
         self.asBits = asBits
         self.jtc = jtc
-        # jsval_layout::asBits is uint64, but somebody botches the sign bit, even
-        # though Python integers are arbitrary precision.
+        # Value::layout::asBits is uint64_t, but somehow the sign bit can be
+        # botched here, even though Python integers are arbitrary precision.
         if self.asBits < 0:
             self.asBits = self.asBits + (1 << 64)
 
@@ -113,9 +88,9 @@ class Box(object):
     def as_double(self): raise NotImplementedError
     def as_address(self): raise NotImplementedError
 
-# Packed non-number boxing --- the format used on x86_64. It would be nice to simply
-# call JSVAL_TO_INT, etc. here, but the debugger is likely to see many jsvals, and
-# doing several inferior calls for each one seems like a bad idea.
+# Packed non-number boxing --- the format used on x86_64. It would be nice to
+# simply call Value::toInt32, etc. here, but the debugger is likely to see many
+# Values, and doing several inferior calls for each one seems like a bad idea.
 class Punbox(Box):
 
     FULL_WIDTH     = 64
@@ -150,20 +125,29 @@ class Nunbox(Box):
     def as_uint32(self): return int(self.asBits & Nunbox.PAYLOAD_MASK)
     def as_address(self): return gdb.Value(self.asBits & Nunbox.PAYLOAD_MASK)
 
-# Cache information about the jsval type for this objfile.
-class jsvalTypeCache(object):
+# Cache information about the Value type for this objfile.
+class JSValueTypeCache(object):
     def __init__(self, cache):
         # Capture the tag values.
         d = gdb.types.make_enum_dict(gdb.lookup_type('JSValueType'))
-        self.DOUBLE    = d['JSVAL_TYPE_DOUBLE']
-        self.INT32     = d['JSVAL_TYPE_INT32']
-        self.UNDEFINED = d['JSVAL_TYPE_UNDEFINED']
-        self.BOOLEAN   = d['JSVAL_TYPE_BOOLEAN']
-        self.MAGIC     = d['JSVAL_TYPE_MAGIC']
-        self.STRING    = d['JSVAL_TYPE_STRING']
-        self.SYMBOL    = d['JSVAL_TYPE_SYMBOL']
-        self.NULL      = d['JSVAL_TYPE_NULL']
-        self.OBJECT    = d['JSVAL_TYPE_OBJECT']
+
+        # The enum keys are prefixed when building with some compilers (clang at
+        # a minimum), so use a helper function to handle either key format.
+        def get(key):
+            val = d.get(key)
+            if val is not None:
+                return val
+            return d['JSValueType::' + key]
+
+        self.DOUBLE = get('JSVAL_TYPE_DOUBLE')
+        self.INT32 = get('JSVAL_TYPE_INT32')
+        self.UNDEFINED = get('JSVAL_TYPE_UNDEFINED')
+        self.BOOLEAN = get('JSVAL_TYPE_BOOLEAN')
+        self.MAGIC = get('JSVAL_TYPE_MAGIC')
+        self.STRING = get('JSVAL_TYPE_STRING')
+        self.SYMBOL = get('JSVAL_TYPE_SYMBOL')
+        self.NULL = get('JSVAL_TYPE_NULL')
+        self.OBJECT = get('JSVAL_TYPE_OBJECT')
 
         # Let self.magic_names be an array whose i'th element is the name of
         # the i'th magic value.
@@ -174,49 +158,50 @@ class jsvalTypeCache(object):
         # Choose an unboxing scheme for this architecture.
         self.boxer = Punbox if cache.void_ptr_t.sizeof == 8 else Nunbox
 
-@pretty_printer('jsval_layout')
-class jsval_layout(object):
+@pretty_printer('JS::Value')
+class JSValue(object):
     def __init__(self, value, cache):
         # Save the generic typecache, and create our own, if we haven't already.
         self.cache = cache
-        if not cache.mod_jsval:
-            cache.mod_jsval = jsvalTypeCache(cache)
-        self.jtc = cache.mod_jsval
+        if not cache.mod_JS_Value:
+            cache.mod_JS_Value = JSValueTypeCache(cache)
+        self.jtc = cache.mod_JS_Value
 
-        self.value = value
-        self.box = self.jtc.boxer(value['asBits'], self.jtc)
+        data = value['data']
+        self.data = data
+        self.box = self.jtc.boxer(data['asBits'], self.jtc)
 
     def to_string(self):
         tag = self.box.tag()
+
+        if tag == self.jtc.UNDEFINED:
+            return '$JS::UndefinedValue()'
+        if tag == self.jtc.NULL:
+            return '$JS::NullValue()'
+        if tag == self.jtc.BOOLEAN:
+            return '$JS::BooleanValue(%s)' % str(self.box.as_uint32() != 0).lower()
+        if tag == self.jtc.MAGIC:
+            value = self.box.as_uint32()
+            if 0 <= value and value < len(self.jtc.magic_names):
+                return '$JS::MagicValue(%s)' % (self.jtc.magic_names[value],)
+            else:
+                return '$JS::MagicValue(%d)' % (value,)
+
         if tag == self.jtc.INT32:
             value = self.box.as_uint32()
             signbit = 1 << 31
             value = (value ^ signbit) - signbit
-        elif tag == self.jtc.UNDEFINED:
-            return 'JSVAL_VOID'
-        elif tag == self.jtc.BOOLEAN:
-            return 'JSVAL_TRUE' if self.box.as_uint32() else 'JSVAL_FALSE'
-        elif tag == self.jtc.MAGIC:
-            value = self.box.as_uint32()
-            if 0 <= value and value < len(self.jtc.magic_names):
-                return '$jsmagic(%s)' % (self.jtc.magic_names[value],)
-            else:
-                return '$jsmagic(%d)' % (value,)
-        elif tag == self.jtc.STRING:
+            return '$JS::Int32Value(%s)' % value
+
+        if tag == self.jtc.DOUBLE:
+            return '$JS::DoubleValue(%s)' % self.data['asDouble']
+
+        if tag == self.jtc.STRING:
             value = self.box.as_address().cast(self.cache.JSString_ptr_t)
-        elif tag == self.jtc.SYMBOL:
-            value = self.box.as_address().cast(self.cache.JSSymbol_ptr_t)
-        elif tag == self.jtc.NULL:
-            return 'JSVAL_NULL'
         elif tag == self.jtc.OBJECT:
             value = self.box.as_address().cast(self.cache.JSObject_ptr_t)
-        elif tag == self.jtc.DOUBLE:
-            value = self.value['asDouble']
+        elif tag == self.jtc.SYMBOL:
+            value = self.box.as_address().cast(self.cache.JSSymbol_ptr_t)
         else:
-            return '$jsval(unrecognized!)'
-        return '$jsval(%s)' % (value,)
-
-@pretty_printer('JS::Value')
-class JSValue(object):
-    def __new__(cls, value, cache):
-        return jsval_layout(value['data'], cache)
+            value = 'unrecognized!'
+        return '$JS::Value(%s)' % (value,)

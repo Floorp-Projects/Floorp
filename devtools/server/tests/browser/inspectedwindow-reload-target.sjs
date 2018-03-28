@@ -48,6 +48,14 @@ function handleInjectedScriptTestRequest(request, response, params) {
     // Output an iframe in seamless mode, so that there is an higher chance that in case
     // of test failures we get a screenshot where the nested iframes are all visible.
     content = `<iframe seamless src="?test=injected-script&frames=${frames - 1}"></iframe>`;
+  } else {
+    // Output an about:srcdoc frame to be sure that inspectedWindow.eval is able to
+    // evaluate js code into it.
+    let srcdoc = `
+      <pre>injected script NOT executed</pre>
+      <script>window.pageScriptExecutedFirst = true</script>
+    `;
+    content = `<iframe style="height: 30px;" srcdoc="${srcdoc}"></iframe>`;
   }
 
   if (params.get("stop") == "windowStop") {

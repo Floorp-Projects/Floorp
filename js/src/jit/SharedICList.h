@@ -20,10 +20,6 @@ namespace jit {
     _(BinaryArith_BooleanWithInt32)              \
     _(BinaryArith_DoubleWithInt32)               \
                                                  \
-    _(UnaryArith_Fallback)                       \
-    _(UnaryArith_Int32)                          \
-    _(UnaryArith_Double)                         \
-                                                 \
     _(Compare_Fallback)                          \
     _(Compare_Int32)                             \
     _(Compare_Double)                            \
