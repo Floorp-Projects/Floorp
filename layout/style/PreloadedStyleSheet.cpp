@@ -45,26 +45,23 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PreloadedStyleSheet)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PreloadedStyleSheet)
 
-NS_IMPL_CYCLE_COLLECTION(PreloadedStyleSheet, mGecko, mServo)
+NS_IMPL_CYCLE_COLLECTION(PreloadedStyleSheet, mSheet)
 
 nsresult
-PreloadedStyleSheet::GetSheet(StyleBackendType aType, StyleSheet** aResult)
+PreloadedStyleSheet::GetSheet(StyleSheet** aResult)
 {
   *aResult = nullptr;
 
   MOZ_DIAGNOSTIC_ASSERT(mLoaded);
 
-  RefPtr<StyleSheet>& sheet =
-    aType == StyleBackendType::Gecko ? mGecko : mServo;
-
-  if (!sheet) {
+  if (!mSheet) {
     RefPtr<css::Loader> loader = new css::Loader;
-    nsresult rv = loader->LoadSheetSync(mURI, mParsingMode, true, &sheet);
+    nsresult rv = loader->LoadSheetSync(mURI, mParsingMode, true, &mSheet);
     NS_ENSURE_SUCCESS(rv, rv);
-    MOZ_ASSERT(sheet);
+    MOZ_ASSERT(mSheet);
   }
 
-  *aResult = sheet;
+  *aResult = mSheet;
   return NS_OK;
 }
 
@@ -88,7 +85,7 @@ PreloadedStyleSheet::Preload()
   mLoaded = true;
 
   StyleSheet* sheet;
-  return GetSheet(StyleBackendType::Servo, &sheet);
+  return GetSheet(&sheet);
 }
 
 NS_IMPL_ISUPPORTS(PreloadedStyleSheet::StylesheetPreloadObserver,
@@ -117,14 +114,12 @@ PreloadedStyleSheet::PreloadAsync(NotNull<dom::Promise*> aPromise)
 {
   MOZ_DIAGNOSTIC_ASSERT(!mLoaded);
 
-  RefPtr<StyleSheet>& sheet = mServo;
-
   RefPtr<css::Loader> loader = new css::Loader;
 
   RefPtr<StylesheetPreloadObserver> obs =
     new StylesheetPreloadObserver(aPromise, this);
 
-  return loader->LoadSheet(mURI, mParsingMode, false, obs, &sheet);
+  return loader->LoadSheet(mURI, mParsingMode, false, obs, &mSheet);
 }
 
 } // namespace mozilla
