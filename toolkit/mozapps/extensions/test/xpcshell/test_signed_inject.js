@@ -33,8 +33,8 @@ function breakAddon(file) {
     f.append("install.rdf");
     f.lastModifiedTime = Date.now();
   } else {
-    var zipW = Cc["@mozilla.org/zipwriter;1"].
-               createInstance(Ci.nsIZipWriter);
+    var zipW = AM_Cc["@mozilla.org/zipwriter;1"].
+               createInstance(AM_Ci.nsIZipWriter);
     zipW.open(file, FileUtils.MODE_RDWR | FileUtils.MODE_APPEND);
     zipW.removeEntry("test.txt", false);
     zipW.close();

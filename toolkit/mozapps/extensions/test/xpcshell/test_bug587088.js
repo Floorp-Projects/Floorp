@@ -10,7 +10,7 @@ profileDir.append("extensions");
 
 function run_test() {
   // This is only an issue on windows.
-  if (!("nsIWindowsRegKey" in Ci))
+  if (!("nsIWindowsRegKey" in AM_Ci))
     return;
 
   do_test_pending();
@@ -84,9 +84,9 @@ function run_test_1() {
       if (uri.schemeIs("jar"))
         uri = a1.getResourceURI();
 
-      let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                    createInstance(Ci.nsIFileInputStream);
-      fstream.init(uri.QueryInterface(Ci.nsIFileURL).file, -1, 0, 0);
+      let fstream = AM_Cc["@mozilla.org/network/file-input-stream;1"].
+                    createInstance(AM_Ci.nsIFileInputStream);
+      fstream.init(uri.QueryInterface(AM_Ci.nsIFileURL).file, -1, 0, 0);
 
       installAllFiles([do_get_addon("test_bug587088_2")], function() {
 
@@ -134,9 +134,9 @@ function run_test_2() {
       if (uri.schemeIs("jar"))
         uri = a1.getResourceURI();
 
-      let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                    createInstance(Ci.nsIFileInputStream);
-      fstream.init(uri.QueryInterface(Ci.nsIFileURL).file, -1, 0, 0);
+      let fstream = AM_Cc["@mozilla.org/network/file-input-stream;1"].
+                    createInstance(AM_Ci.nsIFileInputStream);
+      fstream.init(uri.QueryInterface(AM_Ci.nsIFileURL).file, -1, 0, 0);
 
       a1.uninstall();
 

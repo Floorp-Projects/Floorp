@@ -16,7 +16,7 @@ var CacheFlushObserver = {
       return;
 
     ok(gExpectedFile != null);
-    ok(aSubject instanceof Ci.nsIFile);
+    ok(aSubject instanceof AM_Ci.nsIFile);
     equal(aSubject.path, gExpectedFile.path);
     gCacheFlushCount++;
   }

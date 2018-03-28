@@ -4,7 +4,7 @@
 "use strict";
 
 /* globals Preferences */
-ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+AM_Cu.import("resource://gre/modules/Preferences.jsm");
 
 function getXS() {
   let XPI = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});

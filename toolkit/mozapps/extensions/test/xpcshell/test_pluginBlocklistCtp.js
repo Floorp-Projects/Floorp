@@ -3,13 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const nsIBLS = Ci.nsIBlocklistService;
+ChromeUtils.import("resource://testing-common/httpd.js");
 
 var gNotifier = null;
 var gNextTest = null;
 var gPluginHost = null;
 
-var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
-gTestserver.registerDirectory("/data/", do_get_file("data"));
+var gServer = new HttpServer();
+gServer.start(-1);
+gPort = gServer.identity.primaryPort;
+mapFile("/data/test_pluginBlocklistCtp.xml", gServer);
+mapFile("/data/test_pluginBlocklistCtpUndo.xml", gServer);
 
 var PLUGINS = [{
   // severity=0, vulnerabilitystatus=0 -> outdated
@@ -91,7 +95,7 @@ function test_is_not_clicktoplay() {
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://example.com/data/test_pluginBlocklistCtpUndo.xml");
+  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/test_pluginBlocklistCtpUndo.xml");
   gNextTest = test_is_clicktoplay;
   gNotifier.notify(null);
 }
@@ -103,7 +107,7 @@ function test_is_clicktoplay() {
   var blocklistState = Services.blocklist.getPluginBlocklistState(plugin, "1", "1.9");
   Assert.equal(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://example.com/data/test_pluginBlocklistCtp.xml");
+  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/test_pluginBlocklistCtp.xml");
   gNextTest = test_is_not_clicktoplay2;
   gNotifier.notify(null);
 }
@@ -116,7 +120,7 @@ function test_is_not_clicktoplay2() {
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_UPDATE_AVAILABLE);
   Assert.notEqual(blocklistState, Ci.nsIBlocklistService.STATE_VULNERABLE_NO_UPDATE);
 
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://example.com/data/test_pluginBlocklistCtpUndo.xml");
+  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/test_pluginBlocklistCtpUndo.xml");
   gNextTest = test_disable_blocklist;
   gNotifier.notify(null);
 }
@@ -143,7 +147,7 @@ function test_disable_blocklist() {
   // clean up plugin state
   plugin.enabledState = previousEnabledState;
 
-  do_test_finished();
+  gServer.stop(do_test_finished);
 }
 
 // Observe "blocklist-updated" so we know when to advance to the next test
@@ -155,7 +159,7 @@ function observer() {
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://example.com/data/test_pluginBlocklistCtp.xml");
+  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/test_pluginBlocklistCtp.xml");
   Services.prefs.setBoolPref("plugin.load_flash_only", false);
   startupManager();
 

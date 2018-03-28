@@ -251,7 +251,7 @@ add_task(async function test_after_corruption() {
   // serves this purpose). On startup the add-ons manager won't rebuild
   // because there is a file there still.
   gExtensionsJSON.remove(true);
-  gExtensionsJSON.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+  gExtensionsJSON.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
   await promiseStartupManager(false);
 

@@ -29,7 +29,7 @@ add_task(async function() {
 
   BootstrapMonitor.checkAddonNotStarted(ID);
 
-  let jData = await loadJSON(gExtensionsJSON.path);
+  let jData = loadJSON(gExtensionsJSON);
 
   for (let addonInstance of jData.addons) {
     if (addonInstance.id == ID) {
@@ -38,7 +38,7 @@ add_task(async function() {
     }
   }
 
-  await saveJSON(jData, gExtensionsJSON.path);
+  saveJSON(jData, gExtensionsJSON);
 
   startupManager();
 
