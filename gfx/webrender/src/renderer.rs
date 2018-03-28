@@ -112,10 +112,6 @@ const GPU_TAG_BRUSH_SOLID: GpuProfileTag = GpuProfileTag {
     label: "B_Solid",
     color: debug_colors::RED,
 };
-const GPU_TAG_BRUSH_LINE: GpuProfileTag = GpuProfileTag {
-    label: "Line",
-    color: debug_colors::DARKRED,
-};
 const GPU_TAG_CACHE_CLIP: GpuProfileTag = GpuProfileTag {
     label: "C_Clip",
     color: debug_colors::PURPLE,
@@ -209,7 +205,6 @@ impl BatchKind {
             BatchKind::Brush(kind) => {
                 match kind {
                     BrushBatchKind::Solid => "Brush (Solid)",
-                    BrushBatchKind::Line => "Brush (Line)",
                     BrushBatchKind::Image(..) => "Brush (Image)",
                     BrushBatchKind::Blend => "Brush (Blend)",
                     BrushBatchKind::MixBlend { .. } => "Brush (Composite)",
@@ -229,7 +224,6 @@ impl BatchKind {
             BatchKind::Brush(kind) => {
                 match kind {
                     BrushBatchKind::Solid => GPU_TAG_BRUSH_SOLID,
-                    BrushBatchKind::Line => GPU_TAG_BRUSH_LINE,
                     BrushBatchKind::Image(..) => GPU_TAG_BRUSH_IMAGE,
                     BrushBatchKind::Blend => GPU_TAG_BRUSH_BLEND,
                     BrushBatchKind::MixBlend { .. } => GPU_TAG_BRUSH_MIXBLEND,
@@ -1763,6 +1757,11 @@ impl Renderer {
             target.clip_batcher.box_shadows.len(),
         );
         debug_target.add(
+            debug_server::BatchKind::Clip,
+            "LineDecorations",
+            target.clip_batcher.line_decorations.len(),
+        );
+        debug_target.add(
             debug_server::BatchKind::Cache,
             "Vertical Blur",
             target.vertical_blurs.len(),
@@ -3081,6 +3080,22 @@ impl Renderer {
                     items,
                     VertexArrayKind::Clip,
                     &textures,
+                    stats,
+                );
+            }
+
+            // draw line decoration clips
+            if !target.clip_batcher.line_decorations.is_empty() {
+                let _gm2 = self.gpu_profile.start_marker("clip lines");
+                self.shaders.cs_clip_line.bind(
+                    &mut self.device,
+                    projection,
+                    &mut self.renderer_errors,
+                );
+                self.draw_instanced_batch(
+                    &target.clip_batcher.line_decorations,
+                    VertexArrayKind::Clip,
+                    &BatchTextures::no_texture(),
                     stats,
                 );
             }
