@@ -17,6 +17,7 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
 const ReflowTracker = require("devtools/client/inspector/shared/reflow-tracker");
 const Store = require("devtools/client/inspector/store");
+const InspectorStyleChangeTracker = require("devtools/client/inspector/shared/style-change-tracker");
 
 // Use privileged promise in panel documents to prevent having them to freeze
 // during toolbox destruction. See bug 1402779.
@@ -104,6 +105,7 @@ function Inspector(toolbox) {
   this.highlighters = new HighlightersOverlay(this);
   this.prefsObserver = new PrefObserver("devtools.");
   this.reflowTracker = new ReflowTracker(this._target);
+  this.styleChangeTracker = new InspectorStyleChangeTracker(this);
   this.store = Store();
   this.telemetry = new Telemetry();
 
@@ -1314,6 +1316,7 @@ Inspector.prototype = {
     this.highlighters.destroy();
     this.prefsObserver.destroy();
     this.reflowTracker.destroy();
+    this.styleChangeTracker.destroy();
     this.search.destroy();
 
     this._toolbox = null;
