@@ -1,20 +1,35 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.kotlin_version = '1.2.30'
-    ext.compileSdkVersion = 27
-    ext.targetSdkVersion = 27
-    ext.minSdkVersion = 21
+    // Synchronized version numbers for dependencies used by (some) modules
+    ext.dependencies = [
+        kotlin: '1.2.30',
+        supportLibraries: '27.1.0',
+        junit: '4.12',
+        robolectric: '3.7.1',
+        mockito: '2.12.0'
+    ]
 
-    ext.version = "0.2.2"
+    // Synchronized build configuration for all modules
+    ext.build = [
+        compileSdkVersion: 27,
+        targetSdkVersion: 27,
+        minSdkVersion: 21
+    ]
+
+    // Synchronized library configuration for all modules
+    ext.library = [
+        version: '0.3'
+    ]
 
     repositories {
         google()
         jcenter()
     }
+
     dependencies {
         classpath 'com.android.tools.build:gradle:3.0.1'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${project.ext.dependencies['kotlin']}"
 
         // Publish.
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
