@@ -31,6 +31,13 @@ public:
   static already_AddRefed<Text>
   Constructor(const GlobalObject& aGlobal,
               const nsAString& aData, ErrorResult& aRv);
+
+  /**
+   * Method to see if the text node contains data that is useful
+   * for a translation: i.e., it consists of more than just whitespace,
+   * digits and punctuation.
+   */
+  bool HasTextForTranslation();
 };
 
 } // namespace dom

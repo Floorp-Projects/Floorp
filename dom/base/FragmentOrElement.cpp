@@ -2114,12 +2114,6 @@ FragmentOrElement::ThreadSafeTextIsOnlyWhitespace() const
   return false;
 }
 
-bool
-FragmentOrElement::HasTextForTranslation()
-{
-  return false;
-}
-
 uint32_t
 FragmentOrElement::GetChildCount() const
 {
