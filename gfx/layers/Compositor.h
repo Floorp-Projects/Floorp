@@ -303,6 +303,14 @@ public:
   virtual CompositingRenderTarget* GetCurrentRenderTarget() const = 0;
 
   /**
+   * Returns a render target which contains the entire window's drawing.
+   * On platforms where no such render target is used during compositing (e.g.
+   * with buffered BasicCompositor, where only the invalid area is drawn to a
+   * render target), this will return null.
+   */
+  virtual CompositingRenderTarget* GetWindowRenderTarget() const { return nullptr; }
+
+  /**
    * Mostly the compositor will pull the size from a widget and this method will
    * be ignored, but compositor implementations are free to use it if they like.
    */
