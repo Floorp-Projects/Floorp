@@ -156,10 +156,17 @@ public:
   virtual bool TextIsOnlyWhitespace() override;
   bool ThreadSafeTextIsOnlyWhitespace() const final;
   virtual bool HasTextForTranslation() override;
-  virtual void AppendTextTo(nsAString& aResult) override;
+
+  /**
+   * Append the text content to aResult.
+   */
+  void AppendTextTo(nsAString& aResult);
+  /**
+   * Append the text content to aResult.
+   */
   MOZ_MUST_USE
-  virtual bool AppendTextTo(nsAString& aResult,
-                            const fallible_t&) override;
+  bool AppendTextTo(nsAString& aResult, const fallible_t&);
+
   virtual void SaveSubtreeState() override;
 
 #ifdef DEBUG
