@@ -175,11 +175,6 @@ private:
 private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
   nsTArray<wr::ImageKey> mImageKeysToDelete;
-  // TODO - This is needed because we have some code that creates image keys
-  // and enqueues them for deletion right away which is bad not only because
-  // of poor texture cache usage, but also because images end up deleted before
-  // they are used. This should hopfully be temporary.
-  nsTArray<wr::ImageKey> mImageKeysToDeleteLater;
 
   // Set of compositor animation ids for which there are active animations (as
   // of the last transaction) on the compositor side.
