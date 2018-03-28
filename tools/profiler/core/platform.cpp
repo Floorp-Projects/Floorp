@@ -2089,7 +2089,10 @@ SamplerThread::Run()
             }
           }
 
-          profiledThreadData->GetThreadResponsiveness()->Update();
+          ThreadResponsiveness* resp = profiledThreadData->GetThreadResponsiveness();
+          if (resp) {
+            resp->Update();
+          }
 
           TimeStamp now = TimeStamp::Now();
           SuspendAndSampleAndResumeThread(lock, *registeredThread,
@@ -2269,7 +2272,8 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* aStackTop)
     nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
     ProfiledThreadData* profiledThreadData =
       ActivePS::AddLiveProfiledThread(aLock, registeredThread.get(),
-        MakeUnique<ProfiledThreadData>(info, eventTarget));
+        MakeUnique<ProfiledThreadData>(info, eventTarget,
+                                       ActivePS::FeatureResponsiveness(aLock)));
 
     if (ActivePS::FeatureJS(aLock)) {
       // This StartJSSampling() call is on-thread, so we can poll manually to
@@ -2871,7 +2875,8 @@ locked_profiler_start(PSLockRef aLock, uint32_t aEntries, double aInterval,
       nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
       ProfiledThreadData* profiledThreadData =
         ActivePS::AddLiveProfiledThread(aLock, registeredThread.get(),
-          MakeUnique<ProfiledThreadData>(info, eventTarget));
+          MakeUnique<ProfiledThreadData>(info, eventTarget,
+                                         ActivePS::FeatureResponsiveness(aLock)));
       if (ActivePS::FeatureJS(aLock)) {
         registeredThread->StartJSSampling(
           ActivePS::FeatureTrackOptimizations(aLock));
