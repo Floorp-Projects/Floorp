@@ -10586,73 +10586,6 @@ class MLoadTypedArrayElementHole
     ALLOW_CLONE(MLoadTypedArrayElementHole)
 };
 
-// Load a value fallibly or infallibly from a statically known typed array.
-class MLoadTypedArrayElementStatic
-  : public MUnaryInstruction,
-    public ConvertToInt32Policy<0>::Data
-{
-    MLoadTypedArrayElementStatic(JSObject* someTypedArray, MDefinition* ptr,
-                                 int32_t offset = 0, bool needsBoundsCheck = true)
-      : MUnaryInstruction(classOpcode, ptr), someTypedArray_(someTypedArray), offset_(offset),
-        needsBoundsCheck_(needsBoundsCheck), fallible_(true)
-    {
-        int type = accessType();
-        if (type == Scalar::Float32)
-            setResultType(MIRType::Float32);
-        else if (type == Scalar::Float64)
-            setResultType(MIRType::Double);
-        else
-            setResultType(MIRType::Int32);
-    }
-
-    CompilerObject someTypedArray_;
-
-    // An offset to be encoded in the load instruction - taking advantage of the
-    // addressing modes. This is only non-zero when the access is proven to be
-    // within bounds.
-    int32_t offset_;
-    bool needsBoundsCheck_;
-    bool fallible_;
-
-  public:
-    INSTRUCTION_HEADER(LoadTypedArrayElementStatic)
-    TRIVIAL_NEW_WRAPPERS
-
-    Scalar::Type accessType() const {
-        return someTypedArray_->as<TypedArrayObject>().type();
-    }
-    SharedMem<void*> base() const;
-    size_t length() const;
-
-    MDefinition* ptr() const { return getOperand(0); }
-    int32_t offset() const { return offset_; }
-    void setOffset(int32_t offset) { offset_ = offset; }
-    bool congruentTo(const MDefinition* ins) const override;
-    AliasSet getAliasSet() const override {
-        return AliasSet::Load(AliasSet::UnboxedElement);
-    }
-
-    bool needsBoundsCheck() const { return needsBoundsCheck_; }
-    void setNeedsBoundsCheck(bool v) { needsBoundsCheck_ = v; }
-
-    bool fallible() const {
-        return fallible_;
-    }
-
-    void setInfallible() {
-        fallible_ = false;
-    }
-
-    void computeRange(TempAllocator& alloc) override;
-    bool needTruncation(TruncateKind kind) override;
-    bool canProduceFloat32() const override { return accessType() == Scalar::Float32; }
-    void collectRangeInfoPreTrunc() override;
-
-    bool appendRoots(MRootList& roots) const override {
-        return roots.append(someTypedArray_);
-    }
-};
-
 // Base class for MIR ops that write unboxed scalar values.
 class StoreUnboxedScalarBase
 {
@@ -10810,60 +10743,6 @@ class MStoreTypedArrayElementHole
     }
 
     ALLOW_CLONE(MStoreTypedArrayElementHole)
-};
-
-// Store a value infallibly to a statically known typed array.
-class MStoreTypedArrayElementStatic :
-    public MBinaryInstruction,
-    public StoreUnboxedScalarBase,
-    public StoreTypedArrayElementStaticPolicy::Data
-{
-    MStoreTypedArrayElementStatic(JSObject* someTypedArray, MDefinition* ptr, MDefinition* v,
-                                  int32_t offset = 0, bool needsBoundsCheck = true)
-        : MBinaryInstruction(classOpcode, ptr, v),
-          StoreUnboxedScalarBase(someTypedArray->as<TypedArrayObject>().type()),
-          someTypedArray_(someTypedArray),
-          offset_(offset), needsBoundsCheck_(needsBoundsCheck)
-    {}
-
-    CompilerObject someTypedArray_;
-
-    // An offset to be encoded in the store instruction - taking advantage of the
-    // addressing modes. This is only non-zero when the access is proven to be
-    // within bounds.
-    int32_t offset_;
-    bool needsBoundsCheck_;
-
-  public:
-    INSTRUCTION_HEADER(StoreTypedArrayElementStatic)
-    TRIVIAL_NEW_WRAPPERS
-
-    Scalar::Type accessType() const {
-        return writeType();
-    }
-
-    SharedMem<void*> base() const;
-    size_t length() const;
-
-    MDefinition* ptr() const { return getOperand(0); }
-    MDefinition* value() const { return getOperand(1); }
-    bool needsBoundsCheck() const { return needsBoundsCheck_; }
-    void setNeedsBoundsCheck(bool v) { needsBoundsCheck_ = v; }
-    int32_t offset() const { return offset_; }
-    void setOffset(int32_t offset) { offset_ = offset; }
-    AliasSet getAliasSet() const override {
-        return AliasSet::Store(AliasSet::UnboxedElement);
-    }
-    TruncateKind operandTruncateKind(size_t index) const override;
-
-    bool canConsumeFloat32(MUse* use) const override {
-        return use == getUseFor(1) && accessType() == Scalar::Float32;
-    }
-    void collectRangeInfoPreTrunc() override;
-
-    bool appendRoots(MRootList& roots) const override {
-        return roots.append(someTypedArray_);
-    }
 };
 
 // Compute an "effective address", i.e., a compound computation of the form:
