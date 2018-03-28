@@ -38,6 +38,7 @@ CppUnitTests([
     'TestMacroForEach',
     'TestMathAlgorithms',
     'TestMaybe',
+    'TestNonDereferenceable',
     'TestNotNull',
     'TestPair',
     'TestRange',
