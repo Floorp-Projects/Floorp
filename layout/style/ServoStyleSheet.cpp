@@ -279,7 +279,7 @@ ServoStyleSheet::ReparseSheet(const nsAString& aInput)
     loader = mDocument->CSSLoader();
     NS_ASSERTION(loader, "Document with no CSS loader!");
   } else {
-    loader = new css::Loader(StyleBackendType::Servo, nullptr);
+    loader = new css::Loader;
   }
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);

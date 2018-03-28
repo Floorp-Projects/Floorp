@@ -58,7 +58,7 @@ PreloadedStyleSheet::GetSheet(StyleBackendType aType, StyleSheet** aResult)
     aType == StyleBackendType::Gecko ? mGecko : mServo;
 
   if (!sheet) {
-    RefPtr<css::Loader> loader = new css::Loader(aType, nullptr);
+    RefPtr<css::Loader> loader = new css::Loader;
     nsresult rv = loader->LoadSheetSync(mURI, mParsingMode, true, &sheet);
     NS_ENSURE_SUCCESS(rv, rv);
     MOZ_ASSERT(sheet);
@@ -119,8 +119,7 @@ PreloadedStyleSheet::PreloadAsync(NotNull<dom::Promise*> aPromise)
 
   RefPtr<StyleSheet>& sheet = mServo;
 
-  RefPtr<css::Loader> loader =
-    new css::Loader(StyleBackendType::Servo, nullptr);
+  RefPtr<css::Loader> loader = new css::Loader;
 
   RefPtr<StylesheetPreloadObserver> obs =
     new StylesheetPreloadObserver(aPromise, this);

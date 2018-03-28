@@ -199,10 +199,9 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI *aSheetURI,
 static nsresult
 LoadSheet(nsIURI* aURI,
           css::SheetParsingMode aParsingMode,
-          StyleBackendType aType,
           RefPtr<StyleSheet>* aResult)
 {
-  RefPtr<css::Loader> loader = new css::Loader(aType, nullptr);
+  RefPtr<css::Loader> loader = new css::Loader;
   return loader->LoadSheetSync(aURI, aParsingMode, true, aResult);
 }
 
@@ -233,7 +232,7 @@ nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
 
 
   RefPtr<StyleSheet> servoSheet;
-  nsresult rv = LoadSheet(aSheetURI, parsingMode, StyleBackendType::Servo, &servoSheet);
+  nsresult rv = LoadSheet(aSheetURI, parsingMode, &servoSheet);
   NS_ENSURE_SUCCESS(rv, rv);
   MOZ_ASSERT(servoSheet);
   mServoSheets[aSheetType].AppendElement(servoSheet);

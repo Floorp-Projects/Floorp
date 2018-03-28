@@ -803,7 +803,7 @@ nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
     gCSSLoader_Servo;
 
   if (!loader) {
-    loader = new Loader(mBackendType, nullptr);
+    loader = new Loader;
     if (!loader) {
       ErrorLoadingSheet(aURI, "no Loader", eCrash);
       return;
