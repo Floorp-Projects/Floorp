@@ -19,6 +19,7 @@
 #include "mozilla/ipc/Transport.h"      // for Transport
 #include "mozilla/layers/AnimationHelper.h" // for CompositorAnimationStorage
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
+#include "mozilla/layers/APZSampler.h"  // for APZSampler
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -133,8 +134,9 @@ CrossProcessCompositorBridgeParent::AllocPAPZCTreeManagerParent(const LayersId& 
     // Note: we immediately call ClearTree since otherwise the APZCTM will
     // retain a reference to itself, through the checkerboard observer.
     RefPtr<APZCTreeManager> temp = new APZCTreeManager(LayersId{0});
-    temp->ClearTree();
-    return new APZCTreeManagerParent(aLayersId, temp);
+    RefPtr<APZSampler> tempSampler = new APZSampler(temp);
+    tempSampler->ClearTree();
+    return new APZCTreeManagerParent(aLayersId, temp, tempSampler);
   }
 
   state.mParent->AllocateAPZCTreeManagerParent(lock, aLayersId, state);
