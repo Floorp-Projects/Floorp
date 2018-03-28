@@ -80,13 +80,3 @@ DEFINES += -DBINPATH=$(BINPATH)
 ifdef ENABLE_MARIONETTE
 DEFINES += -DENABLE_MARIONETTE=1
 endif
-
-.PHONY: features
-tools features::
-	# Create a sorted list of built-in features. If the features
-	# directory does not exist, then the recipe line returns true
-	# because this is not a fatal error.
-	#
-	# This should determine the target directory using FINAL_TARGET and DIST_SUBDIR, but it doesn't yet for simplicity.
-	$(PYTHON) -c 'import os, json; listing = {"system": sorted(os.listdir("$(DIST)/bin/features"))}; print json.dumps(listing)' > \
-		$(DIST)/bin/chrome/chrome/content/built_in_addons.json || true
