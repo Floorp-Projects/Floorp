@@ -263,7 +263,7 @@ const isEventHandler = (listener) =>
 
 const Services = require("Services");
 const { describeNthCaller } = require("devtools/shared/platform/stack");
-let loggingEnabled = true;
+let loggingEnabled = false;
 
 if (!isWorker) {
   loggingEnabled = Services.prefs.getBoolPref("devtools.dump.emit");

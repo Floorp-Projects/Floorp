@@ -94,8 +94,6 @@ XPIDL_SOURCES += [
     'nsIBaseWindow.idl',
     'nsIBidiKeyboard.idl',
     'nsIClipboard.idl',
-    'nsIClipboardDragDropHookList.idl',
-    'nsIClipboardDragDropHooks.idl',
     'nsIClipboardHelper.idl',
     'nsIClipboardOwner.idl',
     'nsIColorPicker.idl',

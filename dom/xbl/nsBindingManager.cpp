@@ -1036,13 +1036,11 @@ nsBindingManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     n += mDocumentTable->ShallowSizeOfIncludingThis(aMallocSizeOf);
 #ifdef MOZ_XUL
     nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
-    StyleBackendType backendType = mDocument->GetStyleBackendType();
 #endif
     for (auto iter = mDocumentTable->Iter(); !iter.Done(); iter.Next()) {
       nsXBLDocumentInfo* docInfo = iter.UserData();
 #ifdef MOZ_XUL
-      nsXBLDocumentInfo* cachedInfo =
-        cache->GetXBLDocumentInfo(iter.Key(), backendType);
+      nsXBLDocumentInfo* cachedInfo = cache->GetXBLDocumentInfo(iter.Key());
       if (cachedInfo == docInfo) {
         // If this binding has been cached, skip it since it can be
         // reused by other documents.

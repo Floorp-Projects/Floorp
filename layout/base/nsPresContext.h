@@ -47,7 +47,6 @@
 #include "Units.h"
 #include "prenv.h"
 #include "mozilla/StaticPresData.h"
-#include "mozilla/StyleBackendType.h"
 
 class nsBidi;
 class nsIPrintSettings;
@@ -160,7 +159,7 @@ public:
    * Set and detach presentation shell that this context is bound to.
    * A presentation context may only be bound to a single shell.
    */
-  void AttachShell(nsIPresShell* aShell, mozilla::StyleBackendType aBackendType);
+  void AttachShell(nsIPresShell* aShell);
   void DetachShell();
 
 

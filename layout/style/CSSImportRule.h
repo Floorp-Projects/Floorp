@@ -21,8 +21,6 @@ protected:
 public:
   bool IsCCLeaf() const final;
 
-  int32_t GetType() const final { return css::Rule::IMPORT_RULE; }
-
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override = 0;
 

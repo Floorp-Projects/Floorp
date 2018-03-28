@@ -91,7 +91,6 @@ add_task(async function test() {
 
         // check that PDF is opened with internal viewer
         Assert.ok(content.document.querySelector("div#viewer"), "document content has viewer UI");
-        Assert.ok("PDFJS" in content.wrappedJSObject, "window content has PDFJS object");
 
         let initialWidth, previousWidth;
         initialWidth = previousWidth =

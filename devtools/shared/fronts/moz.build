@@ -15,7 +15,6 @@ DevToolsModules(
     'csscoverage.js',
     'device.js',
     'emulation.js',
-    'eventlooplag.js',
     'framerate.js',
     'gcli.js',
     'highlighters.js',

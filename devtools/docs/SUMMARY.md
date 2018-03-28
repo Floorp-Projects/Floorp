@@ -15,6 +15,7 @@
   * [Code reviews](./contributing/code-reviews.md)
   * [Filing good bugs](./contributing/filing-good-bugs.md)
   * [Investigating performance issues](./contributing/performance.md)
+  * [Writing efficient React code](./contributing/react-performance-tips.md)
 * [Automated tests](tests/README.md)
   * Running tests
     * [`xpcshell`](tests/xpcshell.md)

@@ -8,6 +8,7 @@
 #define nsMathMLmtableFrame_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/UniquePtr.h"
 #include "nsMathMLContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsTableWrapperFrame.h"
@@ -337,9 +338,9 @@ public:
 
 protected:
   explicit nsMathMLmtdInnerFrame(ComputedStyle* aStyle);
-  virtual ~nsMathMLmtdInnerFrame();
+  virtual ~nsMathMLmtdInnerFrame() {}
 
-  nsStyleText* mUniqueStyleText;
+  mozilla::UniquePtr<nsStyleText> mUniqueStyleText;
 
 };  // class nsMathMLmtdInnerFrame
 

@@ -42,7 +42,8 @@ void
 WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
                                      nsDisplayItem* aItem,
                                      int32_t aDescendantCount,
-                                     const ActiveScrolledRoot* aStopAtAsr)
+                                     const ActiveScrolledRoot* aStopAtAsr,
+                                     const Maybe<gfx::Matrix4x4>& aTransform)
 {
   MOZ_ASSERT(aDescendantCount >= 0); // Ensure value is valid
   MOZ_ASSERT(mDescendantCount == -1); // Don't allow re-setting an already set value
@@ -50,6 +51,11 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
 
   MOZ_ASSERT(aItem);
   aItem->UpdateScrollData(&aOwner, this);
+  if (aTransform) {
+    // mTransform might have been set by the UpdateScrollData call above, so
+    // we should combine rather than clobber
+    mTransform = *aTransform * mTransform;
+  }
   for (const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
        asr && asr != aStopAtAsr;
        asr = asr->mParent) {

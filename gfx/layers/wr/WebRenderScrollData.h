@@ -47,7 +47,8 @@ public:
   void Initialize(WebRenderScrollData& aOwner,
                   nsDisplayItem* aItem,
                   int32_t aDescendantCount,
-                  const ActiveScrolledRoot* aStopAtAsr);
+                  const ActiveScrolledRoot* aStopAtAsr,
+                  const Maybe<gfx::Matrix4x4>& aTransform);
 
   int32_t GetDescendantCount() const;
   size_t GetScrollMetadataCount() const;

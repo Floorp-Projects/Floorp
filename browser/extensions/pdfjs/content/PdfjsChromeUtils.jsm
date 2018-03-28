@@ -23,40 +23,18 @@ const PDF_CONTENT_TYPE = "application/pdf";
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+ChromeUtils.defineModuleGetter(this, "PdfJsDefaultPreferences",
+  "resource://pdf.js/PdfJsDefaultPreferences.jsm");
+
 var Svc = {};
 XPCOMUtils.defineLazyServiceGetter(Svc, "mime",
                                    "@mozilla.org/mime;1",
                                    "nsIMIMEService");
 
-/* eslint-disable semi */
-var DEFAULT_PREFERENCES =
-{
-  "showPreviousViewOnLoad": true,
-  "defaultZoomValue": "",
-  "sidebarViewOnLoad": 0,
-  "cursorToolOnLoad": 0,
-  "enableWebGL": false,
-  "pdfBugEnabled": false,
-  "disableRange": false,
-  "disableStream": false,
-  "disableAutoFetch": false,
-  "disableFontFace": false,
-  "textLayerMode": 1,
-  "useOnlyCssZoom": false,
-  "externalLinkTarget": 0,
-  "renderer": "canvas",
-  "renderInteractiveForms": false,
-  "enablePrintAutoRotate": false,
-  "disablePageMode": false,
-  "disablePageLabels": false
-}
-
-/* eslint-enable semi */
-
 var PdfjsChromeUtils = {
   // For security purposes when running remote, we restrict preferences
   // content can access.
-  _allowedPrefNames: Object.keys(DEFAULT_PREFERENCES),
+  _allowedPrefNames: Object.keys(PdfJsDefaultPreferences),
   _ppmm: null,
   _mmg: null,
 

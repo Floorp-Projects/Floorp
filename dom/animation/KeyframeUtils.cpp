@@ -339,7 +339,6 @@ static bool
 GetPropertyValuesPairs(JSContext* aCx,
                        JS::Handle<JSObject*> aObject,
                        ListAllowance aAllowLists,
-                       StyleBackendType aBackend,
                        nsTArray<PropertyValuesPair>& aResult);
 
 static bool
@@ -523,36 +522,15 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
 }
 
 /* static */ bool
-KeyframeUtils::IsAnimatableProperty(nsCSSPropertyID aProperty,
-                                    StyleBackendType aBackend)
+KeyframeUtils::IsAnimatableProperty(nsCSSPropertyID aProperty)
 {
   // Regardless of the backend type, treat the 'display' property as not
-  // animatable. (The Servo backend will report it as being animatable, since
-  // it is in fact animatable by SMIL.)
+  // animatable. (Servo will report it as being animatable, since it is
+  // in fact animatable by SMIL.)
   if (aProperty == eCSSProperty_display) {
     return false;
   }
-
-  if (aBackend == StyleBackendType::Servo) {
-    return Servo_Property_IsAnimatable(aProperty);
-  }
-
-  if (aProperty == eCSSProperty_UNKNOWN) {
-    return false;
-  }
-
-  if (!nsCSSProps::IsShorthand(aProperty)) {
-    return nsCSSProps::kAnimTypeTable[aProperty] != eStyleAnimType_None;
-  }
-
-  CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, aProperty,
-                                       CSSEnabledState::eForAllContent) {
-    if (nsCSSProps::kAnimTypeTable[*subprop] != eStyleAnimType_None) {
-      return true;
-    }
-  }
-
-  return false;
+  return Servo_Property_IsAnimatable(aProperty);
 }
 
 // ------------------------------------------------------------------
@@ -662,7 +640,6 @@ ConvertKeyframeSequence(JSContext* aCx,
       JS::Rooted<JSObject*> object(aCx, &value.toObject());
       if (!GetPropertyValuesPairs(aCx, object,
                                   ListAllowance::eDisallow,
-                                  aDocument->GetStyleBackendType(),
                                   propertyValuePairs)) {
         return false;
       }
@@ -721,8 +698,6 @@ ConvertKeyframeSequence(JSContext* aCx,
  * @param aAllowLists If eAllow, values will be converted to
  *   (DOMString or sequence<DOMString); if eDisallow, values
  *   will be converted to DOMString.
- * @param aBackend The style backend in use. Used to determine which properties
- *   are animatable since only animatable properties are read.
  * @param aResult The array into which the enumerated property-values
  *   pairs will be stored.
  * @return false on failure or JS exception thrown while interacting
@@ -732,7 +707,6 @@ static bool
 GetPropertyValuesPairs(JSContext* aCx,
                        JS::Handle<JSObject*> aObject,
                        ListAllowance aAllowLists,
-                       StyleBackendType aBackend,
                        nsTArray<PropertyValuesPair>& aResult)
 {
   nsTArray<AdditionalProperty> properties;
@@ -755,7 +729,7 @@ GetPropertyValuesPairs(JSContext* aCx,
     nsCSSPropertyID property =
       nsCSSProps::LookupPropertyByIDLName(propName,
                                           CSSEnabledState::eForAllContent);
-    if (KeyframeUtils::IsAnimatableProperty(property, aBackend)) {
+    if (KeyframeUtils::IsAnimatableProperty(property)) {
       AdditionalProperty* p = properties.AppendElement();
       p->mProperty = property;
       p->mJsidIndex = i;
@@ -1247,7 +1221,6 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
   JS::Rooted<JSObject*> object(aCx, &aValue.toObject());
   nsTArray<PropertyValuesPair> propertyValuesPairs;
   if (!GetPropertyValuesPairs(aCx, object, ListAllowance::eAllow,
-                              aDocument->GetStyleBackendType(),
                               propertyValuesPairs)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;

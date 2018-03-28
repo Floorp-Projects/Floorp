@@ -302,8 +302,9 @@ fn get_regions_for_clip_scroll_node(
                 HitTestRegion::RoundedRectangle(*rect, *radii, *mode),
             ClipSource::Image(ref mask) => HitTestRegion::Rectangle(mask.rect),
             ClipSource::BorderCorner(_) |
+            ClipSource::LineDecoration(_) |
             ClipSource::BoxShadow(_) => {
-                unreachable!("Didn't expect to hit test against BorderCorner / BoxShadow");
+                unreachable!("Didn't expect to hit test against BorderCorner / BoxShadow / LineDecoration");
             }
         }
     }).collect()

@@ -5,7 +5,7 @@
 "use strict";
 
 const { openToolboxAndLog, closeToolbox, testSetup,
-        testTeardown, SIMPLE_URL } = require("chrome://damp/content/tests/head");
+        testTeardown, SIMPLE_URL } = require("../head");
 
 // This simple test is only called once using the flag coldRun
 module.exports = async function() {
