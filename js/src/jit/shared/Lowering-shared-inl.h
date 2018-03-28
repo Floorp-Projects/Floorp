@@ -250,7 +250,7 @@ LIRGeneratorShared::defineSharedStubReturn(LInstruction* lir, MDefinition* mir)
 {
     lir->setMir(mir);
 
-    MOZ_ASSERT(lir->isBinarySharedStub() || lir->isUnarySharedStub() || lir->isNullarySharedStub());
+    MOZ_ASSERT(lir->isBinarySharedStub() || lir->isNullarySharedStub());
     MOZ_ASSERT(mir->type() == MIRType::Value);
 
     uint32_t vreg = getVirtualRegister();

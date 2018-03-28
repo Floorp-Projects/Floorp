@@ -19,6 +19,7 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIURI.h"
+#include "nsWindowSizes.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Anchor)
 

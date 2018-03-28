@@ -70,6 +70,7 @@ static void audiounit_close_stream(cubeb_stream *stm);
 static int audiounit_setup_stream(cubeb_stream *stm);
 static vector<AudioObjectID>
 audiounit_get_devices_of_type(cubeb_device_type devtype);
+static UInt32 audiounit_get_device_presentation_latency(AudioObjectID devid, AudioObjectPropertyScope scope);
 
 extern cubeb_ops const audiounit_ops;
 
@@ -178,8 +179,7 @@ struct cubeb_stream {
   atomic<bool> draining{ false };
   /* Latency requested by the user. */
   uint32_t latency_frames = 0;
-  atomic<uint64_t> current_latency_frames{ 0 };
-  uint64_t hw_latency_frames = UINT64_MAX;
+  atomic<uint32_t> current_latency_frames{ 0 };
   atomic<float> panning{ 0 };
   unique_ptr<cubeb_resampler, decltype(&cubeb_resampler_destroy)> resampler;
   /* This is true if a device change callback is currently running.  */
@@ -319,19 +319,6 @@ AudioConvertHostTimeToNanos(uint64_t host_time)
   return (uint64_t)answer;
 }
 #endif
-
-static int64_t
-audiotimestamp_to_latency(AudioTimeStamp const * tstamp, cubeb_stream * stream)
-{
-  if (!(tstamp->mFlags & kAudioTimeStampHostTimeValid)) {
-    return 0;
-  }
-
-  uint64_t pres = AudioConvertHostTimeToNanos(tstamp->mHostTime);
-  uint64_t now = AudioConvertHostTimeToNanos(AudioGetCurrentHostTime());
-
-  return ((pres - now) * stream->output_desc.mSampleRate) / 1000000000LL;
-}
 
 static void
 audiounit_set_global_latency(cubeb_stream * stm, uint32_t latency_frames)
@@ -526,7 +513,6 @@ audiounit_output_callback(void * user_ptr,
     return noErr;
   }
 
-  stm->current_latency_frames = audiotimestamp_to_latency(tstamp, stm);
   if (stm->draining) {
     OSStatus r = AudioOutputUnitStop(stm->output_unit);
     assert(r == 0);
@@ -2541,6 +2527,14 @@ audiounit_setup_stream(cubeb_stream * stm)
       LOG("AudioUnitInitialize/output rv=%d", r);
       return CUBEB_ERROR;
     }
+
+    stm->current_latency_frames = audiounit_get_device_presentation_latency(stm->output_device.id, kAudioDevicePropertyScopeOutput);
+
+    Float64 unit_s;
+    UInt32 size = sizeof(unit_s);
+    if (AudioUnitGetProperty(stm->output_unit, kAudioUnitProperty_Latency, kAudioUnitScope_Global, 0, &unit_s, &size) == noErr) {
+      stm->current_latency_frames += static_cast<uint32_t>(unit_s * stm->output_desc.mSampleRate);
+    }
   }
 
   if (stm->input_unit && stm->output_unit) {
@@ -2764,7 +2758,11 @@ static int
 audiounit_stream_get_position(cubeb_stream * stm, uint64_t * position)
 {
   assert(stm);
-  *position = stm->frames_played;
+  if (stm->current_latency_frames > stm->frames_played) {
+    *position = 0;
+  } else {
+    *position = stm->frames_played - stm->current_latency_frames;
+  }
   return CUBEB_OK;
 }
 
@@ -2775,74 +2773,7 @@ audiounit_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
   //TODO
   return CUBEB_ERROR_NOT_SUPPORTED;
 #else
-  auto_lock lock(stm->mutex);
-  if (stm->hw_latency_frames == UINT64_MAX) {
-    UInt32 size;
-    uint32_t device_latency_frames, device_safety_offset;
-    double unit_latency_sec;
-    AudioDeviceID output_device_id;
-    OSStatus r;
-    AudioObjectPropertyAddress latency_address = {
-      kAudioDevicePropertyLatency,
-      kAudioDevicePropertyScopeOutput,
-      kAudioObjectPropertyElementMaster
-    };
-    AudioObjectPropertyAddress safety_offset_address = {
-      kAudioDevicePropertySafetyOffset,
-      kAudioDevicePropertyScopeOutput,
-      kAudioObjectPropertyElementMaster
-    };
-
-    output_device_id = audiounit_get_default_device_id(CUBEB_DEVICE_TYPE_OUTPUT);
-    if (output_device_id == kAudioObjectUnknown) {
-      return CUBEB_ERROR;
-    }
-
-    size = sizeof(unit_latency_sec);
-    r = AudioUnitGetProperty(stm->output_unit,
-                             kAudioUnitProperty_Latency,
-                             kAudioUnitScope_Global,
-                             0,
-                             &unit_latency_sec,
-                             &size);
-    if (r != noErr) {
-      LOG("AudioUnitGetProperty/kAudioUnitProperty_Latency rv=%d", r);
-      return CUBEB_ERROR;
-    }
-
-    size = sizeof(device_latency_frames);
-    r = AudioObjectGetPropertyData(output_device_id,
-                                   &latency_address,
-                                   0,
-                                   NULL,
-                                   &size,
-                                   &device_latency_frames);
-    if (r != noErr) {
-      LOG("AudioUnitGetPropertyData/latency_frames rv=%d", r);
-      return CUBEB_ERROR;
-    }
-
-    size = sizeof(device_safety_offset);
-    r = AudioObjectGetPropertyData(output_device_id,
-                                   &safety_offset_address,
-                                   0,
-                                   NULL,
-                                   &size,
-                                   &device_safety_offset);
-    if (r != noErr) {
-      LOG("AudioUnitGetPropertyData/safety_offset rv=%d", r);
-      return CUBEB_ERROR;
-    }
-
-    /* This part is fixed and depend on the stream parameter and the hardware. */
-    stm->hw_latency_frames =
-      static_cast<uint32_t>(unit_latency_sec * stm->output_desc.mSampleRate)
-      + device_latency_frames
-      + device_safety_offset;
-  }
-
-  *latency = stm->hw_latency_frames + stm->current_latency_frames;
-
+  *latency = stm->current_latency_frames;
   return CUBEB_OK;
 #endif
 }
@@ -3089,7 +3020,7 @@ static UInt32
 audiounit_get_device_presentation_latency(AudioObjectID devid, AudioObjectPropertyScope scope)
 {
   AudioObjectPropertyAddress adr = { 0, scope, kAudioObjectPropertyElementMaster };
-  UInt32 size, dev, stream = 0, offset;
+  UInt32 size, dev, stream = 0;
   AudioStreamID sid[1];
 
   adr.mSelector = kAudioDevicePropertyLatency;
@@ -3106,13 +3037,7 @@ audiounit_get_device_presentation_latency(AudioObjectID devid, AudioObjectProper
     AudioObjectGetPropertyData(sid[0], &adr, 0, NULL, &size, &stream);
   }
 
-  adr.mSelector = kAudioDevicePropertySafetyOffset;
-  size = sizeof(UInt32);
-  if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, &offset) != noErr) {
-    offset = 0;
-  }
-
-  return dev + stream + offset;
+  return dev + stream;
 }
 
 static int

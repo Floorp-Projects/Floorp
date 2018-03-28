@@ -203,21 +203,6 @@ nsPresArena::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
       case eArenaObjectID_nsLineBox:
         aSizes.mArenaSizes.mLineBoxes += totalSize;
         break;
-      case eArenaObjectID_nsRuleNode:
-        aSizes.mArenaSizes.mRuleNodes += totalSize;
-        break;
-      case eArenaObjectID_GeckoComputedStyle:
-        aSizes.mArenaSizes.mComputedStyles += totalSize;
-        break;
-#define STYLE_STRUCT(name_) \
-      case eArenaObjectID_nsStyle##name_: \
-        aSizes.mArenaSizes.mGeckoStyleSizes.NS_STYLE_SIZES_FIELD(name_) += \
-          totalSize; \
-        break;
-#define STYLE_STRUCT_LIST_IGNORE_VARIABLES
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
       default:
         continue;
     }

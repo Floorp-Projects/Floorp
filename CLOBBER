@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Historically updating ICU has required a CLOBBER.  Bug 1445524 is a fairly notable ICU-related change, so play it safe and force a full rebuild, even if no problem along these lines has actually been observed.
+More ICU-build-related touching for bug 1447475, trying a CLOBBER after a previous build failure just in case.

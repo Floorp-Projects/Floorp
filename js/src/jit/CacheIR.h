@@ -163,7 +163,8 @@ class TypedOperandId : public OperandId
     _(GetIterator)          \
     _(Compare)              \
     _(ToBool)               \
-    _(Call)
+    _(Call)                 \
+    _(UnaryArith)
 
 enum class CacheKind : uint8_t
 {
@@ -181,6 +182,7 @@ extern const char* CacheKindNames[];
     _(GuardIsString)                      \
     _(GuardIsSymbol)                      \
     _(GuardIsNumber)                      \
+    _(GuardIsInt32)                       \
     _(GuardIsInt32Index)                  \
     _(GuardType)                          \
     _(GuardShape)                         \
@@ -218,6 +220,8 @@ extern const char* CacheKindNames[];
     _(LoadEnclosingEnvironment)           \
     _(LoadWrapperTarget)                  \
     _(LoadValueTag)                       \
+                                          \
+    _(TruncateDoubleToUInt32)             \
                                           \
     _(MegamorphicLoadSlotResult)          \
     _(MegamorphicLoadSlotByValueResult)   \
@@ -284,6 +288,9 @@ extern const char* CacheKindNames[];
     _(LoadStringResult)                   \
     _(LoadInstanceOfObjectResult)         \
     _(LoadTypeOfObjectResult)             \
+    _(Int32NotResult)                     \
+    _(Int32NegationResult)                \
+    _(DoubleNegationResult)               \
     _(LoadInt32TruthyResult)              \
     _(LoadDoubleTruthyResult)             \
     _(LoadStringTruthyResult)             \
@@ -535,6 +542,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardIsSymbol, val);
         return SymbolOperandId(val.id());
     }
+    Int32OperandId guardIsInt32(ValOperandId val) {
+        Int32OperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::GuardIsInt32, val);
+        writeOperandId(res);
+        return res;
+    }
     Int32OperandId guardIsInt32Index(ValOperandId val) {
         Int32OperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::GuardIsInt32Index, val);
@@ -765,6 +778,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         return res;
     }
 
+    Int32OperandId truncateDoubleToUInt32(ValOperandId val) {
+        Int32OperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::TruncateDoubleToUInt32, val);
+        writeOperandId(res);
+        return res;
+    }
+
     ValueTagOperandId loadValueTag(ValOperandId val) {
         ValueTagOperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::LoadValueTag, val);
@@ -956,6 +976,15 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         buffer_.writeByte(uint32_t(hasOwn));
     }
 
+    void int32NotResult(Int32OperandId id) {
+        writeOpWithOperandId(CacheOp::Int32NotResult, id);
+    }
+    void int32NegationResult(Int32OperandId id) {
+        writeOpWithOperandId(CacheOp::Int32NegationResult, id);
+    }
+    void doubleNegationResult(ValOperandId val) {
+        writeOpWithOperandId(CacheOp::DoubleNegationResult, val);
+    }
     void loadBooleanResult(bool val) {
         writeOp(CacheOp::LoadBooleanResult);
         buffer_.writeByte(uint32_t(val));
@@ -1708,6 +1737,24 @@ class MOZ_RAII GetIntrinsicIRGenerator : public IRGenerator
   public:
     GetIntrinsicIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode,
                             HandleValue val);
+
+    bool tryAttachStub();
+};
+
+class MOZ_RAII UnaryArithIRGenerator : public IRGenerator
+{
+    JSOp op_;
+    HandleValue val_;
+    HandleValue res_;
+
+    bool tryAttachInt32();
+    bool tryAttachNumber();
+
+    void trackAttached(const char* name);
+
+  public:
+    UnaryArithIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode,
+                          JSOp op, HandleValue val, HandleValue res);
 
     bool tryAttachStub();
 };

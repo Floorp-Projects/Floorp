@@ -445,36 +445,11 @@ private:
                                   bool isTracking, bool couldVary,
                                   bool isNoStore);
 
-  // Make sure our prefs are in their expected range of values
-  void SanitizePrefs();
+  // Gets the pref value and clamps it within the acceptable range.
+  uint32_t ClampedPrefetchRollingLoadCount();
 
   // Our state
   bool mInitialized;
-
-  bool mEnabled;
-  bool mEnableHoverOnSSL;
-  bool mEnablePrefetch;
-
-  int32_t mPageDegradationDay;
-  int32_t mPageDegradationWeek;
-  int32_t mPageDegradationMonth;
-  int32_t mPageDegradationYear;
-  int32_t mPageDegradationMax;
-
-  int32_t mSubresourceDegradationDay;
-  int32_t mSubresourceDegradationWeek;
-  int32_t mSubresourceDegradationMonth;
-  int32_t mSubresourceDegradationYear;
-  int32_t mSubresourceDegradationMax;
-
-  int32_t mPrefetchRollingLoadCount;
-  int32_t mPrefetchMinConfidence;
-  int32_t mPreconnectMinConfidence;
-  int32_t mPreresolveMinConfidence;
-
-  int32_t mPrefetchForceValidFor;
-
-  int32_t mMaxResourcesPerEntry;
 
   bool mCleanedUp;
   nsCOMPtr<nsITimer> mCleanupTimer;
@@ -492,8 +467,6 @@ private:
   uint32_t mLastStartupTime;
   int32_t mStartupCount;
 
-  uint32_t mMaxURILength;
-
   nsCOMPtr<nsIDNSService> mDnsService;
 
   RefPtr<DNSListener> mDNSListener;
@@ -501,8 +474,6 @@ private:
   nsTArray<nsCOMPtr<nsIURI>> mPrefetches;
   nsTArray<nsCOMPtr<nsIURI>> mPreconnects;
   nsTArray<nsCOMPtr<nsIURI>> mPreresolves;
-
-  bool mDoingTests;
 
   static Predictor *sSelf;
 };

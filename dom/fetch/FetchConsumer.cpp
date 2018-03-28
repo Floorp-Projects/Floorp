@@ -87,13 +87,11 @@ class AbortConsumeBodyControlRunnable final : public MainThreadWorkerControlRunn
 
 public:
   AbortConsumeBodyControlRunnable(FetchBodyConsumer<Derived>* aFetchBodyConsumer,
-                                  WorkerPrivate* aWorkerPrivate,
-                                  uint8_t* aResult)
+                                  WorkerPrivate* aWorkerPrivate)
     : MainThreadWorkerControlRunnable(aWorkerPrivate)
     , mFetchBodyConsumer(aFetchBodyConsumer)
   {
     MOZ_ASSERT(NS_IsMainThread());
-    free(aResult);
   }
 
   bool
@@ -131,8 +129,7 @@ public:
     if (mWorkerRef) {
       RefPtr<AbortConsumeBodyControlRunnable<Derived>> r =
         new AbortConsumeBodyControlRunnable<Derived>(mBodyConsumer,
-                                                     mWorkerRef->Private(),
-                                                     nullptr);
+                                                     mWorkerRef->Private());
       if (!r->Dispatch()) {
         MOZ_CRASH("We are going to leak");
       }
@@ -264,14 +261,13 @@ public:
 
     RefPtr<AbortConsumeBodyControlRunnable<Derived>> r =
       new AbortConsumeBodyControlRunnable<Derived>(mFetchBodyConsumer,
-                                                   mWorkerRef->Private(),
-                                                   nonconstResult);
+                                                   mWorkerRef->Private());
     if (NS_WARN_IF(!r->Dispatch())) {
       return NS_ERROR_FAILURE;
     }
 
-    // FetchBody is responsible for data.
-    return NS_SUCCESS_ADOPTED_DATA;
+    // We haven't taken ownership of the data.
+    return NS_OK;
   }
 
   virtual void BlobStoreCompleted(MutableBlobStorage* aBlobStorage,

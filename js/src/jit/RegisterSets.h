@@ -71,15 +71,10 @@ struct AnyRegister {
     }
     AnyRegister aliased(uint32_t aliasIdx) const {
         AnyRegister ret;
-        if (isFloat()) {
-            FloatRegister fret;
-            fpu().aliased(aliasIdx, &fret);
-            ret = AnyRegister(fret);
-        } else {
-            Register gret;
-            gpr().aliased(aliasIdx, &gret);
-            ret = AnyRegister(gret);
-        }
+        if (isFloat())
+            ret = AnyRegister(fpu().aliased(aliasIdx));
+        else
+            ret = AnyRegister(gpr().aliased(aliasIdx));
         MOZ_ASSERT_IF(aliasIdx == 0, ret == *this);
         return ret;
     }

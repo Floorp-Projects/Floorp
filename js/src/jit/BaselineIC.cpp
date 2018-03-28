@@ -4146,9 +4146,12 @@ TryAttachInstanceOfStub(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallba
 }
 
 static bool
-DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallback* stub,
+DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallback* stub_,
                      HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
+    // This fallback stub may trigger debug mode toggling.
+    DebugModeOSRVolatileStub<ICInstanceOf_Fallback*> stub(ICStubEngine::Baseline, frame, stub_);
+
     FallbackICSpew(cx, stub, "InstanceOf");
 
     if (!rhs.isObject()) {
@@ -4162,6 +4165,10 @@ DoInstanceOfFallback(JSContext* cx, BaselineFrame* frame, ICInstanceOf_Fallback*
         return false;
 
     res.setBoolean(cond);
+
+    // Check if debug mode toggling made the stub invalid.
+    if (stub.invalid())
+        return true;
 
     if (!obj->is<JSFunction>()) {
         stub->noteUnoptimizableAccess();
@@ -4530,6 +4537,90 @@ ICRest_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     pushStubPayload(masm, R0.scratchReg());
 
     return tailCallVM(DoRestFallbackInfo, masm);
+}
+
+//
+// UnaryArith_Fallback
+//
+
+static bool
+DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame, ICUnaryArith_Fallback* stub,
+                     HandleValue val, MutableHandleValue res)
+{
+    // This fallback stub may trigger debug mode toggling.
+    DebugModeOSRVolatileStub<ICUnaryArith_Fallback*> debug_stub(ICStubEngine::Baseline, frame, stub);
+
+    RootedScript script(cx, frame->script());
+    jsbytecode* pc = stub->icEntry()->pc(script);
+    JSOp op = JSOp(*pc);
+    FallbackICSpew(cx, stub, "UnaryArith(%s)", CodeName[op]);
+
+    switch (op) {
+      case JSOP_BITNOT: {
+        int32_t result;
+        if (!BitNot(cx, val, &result))
+            return false;
+        res.setInt32(result);
+        break;
+      }
+      case JSOP_NEG:
+        if (!NegOperation(cx, val, res))
+            return false;
+        break;
+      default:
+        MOZ_CRASH("Unexpected op");
+    }
+
+    // Check if debug mode toggling made the stub invalid.
+    if (debug_stub.invalid())
+        return true;
+
+    if (res.isDouble())
+        stub->setSawDoubleResult();
+
+    if (stub->state().maybeTransition())
+        stub->discardStubs(cx);
+
+    if (stub->state().canAttachStub()) {
+        UnaryArithIRGenerator gen(cx, script, pc, stub->state().mode(),
+                                    op, val, res);
+        if (gen.tryAttachStub()) {
+            bool attached = false;
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Regular,
+                                                        ICStubEngine::Baseline, script, stub, &attached);
+            if (newStub) {
+                JitSpew(JitSpew_BaselineIC, "  Attached (shared) CacheIR stub for %s", CodeName[op]);
+            }
+        }
+    }
+
+    return true;
+}
+
+typedef bool (*DoUnaryArithFallbackFn)(JSContext*, BaselineFrame*, ICUnaryArith_Fallback*,
+                                       HandleValue, MutableHandleValue);
+static const VMFunction DoUnaryArithFallbackInfo =
+    FunctionInfo<DoUnaryArithFallbackFn>(DoUnaryArithFallback, "DoUnaryArithFallback", TailCall,
+                                         PopValues(1));
+
+bool
+ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
+{
+    MOZ_ASSERT(R0 == JSReturnOperand);
+
+    // Restore the tail call register.
+    EmitRestoreTailCallReg(masm);
+
+    // Ensure stack is fully synced for the expression decompiler.
+    masm.pushValue(R0);
+
+    // Push arguments.
+    masm.pushValue(R0);
+    masm.push(ICStubReg);
+    pushStubPayload(masm, R0.scratchReg());
+
+    return tailCallVM(DoUnaryArithFallbackInfo, masm);
 }
 
 } // namespace jit

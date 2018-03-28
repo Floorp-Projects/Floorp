@@ -28,7 +28,7 @@ public:
 
   DrawEventRecorderPrivate();
   virtual ~DrawEventRecorderPrivate() { }
-  virtual void Finish() override { ClearResources(); }
+  virtual bool Finish() override { ClearResources(); return true; }
   virtual void FlushItem(IntRect) { }
   void DetatchResources() {
     // The iteration is a bit awkward here because our iterator will
@@ -189,7 +189,7 @@ public:
    * and processed in chunks, releasing memory as it goes.
    */
   void WipeRecording();
-  void Finish() override;
+  bool Finish() override;
   void FlushItem(IntRect) override;
 
   MemStream mOutputStream;

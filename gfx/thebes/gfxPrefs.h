@@ -508,6 +508,7 @@ private:
   DECL_GFX_PREF(Once, "gfx.webrender.all",                     WebRenderAll, bool, false);
   DECL_GFX_PREF(Once, "gfx.webrender.enabled",                 WebRenderEnabledDoNotUseDirectly, bool, false);
   DECL_OVERRIDE_PREF(Live, "gfx.webrender.blob-images",        WebRenderBlobImages, gfxPrefs::WebRenderAll());
+  DECL_GFX_PREF(Live, "gfx.webrender.blob.invalidation",       WebRenderBlobInvalidation, bool, false);
   DECL_GFX_PREF(Live, "gfx.webrender.highlight-painted-layers",WebRenderHighlightPaintedLayers, bool, false);
   DECL_GFX_PREF(Live, "gfx.webrender.hit-test",                WebRenderHitTest, bool, true);
 

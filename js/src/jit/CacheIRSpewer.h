@@ -42,7 +42,7 @@ class CacheIRSpewer
 
   public:
     static CacheIRSpewer& singleton() { return cacheIRspewer; }
-    bool init();
+    bool init(const char* name);
 
     class MOZ_RAII Guard {
         CacheIRSpewer& sp_;
