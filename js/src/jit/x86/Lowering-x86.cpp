@@ -470,30 +470,6 @@ LIRGenerator::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
 }
 
 void
-LIRGenerator::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins)
-{
-    // The code generated for StoreTypedArrayElementStatic is identical to that
-    // for AsmJSStoreHeap, and the same concerns apply.
-    LStoreTypedArrayElementStatic* lir;
-    switch (ins->accessType()) {
-      case Scalar::Int8: case Scalar::Uint8:
-      case Scalar::Uint8Clamped:
-        lir = new(alloc()) LStoreTypedArrayElementStatic(useRegister(ins->ptr()),
-                                                         useFixed(ins->value(), eax));
-        break;
-      case Scalar::Int16: case Scalar::Uint16:
-      case Scalar::Int32: case Scalar::Uint32:
-      case Scalar::Float32: case Scalar::Float64:
-        lir = new(alloc()) LStoreTypedArrayElementStatic(useRegisterAtStart(ins->ptr()),
-                                                         useRegisterAtStart(ins->value()));
-        break;
-      default: MOZ_CRASH("unexpected array type");
-    }
-
-    add(lir, ins);
-}
-
-void
 LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins)
 {
     MDefinition* base = ins->base();

@@ -113,7 +113,9 @@ ActiveVerifier* ActiveVerifier::Get() {
 
 bool CloseHandleWrapper(HANDLE handle) {
   if (!::CloseHandle(handle))
-    CHECK(false);  // CloseHandle failed.
+    // Making this DCHECK as we are hitting this frequently, looks like we are
+    // closing handles twice somewhere. See bug 1449480.
+    DCHECK(false);  // CloseHandle failed.
   return true;
 }
 

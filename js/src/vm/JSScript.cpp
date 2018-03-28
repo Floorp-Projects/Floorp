@@ -2382,7 +2382,6 @@ js::SharedScriptData::new_(JSContext* cx, uint32_t codeLength,
     entry->codeLength_ = codeLength;
     entry->noteLength_ = srcnotesLength;
 
-
     /*
      * Call constructors to initialize the storage that will be accessed as a
      * GCPtrAtom array via atoms().
@@ -2397,6 +2396,20 @@ js::SharedScriptData::new_(JSContext* cx, uint32_t codeLength,
     MOZ_ASSERT(entry->dataLength() == dataLength);
 
     return entry;
+}
+
+inline
+js::ScriptBytecodeHasher::Lookup::Lookup(SharedScriptData* data)
+  : scriptData(data),
+    hash(mozilla::HashBytes(scriptData->data(), scriptData->dataLength()))
+{
+    scriptData->incRefCount();
+}
+
+inline
+js::ScriptBytecodeHasher::Lookup::~Lookup()
+{
+    scriptData->decRefCount();
 }
 
 bool
@@ -2415,7 +2428,6 @@ JSScript::createScriptData(JSContext* cx, uint32_t codeLength, uint32_t srcnotes
 void
 JSScript::freeScriptData()
 {
-    MOZ_ASSERT(scriptData_->refCount() == 1);
     scriptData_->decRefCount();
     scriptData_ = nullptr;
 }
@@ -2441,9 +2453,13 @@ JSScript::shareScriptData(JSContext* cx)
     MOZ_ASSERT(ssd);
     MOZ_ASSERT(ssd->refCount() == 1);
 
+    // Calculate the hash before taking the lock. Because the data is reference
+    // counted, it also will be freed after releasing the lock if necessary.
+    ScriptBytecodeHasher::Lookup lookup(ssd);
+
     AutoLockScriptData lock(cx->runtime());
 
-    ScriptDataTable::AddPtr p = cx->scriptDataTable(lock).lookupForAdd(*ssd);
+    ScriptDataTable::AddPtr p = cx->scriptDataTable(lock).lookupForAdd(lookup);
     if (p) {
         MOZ_ASSERT(ssd != *p);
         freeScriptData();

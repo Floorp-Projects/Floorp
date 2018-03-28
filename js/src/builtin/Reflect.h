@@ -24,6 +24,9 @@ Reflect_getPrototypeOf(JSContext* cx, unsigned argc, Value* vp);
 extern MOZ_MUST_USE bool
 Reflect_isExtensible(JSContext* cx, unsigned argc, Value* vp);
 
+extern MOZ_MUST_USE bool
+Reflect_ownKeys(JSContext* cx, unsigned argc, Value* vp);
+
 }
 
 #endif /* builtin_Reflect_h */

@@ -61,7 +61,8 @@ class JSFunction : public js::NativeObject
         BOUND_FUN        = 0x0008,  /* function was created with Function.prototype.bind. */
         WASM_OPTIMIZED   = 0x0010,  /* asm.js/wasm function that has a jit entry */
         HAS_GUESSED_ATOM = 0x0020,  /* function had no explicit name, but a
-                                       name was guessed for it anyway */
+                                       name was guessed for it anyway. See
+                                       atom_ for more info about this flag. */
         HAS_BOUND_FUNCTION_NAME_PREFIX = 0x0020, /* bound functions reuse the HAS_GUESSED_ATOM
                                                     flag to track if atom_ already contains the
                                                     "bound " function name prefix */
@@ -72,7 +73,8 @@ class JSFunction : public js::NativeObject
                                        decompilable nor constructible. */
         HAS_INFERRED_NAME = 0x0100, /* function had no explicit name, but a name was
                                        set by SetFunctionName at compile time or
-                                       SetFunctionNameIfNoOwnName at runtime. */
+                                       SetFunctionNameIfNoOwnName at runtime. See
+                                       atom_ for more info about this flag. */
         INTERPRETED_LAZY = 0x0200,  /* function is interpreted but doesn't have a script yet */
         RESOLVED_LENGTH  = 0x0400,  /* f.length has been resolved (see fun_resolve). */
         RESOLVED_NAME    = 0x0800,  /* f.name has been resolved (see fun_resolve). */
@@ -141,7 +143,42 @@ class JSFunction : public js::NativeObject
             } s;
         } scripted;
     } u;
-    js::GCPtrAtom atom_; /* name for diagnostics and decompiling */
+
+    // The |atom_| field can have different meanings depending on the function
+    // type and flags. It is used for diagnostics, decompiling, and
+    //
+    // 1. If the function is not a bound function:
+    //   a. If HAS_GUESSED_ATOM is not set, to store the initial value of the
+    //      "name" property of functions. But also see RESOLVED_NAME.
+    //   b. If HAS_GUESSED_ATOM is set, |atom_| is only used for diagnostics,
+    //      but must not be used for the "name" property.
+    //   c. If HAS_INFERRED_NAME is set, the function wasn't given an explicit
+    //      name in the source text, e.g. |function fn(){}|, but instead it
+    //      was inferred based on how the function was defined in the source
+    //      text. The exact name inference rules are defined in the ECMAScript
+    //      specification.
+    //      Name inference can happen at compile-time, for example in
+    //      |var fn = function(){}|, or it can happen at runtime, for example
+    //      in |var o = {[Symbol.iterator]: function(){}}|. When it happens at
+    //      compile-time, the HAS_INFERRED_NAME is set directly in the
+    //      bytecode emitter, when it happens at runtime, the flag is set when
+    //      evaluating the JSOP_SETFUNNAME bytecode.
+    //   d. HAS_GUESSED_ATOM and HAS_INFERRED_NAME cannot both be set.
+    //   e. |atom_| can be null if neither an explicit, nor inferred, nor a
+    //      guessed name was set.
+    //   f. HAS_INFERRED_NAME can be set for cloned singleton function, even
+    //      though the clone shouldn't receive an inferred name. See the
+    //      comments in NewFunctionClone() and SetFunctionNameIfNoOwnName()
+    //      for details.
+    //
+    // 2. If the function is a bound function:
+    //   a. To store the initial value of the "name" property.
+    //   b. If HAS_BOUND_FUNCTION_NAME_PREFIX is not set, |atom_| doesn't
+    //      contain the "bound " prefix which is prepended to the "name"
+    //      property of bound functions per ECMAScript.
+    //   c. Bound functions can never have an inferred or guessed name.
+    //   d. |atom_| is never null for bound functions.
+    js::GCPtrAtom atom_;
 
   public:
     /* Call objects must be created for each invocation of this function. */
@@ -803,10 +840,6 @@ NewScriptedFunction(JSContext* cx, unsigned nargs, JSFunction::Flags flags,
 extern JSAtom*
 IdToFunctionName(JSContext* cx, HandleId id,
                  FunctionPrefixKind prefixKind = FunctionPrefixKind::None);
-
-extern JSAtom*
-NameToFunctionName(JSContext* cx, HandleAtom name,
-                   FunctionPrefixKind prefixKind = FunctionPrefixKind::None);
 
 extern bool
 SetFunctionNameIfNoOwnName(JSContext* cx, HandleFunction fun, HandleValue name,
