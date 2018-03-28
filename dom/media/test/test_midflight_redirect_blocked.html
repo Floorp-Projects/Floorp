@@ -41,8 +41,9 @@
             removeNodeAndSource(element);
           }, false);
 
-          let suffix = useCors ? "&cors" : "";
-          element.src = "midflight-redirect.sjs?resource=" + test.name + suffix;
+          element.src = "midflight-redirect.sjs?resource=" + test.name
+                      + (useCors ? "&cors" : "")
+                      + "&type=" + test.type;
           element.preload = "metadata";
           document.body.appendChild(element);
           element.load()

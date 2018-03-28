@@ -16,6 +16,7 @@ function handleRequest(request, response)
 {
   var query = request.queryString;
   var resource = parseQuery(query, "resource");
+  var type = parseQuery(query, "type") || "application/octet-stream";
   var redirected = parseQuery(query, "redirected") || false;
   var useCors = parseQuery(query, "cors") || false;
 
@@ -61,7 +62,7 @@ function handleRequest(request, response)
   response.setStatusLine(request.httpVersion, 206, "Partial Content");
   response.setHeader("Content-Range", contentRange);
   response.setHeader("Content-Length", contentLength, false);
-  response.setHeader("Content-Type", "video/ogg", false);
+  response.setHeader("Content-Type", type, false);
   response.setHeader("Accept-Ranges", "bytes", false);
   if (redirected && useCors) {
     response.setHeader("Access-Control-Allow-Origin", "*");
