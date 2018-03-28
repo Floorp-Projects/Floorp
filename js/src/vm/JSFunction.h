@@ -841,10 +841,6 @@ extern JSAtom*
 IdToFunctionName(JSContext* cx, HandleId id,
                  FunctionPrefixKind prefixKind = FunctionPrefixKind::None);
 
-extern JSAtom*
-NameToFunctionName(JSContext* cx, HandleAtom name,
-                   FunctionPrefixKind prefixKind = FunctionPrefixKind::None);
-
 extern bool
 SetFunctionNameIfNoOwnName(JSContext* cx, HandleFunction fun, HandleValue name,
                            FunctionPrefixKind prefixKind);
