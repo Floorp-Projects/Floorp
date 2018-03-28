@@ -1269,14 +1269,9 @@ NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtdInnerFrame)
 
 nsMathMLmtdInnerFrame::nsMathMLmtdInnerFrame(ComputedStyle* aStyle)
   : nsBlockFrame(aStyle, kClassID)
-{
   // Make a copy of the parent nsStyleText for later modification.
-  mUniqueStyleText = new (PresContext()) nsStyleText(*StyleText());
-}
-
-nsMathMLmtdInnerFrame::~nsMathMLmtdInnerFrame()
+  , mUniqueStyleText(MakeUnique<nsStyleText>(*StyleText()))
 {
-  mUniqueStyleText->Destroy(PresContext());
 }
 
 void
@@ -1314,13 +1309,12 @@ nsStyleText* nsMathMLmtdInnerFrame::StyleTextForLineLayout()
   }
 
   mUniqueStyleText->mTextAlign = alignment;
-  return mUniqueStyleText;
+  return mUniqueStyleText.get();
 }
 
 /* virtual */ void
 nsMathMLmtdInnerFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
 {
   nsBlockFrame::DidSetComputedStyle(aOldComputedStyle);
-  mUniqueStyleText->Destroy(PresContext());
-  mUniqueStyleText = new (PresContext()) nsStyleText(*StyleText());
+  mUniqueStyleText = MakeUnique<nsStyleText>(*StyleText());
 }
