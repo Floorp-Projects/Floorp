@@ -141,7 +141,6 @@ add_task(async function networkErrorResponse() {
     serverURL: "https://domain.dummy",
     client_id: "abc123"
   });
-  Services.prefs.setBoolPref("identity.fxaccounts.skipDeviceRegistration", true);
   client.getTokenFromAssertion("assertion", "scope")
     .catch(function(e) {
       Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
@@ -149,8 +148,7 @@ add_task(async function networkErrorResponse() {
       Assert.equal(e.errno, ERRNO_NETWORK);
       Assert.equal(e.error, ERROR_NETWORK);
       run_next_test();
-    }).catch(() => {}).then(() =>
-      Services.prefs.clearUserPref("identity.fxaccounts.skipDeviceRegistration"));
+    });
 });
 
 add_test(function unsupportedMethod() {
@@ -271,7 +269,6 @@ add_test(function networkErrorResponse() {
     serverURL: "https://domain.dummy",
     client_id: "abc123"
   });
-  Services.prefs.setBoolPref("identity.fxaccounts.skipDeviceRegistration", true);
   client.getTokenFromAssertion("assertion", "scope")
     .catch(function(e) {
       Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
@@ -279,8 +276,7 @@ add_test(function networkErrorResponse() {
       Assert.equal(e.errno, ERRNO_NETWORK);
       Assert.equal(e.error, ERROR_NETWORK);
       run_next_test();
-    }).catch(() => {}).then(() =>
-      Services.prefs.clearUserPref("identity.fxaccounts.skipDeviceRegistration"));
+    });
 });
 
 
