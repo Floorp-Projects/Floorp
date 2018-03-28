@@ -658,11 +658,9 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
       // it since we avoid mutating state as part of the Servo parallel
       // traversal.
       presContext->EffectCompositor()
-                 ->UpdateCascadeResults(StyleBackendType::Servo,
-                                        *effectSet,
+                 ->UpdateCascadeResults(*effectSet,
                                         const_cast<Element*>(aElement),
-                                        pseudoType,
-                                        nullptr);
+                                        pseudoType);
     }
   }
 
