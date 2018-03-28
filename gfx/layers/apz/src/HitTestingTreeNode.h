@@ -89,7 +89,8 @@ public:
                       const LayerIntRegion& aVisibleRegion,
                       const CSSTransformMatrix& aTransform,
                       const Maybe<ParentLayerIntRegion>& aClipRegion,
-                      const EventRegionsOverride& aOverride);
+                      const EventRegionsOverride& aOverride,
+                      bool aIsBackfaceHidden);
   bool IsOutsideClip(const ParentLayerPoint& aPoint) const;
 
   /* Scrollbar info */
@@ -171,6 +172,14 @@ private:
   /* This is the transform from layer L. This does NOT include any async
    * transforms. */
   CSSTransformMatrix mTransform;
+
+  /* Whether layer L is backface-visibility:hidden, and its backface is
+   * currently visible. It's true that the latter depends on the layer's
+   * shadow transform, but the sorts of changes APZ makes to the shadow
+   * transform shouldn't change the backface from hidden to visible or
+   * vice versa, so it's sufficient to record this at hit test tree
+   * building time. */
+  bool mIsBackfaceHidden;
 
   /* This is clip rect for L that we wish to use for hit-testing purposes. Note
    * that this may not be exactly the same as the clip rect on layer L because
