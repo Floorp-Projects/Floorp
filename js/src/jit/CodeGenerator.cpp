@@ -9227,9 +9227,10 @@ CodeGenerator::emitStoreElementHoleT(T* lir)
 
     Register elements = ToRegister(lir->elements());
     Register index = ToRegister(lir->index());
+    Register spectreTemp = ToTempRegisterOrInvalid(lir->spectreTemp());
 
     Address initLength(elements, ObjectElements::offsetOfInitializedLength());
-    masm.branch32(Assembler::BelowOrEqual, initLength, index, ool->entry());
+    masm.spectreBoundsCheck32(index, initLength, spectreTemp, ool->entry());
 
     if (lir->mir()->needsBarrier())
         emitPreBarrier(elements, lir->index(), 0);
@@ -9260,9 +9261,10 @@ CodeGenerator::emitStoreElementHoleV(T* lir)
     Register elements = ToRegister(lir->elements());
     Register index = ToRegister(lir->index());
     const ValueOperand value = ToValue(lir, T::Value);
+    Register spectreTemp = ToTempRegisterOrInvalid(lir->spectreTemp());
 
     Address initLength(elements, ObjectElements::offsetOfInitializedLength());
-    masm.branch32(Assembler::BelowOrEqual, initLength, index, ool->entry());
+    masm.spectreBoundsCheck32(index, initLength, spectreTemp, ool->entry());
 
     if (lir->mir()->needsBarrier())
         emitPreBarrier(elements, lir->index(), 0);
@@ -9360,6 +9362,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
     const LAllocation* index;
     MIRType valueType;
     ConstantOrRegister value;
+    Register spectreTemp;
 
     if (ins->isStoreElementHoleV()) {
         LStoreElementHoleV* store = ins->toStoreElementHoleV();
@@ -9368,6 +9371,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
         index = store->index();
         valueType = store->mir()->value()->type();
         value = TypedOrValueRegister(ToValue(store, LStoreElementHoleV::Value));
+        spectreTemp = ToTempRegisterOrInvalid(store->spectreTemp());
     } else if (ins->isFallibleStoreElementV()) {
         LFallibleStoreElementV* store = ins->toFallibleStoreElementV();
         object = ToRegister(store->object());
@@ -9375,6 +9379,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
         index = store->index();
         valueType = store->mir()->value()->type();
         value = TypedOrValueRegister(ToValue(store, LFallibleStoreElementV::Value));
+        spectreTemp = ToTempRegisterOrInvalid(store->spectreTemp());
     } else if (ins->isStoreElementHoleT()) {
         LStoreElementHoleT* store = ins->toStoreElementHoleT();
         object = ToRegister(store->object());
@@ -9385,6 +9390,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
             value = ConstantOrRegister(store->value()->toConstant()->toJSValue());
         else
             value = TypedOrValueRegister(valueType, ToAnyRegister(store->value()));
+        spectreTemp = ToTempRegisterOrInvalid(store->spectreTemp());
     } else { // ins->isFallibleStoreElementT()
         LFallibleStoreElementT* store = ins->toFallibleStoreElementT();
         object = ToRegister(store->object());
@@ -9395,6 +9401,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
             value = ConstantOrRegister(store->value()->toConstant()->toJSValue());
         else
             value = TypedOrValueRegister(valueType, ToAnyRegister(store->value()));
+        spectreTemp = ToTempRegisterOrInvalid(store->spectreTemp());
     }
 
     Register indexReg = ToRegister(index);
@@ -9402,6 +9409,8 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
     // If index == initializedLength, try to bump the initialized length inline.
     // If index > initializedLength, call a stub. Note that this relies on the
     // condition flags sticking from the incoming branch.
+    // Also note: this branch does not need Spectre mitigations, doing that for
+    // the capacity check below is sufficient.
     Label callStub;
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     // Had to reimplement for MIPS because there are no flags.
@@ -9412,8 +9421,8 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
 #endif
 
     // Check array capacity.
-    masm.branch32(Assembler::BelowOrEqual, Address(elements, ObjectElements::offsetOfCapacity()),
-                  indexReg, &callStub);
+    masm.spectreBoundsCheck32(indexReg, Address(elements, ObjectElements::offsetOfCapacity()),
+                              spectreTemp, &callStub);
 
     // Update initialized length. The capacity guard above ensures this won't overflow,
     // due to MAX_DENSE_ELEMENTS_COUNT.
@@ -9558,12 +9567,13 @@ CodeGenerator::emitArrayPopShift(LInstruction* lir, const MArrayPopShift* mir, R
     // VM call if a write barrier is necessary.
     masm.branchTestNeedsIncrementalBarrier(Assembler::NonZero, ool->entry());
 
-    // Load elements and length, and VM call if length != initializedLength.
+    // Load elements and initializedLength, and VM call if
+    // length != initializedLength.
     masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), elementsTemp);
-    masm.load32(Address(elementsTemp, ObjectElements::offsetOfLength()), lengthTemp);
+    masm.load32(Address(elementsTemp, ObjectElements::offsetOfInitializedLength()), lengthTemp);
 
-    Address initLength(elementsTemp, ObjectElements::offsetOfInitializedLength());
-    masm.branch32(Assembler::NotEqual, initLength, lengthTemp, ool->entry());
+    Address lengthAddr(elementsTemp, ObjectElements::offsetOfLength());
+    masm.branch32(Assembler::NotEqual, lengthAddr, lengthTemp, ool->entry());
 
     // Test for length != 0. On zero length either take a VM call or generate
     // an undefined value, depending on whether the call is known to produce
@@ -9655,7 +9665,8 @@ static const VMFunction ArrayPushDenseInfo =
 
 void
 CodeGenerator::emitArrayPush(LInstruction* lir, Register obj,
-                             const ConstantOrRegister& value, Register elementsTemp, Register length)
+                             const ConstantOrRegister& value, Register elementsTemp, Register length,
+                             Register spectreTemp)
 {
     OutOfLineCode* ool = oolCallVM(ArrayPushDenseInfo, lir, ArgList(obj, value), StoreRegisterTo(length));
 
@@ -9669,7 +9680,7 @@ CodeGenerator::emitArrayPush(LInstruction* lir, Register obj,
 
     // Guard length < capacity.
     Address capacity(elementsTemp, ObjectElements::offsetOfCapacity());
-    masm.branch32(Assembler::BelowOrEqual, capacity, length, ool->entry());
+    masm.spectreBoundsCheck32(length, capacity, spectreTemp, ool->entry());
 
     // Do the store.
     masm.storeConstantOrRegister(value, BaseIndex(elementsTemp, length, TimesEight));
@@ -9690,7 +9701,8 @@ CodeGenerator::visitArrayPushV(LArrayPushV* lir)
     Register elementsTemp = ToRegister(lir->temp());
     Register length = ToRegister(lir->output());
     ConstantOrRegister value = TypedOrValueRegister(ToValue(lir, LArrayPushV::Value));
-    emitArrayPush(lir, obj, value, elementsTemp, length);
+    Register spectreTemp = ToTempRegisterOrInvalid(lir->spectreTemp());
+    emitArrayPush(lir, obj, value, elementsTemp, length, spectreTemp);
 }
 
 void
@@ -9704,7 +9716,8 @@ CodeGenerator::visitArrayPushT(LArrayPushT* lir)
         value = ConstantOrRegister(lir->value()->toConstant()->toJSValue());
     else
         value = TypedOrValueRegister(lir->mir()->value()->type(), ToAnyRegister(lir->value()));
-    emitArrayPush(lir, obj, value, elementsTemp, length);
+    Register spectreTemp = ToTempRegisterOrInvalid(lir->spectreTemp());
+    emitArrayPush(lir, obj, value, elementsTemp, length, spectreTemp);
 }
 
 typedef JSObject* (*ArraySliceDenseFn)(JSContext*, HandleObject, int32_t, int32_t, HandleObject);

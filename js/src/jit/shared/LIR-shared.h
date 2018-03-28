@@ -6440,19 +6440,21 @@ class LStoreElementT : public LInstructionHelper<0, 3, 0>
 };
 
 // Like LStoreElementV, but supports indexes >= initialized length.
-class LStoreElementHoleV : public LInstructionHelper<0, 3 + BOX_PIECES, 0>
+class LStoreElementHoleV : public LInstructionHelper<0, 3 + BOX_PIECES, 1>
 {
   public:
     LIR_HEADER(StoreElementHoleV)
 
     LStoreElementHoleV(const LAllocation& object, const LAllocation& elements,
-                       const LAllocation& index, const LBoxAllocation& value)
+                       const LAllocation& index, const LBoxAllocation& value,
+                       const LDefinition& spectreTemp)
       : LInstructionHelper(classOpcode)
     {
         setOperand(0, object);
         setOperand(1, elements);
         setOperand(2, index);
         setBoxOperand(Value, value);
+        setTemp(0, spectreTemp);
     }
 
     static const size_t Value = 3;
@@ -6469,22 +6471,27 @@ class LStoreElementHoleV : public LInstructionHelper<0, 3 + BOX_PIECES, 0>
     const LAllocation* index() {
         return getOperand(2);
     }
+    const LDefinition* spectreTemp() {
+        return getTemp(0);
+    }
 };
 
 // Like LStoreElementT, but supports indexes >= initialized length.
-class LStoreElementHoleT : public LInstructionHelper<0, 4, 0>
+class LStoreElementHoleT : public LInstructionHelper<0, 4, 1>
 {
   public:
     LIR_HEADER(StoreElementHoleT)
 
     LStoreElementHoleT(const LAllocation& object, const LAllocation& elements,
-                       const LAllocation& index, const LAllocation& value)
+                       const LAllocation& index, const LAllocation& value,
+                       const LDefinition& spectreTemp)
       : LInstructionHelper(classOpcode)
     {
         setOperand(0, object);
         setOperand(1, elements);
         setOperand(2, index);
         setOperand(3, value);
+        setTemp(0, spectreTemp);
     }
 
     const MStoreElementHole* mir() const {
@@ -6502,22 +6509,27 @@ class LStoreElementHoleT : public LInstructionHelper<0, 4, 0>
     const LAllocation* value() {
         return getOperand(3);
     }
+    const LDefinition* spectreTemp() {
+        return getTemp(0);
+    }
 };
 
 // Like LStoreElementV, but can just ignore assignment (for eg. frozen objects)
-class LFallibleStoreElementV : public LInstructionHelper<0, 3 + BOX_PIECES, 0>
+class LFallibleStoreElementV : public LInstructionHelper<0, 3 + BOX_PIECES, 1>
 {
   public:
     LIR_HEADER(FallibleStoreElementV)
 
     LFallibleStoreElementV(const LAllocation& object, const LAllocation& elements,
-                           const LAllocation& index, const LBoxAllocation& value)
+                           const LAllocation& index, const LBoxAllocation& value,
+                           const LDefinition& spectreTemp)
       : LInstructionHelper(classOpcode)
     {
         setOperand(0, object);
         setOperand(1, elements);
         setOperand(2, index);
         setBoxOperand(Value, value);
+        setTemp(0, spectreTemp);
     }
 
     static const size_t Value = 3;
@@ -6534,22 +6546,27 @@ class LFallibleStoreElementV : public LInstructionHelper<0, 3 + BOX_PIECES, 0>
     const LAllocation* index() {
         return getOperand(2);
     }
+    const LDefinition* spectreTemp() {
+        return getTemp(0);
+    }
 };
 
 // Like LStoreElementT, but can just ignore assignment (for eg. frozen objects)
-class LFallibleStoreElementT : public LInstructionHelper<0, 4, 0>
+class LFallibleStoreElementT : public LInstructionHelper<0, 4, 1>
 {
   public:
     LIR_HEADER(FallibleStoreElementT)
 
     LFallibleStoreElementT(const LAllocation& object, const LAllocation& elements,
-                           const LAllocation& index, const LAllocation& value)
+                           const LAllocation& index, const LAllocation& value,
+                           const LDefinition& spectreTemp)
       : LInstructionHelper(classOpcode)
     {
         setOperand(0, object);
         setOperand(1, elements);
         setOperand(2, index);
         setOperand(3, value);
+        setTemp(0, spectreTemp);
     }
 
     const MFallibleStoreElement* mir() const {
@@ -6566,6 +6583,9 @@ class LFallibleStoreElementT : public LInstructionHelper<0, 4, 0>
     }
     const LAllocation* value() {
         return getOperand(3);
+    }
+    const LDefinition* spectreTemp() {
+        return getTemp(0);
     }
 };
 
@@ -6681,17 +6701,19 @@ class LArrayPopShiftT : public LInstructionHelper<1, 1, 2>
     }
 };
 
-class LArrayPushV : public LInstructionHelper<1, 1 + BOX_PIECES, 1>
+class LArrayPushV : public LInstructionHelper<1, 1 + BOX_PIECES, 2>
 {
   public:
     LIR_HEADER(ArrayPushV)
 
-    LArrayPushV(const LAllocation& object, const LBoxAllocation& value, const LDefinition& temp)
+    LArrayPushV(const LAllocation& object, const LBoxAllocation& value, const LDefinition& temp,
+                const LDefinition& spectreTemp)
       : LInstructionHelper(classOpcode)
     {
         setOperand(0, object);
         setBoxOperand(Value, value);
         setTemp(0, temp);
+        setTemp(1, spectreTemp);
     }
 
     static const size_t Value = 1;
@@ -6705,19 +6727,24 @@ class LArrayPushV : public LInstructionHelper<1, 1 + BOX_PIECES, 1>
     const LDefinition* temp() {
         return getTemp(0);
     }
+    const LDefinition* spectreTemp() {
+        return getTemp(1);
+    }
 };
 
-class LArrayPushT : public LInstructionHelper<1, 2, 1>
+class LArrayPushT : public LInstructionHelper<1, 2, 2>
 {
   public:
     LIR_HEADER(ArrayPushT)
 
-    LArrayPushT(const LAllocation& object, const LAllocation& value, const LDefinition& temp)
+    LArrayPushT(const LAllocation& object, const LAllocation& value, const LDefinition& temp,
+                const LDefinition& spectreTemp)
       : LInstructionHelper(classOpcode)
     {
         setOperand(0, object);
         setOperand(1, value);
         setTemp(0, temp);
+        setTemp(1, spectreTemp);
     }
 
     const MArrayPush* mir() const {
@@ -6731,6 +6758,9 @@ class LArrayPushT : public LInstructionHelper<1, 2, 1>
     }
     const LDefinition* temp() {
         return getTemp(0);
+    }
+    const LDefinition* spectreTemp() {
+        return getTemp(1);
     }
 };
 

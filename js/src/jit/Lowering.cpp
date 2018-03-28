@@ -3419,6 +3419,18 @@ LIRGenerator::visitStoreElement(MStoreElement* ins)
     }
 }
 
+static bool
+BoundsCheckNeedsSpectreTemp()
+{
+    // On x86, spectreBoundsCheck32 can emit better code if it has a scratch
+    // register and index masking is enabled.
+#ifdef JS_CODEGEN_X86
+    return JitOptions.spectreIndexMasking;
+#else
+    return false;
+#endif
+}
+
 void
 LIRGenerator::visitStoreElementHole(MStoreElementHole* ins)
 {
@@ -3429,16 +3441,19 @@ LIRGenerator::visitStoreElementHole(MStoreElementHole* ins)
     const LUse elements = useRegister(ins->elements());
     const LAllocation index = useRegister(ins->index());
 
+    LDefinition spectreTemp = BoundsCheckNeedsSpectreTemp() ? temp() : LDefinition::BogusTemp();
+
     LInstruction* lir;
     switch (ins->value()->type()) {
       case MIRType::Value:
-        lir = new(alloc()) LStoreElementHoleV(object, elements, index, useBox(ins->value()));
+        lir = new(alloc()) LStoreElementHoleV(object, elements, index, useBox(ins->value()),
+                                              spectreTemp);
         break;
 
       default:
       {
         const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
-        lir = new(alloc()) LStoreElementHoleT(object, elements, index, value);
+        lir = new(alloc()) LStoreElementHoleT(object, elements, index, value, spectreTemp);
         break;
       }
     }
@@ -3457,14 +3472,18 @@ LIRGenerator::visitFallibleStoreElement(MFallibleStoreElement* ins)
     const LUse elements = useRegister(ins->elements());
     const LAllocation index = useRegister(ins->index());
 
+    LDefinition spectreTemp = BoundsCheckNeedsSpectreTemp() ? temp() : LDefinition::BogusTemp();
+
     LInstruction* lir;
     switch (ins->value()->type()) {
       case MIRType::Value:
-        lir = new(alloc()) LFallibleStoreElementV(object, elements, index, useBox(ins->value()));
+        lir = new(alloc()) LFallibleStoreElementV(object, elements, index, useBox(ins->value()),
+                                                  spectreTemp);
         break;
       default:
         const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
-        lir = new(alloc()) LFallibleStoreElementT(object, elements, index, value);
+        lir = new(alloc()) LFallibleStoreElementT(object, elements, index, value,
+                                                  spectreTemp);
         break;
     }
 
@@ -3563,10 +3582,13 @@ LIRGenerator::visitArrayPush(MArrayPush* ins)
 
     LUse object = useRegister(ins->object());
 
+    LDefinition spectreTemp = BoundsCheckNeedsSpectreTemp() ? temp() : LDefinition::BogusTemp();
+
     switch (ins->value()->type()) {
       case MIRType::Value:
       {
-        LArrayPushV* lir = new(alloc()) LArrayPushV(object, useBox(ins->value()), temp());
+        LArrayPushV* lir = new(alloc()) LArrayPushV(object, useBox(ins->value()), temp(),
+                                                    spectreTemp);
         define(lir, ins);
         assignSafepoint(lir, ins);
         break;
@@ -3575,7 +3597,7 @@ LIRGenerator::visitArrayPush(MArrayPush* ins)
       default:
       {
         const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
-        LArrayPushT* lir = new(alloc()) LArrayPushT(object, value, temp());
+        LArrayPushT* lir = new(alloc()) LArrayPushT(object, value, temp(), spectreTemp);
         define(lir, ins);
         assignSafepoint(lir, ins);
         break;
@@ -3798,7 +3820,7 @@ LIRGenerator::visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole* ins)
     else
         value = useRegisterOrNonDoubleConstant(ins->value());
 
-    LDefinition spectreTemp = JitOptions.spectreIndexMasking ? temp() : LDefinition::BogusTemp();
+    LDefinition spectreTemp = BoundsCheckNeedsSpectreTemp() ? temp() : LDefinition::BogusTemp();
     auto* lir =
         new(alloc()) LStoreTypedArrayElementHole(elements, length, index, value, spectreTemp);
     add(lir, ins);
