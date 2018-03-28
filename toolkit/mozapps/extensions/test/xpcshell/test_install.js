@@ -211,9 +211,15 @@ add_task(async function test_1() {
   } else {
     let iconFile = uri.QueryInterface(Ci.nsIFileURL).file;
     ok(iconFile.exists());
+    // Make the iconFile predictably old.
+    iconFile.lastModifiedTime = Date.now() - MAKE_FILE_OLD_DIFFERENCE;
   }
 
+  // Make the pending install have a sensible date
   let updateDate = Date.now();
+  let extURI = addon.getResourceURI("");
+  let ext = extURI.QueryInterface(Ci.nsIFileURL).file;
+  setExtensionModifiedTime(ext, updateDate);
 
   ok(!hasFlag(addon.permissions, AddonManager.PERM_CAN_ENABLE));
   ok(hasFlag(addon.permissions, AddonManager.PERM_CAN_DISABLE));
