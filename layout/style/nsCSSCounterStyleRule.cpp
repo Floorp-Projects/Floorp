@@ -75,12 +75,6 @@ nsCSSCounterStyleRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-/* virtual */ int32_t
-nsCSSCounterStyleRule::GetType() const
-{
-  return Rule::COUNTER_STYLE_RULE;
-}
-
 uint16_t
 nsCSSCounterStyleRule::Type() const
 {

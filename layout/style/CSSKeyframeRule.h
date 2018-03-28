@@ -21,7 +21,6 @@ protected:
   virtual ~CSSKeyframeRule() {}
 
 public:
-  int32_t GetType() const final { return Rule::KEYFRAME_RULE; }
   bool IsCCLeaf() const override { return Rule::IsCCLeaf(); }
 
   // WebIDL interface

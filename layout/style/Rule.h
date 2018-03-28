@@ -58,30 +58,6 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const = 0;
 #endif
 
-  // The constants in this list must maintain the following invariants:
-  //   If a rule of type N must appear before a rule of type M in stylesheets
-  //   then N < M
-  // Note that CSSStyleSheet::RebuildChildList assumes that no other kinds of
-  // rules can come between two rules of type IMPORT_RULE.
-  enum {
-    UNKNOWN_RULE = 0,
-    CHARSET_RULE,
-    IMPORT_RULE,
-    NAMESPACE_RULE,
-    STYLE_RULE,
-    MEDIA_RULE,
-    FONT_FACE_RULE,
-    PAGE_RULE,
-    KEYFRAME_RULE,
-    KEYFRAMES_RULE,
-    DOCUMENT_RULE,
-    SUPPORTS_RULE,
-    FONT_FEATURE_VALUES_RULE,
-    COUNTER_STYLE_RULE
-  };
-
-  virtual int32_t GetType() const = 0;
-
   StyleSheet* GetStyleSheet() const { return mSheet; }
 
   // Return the document the rule lives in, if any
