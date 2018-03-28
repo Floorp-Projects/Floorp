@@ -11,11 +11,14 @@
 #include "nsITelemetry.h"
 #include "nsThreadUtils.h"
 #include "Telemetry.h"
+#include "mozilla/TelemetryProcessEnums.h"
 #include "TelemetryFixture.h"
+#include "TelemetryScalar.h"
 #include "TelemetryTestHelpers.h"
 
 using namespace mozilla;
 using namespace TelemetryTestHelpers;
+using mozilla::Telemetry::ProcessID;
 
 #define EXPECTED_STRING "Nice, expected and creative string."
 
@@ -246,4 +249,50 @@ TEST_F(TelemetryTestFixture, ScalarUnknownID) {
     ASSERT_TRUE(keyedSnapshot.isUndefined()) << "No keyed scalar must be recorded";
   }
 #endif
+}
+
+TEST_F(TelemetryTestFixture, ScalarEventSummary) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  // Make sure we don't get scalars from other tests.
+  Unused << mTelemetry->ClearScalars();
+
+  const char* kScalarName = "telemetry.event_counts";
+
+  const char* kLongestEvent = "oohwowlookthiscategoryissolong#thismethodislongtooo#thisobjectisnoslouch";
+  TelemetryScalar::SummarizeEvent(nsCString(kLongestEvent), ProcessID::Parent, false /* aDynamic */);
+
+  // Check the recorded value.
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
+
+  CheckKeyedUintScalar(kScalarName, kLongestEvent, cx.GetJSContext(), scalarsSnapshot, 1);
+
+// Don't run this part in debug builds as that intentionally asserts.
+#ifndef DEBUG
+  const char* kTooLongEvent = "oohwowlookthiscategoryissolong#thismethodislongtooo#thisobjectisnoslouch2";
+  TelemetryScalar::SummarizeEvent(nsCString(kTooLongEvent), ProcessID::Parent, false /* aDynamic */);
+
+  GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
+  CheckNumberOfProperties(kScalarName, cx.GetJSContext(), scalarsSnapshot, 1);
+#endif // #ifndef DEBUG
+
+  // Test we can fill the next 499 keys up to our 500 maximum
+  for (int i = 1; i < 500; i++) {
+    std::ostringstream eventName;
+    eventName << "category#method#object" << i;
+    TelemetryScalar::SummarizeEvent(nsCString(eventName.str().c_str()), ProcessID::Parent, false /* aDynamic */);
+  }
+
+  GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
+  CheckNumberOfProperties(kScalarName, cx.GetJSContext(), scalarsSnapshot, 500);
+
+// Don't run this part in debug builds as that intentionally asserts.
+#ifndef DEBUG
+  TelemetryScalar::SummarizeEvent(nsCString("whoops#too#many"), ProcessID::Parent, false /* aDynamic */);
+
+  GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
+  CheckNumberOfProperties(kScalarName, cx.GetJSContext(), scalarsSnapshot, 500);
+#endif // #ifndef DEBUG
+
 }
