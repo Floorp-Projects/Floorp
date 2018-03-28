@@ -666,20 +666,17 @@ nsAtomTable::RegisterStaticAtoms(const nsStaticAtomSetup* aSetup,
     AtomTableEntry* he = table.Add(key);
 
     if (he->mAtom) {
-      // Disallow creating a dynamic atom, and then later, while the dynamic
-      // atom is still alive, registering that same atom as a static atom.  It
-      // causes subtle bugs, and we're programming in C++ here, not Smalltalk.
-      if (!he->mAtom->IsStatic()) {
-        nsAutoCString name;
-        he->mAtom->ToUTF8String(name);
-        MOZ_CRASH_UNSAFE_PRINTF(
-          "Static atom registration for %s should be pushed back", name.get());
-      }
-      // XXX: A duplicate static atom! Bug 1445113 will disallow this case.
-      *atomp = static_cast<nsStaticAtom*>(he->mAtom);
-    } else {
-      he->mAtom = *atomp = const_cast<nsStaticAtom*>(atom);
+      // There are two ways we could get here.
+      // - Register two static atoms with the same string.
+      // - Create a dynamic atom and then register a static atom with the same
+      //   string while the dynamic atom is alive.
+      // Both cases can cause subtle bugs, and are disallowed. We're
+      // programming in C++ here, not Smalltalk.
+      nsAutoCString name;
+      he->mAtom->ToUTF8String(name);
+      MOZ_CRASH_UNSAFE_PRINTF("Atom for '%s' already exists", name.get());
     }
+    he->mAtom = *atomp = const_cast<nsStaticAtom*>(atom);
   }
 }
 
