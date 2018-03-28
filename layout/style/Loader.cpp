@@ -367,12 +367,10 @@ LoaderReusableStyleSheets::FindReusableStyleSheet(nsIURI* aURL,
  * Loader Implementation *
  *************************/
 
-Loader::Loader(StyleBackendType aType, DocGroup* aDocGroup)
+Loader::Loader()
   : mDocument(nullptr)
-  , mDocGroup(aDocGroup)
   , mDatasToNotifyOn(0)
   , mCompatMode(eCompatibility_FullStandards)
-  , mStyleBackendType(Some(aType))
   , mEnabled(true)
   , mReporter(new ConsoleReportCollector())
 #ifdef DEBUG
@@ -381,16 +379,16 @@ Loader::Loader(StyleBackendType aType, DocGroup* aDocGroup)
 {
 }
 
-Loader::Loader(nsIDocument* aDocument)
-  : mDocument(aDocument)
-  , mDatasToNotifyOn(0)
-  , mCompatMode(eCompatibility_FullStandards)
-  , mEnabled(true)
-  , mReporter(new ConsoleReportCollector())
-#ifdef DEBUG
-  , mSyncCallback(false)
-#endif
+Loader::Loader(DocGroup* aDocGroup)
+  : Loader()
 {
+  mDocGroup = aDocGroup;
+}
+
+Loader::Loader(nsIDocument* aDocument)
+  : Loader()
+{
+  mDocument = aDocument;
   MOZ_ASSERT(mDocument, "We should get a valid document from the caller!");
 
   // We can just use the preferred set, since there are no sheets in the
@@ -1061,11 +1059,7 @@ Loader::CreateSheet(nsIURI* aURI,
                                   &sriMetadata);
     }
 
-    if (GetStyleBackendType() == StyleBackendType::Gecko) {
-      MOZ_CRASH("old style system disabled");
-    } else {
-      *aSheet = new ServoStyleSheet(aParsingMode, aCORSMode, aReferrerPolicy, sriMetadata);
-    }
+    *aSheet = new ServoStyleSheet(aParsingMode, aCORSMode, aReferrerPolicy, sriMetadata);
     (*aSheet)->SetURIs(sheetURI, originalURI, baseURI);
   }
 
@@ -2601,18 +2595,6 @@ Loader::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   // - mPreferredSheet, because it can be a shared string
 
   return n;
-}
-
-StyleBackendType
-Loader::GetStyleBackendType() const
-{
-  MOZ_ASSERT(mStyleBackendType || mDocument,
-             "you must construct a Loader with a document or set a "
-             "StyleBackendType on it before calling GetStyleBackendType");
-  if (mStyleBackendType) {
-    return *mStyleBackendType;
-  }
-  return mDocument->GetStyleBackendType();
 }
 
 void

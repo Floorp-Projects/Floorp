@@ -24,7 +24,6 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/StyleBackendType.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
@@ -192,11 +191,11 @@ class Loader final {
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
 public:
+  Loader();
   // aDocGroup is used for dispatching SheetLoadData in PostLoadEvent(). It
   // can be null if you want to use this constructor, and there's no
   // document when the Loader is constructed.
-  Loader(StyleBackendType aType, mozilla::dom::DocGroup* aDocGroup);
-
+  explicit Loader(mozilla::dom::DocGroup*);
   explicit Loader(nsIDocument*);
 
  private:
@@ -607,8 +606,6 @@ private:
   // directly or indirectly @importing the sheet this SheetLoadData represents.
   void MarkLoadTreeFailed(SheetLoadData* aLoadData);
 
-  StyleBackendType GetStyleBackendType() const;
-
   struct Sheets {
     nsBaseHashtable<URIPrincipalReferrerPolicyAndCORSModeHashKey,
                     RefPtr<StyleSheet>,
@@ -642,10 +639,6 @@ private:
 
   nsCompatibility   mCompatMode;
   nsString          mPreferredSheet;  // title of preferred sheet
-
-  // Set explicitly when the Loader(StyleBackendType) constructor is used, or
-  // taken from the document when the Loader(nsIDocument*) constructor is used.
-  mozilla::Maybe<StyleBackendType> mStyleBackendType;
 
   bool              mEnabled; // is enabled to load new styles
 
