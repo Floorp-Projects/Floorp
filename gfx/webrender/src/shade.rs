@@ -418,7 +418,6 @@ pub struct Shaders {
 
     // Brush shaders
     brush_solid: BrushShader,
-    brush_line: BrushShader,
     brush_image: Vec<Option<BrushShader>>,
     brush_blend: BrushShader,
     brush_mix_blend: BrushShader,
@@ -433,6 +432,7 @@ pub struct Shaders {
     pub cs_clip_box_shadow: LazilyCompiledShader,
     pub cs_clip_image: LazilyCompiledShader,
     pub cs_clip_border: LazilyCompiledShader,
+    pub cs_clip_line: LazilyCompiledShader,
 
     // The are "primitive shaders". These shaders draw and blend
     // final results on screen. They are aware of tile boundaries.
@@ -459,13 +459,6 @@ impl Shaders {
     ) -> Result<Self, ShaderError> {
         let brush_solid = BrushShader::new(
             "brush_solid",
-            device,
-            &[],
-            options.precache_shaders,
-        )?;
-
-        let brush_line = BrushShader::new(
-            "brush_line",
             device,
             &[],
             options.precache_shaders,
@@ -534,6 +527,14 @@ impl Shaders {
         let cs_clip_box_shadow = LazilyCompiledShader::new(
             ShaderKind::ClipCache,
             "cs_clip_box_shadow",
+            &[],
+            device,
+            options.precache_shaders,
+        )?;
+
+        let cs_clip_line = LazilyCompiledShader::new(
+            ShaderKind::ClipCache,
+            "cs_clip_line",
             &[],
             device,
             options.precache_shaders,
@@ -676,7 +677,6 @@ impl Shaders {
             cs_blur_a8,
             cs_blur_rgba8,
             brush_solid,
-            brush_line,
             brush_image,
             brush_blend,
             brush_mix_blend,
@@ -687,6 +687,7 @@ impl Shaders {
             cs_clip_box_shadow,
             cs_clip_border,
             cs_clip_image,
+            cs_clip_line,
             ps_text_run,
             ps_text_run_dual_source,
             ps_image,
@@ -723,9 +724,6 @@ impl Shaders {
                         self.brush_image[image_buffer_kind as usize]
                             .as_mut()
                             .expect("Unsupported image shader kind")
-                    }
-                    BrushBatchKind::Line => {
-                        &mut self.brush_line
                     }
                     BrushBatchKind::Blend => {
                         &mut self.brush_blend
@@ -775,7 +773,6 @@ impl Shaders {
         self.cs_blur_a8.deinit(device);
         self.cs_blur_rgba8.deinit(device);
         self.brush_solid.deinit(device);
-        self.brush_line.deinit(device);
         self.brush_blend.deinit(device);
         self.brush_mix_blend.deinit(device);
         self.brush_radial_gradient.deinit(device);
@@ -784,6 +781,7 @@ impl Shaders {
         self.cs_clip_box_shadow.deinit(device);
         self.cs_clip_image.deinit(device);
         self.cs_clip_border.deinit(device);
+        self.cs_clip_line.deinit(device);
         self.ps_text_run.deinit(device);
         self.ps_text_run_dual_source.deinit(device);
         for shader in self.brush_image {

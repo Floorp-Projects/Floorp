@@ -40,6 +40,10 @@ const SHADERS: &[Shader] = &[
         name: "cs_clip_border",
         features: CLIP_FEATURES,
     },
+    Shader {
+        name: "cs_clip_line",
+        features: CLIP_FEATURES,
+    },
     // Cache shaders
     Shader {
         name: "cs_blur",
@@ -89,10 +93,6 @@ const SHADERS: &[Shader] = &[
     },
     Shader {
         name: "brush_composite",
-        features: &[],
-    },
-    Shader {
-        name: "brush_line",
         features: &[],
     },
     Shader {

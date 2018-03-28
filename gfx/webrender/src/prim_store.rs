@@ -4,10 +4,11 @@
 
 use api::{AlphaType, BorderRadius, BoxShadowClipMode, BuiltDisplayList, ClipMode, ColorF, ComplexClipRegion};
 use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, Epoch, ExtendMode, FontRenderMode};
-use api::{GlyphInstance, GlyphKey, GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag};
-use api::{LayerPoint, LayerRect, LayerSize, LayerToWorldTransform, LayerVector2D, LineOrientation};
-use api::{LineStyle, PipelineId, PremultipliedColorF, Shadow, YuvColorSpace, YuvFormat};
+use api::{FilterOp, GlyphInstance, GlyphKey, GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag};
+use api::{LayerPoint, LayerRect, LayerSize, LayerToWorldTransform, LayerVector2D};
+use api::{PipelineId, PremultipliedColorF, Shadow, YuvColorSpace, YuvFormat};
 use border::{BorderCornerInstance, BorderEdgeKind};
+use box_shadow::BLUR_SAMPLE_SCALE;
 use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, CoordinateSystemId};
 use clip_scroll_node::ClipScrollNode;
 use clip::{ClipChain, ClipChainNode, ClipChainNodeIter, ClipChainNodeRef, ClipSource};
@@ -18,7 +19,7 @@ use glyph_rasterizer::{FontInstance, FontTransform};
 use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
                 ToGpuBlocks};
 use gpu_types::{ClipChainRectIndex};
-use picture::{PictureCompositeMode, PictureKind, PicturePrimitive};
+use picture::{PictureCompositeMode, PicturePrimitive};
 use render_task::{BlitSource, RenderTask, RenderTaskCacheKey, RenderTaskCacheKeyKind};
 use render_task::RenderTaskId;
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
@@ -198,12 +199,6 @@ pub enum BrushKind {
         color: ColorF,
     },
     Clear,
-    Line {
-        color: PremultipliedColorF,
-        wavy_line_thickness: f32,
-        style: LineStyle,
-        orientation: LineOrientation,
-    },
     Picture {
         pic_index: PictureIndex,
     },
@@ -248,8 +243,7 @@ impl BrushKind {
             BrushKind::RadialGradient { .. } |
             BrushKind::LinearGradient { .. } => true,
 
-            BrushKind::Clear |
-            BrushKind::Line { .. } => false,
+            BrushKind::Clear => false,
         }
     }
 }
@@ -354,15 +348,6 @@ impl BrushPrimitive {
             BrushKind::Clear => {
                 // Opaque black with operator dest out
                 request.push(PremultipliedColorF::BLACK);
-            }
-            BrushKind::Line { color, wavy_line_thickness, style, orientation } => {
-                request.push(color);
-                request.push([
-                    wavy_line_thickness,
-                    pack_as_float(style as u32),
-                    pack_as_float(orientation as u32),
-                    0.0,
-                ]);
             }
             BrushKind::LinearGradient { start_point, end_point, extend_mode, .. } => {
                 request.push([
@@ -919,6 +904,95 @@ pub enum PrimitiveContainer {
     Brush(BrushPrimitive),
 }
 
+impl PrimitiveContainer {
+    // Return true if the primary primitive is visible.
+    // Used to trivially reject non-visible primitives.
+    // TODO(gw): Currently, primitives other than those
+    //           listed here are handled before the
+    //           add_primitive() call. In the future
+    //           we should move the logic for all other
+    //           primitive types to use this.
+    pub fn is_visible(&self) -> bool {
+        match *self {
+            PrimitiveContainer::TextRun(ref info) => {
+                info.font.color.a > 0
+            }
+            PrimitiveContainer::Brush(ref brush) => {
+                match brush.kind {
+                    BrushKind::Solid { ref color } => {
+                        color.a > 0.0
+                    }
+                    BrushKind::Clear |
+                    BrushKind::Picture { .. } |
+                    BrushKind::Image { .. } |
+                    BrushKind::YuvImage { .. } |
+                    BrushKind::RadialGradient { .. } |
+                    BrushKind::LinearGradient { .. } => {
+                        true
+                    }
+                }
+            }
+            PrimitiveContainer::Image(..) |
+            PrimitiveContainer::Border(..) => {
+                true
+            }
+        }
+    }
+
+    // Create a clone of this PrimitiveContainer, applying whatever
+    // changes are necessary to the primitive to support rendering
+    // it as part of the supplied shadow.
+    pub fn create_shadow(&self, shadow: &Shadow) -> PrimitiveContainer {
+        match *self {
+            PrimitiveContainer::TextRun(ref info) => {
+                let mut render_mode = info.font.render_mode;
+
+                if shadow.blur_radius > 0.0 {
+                    render_mode = render_mode.limit_by(FontRenderMode::Alpha);
+                }
+
+                PrimitiveContainer::TextRun(TextRunPrimitiveCpu {
+                    font: FontInstance {
+                        color: shadow.color.into(),
+                        render_mode,
+                        ..info.font.clone()
+                    },
+                    offset: info.offset + shadow.offset,
+                    glyph_range: info.glyph_range,
+                    glyph_count: info.glyph_count,
+                    glyph_keys: info.glyph_keys.clone(),
+                    glyph_gpu_blocks: Vec::new(),
+                    shadow: true,
+                })
+            }
+            PrimitiveContainer::Brush(ref brush) => {
+                match brush.kind {
+                    BrushKind::Solid { .. } => {
+                        PrimitiveContainer::Brush(BrushPrimitive::new(
+                            BrushKind::Solid {
+                                color: shadow.color,
+                            },
+                            None,
+                        ))
+                    }
+                    BrushKind::Clear |
+                    BrushKind::Picture { .. } |
+                    BrushKind::Image { .. } |
+                    BrushKind::YuvImage { .. } |
+                    BrushKind::RadialGradient { .. } |
+                    BrushKind::LinearGradient { .. } => {
+                        panic!("bug: other brush kinds not expected here yet");
+                    }
+                }
+            }
+            PrimitiveContainer::Image(..) |
+            PrimitiveContainer::Border(..) => {
+                panic!("bug: other primitive containers not expected here");
+            }
+        }
+    }
+}
+
 pub struct PrimitiveStore {
     /// CPU side information only.
     pub cpu_brushes: Vec<BrushPrimitive>,
@@ -962,6 +1036,7 @@ impl PrimitiveStore {
         pipeline_id: PipelineId,
         reference_frame_index: ClipScrollNodeIndex,
         frame_output_pipeline_id: Option<PipelineId>,
+        apply_local_clip_rect: bool,
     ) -> PictureIndex {
         let pic = PicturePrimitive::new_image(
             composite_mode,
@@ -969,22 +1044,7 @@ impl PrimitiveStore {
             pipeline_id,
             reference_frame_index,
             frame_output_pipeline_id,
-        );
-
-        let pic_index = PictureIndex(self.pictures.len());
-        self.pictures.push(pic);
-
-        pic_index
-    }
-
-    pub fn add_shadow_picture(
-        &mut self,
-        shadow: Shadow,
-        pipeline_id: PipelineId,
-    ) -> PictureIndex {
-        let pic = PicturePrimitive::new_text_shadow(
-            shadow,
-            pipeline_id,
+            apply_local_clip_rect,
         );
 
         let pic_index = PictureIndex(self.pictures.len());
@@ -1024,7 +1084,6 @@ impl PrimitiveStore {
                 let opacity = match brush.kind {
                     BrushKind::Clear => PrimitiveOpacity::translucent(),
                     BrushKind::Solid { ref color } => PrimitiveOpacity::from_alpha(color.a),
-                    BrushKind::Line { .. } => PrimitiveOpacity::translucent(),
                     BrushKind::Image { .. } => PrimitiveOpacity::translucent(),
                     BrushKind::YuvImage { .. } => PrimitiveOpacity::opaque(),
                     BrushKind::RadialGradient { .. } => PrimitiveOpacity::translucent(),
@@ -1300,8 +1359,7 @@ impl PrimitiveStore {
                             );
                     }
                     BrushKind::Solid { .. } |
-                    BrushKind::Clear |
-                    BrushKind::Line { .. } => {}
+                    BrushKind::Clear => {}
                 }
             }
         }
@@ -1427,6 +1485,7 @@ impl PrimitiveStore {
                         continue;
                     }
                     ClipSource::BorderCorner(..) |
+                    ClipSource::LineDecoration(..) |
                     ClipSource::Image(..) => {
                         // TODO(gw): We can easily extend the segment builder
                         //           to support these clip sources in the
@@ -1560,6 +1619,18 @@ impl PrimitiveStore {
         true
     }
 
+    fn reset_clip_task(&mut self, prim_index: PrimitiveIndex) {
+        let metadata = &mut self.cpu_metadata[prim_index.0];
+        metadata.clip_task_id = None;
+        if metadata.prim_kind == PrimitiveKind::Brush {
+            if let Some(ref mut desc) = self.cpu_brushes[metadata.cpu_prim_index.0].segment_desc {
+                for segment in &mut desc.segments {
+                    segment.clip_task_id = None;
+                }
+            }
+        }
+    }
+
     fn update_clip_task(
         &mut self,
         prim_index: PrimitiveIndex,
@@ -1569,7 +1640,8 @@ impl PrimitiveStore {
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
     ) -> bool {
-        self.cpu_metadata[prim_index.0].clip_task_id = None;
+        // Reset clips from previous frames since we may clip differently each frame.
+        self.reset_clip_task(prim_index);
 
         let prim_screen_rect = match prim_screen_rect.intersection(&frame_context.screen_rect) {
             Some(rect) => rect,
@@ -1733,13 +1805,16 @@ impl PrimitiveStore {
                         return None;
                     }
 
-                    let (apply_local_clip_rect, original_reference_frame_index) = match pic.kind {
-                        PictureKind::Image { reference_frame_index, composite_mode, .. } => {
-                            may_need_clip_mask = composite_mode.is_some();
-                            (true, Some(reference_frame_index))
+                    may_need_clip_mask = pic.composite_mode.is_some();
+
+                    let inflation_factor = match pic.composite_mode {
+                        Some(PictureCompositeMode::Filter(FilterOp::Blur(blur_radius))) => {
+                            // The amount of extra space needed for primitives inside
+                            // this picture to ensure the visibility check is correct.
+                            BLUR_SAMPLE_SCALE * blur_radius
                         }
-                        PictureKind::TextShadow { .. } => {
-                            (false, None)
+                        _ => {
+                            0.0
                         }
                     };
 
@@ -1757,10 +1832,11 @@ impl PrimitiveStore {
                     PictureContext {
                         pipeline_id: pic.pipeline_id,
                         prim_runs: mem::replace(&mut pic.runs, Vec::new()),
-                        original_reference_frame_index,
+                        original_reference_frame_index: Some(pic.reference_frame_index),
                         display_list,
                         inv_world_transform,
-                        apply_local_clip_rect,
+                        apply_local_clip_rect: pic.apply_local_clip_rect,
+                        inflation_factor,
                     }
                 };
 
@@ -1788,7 +1864,14 @@ impl PrimitiveStore {
                 return None;
             }
 
-            let local_rect = metadata.local_clip_rect.intersection(&metadata.local_rect);
+            // Inflate the local rect for this primitive by the inflation factor of
+            // the picture context. This ensures that even if the primitive itself
+            // is not visible, any effects from the blur radius will be correctly
+            // taken into account.
+            let local_rect = metadata
+                .local_rect
+                .inflate(pic_context.inflation_factor, pic_context.inflation_factor)
+                .intersection(&metadata.local_clip_rect);
             let local_rect = match local_rect {
                 Some(local_rect) => local_rect,
                 None => return None,
