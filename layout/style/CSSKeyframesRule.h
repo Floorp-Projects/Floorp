@@ -20,7 +20,6 @@ protected:
   virtual ~CSSKeyframesRule() {}
 
 public:
-  int32_t GetType() const final { return Rule::KEYFRAMES_RULE; }
   // Let's not worry for now about sorting out whether we're a leaf or not.
   bool IsCCLeaf() const override { return false; }
 

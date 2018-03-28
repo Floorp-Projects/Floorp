@@ -96,7 +96,6 @@ public:
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
-  virtual int32_t GetType() const override;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
 
   void SetDesc(nsCSSFontDesc aDescID, nsCSSValue const & aValue);
