@@ -383,11 +383,10 @@ struct FloatRegister
             return FloatRegisters::Single;
         return FloatRegisters::Double;
     }
-    void aliased(uint32_t aliasIdx, FloatRegister* ret) {
+    FloatRegister aliased(uint32_t aliasIdx) {
         if (aliasIdx == 0)
-            *ret = *this;
-        else
-            *ret = FloatRegister(code_, otherkind(k_));
+            return *this;
+        return FloatRegister(code_, otherkind(k_));
     }
     // This function mostly exists for the ARM backend.  It is to ensure that two
     // floating point registers' types are equivalent.  e.g. S0 is not equivalent
@@ -403,9 +402,9 @@ struct FloatRegister
     uint32_t numAlignedAliased() {
         return numAliased();
     }
-    void alignedAliased(uint32_t aliasIdx, FloatRegister* ret) {
+    FloatRegister alignedAliased(uint32_t aliasIdx) {
         MOZ_ASSERT(aliasIdx < numAliased());
-        aliased(aliasIdx, ret);
+        return aliased(aliasIdx);
     }
     SetType alignedOrDominatedAliasedSet() const {
         return Codes::SpreadCoefficient << code_;

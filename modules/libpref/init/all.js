@@ -917,6 +917,7 @@ pref("gfx.webrender.program-binary", true);
 
 pref("gfx.webrender.highlight-painted-layers", false);
 pref("gfx.webrender.blob-images", 1);
+pref("gfx.webrender.blob.invalidation", false);
 pref("gfx.webrender.hit-test", true);
 
 // WebRender debugging utilities.
@@ -2171,29 +2172,6 @@ pref("network.dir.format", 2);
 pref("network.prefetch-next", true);
 // enables the preloading (i.e., preloading of <link rel="preload"> URLs).
 pref("network.preload", false);
-
-// enables the predictive service
-pref("network.predictor.enabled", true);
-pref("network.predictor.enable-hover-on-ssl", false);
-pref("network.predictor.enable-prefetch", false);
-pref("network.predictor.page-degradation.day", 0);
-pref("network.predictor.page-degradation.week", 5);
-pref("network.predictor.page-degradation.month", 10);
-pref("network.predictor.page-degradation.year", 25);
-pref("network.predictor.page-degradation.max", 50);
-pref("network.predictor.subresource-degradation.day", 1);
-pref("network.predictor.subresource-degradation.week", 10);
-pref("network.predictor.subresource-degradation.month", 25);
-pref("network.predictor.subresource-degradation.year", 50);
-pref("network.predictor.subresource-degradation.max", 100);
-pref("network.predictor.prefetch-rolling-load-count", 10);
-pref("network.predictor.prefetch-min-confidence", 100);
-pref("network.predictor.preconnect-min-confidence", 90);
-pref("network.predictor.preresolve-min-confidence", 60);
-pref("network.predictor.prefetch-force-valid-for", 10);
-pref("network.predictor.max-resources-per-entry", 100);
-pref("network.predictor.max-uri-length", 500);
-pref("network.predictor.cleaned-up", false);
 
 // The following prefs pertain to the negotiate-auth extension (see bug 17578),
 // which provides transparent Kerberos or NTLM authentication using the SPNEGO

@@ -6,6 +6,7 @@
 #include "Image.h"
 #include "Layers.h"               // for LayerManager
 #include "nsRefreshDriver.h"
+#include "mozilla/SizeOfState.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"        // for Tie
 

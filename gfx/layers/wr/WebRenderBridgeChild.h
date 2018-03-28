@@ -140,7 +140,7 @@ public:
   wr::FontInstanceKey GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont);
   wr::FontKey GetFontKeyForUnscaledFont(gfx::UnscaledFont* aUnscaledFont);
 
-  void RemoveExpiredFontKeys();
+  void RemoveExpiredFontKeys(wr::IpcResourceUpdateQueue& aResources);
 
   void BeginClearCachedResources();
   void EndClearCachedResources();

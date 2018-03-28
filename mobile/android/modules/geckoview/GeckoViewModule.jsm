@@ -129,13 +129,13 @@ class EventProxy {
   }
 
   registerListener(aEventList) {
-    debug("rabbit register " + aEventList);
+    debug("register " + aEventList);
     this.eventDispatcher.registerListener(this, aEventList);
     this._registeredEvents = this._registeredEvents.concat(aEventList);
   }
 
   unregisterListener() {
-    debug("rabbit unregister");
+    debug("unregister");
     if (this._registeredEvents.length === 0) {
       return;
     }
@@ -145,7 +145,7 @@ class EventProxy {
 
   onEvent(aEvent, aData, aCallback) {
     if (this._enableQueuing) {
-      debug("rabbit queue " + aEvent + ", aData=" + JSON.stringify(aData));
+      debug("queue " + aEvent + ", aData=" + JSON.stringify(aData));
       this._eventQueue.unshift(arguments);
     } else {
       this._dispatch.apply(this, arguments);
@@ -158,12 +158,12 @@ class EventProxy {
   }
 
   _dispatch(aEvent, aData, aCallback) {
-    debug("rabbit dispatch " + aEvent + ", aData=" + JSON.stringify(aData));
+    debug("dispatch " + aEvent + ", aData=" + JSON.stringify(aData));
     this.listener.onEvent.apply(this.listener, arguments);
   }
 
   dispatchQueuedEvents() {
-    debug("rabbit dispatchQueued");
+    debug("dispatchQueued");
     while (this._eventQueue.length) {
       const e = this._eventQueue.pop();
       this._dispatch.apply(this, e);

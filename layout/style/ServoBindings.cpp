@@ -47,6 +47,7 @@
 #include "nsSVGElement.h"
 #include "nsTArray.h"
 #include "nsTransitionManager.h"
+#include "nsWindowSizes.h"
 
 #include "mozilla/CORSMode.h"
 #include "mozilla/DeclarationBlockInlines.h"
@@ -226,7 +227,7 @@ ServoComputedData::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
                 "alignment will break AddSizeOfExcludingThis()"); \
   const void* p##name_ = GetStyle##name_(); \
   if (!aSizes.mState.HaveSeenPtr(p##name_)) { \
-    aSizes.mServoStyleSizes.NS_STYLE_SIZES_FIELD(name_) += \
+    aSizes.mStyleSizes.NS_STYLE_SIZES_FIELD(name_) += \
       ServoStyleStructsMallocEnclosingSizeOf(p##name_); \
   }
   #define STYLE_STRUCT_LIST_IGNORE_VARIABLES

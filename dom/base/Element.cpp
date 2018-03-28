@@ -79,6 +79,7 @@
 #include "nsAttrValueOrString.h"
 #include "nsAttrValueInlines.h"
 #include "nsCSSPseudoElements.h"
+#include "nsWindowSizes.h"
 #ifdef MOZ_XUL
 #include "nsXULElement.h"
 #endif /* MOZ_XUL */
@@ -4361,7 +4362,7 @@ Element::AddSizeOfExcludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
 
   if (HasServoData()) {
     // Measure the ElementData object itself.
-    aSizes.mLayoutServoElementDataObjects +=
+    aSizes.mLayoutElementDataObjects +=
       aSizes.mState.mMallocSizeOf(mServoData.Get());
 
     // Measure mServoData, excluding the ComputedValues. This measurement

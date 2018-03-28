@@ -28,6 +28,7 @@
 #include "nsStyleConsts.h"
 #include "nsStyleLinkElement.h"
 #include "nsUnicharUtils.h"
+#include "nsWindowSizes.h"
 
 #define LINK_ELEMENT_FLAG_BIT(n_) \
   NODE_FLAG_BIT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + (n_))

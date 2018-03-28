@@ -1459,6 +1459,44 @@ class ICRetSub_Resume : public ICStub
     };
 };
 
+// UnaryArith
+//     JSOP_BITNOT
+//     JSOP_NEG
+
+class ICUnaryArith_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    explicit ICUnaryArith_Fallback(JitCode* stubCode)
+      : ICFallbackStub(UnaryArith_Fallback, stubCode)
+    {
+        extra_ = 0;
+    }
+
+  public:
+    bool sawDoubleResult() {
+        return extra_;
+    }
+    void setSawDoubleResult() {
+        extra_ = 1;
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICStubCompiler {
+      protected:
+        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm) override;
+
+      public:
+        explicit Compiler(JSContext* cx)
+          : ICStubCompiler(cx, ICStub::UnaryArith_Fallback, Engine::Baseline)
+        {}
+
+        ICStub* getStub(ICStubSpace* space) override {
+            return newStub<ICUnaryArith_Fallback>(space, getStubCode());
+        }
+    };
+};
+
 inline bool
 IsCacheableDOMProxy(JSObject* obj)
 {

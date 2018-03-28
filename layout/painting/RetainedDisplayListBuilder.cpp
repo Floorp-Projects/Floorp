@@ -49,6 +49,7 @@ MarkFramesWithItemsAndImagesModified(nsDisplayList* aList)
       // whether we need to invalidate for a sync decode. If we don't, then
       // use the item's flags.
       DisplayItemData* data = FrameLayerBuilder::GetOldDataFor(i);
+      //XXX: handle webrender case
       bool invalidate = false;
       if (data &&
           data->GetGeometry()) {
