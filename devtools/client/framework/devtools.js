@@ -611,7 +611,8 @@ DevTools.prototype = {
    * @param {Array} selectors
    *        An array of CSS selectors to find the target node. Several selectors can be
    *        needed if the element is nested in frames and not directly in the root
-   *        document.
+   *        document. The selectors are ordered starting with the root document and
+   *        ending with the deepest nested frame.
    * @param {Number} startTime
    *        Optional, indicates the time at which the user event related to this node
    *        inspection started. This is a `performance.now()` timing.
@@ -630,7 +631,7 @@ DevTools.prototype = {
 
     // Evaluate the cross iframes query selectors
     async function querySelectors(nodeFront) {
-      let selector = nodeSelectors.pop();
+      let selector = nodeSelectors.shift();
       if (!selector) {
         return nodeFront;
       }
