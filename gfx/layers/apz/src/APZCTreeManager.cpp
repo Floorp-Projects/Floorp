@@ -843,7 +843,8 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
         (!parentHasPerspective && aLayer.GetClipRect())
           ? Some(ParentLayerIntRegion(*aLayer.GetClipRect()))
           : Nothing(),
-        GetEventRegionsOverride(aParent, aLayer));
+        GetEventRegionsOverride(aParent, aLayer),
+        aLayer.IsBackfaceHidden());
     node->SetScrollbarData(aLayer.GetScrollbarTargetContainerId(),
                            aLayer.GetScrollbarAnimationId(),
                            aLayer.GetScrollThumbData(),
@@ -956,7 +957,8 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
         aLayer.GetVisibleRegion(),
         aLayer.GetTransformTyped(),
         clipRegion,
-        GetEventRegionsOverride(aParent, aLayer));
+        GetEventRegionsOverride(aParent, aLayer),
+        aLayer.IsBackfaceHidden());
     apzc->SetAncestorTransform(aAncestorTransform);
 
     PrintAPZCInfo(aLayer, apzc);
@@ -1055,7 +1057,8 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
         aLayer.GetVisibleRegion(),
         aLayer.GetTransformTyped(),
         clipRegion,
-        GetEventRegionsOverride(aParent, aLayer));
+        GetEventRegionsOverride(aParent, aLayer),
+        aLayer.IsBackfaceHidden());
   }
 
   // Note: if layer properties must be propagated to nodes, RecvUpdate in
