@@ -216,11 +216,19 @@ async function spawnInDialogForMerchantTask(merchantTaskFn, dialogTaskFn, taskAr
   });
 }
 
-add_task(async function setup_head() {
+async function setupFormAutofillStorage() {
   await formAutofillStorage.initialize();
+}
+
+function cleanupFormAutofillStorage() {
+  formAutofillStorage.addresses._nukeAllRecords();
+  formAutofillStorage.creditCards._nukeAllRecords();
+}
+
+add_task(async function setup_head() {
+  await setupFormAutofillStorage();
   registerCleanupFunction(function cleanup() {
     paymentSrv.cleanup();
-    formAutofillStorage.addresses._nukeAllRecords();
-    formAutofillStorage.creditCards._nukeAllRecords();
+    cleanupFormAutofillStorage();
   });
 });

@@ -124,6 +124,26 @@ var PaymentTestUtils = {
       };
     },
 
+    getShippingAddresses: () => {
+      let doc = content.document;
+      let addressPicker =
+        doc.querySelector("address-picker[selected-state-key='selectedShippingAddress']");
+      let select = addressPicker.querySelector("rich-select");
+      let popupBox = Cu.waiveXrays(select).popupBox;
+      let options = Array.from(popupBox.children).map(option => {
+        return {
+          guid: option.guid,
+          country: option.country,
+          selected: option.selected,
+        };
+      });
+      let selectedOptionIndex = options.findIndex(item => item.selected);
+      return {
+        selectedOptionIndex,
+        options,
+      };
+    },
+
     selectShippingAddressByCountry: country => {
       let doc = content.document;
       let addressPicker =
