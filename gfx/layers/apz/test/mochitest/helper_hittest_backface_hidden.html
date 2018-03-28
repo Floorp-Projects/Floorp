@@ -42,11 +42,6 @@
 
 function* test(testDriver) {
   var config = getHitTestConfig();
-  if (config.isWebRender) {
-    ok(true, "This test is only enabled for non-WebRender");
-    subtestDone();
-    return;
-  }
 
   var subframe = document.getElementById('front');
 
