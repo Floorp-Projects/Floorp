@@ -188,9 +188,13 @@ function GetModuleNamespace(module)
     // Step 1
     assert(IsModule(module), "GetModuleNamespace called with non-module");
 
+    // Until issue https://github.com/tc39/ecma262/issues/1155 is resolved,
+    // violate the spec here and throw if called on an errored module.
+    if (module.status === MODULE_STATUS_EVALUATED_ERROR)
+        throw GetModuleEvaluationError(module);
+
     // Steps 2-3
-    assert(module.status !== MODULE_STATUS_UNINSTANTIATED &&
-           module.status !== MODULE_STATUS_EVALUATED_ERROR,
+    assert(module.status !== MODULE_STATUS_UNINSTANTIATED,
            "Bad module state in GetModuleNamespace");
 
     // Step 4
