@@ -1151,6 +1151,10 @@ var generateRequestHandlers = function(actorSpec, actorProto) {
           throw ex;
         }
 
+        if (!this[spec.name]) {
+          throw new Error(`Spec for '${actorProto.typeName}' specifies a '${spec.name}'` +
+                          ` method that isn't implemented by the actor`);
+        }
         let ret = this[spec.name].apply(this, args);
 
         let sendReturn = (retToSend) => {
