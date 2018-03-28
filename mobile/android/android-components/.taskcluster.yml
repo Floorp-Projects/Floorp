@@ -57,3 +57,36 @@ tasks:
       description: Building and testing Android components - triggered by a pull request.
       owner: '{{ event.head.user.email }}'
       source: '{{ event.head.repo.url }}'
+####################################################################################################
+# Task: Release
+####################################################################################################
+  - provisionerId: '{{ taskcluster.docker.provisionerId }}'
+    workerType: '{{ taskcluster.docker.workerType }}'
+    extra:
+      github:
+        events:
+          - release
+    scopes:
+      - "secrets:get:project/android-components/publish"
+    payload:
+      maxRunTime: 3600
+      deadline: "{{ '2 hours' | $fromNow }}"
+      image: 'mozillamobile/android-components:1.0'
+      command:
+        - /bin/bash
+        - '--login'
+        - '-cx'
+        - >-
+          git fetch origin --tags
+          && git config advice.detachedHead false
+          && git checkout {{ event.version }}
+          && ./gradlew --no-daemon clean test detektCheck ktlint assembleRelease
+          && python automation/taskcluster/release/fetch-bintray-api-key.py
+          && ./gradlew bintrayUpload
+      features:
+        taskclusterProxy: true
+    metadata:
+      name: Android Components - Release ({{ event.version }})
+      description: Building and publishing release versions.
+      owner: '{{ event.head.user.email }}'
+      source: '{{ event.head.repo.url }}'
