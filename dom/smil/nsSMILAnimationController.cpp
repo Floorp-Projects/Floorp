@@ -715,6 +715,8 @@ nsSMILAnimationController::PreTraverseInSubtree(Element* aRoot)
   if (!context) {
     return false;
   }
+  MOZ_ASSERT(context->RestyleManager()->IsServo(),
+             "PreTraverse should only be called for the servo style system");
 
   bool foundElementsNeedingRestyle = false;
   for (auto iter = mAnimationElementTable.Iter(); !iter.Done(); iter.Next()) {

@@ -3013,8 +3013,12 @@ HTMLEditor::EnableExistingStyleSheet(const nsAString& aURL)
   nsCOMPtr<nsIDocument> document = GetDocument();
   sheet->SetAssociatedDocument(document, StyleSheet::NotOwnedByDocument);
 
-  // FIXME: This used to do sheet->SetDisabled(false), figure out if we can
-  // just remove all this code in bug 1449522, since it seems unused.
+  if (sheet->IsServo()) {
+    // XXXheycam ServoStyleSheets don't support being enabled/disabled yet.
+    NS_ERROR("stylo: ServoStyleSheets can't be disabled yet");
+    return true;
+  }
+  MOZ_CRASH("old style system disabled");
   return true;
 }
 

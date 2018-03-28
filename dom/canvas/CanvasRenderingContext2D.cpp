@@ -2689,6 +2689,8 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
                      nsAString& aOutUsedFont,
                      ErrorResult& aError)
 {
+  MOZ_ASSERT(aPresShell->StyleSet()->IsServo());
+
   RefPtr<RawServoDeclarationBlock> declarations =
     CreateFontDeclarationForServo(aFont, aPresShell->GetDocument());
   if (!declarations) {
@@ -2758,6 +2760,8 @@ ResolveFilterStyleForServo(const nsAString& aFilterString,
                            nsIPresShell* aPresShell,
                            ErrorResult& aError)
 {
+  MOZ_ASSERT(aPresShell->StyleSet()->IsServo());
+
   RefPtr<RawServoDeclarationBlock> declarations =
     CreateFilterDeclarationForServo(aFilterString, aPresShell->GetDocument());
   if (!declarations) {
@@ -2796,7 +2800,14 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
     return false;
   }
 
-  nsString usedFont; // unused
+  nsString usedFont;
+  if (presShell->StyleSet()->IsGecko()) {
+    MOZ_CRASH("old style system disabled");
+    return false;
+  }
+
+  // For stylo
+  MOZ_ASSERT(presShell->StyleSet()->IsServo());
 
   RefPtr<ComputedStyle> parentStyle =
     GetFontStyleForServo(mCanvasElement,
@@ -3724,9 +3735,14 @@ CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
     return false;
   }
 
+  RefPtr<ComputedStyle> sc;
   nsString usedFont;
-  RefPtr<ComputedStyle> sc =
-    GetFontStyleForServo(mCanvasElement, aFont, presShell, usedFont, aError);
+  if (presShell->StyleSet()->IsServo()) {
+    sc =
+      GetFontStyleForServo(mCanvasElement, aFont, presShell, usedFont, aError);
+  } else {
+    MOZ_CRASH("old style system disabled");
+  }
   if (!sc) {
     return false;
   }
@@ -3739,8 +3755,8 @@ CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
   // size (fontStyle->mSize).  See
   // https://bugzilla.mozilla.org/show_bug.cgi?id=698652.
   // FIXME: Nobody initializes mAllowZoom for servo?
-  //MOZ_ASSERT(!fontStyle->mAllowZoom,
-  //           "expected text zoom to be disabled on this nsStyleFont");
+  MOZ_ASSERT(presShell->StyleSet()->IsServo() || !fontStyle->mAllowZoom,
+             "expected text zoom to be disabled on this nsStyleFont");
   nsFont resizedFont(fontStyle->mFont);
   // Create a font group working in units of CSS pixels instead of the usual
   // device pixels, to avoid being affected by page zoom. nsFontMetrics will

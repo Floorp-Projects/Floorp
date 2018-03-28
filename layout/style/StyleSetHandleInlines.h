@@ -25,6 +25,9 @@ void
 StyleSetHandle::Ptr::Delete()
 {
   if (mValue) {
+    if (IsGecko()) {
+      MOZ_CRASH("old style system disabled");
+    }
     delete AsServo();
   }
 }
@@ -158,6 +161,10 @@ nsresult
 StyleSetHandle::Ptr::ReplaceSheets(SheetType aType,
                        const nsTArray<RefPtr<StyleSheet>>& aNewSheets)
 {
+  if (IsGecko()) {
+    MOZ_CRASH("old style system disabled");
+  }
+
   nsTArray<RefPtr<ServoStyleSheet>> newSheets(aNewSheets.Length());
   for (auto& sheet : aNewSheets) {
     newSheets.AppendElement(sheet->AsServo());
@@ -267,6 +274,26 @@ StyleSetHandle::Ptr::ProbePseudoElementStyle(dom::Element* aParentElement,
                                              ComputedStyle* aParentStyle)
 {
   FORWARD(ProbePseudoElementStyle, (aParentElement, aType, aParentStyle));
+}
+
+void
+StyleSetHandle::Ptr::RootComputedStyleAdded()
+{
+  if (IsGecko()) {
+    MOZ_CRASH("old style system disabled");
+  }
+
+  // Not needed.
+}
+
+void
+StyleSetHandle::Ptr::RootComputedStyleRemoved()
+{
+  if (IsGecko()) {
+    MOZ_CRASH("old style system disabled");
+  }
+
+  // Not needed.
 }
 
 bool

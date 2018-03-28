@@ -389,12 +389,19 @@ nsCSSCounterStyleRule::SetDescriptor(nsCSSCounterDesc aDescID,
                                      const nsAString& aValue)
 {
   nsCSSValue value;
+  bool ok;
 
   StyleSheet* sheet = GetStyleSheet();
 
-  URLExtraData* data = sheet ? sheet->AsServo()->URLData() : nullptr;
-  bool ok = ServoCSSParser::ParseCounterStyleDescriptor(aDescID, aValue, data,
-                                                        value);
+  bool useServo = !sheet || sheet->IsServo();
+
+  if (useServo) {
+    URLExtraData* data = sheet ? sheet->AsServo()->URLData() : nullptr;
+    ok = ServoCSSParser::ParseCounterStyleDescriptor(aDescID, aValue, data,
+                                                     value);
+  } else {
+    MOZ_CRASH("old style system disabled");
+  }
 
   if (ok && CheckDescValue(GetSystem(), aDescID, value)) {
     SetDesc(aDescID, value);

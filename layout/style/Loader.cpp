@@ -1198,15 +1198,20 @@ Loader::InsertSheetInDoc(StyleSheet* aSheet,
  */
 nsresult
 Loader::InsertChildSheet(StyleSheet* aSheet,
-                         StyleSheet* aParentSheet)
+                         StyleSheet* aParentSheet,
+                         ImportRule* aGeckoParentRule)
 {
   LOG(("css::Loader::InsertChildSheet"));
   MOZ_ASSERT(aSheet, "Nothing to insert");
   MOZ_ASSERT(aParentSheet, "Need a parent to insert into");
+  MOZ_ASSERT(aSheet->IsGecko() == !!aGeckoParentRule);
 
   // child sheets should always start out enabled, even if they got
   // cloned off of top-level sheets which were disabled
   aSheet->SetEnabled(true);
+  if (aGeckoParentRule) {
+    MOZ_CRASH("old style system disabled");
+  }
   aParentSheet->PrependStyleSheet(aSheet);
 
   LOG(("  Inserting into parent sheet"));
@@ -2081,11 +2086,13 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
                        SheetLoadData* aParentData,
                        nsIURI* aURL,
                        dom::MediaList* aMedia,
+                       ImportRule* aGeckoParentRule,
                        LoaderReusableStyleSheets* aReusableSheets)
 {
   LOG(("css::Loader::LoadChildSheet"));
   NS_PRECONDITION(aURL, "Must have a URI to load");
   NS_PRECONDITION(aParentSheet, "Must have a parent sheet");
+  MOZ_ASSERT(aParentSheet->IsGecko() == !!aGeckoParentRule);
 
   if (!mEnabled) {
     LOG_WARN(("  Not enabled"));
@@ -2151,6 +2158,9 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
   RefPtr<StyleSheet> sheet;
   StyleSheetState state;
   if (aReusableSheets && aReusableSheets->FindReusableStyleSheet(aURL, sheet)) {
+    if (aParentSheet->IsGecko()) {
+      MOZ_CRASH("old style system disabled");
+    }
     state = eSheetComplete;
   } else {
     bool isAlternate;
@@ -2167,7 +2177,7 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
     PrepareSheet(sheet, empty, empty, aMedia, isAlternate);
   }
 
-  rv = InsertChildSheet(sheet, aParentSheet);
+  rv = InsertChildSheet(sheet, aParentSheet, aGeckoParentRule);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (state == eSheetComplete) {
