@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-  <string name="action_cancel">रद करऽ</string>
+  <string name="action_cancel">मोज़िल्ला</string>
   <string name="action_ok">ठीक</string>
   <string name="action_save">सेव करियै</string>
   <string name="urlbar_hint">खोजियै अथवा पता भरियै</string>
@@ -20,10 +20,10 @@
   <string name="share_dialog_title">एकरा द्वारा शेयर करऽ</string>
   <string name="notification_erase_text">ब्राउज़िंग इतिहास मेटाभोऽ</string>
   <string name="notification_action_open">खोलऽ</string>
-  <string name="notification_action_erase_and_open">मेटाभोऽ आरू खोलहोऽ</string>
+  <string name="notification_action_erase_and_open">मेटाभोऽ आरू खोलऽ</string>
   <string name="shortcut_erase_short_label">मेटाभोऽ</string>
   <string name="shortcut_erase_long_label">ब्राउज़िंग इतिहास मेटाभोऽ</string>
-  <string name="text_selection_search_action">निजी रूप सँ खोजहोऽ</string>
+  <string name="text_selection_search_action">निजी रूप सँ खोजऽ</string>
   <string name="preference_category_search">खोजहोऽ</string>
   <string name="preference_search_engine_default">मूलभूत</string>
   <string name="preference_state_on">चालू</string>
@@ -54,4 +54,16 @@
   <string name="preference_privacy_block_social">सामाजिक ट्रैकर्स ब्लौक करऽ</string>
   <string name="preference_privacy_block_content">दोसरो कोंटेंट ट्रैकर्स ब्लौक करऽ</string>
   <string name="preference_privacy_secure_mode">"गोपनीयता "</string>
+  <string name="preference_category_performance">प्रदर्शन</string>
+  <string name="preference_performance_block_webfonts">वेब फ्रंटौं कऽ ब्लौक करऽ</string>
+  <string name="preference_performance_block_images">चित्रों कऽ ब्लौक करऽ</string>
+  <string name="preference_default_browser2">%1$s कऽ मूलभूत ब्रोजर बनाबऽ</string>
+  <string name="preference_category_mozilla">मोज़िल्ला</string>
+  <string name="preference_mozilla_telemetry2">डाटा उपयोगभेल भेजऽ</string>
+  <string name="preference_mozilla_telemetry_summary">अधिक जानऽ</string>
+  <string name="preference_privacy_notice">"गोपनीय सूचना "</string>
+  <string name="preference_about">%1$s कऽ बारो मऽ</string>
+  <string name="preference_search_installed_search_engines">खोजलो ईंजनों इंसटौल करऽ</string>
+  <string name="preference_search_remove_title">खोजलो ईंजनों हटाभोऽ</string>
+  <string name="preference_search_remove">हटाभोऽ</string>
 </resources>
