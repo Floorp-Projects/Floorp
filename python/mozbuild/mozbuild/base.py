@@ -151,7 +151,7 @@ class MozbuildObject(ProcessExecutionMixin):
                 break
 
         # See if we're running from a Python virtualenv that's inside an objdir.
-        mozinfo_path = os.path.join(os.path.dirname(sys.prefix), "mozinfo.json")
+        mozinfo_path = os.path.join(os.path.dirname(sys.prefix), "../mozinfo.json")
         if detect_virtualenv_mozinfo and os.path.isfile(mozinfo_path):
             topsrcdir, topobjdir, mozconfig = load_mozinfo(mozinfo_path)
 
@@ -201,7 +201,7 @@ class MozbuildObject(ProcessExecutionMixin):
     def virtualenv_manager(self):
         if self._virtualenv_manager is None:
             self._virtualenv_manager = VirtualenvManager(self.topsrcdir,
-                self.topobjdir, os.path.join(self.topobjdir, '_virtualenv'),
+                self.topobjdir, os.path.join(self.topobjdir, '_virtualenvs', 'init'),
                 sys.stdout, os.path.join(self.topsrcdir, 'build',
                 'virtualenv_packages.txt'))
 
