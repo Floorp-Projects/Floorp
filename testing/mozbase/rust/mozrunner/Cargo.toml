@@ -1,6 +1,6 @@
 [package]
 name = "mozrunner"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Mozilla"]
 description = "Library for starting Firefox binaries."
 repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/rust/mozrunner"
