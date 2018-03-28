@@ -74,7 +74,12 @@ public:
 
   void UnshippedEntangle(MessagePort* aEntangledPort);
 
-  bool CloneAndDisentangle(MessagePortIdentifier& aIdentifier);
+  bool CanBeCloned() const
+  {
+    return !mHasBeenTransferredOrClosed;
+  }
+
+  void CloneAndDisentangle(MessagePortIdentifier& aIdentifier);
 
   void CloseForced();
 
@@ -182,6 +187,12 @@ private:
   bool mMessageQueueEnabled;
 
   bool mIsKeptAlive;
+
+  // mHasBeenTransferredOrClosed is used to know if this port has been manually
+  // closed or transferred via postMessage. Note that if the entangled port is
+  // closed, this port is closed as well (see mState) but, just because close()
+  // has not been called directly, by spec, this port can still be transferred.
+  bool mHasBeenTransferredOrClosed;
 };
 
 } // namespace dom

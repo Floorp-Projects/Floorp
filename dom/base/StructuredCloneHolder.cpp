@@ -123,6 +123,17 @@ StructuredCloneCallbacksFreeTransfer(uint32_t aTag,
                                            aExtraData);
 }
 
+bool
+StructuredCloneCallbacksCanTransfer(JSContext* aCx,
+                                    JS::Handle<JSObject*> aObject,
+                                    void* aClosure)
+{
+  StructuredCloneHolderBase* holder =
+    static_cast<StructuredCloneHolderBase*>(aClosure);
+  MOZ_ASSERT(holder);
+  return holder->CustomCanTransferHandler(aCx, aObject);
+}
+
 void
 StructuredCloneCallbacksError(JSContext* aCx,
                               uint32_t aErrorId)
@@ -138,7 +149,8 @@ const JSStructuredCloneCallbacks StructuredCloneHolder::sCallbacks = {
   StructuredCloneCallbacksError,
   StructuredCloneCallbacksReadTransfer,
   StructuredCloneCallbacksWriteTransfer,
-  StructuredCloneCallbacksFreeTransfer
+  StructuredCloneCallbacksFreeTransfer,
+  StructuredCloneCallbacksCanTransfer,
 };
 
 // StructuredCloneHolderBase class
@@ -238,6 +250,13 @@ StructuredCloneHolderBase::CustomFreeTransferHandler(uint32_t aTag,
                                                      uint64_t aExtraData)
 {
   MOZ_CRASH("Nothing to free.");
+}
+
+bool
+StructuredCloneHolderBase::CustomCanTransferHandler(JSContext* aCx,
+                                                    JS::Handle<JSObject*> aObj)
+{
+  return false;
 }
 
 // StructuredCloneHolder class
@@ -1221,9 +1240,11 @@ StructuredCloneHolder::CustomWriteTransferHandler(JSContext* aCx,
       *aExtraData = mPortIdentifiers.Length();
       MessagePortIdentifier* identifier = mPortIdentifiers.AppendElement();
 
-      if (!port->CloneAndDisentangle(*identifier)) {
+      if (!port->CanBeCloned()) {
         return false;
       }
+
+      port->CloneAndDisentangle(*identifier);
 
       *aTag = SCTAG_DOM_MAP_MESSAGEPORT;
       *aOwnership = JS::SCTAG_TMO_CUSTOM;
@@ -1318,6 +1339,42 @@ StructuredCloneHolder::CustomFreeTransferHandler(uint32_t aTag,
     delete data;
     return;
   }
+}
+
+bool
+StructuredCloneHolder::CustomCanTransferHandler(JSContext* aCx,
+                                                JS::Handle<JSObject*> aObj)
+{
+  if (!mSupportsTransferring) {
+    return false;
+  }
+
+  JS::Rooted<JSObject*> obj(aCx, aObj);
+
+  {
+    MessagePort* port = nullptr;
+    nsresult rv = UNWRAP_OBJECT(MessagePort, &obj, port);
+    if (NS_SUCCEEDED(rv)) {
+      return true;
+    }
+
+    if (mStructuredCloneScope == StructuredCloneScope::SameProcessSameThread ||
+        mStructuredCloneScope == StructuredCloneScope::SameProcessDifferentThread) {
+      OffscreenCanvas* canvas = nullptr;
+      rv = UNWRAP_OBJECT(OffscreenCanvas, &obj, canvas);
+      if (NS_SUCCEEDED(rv)) {
+        return true;
+      }
+
+      ImageBitmap* bitmap = nullptr;
+      rv = UNWRAP_OBJECT(ImageBitmap, &obj, bitmap);
+      if (NS_SUCCEEDED(rv)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 bool
