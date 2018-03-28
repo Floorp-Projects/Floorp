@@ -15,6 +15,7 @@ function handleRequest(request, response)
 {
   var query = request.queryString;
   var key = parseQuery(query, "key");
+  var type = parseQuery(query, "type") || "application/octet-stream";
   var resource = parseQuery(query, "res");
   var nested = parseQuery(query, "nested") || false;
 
@@ -60,7 +61,7 @@ function handleRequest(request, response)
   response.setStatusLine(request.httpVersion, 206, "Partial Content");
   response.setHeader("Content-Range", contentRange);
   response.setHeader("Content-Length", contentLength, false);
-  response.setHeader("Content-Type", "video/ogg", false);
+  response.setHeader("Content-Type", type, false);
   response.setHeader("Accept-Ranges", "bytes", false);
   response.write(byterange, byterange.length);
   bis.close();
