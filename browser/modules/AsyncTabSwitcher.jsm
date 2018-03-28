@@ -1009,13 +1009,6 @@ class AsyncTabSwitcher {
     if (this.switchInProgress && this.requestedTab &&
         (this.getTabState(this.requestedTab) == this.STATE_LOADED ||
           this.requestedTab === this.blankTab)) {
-      let browser = this.requestedTab.linkedBrowser;
-      let { tabParent } = browser.frameLoader;
-      if (tabParent && this.activeSuppressDisplayport.has(tabParent)) {
-        tabParent.suppressDisplayport(false);
-        this.activeSuppressDisplayport.delete(tabParent);
-      }
-
       // After this point the tab has switched from the content thread's point of view.
       // The changes will be visible after the next refresh driver tick + composite.
       let time = TelemetryStopwatch.timeElapsed("FX_TAB_SWITCH_TOTAL_E10S_MS", this.window);
