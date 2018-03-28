@@ -66,9 +66,10 @@ function testEventListeners(aThreadClient) {
       return;
     }
 
-    // There are 3 event listeners in the page: button.onclick, window.onload
-    // and one more from the video element controls.
-    is(aPacket.listeners.length, 3, "Found all event listeners.");
+    // There are 2 event listeners in the page: button.onclick, window.onload.
+    // The video element controls listeners are skipped — they cannot be
+    // unwrapped but they shouldn't cause us to throw either.
+    is(aPacket.listeners.length, 2, "Found all event listeners.");
     aThreadClient.resume(deferred.resolve);
   });
 
