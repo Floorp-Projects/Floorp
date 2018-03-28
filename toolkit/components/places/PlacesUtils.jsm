@@ -107,7 +107,11 @@ function serializeNode(aNode, aIsLivemark) {
   let data = {};
 
   data.title = aNode.title;
+  // The id is no longer used for copying within the same instance/session of
+  // Firefox as of at least 61. However, we keep the id for now to maintain
+  // backwards compat of drag and drop with older Firefox versions.
   data.id = aNode.itemId;
+  data.itemGuid = aNode.bookmarkGuid;
   data.livemark = aIsLivemark;
   // Add an instanceId so we can tell which instance of an FF session the data
   // is coming from.
@@ -120,9 +124,6 @@ function serializeNode(aNode, aIsLivemark) {
   // we ignore any that are a folder shortcut. These will be handled below.
   if (guid && !PlacesUtils.bookmarks.isVirtualRootItem(guid) &&
       !PlacesUtils.isVirtualLeftPaneItem(guid)) {
-    // TODO: Really guid should be set on everything, however currently this upsets
-    // the drag 'n' drop / cut/copy/paste operations.
-    data.itemGuid = guid;
     if (aNode.parent) {
       data.parent = aNode.parent.itemId;
       data.parentGuid = aNode.parent.bookmarkGuid;
