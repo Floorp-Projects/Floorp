@@ -11,6 +11,7 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
+#include "mozilla/layers/SynchronousTask.h"
 #include "TreeTraversal.h"
 
 namespace mozilla {
@@ -38,7 +39,10 @@ void
 APZSampler::ClearTree()
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  mApz->ClearTree();
+  RunOnSamplerThread(NewRunnableMethod(
+      "APZSampler::ClearTree",
+      mApz,
+      &APZCTreeManager::ClearTree));
 }
 
 void
@@ -47,7 +51,13 @@ APZSampler::UpdateFocusState(LayersId aRootLayerTreeId,
                              const FocusTarget& aFocusTarget)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  mApz->UpdateFocusState(aRootLayerTreeId, aOriginatingLayersId, aFocusTarget);
+  RunOnSamplerThread(NewRunnableMethod<LayersId, LayersId, FocusTarget>(
+      "APZSampler::UpdateFocusState",
+      mApz,
+      &APZCTreeManager::UpdateFocusState,
+      aRootLayerTreeId,
+      aOriginatingLayersId,
+      aFocusTarget));
 }
 
 void
@@ -58,6 +68,7 @@ APZSampler::UpdateHitTestingTree(LayersId aRootLayerTreeId,
                                  uint32_t aPaintSequenceNumber)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
   mApz->UpdateHitTestingTree(aRootLayerTreeId, aRoot, aIsFirstPaint,
       aOriginatingLayersId, aPaintSequenceNumber);
 }
@@ -70,8 +81,26 @@ APZSampler::UpdateHitTestingTree(LayersId aRootLayerTreeId,
                                  uint32_t aPaintSequenceNumber)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  mApz->UpdateHitTestingTree(aRootLayerTreeId, aScrollData, aIsFirstPaint,
-      aOriginatingLayersId, aPaintSequenceNumber);
+  // use the local variable to resolve the function overload.
+  auto func = static_cast<void (APZCTreeManager::*)(LayersId,
+                                                    const WebRenderScrollData&,
+                                                    bool,
+                                                    LayersId,
+                                                    uint32_t)>
+      (&APZCTreeManager::UpdateHitTestingTree);
+  RunOnSamplerThread(NewRunnableMethod<LayersId,
+                                       WebRenderScrollData,
+                                       bool,
+                                       LayersId,
+                                       uint32_t>(
+      "APZSampler::UpdateHitTestingTree",
+      mApz,
+      func,
+      aRootLayerTreeId,
+      aScrollData,
+      aIsFirstPaint,
+      aOriginatingLayersId,
+      aPaintSequenceNumber));
 }
 
 void
@@ -79,14 +108,23 @@ APZSampler::NotifyLayerTreeAdopted(LayersId aLayersId,
                                    const RefPtr<APZSampler>& aOldSampler)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  mApz->NotifyLayerTreeAdopted(aLayersId, aOldSampler ? aOldSampler->mApz : nullptr);
+  RunOnSamplerThread(NewRunnableMethod<LayersId, RefPtr<APZCTreeManager>>(
+      "APZSampler::NotifyLayerTreeAdopted",
+      mApz,
+      &APZCTreeManager::NotifyLayerTreeAdopted,
+      aLayersId,
+      aOldSampler ? aOldSampler->mApz : nullptr));
 }
 
 void
 APZSampler::NotifyLayerTreeRemoved(LayersId aLayersId)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  mApz->NotifyLayerTreeRemoved(aLayersId);
+  RunOnSamplerThread(NewRunnableMethod<LayersId>(
+      "APZSampler::NotifyLayerTreeRemoved",
+      mApz,
+      &APZCTreeManager::NotifyLayerTreeRemoved,
+      aLayersId));
 }
 
 bool
@@ -104,7 +142,22 @@ APZSampler::GetAPZTestData(LayersId aLayersId,
                            APZTestData* aOutData)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  return mApz->GetAPZTestData(aLayersId, aOutData);
+
+  RefPtr<APZCTreeManager> apz = mApz;
+  bool ret = false;
+  SynchronousTask waiter("APZSampler::GetAPZTestData");
+  RunOnSamplerThread(NS_NewRunnableFunction(
+    "APZSampler::GetAPZTestData",
+    [&]() {
+      AutoCompleteTask notifier(&waiter);
+      ret = apz->GetAPZTestData(aLayersId, aOutData);
+    }
+  ));
+
+  // Wait until the task posted above has run and populated aOutData and ret
+  waiter.Wait();
+
+  return ret;
 }
 
 void
@@ -113,12 +166,18 @@ APZSampler::SetTestAsyncScrollOffset(LayersId aLayersId,
                                      const CSSPoint& aOffset)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  RefPtr<AsyncPanZoomController> apzc = mApz->GetTargetAPZC(aLayersId, aScrollId);
-  if (apzc) {
-    apzc->SetTestAsyncScrollOffset(aOffset);
-  } else {
-    NS_WARNING("Unable to find APZC in SetTestAsyncScrollOffset");
-  }
+  RefPtr<APZCTreeManager> apz = mApz;
+  RunOnSamplerThread(NS_NewRunnableFunction(
+    "APZSampler::SetTestAsyncScrollOffset",
+    [=]() {
+      RefPtr<AsyncPanZoomController> apzc = apz->GetTargetAPZC(aLayersId, aScrollId);
+      if (apzc) {
+        apzc->SetTestAsyncScrollOffset(aOffset);
+      } else {
+        NS_WARNING("Unable to find APZC in SetTestAsyncScrollOffset");
+      }
+    }
+  ));
 }
 
 void
@@ -127,12 +186,18 @@ APZSampler::SetTestAsyncZoom(LayersId aLayersId,
                              const LayerToParentLayerScale& aZoom)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  RefPtr<AsyncPanZoomController> apzc = mApz->GetTargetAPZC(aLayersId, aScrollId);
-  if (apzc) {
-    apzc->SetTestAsyncZoom(aZoom);
-  } else {
-    NS_WARNING("Unable to find APZC in SetTestAsyncZoom");
-  }
+  RefPtr<APZCTreeManager> apz = mApz;
+  RunOnSamplerThread(NS_NewRunnableFunction(
+    "APZSampler::SetTestAsyncZoom",
+    [=]() {
+      RefPtr<AsyncPanZoomController> apzc = apz->GetTargetAPZC(aLayersId, aScrollId);
+      if (apzc) {
+        apzc->SetTestAsyncZoom(aZoom);
+      } else {
+        NS_WARNING("Unable to find APZC in SetTestAsyncZoom");
+      }
+    }
+  ));
 }
 
 bool
@@ -140,6 +205,7 @@ APZSampler::SampleAnimations(const LayerMetricsWrapper& aLayer,
                              const TimeStamp& aSampleTime)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
 
   // TODO: eventually we can drop the aLayer argument and just walk the APZ
   // tree directly in mApz.
@@ -167,6 +233,8 @@ APZSampler::ComputeTransformForScrollThumb(const LayerToParentLayerMatrix4x4& aC
                                            AsyncTransformComponentMatrix* aOutClipTransform)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
+
   return mApz->ComputeTransformForScrollThumb(aCurrentTransform,
                                               aContent.GetTransform(),
                                               aContent.GetApzc(),
@@ -179,6 +247,9 @@ APZSampler::ComputeTransformForScrollThumb(const LayerToParentLayerMatrix4x4& aC
 ParentLayerPoint
 APZSampler::GetCurrentAsyncScrollOffset(const LayerMetricsWrapper& aLayer)
 {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
+
   MOZ_ASSERT(aLayer.GetApzc());
   return aLayer.GetApzc()->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForCompositing);
 }
@@ -186,6 +257,9 @@ APZSampler::GetCurrentAsyncScrollOffset(const LayerMetricsWrapper& aLayer)
 AsyncTransform
 APZSampler::GetCurrentAsyncTransform(const LayerMetricsWrapper& aLayer)
 {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
+
   MOZ_ASSERT(aLayer.GetApzc());
   return aLayer.GetApzc()->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing);
 }
@@ -193,6 +267,9 @@ APZSampler::GetCurrentAsyncTransform(const LayerMetricsWrapper& aLayer)
 AsyncTransformComponentMatrix
 APZSampler::GetOverscrollTransform(const LayerMetricsWrapper& aLayer)
 {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
+
   MOZ_ASSERT(aLayer.GetApzc());
   return aLayer.GetApzc()->GetOverscrollTransform(AsyncPanZoomController::eForCompositing);
 }
@@ -200,6 +277,9 @@ APZSampler::GetOverscrollTransform(const LayerMetricsWrapper& aLayer)
 AsyncTransformComponentMatrix
 APZSampler::GetCurrentAsyncTransformWithOverscroll(const LayerMetricsWrapper& aLayer)
 {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
+
   MOZ_ASSERT(aLayer.GetApzc());
   return aLayer.GetApzc()->GetCurrentAsyncTransformWithOverscroll(AsyncPanZoomController::eForCompositing);
 }
@@ -207,6 +287,9 @@ APZSampler::GetCurrentAsyncTransformWithOverscroll(const LayerMetricsWrapper& aL
 void
 APZSampler::MarkAsyncTransformAppliedToContent(const LayerMetricsWrapper& aLayer)
 {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
+
   MOZ_ASSERT(aLayer.GetApzc());
   aLayer.GetApzc()->MarkAsyncTransformAppliedToContent();
 }
@@ -214,6 +297,9 @@ APZSampler::MarkAsyncTransformAppliedToContent(const LayerMetricsWrapper& aLayer
 bool
 APZSampler::HasUnusedAsyncTransform(const LayerMetricsWrapper& aLayer)
 {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  AssertOnSamplerThread();
+
   AsyncPanZoomController* apzc = aLayer.GetApzc();
   return apzc
       && !apzc->GetAsyncTransformAppliedToContent()
