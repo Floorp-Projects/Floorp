@@ -3731,18 +3731,6 @@ LIRGenerator::visitLoadTypedArrayElementHole(MLoadTypedArrayElementHole* ins)
 }
 
 void
-LIRGenerator::visitLoadTypedArrayElementStatic(MLoadTypedArrayElementStatic* ins)
-{
-    LLoadTypedArrayElementStatic* lir =
-        new(alloc()) LLoadTypedArrayElementStatic(useRegisterAtStart(ins->ptr()));
-
-    // In case of out of bounds, may bail out, or may jump to ool code.
-    if (ins->fallible())
-        assignSnapshot(lir, Bailout_BoundsCheck);
-    define(lir, ins);
-}
-
-void
 LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins)
 {
     MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));

@@ -7801,11 +7801,6 @@ IonBuilder::jsop_getelem()
         if (emitted)
             return Ok();
 
-        trackOptimizationAttempt(TrackedStrategy::GetElem_TypedStatic);
-        MOZ_TRY(getElemTryTypedStatic(&emitted, obj, index));
-        if (emitted)
-            return Ok();
-
         trackOptimizationAttempt(TrackedStrategy::GetElem_TypedArray);
         MOZ_TRY(getElemTryTypedArray(&emitted, obj, index));
         if (emitted)
@@ -8223,102 +8218,6 @@ IonBuilder::getElemTryDense(bool* emitted, MDefinition* obj, MDefinition* index)
     }
 
     MOZ_TRY(jsop_getelem_dense(obj, index));
-
-    trackOptimizationSuccess();
-    *emitted = true;
-    return Ok();
-}
-
-AbortReasonOr<JSObject*>
-IonBuilder::getStaticTypedArrayObject(MDefinition* obj, MDefinition* index)
-{
-    Scalar::Type arrayType;
-    if (!ElementAccessIsTypedArray(constraints(), obj, index, &arrayType)) {
-        trackOptimizationOutcome(TrackedOutcome::AccessNotTypedArray);
-        return nullptr;
-    }
-
-    if (!LIRGenerator::allowStaticTypedArrayAccesses()) {
-        trackOptimizationOutcome(TrackedOutcome::Disabled);
-        return nullptr;
-    }
-
-    bool hasExtraIndexedProperty;
-    MOZ_TRY_VAR(hasExtraIndexedProperty, ElementAccessHasExtraIndexedProperty(this, obj));
-    if (hasExtraIndexedProperty) {
-        trackOptimizationOutcome(TrackedOutcome::ProtoIndexedProps);
-        return nullptr;
-    }
-
-    if (!obj->resultTypeSet()) {
-        trackOptimizationOutcome(TrackedOutcome::NoTypeInfo);
-        return nullptr;
-    }
-
-    JSObject* tarrObj = obj->resultTypeSet()->maybeSingleton();
-    if (!tarrObj) {
-        trackOptimizationOutcome(TrackedOutcome::NotSingleton);
-        return nullptr;
-    }
-
-    TypeSet::ObjectKey* tarrKey = TypeSet::ObjectKey::get(tarrObj);
-    if (tarrKey->unknownProperties()) {
-        trackOptimizationOutcome(TrackedOutcome::UnknownProperties);
-        return nullptr;
-    }
-
-    return tarrObj;
-}
-
-AbortReasonOr<Ok>
-IonBuilder::getElemTryTypedStatic(bool* emitted, MDefinition* obj, MDefinition* index)
-{
-    MOZ_ASSERT(*emitted == false);
-
-    JSObject* tarrObj;
-    MOZ_TRY_VAR(tarrObj, getStaticTypedArrayObject(obj, index));
-    if (!tarrObj)
-        return Ok();
-
-    // LoadTypedArrayElementStatic currently treats uint32 arrays as int32.
-    Scalar::Type viewType = tarrObj->as<TypedArrayObject>().type();
-    if (viewType == Scalar::Uint32) {
-        trackOptimizationOutcome(TrackedOutcome::StaticTypedArrayUint32);
-        return Ok();
-    }
-
-    MDefinition* ptr = convertShiftToMaskForStaticTypedArray(index, viewType);
-    if (!ptr)
-        return Ok();
-
-    // Emit LoadTypedArrayElementStatic.
-
-    if (tarrObj->is<TypedArrayObject>()) {
-        TypeSet::ObjectKey* tarrKey = TypeSet::ObjectKey::get(tarrObj);
-        tarrKey->watchStateChangeForTypedArrayData(constraints());
-    }
-
-    obj->setImplicitlyUsedUnchecked();
-    index->setImplicitlyUsedUnchecked();
-
-    MLoadTypedArrayElementStatic* load = MLoadTypedArrayElementStatic::New(alloc(), tarrObj, ptr);
-    current->add(load);
-    current->push(load);
-
-    // The load is infallible if an undefined result will be coerced to the
-    // appropriate numeric type if the read is out of bounds. The truncation
-    // analysis picks up some of these cases, but is incomplete with respect
-    // to others. For now, sniff the bytecode for simple patterns following
-    // the load which guarantee a truncation or numeric conversion.
-    if (viewType == Scalar::Float32 || viewType == Scalar::Float64) {
-        jsbytecode* next = pc + JSOP_GETELEM_LENGTH;
-        if (*next == JSOP_POS)
-            load->setInfallible();
-    } else {
-        jsbytecode* next = pc + JSOP_GETELEM_LENGTH;
-        if (*next == JSOP_ZERO && *(next + JSOP_ZERO_LENGTH) == JSOP_BITOR)
-            load->setInfallible();
-    }
 
     trackOptimizationSuccess();
     *emitted = true;
@@ -8787,50 +8686,6 @@ IonBuilder::addTypedArrayLengthAndData(MDefinition* obj,
     }
 }
 
-MDefinition*
-IonBuilder::convertShiftToMaskForStaticTypedArray(MDefinition* id,
-                                                  Scalar::Type viewType)
-{
-    trackOptimizationOutcome(TrackedOutcome::StaticTypedArrayCantComputeMask);
-
-    // No shifting is necessary if the typed array has single byte elements.
-    if (TypedArrayShift(viewType) == 0)
-        return id;
-
-    // If the index is an already shifted constant, undo the shift to get the
-    // absolute offset being accessed.
-    if (MConstant* idConst = id->maybeConstantValue()) {
-        if (idConst->type() == MIRType::Int32) {
-            int32_t index = idConst->toInt32();
-            MConstant* offset = MConstant::New(alloc(), Int32Value(index << TypedArrayShift(viewType)));
-            current->add(offset);
-            return offset;
-        }
-    }
-
-    if (!id->isRsh() || id->isEffectful())
-        return nullptr;
-
-    MConstant* shiftAmount = id->toRsh()->rhs()->maybeConstantValue();
-    if (!shiftAmount || shiftAmount->type() != MIRType::Int32)
-        return nullptr;
-    if (uint32_t(shiftAmount->toInt32()) != TypedArrayShift(viewType))
-        return nullptr;
-
-    // Instead of shifting, mask off the low bits of the index so that
-    // a non-scaled access on the typed array can be performed.
-    MConstant* mask = MConstant::New(alloc(), Int32Value(~((1 << shiftAmount->toInt32()) - 1)));
-    MBitAnd* ptr = MBitAnd::New(alloc(), id->getOperand(0), mask);
-
-    ptr->infer(nullptr, nullptr);
-    MOZ_ASSERT(!ptr->isEffectful());
-
-    current->add(mask);
-    current->add(ptr);
-
-    return ptr;
-}
-
 AbortReasonOr<Ok>
 IonBuilder::jsop_getelem_typed(MDefinition* obj, MDefinition* index,
                                Scalar::Type arrayType)
@@ -8933,11 +8788,6 @@ IonBuilder::jsop_setelem()
     }
 
     if (!forceInlineCaches()) {
-        trackOptimizationAttempt(TrackedStrategy::SetElem_TypedStatic);
-        MOZ_TRY(setElemTryTypedStatic(&emitted, object, index, value));
-        if (emitted)
-            return Ok();
-
         trackOptimizationAttempt(TrackedStrategy::SetElem_TypedArray);
         MOZ_TRY(setElemTryTypedArray(&emitted, object, index, value));
         if (emitted)
@@ -9072,54 +8922,6 @@ IonBuilder::setElemTryScalarElemOfTypedObject(bool* emitted,
         return Ok();
 
     return setPropTryScalarTypedObjectValue(emitted, obj, indexAsByteOffset, elemType, value);
-}
-
-AbortReasonOr<Ok>
-IonBuilder::setElemTryTypedStatic(bool* emitted, MDefinition* object,
-                                  MDefinition* index, MDefinition* value)
-{
-    MOZ_ASSERT(*emitted == false);
-
-    JSObject* tarrObj;
-    MOZ_TRY_VAR(tarrObj, getStaticTypedArrayObject(object, index));
-    if (!tarrObj)
-        return Ok();
-
-    SharedMem<void*> viewData = tarrObj->as<TypedArrayObject>().viewDataEither();
-    if (tarrObj->zone()->group()->nursery().isInside(viewData))
-        return Ok();
-
-    Scalar::Type viewType = tarrObj->as<TypedArrayObject>().type();
-    MDefinition* ptr = convertShiftToMaskForStaticTypedArray(index, viewType);
-    if (!ptr)
-        return Ok();
-
-    // Emit StoreTypedArrayElementStatic.
-
-    if (tarrObj->is<TypedArrayObject>()) {
-        TypeSet::ObjectKey* tarrKey = TypeSet::ObjectKey::get(tarrObj);
-        tarrKey->watchStateChangeForTypedArrayData(constraints());
-    }
-
-    object->setImplicitlyUsedUnchecked();
-    index->setImplicitlyUsedUnchecked();
-
-    // Clamp value to [0, 255] for Uint8ClampedArray.
-    MDefinition* toWrite = value;
-    if (viewType == Scalar::Uint8Clamped) {
-        toWrite = MClampToUint8::New(alloc(), value);
-        current->add(toWrite->toInstruction());
-    }
-
-    MInstruction* store = MStoreTypedArrayElementStatic::New(alloc(), tarrObj, ptr, toWrite);
-    current->add(store);
-    current->push(value);
-
-    MOZ_TRY(resumeAfter(store));
-
-    trackOptimizationSuccess();
-    *emitted = true;
-    return Ok();
 }
 
 AbortReasonOr<Ok>

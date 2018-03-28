@@ -6854,23 +6854,6 @@ class LLoadTypedArrayElementHole : public LInstructionHelper<BOX_PIECES, 2, 1>
     }
 };
 
-class LLoadTypedArrayElementStatic : public LInstructionHelper<1, 1, 0>
-{
-  public:
-    LIR_HEADER(LoadTypedArrayElementStatic);
-    explicit LLoadTypedArrayElementStatic(const LAllocation& ptr)
-      : LInstructionHelper(classOpcode)
-    {
-        setOperand(0, ptr);
-    }
-    MLoadTypedArrayElementStatic* mir() const {
-        return mir_->toLoadTypedArrayElementStatic();
-    }
-    const LAllocation* ptr() {
-        return getOperand(0);
-    }
-};
-
 class LStoreUnboxedScalar : public LInstructionHelper<0, 3, 0>
 {
   public:
@@ -6928,27 +6911,6 @@ class LStoreTypedArrayElementHole : public LInstructionHelper<0, 4, 0>
     }
     const LAllocation* value() {
         return getOperand(3);
-    }
-};
-
-class LStoreTypedArrayElementStatic : public LInstructionHelper<0, 2, 0>
-{
-  public:
-    LIR_HEADER(StoreTypedArrayElementStatic);
-    LStoreTypedArrayElementStatic(const LAllocation& ptr, const LAllocation& value)
-      : LInstructionHelper(classOpcode)
-    {
-        setOperand(0, ptr);
-        setOperand(1, value);
-    }
-    MStoreTypedArrayElementStatic* mir() const {
-        return mir_->toStoreTypedArrayElementStatic();
-    }
-    const LAllocation* ptr() {
-        return getOperand(0);
-    }
-    const LAllocation* value() {
-        return getOperand(1);
     }
 };
 

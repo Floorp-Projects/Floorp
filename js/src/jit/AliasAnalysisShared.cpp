@@ -123,8 +123,6 @@ GetObject(const MDefinition* ins)
         object = ins->getOperand(0);
         break;
       case MDefinition::Opcode::GetPropertyCache:
-      case MDefinition::Opcode::LoadTypedArrayElementStatic:
-      case MDefinition::Opcode::StoreTypedArrayElementStatic:
       case MDefinition::Opcode::GetDOMProperty:
       case MDefinition::Opcode::GetDOMMember:
       case MDefinition::Opcode::Call:
