@@ -419,15 +419,28 @@
       },
 
       handleEvent(aEvent) {
-        this.log("Got media event ----> " + aEvent.type);
+        if (!aEvent.isTrusted) {
+          this.log("Drop untrusted event ----> " + aEvent.type);
+          return;
+        }
+
+        this.log("Got event ----> " + aEvent.type);
 
         // If the binding is detached (or has been replaced by a
         // newer instance of the binding), nuke our event-listeners.
         if (this.videocontrols.randomID != this.randomID) {
-          this.terminateEventListeners();
+          this.terminate();
           return;
         }
 
+        if (this.videoEvents.includes(aEvent.type)) {
+          this.handleVideoEvent(aEvent);
+        } else {
+          this.handleControlEvent(aEvent);
+        }
+      },
+
+      handleVideoEvent(aEvent) {
         switch (aEvent.type) {
           case "play":
             this.setPlayButtonState(false);
@@ -465,7 +478,8 @@
             if (this.clickToPlay.hidden && !this.isAudioOnly) {
               this.startFadeIn(this.controlBar);
               clearTimeout(this._hideControlsTimeout);
-              this._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
+              this._hideControlsTimeout =
+                setTimeout(() => this._hideControlsFn(), this.HIDE_CONTROLS_TIMEOUT_MS);
             }
             break;
           case "loadedmetadata":
@@ -592,11 +606,99 @@
             this.setupStatusFader();
             break;
           default:
-            this.log("!!! event " + aEvent.type + " not handled!");
+            this.log("!!! media event " + aEvent.type + " not handled!");
         }
       },
 
-      terminateEventListeners() {
+      handleControlEvent(aEvent) {
+        switch (aEvent.type) {
+          case "click":
+            switch (aEvent.currentTarget) {
+              case this.muteButton:
+                this.toggleMute();
+                break;
+              case this.castingButton:
+                this.toggleCasting();
+                break;
+              case this.closedCaptionButton:
+                this.toggleClosedCaption();
+                break;
+              case this.fullscreenButton:
+                this.toggleFullscreen();
+                break;
+              case this.playButton:
+              case this.clickToPlay:
+              case this.controlsSpacer:
+                this.clickToPlayClickHandler(aEvent);
+                break;
+              case this.textTrackList:
+                const index = +aEvent.originalTarget.getAttribute("index");
+                this.changeTextTrack(index);
+                break;
+              case this.videocontrols:
+                // Prevent any click event within media controls from dispatching through to video.
+                aEvent.stopPropagation();
+                break;
+            }
+            break;
+          case "dblclick":
+            this.toggleFullscreen();
+            break;
+          case "resizevideocontrols":
+            this.adjustControlSize();
+            break;
+          // See comment at onFullscreenChange on bug 718107.
+          /*
+          case "fullscreenchange":
+            this.onFullscreenChange();
+            break;
+          */
+          case "keypress":
+            this.keyHandler(aEvent);
+            break;
+          case "dragstart":
+            aEvent.preventDefault(); // prevent dragging of controls image (bug 517114)
+            break;
+          case "input":
+            switch (aEvent.currentTarget) {
+              case this.scrubber:
+                this.onScrubberInput(aEvent);
+                break;
+              case this.volumeControl:
+                this.updateVolume();
+                break;
+            }
+            break;
+          case "change":
+            switch (aEvent.currentTarget) {
+              case this.scrubber:
+                this.onScrubberChange(aEvent);
+                break;
+              case this.video.textTracks:
+                this.setClosedCaptionButtonState();
+                break;
+            }
+            break;
+          case "mouseup":
+            // add mouseup listener additionally to handle the case that `change` event
+            // isn't fired when the input value before/after dragging are the same. (bug 1328061)
+            this.onScrubberChange(aEvent);
+            break;
+          case "addtrack":
+            this.onTextTrackAdd(aEvent);
+            break;
+          case "removetrack":
+            this.onTextTrackRemove(aEvent);
+            break;
+          case "media-videoCasting":
+            this.updateCasting(aEvent.detail);
+            break;
+          default:
+            this.log("!!! control event " + aEvent.type + " not handled!");
+        }
+      },
+
+      terminate() {
         if (this.videoEvents) {
           for (let event of this.videoEvents) {
             try {
@@ -608,16 +710,15 @@
           }
         }
 
-        if (this.controlListeners) {
-          for (let element of this.controlListeners) {
-            try {
-              element.item.removeEventListener(element.event, element.func,
-                { mozSystemGroup: element.mozSystemGroup, capture: element.capture });
-            } catch (ex) {}
+        try {
+          for (let { el, type, capture = false } of this.controlsEvents) {
+            el.removeEventListener(type, this, { mozSystemGroup: true, capture });
           }
+        } catch (ex) {}
 
-          delete this.controlListeners;
-        }
+        clearTimeout(this._showControlsTimeout);
+        clearTimeout(this._hideControlsTimeout);
+        this._cancelShowThrobberWhileResumingVideoDecoder();
 
         this.log("--- videocontrols terminated ---");
       },
@@ -887,19 +988,19 @@
       _showControlsTimeout: 0,
       SHOW_CONTROLS_TIMEOUT_MS: 500,
       _showControlsFn() {
-        if (Utils.video.matches("video:hover")) {
-          Utils.startFadeIn(Utils.controlBar, false);
-          Utils._showControlsTimeout = 0;
-          Utils._controlsHiddenByTimeout = false;
+        if (this.video.matches("video:hover")) {
+          this.startFadeIn(this.controlBar, false);
+          this._showControlsTimeout = 0;
+          this._controlsHiddenByTimeout = false;
         }
       },
 
       _hideControlsTimeout: 0,
       _hideControlsFn() {
-        if (!Utils.scrubber.isDragging) {
-          Utils.startFade(Utils.controlBar, false);
-          Utils._hideControlsTimeout = 0;
-          Utils._controlsHiddenByTimeout = true;
+        if (!this.scrubber.isDragging) {
+          this.startFade(this.controlBar, false);
+          this._hideControlsTimeout = 0;
+          this._controlsHiddenByTimeout = true;
         }
       },
       HIDE_CONTROLS_TIMEOUT_MS: 2000,
@@ -920,7 +1021,8 @@
         }
 
         if (this._controlsHiddenByTimeout) {
-          this._showControlsTimeout = setTimeout(this._showControlsFn, this.SHOW_CONTROLS_TIMEOUT_MS);
+          this._showControlsTimeout =
+            setTimeout(() => this._showControlsFn(), this.SHOW_CONTROLS_TIMEOUT_MS);
         } else {
           this.startFade(this.controlBar, true);
         }
@@ -930,7 +1032,8 @@
         if ((this._controlsHiddenByTimeout ||
             event.clientY < this.controlBar.getBoundingClientRect().top) &&
             this.clickToPlay.hidden) {
-          this._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
+          this._hideControlsTimeout =
+            setTimeout(() => this._hideControlsFn(), this.HIDE_CONTROLS_TIMEOUT_MS);
         }
       },
 
@@ -978,7 +1081,7 @@
           this.startFadeOut(this.controlBar, false);
           this.textTrackList.hidden = true;
           clearTimeout(this._showControlsTimeout);
-          Utils._controlsHiddenByTimeout = false;
+          this._controlsHiddenByTimeout = false;
         }
       },
 
@@ -1216,7 +1319,8 @@
         // fixed, or we could simply acknowledge the current behavior
         // after-the-fact and try not to fix this.
         if (this.isVideoInFullScreen) {
-          Utils._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
+          this._hideControlsTimeout =
+            setTimeout(() => this._hideControlsFn(), this.HIDE_CONTROLS_TIMEOUT_MS);
         }
 
         // Constructor will handle this correctly on the new DOM content in
@@ -1546,13 +1650,6 @@
 
         ttBtn.classList.add("textTrackItem");
         ttBtn.setAttribute("index", tt.index);
-
-        ttBtn.addEventListener("click", event => {
-          event.stopPropagation();
-
-          this.changeTextTrack(tt.index);
-        });
-
         ttBtn.appendChild(ttText);
 
         this.textTrackList.appendChild(ttBtn);
@@ -1830,64 +1927,53 @@
           });
         }
 
-        var self = this;
-        this.controlListeners = [];
+        this.controlsEvents = [
+          { el: this.muteButton, type: "click" },
+          { el: this.castingButton, type: "click" },
+          { el: this.closedCaptionButton, type: "click" },
+          { el: this.fullscreenButton, type: "click" },
+          { el: this.playButton, type: "click" },
+          { el: this.clickToPlay, type: "click" },
 
-        // Helper function to add an event listener to the given element
-        // Due to this helper function, "Utils" is made available to the event
-        // listener functions. Hence declare it as a global for ESLint.
-        /* global Utils */
-        function addListener(elem, eventName, func, {capture = false, mozSystemGroup = true} = {}) {
-          let boundFunc = evt => evt.isTrusted && func.call(self, evt);
-          self.controlListeners.push({
-            item: elem,
-            event: eventName,
-            func: boundFunc,
-            capture,
-            mozSystemGroup,
-          });
-          elem.addEventListener(eventName, boundFunc, {mozSystemGroup, capture});
-        }
+          // On touch videocontrols, tapping controlsSpacer should show/hide
+          // the control bar, instead of playing the video or toggle fullscreen.
+          { el: this.controlsSpacer, type: "click", nonTouchOnly: true },
+          { el: this.controlsSpacer, type: "dblclick", nonTouchOnly: true },
 
-        addListener(this.muteButton, "click", this.toggleMute);
-        addListener(this.castingButton, "click", this.toggleCasting);
-        addListener(this.closedCaptionButton, "click", this.toggleClosedCaption);
-        addListener(this.fullscreenButton, "click", this.toggleFullscreen);
-        addListener(this.playButton, "click", this.clickToPlayClickHandler);
-        addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
+          { el: this.textTrackList, type: "click" },
 
-        // On touch videocontrols, tapping controlsSpacer should show/hide
-        // the control bar, instead of playing the video or toggle fullscreen.
-        if (!this.videocontrols.isTouchControls) {
-          addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
-          addListener(this.controlsSpacer, "dblclick", this.toggleFullscreen);
-        }
+          { el: this.videocontrols, type: "resizevideocontrols" },
 
-        addListener(this.videocontrols, "resizevideocontrols", this.adjustControlSize);
-        // See comment at onFullscreenChange on bug 718107.
-        // addListener(this.video.ownerDocument, "fullscreenchange", this.onFullscreenChange);
-        addListener(this.video, "keypress", this.keyHandler, {capture: true});
-        // Prevent any click event within media controls from dispatching through to video.
-        addListener(this.videocontrols, "click", function(event) {
-          event.stopPropagation();
-        }, {mozSystemGroup: false});
-        addListener(this.videocontrols, "dragstart", function(event) {
-          event.preventDefault(); // prevent dragging of controls image (bug 517114)
-        });
+          // See comment at onFullscreenChange on bug 718107.
+          // { el: this.video.ownerDocument, type: "fullscreenchange" },
+          { el: this.video, type: "keypress", capture: true },
 
-        addListener(this.scrubber, "input", this.onScrubberInput);
-        addListener(this.scrubber, "change", this.onScrubberChange);
-        // add mouseup listener additionally to handle the case that `change` event
-        // isn't fired when the input value before/after dragging are the same. (bug 1328061)
-        addListener(this.scrubber, "mouseup", this.onScrubberChange);
-        addListener(this.volumeControl, "input", this.updateVolume);
-        addListener(this.video.textTracks, "addtrack", this.onTextTrackAdd);
-        addListener(this.video.textTracks, "removetrack", this.onTextTrackRemove);
-        addListener(this.video.textTracks, "change", this.setClosedCaptionButtonState);
+          // Prevent any click event within media controls from dispatching through to video.
+          { el: this.videocontrols, type: "click", mozSystemGroup: false },
 
-        if (this.videocontrols.isTouchControls) {
-          addListener(this.video, "media-videoCasting",
-            (evt) => this.updateCasting(evt.detail));
+          // prevent dragging of controls image (bug 517114)
+          { el: this.videocontrols, type: "dragstart" },
+
+          { el: this.scrubber, type: "input" },
+          { el: this.scrubber, type: "change" },
+          // add mouseup listener additionally to handle the case that `change` event
+          // isn't fired when the input value before/after dragging are the same. (bug 1328061)
+          { el: this.scrubber, type: "mouseup" },
+          { el: this.volumeControl, type: "input" },
+          { el: this.video.textTracks, type: "addtrack" },
+          { el: this.video.textTracks, type: "removetrack" },
+          { el: this.video.textTracks, type: "change" },
+
+          { el: this.video, type: "media-videoCasting", touchOnly: true }
+        ];
+
+        for (let { el, type, nonTouchOnly = false, touchOnly = false,
+                   mozSystemGroup = true, capture = false } of this.controlsEvents) {
+          if ((this.videocontrols.isTouchControls && nonTouchOnly) ||
+              (!this.videocontrols.isTouchControls && touchOnly)) {
+            continue;
+          }
+          el.addEventListener(type, this, { mozSystemGroup, capture });
         }
 
         this.log("--- videocontrols initialized ---");
@@ -1909,12 +1995,7 @@
                !(this.Utils.controlBar.hidden);
       },
 
-      _firstShow: false,
-      get firstShow() { return this._firstShow; },
-      set firstShow(val) {
-        this._firstShow = val;
-        this.Utils.controlBar.setAttribute("firstshow", val);
-      },
+      firstShow: false,
 
       toggleControls() {
         if (!this.Utils.dynamicControls || !this.visible) {
@@ -1940,10 +2021,8 @@
 
       delayHideControls(aTimeout) {
         this.clearTimer();
-        let self = this;
-        this.controlsTimer = setTimeout(function() {
-          self.hideControls();
-        }, aTimeout);
+        this.controlsTimer =
+          setTimeout(() => this.hideControls(), aTimeout);
       },
 
       hideControls() {
@@ -1954,48 +2033,69 @@
       },
 
       handleEvent(aEvent) {
+        switch (aEvent.type) {
+          case "click":
+            switch (aEvent.currentTarget) {
+              case this.Utils.playButton:
+                if (!this.video.paused) {
+                  this.delayHideControls(0);
+                } else {
+                  this.showControls();
+                }
+                break;
+              case this.Utils.muteButton:
+                this.delayHideControls(this.controlsTimeout);
+                break;
+            }
+            break;
+          case "touchstart":
+            this.clearTimer();
+            break;
+          case "touchend":
+            this.delayHideControls(this.controlsTimeout);
+            break;
+          case "mouseup":
+            if (aEvent.originalTarget == this.Utils.controlsSpacer) {
+              if (this.firstShow) {
+                this.Utils.video.play();
+                this.firstShow = false;
+              }
+              this.toggleControls();
+            }
+
+            break;
+        }
+
         if (this.videocontrols.randomID != this.Utils.randomID) {
-          this.terminateEventListeners();
+          this.terminate();
         }
       },
 
-      terminateEventListeners() {
-        for (var event of this.videoEvents) {
-          try {
-            this.Utils.video.removeEventListener(event, this);
-          } catch (ex) {}
-        }
+      terminate() {
+        try {
+          for (let { el, type, mozSystemGroup = true } of this.controlsEvents) {
+            el.removeEventListener(type, this, { mozSystemGroup });
+          }
+        } catch (ex) {}
+
+        this.clearTimer();
       },
 
       init(binding) {
         this.videocontrols = binding;
         this.video = binding.parentNode;
 
-        let self = this;
-        this.Utils.playButton.addEventListener("click", function() {
-          if (!self.video.paused) {
-            self.delayHideControls(0);
-          } else {
-            self.showControls();
-          }
-        });
-        this.Utils.scrubber.addEventListener("touchstart", function() {
-          self.clearTimer();
-        });
-        this.Utils.scrubber.addEventListener("touchend", function() {
-          self.delayHideControls(self.controlsTimeout);
-        });
-        this.Utils.muteButton.addEventListener("click", function() { self.delayHideControls(self.controlsTimeout); });
+        this.controlsEvents = [
+          { el: this.Utils.playButton, type: "click" },
+          { el: this.Utils.scrubber, type: "touchstart" },
+          { el: this.Utils.scrubber, type: "touchend" },
+          { el: this.Utils.muteButton, type: "click" },
+          { el: this.Utils.controlsSpacer, type: "mouseup" }
+        ];
 
-        this.Utils.controlsSpacer.addEventListener("mouseup", function(event) {
-          if (event.originalTarget == self.Utils.controlsSpacer) {
-            if (self.firstShow) {
-              self.Utils.video.play();
-              self.firstShow = false;
-            }
-            self.toggleControls();
-          }
-        });
+        for (let { el, type, mozSystemGroup = true } of this.controlsEvents) {
+          el.addEventListener(type, this, { mozSystemGroup });
+        }
 
         // The first time the controls appear we want to just display
         // a play button that does not fade away. The firstShow property
@@ -2027,7 +2127,8 @@
   </constructor>
   <destructor>
     <![CDATA[
-    this.Utils.terminateEventListeners();
+    this.Utils.terminate();
+    this.TouchUtils.terminate();
     this.Utils.updateOrientationState(false);
     // randomID used to be a <field>, which meant that the XBL machinery
     // undefined the property when the element was unbound. The code in
@@ -2081,23 +2182,21 @@
     this.Utils = {
       randomID: 0,
       videoEvents: ["play",
-                    "playing"],
-      controlListeners: [],
-      terminateEventListeners() {
+                    "playing",
+                    "MozNoControlsBlockedVideo"],
+      terminate() {
         for (let event of this.videoEvents) {
           try {
-            this.video.removeEventListener(event, this, { mozSystemGroup: true });
+            this.video.removeEventListener(event, this, {
+              capture: true,
+              mozSystemGroup: true
+            });
           } catch (ex) {}
         }
 
-        for (let element of this.controlListeners) {
-          try {
-            element.item.removeEventListener(element.event, element.func,
-              { mozSystemGroup: true });
-          } catch (ex) {}
-        }
-
-        delete this.controlListeners;
+        try {
+          this.clickToPlay.removeEventListener("click", this, { mozSystemGroup: true });
+        } catch (ex) {}
       },
 
       hasError() {
@@ -2108,7 +2207,7 @@
         // If the binding is detached (or has been replaced by a
         // newer instance of the binding), nuke our event-listeners.
         if (this.videocontrols.randomID != this.randomID) {
-          this.terminateEventListeners();
+          this.terminate();
           return;
         }
 
@@ -2119,12 +2218,18 @@
           case "playing":
             this.noControlsOverlay.hidden = true;
             break;
+          case "MozNoControlsBlockedVideo":
+            this.blockedVideoHandler();
+            break;
+          case "click":
+            this.clickToPlayClickHandler(aEvent);
+            break;
         }
       },
 
       blockedVideoHandler() {
         if (this.videocontrols.randomID != this.randomID) {
-          this.terminateEventListeners();
+          this.terminate();
           return;
         } else if (this.hasError()) {
           this.noControlsOverlay.hidden = true;
@@ -2135,7 +2240,7 @@
 
       clickToPlayClickHandler(e) {
         if (this.videocontrols.randomID != this.randomID) {
-          this.terminateEventListeners();
+          this.terminate();
           return;
         } else if (e.button != 0) {
           return;
@@ -2165,17 +2270,13 @@
           this.controlsContainer.classList.add("touch");
         }
 
-        let self = this;
-        function addListener(elem, eventName, func) {
-          let boundFunc = func.bind(self);
-          self.controlListeners.push({ item: elem, event: eventName, func: boundFunc });
-          elem.addEventListener(eventName, boundFunc, { mozSystemGroup: true });
-        }
-        addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
-        addListener(this.video, "MozNoControlsBlockedVideo", this.blockedVideoHandler);
+        this.clickToPlay.addEventListener("click", this, { mozSystemGroup: true });
 
         for (let event of this.videoEvents) {
-          this.video.addEventListener(event, this, { mozSystemGroup: true });
+          this.video.addEventListener(event, this, {
+            capture: true,
+            mozSystemGroup: true
+          });
         }
       }
     };
@@ -2185,7 +2286,7 @@
   </constructor>
   <destructor>
     <![CDATA[
-    this.Utils.terminateEventListeners();
+    this.Utils.terminate();
     // randomID used to be a <field>, which meant that the XBL machinery
     // undefined the property when the element was unbound. The code in
     // this file actually depends on this, so now that randomID is an
