@@ -1221,7 +1221,9 @@ StructuredCloneHolder::CustomWriteTransferHandler(JSContext* aCx,
       *aExtraData = mPortIdentifiers.Length();
       MessagePortIdentifier* identifier = mPortIdentifiers.AppendElement();
 
-      port->CloneAndDisentangle(*identifier);
+      if (!port->CloneAndDisentangle(*identifier)) {
+        return false;
+      }
 
       *aTag = SCTAG_DOM_MAP_MESSAGEPORT;
       *aOwnership = JS::SCTAG_TMO_CUSTOM;
@@ -1236,6 +1238,10 @@ StructuredCloneHolder::CustomWriteTransferHandler(JSContext* aCx,
       rv = UNWRAP_OBJECT(OffscreenCanvas, &obj, canvas);
       if (NS_SUCCEEDED(rv)) {
         MOZ_ASSERT(canvas);
+
+        if (canvas->IsNeutered()) {
+          return false;
+        }
 
         *aExtraData = 0;
         *aTag = SCTAG_DOM_CANVAS;
