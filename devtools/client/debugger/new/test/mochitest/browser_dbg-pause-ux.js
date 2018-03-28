@@ -24,7 +24,7 @@ add_task(async function() {
   let longSrc = findSource(dbg, "long.js");
   await addBreakpoint(dbg, longSrc, 66);
   invokeInTab("testModel");
-  await waitForPaused(dbg);
+  await waitForPaused(dbg, "long.js");
 
   const pauseScrollTop = getScrollTop(dbg);
 
