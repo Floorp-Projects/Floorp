@@ -15,6 +15,7 @@
 #include "mozilla/StyleComplexColor.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 #include "nscore.h"
 #include "nsCSSProps.h"
 #include "nsDOMCSSDeclaration.h"
@@ -23,7 +24,6 @@
 #include "mozilla/gfx/Types.h"
 #include "nsCoord.h"
 #include "nsColor.h"
-#include "nsIContent.h"
 #include "nsStyleStruct.h"
 #include "mozilla/WritingModes.h"
 
@@ -107,7 +107,7 @@ public:
   {
     return DoGetComputedStyleNoFlush(aElement,
                                      aPseudo,
-                                     aElement->OwnerDoc()->GetShell(),
+                                     nsContentUtils::GetPresShellForContent(aElement),
                                      aStyleType);
   }
 

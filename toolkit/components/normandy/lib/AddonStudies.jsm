@@ -48,7 +48,6 @@ const DB_NAME = "shield";
 const STORE_NAME = "addon-studies";
 const DB_OPTIONS = {
   version: 1,
-  storage: "persistent",
 };
 const STUDY_ENDED_TOPIC = "shield-study-ended";
 const log = LogManager.getLogger("addon-studies");

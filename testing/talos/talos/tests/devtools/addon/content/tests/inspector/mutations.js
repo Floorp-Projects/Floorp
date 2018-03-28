@@ -5,7 +5,7 @@
 "use strict";
 
 const { openToolbox, closeToolbox, runTest, testSetup,
-        testTeardown, SIMPLE_URL } = require("chrome://damp/content/tests/head");
+        testTeardown, SIMPLE_URL } = require("../head");
 
 /**
  * Measure the time necessary to perform successive childList mutations in the content

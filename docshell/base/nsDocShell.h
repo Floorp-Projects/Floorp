@@ -74,7 +74,6 @@ typedef uint32_t ScreenOrientationInternal;
 } // namespace dom
 } // namespace mozilla
 
-class nsIClipboardDragDropHookList;
 class nsICommandManager;
 class nsIContentViewer;
 class nsIController;
@@ -963,9 +962,6 @@ private: // data members
 
   // Editor data, if this document is designMode or contentEditable.
   nsAutoPtr<nsDocShellEditorData> mEditorData;
-
-  // Transferable hooks/callbacks
-  nsCOMPtr<nsIClipboardDragDropHookList> mTransferableHookData;
 
   // Secure browser UI object
   nsCOMPtr<nsISecureBrowserUI> mSecurityUI;

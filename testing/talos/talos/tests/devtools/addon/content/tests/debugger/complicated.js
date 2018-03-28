@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { closeToolboxAndLog, testSetup, testTeardown, COMPLICATED_URL } = require("chrome://damp/content/tests/head");
-const { openDebuggerAndLog, reloadDebuggerAndLog } = require("chrome://damp/content/tests/debugger/debugger-helpers");
+const { closeToolboxAndLog, testSetup, testTeardown, COMPLICATED_URL } = require("../head");
+const { openDebuggerAndLog, reloadDebuggerAndLog } = require("./debugger-helpers");
 
 const EXPECTED = {
   sources: 14,

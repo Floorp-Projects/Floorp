@@ -5,8 +5,8 @@
 "use strict";
 
 const { openToolboxAndLog, closeToolboxAndLog, reloadPageAndLog, testSetup,
-        testTeardown, COMPLICATED_URL } = require("chrome://damp/content/tests/head");
-const { exportHar, waitForNetworkRequests } = require("chrome://damp/content/tests/netmonitor/netmonitor-helpers");
+        testTeardown, COMPLICATED_URL } = require("../head");
+const { exportHar, waitForNetworkRequests } = require("./netmonitor-helpers");
 
 const EXPECTED_REQUESTS = 280;
 

@@ -231,16 +231,24 @@ public: // TODO: make private once we upgrade to GCC 4.8+ on linux.
   static void AnonymizeDevices(SourceSet& aDevices, const nsACString& aOriginKey);
   static already_AddRefed<nsIWritableVariant> ToJSArray(SourceSet& aDevices);
 private:
+  enum class DeviceEnumerationType :uint8_t {
+    Normal, // Enumeration should not return loopback or fake devices
+    Fake, // Enumeration should return fake device(s)
+    Loopback /* Enumeration should return loopback device(s) (possibly in
+             addition to normal devices) */
+  };
   already_AddRefed<PledgeSourceSet>
   EnumerateRawDevices(uint64_t aWindowId,
                       dom::MediaSourceEnum aVideoType,
                       dom::MediaSourceEnum aAudioType,
-                      bool aFake);
+                      DeviceEnumerationType aVideoEnumType = DeviceEnumerationType::Normal,
+                      DeviceEnumerationType aAudioEnumType = DeviceEnumerationType::Normal);
   already_AddRefed<PledgeSourceSet>
   EnumerateDevicesImpl(uint64_t aWindowId,
-                       dom::MediaSourceEnum aVideoSrcType,
-                       dom::MediaSourceEnum aAudioSrcType,
-                       bool aFake = false);
+                       dom::MediaSourceEnum aVideoType,
+                       dom::MediaSourceEnum aAudioType,
+                       DeviceEnumerationType aVideoEnumType = DeviceEnumerationType::Normal,
+                       DeviceEnumerationType aAudioEnumType = DeviceEnumerationType::Normal);
   already_AddRefed<PledgeChar>
   SelectSettings(
       dom::MediaStreamConstraints& aConstraints,

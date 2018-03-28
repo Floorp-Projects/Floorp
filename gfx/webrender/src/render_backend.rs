@@ -73,7 +73,7 @@ struct SceneData {
     removed_pipelines: Vec<PipelineId>,
 }
 
-#[derive(Copy, Clone, PartialEq, PartialOrd, Debug, Eq, Ord)]
+#[derive(Copy, Clone, Hash, PartialEq, PartialOrd, Debug, Eq, Ord)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FrameId(pub u32);

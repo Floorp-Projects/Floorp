@@ -439,6 +439,7 @@ private:
   DECL_GFX_PREF(Once, "gfx.blocklist.all",                     BlocklistAll, int32_t, 0);
 #endif
   DECL_GFX_PREF(Live, "gfx.compositor.clearstate",             CompositorClearState, bool, false);
+  DECL_GFX_PREF(Live, "gfx.compositor.glcontext.opaque",       CompositorGLContextOpaque, bool, false);
   DECL_GFX_PREF(Live, "gfx.canvas.auto_accelerate.min_calls",  CanvasAutoAccelerateMinCalls, int32_t, 4);
   DECL_GFX_PREF(Live, "gfx.canvas.auto_accelerate.min_frames", CanvasAutoAccelerateMinFrames, int32_t, 30);
   DECL_GFX_PREF(Live, "gfx.canvas.auto_accelerate.min_seconds", CanvasAutoAccelerateMinSeconds, float, 5.0f);

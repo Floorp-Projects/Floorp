@@ -435,6 +435,17 @@ async function openDebugger(options = {}) {
   return {target, toolbox, panel};
 }
 
+async function openInspector(options = {}) {
+  if (!options.tab) {
+    options.tab = gBrowser.selectedTab;
+  }
+
+  const target = TargetFactory.forTab(options.tab);
+  const toolbox = await gDevTools.showToolbox(target, "inspector");
+
+  return toolbox.getCurrentPanel();
+}
+
 /**
  * Open the Web Console for the given tab, or the current one if none given.
  *

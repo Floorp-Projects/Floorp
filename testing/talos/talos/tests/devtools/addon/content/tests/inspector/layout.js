@@ -7,7 +7,7 @@
 const Services = require("Services");
 
 const { openToolbox, closeToolbox, runTest, testSetup,
-        testTeardown, SIMPLE_URL } = require("chrome://damp/content/tests/head");
+        testTeardown, SIMPLE_URL } = require("../head");
 
 module.exports = async function() {
   let tab = await testSetup(SIMPLE_URL);

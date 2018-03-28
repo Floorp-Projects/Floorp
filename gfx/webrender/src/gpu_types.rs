@@ -9,6 +9,28 @@ use render_task::RenderTaskAddress;
 
 // Contains type that must exactly match the same structures declared in GLSL.
 
+#[derive(Copy, Clone, Debug)]
+#[repr(C)]
+pub struct ZBufferId(i32);
+
+pub struct ZBufferIdGenerator {
+    next: i32,
+}
+
+impl ZBufferIdGenerator {
+    pub fn new() -> ZBufferIdGenerator {
+        ZBufferIdGenerator {
+            next: 0
+        }
+    }
+
+    pub fn next(&mut self) -> ZBufferId {
+        let id = ZBufferId(self.next);
+        self.next += 1;
+        id
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -75,7 +97,7 @@ pub struct SimplePrimitiveInstance {
     pub clip_task_address: RenderTaskAddress,
     pub clip_chain_rect_index: ClipChainRectIndex,
     pub scroll_id: ClipScrollNodeIndex,
-    pub z_sort_index: i32,
+    pub z: ZBufferId,
 }
 
 impl SimplePrimitiveInstance {
@@ -85,7 +107,7 @@ impl SimplePrimitiveInstance {
         clip_task_address: RenderTaskAddress,
         clip_chain_rect_index: ClipChainRectIndex,
         scroll_id: ClipScrollNodeIndex,
-        z_sort_index: i32,
+        z: ZBufferId,
     ) -> Self {
         SimplePrimitiveInstance {
             specific_prim_address,
@@ -93,7 +115,7 @@ impl SimplePrimitiveInstance {
             clip_task_address,
             clip_chain_rect_index,
             scroll_id,
-            z_sort_index,
+            z,
         }
     }
 
@@ -104,7 +126,7 @@ impl SimplePrimitiveInstance {
                 self.task_address.0 as i32,
                 self.clip_task_address.0 as i32,
                 ((self.clip_chain_rect_index.0 as i32) << 16) | self.scroll_id.0 as i32,
-                self.z_sort_index,
+                self.z.0,
                 data0,
                 data1,
                 data2,
@@ -119,7 +141,7 @@ pub struct CompositePrimitiveInstance {
     pub backdrop_task_address: RenderTaskAddress,
     pub data0: i32,
     pub data1: i32,
-    pub z: i32,
+    pub z: ZBufferId,
     pub data2: i32,
     pub data3: i32,
 }
@@ -131,7 +153,7 @@ impl CompositePrimitiveInstance {
         backdrop_task_address: RenderTaskAddress,
         data0: i32,
         data1: i32,
-        z: i32,
+        z: ZBufferId,
         data2: i32,
         data3: i32,
     ) -> Self {
@@ -155,7 +177,7 @@ impl From<CompositePrimitiveInstance> for PrimitiveInstance {
                 instance.task_address.0 as i32,
                 instance.src_task_address.0 as i32,
                 instance.backdrop_task_address.0 as i32,
-                instance.z,
+                instance.z.0,
                 instance.data0,
                 instance.data1,
                 instance.data2,
@@ -187,7 +209,7 @@ pub struct BrushInstance {
     pub clip_chain_rect_index: ClipChainRectIndex,
     pub scroll_id: ClipScrollNodeIndex,
     pub clip_task_address: RenderTaskAddress,
-    pub z: i32,
+    pub z: ZBufferId,
     pub segment_index: i32,
     pub edge_flags: EdgeAaSegmentMask,
     pub brush_flags: BrushFlags,
@@ -201,7 +223,7 @@ impl From<BrushInstance> for PrimitiveInstance {
                 instance.picture_address.0 as i32 | (instance.clip_task_address.0 as i32) << 16,
                 instance.prim_address.as_int(),
                 ((instance.clip_chain_rect_index.0 as i32) << 16) | instance.scroll_id.0 as i32,
-                instance.z,
+                instance.z.0,
                 instance.segment_index |
                     ((instance.edge_flags.bits() as i32) << 16) |
                     ((instance.brush_flags.bits() as i32) << 24),
@@ -244,15 +266,6 @@ impl ClipScrollNodeData {
 #[derive(Copy, Debug, Clone, PartialEq)]
 #[repr(C)]
 pub struct ClipChainRectIndex(pub usize);
-
-#[derive(Copy, Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[repr(C)]
-pub enum PictureType {
-    Image = 1,
-    TextShadow = 2,
-}
 
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]

@@ -105,7 +105,7 @@ async function testGroupToggle({
   visibleMessageIdsAfterExpand,
   visibleMessageIdsAfterCollapse
 }) {
-  let toggleArrow = node.querySelector(".theme-twisty");
+  let toggleArrow = node.querySelector(".collapse-button");
   const isOpen = node2 => node2.classList.contains("open");
   const assertVisibleMessageIds = (expanded) => {
     let visibleMessageIds = store.getState().messages.visibleMessages;

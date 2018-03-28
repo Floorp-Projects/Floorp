@@ -1314,15 +1314,9 @@ nsIDocument::SelectorCache::~SelectorCache()
 void
 nsIDocument::SelectorCache::SelectorList::Reset()
 {
-  if (mIsServo) {
-    if (mServo) {
-      Servo_SelectorList_Drop(mServo);
-      mServo = nullptr;
-    }
-  } else {
-    if (mGecko) {
-      MOZ_CRASH("old style system disabled");
-    }
+  if (mServo) {
+    Servo_SelectorList_Drop(mServo);
+    mServo = nullptr;
   }
 }
 
@@ -2507,7 +2501,7 @@ nsIDocument::ResetStylesheetsToURI(nsIURI* aURI)
 
     if (nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance()) {
       RemoveStyleSheetsFromStyleSets(
-        *sheetService->AuthorStyleSheets(GetStyleBackendType()), SheetType::Doc);
+        *sheetService->AuthorStyleSheets(), SheetType::Doc);
     }
 
     mStyleSetFilled = false;
@@ -2571,7 +2565,7 @@ nsIDocument::FillStyleSet(StyleSetHandle aStyleSet)
 
   if (nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance()) {
     nsTArray<RefPtr<StyleSheet>>& sheets =
-      *sheetService->AuthorStyleSheets(aStyleSet->BackendType());
+      *sheetService->AuthorStyleSheets();
     for (StyleSheet* sheet : sheets) {
       aStyleSet->AppendStyleSheet(SheetType::Doc, sheet);
     }
@@ -4572,8 +4566,7 @@ nsIDocument::LoadAdditionalStyleSheet(additionalSheetType aType,
     return NS_ERROR_INVALID_ARG;
 
   // Loading the sheet sync.
-  RefPtr<css::Loader> loader =
-    new css::Loader(GetStyleBackendType(), GetDocGroup());
+  RefPtr<css::Loader> loader = new css::Loader(GetDocGroup());
 
   css::SheetParsingMode parsingMode;
   switch (aType) {
@@ -5903,7 +5896,7 @@ nsIDocument::ResolveScheduledSVGPresAttrs()
 {
   for (auto iter = mLazySVGPresElements.Iter(); !iter.Done(); iter.Next()) {
     nsSVGElement* svg = iter.Get()->GetKey();
-    svg->UpdateContentDeclarationBlock(StyleBackendType::Servo);
+    svg->UpdateContentDeclarationBlock();
   }
   mLazySVGPresElements.Clear();
 }
@@ -9571,7 +9564,6 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
 
       clonedDoc->mOriginalDocument->mStaticCloneCount++;
 
-      MOZ_ASSERT(GetStyleBackendType() == clonedDoc->GetStyleBackendType());
       size_t sheetsCount = SheetCount();
       for (size_t i = 0; i < sheetsCount; ++i) {
         RefPtr<StyleSheet> sheet = SheetAt(i);

@@ -39,7 +39,6 @@ class Element;
 } // namespace dom
 
 enum class CSSPseudoElementType : uint8_t;
-enum class StyleBackendType : uint8_t;
 struct PropertyStyleAnimationValuePair;
 
 
@@ -110,10 +109,9 @@ struct AnimationValue
                                    dom::Element* aElement);
 
   // Create an AnimationValue from an opacity value.
-  static AnimationValue Opacity(StyleBackendType aBackendType, float aOpacity);
+  static AnimationValue Opacity(float aOpacity);
   // Create an AnimationValue from a transform list.
-  static AnimationValue Transform(StyleBackendType aBackendType,
-                                  nsCSSValueSharedList& aList);
+  static AnimationValue Transform(nsCSSValueSharedList& aList);
 
   static already_AddRefed<nsCSSValue::Array>
   AppendTransformFunction(nsCSSKeyword aTransformFunction,

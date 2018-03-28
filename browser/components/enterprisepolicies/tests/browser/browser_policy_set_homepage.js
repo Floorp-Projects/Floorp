@@ -10,6 +10,49 @@ registerCleanupFunction(function restore_pref_values() {
   Services.prefs.clearUserPref("browser.startup.page");
 });
 
+async function check_homepage({expectedURL, expectedPageVal = 1, locked = false}) {
+  is(gHomeButton.getHomePage(),
+     expectedURL, "Homepage URL should match expected");
+  is(Services.prefs.getIntPref("browser.startup.page", -1), expectedPageVal,
+     "Pref page value should match expected");
+  is(Services.prefs.prefIsLocked("browser.startup.homepage"), locked,
+     "Lock status of browser.startup.homepage should match expected");
+  is(Services.prefs.prefIsLocked("browser.startup.page"), locked,
+     "Lock status of browser.startup.page should match expected");
+
+  // Test that UI is disabled when the Locked property is enabled
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
+  await ContentTask.spawn(tab.linkedBrowser, {expectedURL, expectedPageVal, locked},
+                          // eslint-disable-next-line no-shadow
+                          async function({expectedURL, expectedPageVal, locked}) {
+    let startupPageRadioGroup = content.document.getElementById("browserStartupPage");
+    is(startupPageRadioGroup.disabled, locked,
+       "Disabled status of start page radio group should match expected");
+    is(startupPageRadioGroup.value, expectedPageVal,
+       "Value of start page radio group should match expected");
+
+    content.document.getElementById("category-home").click();
+
+    let homepageTextbox = content.document.getElementById("homePageUrl");
+    // Unfortunately this test does not work because the new UI does not fill
+    // default values into the URL box at the moment.
+    // is(homepageTextbox.value, expectedURL,
+    //    "Homepage URL should match expected");
+
+    is(homepageTextbox.disabled, locked,
+       "Homepage URL text box disabled status should match expected");
+    is(content.document.getElementById("homeMode").disabled, locked,
+       "Home mode drop down disabled status should match expected");
+    is(content.document.getElementById("useCurrentBtn").disabled, locked,
+       "\"Use current page\" button disabled status should match expected");
+    is(content.document.getElementById("useBookmarkBtn").disabled, locked,
+      "\"Use bookmark\" button disabled status should match expected");
+    is(content.document.getElementById("restoreDefaultHomePageBtn").disabled,
+       locked, "\"Restore defaults\" button disabled status should match expected");
+  });
+  await BrowserTestUtils.removeTab(tab);
+}
+
 add_task(async function homepage_test_simple() {
   await setupPolicyEngineWithJson({
     "policies": {
@@ -18,10 +61,7 @@ add_task(async function homepage_test_simple() {
       }
     }
   });
-  is(Services.prefs.getStringPref("browser.startup.homepage", ""),
-     "http://example1.com/", "Homepage URL should have been set");
-  is(Services.prefs.getIntPref("browser.startup.page", -1), 1,
-     "Homepage should be used instead of blank page or previous tabs");
+  await check_homepage({expectedURL: "http://example1.com/"});
 });
 
 add_task(async function homepage_test_repeat_same_policy_value() {
@@ -39,11 +79,8 @@ add_task(async function homepage_test_repeat_same_policy_value() {
       }
     }
   });
-  is(Services.prefs.getStringPref("browser.startup.homepage", ""),
-     "http://example2.com/",
-     "Homepage URL should not have been overridden by pre-existing policy value");
-  is(Services.prefs.getIntPref("browser.startup.page", -1), 3,
-     "Start page type should not have been overridden by pre-existing policy value");
+  await check_homepage({expectedURL: "http://example2.com/",
+                       expectedPageVal: 3});
 });
 
 add_task(async function homepage_test_different_policy_value() {
@@ -56,11 +93,7 @@ add_task(async function homepage_test_different_policy_value() {
       }
     }
   });
-  is(Services.prefs.getStringPref("browser.startup.homepage", ""),
-     "http://example3.com/",
-     "Homepage URL should have been overridden by the policy value");
-  is(Services.prefs.getIntPref("browser.startup.page", -1), 1,
-     "Start page type should have been overridden by setting the policy value");
+  await check_homepage({expectedURL: "http://example3.com/"});
 });
 
 add_task(async function homepage_test_empty_additional() {
@@ -72,8 +105,7 @@ add_task(async function homepage_test_empty_additional() {
       }
     }
   });
-  is(Services.prefs.getStringPref("browser.startup.homepage", ""),
-     "http://example1.com/", "Homepage URL should have been set properly");
+  await check_homepage({expectedURL: "http://example1.com/"});
 });
 
 add_task(async function homepage_test_single_additional() {
@@ -85,10 +117,7 @@ add_task(async function homepage_test_single_additional() {
       }
     }
   });
-  is(Services.prefs.getStringPref("browser.startup.homepage", ""),
-     "http://example1.com/|http://example2.com/",
-     "Homepage URL should have been set properly");
-
+  await check_homepage({expectedURL: "http://example1.com/|http://example2.com/"});
 });
 
 add_task(async function homepage_test_multiple_additional() {
@@ -101,10 +130,7 @@ add_task(async function homepage_test_multiple_additional() {
       }
     }
   });
-  is(Services.prefs.getStringPref("browser.startup.homepage", ""),
-     "http://example1.com/|http://example2.com/|http://example3.com/",
-     "Homepage URL should have been set properly");
-
+  await check_homepage({expectedURL: "http://example1.com/|http://example2.com/|http://example3.com/"});
 });
 
 add_task(async function homepage_test_locked() {
@@ -118,34 +144,6 @@ add_task(async function homepage_test_locked() {
       }
     }
   });
-  is(Services.prefs.getStringPref("browser.startup.homepage", ""),
-     "http://example4.com/|http://example5.com/|http://example6.com/",
-     "Homepage URL should have been set properly");
-  is(Services.prefs.getIntPref("browser.startup.page", -1), 1,
-     "Homepage should be used instead of blank page or previous tabs");
-  is(Services.prefs.prefIsLocked("browser.startup.homepage"), true,
-     "Homepage pref should be locked");
-  is(Services.prefs.prefIsLocked("browser.startup.page"), true,
-     "Start page type pref should be locked");
-
-  // Test that UI is disabled when the Locked property is enabled
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences");
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
-    is(content.document.getElementById("browserStartupPage").disabled, true,
-       "When homepage is locked, the startup page choice controls should be locked");
-  });
-  await BrowserTestUtils.loadURI(tab.linkedBrowser, "about:preferences#home");
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
-    is(content.document.getElementById("homeMode").disabled, true,
-       "Homepage menulist should be disabled");
-    is(content.document.getElementById("homePageUrl").disabled, true,
-       "Homepage custom input should be disabled");
-    is(content.document.getElementById("useCurrentBtn").disabled, true,
-       "\"Use Current Page\" button should be disabled");
-    is(content.document.getElementById("useBookmarkBtn").disabled, true,
-       "\"Use Bookmark...\" button should be disabled");
-    is(content.document.getElementById("restoreDefaultHomePageBtn").disabled, true,
-       "\"Restore to Default\" button should be disabled");
-  });
-  BrowserTestUtils.removeTab(tab);
+  await check_homepage({expectedURL: "http://example4.com/|http://example5.com/|http://example6.com/",
+                       locked: true});
 });

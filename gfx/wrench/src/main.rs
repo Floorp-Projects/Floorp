@@ -349,8 +349,8 @@ impl RenderNotifier for Notifier {
         self.tx.send(NotifierEvent::ShutDown).unwrap();
     }
 
-    fn new_document_ready(&self, _: DocumentId, scrolled: bool, _composite_needed: bool) {
-        if !scrolled {
+    fn new_document_ready(&self, _: DocumentId, _scrolled: bool, composite_needed: bool) {
+        if composite_needed {
             self.wake_up();
         }
     }
@@ -504,6 +504,7 @@ fn main() {
     let mut show_help = false;
     let mut do_loop = false;
     let mut cpu_profile_index = 0;
+    let mut cursor_position = WorldPoint::zero();
 
     let dim = window.get_inner_size();
     wrench.update(dim);
@@ -527,13 +528,14 @@ fn main() {
                 glutin::WindowEvent::Closed => {
                     return glutin::ControlFlow::Break;
                 }
-
                 glutin::WindowEvent::Refresh |
-                glutin::WindowEvent::Focused(..) |
-                glutin::WindowEvent::CursorMoved { .. } => {
+                glutin::WindowEvent::Focused(..) => {
                     do_render = true;
                 }
-
+                glutin::WindowEvent::CursorMoved { position: (x, y), .. } => {
+                    cursor_position = WorldPoint::new(x as f32, y as f32);
+                    do_render = true;
+                }
                 glutin::WindowEvent::KeyboardInput {
                     input: glutin::KeyboardInput {
                         state: glutin::ElementState::Pressed,
@@ -613,6 +615,20 @@ fn main() {
 
                         wrench.set_page_zoom(new_zoom_factor);
                         do_frame = true;
+                    }
+                    VirtualKeyCode::X => {
+                        let results = wrench.api.hit_test(
+                            wrench.document_id,
+                            None,
+                            cursor_position,
+                            HitTestFlags::FIND_ALL
+                        );
+
+                        println!("Hit test results:");
+                        for item in &results.items {
+                            println!("  • {:?}", item);
+                        }
+                        println!("");
                     }
                     _ => {}
                 }

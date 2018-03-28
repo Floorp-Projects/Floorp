@@ -95,10 +95,7 @@ nsXBLResourceLoader::LoadResources(nsIContent* aBoundElement)
   mBoundDocument = aBoundElement->OwnerDoc();
 
   mozilla::css::Loader* cssLoader = doc->CSSLoader();
-  MOZ_ASSERT(cssLoader->GetDocument() &&
-             cssLoader->GetDocument()->GetStyleBackendType()
-               == mBoundDocument->GetStyleBackendType(),
-             "The style backends of the loader and bound document are mismatched!");
+  MOZ_ASSERT(cssLoader->GetDocument(), "Loader must have document");
 
   nsIURI *docURL = doc->GetDocumentURI();
   nsIPrincipal* docPrincipal = doc->NodePrincipal();
@@ -182,12 +179,8 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
 
   if (mPendingSheets == 0) {
     // All stylesheets are loaded.
-    if (aSheet->IsGecko()) {
-      MOZ_CRASH("old style system disabled");
-    } else {
-      mResources->ComputeServoStyles(
-        *mBoundDocument->GetShell()->StyleSet()->AsServo());
-    }
+    mResources->ComputeServoStyles(
+      *mBoundDocument->GetShell()->StyleSet()->AsServo());
 
     // XXX Check for mPendingScripts when scripts also come online.
     if (!mInLoadResourcesFunc)

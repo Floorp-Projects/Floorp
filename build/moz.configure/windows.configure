@@ -256,6 +256,10 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, c_compiler):
 @depends(c_compiler)
 @imports('os')
 def vc_path(c_compiler):
+    vc_path_env = os.environ.get('VC_PATH')
+    if vc_path_env:
+        return os.path.normpath(vc_path_env)
+
     if c_compiler.type not in ('msvc', 'clang-cl'):
         return
 
@@ -283,8 +287,13 @@ def vc_path(c_compiler):
 
 @depends(vc_path, c_compiler)
 @checking('for the Debug Interface Access SDK', lambda x: x or 'not found')
+@imports('os')
 @imports(_from='os.path', _import='isdir')
 def dia_sdk_dir(vc_path, c_compiler):
+    dia_sdk_dir_env = os.environ.get('DIA_SDK_PATH')
+    if dia_sdk_dir_env:
+        return os.path.normpath(dia_sdk_dir_env)
+
     if vc_path:
         if c_compiler.version < '19.10':
             path = os.path.join(os.path.dirname(vc_path), 'DIA SDK')
