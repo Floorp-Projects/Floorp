@@ -128,6 +128,9 @@
     <!-- Preference category: Custom (user-defined) autocomplete URLs. -->
     <string name="preference_category_autocomplete_custom">Custom URL</string>
 
+    <!-- Preference category: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_category_autocomplete_custom_urls">Custom URLs</string>
+
     <!-- Item in autocomplete settings that will open a new preference screen for adding and removing custom autocomplete URLs -->
     <string name="preference_autocomplete_subitem_customlist">Custom URLs</string>
 
