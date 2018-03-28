@@ -41,9 +41,11 @@
             removeNodeAndSource(element);
           }, false);
 
+          var noise = Math.floor(Math.random() * 100000000);
           element.src = "midflight-redirect.sjs?resource=" + test.name
                       + (useCors ? "&cors" : "")
-                      + "&type=" + test.type;
+                      + "&type=" + test.type
+                      + "&noise=" + noise;
           element.preload = "metadata";
           document.body.appendChild(element);
           element.load()
