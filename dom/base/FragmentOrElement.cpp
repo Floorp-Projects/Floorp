@@ -182,7 +182,7 @@ nsIContent::GetAssignedSlotByMode() const
 nsIContent::IMEState
 nsIContent::GetDesiredIMEState()
 {
-  if (!IsEditableInternal()) {
+  if (!IsEditable()) {
     // Check for the special case where we're dealing with elements which don't
     // have the editable flag set, but are readwrite (such as text controls).
     if (!IsElement() ||
@@ -227,7 +227,7 @@ dom::Element*
 nsIContent::GetEditingHost()
 {
   // If this isn't editable, return nullptr.
-  if (!IsEditableInternal()) {
+  if (!IsEditable()) {
     return nullptr;
   }
 
