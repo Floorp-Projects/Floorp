@@ -429,8 +429,7 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 %ifdef XP_MACOSX
   /* Native styling adds more 'oompf' to the popup box-shadow, so simulate that
    * as best as we can here: */
-  border: 1px solid var(--arrowpanel-dimmed-even-further);
-  box-shadow: 0 4px 10px hsla(0,0%,0%,.3);
+  box-shadow: 0 0 1px hsla(0,0%,0%,.3), 0 4px 10px hsla(0,0%,0%,.3);
   -moz-appearance: none;
   border-radius: var(--arrowpanel-border-radius);
 %else
