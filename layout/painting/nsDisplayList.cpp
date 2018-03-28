@@ -8554,7 +8554,12 @@ bool
 nsDisplayTransform::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
                                      mozilla::layers::WebRenderLayerScrollData* aLayerData)
 {
-  if (aLayerData && mFrame->HasPerspective()) {
+  if (!mFrame->HasPerspective()) {
+    // This case is handled in CreateWebRenderCommands by stashing the transform
+    // on the stacking context.
+    return false;
+  }
+  if (aLayerData) {
     aLayerData->SetTransform(GetTransform().GetMatrix());
     aLayerData->SetTransformIsPerspective(true);
   }
