@@ -75,7 +75,7 @@ public:
     return mInheritedTransform;
   }
 
-  gfx::Matrix4x4 GetTransformForScrollData() const;
+  const Maybe<gfx::Matrix4x4>& GetTransformForScrollData() const;
 
   bool AffectsClipPositioning() const { return mAffectsClipPositioning; }
 
