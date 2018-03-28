@@ -174,6 +174,10 @@ PaddingBetweenFunctions
 x64CrashCFITest_ALLOC_SMALL proc frame
   TestHeader
 
+  ; Trash rbp to force stack scan. This will force
+  ; correct behavior for test_crash_win64cfi_not_a_pe, et al.
+  xor rbp, rbp
+
   push rax
   push rax
   push rax
