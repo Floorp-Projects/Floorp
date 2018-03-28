@@ -5489,20 +5489,7 @@ BytecodeEmitter::setOrEmitSetFunName(ParseNode* maybeFun, HandleAtom name,
         // Function doesn't have 'name' property at this point.
         // Set function's name at compile time.
         JSFunction* fun = maybeFun->pn_funbox->function();
-
-        // Single node can be emitted multiple times if it appears in
-        // array destructuring default.  If function already has a name,
-        // just return.
-        if (fun->hasInferredName()) {
-#ifdef DEBUG
-            RootedFunction rootedFun(cx, fun);
-            JSAtom* funName = NameToFunctionName(cx, name, prefixKind);
-            if (!funName)
-                return false;
-            MOZ_ASSERT(funName == rootedFun->inferredName());
-#endif
-            return true;
-        }
+        MOZ_ASSERT(!fun->hasInferredName());
 
         fun->setInferredName(name);
         return true;

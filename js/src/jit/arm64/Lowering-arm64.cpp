@@ -281,12 +281,6 @@ LIRGeneratorARM64::lowerTruncateFToInt32(MTruncateToInt32* ins)
 }
 
 void
-LIRGenerator::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
 LIRGenerator::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins)
 {
     MOZ_CRASH("NYI");

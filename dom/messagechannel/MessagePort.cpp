@@ -204,6 +204,7 @@ MessagePort::MessagePort(nsIGlobalObject* aGlobal)
   , mInnerID(0)
   , mMessageQueueEnabled(false)
   , mIsKeptAlive(false)
+  , mHasBeenTransferredOrClosed(false)
 {
   MOZ_ASSERT(aGlobal);
 
@@ -501,6 +502,7 @@ MessagePort::Dispatch()
 void
 MessagePort::Close()
 {
+  mHasBeenTransferredOrClosed = true;
   CloseInternal(true /* aSoftly */);
 }
 
@@ -725,6 +727,9 @@ void
 MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
 {
   MOZ_ASSERT(mIdentifier);
+  MOZ_ASSERT(!mHasBeenTransferredOrClosed);
+
+  mHasBeenTransferredOrClosed = true;
 
   // We can clone a port that has already been transfered. In this case, on the
   // otherside will have a neutered port. Here we set neutered to true so that

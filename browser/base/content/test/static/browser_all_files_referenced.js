@@ -51,7 +51,6 @@ var whitelist = [
   {file: "chrome://pippki/content/load_device.xul"},
 
   // Add-on compat
-  {file: "chrome://global/content/XPCNativeWrapper.js"},
   {file: "chrome://global/locale/brand.dtd"},
 
   // The l10n build system can't package string files only for some platforms.

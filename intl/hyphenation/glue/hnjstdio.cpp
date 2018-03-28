@@ -22,6 +22,7 @@ struct hnjFile_ {
     char                     mBuffer[BUFSIZE];
     uint32_t                 mCurPos;
     uint32_t                 mLimit;
+    bool                     mEOF;
 };
 
 // replacement for fopen()
@@ -58,6 +59,7 @@ hnjFopen(const char* aURISpec, const char* aMode)
     f->mStream = instream;
     f->mCurPos = 0;
     f->mLimit = 0;
+    f->mEOF = false;
 
     return f;
 }
@@ -79,6 +81,27 @@ hnjFclose(hnjFile* f)
     return result;
 }
 
+// replacement for fgetc()
+int
+hnjFgetc(hnjFile* f)
+{
+    if (f->mCurPos >= f->mLimit) {
+        f->mCurPos = 0;
+
+        nsresult rv = f->mStream->Read(f->mBuffer, BUFSIZE, &f->mLimit);
+        if (NS_FAILED(rv)) {
+            f->mLimit = 0;
+        }
+
+        if (f->mLimit == 0) {
+            f->mEOF = true;
+            return EOF;
+        }
+    }
+
+    return f->mBuffer[f->mCurPos++];
+}
+
 // replacement for fgets()
 // (not a full reimplementation, but sufficient for libhyphen's needs)
 char*
@@ -88,24 +111,15 @@ hnjFgets(char* s, int n, hnjFile* f)
 
     int i = 0;
     while (i < n - 1) {
-        if (f->mCurPos < f->mLimit) {
-            char c = f->mBuffer[f->mCurPos++];
-            s[i++] = c;
-            if (c == '\n' || c == '\r') {
-                break;
-            }
-            continue;
+        int c = hnjFgetc(f);
+
+        if (c == EOF) {
+            break;
         }
 
-        f->mCurPos = 0;
+        s[i++] = c;
 
-        nsresult rv = f->mStream->Read(f->mBuffer, BUFSIZE, &f->mLimit);
-        if (NS_FAILED(rv)) {
-            f->mLimit = 0;
-            return nullptr;
-        }
-
-        if (f->mLimit == 0) {
+        if (c == '\n' || c == '\r') {
             break;
         }
     }
@@ -116,4 +130,10 @@ hnjFgets(char* s, int n, hnjFile* f)
 
     s[i] = '\0'; // null-terminate the returned string
     return s;
+}
+
+int
+hnjFeof(hnjFile* f)
+{
+    return f->mEOF ? EOF : 0;
 }

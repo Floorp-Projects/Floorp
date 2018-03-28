@@ -29,6 +29,7 @@ namespace js {
 
 class Shape;
 class TenuringTracer;
+class UnboxedPlainObject;
 
 /*
  * To really poison a set of values, using 'magic' or 'undefined' isn't good
@@ -1606,6 +1607,16 @@ bool IsPackedArray(JSObject* obj);
 
 extern void
 AddPropertyTypesAfterProtoChange(JSContext* cx, NativeObject* obj, ObjectGroup* oldGroup);
+
+// Specializations of 7.3.23 CopyDataProperties(...) for NativeObjects.
+extern bool
+CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target, HandleNativeObject from,
+                         HandlePlainObject excludedItems, bool* optimized);
+
+extern bool
+CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
+                         Handle<UnboxedPlainObject*> from, HandlePlainObject excludedItems,
+                         bool* optimized);
 
 } // namespace js
 
