@@ -151,8 +151,8 @@
   transform: scaleX(-1);
 }
 
-.pageAction-sendToDevice-device[clientType=mobile] {
-  list-style-image: url("chrome://browser/skin/device-mobile.svg");
+.pageAction-sendToDevice-device[clientType=phone] {
+  list-style-image: url("chrome://browser/skin/device-phone.svg");
 }
 
 .pageAction-sendToDevice-device[clientType=tablet] {
