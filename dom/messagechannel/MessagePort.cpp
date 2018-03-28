@@ -204,6 +204,7 @@ MessagePort::MessagePort(nsIGlobalObject* aGlobal)
   , mInnerID(0)
   , mMessageQueueEnabled(false)
   , mIsKeptAlive(false)
+  , mHasBeenTransferredOrClosed(false)
 {
   MOZ_ASSERT(aGlobal);
 
@@ -501,6 +502,7 @@ MessagePort::Dispatch()
 void
 MessagePort::Close()
 {
+  mHasBeenTransferredOrClosed = true;
   CloseInternal(true /* aSoftly */);
 }
 
@@ -721,10 +723,13 @@ MessagePort::Disentangle()
   UpdateMustKeepAlive();
 }
 
-bool
+void
 MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
 {
   MOZ_ASSERT(mIdentifier);
+  MOZ_ASSERT(!mHasBeenTransferredOrClosed);
+
+  mHasBeenTransferredOrClosed = true;
 
   // We can clone a port that has already been transfered. In this case, on the
   // otherside will have a neutered port. Here we set neutered to true so that
@@ -732,14 +737,14 @@ MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
   aIdentifier.neutered() = true;
 
   if (mState > eStateEntangled) {
-    return false;
+    return;
   }
 
   // We already have a 'next step'. We have to consider this port as already
   // cloned/closed/disentangled.
   if (mState == eStateEntanglingForDisentangle ||
       mState == eStateEntanglingForClose) {
-    return false;
+    return;
   }
 
   aIdentifier.uuid() = mIdentifier->uuid();
@@ -755,7 +760,7 @@ MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
     // Disconnect the entangled port and connect it to PBackground.
     if (!mUnshippedEntangledPort->ConnectToPBackground()) {
       // We are probably shutting down. We cannot proceed.
-      return false;
+      return;
     }
 
     mUnshippedEntangledPort = nullptr;
@@ -766,28 +771,27 @@ MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
 
       mState = eStateDisentangled;
       UpdateMustKeepAlive();
-      return true;
+      return;
     }
 
     // Register this component to PBackground.
     if (!ConnectToPBackground()) {
       // We are probably shutting down. We cannot proceed.
-      return false;
+      return;
     }
 
     mState = eStateEntanglingForDisentangle;
-    return true;
+    return;
   }
 
   // Not entangled yet, we have to wait.
   if (mState == eStateEntangling) {
     mState = eStateEntanglingForDisentangle;
-    return true;
+    return;
   }
 
   MOZ_ASSERT(mState == eStateEntangled);
   StartDisentangling();
-  return true;
 }
 
 void
