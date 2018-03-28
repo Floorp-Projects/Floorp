@@ -77,7 +77,11 @@ namespace dom {
 class CharacterData : public nsIContent
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  // We want to avoid the overhead of extra function calls for
+  // refcounting when we're not doing refcount logging, so we can't
+  // NS_DECL_ISUPPORTS_INHERITED.
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(CharacterData, nsIContent);
 
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
@@ -213,7 +217,8 @@ public:
   void ToCString(nsAString& aBuf, int32_t aOffset, int32_t aLen) const;
 #endif
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(CharacterData)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(CharacterData,
+                                                                   nsIContent)
 
 protected:
   virtual ~CharacterData();
@@ -242,21 +247,6 @@ protected:
     CloneDataNode(dom::NodeInfo *aNodeInfo, bool aCloneText) const = 0;
 
   nsTextFragment mText;
-
-public:
-  virtual bool OwnedOnlyByTheDOMTree() override
-  {
-    return GetParent() && mRefCnt.get() == 1;
-  }
-
-  virtual bool IsPurple() override
-  {
-    return mRefCnt.IsPurple();
-  }
-  virtual void RemovePurple() override
-  {
-    mRefCnt.RemovePurple();
-  }
 
 private:
   already_AddRefed<nsAtom> GetCurrentValueAtom();
