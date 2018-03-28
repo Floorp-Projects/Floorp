@@ -2501,7 +2501,7 @@ nsIDocument::ResetStylesheetsToURI(nsIURI* aURI)
 
     if (nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance()) {
       RemoveStyleSheetsFromStyleSets(
-        *sheetService->AuthorStyleSheets(GetStyleBackendType()), SheetType::Doc);
+        *sheetService->AuthorStyleSheets(), SheetType::Doc);
     }
 
     mStyleSetFilled = false;
@@ -2565,7 +2565,7 @@ nsIDocument::FillStyleSet(StyleSetHandle aStyleSet)
 
   if (nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance()) {
     nsTArray<RefPtr<StyleSheet>>& sheets =
-      *sheetService->AuthorStyleSheets(aStyleSet->BackendType());
+      *sheetService->AuthorStyleSheets();
     for (StyleSheet* sheet : sheets) {
       aStyleSet->AppendStyleSheet(SheetType::Doc, sheet);
     }
