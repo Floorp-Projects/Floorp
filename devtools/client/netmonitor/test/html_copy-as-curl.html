@@ -12,15 +12,14 @@
   </head>
 
   <body>
-    <p>Performing a GET or POST request</p>
+    <p>Performing requests of various methods, with or without payload.</p>
 
     <script type="text/javascript">
       /* exported performRequest */
       "use strict";
 
-      function performRequest(url, payload) {
+      function performRequest(url, method, payload = null) {
         let xhr = new XMLHttpRequest();
-        let method = payload ? "POST" : "GET";
         xhr.open(method, url, true);
         xhr.setRequestHeader("Accept-Language", window.navigator.language);
         xhr.setRequestHeader("X-Custom-Header-1", "Custom value");
