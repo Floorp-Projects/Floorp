@@ -253,5 +253,16 @@ APZSampler::IsSamplerThread()
   return CompositorThreadHolder::IsInCompositorThread();
 }
 
+void
+APZSampler::RunOnControllerThread(already_AddRefed<Runnable> aTask)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
+  RunOnSamplerThread(NewRunnableFunction(
+      "APZSampler::RunOnControllerThread",
+      &APZThreadUtils::RunOnControllerThread,
+      Move(aTask)));
+}
+
 } // namespace layers
 } // namespace mozilla
