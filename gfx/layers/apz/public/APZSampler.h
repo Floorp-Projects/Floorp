@@ -7,6 +7,7 @@
 #ifndef mozilla_layers_APZSampler_h
 #define mozilla_layers_APZSampler_h
 
+#include "base/message_loop.h"
 #include "LayersTypes.h"
 #include "mozilla/layers/APZTestData.h"
 #include "mozilla/layers/AsyncCompositionManager.h" // for AsyncTransform
@@ -124,6 +125,16 @@ public:
    * Returns true if currently on the APZSampler's "sampler thread".
    */
   bool IsSamplerThread();
+
+  /**
+   * Dispatches the given task to the APZ "controller thread", but does it *from*
+   * the sampler thread. That is, if the thread on which this function is called
+   * is not the sampler thread, the task is first dispatched to the sampler thread.
+   * When the sampler thread runs it (or if this is called directly on the sampler
+   * thread), that is when the task gets dispatched to the controller thread.
+   * The controller thread then actually runs the task.
+   */
+  void RunOnControllerThread(already_AddRefed<Runnable> aTask);
 
 protected:
   virtual ~APZSampler();
