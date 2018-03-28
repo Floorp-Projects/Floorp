@@ -31,6 +31,7 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
   , mScrollViewId(FrameMetrics::NULL_SCROLL_ID)
   , mScrollbarAnimationId(0)
   , mFixedPosTarget(FrameMetrics::NULL_SCROLL_ID)
+  , mIsBackfaceHidden(false)
   , mOverride(EventRegionsOverride::NoOverride)
 {
 if (mIsPrimaryApzcHolder) {
@@ -263,13 +264,15 @@ HitTestingTreeNode::SetHitTestData(const EventRegions& aRegions,
                                    const LayerIntRegion& aVisibleRegion,
                                    const CSSTransformMatrix& aTransform,
                                    const Maybe<ParentLayerIntRegion>& aClipRegion,
-                                   const EventRegionsOverride& aOverride)
+                                   const EventRegionsOverride& aOverride,
+                                   bool aIsBackfaceHidden)
 {
   mEventRegions = aRegions;
   mVisibleRegion = aVisibleRegion;
   mTransform = aTransform;
   mClipRegion = aClipRegion;
   mOverride = aOverride;
+  mIsBackfaceHidden = aIsBackfaceHidden;
 }
 
 bool
@@ -300,6 +303,13 @@ HitTestingTreeNode::HitTest(const LayerPoint& aPoint) const
   }
 
   auto point = LayerIntPoint::Round(aPoint);
+
+  // If the layer's backface is showing and it's hidden, don't hit it.
+  // This matches the behavior of main-thread hit testing in
+  // nsDisplayTransform::HitTest().
+  if (mIsBackfaceHidden) {
+    return result;
+  }
 
   // test against event regions in Layer coordinate space
   if (!mEventRegions.mHitRegion.Contains(point.x, point.y)) {
