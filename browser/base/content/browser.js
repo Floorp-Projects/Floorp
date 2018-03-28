@@ -1203,11 +1203,12 @@ var gBrowserInit = {
       }
     }
 
-    new LightweightThemeConsumer(document);
-    CompactTheme.init();
-
+    // Update the chromemargin attribute so the window can be sized correctly.
+    window.TabBarVisibility.update();
     TabsInTitlebar.init();
 
+    new LightweightThemeConsumer(document);
+    CompactTheme.init();
     if (window.matchMedia("(-moz-os-version: windows-win8)").matches &&
         window.matchMedia("(-moz-windows-default-theme)").matches) {
       let windowFrameColor = new Color(...ChromeUtils.import("resource:///modules/Windows8WindowFrameColor.jsm", {})
@@ -1267,8 +1268,6 @@ var gBrowserInit = {
       remoteType, sameProcessAsFrameLoader
     });
 
-    gUIDensity.init();
-
     // Hack to ensure that the about:home favicon is loaded
     // instantaneously, to avoid flickering and improve perceived performance.
     this._callWithURIToLoad(uriToLoad => {
@@ -1281,8 +1280,9 @@ var gBrowserInit = {
 
     this._setInitialFocus();
 
-    window.TabBarVisibility.update();
-    TabsInTitlebar.onDOMContentLoaded();
+    // Update the UI density before TabsInTitlebar lays out the titlbar.
+    gUIDensity.init();
+    TabsInTitlebar.whenWindowLayoutReady();
   },
 
   onLoad() {
