@@ -137,11 +137,19 @@ var TabsInTitlebar = {
     let allowed = (Object.keys(this._disallowed)).length == 0;
     if (allowed) {
       document.documentElement.setAttribute("tabsintitlebar", "true");
+      if (AppConstants.platform == "macosx") {
+        document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
+        document.documentElement.removeAttribute("drawtitle");
+      } else {
+        document.documentElement.setAttribute("chromemargin", "0,2,2,2");
+      }
     } else {
       document.documentElement.removeAttribute("tabsintitlebar");
+      document.documentElement.removeAttribute("chromemargin");
+      if (AppConstants.platform == "macosx") {
+        document.documentElement.setAttribute("drawtitle", "true");
+      }
     }
-
-    updateTitlebarDisplay();
 
     this._layOutTitlebar(allowed);
 
@@ -289,23 +297,6 @@ var TabsInTitlebar = {
     gDragSpaceObserver.uninit();
   }
 };
-
-function updateTitlebarDisplay() {
-  if (AppConstants.platform == "macosx") {
-    if (TabsInTitlebar.enabled) {
-      document.documentElement.setAttribute("chromemargin", "0,-1,-1,-1");
-      document.documentElement.removeAttribute("drawtitle");
-    } else {
-      document.documentElement.removeAttribute("chromemargin");
-      document.documentElement.setAttribute("drawtitle", "true");
-    }
-  } else if (TabsInTitlebar.enabled) {
-    // not OS X
-    document.documentElement.setAttribute("chromemargin", "0,2,2,2");
-  } else {
-    document.documentElement.removeAttribute("chromemargin");
-  }
-}
 
 function onTitlebarMaxClick() {
   if (window.windowState == window.STATE_MAXIMIZED)
