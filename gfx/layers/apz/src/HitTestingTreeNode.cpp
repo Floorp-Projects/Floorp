@@ -57,7 +57,7 @@ HitTestingTreeNode::~HitTestingTreeNode() = default;
 void
 HitTestingTreeNode::Destroy()
 {
-  // This runs on the sampler thread, it's not worth passing around extra raw
+  // This runs on the updater thread, it's not worth passing around extra raw
   // pointers just to assert it.
 
   mPrevSibling = nullptr;
