@@ -7,8 +7,10 @@
 // This file defines static prefs, i.e. those that are defined at startup and
 // used entirely or mostly from C++ code.
 //
-// Prefs defined in this file should *not* be listed in a prefs data file such
-// as all.js. If they are, CheckForDoubleDefinition() will issue an NS_ERROR.
+// If a pref is listed here and also in a prefs data file such as all.js, the
+// value from the latter will override the value given here. For vanilla
+// browser builds such overrides are discouraged, but they are necessary for
+// some configurations (e.g. Thunderbird).
 //
 // The file is separated into sections, where the sections are determined by
 // the first segment of the prefnames within (e.g. "network.predictor.enabled"
