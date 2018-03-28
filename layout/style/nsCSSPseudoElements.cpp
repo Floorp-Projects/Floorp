@@ -10,7 +10,6 @@
 
 #include "mozilla/ArrayUtils.h"
 
-#include "nsStaticAtom.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsDOMString.h"
 
