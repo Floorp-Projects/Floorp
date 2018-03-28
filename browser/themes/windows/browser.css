@@ -529,11 +529,6 @@ menuitem.bookmark-item {
   }
 }
 
-#urlbar[focused="true"],
-.searchbar-textbox[focused="true"] {
-  border-color: Highlight;
-}
-
 html|*.urlbar-input:-moz-lwtheme::placeholder,
 .searchbar-textbox:-moz-lwtheme > .urlbar-textbox-container > .textbox-input-box > html|*.textbox-input::placeholder {
   opacity: 1.0;

@@ -172,11 +172,6 @@ menuitem.bookmark-item {
   border-color: ThreeDShadow;
 }
 
-#urlbar[focused="true"],
-.searchbar-textbox[focused="true"] {
-  border-color: Highlight;
-}
-
 /* ::::: URL Bar Zoom Reset Button ::::: */
 @keyframes urlbar-zoom-reset-pulse {
   0% {
