@@ -42,7 +42,15 @@ add_task(async function simple() {
   let panelButtonID = BrowserPageActions.panelButtonNodeIDForActionID(id);
   let urlbarButtonID = BrowserPageActions.urlbarButtonNodeIDForActionID(id);
 
+
+  // Open the panel so that actions are added to it, and then close it.
+  await promiseOpenPageActionPanel();
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
+
   let initialActions = PageActions.actions;
+  let initialActionsInPanel = PageActions.actionsInPanel(window);
+  let initialActionsInUrlbar = PageActions.actionsInUrlbar(window);
 
   let action = PageActions.addAction(new PageActions.Action({
     iconURL,
@@ -77,37 +85,89 @@ add_task(async function simple() {
   Assert.equal(action.id, id, "id");
   Assert.deepEqual(action.nodeAttributes, nodeAttributes, "nodeAttributes");
   Assert.equal(action.pinnedToUrlbar, false, "pinnedToUrlbar");
-  Assert.equal(action.subview, null, "subview");
   Assert.equal(action.getDisabled(), false, "disabled");
   Assert.equal(action.getDisabled(window), false, "disabled in window");
   Assert.equal(action.getTitle(), title, "title");
   Assert.equal(action.getTitle(window), title, "title in window");
   Assert.equal(action.getTooltip(), tooltip, "tooltip");
   Assert.equal(action.getTooltip(window), tooltip, "tooltip in window");
+  Assert.equal(action.getWantsSubview(), false, "subview");
+  Assert.equal(action.getWantsSubview(window), false, "subview in window");
   Assert.equal(action.urlbarIDOverride, null, "urlbarIDOverride");
   Assert.equal(action.wantsIframe, false, "wantsIframe");
 
   Assert.ok(!("__insertBeforeActionID" in action), "__insertBeforeActionID");
   Assert.ok(!("__isSeparator" in action), "__isSeparator");
   Assert.ok(!("__urlbarNodeInMarkup" in action), "__urlbarNodeInMarkup");
+  Assert.ok(!("__transient" in action), "__transient");
 
-  Assert.equal(onPlacedInPanelCallCount, 1,
-               "onPlacedInPanelCallCount should be inc'ed");
+  // The action shouldn't be placed in the panel until it opens for the first
+  // time.
+  Assert.equal(onPlacedInPanelCallCount, 0,
+               "onPlacedInPanelCallCount should remain 0");
   Assert.equal(onPlacedInUrlbarCallCount, 0,
                "onPlacedInUrlbarCallCount should remain 0");
   Assert.equal(onShowingInPanelCallCount, 0,
                "onShowingInPanelCallCount should remain 0");
 
-  // The separator between the built-in and non-built-in actions should have
-  // been created and included in PageActions.actions, which is why the new
-  // count should be the initial count + 2, not + 1.
-  Assert.equal(PageActions.actions.length, initialActions.length + 2,
-               "PageActions.actions.length should be updated");
-  Assert.deepEqual(PageActions.actions[PageActions.actions.length - 1], action,
-                   "Last page action should be action");
-  Assert.equal(PageActions.actions[PageActions.actions.length - 2].id,
-               PageActions.ACTION_ID_BUILT_IN_SEPARATOR,
-               "2nd-to-last page action should be separator");
+  // Open the panel so that actions are added to it, and then close it.
+  await promiseOpenPageActionPanel();
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
+
+  Assert.equal(onPlacedInPanelCallCount, 1,
+               "onPlacedInPanelCallCount should be inc'ed");
+  Assert.equal(onShowingInPanelCallCount, 1,
+               "onShowingInPanelCallCount should be inc'ed");
+
+  // Build an array of the expected actions in the panel and compare it to the
+  // actual actions.  Don't assume that there are or aren't already other non-
+  // built-in actions.
+  let sepIndex =
+    initialActionsInPanel
+    .findIndex(a => a.id == PageActions.ACTION_ID_BUILT_IN_SEPARATOR);
+  let initialSepIndex = sepIndex;
+  let indexInPanel;
+  if (sepIndex < 0) {
+    // No prior non-built-in actions.
+    indexInPanel = initialActionsInPanel.length;
+  } else {
+    // Prior non-built-in actions.  Find the index where the action goes.
+    for (indexInPanel = sepIndex + 1;
+         indexInPanel < initialActionsInPanel.length;
+         indexInPanel++) {
+      let a = initialActionsInPanel[indexInPanel];
+      if (a.getTitle().localeCompare(action.getTitle()) < 1) {
+        break;
+      }
+    }
+  }
+  let expectedActionsInPanel = initialActionsInPanel.slice();
+  expectedActionsInPanel.splice(indexInPanel, 0, action);
+  // The separator between the built-ins and non-built-ins should be present
+  // if it's not already.
+  if (sepIndex < 0) {
+    expectedActionsInPanel.splice(indexInPanel, 0, new PageActions.Action({
+      id: PageActions.ACTION_ID_BUILT_IN_SEPARATOR,
+      _isSeparator: true,
+    }));
+    sepIndex = indexInPanel;
+    indexInPanel++;
+  }
+  Assert.deepEqual(PageActions.actionsInPanel(window),
+                   expectedActionsInPanel,
+                   "Actions in panel after adding the action");
+
+  // The actions in the urlbar should be the same since the test action isn't
+  // shown there.
+  Assert.deepEqual(PageActions.actionsInUrlbar(window),
+                   initialActionsInUrlbar,
+                   "Actions in urlbar after adding the action");
+
+  // Check the list of all actions.
+  Assert.deepEqual(PageActions.actions,
+                   initialActions.concat([action]),
+                   "All actions after adding the action");
 
   Assert.deepEqual(PageActions.actionForID(action.id), action,
                    "actionForID should be action");
@@ -116,8 +176,10 @@ add_task(async function simple() {
             "PageActions should record action in its list of seen actions");
 
   // The action's panel button should have been created.
-  let panelButtonNode = document.getElementById(panelButtonID);
+  let panelButtonNode =
+    BrowserPageActions.mainViewBodyNode.childNodes[indexInPanel];
   Assert.notEqual(panelButtonNode, null, "panelButtonNode");
+  Assert.equal(panelButtonNode.id, panelButtonID, "panelButtonID");
   Assert.equal(panelButtonNode.getAttribute("label"), action.getTitle(),
                "label");
   for (let name in action.nodeAttributes) {
@@ -127,17 +189,16 @@ add_task(async function simple() {
                  "Equal attribute: " + name);
   }
 
-  // The panel button should be the last node in the panel, and its previous
-  // sibling should be the separator between the built-in actions and non-built-
-  // in actions.
-  Assert.equal(panelButtonNode.nextSibling, null, "nextSibling");
-  Assert.notEqual(panelButtonNode.previousSibling, null, "previousSibling");
+  // The separator between the built-ins and non-built-ins should exist.
+  let sepNode =
+    BrowserPageActions.mainViewBodyNode.childNodes[sepIndex];
+  Assert.notEqual(sepNode, null, "sepNode");
   Assert.equal(
-    panelButtonNode.previousSibling.id,
+    sepNode.id,
     BrowserPageActions.panelButtonNodeIDForActionID(
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR
     ),
-    "previousSibling.id"
+    "sepNode.id"
   );
 
   // The action's urlbar button should not have been created.
@@ -145,8 +206,8 @@ add_task(async function simple() {
   Assert.equal(urlbarButtonNode, null, "urlbarButtonNode");
 
   // Open the panel, click the action's button.
-  await promisePageActionPanelOpen();
-  Assert.equal(onShowingInPanelCallCount, 1,
+  await promiseOpenPageActionPanel();
+  Assert.equal(onShowingInPanelCallCount, 2,
                "onShowingInPanelCallCount should be inc'ed");
   onCommandExpectedButtonID = panelButtonID;
   EventUtils.synthesizeMouseAtCenter(panelButtonNode, {});
@@ -233,18 +294,27 @@ add_task(async function simple() {
   urlbarButtonNode = document.getElementById(urlbarButtonID);
   Assert.equal(urlbarButtonNode, null, "urlbarButtonNode");
 
-  // The separator between the built-in actions and non-built-in actions should
-  // be gone now, too.
   let separatorNode = document.getElementById(
     BrowserPageActions.panelButtonNodeIDForActionID(
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR
     )
   );
-  Assert.equal(separatorNode, null, "No separator");
-  Assert.ok(!BrowserPageActions.mainViewBodyNode
-            .lastChild.localName.includes("separator"),
-            "Last child should not be separator");
+  if (initialSepIndex < 0) {
+    // The separator between the built-in actions and non-built-in actions
+    // should be gone now, too.
+    Assert.equal(separatorNode, null, "No separator");
+    Assert.ok(!BrowserPageActions.mainViewBodyNode
+              .lastChild.localName.includes("separator"),
+              "Last child should not be separator");
+  } else {
+    // The separator should still be present.
+    Assert.notEqual(separatorNode, null, "Separator should still exist");
+  }
 
+  Assert.deepEqual(PageActions.actionsInPanel(window), initialActionsInPanel,
+                   "Actions in panel should go back to initial");
+  Assert.deepEqual(PageActions.actionsInUrlbar(window), initialActionsInUrlbar,
+                   "Actions in urlbar should go back to initial");
   Assert.deepEqual(PageActions.actions, initialActions,
                    "Actions should go back to initial");
   Assert.equal(PageActions.actionForID(action.id), null,
@@ -262,12 +332,10 @@ add_task(async function simple() {
 add_task(async function withSubview() {
   let id = "test-subview";
 
-  let onActionCommandCallCount = 0;
   let onActionPlacedInPanelCallCount = 0;
   let onActionPlacedInUrlbarCallCount = 0;
   let onSubviewPlacedCount = 0;
   let onSubviewShowingCount = 0;
-  let onButtonCommandCallCount = 0;
 
   let panelButtonID = BrowserPageActions.panelButtonNodeIDForActionID(id);
   let urlbarButtonID = BrowserPageActions.urlbarButtonNodeIDForActionID(id);
@@ -279,53 +347,13 @@ add_task(async function withSubview() {
 
   let onSubviewPlacedExpectedPanelViewID = panelViewIDPanel;
   let onSubviewShowingExpectedPanelViewID;
-  let onButtonCommandExpectedButtonID;
-
-  let subview = {
-    buttons: [0, 1, 2].map(index => {
-      return {
-        id: "test-subview-button-" + index,
-        title: "Test subview Button " + index,
-      };
-    }),
-    onPlaced(panelViewNode) {
-      onSubviewPlacedCount++;
-      Assert.ok(panelViewNode,
-                "panelViewNode should be non-null: " + panelViewNode);
-      Assert.equal(panelViewNode.id, onSubviewPlacedExpectedPanelViewID,
-                   "panelViewNode.id");
-    },
-    onShowing(panelViewNode) {
-      onSubviewShowingCount++;
-      Assert.ok(panelViewNode,
-                "panelViewNode should be non-null: " + panelViewNode);
-      Assert.equal(panelViewNode.id, onSubviewShowingExpectedPanelViewID,
-                   "panelViewNode.id");
-    },
-  };
-  subview.buttons[0].onCommand = (event, buttonNode) => {
-    onButtonCommandCallCount++;
-    Assert.ok(event, "event should be non-null: " + event);
-    Assert.ok(buttonNode, "buttonNode should be non-null: " + buttonNode);
-    Assert.equal(buttonNode.id, onButtonCommandExpectedButtonID,
-                 "buttonNode.id");
-    for (let node = buttonNode.parentNode; node; node = node.parentNode) {
-      if (node.localName == "panel") {
-        node.hidePopup();
-        break;
-      }
-    }
-  };
 
   let action = PageActions.addAction(new PageActions.Action({
     iconURL: "chrome://browser/skin/mail.svg",
     id,
     pinnedToUrlbar: true,
-    subview,
     title: "Test subview",
-    onCommand(event, buttonNode) {
-      onActionCommandCallCount++;
-    },
+    wantsSubview: true,
     onPlacedInPanel(buttonNode) {
       onActionPlacedInPanelCallCount++;
       Assert.ok(buttonNode, "buttonNode should be non-null: " + buttonNode);
@@ -336,33 +364,42 @@ add_task(async function withSubview() {
       Assert.ok(buttonNode, "buttonNode should be non-null: " + buttonNode);
       Assert.equal(buttonNode.id, urlbarButtonID, "buttonNode.id");
     },
+    onSubviewPlaced(panelViewNode) {
+      onSubviewPlacedCount++;
+      Assert.ok(panelViewNode,
+                "panelViewNode should be non-null: " + panelViewNode);
+      Assert.equal(panelViewNode.id, onSubviewPlacedExpectedPanelViewID,
+                   "panelViewNode.id");
+    },
+    onSubviewShowing(panelViewNode) {
+      onSubviewShowingCount++;
+      Assert.ok(panelViewNode,
+                "panelViewNode should be non-null: " + panelViewNode);
+      Assert.equal(panelViewNode.id, onSubviewShowingExpectedPanelViewID,
+                   "panelViewNode.id");
+    },
   }));
 
-  let panelViewButtonIDPanel =
-    BrowserPageActions._panelViewButtonNodeIDForActionID(
-      id, subview.buttons[0].id, false
-    );
-  let panelViewButtonIDUrlbar =
-    BrowserPageActions._panelViewButtonNodeIDForActionID(
-      id, subview.buttons[0].id, true
-    );
-
   Assert.equal(action.id, id, "id");
-  Assert.notEqual(action.subview, null, "subview");
-  Assert.notEqual(action.subview.buttons, null, "subview.buttons");
-  Assert.equal(action.subview.buttons.length, subview.buttons.length,
-               "subview.buttons.length");
-  for (let i = 0; i < subview.buttons.length; i++) {
-    Assert.equal(action.subview.buttons[i].id, subview.buttons[i].id,
-                 "subview button id for index: " + i);
-    Assert.equal(action.subview.buttons[i].title, subview.buttons[i].title,
-                 "subview button title for index: " + i);
-  }
+  Assert.equal(action.getWantsSubview(), true, "subview");
+  Assert.equal(action.getWantsSubview(window), true, "subview in window");
+
+  // The action shouldn't be placed in the panel until it opens for the first
+  // time.
+  Assert.equal(onActionPlacedInPanelCallCount, 0,
+               "onActionPlacedInPanelCallCount should be 0");
+  Assert.equal(onSubviewPlacedCount, 0,
+               "onSubviewPlacedCount should be 0");
+
+  // But it should be placed in the urlbar.
+  Assert.equal(onActionPlacedInUrlbarCallCount, 1,
+               "onActionPlacedInUrlbarCallCount should be 0");
+
+  // Open the panel, which should place the action in it.
+  await promiseOpenPageActionPanel();
 
   Assert.equal(onActionPlacedInPanelCallCount, 1,
                "onActionPlacedInPanelCallCount should be inc'ed");
-  Assert.equal(onActionPlacedInUrlbarCallCount, 1,
-               "onActionPlacedInUrlbarCallCount should be inc'ed");
   Assert.equal(onSubviewPlacedCount, 1,
                "onSubviewPlacedCount should be inc'ed");
   Assert.equal(onSubviewShowingCount, 0,
@@ -372,9 +409,6 @@ add_task(async function withSubview() {
   // have been created.
   let panelButtonNode = document.getElementById(panelButtonID);
   Assert.notEqual(panelButtonNode, null, "panelButtonNode");
-  let panelViewButtonNodePanel =
-    document.getElementById(panelViewButtonIDPanel);
-  Assert.notEqual(panelViewButtonNodePanel, null, "panelViewButtonNodePanel");
 
   // The action's urlbar button should have been created.
   let urlbarButtonNode = document.getElementById(urlbarButtonID);
@@ -388,36 +422,20 @@ add_task(async function withSubview() {
     "Next node should be the bookmark star"
   );
 
-  // Open the panel, click the action's button, click the subview's first
-  // button.
-  await promisePageActionPanelOpen();
+  // Click the action's button in the panel.  The subview should be shown.
   Assert.equal(onSubviewShowingCount, 0,
                "onSubviewShowingCount should remain 0");
   let subviewShownPromise = promisePageActionViewShown();
   onSubviewShowingExpectedPanelViewID = panelViewIDPanel;
-
-  // synthesizeMouse often cannot seem to click the right node when used on
-  // buttons that show subviews and buttons inside subviews.  That's why we're
-  // using node.click() twice here: the first time to show the subview, the
-  // second time to click a button in the subview.
-//   EventUtils.synthesizeMouseAtCenter(panelButtonNode, {});
   panelButtonNode.click();
   await subviewShownPromise;
-  Assert.equal(onActionCommandCallCount, 0,
-               "onActionCommandCallCount should remain 0");
-  Assert.equal(onSubviewShowingCount, 1,
-               "onSubviewShowingCount should be inc'ed");
-  onButtonCommandExpectedButtonID = panelViewButtonIDPanel;
-//   EventUtils.synthesizeMouseAtCenter(panelViewButtonNodePanel, {});
-  panelViewButtonNodePanel.click();
+
+  // Click the main button to hide the main panel.
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
-  Assert.equal(onActionCommandCallCount, 0,
-               "onActionCommandCallCount should remain 0");
-  Assert.equal(onButtonCommandCallCount, 1,
-               "onButtonCommandCallCount should be inc'ed");
 
   // Click the action's urlbar button, which should open the activated-action
-  // panel showing the subview, and click the subview's first button.
+  // panel showing the subview.
   onSubviewPlacedExpectedPanelViewID = panelViewIDUrlbar;
   onSubviewShowingExpectedPanelViewID = panelViewIDUrlbar;
   EventUtils.synthesizeMouseAtCenter(urlbarButtonNode, {});
@@ -426,14 +444,10 @@ add_task(async function withSubview() {
                "onSubviewPlacedCount should be inc'ed");
   Assert.equal(onSubviewShowingCount, 2,
                "onSubviewShowingCount should be inc'ed");
-  let panelViewButtonNodeUrlbar =
-    document.getElementById(panelViewButtonIDUrlbar);
-  Assert.notEqual(panelViewButtonNodeUrlbar, null, "panelViewButtonNodeUrlbar");
-  onButtonCommandExpectedButtonID = panelViewButtonIDUrlbar;
-  EventUtils.synthesizeMouseAtCenter(panelViewButtonNodeUrlbar, {});
+
+  // Click the urlbar button again.  The activated-action panel should close.
+  EventUtils.synthesizeMouseAtCenter(urlbarButtonNode, {});
   assertActivatedPageActionPanelHidden();
-  Assert.equal(onButtonCommandCallCount, 2,
-               "onButtonCommandCallCount should be inc'ed");
 
   // Remove the action.
   action.remove();
@@ -492,6 +506,10 @@ add_task(async function withIframe() {
   Assert.equal(action.id, id, "id");
   Assert.equal(action.wantsIframe, true, "wantsIframe");
 
+  await promiseOpenPageActionPanel();
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
+
   Assert.equal(onPlacedInPanelCallCount, 1,
                "onPlacedInPanelCallCount should be inc'ed");
   Assert.equal(onPlacedInUrlbarCallCount, 1,
@@ -518,11 +536,11 @@ add_task(async function withIframe() {
   );
 
   // Open the panel, click the action's button.
-  await promisePageActionPanelOpen();
+  await promiseOpenPageActionPanel();
   Assert.equal(onIframeShowingCount, 0, "onIframeShowingCount should remain 0");
   EventUtils.synthesizeMouseAtCenter(panelButtonNode, {});
   await promisePanelShown(BrowserPageActions._activatedActionPanelID);
-  Assert.equal(onCommandCallCount, 0, "onCommandCallCount should remain 0");
+  Assert.equal(onCommandCallCount, 1, "onCommandCallCount should be inc'ed");
   Assert.equal(onIframeShowingCount, 1, "onIframeShowingCount should be inc'ed");
 
   // The activated-action panel should have opened, anchored to the action's
@@ -537,7 +555,7 @@ add_task(async function withIframe() {
   // Click the action's urlbar button.
   EventUtils.synthesizeMouseAtCenter(urlbarButtonNode, {});
   await promisePanelShown(BrowserPageActions._activatedActionPanelID);
-  Assert.equal(onCommandCallCount, 0, "onCommandCallCount should remain 0");
+  Assert.equal(onCommandCallCount, 2, "onCommandCallCount should be inc'ed");
   Assert.equal(onIframeShowingCount, 2, "onIframeShowingCount should be inc'ed");
 
   // The activated-action panel should have opened, again anchored to the
@@ -554,10 +572,10 @@ add_task(async function withIframe() {
   Assert.equal(urlbarButtonNode, null, "urlbarButtonNode");
 
   // Open the panel, click the action's button.
-  await promisePageActionPanelOpen();
+  await promiseOpenPageActionPanel();
   EventUtils.synthesizeMouseAtCenter(panelButtonNode, {});
   await promisePanelShown(BrowserPageActions._activatedActionPanelID);
-  Assert.equal(onCommandCallCount, 0, "onCommandCallCount should remain 0");
+  Assert.equal(onCommandCallCount, 3, "onCommandCallCount should be inc'ed");
   Assert.equal(onIframeShowingCount, 3, "onIframeShowingCount should be inc'ed");
 
   // The activated-action panel should have opened, this time anchored to the
@@ -583,10 +601,10 @@ add_task(async function insertBeforeActionID() {
   let id = "test-insertBeforeActionID";
   let panelButtonID = BrowserPageActions.panelButtonNodeIDForActionID(id);
 
-  let initialActions = PageActions.actions;
-  let initialBuiltInActions = PageActions.builtInActions;
-  let initialNonBuiltInActions = PageActions.nonBuiltInActions;
-  let initialBookmarkSeparatorIndex = PageActions.actions.findIndex(a => {
+  let initialActions = PageActions.actionsInPanel(window);
+  let initialBuiltInActions = PageActions._builtInActions.slice();
+  let initialNonBuiltInActions = PageActions._nonBuiltInActions.slice();
+  let initialBookmarkSeparatorIndex = initialActions.findIndex(a => {
     return a.id == PageActions.ACTION_ID_BOOKMARK_SEPARATOR;
   });
 
@@ -602,20 +620,25 @@ add_task(async function insertBeforeActionID() {
                PageActions.ACTION_ID_BOOKMARK_SEPARATOR,
                "action.__insertBeforeActionID");
 
-  Assert.equal(PageActions.actions.length,
+  await promiseOpenPageActionPanel();
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
+
+  let newActions = PageActions.actionsInPanel(window);
+  Assert.equal(newActions.length,
                initialActions.length + 1,
                "PageActions.actions.length should be updated");
-  Assert.equal(PageActions.builtInActions.length,
+  Assert.equal(PageActions._builtInActions.length,
                initialBuiltInActions.length + 1,
-               "PageActions.builtInActions.length should be updated");
-  Assert.equal(PageActions.nonBuiltInActions.length,
+               "PageActions._builtInActions.length should be updated");
+  Assert.equal(PageActions._nonBuiltInActions.length,
                initialNonBuiltInActions.length,
-               "PageActions.nonBuiltInActions.length should be updated");
+               "PageActions._nonBuiltInActions.length should remain the same");
 
-  let actionIndex = PageActions.actions.findIndex(a => a.id == id);
+  let actionIndex = newActions.findIndex(a => a.id == id);
   Assert.equal(initialBookmarkSeparatorIndex, actionIndex,
                "initialBookmarkSeparatorIndex");
-  let newBookmarkSeparatorIndex = PageActions.actions.findIndex(a => {
+  let newBookmarkSeparatorIndex = newActions.findIndex(a => {
     return a.id == PageActions.ACTION_ID_BOOKMARK_SEPARATOR;
   });
   Assert.equal(newBookmarkSeparatorIndex, initialBookmarkSeparatorIndex + 1,
@@ -652,14 +675,15 @@ add_task(async function insertBeforeActionID() {
 });
 
 
-// Tests that the ordering of multiple non-built-in actions is alphabetical.
+// Tests that the ordering in the panel of multiple non-built-in actions is
+// alphabetical.
 add_task(async function multipleNonBuiltInOrdering() {
   let idPrefix = "test-multipleNonBuiltInOrdering-";
   let titlePrefix = "Test multipleNonBuiltInOrdering ";
 
-  let initialActions = PageActions.actions;
-  let initialBuiltInActions = PageActions.builtInActions;
-  let initialNonBuiltInActions = PageActions.nonBuiltInActions;
+  let initialActions = PageActions.actionsInPanel(window);
+  let initialBuiltInActions = PageActions._builtInActions.slice();
+  let initialNonBuiltInActions = PageActions._nonBuiltInActions.slice();
 
   // Create some actions in an out-of-order order.
   let actions = [2, 1, 4, 3].map(index => {
@@ -670,25 +694,29 @@ add_task(async function multipleNonBuiltInOrdering() {
   });
 
   // + 1 for the separator between built-in and non-built-in actions.
-  Assert.equal(PageActions.actions.length,
+  Assert.equal(PageActions.actionsInPanel(window).length,
                initialActions.length + actions.length + 1,
-               "PageActions.actions.length should be updated");
+               "PageActions.actionsInPanel().length should be updated");
 
-  Assert.equal(PageActions.builtInActions.length,
+  Assert.equal(PageActions._builtInActions.length,
                initialBuiltInActions.length,
-               "PageActions.builtInActions.length should be same");
-  Assert.equal(PageActions.nonBuiltInActions.length,
+               "PageActions._builtInActions.length should be same");
+  Assert.equal(PageActions._nonBuiltInActions.length,
                initialNonBuiltInActions.length + actions.length,
-               "PageActions.nonBuiltInActions.length should be updated");
+               "PageActions._nonBuiltInActions.length should be updated");
 
   // Look at the final actions.length actions in PageActions.actions, from first
   // to last.
   for (let i = 0; i < actions.length; i++) {
     let expectedIndex = i + 1;
-    let actualAction = PageActions.nonBuiltInActions[i];
+    let actualAction = PageActions._nonBuiltInActions[i];
     Assert.equal(actualAction.id, idPrefix + expectedIndex,
                  "actualAction.id for index: " + i);
   }
+
+  await promiseOpenPageActionPanel();
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
 
   // Check the button nodes in the panel.
   let expectedIndex = 1;
@@ -739,6 +767,7 @@ add_task(async function multipleNonBuiltInOrdering() {
 // and added back.
 add_task(async function nonBuiltFirst() {
   let initialActions = PageActions.actions;
+  let initialActionsInPanel = PageActions.actionsInPanel(window);
 
   // Remove all actions.
   for (let action of initialActions) {
@@ -748,10 +777,10 @@ add_task(async function nonBuiltFirst() {
   // Check the actions.
   Assert.deepEqual(PageActions.actions.map(a => a.id), [],
                    "PageActions.actions should be empty");
-  Assert.deepEqual(PageActions.builtInActions.map(a => a.id), [],
-                   "PageActions.builtInActions should be empty");
-  Assert.deepEqual(PageActions.nonBuiltInActions.map(a => a.id), [],
-                   "PageActions.nonBuiltInActions should be empty");
+  Assert.deepEqual(PageActions._builtInActions.map(a => a.id), [],
+                   "PageActions._builtInActions should be empty");
+  Assert.deepEqual(PageActions._nonBuiltInActions.map(a => a.id), [],
+                   "PageActions._nonBuiltInActions should be empty");
 
   // Check the panel.
   Assert.equal(BrowserPageActions.mainViewBodyNode.childNodes.length, 0,
@@ -766,12 +795,15 @@ add_task(async function nonBuiltFirst() {
   // Check the actions.
   Assert.deepEqual(PageActions.actions.map(a => a.id), [action.id],
                    "Action should be in PageActions.actions");
-  Assert.deepEqual(PageActions.builtInActions.map(a => a.id), [],
-                   "PageActions.builtInActions should be empty");
-  Assert.deepEqual(PageActions.nonBuiltInActions.map(a => a.id), [action.id],
-                   "Action should be in PageActions.nonBuiltInActions");
+  Assert.deepEqual(PageActions._builtInActions.map(a => a.id), [],
+                   "PageActions._builtInActions should be empty");
+  Assert.deepEqual(PageActions._nonBuiltInActions.map(a => a.id), [action.id],
+                   "Action should be in PageActions._nonBuiltInActions");
 
   // Check the panel.
+  await promiseOpenPageActionPanel();
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
   Assert.deepEqual(
     Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
     [BrowserPageActions.panelButtonNodeIDForActionID(action.id)],
@@ -787,26 +819,36 @@ add_task(async function nonBuiltFirst() {
   Assert.deepEqual(
     PageActions.actions.map(a => a.id),
     initialActions.map(a => a.id).concat(
-      [PageActions.ACTION_ID_BUILT_IN_SEPARATOR],
       [action.id]
     ),
     "All actions should be in PageActions.actions"
   );
   Assert.deepEqual(
-    PageActions.builtInActions.map(a => a.id),
+    PageActions._builtInActions.map(a => a.id),
     initialActions.map(a => a.id),
-    "PageActions.builtInActions should be initial actions"
+    "PageActions._builtInActions should be initial actions"
   );
   Assert.deepEqual(
-    PageActions.nonBuiltInActions.map(a => a.id),
+    PageActions._nonBuiltInActions.map(a => a.id),
     [action.id],
-    "PageActions.nonBuiltInActions should contain action"
+    "PageActions._nonBuiltInActions should contain action"
   );
 
   // Check the panel.
+  await promiseOpenPageActionPanel();
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
+  Assert.deepEqual(
+    PageActions.actionsInPanel(window).map(a => a.id),
+    initialActionsInPanel.map(a => a.id).concat(
+      [PageActions.ACTION_ID_BUILT_IN_SEPARATOR],
+      [action.id]
+    ),
+    "All actions should be in PageActions.actionsInPanel()"
+  );
   Assert.deepEqual(
     Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
-    initialActions.map(a => a.id).concat(
+    initialActionsInPanel.map(a => a.id).concat(
       [PageActions.ACTION_ID_BUILT_IN_SEPARATOR],
       [action.id]
     ).map(id => BrowserPageActions.panelButtonNodeIDForActionID(id)),
@@ -823,20 +865,28 @@ add_task(async function nonBuiltFirst() {
     "Action should no longer be in PageActions.actions"
   );
   Assert.deepEqual(
-    PageActions.builtInActions.map(a => a.id),
+    PageActions._builtInActions.map(a => a.id),
     initialActions.map(a => a.id),
-    "PageActions.builtInActions should be initial actions"
+    "PageActions._builtInActions should be initial actions"
   );
   Assert.deepEqual(
-    PageActions.nonBuiltInActions.map(a => a.id),
+    PageActions._nonBuiltInActions.map(a => a.id),
     [],
-    "Action should no longer be in PageActions.nonBuiltInActions"
+    "Action should no longer be in PageActions._nonBuiltInActions"
   );
 
   // Check the panel.
+  await promiseOpenPageActionPanel();
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
+  Assert.deepEqual(
+    PageActions.actionsInPanel(window).map(a => a.id),
+    initialActionsInPanel.map(a => a.id),
+    "Action should no longer be in PageActions.actionsInPanel()"
+  );
   Assert.deepEqual(
     Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
-    initialActions.map(a => BrowserPageActions.panelButtonNodeIDForActionID(a.id)),
+    initialActionsInPanel.map(a => BrowserPageActions.panelButtonNodeIDForActionID(a.id)),
     "Action should no longer be in panel"
   );
 });
@@ -1040,6 +1090,7 @@ add_task(async function perWindowState() {
   let panelButtonID =
     BrowserPageActions.panelButtonNodeIDForActionID(action.id);
   for (let win of [window, newWindow]) {
+    win.BrowserPageActions.placeLazyActionsInPanel();
     let panelButtonNode = win.document.getElementById(panelButtonID);
     Assert.equal(panelButtonNode.getAttribute("label"), newGlobalTitle,
                  "Panel button label should be global title");
@@ -1233,7 +1284,7 @@ add_task(async function contextMenu() {
   }));
 
   // Open the panel and then open the context menu on the action's item.
-  await promisePageActionPanelOpen();
+  await promiseOpenPageActionPanel();
   let panelButton = BrowserPageActions.panelButtonNodeForActionID(action.id);
   let contextMenuPromise = promisePanelShown("pageActionContextMenu");
   EventUtils.synthesizeMouseAtCenter(panelButton, {
@@ -1349,7 +1400,7 @@ add_task(async function contextMenu() {
   }, "Waiting for urlbar button to be removed");
 
   // Open the panel and then open the context menu on the action's item.
-  await promisePageActionPanelOpen();
+  await promiseOpenPageActionPanel();
   contextMenuPromise = promisePanelShown("pageActionContextMenu");
   EventUtils.synthesizeMouseAtCenter(panelButton, {
     type: "contextmenu",
@@ -1416,11 +1467,216 @@ add_task(async function contextMenu() {
 });
 
 
+// Tests transient actions.
+add_task(async function transient() {
+  let initialActionsInPanel = PageActions.actionsInPanel(window);
+
+  let onPlacedInPanelCount = 0;
+  let onBeforePlacedInWindowCount = 0;
+
+  let action = PageActions.addAction(new PageActions.Action({
+    id: "test-transient",
+    title: "Test transient",
+    _transient: true,
+    onPlacedInPanel(buttonNode) {
+      onPlacedInPanelCount++;
+    },
+    onBeforePlacedInWindow(win) {
+      onBeforePlacedInWindowCount++;
+    },
+  }));
+
+  Assert.equal(action.__transient, true, "__transient");
+
+  Assert.equal(onPlacedInPanelCount, 0,
+               "onPlacedInPanelCount should remain 0");
+  Assert.equal(onBeforePlacedInWindowCount, 0,
+               "onBeforePlacedInWindowCount should remain 0");
+
+  Assert.deepEqual(
+    PageActions.actionsInPanel(window).map(a => a.id),
+    initialActionsInPanel.map(a => a.id).concat([
+      PageActions.ACTION_ID_TRANSIENT_SEPARATOR,
+      action.id,
+    ]),
+    "PageActions.actionsInPanel() should be updated"
+  );
+
+  // Check the panel.
+  await promiseOpenPageActionPanel();
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
+  Assert.deepEqual(
+    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    initialActionsInPanel.map(a => a.id).concat([
+      PageActions.ACTION_ID_TRANSIENT_SEPARATOR,
+      action.id,
+    ]).map(id => BrowserPageActions.panelButtonNodeIDForActionID(id)),
+    "Actions in panel should be correct"
+  );
+
+  Assert.equal(onPlacedInPanelCount, 1,
+               "onPlacedInPanelCount should be inc'ed");
+  Assert.equal(onBeforePlacedInWindowCount, 1,
+               "onBeforePlacedInWindowCount should be inc'ed");
+
+  // Disable the action.  It should be removed from the panel.
+  action.setDisabled(true, window);
+
+  Assert.deepEqual(
+    PageActions.actionsInPanel(window).map(a => a.id),
+    initialActionsInPanel.map(a => a.id),
+    "PageActions.actionsInPanel() should revert to initial"
+  );
+
+  // Check the panel.
+  await promiseOpenPageActionPanel();
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
+  Assert.deepEqual(
+    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    initialActionsInPanel
+      .map(a => BrowserPageActions.panelButtonNodeIDForActionID(a.id)),
+    "Actions in panel should be correct"
+  );
+
+  // Enable the action.  It should be added back to the panel.
+  action.setDisabled(false, window);
+
+  Assert.deepEqual(
+    PageActions.actionsInPanel(window).map(a => a.id),
+    initialActionsInPanel.map(a => a.id).concat([
+      PageActions.ACTION_ID_TRANSIENT_SEPARATOR,
+      action.id,
+    ]),
+    "PageActions.actionsInPanel() should be updated"
+  );
+
+  // Check the panel.
+  await promiseOpenPageActionPanel();
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
+  Assert.deepEqual(
+    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    initialActionsInPanel.map(a => a.id).concat([
+      PageActions.ACTION_ID_TRANSIENT_SEPARATOR,
+      action.id,
+    ]).map(id => BrowserPageActions.panelButtonNodeIDForActionID(id)),
+    "Actions in panel should be correct"
+  );
+
+  Assert.equal(onPlacedInPanelCount, 2,
+               "onPlacedInPanelCount should be inc'ed");
+  Assert.equal(onBeforePlacedInWindowCount, 2,
+               "onBeforePlacedInWindowCount should be inc'ed");
+
+  // Add another non-built in but non-transient action.
+  let otherAction = PageActions.addAction(new PageActions.Action({
+    id: "test-transient2",
+    title: "Test transient 2",
+  }));
+
+  Assert.deepEqual(
+    PageActions.actionsInPanel(window).map(a => a.id),
+    initialActionsInPanel.map(a => a.id).concat([
+      PageActions.ACTION_ID_BUILT_IN_SEPARATOR,
+      otherAction.id,
+      PageActions.ACTION_ID_TRANSIENT_SEPARATOR,
+      action.id,
+    ]),
+    "PageActions.actionsInPanel() should be updated"
+  );
+
+  // Check the panel.
+  await promiseOpenPageActionPanel();
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
+  Assert.deepEqual(
+    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    initialActionsInPanel.map(a => a.id).concat([
+      PageActions.ACTION_ID_BUILT_IN_SEPARATOR,
+      otherAction.id,
+      PageActions.ACTION_ID_TRANSIENT_SEPARATOR,
+      action.id,
+    ]).map(id => BrowserPageActions.panelButtonNodeIDForActionID(id)),
+    "Actions in panel should be correct"
+  );
+
+  Assert.equal(onPlacedInPanelCount, 2,
+               "onPlacedInPanelCount should remain the same");
+  Assert.equal(onBeforePlacedInWindowCount, 2,
+               "onBeforePlacedInWindowCount should remain the same");
+
+  // Disable the action again.  It should be removed from the panel.
+  action.setDisabled(true, window);
+
+  Assert.deepEqual(
+    PageActions.actionsInPanel(window).map(a => a.id),
+    initialActionsInPanel.map(a => a.id).concat([
+      PageActions.ACTION_ID_BUILT_IN_SEPARATOR,
+      otherAction.id,
+    ]),
+    "PageActions.actionsInPanel() should be updated"
+  );
+
+  // Check the panel.
+  await promiseOpenPageActionPanel();
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
+  Assert.deepEqual(
+    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    initialActionsInPanel.map(a => a.id).concat([
+      PageActions.ACTION_ID_BUILT_IN_SEPARATOR,
+      otherAction.id,
+    ]).map(id => BrowserPageActions.panelButtonNodeIDForActionID(id)),
+    "Actions in panel should be correct"
+  );
+
+  // Enable the action again.  It should be added back to the panel.
+  action.setDisabled(false, window);
+
+  Assert.deepEqual(
+    PageActions.actionsInPanel(window).map(a => a.id),
+    initialActionsInPanel.map(a => a.id).concat([
+      PageActions.ACTION_ID_BUILT_IN_SEPARATOR,
+      otherAction.id,
+      PageActions.ACTION_ID_TRANSIENT_SEPARATOR,
+      action.id,
+    ]),
+    "PageActions.actionsInPanel() should be updated"
+  );
+
+  // Check the panel.
+  await promiseOpenPageActionPanel();
+  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+  await promisePageActionPanelHidden();
+  Assert.deepEqual(
+    Array.map(BrowserPageActions.mainViewBodyNode.childNodes, n => n.id),
+    initialActionsInPanel.map(a => a.id).concat([
+      PageActions.ACTION_ID_BUILT_IN_SEPARATOR,
+      otherAction.id,
+      PageActions.ACTION_ID_TRANSIENT_SEPARATOR,
+      action.id,
+    ]).map(id => BrowserPageActions.panelButtonNodeIDForActionID(id)),
+    "Actions in panel should be correct"
+  );
+
+  Assert.equal(onPlacedInPanelCount, 3,
+               "onPlacedInPanelCount should be inc'ed");
+  Assert.equal(onBeforePlacedInWindowCount, 3,
+               "onBeforePlacedInWindowCount should be inc'ed");
+
+  // Done, clean up.
+  action.remove();
+  otherAction.remove();
+});
+
+
 function assertActivatedPageActionPanelHidden() {
   Assert.ok(!document.getElementById(BrowserPageActions._activatedActionPanelID));
 }
 
-function promisePageActionPanelOpen() {
+function promiseOpenPageActionPanel() {
   let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
                   .getInterface(Ci.nsIDOMWindowUtils);
   return BrowserTestUtils.waitForCondition(() => {
