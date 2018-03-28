@@ -23,9 +23,9 @@ if (Services.appinfo.OS == "WINNT") {
     {
       stack: [
         "verticalMargins@chrome://browser/content/browser-tabsintitlebar.js",
-        "_layOutTitlebar@chrome://browser/content/browser-tabsintitlebar.js",
         "update@chrome://browser/content/browser-tabsintitlebar.js",
-        "whenWindowLayoutReady@chrome://browser/content/browser-tabsintitlebar.js",
+        "onDOMContentLoaded@chrome://browser/content/browser-tabsintitlebar.js",
+        "onDOMContentLoaded@chrome://browser/content/browser.js",
       ],
       maxCount: 2, // This number should only ever go down - never up.
     },
@@ -37,9 +37,9 @@ if (Services.appinfo.OS == "WINNT" || Services.appinfo.OS == "Darwin") {
     {
       stack: [
         "rect@chrome://browser/content/browser-tabsintitlebar.js",
-        "_layOutTitlebar@chrome://browser/content/browser-tabsintitlebar.js",
         "update@chrome://browser/content/browser-tabsintitlebar.js",
-        "whenWindowLayoutReady@chrome://browser/content/browser-tabsintitlebar.js",
+        "onDOMContentLoaded@chrome://browser/content/browser-tabsintitlebar.js",
+        "onDOMContentLoaded@chrome://browser/content/browser.js",
       ],
       // These numbers should only ever go down - never up.
       maxCount: Services.appinfo.OS == "WINNT" ? 5 : 4,
