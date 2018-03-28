@@ -49,6 +49,10 @@
   --panel-separator-color: hsla(210,4%,10%,.14);
 }
 
+:root[lwt-popup-brighttext] {
+  --panel-separator-color: hsla(0,0%,80%,.25);
+}
+
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
 }
