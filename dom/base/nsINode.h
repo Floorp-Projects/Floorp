@@ -511,6 +511,13 @@ public:
   mozilla::dom::Text* GetAsText();
   const mozilla::dom::Text* GetAsText() const;
 
+  /**
+   * Return this node as Text.  Asserts IsText().  This is defined inline in
+   * Text.h.
+   */
+  mozilla::dom::Text* AsText();
+  const mozilla::dom::Text* AsText() const;
+
   /*
    * Return whether the node is a ProcessingInstruction node.
    */

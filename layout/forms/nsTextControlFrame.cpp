@@ -508,7 +508,7 @@ nsTextControlFrame::CreatePlaceholderIfNeeded()
   mPlaceholderDiv = CreateEmptyDivWithTextNode(*this);
   // Associate ::placeholder pseudo-element with the placeholder node.
   mPlaceholderDiv->SetPseudoElementType(CSSPseudoElementType::placeholder);
-  mPlaceholderDiv->GetFirstChild()->SetText(placeholderTxt, false);
+  mPlaceholderDiv->GetFirstChild()->AsText()->SetText(placeholderTxt, false);
 }
 
 void
@@ -1269,8 +1269,9 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   NS_PRECONDITION(!mEditorHasBeenInitialized,
                   "Do not call this after editor has been initialized");
 
-  nsIContent* textContent = mRootNode->GetFirstChild();
-  if (!textContent) {
+  nsIContent* childContent = mRootNode->GetFirstChild();
+  Text* textContent;
+  if (!childContent) {
     // Set up a textnode with our value
     RefPtr<nsTextNode> textNode =
       new nsTextNode(mContent->NodeInfo()->NodeInfoManager());
@@ -1278,6 +1279,8 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
 
     mRootNode->AppendChildTo(textNode, aNotify);
     textContent = textNode;
+  } else {
+    textContent = childContent->AsText();
   }
 
   NS_ENSURE_TRUE(textContent, NS_ERROR_UNEXPECTED);
