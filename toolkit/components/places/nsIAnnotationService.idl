@@ -271,6 +271,7 @@ interface nsIAnnotationService : nsISupports
                                out unsigned short aType);
     void getItemAnnotationInfo(in long long aItemId,
                                in AUTF8String aName,
+                               out nsIVariant aValue,
                                out long aFlags,
                                out unsigned short aExpiration,
                                out unsigned short aType);

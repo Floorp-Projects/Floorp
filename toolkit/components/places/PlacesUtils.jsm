@@ -1186,16 +1186,15 @@ var PlacesUtils = {
    */
   getAnnotationsForItem: function PU_getAnnotationsForItem(aItemId) {
     var annosvc = this.annotations;
-    var annos = [], val = null;
+    var annos = [];
     var annoNames = annosvc.getItemAnnotationNames(aItemId);
     for (var i = 0; i < annoNames.length; i++) {
-      var flags = {}, exp = {}, storageType = {};
-      annosvc.getItemAnnotationInfo(aItemId, annoNames[i], flags, exp, storageType);
-      val = annosvc.getItemAnnotation(aItemId, annoNames[i]);
+      let value = {}, flags = {}, exp = {}, storageType = {};
+      annosvc.getItemAnnotationInfo(aItemId, annoNames[i], value, flags, exp, storageType);
       annos.push({name: annoNames[i],
                   flags: flags.value,
                   expires: exp.value,
-                  value: val});
+                  value: value.value});
     }
     return annos;
   },
