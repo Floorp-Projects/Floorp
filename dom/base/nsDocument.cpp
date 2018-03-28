@@ -1314,9 +1314,15 @@ nsIDocument::SelectorCache::~SelectorCache()
 void
 nsIDocument::SelectorCache::SelectorList::Reset()
 {
-  if (mServo) {
-    Servo_SelectorList_Drop(mServo);
-    mServo = nullptr;
+  if (mIsServo) {
+    if (mServo) {
+      Servo_SelectorList_Drop(mServo);
+      mServo = nullptr;
+    }
+  } else {
+    if (mGecko) {
+      MOZ_CRASH("old style system disabled");
+    }
   }
 }
 

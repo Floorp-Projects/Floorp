@@ -118,7 +118,7 @@ nsSVGElement::DidAnimateClass()
   nsIPresShell* shell = OwnerDoc()->GetShell();
   if (shell) {
     nsPresContext* presContext = shell->GetPresContext();
-    if (presContext) {
+    if (presContext && presContext->RestyleManager()->IsServo()) {
       presContext->RestyleManager()
                  ->AsServo()
                  ->ClassAttributeWillBeChangedBySMIL(this);

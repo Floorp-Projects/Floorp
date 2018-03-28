@@ -396,6 +396,7 @@ void
 nsStyleBorder::FinishStyle(nsPresContext* aPresContext, const nsStyleBorder* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
   mBorderImageSource.ResolveImage(
     aPresContext, aOldStyle ? &aOldStyle->mBorderImageSource : nullptr);
@@ -616,6 +617,7 @@ void
 nsStyleList::FinishStyle(nsPresContext* aPresContext, const nsStyleList* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
   if (mListStyleImage && !mListStyleImage->IsResolved()) {
     mListStyleImage->Resolve(
@@ -1303,6 +1305,7 @@ void
 nsStyleSVGReset::FinishStyle(nsPresContext* aPresContext, const nsStyleSVGReset* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mMask) {
     nsStyleImage& image = mMask.mLayers[i].mImage;
@@ -3370,6 +3373,7 @@ nsStyleBackground::FinishStyle(
   nsPresContext* aPresContext, const nsStyleBackground* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
   mImage.ResolveImages(aPresContext, aOldStyle ? &aOldStyle->mImage : nullptr);
 }
@@ -3749,6 +3753,7 @@ nsStyleDisplay::FinishStyle(
     nsPresContext* aPresContext, const nsStyleDisplay* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
   if (mShapeOutside.GetType() == StyleShapeSourceType::Image) {
     const UniquePtr<nsStyleImage>& shapeImage = mShapeOutside.GetShapeImage();
@@ -4672,6 +4677,7 @@ nsStyleUserInterface::FinishStyle(
   nsPresContext* aPresContext, const nsStyleUserInterface* aOldStyle)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
   for (size_t i = 0; i < mCursorImages.Length(); ++i) {
     nsCursorImage& cursor = mCursorImages[i];
