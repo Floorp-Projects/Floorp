@@ -6429,7 +6429,7 @@
     "expires_in_version": "64",
     "kind": "categorical",
     "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
-               "sendToDevice", "other"],
+               "sendToDevice", "other", "addSearchEngine"],
     "description": "Count how many times people add items to the url bar"
   },
   "FX_PAGE_ACTION_REMOVED": {
@@ -6439,7 +6439,7 @@
     "expires_in_version": "64",
     "kind": "categorical",
     "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
-               "sendToDevice", "other"],
+               "sendToDevice", "other", "addSearchEngine"],
     "description": "Count how many times people remove items from the url bar"
   },
   "FX_PAGE_ACTION_MANAGED": {
@@ -6449,7 +6449,7 @@
     "expires_in_version": "64",
     "kind": "categorical",
     "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
-               "sendToDevice", "other"],
+               "sendToDevice", "other", "addSearchEngine"],
     "description": "Count how many times people manage extensions via their actions in the url bar"
   },
   "FX_PAGE_ACTION_URLBAR_USED": {
@@ -6459,7 +6459,7 @@
     "expires_in_version": "64",
     "kind": "categorical",
     "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
-               "sendToDevice", "other"],
+               "sendToDevice", "other", "addSearchEngine"],
     "description": "Count how many times people use items in the url bar"
   },
   "FX_PAGE_ACTION_PANEL_USED": {
@@ -6469,7 +6469,7 @@
     "expires_in_version": "64",
     "kind": "categorical",
     "labels": ["bookmark", "pocket", "screenshots", "webcompat", "copyURL", "emailLink",
-               "sendToDevice", "other"],
+               "sendToDevice", "other", "addSearchEngine"],
     "description": "Count how many times people use items from the main page action button"
   },
   "INPUT_EVENT_RESPONSE_MS": {
