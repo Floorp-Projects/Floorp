@@ -84,6 +84,7 @@
 #include "nsContentUtils.h"
 #include "nsTextFragment.h"
 #include "nsContentCID.h"
+#include "nsWindowSizes.h"
 
 #include "nsIDOMEventListener.h"
 #include "nsIWebNavigation.h"

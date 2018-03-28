@@ -6313,6 +6313,7 @@ nsDisplayWrapList::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBui
                                            nsDisplayListBuilder* aDisplayListBuilder)
 {
   aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(GetChildren(),
+                                                                    this,
                                                                     aDisplayListBuilder,
                                                                     aSc,
                                                                     aBuilder,
@@ -6679,6 +6680,7 @@ nsDisplayOpacity::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
                            opacityForSC);
 
   aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(&mList,
+                                                                    this,
                                                                     aDisplayListBuilder,
                                                                     sc,
                                                                     aBuilder,
@@ -6754,6 +6756,12 @@ nsDisplayBlendMode::BuildLayer(nsDisplayListBuilder* aBuilder,
   container->SetMixBlendMode(nsCSSRendering::GetGFXBlendMode(mBlendMode));
 
   return container.forget();
+}
+
+mozilla::gfx::CompositionOp
+nsDisplayBlendMode::BlendMode()
+{
+  return nsCSSRendering::GetGFXBlendMode(mBlendMode);
 }
 
 bool
@@ -10016,7 +10024,15 @@ nsDisplaySVGWrapper::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aB
                                              mozilla::layers::WebRenderLayerManager* aManager,
                                              nsDisplayListBuilder* aDisplayListBuilder)
 {
-  return false;
+  if (gfxPrefs::WebRenderBlobInvalidation()) {
+    return nsDisplayWrapList::CreateWebRenderCommands(aBuilder,
+                                             aResources,
+                                             aSc,
+                                             aManager,
+                                             aDisplayListBuilder);
+  } else {
+    return false;
+  }
 }
 
 namespace mozilla {

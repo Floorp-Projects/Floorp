@@ -1,5 +1,5 @@
 This directory holds Python code to support debugging SpiderMonkey with
-GDB. It includes pretty-printers for common SpiderMonkey types like jsval,
+GDB. It includes pretty-printers for common SpiderMonkey types like JS::Value,
 jsid, and JSObject, and makes GDB "see through" the SpiderMonkey rooting
 types like js::Rooted and JS::Handle. For example:
 
@@ -7,7 +7,7 @@ types like js::Rooted and JS::Handle. For example:
     #0  js::baseops::SetPropertyHelper (cx=0xbf3460,
         obj=(JSObject * const) 0x7ffff150b060 [object global] delegate,
         receiver=(JSObject * const) 0x7ffff150b060 [object global] delegate,
-        id=$jsid("x"), defineHow=4, vp=$jsval(1), strict=0)
+        id=$jsid("x"), defineHow=4, vp=$JS::Int32Value(1), strict=0)
         at /home/jimb/moz/archer/js/src/jsobj.cpp:4495
     4495	    MOZ_ASSERT((defineHow & ~(DNP_CACHE_RESULT | DNP_UNQUALIFIED)) == 0);
     (gdb)
@@ -24,9 +24,9 @@ Things to note here:
   We show the handle's referent, and print the identifier as a string.
 
 - vp, a JS::MutableHandleValue, prints as:
-      vp=$jsval(1)
-  We show the handle's referent, using the jsval's tag to print it in its
-  JavaScript form.
+      vp=$JS::Int32Value(1)
+  We show the handle's referent, using the JS::Value's tag to print it noting
+  its particular internal type and value.
 
 You can still see the raw form of a value with 'print/r':
 
@@ -56,13 +56,13 @@ pointer's referent:
     js> Math.atan2('Spleen', 42)
     Breakpoint 1, math_atan2 (cx=0xbf3440, argc=2, vp=0x7ffff172f0a0)
     (gdb) print vp[0]
-    $1 = $jsval((JSObject *) 0x7ffff151c0c0 [object Function "atan2"])
+    $1 = $JS::Value((JSObject *) 0x7ffff151c0c0 [object Function "atan2"])
     (gdb) print vp[1]
-    $2 = $jsval((JSObject *) 0x7ffff150d0a0 [object Math])
+    $2 = $JS::Value((JSObject *) 0x7ffff150d0a0 [object Math])
     (gdb) print vp[2]
-    $3 = $jsval("Spleen")
+    $3 = $JS::Value("Spleen")
     (gdb) print vp[3]
-    $4 = $jsval(42)
+    $4 = $JS::Int32Value(42)
     (gdb)
 
 We used to also have pretty-printers for the actual contents of a JSString

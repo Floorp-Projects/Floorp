@@ -23,6 +23,7 @@ namespace jit {
     _(GuardIsString)                      \
     _(GuardIsSymbol)                      \
     _(GuardIsNumber)                      \
+    _(GuardIsInt32)                       \
     _(GuardIsInt32Index)                  \
     _(GuardType)                          \
     _(GuardClass)                         \
@@ -48,6 +49,10 @@ namespace jit {
     _(LoadUndefinedResult)                \
     _(LoadBooleanResult)                  \
     _(LoadInt32ArrayLengthResult)         \
+    _(Int32NegationResult)                \
+    _(Int32NotResult)                     \
+    _(DoubleNegationResult)               \
+    _(TruncateDoubleToUInt32)             \
     _(LoadArgumentsObjectLengthResult)    \
     _(LoadFunctionLengthResult)           \
     _(LoadStringLengthResult)             \

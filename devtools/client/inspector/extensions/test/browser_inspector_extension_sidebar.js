@@ -13,18 +13,31 @@ loader.lazyGetter(this, "WebExtensionInspectedWindowFront", () => {
   ).WebExtensionInspectedWindowFront;
 }, true);
 
-const FAKE_CALLER_INFO = {
-  url: "moz-extension://fake-webextension-uuid/fake-caller-script.js",
-  lineNumber: 1,
-  addonId: "fake-webextension-uuid",
-};
 const SIDEBAR_ID = "an-extension-sidebar";
 const SIDEBAR_TITLE = "Sidebar Title";
+
+let extension;
+let fakeExtCallerInfo;
 
 let toolbox;
 let inspector;
 
 add_task(async function setupExtensionSidebar() {
+  extension = ExtensionTestUtils.loadExtension({
+    background() {
+      // This is just an empty extension used to ensure that the caller extension uuid
+      // actually exists.
+    }
+  });
+
+  await extension.startup();
+
+  fakeExtCallerInfo = {
+    url: WebExtensionPolicy.getByID(extension.id).getURL("fake-caller-script.js"),
+    lineNumber: 1,
+    addonId: extension.id,
+  };
+
   const res = await openInspectorForURL("about:blank");
   inspector = res.inspector;
   toolbox = res.toolbox;
@@ -117,7 +130,7 @@ add_task(async function testSidebarSetObjectValueGrip() {
     obj;
   `;
 
-  let evalResult = await inspectedWindowFront.eval(FAKE_CALLER_INFO, expression, {
+  let evalResult = await inspectedWindowFront.eval(fakeExtCallerInfo, expression, {
     evalResultAsGrip: true,
     toolboxConsoleActorID: toolbox.target.form.consoleActor
   });
@@ -154,7 +167,7 @@ add_task(async function testSidebarDOMNodeHighlighting() {
 
   let expression = "({ body: document.body })";
 
-  let evalResult = await inspectedWindowFront.eval(FAKE_CALLER_INFO, expression, {
+  let evalResult = await inspectedWindowFront.eval(fakeExtCallerInfo, expression, {
     evalResultAsGrip: true,
     toolboxConsoleActorID: toolbox.target.form.consoleActor
   });
@@ -236,6 +249,9 @@ add_task(async function teardownExtensionSidebar() {
 
   await toolbox.destroy();
 
+  await extension.unload();
+
   toolbox = null;
   inspector = null;
+  extension = null;
 });

@@ -38,6 +38,7 @@ public:
   explicit WebRenderCommandBuilder(WebRenderLayerManager* aManager)
   : mManager(aManager)
   , mLastAsr(nullptr)
+  , mDoGrouping(false)
   {}
 
   void Destroy();
@@ -85,10 +86,19 @@ public:
                        nsDisplayListBuilder* aDisplayListBuilder);
 
   void CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDisplayList,
+                                              nsDisplayItem* aOuterItem,
                                               nsDisplayListBuilder* aDisplayListBuilder,
                                               const StackingContextHelper& aSc,
                                               wr::DisplayListBuilder& aBuilder,
                                               wr::IpcResourceUpdateQueue& aResources);
+
+  // aWrappingItem has to be non-null.
+  void DoGroupingForDisplayList(nsDisplayList* aDisplayList,
+                                nsDisplayItem* aWrappingItem,
+                                nsDisplayListBuilder* aDisplayListBuilder,
+                                const StackingContextHelper& aSc,
+                                wr::DisplayListBuilder& aBuilder,
+                                wr::IpcResourceUpdateQueue& aResources);
 
   already_AddRefed<WebRenderFallbackData> GenerateFallbackData(nsDisplayItem* aItem,
                                                                wr::DisplayListBuilder& aBuilder,
@@ -148,8 +158,8 @@ public:
     return res.forget();
   }
 
-private:
   WebRenderLayerManager* mManager;
+private:
   ScrollingLayersHelper mScrollingHelper;
 
   // These fields are used to save a copy of the display list for
@@ -170,6 +180,10 @@ private:
 
   // Store of WebRenderCanvasData objects for use in empty transactions
   CanvasDataSet mLastCanvasDatas;
+
+  // Whether consecutive inactive display items should be grouped into one
+  // blob image.
+  bool mDoGrouping;
 };
 
 } // namespace layers

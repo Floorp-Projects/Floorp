@@ -17,7 +17,6 @@
 #include "nsNodeInfoManager.h"      // for use in NodePrincipal()
 #include "nsPropertyTable.h"        // for typedefs
 #include "nsTObserverArray.h"       // for member
-#include "nsWindowSizes.h"          // for nsStyleSizes
 #include "mozilla/ErrorResult.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
@@ -56,6 +55,7 @@ class nsNodeSupportsWeakRefTearoff;
 class nsNodeWeakReference;
 class nsDOMMutationObserver;
 class nsRange;
+class nsWindowSizes;
 struct RawServoSelectorList;
 
 namespace mozilla {
@@ -359,11 +359,7 @@ public:
   // way that |this| points to the start of the allocated object, even in
   // methods of nsINode's sub-classes, so aSizes.mState.mMallocSizeOf(this) is
   // always safe to call no matter which object it was invoked on.
-  virtual void AddSizeOfIncludingThis(nsWindowSizes& aSizes,
-                                      size_t* aNodeSize) const {
-    *aNodeSize += aSizes.mState.mMallocSizeOf(this);
-    AddSizeOfExcludingThis(aSizes, aNodeSize);
-  }
+  void AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const;
 
   friend class nsNodeUtils;
   friend class nsNodeWeakReference;
