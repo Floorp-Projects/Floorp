@@ -108,7 +108,6 @@ class LIRGeneratorARM64 : public LIRGeneratorShared
     void visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins) override;
     void visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins) override;
     void visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins) override;
-    void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins) override;
     void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins) override;
     void visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins) override;
     void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins) override;

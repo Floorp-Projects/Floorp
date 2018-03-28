@@ -209,8 +209,6 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     void visitNegI(LNegI* lir);
     void visitNegD(LNegD* lir);
     void visitNegF(LNegF* lir);
-    void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins);
-    void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins);
     void visitWasmLoad(LWasmLoad* ins);
     void visitWasmUnalignedLoad(LWasmUnalignedLoad* ins);
     void visitWasmStore(LWasmStore* ins);

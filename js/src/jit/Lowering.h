@@ -251,7 +251,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitArrayJoin(MArrayJoin* ins) override;
     void visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) override;
     void visitLoadTypedArrayElementHole(MLoadTypedArrayElementHole* ins) override;
-    void visitLoadTypedArrayElementStatic(MLoadTypedArrayElementStatic* ins) override;
     void visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) override;
     void visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole* ins) override;
     void visitClampToUint8(MClampToUint8* ins) override;

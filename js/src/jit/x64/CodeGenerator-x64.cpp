@@ -382,18 +382,6 @@ CodeGeneratorX64::visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir)
 }
 
 void
-CodeGeneratorX64::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-CodeGeneratorX64::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
 CodeGeneratorX64::wasmStore(const wasm::MemoryAccessDesc& access, const LAllocation* value,
                             Operand dstAddr)
 {

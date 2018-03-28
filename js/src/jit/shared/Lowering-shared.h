@@ -295,11 +295,6 @@ class LIRGeneratorShared : public MDefinitionVisitor
         return false;
     }
 
-    // Whether to generate typed array accesses on statically known objects.
-    static bool allowStaticTypedArrayAccesses() {
-        return false;
-    }
-
     // Provide NYI default implementations of the SIMD visitor functions.
     // Many targets don't implement SIMD at all, and we don't want to duplicate
     // these stubs in the specific sub-classes.

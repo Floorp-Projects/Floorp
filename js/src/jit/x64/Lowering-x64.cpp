@@ -416,12 +416,6 @@ LIRGeneratorX64::visitSubstr(MSubstr* ins)
 }
 
 void
-LIRGeneratorX64::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
 LIRGeneratorX64::visitRandom(MRandom* ins)
 {
     LRandom *lir = new(alloc()) LRandom(temp(),
