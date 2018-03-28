@@ -155,7 +155,6 @@ public:
 
   virtual bool TextIsOnlyWhitespace() override;
   bool ThreadSafeTextIsOnlyWhitespace() const final;
-  virtual bool HasTextForTranslation() override;
 
   /**
    * Append the text content to aResult.

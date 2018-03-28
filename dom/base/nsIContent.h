@@ -387,14 +387,6 @@ public:
   virtual bool ThreadSafeTextIsOnlyWhitespace() const = 0;
 
   /**
-   * Method to see if the text node contains data that is useful
-   * for a translation: i.e., it consists of more than just whitespace,
-   * digits and punctuation.
-   * NOTE: Always returns false for elements.
-   */
-  virtual bool HasTextForTranslation() = 0;
-
-  /**
    * Check if this content is focusable and in the current tab order.
    * Note: most callers should use nsIFrame::IsFocusable() instead as it
    *       checks visibility and other layout factors as well.
@@ -628,16 +620,6 @@ public:
   }
 
   /**
-   * This method is called when the parser begins creating the element's
-   * children, if any are present.
-   *
-   * This is only called for XTF elements currently.
-   */
-  virtual void BeginAddingChildren()
-  {
-  }
-
-  /**
    * This method is called when the parser finishes creating the element's children,
    * if any are present.
    *
@@ -793,11 +775,6 @@ public:
 
   virtual bool OwnedOnlyByTheDOMTree() { return false; }
 
-  virtual already_AddRefed<nsITextControlElement> GetAsTextControlElement()
-  {
-    return nullptr;
-  }
-
 protected:
   /**
    * Lazily allocated extended slots to avoid
@@ -928,15 +905,6 @@ public:
   virtual void DumpContent(FILE* out = stdout, int32_t aIndent = 0,
                            bool aDumpAll = true) const = 0;
 #endif
-
-  /**
-   * Append to aOutDescription a short (preferably one line) string
-   * describing the content.
-   * Currently implemented for elements only.
-   */
-  virtual void Describe(nsAString& aOutDescription) const {
-    aOutDescription = NS_LITERAL_STRING("(not an element)");
-  }
 
   enum ETabFocusType {
     eTabFocus_textControlsMask = (1<<0),  // textboxes and lists always tabbable

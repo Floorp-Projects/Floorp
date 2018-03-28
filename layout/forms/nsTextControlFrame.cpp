@@ -1241,8 +1241,10 @@ nsTextControlFrame::SetInitialChildList(ChildListID     aListID,
 void
 nsTextControlFrame::SetValueChanged(bool aValueChanged)
 {
-  nsCOMPtr<nsITextControlElement> txtCtrl =
-    GetContent()->GetAsTextControlElement();
+  nsCOMPtr<nsITextControlElement> txtCtrl = HTMLInputElement::FromNode(GetContent());
+  if (!txtCtrl) {
+    txtCtrl = HTMLTextAreaElement::FromNode(GetContent());
+  }
   MOZ_ASSERT(txtCtrl, "Content not a text control element");
 
   if (mPlaceholderDiv) {
