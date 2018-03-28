@@ -2492,8 +2492,7 @@ nsINode::ParseServoSelectorList(
 {
   nsIDocument* doc = OwnerDoc();
 
-  nsIDocument::SelectorCache& cache =
-    doc->GetSelectorCache(mozilla::StyleBackendType::Servo);
+  nsIDocument::SelectorCache& cache = doc->GetSelectorCache();
   nsIDocument::SelectorCache::SelectorList* list =
     cache.GetList(aSelectorString);
   if (list) {

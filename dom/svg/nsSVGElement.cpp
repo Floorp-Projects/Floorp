@@ -304,9 +304,7 @@ nsSVGElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
   // just delete the style rule and lazily reconstruct it as needed).
   if (aNamespaceID == kNameSpaceID_None && IsAttributeMapped(aName)) {
     mContentDeclarationBlock = nullptr;
-    if (OwnerDoc()->GetStyleBackendType() == StyleBackendType::Servo) {
-      OwnerDoc()->ScheduleSVGForPresAttrEvaluation(this);
-    }
+    OwnerDoc()->ScheduleSVGForPresAttrEvaluation(this);
   }
 
   if (IsEventAttributeName(aName) && aValue) {
@@ -1145,8 +1143,7 @@ public:
   MappedAttrParser(css::Loader* aLoader,
                    nsIURI* aDocURI,
                    already_AddRefed<nsIURI> aBaseURI,
-                   nsSVGElement* aElement,
-                   StyleBackendType aBackend);
+                   nsSVGElement* aElement);
   ~MappedAttrParser();
 
   // Parses a mapped attribute value.
@@ -1172,20 +1169,16 @@ private:
 
   // For reporting use counters
   nsSVGElement*     mElement;
-
-  StyleBackendType mBackend;
 };
 
 MappedAttrParser::MappedAttrParser(css::Loader* aLoader,
                                    nsIURI* aDocURI,
                                    already_AddRefed<nsIURI> aBaseURI,
-                                   nsSVGElement* aElement,
-                                   StyleBackendType aBackend)
+                                   nsSVGElement* aElement)
   : mLoader(aLoader)
   , mDocURI(aDocURI)
   , mBaseURI(aBaseURI)
   , mElement(aElement)
-  , mBackend(aBackend)
 {
 }
 
@@ -1201,11 +1194,7 @@ MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
                                        const nsAString& aMappedAttrValue)
 {
   if (!mDecl) {
-    if (mBackend == StyleBackendType::Gecko) {
-      MOZ_CRASH("old style system disabled");
-    } else {
-      mDecl = new ServoDeclarationBlock();
-    }
+    mDecl = new ServoDeclarationBlock();
   }
 
   // Get the nsCSSPropertyID ID for our mapped attribute.
@@ -1214,17 +1203,13 @@ MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
                                CSSEnabledState::eForAllContent);
   if (propertyID != eCSSProperty_UNKNOWN) {
     bool changed = false; // outparam for ParseProperty.
-    if (mBackend == StyleBackendType::Gecko) {
-      MOZ_CRASH("old style system disabled");
-    } else {
-      NS_ConvertUTF16toUTF8 value(aMappedAttrValue);
-      // FIXME (bug 1343964): Figure out a better solution for sending the base uri to servo
-      RefPtr<URLExtraData> data = new URLExtraData(mBaseURI, mDocURI,
-                                                   mElement->NodePrincipal());
-      changed = Servo_DeclarationBlock_SetPropertyById(
-        mDecl->AsServo()->Raw(), propertyID, &value, false, data,
-        ParsingMode::AllowUnitlessLength, mElement->OwnerDoc()->GetCompatibilityMode(), mLoader);
-    }
+    NS_ConvertUTF16toUTF8 value(aMappedAttrValue);
+    // FIXME (bug 1343964): Figure out a better solution for sending the base uri to servo
+    RefPtr<URLExtraData> data = new URLExtraData(mBaseURI, mDocURI,
+                                                 mElement->NodePrincipal());
+    changed = Servo_DeclarationBlock_SetPropertyById(
+      mDecl->AsServo()->Raw(), propertyID, &value, false, data,
+      ParsingMode::AllowUnitlessLength, mElement->OwnerDoc()->GetCompatibilityMode(), mLoader);
 
     if (changed) {
       // The normal reporting of use counters by the nsCSSParser won't happen
@@ -1251,12 +1236,8 @@ MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
   // nsCSSParser doesn't know about 'lang', so we need to handle it specially.
   if (aMappedAttrName == nsGkAtoms::lang) {
     propertyID = eCSSProperty__x_lang;
-    if (mBackend == StyleBackendType::Gecko) {
-      MOZ_CRASH("old style system disabled");
-    } else {
-      RefPtr<nsAtom> atom = NS_Atomize(aMappedAttrValue);
-      Servo_DeclarationBlock_SetIdentStringValue(mDecl->AsServo()->Raw(), propertyID, atom);
-    }
+    RefPtr<nsAtom> atom = NS_Atomize(aMappedAttrValue);
+    Servo_DeclarationBlock_SetIdentStringValue(mDecl->AsServo()->Raw(), propertyID, atom);
   }
 }
 
@@ -1272,7 +1253,7 @@ MappedAttrParser::GetDeclarationBlock()
 // Implementation Helpers:
 
 void
-nsSVGElement::UpdateContentDeclarationBlock(mozilla::StyleBackendType aBackend)
+nsSVGElement::UpdateContentDeclarationBlock()
 {
   NS_ASSERTION(!mContentDeclarationBlock,
                "we already have a content declaration block");
@@ -1285,7 +1266,7 @@ nsSVGElement::UpdateContentDeclarationBlock(mozilla::StyleBackendType aBackend)
 
   nsIDocument* doc = OwnerDoc();
   MappedAttrParser mappedAttrParser(doc->CSSLoader(), doc->GetDocumentURI(),
-                                    GetBaseURI(), this, aBackend);
+                                    GetBaseURI(), this);
 
   for (uint32_t i = 0; i < attrCount; ++i) {
     const nsAttrName* attrName = mAttrsAndChildren.AttrNameAt(i);

@@ -7,7 +7,6 @@
 #include "mozilla/ServoStyleSheet.h"
 
 #include "mozilla/css/Rule.h"
-#include "mozilla/StyleBackendType.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/ServoImportRule.h"
@@ -131,7 +130,7 @@ ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
                                  CORSMode aCORSMode,
                                  net::ReferrerPolicy aReferrerPolicy,
                                  const dom::SRIMetadata& aIntegrity)
-  : StyleSheet(StyleBackendType::Servo, aParsingMode)
+  : StyleSheet(aParsingMode)
 {
   mInner = new ServoStyleSheetInner(
     aCORSMode, aReferrerPolicy, aIntegrity, aParsingMode);

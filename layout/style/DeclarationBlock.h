@@ -14,7 +14,6 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/ServoUtils.h"
-#include "mozilla/StyleBackendType.h"
 
 #include "nsCSSPropertyID.h"
 
@@ -32,16 +31,15 @@ class Rule;
 class DeclarationBlock
 {
 protected:
-  explicit DeclarationBlock(StyleBackendType aType)
+  DeclarationBlock()
     : mImmutable(false)
-    , mType(aType)
     , mIsDirty(false)
   {
     mContainer.mRaw = 0;
   }
 
   DeclarationBlock(const DeclarationBlock& aCopy)
-    : DeclarationBlock(aCopy.mType) {}
+    : DeclarationBlock() {}
 
 public:
   MOZ_DECL_STYLO_METHODS(css::Declaration, ServoDeclarationBlock)
@@ -157,8 +155,6 @@ private:
 
   // set when declaration put in the rule tree;
   bool mImmutable;
-
-  const StyleBackendType mType;
 
   // True if this declaration has not been restyled after modified.
   //
