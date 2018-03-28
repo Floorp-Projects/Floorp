@@ -189,8 +189,6 @@ class CodeGeneratorARM64 : public CodeGeneratorShared
     void visitNegI(LNegI* lir);
     void visitNegD(LNegD* lir);
     void visitNegF(LNegF* lir);
-    void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins);
-    void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins);
     void visitCompareExchangeTypedArrayElement(LCompareExchangeTypedArrayElement* lir);
     void visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir);
     void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);

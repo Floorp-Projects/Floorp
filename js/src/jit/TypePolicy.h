@@ -464,7 +464,6 @@ class InstanceOfPolicy final : public TypePolicy
 };
 
 class StoreTypedArrayHolePolicy;
-class StoreTypedArrayElementStaticPolicy;
 
 class StoreUnboxedScalarPolicy : public TypePolicy
 {
@@ -474,7 +473,6 @@ class StoreUnboxedScalarPolicy : public TypePolicy
                                               int valueOperand);
 
     friend class StoreTypedArrayHolePolicy;
-    friend class StoreTypedArrayElementStaticPolicy;
 
   public:
     EMPTY_DATA_;
@@ -482,13 +480,6 @@ class StoreUnboxedScalarPolicy : public TypePolicy
 };
 
 class StoreTypedArrayHolePolicy final : public StoreUnboxedScalarPolicy
-{
-  public:
-    EMPTY_DATA_;
-    virtual MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* ins) override;
-};
-
-class StoreTypedArrayElementStaticPolicy final : public StoreUnboxedScalarPolicy
 {
   public:
     EMPTY_DATA_;

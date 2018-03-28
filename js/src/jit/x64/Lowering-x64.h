@@ -64,7 +64,6 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     void visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins) override;
     void visitWasmLoad(MWasmLoad* ins) override;
     void visitWasmStore(MWasmStore* ins) override;
-    void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins) override;
     void visitSubstr(MSubstr* ins) override;
     void visitRandom(MRandom* ins) override;
     void visitWasmTruncateToInt64(MWasmTruncateToInt64* ins) override;

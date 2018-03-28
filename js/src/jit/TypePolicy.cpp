@@ -1078,15 +1078,6 @@ StoreTypedArrayHolePolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
 }
 
 bool
-StoreTypedArrayElementStaticPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
-{
-    MStoreTypedArrayElementStatic* store = ins->toStoreTypedArrayElementStatic();
-
-    return ConvertToInt32Policy<0>::staticAdjustInputs(alloc, ins) &&
-        StoreUnboxedScalarPolicy::adjustValueInput(alloc, ins, store->accessType(), store->value(), 1);
-}
-
-bool
 StoreUnboxedObjectOrNullPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
 {
     if (!ObjectPolicy<0>::staticAdjustInputs(alloc, ins))
@@ -1266,7 +1257,6 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
     _(SimdAllPolicy)                            \
     _(SimdSelectPolicy)                         \
     _(SimdShufflePolicy)                        \
-    _(StoreTypedArrayElementStaticPolicy)       \
     _(StoreTypedArrayHolePolicy)                \
     _(StoreUnboxedScalarPolicy)                 \
     _(StoreUnboxedObjectOrNullPolicy)           \

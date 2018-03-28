@@ -5733,41 +5733,6 @@ InlinePropertyTable::appendRoots(MRootList& roots) const
     return true;
 }
 
-SharedMem<void*>
-MLoadTypedArrayElementStatic::base() const
-{
-    return someTypedArray_->as<TypedArrayObject>().viewDataEither();
-}
-
-size_t
-MLoadTypedArrayElementStatic::length() const
-{
-    return someTypedArray_->as<TypedArrayObject>().byteLength();
-}
-
-bool
-MLoadTypedArrayElementStatic::congruentTo(const MDefinition* ins) const
-{
-    if (!ins->isLoadTypedArrayElementStatic())
-        return false;
-    const MLoadTypedArrayElementStatic* other = ins->toLoadTypedArrayElementStatic();
-    if (offset() != other->offset())
-        return false;
-    if (needsBoundsCheck() != other->needsBoundsCheck())
-        return false;
-    if (accessType() != other->accessType())
-        return false;
-    if (base() != other->base())
-        return false;
-    return congruentIfOperandsEqual(other);
-}
-
-SharedMem<void*>
-MStoreTypedArrayElementStatic::base() const
-{
-    return someTypedArray_->as<TypedArrayObject>().viewDataEither();
-}
-
 bool
 MGetPropertyCache::allowDoubleResult() const
 {
@@ -5775,12 +5740,6 @@ MGetPropertyCache::allowDoubleResult() const
         return true;
 
     return resultTypeSet()->hasType(TypeSet::DoubleType());
-}
-
-size_t
-MStoreTypedArrayElementStatic::length() const
-{
-    return someTypedArray_->as<TypedArrayObject>().byteLength();
 }
 
 MDefinition::AliasType

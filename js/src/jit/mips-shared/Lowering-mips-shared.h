@@ -88,7 +88,6 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared
     void visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins);
     void visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins);
     void visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins);
-    void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins);
     void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins);
     void visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins);
     void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins);
