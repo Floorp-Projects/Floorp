@@ -183,7 +183,7 @@ class TypeCache(object):
         self.mod_Interpreter = None
         self.mod_JSObject = None
         self.mod_JSString = None
-        self.mod_jsval = None
+        self.mod_JS_Value = None
         self.mod_ExecutableAllocator = None
         self.mod_IonGraph = None
 

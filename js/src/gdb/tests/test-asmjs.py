@@ -12,4 +12,4 @@ run_fragment('asmjs.segfault')
 # So if we get here, and the asm.js code actually ran, we win.
 
 assert_pretty('ok', 'true')
-assert_pretty('rval', '$jsval("ok")')
+assert_pretty('rval', '$JS::Value("ok")')

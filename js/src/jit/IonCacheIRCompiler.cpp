@@ -544,6 +544,19 @@ IonCacheIRCompiler::init()
                                                             AnyRegister(ic->rhs())));
         break;
       }
+      case CacheKind::UnaryArith: {
+        IonUnaryArithIC *ic = ic_->asUnaryArithIC();
+        ValueOperand output = ic->output();
+
+        available.add(output);
+
+        liveRegs_.emplace(ic->liveRegs());
+        outputUnchecked_.emplace(TypedOrValueRegister(output));
+
+        MOZ_ASSERT(numInputs == 1);
+        allocator.initInputLocation(0, ic->input());
+        break;
+      }
       case CacheKind::Call:
       case CacheKind::Compare:
       case CacheKind::TypeOf:

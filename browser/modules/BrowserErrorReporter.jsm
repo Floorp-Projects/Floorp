@@ -91,7 +91,7 @@ class BrowserErrorReporter {
     this.requestBodyTemplate = {
       logger: "javascript",
       platform: "javascript",
-      release: Services.appinfo.version,
+      release: Services.appinfo.appBuildID,
       environment: UpdateUtils.getUpdateChannel(false),
       contexts: {
         os: {
@@ -108,7 +108,6 @@ class BrowserErrorReporter {
         },
       },
       tags: {
-        appBuildID: Services.appinfo.appBuildID,
         changeset: AppConstants.SOURCE_REVISION_URL,
       },
       sdk: {

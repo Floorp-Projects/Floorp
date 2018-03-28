@@ -161,6 +161,7 @@ nsSVGForeignObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!static_cast<const nsSVGElement*>(GetContent())->HasValidDimensions()) {
     return;
   }
+  // TODO: wrap items into an nsDisplayForeignObject
   DisplayOutline(aBuilder, aLists);
   BuildDisplayListForNonBlockChildren(aBuilder, aLists);
 }
