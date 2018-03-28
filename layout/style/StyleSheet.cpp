@@ -845,7 +845,7 @@ dom::MediaList*
 StyleSheet::Media()
 {
   if (!mMedia) {
-    mMedia = dom::MediaList::Create(mType, nsString());
+    mMedia = dom::MediaList::Create(nsString());
     mMedia->SetStyleSheet(this);
   }
 
