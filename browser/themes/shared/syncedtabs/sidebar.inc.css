@@ -88,24 +88,25 @@ body {
   padding-inline-start: 20px;
 }
 
-.item.client.device-image-desktop > .item-title-container > .item-icon-container {
-  background-image: url("chrome://browser/skin/sync-desktopIcon.svg");
+.item.client[clientType] > .item-title-container > .item-icon-container {
   -moz-context-properties: fill;
   fill: #4d4d4d;
 }
 
-.item.client.device-image-desktop.selected:focus > .item-title-container > .item-icon-container {
+.item.client[clientType].selected:focus > .item-title-container > .item-icon-container {
   fill: white;
 }
 
-.item.client.device-image-mobile > .item-title-container > .item-icon-container {
-  background-image: url("chrome://browser/skin/sync-mobileIcon.svg");
-  -moz-context-properties: fill;
-  fill: #4d4d4d;
+.item.client[clientType=phone] > .item-title-container > .item-icon-container {
+  background-image: url("chrome://browser/skin/device-phone.svg");
 }
 
-.item.client.device-image-mobile.selected:focus > .item-title-container > .item-icon-container {
-  fill: white;
+.item.client[clientType=tablet] > .item-title-container > .item-icon-container {
+  background-image: url("chrome://browser/skin/device-tablet.svg");
+}
+
+.item.client[clientType=desktop] > .item-title-container > .item-icon-container {
+  background-image: url("chrome://browser/skin/device-desktop.svg");
 }
 
 .item.tab > .item-title-container > .item-icon-container {

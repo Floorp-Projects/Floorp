@@ -384,8 +384,7 @@ var gSync = {
 
     const clients = this.remoteClients;
     for (let client of clients) {
-      const type = client.formfactor && client.formfactor.includes("tablet") ?
-                   "tablet" : client.type;
+      const type = Weave.Service.clientsEngine.getClientType(client.id);
       addTargetDevice(client.id, client.name, type, new Date(client.serverLastModified * 1000));
     }
 
