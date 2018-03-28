@@ -10,11 +10,9 @@ mozilla.prettyprinters.clear_module_printers(__name__)
 
 # Summary of the JS::Value type:
 #
-# Viewed abstractly, JS::Value is a 64-bit discriminated union, with
-# JSString *, JSObject *, IEEE 64-bit floating-point, and 32-bit integer
-# branches (and a few others). (It is not actually a C++ union;
-# 'discriminated union' just describes the overall effect.) Note that
-# JS::Value is always 64 bits long, even on 32-bit architectures.
+# JS::Value is a 64-bit discriminated union, with JSString*, JSObject*, IEEE
+# 64-bit floating-point, and 32-bit integer branches (and a few others).
+# JS::Value is 64 bits long on all architectures.
 #
 # The ECMAScript standard specifies that ECMAScript numbers are IEEE 64-bit
 # floating-point values. A JS::Value can represent any JavaScript number
@@ -63,11 +61,10 @@ mozilla.prettyprinters.clear_module_printers(__name__)
 #   holds the address of a JSObject; if a string, the address of a
 #   JSString; and so on.
 #
-# On the only 64-bit platform we support, x86_64, only the lower 48 bits of
-# an address are significant, and only those values whose top bit is zero
-# are used for user-space addresses. This means that x86_64 addresses are
-# effectively 47 bits long, and thus fit nicely in the available portion of
-# the fraction field.
+# On x86_64 only the lower 48 bits of an address are significant, and only
+# those values whose top bit is zero are used for user-space addresses. Thus
+# x86_64 addresses are effectively 47 bits long and fit nicely in the available
+# portion of the fraction field.
 #
 # See Value.h for full details.
 
@@ -75,8 +72,8 @@ class Box(object):
     def __init__(self, asBits, jtc):
         self.asBits = asBits
         self.jtc = jtc
-        # Value::layout::asBits is uint64_t, but somehow the sign bit can be
-        # botched here, even though Python integers are arbitrary precision.
+        # Value::asBits is uint64_t, but somehow the sign bit can be botched
+        # here, even though Python integers are arbitrary precision.
         if self.asBits < 0:
             self.asBits = self.asBits + (1 << 64)
 
@@ -167,9 +164,8 @@ class JSValue(object):
             cache.mod_JS_Value = JSValueTypeCache(cache)
         self.jtc = cache.mod_JS_Value
 
-        data = value['data']
-        self.data = data
-        self.box = self.jtc.boxer(data['asBits'], self.jtc)
+        self.value = value
+        self.box = self.jtc.boxer(value['asBits_'], self.jtc)
 
     def to_string(self):
         tag = self.box.tag()
@@ -194,7 +190,7 @@ class JSValue(object):
             return '$JS::Int32Value(%s)' % value
 
         if tag == self.jtc.DOUBLE:
-            return '$JS::DoubleValue(%s)' % self.data['asDouble']
+            return '$JS::DoubleValue(%s)' % self.value['asDouble_']
 
         if tag == self.jtc.STRING:
             value = self.box.as_address().cast(self.cache.JSString_ptr_t)
