@@ -34,7 +34,7 @@
         // Open up the features summary.
         document.querySelector("#perf-settings-features-summary").click();
 
-        is(selectors.getFeatures(getState()).join(","), "js,stackwalk",
+        is(selectors.getFeatures(getState()).join(","), "js,stackwalk,responsiveness",
           "The features starts out with the default");
         is(recordingPreferencesCalls.length, 0,
           "No calls have been made to set preferences");
@@ -42,16 +42,16 @@
         // Click the "features checkbox.
         document.querySelector("#perf-settings-feature-checkbox-js").click();
 
-        is(selectors.getFeatures(getState()).join(","), "stackwalk",
+        is(selectors.getFeatures(getState()).join(","), "stackwalk,responsiveness",
           "The feature has been removed.");
         is(recordingPreferencesCalls.length, 1,
           "The preferences have been updated.");
-        is(recordingPreferencesCalls[0].features.join(","), "stackwalk",
+        is(recordingPreferencesCalls[0].features.join(","), "stackwalk,responsiveness",
           "The preferences have been updated.");
 
         // Enable a feature
         document.querySelector("#perf-settings-feature-checkbox-leaf").click();
-        is(selectors.getFeatures(getState()).join(","), "leaf,stackwalk",
+        is(selectors.getFeatures(getState()).join(","), "leaf,stackwalk,responsiveness",
           "Another feature was added");
 
         // Start the profiler by clicking the start button, and flushing the async
@@ -61,7 +61,8 @@
 
         is(perfFrontMock._startProfilerCalls.length, 1,
           "Start profiler was called once");
-        is(perfFrontMock._startProfilerCalls[0].features.join(","), "leaf,stackwalk",
+        is(perfFrontMock._startProfilerCalls[0].features.join(","),
+          "leaf,stackwalk,responsiveness",
           "Start profiler was called with the correct features");
       });
     </script>
