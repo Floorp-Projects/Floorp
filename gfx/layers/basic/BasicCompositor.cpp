@@ -1039,7 +1039,6 @@ BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd)
     // Note: Most platforms require us to buffer drawing to the widget surface.
     // That's why we don't draw to mDrawTarget directly.
     RefPtr<SourceSurface> source = mWidget->EndBackBufferDrawing();
-    RefPtr<DrawTarget> dest(mTarget ? mTarget : mDrawTarget);
 
     nsIntPoint offset = mTarget ? mTargetBounds.TopLeft() : nsIntPoint();
 
@@ -1048,9 +1047,9 @@ BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd)
     // pixels.
     for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
       const LayoutDeviceIntRect& r = iter.Get();
-      dest->CopySurface(source,
-                        IntRect(r.X(), r.Y(), r.Width(), r.Height()) - mRenderTarget->GetOrigin(),
-                        IntPoint(r.X(), r.Y()) - offset);
+      mDrawTarget->CopySurface(source,
+                               r.ToUnknownRect() - mRenderTarget->GetOrigin(),
+                               r.TopLeft().ToUnknownPoint() - offset);
     }
   }
 
