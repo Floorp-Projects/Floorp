@@ -11,10 +11,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "gXulStore",
                                    "nsIXULStore");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.jsm",
-  ProxyPolicies: "resource:///modules/policies/ProxyPolicies.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+  BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
+  ProxyPolicies: "resource:///modules/policies/ProxyPolicies.jsm",
+  WebsiteFilter: "resource:///modules/policies/WebsiteFilter.jsm",
 });
 
 const PREF_LOGLEVEL           = "browser.policies.loglevel";
@@ -579,7 +580,14 @@ var Policies = {
         }
       });
     }
-  }
+  },
+
+  "WebsiteFilter": {
+    onBeforeUIStartup(manager, param) {
+      this.filter = new WebsiteFilter(param.Block || [], param.Exceptions || []);
+    }
+  },
+
 };
 
 /*
