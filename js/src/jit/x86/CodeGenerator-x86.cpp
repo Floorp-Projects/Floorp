@@ -259,55 +259,6 @@ CodeGenerator::visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir)
     masm.convertUInt32ToFloat32(temp, output);
 }
 
-void
-CodeGenerator::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins)
-{
-    const MLoadTypedArrayElementStatic* mir = ins->mir();
-    Scalar::Type accessType = mir->accessType();
-    MOZ_ASSERT_IF(accessType == Scalar::Float32, mir->type() == MIRType::Float32);
-
-    Register ptr = ToRegister(ins->ptr());
-    AnyRegister out = ToAnyRegister(ins->output());
-    OutOfLineLoadTypedArrayOutOfBounds* ool = nullptr;
-    uint32_t offset = mir->offset();
-
-    if (mir->needsBoundsCheck()) {
-        MOZ_ASSERT(offset == 0);
-        if (!mir->fallible()) {
-            ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(out, accessType);
-            addOutOfLineCode(ool, ins->mir());
-        }
-
-        masm.cmpPtr(ptr, ImmWord(mir->length()));
-        if (ool)
-            masm.j(Assembler::AboveOrEqual, ool->entry());
-        else
-            bailoutIf(Assembler::AboveOrEqual, ins->snapshot());
-    }
-
-    Operand srcAddr(ptr, int32_t(mir->base().asValue()) + int32_t(offset));
-    switch (accessType) {
-      case Scalar::Int8:         masm.movsblWithPatch(srcAddr, out.gpr()); break;
-      case Scalar::Uint8Clamped:
-      case Scalar::Uint8:        masm.movzblWithPatch(srcAddr, out.gpr()); break;
-      case Scalar::Int16:        masm.movswlWithPatch(srcAddr, out.gpr()); break;
-      case Scalar::Uint16:       masm.movzwlWithPatch(srcAddr, out.gpr()); break;
-      case Scalar::Int32:
-      case Scalar::Uint32:       masm.movlWithPatch(srcAddr, out.gpr()); break;
-      case Scalar::Float32:      masm.vmovssWithPatch(srcAddr, out.fpu()); break;
-      case Scalar::Float64:      masm.vmovsdWithPatch(srcAddr, out.fpu()); break;
-      default:                   MOZ_CRASH("Unexpected type");
-    }
-
-    if (accessType == Scalar::Float64)
-        masm.canonicalizeDouble(out.fpu());
-    if (accessType == Scalar::Float32)
-        masm.canonicalizeFloat(out.fpu());
-
-    if (ool)
-        masm.bind(ool->rejoin());
-}
-
 template <typename T>
 void
 CodeGeneratorX86::emitWasmLoad(T* ins)
@@ -418,55 +369,6 @@ CodeGenerator::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
 
     if (ool)
         masm.bind(ool->rejoin());
-}
-
-void
-CodeGenerator::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins)
-{
-    MStoreTypedArrayElementStatic* mir = ins->mir();
-    Scalar::Type accessType = mir->accessType();
-    Register ptr = ToRegister(ins->ptr());
-    const LAllocation* value = ins->value();
-
-    canonicalizeIfDeterministic(accessType, value);
-
-    uint32_t offset = mir->offset();
-    MOZ_ASSERT_IF(mir->needsBoundsCheck(), offset == 0);
-
-    Label rejoin;
-    if (mir->needsBoundsCheck()) {
-        MOZ_ASSERT(offset == 0);
-        masm.cmpPtr(ptr, ImmWord(mir->length()));
-        masm.j(Assembler::AboveOrEqual, &rejoin);
-    }
-
-    Operand dstAddr(ptr, int32_t(mir->base().asValue()) + int32_t(offset));
-    switch (accessType) {
-      case Scalar::Int8:
-      case Scalar::Uint8Clamped:
-      case Scalar::Uint8:
-        masm.movbWithPatch(ToRegister(value), dstAddr);
-        break;
-      case Scalar::Int16:
-      case Scalar::Uint16:
-        masm.movwWithPatch(ToRegister(value), dstAddr);
-        break;
-      case Scalar::Int32:
-      case Scalar::Uint32:
-        masm.movlWithPatch(ToRegister(value), dstAddr);
-        break;
-      case Scalar::Float32:
-        masm.vmovssWithPatch(ToFloatRegister(value), dstAddr);
-        break;
-      case Scalar::Float64:
-        masm.vmovsdWithPatch(ToFloatRegister(value), dstAddr);
-        break;
-      default:
-        MOZ_CRASH("unexpected type");
-    }
-
-    if (rejoin.used())
-        masm.bind(&rejoin);
 }
 
 void

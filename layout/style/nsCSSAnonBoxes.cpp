@@ -39,21 +39,12 @@ MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
 #undef CSS_ANON_BOX
 
 static const nsStaticAtomSetup sCSSAnonBoxAtomSetup[] = {
-  // Put the non-inheriting anon boxes first, so we can index into them easily.
-  #define CSS_ANON_BOX(name_, value_) /* nothing */
-  #define CSS_NON_INHERITING_ANON_BOX(name_, value_) \
-    NS_STATIC_ATOM_SUBCLASS_SETUP( \
-      mozilla::detail::gCSSAnonBoxAtoms, nsCSSAnonBoxes, name_)
-  #include "nsCSSAnonBoxList.h"
-  #undef CSS_NON_INHERITING_ANON_BOX
-  #undef CSS_ANON_BOX
-
+  // Non-inheriting boxes must come first in nsCSSAnonBoxList.h so that
+  // `NonInheriting` values can index into this array and other similar arrays.
   #define CSS_ANON_BOX(name_, value_) \
     NS_STATIC_ATOM_SUBCLASS_SETUP( \
       mozilla::detail::gCSSAnonBoxAtoms, nsCSSAnonBoxes, name_)
-  #define CSS_NON_INHERITING_ANON_BOX(name_, value_) /* nothing */
   #include "nsCSSAnonBoxList.h"
-  #undef CSS_NON_INHERITING_ANON_BOX
   #undef CSS_ANON_BOX
 };
 
@@ -85,11 +76,4 @@ nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(nsAtom* aPseudo)
     nsStaticAtomUtils::Lookup(aPseudo, sCSSAnonBoxAtomSetup);
   MOZ_RELEASE_ASSERT(index.isSome());
   return static_cast<NonInheriting>(*index);
-}
-
-/* static */ nsAtom*
-nsCSSAnonBoxes::GetNonInheritingPseudoAtom(NonInheriting aBoxType)
-{
-  MOZ_ASSERT(aBoxType < NonInheriting::_Count);
-  return *sCSSAnonBoxAtomSetup[static_cast<NonInheritingBase>(aBoxType)].mAtomp;
 }

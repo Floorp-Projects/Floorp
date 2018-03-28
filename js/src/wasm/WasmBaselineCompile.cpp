@@ -7992,28 +7992,31 @@ BaseCompiler::emitSetGlobal()
 
     const GlobalDesc& global = env_.globals[id];
 
-    ScratchI32 tmp(*this);
     switch (global.type()) {
       case ValType::I32: {
         RegI32 rv = popI32();
+        ScratchI32 tmp(*this);
         masm.store32(rv, addressOfGlobalVar(global, tmp));
         freeI32(rv);
         break;
       }
       case ValType::I64: {
         RegI64 rv = popI64();
+        ScratchI32 tmp(*this);
         masm.store64(rv, addressOfGlobalVar(global, tmp));
         freeI64(rv);
         break;
       }
       case ValType::F32: {
         RegF32 rv = popF32();
+        ScratchI32 tmp(*this);
         masm.storeFloat32(rv, addressOfGlobalVar(global, tmp));
         freeF32(rv);
         break;
       }
       case ValType::F64: {
         RegF64 rv = popF64();
+        ScratchI32 tmp(*this);
         masm.storeDouble(rv, addressOfGlobalVar(global, tmp));
         freeF64(rv);
         break;

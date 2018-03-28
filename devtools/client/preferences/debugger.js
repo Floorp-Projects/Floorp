@@ -29,6 +29,7 @@ pref("devtools.debugger.ui.variables-searchbox-visible", false);
 pref("devtools.debugger.ui.framework-grouping-on", true);
 pref("devtools.debugger.call-stack-visible", true);
 pref("devtools.debugger.scopes-visible", true);
+pref("devtools.debugger.component-visible", true);
 pref("devtools.debugger.workers-visible", true);
 pref("devtools.debugger.breakpoints-visible", true);
 pref("devtools.debugger.expressions-visible", true);

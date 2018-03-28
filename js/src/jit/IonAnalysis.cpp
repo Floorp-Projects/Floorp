@@ -1681,7 +1681,7 @@ TypeAnalyzer::adjustInputs(MDefinition* def)
         return true;
 
     MInstruction* ins = def->toInstruction();
-    TypePolicy* policy = ins->typePolicy();
+    const TypePolicy* policy = ins->typePolicy();
     if (policy && !policy->adjustInputs(alloc(), ins))
         return false;
     return true;

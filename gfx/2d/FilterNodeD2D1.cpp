@@ -202,6 +202,8 @@ uint32_t ConvertValue(FilterType aType, uint32_t aAttribute, uint32_t aValue)
       aValue = D2DFilterCompositionMode(aValue);
     }
     break;
+  default:
+    break;
   }
 
   return aValue;
@@ -217,6 +219,8 @@ void ConvertValue(FilterType aType, uint32_t aAttribute, IntSize &aValue)
       aValue.height *= 2;
       aValue.height += 1;
     }
+    break;
+  default:
     break;
   }
 }
@@ -441,6 +445,8 @@ GetD2D1PropForAttribute(FilterType aType, uint32_t aIndex)
       CONVERT_PROP(CROP_RECT, CROP_PROP_RECT);
     }
     break;
+  default:
+    break;
   }
 
   return UINT32_MAX;
@@ -456,6 +462,8 @@ GetD2D1PropsForIntSize(FilterType aType, uint32_t aIndex, UINT32 *aPropWidth, UI
       *aPropHeight = D2D1_MORPHOLOGY_PROP_HEIGHT;
       return true;
     }
+    break;
+  default:
     break;
   }
   return false;
@@ -514,6 +522,8 @@ static inline REFCLSID GetCLDIDForFilterType(FilterType aType)
     return CLSID_D2D1Premultiply;
   case FilterType::UNPREMULTIPLY:
     return CLSID_D2D1UnPremultiply;
+  default:
+    break;
   }
   return GUID_NULL;
 }
