@@ -158,6 +158,13 @@ public:
   virtual void SetRenderTarget(CompositingRenderTarget *aSurface) override;
   virtual CompositingRenderTarget* GetCurrentRenderTarget() const override;
 
+  virtual bool
+  ReadbackRenderTarget(CompositingRenderTarget* aSource,
+                       AsyncReadbackBuffer* aDest) override;
+
+  virtual already_AddRefed<AsyncReadbackBuffer>
+  CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) override;
+
   virtual void DrawQuad(const gfx::Rect& aRect,
                         const gfx::IntRect& aClipRect,
                         const EffectChain &aEffectChain,
