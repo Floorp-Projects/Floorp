@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/skin/extensions/about.css" type="text/css"?> 
+
+<!DOCTYPE dialog SYSTEM "chrome://mozapps/locale/extensions/about.dtd">
+
+<dialog id="genericAbout"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="init();"
+        buttons="accept"
+        buttoniconaccept="close"
+        onaccept="close();">
+
+  <script type="application/javascript" src="chrome://mozapps/content/extensions/about.js"/>
+  <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
+
+  <stringbundleset id="aboutSet">
+    <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
+  </stringbundleset>
+
+  <vbox id="clientBox" flex="1">
+    <hbox class="basic-info">
+      <vbox pack="center">
+        <image id="extensionIcon"/>
+      </vbox>
+      <vbox flex="1">
+        <label id="extensionName"/>
+        <label id="extensionVersion" crop="end"/>
+      </vbox>
+    </hbox>
+    <description id="extensionDescription" class="boxIndent"/>
+
+    <separator id="groove" class="groove"/>
+
+    <vbox id="extensionDetailsBox" flex="1">
+      <label id="extensionCreatorLabel" class="sectionTitle">&creator.label;</label>
+      <hbox id="creatorBox" class="boxIndent">
+        <label id="extensionCreator" flex="1" crop="end"/>
+        <label id="extensionHomepage" onclick="if (event.button == 0) { loadHomepage(event); }"
+               class="text-link" value="&homepage.label;"/>
+      </hbox>
+  
+      <label id="extensionDevelopers" class="sectionTitle">&developers.label;</label>
+      <vbox flex="1" id="developersBox" class="boxIndent"/>
+      <label id="extensionTranslators" class="sectionTitle">&translators.label;</label>
+      <vbox flex="1" id="translatorsBox" class="boxIndent"/>
+      <label id="extensionContributors" class="sectionTitle">&contributors.label;</label>
+      <vbox flex="1" id="contributorsBox" class="boxIndent"/>
+    </vbox>
+  </vbox>
+
+</dialog>
