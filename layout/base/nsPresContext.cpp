@@ -1219,7 +1219,7 @@ nsPresContext::CompatibilityModeChanged()
     return;
   }
 
-  auto cache = nsLayoutStylesheetCache::For(styleSet->BackendType());
+  auto cache = nsLayoutStylesheetCache::Singleton();
   StyleSheet* sheet = cache->QuirkSheet();
 
   if (needsQuirkSheet) {

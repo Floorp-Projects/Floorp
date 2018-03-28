@@ -2299,7 +2299,7 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
   // send the file URL instead.
   StyleBackendType backendType =
     StyleBackendType::Servo;
-  StyleSheet* ucs = nsLayoutStylesheetCache::For(backendType)->UserContentSheet();
+  StyleSheet* ucs = nsLayoutStylesheetCache::Singleton()->UserContentSheet();
   if (ucs) {
     SerializeURI(ucs->GetSheetURI(), xpcomInit.userContentSheetURL());
   } else {
