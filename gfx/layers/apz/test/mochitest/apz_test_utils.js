@@ -522,6 +522,12 @@ function getHitTestConfig() {
   return window.hitTestConfig;
 }
 
+// Compute the coordinates of the center of the given element.
+function centerOf(element) {
+  var bounds = element.getBoundingClientRect();
+  return { x: bounds.x + (bounds.width / 2), y: bounds.y + (bounds.height / 2) };
+}
+
 // Peform a compositor hit test at the given point and return the result.
 // The returned object has two fields:
 //   hitInfo: a combination of APZHitResultFlags

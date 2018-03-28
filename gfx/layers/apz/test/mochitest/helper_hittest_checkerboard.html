@@ -17,11 +17,6 @@
 </body>
 <script type="application/javascript">
 
-function centerOf(element) {
-  var bounds = element.getBoundingClientRect();
-  return { x: bounds.x + (bounds.width / 2), y: bounds.y + (bounds.height / 2) };
-}
-
 function* test(testDriver) {
   var config = getHitTestConfig();
   var utils = config.utils;
