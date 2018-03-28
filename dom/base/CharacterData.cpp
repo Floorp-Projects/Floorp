@@ -786,46 +786,6 @@ CharacterData::ThreadSafeTextIsOnlyWhitespace() const
   return true;
 }
 
-bool
-CharacterData::HasTextForTranslation()
-{
-  if (NodeType() != TEXT_NODE &&
-      NodeType() != CDATA_SECTION_NODE) {
-    return false;
-  }
-
-  if (mText.Is2b()) {
-    // The fragment contains non-8bit characters which means there
-    // was at least one "interesting" character to trigger non-8bit.
-    return true;
-  }
-
-  if (HasFlag(NS_CACHED_TEXT_IS_ONLY_WHITESPACE) &&
-      HasFlag(NS_TEXT_IS_ONLY_WHITESPACE)) {
-    return false;
-  }
-
-  const char* cp = mText.Get1b();
-  const char* end = cp + mText.GetLength();
-
-  unsigned char ch;
-  for (; cp < end; cp++) {
-    ch = *cp;
-
-    // These are the characters that are letters
-    // in the first 256 UTF-8 codepoints.
-    if ((ch >= 'a' && ch <= 'z') ||
-       (ch >= 'A' && ch <= 'Z') ||
-       (ch >= 192 && ch <= 214) ||
-       (ch >= 216 && ch <= 246) ||
-       (ch >= 248)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 void
 CharacterData::AppendTextTo(nsAString& aResult)
 {
