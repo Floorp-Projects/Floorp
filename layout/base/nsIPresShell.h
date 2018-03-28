@@ -95,6 +95,7 @@ class EventStates;
 
 namespace dom {
 class Element;
+class HTMLSlotElement;
 class Touch;
 class Selection;
 class ShadowRoot;
@@ -524,7 +525,18 @@ public:
    *
    * Note that this may destroy frames for an ancestor instead.
    */
-  virtual void DestroyFramesForAndRestyle(mozilla::dom::Element* aElement) = 0;
+  void DestroyFramesForAndRestyle(mozilla::dom::Element* aElement);
+
+  /**
+   * Handles all the layout stuff needed when the slot assignment for an element
+   * is about to change.
+   *
+   * Only called when the slot attribute of the element changes, the rest of
+   * the changes should be handled in ShadowRoot.
+   */
+  void SlotAssignmentWillChange(mozilla::dom::Element& aElement,
+                                mozilla::dom::HTMLSlotElement* aOldSlot,
+                                mozilla::dom::HTMLSlotElement* aNewSlot);
 
   void PostRecreateFramesFor(mozilla::dom::Element* aElement);
   void RestyleForAnimation(mozilla::dom::Element* aElement,
