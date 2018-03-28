@@ -155,7 +155,7 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
     }
   }
 
-  auto cache = nsLayoutStylesheetCache::For(GetStyleBackendType());
+  auto cache = nsLayoutStylesheetCache::Singleton();
 
   StyleSheet* sheet = cache->NumberControlSheet();
   if (sheet) {

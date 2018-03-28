@@ -76,7 +76,7 @@ vec4[2] fetch_from_resource_cache_2(int address) {
 
 #define VECS_PER_CLIP_SCROLL_NODE   9
 #define VECS_PER_LOCAL_CLIP_RECT    1
-#define VECS_PER_RENDER_TASK        3
+#define VECS_PER_RENDER_TASK        2
 #define VECS_PER_PRIM_HEADER        2
 #define VECS_PER_TEXT_RUN           3
 #define VECS_PER_GRADIENT_STOP      2
@@ -203,7 +203,6 @@ struct RenderTaskCommonData {
 struct RenderTaskData {
     RenderTaskCommonData common_data;
     vec3 data1;
-    vec4 data2;
 };
 
 RenderTaskData fetch_render_task_data(int index) {
@@ -211,7 +210,6 @@ RenderTaskData fetch_render_task_data(int index) {
 
     vec4 texel0 = TEXEL_FETCH(sRenderTasks, uv, 0, ivec2(0, 0));
     vec4 texel1 = TEXEL_FETCH(sRenderTasks, uv, 0, ivec2(1, 0));
-    vec4 texel2 = TEXEL_FETCH(sRenderTasks, uv, 0, ivec2(2, 0));
 
     RectWithSize task_rect = RectWithSize(
         texel0.xy,
@@ -225,8 +223,7 @@ RenderTaskData fetch_render_task_data(int index) {
 
     RenderTaskData data = RenderTaskData(
         common_data,
-        texel1.yzw,
-        texel2
+        texel1.yzw
     );
 
     return data;
@@ -262,8 +259,6 @@ RenderTaskCommonData fetch_render_task_common_data(int index) {
 struct PictureTask {
     RenderTaskCommonData common_data;
     vec2 content_origin;
-    float pic_kind_and_raster_mode;
-    vec4 color;
 };
 
 PictureTask fetch_picture_task(int address) {
@@ -271,9 +266,7 @@ PictureTask fetch_picture_task(int address) {
 
     PictureTask task = PictureTask(
         task_data.common_data,
-        task_data.data1.xy,
-        task_data.data1.z,
-        task_data.data2
+        task_data.data1.xy
     );
 
     return task;

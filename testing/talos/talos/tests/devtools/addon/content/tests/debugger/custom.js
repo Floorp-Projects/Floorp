@@ -5,9 +5,9 @@
 "use strict";
 
 const { closeToolboxAndLog, garbageCollect, runTest, testSetup,
-        testTeardown, PAGES_BASE_URL } = require("chrome://damp/content/tests/head");
+        testTeardown, PAGES_BASE_URL } = require("../head");
 const { createContext, openDebuggerAndLog, pauseDebugger, reloadDebuggerAndLog,
-        removeBreakpoints, resume, step } = require("chrome://damp/content/tests/debugger/debugger-helpers");
+        removeBreakpoints, resume, step } = require("./debugger-helpers");
 
 const EXPECTED = {
   sources: 7,

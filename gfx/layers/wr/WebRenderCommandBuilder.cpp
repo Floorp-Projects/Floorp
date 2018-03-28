@@ -1313,8 +1313,8 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
         int32_t descendants = mLayerScrollData.size() - layerCountBeforeRecursing;
 
         mLayerScrollData.emplace_back();
-        mLayerScrollData.back().Initialize(mManager->GetScrollData(), item, descendants, stopAtAsr);
-        mLayerScrollData.back().SetTransform(aSc.GetTransformForScrollData());
+        mLayerScrollData.back().Initialize(mManager->GetScrollData(), item,
+            descendants, stopAtAsr, aSc.GetTransformForScrollData());
       } else if (mLayerScrollData.size() != layerCountBeforeRecursing &&
                  !eventRegions.IsEmpty()) {
         // We are not forcing a new layer for |item|, but we did create some

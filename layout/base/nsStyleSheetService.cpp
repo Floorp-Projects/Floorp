@@ -96,11 +96,9 @@ SheetHasURI(StyleSheet* aSheet, nsIURI* aSheetURI)
 }
 
 int32_t
-nsStyleSheetService::FindSheetByURI(mozilla::StyleBackendType aBackendType,
-                                    uint32_t aSheetType,
-                                    nsIURI* aSheetURI)
+nsStyleSheetService::FindSheetByURI(uint32_t aSheetType, nsIURI* aSheetURI)
 {
-  SheetArray& sheets = Sheets(aBackendType)[aSheetType];
+  SheetArray& sheets = mSheets[aSheetType];
   for (int32_t i = sheets.Length() - 1; i >= 0; i-- ) {
     if (SheetHasURI(sheets[i], aSheetURI)) {
       return i;
@@ -173,7 +171,7 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI *aSheetURI,
     // Hold on to a copy of the registered PresShells.
     nsTArray<nsCOMPtr<nsIPresShell>> toNotify(mPresShells);
     for (nsIPresShell* presShell : toNotify) {
-      StyleSheet* sheet = Sheets(StyleBackendType::Servo)[aSheetType].LastElement();
+      StyleSheet* sheet = mSheets[aSheetType].LastElement();
       presShell->NotifyStyleSheetServiceSheetAdded(sheet, aSheetType);
     }
 
@@ -199,10 +197,9 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI *aSheetURI,
 static nsresult
 LoadSheet(nsIURI* aURI,
           css::SheetParsingMode aParsingMode,
-          StyleBackendType aType,
           RefPtr<StyleSheet>* aResult)
 {
-  RefPtr<css::Loader> loader = new css::Loader(aType, nullptr);
+  RefPtr<css::Loader> loader = new css::Loader;
   return loader->LoadSheetSync(aURI, aParsingMode, true, aResult);
 }
 
@@ -232,11 +229,11 @@ nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
   }
 
 
-  RefPtr<StyleSheet> servoSheet;
-  nsresult rv = LoadSheet(aSheetURI, parsingMode, StyleBackendType::Servo, &servoSheet);
+  RefPtr<StyleSheet> sheet;
+  nsresult rv = LoadSheet(aSheetURI, parsingMode, &sheet);
   NS_ENSURE_SUCCESS(rv, rv);
-  MOZ_ASSERT(servoSheet);
-  mServoSheets[aSheetType].AppendElement(servoSheet);
+  MOZ_ASSERT(sheet);
+  mSheets[aSheetType].AppendElement(sheet);
 
   return NS_OK;
 }
@@ -252,9 +249,7 @@ nsStyleSheetService::SheetRegistered(nsIURI *sheetURI,
   NS_PRECONDITION(_retval, "Null out param");
 
   // Check to see if we have the sheet.
-  StyleBackendType backendType =
-    StyleBackendType::Servo;
-  *_retval = (FindSheetByURI(backendType, aSheetType, sheetURI) >= 0);
+  *_retval = (FindSheetByURI(aSheetType, sheetURI) >= 0);
 
   return NS_OK;
 }
@@ -346,25 +341,17 @@ nsStyleSheetService::UnregisterSheet(nsIURI *aSheetURI, uint32_t aSheetType)
                 aSheetType == AUTHOR_SHEET);
   NS_ENSURE_ARG_POINTER(aSheetURI);
 
-  // We have to search for Gecko and Servo sheets separately.
-  int32_t foundIndex;
-
-
-  // Now search for Servo, which may or may not be present.
-  RefPtr<StyleSheet> servoSheet;
-  foundIndex = FindSheetByURI(StyleBackendType::Servo,
-                              aSheetType, aSheetURI);
+  RefPtr<StyleSheet> sheet;
+  int32_t foundIndex = FindSheetByURI(aSheetType, aSheetURI);
   if (foundIndex >= 0) {
-    servoSheet = mServoSheets[aSheetType][foundIndex];
-    mServoSheets[aSheetType].RemoveElementAt(foundIndex);
+    sheet = mSheets[aSheetType][foundIndex];
+    mSheets[aSheetType].RemoveElementAt(foundIndex);
   }
 
   // Hold on to a copy of the registered PresShells.
   nsTArray<nsCOMPtr<nsIPresShell>> toNotify(mPresShells);
   for (nsIPresShell* presShell : toNotify) {
     if (presShell->StyleSet()) {
-      StyleSheet* sheet =
-        servoSheet;
       if (sheet) {
         presShell->NotifyStyleSheetServiceSheetRemoved(sheet, aSheetType);
       }
@@ -423,15 +410,11 @@ size_t
 nsStyleSheetService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-  for (auto* sheetArrays : {
-      &mServoSheets,
-    }) {
-    for (auto& sheetArray : *sheetArrays) {
-      n += sheetArray.ShallowSizeOfExcludingThis(aMallocSizeOf);
-      for (StyleSheet* sheet : sheetArray) {
-        if (sheet) {
-          n += sheet->SizeOfIncludingThis(aMallocSizeOf);
-        }
+  for (auto& sheetArray : mSheets) {
+    n += sheetArray.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    for (StyleSheet* sheet : sheetArray) {
+      if (sheet) {
+        n += sheet->SizeOfIncludingThis(aMallocSizeOf);
       }
     }
   }

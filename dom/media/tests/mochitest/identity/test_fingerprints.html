@@ -61,9 +61,9 @@ function testMultipleFingerprints() {
       (e => ok(false, 'error in ' + msg + ': ' +
                (e.message ? (e.message + '\n' + e.stack) : e)));
 
-  navigator.mediaDevices.getUserMedia({ audio: true, fake: true })
+  navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
-      ok(stream, 'Got fake stream');
+      ok(stream, 'Got test stream');
       pcDouble.addStream(stream);
       return pcDouble.createOffer();
     })
@@ -104,7 +104,17 @@ function testMultipleFingerprints() {
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
-  set: [ [ 'media.peerconnection.identity.enabled', true ] ]
+  set: [
+    [ 'media.peerconnection.identity.enabled', true ],
+    // Disable permission to skip prompt when on platforms the use loopback
+    // test devices (these would normally trigger a prompt).
+    [ 'media.navigator.permission.disabled', true ],
+    // Since this test doesn't include head.js or pc.js, we need to set the fake
+    // device pref manually. On platforms where loopback devices are used they
+    // should still take precedence, however on some platforms no prefs would
+    // be set and the test would fail.
+    [ 'media.navigator.streams.fake', true ]
+  ]
 }, testMultipleFingerprints);
 </script>
   </body>

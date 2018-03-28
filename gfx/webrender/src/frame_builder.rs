@@ -10,7 +10,7 @@ use clip_scroll_node::{ClipScrollNode};
 use clip_scroll_tree::{ClipScrollNodeIndex, ClipScrollTree};
 use display_list_flattener::{DisplayListFlattener};
 use gpu_cache::GpuCache;
-use gpu_types::{ClipChainRectIndex, ClipScrollNodeData, PictureType};
+use gpu_types::{ClipChainRectIndex, ClipScrollNodeData};
 use hit_test::{HitTester, HitTestingRun};
 use internal_types::{FastHashMap};
 use prim_store::{CachedGradient, PrimitiveIndex, PrimitiveRun, PrimitiveStore};
@@ -74,6 +74,7 @@ pub struct PictureContext<'a> {
     pub display_list: &'a BuiltDisplayList,
     pub inv_world_transform: Option<WorldToLayerFastTransform>,
     pub apply_local_clip_rect: bool,
+    pub inflation_factor: f32,
 }
 
 pub struct PictureState {
@@ -203,6 +204,7 @@ impl FrameBuilder {
             display_list,
             inv_world_transform: None,
             apply_local_clip_rect: true,
+            inflation_factor: 0.0,
         };
 
         let mut pic_state = PictureState::new();
@@ -226,7 +228,6 @@ impl FrameBuilder {
             PremultipliedColorF::TRANSPARENT,
             ClearMode::Transparent,
             pic_state.tasks,
-            PictureType::Image,
         );
 
         let render_task_id = frame_state.render_tasks.add(root_render_task);
@@ -310,7 +311,7 @@ impl FrameBuilder {
 
         self.update_scroll_bars(clip_scroll_tree, gpu_cache);
 
-        let mut render_tasks = RenderTaskTree::new();
+        let mut render_tasks = RenderTaskTree::new(frame_id);
 
         let main_render_task_id = self.build_layer_screen_rects_and_cull_layers(
             clip_scroll_tree,

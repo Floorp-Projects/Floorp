@@ -659,6 +659,9 @@ pref("media.cubeb.logging_level", "");
 // Cubeb sandbox (remoting) control
 #ifdef XP_LINUX
 pref("media.cubeb.sandbox", true);
+pref("media.audioipc.pool_size", 2);
+// 64 kB stack per pool thread.
+pref("media.audioipc.stack_size", 65536);
 #else
 pref("media.cubeb.sandbox", false);
 #endif
@@ -913,6 +916,10 @@ pref("gfx.webrender.enabled", false);
 #ifdef XP_WIN
 pref("gfx.webrender.force-angle", true);
 pref("gfx.webrender.program-binary", true);
+#endif
+
+#ifdef XP_MACOSX
+pref("gfx.compositor.glcontext.opaque", false);
 #endif
 
 pref("gfx.webrender.highlight-painted-layers", false);

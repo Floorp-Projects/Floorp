@@ -22,7 +22,7 @@ class ServoSpecifiedValues final : public GenericSpecifiedValues
 {
 public:
   ServoSpecifiedValues(nsIDocument* aDocument, RawServoDeclarationBlock* aDecl)
-    : GenericSpecifiedValues(StyleBackendType::Servo, aDocument, NS_STYLE_INHERIT_MASK)
+    : GenericSpecifiedValues(aDocument, NS_STYLE_INHERIT_MASK)
     , mDecl(aDecl)
   {}
 

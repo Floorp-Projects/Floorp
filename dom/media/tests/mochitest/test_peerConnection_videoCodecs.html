@@ -14,7 +14,7 @@
 
   async function testVideoCodec(options = {}, codec) {
     let test = new PeerConnectionTest(options);
-    test.setMediaConstraints([{video: true, fake: true}], []);
+    test.setMediaConstraints([{video: true}], []);
 
     test.chain.insertBefore("PC_LOCAL_SET_LOCAL_DESCRIPTION", [
       function PC_LOCAL_FILTER_OUT_CODECS() {
@@ -72,6 +72,11 @@
   ];
 
   runNetworkTest(async (options) => {
+    // This test expects the video being captured will change color. Use fake
+    // video device as loopback does not currently change.
+    await pushPrefs(
+      ['media.video_loopback_dev', ''],
+      ['media.navigator.streams.fake', true]);
     for (let codec of codecs) {
       info(`Testing video for codec ${codec.name}`);
       try {

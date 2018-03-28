@@ -84,7 +84,6 @@ media/libopus/.*
 media/libpng/.*
 media/libsoundtouch/.*
 media/libspeex_resampler/.*
-media/libstagefright/.*
 media/libtheora/.*
 media/libtremor/.*
 media/libvorbis/.*
@@ -92,11 +91,11 @@ media/libvpx/.*
 media/libyuv/.*
 media/mtransport/third_party/.*
 media/openmax_dl/.*
-media/sphinxbase/.*
 media/webrtc/signaling/src/sdp/sipcc/.*
 media/webrtc/trunk/.*
 mfbt/decimal/.*
 mfbt/double-conversion/double-conversion/.*
+mfbt/lz4.*
 mobile/android/geckoview/src/thirdparty/.*
 mobile/android/thirdparty/.*
 modules/brotli/.*
@@ -141,7 +140,6 @@ third_party/python/six/.*
 third_party/python/which/.*
 third_party/rust/.*
 toolkit/components/jsoncpp/.*
-toolkit/components/lz4/.*
 toolkit/components/protobuf/.*
 toolkit/components/url-classifier/chromium/.*
 toolkit/components/url-classifier/protobuf/.*

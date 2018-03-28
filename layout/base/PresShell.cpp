@@ -27,7 +27,6 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-#include "mozilla/StyleBackendType.h"
 #include <algorithm>
 
 #ifdef XP_WIN
@@ -604,11 +603,7 @@ static void
 VerifyStyleTree(nsPresContext* aPresContext, nsFrameManager* aFrameManager)
 {
   if (nsFrame::GetVerifyStyleTreeEnable()) {
-    if (aPresContext->RestyleManager()->IsServo()) {
-      NS_ERROR("stylo: cannot verify style tree with a ServoRestyleManager");
-      return;
-    }
-    MOZ_CRASH("old style system disabled");
+    NS_ERROR("stylo: cannot verify style tree with a ServoRestyleManager");
   }
 }
 #define VERIFY_STYLE_TREE ::VerifyStyleTree(mPresContext, mFrameConstructor)
@@ -957,7 +952,7 @@ PresShell::Init(nsIDocument* aDocument,
 
   // Bind the context to the presentation shell.
   mPresContext = aPresContext;
-  mPresContext->AttachShell(this, aStyleSet->BackendType());
+  mPresContext->AttachShell(this);
 
   // Now we can initialize the style set. Make sure to set the member before
   // calling Init, since various subroutines need to find the style set off
@@ -1504,7 +1499,7 @@ PresShell::UpdatePreferenceStyles()
   // matter which pres context we pass in when it does need to be recreated.
   // (See nsPresContext::GetDocumentColorPreferences for how whether we
   // are a chrome origin image affects some pref styling information.)
-  auto cache = nsLayoutStylesheetCache::For(mStyleSet->BackendType());
+  auto cache = nsLayoutStylesheetCache::Singleton();
   RefPtr<StyleSheet> newPrefSheet =
     mPresContext->IsChromeOriginImage() ?
       cache->ChromePreferenceSheet(mPresContext) :
@@ -1547,8 +1542,7 @@ PresShell::AddUserSheet(StyleSheet* aSheet)
   mStyleSet->BeginUpdate();
 
   nsStyleSheetService* sheetService = nsStyleSheetService::gInstance;
-  nsTArray<RefPtr<StyleSheet>>& userSheets =
-    *sheetService->UserStyleSheets(mStyleSet->BackendType());
+  nsTArray<RefPtr<StyleSheet>>& userSheets = *sheetService->UserStyleSheets();
   // Iterate forwards when removing so the searches for RemoveStyleSheet are as
   // short as possible.
   for (StyleSheet* sheet : userSheets) {
@@ -4372,11 +4366,7 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument, EventStates aStateMask)
   MOZ_ASSERT(!aStateMask.IsEmpty());
 
   if (mDidInitialize) {
-    if (mStyleSet->IsServo()) {
-      mStyleSet->AsServo()->InvalidateStyleForDocumentStateChanges(aStateMask);
-    } else {
-      MOZ_CRASH("old style system disabled");
-    }
+    mStyleSet->AsServo()->InvalidateStyleForDocumentStateChanges(aStateMask);
   }
 
   if (aStateMask.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
@@ -4596,7 +4586,6 @@ PresShell::RecordStyleSheetChange(StyleSheet* aStyleSheet,
 {
   // too bad we can't check that the update is UPDATE_STYLE
   NS_ASSERTION(mUpdateCount != 0, "must be in an update");
-  MOZ_ASSERT(aStyleSheet->IsServo() == mStyleSet->IsServo());
 
   mStyleSet->RecordStyleSheetChange(aStyleSheet, aChangeType);
 }
@@ -9642,14 +9631,9 @@ PresShell::VerifyIncrementalReflow()
 
   // Create a new presentation shell to view the document. Use the
   // exact same style information that this document has.
-  nsAutoPtr<ServoStyleSet> newServoSet;
-  StyleSetHandle newSet;
-  if (mStyleSet->IsServo()) {
-    newServoSet = CloneStyleSet(mStyleSet->AsServo());
-    newSet = newServoSet;
-  } else {
-    MOZ_CRASH("old style system disabled");
-  }
+  nsAutoPtr<ServoStyleSet> newServoSet(CloneStyleSet(mStyleSet->AsServo()));
+  StyleSetHandle newSet(newServoSet);
+
   nsCOMPtr<nsIPresShell> sh = mDocument->CreateShell(cx, vm, newSet);
   NS_ENSURE_TRUE(sh, false);
   newServoSet.forget();
@@ -10380,11 +10364,7 @@ PresShell::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
     mApproximatelyVisibleFrames.ShallowSizeOfExcludingThis(mallocSizeOf) +
     mFramesToDirty.ShallowSizeOfExcludingThis(mallocSizeOf);
 
-  if (StyleSet()->IsGecko()) {
-    MOZ_CRASH("old style system disabled");
-  } else {
-    StyleSet()->AsServo()->AddSizeOfIncludingThis(aSizes);
-  }
+  StyleSet()->AsServo()->AddSizeOfIncludingThis(aSizes);
 
   aSizes.mLayoutTextRunsSize += SizeOfTextRuns(mallocSizeOf);
 
@@ -10581,9 +10561,6 @@ nsIPresShell::HasRuleProcessorUsedByMultipleStyleSets(uint32_t aSheetType,
                                                       bool* aRetVal)
 {
   *aRetVal = false;
-  if (mStyleSet->IsGecko()) {
-    MOZ_CRASH("old style system disabled");
-  }
   return NS_OK;
 }
 

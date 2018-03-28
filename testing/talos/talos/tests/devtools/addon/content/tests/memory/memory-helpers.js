@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { getToolbox, runTest } = require("chrome://damp/content/tests/head");
+const { getToolbox, runTest } = require("../head");
 
 exports.saveHeapSnapshot = async function(label) {
   let toolbox = getToolbox();

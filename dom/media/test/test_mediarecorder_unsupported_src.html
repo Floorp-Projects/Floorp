@@ -4,6 +4,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="gUM_support.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=957439">Mozilla Bug 957439</a>
@@ -11,7 +12,7 @@
 <script class="testbody" type="text/javascript">
 
 
-function startTest() {
+async function startTest() {
   // also do general checks on mimetype support for audio-only
   ok(MediaRecorder.isTypeSupported("audio/ogg"), 'Should support audio/ogg');
   ok(MediaRecorder.isTypeSupported('audio/ogg; codecs="opus"'), 'Should support audio/ogg+opus');
@@ -19,73 +20,72 @@ function startTest() {
   ok(!MediaRecorder.isTypeSupported("video/webm"), 'Should not support video/webm');
   ok(!MediaRecorder.isTypeSupported("video/mp4"), 'Should not support video/mp4');
 
-  navigator.mozGetUserMedia({audio: false, video: true, fake: true},
-    function(stream) {
+  try {
+    await setupGetUserMediaTestPrefs();
+    let stream = await navigator.mediaDevices.getUserMedia({audio: false, video: true});
 
-      // Expected callback sequence should be:
-      // 1. onerror (from start)
-      // 2. ondataavailable
-      // 3. onstop
-      var callbackStep = 0;
-      var mediaRecorder = new MediaRecorder(stream);
+    // Expected callback sequence should be:
+    // 1. onerror (from start)
+    // 2. ondataavailable
+    // 3. onstop
+    let callbackStep = 0;
+    let mediaRecorder = new MediaRecorder(stream);
 
-      is(mediaRecorder.stream, stream, 'Stream should be provided on creation');
+    is(mediaRecorder.stream, stream, 'Stream should be provided on creation');
 
-      mediaRecorder.onerror = function (e) {
-        callbackStep++;
-        info('onerror callback fired');
-        if (callbackStep == 1) {
-          try {
-            mediaRecorder.pause();
-            ok(false, 'pause should fire an exception if called on an inactive recorder');
-          } catch(e) {
-            ok(e instanceof DOMException, 'pause should fire an exception ' +
-              'if called on an inactive recorder');
-            is(e.name, 'InvalidStateError', 'Exception name should be InvalidStateError');
-          }
+    mediaRecorder.onerror = function (e) {
+      callbackStep++;
+      info('onerror callback fired');
+      if (callbackStep == 1) {
+        try {
+          mediaRecorder.pause();
+          ok(false, 'pause should fire an exception if called on an inactive recorder');
+        } catch(e) {
+          ok(e instanceof DOMException, 'pause should fire an exception ' +
+            'if called on an inactive recorder');
+          is(e.name, 'InvalidStateError', 'Exception name should be InvalidStateError');
         }
-        ok(callbackStep == 1, 'onerror callback should handle be the 1st event fired');
-        is(e.error.name, 'UnknownError', 'Error name should be UnknownError.');
-        ok(e.error.stack.includes('test_mediarecorder_unsupported_src.html'),
-          'Events fired from onerror should include an error with a stack trace indicating ' +
-          'an error in this test');
-        is(mediaRecorder.mimeType, '', 'mimetype should be empty');
-        is(mediaRecorder.state, 'inactive', 'state is inactive');
-      };
-
-      mediaRecorder.onwarning = function () {
-        ok(false, 'Unexpected onwarning callback fired.');
-      };
-
-      mediaRecorder.ondataavailable = function (evt) {
-        callbackStep++;
-        info('ondataavailable callback fired');
-        is(callbackStep, 2, 'ondataavailable callback should handle the 2nd event fired');
-        is(evt.data.size, 0, 'data size should be zero');
-        ok(evt instanceof BlobEvent,
-           'Events fired from ondataavailable should be BlobEvent');
-        is(evt.data.type, '', 'encoder start fail, blob miemType should be empty');
-      };
-
-      mediaRecorder.onstop = function() {
-        callbackStep++;
-        info('onstop callback fired');
-        is(mediaRecorder.state, 'inactive', 'state should be inactive');
-        is(callbackStep, 3, 'onstop callback should handle the 3rd event fired');
-        SimpleTest.finish();
-      };
-
-      try {
-        mediaRecorder.start();
-      } catch(e) {
-        ok(false, 'Should not get exception in start call.');
       }
-    },
-    function(err) {
-      ok(false, 'Unexpected error fired with: ' + err);
+      ok(callbackStep == 1, 'onerror callback should handle be the 1st event fired');
+      is(e.error.name, 'UnknownError', 'Error name should be UnknownError.');
+      ok(e.error.stack.includes('test_mediarecorder_unsupported_src.html'),
+        'Events fired from onerror should include an error with a stack trace indicating ' +
+        'an error in this test');
+      is(mediaRecorder.mimeType, '', 'mimetype should be empty');
+      is(mediaRecorder.state, 'inactive', 'state is inactive');
+    };
+
+    mediaRecorder.onwarning = function () {
+      ok(false, 'Unexpected onwarning callback fired.');
+    };
+
+    mediaRecorder.ondataavailable = function (evt) {
+      callbackStep++;
+      info('ondataavailable callback fired');
+      is(callbackStep, 2, 'ondataavailable callback should handle the 2nd event fired');
+      is(evt.data.size, 0, 'data size should be zero');
+      ok(evt instanceof BlobEvent,
+          'Events fired from ondataavailable should be BlobEvent');
+      is(evt.data.type, '', 'encoder start fail, blob miemType should be empty');
+    };
+
+    mediaRecorder.onstop = function() {
+      callbackStep++;
+      info('onstop callback fired');
+      is(mediaRecorder.state, 'inactive', 'state should be inactive');
+      is(callbackStep, 3, 'onstop callback should handle the 3rd event fired');
       SimpleTest.finish();
+    };
+
+    try {
+      mediaRecorder.start();
+    } catch(e) {
+      ok(false, 'Should not get exception in start call.');
     }
-  );
+  } catch (err) {
+    ok(false, 'Unexpected error fired with: ' + err);
+    SimpleTest.finish();
+  }
 }
 
 SimpleTest.waitForExplicitFinish();

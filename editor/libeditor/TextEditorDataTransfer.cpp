@@ -310,12 +310,6 @@ TextEditor::Paste(int32_t aSelectionType)
     // Get the Data from the clipboard
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) &&
         IsModifiable()) {
-      // handle transferable hooks
-      nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
-      if (!EditorHookUtils::DoInsertionHook(domdoc, nullptr, trans)) {
-        return NS_OK;
-      }
-
       rv = InsertTextFromTransferable(trans, nullptr, 0, true);
     }
   }
@@ -333,12 +327,6 @@ TextEditor::PasteTransferable(nsITransferable* aTransferable)
   }
 
   if (!IsModifiable()) {
-    return NS_OK;
-  }
-
-  // handle transferable hooks
-  nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
-  if (!EditorHookUtils::DoInsertionHook(domdoc, nullptr, aTransferable)) {
     return NS_OK;
   }
 

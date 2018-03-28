@@ -1636,7 +1636,6 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
     }
   }
 
-  char                        sizeBuf[10];
   nsAutoString                sizeString;
   nsAutoString                windowElementId;
 
@@ -1652,8 +1651,8 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   // (only for size elements which are persisted)
   if ((mPersistentAttributesDirty & PAD_POSITION) && gotRestoredBounds) {
     if (persistString.Find("screenX") >= 0) {
-      SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.X() / posScale.scale));
-      CopyASCIItoUTF16(sizeBuf, sizeString);
+      sizeString.Truncate();
+      sizeString.AppendInt(NSToIntRound(rect.X() / posScale.scale));
       docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
         IgnoredErrorResult err;
@@ -1661,8 +1660,8 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       }
     }
     if (persistString.Find("screenY") >= 0) {
-      SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.Y() / posScale.scale));
-      CopyASCIItoUTF16(sizeBuf, sizeString);
+      sizeString.Truncate();
+      sizeString.AppendInt(NSToIntRound(rect.Y() / posScale.scale));
       docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
         IgnoredErrorResult err;
@@ -1674,8 +1673,8 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   if ((mPersistentAttributesDirty & PAD_SIZE) && gotRestoredBounds) {
     LayoutDeviceIntRect innerRect = rect - GetOuterToInnerSizeDifference(mWindow);
     if (persistString.Find("width") >= 0) {
-      SprintfLiteral(sizeBuf, "%d", NSToIntRound(innerRect.Width() / sizeScale.scale));
-      CopyASCIItoUTF16(sizeBuf, sizeString);
+      sizeString.Truncate();
+      sizeString.AppendInt(NSToIntRound(innerRect.Width() / sizeScale.scale));
       docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
         IgnoredErrorResult err;
@@ -1683,8 +1682,8 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       }
     }
     if (persistString.Find("height") >= 0) {
-      SprintfLiteral(sizeBuf, "%d", NSToIntRound(innerRect.Height() / sizeScale.scale));
-      CopyASCIItoUTF16(sizeBuf, sizeString);
+      sizeString.Truncate();
+      sizeString.AppendInt(NSToIntRound(innerRect.Height() / sizeScale.scale));
       docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
         IgnoredErrorResult err;
@@ -1714,8 +1713,8 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       nsCOMPtr<nsIWindowMediator> mediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
       if (mediator) {
         mediator->GetZLevel(this, &zLevel);
-        SprintfLiteral(sizeBuf, "%" PRIu32, zLevel);
-        CopyASCIItoUTF16(sizeBuf, sizeString);
+        sizeString.Truncate();
+        sizeString.AppendInt(zLevel);
         docShellElement->SetAttribute(ZLEVEL_ATTRIBUTE, sizeString, rv);
         if (shouldPersist) {
           IgnoredErrorResult err;
@@ -2358,7 +2357,8 @@ nsXULWindow::SizeShell()
 
   LoadMiscPersistentAttributesFromXUL();
 
-  if (mChromeLoaded && mCenterAfterLoad && !positionSet) {
+  if (mChromeLoaded && mCenterAfterLoad && !positionSet &&
+      mWindow->SizeMode() == nsSizeMode_Normal) {
     Center(parentWindow, parentWindow ? false : true, false);
   }
 }

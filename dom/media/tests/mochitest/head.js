@@ -7,26 +7,41 @@
 var Cc = SpecialPowers.Cc;
 var Ci = SpecialPowers.Ci;
 
-// Specifies whether we are using fake streams to run this automation
-var FAKE_ENABLED = true;
-var TEST_AUDIO_FREQ = 1000;
-try {
-  var audioDevice = SpecialPowers.getCharPref('media.audio_loopback_dev');
-  var videoDevice = SpecialPowers.getCharPref('media.video_loopback_dev');
-  dump('TEST DEVICES: Using media devices:\n');
-  dump('audio: ' + audioDevice + '\nvideo: ' + videoDevice + '\n');
-  FAKE_ENABLED = false;
-  // It will be updated to 440 when/if DefaultLoopbackTone is instantiated.
-  TEST_AUDIO_FREQ = -1;
-} catch (e) {
-  dump('TEST DEVICES: No test devices found (in media.{audio,video}_loopback_dev, using fake streams.\n');
-  FAKE_ENABLED = true;
+// Specifies if we want fake audio streams for this run
+let WANT_FAKE_AUDIO = true;
+// Specifies if we want fake video streams for this run
+let WANT_FAKE_VIDEO = true;
+let TEST_AUDIO_FREQ = 1000;
+
+/**
+ * Reads the current values of preferences affecting fake and loopback devices
+ * and sets the WANT_FAKE_AUDIO and WANT_FAKE_VIDEO gloabals appropriately.
+*/
+function updateConfigFromFakeAndLoopbackPrefs() {
+  let audioDevice = SpecialPowers.getCharPref("media.audio_loopback_dev", "");
+  if (audioDevice) {
+    WANT_FAKE_AUDIO = false;
+    dump("TEST DEVICES: Got loopback audio: " + audioDevice + "\n");
+  } else {
+    WANT_FAKE_AUDIO = true;
+    dump("TEST DEVICES: No test device found in media.audio_loopback_dev, using fake audio streams.\n");
+  }
+  let videoDevice = SpecialPowers.getCharPref("media.video_loopback_dev", "");
+  if (videoDevice) {
+    WANT_FAKE_VIDEO = false;
+    dump("TEST DEVICES: Got loopback video: " + videoDevice + "\n");
+  } else {
+    WANT_FAKE_VIDEO = true;
+    dump("TEST DEVICES: No test device found in media.video_loopback_dev, using fake video streams.\n");
+  }
 }
+
+updateConfigFromFakeAndLoopbackPrefs();
 
 /**
  *  Global flag to skip LoopbackTone
  */
-var DISABLE_LOOPBACK_TONE = false
+let DISABLE_LOOPBACK_TONE = false;
 /**
  * Helper class to setup a sine tone of a given frequency.
  */
@@ -43,7 +58,7 @@ class LoopbackTone {
     this.changeFrequency(frequency);
   }
 
-  // Method should be used when FAKE_ENABLED is false.
+  // Method should be used when WANT_FAKE_AUDIO is false.
   start() {
     if (!this.oscNode) {
       throw new Error("Attempt to start a stopped LoopbackTone");
@@ -68,7 +83,7 @@ class LoopbackTone {
     this.oscNode.stop();
     this.oscNode = null;
   }
-};
+}
 // Object that holds the default loopback tone.
 var DefaultLoopbackTone = null;
 
@@ -348,7 +363,9 @@ function createMediaElementForTrack(track, idPrefix) {
  *        The constraints for this mozGetUserMedia callback
  */
 function getUserMedia(constraints) {
-  if (!FAKE_ENABLED
+  // Tests may have changed the values of prefs, so recheck
+  updateConfigFromFakeAndLoopbackPrefs();
+  if (!WANT_FAKE_AUDIO
       && !constraints.fake
       && constraints.audio
       && !DISABLE_LOOPBACK_TONE) {
@@ -364,6 +381,9 @@ function getUserMedia(constraints) {
                                         , {echoCancellation: false}
                                         , {noiseSuppression: false}
                                         , constraints.audio);
+  } else {
+    // Fake device configured, ensure our test freq is correct.
+    TEST_AUDIO_FREQ = 1000;
   }
   info("Call getUserMedia for " + JSON.stringify(constraints));
   return navigator.mediaDevices.getUserMedia(constraints)
@@ -395,14 +415,16 @@ function setupEnvironment() {
       ['media.peerconnection.remoteTrackId.enabled', true],
       ['media.peerconnection.rtpsourcesapi.enabled', true],
       ['media.navigator.permission.disabled', true],
-      ['media.navigator.streams.fake', FAKE_ENABLED],
+      // If either fake audio or video is desired we enable fake streams.
+      // If loopback devices are set they will be chosen instead of fakes in gecko.
+      ['media.navigator.streams.fake', WANT_FAKE_AUDIO || WANT_FAKE_VIDEO],
       ['media.getusermedia.screensharing.enabled', true],
       ['media.getusermedia.audiocapture.enabled', true],
       ['media.recorder.audio_node.enabled', true]
     ]
   };
 
-  if (!FAKE_ENABLED) {
+  if (!WANT_FAKE_AUDIO) {
     defaultMochitestPrefs.set.push(
       ["media.volume_scale", "1"],
     );

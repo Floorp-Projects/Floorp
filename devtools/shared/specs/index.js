@@ -74,11 +74,6 @@ const Types = exports.__TypesForTests = [
     spec: "devtools/shared/specs/environment",
     front: null,
   },
-  {
-    types: ["eventLoopLag"],
-    spec: "devtools/shared/specs/eventlooplag",
-    front: "devtools/shared/fronts/eventlooplag",
-  },
   /* frame has old fashion client and no front */
   {
     types: ["frame"],

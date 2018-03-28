@@ -158,7 +158,6 @@ add_task(async function test() {
       await ContentTask.spawn(newTabBrowser, null, async function() {
         // Check if PDF is opened with internal viewer
         Assert.ok(content.document.querySelector("div#viewer"), "document content has viewer UI");
-        Assert.ok("PDFJS" in content.wrappedJSObject, "window content has PDFJS object");
       });
 
       await ContentTask.spawn(newTabBrowser, null, contentSetUp);

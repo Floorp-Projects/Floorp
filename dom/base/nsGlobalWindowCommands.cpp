@@ -37,9 +37,6 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/layers/KeyboardMap.h"
 
-#include "nsIClipboardDragDropHooks.h"
-#include "nsIClipboardDragDropHookList.h"
-
 using namespace mozilla;
 using namespace mozilla::layers;
 
@@ -918,101 +915,6 @@ nsGoBackCommand::DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWe
 }
 #endif
 
-/*---------------------------------------------------------------------------
-
-  nsClipboardDragDropHookCommand
-      params        value type   possible values
-      "addhook"     isupports    nsIClipboardDragDropHooks as nsISupports
-      "removehook"  isupports    nsIClipboardDragDropHooks as nsISupports
-
-----------------------------------------------------------------------------*/
-
-class nsClipboardDragDropHookCommand final : public nsIControllerCommand
-{
-  ~nsClipboardDragDropHookCommand() {}
-
-public:
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICONTROLLERCOMMAND
-
-protected:
-  // no member variables, please, we're stateless!
-};
-
-
-NS_IMPL_ISUPPORTS(nsClipboardDragDropHookCommand, nsIControllerCommand)
-
-NS_IMETHODIMP
-nsClipboardDragDropHookCommand::IsCommandEnabled(const char * aCommandName,
-                                                 nsISupports *aCommandContext,
-                                                 bool *outCmdEnabled)
-{
-  *outCmdEnabled = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsClipboardDragDropHookCommand::DoCommand(const char *aCommandName,
-                                          nsISupports *aCommandContext)
-{
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsClipboardDragDropHookCommand::DoCommandParams(const char *aCommandName,
-                                                nsICommandParams *aParams,
-                                                nsISupports *aCommandContext)
-{
-  NS_ENSURE_ARG(aParams);
-
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aCommandContext);
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-  nsIDocShell *docShell = window->GetDocShell();
-
-  nsCOMPtr<nsIClipboardDragDropHookList> obj = do_GetInterface(docShell);
-  if (!obj) return NS_ERROR_INVALID_ARG;
-
-  nsCOMPtr<nsISupports> isuppHook;
-
-  nsresult returnValue = NS_OK;
-  nsresult rv = aParams->GetISupportsValue("addhook", getter_AddRefs(isuppHook));
-  if (NS_SUCCEEDED(rv))
-  {
-    nsCOMPtr<nsIClipboardDragDropHooks> hook = do_QueryInterface(isuppHook);
-    if (hook)
-      returnValue = obj->AddClipboardDragDropHooks(hook);
-    else
-      returnValue = NS_ERROR_INVALID_ARG;
-  }
-
-  rv = aParams->GetISupportsValue("removehook", getter_AddRefs(isuppHook));
-  if (NS_SUCCEEDED(rv))
-  {
-    nsCOMPtr<nsIClipboardDragDropHooks> hook = do_QueryInterface(isuppHook);
-    if (hook)
-    {
-      rv = obj->RemoveClipboardDragDropHooks(hook);
-      if (NS_FAILED(rv) && NS_SUCCEEDED(returnValue))
-        returnValue = rv;
-    }
-    else
-      returnValue = NS_ERROR_INVALID_ARG;
-  }
-
-  return returnValue;
-}
-
-NS_IMETHODIMP
-nsClipboardDragDropHookCommand::GetCommandStateParams(const char *aCommandName,
-                                                      nsICommandParams *aParams,
-                                                      nsISupports *aCommandContext)
-{
-  NS_ENSURE_ARG_POINTER(aParams);
-  return aParams->SetBooleanValue("state_enabled", true);
-}
-
 class nsLookUpDictionaryCommand final : public nsIControllerCommand
 {
 public:
@@ -1278,8 +1180,6 @@ nsWindowCommandRegistration::RegisterWindowCommands(
   NS_REGISTER_ONE_COMMAND(nsGoBackCommand, "cmd_browserBack");
   NS_REGISTER_ONE_COMMAND(nsGoForwardCommand, "cmd_browserForward");
 #endif
-
-  NS_REGISTER_ONE_COMMAND(nsClipboardDragDropHookCommand, "cmd_clipboardDragDropHook");
 
   NS_REGISTER_ONE_COMMAND(nsLookUpDictionaryCommand, "cmd_lookUpDictionary");
 

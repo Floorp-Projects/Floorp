@@ -20,8 +20,6 @@ protected:
   virtual ~CSSMozDocumentRule() {}
 
 public:
-  int32_t GetType() const final { return css::Rule::DOCUMENT_RULE; }
-
   static bool Match(nsIDocument* aDoc,
                     nsIURI* aDocURI,
                     const nsACString& aDocURISpec,
