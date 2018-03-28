@@ -196,6 +196,9 @@ class MachCommands(MachCommandBase):
                      required=False,
                      action='store_true',
                      help='Do not actually create tasks')
+    @CommandArgument('--root', '-r',
+                     required=False,
+                     help="root of the repository to get cron task definitions from")
     def taskgraph_cron(self, **options):
         """Run the cron task; this task creates zero or more decision tasks.  It is run
         from the hooks service on a regular basis."""
