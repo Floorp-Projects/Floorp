@@ -753,6 +753,8 @@ protected:
    */
   APZCTreeManager* GetApzcTreeManager() const;
 
+  void AssertOnSamplerThread() const;
+
   /**
    * Convert ScreenPoint relative to the screen to LayoutDevicePoint relative
    * to the parent document. This excludes the transient compositor transform.
