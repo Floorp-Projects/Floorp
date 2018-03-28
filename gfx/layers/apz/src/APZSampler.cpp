@@ -28,6 +28,12 @@ APZSampler::~APZSampler()
   mApz->SetSampler(nullptr);
 }
 
+bool
+APZSampler::HasTreeManager(const RefPtr<APZCTreeManager>& aApz)
+{
+  return aApz.get() == mApz.get();
+}
+
 void
 APZSampler::ClearTree()
 {
