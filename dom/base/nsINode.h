@@ -613,9 +613,11 @@ public:
   }
 
   /**
-   * This method returns the owner doc if the node is in the
-   * composed document (as defined in the Shadow DOM spec), otherwise
-   * it returns null.
+   * This method returns the owner document if the node is connected to it
+   * (as defined in the DOM spec), otherwise it returns null.
+   * In other words, returns non-null even in the case the node is in
+   * Shadow DOM, if there is a possibly shadow boundary crossing path from
+   * the node to its owner document.
    */
   nsIDocument* GetComposedDoc() const
   {
