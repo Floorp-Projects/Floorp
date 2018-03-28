@@ -45,6 +45,7 @@ namespace layers {
 class Layer;
 class AsyncPanZoomController;
 class APZCTreeManagerParent;
+class APZSampler;
 class CompositorBridgeParent;
 class OverscrollHandoffChain;
 struct OverscrollHandoffState;
@@ -115,6 +116,8 @@ class APZCTreeManager : public IAPZCTreeManager
 
 public:
   explicit APZCTreeManager(LayersId aRootLayersId);
+
+  void SetSampler(APZSampler* aSampler);
 
   /**
    * Notifies this APZCTreeManager that the associated compositor is now
@@ -690,6 +693,13 @@ protected:
 private:
   /* Layers id for the root CompositorBridgeParent that owns this APZCTreeManager. */
   LayersId mRootLayersId;
+
+  /* Pointer to the APZSampler instance that is bound to this APZCTreeManager.
+   * The sampler has a RefPtr to this class, and this non-owning raw pointer
+   * back to the APZSampler is nulled out in the sampler's destructor, so this
+   * pointer should always be valid.
+   */
+  APZSampler* MOZ_NON_OWNING_REF mSampler;
 
   /* Whenever walking or mutating the tree rooted at mRootNode, mTreeLock must be held.
    * This lock does not need to be held while manipulating a single APZC instance in

@@ -18,9 +18,14 @@ namespace layers {
 APZSampler::APZSampler(const RefPtr<APZCTreeManager>& aApz)
   : mApz(aApz)
 {
+  MOZ_ASSERT(aApz);
+  mApz->SetSampler(this);
 }
 
-APZSampler::~APZSampler() = default;
+APZSampler::~APZSampler()
+{
+  mApz->SetSampler(nullptr);
+}
 
 void
 APZSampler::ClearTree()

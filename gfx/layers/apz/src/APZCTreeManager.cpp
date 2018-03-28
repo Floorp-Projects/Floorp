@@ -21,6 +21,7 @@
 #include "mozilla/gfx/GPUParent.h"      // for GPUParent
 #include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 #include "mozilla/gfx/Point.h"          // for Point
+#include "mozilla/layers/APZSampler.h"  // for APZSampler
 #include "mozilla/layers/APZThreadUtils.h"  // for AssertOnControllerThread, etc
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
 #include "mozilla/layers/AsyncDragMetrics.h" // for AsyncDragMetrics
@@ -224,6 +225,7 @@ private:
 APZCTreeManager::APZCTreeManager(LayersId aRootLayersId)
     : mInputQueue(new InputQueue()),
       mRootLayersId(aRootLayersId),
+      mSampler(nullptr),
       mTreeLock("APZCTreeLock"),
       mHitResultForInputBlock(CompositorHitTestInfo::eInvisibleToHitTest),
       mRetainedTouchIdentifier(-1),
@@ -245,6 +247,14 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId)
 }
 
 APZCTreeManager::~APZCTreeManager() = default;
+
+void
+APZCTreeManager::SetSampler(APZSampler* aSampler)
+{
+  // We're either setting the sampler or clearing it
+  MOZ_ASSERT((mSampler == nullptr) != (aSampler == nullptr));
+  mSampler = aSampler;
+}
 
 void
 APZCTreeManager::NotifyLayerTreeAdopted(LayersId aLayersId,
