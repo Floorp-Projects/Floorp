@@ -260,6 +260,10 @@
 
 %include ../shared/urlbar-searchbar.inc.css
 
+:root {
+  --toolbar-field-focus-border-color: -moz-mac-focusring;
+}
+
 #urlbar,
 .searchbar-textbox {
   font-size: 1.25em;
@@ -273,8 +277,8 @@ html|input.urlbar-input {
 
 #urlbar[focused="true"],
 .searchbar-textbox[focused="true"] {
-  border-color: -moz-mac-focusring;
-  box-shadow: var(--focus-ring-box-shadow);
+  box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color) inset,
+              0 0 0 1px var(--toolbar-field-focus-border-color);
 }
 
 %include ../shared/identity-block/identity-block.inc.css
