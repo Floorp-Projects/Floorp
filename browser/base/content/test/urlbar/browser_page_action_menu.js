@@ -269,6 +269,7 @@ add_task(async function sendToDevice_syncNotReady_configured() {
       syncReady.get(() => true);
       lastSync.get(() => Date.now());
       sandbox.stub(gSync, "remoteClients").get(() => mockRemoteClients);
+      sandbox.stub(Weave.Service.clientsEngine, "getClientType").callsFake(id => mockRemoteClients.find(c => c.id == id).type);
     });
 
     let onShowingSubview = BrowserPageActions.sendToDevice.onShowingSubview;
@@ -405,6 +406,7 @@ add_task(async function sendToDevice_noDevices() {
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
     sandbox.stub(gSync, "remoteClients").get(() => []);
+    sandbox.stub(Weave.Service.clientsEngine, "getClientType").callsFake(id => mockRemoteClients.find(c => c.id == id).type);
 
     let cleanUp = () => {
       sandbox.restore();
@@ -470,6 +472,7 @@ add_task(async function sendToDevice_devices() {
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
     sandbox.stub(gSync, "remoteClients").get(() => mockRemoteClients);
+    sandbox.stub(Weave.Service.clientsEngine, "getClientType").callsFake(id => mockRemoteClients.find(c => c.id == id).type);
 
     let cleanUp = () => {
       sandbox.restore();
@@ -534,6 +537,7 @@ add_task(async function sendToDevice_inUrlbar() {
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
     sandbox.stub(gSync, "isSendableURI").returns(true);
     sandbox.stub(gSync, "remoteClients").get(() => mockRemoteClients);
+    sandbox.stub(Weave.Service.clientsEngine, "getClientType").callsFake(id => mockRemoteClients.find(c => c.id == id).type);
 
     let cleanUp = () => {
       sandbox.restore();
