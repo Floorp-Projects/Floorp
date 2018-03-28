@@ -1165,11 +1165,7 @@ async function getTransactionsForTransferItems(items, insertionIndex,
     }
 
     // Work out if this is data from the same app session we're running in.
-    if ("instanceId" in item && item.instanceId == PlacesUtils.instanceId) {
-      if ("itemGuid" in item && !PlacesUIUtils.PLACES_FLAVORS.includes(item.type)) {
-        throw new Error(`itemGuid unexpectedly set on ${item.type} data`);
-      }
-    } else {
+    if (!("instanceId" in item) || item.instanceId != PlacesUtils.instanceId) {
       if (item.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
         throw new Error("Can't copy a container from a legacy-transactions build");
       }
@@ -1258,12 +1254,22 @@ async function getTransactionsForCopy(items, insertionIndex,
 
   for (let item of items) {
     let transaction;
+    let guid = item.itemGuid;
 
-    if ("itemGuid" in item && "instanceId" in item &&
-        item.instanceId == PlacesUtils.instanceId) {
+    if (PlacesUIUtils.PLACES_FLAVORS.includes(item.type) &&
+        // For anything that is comming from within this session, we do a
+        // direct copy, otherwise we fallback and form a new item below.
+        "instanceId" in item && item.instanceId == PlacesUtils.instanceId &&
+        // If the Item doesn't have a guid, this could be a virtual tag query or
+        // other item, so fallback to inserting a new bookmark with the URI.
+        guid &&
+        // For virtual root items, we fallback to creating a new bookmark, as
+        // we want a shortcut to be created, not a full tree copy.
+        !PlacesUtils.bookmarks.isVirtualRootItem(guid) &&
+        !PlacesUtils.isVirtualLeftPaneItem(guid)) {
       transaction = PlacesTransactions.Copy({
         excludingAnnotation: "Places/SmartBookmark",
-        guid: item.itemGuid,
+        guid,
         newIndex: index,
         newParentGuid: insertionParentGuid,
       });
