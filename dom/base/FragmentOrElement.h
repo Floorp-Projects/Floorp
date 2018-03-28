@@ -113,7 +113,11 @@ public:
   explicit FragmentOrElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   explicit FragmentOrElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  // We want to avoid the overhead of extra function calls for
+  // refcounting when we're not doing refcount logging, so we can't
+  // NS_DECL_ISUPPORTS_INHERITED.
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(FragmentOrElement, nsIContent);
 
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
@@ -160,32 +164,13 @@ public:
                                nsINode* aParent,
                                nsTArray<nsCOMPtr<nsIContent> >& aNodes);
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(FragmentOrElement)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(FragmentOrElement,
+                                                                   nsIContent)
 
   /**
    * Fire a DOMNodeRemoved mutation event for all children of this node
    */
   void FireNodeRemovedForChildren();
-
-  virtual bool OwnedOnlyByTheDOMTree() override
-  {
-    uint32_t rc = mRefCnt.get();
-    if (GetParent()) {
-      --rc;
-    }
-    rc -= mAttrsAndChildren.ChildCount();
-    return rc == 0;
-  }
-
-  virtual bool IsPurple() override
-  {
-    return mRefCnt.IsPurple();
-  }
-
-  virtual void RemovePurple() override
-  {
-    mRefCnt.RemovePurple();
-  }
 
   static void ClearContentUnbinder();
   static bool CanSkip(nsINode* aNode, bool aRemovingAllowed);
