@@ -1351,10 +1351,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Performs a bounds check and zeroes the index register if out-of-bounds
     // (to mitigate Spectre).
   private:
+
     inline void spectreBoundsCheck32(Register index, const Operand& length, Register maybeScratch,
                                      Label* failure)
         DEFINED_ON(x86);
+
   public:
+
     inline void spectreBoundsCheck32(Register index, Register length, Register maybeScratch,
                                      Label* failure)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
