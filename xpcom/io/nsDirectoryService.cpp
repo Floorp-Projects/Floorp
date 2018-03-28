@@ -41,16 +41,6 @@
 
 using namespace mozilla;
 
-// define home directory
-// For Windows platform, We are choosing Appdata folder as HOME
-#if defined (XP_WIN)
-#define HOME_DIR NS_WIN_APPDATA_DIR
-#elif defined (MOZ_WIDGET_COCOA)
-#define HOME_DIR NS_OSX_HOME_DIR
-#elif defined (XP_UNIX)
-#define HOME_DIR NS_UNIX_HOME_DIR
-#endif
-
 //----------------------------------------------------------------------------------------
 nsresult
 nsDirectoryService::GetCurrentProcessDirectory(nsIFile** aFile)
