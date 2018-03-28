@@ -93,10 +93,19 @@ public:
 
   virtual void SetStyleSheet(StyleSheet* aSheet);
 
-  void SetParentRule(GroupRule* aRule) {
-    // We don't reference count this up reference. The group rule
-    // will tell us when it's going away or when we're detached from
-    // it.
+  // We don't reference count this up reference. The rule will tell us
+  // when it's going away or when we're detached from it.
+  void SetParentRule(Rule* aRule) {
+#ifdef DEBUG
+    if (aRule) {
+      int16_t type = aRule->Type();
+      MOZ_ASSERT(type == dom::CSSRuleBinding::MEDIA_RULE ||
+                 type == dom::CSSRuleBinding::DOCUMENT_RULE ||
+                 type == dom::CSSRuleBinding::SUPPORTS_RULE ||
+                 (type == dom::CSSRuleBinding::KEYFRAMES_RULE &&
+                  Type() == dom::CSSRuleBinding::KEYFRAME_RULE));
+    }
+#endif
     mParentRule = aRule;
   }
 
@@ -129,7 +138,7 @@ protected:
   StyleSheet* mSheet;
   // When the parent GroupRule is destroyed, it will call SetParentRule(nullptr)
   // on this object. (Through SetParentRuleReference);
-  GroupRule* MOZ_NON_OWNING_REF mParentRule;
+  Rule* MOZ_NON_OWNING_REF mParentRule;
 
   // Keep the same type so that MSVC packs them.
   uint32_t          mLineNumber;
