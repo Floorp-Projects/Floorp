@@ -166,7 +166,8 @@ this.DevToolsShim = {
    * @param {Array} selectors
    *        An array of CSS selectors to find the target node. Several selectors can be
    *        needed if the element is nested in frames and not directly in the root
-   *        document.
+   *        document. The selectors are ordered starting with the root document and
+   *        ending with the deepest nested frame.
    * @return {Promise} a promise that resolves when the node is selected in the inspector
    *         markup view or that resolves immediately if DevTools are not enabled.
    */
