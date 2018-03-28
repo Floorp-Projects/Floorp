@@ -118,10 +118,6 @@ public:
   // Get the NonInheriting type for a given pseudo tag.  The pseudo tag must
   // test true for IsNonInheritingAnonBox.
   static NonInheriting NonInheritingTypeForPseudoTag(nsAtom* aPseudo);
-
-  // Get the atom for a given non-inheriting anon box type.  aBoxType must be <
-  // NonInheriting::_Count.
-  static nsAtom* GetNonInheritingPseudoAtom(NonInheriting aBoxType);
 };
 
 #endif /* nsCSSAnonBoxes_h___ */
