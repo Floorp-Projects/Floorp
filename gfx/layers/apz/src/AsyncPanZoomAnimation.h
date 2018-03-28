@@ -26,8 +26,7 @@ class AsyncPanZoomAnimation {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncPanZoomAnimation)
 
 public:
-  explicit AsyncPanZoomAnimation()
-  { }
+  explicit AsyncPanZoomAnimation() = default;
 
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
                         const TimeDuration& aDelta) = 0;
@@ -70,8 +69,7 @@ public:
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
-  virtual ~AsyncPanZoomAnimation()
-  { }
+  virtual ~AsyncPanZoomAnimation() = default;
 
   /**
    * Tasks scheduled for execution after the APZC's mMonitor is released.

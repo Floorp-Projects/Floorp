@@ -550,14 +550,18 @@ private:
 
 class ZoomAnimation: public AsyncPanZoomAnimation {
 public:
-  ZoomAnimation(CSSPoint aStartOffset, CSSToParentLayerScale2D aStartZoom,
-                CSSPoint aEndOffset, CSSToParentLayerScale2D aEndZoom)
-    : mTotalDuration(TimeDuration::FromMilliseconds(gfxPrefs::APZZoomAnimationDuration()))
+  ZoomAnimation(const CSSPoint& aStartOffset,
+                const CSSToParentLayerScale2D& aStartZoom,
+                const CSSPoint& aEndOffset,
+                const CSSToParentLayerScale2D& aEndZoom)
+    : mTotalDuration(
+        TimeDuration::FromMilliseconds(gfxPrefs::APZZoomAnimationDuration()))
     , mStartOffset(aStartOffset)
     , mStartZoom(aStartZoom)
     , mEndOffset(aEndOffset)
     , mEndZoom(aEndZoom)
-  {}
+  {
+  }
 
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
                         const TimeDuration& aDelta) override
@@ -1118,7 +1122,7 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
     break;
   }
   case KEYBOARD_INPUT: {
-    KeyboardInput keyInput = aEvent.AsKeyboardInput();
+    const KeyboardInput& keyInput = aEvent.AsKeyboardInput();
     rv = OnKeyboard(keyInput);
     break;
   }
@@ -1412,7 +1416,7 @@ nsEventStatus AsyncPanZoomController::OnScaleBegin(const PinchGestureInput& aEve
 
 nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
   APZC_LOG("%p got a scale in state %d\n", this, mState);
- 
+
   if (HasReadyTouchBlock() && !GetCurrentTouchBlock()->TouchActionAllowsPinchZoom()) {
     return nsEventStatus_eIgnore;
   }

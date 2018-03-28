@@ -140,7 +140,7 @@ public:
   }
 
 protected:
-  virtual ~CheckerboardFlushObserver() {}
+  virtual ~CheckerboardFlushObserver() = default;
 
 private:
   RefPtr<APZCTreeManager> mTreeManager;
@@ -244,9 +244,7 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId)
 #endif // (MOZ_WIDGET_ANDROID)
 }
 
-APZCTreeManager::~APZCTreeManager()
-{
-}
+APZCTreeManager::~APZCTreeManager() = default;
 
 void
 APZCTreeManager::NotifyLayerTreeAdopted(LayersId aLayersId,
@@ -3169,7 +3167,7 @@ APZCTreeManager::ComputeTransformForScrollThumb(
     AsyncTransformComponentMatrix overscroll =
         aApzc->GetOverscrollTransform(AsyncPanZoomController::eForCompositing);
     Matrix4x4 asyncUntransform = (asyncTransform * overscroll).Inverse().ToUnknownMatrix();
-    Matrix4x4 contentTransform = aScrollableContentTransform;
+    const Matrix4x4& contentTransform = aScrollableContentTransform;
     Matrix4x4 contentUntransform = contentTransform.Inverse();
 
     AsyncTransformComponentMatrix asyncCompensation =

@@ -67,15 +67,15 @@ struct KeyboardScrollAction;
 // Base class for grouping platform-specific APZC state variables.
 class PlatformSpecificStateBase {
 public:
-  virtual ~PlatformSpecificStateBase() {}
+  virtual ~PlatformSpecificStateBase() = default;
   virtual AndroidSpecificState* AsAndroidSpecificState() { return nullptr; }
 };
 
 /*
  * Represents a transform from the ParentLayer coordinate space of an APZC
  * to the ParentLayer coordinate space of its parent APZC.
- * Each layer along the way contributes to the transform. We track 
- * contributions that are perspective transforms separately, as sometimes 
+ * Each layer along the way contributes to the transform. We track
+ * contributions that are perspective transforms separately, as sometimes
  * these require special handling.
  */
 struct AncestorTransform {

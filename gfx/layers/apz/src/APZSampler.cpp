@@ -20,9 +20,7 @@ APZSampler::APZSampler(const RefPtr<APZCTreeManager>& aApz)
 {
 }
 
-APZSampler::~APZSampler()
-{
-}
+APZSampler::~APZSampler() = default;
 
 void
 APZSampler::ClearTree()
