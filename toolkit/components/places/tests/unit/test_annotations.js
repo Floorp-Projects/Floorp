@@ -138,12 +138,13 @@ add_task(async function test_execute() {
   } catch (ex) {}
 
   // get annotation info
-  var flags = {}, exp = {}, storageType = {};
+  var value = {}, flags = {}, exp = {}, storageType = {};
   annosvc.getPageAnnotationInfo(testURI, testAnnoName, flags, exp, storageType);
   Assert.equal(flags.value, 0);
   Assert.equal(exp.value, 0);
   Assert.equal(storageType.value, Ci.nsIAnnotationService.TYPE_STRING);
-  annosvc.getItemAnnotationInfo(testItemId, testAnnoName, flags, exp, storageType);
+  annosvc.getItemAnnotationInfo(testItemId, testAnnoName, value, flags, exp, storageType);
+  Assert.equal(value.value, testAnnoVal);
   Assert.equal(flags.value, 0);
   Assert.equal(exp.value, 0);
   Assert.equal(storageType.value, Ci.nsIAnnotationService.TYPE_STRING);
@@ -226,7 +227,7 @@ add_task(async function test_execute() {
   var int32Val = 23;
   annosvc.setPageAnnotation(testURI, int32Key, int32Val, 0, 0);
   Assert.ok(annosvc.pageHasAnnotation(testURI, int32Key));
-  flags = {}, exp = {}, storageType = {};
+  value = {}, flags = {}, exp = {}, storageType = {};
   annosvc.getPageAnnotationInfo(testURI, int32Key, flags, exp, storageType);
   Assert.equal(flags.value, 0);
   Assert.equal(exp.value, 0);
@@ -235,7 +236,8 @@ add_task(async function test_execute() {
   Assert.ok(int32Val === storedVal);
   annosvc.setItemAnnotation(testItemId, int32Key, int32Val, 0, 0);
   Assert.ok(annosvc.itemHasAnnotation(testItemId, int32Key));
-  annosvc.getItemAnnotationInfo(testItemId, int32Key, flags, exp, storageType);
+  annosvc.getItemAnnotationInfo(testItemId, int32Key, value, flags, exp, storageType);
+  Assert.equal(value.value, int32Val);
   Assert.equal(flags.value, 0);
   Assert.equal(exp.value, 0);
   storedVal = annosvc.getItemAnnotation(testItemId, int32Key);
@@ -252,7 +254,8 @@ add_task(async function test_execute() {
   Assert.ok(int64Val === storedVal);
   annosvc.setItemAnnotation(testItemId, int64Key, int64Val, 0, 0);
   Assert.ok(annosvc.itemHasAnnotation(testItemId, int64Key));
-  annosvc.getItemAnnotationInfo(testItemId, int64Key, flags, exp, storageType);
+  annosvc.getItemAnnotationInfo(testItemId, int64Key, value, flags, exp, storageType);
+  Assert.equal(value.value, int64Val);
   Assert.equal(flags.value, 0);
   Assert.equal(exp.value, 0);
   storedVal = annosvc.getItemAnnotation(testItemId, int64Key);
@@ -269,7 +272,8 @@ add_task(async function test_execute() {
   Assert.ok(doubleVal === storedVal);
   annosvc.setItemAnnotation(testItemId, doubleKey, doubleVal, 0, 0);
   Assert.ok(annosvc.itemHasAnnotation(testItemId, doubleKey));
-  annosvc.getItemAnnotationInfo(testItemId, doubleKey, flags, exp, storageType);
+  annosvc.getItemAnnotationInfo(testItemId, doubleKey, value, flags, exp, storageType);
+  Assert.equal(value.value, doubleVal);
   Assert.equal(flags.value, 0);
   Assert.equal(exp.value, 0);
   Assert.equal(storageType.value, Ci.nsIAnnotationService.TYPE_DOUBLE);
