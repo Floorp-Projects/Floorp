@@ -319,7 +319,7 @@ public:
   virtual bool IsSVGFocusable(bool* aIsFocusable, int32_t* aTabIndex);
   virtual bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override;
 
-  void UpdateContentDeclarationBlock(mozilla::StyleBackendType aBackend);
+  void UpdateContentDeclarationBlock();
   const mozilla::DeclarationBlock* GetContentDeclarationBlock() const;
 
 protected:

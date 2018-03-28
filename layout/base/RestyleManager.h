@@ -213,7 +213,7 @@ public:
                                             aChangeListToProcess);
 
 protected:
-  RestyleManager(StyleBackendType aType, nsPresContext* aPresContext);
+  explicit RestyleManager(nsPresContext* aPresContext);
 
   virtual ~RestyleManager()
   {
@@ -273,8 +273,6 @@ private:
   mozilla::UniquePtr<nsTHashtable<nsPtrHashKey<const nsIFrame>>> mDestroyedFrames;
 
 protected:
-  const StyleBackendType mType;
-
   // True if we're in the middle of a nsRefreshDriver refresh
   bool mInStyleRefresh;
 

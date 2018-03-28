@@ -50,7 +50,6 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/SegmentedVector.h"
 #include "mozilla/ServoBindingTypes.h"
-#include "mozilla/StyleBackendType.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -1584,14 +1583,12 @@ public:
       nsDataHashtable<nsStringHashKey, SelectorList> mTable;
   };
 
-  SelectorCache& GetSelectorCache(mozilla::StyleBackendType aBackendType) {
-    mozilla::UniquePtr<SelectorCache>& cache =
-      aBackendType == mozilla::StyleBackendType::Servo
-        ? mServoSelectorCache : mGeckoSelectorCache;
-    if (!cache) {
-      cache.reset(new SelectorCache(EventTargetFor(mozilla::TaskCategory::Other)));
+  SelectorCache& GetSelectorCache() {
+    if (!mSelectorCache) {
+      mSelectorCache.reset(new SelectorCache(
+        EventTargetFor(mozilla::TaskCategory::Other)));
     }
-    return *cache;
+    return *mSelectorCache;
   }
   // Get the root <html> element, or return null if there isn't one (e.g.
   // if the root isn't <html>)
@@ -1721,11 +1718,6 @@ public:
    */
   mozilla::css::Loader* CSSLoader() const {
     return mCSSLoader;
-  }
-
-  mozilla::StyleBackendType GetStyleBackendType() const
-  {
-    return mozilla::StyleBackendType::Servo;
   }
 
   /**
@@ -3741,10 +3733,7 @@ private:
 
   // Lazy-initialization to have mDocGroup initialized in prior to the
   // SelectorCaches.
-  // FIXME(emilio): We can use a single cache when all CSSOM methods are
-  // implemented for the Servo backend.
-  mozilla::UniquePtr<SelectorCache> mServoSelectorCache;
-  mozilla::UniquePtr<SelectorCache> mGeckoSelectorCache;
+  mozilla::UniquePtr<SelectorCache> mSelectorCache;
 
 protected:
   friend class nsDocumentOnStack;

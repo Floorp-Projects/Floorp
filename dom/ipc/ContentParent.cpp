@@ -2297,8 +2297,6 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
 
   // Content processes have no permission to access profile directory, so we
   // send the file URL instead.
-  StyleBackendType backendType =
-    StyleBackendType::Servo;
   StyleSheet* ucs = nsLayoutStylesheetCache::Singleton()->UserContentSheet();
   if (ucs) {
     SerializeURI(ucs->GetSheetURI(), xpcomInit.userContentSheetURL());

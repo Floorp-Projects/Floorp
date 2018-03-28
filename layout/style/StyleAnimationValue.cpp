@@ -249,39 +249,18 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
 }
 
 /* static */ AnimationValue
-AnimationValue::Opacity(StyleBackendType aBackendType, float aOpacity)
+AnimationValue::Opacity(float aOpacity)
 {
   AnimationValue result;
-
-  switch (aBackendType) {
-    case StyleBackendType::Servo:
-      result.mServo = Servo_AnimationValue_Opacity(aOpacity).Consume();
-      break;
-    case StyleBackendType::Gecko:
-      MOZ_CRASH("old style system disabled");
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unsupported style backend");
-  }
+  result.mServo = Servo_AnimationValue_Opacity(aOpacity).Consume();
   return result;
 }
 
 /* static */ AnimationValue
-AnimationValue::Transform(StyleBackendType aBackendType,
-                          nsCSSValueSharedList& aList)
+AnimationValue::Transform(nsCSSValueSharedList& aList)
 {
   AnimationValue result;
-
-  switch (aBackendType) {
-    case StyleBackendType::Servo:
-      result.mServo = Servo_AnimationValue_Transform(aList).Consume();
-      break;
-    case StyleBackendType::Gecko:
-      MOZ_CRASH("old style system disabled");
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unsupported style backend");
-  }
+  result.mServo = Servo_AnimationValue_Transform(aList).Consume();
   return result;
 }
 
