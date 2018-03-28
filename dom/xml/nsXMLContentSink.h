@@ -23,6 +23,7 @@ class nsIDocument;
 class nsIURI;
 class nsIContent;
 class nsIParser;
+class nsTextNode;
 
 namespace mozilla {
 namespace dom {
@@ -194,7 +195,7 @@ protected:
   int32_t mTextLength;
 
   int32_t mNotifyLevel;
-  nsCOMPtr<nsIContent> mLastTextNode;
+  RefPtr<nsTextNode> mLastTextNode;
 
   uint8_t mPrettyPrintXML : 1;
   uint8_t mPrettyPrintHasSpecialRoot : 1;
