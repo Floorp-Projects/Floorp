@@ -443,7 +443,6 @@ audio > xul|videocontrols {
 
 .controlsSpacerStack:hover > .clickToPlay[fadeout] {
   opacity: 0;
-  visibility: hidden;
 }
 
 .controlBar[fullscreen-unavailable] .fullscreenButton {
@@ -451,37 +450,43 @@ audio > xul|videocontrols {
 }
 
 /* CSS Transitions */
-.clickToPlay:not([immediate]) {
-  transition-property: transform, opacity, visibility;
-  transition-duration: 400ms, 400ms, 400ms;
+.clickToPlay {
+  transition-property: transform, opacity;
+  transition-duration: 400ms, 400ms;
+}
+
+.controlsSpacer[fadeout] {
+  opacity: 0;
 }
 
 .clickToPlay[fadeout] {
   transform: scale(3);
   opacity: 0;
-  visibility: hidden;
 }
 
+.clickToPlay[fadeout][immediate] {
+  transition-property: opacity, background-size;
+  transition-duration: 0s, 0s;
+}
 .controlBar:not([immediate]) {
-  transition-property: opacity, visibility;
-  transition-duration: 200ms, 200ms;
+  transition-property: opacity;
+  transition-duration: 200ms;
 }
-
 .controlBar[fadeout] {
   opacity: 0;
-  visibility: hidden;
 }
-
+.volumeStack:not([immediate]) {
+  transition-property: opacity, margin-top;
+  transition-duration: 200ms, 200ms;
+}
 .statusOverlay:not([immediate]) {
-  transition-property: opacity, visibility;
-  transition-duration: 300ms, 300ms;
-  transition-delay: 750ms, 750ms;
+  transition-property: opacity;
+  transition-duration: 300ms;
+  transition-delay: 750ms;
 }
-
 .statusOverlay[fadeout],
 .statusOverlay[error] + .controlsOverlay > .controlsSpacerStack {
   opacity: 0;
-  visibility: hidden;
 }
 
 /* Error description formatting */
