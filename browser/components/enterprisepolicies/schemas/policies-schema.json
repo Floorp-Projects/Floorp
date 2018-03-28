@@ -177,6 +177,14 @@
       "type": "boolean"
     },
 
+    "DisableTelemetry": {
+      "description": "Turns off telemetry.",
+      "first_available": "60.0",
+      "enterprise_only": true,
+
+      "type": "boolean"
+    },
+
     "DisableSysAddonUpdate": {
       "description": "Prevent the browser from installing and updating system addons.",
       "first_available": "60.0",
