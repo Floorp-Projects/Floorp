@@ -16,7 +16,6 @@
 #include "gtest/gtest.h"
 
 
-#ifdef NIGHTLY_BUILD
 #if defined(DEBUG) && !defined(XP_WIN) && !defined(ANDROID)
 #define HAS_GDB_SLEEP_DURATION 1
 extern unsigned int _gdb_sleep_duration;
@@ -41,7 +40,7 @@ static void DisableCrashReporter()
 #else
 #define ASSERT_DEATH_WRAP(a, b)
 #endif
-#endif
+
 
 using namespace mozilla;
 
@@ -255,7 +254,6 @@ TEST(Jemalloc, PtrInfo)
   jemalloc_thread_local_arena(false);
 }
 
-#ifdef NIGHTLY_BUILD
 size_t sSizes[] = { 1,      42,      79,      918,     1.5_KiB,
                     73_KiB, 129_KiB, 1.1_MiB, 2.6_MiB, 5.1_MiB };
 
@@ -271,7 +269,8 @@ TEST(Jemalloc, Arenas)
   ptr = moz_arena_calloc(arena, 24, 2);
   // For convenience, free can be used to free arena pointers.
   free(ptr);
-  moz_dispose_arena(arena);
+  // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
+  // moz_dispose_arena(arena);
 
 #ifdef HAS_GDB_SLEEP_DURATION
   // Avoid death tests adding some unnecessary (long) delays.
@@ -280,13 +279,15 @@ TEST(Jemalloc, Arenas)
 #endif
 
   // Can't use an arena after it's disposed.
-  ASSERT_DEATH_WRAP(moz_arena_malloc(arena, 80), "");
+  // ASSERT_DEATH_WRAP(moz_arena_malloc(arena, 80), "");
 
   // Arena id 0 can't be used to somehow get to the main arena.
   ASSERT_DEATH_WRAP(moz_arena_malloc(0, 80), "");
 
   arena = moz_create_arena();
   arena_id_t arena2 = moz_create_arena();
+  // Ensure arena2 is used to prevent OSX errors:
+  (void)arena2;
 
   // For convenience, realloc can also be used to reallocate arena pointers.
   // The result should be in the same arena. Test various size class transitions.
@@ -305,8 +306,10 @@ TEST(Jemalloc, Arenas)
     }
   }
 
-  moz_dispose_arena(arena2);
-  moz_dispose_arena(arena);
+  // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
+  // moz_dispose_arena(arena2);
+  // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
+  // moz_dispose_arena(arena);
 
 #ifdef HAS_GDB_SLEEP_DURATION
   _gdb_sleep_duration = old_gdb_sleep_duration;
@@ -429,7 +432,8 @@ TEST(Jemalloc, InPlace)
     }
   }
 
-  moz_dispose_arena(arena);
+  // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
+  // moz_dispose_arena(arena);
 }
 
 TEST(Jemalloc, JunkPoison)
@@ -610,10 +614,11 @@ TEST(Jemalloc, JunkPoison)
     }
   }
 
-  moz_dispose_arena(arena);
+  // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
+  // moz_dispose_arena(arena);
 
   moz_arena_free(buf_arena, poison_buf);
   moz_arena_free(buf_arena, junk_buf);
-  moz_dispose_arena(buf_arena);
+  // Until Bug 1364359 is fixed it is unsafe to call moz_dispose_arena.
+  // moz_dispose_arena(buf_arena);
 }
-#endif

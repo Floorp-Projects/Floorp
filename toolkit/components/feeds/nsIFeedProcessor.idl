@@ -28,22 +28,6 @@ interface nsIFeedProcessor : nsIStreamListener {
   // nsIFeedExtensionHandler, in long level);
   
   /**
-   * Parse a feed from an nsIInputStream.
-   *
-   * @param stream The input stream.
-   * @param uri The base URI.
-   */
-  void parseFromStream(in nsIInputStream stream, in nsIURI uri);
-
-  /**
-   * Parse a feed from a string.
-   *
-   * @param str The string to parse.
-   * @param uri The base URI.
-   */
-  void parseFromString(in AString str, in nsIURI uri);		
-
-  /**
    * Parse a feed asynchronously. The caller must then call the
    * nsIFeedProcessor's nsIStreamListener methods to drive the
    * parse. Do not call the other parse methods during an asynchronous

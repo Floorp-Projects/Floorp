@@ -32,7 +32,6 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/Element.h"
-#include "nsCSSPseudoClasses.h"
 #include "mozilla/dom/CSSLexer.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -980,39 +979,11 @@ InspectorUtils::GetUsedFontFaces(GlobalObject& aGlobalObject,
 static EventStates
 GetStatesForPseudoClass(const nsAString& aStatePseudo)
 {
-  // An array of the states that are relevant for various pseudoclasses.
-  // XXXbz this duplicates code in nsCSSRuleProcessor
-  static const EventStates sPseudoClassStates[] = {
-#define CSS_PSEUDO_CLASS(_name, _value, _flags, _pref) \
-    EventStates(),
-#define CSS_STATE_PSEUDO_CLASS(_name, _value, _flags, _pref, _states) \
-    _states,
-#include "nsCSSPseudoClassList.h"
-#undef CSS_STATE_PSEUDO_CLASS
-#undef CSS_PSEUDO_CLASS
-
-    // Add more entries for our fake values to make sure we can't
-    // index out of bounds into this array no matter what.
-    EventStates(),
-    EventStates()
-  };
-  static_assert(MOZ_ARRAY_LENGTH(sPseudoClassStates) ==
-                static_cast<size_t>(CSSPseudoClassType::MAX),
-                "Length of PseudoClassStates array is incorrect");
-
-  RefPtr<nsAtom> atom = NS_Atomize(aStatePseudo);
-  CSSPseudoClassType type = nsCSSPseudoClasses::
-    GetPseudoType(atom, CSSEnabledState::eIgnoreEnabledState);
-
-  // Ignore :any-link so we don't give the element simultaneous
-  // visited and unvisited style state
-  if (type == CSSPseudoClassType::anyLink ||
-      type == CSSPseudoClassType::mozAnyLink) {
+  if (aStatePseudo.IsEmpty() || aStatePseudo[0] != u':') {
     return EventStates();
   }
-  // Our array above is long enough that indexing into it with
-  // NotPseudo is ok.
-  return sPseudoClassStates[static_cast<CSSPseudoClassTypeBase>(type)];
+  NS_ConvertUTF16toUTF8 statePseudo(Substring(aStatePseudo, 1));
+  return EventStates(Servo_PseudoClass_GetStates(&statePseudo));
 }
 
 /* static */ void

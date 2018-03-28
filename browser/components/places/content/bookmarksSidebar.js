@@ -6,6 +6,11 @@
 /* import-globals-from ../../../../toolkit/components/places/PlacesUtils.jsm */
 
 function init() {
+  let uidensity = window.top.document.documentElement.getAttribute("uidensity");
+  if (uidensity) {
+    document.documentElement.setAttribute("uidensity", uidensity);
+  }
+
   document.getElementById("bookmarks-view").place =
     "place:type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY;
 }
