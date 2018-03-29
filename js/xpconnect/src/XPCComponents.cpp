@@ -2678,6 +2678,23 @@ nsXPCComponents_Utils::ForcePermissiveCOWs(JSContext* cx)
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::GetComponentsForScope(HandleValue vscope, JSContext* cx,
+                                             MutableHandleValue rval)
+{
+    if (!vscope.isObject())
+        return NS_ERROR_INVALID_ARG;
+    JSObject* scopeObj = js::UncheckedUnwrap(&vscope.toObject());
+    XPCWrappedNativeScope* scope = ObjectScope(scopeObj);
+    RootedObject components(cx);
+    if (!scope->GetComponentsJSObject(&components))
+        return NS_ERROR_FAILURE;
+    if (!JS_WrapObject(cx, &components))
+        return NS_ERROR_FAILURE;
+    rval.setObject(*components);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::Dispatch(HandleValue runnableArg, HandleValue scope,
                                 JSContext* cx)
 {
