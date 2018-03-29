@@ -103,3 +103,4 @@ MSG_DEF(MSG_ONLY_IF_CACHED_WITHOUT_SAME_ORIGIN, 1, JSEXN_TYPEERR, "Request mode 
 MSG_DEF(MSG_THRESHOLD_RANGE_ERROR, 0, JSEXN_RANGEERR, "Threshold values must all be in the range [0, 1].")
 MSG_DEF(MSG_WORKER_THREAD_SHUTTING_DOWN, 0, JSEXN_TYPEERR, "The Worker thread is shutting down.")
 MSG_DEF(MSG_CACHE_OPEN_FAILED, 0, JSEXN_TYPEERR, "CacheStorage.open() failed to access the storage system.")
+MSG_DEF(MSG_MATRIX_INIT_LENGTH_WRONG, 1, JSEXN_TYPEERR, "Matrix init sequence must have a length of 6 or 16 (actual value: {0})")
