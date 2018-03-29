@@ -28,7 +28,7 @@ static void ServoParsingBench() {
   ASSERT_EQ(Encoding::UTF8ValidUpTo(css), css.Length());
 
   RefPtr<URLExtraData> data = new URLExtraData(
-    NullPrincipalURI::Create(), nullptr, NullPrincipal::Create());
+    NullPrincipalURI::Create(), nullptr, NullPrincipal::CreateWithoutOriginAttributes());
   for (int i = 0; i < PARSING_REPETITIONS; i++) {
     RefPtr<RawServoStyleSheetContents> stylesheet =
       Servo_StyleSheet_FromUTF8Bytes(nullptr,
@@ -55,7 +55,7 @@ MOZ_GTEST_BENCH(Stylo, Servo_StyleSheet_FromUTF8Bytes_Bench, ServoParsingBench);
 static void ServoSetPropertyByIdBench(const nsACString& css) {
   RefPtr<RawServoDeclarationBlock> block = Servo_DeclarationBlock_CreateEmpty().Consume();
   RefPtr<URLExtraData> data = new URLExtraData(
-    NullPrincipalURI::Create(), nullptr, NullPrincipal::Create());
+    NullPrincipalURI::Create(), nullptr, NullPrincipal::CreateWithoutOriginAttributes());
 
   ASSERT_TRUE(IsUTF8(css));
 
@@ -84,7 +84,7 @@ MOZ_GTEST_BENCH(Stylo, Servo_DeclarationBlock_SetPropertyById_WithInitialSpace_B
 static void ServoGetPropertyValueById() {
   RefPtr<RawServoDeclarationBlock> block = Servo_DeclarationBlock_CreateEmpty().Consume();
   RefPtr<URLExtraData> data = new URLExtraData(
-    NullPrincipalURI::Create(), nullptr, NullPrincipal::Create());
+    NullPrincipalURI::Create(), nullptr, NullPrincipal::CreateWithoutOriginAttributes());
   NS_NAMED_LITERAL_CSTRING(css_, "10px");
   const nsACString& css = css_;
   Servo_DeclarationBlock_SetPropertyById(

@@ -16,7 +16,7 @@ interface HTMLDocument : Document {
 
   // dynamic markup insertion
   [CEReactions, Throws]
-  Document open(optional DOMString type = "text/html", optional DOMString replace = "");
+  Document open(optional DOMString type, optional DOMString replace = ""); // type is ignored
   [CEReactions, Throws]
   WindowProxy? open(DOMString url, DOMString name, DOMString features, optional boolean replace = false);
   [CEReactions, Throws]

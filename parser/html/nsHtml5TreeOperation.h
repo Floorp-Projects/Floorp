@@ -15,7 +15,11 @@ class nsHtml5TreeOpExecutor;
 class nsHtml5DocumentBuilder;
 namespace mozilla {
 class Encoding;
-}
+
+namespace dom {
+class Text;
+} // namespace dom
+} // namespace mozilla
 
 enum eHtml5TreeOperation
 {
@@ -126,7 +130,7 @@ public:
 
   static nsresult AppendTextToTextNode(const char16_t* aBuffer,
                                        uint32_t aLength,
-                                       nsIContent* aTextNode,
+                                       mozilla::dom::Text* aTextNode,
                                        nsHtml5DocumentBuilder* aBuilder);
 
   static nsresult AppendText(const char16_t* aBuffer,

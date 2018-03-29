@@ -1586,7 +1586,7 @@ nsTreeSanitizer::InitializeStatics()
     sAttributesMathML->PutEntry(*kAttributesMathML[i]);
   }
 
-  nsCOMPtr<nsIPrincipal> principal = NullPrincipal::Create();
+  nsCOMPtr<nsIPrincipal> principal = NullPrincipal::CreateWithoutOriginAttributes();
   principal.forget(&sNullPrincipal);
 }
 

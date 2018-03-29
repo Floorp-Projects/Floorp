@@ -20,7 +20,6 @@ public:
                              nsISupports* aContainer,
                              nsIChannel* aChannel);
   static nsIThread* GetStreamParserThread();
-  static bool sOffMainThread;
 
 private:
 #ifdef DEBUG

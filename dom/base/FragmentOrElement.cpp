@@ -134,6 +134,35 @@ int32_t nsIContent::sTabFocusModel = eTabFocus_any;
 bool nsIContent::sTabFocusModelAppliesToXUL = false;
 uint64_t nsMutationGuard::sGeneration = 0;
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsIContent)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsIContent)
+  MOZ_ASSERT_UNREACHABLE("Our subclasses don't call us");
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsIContent)
+  MOZ_ASSERT_UNREACHABLE("Our subclasses don't call us");
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN(nsIContent)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  // Don't bother to QI to cycle collection, because our CC impl is
+  // not doing anything anyway.
+  NS_INTERFACE_MAP_ENTRY(nsIContent)
+  NS_INTERFACE_MAP_ENTRY(nsINode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
+  NS_INTERFACE_MAP_ENTRY(mozilla::dom::EventTarget)
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
+                                 new nsNodeSupportsWeakRefTearoff(this))
+  // DOM bindings depend on the identity pointer being the
+  // same as nsINode (which nsIContent inherits).
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_ADDREF(nsIContent)
+NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(nsIContent,
+                                                                    nsNodeUtils::LastRelease(this))
+
 nsIContent*
 nsIContent::FindFirstNonChromeOnlyAccessContent() const
 {
@@ -182,7 +211,7 @@ nsIContent::GetAssignedSlotByMode() const
 nsIContent::IMEState
 nsIContent::GetDesiredIMEState()
 {
-  if (!IsEditableInternal()) {
+  if (!IsEditable()) {
     // Check for the special case where we're dealing with elements which don't
     // have the editable flag set, but are readwrite (such as text controls).
     if (!IsElement() ||
@@ -227,7 +256,7 @@ dom::Element*
 nsIContent::GetEditingHost()
 {
   // If this isn't editable, return nullptr.
-  if (!IsEditableInternal()) {
+  if (!IsEditable()) {
     return nullptr;
   }
 
@@ -1426,8 +1455,9 @@ FragmentOrElement::ClearContentUnbinder()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(FragmentOrElement)
 
+// We purposefully don't UNLINK_BEGIN_INHERITED here.
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
-  nsINode::Unlink(tmp);
+  nsIContent::Unlink(tmp);
 
   // The XBL binding is removed by RemoveFromBindingManagerRunnable
   // which is dispatched in UnbindFromTree.
@@ -1921,6 +1951,8 @@ static const char* kNSURIs[] = {
   " (XML Events)"
 };
 
+// We purposefully don't TRAVERSE_BEGIN_INHERITED here.  All the bits
+// we should traverse should be added here or in nsINode::Traverse.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
   if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     char name[512];
@@ -1973,7 +2005,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(FragmentOrElement, tmp->mRefCnt.get())
   }
 
-  if (!nsINode::Traverse(tmp, cb)) {
+  if (!nsIContent::Traverse(tmp, cb)) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
@@ -2045,22 +2077,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
 NS_INTERFACE_MAP_BEGIN(FragmentOrElement)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(FragmentOrElement)
-  NS_INTERFACE_MAP_ENTRY(nsIContent)
-  NS_INTERFACE_MAP_ENTRY(nsINode)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(mozilla::dom::EventTarget)
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
-                                 new nsNodeSupportsWeakRefTearoff(this))
-  // DOM bindings depend on the identity pointer being the
-  // same as nsINode (which nsIContent inherits).
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_ADDREF(FragmentOrElement)
-NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(FragmentOrElement,
-                                                                    nsNodeUtils::LastRelease(this))
+NS_INTERFACE_MAP_END_INHERITING(nsIContent)
 
 //----------------------------------------------------------------------
 
@@ -2102,24 +2120,6 @@ FragmentOrElement::TextLength() const
   return 0;
 }
 
-nsresult
-FragmentOrElement::SetText(const char16_t* aBuffer, uint32_t aLength,
-                          bool aNotify)
-{
-  NS_ERROR("called FragmentOrElement::SetText");
-
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-FragmentOrElement::AppendText(const char16_t* aBuffer, uint32_t aLength,
-                             bool aNotify)
-{
-  NS_ERROR("called FragmentOrElement::AppendText");
-
-  return NS_ERROR_FAILURE;
-}
-
 bool
 FragmentOrElement::TextIsOnlyWhitespace()
 {
@@ -2129,30 +2129,6 @@ FragmentOrElement::TextIsOnlyWhitespace()
 bool
 FragmentOrElement::ThreadSafeTextIsOnlyWhitespace() const
 {
-  return false;
-}
-
-bool
-FragmentOrElement::HasTextForTranslation()
-{
-  return false;
-}
-
-void
-FragmentOrElement::AppendTextTo(nsAString& aResult)
-{
-  // We can remove this assertion if it turns out to be useful to be able
-  // to depend on this appending nothing.
-  NS_NOTREACHED("called FragmentOrElement::TextLength");
-}
-
-bool
-FragmentOrElement::AppendTextTo(nsAString& aResult, const mozilla::fallible_t&)
-{
-  // We can remove this assertion if it turns out to be useful to be able
-  // to depend on this appending nothing.
-  NS_NOTREACHED("called FragmentOrElement::TextLength");
-
   return false;
 }
 

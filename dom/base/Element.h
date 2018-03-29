@@ -941,7 +941,11 @@ public:
   void ListAttributes(FILE* out) const;
 #endif
 
-  void Describe(nsAString& aOutDescription) const override;
+  /**
+   * Append to aOutDescription a short (preferably one line) string
+   * describing the element.
+   */
+  void Describe(nsAString& aOutDescription) const;
 
   /*
    * Attribute Mapping Helpers
