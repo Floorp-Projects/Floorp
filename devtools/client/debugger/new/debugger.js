@@ -2893,6 +2893,7 @@ const dispatcher = new WorkerDispatcher();
 
 const getOriginalURLs = dispatcher.task("getOriginalURLs");
 const getGeneratedLocation = dispatcher.task("getGeneratedLocation");
+const getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations");
 const getOriginalLocation = dispatcher.task("getOriginalLocation");
 const getLocationScopes = dispatcher.task("getLocationScopes");
 const getOriginalSourceText = dispatcher.task("getOriginalSourceText");
@@ -2908,6 +2909,7 @@ module.exports = {
   hasMappedSource,
   getOriginalURLs,
   getGeneratedLocation,
+  getAllGeneratedLocations,
   getOriginalLocation,
   getLocationScopes,
   getOriginalSourceText,
@@ -3624,7 +3626,7 @@ function updateSource(state, source) {
     return state;
   }
 
-  const existingSource = state.getIn(["sources", source.id]);
+  const existingSource = state.sources.get(source.id);
 
   if (existingSource) {
     const updatedSource = existingSource.merge(source);
@@ -4901,7 +4903,7 @@ function getSymbols(state, source) {
     return null;
   }
 
-  return state.ast.getIn(["symbols", source.id]) || null;
+  return state.ast.symbols.get(source.id) || null;
 }
 
 function hasSymbols(state, source) {
@@ -4933,11 +4935,11 @@ function getEmptyLines(state, source) {
     return null;
   }
 
-  return state.ast.getIn(["emptyLines", source.id]);
+  return state.ast.emptyLines.get(source.id);
 }
 
 function getPausePoints(state, sourceId) {
-  return state.ast.getIn(["pausePoints", sourceId]);
+  return state.ast.pausePoints.get(sourceId);
 }
 
 function hasPausePoints(state, sourceId) {
@@ -4955,7 +4957,7 @@ function getPreview(state) {
 
 const emptySourceMetaData = {};
 function getSourceMetaData(state, sourceId) {
-  return state.ast.getIn(["sourceMetaData", sourceId]) || emptySourceMetaData;
+  return state.ast.sourceMetaData.get(sourceId) || emptySourceMetaData;
 }
 
 function hasSourceMetaData(state, sourceId) {
@@ -5304,6 +5306,7 @@ function trimUrlQuery(url) {
 const contentMap = {
   "js": "text/javascript",
   "jsm": "text/javascript",
+  "mjs": "text/javascript",
   "ts": "text/typescript",
   "tsx": "text/typescript-jsx",
   "jsx": "text/jsx",
@@ -6350,14 +6353,14 @@ function evaluateExpression(expression) {
     const frame = (0, _selectors.getSelectedFrame)(getState());
 
     if (frame) {
-      const { location, generatedLocation } = frame;
+      const { location } = frame;
       const source = (0, _selectors.getSource)(getState(), location.sourceId);
       const sourceId = source.get("id");
 
       const selectedSource = (0, _selectors.getSelectedSource)(getState());
 
       if (selectedSource && !(0, _devtoolsSourceMap.isGeneratedId)(sourceId) && !(0, _devtoolsSourceMap.isGeneratedId)(selectedSource.get("id"))) {
-        input = await getMappedExpression({ getState, sourceMaps }, generatedLocation, input);
+        input = await dispatch(getMappedExpression(input));
       }
     }
 
@@ -6375,13 +6378,18 @@ function evaluateExpression(expression) {
  * Gets information about original variable names from the source map
  * and replaces all posible generated names.
  */
-async function getMappedExpression({ getState, sourceMaps }, generatedLocation, expression) {
-  const mappings = (0, _selectors.getSelectedScopeMappings)(getState());
-  if (!mappings) {
-    return expression;
-  }
+function getMappedExpression(expression) {
+  return async function ({ dispatch, getState, client, sourceMaps }) {
+    const mappings = (0, _selectors.getSelectedScopeMappings)(getState());
+    if (!mappings) {
+      return expression;
+    }
 
-  return await parser.mapOriginalExpression(expression, mappings);
+    return await dispatch({
+      type: "MAP_EXPRESSION_RESULT",
+      [_promise.PROMISE]: parser.mapOriginalExpression(expression, mappings)
+    });
+  };
 }
 
 /***/ }),
@@ -7821,20 +7829,20 @@ function update(state = createExpressionState(), action) {
       if (action.expressionError) {
         return state.set("expressionError", !!action.expressionError);
       }
-      return appendToList(state, ["expressions"], {
+      return appendExpressionToList(state, {
         input: action.input,
         value: null,
         updating: true
       });
     case "UPDATE_EXPRESSION":
       const key = action.expression.input;
-      return updateItemInList(state, ["expressions"], key, {
+      return updateExpressionInList(state, key, {
         input: action.input,
         value: null,
         updating: true
       }).set("expressionError", !!action.expressionError);
     case "EVALUATE_EXPRESSION":
-      return updateItemInList(state, ["expressions"], action.input, {
+      return updateExpressionInList(state, action.input, {
         input: action.input,
         value: action.value,
         updating: false
@@ -7859,7 +7867,7 @@ function travelTo(state, action) {
   if (!expressions) {
     return state;
   }
-  return expressions.reduce((finalState, previousState) => updateItemInList(finalState, ["expressions"], previousState.input, {
+  return expressions.reduce((finalState, previousState) => updateExpressionInList(finalState, previousState.input, {
     input: previousState.input,
     value: previousState.value,
     updating: false
@@ -7874,26 +7882,26 @@ function restoreExpressions() {
   return exprs;
 }
 
-function storeExpressions(state) {
-  const expressions = state.getIn(["expressions"]).map(expression => (0, _lodash.omit)(expression, "value")).toJS();
-
-  _prefs.prefs.expressions = expressions;
+function storeExpressions({ expressions }) {
+  _prefs.prefs.expressions = expressions.map(expression => (0, _lodash.omit)(expression, "value")).toJS();
 }
 
-function appendToList(state, path, value) {
-  const newState = state.updateIn(path, () => {
-    return state.getIn(path).push(value);
+function appendExpressionToList(state, value) {
+  const newState = state.update("expressions", () => {
+    return state.expressions.push(value);
   });
+
   storeExpressions(newState);
   return newState;
 }
 
-function updateItemInList(state, path, key, value) {
-  const newState = state.updateIn(path, () => {
-    const list = state.getIn(path);
+function updateExpressionInList(state, key, value) {
+  const newState = state.update("expressions", () => {
+    const list = state.expressions;
     const index = list.findIndex(e => e.input == key);
     return list.update(index, () => value);
   });
+
   storeExpressions(newState);
   return newState;
 }
@@ -7907,13 +7915,13 @@ function deleteExpression(state, input) {
 
 const getExpressionsWrapper = state => state.expressions;
 
-const getExpressions = exports.getExpressions = (0, _reselect.createSelector)(getExpressionsWrapper, expressions => expressions.get("expressions"));
+const getExpressions = exports.getExpressions = (0, _reselect.createSelector)(getExpressionsWrapper, expressions => expressions.expressions);
 
 function getExpression(state, input) {
   return getExpressions(state).find(exp => exp.input == input);
 }
 
-const getExpressionError = exports.getExpressionError = (0, _reselect.createSelector)(getExpressionsWrapper, expressions => expressions.get("expressionError"));
+const getExpressionError = exports.getExpressionError = (0, _reselect.createSelector)(getExpressionsWrapper, expressions => expressions.expressionError);
 
 exports.default = update;
 
@@ -8118,7 +8126,7 @@ function removeBreakpoint(state, action) {
   const { breakpoint } = action;
 
   const locationId = (0, _breakpoint.makePendingLocationId)(breakpoint.location);
-  const pendingBp = state.getIn(["pendingBreakpoints", locationId]);
+  const pendingBp = state.pendingBreakpoints.get(locationId);
 
   if (!pendingBp && action.status == "start") {
     return state.set("pendingBreakpoints", I.Map());
@@ -8444,7 +8452,7 @@ function update(state = createFileSearchState(), action) {
 
     case "TOGGLE_FILE_SEARCH_MODIFIER":
       {
-        const actionVal = !state.getIn(["modifiers", action.modifier]);
+        const actionVal = !state.modifiers[action.modifier];
 
         if (action.modifier == "caseSensitive") {
           _prefs.prefs.fileSearchCaseSensitive = actionVal;
@@ -8471,15 +8479,15 @@ function update(state = createFileSearchState(), action) {
 // NOTE: we'd like to have the app state fully typed
 // https://github.com/devtools-html/debugger.html/blob/master/src/reducers/sources.js#L179-L185
 function getFileSearchQuery(state) {
-  return state.fileSearch.get("query");
+  return state.fileSearch.query;
 }
 
 function getFileSearchModifiers(state) {
-  return state.fileSearch.get("modifiers");
+  return state.fileSearch.modifiers;
 }
 
 function getFileSearchResults(state) {
-  return state.fileSearch.get("searchResults");
+  return state.fileSearch.searchResults;
 }
 
 exports.default = update;
@@ -10047,6 +10055,10 @@ ResultList.defaultProps = {
 
 var _initialiseProps = function () {
   this.renderListItem = (item, index) => {
+    if (item.value === "/" && item.title === "") {
+      item.title = "(index)";
+    }
+
     const { selectItem, selected } = this.props;
     const props = {
       onClick: event => selectItem(event, item, index),
@@ -25018,7 +25030,7 @@ class Tabs extends _react.PureComponent {
     super(props);
 
     this.renderDropdownSource = source => {
-      const { selectSource } = this.props;
+      const { selectSpecificSource } = this.props;
       const filename = (0, _source.getFilename)(source.toJS());
 
       const onClick = () => selectSpecificSource(source.id);
@@ -30231,11 +30243,6 @@ function createLocation({
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 exports.getExtra = getExtra;
 exports.updatePreview = updatePreview;
 exports.setPreview = setPreview;
@@ -30265,7 +30272,9 @@ async function getReactProps(evaluate) {
   return {
     displayName: reactDisplayName.result
   };
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 async function getImmutableProps(expression, evaluate) {
   const immutableEntries = await evaluate((exp => `${exp}.toJS()`)(expression));
@@ -30383,9 +30392,7 @@ function setPreview(expression, location, tokenPos, cursorPos) {
 
         const sourceId = source.get("id");
         if (location && !(0, _devtoolsSourceMap.isGeneratedId)(sourceId)) {
-          const generatedLocation = await sourceMaps.getGeneratedLocation(_extends({}, location.start, { sourceId }), source.toJS());
-
-          expression = await (0, _expressions.getMappedExpression)({ sourceMaps, getState }, generatedLocation, expression);
+          expression = await dispatch((0, _expressions.getMappedExpression)(expression));
         }
 
         const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
@@ -31533,6 +31540,8 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 exports.selectSourceURL = selectSourceURL;
 exports.selectSource = selectSource;
 exports.selectLocation = selectLocation;
+exports.selectSpecificLocation = selectSpecificLocation;
+exports.selectSpecificSource = selectSpecificSource;
 exports.jumpToMappedLocation = jumpToMappedLocation;
 exports.jumpToMappedSelectedLocation = jumpToMappedSelectedLocation;
 
@@ -31613,8 +31622,8 @@ function selectLocation(location) {
       return;
     }
 
-    const source = (0, _selectors.getSource)(getState(), location.sourceId);
-    if (!source) {
+    const sourceRecord = (0, _selectors.getSource)(getState(), location.sourceId);
+    if (!sourceRecord) {
       // If there is no source we deselect the current selected source
       return dispatch({ type: "CLEAR_SELECTED_SOURCE" });
     }
@@ -31624,21 +31633,23 @@ function selectLocation(location) {
       dispatch((0, _ui.closeActiveSearch)());
     }
 
-    dispatch((0, _tabs.addTab)(source.toJS(), 0));
+    const source = sourceRecord.toJS();
 
+    dispatch((0, _tabs.addTab)(source, 0));
     dispatch({
       type: "SELECT_SOURCE",
-      source: source.toJS(),
+      source,
       location
     });
 
-    await dispatch((0, _loadSourceText.loadSourceText)(source));
+    await dispatch((0, _loadSourceText.loadSourceText)(sourceRecord));
     const selectedSource = (0, _selectors.getSelectedSource)(getState());
     if (!selectedSource) {
       return;
     }
 
-    const sourceId = selectedSource.get("id");
+    const sourceId = selectedSource.id;
+
     if (_prefs.prefs.autoPrettyPrint && !(0, _selectors.getPrettySource)(getState(), sourceId) && (0, _source.shouldPrettyPrint)(selectedSource) && (0, _source.isMinified)(selectedSource)) {
       await dispatch((0, _prettyPrint.togglePrettyPrint)(sourceId));
       dispatch((0, _tabs.closeTab)(source.url));
@@ -31646,6 +31657,61 @@ function selectLocation(location) {
 
     dispatch((0, _ast.setSymbols)(sourceId));
     dispatch((0, _ast.setOutOfScopeLocations)());
+  };
+}
+
+/**
+ * @memberof actions/sources
+ * @static
+ */
+function selectSpecificLocation(location) {
+  return async ({ dispatch, getState, client }) => {
+    if (!client) {
+      // No connection, do nothing. This happens when the debugger is
+      // shut down too fast and it tries to display a default source.
+      return;
+    }
+
+    const sourceRecord = (0, _selectors.getSource)(getState(), location.sourceId);
+    if (!sourceRecord) {
+      // If there is no source we deselect the current selected source
+      return dispatch({ type: "CLEAR_SELECTED_SOURCE" });
+    }
+
+    const activeSearch = (0, _selectors.getActiveSearch)(getState());
+    if (activeSearch !== "file") {
+      dispatch((0, _ui.closeActiveSearch)());
+    }
+
+    const source = sourceRecord.toJS();
+
+    dispatch((0, _tabs.addTab)(source, 0));
+    dispatch({
+      type: "SELECT_SOURCE",
+      source,
+      location
+    });
+
+    await dispatch((0, _loadSourceText.loadSourceText)(sourceRecord));
+    const selectedSource = (0, _selectors.getSelectedSource)(getState());
+    if (!selectedSource) {
+      return;
+    }
+
+    const sourceId = selectedSource.id;
+    dispatch((0, _ast.setSymbols)(sourceId));
+    dispatch((0, _ast.setOutOfScopeLocations)());
+  };
+}
+
+/**
+ * @memberof actions/sources
+ * @static
+ */
+function selectSpecificSource(sourceId) {
+  return async ({ dispatch }) => {
+    const location = (0, _location.createLocation)({ sourceId });
+    return await dispatch(selectSpecificLocation(location));
   };
 }
 
@@ -33692,7 +33758,7 @@ class Tab extends _react.PureComponent {
   render() {
     const {
       selectedSource,
-      selectSource,
+      selectSpecificSource,
       closeTab,
       source,
       sourceMetaData
@@ -33718,7 +33784,7 @@ class Tab extends _react.PureComponent {
         return closeTab(source.url);
       }
 
-      return selectSource(sourceId);
+      return selectSpecificSource(sourceId);
     }
 
     const className = (0, _classnames2.default)("source-tab", {
@@ -33860,8 +33926,6 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 exports.setupHelper = setupHelper;
 
-var _redux = __webpack_require__(3593);
-
 var _timings = __webpack_require__(1657);
 
 var timings = _interopRequireWildcard(_timings);
@@ -33917,10 +33981,8 @@ function _formatPausePoints(dbg, url) {
 
 function setupHelper(obj) {
   const selectors = bindSelectors(obj);
-  const actions = (0, _redux.bindActionCreators)(obj.actions, obj.store.dispatch);
   const dbg = _extends({}, obj, {
     selectors,
-    actions,
     prefs: _prefs.prefs,
     features: _prefs.features,
     timings,
