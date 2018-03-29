@@ -260,6 +260,14 @@ NS_INTERFACE_MAP_END
 uint32_t
 nsSHistory::CalcMaxTotalViewers()
 {
+  // This value allows tweaking how fast the allowed amount of content viewers
+  // grows with increasing amounts of memory. Larger values mean slower growth.
+  #ifdef ANDROID
+  #define MAX_TOTAL_VIEWERS_BIAS 15.9
+  #else
+  #define MAX_TOTAL_VIEWERS_BIAS 14
+  #endif
+
   // Calculate an estimate of how many ContentViewers we should cache based
   // on RAM.  This assumes that the average ContentViewer is 4MB (conservative)
   // and caps the max at 8 ContentViewers
@@ -267,16 +275,18 @@ nsSHistory::CalcMaxTotalViewers()
   // TODO: Should we split the cache memory betw. ContentViewer caching and
   // nsCacheService?
   //
-  // RAM      ContentViewers
-  // -----------------------
-  // 32   Mb       0
-  // 64   Mb       1
-  // 128  Mb       2
-  // 256  Mb       3
-  // 512  Mb       5
-  // 1024 Mb       8
-  // 2048 Mb       8
-  // 4096 Mb       8
+  // RAM    | ContentViewers | on Android
+  // -------------------------------------
+  // 32   Mb       0                0
+  // 64   Mb       1                0
+  // 128  Mb       2                0
+  // 256  Mb       3                1
+  // 512  Mb       5                2
+  // 768  Mb       6                2
+  // 1024 Mb       8                3
+  // 2048 Mb       8                5
+  // 3072 Mb       8                7
+  // 4096 Mb       8                8
   uint64_t bytes = PR_GetPhysicalMemorySize();
 
   if (bytes == 0) {
@@ -296,7 +306,7 @@ nsSHistory::CalcMaxTotalViewers()
   // except that we divide the final memory calculation by 4, since
   // we assume each ContentViewer takes on average 4MB
   uint32_t viewers = 0;
-  double x = std::log(kBytesD) / std::log(2.0) - 14;
+  double x = std::log(kBytesD) / std::log(2.0) - MAX_TOTAL_VIEWERS_BIAS;
   if (x > 0) {
     viewers = (uint32_t)(x * x - x + 2.001); // add .001 for rounding
     viewers /= 4;
