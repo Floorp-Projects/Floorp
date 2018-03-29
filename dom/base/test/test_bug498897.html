@@ -44,9 +44,12 @@ var policy = {
   },
 
   // nsIContentPolicy implementation
-  shouldLoad: function(contentType, contentLocation, requestOrigin, context,
-                       mimeTypeGuess, extra) {
+  shouldLoad: function(contentLocation, loadInfo, mimeTypeGuess) {
     var url = window.location.href.substr(0, window.location.href.indexOf('test_bug498897'));
+    let loadingPrincipal = loadInfo.loadingPrincipal;
+    if (loadingPrincipal) {
+      requestOrigin = loadingPrincipal.URI;
+    }
     if (contentLocation.spec == url + "file_bug498897.css" &&
         requestOrigin.spec == url + "file_bug498897.html") {
       checkedLoad = true;
@@ -55,8 +58,7 @@ var policy = {
     return Ci.nsIContentPolicy.ACCEPT;
   },
 
-  shouldProcess: function(contentType, contentLocation, requestOrigin, context,
-                          mimeTypeGuess, extra) {
+  shouldProcess: function(contentLocation, loadInfo, mimeTypeGuess) {
     return Ci.nsIContentPolicy.ACCEPT;
   }
 }

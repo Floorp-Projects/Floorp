@@ -46,12 +46,11 @@ namespace gc {
 // single Cell.
 
 void
-AtomMarkingRuntime::registerArena(Arena* arena)
+AtomMarkingRuntime::registerArena(Arena* arena, const AutoLockGC& lock)
 {
     MOZ_ASSERT(arena->getThingSize() != 0);
     MOZ_ASSERT(arena->getThingSize() % CellAlignBytes == 0);
     MOZ_ASSERT(arena->zone->isAtomsZone());
-    MOZ_ASSERT(arena->zone->runtimeFromAnyThread()->currentThreadHasExclusiveAccess());
 
     // We need to find a range of bits from the atoms bitmap for this arena.
 
@@ -67,7 +66,7 @@ AtomMarkingRuntime::registerArena(Arena* arena)
 }
 
 void
-AtomMarkingRuntime::unregisterArena(Arena* arena)
+AtomMarkingRuntime::unregisterArena(Arena* arena, const AutoLockGC& lock)
 {
     MOZ_ASSERT(arena->zone->isAtomsZone());
 
@@ -78,7 +77,8 @@ AtomMarkingRuntime::unregisterArena(Arena* arena)
 bool
 AtomMarkingRuntime::computeBitmapFromChunkMarkBits(JSRuntime* runtime, DenseBitmap& bitmap)
 {
-    MOZ_ASSERT(runtime->currentThreadHasExclusiveAccess());
+    MOZ_ASSERT(CurrentThreadIsPerformingGC());
+    MOZ_ASSERT(!runtime->hasHelperThreadZones());
 
     if (!bitmap.ensureSpace(allocatedWords))
         return false;
@@ -130,7 +130,8 @@ AddBitmapToChunkMarkBits(JSRuntime* runtime, Bitmap& bitmap)
 void
 AtomMarkingRuntime::updateChunkMarkBits(JSRuntime* runtime)
 {
-    MOZ_ASSERT(runtime->currentThreadHasExclusiveAccess());
+    MOZ_ASSERT(CurrentThreadIsPerformingGC());
+    MOZ_ASSERT(!runtime->hasHelperThreadZones());
 
     // Try to compute a simple union of the zone atom bitmaps before updating
     // the chunk mark bitmaps. If this allocation fails then fall back to
@@ -195,7 +196,8 @@ AtomMarkingRuntime::markAtomValue(JSContext* cx, const Value& value)
 void
 AtomMarkingRuntime::adoptMarkedAtoms(Zone* target, Zone* source)
 {
-    MOZ_ASSERT(target->runtimeFromAnyThread()->currentThreadHasExclusiveAccess());
+    MOZ_ASSERT(CurrentThreadCanAccessZone(source));
+    MOZ_ASSERT(CurrentThreadCanAccessZone(target));
     target->markedAtoms().bitwiseOrWith(source->markedAtoms());
 }
 

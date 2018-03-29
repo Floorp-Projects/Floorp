@@ -668,6 +668,10 @@ vi{
         }
         MRO{
             "MRO",
+            "Ouguiya Mauritania (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Ouguiya Mauritania",
         }
         MTL{
@@ -896,6 +900,10 @@ vi{
         }
         STD{
             "STD",
+            "Dobra São Tomé và Príncipe (1977–2017)",
+        }
+        STN{
+            "STN",
             "Dobra São Tomé và Príncipe",
         }
         SUR{
@@ -1251,7 +1259,7 @@ vi{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1552,6 +1560,9 @@ vi{
             other{"Pataca Ma Cao"}
         }
         MRO{
+            other{"Ouguiya Mauritania (1973–2017)"}
+        }
+        MRU{
             other{"Ouguiya Mauritania"}
         }
         MUR{
@@ -1663,6 +1674,9 @@ vi{
             other{"Bảng Nam Sudan"}
         }
         STD{
+            other{"Dobra São Tomé và Príncipe (1977–2017)"}
+        }
+        STN{
             other{"Dobra São Tomé và Príncipe"}
         }
         SYP{
@@ -1756,5 +1770,5 @@ vi{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.20"}
 }

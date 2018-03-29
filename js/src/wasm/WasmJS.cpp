@@ -249,7 +249,7 @@ GetImports(JSContext* cx,
 #if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
             if (v.isObject() && v.toObject().is<WasmGlobalObject>()) {
                 RootedWasmGlobalObject obj(cx, &v.toObject().as<WasmGlobalObject>());
-                if (globalObjs.length() <= index && !globalObjs.resize(index+1)) {
+                if (globalObjs.length() <= index && !globalObjs.resize(index + 1)) {
                     ReportOutOfMemory(cx);
                     return false;
                 }

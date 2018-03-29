@@ -857,14 +857,18 @@ Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
     aIsPreload ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
                : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
 
+  nsCOMPtr<nsINode> requestingNode = do_QueryInterface(aContext);
+  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+    new net::LoadInfo(aLoadingPrincipal,
+                      aTriggeringPrincipal,
+                      requestingNode,
+                      nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                      contentPolicyType);
+
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(contentPolicyType,
-                                          aTargetURI,
-                                          aLoadingPrincipal,
-                                          aTriggeringPrincipal,
-                                          aContext,
+  nsresult rv = NS_CheckContentLoadPolicy(aTargetURI,
+                                          secCheckLoadInfo,
                                           NS_LITERAL_CSTRING("text/css"),
-                                          nullptr,  //extra param
                                           &shouldLoad,
                                           nsContentUtils::GetContentPolicy());
    if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {

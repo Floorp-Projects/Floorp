@@ -47,6 +47,8 @@ add_task(async function() {
   // Test that the current select source persists across reloads
   await selectSource(dbg, "long.js");
   await reload(dbg, "long.js");
+  await waitForSelectedSource(dbg, "long.js");
+
   ok(
     getSelectedSource(getState())
       .get("url")

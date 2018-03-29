@@ -19,7 +19,7 @@ DISTY_DIR=dist
 DISTY_TMP=dist/tmp
 DISTY_ICU=$(DISTY_TMP)/icu
 DISTY_DATA=$(DISTY_ICU)/source/data
-DISTY_RMV=brkitr coll curr lang locales mappings rbnf region translit xml zone misc unit
+DISTY_RMV=brkitr coll curr lang locales mappings rbnf region translit xml zone misc/*.txt misc/*.mk unit
 DISTY_RMDIR=$(DISTY_RMV:%=$(DISTY_DATA)/%)
 DISTY_IN=$(DISTY_DATA)/in
 DOCZIP=icu-docs.zip
@@ -49,7 +49,7 @@ $(DISTY_TMP):
 
 $(DISTY_DOC_ZIP):  $(DOCZIP) $(DISTY_FILE_DIR)
 	cp $(DOCZIP) $(DISTY_DOC_ZIP)
-	ln -sf $(DISTY_DOC_ZIP) $(DISTY_FILE_DIR)/icu4c-docs.zip
+	ln -sf $(shell basename $(DISTY_DOC_ZIP)) $(DISTY_FILE_DIR)/icu4c-docs.zip
 
 $(DISTY_DAT): 
 	echo Missing $@
@@ -74,14 +74,14 @@ $(DISTY_FILE_TGZ) $(DISTY_FILE_ZIP) $(DISTY_DATA_ZIP):  $(DISTY_DAT) $(DISTY_TMP
 	$(MKINSTALLDIRS) $(DISTY_IN)
 	echo DISTY_DAT=$(DISTY_DAT)
 	cp $(DISTY_DAT) $(DISTY_IN)
-	( cd $(DISTY_TMP)/icu ; python as_is/bomlist.py > as_is/bomlist.txt || rm -f as_is/bomlist.txt )
-	( cd $(DISTY_TMP) ; zip -rlq $(DISTY_FILE_ZIP) icu )
 	$(RMV) $(DISTY_RMDIR)
 	( cd $(DISTY_TMP)/icu ; python as_is/bomlist.py > as_is/bomlist.txt || rm -f as_is/bomlist.txt )
 	( cd $(DISTY_TMP) ; tar cfpz $(DISTY_FILE_TGZ) icu )
-	ln -sf $(DISTY_FILE_ZIP) $(DISTY_FILE_DIR)/icu4c-src.zip
-	ln -sf $(DISTY_FILE_TGZ) $(DISTY_FILE_DIR)/icu4c-src.tgz
-	ln -sf $(DISTY_DATA_ZIP) $(DISTY_FILE_DIR)/icu4c-data.zip
+	( cd $(DISTY_TMP) ; zip -rlq $(DISTY_FILE_ZIP) icu )
+	$(RMV) $(DISTY_TMP)
+	ln -sf $(shell basename $(DISTY_FILE_ZIP)) $(DISTY_FILE_DIR)/icu4c-src.zip
+	ln -sf $(shell basename $(DISTY_FILE_TGZ)) $(DISTY_FILE_DIR)/icu4c-src.tgz
+	ln -sf $(shell basename $(DISTY_DATA_ZIP)) $(DISTY_FILE_DIR)/icu4c-data.zip
 	ls -l $(DISTY_FILE_TGZ) $(DISTY_FILE_ZIP) $(DISTY_DATA_ZIP)
 
 

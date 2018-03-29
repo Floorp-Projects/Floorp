@@ -54,6 +54,7 @@
 #include "nsContentTypeParser.h"
 #include "nsINetworkPredictor.h"
 #include "mozilla/ConsoleReportCollector.h"
+#include "mozilla/LoadInfo.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
@@ -320,14 +321,17 @@ ScriptLoader::CheckContentPolicy(nsIDocument* aDocument,
                                           ? nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD
                                           : nsIContentPolicy::TYPE_INTERNAL_SCRIPT;
 
+  nsCOMPtr<nsINode> requestingNode = do_QueryInterface(aContext);
+  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+    new net::LoadInfo(aDocument->NodePrincipal(), // loading principal
+                      aDocument->NodePrincipal(), // triggering principal
+                      requestingNode,
+                      nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                      contentPolicyType);
+
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(contentPolicyType,
-                                          aURI,
-                                          aDocument->NodePrincipal(), // loading principal
-                                          aDocument->NodePrincipal(), // triggering principal
-                                          aContext,
+  nsresult rv = NS_CheckContentLoadPolicy(aURI, secCheckLoadInfo,
                                           NS_LossyConvertUTF16toASCII(aType),
-                                          nullptr,    //extra
                                           &shouldLoad,
                                           nsContentUtils::GetContentPolicy());
   if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
@@ -1619,6 +1623,7 @@ ScriptLoader::LookupPreloadRequest(nsIScriptElement* aElement,
       mDocument->GetReferrerPolicy() != request->mReferrerPolicy ||
       aScriptKind != request->mKind) {
     // Drop the preload.
+    request->Cancel();
     AccumulateCategorical(LABELS_DOM_SCRIPT_PRELOAD_RESULT::RequestMismatch);
     return nullptr;
   }

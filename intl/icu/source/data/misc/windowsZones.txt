@@ -212,7 +212,6 @@ windowsZones:table(nofallback){
             KE{"Africa/Nairobi"}
             KM{"Indian/Comoro"}
             MG{"Indian/Antananarivo"}
-            SD{"Africa/Khartoum"}
             SO{"Africa/Mogadishu"}
             SS{"Africa/Juba"}
             TZ{"Africa/Dar_es_Salaam"}
@@ -316,7 +315,6 @@ windowsZones:table(nofallback){
             SH{"Atlantic/St_Helena"}
             SL{"Africa/Freetown"}
             SN{"Africa/Dakar"}
-            ST{"Africa/Sao_Tome"}
             TG{"Africa/Lome"}
         }
         "Haiti Standard Time"{
@@ -615,6 +613,10 @@ windowsZones:table(nofallback){
             001{"Asia/Colombo"}
             LK{"Asia/Colombo"}
         }
+        "Sudan Standard Time"{
+            001{"Africa/Khartoum"}
+            SD{"Africa/Khartoum"}
+        }
         "Syria Standard Time"{
             001{"Asia/Damascus"}
             SY{"Asia/Damascus"}
@@ -744,6 +746,7 @@ windowsZones:table(nofallback){
             GQ{"Africa/Malabo"}
             NE{"Africa/Niamey"}
             NG{"Africa/Lagos"}
+            ST{"Africa/Sao_Tome"}
             TD{"Africa/Ndjamena"}
             TN{"Africa/Tunis"}
             ZZ{"Etc/GMT-1"}

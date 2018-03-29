@@ -684,6 +684,10 @@ cs{
         }
         MRO{
             "MRO",
+            "mauritánská ouguiya (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "mauritánská ouguiya",
         }
         MTL{
@@ -916,6 +920,10 @@ cs{
         }
         STD{
             "STD",
+            "svatotomášská dobra (1977–2017)",
+        }
+        STN{
+            "STN",
             "svatotomášská dobra",
         }
         SUR{
@@ -1283,7 +1291,7 @@ cs{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -2325,6 +2333,12 @@ cs{
             other{"macajských patac"}
         }
         MRO{
+            few{"mauritánské ouguiye (1973–2017)"}
+            many{"mauritánské ouguiye (1973–2017)"}
+            one{"mauritánská ouguiya (1973–2017)"}
+            other{"mauritánských ouguiyí (1973–2017)"}
+        }
+        MRU{
             few{"mauritánské ouguiye"}
             many{"mauritánské ouguiye"}
             one{"mauritánská ouguiya"}
@@ -2673,6 +2687,12 @@ cs{
             other{"jihosúdánských liber"}
         }
         STD{
+            few{"svatotomášské dobry (1977–2017)"}
+            many{"svatotomášské dobry (1977–2017)"}
+            one{"svatotomášská dobra (1977–2017)"}
+            other{"svatotomášských dober (1977–2017)"}
+        }
+        STN{
             few{"svatotomášské dobry"}
             many{"svatotomášské dobry"}
             one{"svatotomášská dobra"}
@@ -3093,5 +3113,5 @@ cs{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.11"}
+    Version{"2.1.39.15"}
 }

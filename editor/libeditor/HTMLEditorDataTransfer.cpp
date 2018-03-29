@@ -168,11 +168,11 @@ HTMLEditor::InsertHTML(const nsAString& aInString)
 {
   const nsString& empty = EmptyString();
 
-  return InsertHTMLWithContext(aInString, empty, empty, empty,
-                               nullptr,  nullptr, 0, true);
+  return DoInsertHTMLWithContext(aInString, empty, empty, empty,
+                                 nullptr,  nullptr, 0, true, true, false);
 }
 
-nsresult
+NS_IMETHODIMP
 HTMLEditor::InsertHTMLWithContext(const nsAString& aInputString,
                                   const nsAString& aContextStr,
                                   const nsAString& aInfoStr,
@@ -182,9 +182,12 @@ HTMLEditor::InsertHTMLWithContext(const nsAString& aInputString,
                                   int32_t aDestOffset,
                                   bool aDeleteSelection)
 {
+  nsCOMPtr<nsINode> destNode = do_QueryInterface(aDestNode);
   return DoInsertHTMLWithContext(aInputString, aContextStr, aInfoStr,
-      aFlavor, aSourceDoc, aDestNode, aDestOffset, aDeleteSelection,
-      /* trusted input */ true, /* clear style */ false);
+                                 aFlavor, aSourceDoc, destNode, aDestOffset,
+                                 aDeleteSelection,
+                                 /* trusted input */ true,
+                                 /* clear style */ false);
 }
 
 nsresult
@@ -193,7 +196,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
                                     const nsAString& aInfoStr,
                                     const nsAString& aFlavor,
                                     nsIDOMDocument* aSourceDoc,
-                                    nsIDOMNode* aDestDOMNode,
+                                    nsINode* aDestNode,
                                     int32_t aDestOffset,
                                     bool aDeleteSelection,
                                     bool aTrustedInput,
@@ -227,7 +230,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   NS_ENSURE_SUCCESS(rv, rv);
 
   EditorDOMPoint targetPoint;
-  if (!aDestDOMNode) {
+  if (!aDestNode) {
     // if caller didn't provide the destination/target node,
     // fetch the paste insertion point from our selection
     targetPoint = EditorBase::GetStartPoint(selection);
@@ -236,17 +239,16 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
       return NS_ERROR_FAILURE;
     }
   } else {
-    nsCOMPtr<nsINode> destNode = do_QueryInterface(aDestDOMNode);
-    targetPoint.Set(destNode, aDestOffset);
+    targetPoint.Set(aDestNode, aDestOffset);
   }
 
   // if we have a destination / target node, we want to insert there
   // rather than in place of the selection
-  // ignore aDeleteSelection here if no aDestDOMNode since deletion will
+  // ignore aDeleteSelection here if no aDestNode since deletion will
   // also occur later; this block is intended to cover the various
   // scenarios where we are dropping in an editor (and may want to delete
   // the selection before collapsing the selection in the new destination)
-  if (aDestDOMNode) {
+  if (aDestNode) {
     if (aDeleteSelection) {
       // Use an auto tracker so that our drop point is correctly
       // positioned after the delete.
@@ -959,7 +961,7 @@ HTMLEditor::BlobReader::BlobReader(BlobImpl* aBlob,
                                    HTMLEditor* aHTMLEditor,
                                    bool aIsSafe,
                                    nsIDOMDocument* aSourceDoc,
-                                   nsIDOMNode* aDestinationNode,
+                                   nsINode* aDestinationNode,
                                    int32_t aDestOffset,
                                    bool aDoDeleteSelection)
   : mBlob(aBlob)
@@ -1000,12 +1002,11 @@ HTMLEditor::BlobReader::OnResult(const nsACString& aResult)
 NS_IMETHODIMP
 HTMLEditor::BlobReader::OnError(const nsAString& aError)
 {
-  nsCOMPtr<nsINode> destNode = do_QueryInterface(mDestinationNode);
   const nsPromiseFlatString& flat = PromiseFlatString(aError);
   const char16_t* error = flat.get();
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("Editor"),
-                                  destNode->OwnerDoc(),
+                                  mDestinationNode->OwnerDoc(),
                                   nsContentUtils::eDOM_PROPERTIES,
                                   "EditorFileDropFailed",
                                   &error, 1);
@@ -1017,7 +1018,7 @@ HTMLEditor::InsertObject(const nsACString& aType,
                          nsISupports* aObject,
                          bool aIsSafe,
                          nsIDOMDocument* aSourceDoc,
-                         nsIDOMNode* aDestinationNode,
+                         nsINode* aDestinationNode,
                          int32_t aDestOffset,
                          bool aDoDeleteSelection)
 {
@@ -1100,8 +1101,6 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
                                    const nsAString& aContextStr,
                                    const nsAString& aInfoStr,
                                    bool havePrivateHTMLFlavor,
-                                   nsIDOMNode* aDestinationNode,
-                                   int32_t aDestOffset,
                                    bool aDoDeleteSelection)
 {
   nsresult rv = NS_OK;
@@ -1124,7 +1123,7 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
         bestFlavor.EqualsLiteral(kPNGImageMime) ||
         bestFlavor.EqualsLiteral(kGIFImageMime)) {
       rv = InsertObject(bestFlavor, genericDataObj, isSafe,
-                        aSourceDoc, aDestinationNode, aDestOffset, aDoDeleteSelection);
+                        aSourceDoc, nullptr, 0, aDoDeleteSelection);
     } else if (bestFlavor.EqualsLiteral(kNativeHTMLMime)) {
       // note cf_html uses utf8, hence use length = len, not len/2 as in flavors below
       nsCOMPtr<nsISupportsCString> textDataObj = do_QueryInterface(genericDataObj);
@@ -1143,14 +1142,14 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
             rv = DoInsertHTMLWithContext(cffragment,
                                          aContextStr, aInfoStr, flavor,
                                          aSourceDoc,
-                                         aDestinationNode, aDestOffset,
+                                         nullptr, 0,
                                          aDoDeleteSelection,
                                          isSafe);
           } else {
             rv = DoInsertHTMLWithContext(cffragment,
                                          cfcontext, cfselection, flavor,
                                          aSourceDoc,
-                                         aDestinationNode, aDestOffset,
+                                         nullptr, 0,
                                          aDoDeleteSelection,
                                          isSafe);
 
@@ -1191,11 +1190,11 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
           rv = DoInsertHTMLWithContext(stuffToPaste,
                                        aContextStr, aInfoStr, flavor,
                                        aSourceDoc,
-                                       aDestinationNode, aDestOffset,
+                                       nullptr, 0,
                                        aDoDeleteSelection,
                                        isSafe);
         } else {
-          rv = InsertTextAt(stuffToPaste, aDestinationNode, aDestOffset, aDoDeleteSelection);
+          rv = InsertTextAt(stuffToPaste, nullptr, 0, aDoDeleteSelection);
         }
       }
     }
@@ -1225,7 +1224,7 @@ nsresult
 HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
                                    int32_t aIndex,
                                    nsIDOMDocument* aSourceDoc,
-                                   nsIDOMNode* aDestinationNode,
+                                   nsINode* aDestinationNode,
                                    int32_t aDestOffset,
                                    bool aDoDeleteSelection)
 {
@@ -1258,7 +1257,8 @@ HTMLEditor::InsertFromDataTransfer(DataTransfer* aDataTransfer,
           nsCOMPtr<nsISupports> object;
           variant->GetAsISupports(getter_AddRefs(object));
           return InsertObject(NS_ConvertUTF16toUTF8(type), object, isSafe,
-                              aSourceDoc, aDestinationNode, aDestOffset, aDoDeleteSelection);
+                              aSourceDoc, aDestinationNode, aDestOffset,
+                              aDoDeleteSelection);
         }
       } else if (type.EqualsLiteral(kNativeHTMLMime)) {
         // Windows only clipboard parsing.
@@ -1415,8 +1415,8 @@ HTMLEditor::Paste(int32_t aSelectionType)
     }
   }
 
-  return InsertFromTransferable(trans, nullptr, contextStr, infoStr, bHavePrivateHTMLFlavor,
-                                nullptr, 0, true);
+  return InsertFromTransferable(trans, nullptr, contextStr, infoStr,
+                                bHavePrivateHTMLFlavor, true);
 }
 
 NS_IMETHODIMP
@@ -1429,8 +1429,8 @@ HTMLEditor::PasteTransferable(nsITransferable* aTransferable)
   }
 
   nsAutoString contextStr, infoStr;
-  return InsertFromTransferable(aTransferable, nullptr, contextStr, infoStr, false,
-                                nullptr, 0, true);
+  return InsertFromTransferable(aTransferable, nullptr, contextStr, infoStr,
+                                false, true);
 }
 
 /**
@@ -1459,8 +1459,7 @@ HTMLEditor::PasteNoFormatting(int32_t aSelectionType)
     if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) &&
         IsModifiable()) {
       const nsString& empty = EmptyString();
-      rv = InsertFromTransferable(trans, nullptr, empty, empty, false, nullptr, 0,
-                                  true);
+      rv = InsertFromTransferable(trans, nullptr, empty, empty, false, true);
     }
   }
 

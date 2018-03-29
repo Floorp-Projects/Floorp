@@ -4789,6 +4789,7 @@ exports.isSymbolsLoading = isSymbolsLoading;
 exports.isEmptyLineInSource = isEmptyLineInSource;
 exports.getEmptyLines = getEmptyLines;
 exports.getPausePoints = getPausePoints;
+exports.hasPausePoints = hasPausePoints;
 exports.getOutOfScopeLocations = getOutOfScopeLocations;
 exports.getPreview = getPreview;
 exports.getSourceMetaData = getSourceMetaData;
@@ -4935,12 +4936,13 @@ function getEmptyLines(state, source) {
   return state.ast.getIn(["emptyLines", source.id]);
 }
 
-function getPausePoints(state, source) {
-  if (!source) {
-    return null;
-  }
+function getPausePoints(state, sourceId) {
+  return state.ast.getIn(["pausePoints", sourceId]);
+}
 
-  return state.ast.getIn(["pausePoints", source.id]);
+function hasPausePoints(state, sourceId) {
+  const pausePoints = getPausePoints(state, sourceId);
+  return !!pausePoints;
 }
 
 function getOutOfScopeLocations(state) {
@@ -6408,6 +6410,12 @@ var _parser = __webpack_require__(1365);
 
 var _promise = __webpack_require__(1653);
 
+var _devtoolsSourceMap = __webpack_require__(1360);
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 function setSourceMetaData(sourceId) {
   return async ({ dispatch, getState }) => {
     const source = (0, _selectors.getSource)(getState(), sourceId);
@@ -6424,9 +6432,7 @@ function setSourceMetaData(sourceId) {
       }
     });
   };
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 function setSymbols(sourceId) {
   return async ({ dispatch, getState }) => {
@@ -6481,7 +6487,10 @@ function setPausePoints(sourceId) {
     }
 
     const pausePoints = await (0, _parser.getPausePoints)(source.id);
-    await client.setPausePoints(source.id, pausePoints);
+
+    if ((0, _devtoolsSourceMap.isGeneratedId)(source.id)) {
+      await client.setPausePoints(source.id, pausePoints);
+    }
 
     dispatch({
       type: "SET_PAUSE_POINTS",
@@ -12279,8 +12288,8 @@ function setupCommands(dependencies) {
   return { bpClients };
 }
 
-function sendPacket(packet, callback) {
-  debuggerClient.request(packet).then(callback);
+function sendPacket(packet, callback = r => r) {
+  return debuggerClient.request(packet).then(callback);
 }
 
 function resume() {
@@ -26413,7 +26422,7 @@ function findBestMatchExpression(symbols, tokenPos) {
    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function findEmptyLines(selectedSource, pausePoints) {
-  if (!pausePoints || !selectedSource) {
+  if (!pausePoints || pausePoints.length == 0 || !selectedSource) {
     return [];
   }
 
@@ -28133,7 +28142,7 @@ exports.log = log;
 
 var _devtoolsConfig = __webpack_require__(1355);
 
-const blacklist = ["SET_POPUP_OBJECT_PROPERTIES", "SET_PAUSE_POINTS", "SET_SYMBOLS", "OUT_OF_SCOPE_LOCATIONS", "MAP_SCOPES", "ADD_SCOPES", "IN_SCOPE_LINES", "SET_EMPTY_LINES"];
+const blacklist = ["SET_POPUP_OBJECT_PROPERTIES", "SET_PAUSE_POINTS", "SET_SYMBOLS", "OUT_OF_SCOPE_LOCATIONS", "MAP_SCOPES", "MAP_FRAMES", "ADD_SCOPES", "IN_SCOPE_LINES", "SET_EMPTY_LINES"];
 
 function cloneAction(action) {
   action = action || {};

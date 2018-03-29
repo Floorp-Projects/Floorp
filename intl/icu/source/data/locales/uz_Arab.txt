@@ -28,7 +28,7 @@ uz_Arab{
         }
         native{"arabext"}
     }
-    Version{"2.1.36.86"}
+    Version{"2.1.38.69"}
     calendar{
         gregorian{
             dayNames{

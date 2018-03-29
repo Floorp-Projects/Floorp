@@ -238,7 +238,7 @@ kn{
         minimumGroupingDigits{"1"}
         native{"knda"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.11"}
     calendar{
         buddhist{
             eras{
@@ -717,8 +717,8 @@ kn{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    one{"'week' w 'of' Y"}
-                    other{"'week' w 'of' Y"}
+                    one{"'week' w 'of' y"}
+                    other{"'week' w 'of' y"}
                 }
             }
             dayNames{

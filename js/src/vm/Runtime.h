@@ -494,13 +494,17 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
 #ifdef DEBUG
     bool currentThreadHasExclusiveAccess() const {
-        return (!hasHelperThreadZones() && activeThreadHasExclusiveAccess) ||
-            exclusiveAccessLock.ownedByCurrentThread();
+        if (!hasHelperThreadZones())
+            return CurrentThreadCanAccessRuntime(this) && activeThreadHasExclusiveAccess;
+
+        return exclusiveAccessLock.ownedByCurrentThread();
     }
 
     bool currentThreadHasScriptDataAccess() const {
-        return (!hasHelperThreadZones() && activeThreadHasScriptDataAccess) ||
-            scriptDataLock.ownedByCurrentThread();
+        if (!hasHelperThreadZones())
+            return CurrentThreadCanAccessRuntime(this) && activeThreadHasScriptDataAccess;
+
+        return scriptDataLock.ownedByCurrentThread();
     }
 #endif
 

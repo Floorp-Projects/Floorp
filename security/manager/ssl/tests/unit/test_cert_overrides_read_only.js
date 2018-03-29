@@ -79,7 +79,7 @@ function run_test() {
                          SEC_ERROR_UNKNOWN_ISSUER);
   add_read_only_cert_override_test("selfsigned.example.com",
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
-                         SEC_ERROR_UNKNOWN_ISSUER);
+                         MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT);
   add_read_only_cert_override_test("mismatch.example.com",
                          Ci.nsICertOverrideService.ERROR_MISMATCH |
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,

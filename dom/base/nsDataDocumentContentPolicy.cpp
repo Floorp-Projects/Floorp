@@ -37,15 +37,14 @@ HasFlags(nsIURI* aURI, uint32_t aURIFlags)
 // CHECK_PRINCIPAL_AND_DATA in nsContentPolicyUtils is still valid.
 // nsContentPolicyUtils may not pass all the parameters to ShouldLoad.
 NS_IMETHODIMP
-nsDataDocumentContentPolicy::ShouldLoad(uint32_t aContentType,
-                                        nsIURI *aContentLocation,
-                                        nsIURI *aRequestingLocation,
-                                        nsISupports *aRequestingContext,
+nsDataDocumentContentPolicy::ShouldLoad(nsIURI *aContentLocation,
+                                        nsILoadInfo* aLoadInfo,
                                         const nsACString &aMimeGuess,
-                                        nsISupports *aExtra,
-                                        nsIPrincipal *aRequestPrincipal,
                                         int16_t *aDecision)
 {
+  uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
+  nsCOMPtr<nsISupports> aRequestingContext = aLoadInfo->GetLoadingContext();
+
   MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
              "We should only see external content policy types here.");
 
@@ -145,16 +144,10 @@ nsDataDocumentContentPolicy::ShouldLoad(uint32_t aContentType,
 }
 
 NS_IMETHODIMP
-nsDataDocumentContentPolicy::ShouldProcess(uint32_t aContentType,
-                                           nsIURI *aContentLocation,
-                                           nsIURI *aRequestingLocation,
-                                           nsISupports *aRequestingContext,
+nsDataDocumentContentPolicy::ShouldProcess(nsIURI *aContentLocation,
+                                           nsILoadInfo *aLoadInfo,
                                            const nsACString &aMimeGuess,
-                                           nsISupports *aExtra,
-                                           nsIPrincipal *aRequestPrincipal,
                                            int16_t *aDecision)
 {
-  return ShouldLoad(aContentType, aContentLocation, aRequestingLocation,
-                    aRequestingContext, aMimeGuess, aExtra, aRequestPrincipal,
-                    aDecision);
+  return ShouldLoad(aContentLocation, aLoadInfo, aMimeGuess, aDecision);
 }

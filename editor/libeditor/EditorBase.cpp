@@ -78,7 +78,6 @@
 #include "nsIDOMEventListener.h"        // for nsIDOMEventListener
 #include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc.
-#include "nsIDOMNodeList.h"             // for nsIDOMNodeList
 #include "nsIDocumentStateListener.h"   // for nsIDocumentStateListener
 #include "nsIEditActionListener.h"      // for nsIEditActionListener
 #include "nsIEditorObserver.h"          // for nsIEditorObserver
@@ -3916,24 +3915,6 @@ EditorBase::GetTag(nsIDOMNode* aNode)
   }
 
   return content->NodeInfo()->NameAtom();
-}
-
-bool
-EditorBase::NodesSameType(nsIDOMNode* aNode1,
-                          nsIDOMNode* aNode2)
-{
-  if (!aNode1 || !aNode2) {
-    NS_NOTREACHED("null node passed to EditorBase::NodesSameType()");
-    return false;
-  }
-
-  nsCOMPtr<nsIContent> content1 = do_QueryInterface(aNode1);
-  NS_ENSURE_TRUE(content1, false);
-
-  nsCOMPtr<nsIContent> content2 = do_QueryInterface(aNode2);
-  NS_ENSURE_TRUE(content2, false);
-
-  return AreNodesSameType(content1, content2);
 }
 
 bool

@@ -8,5 +8,5 @@ en_DK{
             "Danish Krone",
         }
     }
-    Version{"2.1.37.6"}
+    Version{"2.1.38.69"}
 }

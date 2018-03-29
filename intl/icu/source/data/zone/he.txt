@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 he{
-    Version{"2.1.37.22"}
+    Version{"2.1.39.20"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"שעון אפגניסטן"}
@@ -261,6 +261,9 @@ he{
             lg{"שעון מערב גרינלנד"}
             ls{"שעון מערב גרינלנד (חורף)"}
         }
+        "meta:Guam"{
+            ls{"שעון גואם"}
+        }
         "meta:Gulf"{
             ls{"שעון מדינות המפרץ"}
         }
@@ -442,6 +445,9 @@ he{
             ld{"שעון פרננדו די נורוניה (קיץ)"}
             lg{"שעון פרננדו די נורוניה"}
             ls{"שעון פרננדו די נורוניה (חורף)"}
+        }
+        "meta:North_Mariana"{
+            ls{"שעון איי מריאנה הצפוניים"}
         }
         "meta:Novosibirsk"{
             ld{"שעון נובוסיבירסק (קיץ)"}

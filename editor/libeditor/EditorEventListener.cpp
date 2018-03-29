@@ -34,7 +34,6 @@
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMEvent.h"                // for nsIDOMEvent
 #include "nsIDOMEventTarget.h"          // for nsIDOMEventTarget
-#include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIFocusManager.h"            // for nsIFocusManager
 #include "nsIFormControl.h"             // for nsIFormControl, etc.
