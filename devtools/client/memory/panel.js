@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { MemoryFront } = require("devtools/shared/fronts/memory");
 const HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");
 
