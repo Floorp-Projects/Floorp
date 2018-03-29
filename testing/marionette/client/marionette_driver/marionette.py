@@ -615,10 +615,6 @@ class Marionette(object):
             self.startup_timeout = int(startup_timeout)
 
         if self.bin:
-            if not Marionette.is_port_available(self.port, host=self.host):
-                ex_msg = "{0}:{1} is unavailable.".format(self.host, self.port)
-                raise errors.MarionetteException(message=ex_msg)
-
             self.instance = GeckoInstance.create(
                 app, host=self.host, port=self.port, bin=self.bin, **instance_args)
             self.start_binary(self.startup_timeout)
@@ -631,6 +627,9 @@ class Marionette(object):
             return self.instance.profile.profile
 
     def start_binary(self, timeout):
+        if not self.is_port_available(self.port, host=self.host):
+            raise IOError("Port {0}:{1} is unavailable.".format(self.host, self.port))
+
         try:
             self.instance.start()
             self.raise_for_port(timeout=timeout)
