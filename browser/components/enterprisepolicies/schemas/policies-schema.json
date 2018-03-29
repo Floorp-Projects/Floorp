@@ -405,6 +405,14 @@
       "type": "boolean"
     },
 
+    "SearchBar": {
+      "description": "Sets the default location of the search bar. Only applies on firtrun, but can be changed.",
+      "first_available": "60.0",
+
+      "type": "string",
+      "enum": ["unified", "separate"]
+    },
+
     "SearchEngines": {
       "description": "Modifies the list of search engines built into Firefox",
       "first_available": "60.0",
