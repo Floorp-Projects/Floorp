@@ -19,6 +19,8 @@ import android.widget.RadioGroup;
 
 import org.mozilla.focus.R;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public abstract class SearchEngineListPreference extends Preference {
@@ -42,6 +44,14 @@ public abstract class SearchEngineListPreference extends Preference {
         final Context context = searchEngineGroup.getContext();
         final SearchEngineManager sem = SearchEngineManager.getInstance();
         searchEngines = sem.getSearchEngines();
+
+        Collections.sort(this.searchEngines, new Comparator<SearchEngine>() {
+            @Override
+            public int compare(SearchEngine engine1, SearchEngine engine2) {
+                return engine1.getName().compareToIgnoreCase(engine2.getName());
+            }
+        });
+
         refreshSearchEngineViews(context, sem);
 
         return layoutView;
