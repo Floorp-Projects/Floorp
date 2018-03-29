@@ -161,20 +161,10 @@ function fetchStylesheetFromNetworkMonitor(href, consoleActor) {
   if (request._discardResponseBody || request._truncated || !content) {
     return null;
   }
-  if (content.text.type != "longString") {
-    // For short strings, the text is available directly.
-    return {
-      content: content.text,
-      contentType: content.mimeType,
-    };
-  }
-  // For long strings, look up the actor that holds the full text.
-  let longStringActor = consoleActor.conn._getOrCreateActor(content.text.actor);
-  if (!longStringActor) {
-    return null;
-  }
+  // `content.text` is a LongStringActor instance
+  // Get a reference to the raw string via `str` property
   return {
-    content: longStringActor.rawValue(),
+    content: content.text.str,
     contentType: content.mimeType,
   };
 }
