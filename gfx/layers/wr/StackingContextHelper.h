@@ -49,18 +49,6 @@ public:
   // Pops the stacking context, if one was pushed during the constructor.
   ~StackingContextHelper();
 
-  // When this StackingContextHelper is in scope, this function can be used
-  // to convert a rect from the layer system's coordinate space to a LayoutRect
-  // that is relative to the stacking context. This is useful because most
-  // things that are pushed inside the stacking context need to be relative
-  // to the stacking context.
-  // We allow passing in a LayoutDeviceRect for convenience because in a lot of
-  // cases with WebRender display item generate the layout device space is the
-  // same as the layer space. (TODO: try to make this more explicit somehow).
-  // We also round the rectangle to ints after transforming since the output
-  // is the final destination rect.
-  wr::LayoutRect ToRelativeLayoutRect(const LayoutDeviceRect& aRect) const;
-
   // Export the inherited scale
   gfx::Size GetInheritedScale() const { return mScale; }
 

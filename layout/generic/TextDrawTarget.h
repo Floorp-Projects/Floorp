@@ -63,7 +63,7 @@ public:
     LayoutDeviceRect layoutBoundsRect = LayoutDeviceRect::FromAppUnits(
         aBounds, appUnitsPerDevPixel);
     LayoutDeviceRect layoutClipRect = layoutBoundsRect;
-    mBoundsRect = aSc.ToRelativeLayoutRect(layoutBoundsRect);
+    mBoundsRect = wr::ToRoundedLayoutRect(layoutBoundsRect);
 
     // Add 1 pixel of dirty area around clip rect to allow us to paint
     // antialiased pixels beyond the measured text extents.
@@ -246,7 +246,7 @@ public:
     }
 
     wr::Line decoration;
-    decoration.bounds = mSc.ToRelativeLayoutRect(LayoutDeviceRect(pos, size));
+    decoration.bounds = wr::ToRoundedLayoutRect(LayoutDeviceRect(pos, size));
     decoration.wavyLineThickness = 0; // dummy value, unused
     decoration.color = wr::ToColorF(aColor);
     decoration.orientation = aVertical
@@ -285,7 +285,7 @@ public:
   {
     wr::Line decoration;
 
-    decoration.bounds = mSc.ToRelativeLayoutRect(
+    decoration.bounds = wr::ToRoundedLayoutRect(
       LayoutDeviceRect::FromUnknownRect(aBounds));
     decoration.wavyLineThickness = aThickness;
     decoration.color = wr::ToColorF(aColor);
@@ -300,7 +300,7 @@ public:
 private:
   wr::LayerRect ClipRect()
   {
-    return mSc.ToRelativeLayoutRect(mClipStack.LastElement());
+    return wr::ToRoundedLayoutRect(mClipStack.LastElement());
   }
   // Whether anything unsupported was encountered. Currently:
   //
@@ -405,7 +405,7 @@ public:
                 const DrawOptions &aOptions = DrawOptions()) override {
     MOZ_RELEASE_ASSERT(aPattern.GetType() == PatternType::COLOR);
 
-    auto rect = mSc.ToRelativeLayoutRect(LayoutDeviceRect::FromUnknownRect(aRect));
+    auto rect = wr::ToRoundedLayoutRect(LayoutDeviceRect::FromUnknownRect(aRect));
     auto color = wr::ToColorF(static_cast<const ColorPattern&>(aPattern).mColor);
     mBuilder.PushRect(rect, ClipRect(), mBackfaceVisible, color);
   }
@@ -425,25 +425,25 @@ public:
     // Top horizontal line
     LayoutDevicePoint top(aRect.x, aRect.y - aStrokeOptions.mLineWidth / 2);
     LayoutDeviceSize horiSize(aRect.width, aStrokeOptions.mLineWidth);
-    line.bounds = mSc.ToRelativeLayoutRect(LayoutDeviceRect(top, horiSize));
+    line.bounds = wr::ToRoundedLayoutRect(LayoutDeviceRect(top, horiSize));
     line.orientation = wr::LineOrientation::Horizontal;
     mBuilder.PushLine(ClipRect(), mBackfaceVisible, line);
 
     // Bottom horizontal line
     LayoutDevicePoint bottom(aRect.x, aRect.YMost() - aStrokeOptions.mLineWidth / 2);
-    line.bounds = mSc.ToRelativeLayoutRect(LayoutDeviceRect(bottom, horiSize));
+    line.bounds = wr::ToRoundedLayoutRect(LayoutDeviceRect(bottom, horiSize));
     mBuilder.PushLine(ClipRect(), mBackfaceVisible, line);
 
     // Left vertical line
     LayoutDevicePoint left(aRect.x + aStrokeOptions.mLineWidth / 2, aRect.y + aStrokeOptions.mLineWidth / 2);
     LayoutDeviceSize vertSize(aStrokeOptions.mLineWidth, aRect.height - aStrokeOptions.mLineWidth);
-    line.bounds = mSc.ToRelativeLayoutRect(LayoutDeviceRect(left, vertSize));
+    line.bounds = wr::ToRoundedLayoutRect(LayoutDeviceRect(left, vertSize));
     line.orientation = wr::LineOrientation::Vertical;
     mBuilder.PushLine(ClipRect(), mBackfaceVisible, line);
 
     // Right vertical line
     LayoutDevicePoint right(aRect.XMost() - aStrokeOptions.mLineWidth / 2, aRect.y + aStrokeOptions.mLineWidth / 2);
-    line.bounds = mSc.ToRelativeLayoutRect(LayoutDeviceRect(right, vertSize));
+    line.bounds = wr::ToRoundedLayoutRect(LayoutDeviceRect(right, vertSize));
     mBuilder.PushLine(ClipRect(), mBackfaceVisible, line);
   }
 

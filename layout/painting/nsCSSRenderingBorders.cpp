@@ -3426,7 +3426,7 @@ nsCSSBorderRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
                                              const layers::StackingContextHelper& aSc)
 {
   LayoutDeviceRect outerRect = LayoutDeviceRect::FromUnknownRect(mOuterRect);
-  wr::LayoutRect transformedRect = aSc.ToRelativeLayoutRect(outerRect);
+  wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(outerRect);
   wr::BorderSide side[4];
   NS_FOR_CSS_SIDES(i) {
     side[i] = wr::ToBorderSide(ToDeviceColor(mBorderColors[i]), mBorderStyles[i]);
@@ -3439,14 +3439,14 @@ nsCSSBorderRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
 
   if (mLocalClip) {
     LayoutDeviceRect clip = LayoutDeviceRect::FromUnknownRect(mLocalClip.value());
-    wr::LayoutRect clipRect = aSc.ToRelativeLayoutRect(clip);
+    wr::LayoutRect clipRect = wr::ToRoundedLayoutRect(clip);
     wr::WrClipId clipId = aBuilder.DefineClip(Nothing(), Nothing(), clipRect);
     aBuilder.PushClip(clipId, aItem->GetClipChain());
   }
 
   Range<const wr::BorderSide> wrsides(side, 4);
-  aBuilder.PushBorder(transformedRect,
-                      transformedRect,
+  aBuilder.PushBorder(roundedRect,
+                      roundedRect,
                       mBackfaceIsVisible,
                       wr::ToBorderWidths(mBorderWidths[0], mBorderWidths[1], mBorderWidths[2], mBorderWidths[3]),
                       wrsides,
@@ -3698,13 +3698,13 @@ nsCSSBorderImageRenderer::CreateWebRenderCommands(nsDisplayItem* aItem,
 
   LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
     mArea, appUnitsPerDevPixel);
-  wr::LayoutRect dest = aSc.ToRelativeLayoutRect(destRect);
+  wr::LayoutRect dest = wr::ToRoundedLayoutRect(destRect);
 
   wr::LayoutRect clip = dest;
   if (!mClip.IsEmpty()) {
     LayoutDeviceRect clipRect = LayoutDeviceRect::FromAppUnits(
       mClip, appUnitsPerDevPixel);
-    clip = aSc.ToRelativeLayoutRect(clipRect);
+    clip = wr::ToRoundedLayoutRect(clipRect);
   }
 
   switch (mImageRenderer.GetType()) {
