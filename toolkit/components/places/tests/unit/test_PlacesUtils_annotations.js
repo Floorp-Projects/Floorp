@@ -45,7 +45,7 @@ add_task(async function test_getAnnotationsForItem() {
   let ids = await PlacesUtils.promiseManyItemIds(bms.map(bm => bm.guid));
 
   for (let i = 0; i < bms.length; i++) {
-    let annotations = PlacesUtils.getAnnotationsForItem(ids.get(bms[i].guid));
+    let annotations = await PlacesUtils.promiseAnnotationsForItem(ids.get(bms[i].guid));
     checkAnnotations(annotations, TEST_ANNOTATIONS.slice(0, i));
   }
 });
