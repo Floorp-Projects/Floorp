@@ -38,6 +38,8 @@ public:
 
   float GetPrintingScale() final;
 
+  gfxPoint GetPrintingTranslate() final;
+
 
   NS_IMETHOD BeginDocument(const nsAString& aTitle,
                            const nsAString& aPrintToFileName,

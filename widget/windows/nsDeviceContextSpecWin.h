@@ -38,6 +38,7 @@ public:
   float GetDPI() final;
 
   float GetPrintingScale() final;
+  gfxPoint GetPrintingTranslate() final;
 
   void GetDriverName(nsAString& aDriverName) const { aDriverName = mDriverName; }
   void GetDeviceName(nsAString& aDeviceName) const { aDeviceName = mDeviceName; }

@@ -305,6 +305,7 @@ private:
     int32_t  mAppUnitsPerPhysicalInch;
     float    mFullZoom;
     float    mPrintingScale;
+    gfxPoint  mPrintingTranslate;
 
     RefPtr<nsFontCache>            mFontCache;
     nsCOMPtr<nsIWidget>            mWidget;

@@ -46,6 +46,7 @@ public:
 
 protected:
   void CopyDevMode(DEVMODEW* aInDevMode, DEVMODEW *& aOutDevMode);
+  void InitUnwriteableMargin(HDC aHdc);
 
   nsString      mDeviceName;
   nsString      mDriverName;
