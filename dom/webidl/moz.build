@@ -64,9 +64,6 @@ with Files("ClipboardEvent.webidl"):
 with Files("ConstantSourceNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
-with Files("ContainerBoxObject.webidl"):
-    BUG_COMPONENT = ("Core", "DOM")
-
 with Files("ConvolverNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
@@ -423,7 +420,6 @@ WEBIDL_FILES = [
     'CompositionEvent.webidl',
     'Console.webidl',
     'ConstantSourceNode.webidl',
-    'ContainerBoxObject.webidl',
     'ConvolverNode.webidl',
     'Coordinates.webidl',
     'CreateOfferRequest.webidl',

@@ -311,7 +311,6 @@ nsresult NS_NewListBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewScrollBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewMenuBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewPopupBoxObject(nsIBoxObject** aResult);
-nsresult NS_NewContainerBoxObject(nsIBoxObject** aResult);
 nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
 #endif
 
@@ -376,7 +375,6 @@ MAKE_CTOR(CreateNewMenuBoxObject,       nsIBoxObject,           NS_NewMenuBoxObj
 MAKE_CTOR(CreateNewPopupBoxObject,      nsIBoxObject,           NS_NewPopupBoxObject)
 MAKE_CTOR(CreateNewScrollBoxObject,     nsIBoxObject,           NS_NewScrollBoxObject)
 MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
-MAKE_CTOR(CreateNewContainerBoxObject,  nsIBoxObject,           NS_NewContainerBoxObject)
 #endif // MOZ_XUL
 
 #ifdef MOZ_XUL
@@ -521,7 +519,6 @@ NS_DEFINE_NAMED_CID(NS_BOXOBJECT_CID);
 NS_DEFINE_NAMED_CID(NS_LISTBOXOBJECT_CID);
 NS_DEFINE_NAMED_CID(NS_MENUBOXOBJECT_CID);
 NS_DEFINE_NAMED_CID(NS_POPUPBOXOBJECT_CID);
-NS_DEFINE_NAMED_CID(NS_CONTAINERBOXOBJECT_CID);
 NS_DEFINE_NAMED_CID(NS_SCROLLBOXOBJECT_CID);
 NS_DEFINE_NAMED_CID(NS_TREEBOXOBJECT_CID);
 #endif // MOZ_XUL
@@ -768,7 +765,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_LISTBOXOBJECT_CID, false, nullptr, CreateNewListBoxObject },
   { &kNS_MENUBOXOBJECT_CID, false, nullptr, CreateNewMenuBoxObject },
   { &kNS_POPUPBOXOBJECT_CID, false, nullptr, CreateNewPopupBoxObject },
-  { &kNS_CONTAINERBOXOBJECT_CID, false, nullptr, CreateNewContainerBoxObject },
   { &kNS_SCROLLBOXOBJECT_CID, false, nullptr, CreateNewScrollBoxObject },
   { &kNS_TREEBOXOBJECT_CID, false, nullptr, CreateNewTreeBoxObject },
 #endif // MOZ_XUL
@@ -881,7 +877,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/layout/xul-boxobject-listbox;1", &kNS_LISTBOXOBJECT_CID },
   { "@mozilla.org/layout/xul-boxobject-menu;1", &kNS_MENUBOXOBJECT_CID },
   { "@mozilla.org/layout/xul-boxobject-popup;1", &kNS_POPUPBOXOBJECT_CID },
-  { "@mozilla.org/layout/xul-boxobject-container;1", &kNS_CONTAINERBOXOBJECT_CID },
   { "@mozilla.org/layout/xul-boxobject-scrollbox;1", &kNS_SCROLLBOXOBJECT_CID },
   { "@mozilla.org/layout/xul-boxobject-tree;1", &kNS_TREEBOXOBJECT_CID },
 #endif // MOZ_XUL
