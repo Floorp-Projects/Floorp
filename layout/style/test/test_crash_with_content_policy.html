@@ -36,11 +36,11 @@ var policy = {
   },
 
   // nsIContentPolicy implementation
-  shouldLoad: function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra) {
+  shouldLoad: function(contentLocation, loadInfo, mimeTypeGuess) {
     info(`shouldLoad is invoked for ${SpecialPowers.wrap(contentLocation).spec}`);
     return Ci.nsIContentPolicy.ACCEPT;
   },
-  shouldProcess: function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra) {
+  shouldProcess: function(contentLocation, loadInfo, mimeTypeGuess) {
     return Ci.nsIContentPolicy.ACCEPT;
   }
 }
@@ -65,6 +65,8 @@ async function runTests() {
     });
     ok(true, `${test} doesn't crash`);
   }
+  categoryManager.deleteCategoryEntry("content-policy", policyName, false);
+  componentManager.unregisterFactory(policyID, policy);
   SimpleTest.finish();
 }
 runTests();
