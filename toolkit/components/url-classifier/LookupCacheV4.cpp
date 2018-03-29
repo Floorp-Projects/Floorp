@@ -37,7 +37,7 @@ public:
   void Merge(PrefixStringMap& aPrefixMap);
 
   // Find the smallest string from the map in VLPrefixSet.
-  bool GetSmallestPrefix(nsDependentCSubstring& aOutString);
+  bool GetSmallestPrefix(nsACString& aOutString);
 
   // Return the number of prefixes in the map
   uint32_t Count() const { return mCount; }
@@ -48,19 +48,32 @@ private:
   // |pos| increases each time GetSmallestPrefix finds the smallest string.
   struct PrefixString {
     PrefixString(const nsACString& aStr, uint32_t aSize)
-     : pos(0)
-     , size(aSize)
+      : data(aStr)
+      , pos(0)
+      , size(aSize)
     {
-      data.Rebind(aStr.BeginReading(), aStr.Length());
     }
 
-    const char* get() {
-      return pos < data.Length() ? data.BeginReading() + pos : nullptr;
+    void getRemainingString(nsACString& out) {
+      MOZ_ASSERT(out.IsEmpty());
+      if (remaining() > 0) {
+        out = Substring(data, pos);
+      }
     }
-    void next() { pos += size; }
-    uint32_t remaining() { return data.Length() - pos; }
+    void getPrefix(nsACString& out) {
+      MOZ_ASSERT(out.IsEmpty());
+      if (remaining() >= size) {
+        out = Substring(data, pos, size);
+      }
+    }
+    void next() {
+      pos += size;
+    }
+    uint32_t remaining() {
+      return data.Length() - pos;
+    }
 
-    nsDependentCSubstring data;
+    nsCString data;
     uint32_t pos;
     uint32_t size;
   };
@@ -197,7 +210,7 @@ LookupCacheV4::SizeOfPrefixSet()
 }
 
 static nsresult
-AppendPrefixToMap(PrefixStringMap& prefixes, nsDependentCSubstring& prefix)
+AppendPrefixToMap(PrefixStringMap& prefixes, const nsACString& prefix)
 {
   uint32_t len = prefix.Length();
   if (!len) {
@@ -205,7 +218,7 @@ AppendPrefixToMap(PrefixStringMap& prefixes, nsDependentCSubstring& prefix)
   }
 
   nsCString* prefixString = prefixes.LookupOrAdd(len);
-  if (!prefixString->Append(prefix.BeginReading(), len, fallible)) {
+  if (!prefixString->Append(prefix, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -251,8 +264,8 @@ LookupCacheV4::ApplyUpdate(TableUpdateV4* aTableUpdate,
   uint32_t removalIndex = 0;
   int32_t numOldPrefixPicked = -1;
 
-  nsDependentCSubstring smallestOldPrefix;
-  nsDependentCSubstring smallestAddPrefix;
+  nsAutoCString smallestOldPrefix;
+  nsAutoCString smallestAddPrefix;
 
   bool isOldMapEmpty = false, isAddMapEmpty = false;
 
@@ -389,7 +402,7 @@ LookupCacheV4::VerifyChecksum(const nsACString& aChecksum)
   VLPrefixSet loadPSet(map);
   uint32_t index = loadPSet.Count() + 1;
   for(;index > 0; index--) {
-    nsDependentCSubstring prefix;
+    nsAutoCString prefix;
     if (!loadPSet.GetSmallestPrefix(prefix)) {
       break;
     }
@@ -605,31 +618,37 @@ VLPrefixSet::Merge(PrefixStringMap& aPrefixMap) {
     nsCString* prefixString = aPrefixMap.LookupOrAdd(iter.Key());
     PrefixString* str = iter.Data();
 
-    if (str->get()) {
-      prefixString->Append(str->get(), str->remaining());
+    nsAutoCString remainingString;
+    str->getRemainingString(remainingString);
+    if (!remainingString.IsEmpty()) {
+      MOZ_ASSERT(remainingString.Length() == str->remaining());
+      prefixString->Append(remainingString);
     }
   }
 }
 
 bool
-VLPrefixSet::GetSmallestPrefix(nsDependentCSubstring& aOutString) {
+VLPrefixSet::GetSmallestPrefix(nsACString& aOutString) {
   PrefixString* pick = nullptr;
   for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
     PrefixString* str = iter.Data();
 
-    if (!str->get()) {
+    if (str->remaining() <= 0) {
       continue;
     }
 
     if (aOutString.IsEmpty()) {
-      aOutString.Rebind(str->get(), iter.Key());
+      str->getPrefix(aOutString);
+      MOZ_ASSERT(aOutString.Length() == iter.Key());
       pick = str;
       continue;
     }
 
-    nsDependentCSubstring cur(str->get(), iter.Key());
-    if (cur < aOutString) {
-      aOutString.Rebind(str->get(), iter.Key());
+    nsAutoCString cur;
+    str->getPrefix(cur);
+    if (!cur.IsEmpty() && cur < aOutString) {
+      aOutString.Assign(cur);
+      MOZ_ASSERT(aOutString.Length() == iter.Key());
       pick = str;
     }
   }
