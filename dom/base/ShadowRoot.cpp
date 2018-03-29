@@ -81,10 +81,33 @@ ShadowRoot::~ShadowRoot()
     host->RemoveMutationObserver(this);
   }
 
+  if (IsComposedDocParticipant()) {
+    OwnerDoc()->RemoveComposedDocShadowRoot(*this);
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(!OwnerDoc()->IsComposedDocShadowRoot(*this));
+
   UnsetFlags(NODE_IS_IN_SHADOW_TREE);
 
   // nsINode destructor expects mSubtreeRoot == this.
   SetSubtreeRootPointer(this);
+}
+
+void
+ShadowRoot::SetIsComposedDocParticipant(bool aIsComposedDocParticipant)
+{
+  bool changed = mIsComposedDocParticipant != aIsComposedDocParticipant;
+  mIsComposedDocParticipant = aIsComposedDocParticipant;
+  if (!changed) {
+    return;
+  }
+
+  nsIDocument* doc = OwnerDoc();
+  if (IsComposedDocParticipant()) {
+    doc->AddComposedDocShadowRoot(*this);
+  } else {
+    doc->RemoveComposedDocShadowRoot(*this);
+  }
 }
 
 JSObject*
