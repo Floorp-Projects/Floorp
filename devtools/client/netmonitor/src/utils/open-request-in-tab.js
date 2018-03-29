@@ -10,17 +10,15 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 /**
  * Opens given request in a new tab.
  */
-function openRequestInTab(request) {
+function openRequestInTab(url, method, requestPostData) {
   let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-  if (request.method.toLowerCase() !== "get") {
-    win.openUILinkIn(this.selectedRequest.url, "tab", {
-      relatedToCurrent: true
-    });
+  if (method.toLowerCase() !== "get") {
+    win.openUILinkIn(url, "tab", {relatedToCurrent: true});
   } else {
     openRequestInTabHelper({
-      url: request.url,
-      method: request.method,
-      data: request.requestPostData ? request.requestPostData.postData : null,
+      url,
+      method,
+      data: requestPostData ? requestPostData.postData : null,
     });
   }
 }

@@ -12,9 +12,9 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 /**
  * Opens given request in a new tab.
  */
-function openRequestInTab(request) {
+function openRequestInTab(url, method, requestPostData) {
   let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-  let rawData = request.requestPostData ? request.requestPostData.postData : null;
+  let rawData = requestPostData ? requestPostData.postData : null;
   let postData;
 
   if (rawData && rawData.text) {
@@ -25,7 +25,7 @@ function openRequestInTab(request) {
     postData.setData(stringStream);
   }
 
-  win.gBrowser.selectedTab = win.gBrowser.addTab(request.url, null, null, postData);
+  win.gBrowser.selectedTab = win.gBrowser.addTab(url, null, null, postData);
 }
 
 function getInputStreamFromString(data) {
