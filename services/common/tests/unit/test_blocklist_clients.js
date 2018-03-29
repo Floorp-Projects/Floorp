@@ -103,11 +103,9 @@ add_task(async function test_initial_dump_is_loaded_as_synced_when_collection_is
     // Test an empty db populates, but don't reach server (specified timestamp <= dump).
     await client.maybeSync(1, Date.now());
 
-    // Open the collection, verify the loaded data has status to synced:
-    await client.openCollection(async (collection) => {
-      const list = await collection.list();
-      equal(list.data[0]._status, "synced");
-    });
+    // Verify the loaded data has status to synced:
+    const list = await client.get();
+    equal(list[0]._status, "synced");
   }
 });
 add_task(clear_state);
@@ -119,10 +117,8 @@ add_task(async function test_records_obtained_from_server_are_stored_in_db() {
 
     // Open the collection, verify it's been populated:
     // Our test data has a single record; it should be in the local collection
-    await client.openCollection(async (collection) => {
-      const list = await collection.list();
-      equal(list.data.length, 1);
-    });
+    const list = await client.get();
+    equal(list.length, 1);
   }
 });
 add_task(clear_state);
