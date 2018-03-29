@@ -94,22 +94,30 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
   nsAutoCString mimeType;
   channel->GetContentType(mimeType);
 
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  nsCOMPtr<nsIPrincipal> channelPrincipal;
-  if (secMan) {
-    secMan->GetChannelResultPrincipal(channel, getter_AddRefs(channelPrincipal));
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+  // query the corresponding arguments for the channel loadinfo and pass
+  // it on to the temporary loadinfo used for content policy checks.
+  nsCOMPtr<nsINode> requestingNode = domWindow->GetFrameElementInternal();
+  nsCOMPtr<nsIPrincipal> loadingPrincipal;
+  if (requestingNode) {
+    loadingPrincipal = requestingNode->NodePrincipal();
+  }
+  else {
+    nsContentUtils::GetSecurityManager()->
+      GetChannelResultPrincipal(channel, getter_AddRefs(loadingPrincipal));
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+    new net::LoadInfo(loadingPrincipal,
+                      loadInfo ? loadInfo->TriggeringPrincipal() : nullptr,
+                      requestingNode,
+                      nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                      nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 
   int16_t decision = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentProcessPolicy(nsIContentPolicy::TYPE_INTERNAL_IMAGE,
-                                             channelURI,
-                                             channelPrincipal,
-                                             loadInfo ? loadInfo->TriggeringPrincipal() : nullptr,
-                                             domWindow->GetFrameElementInternal(),
+  nsresult rv = NS_CheckContentProcessPolicy(channelURI,
+                                             secCheckLoadInfo,
                                              mimeType,
-                                             nullptr,
                                              &decision,
                                              nsContentUtils::GetContentPolicy());
 

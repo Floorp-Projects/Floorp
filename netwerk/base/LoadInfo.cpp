@@ -101,7 +101,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
 
   // This constructor shouldn't be used for TYPE_DOCUMENT loads that don't
   // have a loadingPrincipal
-  MOZ_ASSERT(skipContentTypeCheck ||
+  MOZ_ASSERT(skipContentTypeCheck || mLoadingPrincipal ||
              mInternalContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT);
 
   // We should only get an explicit controller for subresource requests.
@@ -656,6 +656,27 @@ LoadInfo::ContextForTopLevelLoad()
             "should only query this context for top level document loads");
   nsCOMPtr<nsISupports> context = do_QueryReferent(mContextForTopLevelLoad);
   return context;
+}
+
+already_AddRefed<nsISupports>
+LoadInfo::GetLoadingContext()
+{
+  nsCOMPtr<nsISupports> context;
+  if (mInternalContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
+    context = ContextForTopLevelLoad();
+  }
+  else {
+    context = LoadingNode();
+  }
+  return context.forget();
+}
+
+NS_IMETHODIMP
+LoadInfo::GetLoadingContextXPCOM(nsISupports** aResult)
+{
+  nsCOMPtr<nsISupports> context = GetLoadingContext();
+  context.forget(aResult);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

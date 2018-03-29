@@ -315,34 +315,23 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     return NS_OK;
   }
 
-  nsContentPolicyType contentPolicyType = loadInfo->InternalContentPolicyType();
   nsCOMPtr<nsIPrincipal> requestingPrincipal = loadInfo->LoadingPrincipal();
 
   // Since we are calling shouldLoad() directly on redirects, we don't go through the code
   // in nsContentPolicyUtils::NS_CheckContentLoadPolicy(). Hence, we have to
   // duplicate parts of it here.
-  nsCOMPtr<nsIURI> requestingLocation;
   if (requestingPrincipal) {
     // We check to see if the loadingPrincipal is systemPrincipal and return
     // early if it is
     if (nsContentUtils::IsSystemPrincipal(requestingPrincipal)) {
       return NS_OK;
     }
-    // We set the requestingLocation from the RequestingPrincipal.
-    rv = requestingPrincipal->GetURI(getter_AddRefs(requestingLocation));
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsISupports> requestingContext = loadInfo->LoadingNode();
-
   int16_t decision = REJECT_REQUEST;
-  rv = ShouldLoad(contentPolicyType,
-                  newUri,
-                  requestingLocation,
-                  requestingContext,
-                  EmptyCString(),       // aMimeGuess
-                  nullptr,              // aExtra
-                  requestingPrincipal,
+  rv = ShouldLoad(newUri,
+                  loadInfo,
+                  EmptyCString(), // aMimeGuess
                   &decision);
   if (NS_FAILED(rv)) {
     autoCallback.DontCallback();
@@ -365,15 +354,20 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
  * for detailed description of the parameters.
  */
 NS_IMETHODIMP
-nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
-                                  nsIURI* aContentLocation,
-                                  nsIURI* aRequestingLocation,
-                                  nsISupports* aRequestingContext,
+nsMixedContentBlocker::ShouldLoad(nsIURI* aContentLocation,
+                                  nsILoadInfo* aLoadInfo,
                                   const nsACString& aMimeGuess,
-                                  nsISupports* aExtra,
-                                  nsIPrincipal* aRequestPrincipal,
                                   int16_t* aDecision)
 {
+  uint32_t aContentType = aLoadInfo->InternalContentPolicyType();
+  nsCOMPtr<nsISupports> aRequestingContext = aLoadInfo->GetLoadingContext();
+  nsCOMPtr<nsIPrincipal> aRequestPrincipal = aLoadInfo->TriggeringPrincipal();
+  nsCOMPtr<nsIURI> aRequestingLocation;
+  nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
+  if (loadingPrincipal) {
+    loadingPrincipal->GetURI(getter_AddRefs(aRequestingLocation));
+  }
+
   // We pass in false as the first parameter to ShouldLoad(), because the
   // callers of this method don't know whether the load went through cached
   // image redirects.  This is handled by direct callers of the static
@@ -384,7 +378,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
                            aRequestingLocation,
                            aRequestingContext,
                            aMimeGuess,
-                           aExtra,
+                           nullptr, // aExtra,
                            aRequestPrincipal,
                            aDecision);
   return rv;
@@ -1060,16 +1054,12 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
 }
 
 NS_IMETHODIMP
-nsMixedContentBlocker::ShouldProcess(uint32_t aContentType,
-                                     nsIURI* aContentLocation,
-                                     nsIURI* aRequestingLocation,
-                                     nsISupports* aRequestingContext,
+nsMixedContentBlocker::ShouldProcess(nsIURI* aContentLocation,
+                                     nsILoadInfo* aLoadInfo,
                                      const nsACString& aMimeGuess,
-                                     nsISupports* aExtra,
-                                     nsIPrincipal* aRequestPrincipal,
                                      int16_t* aDecision)
 {
-  aContentType = nsContentUtils::InternalContentPolicyTypeToExternal(aContentType);
+  uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
 
   if (!aContentLocation) {
     // aContentLocation may be null when a plugin is loading without an associated URI resource
@@ -1082,9 +1072,7 @@ nsMixedContentBlocker::ShouldProcess(uint32_t aContentType,
     }
   }
 
-  return ShouldLoad(aContentType, aContentLocation, aRequestingLocation,
-                    aRequestingContext, aMimeGuess, aExtra, aRequestPrincipal,
-                    aDecision);
+  return ShouldLoad(aContentLocation, aLoadInfo, aMimeGuess, aDecision);
 }
 
 // Record information on when HSTS would have made mixed content not mixed

@@ -13,6 +13,7 @@ interface nsINode;
 interface nsIPrincipal;
 interface nsIRedirectHistoryEntry;
 interface nsIURI;
+native LoadContextRef(already_AddRefed<nsISupports>);
 %{C++
 #include "nsTArray.h"
 #include "mozilla/BasePrincipal.h"
@@ -73,6 +74,16 @@ interface nsILoadInfo : nsISupports
    * return the correct result principal. If none or more than one of these
    * flags are set AsyncOpen2 will fail.
    */
+
+   /**
+    * Warning: Never use this flag when creating a new channel!
+    * Only use this flag if you have to create a temporary LoadInfo
+    * for performing an explicit nsIContentPolicy check, like e.g.
+    * when loading something from the cache that needs an explicit
+    * nsIContentPolicy check. In all other cases pick one of the
+    * security flags underneath.
+    */
+  const unsigned long SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK = 0;
 
   /*
    * Enforce the same origin policy where data: loads inherit the principal.
@@ -359,6 +370,21 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, notxpcom, nostdcall, binaryname(ContextForTopLevelLoad)]
   nsISupports binaryContextForTopLevelLoad();
+
+  /**
+   * For all loads except loads of TYPE_DOCUMENT, the loadingContext
+   * simply returns the loadingNode. For loads of TYPE_DOCUMENT this
+   * will return the context available for top-level loads which
+   * do not have a loadingNode.
+   */
+  [binaryname(LoadingContextXPCOM)]
+  readonly attribute nsISupports loadingContext;
+  
+  /**
+   * A C++ friendly version of the loadingContext.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(GetLoadingContext)]
+  LoadContextRef binaryGetLoadingContext();
 
   /**
    * The securityFlags of that channel.

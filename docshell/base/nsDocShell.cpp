@@ -9547,16 +9547,19 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     rv = extraStr->SetData(msg);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // Ideally we should use the same loadinfo as within DoURILoad which
+    // should match this one when both are applicable.
+    nsCOMPtr<nsPIDOMWindowOuter> loadingWindow = mScriptGlobal->AsOuter();
+    nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+      new LoadInfo(loadingWindow,
+                   aTriggeringPrincipal,
+                   requestingContext,
+                   nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK);
+
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(contentType,
-                                   aURI,
-                                   // This is a top-level load, so the loading
-                                   // principal is null.
-                                   nullptr,
-                                   aTriggeringPrincipal,
-                                   requestingContext,
+    rv = NS_CheckContentLoadPolicy(aURI,
+                                   secCheckLoadInfo,
                                    EmptyCString(),  // mime guess
-                                   extraStr,  // extra
                                    &shouldLoad);
 
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
