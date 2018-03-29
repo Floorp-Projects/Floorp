@@ -4,13 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# run Microsoft's Binscope tool (http://www.microsoft.com/download/en/details.aspx?id=11910)
+# run Microsoft's Binscope tool (https://www.microsoft.com/en-us/download/details.aspx?id=44995)
 # against a fresh Windows build. output a 'binscope.log' file with full details
 # of the run and appropriate strings to integrate with the buildbots
-
-# from the docs : "The error code returned when running under the command line is equal 
-# to the number of failures the tool reported plus the number of errors. BinScope will return 
-# 0 only if there are no errors or failures."
 
 # the symbol dir should point to the symbol dir hierarchy created
 # via running make buildsymbols in a windows build's objdir
@@ -40,14 +36,14 @@ else:
 try:
   binscope_path = os.environ['BINSCOPE']
 except KeyError:
-  print "BINSCOPE environment variable is not set, can't check DEP/ASLR etc. status."
+  print "TEST-UNEXPECTED-FAIL | autobinscope.py | BINSCOPE environment variable is not set, can't check DEP/ASLR etc. status."
   sys.exit(0)
   
 try:    
   proc = subprocess.Popen([
     binscope_path,
+    "/NoLogo",
     "/Target", binary_path,
-    "/Output", log_file_path,
     "/SymPath", symbol_path,
     "/Checks", "ATLVersionCheck",
     "/Checks", "ATLVulnCheck",
@@ -73,27 +69,29 @@ try:
     "/Checks", "SharedSectionCheck",
     "/Checks", "VB6Check",
     "/Checks", "WXCheck"
-    ], stdout=subprocess.PIPE)
+    ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 except WindowsError, (errno, strerror): 
   if errno != 2 and errno != 3:
-    print "Unexpected error ! \nError " + str(errno) + " : " + strerror + "\nExiting !\n"
+    print "TEST-UNEXPECTED-FAIL | autobinscope.py | Unexpected error %d : %s" (errno, strerror)
     sys.exit(0)
   else:
-    print "Could not locate binscope at location : %s\n" % binscope_path
-    print "Binscope wasn't installed or the BINSCOPE env variable wasn't set correctly, skipping this check and exiting..."
+    print "TEST-UNEXPECTED-FAIL | autobinscope.py | Could not locate binscope at location : %s\n" % binscope_path
     sys.exit(0)
 
 proc.wait()
 
-output = proc.communicate()[0]
+output = proc.communicate()[1].decode('utf-8').splitlines()
 
-# is this a PASS or a FAIL ? 
+errors = 0
+for line in output:
+  print(line)
+  if 'error' in line:
+    errors += 1
+
 if proc.returncode != 0:
-  print "Error count: %d" % proc.returncode
-  print "TEST-UNEXPECTED-FAIL | autobinscope.py | %s is missing a needed Windows protection, such as /GS or ASLR" % binary_path
-  logfile = open(log_file_path, "r")
-  for line in logfile:
-    print(line),
+  print "TEST-UNEXPECTED-FAIL | autobinscope.py | Binscope returned error code %d for file %s" % (proc.returncode, binary_path)
+elif errors != 0:
+  print "TEST-UNEXPECTED-FAIL | autobinscope.py | Binscope reported %d error(s) for file %s" % (errors, binary_path)
 else:
   print "TEST-PASS | autobinscope.py | %s succeeded" % binary_path
