@@ -1,7 +1,10 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ar_IL{
-    Version{"2.1.31.33"}
+    NumberElements{
+        default{"arab"}
+    }
+    Version{"2.1.38.80"}
     calendar{
         gregorian{
             DateTimePatterns{

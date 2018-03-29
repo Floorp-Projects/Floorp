@@ -644,6 +644,10 @@ cy{
         }
         MRO{
             "MRO",
+            "Ouguiya Mauritania (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Ouguiya Mauritania",
         }
         MTL{
@@ -860,6 +864,10 @@ cy{
         }
         STD{
             "STD",
+            "Dobra São Tomé a Príncipe (1977–2017)",
+        }
+        STN{
+            "STN",
             "Dobra São Tomé a Príncipe",
         }
         SVC{
@@ -1183,7 +1191,7 @@ cy{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -2413,6 +2421,14 @@ cy{
             zero{"pataca Macau"}
         }
         MRO{
+            few{"ouguiya Mauritania (1973–2017)"}
+            many{"ouguiya Mauritania (1973–2017)"}
+            one{"ouguiya Mauritania (1973–2017)"}
+            other{"ouguiya Mauritania (1973–2017)"}
+            two{"ouguiya Mauritania (1973–2017)"}
+            zero{"ouguiya Mauritania (1973–2017)"}
+        }
+        MRU{
             few{"ouguiya Mauritania"}
             many{"ouguiya Mauritania"}
             one{"ouguiya Mauritania"}
@@ -2813,6 +2829,14 @@ cy{
             zero{"punt De Sudan"}
         }
         STD{
+            few{"dobra São Tomé a Príncipe (1977–2017)"}
+            many{"dobra São Tomé a Príncipe (1977–2017)"}
+            one{"dobra São Tomé a Príncipe (1977–2017)"}
+            other{"dobra São Tomé a Príncipe (1977–2017)"}
+            two{"dobra São Tomé a Príncipe (1977–2017)"}
+            zero{"dobra São Tomé a Príncipe (1977–2017)"}
+        }
+        STN{
             few{"dobra São Tomé a Príncipe"}
             many{"dobra São Tomé a Príncipe"}
             one{"dobra São Tomé a Príncipe"}
@@ -3237,5 +3261,5 @@ cy{
         two{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"2.1.37.17"}
+    Version{"2.1.39.11"}
 }

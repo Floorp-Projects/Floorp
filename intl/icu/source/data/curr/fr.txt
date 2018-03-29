@@ -620,6 +620,10 @@ fr{
         }
         MRO{
             "MRO",
+            "ouguiya mauritanien (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "ouguiya mauritanien",
         }
         MTL{
@@ -848,6 +852,10 @@ fr{
         }
         STD{
             "STD",
+            "dobra santoméen (1977–2017)",
+        }
+        STN{
+            "STN",
             "dobra santoméen",
         }
         SUR{
@@ -1195,7 +1203,7 @@ fr{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1833,6 +1841,10 @@ fr{
             other{"patacas macanaises"}
         }
         MRO{
+            one{"ouguiya mauritanien (1973–2017)"}
+            other{"ouguiyas mauritaniens (1973–2017)"}
+        }
+        MRU{
             one{"ouguiya mauritanien"}
             other{"ouguiyas mauritaniens"}
         }
@@ -2061,6 +2073,10 @@ fr{
             other{"livres sud-soudanaises"}
         }
         STD{
+            one{"dobra santoméen (1977–2017)"}
+            other{"dobras santoméens (1977–2017)"}
+        }
+        STN{
             one{"dobra santoméen"}
             other{"dobras santoméens"}
         }
@@ -2329,5 +2345,5 @@ fr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.20"}
 }

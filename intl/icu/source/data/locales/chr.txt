@@ -116,7 +116,7 @@ chr{
                     }
                     10000000000{
                         one{"¤00B"}
-                        other{"¤ 00G"}
+                        other{"¤00B"}
                     }
                     100000000000{
                         one{"¤000B"}
@@ -213,7 +213,7 @@ chr{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
     calendar{
         generic{
             DateTimePatterns{
@@ -232,12 +232,22 @@ chr{
                 "{1}, {0}",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"d E"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
+                H{"HH"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
                 M{"L"}
@@ -248,8 +258,10 @@ chr{
                 MMMd{"MMM d"}
                 Md{"M/d"}
                 d{"d"}
+                h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
+                ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M/y GGGGG"}
@@ -333,7 +345,7 @@ chr{
             }
             AmPmMarkersAbbr{
                 "ᏌᎾᎴ",
-                "ᏒᎯᏱᎢᏗᏢ",
+                "ᏒᎯᏱᎢ",
             }
             AmPmMarkersNarrow{
                 "Ꮜ",
@@ -358,7 +370,12 @@ chr{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d E"}
@@ -508,14 +525,14 @@ chr{
                         am{"ᏌᎾᎴ"}
                         morning1{"ᏌᎾᎴ"}
                         noon{"ᎢᎦ"}
-                        pm{"ᏒᎯᏱᎢᏗᏢ"}
+                        pm{"ᏒᎯᏱᎢ"}
                     }
                     narrow{
                         afternoon1{"ᏒᎯᏱᎢᏗᏢ"}
                         am{"ᏌᎾᎴ"}
                         morning1{"ᏌᎾᎴ"}
                         noon{"ᎢᎦ"}
-                        pm{"ᏒᎯᏱᎢᏗᏢ"}
+                        pm{"ᏒᎯᏱᎢ"}
                     }
                     wide{
                         afternoon1{"ᏒᎯᏱᎢᏗᏢ"}
@@ -1640,8 +1657,8 @@ chr{
     }
     listPattern{
         or{
-            2{"{0} or {1}"}
-            end{"{0}, or {1}"}
+            2{"{0} ᎠᎴᏱᎩ {1}"}
+            end{"{0}, ᎠᎴᏱᎩ {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }

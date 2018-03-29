@@ -221,7 +221,7 @@ hu{
         minimumGroupingDigits{"4"}
         native{"latn"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.20"}
     calendar{
         buddhist{
             eras{
@@ -1523,6 +1523,12 @@ hu{
         weather{"időjárás"}
         western_asian_scripts{"nyugat-ázsiai írásrendszerek"}
         whitespace{"térköz"}
+    }
+    contextTransforms{
+        typographicNames:intvector{
+            1,
+            1,
+        }
     }
     delimiters{
         alternateQuotationEnd{"«"}

@@ -10,7 +10,6 @@
 #include "mozilla/EditorUtils.h"
 #include "mozilla/Maybe.h"
 #include "nsIAbsorbingTransaction.h"
-#include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
 #include "nsWeakPtr.h"
 

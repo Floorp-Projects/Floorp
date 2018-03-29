@@ -58,7 +58,7 @@ es_US{
                         other{"0"}
                     }
                     10000{
-                        one{"00 K"}
+                        one{"00 K"}
                         other{"00 K"}
                     }
                     100000{
@@ -81,7 +81,7 @@ es_US{
             }
         }
     }
-    Version{"2.1.37.22"}
+    Version{"2.1.38.73"}
     calendar{
         generic{
             DateTimePatterns{
@@ -259,24 +259,6 @@ es_US{
                 yMMMd{
                     M{"d 'de' MMM – d 'de' MMM y"}
                     d{"d–d 'de' MMM 'de' y"}
-                }
-            }
-            monthNames{
-                format{
-                    abbreviated{
-                        "ene.",
-                        "feb.",
-                        "mar.",
-                        "abr.",
-                        "may.",
-                        "jun.",
-                        "jul.",
-                        "ago.",
-                        "sep.",
-                        "oct.",
-                        "nov.",
-                        "dic.",
-                    }
                 }
             }
         }

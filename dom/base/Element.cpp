@@ -3473,37 +3473,22 @@ Element::GetTokenList(nsAtom* aAtom,
 Element*
 Element::Closest(const nsAString& aSelector, ErrorResult& aResult)
 {
-  return WithSelectorList<Element*>(
-    aSelector,
-    aResult,
-    [&](const RawServoSelectorList* aList) -> Element* {
-      if (!aList) {
-        return nullptr;
-      }
-      return const_cast<Element*>(Servo_SelectorList_Closest(this, aList));
-    },
-    [&](nsCSSSelectorList* aList) -> Element* {
-      MOZ_CRASH("old style system disabled");
-    }
-  );
+  const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);
+  if (!list) {
+    return nullptr;
+  }
+
+  return const_cast<Element*>(Servo_SelectorList_Closest(this, list));
 }
 
 bool
-Element::Matches(const nsAString& aSelector, ErrorResult& aError)
+Element::Matches(const nsAString& aSelector, ErrorResult& aResult)
 {
-  return WithSelectorList<bool>(
-    aSelector,
-    aError,
-    [&](const RawServoSelectorList* aList) {
-      if (!aList) {
-        return false;
-      }
-      return Servo_SelectorList_Matches(this, aList);
-    },
-    [&](nsCSSSelectorList* aList) {
-      MOZ_CRASH("old style system disabled");
-    }
-  );
+  const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);
+  if (!list) {
+    return false;
+  }
+  return Servo_SelectorList_Matches(this, list);
 }
 
 static const nsAttrValue::EnumTable kCORSAttributeTable[] = {

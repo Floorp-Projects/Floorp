@@ -288,7 +288,7 @@ uk{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.12"}
+    Version{"2.1.39.20"}
     calendar{
         buddhist{
             eras{
@@ -1547,6 +1547,10 @@ uk{
             1,
         }
         relative:intvector{
+            1,
+            1,
+        }
+        typographicNames:intvector{
             1,
             1,
         }

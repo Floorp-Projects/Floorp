@@ -31,6 +31,7 @@
 #endif
 
 struct ID3D11Device;
+struct IDCompositionDevice;
 struct IDirectDraw7;
 
 namespace mozilla {
@@ -57,6 +58,7 @@ public:
 
   RefPtr<ID3D11Device> GetCompositorDevice();
   RefPtr<ID3D11Device> GetContentDevice();
+  RefPtr<IDCompositionDevice> GetDirectCompositionDevice();
   RefPtr<ID3D11Device> GetVRDevice();
   RefPtr<ID3D11Device> CreateDecoderDevice();
   RefPtr<layers::MLGDevice> GetMLGDevice();
@@ -66,6 +68,7 @@ public:
   bool TextureSharingWorks();
   bool IsWARP();
   bool CanUseNV12();
+  bool CanUseDComp();
 
   // Returns true if we can create a texture with
   // D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX and also
@@ -80,6 +83,7 @@ public:
 
   bool CreateCompositorDevices();
   void CreateContentDevices();
+  void CreateDirectCompositionDevice();
 
   void GetCompositorDevices(RefPtr<ID3D11Device>* aOutDevice,
                             RefPtr<layers::DeviceAttachmentsD3D11>* aOutAttachments);
@@ -137,6 +141,7 @@ private:
   bool ContentAdapterIsParentAdapter(ID3D11Device* device);
 
   bool LoadD3D11();
+  bool LoadDcomp();
   void ReleaseD3D11();
 
   // Call GetDeviceRemovedReason on each device until one returns
@@ -151,6 +156,8 @@ private:
   // the ref and unassign the module).
   nsModuleHandle mD3D11Module;
 
+  nsModuleHandle mDcompModule;
+
   mozilla::Mutex mDeviceLock;
   nsTArray<D3D_FEATURE_LEVEL> mFeatureLevels;
   RefPtr<IDXGIAdapter1> mAdapter;
@@ -158,6 +165,8 @@ private:
   RefPtr<ID3D11Device> mContentDevice;
   RefPtr<ID3D11Device> mVRDevice;
   RefPtr<ID3D11Device> mDecoderDevice;
+  RefPtr<IDCompositionDevice> mDirectCompositionDevice;
+
   RefPtr<layers::DeviceAttachmentsD3D11> mCompositorAttachments;
   RefPtr<layers::MLGDevice> mMLGDevice;
   bool mCompositorDeviceSupportsVideo;

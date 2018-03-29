@@ -2,10 +2,10 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ff_MR{
     Currencies{
-        MRO{
+        MRU{
             "UM",
             "Ugiyya Muritani",
         }
     }
-    Version{"2.1.31.33"}
+    Version{"2.1.39.11"}
 }

@@ -216,7 +216,7 @@ ca{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.22"}
+    Version{"2.1.39.20"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1416,6 +1416,12 @@ ca{
         weather{"temps"}
         western_asian_scripts{"escriptures de l’Àsia Sud-occidental"}
         whitespace{"espai en blanc"}
+    }
+    contextTransforms{
+        typographicNames:intvector{
+            1,
+            1,
+        }
     }
     delimiters{
         alternateQuotationEnd{"”"}

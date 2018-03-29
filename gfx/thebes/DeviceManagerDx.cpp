@@ -25,7 +25,12 @@
 #include "nsIGfxInfo.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
+
+#undef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_WIN8
+
 #include <d3d11.h>
+#include <dcomp.h>
 #include <ddraw.h>
 
 namespace mozilla {
@@ -40,6 +45,9 @@ StaticAutoPtr<DeviceManagerDx> DeviceManagerDx::sInstance;
 // since it doesn't include d3d11.h, so we use a static here. It should only
 // be used within InitializeD3D11.
 decltype(D3D11CreateDevice)* sD3D11CreateDeviceFn = nullptr;
+
+typedef HRESULT(WINAPI * PFN_DCOMPOSITION_CREATE_DEVICE)(IDXGIDevice * dxgiDevice, REFIID iid, void **dcompositionDevice);
+PFN_DCOMPOSITION_CREATE_DEVICE sDcompCreateDeviceFn = nullptr;
 
 // We don't have access to the DirectDrawCreateEx type in gfxWindowsPlatform.h,
 // since it doesn't include ddraw.h, so we use a static here. It should only
@@ -98,6 +106,35 @@ DeviceManagerDx::LoadD3D11()
   }
 
   mD3D11Module.steal(module);
+  return true;
+}
+
+bool
+DeviceManagerDx::LoadDcomp()
+{
+  FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
+  MOZ_ASSERT(d3d11.IsEnabled());
+  MOZ_ASSERT(gfxVars::UseWebRender());
+  MOZ_ASSERT(gfxVars::UseWebRenderANGLE());
+  MOZ_ASSERT(gfxVars::UseWebRenderDCompWin());
+
+  if (sDcompCreateDeviceFn) {
+    return true;
+  }
+
+  nsModuleHandle module(LoadLibrarySystem32(L"dcomp.dll"));
+  if (!module) {
+    return false;
+  }
+
+  sDcompCreateDeviceFn =
+    reinterpret_cast<PFN_DCOMPOSITION_CREATE_DEVICE>(
+      ::GetProcAddress(module, "DCompositionCreateDevice"));
+  if (!sDcompCreateDeviceFn) {
+    return false;
+  }
+
+  mDcompModule.steal(module);
   return true;
 }
 
@@ -205,6 +242,41 @@ DeviceManagerDx::CreateVRDevice()
   }
 
   return true;
+}
+
+void
+DeviceManagerDx::CreateDirectCompositionDevice()
+{
+  if (!gfxVars::UseWebRenderDCompWin()) {
+    return;
+  }
+
+  if (!mCompositorDevice) {
+    return;
+  }
+
+  if (!LoadDcomp()) {
+    return;
+  }
+
+  RefPtr<IDXGIDevice> dxgiDevice;
+  if (mCompositorDevice->QueryInterface(IID_PPV_ARGS((IDXGIDevice**)getter_AddRefs(dxgiDevice))) != S_OK) {
+    return;
+  }
+
+  HRESULT hr;
+  RefPtr<IDCompositionDevice> compositionDevice;
+  MOZ_SEH_TRY {
+    hr = sDcompCreateDeviceFn(dxgiDevice, IID_PPV_ARGS((IDCompositionDevice**)getter_AddRefs(compositionDevice)));
+  } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
+    return;
+  }
+
+  if (!SUCCEEDED(hr)) {
+    return;
+  }
+
+  mDirectCompositionDevice = compositionDevice;
 }
 
 void
@@ -991,6 +1063,13 @@ DeviceManagerDx::GetVRDevice()
   return mVRDevice;
 }
 
+RefPtr<IDCompositionDevice>
+DeviceManagerDx::GetDirectCompositionDevice()
+{
+  MutexAutoLock lock(mDeviceLock);
+  return mDirectCompositionDevice;
+}
+
 unsigned
 DeviceManagerDx::GetCompositorFeatureLevel() const
 {
@@ -1062,6 +1141,13 @@ DeviceManagerDx::CanUseNV12()
     return false;
   }
   return mDeviceStatus->useNV12();
+}
+
+bool
+DeviceManagerDx::CanUseDComp()
+{
+  MutexAutoLock lock(mDeviceLock);
+  return !!mDirectCompositionDevice;
 }
 
 void

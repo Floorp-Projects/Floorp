@@ -14,7 +14,6 @@
 #include "mozilla/GuardObjects.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
-#include "nsIDOMNode.h"
 #include "nsIEditor.h"
 #include "nscore.h"
 

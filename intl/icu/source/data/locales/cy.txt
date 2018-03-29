@@ -393,7 +393,7 @@ cy{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.17"}
+    Version{"2.1.39.11"}
     calendar{
         generic{
             DateTimePatterns{
@@ -727,6 +727,20 @@ cy{
             }
             dayPeriod{
                 format{
+                    abbreviated{
+                        afternoon1{"y prynhawn"}
+                        evening1{"yr hwyr"}
+                        midnight{"canol nos"}
+                        morning1{"y bore"}
+                        noon{"canol dydd"}
+                    }
+                    narrow{
+                        afternoon1{"yn y prynhawn"}
+                        evening1{"min nos"}
+                        midnight{"canol nos"}
+                        morning1{"yn y bore"}
+                        noon{"canol dydd"}
+                    }
                     wide{
                         afternoon1{"y prynhawn"}
                         evening1{"yr hwyr"}
@@ -737,11 +751,21 @@ cy{
                 }
                 stand-alone{
                     abbreviated{
+                        afternoon1{"prynhawn"}
                         am{"yb"}
+                        evening1{"yr hwyr"}
+                        midnight{"canol nos"}
+                        morning1{"bore"}
+                        noon{"canol dydd"}
                         pm{"yh"}
                     }
                     narrow{
+                        afternoon1{"prynhawn"}
                         am{"yb"}
+                        evening1{"min nos"}
+                        midnight{"canol nos"}
+                        morning1{"bore"}
+                        noon{"canol dydd"}
                         pm{"yh"}
                     }
                     wide{

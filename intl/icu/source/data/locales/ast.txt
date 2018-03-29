@@ -236,7 +236,7 @@ ast{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1154,8 +1154,8 @@ ast{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ 'de' y"}
                 yw{
-                    one{"'selmana' w 'de' Y"}
-                    other{"'selmana' w 'de' Y"}
+                    one{"'selmana' w 'de' y"}
+                    other{"'selmana' w 'de' y"}
                 }
             }
             dayNames{
@@ -3933,5 +3933,32 @@ ast{
         UK{"R.X."}
         US{"EE.XX."}
         metric{"Métricu"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

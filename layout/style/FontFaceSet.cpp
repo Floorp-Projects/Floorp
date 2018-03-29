@@ -24,6 +24,7 @@
 #include "mozilla/ServoUtils.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/LoadInfo.h"
 #include "nsAutoPtr.h"
 #include "nsContentPolicyUtils.h"
 #include "nsCSSParser.h"
@@ -1376,14 +1377,17 @@ FontFaceSet::IsFontLoadAllowed(nsIURI* aFontLocation,
     mDocument->StartBufferingCSPViolations();
   }
 
+  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+    new net::LoadInfo(mDocument->NodePrincipal(), // loading principal
+                      aPrincipal, // triggering principal
+                      mDocument,
+                      nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                      nsIContentPolicy::TYPE_FONT);
+
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_FONT,
-                                          aFontLocation,
-                                          aPrincipal, // loading principal
-                                          aPrincipal, // triggering principal
-                                          mDocument,
+  nsresult rv = NS_CheckContentLoadPolicy(aFontLocation,
+                                          secCheckLoadInfo,
                                           EmptyCString(), // mime type
-                                          nullptr, // aExtra
                                           &shouldLoad,
                                           nsContentUtils::GetContentPolicy());
 

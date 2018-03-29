@@ -9,7 +9,7 @@ en_CA{
             }
         }
     }
-    Version{"2.1.37.22"}
+    Version{"2.1.38.73"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -199,6 +199,10 @@ en_CA{
                 yMMMEd{"E, MMM d, y"}
                 yMMMd{"MMM d, y"}
                 yMd{"y-MM-dd"}
+                yw{
+                    one{"'week' w 'of' y"}
+                    other{"'week' w 'of' y"}
+                }
             }
             dayNames{
                 format{
@@ -339,6 +343,7 @@ en_CA{
         leftwards_rightwards_arrows{"leftward rightward arrow"}
         letterlike_symbols{"letter-like symbol"}
         limited_use{"limited use"}
+        math_symbols{"math symbol"}
         nonspacing{"non-spacing"}
         rightwards_arrows{"rightward arrow"}
         upwards_arrows{"upward arrows"}

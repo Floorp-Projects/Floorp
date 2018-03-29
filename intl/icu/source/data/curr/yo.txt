@@ -124,6 +124,10 @@ yo{
         }
         MRO{
             "MRO",
+            "Ouguiya ti Orílẹ́ède Maritania (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Ouguiya ti Orílẹ́ède Maritania",
         }
         MUR{
@@ -180,6 +184,10 @@ yo{
         }
         STD{
             "STD",
+            "Dobira ti Orílẹ́ède Sao tome Ati Pirisipe (1977–2017)",
+        }
+        STN{
+            "STN",
             "Dobira ti Orílẹ́ède Sao tome Ati Pirisipe",
         }
         SZL{
@@ -230,5 +238,5 @@ yo{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
 }
