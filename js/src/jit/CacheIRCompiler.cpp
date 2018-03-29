@@ -88,6 +88,51 @@ CacheRegisterAllocator::useValueRegister(MacroAssembler& masm, ValOperandId op)
     MOZ_CRASH();
 }
 
+// Load a value operand directly into a float register. Caller must have
+// guarded isNumber on the provided val.
+void
+CacheRegisterAllocator::loadDouble(MacroAssembler& masm, ValOperandId op, FloatRegister dest)
+{
+    OperandLocation& loc = operandLocations_[op.id()];
+
+    Label failure, done;
+    switch (loc.kind()) {
+      case OperandLocation::ValueReg: {
+        masm.ensureDouble(loc.valueReg(), dest, &failure);
+        break;
+      }
+
+      case OperandLocation::ValueStack: {
+        masm.ensureDouble(valueAddress(masm, &loc), dest, &failure);
+        break;
+      }
+
+      case OperandLocation::BaselineFrame: {
+        Address addr = addressOf(masm, loc.baselineFrameSlot());
+        masm.ensureDouble(addr, dest, &failure);
+        break;
+      }
+
+      case OperandLocation::DoubleReg: {
+        masm.moveDouble(loc.doubleReg(), dest);
+        loc.setDoubleReg(dest);
+        return;
+      }
+
+      case OperandLocation::Constant:
+      case OperandLocation::PayloadStack:
+      case OperandLocation::PayloadReg:
+      case OperandLocation::Uninitialized:
+        MOZ_CRASH("Unhandled operand type in loadDouble");
+        return;
+    }
+    masm.jump(&done);
+    masm.bind(&failure);
+    masm.assumeUnreachable("Missing guard allowed non-number to hit loadDouble");
+    masm.bind(&done);
+}
+
+
 ValueOperand
 CacheRegisterAllocator::useFixedValueRegister(MacroAssembler& masm, ValOperandId valId,
                                               ValueOperand reg)
@@ -668,6 +713,13 @@ CacheRegisterAllocator::popPayload(MacroAssembler& masm, OperandLocation* loc, R
     loc->setPayloadReg(dest, loc->payloadType());
 }
 
+Address
+CacheRegisterAllocator::valueAddress(MacroAssembler& masm, OperandLocation* loc)
+{
+    MOZ_ASSERT(loc >= operandLocations_.begin() && loc < operandLocations_.end());
+    return Address(masm.getStackPointer(), stackPushed_ - loc->valueStack());
+}
+
 void
 CacheRegisterAllocator::popValue(MacroAssembler& masm, OperandLocation* loc, ValueOperand dest)
 {
@@ -777,9 +829,11 @@ CacheRegisterAllocator::restoreInputState(MacroAssembler& masm, bool shouldDisca
               case OperandLocation::ValueStack:
                 popValue(masm, &cur, dest.valueReg());
                 continue;
+              case OperandLocation::DoubleReg:
+                masm.boxDouble(cur.doubleReg(), dest.valueReg(), cur.doubleReg());
+                continue;
               case OperandLocation::Constant:
               case OperandLocation::BaselineFrame:
-              case OperandLocation::DoubleReg:
               case OperandLocation::Uninitialized:
                 break;
             }
@@ -1865,6 +1919,39 @@ CacheIRCompiler::emitLoadInt32ArrayLengthResult()
     // Guard length fits in an int32.
     masm.branchTest32(Assembler::Signed, scratch, scratch, failure->label());
     EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+    return true;
+}
+bool
+CacheIRCompiler::emitDoubleAddResult()
+{
+    AutoOutputRegister output(*this);
+
+    // Float register must be preserved. The BinaryArith ICs use
+    // the fact that baseline has them available, as well as fixed temps on
+    // LBinaryCache.
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg0);
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
+
+    masm.addDouble(FloatReg1, FloatReg0);
+    masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+
+    return true;
+}
+
+bool
+CacheIRCompiler::emitInt32AddResult()
+{
+    AutoOutputRegister output(*this);
+    Register lhs = allocator.useRegister(masm, reader.int32OperandId());
+    Register rhs = allocator.useRegister(masm, reader.int32OperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    masm.branchAdd32(Assembler::Overflow, lhs, rhs, failure->label());
+    EmitStoreResult(masm, rhs, JSVAL_TYPE_INT32, output);
+
     return true;
 }
 
