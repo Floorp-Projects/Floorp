@@ -4,9 +4,6 @@ config = {
     'base_name': 'WINNT_5.2_%(branch)s',
     'platform': 'win32',
     'env': {
-        'BINSCOPE': os.path.join(
-            os.environ['ProgramFiles(x86)'], 'Microsoft', 'SDL BinScope', 'BinScope.exe'
-        ),
         'PDBSTR_PATH': 'C:/Program Files (x86)/Windows Kits/10/Debuggers/x86/srcsrv/pdbstr.exe',
     },
     "check_test_env": {
