@@ -25,6 +25,7 @@ apps:
       - network-observe
       - opengl
       - pulseaudio
+      - removable-media
       - screen-inhibit-control
       - unity7
       - upower-observe
