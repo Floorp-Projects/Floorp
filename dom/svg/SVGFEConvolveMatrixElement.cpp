@@ -53,9 +53,9 @@ nsSVGElement::BooleanInfo SVGFEConvolveMatrixElement::sBooleanInfo[1] =
 };
 
 nsSVGEnumMapping SVGFEConvolveMatrixElement::sEdgeModeMap[] = {
-  {&nsGkAtoms::duplicate, SVG_EDGEMODE_DUPLICATE},
-  {&nsGkAtoms::wrap, SVG_EDGEMODE_WRAP},
-  {&nsGkAtoms::none, SVG_EDGEMODE_NONE},
+  {nsGkAtoms::duplicate, SVG_EDGEMODE_DUPLICATE},
+  {nsGkAtoms::wrap, SVG_EDGEMODE_WRAP},
+  {nsGkAtoms::none, SVG_EDGEMODE_NONE},
   {nullptr, 0}
 };
 

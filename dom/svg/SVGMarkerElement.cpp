@@ -43,8 +43,8 @@ nsSVGElement::LengthInfo SVGMarkerElement::sLengthInfo[4] =
 };
 
 nsSVGEnumMapping SVGMarkerElement::sUnitsMap[] = {
-  {&nsGkAtoms::strokeWidth, SVG_MARKERUNITS_STROKEWIDTH},
-  {&nsGkAtoms::userSpaceOnUse, SVG_MARKERUNITS_USERSPACEONUSE},
+  {nsGkAtoms::strokeWidth, SVG_MARKERUNITS_STROKEWIDTH},
+  {nsGkAtoms::userSpaceOnUse, SVG_MARKERUNITS_USERSPACEONUSE},
   {nullptr, 0}
 };
 

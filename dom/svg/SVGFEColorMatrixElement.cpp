@@ -25,10 +25,10 @@ SVGFEColorMatrixElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenPr
 }
 
 nsSVGEnumMapping SVGFEColorMatrixElement::sTypeMap[] = {
-  {&nsGkAtoms::matrix, SVG_FECOLORMATRIX_TYPE_MATRIX},
-  {&nsGkAtoms::saturate, SVG_FECOLORMATRIX_TYPE_SATURATE},
-  {&nsGkAtoms::hueRotate, SVG_FECOLORMATRIX_TYPE_HUE_ROTATE},
-  {&nsGkAtoms::luminanceToAlpha, SVG_FECOLORMATRIX_TYPE_LUMINANCE_TO_ALPHA},
+  {nsGkAtoms::matrix, SVG_FECOLORMATRIX_TYPE_MATRIX},
+  {nsGkAtoms::saturate, SVG_FECOLORMATRIX_TYPE_SATURATE},
+  {nsGkAtoms::hueRotate, SVG_FECOLORMATRIX_TYPE_HUE_ROTATE},
+  {nsGkAtoms::luminanceToAlpha, SVG_FECOLORMATRIX_TYPE_LUMINANCE_TO_ALPHA},
   {nullptr, 0}
 };
 
