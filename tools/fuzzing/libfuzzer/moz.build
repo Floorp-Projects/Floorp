@@ -11,6 +11,7 @@ EXPORTS += [
 ]
 
 SOURCES += [
+    'FuzzerClangCounters.cpp',
     'FuzzerCrossOver.cpp',
     'FuzzerDriver.cpp',
     'FuzzerExtFunctionsDlsym.cpp',
@@ -28,7 +29,6 @@ SOURCES += [
     'FuzzerShmemPosix.cpp',
     'FuzzerShmemWindows.cpp',
     'FuzzerTracePC.cpp',
-    'FuzzerTraceState.cpp',
     'FuzzerUtil.cpp',
     'FuzzerUtilDarwin.cpp',
     'FuzzerUtilLinux.cpp',

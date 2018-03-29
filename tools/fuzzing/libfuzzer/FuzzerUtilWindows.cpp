@@ -10,6 +10,7 @@
 //===----------------------------------------------------------------------===//
 #include "FuzzerDefs.h"
 #if LIBFUZZER_WINDOWS
+#include "FuzzerCommand.h"
 #include "FuzzerIO.h"
 #include "FuzzerInternal.h"
 #include <cassert>
@@ -18,11 +19,12 @@
 #include <errno.h>
 #include <iomanip>
 #include <signal.h>
-#include <sstream>
 #include <stdio.h>
 #include <sys/types.h>
 #include <windows.h>
-#include <psapi.h>
+
+// This must be included after windows.h.
+#include <Psapi.h>
 
 namespace fuzzer {
 
@@ -150,8 +152,9 @@ FILE *OpenProcessPipe(const char *Command, const char *Mode) {
   return _popen(Command, Mode);
 }
 
-int ExecuteCommand(const std::string &Command) {
-  return system(Command.c_str());
+int ExecuteCommand(const Command &Cmd) {
+  std::string CmdLine = Cmd.toString();
+  return system(CmdLine.c_str());
 }
 
 const void *SearchMemory(const void *Data, size_t DataLen, const void *Patt,
