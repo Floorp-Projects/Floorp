@@ -1250,82 +1250,23 @@ nsAnnotationService::GetItemsWithAnnotationTArray(const nsACString& aName,
 }
 
 
-NS_IMETHODIMP
-nsAnnotationService::GetPageAnnotationNames(nsIURI* aURI,
-                                            uint32_t* _count,
-                                            nsIVariant*** _result)
-{
-  NS_ENSURE_ARG(aURI);
-  NS_ENSURE_ARG_POINTER(_count);
-  NS_ENSURE_ARG_POINTER(_result);
-
-  *_count = 0;
-  *_result = nullptr;
-
-  nsTArray<nsCString> names;
-  nsresult rv = GetAnnotationNamesTArray(aURI, 0, &names);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (names.Length() == 0)
-    return NS_OK;
-
-  *_result = static_cast<nsIVariant**>
-                        (moz_xmalloc(sizeof(nsIVariant*) * names.Length()));
-  NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
-
-  for (uint32_t i = 0; i < names.Length(); i ++) {
-    nsCOMPtr<nsIWritableVariant> var = new nsVariant();
-    if (!var) {
-      // need to release all the variants we've already created
-      for (uint32_t j = 0; j < i; j ++)
-        NS_RELEASE((*_result)[j]);
-      free(*_result);
-      *_result = nullptr;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    var->SetAsAUTF8String(names[i]);
-    NS_ADDREF((*_result)[i] = var);
-  }
-  *_count = names.Length();
-
-  return NS_OK;
-}
-
-
 nsresult
-nsAnnotationService::GetAnnotationNamesTArray(nsIURI* aURI,
-                                              int64_t aItemId,
-                                              nsTArray<nsCString>* _result)
+nsAnnotationService::GetItemAnnotationNamesTArray(int64_t aItemId,
+                                                  nsTArray<nsCString>* _result)
 {
   _result->Clear();
 
-  bool isItemAnnotation = (aItemId > 0);
   nsCOMPtr<mozIStorageStatement> statement;
-  if (isItemAnnotation) {
-    statement = mDB->GetStatement(
-      "SELECT n.name "
-      "FROM moz_anno_attributes n "
-      "JOIN moz_items_annos a ON a.anno_attribute_id = n.id "
-      "WHERE a.item_id = :item_id"
-    );
-  }
-  else {
-    statement = mDB->GetStatement(
-      "SELECT n.name "
-      "FROM moz_anno_attributes n "
-      "JOIN moz_annos a ON a.anno_attribute_id = n.id "
-      "JOIN moz_places h ON h.id = a.place_id "
-      "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url"
-    );
-  }
+  statement = mDB->GetStatement(
+    "SELECT n.name "
+    "FROM moz_anno_attributes n "
+    "JOIN moz_items_annos a ON a.anno_attribute_id = n.id "
+    "WHERE a.item_id = :item_id"
+  );
   NS_ENSURE_STATE(statement);
   mozStorageStatementScoper scoper(statement);
 
-  nsresult rv;
-  if (isItemAnnotation)
-    rv = statement->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
-  else
-    rv = URIBinder::Bind(statement, NS_LITERAL_CSTRING("page_url"), aURI);
+  nsresult rv = statement->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), aItemId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasResult = false;
@@ -1355,7 +1296,7 @@ nsAnnotationService::GetItemAnnotationNames(int64_t aItemId,
   *_result = nullptr;
 
   nsTArray<nsCString> names;
-  nsresult rv = GetAnnotationNamesTArray(nullptr, aItemId, &names);
+  nsresult rv = GetItemAnnotationNamesTArray(aItemId, &names);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (names.Length() == 0)
