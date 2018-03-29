@@ -71,8 +71,8 @@ struct NurseryChunk {
     char data[Nursery::NurseryChunkUsableSize];
     gc::ChunkTrailer trailer;
     static NurseryChunk* fromChunk(gc::Chunk* chunk);
-    void init(JSRuntime* rt);
-    void poisonAndInit(JSRuntime* rt, uint8_t poison);
+    void poisonAndInit(JSRuntime* rt);
+    void poisonAfterSweep();
     uintptr_t start() const { return uintptr_t(&data); }
     uintptr_t end() const { return uintptr_t(&trailer); }
     gc::Chunk* toChunk(JSRuntime* rt);
@@ -83,16 +83,17 @@ static_assert(sizeof(js::NurseryChunk) == gc::ChunkSize,
 } /* namespace js */
 
 inline void
-js::NurseryChunk::poisonAndInit(JSRuntime* rt, uint8_t poison)
+js::NurseryChunk::poisonAndInit(JSRuntime* rt)
 {
-    JS_POISON(this, poison, ChunkSize);
-    init(rt);
+    JS_POISON(this, JS_FRESH_NURSERY_PATTERN, ChunkSize);
+
+    new (&trailer) gc::ChunkTrailer(rt, &rt->gc.storeBuffer());
 }
 
 inline void
-js::NurseryChunk::init(JSRuntime* rt)
+js::NurseryChunk::poisonAfterSweep()
 {
-    new (&trailer) gc::ChunkTrailer(rt, &rt->gc.storeBuffer());
+    JS_POISON(this, JS_SWEPT_NURSERY_PATTERN, ChunkSize);
 }
 
 /* static */ inline js::NurseryChunk*
@@ -1020,13 +1021,18 @@ js::Nursery::clear()
 #if defined(JS_GC_ZEAL) || defined(JS_CRASH_DIAGNOSTICS)
     /* Poison the nursery contents so touching a freed object will crash. */
     for (unsigned i = currentStartChunk_; i < allocatedChunkCount(); ++i)
-        chunk(i).poisonAndInit(runtime(), JS_SWEPT_NURSERY_PATTERN);
+        chunk(i).poisonAfterSweep();
 #endif
 
     if (runtime()->hasZealMode(ZealMode::GenerationalGC)) {
         /* Only reset the alloc point when we are close to the end. */
-        if (currentChunk_ + 1 == maxChunkCount())
+        if (currentChunk_ + 1 == maxChunkCount()) {
             setCurrentChunk(0);
+        } else {
+            // poisonAfterSweep poisons the chunk trailer. Ensure it's
+            // initialized.
+            chunk(currentChunk_).poisonAndInit(runtime());
+        }
     } else {
         setCurrentChunk(0);
     }
@@ -1061,7 +1067,7 @@ js::Nursery::setCurrentChunk(unsigned chunkno)
     currentEnd_ = chunk(chunkno).end();
     if (canAllocateStrings_)
         currentStringEnd_ = currentEnd_;
-    chunk(chunkno).poisonAndInit(runtime(), JS_FRESH_NURSERY_PATTERN);
+    chunk(chunkno).poisonAndInit(runtime());
 }
 
 bool
