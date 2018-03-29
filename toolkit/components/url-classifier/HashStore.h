@@ -143,13 +143,13 @@ public:
   struct PrefixStdString {
   private:
     std::string mStorage;
-    nsDependentCSubstring mString;
+    nsCString mString;
 
   public:
     explicit PrefixStdString(std::string& aString)
     {
       aString.swap(mStorage);
-      mString.Rebind(mStorage.data(), mStorage.size());
+      mString.AssignLiteral(mStorage.data(), mStorage.size());
     };
 
     const nsACString& GetPrefixString() const { return mString; };
