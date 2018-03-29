@@ -6839,9 +6839,9 @@ nsCSSFrameConstructor::CheckBitsForLazyFrameConstruction(nsIContent* aParent)
       content->GetPrimaryFrame()->IsLeaf()) {
     noPrimaryFrame = needsFrameBitSet = false;
   }
-  NS_ASSERTION(!noPrimaryFrame, "Ancestors of nodes with frames to be "
+  MOZ_ASSERT(!noPrimaryFrame, "Ancestors of nodes with frames to be "
     "constructed lazily should have frames");
-  NS_ASSERTION(!needsFrameBitSet, "Ancestors of nodes with frames to be "
+  MOZ_ASSERT(!needsFrameBitSet, "Ancestors of nodes with frames to be "
     "constructed lazily should not have NEEDS_FRAME bit set");
 }
 #endif
@@ -6886,6 +6886,10 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
 
   if (Servo_Element_IsDisplayNone(parent)) {
     // Nothing to do either.
+    //
+    // FIXME(emilio): This should be an assert, except for weird <frameset>
+    // stuff that does its own frame construction. Such an assert would fire in
+    // layout/style/crashtests/1411478.html, for example.
     return true;
   }
 
@@ -6920,7 +6924,8 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
 void
 nsCSSFrameConstructor::IssueSingleInsertNofications(nsIContent* aContainer,
                                                     nsIContent* aStartChild,
-                                                    nsIContent* aEndChild)
+                                                    nsIContent* aEndChild,
+                                                    InsertionKind aInsertionKind)
 {
   for (nsIContent* child = aStartChild;
        child != aEndChild;
@@ -6931,7 +6936,7 @@ nsCSSFrameConstructor::IssueSingleInsertNofications(nsIContent* aContainer,
 
     // Call ContentRangeInserted with this node.
     ContentRangeInserted(aContainer, child, child->GetNextSibling(),
-                         mTempFrameTreeState, InsertionKind::Sync);
+                         mTempFrameTreeState, aInsertionKind);
   }
 }
 
@@ -6960,7 +6965,8 @@ nsCSSFrameConstructor::InsertionPoint::IsMultiple() const
 nsCSSFrameConstructor::InsertionPoint
 nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
                                               nsIContent* aStartChild,
-                                              nsIContent* aEndChild)
+                                              nsIContent* aEndChild,
+                                              InsertionKind aInsertionKind)
 {
   MOZ_ASSERT(aStartChild);
 
@@ -6968,7 +6974,8 @@ nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
   // points, insert them separately and bail out, letting ContentInserted handle
   // the mess.
   if (aContainer->GetShadowRoot() || aContainer->GetXBLBinding()) {
-    IssueSingleInsertNofications(aContainer, aStartChild, aEndChild);
+    IssueSingleInsertNofications(
+      aContainer, aStartChild, aEndChild, aInsertionKind);
     return { };
   }
 
@@ -6987,7 +6994,8 @@ nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
   // insertion point.
   InsertionPoint ip = GetInsertionPoint(aStartChild);
   if (ip.IsMultiple()) {
-    IssueSingleInsertNofications(aContainer, aStartChild, aEndChild);
+    IssueSingleInsertNofications(
+      aContainer, aStartChild, aEndChild, aInsertionKind);
     return { };
   }
 
@@ -7098,9 +7106,12 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   }
 #endif
 
-  // See comment in ContentRangeInserted for why this is necessary.
-  if (!GetContentInsertionFrameFor(aContainer) &&
-      !aContainer->IsActiveChildrenElement()) {
+  LAYOUT_PHASE_TEMP_EXIT();
+  InsertionPoint insertion =
+    GetRangeInsertionPoint(aContainer, aFirstNewContent, nullptr, aInsertionKind);
+  nsContainerFrame*& parentFrame = insertion.mParentFrame;
+  LAYOUT_PHASE_TEMP_REENTER();
+  if (!parentFrame) {
     // We're punting on frame construction because there's no container frame.
     // The Servo-backed style system handles this case like the lazy frame
     // construction case, except when we're already constructing frames, in
@@ -7122,15 +7133,6 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   // styles are up-to-date already).
   if (aInsertionKind == InsertionKind::Async) {
     StyleNewChildRange(aFirstNewContent, nullptr);
-  }
-
-  LAYOUT_PHASE_TEMP_EXIT();
-  InsertionPoint insertion =
-    GetRangeInsertionPoint(aContainer, aFirstNewContent, nullptr);
-  nsContainerFrame*& parentFrame = insertion.mParentFrame;
-  LAYOUT_PHASE_TEMP_REENTER();
-  if (!parentFrame) {
-    return;
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
@@ -7504,7 +7506,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
       // We don't handle a range insert to a listbox parent, issue single
       // ContertInserted calls for each node inserted.
       LAYOUT_PHASE_TEMP_EXIT();
-      IssueSingleInsertNofications(aContainer, aStartChild, aEndChild);
+      IssueSingleInsertNofications(
+        aContainer, aStartChild, aEndChild, InsertionKind::Sync);
       LAYOUT_PHASE_TEMP_REENTER();
       return;
     }
@@ -7555,12 +7558,21 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     return;
   }
 
-  nsContainerFrame* parentFrame = GetContentInsertionFrameFor(aContainer);
-  // The xbl:children element won't have a frame, but default content can have the children as
-  // a parent. While its uncommon to change the structure of the default content itself, a label,
-  // for example, can be reframed by having its value attribute set or removed.
-  if (!parentFrame &&
-      !(aContainer->IsActiveChildrenElement() || aContainer->IsShadowRoot())) {
+  InsertionPoint insertion;
+  if (isSingleInsert) {
+    // See if we have an XBL insertion point. If so, then that's our
+    // real parent frame; if not, then the frame hasn't been built yet
+    // and we just bail.
+    insertion = GetInsertionPoint(aStartChild);
+  } else {
+    // Get our insertion point. If we need to issue single ContentInserteds
+    // GetRangeInsertionPoint will take care of that for us.
+    LAYOUT_PHASE_TEMP_EXIT();
+    insertion = GetRangeInsertionPoint(aContainer, aStartChild, aEndChild, aInsertionKind);
+    LAYOUT_PHASE_TEMP_REENTER();
+  }
+
+  if (!insertion.mParentFrame) {
     // We're punting on frame construction because there's no container frame.
     // The Servo-backed style system handles this case like the lazy frame
     // construction case, except when we're already constructing frames, in
@@ -7570,13 +7582,6 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     }
     return;
   }
-
-  MOZ_ASSERT_IF(aContainer->IsShadowRoot(), !parentFrame);
-
-  // Otherwise, we've got parent content. Find its frame.
-  NS_ASSERTION(!parentFrame || parentFrame->GetContent() == aContainer ||
-               IsDisplayContents(aContainer),
-               "New XBL code is possibly wrong!");
 
   if (aInsertionKind == InsertionKind::Async &&
       MaybeConstructLazily(CONTENTINSERT, aStartChild)) {
@@ -7588,24 +7593,6 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
   // if needed.
   styleNewChildRangeEagerly();
 
-  InsertionPoint insertion;
-  if (isSingleInsert) {
-    // See if we have an XBL insertion point. If so, then that's our
-    // real parent frame; if not, then the frame hasn't been built yet
-    // and we just bail.
-    insertion = GetInsertionPoint(aStartChild);
-  } else {
-    // Get our insertion point. If we need to issue single ContentInserted's
-    // GetRangeInsertionPoint will take care of that for us.
-    LAYOUT_PHASE_TEMP_EXIT();
-    insertion = GetRangeInsertionPoint(aContainer, aStartChild, aEndChild);
-    LAYOUT_PHASE_TEMP_REENTER();
-  }
-
-  if (!insertion.mParentFrame) {
-    return;
-  }
-
   bool isAppend, isRangeInsertSafe;
   nsIFrame* prevSibling = GetInsertionPrevSibling(&insertion, aStartChild,
                                                   &isAppend, &isRangeInsertSafe);
@@ -7614,7 +7601,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
   if (!isSingleInsert && !isRangeInsertSafe) {
     // must fall back to a single ContertInserted for each child in the range
     LAYOUT_PHASE_TEMP_EXIT();
-    IssueSingleInsertNofications(aContainer, aStartChild, aEndChild);
+    IssueSingleInsertNofications(
+        aContainer, aStartChild, aEndChild, InsertionKind::Sync);
     LAYOUT_PHASE_TEMP_REENTER();
     return;
   }
@@ -7746,7 +7734,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
 
         // must fall back to a single ContertInserted for each child in the range
         LAYOUT_PHASE_TEMP_EXIT();
-        IssueSingleInsertNofications(aContainer, aStartChild, aEndChild);
+        IssueSingleInsertNofications(
+          aContainer, aStartChild, aEndChild, InsertionKind::Sync);
         LAYOUT_PHASE_TEMP_REENTER();
         return;
       }
