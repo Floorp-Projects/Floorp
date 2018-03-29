@@ -888,7 +888,7 @@ HTMLEditor::GetBlock(nsINode& aNode,
   if (NodeIsBlockStatic(&aNode)) {
     return aNode.AsElement();
   }
-  return GetBlockNodeParent(&aNode);
+  return GetBlockNodeParent(&aNode, aAncestorLimiter);
 }
 
 /**
