@@ -27,8 +27,8 @@ class SVGAnimationElement;
 typedef uint8_t nsSVGEnumValue;
 
 struct nsSVGEnumMapping {
-  nsStaticAtom** mKey;
-  nsSVGEnumValue mVal;
+  nsStaticAtom* const mKey;
+  const nsSVGEnumValue mVal;
 };
 
 class nsSVGEnum

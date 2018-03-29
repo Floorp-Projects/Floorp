@@ -44,17 +44,17 @@ nsSVGElement::IntegerInfo SVGFETurbulenceElement::sIntegerInfo[1] =
 };
 
 nsSVGEnumMapping SVGFETurbulenceElement::sTypeMap[] = {
-  {&nsGkAtoms::fractalNoise,
+  {nsGkAtoms::fractalNoise,
    SVG_TURBULENCE_TYPE_FRACTALNOISE},
-  {&nsGkAtoms::turbulence,
+  {nsGkAtoms::turbulence,
    SVG_TURBULENCE_TYPE_TURBULENCE},
   {nullptr, 0}
 };
 
 nsSVGEnumMapping SVGFETurbulenceElement::sStitchTilesMap[] = {
-  {&nsGkAtoms::stitch,
+  {nsGkAtoms::stitch,
    SVG_STITCHTYPE_STITCH},
-  {&nsGkAtoms::noStitch,
+  {nsGkAtoms::noStitch,
    SVG_STITCHTYPE_NOSTITCH},
   {nullptr, 0}
 };

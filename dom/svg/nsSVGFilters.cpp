@@ -213,15 +213,15 @@ nsSVGElement::NumberInfo SVGComponentTransferFunctionElement::sNumberInfo[5] =
 };
 
 nsSVGEnumMapping SVGComponentTransferFunctionElement::sTypeMap[] = {
-  {&nsGkAtoms::identity,
+  {nsGkAtoms::identity,
    SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY},
-  {&nsGkAtoms::table,
+  {nsGkAtoms::table,
    SVG_FECOMPONENTTRANSFER_TYPE_TABLE},
-  {&nsGkAtoms::discrete,
+  {nsGkAtoms::discrete,
    SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE},
-  {&nsGkAtoms::linear,
+  {nsGkAtoms::linear,
    SVG_FECOMPONENTTRANSFER_TYPE_LINEAR},
-  {&nsGkAtoms::gamma,
+  {nsGkAtoms::gamma,
    SVG_FECOMPONENTTRANSFER_TYPE_GAMMA},
   {nullptr, 0}
 };

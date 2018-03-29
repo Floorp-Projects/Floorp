@@ -28,10 +28,10 @@ nsSVGElement::NumberInfo SVGFEDisplacementMapElement::sNumberInfo[1] =
 };
 
 nsSVGEnumMapping SVGFEDisplacementMapElement::sChannelMap[] = {
-  {&nsGkAtoms::R, SVG_CHANNEL_R},
-  {&nsGkAtoms::G, SVG_CHANNEL_G},
-  {&nsGkAtoms::B, SVG_CHANNEL_B},
-  {&nsGkAtoms::A, SVG_CHANNEL_A},
+  {nsGkAtoms::R, SVG_CHANNEL_R},
+  {nsGkAtoms::G, SVG_CHANNEL_G},
+  {nsGkAtoms::B, SVG_CHANNEL_B},
+  {nsGkAtoms::A, SVG_CHANNEL_A},
   {nullptr, 0}
 };
 
