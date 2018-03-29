@@ -654,7 +654,8 @@ SandboxBroker::SymlinkPermissions(const char* aPath, const size_t aPathLen)
     // We finished the translation, so we have a usable return in "perms".
     return perms;
   } else {
-    // Empty path means we got a writable dir in the chain.
+    // Empty path means we got a writable dir in the chain or tried
+    // to back out of a link target.
     return 0;
   }
 }
@@ -798,26 +799,26 @@ SandboxBroker::ThreadMain(void)
         // Was it a tempdir that we can remap?
         pathLen = RemapTempDirs(pathBuf, sizeof(pathBuf), pathLen);
         perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
-        if (!perms) {
-          // Did we arrive from a symlink in a path that is not writable?
-          // Then try to figure out the original path and see if that is
-          // readable. Work on the original path, this reverses
-            // ConvertRelative above.
-          int symlinkPerms = SymlinkPermissions(recvBuf, first_len);
-          if (symlinkPerms > 0) {
-            perms = symlinkPerms;
-          }
-          if (!perms) {
-            // Now try the opposite case: translate symlinks to their
-            // actual destination file. Firefox always resolves symlinks,
-            // and in most cases we have whitelisted fixed paths that
-            // libraries will rely on and try to open. So this codepath
-            // is mostly useful for Mesa which had its kernel interface
-            // moved around.
-            pathLen = RealPath(pathBuf, sizeof(pathBuf), pathLen);
-            perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
-          }
+      }
+      if (!perms) {
+        // Did we arrive from a symlink in a path that is not writable?
+        // Then try to figure out the original path and see if that is
+        // readable. Work on the original path, this reverses
+        // ConvertRelative above.
+        int symlinkPerms = SymlinkPermissions(recvBuf, first_len);
+        if (symlinkPerms > 0) {
+          perms = symlinkPerms;
         }
+      }
+      if (!perms) {
+        // Now try the opposite case: translate symlinks to their
+        // actual destination file. Firefox always resolves symlinks,
+        // and in most cases we have whitelisted fixed paths that
+        // libraries will rely on and try to open. So this codepath
+        // is mostly useful for Mesa which had its kernel interface
+        // moved around.
+        pathLen = RealPath(pathBuf, sizeof(pathBuf), pathLen);
+        perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
       }
 
       // Same for the second path.
@@ -1055,8 +1056,9 @@ SandboxBroker::AuditPermissive(int aOp, int aFlags, int aPerms, const char* aPat
     errno = 0;
   }
 
-  SANDBOX_LOG_ERROR("SandboxBroker: would have denied op=%d rflags=%o perms=%d path=%s for pid=%d" \
-                    " permissive=1 error=\"%s\"", aOp, aFlags, aPerms,
+  SANDBOX_LOG_ERROR("SandboxBroker: would have denied op=%s rflags=%o perms=%d path=%s for pid=%d" \
+                    " permissive=1 error=\"%s\"", OperationDescription[aOp],
+                    aFlags, aPerms,
                     aPath, mChildPid, strerror(errno));
 }
 
