@@ -309,21 +309,37 @@ var Policies = {
               }
               url = Services.io.newFileURI(xpiFile).spec;
             }
-            AddonManager.getInstallForURL(url, (install) => {
+            AddonManager.getInstallForURL(url, null, "application/x-xpinstall").then(install => {
+              if (install.addon && install.addon.appDisabled) {
+                log.error(`Incompatible add-on - ${location}`);
+                install.cancel();
+                return;
+              }
               let listener = {
+              /* eslint-disable-next-line no-shadow */
+                onDownloadEnded: (install) => {
+                  if (install.addon && install.addon.appDisabled) {
+                    log.error(`Incompatible add-on - ${location}`);
+                    install.removeListener(listener);
+                    install.cancel();
+                  }
+                },
                 onDownloadFailed: () => {
+                  install.removeListener(listener);
                   log.error(`Download failed - ${location}`);
                 },
                 onInstallFailed: () => {
+                  install.removeListener(listener);
                   log.error(`Installation failed - ${location}`);
                 },
                 onInstallEnded: () => {
+                  install.removeListener(listener);
                   log.debug(`Installation succeeded - ${location}`);
                 }
               };
               install.addListener(listener);
               install.install();
-            }, "application/x-xpinstall");
+            });
           }
         });
       }
