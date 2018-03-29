@@ -319,7 +319,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             const auto format = [&]() -> const webgl::FormatInfo* {
                 if (mBoundDrawFramebuffer) {
                     const auto& fb = *mBoundDrawFramebuffer;
-                    const auto& attachment = [&]() {
+                    const auto& attachment = [&]() -> const auto& {
                         switch (pname) {
                         case LOCAL_GL_DEPTH_BITS:
                             return fb.AnyDepthAttachment();
