@@ -3047,6 +3047,7 @@ AppendInternalItemToTop(const nsDisplayListSet& aLists,
 static const uint32_t APPEND_OWN_LAYER = 0x1;
 static const uint32_t APPEND_POSITIONED = 0x2;
 static const uint32_t APPEND_SCROLLBAR_CONTAINER = 0x4;
+static const uint32_t APPEND_OVERLAY = 0x8;
 
 static void
 AppendToTop(nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists,
@@ -3081,7 +3082,10 @@ AppendToTop(nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists,
     // We want overlay scrollbars to always be on top of the scrolled content,
     // but we don't want them to unnecessarily cover overlapping elements from
     // outside our scroll frame.
-    int32_t zIndex = MaxZIndexInList(aLists.PositionedDescendants(), aBuilder);
+    int32_t zIndex = -1;
+    if (aFlags & APPEND_OVERLAY) {
+      zIndex = MaxZIndexInList(aLists.PositionedDescendants(), aBuilder);
+    }
     AppendInternalItemToTop(aLists, newItem, zIndex);
   } else {
     aLists.BorderBackground()->AppendToTop(newItem);
@@ -3199,6 +3203,9 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     }
     if (aPositioned) {
       appendToTopFlags |= APPEND_POSITIONED;
+    }
+    if (overlayScrollbars) {
+      appendToTopFlags |= APPEND_OVERLAY;
     }
 
     {
