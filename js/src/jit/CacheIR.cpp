@@ -5078,3 +5078,95 @@ UnaryArithIRGenerator::tryAttachNumber()
     writer.returnFromIC();
     return true;
 }
+
+BinaryArithIRGenerator::BinaryArithIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, ICState::Mode mode,
+                                               JSOp op, HandleValue lhs, HandleValue rhs, HandleValue res)
+  : IRGenerator(cx, script, pc, CacheKind::BinaryArith, mode),
+    op_(op),
+    lhs_(lhs),
+    rhs_(rhs),
+    res_(res)
+{ }
+
+void
+BinaryArithIRGenerator::trackAttached(const char* name)
+{
+#ifdef JS_CACHEIR_SPEW
+    if (const CacheIRSpewer::Guard& sp = CacheIRSpewer::Guard(*this, name)) {
+        sp.opcodeProperty("op", op_);
+        sp.valueProperty("rhs", rhs_);
+        sp.valueProperty("lhs", lhs_);
+    }
+#endif
+}
+
+bool
+BinaryArithIRGenerator::tryAttachStub()
+{
+
+    if (tryAttachInt32())
+        return true;
+    if (tryAttachDouble())
+        return true;
+
+    trackAttached(IRGenerator::NotAttached);
+    return false;
+}
+
+bool
+BinaryArithIRGenerator::tryAttachDouble()
+{
+    if (op_ != JSOP_ADD)
+        return false;
+
+    if (!lhs_.isDouble() || !rhs_.isDouble() || !res_.isDouble())
+        return false;
+
+    if (!cx_->runtime()->jitSupportsFloatingPoint)
+        return false;
+
+    ValOperandId lhsId(writer.setInputOperandId(0));
+    ValOperandId rhsId(writer.setInputOperandId(1));
+
+    writer.guardIsNumber(lhsId);
+    writer.guardIsNumber(rhsId);
+
+    switch (op_) {
+       case JSOP_ADD:
+        writer.doubleAddResult(lhsId, rhsId);
+        trackAttached("BinaryArith.Double.Add");
+        break;
+      default:
+        MOZ_CRASH("Unhandled Op");
+    }
+    writer.returnFromIC();
+    return true;
+}
+
+bool
+BinaryArithIRGenerator::tryAttachInt32()
+{
+    if (op_ != JSOP_ADD)
+        return false;
+
+    if (!lhs_.isInt32() || !rhs_.isInt32())
+        return false;
+
+    ValOperandId lhsId(writer.setInputOperandId(0));
+    ValOperandId rhsId(writer.setInputOperandId(1));
+
+    Int32OperandId lhsIntId = writer.guardIsInt32(lhsId);
+    Int32OperandId rhsIntId = writer.guardIsInt32(rhsId);
+
+    switch (op_) {
+      case JSOP_ADD:
+        writer.int32AddResult(lhsIntId, rhsIntId);
+        trackAttached("BinaryArith.Int32.Add");
+        break;
+      default:
+        MOZ_CRASH("Unhandled op in tryAttachInt32");
+    }
+
+    writer.returnFromIC();
+    return true;
+}

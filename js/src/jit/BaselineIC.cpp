@@ -4933,5 +4933,61 @@ ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     return tailCallVM(DoUnaryArithFallbackInfo, masm);
 }
 
+//
+// BinaryArith_Fallback
+//
+// This currently is fused with the SharedIC DoBinaryArithFallback, however,
+// as we deprecate the SharedIC, this will be able to eventually take over.
+//
+// At that point the stub argument will go away, and instead be generated here.
+bool
+DoCacheIRBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallback* stub_,
+                             HandleValue lhs, HandleValue rhs, MutableHandleValue ret,
+                             DebugModeOSRVolatileStub<ICBinaryArith_Fallback*>& stub)
+{
+    RootedScript script(cx, frame->script());
+    jsbytecode* pc = stub->icEntry()->pc(script);
+    JSOp op = JSOp(*pc);
+
+    // Ensure we're only generating for an enabled opcode.
+    switch(op) {
+      case JSOP_ADD:
+        break;
+      default:
+        return false; // Fallback to shared IC.
+    }
+
+    FallbackICSpew(cx, stub, "CacheIRBinaryArith(%s,%d,%d)", CodeName[op],
+            int(lhs.isDouble() ? JSVAL_TYPE_DOUBLE : lhs.extractNonDoubleType()),
+            int(rhs.isDouble() ? JSVAL_TYPE_DOUBLE : rhs.extractNonDoubleType()));
+
+    // Check if debug mode toggling made the stub invalid.
+    if (stub.invalid())
+        return true;
+
+    if (ret.isDouble())
+        stub->setSawDoubleResult();
+
+    if (stub->state().maybeTransition())
+        stub->discardStubs(cx);
+
+    if (stub->state().canAttachStub()) {
+        BinaryArithIRGenerator gen(cx, script, pc, stub->state().mode(),
+                                   op, lhs, rhs, ret);
+        if (gen.tryAttachStub()) {
+            bool attached = false;
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Regular,
+                                                        ICStubEngine::Baseline, script, stub, &attached);
+            if (newStub)
+                JitSpew(JitSpew_BaselineIC, "  Attached BinaryArith CacheIR stub for %s", CodeName[op]);
+        } else {
+            return false; // Fallback to shared IC.
+        }
+    }
+    return true;
+}
+
+
 } // namespace jit
 } // namespace js

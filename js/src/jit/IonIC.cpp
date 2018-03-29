@@ -58,6 +58,8 @@ IonIC::scratchRegisterForEntryJump()
         return asInstanceOfIC()->output();
       case CacheKind::UnaryArith:
         return asUnaryArithIC()->output().scratchReg();
+      case CacheKind::BinaryArith:
+        return asBinaryArithIC()->output().scratchReg();
       case CacheKind::Call:
       case CacheKind::Compare:
       case CacheKind::TypeOf:
@@ -545,6 +547,48 @@ IonUnaryArithIC::update(JSContext* cx, HandleScript outerScript, IonUnaryArithIC
             ic->state().trackNotAttached();
     }
 
+    return true;
+}
+
+/* static */ bool
+IonBinaryArithIC::update(JSContext* cx, HandleScript outerScript, IonBinaryArithIC* ic,
+                         HandleValue lhs, HandleValue rhs, MutableHandleValue ret)
+{
+    IonScript* ionScript = outerScript->ionScript();
+    RootedScript script(cx, ic->script());
+    jsbytecode* pc = ic->pc();
+    JSOp op = JSOp(*pc);
+
+    // Don't pass lhs/rhs directly, we need the original values when
+    // generating stubs.
+    RootedValue lhsCopy(cx, lhs);
+    RootedValue rhsCopy(cx, rhs);
+
+    // Perform the compare operation.
+    switch(op) {
+      case JSOP_ADD:
+        // Do an add.
+        if (!AddValues(cx, &lhsCopy, &rhsCopy, ret))
+            return false;
+        break;
+      default:
+        MOZ_CRASH("Unhandled binary arith op");
+    }
+
+    if (ic->state().maybeTransition())
+        ic->discardStubs(cx->zone());
+
+    if (ic->state().canAttachStub()) {
+        bool attached = false;
+        BinaryArithIRGenerator gen(cx, script, pc, ic->state().mode(),
+                                   op, lhs, rhs, ret);
+        if (gen.tryAttachStub()) {
+            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
+
+            if (!attached)
+                ic->state().trackNotAttached();
+        }
+    }
     return true;
 }
 
