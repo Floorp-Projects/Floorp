@@ -231,14 +231,6 @@ StyleSetHandle::Ptr::RuleChanged(StyleSheet& aSheet, css::Rule* aRule)
 }
 
 void
-StyleSetHandle::Ptr::RecordStyleSheetChange(StyleSheet* aSheet,
-                                            StyleSheet::ChangeType aChangeType)
-{
-  FORWARD_CONCRETE(RecordStyleSheetChange, (aSheet->AsGecko(), aChangeType),
-                                           (aSheet->AsServo(), aChangeType));
-}
-
-void
 StyleSetHandle::Ptr::RecordShadowStyleChange(mozilla::dom::ShadowRoot& aShadowRoot)
 {
   FORWARD(RecordShadowStyleChange, (aShadowRoot));
