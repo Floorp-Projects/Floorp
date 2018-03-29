@@ -51,7 +51,9 @@ var policy = {
   },
 
   // nsIContentPolicy implementation
-  shouldLoad: function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra) {
+  shouldLoad: function(contentLocation, loadInfo, mimeTypeGuess) {
+    let contentType = loadInfo.externalContentPolicyType;
+    let context = loadInfo.loadingContext;
 
     if (SpecialPowers.wrap(contentLocation).spec !== document.getElementById("testlink").href) {
       // not the URI we are looking for, allow the load
@@ -77,7 +79,7 @@ var policy = {
     return Ci.nsIContentPolicy.REJECT_REQUEST;
   },
 
-  shouldProcess: function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra) {
+  shouldProcess: function(contentLocation, loadInfo, mimeTypeGuess) {
     return Ci.nsIContentPolicy.ACCEPT;
   }
 }
