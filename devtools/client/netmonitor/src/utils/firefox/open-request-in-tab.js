@@ -12,7 +12,7 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 /**
  * Opens given request in a new tab.
  */
-function openRequestInTab(url, method, requestPostData) {
+function openRequestInTab(url, requestPostData) {
   let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
   let rawData = requestPostData ? requestPostData.postData : null;
   let postData;
