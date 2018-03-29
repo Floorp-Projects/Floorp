@@ -3642,8 +3642,11 @@ nsWindow::Create(nsIWidget* aParent,
             useAlphaVisual = true;
 
 #ifdef GL_PROVIDER_GLX
-        bool useWebRender = gfxPlatform::Initialized() &&
-            gfx::gfxVars::UseWebRender() &&
+        // Ensure gfxPlatform is initialized, since that is what initializes
+        // gfxVars, used below.
+        Unused << gfxPlatform::GetPlatform();
+
+        bool useWebRender = gfx::gfxVars::UseWebRender() &&
             AllowWebRenderForThisWindow();
 
         // If using WebRender on X11, we need to select a visual with a depth buffer,
