@@ -15,11 +15,11 @@
 namespace mozilla {
 namespace dom {
 
-nsStaticAtom** SVGTests::sStringListNames[3] =
+nsStaticAtom* const SVGTests::sStringListNames[3] =
 {
-  &nsGkAtoms::requiredFeatures,
-  &nsGkAtoms::requiredExtensions,
-  &nsGkAtoms::systemLanguage,
+  nsGkAtoms::requiredFeatures,
+  nsGkAtoms::requiredExtensions,
+  nsGkAtoms::systemLanguage,
 };
 
 SVGTests::SVGTests()
@@ -59,7 +59,7 @@ bool
 SVGTests::IsConditionalProcessingAttribute(const nsAtom* aAttribute) const
 {
   for (uint32_t i = 0; i < ArrayLength(sStringListNames); i++) {
-    if (aAttribute == *sStringListNames[i]) {
+    if (aAttribute == sStringListNames[i]) {
       return true;
     }
   }
@@ -180,7 +180,7 @@ SVGTests::ParseConditionalProcessingAttribute(nsAtom* aAttribute,
                                               nsAttrValue& aResult)
 {
   for (uint32_t i = 0; i < ArrayLength(sStringListNames); i++) {
-    if (aAttribute == *sStringListNames[i]) {
+    if (aAttribute == sStringListNames[i]) {
       nsresult rv = mStringListAttributes[i].SetValue(aValue);
       if (NS_FAILED(rv)) {
         mStringListAttributes[i].Clear();
@@ -196,7 +196,7 @@ void
 SVGTests::UnsetAttr(const nsAtom* aAttribute)
 {
   for (uint32_t i = 0; i < ArrayLength(sStringListNames); i++) {
-    if (aAttribute == *sStringListNames[i]) {
+    if (aAttribute == sStringListNames[i]) {
       mStringListAttributes[i].Clear();
       MaybeInvalidate();
       return;
@@ -204,10 +204,10 @@ SVGTests::UnsetAttr(const nsAtom* aAttribute)
   }
 }
 
-nsAtom*
+nsStaticAtom*
 SVGTests::GetAttrName(uint8_t aAttrEnum) const
 {
-  return *sStringListNames[aAttrEnum];
+  return sStringListNames[aAttrEnum];
 }
 
 void
