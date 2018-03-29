@@ -17,12 +17,12 @@ add_task(function* () {
 
   let hud = yield openConsole();
 
-  doTests(hud);
+  yield doTests(hud);
 
   jsterm = inputNode = null;
 });
 
-function doTests(HUD) {
+function* doTests(HUD) {
   jsterm = HUD.jsterm;
   inputNode = jsterm.inputNode;
   ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
@@ -31,7 +31,7 @@ function doTests(HUD) {
 
   testSingleLineInputNavNoHistory();
   testMultiLineInputNavNoHistory();
-  testNavWithHistory();
+  yield testNavWithHistory();
 }
 
 function testSingleLineInputNavNoHistory() {
@@ -157,7 +157,7 @@ function testMultiLineInputNavNoHistory() {
   }
 }
 
-function testNavWithHistory() {
+function* testNavWithHistory() {
   // NOTE: Tests does NOT currently define behaviour for ctrl-p/ctrl-n with
   // caret placed _within_ single line input
   let values = ['"single line input"',
@@ -167,7 +167,7 @@ function testNavWithHistory() {
   // submit to history
   for (let i = 0; i < values.length; i++) {
     jsterm.setInputValue(values[i]);
-    jsterm.execute();
+    yield jsterm.execute();
   }
   is(inputNode.selectionStart, 0, "caret location at start of empty line");
 

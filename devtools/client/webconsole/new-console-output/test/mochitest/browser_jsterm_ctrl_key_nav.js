@@ -23,7 +23,7 @@ add_task(async function() {
 
   testSingleLineInputNavNoHistory(jsterm);
   testMultiLineInputNavNoHistory(jsterm);
-  testNavWithHistory(jsterm);
+  await testNavWithHistory(jsterm);
 });
 
 function testSingleLineInputNavNoHistory(jsterm) {
@@ -151,7 +151,7 @@ function testMultiLineInputNavNoHistory(jsterm) {
   }
 }
 
-function testNavWithHistory(jsterm) {
+async function testNavWithHistory(jsterm) {
   let inputNode = jsterm.inputNode;
 
   // NOTE: Tests does NOT currently define behaviour for ctrl-p/ctrl-n with
@@ -165,7 +165,7 @@ function testNavWithHistory(jsterm) {
   // submit to history
   for (let i = 0; i < values.length; i++) {
     jsterm.setInputValue(values[i]);
-    jsterm.execute();
+    await jsterm.execute();
   }
   is(inputNode.selectionStart, 0, "caret location at start of empty line");
 

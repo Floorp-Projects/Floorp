@@ -131,6 +131,12 @@ DebuggerPanel.prototype = {
 
   // DebuggerPanel API
 
+  getMappedExpression(expression) {
+    // No-op implementation since this feature doesn't exist in the older
+    // debugger implementation.
+    return expression;
+  },
+
   isPaused() {
     let framesController = this.panelWin.DebuggerController.StackFrames;
     let thread = framesController.activeThread;
