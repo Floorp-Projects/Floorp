@@ -425,7 +425,7 @@ async function generateNetworkEventStubs() {
   for (let [key, {keys, code}] of networkEvent) {
     let onNetwork = new Promise(resolve => {
       let i = 0;
-      toolbox.target.activeConsole.on("networkEvent", function onNetworkEvent(type, res) {
+      toolbox.target.activeConsole.on("networkEvent", function onNetworkEvent(res) {
         stubs.packets.push(formatPacket(keys[i], res));
         stubs.preparedMessages.push(formatNetworkEventStub(keys[i], res));
         if (++i === keys.length) {

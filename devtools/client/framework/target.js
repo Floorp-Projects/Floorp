@@ -457,7 +457,7 @@ TabTarget.prototype = {
       }
       this.activeConsole = consoleClient;
 
-      this._onInspectObject = (event, packet) => this.emit("inspect-object", packet);
+      this._onInspectObject = packet => this.emit("inspect-object", packet);
       this.activeConsole.on("inspectObject", this._onInspectObject);
 
       this._remote.resolve(null);

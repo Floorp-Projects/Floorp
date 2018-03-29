@@ -354,12 +354,10 @@ WebConsoleConnectionProxy.prototype = {
    * the UI for displaying.
    *
    * @private
-   * @param string type
-   *        Message type.
    * @param object networkInfo
    *        The network request information.
    */
-  _onNetworkEvent: function(type, networkInfo) {
+  _onNetworkEvent: function(networkInfo) {
     if (!this.webConsoleFrame) {
       return;
     }
@@ -374,12 +372,10 @@ WebConsoleConnectionProxy.prototype = {
    * the UI for displaying.
    *
    * @private
-   * @param string type
-   *        Message type.
    * @param object response
    *        The update response received from the server.
    */
-  _onNetworkEventUpdate: function(type, response) {
+  _onNetworkEventUpdate: function(response) {
     if (!this.webConsoleFrame) {
       return;
     }
