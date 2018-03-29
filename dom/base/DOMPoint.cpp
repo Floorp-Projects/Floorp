@@ -18,8 +18,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMPointReadOnly, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMPointReadOnly, Release)
 
 already_AddRefed<DOMPoint>
-DOMPoint::Constructor(const GlobalObject& aGlobal, const DOMPointInit& aParams,
-                      ErrorResult& aRV)
+DOMPoint::FromPoint(const GlobalObject& aGlobal, const DOMPointInit& aParams)
 {
   RefPtr<DOMPoint> obj =
     new DOMPoint(aGlobal.GetAsSupports(), aParams.mX, aParams.mY,
