@@ -290,7 +290,7 @@ ru{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.58"}
+    Version{"2.1.39.20"}
     calendar{
         buddhist{
             eras{
@@ -1962,8 +1962,8 @@ ru{
     }
     characterLabel{
         activities{"занятия"}
-        african_scripts{"африканская письменность"}
-        american_scripts{"американская письменность"}
+        african_scripts{"письменности Африки"}
+        american_scripts{"письменности Америки"}
         animal{"животные"}
         animals_nature{"животные и природа"}
         arrows{"стрелки"}
@@ -1972,7 +1972,7 @@ ru{
         braille{"шрифт Брайля"}
         building{"здания"}
         bullets_stars{"маркеры списка/звезды"}
-        consonantal_jamo{"согласные джамо"}
+        consonantal_jamo{"согласные чамо"}
         currency_symbols{"символы валюты"}
         dash_connector{"тире/связка"}
         digits{"цифры"}
@@ -1980,9 +1980,9 @@ ru{
         divination_symbols{"оккультные символы"}
         downwards_arrows{"стрелки вниз"}
         downwards_upwards_arrows{"стрелки вверх и вниз"}
-        east_asian_scripts{"восточноазиатская письменность"}
+        east_asian_scripts{"письменности Восточной Азии"}
         emoji{"эмодзи"}
-        european_scripts{"европейская письменность"}
+        european_scripts{"письменности Европы"}
         female{"женщины"}
         flag{"флаги"}
         flags{"флаги"}
@@ -2010,10 +2010,10 @@ ru{
         limited_use{"ограниченное использование"}
         male{"мужчины"}
         math_symbols{"математические символы"}
-        middle_eastern_scripts{"центрально-восточная письменность"}
+        middle_eastern_scripts{"письменности Среднего Востока"}
         miscellaneous{"разное"}
         modern_scripts{"современная письменность"}
-        modifier{"модификатор"}
+        modifier{"модификаторы"}
         musical_symbols{"музыкальные символы"}
         nature{"природа"}
         nonspacing{"непротяженные символы"}
@@ -2032,9 +2032,9 @@ ru{
         small_form_variant{"маленькие варианты формы"}
         smiley{"смайлики"}
         smileys_people{"смайлики и люди"}
-        south_asian_scripts{"южноазиатская письменность"}
-        southeast_asian_scripts{"письменность Юго-Восточной Азии"}
-        spacing{"пробелы"}
+        south_asian_scripts{"письменности Южной Азии"}
+        southeast_asian_scripts{"письменности Юго-Восточной Азии"}
+        spacing{"промежутки"}
         sport{"спорт"}
         symbols{"символы"}
         technical_symbols{"технические символы"}
@@ -2043,9 +2043,9 @@ ru{
         travel_places{"путешествия и места"}
         upwards_arrows{"стрелки вверх"}
         variant_forms{"вариативные формы"}
-        vocalic_jamo{"гласные джамо"}
+        vocalic_jamo{"гласные чамо"}
         weather{"погода"}
-        western_asian_scripts{"западноазиатская письменность"}
+        western_asian_scripts{"письменности Западной Азии"}
         whitespace{"пробелы"}
     }
     contextTransforms{
@@ -2090,6 +2090,10 @@ ru{
             1,
         }
         script:intvector{
+            1,
+            1,
+        }
+        typographicNames:intvector{
             1,
             1,
         }

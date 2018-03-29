@@ -685,6 +685,10 @@ zh_Hant{
         }
         MRO{
             "MRO",
+            "茅利塔尼亞烏吉亞 (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "茅利塔尼亞烏吉亞",
         }
         MTL{
@@ -917,6 +921,10 @@ zh_Hant{
         }
         STD{
             "STD",
+            "聖多美島和普林西比島多布拉 (1977–2017)",
+        }
+        STN{
+            "STN",
             "聖多美島和普林西比島多布拉",
         }
         SUR{
@@ -1282,7 +1290,7 @@ zh_Hant{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1808,6 +1816,9 @@ zh_Hant{
             other{"澳門元"}
         }
         MRO{
+            other{"茅利塔尼亞烏吉亞 (1973–2017)"}
+        }
+        MRU{
             other{"茅利塔尼亞烏吉亞"}
         }
         MTL{
@@ -1982,6 +1993,9 @@ zh_Hant{
             other{"南蘇丹鎊"}
         }
         STD{
+            other{"聖多美島和普林西比島多布拉 (1977–2017)"}
+        }
+        STN{
             other{"聖多美島和普林西比島多布拉"}
         }
         SUR{
@@ -2198,5 +2212,5 @@ zh_Hant{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.20"}
 }

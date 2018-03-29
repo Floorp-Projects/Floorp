@@ -915,7 +915,7 @@ gd{
             }
         }
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
     calendar{
         buddhist{
             intervalFormats{
@@ -1176,10 +1176,10 @@ gd{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    few{"'seachdain' w 'dhe' Y"}
-                    one{"'seachdain' w 'dhe' Y"}
-                    other{"'seachdain' w 'dhe' Y"}
-                    two{"'seachdain' w 'dhe' Y"}
+                    few{"'seachdain' w 'dhe' y"}
+                    one{"'seachdain' w 'dhe' y"}
+                    other{"'seachdain' w 'dhe' y"}
+                    two{"'seachdain' w 'dhe' y"}
                 }
             }
             dayNames{

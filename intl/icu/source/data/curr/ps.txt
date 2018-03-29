@@ -370,6 +370,10 @@ ps{
             "MRO",
             "MRO",
         }
+        MRU{
+            "MRU",
+            "MRU",
+        }
         MUR{
             "MUR",
             "MUR",
@@ -517,6 +521,10 @@ ps{
         STD{
             "STD",
             "STD",
+        }
+        STN{
+            "STN",
+            "STN",
         }
         SYP{
             "SYP",
@@ -711,7 +719,7 @@ ps{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1099,6 +1107,10 @@ ps{
             one{"MRO"}
             other{"MRO"}
         }
+        MRU{
+            one{"MRU"}
+            other{"MRU"}
+        }
         MUR{
             one{"MUR"}
             other{"MUR"}
@@ -1247,6 +1259,10 @@ ps{
             one{"STD"}
             other{"STD"}
         }
+        STN{
+            one{"STN"}
+            other{"STN"}
+        }
         SYP{
             one{"SYP"}
             other{"SYP"}
@@ -1360,5 +1376,5 @@ ps{
             other{"ZMW"}
         }
     }
-    Version{"2.1.36.86"}
+    Version{"2.1.39.11"}
 }

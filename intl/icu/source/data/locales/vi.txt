@@ -182,7 +182,7 @@ vi{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.20"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1040,7 +1040,7 @@ vi{
                     "sau CN",
                 }
                 abbreviated%variant{
-                    "BCE",
+                    "trước CN",
                     "CN",
                 }
                 narrow{
@@ -1052,7 +1052,7 @@ vi{
                     "sau CN",
                 }
                 wide%variant{
-                    "BCE",
+                    "trước CN",
                     "CN",
                 }
             }
@@ -1610,6 +1610,12 @@ vi{
         weather{"thời tiết"}
         western_asian_scripts{"chữ viết Tây Á"}
         whitespace{"dấu cách"}
+    }
+    contextTransforms{
+        typographicNames:intvector{
+            1,
+            1,
+        }
     }
     delimiters{
         alternateQuotationEnd{"’"}
@@ -2273,6 +2279,9 @@ vi{
             dn{"tuần trong tháng"}
         }
         weekday{
+            dn{"ngày trong tuần"}
+        }
+        weekday-narrow{
             dn{"ngày trong tuần"}
         }
         weekday-short{

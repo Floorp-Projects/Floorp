@@ -35,7 +35,7 @@ add_task(async function() {
 
   const syncedBps = waitForDispatch(dbg, "SYNC_BREAKPOINT", 2);
   await reload(dbg, "simple1");
-  await waitForSelectedSource(dbg);
+  await waitForSelectedSource(dbg, "simple1");
   await syncedBps;
 
   assertEditorBreakpoint(dbg, 4);

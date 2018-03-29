@@ -22,7 +22,7 @@ root{
             patterns{
                 accountingFormat:alias{"/LOCALE/NumberElements/arab/patterns/currencyFormat"}
                 currencyFormat{"#,##0.00 ¤"}
-                percentFormat{"#,##0 %"}
+                percentFormat{"#,##0%"}
             }
             symbols{
                 decimal{"٫"}
@@ -172,7 +172,7 @@ root{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.27"}
     calendar{
         buddhist{
             AmPmMarkers:alias{"/LOCALE/calendar/gregorian/AmPmMarkers"}

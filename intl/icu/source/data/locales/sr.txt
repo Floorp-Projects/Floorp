@@ -234,10 +234,20 @@ sr{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Скрените у {0}. десно."}
+            }
+            plural{
+                few{"{0} сата"}
+                one{"{0} сат"}
+                other{"{0} сати"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.11"}
     calendar{
         buddhist{
             eras{

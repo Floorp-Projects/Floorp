@@ -11,6 +11,10 @@ es_US{
             "MYR",
             "ringit",
         }
+        STN{
+            "STN",
+            "dobra santotomense",
+        }
         THB{
             "THB",
             "bat",
@@ -52,6 +56,10 @@ es_US{
         RON{
             one{"leu rumano"}
         }
+        STN{
+            one{"dobra santotomense"}
+            other{"dobra santotomense"}
+        }
         THB{
             one{"bat"}
             other{"bats"}
@@ -69,5 +77,5 @@ es_US{
             other{"francos CFA de África Occidental"}
         }
     }
-    Version{"2.1.37.22"}
+    Version{"2.1.38.73"}
 }

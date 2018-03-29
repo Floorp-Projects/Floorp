@@ -57,7 +57,7 @@ es_419{
             }
         }
     }
-    Version{"2.1.37.22"}
+    Version{"2.1.38.39"}
     calendar{
         coptic{
             monthNames{
@@ -221,6 +221,10 @@ es_419{
                 yMMMEd{"E, d 'de' MMM 'de' y"}
                 yMMMd{"d 'de' MMMM 'de' y"}
                 yQQQ{"QQQ 'de' y"}
+                yw{
+                    one{"'semana' w 'de' Y"}
+                    other{"'semana' w 'de' Y"}
+                }
             }
             dayNames{
                 format{

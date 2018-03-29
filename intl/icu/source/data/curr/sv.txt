@@ -684,6 +684,10 @@ sv{
         }
         MRO{
             "MRO",
+            "mauretansk ouguiya (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "mauretansk ouguiya",
         }
         MTL{
@@ -916,6 +920,10 @@ sv{
         }
         STD{
             "STD",
+            "saotomeansk dobra (1977–2017)",
+        }
+        STN{
+            "STN",
             "saotomeansk dobra",
         }
         SUR{
@@ -1280,7 +1288,7 @@ sv{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1982,6 +1990,10 @@ sv{
             other{"makanesiska pataca"}
         }
         MRO{
+            one{"mauretansk ouguiya (1973–2017)"}
+            other{"mauretanska ouguiya (1973–2017)"}
+        }
+        MRU{
             one{"mauretansk ouguiya"}
             other{"mauretanska ouguiya"}
         }
@@ -2214,6 +2226,10 @@ sv{
             other{"sydsudanesiska pund"}
         }
         STD{
+            one{"saotomeansk dobra (1977–2017)"}
+            other{"saotomeanska dobra (1977–2017)"}
+        }
+        STN{
             one{"saotomeansk dobra"}
             other{"saotomeanska dobra"}
         }
@@ -2502,5 +2518,5 @@ sv{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.20"}
 }

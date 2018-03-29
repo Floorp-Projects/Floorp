@@ -36,6 +36,7 @@ class gfxVarReceiver;
   _(DXInterop2Blocked,          bool,             false)                \
   _(UseWebRender,               bool,             false)                \
   _(UseWebRenderANGLE,          bool,             false)                \
+  _(UseWebRenderDCompWin,       bool,             false)                \
   _(UseWebRenderProgramBinary,  bool,             false)                \
   _(WebRenderDebugFlags,        int32_t,          0)                    \
   _(ScreenDepth,                int32_t,          0)                    \

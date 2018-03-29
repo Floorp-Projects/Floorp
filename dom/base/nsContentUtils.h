@@ -807,7 +807,7 @@ public:
    * Method to do security and content policy checks on the image URI
    *
    * @param aURI uri of the image to be loaded
-   * @param aContext the context the image is loaded in (eg an element)
+   * @param aNode, the context the image is loaded in (eg an element)
    * @param aLoadingDocument the document we belong to
    * @param aLoadingPrincipal the principal doing the load
    * @param [aContentPolicyType=nsIContentPolicy::TYPE_INTERNAL_IMAGE] (Optional)
@@ -822,7 +822,7 @@ public:
    *         false is returned.
    */
   static bool CanLoadImage(nsIURI* aURI,
-                           nsISupports* aContext,
+                           nsINode* aNode,
                            nsIDocument* aLoadingDocument,
                            nsIPrincipal* aLoadingPrincipal,
                            int16_t* aImageBlockingStatus = nullptr,

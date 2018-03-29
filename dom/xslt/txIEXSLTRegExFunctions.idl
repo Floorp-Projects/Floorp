@@ -5,15 +5,17 @@
 
 #include "nsISupports.idl"
 
-interface txIFunctionEvaluationContext;
-interface txINodeSet;
+interface nsIDOMDocument;
+interface nsIDOMDocumentFragment;
 
 [scriptable, uuid(c180e993-aced-4839-95a0-ecd5ff138be9)]
 interface txIEXSLTRegExFunctions : nsISupports
 {
-    txINodeSet match(in txIFunctionEvaluationContext aContext,
-                     in DOMString aString, in DOMString aRegEx,
-                     in DOMString aFlags);
+    // Make this take Document and return DocumentFragment once https://bugzil.la/1444991
+    // is fixed.
+    nsIDOMDocumentFragment match(in DOMString aString, in DOMString aRegEx,
+                                 in DOMString aFlags,
+                                 in nsIDOMDocument aResultDocument);
     DOMString replace(in DOMString aString, in DOMString aRegEx,
                       in DOMString aFlags, in DOMString aReplace);
     boolean test(in DOMString aString, in DOMString aRegEx,

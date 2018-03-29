@@ -77,12 +77,12 @@ tzorig:	$(TZCODE) $(TZDATA)
 	-mv $(TZORIG)/zishrink.awk $(TZORIG)/zishrink.awk.orig
 	sed -e '/if (line ~ \/^R SystemV \/) return/s/^/#/' $(TZORIG)/zishrink.awk.orig > $(TZORIG)/zishrink.awk
 	-mv $(TZORIG)/Makefile $(TZORIG)/Makefile.orig
-	sed -e "s/BACKWARD=\$$(BACKWARD)/BACKWARD='\$$(BACKWARD)'/" $(TZORIG)/Makefile.orig > $(TZORIG)/Makefile
+	sed -e "s/^BACKWARD=.*/BACKWARD= backward pacificnew/" $(TZORIG)/Makefile.orig > $(TZORIG)/Makefile
 	$(MAKE) -C $@ $(TZORIG_OPTS) zdump zones
 
 $(ZDUMPOUT): tzorig
 	( cd $(TZORIG) ; ./zdump$(EXEEXT) $(ZDUMP_OPTS) )
-
+	find $(ZDUMPOUT) -name '*--ICU' -exec sh -c 'mv "$${0}" $${0%--ICU}' {} \;
 
 dump-out: $(ZDUMPOUT) $(ICUZDUMPOUT)
 

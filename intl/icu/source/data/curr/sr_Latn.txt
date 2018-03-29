@@ -625,6 +625,10 @@ sr_Latn{
         }
         MRO{
             "MRO",
+            "Mauritanijska ogija (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Mauritanijska ogija",
         }
         MTL{
@@ -765,11 +769,11 @@ sr_Latn{
         }
         ROL{
             "ROL",
-            "Rumunski lej",
+            "Rumunski lej (1952–2006)",
         }
         RON{
             "RON",
-            "Rumunski lej (1952–2006)",
+            "Rumunski lej",
         }
         RSD{
             "RSD",
@@ -853,6 +857,10 @@ sr_Latn{
         }
         STD{
             "STD",
+            "Saotomska dobra (1977–2017)",
+        }
+        STN{
+            "STN",
             "Saotomska dobra",
         }
         SUR{
@@ -1204,7 +1212,7 @@ sr_Latn{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -2001,6 +2009,11 @@ sr_Latn{
             other{"makaoskih pataka"}
         }
         MRO{
+            few{"mauritanijske ogije (1973–2017)"}
+            one{"mauritanijska ogija (1973–2017)"}
+            other{"mauritanijskih ogija (1973–2017)"}
+        }
+        MRU{
             few{"mauritanijske ogije"}
             one{"mauritanijska ogija"}
             other{"mauritanijskih ogija"}
@@ -2176,14 +2189,14 @@ sr_Latn{
             other{"rodežanskih dolara"}
         }
         ROL{
-            few{"rumunska leja"}
-            one{"rumunski lej"}
-            other{"rumunskih leja"}
-        }
-        RON{
             few{"rumunska leja (1952–2006)"}
             one{"rumunski lej (1952–2006)"}
             other{"rumunskih leja (1952–2006)"}
+        }
+        RON{
+            few{"rumunska leja"}
+            one{"rumunski lej"}
+            other{"rumunskih leja"}
         }
         RSD{
             few{"srpska dinara"}
@@ -2286,6 +2299,11 @@ sr_Latn{
             other{"južnosudanskih funti"}
         }
         STD{
+            few{"saotomske dobre (1977–2017)"}
+            one{"saotomska dobra (1977–2017)"}
+            other{"saotomskih dobri (1977–2017)"}
+        }
+        STN{
             few{"saotomske dobre"}
             one{"saotomska dobra"}
             other{"saotomskih dobri"}
@@ -2631,5 +2649,5 @@ sr_Latn{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.8"}
+    Version{"2.1.39.37"}
 }

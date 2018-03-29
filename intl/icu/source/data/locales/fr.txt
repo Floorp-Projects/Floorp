@@ -214,7 +214,7 @@ fr{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.20"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1942,6 +1942,10 @@ fr{
         }
         month-standalone-except-narrow:intvector{
             0,
+            1,
+        }
+        typographicNames:intvector{
+            1,
             1,
         }
     }

@@ -388,6 +388,10 @@ sw{
         }
         MRO{
             "MRO",
+            "Ouguiya ya Mauritania (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Ouguiya ya Mauritania",
         }
         MUR{
@@ -544,6 +548,10 @@ sw{
         }
         STD{
             "STD",
+            "Dobra ya Sao Tome na Principe (1977–2017)",
+        }
+        STN{
+            "STN",
             "Dobra ya Sao Tome na Principe",
         }
         SYP{
@@ -747,7 +755,7 @@ sw{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1141,6 +1149,10 @@ sw{
             other{"pataca za Macau"}
         }
         MRO{
+            one{"ouguiya ya Mauritania (1973–2017)"}
+            other{"ouguiya za Mauritania (1973–2017)"}
+        }
+        MRU{
             one{"ouguiya ya Mauritania"}
             other{"ouguiya za Mauritania"}
         }
@@ -1297,6 +1309,10 @@ sw{
             other{"pauni za Sudan Kusini"}
         }
         STD{
+            one{"dobra ya Sao Tome na Principe (1977–2017)"}
+            other{"dobra za Sao Tome na Principe (1977–2017)"}
+        }
+        STN{
             one{"dobra ya Sao Tome na Principe"}
             other{"dobra za Sao Tome na Principe"}
         }
@@ -1417,5 +1433,5 @@ sw{
         one{"{1} {0}"}
         other{"{1} {0}"}
     }
-    Version{"2.1.37.34"}
+    Version{"2.1.39.11"}
 }

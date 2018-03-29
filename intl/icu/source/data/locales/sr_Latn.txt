@@ -235,10 +235,20 @@ sr_Latn{
                 timeSeparator{":"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Skrenite u {0}. desno."}
+            }
+            plural{
+                few{"{0} sata"}
+                one{"{0} sat"}
+                other{"{0} sati"}
+            }
+        }
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.8"}
+    Version{"2.1.39.37"}
     calendar{
         buddhist{
             eras{

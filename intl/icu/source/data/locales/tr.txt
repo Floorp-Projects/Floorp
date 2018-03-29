@@ -216,7 +216,7 @@ tr{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.20"}
     calendar{
         buddhist{
             eras{
@@ -412,7 +412,12 @@ tr{
                 "{1} {0}",
             }
             availableFormats{
+                Bh{"B h"}
+                Bhm{"B h:mm"}
+                Bhms{"B h:mm:ss"}
                 E{"ccc"}
+                EBhm{"E B h:mm"}
+                EBhms{"E B h:mm:ss"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d E"}
@@ -1400,6 +1405,10 @@ tr{
     }
     contextTransforms{
         relative:intvector{
+            1,
+            1,
+        }
+        typographicNames:intvector{
             1,
             1,
         }

@@ -10,7 +10,7 @@ en_AU{
             }
         }
     }
-    Version{"2.1.37.6"}
+    Version{"2.1.38.73"}
     calendar{
         generic{
             availableFormats{
@@ -222,6 +222,26 @@ en_AU{
         upwards_arrows{"upward arrows"}
     }
     fields{
+        day-narrow{
+            relativeTime{
+                future{
+                    other{"in {0} days"}
+                }
+                past{
+                    other{"{0} days ago"}
+                }
+            }
+        }
+        day-short{
+            relativeTime{
+                future{
+                    other{"in {0} days"}
+                }
+                past{
+                    other{"{0} days ago"}
+                }
+            }
+        }
         dayOfYear-narrow{
             dn{"day of yr"}
         }
@@ -483,6 +503,9 @@ en_AU{
             }
         }
         tue-narrow{
+            relative{
+                "-1"{"last Tu"}
+            }
             relativeTime{
                 future{
                     one{"in {0} Tu"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sv{
-    Version{"2.1.37.5"}
+    Version{"2.1.39.20"}
     zoneStrings{
         "meta:Acre"{
             ld{"västbrasiliansk sommartid"}

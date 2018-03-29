@@ -455,10 +455,11 @@ Instance::Instance(JSContext* cx,
         uint8_t* globalAddr = globalData() + global.offset();
         switch (global.kind()) {
           case GlobalKind::Import: {
+            size_t imported = global.importIndex();
             if (global.isIndirect())
-                *(void**)globalAddr = globalObjs[global.importIndex()]->cell();
+                *(void**)globalAddr = globalObjs[imported]->cell();
             else
-                globalImportValues[global.importIndex()].writePayload(globalAddr);
+                globalImportValues[imported].writePayload(globalAddr);
             break;
           }
           case GlobalKind::Variable: {

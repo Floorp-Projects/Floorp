@@ -374,17 +374,11 @@ HTMLEditUtils::IsDiv(nsIDOMNode* aNode)
  * IsMozDiv() returns true if aNode is an html div node with |type = _moz|.
  */
 bool
-HTMLEditUtils::IsMozDiv(nsIDOMNode* aNode)
-{
-  return IsDiv(aNode) && TextEditUtils::HasMozAttr(aNode);
-}
-
-bool
 HTMLEditUtils::IsMozDiv(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
   return aNode->IsHTMLElement(nsGkAtoms::div) &&
-         TextEditUtils::HasMozAttr(GetAsDOMNode(aNode));
+         TextEditUtils::HasMozAttr(aNode);
 }
 
 /**

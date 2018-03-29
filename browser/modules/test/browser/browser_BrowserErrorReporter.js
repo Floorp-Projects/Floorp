@@ -445,7 +445,7 @@ add_task(async function testExtensionTag() {
     `Wait for error from ${id} to be logged`,
   );
   let body = JSON.parse(call.args[1].body);
-  ok(body.tags.isExtensionError, "Errors from extensions have an isExtensionError tag.");
+  ok(body.tags.isExtensionError, "Errors from extensions have an isExtensionError=true tag.");
 
   await extension.unload();
   reporter.uninit();
@@ -453,7 +453,7 @@ add_task(async function testExtensionTag() {
   await reporter.observe(createScriptError({message: "testExtensionTag not from extension"}));
   call = fetchCallForMessage(fetchSpy, "testExtensionTag not from extension");
   body = JSON.parse(call.args[1].body);
-  is(body.tags.isExtensionError, undefined, "Normal errors do not have an isExtensionError tag.");
+  is(body.tags.isExtensionError, false, "Normal errors have an isExtensionError=false tag.");
 });
 
 add_task(async function testScalars() {

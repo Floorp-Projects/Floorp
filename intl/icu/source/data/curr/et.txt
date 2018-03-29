@@ -613,6 +613,10 @@ et{
         }
         MRO{
             "MRO",
+            "Mauritaania ugia (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Mauritaania ugia",
         }
         MTL{
@@ -841,6 +845,10 @@ et{
         }
         STD{
             "STD",
+            "São Tomé ja Príncipe dobra (1977–2017)",
+        }
+        STN{
+            "STN",
             "São Tomé ja Príncipe dobra",
         }
         SUR{
@@ -1730,6 +1738,10 @@ et{
             other{"Macau pataakat"}
         }
         MRO{
+            one{"Mauritaania ugia (1973–2017)"}
+            other{"Mauritaania ugiat (1973–2017)"}
+        }
+        MRU{
             one{"Mauritaania ugia"}
             other{"Mauritaania ugiat"}
         }
@@ -1950,6 +1962,10 @@ et{
             other{"Lõuna-Sudaani naela"}
         }
         STD{
+            one{"São Tomé ja Príncipe dobra (1977–2017)"}
+            other{"São Tomé ja Príncipe dobrat (1977–2017)"}
+        }
+        STN{
             one{"São Tomé ja Príncipe dobra"}
             other{"São Tomé ja Príncipe dobrat"}
         }
@@ -2158,5 +2174,5 @@ et{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.22"}
+    Version{"2.1.39.11"}
 }

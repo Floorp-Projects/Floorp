@@ -201,7 +201,7 @@ my{
         }
         native{"mymr"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.11"}
     calendar{
         generic{
             DateTimePatterns{
@@ -440,7 +440,7 @@ my{
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
                 yw{
-                    other{"Y ခု w ပတ်မြောက်"}
+                    other{"y ခု w ပတ်မြောက်"}
                 }
             }
             dayNames{

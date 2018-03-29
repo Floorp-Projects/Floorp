@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_MX{
     %%Parent{"es_419"}
-    Version{"2.1.37.32"}
+    Version{"2.1.38.73"}
     zoneStrings{
         "meta:America_Mountain"{
             ld{"hora de verano de las Montañas Rocosas"}

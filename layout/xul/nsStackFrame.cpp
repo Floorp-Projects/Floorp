@@ -22,6 +22,8 @@
 #include "nsStackLayout.h"
 #include "nsDisplayList.h"
 
+using namespace mozilla;
+
 nsIFrame*
 NS_NewStackFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 {

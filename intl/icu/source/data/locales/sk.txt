@@ -287,7 +287,7 @@ sk{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.11"}
     calendar{
         buddhist{
             eras{
@@ -1582,6 +1582,13 @@ sk{
         }
         day-narrow{
             dn{"d."}
+            relative{
+                "-1"{"včera"}
+                "-2"{"predvčerom"}
+                "0"{"dnes"}
+                "1"{"zajtra"}
+                "2"{"pozajtra"}
+            }
             relativeTime{
                 future{
                     few{"o {0} d."}
@@ -1599,6 +1606,13 @@ sk{
         }
         day-short{
             dn{"d."}
+            relative{
+                "-1"{"včera"}
+                "-2"{"predvčerom"}
+                "0"{"dnes"}
+                "1"{"zajtra"}
+                "2"{"pozajtra"}
+            }
             relativeTime{
                 future{
                     few{"o {0} d."}
