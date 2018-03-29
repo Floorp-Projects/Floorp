@@ -18,20 +18,22 @@ namespace fuzzer {
 struct FuzzingOptions {
   int Verbosity = 1;
   size_t MaxLen = 0;
-  bool ExperimentalLenControl = false;
+  size_t LenControl = 1000;
   int UnitTimeoutSec = 300;
   int TimeoutExitCode = 77;
   int ErrorExitCode = 77;
   int MaxTotalTimeSec = 0;
   int RssLimitMb = 0;
+  int MallocLimitMb = 0;
   bool DoCrossOver = true;
   int MutateDepth = 5;
+  bool ReduceDepth = false;
   bool UseCounters = false;
-  bool UseIndirCalls = true;
   bool UseMemmem = true;
   bool UseCmp = false;
   bool UseValueProfile = false;
   bool Shrink = false;
+  bool ReduceInputs = false;
   int ReloadIntervalSec = 1;
   bool ShuffleAtStartUp = true;
   bool PreferSmall = true;
@@ -46,11 +48,15 @@ struct FuzzingOptions {
   bool SaveArtifacts = true;
   bool PrintNEW = true; // Print a status line when new units are found;
   bool PrintNewCovPcs = false;
+  int PrintNewCovFuncs = 0;
   bool PrintFinalStats = false;
   bool PrintCorpusStats = false;
   bool PrintCoverage = false;
   bool DumpCoverage = false;
+  bool UseClangCoverage = false;
   bool DetectLeaks = true;
+  int PurgeAllocatorIntervalSec = 1;
+  int UseFeatureFrequency = false;
   int  TraceMalloc = 0;
   bool HandleAbrt = false;
   bool HandleBus = false;
@@ -60,6 +66,8 @@ struct FuzzingOptions {
   bool HandleSegv = false;
   bool HandleTerm = false;
   bool HandleXfsz = false;
+  bool HandleUsr1 = false;
+  bool HandleUsr2 = false;
 };
 
 }  // namespace fuzzer
