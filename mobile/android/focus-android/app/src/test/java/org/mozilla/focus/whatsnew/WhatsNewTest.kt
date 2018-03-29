@@ -39,20 +39,37 @@ class WhatsNewTest {
     fun testWithUpdatedAppVersionName() {
         assertFalse(WhatsNew.shouldHighlightWhatsNew(RuntimeEnvironment.application))
 
-        PreferenceManager.getDefaultSharedPreferences(RuntimeEnvironment.application)
-                .edit()
-                .putString(WhatsNew.PREFERENCE_KEY_APP_NAME, "2.0")
-                .apply()
+        val storage = object : WhatsNewStorage {
+            private var version = WhatsNewVersion("2.0.0")
+            private var sessionCounter = 0
+
+            override fun getVersion(): WhatsNewVersion? {
+                return version
+            }
+
+            override fun getSessionCounter(): Int {
+                return sessionCounter
+            }
+
+            override fun setSessionCounter(sessionCount: Int) {
+                sessionCounter = sessionCount
+            }
+
+            override fun setVersion(version: WhatsNewVersion) {
+                this.version = version
+            }
+        }
 
         // Reset cached value
         WhatsNew.wasUpdatedRecently = null
+        val newVersion = WhatsNewVersion("3.0.0")
 
         // The app was updated recently
-        assertTrue(WhatsNew.shouldHighlightWhatsNew(RuntimeEnvironment.application))
+        assertTrue(WhatsNew.shouldHighlightWhatsNew(newVersion, storage))
 
         // shouldHighlightWhatsNew() will continue to return true as long as the process is alive
         for (i in 1..10) {
-            assertTrue(WhatsNew.shouldHighlightWhatsNew(RuntimeEnvironment.application))
+            assertTrue(WhatsNew.shouldHighlightWhatsNew(newVersion, storage))
         }
     }
 
@@ -62,7 +79,7 @@ class WhatsNewTest {
 
         PreferenceManager.getDefaultSharedPreferences(RuntimeEnvironment.application)
                 .edit()
-                .putString(WhatsNew.PREFERENCE_KEY_APP_NAME, "2.0")
+                .putString(WhatsNewStorage.PREFERENCE_KEY_APP_NAME, "2.0")
                 .apply()
 
         for (i in 1..3) {
@@ -82,7 +99,7 @@ class WhatsNewTest {
 
         PreferenceManager.getDefaultSharedPreferences(RuntimeEnvironment.application)
                 .edit()
-                .putString(WhatsNew.PREFERENCE_KEY_APP_NAME, "2.0")
+                .putString(WhatsNewStorage.PREFERENCE_KEY_APP_NAME, "2.0")
                 .apply()
 
         // Reset cached value
