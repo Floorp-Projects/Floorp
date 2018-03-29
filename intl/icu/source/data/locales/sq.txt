@@ -220,7 +220,7 @@ sq{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
     calendar{
         generic{
             DateTimePatterns{
@@ -848,7 +848,7 @@ sq{
         currency_symbols{"simbole monedhash/valutash"}
         dash_connector{"vizë lidhëse"}
         digits{"shifra"}
-        dingbats{"dingbats (shndërrues germash në yje ose figura)"}
+        dingbats{"dingbat (shndërrues germash në yje ose figura)"}
         divination_symbols{"simbole parashikimi"}
         downwards_arrows{"shigjeta për së poshti"}
         downwards_upwards_arrows{"shigjeta lart-poshtë"}

@@ -212,7 +212,7 @@ mn{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
     calendar{
         generic{
             DateTimePatterns{
@@ -387,8 +387,8 @@ mn{
                 "HH:mm:ss (z)",
                 "HH:mm:ss",
                 "HH:mm",
-                "y 'оны' MMM'ын' d. EEEE 'гараг'.",
-                "y 'оны' MMM'ын' d",
+                "y.MM.dd, EEEE",
+                "y.MM.dd",
                 "y.MM.dd",
                 "y.MM.dd",
                 "{1} {0}",

@@ -684,6 +684,10 @@ lt{
         }
         MRO{
             "MRO",
+            "Mauritanijos ugija (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Mauritanijos ugija",
         }
         MTL{
@@ -916,6 +920,10 @@ lt{
         }
         STD{
             "STD",
+            "San Tomės ir Principės dobra (1977–2017)",
+        }
+        STN{
+            "STN",
             "San Tomės ir Principės dobra",
         }
         SUR{
@@ -1279,7 +1287,7 @@ lt{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -2322,6 +2330,12 @@ lt{
             other{"Makao patakų"}
         }
         MRO{
+            few{"Mauritanijos ugijos (1973–2017)"}
+            many{"Mauritanijos ugijos (1973–2017)"}
+            one{"Mauritanijos ugija (1973–2017)"}
+            other{"Mauritanijos ugijų (1973–2017)"}
+        }
+        MRU{
             few{"Mauritanijos ugijos"}
             many{"Mauritanijos ugijos"}
             one{"Mauritanijos ugija"}
@@ -2670,6 +2684,12 @@ lt{
             other{"Pietų Sudano svarų"}
         }
         STD{
+            few{"San Tomės ir Principės dobros (1977–2017)"}
+            many{"San Tomės ir Principės dobros (1977–2017)"}
+            one{"San Tomės ir Principės dobra (1977–2017)"}
+            other{"Sao Tomės ir Principės dobrų (1977–2017)"}
+        }
+        STN{
             few{"San Tomės ir Principės dobros"}
             many{"San Tomės ir Principės dobros"}
             one{"San Tomės ir Principės dobra"}
@@ -3096,5 +3116,5 @@ lt{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.11"}
 }

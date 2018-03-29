@@ -41,7 +41,7 @@ add_task(async function() {
   // check to make sure that the toggle button isn't there
   let button = toggleButton(dbg);
   let frames = findAllElements(dbg, "frames");
-  is(button.innerText, "Expand rows", "toggle button should be expand");
+  is(button.innerText, "Expand rows", "toggle button should be 'expand'");
   is(frames.length, 7, "There should be at most seven frames");
 
   button.click();
@@ -50,4 +50,5 @@ add_task(async function() {
   frames = findAllElements(dbg, "frames");
   is(button.innerText, "Collapse rows", "toggle button should be collapsed");
   is(frames.length, 22, "All of the frames should be shown");
+  await waitForSelectedSource(dbg, "frames.js");
 });

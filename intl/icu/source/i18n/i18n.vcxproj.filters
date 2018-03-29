@@ -156,6 +156,24 @@
     <ClCompile Include="digitlst.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
+    <ClCompile Include="double-conversion-bignum-dtoa.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="double-conversion-bignum.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="double-conversion-cached-powers.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="double-conversion-diy-fp.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="double-conversion-fast-dtoa.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="double-conversion.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
     <ClCompile Include="dtfmtsym.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
@@ -540,6 +558,60 @@
     <ClCompile Include="uregion.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
+    <ClCompile Include="number_stringbuilder.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_affixutils.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_compact.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_decimalquantity.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_decimfmtprops.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_fluent.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_formatimpl.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_grouping.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_integerwidth.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_longnames.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_modifiers.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_notation.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_padding.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_patternmodifier.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_patternstring.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_rounding.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="number_scientific.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="nounit.cpp">
+      <Filter>misc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bocsu.cpp">
@@ -705,6 +777,30 @@
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="digitlst.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="double-conversion-bignum-dtoa.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="double-conversion-bignum.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="double-conversion-cached-powers.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="double-conversion-diy-fp.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="double-conversion-fast-dtoa.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="double-conversion-ieee.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="double-conversion-utils.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="double-conversion.h">
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="dt_impl.h">
@@ -1173,12 +1269,6 @@
     <CustomBuild Include="unicode\msgfmt.h">
       <Filter>formatting</Filter>
     </CustomBuild>
-    <CustomBuild Include="unicode/nounit.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
-    <CustomBuild Include="/numberformatter.h">
-      <Filter>formatting</Filter>
-    </CustomBuild>
     <CustomBuild Include="unicode\numfmt.h">
       <Filter>formatting</Filter>
     </CustomBuild>
@@ -1315,6 +1405,12 @@
       <Filter>formatting</Filter>
     </CustomBuild>
     <CustomBuild Include="unicode\uformattable.h">
+      <Filter>formatting</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\nounit.h">
+      <Filter>misc</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\numberformatter.h">
       <Filter>formatting</Filter>
     </CustomBuild>
   </ItemGroup>

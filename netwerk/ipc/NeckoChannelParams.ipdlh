@@ -54,6 +54,7 @@ struct LoadInfoArgs
   bool                        allowDocumentToBeAgnosticToCSP;
   bool                        forceAllowDataURI;
   bool                        allowInsecureRedirectToDataURI;
+  bool                        skipContentPolicyCheckForWebRequest;
   bool                        forceInheritPrincipalDropped;
   uint64_t                    innerWindowID;
   uint64_t                    outerWindowID;

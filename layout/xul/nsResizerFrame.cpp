@@ -541,7 +541,7 @@ nsResizerFrame::MouseClicked(WidgetMouseEvent* aEvent)
   bool isControl = false;
   bool isAlt = false;
   bool isMeta = false;
-  uint16_t inputSource = MouseEventBinding::MOZ_SOURCE_UNKNOWN;
+  uint16_t inputSource = dom::MouseEventBinding::MOZ_SOURCE_UNKNOWN;
 
   if(aEvent) {
     isShift = aEvent->IsShift();

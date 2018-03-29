@@ -8,5 +8,5 @@ es_EC{
             "dólar estadounidense",
         }
     }
-    Version{"2.1.37.6"}
+    Version{"2.1.38.39"}
 }

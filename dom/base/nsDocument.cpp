@@ -253,7 +253,6 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
 #ifdef MOZ_XUL
-#include "mozilla/dom/ContainerBoxObject.h"
 #include "mozilla/dom/ListBoxObject.h"
 #include "mozilla/dom/MenuBoxObject.h"
 #include "mozilla/dom/PopupBoxObject.h"
@@ -1308,26 +1307,6 @@ nsIDocument::SelectorCache::SelectorCache(nsIEventTarget* aEventTarget)
 nsIDocument::SelectorCache::~SelectorCache()
 {
   AgeAllGenerations();
-}
-
-void
-nsIDocument::SelectorCache::SelectorList::Reset()
-{
-  if (mServo) {
-    Servo_SelectorList_Drop(mServo);
-    mServo = nullptr;
-  }
-}
-
-
-void nsIDocument::SelectorCache::CacheList(
-  const nsAString& aSelector,
-  UniquePtr<RawServoSelectorList>&& aSelectorList)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  SelectorCacheKey* key = new SelectorCacheKey(aSelector);
-  mTable.Put(key->mKey, SelectorList(Move(aSelectorList)));
-  AddObject(key);
 }
 
 void nsIDocument::SelectorCache::NotifyExpired(SelectorCacheKey* aSelector)
@@ -6493,11 +6472,7 @@ nsIDocument::GetBoxObjectFor(Element* aElement, ErrorResult& aRv)
   RefPtr<nsAtom> tag = BindingManager()->ResolveTag(aElement, &namespaceID);
 #ifdef MOZ_XUL
   if (namespaceID == kNameSpaceID_XUL) {
-    if (tag == nsGkAtoms::browser ||
-        tag == nsGkAtoms::editor ||
-        tag == nsGkAtoms::iframe) {
-      boxObject = new ContainerBoxObject();
-    } else if (tag == nsGkAtoms::menu) {
+    if (tag == nsGkAtoms::menu) {
       boxObject = new MenuBoxObject();
     } else if (tag == nsGkAtoms::popup ||
                tag == nsGkAtoms::menupopup ||

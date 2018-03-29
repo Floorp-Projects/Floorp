@@ -342,6 +342,10 @@ mt{
             "MRO",
             "MRO",
         }
+        MRU{
+            "MRU",
+            "MRU",
+        }
         MTL{
             "MTL",
             "Lira Maltija",
@@ -489,6 +493,10 @@ mt{
         STD{
             "STD",
             "STD",
+        }
+        STN{
+            "STN",
+            "STN",
         }
         SYP{
             "SYP",
@@ -674,7 +682,7 @@ mt{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1202,6 +1210,12 @@ mt{
             one{"MRO"}
             other{"MRO"}
         }
+        MRU{
+            few{"MRU"}
+            many{"MRU"}
+            one{"MRU"}
+            other{"MRU"}
+        }
         MUR{
             few{"MUR"}
             many{"MUR"}
@@ -1412,6 +1426,12 @@ mt{
             one{"STD"}
             other{"STD"}
         }
+        STN{
+            few{"STN"}
+            many{"STN"}
+            one{"STN"}
+            other{"STN"}
+        }
         SYP{
             few{"SYP"}
             many{"SYP"}
@@ -1587,5 +1607,5 @@ mt{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
 }

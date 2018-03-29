@@ -684,6 +684,10 @@ en{
         }
         MRO{
             "MRO",
+            "Mauritanian Ouguiya (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Mauritanian Ouguiya",
         }
         MTL{
@@ -916,11 +920,11 @@ en{
         }
         STD{
             "STD",
-            "São Tomé & Príncipe Dobra",
+            "São Tomé & Príncipe Dobra (1977–2017)",
         }
         STN{
             "STN",
-            "São Tomé & Príncipe Dobra (2018)",
+            "São Tomé & Príncipe Dobra",
         }
         SUR{
             "SUR",
@@ -1885,6 +1889,10 @@ en{
             other{"Macanese patacas"}
         }
         MRO{
+            one{"Mauritanian ouguiya (1973–2017)"}
+            other{"Mauritanian ouguiyas (1973–2017)"}
+        }
+        MRU{
             one{"Mauritanian ouguiya"}
             other{"Mauritanian ouguiyas"}
         }
@@ -2117,12 +2125,12 @@ en{
             other{"South Sudanese pounds"}
         }
         STD{
-            one{"São Tomé & Príncipe dobra"}
-            other{"São Tomé & Príncipe dobras"}
+            one{"São Tomé & Príncipe dobra (1977–2017)"}
+            other{"São Tomé & Príncipe dobras (1977–2017)"}
         }
         STN{
-            one{"São Tomé & Príncipe dobra (2018)"}
-            other{"São Tomé & Príncipe dobras (2018)"}
+            one{"São Tomé & Príncipe dobra"}
+            other{"São Tomé & Príncipe dobras"}
         }
         SUR{
             one{"Soviet rouble"}
@@ -2409,5 +2417,5 @@ en{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.44"}
+    Version{"2.1.39.27"}
 }

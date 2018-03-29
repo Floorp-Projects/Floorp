@@ -199,6 +199,10 @@ metadata:table(nofallback){
                 reason{"macrolanguage"}
                 replacement{"zh"}
             }
+            cnr{
+                reason{"legacy"}
+                replacement{"sr_ME"}
+            }
             cor{
                 reason{"overlong"}
                 replacement{"kw"}
@@ -1355,6 +1359,130 @@ metadata:table(nofallback){
             }
         }
         subdivision{
+            cn11{
+                reason{"deprecated"}
+                replacement{"cnbj"}
+            }
+            cn12{
+                reason{"deprecated"}
+                replacement{"cntj"}
+            }
+            cn13{
+                reason{"deprecated"}
+                replacement{"cnhe"}
+            }
+            cn14{
+                reason{"deprecated"}
+                replacement{"cnsx"}
+            }
+            cn15{
+                reason{"deprecated"}
+                replacement{"cnmn"}
+            }
+            cn21{
+                reason{"deprecated"}
+                replacement{"cnln"}
+            }
+            cn22{
+                reason{"deprecated"}
+                replacement{"cnjl"}
+            }
+            cn23{
+                reason{"deprecated"}
+                replacement{"cnhl"}
+            }
+            cn31{
+                reason{"deprecated"}
+                replacement{"cnsh"}
+            }
+            cn32{
+                reason{"deprecated"}
+                replacement{"cnjs"}
+            }
+            cn33{
+                reason{"deprecated"}
+                replacement{"cnzj"}
+            }
+            cn34{
+                reason{"deprecated"}
+                replacement{"cnah"}
+            }
+            cn35{
+                reason{"deprecated"}
+                replacement{"cnfj"}
+            }
+            cn36{
+                reason{"deprecated"}
+                replacement{"cnjx"}
+            }
+            cn37{
+                reason{"deprecated"}
+                replacement{"cnsd"}
+            }
+            cn41{
+                reason{"deprecated"}
+                replacement{"cnha"}
+            }
+            cn42{
+                reason{"deprecated"}
+                replacement{"cnhb"}
+            }
+            cn43{
+                reason{"deprecated"}
+                replacement{"cnhn"}
+            }
+            cn44{
+                reason{"deprecated"}
+                replacement{"cngd"}
+            }
+            cn45{
+                reason{"deprecated"}
+                replacement{"cngx"}
+            }
+            cn46{
+                reason{"deprecated"}
+                replacement{"cnhi"}
+            }
+            cn50{
+                reason{"deprecated"}
+                replacement{"cncq"}
+            }
+            cn51{
+                reason{"deprecated"}
+                replacement{"cnsc"}
+            }
+            cn52{
+                reason{"deprecated"}
+                replacement{"cngz"}
+            }
+            cn53{
+                reason{"deprecated"}
+                replacement{"cnyn"}
+            }
+            cn54{
+                reason{"deprecated"}
+                replacement{"cnxz"}
+            }
+            cn61{
+                reason{"deprecated"}
+                replacement{"cnsn"}
+            }
+            cn62{
+                reason{"deprecated"}
+                replacement{"cngs"}
+            }
+            cn63{
+                reason{"deprecated"}
+                replacement{"cnqh"}
+            }
+            cn64{
+                reason{"deprecated"}
+                replacement{"cnnx"}
+            }
+            cn65{
+                reason{"deprecated"}
+                replacement{"cnxj"}
+            }
             cn71{
                 reason{"overlong"}
                 replacement{"TW"}
@@ -1367,9 +1495,93 @@ metadata:table(nofallback){
                 reason{"overlong"}
                 replacement{"MO"}
             }
+            cnhk{
+                reason{"overlong"}
+                replacement{"HK"}
+            }
+            cnmo{
+                reason{"overlong"}
+                replacement{"MO"}
+            }
+            cntw{
+                reason{"overlong"}
+                replacement{"TW"}
+            }
+            cz10a{
+                reason{"deprecated"}
+                replacement{"cz110"}
+            }
+            cz10b{
+                reason{"deprecated"}
+                replacement{"cz111"}
+            }
+            cz10c{
+                reason{"deprecated"}
+                replacement{"cz112"}
+            }
+            cz10d{
+                reason{"deprecated"}
+                replacement{"cz113"}
+            }
+            cz10e{
+                reason{"deprecated"}
+                replacement{"cz114"}
+            }
+            cz10f{
+                reason{"deprecated"}
+                replacement{"cz115"}
+            }
+            cz611{
+                reason{"deprecated"}
+                replacement{"cz663"}
+            }
+            cz612{
+                reason{"deprecated"}
+                replacement{"cz632"}
+            }
+            cz613{
+                reason{"deprecated"}
+                replacement{"cz633"}
+            }
+            cz614{
+                reason{"deprecated"}
+                replacement{"cz634"}
+            }
+            cz615{
+                reason{"deprecated"}
+                replacement{"cz635"}
+            }
+            cz621{
+                reason{"deprecated"}
+                replacement{"cz641"}
+            }
+            cz622{
+                reason{"deprecated"}
+                replacement{"cz642"}
+            }
+            cz623{
+                reason{"deprecated"}
+                replacement{"cz643"}
+            }
+            cz624{
+                reason{"deprecated"}
+                replacement{"cz644"}
+            }
+            cz626{
+                reason{"deprecated"}
+                replacement{"cz646"}
+            }
+            cz627{
+                reason{"deprecated"}
+                replacement{"cz647"}
+            }
             czjc{
                 reason{"deprecated"}
                 replacement{"cz31"}
+            }
+            czjm{
+                reason{"deprecated"}
+                replacement{"cz64"}
             }
             czka{
                 reason{"deprecated"}
@@ -1399,6 +1611,10 @@ metadata:table(nofallback){
                 reason{"deprecated"}
                 replacement{"cz32"}
             }
+            czpr{
+                reason{"deprecated"}
+                replacement{"cz10"}
+            }
             czst{
                 reason{"deprecated"}
                 replacement{"cz20"}
@@ -1406,6 +1622,10 @@ metadata:table(nofallback){
             czus{
                 reason{"deprecated"}
                 replacement{"cz42"}
+            }
+            czvy{
+                reason{"deprecated"}
+                replacement{"cz63"}
             }
             czzl{
                 reason{"deprecated"}
@@ -4445,6 +4665,7 @@ metadata:table(nofallback){
         "sah_RU",
         "saq_KE",
         "sbp_TZ",
+        "scn_IT",
         "sd_PK",
         "sdh_IR",
         "se_NO",

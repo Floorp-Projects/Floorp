@@ -56,7 +56,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         }
 
         public synchronized int getPid() {
-            if (mPid == 0) {
+            if ((mPid == 0) && (mChild != null)) {
                 try {
                     mPid = mChild.getPid();
                 } catch (final RemoteException e) {

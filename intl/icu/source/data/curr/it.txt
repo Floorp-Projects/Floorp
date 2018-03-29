@@ -609,6 +609,10 @@ it{
         }
         MRO{
             "MRO",
+            "ouguiya della Mauritania (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "ouguiya della Mauritania",
         }
         MTL{
@@ -829,6 +833,10 @@ it{
         }
         STD{
             "STD",
+            "dobra di Sao Tomé e Principe (1977–2017)",
+        }
+        STN{
+            "STN",
             "dobra di Sao Tomé e Principe",
         }
         SUR{
@@ -1168,7 +1176,7 @@ it{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1566,6 +1574,10 @@ it{
             other{"patacas di Macao"}
         }
         MRO{
+            one{"ouguiya della Mauritania (1973–2017)"}
+            other{"ouguiya della Mauritania (1973–2017)"}
+        }
+        MRU{
             one{"ouguiya della Mauritania"}
             other{"ouguiya della Mauritania"}
         }
@@ -1722,6 +1734,10 @@ it{
             other{"sterline sud-sudanesi"}
         }
         STD{
+            one{"dobra di Sao Tomé e Principe (1977–2017)"}
+            other{"dobra di Sao Tomé e Principe (1977–2017)"}
+        }
+        STN{
             one{"dobra di Sao Tomé e Principe"}
             other{"dobra di Sao Tomé e Principe"}
         }
@@ -1854,5 +1870,5 @@ it{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.40"}
 }

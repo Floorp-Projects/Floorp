@@ -14,7 +14,6 @@
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc.
 #include "nsError.h"                    // for NS_OK, etc.
 #include "nsIContent.h"                 // for nsIContent
-#include "nsIDOMNode.h"                 // for nsIDOMNode
 #include "nsISupportsImpl.h"            // for nsRange::Release
 #include "nsRange.h"                    // for nsRange
 
@@ -574,17 +573,6 @@ RangeUpdater::DidRemoveContainer(nsINode* aNode,
     }
   }
   return NS_OK;
-}
-
-nsresult
-RangeUpdater::DidRemoveContainer(nsIDOMNode* aNode,
-                                 nsIDOMNode* aParent,
-                                 int32_t aOffset,
-                                 uint32_t aNodeOrigLen)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
-  return DidRemoveContainer(node, parent, aOffset, aNodeOrigLen);
 }
 
 nsresult

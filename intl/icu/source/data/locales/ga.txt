@@ -319,7 +319,7 @@ ga{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.11"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1071,8 +1071,8 @@ ga{
         african_scripts{"Scripteanna na hAfraice"}
         american_scripts{"Scripteanna Meiriceánacha"}
         animal{"ainmhí"}
-        animals_nature{"Ainmhithe agus an Nádúr"}
-        arrows{"Saighde"}
+        animals_nature{"Ainmhithe nó an Nádúr"}
+        arrows{"saighead"}
         body{"corp"}
         box_drawing{"Líníocht Boscaí"}
         braille{"Braille"}
@@ -1084,8 +1084,8 @@ ga{
         digits{"Digití"}
         dingbats{"Smísteoga"}
         divination_symbols{"Siombailí na Fáistine"}
-        downwards_arrows{"Saighde Síos"}
-        downwards_upwards_arrows{"Saighde Síos Suas"}
+        downwards_arrows{"Saigheada Síos"}
+        downwards_upwards_arrows{"Saigheada Síos Suas"}
         east_asian_scripts{"Scripteanna na hÁise Thoir"}
         emoji{"Emoji"}
         european_scripts{"Scripteanna na hEorpa"}
@@ -1095,9 +1095,9 @@ ga{
         food_drink{"Bia agus Deoch"}
         format{"Formáid"}
         format_whitespace{"Formáid agus Spás Bán"}
-        full_width_form_variant{"Foirmeacha Malartacha Lánleithid"}
+        full_width_form_variant{"Foirm Lánleithid"}
         geometric_shapes{"Cruthanna Geoiméadracha"}
-        half_width_form_variant{"Foirmeacha Malartacha Leathleithid"}
+        half_width_form_variant{"Foirm Leathleithid"}
         han_characters{"Carachtair Han"}
         han_radicals{"Fréamhacha Han"}
         hanja{"Hanaí"}
@@ -1110,8 +1110,8 @@ ga{
         kanbun{"Kanbun"}
         kanji{"Ceansaí"}
         keycap{"caipín eochrach"}
-        leftwards_arrows{"Saighde Clé"}
-        leftwards_rightwards_arrows{"Saighde Clé-Deas"}
+        leftwards_arrows{"Saighead Chlé"}
+        leftwards_rightwards_arrows{"Saighead Chlé-Dheas"}
         letterlike_symbols{"Siombailí Cosúil le Litreacha"}
         limited_use{"Neamhfhorleathan"}
         male{"fireann"}
@@ -1122,7 +1122,7 @@ ga{
         modifier{"Mionathraitheoir"}
         musical_symbols{"Siombailí Ceoil"}
         nature{"nádúr"}
-        nonspacing{"Neamhspásáilte"}
+        nonspacing{"Neamhspásáil"}
         numbers{"Uimhreacha"}
         objects{"Nithe"}
         other{"Eile"}
@@ -1133,11 +1133,11 @@ ga{
         place{"áit"}
         plant{"planda"}
         punctuation{"Poncaíocht"}
-        rightwards_arrows{"Saighde Deasa"}
+        rightwards_arrows{"Saighead Dheas"}
         sign_standard_symbols{"Comharthaí/Siombailí Coitianta"}
-        small_form_variant{"Foirmeacha Beaga Malartacha"}
+        small_form_variant{"Foirmeacha Beaga"}
         smiley{"straoiseog"}
-        smileys_people{"Straoiseoga agus Daoine"}
+        smileys_people{"Straoiseoga nó Daoine"}
         south_asian_scripts{"Scripteanna na hÁise Theas"}
         southeast_asian_scripts{"Scripteanna na hÁise Thoir Theas"}
         spacing{"Spásáil"}
@@ -1146,8 +1146,8 @@ ga{
         technical_symbols{"Siombailí Teicniúla"}
         tone_marks{"Comharthaí Toin"}
         travel{"taisteal"}
-        travel_places{"Taisteal agus Áiteanna"}
-        upwards_arrows{"Saighde Suas"}
+        travel_places{"Taisteal nó Áiteanna"}
+        upwards_arrows{"Saighead suas"}
         variant_forms{"Foirmeacha Malartacha"}
         vocalic_jamo{"Seamó Guthach"}
         weather{"aimsir"}

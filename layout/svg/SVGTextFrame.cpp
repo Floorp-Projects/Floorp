@@ -5095,8 +5095,8 @@ SVGTextFrame::DoTextPathLayout()
 
     SVGTextPathElement* textPath =
       static_cast<SVGTextPathElement*>(textPathFrame->GetContent());
-    RefPtr<SVGAnimatedEnumeration> sideEnum = textPath->Side();
-    uint16_t side = sideEnum->AnimVal();
+    uint16_t side =
+      textPath->EnumAttributes()[SVGTextPathElement::SIDE].GetAnimValue();
 
     gfxFloat offset = GetStartOffset(textPathFrame);
     Float pathLength = path->ComputeLength();
@@ -5292,8 +5292,8 @@ SVGTextFrame::DoGlyphPositioning()
     float actualTextLength =
       static_cast<float>(presContext->AppUnitsToGfxUnits(frameLength) * factor);
 
-    RefPtr<SVGAnimatedEnumeration> lengthAdjustEnum = element->LengthAdjust();
-    uint16_t lengthAdjust = lengthAdjustEnum->AnimVal();
+    uint16_t lengthAdjust =
+      element->EnumAttributes()[SVGTextContentElement::LENGTHADJUST].GetAnimValue();
     switch (lengthAdjust) {
       case LENGTHADJUST_SPACINGANDGLYPHS:
         // Scale the glyphs and their positions.

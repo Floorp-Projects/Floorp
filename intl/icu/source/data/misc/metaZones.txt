@@ -131,11 +131,11 @@ metaZones:table(nofallback){
             001{"America/Halifax"}
             AG{"America/Antigua"}
             AI{"America/Anguilla"}
-            AN{"America/Curacao"}
             AW{"America/Aruba"}
             BB{"America/Barbados"}
             BM{"Atlantic/Bermuda"}
             BQ{"America/Kralendijk"}
+            CW{"America/Curacao"}
             DM{"America/Dominica"}
             GD{"America/Grenada"}
             GL{"America/Thule"}
@@ -344,7 +344,6 @@ metaZones:table(nofallback){
             SH{"Atlantic/St_Helena"}
             SL{"Africa/Freetown"}
             SN{"Africa/Dakar"}
-            ST{"Africa/Sao_Tome"}
             TG{"Africa/Lome"}
         }
         Galapagos{
@@ -1030,6 +1029,13 @@ metaZones:table(nofallback){
         "Africa:Sao_Tome"{
             {
                 "GMT",
+                "1970-01-01 00:00",
+                "2018-01-01 01:00",
+            }
+            {
+                "Africa_Western",
+                "2018-01-01 01:00",
+                "9999-12-31 23:59",
             }
         }
         "Africa:Tripoli"{

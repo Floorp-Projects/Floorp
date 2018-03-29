@@ -4898,7 +4898,7 @@ nsTextFrame::CharacterDataChanged(const CharacterDataChangeInfo& aInfo)
   return NS_OK;
 }
 
-class nsDisplayText : public nsCharClipDisplayItem {
+class nsDisplayText final : public nsCharClipDisplayItem {
 public:
   nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame,
                 const Maybe<bool>& aIsSelected);
@@ -7656,9 +7656,8 @@ nsTextFrame::SetSelectedRange(uint32_t aStart, uint32_t aEnd, bool aSelected,
       bool didHaveOverflowingSelection =
         (f->GetStateBits() & TEXT_SELECTION_UNDERLINE_OVERFLOWED) != 0;
       nsRect r(nsPoint(0, 0), GetSize());
-      bool willHaveOverflowingSelection =
-        aSelected && f->CombineSelectionUnderlineRect(presContext, r);
-      if (didHaveOverflowingSelection || willHaveOverflowingSelection) {
+      if (didHaveOverflowingSelection ||
+          (aSelected && f->CombineSelectionUnderlineRect(presContext, r))) {
         presContext->PresShell()->FrameNeedsReflow(f,
                                                    nsIPresShell::eStyleChange,
                                                    NS_FRAME_IS_DIRTY);
