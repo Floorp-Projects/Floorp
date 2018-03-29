@@ -42,3 +42,4 @@ JS_PREFERENCE_FILES += [
     'services-common.js',
 ]
 
+SPHINX_TREES['services'] = 'docs'

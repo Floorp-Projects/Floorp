@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["RemoteSettings", "pollChanges"];
+var EXPORTED_SYMBOLS = ["RemoteSettings"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -23,6 +23,8 @@ ChromeUtils.defineModuleGetter(this, "UptakeTelemetry",
                                "resource://services-common/uptake-telemetry.js");
 
 const PREF_SETTINGS_SERVER             = "services.settings.server";
+const PREF_SETTINGS_DEFAULT_BUCKET     = "services.settings.default_bucket";
+const PREF_SETTINGS_DEFAULT_SIGNER     = "services.settings.default_signer";
 const PREF_SETTINGS_VERIFY_SIGNATURE   = "services.settings.verify_signature";
 const PREF_SETTINGS_SERVER_BACKOFF     = "services.settings.server.backoff";
 const PREF_SETTINGS_CHANGES_PATH       = "services.settings.changes.path";
@@ -40,20 +42,6 @@ const INVALID_SIGNATURE = "Invalid content/signature";
 // FirefoxAdapter, so for backwards compatibility we maintain this
 // filename, even though it isn't descriptive of who is using it.
 const KINTO_STORAGE_PATH = "kinto.sqlite";
-
-const gRemoteSettingsClients = new Map();
-
-
-// Get or instantiate a remote settings client.
-function RemoteSettings(collectionName, options) {
-  const { bucketName } = options;
-  const key = `${bucketName}/${collectionName}`;
-  if (!gRemoteSettingsClients.has(key)) {
-    const c = new RemoteSettingsClient(collectionName, options);
-    gRemoteSettingsClients.set(key, c);
-  }
-  return gRemoteSettingsClients.get(key);
-}
 
 
 function mergeChanges(collection, localRecords, changes) {
@@ -204,6 +192,24 @@ class RemoteSettingsClient {
   }
 
   /**
+   * Lists settings.
+   *
+   * @param  {Object} options         The options object.
+   * @param  {Object} options.filters Filter the results (default: `{}`).
+   * @param  {Object} options.order   The order to apply   (default: `-last_modified`).
+   * @return {Promise}
+   */
+  async get(options = {}) {
+    // In Bug 1451031, we will do some jexl filtering to limit the list items
+    // whose target is matched.
+    const { filters, order } = options;
+    return this.openCollection(async c => {
+      const { data } = await c.list({ filters, order });
+      return data;
+    });
+  }
+
+  /**
    * Synchronize from Kinto server, if necessary.
    *
    * @param {int}  lastModified     the lastModified date (on the server) for
@@ -262,7 +268,7 @@ class RemoteSettingsClient {
         try {
           // Server changes have priority during synchronization.
           const strategy = Kinto.syncStrategy.SERVER_WINS;
-          const {ok} = await collection.sync({remote, strategy});
+          const { ok } = await collection.sync({remote, strategy});
           if (!ok) {
             // Some synchronization conflicts occured.
             reportStatus = UptakeTelemetry.STATUS.CONFLICT_ERROR;
@@ -304,7 +310,7 @@ class RemoteSettingsClient {
           }
         }
         // Read local collection of records.
-        const {data} = await collection.list();
+        const { data } = await collection.list();
 
         // Handle the obtained records (ie. apply locally).
         try {
@@ -397,106 +403,141 @@ class RemoteSettingsClient {
    * @param {Date} serverTime   the current date return by server.
    */
   _updateLastCheck(serverTime) {
+    if (!this.lastCheckTimePref) {
+      // If not set (default), it is not necessary to store the last check timestamp.
+      return;
+    }
+    // Storing the last check time is mainly a matter of retro-compatibility with
+    // the blocklists clients.
     const checkedServerTimeInSeconds = Math.round(serverTime / 1000);
     Services.prefs.setIntPref(this.lastCheckTimePref, checkedServerTimeInSeconds);
   }
 }
 
-// This is called by the ping mechanism.
-// returns a promise that rejects if something goes wrong
-async function pollChanges() {
-  // Check if the server backoff time is elapsed.
-  if (Services.prefs.prefHasUserValue(PREF_SETTINGS_SERVER_BACKOFF)) {
-    const backoffReleaseTime = Services.prefs.getCharPref(PREF_SETTINGS_SERVER_BACKOFF);
-    const remainingMilliseconds = parseInt(backoffReleaseTime, 10) - Date.now();
-    if (remainingMilliseconds > 0) {
-      // Backoff time has not elapsed yet.
-      UptakeTelemetry.report(TELEMETRY_HISTOGRAM_KEY,
-                             UptakeTelemetry.STATUS.BACKOFF);
-      throw new Error(`Server is asking clients to back off; retry in ${Math.ceil(remainingMilliseconds / 1000)}s.`);
-    } else {
-      Services.prefs.clearUserPref(PREF_SETTINGS_SERVER_BACKOFF);
+
+function remoteSettingsFunction() {
+  const _clients = new Map();
+
+  // If not explicitly specified, use the default bucket name and signer.
+  const mainBucket = Services.prefs.getCharPref(PREF_SETTINGS_DEFAULT_BUCKET);
+  const defaultSigner = Services.prefs.getCharPref(PREF_SETTINGS_DEFAULT_SIGNER);
+
+  const remoteSettings = function(collectionName, options) {
+    // Get or instantiate a remote settings client.
+    const rsOptions = {
+      bucketName: mainBucket,
+      signerName: defaultSigner,
+      ...options
+    };
+    const { bucketName } = rsOptions;
+    const key = `${bucketName}/${collectionName}`;
+    if (!_clients.has(key)) {
+      const c = new RemoteSettingsClient(collectionName, rsOptions);
+      _clients.set(key, c);
     }
-  }
+    return _clients.get(key);
+  };
 
-  // Right now, we only use the collection name and the last modified info
-  const kintoBase = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
-  const changesEndpoint = kintoBase + Services.prefs.getCharPref(PREF_SETTINGS_CHANGES_PATH);
-
-  let lastEtag;
-  if (Services.prefs.prefHasUserValue(PREF_SETTINGS_LAST_ETAG)) {
-    lastEtag = Services.prefs.getCharPref(PREF_SETTINGS_LAST_ETAG);
-  }
-
-  let pollResult;
-  try {
-    pollResult = await fetchLatestChanges(changesEndpoint, lastEtag);
-  } catch (e) {
-    // Report polling error to Uptake Telemetry.
-    let report;
-    if (/Server/.test(e.message)) {
-      report = UptakeTelemetry.STATUS.SERVER_ERROR;
-    } else if (/NetworkError/.test(e.message)) {
-      report = UptakeTelemetry.STATUS.NETWORK_ERROR;
-    } else {
-      report = UptakeTelemetry.STATUS.UNKNOWN_ERROR;
-    }
-    UptakeTelemetry.report(TELEMETRY_HISTOGRAM_KEY, report);
-    // No need to go further.
-    throw new Error(`Polling for changes failed: ${e.message}.`);
-  }
-
-  const {serverTimeMillis, changes, currentEtag, backoffSeconds} = pollResult;
-
-  // Report polling success to Uptake Telemetry.
-  const report = changes.length == 0 ? UptakeTelemetry.STATUS.UP_TO_DATE
-                                     : UptakeTelemetry.STATUS.SUCCESS;
-  UptakeTelemetry.report(TELEMETRY_HISTOGRAM_KEY, report);
-
-  // Check if the server asked the clients to back off (for next poll).
-  if (backoffSeconds) {
-    const backoffReleaseTime = Date.now() + backoffSeconds * 1000;
-    Services.prefs.setCharPref(PREF_SETTINGS_SERVER_BACKOFF, backoffReleaseTime);
-  }
-
-  // Record new update time and the difference between local and server time.
-  // Negative clockDifference means local time is behind server time
-  // by the absolute of that value in seconds (positive means it's ahead)
-  const clockDifference = Math.floor((Date.now() - serverTimeMillis) / 1000);
-  Services.prefs.setIntPref(PREF_SETTINGS_CLOCK_SKEW_SECONDS, clockDifference);
-  Services.prefs.setIntPref(PREF_SETTINGS_LAST_UPDATE, serverTimeMillis / 1000);
-
-  const loadDump = Services.prefs.getBoolPref(PREF_SETTINGS_LOAD_DUMP, true);
-  // Iterate through the collections version info and initiate a synchronization
-  // on the related remote settings client.
-  let firstError;
-  for (const change of changes) {
-    const {bucket, collection, last_modified: lastModified} = change;
-    const key = `${bucket}/${collection}`;
-    if (!gRemoteSettingsClients.has(key)) {
-      continue;
-    }
-    const client = gRemoteSettingsClients.get(key);
-    if (client.bucketName != bucket) {
-      continue;
-    }
-    try {
-      await client.maybeSync(lastModified, serverTimeMillis, {loadDump});
-    } catch (e) {
-      if (!firstError) {
-        firstError = e;
+  // This is called by the ping mechanism.
+  // returns a promise that rejects if something goes wrong
+  remoteSettings.pollChanges = async () => {
+    // Check if the server backoff time is elapsed.
+    if (Services.prefs.prefHasUserValue(PREF_SETTINGS_SERVER_BACKOFF)) {
+      const backoffReleaseTime = Services.prefs.getCharPref(PREF_SETTINGS_SERVER_BACKOFF);
+      const remainingMilliseconds = parseInt(backoffReleaseTime, 10) - Date.now();
+      if (remainingMilliseconds > 0) {
+        // Backoff time has not elapsed yet.
+        UptakeTelemetry.report(TELEMETRY_HISTOGRAM_KEY,
+                               UptakeTelemetry.STATUS.BACKOFF);
+        throw new Error(`Server is asking clients to back off; retry in ${Math.ceil(remainingMilliseconds / 1000)}s.`);
+      } else {
+        Services.prefs.clearUserPref(PREF_SETTINGS_SERVER_BACKOFF);
       }
     }
-  }
-  if (firstError) {
-    // cause the promise to reject by throwing the first observed error
-    throw firstError;
-  }
 
-  // Save current Etag for next poll.
-  if (currentEtag) {
-    Services.prefs.setCharPref(PREF_SETTINGS_LAST_ETAG, currentEtag);
-  }
+    // Right now, we only use the collection name and the last modified info
+    const kintoBase = Services.prefs.getCharPref(PREF_SETTINGS_SERVER);
+    const changesEndpoint = kintoBase + Services.prefs.getCharPref(PREF_SETTINGS_CHANGES_PATH);
 
-  Services.obs.notifyObservers(null, "remote-settings-changes-polled");
+    let lastEtag;
+    if (Services.prefs.prefHasUserValue(PREF_SETTINGS_LAST_ETAG)) {
+      lastEtag = Services.prefs.getCharPref(PREF_SETTINGS_LAST_ETAG);
+    }
+
+    let pollResult;
+    try {
+      pollResult = await fetchLatestChanges(changesEndpoint, lastEtag);
+    } catch (e) {
+      // Report polling error to Uptake Telemetry.
+      let report;
+      if (/Server/.test(e.message)) {
+        report = UptakeTelemetry.STATUS.SERVER_ERROR;
+      } else if (/NetworkError/.test(e.message)) {
+        report = UptakeTelemetry.STATUS.NETWORK_ERROR;
+      } else {
+        report = UptakeTelemetry.STATUS.UNKNOWN_ERROR;
+      }
+      UptakeTelemetry.report(TELEMETRY_HISTOGRAM_KEY, report);
+      // No need to go further.
+      throw new Error(`Polling for changes failed: ${e.message}.`);
+    }
+
+    const {serverTimeMillis, changes, currentEtag, backoffSeconds} = pollResult;
+
+    // Report polling success to Uptake Telemetry.
+    const report = changes.length == 0 ? UptakeTelemetry.STATUS.UP_TO_DATE
+                                       : UptakeTelemetry.STATUS.SUCCESS;
+    UptakeTelemetry.report(TELEMETRY_HISTOGRAM_KEY, report);
+
+    // Check if the server asked the clients to back off (for next poll).
+    if (backoffSeconds) {
+      const backoffReleaseTime = Date.now() + backoffSeconds * 1000;
+      Services.prefs.setCharPref(PREF_SETTINGS_SERVER_BACKOFF, backoffReleaseTime);
+    }
+
+    // Record new update time and the difference between local and server time.
+    // Negative clockDifference means local time is behind server time
+    // by the absolute of that value in seconds (positive means it's ahead)
+    const clockDifference = Math.floor((Date.now() - serverTimeMillis) / 1000);
+    Services.prefs.setIntPref(PREF_SETTINGS_CLOCK_SKEW_SECONDS, clockDifference);
+    Services.prefs.setIntPref(PREF_SETTINGS_LAST_UPDATE, serverTimeMillis / 1000);
+
+    const loadDump = Services.prefs.getBoolPref(PREF_SETTINGS_LOAD_DUMP, true);
+    // Iterate through the collections version info and initiate a synchronization
+    // on the related remote settings client.
+    let firstError;
+    for (const change of changes) {
+      const {bucket, collection, last_modified: lastModified} = change;
+      const key = `${bucket}/${collection}`;
+      if (!_clients.has(key)) {
+        continue;
+      }
+      const client = _clients.get(key);
+      if (client.bucketName != bucket) {
+        continue;
+      }
+      try {
+        await client.maybeSync(lastModified, serverTimeMillis, {loadDump});
+      } catch (e) {
+        if (!firstError) {
+          firstError = e;
+        }
+      }
+    }
+    if (firstError) {
+      // cause the promise to reject by throwing the first observed error
+      throw firstError;
+    }
+
+    // Save current Etag for next poll.
+    if (currentEtag) {
+      Services.prefs.setCharPref(PREF_SETTINGS_LAST_ETAG, currentEtag);
+    }
+
+    Services.obs.notifyObservers(null, "remote-settings-changes-polled");
+  };
+
+  return remoteSettings;
 }
+
+var RemoteSettings = remoteSettingsFunction();

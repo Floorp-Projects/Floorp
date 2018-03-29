@@ -36,7 +36,8 @@ XPCOMUtils.defineLazyGetter(this, "RemoteSettings", function() {
   // Instantiate blocklist clients.
   BlocklistClients.initialize();
   // Import RemoteSettings for ``pollChanges()``
-  return ChromeUtils.import("resource://services-common/remote-settings.js", {});
+  const { RemoteSettings } = ChromeUtils.import("resource://services-common/remote-settings.js", {});
+  return RemoteSettings;
 });
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
