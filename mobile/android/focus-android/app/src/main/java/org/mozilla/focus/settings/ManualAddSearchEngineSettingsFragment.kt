@@ -214,7 +214,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
 
         private fun showServerError(that: ManualAddSearchEngineSettingsFragment) {
             val pref = that.findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
-            pref.setSearchQueryErrorText(that.getString(R.string.pref_key_manual_add_search_engine))
+            pref.setSearchQueryErrorText(that.getString(R.string.error_hostLookup_title))
         }
     }
 }
