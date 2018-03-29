@@ -3450,7 +3450,7 @@ nsContentUtils::GetContextForContent(const nsIContent* aContent)
 
 // static
 bool
-nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
+nsContentUtils::CanLoadImage(nsIURI* aURI, nsINode* aNode,
                              nsIDocument* aLoadingDocument,
                              nsIPrincipal* aLoadingPrincipal,
                              int16_t* aImageBlockingStatus,
@@ -3495,15 +3495,17 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
     }
   }
 
+  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+    new LoadInfo(aLoadingPrincipal,
+                 aLoadingPrincipal, // triggering principal
+                 aNode,
+                 nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                 aContentType);
+
   int16_t decision = nsIContentPolicy::ACCEPT;
 
-  rv = NS_CheckContentLoadPolicy(aContentType,
-                                 aURI,
-                                 aLoadingPrincipal,
-                                 aLoadingPrincipal, // triggering principal
-                                 aContext,
+  rv = NS_CheckContentLoadPolicy(aURI, secCheckLoadInfo,
                                  EmptyCString(), //mime guess
-                                 nullptr,         //extra
                                  &decision,
                                  GetContentPolicy());
 

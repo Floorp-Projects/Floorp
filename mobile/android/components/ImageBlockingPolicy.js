@@ -45,7 +45,10 @@ ImageBlockingPolicy.prototype = {
   xpcom_categories: [{category: "content-policy", service: true}],
 
   // nsIContentPolicy interface implementation
-  shouldLoad: function(contentType, contentLocation, requestOrigin, node, mimeTypeGuess, extra) {
+  shouldLoad: function(contentLocation, loadInfo, mimeTypeGuess) {
+    let contentType = loadInfo.externalContentPolicyType;
+    let node = loadInfo.loadingContext;
+
     // When enabled or when on cellular, and option for cellular-only is selected
     if (this._enabled() == OPTION_NEVER || (this._enabled() == OPTION_WIFI_ONLY && this._usingCellular())) {
       if (contentType === Ci.nsIContentPolicy.TYPE_IMAGE || contentType === Ci.nsIContentPolicy.TYPE_IMAGESET) {
@@ -81,7 +84,7 @@ ImageBlockingPolicy.prototype = {
     return Ci.nsIContentPolicy.ACCEPT;
   },
 
-  shouldProcess: function(contentType, contentLocation, requestOrigin, node, mimeTypeGuess, extra) {
+  shouldProcess: function(contentLocation, loadInfo, mimeTypeGuess) {
     return Ci.nsIContentPolicy.ACCEPT;
   },
 

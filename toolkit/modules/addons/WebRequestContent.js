@@ -76,8 +76,16 @@ var ContentPolicy = {
     catMan.deleteCategoryEntry("content-policy", this._contractID, false);
   },
 
-  shouldLoad(policyType, contentLocation, requestOrigin,
-             node, mimeTypeGuess, extra, requestPrincipal) {
+  shouldLoad(contentLocation, loadInfo, mimeTypeGuess) {
+    let policyType = loadInfo.externalContentPolicyType;
+    let node = loadInfo.loadingContext;
+    let loadingPrincipal = loadInfo.loadingPrincipal;
+    let requestPrincipal = loadInfo.triggeringPrincipal;
+    let requestOrigin = null;
+    if (loadingPrincipal) {
+      requestOrigin = loadingPrincipal.URI;
+    }
+
     // Loads of TYPE_DOCUMENT and TYPE_SUBDOCUMENT perform a ConPol check
     // within docshell as well as within the ContentSecurityManager. To avoid
     // duplicate evaluations we ignore ConPol checks performed within docShell.
@@ -192,7 +200,7 @@ var ContentPolicy = {
     return Ci.nsIContentPolicy.ACCEPT;
   },
 
-  shouldProcess: function(contentType, contentLocation, requestOrigin, insecNode, mimeType, extra) {
+  shouldProcess: function(contentLocation, loadInfo, mimeType) {
     return Ci.nsIContentPolicy.ACCEPT;
   },
 
