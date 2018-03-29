@@ -197,6 +197,21 @@ public:
    */
   static nsFlexContainerFrame* GetFlexFrameWithComputedInfo(nsIFrame* aFrame);
 
+  /**
+   * Given a frame for a flex item, this method returns true IFF that flex
+   * item's inline axis is the same as (i.e. not orthogonal to) its flex
+   * container's main axis.
+   *
+   * (This method is only intended to be used from external
+   * callers. Inside of flex reflow code, FlexItem::IsInlineAxisMainAxis() is
+   * equivalent & more optimal.)
+   *
+   * @param aFrame a flex item (must return true from IsFlexItem)
+   * @return true iff aFrame's inline axis is the same as (i.e. not orthogonal
+   *              to) its flex container's main axis. Otherwise, false.
+   */
+  static bool IsItemInlineAxisMainAxis(nsIFrame* aFrame);
+
 protected:
   // Protected constructor & destructor
   explicit nsFlexContainerFrame(ComputedStyle* aStyle)

@@ -5663,25 +5663,10 @@ nsFrame::ComputeSize(gfxContext*         aRenderingContext,
   bool usingFlexBasisForISize = false;
   if (isFlexItem) {
     // Flex items use their "flex-basis" property in place of their main-size
-    // property (e.g. "width") for sizing purposes, *unless* they have
-    // "flex-basis:auto", in which case they use their main-size property after
-    // all.
-    uint32_t flexDirection = GetParent()->StylePosition()->mFlexDirection;
-    const bool flexContainerIsRowOriented =
-      flexDirection == NS_STYLE_FLEX_DIRECTION_ROW ||
-      flexDirection == NS_STYLE_FLEX_DIRECTION_ROW_REVERSE;
-    const bool inlineAxisSameAsParent =
-      !aWM.IsOrthogonalTo(parentFrame->GetWritingMode());
-
-    // If parent is row-oriented, its main axis (i.e. the flex-basis axis) is
-    // its own inline axis. So if it's row oriented and our own inline axis
-    // is the same as our parent's, then we'll be using flex-basis in place
-    // of our _ISize_ sizing property.
-    // Otherwise, we'll be using flex-basis for our _BSize_ sizing property
-    // (unless both conditions are false, in which case we flip back around to
-    // using our ISize sizing property).
+    // property for sizing purposes, *unless* they have "flex-basis:auto", in
+    // which case they use their main-size property after all.
     usingFlexBasisForISize =
-      (flexContainerIsRowOriented == inlineAxisSameAsParent);
+      nsFlexContainerFrame::IsItemInlineAxisMainAxis(this);
 
     // NOTE: The logic here should match the similar chunk for determining
     // inlineStyleCoord and blockStyleCoord in
@@ -5903,17 +5888,8 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(gfxContext*          aRenderingConte
   // from our style struct. (Otherwise, we'll be using an irrelevant value in
   // the aspect-ratio calculations below.)
   if (isFlexItem) {
-    uint32_t flexDirection =
-      GetParent()->StylePosition()->mFlexDirection;
-    const bool flexContainerIsRowOriented =
-      flexDirection == NS_STYLE_FLEX_DIRECTION_ROW ||
-      flexDirection == NS_STYLE_FLEX_DIRECTION_ROW_REVERSE;
-    const bool inlineAxisSameAsParent =
-      !aWM.IsOrthogonalTo(parentFrame->GetWritingMode());
-
-    // (See explanatory comment in similar code within ComputeSize.)
     usingFlexBasisForISize =
-      (flexContainerIsRowOriented == inlineAxisSameAsParent);
+      nsFlexContainerFrame::IsItemInlineAxisMainAxis(this);
 
     // If FlexItemMainSizeOverride frame-property is set, then that means the
     // flex container is imposing a main-size on this flex item for it to use
