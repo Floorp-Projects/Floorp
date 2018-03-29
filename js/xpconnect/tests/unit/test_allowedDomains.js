@@ -38,4 +38,9 @@ function run_test() {
   evalAndCatch("objC.prop1", sbMaster);
   evalAndCatch("objMaster.prop1", sbA);
   evalAndCatch("objMaster.prop1", sbSubset);
+  
+  // Bug 777705:
+  sbMaster.Components = Cu.getComponentsForScope(sbMaster);
+  Cu.evalInSandbox("Components.interfaces", sbMaster);
+  Assert.ok(true);
 }
