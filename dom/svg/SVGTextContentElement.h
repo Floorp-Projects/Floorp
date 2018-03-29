@@ -25,6 +25,7 @@ typedef SVGGraphicsElement SVGTextContentElementBase;
 
 class SVGTextContentElement : public SVGTextContentElementBase
 {
+  friend class ::SVGTextFrame;
 public:
   using FragmentOrElement::TextLength;
 
