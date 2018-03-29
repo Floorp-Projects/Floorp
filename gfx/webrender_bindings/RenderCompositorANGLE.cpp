@@ -196,6 +196,8 @@ RenderCompositorANGLE::Initialize()
 bool
 RenderCompositorANGLE::BeginFrame()
 {
+  mWidget->AsWindows()->UpdateCompositorWndSizeIfNecessary();
+
   if (!ResizeBufferIfNeeded()) {
     return false;
   }
