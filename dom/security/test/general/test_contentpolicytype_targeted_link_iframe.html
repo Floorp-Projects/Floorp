@@ -51,8 +51,8 @@ var policy = {
   },
 
   // nsIContentPolicy implementation
-  shouldLoad: function(contentType, contentLocation, requestOrigin,
-                       context, mimeTypeGuess, extra) {
+  shouldLoad: function(contentLocation, loadInfo, mimeTypeGuess) {
+    let contentType = loadInfo.externalContentPolicyType;
 
     // make sure we get the right amount of content policy calls
     // e.g. about:blank also gets chrcked by content policies
@@ -60,14 +60,14 @@ var policy = {
       is(contentType, EXPECTED_CONTENT_TYPE,
          "content policy type should TYPESUBDOCUMENT");
       categoryManager.deleteCategoryEntry("content-policy", POLICYNAME, false);
+      componentManager.unregisterFactory(POLICYID, policy);
       SimpleTest.finish();
       return Ci.nsIContentPolicy.REJECT_REQUEST;
     }
     return Ci.nsIContentPolicy.ACCEPT;
   },
 
-  shouldProcess: function(contentType, contentLocation, requestOrigin,
-                          context, mimeTypeGuess, extra) {
+  shouldProcess: function(contentLocation, loadInfo, mimeTypeGuess) {
     return Ci.nsIContentPolicy.ACCEPT;
   }
 }
