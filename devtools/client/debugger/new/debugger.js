@@ -24250,20 +24250,21 @@ async function loadSource(source, { sourceMaps, client }) {
  */
 function loadSourceText(source) {
   return async ({ dispatch, getState, client, sourceMaps }) => {
-    const telemetryStart = performance.now();
-    const deferred = (0, _defer2.default)();
+    const id = source.get("id");
 
     // Fetch the source text only once.
-    if ((0, _source.isLoaded)(source)) {
-      return Promise.resolve(source);
-    }
-
-    const id = source.get("id");
-    if ((0, _source.isLoading)(source) || requests.has(id)) {
+    if (requests.has(id)) {
       return requests.get(id);
     }
 
+    if ((0, _source.isLoaded)(source)) {
+      return Promise.resolve();
+    }
+
+    const telemetryStart = performance.now();
+    const deferred = (0, _defer2.default)();
     requests.set(id, deferred.promise);
+
     try {
       await dispatch({
         type: "LOAD_SOURCE_TEXT",
@@ -48502,6 +48503,10 @@ exports.loadSourceMap = loadSourceMap;
 exports.newSource = newSource;
 exports.newSources = newSources;
 
+var _devtoolsSourceMap = __webpack_require__(1360);
+
+var _lodash = __webpack_require__(2);
+
 var _breakpoints = __webpack_require__(1396);
 
 var _loadSourceText = __webpack_require__(1435);
@@ -48525,34 +48530,45 @@ function createOriginalSource(originalUrl, generatedSource, sourceMaps) {
   };
 }
 
+function loadSourceMaps(sources) {
+  return async function ({ dispatch, getState, sourceMaps }) {
+    const originalSources = await Promise.all(sources.map(source => dispatch(loadSourceMap(source.id))));
+
+    await dispatch(newSources((0, _lodash.flatten)(originalSources)));
+  };
+}
+
 /**
  * @memberof actions/sources
  * @static
  */
-function loadSourceMap(generatedSource) {
+function loadSourceMap(sourceId) {
   return async function ({ dispatch, getState, sourceMaps }) {
+    const source = (0, _selectors.getSource)(getState(), sourceId).toJS();
+    if (!(0, _devtoolsSourceMap.isGeneratedId)(source.id) || !source.sourceMapURL) {
+      return;
+    }
+
     let urls;
+
     try {
-      urls = await sourceMaps.getOriginalURLs(generatedSource);
+      urls = await sourceMaps.getOriginalURLs(source);
     } catch (e) {
       console.error(e);
       urls = null;
     }
+
     if (!urls) {
       // If this source doesn't have a sourcemap, enable it for pretty printing
       dispatch({
         type: "UPDATE_SOURCE",
-        source: _extends({}, generatedSource, { sourceMapURL: "" })
+        source: _extends({}, source, { sourceMapURL: "" })
       });
       return;
     }
 
-    const originalSources = urls.map(url => createOriginalSource(url, generatedSource, sourceMaps));
+    const originalSources = urls.map(url => createOriginalSource(url, source, sourceMaps));
 
-    // TODO: check if this line is really needed, it introduces
-    // a lot of lag to the application.
-    const generatedSourceRecord = (0, _selectors.getSource)(getState(), generatedSource.id);
-    await dispatch((0, _loadSourceText.loadSourceText)(generatedSourceRecord));
     dispatch(newSources(originalSources));
   };
 }
@@ -48616,7 +48632,7 @@ function newSource(source) {
 
 function newSources(sources) {
   return async ({ dispatch, getState }) => {
-    const filteredSources = sources.filter(source => !(0, _selectors.getSource)(getState(), source.id));
+    const filteredSources = sources.filter(source => source && !(0, _selectors.getSource)(getState(), source.id));
 
     if (filteredSources.length == 0) {
       return;
@@ -48632,7 +48648,7 @@ function newSources(sources) {
       dispatch(checkPendingBreakpoints(source.id));
     }
 
-    return Promise.all(filteredSources.map(source => dispatch(loadSourceMap(source))));
+    await dispatch(loadSourceMaps(filteredSources));
   };
 }
 
