@@ -60,12 +60,6 @@ public:
   // We also round the rectangle to ints after transforming since the output
   // is the final destination rect.
   wr::LayoutRect ToRelativeLayoutRect(const LayoutDeviceRect& aRect) const;
-  // Same but for points
-  wr::LayoutPoint ToRelativeLayoutPoint(const LayoutDevicePoint& aPoint) const
-  {
-    return wr::ToLayoutPoint(aPoint);
-  }
-
 
   // Export the inherited scale
   gfx::Size GetInheritedScale() const { return mScale; }
