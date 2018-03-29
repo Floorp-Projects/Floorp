@@ -633,7 +633,7 @@ public class BrowserApp extends GeckoApp
                     return true;
 
                 case KeyEvent.KEYCODE_R:
-                    tab.doReload(event.isShiftPressed() ? true : false);
+                    tab.doReload(event.isShiftPressed());
                     return true;
 
                 case KeyEvent.KEYCODE_PERIOD:
