@@ -102,6 +102,11 @@ class AsyncTabSwitcher {
     // True if we're in the midst of switching tabs.
     this.switchInProgress = false;
 
+    // Keep an exact list of content processes (tabParent) in which
+    // we're actively suppressing the display port. This gives a robust
+    // way to make sure we don't forget to un-suppress.
+    this.activeSuppressDisplayport = new Set();
+
     // Set of tabs that might be visible right now. We maintain
     // this set because we can't be sure when a tab is actually
     // drawn. A tab is added to this set when we ask to make it
@@ -183,6 +188,11 @@ class AsyncTabSwitcher {
     this.window.removeEventListener("EndSwapDocShells", this, true);
 
     this.tabbrowser._switcher = null;
+
+    this.activeSuppressDisplayport.forEach(function(tabParent) {
+      tabParent.suppressDisplayport(false);
+    });
+    this.activeSuppressDisplayport.clear();
   }
 
   // Wraps nsITimer. Must not use the vanilla setTimeout and
@@ -866,7 +876,7 @@ class AsyncTabSwitcher {
 
     this.warmingTabs.add(tab);
     this.setTabState(tab, this.STATE_LOADING);
-    this.queueUnload(gTabWarmingUnloadDelayMs);
+    this.suppressDisplayPortAndQueueUnload(tab, gTabWarmingUnloadDelayMs);
   }
 
   // Called when the user asks to switch to a given tab.
@@ -912,11 +922,19 @@ class AsyncTabSwitcher {
     }
     this.lastPrimaryTab = tab;
 
-    this.queueUnload(this.UNLOAD_DELAY);
+    this.suppressDisplayPortAndQueueUnload(this.requestedTab, this.UNLOAD_DELAY);
     this._requestingTab = false;
   }
 
-  queueUnload(unloadTimeout) {
+  suppressDisplayPortAndQueueUnload(tab, unloadTimeout) {
+    let browser = tab.linkedBrowser;
+    let fl = browser.frameLoader;
+
+    if (fl && fl.tabParent && !this.activeSuppressDisplayport.has(fl.tabParent)) {
+      fl.tabParent.suppressDisplayport(true);
+      this.activeSuppressDisplayport.add(fl.tabParent);
+    }
+
     this.preActions();
 
     if (this.unloadTimer) {
