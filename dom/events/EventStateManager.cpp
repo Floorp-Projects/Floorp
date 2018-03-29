@@ -506,7 +506,8 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
                                   WidgetEvent* aEvent,
                                   nsIFrame* aTargetFrame,
                                   nsIContent* aTargetContent,
-                                  nsEventStatus* aStatus)
+                                  nsEventStatus* aStatus,
+                                  nsIContent* aOverrideClickTarget)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
   NS_ENSURE_ARG(aPresContext);
@@ -655,7 +656,8 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         MOZ_FALLTHROUGH;
       case WidgetMouseEvent::eRightButton:
       case WidgetMouseEvent::eMiddleButton:
-        SetClickCount(mouseEvent, aStatus);
+        RefPtr<EventStateManager> esm = ESMFromContentOrThis(aOverrideClickTarget);
+        esm->SetClickCount(mouseEvent, aStatus, aOverrideClickTarget);
         NotifyTargetUserActivation(aEvent, aTargetContent);
         break;
     }
@@ -920,6 +922,26 @@ EventStateManager::NotifyTargetUserActivation(WidgetEvent* aEvent,
              aEvent->mMessage == eMouseUp ||
              aEvent->mMessage == eTouchEnd);
   doc->NotifyUserActivation();
+}
+
+already_AddRefed<EventStateManager>
+EventStateManager::ESMFromContentOrThis(nsIContent* aContent)
+{
+  if (aContent) {
+    nsIPresShell* shell = aContent->OwnerDoc()->GetShell();
+    if (shell) {
+      nsPresContext* prescontext = shell->GetPresContext();
+      if (prescontext) {
+        RefPtr<EventStateManager> esm = prescontext->EventStateManager();
+        if (esm) {
+          return esm.forget();
+        }
+      }
+    }
+  }
+
+  RefPtr<EventStateManager> esm = this;
+  return esm.forget();
 }
 
 void
@@ -3055,7 +3077,8 @@ nsresult
 EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
                                    WidgetEvent* aEvent,
                                    nsIFrame* aTargetFrame,
-                                   nsEventStatus* aStatus)
+                                   nsEventStatus* aStatus,
+                                   nsIContent* aOverrideClickTarget)
 {
   NS_ENSURE_ARG(aPresContext);
   NS_ENSURE_ARG_POINTER(aStatus);
@@ -3317,7 +3340,10 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         }
         // Make sure to dispatch the click even if there is no frame for
         // the current target element. This is required for Web compatibility.
-        ret = CheckForAndDispatchClick(mouseEvent, aStatus);
+        RefPtr<EventStateManager> esm =
+          ESMFromContentOrThis(aOverrideClickTarget);
+        ret = esm->CheckForAndDispatchClick(mouseEvent, aStatus,
+                                            aOverrideClickTarget);
       }
 
       nsIPresShell *shell = presContext->GetPresShell();
@@ -4786,11 +4812,12 @@ EventStateManager::UpdateDragDataTransfer(WidgetDragEvent* dragEvent)
 
 nsresult
 EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
-                                 nsEventStatus* aStatus)
+                                 nsEventStatus* aStatus,
+                                 nsIContent* aOverrideClickTarget)
 {
-  nsCOMPtr<nsIContent> mouseContent;
+  nsCOMPtr<nsIContent> mouseContent = aOverrideClickTarget;
   nsIContent* mouseContentParent = nullptr;
-  if (mCurrentTarget) {
+  if (!mouseContent && mCurrentTarget) {
     mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(mouseContent));
   }
   if (mouseContent) {
@@ -4868,7 +4895,8 @@ EventStateManager::InitAndDispatchClickEvent(WidgetMouseEvent* aEvent,
                                              nsIPresShell* aPresShell,
                                              nsIContent* aMouseTarget,
                                              AutoWeakFrame aCurrentTarget,
-                                             bool aNoContentDispatch)
+                                             bool aNoContentDispatch,
+                                             nsIContent* aOverrideClickTarget)
 {
   WidgetMouseEvent event(aEvent->IsTrusted(), aMessage,
                          aEvent->mWidget, WidgetMouseEvent::eReal);
@@ -4883,14 +4911,21 @@ EventStateManager::InitAndDispatchClickEvent(WidgetMouseEvent* aEvent,
   event.button = aEvent->button;
   event.pointerId = aEvent->pointerId;
   event.inputSource = aEvent->inputSource;
+  nsIContent* target = aMouseTarget;
+  nsIFrame* targetFrame = aCurrentTarget;
+  if (aOverrideClickTarget) {
+    target = aOverrideClickTarget;
+    targetFrame = aOverrideClickTarget->GetPrimaryFrame();
+  }
 
-  return aPresShell->HandleEventWithTarget(&event, aCurrentTarget,
-                                           aMouseTarget, aStatus);
+  return aPresShell->HandleEventWithTarget(&event, targetFrame,
+                                           target, aStatus);
 }
 
 nsresult
 EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
-                                            nsEventStatus* aStatus)
+                                            nsEventStatus* aStatus,
+                                            nsIContent* aOverrideClickTarget)
 {
   nsresult ret = NS_OK;
 
@@ -4920,7 +4955,7 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
         mouseContent = mouseContent->GetParent();
       }
 
-      if (!mouseContent && !mCurrentTarget) {
+      if (!mouseContent && !mCurrentTarget && !aOverrideClickTarget) {
         return NS_OK;
       }
 
@@ -4928,20 +4963,22 @@ EventStateManager::CheckForAndDispatchClick(WidgetMouseEvent* aEvent,
       AutoWeakFrame currentTarget = mCurrentTarget;
       ret = InitAndDispatchClickEvent(aEvent, aStatus, eMouseClick,
                                       presShell, mouseContent, currentTarget,
-                                      notDispatchToContents);
+                                      notDispatchToContents,
+                                      aOverrideClickTarget);
 
       if (NS_SUCCEEDED(ret) && aEvent->mClickCount == 2 &&
           mouseContent && mouseContent->IsInComposedDoc()) {
         //fire double click
         ret = InitAndDispatchClickEvent(aEvent, aStatus, eMouseDoubleClick,
                                         presShell, mouseContent, currentTarget,
-                                        notDispatchToContents);
+                                        notDispatchToContents,
+                                        aOverrideClickTarget);
       }
       if (NS_SUCCEEDED(ret) && mouseContent && fireAuxClick &&
           mouseContent->IsInComposedDoc()) {
         ret = InitAndDispatchClickEvent(aEvent, aStatus, eMouseAuxClick,
                                         presShell, mouseContent, currentTarget,
-                                        false);
+                                        false, aOverrideClickTarget);
       }
     }
   }
