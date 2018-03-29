@@ -102,29 +102,27 @@ extern constexpr DirectoryAtoms gDirectoryAtoms = {
   #define DIR_ATOM(name_, value_) NS_STATIC_ATOM_INIT_STRING(value_)
   #include "nsDirectoryServiceAtomList.h"
   #undef DIR_ATOM
-
-  #define DIR_ATOM(name_, value_) \
-    NS_STATIC_ATOM_INIT_ATOM(DirectoryAtoms, name_, value_)
-  #include "nsDirectoryServiceAtomList.h"
-  #undef DIR_ATOM
+  {
+    #define DIR_ATOM(name_, value_) \
+      NS_STATIC_ATOM_INIT_ATOM(nsStaticAtom, DirectoryAtoms, name_, value_)
+    #include "nsDirectoryServiceAtomList.h"
+    #undef DIR_ATOM
+  }
 };
 MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
 
 } // namespace detail
 } // namespace mozilla
 
+const nsStaticAtom* const nsDirectoryService::sAtoms =
+  mozilla::detail::gDirectoryAtoms.mAtoms;
+
 #define DIR_ATOM(name_, value_) \
-  NS_STATIC_ATOM_DEFN_PTR(nsDirectoryService, name_)
+  NS_STATIC_ATOM_DEFN_PTR( \
+    nsStaticAtom, mozilla::detail::DirectoryAtoms, \
+    mozilla::detail::gDirectoryAtoms, nsDirectoryService, name_)
 #include "nsDirectoryServiceAtomList.h"
 #undef DIR_ATOM
-
-static const nsStaticAtomSetup sDirectoryServiceAtomSetup[] = {
-  #define DIR_ATOM(name_, value_) \
-    NS_STATIC_ATOM_SETUP( \
-      mozilla::detail::gDirectoryAtoms, nsDirectoryService, name_)
-  #include "nsDirectoryServiceAtomList.h"
-  #undef DIR_ATOM
-};
 
 NS_IMETHODIMP
 nsDirectoryService::Init()
@@ -141,7 +139,7 @@ nsDirectoryService::RealInit()
 
   gService = new nsDirectoryService();
 
-  NS_RegisterStaticAtoms(sDirectoryServiceAtomSetup);
+  NS_RegisterStaticAtoms(sAtoms, sAtomsLen);
 
   // Let the list hold the only reference to the provider.
   nsAppFileLocationProvider* defaultProvider = new nsAppFileLocationProvider;

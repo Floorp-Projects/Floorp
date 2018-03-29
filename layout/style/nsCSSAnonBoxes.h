@@ -12,9 +12,16 @@
 #include "nsAtom.h"
 #include "nsStaticAtom.h"
 
-// Empty class derived from nsAtom so that function signatures can
-// require an atom from this atom list.
-class nsICSSAnonBoxPseudo : public nsAtom {};
+// Trivial subclass of nsStaticAtom so that function signatures can require an
+// atom from this atom list.
+class nsICSSAnonBoxPseudo : public nsStaticAtom
+{
+public:
+  constexpr nsICSSAnonBoxPseudo(const char16_t* aStr, uint32_t aLength,
+                                uint32_t aStringOffset)
+    : nsStaticAtom(aStr, aLength, aStringOffset)
+  {}
+};
 
 namespace mozilla {
 namespace detail {
@@ -25,9 +32,15 @@ struct CSSAnonBoxAtoms
   #include "nsCSSAnonBoxList.h"
   #undef CSS_ANON_BOX
 
-  #define CSS_ANON_BOX(name_, value_) NS_STATIC_ATOM_DECL_ATOM(name_)
-  #include "nsCSSAnonBoxList.h"
-  #undef CSS_ANON_BOX
+  enum class Atoms {
+    #define CSS_ANON_BOX(name_, value_) \
+      NS_STATIC_ATOM_ENUM(name_)
+    #include "nsCSSAnonBoxList.h"
+    #undef CSS_ANON_BOX
+    AtomsCount
+  };
+
+  const nsICSSAnonBoxPseudo mAtoms[static_cast<size_t>(Atoms::AtomsCount)];
 };
 
 extern const CSSAnonBoxAtoms gCSSAnonBoxAtoms;
@@ -50,10 +63,16 @@ public:
            aPseudo == firstLetterContinuation;
   }
 
-#define CSS_ANON_BOX(name_, value_) \
-  NS_STATIC_ATOM_SUBCLASS_DECL_PTR(nsICSSAnonBoxPseudo, name_)
-#include "nsCSSAnonBoxList.h"
-#undef CSS_ANON_BOX
+private:
+  static const nsStaticAtom* const sAtoms;
+  static constexpr size_t sAtomsLen =
+    mozilla::ArrayLength(mozilla::detail::gCSSAnonBoxAtoms.mAtoms);
+
+public:
+  #define CSS_ANON_BOX(name_, value_) \
+    NS_STATIC_ATOM_DECL_PTR(nsICSSAnonBoxPseudo, name_)
+  #include "nsCSSAnonBoxList.h"
+  #undef CSS_ANON_BOX
 
   typedef uint8_t NonInheritingBase;
   enum class NonInheriting : NonInheritingBase {
