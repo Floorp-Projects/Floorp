@@ -45,7 +45,7 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
     check_unset("parentGuid");
   }
 
-  let expectedAnnos = PlacesUtils.getAnnotationsForItem(aItem.id);
+  let expectedAnnos = await PlacesUtils.promiseAnnotationsForItem(aItem.id);
   if (expectedAnnos.length > 0)
     Assert.deepEqual(aItem.annos, expectedAnnos);
   else

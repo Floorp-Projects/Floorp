@@ -7,6 +7,7 @@
 #ifndef mozilla_css_StreamLoader_h
 #define mozilla_css_StreamLoader_h
 
+#include "nsIStreamListener.h"
 #include "nsString.h"
 #include "mozilla/css/SheetLoadData.h"
 

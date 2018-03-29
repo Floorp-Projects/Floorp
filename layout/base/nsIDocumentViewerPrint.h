@@ -7,10 +7,11 @@
 #define nsIDocumentViewerPrint_h___
 
 #include "nsISupports.h"
+#include "mozilla/UniquePtr.h"
 
 class nsIDocument;
 namespace mozilla {
-class StyleSetHandle;
+class ServoStyleSet;
 } // namespace mozilla
 class nsIPresShell;
 class nsPresContext;
@@ -39,7 +40,8 @@ public:
   // The style set returned by CreateStyleSet is in the middle of an
   // update batch so that the caller can add sheets to it if needed.
   // Callers should call EndUpdate() on it when ready to use.
-  virtual mozilla::StyleSetHandle CreateStyleSet(nsIDocument* aDocument) = 0;
+  virtual mozilla::UniquePtr<mozilla::ServoStyleSet>
+    CreateStyleSet(nsIDocument* aDocument) = 0;
 
   /**
    * This is used by nsPagePrintTimer to make nsDocumentViewer::Destroy()
@@ -78,7 +80,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewerPrint,
   bool GetIsPrinting() override; \
   void SetIsPrintPreview(bool aIsPrintPreview) override; \
   bool GetIsPrintPreview() override; \
-  mozilla::StyleSetHandle CreateStyleSet(nsIDocument* aDocument) override; \
+  mozilla::UniquePtr<mozilla::ServoStyleSet> \
+    CreateStyleSet(nsIDocument* aDocument) override; \
   void IncrementDestroyBlockedCount() override; \
   void DecrementDestroyBlockedCount() override; \
   void OnDonePrinting() override; \

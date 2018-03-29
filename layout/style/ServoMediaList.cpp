@@ -94,7 +94,7 @@ bool
 ServoMediaList::Matches(nsPresContext* aPresContext) const
 {
   const RawServoStyleSet* rawSet =
-    aPresContext->StyleSet()->AsServo()->RawSet();
+    aPresContext->StyleSet()->RawSet();
   MOZ_ASSERT(rawSet, "The RawServoStyleSet should be valid!");
   return Servo_MediaList_Matches(mRawList, rawSet);
 }

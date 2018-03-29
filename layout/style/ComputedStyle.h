@@ -11,28 +11,82 @@
 
 #include "nsIMemoryReporter.h"
 #include <algorithm>
+#include "mozilla/ArenaObjectID.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/RestyleLogging.h"
-#include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoTypes.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StyleComplexColor.h"
 #include "mozilla/CachedInheritingStyles.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsCSSPseudoElements.h"
+
+// Includes nsStyleStructID.
+#include "nsStyleStructFwd.h"
+
+// Bits for each struct.
+// NS_STYLE_INHERIT_BIT defined in nsStyleStructFwd.h
+#define NS_STYLE_INHERIT_MASK              0x000ffffff
+
+// Bits for inherited structs.
+#define NS_STYLE_INHERITED_STRUCT_MASK \
+  ((nsStyleStructID_size_t(1) << nsStyleStructID_Inherited_Count) - 1)
+// Bits for reset structs.
+#define NS_STYLE_RESET_STRUCT_MASK \
+  (((nsStyleStructID_size_t(1) << nsStyleStructID_Reset_Count) - 1) \
+   << nsStyleStructID_Inherited_Count)
+
+// Additional bits for ComputedStyle's mBits:
+// See ComputedStyle::HasTextDecorationLines
+#define NS_STYLE_HAS_TEXT_DECORATION_LINES 0x001000000
+// See ComputedStyle::HasPseudoElementData.
+#define NS_STYLE_HAS_PSEUDO_ELEMENT_DATA   0x002000000
+// See ComputedStyle::RelevantLinkIsVisited
+#define NS_STYLE_RELEVANT_LINK_VISITED     0x004000000
+// See ComputedStyle::IsStyleIfVisited
+#define NS_STYLE_IS_STYLE_IF_VISITED       0x008000000
+// See ComputedStyle::HasChildThatUsesGrandancestorStyle
+#define NS_STYLE_CHILD_USES_GRANDANCESTOR_STYLE 0x010000000
+// See ComputedStyle::IsShared
+#define NS_STYLE_IS_SHARED                 0x020000000
+// See ComputedStyle::AssertStructsNotUsedElsewhere
+// (This bit is currently only used in #ifdef DEBUG code.)
+#define NS_STYLE_IS_GOING_AWAY             0x040000000
+// See ComputedStyle::ShouldSuppressLineBreak
+#define NS_STYLE_SUPPRESS_LINEBREAK        0x080000000
+// See ComputedStyle::IsInDisplayNoneSubtree
+#define NS_STYLE_IN_DISPLAY_NONE_SUBTREE   0x100000000
+// See ComputedStyle::FindChildWithRules
+#define NS_STYLE_INELIGIBLE_FOR_SHARING    0x200000000
+// See ComputedStyle::HasChildThatUsesResetStyle
+#define NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE 0x400000000
+// See ComputedStyle::IsTextCombined
+#define NS_STYLE_IS_TEXT_COMBINED          0x800000000
+// Whether a ComputedStyle is a Gecko or Servo context
+#define NS_STYLE_CONTEXT_IS_GECKO          0x1000000000
+// See ComputedStyle::GetPseudoEnum
+#define NS_STYLE_CONTEXT_TYPE_SHIFT        37
 
 class nsAtom;
+enum nsChangeHint : uint32_t;
+class nsIPresShell;
 class nsPresContext;
 class nsWindowSizes;
 
-namespace mozilla {
-
-enum class CSSPseudoElementType : uint8_t;
-class ComputedStyle;
+#define STYLE_STRUCT(name_) struct nsStyle##name_;
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
 
 extern "C" {
   void Servo_ComputedStyle_AddRef(const mozilla::ComputedStyle* aStyle);
   void Servo_ComputedStyle_Release(const mozilla::ComputedStyle* aStyle);
   void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle*);
 }
+
+namespace mozilla {
+
+enum class CSSPseudoElementType : uint8_t;
+class ComputedStyle;
 
 /**
  * A ComputedStyle represents the computed style data for an element.  The

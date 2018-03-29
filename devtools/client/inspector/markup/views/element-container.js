@@ -44,23 +44,31 @@ function MarkupElementContainer(markupView, node) {
 }
 
 MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
-  async _buildEventTooltipContent(target, tooltip) {
-    if (target.hasAttribute("data-event")) {
-      await tooltip.hide();
-
-      let listenerInfo = await this.node.getEventListenerInfo();
-
-      let toolbox = this.markup.toolbox;
-
-      setEventTooltip(tooltip, listenerInfo, toolbox);
-      // Disable the image preview tooltip while we display the event details
-      this.markup._disableImagePreviewTooltip();
-      tooltip.once("hidden", () => {
-        // Enable the image preview tooltip after closing the event details
-        this.markup._enableImagePreviewTooltip();
-      });
-      tooltip.show(target);
+  onContainerClick: function(event) {
+    if (!event.target.hasAttribute("data-event")) {
+      return;
     }
+
+    this._buildEventTooltipContent(event.target);
+  },
+
+  async _buildEventTooltipContent(target) {
+    let tooltip = this.markup.eventDetailsTooltip;
+
+    await tooltip.hide();
+
+    let listenerInfo = await this.node.getEventListenerInfo();
+
+    let toolbox = this.markup.toolbox;
+
+    setEventTooltip(tooltip, listenerInfo, toolbox);
+    // Disable the image preview tooltip while we display the event details
+    this.markup._disableImagePreviewTooltip();
+    tooltip.once("hidden", () => {
+      // Enable the image preview tooltip after closing the event details
+      this.markup._enableImagePreviewTooltip();
+    });
+    tooltip.show(target);
   },
 
   /**

@@ -7,6 +7,7 @@
 :root {
   --autocomplete-popup-background: -moz-field;
   --autocomplete-popup-color: -moz-fieldtext;
+  --autocomplete-popup-border-color: ThreeDShadow;
   --autocomplete-popup-highlight-background: Highlight;
   --autocomplete-popup-highlight-color: HighlightText;
   --autocomplete-popup-secondary-color: GrayText;
@@ -29,6 +30,7 @@
 #PopupSearchAutoComplete {
   background: var(--autocomplete-popup-background);
   color: var(--autocomplete-popup-color);
+  border-color: var(--autocomplete-popup-border-color);
 }
 
 #PopupAutoCompleteRichResult .autocomplete-richlistbox {

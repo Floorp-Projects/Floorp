@@ -180,7 +180,7 @@ nsXBLResourceLoader::StyleSheetLoaded(StyleSheet* aSheet,
   if (mPendingSheets == 0) {
     // All stylesheets are loaded.
     mResources->ComputeServoStyles(
-      *mBoundDocument->GetShell()->StyleSet()->AsServo());
+      *mBoundDocument->GetShell()->StyleSet());
 
     // XXX Check for mPendingScripts when scripts also come online.
     if (!mInLoadResourcesFunc)

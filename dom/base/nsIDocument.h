@@ -130,7 +130,7 @@ class ErrorResult;
 class EventStates;
 class EventListenerManager;
 class PendingAnimationTracker;
-class StyleSetHandle;
+class ServoStyleSet;
 template<typename> class OwningNonNull;
 struct URLExtraData;
 
@@ -1181,9 +1181,10 @@ public:
    * method is responsible for calling BeginObservingDocument() on the
    * presshell if the presshell should observe document mutations.
    */
-  already_AddRefed<nsIPresShell> CreateShell(nsPresContext* aContext,
-                                             nsViewManager* aViewManager,
-                                             mozilla::StyleSetHandle aStyleSet);
+  already_AddRefed<nsIPresShell> CreateShell(
+    nsPresContext* aContext,
+    nsViewManager* aViewManager,
+    mozilla::UniquePtr<mozilla::ServoStyleSet> aStyleSet);
   void DeleteShell();
 
   nsIPresShell* GetShell() const
@@ -3715,7 +3716,7 @@ protected:
       const nsTArray<RefPtr<mozilla::StyleSheet>>& aSheets,
       mozilla::SheetType aType);
   void ResetStylesheetsToURI(nsIURI* aURI);
-  void FillStyleSet(mozilla::StyleSetHandle aStyleSet);
+  void FillStyleSet(mozilla::ServoStyleSet* aStyleSet);
   void AddStyleSheetToStyleSets(mozilla::StyleSheet* aSheet);
   void RemoveStyleSheetFromStyleSets(mozilla::StyleSheet* aSheet);
   void NotifyStyleSheetAdded(mozilla::StyleSheet* aSheet, bool aDocumentSheet);

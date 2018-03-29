@@ -229,6 +229,16 @@ ExtensionPreferencesManager.addSetting("webNotificationsDisabled", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("overrideDocumentColors", {
+  prefNames: [
+    "browser.display.document_color_use",
+  ],
+
+  setCallback(value) {
+    return {[this.prefNames[0]]: value};
+  },
+});
+
 this.browserSettings = class extends ExtensionAPI {
   getAPI(context) {
     let {extension} = context;
@@ -408,6 +418,36 @@ this.browserSettings = class extends ExtensionAPI {
                 "permissions.default.desktop-notification", null);
             return prefValue === PERM_DENY_ACTION;
           }),
+        overrideDocumentColors: Object.assign(
+          getSettingsAPI(
+            extension, "overrideDocumentColors",
+            () => {
+              let prefValue = Services.prefs.getIntPref("browser.display.document_color_use");
+              if (prefValue === 1) {
+                return "never";
+              } else if (prefValue === 2) {
+                return "always";
+              }
+              return "high-contrast-only";
+            }
+          ),
+          {
+            set: details => {
+              if (!["never", "always", "high-contrast-only"].includes(details.value)) {
+                throw new ExtensionError(
+                  `${details.value} is not a valid value for overrideDocumentColors.`);
+              }
+              let prefValue = 0; // initialize to 0 - auto/high-contrast-only
+              if (details.value === "never") {
+                prefValue = 1;
+              } else if (details.value === "always") {
+                prefValue = 2;
+              }
+              return ExtensionPreferencesManager.setSetting(
+                extension.id, "overrideDocumentColors", prefValue);
+            },
+          }
+        ),
       },
     };
   }

@@ -13,9 +13,10 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/FlushType.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSheet.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "GeckoProfiler.h"
 #include "gfxPoint.h"
@@ -56,7 +57,7 @@ class nsCanvasFrame;
 class nsCaret;
 namespace mozilla {
 class AccessibleCaretEventHub;
-class CSSStyleSheet;
+class ServoStyleSheet;
 } // namespace mozilla
 class nsFrameSelection;
 class nsFrameManager;
@@ -278,7 +279,7 @@ public:
   }
 #endif
 
-  mozilla::StyleSetHandle StyleSet() const { return mStyleSet; }
+  mozilla::ServoStyleSet* StyleSet() const { return mStyleSet.get(); }
 
   nsCSSFrameConstructor* FrameConstructor() const { return mFrameConstructor; }
 
@@ -993,13 +994,13 @@ public:
    * Get the set of agent style sheets for this presentation
    */
   virtual nsresult GetAgentStyleSheets(
-      nsTArray<RefPtr<mozilla::StyleSheet>>& aSheets) = 0;
+      nsTArray<RefPtr<mozilla::ServoStyleSheet>>& aSheets) = 0;
 
   /**
    * Replace the set of agent style sheets
    */
   virtual nsresult SetAgentStyleSheets(
-      const nsTArray<RefPtr<mozilla::StyleSheet>>& aSheets) = 0;
+      const nsTArray<RefPtr<mozilla::ServoStyleSheet>>& aSheets) = 0;
 
   /**
    * Add an override style sheet for this presentation
@@ -1694,7 +1695,7 @@ protected:
   // we must share ownership.
   nsCOMPtr<nsIDocument>     mDocument;
   RefPtr<nsPresContext>   mPresContext;
-  mozilla::StyleSetHandle   mStyleSet;      // [OWNS]
+  mozilla::UniquePtr<mozilla::ServoStyleSet> mStyleSet;
   nsCSSFrameConstructor*    mFrameConstructor; // [OWNS]
   nsViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
   nsPresArena               mFrameArena;
