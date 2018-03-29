@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.jsm",
   ProxyPolicies: "resource:///modules/policies/ProxyPolicies.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
 });
 
 const PREF_LOGLEVEL           = "browser.policies.loglevel";
@@ -432,6 +433,22 @@ var Policies = {
   "RememberPasswords": {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("signon.rememberSignons", param);
+    }
+  },
+
+  "SearchBar": {
+    onAllWindowsRestored(manager, param) {
+      // This policy is meant to change the default behavior, not to force it.
+      // If this policy was already applied and the user chose move the search
+      // bar, don't move it again.
+      runOncePerModification("searchInNavBar", param, () => {
+        if (param == "separate") {
+          CustomizableUI.addWidgetToArea("search-container", CustomizableUI.AREA_NAVBAR,
+          CustomizableUI.getPlacementOfWidget("urlbar-container").position + 1);
+        } else if (param == "unified") {
+          CustomizableUI.removeWidgetFromArea("search-container");
+        }
+      });
     }
   },
 
