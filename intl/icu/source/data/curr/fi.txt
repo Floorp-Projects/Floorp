@@ -360,7 +360,7 @@ fi{
         }
         ESA{
             "ESA",
-            "Espanjan peseta (A–tili)",
+            "Espanjan peseta (A-tili)",
         }
         ESB{
             "ESB",
@@ -684,6 +684,10 @@ fi{
         }
         MRO{
             "MRO",
+            "Mauritanian ouguiya (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Mauritanian ouguiya",
         }
         MTL{
@@ -916,6 +920,10 @@ fi{
         }
         STD{
             "STD",
+            "São Tomén ja Príncipen dobra (1977–2017)",
+        }
+        STN{
+            "STN",
             "São Tomén ja Príncipen dobra",
         }
         SUR{
@@ -1283,7 +1291,7 @@ fi{
         SHP{"SHP"}
         SRD{"SRD"}
         SSP{"SSP"}
-        STD{"STD"}
+        STN{"STD"}
         SYP{"SYP"}
         THB{"THB"}
         TOP{"TOP"}
@@ -1660,8 +1668,8 @@ fi{
             other{"Eritrean nakfaa"}
         }
         ESA{
-            one{"Espanjan peseta (A–tili)"}
-            other{"Espanjan pesetaa (A–tili)"}
+            one{"Espanjan peseta (A-tili)"}
+            other{"Espanjan pesetaa (A-tili)"}
         }
         ESB{
             one{"Espanjan peseta (vaihdettava tili)"}
@@ -1984,6 +1992,10 @@ fi{
             other{"Macaon patacaa"}
         }
         MRO{
+            one{"Mauritanian ouguiya (1973–2017)"}
+            other{"Mauritanian ouguiyaa (1973–2017)"}
+        }
+        MRU{
             one{"Mauritanian ouguiya"}
             other{"Mauritanian ouguiyaa"}
         }
@@ -2216,6 +2228,10 @@ fi{
             other{"Etelä-Sudanin puntaa"}
         }
         STD{
+            one{"São Tomén ja Príncipen dobra (1977–2017)"}
+            other{"São Tomén ja Príncipen dobraa (1977–2017)"}
+        }
+        STN{
             one{"São Tomén ja Príncipen dobra"}
             other{"São Tomén ja Príncipen dobraa"}
         }
@@ -2504,5 +2520,5 @@ fi{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.67"}
+    Version{"2.1.39.20"}
 }

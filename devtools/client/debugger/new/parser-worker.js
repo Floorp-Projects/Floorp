@@ -562,6 +562,48 @@ module.exports = toKey;
 
 /***/ }),
 
+/***/ 1127:
+/***/ (function(module, exports, __webpack_require__) {
+
+var baseIsEqual = __webpack_require__(799);
+
+/**
+ * Performs a deep comparison between two values to determine if they are
+ * equivalent.
+ *
+ * **Note:** This method supports comparing arrays, array buffers, booleans,
+ * date objects, error objects, maps, numbers, `Object` objects, regexes,
+ * sets, strings, symbols, and typed arrays. `Object` objects are compared
+ * by their own, not inherited, enumerable properties. Functions and DOM
+ * nodes are compared by strict equality, i.e. `===`.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to compare.
+ * @param {*} other The other value to compare.
+ * @returns {boolean} Returns `true` if the values are equivalent, else `false`.
+ * @example
+ *
+ * var object = { 'a': 1 };
+ * var other = { 'a': 1 };
+ *
+ * _.isEqual(object, other);
+ * // => true
+ *
+ * object === other;
+ * // => false
+ */
+function isEqual(value, other) {
+  return baseIsEqual(value, other);
+}
+
+module.exports = isEqual;
+
+
+/***/ }),
+
 /***/ 114:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -997,12 +1039,13 @@ function _parse(code, opts) {
 
 const sourceOptions = {
   generated: {
-    tokens: true
+    tokens: true,
+    plugins: ["objectRestSpread"]
   },
   original: {
     sourceType: "unambiguous",
     tokens: true,
-    plugins: ["jsx", "flow", "doExpressions", "objectRestSpread", "classProperties", "exportDefaultFrom", "exportNamespaceFrom", "asyncGenerators", "functionBind", "functionSent", "dynamicImport"]
+    plugins: ["jsx", "flow", "doExpressions", "decorators", "objectRestSpread", "classProperties", "exportDefaultFrom", "exportNamespaceFrom", "asyncGenerators", "functionBind", "functionSent", "dynamicImport", "react-jsx"]
   }
 };
 
@@ -1015,6 +1058,7 @@ function parse(text, opts) {
   try {
     ast = _parse(text, opts);
   } catch (error) {
+    console.error(error);
     ast = {};
   }
 
@@ -21067,53 +21111,108 @@ var _types = __webpack_require__(2268);
 
 var t = _interopRequireWildcard(_types);
 
+var _isEqual = __webpack_require__(1127);
+
+var _isEqual2 = _interopRequireDefault(_isEqual);
+
+var _uniqBy = __webpack_require__(3624);
+
+var _uniqBy2 = _interopRequireDefault(_uniqBy);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const isControlFlow = node => t.isForStatement(node) || t.isWhileStatement(node) || t.isIfStatement(node);
+const isControlFlow = node => t.isForStatement(node) || t.isWhileStatement(node) || t.isIfStatement(node) || t.isSwitchCase(node) || t.isSwitchStatement(node);
 
 const isAssignment = node => t.isVariableDeclarator(node) || t.isAssignmentExpression(node);
 
 const isImport = node => t.isImport(node) || t.isImportDeclaration(node);
 const isReturn = node => t.isReturnStatement(node);
-const inExpression = parent => t.isArrayExpression(parent.node) || t.isObjectProperty(parent.node) || t.isCallExpression(parent.node) || t.isTemplateLiteral(parent.node);
+const isCall = node => t.isCallExpression(node) || t.isJSXElement(node);
+
+const inExpression = (parent, grandParent) => t.isArrayExpression(parent) || t.isObjectProperty(parent) || t.isCallExpression(parent) || t.isJSXElement(parent) || t.isJSXAttribute(grandParent) || t.isTemplateLiteral(parent);
+
+const isExport = node => t.isExportNamedDeclaration(node) || t.isExportDefaultDeclaration(node);
+
+function removeDuplicatePoints(state) {
+  return (0, _uniqBy2.default)(state, ({ location }) => `${location.line}-$${location.column}`);
+}
 
 function getPausePoints(sourceId) {
   const state = [];
   (0, _ast.traverseAst)(sourceId, { enter: onEnter }, state);
-  return state;
+  const uniqPoints = removeDuplicatePoints(state);
+  return uniqPoints;
 }
 
 function onEnter(node, ancestors, state) {
   const parent = ancestors[ancestors.length - 1];
+  const grandParent = ancestors[ancestors.length - 2];
+  const startLocation = node.loc.start;
 
-  if (isAssignment(node) || isImport(node) || isControlFlow(node) || t.isDebuggerStatement(node)) {
-    addPoint(state, node.loc.start);
+  if (isImport(node) || t.isClassDeclaration(node) || isExport(node) || t.isDebuggerStatement(node)) {
+    addPoint(state, startLocation);
   }
 
-  if (isReturn(node)) {
-    if (t.isCallExpression(node.argument)) {
-      addEmptyPoint(state, node.loc.start);
-    } else {
-      addPoint(state, node.loc.start);
+  if (isControlFlow(node)) {
+    addEmptyPoint(state, startLocation);
+
+    const test = node.test || node.discriminant;
+    if (test) {
+      addPoint(state, test.loc.start);
     }
   }
 
-  if (t.isCallExpression(node)) {
-    addPoint(state, node.loc.start, {
-      breakpoint: true,
+  if (isReturn(node)) {
+    // We do not want to pause at the return and the call e.g. return foo()
+    if (isCall(node.argument)) {
+      addEmptyPoint(state, startLocation);
+    } else {
+      addPoint(state, startLocation);
+    }
+  }
 
-      // NOTE: we do not want to land inside an expression e.g. [], {}, call
-      stepOver: !inExpression(parent)
-    });
+  if (isAssignment(node)) {
+    // We only want to pause at literal assignments `var a = foo()`
+    const value = node.right || node.init;
+    if (!isCall(value)) {
+      addPoint(state, startLocation);
+    }
+  }
+
+  if (isCall(node)) {
+    let location = startLocation;
+
+    // When functions are chained, we want to use the property location
+    // e.g `foo().bar()`
+    if (t.isMemberExpression(node.callee)) {
+      location = node.callee.property.loc.start;
+    }
+
+    // NOTE: we do not want to land inside an expression e.g. [], {}, call
+    const stepOver = !inExpression(parent.node, grandParent && grandParent.node);
+
+    // NOTE: we add a point at the beginning of the expression
+    // and each of the calls because the engine does not support
+    // column-based member expression calls.
+    addPoint(state, startLocation, { breakpoint: true, stepOver });
+    if (location && !(0, _isEqual2.default)(location, startLocation)) {
+      addPoint(state, location, { breakpoint: true, stepOver });
+    }
+  }
+
+  if (t.isClassProperty(node)) {
+    addBreakPoint(state, startLocation);
   }
 
   if (t.isFunction(node)) {
     const { line, column } = node.loc.end;
-    addBreakPoint(state, node.loc.start);
+    addBreakPoint(state, startLocation);
     addPoint(state, { line, column: column - 1 });
   }
 
@@ -21209,6 +21308,44 @@ function mapOriginalExpression(expression, mappings) {
 
   return (0, _generator2.default)(ast, { concise: true }).code;
 }
+
+/***/ }),
+
+/***/ 3624:
+/***/ (function(module, exports, __webpack_require__) {
+
+var baseIteratee = __webpack_require__(814),
+    baseUniq = __webpack_require__(562);
+
+/**
+ * This method is like `_.uniq` except that it accepts `iteratee` which is
+ * invoked for each element in `array` to generate the criterion by which
+ * uniqueness is computed. The order of result values is determined by the
+ * order they occur in the array. The iteratee is invoked with one argument:
+ * (value).
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Array
+ * @param {Array} array The array to inspect.
+ * @param {Function} [iteratee=_.identity] The iteratee invoked per element.
+ * @returns {Array} Returns the new duplicate free array.
+ * @example
+ *
+ * _.uniqBy([2.1, 1.2, 2.3], Math.floor);
+ * // => [2.1, 1.2]
+ *
+ * // The `_.property` iteratee shorthand.
+ * _.uniqBy([{ 'x': 1 }, { 'x': 2 }, { 'x': 1 }], 'x');
+ * // => [{ 'x': 1 }, { 'x': 2 }]
+ */
+function uniqBy(array, iteratee) {
+  return (array && array.length) ? baseUniq(array, baseIteratee(iteratee, 2)) : [];
+}
+
+module.exports = uniqBy;
+
 
 /***/ }),
 

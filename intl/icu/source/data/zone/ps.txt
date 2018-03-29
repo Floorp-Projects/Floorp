@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ps{
-    Version{"2.1.36.86"}
+    Version{"2.1.39.11"}
     zoneStrings{
         "meta:Afghanistan"{
             ls{"افغانستان وخت"}
@@ -456,6 +456,9 @@ ps{
             lg{"سینټ پییرا و ميکلين وخت"}
             ls{"سینټ پییرا و ميکلين معیاری وخت"}
         }
+        "meta:Pitcairn"{
+            ls{"پیټ کارین وخت"}
+        }
         "meta:Ponape"{
             ls{"پونپپ وخت"}
         }
@@ -483,6 +486,9 @@ ps{
         }
         "meta:Singapore"{
             ls{"د سنګاپور معیاري وخت"}
+        }
+        "meta:Solomon"{
+            ls{"د سلیمان ټاپوګانو وخت"}
         }
         "meta:South_Georgia"{
             ls{"د سویل جورجیا وخت"}

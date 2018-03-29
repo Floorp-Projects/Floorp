@@ -180,7 +180,7 @@ kok{
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"2.1.36.86"}
+    Version{"2.1.38.69"}
     calendar{
         generic{
             DateTimePatterns{
@@ -282,7 +282,7 @@ kok{
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
                 yw{
-                    other{"'week' w 'of' Y"}
+                    other{"'week' w 'of' y"}
                 }
             }
             dayNames{

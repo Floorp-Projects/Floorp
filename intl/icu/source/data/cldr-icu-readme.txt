@@ -42,6 +42,18 @@
 #
 #----
 #
+# IP address whitelisting
+#
+# Parts of the build process (notably building the new ICU data filescin step 4)
+# require http: access to files in the CLDR repository; for example, processing
+# the files in icu4c/source/data/xml/ may require access to
+# http://www.unicode.org/repos/cldr/trunk/common/dtd/ldml.dtd
+#
+# The IP address of the system requesting such access be whitelisted with Unicode,
+# otherwise there may be timeout failures; contact Rick McGowan.
+#
+#----
+#
 # There are several environment variables that need to be defined.
 #
 # a) Java- and ant-related variables
@@ -78,7 +90,7 @@
 # files are used in addition to the CLDR files as inputs to the CLDR data build
 # process for ICU):
 #
-#    icu/trunk/source/data/icu-config.xml - Update <locales> to add or remove
+#    icu4c/source/data/icu-config.xml - Update <locales> to add or remove
 #                CLDR locales for inclusion in ICU. Update <paths> to prefer
 #                alt forms for certain paths, or to exclude certain paths; note
 #                that <paths> items can only have draft or alt attributes.
@@ -89,11 +101,11 @@
 #                should also be included in <locales>, per PMC policy decision
 #                2012-05-02 (see http://bugs.icu-project.org/trac/ticket/9298).
 #
-#    icu/trunk/source/data/build.xml - If you are adding or removing break
+#    icu4c/source/data/build.xml - If you are adding or removing break
 #                iterators, you need to update  <fileset id="brkitr" ...> under
 #                <target name="clean" ...> to clean the correct set of files.
 #
-#    icu/trunk/source/data/xml/      - If you are adding a new locale, break
+#    icu4c/source/data/xml/      - If you are adding a new locale, break
 #                iterator, collation tailoring, or rule-based number formatter,
 #                you may need to add a corresponding xml file in (respectively)
 #                the main/, brkitr/, collation/, or rbnf/ subdirectory here.
@@ -158,6 +170,11 @@ make check 2>&1 | tee /tmp/icu4c-oldData-makeCheck.txt
 # necessary CLDR tools including LDML2ICUConverter, ConvertTransforms, etc.
 # This process will take several minutes.
 # Keep a log so you can investigate anything that looks suspicious.
+#
+# If you see timeout errors when building the rbnf data, for example, then the
+# system you are building on likely does not have its IP address whitelisted with
+# Unicode for access to the CLDR repository, see note on "IP address whitelisting"
+# near the top of this file.
 
 cd $ICU4C_DIR/source/data
 ant clean

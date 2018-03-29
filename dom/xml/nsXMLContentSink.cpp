@@ -57,6 +57,7 @@
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/txMozillaXSLTProcessor.h"
+#include "mozilla/LoadInfo.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -738,15 +739,18 @@ nsXMLContentSink::MaybeProcessXSLTLink(
                               nsIScriptSecurityManager::ALLOW_CHROME);
   NS_ENSURE_SUCCESS(rv, NS_OK);
 
+  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+    new net::LoadInfo(mDocument->NodePrincipal(), // loading principal
+                      mDocument->NodePrincipal(), // triggering principal
+                      aProcessingInstruction,
+                      nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                      nsIContentPolicy::TYPE_XSLT);
+
   // Do content policy check
   int16_t decision = nsIContentPolicy::ACCEPT;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_XSLT,
-                                 url,
-                                 mDocument->NodePrincipal(), // loading principal
-                                 mDocument->NodePrincipal(), // triggering principal
-                                 ToSupports(aProcessingInstruction),
+  rv = NS_CheckContentLoadPolicy(url,
+                                 secCheckLoadInfo,
                                  NS_ConvertUTF16toUTF8(aType),
-                                 nullptr,
                                  &decision,
                                  nsContentUtils::GetContentPolicy());
 

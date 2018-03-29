@@ -335,6 +335,7 @@ keyTypeData:table(nofallback){
             mnt{""}
             mop{""}
             mro{""}
+            mru{""}
             mtl{""}
             mtp{""}
             mur{""}

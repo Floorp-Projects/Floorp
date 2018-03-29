@@ -9536,27 +9536,24 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       requestingContext = requestingElement;
     }
 
+    // Ideally we should use the same loadinfo as within DoURILoad which
+    // should match this one when both are applicable.
+    nsCOMPtr<nsPIDOMWindowOuter> loadingWindow = mScriptGlobal->AsOuter();
+    nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+      new LoadInfo(loadingWindow,
+                   aTriggeringPrincipal,
+                   requestingContext,
+                   nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK);
+
     // Since Content Policy checks are performed within docShell as well as
     // the ContentSecurityManager we need a reliable way to let certain
-    // nsIContentPolicy consumers ignore duplicate calls. Let's use the 'extra'
-    // argument to pass a specific identifier.
-    nsCOMPtr<nsISupportsString> extraStr =
-      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_NAMED_LITERAL_STRING(msg, "conPolCheckFromDocShell");
-    rv = extraStr->SetData(msg);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // nsIContentPolicy consumers ignore duplicate calls.
+    secCheckLoadInfo->SetSkipContentPolicyCheckForWebRequest(true);
 
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(contentType,
-                                   aURI,
-                                   // This is a top-level load, so the loading
-                                   // principal is null.
-                                   nullptr,
-                                   aTriggeringPrincipal,
-                                   requestingContext,
+    rv = NS_CheckContentLoadPolicy(aURI,
+                                   secCheckLoadInfo,
                                    EmptyCString(),  // mime guess
-                                   extraStr,  // extra
                                    &shouldLoad);
 
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {

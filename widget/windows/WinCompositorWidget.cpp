@@ -11,6 +11,7 @@
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsWindow.h"
 #include "VsyncDispatcher.h"
+#include "WinCompositorWindowThread.h"
 
 #include <ddraw.h>
 
@@ -24,6 +25,7 @@ WinCompositorWidget::WinCompositorWidget(const WinCompositorWidgetInitData& aIni
  : CompositorWidget(aOptions)
  , mWidgetKey(aInitData.widgetKey()),
    mWnd(reinterpret_cast<HWND>(aInitData.hWnd())),
+   mCompositorWnd(nullptr),
    mTransparencyMode(static_cast<nsTransparencyMode>(aInitData.transparencyMode())),
    mMemoryDC(nullptr),
    mCompositeDC(nullptr),
@@ -36,6 +38,11 @@ WinCompositorWidget::WinCompositorWidget(const WinCompositorWidgetInitData& aIni
   mNotDeferEndRemoteDrawing = gfxPrefs::LayersCompositionFrameRate() == 0 ||
                               gfxPlatform::IsInLayoutAsapMode() ||
                               gfxPlatform::ForceSoftwareVsync();
+}
+
+WinCompositorWidget::~WinCompositorWidget()
+{
+  DestroyCompositorWindow();
 }
 
 void
@@ -337,6 +344,49 @@ bool
 WinCompositorWidget::IsHidden() const
 {
   return ::IsIconic(mWnd);
+}
+
+void
+WinCompositorWidget::EnsureCompositorWindow()
+{
+  if (mCompositorWnd) {
+    return;
+  }
+  mCompositorWnd = WinCompositorWindowThread::CreateCompositorWindow(mWnd);
+  MOZ_ASSERT(mCompositorWnd);
+}
+
+void
+WinCompositorWidget::DestroyCompositorWindow()
+{
+  if (!mCompositorWnd) {
+    return;
+  }
+  WinCompositorWindowThread::DestroyCompositorWindow(mCompositorWnd);
+  mCompositorWnd = nullptr;
+}
+
+void
+WinCompositorWidget::UpdateCompositorWndSizeIfNecessary()
+{
+  MOZ_ASSERT(mCompositorWnd);
+
+  if (!mCompositorWnd) {
+    return;
+  }
+
+  LayoutDeviceIntSize size = GetClientSize();
+  if (mLastCompositorWndSize == size) {
+    return;
+  }
+
+  // Force a resize and redraw (but not a move, activate, etc.).
+  if (!::SetWindowPos(mCompositorWnd, nullptr, 0, 0, size.width, size.height,
+                      SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOCOPYBITS |
+                      SWP_NOOWNERZORDER | SWP_NOZORDER)) {
+    return;
+  }
+  mLastCompositorWndSize = size;
 }
 
 } // namespace widget

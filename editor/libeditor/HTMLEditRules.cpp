@@ -42,7 +42,6 @@
 #include "nsID.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMNode.h"
 #include "nsIFrame.h"
 #include "nsIHTMLAbsPosEditor.h"
 #include "nsIHTMLDocument.h"
@@ -2727,8 +2726,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         // MOOSE: this could conceivably screw up a table.. fix me.
         NS_ENSURE_STATE(mHTMLEditor);
         if (leftBlockParent == rightBlockParent &&
-            mHTMLEditor->NodesSameType(GetAsDOMNode(leftParent),
-                                       GetAsDOMNode(rightParent)) &&
+            mHTMLEditor->AreNodesSameType(leftParent, rightParent) &&
             // XXX What's special about these three types of block?
             (leftParent->IsHTMLElement(nsGkAtoms::p) ||
              HTMLEditUtils::IsListItem(leftParent) ||
@@ -3430,7 +3428,7 @@ HTMLEditRules::DeleteNonTableElements(nsINode* aNode)
   MOZ_ASSERT(aNode);
   if (!HTMLEditUtils::IsTableElementButNotTable(aNode)) {
     NS_ENSURE_STATE(mHTMLEditor);
-    return mHTMLEditor->DeleteNode(aNode->AsDOMNode());
+    return mHTMLEditor->DeleteNode(aNode);
   }
 
   AutoTArray<nsCOMPtr<nsIContent>, 10> childList;
@@ -5228,7 +5226,7 @@ HTMLEditRules::WillAlign(Selection& aSelection,
       if (HTMLEditUtils::IsList(atCurNode.GetContainer())) {
         // If we don't use CSS, add a contraint to list element: they have to
         // be inside another list, i.e., >= second level of nesting
-        rv = AlignInnerBlocks(*curNode, &aAlignType);
+        rv = AlignInnerBlocks(*curNode, aAlignType);
         NS_ENSURE_SUCCESS(rv, rv);
         curDiv = nullptr;
         continue;
@@ -5274,10 +5272,8 @@ HTMLEditRules::WillAlign(Selection& aSelection,
  */
 nsresult
 HTMLEditRules::AlignInnerBlocks(nsINode& aNode,
-                                const nsAString* alignType)
+                                const nsAString& aAlignType)
 {
-  NS_ENSURE_TRUE(alignType, NS_ERROR_NULL_POINTER);
-
   // Gather list of table cells or list items
   nsTArray<OwningNonNull<nsINode>> nodeArray;
   TableCellAndListItemFunctor functor;
@@ -5286,8 +5282,10 @@ HTMLEditRules::AlignInnerBlocks(nsINode& aNode,
 
   // Now that we have the list, align their contents as requested
   for (auto& node : nodeArray) {
-    nsresult rv = AlignBlockContents(GetAsDOMNode(node), alignType);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = AlignBlockContents(*node, aAlignType);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   return NS_OK;
@@ -5298,54 +5296,51 @@ HTMLEditRules::AlignInnerBlocks(nsINode& aNode,
  * AlignBlockContents() aligns contents of a block element.
  */
 nsresult
-HTMLEditRules::AlignBlockContents(nsIDOMNode* aNode,
-                                  const nsAString* alignType)
+HTMLEditRules::AlignBlockContents(nsINode& aNode,
+                                  const nsAString& aAlignType)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node && alignType, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIContent> firstChild, lastChild;
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
 
-  NS_ENSURE_STATE(mHTMLEditor);
-  firstChild = mHTMLEditor->GetFirstEditableChild(*node);
-  NS_ENSURE_STATE(mHTMLEditor);
-  lastChild = mHTMLEditor->GetLastEditableChild(*node);
+  nsCOMPtr<nsIContent> firstChild = htmlEditor->GetFirstEditableChild(aNode);
   if (!firstChild) {
     // this cell has no content, nothing to align
-  } else if (firstChild == lastChild &&
-             firstChild->IsHTMLElement(nsGkAtoms::div)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIContent> lastChild = htmlEditor->GetLastEditableChild(aNode);
+  if (firstChild == lastChild && firstChild->IsHTMLElement(nsGkAtoms::div)) {
     // the cell already has a div containing all of its content: just
     // act on this div.
-    RefPtr<Element> divElem = firstChild->AsElement();
-    NS_ENSURE_STATE(mHTMLEditor);
-    nsresult rv = mHTMLEditor->SetAttributeOrEquivalent(divElem,
-                                                        nsGkAtoms::align,
-                                                        *alignType, false);
+    return htmlEditor->SetAttributeOrEquivalent(firstChild->AsElement(),
+                                                nsGkAtoms::align,
+                                                aAlignType, false);
+  }
+
+  // else we need to put in a div, set the alignment, and toss in all the
+  // children
+  EditorRawDOMPoint atStartOfNode(&aNode, 0);
+  RefPtr<Element> divElem =
+    htmlEditor->CreateNode(nsGkAtoms::div, atStartOfNode);
+  if (NS_WARN_IF(!divElem)) {
+    return NS_ERROR_FAILURE;
+  }
+  // set up the alignment on the div
+  nsresult rv =
+    htmlEditor->SetAttributeOrEquivalent(divElem, nsGkAtoms::align,
+                                         aAlignType, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  // tuck the children into the end of the active div
+  while (lastChild && (lastChild != divElem)) {
+    nsresult rv = htmlEditor->MoveNode(lastChild, divElem, 0);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-  } else {
-    // else we need to put in a div, set the alignment, and toss in all the children
-    NS_ENSURE_STATE(mHTMLEditor);
-    EditorRawDOMPoint atStartOfNode(node, 0);
-    RefPtr<Element> divElem =
-      mHTMLEditor->CreateNode(nsGkAtoms::div, atStartOfNode);
-    NS_ENSURE_STATE(divElem);
-    // set up the alignment on the div
-    NS_ENSURE_STATE(mHTMLEditor);
-    nsresult rv =
-      mHTMLEditor->SetAttributeOrEquivalent(divElem, nsGkAtoms::align,
-                                            *alignType, false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    // tuck the children into the end of the active div
-    while (lastChild && (lastChild != divElem)) {
-      NS_ENSURE_STATE(mHTMLEditor);
-      nsresult rv = mHTMLEditor->MoveNode(lastChild, divElem, 0);
-      NS_ENSURE_SUCCESS(rv, rv);
-      NS_ENSURE_STATE(mHTMLEditor);
-      lastChild = mHTMLEditor->GetLastEditableChild(*node);
-    }
+    lastChild = htmlEditor->GetLastEditableChild(aNode);
   }
   return NS_OK;
 }
@@ -7026,7 +7021,7 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
         htmlEditor->GetPriorHTMLSibling(atStartOfSelection.GetContainer());
       if (!brNode ||
           !htmlEditor->IsVisibleBRElement(brNode) ||
-          TextEditUtils::HasMozAttr(GetAsDOMNode(brNode))) {
+          TextEditUtils::HasMozAttr(brNode)) {
         pointToInsertBR.Set(atStartOfSelection.GetContainer());
         brNode = nullptr;
       }
@@ -7037,7 +7032,7 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
         htmlEditor->GetNextHTMLSibling(atStartOfSelection.GetContainer());
       if (!brNode ||
           !htmlEditor->IsVisibleBRElement(brNode) ||
-          TextEditUtils::HasMozAttr(GetAsDOMNode(brNode))) {
+          TextEditUtils::HasMozAttr(brNode)) {
         pointToInsertBR.Set(atStartOfSelection.GetContainer());
         DebugOnly<bool> advanced = pointToInsertBR.AdvanceOffset();
         NS_WARNING_ASSERTION(advanced,
@@ -7069,12 +7064,12 @@ HTMLEditRules::ReturnInParagraph(Selection& aSelection,
     nearNode =
       htmlEditor->GetPreviousEditableHTMLNode(atStartOfSelection);
     if (!nearNode || !htmlEditor->IsVisibleBRElement(nearNode) ||
-        TextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
+        TextEditUtils::HasMozAttr(nearNode)) {
       // is there a BR after it?
       nearNode =
         htmlEditor->GetNextEditableHTMLNode(atStartOfSelection);
       if (!nearNode || !htmlEditor->IsVisibleBRElement(nearNode) ||
-          TextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
+          TextEditUtils::HasMozAttr(nearNode)) {
         pointToInsertBR = atStartOfSelection;
         splitAfterNewBR = true;
       }
@@ -8381,15 +8376,6 @@ HTMLEditRules::FindNearEditableNode(const EditorDOMPointBase<PT, CT>& aPoint,
 }
 
 bool
-HTMLEditRules::InDifferentTableElements(nsIDOMNode* aNode1,
-                                        nsIDOMNode* aNode2)
-{
-  nsCOMPtr<nsINode> node1 = do_QueryInterface(aNode1);
-  nsCOMPtr<nsINode> node2 = do_QueryInterface(aNode2);
-  return InDifferentTableElements(node1, node2);
-}
-
-bool
 HTMLEditRules::InDifferentTableElements(nsINode* aNode1,
                                         nsINode* aNode2)
 {
@@ -8493,8 +8479,7 @@ HTMLEditRules::RemoveEmptyNodes()
       if (bIsCandidate) {
         // We delete mailcites even if they have a solo br in them.  Other
         // nodes we require to be empty.
-        rv = htmlEditor->IsEmptyNode(node->AsDOMNode(), &bIsEmptyNode,
-                                     bIsMailCite, true);
+        rv = htmlEditor->IsEmptyNode(node, &bIsEmptyNode, bIsMailCite, true);
         NS_ENSURE_SUCCESS(rv, rv);
         if (bIsEmptyNode) {
           if (bIsMailCite) {

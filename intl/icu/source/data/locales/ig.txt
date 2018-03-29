@@ -90,7 +90,7 @@ ig{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.38.69"}
     calendar{
         generic{
             DateTimePatterns{
@@ -208,7 +208,7 @@ ig{
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
                 yw{
-                    other{"'week' w 'of' Y"}
+                    other{"'week' w 'of' y"}
                 }
             }
             dayNames{

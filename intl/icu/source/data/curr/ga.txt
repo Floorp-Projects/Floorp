@@ -648,6 +648,10 @@ ga{
         }
         MRO{
             "MRO",
+            "Ouguiya na Máratáine (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Ouguiya na Máratáine",
         }
         MTL{
@@ -876,6 +880,10 @@ ga{
         }
         STD{
             "STD",
+            "Dobra São Tomé agus Príncipe (1977–2017)",
+        }
+        STN{
+            "STN",
             "Dobra São Tomé agus Príncipe",
         }
         SUR{
@@ -1223,7 +1231,7 @@ ga{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -2308,6 +2316,13 @@ ga{
             two{"phataca Mhacao"}
         }
         MRO{
+            few{"ouguiya na Máratáine (1973–2017)"}
+            many{"n-ouguiya na Máratáine (1973–2017)"}
+            one{"ouguiya na Máratáine (1973–2017)"}
+            other{"ouguiya na Máratáine (1973–2017)"}
+            two{"ouguiya na Máratáine (1973–2017)"}
+        }
+        MRU{
             few{"ouguiya na Máratáine"}
             many{"n-ouguiya na Máratáine"}
             one{"ouguiya na Máratáine"}
@@ -2707,6 +2722,13 @@ ga{
             two{"phunt na Súdáine Theas"}
         }
         STD{
+            few{"dhobra São Tomé agus Príncipe (1977–2017)"}
+            many{"ndobra São Tomé agus Príncipe (1977–2017)"}
+            one{"dobra São Tomé agus Príncipe (1977–2017)"}
+            other{"dobra São Tomé agus Príncipe (1977–2017)"}
+            two{"dhobra São Tomé agus Príncipe (1977–2017)"}
+        }
+        STN{
             few{"dhobra São Tomé agus Príncipe"}
             many{"ndobra São Tomé agus Príncipe"}
             one{"dobra São Tomé agus Príncipe"}
@@ -3155,5 +3177,5 @@ ga{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.11"}
 }

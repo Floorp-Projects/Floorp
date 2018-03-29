@@ -2489,9 +2489,8 @@ nsINode::Length() const
 }
 
 const RawServoSelectorList*
-nsINode::ParseServoSelectorList(
-  const nsAString& aSelectorString,
-  ErrorResult& aRv)
+nsINode::ParseSelectorList(const nsAString& aSelectorString,
+                           ErrorResult& aRv)
 {
   nsIDocument* doc = OwnerDoc();
 
@@ -2508,12 +2507,13 @@ nsINode::ParseServoSelectorList(
       return nullptr;
     }
 
-    return list->AsServo();
+    return list->get();
   }
 
   NS_ConvertUTF16toUTF8 selectorString(aSelectorString);
 
-  auto* selectorList = Servo_SelectorList_Parse(&selectorString);
+  auto selectorList =
+    UniquePtr<RawServoSelectorList>(Servo_SelectorList_Parse(&selectorString));
   if (!selectorList) {
     aRv.ThrowDOMException(NS_ERROR_DOM_SYNTAX_ERR,
       NS_LITERAL_CSTRING("'") + selectorString +
@@ -2521,10 +2521,10 @@ nsINode::ParseServoSelectorList(
     );
   }
 
-  cache.CacheList(aSelectorString, UniquePtr<RawServoSelectorList>(selectorList));
-  return selectorList;
+  auto* ret = selectorList.get();
+  cache.CacheList(aSelectorString, Move(selectorList));
+  return ret;
 }
-
 
 namespace {
 struct SelectorMatchInfo {
@@ -2591,44 +2591,26 @@ struct ElementHolder {
 Element*
 nsINode::QuerySelector(const nsAString& aSelector, ErrorResult& aResult)
 {
-  return WithSelectorList<Element*>(
-    aSelector,
-    aResult,
-    [&](const RawServoSelectorList* aList) -> Element* {
-      if (!aList) {
-        return nullptr;
-      }
-      const bool useInvalidation = false;
-      return const_cast<Element*>(
-          Servo_SelectorList_QueryFirst(this, aList, useInvalidation));
-    },
-    [&](nsCSSSelectorList* aList) -> Element* {
-      MOZ_CRASH("old style system disabled");
-    }
-  );
+  const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);
+  if (!list) {
+    return nullptr;
+  }
+  const bool useInvalidation = false;
+  return const_cast<Element*>(
+    Servo_SelectorList_QueryFirst(this, list, useInvalidation));
 }
 
 already_AddRefed<nsINodeList>
 nsINode::QuerySelectorAll(const nsAString& aSelector, ErrorResult& aResult)
 {
   RefPtr<nsSimpleContentList> contentList = new nsSimpleContentList(this);
+  const RawServoSelectorList* list = ParseSelectorList(aSelector, aResult);
+  if (!list) {
+    return contentList.forget();
+  }
 
-  WithSelectorList<void>(
-    aSelector,
-    aResult,
-    [&](const RawServoSelectorList* aList) {
-      if (!aList) {
-        return;
-      }
-      const bool useInvalidation = false;
-      Servo_SelectorList_QueryAll(
-        this, aList, contentList.get(), useInvalidation);
-    },
-    [&](nsCSSSelectorList* aList) {
-      MOZ_CRASH("old style system disabled");
-    }
-  );
-
+  const bool useInvalidation = false;
+  Servo_SelectorList_QueryAll(this, list, contentList.get(), useInvalidation);
   return contentList.forget();
 }
 

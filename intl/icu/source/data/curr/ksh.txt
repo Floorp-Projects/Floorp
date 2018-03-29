@@ -384,6 +384,10 @@ ksh{
         }
         MRO{
             "MRO",
+            "mauretanesche Ouguiya (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "mauretanesche Ouguiya",
         }
         MUR{
@@ -544,6 +548,10 @@ ksh{
         }
         STD{
             "STD",
+            "Dobra vun São Tomé un Príncipe (1977–2017)",
+        }
+        STN{
+            "STN",
             "Dobra vun São Tomé un Príncipe",
         }
         SVC{
@@ -855,6 +863,11 @@ ksh{
             zero{"södsudaneesesche Pongk"}
         }
         STD{
+            one{"Dobra vun São Tomé un Príncipe (1977–2017)"}
+            other{"Dobra vun São Tomé un Príncipe (1977–2017)"}
+            zero{"Dobra vun São Tomé un Príncipe (1977–2017)"}
+        }
+        STN{
             one{"Dobra vun São Tomé un Príncipe"}
             other{"Dobra vun São Tomé un Príncipe"}
             zero{"Dobra vun São Tomé un Príncipe"}
@@ -895,5 +908,5 @@ ksh{
         other{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
 }

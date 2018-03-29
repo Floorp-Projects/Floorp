@@ -118,7 +118,7 @@ yue{
             patternsLong{
                 decimalFormat{
                     1000{
-                        other{"0"}
+                        other{"0千"}
                     }
                     10000{
                         other{"0萬"}
@@ -158,7 +158,7 @@ yue{
             patternsShort{
                 currencyFormat{
                     1000{
-                        other{"0"}
+                        other{"¤0千"}
                     }
                     10000{
                         other{"¤0萬"}
@@ -196,7 +196,7 @@ yue{
                 }
                 decimalFormat{
                     1000{
-                        other{"0"}
+                        other{"0千"}
                     }
                     10000{
                         other{"0萬"}
@@ -260,7 +260,7 @@ yue{
         native{"hanidec"}
         traditional{"hant"}
     }
-    Version{"2.1.37.33"}
+    Version{"2.1.39.11"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -2619,7 +2619,7 @@ yue{
         sign_standard_symbols{"標記/標準符號"}
         small_form_variant{"小寫變體"}
         smiley{"表情符號"}
-        smileys_people{"表情符號與人"}
+        smileys_people{"表情符號同人"}
         south_asian_scripts{"南亞字體"}
         southeast_asian_scripts{"東南亞字體"}
         spacing{"空位"}
@@ -2628,7 +2628,7 @@ yue{
         technical_symbols{"技術符號"}
         tone_marks{"聲調符號"}
         travel{"旅遊"}
-        travel_places{"旅遊和地點"}
+        travel_places{"旅遊同地點"}
         upwards_arrows{"向上箭咀"}
         variant_forms{"變化型"}
         vocalic_jamo{"元音字母"}

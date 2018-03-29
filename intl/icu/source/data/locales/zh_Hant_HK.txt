@@ -91,7 +91,7 @@ zh_Hant_HK{
             }
         }
     }
-    Version{"2.1.37.6"}
+    Version{"2.1.39.11"}
     calendar{
         buddhist{
             availableFormats{

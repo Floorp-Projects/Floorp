@@ -464,6 +464,10 @@ hsb{
         }
         MRO{
             "MRO",
+            "mawretanska ouguiya (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "mawretanska ouguiya",
         }
         MUR{
@@ -620,6 +624,10 @@ hsb{
         }
         STD{
             "STD",
+            "são tomeski dobra (1977–2017)",
+        }
+        STN{
+            "STN",
             "são tomeski dobra",
         }
         SVC{
@@ -1434,6 +1442,12 @@ hsb{
             two{"macaoskej patace"}
         }
         MRO{
+            few{"mawretanske ouguije (1973–2017)"}
+            one{"mawretanska ouguiya (1973–2017)"}
+            other{"mawretanskich ouguijow (1973–2017)"}
+            two{"mawretanskej ouguiji (1973–2017)"}
+        }
+        MRU{
             few{"mawretanske ouguije"}
             one{"mawretanska ouguiya"}
             other{"mawretanskich ouguijow"}
@@ -1668,6 +1682,12 @@ hsb{
             two{"južnosudanskej puntaj"}
         }
         STD{
+            few{"são tomeske dobry (1977–2017)"}
+            one{"são tomeski dobra (1977–2017)"}
+            other{"são tomeskich dobrow (1977–2017)"}
+            two{"são tomeskej dobraj (1977–2017)"}
+        }
+        STN{
             few{"são tomeske dobry"}
             one{"são tomeski dobra"}
             other{"são tomeskich dobrow"}
@@ -1854,5 +1874,5 @@ hsb{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.11"}
 }

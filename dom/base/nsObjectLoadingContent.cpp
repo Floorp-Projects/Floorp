@@ -92,6 +92,7 @@
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/HTMLEmbedElement.h"
 #include "mozilla/dom/HTMLObjectElement.h"
+#include "mozilla/LoadInfo.h"
 #include "nsChannelClassifier.h"
 #include "nsFocusManager.h"
 
@@ -1463,14 +1464,17 @@ nsObjectLoadingContent::CheckLoadPolicy(int16_t *aContentPolicy)
 
   nsContentPolicyType contentPolicyType = GetContentPolicyType();
 
+  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+    new LoadInfo(doc->NodePrincipal(), // loading principal
+                 doc->NodePrincipal(), // triggering principal
+                 thisContent,
+                 nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                 contentPolicyType);
+
   *aContentPolicy = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(contentPolicyType,
-                                          mURI,
-                                          doc->NodePrincipal(), // loading principal
-                                          doc->NodePrincipal(), // triggering principal
-                                          thisContent,
+  nsresult rv = NS_CheckContentLoadPolicy(mURI,
+                                          secCheckLoadInfo,
                                           mContentType,
-                                          nullptr, //extra
                                           aContentPolicy,
                                           nsContentUtils::GetContentPolicy());
   NS_ENSURE_SUCCESS(rv, false);
@@ -1516,15 +1520,18 @@ nsObjectLoadingContent::CheckProcessPolicy(int16_t *aContentPolicy)
       return false;
   }
 
+  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+    new LoadInfo(doc->NodePrincipal(), // loading principal
+                 doc->NodePrincipal(), // triggering principal
+                 thisContent,
+                 nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                 objectType);
+
   *aContentPolicy = nsIContentPolicy::ACCEPT;
   nsresult rv =
-    NS_CheckContentProcessPolicy(objectType,
-                                 mURI ? mURI : mBaseURI,
-                                 doc->NodePrincipal(), // loading principal
-                                 doc->NodePrincipal(), // triggering principal
-                                 static_cast<nsIImageLoadingContent*>(this),
+    NS_CheckContentProcessPolicy(mURI ? mURI : mBaseURI,
+                                 secCheckLoadInfo,
                                  mContentType,
-                                 nullptr, //extra
                                  aContentPolicy,
                                  nsContentUtils::GetContentPolicy());
   NS_ENSURE_SUCCESS(rv, false);

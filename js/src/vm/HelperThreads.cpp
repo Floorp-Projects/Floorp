@@ -871,6 +871,15 @@ js::EnqueuePendingParseTasksAfterGC(JSRuntime* rt)
     HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER, lock);
 }
 
+#ifdef DEBUG
+bool
+js::CurrentThreadIsParseThread()
+{
+    JSContext* cx = TlsContext.get();
+    return cx->helperThread() && cx->helperThread()->parseTask();
+}
+#endif
+
 static const uint32_t kDefaultHelperStackSize = 2048 * 1024;
 static const uint32_t kDefaultHelperStackQuota = 1800 * 1024;
 

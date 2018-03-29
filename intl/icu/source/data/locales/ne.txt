@@ -235,7 +235,7 @@ ne{
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"2.1.36.86"}
+    Version{"2.1.39.11"}
     calendar{
         generic{
             DateTimePatterns{
@@ -925,7 +925,7 @@ ne{
         punctuation{"विराम"}
         rightwards_arrows{"दायाँतर्फी बाँणहरू"}
         sign_standard_symbols{"संकेत/मानक चिन्हहरू"}
-        small_form_variant{"सानो फाराम भ्यारियन्टहरू"}
+        small_form_variant{"साना भ्यारियन्टहरू"}
         smiley{"स्माइली"}
         smileys_people{"स्माइली तथा व्यक्तिहरू"}
         south_asian_scripts{"दक्षिण एशियाली लिपिहरू"}
@@ -938,7 +938,7 @@ ne{
         travel{"यात्रा"}
         travel_places{"यात्रा तथा ठाउँहरू"}
         upwards_arrows{"माथितिरका बाँणहरू"}
-        variant_forms{"भ्यारियन्ट फारामहरू"}
+        variant_forms{"भ्यारियन्ट"}
         vocalic_jamo{"भोकालिक जामोहरू"}
         weather{"मौंसम"}
         western_asian_scripts{"पश्चिमी एशियाली लिपिहरू"}

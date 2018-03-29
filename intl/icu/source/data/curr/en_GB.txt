@@ -20,5 +20,5 @@ en_GB{
             other{"West African CFA francs"}
         }
     }
-    Version{"2.1.37.22"}
+    Version{"2.1.38.73"}
 }
