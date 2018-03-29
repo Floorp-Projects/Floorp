@@ -328,7 +328,7 @@ class RobocopTestRunner(MochitestDesktop):
         try:
             if printLogcat:
                 logcat = self.device.get_logcat(
-                    filterOutRegexps=fennecLogcatFilters)
+                    filter_out_regexps=fennecLogcatFilters)
                 self.log.info(
                     '\n' +
                     ''.join(logcat).decode(
