@@ -33,7 +33,7 @@
   });
 
   add_task(async function check_inital_state() {
-    is(ccBtn.getAttribute("hidden"), "true", "CC button should hide");
+    ok(ccBtn.hidden, "CC button should hide");
   });
 
   add_task(async function check_unsupported_type_added() {
@@ -42,7 +42,7 @@
     video.addTextTrack("metadata", "English", "en");
 
     await new Promise(SimpleTest.executeSoon);
-    is(ccBtn.getAttribute("hidden"), "true", "CC button should hide if no supported tracks provided");
+    ok(ccBtn.hidden, "CC button should hide if no supported tracks provided");
   });
 
   add_task(async function check_cc_button_present() {
@@ -50,7 +50,7 @@
     sub.mode = "disabled";
 
     await new Promise(SimpleTest.executeSoon);
-    is(ccBtn.hasAttribute("hidden"), false, "CC button should show");
+    ok(!ccBtn.hidden, "CC button should show");
     is(ccBtn.hasAttribute("enabled"), false, "CC button should be disabled");
   });
 
@@ -59,7 +59,7 @@
     subtitle.mode = "showing";
 
     await new Promise(SimpleTest.executeSoon);
-    is(ccBtn.getAttribute("enabled"), "true", "CC button should be enabled");
+    ok(ccBtn.hasAttribute("enabled"), "CC button should be enabled");
     subtitle.mode = "disabled";
   });
 
@@ -68,26 +68,26 @@
     caption.mode = "showing";
 
     await new Promise(SimpleTest.executeSoon);
-    is(ccBtn.getAttribute("enabled"), "true", "CC button should be enabled");
+    ok(ccBtn.hasAttribute("enabled"), "CC button should be enabled");
   });
 
   add_task(async function check_track_ui_state() {
     synthesizeMouseAtCenter(ccBtn, {});
 
     await new Promise(SimpleTest.executeSoon);
-    is(ttList.hasAttribute("hidden"), false, "Texttrack menu should show up");
-    is(ttList.lastChild.getAttribute("on"), "true", "The last added item should be highlighted");
+    ok(!ttList.hidden, "Texttrack menu should show up");
+    ok(ttList.lastChild.hasAttribute("on"), "The last added item should be highlighted");
   });
 
   add_task(async function check_select_texttrack() {
     const tt = ttList.children[1];
 
-    isnot(tt.getAttribute("on"), "true", "Item should be off before click");
+    ok(!tt.hasAttribute("on"), "Item should be off before click");
     synthesizeMouseAtCenter(tt, {});
 
     await new Promise(SimpleTest.executeSoon);
-    is(tt.getAttribute("on"), "true", "Selected item should be enabled");
-    is(ttList.getAttribute("hidden"), "true", "Should hide texttrack menu once clicked on an item");
+    ok(tt.hasAttribute("on"), "Selected item should be enabled");
+    ok(ttList.hidden, "Should hide texttrack menu once clicked on an item");
   });
 
   add_task(async function check_change_texttrack_mode() {
@@ -95,13 +95,13 @@
 
     tts.forEach(tt => tt.mode = "hidden");
     await new Promise(SimpleTest.executeSoon);
-    is(ccBtn.hasAttribute("enabled"), false, "CC button should be disabled");
+    ok(!ccBtn.hasAttribute("enabled"), "CC button should be disabled");
 
     // enable the last text track.
     tts[tts.length - 1].mode = "showing";
     await new Promise(SimpleTest.executeSoon);
-    is(ccBtn.hasAttribute("enabled"), true, "CC button should be enabled");
-    is(ttList.lastChild.getAttribute("on"), "true", "The last item should be highlighted");
+    ok(ccBtn.hasAttribute("enabled"), "CC button should be enabled");
+    ok(ttList.lastChild.hasAttribute("on"), "The last item should be highlighted");
   });
 
 </script>
