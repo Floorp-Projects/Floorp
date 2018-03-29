@@ -279,7 +279,7 @@ public:
   already_AddRefed<nsAtom> Atomize(const nsACString& aUTF8String);
   already_AddRefed<nsAtom> AtomizeMainThread(const nsAString& aUTF16String);
   nsStaticAtom* GetStaticAtom(const nsAString& aUTF16String);
-  void RegisterStaticAtoms(const nsStaticAtomSetup* aSetup, uint32_t aCount);
+  void RegisterStaticAtoms(const nsStaticAtom* aAtoms, size_t aAtomsLen);
 
   // The result of this function may be imprecise if other threads are operating
   // on atoms concurrently. It's also slow, since it triggers a GC before
@@ -647,16 +647,13 @@ nsAtomSubTable::AddSizeOfExcludingThisLocked(MallocSizeOf aMallocSizeOf,
 }
 
 void
-nsAtomTable::RegisterStaticAtoms(const nsStaticAtomSetup* aSetup,
-                                 uint32_t aCount)
+nsAtomTable::RegisterStaticAtoms(const nsStaticAtom* aAtoms, size_t aAtomsLen)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(!gStaticAtomsDone, "Static atom insertion is finished!");
 
-  for (uint32_t i = 0; i < aCount; ++i) {
-    const nsStaticAtom* atom = aSetup[i].mAtom;
-    nsStaticAtom** atomp = aSetup[i].mAtomp;
-
+  for (uint32_t i = 0; i < aAtomsLen; ++i) {
+    const nsStaticAtom* atom = &aAtoms[i];
     MOZ_ASSERT(nsCRT::IsAscii(atom->String()));
     MOZ_ASSERT(NS_strlen(atom->String()) == atom->GetLength());
 
@@ -676,15 +673,15 @@ nsAtomTable::RegisterStaticAtoms(const nsStaticAtomSetup* aSetup,
       he->mAtom->ToUTF8String(name);
       MOZ_CRASH_UNSAFE_PRINTF("Atom for '%s' already exists", name.get());
     }
-    he->mAtom = *atomp = const_cast<nsStaticAtom*>(atom);
+    he->mAtom = const_cast<nsStaticAtom*>(atom);
   }
 }
 
 void
-RegisterStaticAtoms(const nsStaticAtomSetup* aSetup, uint32_t aCount)
+NS_RegisterStaticAtoms(const nsStaticAtom* aAtoms, size_t aAtomsLen)
 {
   MOZ_ASSERT(gAtomTable);
-  gAtomTable->RegisterStaticAtoms(aSetup, aCount);
+  gAtomTable->RegisterStaticAtoms(aAtoms, aAtomsLen);
 }
 
 already_AddRefed<nsAtom>
