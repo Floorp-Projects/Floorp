@@ -108,7 +108,7 @@ class MochiRemote(MochitestDesktop):
             self.device.rm(self.remoteChromeTestDir, force=True, recursive=True)
             self.chromePushed = False
             uploadDir = os.environ.get('MOZ_UPLOAD_DIR', None)
-            if uploadDir:
+            if uploadDir and self.device.is_dir(self.remoteMozLog):
                 self.device.pull(self.remoteMozLog, uploadDir)
         self.device.rm(self.remoteLogFile, force=True)
         self.device.rm(self.remoteProfile, force=True, recursive=True)
