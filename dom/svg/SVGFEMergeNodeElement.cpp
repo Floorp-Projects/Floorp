@@ -20,7 +20,7 @@ SVGFEMergeNodeElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 
 nsSVGElement::StringInfo SVGFEMergeNodeElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::in, kNameSpaceID_None, true }
+  { nsGkAtoms::in, kNameSpaceID_None, true }
 };
 
 //----------------------------------------------------------------------

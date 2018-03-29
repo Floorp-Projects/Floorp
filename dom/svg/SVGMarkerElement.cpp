@@ -36,10 +36,10 @@ SVGMarkerElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
 nsSVGElement::LengthInfo SVGMarkerElement::sLengthInfo[4] =
 {
-  { &nsGkAtoms::refX, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { &nsGkAtoms::refY, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
-  { &nsGkAtoms::markerWidth, 3, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
-  { &nsGkAtoms::markerHeight, 3, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
+  { nsGkAtoms::refX, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
+  { nsGkAtoms::refY, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
+  { nsGkAtoms::markerWidth, 3, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X },
+  { nsGkAtoms::markerHeight, 3, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::Y },
 };
 
 nsSVGEnumMapping SVGMarkerElement::sUnitsMap[] = {
@@ -50,7 +50,7 @@ nsSVGEnumMapping SVGMarkerElement::sUnitsMap[] = {
 
 nsSVGElement::EnumInfo SVGMarkerElement::sEnumInfo[1] =
 {
-  { &nsGkAtoms::markerUnits,
+  { nsGkAtoms::markerUnits,
     sUnitsMap,
     SVG_MARKERUNITS_STROKEWIDTH
   }
@@ -58,7 +58,7 @@ nsSVGElement::EnumInfo SVGMarkerElement::sEnumInfo[1] =
 
 nsSVGElement::AngleInfo SVGMarkerElement::sAngleInfo[1] =
 {
-  { &nsGkAtoms::orient, 0, SVG_ANGLETYPE_UNSPECIFIED }
+  { nsGkAtoms::orient, 0, SVG_ANGLETYPE_UNSPECIFIED }
 };
 
 //----------------------------------------------------------------------

@@ -23,8 +23,8 @@ SVGFEDistantLightElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenP
 
 nsSVGElement::NumberInfo SVGFEDistantLightElement::sNumberInfo[2] =
 {
-  { &nsGkAtoms::azimuth,   0, false },
-  { &nsGkAtoms::elevation, 0, false }
+  { nsGkAtoms::azimuth,   0, false },
+  { nsGkAtoms::elevation, 0, false }
 };
 
 //----------------------------------------------------------------------

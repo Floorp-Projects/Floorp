@@ -48,7 +48,7 @@ public:
     return &mPath;
   }
 
-  nsAtom* GetPathDataAttrName() const override {
+  nsStaticAtom* GetPathDataAttrName() const override {
     return nsGkAtoms::path;
   }
 

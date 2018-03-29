@@ -25,8 +25,8 @@ SVGFEComponentTransferElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aG
 
 nsSVGElement::StringInfo SVGFEComponentTransferElement::sStringInfo[2] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true },
-  { &nsGkAtoms::in, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true },
+  { nsGkAtoms::in, kNameSpaceID_None, true }
 };
 
 //----------------------------------------------------------------------

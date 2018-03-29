@@ -31,9 +31,9 @@ SVGTextPathElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 nsSVGElement::LengthInfo SVGTextPathElement::sLengthInfo[2] =
 {
   // from SVGTextContentElement:
-  { &nsGkAtoms::textLength, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY },
+  { nsGkAtoms::textLength, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::XY },
   // from SVGTextPathElement:
-  { &nsGkAtoms::startOffset, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X }
+  { nsGkAtoms::startOffset, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER, SVGContentUtils::X }
 };
 
 nsSVGEnumMapping SVGTextPathElement::sMethodMap[] = {
@@ -57,20 +57,20 @@ nsSVGEnumMapping SVGTextPathElement::sSideMap[] = {
 nsSVGElement::EnumInfo SVGTextPathElement::sEnumInfo[4] =
 {
   // from SVGTextContentElement:
-  { &nsGkAtoms::lengthAdjust,
+  { nsGkAtoms::lengthAdjust,
     sLengthAdjustMap,
     LENGTHADJUST_SPACING
   },
   // from SVGTextPathElement:
-  { &nsGkAtoms::method,
+  { nsGkAtoms::method,
     sMethodMap,
     TEXTPATH_METHODTYPE_ALIGN
   },
-  { &nsGkAtoms::spacing,
+  { nsGkAtoms::spacing,
     sSpacingMap,
     TEXTPATH_SPACINGTYPE_EXACT
   },
-  { &nsGkAtoms::side_,
+  { nsGkAtoms::side_,
     sSideMap,
     TEXTPATH_SIDETYPE_LEFT
   }
@@ -78,8 +78,8 @@ nsSVGElement::EnumInfo SVGTextPathElement::sEnumInfo[4] =
 
 nsSVGElement::StringInfo SVGTextPathElement::sStringInfo[2] =
 {
-  { &nsGkAtoms::href, kNameSpaceID_None, true },
-  { &nsGkAtoms::href, kNameSpaceID_XLink, true }
+  { nsGkAtoms::href, kNameSpaceID_None, true },
+  { nsGkAtoms::href, kNameSpaceID_XLink, true }
 };
 
 //----------------------------------------------------------------------

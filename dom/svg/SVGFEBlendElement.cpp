@@ -43,7 +43,7 @@ nsSVGEnumMapping SVGFEBlendElement::sModeMap[] = {
 
 nsSVGElement::EnumInfo SVGFEBlendElement::sEnumInfo[1] =
 {
-  { &nsGkAtoms::mode,
+  { nsGkAtoms::mode,
     sModeMap,
     SVG_FEBLEND_MODE_NORMAL
   }
@@ -51,9 +51,9 @@ nsSVGElement::EnumInfo SVGFEBlendElement::sEnumInfo[1] =
 
 nsSVGElement::StringInfo SVGFEBlendElement::sStringInfo[3] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true },
-  { &nsGkAtoms::in, kNameSpaceID_None, true },
-  { &nsGkAtoms::in2, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true },
+  { nsGkAtoms::in, kNameSpaceID_None, true },
+  { nsGkAtoms::in2, kNameSpaceID_None, true }
 };
 
 //----------------------------------------------------------------------
