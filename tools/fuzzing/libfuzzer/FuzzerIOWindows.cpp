@@ -73,7 +73,7 @@ bool IsFile(const std::string &Path) {
 }
 
 void ListFilesInDirRecursive(const std::string &Dir, long *Epoch,
-                             std::vector<std::string> *V, bool TopDir) {
+                             Vector<std::string> *V, bool TopDir) {
   auto E = GetEpoch(Dir);
   if (Epoch)
     if (E && *Epoch >= E) return;
@@ -182,7 +182,7 @@ static size_t ParseFileName(const std::string &FileName, const size_t Offset) {
   return Pos - Offset;
 }
 
-// Parse a directory ending in separator, like: SomeDir\
+// Parse a directory ending in separator, like: `SomeDir\`
 // Returns number of characters considered if successful.
 static size_t ParseDir(const std::string &FileName, const size_t Offset) {
   size_t Pos = Offset;
@@ -197,7 +197,7 @@ static size_t ParseDir(const std::string &FileName, const size_t Offset) {
   return Pos - Offset;
 }
 
-// Parse a servername and share, like: SomeServer\SomeShare\
+// Parse a servername and share, like: `SomeServer\SomeShare\`
 // Returns number of characters considered if successful.
 static size_t ParseServerAndShare(const std::string &FileName,
                                   const size_t Offset) {
