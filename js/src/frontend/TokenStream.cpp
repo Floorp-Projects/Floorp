@@ -607,8 +607,8 @@ TokenStreamChars<char16_t, AnyCharsAccess>::ungetCodePointIgnoreEOL(uint32_t cod
 }
 
 // Return true iff |n| raw characters can be read from this without reading past
-// EOF or a newline, and copy those characters into |cp| if so.  The characters
-// are not consumed: use skipChars(n) to do so after checking that the consumed
+// EOF, and copy those characters into |cp| if so.  The characters are not
+// consumed: use skipChars(n) to do so after checking that the consumed
 // characters had appropriate values.
 template<typename CharT, class AnyCharsAccess>
 bool
@@ -619,11 +619,6 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::peekChars(int n, CharT* cp)
         int32_t c = getCharIgnoreEOL();
         if (c == EOF)
             break;
-
-        if (c == '\n') {
-            ungetCharIgnoreEOL(c);
-            break;
-        }
 
         cp[i] = char16_t(c);
     }
@@ -1189,15 +1184,10 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getDirective(bool isMultiline,
         // Debugging directives can occur in both single- and multi-line
         // comments. If we're currently inside a multi-line comment, we also
         // need to recognize multi-line comment terminators.
-        if (isMultiline && c == '*') {
-            int32_t c2;
-            if (!peekChar(&c2))
-                return false;
-
-            if (c2 == '/') {
-                ungetChar('*');
-                break;
-            }
+        if (isMultiline && c == '*' && matchChar('/')) {
+            ungetCharIgnoreEOL('/');
+            ungetCharIgnoreEOL('*');
+            break;
         }
 
         if (!tokenbuf.append(c))
@@ -1897,9 +1887,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
                 if (matchChar('-')) {
                     if (matchChar('-'))
                         goto skipline;
-                    ungetChar('-');
+                    ungetCharIgnoreEOL('-');
                 }
-                ungetChar('!');
+                ungetCharIgnoreEOL('!');
             }
         }
         if (matchChar('<')) {
@@ -1930,23 +1920,21 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
       case '/':
         // Look for a single-line comment.
         if (matchChar('/')) {
-            if (!peekChar(&c))
-                goto error;
+            c = getCharIgnoreEOL();
             if (c == '@' || c == '#') {
-                consumeKnownChar(c);
-
                 bool shouldWarn = c == '@';
                 if (!getDirectives(false, shouldWarn))
                     goto error;
+            } else {
+                ungetCharIgnoreEOL(c);
             }
 
         skipline:
             do {
-                if (!getChar(&c))
-                    goto error;
-            } while (c != EOF && c != '\n');
+                c = getCharIgnoreEOL();
+            } while (c != EOF && !TokenBuf::isRawEOLChar(c));
 
-            ungetChar(c);
+            ungetCharIgnoreEOL(c);
             anyCharsAccess().cursor = (anyCharsAccess().cursor - 1) & ntokensMask;
             goto retry;
         }
@@ -2013,37 +2001,34 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             } while (true);
 
             RegExpFlag reflags = NoFlags;
-            unsigned length = tokenbuf.length() + 1;
             while (true) {
-                if (!peekChar(&c))
-                    goto error;
-                if (c == 'g' && !(reflags & GlobalFlag))
-                    reflags = RegExpFlag(reflags | GlobalFlag);
-                else if (c == 'i' && !(reflags & IgnoreCaseFlag))
-                    reflags = RegExpFlag(reflags | IgnoreCaseFlag);
-                else if (c == 'm' && !(reflags & MultilineFlag))
-                    reflags = RegExpFlag(reflags | MultilineFlag);
-                else if (c == 'y' && !(reflags & StickyFlag))
-                    reflags = RegExpFlag(reflags | StickyFlag);
-                else if (c == 'u' && !(reflags & UnicodeFlag))
-                    reflags = RegExpFlag(reflags | UnicodeFlag);
+                RegExpFlag flag;
+                c = getCharIgnoreEOL();
+                if (c == 'g')
+                    flag = GlobalFlag;
+                else if (c == 'i')
+                    flag = IgnoreCaseFlag;
+                else if (c == 'm')
+                    flag = MultilineFlag;
+                else if (c == 'y')
+                    flag = StickyFlag;
+                else if (c == 'u')
+                    flag = UnicodeFlag;
+                else if (JS7_ISLET(c))
+                    flag = NoFlags;
                 else
                     break;
-                if (!getChar(&c))
-                    goto error;
-                length++;
-            }
 
-            if (!peekChar(&c))
-                goto error;
-            if (JS7_ISLET(c)) {
-                char buf[2] = { '\0', '\0' };
-                tp->pos.begin += length + 1;
-                buf[0] = char(c);
-                reportError(JSMSG_BAD_REGEXP_FLAG, buf);
-                consumeKnownChar(c);
-                goto error;
+                if ((reflags & flag) || flag == NoFlags) {
+                    MOZ_ASSERT(userbuf.offset() > 0);
+                    char buf[2] = { char(c), '\0' };
+                    errorAt(userbuf.offset() - 1, JSMSG_BAD_REGEXP_FLAG, buf);
+                    goto error;
+                }
+                reflags = RegExpFlag(reflags | flag);
             }
+            ungetCharIgnoreEOL(c);
+
             tp->type = TokenKind::RegExp;
             tp->setRegExpFlags(reflags);
             goto out;
@@ -2061,11 +2046,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getTokenInternal(TokenKind* ttp, Mod
             if (anyCharsAccess().options().allowHTMLComments &&
                 !anyCharsAccess().flags.isDirtyLine)
             {
-                int32_t c2;
-                if (!peekChar(&c2))
-                    goto error;
-
-                if (c2 == '>')
+                if (matchChar('>'))
                     goto skipline;
             }
 
@@ -2123,9 +2104,9 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                "unexpected string/template literal delimiter");
 
     int c;
-    int nc = -1;
 
     bool parsingTemplate = (untilChar == '`');
+    bool templateHead = false;
 
     *tp = newToken(-1);
     tokenbuf.clear();
@@ -2170,17 +2151,10 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
 
               // Unicode character specification.
               case 'u': {
-                uint32_t code = 0;
-
-                int32_t c2;
-                if (!peekChar(&c2))
-                    return false;
-
-                uint32_t start = userbuf.offset() - 2;
-
+                int32_t c2 = getCharIgnoreEOL();
                 if (c2 == '{') {
-                    consumeKnownChar('{');
-
+                    uint32_t start = userbuf.offset() - 3;
+                    uint32_t code = 0;
                     bool first = true;
                     bool valid = true;
                     do {
@@ -2258,16 +2232,18 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                     break;
                 }
 
-                CharT cp[4];
-                if (peekChars(4, cp) &&
-                    JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]) && JS7_ISHEX(cp[3]))
+                CharT cp[3];
+                if (JS7_ISHEX(c2) && peekChars(3, cp) &&
+                    JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]))
                 {
-                    c = JS7_UNHEX(cp[0]);
-                    c = (c << 4) + JS7_UNHEX(cp[1]);
-                    c = (c << 4) + JS7_UNHEX(cp[2]);
-                    c = (c << 4) + JS7_UNHEX(cp[3]);
-                    skipChars(4);
+                    c = (JS7_UNHEX(c2) << 12) |
+                        (JS7_UNHEX(cp[0]) << 8) |
+                        (JS7_UNHEX(cp[1]) << 4) |
+                        JS7_UNHEX(cp[2]);
+                    skipChars(3);
                 } else {
+                    ungetCharIgnoreEOL(c2);
+                    uint32_t start = userbuf.offset() - 2;
                     if (parsingTemplate) {
                         TokenStreamAnyChars& anyChars = anyCharsAccess();
                         anyChars.setInvalidTemplateEscape(start, InvalidEscapeType::Unicode);
@@ -2347,18 +2323,19 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
             }
             if (c == '\r') {
                 c = '\n';
-                if (userbuf.peekRawChar() == '\n')
-                    skipCharsIgnoreEOL(1);
+
+                // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
+                if (userbuf.hasRawChars())
+                    userbuf.matchRawChar('\n');
             }
 
             if (!updateLineInfoForEOL())
                 return false;
 
             anyCharsAccess().updateFlagsForEOL();
-        } else if (parsingTemplate && c == '$') {
-            if ((nc = getCharIgnoreEOL()) == '{')
-                break;
-            ungetCharIgnoreEOL(nc);
+        } else if (parsingTemplate && c == '$' && matchChar('{')) {
+            templateHead = true;
+            break;
         }
 
         if (!tokenbuf.append(c)) {
@@ -2372,9 +2349,11 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
         return false;
 
     if (!parsingTemplate) {
+        MOZ_ASSERT(!templateHead);
+
         (*tp)->type = TokenKind::String;
     } else {
-        if (c == '$' && nc == '{')
+        if (templateHead)
             (*tp)->type = TokenKind::TemplateHead;
         else
             (*tp)->type = TokenKind::NoSubsTemplate;

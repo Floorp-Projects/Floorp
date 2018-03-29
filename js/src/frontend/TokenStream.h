@@ -1483,7 +1483,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         while (n-- > 0) {
             MOZ_ASSERT(userbuf.hasRawChars());
             mozilla::DebugOnly<int32_t> c = getCharIgnoreEOL();
-            MOZ_ASSERT(c != '\n');
+            MOZ_ASSERT(!TokenBuf::isRawEOLChar(c));
         }
     }
 
