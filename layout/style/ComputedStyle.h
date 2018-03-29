@@ -11,13 +11,16 @@
 
 #include "nsIMemoryReporter.h"
 #include <algorithm>
+#include "mozilla/ArenaObjectID.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/RestyleLogging.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoTypes.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StyleComplexColor.h"
 #include "mozilla/CachedInheritingStyles.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsCSSPseudoElements.h"
 
 // Includes nsStyleStructID.
 #include "nsStyleStructFwd.h"
@@ -66,19 +69,25 @@
 #define NS_STYLE_CONTEXT_TYPE_SHIFT        37
 
 class nsAtom;
+enum nsChangeHint : uint32_t;
+class nsIPresShell;
 class nsPresContext;
 class nsWindowSizes;
 
-namespace mozilla {
-
-enum class CSSPseudoElementType : uint8_t;
-class ComputedStyle;
+#define STYLE_STRUCT(name_) struct nsStyle##name_;
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
 
 extern "C" {
   void Servo_ComputedStyle_AddRef(const mozilla::ComputedStyle* aStyle);
   void Servo_ComputedStyle_Release(const mozilla::ComputedStyle* aStyle);
   void Gecko_ComputedStyle_Destroy(mozilla::ComputedStyle*);
 }
+
+namespace mozilla {
+
+enum class CSSPseudoElementType : uint8_t;
+class ComputedStyle;
 
 /**
  * A ComputedStyle represents the computed style data for an element.  The
