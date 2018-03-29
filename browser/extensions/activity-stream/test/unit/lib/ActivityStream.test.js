@@ -25,13 +25,16 @@ describe("ActivityStream", () => {
       "lib/FaviconFeed.jsm": {FaviconFeed: Fake},
       "lib/TopSitesFeed.jsm": {TopSitesFeed: Fake},
       "lib/TopStoriesFeed.jsm": {TopStoriesFeed: Fake},
-      "lib/HighlightsFeed.jsm": {HighlightsFeed: Fake}
+      "lib/HighlightsFeed.jsm": {HighlightsFeed: Fake},
+      "lib/ThemeFeed.jsm": {ThemeFeed: Fake},
+      "lib/MessageCenterFeed.jsm": {MessageCenterFeed: Fake}
     }));
     as = new ActivityStream();
     sandbox.stub(as.store, "init");
     sandbox.stub(as.store, "uninit");
     sandbox.stub(as._defaultPrefs, "init");
     sandbox.stub(as._defaultPrefs, "reset");
+    sandbox.stub(as._storage, "_openDatabase");
   });
 
   afterEach(() => sandbox.restore());
@@ -55,10 +58,14 @@ describe("ActivityStream", () => {
     it("should call .store.init", () => {
       assert.calledOnce(as.store.init);
     });
+    it("should cause storage to open database", () => {
+      assert.calledOnce(as._storage._openDatabase);
+    });
     it("should pass to Store an INIT event with the right version", () => {
       as = new ActivityStream({version: "1.2.3"});
       sandbox.stub(as.store, "init");
       sandbox.stub(as._defaultPrefs, "init");
+      sandbox.stub(as._storage, "_openDatabase");
 
       as.init();
 
@@ -156,6 +163,14 @@ describe("ActivityStream", () => {
     });
     it("should create a Favicon feed", () => {
       const feed = as.feeds.get("feeds.favicon")();
+      assert.instanceOf(feed, Fake);
+    });
+    it("should create a Theme feed", () => {
+      const feed = as.feeds.get("feeds.theme")();
+      assert.instanceOf(feed, Fake);
+    });
+    it("should create a MessageCenter feed", () => {
+      const feed = as.feeds.get("feeds.messagecenterfeed")();
       assert.instanceOf(feed, Fake);
     });
   });

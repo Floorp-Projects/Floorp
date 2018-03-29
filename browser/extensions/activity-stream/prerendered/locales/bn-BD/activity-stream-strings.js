@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} সারি; {num} সারিগুলি",
   "prefs_search_header": "ওয়েব অনুসন্ধান",
   "prefs_topsites_description": "যে সাইটগুলিতে আপনি বেশি যান",
-  "prefs_topstories_description": "আপনি উচ্চ-মানের কনটেন্টের অভাব বোধ করতে পারেন",
+  "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "{provider} বিজ্ঞাপনী গল্প",
   "prefs_topstories_sponsored_learn_more": "আরও জানুন",
   "prefs_highlights_description": "সাইটের একটি সেকশন যা আপনি সংরক্ষণ অথবা গিয়েছিলেন",
@@ -111,5 +111,6 @@ window.gActivityStreamStrings = {
   "edit_topsites_done_button": "হয়েছে",
   "edit_topsites_pin_button": "সাইটটি পিন করুন",
   "edit_topsites_dismiss_button": "সাইটটি মুছে দিন",
-  "edit_topsites_add_button": "যুক্ত করুন"
+  "edit_topsites_add_button": "যুক্ত করুন",
+  "prefs_topstories_description": "আপনি উচ্চ-মানের কনটেন্টের অভাব বোধ করতে পারেন"
 };

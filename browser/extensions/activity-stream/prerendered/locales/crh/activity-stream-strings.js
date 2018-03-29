@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} row;{num} rows",
   "prefs_search_header": "Ağ Qıdırması",
   "prefs_topsites_description": "The sites you visit most",
-  "prefs_topstories_description": "High-quality content you might otherwise miss",
+  "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "{provider} Sponsored Stories",
   "prefs_topstories_sponsored_learn_more": "Daha çoq ögren",
   "prefs_highlights_description": "A selection of sites that you’ve saved or visited",

@@ -1,17 +1,20 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
 import {GlobalOverrider} from "test/unit/utils";
-import injector from "inject!lib/ManualMigration.jsm";
+import {ManualMigration} from "lib/ManualMigration.jsm";
+
+const FAKE_MIGRATION_EXPIRED = false;
+const FAKE_MIGRATION_LAST_SHOWN_DATE = 999;
+const FAKE_MIGRATION_REMAINING_DAYS = 4;
 
 describe("ManualMigration", () => {
   let dispatch;
-  let store;
   let instance;
   let globals;
+  let sandbox;
 
   let migrationWizardStub;
-  let fakeServices;
-  let fakePrefs;
   let fakeProfileAge;
+  let prefs;
 
   beforeEach(() => {
     migrationWizardStub = sinon.stub();
@@ -19,15 +22,6 @@ describe("ManualMigration", () => {
       showMigrationWizard: migrationWizardStub,
       MIGRATION_ENTRYPOINT_NEWTAB: "MIGRATION_ENTRYPOINT_NEWTAB"
     };
-    fakeServices = {
-      obs: {
-        addObserver: sinon.stub(),
-        removeObserver: sinon.stub()
-      }
-    };
-    fakePrefs = function() {};
-    fakePrefs.get = sinon.stub();
-    fakePrefs.set = sinon.stub();
 
     fakeProfileAge = function() {};
     fakeProfileAge.prototype = {
@@ -38,26 +32,34 @@ describe("ManualMigration", () => {
       }
     };
 
-    const {ManualMigration} = injector({"lib/ActivityStreamPrefs.jsm": {Prefs: fakePrefs}});
-
+    sandbox = sinon.sandbox.create();
     globals = new GlobalOverrider();
-    globals.set("Services", fakeServices);
     globals.set("MigrationUtils", fakeMigrationUtils);
     globals.set("ProfileAge", fakeProfileAge);
+    sandbox.spy(global.Services.obs, "addObserver");
+    sandbox.spy(global.Services.obs, "removeObserver");
 
-    dispatch = sinon.stub();
-    store = {dispatch};
     instance = new ManualMigration();
-    instance.store = store;
+    prefs = {
+      "migrationExpired": FAKE_MIGRATION_EXPIRED,
+      "migrationLastShownDate": FAKE_MIGRATION_LAST_SHOWN_DATE,
+      "migrationRemainingDays": FAKE_MIGRATION_REMAINING_DAYS
+    };
+    dispatch = sinon.stub();
+    instance.store = {
+      dispatch,
+      getState: sinon.stub().returns({Prefs: {values: prefs}})
+    };
   });
 
   afterEach(() => {
+    sandbox.restore();
     globals.restore();
   });
 
   it("should set an event listener for Migration:Ended", () => {
-    assert.calledOnce(fakeServices.obs.addObserver);
-    assert.calledWith(fakeServices.obs.addObserver, instance, "Migration:Ended");
+    assert.calledOnce(global.Services.obs.addObserver);
+    assert.calledWith(global.Services.obs.addObserver, instance, "Migration:Ended");
   });
 
   describe("onAction", () => {
@@ -116,33 +118,21 @@ describe("ManualMigration", () => {
       assert.calledOnce(stub);
     });
     describe("isMigrationMessageExpired", () => {
-      beforeEach(() => {
-        instance._prefs = fakePrefs;
-      });
       it("should check migrationLastShownDate (case: today)", async () => {
         let today = new Date();
         today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        prefs.migrationLastShownDate = today;
 
-        const migrationSpy = sinon.spy(instance, "isMigrationMessageExpired");
-        fakePrefs.get.returns(today);
-        const ret = await instance.isMigrationMessageExpired();
-
-        assert.calledOnce(migrationSpy);
-        assert.calledOnce(fakePrefs.get);
-        assert.calledWithExactly(fakePrefs.get, "migrationLastShownDate");
-        assert.equal(ret, false);
+        const result = await instance.isMigrationMessageExpired();
+        assert.equal(result, false);
       });
       it("should return false if lastShownDate is today", async () => {
         let today = new Date();
         today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        prefs.isMigrationMessageExpired = today;
 
-        const migrationSpy = sinon.spy(instance, "isMigrationMessageExpired");
-        fakePrefs.get.returns(today);
-        const ret = await instance.isMigrationMessageExpired();
-
-        assert.calledOnce(migrationSpy);
-        assert.calledOnce(fakePrefs.get);
-        assert.equal(ret, false);
+        const result = await instance.isMigrationMessageExpired();
+        assert.equal(result, false);
       });
       it("should check migrationLastShownDate (case: yesterday)", async () => {
         const action = {
@@ -151,16 +141,12 @@ describe("ManualMigration", () => {
         };
         let today = new Date();
         let yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+        prefs.migrationLastShownDate = yesterday.valueOf() / 1000;
+        prefs.migrationRemainingDays = 4;
 
-        const migrationSpy = sinon.spy(instance, "isMigrationMessageExpired");
-        fakePrefs.get.withArgs("migrationLastShownDate").returns(yesterday.valueOf() / 1000);
-        fakePrefs.get.withArgs("migrationRemainingDays").returns(4);
         await instance.onAction(action);
 
-        assert.calledOnce(migrationSpy);
-        assert.calledTwice(fakePrefs.get);
-        assert.calledWithExactly(fakePrefs.get, "migrationLastShownDate");
-        assert.calledWithExactly(fakePrefs.get, "migrationRemainingDays");
+        assert.calledTwice(instance.store.getState);
       });
       it("should update the migration prefs", async () => {
         const action = {
@@ -170,40 +156,33 @@ describe("ManualMigration", () => {
         let today = new Date();
         let yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
         today = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        prefs.migrationLastShownDate = yesterday.valueOf() / 1000;
+        prefs.migrationRemainingDays = 4;
 
-        const migrationSpy = sinon.spy(instance, "isMigrationMessageExpired");
-        fakePrefs.get.withArgs("migrationLastShownDate").returns(yesterday.valueOf() / 1000);
-        fakePrefs.get.withArgs("migrationRemainingDays").returns(4);
         await instance.onAction(action);
 
-        assert.calledOnce(migrationSpy);
-        assert.calledTwice(fakePrefs.set);
-        assert.calledWithExactly(fakePrefs.set, "migrationRemainingDays", 3);
-        assert.calledWithExactly(fakePrefs.set, "migrationLastShownDate", today.valueOf() / 1000);
+        assert.calledTwice(dispatch);
+        assert.calledWithExactly(dispatch, ac.SetPref("migrationRemainingDays", 3));
+        assert.calledWithExactly(dispatch, ac.SetPref("migrationLastShownDate", today.valueOf() / 1000));
       });
       it("should return true if remainingDays reaches 0", async () => {
         let today = new Date();
         let yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+        prefs.migrationLastShownDate = yesterday.valueOf() / 1000;
+        prefs.migrationRemainingDays = 1;
 
-        const migrationSpy = sinon.spy(instance, "isMigrationMessageExpired");
-        fakePrefs.get.withArgs("migrationLastShownDate").returns(yesterday.valueOf() / 1000);
-        fakePrefs.get.withArgs("migrationRemainingDays").returns(1);
-        const ret = await instance.isMigrationMessageExpired();
-
-        assert.calledOnce(migrationSpy);
-        assert.calledTwice(fakePrefs.set);
-        assert.calledWithExactly(fakePrefs.set, "migrationRemainingDays", 0);
-        assert.equal(ret, true);
+        const result = await instance.isMigrationMessageExpired();
+        assert.calledWithExactly(dispatch, ac.SetPref("migrationRemainingDays", 0));
+        assert.equal(result, true);
       });
       it("should return false if profile age < 3", async () => {
         let today = new Date();
         let yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+        prefs.migrationLastShownDate = yesterday.valueOf() / 1000;
+        prefs.migrationRemainingDays = 2;
 
-        fakePrefs.get.withArgs("migrationLastShownDate").returns(yesterday.valueOf() / 1000);
-        fakePrefs.get.withArgs("migrationRemainingDays").returns(2);
-        const ret = await instance.isMigrationMessageExpired();
-
-        assert.equal(ret, false);
+        const result = await instance.isMigrationMessageExpired();
+        assert.equal(result, false);
       });
       it("should return true if profile age > 3", async () => {
         let today = new Date();
@@ -215,12 +194,11 @@ describe("ManualMigration", () => {
             });
           }
         };
+        prefs.migrationLastShownDate = someDaysAgo.valueOf() / 1000;
+        prefs.migrationRemainingDays = 2;
 
-        fakePrefs.get.withArgs("migrationLastShownDate").returns(someDaysAgo.valueOf() / 1000);
-        fakePrefs.get.withArgs("migrationRemainingDays").returns(2);
-        const ret = await instance.isMigrationMessageExpired();
-
-        assert.equal(ret, true);
+        const result = await instance.isMigrationMessageExpired();
+        assert.equal(result, true);
       });
       it("should return early and not check prefs if profile age > 3", async () => {
         let today = new Date();
@@ -233,11 +211,11 @@ describe("ManualMigration", () => {
           }
         };
 
-        const ret = await instance.isMigrationMessageExpired();
+        const result = await instance.isMigrationMessageExpired();
 
-        assert.equal(fakePrefs.get.callCount, 0);
-        assert.equal(fakePrefs.set.callCount, 0);
-        assert.equal(ret, true);
+        assert.equal(instance.store.getState.callCount, 0);
+        assert.equal(instance.store.getState.callCount, 0);
+        assert.equal(result, true);
       });
     });
   });
@@ -254,7 +232,7 @@ describe("ManualMigration", () => {
     instance.onAction(action);
 
     assert.calledOnce(uninitSpy);
-    assert.calledOnce(fakeServices.obs.removeObserver);
-    assert.calledWith(fakeServices.obs.removeObserver, instance, "Migration:Ended");
+    assert.calledOnce(global.Services.obs.removeObserver);
+    assert.calledWith(global.Services.obs.removeObserver, instance, "Migration:Ended");
   });
 });

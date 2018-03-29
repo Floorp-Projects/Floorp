@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} радок;{num} радкі;{num} радкоў",
   "prefs_search_header": "Пошук у сеціве",
   "prefs_topsites_description": "Сайты, якія вы наведваеце найчасцей",
-  "prefs_topstories_description": "Якасны змест, які вы маглі іначай прапусціць",
+  "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "Артыкулы ад спонсараў {provider}",
   "prefs_topstories_sponsored_learn_more": "Даведацца больш",
   "prefs_highlights_description": "Выбраныя сайты, якія вы захавалі ці наведалі",
@@ -89,5 +89,6 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Дадаць папулярны сайт",
   "section_menu_action_move_up": "Пасунуць вышэй",
   "section_menu_action_move_down": "Пасунуць ніжэй",
-  "section_menu_action_privacy_notice": "Паведамленне аб прыватнасці"
+  "section_menu_action_privacy_notice": "Паведамленне аб прыватнасці",
+  "prefs_topstories_description": "Якасны змест, які вы маглі іначай прапусціць"
 };

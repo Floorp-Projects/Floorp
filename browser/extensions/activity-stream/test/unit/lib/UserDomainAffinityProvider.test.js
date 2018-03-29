@@ -1,5 +1,5 @@
 import {GlobalOverrider} from "test/unit/utils";
-import injector from "inject!lib/UserDomainAffinityProvider.jsm";
+import {UserDomainAffinityProvider} from "lib/UserDomainAffinityProvider.jsm";
 
 const TIME_SEGMENTS = [
   {"id": "hour", "startTime": 3600, "endTime": 0, "weightPosition": 1},
@@ -30,27 +30,20 @@ const PARAMETER_SETS = {
 };
 
 describe("User Domain Affinity Provider", () => {
-  let UserDomainAffinityProvider;
   let instance;
   let globals;
 
   beforeEach(() => {
     globals = new GlobalOverrider();
-    globals.set("Services", {io: {newURI: u => ({host: "www.somedomain.org"})}});
-    globals.set("PlacesUtils", {
-      history: {
-        getNewQuery: () => ({"TIME_RELATIVE_NOW": 1}),
-        getNewQueryOptions: () => ({}),
-        executeQuery: () => ({root: {childCount: 1, getChild: index => ({uri: "www.somedomain.org", accessCount: 1})}})
-      }
-    });
-    global.Cc["@mozilla.org/browser/nav-history-service;1"] = {
-      getService() {
-        return global.PlacesUtils.history;
-      }
-    };
 
-    ({UserDomainAffinityProvider} = injector());
+    const testUrl = "www.somedomain.com";
+    globals.sandbox.stub(global.Services.io, "newURI").returns({host: testUrl});
+
+    const history = global.Cc["@mozilla.org/browser/nav-history-service;1"];
+    globals.sandbox.stub(history, "executeQuery").returns({root: {childCount: 1, getChild: index => ({uri: testUrl, accessCount: 1})}});
+    globals.sandbox.stub(history, "getNewQuery").returns({"TIME_RELATIVE_NOW": 1});
+    globals.sandbox.stub(history, "getNewQueryOptions").returns({});
+
     instance = new UserDomainAffinityProvider(TIME_SEGMENTS, PARAMETER_SETS);
   });
   afterEach(() => {

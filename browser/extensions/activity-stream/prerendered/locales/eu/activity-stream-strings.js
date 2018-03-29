@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "Errenkada bat;{num} errenkada",
   "prefs_search_header": "Web bilaketa",
   "prefs_topsites_description": "Gehien bisitatzen dituzun guneak",
-  "prefs_topstories_description": "Bestela galduko zenukeen kalitatezko edukia",
+  "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "{provider} babeslearen istorioak",
   "prefs_topstories_sponsored_learn_more": "Argibide gehiago",
   "prefs_highlights_description": "Gorde edo bisitatu dituzun guneen hautapena",
@@ -89,5 +89,6 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Gehitu maiz erabilitako gunea",
   "section_menu_action_move_up": "Eraman gora",
   "section_menu_action_move_down": "Eraman behera",
-  "section_menu_action_privacy_notice": "Pribatutasun-oharra"
+  "section_menu_action_privacy_notice": "Pribatutasun-oharra",
+  "prefs_topstories_description": "Bestela galduko zenukeen kalitatezko edukia"
 };

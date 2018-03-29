@@ -27,15 +27,6 @@ export class GlobalOverrider {
    * @param  {any} value The value to which the property should be reassigned
    */
   _override(key, value) {
-    if (key === "Components") {
-      // Components can be reassigned, but it will subsequently throw a deprecation
-      // error in Firefox which will stop execution. Adding the assignment statement
-      // to a try/catch block will prevent this from happening.
-      try {
-        global[key] = value;
-      } catch (e) {} // eslint-disable-line no-empty
-      return;
-    }
     if (!this.originalGlobals.has(key)) {
       this.originalGlobals.set(key, global[key]);
     }

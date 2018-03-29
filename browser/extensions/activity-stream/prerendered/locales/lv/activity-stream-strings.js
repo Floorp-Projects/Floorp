@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} rindu;{num} rinda;{num} rindas",
   "prefs_search_header": "Tīmekļa meklēšana",
   "prefs_topsites_description": "Biežāk apmeklētās lapas",
-  "prefs_topstories_description": "Labas kvalitātes saturs, kas jūs varētu intereēt",
+  "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "{provider} sponsorētie stāsti",
   "prefs_topstories_sponsored_learn_more": "Uzzināt vairāk",
   "prefs_highlights_description": "Jūsu apmeklēto vai saglabāto lapu izlase",
@@ -89,5 +89,6 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Pievienot populāru lapu",
   "section_menu_action_move_up": "Pārvietot augšup",
   "section_menu_action_move_down": "Pārvietot lejup",
-  "section_menu_action_privacy_notice": "Privātuma politika"
+  "section_menu_action_privacy_notice": "Privātuma politika",
+  "prefs_topstories_description": "Labas kvalitātes saturs, kas jūs varētu intereēt"
 };

@@ -433,12 +433,15 @@ describe("Highlights Feed", () => {
       assert.calledOnce(feed.fetchHighlights);
       assert.calledWith(feed.fetchHighlights, {broadcast: true});
     });
-    it("should fetch highlights on PLACES_LINKS_DELETED", async () => {
+    it("should fetch highlights on PLACES_LINKS_CHANGED", async () => {
       await feed.fetchHighlights();
       feed.fetchHighlights = sinon.spy();
-      feed.onAction({type: at.PLACES_LINKS_DELETED});
+      sandbox.stub(feed.linksCache, "expire");
+
+      feed.onAction({type: at.PLACES_LINKS_CHANGED});
       assert.calledOnce(feed.fetchHighlights);
-      assert.calledWith(feed.fetchHighlights, {broadcast: true});
+      assert.calledWith(feed.fetchHighlights, {broadcast: false});
+      assert.calledOnce(feed.linksCache.expire);
     });
     it("should fetch highlights on PLACES_LINK_BLOCKED", async () => {
       await feed.fetchHighlights();
@@ -446,27 +449,6 @@ describe("Highlights Feed", () => {
       feed.onAction({type: at.PLACES_LINK_BLOCKED});
       assert.calledOnce(feed.fetchHighlights);
       assert.calledWith(feed.fetchHighlights, {broadcast: true});
-    });
-    it("should fetch highlights on PLACES_BOOKMARK_ADDED", async () => {
-      await feed.fetchHighlights();
-      feed.fetchHighlights = sinon.spy();
-      feed.onAction({type: at.PLACES_BOOKMARK_ADDED});
-      assert.calledOnce(feed.fetchHighlights);
-      assert.calledWith(feed.fetchHighlights, {broadcast: false});
-    });
-    it("should fetch highlights on PLACES_BOOKMARK_REMOVED", async () => {
-      await feed.fetchHighlights();
-      feed.fetchHighlights = sinon.spy();
-      feed.onAction({type: at.PLACES_BOOKMARK_REMOVED});
-      assert.calledOnce(feed.fetchHighlights);
-      assert.calledWith(feed.fetchHighlights, {broadcast: false});
-    });
-    it("should expire the cache on PLACES_BOOKMARK_REMOVED", async () => {
-      sandbox.stub(feed.linksCache, "expire");
-
-      feed.onAction({type: at.PLACES_BOOKMARK_REMOVED});
-
-      assert.calledOnce(feed.linksCache.expire);
     });
     it("should fetch highlights and expire the cache on PLACES_SAVED_TO_POCKET", async () => {
       await feed.fetchHighlights();

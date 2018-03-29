@@ -232,6 +232,14 @@ describe("AboutPreferences Feed", () => {
 
         assert.equal(node.textContent, descString);
       });
+      it("should add a link for top stories", () => {
+        const href = "https://disclaimer/";
+        prefStructure = [{disclaimer: {link: {href}}, id: "topstories", pref: {descString: "some_desc"}}];
+
+        testRender();
+
+        assert.calledWith(node.setAttribute, "href", href);
+      });
       it("should render rows dropdown with appropriate number", () => {
         prefStructure = [{rowsPref: "row_pref", maxRows: 3, pref: {descString: "foo"}}];
 
@@ -250,14 +258,6 @@ describe("AboutPreferences Feed", () => {
         testRender();
 
         assert.calledWith(node.setAttribute, "label", titleString);
-      });
-      it("should add a link for sponsored", () => {
-        const href = "https://disclaimer/";
-        prefStructure = [{disclaimer: {link: {href}}, pref: {nestedPrefs: [{name: "showSponsored"}]}}];
-
-        testRender();
-
-        assert.calledWith(node.setAttribute, "href", href);
       });
     });
   });

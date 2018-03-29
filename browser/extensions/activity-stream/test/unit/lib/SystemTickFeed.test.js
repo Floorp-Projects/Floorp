@@ -1,16 +1,13 @@
+import {SYSTEM_TICK_INTERVAL, SystemTickFeed} from "lib/SystemTickFeed.jsm";
 import {actionTypes as at} from "common/Actions.jsm";
-import injector from "inject!lib/SystemTickFeed.jsm";
 
 describe("System Tick Feed", () => {
-  let SystemTickFeed;
-  let SYSTEM_TICK_INTERVAL;
   let instance;
   let clock;
 
   beforeEach(() => {
     clock = sinon.useFakeTimers();
 
-    ({SystemTickFeed, SYSTEM_TICK_INTERVAL} = injector({}));
     instance = new SystemTickFeed();
     instance.store = {getState() { return {}; }, dispatch() {}};
   });
