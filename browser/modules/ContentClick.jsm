@@ -20,7 +20,11 @@ var ContentClick = {
   receiveMessage(message) {
     switch (message.name) {
       case "Content:Click":
-        this.contentAreaClick(message.json, message.target);
+        // Bug 1446913 - Ensure this happens in the next tick so TabOpen/TabMove
+        // events are processed correctly in webextensions.
+        Promise.resolve().then(() => {
+          this.contentAreaClick(message.json, message.target);
+        });
         break;
     }
   },
