@@ -47,8 +47,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=489415
         var video = document.createElement("video");
         video.preload = "metadata";
         video.controls = true;
-        var url = "http://" + origin + "/tests/dom/media/test/dynamic_redirect.sjs?key="
-                  + noise + "&res=pixel_aspect_ratio.mp4"
+        var url = "http://" + origin + "/tests/dom/media/test/midflight-redirect.sjs?key="
+                  + noise + "&resource=pixel_aspect_ratio.mp4"
                   + "&type=video/mp4";
         SimpleTest.info("Loading from " + url);
         video.src = url;
