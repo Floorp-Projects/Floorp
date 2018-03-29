@@ -158,6 +158,7 @@ var UITour = {
         if (node && !node.hidden) {
           return node;
         }
+        aDocument.ownerGlobal.BrowserPageActions.placeLazyActionsInPanel();
         return aDocument.getElementById("pageAction-panel-pocket");
       },
     }],
@@ -224,29 +225,34 @@ var UITour = {
         if (node && !node.hidden) {
           return node;
         }
+        aDocument.ownerGlobal.BrowserPageActions.placeLazyActionsInPanel();
         return aDocument.getElementById("pageAction-panel-bookmark");
       },
     }],
     ["pageAction-copyURL", {
       query: (aDocument) => {
+        aDocument.ownerGlobal.BrowserPageActions.placeLazyActionsInPanel();
         return aDocument.getElementById("pageAction-urlbar-copyURL") ||
                aDocument.getElementById("pageAction-panel-copyURL");
       },
     }],
     ["pageAction-emailLink", {
       query: (aDocument) => {
+        aDocument.ownerGlobal.BrowserPageActions.placeLazyActionsInPanel();
         return aDocument.getElementById("pageAction-urlbar-emailLink") ||
                aDocument.getElementById("pageAction-panel-emailLink");
       },
     }],
     ["pageAction-sendToDevice", {
       query: (aDocument) => {
+        aDocument.ownerGlobal.BrowserPageActions.placeLazyActionsInPanel();
         return aDocument.getElementById("pageAction-urlbar-sendToDevice") ||
                aDocument.getElementById("pageAction-panel-sendToDevice");
       },
     }],
     ["screenshots", {
       query: (aDocument) => {
+        aDocument.ownerGlobal.BrowserPageActions.placeLazyActionsInPanel();
         return aDocument.getElementById("pageAction-urlbar-screenshots") ||
                aDocument.getElementById("pageAction-panel-screenshots");
       },

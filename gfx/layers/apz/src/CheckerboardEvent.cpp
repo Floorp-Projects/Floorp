@@ -159,8 +159,8 @@ CheckerboardEvent::StartEvent()
   }
   MonitorAutoLock lock(mRendertraceLock);
   std::vector<PropertyValue> history;
-  for (size_t i = 0; i < sRendertracePropertyCount; i++) {
-    mBufferedProperties[i].Flush(history, lock);
+  for (PropertyBuffer& bufferedProperty : mBufferedProperties) {
+    bufferedProperty.Flush(history, lock);
   }
   std::sort(history.begin(), history.end());
   for (const PropertyValue& p : history) {

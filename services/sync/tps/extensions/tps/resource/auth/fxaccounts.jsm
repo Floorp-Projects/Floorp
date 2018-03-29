@@ -199,16 +199,9 @@ var Authentication = {
       if (!user) {
         throw new Error("Failed to get signed in user!");
       }
+      let { sessionToken } = user;
       let fxc = new FxAccountsClient();
-      let { sessionToken, deviceId } = user;
-      if (deviceId) {
-        Logger.logInfo("Destroying device " + deviceId);
-        await fxAccounts.deleteDeviceRegistration(sessionToken, deviceId);
-        await fxAccounts.signOut(true);
-      } else {
-        Logger.logError("No device found.");
-        await fxc.signOut(sessionToken, { service: "sync" });
-      }
+      await fxc.signOut(sessionToken, { service: "sync" });
     }
   }
 };

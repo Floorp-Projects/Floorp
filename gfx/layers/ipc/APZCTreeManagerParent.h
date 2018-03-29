@@ -13,13 +13,16 @@ namespace mozilla {
 namespace layers {
 
 class APZCTreeManager;
+class APZUpdater;
 
 class APZCTreeManagerParent
     : public PAPZCTreeManagerParent
 {
 public:
 
-  explicit APZCTreeManagerParent(LayersId aLayersId, RefPtr<APZCTreeManager> aAPZCTreeManager);
+  APZCTreeManagerParent(LayersId aLayersId,
+                        RefPtr<APZCTreeManager> aAPZCTreeManager,
+                        RefPtr<APZUpdater> mAPZUpdater);
   virtual ~APZCTreeManagerParent();
 
   LayersId GetLayersId() const { return mLayersId; }
@@ -28,7 +31,8 @@ public:
    * Called when the layer tree that this protocol is connected to
    * is adopted by another compositor, and we need to switch APZCTreeManagers.
    */
-  void ChildAdopted(RefPtr<APZCTreeManager> aAPZCTreeManager);
+  void ChildAdopted(RefPtr<APZCTreeManager> aAPZCTreeManager,
+                    RefPtr<APZUpdater> aAPZUpdater);
 
   mozilla::ipc::IPCResult
   RecvSetKeyboardMap(const KeyboardMap& aKeyboardMap) override;
@@ -84,6 +88,7 @@ public:
 private:
   LayersId mLayersId;
   RefPtr<APZCTreeManager> mTreeManager;
+  RefPtr<APZUpdater> mUpdater;
 };
 
 } // namespace layers

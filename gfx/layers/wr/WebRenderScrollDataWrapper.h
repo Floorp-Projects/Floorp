@@ -315,6 +315,13 @@ public:
     return mLayer->GetFixedPositionScrollContainerId();
   }
 
+  bool IsBackfaceHidden() const
+  {
+    // This is only used by APZCTM hit testing, and WR does its own
+    // hit testing, so no need to implement this.
+    return false;
+  }
+
   const void* GetLayer() const
   {
     MOZ_ASSERT(IsValid());

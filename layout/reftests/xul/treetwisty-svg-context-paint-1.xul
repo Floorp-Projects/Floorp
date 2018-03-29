@@ -3,7 +3,13 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml">
+  <image src="treetwisty-context-paint.svg" id="preload-image"/>
   <html:style>
+    #preload-image {
+      visibility: collapse;
+    }
+
+    #preload-image,
     treechildren::-moz-tree-twisty {
       -moz-appearance: none !important;
       -moz-context-properties: fill, fill-opacity, stroke, stroke-opacity !important;

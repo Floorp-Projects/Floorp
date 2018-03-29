@@ -13,7 +13,6 @@ namespace mozilla {
 namespace layers {
 
 // Helper that creates a monitor and a "done" flag, then enters the monitor.
-// This can go away when we switch ImageBridge to an XPCOM thread.
 class MOZ_STACK_CLASS SynchronousTask
 {
   friend class AutoCompleteTask;

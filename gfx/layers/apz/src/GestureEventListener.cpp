@@ -81,9 +81,7 @@ GestureEventListener::GestureEventListener(AsyncPanZoomController* aAsyncPanZoom
 {
 }
 
-GestureEventListener::~GestureEventListener()
-{
-}
+GestureEventListener::~GestureEventListener() = default;
 
 nsEventStatus GestureEventListener::HandleInputEvent(const MultiTouchInput& aEvent)
 {

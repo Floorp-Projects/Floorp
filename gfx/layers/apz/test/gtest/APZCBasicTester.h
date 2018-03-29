@@ -13,6 +13,8 @@
 
 #include "APZTestCommon.h"
 #include "gfxPrefs.h"
+#include "mozilla/layers/APZSampler.h"
+#include "mozilla/layers/APZUpdater.h"
 
 class APZCBasicTester : public APZCTesterBase {
 public:
@@ -29,6 +31,8 @@ protected:
     APZThreadUtils::SetControllerThread(MessageLoop::current());
 
     tm = new TestAPZCTreeManager(mcc);
+    updater = new APZUpdater(tm);
+    sampler = new APZSampler(tm);
     apzc = new TestAsyncPanZoomController(LayersId{0}, mcc, tm, mGestureBehavior);
     apzc->SetFrameMetrics(TestFrameMetrics());
     apzc->GetScrollMetadata().SetIsLayersIdRoot(true);
@@ -115,6 +119,8 @@ protected:
 
   AsyncPanZoomController::GestureBehavior mGestureBehavior;
   RefPtr<TestAPZCTreeManager> tm;
+  RefPtr<APZSampler> sampler;
+  RefPtr<APZUpdater> updater;
   RefPtr<TestAsyncPanZoomController> apzc;
 };
 

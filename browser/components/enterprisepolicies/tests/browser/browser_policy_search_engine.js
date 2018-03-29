@@ -72,9 +72,46 @@ add_task(async function test_install_and_set_default() {
 
   // Clean up
   Services.search.removeEngine(Services.search.currentEngine);
+  EnterprisePolicyTesting.resetRunOnceState();
+});
+
+// Same as the last test, but with "PreventInstalls" set to true to make sure
+// it does not prevent search engines from being installed properly
+add_task(async function test_install_and_set_default_prevent_installs() {
+  isnot(Services.search.currentEngine.name, "MozSearch",
+        "Default search engine should not be MozSearch when test starts");
+  is(Services.search.getEngineByName("Foo"), null,
+     "Engine \"Foo\" should not be present when test starts");
+
+  await setupPolicyEngineWithJson({
+    "policies": {
+      "SearchEngines": {
+        "Add": [
+          {
+            "Name": "MozSearch",
+            "URLTemplate": "http://example.com/?q={searchTerms}"
+          }
+        ],
+        "Default": "MozSearch",
+        "PreventInstalls": true
+      }
+    }
+  });
+
+  is(Services.search.currentEngine.name, "MozSearch",
+     "Specified search engine should be the default");
+
+  // Clean up
+  Services.search.removeEngine(Services.search.currentEngine);
+  EnterprisePolicyTesting.resetRunOnceState();
 });
 
 add_task(async function test_opensearch_works() {
+  // Clear out policies so we can test with no policies applied
+  await setupPolicyEngineWithJson({
+    "policies": {
+    }
+  });
   // Ensure that opensearch works before we make sure that it can be properly
   // disabled
   await test_opensearch(true);

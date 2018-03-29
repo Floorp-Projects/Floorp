@@ -15,6 +15,8 @@
 #include "APZTestCommon.h"
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
+#include "mozilla/layers/APZSampler.h"
+#include "mozilla/layers/APZUpdater.h"
 
 class APZCTreeManagerTester : public APZCTesterBase {
 protected:
@@ -25,6 +27,8 @@ protected:
     APZThreadUtils::SetControllerThread(MessageLoop::current());
 
     manager = new TestAPZCTreeManager(mcc);
+    updater = new APZUpdater(manager);
+    sampler = new APZSampler(manager);
   }
 
   virtual void TearDown() {
@@ -54,6 +58,8 @@ protected:
   RefPtr<Layer> root;
 
   RefPtr<TestAPZCTreeManager> manager;
+  RefPtr<APZSampler> sampler;
+  RefPtr<APZUpdater> updater;
 
 protected:
   static ScrollMetadata BuildScrollMetadata(FrameMetrics::ViewID aScrollId,

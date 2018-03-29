@@ -76,153 +76,145 @@ void
 HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                        GenericSpecifiedValues* aData)
 {
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)) {
+  // This is the one place where we try to set the same property
+  // multiple times in presentation attributes. Servo does not support
+  // querying if a property is set (because that is O(n) behavior
+  // in ServoSpecifiedValues). Instead, we use the below values to keep
+  // track of whether we have already set a property, and if so, what value
+  // we set it to (which is used when handling margin
+  // attributes from the containing frame element)
 
-    // This is the one place where we try to set the same property
-    // multiple times in presentation attributes. Servo does not support
-    // querying if a property is set (because that is O(n) behavior
-    // in ServoSpecifiedValues). Instead, we use the below values to keep
-    // track of whether we have already set a property, and if so, what value
-    // we set it to (which is used when handling margin
-    // attributes from the containing frame element)
+  int32_t bodyMarginWidth  = -1;
+  int32_t bodyMarginHeight = -1;
+  int32_t bodyTopMargin = -1;
+  int32_t bodyBottomMargin = -1;
+  int32_t bodyLeftMargin = -1;
+  int32_t bodyRightMargin = -1;
 
-    int32_t bodyMarginWidth  = -1;
-    int32_t bodyMarginHeight = -1;
-    int32_t bodyTopMargin = -1;
-    int32_t bodyBottomMargin = -1;
-    int32_t bodyLeftMargin = -1;
-    int32_t bodyRightMargin = -1;
+  const nsAttrValue* value;
+  // if marginwidth/marginheight are set, reflect them as 'margin'
+  value = aAttributes->GetAttr(nsGkAtoms::marginwidth);
+  if (value && value->Type() == nsAttrValue::eInteger) {
+    bodyMarginWidth = value->GetIntegerValue();
+    if (bodyMarginWidth < 0) {
+      bodyMarginWidth = 0;
+    }
+    aData->SetPixelValueIfUnset(eCSSProperty_margin_left, (float)bodyMarginWidth);
+    aData->SetPixelValueIfUnset(eCSSProperty_margin_right, (float)bodyMarginWidth);
+  }
 
-    const nsAttrValue* value;
-    // if marginwidth/marginheight are set, reflect them as 'margin'
-    value = aAttributes->GetAttr(nsGkAtoms::marginwidth);
+  value = aAttributes->GetAttr(nsGkAtoms::marginheight);
+  if (value && value->Type() == nsAttrValue::eInteger) {
+    bodyMarginHeight = value->GetIntegerValue();
+    if (bodyMarginHeight < 0) {
+      bodyMarginHeight = 0;
+    }
+    aData->SetPixelValueIfUnset(eCSSProperty_margin_top, (float)bodyMarginHeight);
+    aData->SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)bodyMarginHeight);
+  }
+
+    // topmargin (IE-attribute)
+  if (bodyMarginHeight == -1) {
+    value = aAttributes->GetAttr(nsGkAtoms::topmargin);
     if (value && value->Type() == nsAttrValue::eInteger) {
-      bodyMarginWidth = value->GetIntegerValue();
-      if (bodyMarginWidth < 0) {
-        bodyMarginWidth = 0;
+      bodyTopMargin = value->GetIntegerValue();
+      if (bodyTopMargin < 0) {
+        bodyTopMargin = 0;
       }
-      aData->SetPixelValueIfUnset(eCSSProperty_margin_left, (float)bodyMarginWidth);
-      aData->SetPixelValueIfUnset(eCSSProperty_margin_right, (float)bodyMarginWidth);
+      aData->SetPixelValueIfUnset(eCSSProperty_margin_top, (float)bodyTopMargin);
     }
+  }
+    // bottommargin (IE-attribute)
 
-    value = aAttributes->GetAttr(nsGkAtoms::marginheight);
+  if (bodyMarginHeight == -1) {
+    value = aAttributes->GetAttr(nsGkAtoms::bottommargin);
     if (value && value->Type() == nsAttrValue::eInteger) {
-      bodyMarginHeight = value->GetIntegerValue();
-      if (bodyMarginHeight < 0) {
-        bodyMarginHeight = 0;
+      bodyBottomMargin = value->GetIntegerValue();
+      if (bodyBottomMargin < 0) {
+        bodyBottomMargin = 0;
       }
-      aData->SetPixelValueIfUnset(eCSSProperty_margin_top, (float)bodyMarginHeight);
-      aData->SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)bodyMarginHeight);
+      aData->SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)bodyBottomMargin);
     }
+  }
 
-      // topmargin (IE-attribute)
-    if (bodyMarginHeight == -1) {
-      value = aAttributes->GetAttr(nsGkAtoms::topmargin);
-      if (value && value->Type() == nsAttrValue::eInteger) {
-        bodyTopMargin = value->GetIntegerValue();
-        if (bodyTopMargin < 0) {
-          bodyTopMargin = 0;
-        }
-        aData->SetPixelValueIfUnset(eCSSProperty_margin_top, (float)bodyTopMargin);
+    // leftmargin (IE-attribute)
+  if (bodyMarginWidth == -1) {
+    value = aAttributes->GetAttr(nsGkAtoms::leftmargin);
+    if (value && value->Type() == nsAttrValue::eInteger) {
+      bodyLeftMargin = value->GetIntegerValue();
+      if (bodyLeftMargin < 0) {
+        bodyLeftMargin = 0;
       }
+      aData->SetPixelValueIfUnset(eCSSProperty_margin_left, (float)bodyLeftMargin);
     }
-      // bottommargin (IE-attribute)
-
-    if (bodyMarginHeight == -1) {
-      value = aAttributes->GetAttr(nsGkAtoms::bottommargin);
-      if (value && value->Type() == nsAttrValue::eInteger) {
-        bodyBottomMargin = value->GetIntegerValue();
-        if (bodyBottomMargin < 0) {
-          bodyBottomMargin = 0;
-        }
-        aData->SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)bodyBottomMargin);
+  }
+    // rightmargin (IE-attribute)
+  if (bodyMarginWidth == -1) {
+    value = aAttributes->GetAttr(nsGkAtoms::rightmargin);
+    if (value && value->Type() == nsAttrValue::eInteger) {
+      bodyRightMargin = value->GetIntegerValue();
+      if (bodyRightMargin < 0) {
+        bodyRightMargin = 0;
       }
+      aData->SetPixelValueIfUnset(eCSSProperty_margin_right, (float)bodyRightMargin);
     }
+  }
 
-      // leftmargin (IE-attribute)
-    if (bodyMarginWidth == -1) {
-      value = aAttributes->GetAttr(nsGkAtoms::leftmargin);
-      if (value && value->Type() == nsAttrValue::eInteger) {
-        bodyLeftMargin = value->GetIntegerValue();
-        if (bodyLeftMargin < 0) {
-          bodyLeftMargin = 0;
+  // if marginwidth or marginheight is set in the <frame> and not set in the <body>
+  // reflect them as margin in the <body>
+  if (bodyMarginWidth == -1 || bodyMarginHeight == -1) {
+    nsCOMPtr<nsIDocShell> docShell(aData->Document()->GetDocShell());
+    if (docShell) {
+      nscoord frameMarginWidth=-1;  // default value
+      nscoord frameMarginHeight=-1; // default value
+      docShell->GetMarginWidth(&frameMarginWidth); // -1 indicates not set
+      docShell->GetMarginHeight(&frameMarginHeight);
+
+      if (bodyMarginWidth == -1 && frameMarginWidth >= 0) {
+        if (bodyLeftMargin == -1) {
+          aData->SetPixelValueIfUnset(eCSSProperty_margin_left, (float)frameMarginWidth);
         }
-        aData->SetPixelValueIfUnset(eCSSProperty_margin_left, (float)bodyLeftMargin);
+        if (bodyRightMargin == -1) {
+          aData->SetPixelValueIfUnset(eCSSProperty_margin_right, (float)frameMarginWidth);
+        }
       }
-    }
-      // rightmargin (IE-attribute)
-    if (bodyMarginWidth == -1) {
-      value = aAttributes->GetAttr(nsGkAtoms::rightmargin);
-      if (value && value->Type() == nsAttrValue::eInteger) {
-        bodyRightMargin = value->GetIntegerValue();
-        if (bodyRightMargin < 0) {
-          bodyRightMargin = 0;
+
+      if (bodyMarginHeight == -1 && frameMarginHeight >= 0) {
+        if (bodyTopMargin == -1) {
+          aData->SetPixelValueIfUnset(eCSSProperty_margin_top, (float)frameMarginHeight);
         }
-        aData->SetPixelValueIfUnset(eCSSProperty_margin_right, (float)bodyRightMargin);
-      }
-    }
-
-    // if marginwidth or marginheight is set in the <frame> and not set in the <body>
-    // reflect them as margin in the <body>
-    if (bodyMarginWidth == -1 || bodyMarginHeight == -1) {
-      nsCOMPtr<nsIDocShell> docShell(aData->Document()->GetDocShell());
-      if (docShell) {
-        nscoord frameMarginWidth=-1;  // default value
-        nscoord frameMarginHeight=-1; // default value
-        docShell->GetMarginWidth(&frameMarginWidth); // -1 indicates not set
-        docShell->GetMarginHeight(&frameMarginHeight);
-
-        if (bodyMarginWidth == -1 && frameMarginWidth >= 0) {
-          if (bodyLeftMargin == -1) {
-            aData->SetPixelValueIfUnset(eCSSProperty_margin_left, (float)frameMarginWidth);
-          }
-          if (bodyRightMargin == -1) {
-            aData->SetPixelValueIfUnset(eCSSProperty_margin_right, (float)frameMarginWidth);
-          }
-        }
-
-        if (bodyMarginHeight == -1 && frameMarginHeight >= 0) {
-          if (bodyTopMargin == -1) {
-            aData->SetPixelValueIfUnset(eCSSProperty_margin_top, (float)frameMarginHeight);
-          }
-          if (bodyBottomMargin == -1) {
-            aData->SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)frameMarginHeight);
-          }
+        if (bodyBottomMargin == -1) {
+          aData->SetPixelValueIfUnset(eCSSProperty_margin_bottom, (float)frameMarginHeight);
         }
       }
     }
   }
 
-  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Display))) {
-    // When display if first asked for, go ahead and get our colors set up.
-    if (nsHTMLStyleSheet* styleSheet = aData->Document()->GetAttributeStyleSheet()) {
-      const nsAttrValue* value;
-      nscolor color;
-      value = aAttributes->GetAttr(nsGkAtoms::link);
-      if (value && value->GetColorValue(color)) {
-        styleSheet->SetLinkColor(color);
-      }
+  // When display if first asked for, go ahead and get our colors set up.
+  if (nsHTMLStyleSheet* styleSheet = aData->Document()->GetAttributeStyleSheet()) {
+    nscolor color;
+    value = aAttributes->GetAttr(nsGkAtoms::link);
+    if (value && value->GetColorValue(color)) {
+      styleSheet->SetLinkColor(color);
+    }
 
-      value = aAttributes->GetAttr(nsGkAtoms::alink);
-      if (value && value->GetColorValue(color)) {
-        styleSheet->SetActiveLinkColor(color);
-      }
+    value = aAttributes->GetAttr(nsGkAtoms::alink);
+    if (value && value->GetColorValue(color)) {
+      styleSheet->SetActiveLinkColor(color);
+    }
 
-      value = aAttributes->GetAttr(nsGkAtoms::vlink);
-      if (value && value->GetColorValue(color)) {
-        styleSheet->SetVisitedLinkColor(color);
-      }
+    value = aAttributes->GetAttr(nsGkAtoms::vlink);
+    if (value && value->GetColorValue(color)) {
+      styleSheet->SetVisitedLinkColor(color);
     }
   }
 
-  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Color))) {
-    if (!aData->PropertyIsSet(eCSSProperty_color)) {
-      // color: color
-      nscolor color;
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::text);
-      if (value && value->GetColorValue(color)) {
-        aData->SetColorValue(eCSSProperty_color, color);
-      }
+  if (!aData->PropertyIsSet(eCSSProperty_color)) {
+    // color: color
+    nscolor color;
+    value = aAttributes->GetAttr(nsGkAtoms::text);
+    if (value && value->GetColorValue(color)) {
+      aData->SetColorValue(eCSSProperty_color, color);
     }
   }
 

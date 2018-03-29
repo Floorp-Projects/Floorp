@@ -70,7 +70,8 @@ add_test(function successfulResponse() {
   let response = {
     success: true,
     status: STATUS_SUCCESS,
-    body: "{\"access_token\":\"http://example.com/image.jpeg\",\"id\":\"0d5c1a89b8c54580b8e3e8adadae864a\"}",
+    body: JSON.stringify({access_token: "http://example.com/image.jpeg",
+                          id: "0d5c1a89b8c54580b8e3e8adadae864a"})
   };
 
   client._Request = new mockResponse(response);
@@ -88,7 +89,7 @@ add_test(function successfulDestroy() {
   let response = {
     success: true,
     status: STATUS_SUCCESS,
-    body: "{}",
+    body: JSON.stringify({}),
   };
 
   client._Request = new mockResponse(response);
@@ -119,7 +120,8 @@ add_task(async function serverErrorResponse() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   let response = {
     status: 400,
-    body: "{ \"code\": 400, \"errno\": 104, \"error\": \"Bad Request\", \"message\": \"Unauthorized\", \"reason\": \"Invalid fxa assertion\" }",
+    body: JSON.stringify({code: 400, errno: 104, error: "Bad Request",
+                          message: "Unauthorized", reason: "Invalid fxa assertion"}),
   };
 
   client._Request = new mockResponse(response);
@@ -139,7 +141,6 @@ add_task(async function networkErrorResponse() {
     serverURL: "https://domain.dummy",
     client_id: "abc123"
   });
-  Services.prefs.setBoolPref("identity.fxaccounts.skipDeviceRegistration", true);
   client.getTokenFromAssertion("assertion", "scope")
     .catch(function(e) {
       Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
@@ -147,8 +148,7 @@ add_task(async function networkErrorResponse() {
       Assert.equal(e.errno, ERRNO_NETWORK);
       Assert.equal(e.error, ERROR_NETWORK);
       run_next_test();
-    }).catch(() => {}).then(() =>
-      Services.prefs.clearUserPref("identity.fxaccounts.skipDeviceRegistration"));
+    });
 });
 
 add_test(function unsupportedMethod() {
@@ -183,7 +183,8 @@ add_test(function incorrectErrno() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   let response = {
     status: 400,
-    body: "{ \"code\": 400, \"errno\": \"bad errno\", \"error\": \"Bad Request\", \"message\": \"Unauthorized\", \"reason\": \"Invalid fxa assertion\" }",
+    body: JSON.stringify({code: 400, errno: "bad errno", error: "Bad Request",
+                          message: "Unauthorized", reason: "Invalid fxa assertion"}),
   };
 
   client._Request = new mockResponse(response);
@@ -268,7 +269,6 @@ add_test(function networkErrorResponse() {
     serverURL: "https://domain.dummy",
     client_id: "abc123"
   });
-  Services.prefs.setBoolPref("identity.fxaccounts.skipDeviceRegistration", true);
   client.getTokenFromAssertion("assertion", "scope")
     .catch(function(e) {
       Assert.equal(e.name, "FxAccountsOAuthGrantClientError");
@@ -276,8 +276,7 @@ add_test(function networkErrorResponse() {
       Assert.equal(e.errno, ERRNO_NETWORK);
       Assert.equal(e.error, ERROR_NETWORK);
       run_next_test();
-    }).catch(() => {}).then(() =>
-      Services.prefs.clearUserPref("identity.fxaccounts.skipDeviceRegistration"));
+    });
 });
 
 

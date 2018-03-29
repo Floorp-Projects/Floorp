@@ -67,62 +67,55 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   nscolor color;
   bool colorIsSet = colorValue && colorValue->GetColorValue(color);
 
-  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Position) |
-                                      NS_STYLE_INHERIT_BIT(Border))) {
-    if (colorIsSet) {
-      noshade = true;
-    } else {
-      noshade = !!aAttributes->GetAttr(nsGkAtoms::noshade);
-    }
+  if (colorIsSet) {
+    noshade = true;
+  } else {
+    noshade = !!aAttributes->GetAttr(nsGkAtoms::noshade);
   }
 
-  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Margin))) {
-    // align: enum
-    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
-    if (value && value->Type() == nsAttrValue::eEnum) {
-      // Map align attribute into auto side margins
-      switch (value->GetEnumValue()) {
-      case NS_STYLE_TEXT_ALIGN_LEFT:
-        aData->SetPixelValueIfUnset(eCSSProperty_margin_left, 0.0f);
-        aData->SetAutoValueIfUnset(eCSSProperty_margin_right);
-        break;
-      case NS_STYLE_TEXT_ALIGN_RIGHT:
-        aData->SetAutoValueIfUnset(eCSSProperty_margin_left);
-        aData->SetPixelValueIfUnset(eCSSProperty_margin_right, 0.0f);
-        break;
-      case NS_STYLE_TEXT_ALIGN_CENTER:
-        aData->SetAutoValueIfUnset(eCSSProperty_margin_left);
-        aData->SetAutoValueIfUnset(eCSSProperty_margin_right);
-        break;
-      }
+  // align: enum
+  const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
+  if (value && value->Type() == nsAttrValue::eEnum) {
+    // Map align attribute into auto side margins
+    switch (value->GetEnumValue()) {
+    case NS_STYLE_TEXT_ALIGN_LEFT:
+      aData->SetPixelValueIfUnset(eCSSProperty_margin_left, 0.0f);
+      aData->SetAutoValueIfUnset(eCSSProperty_margin_right);
+      break;
+    case NS_STYLE_TEXT_ALIGN_RIGHT:
+      aData->SetAutoValueIfUnset(eCSSProperty_margin_left);
+      aData->SetPixelValueIfUnset(eCSSProperty_margin_right, 0.0f);
+      break;
+    case NS_STYLE_TEXT_ALIGN_CENTER:
+      aData->SetAutoValueIfUnset(eCSSProperty_margin_left);
+      aData->SetAutoValueIfUnset(eCSSProperty_margin_right);
+      break;
     }
   }
-  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Position))) {
-    if (!aData->PropertyIsSet(eCSSProperty_height)) {
-      // size: integer
-      if (noshade) {
-        // noshade case: size is set using the border
-        aData->SetAutoValue(eCSSProperty_height);
-      } else {
-        // normal case
-        // the height includes the top and bottom borders that are initially 1px.
-        // for size=1, html.css has a special case rule that makes this work by
-        // removing all but the top border.
-        const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::size);
-        if (value && value->Type() == nsAttrValue::eInteger) {
-          aData->SetPixelValue(eCSSProperty_height, (float)value->GetIntegerValue());
-        } // else use default value from html.css
-      }
+  if (!aData->PropertyIsSet(eCSSProperty_height)) {
+    // size: integer
+    if (noshade) {
+      // noshade case: size is set using the border
+      aData->SetAutoValue(eCSSProperty_height);
+    } else {
+      // normal case
+      // the height includes the top and bottom borders that are initially 1px.
+      // for size=1, html.css has a special case rule that makes this work by
+      // removing all but the top border.
+      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::size);
+      if (value && value->Type() == nsAttrValue::eInteger) {
+        aData->SetPixelValue(eCSSProperty_height, (float)value->GetIntegerValue());
+      } // else use default value from html.css
     }
   }
 
   // if not noshade, border styles are dealt with by html.css
-  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Border)) && noshade) {
+  if (noshade) {
     // size: integer
     // if a size is set, use half of it per side, otherwise, use 1px per side
     float sizePerSide;
     bool allSides = true;
-    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::size);
+    value = aAttributes->GetAttr(nsGkAtoms::size);
     if (value && value->Type() == nsAttrValue::eInteger) {
       sizePerSide = (float)value->GetIntegerValue() / 2.0f;
       if (sizePerSide < 1.0f) {
@@ -164,12 +157,10 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       }
     }
   }
-  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Color))) {
-    // color: a color
-    // (we got the color attribute earlier)
-    if (colorIsSet) {
-      aData->SetColorValueIfUnset(eCSSProperty_color, color);
-    }
+  // color: a color
+  // (we got the color attribute earlier)
+  if (colorIsSet) {
+    aData->SetColorValueIfUnset(eCSSProperty_color, color);
   }
 
   nsGenericHTMLElement::MapWidthAttributeInto(aAttributes, aData);

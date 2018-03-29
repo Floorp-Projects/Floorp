@@ -67,18 +67,16 @@ void
 HTMLTableColElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                            GenericSpecifiedValues* aData)
 {
-  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Table))) {
-    if (!aData->PropertyIsSet(eCSSProperty__x_span)) {
-      // span: int
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::span);
-      if (value && value->Type() == nsAttrValue::eInteger) {
-        int32_t val = value->GetIntegerValue();
-        // Note: Do NOT use this code for table cells!  The value "0"
-        // means something special for colspan and rowspan, but for <col
-        // span> and <colgroup span> it's just disallowed.
-        if (val > 0) {
-          aData->SetIntValue(eCSSProperty__x_span, value->GetIntegerValue());
-        }
+  if (!aData->PropertyIsSet(eCSSProperty__x_span)) {
+    // span: int
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::span);
+    if (value && value->Type() == nsAttrValue::eInteger) {
+      int32_t val = value->GetIntegerValue();
+      // Note: Do NOT use this code for table cells!  The value "0"
+      // means something special for colspan and rowspan, but for <col
+      // span> and <colgroup span> it's just disallowed.
+      if (val > 0) {
+        aData->SetIntValue(eCSSProperty__x_span, value->GetIntegerValue());
       }
     }
   }

@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>APZ hit-testing with backface-visibility:hidden</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    body,html{
+      height: 100%;
+    }
+    body{
+      margin: 0;
+      transform-style: preserve-3d;
+    }
+    #back, #front{
+      backface-visibility: hidden;
+      position: absolute;
+      width: 100%;
+      height: 100%
+    }
+    #front{
+      overflow-y:auto;
+    }
+    #content{
+      width: 100%;
+      height: 200%;
+      background: linear-gradient(blue, green);
+    }
+    #back{
+      transform: rotateY(180deg);
+    }
+  </style>
+</head>
+<body>
+  <div id="front">
+    <div id="content"></div>
+  </div>
+  <div id="back"></div></body>
+<script type="application/javascript">
+
+function* test(testDriver) {
+  var config = getHitTestConfig();
+  if (config.isWebRender) {
+    ok(true, "This test is only enabled for non-WebRender");
+    subtestDone();
+    return;
+  }
+
+  var subframe = document.getElementById('front');
+  var subframeViewId = config.utils.getViewId(subframe);
+
+  var {hitInfo, scrollId} = hitTest(centerOf(subframe));
+
+  is(scrollId, subframeViewId,
+     "hit the scroll frame behind the backface-visibility:hidden element");
+
+  subtestDone();
+}
+
+waitUntilApzStable().then(runContinuation(test));
+
+</script>
+</html>

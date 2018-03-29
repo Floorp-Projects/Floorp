@@ -28,8 +28,12 @@ public:
 
   bool DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) override;
 
-  void UpdateDelta(TimeStamp aTime, nsPoint aDelta, const nsSize& aCurrentVelocity);
-  void UpdateDestination(TimeStamp aTime, nsPoint aDestination, const nsSize& aCurrentVelocity);
+  void UpdateDelta(TimeStamp aTime,
+                   const nsPoint& aDelta,
+                   const nsSize& aCurrentVelocity);
+  void UpdateDestination(TimeStamp aTime,
+                         const nsPoint& aDestination,
+                         const nsSize& aCurrentVelocity);
 
   CSSPoint GetDestination() const {
     return CSSPoint::FromAppUnits(mFinalDestination);

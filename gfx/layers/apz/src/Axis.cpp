@@ -381,9 +381,9 @@ bool Axis::FlingApplyFrictionOrCancel(const TimeDuration& aDelta,
     // actually see any changes.
     mVelocity = 0.0f;
     return false;
-  } else {
-    mVelocity *= pow(1.0f - aFriction, float(aDelta.ToMilliseconds()));
   }
+
+  mVelocity *= pow(1.0f - aFriction, float(aDelta.ToMilliseconds()));
   AXIS_LOG("%p|%s reduced velocity to %f due to friction\n",
     mAsyncPanZoomController, Name(), mVelocity);
   return true;
