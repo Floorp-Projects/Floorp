@@ -520,8 +520,6 @@ class TokenStreamAnyChars
   private:
     PropertyName* reservedWordToPropertyName(TokenKind tt) const;
 
-    void undoGetChar();
-
   public:
     PropertyName* currentName() const {
         if (isCurrentTokenType(TokenKind::Name))
@@ -748,6 +746,8 @@ class TokenStreamAnyChars
 
   private:
     MOZ_MUST_USE MOZ_ALWAYS_INLINE bool internalUpdateLineInfoForEOL(uint32_t lineStartOffset);
+
+    void undoInternalUpdateLineInfoForEOL();
 
   public:
     const Token& nextToken() const {
