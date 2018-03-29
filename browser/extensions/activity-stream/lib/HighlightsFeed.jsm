@@ -213,11 +213,11 @@ this.HighlightsFeed = class HighlightsFeed {
         this.init();
         break;
       case at.SYSTEM_TICK:
+      case at.TOP_SITES_UPDATED:
         this.fetchHighlights({broadcast: false});
         break;
       case at.MIGRATION_COMPLETED:
       case at.PLACES_HISTORY_CLEARED:
-      case at.PLACES_LINKS_DELETED:
       case at.PLACES_LINK_BLOCKED:
         this.fetchHighlights({broadcast: true});
         break;
@@ -227,13 +227,9 @@ this.HighlightsFeed = class HighlightsFeed {
       case at.ARCHIVE_FROM_POCKET:
         this.archiveFromPocket(action.data.pocket_id);
         break;
-      case at.PLACES_BOOKMARK_ADDED:
-      case at.PLACES_BOOKMARK_REMOVED:
+      case at.PLACES_LINKS_CHANGED:
       case at.PLACES_SAVED_TO_POCKET:
         this.linksCache.expire();
-        this.fetchHighlights({broadcast: false});
-        break;
-      case at.TOP_SITES_UPDATED:
         this.fetchHighlights({broadcast: false});
         break;
       case at.UNINIT:

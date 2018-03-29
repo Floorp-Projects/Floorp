@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} renk;{num} renk;{num} renk;{num} a renkoù;{num} renk",
   "prefs_search_header": "Klask web",
   "prefs_topsites_description": "Al lec'hiennoù a weladennit ar muiañ",
-  "prefs_topstories_description": "Danvez eus an dibab a c'hallfec'h c'hwitout a-hend-all",
+  "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "Istorioù kevelet {provider}",
   "prefs_topstories_sponsored_learn_more": "Gouzout hiroc'h",
   "prefs_highlights_description": "Un dibab a lec'hiennoù ho peus enrollet pe gweladennet",
@@ -89,5 +89,6 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Ouzhpennañ ul lec'hienn gwellañ din",
   "section_menu_action_move_up": "Dilec'hiañ etrezek ar c'hrec'h",
   "section_menu_action_move_down": "Dilec'hiañ etrezek an traoñ",
-  "section_menu_action_privacy_notice": "Evezhiadennoù a-fet buhez prevez"
+  "section_menu_action_privacy_notice": "Evezhiadennoù a-fet buhez prevez",
+  "prefs_topstories_description": "Danvez eus an dibab a c'hallfec'h c'hwitout a-hend-all"
 };

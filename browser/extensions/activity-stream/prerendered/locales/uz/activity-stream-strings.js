@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} qator;{num} qator",
   "prefs_search_header": "Internetdan qidirish",
   "prefs_topsites_description": "Tez-tez tashrif buyuradigan saytlaringiz",
-  "prefs_topstories_description": "O‘tkazib yubormasligingiz uchun qiziqarli maqolalar",
+  "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "{provider} tomonidan homiylik maqolalari",
   "prefs_topstories_sponsored_learn_more": "Batafsil",
   "prefs_highlights_description": "Saqlangan yoki tashrif buyurgan saralangan saytlaringiz",
@@ -89,5 +89,6 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Add Top Site",
   "section_menu_action_move_up": "Move Up",
   "section_menu_action_move_down": "Move Down",
-  "section_menu_action_privacy_notice": "Privacy Notice"
+  "section_menu_action_privacy_notice": "Privacy Notice",
+  "prefs_topstories_description": "O‘tkazib yubormasligingiz uchun qiziqarli maqolalar"
 };

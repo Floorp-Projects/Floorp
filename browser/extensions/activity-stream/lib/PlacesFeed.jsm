@@ -14,6 +14,7 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
 const LINK_BLOCKED_EVENT = "newtab-linkBlocked";
+const PLACES_LINKS_CHANGED_DELAY_TIME = 1000; // time in ms to delay timer for places links changed events
 
 /**
  * Observer - a wrapper around history/bookmark observers to add the QueryInterface.
@@ -39,24 +40,12 @@ class HistoryObserver extends Observer {
    * @param  {obj} uri        A URI object representing the link's url
    *         {str} uri.spec   The URI as a string
    */
-  async onDeleteURI(uri) {
-    // Add to an existing array of links if we haven't dispatched yet
-    const {spec} = uri;
-    if (this._deletedLinks) {
-      this._deletedLinks.push(spec);
-    } else {
-      // Store an array of synchronously deleted links
-      this._deletedLinks = [spec];
-
-      // Only dispatch a single action when we've gotten all deleted urls
-      await Promise.resolve().then(() => {
-        this.dispatch({
-          type: at.PLACES_LINKS_DELETED,
-          data: this._deletedLinks
-        });
-        delete this._deletedLinks;
-      });
-    }
+  onDeleteURI(uri) {
+    this.dispatch({type: at.PLACES_LINKS_CHANGED});
+    this.dispatch({
+      type: at.PLACES_LINK_DELETED,
+      data: {url: uri.spec}
+    });
   }
 
   /**
@@ -120,6 +109,8 @@ class BookmarksObserver extends Observer {
         (uri.scheme !== "http" && uri.scheme !== "https")) {
       return;
     }
+
+    this.dispatch({type: at.PLACES_LINKS_CHANGED});
     this.dispatch({
       type: at.PLACES_BOOKMARK_ADDED,
       data: {
@@ -148,6 +139,7 @@ class BookmarksObserver extends Observer {
         source !== PlacesUtils.bookmarks.SOURCES.RESTORE &&
         source !== PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP &&
         source !== PlacesUtils.bookmarks.SOURCES.SYNC) {
+      this.dispatch({type: at.PLACES_LINKS_CHANGED});
       this.dispatch({
         type: at.PLACES_BOOKMARK_REMOVED,
         data: {url: uri.spec, bookmarkGuid: guid}
@@ -171,8 +163,10 @@ class BookmarksObserver extends Observer {
 
 class PlacesFeed {
   constructor() {
-    this.historyObserver = new HistoryObserver(action => this.store.dispatch(ac.BroadcastToContent(action)));
-    this.bookmarksObserver = new BookmarksObserver(action => this.store.dispatch(ac.BroadcastToContent(action)));
+    this.placesChangedTimer = null;
+    this.customDispatch = this.customDispatch.bind(this);
+    this.historyObserver = new HistoryObserver(this.customDispatch);
+    this.bookmarksObserver = new BookmarksObserver(this.customDispatch);
   }
 
   addObservers() {
@@ -187,7 +181,40 @@ class PlacesFeed {
     Services.obs.addObserver(this, LINK_BLOCKED_EVENT);
   }
 
+  /**
+   * setTimeout - A custom function that creates an nsITimer that can be cancelled
+   *
+   * @param {func} callback       A function to be executed after the timer expires
+   * @param {int}  delay          The time (in ms) the timer should wait before the function is executed
+   */
+  setTimeout(callback, delay) {
+    let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer.initWithCallback(callback, delay, Ci.nsITimer.TYPE_ONE_SHOT);
+    return timer;
+  }
+
+  customDispatch(action) {
+    // If we are changing many links at once, delay this action and only dispatch
+    // one action at the end
+    if (action.type === at.PLACES_LINKS_CHANGED) {
+      if (this.placesChangedTimer) {
+        this.placesChangedTimer.delay = PLACES_LINKS_CHANGED_DELAY_TIME;
+      } else {
+        this.placesChangedTimer = this.setTimeout(() => {
+          this.placesChangedTimer = null;
+          this.store.dispatch(ac.OnlyToMain(action));
+        }, PLACES_LINKS_CHANGED_DELAY_TIME);
+      }
+    } else {
+      this.store.dispatch(ac.BroadcastToContent(action));
+    }
+  }
+
   removeObservers() {
+    if (this.placesChangedTimer) {
+      this.placesChangedTimer.cancel();
+      this.placesChangedTimer = null;
+    }
     PlacesUtils.history.removeObserver(this.historyObserver);
     PlacesUtils.bookmarks.removeObserver(this.bookmarksObserver);
     Services.obs.removeObserver(this, LINK_BLOCKED_EVENT);

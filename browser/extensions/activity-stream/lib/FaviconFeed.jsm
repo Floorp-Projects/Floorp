@@ -15,11 +15,108 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
+ChromeUtils.defineModuleGetter(this, "NewTabUtils",
+  "resource://gre/modules/NewTabUtils.jsm");
 
 const FIVE_MINUTES = 5 * 60 * 1000;
 const ONE_DAY = 24 * 60 * 60 * 1000;
 const TIPPYTOP_UPDATE_TIME = ONE_DAY;
 const TIPPYTOP_RETRY_DELAY = FIVE_MINUTES;
+const MIN_FAVICON_SIZE = 96;
+
+/**
+ * Get favicon info (uri and size) for a uri from Places.
+ *
+ * @param uri {nsIURI} Page to check for favicon data
+ * @returns A promise of an object (possibly null) containing the data
+ */
+function getFaviconInfo(uri) {
+  // Use 0 to get the biggest width available
+  const preferredWidth = 0;
+  return new Promise(resolve => PlacesUtils.favicons.getFaviconDataForPage(
+    uri,
+    // Package up the icon data in an object if we have it; otherwise null
+    (iconUri, faviconLength, favicon, mimeType, faviconSize) =>
+      resolve(iconUri ? {iconUri, faviconSize} : null),
+    preferredWidth));
+}
+
+/**
+ * Fetches visit paths for a given URL from its most recent visit in Places.
+ *
+ * Note that this includes the URL itself as well as all the following
+ * permenent&temporary redirected URLs if any.
+ *
+ * @param {String} a URL string
+ *
+ * @returns {Array} Returns an array containing objects as
+ *   {int}    visit_id: ID of the visit in moz_historyvisits.
+ *   {String} url: URL of the redirected URL.
+ */
+async function fetchVisitPaths(url) {
+  const query = `
+    WITH RECURSIVE path(visit_id)
+    AS (
+      SELECT v.id
+      FROM moz_places h
+      JOIN moz_historyvisits v
+        ON v.place_id = h.id
+      WHERE h.url_hash = hash(:url) AND h.url = :url
+        AND v.visit_date = h.last_visit_date
+
+      UNION
+
+      SELECT id
+      FROM moz_historyvisits
+      JOIN path
+        ON visit_id = from_visit
+      WHERE visit_type IN
+        (${PlacesUtils.history.TRANSITIONS.REDIRECT_PERMANENT},
+         ${PlacesUtils.history.TRANSITIONS.REDIRECT_TEMPORARY})
+    )
+    SELECT visit_id, (
+      SELECT (
+        SELECT url
+        FROM moz_places
+        WHERE id = place_id)
+      FROM moz_historyvisits
+      WHERE id = visit_id) AS url
+    FROM path
+  `;
+
+  const visits = await NewTabUtils.activityStreamProvider.executePlacesQuery(query, {
+    columns: ["visit_id", "url"],
+    params: {url}
+  });
+  return visits;
+}
+
+/**
+ * Fetch favicon for a url by following its redirects in Places.
+ *
+ * This can improve the rich icon coverage for Top Sites since Places only
+ * associates the favicon to the final url if the original one gets redirected.
+ * Note this is not an urgent request, hence it is dispatched to the main
+ * thread idle handler to avoid any possible performance impact.
+ */
+async function fetchIconFromRedirects(url) {
+  const visitPaths = await fetchVisitPaths(url);
+  if (visitPaths.length > 1) {
+    const lastVisit = visitPaths.pop();
+    const redirectedUri = Services.io.newURI(lastVisit.url);
+    const iconInfo = await getFaviconInfo(redirectedUri);
+    if (iconInfo && iconInfo.faviconSize >= MIN_FAVICON_SIZE) {
+      PlacesUtils.favicons.setAndFetchFaviconForPage(
+        Services.io.newURI(url),
+        iconInfo.iconUri,
+        false,
+        PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+        null,
+        Services.scriptSecurityManager.getSystemPrincipal()
+      );
+    }
+  }
+}
 
 this.FaviconFeed = class FaviconFeed {
   constructor() {
@@ -27,6 +124,7 @@ this.FaviconFeed = class FaviconFeed {
     this.cache = new PersistentCache("tippytop", true);
     this._sitesByDomain = null;
     this.numRetries = 0;
+    this._queryForRedirects = new Set();
   }
 
   get endpoint() {
@@ -113,6 +211,12 @@ this.FaviconFeed = class FaviconFeed {
     }));
   }
 
+  /**
+  * fetchIcon attempts to fetch a rich icon for the given url from two sources.
+  * First, it looks up the tippy top feed, if it's still missing, then it queries
+  * the places for rich icon with its most recent visit in order to deal with
+  * the redirected visit. See Bug 1421428 for more details.
+  */
   async fetchIcon(url) {
     // Avoid initializing and fetching icons if prefs are turned off
     if (!this.shouldFetchIcons) {
@@ -133,6 +237,12 @@ this.FaviconFeed = class FaviconFeed {
         null,
         Services.scriptSecurityManager.getSystemPrincipal()
       );
+      return;
+    }
+
+    if (!this._queryForRedirects.has(url)) {
+      this._queryForRedirects.add(url);
+      Services.tm.idleDispatchToMainThread(() => fetchIconFromRedirects(url));
     }
   }
 
@@ -158,4 +268,4 @@ this.FaviconFeed = class FaviconFeed {
   }
 };
 
-const EXPORTED_SYMBOLS = ["FaviconFeed"];
+const EXPORTED_SYMBOLS = ["FaviconFeed", "fetchIconFromRedirects"];

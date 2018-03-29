@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} vico;{num} vicoj",
   "prefs_search_header": "Serĉo en la reto",
   "prefs_topsites_description": "Viaj plej vizititaj retejoj",
-  "prefs_topstories_description": "Altkvalita enhavo, kiun aliokaze vi povus maltrafi",
+  "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "Patronitaj artikoloj de {provider}",
   "prefs_topstories_sponsored_learn_more": "Pli da informo",
   "prefs_highlights_description": "Retejoj elektitaj inter tiuj, kiun vi vizitis aŭ konservis",
@@ -89,5 +89,6 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Aldoni oftan retejon",
   "section_menu_action_move_up": "Movi supren",
   "section_menu_action_move_down": "Movi malsupren",
-  "section_menu_action_privacy_notice": "Rimarko pri privateco"
+  "section_menu_action_privacy_notice": "Rimarko pri privateco",
+  "prefs_topstories_description": "Altkvalita enhavo, kiun aliokaze vi povus maltrafi"
 };

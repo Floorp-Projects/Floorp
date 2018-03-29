@@ -1,42 +1,55 @@
 ChromeUtils.defineModuleGetter(this, "IndexedDB", "resource://gre/modules/IndexedDB.jsm");
 
 this.ActivityStreamStorage = class ActivityStreamStorage {
+  /**
+   * @param storeName String with the store name to access or array of strings
+   *                  to create all the required stores
+   */
   constructor(storeName) {
     this.dbName = "ActivityStream";
-    this.dbVersion = 2;
+    this.dbVersion = 3;
     this.storeName = storeName;
-
-    this._db = null;
   }
 
   get db() {
-    if (!this._db) {
-      throw new Error("It looks like the db connection has not initialized yet. Are you use .init was called?");
-    }
-    return this._db;
+    return this._db || (this._db = this._openDatabase());
   }
 
-  getStore() {
-    return this.db.objectStore(this.storeName, "readwrite");
+  async getStore() {
+    return (await this.db).objectStore(this.storeName, "readwrite");
   }
 
-  get(key) {
-    return this.getStore().get(key);
+  async get(key) {
+    return (await this.getStore()).get(key);
   }
 
-  set(key, value) {
-    return this.getStore().put(value, key);
+  async getAll() {
+    return (await this.getStore()).getAll();
+  }
+
+  async set(key, value) {
+    return (await this.getStore()).put(value, key);
   }
 
   _openDatabase() {
     return IndexedDB.open(this.dbName, {version: this.dbVersion}, db => {
-      db.createObjectStore(this.storeName);
+      // If provided with array of objectStore names we need to create all the
+      // individual stores
+      if (Array.isArray(this.storeName)) {
+        this.storeName.forEach(store => {
+          if (!db.objectStoreNames.contains(store)) {
+            db.createObjectStore(store);
+          }
+        });
+      } else if (!db.objectStoreNames.contains(this.storeName)) {
+        db.createObjectStore(this.storeName);
+      }
     });
-  }
-
-  async init() {
-    this._db = await this._openDatabase();
   }
 };
 
-const EXPORTED_SYMBOLS = ["ActivityStreamStorage"];
+function getDefaultOptions(options) {
+  return {collapsed: !!options.collapsed};
+}
+
+const EXPORTED_SYMBOLS = ["ActivityStreamStorage", "getDefaultOptions"];

@@ -29,13 +29,13 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories": "Cele mai interesante articole de pe web, alese pe baza lucrurilor pe care le citești. De la Pocket, acum parte din Mozilla.",
   "section_disclaimer_topstories_linktext": "Află cum funcționează.",
   "section_disclaimer_topstories_buttontext": "Ok, am înțeles",
-  "prefs_home_header": "Conținut pagină de start Firefox",
-  "prefs_home_description": "Alege conținutul pe care-l vrei pe pagina de start Firefox.",
-  "prefs_restore_defaults_button": "Restabilește setările implicite",
+  "prefs_home_header": "Conținutul paginii de start Firefox",
+  "prefs_home_description": "Alege ce conținut vrei pe ecranul de start Firefox.",
+  "prefs_restore_defaults_button": "Restaurează valorile implicite",
   "prefs_section_rows_option": "{num} rând;{num} rânduri;{num} de rânduri",
   "prefs_search_header": "Căutare web",
-  "prefs_topsites_description": "Site-urile pe care le vizitezi mai des",
-  "prefs_topstories_description": "Conținut de calitate pe care l-ai putea rata",
+  "prefs_topsites_description": "Site-urile pe care le vizitezi cel mai des",
+  "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "Conținut sponsorizat de {provider}",
   "prefs_topstories_sponsored_learn_more": "Află mai multe",
   "prefs_highlights_description": "O selecție a site-urilor pe care le-ai salvat sau vizitat",
@@ -89,5 +89,6 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Adaugă site de top",
   "section_menu_action_move_up": "Mută în sus",
   "section_menu_action_move_down": "Mută în jos",
-  "section_menu_action_privacy_notice": "Politica de confidențialitate"
+  "section_menu_action_privacy_notice": "Politica de confidențialitate",
+  "prefs_topstories_description": "Conținut de calitate pe care l-ai putea rata"
 };

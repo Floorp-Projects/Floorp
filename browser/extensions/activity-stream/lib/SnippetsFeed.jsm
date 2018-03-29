@@ -169,14 +169,13 @@ this.SnippetsFeed = class SnippetsFeed {
   }
 
   async init() {
-    await this._storage.init();
+    Services.obs.addObserver(this, SEARCH_ENGINE_OBSERVER_TOPIC);
     this._previousSessionEnd = await this._storage.get("previousSessionEnd");
     await this._refresh();
     Services.prefs.addObserver(ONBOARDING_FINISHED_PREF, this._refresh);
     Services.prefs.addObserver(SNIPPETS_URL_PREF, this._refresh);
     Services.prefs.addObserver(TELEMETRY_PREF, this._refresh);
     Services.prefs.addObserver(FXA_USERNAME_PREF, this._refresh);
-    Services.obs.addObserver(this, SEARCH_ENGINE_OBSERVER_TOPIC);
   }
 
   uninit() {

@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} rida;{num} rida",
   "prefs_search_header": "Veebiotsing",
   "prefs_topsites_description": "Enim külastatud saidid",
-  "prefs_topstories_description": "Kõrge kvaliteediga sisu, mida sa ei pruugi ise märgata",
+  "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "Sponsitud lood ({provider})",
   "prefs_topstories_sponsored_learn_more": "Rohkem teavet",
   "prefs_highlights_description": "Valik saitidest, mille oled salvestanud või mida oled külastanud",
@@ -89,5 +89,6 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Lisa top sait",
   "section_menu_action_move_up": "Liiguta üles",
   "section_menu_action_move_down": "Liiguta alla",
-  "section_menu_action_privacy_notice": "Privaatsuspoliitika"
+  "section_menu_action_privacy_notice": "Privaatsuspoliitika",
+  "prefs_topstories_description": "Kõrge kvaliteediga sisu, mida sa ei pruugi ise märgata"
 };

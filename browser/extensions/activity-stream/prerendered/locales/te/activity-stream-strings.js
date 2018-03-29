@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} వరుస;{num} వరుసలు",
   "prefs_search_header": "జాల వెతుకులాట",
   "prefs_topsites_description": "మీరు తరచూ చూసే సైట్లు",
-  "prefs_topstories_description": "మీరు తప్పక చూడాల్సిన నాణ్యమైన విషయాలు",
+  "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "{provider} అందించే కథనాలు",
   "prefs_topstories_sponsored_learn_more": "ఇంకా తెలుసుకోండి",
   "prefs_highlights_description": "మీరు భద్రపరచిన లేదా సందర్శించిన సైట్ల నుండి ఎంపికచేసినవి",
@@ -89,5 +89,6 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "మేటి సైటును చేర్చు",
   "section_menu_action_move_up": "పైకి జరుపు",
   "section_menu_action_move_down": "కిందకి జరుపు",
-  "section_menu_action_privacy_notice": "అంతరంగికత గమనిక"
+  "section_menu_action_privacy_notice": "అంతరంగికత గమనిక",
+  "prefs_topstories_description": "మీరు తప్పక చూడాల్సిన నాణ్యమైన విషయాలు"
 };
