@@ -11,15 +11,15 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 817834";
 
-add_task(function* () {
-  yield loadTab(TEST_URI);
+add_task(async function () {
+  await loadTab(TEST_URI);
 
-  let hud = yield openConsole();
+  let hud = await openConsole();
 
-  testEditedInputHistory(hud);
+  await testEditedInputHistory(hud);
 });
 
-function testEditedInputHistory(HUD) {
+async function testEditedInputHistory(HUD) {
   let jsterm = HUD.jsterm;
   let inputNode = jsterm.inputNode;
   ok(!jsterm.getInputValue(), "jsterm.getInputValue() is empty");
@@ -32,7 +32,7 @@ function testEditedInputHistory(HUD) {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   is(jsterm.getInputValue(), '"first item"', "null test history down");
 
-  jsterm.execute();
+  await jsterm.execute();
   is(jsterm.getInputValue(), "", "cleared input line after submit");
 
   jsterm.setInputValue('"editing input 1"');
@@ -43,7 +43,7 @@ function testEditedInputHistory(HUD) {
     "test history down restores in-progress input");
 
   jsterm.setInputValue('"second item"');
-  jsterm.execute();
+  await jsterm.execute();
   jsterm.setInputValue('"editing input 2"');
   EventUtils.synthesizeKey("KEY_ArrowUp");
   is(jsterm.getInputValue(), '"second item"', "test history up");

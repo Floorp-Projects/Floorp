@@ -15,13 +15,13 @@ add_task(function* () {
 
   let hud = yield openConsole();
 
-  setup(hud);
+  yield setup(hud);
   performTests();
 
   jsterm = inputNode = values = null;
 });
 
-function setup(HUD) {
+function* setup(HUD) {
   jsterm = HUD.jsterm;
   inputNode = jsterm.inputNode;
 
@@ -35,7 +35,7 @@ function setup(HUD) {
   // Execute each of the values;
   for (let i = 0; i < values.length; i++) {
     jsterm.setInputValue(values[i]);
-    jsterm.execute();
+    yield jsterm.execute();
   }
 }
 

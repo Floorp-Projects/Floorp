@@ -20,7 +20,7 @@ add_task(async function() {
     ok(false, "popup shown");
   };
 
-  jsterm.execute(`window.foobarBug660806 = {
+  await jsterm.execute(`window.foobarBug660806 = {
     'location': 'value0',
     'locationbar': 'value1'
   }`);
@@ -35,6 +35,9 @@ add_task(async function() {
      "lastInputValue is correct");
 
   EventUtils.synthesizeKey("KEY_Enter");
+
+  // Wait for the execution to complete and clear the value.
+  await waitFor(() => !jsterm.lastInputValue);
 
   let onSetInputValue = jsterm.once("set-input-value");
   EventUtils.synthesizeKey("KEY_ArrowUp");
