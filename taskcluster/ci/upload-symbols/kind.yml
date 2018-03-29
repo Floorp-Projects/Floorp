@@ -22,9 +22,7 @@ only-for-build-platforms:
     - android-aarch64-nightly/opt
     - android-api-16/opt
     - android-api-16-nightly/opt
-    - android-api-16-old-id-nightly/opt
     - android-x86-nightly/opt
-    - android-x86-old-id-nightly/opt
     - macosx64-nightly/opt
     - macosx64-devedition-nightly/opt
     - win32-nightly/opt
