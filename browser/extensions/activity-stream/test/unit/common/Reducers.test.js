@@ -1,5 +1,5 @@
 import {INITIAL_STATE, insertPinned, reducers} from "common/Reducers.jsm";
-const {TopSites, App, Snippets, Prefs, Dialog, Sections} = reducers;
+const {TopSites, App, Snippets, Prefs, Dialog, Sections, Theme} = reducers;
 import {actionTypes as at} from "common/Actions.jsm";
 
 describe("Reducers", () => {
@@ -28,12 +28,22 @@ describe("Reducers", () => {
     });
     it("should add top sites on TOP_SITES_UPDATED", () => {
       const newRows = [{url: "foo.com"}, {url: "bar.com"}];
-      const nextState = TopSites(undefined, {type: at.TOP_SITES_UPDATED, data: newRows});
+      const nextState = TopSites(undefined, {type: at.TOP_SITES_UPDATED, data: {links: newRows}});
       assert.equal(nextState.rows, newRows);
     });
     it("should not update state for empty action.data on TOP_SITES_UPDATED", () => {
       const nextState = TopSites(undefined, {type: at.TOP_SITES_UPDATED});
       assert.equal(nextState, INITIAL_STATE.TopSites);
+    });
+    it("should initialize prefs on TOP_SITES_UPDATED", () => {
+      const nextState = TopSites(undefined, {type: at.TOP_SITES_UPDATED, data: {links: [], pref: "foo"}});
+
+      assert.equal(nextState.pref, "foo");
+    });
+    it("should pass prevState.prefs if not present in TOP_SITES_UPDATED", () => {
+      const nextState = TopSites({prefs: "foo"}, {type: at.TOP_SITES_UPDATED, data: {links: []}});
+
+      assert.equal(nextState.prefs, "foo");
     });
     it("should set editForm.site to action.data on TOP_SITES_EDIT", () => {
       const data = {index: 7};
@@ -148,6 +158,21 @@ describe("Reducers", () => {
     it("should not update state for empty action.data on PLACES_BOOKMARK_REMOVED", () => {
       const nextState = TopSites(undefined, {type: at.PLACES_BOOKMARK_REMOVED});
       assert.equal(nextState, INITIAL_STATE.TopSites);
+    });
+    it("should update prefs on TOP_SITES_PREFS_UPDATED", () => {
+      const state = TopSites({}, {type: at.TOP_SITES_PREFS_UPDATED, data: {pref: "foo"}});
+
+      assert.equal(state.pref, "foo");
+    });
+    it("should not update state for empty action.data on PLACES_LINK_DELETED", () => {
+      const nextState = TopSites(undefined, {type: at.PLACES_LINK_DELETED});
+      assert.equal(nextState, INITIAL_STATE.TopSites);
+    });
+    it("should remove the site on PLACES_LINK_DELETED", () => {
+      const oldState = {rows: [{url: "foo.com"}, {url: "bar.com"}]};
+      const deleteAction = {type: at.PLACES_LINK_DELETED, data: {url: "foo.com"}};
+      const nextState = TopSites(oldState, deleteAction);
+      assert.deepEqual(nextState.rows, [{url: "bar.com"}]);
     });
   });
   describe("Prefs", () => {
@@ -359,21 +384,16 @@ describe("Reducers", () => {
     });
     it("should remove blocked and deleted urls from all rows in all sections", () => {
       const blockAction = {type: at.PLACES_LINK_BLOCKED, data: {url: "www.foo.bar"}};
-      const deleteAction = {type: at.PLACES_LINKS_DELETED, data: ["www.foo.bar"]};
+      const deleteAction = {type: at.PLACES_LINK_DELETED, data: {url: "www.foo.bar"}};
       const newBlockState = Sections(oldState, blockAction);
       const newDeleteState = Sections(oldState, deleteAction);
       newBlockState.concat(newDeleteState).forEach(section => {
         assert.deepEqual(section.rows, [{url: "www.other.url"}]);
       });
     });
-    it("should remove all deleted urls", () => {
-      const deleteAction = {type: at.PLACES_LINKS_DELETED, data: ["www.foo.bar", "www.other.url"]};
-
-      const newState = Sections(oldState, deleteAction);
-
-      newState.forEach(section => {
-        assert.lengthOf(section.rows, 0);
-      });
+    it("should not update state for empty action.data on PLACES_LINK_DELETED", () => {
+      const nextState = Sections(undefined, {type: at.PLACES_LINK_DELETED});
+      assert.equal(nextState, INITIAL_STATE.Sections);
     });
     it("should remove all removed pocket urls", () => {
       const removeAction = {type: at.DELETE_FROM_POCKET, data: {pocket_id: 123}};
@@ -569,6 +589,16 @@ describe("Reducers", () => {
     it("should clear the blocklist on SNIPPETS_BLOCKLIST_CLEARED", () => {
       const state = Snippets({blockList: [1, 2]}, {type: at.SNIPPETS_BLOCKLIST_CLEARED});
       assert.deepEqual(state.blockList, []);
+    });
+  });
+  describe("Theme", () => {
+    it("should return INITIAL_STATE by default", () => {
+      assert.equal(Theme(undefined, {type: "some_action"}), INITIAL_STATE.Theme);
+    });
+    it("should update Theme data on THEME_UPDATE", () => {
+      const action = {type: at.THEME_UPDATE, data: {className: "new-theme"}};
+      const nextState = Theme(INITIAL_STATE.Theme, action);
+      assert.equal(nextState.className, action.data.className);
     });
   });
 });

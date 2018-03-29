@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} fila{num} filas",
   "prefs_search_header": "Búsqueda web",
   "prefs_topsites_description": "Los sitios que más visita",
-  "prefs_topstories_description": "Contenido de alta calidad que de otra forma se perdería",
+  "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "{provider} Historias patrocinadas",
   "prefs_topstories_sponsored_learn_more": "Más información",
   "prefs_highlights_description": "Una selección de sitios que ha guardado o visitado",
@@ -114,6 +114,7 @@ window.gActivityStreamStrings = {
   "time_label_minute": "{number}m",
   "time_label_hour": "{number}h",
   "time_label_day": "{number}d",
+  "prefs_topstories_description": "Contenido de alta calidad que de otra forma se perdería",
   "settings_pane_bookmarks_header": "Marcadores recientes",
   "settings_pane_bookmarks_body": "Tus marcadores recién creados, fácilmente accesibles.",
   "settings_pane_visit_again_header": "Visitar de nuevo",
@@ -126,6 +127,5 @@ window.gActivityStreamStrings = {
   "edit_topsites_unpin_button": "Eliminar este sitio fijo",
   "edit_topsites_dismiss_button": "Olvidar este sitio",
   "edit_topsites_add_button": "Agregar",
-  "pocket_feedback_header": "Lo mejor de la web, confirmado por más de 25 millones de personas.",
-  "edit_topsites_add_button_tooltip": "Agregar sitio popular"
+  "pocket_feedback_header": "Lo mejor de la web, confirmado por más de 25 millones de personas."
 };

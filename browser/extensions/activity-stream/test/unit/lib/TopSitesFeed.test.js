@@ -3,6 +3,7 @@
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
 import {FakePrefs, GlobalOverrider} from "test/unit/utils";
 import {insertPinned, TOP_SITES_DEFAULT_ROWS, TOP_SITES_MAX_SITES_PER_ROW} from "common/Reducers.jsm";
+import {getDefaultOptions} from "lib/ActivityStreamStorage.jsm";
 import injector from "inject!lib/TopSitesFeed.jsm";
 import {Screenshots} from "lib/Screenshots.jsm";
 
@@ -80,9 +81,15 @@ describe("Top Sites Feed", () => {
       "lib/FilterAdult.jsm": {filterAdult: filterAdultStub},
       "lib/Screenshots.jsm": {Screenshots: fakeScreenshot},
       "lib/TippyTopProvider.jsm": {TippyTopProvider: FakeTippyTopProvider},
-      "lib/ShortURL.jsm": {shortURL: shortURLStub}
+      "lib/ShortURL.jsm": {shortURL: shortURLStub},
+      "lib/ActivityStreamStorage.jsm": {ActivityStreamStorage: function Fake() {}, getDefaultOptions}
     }));
     feed = new TopSitesFeed();
+    feed._storage = {
+      init: sandbox.stub().returns(Promise.resolve()),
+      get: sandbox.stub().returns(Promise.resolve()),
+      set: sandbox.stub().returns(Promise.resolve())
+    };
     feed.store = {
       dispatch: sinon.spy(),
       getState() { return this.state; },
@@ -291,6 +298,38 @@ describe("Top Sites Feed", () => {
         const internal = Object.keys(result[0]).filter(key => key.startsWith("__"));
         assert.equal(internal.join(""), "");
       });
+      it("should copy the screenshot of the frecent site if pinned site doesn't have customScreenshotURL", async () => {
+        links = [{url: "https://foo.com/", screenshot: "screenshot"}];
+        fakeNewTabUtils.pinnedLinks.links = [{url: "https://foo.com/"}];
+
+        const result = await feed.getLinksWithDefaults();
+
+        assert.equal(result[0].screenshot, links[0].screenshot);
+      });
+      it("should not copy the frecent screenshot if customScreenshotURL is set", async () => {
+        links = [{url: "https://foo.com/", screenshot: "screenshot"}];
+        fakeNewTabUtils.pinnedLinks.links = [{url: "https://foo.com/", customScreenshotURL: "custom"}];
+
+        const result = await feed.getLinksWithDefaults();
+
+        assert.isUndefined(result[0].screenshot);
+      });
+      it("should keep the same screenshot if no frecent site is found", async () => {
+        links = [];
+        fakeNewTabUtils.pinnedLinks.links = [{url: "https://foo.com/", screenshot: "custom"}];
+
+        const result = await feed.getLinksWithDefaults();
+
+        assert.equal(result[0].screenshot, "custom");
+      });
+      it("should not overwrite pinned site screenshot", async () => {
+        links = [{url: "https://foo.com/", screenshot: "foo"}];
+        fakeNewTabUtils.pinnedLinks.links = [{url: "https://foo.com/", screenshot: "bar"}];
+
+        const result = await feed.getLinksWithDefaults();
+
+        assert.equal(result[0].screenshot, "bar");
+      });
       describe("concurrency", () => {
         let resolvers;
         beforeEach(() => {
@@ -419,7 +458,7 @@ describe("Top Sites Feed", () => {
       assert.calledOnce(feed.store.dispatch);
       assert.calledWithExactly(feed.store.dispatch, ac.BroadcastToContent({
         type: at.TOP_SITES_UPDATED,
-        data: []
+        data: {links: [], pref: {collapsed: false}}
       }));
     });
     it("should dispatch an action with the links returned", async () => {
@@ -428,7 +467,7 @@ describe("Top Sites Feed", () => {
 
       assert.calledOnce(feed.store.dispatch);
       assert.propertyVal(feed.store.dispatch.firstCall.args[0], "type", at.TOP_SITES_UPDATED);
-      assert.deepEqual(feed.store.dispatch.firstCall.args[0].data, reference);
+      assert.deepEqual(feed.store.dispatch.firstCall.args[0].data.links, reference);
     });
     it("should handle empty slots in the resulting top sites array", async () => {
       links = [FAKE_LINKS[0]];
@@ -443,7 +482,32 @@ describe("Top Sites Feed", () => {
       assert.calledOnce(feed.store.dispatch);
       assert.calledWithExactly(feed.store.dispatch, ac.AlsoToPreloaded({
         type: at.TOP_SITES_UPDATED,
-        data: []
+        data: {links: [], pref: {collapsed: false}}
+      }));
+    });
+    it("should not init storage if it is already initialized", async () => {
+      feed._storage.initialized = true;
+
+      await feed.refresh({broadcast: false});
+
+      assert.notCalled(feed._storage.init);
+    });
+  });
+  describe("#updateSectionPrefs", () => {
+    it("should call updateSectionPrefs on UPDATE_SECTION_PREFS", () => {
+      sandbox.stub(feed, "updateSectionPrefs");
+
+      feed.onAction({type: at.UPDATE_SECTION_PREFS, data: {id: "topsites"}});
+
+      assert.calledOnce(feed.updateSectionPrefs);
+    });
+    it("should dispatch TOP_SITES_PREFS_UPDATED", async () => {
+      await feed.updateSectionPrefs({collapsed: true});
+
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWithExactly(feed.store.dispatch, ac.BroadcastToContent({
+        type: at.TOP_SITES_PREFS_UPDATED,
+        data: {pref: {collapsed: true}}
       }));
     });
   });
@@ -656,11 +720,11 @@ describe("Top Sites Feed", () => {
       assert.calledOnce(feed.refresh);
       assert.calledWithExactly(feed.refresh, {broadcast: true});
     });
-    it("should call refresh on PLACES_LINKS_DELETED action", async () => {
+    it("should call refresh on PLACES_LINKS_CHANGED action", async () => {
       sinon.stub(feed, "refresh");
-      await feed.onAction({type: at.PLACES_LINKS_DELETED});
+      await feed.onAction({type: at.PLACES_LINKS_CHANGED});
       assert.calledOnce(feed.refresh);
-      assert.calledWithExactly(feed.refresh, {broadcast: true});
+      assert.calledWithExactly(feed.refresh, {broadcast: false});
     });
     it("should call pin with correct args on TOP_SITES_INSERT without an index specified", () => {
       const addAction = {
@@ -930,8 +994,8 @@ describe("Top Sites Feed", () => {
       await forDispatch({type: at.PLACES_LINK_BLOCKED});
 
       assert.calledTwice(feed.store.dispatch);
-      assert.equal(feed.store.dispatch.firstCall.args[0].data[0].url, url);
-      assert.equal(feed.store.dispatch.secondCall.args[0].data[0].url, FAKE_LINKS[0].url);
+      assert.equal(feed.store.dispatch.firstCall.args[0].data.links[0].url, url);
+      assert.equal(feed.store.dispatch.secondCall.args[0].data.links[0].url, FAKE_LINKS[0].url);
     });
   });
 });

@@ -35,7 +35,7 @@ window.gActivityStreamStrings = {
   "prefs_section_rows_option": "{num} σειρά;{num} σειρές",
   "prefs_search_header": "Αναζήτηση ιστού",
   "prefs_topsites_description": "Οι ιστοσελίδες που επισκέπτεστε περισσότερο",
-  "prefs_topstories_description": "Υψηλής ποιότητας περιεχόμενο που ίσως έχετε χάσει",
+  "prefs_topstories_description2": "Great content from around the web, personalized for you",
   "prefs_topstories_show_sponsored_label": "Χορηγούμενες ιστορίες του {provider}",
   "prefs_topstories_sponsored_learn_more": "Μάθετε περισσότερα",
   "prefs_highlights_description": "Μια συλλογή ιστοσελίδων που έχετε αποθηκεύσει ή επισκεφθεί",
@@ -89,5 +89,6 @@ window.gActivityStreamStrings = {
   "section_menu_action_add_topsite": "Προσθήκη κορυφαίας ιστοσελίδας",
   "section_menu_action_move_up": "Μετακίνηση επάνω",
   "section_menu_action_move_down": "Μετακίνηση κάτω",
-  "section_menu_action_privacy_notice": "Σημείωση απορρήτου"
+  "section_menu_action_privacy_notice": "Σημείωση απορρήτου",
+  "prefs_topstories_description": "Υψηλής ποιότητας περιεχόμενο που ίσως έχετε χάσει"
 };
