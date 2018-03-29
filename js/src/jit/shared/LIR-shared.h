@@ -5556,6 +5556,32 @@ class LBinarySharedStub : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIEC
     static const size_t RhsInput = BOX_PIECES;
 };
 
+class LBinaryCache : public LInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 2>
+{
+  public:
+    LIR_HEADER(BinaryCache)
+
+    // Takes two temps: these are intendend to be FloatReg0 and FloatReg1
+    // To allow the actual cache code to safely clobber those values without
+    // save and restore.
+    LBinaryCache(const LBoxAllocation& lhs, const LBoxAllocation& rhs,
+                 const LDefinition& temp0, const LDefinition& temp1)
+      : LInstructionHelper(classOpcode)
+    {
+        setBoxOperand(LhsInput, lhs);
+        setBoxOperand(RhsInput, rhs);
+        setTemp(0, temp0);
+        setTemp(1, temp1);
+    }
+
+    const MBinaryCache* mir() const {
+        return mir_->toBinaryCache();
+    }
+
+    static const size_t LhsInput = 0;
+    static const size_t RhsInput = BOX_PIECES;
+};
+
 class LUnaryCache : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0>
 {
   public:

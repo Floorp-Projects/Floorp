@@ -688,6 +688,14 @@ LIRGeneratorShared::tempFixed(Register reg)
 }
 
 LDefinition
+LIRGeneratorShared::tempFixed(FloatRegister reg)
+{
+    LDefinition t = temp(LDefinition::DOUBLE);
+    t.setOutput(LFloatReg(reg));
+    return t;
+}
+
+LDefinition
 LIRGeneratorShared::tempFloat32()
 {
     return temp(LDefinition::FLOAT32);

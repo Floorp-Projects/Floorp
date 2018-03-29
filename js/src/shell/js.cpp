@@ -8569,6 +8569,8 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
             jit::JitOptions.disableCacheIR = false;
         else if (strcmp(str, "off") == 0)
             jit::JitOptions.disableCacheIR = true;
+        else if (strcmp(str, "nobinary") == 0)
+            jit::JitOptions.disableCacheIRBinaryArith = true;
         else
             return OptionFailure("cache-ir-stubs", str);
     }
@@ -9123,8 +9125,9 @@ main(int argc, char** argv, char** envp)
 #endif
         || !op.addStringOption('\0', "spectre-mitigations", "on/off",
                                "Whether Spectre mitigations are enabled (default: off, on to enable)")
-        || !op.addStringOption('\0', "cache-ir-stubs", "on/off",
-                               "Use CacheIR stubs (default: on, off to disable)")
+        || !op.addStringOption('\0', "cache-ir-stubs", "on/off/nobinary",
+                               "Use CacheIR stubs (default: on, off to disable, nobinary to"
+                               "just disable binary arith)")
         || !op.addStringOption('\0', "ion-shared-stubs", "on/off",
                                "Use shared stubs (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-scalar-replacement", "on/off",
