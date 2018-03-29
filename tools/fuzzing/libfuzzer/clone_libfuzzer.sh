@@ -1,8 +1,8 @@
 #!/bin/sh
 
 mkdir tmp/
-git clone --no-checkout --depth 1 https://chromium.googlesource.com/chromium/llvm-project/llvm/lib/Fuzzer tmp/
-(cd tmp && git reset --hard f74d9f33e526fff0e8d17f08bb0e5982a821f70e)
+git clone --no-checkout --depth 1 https://chromium.googlesource.com/chromium/llvm-project/compiler-rt/lib/fuzzer tmp/
+(cd tmp && git reset --hard 2c1f00d30409ff8662e62a6480718726dad77586)
 
 # Copy only source code and includes
 cp tmp/*.cpp tmp/*.h tmp/*.def .
