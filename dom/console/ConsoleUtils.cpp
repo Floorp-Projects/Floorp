@@ -150,7 +150,7 @@ ConsoleUtils::GetOrCreateSandbox(JSContext* aCx)
     nsIXPConnect* xpc = nsContentUtils::XPConnect();
     MOZ_ASSERT(xpc, "This should never be null!");
 
-    RefPtr<NullPrincipal> nullPrincipal = NullPrincipal::Create();
+    RefPtr<NullPrincipal> nullPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
 
     JS::Rooted<JSObject*> sandbox(aCx);
     nsresult rv = xpc->CreateSandbox(aCx, nullPrincipal, sandbox.address());

@@ -6,7 +6,7 @@ const ID = "webextension1@tests.mozilla.org";
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
-profileDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+profileDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 startupManager();

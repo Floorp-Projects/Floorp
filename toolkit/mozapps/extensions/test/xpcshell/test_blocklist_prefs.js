@@ -7,14 +7,11 @@
 
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
-ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
-var testserver = new HttpServer();
-testserver.start(-1);
+var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 gPort = testserver.identity.primaryPort;
 
-// register static files with server and interpolate port numbers in them
-mapFile("/data/test_blocklist_prefs_1.xml", testserver);
+testserver.registerDirectory("/data/", do_get_file("data"));
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
@@ -65,7 +62,7 @@ function load_blocklist(aFile, aCallback) {
 }
 
 function end_test() {
-  testserver.stop(do_test_finished);
+  do_test_finished();
 }
 
 function run_test() {

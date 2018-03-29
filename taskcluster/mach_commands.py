@@ -174,14 +174,14 @@ class MachCommands(MachCommandBase):
     @SubCommand('taskgraph', 'cron',
                 description="Run the cron task")
     @CommandArgument('--base-repository',
-                     required=True,
-                     help='URL for "base" repository to clone')
+                     required=False,
+                     help='(ignored)')
     @CommandArgument('--head-repository',
                      required=True,
                      help='URL for "head" repository to fetch')
     @CommandArgument('--head-ref',
-                     required=True,
-                     help='Reference to fetch in head-repository (usually "default")')
+                     required=False,
+                     help='(ignored)')
     @CommandArgument('--project',
                      required=True,
                      help='Project to use for creating tasks. Example: --project=mozilla-central')
@@ -196,6 +196,9 @@ class MachCommands(MachCommandBase):
                      required=False,
                      action='store_true',
                      help='Do not actually create tasks')
+    @CommandArgument('--root', '-r',
+                     required=False,
+                     help="root of the repository to get cron task definitions from")
     def taskgraph_cron(self, **options):
         """Run the cron task; this task creates zero or more decision tasks.  It is run
         from the hooks service on a regular basis."""

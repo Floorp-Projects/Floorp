@@ -6,23 +6,16 @@
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
-ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
-var gTestserver = new HttpServer();
-gTestserver.start(-1);
-gPort = gTestserver.identity.primaryPort;
+var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 
 const {promiseObserved} = ExtensionUtils;
 
-// register static files with server and interpolate port numbers in them
-mapFile("/data/bug455906_warn.xml", gTestserver);
-mapFile("/data/bug455906_start.xml", gTestserver);
-mapFile("/data/bug455906_block.xml", gTestserver);
-mapFile("/data/bug455906_empty.xml", gTestserver);
+gTestserver.registerDirectory("/data/", do_get_file("data"));
 
 // Workaround for Bug 658720 - URL formatter can leak during xpcshell tests
 const PREF_BLOCKLIST_ITEM_URL = "extensions.blocklist.itemURL";
-Services.prefs.setCharPref(PREF_BLOCKLIST_ITEM_URL, "http://localhost:" + gPort + "/blocklist/%blockID%");
+Services.prefs.setCharPref(PREF_BLOCKLIST_ITEM_URL, "http://example.com/blocklist/%blockID%");
 
 var ADDONS = [{
   // Tests how the blocklist affects a disabled add-on
@@ -195,7 +188,7 @@ function create_addon(addon) {
 }
 
 function load_blocklist(file) {
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" + gPort + "/data/" + file);
+  Services.prefs.setCharPref("extensions.blocklist.url", "http://example.com/data/" + file);
   var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
                   getService(Ci.nsITimerCallback);
   blocklist.notify(null);
@@ -508,5 +501,5 @@ function check_test_pt4() {
 }
 
 function finish() {
-  gTestserver.stop(do_test_finished);
+  do_test_finished();
 }

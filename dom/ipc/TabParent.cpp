@@ -563,7 +563,7 @@ TabParent::RecvDropLinks(nsTArray<nsString>&& aLinks)
     if (loadUsingSystemPrincipal) {
       triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
     } else {
-      triggeringPrincipal = NullPrincipal::Create();
+      triggeringPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
     }
     browser->DropLinks(aLinks.Length(), links.get(), triggeringPrincipal);
   }

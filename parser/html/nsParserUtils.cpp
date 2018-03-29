@@ -70,7 +70,7 @@ nsParserUtils::Sanitize(const nsAString& aFromStr,
 {
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), "about:blank");
-  nsCOMPtr<nsIPrincipal> principal = NullPrincipal::Create();
+  nsCOMPtr<nsIPrincipal> principal = NullPrincipal::CreateWithoutOriginAttributes();
   nsCOMPtr<nsIDOMDocument> domDocument;
   nsresult rv = NS_NewDOMDocument(getter_AddRefs(domDocument),
                                   EmptyString(),

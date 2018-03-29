@@ -43,7 +43,7 @@ var addon2 = {
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
-profileDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+profileDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
 
 const sourceDir = gProfD.clone();
 sourceDir.append("source");
@@ -89,7 +89,7 @@ add_task(async function test_new_pointer_install() {
   notEqual(addon, null);
   equal(addon.version, "1.0");
 
-  let file = addon.getResourceURI().QueryInterface(AM_Ci.nsIFileURL).file;
+  let file = addon.getResourceURI().QueryInterface(Ci.nsIFileURL).file;
   equal(file.parent.path, sourceDir.path);
 
   let rootUri = do_get_addon_root_uri(sourceDir, addon1.id);
@@ -151,7 +151,7 @@ add_task(async function test_addon_over_pointer() {
   notEqual(addon, null);
   equal(addon.version, "2.0");
 
-  let file = addon.getResourceURI().QueryInterface(AM_Ci.nsIFileURL).file;
+  let file = addon.getResourceURI().QueryInterface(Ci.nsIFileURL).file;
   equal(file.parent.path, profileDir.path);
 
   let rootUri = do_get_addon_root_uri(profileDir, addon1.id);
@@ -338,7 +338,7 @@ add_task(async function test_new_relative_pointer() {
   let addon = await AddonManager.getAddonByID(addon1.id);
   equal(addon.version, "1.0");
 
-  let file = addon.getResourceURI().QueryInterface(AM_Ci.nsIFileURL).file;
+  let file = addon.getResourceURI().QueryInterface(Ci.nsIFileURL).file;
   equal(file.parent.path, sourceDir.path);
 
   let rootUri = do_get_addon_root_uri(sourceDir, addon1.id);
