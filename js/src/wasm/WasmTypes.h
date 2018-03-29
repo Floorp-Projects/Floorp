@@ -806,11 +806,7 @@ class GlobalDesc
     //
     // We don't want to indirect unless we must, so only mutable, exposed
     // globals are indirected - in all other cases we copy values into and out
-    // of their module.
-    //
-    // Note that isIndirect() isn't equivalent to getting a WasmGlobalObject:
-    // an immutable exported global will still get an object, but will not be
-    // indirect.
+    // of them module.
     bool isIndirect() const { return isMutable() && isWasm() && (isImport() || isExport()); }
 
     ValType type() const {
