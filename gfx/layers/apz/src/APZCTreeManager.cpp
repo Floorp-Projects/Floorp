@@ -21,7 +21,9 @@
 #include "mozilla/gfx/GPUParent.h"      // for GPUParent
 #include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 #include "mozilla/gfx/Point.h"          // for Point
+#include "mozilla/layers/APZSampler.h"  // for APZSampler
 #include "mozilla/layers/APZThreadUtils.h"  // for AssertOnControllerThread, etc
+#include "mozilla/layers/APZUpdater.h"  // for APZUpdater
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
 #include "mozilla/layers/AsyncDragMetrics.h" // for AsyncDragMetrics
 #include "mozilla/layers/CompositorBridgeParent.h" // for CompositorBridgeParent, etc
@@ -140,7 +142,7 @@ public:
   }
 
 protected:
-  virtual ~CheckerboardFlushObserver() {}
+  virtual ~CheckerboardFlushObserver() = default;
 
 private:
   RefPtr<APZCTreeManager> mTreeManager;
@@ -224,6 +226,8 @@ private:
 APZCTreeManager::APZCTreeManager(LayersId aRootLayersId)
     : mInputQueue(new InputQueue()),
       mRootLayersId(aRootLayersId),
+      mSampler(nullptr),
+      mUpdater(nullptr),
       mTreeLock("APZCTreeLock"),
       mHitResultForInputBlock(CompositorHitTestInfo::eInvisibleToHitTest),
       mRetainedTouchIdentifier(-1),
@@ -244,15 +248,29 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId)
 #endif // (MOZ_WIDGET_ANDROID)
 }
 
-APZCTreeManager::~APZCTreeManager()
+APZCTreeManager::~APZCTreeManager() = default;
+
+void
+APZCTreeManager::SetSampler(APZSampler* aSampler)
 {
+  // We're either setting the sampler or clearing it
+  MOZ_ASSERT((mSampler == nullptr) != (aSampler == nullptr));
+  mSampler = aSampler;
+}
+
+void
+APZCTreeManager::SetUpdater(APZUpdater* aUpdater)
+{
+  // We're either setting the updater or clearing it
+  MOZ_ASSERT((mUpdater == nullptr) != (aUpdater == nullptr));
+  mUpdater = aUpdater;
 }
 
 void
 APZCTreeManager::NotifyLayerTreeAdopted(LayersId aLayersId,
                                         const RefPtr<APZCTreeManager>& aOldApzcTreeManager)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnUpdaterThread();
 
   if (aOldApzcTreeManager) {
     aOldApzcTreeManager->mFocusState.RemoveFocusTarget(aLayersId);
@@ -279,7 +297,7 @@ APZCTreeManager::NotifyLayerTreeAdopted(LayersId aLayersId,
 void
 APZCTreeManager::NotifyLayerTreeRemoved(LayersId aLayersId)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnUpdaterThread();
 
   mFocusState.RemoveFocusTarget(aLayersId);
 
@@ -474,7 +492,7 @@ APZCTreeManager::UpdateFocusState(LayersId aRootLayerTreeId,
                                   LayersId aOriginatingLayersId,
                                   const FocusTarget& aFocusTarget)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnUpdaterThread();
 
   if (!gfxPrefs::APZKeyboardEnabled()) {
     return;
@@ -492,7 +510,7 @@ APZCTreeManager::UpdateHitTestingTree(LayersId aRootLayerTreeId,
                                       LayersId aOriginatingLayersId,
                                       uint32_t aPaintSequenceNumber)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnUpdaterThread();
 
   LayerMetricsWrapper root(aRoot);
   UpdateHitTestingTreeImpl(aRootLayerTreeId, root, aIsFirstPaint,
@@ -506,7 +524,7 @@ APZCTreeManager::UpdateHitTestingTree(LayersId aRootLayerTreeId,
                                       LayersId aOriginatingLayersId,
                                       uint32_t aPaintSequenceNumber)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnUpdaterThread();
 
   WebRenderScrollDataWrapper wrapper(&aScrollData);
   UpdateHitTestingTreeImpl(aRootLayerTreeId, wrapper, aIsFirstPaint,
@@ -518,7 +536,7 @@ APZCTreeManager::PushStateToWR(wr::TransactionBuilder& aTxn,
                                const TimeStamp& aSampleTime,
                                nsTArray<wr::WrTransformProperty>& aTransformArray)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnSamplerThread();
 
   RecursiveMutexAutoLock lock(mTreeLock);
 
@@ -843,7 +861,8 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
         (!parentHasPerspective && aLayer.GetClipRect())
           ? Some(ParentLayerIntRegion(*aLayer.GetClipRect()))
           : Nothing(),
-        GetEventRegionsOverride(aParent, aLayer));
+        GetEventRegionsOverride(aParent, aLayer),
+        aLayer.IsBackfaceHidden());
     node->SetScrollbarData(aLayer.GetScrollbarTargetContainerId(),
                            aLayer.GetScrollbarAnimationId(),
                            aLayer.GetScrollThumbData(),
@@ -958,7 +977,8 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
         aLayer.GetVisibleRegion(),
         aLayer.GetTransformTyped(),
         clipRegion,
-        GetEventRegionsOverride(aParent, aLayer));
+        GetEventRegionsOverride(aParent, aLayer),
+        aLayer.IsBackfaceHidden());
     apzc->SetAncestorTransform(aAncestorTransform);
 
     PrintAPZCInfo(aLayer, apzc);
@@ -1057,7 +1077,8 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
         aLayer.GetVisibleRegion(),
         aLayer.GetTransformTyped(),
         clipRegion,
-        GetEventRegionsOverride(aParent, aLayer));
+        GetEventRegionsOverride(aParent, aLayer),
+        aLayer.IsBackfaceHidden());
   }
 
   // Note: if layer properties must be propagated to nodes, RecvUpdate in
@@ -1902,7 +1923,7 @@ APZCTreeManager::ZoomToRect(const ScrollableLayerGuid& aGuid,
                             const CSSRect& aRect,
                             const uint32_t aFlags)
 {
-  // We could probably move this to run on the sampler thread if needed, but
+  // We could probably move this to run on the updater thread if needed, but
   // either way we should restrict it to a single thread. For now let's use the
   // controller thread.
   APZThreadUtils::AssertOnControllerThread();
@@ -1951,13 +1972,13 @@ void
 APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
                                        const Maybe<ZoomConstraints>& aConstraints)
 {
-  if (!APZThreadUtils::IsSamplerThread()) {
+  if (!GetUpdater()->IsUpdaterThread()) {
     // This can happen if we're in the UI process and got a call directly from
     // nsBaseWidget (as opposed to over PAPZCTreeManager). We want this function
-    // to run on the sampler thread, so bounce it over.
+    // to run on the updater thread, so bounce it over.
     MOZ_ASSERT(XRE_IsParentProcess());
 
-    APZThreadUtils::RunOnSamplerThread(
+    GetUpdater()->RunOnUpdaterThread(
         NewRunnableMethod<ScrollableLayerGuid, Maybe<ZoomConstraints>>(
             "APZCTreeManager::UpdateZoomConstraints",
             this,
@@ -1967,7 +1988,7 @@ APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
     return;
   }
 
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnUpdaterThread();
 
   RecursiveMutexAutoLock lock(mTreeLock);
   RefPtr<HitTestingTreeNode> node = GetTargetNode(aGuid, nullptr);
@@ -2062,7 +2083,7 @@ APZCTreeManager::AdjustScrollForSurfaceShift(const ScreenPoint& aShift)
 void
 APZCTreeManager::ClearTree()
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnUpdaterThread();
 
 #if defined(MOZ_WIDGET_ANDROID)
   mToolbarAnimator->ClearTreeManager();
@@ -2525,9 +2546,8 @@ APZCTreeManager::BuildOverscrollHandoffChain(const RefPtr<AsyncPanZoomController
 void
 APZCTreeManager::SetLongTapEnabled(bool aLongTapEnabled)
 {
-  APZThreadUtils::RunOnControllerThread(
-    NewRunnableFunction("SetLongTapEnabledRunnable",
-                        GestureEventListener::SetLongTapEnabled, aLongTapEnabled));
+  APZThreadUtils::AssertOnControllerThread();
+  GestureEventListener::SetLongTapEnabled(aLongTapEnabled);
 }
 
 RefPtr<HitTestingTreeNode>
@@ -3018,7 +3038,7 @@ bool
 APZCTreeManager::GetAPZTestData(LayersId aLayersId,
                                 APZTestData* aOutData)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  AssertOnUpdaterThread();
   MutexAutoLock lock(mTestDataLock);
   auto it = mTestData.find(aLayersId);
   if (it == mTestData.end()) {
@@ -3168,7 +3188,7 @@ APZCTreeManager::ComputeTransformForScrollThumb(
     AsyncTransformComponentMatrix overscroll =
         aApzc->GetOverscrollTransform(AsyncPanZoomController::eForCompositing);
     Matrix4x4 asyncUntransform = (asyncTransform * overscroll).Inverse().ToUnknownMatrix();
-    Matrix4x4 contentTransform = aScrollableContentTransform;
+    const Matrix4x4& contentTransform = aScrollableContentTransform;
     Matrix4x4 contentUntransform = contentTransform.Inverse();
 
     AsyncTransformComponentMatrix asyncCompensation =
@@ -3188,6 +3208,36 @@ APZCTreeManager::ComputeTransformForScrollThumb(
   transform = transform * compensation;
 
   return transform;
+}
+
+APZSampler*
+APZCTreeManager::GetSampler() const
+{
+  // We should always have a sampler here, since in practice the sampler
+  // is destroyed at the same time that this APZCTreeMAnager instance is.
+  MOZ_ASSERT(mSampler);
+  return mSampler;
+}
+
+void
+APZCTreeManager::AssertOnSamplerThread()
+{
+  GetSampler()->AssertOnSamplerThread();
+}
+
+APZUpdater*
+APZCTreeManager::GetUpdater() const
+{
+  // We should always have an updater here, since in practice the updater
+  // is destroyed at the same time that this APZCTreeManager instance is.
+  MOZ_ASSERT(mUpdater);
+  return mUpdater;
+}
+
+void
+APZCTreeManager::AssertOnUpdaterThread()
+{
+  GetUpdater()->AssertOnUpdaterThread();
 }
 
 void

@@ -45,6 +45,8 @@ namespace layers {
 class Layer;
 class AsyncPanZoomController;
 class APZCTreeManagerParent;
+class APZSampler;
+class APZUpdater;
 class CompositorBridgeParent;
 class OverscrollHandoffChain;
 struct OverscrollHandoffState;
@@ -80,7 +82,7 @@ struct ScrollThumbData;
  * This class manages the tree of AsyncPanZoomController instances. There is one
  * instance of this class owned by each CompositorBridgeParent, and it contains as
  * many AsyncPanZoomController instances as there are scrollable container layers.
- * This class generally lives on the sampler thread, although some functions
+ * This class generally lives on the updater thread, although some functions
  * may be called from other threads as noted; thread safety is ensured internally.
  *
  * The bulk of the work of this class happens as part of the UpdateHitTestingTree
@@ -116,13 +118,16 @@ class APZCTreeManager : public IAPZCTreeManager
 public:
   explicit APZCTreeManager(LayersId aRootLayersId);
 
+  void SetSampler(APZSampler* aSampler);
+  void SetUpdater(APZUpdater* aUpdater);
+
   /**
    * Notifies this APZCTreeManager that the associated compositor is now
    * responsible for managing another layers id, which got moved over from
    * some other compositor. That other compositor's APZCTreeManager is also
    * provided. This allows APZCTreeManager to transfer any necessary state
    * from the old APZCTreeManager related to that layers id.
-   * This function must be called on the sampler thread.
+   * This function must be called on the updater thread.
    */
   void NotifyLayerTreeAdopted(LayersId aLayersId,
                               const RefPtr<APZCTreeManager>& aOldTreeManager);
@@ -132,14 +137,14 @@ public:
    * associated compositor has been removed/destroyed. Note that this does
    * NOT get called during shutdown situations, when the root layer tree is
    * also getting destroyed.
-   * This function must be called on the sampler thread.
+   * This function must be called on the updater thread.
    */
   void NotifyLayerTreeRemoved(LayersId aLayersId);
 
   /**
    * Rebuild the focus state based on the focus target from the layer tree update
    * that just occurred.
-   * This must be called on the sampler thread.
+   * This must be called on the updater thread.
    *
    * @param aRootLayerTreeId The layer tree ID of the root layer corresponding
    *                         to this APZCTreeManager
@@ -155,7 +160,7 @@ public:
    * Preserve nodes and APZC instances where possible, but retire those whose
    * layers are no longer in the layer tree.
    *
-   * This must be called on the sampler thread as it walks the layer tree.
+   * This must be called on the updater thread as it walks the layer tree.
    *
    * @param aRootLayerTreeId The layer tree ID of the root layer corresponding
    *                         to this APZCTreeManager
@@ -333,7 +338,7 @@ public:
    * lifetime of this APZCTreeManager, when this APZCTreeManager is no longer
    * needed. Failing to call this function may prevent objects from being freed
    * properly.
-   * This must be called on the sampler thread.
+   * This must be called on the updater thread.
    */
   void ClearTree();
 
@@ -523,9 +528,17 @@ public:
       bool aScrollbarIsDescendant,
       AsyncTransformComponentMatrix* aOutClipTransform);
 
+  // Assert that the current thread is the sampler thread for this APZCTM.
+  void AssertOnSamplerThread();
+  // Assert that the current thread is the updater thread for this APZCTM.
+  void AssertOnUpdaterThread();
+
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~APZCTreeManager();
+
+  APZSampler* GetSampler() const;
+  APZUpdater* GetUpdater() const;
 
   // Protected hooks for gtests subclass
   virtual AsyncPanZoomController* NewAPZCInstance(LayersId aLayersId,
@@ -691,6 +704,19 @@ private:
   /* Layers id for the root CompositorBridgeParent that owns this APZCTreeManager. */
   LayersId mRootLayersId;
 
+  /* Pointer to the APZSampler instance that is bound to this APZCTreeManager.
+   * The sampler has a RefPtr to this class, and this non-owning raw pointer
+   * back to the APZSampler is nulled out in the sampler's destructor, so this
+   * pointer should always be valid.
+   */
+  APZSampler* MOZ_NON_OWNING_REF mSampler;
+  /* Pointer to the APZUpdater instance that is bound to this APZCTreeManager.
+   * The updater has a RefPtr to this class, and this non-owning raw pointer
+   * back to the APZUpdater is nulled out in the updater's destructor, so this
+   * pointer should always be valid.
+   */
+  APZUpdater* MOZ_NON_OWNING_REF mUpdater;
+
   /* Whenever walking or mutating the tree rooted at mRootNode, mTreeLock must be held.
    * This lock does not need to be held while manipulating a single APZC instance in
    * isolation (that is, if its tree pointers are not being accessed or mutated). The
@@ -701,7 +727,7 @@ private:
   RefPtr<HitTestingTreeNode> mRootNode;
 
   /* Holds the zoom constraints for scrollable layers, as determined by the
-   * the main-thread gecko code. This can only be accessed on the sampler
+   * the main-thread gecko code. This can only be accessed on the updater
    * thread. */
   std::unordered_map<ScrollableLayerGuid, ZoomConstraints, ScrollableLayerGuidHash> mZoomConstraints;
   /* A list of keyboard shortcuts to use for translating keyboard inputs into

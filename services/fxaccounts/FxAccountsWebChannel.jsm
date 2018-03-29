@@ -427,7 +427,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
     // versions to supported field names doesn't buy us much.
     // So we just remove field names we know aren't handled.
     let newCredentials = {
-      deviceId: null
+      device: null // Force a brand new device registration.
     };
     for (let name of Object.keys(credentials)) {
       if (name == "email" || name == "uid" || FxAccountsStorageManagerCanStoreField(name)) {

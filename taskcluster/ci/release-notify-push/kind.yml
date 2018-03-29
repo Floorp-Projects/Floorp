@@ -28,35 +28,19 @@ job-defaults:
          - -c
          - echo "Dummy task"
    notifications:
-      completed:
-         subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has been pushed to releases"
-         message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has been pushed to releases"
-         plugins: ["ses"]
-         emails:
-            by-project:
-               mozilla-beta: ["release-signoff@mozilla.org"]
-               mozilla-release: ["release-signoff@mozilla.org"]
-               try: ["{task_def[metadata][owner]}"]
-               maple: ["release+tcstaging@mozilla.com"]
-               default: []
-   routes:
-      - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.email-{channel}
-      - index.releases.v1.{branch}.latest.{product}.latest.email-{channel}
-   index:
-      type: release
-      channel:
+      subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has been pushed to cdntest"
+      message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has been pushed to cdntest"
+      emails:
          by-project:
-            mozilla-beta: beta-cdns
-            mozilla-release: release-cdns
-            maple: maple-cdns
-            default: unknown
+            mozilla-beta: ["release-signoff@mozilla.org"]
+            mozilla-release: ["release-signoff@mozilla.org"]
+            try: ["{task_def[metadata][owner]}"]
+            maple: ["release+tcstaging@mozilla.com"]
+            birch: ["release+tcstaging@mozilla.com"]
+            default: []
 
 jobs:
    firefox:
       shipping-product: firefox
-      index:
-         product: firefox
    devedition:
       shipping-product: devedition
-      index:
-         product: devedition

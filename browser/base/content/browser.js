@@ -1203,11 +1203,12 @@ var gBrowserInit = {
       }
     }
 
-    new LightweightThemeConsumer(document);
-    CompactTheme.init();
-
+    // Update the chromemargin attribute so the window can be sized correctly.
+    window.TabBarVisibility.update();
     TabsInTitlebar.init();
 
+    new LightweightThemeConsumer(document);
+    CompactTheme.init();
     if (window.matchMedia("(-moz-os-version: windows-win8)").matches &&
         window.matchMedia("(-moz-windows-default-theme)").matches) {
       let windowFrameColor = new Color(...ChromeUtils.import("resource:///modules/Windows8WindowFrameColor.jsm", {})
@@ -1267,8 +1268,6 @@ var gBrowserInit = {
       remoteType, sameProcessAsFrameLoader
     });
 
-    gUIDensity.init();
-
     // Hack to ensure that the about:home favicon is loaded
     // instantaneously, to avoid flickering and improve perceived performance.
     this._callWithURIToLoad(uriToLoad => {
@@ -1281,8 +1280,9 @@ var gBrowserInit = {
 
     this._setInitialFocus();
 
-    window.TabBarVisibility.update();
-    TabsInTitlebar.onDOMContentLoaded();
+    // Update the UI density before TabsInTitlebar lays out the titlbar.
+    gUIDensity.init();
+    TabsInTitlebar.whenWindowLayoutReady();
   },
 
   onLoad() {
@@ -1346,6 +1346,7 @@ var gBrowserInit = {
     TabletModeUpdater.init();
     CombinedStopReload.ensureInitialized();
     gPrivateBrowsingUI.init();
+    BrowserSearch.init();
     BrowserPageActions.init();
     gAccessibilityServiceIndicator.init();
 
@@ -1875,6 +1876,8 @@ var gBrowserInit = {
     gAccessibilityServiceIndicator.uninit();
 
     LanguagePrompt.uninit();
+
+    BrowserSearch.uninit();
 
     // Now either cancel delayedStartup, or clean up the services initialized from
     // it.
@@ -3747,6 +3750,83 @@ const DOMEventHandler = {
 };
 
 const BrowserSearch = {
+  init() {
+    Services.obs.addObserver(this, "browser-search-engine-modified");
+  },
+
+  uninit() {
+    Services.obs.removeObserver(this, "browser-search-engine-modified");
+  },
+
+  observe(engine, topic, data) {
+    // There are two kinds of search engine objects, nsISearchEngine objects and
+    // plain { uri, title, icon } objects.  `engine` in this method is the
+    // former.  The browser.engines and browser.hiddenEngines arrays are the
+    // latter, and they're the engines offered by the the page in the browser.
+    //
+    // The two types of engines are currently related by their titles/names,
+    // although that may change; see bug 335102.
+    let engineName = engine.wrappedJSObject.name;
+    switch (data) {
+    case "engine-removed":
+      // An engine was removed from the search service.  If a page is offering
+      // the engine, then the engine needs to be added back to the corresponding
+      // browser's offered engines.
+      this._addMaybeOfferedEngine(engineName);
+      break;
+    case "engine-added":
+      // An engine was added to the search service.  If a page is offering the
+      // engine, then the engine needs to be removed from the corresponding
+      // browser's offered engines.
+      this._removeMaybeOfferedEngine(engineName);
+      break;
+    }
+  },
+
+  _addMaybeOfferedEngine(engineName) {
+    let selectedBrowserOffersEngine = false;
+    for (let browser of gBrowser.browsers) {
+      for (let i = 0; i < (browser.hiddenEngines || []).length; i++) {
+        if (browser.hiddenEngines[i].title == engineName) {
+          if (!browser.engines) {
+            browser.engines = [];
+          }
+          browser.engines.push(browser.hiddenEngines[i]);
+          browser.hiddenEngines.splice(i, 1);
+          if (browser == gBrowser.selectedBrowser) {
+            selectedBrowserOffersEngine = true;
+          }
+          break;
+        }
+      }
+    }
+    if (selectedBrowserOffersEngine) {
+      this.updateOpenSearchBadge();
+    }
+  },
+
+  _removeMaybeOfferedEngine(engineName) {
+    let selectedBrowserOffersEngine = false;
+    for (let browser of gBrowser.browsers) {
+      for (let i = 0; i < (browser.engines || []).length; i++) {
+        if (browser.engines[i].title == engineName) {
+          if (!browser.hiddenEngines) {
+            browser.hiddenEngines = [];
+          }
+          browser.hiddenEngines.push(browser.engines[i]);
+          browser.engines.splice(i, 1);
+          if (browser == gBrowser.selectedBrowser) {
+            selectedBrowserOffersEngine = true;
+          }
+          break;
+        }
+      }
+    }
+    if (selectedBrowserOffersEngine) {
+      this.updateOpenSearchBadge();
+    }
+  },
+
   addEngine(browser, engine, uri) {
     // Check to see whether we've already added an engine with this title
     if (browser.engines) {
@@ -3784,6 +3864,8 @@ const BrowserSearch = {
    * has search engines.
    */
   updateOpenSearchBadge() {
+    BrowserPageActions.addSearchEngine.updateEngines();
+
     var searchBar = this.searchBar;
     if (!searchBar)
       return;

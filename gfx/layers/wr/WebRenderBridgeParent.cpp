@@ -16,6 +16,7 @@
 #include "mozilla/Range.h"
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/APZSampler.h"
+#include "mozilla/layers/APZUpdater.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -516,7 +517,7 @@ WebRenderBridgeParent::UpdateAPZ(bool aUpdateHitTestingTree)
   if (!rootWrbp) {
     return;
   }
-  if (RefPtr<APZSampler> apz = cbp->GetAPZSampler()) {
+  if (RefPtr<APZUpdater> apz = cbp->GetAPZUpdater()) {
     apz->UpdateFocusState(rootLayersId, GetLayersId(),
                           mScrollData.GetFocusTarget());
     if (aUpdateHitTestingTree) {
