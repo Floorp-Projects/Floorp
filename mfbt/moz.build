@@ -12,7 +12,6 @@ TEST_DIRS += ['tests']
 Library('mfbt')
 
 EXPORTS.mozilla = [
-    'Algorithm.h',
     'Alignment.h',
     'AllocPolicy.h',
     'AlreadyAddRefed.h',
