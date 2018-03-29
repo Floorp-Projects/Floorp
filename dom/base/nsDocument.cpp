@@ -254,7 +254,6 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
 #ifdef MOZ_XUL
-#include "mozilla/dom/ContainerBoxObject.h"
 #include "mozilla/dom/ListBoxObject.h"
 #include "mozilla/dom/MenuBoxObject.h"
 #include "mozilla/dom/PopupBoxObject.h"
@@ -6494,11 +6493,7 @@ nsIDocument::GetBoxObjectFor(Element* aElement, ErrorResult& aRv)
   RefPtr<nsAtom> tag = BindingManager()->ResolveTag(aElement, &namespaceID);
 #ifdef MOZ_XUL
   if (namespaceID == kNameSpaceID_XUL) {
-    if (tag == nsGkAtoms::browser ||
-        tag == nsGkAtoms::editor ||
-        tag == nsGkAtoms::iframe) {
-      boxObject = new ContainerBoxObject();
-    } else if (tag == nsGkAtoms::menu) {
+    if (tag == nsGkAtoms::menu) {
       boxObject = new MenuBoxObject();
     } else if (tag == nsGkAtoms::popup ||
                tag == nsGkAtoms::menupopup ||
