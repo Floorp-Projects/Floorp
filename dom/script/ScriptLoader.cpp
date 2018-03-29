@@ -1623,6 +1623,7 @@ ScriptLoader::LookupPreloadRequest(nsIScriptElement* aElement,
       mDocument->GetReferrerPolicy() != request->mReferrerPolicy ||
       aScriptKind != request->mKind) {
     // Drop the preload.
+    request->Cancel();
     AccumulateCategorical(LABELS_DOM_SCRIPT_PRELOAD_RESULT::RequestMismatch);
     return nullptr;
   }
