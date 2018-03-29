@@ -430,7 +430,7 @@ add_task(async function test_4() {
   do_check_in_crash_annotation(a2.id, a2.version);
   // Windows currently has timing issues, and sees the add-on as changed
   // after restart.
-  if (AppConstants.OS !== "win") {
+  if (AppConstants.platform !== "win") {
     equal(a2.sourceURI.spec,
           "http://example.com/addons/test_install2_2.xpi");
   }
