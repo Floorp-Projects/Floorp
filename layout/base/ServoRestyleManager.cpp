@@ -848,18 +848,20 @@ ServoRestyleManager::ProcessPostTraversal(
   // Hold the ComputedStyle alive, because it could become a dangling pointer
   // during the replacement. In practice it's not a huge deal, but better not
   // playing with dangling pointers if not needed.
-  RefPtr<ComputedStyle> oldComputedStyle =
+  //
+  // NOTE(emilio): We could keep around the old computed style for display:
+  // contents elements too, but we don't really need it right now.
+  RefPtr<ComputedStyle> oldOrDisplayContentsStyle =
     styleFrame ? styleFrame->Style() : nullptr;
 
-  ComputedStyle* displayContentsStyle = nullptr;
-  // FIXME(emilio, bug 1303605): This can be simpler for Servo.
-  // Note that we intentionally don't check for display: none content.
-  if (!oldComputedStyle) {
-    displayContentsStyle =
-      PresContext()->FrameConstructor()->GetDisplayContentsStyleFor(aElement);
-    if (displayContentsStyle) {
-      oldComputedStyle = displayContentsStyle;
-    }
+  MOZ_ASSERT(!(styleFrame && Servo_Element_IsDisplayContents(aElement)),
+             "display: contents node has a frame, yet we didn't reframe it"
+             " above?");
+  const bool isDisplayContents =
+    !styleFrame && Servo_Element_IsDisplayContents(aElement);
+  if (isDisplayContents) {
+    oldOrDisplayContentsStyle =
+      aRestyleState.StyleSet().ResolveServoStyle(aElement);
   }
 
   Maybe<ServoRestyleState> thisFrameRestyleState;
@@ -879,17 +881,19 @@ ServoRestyleManager::ProcessPostTraversal(
   RefPtr<ComputedStyle> upToDateContext =
     wasRestyled
       ? aRestyleState.StyleSet().ResolveServoStyle(aElement)
-      : oldComputedStyle;
+      : oldOrDisplayContentsStyle;
 
   ServoPostTraversalFlags childrenFlags =
     wasRestyled ? ServoPostTraversalFlags::ParentWasRestyled
                 : ServoPostTraversalFlags::Empty;
 
-  if (wasRestyled && oldComputedStyle) {
-    MOZ_ASSERT(styleFrame || displayContentsStyle);
-    MOZ_ASSERT(oldComputedStyle->ComputedData() != upToDateContext->ComputedData());
+  if (wasRestyled && oldOrDisplayContentsStyle) {
+    MOZ_ASSERT(styleFrame || isDisplayContents);
 
-    upToDateContext->ResolveSameStructsAs(oldComputedStyle);
+    // Note that upToDateContext could be the same as oldOrDisplayContentsStyle,
+    // but it doesn't matter, since the only point of it is calling FinishStyle
+    // on the relevant structs, and those don't matter for display: contents.
+    upToDateContext->ResolveSameStructsAs(oldOrDisplayContentsStyle);
 
     // We want to walk all the continuations here, even the ones with different
     // styles.  In practice, the only reason we get continuations with different
@@ -904,12 +908,6 @@ ServoRestyleManager::ProcessPostTraversal(
     for (nsIFrame* f = styleFrame; f; f = f->GetNextContinuation()) {
       MOZ_ASSERT_IF(f != styleFrame, !f->GetAdditionalComputedStyle(0));
       f->SetComputedStyle(upToDateContext);
-    }
-
-    if (MOZ_UNLIKELY(displayContentsStyle)) {
-      MOZ_ASSERT(!styleFrame);
-      PresContext()->FrameConstructor()->
-        ChangeRegisteredDisplayContentsStyleFor(aElement, upToDateContext);
     }
 
     if (styleFrame) {
@@ -938,9 +936,11 @@ ServoRestyleManager::ProcessPostTraversal(
     AddLayerChangesForAnimation(
       styleFrame, aElement, aRestyleState.ChangeList());
 
-    childrenFlags |= SendA11yNotifications(mPresContext, aElement,
-                                           oldComputedStyle,
-                                           upToDateContext, aFlags);
+    childrenFlags |= SendA11yNotifications(mPresContext,
+                                           aElement,
+                                           oldOrDisplayContentsStyle,
+                                           upToDateContext,
+                                           aFlags);
   }
 
   const bool traverseElementChildren =
@@ -952,7 +952,7 @@ ServoRestyleManager::ProcessPostTraversal(
     StyleChildrenIterator it(aElement);
     TextPostTraversalState textState(*aElement,
                                      upToDateContext,
-                                     displayContentsStyle && wasRestyled,
+                                     isDisplayContents && wasRestyled,
                                      childrenRestyleState);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       if (traverseElementChildren && n->IsElement()) {
@@ -1585,6 +1585,8 @@ ServoRestyleManager::DoReparentComputedStyle(nsIFrame* aFrame,
     }
   }
 
+  // FIXME(emilio): This is the only caller of GetParentComputedStyle, let's try
+  // to remove it?
   nsIFrame* providerFrame;
   ComputedStyle* newParentStyle =
     aFrame->GetParentComputedStyle(&providerFrame);

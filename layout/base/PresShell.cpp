@@ -2977,9 +2977,44 @@ nsIPresShell::SlotAssignmentWillChange(Element& aElement,
   }
 }
 
+#ifdef DEBUG
+static void
+AssertNoFramesInSubtree(nsIContent* aContent)
+{
+  for (nsIContent* c = aContent; c; c = c->GetNextNode(aContent)) {
+    MOZ_ASSERT(!c->GetPrimaryFrame());
+    if (auto* shadowRoot = c->GetShadowRoot()) {
+      AssertNoFramesInSubtree(shadowRoot);
+    }
+    if (auto* binding = c->GetXBLBinding()) {
+      if (auto* bindingWithContent = binding->GetBindingWithContent()) {
+        nsIContent* anonContent = bindingWithContent->GetAnonymousContent();
+        MOZ_ASSERT(!anonContent->GetPrimaryFrame());
+
+        // Need to do this instead of just AssertNoFramesInSubtree(anonContent),
+        // because the parent of the children of the <content> element isn't the
+        // <content> element, but the bound element, and that confuses
+        // GetNextNode a lot.
+        for (nsIContent* child = anonContent->GetFirstChild();
+             child;
+             child = child->GetNextSibling()) {
+          AssertNoFramesInSubtree(child);
+        }
+      }
+    }
+  }
+}
+#endif
+
 void
 nsIPresShell::DestroyFramesForAndRestyle(Element* aElement)
 {
+#ifdef DEBUG
+  auto postCondition = mozilla::MakeScopeExit([&]() {
+    AssertNoFramesInSubtree(aElement);
+  });
+#endif
+
   MOZ_ASSERT(aElement);
   if (MOZ_UNLIKELY(!mDidInitialize)) {
     return;
@@ -4527,8 +4562,6 @@ PresShell::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
       : container->GetFirstChild();
   }
 
-  mPresContext->RestyleManager()->ContentRemoved(container, aChild, oldNextSibling);
-
   // After removing aChild from tree we should save information about live ancestor
   if (mPointerEventTarget &&
       nsContentUtils::ContentIsDescendantOf(mPointerEventTarget, aChild)) {
@@ -4538,6 +4571,12 @@ PresShell::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
   mFrameConstructor->ContentRemoved(
       aChild->GetParent(), aChild, oldNextSibling,
       nsCSSFrameConstructor::REMOVE_CONTENT);
+
+  // NOTE(emilio): It's important that this goes after the frame constructor
+  // stuff, otherwise the frame constructor can't see elements which are
+  // display: contents / display: none, because we'd have cleared all the style
+  // data from there.
+  mPresContext->RestyleManager()->ContentRemoved(container, aChild, oldNextSibling);
 }
 
 void
