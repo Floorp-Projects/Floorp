@@ -16,6 +16,7 @@ StackingContextHelper::StackingContextHelper()
   : mBuilder(nullptr)
   , mScale(1.0f, 1.0f)
   , mAffectsClipPositioning(false)
+  , mIsPreserve3D(false)
 {
   // mOrigin remains at 0,0
 }
@@ -36,12 +37,19 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
   : mBuilder(&aBuilder)
   , mScale(1.0f, 1.0f)
   , mTransformForScrollData(aTransformForScrollData)
+  , mIsPreserve3D(aIsPreserve3D)
 {
-  // Compute scale for fallback rendering.
+  // Compute scale for fallback rendering. We don't try to guess a scale for 3d
+  // transformed items
   gfx::Matrix transform2d;
-  if (aBoundTransform && aBoundTransform->CanDraw2D(&transform2d)) {
+  if (aBoundTransform && aBoundTransform->CanDraw2D(&transform2d)
+      && !aPerspectivePtr
+      && !aParentSC.mIsPreserve3D) {
     mInheritedTransform = transform2d * aParentSC.mInheritedTransform;
     mScale = mInheritedTransform.ScaleFactors(true);
+  } else {
+    mInheritedTransform = aParentSC.mInheritedTransform;
+    mScale = aParentSC.mScale;
   }
 
   mBuilder->PushStackingContext(wr::ToLayoutRect(aBounds),

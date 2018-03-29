@@ -6,9 +6,7 @@
 package org.mozilla.geckoview;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.GeckoEditable;
 import org.mozilla.gecko.GeckoEditableChild;
-import org.mozilla.gecko.GeckoInputConnection;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.NativeQueue;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -24,15 +22,15 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 
 /**
- * TextInputController handles text input for GeckoSession through key events or input
+ * SessionTextInput handles text input for GeckoSession through key events or input
  * methods. It is typically used to implement certain methods in View such as {@code
  * onCreateInputConnection()}, by forwarding such calls to corresponding methods in
- * TextInputController.
+ * SessionTextInput.
  */
-public final class TextInputController {
+public final class SessionTextInput {
 
-    // Interface to access GeckoInputConnection from TextInputController.
-    public interface Delegate {
+    // Interface to access GeckoInputConnection from SessionTextInput.
+    /* package */ interface Delegate {
         View getView();
         Handler getHandler(Handler defHandler);
         InputConnection onCreateInputConnection(EditorInfo attrs);
@@ -45,7 +43,7 @@ public final class TextInputController {
     }
 
     // Interface to access GeckoEditable from GeckoInputConnection.
-    public interface EditableClient {
+    /* package */ interface EditableClient {
         // The following value is used by requestCursorUpdates
         // ONE_SHOT calls updateCompositionRects() after getting current composing
         // character rects.
@@ -66,7 +64,7 @@ public final class TextInputController {
     }
 
     // Interface to access GeckoInputConnection from GeckoEditable.
-    public interface EditableListener {
+    /* package */ interface EditableListener {
         // IME notification type for notifyIME(), corresponding to NotificationToIME enum.
         @WrapForJNI final int NOTIFY_IME_OF_TOKEN = -3;
         @WrapForJNI final int NOTIFY_IME_OPEN_VKB = -2;
@@ -100,8 +98,8 @@ public final class TextInputController {
     private final GeckoEditableChild mEditableChild = new GeckoEditableChild(mEditable);
     private Delegate mInputConnection;
 
-    /* package */ TextInputController(final @NonNull GeckoSession session,
-                                      final @NonNull NativeQueue queue) {
+    /* package */ SessionTextInput(final @NonNull GeckoSession session,
+                                   final @NonNull NativeQueue queue) {
         mSession = session;
         mQueue = queue;
         mEditable.setDefaultEditableChild(mEditableChild);
@@ -129,7 +127,7 @@ public final class TextInputController {
      *     if (Build.VERSION.SDK_INT &gt;= 24) {
      *         return super.getHandler();
      *     }
-     *     return getSession().getTextInputController().getHandler(super.getHandler());
+     *     return getSession().getTextInput().getHandler(super.getHandler());
      * }</pre>
      *
      * @param defHandler Handler returned by the system {@code getHandler} implementation.

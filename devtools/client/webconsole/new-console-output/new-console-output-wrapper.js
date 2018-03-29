@@ -191,7 +191,8 @@ NewConsoleOutputWrapper.prototype = {
             ] = await Promise.all([onGripNodeToFront, onSelectInspector]);
 
             let onInspectorUpdated = inspector.once("inspector-updated");
-            let onNodeFrontSet = this.toolbox.selection.setNodeFront(front, "console");
+            let onNodeFrontSet = this.toolbox.selection
+              .setNodeFront(front, { reason: "console" });
 
             return Promise.all([onNodeFrontSet, onInspectorUpdated]);
           }

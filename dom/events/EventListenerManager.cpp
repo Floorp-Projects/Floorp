@@ -1471,7 +1471,7 @@ EventListenerManager::MutationListenerBits()
 }
 
 bool
-EventListenerManager::HasListenersFor(const nsAString& aEventName)
+EventListenerManager::HasListenersFor(const nsAString& aEventName) const
 {
   if (mIsMainThreadELM) {
     RefPtr<nsAtom> atom = NS_Atomize(NS_LITERAL_STRING("on") + aEventName);
@@ -1480,7 +1480,7 @@ EventListenerManager::HasListenersFor(const nsAString& aEventName)
 
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    Listener* listener = &mListeners.ElementAt(i);
+    const Listener* listener = &mListeners.ElementAt(i);
     if (listener->mTypeString == aEventName) {
       return true;
     }
@@ -1489,7 +1489,7 @@ EventListenerManager::HasListenersFor(const nsAString& aEventName)
 }
 
 bool
-EventListenerManager::HasListenersFor(nsAtom* aEventNameWithOn)
+EventListenerManager::HasListenersFor(nsAtom* aEventNameWithOn) const
 {
 #ifdef DEBUG
   nsAutoString name;
@@ -1499,7 +1499,7 @@ EventListenerManager::HasListenersFor(nsAtom* aEventNameWithOn)
                "Event name does not start with 'on'");
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    Listener* listener = &mListeners.ElementAt(i);
+    const Listener* listener = &mListeners.ElementAt(i);
     if (listener->mTypeAtom == aEventNameWithOn) {
       return true;
     }
@@ -1508,7 +1508,7 @@ EventListenerManager::HasListenersFor(nsAtom* aEventNameWithOn)
 }
 
 bool
-EventListenerManager::HasListeners()
+EventListenerManager::HasListeners() const
 {
   return !mListeners.IsEmpty();
 }

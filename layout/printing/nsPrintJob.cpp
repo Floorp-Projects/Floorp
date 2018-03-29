@@ -119,8 +119,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIChannel.h"
 #include "xpcpublic.h"
 #include "nsVariant.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/ServoStyleSet.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2345,19 +2344,20 @@ nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO)
   rv = aPO->mViewManager->Init(printData->mPrintDC);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  StyleSetHandle styleSet = mDocViewerPrint->CreateStyleSet(aPO->mDocument);
+  UniquePtr<ServoStyleSet> styleSet =
+    mDocViewerPrint->CreateStyleSet(aPO->mDocument);
 
   if (aPO->mDocument->IsSVGDocument()) {
     // The SVG document only loads minimal-xul.css, so it doesn't apply other
     // styles. We should add ua.css for applying style which related to print.
     auto cache = nsLayoutStylesheetCache::Singleton();
-    styleSet->PrependStyleSheet(SheetType::Agent, cache->UASheet());
+    styleSet->PrependStyleSheet(SheetType::Agent, cache->UASheet()->AsServo());
   }
 
   aPO->mPresShell = aPO->mDocument->CreateShell(aPO->mPresContext,
-                                                aPO->mViewManager, styleSet);
+                                                aPO->mViewManager,
+                                                Move(styleSet));
   if (!aPO->mPresShell) {
-    styleSet->Delete();
     return NS_ERROR_FAILURE;
   }
 
@@ -2369,7 +2369,7 @@ nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO)
     DeleteUnselectedNodes(aPO->mDocument->GetOriginalDocument(), aPO->mDocument);
   }
 
-  styleSet->EndUpdate();
+  aPO->mPresShell->StyleSet()->EndUpdate();
 
   // The pres shell now owns the style set object.
 

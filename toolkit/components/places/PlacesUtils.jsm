@@ -96,6 +96,34 @@ async function notifyKeywordChange(url, keyword, source) {
 }
 
 /**
+ * Synchonously fetches all annotations for an item, including all properties of
+ * each annotation which would be required to recreate it.
+ * @note The async version (PlacesUtils.promiseAnnotationsForItem) should be
+ *       used, unless there's absolutely no way to make the caller async.
+ * @param aItemId
+ *        The identifier of the itme for which annotations are to be
+ *        retrieved.
+ * @return Array of objects, each containing the following properties:
+ *         name, flags, expires, mimeType, type, value
+ */
+function getAnnotationsForItem(aItemId) {
+  var annos = [];
+  var annoNames = PlacesUtils.annotations.getItemAnnotationNames(aItemId);
+  for (let name of annoNames) {
+    let value = {}, flags = {}, exp = {}, storageType = {};
+    PlacesUtils.annotations.getItemAnnotationInfo(aItemId, name, value,
+                                                  flags, exp, storageType);
+    annos.push({
+      name,
+      flags: flags.value,
+      expires: exp.value,
+      value: value.value
+    });
+  }
+  return annos;
+}
+
+/**
  * Serializes the given node in JSON format.
  *
  * @param aNode
@@ -107,7 +135,11 @@ function serializeNode(aNode, aIsLivemark) {
   let data = {};
 
   data.title = aNode.title;
+  // The id is no longer used for copying within the same instance/session of
+  // Firefox as of at least 61. However, we keep the id for now to maintain
+  // backwards compat of drag and drop with older Firefox versions.
   data.id = aNode.itemId;
+  data.itemGuid = aNode.bookmarkGuid;
   data.livemark = aIsLivemark;
   // Add an instanceId so we can tell which instance of an FF session the data
   // is coming from.
@@ -120,9 +152,6 @@ function serializeNode(aNode, aIsLivemark) {
   // we ignore any that are a folder shortcut. These will be handled below.
   if (guid && !PlacesUtils.bookmarks.isVirtualRootItem(guid) &&
       !PlacesUtils.isVirtualLeftPaneItem(guid)) {
-    // TODO: Really guid should be set on everything, however currently this upsets
-    // the drag 'n' drop / cut/copy/paste operations.
-    data.itemGuid = guid;
     if (aNode.parent) {
       data.parent = aNode.parent.itemId;
       data.parentGuid = aNode.parent.bookmarkGuid;
@@ -136,7 +165,7 @@ function serializeNode(aNode, aIsLivemark) {
     data.dateAdded = aNode.dateAdded;
     data.lastModified = aNode.lastModified;
 
-    let annos = PlacesUtils.getAnnotationsForItem(data.id);
+    let annos = getAnnotationsForItem(data.id);
     if (annos.length > 0)
       data.annos = annos;
   }
@@ -1177,26 +1206,33 @@ var PlacesUtils = {
   /**
    * Fetch all annotations for an item, including all properties of each
    * annotation which would be required to recreate it.
-   * @param aItemId
+   * @param itemId
    *        The identifier of the itme for which annotations are to be
    *        retrieved.
    * @return Array of objects, each containing the following properties:
    *         name, flags, expires, mimeType, type, value
    */
-  getAnnotationsForItem: function PU_getAnnotationsForItem(aItemId) {
-    var annosvc = this.annotations;
-    var annos = [], val = null;
-    var annoNames = annosvc.getItemAnnotationNames(aItemId);
-    for (var i = 0; i < annoNames.length; i++) {
-      var flags = {}, exp = {}, storageType = {};
-      annosvc.getItemAnnotationInfo(aItemId, annoNames[i], flags, exp, storageType);
-      val = annosvc.getItemAnnotation(aItemId, annoNames[i]);
-      annos.push({name: annoNames[i],
-                  flags: flags.value,
-                  expires: exp.value,
-                  value: val});
+  async promiseAnnotationsForItem(itemId) {
+    let db =  await PlacesUtils.promiseDBConnection();
+    let rows = await db.executeCached(
+      `SELECT n.name, a.content, a.expiration, a.flags
+       FROM moz_items_annos a
+       JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id
+       WHERE a.item_id = :itemId
+      `, { itemId });
+
+    let result = [];
+    for (let row of rows) {
+      let anno = {
+        name: row.getResultByName("name"),
+        value: row.getResultByName("content"),
+        expires: row.getResultByName("expiration"),
+        flags: row.getResultByName("flags"),
+      };
+      result.push(anno);
     }
-    return annos;
+
+    return result;
   },
 
   /**
@@ -1710,7 +1746,7 @@ var PlacesUtils = {
       // Add annotations.
       if (aRow.getResultByName("has_annos")) {
         try {
-          item.annos = PlacesUtils.getAnnotationsForItem(itemId);
+          item.annos = await PlacesUtils.promiseAnnotationsForItem(itemId);
         } catch (ex) {
           Cu.reportError("Unexpected error while reading annotations " + ex);
         }

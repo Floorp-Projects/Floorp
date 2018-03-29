@@ -14,7 +14,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/StyleSetHandle.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h" // For AddScriptBlocker().
@@ -45,6 +45,7 @@ class nsAutoCauseReflowNotifier;
 class AutoPointerEventTargetUpdater;
 
 namespace mozilla {
+class ServoStyleSheet;
 
 namespace dom {
 class Element;
@@ -81,7 +82,8 @@ public:
   static bool AccessibleCaretEnabled(nsIDocShell* aDocShell);
 
   void Init(nsIDocument* aDocument, nsPresContext* aPresContext,
-            nsViewManager* aViewManager, StyleSetHandle aStyleSet);
+            nsViewManager* aViewManager,
+            UniquePtr<ServoStyleSet> aStyleSet);
   void Destroy() override;
 
   void UpdatePreferenceStyles() override;
@@ -158,9 +160,9 @@ public:
   void UnsuppressPainting() override;
 
   nsresult GetAgentStyleSheets(
-      nsTArray<RefPtr<StyleSheet>>& aSheets) override;
+      nsTArray<RefPtr<ServoStyleSheet>>& aSheets) override;
   nsresult SetAgentStyleSheets(
-      const nsTArray<RefPtr<StyleSheet>>& aSheets) override;
+      const nsTArray<RefPtr<ServoStyleSheet>>& aSheets) override;
 
   nsresult AddOverrideStyleSheet(StyleSheet* aSheet) override;
   nsresult RemoveOverrideStyleSheet(StyleSheet* aSheet) override;
@@ -289,9 +291,6 @@ public:
   NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD
   NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED
   NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED
-  NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED
-  NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED
-  NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETAPPLICABLESTATECHANGED
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
@@ -508,13 +507,11 @@ private:
   bool mCaretEnabled;
 
 #ifdef DEBUG
-  ServoStyleSet* CloneStyleSet(ServoStyleSet* aSet);
+  UniquePtr<ServoStyleSet> CloneStyleSet(ServoStyleSet* aSet);
   bool VerifyIncrementalReflow();
   bool mInVerifyReflow;
   void ShowEventTargetDebug();
 #endif
-
-  void RecordStyleSheetChange(StyleSheet* aStyleSheet, StyleSheet::ChangeType);
 
   void RemovePreferenceStyles();
 

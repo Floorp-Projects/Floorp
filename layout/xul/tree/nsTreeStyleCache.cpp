@@ -6,8 +6,7 @@
 
 #include "nsTreeStyleCache.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/ServoStyleSet.h"
 
 using namespace mozilla;
 

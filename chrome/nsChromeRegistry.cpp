@@ -39,6 +39,7 @@ nsChromeRegistry* nsChromeRegistry::gChromeRegistry;
 
 // DO NOT use namespace mozilla; it'll break due to a naming conflict between
 // mozilla::TextRange and a TextRange in OSX headers.
+using mozilla::ServoStyleSheet;
 using mozilla::StyleSheet;
 using mozilla::dom::IsChromeURI;
 using mozilla::dom::Location;
@@ -403,12 +404,12 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow)
   nsCOMPtr<nsIPresShell> shell = document->GetShell();
   if (shell) {
     // Reload only the chrome URL agent style sheets.
-    nsTArray<RefPtr<StyleSheet>> agentSheets;
+    nsTArray<RefPtr<ServoStyleSheet>> agentSheets;
     rv = shell->GetAgentStyleSheets(agentSheets);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsTArray<RefPtr<StyleSheet>> newAgentSheets;
-    for (StyleSheet* sheet : agentSheets) {
+    nsTArray<RefPtr<ServoStyleSheet>> newAgentSheets;
+    for (ServoStyleSheet* sheet : agentSheets) {
       nsIURI* uri = sheet->GetSheetURI();
 
       if (IsChromeURI(uri)) {
@@ -417,7 +418,8 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow)
         rv = document->LoadChromeSheetSync(uri, true, &newSheet);
         if (NS_FAILED(rv)) return rv;
         if (newSheet) {
-          rv = newAgentSheets.AppendElement(newSheet) ? NS_OK : NS_ERROR_FAILURE;
+          rv = newAgentSheets.AppendElement(newSheet->AsServo())
+            ? NS_OK : NS_ERROR_FAILURE;
           if (NS_FAILED(rv)) return rv;
         }
       }

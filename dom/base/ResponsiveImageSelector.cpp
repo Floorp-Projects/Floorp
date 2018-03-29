@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ResponsiveImageSelector.h"
-#include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoStyleSetInlines.h"
 #include "nsIURI.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
@@ -440,9 +440,8 @@ ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(double *aWidth)
   if (!pctx) {
     return false;
   }
-  nscoord effectiveWidth =
-    presShell->StyleSet()->AsServo()->EvaluateSourceSizeList(
-      mServoSourceSizeList.get());
+  nscoord effectiveWidth = presShell->StyleSet()->
+    EvaluateSourceSizeList(mServoSourceSizeList.get());
 
   *aWidth = nsPresContext::AppUnitsToDoubleCSSPixels(std::max(effectiveWidth, 0));
   return true;

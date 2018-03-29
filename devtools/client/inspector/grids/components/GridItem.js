@@ -85,7 +85,7 @@ class GridItem extends PureComponent {
 
   onGridInspectIconClick(nodeFront) {
     let { setSelectedNode } = this.props;
-    setSelectedNode(nodeFront, "layout-panel").catch(e => console.error(e));
+    setSelectedNode(nodeFront, { reason: "layout-panel" }).catch(e => console.error(e));
     nodeFront.scrollIntoView().catch(e => console.error(e));
   }
 

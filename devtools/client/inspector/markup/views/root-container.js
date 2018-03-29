@@ -49,7 +49,11 @@ RootContainer.prototype = {
   /**
    * Set an appropriate DOM tree depth level for a node and its subtree.
    */
-  updateLevel: function() {}
+  updateLevel: function() {},
+
+  isSlotted: function() {
+    return false;
+  }
 };
 
 module.exports = RootContainer;

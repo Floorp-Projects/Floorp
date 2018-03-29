@@ -45,7 +45,7 @@ class nsBulletFrame;
 namespace mozilla {
 class BlockReflowInput;
 class ServoRestyleState;
-class StyleSetHandle;
+class ServoStyleSet;
 } // namespace mozilla
 
 /**
@@ -943,7 +943,7 @@ protected:
   // optimization, because all callsites have it.
   already_AddRefed<ComputedStyle> ResolveBulletStyle(
     mozilla::CSSPseudoElementType aType,
-    mozilla::StyleSetHandle aStyleSet);
+    mozilla::ServoStyleSet* aStyleSet);
 
 #ifdef DEBUG
   void VerifyLines(bool aFinalCheckOK);
