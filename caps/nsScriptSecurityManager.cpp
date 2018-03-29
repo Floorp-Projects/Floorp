@@ -1212,6 +1212,12 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
 {
 // XXX Special case for Exception ?
 
+    uint32_t flags;
+    if (aClassInfo && NS_SUCCEEDED(aClassInfo->GetFlags(&flags)) &&
+        (flags & nsIClassInfo::DOM_OBJECT)) {
+        return NS_OK;
+    }
+
     // We give remote-XUL whitelisted domains a free pass here. See bug 932906.
     JS::Rooted<JS::Realm*> contextRealm(cx, JS::GetCurrentRealmOrNull(cx));
     MOZ_RELEASE_ASSERT(contextRealm);
