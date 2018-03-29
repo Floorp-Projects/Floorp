@@ -133,6 +133,14 @@ nsDeviceContextSpecProxy::GetPrintingScale()
   return mRealDeviceContextSpec->GetPrintingScale();
 }
 
+gfxPoint
+nsDeviceContextSpecProxy::GetPrintingTranslate()
+{
+  MOZ_ASSERT(mRealDeviceContextSpec);
+
+  return mRealDeviceContextSpec->GetPrintingTranslate();
+}
+
 NS_IMETHODIMP
 nsDeviceContextSpecProxy::BeginDocument(const nsAString& aTitle,
                                         const nsAString& aPrintToFileName,

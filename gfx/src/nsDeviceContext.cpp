@@ -204,6 +204,7 @@ nsDeviceContext::nsDeviceContext()
       mAppUnitsPerDevPixel(-1), mAppUnitsPerDevPixelAtUnitFullZoom(-1),
       mAppUnitsPerPhysicalInch(-1),
       mFullZoom(1.0f), mPrintingScale(1.0f),
+      mPrintingTranslate(gfxPoint(0, 0)),
       mIsCurrentlyPrintingDoc(false)
 #ifdef DEBUG
     , mIsInitialized(false)
@@ -276,6 +277,7 @@ nsDeviceContext::SetDPI(double* aScale)
     if (mDeviceContextSpec) {
         dpi = mDeviceContextSpec->GetDPI();
         mPrintingScale = mDeviceContextSpec->GetPrintingScale();
+        mPrintingTranslate = mDeviceContextSpec->GetPrintingTranslate();
         mAppUnitsPerDevPixelAtUnitFullZoom =
             NS_lround((AppUnitsPerCSSPixel() * 96) / dpi);
     } else {
@@ -414,6 +416,7 @@ nsDeviceContext::CreateRenderingContextCommon(bool aWantReferenceContext)
     MOZ_ASSERT(pContext); // already checked draw target above
 
     gfxMatrix transform;
+    transform.PreTranslate(mPrintingTranslate);
     if (mPrintTarget->RotateNeededForLandscape()) {
       // Rotate page 90 degrees to draw landscape page on portrait paper
       IntSize size = mPrintTarget->GetSize();

@@ -69,6 +69,13 @@ public:
     */
    virtual float GetPrintingScale() { return 1.0f;  }
 
+   /**
+    * Override to return something other than the default.
+    *
+    * @return the point to translate the context to for printing.
+    */
+   virtual gfxPoint GetPrintingTranslate() { return gfxPoint(0, 0);  }
+
    NS_IMETHOD BeginDocument(const nsAString& aTitle,
                             const nsAString& aPrintToFileName,
                             int32_t          aStartPage,
