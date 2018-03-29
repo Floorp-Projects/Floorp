@@ -142,8 +142,6 @@ public:
     inline void RuleAdded(StyleSheet&, css::Rule&);
     inline void RuleChanged(StyleSheet&, css::Rule*);
 
-    // TODO(emilio): Remove in favor of Rule* methods.
-    inline void RecordStyleSheetChange(StyleSheet* aSheet, StyleSheet::ChangeType);
     inline void RecordShadowStyleChange(mozilla::dom::ShadowRoot& aShadowRoot);
     inline bool StyleSheetsHaveChanged() const;
     inline void InvalidateStyleForCSSRuleChanges();
