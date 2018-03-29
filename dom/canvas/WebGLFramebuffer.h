@@ -38,7 +38,7 @@ public:
     WebGLFramebuffer* const mFB;
     const GLenum mAttachmentPoint;
 
-protected:
+private:
     WebGLRefPtr<WebGLTexture> mTexturePtr;
     WebGLRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
     TexImageTarget mTexImageTarget;
@@ -49,6 +49,7 @@ protected:
 
     WebGLFBAttachPoint();
     WebGLFBAttachPoint(WebGLFramebuffer* fb, GLenum attachmentPoint);
+    explicit WebGLFBAttachPoint(WebGLFBAttachPoint&) = default; // Make this private.
 
 public:
     ~WebGLFBAttachPoint();
