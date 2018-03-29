@@ -365,23 +365,6 @@ interface nsIAnnotationService : nsISupports
                                [optional] in unsigned short aSource);
 
     /**
-     * Copies all annotations from the source to the destination URI/item. If
-     * the destination already has an annotation with the same name as one on
-     * the source, it will be overwritten if aOverwriteDest is set. Otherwise,
-     * the original annotation will be preferred.
-     *
-     * All the source annotations will stay as-is. If you don't want them
-     * any more, use removePageAnnotations on that URI.
-     */
-    void copyPageAnnotations(in nsIURI aSourceURI,
-                             in nsIURI aDestURI,
-                             in boolean aOverwriteDest);
-    void copyItemAnnotations(in long long aSourceItemId,
-                             in long long aDestItemId,
-                             in boolean aOverwriteDest,
-                             [optional] in unsigned short aSource);
-
-    /**
      * Adds an annotation observer. The annotation service will keep an owning
      * reference to the observer object.
      */
