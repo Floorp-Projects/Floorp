@@ -90,7 +90,20 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
     /**
      * We have various tables of static atoms for elements and attributes.
      */
-    typedef nsTHashtable<nsRefPtrHashKey<nsAtom>> AtomsTable;
+    class AtomsTable : public nsTHashtable<nsPtrHashKey<const nsStaticAtom>>
+    {
+    public:
+        explicit AtomsTable(uint32_t aLength)
+          : nsTHashtable<nsPtrHashKey<const nsStaticAtom>>(aLength)
+        {}
+
+        bool Contains(nsAtom* aAtom)
+        {
+            // Because this table only contains static atoms, if aAtom isn't
+            // static we can immediately fail.
+            return aAtom->IsStatic() && GetEntry(aAtom->AsStatic());
+        }
+    };
 
     void SanitizeChildren(nsINode* aRoot);
 
@@ -122,7 +135,7 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
      * @param aLocalName the name to search on the list
      * @return true if aLocalName is on the aURLs list and false otherwise
      */
-    bool IsURL(nsStaticAtom* const* aURLs, nsAtom* aLocalName);
+    bool IsURL(const nsStaticAtom* const* aURLs, nsAtom* aLocalName);
 
     /**
      * Removes dangerous attributes from the element. If the style attribute
@@ -140,7 +153,7 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
      */
     void SanitizeAttributes(mozilla::dom::Element* aElement,
                             AtomsTable* aAllowed,
-                            nsStaticAtom* const* aURLs,
+                            const nsStaticAtom* const* aURLs,
                             bool aAllowXLink,
                             bool aAllowStyle,
                             bool aAllowDangerousSrc);
