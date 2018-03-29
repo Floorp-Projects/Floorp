@@ -51,6 +51,8 @@ namespace jit {
     _(LoadUndefinedResult)                \
     _(LoadBooleanResult)                  \
     _(LoadInt32ArrayLengthResult)         \
+    _(Int32AddResult)                     \
+    _(DoubleAddResult)                    \
     _(Int32NegationResult)                \
     _(Int32NotResult)                     \
     _(DoubleNegationResult)               \
@@ -329,6 +331,7 @@ class MOZ_RAII CacheRegisterAllocator
 
     void popPayload(MacroAssembler& masm, OperandLocation* loc, Register dest);
     void popValue(MacroAssembler& masm, OperandLocation* loc, ValueOperand dest);
+    Address valueAddress(MacroAssembler& masm, OperandLocation* loc);
 
 #ifdef DEBUG
     void assertValidState() const;
@@ -468,6 +471,9 @@ class MOZ_RAII CacheRegisterAllocator
     // Allocates an output register for the given operand.
     Register defineRegister(MacroAssembler& masm, TypedOperandId typedId);
     ValueOperand defineValueRegister(MacroAssembler& masm, ValOperandId val);
+
+    // Loads (and unboxes) a value into a float register (unchecked)
+    void loadDouble(MacroAssembler&, ValOperandId, FloatRegister, Label* failure);
 
     // Returns |val|'s JSValueType or JSVAL_TYPE_UNKNOWN.
     JSValueType knownType(ValOperandId val) const;
