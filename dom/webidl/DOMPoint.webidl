@@ -19,10 +19,11 @@ interface DOMPointReadOnly {
 };
 
 [Pref="layout.css.DOMPoint.enabled",
- Constructor(optional DOMPointInit point),
  Constructor(unrestricted double x, unrestricted double y,
              optional unrestricted double z = 0, optional unrestricted double w = 1)]
 interface DOMPoint : DOMPointReadOnly {
+    [NewObject] static DOMPoint fromPoint(optional DOMPointInit other);
+
     inherit attribute unrestricted double x;
     inherit attribute unrestricted double y;
     inherit attribute unrestricted double z;

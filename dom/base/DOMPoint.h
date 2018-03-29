@@ -58,8 +58,7 @@ public:
   {}
 
   static already_AddRefed<DOMPoint>
-  Constructor(const GlobalObject& aGlobal, const DOMPointInit& aParams,
-              ErrorResult& aRV);
+  FromPoint(const GlobalObject& aGlobal, const DOMPointInit& aParams);
   static already_AddRefed<DOMPoint>
   Constructor(const GlobalObject& aGlobal, double aX, double aY,
               double aZ, double aW, ErrorResult& aRV);
