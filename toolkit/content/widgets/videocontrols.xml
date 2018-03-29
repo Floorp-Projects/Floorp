@@ -138,12 +138,6 @@
         }
       },
 
-      get isControlBarHidden() {
-        return this.controlBar.hidden ||
-               this.controlBar.hideByAdjustment ||
-               this.controlBar.getAttribute("fadeout") === "true";
-      },
-
       suppressError: false,
 
       setupStatusFader(immediate) {
@@ -298,21 +292,36 @@
               value: true,
               writable: true
             },
-            hideByAdjustment: {
+            hidden: {
               set: (v) => {
-                if (v) {
-                  control.setAttribute("hidden", "true");
-                } else {
-                  control.removeAttribute("hidden");
-                }
-
+                control._isHiddenExplicitly = v;
+                control._updateHiddenAttribute();
+              },
+              get: () => control.hasAttribute("hidden")
+            },
+            hiddenByAdjustment: {
+              set: (v) => {
                 control._isHiddenByAdjustment = v;
+                control._updateHiddenAttribute();
               },
               get: () => control._isHiddenByAdjustment
             },
             _isHiddenByAdjustment: {
               value: false,
               writable: true
+            },
+            _isHiddenExplicitly: {
+              value: false,
+              writable: true
+            },
+            _updateHiddenAttribute: {
+              value: () => {
+                if (control._isHiddenExplicitly || control._isHiddenByAdjustment) {
+                  control.setAttribute("hidden", "");
+                } else {
+                  control.removeAttribute("hidden");
+                }
+              }
             }
           });
         }
@@ -342,7 +351,6 @@
         let shouldClickToPlayShow = shouldShow && !this.isAudioOnly &&
                                     this.video.currentTime == 0 && !this.hasError();
         this.startFade(this.clickToPlay, shouldClickToPlayShow, true);
-        this.startFade(this.controlsSpacer, shouldClickToPlayShow, true);
         this.startFade(this.controlBar, shouldShow, true);
       },
 
@@ -398,8 +406,8 @@
         this._showThrobberTimer = setTimeout(() => {
           this.statusIcon.setAttribute("type", "throbber");
           // Show the throbber immediately since we have waited for SHOW_THROBBER_TIMEOUT_MS.
-          // We don't want to wait for another transition-delay(750ms) and the
-          // transition-duration(300ms).
+          // We don't want to wait for another animation delay(750ms) and the
+          // animation duration(300ms).
           this.setupStatusFader(true);
         }, this.SHOW_THROBBER_TIMEOUT_MS);
       },
@@ -429,7 +437,6 @@
             }
             if (!this._triggeredByControls) {
               this.clickToPlay.hidden = true;
-              this.controlsSpacer.setAttribute("fadeout", "true");
             }
             this._triggeredByControls = false;
             break;
@@ -969,7 +976,7 @@
           }
 
           this.startFadeOut(this.controlBar, false);
-          this.textTrackList.setAttribute("hidden", "true");
+          this.textTrackList.hidden = true;
           clearTimeout(this._showControlsTimeout);
           Utils._controlsHiddenByTimeout = false;
         }
@@ -983,57 +990,107 @@
         this.startFade(element, false, immediate);
       },
 
-      startFade(element, fadeIn, immediate) {
-        if (element.classList.contains("controlBar") && fadeIn) {
-          // Bug 493523, the scrubber doesn't call valueChanged while hidden,
-          // so our dependent state (eg, timestamp in the thumb) will be stale.
-          // As a workaround, update it manually when it first becomes unhidden.
-          if (element.hidden) {
-            this.scrubber.value = this.video.currentTime * 1000;
-          }
-        }
+      animationMap: new WeakMap(),
 
-        if (immediate) {
-          element.setAttribute("immediate", true);
-        } else {
-          element.removeAttribute("immediate");
-        }
-
-        if (fadeIn) {
-          // hidden state should be controlled by adjustControlSize
-          if (!(element.isAdjustableControl && element.hideByAdjustment)) {
-            element.hidden = false;
+      animationProps: {
+        clickToPlay: {
+          keyframes: [
+            { transform: "scale(3)", opacity: 0 },
+            { transform: "scale(1)", opacity: 0.55 }
+          ],
+          options: {
+            duration: 400
           }
-          // force style resolution, so that transition begins
-          // when we remove the attribute.
-          element.clientTop;
-          element.removeAttribute("fadeout");
-          if (element.classList.contains("controlBar")) {
-            this.controlsSpacer.removeAttribute("hideCursor");
+        },
+        controlBar: {
+          keyframes: [
+            { opacity: 0 },
+            { opacity: 1 }
+          ],
+          options: {
+            duration: 200
           }
-        } else {
-          element.setAttribute("fadeout", true);
-          if (element.classList.contains("controlBar") && !this.hasError() &&
-              document.mozFullScreenElement == this.video) {
-            this.controlsSpacer.setAttribute("hideCursor", true);
+        },
+        statusOverlay: {
+          keyframes: [
+            { opacity: 0 },
+            { opacity: 0, offset: .72 }, // ~750ms into animation
+            { opacity: 1 }
+          ],
+          options: {
+            duration: 1050
           }
         }
       },
 
-      onTransitionEnd(event) {
-        // Ignore events for things other than opacity changes.
-        if (event.propertyName != "opacity") {
-          return;
+      startFade(element, fadeIn, immediate = false) {
+        // Bug 493523, the scrubber doesn't call valueChanged while hidden,
+        // so our dependent state (eg, timestamp in the thumb) will be stale.
+        // As a workaround, update it manually when it first becomes unhidden.
+        if (element == this.controlBar && fadeIn && element.hidden) {
+          this.scrubber.value = this.video.currentTime * 1000;
         }
 
-        var element = event.originalTarget;
-
-        // Nothing to do when a fade *in* finishes.
-        if (!element.hasAttribute("fadeout")) {
-          return;
+        let animationProp =
+          this.animationProps[element.getAttribute("anonid")];
+        if (!animationProp) {
+          throw new Error("Element " + element.getAttribute("anonid") +
+            " has no transition. Toggle the hidden property directly.");
         }
 
-        element.hidden = true;
+        let animation = this.animationMap.get(element);
+        if (!animation) {
+          animation = new Animation(new KeyframeEffect(
+            element, animationProp.keyframes, animationProp.options));
+
+          this.animationMap.set(element, animation);
+        }
+
+        if (fadeIn) {
+          // hidden state should be controlled by adjustControlSize
+          if (element.isAdjustableControl && element.hiddenByAdjustment) {
+            return;
+          }
+
+          // No need to fade in again if the element is visible and not fading out
+          if (!element.hidden && !element.classList.contains("fadeout")) {
+            return;
+          }
+
+          // Unhide
+          element.hidden = false;
+        } else {
+          // No need to fade out if the element is already no visible.
+          if (element.hidden) {
+            return;
+          }
+
+          if (element == this.controlBar && !this.hasError() &&
+              document.mozFullScreenElement == this.video) {
+            this.controlsSpacer.setAttribute("hideCursor", true);
+          }
+        }
+
+        element.classList.toggle("fadeout", !fadeIn);
+        element.classList.toggle("fadein", fadeIn);
+        let finishedPromise;
+        if (!immediate) {
+          animation.playbackRate = fadeIn ? 1 : -1;
+          animation.play();
+          finishedPromise = animation.finished;
+        } else {
+          animation.cancel();
+          finishedPromise = Promise.resolve();
+        }
+        finishedPromise.then(() => {
+          if (element == this.controlBar) {
+            this.onControlBarAnimationFinished();
+          }
+          element.classList.remove(fadeIn ? "fadein" : "fadeout");
+          if (!fadeIn) {
+            element.hidden = true;
+          }
+        }, () => { /* Do nothing on rejection */ });
       },
 
       _triggeredByControls: false,
@@ -1191,15 +1248,9 @@
         let animationScale = 2;
         let animationMinSize = this.clickToPlay.minWidth * animationScale;
 
-        if (animationMinSize > videoWidth ||
-            animationMinSize > (videoHeight - this.controlBarMinHeight)) {
-          this.clickToPlay.setAttribute("immediate", "true");
-          this.clickToPlay.hidden = true;
-        } else {
-          this.clickToPlay.removeAttribute("immediate");
-        }
-        this.clickToPlay.setAttribute("fadeout", "true");
-        this.controlsSpacer.setAttribute("fadeout", "true");
+        let immediate = (animationMinSize > videoWidth ||
+            animationMinSize > (videoHeight - this.controlBarMinHeight));
+        this.startFadeOut(this.clickToPlay, immediate);
       },
 
       setPlayButtonState(aPaused) {
@@ -1486,11 +1537,11 @@
           }
         }
 
-        this.textTrackList.setAttribute("hidden", "true");
+        this.textTrackList.hidden = true;
       },
 
-      onControlBarTransitioned() {
-        this.textTrackList.setAttribute("hidden", "true");
+      onControlBarAnimationFinished() {
+        this.textTrackList.hidden = true;
         this.video.dispatchEvent(new CustomEvent("controlbarchange"));
         this.adjustControlSize();
       },
@@ -1500,10 +1551,10 @@
       },
 
       toggleClosedCaption() {
-        if (this.textTrackList.hasAttribute("hidden")) {
-          this.textTrackList.removeAttribute("hidden");
+        if (this.textTrackList.hidden) {
+          this.textTrackList.hidden = false;
         } else {
-          this.textTrackList.setAttribute("hidden", "true");
+          this.textTrackList.hidden = true;
         }
       },
 
@@ -1605,14 +1656,14 @@
 
         for (let control of this.prioritizedControls) {
           if (!control.isWanted) {
-            control.hideByAdjustment = true;
+            control.hiddenByAdjustment = true;
             continue;
           }
 
-          control.hideByAdjustment = preventAppendControl ||
+          control.hiddenByAdjustment = preventAppendControl ||
           widthUsed + control.minWidth > videoWidth;
 
-          if (control.hideByAdjustment) {
+          if (control.hiddenByAdjustment) {
             preventAppendControl = true;
           } else {
             widthUsed += control.minWidth;
@@ -1647,10 +1698,10 @@
         if (videoHeight < this.controlBarMinHeight ||
             widthUsed === minControlBarPaddingWidth) {
           this.controlBar.setAttribute("size", "hidden");
-          this.controlBar.hideByAdjustment = true;
+          this.controlBar.hiddenByAdjustment = true;
         } else {
           this.controlBar.removeAttribute("size");
-          this.controlBar.hideByAdjustment = false;
+          this.controlBar.hiddenByAdjustment = false;
         }
 
         // Adjust clickToPlayButton size.
@@ -1661,10 +1712,10 @@
 
         if (clickToPlayScaledSize >= videoWidth ||
            (clickToPlayScaledSize + this.controlBarMinHeight / 2 >= videoHeight / 2 )) {
-          this.clickToPlay.hideByAdjustment = true;
+          this.clickToPlay.hiddenByAdjustment = true;
         } else {
           if (this.clickToPlay.hidden && !this.video.played.length && this.video.paused) {
-            this.clickToPlay.hideByAdjustment = false;
+            this.clickToPlay.hiddenByAdjustment = false;
           }
           this.clickToPlay.style.width = `${clickToPlayScaledSize}px`;
           this.clickToPlay.style.height = `${clickToPlayScaledSize}px`;
@@ -1779,8 +1830,6 @@
         }
 
         addListener(this.videocontrols, "resizevideocontrols", this.adjustControlSize);
-        addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
-        addListener(this.controlBar, "transitionend", this.onControlBarTransitioned);
         // See comment at onFullscreenChange on bug 718107.
         // addListener(this.video.ownerDocument, "fullscreenchange", this.onFullscreenChange);
         addListener(this.video, "keypress", this.keyHandler, {capture: true});
@@ -1823,7 +1872,7 @@
 
       get visible() {
         return !this.Utils.controlBar.hasAttribute("fadeout") &&
-               !(this.Utils.controlBar.getAttribute("hidden") == "true");
+               !(this.Utils.controlBar.hidden);
       },
 
       _firstShow: false,

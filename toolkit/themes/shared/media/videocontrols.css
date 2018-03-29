@@ -65,7 +65,7 @@ audio > xul|videocontrols {
   --volumeStack-width: 64px;
 }
 
-.controlsContainer [hidden="true"],
+.controlsContainer [hidden],
 .controlBar[hidden] {
   display: none;
 }
@@ -449,41 +449,6 @@ audio > xul|videocontrols {
   display: none;
 }
 
-/* CSS Transitions */
-.clickToPlay {
-  transition-property: transform, opacity;
-  transition-duration: 400ms, 400ms;
-}
-
-.controlsSpacer[fadeout] {
-  opacity: 0;
-}
-
-.clickToPlay[fadeout] {
-  transform: scale(3);
-  opacity: 0;
-}
-
-.clickToPlay[fadeout][immediate] {
-  transition-property: opacity, background-size;
-  transition-duration: 0s, 0s;
-}
-.controlBar:not([immediate]) {
-  transition-property: opacity;
-  transition-duration: 200ms;
-}
-.controlBar[fadeout] {
-  opacity: 0;
-}
-.volumeStack:not([immediate]) {
-  transition-property: opacity, margin-top;
-  transition-duration: 200ms, 200ms;
-}
-.statusOverlay:not([immediate]) {
-  transition-property: opacity;
-  transition-duration: 300ms;
-  transition-delay: 750ms;
-}
 .statusOverlay[fadeout],
 .statusOverlay[error] + .controlsOverlay > .controlsSpacerStack {
   opacity: 0;
