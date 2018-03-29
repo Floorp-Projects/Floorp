@@ -21,8 +21,6 @@
 #include "nsContentUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsCSSPseudoElements.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
 #include "nsThreadUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/dom/MutationEventBinding.h"

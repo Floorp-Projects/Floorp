@@ -191,7 +191,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @param {Object} data Information about the picked node
    */
   function onPickerNodePicked(data) {
-    toolbox.selection.setNodeFront(data.node, "picker-node-picked");
+    toolbox.selection.setNodeFront(data.node, { reason: "picker-node-picked" });
     stopPicker();
   }
 
@@ -201,7 +201,7 @@ exports.getHighlighterUtils = function(toolbox) {
    * @param {Object} data Information about the picked node
    */
   function onPickerNodePreviewed(data) {
-    toolbox.selection.setNodeFront(data.node, "picker-node-previewed");
+    toolbox.selection.setNodeFront(data.node, { reason: "picker-node-previewed" });
   }
 
   /**

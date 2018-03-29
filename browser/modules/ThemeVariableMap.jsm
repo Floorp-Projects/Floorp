@@ -48,7 +48,7 @@ const ThemeVariableMap = [
   ["--lwt-toolbar-field-focus-color", {
     lwtProperty: "toolbar_field_text_focus"
   }],
-  ["--lwt-toolbar-field-focus-border-color", {
+  ["--toolbar-field-focus-border-color", {
     lwtProperty: "toolbar_field_border_focus"
   }],
   ["--urlbar-separator-color", {
@@ -105,6 +105,9 @@ const ThemeVariableMap = [
       element.style.setProperty(secondaryVariable, `rgba(${r}, ${g}, ${b}, 0.5)`);
       return `rgba(${r}, ${g}, ${b}, ${a})`;
     }
+  }],
+  ["--autocomplete-popup-border-color", {
+    lwtProperty: "popup_border"
   }],
   ["--autocomplete-popup-highlight-background", {
     lwtProperty: "popup_highlight"

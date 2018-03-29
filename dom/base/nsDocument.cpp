@@ -246,8 +246,7 @@
 #include "mozilla/dom/FontFaceSet.h"
 #include "gfxPrefs.h"
 #include "nsISupportsPrimitives.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/SVGSVGElement.h"
@@ -2436,7 +2435,7 @@ nsIDocument::RemoveDocStyleSheetsFromStyleSets()
     if (sheet->IsApplicable()) {
       nsCOMPtr<nsIPresShell> shell = GetShell();
       if (shell) {
-        shell->StyleSet()->RemoveDocStyleSheet(sheet);
+        shell->StyleSet()->RemoveDocStyleSheet(sheet->AsServo());
       }
     }
     // XXX Tell observers?
@@ -2455,7 +2454,7 @@ nsIDocument::RemoveStyleSheetsFromStyleSets(
     if (sheet->IsApplicable()) {
       nsCOMPtr<nsIPresShell> shell = GetShell();
       if (shell) {
-        shell->StyleSet()->RemoveStyleSheet(aType, sheet);
+        shell->StyleSet()->RemoveStyleSheet(aType, sheet->AsServo());
       }
     }
     // XXX Tell observers?
@@ -2517,18 +2516,18 @@ nsIDocument::ResetStylesheetsToURI(nsIURI* aURI)
 }
 
 static void
-AppendSheetsToStyleSet(StyleSetHandle aStyleSet,
+AppendSheetsToStyleSet(ServoStyleSet* aStyleSet,
                        const nsTArray<RefPtr<StyleSheet>>& aSheets,
                        SheetType aType)
 {
   for (StyleSheet* sheet : Reversed(aSheets)) {
-    aStyleSet->AppendStyleSheet(aType, sheet);
+    aStyleSet->AppendStyleSheet(aType, sheet->AsServo());
   }
 }
 
 
 void
-nsIDocument::FillStyleSet(StyleSetHandle aStyleSet)
+nsIDocument::FillStyleSet(ServoStyleSet* aStyleSet)
 {
   NS_PRECONDITION(aStyleSet, "Must have a style set");
   NS_PRECONDITION(aStyleSet->SheetCount(SheetType::Doc) == 0,
@@ -2538,7 +2537,7 @@ nsIDocument::FillStyleSet(StyleSetHandle aStyleSet)
 
   for (StyleSheet* sheet : Reversed(mStyleSheets)) {
     if (sheet->IsApplicable()) {
-      aStyleSet->AddDocStyleSheet(sheet, this);
+      aStyleSet->AddDocStyleSheet(sheet->AsServo(), this);
     }
   }
 
@@ -2546,14 +2545,14 @@ nsIDocument::FillStyleSet(StyleSetHandle aStyleSet)
     nsTArray<RefPtr<StyleSheet>>& sheets =
       *sheetService->AuthorStyleSheets();
     for (StyleSheet* sheet : sheets) {
-      aStyleSet->AppendStyleSheet(SheetType::Doc, sheet);
+      aStyleSet->AppendStyleSheet(SheetType::Doc, sheet->AsServo());
     }
   }
 
   // Iterate backwards to maintain order
   for (StyleSheet* sheet : Reversed(mOnDemandBuiltInUASheets)) {
     if (sheet->IsApplicable()) {
-      aStyleSet->PrependStyleSheet(SheetType::Agent, sheet);
+      aStyleSet->PrependStyleSheet(SheetType::Agent, sheet->AsServo());
     }
   }
 
@@ -3857,19 +3856,19 @@ AssertNoStaleServoDataIn(const nsINode& aSubtreeRoot)
 already_AddRefed<nsIPresShell>
 nsIDocument::CreateShell(nsPresContext* aContext,
                          nsViewManager* aViewManager,
-                         StyleSetHandle aStyleSet)
+                         UniquePtr<ServoStyleSet> aStyleSet)
 {
   NS_ASSERTION(!mPresShell, "We have a presshell already!");
 
   NS_ENSURE_FALSE(GetBFCacheEntry(), nullptr);
 
-  FillStyleSet(aStyleSet);
+  FillStyleSet(aStyleSet.get());
   AssertNoStaleServoDataIn(static_cast<nsINode&>(*this));
 
   RefPtr<PresShell> shell = new PresShell;
   // Note: we don't hold a ref to the shell (it holds a ref to us)
   mPresShell = shell;
-  shell->Init(this, aContext, aViewManager, aStyleSet);
+  shell->Init(this, aContext, aViewManager, Move(aStyleSet));
 
   // Make sure to never paint if we belong to an invisible DocShell.
   nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
@@ -4290,7 +4289,7 @@ nsIDocument::AddOnDemandBuiltInUASheet(StyleSheet* aSheet)
       // do not override Firefox OS/Mobile's content.css sheet. Maybe we should
       // have an insertion point to match the order of
       // nsDocumentViewer::CreateStyleSet though?
-      shell->StyleSet()->PrependStyleSheet(SheetType::Agent, aSheet);
+      shell->StyleSet()->PrependStyleSheet(SheetType::Agent, aSheet->AsServo());
     }
   }
 
@@ -4302,7 +4301,7 @@ nsIDocument::AddStyleSheetToStyleSets(StyleSheet* aSheet)
 {
   nsCOMPtr<nsIPresShell> shell = GetShell();
   if (shell) {
-    shell->StyleSet()->AddDocStyleSheet(aSheet, this);
+    shell->StyleSet()->AddDocStyleSheet(aSheet->AsServo(), this);
   }
 }
 
@@ -4369,7 +4368,7 @@ nsIDocument::RemoveStyleSheetFromStyleSets(StyleSheet* aSheet)
 {
   nsCOMPtr<nsIPresShell> shell = GetShell();
   if (shell) {
-    shell->StyleSet()->RemoveDocStyleSheet(aSheet);
+    shell->StyleSet()->RemoveDocStyleSheet(aSheet->AsServo());
   }
 }
 
@@ -4590,7 +4589,7 @@ nsIDocument::AddAdditionalStyleSheet(additionalSheetType aType, StyleSheet* aShe
   nsCOMPtr<nsIPresShell> shell = GetShell();
   if (shell) {
     SheetType type = ConvertAdditionalSheetType(aType);
-    shell->StyleSet()->AppendStyleSheet(type, aSheet);
+    shell->StyleSet()->AppendStyleSheet(type, aSheet->AsServo());
   }
 
   // Passing false, so documet.styleSheets.length will not be affected by
@@ -4618,7 +4617,7 @@ nsIDocument::RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* aShee
       nsCOMPtr<nsIPresShell> shell = GetShell();
       if (shell) {
         SheetType type = ConvertAdditionalSheetType(aType);
-        shell->StyleSet()->RemoveStyleSheet(type, sheetRef);
+        shell->StyleSet()->RemoveStyleSheet(type, sheetRef->AsServo());
       }
     }
 

@@ -32,7 +32,7 @@ async function selectAndHighlightNode(selectorOrNodeFront, inspector) {
 
   let nodeFront = await getNodeFront(selectorOrNodeFront, inspector);
   let updated = inspector.toolbox.once("highlighter-ready");
-  inspector.selection.setNodeFront(nodeFront, "test-highlight");
+  inspector.selection.setNodeFront(nodeFront, { reason: "test-highlight" });
   await updated;
 }
 

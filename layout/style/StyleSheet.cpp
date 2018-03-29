@@ -17,7 +17,6 @@
 #include "mozilla/ServoCSSRuleList.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoStyleSheet.h"
-#include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/StyleSheetInlines.h"
 
 #include "mozAutoDocUpdate.h"
@@ -360,7 +359,7 @@ StyleSheet::WillDirty()
 }
 
 void
-StyleSheet::AddStyleSet(const StyleSetHandle& aStyleSet)
+StyleSheet::AddStyleSet(ServoStyleSet* aStyleSet)
 {
   NS_ASSERTION(!mStyleSets.Contains(aStyleSet),
                "style set already registered");
@@ -368,7 +367,7 @@ StyleSheet::AddStyleSet(const StyleSetHandle& aStyleSet)
 }
 
 void
-StyleSheet::DropStyleSet(const StyleSetHandle& aStyleSet)
+StyleSheet::DropStyleSet(ServoStyleSet* aStyleSet)
 {
   DebugOnly<bool> found = mStyleSets.RemoveElement(aStyleSet);
   NS_ASSERTION(found, "didn't find style set");
@@ -399,7 +398,7 @@ StyleSheet::EnsureUniqueInner()
   // let our containing style sets know that if we call
   // nsPresContext::EnsureSafeToHandOutCSSRules we will need to restyle the
   // document
-  for (StyleSetHandle& setHandle : mStyleSets) {
+  for (ServoStyleSet* setHandle : mStyleSets) {
     setHandle->SetNeedsRestyleAfterEnsureUniqueInner();
   }
 }
@@ -527,7 +526,7 @@ StyleSheet::GetContainingShadow() const
 #define NOTIFY(function_, args_) do {                     \
   StyleSheet* current = this;                             \
   do {                                                    \
-    for (StyleSetHandle handle : current->mStyleSets) {   \
+    for (ServoStyleSet* handle : current->mStyleSets) {   \
       handle->function_ args_;                            \
     }                                                     \
     if (auto* shadow = current->GetContainingShadow()) {  \
@@ -542,7 +541,7 @@ StyleSheet::RuleAdded(css::Rule& aRule)
 {
   DidDirty();
   mDirtyFlags |= MODIFIED_RULES;
-  NOTIFY(RuleAdded, (*this, aRule));
+  NOTIFY(RuleAdded, (*AsServo(), aRule));
 
   if (mDocument) {
     mDocument->StyleRuleAdded(this, &aRule);
@@ -554,7 +553,7 @@ StyleSheet::RuleRemoved(css::Rule& aRule)
 {
   DidDirty();
   mDirtyFlags |= MODIFIED_RULES;
-  NOTIFY(RuleRemoved, (*this, aRule));
+  NOTIFY(RuleRemoved, (*AsServo(), aRule));
 
   if (mDocument) {
     mDocument->StyleRuleRemoved(this, &aRule);
@@ -566,7 +565,7 @@ StyleSheet::RuleChanged(css::Rule* aRule)
 {
   DidDirty();
   mDirtyFlags |= MODIFIED_RULES;
-  NOTIFY(RuleChanged, (*this, aRule));
+  NOTIFY(RuleChanged, (*AsServo(), aRule));
 
   if (mDocument) {
     mDocument->StyleRuleChanged(this, aRule);

@@ -22,8 +22,6 @@
 #include "SVGTextFrame.h"
 #include "nsStyleChangeList.h"
 #include "mozilla/ComputedStyle.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/ServoStyleSet.h"
 
 #ifdef DEBUG

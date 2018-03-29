@@ -106,16 +106,6 @@ const walkerSpec = generateActorSpec({
       request: { node: Arg(0, "nullable:domnode") },
       response: { node: RetVal("domnode") },
     },
-    parents: {
-      request: {
-        node: Arg(0, "domnode"),
-        sameDocument: Option(1),
-        sameTypeRootTreeItem: Option(1)
-      },
-      response: {
-        nodes: RetVal("array:domnode")
-      },
-    },
     retainNode: {
       request: { node: Arg(0, "domnode") },
       response: {}
@@ -131,7 +121,6 @@ const walkerSpec = generateActorSpec({
       }
     },
     children: nodeArrayMethod,
-    siblings: nodeArrayMethod,
     nextSibling: traversalMethod,
     previousSibling: traversalMethod,
     findInspectingNode: {

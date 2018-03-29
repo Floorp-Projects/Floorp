@@ -38,6 +38,7 @@ add_task(async function test_addon_locked() {
 });
 
 add_task(async function test_addon_uninstall() {
+  let uninstallPromise = wait_for_addon_uninstall();
   await setupPolicyEngineWithJson({
     "policies": {
       "Extensions": {
@@ -47,6 +48,7 @@ add_task(async function test_addon_uninstall() {
       }
     }
   });
+  await uninstallPromise;
   let addon = await AddonManager.getAddonByID(addonID);
   is(addon, null, "Addon should be uninstalled.");
 });
@@ -55,8 +57,9 @@ function wait_for_addon_install() {
   return new Promise((resolve, reject) => {
       AddonManager.addInstallListener({
         onInstallEnded(install, addon) {
-          if (addon.id == addonID)
-          resolve();
+          if (addon.id == addonID) {
+            resolve();
+          }
         },
         onDownloadFailed: (install) => {
           reject();
@@ -65,5 +68,18 @@ function wait_for_addon_install() {
           reject();
         },
       });
+  });
+}
+
+function wait_for_addon_uninstall() {
+ return new Promise(resolve => {
+    let listener = {};
+    listener.onUninstalled = addon => {
+      if (addon.id == addonID) {
+        AddonManager.removeAddonListener(listener);
+        resolve();
+      }
+    };
+    AddonManager.addAddonListener(listener);
   });
 }

@@ -91,9 +91,9 @@ class ExtensionSidebar {
 
             let front = await highlighterUtils.gripToNodeFront(grip);
             let onInspectorUpdated = this.inspector.once("inspector-updated");
-            let onNodeFrontSet = this.inspector.toolbox.selection.setNodeFront(
-              front, "inspector-extension-sidebar"
-            );
+            let onNodeFrontSet = this.inspector.toolbox.selection.setNodeFront(front, {
+              reason: "inspector-extension-sidebar"
+            });
 
             return Promise.all([onNodeFrontSet, onInspectorUpdated]);
           }

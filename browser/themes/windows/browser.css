@@ -71,6 +71,10 @@
   --panel-separator-color: hsla(210,4%,10%,.14);
 }
 
+:root[lwt-popup-brighttext] {
+  --panel-separator-color: hsla(0,0%,80%,.25);
+}
+
 #navigator-toolbox:-moz-lwtheme {
   --tabs-border-color: rgba(0,0,0,.3);
 }
@@ -523,11 +527,6 @@ menuitem.bookmark-item {
   .searchbar-textbox:not(:-moz-lwtheme):not([focused="true"]) {
     border-color: ThreeDShadow;
   }
-}
-
-#urlbar[focused="true"],
-.searchbar-textbox[focused="true"] {
-  border-color: Highlight;
 }
 
 html|*.urlbar-input:-moz-lwtheme::placeholder,

@@ -223,7 +223,8 @@ public:
       return mDocument;
   }
 
-  mozilla::StyleSetHandle StyleSet() const { return GetPresShell()->StyleSet(); }
+  mozilla::ServoStyleSet* StyleSet() const
+    { return GetPresShell()->StyleSet(); }
 
   bool HasPendingMediaQueryUpdates() const
   {

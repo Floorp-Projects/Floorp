@@ -1,0 +1,112 @@
+/* vim: set ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/* import-globals-from helper_shadowdom.js */
+
+"use strict";
+
+loadHelperScript("helper_shadowdom.js");
+
+// Test that the markup view is correctly displayed when a component has children but no
+// slots are available under the shadow root.
+
+const TEST_URL = `data:text/html;charset=utf-8,
+  <style>
+    .has-before::before { content: "before-content" }
+  </style>
+
+  <div class="root">
+    <no-slot-component>
+      <div class="not-nested">light</div>
+      <div class="nested">
+        <div class="has-before"></div>
+        <div>dummy for Bug 1441863</div>
+      </div>
+    </no-slot-component>
+    <slot-component>
+      <div class="not-nested">light</div>
+      <div class="nested">
+        <div class="has-before"></div>
+      </div>
+    </slot-component>
+  </div>
+
+  <script>
+    'use strict';
+    customElements.define('no-slot-component', class extends HTMLElement {
+      constructor() {
+        super();
+        let shadowRoot = this.attachShadow({mode: 'open'});
+        shadowRoot.innerHTML = '<div class="no-slot-div"></div>';
+      }
+    });
+    customElements.define('slot-component', class extends HTMLElement {
+      constructor() {
+        super();
+        let shadowRoot = this.attachShadow({mode: 'open'});
+        shadowRoot.innerHTML = '<slot></slot>';
+      }
+    });
+  </script>`;
+
+add_task(async function() {
+  await enableWebComponents();
+
+  let {inspector} = await openInspectorForURL(TEST_URL);
+
+  // We expect that host children are correctly displayed when no slots are defined.
+  let beforeTree = `
+  class="root"
+    no-slot-component
+      #shadow-root
+        no-slot-div
+      class="not-nested"
+      class="nested"
+        class="has-before"
+        dummy for Bug 1441863
+    slot-component
+      #shadow-root
+        slot
+          div!slotted
+          div!slotted
+      class="not-nested"
+      class="nested"
+        class="has-before"
+          ::before`;
+  await checkTreeFromRootSelector(beforeTree, ".root", inspector);
+
+  info("Move the non-slotted element with class has-before and check the pseudo appears");
+  let mutated = waitForNMutations(inspector, "childList", 2);
+  let pseudoMutated = waitForMutation(inspector, "nativeAnonymousChildList");
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    let root = content.document.querySelector(".root");
+    let hasBeforeEl = content.document.querySelector("no-slot-component .has-before");
+    root.appendChild(hasBeforeEl);
+  });
+  await mutated;
+  await pseudoMutated;
+
+  // As the non-slotted has-before is moved into the tree, the before pseudo is expected
+  // to appear.
+  let afterTree = `
+    class="root"
+      no-slot-component
+        #shadow-root
+          no-slot-div
+        class="not-nested"
+        class="nested"
+          dummy for Bug 1441863
+      slot-component
+        #shadow-root
+          slot
+            div!slotted
+            div!slotted
+        class="not-nested"
+        class="nested"
+          class="has-before"
+            ::before
+      class="has-before"
+        ::before`;
+  await checkTreeFromRootSelector(afterTree, ".root", inspector);
+});

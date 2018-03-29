@@ -295,6 +295,18 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
     return !!this._form.isDocumentElement;
   },
 
+  get isShadowRoot() {
+    return this._form.isShadowRoot;
+  },
+
+  get isShadowHost() {
+    return this._form.isShadowHost;
+  },
+
+  get isDirectShadowHostChild() {
+    return this._form.isDirectShadowHostChild;
+  },
+
   // doctype properties
   get name() {
     return this._form.name;

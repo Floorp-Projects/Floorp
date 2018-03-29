@@ -61,6 +61,7 @@ class Reader(object):
         self.got_end_timestamp = False
         self.got_timeout = False
         self.timeout_message = ''
+        self.got_error = False
         self.event = event
         self.proc = None
 
@@ -71,6 +72,9 @@ class Reader(object):
         elif line == 'TART: TIMEOUT':
             self.got_timeout = True
             self.timeout_message = 'TART'
+            self.event.set()
+        elif line.startswith('TEST-UNEXPECTED-FAIL | '):
+            self.got_error = True
             self.event.set()
 
         if not (line.startswith('JavaScript error:') or
@@ -148,6 +152,8 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
                 )
         elif reader.got_timeout:
             raise TalosError('TIMEOUT: %s' % reader.timeout_message)
+        elif reader.got_error:
+            raise TalosError("unexpected error")
     finally:
         # this also handle KeyboardInterrupt
         # ensure early the process is really terminated
