@@ -233,15 +233,6 @@ var Policies = {
     }
   },
 
-  "DisableTelemetry": {
-    onBeforeAddons(manager, param) {
-      if (param) {
-        setAndLockPref("datareporting.healthreport.uploadEnabled", false);
-        setAndLockPref("datareporting.policy.dataSubmissionEnabled", false);
-      }
-    }
-  },
-
   "DisplayBookmarksToolbar": {
     onBeforeUIStartup(manager, param) {
       let value = (!param).toString();
