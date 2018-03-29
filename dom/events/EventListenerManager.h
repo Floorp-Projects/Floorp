@@ -405,18 +405,18 @@ public:
   /**
    * Returns true if there is at least one event listener for aEventName.
    */
-  bool HasListenersFor(const nsAString& aEventName);
+  bool HasListenersFor(const nsAString& aEventName) const;
 
   /**
    * Returns true if there is at least one event listener for aEventNameWithOn.
    * Note that aEventNameWithOn must start with "on"!
    */
-  bool HasListenersFor(nsAtom* aEventNameWithOn);
+  bool HasListenersFor(nsAtom* aEventNameWithOn) const;
 
   /**
    * Returns true if there is at least one event listener.
    */
-  bool HasListeners();
+  bool HasListeners() const;
 
   /**
    * Sets aList to the list of nsIEventListenerInfo objects representing the
