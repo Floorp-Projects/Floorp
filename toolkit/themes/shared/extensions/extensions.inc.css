@@ -1000,13 +1000,13 @@ button.button-link:not([disabled="true"]):active:hover {
 
 .addon-control.replacement:active,
 .addon-control.replacement:hover {
-  background-color: var(--in-content-primary-button-hover);
-  border-color: var(--in-content-primary-button-hover);
+  background-color: var(--in-content-primary-button-background-hover);
+  border-color: var(--in-content-primary-button-background-hover);
 }
 
 .addon-control.replacement:active:hover {
-  background-color: var(--in-content-primary-button-active);
-  border-color: var(--in-content-primary-button-active);
+  background-color: var(--in-content-primary-button-background-active);
+  border-color: var(--in-content-primary-button-background-active);
 }
 
 /*** telemetry experiments ***/
