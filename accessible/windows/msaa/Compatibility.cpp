@@ -275,8 +275,12 @@ Compatibility::Init()
     // The vectored exception handler allows us to catch exceptions ahead of any
     // SEH handlers.
     if (!sVectoredExceptionHandler) {
+      // We need to let ASan's ShadowExceptionHandler remain in the firstHandler
+      // position, otherwise we'll get infinite recursion when our handler
+      // faults on shadow memory.
+      const ULONG firstHandler = FALSE;
       sVectoredExceptionHandler =
-        AddVectoredExceptionHandler(TRUE, &DetectInSendMessageExCompat);
+        AddVectoredExceptionHandler(firstHandler, &DetectInSendMessageExCompat);
     }
   }
 }
