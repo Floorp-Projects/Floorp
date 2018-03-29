@@ -67,15 +67,15 @@ struct KeyboardScrollAction;
 // Base class for grouping platform-specific APZC state variables.
 class PlatformSpecificStateBase {
 public:
-  virtual ~PlatformSpecificStateBase() {}
+  virtual ~PlatformSpecificStateBase() = default;
   virtual AndroidSpecificState* AsAndroidSpecificState() { return nullptr; }
 };
 
 /*
  * Represents a transform from the ParentLayer coordinate space of an APZC
  * to the ParentLayer coordinate space of its parent APZC.
- * Each layer along the way contributes to the transform. We track 
- * contributions that are perspective transforms separately, as sometimes 
+ * Each layer along the way contributes to the transform. We track
+ * contributions that are perspective transforms separately, as sometimes
  * these require special handling.
  */
 struct AncestorTransform {
@@ -239,6 +239,10 @@ public:
 
   bool UpdateAnimation(const TimeStamp& aSampleTime,
                        nsTArray<RefPtr<Runnable>>* aOutDeferredTasks);
+
+  // --------------------------------------------------------------------------
+  // These methods must only be called on the updater thread.
+  //
 
   /**
    * A shadow layer update has arrived. |aScrollMetdata| is the new ScrollMetadata
@@ -753,6 +757,9 @@ protected:
    */
   APZCTreeManager* GetApzcTreeManager() const;
 
+  void AssertOnSamplerThread() const;
+  void AssertOnUpdaterThread() const;
+
   /**
    * Convert ScreenPoint relative to the screen to LayoutDevicePoint relative
    * to the parent document. This excludes the transient compositor transform.
@@ -792,7 +799,7 @@ protected:
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
      since they are accessed on the UI thread but can be cleared on the
-     sampler thread. */
+     updater thread. */
   RefPtr<GeckoContentController> mGeckoContentController;
   RefPtr<GestureEventListener> mGestureEventListener;
   mutable Monitor mRefPtrMonitor;

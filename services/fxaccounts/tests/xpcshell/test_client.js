@@ -732,48 +732,6 @@ add_task(async function test_updateDevice() {
   await promiseStopServer(server);
 });
 
-add_task(async function test_signOutAndDestroyDevice() {
-  const DEVICE_ID = "device id";
-  const ERROR_ID = "test that the client promise rejects";
-  let emptyMessage = "{}";
-
-  const server = httpd_setup({
-    "/account/device/destroy": function(request, response) {
-      const body = JSON.parse(CommonUtils.readBytesFromInputStream(request.bodyInputStream));
-
-      if (!body.id) {
-        response.setStatusLine(request.httpVersion, 400, "Invalid request");
-        response.bodyOutputStream.write(emptyMessage, emptyMessage.length);
-        return;
-      }
-
-      if (body.id === ERROR_ID) {
-        response.setStatusLine(request.httpVersion, 500, "Alas");
-        response.bodyOutputStream.write("{}", 2);
-        return;
-      }
-
-      response.setStatusLine(request.httpVersion, 200, "OK");
-      response.bodyOutputStream.write("{}", 2);
-    },
-  });
-
-  const client = new FxAccountsClient(server.baseURI);
-  const result = await client.signOutAndDestroyDevice(FAKE_SESSION_TOKEN, DEVICE_ID);
-
-  Assert.ok(result);
-  Assert.equal(Object.keys(result).length, 0);
-
-  try {
-    await client.signOutAndDestroyDevice(FAKE_SESSION_TOKEN, ERROR_ID);
-    do_throw("Expected to catch an exception");
-  } catch (unexpectedError) {
-    Assert.equal(unexpectedError.code, 500);
-  }
-
-  await promiseStopServer(server);
-});
-
 add_task(async function test_getDeviceList() {
   let canReturnDevices;
 

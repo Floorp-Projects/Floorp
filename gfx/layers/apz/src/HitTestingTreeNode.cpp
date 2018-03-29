@@ -10,7 +10,6 @@
 #include "gfxPrefs.h"
 #include "LayersLogging.h"                              // for Stringify
 #include "mozilla/gfx/Point.h"                          // for Point4D
-#include "mozilla/layers/APZThreadUtils.h"              // for AssertOnSamplerThread
 #include "mozilla/layers/APZUtils.h"                    // for CompleteAsyncTransform
 #include "mozilla/layers/AsyncCompositionManager.h"     // for ViewTransform::operator Matrix4x4()
 #include "mozilla/layers/AsyncDragMetrics.h"            // for AsyncDragMetrics
@@ -31,6 +30,7 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
   , mScrollViewId(FrameMetrics::NULL_SCROLL_ID)
   , mScrollbarAnimationId(0)
   , mFixedPosTarget(FrameMetrics::NULL_SCROLL_ID)
+  , mIsBackfaceHidden(false)
   , mOverride(EventRegionsOverride::NoOverride)
 {
 if (mIsPrimaryApzcHolder) {
@@ -52,14 +52,13 @@ HitTestingTreeNode::RecycleWith(AsyncPanZoomController* aApzc,
   // fields.
 }
 
-HitTestingTreeNode::~HitTestingTreeNode()
-{
-}
+HitTestingTreeNode::~HitTestingTreeNode() = default;
 
 void
 HitTestingTreeNode::Destroy()
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  // This runs on the updater thread, it's not worth passing around extra raw
+  // pointers just to assert it.
 
   mPrevSibling = nullptr;
   mLastChild = nullptr;
@@ -263,13 +262,15 @@ HitTestingTreeNode::SetHitTestData(const EventRegions& aRegions,
                                    const LayerIntRegion& aVisibleRegion,
                                    const CSSTransformMatrix& aTransform,
                                    const Maybe<ParentLayerIntRegion>& aClipRegion,
-                                   const EventRegionsOverride& aOverride)
+                                   const EventRegionsOverride& aOverride,
+                                   bool aIsBackfaceHidden)
 {
   mEventRegions = aRegions;
   mVisibleRegion = aVisibleRegion;
   mTransform = aTransform;
   mClipRegion = aClipRegion;
   mOverride = aOverride;
+  mIsBackfaceHidden = aIsBackfaceHidden;
 }
 
 bool
@@ -300,6 +301,13 @@ HitTestingTreeNode::HitTest(const LayerPoint& aPoint) const
   }
 
   auto point = LayerIntPoint::Round(aPoint);
+
+  // If the layer's backface is showing and it's hidden, don't hit it.
+  // This matches the behavior of main-thread hit testing in
+  // nsDisplayTransform::HitTest().
+  if (mIsBackfaceHidden) {
+    return result;
+  }
 
   // test against event regions in Layer coordinate space
   if (!mEventRegions.mHitRegion.Contains(point.x, point.y)) {

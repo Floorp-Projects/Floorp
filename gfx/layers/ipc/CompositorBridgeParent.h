@@ -64,6 +64,7 @@ namespace layers {
 class APZCTreeManager;
 class APZCTreeManagerParent;
 class APZSampler;
+class APZUpdater;
 class AsyncCompositionManager;
 class AsyncImagePipelineManager;
 class Compositor;
@@ -461,6 +462,7 @@ public:
   AndroidDynamicToolbarAnimator* GetAndroidDynamicToolbarAnimator();
 #endif
   RefPtr<APZSampler> GetAPZSampler();
+  RefPtr<APZUpdater> GetAPZUpdater();
 
   CompositorOptions GetOptions() const {
     return mOptions;
@@ -623,6 +625,7 @@ protected:
 
   RefPtr<APZCTreeManager> mApzcTreeManager;
   RefPtr<APZSampler> mApzSampler;
+  RefPtr<APZUpdater> mApzUpdater;
 
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   // This makes sure the compositorParent is not destroyed before receiving

@@ -62,7 +62,6 @@ class BackendTupfile(object):
         self.environment = environment
         self.name = mozpath.join(objdir, 'Tupfile')
         self.rules_included = False
-        self.shell_exported = False
         self.defines = []
         self.host_defines = []
         self.delayed_generated_files = []
@@ -75,6 +74,7 @@ class BackendTupfile(object):
         self.static_lib = None
         self.shared_lib = None
         self.program = None
+        self.exports = set()
 
         self.fh = FileAvoidWrite(self.name, capture_diff=True)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
@@ -157,13 +157,16 @@ class BackendTupfile(object):
                     display='%s %%f' % compiler,
                 )
 
-    def export_shell(self):
-        if not self.shell_exported:
-            # These are used by mach/mixin/process.py to determine the current
-            # shell.
-            for var in ('SHELL', 'MOZILLABUILD', 'COMSPEC'):
+    def export(self, env):
+        for var in env:
+            if var not in self.exports:
+                self.exports.add(var)
                 self.write('export %s\n' % var)
-            self.shell_exported = True
+
+    def export_shell(self):
+        # These are used by mach/mixin/process.py to determine the current
+        # shell.
+        self.export(['SHELL', 'MOZILLABUILD', 'COMSPEC'])
 
     def close(self):
         return self.fh.close()
@@ -508,6 +511,14 @@ class TupOnly(CommonBackend, PartialBackend):
             outputs = []
             outputs.extend(obj.outputs)
             outputs.append('%s.pp' % obj.outputs[0])
+
+            extra_exports = {
+                'buildid.h': ['MOZ_BUILD_DATE'],
+            }
+            for f in obj.outputs:
+                exports = extra_exports.get(f)
+                if exports:
+                    backend_file.export(exports)
 
             if any(f in obj.outputs for f in ('source-repo.h', 'buildid.h')):
                 extra_outputs = [self._early_generated_files]

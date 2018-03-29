@@ -138,7 +138,7 @@ private:
 
 private:
   // All methods should hold this lock, since this class is accessed via both
-  // the sampler and controller threads.
+  // the updater and controller threads.
   mutable Mutex mMutex;
 
   // The set of focus targets received indexed by their layer tree ID

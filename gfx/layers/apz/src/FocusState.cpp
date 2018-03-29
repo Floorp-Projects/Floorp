@@ -70,7 +70,9 @@ FocusState::Update(LayersId aRootLayerTreeId,
                    LayersId aOriginatingLayersId,
                    const FocusTarget& aState)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  // This runs on the updater thread, it's not worth passing around extra raw
+  // pointers just to assert it.
+
   MutexAutoLock lock(mMutex);
 
   FS_LOG("Update with rlt=%" PRIu64 ", olt=%" PRIu64 ", ft=(%s, %" PRIu64 ")\n",
@@ -182,7 +184,8 @@ FocusState::Update(LayersId aRootLayerTreeId,
 void
 FocusState::RemoveFocusTarget(LayersId aLayersId)
 {
-  APZThreadUtils::AssertOnSamplerThread();
+  // This runs on the updater thread, it's not worth passing around extra raw
+  // pointers just to assert it.
   MutexAutoLock lock(mMutex);
 
   mFocusTree.erase(aLayersId);

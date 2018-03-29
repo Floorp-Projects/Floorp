@@ -15,6 +15,7 @@
 #include "nsTArray.h"
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT
 #include "mozilla/DebugOnly.h"   // for DebugOnly
+#include "mozilla/GfxMessageUtils.h" // for ParamTraits specializations
 #include "mozilla/ToString.h"    // for ToString
 #include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "ipc/IPCMessageUtils.h"

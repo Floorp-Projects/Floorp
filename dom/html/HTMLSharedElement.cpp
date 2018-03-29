@@ -81,16 +81,14 @@ static void
 DirectoryMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                GenericSpecifiedValues* aData)
 {
-  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(List))) {
-    if (!aData->PropertyIsSet(eCSSProperty_list_style_type)) {
-      // type: enum
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
-      if (value) {
-        if (value->Type() == nsAttrValue::eEnum) {
-          aData->SetKeywordValue(eCSSProperty_list_style_type, value->GetEnumValue());
-        } else {
-          aData->SetKeywordValue(eCSSProperty_list_style_type, NS_STYLE_LIST_STYLE_DISC);
-        }
+  if (!aData->PropertyIsSet(eCSSProperty_list_style_type)) {
+    // type: enum
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
+    if (value) {
+      if (value->Type() == nsAttrValue::eEnum) {
+        aData->SetKeywordValue(eCSSProperty_list_style_type, value->GetEnumValue());
+      } else {
+        aData->SetKeywordValue(eCSSProperty_list_style_type, NS_STYLE_LIST_STYLE_DISC);
       }
     }
   }
