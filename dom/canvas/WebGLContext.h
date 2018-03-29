@@ -973,6 +973,7 @@ protected:
     WebGLRefPtr<WebGLBuffer> mBoundCopyWriteBuffer;
     WebGLRefPtr<WebGLBuffer> mBoundPixelPackBuffer;
     WebGLRefPtr<WebGLBuffer> mBoundPixelUnpackBuffer;
+    WebGLRefPtr<WebGLBuffer> mBoundTransformFeedbackBuffer;
     WebGLRefPtr<WebGLBuffer> mBoundUniformBuffer;
 
     std::vector<IndexedBufferBinding> mIndexedUniformBufferBindings;

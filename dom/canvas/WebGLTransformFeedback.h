@@ -27,7 +27,8 @@ public:
     const GLuint mGLName;
 private:
     // GLES 3.0.4 p267, Table 6.24 "Transform Feedback State"
-    WebGLRefPtr<WebGLBuffer> mGenericBufferBinding;
+    // It's not yet in the ES3 spec, but the generic TF buffer bind point has been moved
+    // to context state, instead of TFO state.
     std::vector<IndexedBufferBinding> mIndexedBindings;
     bool mIsPaused;
     bool mIsActive;
