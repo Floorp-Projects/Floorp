@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    svg{
+      display: block;
+      margin: auto;
+      -webkit-transform-origin: top center;
+      -webkit-transform: scale(1.5);
+    }
+    #cube{
+      position: absolute;
+      left: 25px;
+      top: 25px;
+      width: 74px;
+      height: 74px;
+      backface-visibility: visible;
+      -webkit-transform-style: preserve-3d;
+      -webkit-transform-origin: center center;
+      -webkit-backface-visibility: visible;
+      -webkit-transform: rotateX(-45deg) rotateY(50deg);
+      -webkit-transition: -webkit-transform 1s;
+    }
+
+    .side{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 74px;
+      height: 74px;
+      backface-visibility: visible;
+      -webkit-transform-origin: center center;
+      -webkit-backface-visibility: visible;
+    }
+
+    #cube .side:nth-child(1) {
+	    -webkit-transform: translateY(37px) rotateX(90deg);
+	    -moz-transform: translateY(37px) rotateX(90deg);
+    }
+
+    #cube .side:nth-child(2) {
+	    -webkit-transform: translateY(-37px) rotateX(-90deg);
+	    -moz-transform: translateY(-37px) rotateX(-90deg);
+
+    }
+  </style>
+</head>
+<body>
+  <div id="cube">
+    <svg class="side" width="100px" height="100px">
+    <rect fill="#DAD6CC" width="74" height="74"></rect>
+    <circle fill="#F8F1E5" cx="37" cy="37" r="27"></circle>
+    <g>
+    </g>
+    </svg>
+    <svg class="side" width="100px" height="100px">
+    <rect fill="#DAD6CC" width="74" height="74"></rect>
+    <circle fill="#F8F1E5" cx="37" cy="37" r="27"></circle>
+    <g>
+    </g>
+    </svg>
+
+  </div>
+</body></html>

@@ -185,6 +185,14 @@
       "type": "boolean"
     },
 
+    "DisableTelemetry": {
+      "description": "Turns off telemetry.",
+      "first_available": "60.0",
+      "enterprise_only": true,
+
+      "type": "boolean"
+    },
+
     "DisplayBookmarksToolbar": {
       "description": "Causes the bookmarks toolbar to be displayed by default.",
       "first_available": "60.0",

@@ -362,7 +362,7 @@ public:
                       const nsTimingFunction& aTimingFunction,
                       nsTArray<Keyframe>& aKeyframes)
   {
-    ServoStyleSet* styleSet = aPresContext->StyleSet()->AsServo();
+    ServoStyleSet* styleSet = aPresContext->StyleSet();
     MOZ_ASSERT(styleSet);
     return styleSet->GetKeyframesForName(aName,
                                          aTimingFunction,

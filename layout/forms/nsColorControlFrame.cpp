@@ -13,8 +13,6 @@
 #include "nsGkAtoms.h"
 #include "nsIDOMNode.h"
 #include "nsIFormControl.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsIDocument.h"
 

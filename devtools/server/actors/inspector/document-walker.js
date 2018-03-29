@@ -20,27 +20,36 @@ const SKIP_TO_SIBLING = "SKIP_TO_SIBLING";
  *
  * @param {DOMNode} node
  * @param {Window} rootWin
- * @param {Number} whatToShow
- *        See nodeFilterConstants / inIDeepTreeWalker for options.
- * @param {Function} filter
- *        A custom filter function Taking in a DOMNode and returning an Int. See
- *        WalkerActor.nodeFilter for an example.
- * @param {String} skipTo
- *        Either SKIP_TO_PARENT or SKIP_TO_SIBLING. If the provided node is not compatible
- *        with the filter function for this walker, try to find a compatible one either
- *        in the parents or in the siblings of the node.
+ * @param {Object}
+ *        - {Number} whatToShow
+ *          See nodeFilterConstants / inIDeepTreeWalker for options.
+ *        - {Function} filter
+ *          A custom filter function Taking in a DOMNode and returning an Int. See
+ *          WalkerActor.nodeFilter for an example.
+ *        - {String} skipTo
+ *          Either SKIP_TO_PARENT or SKIP_TO_SIBLING. If the provided node is not
+ *          compatible with the filter function for this walker, try to find a compatible
+ *          one either in the parents or in the siblings of the node.
+ *        - {Boolean} showAnonymousContent
+ *          Pass true to let the walker return and traverse anonymous content.
+ *          When navigating host elements to which shadow DOM is attached, the light tree
+ *          will be visible only to a walker with showAnonymousContent=false. The shadow
+ *          tree will only be visible to a walker with showAnonymousContent=true.
  */
 function DocumentWalker(node, rootWin,
-  whatToShow = nodeFilterConstants.SHOW_ALL,
-  filter = standardTreeWalkerFilter,
-  skipTo = SKIP_TO_PARENT) {
+  {
+    whatToShow = nodeFilterConstants.SHOW_ALL,
+    filter = standardTreeWalkerFilter,
+    skipTo = SKIP_TO_PARENT,
+    showAnonymousContent = true
+  } = {}) {
   if (Cu.isDeadWrapper(rootWin) || !rootWin.location) {
     throw new Error("Got an invalid root window in DocumentWalker");
   }
 
   this.walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"]
     .createInstance(Ci.inIDeepTreeWalker);
-  this.walker.showAnonymousContent = true;
+  this.walker.showAnonymousContent = showAnonymousContent;
   this.walker.showSubDocuments = true;
   this.walker.showDocumentsAsNodes = true;
   this.walker.init(rootWin.document, whatToShow);

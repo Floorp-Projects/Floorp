@@ -154,6 +154,11 @@ protected:
                                     BookmarkData* aBookmark,
                                     const nsACString& aName);
 
+  nsresult
+  GetValueFromStatement(nsCOMPtr<mozIStorageStatement>& aStatement,
+                        nsIVariant** _retval);
+
+
 public:
   nsresult GetPagesWithAnnotationCOMArray(const nsACString& aName,
                                           nsCOMArray<nsIURI>* _results);

@@ -40,20 +40,6 @@ addAsyncTest(async function() {
 
 addAsyncTest(async function() {
   info("Getting a nodeFront, reloading the page, and calling " +
-    "walker.parents(nodeFront) before the load completes shouldn't fail");
-
-  let nodeFront = await gWalker.querySelector(gWalker.rootNode, "h1");
-  let newRoot = waitForMutation(gWalker, isNewRoot);
-  gDoc.defaultView.location.reload();
-  await gWalker.parents(nodeFront);
-  await newRoot;
-
-  ok(true, "The call to walker.parents() didn't fail");
-  runNextTest();
-});
-
-addAsyncTest(async function() {
-  info("Getting a nodeFront, reloading the page, and calling " +
     "walker.children(nodeFront) before the load completes shouldn't fail");
 
   let nodeFront = await gWalker.querySelector(gWalker.rootNode, "body");
@@ -63,20 +49,6 @@ addAsyncTest(async function() {
   await newRoot;
 
   ok(true, "The call to walker.children() didn't fail");
-  runNextTest();
-});
-
-addAsyncTest(async function() {
-  info("Getting a nodeFront, reloading the page, and calling " +
-    "walker.siblings(nodeFront) before the load completes shouldn't fail");
-
-  let nodeFront = await gWalker.querySelector(gWalker.rootNode, "h1");
-  let newRoot = waitForMutation(gWalker, isNewRoot);
-  gDoc.defaultView.location.reload();
-  await gWalker.siblings(nodeFront);
-  await newRoot;
-
-  ok(true, "The call to walker.siblings() didn't fail");
   runNextTest();
 });
 

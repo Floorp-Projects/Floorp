@@ -16,7 +16,7 @@ job-defaults:
         using: mach
     when:
         files-changed:
-            - 'config/mozunit.py'
+            - 'config/mozunit/**'
             - 'python/mach_commands.py'
 
 taskgraph-tests:
@@ -107,6 +107,7 @@ mozlint:
     when:
         files-changed:
             - 'python/mozlint/**'
+            - 'tools/lint/**'
 
 mozterm:
     description: python/mozterm unit tests

@@ -29,8 +29,6 @@
 #include "nsIServiceManager.h"
 #include "nsContainerFrame.h"
 #include "nsContentCID.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"

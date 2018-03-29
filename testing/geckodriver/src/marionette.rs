@@ -600,8 +600,9 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
         if let Some(ref mut runner) = self.browser {
             // TODO(https://bugzil.la/1443922):
             // Use toolkit.asyncshutdown.crash_timout pref
-            if runner.wait(time::Duration::from_secs(70)).is_err() {
-                error!("Failed to stop browser process");
+            match runner.wait(time::Duration::from_secs(70)) {
+                Ok(x) => debug!("Browser process stopped with exit status {}", x),
+                Err(e) => error!("Failed to stop browser process: {}", e),
             }
         }
 

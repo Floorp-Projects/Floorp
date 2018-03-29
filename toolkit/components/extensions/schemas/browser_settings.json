@@ -156,6 +156,10 @@
       "webNotificationsDisabled": {
         "$ref": "types.Setting",
         "description": "Disables webAPI notifications."
+      },
+      "overrideDocumentColors": {
+        "$ref": "types.Setting",
+        "description": "This setting controls whether the user-chosen colors override the page's colors."
       }
     }
   }
