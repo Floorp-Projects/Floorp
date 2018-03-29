@@ -52,6 +52,8 @@ private:
       , pos(0)
       , size(aSize)
     {
+      MOZ_ASSERT(data.Length() % size == 0,
+                 "PrefixString length must be a multiple of the prefix size.");
     }
 
     void getRemainingString(nsACString& out) {
@@ -64,13 +66,18 @@ private:
       MOZ_ASSERT(out.IsEmpty());
       if (remaining() >= size) {
         out = Substring(data, pos, size);
+      } else {
+        MOZ_ASSERT(remaining() == 0,
+                   "Remaining bytes but not enough for a (size)-byte prefix.");
       }
     }
     void next() {
       pos += size;
+      MOZ_ASSERT(pos <= data.Length());
     }
     uint32_t remaining() {
       return data.Length() - pos;
+      MOZ_ASSERT(pos <= data.Length());
     }
 
     nsCString data;
@@ -213,6 +220,7 @@ static nsresult
 AppendPrefixToMap(PrefixStringMap& prefixes, const nsACString& prefix)
 {
   uint32_t len = prefix.Length();
+  MOZ_ASSERT(len >= PREFIX_SIZE && len <= COMPLETE_SIZE);
   if (!len) {
     return NS_OK;
   }
@@ -597,6 +605,8 @@ VLPrefixSet::VLPrefixSet(const PrefixStringMap& aMap)
 {
   for (auto iter = aMap.ConstIter(); !iter.Done(); iter.Next()) {
     uint32_t size = iter.Key();
+    MOZ_ASSERT(iter.Data()->Length() % size == 0,
+               "PrefixString must be a multiple of the prefix size.");
     mMap.Put(size, new PrefixString(*iter.Data(), size));
     mCount += iter.Data()->Length() / size;
   }
@@ -607,6 +617,8 @@ VLPrefixSet::VLPrefixSet(const TableUpdateV4::PrefixStdStringMap& aMap)
 {
   for (auto iter = aMap.ConstIter(); !iter.Done(); iter.Next()) {
     uint32_t size = iter.Key();
+    MOZ_ASSERT(iter.Data()->GetPrefixString().Length() % size == 0,
+               "PrefixString must be a multiple of the prefix size.");
     mMap.Put(size, new PrefixString(iter.Data()->GetPrefixString(), size));
     mCount += iter.Data()->GetPrefixString().Length() / size;
   }
