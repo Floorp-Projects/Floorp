@@ -519,7 +519,7 @@ cs{
             }
         }
     }
-    Version{"2.1.37.11"}
+    Version{"2.1.39.15"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -4658,6 +4658,10 @@ cs{
             0,
         }
         relative:intvector{
+            1,
+            1,
+        }
+        typographicNames:intvector{
             1,
             1,
         }

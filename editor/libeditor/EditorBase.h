@@ -1186,7 +1186,6 @@ public:
    */
   static nsAtom* GetTag(nsIDOMNode* aNode);
 
-  bool NodesSameType(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
   virtual bool AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2);
 
   static bool IsTextNode(nsIDOMNode* aNode);
@@ -1534,7 +1533,7 @@ public:
   virtual nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
                                           int32_t aIndex,
                                           nsIDOMDocument* aSourceDoc,
-                                          nsIDOMNode* aDestinationNode,
+                                          nsINode* aDestinationNode,
                                           int32_t aDestOffset,
                                           bool aDoDeleteSelection) = 0;
 

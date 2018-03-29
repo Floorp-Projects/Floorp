@@ -1,4 +1,4 @@
-﻿//---------------------------------------------------------
+//---------------------------------------------------------
 // Copyright (C) 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html
 //---------------------------------------------------------
@@ -6,7 +6,7 @@
 // Corporation and others.  All Rights Reserved.
 //---------------------------------------------------------
 // Build tool: com.ibm.icu.dev.tool.currency.NumericCodeData
-// Build date: 2017-09-28T21:49:02Z
+// Build date: 2018-03-06T17:38:16Z
 //---------------------------------------------------------
 // >> !!! >>   THIS IS A MACHINE-GENERATED FILE   << !!! <<
 // >> !!! >>>            DO NOT EDIT             <<< !!! <<
@@ -179,6 +179,7 @@ currencyNumericCodes:table(nofallback){
         MNT:int{496}
         MOP:int{446}
         MRO:int{478}
+        MRU:int{929}
         MTL:int{470}
         MTP:int{470}
         MUR:int{480}
@@ -239,6 +240,7 @@ currencyNumericCodes:table(nofallback){
         SRG:int{740}
         SSP:int{728}
         STD:int{678}
+        STN:int{930}
         SUR:int{810}
         SVC:int{222}
         SYP:int{760}

@@ -27,7 +27,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsISupportsUtils.h"

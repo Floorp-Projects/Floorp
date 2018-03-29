@@ -684,6 +684,10 @@ pt{
         }
         MRO{
             "MRO",
+            "Ouguiya mauritana (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Ouguiya mauritana",
         }
         MTL{
@@ -912,6 +916,10 @@ pt{
         }
         STD{
             "STD",
+            "Dobra de São Tomé e Príncipe (1977–2017)",
+        }
+        STN{
+            "STN",
             "Dobra de São Tomé e Príncipe",
         }
         SUR{
@@ -1267,7 +1275,7 @@ pt{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1969,6 +1977,10 @@ pt{
             other{"Patacas macaenses"}
         }
         MRO{
+            one{"Ouguiya mauritana (1973–2017)"}
+            other{"Ouguiyas mauritanas (1973–2017)"}
+        }
+        MRU{
             one{"Ouguiya mauritana"}
             other{"Ouguiyas mauritanas"}
         }
@@ -2197,6 +2209,10 @@ pt{
             other{"Libras sul-sudanesas"}
         }
         STD{
+            one{"Dobra de São Tomé e Príncipe (1977–2017)"}
+            other{"Dobras de São Tomé e Príncipe (1977–2017)"}
+        }
+        STN{
             one{"Dobra de São Tomé e Príncipe"}
             other{"Dobras de São Tomé e Príncipe"}
         }
@@ -2477,5 +2493,5 @@ pt{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.1"}
+    Version{"2.1.39.20"}
 }

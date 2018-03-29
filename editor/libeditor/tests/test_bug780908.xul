@@ -103,7 +103,7 @@ adapted from test_bug607584.xul by Kent James <kent@caspia.com>
   function runTest() {
     var newEditorElement = document.getElementById("editor");
     newEditorElement.makeEditable("html", true);
-    var docShell = newEditorElement.boxObject.docShell;
+    var docShell = newEditorElement.docShell;
     progress = docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebProgress);
     progressListener = new EditorContentListener(newEditorElement);
     progress.addProgressListener(progressListener, Ci.nsIWebProgress.NOTIFY_ALL);

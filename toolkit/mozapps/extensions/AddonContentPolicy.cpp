@@ -92,15 +92,19 @@ LogMessage(const nsAString &aMessage, nsIURI* aSourceURI, const nsAString &aSour
 // Content policy enforcement:
 
 NS_IMETHODIMP
-AddonContentPolicy::ShouldLoad(uint32_t aContentType,
-                               nsIURI* aContentLocation,
-                               nsIURI* aRequestOrigin,
-                               nsISupports* aContext,
+AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation,
+                               nsILoadInfo* aLoadInfo,
                                const nsACString& aMimeTypeGuess,
-                               nsISupports* aExtra,
-                               nsIPrincipal* aRequestPrincipal,
                                int16_t* aShouldLoad)
 {
+  uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
+  nsCOMPtr<nsISupports> aContext = aLoadInfo->GetLoadingContext();
+  nsCOMPtr<nsIURI> aRequestOrigin;
+  nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
+  if (loadingPrincipal) {
+    loadingPrincipal->GetURI(getter_AddRefs(aRequestOrigin));
+  }
+
   MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
              "We should only see external content policy types here.");
 
@@ -139,17 +143,16 @@ AddonContentPolicy::ShouldLoad(uint32_t aContentType,
 }
 
 NS_IMETHODIMP
-AddonContentPolicy::ShouldProcess(uint32_t aContentType,
-                                  nsIURI* aContentLocation,
-                                  nsIURI* aRequestOrigin,
-                                  nsISupports* aRequestingContext,
+AddonContentPolicy::ShouldProcess(nsIURI* aContentLocation,
+                                  nsILoadInfo* aLoadInfo,
                                   const nsACString& aMimeTypeGuess,
-                                  nsISupports* aExtra,
-                                  nsIPrincipal* aRequestPrincipal,
                                   int16_t* aShouldProcess)
 {
+#ifdef DEBUG
+  uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
   MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
              "We should only see external content policy types here.");
+#endif
 
   *aShouldProcess = nsIContentPolicy::ACCEPT;
   return NS_OK;

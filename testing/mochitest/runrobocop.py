@@ -139,8 +139,10 @@ class RobocopTestRunner(MochitestDesktop):
         if uploadDir:
             self.log.debug("Pulling any remote moz logs and screenshots to %s." %
                            uploadDir)
-            self.device.pull(self.remoteMozLog, uploadDir)
-            self.device.pull(self.remoteScreenshots, uploadDir)
+            if self.device.is_dir(self.remoteMozLog):
+                self.device.pull(self.remoteMozLog, uploadDir)
+            if self.device.is_dir(self.remoteScreenshots):
+                self.device.pull(self.remoteScreenshots, uploadDir)
         MochitestDesktop.cleanup(self, self.options)
         if self.localProfile:
             mozfile.remove(self.localProfile)
@@ -328,7 +330,7 @@ class RobocopTestRunner(MochitestDesktop):
         try:
             if printLogcat:
                 logcat = self.device.get_logcat(
-                    filterOutRegexps=fennecLogcatFilters)
+                    filter_out_regexps=fennecLogcatFilters)
                 self.log.info(
                     '\n' +
                     ''.join(logcat).decode(

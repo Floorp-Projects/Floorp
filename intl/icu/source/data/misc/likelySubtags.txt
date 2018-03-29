@@ -1576,7 +1576,7 @@ likelySubtags:table(nofallback){
     und_Plrd{"hmd_Plrd_CN"}
     und_Prti{"xpr_Prti_IR"}
     und_QA{"ar_Arab_QA"}
-    und_QO{"en_Latn_IO"}
+    und_QO{"en_Latn_DG"}
     und_RE{"fr_Latn_RE"}
     und_RO{"ro_Latn_RO"}
     und_RS{"sr_Cyrl_RS"}

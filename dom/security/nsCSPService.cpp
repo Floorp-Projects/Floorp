@@ -120,17 +120,22 @@ subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
 
 /* nsIContentPolicy implementation */
 NS_IMETHODIMP
-CSPService::ShouldLoad(uint32_t aContentType,
-                       nsIURI *aContentLocation,
-                       nsIURI *aRequestOrigin,
-                       nsISupports *aRequestContext,
+CSPService::ShouldLoad(nsIURI *aContentLocation,
+                       nsILoadInfo* aLoadInfo,
                        const nsACString &aMimeTypeGuess,
-                       nsISupports *aExtra,
-                       nsIPrincipal *aRequestPrincipal,
                        int16_t *aDecision)
 {
   if (!aContentLocation) {
     return NS_ERROR_FAILURE;
+  }
+
+  uint32_t aContentType = aLoadInfo->InternalContentPolicyType();
+  nsCOMPtr<nsISupports> aRequestContext = aLoadInfo->GetLoadingContext();
+  nsCOMPtr<nsIPrincipal> aRequestPrincipal = aLoadInfo->TriggeringPrincipal();
+  nsCOMPtr<nsIURI> aRequestOrigin;
+  nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
+  if (loadingPrincipal) {
+    loadingPrincipal->GetURI(getter_AddRefs(aRequestOrigin));
   }
 
   if (MOZ_LOG_TEST(gCspPRLog, LogLevel::Debug)) {
@@ -218,18 +223,15 @@ CSPService::ShouldLoad(uint32_t aContentType,
 }
 
 NS_IMETHODIMP
-CSPService::ShouldProcess(uint32_t         aContentType,
-                          nsIURI           *aContentLocation,
-                          nsIURI           *aRequestOrigin,
-                          nsISupports      *aRequestContext,
+CSPService::ShouldProcess(nsIURI           *aContentLocation,
+                          nsILoadInfo*     aLoadInfo,
                           const nsACString &aMimeTypeGuess,
-                          nsISupports      *aExtra,
-                          nsIPrincipal     *aRequestPrincipal,
                           int16_t          *aDecision)
 {
   if (!aContentLocation) {
     return NS_ERROR_FAILURE;
   }
+  uint32_t aContentType = aLoadInfo->InternalContentPolicyType();
 
   if (MOZ_LOG_TEST(gCspPRLog, LogLevel::Debug)) {
     MOZ_LOG(gCspPRLog, LogLevel::Debug,
@@ -250,13 +252,9 @@ CSPService::ShouldProcess(uint32_t         aContentType,
     return NS_OK;
   }
 
-  return ShouldLoad(aContentType,
-                    aContentLocation,
-                    aRequestOrigin,
-                    aRequestContext,
+  return ShouldLoad(aContentLocation,
+                    aLoadInfo,
                     aMimeTypeGuess,
-                    aExtra,
-                    aRequestPrincipal,
                     aDecision);
 }
 

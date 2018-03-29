@@ -854,7 +854,7 @@ Chunk::releaseArena(JSRuntime* rt, Arena* arena, const AutoLockGC& lock)
     MOZ_ASSERT(arena->allocated());
     MOZ_ASSERT(!arena->hasDelayedMarking);
 
-    arena->release();
+    arena->release(lock);
     addArenaToFreeList(rt, arena);
     updateChunkListAfterFree(rt, lock);
 }

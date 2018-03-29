@@ -75,6 +75,11 @@ def parse_auto_props():
             # unescape any ";;" in a property value, e.g. the mime-type from
             #    *.java = svn:eol-style=native;svn:mime-type=text/plain;;charset=utf-8
             prop_val = prop_val.replace(";;", ";");
+            # If the prop value "is quoted", remove the quotes.
+            # See svn:keywords for an example of a quoted prop value.
+            match = re.match('^"(.+)"$', prop_val)
+            if match:
+                prop_val = match.group(1)
             proplist.append((prop_name, prop_val))
 
         file_types.append((file_type, proplist))

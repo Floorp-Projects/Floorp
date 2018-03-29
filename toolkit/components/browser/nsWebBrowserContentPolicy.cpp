@@ -21,16 +21,15 @@ nsWebBrowserContentPolicy::~nsWebBrowserContentPolicy()
 NS_IMPL_ISUPPORTS(nsWebBrowserContentPolicy, nsIContentPolicy)
 
 NS_IMETHODIMP
-nsWebBrowserContentPolicy::ShouldLoad(uint32_t aContentType,
-                                      nsIURI* aContentLocation,
-                                      nsIURI* aRequestingLocation,
-                                      nsISupports* aRequestingContext,
+nsWebBrowserContentPolicy::ShouldLoad(nsIURI* aContentLocation,
+                                      nsILoadInfo* aLoadInfo,
                                       const nsACString& aMimeGuess,
-                                      nsISupports* aExtra,
-                                      nsIPrincipal* aRequestPrincipal,
                                       int16_t* aShouldLoad)
 {
   NS_PRECONDITION(aShouldLoad, "Null out param");
+
+  uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
+  nsCOMPtr<nsISupports> aRequestingContext = aLoadInfo->GetLoadingContext();
 
   MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
              "We should only see external content policy types here.");
@@ -74,16 +73,15 @@ nsWebBrowserContentPolicy::ShouldLoad(uint32_t aContentType,
 }
 
 NS_IMETHODIMP
-nsWebBrowserContentPolicy::ShouldProcess(uint32_t aContentType,
-                                         nsIURI* aContentLocation,
-                                         nsIURI* aRequestingLocation,
-                                         nsISupports* aRequestingContext,
+nsWebBrowserContentPolicy::ShouldProcess(nsIURI* aContentLocation,
+                                         nsILoadInfo* aLoadInfo,
                                          const nsACString& aMimeGuess,
-                                         nsISupports* aExtra,
-                                         nsIPrincipal* aRequestPrincipal,
                                          int16_t* aShouldProcess)
 {
   NS_PRECONDITION(aShouldProcess, "Null out param");
+
+  uint32_t aContentType = aLoadInfo->GetExternalContentPolicyType();
+  nsCOMPtr<nsISupports> aRequestingContext = aLoadInfo->GetLoadingContext();
 
   MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
              "We should only see external content policy types here.");

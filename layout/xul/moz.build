@@ -33,7 +33,6 @@ EXPORTS += [
 
 EXPORTS.mozilla.dom += [
     'BoxObject.h',
-    'ContainerBoxObject.h',
     'ListBoxObject.h',
     'MenuBoxObject.h',
     'PopupBoxObject.h',
@@ -61,7 +60,6 @@ UNIFIED_SOURCES += [
 
 if CONFIG['MOZ_XUL']:
     UNIFIED_SOURCES += [
-        'ContainerBoxObject.cpp',
         'ListBoxObject.cpp',
         'MenuBoxObject.cpp',
         'nsDeckFrame.cpp',

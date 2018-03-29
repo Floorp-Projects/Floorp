@@ -288,6 +288,10 @@ pt_PT{
         }
         MRO{
             "MRO",
+            "Ouguiya da Mauritânia (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "Ouguiya da Mauritânia",
         }
         MVR{
@@ -402,6 +406,10 @@ pt_PT{
         SRD{
             "SRD",
             "dólar do Suriname",
+        }
+        STN{
+            "STN",
+            "São Tomé & Príncipe Dobra (2018)",
         }
         SZL{
             "SZL",
@@ -746,6 +754,10 @@ pt_PT{
             other{"Patacas de Macau"}
         }
         MRO{
+            one{"Ouguiya da Mauritânia (1973–2017)"}
+            other{"Ouguiyas da Mauritânia (1973–2017)"}
+        }
+        MRU{
             one{"Ouguiya da Mauritânia"}
             other{"Ouguiyas da Mauritânia"}
         }
@@ -849,6 +861,10 @@ pt_PT{
             one{"dólar do Suriname"}
             other{"dólares do Suriname"}
         }
+        STN{
+            one{"São Tomé & Príncipe dobra (2018)"}
+            other{"São Tomé & Príncipe dobras (2018)"}
+        }
         SZL{
             one{"Lilangeni da Suazilândia"}
             other{"Lilangenis da Suazilândia"}
@@ -922,5 +938,5 @@ pt_PT{
             other{"Kwachas zambianos (1968–2012)"}
         }
     }
-    Version{"2.1.37.6"}
+    Version{"2.1.39.11"}
 }

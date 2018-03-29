@@ -107,7 +107,9 @@ number_affixutils.o number_compact.o number_decimalquantity.o \
 number_decimfmtprops.o number_fluent.o number_formatimpl.o number_grouping.o \
 number_integerwidth.o number_longnames.o number_modifiers.o number_notation.o \
 number_padding.o number_patternmodifier.o number_patternstring.o \
-number_rounding.o number_scientific.o number_stringbuilder.o
+number_rounding.o number_scientific.o number_stringbuilder.o \
+double-conversion.o double-conversion-bignum-dtoa.o double-conversion-bignum.o \
+double-conversion-cached-powers.o double-conversion-diy-fp.o double-conversion-fast-dtoa.o
 
 
 ## Header files to install

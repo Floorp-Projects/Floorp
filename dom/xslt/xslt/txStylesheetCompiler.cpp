@@ -899,8 +899,7 @@ txErrorFunctionCall::appendName(nsAString& aDest)
 #endif
 
 static nsresult
-TX_ConstructXSLTFunction(nsAtom* aName, int32_t aNamespaceID,
-                         txStylesheetCompilerState* aState,
+TX_ConstructXSLTFunction(nsAtom* aName, txStylesheetCompilerState* aState,
                          FunctionCall** aFunction)
 {
     if (aName == nsGkAtoms::document) {
@@ -951,115 +950,21 @@ TX_ConstructXSLTFunction(nsAtom* aName, int32_t aNamespaceID,
     return NS_OK;
 }
 
-typedef nsresult (*txFunctionFactory)(nsAtom* aName,
-                                      int32_t aNamespaceID,
-                                      txStylesheetCompilerState* aState,
-                                      FunctionCall** aResult);
-struct txFunctionFactoryMapping
-{
-    const char* const mNamespaceURI;
-    int32_t mNamespaceID;
-    txFunctionFactory mFactory;
-};
-
 extern nsresult
 TX_ConstructEXSLTFunction(nsAtom *aName,
                           int32_t aNamespaceID,
                           txStylesheetCompilerState* aState,
                           FunctionCall **aResult);
 
-static txFunctionFactoryMapping kExtensionFunctions[] = {
-    { "", kNameSpaceID_Unknown, TX_ConstructXSLTFunction },
-    { "http://exslt.org/common", kNameSpaceID_Unknown,
-      TX_ConstructEXSLTFunction },
-    { "http://exslt.org/sets", kNameSpaceID_Unknown,
-      TX_ConstructEXSLTFunction },
-    { "http://exslt.org/strings", kNameSpaceID_Unknown,
-      TX_ConstructEXSLTFunction },
-    { "http://exslt.org/math", kNameSpaceID_Unknown,
-      TX_ConstructEXSLTFunction },
-    { "http://exslt.org/dates-and-times", kNameSpaceID_Unknown,
-      TX_ConstructEXSLTFunction }
-};
-
-extern nsresult
-TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, int32_t aNamespaceID,
-                            nsAtom *aName, nsISupports *aState,
-                            FunctionCall **aFunction);
-
-struct txXPCOMFunctionMapping
-{
-    int32_t mNamespaceID;
-    nsCString mContractID;
-};
-
-static nsTArray<txXPCOMFunctionMapping> *sXPCOMFunctionMappings = nullptr;
-
 static nsresult
 findFunction(nsAtom* aName, int32_t aNamespaceID,
              txStylesheetCompilerState* aState, FunctionCall** aResult)
 {
-    if (kExtensionFunctions[0].mNamespaceID == kNameSpaceID_Unknown) {
-        uint32_t i;
-        for (i = 0; i < ArrayLength(kExtensionFunctions); ++i) {
-            txFunctionFactoryMapping& mapping = kExtensionFunctions[i];
-            NS_ConvertASCIItoUTF16 namespaceURI(mapping.mNamespaceURI);
-            mapping.mNamespaceID =
-                txNamespaceManager::getNamespaceID(namespaceURI);
-        }
+    if (aNamespaceID == kNameSpaceID_None) {
+      return TX_ConstructXSLTFunction(aName, aState, aResult);
     }
 
-    uint32_t i;
-    for (i = 0; i < ArrayLength(kExtensionFunctions); ++i) {
-        const txFunctionFactoryMapping& mapping = kExtensionFunctions[i];
-        if (mapping.mNamespaceID == aNamespaceID) {
-            return mapping.mFactory(aName, aNamespaceID, aState, aResult);
-        }
-    }
-
-    if (!sXPCOMFunctionMappings) {
-        sXPCOMFunctionMappings = new nsTArray<txXPCOMFunctionMapping>;
-    }
-
-    txXPCOMFunctionMapping *map = nullptr;
-    uint32_t count = sXPCOMFunctionMappings->Length();
-    for (i = 0; i < count; ++i) {
-        map = &sXPCOMFunctionMappings->ElementAt(i);
-        if (map->mNamespaceID == aNamespaceID) {
-            break;
-        }
-    }
-
-    if (i == count) {
-        nsresult rv;
-        nsCOMPtr<nsICategoryManager> catman =
-            do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsAutoString namespaceURI;
-        rv = txNamespaceManager::getNamespaceURI(aNamespaceID, namespaceURI);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsCString contractID;
-        rv = catman->GetCategoryEntry("XSLT-extension-functions",
-                                      NS_ConvertUTF16toUTF8(namespaceURI).get(),
-                                      getter_Copies(contractID));
-        if (rv == NS_ERROR_NOT_AVAILABLE) {
-            return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
-        }
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        map = sXPCOMFunctionMappings->AppendElement();
-        if (!map) {
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        map->mNamespaceID = aNamespaceID;
-        map->mContractID = contractID;
-    }
-
-    return TX_ResolveFunctionCallXPCOM(map->mContractID, aNamespaceID, aName,
-                                       nullptr, aResult);
+    return TX_ConstructEXSLTFunction(aName, aNamespaceID, aState, aResult);
 }
 
 extern bool
@@ -1102,14 +1007,6 @@ void
 txStylesheetCompilerState::SetErrorOffset(uint32_t aOffset)
 {
     // XXX implement me
-}
-
-/* static */
-void
-txStylesheetCompilerState::shutdown()
-{
-    delete sXPCOMFunctionMappings;
-    sXPCOMFunctionMappings = nullptr;
 }
 
 txElementContext::txElementContext(const nsAString& aBaseURI)

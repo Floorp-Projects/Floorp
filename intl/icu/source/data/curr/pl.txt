@@ -596,6 +596,10 @@ pl{
         }
         MRO{
             "MRO",
+            "ouguiya mauretańska (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "ouguiya mauretańska",
         }
         MTL{
@@ -820,6 +824,10 @@ pl{
         }
         STD{
             "STD",
+            "dobra Wysp Świętego Tomasza i Książęcej (1977–2017)",
+        }
+        STN{
+            "STN",
             "dobra Wysp Świętego Tomasza i Książęcej",
         }
         SUR{
@@ -1139,7 +1147,7 @@ pl{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1815,6 +1823,12 @@ pl{
             other{"pataca Makau"}
         }
         MRO{
+            few{"ouguiya mauretańskie (1973–2017)"}
+            many{"ouguiya mauretańskich (1973–2017)"}
+            one{"ouguiya mauretańska (1973–2017)"}
+            other{"ouguiya mauretańskiej (1973–2017)"}
+        }
+        MRU{
             few{"ouguiya mauretańskie"}
             many{"ouguiya mauretańskich"}
             one{"ouguiya mauretańska"}
@@ -2085,6 +2099,12 @@ pl{
             other{"funta południowosudańskiego"}
         }
         STD{
+            few{"dobry Wysp Świętego Tomasza i Książęcej (1977–2017)"}
+            many{"dobr Wysp Świętego Tomasza i Książęcej (1977–2017)"}
+            one{"dobra Wysp Świętego Tomasza i Książęcej (1977–2017)"}
+            other{"dobry Wysp Świętego Tomasza i Książęcej (1977–2017)"}
+        }
+        STN{
             few{"dobry Wysp Świętego Tomasza i Książęcej"}
             many{"dobr Wysp Świętego Tomasza i Książęcej"}
             one{"dobra Wysp Świętego Tomasza i Książęcej"}
@@ -2301,5 +2321,5 @@ pl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.15"}
 }

@@ -523,7 +523,7 @@ Chunk::allocateArena(JSRuntime* rt, Zone* zone, AllocKind thingKind, const AutoL
     Arena* arena = info.numArenasFreeCommitted > 0
                    ? fetchNextFreeArena(rt)
                    : fetchNextDecommittedArena();
-    arena->init(zone, thingKind);
+    arena->init(zone, thingKind, lock);
     updateChunkListAfterAlloc(rt, lock);
     return arena;
 }

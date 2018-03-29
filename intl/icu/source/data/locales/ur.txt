@@ -240,7 +240,7 @@ ur{
         minimumGroupingDigits{"1"}
         native{"arabext"}
     }
-    Version{"2.1.37.69"}
+    Version{"2.1.39.11"}
     calendar{
         buddhist{
             eras{
@@ -458,7 +458,7 @@ ur{
                 MEd{"E، d/M"}
                 MMM{"LLL"}
                 MMMEd{"E، d MMM"}
-                MMMMd{"MMMM d"}
+                MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
                 d{"d"}
@@ -592,9 +592,9 @@ ur{
                 "h:mm:ss a z",
                 "h:mm:ss a",
                 "h:mm a",
-                "EEEE, MMMM d, y",
-                "MMMM d, y",
-                "MMM d, y",
+                "EEEE، d MMMM، y",
+                "d MMMM، y",
+                "d MMM، y",
                 "d/M/yy",
                 "{1} {0}",
                 "{1} {0}",
@@ -634,7 +634,7 @@ ur{
                     one{"MMMM کا ہفتہ W"}
                     other{"MMMM کا ہفتہ W"}
                 }
-                MMMMd{"MMMM d"}
+                MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
                 d{"d"}
@@ -901,7 +901,7 @@ ur{
                 }
                 yMMMd{
                     M{"d MMM – d MMM، y"}
-                    d{"y MMM d–d"}
+                    d{"d–d MMM y"}
                     y{"d MMM، y – d MMM، y"}
                 }
                 yMd{

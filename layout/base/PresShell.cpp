@@ -2938,12 +2938,69 @@ PresShell::CancelAllPendingReflows()
   ASSERT_REFLOW_SCHEDULED_STATE();
 }
 
+static bool
+DestroyFramesAndStyleDataFor(Element* aElement,
+                             nsPresContext& aPresContext,
+                             ServoRestyleManager::IncludeRoot aIncludeRoot)
+{
+  bool didReconstruct =
+    aPresContext.FrameConstructor()->DestroyFramesFor(aElement);
+  ServoRestyleManager::ClearServoDataFromSubtree(aElement, aIncludeRoot);
+  return didReconstruct;
+}
+
 void
-PresShell::DestroyFramesForAndRestyle(Element* aElement)
+nsIPresShell::SlotAssignmentWillChange(Element& aElement,
+                                       HTMLSlotElement* aOldSlot,
+                                       HTMLSlotElement* aNewSlot)
+{
+  MOZ_ASSERT(aOldSlot != aNewSlot);
+
+  if (MOZ_UNLIKELY(!mDidInitialize)) {
+    return;
+  }
+
+  // If the old slot is about to become empty, let layout know that it needs to
+  // do work.
+  if (aOldSlot && aOldSlot->AssignedNodes().Length() == 1) {
+    DestroyFramesForAndRestyle(aOldSlot);
+  }
+
+  // Ensure the new element starts off clean.
+  DestroyFramesAndStyleDataFor(&aElement,
+                               *mPresContext,
+                               ServoRestyleManager::IncludeRoot::Yes);
+
+  if (aNewSlot) {
+    // If the new slot will stop showing fallback content, we need to reframe it
+    // altogether.
+    if (aNewSlot->AssignedNodes().IsEmpty()) {
+      DestroyFramesForAndRestyle(aNewSlot);
+    // Otherwise we just care about the element, but we need to ensure that
+    // something takes care of traversing to the relevant slot, if needed.
+    } else if (aNewSlot->HasServoData() &&
+               !Servo_Element_IsDisplayNone(aNewSlot)) {
+      // Set the reframe bits...
+      aNewSlot->NoteDescendantsNeedFramesForServo();
+      aElement.SetFlags(NODE_NEEDS_FRAME);
+      // Now the style dirty bits. Note that we can't just do
+      // aElement.NoteDirtyForServo(), because the new slot is not setup yet.
+      aNewSlot->SetHasDirtyDescendantsForServo();
+      aNewSlot->NoteDirtySubtreeForServo();
+    }
+  }
+}
+
+void
+nsIPresShell::DestroyFramesForAndRestyle(Element* aElement)
 {
   MOZ_ASSERT(aElement);
-  NS_ENSURE_TRUE_VOID(mPresContext);
-  if (!mDidInitialize) {
+  if (MOZ_UNLIKELY(!mDidInitialize)) {
+    return;
+  }
+
+  if (!aElement->GetFlattenedTreeParentNode()) {
+    // Nothing to do here, the element already is out of the frame tree.
     return;
   }
 
@@ -2953,25 +3010,11 @@ PresShell::DestroyFramesForAndRestyle(Element* aElement)
   ++mChangeNestCount;
 
   const bool didReconstruct = FrameConstructor()->DestroyFramesFor(aElement);
-  if (aElement->GetFlattenedTreeParentNode()) {
-    // The element is still in the flat tree, but their children may not be
-    // anymore in a second.
-    //
-    // This is the case of a new shadow root or XBL binding about to be
-    // attached.
-    //
-    // Clear the style data from all the flattened tree descendants, but _not_
-    // from us, since otherwise we wouldn't see the reframe.
-    //
-    // FIXME(emilio): It'd be more ergonomic to just map the no data -> data
-    // case to a reframe from the style system.
-    ServoRestyleManager::ClearServoDataFromSubtree(
-        aElement, ServoRestyleManager::IncludeRoot::No);
-  } else {
-    // This is the case of an element that was redistributed but is no longer
-    // bound to any insertion point. Just forget about all the data.
-    ServoRestyleManager::ClearServoDataFromSubtree(aElement);
-  }
+
+  // Clear the style data from all the flattened tree descendants, but _not_
+  // from us, since otherwise we wouldn't see the reframe.
+  ServoRestyleManager::ClearServoDataFromSubtree(
+      aElement, ServoRestyleManager::IncludeRoot::No);
 
   auto changeHint = didReconstruct
     ? nsChangeHint(0)
@@ -6991,23 +7034,29 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       frame = pointerCapturingContent->GetPrimaryFrame();
 
       if (!frame) {
+        RefPtr<PresShell> shell =
+          GetShellForEventTarget(nullptr, pointerCapturingContent);
+        if (!shell) {
+          // If we can't process event for the capturing content, release
+          // the capture.
+          PointerEventHandler::ReleaseIfCaptureByDescendant(
+            pointerCapturingContent);
+          return NS_OK;
+        }
+
+        nsCOMPtr<nsIContent> overrideClickTarget =
+          GetOverrideClickTarget(aEvent, aFrame);
+
         // Dispatch events to the capturing content even it's frame is
         // destroyed.
         PointerEventHandler::DispatchPointerFromMouseOrTouch(
-          this, nullptr, pointerCapturingContent, aEvent, false,
+          shell, nullptr, pointerCapturingContent, aEvent, false,
           aEventStatus, nullptr);
 
-        RefPtr<PresShell> shell =
-          GetShellForEventTarget(nullptr, pointerCapturingContent);
-
-        if (!shell) {
-          // The capturing element could be changed when dispatch pointer
-          // events.
-          return NS_OK;
-        }
         return shell->HandleEventWithTarget(aEvent, nullptr,
                                             pointerCapturingContent,
-                                            aEventStatus, true);
+                                            aEventStatus, true, nullptr,
+                                            overrideClickTarget);
       }
     }
 
@@ -7138,6 +7187,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       }
     }
 
+    nsCOMPtr<nsIContent> overrideClickTarget;
     if (PointerEventHandler::IsPointerEventEnabled()) {
       // Dispatch pointer events from the mouse or touch events. Regarding
       // pointer events from mouse, we should dispatch those pointer events to
@@ -7152,6 +7202,21 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       // and do hit test for each point.
       nsIFrame* targetFrame =
         aEvent->mClass == eTouchEventClass ? aFrame : frame;
+
+      if (pointerCapturingContent) {
+        overrideClickTarget = GetOverrideClickTarget(aEvent, aFrame);
+        shell = GetShellForEventTarget(nullptr, pointerCapturingContent);
+        if (!shell) {
+          // If we can't process event for the capturing content, release
+          // the capture.
+          PointerEventHandler::ReleaseIfCaptureByDescendant(
+            pointerCapturingContent);
+          return NS_OK;
+        }
+
+        targetFrame = pointerCapturingContent->GetPrimaryFrame();
+        frame = targetFrame;
+      }
 
       AutoWeakFrame weakFrame(targetFrame);
       nsCOMPtr<nsIContent> targetContent;
@@ -7202,7 +7267,8 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     // must have been captured by us or some ancestor shell and we
     // now ask the subshell to dispatch it normally.
     shell->PushCurrentEventInfo(frame, targetElement);
-    rv = shell->HandleEventInternal(aEvent, aEventStatus, true);
+    rv = shell->HandleEventInternal(aEvent, aEventStatus, true,
+                                    overrideClickTarget);
 #ifdef DEBUG
     shell->ShowEventTargetDebug();
 #endif
@@ -7359,7 +7425,8 @@ nsresult
 PresShell::HandleEventWithTarget(WidgetEvent* aEvent, nsIFrame* aFrame,
                                  nsIContent* aContent, nsEventStatus* aStatus,
                                  bool aIsHandlingNativeEvent,
-                                 nsIContent** aTargetContent)
+                                 nsIContent** aTargetContent,
+                                 nsIContent* aOverrideClickTarget)
 {
 #if DEBUG
   MOZ_ASSERT(!aFrame || aFrame->PresContext()->GetPresShell() == this,
@@ -7374,7 +7441,8 @@ PresShell::HandleEventWithTarget(WidgetEvent* aEvent, nsIFrame* aFrame,
   NS_ENSURE_STATE(!aContent || aContent->GetComposedDoc() == mDocument);
   AutoPointerEventTargetUpdater updater(this, aEvent, aFrame, aTargetContent);
   PushCurrentEventInfo(aFrame, aContent);
-  nsresult rv = HandleEventInternal(aEvent, aStatus, false);
+  nsresult rv =
+    HandleEventInternal(aEvent, aStatus, false, aOverrideClickTarget);
   PopCurrentEventInfo();
   return rv;
 }
@@ -7382,7 +7450,8 @@ PresShell::HandleEventWithTarget(WidgetEvent* aEvent, nsIFrame* aFrame,
 nsresult
 PresShell::HandleEventInternal(WidgetEvent* aEvent,
                                nsEventStatus* aStatus,
-                               bool aIsHandlingNativeEvent)
+                               bool aIsHandlingNativeEvent,
+                               nsIContent* aOverrideClickTarget)
 {
   RefPtr<EventStateManager> manager = mPresContext->EventStateManager();
   nsresult rv = NS_OK;
@@ -7554,7 +7623,8 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
     // 1. Give event to event manager for pre event state changes and
     //    generation of synthetic events.
     rv = manager->PreHandleEvent(mPresContext, aEvent, mCurrentEventFrame,
-                                 mCurrentEventContent, aStatus);
+                                 mCurrentEventContent, aStatus,
+                                 aOverrideClickTarget);
 
     // 2. Give event to the DOM for third party and JS use.
     if (NS_SUCCEEDED(rv)) {
@@ -7608,7 +7678,8 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
       //    generation of synthetic events.
       if (!mIsDestroying && NS_SUCCEEDED(rv)) {
         rv = manager->PostHandleEvent(mPresContext, aEvent,
-                                      GetCurrentEventFrame(), aStatus);
+                                      GetCurrentEventFrame(), aStatus,
+                                      aOverrideClickTarget);
       }
     }
 
@@ -10552,4 +10623,35 @@ PresShell::NotifyStyleSheetServiceSheetRemoved(StyleSheet* aSheet,
   }
 
   RemoveSheet(ToSheetType(aSheetType), aSheet);
+}
+
+nsIContent*
+PresShell::GetOverrideClickTarget(WidgetGUIEvent* aEvent,
+                                  nsIFrame* aFrame)
+{
+  if (aEvent->mMessage != eMouseUp) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(aEvent->mClass == eMouseEventClass);
+  WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+
+  uint32_t flags = 0;
+  nsPoint eventPoint =
+    nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, aFrame);
+  if (mouseEvent->mIgnoreRootScrollFrame) {
+    flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
+  }
+
+  nsIFrame* target =
+    FindFrameTargetedByInputEvent(aEvent, aFrame, eventPoint, flags);
+  if (!target) {
+    return nullptr;
+  }
+
+  nsIContent* overrideClickTarget = target->GetContent();
+  while (overrideClickTarget && !overrideClickTarget->IsElement()) {
+    overrideClickTarget = overrideClickTarget->GetFlattenedTreeParent();
+  }
+  return overrideClickTarget;
 }

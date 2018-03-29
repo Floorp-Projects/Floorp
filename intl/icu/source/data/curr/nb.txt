@@ -684,6 +684,10 @@ nb{
         }
         MRO{
             "MRO",
+            "mauritanske ouguiya (1973–2017)",
+        }
+        MRU{
+            "MRU",
             "mauritanske ouguiya",
         }
         MTL{
@@ -916,6 +920,10 @@ nb{
         }
         STD{
             "STD",
+            "saotomesiske dobra (1977–2017)",
+        }
+        STN{
+            "STN",
             "saotomesiske dobra",
         }
         SUR{
@@ -1281,7 +1289,7 @@ nb{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STD{"Db"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1975,6 +1983,10 @@ nb{
             other{"makaoiske pataca"}
         }
         MRO{
+            one{"mauritansk ouguiya (1973–2017)"}
+            other{"mauritanske ouguiya (1973–2017)"}
+        }
+        MRU{
             one{"mauritansk ouguiya"}
             other{"mauritanske ouguiya"}
         }
@@ -2207,6 +2219,10 @@ nb{
             other{"sørsudanske pund"}
         }
         STD{
+            one{"saotomesisk dobra (1977–2017)"}
+            other{"saotomesiske dobra (1977–2017)"}
+        }
+        STN{
             one{"saotomesisk dobra"}
             other{"saotomesiske dobra"}
         }
@@ -2491,5 +2507,5 @@ nb{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.39.20"}
 }
