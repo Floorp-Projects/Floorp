@@ -41,16 +41,6 @@
 
 using namespace mozilla;
 
-// define home directory
-// For Windows platform, We are choosing Appdata folder as HOME
-#if defined (XP_WIN)
-#define HOME_DIR NS_WIN_APPDATA_DIR
-#elif defined (MOZ_WIDGET_COCOA)
-#define HOME_DIR NS_OSX_HOME_DIR
-#elif defined (XP_UNIX)
-#define HOME_DIR NS_UNIX_HOME_DIR
-#endif
-
 //----------------------------------------------------------------------------------------
 nsresult
 nsDirectoryService::GetCurrentProcessDirectory(nsIFile** aFile)
@@ -556,16 +546,12 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
     rv = GetSpecialSystemDirectory(Win_Personal, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sFavorites) {
     rv = GetSpecialSystemDirectory(Win_Favorites, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sStartup) {
-    rv = GetSpecialSystemDirectory(Win_Startup, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sRecent) {
     rv = GetSpecialSystemDirectory(Win_Recent, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sSendto) {
     rv = GetSpecialSystemDirectory(Win_Sendto, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sBitbucket) {
     rv = GetSpecialSystemDirectory(Win_Bitbucket, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sStartmenu) {
-    rv = GetSpecialSystemDirectory(Win_Startmenu, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sDesktopdirectory ||
              inAtom == nsDirectoryService::sOS_DesktopDirectory) {
     rv = GetSpecialSystemDirectory(Win_Desktopdirectory, getter_AddRefs(localFile));
@@ -579,12 +565,8 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
     rv = GetSpecialSystemDirectory(Win_Fonts, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sTemplates) {
     rv = GetSpecialSystemDirectory(Win_Templates, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sCommon_Startmenu) {
-    rv = GetSpecialSystemDirectory(Win_Common_Startmenu, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sCommon_Programs) {
     rv = GetSpecialSystemDirectory(Win_Common_Programs, getter_AddRefs(localFile));
-  } else if (inAtom == nsDirectoryService::sCommon_Startup) {
-    rv = GetSpecialSystemDirectory(Win_Common_Startup, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sCommon_Desktopdirectory) {
     rv = GetSpecialSystemDirectory(Win_Common_Desktopdirectory, getter_AddRefs(localFile));
   } else if (inAtom == nsDirectoryService::sCommon_AppData) {

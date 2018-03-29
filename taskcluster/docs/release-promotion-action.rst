@@ -1,22 +1,27 @@
 Release Promotion Action
 ========================
 
-The `release promotion action`_ allows us to chain multiple task groups, or graphs, together.
-Essentially, we're using :ref:`optimization` logic to replace task labels in the
-current task group with task IDs from the previous task group(s).
-
-.. _snowman model:
+The release promotion action is how Releng triggers `release promotion`_
+taskgraphs. The one action covers all release promotion needs: different
+*flavors* allow for us to trigger the different :ref:`release promotion phases`
+for each product. The input schema and release promotion flavors are defined in
+the `release promotion action`_.
 
 The snowman model
 -----------------
 
-We chain task groups, or graphs, together to allow us to trigger sets of tasks
-at separate cadences. This is the ``snowman`` model. If you request the body of
+The `release promotion action`_ allows us to chain multiple taskgraphs (aka graphs, aka task groups) together.
+Essentially, we're using `optimization`_ logic to replace task labels in the
+current taskgraph with task IDs from the previous taskgraph(s).
+
+.. _snowman model:
+
+This is the ``snowman`` model. If you request the body of
 the snowman and point at the base, we only create the middle section of the snowman.
 If you request the body of the snowman and don't point it at the base, we build the
 first base and body of the snowman from scratch.
 
-For example, let's generate a task ``t2`` that depends on ``t1``. Let's call our new task group ``G``::
+For example, let's generate a task ``t2`` that depends on ``t1``. Let's call our new taskgraph ``G``::
 
     G
     |
@@ -71,7 +76,7 @@ If we point the ``promote`` task group G at the on-push build task group ``G1``,
 
 We can also explicitly exclude certain tasks from being optimized out.
 We currently do this by specifying ``rebuild_kinds`` in the action; these
-are :ref:`kinds` that we want to explicitly rebuild in the current task group,
+are `kinds`_ that we want to explicitly rebuild in the current task group,
 even if they existed in previous task groups. We also allow for specifying a list of
 ``do_not_optimize`` labels, which would be more verbose and specific than
 specifying kinds to rebuild.
@@ -87,7 +92,7 @@ The action downloads the ``parameters.yml`` from the initial ``previous_graph_id
 
 The action then downloads the various ``label-to-taskid.json`` artifacts from each previous task group, and builds an ``existing_tasks`` parameter of which labels to replace with which task IDs. Each successive update to this dictionary overwrites existing keys with new task IDs, so the rightmost task group with a given label takes precedence. Any labels that match the ``do_not_optimize`` list or that belong to tasks in the ``rebuild_kinds`` list are excluded from the ``existing_tasks`` parameter.
 
-Once all that happens, and we've gotten our configuration from the original parameters and our action config and inputs, we run the decision task function with our custom parameters. The :ref:`optimization` phase replaces any ``existing_tasks`` with the task IDs we've built from the previous task groups.
+Once all that happens, and we've gotten our configuration from the original parameters and our action config and inputs, we run the decision task function with our custom parameters. The `optimization`_ phase replaces any ``existing_tasks`` with the task IDs we've built from the previous task groups.
 
 Release Promotion Flavors
 -------------------------
@@ -106,7 +111,7 @@ Triggering the release promotion action via Treeherder
 
 Currently, we're able to trigger this action via `Treeherder`_; we sometimes use this method for testing purposes. This is powerful, because we can modify the inputs directly, but is less production friendly, because it requires us to enter the inputs manually. At some point we may disable the ability to trigger the action via Treeherder.
 
-This requires being signed in with the right scopes. On `Release Promotion Projects`_, here's a dropdown in the top right of a given revision. Choose ``Custom Push Action``, then ``Release Promotion``. The inputs are specifiable as raw yaml on the left hand column.
+This requires being signed in with the right scopes. On `Release Promotion Projects`_, there's a dropdown in the top right of a given revision. Choose ``Custom Push Action``, then ``Release Promotion``. The inputs are specifiable as raw yaml on the left hand column.
 
 Triggering the release promotion action via releaserunner3
 ----------------------------------------------------------
@@ -153,6 +158,9 @@ The input file (in the above example, that would be ``/src/gecko/params/promote_
 
 The ``parameters.yml`` file is downloadable from a previous decision or action task.
 
+.. _release promotion: release-promotion.html
+.. _optimization: optimization.html
+.. _kinds: kinds.html
 .. _release promotion action: https://searchfox.org/mozilla-central/source/taskcluster/taskgraph/actions/release_promotion.py
 .. _Treeherder: https://treeherder.mozilla.org
 .. _Release Promotion Projects: https://searchfox.org/mozilla-central/search?q=RELEASE_PROMOTION_PROJECTS&path=taskcluster/taskgraph/util/attributes.py

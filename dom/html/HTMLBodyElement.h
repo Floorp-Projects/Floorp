@@ -21,7 +21,6 @@ class HTMLBodyElement final : public nsGenericHTMLElement
 {
 public:
   using Element::GetText;
-  using Element::SetText;
 
   explicit HTMLBodyElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)

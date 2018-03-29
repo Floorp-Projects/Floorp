@@ -41,6 +41,7 @@
 
 #include "nsXBLResourceLoader.h"
 #include "mozilla/dom/CDATASection.h"
+#include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/StyleSheet.h"
@@ -1214,7 +1215,7 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
   if (namespaceID == XBLBinding_Serialize_TextNode ||
       namespaceID == XBLBinding_Serialize_CDATANode ||
       namespaceID == XBLBinding_Serialize_CommentNode) {
-    nsCOMPtr<nsIContent> content;
+    RefPtr<CharacterData> content;
     switch (namespaceID) {
       case XBLBinding_Serialize_TextNode:
         content = new nsTextNode(aNim);
@@ -1234,7 +1235,7 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
     NS_ENSURE_SUCCESS(rv, rv);
 
     content->SetText(text, false);
-    content.swap(*aContent);
+    content.forget(aContent);
     return NS_OK;
   }
 

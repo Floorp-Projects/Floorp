@@ -8,7 +8,7 @@ var TEST_PLUGIN_DESCRIPTION = "Flash plug-in for testing purposes.";
 var gID = null;
 
 function setTestPluginState(state) {
-  let tags = AM_Cc["@mozilla.org/plugin/host;1"].getService(AM_Ci.nsIPluginHost)
+  let tags = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost)
     .getPluginTags();
   for (let tag of tags) {
     info("Checking tag: " + tag.description);
@@ -26,7 +26,7 @@ function run_test() {
   Services.prefs.setBoolPref("plugins.click_to_play", true);
   Services.prefs.setBoolPref("plugin.load_flash_only", false);
 
-  setTestPluginState(AM_Ci.nsIPluginTag.STATE_CLICKTOPLAY);
+  setTestPluginState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
   startupManager();
   AddonManager.addAddonListener(AddonListener);
@@ -37,9 +37,9 @@ function run_test() {
 
 // Finds the test plugin library
 function get_test_plugin() {
-  var pluginEnum = Services.dirsvc.get("APluginsDL", AM_Ci.nsISimpleEnumerator);
+  var pluginEnum = Services.dirsvc.get("APluginsDL", Ci.nsISimpleEnumerator);
   while (pluginEnum.hasMoreElements()) {
-    let dir = pluginEnum.getNext().QueryInterface(AM_Ci.nsIFile);
+    let dir = pluginEnum.getNext().QueryInterface(Ci.nsIFile);
     let plugin = dir.clone();
     // OSX plugin
     plugin.append("npswftest.plugin");
@@ -70,7 +70,7 @@ function getFileSize(aFile) {
     return aFile.fileSize;
 
   let size = 0;
-  let entries = aFile.directoryEntries.QueryInterface(AM_Ci.nsIDirectoryEnumerator);
+  let entries = aFile.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
   let entry;
   while ((entry = entries.nextFile))
     size += getFileSize(entry);
@@ -83,7 +83,7 @@ function getPluginLastModifiedTime(aPluginFile) {
   // the package directories modified date may be outdated.
   // See bug 313700.
   try {
-    let localFileMac = aPluginFile.QueryInterface(AM_Ci.nsILocalFileMac);
+    let localFileMac = aPluginFile.QueryInterface(Ci.nsILocalFileMac);
     if (localFileMac) {
       return localFileMac.bundleContentsLastModifiedTime;
     }

@@ -59,7 +59,7 @@ const ADDONS = [
       appDisabled: false,
       isCompatible: true,
       providesUpdatesSecurely: true,
-      blocklistState: AM_Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+      blocklistState: Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
     },
   },
 

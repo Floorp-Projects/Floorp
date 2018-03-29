@@ -3224,7 +3224,7 @@ HttpBaseChannel::CloneLoadInfoForRedirect(nsIURI * newURI, uint32_t redirectFlag
   nsContentPolicyType contentPolicyType = mLoadInfo->GetExternalContentPolicyType();
   if (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
       contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
-    nsCOMPtr<nsIPrincipal> nullPrincipalToInherit = NullPrincipal::Create();
+    nsCOMPtr<nsIPrincipal> nullPrincipalToInherit = NullPrincipal::CreateWithoutOriginAttributes();
     newLoadInfo->SetPrincipalToInherit(nullPrincipalToInherit);
   }
 

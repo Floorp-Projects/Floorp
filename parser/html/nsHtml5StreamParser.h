@@ -122,8 +122,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHtml5StreamParser,
                                            nsICharsetDetectionObserver)
 
-  static void InitializeStatics();
-
   nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
                       nsHtml5Parser* aOwner,
                       eParserMode aMode);
@@ -580,20 +578,6 @@ private:
    * Whether the parser is doing a normal parse, view source or plain text.
    */
   eParserMode mMode;
-
-  /**
-   * The pref html5.flushtimer.initialdelay: Time in milliseconds between
-   * the time a network buffer is seen and the timer firing when the
-   * timer hasn't fired previously in this parse.
-   */
-  static int32_t sTimerInitialDelay;
-
-  /**
-   * The pref html5.flushtimer.subsequentdelay: Time in milliseconds between
-   * the time a network buffer is seen and the timer firing when the
-   * timer has already fired previously in this parse.
-   */
-  static int32_t sTimerSubsequentDelay;
 };
 
 #endif // nsHtml5StreamParser_h

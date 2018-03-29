@@ -22,7 +22,6 @@ class HTMLAnchorElement final : public nsGenericHTMLElement,
 {
 public:
   using Element::GetText;
-  using Element::SetText;
 
   explicit HTMLAnchorElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
