@@ -267,12 +267,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                 }
             }
 
-            bool overwriteToString = !(flags & nsIClassInfo::DOM_OBJECT)
-                || Preferences::GetBool("dom.XPCToStringForDOMClasses", false);
-
-            if(id == xpccx->GetStringID(XPCJSContext::IDX_TO_STRING)
-                && overwriteToString)
-            {
+            if (id == xpccx->GetStringID(XPCJSContext::IDX_TO_STRING)) {
                 call = XPC_WN_Shared_ToString;
                 name = xpccx->GetStringName(XPCJSContext::IDX_TO_STRING);
             } else if (id == xpccx->GetStringID(XPCJSContext::IDX_TO_SOURCE)) {
