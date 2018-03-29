@@ -9,8 +9,6 @@
 
 #include "Layers.h"
 #include "LayerAnimationInfo.h" // For LayerAnimationInfo::sRecords
-#include "mozilla/StyleSetHandleInlines.h"
-#include "mozilla/ServoStyleSetInlines.h"
 #include "nsAnimationManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSRendering.h"

@@ -56,8 +56,6 @@
 #include "mozilla/RestyleManagerInlines.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/Telemetry.h"
 
 #include "nsBidiPresUtils.h"
@@ -7553,7 +7551,7 @@ nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState)
 
 already_AddRefed<ComputedStyle>
 nsBlockFrame::ResolveBulletStyle(CSSPseudoElementType aType,
-                                 StyleSetHandle aStyleSet)
+                                 ServoStyleSet* aStyleSet)
 {
   ComputedStyle* parentStyle =
     CorrectStyleParentFrame(this,

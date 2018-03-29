@@ -41,7 +41,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsContentList.h"
 #include "nsGkAtoms.h"
-#include "mozilla/StyleSetHandle.h"
 #include "PLDHashTable.h"
 #include "nsDOMAttributeMap.h"
 #include "imgIRequest.h"
