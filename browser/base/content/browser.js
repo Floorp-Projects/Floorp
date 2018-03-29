@@ -3098,7 +3098,6 @@ var BrowserOnClick = {
             info: errorInfo,
             codeString: securityInfo.errorCodeString,
             certIsUntrusted: sslStatus.isUntrusted,
-            certIsSelfSigned: sslStatus.serverCert.isSelfSigned,
             certSubjectAltNames: sslStatus.serverCert.subjectAltNames,
             validity: validityInfo,
             url: location,

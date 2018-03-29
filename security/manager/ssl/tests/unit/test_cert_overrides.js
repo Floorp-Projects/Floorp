@@ -18,7 +18,7 @@ function check_telemetry() {
                     .getHistogramById("SSL_CERT_ERROR_OVERRIDES")
                     .snapshot();
   equal(histogram.counts[0], 0, "Should have 0 unclassified counts");
-  equal(histogram.counts[2], 9,
+  equal(histogram.counts[2], 6,
         "Actual and expected SEC_ERROR_UNKNOWN_ISSUER counts should match");
   equal(histogram.counts[3], 1,
         "Actual and expected SEC_ERROR_CA_CERT_INVALID counts should match");
@@ -50,6 +50,8 @@ function check_telemetry() {
         "Actual and expected SEC_ERROR_INVALID_TIME counts should match");
   equal(histogram.counts[17], 1,
         "Actual and expected MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME counts should match");
+  equal(histogram.counts[19], 3,
+        "Actual and expected MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT counts should match");
 
   let keySizeHistogram = Services.telemetry
                            .getHistogramById("CERT_CHAIN_KEY_SIZE_STATUS")
@@ -134,7 +136,7 @@ function add_simple_tests() {
                          SEC_ERROR_INVALID_TIME);
   add_cert_override_test("selfsigned.example.com",
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
-                         SEC_ERROR_UNKNOWN_ISSUER);
+                         MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT);
   add_cert_override_test("unknownissuer.example.com",
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
                          SEC_ERROR_UNKNOWN_ISSUER);
@@ -168,7 +170,7 @@ function add_simple_tests() {
   // properties similar to the one this "host" will present.
   add_cert_override_test("selfsigned-inadequateEKU.example.com",
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
-                         SEC_ERROR_UNKNOWN_ISSUER);
+                         MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT);
 
   add_prevented_cert_override_test("inadequatekeyusage.example.com",
                                    Ci.nsICertOverrideService.ERROR_UNTRUSTED,
@@ -197,7 +199,7 @@ function add_simple_tests() {
   // is a scenario in which an override is allowed.
   add_cert_override_test("self-signed-end-entity-with-cA-true.example.com",
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
-                         SEC_ERROR_UNKNOWN_ISSUER);
+                         MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT);
 
   add_cert_override_test("ca-used-as-end-entity.example.com",
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,

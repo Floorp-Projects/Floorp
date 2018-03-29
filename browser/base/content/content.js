@@ -87,6 +87,7 @@ const SEC_ERROR_REUSED_ISSUER_AND_SERIAL           = SEC_ERROR_BASE + 138;
 const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED  = SEC_ERROR_BASE + 176;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 5;
 const MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE = MOZILLA_PKIX_ERROR_BASE + 6;
+const MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT          = MOZILLA_PKIX_ERROR_BASE + 14;
 
 
 const SSL_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE;
@@ -315,7 +316,7 @@ var AboutNetAndCertErrorListener = {
                                                   [hostString], 1);
     msg1 += "\n\n";
 
-    if (input.data.certIsUntrusted && !input.data.certIsSelfSigned) {
+    if (input.data.certIsUntrusted) {
       switch (input.data.code) {
         case SEC_ERROR_UNKNOWN_ISSUER:
           msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_UnknownIssuer") + "\n";
@@ -334,12 +335,12 @@ var AboutNetAndCertErrorListener = {
         case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
           msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_ExpiredIssuer") + "\n";
           break;
+        case MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT:
+          msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_SelfSigned") + "\n";
+          break;
         default:
           msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_Untrusted") + "\n";
       }
-    }
-    if (input.data.certIsUntrusted && input.data.certIsSelfSigned) {
-      msg1 += gPipNSSBundle.GetStringFromName("certErrorTrust_SelfSigned") + "\n";
     }
 
     technicalInfo.appendChild(doc.createTextNode(msg1));
@@ -485,6 +486,7 @@ var AboutNetAndCertErrorListener = {
 
     switch (msg.data.code) {
       case SEC_ERROR_UNKNOWN_ISSUER:
+      case MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT:
         learnMoreLink.href = baseURL + "security-error";
         break;
 
