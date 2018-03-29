@@ -3,6 +3,6 @@ ExplicitPathLinter:
     description: Only lint a specific file name
     rule: no-foobar
     include:
-        - no_foobar.js
+        - files/no_foobar.js
     type: string
     payload: foobar

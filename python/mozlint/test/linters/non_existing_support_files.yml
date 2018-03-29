@@ -1,0 +1,7 @@
+---
+BadSupportFilesLinter:
+    description: Has an invalid support-files directive.
+    support-files:
+        - files/does_not_exist
+    type: string
+    payload: foobar

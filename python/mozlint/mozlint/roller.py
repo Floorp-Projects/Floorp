@@ -90,7 +90,7 @@ class LintRoller(object):
     MAX_PATHS_PER_JOB = 50  # set a max size to prevent command lines that are too long on Windows
 
     def __init__(self, root, **lintargs):
-        self.parse = Parser()
+        self.parse = Parser(root)
         try:
             self.vcs = get_repository_object(root)
         except InvalidRepoPath:
