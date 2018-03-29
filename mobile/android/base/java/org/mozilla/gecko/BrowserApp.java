@@ -642,8 +642,22 @@ public class BrowserApp extends GeckoApp
 
                 case KeyEvent.KEYCODE_T:
                     int flags = Tabs.LOADURL_START_EDITING;
+                    if (tab.isPrivate()) {
+                        flags |= Tabs.LOADURL_PRIVATE;
+                    }
                     addTab(flags);
                     return true;
+
+                case KeyEvent.KEYCODE_N:
+                    addTab(Tabs.LOADURL_START_EDITING);
+                    return true;
+
+                case KeyEvent.KEYCODE_P:
+                    if (event.isShiftPressed()) {
+                        addTab(Tabs.LOADURL_PRIVATE | Tabs.LOADURL_START_EDITING);
+                        return true;
+                    }
+                    break;
 
                 case KeyEvent.KEYCODE_W:
                     Tabs.getInstance().closeTab(tab);
