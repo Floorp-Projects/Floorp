@@ -634,6 +634,8 @@ public abstract class GeckoApp extends GeckoActivity
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());
     }
 
+    public void addTab(int flags) { }
+
     public void addTab() { }
 
     public void addPrivateTab() { }
