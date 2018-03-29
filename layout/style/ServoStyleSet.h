@@ -15,7 +15,6 @@
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoUtils.h"
-#include "mozilla/StyleSheetInlines.h"
 #include "mozilla/SheetType.h"
 #include "mozilla/UniquePtr.h"
 #include "MainThreadUtils.h"
@@ -116,10 +115,6 @@ public:
   void RuleAdded(ServoStyleSheet&, css::Rule&);
   void RuleRemoved(ServoStyleSheet&, css::Rule&);
   void RuleChanged(ServoStyleSheet& aSheet, css::Rule* aRule);
-
-  // All the relevant changes are handled in RuleAdded / RuleRemoved / etc, and
-  // the relevant AppendSheet / RemoveSheet...
-  void RecordStyleSheetChange(ServoStyleSheet*, StyleSheet::ChangeType) {}
 
   // Runs style invalidation due to document state changes.
   void InvalidateStyleForDocumentStateChanges(EventStates aStatesChanged);

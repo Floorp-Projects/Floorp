@@ -4580,49 +4580,6 @@ nsIPresShell::RestyleForCSSRuleChanges()
   mStyleSet->InvalidateStyleForCSSRuleChanges();
 }
 
-void
-PresShell::RecordStyleSheetChange(StyleSheet* aStyleSheet,
-                                  StyleSheet::ChangeType aChangeType)
-{
-  // too bad we can't check that the update is UPDATE_STYLE
-  NS_ASSERTION(mUpdateCount != 0, "must be in an update");
-
-  mStyleSet->RecordStyleSheetChange(aStyleSheet, aChangeType);
-}
-
-void
-PresShell::StyleSheetAdded(StyleSheet* aStyleSheet,
-                           bool aDocumentSheet)
-{
-  // We only care when enabled sheets are added
-  NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
-
-  if (aStyleSheet->IsApplicable() && aStyleSheet->HasRules()) {
-    RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::Added);
-  }
-}
-
-void
-PresShell::StyleSheetRemoved(StyleSheet* aStyleSheet,
-                             bool aDocumentSheet)
-{
-  // We only care when enabled sheets are removed
-  NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
-
-  if (aStyleSheet->IsApplicable() && aStyleSheet->HasRules()) {
-    RecordStyleSheetChange(aStyleSheet, StyleSheet::ChangeType::Removed);
-  }
-}
-
-void
-PresShell::StyleSheetApplicableStateChanged(StyleSheet* aStyleSheet)
-{
-  if (aStyleSheet->HasRules()) {
-    RecordStyleSheetChange(
-        aStyleSheet, StyleSheet::ChangeType::ApplicableStateChanged);
-  }
-}
-
 nsresult
 PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
                           nscolor aBackgroundColor,
