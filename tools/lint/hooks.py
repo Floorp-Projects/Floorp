@@ -4,12 +4,23 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import signal
 import subprocess
 import sys
 from distutils.spawn import find_executable
 
 here = os.path.dirname(os.path.realpath(__file__))
 topsrcdir = os.path.join(here, os.pardir, os.pardir)
+
+
+def run_process(cmd):
+    proc = subprocess.Popen(cmd)
+
+    # ignore SIGINT, the mozlint subprocess should exit quickly and gracefully
+    orig_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    proc.wait()
+    signal.signal(signal.SIGINT, orig_handler)
+    return proc.returncode
 
 
 def run_mozlint(hooktype, args):
@@ -19,10 +30,10 @@ def run_mozlint(hooktype, args):
 
     if 'commit' in hooktype:
         # don't prevent commits, just display the lint results
-        subprocess.call(cmd + ['--workdir=staged'])
+        run_process(cmd + ['--workdir=staged'])
         return False
     elif 'push' in hooktype:
-        return subprocess.call(cmd + ['--outgoing'] + args)
+        return run_process(cmd + ['--outgoing'] + args)
 
     print("warning: '{}' is not a valid mozlint hooktype".format(hooktype))
     return False
