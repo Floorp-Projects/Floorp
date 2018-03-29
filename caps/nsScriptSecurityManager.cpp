@@ -1223,20 +1223,6 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
         return NS_OK;
     }
 
-    // We want to expose nsIDOMXULCommandDispatcher and nsITreeSelection
-    // implementations in XBL scopes.
-    if (xpc::IsContentXBLScope(contextRealm)) {
-      nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher = do_QueryInterface(aObj);
-      if (dispatcher) {
-        return NS_OK;
-      }
-
-      nsCOMPtr<nsITreeSelection> treeSelection = do_QueryInterface(aObj);
-      if (treeSelection) {
-        return NS_OK;
-      }
-    }
-
     //-- Access denied, report an error
     nsAutoCString originUTF8;
     nsIPrincipal* subjectPrincipal = nsContentUtils::SubjectPrincipal();
