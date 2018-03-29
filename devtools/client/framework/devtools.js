@@ -625,6 +625,10 @@ DevTools.prototype = {
     let toolbox = await gDevTools.showToolbox(target, "inspector", null, null, startTime);
     let inspector = toolbox.getCurrentPanel();
 
+    // If the toolbox has been switched into a nested frame, we should first remove
+    // selectors according to the frame depth.
+    nodeSelectors.splice(0, toolbox.selectedFrameDepth);
+
     // new-node-front tells us when the node has been selected, whether the
     // browser is remote or not.
     let onNewNode = inspector.selection.once("new-node-front");
