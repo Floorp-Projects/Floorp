@@ -220,6 +220,15 @@ function test() {
        "Test with " + keys + ", result should be " + expectedVal);
     elem.value = "";
   }
+
+  function chromeListener(e) {
+    ok(false, "Picker should not be opened when dispatching untrusted click.");
+  }
+  SpecialPowers.addChromeEventListener("MozOpenDateTimePicker",
+    chromeListener);
+  input.click();
+  SpecialPowers.removeChromeEventListener("MozOpenDateTimePicker",
+    chromeListener);
 }
 
 </script>
