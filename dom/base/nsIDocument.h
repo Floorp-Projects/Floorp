@@ -120,7 +120,6 @@ class nsWindowSizes;
 class nsDOMCaretPosition;
 class nsViewportInfo;
 class nsIGlobalObject;
-struct nsCSSSelectorList;
 
 namespace mozilla {
 class AbstractThread;
@@ -1499,94 +1498,44 @@ public:
   class SelectorCache final
     : public nsExpirationTracker<SelectorCacheKey, 4>
   {
-    public:
-      class SelectorList
-      {
-      public:
-        SelectorList()
-          : mGecko(nullptr)
-        {}
+  public:
+    using SelectorList = mozilla::UniquePtr<RawServoSelectorList>;
 
-        SelectorList(SelectorList&& aOther)
-        {
-          *this = mozilla::Move(aOther);
-        }
+    explicit SelectorCache(nsIEventTarget* aEventTarget);
 
-        SelectorList& operator=(SelectorList&& aOther)
-        {
-          Reset();
-          mServo = aOther.mServo;
-          aOther.mServo = nullptr;
-          return *this;
-        }
+    void CacheList(const nsAString& aSelector, SelectorList aSelectorList)
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+      SelectorCacheKey* key = new SelectorCacheKey(aSelector);
+      mTable.Put(key->mKey, Move(aSelectorList));
+      AddObject(key);
+    }
 
-        SelectorList(const SelectorList& aOther) = delete;
+    void NotifyExpired(SelectorCacheKey* aSelector) final;
 
-        explicit SelectorList(mozilla::UniquePtr<RawServoSelectorList>&& aList)
-          : mServo(aList.release())
-        {}
+    // We do not call MarkUsed because it would just slow down lookups and
+    // because we're OK expiring things after a few seconds even if they're
+    // being used.  Returns whether we actually had an entry for aSelector.
+    //
+    // If we have an entry and the selector list returned has a null
+    // RawServoSelectorList*, that indicates that aSelector has already been
+    // parsed and is not a syntactically valid selector.
+    SelectorList* GetList(const nsAString& aSelector)
+    {
+      return mTable.GetValue(aSelector);
+    }
 
+    ~SelectorCache();
 
-        ~SelectorList() {
-          Reset();
-        }
-
-        explicit operator bool() const
-        {
-          return !!AsServo();
-        }
-
-        nsCSSSelectorList* AsGecko() const
-        {
-          return mGecko;
-        }
-
-        RawServoSelectorList* AsServo() const
-        {
-          return mServo;
-        }
-
-      private:
-        void Reset();
-
-        union {
-          nsCSSSelectorList* mGecko;
-          RawServoSelectorList* mServo;
-        };
-      };
-
-      explicit SelectorCache(nsIEventTarget* aEventTarget);
-
-      // CacheList takes ownership of aSelectorList.
-      void CacheList(const nsAString& aSelector,
-                     mozilla::UniquePtr<nsCSSSelectorList>&& aSelectorList);
-      void CacheList(const nsAString& aSelector,
-                     mozilla::UniquePtr<RawServoSelectorList>&& aSelectorList);
-
-      virtual void NotifyExpired(SelectorCacheKey* aSelector) override;
-
-      // We do not call MarkUsed because it would just slow down lookups and
-      // because we're OK expiring things after a few seconds even if they're
-      // being used.  Returns whether we actually had an entry for aSelector.
-      //
-      // If we have an entry and the selector list returned has a null
-      // nsCSSSelectorList*/RawServoSelectorList*, that indicates that aSelector
-      // has already been parsed and is not a syntactically valid selector.
-      SelectorList* GetList(const nsAString& aSelector)
-      {
-        return mTable.GetValue(aSelector);
-      }
-
-      ~SelectorCache();
-
-    private:
-      nsDataHashtable<nsStringHashKey, SelectorList> mTable;
+  private:
+    nsDataHashtable<nsStringHashKey, SelectorList> mTable;
   };
 
   SelectorCache& GetSelectorCache() {
     if (!mSelectorCache) {
-      mSelectorCache.reset(new SelectorCache(
-        EventTargetFor(mozilla::TaskCategory::Other)));
+      mSelectorCache =
+        mozilla::MakeUnique<SelectorCache>(
+          EventTargetFor(mozilla::TaskCategory::Other));
     }
     return *mSelectorCache;
   }
