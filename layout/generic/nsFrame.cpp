@@ -5697,21 +5697,9 @@ nsFrame::ComputeSize(gfxContext*         aRenderingContext,
     // nsFrame::ComputeSizeWithIntrinsicDimensions().
     const nsStyleCoord* flexBasis = &(stylePos->mFlexBasis);
     if (flexBasis->GetUnit() != eStyleUnit_Auto) {
-      // One caveat for when flex-basis is stomping on 'height': We don't
-      // support enumerated values (e.g. "max-content") for height yet (that's
-      // bug 567039). So, if our computed flex-basis is an enumerated value,
-      // we'll just behave as if it were "auto", which means "use the main-size
-      // property after all" (which is "height", in this case).  NOTE: Once we
-      // support intrinsic sizing keywords for "height", we should remove this
-      // check.
-      bool usingFlexBasisForHeight =
-        (usingFlexBasisForISize != aWM.IsVertical());
-      if (!usingFlexBasisForHeight ||
-          flexBasis->GetUnit() != eStyleUnit_Enumerated) {
-        // Override whichever coord we're overriding:
-        (usingFlexBasisForISize ? inlineStyleCoord : blockStyleCoord) =
-          flexBasis;
-      }
+      // Override whichever styleCoord is in flex container's main axis:
+      (usingFlexBasisForISize ? inlineStyleCoord : blockStyleCoord) =
+        flexBasis;
     }
   }
 
@@ -5960,21 +5948,9 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(gfxContext*          aRenderingConte
       // inlineStyleCoord and blockStyleCoord in nsFrame::ComputeSize().
       const nsStyleCoord* flexBasis = &(stylePos->mFlexBasis);
       if (flexBasis->GetUnit() != eStyleUnit_Auto) {
-        // One caveat for when flex-basis is stomping on 'height': We don't
-        // support enumerated values (e.g. "max-content") for height yet
-        // (that's bug 567039). So, if our computed flex-basis is an enumerated
-        // value, we'll just behave as if it were "auto", which means "use the
-        // main-size property after all" (which is "height", in this case).
-        // NOTE: Once we support intrinsic sizing keywords for "height", we
-        // should remove this check.
-        bool usingFlexBasisForHeight =
-          (usingFlexBasisForISize != aWM.IsVertical());
-        if (!usingFlexBasisForHeight ||
-            flexBasis->GetUnit() != eStyleUnit_Enumerated) {
-          // Override whichever coord we're overriding:
-          (usingFlexBasisForISize ? inlineStyleCoord : blockStyleCoord) =
-            flexBasis;
-        }
+        // Override whichever styleCoord is in flex container's main axis:
+        (usingFlexBasisForISize ? inlineStyleCoord : blockStyleCoord) =
+          flexBasis;
       }
     }
   }
