@@ -47,6 +47,9 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
       && !aParentSC.mIsPreserve3D) {
     mInheritedTransform = transform2d * aParentSC.mInheritedTransform;
     mScale = mInheritedTransform.ScaleFactors(true);
+  } else {
+    mInheritedTransform = aParentSC.mInheritedTransform;
+    mScale = aParentSC.mScale;
   }
 
   mBuilder->PushStackingContext(wr::ToLayoutRect(aBounds),
