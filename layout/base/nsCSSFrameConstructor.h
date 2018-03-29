@@ -125,7 +125,8 @@ private:
   // [aStartChild, aEndChild).
   void IssueSingleInsertNofications(nsIContent* aContainer,
                                     nsIContent* aStartChild,
-                                    nsIContent* aEndChild);
+                                    nsIContent* aEndChild,
+                                    InsertionKind);
 
   /**
    * Data that represents an insertion point for some child content.
@@ -173,7 +174,8 @@ private:
    */
   InsertionPoint GetRangeInsertionPoint(nsIContent* aContainer,
                                         nsIContent* aStartChild,
-                                        nsIContent* aEndChild);
+                                        nsIContent* aEndChild,
+                                        InsertionKind);
 
   // Returns true if parent was recreated due to frameset child, false otherwise.
   bool MaybeRecreateForFrameset(nsIFrame* aParentFrame,
