@@ -109,13 +109,11 @@ class ContinueConsumeBodyControlRunnable final : public MainThreadWorkerControlR
   RefPtr<FetchBodyConsumer<Derived>> mFetchBodyConsumer;
 
 public:
-  ContinueConsumeBodyControlRunnable(FetchBodyConsumer<Derived>* aFetchBodyConsumer,
-                                     uint8_t* aResult)
+  ContinueConsumeBodyControlRunnable(FetchBodyConsumer<Derived>* aFetchBodyConsumer)
     : MainThreadWorkerControlRunnable(aFetchBodyConsumer->GetWorkerPrivate())
     , mFetchBodyConsumer(aFetchBodyConsumer)
   {
     MOZ_ASSERT(NS_IsMainThread());
-    free(aResult);
   }
 
   bool
@@ -289,14 +287,12 @@ public:
     // shutting down procedure.
 
     RefPtr<ContinueConsumeBodyControlRunnable<Derived>> r =
-      new ContinueConsumeBodyControlRunnable<Derived>(mFetchBodyConsumer,
-                                                      nonconstResult);
+      new ContinueConsumeBodyControlRunnable<Derived>(mFetchBodyConsumer);
     if (NS_WARN_IF(!r->Dispatch())) {
       return NS_ERROR_FAILURE;
     }
 
-    // FetchBody is responsible for data.
-    return NS_SUCCESS_ADOPTED_DATA;
+    return NS_OK;
   }
 
   virtual void BlobStoreCompleted(MutableBlobStorage* aBlobStorage,
