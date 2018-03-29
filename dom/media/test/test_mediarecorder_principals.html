@@ -46,8 +46,8 @@ function testPrincipals(resource) {
   // another origin before attempting to record stream.
   let video = document.getElementById("v1");
   video.src =
-      "http://mochi.test:8888/tests/dom/media/test/dynamic_redirect.sjs?key=v1_" +
-      key + "&res=" + resource.name + "&type=" + resource.type;
+      "http://mochi.test:8888/tests/dom/media/test/midflight-redirect.sjs?key=v1_" +
+      key + "&resource=" + resource.name + "&type=" + resource.type;
   return new Promise(resolve => video.onloadedmetadata = resolve).then(() => {
     video.load();
     video.play();
@@ -67,8 +67,8 @@ function testPrincipals(resource) {
     // getting redirected to another origin.
     let video = document.getElementById("v2");
     video.src =
-        "http://mochi.test:8888/tests/dom/media/test/dynamic_redirect.sjs?key=v2_" +
-        key + "&res=" + resource.name + "&type=" + resource.type;
+        "http://mochi.test:8888/tests/dom/media/test/midflight-redirect.sjs?key=v2_" +
+        key + "&resource=" + resource.name + "&type=" + resource.type;
     let rec, hasStopped, hasEnded = new Promise(r => video.onended = r);
     let data = [];
 
