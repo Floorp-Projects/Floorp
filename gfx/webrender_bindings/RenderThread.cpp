@@ -16,6 +16,10 @@
 #include "mozilla/webrender/RenderTextureHost.h"
 #include "mozilla/widget/CompositorWidget.h"
 
+#ifdef XP_WIN
+#include "mozilla/widget/WinCompositorWindowThread.h"
+#endif
+
 namespace mozilla {
 namespace wr {
 
@@ -60,6 +64,9 @@ RenderThread::Start()
   }
 
   sRenderThread = new RenderThread(thread);
+#ifdef XP_WIN
+  widget::WinCompositorWindowThread::Start();
+#endif
 }
 
 // static
@@ -83,6 +90,9 @@ RenderThread::ShutDown()
   task.Wait();
 
   sRenderThread = nullptr;
+#ifdef XP_WIN
+  widget::WinCompositorWindowThread::ShutDown();
+#endif
 }
 
 void

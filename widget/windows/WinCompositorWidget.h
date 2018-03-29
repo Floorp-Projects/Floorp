@@ -54,6 +54,7 @@ class WinCompositorWidget
 public:
   WinCompositorWidget(const WinCompositorWidgetInitData& aInitData,
                       const layers::CompositorOptions& aOptions);
+  ~WinCompositorWidget() override;
 
   // CompositorWidget Overrides
 
@@ -94,8 +95,18 @@ public:
     return mMemoryDC;
   }
   HWND GetHwnd() const {
-    return mWnd;
+    return mCompositorWnd ? mCompositorWnd : mWnd;
   }
+
+  HWND GetCompositorHwnd() const {
+    return mCompositorWnd;
+  }
+
+  void EnsureCompositorWindow();
+  void DestroyCompositorWindow();
+  void UpdateCompositorWndSizeIfNecessary();
+
+protected:
 
 private:
   HDC GetWindowSurface();
@@ -106,6 +117,10 @@ private:
 private:
   uintptr_t mWidgetKey;
   HWND mWnd;
+
+  HWND mCompositorWnd;
+  LayoutDeviceIntSize mLastCompositorWndSize;
+
   gfx::CriticalSection mPresentLock;
 
   // Transparency handling.

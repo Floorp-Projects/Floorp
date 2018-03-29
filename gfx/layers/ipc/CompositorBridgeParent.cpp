@@ -79,6 +79,7 @@
 #include "nsXULAppAPI.h"                // for XRE_GetIOMessageLoop
 #ifdef XP_WIN
 #include "mozilla/layers/CompositorD3D11.h"
+#include "mozilla/widget/WinCompositorWidget.h"
 #endif
 #include "GeckoProfiler.h"
 #include "mozilla/ipc/ProtocolTypes.h"
@@ -1749,9 +1750,14 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   MOZ_ASSERT(!mWrBridge);
   MOZ_ASSERT(!mCompositor);
   MOZ_ASSERT(!mCompositorScheduler);
-
-
   MOZ_ASSERT(mWidget);
+
+#ifdef XP_WIN
+  if (XRE_IsGPUProcess() && gfx::gfxVars::UseWebRenderANGLE() && mWidget) {
+    mWidget->AsWindows()->EnsureCompositorWindow();
+  }
+#endif
+
   RefPtr<widget::CompositorWidget> widget = mWidget;
   RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(this, Move(widget), aSize);
   if (!api) {
@@ -1796,6 +1802,11 @@ CompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aA
       it->second.mWrBridge = nullptr;
     }
   }
+#ifdef XP_WIN
+  if (XRE_IsGPUProcess() && gfx::gfxVars::UseWebRenderANGLE() && mWidget) {
+    mWidget->AsWindows()->DestroyCompositorWindow();
+  }
+#endif
   parent->Release(); // IPDL reference
   return true;
 }
