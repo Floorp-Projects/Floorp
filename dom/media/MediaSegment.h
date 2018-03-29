@@ -449,12 +449,12 @@ public:
 protected:
   explicit MediaSegmentBase(Type aType)
     : MediaSegment(aType)
-    , mChunks(DEFAULT_SEGMENT_CAPACITY)
+    , mChunks()
   {}
 
   MediaSegmentBase(MediaSegmentBase&& aSegment)
     : MediaSegment(Move(aSegment))
-    , mChunks(aSegment.mChunks.Capacity())
+    , mChunks()
 #ifdef MOZILLA_INTERNAL_API
     , mTimeStamp(Move(aSegment.mTimeStamp))
 #endif
@@ -575,7 +575,7 @@ protected:
     // Caller must adjust mDuration
   }
 
-  nsTArray<Chunk> mChunks;
+  AutoTArray<Chunk, DEFAULT_SEGMENT_CAPACITY> mChunks;
 #ifdef MOZILLA_INTERNAL_API
   mozilla::TimeStamp mTimeStamp;
 #endif
