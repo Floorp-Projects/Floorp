@@ -641,7 +641,8 @@ public class BrowserApp extends GeckoApp
                     return true;
 
                 case KeyEvent.KEYCODE_T:
-                    addTab();
+                    int flags = Tabs.LOADURL_START_EDITING;
+                    addTab(flags);
                     return true;
 
                 case KeyEvent.KEYCODE_W:
@@ -2323,9 +2324,16 @@ public class BrowserApp extends GeckoApp
     }
 
     @Override
+    public void addTab(final int flags) {
+        if ((flags & Tabs.LOADURL_PRIVATE) == 0) {
+            MmaDelegate.track(NEW_TAB);
+        }
+        Tabs.getInstance().addTab(flags);
+    }
+
+    @Override
     public void addTab() {
-        MmaDelegate.track(NEW_TAB);
-        Tabs.getInstance().addTab();
+        addTab(Tabs.LOADURL_NONE);
     }
 
     @Override
