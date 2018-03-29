@@ -450,14 +450,12 @@ void
 HTMLTextAreaElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                            GenericSpecifiedValues* aData)
 {
-  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Text))) {
-    // wrap=off
-    if (!aData->PropertyIsSet(eCSSProperty_white_space)) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::wrap);
-      if (value && value->Type() == nsAttrValue::eString &&
-          value->Equals(nsGkAtoms::OFF, eIgnoreCase)) {
-        aData->SetKeywordValue(eCSSProperty_white_space, StyleWhiteSpace::Pre);
-      }
+  // wrap=off
+  if (!aData->PropertyIsSet(eCSSProperty_white_space)) {
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::wrap);
+    if (value && value->Type() == nsAttrValue::eString &&
+        value->Equals(nsGkAtoms::OFF, eIgnoreCase)) {
+      aData->SetKeywordValue(eCSSProperty_white_space, StyleWhiteSpace::Pre);
     }
   }
 

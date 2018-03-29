@@ -55,12 +55,10 @@ void
 HTMLTableCaptionElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                                GenericSpecifiedValues* aData)
 {
-  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(TableBorder))) {
-    if (!aData->PropertyIsSet(eCSSProperty_caption_side)) {
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
-      if (value && value->Type() == nsAttrValue::eEnum)
-        aData->SetKeywordValue(eCSSProperty_caption_side, value->GetEnumValue());
-    }
+  if (!aData->PropertyIsSet(eCSSProperty_caption_side)) {
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
+    if (value && value->Type() == nsAttrValue::eEnum)
+      aData->SetKeywordValue(eCSSProperty_caption_side, value->GetEnumValue());
   }
 
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
