@@ -24,8 +24,7 @@
 #include "nsPresContext.h"
 #include "nsNodeInfoManager.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/ServoStyleSet.h"
 #include "nsThemeConstants.h"
 
 #ifdef ACCESSIBILITY
@@ -79,7 +78,7 @@ nsRangeFrame::Init(nsIContent*       aContent,
   }
   aContent->AddEventListener(NS_LITERAL_STRING("touchstart"), mDummyTouchListener, false);
 
-  StyleSetHandle styleSet = PresContext()->StyleSet();
+  ServoStyleSet* styleSet = PresContext()->StyleSet();
 
   mOuterFocusStyle =
     styleSet->ProbePseudoElementStyle(aContent->AsElement(),

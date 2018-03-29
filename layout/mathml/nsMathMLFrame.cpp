@@ -17,8 +17,7 @@
 #include "gfxMathTable.h"
 
 // used to map attributes into CSS rules
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/ServoStyleSet.h"
 #include "nsDisplayList.h"
 
 using namespace mozilla;

@@ -29,8 +29,7 @@
 #include "nsHTMLParts.h"
 #include "nsNameSpaceManager.h"
 #include "nsCSSAnonBoxes.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/Element.h"
 #include "nsDisplayList.h"
 #include "nsNodeUtils.h"
@@ -803,7 +802,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   nsIPresShell *shell = aPresContext->PresShell();
-  StyleSetHandle styleSet = shell->StyleSet();
+  ServoStyleSet* styleSet = shell->StyleSet();
 
   GetParent()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
 

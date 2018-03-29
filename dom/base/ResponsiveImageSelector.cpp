@@ -440,9 +440,8 @@ ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(double *aWidth)
   if (!pctx) {
     return false;
   }
-  nscoord effectiveWidth =
-    presShell->StyleSet()->AsServo()->EvaluateSourceSizeList(
-      mServoSourceSizeList.get());
+  nscoord effectiveWidth = presShell->StyleSet()->
+    EvaluateSourceSizeList(mServoSourceSizeList.get());
 
   *aWidth = nsPresContext::AppUnitsToDoubleCSSPixels(std::max(effectiveWidth, 0));
   return true;

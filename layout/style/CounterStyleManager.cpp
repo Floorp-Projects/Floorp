@@ -17,8 +17,7 @@
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsUnicodeProperties.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/ServoStyleSet.h"
 
 namespace mozilla {
 
@@ -2035,7 +2034,7 @@ CounterStyleManager::BuildCounterStyle(nsAtom* aName)
 
   // Names are compared case-sensitively here. Predefined names should
   // have been lowercased by the parser.
-  StyleSetHandle styleSet = mPresContext->StyleSet();
+  ServoStyleSet* styleSet = mPresContext->StyleSet();
   nsCSSCounterStyleRule* rule = styleSet->CounterStyleRuleForName(aName);
   if (rule) {
     MOZ_ASSERT(rule->Name() == aName);
@@ -2086,7 +2085,7 @@ CounterStyleManager::NotifyRuleChanged()
     CounterStyle* style = iter.Data();
     bool toBeUpdated = false;
     bool toBeRemoved = false;
-    StyleSetHandle styleSet = mPresContext->StyleSet();
+    ServoStyleSet* styleSet = mPresContext->StyleSet();
     nsCSSCounterStyleRule* newRule = styleSet->CounterStyleRuleForName(iter.Key());
     if (!newRule) {
       if (style->IsCustomStyle()) {

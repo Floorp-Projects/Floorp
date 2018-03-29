@@ -408,10 +408,8 @@ KeyframeEffectReadOnly::EnsureBaseStyle(
     Element* animatingElement =
       EffectCompositor::GetElementToRestyle(mTarget->mElement,
                                             mTarget->mPseudoType);
-    aBaseComputedStyle =
-      aPresContext->StyleSet()->AsServo()->GetBaseContextForElement(
-          animatingElement,
-          aComputedStyle);
+    aBaseComputedStyle = aPresContext->StyleSet()->
+      GetBaseContextForElement(animatingElement, aComputedStyle);
   }
   RefPtr<RawServoAnimationValue> baseValue =
     Servo_ComputedValues_ExtractAnimationValue(aBaseComputedStyle,
@@ -1488,8 +1486,7 @@ KeyframeEffectReadOnly::CreateComputedStyleForAnimationValue(
              "CreateComputedStyleForAnimationValue needs to be called "
              "with a valid ComputedStyle");
 
-  ServoStyleSet* styleSet =
-    aBaseComputedStyle->PresContext()->StyleSet()->AsServo();
+  ServoStyleSet* styleSet = aBaseComputedStyle->PresContext()->StyleSet();
   Element* elementForResolve =
     EffectCompositor::GetElementToRestyle(mTarget->mElement,
                                           mTarget->mPseudoType);
