@@ -1476,8 +1476,8 @@ add_task(async function test_annotate_multiple() {
     return [new AnnoObj("A", a), new AnnoObj("B", b)];
   }
 
-  function verifyAnnoValues(a = null, b = null) {
-    let currentAnnos = PlacesUtils.getAnnotationsForItem(itemId);
+  async function verifyAnnoValues(a = null, b = null) {
+    let currentAnnos = await PlacesUtils.promiseAnnotationsForItem(itemId);
     let expectedAnnos = [];
     if (a !== null)
       expectedAnnos.push(new AnnoObj("A", a));
@@ -1488,29 +1488,29 @@ add_task(async function test_annotate_multiple() {
   }
 
   await PT.Annotate({ guid, annotations: annos(1, 2) }).transact();
-  verifyAnnoValues(1, 2);
+  await verifyAnnoValues(1, 2);
   await PT.undo();
-  verifyAnnoValues();
+  await verifyAnnoValues();
   await PT.redo();
-  verifyAnnoValues(1, 2);
+  await verifyAnnoValues(1, 2);
 
   await PT.Annotate({ guid,
                       annotation: { name: "A" } }).transact();
-  verifyAnnoValues(null, 2);
+  await verifyAnnoValues(null, 2);
 
   await PT.Annotate({ guid,
                       annotation: { name: "B", value: 0 } }).transact();
-  verifyAnnoValues(null, 0);
+  await verifyAnnoValues(null, 0);
   await PT.undo();
-  verifyAnnoValues(null, 2);
+  await verifyAnnoValues(null, 2);
   await PT.redo();
-  verifyAnnoValues(null, 0);
+  await verifyAnnoValues(null, 0);
   await PT.undo();
-  verifyAnnoValues(null, 2);
+  await verifyAnnoValues(null, 2);
   await PT.undo();
-  verifyAnnoValues(1, 2);
+  await verifyAnnoValues(1, 2);
   await PT.undo();
-  verifyAnnoValues();
+  await verifyAnnoValues();
 
   // Cleanup
   await PT.undo();
