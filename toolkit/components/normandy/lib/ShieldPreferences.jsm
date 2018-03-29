@@ -22,17 +22,13 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed"; // from modules/libpref/nsIPrefBranch.idl
 const FHR_UPLOAD_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
 const OPT_OUT_STUDIES_ENABLED_PREF = "app.shield.optoutstudies.enabled";
+const NORMANDY_ENABLED_PREF = "app.normandy.enabled";
 
 /**
  * Handles Shield-specific preferences, including their UI.
  */
 var ShieldPreferences = {
   init() {
-    // If the FHR pref was disabled since our last run, disable opt-out as well.
-    if (!Services.prefs.getBoolPref(FHR_UPLOAD_ENABLED_PREF)) {
-      Services.prefs.setBoolPref(OPT_OUT_STUDIES_ENABLED_PREF, false);
-    }
-
     // Watch for changes to the FHR pref
     Services.prefs.addObserver(FHR_UPLOAD_ENABLED_PREF, this);
     CleanupManager.addCleanupHandler(() => {
@@ -71,13 +67,6 @@ var ShieldPreferences = {
   async observePrefChange(prefName) {
     let prefValue;
     switch (prefName) {
-      // If the FHR pref changes, set the opt-out-study pref to the value it is changing to.
-      case FHR_UPLOAD_ENABLED_PREF: {
-        prefValue = Services.prefs.getBoolPref(FHR_UPLOAD_ENABLED_PREF);
-        Services.prefs.setBoolPref(OPT_OUT_STUDIES_ENABLED_PREF, prefValue);
-        break;
-      }
-
       // If the opt-out pref changes to be false, disable all current studies.
       case OPT_OUT_STUDIES_ENABLED_PREF: {
         prefValue = Services.prefs.getBoolPref(OPT_OUT_STUDIES_ENABLED_PREF);
@@ -98,6 +87,8 @@ var ShieldPreferences = {
    * handles events coming from the UI for it.
    */
   injectOptOutStudyCheckbox(doc) {
+    const allowedByPolicy = Services.policies.isAllowed("Shield");
+
     const container = doc.createElementNS(XUL_NS, "vbox");
     container.classList.add("indent");
 
@@ -109,15 +100,6 @@ var ShieldPreferences = {
     checkbox.setAttribute("id", "optOutStudiesEnabled");
     checkbox.setAttribute("class", "tail-with-learn-more");
     checkbox.setAttribute("label", "Allow Firefox to install and run studies");
-
-    let allowedByPolicy = Services.policies.isAllowed("Shield");
-    if (allowedByPolicy) {
-      // If Shield is not allowed by policy, don't tie this checkbox to the preference,
-      // so that the checkbox remains unchecked.
-      // Otherwise, it would be grayed out but still checked, which looks confusing
-      // because it appears it's enabled with no way to disable it.
-      checkbox.setAttribute("preference", OPT_OUT_STUDIES_ENABLED_PREF);
-    }
     hContainer.appendChild(checkbox);
 
     const viewStudies = doc.createElementNS(XUL_NS, "label");
@@ -133,11 +115,49 @@ var ShieldPreferences = {
 
     // Weirdly, FHR doesn't have a Preference instance on the page, so we create it.
     const fhrPref = doc.defaultView.Preferences.add({ id: FHR_UPLOAD_ENABLED_PREF, type: "bool" });
-    function onChangeFHRPref() {
-      let isDisabled = Services.prefs.prefIsLocked(FHR_UPLOAD_ENABLED_PREF) ||
-                       !AppConstants.MOZ_TELEMETRY_REPORTING ||
-                       !Services.prefs.getBoolPref(FHR_UPLOAD_ENABLED_PREF) ||
-                       !allowedByPolicy;
+    function updateStudyCheckboxState() {
+      // The checkbox should be disabled if any of the below are true. This
+      // prevents the user from changing the value in the box.
+      //
+      // * the policy forbids shield
+      // * the Shield Study preference is locked
+      // * the FHR pref is false
+      //
+      // The checkbox should match the value of the preference only if all of
+      // these are true. Otherwise, the checkbox should remain unchecked. This
+      // is because in these situations, Shield studies are always disabled, and
+      // so showing a checkbox would be confusing.
+      //
+      // * MOZ_TELEMETRY_REPORTING is true
+      // * the policy allows Shield
+      // * the FHR pref is true
+      // * Normandy is enabled
+
+      const checkboxMatchesPref = (
+        AppConstants.MOZ_DATA_REPORTING &&
+        allowedByPolicy &&
+        Services.prefs.getBoolPref(FHR_UPLOAD_ENABLED_PREF, false) &&
+        Services.prefs.getBoolPref(NORMANDY_ENABLED_PREF, false)
+      );
+
+      if (checkboxMatchesPref) {
+        if (Services.prefs.getBoolPref(OPT_OUT_STUDIES_ENABLED_PREF)) {
+          checkbox.setAttribute("checked", "checked");
+        } else {
+          checkbox.removeAttribute("checked");
+        }
+        checkbox.setAttribute("preference", OPT_OUT_STUDIES_ENABLED_PREF);
+      } else {
+        checkbox.removeAttribute("preference");
+        checkbox.removeAttribute("checked");
+      }
+
+      const isDisabled = (
+        !allowedByPolicy ||
+        Services.prefs.prefIsLocked(OPT_OUT_STUDIES_ENABLED_PREF) ||
+        !Services.prefs.getBoolPref(FHR_UPLOAD_ENABLED_PREF)
+      );
+
       // We can't use checkbox.disabled here because the XBL binding may not be present,
       // in which case setting the property won't work properly.
       if (isDisabled) {
@@ -146,9 +166,9 @@ var ShieldPreferences = {
         checkbox.removeAttribute("disabled");
       }
     }
-    fhrPref.on("change", onChangeFHRPref);
-    onChangeFHRPref();
-    doc.defaultView.addEventListener("unload", () => fhrPref.off("change", onChangeFHRPref), { once: true });
+    fhrPref.on("change", updateStudyCheckboxState);
+    updateStudyCheckboxState();
+    doc.defaultView.addEventListener("unload", () => fhrPref.off("change", updateStudyCheckboxState), { once: true });
 
     // Actually inject the elements we've created.
     const parent = doc.getElementById("submitHealthReportBox").closest("description");
