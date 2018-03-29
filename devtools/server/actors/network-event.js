@@ -6,6 +6,7 @@
 
 const protocol = require("devtools/shared/protocol");
 const { networkEventSpec } = require("devtools/shared/specs/network-event");
+const { LongStringActor } = require("devtools/server/actors/string");
 
 /**
  * Creates an actor for a network event.
@@ -43,15 +44,11 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
 
     this._discardRequestBody = false;
     this._discardResponseBody = false;
-
-    // Keep track of LongStringActors owned by this NetworkEventActor.
-    this._longStringActors = new Set();
   },
 
   _request: null,
   _response: null,
   _timings: null,
-  _longStringActors: null,
 
   /**
    * Returns a grip for this actor for returning in a protocol message.
@@ -75,14 +72,6 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    * Releases this actor from the pool.
    */
   destroy(conn) {
-    for (let grip of this._longStringActors) {
-      let actor = this.webConsoleActor.getActorByID(grip.actor);
-      if (actor) {
-        this.webConsoleActor.releaseActor(actor);
-      }
-    }
-    this._longStringActors = new Set();
-
     if (!this.webConsoleActor) {
       return;
     }
@@ -284,9 +273,8 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
     this._request.headers = headers;
     this._prepareHeaders(headers);
 
-    rawHeaders = this.webConsoleActor._createStringGrip(rawHeaders);
-    if (typeof rawHeaders == "object") {
-      this._longStringActors.add(rawHeaders);
+    if (rawHeaders) {
+      rawHeaders = new LongStringActor(this.conn, rawHeaders);
     }
     this._request.rawHeaders = rawHeaders;
 
@@ -319,13 +307,10 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    */
   addRequestPostData(postData) {
     this._request.postData = postData;
-    postData.text = this.webConsoleActor._createStringGrip(postData.text);
-    if (typeof postData.text == "object") {
-      this._longStringActors.add(postData.text);
-    }
+    postData.text = new LongStringActor(this.conn, postData.text);
 
     this.emit("network-event-update:post-data", "requestPostData", {
-      dataSize: postData.text.length,
+      dataSize: postData.text.str.length,
       discardRequestBody: this._discardRequestBody,
     });
   },
@@ -339,10 +324,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    *        The raw headers source.
    */
   addResponseStart(info, rawHeaders) {
-    rawHeaders = this.webConsoleActor._createStringGrip(rawHeaders);
-    if (typeof rawHeaders == "object") {
-      this._longStringActors.add(rawHeaders);
-    }
+    rawHeaders = new LongStringActor(this.conn, rawHeaders);
     this._response.rawHeaders = rawHeaders;
 
     this._response.httpVersion = info.httpVersion;
@@ -416,10 +398,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
   addResponseContent(content, {discardResponseBody, truncated}) {
     this._truncated = truncated;
     this._response.content = content;
-    content.text = this.webConsoleActor._createStringGrip(content.text);
-    if (typeof content.text == "object") {
-      this._longStringActors.add(content.text);
-    }
+    content.text = new LongStringActor(this.conn, content.text);
 
     this.emit("network-event-update:response-content", "responseContent", {
       mimeType: content.mimeType,
@@ -462,10 +441,7 @@ const NetworkEventActor = protocol.ActorClassWithSpec(networkEventSpec, {
    */
   _prepareHeaders(headers) {
     for (let header of headers) {
-      header.value = this.webConsoleActor._createStringGrip(header.value);
-      if (typeof header.value == "object") {
-        this._longStringActors.add(header.value);
-      }
+      header.value = new LongStringActor(this.conn, header.value);
     }
   },
 });
