@@ -332,30 +332,31 @@ namespace {
 } // namespace
 
 bool
-MediaStreamGraphImpl::AudioTrackPresent(bool& aNeedsAEC)
+MediaStreamGraphImpl::AudioTrackPresent()
 {
   MOZ_ASSERT(OnGraphThreadOrNotRunning());
 
   bool audioTrackPresent = false;
-  for (uint32_t i = 0; i < mStreams.Length() && audioTrackPresent == false; ++i) {
-    MediaStream* stream = mStreams[i];
-    SourceMediaStream* source = stream->AsSourceStream();
-#ifdef MOZ_WEBRTC
-    if (source && source->NeedsMixing()) {
-      aNeedsAEC = true;
-    }
-#endif
-    // If this is a AudioNodeStream, force a AudioCallbackDriver.
+  for (MediaStream* stream : mStreams) {
     if (stream->AsAudioNodeStream()) {
       audioTrackPresent = true;
-    } else {
-      for (StreamTracks::TrackIter tracks(stream->GetStreamTracks(), MediaSegment::AUDIO);
-           !tracks.IsEnded(); tracks.Next()) {
-        audioTrackPresent = true;
-      }
+      break;
     }
-    if (source) {
+
+    if (!StreamTracks::TrackIter(
+            stream->GetStreamTracks(),
+            MediaSegment::AUDIO
+          ).IsEnded()) {
+      audioTrackPresent = true;
+      break;
+    }
+
+    if (SourceMediaStream* source = stream->AsSourceStream()) {
       audioTrackPresent = source->HasPendingAudioTrack();
+    }
+
+    if (audioTrackPresent) {
+      break;
     }
   }
 
@@ -365,9 +366,6 @@ MediaStreamGraphImpl::AudioTrackPresent(bool& aNeedsAEC)
   if (!audioTrackPresent && mInputDeviceUsers.Count() != 0) {
     NS_WARNING("No audio tracks, but full-duplex audio is enabled!!!!!");
     audioTrackPresent = true;
-#ifdef MOZ_WEBRTC
-    aNeedsAEC = true;
-#endif
   }
 
   return audioTrackPresent;
@@ -377,8 +375,7 @@ void
 MediaStreamGraphImpl::UpdateStreamOrder()
 {
   MOZ_ASSERT(OnGraphThreadOrNotRunning());
-  bool shouldAEC = false;
-  bool audioTrackPresent = AudioTrackPresent(shouldAEC);
+  bool audioTrackPresent = AudioTrackPresent();
 
   // Note that this looks for any audio streams, input or output, and switches to a
   // SystemClockDriver if there are none.  However, if another is already pending, let that
@@ -895,8 +892,7 @@ MediaStreamGraphImpl::CloseAudioInputImpl(AudioDataListener *aListener)
   mAudioInputs.RemoveElement(aListener);
 
   // Switch Drivers since we're adding or removing an input (to nothing/system or output only)
-  bool shouldAEC = false;
-  bool audioTrackPresent = AudioTrackPresent(shouldAEC);
+  bool audioTrackPresent = AudioTrackPresent();
 
   MonitorAutoLock mon(mMonitor);
   if (LifecycleStateRef() == LIFECYCLE_RUNNING) {
@@ -4148,8 +4144,7 @@ MediaStreamGraphImpl::ApplyAudioContextOperationImpl(
   // This is the same logic as in UpdateStreamOrder, but it's simpler to have it
   // here as well so we don't have to store the Promise(s) on the Graph.
   if (aOperation != AudioContextOperation::Resume) {
-    bool shouldAEC = false;
-    bool audioTrackPresent = AudioTrackPresent(shouldAEC);
+    bool audioTrackPresent = AudioTrackPresent();
 
     if (!audioTrackPresent && CurrentDriver()->AsAudioCallbackDriver()) {
       CurrentDriver()->AsAudioCallbackDriver()->
