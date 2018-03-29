@@ -651,13 +651,6 @@ XULContentSinkImpl::ReportError(const char16_t* aErrorText,
     return NS_OK;
   };
 
-  if (idoc &&
-      idoc->IsXULDocument() &&
-      !idoc->AsXULDocument()->OnDocumentParserError()) {
-    // The overlay was broken.  Don't add a messy element to the master doc.
-    return NS_OK;
-  }
-
   const char16_t* noAtts[] = { 0, 0 };
 
   NS_NAMED_LITERAL_STRING(errorNs,
