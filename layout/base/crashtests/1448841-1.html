@@ -1,0 +1,17 @@
+<html class="reftest-wait">
+<body>
+  <div style="width:500px; height:500px; overflow:scroll; border:1px black solid;">
+    <div id="change" style="width:100px; height:100px; background-color:green; position:relative; top:50px; left:50px"></div>
+    <div style="width:100px; height:100px; background-color:red; z-index:2; position:relative; left:200px"></div>
+    <div style="height:1000px"></div>
+  </div>
+  <div style="width:100px; height:100px; background-color:blue; z-index:1; position:relative; top:-400px"></div>
+</body>
+<script>
+  function doTest() {
+    document.getElementById("change").style.backgroundColor = "orange";
+    document.documentElement.removeAttribute("class");
+  }
+  document.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</html>
