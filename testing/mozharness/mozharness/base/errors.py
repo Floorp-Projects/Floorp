@@ -155,13 +155,6 @@ TarErrorList = BaseErrorList + [
     {'substr': r''': Error is not recoverable: exiting now''', 'level': ERROR},
 ]
 
-ADBErrorList = BaseErrorList + [
-    {'substr': r'''INSTALL_FAILED_''', 'level': ERROR},
-    {'substr': r'''Android Debug Bridge version''', 'level': ERROR},
-    {'substr': r'''error: protocol fault''', 'level': ERROR},
-    {'substr': r'''unable to connect to ''', 'level': ERROR},
-]
-
 JarsignerErrorList = [{
     'substr': r'''command not found''',
     'level': FATAL
