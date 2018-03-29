@@ -3570,6 +3570,12 @@ IonBuilder::arithTrySharedStub(bool* emitted, JSOp op,
         stub = MUnaryCache::New(alloc(), right);
         break;
       case JSOP_ADD:
+        // If not disabled, prefer the cache IR stub.
+        if (!JitOptions.disableCacheIRBinaryArith) {
+            stub = MBinaryCache::New(alloc(), left, right);
+            break;
+        }
+        MOZ_FALLTHROUGH;
       case JSOP_SUB:
       case JSOP_MUL:
       case JSOP_DIV:

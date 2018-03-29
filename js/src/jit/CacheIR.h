@@ -166,7 +166,8 @@ class TypedOperandId : public OperandId
     _(Compare)              \
     _(ToBool)               \
     _(Call)                 \
-    _(UnaryArith)
+    _(UnaryArith)           \
+    _(BinaryArith)
 
 enum class CacheKind : uint8_t
 {
@@ -290,6 +291,8 @@ extern const char* CacheKindNames[];
     _(LoadStringResult)                   \
     _(LoadInstanceOfObjectResult)         \
     _(LoadTypeOfObjectResult)             \
+    _(DoubleAddResult)                    \
+    _(Int32AddResult)                     \
     _(Int32NotResult)                     \
     _(Int32NegationResult)                \
     _(DoubleNegationResult)               \
@@ -989,6 +992,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         buffer_.writeByte(uint32_t(hasOwn));
     }
 
+    void doubleAddResult(ValOperandId lhsId, ValOperandId rhsId) {
+        writeOpWithOperandId(CacheOp::DoubleAddResult, lhsId);
+        writeOperandId(rhsId);
+    }
+    void int32AddResult(Int32OperandId lhs, Int32OperandId rhs) {
+        writeOpWithOperandId(CacheOp::Int32AddResult, lhs);
+        writeOperandId(rhs);
+    }
     void int32NotResult(Int32OperandId id) {
         writeOpWithOperandId(CacheOp::Int32NotResult, id);
     }
@@ -1775,6 +1786,26 @@ class MOZ_RAII UnaryArithIRGenerator : public IRGenerator
                           JSOp op, HandleValue val, HandleValue res);
 
     bool tryAttachStub();
+};
+
+class MOZ_RAII BinaryArithIRGenerator : public IRGenerator
+{
+    JSOp op_;
+    HandleValue lhs_;
+    HandleValue rhs_;
+    HandleValue res_;
+
+    void trackAttached(const char* name);
+
+    bool tryAttachInt32();
+    bool tryAttachDouble();
+
+  public:
+    BinaryArithIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode,
+                           JSOp op, HandleValue lhs, HandleValue rhs, HandleValue res);
+
+    bool tryAttachStub();
+
 };
 
 } // namespace jit
