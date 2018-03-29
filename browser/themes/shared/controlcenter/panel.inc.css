@@ -382,6 +382,7 @@ description#identity-popup-content-verifier,
   min-width: 0;
   padding: 2px;
   background-color: transparent;
+  color: inherit;
   opacity: 0.6;
 }
 
