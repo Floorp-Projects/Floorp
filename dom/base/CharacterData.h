@@ -77,7 +77,11 @@ namespace dom {
 class CharacterData : public nsIContent
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  // We want to avoid the overhead of extra function calls for
+  // refcounting when we're not doing refcount logging, so we can't
+  // NS_DECL_ISUPPORTS_INHERITED.
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(CharacterData, nsIContent);
 
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
@@ -130,22 +134,42 @@ public:
 
   virtual const nsTextFragment *GetText() override;
   virtual uint32_t TextLength() const override;
-  virtual nsresult SetText(const char16_t* aBuffer, uint32_t aLength,
-                           bool aNotify) override;
-  // Need to implement this here too to avoid hiding.
+
+  /**
+   * Set the text to the given value. If aNotify is true then
+   * the document is notified of the content change.
+   */
+  nsresult SetText(const char16_t* aBuffer, uint32_t aLength,
+                   bool aNotify);
+  /**
+   * Append the given value to the current text. If aNotify is true then
+   * the document is notified of the content change.
+   */
   nsresult SetText(const nsAString& aStr, bool aNotify)
   {
     return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
   }
-  virtual nsresult AppendText(const char16_t* aBuffer, uint32_t aLength,
-                              bool aNotify) override;
+
+  /**
+   * Append the given value to the current text. If aNotify is true then
+   * the document is notified of the content change.
+   */
+  nsresult AppendText(const char16_t* aBuffer, uint32_t aLength,
+                      bool aNotify);
+
   virtual bool TextIsOnlyWhitespace() override;
   bool ThreadSafeTextIsOnlyWhitespace() const final;
-  virtual bool HasTextForTranslation() override;
-  virtual void AppendTextTo(nsAString& aResult) override;
+
+  /**
+   * Append the text content to aResult.
+   */
+  void AppendTextTo(nsAString& aResult);
+  /**
+   * Append the text content to aResult.
+   */
   MOZ_MUST_USE
-  virtual bool AppendTextTo(nsAString& aResult,
-                            const fallible_t&) override;
+  bool AppendTextTo(nsAString& aResult, const fallible_t&);
+
   virtual void SaveSubtreeState() override;
 
 #ifdef DEBUG
@@ -193,7 +217,8 @@ public:
   void ToCString(nsAString& aBuf, int32_t aOffset, int32_t aLen) const;
 #endif
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(CharacterData)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(CharacterData,
+                                                                   nsIContent)
 
 protected:
   virtual ~CharacterData();
@@ -222,21 +247,6 @@ protected:
     CloneDataNode(dom::NodeInfo *aNodeInfo, bool aCloneText) const = 0;
 
   nsTextFragment mText;
-
-public:
-  virtual bool OwnedOnlyByTheDOMTree() override
-  {
-    return GetParent() && mRefCnt.get() == 1;
-  }
-
-  virtual bool IsPurple() override
-  {
-    return mRefCnt.IsPurple();
-  }
-  virtual void RemovePurple() override
-  {
-    mRefCnt.RemovePurple();
-  }
 
 private:
   already_AddRefed<nsAtom> GetCurrentValueAtom();

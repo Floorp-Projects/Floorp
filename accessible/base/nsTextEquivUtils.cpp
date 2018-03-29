@@ -11,6 +11,7 @@
 #include "AccIterator.h"
 #include "nsCoreUtils.h"
 #include "nsIDOMXULLabeledControlEl.h"
+#include "mozilla/dom/Text.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -116,7 +117,7 @@ nsresult
 nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
                                                  nsAString *aString)
 {
-  if (aContent->IsNodeOfType(nsINode::eTEXT)) {
+  if (aContent->IsText()) {
     bool isHTMLBlock = false;
 
     nsIContent *parentContent = aContent->GetFlattenedTreeParent();
@@ -146,7 +147,7 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
         aString->Append(text.mString);
       } else {
         // If aContent is an object that is display: none, we have no a frame.
-        aContent->AppendTextTo(*aString);
+        aContent->GetAsText()->AppendTextTo(*aString);
       }
       if (isHTMLBlock && !aString->IsEmpty()) {
         aString->Append(char16_t(' '));

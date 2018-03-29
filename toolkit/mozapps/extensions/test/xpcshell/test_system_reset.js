@@ -24,8 +24,8 @@ registerDirectory("XREAppFeat", distroDir);
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "0");
 
 function makeUUID() {
-  let uuidGen = AM_Cc["@mozilla.org/uuid-generator;1"].
-                getService(AM_Ci.nsIUUIDGenerator);
+  let uuidGen = Cc["@mozilla.org/uuid-generator;1"].
+                getService(Ci.nsIUUIDGenerator);
   return uuidGen.generateUUID().toString();
 }
 
@@ -65,7 +65,7 @@ async function check_installed(conditions) {
       Assert.ok(file.isFile());
 
       let uri = addon.getResourceURI(null);
-      Assert.ok(uri instanceof AM_Ci.nsIFileURL);
+      Assert.ok(uri instanceof Ci.nsIFileURL);
       Assert.equal(uri.file.path, file.path);
 
       if (isUpgrade) {

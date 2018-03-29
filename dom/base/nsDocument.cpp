@@ -12259,6 +12259,7 @@ nsIDocument::SetContentTypeInternal(const nsACString& aType)
 
   mCachedEncoder = nullptr;
   mContentType = aType;
+  mContentTypeForWriteCalls = aType;
 }
 
 nsILoadContext*

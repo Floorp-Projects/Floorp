@@ -12,34 +12,34 @@ browser.jar:
     content/browser/extension-win-panel.css
 #endif
     content/browser/extension.svg
-    content/browser/ext-bookmarks.js
-    content/browser/ext-browser.js
     content/browser/ext-browser.json
-    content/browser/ext-browserAction.js
-    content/browser/ext-browsingData.js
-    content/browser/ext-chrome-settings-overrides.js
-    content/browser/ext-commands.js
-    content/browser/ext-devtools.js
-    content/browser/ext-devtools-inspectedWindow.js
-    content/browser/ext-devtools-network.js
-    content/browser/ext-devtools-panels.js
-    content/browser/ext-find.js
-    content/browser/ext-geckoProfiler.js
-    content/browser/ext-history.js
-    content/browser/ext-menus.js
-    content/browser/ext-omnibox.js
-    content/browser/ext-pageAction.js
-    content/browser/ext-pkcs11.js
-    content/browser/ext-sessions.js
-    content/browser/ext-sidebarAction.js
-    content/browser/ext-tabs.js
-    content/browser/ext-url-overrides.js
-    content/browser/ext-windows.js
-    content/browser/ext-c-browser.js
-    content/browser/ext-c-devtools-inspectedWindow.js
-    content/browser/ext-c-devtools-network.js
-    content/browser/ext-c-devtools-panels.js
-    content/browser/ext-c-devtools.js
-    content/browser/ext-c-menus.js
-    content/browser/ext-c-omnibox.js
-    content/browser/ext-c-tabs.js
+    content/browser/parent/ext-bookmarks.js (parent/ext-bookmarks.js)
+    content/browser/parent/ext-browser.js (parent/ext-browser.js)
+    content/browser/parent/ext-browserAction.js (parent/ext-browserAction.js)
+    content/browser/parent/ext-browsingData.js (parent/ext-browsingData.js)
+    content/browser/parent/ext-chrome-settings-overrides.js (parent/ext-chrome-settings-overrides.js)
+    content/browser/parent/ext-commands.js (parent/ext-commands.js)
+    content/browser/parent/ext-devtools.js (parent/ext-devtools.js)
+    content/browser/parent/ext-devtools-inspectedWindow.js (parent/ext-devtools-inspectedWindow.js)
+    content/browser/parent/ext-devtools-network.js (parent/ext-devtools-network.js)
+    content/browser/parent/ext-devtools-panels.js (parent/ext-devtools-panels.js)
+    content/browser/parent/ext-find.js (parent/ext-find.js)
+    content/browser/parent/ext-geckoProfiler.js (parent/ext-geckoProfiler.js)
+    content/browser/parent/ext-history.js (parent/ext-history.js)
+    content/browser/parent/ext-menus.js (parent/ext-menus.js)
+    content/browser/parent/ext-omnibox.js (parent/ext-omnibox.js)
+    content/browser/parent/ext-pageAction.js (parent/ext-pageAction.js)
+    content/browser/parent/ext-pkcs11.js (parent/ext-pkcs11.js)
+    content/browser/parent/ext-sessions.js (parent/ext-sessions.js)
+    content/browser/parent/ext-sidebarAction.js (parent/ext-sidebarAction.js)
+    content/browser/parent/ext-tabs.js (parent/ext-tabs.js)
+    content/browser/parent/ext-url-overrides.js (parent/ext-url-overrides.js)
+    content/browser/parent/ext-windows.js (parent/ext-windows.js)
+    content/browser/child/ext-browser.js (child/ext-browser.js)
+    content/browser/child/ext-devtools-inspectedWindow.js (child/ext-devtools-inspectedWindow.js)
+    content/browser/child/ext-devtools-network.js (child/ext-devtools-network.js)
+    content/browser/child/ext-devtools-panels.js (child/ext-devtools-panels.js)
+    content/browser/child/ext-devtools.js (child/ext-devtools.js)
+    content/browser/child/ext-menus.js (child/ext-menus.js)
+    content/browser/child/ext-omnibox.js (child/ext-omnibox.js)
+    content/browser/child/ext-tabs.js (child/ext-tabs.js)

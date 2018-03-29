@@ -7,6 +7,7 @@
 #include "nsBidiPresUtils.h"
 
 #include "mozilla/IntegerRange.h"
+#include "mozilla/dom/Text.h"
 
 #include "gfxContext.h"
 #include "nsAutoPtr.h"
@@ -1136,14 +1137,14 @@ nsBidiPresUtils::TraverseFrames(nsBlockInFlowLineIterator* aLineIter,
           aBpd->mPrevContent = content;
           if (!frame->StyleText()->NewlineIsSignificant(
                 static_cast<nsTextFrame*>(frame))) {
-            content->AppendTextTo(aBpd->mBuffer);
+            content->GetAsText()->AppendTextTo(aBpd->mBuffer);
           } else {
             /*
              * For preformatted text we have to do bidi resolution on each line
              * separately.
              */
             nsAutoString text;
-            content->AppendTextTo(text);
+            content->GetAsText()->AppendTextTo(text);
             nsIFrame* next;
             do {
               next = nullptr;

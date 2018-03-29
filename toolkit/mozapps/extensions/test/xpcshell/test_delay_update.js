@@ -7,7 +7,6 @@
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
-ChromeUtils.import("resource://testing-common/httpd.js");
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
@@ -24,11 +23,8 @@ const TEST_IGNORE_PREF = "delaytest.ignore";
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 // Create and configure the HTTP server.
-let testserver = createHttpServer();
-gPort = testserver.identity.primaryPort;
-mapFile("/data/test_delay_updates_complete_legacy.json", testserver);
-mapFile("/data/test_delay_updates_ignore_legacy.json", testserver);
-mapFile("/data/test_delay_updates_defer_legacy.json", testserver);
+var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
+testserver.registerDirectory("/data/", do_get_file("data"));
 testserver.registerDirectory("/addons/", do_get_file("addons"));
 
 function createIgnoreAddon() {
@@ -37,7 +33,7 @@ function createIgnoreAddon() {
     version: "1.0",
     bootstrap: true,
     unpack: true,
-    updateURL: `http://localhost:${gPort}/data/test_delay_updates_ignore_legacy.json`,
+    updateURL: `http://example.com/data/test_delay_updates_ignore_legacy.json`,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -58,7 +54,7 @@ function createCompleteAddon() {
     version: "1.0",
     bootstrap: true,
     unpack: true,
-    updateURL: `http://localhost:${gPort}/data/test_delay_updates_complete_legacy.json`,
+    updateURL: `http://example.com/data/test_delay_updates_complete_legacy.json`,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -79,7 +75,7 @@ function createDeferAddon() {
     version: "1.0",
     bootstrap: true,
     unpack: true,
-    updateURL: `http://localhost:${gPort}/data/test_delay_updates_defer_legacy.json`,
+    updateURL: `http://example.com/data/test_delay_updates_defer_legacy.json`,
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",

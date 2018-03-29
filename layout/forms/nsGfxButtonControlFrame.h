@@ -12,6 +12,8 @@
 #include "nsCOMPtr.h"
 #include "nsIAnonymousContentCreator.h"
 
+class nsTextNode;
+
 // Class which implements the input[type=button, reset, submit] and
 // browse button for input[type=file].
 // The label for button is specified through generated content
@@ -56,7 +58,7 @@ protected:
 
   virtual bool IsInput() override { return true; }
 private:
-  nsCOMPtr<nsIContent> mTextContent;
+  RefPtr<nsTextNode> mTextContent;
 };
 
 

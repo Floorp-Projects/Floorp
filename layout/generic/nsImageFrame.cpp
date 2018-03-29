@@ -1899,14 +1899,10 @@ nsImageFrame::ShouldDisplaySelection()
 
   // If the image is the only selected node, don't draw the selection overlay.
   // This can happen when selecting an image in contenteditable context.
-  if (displaySelection == nsISelectionDisplay::DISPLAY_ALL)
-  {
-    const nsFrameSelection* frameSelection = GetConstFrameSelection();
-    if (frameSelection)
-    {
+  if (displaySelection == nsISelectionDisplay::DISPLAY_ALL) {
+    if (const nsFrameSelection* frameSelection = GetConstFrameSelection()) {
       const Selection* selection = frameSelection->GetSelection(SelectionType::eNormal);
-      if (selection && selection->RangeCount() == 1)
-      {
+      if (selection && selection->RangeCount() == 1) {
         nsINode* parent = mContent->GetParent();
         int32_t thisOffset = parent->ComputeIndexOf(mContent);
         nsRange* range = selection->GetRangeAt(0);

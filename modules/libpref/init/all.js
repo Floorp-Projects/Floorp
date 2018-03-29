@@ -5065,16 +5065,6 @@ pref("device.sensors.ambientLight.enabled", true);
 // Enable/Disable the device storage API for content
 pref("device.storage.enabled", false);
 
-// Toggle which thread the HTML5 parser uses for stream parsing
-pref("html5.offmainthread", true);
-// Time in milliseconds between the time a network buffer is seen and the
-// timer firing when the timer hasn't fired previously in this parse in the
-// off-the-main-thread HTML5 parser.
-pref("html5.flushtimer.initialdelay", 120);
-// Time in milliseconds between the time a network buffer is seen and the
-// timer firing when the timer has already fired previously in this parse.
-pref("html5.flushtimer.subsequentdelay", 120);
-
 // Push/Pop/Replace State prefs
 pref("browser.history.maxStateObjectSize", 655360);
 

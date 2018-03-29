@@ -511,6 +511,13 @@ public:
   mozilla::dom::Text* GetAsText();
   const mozilla::dom::Text* GetAsText() const;
 
+  /**
+   * Return this node as Text.  Asserts IsText().  This is defined inline in
+   * Text.h.
+   */
+  mozilla::dom::Text* AsText();
+  const mozilla::dom::Text* AsText() const;
+
   /*
    * Return whether the node is a ProcessingInstruction node.
    */
@@ -1217,14 +1224,7 @@ public:
     }
   }
 
-  bool IsEditable() const
-  {
-#ifdef MOZILLA_INTERNAL_API
-    return IsEditableInternal();
-#else
-    return IsEditableExternal();
-#endif
-  }
+  bool IsEditable() const;
 
   /**
    * Returns true if |this| is native anonymous (i.e. created by
@@ -1298,7 +1298,7 @@ public:
    */
   nsIContent* GetSelectionRootContent(nsIPresShell* aPresShell);
 
-  virtual nsINodeList* ChildNodes();
+  nsINodeList* ChildNodes();
   nsIContent* GetFirstChild() const { return mFirstChild; }
   nsIContent* GetLastChild() const
   {
@@ -1348,14 +1348,6 @@ public:
    * in HTMLInputElement with number type as increasing / decreasing its value.
    */
   virtual bool IsNodeApzAwareInternal() const;
-
-  // HTML elements named <shadow> may or may not be HTMLShadowElement.  This is
-  // a way to ask an element whether it's an HTMLShadowElement.
-  virtual bool IsHTMLShadowElement() const { return false; }
-
-  // Elements named <content> may or may not be HTMLContentElement.  This is a
-  // way to ask an element whether it's an HTMLContentElement.
-  virtual bool IsHTMLContentElement() const { return false; }
 
   void GetTextContent(nsAString& aTextContent,
                       mozilla::OOMReporter& aError)
@@ -1960,12 +1952,6 @@ protected:
    * of type nsParentNodeChildContentList.
    */
   void InvalidateChildNodes();
-
-  bool IsEditableInternal() const;
-  virtual bool IsEditableExternal() const
-  {
-    return IsEditableInternal();
-  }
 
   virtual void GetTextContentInternal(nsAString& aTextContent,
                                       mozilla::OOMReporter& aError);

@@ -247,9 +247,8 @@ HTMLOptionElement::GetText(nsAString& aText)
 
   nsIContent* child = nsINode::GetFirstChild();
   while (child) {
-    if (child->NodeType() == TEXT_NODE ||
-        child->NodeType() == CDATA_SECTION_NODE) {
-      child->AppendTextTo(text);
+    if (Text* textChild = child->GetAsText()) {
+      textChild->AppendTextTo(text);
     }
     if (child->IsHTMLElement(nsGkAtoms::script) ||
         child->IsSVGElement(nsGkAtoms::script)) {

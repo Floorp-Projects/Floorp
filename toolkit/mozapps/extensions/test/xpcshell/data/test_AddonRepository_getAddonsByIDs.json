@@ -14,7 +14,7 @@
                 "files": [
                     {
                         "platform": "all",
-                        "url": "http://localhost:%PORT%/addons/test_AddonRepository_2.xpi",
+                        "url": "http://example.com/addons/test_AddonRepository_2.xpi",
                         "size": 5555
                     }
                 ]
@@ -22,30 +22,30 @@
             "authors": [
                 {
                     "name": "Test Creator 1",
-                    "url": "http://localhost:%PORT%/creator1.html"
+                    "url": "http://example.com/creator1.html"
                 },
                 {
                     "name": "Test Developer 1",
-                    "url": "http://localhost:%PORT%/developer1.html"
+                    "url": "http://example.com/developer1.html"
                 }
             ],
             "summary": "Test Summary 1",
             "description": "Test Description 1",
             "icons": {
-              "32": "http://localhost:%PORT%/icon1.png"
+              "32": "http://example.com/icon1.png"
             },
             "previews": [
                 {
                     "caption": "Caption 1 - 1",
                     "image_size": [400, 300],
-                    "image_url": "http://localhost:%PORT%/full1-1.png",
+                    "image_url": "http://example.com/full1-1.png",
                     "thumbnail_size": [200, 150],
-                    "thumbnail_url": "http://localhost:%PORT%/thumbnail1-1.png"
+                    "thumbnail_url": "http://example.com/thumbnail1-1.png"
                 },
                 {
                     "caption": "Caption 2 - 1",
-                    "image_url": "http://localhost:%PORT%/full2-1.png",
-                    "thumbnail_url": "http://localhost:%PORT%/thumbnail2-1.png"
+                    "image_url": "http://example.com/full2-1.png",
+                    "thumbnail_url": "http://example.com/thumbnail2-1.png"
                 }
             ],
             "ratings": {
@@ -53,9 +53,9 @@
                 "text_count": 1111,
                 "average": 4
             },
-            "ratings_url": "http://localhost:%PORT%/review1.html",
-            "support_url": "http://localhost:%PORT%/support1.html",
-            "contributions_url": "http://localhost:%PORT%/contribution1.html",
+            "ratings_url": "http://example.com/review1.html",
+            "support_url": "http://example.com/support1.html",
+            "contributions_url": "http://example.com/contribution1.html",
             "weekly_downloads": 3333,
             "last_updated": "2010-02-01T14:04:05Z"
         },
@@ -68,7 +68,7 @@
                 "files": [
                     {
                         "platform": "all",
-                        "url": "http://localhost:%PORT%/test3.xpi"
+                        "url": "http://example.com/test3.xpi"
                     }
                 ]
             },
@@ -88,11 +88,11 @@
                 "files": [
                     {
                         "platform": "UNKNOWN1",
-                        "url": "http://localhost:%PORT%/test4.xpi"
+                        "url": "http://example.com/test4.xpi"
                     },
                     {
                         "platform": "UNKNOWN2",
-                        "url": "http://localhost:%PORT%/test4.xpi"
+                        "url": "http://example.com/test4.xpi"
                     }
                 ]
             }

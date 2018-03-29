@@ -11,6 +11,7 @@
 #include "nsCaseTreatment.h" // for enum, cannot be forward-declared
 #include "nsINode.h"
 #include "nsStringFwd.h"
+#include "nsISupportsImpl.h"
 
 // Forward declarations
 class nsAtom;
@@ -67,6 +68,9 @@ public:
 #endif // MOZILLA_INTERNAL_API
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsIContent)
 
   /**
    * Bind this content node to a tree.  If this method throws, the caller must
@@ -376,32 +380,6 @@ public:
   }
 
   /**
-   * Set the text to the given value. If aNotify is true then
-   * the document is notified of the content change.
-   * NOTE: For elements this always ASSERTS and returns NS_ERROR_FAILURE
-   */
-  virtual nsresult SetText(const char16_t* aBuffer, uint32_t aLength,
-                           bool aNotify) = 0;
-
-  /**
-   * Append the given value to the current text. If aNotify is true then
-   * the document is notified of the content change.
-   * NOTE: For elements this always ASSERTS and returns NS_ERROR_FAILURE
-   */
-  virtual nsresult AppendText(const char16_t* aBuffer, uint32_t aLength,
-                              bool aNotify) = 0;
-
-  /**
-   * Set the text to the given value. If aNotify is true then
-   * the document is notified of the content change.
-   * NOTE: For elements this always asserts and returns NS_ERROR_FAILURE
-   */
-  nsresult SetText(const nsAString& aStr, bool aNotify)
-  {
-    return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
-  }
-
-  /**
    * Query method to see if the frame is nothing but whitespace
    * NOTE: Always returns false for elements
    */
@@ -411,27 +389,6 @@ public:
    * Thread-safe version of TextIsOnlyWhitespace.
    */
   virtual bool ThreadSafeTextIsOnlyWhitespace() const = 0;
-
-  /**
-   * Method to see if the text node contains data that is useful
-   * for a translation: i.e., it consists of more than just whitespace,
-   * digits and punctuation.
-   * NOTE: Always returns false for elements.
-   */
-  virtual bool HasTextForTranslation() = 0;
-
-  /**
-   * Append the text content to aResult.
-   * NOTE: This asserts and returns for elements
-   */
-  virtual void AppendTextTo(nsAString& aResult) = 0;
-
-  /**
-   * Append the text content to aResult.
-   * NOTE: This asserts and returns for elements
-   */
-  MOZ_MUST_USE
-  virtual bool AppendTextTo(nsAString& aResult, const mozilla::fallible_t&) = 0;
 
   /**
    * Check if this content is focusable and in the current tab order.
@@ -667,16 +624,6 @@ public:
   }
 
   /**
-   * This method is called when the parser begins creating the element's
-   * children, if any are present.
-   *
-   * This is only called for XTF elements currently.
-   */
-  virtual void BeginAddingChildren()
-  {
-  }
-
-  /**
    * This method is called when the parser finishes creating the element's children,
    * if any are present.
    *
@@ -827,14 +774,24 @@ public:
   virtual nsresult GetEventTargetParent(
                      mozilla::EventChainPreVisitor& aVisitor) override;
 
-  virtual bool IsPurple() = 0;
-  virtual void RemovePurple() = 0;
-
-  virtual bool OwnedOnlyByTheDOMTree() { return false; }
-
-  virtual already_AddRefed<nsITextControlElement> GetAsTextControlElement()
+  bool IsPurple() const
   {
-    return nullptr;
+    return mRefCnt.IsPurple();
+  }
+
+  void RemovePurple()
+  {
+    mRefCnt.RemovePurple();
+  }
+
+  bool OwnedOnlyByTheDOMTree()
+  {
+    uint32_t rc = mRefCnt.get();
+    if (GetParent()) {
+      --rc;
+    }
+    rc -= GetChildCount();
+    return rc == 0;
   }
 
 protected:
@@ -952,6 +909,8 @@ protected:
    */
   nsAtom* DoGetID() const;
 
+  ~nsIContent() {}
+
 public:
 #ifdef DEBUG
   /**
@@ -967,15 +926,6 @@ public:
   virtual void DumpContent(FILE* out = stdout, int32_t aIndent = 0,
                            bool aDumpAll = true) const = 0;
 #endif
-
-  /**
-   * Append to aOutDescription a short (preferably one line) string
-   * describing the content.
-   * Currently implemented for elements only.
-   */
-  virtual void Describe(nsAString& aOutDescription) const {
-    aOutDescription = NS_LITERAL_STRING("(not an element)");
-  }
 
   enum ETabFocusType {
     eTabFocus_textControlsMask = (1<<0),  // textboxes and lists always tabbable
