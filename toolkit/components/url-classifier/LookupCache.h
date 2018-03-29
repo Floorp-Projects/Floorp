@@ -250,7 +250,7 @@ protected:
                       bool* aHas,
                       bool* aConfirmed);
 
-  bool mPrimed;
+  bool mPrimed; // true when the PrefixSet has been loaded (or constructed)
   nsCString mTableName;
   nsCString mProvider;
   nsCOMPtr<nsIFile> mRootStoreDirectory;
