@@ -28,7 +28,7 @@ add_task(async function() {
   info("Execute each test value in the console");
   for (let value of TEST_VALUES) {
     jsterm.setInputValue(value);
-    jsterm.execute();
+    await jsterm.execute();
   }
 
   performTests(jsterm);
