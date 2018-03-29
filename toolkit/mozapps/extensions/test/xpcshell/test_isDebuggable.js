@@ -3,28 +3,35 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-var ADDONS = [
-  "test_bootstrap2_1", // restartless addon
-];
+var ID = "bootstrap2@tests.mozilla.org";
 
-var IDS = [
-  "bootstrap2@tests.mozilla.org",
-];
+const ADDON = {
+  id: ID,
+  version: "1.0",
+  bootstrap: "true",
+  multiprocessCompatible: "true",
 
-function run_test() {
-  do_test_pending();
+  name: "Test Bootstrap 2",
+  description: "Test Description",
 
+  iconURL: "chrome://foo/skin/icon.png",
+  aboutURL: "chrome://foo/content/about.xul",
+  optionsURL: "chrome://foo/content/options.xul",
+
+  targetApplications: [{
+    id: "xpcshell@tests.mozilla.org",
+    minVersion: "1",
+    maxVersion: "1"}],
+};
+
+add_task(async function() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
 
-  startupManager();
+  await promiseStartupManager();
   AddonManager.checkCompatibility = false;
 
-  installAllFiles(ADDONS.map(do_get_addon), function() {
-    restartManager();
+  await promiseInstallXPI(ADDON);
 
-    AddonManager.getAddonsByIDs(IDS, function([a1]) {
-      Assert.equal(a1.isDebuggable, true);
-      do_test_finished();
-    });
-  }, true);
-}
+  let addon = await AddonManager.getAddonByID(ID);
+  Assert.equal(addon.isDebuggable, true);
+});

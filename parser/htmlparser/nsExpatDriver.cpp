@@ -679,7 +679,7 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
       }
     }
     if (!loadingPrincipal) {
-      loadingPrincipal = NullPrincipal::Create();
+      loadingPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
     }
     rv = NS_NewChannel(getter_AddRefs(channel),
                        uri,

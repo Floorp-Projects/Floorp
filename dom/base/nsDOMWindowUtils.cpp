@@ -78,6 +78,7 @@
 #include "mozilla/dom/IDBMutableFile.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/dom/Text.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/ContentChild.h"
@@ -1425,7 +1426,7 @@ nsDOMWindowUtils::GetTranslationNodes(nsIDOMNode* aRoot,
          child;
          child = child->GetNextSibling()) {
 
-      if (child->HasTextForTranslation()) {
+      if (child->IsText() && child->GetAsText()->HasTextForTranslation()) {
         translationNodesHash.PutEntry(content);
 
         bool isBlockFrame = false;

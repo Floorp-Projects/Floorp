@@ -19,6 +19,7 @@
 #include "nsIDocShell.h"
 #include "nsIScriptError.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsHtml5Highlighter.h"
@@ -35,19 +36,6 @@
 #include "nsJSEnvironment.h"
 
 using namespace mozilla;
-
-int32_t nsHtml5StreamParser::sTimerInitialDelay = 120;
-int32_t nsHtml5StreamParser::sTimerSubsequentDelay = 120;
-
-// static
-void
-nsHtml5StreamParser::InitializeStatics()
-{
-  Preferences::AddIntVarCache(&sTimerInitialDelay,
-                              "html5.flushtimer.initialdelay");
-  Preferences::AddIntVarCache(&sTimerSubsequentDelay,
-                              "html5.flushtimer.subsequentdelay");
-}
 
 /*
  * Note that nsHtml5StreamParser implements cycle collecting AddRef and
@@ -1204,7 +1192,8 @@ nsHtml5StreamParser::DoDataAvailable(const uint8_t* aBuffer, uint32_t aLength)
     mFlushTimer->InitWithNamedFuncCallback(
       nsHtml5StreamParser::TimerCallback,
       static_cast<void*>(this),
-      mFlushTimerEverFired ? sTimerInitialDelay : sTimerSubsequentDelay,
+      mFlushTimerEverFired ? StaticPrefs::html5_flushtimer_initialdelay()
+                           : StaticPrefs::html5_flushtimer_subsequentdelay(),
       nsITimer::TYPE_ONE_SHOT,
       "nsHtml5StreamParser::DoDataAvailable");
   }

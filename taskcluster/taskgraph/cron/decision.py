@@ -16,7 +16,7 @@ import slugid
 from taskgraph.util.time import current_json_time
 
 
-def run_decision_task(job, params):
+def run_decision_task(job, params, root):
     arguments = []
     if 'target-tasks-method' in job:
         arguments.append('--target-tasks-method={}'.format(job['target-tasks-method']))
@@ -24,13 +24,14 @@ def run_decision_task(job, params):
         make_decision_task(
             params,
             symbol=job['treeherder-symbol'],
-            arguments=arguments),
+            arguments=arguments,
+            root=root),
     ]
 
 
-def make_decision_task(params, symbol, arguments=[], head_rev=None):
+def make_decision_task(params, root, symbol, arguments=[], head_rev=None):
     """Generate a basic decision task, based on the root .taskcluster.yml"""
-    with open('.taskcluster.yml') as f:
+    with open(os.path.join(root, '.taskcluster.yml'), 'rb') as f:
         taskcluster_yml = yaml.load(f)
 
     if not head_rev:
@@ -51,7 +52,7 @@ def make_decision_task(params, symbol, arguments=[], head_rev=None):
     context = {
         'tasks_for': 'cron',
         'repository': {
-            'url': params['head_repository'],
+            'url': params['repository_url'],
             'project': params['project'],
             'level': params['level'],
         },
@@ -60,7 +61,7 @@ def make_decision_task(params, symbol, arguments=[], head_rev=None):
             # remainder are fake values, but the decision task expects them anyway
             'pushlog_id': -1,
             'pushdate': 0,
-            'owner': 'nobody',
+            'owner': 'cron',
             'comment': '',
         },
         'cron': {

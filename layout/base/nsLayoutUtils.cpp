@@ -9453,7 +9453,11 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
   if (gfxPrefs::APZPrintTree() || gfxPrefs::APZTestLoggingEnabled()) {
     if (nsIContent* content = frameForCompositionBoundsCalculation->GetContent()) {
       nsAutoString contentDescription;
-      content->Describe(contentDescription);
+      if (content->IsElement()) {
+        content->AsElement()->Describe(contentDescription);
+      } else {
+        contentDescription.AssignLiteral("(not an element)");
+      }
       metadata.SetContentDescription(NS_LossyConvertUTF16toASCII(contentDescription));
       if (IsAPZTestLoggingEnabled()) {
         LogTestDataForPaint(aLayerManager, scrollId, "contentDescription",

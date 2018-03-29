@@ -45,7 +45,7 @@ const gPluginHost = {
     return PLUGINS;
   },
 
-  QueryInterface: XPCOMUtils.generateQI([AM_Ci.nsIPluginHost])
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPluginHost])
 };
 
 MockRegistrar.register("@mozilla.org/plugin/host;1", gPluginHost);

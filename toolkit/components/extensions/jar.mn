@@ -5,47 +5,45 @@
 toolkit.jar:
 % content extensions %content/extensions/
     content/extensions/dummy.xul
-    content/extensions/ext-alarms.js
-    content/extensions/ext-backgroundPage.js
     content/extensions/ext-browser-content.js
-    content/extensions/ext-browserSettings.js
-    content/extensions/ext-contentScripts.js
-    content/extensions/ext-contextualIdentities.js
-    content/extensions/ext-clipboard.js
-    content/extensions/ext-cookies.js
-    content/extensions/ext-dns.js
-    content/extensions/ext-downloads.js
-    content/extensions/ext-extension.js
-    content/extensions/ext-i18n.js
-#ifndef ANDROID
-    content/extensions/ext-identity.js
-#endif
-    content/extensions/ext-idle.js
-    content/extensions/ext-management.js
-    content/extensions/ext-notifications.js
-    content/extensions/ext-permissions.js
-    content/extensions/ext-privacy.js
-    content/extensions/ext-protocolHandlers.js
-    content/extensions/ext-proxy.js
-    content/extensions/ext-runtime.js
-    content/extensions/ext-storage.js
-    content/extensions/ext-tabs-base.js
-    content/extensions/ext-theme.js
-    content/extensions/ext-toolkit.js
     content/extensions/ext-toolkit.json
-    content/extensions/ext-topSites.js
-    content/extensions/ext-webRequest.js
-    content/extensions/ext-webNavigation.js
-    # Below is a separate group using the naming convention ext-c-*.js that run
-    # in the child process.
-    content/extensions/ext-c-backgroundPage.js
-    content/extensions/ext-c-contentScripts.js
-    content/extensions/ext-c-extension.js
+    content/extensions/parent/ext-alarms.js (parent/ext-alarms.js)
+    content/extensions/parent/ext-backgroundPage.js (parent/ext-backgroundPage.js)
+    content/extensions/parent/ext-browserSettings.js (parent/ext-browserSettings.js)
+    content/extensions/parent/ext-contentScripts.js (parent/ext-contentScripts.js)
+    content/extensions/parent/ext-contextualIdentities.js (parent/ext-contextualIdentities.js)
+    content/extensions/parent/ext-clipboard.js (parent/ext-clipboard.js)
+    content/extensions/parent/ext-cookies.js (parent/ext-cookies.js)
+    content/extensions/parent/ext-dns.js (parent/ext-dns.js)
+    content/extensions/parent/ext-downloads.js (parent/ext-downloads.js)
+    content/extensions/parent/ext-extension.js (parent/ext-extension.js)
+    content/extensions/parent/ext-i18n.js (parent/ext-i18n.js)
 #ifndef ANDROID
-    content/extensions/ext-c-identity.js
+    content/extensions/parent/ext-identity.js (parent/ext-identity.js)
 #endif
-    content/extensions/ext-c-runtime.js
-    content/extensions/ext-c-storage.js
-    content/extensions/ext-c-test.js
-    content/extensions/ext-c-toolkit.js
-    content/extensions/ext-c-webRequest.js
+    content/extensions/parent/ext-idle.js (parent/ext-idle.js)
+    content/extensions/parent/ext-management.js (parent/ext-management.js)
+    content/extensions/parent/ext-notifications.js (parent/ext-notifications.js)
+    content/extensions/parent/ext-permissions.js (parent/ext-permissions.js)
+    content/extensions/parent/ext-privacy.js (parent/ext-privacy.js)
+    content/extensions/parent/ext-protocolHandlers.js (parent/ext-protocolHandlers.js)
+    content/extensions/parent/ext-proxy.js (parent/ext-proxy.js)
+    content/extensions/parent/ext-runtime.js (parent/ext-runtime.js)
+    content/extensions/parent/ext-storage.js (parent/ext-storage.js)
+    content/extensions/parent/ext-tabs-base.js (parent/ext-tabs-base.js)
+    content/extensions/parent/ext-theme.js (parent/ext-theme.js)
+    content/extensions/parent/ext-toolkit.js (parent/ext-toolkit.js)
+    content/extensions/parent/ext-topSites.js (parent/ext-topSites.js)
+    content/extensions/parent/ext-webRequest.js (parent/ext-webRequest.js)
+    content/extensions/parent/ext-webNavigation.js (parent/ext-webNavigation.js)
+    content/extensions/child/ext-backgroundPage.js (child/ext-backgroundPage.js)
+    content/extensions/child/ext-contentScripts.js (child/ext-contentScripts.js)
+    content/extensions/child/ext-extension.js (child/ext-extension.js)
+#ifndef ANDROID
+    content/extensions/child/ext-identity.js (child/ext-identity.js)
+#endif
+    content/extensions/child/ext-runtime.js (child/ext-runtime.js)
+    content/extensions/child/ext-storage.js (child/ext-storage.js)
+    content/extensions/child/ext-test.js (child/ext-test.js)
+    content/extensions/child/ext-toolkit.js (child/ext-toolkit.js)
+    content/extensions/child/ext-webRequest.js (child/ext-webRequest.js)

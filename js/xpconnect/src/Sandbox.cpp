@@ -979,7 +979,7 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
         if (sop) {
             principal = sop->GetPrincipal();
         } else {
-            RefPtr<NullPrincipal> nullPrin = NullPrincipal::Create();
+            RefPtr<NullPrincipal> nullPrin = NullPrincipal::CreateWithoutOriginAttributes();
             principal = nullPrin;
         }
     }

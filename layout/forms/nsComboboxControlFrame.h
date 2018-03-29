@@ -36,6 +36,7 @@ class nsIListControlFrame;
 class nsComboboxDisplayFrame;
 class nsIDOMEventListener;
 class nsIScrollableFrame;
+class nsTextNode;
 
 namespace mozilla {
 namespace gfx {
@@ -70,7 +71,7 @@ public:
   virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                         uint32_t aFilter) override;
 
-  nsIContent* GetDisplayNode() { return mDisplayContent; }
+  nsIContent* GetDisplayNode() const;
   nsIFrame* CreateFrameForDisplayNode();
 
 #ifdef ACCESSIBILITY
@@ -285,7 +286,7 @@ private:
 
 protected:
   nsFrameList              mPopupFrames;             // additional named child list
-  nsCOMPtr<nsIContent>     mDisplayContent;          // Anonymous content used to display the current selection
+  RefPtr<nsTextNode>       mDisplayContent;          // Anonymous content used to display the current selection
   RefPtr<Element>     mButtonContent;                // Anonymous content for the button
   nsContainerFrame*        mDisplayFrame;            // frame to display selection
   nsIFrame*                mButtonFrame;             // button frame

@@ -164,12 +164,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLTextAreaElement,
                                            nsGenericHTMLFormElementWithState)
 
-  virtual already_AddRefed<nsITextControlElement> GetAsTextControlElement() override
-  {
-    nsCOMPtr<nsITextControlElement> txt = this;
-    return txt.forget();
-  }
-
   // nsIConstraintValidation
   bool     IsTooLong();
   bool     IsTooShort();

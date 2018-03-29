@@ -44,7 +44,7 @@ let registry;
 
 function run_test() {
   // This test only works where there is a registry.
-  if (!("nsIWindowsRegKey" in AM_Ci))
+  if (!("nsIWindowsRegKey" in Ci))
     return;
 
   registry = new MockRegistry();
@@ -59,13 +59,13 @@ function run_test() {
 
 // Tests whether starting a fresh profile with a bad entry works
 function run_test_1() {
-  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
                     "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
                     "addon1@tests.mozilla.org", addon1Dir.path);
-  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                     "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
                     "addon2@tests.mozilla.org", addon2Dir.path);
-  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                     "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
                     "addon3@tests.mozilla.org", addon3Dir.path);
 
@@ -94,7 +94,7 @@ function run_test_1() {
 function run_test_2() {
   shutdownManager();
 
-  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                     "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
                     "addon3@tests.mozilla.org", addon3Dir.path);
 
@@ -123,7 +123,7 @@ function run_test_2() {
 function run_test_3() {
   shutdownManager();
 
-  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+  registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                     "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
                     "addon3@tests.mozilla.org", null);
 
