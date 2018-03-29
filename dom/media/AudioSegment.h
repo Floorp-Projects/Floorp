@@ -245,7 +245,7 @@ struct AudioChunk {
     return static_cast<T*>(const_cast<void*>(mChannelData[aChannel]));
   }
 
-  PrincipalHandle GetPrincipalHandle() const { return mPrincipalHandle; }
+  const PrincipalHandle& GetPrincipalHandle() const { return mPrincipalHandle; }
 
   StreamTime mDuration = 0; // in frames within the buffer
   RefPtr<ThreadSharedObject> mBuffer; // the buffer object whose lifetime is managed; null means data is all zeroes
