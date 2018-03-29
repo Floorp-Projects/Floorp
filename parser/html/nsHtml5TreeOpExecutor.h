@@ -45,6 +45,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 private:
+  static bool sExternalViewSource;
 #ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
   static uint32_t sAppendBatchMaxSize;
   static uint32_t sAppendBatchSlotsExamined;
@@ -265,6 +266,8 @@ public:
   void AddSpeculationCSP(const nsAString& aCSP);
 
   void AddBase(const nsAString& aURL);
+
+  static void InitializeStatics();
 
 private:
   nsHtml5Parser* GetParser();
