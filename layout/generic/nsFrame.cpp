@@ -2246,7 +2246,7 @@ nsDisplaySelectionOverlay::CreateWebRenderCommands(mozilla::wr::DisplayListBuild
                                                   mozilla::layers::WebRenderLayerManager* aManager,
                                                   nsDisplayListBuilder* aDisplayListBuilder)
 {
-  wr::LayoutRect bounds = aSc.ToRelativeLayoutRect(
+  wr::LayoutRect bounds = wr::ToRoundedLayoutRect(
     LayoutDeviceRect::FromAppUnits(nsRect(ToReferenceFrame(), Frame()->GetSize()),
                                    mFrame->PresContext()->AppUnitsPerDevPixel()));
   aBuilder.PushRect(bounds, bounds, !BackfaceIsHidden(),

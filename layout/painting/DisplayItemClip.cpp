@@ -459,7 +459,7 @@ DisplayItemClip::ToComplexClipRegions(int32_t aAppUnitsPerDevPixel,
 {
   for (uint32_t i = 0; i < mRoundedClipRects.Length(); i++) {
     wr::ComplexClipRegion* region = aOutArray.AppendElement();
-    region->rect = aSc.ToRelativeLayoutRect(LayoutDeviceRect::FromAppUnits(
+    region->rect = wr::ToRoundedLayoutRect(LayoutDeviceRect::FromAppUnits(
         mRoundedClipRects[i].mRect, aAppUnitsPerDevPixel));
     const nscoord* radii = mRoundedClipRects[i].mRadii;
     region->radii = wr::ToBorderRadius(

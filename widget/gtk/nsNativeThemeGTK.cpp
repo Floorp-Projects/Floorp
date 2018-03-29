@@ -1215,7 +1215,7 @@ nsNativeThemeGTK::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBuild
                                                    const nsRect& aRect)
 {
   nsPresContext* presContext = aFrame->PresContext();
-  wr::LayoutRect bounds = aSc.ToRelativeLayoutRect(
+  wr::LayoutRect bounds = wr::ToRoundedLayoutRect(
     LayoutDeviceRect::FromAppUnits(aRect, presContext->AppUnitsPerDevPixel()));
 
   switch (aWidgetType) {

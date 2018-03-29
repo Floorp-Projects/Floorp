@@ -74,14 +74,6 @@ StackingContextHelper::~StackingContextHelper()
   }
 }
 
-wr::LayoutRect
-StackingContextHelper::ToRelativeLayoutRect(const LayoutDeviceRect& aRect) const
-{
-  auto rect = aRect;
-  rect.Round();
-  return wr::ToLayoutRect(rect);
-}
-
 const Maybe<gfx::Matrix4x4>&
 StackingContextHelper::GetTransformForScrollData() const
 {

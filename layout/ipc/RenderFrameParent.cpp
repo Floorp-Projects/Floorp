@@ -391,7 +391,7 @@ nsDisplayRemote::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
     mFrame->GetContentRectRelativeToSelf(), mFrame->PresContext()->AppUnitsPerDevPixel());
   rect += mOffset;
 
-  aBuilder.PushIFrame(aSc.ToRelativeLayoutRect(rect),
+  aBuilder.PushIFrame(mozilla::wr::ToRoundedLayoutRect(rect),
       !BackfaceIsHidden(),
       mozilla::wr::AsPipelineId(GetRemoteLayersId()));
 

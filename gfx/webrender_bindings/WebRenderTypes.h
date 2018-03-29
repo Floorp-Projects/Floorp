@@ -349,6 +349,12 @@ static inline wr::LayoutRect ToLayoutRect(const mozilla::LayoutDeviceIntRect& re
   return ToLayoutRect(IntRectToRect(rect));
 }
 
+static inline wr::LayoutRect ToRoundedLayoutRect(const mozilla::LayoutDeviceRect& aRect) {
+  auto rect = aRect;
+  rect.Round();
+  return wr::ToLayoutRect(rect);
+}
+
 static inline wr::LayoutSize ToLayoutSize(const mozilla::LayoutDeviceSize& size)
 {
   wr::LayoutSize ls;
