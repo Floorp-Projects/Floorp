@@ -26,7 +26,6 @@ py3:
         - nsprpub
         - security/manager/ssl
         - security/nss
-        - services/common/tests/mach_commands.py
         - servo
         - testing/awsy
         - testing/firefox-ui/harness/firefox_ui_harness/runners/update.py
