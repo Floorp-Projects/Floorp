@@ -131,12 +131,19 @@ Benchmark::ReturnResult(uint32_t aDecodeFps)
 }
 
 void
+Benchmark::ReturnError(const MediaResult& aError)
+{
+  MOZ_ASSERT(OnThread());
+
+  mPromise.RejectIfExists(aError, __func__);
+}
+
+void
 Benchmark::Dispose()
 {
   MOZ_ASSERT(OnThread());
 
   mKeepAliveUntilComplete = nullptr;
-  mPromise.RejectIfExists(false, __func__);
 }
 
 void
@@ -184,12 +191,12 @@ BenchmarkPlayback::DemuxSamples()
           mDemuxer->GetTrackDemuxer(TrackInfo::kAudioTrack, 0);
       }
       if (!mTrackDemuxer) {
-        MainThreadShutdown();
+        Error(MediaResult(NS_ERROR_FAILURE, "Can't create track demuxer"));
         return;
       }
       DemuxNextSample();
     },
-    [this, ref](const MediaResult& aError) { MainThreadShutdown(); });
+    [this, ref](const MediaResult& aError) { Error(aError); });
 }
 
 void
@@ -217,7 +224,8 @@ BenchmarkPlayback::DemuxNextSample()
           InitDecoder(Move(*mTrackDemuxer->GetInfo()));
           break;
         default:
-          MainThreadShutdown();
+          Error(aError);
+          break;
       }
     });
 }
@@ -230,18 +238,38 @@ BenchmarkPlayback::InitDecoder(TrackInfo&& aInfo)
   RefPtr<PDMFactory> platform = new PDMFactory();
   mDecoder = platform->CreateDecoder({ aInfo, mDecoderTaskQueue });
   if (!mDecoder) {
-    MainThreadShutdown();
+    Error(MediaResult(NS_ERROR_FAILURE, "Failed to create decoder"));
     return;
   }
   RefPtr<Benchmark> ref(mMainThreadState);
   mDecoder->Init()->Then(
     Thread(), __func__,
-    [this, ref](TrackInfo::TrackType aTrackType) {
-      InputExhausted();
-    },
-    [this, ref](const MediaResult& aError) {
-      MainThreadShutdown();
-    });
+    [this, ref](TrackInfo::TrackType aTrackType) { InputExhausted(); },
+    [this, ref](const MediaResult& aError) { Error(aError); });
+}
+
+void
+BenchmarkPlayback::FinalizeShutdown()
+{
+  MOZ_ASSERT(OnThread());
+
+  MOZ_ASSERT(!mDecoder, "mDecoder must have been shutdown already");
+  mDecoderTaskQueue->BeginShutdown();
+  mDecoderTaskQueue->AwaitShutdownAndIdle();
+  mDecoderTaskQueue = nullptr;
+
+  if (mTrackDemuxer) {
+    mTrackDemuxer->Reset();
+    mTrackDemuxer->BreakCycles();
+    mTrackDemuxer = nullptr;
+  }
+  mDemuxer = nullptr;
+
+  RefPtr<Benchmark> ref(mMainThreadState);
+  Thread()->AsTaskQueue()->BeginShutdown()->Then(
+    ref->Thread(), __func__,
+    [ref]() { ref->Dispose(); },
+    []() { MOZ_CRASH("not reached"); });
 }
 
 void
@@ -263,25 +291,14 @@ BenchmarkPlayback::MainThreadShutdown()
         mDecoder->Shutdown()->Then(
           Thread(), __func__,
           [ref, this]() {
-            mDecoderTaskQueue->BeginShutdown();
-            mDecoderTaskQueue->AwaitShutdownAndIdle();
-            mDecoderTaskQueue = nullptr;
-
-            if (mTrackDemuxer) {
-              mTrackDemuxer->Reset();
-              mTrackDemuxer->BreakCycles();
-              mTrackDemuxer = nullptr;
-            }
-
-            Thread()->AsTaskQueue()->BeginShutdown()->Then(
-              ref->Thread(), __func__,
-              [ref]() { ref->Dispose(); },
-              []() { MOZ_CRASH("not reached"); });
+            FinalizeShutdown();
           },
           []() { MOZ_CRASH("not reached"); });
         mDecoder = nullptr;
       },
       []() { MOZ_CRASH("not reached"); });
+  } else {
+    FinalizeShutdown();
   }
 }
 
@@ -310,6 +327,18 @@ BenchmarkPlayback::Output(const MediaDataDecoder::DecodedData& aResults)
 }
 
 void
+BenchmarkPlayback::Error(const MediaResult& aError)
+{
+  MOZ_ASSERT(OnThread());
+
+  RefPtr<Benchmark> ref(mMainThreadState);
+  MainThreadShutdown();
+  ref->Dispatch(NS_NewRunnableFunction(
+    "BenchmarkPlayback::Error",
+    [ref, aError]() { ref->ReturnError(aError); }));
+}
+
+void
 BenchmarkPlayback::InputExhausted()
 {
   MOZ_ASSERT(OnThread());
@@ -323,7 +352,7 @@ BenchmarkPlayback::InputExhausted()
              Output(aResults);
              InputExhausted();
            },
-           [ref, this](const MediaResult& aError) { MainThreadShutdown(); });
+           [ref, this](const MediaResult& aError) { Error(aError); });
   mSampleIndex++;
   if (mSampleIndex == mSamples.Length()) {
     if (ref->mParameters.mStopAtFrame) {
@@ -335,7 +364,7 @@ BenchmarkPlayback::InputExhausted()
           mDrained = true;
           Output(aResults);
         },
-        [ref, this](const MediaResult& aError) { MainThreadShutdown(); });
+        [ref, this](const MediaResult& aError) { Error(aError); });
     }
   }
 }
