@@ -7,7 +7,7 @@
 with Files('**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
-with Files('mozunit.py'):
+with Files('mozunit/**'):
     BUG_COMPONENT = ('Testing', 'Python Test')
 
 DIST_INSTALL = False
