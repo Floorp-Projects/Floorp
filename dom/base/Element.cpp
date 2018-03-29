@@ -1250,7 +1250,6 @@ Element::AttachShadowInternal(ShadowRootMode aMode, ErrorResult& aError)
   if (nsIDocument* doc = GetComposedDoc()) {
     if (nsIPresShell* shell = doc->GetShell()) {
       shell->DestroyFramesForAndRestyle(this);
-      MOZ_ASSERT(!shell->FrameConstructor()->GetDisplayContentsStyleFor(this));
     }
   }
   MOZ_ASSERT(!GetPrimaryFrame());

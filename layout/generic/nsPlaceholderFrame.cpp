@@ -13,7 +13,9 @@
 
 #include "gfxContext.h"
 #include "gfxUtils.h"
+#include "mozilla/dom/ElementInlines.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/ServoStyleSetInlines.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
@@ -215,14 +217,15 @@ nsPlaceholderFrame::GetParentComputedStyleForOutOfFlow(nsIFrame** aProviderFrame
 {
   NS_PRECONDITION(GetParent(), "How can we not have a parent here?");
 
-  nsIContent* parentContent = mContent ? mContent->GetFlattenedTreeParent() : nullptr;
-  if (parentContent) {
-    ComputedStyle* sc =
-      PresContext()->FrameConstructor()->GetDisplayContentsStyleFor(parentContent);
-    if (sc) {
-      *aProviderFrame = nullptr;
-      return sc;
-    }
+  Element* parentElement =
+    mContent ? mContent->GetFlattenedTreeParentElement() : nullptr;
+  if (parentElement && Servo_Element_IsDisplayContents(parentElement)) {
+    RefPtr<ComputedStyle> style =
+      PresShell()->StyleSet()->ResolveServoStyle(parentElement);
+    *aProviderFrame = nullptr;
+    // See the comment in GetParentComputedStyle to see why returning this as a
+    // weak ref is fine.
+    return style;
   }
 
   return GetLayoutParentStyleForOutOfFlow(aProviderFrame);
