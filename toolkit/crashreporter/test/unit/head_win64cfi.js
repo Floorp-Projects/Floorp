@@ -117,7 +117,14 @@ function assertStack(stack, expected) {
     };
 
     if (expectedFrame.trust) {
-      if (frame.trust !== expectedFrame.trust) {
+      if (expectedFrame.trust.startsWith("!")) {
+        // A "!" prefix on the frame trust matching is a logical "not".
+        if (frame.trust === expectedFrame.trust.substring(1)) {
+          dumpThisFrame();
+          info("Expected frame trust matched when it should not have.");
+          ok(false);
+        }
+      } else if (frame.trust !== expectedFrame.trust) {
         dumpThisFrame();
         info("Expected frame trust did not match.");
         ok(false);
