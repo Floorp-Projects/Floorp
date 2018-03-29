@@ -141,6 +141,10 @@ def setup(root):
 
 
 def lint(paths, config, **lintargs):
+    # TODO don't store results in a global
+    global results
+    results = []
+
     cmdargs = [
         os.path.join(bindir, 'flake8'),
         '--format', '{"path":"%(path)s","lineno":%(row)s,'

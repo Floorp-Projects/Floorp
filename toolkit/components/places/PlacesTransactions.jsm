@@ -1356,7 +1356,7 @@ PT.Annotate.prototype = {
     let undoAnnosForItemId = new Map();
     for (let guid of guids) {
       let itemId = await PlacesUtils.promiseItemId(guid);
-      let currentAnnos = PlacesUtils.getAnnotationsForItem(itemId);
+      let currentAnnos = await PlacesUtils.promiseAnnotationsForItem(itemId);
 
       let undoAnnos = [];
       for (let newAnno of annotations) {

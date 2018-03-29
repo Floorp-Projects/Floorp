@@ -611,7 +611,8 @@ DevTools.prototype = {
    * @param {Array} selectors
    *        An array of CSS selectors to find the target node. Several selectors can be
    *        needed if the element is nested in frames and not directly in the root
-   *        document.
+   *        document. The selectors are ordered starting with the root document and
+   *        ending with the deepest nested frame.
    * @param {Number} startTime
    *        Optional, indicates the time at which the user event related to this node
    *        inspection started. This is a `performance.now()` timing.
@@ -624,13 +625,17 @@ DevTools.prototype = {
     let toolbox = await gDevTools.showToolbox(target, "inspector", null, null, startTime);
     let inspector = toolbox.getCurrentPanel();
 
+    // If the toolbox has been switched into a nested frame, we should first remove
+    // selectors according to the frame depth.
+    nodeSelectors.splice(0, toolbox.selectedFrameDepth);
+
     // new-node-front tells us when the node has been selected, whether the
     // browser is remote or not.
     let onNewNode = inspector.selection.once("new-node-front");
 
     // Evaluate the cross iframes query selectors
     async function querySelectors(nodeFront) {
-      let selector = nodeSelectors.pop();
+      let selector = nodeSelectors.shift();
       if (!selector) {
         return nodeFront;
       }
@@ -645,7 +650,7 @@ DevTools.prototype = {
     let nodeFront = await inspector.walker.getRootNode();
     nodeFront = await querySelectors(nodeFront);
     // Select the final node
-    inspector.selection.setNodeFront(nodeFront, "browser-context-menu");
+    inspector.selection.setNodeFront(nodeFront, { reason: "browser-context-menu" });
 
     await onNewNode;
     // Now that the node has been selected, wait until the inspector is

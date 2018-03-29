@@ -39,7 +39,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsColor.h"
-#include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/ServoStyleSet.h"
 #include "nsStyleUtil.h"
 #include "nsQueryObject.h"
 #include "mozilla/ServoBindings.h"
@@ -67,7 +67,7 @@ InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
   nsIPresShell* presShell = aDocument.GetShell();
 
   if (presShell) {
-    StyleSetHandle styleSet = presShell->StyleSet();
+    ServoStyleSet* styleSet = presShell->StyleSet();
     SheetType sheetType = SheetType::Agent;
     for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
       aResult.AppendElement(styleSet->StyleSheetAt(sheetType, i));
@@ -187,7 +187,7 @@ InspectorUtils::GetCSSStyleRules(GlobalObject& aGlobalObject,
 
   AutoTArray<ServoStyleRuleMap*, 1> maps;
   {
-    ServoStyleSet* styleSet = shell->StyleSet()->AsServo();
+    ServoStyleSet* styleSet = shell->StyleSet();
     ServoStyleRuleMap* map = styleSet->StyleRuleMap();
     maps.AppendElement(map);
   }

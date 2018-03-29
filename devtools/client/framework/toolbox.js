@@ -71,6 +71,8 @@ loader.lazyRequireGetter(this, "StyleSheetsFront",
   "devtools/shared/fronts/stylesheets", true);
 loader.lazyRequireGetter(this, "buildHarLog",
   "devtools/client/netmonitor/src/har/har-builder-utils", true);
+loader.lazyRequireGetter(this, "getKnownDeviceFront",
+  "devtools/shared/fronts/device", true);
 
 loader.lazyGetter(this, "domNodeConstants", () => {
   return require("devtools/shared/dom-node-constants");
@@ -2287,8 +2289,7 @@ Toolbox.prototype = {
    */
   onHightlightFrame: async function(frameId) {
     // Only enable frame highlighting when the top level document is targeted
-    if (this._supportsFrameHighlight &&
-        this.frameMap.get(this.selectedFrameId).parentID === undefined) {
+    if (this._supportsFrameHighlight && this.rootFrameSelected) {
       let frameActor = await this.walker.getNodeActorFromWindowID(frameId);
       this.highlighterUtils.highlightNodeFront(frameActor);
     }
@@ -2359,6 +2360,34 @@ Toolbox.prototype = {
     if (!topFrameSelected && this.selectedFrameId) {
       this._framesButtonChecked = false;
     }
+  },
+
+  /**
+   * Returns a 0-based selected frame depth.
+   *
+   * For example, if the root frame is selected, the returned value is 0.  For a sub-frame
+   * of the root document, the returned value is 1, and so on.
+   */
+  get selectedFrameDepth() {
+    // If the frame switcher is disabled, we won't have a selected frame ID.
+    // In this case, we're always showing the root frame.
+    if (!this.selectedFrameId) {
+      return 0;
+    }
+    let depth = 0;
+    let frame = this.frameMap.get(this.selectedFrameId);
+    while (frame) {
+      depth++;
+      frame = this.frameMap.get(frame.parentID);
+    }
+    return depth - 1;
+  },
+
+  /**
+   * Returns whether a root frame (with no parent frame) is selected.
+   */
+  get rootFrameSelected() {
+    return this.selectedFrameDepth == 0;
   },
 
   /**
@@ -2763,6 +2792,14 @@ Toolbox.prototype = {
     if (this._styleSheets) {
       this._styleSheets.destroy();
       this._styleSheets = null;
+    }
+
+    // Destroy the device front for the current client if any.
+    // A given DeviceFront instance can cached and shared between different panels, so
+    // destroying it is the responsibility of the toolbox.
+    let deviceFront = getKnownDeviceFront(this.target.client);
+    if (deviceFront) {
+      deviceFront.destroy();
     }
 
     // Detach the thread

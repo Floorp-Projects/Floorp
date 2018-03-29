@@ -23,8 +23,7 @@
 #include "nsDocShell.h"
 #include "nsIContentViewer.h"
 #include "nsPIDOMWindow.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/ServoStyleSet.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"
@@ -121,22 +120,11 @@ public:
 nscolor
 nsPresContext::MakeColorPref(const nsString& aColor)
 {
-  bool ok;
+  ServoStyleSet* styleSet = mShell ? mShell->StyleSet() : nullptr;
+
   nscolor result;
-
-  ServoStyleSet* servoStyleSet = mShell && mShell->StyleSet()
-    ? mShell->StyleSet()->GetAsServo()
-    : nullptr;
-
-  bool useServoParser =
-    true;
-
-  if (useServoParser) {
-    ok = ServoCSSParser::ComputeColor(servoStyleSet, NS_RGB(0, 0, 0), aColor,
-                                      &result);
-  } else {
-    MOZ_CRASH("old style system disabled");
-  }
+  bool ok = ServoCSSParser::
+    ComputeColor(styleSet, NS_RGB(0, 0, 0), aColor, &result);
 
   if (!ok) {
     // Any better choices?
@@ -1202,8 +1190,8 @@ nsPresContext::CompatibilityModeChanged()
     return;
   }
 
-  StyleSetHandle styleSet = mShell->StyleSet();
-  styleSet->AsServo()->CompatibilityModeChanged();
+  ServoStyleSet* styleSet = mShell->StyleSet();
+  styleSet->CompatibilityModeChanged();
 
   if (doc->IsSVGDocument()) {
     // SVG documents never load quirk.css.
@@ -1221,11 +1209,11 @@ nsPresContext::CompatibilityModeChanged()
   if (needsQuirkSheet) {
     // quirk.css needs to come after html.css; we just keep it at the end.
     DebugOnly<nsresult> rv =
-      styleSet->AppendStyleSheet(SheetType::Agent, sheet);
+      styleSet->AppendStyleSheet(SheetType::Agent, sheet->AsServo());
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "failed to insert quirk.css");
   } else {
     DebugOnly<nsresult> rv =
-      styleSet->RemoveStyleSheet(SheetType::Agent, sheet);
+      styleSet->RemoveStyleSheet(SheetType::Agent, sheet->AsServo());
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "failed to remove quirk.css");
   }
 
@@ -1470,7 +1458,7 @@ GetPropagatedScrollbarStylesForViewport(nsPresContext* aPresContext,
   }
 
   // Check the style on the document root element
-  StyleSetHandle styleSet = aPresContext->StyleSet();
+  ServoStyleSet* styleSet = aPresContext->StyleSet();
   RefPtr<ComputedStyle> rootStyle =
     styleSet->ResolveStyleFor(docElement, nullptr, LazyComputeBehavior::Allow);
   if (CheckOverflow(rootStyle->StyleDisplay(), aStyles)) {
@@ -3022,7 +3010,7 @@ nsPresContext::FlushFontFeatureValues()
   }
 
   if (mFontFeatureValuesDirty) {
-    StyleSetHandle styleSet = mShell->StyleSet();
+    ServoStyleSet* styleSet = mShell->StyleSet();
     mFontFeatureValuesLookup = styleSet->BuildFontFeatureValueSet();
     mFontFeatureValuesDirty = false;
   }

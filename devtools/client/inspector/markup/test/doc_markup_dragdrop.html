@@ -19,5 +19,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=858038
   </div>
   <input id="anonymousParent" /><span id="before">Before<!-- Force not-inline --></span>
   <pre id="test"><span id="firstChild">First</span><span id="middleChild">Middle</span><span id="lastChild">Last</span></pre>  <span id="after">After</span>
+
+  <test-component class="test-component">
+    <div slot="slot1" class="slotted1">slot1-1</div>
+    <div slot="slot1" class="slotted2">slot1-2</div>
+  </test-component>
+
+  <script>
+    "use strict";
+    customElements.define("test-component", class extends HTMLElement {
+      constructor() {
+        super();
+        let shadowRoot = this.attachShadow({mode: "open"});
+        shadowRoot.innerHTML = '<slot class="slot1" name="slot1"></slot>';
+      }
+    });
+  </script>
 </body>
 </html>

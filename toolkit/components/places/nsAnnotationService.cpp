@@ -738,6 +738,39 @@ nsAnnotationService::GetPageAnnotation(nsIURI* aURI,
   return rv;
 }
 
+nsresult
+nsAnnotationService::GetValueFromStatement(nsCOMPtr<mozIStorageStatement>& aStatement,
+                                           nsIVariant** _retval)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIWritableVariant> value = new nsVariant();
+  int32_t type = aStatement->AsInt32(kAnnoIndex_Type);
+  switch (type) {
+    case nsIAnnotationService::TYPE_INT32:
+    case nsIAnnotationService::TYPE_INT64:
+    case nsIAnnotationService::TYPE_DOUBLE: {
+      rv = value->SetAsDouble(aStatement->AsDouble(kAnnoIndex_Content));
+      break;
+    }
+    case nsIAnnotationService::TYPE_STRING: {
+      nsAutoString valueString;
+      rv = aStatement->GetString(kAnnoIndex_Content, valueString);
+      if (NS_SUCCEEDED(rv))
+        rv = value->SetAsAString(valueString);
+      break;
+    }
+    default: {
+      rv = NS_ERROR_UNEXPECTED;
+      break;
+    }
+  }
+  if (NS_SUCCEEDED(rv)) {
+    value.forget(_retval);
+  }
+  return rv;
+}
+
 
 NS_IMETHODIMP
 nsAnnotationService::GetItemAnnotation(int64_t aItemId,
@@ -754,35 +787,8 @@ nsAnnotationService::GetItemAnnotation(int64_t aItemId,
 
   mozStorageStatementScoper scoper(statement);
 
-  nsCOMPtr<nsIWritableVariant> value = new nsVariant();
-  int32_t type = statement->AsInt32(kAnnoIndex_Type);
-  switch (type) {
-    case nsIAnnotationService::TYPE_INT32:
-    case nsIAnnotationService::TYPE_INT64:
-    case nsIAnnotationService::TYPE_DOUBLE: {
-      rv = value->SetAsDouble(statement->AsDouble(kAnnoIndex_Content));
-      break;
-    }
-    case nsIAnnotationService::TYPE_STRING: {
-      nsAutoString valueString;
-      rv = statement->GetString(kAnnoIndex_Content, valueString);
-      if (NS_SUCCEEDED(rv))
-        rv = value->SetAsAString(valueString);
-      break;
-    }
-    default: {
-      rv = NS_ERROR_UNEXPECTED;
-      break;
-    }
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    value.forget(_retval);
-  }
-
-  return rv;
+  return GetValueFromStatement(statement, _retval);
 }
-
 
 NS_IMETHODIMP
 nsAnnotationService::GetPageAnnotationInt32(nsIURI* aURI,
@@ -986,11 +992,13 @@ nsAnnotationService::GetPageAnnotationInfo(nsIURI* aURI,
 NS_IMETHODIMP
 nsAnnotationService::GetItemAnnotationInfo(int64_t aItemId,
                                            const nsACString& aName,
+                                           nsIVariant** _value,
                                            int32_t* _flags,
                                            uint16_t* _expiration,
                                            uint16_t* _storageType)
 {
   NS_ENSURE_ARG_MIN(aItemId, 1);
+  NS_ENSURE_ARG_POINTER(_value);
   NS_ENSURE_ARG_POINTER(_flags);
   NS_ENSURE_ARG_POINTER(_expiration);
   NS_ENSURE_ARG_POINTER(_storageType);
@@ -1013,7 +1021,7 @@ nsAnnotationService::GetItemAnnotationInfo(int64_t aItemId,
     *_storageType = type;
   }
 
-  return NS_OK;
+  return GetValueFromStatement(statement, _value);
 }
 
 
@@ -1555,181 +1563,6 @@ nsAnnotationService::RemoveItemAnnotationsWithoutNotifying(int64_t aItemId)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = statement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
-/**
- * @note If we use annotations for some standard items like GeckoFlags, it
- *       might be a good idea to blacklist these standard annotations from this
- *       copy function.
- */
-NS_IMETHODIMP
-nsAnnotationService::CopyPageAnnotations(nsIURI* aSourceURI,
-                                         nsIURI* aDestURI,
-                                         bool aOverwriteDest)
-{
-  NS_ENSURE_ARG(aSourceURI);
-  NS_ENSURE_ARG(aDestURI);
-
-  mozStorageTransaction transaction(mDB->MainConn(), false);
-
-  nsCOMPtr<mozIStorageStatement> sourceStmt = mDB->GetStatement(
-    "SELECT h.id, n.id, n.name, a2.id "
-    "FROM moz_places h "
-    "JOIN moz_annos a ON a.place_id = h.id "
-    "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id "
-    "LEFT JOIN moz_annos a2 ON a2.place_id = "
-      "(SELECT id FROM moz_places WHERE url_hash = hash(:dest_url) AND url = :dest_url) "
-                          "AND a2.anno_attribute_id = n.id "
-    "WHERE url = :source_url"
-  );
-  NS_ENSURE_STATE(sourceStmt);
-  mozStorageStatementScoper sourceScoper(sourceStmt);
-
-  nsresult rv = URIBinder::Bind(sourceStmt, NS_LITERAL_CSTRING("source_url"), aSourceURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = URIBinder::Bind(sourceStmt, NS_LITERAL_CSTRING("dest_url"), aDestURI);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageStatement> copyStmt = mDB->GetStatement(
-    "INSERT INTO moz_annos "
-    "(place_id, anno_attribute_id, content, flags, expiration, "
-     "type, dateAdded, lastModified) "
-    "SELECT (SELECT id FROM moz_places WHERE url_hash = hash(:page_url) AND url = :page_url), "
-           "anno_attribute_id, content, flags, expiration, type, "
-           ":date, :date "
-    "FROM moz_annos "
-    "WHERE place_id = :page_id "
-    "AND anno_attribute_id = :name_id"
-  );
-  NS_ENSURE_STATE(copyStmt);
-  mozStorageStatementScoper copyScoper(copyStmt);
-
-  bool hasResult;
-  while (NS_SUCCEEDED(sourceStmt->ExecuteStep(&hasResult)) && hasResult) {
-    int64_t sourcePlaceId = sourceStmt->AsInt64(0);
-    int64_t annoNameID = sourceStmt->AsInt64(1);
-    nsAutoCString annoName;
-    rv = sourceStmt->GetUTF8String(2, annoName);
-    NS_ENSURE_SUCCESS(rv, rv);
-    int64_t annoExistsOnDest = sourceStmt->AsInt64(3);
-
-    if (annoExistsOnDest) {
-      if (!aOverwriteDest)
-        continue;
-      rv = RemovePageAnnotation(aDestURI, annoName);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // Copy the annotation.
-    mozStorageStatementScoper scoper(copyStmt);
-    rv = URIBinder::Bind(copyStmt, NS_LITERAL_CSTRING("page_url"), aDestURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = copyStmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), sourcePlaceId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = copyStmt->BindInt64ByName(NS_LITERAL_CSTRING("name_id"), annoNameID);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = copyStmt->BindInt64ByName(NS_LITERAL_CSTRING("date"), PR_Now());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = copyStmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NOTIFY_ANNOS_OBSERVERS(OnPageAnnotationSet(aDestURI, annoName));
-  }
-
-  rv = transaction.Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAnnotationService::CopyItemAnnotations(int64_t aSourceItemId,
-                                         int64_t aDestItemId,
-                                         bool aOverwriteDest,
-                                         uint16_t aSource)
-{
-  NS_ENSURE_ARG_MIN(aSourceItemId, 1);
-  NS_ENSURE_ARG_MIN(aDestItemId, 1);
-
-  mozStorageTransaction transaction(mDB->MainConn(), false);
-
-  nsCOMPtr<mozIStorageStatement> sourceStmt = mDB->GetStatement(
-    "SELECT n.id, n.name, a2.id "
-    "FROM moz_bookmarks b "
-    "JOIN moz_items_annos a ON a.item_id = b.id "
-    "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id "
-    "LEFT JOIN moz_items_annos a2 ON a2.item_id = :dest_item_id "
-                                "AND a2.anno_attribute_id = n.id "
-    "WHERE b.id = :source_item_id"
-  );
-  NS_ENSURE_STATE(sourceStmt);
-  mozStorageStatementScoper sourceScoper(sourceStmt);
-
-  nsresult rv = sourceStmt->BindInt64ByName(NS_LITERAL_CSTRING("source_item_id"), aSourceItemId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = sourceStmt->BindInt64ByName(NS_LITERAL_CSTRING("dest_item_id"), aDestItemId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageStatement> copyStmt = mDB->GetStatement(
-      "INSERT OR REPLACE INTO moz_items_annos "
-      "(item_id, anno_attribute_id, content, flags, expiration, "
-       "type, dateAdded, lastModified) "
-      "SELECT :dest_item_id, anno_attribute_id, content, flags, expiration, "
-             "type, :date, :date "
-      "FROM moz_items_annos "
-      "WHERE item_id = :source_item_id "
-      "AND anno_attribute_id = :name_id"
-  );
-  NS_ENSURE_STATE(copyStmt);
-  mozStorageStatementScoper copyScoper(copyStmt);
-
-  bool hasResult;
-  while (NS_SUCCEEDED(sourceStmt->ExecuteStep(&hasResult)) && hasResult) {
-    int64_t annoNameID = sourceStmt->AsInt64(0);
-    nsAutoCString annoName;
-    rv = sourceStmt->GetUTF8String(1, annoName);
-    NS_ENSURE_SUCCESS(rv, rv);
-    int64_t annoExistsOnDest = sourceStmt->AsInt64(2);
-
-    if (annoExistsOnDest) {
-      if (!aOverwriteDest)
-        continue;
-      rv = RemoveItemAnnotation(aDestItemId, annoName, aSource);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // Copy the annotation.
-    mozStorageStatementScoper scoper(copyStmt);
-    rv = copyStmt->BindInt64ByName(NS_LITERAL_CSTRING("dest_item_id"), aDestItemId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = copyStmt->BindInt64ByName(NS_LITERAL_CSTRING("source_item_id"), aSourceItemId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = copyStmt->BindInt64ByName(NS_LITERAL_CSTRING("name_id"), annoNameID);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = copyStmt->BindInt64ByName(NS_LITERAL_CSTRING("date"), PR_Now());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = copyStmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NOTIFY_ANNOS_OBSERVERS(OnItemAnnotationSet(aDestItemId, annoName, aSource, false));
-
-    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-    if (bookmarks) {
-      BookmarkData bookmark;
-      if (NS_SUCCEEDED(bookmarks->FetchItemInfo(aDestItemId, bookmark))) {
-        NotifyItemChanged(bookmark, annoName, aSource, false);
-      }
-    }
-  }
-
-  rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

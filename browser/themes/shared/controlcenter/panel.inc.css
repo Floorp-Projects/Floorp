@@ -181,6 +181,11 @@
 .identity-popup-connection-secure {
   color: #058B00;
 }
+
+:root[lwt-popup-brighttext] .identity-popup-connection-secure {
+  color: #30e60b;
+}
+
 .identity-popup-connection-not-secure {
   color: #d74345;
 }
@@ -382,6 +387,7 @@ description#identity-popup-content-verifier,
   min-width: 0;
   padding: 2px;
   background-color: transparent;
+  color: inherit;
   opacity: 0.6;
 }
 

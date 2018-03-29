@@ -56,6 +56,11 @@ var EventEmitter = require("devtools/shared/event-emitter");
 function Selection(walker) {
   EventEmitter.decorate(this);
 
+  // A single node front can be represented twice on the client when the node is a slotted
+  // element. It will be displayed once as a direct child of the host element, and once as
+  // a child of a slot in the "shadow DOM". The latter is called the slotted version.
+  this._isSlotted = false;
+
   this._onMutations = this._onMutations.bind(this);
   this.setNodeFront = this.setNodeFront.bind(this);
   this.setWalker(walker);
@@ -115,17 +120,29 @@ Selection.prototype = {
     }
   },
 
-  setNodeFront: function(value, reason = "unknown") {
+  /**
+   * Update the currently selected node-front.
+   *
+   * @param {NodeFront} nodeFront
+   *        The NodeFront being selected.
+   * @param {Object} (optional)
+   *        - {String} reason: Reason that triggered the selection, will be fired with
+   *          the "new-node-front" event.
+   *        - {Boolean} isSlotted: Is the selection representing the slotted version of
+   *          the node.
+   */
+  setNodeFront: function(nodeFront, { reason = "unknown", isSlotted = false} = {}) {
     this.reason = reason;
 
     // If an inlineTextChild text node is being set, then set it's parent instead.
-    let parentNode = value && value.parentNode();
-    if (value && parentNode && parentNode.inlineTextChild === value) {
-      value = parentNode;
+    let parentNode = nodeFront && nodeFront.parentNode();
+    if (nodeFront && parentNode && parentNode.inlineTextChild === nodeFront) {
+      nodeFront = parentNode;
     }
 
-    this._nodeFront = value;
-    this.emit("new-node-front", value, this.reason);
+    this._isSlotted = isSlotted;
+    this._nodeFront = nodeFront;
+    this.emit("new-node-front", nodeFront, this.reason);
   },
 
   get documentFront() {
@@ -244,5 +261,9 @@ Selection.prototype = {
 
   isNotationNode: function() {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.NOTATION_NODE;
+  },
+
+  isSlotted: function() {
+    return this._isSlotted;
   },
 };

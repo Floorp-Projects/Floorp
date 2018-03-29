@@ -37,8 +37,7 @@
 #include "nsCSSPseudoElements.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/IntegerRange.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
 #include "imgIRequest.h"
@@ -120,7 +119,7 @@ DocumentNeedsRestyle(
 
   // Unfortunately we don't know if the sheet change affects mContent or not, so
   // just assume it will and that we need to flush normally.
-  StyleSetHandle styleSet = shell->StyleSet();
+  ServoStyleSet* styleSet = shell->StyleSet();
   if (styleSet->StyleSheetsHaveChanged()) {
     return true;
   }
@@ -550,7 +549,7 @@ nsComputedDOMStyle::DoGetComputedStyleNoFlush(Element* aElement,
 
   // No frame has been created, or we have a pseudo, or we're looking
   // for the default style, so resolve the style ourselves.
-  ServoStyleSet* styleSet = presShell->StyleSet()->AsServo();
+  ServoStyleSet* styleSet = presShell->StyleSet();
 
   StyleRuleInclusion rules = aStyleType == eDefaultOnly
                              ? StyleRuleInclusion::DefaultOnly
@@ -579,8 +578,8 @@ nsComputedDOMStyle::GetUnanimatedComputedStyleNoFlush(Element* aElement,
     return nullptr;
   }
 
-  return shell->StyleSet()->AsServo()->GetBaseContextForElement(
-    elementOrPseudoElement, style);
+  return shell->StyleSet()->
+    GetBaseContextForElement(elementOrPseudoElement, style);
 }
 
 nsMargin

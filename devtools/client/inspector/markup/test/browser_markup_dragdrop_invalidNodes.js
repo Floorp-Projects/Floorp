@@ -4,13 +4,14 @@
 
 "use strict";
 
-// Check that pseudo-elements and anonymous nodes are not draggable.
+// Check that pseudo-elements, anonymous nodes and slotted nodes are not draggable.
 
 const TEST_URL = URL_ROOT + "doc_markup_dragdrop.html";
-const PREF = "devtools.inspector.showAllAnonymousContent";
 
 add_task(async function() {
-  Services.prefs.setBoolPref(PREF, true);
+  await pushPref("devtools.inspector.showAllAnonymousContent", true);
+  await pushPref("dom.webcomponents.shadowdom.enabled", true);
+  await pushPref("dom.webcomponents.customelements.enabled", true);
 
   let {inspector} = await openInspectorForURL(TEST_URL);
 
@@ -45,4 +46,22 @@ add_task(async function() {
   await simulateNodeDrag(inspector, anonymousDiv);
 
   ok(!anonymousDiv.isDragging, "anonymous node isn't dragging");
+
+  info("Expanding all nodes below test-component");
+  let testComponentFront = await getNodeFront("test-component", inspector);
+  await inspector.markup.expandAll(testComponentFront);
+  await waitForMultipleChildrenUpdates(inspector);
+
+  info("Getting a slotted node and selecting it");
+  // Directly use the markup getContainer API in order to retrieve the slotted container
+  // for a given node front.
+  let slotted1Front = await getNodeFront(".slotted1", inspector);
+  let slottedContainer = inspector.markup.getContainer(slotted1Front, true);
+  slottedContainer.elt.scrollIntoView(true);
+  await selectNode(slotted1Front, inspector, "no-reason", true);
+
+  info("Simulate dragging the slotted node");
+  await simulateNodeDrag(inspector, slottedContainer);
+
+  ok(!slottedContainer.isDragging, "slotted node isn't dragging");
 });

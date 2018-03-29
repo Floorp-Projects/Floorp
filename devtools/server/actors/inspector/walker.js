@@ -139,6 +139,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this._retainedOrphans = new Set();
 
     this.onMutations = this.onMutations.bind(this);
+    this.onSlotchange = this.onSlotchange.bind(this);
     this.onFrameLoad = this.onFrameLoad.bind(this);
     this.onFrameUnload = this.onFrameUnload.bind(this);
     this._throttledEmitNewMutations = throttle(this._emitNewMutations.bind(this),
@@ -199,10 +200,19 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
   getDocumentWalker: function(node, whatToShow, skipTo) {
     // Allow native anon content (like <video> controls) if preffed on
-    let nodeFilter = this.showAllAnonymousContent
+    let filter = this.showAllAnonymousContent
                     ? allAnonymousContentTreeWalkerFilter
                     : standardTreeWalkerFilter;
-    return new DocumentWalker(node, this.rootWin, whatToShow, nodeFilter, skipTo);
+
+    return new DocumentWalker(node, this.rootWin,
+      {whatToShow, filter, skipTo, showAnonymousContent: true});
+  },
+
+  getNonAnonymousWalker: function(node, whatToShow, skipTo) {
+    let nodeFilter = standardTreeWalkerFilter;
+
+    return new DocumentWalker(node, this.rootWin,
+      {whatToShow, nodeFilter, skipTo, showAnonymousContent: false});
   },
 
   destroy: function() {
@@ -297,8 +307,14 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this._refMap.set(node, actor);
 
     if (node.nodeType === Ci.nsIDOMNode.DOCUMENT_NODE) {
-      actor.watchDocument(this.onMutations);
+      actor.watchDocument(node, this.onMutations);
     }
+
+    if (actor.isShadowRoot) {
+      actor.watchDocument(node.ownerDocument, this.onMutations);
+      actor.watchSlotchange(this.onSlotchange);
+    }
+
     return actor;
   },
 
@@ -409,49 +425,26 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return this._ref(elt);
   },
 
-  /**
-   * Return all parents of the given node, ordered from immediate parent
-   * to root.
-   * @param NodeActor node
-   *    The node whose parents are requested.
-   * @param object options
-   *    Named options, including:
-   *    `sameDocument`: If true, parents will be restricted to the same
-   *      document as the node.
-   *    `sameTypeRootTreeItem`: If true, this will not traverse across
-   *     different types of docshells.
-   */
-  parents: function(node, options = {}) {
-    if (isNodeDead(node)) {
-      return [];
-    }
-
-    let walker = this.getDocumentWalker(node.rawNode);
-    let parents = [];
-    let cur;
-    while ((cur = walker.parentNode())) {
-      if (options.sameDocument &&
-          nodeDocument(cur) != nodeDocument(node.rawNode)) {
-        break;
-      }
-
-      if (options.sameTypeRootTreeItem &&
-          nodeDocshell(cur).sameTypeRootTreeItem !=
-          nodeDocshell(node.rawNode).sameTypeRootTreeItem) {
-        break;
-      }
-
-      parents.push(this._ref(cur));
-    }
-    return parents;
-  },
-
   parentNode: function(node) {
-    let walker = this.getDocumentWalker(node.rawNode);
-    let parent = walker.parentNode();
+    let parent;
+    try {
+      // If the node is the child of a shadow host, we can not use an anonymous walker to
+      // get the shadow host parent.
+      let walker = node.isDirectShadowHostChild ? this.getNonAnonymousWalker(node.rawNode)
+                                                : this.getDocumentWalker(node.rawNode);
+      parent = walker.parentNode();
+    } catch (e) {
+      // When getting the parent node for a child of a non-slotted shadow host child,
+      // walker.parentNode() will throw if the walker is anonymous, because non-slotted
+      // shadow host children are not accessible anywhere in the anonymous tree.
+      let walker = this.getNonAnonymousWalker(node.rawNode);
+      parent = walker.parentNode();
+    }
+
     if (parent) {
       return this._ref(parent);
     }
+
     return null;
   },
 
@@ -470,15 +463,16 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       return undefined;
     }
 
-    let docWalker = this.getDocumentWalker(node.rawNode);
-    let firstChild = docWalker.firstChild();
+    let walker = node.isDirectShadowHostChild ? this.getNonAnonymousWalker(node.rawNode)
+                                              : this.getDocumentWalker(node.rawNode);
+    let firstChild = walker.firstChild();
 
     // Bail out if:
     // - more than one child
     // - unique child is not a text node
     // - unique child is a text node, but is too long to be inlined
     if (!firstChild ||
-        docWalker.nextSibling() ||
+        walker.nextSibling() ||
         firstChild.nodeType !== Ci.nsIDOMNode.TEXT_NODE ||
         firstChild.nodeValue.length > gValueSummaryLength
         ) {
@@ -613,13 +607,43 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       maxNodes = Number.MAX_VALUE;
     }
 
+    let { isShadowHost, isShadowRoot, isDirectShadowHostChild } = node;
+
+    // Detect special case of unslotted shadow host children that cannot rely on a
+    // regular anonymous walker.
+    let isUnslottedHostChild = false;
+    if (isDirectShadowHostChild) {
+      try {
+        this.getDocumentWalker(node.rawNode, options.whatToShow, SKIP_TO_SIBLING);
+      } catch (e) {
+        isUnslottedHostChild = true;
+      }
+    }
+
     // We're going to create a few document walkers with the same filter,
     // make it easier.
     let getFilteredWalker = documentWalkerNode => {
       let { whatToShow } = options;
+
       // Use SKIP_TO_SIBLING to force the walker to use a sibling of the provided node
       // in case this one is incompatible with the walker's filter function.
-      return this.getDocumentWalker(documentWalkerNode, whatToShow, SKIP_TO_SIBLING);
+      let skipTo = SKIP_TO_SIBLING;
+
+      let useAnonymousWalker = !(isShadowRoot || isShadowHost || isUnslottedHostChild);
+      if (!useAnonymousWalker) {
+        // Do not use an anonymous walker for :
+        // - shadow roots: if the host element has an ::after pseudo element, a walker on
+        //   the last child of the shadow root will jump to the ::after element, which is
+        //   not a child of the shadow root.
+        //   TODO: For this case, should rather use an anonymous walker with a new
+        //         dedicated filter.
+        // - shadow hosts: anonymous children of host elements make up the shadow dom,
+        //   while we want to return the direct children of the shadow host.
+        // - unslotted host child: if a shadow host child is not slotted, it is not part
+        //   of any anonymous tree and cannot be used with anonymous tree walkers.
+        return this.getNonAnonymousWalker(documentWalkerNode, whatToShow, skipTo);
+      }
+      return this.getDocumentWalker(documentWalkerNode, whatToShow, skipTo);
     };
 
     // Need to know the first and last child.
@@ -627,100 +651,88 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     let firstChild = getFilteredWalker(rawNode).firstChild();
     let lastChild = getFilteredWalker(rawNode).lastChild();
 
-    if (!firstChild) {
+    if (!firstChild && !isShadowHost) {
       // No children, we're done.
       return { hasFirst: true, hasLast: true, nodes: [] };
     }
 
-    let start;
-    if (options.center) {
-      start = options.center.rawNode;
-    } else if (options.start) {
-      start = options.start.rawNode;
-    } else {
-      start = firstChild;
-    }
-
     let nodes = [];
 
-    // Start by reading backward from the starting point if we're centering...
-    let backwardWalker = getFilteredWalker(start);
-    if (backwardWalker.currentNode != firstChild && options.center) {
-      backwardWalker.previousSibling();
-      let backwardCount = Math.floor(maxNodes / 2);
-      let backwardNodes = this._readBackward(backwardWalker, backwardCount);
-      nodes = backwardNodes;
+    if (firstChild) {
+      let start;
+      if (options.center) {
+        start = options.center.rawNode;
+      } else if (options.start) {
+        start = options.start.rawNode;
+      } else {
+        start = firstChild;
+      }
+
+      // Start by reading backward from the starting point if we're centering...
+      let backwardWalker = getFilteredWalker(start);
+      if (backwardWalker.currentNode != firstChild && options.center) {
+        backwardWalker.previousSibling();
+        let backwardCount = Math.floor(maxNodes / 2);
+        let backwardNodes = this._readBackward(backwardWalker, backwardCount);
+        nodes = backwardNodes;
+      }
+
+      // Then read forward by any slack left in the max children...
+      let forwardWalker = getFilteredWalker(start);
+      let forwardCount = maxNodes - nodes.length;
+      nodes = nodes.concat(this._readForward(forwardWalker, forwardCount));
+
+      // If there's any room left, it means we've run all the way to the end.
+      // If we're centering, check if there are more items to read at the front.
+      let remaining = maxNodes - nodes.length;
+      if (options.center && remaining > 0 && nodes[0].rawNode != firstChild) {
+        let firstNodes = this._readBackward(backwardWalker, remaining);
+
+        // Then put it all back together.
+        nodes = firstNodes.concat(nodes);
+      }
     }
 
-    // Then read forward by any slack left in the max children...
-    let forwardWalker = getFilteredWalker(start);
-    let forwardCount = maxNodes - nodes.length;
-    nodes = nodes.concat(this._readForward(forwardWalker, forwardCount));
-
-    // If there's any room left, it means we've run all the way to the end.
-    // If we're centering, check if there are more items to read at the front.
-    let remaining = maxNodes - nodes.length;
-    if (options.center && remaining > 0 && nodes[0].rawNode != firstChild) {
-      let firstNodes = this._readBackward(backwardWalker, remaining);
-
-      // Then put it all back together.
-      nodes = firstNodes.concat(nodes);
+    let hasFirst, hasLast;
+    if (nodes.length > 0) {
+      // Compare first/last with expected nodes before modifying the nodes array in case
+      // this is a shadow host.
+      hasFirst = nodes[0].rawNode == firstChild;
+      hasLast = nodes[nodes.length - 1].rawNode == lastChild;
+    } else {
+      // If nodes is still an empty array, we are on a host element with a shadow root but
+      // no direct children.
+      hasFirst = hasLast = true;
     }
 
-    return {
-      hasFirst: nodes[0].rawNode == firstChild,
-      hasLast: nodes[nodes.length - 1].rawNode == lastChild,
-      nodes: nodes
-    };
+    if (isShadowHost) {
+      let {before, after} = this._getBeforeAfterElements(node.rawNode);
+      nodes = [
+        // #shadow-root
+        this._ref(node.rawNode.shadowRoot),
+        // ::before
+        ...(before ? [before] : []),
+        // shadow host direct children
+        ...nodes,
+        // ::after
+        ...(after ? [after] : []),
+      ];
+    }
+
+    return { hasFirst, hasLast, nodes };
   },
 
-  /**
-   * Return siblings of the given node.  By default this method will return
-   * all siblings of the node, but there are options that can restrict this
-   * to a more manageable subset.
-   *
-   * If `start` or `center` are not specified, this method will center on the
-   * node whose siblings are requested.
-   *
-   * @param NodeActor node
-   *    The node whose children you're curious about.
-   * @param object options
-   *    Named options:
-   *    `maxNodes`: The set of nodes returned by the method will be no longer
-   *       than maxNodes.
-   *    `start`: If a node is specified, the list of nodes will start
-   *       with the given child.  Mutally exclusive with `center`.
-   *    `center`: If a node is specified, the given node will be as centered
-   *       as possible in the list, given how close to the ends of the child
-   *       list it is.  Mutually exclusive with `start`.
-   *    `whatToShow`: A bitmask of node types that should be included.  See
-   *       https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter.
-   *
-   * @returns an object with three items:
-   *    hasFirst: true if the first child of the node is included in the list.
-   *    hasLast: true if the last child of the node is included in the list.
-   *    nodes: Child nodes returned by the request.
-   */
-  siblings: function(node, options = {}) {
-    if (isNodeDead(node)) {
-      return { hasFirst: true, hasLast: true, nodes: [] };
-    }
+  _getBeforeAfterElements: function(node) {
+    let firstChildWalker = this.getDocumentWalker(node);
+    let before = this._ref(firstChildWalker.firstChild());
 
-    let parentNode = this.getDocumentWalker(node.rawNode, options.whatToShow)
-                         .parentNode();
-    if (!parentNode) {
-      return {
-        hasFirst: true,
-        hasLast: true,
-        nodes: [node]
-      };
-    }
+    let lastChildWalker = this.getDocumentWalker(node);
+    let after = this._ref(lastChildWalker.lastChild());
 
-    if (!(options.start || options.center)) {
-      options.center = node;
-    }
-
-    return this.children(this._ref(parentNode), options);
+    return {
+      before: before.isBeforePseudoElement ? before : undefined,
+      after: after.isAfterPseudoElement ? after : undefined,
+    };
   },
 
   /**
@@ -1704,6 +1716,19 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     });
   },
 
+  onSlotchange: function(event) {
+    let target = event.target;
+    let targetActor = this.getNode(target);
+    if (!targetActor) {
+      return;
+    }
+
+    this.queueMutation({
+      type: "slotchange",
+      target: targetActor.actorID
+    });
+  },
+
   onFrameLoad: function({ window, isTopLevel }) {
     let { readyState } = window.document;
     if (readyState != "interactive" && readyState != "complete") {
@@ -1995,15 +2020,5 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return this._ref(offsetParent);
   },
 });
-
-function nodeDocshell(node) {
-  let doc = node ? nodeDocument(node) : null;
-  let win = doc ? doc.defaultView : null;
-  if (win) {
-    return win.QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIDocShell);
-  }
-  return null;
-}
 
 exports.WalkerActor = WalkerActor;

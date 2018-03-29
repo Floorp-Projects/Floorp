@@ -208,12 +208,11 @@ HTMLEditor::CreateAnonymousElement(nsAtom* aTag,
 
   // Must style the new element, otherwise the PostRecreateFramesFor call
   // below will do nothing.
-  if (ServoStyleSet* styleSet = ps->StyleSet()->GetAsServo()) {
-    // Sometimes editor likes to append anonymous content to elements
-    // in display:none subtrees, so avoid styling in those cases.
-    if (ServoStyleSet::MayTraverseFrom(newContent)) {
-      styleSet->StyleNewSubtree(newContent);
-    }
+  ServoStyleSet* styleSet = ps->StyleSet();
+  // Sometimes editor likes to append anonymous content to elements
+  // in display:none subtrees, so avoid styling in those cases.
+  if (ServoStyleSet::MayTraverseFrom(newContent)) {
+    styleSet->StyleNewSubtree(newContent);
   }
 
   ElementDeletionObserver* observer =

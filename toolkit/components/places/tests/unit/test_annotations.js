@@ -138,12 +138,13 @@ add_task(async function test_execute() {
   } catch (ex) {}
 
   // get annotation info
-  var flags = {}, exp = {}, storageType = {};
+  var value = {}, flags = {}, exp = {}, storageType = {};
   annosvc.getPageAnnotationInfo(testURI, testAnnoName, flags, exp, storageType);
   Assert.equal(flags.value, 0);
   Assert.equal(exp.value, 0);
   Assert.equal(storageType.value, Ci.nsIAnnotationService.TYPE_STRING);
-  annosvc.getItemAnnotationInfo(testItemId, testAnnoName, flags, exp, storageType);
+  annosvc.getItemAnnotationInfo(testItemId, testAnnoName, value, flags, exp, storageType);
+  Assert.equal(value.value, testAnnoVal);
   Assert.equal(flags.value, 0);
   Assert.equal(exp.value, 0);
   Assert.equal(storageType.value, Ci.nsIAnnotationService.TYPE_STRING);
@@ -158,75 +159,12 @@ add_task(async function test_execute() {
   Assert.equal(annoNames.length, 1);
   Assert.equal(annoNames[0], "moz-test-places/annotations");
 
-  // copy annotations to another uri
-  var newURI = uri("http://mozilla.org");
-  await PlacesTestUtils.addVisits(newURI);
-  annosvc.setPageAnnotation(testURI, "oldAnno", "new", 0, 0);
-  annosvc.setPageAnnotation(newURI, "oldAnno", "old", 0, 0);
-  annoNames = annosvc.getPageAnnotationNames(newURI);
-  Assert.equal(annoNames.length, 1);
-  Assert.equal(annoNames[0], "oldAnno");
-  var oldAnnoNames = annosvc.getPageAnnotationNames(testURI);
-  Assert.equal(oldAnnoNames.length, 2);
-  var copiedAnno = oldAnnoNames[0];
-  annosvc.copyPageAnnotations(testURI, newURI, false);
-  var newAnnoNames = annosvc.getPageAnnotationNames(newURI);
-  Assert.equal(newAnnoNames.length, 2);
-  Assert.ok(annosvc.pageHasAnnotation(newURI, "oldAnno"));
-  Assert.ok(annosvc.pageHasAnnotation(newURI, copiedAnno));
-  Assert.equal(annosvc.getPageAnnotation(newURI, "oldAnno"), "old");
-  annosvc.setPageAnnotation(newURI, "oldAnno", "new", 0, 0);
-  annosvc.copyPageAnnotations(testURI, newURI, true);
-  newAnnoNames = annosvc.getPageAnnotationNames(newURI);
-  Assert.equal(newAnnoNames.length, 2);
-  Assert.ok(annosvc.pageHasAnnotation(newURI, "oldAnno"));
-  Assert.ok(annosvc.pageHasAnnotation(newURI, copiedAnno));
-  Assert.equal(annosvc.getPageAnnotation(newURI, "oldAnno"), "new");
-
-
-  // copy annotations to another item
-  newURI = uri("http://mozilla.org");
-  let newItem = await PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    title: "",
-    url: newURI,
-  });
-  let newItemId = await PlacesUtils.promiseItemId(newItem.guid);
-  item = await PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.menuGuid,
-    title: "",
-    url: testURI,
-  });
-  var itemId = await PlacesUtils.promiseItemId(item.guid);
-  annosvc.setItemAnnotation(itemId, "oldAnno", "new", 0, 0);
-  annosvc.setItemAnnotation(itemId, "testAnno", "test", 0, 0);
-  annosvc.setItemAnnotation(newItemId, "oldAnno", "old", 0, 0);
-  annoNames = annosvc.getItemAnnotationNames(newItemId);
-  Assert.equal(annoNames.length, 1);
-  Assert.equal(annoNames[0], "oldAnno");
-  oldAnnoNames = annosvc.getItemAnnotationNames(itemId);
-  Assert.equal(oldAnnoNames.length, 2);
-  copiedAnno = oldAnnoNames[0];
-  annosvc.copyItemAnnotations(itemId, newItemId, false);
-  newAnnoNames = annosvc.getItemAnnotationNames(newItemId);
-  Assert.equal(newAnnoNames.length, 2);
-  Assert.ok(annosvc.itemHasAnnotation(newItemId, "oldAnno"));
-  Assert.ok(annosvc.itemHasAnnotation(newItemId, copiedAnno));
-  Assert.equal(annosvc.getItemAnnotation(newItemId, "oldAnno"), "old");
-  annosvc.setItemAnnotation(newItemId, "oldAnno", "new", 0, 0);
-  annosvc.copyItemAnnotations(itemId, newItemId, true);
-  newAnnoNames = annosvc.getItemAnnotationNames(newItemId);
-  Assert.equal(newAnnoNames.length, 2);
-  Assert.ok(annosvc.itemHasAnnotation(newItemId, "oldAnno"));
-  Assert.ok(annosvc.itemHasAnnotation(newItemId, copiedAnno));
-  Assert.equal(annosvc.getItemAnnotation(newItemId, "oldAnno"), "new");
-
   // test int32 anno type
   var int32Key = testAnnoName + "/types/Int32";
   var int32Val = 23;
   annosvc.setPageAnnotation(testURI, int32Key, int32Val, 0, 0);
   Assert.ok(annosvc.pageHasAnnotation(testURI, int32Key));
-  flags = {}, exp = {}, storageType = {};
+  value = {}, flags = {}, exp = {}, storageType = {};
   annosvc.getPageAnnotationInfo(testURI, int32Key, flags, exp, storageType);
   Assert.equal(flags.value, 0);
   Assert.equal(exp.value, 0);
@@ -235,7 +173,8 @@ add_task(async function test_execute() {
   Assert.ok(int32Val === storedVal);
   annosvc.setItemAnnotation(testItemId, int32Key, int32Val, 0, 0);
   Assert.ok(annosvc.itemHasAnnotation(testItemId, int32Key));
-  annosvc.getItemAnnotationInfo(testItemId, int32Key, flags, exp, storageType);
+  annosvc.getItemAnnotationInfo(testItemId, int32Key, value, flags, exp, storageType);
+  Assert.equal(value.value, int32Val);
   Assert.equal(flags.value, 0);
   Assert.equal(exp.value, 0);
   storedVal = annosvc.getItemAnnotation(testItemId, int32Key);
@@ -252,7 +191,8 @@ add_task(async function test_execute() {
   Assert.ok(int64Val === storedVal);
   annosvc.setItemAnnotation(testItemId, int64Key, int64Val, 0, 0);
   Assert.ok(annosvc.itemHasAnnotation(testItemId, int64Key));
-  annosvc.getItemAnnotationInfo(testItemId, int64Key, flags, exp, storageType);
+  annosvc.getItemAnnotationInfo(testItemId, int64Key, value, flags, exp, storageType);
+  Assert.equal(value.value, int64Val);
   Assert.equal(flags.value, 0);
   Assert.equal(exp.value, 0);
   storedVal = annosvc.getItemAnnotation(testItemId, int64Key);
@@ -269,7 +209,8 @@ add_task(async function test_execute() {
   Assert.ok(doubleVal === storedVal);
   annosvc.setItemAnnotation(testItemId, doubleKey, doubleVal, 0, 0);
   Assert.ok(annosvc.itemHasAnnotation(testItemId, doubleKey));
-  annosvc.getItemAnnotationInfo(testItemId, doubleKey, flags, exp, storageType);
+  annosvc.getItemAnnotationInfo(testItemId, doubleKey, value, flags, exp, storageType);
+  Assert.equal(value.value, doubleVal);
   Assert.equal(flags.value, 0);
   Assert.equal(exp.value, 0);
   Assert.equal(storageType.value, Ci.nsIAnnotationService.TYPE_DOUBLE);
@@ -324,7 +265,7 @@ add_task(async function test_execute() {
     title: "",
     url: testURI,
   });
-  itemId = await PlacesUtils.promiseItemId(item.guid);
+  let itemId = await PlacesUtils.promiseItemId(item.guid);
   try {
     annosvc.setItemAnnotation(itemId, "foo", "bar", 0, annosvc.EXPIRE_WITH_HISTORY);
     do_throw("setting an item annotation with EXPIRE_HISTORY should throw");

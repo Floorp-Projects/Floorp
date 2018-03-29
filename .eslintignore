@@ -412,10 +412,7 @@ toolkit/components/payments/res/vendor/*
 
 # Uses preprocessing
 toolkit/content/widgets/wizard.xml
-toolkit/components/osfile/osfile.jsm
-toolkit/components/urlformatter/nsURLFormatter.js
 toolkit/modules/AppConstants.jsm
-toolkit/mozapps/downloads/nsHelperAppDlg.js
 toolkit/mozapps/update/tests/data/xpcshellConstantsPP.js
 
 # Third party

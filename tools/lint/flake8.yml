@@ -5,7 +5,7 @@ flake8:
         - build/*.py
         - build/moz.configure/*.configure
         - config/check_macroassembler_style.py
-        - config/mozunit.py
+        - config/mozunit
         - configure.py
         - layout/tools/reftest
         - python/mach
