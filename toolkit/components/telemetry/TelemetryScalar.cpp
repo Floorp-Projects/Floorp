@@ -1509,6 +1509,19 @@ TelemetryScalar::InitializeGlobalState(bool aCanRecordBase, bool aCanRecordExten
     entry->mData = ScalarKey{i, false};
   }
 
+  // To summarize dynamic events we need a dynamic scalar.
+  const nsTArray<DynamicScalarInfo> initialDynamicScalars({
+    DynamicScalarInfo{
+      nsITelemetry::SCALAR_TYPE_COUNT,
+      true /* recordOnRelease */,
+      false /* expired */,
+      nsAutoCString("telemetry.dynamic_event_counts"),
+      true /* keyed */,
+      false /* built-in */,
+    },
+  });
+  internal_RegisterScalars(locker, initialDynamicScalars);
+
   gInitDone = true;
 }
 
@@ -2546,12 +2559,23 @@ TelemetryScalar::SummarizeEvent(const nsCString& aUniqueEventName,
   }
 
   StaticMutexAutoLock lock(gTelemetryScalarsMutex);
+
   ScalarKey scalarKey{static_cast<uint32_t>(ScalarID::TELEMETRY_EVENT_COUNTS), aDynamic};
+  if (aDynamic) {
+    nsresult rv = internal_GetEnumByScalarName(lock,
+                                               nsAutoCString("telemetry.dynamic_event_counts"),
+                                               &scalarKey);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("NS_FAILED getting ScalarKey for telemetry.dynamic_event_counts");
+      return;
+    }
+  }
+
   KeyedScalar* scalar = nullptr;
   nsresult rv = internal_GetKeyedScalarByEnum(lock, scalarKey, aProcessType, &scalar);
 
   if (NS_FAILED(rv)) {
-    NS_WARNING("NS_FAILED getting keyed scalar telemetry.event_counts. Wut.");
+    NS_WARNING("NS_FAILED getting keyed scalar for event summary. Wut.");
     return;
   }
 
