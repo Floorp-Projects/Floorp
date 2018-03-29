@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoStyleSetInlines.h"
 
 #include "gfxPlatformFontList.h"
 #include "mozilla/AutoRestyleTimelineMarker.h"

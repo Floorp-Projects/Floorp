@@ -13,7 +13,6 @@
 #include "mozilla/MediaFeatureChange.h"
 #include "mozilla/PostTraversalTask.h"
 #include "mozilla/ServoBindingTypes.h"
-#include "mozilla/ServoBindings.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/SheetType.h"
 #include "mozilla/UniquePtr.h"
@@ -133,9 +132,8 @@ public:
   //
   // The SourceSizeList parameter can be null, in which case it will return
   // 100vw.
-  nscoord EvaluateSourceSizeList(const RawServoSourceSizeList* aSourceSizeList) const {
-    return Servo_SourceSizeList_Evaluate(mRawSet.get(), aSourceSizeList);
-  }
+  inline nscoord EvaluateSourceSizeList(
+      const RawServoSourceSizeList* aSourceSizeList) const;
 
   void InvalidateStyleForCSSRuleChanges();
 
@@ -342,10 +340,8 @@ public:
    *
    * FIXME(emilio): Is there a point in this after bug 1367904?
    */
-  already_AddRefed<ComputedStyle> ResolveServoStyle(dom::Element* aElement)
-  {
-    return Servo_ResolveStyle(aElement, mRawSet.get()).Consume();
-  }
+  inline already_AddRefed<ComputedStyle>
+    ResolveServoStyle(dom::Element* aElement);
 
   bool GetKeyframesForName(nsAtom* aName,
                            const nsTimingFunction& aTimingFunction,
