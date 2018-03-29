@@ -59,6 +59,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/Text.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/XULCommandEvent.h"
@@ -590,7 +591,7 @@ nsContentUtils::Init()
   sSecurityManager->GetSystemPrincipal(&sSystemPrincipal);
   MOZ_ASSERT(sSystemPrincipal);
 
-  RefPtr<NullPrincipal> nullPrincipal = NullPrincipal::Create();
+  RefPtr<NullPrincipal> nullPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
   if (!nullPrincipal) {
     return NS_ERROR_FAILURE;
   }
@@ -5220,7 +5221,7 @@ nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
 {
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), "about:blank");
-  nsCOMPtr<nsIPrincipal> principal = NullPrincipal::Create();
+  nsCOMPtr<nsIPrincipal> principal = NullPrincipal::CreateWithoutOriginAttributes();
   nsCOMPtr<nsIDOMDocument> domDocument;
   nsresult rv = NS_NewDOMDocument(getter_AddRefs(domDocument),
                                   EmptyString(),
@@ -5297,7 +5298,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     // Let's remove nodes until we find a eTEXT.
     while (aContent->HasChildren()) {
       nsIContent* child = aContent->GetFirstChild();
-      if (child->IsNodeOfType(nsINode::eTEXT)) {
+      if (child->IsText()) {
         break;
       }
       aContent->RemoveChildNode(child, true);
@@ -5306,8 +5307,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     // If we have a node, it must be a eTEXT and we reuse it.
     if (aContent->HasChildren()) {
       nsIContent* child = aContent->GetFirstChild();
-      MOZ_ASSERT(child->IsNodeOfType(nsINode::eTEXT));
-      nsresult rv = child->SetText(aValue, true);
+      nsresult rv = child->AsText()->SetText(aValue, true);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // All the following nodes, if they exist, must be deleted.
@@ -5356,8 +5356,8 @@ AppendNodeTextContentsRecurse(nsINode* aNode, nsAString& aResult,
         return false;
       }
     }
-    else if (child->IsNodeOfType(nsINode::eTEXT)) {
-      bool ok = child->AppendTextTo(aResult, aFallible);
+    else if (Text* text = child->GetAsText()) {
+      bool ok = text->AppendTextTo(aResult, aFallible);
       if (!ok) {
         return false;
       }
@@ -5373,9 +5373,8 @@ nsContentUtils::AppendNodeTextContent(nsINode* aNode, bool aDeep,
                                       nsAString& aResult,
                                       const fallible_t& aFallible)
 {
-  if (aNode->IsNodeOfType(nsINode::eTEXT)) {
-    return static_cast<nsIContent*>(aNode)->AppendTextTo(aResult,
-                                                         aFallible);
+  if (Text* text = aNode->GetAsText()) {
+    return text->AppendTextTo(aResult, aFallible);
   }
   if (aDeep) {
     return AppendNodeTextContentsRecurse(aNode, aResult, aFallible);
@@ -5384,8 +5383,8 @@ nsContentUtils::AppendNodeTextContent(nsINode* aNode, bool aDeep,
   for (nsIContent* child = aNode->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->IsNodeOfType(nsINode::eTEXT)) {
-      bool ok = child->AppendTextTo(aResult, fallible);
+    if (Text* text = child->GetAsText()) {
+      bool ok = text->AppendTextTo(aResult, fallible);
       if (!ok) {
         return false;
       }

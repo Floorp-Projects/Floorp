@@ -86,12 +86,14 @@ createTextNode(txIEvalContext *aContext, nsString& aValue,
     const txXPathNode& document = es->getSourceDocument();
 
     nsIDocument *doc = txXPathNativeNode::getDocument(document);
-    nsCOMPtr<nsIContent> text = new nsTextNode(doc->NodeInfoManager());
+    RefPtr<nsTextNode> text = new nsTextNode(doc->NodeInfoManager());
 
     nsresult rv = text->SetText(aValue, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    *aResult = txXPathNativeNode::createXPathNode(text, true);
+    // nsTextNode implements both nsIDOMNode and nsIContent, so the
+    // call would be ambiguous without the AsContent() call.
+    *aResult = txXPathNativeNode::createXPathNode(text->AsContent(), true);
     NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
 
     return NS_OK;

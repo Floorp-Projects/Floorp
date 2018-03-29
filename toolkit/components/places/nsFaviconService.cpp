@@ -352,7 +352,7 @@ nsFaviconService::SetAndFetchFaviconForPage(nsIURI* aPageURI,
                                     nsContentUtils::eNECKO_PROPERTIES,
                                     "APIDeprecationWarning",
                                     params, ArrayLength(params));
-    loadingPrincipal = NullPrincipal::Create();
+    loadingPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
   }
   NS_ENSURE_TRUE(loadingPrincipal, NS_ERROR_FAILURE);
 
@@ -545,7 +545,7 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
                                     "APIDeprecationWarning",
                                     params, ArrayLength(params));
 
-    loadingPrincipal = NullPrincipal::Create();
+    loadingPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
   }
   NS_ENSURE_TRUE(loadingPrincipal, NS_ERROR_FAILURE);
 

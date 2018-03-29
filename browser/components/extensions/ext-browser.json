@@ -1,6 +1,6 @@
 {
   "bookmarks": {
-    "url": "chrome://browser/content/ext-bookmarks.js",
+    "url": "chrome://browser/content/parent/ext-bookmarks.js",
     "schema": "chrome://browser/content/schemas/bookmarks.json",
     "scopes": ["addon_parent"],
     "paths": [
@@ -8,7 +8,7 @@
     ]
   },
   "browserAction": {
-    "url": "chrome://browser/content/ext-browserAction.js",
+    "url": "chrome://browser/content/parent/ext-browserAction.js",
     "schema": "chrome://browser/content/schemas/browser_action.json",
     "scopes": ["addon_parent"],
     "manifest": ["browser_action"],
@@ -17,7 +17,7 @@
     ]
   },
   "browsingData": {
-    "url": "chrome://browser/content/ext-browsingData.js",
+    "url": "chrome://browser/content/parent/ext-browsingData.js",
     "schema": "chrome://browser/content/schemas/browsing_data.json",
     "scopes": ["addon_parent"],
     "paths": [
@@ -25,14 +25,14 @@
     ]
   },
   "chrome_settings_overrides": {
-    "url": "chrome://browser/content/ext-chrome-settings-overrides.js",
+    "url": "chrome://browser/content/parent/ext-chrome-settings-overrides.js",
     "scopes": [],
     "events": ["update", "uninstall"],
     "schema": "chrome://browser/content/schemas/chrome_settings_overrides.json",
     "manifest": ["chrome_settings_overrides"]
   },
   "commands": {
-    "url": "chrome://browser/content/ext-commands.js",
+    "url": "chrome://browser/content/parent/ext-commands.js",
     "schema": "chrome://browser/content/schemas/commands.json",
     "scopes": ["addon_parent"],
     "events": ["uninstall"],
@@ -42,7 +42,7 @@
     ]
   },
   "devtools": {
-    "url": "chrome://browser/content/ext-devtools.js",
+    "url": "chrome://browser/content/parent/ext-devtools.js",
     "schema": "chrome://browser/content/schemas/devtools.json",
     "scopes": ["devtools_parent"],
     "manifest": ["devtools_page"],
@@ -51,7 +51,7 @@
     ]
   },
   "devtools_inspectedWindow": {
-    "url": "chrome://browser/content/ext-devtools-inspectedWindow.js",
+    "url": "chrome://browser/content/parent/ext-devtools-inspectedWindow.js",
     "schema": "chrome://browser/content/schemas/devtools_inspected_window.json",
     "scopes": ["devtools_parent"],
     "paths": [
@@ -59,7 +59,7 @@
     ]
   },
   "devtools_network": {
-    "url": "chrome://browser/content/ext-devtools-network.js",
+    "url": "chrome://browser/content/parent/ext-devtools-network.js",
     "schema": "chrome://browser/content/schemas/devtools_network.json",
     "scopes": ["devtools_parent"],
     "paths": [
@@ -67,7 +67,7 @@
     ]
   },
   "devtools_panels": {
-    "url": "chrome://browser/content/ext-devtools-panels.js",
+    "url": "chrome://browser/content/parent/ext-devtools-panels.js",
     "schema": "chrome://browser/content/schemas/devtools_panels.json",
     "scopes": ["devtools_parent"],
     "paths": [
@@ -75,7 +75,7 @@
     ]
   },
   "find": {
-    "url": "chrome://browser/content/ext-find.js",
+    "url": "chrome://browser/content/parent/ext-find.js",
     "schema": "chrome://browser/content/schemas/find.json",
     "scopes": ["addon_parent"],
     "paths": [
@@ -83,7 +83,7 @@
     ]
   },
   "history": {
-    "url": "chrome://browser/content/ext-history.js",
+    "url": "chrome://browser/content/parent/ext-history.js",
     "schema": "chrome://browser/content/schemas/history.json",
     "scopes": ["addon_parent"],
     "paths": [
@@ -91,7 +91,7 @@
     ]
   },
   "identity": {
-    "url": "chrome://extensions/content/ext-identity.js",
+    "url": "chrome://extensions/content/parent/ext-identity.js",
     "schema": "chrome://extensions/content/schemas/identity.json",
     "scopes": ["addon_parent"],
     "paths": [
@@ -99,7 +99,7 @@
     ]
   },
   "menusInternal": {
-    "url": "chrome://browser/content/ext-menus.js",
+    "url": "chrome://browser/content/parent/ext-menus.js",
     "schema": "chrome://browser/content/schemas/menus.json",
     "scopes": ["addon_parent"],
     "paths": [
@@ -109,7 +109,7 @@
     ]
   },
   "omnibox": {
-    "url": "chrome://browser/content/ext-omnibox.js",
+    "url": "chrome://browser/content/parent/ext-omnibox.js",
     "schema": "chrome://browser/content/schemas/omnibox.json",
     "scopes": ["addon_parent"],
     "manifest": ["omnibox"],
@@ -118,7 +118,7 @@
     ]
   },
   "pageAction": {
-    "url": "chrome://browser/content/ext-pageAction.js",
+    "url": "chrome://browser/content/parent/ext-pageAction.js",
     "schema": "chrome://browser/content/schemas/page_action.json",
     "scopes": ["addon_parent"],
     "manifest": ["page_action"],
@@ -127,7 +127,7 @@
     ]
   },
   "pkcs11": {
-    "url": "chrome://browser/content/ext-pkcs11.js",
+    "url": "chrome://browser/content/parent/ext-pkcs11.js",
     "schema": "chrome://browser/content/schemas/pkcs11.json",
     "scopes": ["addon_parent"],
     "paths": [
@@ -135,7 +135,7 @@
     ]
   },
   "geckoProfiler": {
-    "url": "chrome://browser/content/ext-geckoProfiler.js",
+    "url": "chrome://browser/content/parent/ext-geckoProfiler.js",
     "schema": "chrome://browser/content/schemas/geckoProfiler.json",
     "scopes": ["addon_parent"],
     "paths": [
@@ -143,7 +143,7 @@
     ]
   },
   "sessions": {
-    "url": "chrome://browser/content/ext-sessions.js",
+    "url": "chrome://browser/content/parent/ext-sessions.js",
     "schema": "chrome://browser/content/schemas/sessions.json",
     "scopes": ["addon_parent"],
     "paths": [
@@ -151,7 +151,7 @@
     ]
   },
   "sidebarAction": {
-    "url": "chrome://browser/content/ext-sidebarAction.js",
+    "url": "chrome://browser/content/parent/ext-sidebarAction.js",
     "schema": "chrome://browser/content/schemas/sidebar_action.json",
     "scopes": ["addon_parent"],
     "manifest": ["sidebar_action"],
@@ -160,7 +160,7 @@
     ]
   },
   "tabs": {
-    "url": "chrome://browser/content/ext-tabs.js",
+    "url": "chrome://browser/content/parent/ext-tabs.js",
     "schema": "chrome://browser/content/schemas/tabs.json",
     "scopes": ["addon_parent"],
     "events": ["update", "disable"],
@@ -169,7 +169,7 @@
     ]
   },
   "urlOverrides": {
-    "url": "chrome://browser/content/ext-url-overrides.js",
+    "url": "chrome://browser/content/parent/ext-url-overrides.js",
     "schema": "chrome://browser/content/schemas/url_overrides.json",
     "scopes": ["addon_parent"],
     "manifest": ["chrome_url_overrides"],
@@ -178,7 +178,7 @@
     ]
   },
   "windows": {
-    "url": "chrome://browser/content/ext-windows.js",
+    "url": "chrome://browser/content/parent/ext-windows.js",
     "schema": "chrome://browser/content/schemas/windows.json",
     "scopes": ["addon_parent"],
     "paths": [

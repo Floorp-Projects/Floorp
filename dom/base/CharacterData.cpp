@@ -90,6 +90,8 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(CharacterData)
   return Element::CanSkipThis(tmp);
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
+// We purposefully don't TRAVERSE_BEGIN_INHERITED here.  All the bits
+// we should traverse should be added here or in nsINode::Traverse.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(CharacterData)
   if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     char name[40];
@@ -105,6 +107,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(CharacterData)
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+// We purposefully don't UNLINK_BEGIN_INHERITED here.
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CharacterData)
   nsIContent::Unlink(tmp);
 
@@ -119,23 +122,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CharacterData)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN(CharacterData)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(CharacterData)
-  NS_INTERFACE_MAP_ENTRY(nsIContent)
-  NS_INTERFACE_MAP_ENTRY(nsINode)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(mozilla::dom::EventTarget)
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
-                                 new nsNodeSupportsWeakRefTearoff(this))
-  // DOM bindings depend on the identity pointer being the
-  // same as nsINode (which nsIContent inherits).
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_ADDREF(CharacterData)
-NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(CharacterData,
-                                                                    nsNodeUtils::LastRelease(this))
-
+NS_INTERFACE_MAP_END_INHERITING(nsIContent)
 
 void
 CharacterData::GetNodeValueInternal(nsAString& aNodeValue)
@@ -784,46 +772,6 @@ CharacterData::ThreadSafeTextIsOnlyWhitespace() const
   }
 
   return true;
-}
-
-bool
-CharacterData::HasTextForTranslation()
-{
-  if (NodeType() != TEXT_NODE &&
-      NodeType() != CDATA_SECTION_NODE) {
-    return false;
-  }
-
-  if (mText.Is2b()) {
-    // The fragment contains non-8bit characters which means there
-    // was at least one "interesting" character to trigger non-8bit.
-    return true;
-  }
-
-  if (HasFlag(NS_CACHED_TEXT_IS_ONLY_WHITESPACE) &&
-      HasFlag(NS_TEXT_IS_ONLY_WHITESPACE)) {
-    return false;
-  }
-
-  const char* cp = mText.Get1b();
-  const char* end = cp + mText.GetLength();
-
-  unsigned char ch;
-  for (; cp < end; cp++) {
-    ch = *cp;
-
-    // These are the characters that are letters
-    // in the first 256 UTF-8 codepoints.
-    if ((ch >= 'a' && ch <= 'z') ||
-       (ch >= 'A' && ch <= 'Z') ||
-       (ch >= 192 && ch <= 214) ||
-       (ch >= 216 && ch <= 246) ||
-       (ch >= 248)) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 void

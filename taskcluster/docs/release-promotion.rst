@@ -6,8 +6,8 @@ already tested.
 
 In the olden days, we used to re-compile our release builds with separate
 configs, which led to release-specific bugs which weren't caught by continuous
-integration tests. This also meant we required new builds at release time, which
- also increased the end-to-end time for a given release significantly. Release
+integration tests. This meant we required new builds at release time, which
+increased the end-to-end time for a given release significantly. Release
 promotion removes these anti-patterns.
 
 By running our continuous integration tests against our shippable builds, we
@@ -15,6 +15,8 @@ have a higher degree of confidence at release time. By separating the build
 phase tasks (compilation, packaging, and related tests) from the promotion
 phase tasks, we can schedule each phase at their own independent cadence, as
 needed, and the end-to-end time for promotion is reduced significantly.
+
+.. _release promotion phases
 
 Release Promotion Phases
 ------------------------

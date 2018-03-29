@@ -42,6 +42,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
+#include "mozilla/dom/Text.h"
 #include "nsNumberControlFrame.h"
 #include "nsFrameSelection.h"
 #include "mozilla/ErrorResult.h"
@@ -2585,7 +2586,7 @@ nsTextEditorState::SetPreviewText(const nsAString& aValue, bool aNotify)
 
   nsContentUtils::RemoveNewlines(previewValue);
   MOZ_ASSERT(previewDiv->GetFirstChild(), "preview div has no child");
-  previewDiv->GetFirstChild()->SetText(previewValue, aNotify);
+  previewDiv->GetFirstChild()->AsText()->SetText(previewValue, aNotify);
 
   UpdateOverlayTextVisibility(aNotify);
 }

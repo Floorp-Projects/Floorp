@@ -6,12 +6,9 @@
 // Test whether new OS versions are matched properly.
 // Uses test_gfxBlacklist_OS.xml
 
-ChromeUtils.import("resource://testing-common/httpd.js");
-
-var gTestserver = new HttpServer();
-gTestserver.start(-1);
+var gTestserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 gPort = gTestserver.identity.primaryPort;
-mapFile("/data/test_gfxBlacklist_OSVersion.xml", gTestserver);
+gTestserver.registerDirectory("/data/", do_get_file("data"));
 
 function load_blocklist(file) {
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
@@ -73,7 +70,7 @@ function run_test() {
       Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
     }
 
-    gTestserver.stop(do_test_finished);
+    do_test_finished();
   }
 
   Services.obs.addObserver(function(aSubject, aTopic, aData) {

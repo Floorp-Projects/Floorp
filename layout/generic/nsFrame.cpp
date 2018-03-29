@@ -2177,14 +2177,42 @@ public:
 private:
   Color ComputeColor() const;
 
+  static Color ComputeColorFromSelectionStyle(ComputedStyle&);
+  static Color ApplyTransparencyIfNecessary(nscolor);
+
   int16_t mSelectionValue;
 };
+
+Color
+nsDisplaySelectionOverlay::ApplyTransparencyIfNecessary(nscolor aColor)
+{
+  // If it has already alpha, leave it like that.
+  if (NS_GET_A(aColor) != 255) {
+    return ToDeviceColor(aColor);
+  }
+
+  // NOTE(emilio): Blink and WebKit do something slightly different here, and
+  // blend the color with white instead, both for overlays and text backgrounds.
+  auto color = Color::FromABGR(aColor);
+  color.a = 0.5;
+  return ToDeviceColor(color);
+}
+
+Color
+nsDisplaySelectionOverlay::ComputeColorFromSelectionStyle(ComputedStyle& aStyle)
+{
+  return ApplyTransparencyIfNecessary(
+    aStyle.GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor));
+}
 
 Color
 nsDisplaySelectionOverlay::ComputeColor() const
 {
   LookAndFeel::ColorID colorID;
   if (mSelectionValue == nsISelectionController::SELECTION_ON) {
+    if (RefPtr<ComputedStyle> style = mFrame->ComputeSelectionStyle()) {
+      return ComputeColorFromSelectionStyle(*style);
+    }
     colorID = LookAndFeel::eColorID_TextSelectBackground;
   } else if (mSelectionValue == nsISelectionController::SELECTION_ATTENTION) {
     colorID = LookAndFeel::eColorID_TextSelectBackgroundAttention;
@@ -2192,9 +2220,8 @@ nsDisplaySelectionOverlay::ComputeColor() const
     colorID = LookAndFeel::eColorID_TextSelectBackgroundDisabled;
   }
 
-  Color c = Color::FromABGR(LookAndFeel::GetColor(colorID, NS_RGB(255, 255, 255)));
-  c.a = .5;
-  return ToDeviceColor(c);
+  return ApplyTransparencyIfNecessary(
+    LookAndFeel::GetColor(colorID, NS_RGB(255, 255, 255)));
 }
 
 void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
@@ -2227,6 +2254,34 @@ nsDisplaySelectionOverlay::CreateWebRenderCommands(mozilla::wr::DisplayListBuild
   return true;
 }
 
+static Element*
+FindElementAncestorForMozSelection(nsIContent* aContent)
+{
+  NS_ENSURE_TRUE(aContent, nullptr);
+  while (aContent && aContent->IsInNativeAnonymousSubtree()) {
+    aContent = aContent->GetBindingParent();
+  }
+  NS_ASSERTION(aContent, "aContent isn't in non-anonymous tree?");
+  while (aContent && !aContent->IsElement()) {
+    aContent = aContent->GetParent();
+  }
+  return aContent ? aContent->AsElement() : nullptr;
+}
+
+
+already_AddRefed<ComputedStyle>
+nsIFrame::ComputeSelectionStyle() const
+{
+  Element* element = FindElementAncestorForMozSelection(GetContent());
+  if (!element) {
+    return nullptr;
+  }
+  RefPtr<ComputedStyle> sc =
+    PresContext()->StyleSet()->ProbePseudoElementStyle(
+      element, CSSPseudoElementType::mozSelection, Style());
+  return sc.forget();
+}
+
 /********************************************************
 * Refreshes each content's frame
 *********************************************************/
@@ -2236,25 +2291,23 @@ nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
                                  nsDisplayList*          aList,
                                  uint16_t                aContentType)
 {
-  if (!IsSelected() || !IsVisibleForPainting(aBuilder))
+  if (!IsSelected() || !IsVisibleForPainting(aBuilder)) {
     return;
+  }
 
-  nsPresContext* presContext = PresContext();
-  nsIPresShell *shell = presContext->PresShell();
-  if (!shell)
+  int16_t displaySelection = PresShell()->GetSelectionFlags();
+  if (!(displaySelection & aContentType)) {
     return;
-
-  int16_t displaySelection = shell->GetSelectionFlags();
-  if (!(displaySelection & aContentType))
-    return;
+  }
 
   const nsFrameSelection* frameSelection = GetConstFrameSelection();
   int16_t selectionValue = frameSelection->GetDisplaySelection();
 
-  if (selectionValue <= nsISelectionController::SELECTION_HIDDEN)
+  if (selectionValue <= nsISelectionController::SELECTION_HIDDEN) {
     return; // selection is hidden or off
+  }
 
-  nsIContent *newContent = mContent->GetParent();
+  nsIContent* newContent = mContent->GetParent();
 
   //check to see if we are anonymous content
   int32_t offset = 0;
@@ -2264,8 +2317,8 @@ nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
   }
 
   //look up to see what selection(s) are on this frame
-  UniquePtr<SelectionDetails> details
-    = frameSelection->LookUpSelection(newContent, offset, 1, false);
+  UniquePtr<SelectionDetails> details =
+    frameSelection->LookUpSelection(newContent, offset, 1, false);
   if (!details)
     return;
 
@@ -4245,7 +4298,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   // starting a new selection since the user may be trying to
   // drag the selected region to some other app.
 
-  if (GetContent()->IsSelectionDescendant())
+  if (GetContent() && GetContent()->IsSelectionDescendant())
   {
     bool inSelection = false;
     UniquePtr<SelectionDetails> details

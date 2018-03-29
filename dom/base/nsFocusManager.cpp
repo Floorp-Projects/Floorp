@@ -53,6 +53,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
+#include "mozilla/dom/Text.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
@@ -2586,7 +2587,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
 
       if (startContent->NodeType() == nsINode::TEXT_NODE) {
         nsAutoString nodeValue;
-        startContent->AppendTextTo(nodeValue);
+        startContent->GetAsText()->AppendTextTo(nodeValue);
 
         bool isFormControl =
           startContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL);

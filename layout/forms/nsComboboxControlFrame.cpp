@@ -1297,6 +1297,12 @@ nsComboboxControlFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElement
   }
 }
 
+nsIContent*
+nsComboboxControlFrame::GetDisplayNode() const
+{
+  return mDisplayContent;
+}
+
 // XXXbz this is a for-now hack.  Now that display:inline-block works,
 // need to revisit this.
 class nsComboboxDisplayFrame : public nsBlockFrame {
