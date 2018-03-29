@@ -18,7 +18,6 @@
 #include "nsCSSValue.h"
 
 class nsAttrValue;
-struct nsRuleData;
 
 namespace mozilla {
 
@@ -31,9 +30,8 @@ class ServoSpecifiedValues;
 class GenericSpecifiedValues
 {
 protected:
-  explicit GenericSpecifiedValues(nsIDocument* aDoc, uint32_t aSIDs)
+  explicit GenericSpecifiedValues(nsIDocument* aDoc)
     : mDocument(aDoc)
-    , mSIDs(aSIDs)
   {}
 
 public:
@@ -46,14 +44,6 @@ public:
 
   // Check if we already contain a certain longhand
   inline bool PropertyIsSet(nsCSSPropertyID aId);
-
-  // Check if we are able to hold longhands from a given
-  // style struct. Pass the result of NS_STYLE_INHERIT_BIT to this
-  // function. Can accept multiple inherit bits or'd together.
-  inline bool ShouldComputeStyleStruct(uint64_t aInheritBits)
-  {
-    return aInheritBits & mSIDs;
-  }
 
   // Set a property to an identifier (string)
   inline void SetIdentStringValue(nsCSSPropertyID aId, const nsString& aValue);
@@ -118,7 +108,6 @@ public:
   inline void SetBackgroundImage(nsAttrValue& value);
 
   nsIDocument* const mDocument;
-  const uint32_t mSIDs;
 };
 
 } // namespace mozilla
