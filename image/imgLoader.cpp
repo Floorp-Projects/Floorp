@@ -9,12 +9,14 @@
 
 #include "ImageLogging.h"
 #include "imgLoader.h"
+#include "NullPrincipal.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ChaosMode.h"
+#include "mozilla/LoadInfo.h"
 
 #include "nsImageModule.h"
 #include "imgRequestProxy.h"
@@ -630,14 +632,28 @@ ShouldLoadCachedImage(imgRequest* aImgRequest,
   aImgRequest->GetFinalURI(getter_AddRefs(contentLocation));
   nsresult rv;
 
+  nsCOMPtr<nsINode> requestingNode = do_QueryInterface(aLoadingContext);
+  nsCOMPtr<nsIPrincipal> loadingPrincipal = requestingNode
+    ? requestingNode->NodePrincipal()
+    : aTriggeringPrincipal;
+  // If there is no context and also no triggeringPrincipal, then we use a fresh
+  // nullPrincipal as the loadingPrincipal because we can not create a loadinfo
+  // without a valid loadingPrincipal.
+  if (!loadingPrincipal) {
+    loadingPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
+  }
+
+  nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
+    new LoadInfo(loadingPrincipal,
+                 aTriggeringPrincipal,
+                 requestingNode,
+                 nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                 aPolicyType);
+
   int16_t decision = nsIContentPolicy::REJECT_REQUEST;
-  rv = NS_CheckContentLoadPolicy(aPolicyType,
-                                 contentLocation,
-                                 aTriggeringPrincipal, // loading principal
-                                 aTriggeringPrincipal,
-                                 aLoadingContext,
+  rv = NS_CheckContentLoadPolicy(contentLocation,
+                                 secCheckLoadInfo,
                                  EmptyCString(), //mime guess
-                                 nullptr, //aExtra
                                  &decision,
                                  nsContentUtils::GetContentPolicy());
   if (NS_FAILED(rv) || !NS_CP_ACCEPTED(decision)) {
