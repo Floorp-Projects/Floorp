@@ -119,8 +119,7 @@
 #include "Units.h"
 #include "CanvasUtils.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/layers/CanvasClient.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/layers/WebRenderCanvasRenderer.h"
@@ -743,23 +742,12 @@ CanvasGradient::AddColorStop(float aOffset, const nsAString& aColorstr, ErrorRes
     return;
   }
 
-  nscolor color;
-  bool ok;
-
   nsIPresShell* shell = mContext ? mContext->GetPresShell() : nullptr;
-  ServoStyleSet* servoStyleSet = shell && shell->StyleSet()
-    ? shell->StyleSet()->GetAsServo()
-    : nullptr;
+  ServoStyleSet* styleSet = shell ? shell->StyleSet() : nullptr;
 
-  bool useServoParser =
-    true;
-
-  if (useServoParser) {
-    ok = ServoCSSParser::ComputeColor(servoStyleSet, NS_RGB(0, 0, 0), aColorstr,
-                                      &color);
-  } else {
-    MOZ_CRASH("old style system disabled");
-  }
+  nscolor color;
+  bool ok = ServoCSSParser::ComputeColor(styleSet, NS_RGB(0, 0, 0),
+                                         aColorstr, &color);
 
   if (!ok) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
@@ -1158,34 +1146,27 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
   nsIDocument* document = mCanvasElement ? mCanvasElement->OwnerDoc() : nullptr;
   css::Loader* loader = document ? document->CSSLoader() : nullptr;
 
-  bool useServoParser =
-    true;
+  nsIPresShell* presShell = GetPresShell();
+  ServoStyleSet* set = presShell ? presShell->StyleSet() : nullptr;
 
-  if (useServoParser) {
-    nsIPresShell* presShell = GetPresShell();
-    ServoStyleSet* set = presShell ? presShell->StyleSet()->AsServo() : nullptr;
-
-    // First, try computing the color without handling currentcolor.
-    bool wasCurrentColor = false;
-    if (!ServoCSSParser::ComputeColor(set, NS_RGB(0, 0, 0), aString, aColor,
-                                      &wasCurrentColor, loader)) {
-      return false;
-    }
-
-    if (wasCurrentColor && mCanvasElement) {
-      // Otherwise, get the value of the color property, flushing style
-      // if necessary.
-      RefPtr<ComputedStyle> canvasStyle =
-        nsComputedDOMStyle::GetComputedStyle(mCanvasElement, nullptr);
-      if (canvasStyle) {
-        *aColor = canvasStyle->StyleColor()->mColor;
-      }
-      // Beware that the presShell could be gone here.
-    }
-    return true;
+  // First, try computing the color without handling currentcolor.
+  bool wasCurrentColor = false;
+  if (!ServoCSSParser::ComputeColor(set, NS_RGB(0, 0, 0), aString, aColor,
+                                    &wasCurrentColor, loader)) {
+    return false;
   }
 
-  MOZ_CRASH("old style system disabled");
+  if (wasCurrentColor && mCanvasElement) {
+    // Otherwise, get the value of the color property, flushing style
+    // if necessary.
+    RefPtr<ComputedStyle> canvasStyle =
+      nsComputedDOMStyle::GetComputedStyle(mCanvasElement, nullptr);
+    if (canvasStyle) {
+      *aColor = canvasStyle->StyleColor()->mColor;
+    }
+    // Beware that the presShell could be gone here.
+  }
+  return true;
 }
 
 nsresult
@@ -2704,7 +2685,7 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
     return nullptr;
   }
 
-  ServoStyleSet* styleSet = aPresShell->StyleSet()->AsServo();
+  ServoStyleSet* styleSet = aPresShell->StyleSet();
 
   RefPtr<ComputedStyle> parentStyle;
   // have to get a parent ComputedStyle for inherit-like relative
@@ -2723,7 +2704,7 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
                                     aPresShell->GetDocument());
     MOZ_ASSERT(declarations);
 
-    parentStyle = aPresShell->StyleSet()->AsServo()->
+    parentStyle = aPresShell->StyleSet()->
       ResolveForDeclarations(nullptr, declarations);
   }
 
@@ -2772,7 +2753,7 @@ ResolveFilterStyleForServo(const nsAString& aFilterString,
     return nullptr;
   }
 
-  ServoStyleSet* styleSet = aPresShell->StyleSet()->AsServo();
+  ServoStyleSet* styleSet = aPresShell->StyleSet();
   RefPtr<ComputedStyle> computedValues =
     styleSet->ResolveForDeclarations(aParentStyle, declarations);
 

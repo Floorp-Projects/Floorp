@@ -7,8 +7,6 @@
 #include "ActiveElementManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/Preferences.h"
 #include "base/message_loop.h"
 #include "base/task.h"

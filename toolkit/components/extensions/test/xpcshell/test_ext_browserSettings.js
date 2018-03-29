@@ -50,6 +50,7 @@ add_task(async function test_browser_settings() {
     "signon.autologin.proxy": false,
     "browser.tabs.insertRelatedAfterCurrent": true,
     "browser.tabs.insertAfterCurrent": false,
+    "browser.display.document_color_use": 1,
   };
 
   async function background() {
@@ -209,6 +210,16 @@ add_task(async function test_browser_settings() {
     "openSearchResultsInNewTabs", false,
     {"browser.search.openintab": false});
 
+  await testSetting(
+    "overrideDocumentColors", "high-contrast-only",
+    {"browser.display.document_color_use": 0});
+  await testSetting(
+    "overrideDocumentColors", "never",
+    {"browser.display.document_color_use": 1});
+  await testSetting(
+    "overrideDocumentColors", "always",
+    {"browser.display.document_color_use": 2});
+
   async function testProxy(config, expectedPrefs) {
     // proxyConfig is not supported on Android.
     if (AppConstants.platform === "android") {
@@ -366,6 +377,16 @@ add_task(async function test_bad_value() {
       browser.browserSettings.contextMenuShowEvent.set({value: "bad"}),
       /bad is not a valid value for contextMenuShowEvent/,
       "contextMenuShowEvent.set rejects with an invalid value.");
+
+    await browser.test.assertRejects(
+      browser.browserSettings.overrideDocumentColors.set({value: 2}),
+      /2 is not a valid value for overrideDocumentColors/,
+      "overrideDocumentColors.set rejects with an invalid value.");
+
+    await browser.test.assertRejects(
+      browser.browserSettings.overrideDocumentColors.set({value: "bad"}),
+      /bad is not a valid value for overrideDocumentColors/,
+      "overrideDocumentColors.set rejects with an invalid value.");
 
     browser.test.sendMessage("done");
   }

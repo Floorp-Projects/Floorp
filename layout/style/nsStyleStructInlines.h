@@ -17,7 +17,6 @@
 #include "nsIContent.h" // for GetParent()
 #include "nsTextFrame.h" // for nsTextFrame::ShouldSuppressLineBreak
 #include "nsSVGUtils.h" // for nsSVGUtils::IsInSVGTextSubtree
-#include "mozilla/ServoStyleSet.h"
 
 inline void
 nsStyleImage::EnsureCachedBIData() const

@@ -34,6 +34,7 @@ mozilla.pth:build
 objdir:build
 mozilla.pth:build/pymake
 mozilla.pth:config
+mozilla.pth:config/mozunit
 mozilla.pth:dom/bindings
 mozilla.pth:dom/bindings/parser
 mozilla.pth:layout/tools/reftest

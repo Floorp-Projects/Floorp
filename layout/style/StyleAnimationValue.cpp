@@ -11,8 +11,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
@@ -241,10 +240,8 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
     return result;
   }
 
-  result.mServo =
-    shell->StyleSet()->AsServo()->ComputeAnimationValue(aElement,
-                                                        declarations,
-                                                        computedStyle);
+  result.mServo = shell->StyleSet()->
+    ComputeAnimationValue(aElement, declarations, computedStyle);
   return result;
 }
 

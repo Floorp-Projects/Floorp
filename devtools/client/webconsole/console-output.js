@@ -3177,7 +3177,7 @@ Widgets.ObjectRenderers.add({
     if (isAttached) {
       let onReady = defer();
       this.toolbox.inspector.once("inspector-updated", onReady.resolve);
-      await this.toolbox.selection.setNodeFront(this._nodeFront, "console");
+      await this.toolbox.selection.setNodeFront(this._nodeFront, { reason: "console" });
       await onReady.promise;
     } else {
       throw new Error("Node is not attached.");

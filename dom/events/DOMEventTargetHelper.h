@@ -108,12 +108,12 @@ public:
     return static_cast<DOMEventTargetHelper*>(target);
   }
 
-  bool HasListenersFor(const nsAString& aType)
+  bool HasListenersFor(const nsAString& aType) const
   {
     return mListenerManager && mListenerManager->HasListenersFor(aType);
   }
 
-  bool HasListenersFor(nsAtom* aTypeWithOn)
+  bool HasListenersFor(nsAtom* aTypeWithOn) const
   {
     return mListenerManager && mListenerManager->HasListenersFor(aTypeWithOn);
   }

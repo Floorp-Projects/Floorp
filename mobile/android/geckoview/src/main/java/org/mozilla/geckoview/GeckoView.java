@@ -277,7 +277,7 @@ public class GeckoView extends FrameLayout {
             mSession.open(getContext().getApplicationContext());
         }
 
-        mSession.getTextInputController().setView(this);
+        mSession.getTextInput().setView(this);
 
         super.onAttachedToWindow();
     }
@@ -287,7 +287,7 @@ public class GeckoView extends FrameLayout {
         super.onDetachedFromWindow();
 
         if (mSession != null) {
-          mSession.getTextInputController().setView(null);
+          mSession.getTextInput().setView(null);
         }
 
         if (mStateSaved) {
@@ -383,7 +383,7 @@ public class GeckoView extends FrameLayout {
         if (Build.VERSION.SDK_INT >= 24 || mSession == null) {
             return super.getHandler();
         }
-        return mSession.getTextInputController().getHandler(super.getHandler());
+        return mSession.getTextInput().getHandler(super.getHandler());
     }
 
     @Override
@@ -391,7 +391,7 @@ public class GeckoView extends FrameLayout {
         if (mSession == null) {
             return null;
         }
-        return mSession.getTextInputController().onCreateInputConnection(outAttrs);
+        return mSession.getTextInput().onCreateInputConnection(outAttrs);
     }
 
     @Override
@@ -400,7 +400,7 @@ public class GeckoView extends FrameLayout {
             return true;
         }
         return mSession != null &&
-               mSession.getTextInputController().onKeyPreIme(keyCode, event);
+               mSession.getTextInput().onKeyPreIme(keyCode, event);
     }
 
     @Override
@@ -409,7 +409,7 @@ public class GeckoView extends FrameLayout {
             return true;
         }
         return mSession != null &&
-               mSession.getTextInputController().onKeyUp(keyCode, event);
+               mSession.getTextInput().onKeyUp(keyCode, event);
     }
 
     @Override
@@ -418,7 +418,7 @@ public class GeckoView extends FrameLayout {
             return true;
         }
         return mSession != null &&
-               mSession.getTextInputController().onKeyDown(keyCode, event);
+               mSession.getTextInput().onKeyDown(keyCode, event);
     }
 
     @Override
@@ -427,7 +427,7 @@ public class GeckoView extends FrameLayout {
             return true;
         }
         return mSession != null &&
-               mSession.getTextInputController().onKeyLongPress(keyCode, event);
+               mSession.getTextInput().onKeyLongPress(keyCode, event);
     }
 
     @Override
@@ -436,7 +436,7 @@ public class GeckoView extends FrameLayout {
             return true;
         }
         return mSession != null &&
-               mSession.getTextInputController().onKeyMultiple(keyCode, repeatCount, event);
+               mSession.getTextInput().onKeyMultiple(keyCode, repeatCount, event);
     }
 
     @Override

@@ -232,7 +232,7 @@ DomNodePreview.prototype = {
     if (!this.nodeFront) {
       return;
     }
-    this.inspector.selection.setNodeFront(this.nodeFront, "dom-node-preview");
+    this.inspector.selection.setNodeFront(this.nodeFront, { reason: "dom-node-preview" });
   },
 
   onHighlightElClick: function(e) {

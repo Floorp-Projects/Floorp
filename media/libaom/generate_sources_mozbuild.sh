@@ -199,6 +199,7 @@ gen_config_files mac/x64 "--target=x86_64-darwin9-gcc ${all_platforms} ${x86_pla
 gen_config_files win/x64 "--target=x86_64-win64-vs14 ${all_platforms} ${x86_platforms}"
 gen_config_files win/ia32 "--target=x86-win32-vs14 ${all_platforms} ${x86_platforms}"
 gen_config_files win/mingw32 "--target=x86-win32-gcc ${all_platforms} ${x86_platforms}"
+gen_config_files win/mingw64 "--target=x86_64-win32-gcc ${all_platforms} ${x86_platforms}"
 
 gen_config_files linux/arm "--target=armv7-linux-gcc ${all_platforms} ${arm_platforms}"
 
@@ -206,7 +207,9 @@ gen_config_files generic "--target=generic-gnu ${all_platforms}"
 
 # AOM doesn't know if mingw32 has winpthreads or not, and doesn't try to detect it.
 sed -i 's/HAVE_PTHREAD_H equ 0/HAVE_PTHREAD_H equ 1/' $BASE_DIR/$LIBAOM_CONFIG_DIR/win/mingw32/aom_config.asm
+sed -i 's/HAVE_PTHREAD_H equ 0/HAVE_PTHREAD_H equ 1/' $BASE_DIR/$LIBAOM_CONFIG_DIR/win/mingw64/aom_config.asm
 sed -i 's/HAVE_PTHREAD_H 0/HAVE_PTHREAD_H 1/' $BASE_DIR/$LIBAOM_CONFIG_DIR/win/mingw32/aom_config.h
+sed -i 's/HAVE_PTHREAD_H 0/HAVE_PTHREAD_H 1/' $BASE_DIR/$LIBAOM_CONFIG_DIR/win/mingw64/aom_config.h
 
 
 echo "Remove temporary directory."
@@ -225,6 +228,7 @@ gen_rtcd_header mac/x64 x86_64
 gen_rtcd_header win/x64 x86_64
 gen_rtcd_header win/ia32 x86
 gen_rtcd_header win/mingw32 x86
+gen_rtcd_header win/mingw64 x86_64
 
 gen_rtcd_header linux/arm armv7
 
