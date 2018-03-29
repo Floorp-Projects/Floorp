@@ -10,13 +10,18 @@
 #include "GLContextEGL.h"
 #include "GLContextProvider.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/HelpersD3D11.h"
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/widget/WinCompositorWidget.h"
 #include "mozilla/WindowsVersion.h"
 
+#undef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_WIN8
+
 #include <d3d11.h>
+#include <dcomp.h>
 #include <dxgi1_2.h>
 
 namespace mozilla {
@@ -101,9 +106,14 @@ RenderCompositorANGLE::Initialize()
   }
 
   RefPtr<IDXGIFactory2> dxgiFactory2;
-  if (SUCCEEDED(dxgiFactory->QueryInterface((IDXGIFactory2**)getter_AddRefs(dxgiFactory2))) &&
-      dxgiFactory2 &&
-      IsWin8OrLater())
+  HRESULT hr = dxgiFactory->QueryInterface((IDXGIFactory2**)getter_AddRefs(dxgiFactory2));
+  if (FAILED(hr)) {
+    dxgiFactory2 = nullptr;
+  }
+
+  CreateSwapChainForDCompIfPossible(dxgiFactory2);
+
+  if (!mSwapChain && dxgiFactory2 && IsWin8OrLater())
   {
     RefPtr<IDXGISwapChain1> swapChain1;
 
@@ -122,9 +132,9 @@ RenderCompositorANGLE::Initialize()
     desc.Scaling = DXGI_SCALING_NONE;
     desc.Flags = 0;
 
-    HRESULT hr = dxgiFactory2->CreateSwapChainForHwnd(mDevice, hwnd, &desc,
-                                                      nullptr, nullptr,
-                                                      getter_AddRefs(swapChain1));
+    hr = dxgiFactory2->CreateSwapChainForHwnd(mDevice, hwnd, &desc,
+                                              nullptr, nullptr,
+                                              getter_AddRefs(swapChain1));
     if (SUCCEEDED(hr) && swapChain1) {
       DXGI_RGBA color = { 1.0f, 1.0f, 1.0f, 1.0f };
       swapChain1->SetBackgroundColor(&color);
@@ -193,6 +203,75 @@ RenderCompositorANGLE::Initialize()
   return true;
 }
 
+void
+RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(IDXGIFactory2* aDXGIFactory2)
+{
+  if (!aDXGIFactory2) {
+    return;
+  }
+
+  RefPtr<IDCompositionDevice> dCompDevice = gfx::DeviceManagerDx::Get()->GetDirectCompositionDevice();
+  if (!dCompDevice) {
+    return;
+  }
+  MOZ_ASSERT(XRE_IsGPUProcess());
+
+  RefPtr<IDXGIDevice> dxgiDevice;
+  mDevice->QueryInterface((IDXGIDevice**)getter_AddRefs(dxgiDevice));
+
+  RefPtr<IDXGIFactory> dxgiFactory;
+  {
+    RefPtr<IDXGIAdapter> adapter;
+    dxgiDevice->GetAdapter(getter_AddRefs(adapter));
+    adapter->GetParent(IID_PPV_ARGS((IDXGIFactory**)getter_AddRefs(dxgiFactory)));
+  }
+
+  HWND hwnd = mWidget->AsWindows()->GetCompositorHwnd();
+  if (!hwnd) {
+    gfxCriticalNote << "Compositor window was not created ";
+    return;
+  }
+
+  HRESULT hr = dCompDevice->CreateTargetForHwnd(hwnd, TRUE, getter_AddRefs(mCompositionTarget));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "Could not create DCompositionTarget: " << gfx::hexa(hr);
+    return;
+  }
+
+  hr = dCompDevice->CreateVisual(getter_AddRefs(mVisual));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "Could not create DCompositionVisualt: " << gfx::hexa(hr);
+    return;
+  }
+
+  RefPtr<IDXGISwapChain1> swapChain1;
+
+  DXGI_SWAP_CHAIN_DESC1 desc{};
+  // DXGI does not like 0x0 swapchains. Swap chain creation failed when 0x0 was set.
+  desc.Width = 1;
+  desc.Height = 1;
+  desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+  desc.SampleDesc.Count = 1;
+  desc.SampleDesc.Quality = 0;
+  desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+  desc.BufferCount = 2;
+  // DXGI_SCALING_NONE caused swap chain creation failure.
+  desc.Scaling     = DXGI_SCALING_STRETCH;
+  desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+  desc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+  desc.Flags         = 0;
+
+  hr = aDXGIFactory2->CreateSwapChainForComposition(mDevice, &desc, nullptr, getter_AddRefs(swapChain1));
+  if (SUCCEEDED(hr) && swapChain1) {
+    DXGI_RGBA color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    swapChain1->SetBackgroundColor(&color);
+    mSwapChain = swapChain1;
+    mVisual->SetContent(swapChain1);
+    mCompositionTarget->SetRoot(mVisual);
+    mCompositionDevice = dCompDevice;
+  }
+}
+
 bool
 RenderCompositorANGLE::BeginFrame()
 {
@@ -221,6 +300,10 @@ RenderCompositorANGLE::EndFrame()
 
   mSwapChain->Present(0, 0);
 
+  if (mCompositionDevice) {
+    mCompositionDevice->Commit();
+  }
+
   // Note: this waits on the query we inserted in the previous frame,
   // not the one we just inserted now. Example:
   //   Insert query #1
@@ -244,9 +327,10 @@ RenderCompositorANGLE::ResizeBufferIfNeeded()
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
 
-  // Set size to non negative.
-  size.width = std::max(size.width, 0);
-  size.height = std::max(size.height, 0);
+  // DXGI does not like 0x0 swapchains. ResizeBuffers() failed when 0x0 was set
+  // when DComp is used.
+  size.width = std::max(size.width, 1);
+  size.height = std::max(size.height, 1);
 
   if (mBufferSize.isSome() && mBufferSize.ref() == size) {
     MOZ_ASSERT(mEGLSurface);
@@ -352,7 +436,7 @@ RenderCompositorANGLE::InsertPresentWaitQuery()
   CD3D11_QUERY_DESC desc(D3D11_QUERY_EVENT);
   HRESULT hr = mDevice->CreateQuery(&desc, getter_AddRefs(mNextWaitForPresentQuery));
   if (FAILED(hr) || !mNextWaitForPresentQuery) {
-    gfxWarning() << "Could not create D3D11_QUERY_EVENT: " << hexa(hr);
+    gfxWarning() << "Could not create D3D11_QUERY_EVENT: " << gfx::hexa(hr);
     return;
   }
 

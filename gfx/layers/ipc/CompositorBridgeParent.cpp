@@ -1753,7 +1753,7 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   MOZ_ASSERT(mWidget);
 
 #ifdef XP_WIN
-  if (XRE_IsGPUProcess() && gfx::gfxVars::UseWebRenderANGLE() && mWidget) {
+  if (DeviceManagerDx::Get()->CanUseDComp() && mWidget) {
     mWidget->AsWindows()->EnsureCompositorWindow();
   }
 #endif
@@ -1803,7 +1803,7 @@ CompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aA
     }
   }
 #ifdef XP_WIN
-  if (XRE_IsGPUProcess() && gfx::gfxVars::UseWebRenderANGLE() && mWidget) {
+  if (DeviceManagerDx::Get()->CanUseDComp() && mWidget) {
     mWidget->AsWindows()->DestroyCompositorWindow();
   }
 #endif
