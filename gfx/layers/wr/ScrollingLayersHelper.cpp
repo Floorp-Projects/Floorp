@@ -349,7 +349,7 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
   // Define the clip
   wr::WrClipId clipId = mBuilder->DefineClip(
       ancestorIds.first, ancestorIds.second,
-      aSc.ToRelativeLayoutRect(clip), &wrRoundedRects);
+      wr::ToRoundedLayoutRect(clip), &wrRoundedRects);
   if (!mBuilder->HasExtraClip()) {
     mCacheStack.back()[aChain] = clipId;
   }
@@ -456,8 +456,8 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
   auto scrollId = mBuilder->DefineScrollLayer(viewId,
       ancestorIds.first,
       ancestorIds.second,
-      aSc.ToRelativeLayoutRect(contentRect),
-      aSc.ToRelativeLayoutRect(clipBounds));
+      wr::ToRoundedLayoutRect(contentRect),
+      wr::ToRoundedLayoutRect(clipBounds));
 
   ids.first = Some(scrollId);
   return ids;

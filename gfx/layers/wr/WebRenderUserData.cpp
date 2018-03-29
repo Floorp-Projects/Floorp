@@ -231,7 +231,7 @@ WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBu
   // context need to be done manually and pushed over to the parent side,
   // where it will be done when we build the display list for the iframe.
   // That happens in AsyncImagePipelineManager.
-  wr::LayoutRect r = aSc.ToRelativeLayoutRect(aBounds);
+  wr::LayoutRect r = wr::ToRoundedLayoutRect(aBounds);
   aBuilder.PushIFrame(r, aIsBackfaceVisible, mPipelineId.ref());
 
   WrBridge()->AddWebRenderParentCommand(OpUpdateAsyncImagePipeline(mPipelineId.value(),

@@ -152,11 +152,11 @@ nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
   nsRect shadowRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
   LayoutDeviceRect deviceBox =
     LayoutDeviceRect::FromAppUnits(shadowRect, appUnitsPerDevPixel);
-  wr::LayoutRect deviceBoxRect = aSc.ToRelativeLayoutRect(deviceBox);
+  wr::LayoutRect deviceBoxRect = wr::ToRoundedLayoutRect(deviceBox);
 
   LayoutDeviceRect clipRect =
     LayoutDeviceRect::FromAppUnits(mVisibleRect, appUnitsPerDevPixel);
-  wr::LayoutRect deviceClipRect = aSc.ToRelativeLayoutRect(clipRect);
+  wr::LayoutRect deviceClipRect = wr::ToRoundedLayoutRect(clipRect);
 
   bool hasBorderRadius;
   Unused << nsCSSRendering::HasBoxShadowNativeTheme(mFrame, hasBorderRadius);
