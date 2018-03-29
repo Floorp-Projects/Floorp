@@ -87,6 +87,11 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
      */
     bool mLogRemovals;
 
+    /**
+     * We have various tables of static atoms for elements and attributes.
+     */
+    typedef nsTHashtable<nsRefPtrHashKey<nsAtom>> AtomsTable;
+
     void SanitizeChildren(nsINode* aRoot);
 
     /**
@@ -134,7 +139,7 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
      *                           attribute unsanitized
      */
     void SanitizeAttributes(mozilla::dom::Element* aElement,
-                            nsTHashtable<nsRefPtrHashKey<nsAtom>>* aAllowed,
+                            AtomsTable* aAllowed,
                             nsStaticAtom* const* aURLs,
                             bool aAllowXLink,
                             bool aAllowStyle,
@@ -201,37 +206,37 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
     /**
      * The whitelist of HTML elements.
      */
-    static nsTHashtable<nsRefPtrHashKey<nsAtom>>* sElementsHTML;
+    static AtomsTable* sElementsHTML;
 
     /**
      * The whitelist of non-presentational HTML attributes.
      */
-    static nsTHashtable<nsRefPtrHashKey<nsAtom>>* sAttributesHTML;
+    static AtomsTable* sAttributesHTML;
 
     /**
      * The whitelist of presentational HTML attributes.
      */
-    static nsTHashtable<nsRefPtrHashKey<nsAtom>>* sPresAttributesHTML;
+    static AtomsTable* sPresAttributesHTML;
 
     /**
      * The whitelist of SVG elements.
      */
-    static nsTHashtable<nsRefPtrHashKey<nsAtom>>* sElementsSVG;
+    static AtomsTable* sElementsSVG;
 
     /**
      * The whitelist of SVG attributes.
      */
-    static nsTHashtable<nsRefPtrHashKey<nsAtom>>* sAttributesSVG;
+    static AtomsTable* sAttributesSVG;
 
     /**
      * The whitelist of SVG elements.
      */
-    static nsTHashtable<nsRefPtrHashKey<nsAtom>>* sElementsMathML;
+    static AtomsTable* sElementsMathML;
 
     /**
      * The whitelist of MathML attributes.
      */
-    static nsTHashtable<nsRefPtrHashKey<nsAtom>>* sAttributesMathML;
+    static AtomsTable* sAttributesMathML;
 
     /**
      * Reusable null principal for URL checks.

@@ -931,13 +931,13 @@ nsStaticAtom* const kURLAttributesMathML[] = {
   nullptr
 };
 
-nsTHashtable<nsRefPtrHashKey<nsAtom>>* nsTreeSanitizer::sElementsHTML = nullptr;
-nsTHashtable<nsRefPtrHashKey<nsAtom>>* nsTreeSanitizer::sAttributesHTML = nullptr;
-nsTHashtable<nsRefPtrHashKey<nsAtom>>* nsTreeSanitizer::sPresAttributesHTML = nullptr;
-nsTHashtable<nsRefPtrHashKey<nsAtom>>* nsTreeSanitizer::sElementsSVG = nullptr;
-nsTHashtable<nsRefPtrHashKey<nsAtom>>* nsTreeSanitizer::sAttributesSVG = nullptr;
-nsTHashtable<nsRefPtrHashKey<nsAtom>>* nsTreeSanitizer::sElementsMathML = nullptr;
-nsTHashtable<nsRefPtrHashKey<nsAtom>>* nsTreeSanitizer::sAttributesMathML = nullptr;
+nsTreeSanitizer::AtomsTable* nsTreeSanitizer::sElementsHTML = nullptr;
+nsTreeSanitizer::AtomsTable* nsTreeSanitizer::sAttributesHTML = nullptr;
+nsTreeSanitizer::AtomsTable* nsTreeSanitizer::sPresAttributesHTML = nullptr;
+nsTreeSanitizer::AtomsTable* nsTreeSanitizer::sElementsSVG = nullptr;
+nsTreeSanitizer::AtomsTable* nsTreeSanitizer::sAttributesSVG = nullptr;
+nsTreeSanitizer::AtomsTable* nsTreeSanitizer::sElementsMathML = nullptr;
+nsTreeSanitizer::AtomsTable* nsTreeSanitizer::sAttributesMathML = nullptr;
 nsIPrincipal* nsTreeSanitizer::sNullPrincipal = nullptr;
 
 nsTreeSanitizer::nsTreeSanitizer(uint32_t aFlags)
@@ -1154,7 +1154,7 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
 
 void
 nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
-                                    nsTHashtable<nsRefPtrHashKey<nsAtom>>* aAllowed,
+                                    AtomsTable* aAllowed,
                                     nsStaticAtom* const* aURLs,
                                     bool aAllowXLink,
                                     bool aAllowStyle,
@@ -1544,44 +1544,37 @@ nsTreeSanitizer::InitializeStatics()
 {
   NS_PRECONDITION(!sElementsHTML, "Initializing a second time.");
 
-  sElementsHTML =
-    new nsTHashtable<nsRefPtrHashKey<nsAtom>>(ArrayLength(kElementsHTML));
+  sElementsHTML = new AtomsTable(ArrayLength(kElementsHTML));
   for (uint32_t i = 0; kElementsHTML[i]; i++) {
     sElementsHTML->PutEntry(kElementsHTML[i]);
   }
 
-  sAttributesHTML =
-    new nsTHashtable<nsRefPtrHashKey<nsAtom>>(ArrayLength(kAttributesHTML));
+  sAttributesHTML = new AtomsTable(ArrayLength(kAttributesHTML));
   for (uint32_t i = 0; kAttributesHTML[i]; i++) {
     sAttributesHTML->PutEntry(kAttributesHTML[i]);
   }
 
-  sPresAttributesHTML =
-    new nsTHashtable<nsRefPtrHashKey<nsAtom>>(ArrayLength(kPresAttributesHTML));
+  sPresAttributesHTML = new AtomsTable(ArrayLength(kPresAttributesHTML));
   for (uint32_t i = 0; kPresAttributesHTML[i]; i++) {
     sPresAttributesHTML->PutEntry(kPresAttributesHTML[i]);
   }
 
-  sElementsSVG =
-    new nsTHashtable<nsRefPtrHashKey<nsAtom>>(ArrayLength(kElementsSVG));
+  sElementsSVG = new AtomsTable(ArrayLength(kElementsSVG));
   for (uint32_t i = 0; kElementsSVG[i]; i++) {
     sElementsSVG->PutEntry(kElementsSVG[i]);
   }
 
-  sAttributesSVG =
-    new nsTHashtable<nsRefPtrHashKey<nsAtom>>(ArrayLength(kAttributesSVG));
+  sAttributesSVG = new AtomsTable(ArrayLength(kAttributesSVG));
   for (uint32_t i = 0; kAttributesSVG[i]; i++) {
     sAttributesSVG->PutEntry(kAttributesSVG[i]);
   }
 
-  sElementsMathML =
-    new nsTHashtable<nsRefPtrHashKey<nsAtom>>(ArrayLength(kElementsMathML));
+  sElementsMathML = new AtomsTable(ArrayLength(kElementsMathML));
   for (uint32_t i = 0; kElementsMathML[i]; i++) {
     sElementsMathML->PutEntry(kElementsMathML[i]);
   }
 
-  sAttributesMathML =
-    new nsTHashtable<nsRefPtrHashKey<nsAtom>>(ArrayLength(kAttributesMathML));
+  sAttributesMathML = new AtomsTable(ArrayLength(kAttributesMathML));
   for (uint32_t i = 0; kAttributesMathML[i]; i++) {
     sAttributesMathML->PutEntry(kAttributesMathML[i]);
   }
