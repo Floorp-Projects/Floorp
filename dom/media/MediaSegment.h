@@ -84,13 +84,13 @@ inline PrincipalHandle MakePrincipalHandle(nsIPrincipal* aPrincipal)
 
 #define PRINCIPAL_HANDLE_NONE nullptr
 
-inline nsIPrincipal* GetPrincipalFromHandle(PrincipalHandle& aPrincipalHandle)
+inline nsIPrincipal* GetPrincipalFromHandle(const PrincipalHandle& aPrincipalHandle)
 {
   MOZ_ASSERT(NS_IsMainThread());
   return aPrincipalHandle.get();
 }
 
-inline bool PrincipalHandleMatches(PrincipalHandle& aPrincipalHandle,
+inline bool PrincipalHandleMatches(const PrincipalHandle& aPrincipalHandle,
                                    nsIPrincipal* aOther)
 {
   if (!aOther) {
@@ -148,14 +148,14 @@ public:
   /**
    * Gets the last principal id that was appended to this segment.
    */
-  PrincipalHandle GetLastPrincipalHandle() const { return mLastPrincipalHandle; }
+  const PrincipalHandle& GetLastPrincipalHandle() const { return mLastPrincipalHandle; }
   /**
    * Called by the MediaStreamGraph as it appends a chunk with a different
    * principal id than the current one.
    */
-  void SetLastPrincipalHandle(const PrincipalHandle& aLastPrincipalHandle)
+  void SetLastPrincipalHandle(PrincipalHandle aLastPrincipalHandle)
   {
-    mLastPrincipalHandle = aLastPrincipalHandle;
+    mLastPrincipalHandle = Forward<PrincipalHandle>(aLastPrincipalHandle);
   }
 
   /**

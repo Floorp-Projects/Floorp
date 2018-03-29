@@ -243,7 +243,7 @@ MediaStreamGraphImpl::ProcessChunkMetadataForInterval(MediaStream* aStream,
     if (chunk->IsNull() || offset < aStart) {
       continue;
     }
-    PrincipalHandle principalHandle = chunk->GetPrincipalHandle();
+    const PrincipalHandle& principalHandle = chunk->GetPrincipalHandle();
     if (principalHandle != aSegment.GetLastPrincipalHandle()) {
       aSegment.SetLastPrincipalHandle(principalHandle);
       LOG(LogLevel::Debug,
