@@ -216,9 +216,9 @@ function enableNetProvider(hud) {
         let updates = getAllNetworkMessagesUpdateById(newState);
         let message = updates[action.id];
         if (message && !message.openedOnce && message.source == "network") {
-          dataProvider.onNetworkEvent(null, message);
+          dataProvider.onNetworkEvent(message);
           message.updates.forEach(updateType => {
-            dataProvider.onNetworkEventUpdate(null, {
+            dataProvider.onNetworkEventUpdate({
               packet: { updateType: updateType },
               networkInfo: message,
             });
@@ -238,7 +238,7 @@ function enableNetProvider(hud) {
         if (open) {
           let message = getMessage(state, actor);
           message.updates.forEach(updateType => {
-            dataProvider.onNetworkEventUpdate(null, {
+            dataProvider.onNetworkEventUpdate({
               packet: { updateType },
               networkInfo: message,
             });

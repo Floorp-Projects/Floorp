@@ -288,10 +288,9 @@ class FirefoxDataProvider {
   /**
    * The "networkEvent" message type handler.
    *
-   * @param {string} type message type
    * @param {object} networkInfo network request information
    */
-  async onNetworkEvent(type, networkInfo) {
+  async onNetworkEvent(networkInfo) {
     let {
       actor,
       cause,
@@ -321,11 +320,10 @@ class FirefoxDataProvider {
   /**
    * The "networkEventUpdate" message type handler.
    *
-   * @param {string} type message type
    * @param {object} packet the message received from the server.
    * @param {object} networkInfo the network request information.
    */
-  onNetworkEventUpdate(type, data) {
+  onNetworkEventUpdate(data) {
     let { packet, networkInfo } = data;
     let { actor } = networkInfo;
     let { updateType } = packet;
