@@ -17,10 +17,10 @@ namespace dom {
 
 nsSVGElement::LengthListInfo SVGTextPositioningElement::sLengthListInfo[4] =
 {
-  { &nsGkAtoms::x,  SVGContentUtils::X, false },
-  { &nsGkAtoms::y,  SVGContentUtils::Y, false },
-  { &nsGkAtoms::dx, SVGContentUtils::X, true },
-  { &nsGkAtoms::dy, SVGContentUtils::Y, true }
+  { nsGkAtoms::x,  SVGContentUtils::X, false },
+  { nsGkAtoms::y,  SVGContentUtils::Y, false },
+  { nsGkAtoms::dx, SVGContentUtils::X, true },
+  { nsGkAtoms::dy, SVGContentUtils::Y, true }
 };
 
 nsSVGElement::LengthListAttributesInfo
@@ -33,7 +33,7 @@ SVGTextPositioningElement::GetLengthListInfo()
 
 nsSVGElement::NumberListInfo SVGTextPositioningElement::sNumberListInfo[1] =
 {
-  { &nsGkAtoms::rotate }
+  { nsGkAtoms::rotate }
 };
 
 nsSVGElement::NumberListAttributesInfo

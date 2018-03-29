@@ -66,7 +66,7 @@ private:
   bool mIsAnimated;
   bool mIsBaseSet;
 
-  nsSVGEnumMapping *GetMapping(nsSVGElement *aSVGElement);
+  const nsSVGEnumMapping* GetMapping(nsSVGElement *aSVGElement);
 
 public:
   struct DOMAnimatedEnum final : public mozilla::dom::SVGAnimatedEnumeration

@@ -30,17 +30,17 @@ SVGFETurbulenceElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenPro
 
 nsSVGElement::NumberInfo SVGFETurbulenceElement::sNumberInfo[1] =
 {
-  { &nsGkAtoms::seed, 0, false }
+  { nsGkAtoms::seed, 0, false }
 };
 
 nsSVGElement::NumberPairInfo SVGFETurbulenceElement::sNumberPairInfo[1] =
 {
-  { &nsGkAtoms::baseFrequency, 0, 0 }
+  { nsGkAtoms::baseFrequency, 0, 0 }
 };
 
 nsSVGElement::IntegerInfo SVGFETurbulenceElement::sIntegerInfo[1] =
 {
-  { &nsGkAtoms::numOctaves, 1 }
+  { nsGkAtoms::numOctaves, 1 }
 };
 
 nsSVGEnumMapping SVGFETurbulenceElement::sTypeMap[] = {
@@ -61,11 +61,11 @@ nsSVGEnumMapping SVGFETurbulenceElement::sStitchTilesMap[] = {
 
 nsSVGElement::EnumInfo SVGFETurbulenceElement::sEnumInfo[2] =
 {
-  { &nsGkAtoms::type,
+  { nsGkAtoms::type,
     sTypeMap,
     SVG_TURBULENCE_TYPE_TURBULENCE
   },
-  { &nsGkAtoms::stitchTiles,
+  { nsGkAtoms::stitchTiles,
     sStitchTilesMap,
     SVG_STITCHTYPE_NOSTITCH
   }
@@ -73,7 +73,7 @@ nsSVGElement::EnumInfo SVGFETurbulenceElement::sEnumInfo[2] =
 
 nsSVGElement::StringInfo SVGFETurbulenceElement::sStringInfo[1] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true }
 };
 
 //----------------------------------------------------------------------
