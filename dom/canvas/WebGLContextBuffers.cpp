@@ -46,7 +46,7 @@ WebGLContext::ValidateBufferSlot(const char* funcName, GLenum target)
             break;
 
         case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
-            slot = &(mBoundTransformFeedback->mGenericBufferBinding);
+            slot = &mBoundTransformFeedbackBuffer;
             break;
 
         case LOCAL_GL_UNIFORM_BUFFER:
@@ -479,7 +479,7 @@ WebGLContext::DeleteBuffer(WebGLBuffer* buffer)
         fnClearIfBuffer(0, mBoundPixelUnpackBuffer);
         fnClearIfBuffer(0, mBoundUniformBuffer);
         fnClearIfBuffer(LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER,
-                        mBoundTransformFeedback->mGenericBufferBinding);
+                        mBoundTransformFeedbackBuffer);
 
         if (!mBoundTransformFeedback->mIsActive) {
             for (auto& binding : mBoundTransformFeedback->mIndexedBindings) {
