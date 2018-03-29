@@ -109,7 +109,7 @@ class ContinueConsumeBodyControlRunnable final : public MainThreadWorkerControlR
   RefPtr<FetchBodyConsumer<Derived>> mFetchBodyConsumer;
 
 public:
-  ContinueConsumeBodyControlRunnable(FetchBodyConsumer<Derived>* aFetchBodyConsumer)
+  explicit ContinueConsumeBodyControlRunnable(FetchBodyConsumer<Derived>* aFetchBodyConsumer)
     : MainThreadWorkerControlRunnable(aFetchBodyConsumer->GetWorkerPrivate())
     , mFetchBodyConsumer(aFetchBodyConsumer)
   {
