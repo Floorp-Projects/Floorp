@@ -79,9 +79,7 @@ void
 XULFrameElement::LoadSrc()
 {
   if (!IsInUncomposedDoc() ||
-      !OwnerDoc()->GetRootElement() ||
-      OwnerDoc()->GetRootElement()->
-        NodeInfo()->Equals(nsGkAtoms::overlay, kNameSpaceID_XUL)) {
+      !OwnerDoc()->GetRootElement()) {
       return;
   }
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();

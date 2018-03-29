@@ -10,10 +10,6 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 
-#ifdef MOZ_XUL
-#include "nsIXULOverlayProvider.h"
-#endif
-
 #include "nsString.h"
 #include "nsURIHashKey.h"
 #include "nsInterfaceHashtable.h"
@@ -36,9 +32,6 @@ class nsIURL;
 { 0x47049e42, 0x1d87, 0x482a, { 0x98, 0x4d, 0x56, 0xae, 0x18, 0x5e, 0x36, 0x7a } }
 
 class nsChromeRegistry : public nsIToolkitChromeRegistry,
-#ifdef MOZ_XUL
-                         public nsIXULOverlayProvider,
-#endif
                          public nsIObserver,
                          public nsSupportsWeakReference
 {
@@ -128,8 +121,6 @@ public:
                               char *const * argv, int flags) = 0;
   virtual void ManifestSkin(ManifestProcessingContext& cx, int lineno,
                             char *const * argv, int flags) = 0;
-  virtual void ManifestOverlay(ManifestProcessingContext& cx, int lineno,
-                               char *const * argv, int flags) = 0;
   virtual void ManifestOverride(ManifestProcessingContext& cx, int lineno,
                                 char *const * argv, int flags) = 0;
   virtual void ManifestResource(ManifestProcessingContext& cx, int lineno,
