@@ -1310,26 +1310,6 @@ nsIDocument::SelectorCache::~SelectorCache()
   AgeAllGenerations();
 }
 
-void
-nsIDocument::SelectorCache::SelectorList::Reset()
-{
-  if (mServo) {
-    Servo_SelectorList_Drop(mServo);
-    mServo = nullptr;
-  }
-}
-
-
-void nsIDocument::SelectorCache::CacheList(
-  const nsAString& aSelector,
-  UniquePtr<RawServoSelectorList>&& aSelectorList)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  SelectorCacheKey* key = new SelectorCacheKey(aSelector);
-  mTable.Put(key->mKey, SelectorList(Move(aSelectorList)));
-  AddObject(key);
-}
-
 void nsIDocument::SelectorCache::NotifyExpired(SelectorCacheKey* aSelector)
 {
   MOZ_ASSERT(NS_IsMainThread());

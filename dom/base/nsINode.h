@@ -37,7 +37,6 @@
 
 class nsAttrAndChildArray;
 class nsAttrChildContentList;
-struct nsCSSSelectorList;
 class nsDOMAttributeMap;
 class nsIAnimationObserver;
 class nsIContent;
@@ -2012,20 +2011,6 @@ protected:
                            bool aNotify, nsAttrAndChildArray& aChildArray);
 
   /**
-   * Parse the given selector string into an nsCSSSelectorList.
-   *
-   * A null return value with a non-failing aRv means the string only
-   * contained pseudo-element selectors.
-   *
-   * A failing aRv means the string was not a valid selector.
-   *
-   * Note that the selector list returned here is owned by the owner doc's
-   * selector cache.
-   */
-  nsCSSSelectorList* ParseSelectorList(const nsAString& aSelectorString,
-                                       mozilla::ErrorResult& aRv);
-
-  /**
    * Parse the given selector string into a servo SelectorList.
    *
    * Never returns null if aRv is not failing.
@@ -2033,27 +2018,8 @@ protected:
    * Note that the selector list returned here is owned by the owner doc's
    * selector cache.
    */
-  const RawServoSelectorList* ParseServoSelectorList(
-    const nsAString& aSelectorString,
-    mozilla::ErrorResult& aRv);
-
-  /**
-   * Parse the given selector string a SelectorList, depending on whether we're
-   * in a Servo or Gecko-backed document, and execute either aServoFunctor or
-   * aGeckoFunctor on it.
-   *
-   * Note that the selector list is owned by the owner doc's selector cache
-   * which can get expired, so you shouldn't keep it around for long.
-   */
-  template<typename Ret, typename ServoFunctor, typename GeckoFunctor>
-  Ret WithSelectorList(
-    const nsAString& aSelectorString,
-    mozilla::ErrorResult& aRv,
-    const ServoFunctor& aServoFunctor,
-    const GeckoFunctor& aGeckoFunctor)
-  {
-    return aServoFunctor(ParseServoSelectorList(aSelectorString, aRv));
-  }
+  const RawServoSelectorList* ParseSelectorList(const nsAString& aSelectorString,
+                                                mozilla::ErrorResult&);
 
 public:
   /* Event stuff that documents and elements share.  This needs to be
