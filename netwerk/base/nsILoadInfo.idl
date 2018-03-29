@@ -576,6 +576,11 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean allowInsecureRedirectToDataURI;
 
   /**
+   * If true, the content policy security check is excluded from web requests.
+   */
+  [infallible] attribute boolean skipContentPolicyCheckForWebRequest;
+
+  /**
    * If true, this is the load of a frame's original src attribute
    */
   [infallible] attribute boolean originalFrameSrcLoad;
