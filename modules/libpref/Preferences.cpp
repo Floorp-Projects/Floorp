@@ -29,6 +29,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/SyncRunnable.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/URLPreloader.h"

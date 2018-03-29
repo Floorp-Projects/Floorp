@@ -8,13 +8,11 @@
 #define mozilla_ServoStyleSet_h
 
 #include "mozilla/AtomArray.h"
-#include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MediaFeatureChange.h"
 #include "mozilla/PostTraversalTask.h"
 #include "mozilla/ServoBindingTypes.h"
-#include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -24,22 +22,28 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsChangeHint.h"
+#include "nsCoord.h"
 #include "nsAtom.h"
 #include "nsIMemoryReporter.h"
 #include "nsTArray.h"
 
 namespace mozilla {
+namespace css {
+class Rule;
+} // namespace css
 namespace dom {
 class Element;
+class ShadowRoot;
 } // namespace dom
-class CSSStyleSheet;
 class ServoRestyleManager;
 class ServoStyleSheet;
 struct Keyframe;
 class ServoElementSnapshotTable;
 class ComputedStyle;
 class ServoStyleRuleMap;
+class StyleSheet;
 } // namespace mozilla
+class gfxFontFeatureValueSet;
 class nsCSSCounterStyleRule;
 class nsIContent;
 class nsIDocument;
@@ -471,7 +475,7 @@ public:
                         ComputedStyle* aNewParent,
                         ComputedStyle* aNewParentIgnoringFirstLine,
                         ComputedStyle* aNewLayoutParent,
-                        Element* aElement);
+                        dom::Element* aElement);
 
 private:
   friend class AutoSetInServoTraversal;
