@@ -11,6 +11,9 @@
 #include "mozilla/ComputedStyle.h"
 
 namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
 namespace a11y {
 
 class StyleInfo
