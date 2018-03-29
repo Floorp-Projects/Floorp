@@ -368,7 +368,7 @@ function mangleExtensionUrls(message, exceptionValue) {
 }
 
 function tagExtensionErrors(message, exceptionValue, requestBody) {
-  if (exceptionValue.module && exceptionValue.module.startsWith("moz-extension://")) {
-    requestBody.tags.isExtensionError = true;
-  }
+  requestBody.tags.isExtensionError = !!(
+      exceptionValue.module && exceptionValue.module.startsWith("moz-extension://")
+  );
 }
