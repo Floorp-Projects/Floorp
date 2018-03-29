@@ -19,7 +19,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h" // For AnimationValue
 #include "mozilla/ServoCSSParser.h"
-#include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/BaseKeyframeTypesBinding.h" // For CompositeOperation
 #include "mozilla/dom/Element.h"
 #include "nsDebug.h"
@@ -518,10 +518,9 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
   }
 
   // Compute value
-  aPresContext->StyleSet()->AsServo()->GetAnimationValues(servoDeclarationBlock,
-                                                          aTargetElement,
-                                                          aComputedStyle,
-                                                          result);
+  aPresContext->StyleSet()->
+    GetAnimationValues(servoDeclarationBlock, aTargetElement,
+                       aComputedStyle, result);
 
   return result;
 }

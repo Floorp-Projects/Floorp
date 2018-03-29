@@ -930,8 +930,8 @@ GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
     return result;
   }
 
-  result = presContext->StyleSet()->AsServo()
-    ->GetComputedKeyframeValuesFor(aKeyframes, aElement, aComputedStyle);
+  result = presContext->StyleSet()->
+    GetComputedKeyframeValuesFor(aKeyframes, aElement, aComputedStyle);
   return result;
 }
 

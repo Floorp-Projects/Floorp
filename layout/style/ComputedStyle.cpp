@@ -30,8 +30,6 @@
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StyleSetHandle.h"
-#include "mozilla/StyleSetHandleInlines.h"
 
 #include "mozilla/ReflowInput.h"
 #include "nsLayoutUtils.h"

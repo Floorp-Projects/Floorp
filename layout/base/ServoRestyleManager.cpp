@@ -12,7 +12,7 @@
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ViewportFrame.h"
 #include "mozilla/dom/ChildIterator.h"
@@ -1547,7 +1547,7 @@ ServoRestyleManager::ReparentComputedStyle(nsIFrame* aFrame)
 
 void
 ServoRestyleManager::DoReparentComputedStyle(nsIFrame* aFrame,
-                                            ServoStyleSet& aStyleSet)
+                                             ServoStyleSet& aStyleSet)
 {
   if (aFrame->IsBackdropFrame()) {
     // Style context of backdrop frame has no parent style, and thus we do not

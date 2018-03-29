@@ -402,7 +402,7 @@ EnsureSubtreeStyled(Element* aElement)
     return;
   }
 
-  ServoStyleSet* servoSet = presShell->StyleSet()->AsServo();
+  ServoStyleSet* servoSet = presShell->StyleSet();
   StyleChildrenIterator iter(aElement);
   for (nsIContent* child = iter.GetNextChild();
        child;
@@ -465,7 +465,7 @@ public:
     if (*mResolveStyle) {
       mElement->ClearServoData();
 
-      ServoStyleSet* servoSet = presShell->StyleSet()->AsServo();
+      ServoStyleSet* servoSet = presShell->StyleSet();
       servoSet->StyleNewSubtree(mElement);
     }
   }
