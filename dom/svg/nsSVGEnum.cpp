@@ -35,7 +35,7 @@ nsSVGEnum::SetBaseValueAtom(const nsAtom* aValue, nsSVGElement *aSVGElement)
   const nsSVGEnumMapping* mapping = GetMapping(aSVGElement);
 
   while (mapping && mapping->mKey) {
-    if (aValue == *(mapping->mKey)) {
+    if (aValue == mapping->mKey) {
       mIsBaseSet = true;
       if (mBaseVal != mapping->mVal) {
         mBaseVal = mapping->mVal;
@@ -64,7 +64,7 @@ nsSVGEnum::GetBaseValueAtom(nsSVGElement *aSVGElement)
 
   while (mapping && mapping->mKey) {
     if (mBaseVal == mapping->mVal) {
-      return *mapping->mKey;
+      return mapping->mKey;
     }
     mapping++;
   }
@@ -144,7 +144,7 @@ nsSVGEnum::SMILEnum::ValueFromString(const nsAString& aStr,
     const nsSVGEnumMapping* mapping = mVal->GetMapping(mSVGElement);
 
     while (mapping && mapping->mKey) {
-      if (valAtom == *(mapping->mKey)) {
+      if (valAtom == mapping->mKey) {
         nsSMILValue val(SMILEnumType::Singleton());
         val.mU.mUint = mapping->mVal;
         aValue = val;

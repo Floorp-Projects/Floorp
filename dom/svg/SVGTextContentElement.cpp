@@ -22,8 +22,8 @@ namespace dom {
 using namespace SVGTextContentElement_Binding;
 
 nsSVGEnumMapping SVGTextContentElement::sLengthAdjustMap[] = {
-  { &nsGkAtoms::spacing, LENGTHADJUST_SPACING },
-  { &nsGkAtoms::spacingAndGlyphs, LENGTHADJUST_SPACINGANDGLYPHS },
+  { nsGkAtoms::spacing, LENGTHADJUST_SPACING },
+  { nsGkAtoms::spacingAndGlyphs, LENGTHADJUST_SPACINGANDGLYPHS },
   { nullptr, 0 }
 };
 

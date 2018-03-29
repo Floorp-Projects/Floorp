@@ -29,12 +29,12 @@ nsSVGElement::NumberInfo SVGFECompositeElement::sNumberInfo[4] =
 };
 
 nsSVGEnumMapping SVGFECompositeElement::sOperatorMap[] = {
-  {&nsGkAtoms::over, SVG_FECOMPOSITE_OPERATOR_OVER},
-  {&nsGkAtoms::in, SVG_FECOMPOSITE_OPERATOR_IN},
-  {&nsGkAtoms::out, SVG_FECOMPOSITE_OPERATOR_OUT},
-  {&nsGkAtoms::atop, SVG_FECOMPOSITE_OPERATOR_ATOP},
-  {&nsGkAtoms::xor_, SVG_FECOMPOSITE_OPERATOR_XOR},
-  {&nsGkAtoms::arithmetic, SVG_FECOMPOSITE_OPERATOR_ARITHMETIC},
+  {nsGkAtoms::over, SVG_FECOMPOSITE_OPERATOR_OVER},
+  {nsGkAtoms::in, SVG_FECOMPOSITE_OPERATOR_IN},
+  {nsGkAtoms::out, SVG_FECOMPOSITE_OPERATOR_OUT},
+  {nsGkAtoms::atop, SVG_FECOMPOSITE_OPERATOR_ATOP},
+  {nsGkAtoms::xor_, SVG_FECOMPOSITE_OPERATOR_XOR},
+  {nsGkAtoms::arithmetic, SVG_FECOMPOSITE_OPERATOR_ARITHMETIC},
   {nullptr, 0}
 };
 

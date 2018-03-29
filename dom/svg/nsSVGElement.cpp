@@ -84,8 +84,8 @@ NS_NewSVGElement(Element **aResult, already_AddRefed<mozilla::dom::NodeInfo>&& a
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGElement)
 
 nsSVGEnumMapping nsSVGElement::sSVGUnitTypesMap[] = {
-  {&nsGkAtoms::userSpaceOnUse, SVG_UNIT_TYPE_USERSPACEONUSE},
-  {&nsGkAtoms::objectBoundingBox, SVG_UNIT_TYPE_OBJECTBOUNDINGBOX},
+  {nsGkAtoms::userSpaceOnUse, SVG_UNIT_TYPE_USERSPACEONUSE},
+  {nsGkAtoms::objectBoundingBox, SVG_UNIT_TYPE_OBJECTBOUNDINGBOX},
   {nullptr, 0}
 };
 

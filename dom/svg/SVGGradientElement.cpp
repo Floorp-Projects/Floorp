@@ -29,9 +29,9 @@ using namespace SVGUnitTypes_Binding;
 //--------------------- Gradients------------------------
 
 nsSVGEnumMapping SVGGradientElement::sSpreadMethodMap[] = {
-  {&nsGkAtoms::pad, SVG_SPREADMETHOD_PAD},
-  {&nsGkAtoms::reflect, SVG_SPREADMETHOD_REFLECT},
-  {&nsGkAtoms::repeat, SVG_SPREADMETHOD_REPEAT},
+  {nsGkAtoms::pad, SVG_SPREADMETHOD_PAD},
+  {nsGkAtoms::reflect, SVG_SPREADMETHOD_REFLECT},
+  {nsGkAtoms::repeat, SVG_SPREADMETHOD_REPEAT},
   {nullptr, 0}
 };
 
