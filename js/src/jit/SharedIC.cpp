@@ -673,6 +673,12 @@ SharedStubInfo::outerScript(JSContext* cx)
 //
 // BinaryArith_Fallback
 //
+// This will be phased out in favour of the CacheIR system.
+
+extern bool
+DoCacheIRBinaryArithFallback(JSContext* cx, BaselineFrame* frame, ICBinaryArith_Fallback* stub_,
+                             HandleValue lhs, HandleValue rhs, MutableHandleValue ret,
+                             DebugModeOSRVolatileStub<ICBinaryArith_Fallback*>& stub);
 
 static bool
 DoBinaryArithFallback(JSContext* cx, void* payload, ICBinaryArith_Fallback* stub_,
@@ -689,6 +695,7 @@ DoBinaryArithFallback(JSContext* cx, void* payload, ICBinaryArith_Fallback* stub
     FallbackICSpew(cx, stub, "BinaryArith(%s,%d,%d)", CodeName[op],
             int(lhs.isDouble() ? JSVAL_TYPE_DOUBLE : lhs.extractNonDoubleType()),
             int(rhs.isDouble() ? JSVAL_TYPE_DOUBLE : rhs.extractNonDoubleType()));
+
 
     // Don't pass lhs/rhs directly, we need the original values when
     // generating stubs.
@@ -769,6 +776,13 @@ DoBinaryArithFallback(JSContext* cx, void* payload, ICBinaryArith_Fallback* stub
     // Check if debug mode toggling made the stub invalid.
     if (stub.invalid())
         return true;
+
+    // Try to use a CacheIR stub first. If that succeeds, then we're done. Otherwise, we
+    // need to try to attach a shared stub.
+    if (engine == ICStubCompiler::Engine::Baseline && !JitOptions.disableCacheIRBinaryArith) {
+        if (DoCacheIRBinaryArithFallback(cx, (BaselineFrame*)payload, stub_, lhs, rhs, ret, stub))
+            return true;
+    }
 
     if (ret.isDouble())
         stub->setSawDoubleResult();

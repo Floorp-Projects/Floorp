@@ -187,6 +187,11 @@ typedef bool (*IonUnaryArithICFn)(JSContext* cx, HandleScript outerScript, IonUn
 static const VMFunction IonUnaryArithICInfo =
     FunctionInfo<IonUnaryArithICFn>(IonUnaryArithIC::update, "IonUnaryArithIC::update");
 
+typedef bool (*IonBinaryArithICFn)(JSContext* cx, HandleScript outerScript, IonBinaryArithIC* stub,
+                                    HandleValue lhs, HandleValue rhs, MutableHandleValue res);
+static const VMFunction IonBinaryArithICInfo =
+    FunctionInfo<IonBinaryArithICFn>(IonBinaryArithIC::update, "IonBinaryArithIC::update");
+
 void
 CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
 {
@@ -375,6 +380,23 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
 
         StoreValueTo(unaryArithIC->output()).generate(this);
         restoreLiveIgnore(lir, StoreValueTo(unaryArithIC->output()).clobbered());
+
+        masm.jump(ool->rejoin());
+        return;
+      }
+      case CacheKind::BinaryArith: {
+        IonBinaryArithIC* binaryArithIC = ic->asBinaryArithIC();
+
+        saveLive(lir);
+
+        pushArg(binaryArithIC->rhs());
+        pushArg(binaryArithIC->lhs());
+        icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
+        pushArg(ImmGCPtr(gen->info().script()));
+        callVM(IonBinaryArithICInfo, lir);
+
+        StoreValueTo(binaryArithIC->output()).generate(this);
+        restoreLiveIgnore(lir, StoreValueTo(binaryArithIC->output()).clobbered());
 
         masm.jump(ool->rejoin());
         return;
@@ -2757,6 +2779,18 @@ CodeGenerator::emitSharedStub(ICStub::Kind kind, LInstruction* lir)
     masm.freeStack(sizeof(intptr_t));
 #endif
     markSafepointAt(callOffset, lir);
+}
+
+void
+CodeGenerator::visitBinaryCache(LBinaryCache* lir)
+{
+    LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
+    TypedOrValueRegister lhs = TypedOrValueRegister(ToValue(lir, LBinaryCache::LhsInput));
+    TypedOrValueRegister rhs = TypedOrValueRegister(ToValue(lir, LBinaryCache::RhsInput));
+    ValueOperand output = ToOutValue(lir);
+
+    IonBinaryArithIC ic(liveRegs, lhs, rhs, output);
+    addIC(lir, allocateIC(ic));
 }
 
 void

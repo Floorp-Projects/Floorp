@@ -125,6 +125,9 @@ DefaultJitOptions::DefaultJitOptions()
     // Toggles whether CacheIR stubs are used.
     SET_DEFAULT(disableCacheIR, false);
 
+    // Toggles whether CacheIR stubs for binary arith operations are used
+    SET_DEFAULT(disableCacheIRBinaryArith, false);
+
     // Toggles whether shared stubs are used in Ionmonkey.
     SET_DEFAULT(disableSharedStubs, false);
 

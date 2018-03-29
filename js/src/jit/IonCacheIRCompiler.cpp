@@ -520,6 +520,20 @@ IonCacheIRCompiler::init()
         allocator.initInputLocation(0, ic->input());
         break;
       }
+      case CacheKind::BinaryArith: {
+        IonBinaryArithIC* ic = ic_->asBinaryArithIC();
+        ValueOperand output = ic->output();
+
+        available.add(output);
+
+        liveRegs_.emplace(ic->liveRegs());
+        outputUnchecked_.emplace(TypedOrValueRegister(output));
+
+        MOZ_ASSERT(numInputs == 2);
+        allocator.initInputLocation(0, ic->lhs());
+        allocator.initInputLocation(1, ic->rhs());
+        break;
+      }
       case CacheKind::Call:
       case CacheKind::Compare:
       case CacheKind::TypeOf:
