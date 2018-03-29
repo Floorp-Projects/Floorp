@@ -22,12 +22,49 @@
 namespace mozilla {
 namespace dom {
 
+template <typename T>
+static void
+SetDataInMatrix(DOMMatrixReadOnly* aMatrix, const T* aData, int aLength, ErrorResult& aRv);
+
 static const double radPerDegree = 2.0 * M_PI / 360.0;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMMatrixReadOnly, mParent)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMMatrixReadOnly, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMMatrixReadOnly, Release)
+
+JSObject*
+DOMMatrixReadOnly::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+{
+  return DOMMatrixReadOnlyBinding::Wrap(aCx, this, aGivenProto);
+}
+
+already_AddRefed<DOMMatrixReadOnly>
+DOMMatrixReadOnly::Constructor(
+  const GlobalObject& aGlobal,
+  const Optional<StringOrUnrestrictedDoubleSequence>& aArg,
+  ErrorResult& aRv)
+{
+  RefPtr<DOMMatrixReadOnly> rval = new DOMMatrixReadOnly(aGlobal.GetAsSupports());
+  if (!aArg.WasPassed()) {
+    return rval.forget();
+  }
+
+  const auto& arg = aArg.Value();
+  if (arg.IsString()) {
+    nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aGlobal.GetAsSupports());
+    if (!win) {
+      aRv.ThrowTypeError<MSG_ILLEGAL_CONSTRUCTOR>();
+      return nullptr;
+    }
+    rval->SetMatrixValue(arg.GetAsString(), aRv);
+  } else {
+    const auto& sequence = arg.GetAsUnrestrictedDoubleSequence();
+    SetDataInMatrix(rval, sequence.Elements(), sequence.Length(), aRv);
+  }
+
+  return rval.forget();
+}
 
 already_AddRefed<DOMMatrix>
 DOMMatrixReadOnly::Translate(double aTx,
@@ -365,7 +402,9 @@ DOMMatrix::Constructor(const GlobalObject& aGlobal, const DOMMatrixReadOnly& aOt
   return obj.forget();
 }
 
-template <typename T> void SetDataInMatrix(DOMMatrix* aMatrix, const T* aData, int aLength, ErrorResult& aRv)
+template <typename T>
+static void
+SetDataInMatrix(DOMMatrixReadOnly* aMatrix, const T* aData, int aLength, ErrorResult& aRv)
 {
   if (aLength == 16) {
     aMatrix->SetM11(aData[0]);
@@ -392,7 +431,9 @@ template <typename T> void SetDataInMatrix(DOMMatrix* aMatrix, const T* aData, i
     aMatrix->SetE(aData[4]);
     aMatrix->SetF(aData[5]);
   } else {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    nsAutoString lengthStr;
+    lengthStr.AppendInt(aLength);
+    aRv.ThrowTypeError<MSG_MATRIX_INIT_LENGTH_WRONG>(lengthStr);
   }
 }
 
@@ -425,7 +466,8 @@ DOMMatrix::Constructor(const GlobalObject& aGlobal, const Sequence<double>& aNum
   return obj.forget();
 }
 
-void DOMMatrix::Ensure3DMatrix()
+void
+DOMMatrixReadOnly::Ensure3DMatrix()
 {
   if (!mMatrix3D) {
     mMatrix3D = new gfx::Matrix4x4(gfx::Matrix4x4::From2D(*mMatrix2D));
@@ -652,8 +694,8 @@ DOMMatrix::InvertSelf()
   return this;
 }
 
-DOMMatrix*
-DOMMatrix::SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv)
+DOMMatrixReadOnly*
+DOMMatrixReadOnly::SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv)
 {
   // An empty string is a no-op.
   if (aTransformList.IsEmpty()) {
@@ -684,6 +726,13 @@ DOMMatrix::SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv)
     mMatrix2D = nullptr;
   }
 
+  return this;
+}
+
+DOMMatrix*
+DOMMatrix::SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv)
+{
+  DOMMatrixReadOnly::SetMatrixValue(aTransformList, aRv);
   return this;
 }
 
