@@ -18,7 +18,7 @@ using namespace mozilla::dom;
 static nsSVGAttrTearoffTable<nsSVGEnum, nsSVGEnum::DOMAnimatedEnum>
   sSVGAnimatedEnumTearoffTable;
 
-nsSVGEnumMapping *
+const nsSVGEnumMapping*
 nsSVGEnum::GetMapping(nsSVGElement *aSVGElement)
 {
   nsSVGElement::EnumAttributesInfo info = aSVGElement->GetEnumInfo();
@@ -32,7 +32,7 @@ nsSVGEnum::GetMapping(nsSVGElement *aSVGElement)
 nsresult
 nsSVGEnum::SetBaseValueAtom(const nsAtom* aValue, nsSVGElement *aSVGElement)
 {
-  nsSVGEnumMapping *mapping = GetMapping(aSVGElement);
+  const nsSVGEnumMapping* mapping = GetMapping(aSVGElement);
 
   while (mapping && mapping->mKey) {
     if (aValue == *(mapping->mKey)) {
@@ -60,7 +60,7 @@ nsSVGEnum::SetBaseValueAtom(const nsAtom* aValue, nsSVGElement *aSVGElement)
 nsAtom*
 nsSVGEnum::GetBaseValueAtom(nsSVGElement *aSVGElement)
 {
-  nsSVGEnumMapping *mapping = GetMapping(aSVGElement);
+  const nsSVGEnumMapping* mapping = GetMapping(aSVGElement);
 
   while (mapping && mapping->mKey) {
     if (mBaseVal == mapping->mVal) {
@@ -76,7 +76,7 @@ nsresult
 nsSVGEnum::SetBaseValue(uint16_t aValue,
                         nsSVGElement *aSVGElement)
 {
-  nsSVGEnumMapping *mapping = GetMapping(aSVGElement);
+  const nsSVGEnumMapping* mapping = GetMapping(aSVGElement);
 
   while (mapping && mapping->mKey) {
     if (mapping->mVal == aValue) {
@@ -141,7 +141,7 @@ nsSVGEnum::SMILEnum::ValueFromString(const nsAString& aStr,
 {
   nsAtom *valAtom = NS_GetStaticAtom(aStr);
   if (valAtom) {
-    nsSVGEnumMapping *mapping = mVal->GetMapping(mSVGElement);
+    const nsSVGEnumMapping* mapping = mVal->GetMapping(mSVGElement);
 
     while (mapping && mapping->mKey) {
       if (valAtom == *(mapping->mKey)) {

@@ -23,7 +23,7 @@ SVGFEMorphologyElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenPro
 
 nsSVGElement::NumberPairInfo SVGFEMorphologyElement::sNumberPairInfo[1] =
 {
-  { &nsGkAtoms::radius, 0, 0 }
+  { nsGkAtoms::radius, 0, 0 }
 };
 
 nsSVGEnumMapping SVGFEMorphologyElement::sOperatorMap[] = {
@@ -34,7 +34,7 @@ nsSVGEnumMapping SVGFEMorphologyElement::sOperatorMap[] = {
 
 nsSVGElement::EnumInfo SVGFEMorphologyElement::sEnumInfo[1] =
 {
-  { &nsGkAtoms::_operator,
+  { nsGkAtoms::_operator,
     sOperatorMap,
     SVG_OPERATOR_ERODE
   }
@@ -42,8 +42,8 @@ nsSVGElement::EnumInfo SVGFEMorphologyElement::sEnumInfo[1] =
 
 nsSVGElement::StringInfo SVGFEMorphologyElement::sStringInfo[2] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true },
-  { &nsGkAtoms::in, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true },
+  { nsGkAtoms::in, kNameSpaceID_None, true }
 };
 
 //----------------------------------------------------------------------

@@ -24,13 +24,13 @@ SVGFEGaussianBlurElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenP
 
 nsSVGElement::NumberPairInfo SVGFEGaussianBlurElement::sNumberPairInfo[1] =
 {
-  { &nsGkAtoms::stdDeviation, 0, 0 }
+  { nsGkAtoms::stdDeviation, 0, 0 }
 };
 
 nsSVGElement::StringInfo SVGFEGaussianBlurElement::sStringInfo[2] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true },
-  { &nsGkAtoms::in, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true },
+  { nsGkAtoms::in, kNameSpaceID_None, true }
 };
 
 //----------------------------------------------------------------------

@@ -34,7 +34,7 @@ nsSVGEnumMapping SVGFEColorMatrixElement::sTypeMap[] = {
 
 nsSVGElement::EnumInfo SVGFEColorMatrixElement::sEnumInfo[1] =
 {
-  { &nsGkAtoms::type,
+  { nsGkAtoms::type,
     sTypeMap,
     SVG_FECOLORMATRIX_TYPE_MATRIX
   }
@@ -42,13 +42,13 @@ nsSVGElement::EnumInfo SVGFEColorMatrixElement::sEnumInfo[1] =
 
 nsSVGElement::StringInfo SVGFEColorMatrixElement::sStringInfo[2] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true },
-  { &nsGkAtoms::in, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true },
+  { nsGkAtoms::in, kNameSpaceID_None, true }
 };
 
 nsSVGElement::NumberListInfo SVGFEColorMatrixElement::sNumberListInfo[1] =
 {
-  { &nsGkAtoms::values }
+  { nsGkAtoms::values }
 };
 
 //----------------------------------------------------------------------

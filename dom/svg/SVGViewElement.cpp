@@ -28,7 +28,7 @@ nsSVGEnumMapping SVGViewElement::sZoomAndPanMap[] = {
 
 nsSVGElement::EnumInfo SVGViewElement::sEnumInfo[1] =
 {
-  { &nsGkAtoms::zoomAndPan,
+  { nsGkAtoms::zoomAndPan,
     sZoomAndPanMap,
     SVG_ZOOMANDPAN_MAGNIFY
   }

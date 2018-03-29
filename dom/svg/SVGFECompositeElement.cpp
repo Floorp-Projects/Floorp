@@ -22,10 +22,10 @@ SVGFECompositeElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 
 nsSVGElement::NumberInfo SVGFECompositeElement::sNumberInfo[4] =
 {
-  { &nsGkAtoms::k1, 0, false },
-  { &nsGkAtoms::k2, 0, false },
-  { &nsGkAtoms::k3, 0, false },
-  { &nsGkAtoms::k4, 0, false }
+  { nsGkAtoms::k1, 0, false },
+  { nsGkAtoms::k2, 0, false },
+  { nsGkAtoms::k3, 0, false },
+  { nsGkAtoms::k4, 0, false }
 };
 
 nsSVGEnumMapping SVGFECompositeElement::sOperatorMap[] = {
@@ -40,7 +40,7 @@ nsSVGEnumMapping SVGFECompositeElement::sOperatorMap[] = {
 
 nsSVGElement::EnumInfo SVGFECompositeElement::sEnumInfo[1] =
 {
-  { &nsGkAtoms::_operator,
+  { nsGkAtoms::_operator,
     sOperatorMap,
     SVG_FECOMPOSITE_OPERATOR_OVER
   }
@@ -48,9 +48,9 @@ nsSVGElement::EnumInfo SVGFECompositeElement::sEnumInfo[1] =
 
 nsSVGElement::StringInfo SVGFECompositeElement::sStringInfo[3] =
 {
-  { &nsGkAtoms::result, kNameSpaceID_None, true },
-  { &nsGkAtoms::in, kNameSpaceID_None, true },
-  { &nsGkAtoms::in2, kNameSpaceID_None, true }
+  { nsGkAtoms::result, kNameSpaceID_None, true },
+  { nsGkAtoms::in, kNameSpaceID_None, true },
+  { nsGkAtoms::in2, kNameSpaceID_None, true }
 };
 
 //----------------------------------------------------------------------

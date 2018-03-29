@@ -23,14 +23,14 @@ SVGFESpotLightElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 
 nsSVGElement::NumberInfo SVGFESpotLightElement::sNumberInfo[8] =
 {
-  { &nsGkAtoms::x, 0, false },
-  { &nsGkAtoms::y, 0, false },
-  { &nsGkAtoms::z, 0, false },
-  { &nsGkAtoms::pointsAtX, 0, false },
-  { &nsGkAtoms::pointsAtY, 0, false },
-  { &nsGkAtoms::pointsAtZ, 0, false },
-  { &nsGkAtoms::specularExponent, 1, false },
-  { &nsGkAtoms::limitingConeAngle, 0, false }
+  { nsGkAtoms::x, 0, false },
+  { nsGkAtoms::y, 0, false },
+  { nsGkAtoms::z, 0, false },
+  { nsGkAtoms::pointsAtX, 0, false },
+  { nsGkAtoms::pointsAtY, 0, false },
+  { nsGkAtoms::pointsAtZ, 0, false },
+  { nsGkAtoms::specularExponent, 1, false },
+  { nsGkAtoms::limitingConeAngle, 0, false }
 };
 
 //----------------------------------------------------------------------
