@@ -107,7 +107,7 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) : P
         val sharedPreferences = context.getSharedPreferences(SearchEngineManager.PREF_FILE_SEARCH_ENGINES,
                 Context.MODE_PRIVATE)
 
-        return sharedPreferences.contains(engineName)
+        return !sharedPreferences.contains(engineName)
     }
 
     private fun buildTextWatcherForErrorLayout(errorLayout: TextInputLayout): TextWatcher {

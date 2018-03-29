@@ -99,7 +99,8 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             if (isPartialSuccess) {
                 ViewUtils.hideKeyboard(view)
                 setUiIsValidatingAsync(true, item)
-                activeAsyncTask = ValidateSearchEngineAsyncTask(this, engineName, searchQuery)
+                activeAsyncTask = ValidateSearchEngineAsyncTask(this, engineName, searchQuery).execute()
+                menuItemForActiveAsyncTask = item
             } else {
                 TelemetryWrapper.saveCustomSearchEngineEvent(false)
             }
