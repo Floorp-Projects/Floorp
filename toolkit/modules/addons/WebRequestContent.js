@@ -89,10 +89,8 @@ var ContentPolicy = {
     // Loads of TYPE_DOCUMENT and TYPE_SUBDOCUMENT perform a ConPol check
     // within docshell as well as within the ContentSecurityManager. To avoid
     // duplicate evaluations we ignore ConPol checks performed within docShell.
-    if (extra instanceof Ci.nsISupportsString) {
-      if (extra.data === "conPolCheckFromDocShell") {
-        return Ci.nsIContentPolicy.ACCEPT;
-      }
+    if (loadInfo.skipContentPolicyCheckForWebRequest) {
+      return Ci.nsIContentPolicy.ACCEPT;
     }
 
     if (requestPrincipal &&
