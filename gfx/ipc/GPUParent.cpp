@@ -219,6 +219,7 @@ GPUParent::RecvInit(nsTArray<GfxPrefSetting>&& prefs,
     DeviceManagerDx::Get()->CreateCompositorDevices();
   }
   if (gfxVars::UseWebRender()) {
+    DeviceManagerDx::Get()->CreateDirectCompositionDevice();
     // Ensure to initialize GfxInfo
     nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
     Unused << gfxInfo;
