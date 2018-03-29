@@ -35,7 +35,7 @@ using namespace mozilla::dom;
 //
 // Thanks to Mark Pilgrim and Sam Ruby for the initial whitelist
 //
-nsStaticAtom* const kElementsHTML[] = {
+const nsStaticAtom* const kElementsHTML[] = {
   nsGkAtoms::a,
   nsGkAtoms::abbr,
   nsGkAtoms::acronym,
@@ -150,7 +150,7 @@ nsStaticAtom* const kElementsHTML[] = {
   nullptr
 };
 
-nsStaticAtom* const kAttributesHTML[] = {
+const nsStaticAtom* const kAttributesHTML[] = {
   nsGkAtoms::abbr,
   nsGkAtoms::accept,
   nsGkAtoms::acceptcharset,
@@ -258,7 +258,7 @@ nsStaticAtom* const kAttributesHTML[] = {
   nullptr
 };
 
-nsStaticAtom* const kPresAttributesHTML[] = {
+const nsStaticAtom* const kPresAttributesHTML[] = {
   nsGkAtoms::align,
   nsGkAtoms::background,
   nsGkAtoms::bgcolor,
@@ -277,7 +277,7 @@ nsStaticAtom* const kPresAttributesHTML[] = {
   nullptr
 };
 
-nsStaticAtom* const kURLAttributesHTML[] = {
+const nsStaticAtom* const kURLAttributesHTML[] = {
   nsGkAtoms::action,
   nsGkAtoms::href,
   nsGkAtoms::src,
@@ -287,7 +287,7 @@ nsStaticAtom* const kURLAttributesHTML[] = {
   nullptr
 };
 
-nsStaticAtom* const kElementsSVG[] = {
+const nsStaticAtom* const kElementsSVG[] = {
   nsGkAtoms::a, // a
   nsGkAtoms::circle, // circle
   nsGkAtoms::clipPath, // clipPath
@@ -367,7 +367,7 @@ nsStaticAtom* const kElementsSVG[] = {
   nullptr
 };
 
-nsStaticAtom* const kAttributesSVG[] = {
+const nsStaticAtom* const kAttributesSVG[] = {
   // accent-height
   nsGkAtoms::accumulate, // accumulate
   nsGkAtoms::additive, // additive
@@ -600,12 +600,12 @@ nsStaticAtom* const kAttributesSVG[] = {
   nullptr
 };
 
-nsStaticAtom* const kURLAttributesSVG[] = {
+const nsStaticAtom* const kURLAttributesSVG[] = {
   nsGkAtoms::href,
   nullptr
 };
 
-nsStaticAtom* const kElementsMathML[] = {
+const nsStaticAtom* const kElementsMathML[] = {
    nsGkAtoms::abs_, // abs
    nsGkAtoms::_and, // and
    nsGkAtoms::annotation_, // annotation
@@ -804,7 +804,7 @@ nsStaticAtom* const kElementsMathML[] = {
   nullptr
 };
 
-nsStaticAtom* const kAttributesMathML[] = {
+const nsStaticAtom* const kAttributesMathML[] = {
    nsGkAtoms::accent_, // accent
    nsGkAtoms::accentunder_, // accentunder
    nsGkAtoms::actiontype_, // actiontype
@@ -922,7 +922,7 @@ nsStaticAtom* const kAttributesMathML[] = {
   nullptr
 };
 
-nsStaticAtom* const kURLAttributesMathML[] = {
+const nsStaticAtom* const kURLAttributesMathML[] = {
   nsGkAtoms::href,
   nsGkAtoms::src,
   nsGkAtoms::cdgroup_,
@@ -984,7 +984,7 @@ nsTreeSanitizer::MustFlatten(int32_t aNamespace, nsAtom* aLocal)
                           nsGkAtoms::body == aLocal)) {
       return false;
     }
-    return !sElementsHTML->GetEntry(aLocal);
+    return !sElementsHTML->Contains(aLocal);
   }
   if (aNamespace == kNameSpaceID_SVG) {
     if (mCidEmbedsOnly || mDropMedia) {
@@ -992,18 +992,18 @@ nsTreeSanitizer::MustFlatten(int32_t aNamespace, nsAtom* aLocal)
       // attributes is not supported, so flattening for cid: embed case.
       return true;
     }
-    return !sElementsSVG->GetEntry(aLocal);
+    return !sElementsSVG->Contains(aLocal);
   }
   if (aNamespace == kNameSpaceID_MathML) {
-    return !sElementsMathML->GetEntry(aLocal);
+    return !sElementsMathML->Contains(aLocal);
   }
   return true;
 }
 
 bool
-nsTreeSanitizer::IsURL(nsStaticAtom* const* aURLs, nsAtom* aLocalName)
+nsTreeSanitizer::IsURL(const nsStaticAtom* const* aURLs, nsAtom* aLocalName)
 {
-  nsStaticAtom* atom;
+  const nsStaticAtom* atom;
   while ((atom = *aURLs)) {
     if (atom == aLocalName) {
       return true;
@@ -1155,7 +1155,7 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
 void
 nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
                                     AtomsTable* aAllowed,
-                                    nsStaticAtom* const* aURLs,
+                                    const nsStaticAtom* const* aURLs,
                                     bool aAllowXLink,
                                     bool aAllowStyle,
                                     bool aAllowDangerousSrc)
@@ -1212,10 +1212,10 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
       }
       if (!mDropNonCSSPresentation &&
           (aAllowed == sAttributesHTML) && // element is HTML
-          sPresAttributesHTML->GetEntry(attrLocal)) {
+          sPresAttributesHTML->Contains(attrLocal)) {
         continue;
       }
-      if (aAllowed->GetEntry(attrLocal) &&
+      if (aAllowed->Contains(attrLocal) &&
           !((attrLocal == nsGkAtoms::rel &&
              aElement->IsHTMLElement(nsGkAtoms::link)) ||
             (!mFullDocument &&
