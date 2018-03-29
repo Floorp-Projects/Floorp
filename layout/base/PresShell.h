@@ -169,7 +169,9 @@ public:
                                  nsIContent* aContent,
                                  nsEventStatus* aStatus,
                                  bool aIsHandlingNativeEvent = false,
-                                 nsIContent** aTargetContent = nullptr) override;
+                                 nsIContent** aTargetContent = nullptr,
+                                 nsIContent* aOverrideClickTarget = nullptr)
+                                 override;
   nsIFrame* GetEventTargetFrame() override;
   already_AddRefed<nsIContent>
     GetEventTargetContent(WidgetEvent* aEvent) override;
@@ -673,7 +675,8 @@ private:
    */
   nsresult HandleEventInternal(WidgetEvent* aEvent,
                                nsEventStatus* aStatus,
-                               bool aIsHandlingNativeEvent);
+                               bool aIsHandlingNativeEvent,
+                               nsIContent* aOverrideClickTarget = nullptr);
 
   /*
    * This and the next two helper methods are used to target and position the
@@ -754,6 +757,8 @@ private:
 
   nsresult SetResolutionImpl(float aResolution, bool aScaleToResolution);
 
+  nsIContent* GetOverrideClickTarget(WidgetGUIEvent* aEvent,
+                                     nsIFrame* aFrame);
 #ifdef DEBUG
   // The reflow root under which we're currently reflowing.  Null when
   // not in reflow.
