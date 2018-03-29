@@ -163,9 +163,7 @@ nsXPCComponents_Interfaces::GetClassID(nsCID * *aClassID)
 NS_IMETHODIMP
 nsXPCComponents_Interfaces::GetFlags(uint32_t* aFlags)
 {
-    // Mark ourselves as a DOM object so that instances may be created in
-    // unprivileged scopes.
-    *aFlags = nsIClassInfo::DOM_OBJECT;
+    *aFlags = 0;
     return NS_OK;
 }
 
@@ -363,9 +361,7 @@ nsXPCComponents_InterfacesByID::GetClassID(nsCID * *aClassID)
 NS_IMETHODIMP
 nsXPCComponents_InterfacesByID::GetFlags(uint32_t* aFlags)
 {
-    // Mark ourselves as a DOM object so that instances may be created in
-    // unprivileged scopes.
-    *aFlags = nsIClassInfo::DOM_OBJECT;
+    *aFlags = 0;
     return NS_OK;
 }
 
@@ -957,9 +953,7 @@ nsXPCComponents_Results::GetClassID(nsCID * *aClassID)
 NS_IMETHODIMP
 nsXPCComponents_Results::GetFlags(uint32_t* aFlags)
 {
-    // Mark ourselves as a DOM object so that instances may be created in
-    // unprivileged scopes.
-    *aFlags = nsIClassInfo::DOM_OBJECT;
+    *aFlags = 0;
     return NS_OK;
 }
 
@@ -3265,10 +3259,10 @@ NS_IMPL_QUERY_INTERFACE(ComponentsSH, nsIXPCScriptable)
 { 0x3649f405, 0xf0ec, 0x4c28, \
     { 0xae, 0xb0, 0xaf, 0x9a, 0x51, 0xe4, 0x4c, 0x81 } }
 
-NS_IMPL_CLASSINFO(nsXPCComponentsBase, &ComponentsSH::Get, nsIClassInfo::DOM_OBJECT, NSXPCCOMPONENTSBASE_CID)
+NS_IMPL_CLASSINFO(nsXPCComponentsBase, &ComponentsSH::Get, 0, NSXPCCOMPONENTSBASE_CID)
 NS_IMPL_ISUPPORTS_CI(nsXPCComponentsBase, nsIXPCComponentsBase)
 
-NS_IMPL_CLASSINFO(nsXPCComponents, &ComponentsSH::Get, nsIClassInfo::DOM_OBJECT, NSXPCCOMPONENTS_CID)
+NS_IMPL_CLASSINFO(nsXPCComponents, &ComponentsSH::Get, 0, NSXPCCOMPONENTS_CID)
 // Below is more or less what NS_IMPL_ISUPPORTS_CI_INHERITED1 would look like
 // if it existed.
 NS_IMPL_ADDREF_INHERITED(nsXPCComponents, nsXPCComponentsBase)
