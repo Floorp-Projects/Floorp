@@ -5674,9 +5674,22 @@ nsFrame::ComputeSize(gfxContext*         aRenderingContext,
     // nsFrame::ComputeSizeWithIntrinsicDimensions().
     const nsStyleCoord* flexBasis = &(stylePos->mFlexBasis);
     if (flexBasis->GetUnit() != eStyleUnit_Auto) {
-      // Override whichever styleCoord is in flex container's main axis:
-      (flexMainAxis == eLogicalAxisInline ?
-       inlineStyleCoord : blockStyleCoord) = flexBasis;
+      // Replace our main-axis styleCoord pointer with a different one,
+      // depending on our flex-basis value.
+      auto& mainAxisCoord = (flexMainAxis == eLogicalAxisInline
+                             ? inlineStyleCoord : blockStyleCoord);
+      if (flexBasis->GetUnit() == eStyleUnit_Enumerated &&
+          flexBasis->GetIntValue() == NS_STYLE_FLEX_BASIS_CONTENT) {
+        // We have 'flex-basis: content', which is equivalent to
+        // 'flex-basis:auto; {main-size}: auto'. So, just swap in a dummy
+        // 'auto' value to use for the main size property:
+        static const nsStyleCoord autoStyleCoord(eStyleUnit_Auto);
+        mainAxisCoord = &autoStyleCoord;
+      } else {
+        // For all other flex-basis values, we just swap in the flex-basis
+        // itself for the main-size property here:
+        mainAxisCoord = flexBasis;
+      }
     }
   }
 
@@ -5916,9 +5929,23 @@ nsFrame::ComputeSizeWithIntrinsicDimensions(gfxContext*          aRenderingConte
       // inlineStyleCoord and blockStyleCoord in nsFrame::ComputeSize().
       const nsStyleCoord* flexBasis = &(stylePos->mFlexBasis);
       if (flexBasis->GetUnit() != eStyleUnit_Auto) {
-        // Override whichever styleCoord is in flex container's main axis:
-        (flexMainAxis == eLogicalAxisInline ?
-         inlineStyleCoord : blockStyleCoord) = flexBasis;
+        // Replace our main-axis styleCoord pointer with a different one,
+        // depending on our flex-basis value.
+        auto& mainAxisCoord = (flexMainAxis == eLogicalAxisInline
+                               ? inlineStyleCoord : blockStyleCoord);
+
+        if (flexBasis->GetUnit() == eStyleUnit_Enumerated &&
+            flexBasis->GetIntValue() == NS_STYLE_FLEX_BASIS_CONTENT) {
+          // We have 'flex-basis: content', which is equivalent to
+          // 'flex-basis:auto; {main-size}: auto'. So, just swap in a dummy
+          // 'auto' value to use for the main size property:
+          static const nsStyleCoord autoStyleCoord(eStyleUnit_Auto);
+          mainAxisCoord = &autoStyleCoord;
+        } else {
+          // For all other flex-basis values, we just swap in the flex-basis
+          // itself for the main-size property here:
+          mainAxisCoord = flexBasis;
+        }
       }
     }
   }
