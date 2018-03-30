@@ -20,8 +20,5 @@ EXTRA_JS_MODULES += [
     'SearchWidgetTracker.jsm',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'cocoa'):
-    DEFINES['CAN_DRAW_IN_TITLEBAR'] = 1
-
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Toolbars and Customization')

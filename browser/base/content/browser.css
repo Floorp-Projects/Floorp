@@ -277,7 +277,6 @@ window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-but
 }
 
 
-%ifdef CAN_DRAW_IN_TITLEBAR
 %ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar:not([autohide=true]) + #TabsToolbar > .titlebar-placeholder,
 %endif
@@ -345,8 +344,6 @@ toolbarpaletteitem {
 #main-window[tabletmode] #titlebar-max {
   display: none !important;
 }
-%endif
-
 %endif
 
 #main-window[inFullscreen][inDOMFullscreen] #navigator-toolbox,
