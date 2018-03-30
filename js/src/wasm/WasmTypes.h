@@ -591,8 +591,17 @@ class Sig
     bool hasI64ArgOrRet() const {
         if (ret() == ExprType::I64)
             return true;
-        for (ValType a : args()) {
-            if (a == ValType::I64)
+        for (ValType arg : args()) {
+            if (arg == ValType::I64)
+                return true;
+        }
+        return false;
+    }
+    bool temporarilyUnsupportedAnyRef() const {
+        if (ret() == ExprType::AnyRef)
+            return true;
+        for (ValType arg : args()) {
+            if (arg == ValType::AnyRef)
                 return true;
         }
         return false;
@@ -1459,6 +1468,7 @@ enum class SymbolicAddress
     CallImport_I32,
     CallImport_I64,
     CallImport_F64,
+    CallImport_Ref,
     CoerceInPlace_ToInt32,
     CoerceInPlace_ToNumber,
     CoerceInPlace_JitEntry,

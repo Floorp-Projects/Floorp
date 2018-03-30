@@ -164,6 +164,7 @@ class Instance
     static int32_t callImport_i32(Instance*, int32_t, int32_t, uint64_t*);
     static int32_t callImport_i64(Instance*, int32_t, int32_t, uint64_t*);
     static int32_t callImport_f64(Instance*, int32_t, int32_t, uint64_t*);
+    static int32_t callImport_ref(Instance*, int32_t, int32_t, uint64_t*);
     static uint32_t growMemory_i32(Instance* instance, uint32_t delta);
     static uint32_t currentMemory_i32(Instance* instance);
     static int32_t wait_i32(Instance* instance, uint32_t byteOffset, int32_t value, int64_t timeout);

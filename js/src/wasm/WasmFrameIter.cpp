@@ -1139,6 +1139,7 @@ ThunkedNativeToDescription(SymbolicAddress func)
       case SymbolicAddress::CallImport_I32:
       case SymbolicAddress::CallImport_I64:
       case SymbolicAddress::CallImport_F64:
+      case SymbolicAddress::CallImport_Ref:
       case SymbolicAddress::CoerceInPlace_ToInt32:
       case SymbolicAddress::CoerceInPlace_ToNumber:
         MOZ_ASSERT(!NeedsBuiltinThunk(func), "not in sync with NeedsBuiltinThunk");
