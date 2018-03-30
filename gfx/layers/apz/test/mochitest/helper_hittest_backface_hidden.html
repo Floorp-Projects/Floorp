@@ -49,6 +49,13 @@ function* test(testDriver) {
   }
 
   var subframe = document.getElementById('front');
+
+  // Set a displayport to ensure the subframe is layerized.
+  // This is not required for exercising the behavior we want to test,
+  // but it's needed to be able to assert the results reliably.
+  config.utils.setDisplayPortForElement(0, 0, 1000, 1000, subframe, 1);
+  yield waitForAllPaints(testDriver);
+
   var subframeViewId = config.utils.getViewId(subframe);
 
   var {hitInfo, scrollId} = hitTest(centerOf(subframe));
