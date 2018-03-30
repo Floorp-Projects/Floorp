@@ -190,6 +190,10 @@ class RematerializedFrame
         hasCachedSavedFrame_ = true;
     }
 
+    void clearHasCachedSavedFrame() {
+        hasCachedSavedFrame_ = false;
+    }
+
     unsigned numFormalArgs() const {
         return isFunctionFrame() ? callee()->nargs() : 0;
     }
