@@ -5,8 +5,6 @@
 
 package org.mozilla.geckoview.test;
 
-import org.mozilla.gecko.mozglue.GeckoLoader;
-import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
@@ -75,6 +73,10 @@ public class TestRunnerActivity extends Activity {
         @Override
         public void onContextMenu(GeckoSession session, int screenX, int screenY, String uri, int elementType, String elementSrc) {
 
+        }
+
+        @Override
+        public void onExternalResponse(GeckoSession session, GeckoSession.WebResponseInfo request) {
         }
     };
 

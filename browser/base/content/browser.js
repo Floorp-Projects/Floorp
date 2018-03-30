@@ -6127,6 +6127,11 @@ function handleLinkClick(event, href, linkNode) {
   return true;
 }
 
+/**
+ * Handles paste on middle mouse clicks.
+ *
+ * @param event {Event | Object} Event or JSON object.
+ */
 function middleMousePaste(event) {
   let clipboard = readFromClipboard();
   if (!clipboard)
@@ -6170,7 +6175,9 @@ function middleMousePaste(event) {
     }
   });
 
-  event.stopPropagation();
+  if (event instanceof Event) {
+    event.stopPropagation();
+  }
 }
 
 function stripUnsafeProtocolOnPaste(pasteData) {

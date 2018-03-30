@@ -724,6 +724,9 @@ public class CustomTabsActivity extends AppCompatActivity
         });
     }
 
+    @Override
+    public void onExternalResponse(final GeckoSession session, final GeckoSession.WebResponseInfo request) {
+    }
 
     @Override // ActionModePresenter
     public void startActionMode(final ActionMode.Callback callback) {

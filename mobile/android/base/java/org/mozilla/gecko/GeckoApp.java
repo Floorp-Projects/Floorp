@@ -902,6 +902,10 @@ public abstract class GeckoApp extends GeckoActivity
                               int elementType, final String elementSrc) {
     }
 
+    @Override
+    public void onExternalResponse(final GeckoSession session, final GeckoSession.WebResponseInfo request) {
+    }
+
     protected void setFullScreen(final boolean fullscreen) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
