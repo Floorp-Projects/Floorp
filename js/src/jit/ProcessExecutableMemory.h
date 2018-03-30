@@ -9,6 +9,8 @@
 
 #include "mozilla/Attributes.h"
 
+#include "jsutil.h"
+
 namespace js {
 namespace jit {
 
@@ -39,7 +41,8 @@ extern MOZ_MUST_USE bool InitProcessExecutableMemory();
 extern void ReleaseProcessExecutableMemory();
 
 // Allocate/deallocate executable pages.
-extern void* AllocateExecutableMemory(size_t bytes, ProtectionSetting protection);
+extern void* AllocateExecutableMemory(size_t bytes, ProtectionSetting protection,
+                                      MemCheckKind checkKind);
 extern void DeallocateExecutableMemory(void* addr, size_t bytes);
 
 // Returns true if we can allocate a few more MB of executable code without
