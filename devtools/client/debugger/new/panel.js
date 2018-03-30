@@ -116,6 +116,10 @@ DebuggerPanel.prototype = {
     return { frames, selected };
   },
 
+  getMappedExpression(expression) {
+    return this._actions.getMappedExpression(expression);
+  },
+
   isPaused() {
     return this._selectors.isPaused(this._getState());
   },

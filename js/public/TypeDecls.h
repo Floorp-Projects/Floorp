@@ -41,7 +41,7 @@ namespace JS {
 typedef unsigned char Latin1Char;
 
 class Symbol;
-class Value;
+union Value;
 class Realm;
 struct Runtime;
 struct Zone;
