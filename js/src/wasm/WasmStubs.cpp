@@ -92,6 +92,10 @@ SetupABIArguments(MacroAssembler& masm, const FuncExport& fe, Register argv, Reg
                 masm.load32(src, iter->gpr());
             else if (type == MIRType::Int64)
                 masm.load64(src, iter->gpr64());
+            else if (type == MIRType::Pointer)
+                masm.loadPtr(src, iter->gpr());
+            else
+                MOZ_CRASH("unknown GPR type");
             break;
 #ifdef JS_CODEGEN_REGISTER_PAIR
           case ABIArg::GPR_PAIR:
@@ -148,6 +152,10 @@ SetupABIArguments(MacroAssembler& masm, const FuncExport& fe, Register argv, Reg
 #endif
                 break;
               }
+              case MIRType::Pointer:
+                masm.loadPtr(src, scratch);
+                masm.storePtr(scratch, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
+                break;
               case MIRType::Double:
                 masm.loadDouble(src, ScratchDoubleReg);
                 masm.storeDouble(ScratchDoubleReg,
@@ -203,6 +211,9 @@ StoreABIReturn(MacroAssembler& masm, const FuncExport& fe, Register argv)
       case ExprType::F64:
         masm.canonicalizeDouble(ReturnDoubleReg);
         masm.storeDouble(ReturnDoubleReg, Address(argv, 0));
+        break;
+      case ExprType::AnyRef:
+        masm.storePtr(ReturnReg, Address(argv, 0));
         break;
       case ExprType::I8x16:
       case ExprType::I16x8:
@@ -758,6 +769,9 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
         masm.canonicalizeDouble(ReturnDoubleReg);
         masm.boxDouble(ReturnDoubleReg, JSReturnOperand, ScratchDoubleReg);
         break;
+      case ExprType::AnyRef:
+        MOZ_CRASH("return anyref in jitentry NYI");
+        break;
       case ExprType::I64:
       case ExprType::I8x16:
       case ExprType::I16x8:
@@ -845,6 +859,9 @@ StackCopy(MacroAssembler& masm, MIRType type, Register scratch, Address src, Add
         masm.load64(src, scratch64);
         masm.store64(scratch64, dst);
 #endif
+    } else if (type == MIRType::Pointer) {
+        masm.loadPtr(src, scratch);
+        masm.storePtr(scratch, dst);
     } else if (type == MIRType::Float32) {
         masm.loadFloat32(src, ScratchFloat32Reg);
         masm.storeFloat32(ScratchFloat32Reg, dst);
@@ -878,8 +895,10 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
                     masm.breakpoint();
                 else
                     masm.store64(i->gpr64(), dst);
-            } else {
-                MOZ_CRASH("unexpected input type?");
+            } else if (type == MIRType::Pointer) {
+                if (toValue)
+                    MOZ_CRASH("generating a jit exit for anyref NYI");
+                masm.storePtr(i->gpr(), dst);
             }
             break;
 #ifdef JS_CODEGEN_REGISTER_PAIR
@@ -926,6 +945,8 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
                 } else if (type == MIRType::Int64) {
                     // We can't box int64 into Values (yet).
                     masm.breakpoint();
+                } else if (type == MIRType::Pointer) {
+                    MOZ_CRASH("generating a jit exit for anyref NYI");
                 } else {
                     MOZ_ASSERT(IsFloatingPointType(type));
                     if (type == MIRType::Float32) {
@@ -1122,6 +1143,11 @@ GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi, uint32_t fu
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.loadDouble(argv, ReturnDoubleReg);
         break;
+      case ExprType::AnyRef:
+        masm.call(SymbolicAddress::CallImport_Ref);
+        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
+        masm.loadPtr(argv, ReturnReg);
+        break;
       case ExprType::I8x16:
       case ExprType::I16x8:
       case ExprType::I32x4:
@@ -1296,6 +1322,9 @@ GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi, Label* throwLa
         break;
       case ExprType::F64:
         masm.convertValueToDouble(JSReturnOperand, ReturnDoubleReg, &oolConvert);
+        break;
+      case ExprType::AnyRef:
+        MOZ_CRASH("anyref returned by import (jit exit) NYI");
         break;
       case ExprType::I8x16:
       case ExprType::I16x8:
@@ -1712,7 +1741,7 @@ wasm::GenerateEntryStubs(MacroAssembler& masm, size_t funcExportIndex, const Fun
     if (!codeRanges->emplaceBack(CodeRange::InterpEntry, fe.funcIndex(), offsets))
         return false;
 
-    if (isAsmJS)
+    if (isAsmJS || fe.sig().temporarilyUnsupportedAnyRef())
         return true;
 
     if (!GenerateJitEntry(masm, funcExportIndex, fe, callee, &offsets))
@@ -1747,6 +1776,9 @@ wasm::GenerateStubs(const ModuleEnvironment& env, const FuncImportVector& import
             return false;
         if (!code->codeRanges.emplaceBack(CodeRange::ImportInterpExit, funcIndex, interpOffsets))
             return false;
+
+        if (fi.sig().temporarilyUnsupportedAnyRef())
+            continue;
 
         JitExitOffsets jitOffsets;
         if (!GenerateImportJitExit(masm, fi, &throwLabel, &jitOffsets))
