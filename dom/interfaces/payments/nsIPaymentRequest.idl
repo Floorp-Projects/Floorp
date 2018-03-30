@@ -62,7 +62,7 @@ interface nsIPaymentDetails : nsISupports
   readonly attribute nsIArray modifiers;
   readonly attribute AString error;
 
-  void update(in nsIPaymentDetails aDetails);
+  void update(in nsIPaymentDetails aDetails, in boolean aRequestShipping);
 };
 
 [scriptable, builtinclass, uuid(d53f9f20-138e-47cc-9fd5-db16a3f6d301)]

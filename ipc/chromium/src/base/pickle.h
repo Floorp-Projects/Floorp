@@ -21,7 +21,7 @@
 #include "base/singleton.h"
 #include "mozilla/ipc/Faulty.h"
 #endif
-#if (!defined(RELEASE_OR_BETA) && !defined(FUZZING)) || defined(DEBUG)
+#if !defined(FUZZING) && (!defined(RELEASE_OR_BETA) || defined(DEBUG))
 #define MOZ_PICKLE_SENTINEL_CHECKING
 #endif
 class Pickle;

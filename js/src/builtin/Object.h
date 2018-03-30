@@ -13,7 +13,7 @@
 
 namespace JS {
 class CallArgs;
-class Value;
+union Value;
 } // namespace JS
 
 namespace js {
