@@ -1,9 +1,10 @@
 argh==0.26.2
 asn1crypto==0.22.0
 blinker==1.4
+pycparser==2.17
+cffi==1.10.0
 brotlipy==0.6.0
 certifi==2017.4.17
-cffi==1.10.0
 click==6.7
 construct==2.8.12
 cryptography==1.8.2
@@ -21,7 +22,6 @@ packaging==16.8
 passlib==1.7.1
 pathtools==0.1.2
 pyasn1==0.2.3
-pycparser==2.17
 pyOpenSSL==16.2.0
 pyparsing==2.2.0
 pyperclip==1.5.27
