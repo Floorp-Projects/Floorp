@@ -247,9 +247,7 @@ var openCubicBezierAndChangeCoords = async function(view, ruleIndex,
  * @param {CssRuleView} view
  *        The instance of the rule-view panel
  * @param {Number} ruleIndex
- *        The index of the rule to use. Note that if ruleIndex is 0, you might
- *        want to also listen to markupmutation events in your test since
- *        that's going to change the style attribute of the selected node.
+ *        The index of the rule to use.
  * @param {String} name
  *        The name for the new property
  * @param {String} value
@@ -265,13 +263,33 @@ var openCubicBezierAndChangeCoords = async function(view, ruleIndex,
  * @return {TextProperty} The instance of the TextProperty that was added
  */
 var addProperty = async function(view, ruleIndex, name, value,
-                                        commitValueWith = "VK_RETURN",
-                                        blurNewProperty = true) {
+                                 commitValueWith = "VK_RETURN",
+                                 blurNewProperty = true) {
   info("Adding new property " + name + ":" + value + " to rule " + ruleIndex);
 
   let ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
   let editor = await focusNewRuleViewProperty(ruleEditor);
   let numOfProps = ruleEditor.rule.textProps.length;
+
+  let onMutations = new Promise(r => {
+    // If we're adding the property to a non-element style rule, we don't need to wait
+    // for mutations.
+    if (ruleIndex !== 0) {
+      r();
+    }
+
+    // Otherwise, adding the property to the element style rule causes 2 mutations to the
+    // style attribute on the element: first when the name is added with an empty value,
+    // and then when the value is added.
+    let receivedMutations = 0;
+    view.inspector.walker.on("mutations", function onWalkerMutations(mutations) {
+      receivedMutations += mutations.length;
+      if (receivedMutations >= 2) {
+        view.inspector.walker.off("mutations", onWalkerMutations);
+        r();
+      }
+    });
+  });
 
   info("Adding name " + name);
   editor.input.value = name;
@@ -300,6 +318,9 @@ var addProperty = async function(view, ruleIndex, name, value,
   let onValueAdded = view.once("ruleview-changed");
   EventUtils.synthesizeKey(commitValueWith, {}, view.styleWindow);
   await onValueAdded;
+
+  info("Waiting for DOM mutations in case the property was added to the element style");
+  await onMutations;
 
   if (blurNewProperty) {
     view.styleDocument.activeElement.blur();

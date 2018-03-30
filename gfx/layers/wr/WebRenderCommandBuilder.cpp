@@ -1411,7 +1411,7 @@ WebRenderCommandBuilder::PushImage(nsDisplayItem* aItem,
     return false;
   }
 
-  auto r = aSc.ToRelativeLayoutRect(aRect);
+  auto r = wr::ToRoundedLayoutRect(aRect);
   gfx::SamplingFilter sampleFilter = nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
   aBuilder.PushImage(r, r, !aItem->BackfaceIsHidden(), wr::ToImageRendering(sampleFilter), key.value());
 
@@ -1764,7 +1764,7 @@ WebRenderCommandBuilder::BuildWrMaskImage(nsDisplayItem* aItem,
 
   wr::WrImageMask imageMask;
   imageMask.image = fallbackData->GetKey().value();
-  imageMask.rect = aSc.ToRelativeLayoutRect(aBounds);
+  imageMask.rect = wr::ToRoundedLayoutRect(aBounds);
   imageMask.repeat = false;
   return Some(imageMask);
 }
@@ -1784,7 +1784,7 @@ WebRenderCommandBuilder::PushItemAsImage(nsDisplayItem* aItem,
     return false;
   }
 
-  wr::LayoutRect dest = aSc.ToRelativeLayoutRect(imageRect);
+  wr::LayoutRect dest = wr::ToRoundedLayoutRect(imageRect);
   gfx::SamplingFilter sampleFilter = nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
   aBuilder.PushImage(dest,
                      dest,

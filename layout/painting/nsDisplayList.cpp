@@ -3360,10 +3360,10 @@ nsDisplaySolidColor::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aB
 {
   LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
         mVisibleRect, mFrame->PresContext()->AppUnitsPerDevPixel());
-  wr::LayoutRect transformedRect = aSc.ToRelativeLayoutRect(bounds);
+  wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(bounds);
 
-  aBuilder.PushRect(transformedRect,
-                    transformedRect,
+  aBuilder.PushRect(roundedRect,
+                    roundedRect,
                     !BackfaceIsHidden(),
                     wr::ToColorF(ToDeviceColor(mColor)));
 
@@ -3413,9 +3413,9 @@ nsDisplaySolidColorRegion::CreateWebRenderCommands(mozilla::wr::DisplayListBuild
     nsRect rect = iter.Get();
     LayoutDeviceRect layerRects = LayoutDeviceRect::FromAppUnits(
       rect, mFrame->PresContext()->AppUnitsPerDevPixel());
-    wr::LayoutRect transformedRect = aSc.ToRelativeLayoutRect(layerRects);
-    aBuilder.PushRect(transformedRect,
-                      transformedRect,
+    wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(layerRects);
+    aBuilder.PushRect(roundedRect,
+                      roundedRect,
                       !BackfaceIsHidden(),
                       wr::ToColorF(ToDeviceColor(mColor)));
   }
@@ -4740,10 +4740,10 @@ nsDisplayBackgroundColor::CreateWebRenderCommands(mozilla::wr::DisplayListBuilde
 
   LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
         mBackgroundRect, mFrame->PresContext()->AppUnitsPerDevPixel());
-  wr::LayoutRect transformedRect = aSc.ToRelativeLayoutRect(bounds);
+  wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(bounds);
 
-  aBuilder.PushRect(transformedRect,
-                    transformedRect,
+  aBuilder.PushRect(roundedRect,
+                    roundedRect,
                     !BackfaceIsHidden(),
                     wr::ToColorF(ToDeviceColor(mColor)));
 
@@ -4887,7 +4887,7 @@ nsDisplayClearBackground::CreateWebRenderCommands(mozilla::wr::DisplayListBuilde
     nsRect(ToReferenceFrame(), mFrame->GetSize()),
     mFrame->PresContext()->AppUnitsPerDevPixel());
 
-  aBuilder.PushClearRect(aSc.ToRelativeLayoutRect(bounds));
+  aBuilder.PushClearRect(wr::ToRoundedLayoutRect(bounds));
 
   return true;
 }
@@ -5054,7 +5054,7 @@ nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(mozilla::wr::DisplayList
   const LayoutDeviceRect devRect =
     LayoutDeviceRect::FromAppUnits(mArea, mAppUnitsPerDevPixel);
 
-  const wr::LayoutRect rect = aSc.ToRelativeLayoutRect(devRect);
+  const wr::LayoutRect rect = wr::ToRoundedLayoutRect(devRect);
 
   aBuilder.PushRect(rect, rect, true, wr::ToColorF(gfx::Color()));
   aBuilder.ClearHitTestInfo();
@@ -5344,8 +5344,8 @@ nsDisplayCaret::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilde
   LayoutDeviceRect devHookRect = LayoutDeviceRect::FromAppUnits(
     hookRect + ToReferenceFrame(), appUnitsPerDevPixel);
 
-  wr::LayoutRect caret = aSc.ToRelativeLayoutRect(devCaretRect);
-  wr::LayoutRect hook = aSc.ToRelativeLayoutRect(devHookRect);
+  wr::LayoutRect caret = wr::ToRoundedLayoutRect(devCaretRect);
+  wr::LayoutRect hook = wr::ToRoundedLayoutRect(devHookRect);
 
   // Note, WR will pixel snap anything that is layout aligned.
   aBuilder.PushRect(caret,
@@ -5552,13 +5552,13 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
 
   LayoutDeviceRect destRect = LayoutDeviceRect::FromAppUnits(
     mBorderImageRenderer->mArea, appUnitsPerDevPixel);
-  wr::LayoutRect dest = aSc.ToRelativeLayoutRect(destRect);
+  wr::LayoutRect dest = wr::ToRoundedLayoutRect(destRect);
 
   wr::LayoutRect clip = dest;
   if (!mBorderImageRenderer->mClip.IsEmpty()) {
     LayoutDeviceRect clipRect = LayoutDeviceRect::FromAppUnits(
       mBorderImageRenderer->mClip, appUnitsPerDevPixel);
-    clip = aSc.ToRelativeLayoutRect(clipRect);
+    clip = wr::ToRoundedLayoutRect(clipRect);
   }
 
   switch (mBorderImageRenderer->mImageRenderer.GetType()) {
@@ -5855,8 +5855,8 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
 
       LayoutDeviceRect deviceBox = LayoutDeviceRect::FromAppUnits(
           shadowRect, appUnitsPerDevPixel);
-      wr::LayoutRect deviceBoxRect = aSc.ToRelativeLayoutRect(deviceBox);
-      wr::LayoutRect deviceClipRect = aSc.ToRelativeLayoutRect(clipRect);
+      wr::LayoutRect deviceBoxRect = wr::ToRoundedLayoutRect(deviceBox);
+      wr::LayoutRect deviceClipRect = wr::ToRoundedLayoutRect(clipRect);
 
       LayoutDeviceSize zeroSize;
       wr::BorderRadius borderRadius = wr::ToBorderRadius(zeroSize, zeroSize,
@@ -5998,7 +5998,7 @@ nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::Disp
       // Now translate everything to device pixels.
       LayoutDeviceRect deviceBoxRect = LayoutDeviceRect::FromAppUnits(
           shadowRect, appUnitsPerDevPixel);
-      wr::LayoutRect deviceClipRect = aSc.ToRelativeLayoutRect(clipRect);
+      wr::LayoutRect deviceClipRect = wr::ToRoundedLayoutRect(clipRect);
       Color shadowColor = nsCSSRendering::GetShadowColor(shadowItem, aFrame, 1.0);
 
       LayoutDevicePoint shadowOffset = LayoutDevicePoint::FromAppUnits(
@@ -7607,7 +7607,7 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
       NSAppUnitsToFloatPixels(appliedOffset.x, auPerDevPixel),
       NSAppUnitsToFloatPixels(appliedOffset.y, auPerDevPixel)
     };
-    wr::WrStickyId id = aBuilder.DefineStickyFrame(aSc.ToRelativeLayoutRect(bounds),
+    wr::WrStickyId id = aBuilder.DefineStickyFrame(wr::ToRoundedLayoutRect(bounds),
         topMargin.ptrOr(nullptr), rightMargin.ptrOr(nullptr),
         bottomMargin.ptrOr(nullptr), leftMargin.ptrOr(nullptr),
         vBounds, hBounds, applied);
@@ -9648,7 +9648,7 @@ nsDisplayMask::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
                                                                             bounds);
   if (mask) {
     wr::WrClipId clipId = aBuilder.DefineClip(Nothing(), Nothing(),
-        aSc.ToRelativeLayoutRect(bounds), nullptr, mask.ptr());
+        wr::ToRoundedLayoutRect(bounds), nullptr, mask.ptr());
     // Don't record this clip push in aBuilder's internal clip stack, because
     // otherwise any nested ScrollingLayersHelper instances that are created
     // will get confused about which clips are pushed.

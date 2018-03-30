@@ -1351,8 +1351,8 @@ PlacesTreeView.prototype = {
     // Treat non-expandable childless queries as non-containers, unless they
     // are tags.
     if (PlacesUtils.nodeIsQuery(node) && !PlacesUtils.nodeIsTagQuery(node)) {
-      PlacesUtils.asQuery(node);
-      return node.queryOptions.expandQueries || node.hasChildren;
+      return PlacesUtils.asQuery(node).queryOptions.expandQueries ||
+             node.hasChildren;
     }
     return true;
   },
@@ -1467,13 +1467,8 @@ PlacesTreeView.prototype = {
     if (this._controller.disallowInsertion(container))
       return null;
 
-    // TODO (Bug 1160193): properly support dropping on a tag root.
-    let tagName = null;
-    if (PlacesUtils.nodeIsTagQuery(container)) {
-      tagName = container.title;
-      if (!tagName)
-        return null;
-    }
+    let tagName = PlacesUtils.nodeIsTagQuery(container) ?
+                    PlacesUtils.asQuery(container).query.tags[0] : null;
 
     return new PlacesInsertionPoint({
       parentId: PlacesUtils.getConcreteItemId(container),

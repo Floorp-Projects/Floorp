@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BookmarksPolicies: "resource:///modules/policies/BookmarksPolicies.jsm",
   ProxyPolicies: "resource:///modules/policies/ProxyPolicies.jsm",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
 });
 
 const PREF_LOGLEVEL           = "browser.policies.loglevel";
@@ -309,21 +310,37 @@ var Policies = {
               }
               url = Services.io.newFileURI(xpiFile).spec;
             }
-            AddonManager.getInstallForURL(url, (install) => {
+            AddonManager.getInstallForURL(url, null, "application/x-xpinstall").then(install => {
+              if (install.addon && install.addon.appDisabled) {
+                log.error(`Incompatible add-on - ${location}`);
+                install.cancel();
+                return;
+              }
               let listener = {
+              /* eslint-disable-next-line no-shadow */
+                onDownloadEnded: (install) => {
+                  if (install.addon && install.addon.appDisabled) {
+                    log.error(`Incompatible add-on - ${location}`);
+                    install.removeListener(listener);
+                    install.cancel();
+                  }
+                },
                 onDownloadFailed: () => {
+                  install.removeListener(listener);
                   log.error(`Download failed - ${location}`);
                 },
                 onInstallFailed: () => {
+                  install.removeListener(listener);
                   log.error(`Installation failed - ${location}`);
                 },
                 onInstallEnded: () => {
+                  install.removeListener(listener);
                   log.debug(`Installation succeeded - ${location}`);
                 }
               };
               install.addListener(listener);
               install.install();
-            }, "application/x-xpinstall");
+            });
           }
         });
       }
@@ -416,6 +433,22 @@ var Policies = {
   "RememberPasswords": {
     onBeforeUIStartup(manager, param) {
       setAndLockPref("signon.rememberSignons", param);
+    }
+  },
+
+  "SearchBar": {
+    onAllWindowsRestored(manager, param) {
+      // This policy is meant to change the default behavior, not to force it.
+      // If this policy was already applied and the user chose move the search
+      // bar, don't move it again.
+      runOncePerModification("searchInNavBar", param, () => {
+        if (param == "separate") {
+          CustomizableUI.addWidgetToArea("search-container", CustomizableUI.AREA_NAVBAR,
+          CustomizableUI.getPlacementOfWidget("urlbar-container").position + 1);
+        } else if (param == "unified") {
+          CustomizableUI.removeWidgetFromArea("search-container");
+        }
+      });
     }
   },
 

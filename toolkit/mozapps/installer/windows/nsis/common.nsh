@@ -7529,6 +7529,96 @@
 !define SetStretchedImageOLE "!insertmacro __SetStretchedImageOLE"
 
 /**
+ * Display a task dialog box with custom strings and button labels.
+ *
+ * The task dialog is highly customizable. The specific style being used here
+ * is similar to a MessageBox except that the button text is customizable.
+ * MessageBox-style buttons are used instead of command link buttons; this can
+ * be made configurable if command buttons are needed.
+ *
+ * See https://msdn.microsoft.com/en-us/library/windows/desktop/bb760544.aspx
+ * for the TaskDialogIndirect function's documentation, and links to definitions
+ * of the TASKDIALOGCONFIG and TASKDIALOG_BUTTON structures it uses.
+ *
+ * @param INSTRUCTION  Dialog header string; use empty string if unneeded
+ * @param CONTENT      Secondary message string; use empty string if unneeded
+ * @param BUTTON1      Text for the first button, the one selected by default
+ * @param BUTTON2      Text for the second button
+ *
+ * @return One of the following values will be left on the stack:
+ *         1001 if the first button was clicked
+ *         1002 if the second button was clicked
+ *         2 (IDCANCEL) if the dialog was closed
+ *         0 on error
+ */
+!macro _ShowTaskDialog INSTRUCTION CONTENT BUTTON1 BUTTON2
+  !ifndef SIZEOF_TASKDIALOGCONFIG_32BIT
+    !define SIZEOF_TASKDIALOGCONFIG_32BIT 96
+  !endif
+  !ifndef TDF_ALLOW_DIALOG_CANCELLATION
+    !define TDF_ALLOW_DIALOG_CANCELLATION 0x0008
+  !endif
+  !ifndef TDF_RTL_LAYOUT
+    !define TDF_RTL_LAYOUT 0x02000
+  !endif
+  !ifndef TD_WARNING_ICON
+    !define TD_WARNING_ICON 0x0FFFF
+  !endif
+
+  Push $0 ; return value
+  Push $1 ; TASKDIALOGCONFIG struct
+  Push $2 ; TASKDIALOG_BUTTON array
+  Push $3 ; dwFlags member of the TASKDIALOGCONFIG
+
+  StrCpy $3 ${TDF_ALLOW_DIALOG_CANCELLATION}
+  !ifdef ${AB_CD}_rtl
+    IntOp $3 $3 | ${TDF_RTL_LAYOUT}
+  !endif
+
+  ; Build an array of two TASKDIALOG_BUTTON structs
+  System::Call "*(i 1001, \
+                  w '${BUTTON1}', \
+                  i 1002, \
+                  w '${BUTTON2}' \
+                  ) p.r2"
+  ; Build a TASKDIALOGCONFIG struct
+  System::Call "*(i ${SIZEOF_TASKDIALOGCONFIG_32BIT}, \
+                  p $HWNDPARENT, \
+                  p 0, \
+                  i $3, \
+                  i 0, \
+                  w '$(INSTALLER_WIN_CAPTION)', \
+                  p ${TD_WARNING_ICON}, \
+                  w '${INSTRUCTION}', \
+                  w '${CONTENT}', \
+                  i 2, \
+                  p r2, \
+                  i 1001, \
+                  i 0, \
+                  p 0, \
+                  i 0, \
+                  p 0, \
+                  p 0, \
+                  p 0, \
+                  p 0, \
+                  p 0, \
+                  p 0, \
+                  p 0, \
+                  p 0, \
+                  i 0 \
+                  ) p.r1"
+  System::Call "comctl32::TaskDialogIndirect(p r1, *i 0 r0, p 0, p 0)"
+  System::Free $1
+  System::Free $2
+
+  Pop $3
+  Pop $2
+  Pop $1
+  Exch $0
+!macroend
+!define ShowTaskDialog "!insertmacro _ShowTaskDialog"
+
+/**
  * Removes a single style from a control.
  *
  * _HANDLE the handle of the control
