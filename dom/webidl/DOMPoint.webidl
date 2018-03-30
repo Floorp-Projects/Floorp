@@ -10,16 +10,22 @@
  * liability, trademark and document use rules apply.
  */
 
-[Pref="layout.css.DOMPoint.enabled"]
+[Pref="layout.css.DOMPoint.enabled",
+ Constructor(optional unrestricted double x = 0, optional unrestricted double y = 0,
+             optional unrestricted double z = 0, optional unrestricted double w = 1)]
 interface DOMPointReadOnly {
+    [NewObject] static DOMPointReadOnly fromPoint(optional DOMPointInit other);
+
     readonly attribute unrestricted double x;
     readonly attribute unrestricted double y;
     readonly attribute unrestricted double z;
     readonly attribute unrestricted double w; 
+
+    jsonifier;
 };
 
 [Pref="layout.css.DOMPoint.enabled",
- Constructor(unrestricted double x, unrestricted double y,
+ Constructor(optional unrestricted double x = 0, optional unrestricted double y = 0,
              optional unrestricted double z = 0, optional unrestricted double w = 1)]
 interface DOMPoint : DOMPointReadOnly {
     [NewObject] static DOMPoint fromPoint(optional DOMPointInit other);
