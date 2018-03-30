@@ -313,6 +313,10 @@ release-secondary-balrog-publishing
 ---------------------
 Schedule an RC release to go live in Balrog. Usually this will happen on the beta channel, to a smaller audience, before the RC goes live on the release channel.
 
+release-sign-and-push-langpacks
+-------------------------------
+Sign a langpack XPI and publishes it onto addons.mozilla.org.
+
 release-update-verify
 ---------------------
 Verifies the contents and package of release update MARs.
