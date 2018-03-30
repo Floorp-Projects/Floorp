@@ -784,6 +784,7 @@ const dispatcher = new WorkerDispatcher();
 
 const getOriginalURLs = dispatcher.task("getOriginalURLs");
 const getGeneratedLocation = dispatcher.task("getGeneratedLocation");
+const getAllGeneratedLocations = dispatcher.task("getAllGeneratedLocations");
 const getOriginalLocation = dispatcher.task("getOriginalLocation");
 const getLocationScopes = dispatcher.task("getLocationScopes");
 const getOriginalSourceText = dispatcher.task("getOriginalSourceText");
@@ -799,6 +800,7 @@ module.exports = {
   hasMappedSource,
   getOriginalURLs,
   getGeneratedLocation,
+  getAllGeneratedLocations,
   getOriginalLocation,
   getLocationScopes,
   getOriginalSourceText,
@@ -1160,6 +1162,7 @@ function trimUrlQuery(url) {
 const contentMap = {
   "js": "text/javascript",
   "jsm": "text/javascript",
+  "mjs": "text/javascript",
   "ts": "text/typescript",
   "tsx": "text/typescript-jsx",
   "jsx": "text/jsx",
@@ -21286,6 +21289,8 @@ function getFirstExpression(ast) {
 }
 
 function mapOriginalExpression(expression, mappings) {
+  let didReplace = false;
+
   const ast = (0, _ast.parseScript)(expression);
   t.traverse(ast, (node, ancestors) => {
     const parent = ancestors[ancestors.length - 1];
@@ -21297,16 +21302,23 @@ function mapOriginalExpression(expression, mappings) {
     if (t.isIdentifier(node) && t.isReferenced(node, parentNode)) {
       if (mappings.hasOwnProperty(node.name)) {
         const mapping = mappings[node.name];
-        if (mapping) {
+        if (mapping && mapping !== node.name) {
           const mappingNode = getFirstExpression((0, _ast.parseScript)(mapping));
-
           replaceNode(ancestors, mappingNode);
+
+          didReplace = true;
         }
       }
     }
   });
 
-  return (0, _generator2.default)(ast, { concise: true }).code;
+  if (!didReplace) {
+    // Avoid the extra code generation work and also avoid potentially
+    // reformatting the user's code unnecessarily.
+    return expression;
+  }
+
+  return (0, _generator2.default)(ast).code;
 }
 
 /***/ }),

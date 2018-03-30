@@ -369,8 +369,6 @@ WinCompositorWidget::DestroyCompositorWindow()
 void
 WinCompositorWidget::UpdateCompositorWndSizeIfNecessary()
 {
-  MOZ_ASSERT(mCompositorWnd);
-
   if (!mCompositorWnd) {
     return;
   }

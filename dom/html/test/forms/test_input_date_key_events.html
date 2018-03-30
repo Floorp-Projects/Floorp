@@ -226,6 +226,15 @@ function test() {
     elem.value = "";
     elem.blur();
   }
+
+  function chromeListener(e) {
+    ok(false, "Picker should not be opened when dispatching untrusted click.");
+  }
+  SpecialPowers.addChromeEventListener("MozOpenDateTimePicker",
+    chromeListener);
+  input.click();
+  SpecialPowers.removeChromeEventListener("MozOpenDateTimePicker",
+    chromeListener);
 }
 
 </script>
