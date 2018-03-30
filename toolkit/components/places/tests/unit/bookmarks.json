@@ -142,14 +142,6 @@
                   "value": "item description"
                 },
                 {
-                  "name": "bookmarkProperties/POSTData",
-                  "flags": 0,
-                  "expires": 4,
-                  "mimeType": null,
-                  "type": 3,
-                  "value": "hidden1%3Dbar&text1%3D%25s"
-                },
-                {
                   "name": "bookmarkProperties/loadInSidebar",
                   "flags": 0,
                   "expires": 4,
@@ -161,7 +153,8 @@
               "type": "text/x-moz-place",
               "uri": "http://test/post",
               "keyword": "test",
-              "charset": "ISO-8859-1"
+              "charset": "ISO-8859-1",
+              "postData": "hidden1%3Dbar&text1%3D%25s"
             }
           ]
         }
