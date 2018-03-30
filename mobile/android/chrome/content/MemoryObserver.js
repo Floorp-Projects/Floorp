@@ -41,9 +41,6 @@ var MemoryObserver = {
     // Change some preferences temporarily for only this session
     let defaults = Services.prefs.getDefaultBranch(null);
 
-    // Reduce the amount of decoded image data we keep around
-    defaults.setIntPref("image.mem.max_decoded_image_kb", 0);
-
     // Stop using the bfcache
     if (!Services.prefs.getBoolPref("browser.sessionhistory.bfcacheIgnoreMemoryPressure")) {
       this._defaultMaxContentViewers = defaults.getIntPref(MAX_CONTENT_VIEWERS_PREF);
