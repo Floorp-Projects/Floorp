@@ -12,7 +12,6 @@ const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
-const { JSTerm } = require("devtools/client/webconsole/jsterm");
 const { WebConsoleConnectionProxy } = require("devtools/client/webconsole/webconsole-connection-proxy");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
@@ -82,13 +81,7 @@ NewWebConsoleFrame.prototype = {
    */
   async init() {
     this._initUI();
-    let connectionInited = this._initConnection();
-    // Don't reject if the history fails to load for some reason.
-    // This would be fine, the panel will just start with empty history.
-    let onJsTermHistoryLoaded = this.jsterm.historyLoaded
-      .catch(() => {});
-
-    await Promise.all([connectionInited, onJsTermHistoryLoaded]);
+    await this._initConnection();
     await this.newConsoleOutput.init();
 
     let id = WebConsoleUtils.supportsString(this.hudId);
@@ -104,8 +97,6 @@ NewWebConsoleFrame.prototype = {
     Services.prefs.removeObserver(PREF_MESSAGE_TIMESTAMP, this._onToolboxPrefChanged);
     this.React = this.ReactDOM = this.FrameView = null;
     if (this.jsterm) {
-      this.jsterm.off("sidebar-opened", this.resize);
-      this.jsterm.off("sidebar-closed", this.resize);
       this.jsterm.destroy();
       this.jsterm = null;
     }
@@ -207,23 +198,13 @@ NewWebConsoleFrame.prototype = {
     this.rootElement = this.document.documentElement;
 
     this.outputNode = this.document.getElementById("output-container");
-    this.completeNode = this.document.querySelector(".jsterm-complete-node");
-    this.inputNode = this.document.querySelector(".jsterm-input-node");
-
-    this.jsterm = new JSTerm(this);
-    this.jsterm.init();
 
     let toolbox = gDevTools.getToolbox(this.owner.target);
 
-    // @TODO Remove this once JSTerm is handled with React/Redux.
-    this.window.jsterm = this.jsterm;
-    // @TODO Once the toolbox has been converted to React, see if passing
-    // in JSTerm is still necessary.
-
     // Handle both launchpad and toolbox loading
     let Wrapper = this.owner.NewConsoleOutputWrapper || this.window.NewConsoleOutput;
-    this.newConsoleOutput = new Wrapper(
-      this.outputNode, this.jsterm, toolbox, this.owner, this.document);
+    this.newConsoleOutput =
+      new Wrapper(this.outputNode, this, toolbox, this.owner, this.document);
     // Toggle the timestamp on preference change
     Services.prefs.addObserver(PREF_MESSAGE_TIMESTAMP, this._onToolboxPrefChanged);
     this._onToolboxPrefChanged();
