@@ -88,23 +88,6 @@
           "items": {
             "type": "origin"
           }
-        },
-
-        "Default": {
-          "type": "boolean"
-        },
-
-        "AcceptThirdParty": {
-          "type": "string",
-          "enum": ["all", "none", "from-visited"]
-        },
-
-        "ExpireAtSessionEnd": {
-          "type": "boolean"
-        },
-
-        "Locked": {
-          "type": "boolean"
         }
       }
     },
@@ -293,14 +276,6 @@
           "items": {
             "type": "origin"
           }
-        },
-
-        "Default": {
-          "type": "boolean"
-        },
-
-        "Locked": {
-          "type": "boolean"
         }
       }
     },
@@ -350,7 +325,7 @@
       "type": "boolean"
     },
 
-    "PopupBlocking": {
+    "Popups": {
       "description": "Allow or deny popup usage.",
       "first_available": "60.0",
 
@@ -361,14 +336,6 @@
           "items": {
             "type": "origin"
           }
-        },
-
-        "Default": {
-          "type": "boolean"
-        },
-
-        "Locked": {
-          "type": "boolean"
         }
       }
     },
