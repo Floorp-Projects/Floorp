@@ -22,7 +22,7 @@ gcc_version=6.4.0
 gcc_ext=xz
 binutils_version=2.25.1
 binutils_ext=bz2
-sixgill_rev=39b87ac48871
+sixgill_rev=ab06fc42cf0f
 sixgill_repo=https://hg.mozilla.org/users/sfink_mozilla.com/sixgill
 
 . $data_dir/build-gcc.sh
