@@ -109,7 +109,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
   NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
   Normandy: "resource://normandy/Normandy.jsm",
-  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PageActions: "resource:///modules/PageActions.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
@@ -121,7 +120,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   ReaderParent: "resource:///modules/ReaderParent.jsm",
   RecentWindow: "resource:///modules/RecentWindow.jsm",
   RemotePrompt: "resource:///modules/RemotePrompt.jsm",
@@ -485,11 +483,8 @@ BrowserGlue.prototype = {
           if (this._placesBrowserInitComplete) {
             Services.obs.notifyObservers(null, "places-browser-init-complete");
           }
-        } else if (data == "migrateMatchBucketsPrefForUI66") {
-          this._migrateMatchBucketsPrefForUI66().then(() => {
-            Services.obs.notifyObservers(null, "browser-glue-test",
-                                         "migrateMatchBucketsPrefForUI66-done");
-          });
+        } else if (data == "migrateMatchBucketsPrefForUIVersion60") {
+          this._migrateMatchBucketsPrefForUIVersion60(true);
         }
         break;
       case "initial-migration-will-import-default-bookmarks":
@@ -572,7 +567,6 @@ BrowserGlue.prototype = {
         PdfJs.init(true);
         break;
       case "shield-init-complete":
-        this._shieldInitCompleteDeferred.resolve();
         this._sendMainPingCentrePing();
         break;
     }
@@ -618,8 +612,6 @@ BrowserGlue.prototype = {
     if (AppConstants.platform == "win") {
       JawsScreenReaderVersionCheck.init();
     }
-
-    this._shieldInitCompleteDeferred = PromiseUtils.defer();
   },
 
   // cleanup (called on application shutdown)
@@ -1841,7 +1833,7 @@ BrowserGlue.prototype = {
 
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 66;
+    const UI_VERSION = 65;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2132,7 +2124,9 @@ BrowserGlue.prototype = {
     }
 
     if (currentUIVersion < 60) {
-      // This version is superseded by version 66.  See bug 1444965.
+      // Set whether search suggestions or history results come first in the
+      // urlbar results.
+      this._migrateMatchBucketsPrefForUIVersion60();
     }
 
     if (currentUIVersion < 61) {
@@ -2182,12 +2176,6 @@ BrowserGlue.prototype = {
           }
         }
       });
-    }
-
-    if (currentUIVersion < 66) {
-      // Set whether search suggestions or history/bookmarks results come first
-      // in the urlbar results, and uninstall a related Shield study.
-      this._migrateMatchBucketsPrefForUI66();
     }
 
     // Update the migration version.
@@ -2271,75 +2259,44 @@ BrowserGlue.prototype = {
     }
   },
 
-  async _migrateMatchBucketsPrefForUI66() {
-    // This does two related things.
-    //
-    // (1) Profiles created on or after Firefox 57's release date were eligible
-    // for a Shield study that changed the browser.urlbar.matchBuckets pref in
-    // order to show search suggestions above history/bookmarks in the urlbar
-    // popup.  This uninstalls that study.  (It's actually slightly more
-    // complex.  The study set the pref to several possible values, but the
-    // overwhelming number of profiles in the study got search suggestions
-    // first, followed by history/bookmarks.)
-    //
-    // (2) This also ensures that (a) new users see search suggestions above
-    // history/bookmarks, thereby effectively making the study permanent, and
-    // (b) old users (including those in the study) continue to see whatever
-    // they were seeing before.  This works together with UnifiedComplete.js.
-    // By default, the browser.urlbar.matchBuckets pref does not exist, and
-    // UnifiedComplete.js internally hardcodes a default value for it.  Before
-    // Firefox 60, the hardcoded default was to show history/bookmarks first.
-    // After 60, it's to show search suggestions first.
-
-    // Wait for Shield init to complete.
-    await this._shieldInitCompleteDeferred.promise;
-
-    // Now get the pref's value.  If the study is active, the value will have
-    // just been set (on the default branch) as part of Shield's init.  The pref
-    // should not exist otherwise (normally).
-    let prefName = "browser.urlbar.matchBuckets";
-    let prefValue = Services.prefs.getCharPref(prefName, "");
-
-    // Get the study (aka experiment).  It may not be installed.
-    let experiment = null;
-    let experimentName = "pref-flip-search-composition-57-release-1413565";
-    let {PreferenceExperiments} =
-      ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm", {});
-    try {
-      experiment = await PreferenceExperiments.get(experimentName);
-    } catch (e) {}
-
-    // Uninstall the study, resetting the pref to its state before the study.
-    if (experiment && !experiment.expired) {
-      await PreferenceExperiments.stop(experimentName, {
-        resetValue: true,
-        reason: "external:search-ui-migration",
-      });
-    }
-
-    // At this point, normally the pref should not exist.  If it does, then it
-    // either has a user value, or something unexpectedly set its value on the
-    // default branch.  Either way, preserve that value.
-    if (Services.prefs.getCharPref(prefName, "")) {
-      return;
-    }
-
-    // The new default is "suggestion:4,general:5" (show search suggestions
-    // before history/bookmarks), but we implement that by leaving the pref
-    // undefined, and UnifiedComplete.js hardcodes that value internally.  So if
-    // the pref was "suggestion:4,general:5" (modulo whitespace), we're done.
-    if (prefValue) {
-      let buckets = PlacesUtils.convertMatchBucketsStringToArray(prefValue);
-      if (ObjectUtils.deepEqual(buckets, [["suggestion", 4], ["general", 5]])) {
-        return;
+  _migrateMatchBucketsPrefForUIVersion60(forceCheck = false) {
+    function check() {
+      if (CustomizableUI.getPlacementOfWidget("search-container")) {
+        Services.prefs.setCharPref(prefName,
+                                   "general:5,suggestion:Infinity");
       }
     }
-
-    // Set the pref on the user branch.  If the pref had a value, then preserve
-    // it.  Otherwise, set the previous default value, which was to show history
-    // and bookmarks before search suggestions.
-    prefValue = prefValue || "general:5,suggestion:Infinity";
-    Services.prefs.setCharPref(prefName, prefValue);
+    let prefName = "browser.urlbar.matchBuckets";
+    let pref = Services.prefs.getCharPref(prefName, "");
+    if (!pref) {
+      // Set the pref based on the search bar's current placement.  If it's
+      // placed (the urlbar and search bar are not unified), then set the pref
+      // (so that history results will come before search suggestions).  If it's
+      // not placed (the urlbar and search bar are unified), then leave the pref
+      // cleared so that UnifiedComplete.js uses the default value (so that
+      // search suggestions will come before history results).
+      if (forceCheck) {
+        // This is the case when this is called by the test.
+        check();
+      } else {
+        // This is the normal, non-test case.  At this point the first window
+        // has not been set up yet, so use a CUI listener to get the placement
+        // when the nav-bar is first registered.
+        let listener = {
+          onAreaNodeRegistered(area, container) {
+            if (CustomizableUI.AREA_NAVBAR == area) {
+              check();
+              CustomizableUI.removeListener(listener);
+            }
+          },
+        };
+        CustomizableUI.addListener(listener);
+      }
+    }
+    // Else, the pref has already been set.  Normally this pref does not exist.
+    // Either the user customized it, or they were enrolled in the Shield study
+    // in Firefox 57 that effectively already migrated the pref.  Either way,
+    // leave it at its current value.
   },
 
   async ensurePlacesDefaultQueriesInitialized() {
