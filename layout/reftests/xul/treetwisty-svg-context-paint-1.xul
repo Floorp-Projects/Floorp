@@ -27,17 +27,17 @@
     <treechildren>
       <treeitem>
         <treerow>
-          <treecell label="I am a treecell"></treecell>
+          <treecell label="----"></treecell>
         </treerow>
       </treeitem>
       <treeitem container="true" open="true">
         <treerow>
-          <treecell label="Folder"></treecell>
+          <treecell label="----"></treecell>
         </treerow>
         <treechildren>
           <treeitem>
             <treerow>
-              <treecell label="I am a treecell"></treecell>
+              <treecell label="----"></treecell>
             </treerow>
           </treeitem>
         </treechildren>

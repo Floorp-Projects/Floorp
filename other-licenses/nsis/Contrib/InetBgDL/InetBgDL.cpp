@@ -137,15 +137,20 @@ void __stdcall InetStatusCallback(HINTERNET hInternet, DWORD_PTR dwContext,
                                   DWORD dwStatusInformationLength)
 {
   if (dwInternetStatus == INTERNET_STATUS_NAME_RESOLVED) {
-    // The documentation states the IP address is a PCTSTR but it is usually a
-    // PCSTR and only sometimes a PCTSTR.
-    StatsLock_AcquireExclusive();
-    wsprintf(g_ServerIP, _T("%S"), lpvStatusInformation);
-    if (wcslen(g_ServerIP) == 1)
-    {
-      wsprintf(g_ServerIP, _T("%s"), lpvStatusInformation);
+    // If we're in the process of being reset, don't try to update g_ServerIP;
+    // there's no need for it, and Reset() will be holding the StatsLock, so
+    // we'll hang here and block the reset if we try to acquire it.
+    if (g_FilesTotal != 0) {
+      // The documentation states the IP address is a PCTSTR but it is usually a
+      // PCSTR and only sometimes a PCTSTR.
+      StatsLock_AcquireExclusive();
+      wsprintf(g_ServerIP, _T("%S"), lpvStatusInformation);
+      if (wcslen(g_ServerIP) == 1)
+      {
+        wsprintf(g_ServerIP, _T("%s"), lpvStatusInformation);
+      }
+      StatsLock_ReleaseExclusive();
     }
-    StatsLock_ReleaseExclusive();
   }
 
 #if defined(PLUGIN_DEBUG)

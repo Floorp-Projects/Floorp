@@ -908,7 +908,7 @@ DefineTransaction.defineInputProps(["guid", "parentGuid", "newParentGuid"],
                                    DefineTransaction.guidValidate);
 DefineTransaction.defineInputProps(["title", "postData"],
                                    DefineTransaction.strOrNullValidate, null);
-DefineTransaction.defineInputProps(["keyword", "oldKeyword", "tag",
+DefineTransaction.defineInputProps(["keyword", "oldKeyword", "oldTag", "tag",
                                     "excludingAnnotation"],
                                    DefineTransaction.strValidate, "");
 DefineTransaction.defineInputProps(["index", "newIndex"],
@@ -1609,6 +1609,96 @@ PT.Untag.prototype = {
           PlacesUtils.tagging.untagURI(uri, tagsToRemove);
         }
       });
+    }
+    this.undo = async function() {
+      for (let f of onUndo) {
+        await f();
+      }
+    };
+    this.redo = async function() {
+      for (let f of onRedo) {
+        await f();
+      }
+    };
+  }
+};
+
+/**
+ * Transaction for renaming a tag.
+ *
+ * Required Input Properties: oldTag, tag.
+ */
+PT.RenameTag = DefineTransaction(["oldTag", "tag"]);
+PT.RenameTag.prototype = {
+  async execute({ oldTag, tag }) {
+    // For now this is implemented by untagging and tagging all the bookmarks.
+    // We should create a specialized bookmarking API to just rename the tag.
+    let onUndo = [], onRedo = [];
+    let urls = PlacesUtils.tagging.getURIsForTag(oldTag);
+    if (urls.length > 0) {
+      let tagTxn = TransactionsHistory.getRawTransaction(
+        PT.Tag({ urls, tags: [tag] })
+      );
+      await tagTxn.execute();
+      onUndo.unshift(tagTxn.undo.bind(tagTxn));
+      onRedo.push(tagTxn.redo.bind(tagTxn));
+      let untagTxn = TransactionsHistory.getRawTransaction(
+        PT.Untag({ urls, tags: [oldTag] })
+      );
+      await untagTxn.execute();
+      onUndo.unshift(untagTxn.undo.bind(untagTxn));
+      onRedo.push(untagTxn.redo.bind(untagTxn));
+
+      // Update all the place: queries that refer to this tag.
+      let db = await PlacesUtils.promiseDBConnection();
+      let rows = await db.executeCached(`
+        SELECT h.url, b.guid, b.title
+        FROM moz_places h
+        JOIN moz_bookmarks b ON b.fk = h.id
+        WHERE url_hash BETWEEN hash("place", "prefix_lo")
+                           AND hash("place", "prefix_hi")
+          AND url LIKE :tagQuery
+      `, { tagQuery: "%tag=%" });
+      for (let row of rows) {
+        let url = row.getResultByName("url");
+        try {
+          url = new URL(url);
+          let urlParams = new URLSearchParams(url.pathname);
+          let tags = urlParams.getAll("tag");
+          if (!tags.includes(oldTag))
+            continue;
+          if (tags.length > 1) {
+            // URLSearchParams cannot set more than 1 same-named param.
+            urlParams.delete("tag");
+            urlParams.set("tag", tag);
+            url = new URL(url.protocol + urlParams +
+                          "&tag=" + tags.filter(t => t != oldTag).join("&tag="));
+          } else {
+            urlParams.set("tag", tag);
+            url = new URL(url.protocol + urlParams);
+          }
+        } catch (ex) {
+          Cu.reportError("Invalid bookmark url: " + row.getResultByName("url") + ": " + ex);
+          continue;
+        }
+        let guid = row.getResultByName("guid");
+        let title = row.getResultByName("title");
+
+        let editUrlTxn = TransactionsHistory.getRawTransaction(
+          PT.EditUrl({ guid, url })
+        );
+        await editUrlTxn.execute();
+        onUndo.unshift(editUrlTxn.undo.bind(editUrlTxn));
+        onRedo.push(editUrlTxn.redo.bind(editUrlTxn));
+        if (title == oldTag) {
+          let editTitleTxn = TransactionsHistory.getRawTransaction(
+            PT.EditTitle({ guid, title: tag })
+          );
+          await editTitleTxn.execute();
+          onUndo.unshift(editTitleTxn.undo.bind(editTitleTxn));
+          onRedo.push(editTitleTxn.redo.bind(editTitleTxn));
+        }
+      }
     }
     this.undo = async function() {
       for (let f of onUndo) {

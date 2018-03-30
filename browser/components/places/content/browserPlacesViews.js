@@ -205,10 +205,7 @@ PlacesViewBase.prototype = {
         container = selectedNode.parent;
         index = container.getChildIndex(selectedNode);
         if (PlacesUtils.nodeIsTagQuery(container)) {
-          tagName = container.title;
-          // TODO (Bug 1160193): properly support dropping on a tag root.
-          if (!tagName)
-            return null;
+          tagName = PlacesUtils.asQuery(container).query.tags[0];
         }
       }
     }

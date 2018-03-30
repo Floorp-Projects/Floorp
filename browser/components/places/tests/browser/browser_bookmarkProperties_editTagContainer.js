@@ -31,8 +31,11 @@ add_task(async function() {
   Assert.ok(tree.controller.isCommandEnabled("placesCmd_show:info"),
             "'placesCmd_show:info' on current selected node is enabled");
 
-  let promiseTitleResetNotification = PlacesTestUtils.waitForNotification(
-      "onItemChanged", (itemId, prop, isAnno, val) => prop == "title" && val == "tag1");
+  let promiseTagResetNotification = PlacesTestUtils.waitForNotification(
+    "onItemChanged", (itemId, prop) => {
+      let tags = PlacesUtils.tagging.getTagsForURI(uri);
+      return prop == "tags" && tags.length == 1 && tags[0] == "tag1";
+  });
 
   await withBookmarksDialog(
     true,
@@ -47,22 +50,24 @@ add_task(async function() {
       let namepicker = dialogWin.document.getElementById("editBMPanel_namePicker");
       Assert.ok(!namepicker.readOnly, "Name field should not be read-only");
       Assert.equal(namepicker.value, "tag1", "Node title is correct");
-
-      let promiseTitleChangeNotification = PlacesTestUtils.waitForNotification(
-          "onItemChanged", (itemId, prop, isAnno, val) => prop == "title" && val == "tag2");
+      let promiseTagChangeNotification = PlacesTestUtils.waitForNotification(
+        "onItemChanged", (itemId, prop) => {
+          let tags = PlacesUtils.tagging.getTagsForURI(uri);
+          return prop == "tags" && tags.length == 1 && tags[0] == "tag2";
+      });
 
       fillBookmarkTextField("editBMPanel_namePicker", "tag2", dialogWin);
 
-      await promiseTitleChangeNotification;
+      await promiseTagChangeNotification;
 
-      Assert.equal(namepicker.value, "tag2", "Node title has been properly edited");
+      Assert.equal(namepicker.value, "tag2", "The title field has been changed");
 
       // Check the shortcut's title.
       Assert.equal(tree.selectedNode.title, "tag2", "The node has the correct title");
 
       // Try to set an empty title, it should restore the previous one.
       fillBookmarkTextField("editBMPanel_namePicker", "", dialogWin);
-      Assert.equal(namepicker.value, "tag2", "Title has not been changed");
+      Assert.equal(namepicker.value, "tag2", "The title field has been changed");
       Assert.equal(tree.selectedNode.title, "tag2", "The node has the correct title");
 
       // Check the tags have been edited.
@@ -75,7 +80,7 @@ add_task(async function() {
     }
   );
 
-  await promiseTitleResetNotification;
+  await promiseTagResetNotification;
 
   // Check the tag change has been reverted.
   let tags = PlacesUtils.tagging.getTagsForURI(uri);
