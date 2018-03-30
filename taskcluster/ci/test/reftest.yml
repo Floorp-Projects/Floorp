@@ -92,10 +92,6 @@ reftest:
     description: "Reftest run"
     suite: reftest/reftest
     treeherder-symbol: R(R)
-    worker-type:
-        by-test-platform:
-            windows10-64.*: buildbot-bridge/buildbot-bridge
-            default: null
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['trunk', 'try']  # exclude beta and project branches
@@ -104,7 +100,10 @@ reftest:
         by-test-platform:
             android.*: xlarge
             default: default
-    virtualization: virtual-with-gpu
+    virtualization:
+        by-test-platform:
+            windows10.*: hardware
+            default: virtual-with-gpu
     chunks:
         by-test-platform:
             android-4.3-arm7-api-16/debug: 56
