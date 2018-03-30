@@ -1102,6 +1102,11 @@ function isInside(point, polygon) {
     return false;
   }
 
+  // Reduce the length of the fractional part because this is likely to cause errors when
+  // the point is on the edge of the polygon.
+  point = point.map(n => n.toFixed(2));
+  polygon = polygon.map(p => p.map(n => n.toFixed(2)));
+
   const n = polygon.length;
   const newPoints = polygon.slice(0);
   newPoints.push(polygon[0]);
