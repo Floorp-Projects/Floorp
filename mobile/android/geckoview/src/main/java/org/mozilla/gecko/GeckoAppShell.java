@@ -1872,6 +1872,21 @@ public class GeckoAppShell
 
     @WrapForJNI
     public static String getDefaultLocale() {
-        return Locale.getDefault().toString();
+        final Locale locale = Locale.getDefault();
+        final StringBuilder out = new StringBuilder(locale.getLanguage());
+        final String script = locale.getScript();
+        final String country = locale.getCountry();
+        final String variant = locale.getVariant();
+        if (!TextUtils.isEmpty(script)) {
+            out.append('-').append(script);
+        }
+        if (!TextUtils.isEmpty(country)) {
+            out.append('-').append(country);
+        }
+        if (!TextUtils.isEmpty(variant)) {
+            out.append('-').append(variant);
+        }
+        // e.g. "en", "en-US", "en-Latn-US", or "en-Latn-US-POSIX".
+        return out.toString();
     }
 }
