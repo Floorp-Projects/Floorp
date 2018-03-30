@@ -5051,6 +5051,8 @@ pref("extensions.webextensions.protocol.remote", true);
 // Disable tab hiding API by default.
 pref("extensions.webextensions.tabhide.enabled", false);
 
+pref("extensions.webextensions.background-delayed-startup", false);
+
 // Report Site Issue button
 pref("extensions.webcompat-reporter.newIssueEndpoint", "https://webcompat.com/issues/new");
 #if defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)
