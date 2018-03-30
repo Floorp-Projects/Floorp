@@ -19,6 +19,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import time
 
 import mozcrash
 import mozfile
@@ -138,6 +139,7 @@ class TTest(object):
         )
 
         for i in range(test_config['cycles']):
+            time.sleep(0.1)
             LOG.info('Running cycle %d/%d for %s test...'
                      % (i+1, test_config['cycles'], test_config['name']))
 
