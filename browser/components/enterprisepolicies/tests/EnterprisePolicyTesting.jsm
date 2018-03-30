@@ -135,11 +135,11 @@ var PoliciesPrefTracker = {
       // unlockPref is harmless
       Preferences.unlock(prefName);
 
-      if (stored.originalDefaultValue !== undefined) {
+      if (stored.originalDefaultValue) {
         defaults.set(prefName, stored.originalDefaultValue);
       }
 
-      if (stored.originalUserValue !== undefined) {
+      if (stored.originalUserValue) {
         Preferences.set(prefName, stored.originalUserValue);
       }
     }
