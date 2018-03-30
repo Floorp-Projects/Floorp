@@ -157,6 +157,11 @@ nsIGlobalObject::ForEachEventTargetObject(const std::function<void(DOMEventTarge
   // Iterate the target list and call the function on each one.
   bool done = false;
   for (auto target : targetList) {
+    // Check to see if a previous iteration's callback triggered the removal
+    // of this target as a side-effect.  If it did, then just ignore it.
+    if (!mEventTargetObjects.Contains(target)) {
+      continue;
+    }
     aFunc(target, &done);
     if (done) {
       break;
