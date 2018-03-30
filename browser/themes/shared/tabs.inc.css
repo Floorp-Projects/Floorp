@@ -652,12 +652,10 @@
   margin-inline-start: -1px;
 }
 
-%ifdef CAN_DRAW_IN_TITLEBAR
 %ifdef MENUBAR_CAN_AUTOHIDE
 :root[tabsintitlebar]:not([extradragspace]) #toolbar-menubar[autohide=true] + #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab::after,
 %else
 :root[tabsintitlebar]:not([extradragspace]) .tabbrowser-tab::after,
-%endif
 %endif
 /* Show full height tab separators on hover. */
 .tabbrowser-tab:hover::after,

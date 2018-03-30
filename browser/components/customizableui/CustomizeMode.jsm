@@ -102,14 +102,19 @@ function CustomizeMode(aWindow) {
   // toolbar items in browser.xul. This is invisible, and never seen by the
   // user. Then there's the visible palette, which gets populated and displayed
   // to the user when in customizing mode.
-  this.visiblePalette = this.document.getElementById(kPaletteId);
-  this.pongArena = this.document.getElementById("customization-pong-arena");
-  if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
+  this.visiblePalette = this.$(kPaletteId);
+  this.pongArena = this.$("customization-pong-arena");
+
+  if (this._canDrawInTitlebar()) {
     this._updateTitlebarCheckbox();
     this._updateDragSpaceCheckbox();
     Services.prefs.addObserver(kDrawInTitlebarPref, this);
     Services.prefs.addObserver(kExtraDragSpacePref, this);
+  } else {
+    this.$("customization-titlebar-visibility-checkbox").hidden = true;
+    this.$("customization-extra-drag-space-checkbox").hidden = true;
   }
+
   this.window.addEventListener("unload", this);
 }
 
@@ -138,10 +143,14 @@ CustomizeMode.prototype = {
   },
 
   uninit() {
-    if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
+    if (this._canDrawInTitlebar()) {
       Services.prefs.removeObserver(kDrawInTitlebarPref, this);
       Services.prefs.removeObserver(kExtraDragSpacePref, this);
     }
+  },
+
+  $(id) {
+    return this.document.getElementById(id);
   },
 
   toggle() {
@@ -1577,7 +1586,7 @@ CustomizeMode.prototype = {
       case "nsPref:changed":
         this._updateResetButton();
         this._updateUndoResetButton();
-        if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
+        if (this._canDrawInTitlebar()) {
           this._updateTitlebarCheckbox();
           this._updateDragSpaceCheckbox();
         }
@@ -1585,12 +1594,13 @@ CustomizeMode.prototype = {
     }
   },
 
+  _canDrawInTitlebar() {
+    return this.window.TabsInTitlebar.systemSupported;
+  },
+
   _updateTitlebarCheckbox() {
-    if (!AppConstants.CAN_DRAW_IN_TITLEBAR) {
-      return;
-    }
     let drawInTitlebar = Services.prefs.getBoolPref(kDrawInTitlebarPref, true);
-    let checkbox = this.document.getElementById("customization-titlebar-visibility-checkbox");
+    let checkbox = this.$("customization-titlebar-visibility-checkbox");
     // Drawing in the titlebar means 'hiding' the titlebar.
     // We use the attribute rather than a property because if we're not in
     // customize mode the button is hidden and properties don't work.
@@ -1602,18 +1612,14 @@ CustomizeMode.prototype = {
   },
 
   _updateDragSpaceCheckbox() {
-    if (!AppConstants.CAN_DRAW_IN_TITLEBAR) {
-      return;
-    }
-
     let extraDragSpace = Services.prefs.getBoolPref(kExtraDragSpacePref);
     let drawInTitlebar = Services.prefs.getBoolPref(kDrawInTitlebarPref, true);
-    let menuBar = this.document.getElementById("toolbar-menubar");
+    let menuBar = this.$("toolbar-menubar");
     let menuBarEnabled = menuBar
       && AppConstants.platform != "macosx"
       && menuBar.getAttribute("autohide") != "true";
 
-    let checkbox = this.document.getElementById("customization-extra-drag-space-checkbox");
+    let checkbox = this.$("customization-extra-drag-space-checkbox");
     if (extraDragSpace) {
       checkbox.setAttribute("checked", "true");
     } else {
@@ -1628,19 +1634,12 @@ CustomizeMode.prototype = {
   },
 
   toggleTitlebar(aShouldShowTitlebar) {
-    if (!AppConstants.CAN_DRAW_IN_TITLEBAR) {
-      return;
-    }
     // Drawing in the titlebar means not showing the titlebar, hence the negation:
     Services.prefs.setBoolPref(kDrawInTitlebarPref, !aShouldShowTitlebar);
     this._updateDragSpaceCheckbox();
   },
 
   toggleDragSpace(aShouldShowDragSpace) {
-    if (!AppConstants.CAN_DRAW_IN_TITLEBAR) {
-      return;
-    }
-
     Services.prefs.setBoolPref(kExtraDragSpacePref, aShouldShowDragSpace);
   },
 
