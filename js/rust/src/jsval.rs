@@ -70,9 +70,7 @@ const JSVAL_PAYLOAD_MASK: u64 = 0x00007FFFFFFFFFFF;
 #[inline(always)]
 fn AsJSVal(val: u64) -> JS::Value {
     JS::Value {
-        data: JS::Value_layout {
-            asBits: val,
-        }
+        asBits_: val,
     }
 }
 
@@ -192,7 +190,7 @@ pub fn PrivateValue(o: *const c_void) -> JS::Value {
 impl JS::Value {
     #[inline(always)]
     unsafe fn asBits(&self) -> u64 {
-        self.data.asBits
+        self.asBits_
     }
 
     #[inline(always)]
