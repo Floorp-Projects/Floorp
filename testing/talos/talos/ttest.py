@@ -139,7 +139,7 @@ class TTest(object):
         )
 
         for i in range(test_config['cycles']):
-            time.sleep(0.1)
+            time.sleep(0.25)
             LOG.info('Running cycle %d/%d for %s test...'
                      % (i+1, test_config['cycles'], test_config['name']))
 
