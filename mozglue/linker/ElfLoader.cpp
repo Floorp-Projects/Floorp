@@ -85,7 +85,11 @@ __wrap_dlsym(void *handle, const char *symbol)
     LibHandle *h = reinterpret_cast<LibHandle *>(handle);
     return h->GetSymbolPtr(symbol);
   }
-  return dlsym(handle, symbol);
+
+  void* sym = dlsym(handle, symbol);
+  ElfLoader::Singleton.lastError = dlerror();
+
+  return sym;
 }
 
 int
@@ -356,6 +360,7 @@ SystemElf::Load(const char *path, int flags)
    * already loaded library, even when the full path doesn't exist */
   if (path && path[0] == '/' && (access(path, F_OK) == -1)){
     DEBUG_LOG("dlopen(\"%s\", 0x%x) = %p", path, flags, (void *)nullptr);
+    ElfLoader::Singleton.lastError = "Specified file does not exist";
     return nullptr;
   }
 
