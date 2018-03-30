@@ -70,12 +70,9 @@ XPC_WN_Shared_ToString(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedValue thisv(cx, args.computeThis(cx));
-    if (!thisv.isObject()) {
-        JS_ReportErrorASCII(cx, "Called on incompatible |this|");
+    RootedObject obj(cx);
+    if (!args.computeThis(cx, &obj))
         return false;
-    }
-    RootedObject obj(cx, &thisv.toObject());
 
     XPCCallContext ccx(cx, obj);
     if (!ccx.IsValid())
@@ -895,12 +892,9 @@ XPC_WN_CallMethod(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(JS_TypeOfValue(cx, args.calleev()) == JSTYPE_FUNCTION, "bad function");
     RootedObject funobj(cx, &args.callee());
 
-    RootedValue thisv(cx, args.computeThis(cx));
-    if (!thisv.isObject()) {
-        JS_ReportErrorASCII(cx, "Called on incompatible |this|");
+    RootedObject obj(cx);
+    if (!args.computeThis(cx, &obj))
         return false;
-    }
-    RootedObject obj(cx, &thisv.toObject());
 
     obj = FixUpThisIfBroken(obj, funobj);
     XPCCallContext ccx(cx, obj, funobj, JSID_VOIDHANDLE, args.length(),
