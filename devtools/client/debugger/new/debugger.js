@@ -26725,6 +26725,12 @@ exports.findClosestClass = findClosestClass;
 
 var _lodash = __webpack_require__(2);
 
+var _pausePoints = __webpack_require__(3622);
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 function findBestMatchExpression(symbols, tokenPos) {
   const { memberExpressions, identifiers, literals } = symbols;
   const { line, column } = tokenPos;
@@ -26740,24 +26746,25 @@ function findBestMatchExpression(symbols, tokenPos) {
 
     return found;
   }, null);
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 function findEmptyLines(selectedSource, pausePoints) {
-  if (!pausePoints || pausePoints.length == 0 || !selectedSource) {
+  if (!pausePoints || !selectedSource) {
     return [];
   }
 
-  const breakpoints = pausePoints.filter(point => point.types.breakpoint);
+  const pausePointsList = (0, _pausePoints.convertToList)(pausePoints);
+
+  const breakpoints = pausePointsList.filter(point => point.types.break);
   const breakpointLines = breakpoints.map(point => point.location.line);
 
   if (!selectedSource.text) {
     return [];
   }
+
   const lineCount = selectedSource.text.split("\n").length;
   const sourceLines = (0, _lodash.range)(1, lineCount + 1);
-  return (0, _lodash.without)(sourceLines, ...breakpointLines);
+  return (0, _lodash.xor)(sourceLines, breakpointLines);
 }
 
 function containsPosition(a, b) {
@@ -38915,6 +38922,7 @@ module.exports = reducer;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.convertToList = convertToList;
 exports.formatPausePoints = formatPausePoints;
 
 var _lodash = __webpack_require__(2);
@@ -38927,15 +38935,30 @@ function insertStrtAt(string, index, newString) {
    * License, v. 2.0. If a copy of the MPL was not distributed with this
    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function formatPausePoints(text, nodes) {
-  nodes = (0, _lodash.reverse)((0, _lodash.sortBy)(nodes, ["location.line", "location.column"]));
+function convertToList(pausePoints) {
+  const list = [];
+  for (let line in pausePoints) {
+    for (let column in pausePoints[line]) {
+      const point = pausePoints[line][column];
+      list.push({
+        location: { line: parseInt(line, 10), column: parseInt(column, 10) },
+        types: point
+      });
+    }
+  }
+  return list;
+}
+
+function formatPausePoints(text, pausePoints) {
+  const nodes = (0, _lodash.reverse)(convertToList(pausePoints));
   const lines = text.split("\n");
   nodes.forEach((node, index) => {
     const { line, column } = node.location;
-    const { breakpoint, stepOver } = node.types;
+    const { break: breakPoint, step } = node.types;
     const num = nodes.length - index;
-    const types = `${breakpoint ? "b" : ""}${stepOver ? "s" : ""}`;
-    lines[line - 1] = insertStrtAt(lines[line - 1], column, `/*${types} ${num}*/`);
+    const types = `${breakPoint ? "b" : ""}${step ? "s" : ""}`;
+    const spacer = breakPoint || step ? " " : "";
+    lines[line - 1] = insertStrtAt(lines[line - 1], column, `/*${types}${spacer}${num}*/`);
   });
 
   return lines.join("\n");
