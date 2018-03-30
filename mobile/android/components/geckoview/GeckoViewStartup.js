@@ -37,8 +37,6 @@ GeckoViewStartup.prototype = {
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "app-startup": {
-        this.setResourceSubstitutions();
-
         // Parent and content process.
         Services.obs.addObserver(this, "chrome-document-global-created");
         Services.obs.addObserver(this, "content-document-global-created");
@@ -52,7 +50,11 @@ GeckoViewStartup.prototype = {
           ],
         });
 
-        if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
+        if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
+          // Parent process only.
+          this.setResourceSubstitutions();
+
+        } else {
           // Content process only.
           GeckoViewUtils.addLazyGetter(this, "GeckoViewPrompt", {
             service: "@mozilla.org/prompter;1",
