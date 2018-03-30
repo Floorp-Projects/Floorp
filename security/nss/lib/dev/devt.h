@@ -92,7 +92,7 @@ struct NSSSlotStr {
     PK11SlotInfo *pk11slot;
     PZLock *isPresentLock;
     PRCondVar *isPresentCondition;
-    PRBool inIsPresent;
+    PRThread *isPresentThread;
 };
 
 struct nssSessionStr {
