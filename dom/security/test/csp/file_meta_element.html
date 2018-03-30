@@ -9,7 +9,7 @@
 <body>
 
   <!-- try to load an image which is forbidden by meta CSP -->
-  <img id="testimage" src="http://mochi.test:8888/tests/image/test/mochitest/blue.png"></img>
+  <img id="testimage"></img>
 
   <script type="application/javascript">
     var myImg = document.getElementById("testimage");
@@ -19,6 +19,8 @@
     myImg.onerror = function(e) {
       window.parent.postMessage({result: "img-blocked"}, "*");
     };
+    //Image should be tried to load only after onload/onerror event declaration.
+    myImg.src = "http://mochi.test:8888/tests/image/test/mochitest/blue.png";
   </script>
 
 </body>

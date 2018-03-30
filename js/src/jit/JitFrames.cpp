@@ -931,7 +931,7 @@ TraceIonJSFrame(JSTracer* trc, const JSJitFrameIter& frame)
 
         if (v != Value::fromTagAndPayload(tag, rawPayload)) {
             // GC moved the value, replace the stored payload.
-            rawPayload = *v.payloadUIntPtr();
+            rawPayload = v.toNunboxPayload();
             WriteAllocation(frame, &payload, rawPayload);
         }
     }
