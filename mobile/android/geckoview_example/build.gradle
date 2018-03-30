@@ -33,6 +33,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
 
     implementation "com.android.support:support-annotations:$support_library_version"
+    implementation "com.android.support:appcompat-v7:$support_library_version"
 
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:2.2.2'
     androidTestImplementation 'com.android.support.test:runner:0.5'
