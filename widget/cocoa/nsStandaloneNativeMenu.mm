@@ -201,7 +201,11 @@ void
 nsStandaloneNativeMenu::IconUpdated()
 {
   if (mContainerStatusBarItem) {
-    [mContainerStatusBarItem setImage:[mMenu->NativeMenuItem() image]];
+    NSImage* menuImage = [mMenu->NativeMenuItem() image];
+    if (menuImage) {
+      [menuImage setTemplate:true];
+    }
+    [mContainerStatusBarItem setImage:menuImage];
   }
 }
 
