@@ -675,18 +675,19 @@ WebGLContext::DrawElements_check(const char* const funcName, const GLsizei rawIn
     ////
     // Index fetching
 
+    const auto& indexBuffer = mBoundVertexArray->mElementArrayBuffer;
+    if (!indexBuffer) {
+        ErrorInvalidOperation("%s: Index buffer not bound.", funcName);
+        return false;
+    }
+    MOZ_ASSERT(!indexBuffer->IsBoundForTF(), "This should be impossible.");
+
     if (!indexCount || !instanceCount) {
         *out_lastVert = Nothing();
         return true;
     }
 
-    const auto& indexBuffer = mBoundVertexArray->mElementArrayBuffer;
-
-    size_t availBytes = 0;
-    if (indexBuffer) {
-        MOZ_ASSERT(!indexBuffer->IsBoundForTF(), "This should be impossible.");
-        availBytes = indexBuffer->ByteLength();
-    }
+    const size_t availBytes = indexBuffer->ByteLength();
     const auto availIndices = AvailGroups(availBytes, byteOffset, bytesPerIndex,
                                           bytesPerIndex);
     if (indexCount > availIndices) {
