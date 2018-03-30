@@ -637,12 +637,17 @@ public class Tabs implements BundleEventListener {
             }
 
         } else if ("Content:LoadError".equals(event)) {
-            tab.handleContentLoaded();
+            tab.handleLoadError();
             notifyListeners(tab, Tabs.TabEvents.LOAD_ERROR);
 
         } else if ("Content:DOMContentLoaded".equals(event)) {
-            tab.handleContentLoaded();
-            notifyListeners(tab, TabEvents.LOADED);
+            if (TextUtils.isEmpty(message.getString("errorType"))) {
+                tab.handleContentLoaded();
+                notifyListeners(tab, TabEvents.LOADED);
+            } else {
+                tab.handleLoadError();
+                notifyListeners(tab, TabEvents.LOAD_ERROR);
+            }
 
         } else if ("Content:PageShow".equals(event)) {
             tab.setLoadedFromCache(message.getBoolean("fromCache"));

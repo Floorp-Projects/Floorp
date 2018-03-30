@@ -94,7 +94,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     }
 
     public interface OnCommitListener {
-        public void onCommit();
+        public void onCommitByKey();
     }
 
     public interface OnDismissListener {

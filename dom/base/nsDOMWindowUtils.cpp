@@ -3594,7 +3594,7 @@ nsDOMWindowUtils::GetMillisSinceLastUserInput(double* aMillisSinceLastUserInput)
 {
   TimeStamp lastInput = EventStateManager::LatestUserInputStart();
   if (lastInput.IsNull()) {
-    *aMillisSinceLastUserInput = 0;
+    *aMillisSinceLastUserInput = -1.0f;
     return NS_OK;
   }
 
