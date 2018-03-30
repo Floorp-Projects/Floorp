@@ -553,9 +553,6 @@ public:
   bool NeedsMinSizeAutoResolution() const
     { return mNeedsMinSizeAutoResolution; }
 
-  bool HasAnyAutoMargin() const
-    { return mHasAnyAutoMargin; }
-
   // Indicates whether this item is a "strut" left behind by an element with
   // visibility:collapse.
   bool IsStrut() const             { return mIsStrut; }
@@ -860,9 +857,6 @@ protected:
 
   // Does this item need to resolve a min-[width|height]:auto (in main-axis).
   bool mNeedsMinSizeAutoResolution;
-
-  // Does this item have an auto margin in either main or cross axis?
-  bool mHasAnyAutoMargin;
 
   uint8_t mAlignSelf; // My "align-self" computed value (with "auto"
                       // swapped out for parent"s "align-items" value,
@@ -1822,7 +1816,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
     mIsInlineAxisMainAxis(aAxisTracker.IsRowOriented() !=
                           aAxisTracker.GetWritingMode().IsOrthogonalTo(mWM))
     // mNeedsMinSizeAutoResolution is initialized in CheckForMinSizeAuto()
-    // mAlignSelf, mHasAnyAutoMargin see below
+    // mAlignSelf, see below
 {
   MOZ_ASSERT(mFrame, "expecting a non-null child frame");
   MOZ_ASSERT(!mFrame->IsPlaceholderFrame(),
@@ -1859,16 +1853,12 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
   SetFlexBaseSizeAndMainSize(aFlexBaseSize);
   CheckForMinSizeAuto(aFlexItemReflowInput, aAxisTracker);
 
-
-  const nsStyleSides& styleMargin =
-    aFlexItemReflowInput.mStyleMargin->mMargin;
-  mHasAnyAutoMargin = styleMargin.HasInlineAxisAuto(mWM) ||
-                      styleMargin.HasBlockAxisAuto(mWM);
-
   // Assert that any "auto" margin components are set to 0.
   // (We'll resolve them later; until then, we want to treat them as 0-sized.)
 #ifdef DEBUG
   {
+    const nsStyleSides& styleMargin =
+      aFlexItemReflowInput.mStyleMargin->mMargin;
     NS_FOR_CSS_SIDES(side) {
       if (styleMargin.GetUnit(side) == eStyleUnit_Auto) {
         MOZ_ASSERT(GetMarginComponentForSide(side) == 0,
@@ -1929,7 +1919,6 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
     mIsStrut(true), // (this is the constructor for making struts, after all)
     mIsInlineAxisMainAxis(true), // (doesn't matter b/c we're not doing layout)
     mNeedsMinSizeAutoResolution(false),
-    mHasAnyAutoMargin(false),
     mAlignSelf(NS_STYLE_ALIGN_FLEX_START)
 {
   MOZ_ASSERT(mFrame, "expecting a non-null child frame");
@@ -4766,16 +4755,6 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                        *item, framePos, containerSize);
       }
 
-      // If the item has auto margins, and we were tracking the UsedMargin
-      // property, set the property to the computed margin values.
-      if (item->HasAnyAutoMargin()) {
-        nsMargin* propValue =
-          item->Frame()->GetProperty(nsIFrame::UsedMarginProperty());
-        if (propValue) {
-          *propValue = item->GetMargin();
-        }
-      }
-
       // If this is our first item and we haven't established a baseline for
       // the container yet (i.e. if we don't have 'align-self: baseline' on any
       // children), then use this child's first baseline as the container's
@@ -4975,6 +4954,10 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
     // & neglecting to set it.)
     aItem.Frame()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
   }
+
+  // XXXdholbert Might need to actually set the correct margins in the
+  // reflow state at some point, so that they can be saved on the frame for
+  // UsedMarginProperty().  Maybe doesn't matter though...?
 
   // If we're overriding the computed width or height, *and* we had an
   // earlier "measuring" reflow, then this upcoming reflow needs to be
