@@ -25,6 +25,12 @@ var ContentClick = {
     }
   },
 
+  /**
+   * Handles clicks in the content area.
+   *
+   * @param json {Object} JSON object that looks like an Event
+   * @param browser {Element<browser>}
+   */
   contentAreaClick(json, browser) {
     // This is heavily based on contentAreaClick from browser.js (Bug 903016)
     // The json is set up in a way to look like an Event.
