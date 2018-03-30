@@ -15,7 +15,17 @@
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
-class JSTracer;
+#ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wattributes"
+#endif // JS_BROKEN_GCC_ATTRIBUTE_WARNING
+
+class JS_PUBLIC_API(JSTracer);
+
+#ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
+#pragma GCC diagnostic pop
+#endif // JS_BROKEN_GCC_ATTRIBUTE_WARNING
+
 class PseudoStack;
 
 // This file defines the classes PseudoStack and ProfileEntry.

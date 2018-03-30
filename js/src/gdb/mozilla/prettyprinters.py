@@ -211,7 +211,7 @@ def implemented_types(t):
         if t.code == gdb.TYPE_CODE_TYPEDEF:
             yield t.target()
             for t2 in followers(t.target()): yield t2
-        elif t.code == gdb.TYPE_CODE_STRUCT:
+        elif is_struct_or_union(t):
             base_classes = []
             for f in t.fields():
                 if f.is_base_class:
@@ -224,6 +224,9 @@ def implemented_types(t):
     for t2 in followers(t): yield t2
 
 template_regexp = re.compile("([\w_:]+)<")
+
+def is_struct_or_union(t):
+    return t.code in (gdb.TYPE_CODE_STRUCT, gdb.TYPE_CODE_UNION)
 
 # Construct and return a pretty-printer lookup function for objfile, or
 # return None if the objfile doesn't contain SpiderMonkey code
@@ -253,7 +256,7 @@ def lookup_for_objfile(objfile):
         def check_table_by_type_name(table, t):
             if t.code == gdb.TYPE_CODE_TYPEDEF:
                 return check_table(table, str(t))
-            elif t.code == gdb.TYPE_CODE_STRUCT and t.tag:
+            elif is_struct_or_union(t) and t.tag:
                 return check_table(table, t.tag)
             else:
                 return None
@@ -270,7 +273,7 @@ def lookup_for_objfile(objfile):
             else:
                 p = check_table_by_type_name(printers_by_tag, t)
                 if p: return p
-                if t.code == gdb.TYPE_CODE_STRUCT and t.tag:
+                if is_struct_or_union(t) and t.tag:
                     m = template_regexp.match(t.tag)
                     if m:
                         p = check_table(template_printers_by_tag, m.group(1))
