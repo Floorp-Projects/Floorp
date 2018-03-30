@@ -110,8 +110,8 @@ reftest:
             android.*: 28
             macosx64.*/opt: 1
             macosx64.*/debug: 3
-            windows10-64.*/opt: 1
-            windows10-64.*/debug: 2
+            windows.*/opt: 2
+            windows.*/debug: 4
             default: 8
     e10s:
         by-test-platform:
@@ -138,7 +138,10 @@ reftest-gpu:
     description: "Reftest GPU run"
     suite: reftest/reftest-gpu
     treeherder-symbol: R(Rg)
-    chunks: 8
+    chunks:
+        by-test-platform:
+            windows.*/opt: 2
+            default: 4
     run-on-projects:
         by-test-platform:
             windows10.*: []
@@ -162,6 +165,7 @@ reftest-no-accel:
     chunks:
         by-test-platform:
             macosx.*: 1
+            windows.*: 4
             default: 8
     e10s:
         by-test-platform:
