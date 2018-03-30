@@ -247,6 +247,38 @@ function promisePageActionPanelOpen() {
   });
 }
 
+async function waitForActivatedActionPanel() {
+  if (!BrowserPageActions.activatedActionPanelNode) {
+    info("Waiting for activated-action panel to be added to mainPopupSet");
+    await new Promise(resolve => {
+      let observer = new MutationObserver(mutations => {
+        if (BrowserPageActions.activatedActionPanelNode) {
+          observer.disconnect();
+          resolve();
+        }
+      });
+      let popupSet = document.getElementById("mainPopupSet");
+      observer.observe(popupSet, { childList: true });
+    });
+    info("Activated-action panel added to mainPopupSet");
+  }
+  if (!BrowserPageActions.activatedActionPanelNode.state == "open") {
+    info("Waiting for activated-action panel popupshown");
+    await promisePanelShown(BrowserPageActions.activatedActionPanelNode);
+    info("Got activated-action panel popupshown");
+  }
+  let panelView =
+    BrowserPageActions.activatedActionPanelNode.querySelector("panelview");
+  if (panelView) {
+    await BrowserTestUtils.waitForEvent(
+      BrowserPageActions.activatedActionPanelNode,
+      "ViewShown"
+    );
+    await promisePageActionViewChildrenVisible(panelView);
+  }
+  return panelView;
+}
+
 function promisePageActionPanelShown() {
   return promisePanelShown(BrowserPageActions.panelNode);
 }
@@ -293,16 +325,18 @@ function promisePageActionViewShown() {
 }
 
 function promisePageActionViewChildrenVisible(panelViewNode) {
-  info("promisePageActionViewChildrenVisible waiting for a child node to be visible");
+  return promiseNodeVisible(panelViewNode.firstChild.firstChild);
+}
+
+function promiseNodeVisible(node) {
+  info(`promiseNodeVisible waiting, node.id=${node.id} node.localeName=${node.localName}\n`);
   let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
                   .getInterface(Ci.nsIDOMWindowUtils);
   return BrowserTestUtils.waitForCondition(() => {
-    let bodyNode = panelViewNode.firstChild;
-    for (let childNode of bodyNode.childNodes) {
-      let bounds = dwu.getBoundsWithoutFlushing(childNode);
-      if (bounds.width > 0 && bounds.height > 0) {
-        return true;
-      }
+    let bounds = dwu.getBoundsWithoutFlushing(node);
+    if (bounds.width > 0 && bounds.height > 0) {
+      info(`promiseNodeVisible OK, node.id=${node.id} node.localeName=${node.localName}\n`);
+      return true;
     }
     return false;
   });
