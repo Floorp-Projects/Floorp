@@ -277,10 +277,8 @@ BenchmarkPlayback::MainThreadShutdown()
 {
   MOZ_ASSERT(OnThread());
 
-  if (mFinished) {
-    // Nothing more to do.
-    return;
-  }
+  MOZ_ASSERT(!mFinished, "We've already shutdown");
+
   mFinished = true;
 
   if (mDecoder) {
@@ -306,6 +304,8 @@ void
 BenchmarkPlayback::Output(const MediaDataDecoder::DecodedData& aResults)
 {
   MOZ_ASSERT(OnThread());
+  MOZ_ASSERT(!mFinished);
+
   RefPtr<Benchmark> ref(mMainThreadState);
   mFrameCount += aResults.Length();
   if (!mDecodeStartTime && mFrameCount >= ref->mParameters.mStartupFrame) {
@@ -314,9 +314,8 @@ BenchmarkPlayback::Output(const MediaDataDecoder::DecodedData& aResults)
   TimeStamp now = TimeStamp::Now();
   int32_t frames = mFrameCount - ref->mParameters.mStartupFrame;
   TimeDuration elapsedTime = now - mDecodeStartTime.refOr(now);
-  if (!mFinished &&
-      (((frames == ref->mParameters.mFramesToMeasure) && frames > 0) ||
-       elapsedTime >= ref->mParameters.mTimeout || mDrained)) {
+  if (((frames == ref->mParameters.mFramesToMeasure) && frames > 0) ||
+      elapsedTime >= ref->mParameters.mTimeout || mDrained) {
     uint32_t decodeFps = frames / elapsedTime.ToSeconds();
     MainThreadShutdown();
     ref->Dispatch(
@@ -342,30 +341,48 @@ void
 BenchmarkPlayback::InputExhausted()
 {
   MOZ_ASSERT(OnThread());
-  if (mFinished || mSampleIndex >= mSamples.Length()) {
+  MOZ_ASSERT(!mFinished);
+
+  if (mSampleIndex >= mSamples.Length()) {
+    Error(MediaResult(NS_ERROR_FAILURE, "Nothing left to decode"));
     return;
   }
+
+  RefPtr<MediaRawData> sample = mSamples[mSampleIndex];
   RefPtr<Benchmark> ref(mMainThreadState);
-  mDecoder->Decode(mSamples[mSampleIndex])
-    ->Then(Thread(), __func__,
-           [ref, this](const MediaDataDecoder::DecodedData& aResults) {
-             Output(aResults);
-             InputExhausted();
-           },
-           [ref, this](const MediaResult& aError) { Error(aError); });
+  RefPtr<MediaDataDecoder::DecodePromise> p = mDecoder->Decode(sample);
+
   mSampleIndex++;
-  if (mSampleIndex == mSamples.Length()) {
-    if (ref->mParameters.mStopAtFrame) {
+  if (mSampleIndex == mSamples.Length() && !ref->mParameters.mStopAtFrame) {
+    // Complete current frame decode then drain if still necessary.
+    p->Then(Thread(), __func__,
+            [ref, this](const MediaDataDecoder::DecodedData& aResults) {
+              Output(aResults);
+              if (!mFinished) {
+                mDecoder->Drain()->Then(
+                  Thread(), __func__,
+                  [ref, this](const MediaDataDecoder::DecodedData& aResults) {
+                    mDrained = true;
+                    Output(aResults);
+                    MOZ_ASSERT(mFinished, "We must be done now");
+                  },
+                  [ref, this](const MediaResult& aError) { Error(aError); });
+              }
+            },
+            [ref, this](const MediaResult& aError) { Error(aError); });
+  } else {
+    if (mSampleIndex == mSamples.Length() && ref->mParameters.mStopAtFrame) {
       mSampleIndex = 0;
-    } else {
-      mDecoder->Drain()->Then(
-        Thread(), __func__,
-        [ref, this](const MediaDataDecoder::DecodedData& aResults) {
-          mDrained = true;
-          Output(aResults);
-        },
-        [ref, this](const MediaResult& aError) { Error(aError); });
     }
+    // Continue decoding
+    p->Then(Thread(), __func__,
+            [ref, this](const MediaDataDecoder::DecodedData& aResults) {
+              Output(aResults);
+              if (!mFinished) {
+                InputExhausted();
+              }
+            },
+            [ref, this](const MediaResult& aError) { Error(aError); });
   }
 }
 
