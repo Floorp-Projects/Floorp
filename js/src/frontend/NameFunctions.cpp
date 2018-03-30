@@ -825,8 +825,8 @@ class NameResolver
         MOZ_ASSERT(parents[initialParents] == cur,
                    "pushed child shouldn't change underneath us");
 
-        JS_POISON(&parents[initialParents], 0xFF, sizeof(parents[initialParents]));
-        MOZ_MAKE_MEM_UNDEFINED(&parents[initialParents], sizeof(parents[initialParents]));
+        JS_POISON(&parents[initialParents], 0xFF, sizeof(parents[initialParents]),
+                  MemCheckKind::MakeUndefined);
 
         return true;
     }

@@ -14,6 +14,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/MemoryChecking.h"
 #include "mozilla/PodOperations.h"
 
 #include <limits.h>
@@ -283,8 +284,33 @@ PodSet(T* aDst, const T& aSrc, size_t aNElem)
 # error "JS_SWEPT_CODE_PATTERN not defined for this platform"
 #endif
 
+enum class MemCheckKind : uint8_t {
+    // Marks a region as poisoned. Memory sanitizers like ASan will crash when
+    // accessing it (both reads and writes).
+    MakeNoAccess,
+
+    // Marks a region as having undefined contents. In ASan builds this just
+    // unpoisons the memory. MSan and Valgrind can also use this to find
+    // reads of uninitialized memory.
+    MakeUndefined,
+};
+
+static MOZ_ALWAYS_INLINE void
+SetMemCheckKind(void* ptr, size_t bytes, MemCheckKind kind)
+{
+    switch (kind) {
+      case MemCheckKind::MakeUndefined:
+        MOZ_MAKE_MEM_UNDEFINED(ptr, bytes);
+        return;
+      case MemCheckKind::MakeNoAccess:
+        MOZ_MAKE_MEM_NOACCESS(ptr, bytes);
+        return;
+    }
+    MOZ_CRASH("Invalid kind");
+}
+
 static inline void*
-Poison(void* ptr, uint8_t value, size_t num)
+Poison(void* ptr, uint8_t value, size_t num, MemCheckKind kind)
 {
     static bool disablePoison = bool(getenv("JSGC_DISABLE_POISONING"));
     if (disablePoison)
@@ -314,6 +340,8 @@ Poison(void* ptr, uint8_t value, size_t num)
 #else // !DEBUG
     memset(ptr, value, num);
 #endif // !DEBUG
+
+    SetMemCheckKind(ptr, num, kind);
     return ptr;
 }
 
@@ -324,17 +352,17 @@ Poison(void* ptr, uint8_t value, size_t num)
 
 /* Enable poisoning in crash-diagnostics and zeal builds. */
 #if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
-# define JS_POISON(p, val, size) Poison(p, val, size)
+# define JS_POISON(p, val, size, kind) Poison(p, val, size, kind)
 # define JS_GC_POISONING 1
 #else
-# define JS_POISON(p, val, size) ((void) 0)
+# define JS_POISON(p, val, size, kind) ((void) 0)
 #endif
 
 /* Enable even more poisoning in purely debug builds. */
 #if defined(DEBUG)
-# define JS_EXTRA_POISON(p, val, size) Poison(p, val, size)
+# define JS_EXTRA_POISON(p, val, size, kind) Poison(p, val, size, kind)
 #else
-# define JS_EXTRA_POISON(p, val, size) ((void) 0)
+# define JS_EXTRA_POISON(p, val, size, kind) ((void) 0)
 #endif
 
 #endif /* jsutil_h */

@@ -3140,7 +3140,7 @@ JSScript::finalize(FreeOp* fop)
     destroyDebugScript(fop);
 
     if (data) {
-        JS_POISON(data, 0xdb, computedSizeOfData());
+        JS_POISON(data, 0xdb, computedSizeOfData(), MemCheckKind::MakeNoAccess);
         fop->free_(data);
     }
 
