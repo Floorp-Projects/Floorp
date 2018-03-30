@@ -28,6 +28,9 @@ class Callbacks private constructor() {
 
         override fun onContextMenu(session: GeckoSession, screenX: Int, screenY: Int, uri: String, elementType: Int, elementSrc: String) {
         }
+
+        override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {
+        }
     }
 
     interface NavigationDelegate : GeckoSession.NavigationDelegate {

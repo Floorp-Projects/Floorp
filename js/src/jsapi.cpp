@@ -1339,17 +1339,18 @@ JS::CurrentGlobalOrNull(JSContext* cx)
     return cx->global();
 }
 
-JS_PUBLIC_API(Value)
-JS::detail::ComputeThis(JSContext* cx, Value* vp)
+JS_PUBLIC_API(bool)
+JS::detail::ComputeThis(JSContext* cx, Value* vp, MutableHandleObject thisObject)
 {
     AssertHeapIsIdle();
     assertSameCompartment(cx, JSValueArray(vp, 2));
 
     MutableHandleValue thisv = MutableHandleValue::fromMarkedLocation(&vp[1]);
     if (!BoxNonStrictThis(cx, thisv, thisv))
-        return NullValue();
+        return false;
 
-    return thisv;
+    thisObject.set(&thisv.toObject());
+    return true;
 }
 
 JS_PUBLIC_API(void*)

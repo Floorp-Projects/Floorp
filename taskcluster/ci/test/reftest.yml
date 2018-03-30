@@ -92,10 +92,6 @@ reftest:
     description: "Reftest run"
     suite: reftest/reftest
     treeherder-symbol: R(R)
-    worker-type:
-        by-test-platform:
-            windows10-64.*: buildbot-bridge/buildbot-bridge
-            default: null
     run-on-projects:
         by-test-platform:
             .*-qr/.*: ['trunk', 'try']  # exclude beta and project branches
@@ -104,15 +100,18 @@ reftest:
         by-test-platform:
             android.*: xlarge
             default: default
-    virtualization: virtual-with-gpu
+    virtualization:
+        by-test-platform:
+            windows10.*: hardware
+            default: virtual-with-gpu
     chunks:
         by-test-platform:
             android-4.3-arm7-api-16/debug: 56
             android.*: 28
             macosx64.*/opt: 1
             macosx64.*/debug: 3
-            windows10-64.*/opt: 1
-            windows10-64.*/debug: 2
+            windows.*/opt: 2
+            windows.*/debug: 4
             default: 8
     e10s:
         by-test-platform:
@@ -139,7 +138,10 @@ reftest-gpu:
     description: "Reftest GPU run"
     suite: reftest/reftest-gpu
     treeherder-symbol: R(Rg)
-    chunks: 8
+    chunks:
+        by-test-platform:
+            windows.*/opt: 2
+            default: 4
     run-on-projects:
         by-test-platform:
             windows10.*: []
@@ -163,6 +165,7 @@ reftest-no-accel:
     chunks:
         by-test-platform:
             macosx.*: 1
+            windows.*: 4
             default: 8
     e10s:
         by-test-platform:

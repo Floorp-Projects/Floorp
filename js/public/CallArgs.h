@@ -87,8 +87,8 @@ namespace detail {
  * Compute |this| for the |vp| inside a JSNative, either boxing primitives or
  * replacing with the global object as necessary.
  */
-extern JS_PUBLIC_API(Value)
-ComputeThis(JSContext* cx, JS::Value* vp);
+extern JS_PUBLIC_API(bool)
+ComputeThis(JSContext* cx, JS::Value* vp, MutableHandleObject thisObject);
 
 #ifdef JS_DEBUG
 extern JS_PUBLIC_API(void)
@@ -199,11 +199,13 @@ class MOZ_STACK_CLASS CallArgsBase
         return HandleValue::fromMarkedLocation(&argv_[-1]);
     }
 
-    Value computeThis(JSContext* cx) const {
-        if (thisv().isObject())
-            return thisv();
+    bool computeThis(JSContext* cx, MutableHandleObject thisObject) const {
+        if (thisv().isObject()) {
+            thisObject.set(&thisv().toObject());
+            return true;
+        }
 
-        return ComputeThis(cx, base());
+        return ComputeThis(cx, base(), thisObject);
     }
 
     // ARGUMENTS
