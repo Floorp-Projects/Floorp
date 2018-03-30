@@ -372,7 +372,11 @@ DistributionCustomizer.prototype = {
           if (value) {
             value = value.replace(/%LOCALE%/g, this._locale);
             value = value.replace(/%LANGUAGE%/g, this._language);
-            defaults.set(key, parseValue(value));
+            if (key == "general.useragent.locale") {
+              defaults.set("intl.locale.requested", parseValue(value));
+            } else {
+              defaults.set(key, parseValue(value));
+            }
           }
         } catch (e) { /* ignore bad prefs and move on */ }
       }
