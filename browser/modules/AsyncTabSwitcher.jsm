@@ -1033,6 +1033,9 @@ class AsyncTabSwitcher {
     Services.telemetry
       .getHistogramById("FX_TAB_SWITCH_SPINNER_VISIBLE_TRIGGER")
       .add(this._loadTimerClearedBy);
+    if (AppConstants.NIGHTLY_BUILD) {
+      Services.obs.notifyObservers(null, "tabswitch-spinner");
+    }
   }
 
   spinnerHidden() {
