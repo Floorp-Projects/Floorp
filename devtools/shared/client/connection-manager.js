@@ -7,7 +7,7 @@
 "use strict";
 
 const {Cc, Ci, Cr} = require("chrome");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const Services = require("Services");
@@ -83,7 +83,7 @@ var ConnectionManager = {
   _connections: new Set(),
   createConnection: function(host, port) {
     let c = new Connection(host, port);
-    c.once("destroy", (event) => this.destroyConnection(c));
+    c.once("destroy", () => this.destroyConnection(c));
     this._connections.add(c);
     this.emit("new", c);
     return c;

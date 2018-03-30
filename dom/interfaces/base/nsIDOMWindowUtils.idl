@@ -1649,7 +1649,8 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute boolean isHandlingUserInput;
 
   /**
-   * Returns milliseconds elapsed since last user input was started
+   * Returns milliseconds elapsed since last user input was started.
+   * Returns -1 if there wasn't any previous user input.
    *
    * This relies on EventStateManager::LatestUserInputStart()
    */

@@ -465,7 +465,7 @@ nsImageBoxFrame::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
   if (key.isNothing()) {
     return ImgDrawResult::NOT_READY;
   }
-  wr::LayoutRect fill = aSc.ToRelativeLayoutRect(fillRect);
+  wr::LayoutRect fill = wr::ToRoundedLayoutRect(fillRect);
 
   LayoutDeviceSize gapSize(0, 0);
   SamplingFilter sampleFilter = nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());

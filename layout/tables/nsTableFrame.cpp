@@ -7507,7 +7507,7 @@ BCBlockDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
   LayoutDeviceRect borderRect = LayoutDeviceRect::FromUnknownRect(NSRectToRect(param->mBorderRect + aOffset,
                                                                                param->mAppUnitsPerDevPixel));
 
-  wr::LayoutRect transformedRect = aSc.ToRelativeLayoutRect(borderRect);
+  wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(borderRect);
   wr::BorderSide wrSide[4];
   NS_FOR_CSS_SIDES(i) {
     wrSide[i] = wr::ToBorderSide(ToDeviceColor(param->mBorderColor), NS_STYLE_BORDER_STYLE_NONE);
@@ -7518,13 +7518,13 @@ BCBlockDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
 
   // All border style is set to none except left side. So setting the widths of
   // each side to width of rect is fine.
-  wr::BorderWidths borderWidths = wr::ToBorderWidths(transformedRect.size.width,
-                                                     transformedRect.size.width,
-                                                     transformedRect.size.width,
-                                                     transformedRect.size.width);
+  wr::BorderWidths borderWidths = wr::ToBorderWidths(roundedRect.size.width,
+                                                     roundedRect.size.width,
+                                                     roundedRect.size.width,
+                                                     roundedRect.size.width);
   Range<const wr::BorderSide> wrsides(wrSide, 4);
-  aBuilder.PushBorder(transformedRect,
-                      transformedRect,
+  aBuilder.PushBorder(roundedRect,
+                      roundedRect,
                       param->mBackfaceIsVisible,
                       borderWidths,
                       wrsides,
@@ -7789,7 +7789,7 @@ BCInlineDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
 
   LayoutDeviceRect borderRect = LayoutDeviceRect::FromUnknownRect(NSRectToRect(param->mBorderRect + aPt,
                                                                                param->mAppUnitsPerDevPixel));
-  wr::LayoutRect transformedRect = aSc.ToRelativeLayoutRect(borderRect);
+  wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(borderRect);
   wr::BorderSide wrSide[4];
   NS_FOR_CSS_SIDES(i) {
     wrSide[i] = wr::ToBorderSide(ToDeviceColor(param->mBorderColor), NS_STYLE_BORDER_STYLE_NONE);
@@ -7800,13 +7800,13 @@ BCInlineDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
 
   // All border style is set to none except top side. So setting the widths of
   // each side to height of rect is fine.
-  wr::BorderWidths borderWidths = wr::ToBorderWidths(transformedRect.size.height,
-                                                     transformedRect.size.height,
-                                                     transformedRect.size.height,
-                                                     transformedRect.size.height);
+  wr::BorderWidths borderWidths = wr::ToBorderWidths(roundedRect.size.height,
+                                                     roundedRect.size.height,
+                                                     roundedRect.size.height,
+                                                     roundedRect.size.height);
   Range<const wr::BorderSide> wrsides(wrSide, 4);
-  aBuilder.PushBorder(transformedRect,
-                      transformedRect,
+  aBuilder.PushBorder(roundedRect,
+                      roundedRect,
                       param->mBackfaceIsVisible,
                       borderWidths,
                       wrsides,
@@ -8060,30 +8060,30 @@ nsTableFrame::CreateWebRenderCommandsForBCBorders(wr::DisplayListBuilder& aBuild
       backfaceIsVisible |= param->mBackfaceIsVisible;
     }
 
-    wr::LayoutRect transformedRect = aSc.ToRelativeLayoutRect(borderRect);
+    wr::LayoutRect roundedRect = wr::ToRoundedLayoutRect(borderRect);
     allBorderRect = allBorderRect.Union(borderRect);
     wrSide[side] = wr::ToBorderSide(ToDeviceColor(borderColor), borderStyle);
     switch (side) {
       case eSideTop:
-        wrWidths.top = transformedRect.size.height;
+        wrWidths.top = roundedRect.size.height;
         break;
       case eSideBottom:
-        wrWidths.bottom = transformedRect.size.height;
+        wrWidths.bottom = roundedRect.size.height;
         break;
       case eSideLeft:
-        wrWidths.left = transformedRect.size.width;
+        wrWidths.left = roundedRect.size.width;
         break;
       case eSideRight:
-        wrWidths.right = transformedRect.size.width;
+        wrWidths.right = roundedRect.size.width;
         break;
     }
   }
 
   if (!allBorderRect.IsEmpty()) {
     Range<const wr::BorderSide> wrsides(wrSide, 4);
-    wr::LayoutRect allTransformedRect = aSc.ToRelativeLayoutRect(allBorderRect);
-    aBuilder.PushBorder(allTransformedRect,
-                        allTransformedRect,
+    wr::LayoutRect allRoundedRect = wr::ToRoundedLayoutRect(allBorderRect);
+    aBuilder.PushBorder(allRoundedRect,
+                        allRoundedRect,
                         backfaceIsVisible,
                         wrWidths,
                         wrsides,

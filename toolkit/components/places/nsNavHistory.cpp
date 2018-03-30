@@ -1130,7 +1130,8 @@ class PlacesSQLQueryBuilder
 {
 public:
   PlacesSQLQueryBuilder(const nsCString& aConditions,
-                        nsNavHistoryQueryOptions* aOptions,
+                        const RefPtr<nsNavHistoryQuery>& aQuery,
+                        const RefPtr<nsNavHistoryQueryOptions>& aOptions,
                         bool aUseLimit,
                         nsNavHistory::StringHash& aAddParams,
                         bool aHasSearchTerms);
@@ -1173,12 +1174,14 @@ private:
   nsCString mGroupBy;
   bool mHasDateColumns;
   bool mSkipOrderBy;
+
   nsNavHistory::StringHash& mAddParams;
 };
 
 PlacesSQLQueryBuilder::PlacesSQLQueryBuilder(
     const nsCString& aConditions,
-    nsNavHistoryQueryOptions* aOptions,
+    const RefPtr<nsNavHistoryQuery>& aQuery,
+    const RefPtr<nsNavHistoryQueryOptions>& aOptions,
     bool aUseLimit,
     nsNavHistory::StringHash& aAddParams,
     bool aHasSearchTerms)
@@ -1194,6 +1197,11 @@ PlacesSQLQueryBuilder::PlacesSQLQueryBuilder(
 , mAddParams(aAddParams)
 {
   mHasDateColumns = (mQueryType == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS);
+  // Force the default sorting mode for tag queries.
+  if (mSortingMode == nsINavHistoryQueryOptions::SORT_BY_NONE &&
+      aQuery->Tags().Length() > 0) {
+    mSortingMode = nsINavHistoryQueryOptions::SORT_BY_TITLE_ASCENDING;
+  }
 }
 
 nsresult
@@ -1654,14 +1662,15 @@ PlacesSQLQueryBuilder::SelectAsTag()
   // other history queries.
   mHasDateColumns = true;
 
+  // TODO (Bug 1449939): This is likely wrong, since the tag name should
+  // probably be urlencoded, and we have no util for that in SQL, yet.
+  // We could encode the tag when the user sets it though.
   mQueryString = nsPrintfCString(
-    "SELECT null, 'place:folder=' || id || '&queryType=%d&type=%d', "
+    "SELECT null, 'place:tag=' || title, "
            "title, null, null, null, null, null, dateAdded, "
            "lastModified, null, null, null, null, null, null "
     "FROM moz_bookmarks "
     "WHERE parent = %" PRId64,
-    nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS,
-    nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS,
     history->GetTagsFolder()
   );
 
@@ -2001,6 +2010,11 @@ nsNavHistory::ConstructQueryString(
     return NS_OK;
   }
 
+  // If the query is a tag query, the type is bookmarks.
+  if (!aQuery->Tags().IsEmpty()) {
+    aOptions->SetQueryType(nsNavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS);
+  }
+
   nsAutoCString conditions;
   nsCString queryClause;
   rv = QueryToSelectClause(aQuery, aOptions, &queryClause);
@@ -2016,7 +2030,7 @@ nsNavHistory::ConstructQueryString(
   // using FilterResultSet()
   bool useLimitClause = !NeedToFilterResultSet(aQuery, aOptions);
 
-  PlacesSQLQueryBuilder queryStringBuilder(conditions, aOptions,
+  PlacesSQLQueryBuilder queryStringBuilder(conditions, aQuery, aOptions,
                                            useLimitClause, aAddParams,
                                            hasSearchTerms);
   rv = queryStringBuilder.GetQueryString(queryString);
@@ -3037,8 +3051,9 @@ nsNavHistory::QueryToSelectClause(const RefPtr<nsNavHistoryQuery>& aQuery,
         clause.Str(",");
     }
     clause.Str(")");
-    if (!aQuery->TagsAreNot())
+    if (!aQuery->TagsAreNot()) {
       clause.Str("GROUP BY bms.fk HAVING count(*) >=").Param(":tag_count");
+    }
     clause.Str(")");
   }
 
