@@ -2911,16 +2911,15 @@ static void ExtractRectFromOffset(nsIFrame* aFrame,
                                   const int32_t aOffset, nsRect* aR,
                                   bool aFlushToOriginEdge, bool aClampToEdge)
 {
+  MOZ_ASSERT(aFrame);
+  MOZ_ASSERT(aR);
+
   nsPoint point;
   aFrame->GetPointFromOffset(aOffset, &point);
 
-  // Determine if point was generated from a vertical text run, which will change
-  // our math on the output rect.
-  bool isVertical = false;
-  if (aFrame->IsTextFrame()) {
-    nsTextFrame* textFrame = static_cast<nsTextFrame*>(aFrame);
-    isVertical = textFrame->GetTextRun(nsTextFrame::eInflated)->IsVertical();
-  }
+  // Determine if aFrame has a vertical writing mode, which will change our math
+  // on the output rect.
+  bool isVertical = aFrame->GetWritingMode().IsVertical();
 
   if (!aClampToEdge && !aR->Contains(point)) {
     // If point is outside aR, and we aren't clamping, output an empty rect
