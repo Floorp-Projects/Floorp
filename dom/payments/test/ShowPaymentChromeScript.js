@@ -6,7 +6,9 @@
 const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"].getService(Ci.nsIPaymentRequestService);
-let expectedCompleteStatus;
+let expectedCompleteStatus = null;
+let expectedShowAction = "accept";
+let expectedUpdateAction = "accept";
 
 function emitTestFail(message) {
   sendAsyncMessage("test-fail", message);
@@ -33,212 +35,127 @@ shippingAddress.init("USA",              // country
                      "Bill A. Pacheco",  // recipient
                      "+1-434-441-3879"); // phone
 
-const DummyUIService = {
-  showPayment: function(requestId) {
-    const showResponseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
-                                createInstance(Ci.nsIGeneralResponseData);
-    try {
-      showResponseData.initData({ paymentToken: "6880281f-0df3-4b8e-916f-66575e2457c1",});
-    } catch (e) {
-      emitTestFail("Fail to initialize response data with { paymentToken: \"6880281f-0df3-4b8e-916f-66575e2457c1\",}");
-    }
-    let showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
-                   createInstance(Ci.nsIPaymentShowActionResponse);
-    showResponse.init(requestId,
-                      Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
-                      "testing-payment-method",   // payment method
-                      showResponseData,           // payment method data
-                      "Bill A. Pacheco",          // payer name
-                      "",                         // payer email
-                      "");                        // payer phone
-    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
-  },
-  abortPayment: function(requestId) {
-  },
-  completePayment: function(requestId) {
-    let payRequest = paymentSrv.getPaymentRequestById(requestId);
-    if (payRequest.completeStatus == expectedCompleteStatus) {
-      emitTestPass("request.completeStatus matches expectation of " + expectedCompleteStatus);
-    } else {
-      emitTestFail("request.completeStatus incorrect. Expected " +
-                   expectedCompleteStatus + ", got " + payRequest.completeStatus);
-    }
+function acceptShow(requestId) {
+  const responseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
+                          createInstance(Ci.nsIGeneralResponseData);
+  responseData.initData({ paymentToken: "6880281f-0df3-4b8e-916f-66575e2457c1",});
+  let showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
+                        createInstance(Ci.nsIPaymentShowActionResponse);
+  showResponse.init(requestId,
+                    Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
+                    "testing-payment-method",   // payment method
+                    responseData,           // payment method data
+                    "Bill A. Pacheco",          // payer name
+                    "",                         // payer email
+                    "");                        // payer phone
+  paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+}
 
-    let completeResponse = Cc["@mozilla.org/dom/payments/payment-complete-action-response;1"].
-                           createInstance(Ci.nsIPaymentCompleteActionResponse);
-    completeResponse.init(requestId, Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED);
-    paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
-  },
-  updatePayment: function(requestId) {
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
-};
-
-const NormalUIService = {
-  shippingOptionChanged: false,
-  showPayment: function(requestId) {
-    paymentSrv.changeShippingAddress(requestId, shippingAddress);
-  },
-  abortPayment: function(requestId) {
-  },
-  completePayment: function(requestId) {
-    let payRequest = paymentSrv.getPaymentRequestById(requestId);
-    if (payRequest.completeStatus == expectedCompleteStatus) {
-      emitTestPass("request.completeStatus matches expectation of " + expectedCompleteStatus);
-    } else {
-      emitTestFail("request.completeStatus incorrect. Expected " +
-                   expectedCompleteStatus + ", got " + payRequest.completeStatus);
-    }
-
-    let completeResponse = Cc["@mozilla.org/dom/payments/payment-complete-action-response;1"].
-                           createInstance(Ci.nsIPaymentCompleteActionResponse);
-    completeResponse.init(requestId, Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED);
-    paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
-  },
-  updatePayment: function(requestId) {
-    let showResponse = null;
-    let payRequest = paymentSrv.getPaymentRequestById(requestId);
-    if (payRequest.paymentDetails.error != "") {
-      emitTestFail("updatedDetails should not have errors(" + payRequest.paymentDetails.error + ").");
-    }
-    if (!this.shippingOptionChanged) {
-      paymentSrv.changeShippingOption(requestId, "FastShipping");
-      this.shippingOptionChanged = true;
-    } else {
-      const shippingOptions = payRequest.paymentDetails.shippingOptions;
-      let shippingOption = shippingOptions.queryElementAt(0, Ci.nsIPaymentShippingOption);
-      if (shippingOption.selected) {
-        emitTestFail(shippingOption.label + " should not be selected.");
-      }
-      shippingOption = shippingOptions.queryElementAt(1, Ci.nsIPaymentShippingOption);
-      if (!shippingOption.selected) {
-        emitTestFail(shippingOption.label + " should be selected.");
-      }
-
-      const showResponseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
-                                  createInstance(Ci.nsIGeneralResponseData);
-
-      try {
-        showResponseData.initData({ paymentToken: "6880281f-0df3-4b8e-916f-66575e2457c1",});
-      } catch (e) {
-        emitTestFail("Fail to initialize response data with { paymentToken: \"6880281f-0df3-4b8e-916f-66575e2457c1\",}");
-      }
-
-      showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
-                     createInstance(Ci.nsIPaymentShowActionResponse);
-      showResponse.init(requestId,
-                        Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
-                        "testing-payment-method",   // payment method
-                        showResponseData,           // payment method data
-                        "Bill A. Pacheco",          // payer name
-                        "",                         // payer email
-                        "");                        // payer phone
-      paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
-    }
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
-};
-
-const RejectUIService = {
-  showPayment: function(requestId) {
-    const responseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
-                            createInstance(Ci.nsIGeneralResponseData);
-
-    try {
-      responseData.initData({});
-    } catch (e) {
-      emitTestFail("Fail to initialize response data with empty object.");
-    }
-    const showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
-                            createInstance(Ci.nsIPaymentShowActionResponse);
-    showResponse.init(requestId,
-                      Ci.nsIPaymentActionResponse.PAYMENT_REJECTED,
-                      "",                 // payment method
-                      responseData,       // payment method data
-                      "",                 // payer name
-                      "",                 // payer email
-                      "");                // payer phone
-    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
-  },
-  abortPayment: function(requestId) {
-  },
-  completePayment: function(requestId) {
-  },
-  updatePayment: function(requestId) {
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
-};
-
-const ErrorUIService = {
-  showPayment: function(requestId) {
-    paymentSrv.changeShippingOption(requestId, "");
-  },
-  abortPayment: function(requestId) {
-  },
-  completePayment: function(requestId) {
-  },
-  updatePayment: function(requestId) {
-    let payRequest = paymentSrv.getPaymentRequestById(requestId);
-    if (!payRequest) {
-      emitTestFail("Fail to get existing payment request.");
-    }
-    if (payRequest.paymentDetails.error != "Update with Error") {
-      emitTestFail("details.error should be 'Update with Error', but got " + payRequest.paymentDetails.error + ".");
-    }
-    const responseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
-                            createInstance(Ci.nsIGeneralResponseData);
-    try {
-      responseData.initData({});
-    } catch (e) {
-      emitTestFail("Fail to initialize response data with empty object.");
-    }
-    const showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
-                            createInstance(Ci.nsIPaymentShowActionResponse);
-    showResponse.init(requestId,
-                      Ci.nsIPaymentActionResponse.PAYMENT_REJECTED,
-                      "",                 // payment method
-                      responseData,       // payment method data
-                      "",                 // payer name
-                      "",                 // payer email
-                      "");                // payer phone
-    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
-  },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
-
-};
-
-const CompleteUIService = {
-  showPayment: function(requestId) {
-    const showResponseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
-                                createInstance(Ci.nsIGeneralResponseData);
-
-    try {
-      showResponseData.initData({});
-    } catch (e) {
-      emitTestFail("Fail to initialize response data with empty object.");
-    }
-
-    let showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
+function rejectShow(requestId) {
+  const responseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
+                          createInstance(Ci.nsIGeneralResponseData);
+  responseData.initData({});
+  const showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
                           createInstance(Ci.nsIPaymentShowActionResponse);
-    showResponse.init(requestId,
-                      Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
-                      "",                  // payment method
-                      showResponseData,    // payment method data
-                      "",                  // payer name
-                      "",                  // payer email
-                      "");                 // payer phone
-    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
-  },
-  abortPayment: function(requestId) {
-  },
-  completePayment: function(requestId) {
-  },
-  updatePayment: function(requestId) {
-  },
+  showResponse.init(requestId,
+                    Ci.nsIPaymentActionResponse.PAYMENT_REJECTED,
+                    "",                 // payment method
+                    responseData,       // payment method data
+                    "",                 // payer name
+                    "",                 // payer email
+                    "");                // payer phone
+  paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+}
+
+function updateShow(requestId) {
+  if (expectedUpdateAction == "updateaddress") {
+    paymentSrv.changeShippingAddress(requestId, shippingAddress);
+  } else if (expectedUpdateAction == "accept" || expectedUpdateAction == "error"){
+    paymentSrv.changeShippingOption(requestId, "FastShipping");
+  } else {
+    emitTestFail("Unknown expected update action: " + expectedUpdateAction);
+  }
+}
+
+function showRequest(requestId) {
+  if (expectedShowAction == "accept") {
+    acceptShow(requestId);
+  } else if (expectedShowAction == "reject") {
+    rejectShow(requestId);
+  } else if (expectedShowAction == "update") {
+    updateShow(requestId);
+  } else {
+    emitTestFail("Unknown expected show action: " + expectedShowAction);
+  }
+}
+
+function abortRequest(requestId) {
+  let abortResponse = Cc["@mozilla.org/dom/payments/payment-abort-action-response;1"].
+                         createInstance(Ci.nsIPaymentAbortActionResponse);
+  abortResponse.init(requestId, Ci.nsIPaymentActionResponse.ABORT_SUCCEEDED);
+  paymentSrv.respondPayment(abortResponse);
+}
+
+function completeRequest(requestId) {
+  let payRequest = paymentSrv.getPaymentRequestById(requestId);
+  if (expectedCompleteStatus) {
+    if (payRequest.completeStatus == expectedCompleteStatus) {
+      emitTestPass("request.completeStatus matches expectation of " +
+                   expectedCompleteStatus);
+    } else {
+      emitTestFail("request.completeStatus incorrect. Expected " +
+                   expectedCompleteStatus + ", got " + payRequest.completeStatus);
+    }
+  }
+  let completeResponse = Cc["@mozilla.org/dom/payments/payment-complete-action-response;1"].
+                            createInstance(Ci.nsIPaymentCompleteActionResponse);
+  completeResponse.init(requestId, Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED);
+  paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
+}
+
+function updateRequest(requestId) {
+  let request = paymentSrv.getPaymentRequestById(requestId);
+  if (expectedUpdateAction == "accept") {
+    if (request.paymentDetails.error != "") {
+      emitTestFail("updatedDetails should not have errors(" + request.paymentDetails.error + ").");
+    }
+    const shippingOptions = request.paymentDetails.shippingOptions;
+    let shippingOption = shippingOptions.queryElementAt(0, Ci.nsIPaymentShippingOption);
+    if (shippingOption.selected) {
+      emitTestFail(shippingOption.label + " should not be selected.");
+    }
+    shippingOption = shippingOptions.queryElementAt(1, Ci.nsIPaymentShippingOption);
+    if (!shippingOption.selected) {
+      emitTestFail(shippingOption.label + " should be selected.");
+    }
+    acceptShow(requestId);
+  } else if (expectedUpdateAction == "error") {
+    if (request.paymentDetails.error != "Update with Error") {
+      emitTestFail("details.error should be 'Update with Error', but got " + request.paymentDetails.error + ".");
+    }
+    rejectShow(requestId);
+  } else if (expectedUpdateAction == "updateaddress") {
+    if (request.paymentDetails.error != "") {
+      emitTestFail("updatedDetails should not have errors(" + request.paymentDetails.error + ").");
+    }
+    expectedUpdateAction = "accept";
+    paymentSrv.changeShippingOption(requestId, "FastShipping");
+  } else {
+    emitTestFail("Unknown expected update aciton: " + expectedUpdateAction);
+  }
+}
+
+const DummyUIService = {
+  showPayment: showRequest,
+  abortPayment: abortRequest,
+  completePayment: completeRequest,
+  updatePayment: updateRequest,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
-function testInitDataAndResponse() {
+paymentSrv.setTestingUIService(DummyUIService.QueryInterface(Ci.nsIPaymentUIService));
+
+function testShowResponseInit() {
   const showResponseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
                               createInstance(Ci.nsIGeneralResponseData);
   try {
@@ -248,6 +165,7 @@ function testInitDataAndResponse() {
     if (e.name != "NS_ERROR_FAILURE") {
       emitTestFail("Expected 'NS_ERROR_FAILURE' when initializing nsIGeneralResponseData with null object, but got " + e.name + ".");
     }
+    emitTestPass("Get expected result for initializing nsIGeneralResponseData with null object");
   }
   const showResponse = Cc["@mozilla.org/dom/payments/payment-show-action-response;1"].
                           createInstance(Ci.nsIPaymentShowActionResponse);
@@ -259,6 +177,7 @@ function testInitDataAndResponse() {
                       "Bill A. Pacheco",          // payer name
                       "",                         // payer email
                       "");                        // payer phone
+    emitTestPass("Get expected result for initializing response with accepted and empty data.");
   } catch (e) {
     emitTestFail("Unexpected error " + e.name + " when initializing response with accepted and empty data.");
   }
@@ -271,6 +190,7 @@ function testInitDataAndResponse() {
                       "Bill A. Pacheco",
                       "",
                       "");
+    emitTestPass("Get expected result for initializing response with rejected and null data.");
   } catch (e) {
     emitTestFail("Unexpected error " + e.name + " when initializing response with rejected and null data.");
   }
@@ -288,31 +208,42 @@ function testInitDataAndResponse() {
     if (e.name != "NS_ERROR_ILLEGAL_VALUE") {
       emitTestFail("Expected 'NS_ERROR_ILLEGAL_VALUE', but got " + e.name + ".");
     }
+    emitTestPass("Get expected result for initializing response with accepted and null data.")
   }
-  sendAsyncMessage("test-init-data-and-response-complete");
+  sendAsyncMessage("test-show-response-init-complete");
 }
 
-addMessageListener("set-dummy-ui-service", function() {
-  paymentSrv.setTestingUIService(DummyUIService.QueryInterface(Ci.nsIPaymentUIService));
+addMessageListener("set-simple-ui-service", function() {
+  expectedCompleteStatus = null;
+  expectedShowAction = "accept";
+  expectedUpdateAction = "accept";
 });
 
 addMessageListener("set-normal-ui-service", function() {
-  paymentSrv.setTestingUIService(NormalUIService.QueryInterface(Ci.nsIPaymentUIService));
+  expectedCompleteStatus = null;
+  expectedShowAction = "update";
+  expectedUpdateAction = "updateaddress";
 });
 
 addMessageListener("set-reject-ui-service", function() {
-  paymentSrv.setTestingUIService(RejectUIService.QueryInterface(Ci.nsIPaymentUIService));
+  expectedCompleteStatus = null;
+  expectedShowAction = "reject";
+  expectedUpdateAction = "accept";
+});
+
+addMessageListener("set-update-with-ui-service", function() {
+  expectedCompleteStatus = null;
+  expectedShowAction = "update";
+  expectedUpdateAction = "accept";
 });
 
 addMessageListener("set-update-with-error-ui-service", function() {
-  paymentSrv.setTestingUIService(ErrorUIService.QueryInterface(Ci.nsIPaymentUIService));
+  expectedCompleteStatus = null;
+  expectedShowAction = "update";
+  expectedUpdateAction = "error";
 });
 
-addMessageListener("set-complete-ui-service", function() {
-  paymentSrv.setTestingUIService(CompleteUIService.QueryInterface(Ci.nsIPaymentUIService));
-});
-
-addMessageListener("test-init-data-and-response", testInitDataAndResponse);
+addMessageListener("test-show-response-init", testShowResponseInit);
 
 addMessageListener("set-complete-status-success", function() {
   expectedCompleteStatus = "success";

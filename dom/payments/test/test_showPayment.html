@@ -25,6 +25,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
   gScript.addMessageListener("test-fail", testFailHandler);
   gScript.addMessageListener("test-pass", testPassHandler);
 
+  // testing data declaration
+  // default parameters for PaymentRequest construction
   const defaultMethods = [{
     supportedMethods: "basic-card",
     data: {
@@ -36,15 +38,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
   }, {
     supportedMethods: "testing-payment-method",
   }];
+
+  const defaultTotal = {
+    label: "Total",
+    amount: {
+      currency: "USD",
+      value: "1.00",
+    },
+  }
+
   const defaultDetails = {
     id: "test payment",
-    total: {
-      label: "Total",
-      amount: {
-        currency: "USD",
-        value: "1.00"
-      }
-    },
+    total: defaultTotal,
     shippingOptions: [
       {
         id: "NormalShipping",
@@ -75,14 +80,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     shippingType: "shipping"
   };
 
-  const updatedOptionDetails = {
-    total: {
-      label: "Total",
-      amount: {
-        currency: "USD",
-        value: "1.00"
-      }
-    },
+  // testing data for PaymentRequestUpdateEvent.updateWith()
+  const updatedShippingOptionsDetails = {
+    total: defaultTotal,
     shippingOptions: [
       {
         id: "NormalShipping",
@@ -106,114 +106,78 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
   };
 
   const updatedErrorDetails = {
-    total: {
-      label: "Total",
-      amount: {
-        currency: "USD",
-        value: "1.00"
-      }
-    },
-    shippingOptions: [
-      {
-        id: "NormalShipping",
-        label: "NormalShipping",
-        amount: {
-          currency: "USD",
-          value: "10.00"
-        },
-        selected: false,
-      },
-      {
-        id: "FastShipping",
-        label: "FastShipping",
-        amount: {
-          currency: "USD",
-          value: "30.00"
-        },
-        selected: false,
-      },
-    ],
+    total: defaultTotal,
     error: "Update with Error",
   };
 
+  // Promise function for PaymentRequestUpdateEvent.updateWith()
+  function updateWithPromise(detailsUpdate) {
+    return new Promise((resolve, reject) => {
+      if (detailsUpdate) {
+        resolve(detailsUpdate);
+      } else {
+        reject();
+      }
+    });
+  }
+
+  // testing data for PaymentRequest.show() with Non-supported methods
   const nonSupportedMethods = [{
     supportedMethods: "nonsupported-method",
   }];
 
 
-  function updateWithShippingAddress() {
-    return new Promise((resolve, reject) => {
-      resolve(defaultDetails);
-    });
+  // checking functions
+  function checkAddress(address, fromEvent) {
+    is(address.country, "USA", "address.country should be 'USA'.");
+    is(address.region, "CA", "address.region should be 'CA'.");
+    is(address.city, "San Bruno", "address.city should be 'San Bruno'.");
+    is(address.dependentLocality, "Test locality",
+       "address.dependentLocality should be 'Test locality'.");
+    is(address.postalCode, "94066", "address.postalCode should be '94066'.");
+    is(address.sortingCode, "123456", "address.sortingCode should be '123456'.");
+    if (fromEvent) {
+      is(address.addressLine.length, 0, "address.addressLine.length should be 0 from event.");
+      is(address.organization, "", "address.organization should be empty from event.");
+      is(address.recipient, "", "address.recipient should be empty from event.");
+      is(address.phone, "", "address.phone should be empty from event.");
+    } else {
+      is(address.addressLine.length, 1, "address.addressLine.length should be 1 from promise.");
+      is(address.addressLine[0], "Easton Ave", "address.addressLine[0] should be 'Easton Ave' from promise.");
+      is(address.organization, "Testing Org", "address.organization should be 'Testing Org' from promise.");
+      is(address.recipient, "Bill A. Pacheco", "address.recipient should be 'Bill A. Pacheco' from promise.");
+      is(address.phone, "+1-434-441-3879", "address.phone should be '+1-434-441-3879' from promise.");
+    }
   }
 
-  function updateWithShippingOption() {
-    return new Promise((resolve, reject) => {
-      resolve(updatedOptionDetails);
-    });
+  function checkResponse(response) {
+    is(response.requestId, "test payment", "response.requestId should be 'test payment'.");
+    is(response.methodName, "testing-payment-method", "response.methodName should be 'testing-payment-method'.");
+    is(response.details.paymentToken, "6880281f-0df3-4b8e-916f-66575e2457c1", "response.details.paymentToken should be '6880281f-0df3-4b8e-916f-66575e2457c1'.");
+    checkAddress(response.shippingAddress, false/*fromEvent*/);
+    is(response.shippingOption, "FastShipping", "response.shippingOption should be 'FastShipping'.");
+    is(response.payerName, "Bill A. Pacheco", "response.payerName should be 'Bill A. Pacheco'.");
+    ok(!response.payerEmail, "response.payerEmail should be empty");
+    ok(!response.payerPhone, "response.payerPhone should be empty");
   }
 
-  function updateWithError() {
-    return new Promise((resolve, reject) => {
-      resolve(updatedErrorDetails);
-    });
-  }
-
-  function testShowWithSuccess() {
-    info("starting testShowWithSuccess");
+  // testing functions
+  function testShowNormalFlow() {
     gScript.sendAsyncMessage("set-normal-ui-service");
-    gScript.sendAsyncMessage("set-complete-status-success");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
       payRequest.addEventListener("shippingaddresschange", event => {
-        is(payRequest.shippingAddress.country, "USA", "payRequest.shippingAddress.country should be 'USA' from event.");
-        is(payRequest.shippingAddress.addressLine.length, 0, "payRequest.shippingAddress.addressLine.length should be 0 from event.");
-        is(payRequest.shippingAddress.region, "CA", "payRequest.shippingAddress.region should be 'CA' from event.");
-        is(payRequest.shippingAddress.city, "San Bruno", "payRequest.shippingAddress.city should be 'San Bruno' from event.");
-        is(payRequest.shippingAddress.dependentLocality, "Test locality", "payRequest.shippingAddress.dependentLocality should be 'Test locality' from event.");
-        is(payRequest.shippingAddress.postalCode, "94066", "payRequest.shippingAddress.postalCode should be '94066' from event.");
-        is(payRequest.shippingAddress.sortingCode, "123456", "payRequest.shippingAddress.sortingCode should be '123456' from event.");
-        is(payRequest.shippingAddress.organization, "", "payRequest.shippingAddress.organization should be empty from event.");
-        is(payRequest.shippingAddress.recipient, "", "payRequest.shippingAddress.recipient should be empty from event.");
-        is(payRequest.shippingAddress.phone, "", "payRequest.shippingAddress.phone should be empty from event.");
-        event.updateWith(updateWithShippingAddress());
+        checkAddress(payRequest.shippingAddress, true/*fromEvent*/);
+        event.updateWith(updateWithPromise(defaultDetails));
       });
       payRequest.addEventListener("shippingoptionchange", event => {
-        event.updateWith(updateWithShippingOption());
+        event.updateWith(updateWithPromise(updatedShippingOptionsDetails));
       });
-
       const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
       payRequest.show().then(response => {
-        is(response.requestId, "test payment", "response.requestId should be 'test payment'.");
-        is(response.methodName, "testing-payment-method", "response.methodName should be 'testing-payment-method'.");
-        is(response.details.paymentToken, "6880281f-0df3-4b8e-916f-66575e2457c1", "response.details.paymentToken should be '6880281f-0df3-4b8e-916f-66575e2457c1'.");
-        is(response.shippingAddress.country, "USA", "response.shippingAddress.country should be 'USA'.");
-        is(response.shippingAddress.addressLine.length, 1, "response.shippingAddress.addressLine.length should be 1.");
-        is(response.shippingAddress.addressLine[0], "Easton Ave", "response.shippingAddress.addressLine[0] should be 'Easton Ave'.");
-        is(response.shippingAddress.region, "CA", "response.shippingAddress.region should be 'CA'.");
-        is(response.shippingAddress.city, "San Bruno", "response.shippingAddress.city should be 'San Bruno'.");
-        is(response.shippingAddress.dependentLocality, "Test locality", "response.shippingAddress.dependentLocality should be 'Test locality'.");
-        is(response.shippingAddress.postalCode, "94066", "response.shippingAddress.postalCode should be '94066'.");
-        is(response.shippingAddress.sortingCode, "123456", "response.shippingAddress.sortingCode should be '123456'.");
-        is(response.shippingAddress.organization, "Testing Org", "response.shippingAddress.organization should be 'Testing Org'.");
-        is(response.shippingAddress.recipient, "Bill A. Pacheco", "response.shippingAddress.recipient should be 'Bill A. Pacheco'.");
-        is(response.shippingAddress.phone, "+1-434-441-3879", "response.shippingAddress.phone should be '+1-434-441-3879'.");
-        is(response.shippingOption, "FastShipping", "response.shippingOption should be 'FastShipping'.");
-        is(response.payerName, "Bill A. Pacheco", "response.payerName should be 'Bill A. Pacheco'.");
-        ok(!response.payerEmail, "response.payerEmail should be empty");
-        ok(!response.payerPhone, "response.payerPhone should be empty");
-        is(payRequest.shippingAddress.country, "USA", "payRequest.shippingAddress.country should be 'USA' from promise.");
-        is(payRequest.shippingAddress.addressLine.length, 1, "payRequest.shippingAddress.addressLine.length should be 1 from promise.");
-        is(payRequest.shippingAddress.addressLine[0], "Easton Ave", "payRequest.shippingAddress.addressLine[0] should be 'Easton Ave' from promise.");
-        is(payRequest.shippingAddress.region, "CA", "payRequest.shippingAddress.region should be 'CA' from promise.");
-        is(payRequest.shippingAddress.city, "San Bruno", "payRequest.shippingAddress.city should be 'San Bruno' from promise.");
-        is(payRequest.shippingAddress.dependentLocality, "Test locality", "payRequest.shippingAddress.dependentLocality should be 'Test locality' from promise.");
-        is(payRequest.shippingAddress.postalCode, "94066", "payRequest.shippingAddress.postalCode should be '94066' from promise.");
-        is(payRequest.shippingAddress.sortingCode, "123456", "payRequest.shippingAddress.sortingCode should be '123456' from promise.");
-        is(payRequest.shippingAddress.organization, "Testing Org", "payRequest.shippingAddress.organization should be 'Testing Org' from promise.");
-        is(payRequest.shippingAddress.recipient, "Bill A. Pacheco", "payRequest.shippingAddress.recipient should be 'Bill A. Pacheco' from promise.");
-        is(payRequest.shippingAddress.phone, "+1-434-441-3879", "payRequest.shippingAddress.phone should be '+1-434-441-3879' from promise.");
-        response.complete("success").then(() =>{
+        checkResponse(response, false);
+	checkAddress(payRequest.shippingAddress, false);
+        response.complete().then(() =>{
           resolve();
         }).catch(e => {
           ok(false, "Unexpected error: " + e.name);
@@ -226,77 +190,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     });
   }
 
-  function testShowWithFail() {
-    info("starting testShowWithFail");
-    gScript.sendAsyncMessage("set-dummy-ui-service");
-    gScript.sendAsyncMessage("set-complete-status-fail");
-    return new Promise((resolve, reject) => {
-      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-
-      payRequest.show().then(response => {
-        response.complete("fail").then(() => {
-          resolve();
-        }).catch(e => {
-          ok(false, "Unexpected error: " + e.name);
-          resolve();
-        });
-      }).catch( e => {
-        ok(false, "Unexpected error: " + e.name);
-        resolve();
-      }).finally(handler.destruct);
-    });
-  }
-
-  function testShowWithUnknown() {
-    info("starting testShowWithUnknown");
-    gScript.sendAsyncMessage("set-dummy-ui-service");
-    gScript.sendAsyncMessage("set-complete-status-unknown");
-    return new Promise((resolve, reject) => {
-      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-
-      payRequest.show().then(response => {
-        response.complete("unknown").then(() => {
-          resolve();
-        }).catch(e => {
-          ok(false, "Unexpected error: " + e.name);
-          resolve();
-        });
-      }).catch( e => {
-        ok(false, "Unexpected error: " + e.name);
-        resolve();
-      }).finally(handler.destruct);
-    });
-  }
-
-  function testShowWithEmpty() {
-    info("starting testShowWithEmpty");
-    gScript.sendAsyncMessage("set-dummy-ui-service");
-    gScript.sendAsyncMessage("set-complete-status-unknown");
-    return new Promise((resolve, reject) => {
-      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
-      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-
-      payRequest.show().then(response => {
-        response.complete().then(() => {
-          resolve();
-        }).catch(e => {
-          ok(false, "Unexpected error: " + e.name);
-          resolve();
-        });
-      }).catch( e => {
-        ok(false, "Unexpected error: " + e.name);
-        resolve();
-      }).finally(handler.destruct);
-    });
-  }
-
+  // testing show with nonsupported methods
   function testCannotMakePaymentShow() {
-    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-
+    gScript.sendAsyncMessage("set-simple-ui-service");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(nonSupportedMethods, defaultDetails);
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
       payRequest.canMakePayment().then(result => {
         ok(!result, "canMakePayment() should return false, but got " + result + ".");
         payRequest.show().then( () => {
@@ -310,12 +209,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     });
   }
 
+  // testing show rejected by user
   function testRejectShow() {
-    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
-
     gScript.sendAsyncMessage("set-reject-ui-service");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
       payRequest.show().then((result) => {
         ok(false, "Should be rejected with 'AbortError', but got resolved");
         resolve();
@@ -329,45 +228,189 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     });
   }
 
-  function testUpdateWithError() {
-    const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+  // testing PaymentResponse.complete() with specified result
+  function testCompleteStatus(result) {
+    gScript.sendAsyncMessage("set-simple-ui-service");
+    if (result) {
+      gScript.sendAsyncMessage("set-complete-status-"+result);
+    } else {
+      gScript.sendAsyncMessage("set-complete-status-unknown");
+    }
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+      payRequest.show().then(response => {
+        response.complete(result).then(() => {
+          resolve();
+        }).catch(e => {
+          ok(false, "Unexpected error: " + e.name);
+          resolve();
+        });
+      }).catch( e => {
+        ok(false, "Unexpected error: " + e.name);
+        resolve();
+      }).finally(handler.destruct);
+    });
+  }
 
-    gScript.sendAsyncMessage("set-update-with-error-ui-service");
+  function testCompleteFail() {
+    return testCompleteStatus("fail");
+  }
+
+  function testCompleteSuccess() {
+    return testCompleteStatus("success");
+  }
+
+  function testCompleteUnknown() {
+    return testCompleteStatus("unknown");
+  }
+
+  function testCompleteEmpty() {
+    return testCompleteStatus();
+  }
+
+  // testing PaymentRequestUpdateEvent.updateWith with specified details and error
+  function testUpdateWith(detailsUpdate, expectedError) {
+    if (expectedError) {
+      gScript.sendAsyncMessage("set-update-with-error-ui-service");
+    } else {
+      gScript.sendAsyncMessage("set-update-with-ui-service");
+    }
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
       payRequest.addEventListener("shippingaddresschange", event => {
-        event.updateWith(updateWithError());
+        event.updateWith(updateWithPromise(detailsUpdate));
       });
       payRequest.addEventListener("shippingoptionchange", event => {
-        event.updateWith(updateWithError());
+        event.updateWith(updateWithPromise(detailsUpdate));
       });
-      payRequest.show().then((result) => {
-        ok(false, "Should be rejected with 'AbortError', but got resolved");
-        resolve();
-      }, (result) => {
-        is(result.name, "AbortError", "Should be rejected with 'AbortError', but got " + result.name + ".");
-        resolve();
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+      payRequest.show().then(response => {
+        if (expectedError) {
+          ok(false, "Should be rejected with " + expectedError + ", but got resolved");
+	  resolve();
+	} else {
+	  response.complete("success").then(() => {
+	    resolve();
+	  })
+	}
+      }, response => {
+        if (expectedError) {
+          is(response.name, expectedError,
+	     "Should be rejected with " + expectedError + ", but got " + response.name);
+	} else {
+	  ok(false, "Unexpected error: " + response.name);
+	}
+	resolve();
       }).catch(e => {
         ok(false, "Unexpected error: " + e.name);
-        resolve();
+	resolve();
       }).finally(handler.destruct);
     });
   }
 
-  function testNullDetailsResponse() {
+  function testUpdateWithReject() {
+    return testUpdateWith(null, "AbortError");
+  }
+
+  function testUpdateWithValidDetails() {
+    return testUpdateWith(updatedShippingOptionsDetails, null);
+  }
+
+  function testUpdateWithInvalidDetails() {
+    return testUpdateWith({total: "invalid details"}, "TypeError");
+  }
+
+  function testUpdateWithError() {
+    return testUpdateWith(updatedErrorDetails, "AbortError");
+  }
+
+  // testing show with detailsUpdate promise
+  function testShowWithDetailsPromise(detailsUpdate, expectedError) {
+    if (expectedError) {
+      gScript.sendAsyncMessage("set-reject-ui-service");
+    } else {
+      gScript.sendAsyncMessage("set-simple-ui-service");
+    }
     return new Promise((resolve, reject) => {
-      gScript.addMessageListener("test-init-data-and-response-complete",
-                                 function nullDetailsResponseCompleteHandler() {
-        gScript.removeMessageListener("test-init-data-and-response-complete",
-                                      nullDetailsResponseCompleteHandler);
-        resolve();
-      });
-      gScript.sendAsyncMessage("test-init-data-and-response");
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      ok(!payRequest.shippingOption, "payRequest.shippingOption should be null.");
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+      payRequest.show(updateWithPromise(detailsUpdate)).then(response => {
+        if (expectedError) {
+          ok(false, "Should be rejected with " + expectedError + ", but got resolved");
+	  resolve();
+	} else {
+          ok(response.shippingOption, "response.shippingOption should not be null.");
+	  response.complete().then(() => {
+	    resolve();
+	  })
+	}
+      }, response => {
+        if (expectedError) {
+          is(response.name, expectedError,
+	     "Should be rejected with " + expectedError + ", but got " + response.name);
+	} else {
+	  ok(false, "Unexpected error: " + response.name);
+	}
+	resolve();
+      }).catch(e => {
+        ok(false, "Unexpected error: " + e.name);
+	resolve();
+      }).finally(handler.destruct);
+    });
+  }
+  function testShowWithValidPromise() {
+    return testShowWithDetailsPromise(updatedShippingOptionsDetails, null);
+  }
+
+  function testShowWithRejectedPromise() {
+    return testShowWithDetailsPromise(null, "AbortError");
+  }
+
+  function testShowWithInvalidPromise() {
+    return testShowWithDetailsPromise({total: "invalid details"}, "TypeError");
+  }
+
+  function testShowWithErrorPromise() {
+    return testShowWithDetailsPromise(updatedErrorDetails, "AbortError");
+  }
+
+  function testShowWithPromiseResolvedByRejectedPromise() {
+    gScript.sendAsyncMessage("set-reject-ui-service");
+    return new Promise((resolve, reject)=> {
+      const request = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+      let rejectPromise = Promise.reject(new TypeError());
+      let detailsUpdatePromise = Promise.resolve(rejectPromise);
+      request.show(detailsUpdatePromise).then(response => {
+        ok(false, "should be rejected with 'AbortError', but got resolved.");
+	resolve();
+      }, response => {
+        is(response.name, "AbortError", "Exepcted 'AbortError', but got " + response.name + ".");
+	resolve();
+      }).catch(error => {
+        ok(false, "Unexpected error: " + error.name + ".");
+      }).finally(handler.destruct);
     });
   }
 
-  function testShowUnsafe() {
-    gScript.sendAsyncMessage("set-complete-ui-service");
+  // testing show response initialization in chrome process
+  function testShowResponseInit() {
+    return new Promise((resolve, reject) => {
+      gScript.addMessageListener("test-show-response-init-complete",
+                                 function showResponseInitCompleteHandler() {
+        gScript.removeMessageListener("test-show-response-init-complete",
+                                      showResponseInitCompleteHandler);
+        resolve();
+      });
+      gScript.sendAsyncMessage("test-show-response-init");
+    });
+  }
+
+  // testing show that is not triggered by user.
+  function testShowNotTriggeredByUser() {
+    gScript.sendAsyncMessage("set-simple-ui-service");
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
       payRequest.show().then(() => {
@@ -380,6 +423,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     });
   }
 
+  // teardown function
   function teardown() {
     gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
       gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
@@ -391,16 +435,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     gScript.sendAsyncMessage("teardown");
   }
 
+  // test main body
   function runTests() {
     testCannotMakePaymentShow()
     .then(testRejectShow)
-    .then(testShowWithSuccess)
-    .then(testShowWithFail)
-    .then(testShowWithUnknown)
-    .then(testShowWithEmpty)
+    .then(testShowNormalFlow)
+    .then(testCompleteSuccess)
+    .then(testCompleteFail)
+    .then(testCompleteUnknown)
+    .then(testCompleteEmpty)
+    .then(testUpdateWithReject)
+    .then(testUpdateWithValidDetails)
+    .then(testUpdateWithInvalidDetails)
     .then(testUpdateWithError)
-    .then(testNullDetailsResponse)
-    .then(testShowUnsafe)
+    .then(testShowWithValidPromise)
+    .then(testShowWithInvalidPromise)
+    .then(testShowWithRejectedPromise)
+    .then(testShowWithErrorPromise)
+    .then(testShowWithPromiseResolvedByRejectedPromise)
+    .then(testShowResponseInit)
+    .then(testShowNotTriggeredByUser)
     .then(teardown)
     .catch( e => {
       ok(false, "Unexpected error: " + e.name);
