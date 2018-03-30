@@ -428,12 +428,8 @@ add_task(async function test_4() {
   ok(isExtensionInBootstrappedList(profileDir, a2.id));
   ok(XPIS.test_install2_2.exists());
   do_check_in_crash_annotation(a2.id, a2.version);
-  // Windows currently has timing issues, and sees the add-on as changed
-  // after restart.
-  if (AppConstants.platform !== "win") {
-    equal(a2.sourceURI.spec,
-          "http://example.com/addons/test_install2_2.xpi");
-  }
+  equal(a2.sourceURI.spec,
+        "http://example.com/addons/test_install2_2.xpi");
   ok(!a2.foreignInstall);
 
   equal(a2.installDate.getTime(), gInstallDate);
