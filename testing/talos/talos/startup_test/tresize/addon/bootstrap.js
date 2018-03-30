@@ -14,27 +14,6 @@
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const windowTracker = {
-  init() {
-    Services.ww.registerNotification(this);
-  },
-
-  async observe(window, topic, data) {
-    if (topic === "domwindowopened") {
-      await new Promise(resolve =>
-        window.addEventListener("DOMWindowCreated", resolve, {once: true}));
-
-      let {document} = window;
-      let {documentURI} = document;
-
-      if (documentURI !== "chrome://browser/content/browser.xul") {
-        return;
-      }
-      initializeBrowser(window);
-    }
-  },
-};
-
 function readSync(uri) {
   let channel = NetUtil.newChannel({uri, loadUsingSystemPrincipal: true});
   let buffer = NetUtil.readInputStream(channel.open2());
@@ -43,7 +22,10 @@ function readSync(uri) {
 
 function startup(data, reason) {
   Services.scriptloader.loadSubScript(data.resourceURI.resolve("content/initialize_browser.js"));
-  windowTracker.init();
+  Services.obs.addObserver(function observer(window) {
+    Services.obs.removeObserver(observer, "browser-delayed-startup-finished");
+    initializeBrowser(window);
+  }, "browser-delayed-startup-finished");
 }
 
 function shutdown(data, reason) {}
