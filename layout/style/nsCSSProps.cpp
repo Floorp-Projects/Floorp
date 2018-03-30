@@ -1914,6 +1914,20 @@ const KTableEntry nsCSSProps::kWidthKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
+// This must be the same as kWidthKTable, but just with 'content' added:
+const KTableEntry nsCSSProps::kFlexBasisKTable[] = {
+  { eCSSKeyword__moz_max_content, NS_STYLE_WIDTH_MAX_CONTENT },
+  { eCSSKeyword__moz_min_content, NS_STYLE_WIDTH_MIN_CONTENT },
+  { eCSSKeyword__moz_fit_content, NS_STYLE_WIDTH_FIT_CONTENT },
+  { eCSSKeyword__moz_available,   NS_STYLE_WIDTH_AVAILABLE },
+  { eCSSKeyword_content,          NS_STYLE_FLEX_BASIS_CONTENT },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+static_assert(ArrayLength(nsCSSProps::kFlexBasisKTable) ==
+              ArrayLength(nsCSSProps::kWidthKTable) + 1,
+              "kFlexBasisKTable should have the same entries as "
+              "kWidthKTable, plus one more for 'content'");
+
 const KTableEntry nsCSSProps::kWindowDraggingKTable[] = {
   { eCSSKeyword_default, StyleWindowDragging::Default },
   { eCSSKeyword_drag, StyleWindowDragging::Drag },
