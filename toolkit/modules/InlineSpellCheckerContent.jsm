@@ -49,6 +49,12 @@ var InlineSpellCheckerContent = {
                enableRealTimeSpell: false };
     }
 
+    if (spellChecker.initialSpellCheckPending) {
+      return { canSpellCheck: true,
+               initialSpellCheckPending: true,
+               enableRealTimeSpell: true };
+    }
+
     let dictionaryList = {};
     let realSpellChecker = spellChecker.mInlineSpellChecker.spellChecker;
     realSpellChecker.GetDictionaryList(dictionaryList, {});
