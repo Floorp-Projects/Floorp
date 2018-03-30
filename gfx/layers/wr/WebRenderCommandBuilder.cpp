@@ -289,6 +289,8 @@ struct DIGroup
   IntPoint mGroupOffset;
   Maybe<wr::ImageKey> mKey;
 
+  DIGroup() : mAppUnitsPerDevPixel(0) {}
+
   void InvalidateRect(const IntRect& aRect)
   {
     // Empty rects get dropped
@@ -1047,7 +1049,7 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
       group.mAppUnitsPerDevPixel != appUnitsPerDevPixel ||
       group.mScale != scale) {
     if (group.mAppUnitsPerDevPixel != appUnitsPerDevPixel) {
-      printf("app unit %d %d\n", group.mAppUnitsPerDevPixel, appUnitsPerDevPixel);
+      GP("app unit %d %d\n", group.mAppUnitsPerDevPixel, appUnitsPerDevPixel);
     }
     // The bounds have changed so we need to discard the old image and add all
     // the commands again.
