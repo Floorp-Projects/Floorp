@@ -374,6 +374,9 @@ class CommonFrameLayout
     void setHasCachedSavedFrame() {
         descriptor_ |= HASCACHEDSAVEDFRAME_BIT;
     }
+    void clearHasCachedSavedFrame() {
+        descriptor_ &= ~HASCACHEDSAVEDFRAME_BIT;
+    }
     uint8_t* returnAddress() const {
         return returnAddress_;
     }

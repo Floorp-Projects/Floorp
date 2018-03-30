@@ -777,6 +777,9 @@ class InterpreterFrame
     void setHasCachedSavedFrame() {
         flags_ |= HAS_CACHED_SAVED_FRAME;
     }
+    void clearHasCachedSavedFrame() {
+        flags_ &= ~HAS_CACHED_SAVED_FRAME;
+    }
 
   public:
     void trace(JSTracer* trc, Value* sp, jsbytecode* pc);
@@ -1248,6 +1251,7 @@ class LiveSavedFrameCache
 
         struct HasCachedMatcher;
         struct SetHasCachedMatcher;
+        struct ClearHasCachedMatcher;
 
       public:
         // If iter's frame is of a type that can be cached, construct a FramePtr
@@ -1259,6 +1263,7 @@ class LiveSavedFrameCache
 
         inline bool hasCachedSavedFrame() const;
         inline void setHasCachedSavedFrame();
+        inline void clearHasCachedSavedFrame();
 
         // Return true if this FramePtr refers to an interpreter frame.
         inline bool isInterpreterFrame() const { return ptr.is<InterpreterFrame*>(); }
