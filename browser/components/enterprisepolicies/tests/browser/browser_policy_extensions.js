@@ -5,6 +5,7 @@
 const addonID = "policytest@mozilla.com";
 
 add_task(async function test_addon_install() {
+  let installPromise = wait_for_addon_install();
   await setupPolicyEngineWithJson({
     "policies": {
       "Extensions": {
@@ -17,7 +18,7 @@ add_task(async function test_addon_install() {
       }
     }
   });
-  await wait_for_addon_install();
+  await installPromise;
   let addon = await AddonManager.getAddonByID(addonID);
   isnot(addon, null, "Addon not installed.");
 });
