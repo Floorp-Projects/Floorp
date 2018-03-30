@@ -15,6 +15,8 @@
 inline void
 js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind, const AutoLockGC& lock)
 {
+    MOZ_MAKE_MEM_UNDEFINED(this, ArenaSize);
+
     MOZ_ASSERT(firstFreeSpan.isEmpty());
     MOZ_ASSERT(!zone);
     MOZ_ASSERT(!allocated());
