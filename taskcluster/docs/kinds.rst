@@ -310,6 +310,10 @@ release-secondary-final-verify
 ------------------------------
 Verifies the contents and package of release update MARs for RC releases.
 
+release-sign-and-push-langpacks
+-------------------------------
+Sign a langpack XPI and publishes it onto addons.mozilla.org.
+
 release-update-verify
 ---------------------
 Verifies the contents and package of release update MARs.
