@@ -974,7 +974,8 @@ wasm::EnsureBuiltinThunksInitialized()
     size_t allocSize = AlignBytes(masm.bytesNeeded(), ExecutableCodePageSize);
 
     thunks->codeSize = allocSize;
-    thunks->codeBase = (uint8_t*)AllocateExecutableMemory(allocSize, ProtectionSetting::Writable);
+    thunks->codeBase = (uint8_t*)AllocateExecutableMemory(allocSize, ProtectionSetting::Writable,
+                                                          MemCheckKind::MakeUndefined);
     if (!thunks->codeBase)
         return false;
 

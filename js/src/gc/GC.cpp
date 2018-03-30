@@ -588,7 +588,7 @@ Arena::finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize)
             nmarked++;
         } else {
             t->finalize(fop);
-            JS_POISON(t, JS_SWEPT_TENURED_PATTERN, thingSize);
+            JS_POISON(t, JS_SWEPT_TENURED_PATTERN, thingSize, MemCheckKind::MakeUndefined);
             TraceTenuredFinalize(t);
         }
     }
@@ -596,7 +596,7 @@ Arena::finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize)
     if (nmarked == 0) {
         // Do nothing. The caller will update the arena appropriately.
         MOZ_ASSERT(newListTail == &newListHead);
-        JS_EXTRA_POISON(data, JS_SWEPT_TENURED_PATTERN, sizeof(data));
+        JS_EXTRA_POISON(data, JS_SWEPT_TENURED_PATTERN, sizeof(data), MemCheckKind::MakeUndefined);
         return nmarked;
     }
 
@@ -2961,7 +2961,8 @@ GCRuntime::releaseRelocatedArenasWithoutUnlocking(Arena* arenaList, const AutoLo
 
 #if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
         JS_POISON(reinterpret_cast<void*>(arena->thingsStart()),
-                  JS_MOVED_TENURED_PATTERN, arena->getThingsSpan());
+                  JS_MOVED_TENURED_PATTERN, arena->getThingsSpan(),
+                  MemCheckKind::MakeNoAccess);
 #endif
 
         releaseArena(arena, lock);

@@ -55,9 +55,6 @@ UnregisterCodeSegment(const CodeSegment* cs);
 // Called once before/after the last VM execution which could execute or compile
 // wasm.
 
-bool
-Init();
-
 void
 ShutDown();
 

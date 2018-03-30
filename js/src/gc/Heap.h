@@ -174,7 +174,8 @@ class FreeSpan
             return nullptr; // The span is empty.
         }
         checkSpan(arena);
-        JS_EXTRA_POISON(reinterpret_cast<void*>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize);
+        JS_EXTRA_POISON(reinterpret_cast<void*>(thing), JS_ALLOCATED_TENURED_PATTERN, thingSize,
+                        MemCheckKind::MakeUndefined);
         return reinterpret_cast<TenuredCell*>(thing);
     }
 

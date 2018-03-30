@@ -365,6 +365,10 @@ public class WebAppActivity extends AppCompatActivity
     }
 
     @Override // GeckoSession.ContentDelegate
+    public void onExternalResponse(final GeckoSession session, final GeckoSession.WebResponseInfo request) {
+    }
+
+    @Override // GeckoSession.ContentDelegate
     public void onFullScreen(GeckoSession session, boolean fullScreen) {
         updateFullScreenContent(fullScreen);
     }
