@@ -454,7 +454,7 @@ protected:
   const char *lastError;
 
 private:
-  ElfLoader() : expect_shutdown(true)
+  ElfLoader() : expect_shutdown(true), lastError(nullptr)
   {
     pthread_mutex_init(&handlesMutex, nullptr);
   }
