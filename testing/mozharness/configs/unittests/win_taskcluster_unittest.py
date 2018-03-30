@@ -128,6 +128,7 @@ config = {
                 "--log-errorsummary=%(error_summary_file)s",
                 "--cleanup-crashes",
                 "--marionette-startup-timeout=180",
+                "--sandbox-read-whitelist=%(abs_work_dir)s",
             ],
             "run_filename": "runreftest.py",
             "testsdir": "reftest"
