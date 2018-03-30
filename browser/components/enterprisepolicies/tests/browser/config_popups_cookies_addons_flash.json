@@ -1,6 +1,6 @@
 {
   "policies": {
-    "PopupBlocking": {
+    "Popups": {
       "Allow": [
         "https://www.allow.com",
         "https://www.pre-existing-deny.com"
