@@ -1875,8 +1875,6 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
   // with special cases elsewhere.
   // We are treating this case as one where it is appropriate to use the
   // fallback values defined at https://www.w3.org/TR/css-align/#baseline-values
-  // XXXdholbert That spec text actually says to fall back to 'start'/'end',
-  // not 'flex-start'/'flex-end'... Probably sort this out in bug 1207698.
   if (!IsBlockAxisCrossAxis()) {
     if (mAlignSelf == NS_STYLE_ALIGN_BASELINE) {
       mAlignSelf = NS_STYLE_ALIGN_FLEX_START;
