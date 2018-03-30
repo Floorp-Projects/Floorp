@@ -676,6 +676,12 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_STYLE_WIDTH_MIN_CONTENT              1
 #define NS_STYLE_WIDTH_FIT_CONTENT              2
 #define NS_STYLE_WIDTH_AVAILABLE                3
+// The 'content' keyword is only valid for 'flex-basis' (not for 'width').  But
+// aside from that, the 'flex-basis' property accepts exactly the same values
+// as 'width'. So I'm listing this one 'flex-basis'-specific enumerated value
+// alongside the 'width' ones, to be sure we don't accidentally overload this
+// numeric value with two different meanings if new 'width' keywords are added.
+#define NS_STYLE_FLEX_BASIS_CONTENT             4
 
 // See nsStyleDisplay.mPosition
 #define NS_STYLE_POSITION_STATIC                0

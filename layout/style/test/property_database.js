@@ -4741,6 +4741,7 @@ var gCSSProperties = {
       "calc(50px/(2 - 1))",
     ],
     invalid_values: [ "none", "-2px",
+      "content",  /* (valid for 'flex-basis' but not 'width') */
       /* invalid calc() values */
       "calc(50%+ 2px)",
       "calc(50% +2px)",
@@ -5256,12 +5257,14 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ " auto" ],
-        // NOTE: This is cribbed directly from the "width" chunk, since this
-        // property takes the exact same values as width (albeit with
-        // different semantics on 'auto').
+        // NOTE: Besides "content", this is cribbed directly from the "width"
+        // chunk, since this property takes the exact same values as width
+        // (plus 'content' & with different semantics on 'auto').
         // XXXdholbert (Maybe these should get separated out into
         // a reusable array defined at the top of this file?)
-    other_values: [ "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
+    other_values: [
+      "content",
+      "15px", "3em", "15%", "-moz-max-content", "-moz-min-content", "-moz-fit-content", "-moz-available",
       // valid calc() values
       "calc(-2px)",
       "calc(2px)",
