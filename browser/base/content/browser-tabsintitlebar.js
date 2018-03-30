@@ -3,18 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Note: the file browser-tabsintitlebar-stub.js is used instead of
-// this one on platforms which don't have CAN_DRAW_IN_TITLEBAR defined.
-
 var TabsInTitlebar = {
   init() {
     this._readPref();
     Services.prefs.addObserver(this._prefName, this);
-
-    // Always disable on unsupported GTK versions.
-    if (AppConstants.MOZ_WIDGET_TOOLKIT == "gtk3") {
-      this.allowedBy("gtk", window.matchMedia("(-moz-gtk-csd-available)"));
-    }
 
     // We need to update the appearance of the titlebar when the menu changes
     // from the active to the inactive state. We can't, however, rely on
@@ -64,6 +56,21 @@ var TabsInTitlebar = {
       this._disallowed[condition] = null;
       this.update();
     }
+  },
+
+  get systemSupported() {
+    let isSupported = false;
+    switch (AppConstants.MOZ_WIDGET_TOOLKIT) {
+      case "windows":
+      case "cocoa":
+        isSupported = true;
+        break;
+      case "gtk3":
+        isSupported = window.matchMedia("(-moz-gtk-csd-available)");
+        break;
+    }
+    delete this.systemSupported;
+    return this.systemSupported = isSupported;
   },
 
   get enabled() {
@@ -134,7 +141,8 @@ var TabsInTitlebar = {
       return;
     }
 
-    let allowed = (Object.keys(this._disallowed)).length == 0;
+    let allowed = this.systemSupported &&
+                  (Object.keys(this._disallowed)).length == 0;
     if (allowed) {
       document.documentElement.setAttribute("tabsintitlebar", "true");
       if (AppConstants.platform == "macosx") {
