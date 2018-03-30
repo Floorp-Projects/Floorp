@@ -16,8 +16,7 @@ class GentooBootstrapper(StyloInstall, BaseBootstrapper):
         self.dist_id = dist_id
 
     def install_system_packages(self):
-        self.run_as_root(['emerge', '--noreplace', '--quiet', 'dev-vcs/git',
-                          'mercurial', 'nodejs'])
+        self.run_as_root(['emerge', '--noreplace', '--quiet', 'nodejs'])
 
     def install_browser_packages(self):
         self.ensure_browser_packages()

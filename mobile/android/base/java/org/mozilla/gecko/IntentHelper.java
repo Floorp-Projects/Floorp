@@ -63,9 +63,6 @@ public final class IntentHelper implements BundleEventListener {
     private static final String MARKET_INTENT_URI_PACKAGE_PREFIX = "market://details?id=";
     private static final String EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url";
 
-    /** A partial URI to an error page - the encoded error URI should be appended before loading. */
-    private static final String UNKNOWN_PROTOCOL_URI_PREFIX = "about:neterror?e=unknownProtocolFound&u=";
-
     private static IntentHelper instance;
 
     private IntentHelper() {
@@ -505,7 +502,6 @@ public final class IntentHelper implements BundleEventListener {
 
         if (TextUtils.isEmpty(uri)) {
             Log.w(LOGTAG, "Received empty URL - loading about:neterror");
-            errorResponse.putString("uri", getUnknownProtocolErrorPageUri(""));
             errorResponse.putBoolean("isFallback", false);
             callback.sendError(errorResponse);
             return;
@@ -516,16 +512,8 @@ public final class IntentHelper implements BundleEventListener {
             // TODO (bug 1173626): This will not handle android-app uris on non 5.1 devices.
             intent = Intent.parseUri(uri, 0);
         } catch (final URISyntaxException e) {
-            String errorUri;
-            try {
-                errorUri = getUnknownProtocolErrorPageUri(URLEncoder.encode(uri, "UTF-8"));
-            } catch (final UnsupportedEncodingException encodingE) {
-                errorUri = getUnknownProtocolErrorPageUri("");
-            }
-
             // Don't log the exception to prevent leaking URIs.
             Log.w(LOGTAG, "Unable to parse Intent URI - loading about:neterror");
-            errorResponse.putString("uri", errorUri);
             errorResponse.putBoolean("isFallback", false);
             callback.sendError(errorResponse);
             return;
@@ -575,7 +563,6 @@ public final class IntentHelper implements BundleEventListener {
             //
             // Don't log the URI to prevent leaking it.
             Log.w(LOGTAG, "Unable to open URI, maybe showing neterror");
-            errorResponse.putString("uri", getUnknownProtocolErrorPageUri(intent.getData().toString()));
             errorResponse.putBoolean("isFallback", false);
             callback.sendError(errorResponse);
         }
@@ -599,16 +586,6 @@ public final class IntentHelper implements BundleEventListener {
             Log.w(LOGTAG, "URISyntaxException parsing fallback URI");
         }
         return false;
-    }
-
-    /**
-     * Returns an about:neterror uri with the unknownProtocolFound text as a parameter.
-     * @param encodedUri The encoded uri. While the page does not open correctly without specifying
-     *                   a uri parameter, it happily accepts the empty String so this argument may
-     *                   be the empty String.
-     */
-    private String getUnknownProtocolErrorPageUri(final String encodedUri) {
-        return UNKNOWN_PROTOCOL_URI_PREFIX + encodedUri;
     }
 
     private static class ResultHandler implements ActivityResultHandler {

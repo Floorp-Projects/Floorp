@@ -703,6 +703,11 @@ public class Tab {
         }, 500);
     }
 
+    void handleLoadError() {
+        setState(STATE_ERROR);
+        setLoadProgress(LOAD_PROGRESS_LOADED);
+    }
+
     void handleContentLoaded() {
         setLoadProgressIfLoading(LOAD_PROGRESS_LOADED);
     }

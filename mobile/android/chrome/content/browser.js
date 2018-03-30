@@ -4570,7 +4570,8 @@ Tab.prototype = {
     }
 
     if ((!aRequest || Components.isSuccessCode(aRequest.status)) &&
-        !fixedURI.displaySpec.startsWith("about:neterror") && !this.isSearch) {
+        !(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
+        !this.isSearch) {
       // If this won't end up in an error page and the user isn't searching,
       // don't retain the typed entry.
       this.userRequested = "";
