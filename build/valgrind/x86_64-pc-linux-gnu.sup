@@ -349,6 +349,179 @@
    fun:_ZN7mozilla13ServoStyleSet38InvalidateStyleForDocumentStateChangesENS_11EventStatesE
 }
 
+
+##############################################################################
+## BEGIN suppressions for Stylo as compiled by rustc 1.25.0
+# Even more similar issues, resulting from transitioning to rustc 1.25.0.
+# See bug 1447137.
+
+
+# Suppressions rooted at *style*values*specified*color*Color*style*parser*Parse*parse*
+
+{
+   bug1447137-01
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+   fun:*style*SimpleShadow*
+   fun:*style*parse_value*
+   fun:*style*parse_into*
+}
+
+{
+   bug1447137-02
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+   fun:*style*UrlPaintServer*
+   fun:*style*parse_value*
+   fun:*style*parse_into*
+}
+
+{
+   bug1447137-03
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+   fun:*style*parse_fallback*
+   fun:*style*UrlPaintServer*
+   fun:*style*parse_value*
+}
+
+{
+   bug1447137-04
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+   fun:*style*parse_border*
+   fun:*style*parse_into*
+   fun:*style*parse_value*
+}
+
+{
+   bug1447137-05
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+   fun:*style*parse_quirky*
+   fun:*style*parse_value*
+   fun:*style*parse_into*
+}
+
+{
+   bug1447137-06
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+   fun:*style*parse_value*
+   fun:*style*parse_into*
+   fun:*style*parse_value*
+}
+
+{
+   bug1447137-07
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+   fun:*style*parse_border*
+   fun:*style*parse_value*
+   fun:*style*parse_into*
+}
+
+{
+   bug1447137-08
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+   fun:*style*parse_quirky*
+   fun:*style*parse_value*
+   fun:*style*substitute_variables*
+}
+
+{
+   bug1447137-09
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+   fun:*style*Gradient*
+   fun:*style*Parse*
+   fun:*style*parse_value*
+}
+
+{
+   bug1447137-10
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+   fun:*style*SimpleShadow*
+   fun:*style*parse*closure*
+   fun:*style*parse_value*
+}
+
+{
+   bug1447137-11
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+   fun:*style*parse_border*
+   fun:*style*substitute_variables*
+   fun:*style*substitute_variables*
+}
+
+{
+   bug1447137-12
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+   fun:*style*parse_border*
+   fun:*style*parse_value*
+   fun:*style*substitute_variables*
+}
+
+{
+   bug1447137-13
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+   fun:*style*parse_value*
+   fun:*style*substitute_variables*
+   fun:*style*substitute_variables*
+}
+
+
+{
+   bug1447137-14
+   Memcheck:Cond
+   fun:*style*values*specified*color*Color*style*parser*Parse*parse*
+   fun:*style*parse_value*
+   fun:*style*parse_into*
+   fun:*geckoservo*parse_property_into*
+}
+
+##########################################
+# Suppressions rooted at *selectors*parser*SelectorList*Impl*parse*
+
+{
+   bug1447137-15
+   Memcheck:Cond
+   fun:*selectors*parser*SelectorList*Impl*parse*
+   fun:*style*parse_nested_rules*
+   fun:*style*parse_block*
+   fun:Servo_StyleSheet_FromUTF8Bytes
+}
+
+{
+   bug1447137-16
+   Memcheck:Cond
+   fun:*selectors*parser*SelectorList*Impl*parse*
+   fun:Servo_StyleSheet_FromUTF8Bytes
+   fun:*mozilla*ServoStyleSheet*ParseSheet*
+   fun:*mozilla*css*Loader*DoParseSheetServo*
+}
+
+##########################################
+# Suppressions rooted at *style*properties*shorthands*
+
+{
+   bug1447137-17
+   Memcheck:Cond
+   fun:*style*properties*shorthands*
+   fun:*style*properties*PropertyDeclaration*parse_into*
+   fun:*style*parse_value*
+   fun:*cssparser*Iterator*next*
+}
+
+## END suppressions for Stylo as compiled by rustc 1.25.0
+##############################################################################
+
+
 ###################################################
 #  For valgrind-mochitest ("tc-M-V [tier 2]") runs on taskcluster.
 #  See bug 1248365.

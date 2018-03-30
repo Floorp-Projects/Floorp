@@ -12,7 +12,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.WindowManager;
 
@@ -195,6 +194,10 @@ public class GeckoViewActivity extends Activity {
                           " screenY=" + screenY + " uri=" + uri +
                           " elementType=" + elementType +
                           " elementSrc=" + elementSrc);
+        }
+
+        @Override
+        public void onExternalResponse(GeckoSession session, GeckoSession.WebResponseInfo request) {
         }
     }
 

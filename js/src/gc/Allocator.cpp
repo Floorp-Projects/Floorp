@@ -678,7 +678,14 @@ Chunk::allocate(JSRuntime* rt)
 void
 Chunk::init(JSRuntime* rt)
 {
-    JS_POISON(this, JS_FRESH_TENURED_PATTERN, ChunkSize);
+    /* The chunk may still have some regions marked as no-access. */
+    MOZ_MAKE_MEM_UNDEFINED(this, ChunkSize);
+
+    /*
+     * Poison the chunk. Note that decommitAllArenas() below will mark the
+     * arenas as inaccessible (for memory sanitizers).
+     */
+    JS_POISON(this, JS_FRESH_TENURED_PATTERN, ChunkSize, MemCheckKind::MakeUndefined);
 
     /*
      * We clear the bitmap to guard against JS::GCThingIsMarkedGray being called

@@ -35,6 +35,7 @@ public final class GeckoBundle implements Parcelable {
     @WrapForJNI(calledFrom = "gecko")
     private static final boolean[] EMPTY_BOOLEAN_ARRAY = new boolean[0];
     private static final int[] EMPTY_INT_ARRAY = new int[0];
+    private static final long[] EMPTY_LONG_ARRAY = new long[0];
     private static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final GeckoBundle[] EMPTY_BUNDLE_ARRAY = new GeckoBundle[0];
@@ -245,6 +246,52 @@ public final class GeckoBundle implements Parcelable {
         final Object value = mMap.get(key);
         return value == null ? null : Array.getLength(value) == 0 ? EMPTY_INT_ARRAY :
                value instanceof double[] ? getIntArray((double[]) value) : (int[]) value;
+    }
+
+    /**
+     * Returns the value associated with a long mapping, or defaultValue if the mapping
+     * does not exist.
+     *
+     * @param key Key to look for.
+     * @param defaultValue Value to return if mapping does not exist.
+     * @return long value
+     */
+    public long getLong(final String key, final long defaultValue) {
+        final Object value = mMap.get(key);
+        return value == null ? defaultValue : ((Number) value).longValue();
+    }
+
+    /**
+     * Returns the value associated with a long mapping, or defaultValue if the mapping
+     * does not exist.
+     *
+     * @param key Key to look for.
+     * @return long value
+     */
+    public long getLong(final String key) {
+        return getLong(key, 0L);
+    }
+
+    private static long[] getLongArray(final double[] array) {
+        final int len = array.length;
+        final long[] ret = new long[len];
+        for (int i = 0; i < len; i++) {
+            ret[i] = (long) array[i];
+        }
+        return ret;
+    }
+
+    /**
+     * Returns the value associated with a long array mapping, or null if the mapping does
+     * not exist.
+     *
+     * @param key Key to look for.
+     * @return long array value
+     */
+    public long[] getLongArray(final String key) {
+        final Object value = mMap.get(key);
+        return value == null ? null : Array.getLength(value) == 0 ? EMPTY_LONG_ARRAY :
+                value instanceof double[] ? getLongArray((double[]) value) : (long[]) value;
     }
 
     /**

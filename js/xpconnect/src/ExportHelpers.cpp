@@ -290,7 +290,10 @@ FunctionForwarder(JSContext* cx, unsigned argc, Value* vp)
 
     RootedValue thisVal(cx, NullValue());
     if (!args.isConstructing()) {
-        thisVal.set(args.computeThis(cx));
+        RootedObject thisObject(cx);
+        if (!args.computeThis(cx, &thisObject))
+            return false;
+        thisVal.setObject(*thisObject);
     }
 
     {

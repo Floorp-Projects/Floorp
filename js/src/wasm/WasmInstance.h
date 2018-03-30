@@ -173,9 +173,6 @@ class Instance
 
 typedef UniquePtr<Instance> UniqueInstance;
 
-bool InitSignatureSet();
-void ReleaseSignatureSet();
-
 } // namespace wasm
 } // namespace js
 

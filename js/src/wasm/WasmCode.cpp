@@ -71,7 +71,8 @@ CodeSegment::AllocateCodeBytes(uint32_t codeLength)
     static_assert(MaxCodeBytesPerProcess <= INT32_MAX, "rounding won't overflow");
     uint32_t roundedCodeLength = RoundupCodeLength(codeLength);
 
-    void* p = AllocateExecutableMemory(roundedCodeLength, ProtectionSetting::Writable);
+    void* p = AllocateExecutableMemory(roundedCodeLength, ProtectionSetting::Writable,
+                                       MemCheckKind::MakeUndefined);
 
     // If the allocation failed and the embedding gives us a last-ditch attempt
     // to purge all memory (which, in gecko, does a purging GC/CC/GC), do that
@@ -79,7 +80,8 @@ CodeSegment::AllocateCodeBytes(uint32_t codeLength)
     if (!p) {
         if (OnLargeAllocationFailure) {
             OnLargeAllocationFailure();
-            p = AllocateExecutableMemory(roundedCodeLength, ProtectionSetting::Writable);
+            p = AllocateExecutableMemory(roundedCodeLength, ProtectionSetting::Writable,
+                                         MemCheckKind::MakeUndefined);
         }
     }
 
