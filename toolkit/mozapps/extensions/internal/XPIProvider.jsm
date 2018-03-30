@@ -369,7 +369,9 @@ function getFile(path, base = null) {
  */
 function tryGetMtime(file) {
   try {
-    return file.lastModifiedTime;
+    // Clone the file object so we always get the actual mtime, rather
+    // than whatever value it may have cached.
+    return file.clone().lastModifiedTime;
   } catch (e) {
     return 0;
   }
