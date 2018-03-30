@@ -58,6 +58,7 @@ treeherder:
         'ps': 'Partials signing'
         'Rel': 'Release promotion'
         'Snap': 'Snap image generation'
+        'langpack': 'Langpack sigatures and uploads'
 
 index:
     products:
