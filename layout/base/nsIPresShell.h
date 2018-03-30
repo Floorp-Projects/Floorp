@@ -830,17 +830,23 @@ public:
 
   /**
    * Determine if a rectangle specified in the frame's coordinate system
-   * intersects the viewport "enough" to be considered visible.
+   * intersects "enough" with the viewport to be considered visible. This
+   * is not a strict test against the viewport -- it's a test against
+   * the intersection of the viewport and the frame's ancestor scrollable
+   * frames. If it doesn't intersect enough, return a value indicating
+   * which direction the frame's topmost ancestor scrollable frame would
+   * need to be scrolled to bring the frame into view.
    * @param aFrame frame that aRect coordinates are specified relative to
    * @param aRect rectangle in twips to test for visibility
-   * @param aMinTwips is the minimum distance in from the edge of the viewport
-   *                  that an object must be to be counted visible
+   * @param aMinTwips is the minimum distance in from the edge of the
+   *                  visible area that an object must be to be counted
+   *                  visible
    * @return nsRectVisibility_kVisible if the rect is visible
    *         nsRectVisibility_kAboveViewport
    *         nsRectVisibility_kBelowViewport
    *         nsRectVisibility_kLeftOfViewport
-   *         nsRectVisibility_kRightOfViewport rectangle is outside the viewport
-   *         in the specified direction
+   *         nsRectVisibility_kRightOfViewport rectangle is outside the
+   *         topmost ancestor scrollable frame in the specified direction
    */
   virtual nsRectVisibility GetRectVisibility(nsIFrame *aFrame,
                                              const nsRect &aRect,
