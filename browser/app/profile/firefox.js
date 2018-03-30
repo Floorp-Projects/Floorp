@@ -1104,11 +1104,11 @@ pref("security.sandbox.content.level", 3);
 //      read access triggered by file dialog activity"
 // 2 - "no global read access, read and write access to some
 //      Flash-specific directories"
-pref("dom.ipc.plugins.sandbox-level.flash", 0);
+pref("dom.ipc.plugins.sandbox-level.flash", 1);
 // Controls the sandbox level used by plugins other than Flash. On Mac,
 // no other plugins are supported and this pref is only used for test
 // plugins used in automated tests.
-pref("dom.ipc.plugins.sandbox-level.default", 0);
+pref("dom.ipc.plugins.sandbox-level.default", 1);
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
