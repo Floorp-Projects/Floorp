@@ -27,12 +27,16 @@ var place_content_test_cases = [
         shorthand: "center normal",
     },
     {
-        alignContent: "baseline right safe",
+        alignContent: "baseline safe right",
         shorthand: "",
     },
     {
-        justifyContent: "start safe",
-        shorthand: "",
+        justifyContent: "safe start",
+        shorthand: "normal safe start",
+    },
+    {
+        justifyContent: "unsafe start",
+        shorthand: "normal start",
     },
     {
         justifyContent: "space-evenly start",
@@ -55,8 +59,12 @@ var place_items_test_cases = [
         shorthand: "baseline auto",
     },
     {
-        justifyItems: "start safe",
-        shorthand: "",
+        justifyItems: "safe start",
+        shorthand: "normal safe start",
+    },
+    {
+        justifyItems: "unsafe start",
+        shorthand: "normal start",
     },
     {
         justifyItems: "stretch",
@@ -64,7 +72,7 @@ var place_items_test_cases = [
     },
     {
         justifyItems: "left legacy",
-        shorthand: "",
+        shorthand: "normal legacy left",
     },
     {
         alignItems: "stretch",
@@ -75,16 +83,12 @@ var place_items_test_cases = [
 
 var place_self_test_cases = [
     {
-        alignSelf: "right",
-        shorthand: "right auto",
-    },
-    {
         alignSelf: "self-end safe",
         shorthand: "",
     },
     {
         justifySelf: "unsafe start",
-        shorthand: "",
+        shorthand: "auto start",
     },
     {
         justifySelf: "last baseline start",
