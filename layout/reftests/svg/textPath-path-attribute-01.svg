@@ -1,0 +1,42 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <defs>
+    <path id="path" d="M 100 100 h 400"/>
+  </defs>
+
+  <style>
+    .cover {
+      fill: lime;
+      stroke: lime;
+      stroke-width: 3px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" fill="lime" />
+
+  <text font-size="20">
+    <textPath href="#path" fill="red">1 Should not see this</textPath>
+    <textPath path="M 100 100 h 400" class="cover">1 Should not see this</textPath>
+  </text>
+
+  <text transform="translate(0,50)" font-size="20">
+    <textPath fill="red">2 Should not see this
+      <set attributeName="path" to="M 100 100 h 400"/>
+    </textPath>
+    <textPath href="#path" class="cover">2 Should not see this
+    </textPath>
+  </text>
+
+  <text transform="translate(0,100)" font-size="20">
+    <textPath fill="red" path="M 400 100 h 400" href="#path">3 Should not see this
+      <set attributeName="path" to=""/>
+    </textPath>
+    <textPath href="#path" class="cover">3 Should not see this
+    </textPath>
+  </text>
+
+</svg>

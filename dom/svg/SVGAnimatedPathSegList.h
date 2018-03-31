@@ -74,6 +74,11 @@ public:
   void ClearAnimValue(nsSVGElement *aElement);
 
   /**
+   * Empty paths are not rendered.
+   */
+  bool IsRendered() const;
+
+  /**
    * Needed for correct DOM wrapper construction since GetAnimValue may
    * actually return the baseVal!
    */
