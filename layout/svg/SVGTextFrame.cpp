@@ -3382,6 +3382,7 @@ SVGTextFrame::HandleAttributeChangeInDescendant(Element* aElement,
   if (aElement->IsSVGElement(nsGkAtoms::textPath)) {
     if (aNameSpaceID == kNameSpaceID_None &&
         (aAttribute == nsGkAtoms::startOffset ||
+         aAttribute == nsGkAtoms::path ||
          aAttribute == nsGkAtoms::side_)) {
       NotifyGlyphMetricsChange();
     } else if ((aNameSpaceID == kNameSpaceID_XLink ||
@@ -5019,18 +5020,27 @@ SVGTextFrame::GetTextPathGeometryElement(nsIFrame* aTextPathFrame)
 already_AddRefed<Path>
 SVGTextFrame::GetTextPath(nsIFrame* aTextPathFrame)
 {
-  SVGGeometryElement* element = GetTextPathGeometryElement(aTextPathFrame);
-  if (!element) {
+  nsIContent* content = aTextPathFrame->GetContent();
+  SVGTextPathElement* tp = static_cast<SVGTextPathElement*>(content);
+  if (tp->mPath.IsRendered()) {
+    // This is just an attribute so there's no transform that can apply
+    // so we can just return the path directly.
+    return tp->mPath.GetAnimValue().BuildPathForMeasuring();
+  }
+
+  SVGGeometryElement* geomElement = GetTextPathGeometryElement(aTextPathFrame);
+  if (!geomElement) {
     return nullptr;
   }
 
-  RefPtr<Path> path = element->GetOrBuildPathForMeasuring();
+  RefPtr<Path> path = geomElement->GetOrBuildPathForMeasuring();
   if (!path) {
     return nullptr;
   }
 
-  gfxMatrix matrix = element->PrependLocalTransformsTo(gfxMatrix());
+  gfxMatrix matrix = geomElement->PrependLocalTransformsTo(gfxMatrix());
   if (!matrix.IsIdentity()) {
+    // Apply the geometry element's transform
     RefPtr<PathBuilder> builder =
       path->TransformedCopyToBuilder(ToMatrix(matrix));
     path = builder->Finish();
@@ -5042,11 +5052,19 @@ SVGTextFrame::GetTextPath(nsIFrame* aTextPathFrame)
 gfxFloat
 SVGTextFrame::GetOffsetScale(nsIFrame* aTextPathFrame)
 {
-  SVGGeometryElement* element = GetTextPathGeometryElement(aTextPathFrame);
-  if (!element)
+  nsIContent* content = aTextPathFrame->GetContent();
+  SVGTextPathElement* tp = static_cast<SVGTextPathElement*>(content);
+  if (tp->mPath.IsRendered()) {
+    // A path attribute has no pathLength or transform
+    // so we return a unit scale.
+    return 1.0;
+  }
+
+  SVGGeometryElement* geomElement = GetTextPathGeometryElement(aTextPathFrame);
+  if (!geomElement)
     return 1.0;
 
-  return element->GetPathLengthScale(SVGGeometryElement::eForTextPath);
+  return geomElement->GetPathLengthScale(SVGGeometryElement::eForTextPath);
 }
 
 gfxFloat
