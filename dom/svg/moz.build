@@ -30,6 +30,7 @@ EXPORTS.mozilla.dom += [
     'SVGAnimatedInteger.h',
     'SVGAnimatedLength.h',
     'SVGAnimatedNumber.h',
+    'SVGAnimatedPathSegList.h',
     'SVGAnimatedRect.h',
     'SVGAnimatedString.h',
     'SVGAnimatedTransformList.h',
