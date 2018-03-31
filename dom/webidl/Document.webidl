@@ -106,11 +106,6 @@ interface Document : Node {
   Attr createAttribute(DOMString name);
   [NewObject, Throws]
   Attr createAttributeNS(DOMString? namespace, DOMString name);
-
-  // Allows setting innerHTML without automatic sanitization.
-  // Do not use this.
-  [ChromeOnly]
-  attribute boolean allowUnsafeHTML;
 };
 
 // https://html.spec.whatwg.org/multipage/dom.html#the-document-object
