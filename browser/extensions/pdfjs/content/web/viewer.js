@@ -95,7 +95,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.waitOnEventOrTimeout = exports.WaitOnType = exports.animationStarted = exports.normalizeWheelEventDelta = exports.binarySearchFirstItem = exports.watchScroll = exports.scrollIntoView = exports.getOutputScale = exports.approximateFraction = exports.roundToDivide = exports.getVisibleElements = exports.parseQueryString = exports.noContextMenuHandler = exports.getPDFFileNameFromURL = exports.ProgressBar = exports.EventBus = exports.NullL10n = exports.TextLayerMode = exports.RendererType = exports.PresentationModeState = exports.cloneObj = exports.isFileSchema = exports.isValidRotation = exports.VERTICAL_PADDING = exports.SCROLLBAR_PADDING = exports.MAX_AUTO_SCALE = exports.UNKNOWN_SCALE = exports.MAX_SCALE = exports.MIN_SCALE = exports.DEFAULT_SCALE = exports.DEFAULT_SCALE_VALUE = exports.CSS_UNITS = undefined;
+exports.waitOnEventOrTimeout = exports.WaitOnType = exports.animationStarted = exports.normalizeWheelEventDelta = exports.binarySearchFirstItem = exports.watchScroll = exports.scrollIntoView = exports.getOutputScale = exports.approximateFraction = exports.getPageSizeInches = exports.roundToDivide = exports.getVisibleElements = exports.parseQueryString = exports.noContextMenuHandler = exports.getPDFFileNameFromURL = exports.ProgressBar = exports.EventBus = exports.NullL10n = exports.TextLayerMode = exports.RendererType = exports.PresentationModeState = exports.cloneObj = exports.isFileSchema = exports.isPortraitOrientation = exports.isValidRotation = exports.VERTICAL_PADDING = exports.SCROLLBAR_PADDING = exports.MAX_AUTO_SCALE = exports.UNKNOWN_SCALE = exports.MAX_SCALE = exports.MIN_SCALE = exports.DEFAULT_SCALE = exports.DEFAULT_SCALE_VALUE = exports.CSS_UNITS = undefined;
 
 var _pdfjsLib = __webpack_require__(1);
 
@@ -132,6 +132,9 @@ function formatL10nValue(text, args) {
   });
 }
 let NullL10n = {
+  getLanguage() {
+    return Promise.resolve('en-us');
+  },
   getDirection() {
     return Promise.resolve('ltr');
   },
@@ -281,6 +284,16 @@ function roundToDivide(x, div) {
   let r = x % div;
   return r === 0 ? x : Math.round(x - r + div);
 }
+function getPageSizeInches({ view, userUnit, rotate }) {
+  const [x1, y1, x2, y2] = view;
+  const changeOrientation = rotate % 180 !== 0;
+  const width = (x2 - x1) / 72 * userUnit;
+  const height = (y2 - y1) / 72 * userUnit;
+  return {
+    width: changeOrientation ? height : width,
+    height: changeOrientation ? width : height
+  };
+}
 function getVisibleElements(scrollEl, views, sortByVisibility = false) {
   let top = scrollEl.scrollTop,
       bottom = top + scrollEl.clientHeight;
@@ -394,6 +407,9 @@ function normalizeWheelEventDelta(evt) {
 }
 function isValidRotation(angle) {
   return Number.isInteger(angle) && angle % 90 === 0;
+}
+function isPortraitOrientation(size) {
+  return size.width <= size.height;
 }
 function cloneObj(obj) {
   let result = Object.create(null);
@@ -537,6 +553,7 @@ exports.MAX_AUTO_SCALE = MAX_AUTO_SCALE;
 exports.SCROLLBAR_PADDING = SCROLLBAR_PADDING;
 exports.VERTICAL_PADDING = VERTICAL_PADDING;
 exports.isValidRotation = isValidRotation;
+exports.isPortraitOrientation = isPortraitOrientation;
 exports.isFileSchema = isFileSchema;
 exports.cloneObj = cloneObj;
 exports.PresentationModeState = PresentationModeState;
@@ -550,6 +567,7 @@ exports.noContextMenuHandler = noContextMenuHandler;
 exports.parseQueryString = parseQueryString;
 exports.getVisibleElements = getVisibleElements;
 exports.roundToDivide = roundToDivide;
+exports.getPageSizeInches = getPageSizeInches;
 exports.approximateFraction = approximateFraction;
 exports.getOutputScale = getOutputScale;
 exports.scrollIntoView = scrollIntoView;
@@ -3559,8 +3577,7 @@ function getViewerConfiguration() {
         'producer': document.getElementById('producerField'),
         'version': document.getElementById('versionField'),
         'pageCount': document.getElementById('pageCountField'),
-        'pageSizeInch': document.getElementById('pageSizeFieldInch'),
-        'pageSizeMM': document.getElementById('pageSizeFieldMM')
+        'pageSize': document.getElementById('pageSizeField')
       }
     },
     errorWrapper: {
@@ -4330,6 +4347,20 @@ var _ui_utils = __webpack_require__(0);
 var _pdfjsLib = __webpack_require__(1);
 
 const DEFAULT_FIELD_CONTENT = '-';
+const NON_METRIC_LOCALES = ['en-us', 'en-lr', 'my'];
+const US_PAGE_NAMES = {
+  '8.5x11': 'Letter',
+  '8.5x14': 'Legal'
+};
+const METRIC_PAGE_NAMES = {
+  '297x420': 'A3',
+  '210x297': 'A4'
+};
+function getPageName(size, isPortrait, pageNames) {
+  const width = isPortrait ? size.width : size.height;
+  const height = isPortrait ? size.height : size.width;
+  return pageNames[`${width}x${height}`];
+}
 class PDFDocumentProperties {
   constructor({ overlayName, fields, container, closeButton }, overlayManager, eventBus, l10n = _ui_utils.NullL10n) {
     this.overlayName = overlayName;
@@ -4346,7 +4377,14 @@ class PDFDocumentProperties {
       eventBus.on('pagechanging', evt => {
         this._currentPageNumber = evt.pageNumber;
       });
+      eventBus.on('rotationchanging', evt => {
+        this._pagesRotation = evt.pagesRotation;
+      });
     }
+    this._isNonMetricLocale = true;
+    l10n.getLanguage().then(locale => {
+      this._isNonMetricLocale = NON_METRIC_LOCALES.includes(locale);
+    });
   }
   open() {
     let freezeFieldData = data => {
@@ -4359,15 +4397,16 @@ class PDFDocumentProperties {
     };
     Promise.all([this.overlayManager.open(this.overlayName), this._dataAvailableCapability.promise]).then(() => {
       const currentPageNumber = this._currentPageNumber;
-      if (this.fieldData && currentPageNumber === this.fieldData['_currentPageNumber']) {
+      const pagesRotation = this._pagesRotation;
+      if (this.fieldData && currentPageNumber === this.fieldData['_currentPageNumber'] && pagesRotation === this.fieldData['_pagesRotation']) {
         this._updateUI();
         return;
       }
       this.pdfDocument.getMetadata().then(({ info, metadata, contentDispositionFilename }) => {
         return Promise.all([info, metadata, contentDispositionFilename || (0, _ui_utils.getPDFFileNameFromURL)(this.url), this._parseFileSize(this.maybeFileSize), this._parseDate(info.CreationDate), this._parseDate(info.ModDate), this.pdfDocument.getPage(currentPageNumber).then(pdfPage => {
-          return this._parsePageSize(pdfPage.pageSizeInches);
+          return this._parsePageSize((0, _ui_utils.getPageSizeInches)(pdfPage), pagesRotation);
         })]);
-      }).then(([info, metadata, fileName, fileSize, creationDate, modDate, pageSizes]) => {
+      }).then(([info, metadata, fileName, fileSize, creationDate, modDate, pageSize]) => {
         freezeFieldData({
           'fileName': fileName,
           'fileSize': fileSize,
@@ -4381,9 +4420,9 @@ class PDFDocumentProperties {
           'producer': info.Producer,
           'version': info.PDFFormatVersion,
           'pageCount': this.pdfDocument.numPages,
-          'pageSizeInch': pageSizes.inch,
-          'pageSizeMM': pageSizes.mm,
-          '_currentPageNumber': currentPageNumber
+          'pageSize': pageSize,
+          '_currentPageNumber': currentPageNumber,
+          '_pagesRotation': pagesRotation
         });
         this._updateUI();
         return this.pdfDocument.getDownloadInfo();
@@ -4428,6 +4467,7 @@ class PDFDocumentProperties {
     delete this.fieldData;
     this._dataAvailableCapability = (0, _pdfjsLib.createPromiseCapability)();
     this._currentPageNumber = 1;
+    this._pagesRotation = 0;
   }
   _updateUI(reset = false) {
     if (reset || !this.fieldData) {
@@ -4459,25 +4499,58 @@ class PDFDocumentProperties {
       size_b: fileSize.toLocaleString()
     }, '{{size_mb}} MB ({{size_b}} bytes)');
   }
-  _parsePageSize(pageSizeInches) {
+  _parsePageSize(pageSizeInches, pagesRotation) {
     if (!pageSizeInches) {
-      return Promise.resolve({
-        inch: undefined,
-        mm: undefined
-      });
+      return Promise.resolve(undefined);
     }
-    const { width, height } = pageSizeInches;
-    return Promise.all([this.l10n.get('document_properties_page_size_in_2', {
-      width: (Math.round(width * 100) / 100).toLocaleString(),
-      height: (Math.round(height * 100) / 100).toLocaleString()
-    }, '{{width}} × {{height}} in'), this.l10n.get('document_properties_page_size_mm_2', {
-      width: (Math.round(width * 25.4 * 10) / 10).toLocaleString(),
-      height: (Math.round(height * 25.4 * 10) / 10).toLocaleString()
-    }, '{{width}} × {{height}} mm')]).then(sizes => {
-      return {
-        inch: sizes[0],
-        mm: sizes[1]
+    if (pagesRotation % 180 !== 0) {
+      pageSizeInches = {
+        width: pageSizeInches.height,
+        height: pageSizeInches.width
       };
+    }
+    const isPortrait = (0, _ui_utils.isPortraitOrientation)(pageSizeInches);
+    let sizeInches = {
+      width: Math.round(pageSizeInches.width * 100) / 100,
+      height: Math.round(pageSizeInches.height * 100) / 100
+    };
+    let sizeMillimeters = {
+      width: Math.round(pageSizeInches.width * 25.4 * 10) / 10,
+      height: Math.round(pageSizeInches.height * 25.4 * 10) / 10
+    };
+    let pageName = null;
+    let name = getPageName(sizeInches, isPortrait, US_PAGE_NAMES) || getPageName(sizeMillimeters, isPortrait, METRIC_PAGE_NAMES);
+    if (!name && !(Number.isInteger(sizeMillimeters.width) && Number.isInteger(sizeMillimeters.height))) {
+      const exactMillimeters = {
+        width: pageSizeInches.width * 25.4,
+        height: pageSizeInches.height * 25.4
+      };
+      const intMillimeters = {
+        width: Math.round(sizeMillimeters.width),
+        height: Math.round(sizeMillimeters.height)
+      };
+      if (Math.abs(exactMillimeters.width - intMillimeters.width) < 0.1 && Math.abs(exactMillimeters.height - intMillimeters.height) < 0.1) {
+        name = getPageName(intMillimeters, isPortrait, METRIC_PAGE_NAMES);
+        if (name) {
+          sizeInches = {
+            width: Math.round(intMillimeters.width / 25.4 * 100) / 100,
+            height: Math.round(intMillimeters.height / 25.4 * 100) / 100
+          };
+          sizeMillimeters = intMillimeters;
+        }
+      }
+    }
+    if (name) {
+      pageName = this.l10n.get('document_properties_page_size_name_' + name.toLowerCase(), null, name);
+    }
+    return Promise.all([this._isNonMetricLocale ? sizeInches : sizeMillimeters, this.l10n.get('document_properties_page_size_unit_' + (this._isNonMetricLocale ? 'inches' : 'millimeters'), null, this._isNonMetricLocale ? 'in' : 'mm'), pageName, this.l10n.get('document_properties_page_size_orientation_' + (isPortrait ? 'portrait' : 'landscape'), null, isPortrait ? 'portrait' : 'landscape')]).then(([{ width, height }, unit, name, orientation]) => {
+      return this.l10n.get('document_properties_page_size_dimension_' + (name ? 'name_' : '') + 'string', {
+        width: width.toLocaleString(),
+        height: height.toLocaleString(),
+        unit,
+        name,
+        orientation
+      }, '{{width}} × {{height}} {{unit}} (' + (name ? '{{name}}, ' : '') + '{{orientation}})');
     });
   }
   _parseDate(inputDate) {
@@ -6268,9 +6341,6 @@ function isSameScale(oldScale, newScale) {
   }
   return false;
 }
-function isPortraitOrientation(size) {
-  return size.width <= size.height;
-}
 class BaseViewer {
   constructor(options) {
     if (this.constructor === BaseViewer) {
@@ -6624,8 +6694,7 @@ class BaseViewer {
           scale = Math.min(pageWidthScale, pageHeightScale);
           break;
         case 'auto':
-          let isLandscape = currentPage.width > currentPage.height;
-          let horizontalScale = isLandscape ? Math.min(pageHeightScale, pageWidthScale) : pageWidthScale;
+          let horizontalScale = (0, _ui_utils.isPortraitOrientation)(currentPage) ? pageWidthScale : Math.min(pageHeightScale, pageWidthScale);
           scale = Math.min(_ui_utils.MAX_AUTO_SCALE, horizontalScale);
           break;
         default:
@@ -6883,9 +6952,9 @@ class BaseViewer {
     if (!this.enablePrintAutoRotate) {
       return pagesOverview;
     }
-    let isFirstPagePortrait = isPortraitOrientation(pagesOverview[0]);
+    let isFirstPagePortrait = (0, _ui_utils.isPortraitOrientation)(pagesOverview[0]);
     return pagesOverview.map(function (size) {
-      if (isFirstPagePortrait === isPortraitOrientation(size)) {
+      if (isFirstPagePortrait === (0, _ui_utils.isPortraitOrientation)(size)) {
         return size;
       }
       return {
@@ -8269,6 +8338,9 @@ class FirefoxPreferences extends _preferences.BasePreferences {
 class MozL10n {
   constructor(mozL10n) {
     this.mozL10n = mozL10n;
+  }
+  getLanguage() {
+    return Promise.resolve(this.mozL10n.getLanguage());
   }
   getDirection() {
     return Promise.resolve(this.mozL10n.getDirection());

@@ -755,8 +755,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     // is called at compile time.
     MOZ_MUST_USE bool emitDefault(ParseNode* defaultExpr, ParseNode* pattern);
 
-    MOZ_MUST_USE bool setOrEmitSetFunName(ParseNode* maybeFun, HandleAtom name,
-                                          FunctionPrefixKind prefixKind);
+    MOZ_MUST_USE bool setOrEmitSetFunName(ParseNode* maybeFun, HandleAtom name);
 
     MOZ_MUST_USE bool emitInitializer(ParseNode* initializer, ParseNode* pattern);
     MOZ_MUST_USE bool emitInitializerInBranch(ParseNode* initializer, ParseNode* pattern);
