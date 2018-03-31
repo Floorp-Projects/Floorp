@@ -228,47 +228,21 @@ nsXBLResourceLoader::NotifyBoundElements()
     bool ready = false;
     xblService->BindingReady(content, bindingURI, &ready);
 
-    if (ready) {
-      // We need the document to flush out frame construction and
-      // such, so we want to use the current document.
-      nsIDocument* doc = content->GetUncomposedDoc();
-
-      if (doc) {
-        // Flush first to make sure we can get the frame for content
-        doc->FlushPendingNotifications(FlushType::Frames);
-
-        // If |content| is (in addition to having binding |mBinding|)
-        // also a descendant of another element with binding |mBinding|,
-        // then we might have just constructed it due to the
-        // notification of its parent.  (We can know about both if the
-        // binding loads were triggered from the DOM rather than frame
-        // construction.)  So we have to check both whether the element
-        // has a primary frame and whether it's in the undisplayed map
-        // before sending a ContentInserted notification, or bad things
-        // will happen.
-        nsIPresShell *shell = doc->GetShell();
-        if (shell) {
-          nsIFrame* childFrame = content->GetPrimaryFrame();
-          if (!childFrame) {
-            // Check if it's in the display:none or display:contents maps.
-            ComputedStyle* sc =
-              shell->FrameConstructor()->GetDisplayNoneStyleFor(content);
-
-            if (!sc) {
-              sc = shell->FrameConstructor()->GetDisplayContentsStyleFor(content);
-            }
-
-            if (!sc) {
-              shell->PostRecreateFramesFor(content->AsElement());
-            }
-          }
-        }
-
-        // Flush again
-        // XXXbz why is this needed?
-        doc->FlushPendingNotifications(FlushType::ContentAndNotify);
-      }
+    if (!ready) {
+      continue;
     }
+
+    nsIDocument* doc = content->GetUncomposedDoc();
+    if (!doc) {
+      continue;
+    }
+
+    nsIPresShell* shell = doc->GetShell();
+    if (!shell) {
+      continue;
+    }
+
+    shell->PostRecreateFramesFor(content->AsElement());
   }
 
   // Clear out the whole array.

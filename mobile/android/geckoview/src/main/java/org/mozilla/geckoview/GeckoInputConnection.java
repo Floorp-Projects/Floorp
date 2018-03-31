@@ -85,6 +85,7 @@ import java.lang.reflect.Proxy;
 
     // Prevent showSoftInput and hideSoftInput from causing reentrant calls on some devices.
     private volatile boolean mSoftInputReentrancyGuard;
+    private boolean mShowSoftInputOnFocus = true;
 
     public static SessionTextInput.Delegate create(
             final GeckoSession session,
@@ -286,6 +287,9 @@ import java.lang.reflect.Proxy;
     }
 
     private void showSoftInputWithToolbar(final boolean showToolbar) {
+        if (!mShowSoftInputOnFocus) {
+            return;
+        }
         if (mSoftInputReentrancyGuard) {
             return;
         }
@@ -973,6 +977,9 @@ import java.lang.reflect.Proxy;
         View v = getView();
         switch (keyCode) {
             case KeyEvent.KEYCODE_MENU:
+                if (!mShowSoftInputOnFocus) {
+                    return false;
+                }
                 InputMethodManager imm = getInputMethodManager();
                 imm.toggleSoftInputFromWindow(v.getWindowToken(),
                                               InputMethodManager.SHOW_FORCED, 0);
@@ -987,6 +994,11 @@ import java.lang.reflect.Proxy;
     public synchronized boolean isInputActive() {
         // Make sure this picks up PASSWORD state as well.
         return mIMEState != IME_STATE_DISABLED;
+    }
+
+    @Override // SessionTextInput.Delegate
+    public void setShowSoftInputOnFocus(final boolean showSoftInputOnFocus) {
+        mShowSoftInputOnFocus = showSoftInputOnFocus;
     }
 
     @Override // SessionTextInput.EditableListener
