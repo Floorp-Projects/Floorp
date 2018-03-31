@@ -299,8 +299,10 @@ function ignoreGCFunction(mangled)
     if (fun.includes("js::WeakMap<Key, Value, HashPolicy>::getDelegate("))
         return true;
 
-    // XXX modify refillFreeList<NoGC> to not need data flow analysis to understand it cannot GC.
-    if (/refillFreeList/.test(fun) && /\(js::AllowGC\)0u/.test(fun))
+    // TODO: modify refillFreeList<NoGC> to not need data flow analysis to
+    // understand it cannot GC. As of gcc 6, the same problem occurs with
+    // tryNewTenuredThing, tryNewNurseryObject, and others.
+    if (/refillFreeList|tryNew/.test(fun) && /\(js::AllowGC\)0u/.test(fun))
         return true;
     return false;
 }

@@ -1379,6 +1379,23 @@ nsGlobalWindowInner::FreeInnerObjects()
   // that the Promises can resolve.
   CallDocumentFlushedResolvers();
   mObservingDidRefresh = false;
+
+  // Disconnect service worker objects in FreeInnerObjects().  This is normally
+  // done from CleanUp().  In the future we plan to unify CleanUp() and
+  // FreeInnerObjects().  See bug 1450266.
+  ForEachEventTargetObject([&] (DOMEventTargetHelper* aTarget, bool* aDoneOut) {
+    RefPtr<ServiceWorkerRegistration> swr = do_QueryObject(aTarget);
+    if (swr) {
+      aTarget->DisconnectFromOwner();
+      return;
+    }
+
+    RefPtr<ServiceWorker> sw = do_QueryObject(aTarget);
+    if (sw) {
+      aTarget->DisconnectFromOwner();
+      return;
+    }
+  });
 }
 
 //*****************************************************************************

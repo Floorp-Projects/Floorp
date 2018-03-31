@@ -1765,12 +1765,6 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   MOZ_ASSERT(!mCompositorScheduler);
   MOZ_ASSERT(mWidget);
 
-#ifdef XP_WIN
-  if (DeviceManagerDx::Get()->CanUseDComp() && mWidget) {
-    mWidget->AsWindows()->EnsureCompositorWindow();
-  }
-#endif
-
   RefPtr<widget::CompositorWidget> widget = mWidget;
   RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(this, Move(widget), aSize);
   if (!api) {
@@ -1815,11 +1809,6 @@ CompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aA
       it->second.mWrBridge = nullptr;
     }
   }
-#ifdef XP_WIN
-  if (DeviceManagerDx::Get()->CanUseDComp() && mWidget) {
-    mWidget->AsWindows()->DestroyCompositorWindow();
-  }
-#endif
   parent->Release(); // IPDL reference
   return true;
 }
@@ -1962,6 +1951,12 @@ CompositorBridgeParent::AllocPCompositorWidgetParent(const CompositorWidgetInitD
   widget::CompositorWidgetParent* widget =
     new widget::CompositorWidgetParent(aInitData, mOptions);
   widget->AddRef();
+
+#ifdef XP_WIN
+  if (DeviceManagerDx::Get()->CanUseDComp()) {
+    widget->AsWindows()->EnsureCompositorWindow();
+  }
+#endif
 
   // Sending the constructor acts as initialization as well.
   mWidget = widget;
