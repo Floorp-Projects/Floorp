@@ -65,6 +65,16 @@ audio > xul|videocontrols {
   --volumeStack-width: 64px;
 }
 
+/*
+  XXX this is needed because of bug 1354501.
+  Can be removed when the bug is fixed, or when we move away from
+  the finish event to the finished promise.
+  (currently behind dom.animations-api.core.enabled)
+*/
+.fadeout {
+  opacity: 0;
+}
+
 .controlsContainer [hidden],
 .controlBar[hidden] {
   display: none;
