@@ -198,7 +198,7 @@ linux64-sixgill:
             - 'taskcluster/scripts/misc/build-gcc-sixgill-plugin-linux.sh'
         toolchain-artifact: public/build/sixgill.tar.xz
     toolchains:
-        - linux64-gcc-4.9
+        - linux64-gcc-6
 
 linux64-llvm-dsymutil:
     description: "llvm-dsymutil toolchain build"
