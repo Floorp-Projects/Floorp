@@ -412,6 +412,9 @@ nsBrowserContentHandler.prototype = {
     if (cmdLine.handleFlag("private", false) && PrivateBrowsingUtils.enabled) {
       PrivateBrowsingUtils.enterTemporaryAutoStartMode();
     }
+    if (cmdLine.handleFlag("setDefaultBrowser", false)) {
+      ShellService.setDefaultBrowser(true, true);
+    }
 
     var fileParam = cmdLine.handleFlagWithParam("file", false);
     if (fileParam) {
@@ -450,6 +453,7 @@ nsBrowserContentHandler.prototype = {
     info += "  --screenshot [<path>] Save screenshot to <path> or in working directory.\n";
     info += "  --window-size width[,height] Width and optionally height of screenshot.\n";
     info += "  --search <term>    Search <term> with your default search engine.\n";
+    info += "  --setDefaultBrowser Set this app as the default browser.\n";
     return info;
   },
 
