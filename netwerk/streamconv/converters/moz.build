@@ -18,7 +18,6 @@ UNIFIED_SOURCES += [
     'nsHTTPCompressConv.cpp',
     'nsIndexedToHTML.cpp',
     'nsMultiMixedConv.cpp',
-    'nsTXTToHTMLConv.cpp',
     'nsUnknownDecoder.cpp',
     'ParseFTPList.cpp',
 ]
