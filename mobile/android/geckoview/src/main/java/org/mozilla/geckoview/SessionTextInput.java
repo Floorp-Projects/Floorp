@@ -40,6 +40,7 @@ public final class SessionTextInput {
         boolean onKeyLongPress(int keyCode, KeyEvent event);
         boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event);
         boolean isInputActive();
+        void setShowSoftInputOnFocus(boolean showSoftInputOnFocus);
     }
 
     // Interface to access GeckoEditable from GeckoInputConnection.
@@ -96,6 +97,7 @@ public final class SessionTextInput {
     private final NativeQueue mQueue;
     private final GeckoEditable mEditable = new GeckoEditable();
     private final GeckoEditableChild mEditableChild = new GeckoEditableChild(mEditable);
+    private boolean mShowSoftInputOnFocus = true;
     private Delegate mInputConnection;
 
     /* package */ SessionTextInput(final @NonNull GeckoSession session,
@@ -150,6 +152,7 @@ public final class SessionTextInput {
             mInputConnection = GeckoInputConnection.create(mSession,
                                                            /* view */ null,
                                                            mEditable);
+            mInputConnection.setShowSoftInputOnFocus(mShowSoftInputOnFocus);
             mEditable.setListener((EditableListener) mInputConnection);
         }
         return true;
@@ -179,6 +182,7 @@ public final class SessionTextInput {
             mInputConnection = null;
         } else if (mInputConnection == null || mInputConnection.getView() != view) {
             mInputConnection = GeckoInputConnection.create(mSession, view, mEditable);
+            mInputConnection.setShowSoftInputOnFocus(mShowSoftInputOnFocus);
         }
         mEditable.setListener((EditableListener) mInputConnection);
     }
@@ -284,5 +288,17 @@ public final class SessionTextInput {
     public boolean isInputActive() {
         ThreadUtils.assertOnUiThread();
         return mInputConnection != null && mInputConnection.isInputActive();
+    }
+
+    /**
+     * Prevent soft input when gaining focus
+     *
+     * @param showSoftInputOnFocus Set whether soft input is shown when an input field gains focus.
+     */
+    synchronized public void setShowSoftInputOnFocus(boolean showSoftInputOnFocus) {
+        mShowSoftInputOnFocus = showSoftInputOnFocus;
+        if (mInputConnection != null) {
+            mInputConnection.setShowSoftInputOnFocus(showSoftInputOnFocus);
+        }
     }
 }

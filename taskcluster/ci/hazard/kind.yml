@@ -42,7 +42,7 @@ jobs:
                 - js/src/**
         toolchains:
             - linux64-clang
-            - linux64-gcc-4.9
+            - linux64-gcc-6
             - linux64-sixgill
             - linux64-rust
 
@@ -62,6 +62,6 @@ jobs:
                 && ./build-haz-linux.sh --project browser $HOME/workspace
         toolchains:
             - linux64-clang
-            - linux64-gcc-4.9
+            - linux64-gcc-6
             - linux64-sixgill
             - linux64-rust

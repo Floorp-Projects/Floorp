@@ -28,7 +28,6 @@ add_task(async function() {
   const BASE_RESULT = [
     "curl " + quote(SIMPLE_SJS),
     "--compressed",
-    header("Host: example.com"),
     header("User-Agent: " + navigator.userAgent),
     header("Accept: */*"),
     header("Accept-Language: " + navigator.language),
@@ -51,33 +50,47 @@ add_task(async function() {
     header("Content-Type: text/plain;charset=UTF-8")
   ];
 
+  const HEAD_PARTIAL_RESULT = [
+    "-I"
+  ];
+
   // GET request, no cookies (first request)
-  await performRequest(null);
+  await performRequest("GET");
   await testClipboardContent(BASE_RESULT);
 
   // GET request, cookies set by previous response
-  await performRequest(null);
+  await performRequest("GET");
   await testClipboardContent([
     ...BASE_RESULT,
     ...COOKIE_PARTIAL_RESULT
   ]);
 
   // POST request
-  await performRequest(POST_PAYLOAD);
+  await performRequest("POST", POST_PAYLOAD);
   await testClipboardContent([
     ...BASE_RESULT,
     ...COOKIE_PARTIAL_RESULT,
     ...POST_PARTIAL_RESULT
   ]);
 
+  // HEAD request
+  await performRequest("HEAD");
+  await testClipboardContent([
+    ...BASE_RESULT,
+    ...COOKIE_PARTIAL_RESULT,
+    ...HEAD_PARTIAL_RESULT
+  ]);
+
   await teardown(monitor);
 
-  async function performRequest(payload) {
+  async function performRequest(method, payload) {
     let wait = waitForNetworkEvents(monitor, 1);
     await ContentTask.spawn(tab.linkedBrowser, {
-      url: SIMPLE_SJS, payload_: payload
-    }, async function({url, payload_}) {
-      content.wrappedJSObject.performRequest(url, payload_);
+      url: SIMPLE_SJS,
+      method_: method,
+      payload_: payload
+    }, async function({url, method_, payload_}) {
+      content.wrappedJSObject.performRequest(url, method_, payload_);
     });
     await wait;
   }

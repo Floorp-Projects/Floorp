@@ -692,9 +692,10 @@ Action.prototype = {
       return props;
     }
 
+    let cssURL = urls ? escapeCSSURL(urls) : null;
     return Object.freeze({
-      "--pageAction-image-16px": null,
-      "--pageAction-image-32px": urls ? escapeCSSURL(urls) : null,
+      "--pageAction-image-16px": cssURL,
+      "--pageAction-image-32px": cssURL,
     });
   },
 
@@ -807,31 +808,20 @@ Action.prototype = {
   },
 
   /**
-   * Returns the URL of the best icon to use given a preferred size.  The best
-   * icon is the one with the smallest size that's equal to or bigger than the
-   * preferred size.  Returns null if the action has no icon URL.
-   *
-   * @param  peferredSize (number, required)
-   *         The icon size you prefer.
-   * @return The URL of the best icon, or null.
-   */
-  iconURLForSize(preferredSize, browserWindow) {
-    let iconURL = this.getIconURL(browserWindow);
-    if (!iconURL) {
-      return null;
-    }
-    if (typeof(iconURL) == "string") {
-      return iconURL;
-    }
-    if (typeof(iconURL) == "object") {
-      return this._iconURLForSize(iconURL, preferredSize);
-    }
-    return null;
-  },
-
-  /**
    * Selects the best matching icon from the given URLs object for the
-   * given preferred size, as described in {@see iconURLForSize}.
+   * given preferred size.
+   *
+   * @param {object} urls
+   *        An object containing square icons of various sizes. The name
+   *        of each property is its width, and the value is its image URL.
+   * @param {integer} peferredSize
+   *        The preferred icon width. The most appropriate icon in the
+   *        urls object will be chosen to match that size. An exact
+   *        match will be preferred, followed by an icon exactly double
+   *        the size, followed by the smallest icon larger than the
+   *        preferred size, followed by the largest available icon.
+   * @returns {string}
+   *        The chosen icon URL.
    */
   _iconURLForSize(urls, preferredSize) {
     // This case is copied from ExtensionParent.jsm so that our image logic is

@@ -1403,7 +1403,7 @@ exports.unreachable = unreachable;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.DummyStatTimer = exports.StatTimer = exports.SimpleXMLParser = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.getFilenameFromUrl = exports.addLinkAttributes = exports.RenderingCancelledException = undefined;
+exports.DummyStatTimer = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.getFilenameFromUrl = exports.addLinkAttributes = exports.RenderingCancelledException = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
@@ -1501,107 +1501,6 @@ class DOMSVGFactory {
   createElement(type) {
     (0, _util.assert)(typeof type === 'string', 'Invalid SVG element type');
     return document.createElementNS(SVG_NS, type);
-  }
-}
-class SimpleDOMNode {
-  constructor(nodeName, nodeValue) {
-    this.nodeName = nodeName;
-    this.nodeValue = nodeValue;
-    Object.defineProperty(this, 'parentNode', {
-      value: null,
-      writable: true
-    });
-  }
-  get firstChild() {
-    return this.childNodes[0];
-  }
-  get nextSibling() {
-    let index = this.parentNode.childNodes.indexOf(this);
-    return this.parentNode.childNodes[index + 1];
-  }
-  get textContent() {
-    if (!this.childNodes) {
-      return this.nodeValue || '';
-    }
-    return this.childNodes.map(function (child) {
-      return child.textContent;
-    }).join('');
-  }
-  hasChildNodes() {
-    return this.childNodes && this.childNodes.length > 0;
-  }
-}
-class SimpleXMLParser {
-  parseFromString(data) {
-    let nodes = [];
-    data = data.replace(/<\?[\s\S]*?\?>|<!--[\s\S]*?-->/g, '').trim();
-    data = data.replace(/<!DOCTYPE[^>\[]+(\[[^\]]+)?[^>]+>/g, '').trim();
-    data = data.replace(/>([^<][\s\S]*?)</g, (all, text) => {
-      let length = nodes.length;
-      let node = new SimpleDOMNode('#text', this._decodeXML(text));
-      nodes.push(node);
-      if (node.textContent.trim().length === 0) {
-        return '><';
-      }
-      return '>' + length + ',<';
-    });
-    data = data.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, function (all, text) {
-      let length = nodes.length;
-      let node = new SimpleDOMNode('#text', text);
-      nodes.push(node);
-      return length + ',';
-    });
-    let regex = /<([\w\:]+)((?:[\s\w:=]|'[^']*'|"[^"]*")*)(?:\/>|>([\d,]*)<\/[^>]+>)/g;
-    let lastLength;
-    do {
-      lastLength = nodes.length;
-      data = data.replace(regex, function (all, name, attrs, data) {
-        let length = nodes.length;
-        let node = new SimpleDOMNode(name);
-        let children = [];
-        if (data) {
-          data = data.split(',');
-          data.pop();
-          data.forEach(function (child) {
-            let childNode = nodes[+child];
-            childNode.parentNode = node;
-            children.push(childNode);
-          });
-        }
-        node.childNodes = children;
-        nodes.push(node);
-        return length + ',';
-      });
-    } while (lastLength < nodes.length);
-    return { documentElement: nodes.pop() };
-  }
-  _decodeXML(text) {
-    if (!text.includes('&')) {
-      return text;
-    }
-    return text.replace(/&(#(x[0-9a-f]+|\d+)|\w+);/gi, function (all, entityName, number) {
-      if (number) {
-        if (number[0] === 'x') {
-          number = parseInt(number.substring(1), 16);
-        } else {
-          number = +number;
-        }
-        return String.fromCharCode(number);
-      }
-      switch (entityName) {
-        case 'amp':
-          return '&';
-        case 'lt':
-          return '<';
-        case 'gt':
-          return '>';
-        case 'quot':
-          return '\"';
-        case 'apos':
-          return '\'';
-      }
-      return '&' + entityName + ';';
-    });
   }
 }
 var RenderingCancelledException = function RenderingCancelledException() {
@@ -1702,7 +1601,6 @@ exports.DEFAULT_LINK_REL = DEFAULT_LINK_REL;
 exports.DOMCanvasFactory = DOMCanvasFactory;
 exports.DOMCMapReaderFactory = DOMCMapReaderFactory;
 exports.DOMSVGFactory = DOMSVGFactory;
-exports.SimpleXMLParser = SimpleXMLParser;
 exports.StatTimer = StatTimer;
 exports.DummyStatTimer = DummyStatTimer;
 
@@ -1752,14 +1650,14 @@ exports.GlobalWorkerOptions = GlobalWorkerOptions;
 "use strict";
 
 
-var pdfjsVersion = '2.0.447';
-var pdfjsBuild = 'c0b22da0';
+var pdfjsVersion = '2.0.466';
+var pdfjsBuild = 'a8e9f6cc';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayAPI = __w_pdfjs_require__(9);
-var pdfjsDisplayTextLayer = __w_pdfjs_require__(16);
-var pdfjsDisplayAnnotationLayer = __w_pdfjs_require__(17);
+var pdfjsDisplayTextLayer = __w_pdfjs_require__(17);
+var pdfjsDisplayAnnotationLayer = __w_pdfjs_require__(18);
 var pdfjsDisplayDOMUtils = __w_pdfjs_require__(1);
-var pdfjsDisplaySVG = __w_pdfjs_require__(18);
+var pdfjsDisplaySVG = __w_pdfjs_require__(19);
 let pdfjsDisplayWorkerOptions = __w_pdfjs_require__(4);
 let pdfjsDisplayAPICompatibility = __w_pdfjs_require__(3);
 ;
@@ -4874,9 +4772,9 @@ var _worker_options = __w_pdfjs_require__(4);
 
 var _metadata = __w_pdfjs_require__(13);
 
-var _transport_stream = __w_pdfjs_require__(14);
+var _transport_stream = __w_pdfjs_require__(15);
 
-var _webgl = __w_pdfjs_require__(15);
+var _webgl = __w_pdfjs_require__(16);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -5031,7 +4929,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   }
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.0.447',
+    apiVersion: '2.0.466',
     source: {
       data: source.data,
       url: source.url,
@@ -5232,14 +5130,6 @@ var PDFPageProxy = function PDFPageProxyClosure() {
     },
     get view() {
       return this.pageInfo.view;
-    },
-    get pageSizeInches() {
-      const [x1, y1, x2, y2] = this.view,
-            userUnit = this.userUnit;
-      return {
-        width: (x2 - x1) / 72 * userUnit,
-        height: (y2 - y1) / 72 * userUnit
-      };
     },
     getViewport(scale, rotate = this.rotate, dontFlip = false) {
       return new _util.PageViewport(this.view, scale, rotate, 0, 0, dontFlip);
@@ -6362,8 +6252,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.447';
-  exports.build = build = 'c0b22da0';
+  exports.version = version = '2.0.466';
+  exports.build = build = 'a8e9f6cc';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -8635,16 +8525,18 @@ exports.Metadata = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
-var _dom_utils = __w_pdfjs_require__(1);
+var _xml_parser = __w_pdfjs_require__(14);
 
 class Metadata {
   constructor(data) {
     (0, _util.assert)(typeof data === 'string', 'Metadata: input is not a string');
     data = this._repair(data);
-    let parser = new _dom_utils.SimpleXMLParser();
-    data = parser.parseFromString(data);
+    let parser = new _xml_parser.SimpleXMLParser();
+    const xmlDocument = parser.parseFromString(data);
     this._metadata = Object.create(null);
-    this._parse(data);
+    if (xmlDocument) {
+      this._parse(xmlDocument);
+    }
   }
   _repair(data) {
     return data.replace(/>\\376\\377([^<]+)/g, function (all, codes) {
@@ -8677,8 +8569,8 @@ class Metadata {
       return '>' + chars;
     });
   }
-  _parse(domDocument) {
-    let rdf = domDocument.documentElement;
+  _parse(xmlDocument) {
+    let rdf = xmlDocument.documentElement;
     if (rdf.nodeName.toLowerCase() !== 'rdf:rdf') {
       rdf = rdf.firstChild;
       while (rdf && rdf.nodeName.toLowerCase() !== 'rdf:rdf') {
@@ -8718,6 +8610,334 @@ exports.Metadata = Metadata;
 
 /***/ }),
 /* 14 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+const XMLParserErrorCode = {
+  NoError: 0,
+  EndOfDocument: -1,
+  UnterminatedCdat: -2,
+  UnterminatedXmlDeclaration: -3,
+  UnterminatedDoctypeDeclaration: -4,
+  UnterminatedComment: -5,
+  MalformedElement: -6,
+  OutOfMemory: -7,
+  UnterminatedAttributeValue: -8,
+  UnterminatedElement: -9,
+  ElementNeverBegun: -10
+};
+function isWhitespace(s, index) {
+  const ch = s[index];
+  return ch === ' ' || ch === '\n' || ch === '\r' || ch === '\t';
+}
+function isWhitespaceString(s) {
+  for (let i = 0, ii = s.length; i < ii; i++) {
+    if (!isWhitespace(s, i)) {
+      return false;
+    }
+  }
+  return true;
+}
+class XMLParserBase {
+  _resolveEntities(s) {
+    return s.replace(/&([^;]+);/g, function (all, entity) {
+      if (entity.substring(0, 2) === '#x') {
+        return String.fromCharCode(parseInt(entity.substring(2), 16));
+      } else if (entity.substring(0, 1) === '#') {
+        return String.fromCharCode(parseInt(entity.substring(1), 10));
+      }
+      switch (entity) {
+        case 'lt':
+          return '<';
+        case 'gt':
+          return '>';
+        case 'amp':
+          return '&';
+        case 'quot':
+          return '\"';
+      }
+      return this.onResolveEntity(entity);
+    });
+  }
+  _parseContent(s, start) {
+    let pos = start,
+        name,
+        attributes = [];
+    function skipWs() {
+      while (pos < s.length && isWhitespace(s, pos)) {
+        ++pos;
+      }
+    }
+    while (pos < s.length && !isWhitespace(s, pos) && s[pos] !== '>' && s[pos] !== '/') {
+      ++pos;
+    }
+    name = s.substring(start, pos);
+    skipWs();
+    while (pos < s.length && s[pos] !== '>' && s[pos] !== '/' && s[pos] !== '?') {
+      skipWs();
+      let attrName = '',
+          attrValue = '';
+      while (pos < s.length && !isWhitespace(s, pos) && s[pos] !== '=') {
+        attrName += s[pos];
+        ++pos;
+      }
+      skipWs();
+      if (s[pos] !== '=') {
+        return null;
+      }
+      ++pos;
+      skipWs();
+      const attrEndChar = s[pos];
+      if (attrEndChar !== '\"' && attrEndChar !== '\'') {
+        return null;
+      }
+      const attrEndIndex = s.indexOf(attrEndChar, ++pos);
+      if (attrEndIndex < 0) {
+        return null;
+      }
+      attrValue = s.substring(pos, attrEndIndex);
+      attributes.push({
+        name: attrName,
+        value: this._resolveEntities(attrValue)
+      });
+      pos = attrEndIndex + 1;
+      skipWs();
+    }
+    return {
+      name,
+      attributes,
+      parsed: pos - start
+    };
+  }
+  _parseProcessingInstruction(s, start) {
+    let pos = start,
+        name,
+        value;
+    function skipWs() {
+      while (pos < s.length && isWhitespace(s, pos)) {
+        ++pos;
+      }
+    }
+    while (pos < s.length && !isWhitespace(s, pos) && s[pos] !== '>' && s[pos] !== '/') {
+      ++pos;
+    }
+    name = s.substring(start, pos);
+    skipWs();
+    const attrStart = pos;
+    while (pos < s.length && (s[pos] !== '?' || s[pos + 1] !== '>')) {
+      ++pos;
+    }
+    value = s.substring(attrStart, pos);
+    return {
+      name,
+      value,
+      parsed: pos - start
+    };
+  }
+  parseXml(s) {
+    let i = 0;
+    while (i < s.length) {
+      const ch = s[i];
+      let j = i;
+      if (ch === '<') {
+        ++j;
+        const ch2 = s[j];
+        let q;
+        switch (ch2) {
+          case '/':
+            ++j;
+            q = s.indexOf('>', j);
+            if (q < 0) {
+              this.onError(XMLParserErrorCode.UnterminatedElement);
+              return;
+            }
+            this.onEndElement(s.substring(j, q));
+            j = q + 1;
+            break;
+          case '?':
+            ++j;
+            const pi = this._parseProcessingInstruction(s, j);
+            if (s.substring(j + pi.parsed, j + pi.parsed + 2) !== '?>') {
+              this.onError(XMLParserErrorCode.UnterminatedXmlDeclaration);
+              return;
+            }
+            this.onPi(pi.name, pi.value);
+            j += pi.parsed + 2;
+            break;
+          case '!':
+            if (s.substring(j + 1, j + 3) === '--') {
+              q = s.indexOf('-->', j + 3);
+              if (q < 0) {
+                this.onError(XMLParserErrorCode.UnterminatedComment);
+                return;
+              }
+              this.onComment(s.substring(j + 3, q));
+              j = q + 3;
+            } else if (s.substring(j + 1, j + 8) === '[CDATA[') {
+              q = s.indexOf(']]>', j + 8);
+              if (q < 0) {
+                this.onError(XMLParserErrorCode.UnterminatedCdat);
+                return;
+              }
+              this.onCdata(s.substring(j + 8, q));
+              j = q + 3;
+            } else if (s.substring(j + 1, j + 8) === 'DOCTYPE') {
+              const q2 = s.indexOf('[', j + 8);
+              let complexDoctype = false;
+              q = s.indexOf('>', j + 8);
+              if (q < 0) {
+                this.onError(XMLParserErrorCode.UnterminatedDoctypeDeclaration);
+                return;
+              }
+              if (q2 > 0 && q > q2) {
+                q = s.indexOf(']>', j + 8);
+                if (q < 0) {
+                  this.onError(XMLParserErrorCode.UnterminatedDoctypeDeclaration);
+                  return;
+                }
+                complexDoctype = true;
+              }
+              const doctypeContent = s.substring(j + 8, q + (complexDoctype ? 1 : 0));
+              this.onDoctype(doctypeContent);
+              j = q + (complexDoctype ? 2 : 1);
+            } else {
+              this.onError(XMLParserErrorCode.MalformedElement);
+              return;
+            }
+            break;
+          default:
+            const content = this._parseContent(s, j);
+            if (content === null) {
+              this.onError(XMLParserErrorCode.MalformedElement);
+              return;
+            }
+            let isClosed = false;
+            if (s.substring(j + content.parsed, j + content.parsed + 2) === '/>') {
+              isClosed = true;
+            } else if (s.substring(j + content.parsed, j + content.parsed + 1) !== '>') {
+              this.onError(XMLParserErrorCode.UnterminatedElement);
+              return;
+            }
+            this.onBeginElement(content.name, content.attributes, isClosed);
+            j += content.parsed + (isClosed ? 2 : 1);
+            break;
+        }
+      } else {
+        while (j < s.length && s[j] !== '<') {
+          j++;
+        }
+        const text = s.substring(i, j);
+        this.onText(this._resolveEntities(text));
+      }
+      i = j;
+    }
+  }
+  onResolveEntity(name) {
+    return `&${name};`;
+  }
+  onPi(name, value) {}
+  onComment(text) {}
+  onCdata(text) {}
+  onDoctype(doctypeContent) {}
+  onText(text) {}
+  onBeginElement(name, attributes, isEmpty) {}
+  onEndElement(name) {}
+  onError(code) {}
+}
+class SimpleDOMNode {
+  constructor(nodeName, nodeValue) {
+    this.nodeName = nodeName;
+    this.nodeValue = nodeValue;
+    Object.defineProperty(this, 'parentNode', {
+      value: null,
+      writable: true
+    });
+  }
+  get firstChild() {
+    return this.childNodes[0];
+  }
+  get nextSibling() {
+    let index = this.parentNode.childNodes.indexOf(this);
+    return this.parentNode.childNodes[index + 1];
+  }
+  get textContent() {
+    if (!this.childNodes) {
+      return this.nodeValue || '';
+    }
+    return this.childNodes.map(function (child) {
+      return child.textContent;
+    }).join('');
+  }
+  hasChildNodes() {
+    return this.childNodes && this.childNodes.length > 0;
+  }
+}
+class SimpleXMLParser extends XMLParserBase {
+  constructor() {
+    super();
+    this._currentFragment = null;
+    this._stack = null;
+    this._errorCode = XMLParserErrorCode.NoError;
+  }
+  parseFromString(data) {
+    this._currentFragment = [];
+    this._stack = [];
+    this._errorCode = XMLParserErrorCode.NoError;
+    this.parseXml(data);
+    if (this._errorCode !== XMLParserErrorCode.NoError) {
+      return undefined;
+    }
+    const [documentElement] = this._currentFragment;
+    return { documentElement };
+  }
+  onResolveEntity(name) {
+    switch (name) {
+      case 'apos':
+        return '\'';
+    }
+    return super.onResolveEntity(name);
+  }
+  onText(text) {
+    if (isWhitespaceString(text)) {
+      return;
+    }
+    const node = new SimpleDOMNode('#text', text);
+    this._currentFragment.push(node);
+  }
+  onCdata(text) {
+    const node = new SimpleDOMNode('#text', text);
+    this._currentFragment.push(node);
+  }
+  onBeginElement(name, attributes, isEmpty) {
+    const node = new SimpleDOMNode(name);
+    node.childNodes = [];
+    this._currentFragment.push(node);
+    if (isEmpty) {
+      return;
+    }
+    this._stack.push(this._currentFragment);
+    this._currentFragment = node.childNodes;
+  }
+  onEndElement(name) {
+    this._currentFragment = this._stack.pop();
+    const lastElement = this._currentFragment[this._currentFragment.length - 1];
+    for (let i = 0, ii = lastElement.childNodes.length; i < ii; i++) {
+      lastElement.childNodes[i].parentNode = lastElement;
+    }
+  }
+  onError(code) {
+    this._errorCode = code;
+  }
+}
+exports.SimpleXMLParser = SimpleXMLParser;
+
+/***/ }),
+/* 15 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -8957,7 +9177,7 @@ var PDFDataTransportStream = function PDFDataTransportStreamClosure() {
 exports.PDFDataTransportStream = PDFDataTransportStream;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -9340,7 +9560,7 @@ var WebGLUtils = function WebGLUtilsClosure() {
 exports.WebGLContext = WebGLContext;
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -9883,7 +10103,7 @@ var renderTextLayer = function renderTextLayerClosure() {
 exports.renderTextLayer = renderTextLayer;
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -10598,7 +10818,7 @@ class AnnotationLayer {
 exports.AnnotationLayer = AnnotationLayer;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -10613,7 +10833,7 @@ var _util = __w_pdfjs_require__(0);
 
 var _dom_utils = __w_pdfjs_require__(1);
 
-var _is_node = __w_pdfjs_require__(19);
+var _is_node = __w_pdfjs_require__(20);
 
 var _is_node2 = _interopRequireDefault(_is_node);
 
@@ -10626,7 +10846,7 @@ var SVGGraphics = function () {
 exports.SVGGraphics = SVGGraphics;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
