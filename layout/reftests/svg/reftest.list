@@ -477,6 +477,7 @@ fuzzy-if(skiaContent,1,610) == textPath-03.svg pass.svg
 == textPath-05.html pass.svg
 == textPath-06.svg pass.svg
 == textPath-line-01.svg textPath-line-01-ref.svg
+== textPath-path-attribute-01.svg pass.svg
 == textPath-side-attribute-01.svg pass.svg
 
 == text-white-space-01.svg text-white-space-01-ref.svg
