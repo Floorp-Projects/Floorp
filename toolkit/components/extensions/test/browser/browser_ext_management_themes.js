@@ -124,7 +124,6 @@ add_task(async function test_management_themes() {
     accentcolor: Math.random().toString(),
   };
   is(await extension.awaitMessage("onInstalled"), "Bling", "LWT installed");
-  is(await extension.awaitMessage("onDisabled"), "Default", "default disabled");
   is(await extension.awaitMessage("onEnabled"), "Bling", "LWT enabled");
 
   await theme.startup();
