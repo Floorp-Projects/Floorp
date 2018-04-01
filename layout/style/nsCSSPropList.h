@@ -1186,7 +1186,7 @@ CSS_PROP_COLUMN(
     ColumnGap,
     0,
     "",
-    VARIANT_HL | VARIANT_NORMAL | VARIANT_CALC,
+    VARIANT_HLP | VARIANT_NORMAL | VARIANT_CALC,
     nullptr,
     eStyleAnimType_Coord)
 CSS_PROP_SHORTHAND(
