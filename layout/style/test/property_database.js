@@ -1710,7 +1710,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "normal" ],
-    other_values: [ "2px", "1em", "4em",
+    other_values: [ "2px", "1em", "4em", "3%", "calc(3%)", "calc(1em - 3%)",
       "calc(2px)",
       "calc(-2px)",
       "calc(0px)",
@@ -1721,7 +1721,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 5em)",
     ],
-    invalid_values: [ "3%", "-1px", "4" ]
+    invalid_values: [ "-3%", "-1px", "4" ]
   },
   "-moz-column-gap": {
     domProp: "MozColumnGap",
