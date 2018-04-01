@@ -20,7 +20,7 @@ add_task(async function test_undoCloseTab() {
   // This will be set inside the `onSSWindowStateReady` method.
   let lastTab;
 
-  ss.setCustomTabValue(tab, "foo", "bar");
+  ss.setTabValue(tab, "foo", "bar");
 
   function onSSWindowStateBusy(aEvent) {
     busyEventCount++;
@@ -30,8 +30,8 @@ add_task(async function test_undoCloseTab() {
     Assert.equal(gBrowser.tabs.length, 2, "Should only have 2 tabs");
     lastTab = gBrowser.tabs[1];
     readyEventCount++;
-    Assert.equal(ss.getCustomTabValue(lastTab, "foo"), "bar");
-    ss.setCustomTabValue(lastTab, "baz", "qux");
+    Assert.equal(ss.getTabValue(lastTab, "foo"), "bar");
+    ss.setTabValue(lastTab, "baz", "qux");
   }
 
   window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
@@ -47,7 +47,7 @@ add_task(async function test_undoCloseTab() {
   Assert.equal(reopenedTab, lastTab, "Tabs should be the same one.");
   Assert.equal(busyEventCount, 1);
   Assert.equal(readyEventCount, 1);
-  Assert.equal(ss.getCustomTabValue(reopenedTab, "baz"), "qux");
+  Assert.equal(ss.getTabValue(reopenedTab, "baz"), "qux");
   Assert.equal(reopenedTab.linkedBrowser.currentURI.spec, "about:rights");
 
   window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);

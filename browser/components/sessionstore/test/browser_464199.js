@@ -43,7 +43,7 @@ add_task(async function() {
                            formdata: { id: { "url": "http://www.example.net/" } }
                          }] }, title: REMEMBER },
     { state: { entries: [{ url: "http://www.example.org/form" }],
-               extData: { "setCustomTabValue": "http://example.net:80" } }, title: REMEMBER }
+               extData: { "setTabValue": "http://example.net:80" } }, title: REMEMBER }
   ] }] };
   let remember_count = 5;
 

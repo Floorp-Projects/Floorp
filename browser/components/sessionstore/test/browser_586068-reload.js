@@ -32,7 +32,7 @@ add_task(async function test() {
       // double check that this tab was the right one
       is(browser.currentURI.spec, tabData.entries[0].url,
          "load " + loadCount + " - browser loaded correct url");
-      is(ss.getCustomTabValue(tab, "uniq"), tabData.extData.uniq,
+      is(ss.getTabValue(tab, "uniq"), tabData.extData.uniq,
          "load " + loadCount + " - correct tab was restored");
 
       if (loadCount == state.windows[0].tabs.length) {

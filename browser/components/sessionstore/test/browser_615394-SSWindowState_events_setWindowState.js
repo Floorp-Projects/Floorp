@@ -25,8 +25,8 @@ function test() {
 
   function onSSWindowStateReady(aEvent) {
     readyEventCount++;
-    is(ss.getCustomTabValue(gBrowser.tabs[0], "foo"), "bar");
-    is(ss.getCustomTabValue(gBrowser.tabs[1], "baz"), "qux");
+    is(ss.getTabValue(gBrowser.tabs[0], "foo"), "bar");
+    is(ss.getTabValue(gBrowser.tabs[1], "baz"), "qux");
   }
 
   function onSSTabRestored(aEvent) {
