@@ -40,11 +40,6 @@ add_task(async function() {
 
         browser.test.assertEq(tabs[0].title, "Gort! Klaatu barada nikto!", "tab 0 title correct");
 
-        browser.test.assertThrows(
-          () => browser.tabs.query({index: -1}),
-          /-1 is too small \(must be at least 0\)/,
-          "tab indices must be non-negative");
-
         browser.test.notifyPass("tabs.query");
       });
     },
@@ -293,5 +288,69 @@ add_task(async function testQueryWithoutURLOrTitlePermissions() {
 
   await extension.awaitFinish("testQueryWithoutURLOrTitlePermissions");
 
+  await extension.unload();
+});
+
+add_task(async function test_query_index() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+
+    background: function() {
+      browser.tabs.onCreated.addListener(async function({index, windowId, id}) {
+        browser.test.assertThrows(
+          () => browser.tabs.query({index: -1}),
+          /-1 is too small \(must be at least 0\)/,
+          "tab indices must be non-negative");
+
+        let tabs = await browser.tabs.query({index, windowId});
+        browser.test.assertEq(tabs.length, 1, `Got one tab at index ${index}`);
+        browser.test.assertEq(tabs[0].id, id, "The tab is the right one");
+
+        tabs = await browser.tabs.query({index: 1e5, windowId});
+        browser.test.assertEq(tabs.length, 0, "There is no tab at this index");
+
+        browser.test.notifyPass("tabs.query");
+      });
+    },
+  });
+
+  await extension.startup();
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  await extension.awaitFinish("tabs.query");
+  BrowserTestUtils.removeTab(tab);
+  await extension.unload();
+});
+
+add_task(async function test_query_window() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+
+    background: async function() {
+      let badWindowId = 0;
+      for (let {id} of await browser.windows.getAll()) {
+        badWindowId = Math.max(badWindowId, id + 1);
+      }
+
+      let tabs = await browser.tabs.query({windowId: badWindowId});
+      browser.test.assertEq(tabs.length, 0, "No tabs because there is no such window ID");
+
+      let {id: currentWindowId} = await browser.windows.getCurrent();
+      tabs = await browser.tabs.query({currentWindow: true});
+      browser.test.assertEq(tabs[0].windowId, currentWindowId, "Got tabs from the current window");
+
+      let {id: lastFocusedWindowId} = await browser.windows.getLastFocused();
+      tabs = await browser.tabs.query({lastFocusedWindow: true});
+      browser.test.assertEq(tabs[0].windowId, lastFocusedWindowId, "Got tabs from the last focused window");
+
+      browser.test.notifyPass("tabs.query");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("tabs.query");
   await extension.unload();
 });

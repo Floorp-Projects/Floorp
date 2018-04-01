@@ -399,6 +399,16 @@ class TabBase {
   }
 
   /**
+   * @property {boolean} highlighted
+   *        Alias for `active`.
+   *        @readonly
+   *        @abstract
+   */
+  get highlighted() {
+    return this.active;
+  }
+
+  /**
    * @property {boolean} selected
    *        An alias for `active`.
    *        @readonly
@@ -1042,6 +1052,18 @@ class WindowBase {
   get activeTab() {
     throw new Error("Not implemented");
   }
+
+  /**
+   * Returns the window's tab at the specified index.
+   *
+   * @param {integer} index
+   *        The index of the desired tab.
+   *
+   * @returns {TabBase|undefined}
+   */
+  getTabAtIndex(index) {
+    throw new Error("Not implemented");
+  }
   /* eslint-enable valid-jsdoc */
 }
 
@@ -1368,7 +1390,7 @@ class WindowTrackerBase extends EventEmitter {
    * @returns {DOMWindow|null}
    */
   getCurrentWindow(context) {
-    return context.currentWindow || this.topWindow;
+    return (context && context.currentWindow) || this.topWindow;
   }
 
   /**
@@ -1379,12 +1401,15 @@ class WindowTrackerBase extends EventEmitter {
    * @param {BaseContext} context
    *        The extension context for which the matching is being performed.
    *        Used to determine the current window for relevant properties.
+   * @param {boolean} [strict = true]
+   *        If false, undefined will be returned instead of throwing an error
+   *        in case no window exists with the given ID.
    *
-   * @returns {DOMWindow}
+   * @returns {DOMWindow|undefined}
    * @throws {ExtensionError}
-   *        If no window exists with the given ID.
+   *        If no window exists with the given ID and `strict` is true.
    */
-  getWindow(id, context) {
+  getWindow(id, context, strict = true) {
     if (id === WINDOW_ID_CURRENT) {
       return this.getCurrentWindow(context);
     }
@@ -1394,7 +1419,10 @@ class WindowTrackerBase extends EventEmitter {
         return window;
       }
     }
-    throw new ExtensionError(`Invalid window ID: ${id}`);
+
+    if (strict) {
+      throw new ExtensionError(`Invalid window ID: ${id}`);
+    }
   }
 
   /**
@@ -1800,10 +1828,28 @@ class TabManagerBase {
    * @returns {Iterator<TabBase>}
    */
   * query(queryInfo = null, context = null) {
-    for (let window of this.extension.windowManager.query(queryInfo, context)) {
-      for (let tab of window.getTabs()) {
-        if (!queryInfo || tab.matches(queryInfo)) {
-          yield tab;
+    function* candidates(windowWrapper) {
+      if (queryInfo) {
+        let {active, highlighted, index} = queryInfo;
+        if (active === true || highlighted === true) {
+          yield windowWrapper.activeTab;
+          return;
+        }
+        if (index != null) {
+          let tabWrapper = windowWrapper.getTabAtIndex(index);
+          if (tabWrapper) {
+            yield tabWrapper;
+          }
+          return;
+        }
+      }
+      yield* windowWrapper.getTabs();
+    }
+    let windowWrappers = this.extension.windowManager.query(queryInfo, context);
+    for (let windowWrapper of windowWrappers) {
+      for (let tabWrapper of candidates(windowWrapper)) {
+        if (!queryInfo || tabWrapper.matches(queryInfo)) {
+          yield tabWrapper;
         }
       }
     }
@@ -1901,9 +1947,29 @@ class WindowManagerBase {
    * @returns {Iterator<WindowBase>}
    */
   * query(queryInfo = null, context = null) {
-    for (let window of this.getAll()) {
-      if (!queryInfo || window.matches(queryInfo, context)) {
-        yield window;
+    function* candidates(windowManager) {
+      if (queryInfo) {
+        let {currentWindow, windowId, lastFocusedWindow} = queryInfo;
+        if (currentWindow === true && windowId == null) {
+          windowId = WINDOW_ID_CURRENT;
+        }
+        if (windowId != null) {
+          let window = global.windowTracker.getWindow(windowId, context, false);
+          if (window) {
+            yield windowManager.getWrapper(window);
+          }
+          return;
+        }
+        if (lastFocusedWindow === true) {
+          yield windowManager.getWrapper(global.windowTracker.topWindow);
+          return;
+        }
+      }
+      yield* windowManager.getAll();
+    }
+    for (let windowWrapper of candidates(this)) {
+      if (!queryInfo || windowWrapper.matches(queryInfo, context)) {
+        yield windowWrapper;
       }
     }
   }

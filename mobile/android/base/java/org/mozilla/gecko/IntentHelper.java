@@ -5,16 +5,12 @@
 
 package org.mozilla.gecko;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.webapps.WebAppActivity;
 import org.mozilla.gecko.widget.ExternalIntentDuringPrivateBrowsingPromptFragment;
 
 import android.annotation.TargetApi;
@@ -24,7 +20,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.Browser;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
@@ -34,12 +29,8 @@ import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -62,6 +53,13 @@ public final class IntentHelper implements BundleEventListener {
     // via http://developer.android.com/distribute/tools/promote/linking.html
     private static final String MARKET_INTENT_URI_PACKAGE_PREFIX = "market://details?id=";
     private static final String EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url";
+
+    // In theory we can send up to 1 MB via an intent, which with UTF-16 strings would mean around
+    // 500k chars. In practice those 1 MB need to be shared with anything else we're doing that uses
+    // Binder transactions at the same time, plus sending a share intent can incur considerable
+    // overhead - for ACTION_SEND intents for example the whole EXTRA_TEXT will be duplicated into
+    // the intent's ClipData.
+    private static final int MAX_INTENT_STRING_DATA_LENGTH = 80000;
 
     private static IntentHelper instance;
 
@@ -206,9 +204,14 @@ public final class IntentHelper implements BundleEventListener {
      *         produced.
      */
     public static Intent getShareIntent(final Context context,
-                                        final String targetURI,
+                                        String targetURI,
                                         final String mimeType,
                                         final String title) {
+        if (!TextUtils.isEmpty(targetURI) && targetURI.length() > MAX_INTENT_STRING_DATA_LENGTH) {
+            final String ellipsis = context.getString(R.string.ellipsis);
+            targetURI = targetURI.substring(0, MAX_INTENT_STRING_DATA_LENGTH) + ellipsis;
+        }
+
         Intent shareIntent = getIntentForActionString(Intent.ACTION_SEND);
         shareIntent.putExtra(Intent.EXTRA_TEXT, targetURI);
         shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);

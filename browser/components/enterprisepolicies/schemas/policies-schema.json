@@ -88,6 +88,23 @@
           "items": {
             "type": "origin"
           }
+        },
+
+        "Default": {
+          "type": "boolean"
+        },
+
+        "AcceptThirdParty": {
+          "type": "string",
+          "enum": ["all", "none", "from-visited"]
+        },
+
+        "ExpireAtSessionEnd": {
+          "type": "boolean"
+        },
+
+        "Locked": {
+          "type": "boolean"
         }
       }
     },
@@ -276,6 +293,14 @@
           "items": {
             "type": "origin"
           }
+        },
+
+        "Default": {
+          "type": "boolean"
+        },
+
+        "Locked": {
+          "type": "boolean"
         }
       }
     },
@@ -325,7 +350,7 @@
       "type": "boolean"
     },
 
-    "Popups": {
+    "PopupBlocking": {
       "description": "Allow or deny popup usage.",
       "first_available": "60.0",
 
@@ -336,6 +361,14 @@
           "items": {
             "type": "origin"
           }
+        },
+
+        "Default": {
+          "type": "boolean"
+        },
+
+        "Locked": {
+          "type": "boolean"
         }
       }
     },
@@ -457,6 +490,29 @@
         },
         "PreventInstalls": {
           "type": "boolean"
+        }
+      }
+    },
+
+    "WebsiteFilter": {
+      "description": "Blocks websites from being visited. The parameters take an array of Match Patterns, as documented in https://developer.mozilla.org/en-US/Add-ons/WebExtensions/Match_patterns. Only http/https accesses are supported at the moment. The arrays are limited to 1000 entries each.",
+      "first_available": "60.0",
+      "enterprise_only": "true",
+
+      "type": "object",
+      "properties": {
+        "Block": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+
+        "Exceptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }
