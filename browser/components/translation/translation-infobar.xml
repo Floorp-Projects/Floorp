@@ -182,9 +182,10 @@
         <body>
           <![CDATA[
             this.translation = aTranslation;
-            let bundle = Services.strings.createBundle("chrome://global/locale/languageNames.properties");
+
             let sortByLocalizedName = function(aList) {
-              return aList.map(code => [code, bundle.GetStringFromName(code)])
+              let names = Services.intl.getLanguageDisplayNames(undefined, aList);
+              return aList.map((code, i) => [code, names[i]])
                           .sort((a, b) => a[1].localeCompare(b[1]));
             };
 
@@ -355,9 +356,7 @@
                 lang = this.translation.detectedLanguage;
             }
 
-            let langBundle =
-              Services.strings.createBundle("chrome://global/locale/languageNames.properties");
-            let langName = langBundle.GetStringFromName(lang);
+            let langName = Services.intl.getLanguageDisplayNames(undefined, [lang])[0];
 
             // Set the label and accesskey on the menuitem.
             let bundle =
