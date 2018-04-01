@@ -67,6 +67,7 @@ void Foo(int aSeven)
   char* a[6];
   for (int i = 0; i < aSeven - 1; i++) {
     a[i] = (char*) malloc(128 - 16*i);
+    UseItOrLoseIt(a[i], aSeven);
   }
 
   // Oddly, some versions of clang will cause identical stack traces to be
@@ -79,6 +80,7 @@ void Foo(int aSeven)
 
   for (int i = 0; i < aSeven - 5; i++) {
     Report(a[i]);                   // reported
+    UseItOrLoseIt(a[i], aSeven);
   }
 
   UseItOrLoseIt(a[2], aSeven);
