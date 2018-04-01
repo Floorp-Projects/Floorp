@@ -1464,9 +1464,7 @@ enum FunctionSyntaxKind
     ClassConstructor,
     DerivedClassConstructor,
     Getter,
-    GetterNoExpressionClosure,
     Setter,
-    SetterNoExpressionClosure
 };
 
 static inline bool
@@ -1482,22 +1480,10 @@ IsConstructorKind(FunctionSyntaxKind kind)
 }
 
 static inline bool
-IsGetterKind(FunctionSyntaxKind kind)
-{
-    return kind == Getter || kind == GetterNoExpressionClosure;
-}
-
-static inline bool
-IsSetterKind(FunctionSyntaxKind kind)
-{
-    return kind == Setter || kind == SetterNoExpressionClosure;
-}
-
-static inline bool
 IsMethodDefinitionKind(FunctionSyntaxKind kind)
 {
     return kind == Method || IsConstructorKind(kind) ||
-           IsGetterKind(kind) || IsSetterKind(kind);
+           kind == Getter || kind == Setter;
 }
 
 static inline ParseNode*
