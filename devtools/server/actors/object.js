@@ -1212,7 +1212,7 @@ function SymbolIteratorActor(objectActor) {
       const symbol = symbols[index];
       return {
         name: symbol.toString(),
-        descriptor: objectActor._propertyDescriptor(symbol, true)
+        descriptor: objectActor._propertyDescriptor(symbol)
       };
     }
   };
