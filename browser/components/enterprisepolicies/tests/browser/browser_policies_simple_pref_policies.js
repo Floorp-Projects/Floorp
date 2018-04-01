@@ -69,6 +69,12 @@ const POLICIES_TESTS = [
       "privacy.trackingprotection.pbmode.enabled": false,
     }
   },
+
+  // POLICY: OverrideFirstRunPage
+  {
+    policies: { "OverrideFirstRunPage": "https://www.example.com/" },
+    lockedPrefs: { "startup.homepage_welcome_url": "https://www.example.com/" },
+  },
 ];
 
 add_task(async function test_policy_remember_passwords() {
