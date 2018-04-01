@@ -14,7 +14,7 @@ add_task(async function test_set_tabstate() {
 
   // create a new tab
   let tab = BrowserTestUtils.addTab(gBrowser, URL);
-  ss.setTabValue(tab, key, value);
+  ss.setCustomTabValue(tab, key, value);
   await promiseBrowserLoaded(tab.linkedBrowser);
 
   // get the tab's state
@@ -48,7 +48,7 @@ add_task(async function test_set_tabstate_and_duplicate() {
   await promiseBrowserLoaded(tab.linkedBrowser);
 
   // verify the correctness of the restored tab
-  ok(ss.getTabValue(tab, key2) == value2 && tab.linkedBrowser.currentURI.spec == URL,
+  ok(ss.getCustomTabValue(tab, key2) == value2 && tab.linkedBrowser.currentURI.spec == URL,
      "the tab's state was correctly restored");
 
   // add text data
@@ -59,7 +59,7 @@ add_task(async function test_set_tabstate_and_duplicate() {
   await promiseTabRestored(tab2);
 
   // verify the correctness of the duplicated tab
-  ok(ss.getTabValue(tab2, key2) == value2 &&
+  ok(ss.getCustomTabValue(tab2, key2) == value2 &&
      tab2.linkedBrowser.currentURI.spec == URL,
      "correctly duplicated the tab's state");
   let textbox = await getInputValue(tab2.linkedBrowser, {id: "textbox"});
