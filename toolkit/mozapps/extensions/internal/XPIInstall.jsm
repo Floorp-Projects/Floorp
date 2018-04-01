@@ -71,8 +71,6 @@ ChromeUtils.defineModuleGetter(this, "XPIProvider",
 
 const PREF_ALLOW_NON_RESTARTLESS      = "extensions.legacy.non-restartless.enabled";
 
-const DEFAULT_SKIN = "classic/1.0";
-
 /* globals AddonInternal, BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, KEY_APP_TEMPORARY, TEMPORARY_ADDON_SUFFIX, SIGNED_TYPES, TOOLKIT_ID, XPIDatabase, XPIStates, getExternalType, isTheme, isUsableAddon, isWebExtension, mustSign, recordAddonTelemetry */
 const XPI_INTERNAL_SYMBOLS = [
   "AddonInternal",
@@ -158,14 +156,13 @@ const PROP_TARGETAPP     = ["id", "minVersion", "maxVersion"];
 
 // Map new string type identifiers to old style nsIUpdateItem types.
 // Retired values:
-// 8 = locale
 // 32 = multipackage xpi file
 // 8 = locale
 // 256 = apiextension
 // 128 = experiment
+// theme = 4
 const TYPES = {
   extension: 2,
-  theme: 4,
   dictionary: 64,
 };
 
@@ -801,16 +798,7 @@ async function loadManifestFromRDF(aUri, aData) {
     addon.targetPlatforms.push(platform);
   }
 
-  // A theme's userDisabled value is true if the theme is not the selected skin
-  // or if there is an active lightweight theme. We ignore whether softblocking
-  // is in effect since it would change the active theme.
-  if (isTheme(addon.type)) {
-    addon.userDisabled = !!LightweightThemeManager.currentTheme ||
-                         addon.internalName != DEFAULT_SKIN;
-  } else {
-    addon.userDisabled = false;
-  }
-
+  addon.userDisabled = false;
   addon.softDisabled = addon.blocklistState == nsIBlocklistService.STATE_SOFTBLOCKED;
   addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 

@@ -8,7 +8,7 @@
 /* globals ADDON_SIGNING, SIGNED_TYPES, BOOTSTRAP_REASONS, DB_SCHEMA,
           AddonInternal, XPIProvider, XPIStates, syncLoadManifestFromFile,
           isUsableAddon, recordAddonTelemetry,
-          flushChromeCaches, descriptorToPath, DEFAULT_SKIN */
+          flushChromeCaches, descriptorToPath */
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -48,7 +48,7 @@ const KEY_APP_TEMPORARY               = "app-temporary";
 
 // Properties to save in JSON file
 const PROP_JSON_FIELDS = ["id", "syncGUID", "location", "version", "type",
-                          "internalName", "updateURL", "optionsURL",
+                          "updateURL", "optionsURL",
                           "optionsType", "optionsBrowserStyle", "aboutURL",
                           "defaultLocale", "visible", "active", "userDisabled",
                           "appDisabled", "pendingUninstall", "installDate",
@@ -712,28 +712,6 @@ this.XPIDatabase = {
   },
 
   /**
-   * Synchronously gets an add-on with a particular internalName.
-   *
-   * @param  aInternalName
-   *         The internalName of the add-on to retrieve
-   * @return a DBAddonInternal
-   */
-  getVisibleAddonForInternalName(aInternalName) {
-    if (!this.addonDB) {
-      // This may be called when the DB hasn't otherwise been loaded
-      logger.warn(`Synchronous load of XPI database due to ` +
-                  `getVisibleAddonForInternalName. Stack: ${Error().stack}`);
-      AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_forInternalName",
-          XPIProvider.runPhase);
-      this.syncLoadDB(true);
-    }
-
-    return _findAddon(this.addonDB,
-                      aAddon => aAddon.visible &&
-                                (aAddon.internalName == aInternalName));
-  },
-
-  /**
    * Asynchronously gets all add-ons with pending operations.
    *
    * @param  aTypes
@@ -1094,10 +1072,6 @@ this.XPIDatabaseReconcile = {
 
     // appDisabled depends on whether the add-on is a foreignInstall so update
     aNewAddon.appDisabled = !isUsableAddon(aNewAddon);
-
-    // The default theme is never a foreign install
-    if (aNewAddon.type == "theme" && aNewAddon.internalName == DEFAULT_SKIN)
-      aNewAddon.foreignInstall = false;
 
     if (isDetectedInstall && aNewAddon.foreignInstall) {
       // If the add-on is a foreign install and is in a scope where add-ons
@@ -1460,11 +1434,7 @@ this.XPIDatabaseReconcile = {
         // We might be recovering from a corrupt database, if so use the
         // list of known active add-ons to update the new add-on
         if (!wasStaged && XPIDatabase.activeBundles) {
-          // For themes we know which is active by the current skin setting
-          if (currentAddon.type == "theme")
-            isActive = currentAddon.internalName == DEFAULT_SKIN;
-          else
-            isActive = XPIDatabase.activeBundles.includes(currentAddon.path);
+          isActive = XPIDatabase.activeBundles.includes(currentAddon.path);
 
           if (currentAddon.type == "webextension-theme")
             currentAddon.userDisabled = !isActive;

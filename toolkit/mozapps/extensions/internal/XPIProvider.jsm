@@ -87,8 +87,6 @@ const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVer
 
 const PREF_EM_LAST_APP_BUILD_ID       = "extensions.lastAppBuildId";
 
-const DEFAULT_SKIN = "classic/1.0";
-
 // Specify a list of valid built-in add-ons to load.
 const BUILT_IN_ADDONS_URI             = "chrome://browser/content/built_in_addons.json";
 
@@ -112,8 +110,6 @@ const FILE_RDF_MANIFEST               = "install.rdf";
 const FILE_WEB_MANIFEST               = "manifest.json";
 const FILE_XPI_ADDONS_LIST            = "extensions.ini";
 
-const ADDON_ID_DEFAULT_THEME          = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
-
 const KEY_PROFILEDIR                  = "ProfD";
 const KEY_ADDON_APP_DIR               = "XREAddonAppDir";
 const KEY_APP_DISTRIBUTION            = "XREAppDist";
@@ -127,6 +123,8 @@ const KEY_APP_SYSTEM_LOCAL            = "app-system-local";
 const KEY_APP_SYSTEM_SHARE            = "app-system-share";
 const KEY_APP_SYSTEM_USER             = "app-system-user";
 const KEY_APP_TEMPORARY               = "app-temporary";
+
+const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 
 const TEMPORARY_ADDON_SUFFIX = "@temporary-addon";
 
@@ -142,7 +140,7 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
-XPCOMUtils.defineConstant(this, "DB_SCHEMA", 24);
+XPCOMUtils.defineConstant(this, "DB_SCHEMA", 25);
 
 const NOTIFICATION_TOOLBOX_CONNECTION_CHANGE      = "toolbox-connection-change";
 
@@ -211,7 +209,6 @@ const SIGNED_TYPES = new Set([
 
 const LEGACY_TYPES = new Set([
   "extension",
-  "theme",
 ]);
 
 const ALL_EXTERNAL_TYPES = new Set([
@@ -289,7 +286,6 @@ function loadLazyObjects() {
     SIGNED_TYPES,
     BOOTSTRAP_REASONS,
     DB_SCHEMA,
-    DEFAULT_SKIN,
     AddonInternal,
     XPIProvider,
     XPIStates,
@@ -791,9 +787,6 @@ function isDisabledLegacy(addon) {
  * @return true if the add-on should not be appDisabled
  */
 function isUsableAddon(aAddon) {
-  if (aAddon.type == "theme")
-    return aAddon.internalName == DEFAULT_SKIN;
-
   if (mustSign(aAddon.type) && !aAddon.isCorrectlySigned) {
     logger.warn(`Add-on ${aAddon.id} is not correctly signed.`);
     if (Services.prefs.getBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, false)) {
@@ -1201,14 +1194,7 @@ class XPIState {
     // We don't use aDBAddon.active here because it's not updated until after restart.
     let mustGetMod = (aDBAddon.visible && !aDBAddon.disabled && !this.enabled);
 
-    // We need to treat XUL themes specially here, since lightweight
-    // themes require the default theme's chrome to be registered even
-    // though we report it as disabled for UI purposes.
-    if (aDBAddon.type == "theme") {
-      this.enabled = aDBAddon.internalName == DEFAULT_SKIN;
-    } else {
-      this.enabled = aDBAddon.visible && !aDBAddon.disabled;
-    }
+    this.enabled = aDBAddon.visible && !aDBAddon.disabled;
 
     this.version = aDBAddon.version;
     this.type = aDBAddon.type;
@@ -2061,9 +2047,6 @@ var XPIProvider = {
       if (AppConstants.MOZ_CRASHREPORTER) {
         // Annotate the crash report with relevant add-on information.
         try {
-          Services.appinfo.annotateCrashReport("Theme", DEFAULT_SKIN);
-        } catch (e) { }
-        try {
           Services.appinfo.annotateCrashReport("EMCheckCompatibility",
                                                AddonManager.checkCompatibility);
         } catch (e) { }
@@ -2884,30 +2867,6 @@ var XPIProvider = {
   },
 
   /**
-   * Returns the add-on state data for the restartful extensions which
-   * should be available in safe mode. In particular, this means the
-   * default theme, and only the default theme.
-   *
-   * @returns {object}
-   */
-  getSafeModeExtensions() {
-    let loc = XPIStates.getLocation(KEY_APP_GLOBAL);
-    let state = loc.get(ADDON_ID_DEFAULT_THEME);
-
-    // Use the default state data for the default theme, but always mark
-    // it enabled, in case another theme is enabled in normal mode.
-    let addonData = state.toJSON();
-    addonData.enabled = true;
-
-    return {
-      [KEY_APP_GLOBAL]: {
-        path: loc.path,
-        addons: { [ADDON_ID_DEFAULT_THEME]: addonData },
-      },
-    };
-  },
-
-  /**
    * Checks for any changes that have occurred since the last time the
    * application was launched.
    *
@@ -3006,24 +2965,12 @@ var XPIProvider = {
         }
       }
 
-      if (Services.appinfo.inSafeMode) {
-        aomStartup.initializeExtensions(this.getSafeModeExtensions());
-        logger.debug("Initialized safe mode add-ons");
-        return false;
-      }
-
       // If the application crashed before completing any pending operations then
       // we should perform them now.
       if (extensionListChanged || hasPendingChanges) {
         this._updateActiveAddons();
-
-        // Serialize and deserialize so we get the expected JSON data.
-        let state = JSON.parse(JSON.stringify(XPIStates));
-        aomStartup.initializeExtensions(state);
         return true;
       }
-
-      aomStartup.initializeExtensions(XPIStates.initialStateData);
 
       logger.debug("No changes found");
     } catch (e) {
@@ -3570,14 +3517,21 @@ var XPIProvider = {
     if (!isTheme(aType))
       return;
 
-    let addons = XPIDatabase.getAddonsByType("theme", "webextension-theme");
+    let addons = XPIDatabase.getAddonsByType("webextension-theme");
     for (let theme of addons) {
-      if (isWebExtension(theme.type) && theme.visible && theme.id != aId)
-        this.updateAddonDisabledState(theme, true, undefined);
+      if (theme.visible && theme.id != aId)
+        this.updateAddonDisabledState(theme, true, undefined, true);
     }
 
-    let defaultTheme = XPIDatabase.getVisibleAddonForInternalName(DEFAULT_SKIN);
-    this.updateAddonDisabledState(defaultTheme, aId && aId != defaultTheme.id);
+    if (!aId && (!LightweightThemeManager.currentTheme ||
+                 LightweightThemeManager.currentTheme !== DEFAULT_THEME_ID)) {
+      let theme = LightweightThemeManager.getUsedTheme(DEFAULT_THEME_ID);
+      // This can only ever be null in tests.
+      // This can all go away once lightweight themes are gone.
+      if (theme) {
+        LightweightThemeManager.currentTheme = theme;
+      }
+    }
   },
 
   /**
@@ -3914,13 +3868,16 @@ var XPIProvider = {
    * @param  aSoftDisabled
    *         Value for the softDisabled property. If undefined the value will
    *         not change. If true this will force userDisabled to be true
+   * @param {boolean} aBecauseSelecting
+   *        True if we're disabling this add-on because we're selecting
+   *        another.
    * @return a tri-state indicating the action taken for the add-on:
    *           - undefined: The add-on did not change state
    *           - true: The add-on because disabled
    *           - false: The add-on became enabled
    * @throws if addon is not a DBAddonInternal
    */
-  updateAddonDisabledState(aAddon, aUserDisabled, aSoftDisabled) {
+  updateAddonDisabledState(aAddon, aUserDisabled, aSoftDisabled, aBecauseSelecting) {
     if (!(aAddon.inDatabase))
       throw new Error("Can only update addon states for installed addons.");
     if (aUserDisabled !== undefined && aSoftDisabled !== undefined) {
@@ -4016,12 +3973,16 @@ var XPIProvider = {
     }
 
     // Notify any other providers that a new theme has been enabled
-    if (isTheme(aAddon.type) && !isDisabled) {
-      AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type);
+    if (isTheme(aAddon.type)) {
+      if (!isDisabled) {
+        AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type);
 
-      if (xpiState) {
-        xpiState.syncWithDB(aAddon);
-        XPIStates.save();
+        if (xpiState) {
+          xpiState.syncWithDB(aAddon);
+          XPIStates.save();
+        }
+      } else if (isDisabled && !aBecauseSelecting) {
+        AddonManagerPrivate.notifyAddonChanged(null, "theme");
       }
     }
 
@@ -4768,8 +4729,7 @@ AddonWrapper.prototype = {
       }
     }
 
-    let canUseIconURLs = this.isActive ||
-      (addon.type == "theme" && addon.internalName == DEFAULT_SKIN);
+    let canUseIconURLs = this.isActive;
     if (canUseIconURLs && addon.iconURL) {
       icons[32] = addon.iconURL;
       icons[48] = addon.iconURL;
@@ -4931,22 +4891,12 @@ AddonWrapper.prototype = {
     }
 
     if (addon.inDatabase) {
-      let theme = isTheme(addon.type);
-      if (theme && val) {
-        if (addon.internalName == DEFAULT_SKIN)
-          throw new Error("Cannot disable the default theme");
-
-        let defaultTheme = XPIDatabase.getVisibleAddonForInternalName(DEFAULT_SKIN);
-        XPIProvider.updateAddonDisabledState(defaultTheme, false);
+      // hidden and system add-ons should not be user disabled,
+      // as there is no UI to re-enable them.
+      if (this.hidden) {
+        throw new Error(`Cannot disable hidden add-on ${addon.id}`);
       }
-      if (!(theme && val) || isWebExtension(addon.type)) {
-        // hidden and system add-ons should not be user disasbled,
-        // as there is no UI to re-enable them.
-        if (this.hidden) {
-          throw new Error(`Cannot disable hidden add-on ${addon.id}`);
-        }
-        XPIProvider.updateAddonDisabledState(addon, val);
-      }
+      XPIProvider.updateAddonDisabledState(addon, val);
     } else {
       addon.userDisabled = val;
       // When enabling remove the softDisabled flag
@@ -4965,8 +4915,6 @@ AddonWrapper.prototype = {
     if (addon.inDatabase) {
       // When softDisabling a theme just enable the active theme
       if (isTheme(addon.type) && val && !addon.userDisabled) {
-        if (addon.internalName == DEFAULT_SKIN)
-          throw new Error("Cannot disable the default theme");
         if (isWebExtension(addon.type))
           XPIProvider.updateAddonDisabledState(addon, undefined, val);
       } else {

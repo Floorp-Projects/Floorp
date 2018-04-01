@@ -959,6 +959,8 @@ var AddonTestUtils = {
     var zipW = ZipWriter(zipFile, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | flags);
 
     for (let [path, data] of Object.entries(files)) {
+      if (typeof data === "object" && ChromeUtils.getClassName(data) === "Object")
+        data = JSON.stringify(data);
       if (!(data instanceof ArrayBuffer))
         data = new TextEncoder("utf-8").encode(data).buffer;
 
