@@ -10055,23 +10055,6 @@ ParserBase::addTelemetry(DeprecatedLanguageExtension e)
     context->compartment()->addTelemetry(getFilename(), e);
 }
 
-template <class ParseHandler, typename CharT>
-bool
-GeneralParser<ParseHandler, CharT>::warnOnceAboutExprClosure()
-{
-#ifndef RELEASE_OR_BETA
-    if (context->helperThread())
-        return true;
-
-    if (!context->compartment()->warnedAboutExprClosure) {
-        if (!warning(JSMSG_DEPRECATED_EXPR_CLOSURE))
-            return false;
-        context->compartment()->warnedAboutExprClosure = true;
-    }
-#endif
-    return true;
-}
-
 template class PerHandlerParser<FullParseHandler>;
 template class PerHandlerParser<SyntaxParseHandler>;
 template class GeneralParser<FullParseHandler, char16_t>;
