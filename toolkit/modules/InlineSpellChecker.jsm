@@ -4,8 +4,6 @@
 
 var EXPORTED_SYMBOLS = [ "InlineSpellChecker",
                          "SpellCheckHelper" ];
-var gLanguageBundle;
-var gRegionBundle;
 const MAX_UNDO_STACK_DEPTH = 1;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -170,9 +168,10 @@ InlineSpellChecker.prototype = {
 
   sortDictionaryList(list) {
     var sortedList = [];
+    var names = Services.intl.getLocaleDisplayNames(undefined, list);
     for (var i = 0; i < list.length; i++) {
       sortedList.push({"id": list[i],
-                       "label": this.getDictionaryDisplayName(list[i])});
+                       "label": names[i]});
     }
     sortedList.sort(function(a, b) {
       if (a.label < b.label)
@@ -241,63 +240,6 @@ InlineSpellChecker.prototype = {
         menu.appendChild(item);
     }
     return list.length;
-  },
-
-  // Formats a valid BCP 47 language tag based on available localized names.
-  getDictionaryDisplayName(dictionaryName) {
-    try {
-      // Get the display name for this dictionary.
-      let languageTagMatch = /^([a-z]{2,3}|[a-z]{4}|[a-z]{5,8})(?:[-_]([a-z]{4}))?(?:[-_]([A-Z]{2}|[0-9]{3}))?((?:[-_](?:[a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*)(?:[-_][a-wy-z0-9](?:[-_][a-z0-9]{2,8})+)*(?:[-_]x(?:[-_][a-z0-9]{1,8})+)?$/i;
-      var [/* languageTag */, languageSubtag, scriptSubtag, regionSubtag, variantSubtags] = dictionaryName.match(languageTagMatch);
-    } catch (e) {
-      // If we weren't given a valid language tag, just use the raw dictionary name.
-      return dictionaryName;
-    }
-
-    if (!gLanguageBundle) {
-      // Create the bundles for language and region names.
-      gLanguageBundle = Services.strings.createBundle(
-          "chrome://global/locale/languageNames.properties");
-      gRegionBundle = Services.strings.createBundle(
-          "chrome://global/locale/regionNames.properties");
-    }
-
-    var displayName = "";
-
-    // Language subtag will normally be 2 or 3 letters, but could be up to 8.
-    try {
-      displayName += gLanguageBundle.GetStringFromName(languageSubtag.toLowerCase());
-    } catch (e) {
-      displayName += languageSubtag.toLowerCase(); // Fall back to raw language subtag.
-    }
-
-    // Region subtag will be 2 letters or 3 digits.
-    if (regionSubtag) {
-      displayName += " (";
-
-      try {
-        displayName += gRegionBundle.GetStringFromName(regionSubtag.toLowerCase());
-      } catch (e) {
-        displayName += regionSubtag.toUpperCase(); // Fall back to raw region subtag.
-      }
-
-      displayName += ")";
-    }
-
-    // Script subtag will be 4 letters.
-    if (scriptSubtag) {
-      displayName += " / ";
-
-      // XXX: See bug 666662 and bug 666731 for full implementation.
-      displayName += scriptSubtag; // Fall back to raw script subtag.
-    }
-
-    // Each variant subtag will be 4 to 8 chars.
-    if (variantSubtags)
-      // XXX: See bug 666662 and bug 666731 for full implementation.
-      displayName += " (" + variantSubtags.substr(1).split(/[-_]/).join(" / ") + ")"; // Collapse multiple variants.
-
-    return displayName;
   },
 
   // undoes the work of addDictionaryListToMenu for the menu
