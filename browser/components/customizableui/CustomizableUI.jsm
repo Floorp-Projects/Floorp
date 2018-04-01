@@ -2905,7 +2905,8 @@ var CustomizableUIInternal = {
       return false;
     }
 
-    if (LightweightThemeManager.currentTheme) {
+    if (LightweightThemeManager.currentTheme &&
+        LightweightThemeManager.currentTheme.id != "default-theme@mozilla.org") {
       log.debug(LightweightThemeManager.currentTheme + " theme is non-default");
       return false;
     }
