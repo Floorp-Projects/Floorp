@@ -13,12 +13,16 @@
 <script type="text/javascript">
 "use strict";
 
+var {BrowserActions} = SpecialPowers.Cu.import("resource://gre/modules/BrowserActions.jsm", {});
 var {Services} = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm", {});
 
 add_task(async function test_query_highlighted() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "permissions": ["tabs"],
+      "browser_action": {
+        "default_popup": "popup.html",
+      },
     },
 
     background: async function() {
@@ -34,6 +38,20 @@ add_task(async function test_query_highlighted() {
 
       browser.test.notifyPass("tabs.query");
     },
+
+    files: {
+      "popup.html": `<script src="popup.js"><\/script>`,
+      "popup.js": async function popupScript() {
+        let active = await browser.tabs.query({active: true});
+        let highlighted = await browser.tabs.query({highlighted: true});
+
+        browser.test.assertEq(1, active.length, "should have one active tab");
+        browser.test.assertEq(1, highlighted.length, "should have one highlighted tab");
+        browser.test.assertEq(active[0].id, highlighted[0].id, "the active and highlighted tabs are the same one");
+
+        browser.test.sendMessage("tabs.query.popup");
+      },
+    },
   });
 
   const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
@@ -44,11 +62,49 @@ add_task(async function test_query_highlighted() {
 
   await extension.startup();
   await extension.awaitFinish("tabs.query");
+
+  // Open popup
+  BrowserActions.synthesizeClick(`{${extension.uuid}}`);
+  await extension.awaitMessage("tabs.query.popup");
+
   await extension.unload();
 
   for (let tab of tabs) {
     BrowserApp.closeTab(tab);
   }
+});
+
+add_task(async function test_query_index() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"],
+    },
+
+    background: function() {
+      browser.tabs.onCreated.addListener(async function({index, windowId, id}) {
+        browser.test.assertThrows(
+          () => browser.tabs.query({index: -1}),
+          /-1 is too small \(must be at least 0\)/,
+          "tab indices must be non-negative");
+
+        let tabs = await browser.tabs.query({index, windowId});
+        browser.test.assertEq(tabs.length, 1, `Got one tab at index ${index}`);
+        browser.test.assertEq(tabs[0].id, id, "The tab is the right one");
+
+        tabs = await browser.tabs.query({index: 1e5, windowId});
+        browser.test.assertEq(tabs.length, 0, "There is no tab at this index");
+
+        browser.test.notifyPass("tabs.query");
+      });
+    },
+  });
+
+  const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
+  await extension.startup();
+  let tab = BrowserApp.addTab("http://example.com/");
+  await extension.awaitFinish("tabs.query");
+  BrowserApp.closeTab(tab);
+  await extension.unload();
 });
 </script>
 
