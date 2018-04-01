@@ -2,7 +2,15 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function test_complex_orphaning() {
-  let buf = await openMirror("complex_orphaning");
+  let mergeTelemetryEvents = [];
+  let buf = await openMirror("complex_orphaning", {
+    recordTelemetryEvent(object, method, value, extra) {
+      equal(object, "mirror", "Wrong object for telemetry event");
+      if (method == "merge") {
+        mergeTelemetryEvents.push({ value, extra });
+      }
+    },
+  });
 
   // On iOS, the mirror exists as a separate table. On Desktop, we have a
   // shadow mirror of synced local bookmarks without new changes.
@@ -104,6 +112,10 @@ add_task(async function test_complex_orphaning() {
   info("Apply remote");
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+  deepEqual(mergeTelemetryEvents, [{
+    value: "structure",
+    extra: { new: "2", localFolderDel: "1", remoteFolderDel: "1" },
+  }], "Should record telemetry with structure change counts");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {
@@ -179,7 +191,15 @@ add_task(async function test_complex_orphaning() {
 });
 
 add_task(async function test_locally_modified_remotely_deleted() {
-  let buf = await openMirror("locally_modified_remotely_deleted");
+  let mergeTelemetryEvents = [];
+  let buf = await openMirror("locally_modified_remotely_deleted", {
+    recordTelemetryEvent(object, method, value, extra) {
+      equal(object, "mirror", "Wrong object for telemetry event");
+      if (method == "merge") {
+        mergeTelemetryEvents.push({ value, extra });
+      }
+    },
+  });
 
   info("Set up mirror");
   await PlacesUtils.bookmarks.insertTree({
@@ -284,6 +304,10 @@ add_task(async function test_locally_modified_remotely_deleted() {
   info("Apply remote");
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+  deepEqual(mergeTelemetryEvents, [{
+    value: "structure",
+    extra: { new: "1", localItemDel: "1", remoteFolderDel: "2" },
+  }], "Should record telemetry for local item and remote folder deletions");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {
@@ -323,7 +347,15 @@ add_task(async function test_locally_modified_remotely_deleted() {
 });
 
 add_task(async function test_locally_deleted_remotely_modified() {
-  let buf = await openMirror("locally_deleted_remotely_modified");
+  let mergeTelemetryEvents = [];
+  let buf = await openMirror("locally_deleted_remotely_modified", {
+    recordTelemetryEvent(object, method, value, extra) {
+      equal(object, "mirror", "Wrong object for telemetry event");
+      if (method == "merge") {
+        mergeTelemetryEvents.push({ value, extra });
+      }
+    },
+  });
 
   info("Set up mirror");
   await PlacesUtils.bookmarks.insertTree({
@@ -419,6 +451,10 @@ add_task(async function test_locally_deleted_remotely_modified() {
   info("Apply remote");
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+  deepEqual(mergeTelemetryEvents, [{
+    value: "structure",
+    extra: { new: "1", remoteItemDel: "1", localFolderDel: "2" },
+  }], "Should record telemetry for remote item and local folder deletions");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {

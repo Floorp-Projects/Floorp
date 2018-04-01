@@ -2,7 +2,15 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function test_duping_local_newer() {
-  let buf = await openMirror("duping_local_newer");
+  let mergeTelemetryEvents = [];
+  let buf = await openMirror("duping_local_newer", {
+    recordTelemetryEvent(object, method, value, extra) {
+      equal(object, "mirror", "Wrong object for telemetry event");
+      if (method == "merge") {
+        mergeTelemetryEvents.push({ value, extra });
+      }
+    },
+  });
   let localModified = new Date();
 
   info("Start with empty local and mirror with merged items");
@@ -77,6 +85,13 @@ add_task(async function test_duping_local_newer() {
     remoteTimeSeconds: localModified / 1000,
   });
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+  deepEqual(mergeTelemetryEvents, [{
+    value: "dupes",
+    extra: { count: "2" },
+  }, {
+    value: "structure",
+    extra: { new: "1" },
+  }], "Should record telemetry with dupe counts");
 
   let menuInfo = await PlacesUtils.bookmarks.fetch(
     PlacesUtils.bookmarks.menuGuid);

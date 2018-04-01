@@ -107,3 +107,32 @@ add_task(async function test_deepEqual() {
 
   Assert.ok(deepEqual(checkEquiv(e, f), checkEquiv(f, e)));
 });
+
+add_task(async function test_isEmpty() {
+  Assert.ok(ObjectUtils.isEmpty(""), "Empty strings should be empty");
+  Assert.ok(ObjectUtils.isEmpty(0), "0 should be empty");
+  Assert.ok(ObjectUtils.isEmpty(NaN), "NaN should be empty");
+  Assert.ok(ObjectUtils.isEmpty(), "Undefined should be empty");
+  Assert.ok(ObjectUtils.isEmpty(null), "Null should be empty");
+  Assert.ok(ObjectUtils.isEmpty(false), "False should be empty");
+
+  Assert.ok(ObjectUtils.isEmpty({}),
+    "Objects without properties should be empty");
+  Assert.ok(ObjectUtils.isEmpty(Object.defineProperty({}, "a", {
+    value: 1,
+    enumerable: false,
+    configurable: true,
+    writable: true
+  })), "Objects without enumerable properties should be empty");
+  Assert.ok(ObjectUtils.isEmpty([]), "Arrays without elements should be empty");
+
+  Assert.ok(!ObjectUtils.isEmpty([1]),
+    "Arrays with elements should not be empty");
+  Assert.ok(!ObjectUtils.isEmpty({ a: 1 }),
+    "Objects with properties should not be empty");
+
+  function A() {}
+  A.prototype.b = 2;
+  Assert.ok(!ObjectUtils.isEmpty(new A()),
+    "Objects with inherited enumerable properties should not be empty");
+});

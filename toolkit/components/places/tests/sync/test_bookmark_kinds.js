@@ -364,9 +364,9 @@ add_task(async function test_mismatched_but_incompatible_folder_types() {
     // expecting to see a kind-mismatch event.
     if (value == "kind-mismatch" &&
         extra.local && typeof extra.local == "string" &&
-        extra.local == SyncedBookmarksMirror.KIND.LIVEMARK &&
+        extra.local == "livemark" &&
         extra.remote && typeof extra.remote == "string" &&
-        extra.remote == SyncedBookmarksMirror.KIND.FOLDER) {
+        extra.remote == "folder") {
       sawMismatchEvent = true;
     }
   };
@@ -485,9 +485,9 @@ add_task(async function test_incompatible_types() {
     // expecting to see a kind-mismatch event.
     if (value == "kind-mismatch" &&
         extra.local && typeof extra.local == "string" &&
-        extra.local == SyncedBookmarksMirror.KIND.BOOKMARK &&
+        extra.local == "bookmark" &&
         extra.remote && typeof extra.remote == "string" &&
-        extra.remote == SyncedBookmarksMirror.KIND.FOLDER) {
+        extra.remote == "folder") {
       sawMismatchEvent = true;
     }
   };
