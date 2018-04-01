@@ -301,16 +301,16 @@ var SessionStore = {
     SessionStoreInternal.deleteWindowValue(aWindow, aKey);
   },
 
-  getTabValue: function ss_getTabValue(aTab, aKey) {
-    return SessionStoreInternal.getTabValue(aTab, aKey);
+  getCustomTabValue(aTab, aKey) {
+    return SessionStoreInternal.getCustomTabValue(aTab, aKey);
   },
 
-  setTabValue: function ss_setTabValue(aTab, aKey, aStringValue) {
-    SessionStoreInternal.setTabValue(aTab, aKey, aStringValue);
+  setCustomTabValue(aTab, aKey, aStringValue) {
+    SessionStoreInternal.setCustomTabValue(aTab, aKey, aStringValue);
   },
 
-  deleteTabValue: function ss_deleteTabValue(aTab, aKey) {
-    SessionStoreInternal.deleteTabValue(aTab, aKey);
+  deleteCustomTabValue(aTab, aKey) {
+    SessionStoreInternal.deleteCustomTabValue(aTab, aKey);
   },
 
   getLazyTabValue(aTab, aKey) {
@@ -2589,13 +2589,13 @@ var SessionStoreInternal = {
     this.saveStateDelayed(aWindow);
   },
 
-  getTabValue: function ssi_getTabValue(aTab, aKey) {
+  getCustomTabValue(aTab, aKey) {
     return (aTab.__SS_extdata || {})[aKey] || "";
   },
 
-  setTabValue: function ssi_setTabValue(aTab, aKey, aStringValue) {
+  setCustomTabValue(aTab, aKey, aStringValue) {
     if (typeof aStringValue != "string") {
-      throw new TypeError("setTabValue only accepts string values");
+      throw new TypeError("setCustomTabValue only accepts string values");
     }
 
     // If the tab hasn't been restored, then set the data there, otherwise we
@@ -2608,7 +2608,7 @@ var SessionStoreInternal = {
     this.saveStateDelayed(aTab.ownerGlobal);
   },
 
-  deleteTabValue: function ssi_deleteTabValue(aTab, aKey) {
+  deleteCustomTabValue(aTab, aKey) {
     if (aTab.__SS_extdata && aKey in aTab.__SS_extdata) {
       delete aTab.__SS_extdata[aKey];
       this.saveStateDelayed(aTab.ownerGlobal);

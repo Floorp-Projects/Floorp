@@ -120,7 +120,7 @@ add_task(async function test_tabs_showhide() {
     ok(!tabs[0].hidden, "first tab not hidden");
     for (let i = 1; i < tabs.length; i++) {
       ok(tabs[i].hidden, "tab hidden value is correct");
-      let id = SessionStore.getTabValue(tabs[i], "hiddenBy");
+      let id = SessionStore.getCustomTabValue(tabs[i], "hiddenBy");
       is(id, extension.id, "tab hiddenBy value is correct");
       await TabStateFlusher.flush(tabs[i].linkedBrowser);
     }
@@ -136,7 +136,7 @@ add_task(async function test_tabs_showhide() {
   ok(!tabs[0].hidden, "first tab not hidden");
   for (let i = 1; i < tabs.length; i++) {
     ok(tabs[i].hidden, "tab hidden value is correct");
-    let id = SessionStore.getTabValue(tabs[i], "hiddenBy");
+    let id = SessionStore.getCustomTabValue(tabs[i], "hiddenBy");
     is(id, extension.id, "tab hiddenBy value is correct");
   }
 
