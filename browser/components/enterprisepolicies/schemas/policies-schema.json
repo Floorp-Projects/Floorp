@@ -350,6 +350,14 @@
       "type": "boolean"
     },
 
+    "OverrideFirstRunPage": {
+      "description": "Override the first run page. Set this policy to blank if you want to disable the first run page.",
+      "first_available": "60.0",
+      "enterprise_only": true,
+
+      "type": "URLorEmpty"
+    },
+
     "PopupBlocking": {
       "description": "Allow or deny popup usage.",
       "first_available": "60.0",
