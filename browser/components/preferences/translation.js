@@ -8,9 +8,6 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "gLangBundle", () =>
-  Services.strings.createBundle("chrome://global/locale/languageNames.properties"));
-
 const kPermissionType = "translate";
 const kLanguagesPref = "browser.translation.neverForLanguages";
 
@@ -76,9 +73,9 @@ Tree.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITreeView])
 };
 
-function Lang(aCode) {
+function Lang(aCode, label) {
   this.langCode = aCode;
-  this._label = gLangBundle.GetStringFromName(aCode);
+  this._label = label;
 }
 
 Lang.prototype = {
@@ -123,7 +120,9 @@ var gTranslationExceptions = {
     if (!langs)
       return [];
 
-    let result = langs.split(",").map(code => new Lang(code));
+    let langArr = langs.split(",");
+    let displayNames = Services.intl.getLanguageDisplayNames(undefined, langArr);
+    let result = langArr.map((lang, i) => new Lang(lang, displayNames[i]));
     result.sort();
 
     return result;
