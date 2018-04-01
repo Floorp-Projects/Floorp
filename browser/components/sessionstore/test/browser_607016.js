@@ -40,7 +40,7 @@ add_task(async function() {
 
     // Now we'll set a new unique value on 1 of the tabs
     let newUniq = r();
-    ss.setCustomTabValue(gBrowser.tabs[1], "uniq", newUniq);
+    ss.setTabValue(gBrowser.tabs[1], "uniq", newUniq);
     let tabState = JSON.parse(ss.getTabState(gBrowser.tabs[1]));
     is(tabState.extData.uniq, newUniq,
        "(overwriting) new data is stored in extData");
@@ -52,13 +52,13 @@ add_task(async function() {
 
     // set data that's not in a conflicting key
     let stillUniq = r();
-    ss.setCustomTabValue(gBrowser.tabs[3], "stillUniq", stillUniq);
+    ss.setTabValue(gBrowser.tabs[3], "stillUniq", stillUniq);
     tabState = JSON.parse(ss.getTabState(gBrowser.tabs[3]));
     is(tabState.extData.stillUniq, stillUniq,
        "(adding) new data is stored in extData");
 
     // remove the uniq value and make sure it's not there in the closed data
-    ss.deleteCustomTabValue(gBrowser.tabs[4], "uniq");
+    ss.deleteTabValue(gBrowser.tabs[4], "uniq");
     tabState = JSON.parse(ss.getTabState(gBrowser.tabs[4]));
     // Since Panorama might have put data in, first check if there is extData.
     // If there is explicitly check that "uniq" isn't in it. Otherwise, we're ok
@@ -71,7 +71,7 @@ add_task(async function() {
 
     // set unique data on the tab that never had any set, make sure that's saved
     let newUniq2 = r();
-    ss.setCustomTabValue(gBrowser.tabs[5], "uniq", newUniq2);
+    ss.setTabValue(gBrowser.tabs[5], "uniq", newUniq2);
     tabState = JSON.parse(ss.getTabState(gBrowser.tabs[5]));
     is(tabState.extData.uniq, newUniq2,
        "(creating) new data is stored in extData where there was none");

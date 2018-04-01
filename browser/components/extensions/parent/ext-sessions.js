@@ -156,14 +156,14 @@ this.sessions = class extends ExtensionAPI {
           let {tab, encodedKey} =
             getTabParams(extension.id, key, tabId);
 
-          SessionStore.setCustomTabValue(tab, encodedKey, JSON.stringify(value));
+          SessionStore.setTabValue(tab, encodedKey, JSON.stringify(value));
         },
 
         async getTabValue(tabId, key) {
           let {tab, encodedKey} =
             getTabParams(extension.id, key, tabId);
 
-          let value = SessionStore.getCustomTabValue(tab, encodedKey);
+          let value = SessionStore.getTabValue(tab, encodedKey);
           if (value) {
             return JSON.parse(value);
           }
@@ -175,7 +175,7 @@ this.sessions = class extends ExtensionAPI {
           let {tab, encodedKey} =
             getTabParams(extension.id, key, tabId);
 
-          SessionStore.deleteCustomTabValue(tab, encodedKey);
+          SessionStore.deleteTabValue(tab, encodedKey);
         },
 
         setWindowValue(windowId, key, value) {

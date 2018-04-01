@@ -38,7 +38,7 @@ add_task(async function() {
   ok(test(() => ss.deleteWindowValue(window, key)), "delete non-existent window value");
 
   /**
-   * setCustomTabValue, et al.
+   * setTabValue, et al.
    */
   key = "Unique name: " + Math.random();
   value = "Unique value: " + Date.now();
@@ -46,16 +46,16 @@ add_task(async function() {
   tab.linkedBrowser.stop();
 
   // test adding
-  ok(test(() => ss.setCustomTabValue(tab, key, value)), "store a tab value");
+  ok(test(() => ss.setTabValue(tab, key, value)), "store a tab value");
 
   // test retrieving
-  is(ss.getCustomTabValue(tab, key), value, "stored tab value match original");
+  is(ss.getTabValue(tab, key), value, "stored tab value match original");
 
   // test deleting
   ok(test(() => ss.deleteTabValue(tab, key)), "delete the tab value");
 
   // value should not exist post-delete
-  is(ss.getCustomTabValue(tab, key), "", "tab value was deleted");
+  is(ss.getTabValue(tab, key), "", "tab value was deleted");
 
   // test deleting a non-existent value
   ok(test(() => ss.deleteTabValue(tab, key)), "delete non-existent tab value");
