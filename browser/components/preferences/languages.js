@@ -51,8 +51,6 @@ var gLanguagesDialog = {
     //  ab = language
     //  cd = region
     var bundleAccepted    = document.getElementById("bundleAccepted");
-    var bundleRegions     = document.getElementById("bundleRegions");
-    var bundleLanguages   = document.getElementById("bundleLanguages");
     var bundlePreferences = document.getElementById("bundlePreferences");
 
     function LanguageInfo(aName, aABCD, aIsVisible) {
@@ -63,6 +61,9 @@ var gLanguagesDialog = {
 
     // 1) Read the available languages out of language.properties
     var strings = bundleAccepted.strings;
+
+    let localeCodes = [];
+    let localeValues = [];
     while (strings.hasMoreElements()) {
       var currString = strings.getNext();
       if (!(currString instanceof Ci.nsIPropertyElement))
@@ -70,41 +71,23 @@ var gLanguagesDialog = {
 
       var property = currString.key.split("."); // ab[-cd].accept
       if (property[1] == "accept") {
-        var abCD = property[0];
-        var abCDPairs = abCD.split("-"); // ab[-cd]
-        var useABCDFormat = abCDPairs.length > 1;
-        var ab = useABCDFormat ? abCDPairs[0] : abCD;
-        var cd = useABCDFormat ? abCDPairs[1] : "";
-        if (ab) {
-          var language = "";
-          try {
-            language = bundleLanguages.getString(ab);
-          } catch (e) { continue; }
-
-          var region = "";
-          if (useABCDFormat) {
-            try {
-              region = bundleRegions.getString(cd);
-            } catch (e) { continue; }
-          }
-
-          var name = "";
-          if (useABCDFormat)
-            name = bundlePreferences.getFormattedString("languageRegionCodeFormat",
-                                                        [language, region, abCD]);
-          else
-            name = bundlePreferences.getFormattedString("languageCodeFormat",
-                                                        [language, abCD]);
-
-          if (name && abCD) {
-            var isVisible = currString.value == "true" &&
-                            (!(abCD in this._acceptLanguages) || !this._acceptLanguages[abCD]);
-            var li = new LanguageInfo(name, abCD, isVisible);
-            this._availableLanguagesList.push(li);
-          }
-        }
+        localeCodes.push(property[0]);
+        localeValues.push(currString.value);
       }
     }
+
+    let localeNames = Services.intl.getLocaleDisplayNames(undefined, localeCodes);
+
+    for (let i in localeCodes) {
+      let isVisible = localeValues[i] == "true" &&
+        (!(localeCodes[i] in this._acceptLanguages) || !this._acceptLanguages[localeCodes[i]]);
+
+      let name = bundlePreferences.getFormattedString("languageCodeFormat",
+        [localeNames[i], localeCodes[i]]);
+      let li = new LanguageInfo(name, localeCodes[i], isVisible);
+      this._availableLanguagesList.push(li);
+    }
+
     this._buildAvailableLanguageList();
   },
 
