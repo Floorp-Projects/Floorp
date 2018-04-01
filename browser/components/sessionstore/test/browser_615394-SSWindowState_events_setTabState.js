@@ -30,14 +30,14 @@ function test_setTabState() {
 
   function onSSWindowStateReady(aEvent) {
     readyEventCount++;
-    is(ss.getCustomTabValue(tab, "foo"), "bar");
-    ss.setCustomTabValue(tab, "baz", "qux");
+    is(ss.getTabValue(tab, "foo"), "bar");
+    ss.setTabValue(tab, "baz", "qux");
   }
 
   function onSSTabRestoring(aEvent) {
     is(busyEventCount, 1);
     is(readyEventCount, 1);
-    is(ss.getCustomTabValue(tab, "baz"), "qux");
+    is(ss.getTabValue(tab, "baz"), "qux");
     is(tab.linkedBrowser.currentURI.spec, "http://example.org/");
 
     window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
