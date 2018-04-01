@@ -474,6 +474,13 @@ var Policies = {
     }
   },
 
+  "OverrideFirstRunPage": {
+    onProfileAfterChange(manager, param) {
+      let url = param ? param.spec : "";
+      setAndLockPref("startup.homepage_welcome_url", url);
+    }
+  },
+
   "PopupBlocking": {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("popup", param.Allow, null);
