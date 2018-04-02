@@ -11,14 +11,6 @@
 extern "C" {
 
 #if defined(MOZILLA_MAY_SUPPORT_SSE) && defined(_M_IX86)
-#if defined(__clang__)
-// clang-cl has a bug where it doesn't mangle names in inline asm
-// so let's do the mangling in the preprocessor (ugh)
-// (but we still need to declare a dummy extern for the parser)
-extern void* _kCoefficientsRgbY;
-#define kCoefficientsRgbY _kCoefficientsRgbY
-#endif
-
 __declspec(naked)
 void FastConvertYUVToRGB32Row_SSE(const uint8* y_buf,
                                   const uint8* u_buf,
