@@ -312,6 +312,7 @@ add_test(function test_newFailed_errorLog() {
 });
 
 add_test(function test_errorLog_dumpAddons() {
+  Svc.Prefs.set("log.logger", "Trace");
   Svc.Prefs.set("log.appender.file.logOnError", true);
 
   Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
