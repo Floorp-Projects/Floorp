@@ -3335,15 +3335,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
-  // Adding overlay scrollbars requires us to look at the display list
-  // for the highest z-index item, which isn't possible during partial
-  // building. Mark the frame modified and do a full rebuild of this
-  // scrollframe.
-  if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) &&
-      aBuilder->IsRetainingDisplayList()) {
-    aBuilder->MarkCurrentFrameModifiedDuringBuilding();
-  }
-
   // It's safe to get this value before the DecideScrollableLayer call below
   // because that call cannot create a displayport for root scroll frames,
   // and hence it cannot create an ignore scroll frame.
