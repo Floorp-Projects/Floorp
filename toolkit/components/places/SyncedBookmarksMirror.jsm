@@ -3407,10 +3407,10 @@ class BookmarkMerger {
     this.deleteRemotely = new Set();
     this.structureCounts = {
       new: 0,
-      remoteItemDel: 0,
-      localFolderDel: 0,
-      localItemDel: 0,
-      remoteFolderDel: 0,
+      remoteRevives: 0, // Remote non-folder change wins over local deletion.
+      localDeletes: 0, // Local folder deletion wins over remote change.
+      localRevives: 0, // Local non-folder change wins over remote deletion.
+      remoteDeletes: 0, // Remote folder deletion wins over local change.
     };
     this.dupeCount = 0;
     this.extraTelemetryEvents = [];
@@ -4108,7 +4108,7 @@ class BookmarkMerger {
         MirrorLog.trace("Remote non-folder ${remoteNode} deleted locally " +
                         "and changed remotely; taking remote change",
                         { remoteNode });
-        this.structureCounts.remoteItemDel++;
+        this.structureCounts.remoteRevives++;
         return BookmarkMerger.STRUCTURE.UNCHANGED;
       }
       // For folders, we always take the local deletion and relocate remotely
@@ -4118,7 +4118,7 @@ class BookmarkMerger {
       MirrorLog.trace("Remote folder ${remoteNode} deleted locally " +
                       "and changed remotely; taking local deletion",
                       { remoteNode });
-      this.structureCounts.localFolderDel++;
+      this.structureCounts.localDeletes++;
     } else {
       MirrorLog.trace("Remote node ${remoteNode} deleted locally and not " +
                        "changed remotely; taking local deletion",
@@ -4177,12 +4177,12 @@ class BookmarkMerger {
       if (!localNode.isFolder()) {
         MirrorLog.trace("Local non-folder ${localNode} deleted remotely and " +
                         "changed locally; taking local change", { localNode });
-        this.structureCounts.localItemDel++;
+        this.structureCounts.localRevives++;
         return BookmarkMerger.STRUCTURE.UNCHANGED;
       }
       MirrorLog.trace("Local folder ${localNode} deleted remotely and " +
                       "changed locally; taking remote deletion", { localNode });
-      this.structureCounts.remoteFolderDel++;
+      this.structureCounts.remoteDeletes++;
     } else {
       MirrorLog.trace("Local node ${localNode} deleted remotely and not " +
                       "changed locally; taking remote deletion", { localNode });
