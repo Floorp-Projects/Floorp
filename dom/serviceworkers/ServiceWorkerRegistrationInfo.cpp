@@ -80,6 +80,19 @@ ServiceWorkerRegistrationInfo::Clear()
   NotifyChromeRegistrationListeners();
 }
 
+void
+ServiceWorkerRegistrationInfo::ClearAsCorrupt()
+{
+  mCorrupt = true;
+  Clear();
+}
+
+bool
+ServiceWorkerRegistrationInfo::IsCorrupt() const
+{
+  return mCorrupt;
+}
+
 ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
     const nsACString& aScope,
     nsIPrincipal* aPrincipal,
@@ -93,6 +106,7 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
   , mCreationTimeStamp(TimeStamp::Now())
   , mLastUpdateTime(0)
   , mPendingUninstall(false)
+  , mCorrupt(false)
 {}
 
 ServiceWorkerRegistrationInfo::~ServiceWorkerRegistrationInfo()
