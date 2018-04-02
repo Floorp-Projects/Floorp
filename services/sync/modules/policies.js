@@ -768,9 +768,9 @@ ErrorHandler.prototype = {
     }
 
     let relevantAddons = addons.filter(x => x.isActive && !x.hidden);
-    this._log.trace("Addons installed", relevantAddons.length);
+    this._log.debug("Addons installed", relevantAddons.length);
     for (let addon of relevantAddons) {
-      this._log.trace(" - ${name}, version ${version}, id ${id}", addon);
+      this._log.debug(" - ${name}, version ${version}, id ${id}", addon);
     }
   },
 
