@@ -12,3 +12,4 @@ geckoview.jar:
   content/GeckoViewContentSettings.js
   content/GeckoViewNavigationContent.js
   content/GeckoViewScrollContent.js
+  content/GeckoViewSelectionActionContent.js
