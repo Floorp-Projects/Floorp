@@ -2082,6 +2082,7 @@ exports.CSS_PROPERTIES = {
       "-moz-min-content",
       "auto",
       "calc",
+      "content",
       "inherit",
       "initial",
       "unset"
@@ -2103,6 +2104,7 @@ exports.CSS_PROPERTIES = {
       "-moz-min-content",
       "auto",
       "calc",
+      "content",
       "inherit",
       "initial",
       "unset"
@@ -5549,6 +5551,7 @@ exports.CSS_PROPERTIES = {
       "-moz-min-content",
       "auto",
       "calc",
+      "content",
       "inherit",
       "initial",
       "unset"
@@ -5570,6 +5573,7 @@ exports.CSS_PROPERTIES = {
       "-moz-min-content",
       "auto",
       "calc",
+      "content",
       "inherit",
       "initial",
       "unset"
