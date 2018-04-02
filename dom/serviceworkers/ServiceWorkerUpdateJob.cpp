@@ -14,6 +14,8 @@
 namespace mozilla {
 namespace dom {
 
+using serviceWorkerScriptCache::OnFailure;
+
 namespace {
 
 /**
@@ -96,12 +98,14 @@ public:
   virtual void
   ComparisonResult(nsresult aStatus,
                    bool aInCacheAndEqual,
+                   OnFailure aOnFailure,
                    const nsAString& aNewCacheName,
                    const nsACString& aMaxScope,
                    nsLoadFlags aLoadFlags) override
   {
     mJob->ComparisonResult(aStatus,
                            aInCacheAndEqual,
+                           aOnFailure,
                            aNewCacheName,
                            aMaxScope,
                            aLoadFlags);
@@ -177,6 +181,7 @@ ServiceWorkerUpdateJob::ServiceWorkerUpdateJob(
   : ServiceWorkerJob(Type::Update, aPrincipal, aScope, aScriptSpec)
   , mLoadGroup(aLoadGroup)
   , mUpdateViaCache(aUpdateViaCache)
+  , mOnFailure(OnFailure::DoNothing)
 {
 }
 
@@ -212,20 +217,37 @@ ServiceWorkerUpdateJob::FailUpdateJob(ErrorResult& aRv)
   MOZ_ASSERT(aRv.Failed());
 
   // Cleanup after a failed installation.  This essentially implements
-  // step 12 of the Install algorithm.
+  // step 13 of the Install algorithm.
   //
-  //  https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#installation-algorithm
+  //  https://w3c.github.io/ServiceWorker/#installation-algorithm
   //
   // The spec currently only runs this after an install event fails,
   // but we must handle many more internal errors.  So we check for
   // cleanup on every non-successful exit.
   if (mRegistration) {
-    mRegistration->ClearEvaluating();
-    mRegistration->ClearInstalling();
+    // Some kinds of failures indicate there is something broken in the currently
+    // installed registration.  In these cases we want to fully unregister.
+    if (mOnFailure == OnFailure::Uninstall) {
+      mRegistration->ClearAsCorrupt();
+    }
+
+    // Otherwise just clear the workers we may have created as part of the
+    // update process.
+    else {
+      mRegistration->ClearEvaluating();
+      mRegistration->ClearInstalling();
+    }
 
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     if (swm) {
       swm->MaybeRemoveRegistration(mRegistration);
+
+      // Also clear the registration on disk if we are forcing uninstall
+      // due to a particularly bad failure.
+      if (mOnFailure == OnFailure::Uninstall) {
+        swm->MaybeSendUnregister(mRegistration->Principal(),
+                                 mRegistration->Scope());
+      }
     }
   }
 
@@ -337,11 +359,14 @@ ServiceWorkerUpdateJob::GetUpdateViaCache() const
 void
 ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
                                          bool aInCacheAndEqual,
+                                         OnFailure aOnFailure,
                                          const nsAString& aNewCacheName,
                                          const nsACString& aMaxScope,
                                          nsLoadFlags aLoadFlags)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  mOnFailure = aOnFailure;
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (NS_WARN_IF(Canceled() || !swm)) {
@@ -440,6 +465,14 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
                           aNewCacheName,
                           flags);
 
+  // If the registration is corrupt enough to force an uninstall if the
+  // upgrade fails, then we want to make sure the upgrade takes effect
+  // if it succeeds.  Therefore force the skip-waiting flag on to replace
+  // the broken worker after install.
+  if (aOnFailure == OnFailure::Uninstall) {
+    sw->SetSkipWaitingFlag();
+  }
+
   mRegistration->SetEvaluating(sw);
 
   nsMainThreadPtrHandle<ServiceWorkerUpdateJob> handle(
@@ -515,14 +548,6 @@ ServiceWorkerUpdateJob::Install(ServiceWorkerManager* aSWM)
       mRegistration);
   NS_DispatchToMainThread(upr);
 
-  // Call ContinueAfterInstallEvent(false) on main thread if the SW
-  // script fails to load.
-  nsCOMPtr<nsIRunnable> failRunnable = NewRunnableMethod<bool>(
-    "dom::ServiceWorkerUpdateJob::ContinueAfterInstallEvent",
-    this,
-    &ServiceWorkerUpdateJob::ContinueAfterInstallEvent,
-    false);
-
   nsMainThreadPtrHandle<ServiceWorkerUpdateJob> handle(
     new nsMainThreadPtrHolder<ServiceWorkerUpdateJob>(
       "ServiceWorkerUpdateJob", this));
@@ -532,7 +557,7 @@ ServiceWorkerUpdateJob::Install(ServiceWorkerManager* aSWM)
   ServiceWorkerPrivate* workerPrivate =
     mRegistration->GetInstalling()->WorkerPrivate();
   nsresult rv = workerPrivate->SendLifeCycleEvent(NS_LITERAL_STRING("install"),
-                                                  callback, failRunnable);
+                                                  callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ContinueAfterInstallEvent(false /* aSuccess */);
   }

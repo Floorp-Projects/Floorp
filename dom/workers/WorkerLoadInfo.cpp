@@ -133,9 +133,6 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
   MOZ_ASSERT(!mLoadGroup);
   aOther.mLoadGroup.swap(mLoadGroup);
 
-  MOZ_ASSERT(!mLoadFailedAsyncRunnable);
-  aOther.mLoadFailedAsyncRunnable.swap(mLoadFailedAsyncRunnable);
-
   MOZ_ASSERT(!mInterfaceRequestor);
   aOther.mInterfaceRequestor.swap(mInterfaceRequestor);
 
@@ -402,7 +399,7 @@ WorkerLoadInfo::ProxyReleaseMainThreadObjects(WorkerPrivate* aWorkerPrivate,
                                               nsCOMPtr<nsILoadGroup>& aLoadGroupToCancel)
 {
 
-  static const uint32_t kDoomedCount = 11;
+  static const uint32_t kDoomedCount = 10;
   nsTArray<nsCOMPtr<nsISupports>> doomed(kDoomedCount);
 
   SwapToISupportsArray(mWindow, doomed);
@@ -414,7 +411,6 @@ WorkerLoadInfo::ProxyReleaseMainThreadObjects(WorkerPrivate* aWorkerPrivate,
   SwapToISupportsArray(mChannel, doomed);
   SwapToISupportsArray(mCSP, doomed);
   SwapToISupportsArray(mLoadGroup, doomed);
-  SwapToISupportsArray(mLoadFailedAsyncRunnable, doomed);
   SwapToISupportsArray(mInterfaceRequestor, doomed);
   // Before adding anything here update kDoomedCount above!
 
