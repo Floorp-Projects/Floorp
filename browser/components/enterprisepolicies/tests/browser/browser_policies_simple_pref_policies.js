@@ -91,6 +91,16 @@ const POLICIES_TESTS = [
       "network.automatic-ntlm-auth.trusted-uris": "a.com, b.com",
     }
   },
+  {
+    policies: {
+      "Certificates": {
+        "ImportEnterpriseRoots": true,
+      }
+    },
+    lockedPrefs: {
+      "security.enterprise_roots.enabled": true,
+    }
+  },
 ];
 
 add_task(async function test_policy_remember_passwords() {
