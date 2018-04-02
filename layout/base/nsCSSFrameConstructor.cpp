@@ -5290,21 +5290,18 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
   bool parentIsSVG = aIsWithinSVGText;
   nsIContent* parentContent =
     aParentFrame ? aParentFrame->GetContent() : nullptr;
-  // XXXbz should this really be based on the XBL-resolved tag of the parent
-  // frame's content?  Should it not be based on the type of the parent frame
-  // (e.g. whether it's an SVG frame)?
-  if (parentContent) {
-    int32_t parentNSID;
-    nsAtom* parentTag =
-      parentContent->OwnerDoc()->BindingManager()->
-        ResolveTag(parentContent, &parentNSID);
 
+  // XXXbz should this really be based on the tag of the parent frame's content?
+  // Should it not be based on the type of the parent frame (e.g. whether it's
+  // an SVG frame)?
+  if (parentContent) {
     // It's not clear whether the SVG spec intends to allow any SVG
     // content within svg:foreignObject at all (SVG 1.1, section
     // 23.2), but if it does, it better be svg:svg.  So given that
     // we're allowing it, treat it as a non-SVG parent.
-    parentIsSVG = parentNSID == kNameSpaceID_SVG &&
-                  parentTag != nsGkAtoms::foreignObject;
+    parentIsSVG =
+      parentContent->IsSVGElement() &&
+      parentContent->NodeInfo()->NameAtom() != nsGkAtoms::foreignObject;
   }
 
   if ((aTag != nsGkAtoms::svg && !parentIsSVG) ||
