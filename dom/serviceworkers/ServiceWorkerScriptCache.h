@@ -25,9 +25,15 @@ PurgeCache(nsIPrincipal* aPrincipal, const nsAString& aCacheName);
 nsresult
 GenerateCacheName(nsAString& aName);
 
+enum class OnFailure : uint8_t {
+    DoNothing,
+    Uninstall
+};
+
 class CompareCallback
 {
 public:
+
   /*
    * If there is an error, ignore aInCacheAndEqual and aNewCacheName.
    * On success, if the cached result and network result matched,
@@ -37,6 +43,7 @@ public:
   virtual void
   ComparisonResult(nsresult aStatus,
                    bool aInCacheAndEqual,
+                   OnFailure aOnFailure,
                    const nsAString& aNewCacheName,
                    const nsACString& aMaxScope,
                    nsLoadFlags aLoadFlags) = 0;
