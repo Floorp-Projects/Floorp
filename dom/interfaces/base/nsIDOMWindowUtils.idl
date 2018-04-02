@@ -857,6 +857,12 @@ interface nsIDOMWindowUtils : nsISupports {
   bool needsFlush(in long aFlushtype);
 
   /**
+   * Flush pending layout-type notification without flushing throttled
+   * animations.
+   */
+  void flushLayoutWithoutThrottledAnimations();
+
+  /**
    * Returns the bounds of the window's currently loaded document. This will
    * generally be (0, 0, pageWidth, pageHeight) but in some cases (e.g. RTL
    * documents) may have a negative left value.
