@@ -2145,11 +2145,6 @@ struct StyleShapeSource final
     return mShapeImage;
   }
 
-  // Iff we have "shape-outside:<image>" with an image URI (not a gradient),
-  // this method returns the corresponding imgIRequest*. Else, returns
-  // null.
-  imgIRequest* GetShapeImageData() const;
-
   void SetShapeImage(UniquePtr<nsStyleImage> aShapeImage);
 
   const UniquePtr<StyleBasicShape>& GetBasicShape() const

@@ -1069,18 +1069,6 @@ StyleShapeSource::SetShapeImage(UniquePtr<nsStyleImage> aShapeImage)
   mType = StyleShapeSourceType::Image;
 }
 
-imgIRequest*
-StyleShapeSource::GetShapeImageData() const
-{
-  if (mType != StyleShapeSourceType::Image) {
-    return nullptr;
-  }
-  if (mShapeImage->GetType() != eStyleImageType_Image) {
-    return nullptr;
-  }
-  return mShapeImage->GetImageData();
-}
-
 void
 StyleShapeSource::SetBasicShape(UniquePtr<StyleBasicShape> aBasicShape,
                                 StyleGeometryBox aReferenceBox)

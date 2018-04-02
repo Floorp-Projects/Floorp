@@ -3486,7 +3486,7 @@ nsCSSBorderImageRenderer::CreateBorderImageRenderer(nsPresContext* aPresContext,
   // XXX We shouldn't really... since if anybody is passing in a
   // different style, they'll potentially have the wrong size for the
   // border too.
-  aForFrame->AssociateImage(aStyleBorder.mBorderImageSource, aPresContext, 0);
+  aForFrame->AssociateImage(aStyleBorder.mBorderImageSource, aPresContext);
 
   nsCSSBorderImageRenderer renderer(aForFrame, aBorderArea,
                                     aStyleBorder, aSkipSides, imgRenderer);
