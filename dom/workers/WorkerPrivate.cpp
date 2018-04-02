@@ -473,6 +473,15 @@ private:
     aWorkerPrivate->SetWorkerScriptExecutedSuccessfully();
     return true;
   }
+
+  void
+  PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aRunResult) override
+  {
+    if (!aRunResult) {
+      aWorkerPrivate->CloseInternal();
+    }
+    WorkerRunnable::PostRun(aCx, aWorkerPrivate, aRunResult);
+  }
 };
 
 class NotifyRunnable final : public WorkerControlRunnable
