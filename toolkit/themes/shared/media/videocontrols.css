@@ -403,11 +403,12 @@ audio > xul|videocontrols {
   margin-bottom: 20px;
 }
 
-.statusIcon[type="throbber"] {
+/* Not showing the throbber on mobile because of conflict with m.youtube.com (see bug 1289412) */
+.controlsContainer:not(.mobile) .statusIcon[type="throbber"] {
   background: url(chrome://global/skin/media/throbber.png) no-repeat center;
 }
 
-.statusIcon[type="throbber"][stalled] {
+.controlsContainer:not(.mobile) .statusIcon[type="throbber"][stalled] {
   background: url(chrome://global/skin/media/stalled.png) no-repeat center;
 }
 
