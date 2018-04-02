@@ -18,6 +18,7 @@ const {
   MESSAGE_SOURCE,
 } = constants;
 const { getGripPreviewItems } = require("devtools/client/shared/components/reps/reps");
+const { getUnicodeUrlPath } = require("devtools/client/shared/unicode-url");
 const { getSourceNames } = require("devtools/client/shared/source-utils");
 
 const {
@@ -782,10 +783,13 @@ function isTextInFrame(text, frame) {
     source
   } = frame;
   const { short } = getSourceNames(source);
+  const unicodeShort = getUnicodeUrlPath(short);
 
-  return `${functionName ? functionName + " " : ""}${short}:${line}:${column}`
+  const includes =
+    `${functionName ? functionName + " " : ""}${unicodeShort}:${line}:${column}`
     .toLocaleLowerCase()
     .includes(text.toLocaleLowerCase());
+  return includes;
 }
 
 /**
