@@ -946,14 +946,14 @@ HTMLEditor::GetResizedObject(Element** aResizedObject)
 NS_IMETHODIMP
 HTMLEditor::GetObjectResizingEnabled(bool* aIsObjectResizingEnabled)
 {
-  *aIsObjectResizingEnabled = mIsObjectResizingEnabled;
+  *aIsObjectResizingEnabled = IsObjectResizerEnabled();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLEditor::SetObjectResizingEnabled(bool aObjectResizingEnabled)
 {
-  mIsObjectResizingEnabled = aObjectResizingEnabled;
+  EnableObjectResizer(aObjectResizingEnabled);
   return NS_OK;
 }
 

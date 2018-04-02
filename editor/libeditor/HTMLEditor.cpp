@@ -116,7 +116,7 @@ HTMLEditor::HTMLEditor()
   , mCSSAware(false)
   , mSelectedCellIndex(0)
   , mHasShownResizers(false)
-  , mIsObjectResizingEnabled(true)
+  , mIsObjectResizingEnabled(false)
   , mIsResizing(false)
   , mPreserveRatio(false)
   , mResizedObjectIsAnImage(false)
@@ -127,7 +127,7 @@ HTMLEditor::HTMLEditor()
   , mIsMoving(false)
   , mSnapToGridEnabled(false)
   , mHasShownInlineTableEditor(false)
-  , mIsInlineTableEditingEnabled(true)
+  , mIsInlineTableEditingEnabled(false)
   , mOriginalX(0)
   , mOriginalY(0)
   , mResizedObjectX(0)
@@ -3069,8 +3069,10 @@ HTMLEditor::AddOverrideStyleSheetInternal(const nsAString& aURL)
   // synchronously, of course..
   RefPtr<StyleSheet> sheet;
   // Editor override style sheets may want to style Gecko anonymous boxes
-  rv = presShell->GetDocument()->CSSLoader()->
-    LoadSheetSync(uaURI, css::eAgentSheetFeatures, true, &sheet);
+  DebugOnly<nsresult> ignoredRv =
+    presShell->GetDocument()->CSSLoader()->
+      LoadSheetSync(uaURI, css::eAgentSheetFeatures, true, &sheet);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(ignoredRv), "LoadSheetSync() failed");
 
   // Synchronous loads should ALWAYS return completed
   if (NS_WARN_IF(!sheet)) {
