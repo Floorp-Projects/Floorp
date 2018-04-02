@@ -1129,15 +1129,16 @@ main {
     display: flex;
     font-size: 11px;
     left: 0;
-    padding: 12px 16px 12px 14px;
+    padding: 9px 16px 9px 14px;
     position: absolute;
     right: 0; }
   .card-outer .card-context-icon {
     fill: rgba(12, 12, 13, 0.6);
+    height: 22px;
     margin-inline-end: 6px; }
   .card-outer .card-context-label {
     flex-grow: 1;
-    line-height: 16px;
+    line-height: 22px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap; }
