@@ -27,7 +27,7 @@ function createScriptError(options = {}) {
   const scriptError = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
   scriptError.init(
     options.message || "",
-    options.sourceName || null,
+    "sourceName" in options ? options.sourceName : null,
     options.sourceLine || null,
     options.lineNumber || null,
     options.columnNumber || null,
@@ -210,6 +210,12 @@ add_task(async function testSampling() {
     "A 1.0 sample rate will cause the reporter to always collect errors.",
   );
 
+  await reporter.observe(createScriptError({message: "undefined", sourceName: undefined}));
+  ok(
+    fetchPassedError(fetchSpy, "undefined"),
+    "A missing sourceName doesn't break reporting.",
+  );
+
   await SpecialPowers.pushPrefEnv({set: [
     [PREF_SAMPLE_RATE, "0.0"],
   ]});
@@ -217,6 +223,24 @@ add_task(async function testSampling() {
   ok(
     !fetchPassedError(fetchSpy, "Shouldn't log"),
     "A 0.0 sample rate will cause the reporter to never collect errors.",
+  );
+
+  await reporter.observe(createScriptError({
+    message: "chromedevtools",
+    sourceName: "chrome://devtools/Foo.jsm",
+  }));
+  ok(
+    fetchPassedError(fetchSpy, "chromedevtools"),
+    "chrome://devtools/ paths are sampled at 100% even if the default rate is 0.0.",
+  );
+
+  await reporter.observe(createScriptError({
+    message: "resourcedevtools",
+    sourceName: "resource://devtools/Foo.jsm",
+  }));
+  ok(
+    fetchPassedError(fetchSpy, "resourcedevtools"),
+    "resource://devtools/ paths are sampled at 100% even if the default rate is 0.0.",
   );
 
   await SpecialPowers.pushPrefEnv({set: [
