@@ -527,9 +527,6 @@ public:
     return mWorkerScriptExecutedSuccessfully;
   }
 
-  void
-  MaybeDispatchLoadFailedRunnable();
-
   // Get the event target to use when dispatching to the main thread
   // from this Worker thread.  This may be the main thread itself or
   // a ThrottledEventQueue to the main thread.
@@ -1054,12 +1051,6 @@ public:
   ServiceWorkersTestingInWindow() const
   {
     return mLoadInfo.mServiceWorkersTestingInWindow;
-  }
-
-  already_AddRefed<nsIRunnable>
-  StealLoadFailedAsyncRunnable()
-  {
-    return mLoadInfo.mLoadFailedAsyncRunnable.forget();
   }
 
   // This is used to handle importScripts(). When the worker is first loaded
