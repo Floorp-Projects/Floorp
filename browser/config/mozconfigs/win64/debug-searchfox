@@ -13,6 +13,9 @@ ac_add_options --enable-clang-plugin
 ac_add_options --enable-mozsearch-plugin
 
 . $topsrcdir/build/win64/mozconfig.vs-latest
+# Regardless of what mozconfig.vs-latest sets, clang-plugin builds need to use
+# the Microsoft linker until at least bugs 1414287 and 1427808 are resolved.
+export LINKER=link
 
 . "$topsrcdir/build/mozconfig.common.override"
 . "$topsrcdir/build/mozconfig.clang-cl"

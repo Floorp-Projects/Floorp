@@ -843,7 +843,14 @@ js::wasm::StartUnwinding(const RegisterState& registers, UnwindState* unwindStat
       case CodeRange::BuiltinThunk:
       case CodeRange::DebugTrap:
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-        if (offsetFromEntry < PushedFP || codeRange->isThunk()) {
+        if (codeRange->isThunk()) {
+            // The FarJumpIsland sequence temporary scrambles ra.
+            // Don't unwind to caller.
+            fixedPC = pc;
+            fixedFP = fp;
+            *unwoundCaller = false;
+            AssertMatchesCallSite(fp->returnAddress, fp->callerFP);
+        } else if (offsetFromEntry < PushedFP) {
             // On MIPS we rely on register state instead of state saved on
             // stack until the wasm::Frame is completely built.
             // On entry the return address is in ra (registers.lr) and

@@ -11,10 +11,10 @@ updater.app/Contents/MacOS/org.mozilla.updater
 updater.app/Contents/PkgInfo
 browser/chrome.manifest
 # browser branding / themes is bug 1313106
-browser/chrome/browser/content/branding/icon128.png
 browser/chrome/browser/content/branding/icon16.png
 browser/chrome/browser/content/branding/icon32.png
 browser/chrome/browser/content/branding/icon48.png
+browser/chrome/browser/content/branding/icon64.png
 browser/chrome/browser/content/browser/defaultthemes/5.header.png
 browser/chrome/browser/content/browser/extension.svg
 browser/chrome/browser/content/browser/places/bookmarkProperties.xul
@@ -145,5 +145,5 @@ res/table-remove-row.gif
 res/multilocale.txt
 update.locale
 # Aurora branding
-browser/chrome/browser/content/branding/icon64.png
+browser/chrome/browser/content/branding/icon128.png
 browser/chrome/devtools/content/framework/dev-edition-promo/dev-edition-logo.png

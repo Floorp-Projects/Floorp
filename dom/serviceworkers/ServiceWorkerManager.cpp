@@ -2083,8 +2083,8 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
     auto& reg = iter.UserData()->mRegistrationInfo;
     if (reg->Scope().Equals(aRegistration->Scope()) &&
         reg->Principal()->Equals(aRegistration->Principal())) {
-      MOZ_DIAGNOSTIC_ASSERT(false,
-                            "controlled client when removing registration");
+      MOZ_DIAGNOSTIC_ASSERT(aRegistration->IsCorrupt(),
+                            "controlled client when removing non-corrupt registration");
       iter.Remove();
       break;
     }
