@@ -633,13 +633,6 @@ nsLayoutUtils::IsAnimationLoggingEnabled()
 bool
 nsLayoutUtils::AreRetainedDisplayListsEnabled()
 {
-  // We don't support retaining with overlay scrollbars, since they require
-  // us to look at the display list and pick the highest z-index, which
-  // we can't do during partial building.
-  if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
-    return false;
-  }
-
   if (XRE_IsContentProcess()) {
     return gfxPrefs::LayoutRetainDisplayList();
   } else {
