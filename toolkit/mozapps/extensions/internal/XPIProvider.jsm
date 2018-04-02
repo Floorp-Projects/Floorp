@@ -6432,17 +6432,4 @@ var addonTypes = [
                                     AddonManager.TYPE_UI_HIDE_EMPTY | AddonManager.TYPE_SUPPORTS_UNDO_RESTARTLESS_UNINSTALL),
 ];
 
-// We only register experiments support if the application supports them.
-// Ideally, we would install an observer to watch the pref. Installing
-// an observer for this pref is not necessary here and may be buggy with
-// regards to registering this XPIProvider twice.
-if (Services.prefs.getBoolPref("experiments.supported", false)) {
-  addonTypes.push(
-    new AddonManagerPrivate.AddonType("experiment",
-                                      URI_EXTENSION_STRINGS,
-                                      "type.experiment.name",
-                                      AddonManager.VIEW_TYPE_LIST, 11000,
-                                      AddonManager.TYPE_UI_HIDE_EMPTY | AddonManager.TYPE_SUPPORTS_UNDO_RESTARTLESS_UNINSTALL));
-}
-
 AddonManagerPrivate.registerProvider(XPIProvider, addonTypes);
