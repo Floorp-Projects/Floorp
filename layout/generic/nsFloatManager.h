@@ -344,7 +344,6 @@ private:
   class RoundedBoxShapeInfo;
   class EllipseShapeInfo;
   class PolygonShapeInfo;
-  class ImageShapeInfo;
 
   struct FloatInfo {
     nsIFrame *const mFrame;

@@ -106,14 +106,13 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/css/ImageLoader.h"
 #include "mozilla/gfx/Tools.h"
 #include "nsPrintfCString.h"
 #include "ActiveLayerTracker.h"
 
 #include "nsITheme.h"
 #include "nsThemeConstants.h"
-
-#include "ImageLoader.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -908,7 +907,7 @@ AddAndRemoveImageAssociations(nsFrame* aFrame,
 
   CompareLayers(aNewLayers, aOldLayers,
     [&imageLoader, aFrame](imgRequestProxy* aReq)
-    { imageLoader->AssociateRequestToFrame(aReq, aFrame, 0); }
+    { imageLoader->AssociateRequestToFrame(aReq, aFrame); }
   );
 }
 
@@ -1176,24 +1175,7 @@ nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
       imageLoader->DisassociateRequestFromFrame(oldBorderImage, this);
     }
     if (newBorderImage) {
-      imageLoader->AssociateRequestToFrame(newBorderImage, this, 0);
-    }
-  }
-
-  imgIRequest* oldShapeImage =
-      aOldComputedStyle
-    ? aOldComputedStyle->StyleDisplay()->mShapeOutside.GetShapeImageData()
-    : nullptr;
-  imgIRequest* newShapeImage =
-    StyleDisplay()->mShapeOutside.GetShapeImageData();
-
-  if (oldShapeImage != newShapeImage) {
-    if (oldShapeImage && HasImageRequest()) {
-      imageLoader->DisassociateRequestFromFrame(oldShapeImage, this);
-    }
-    if (newShapeImage) {
-      imageLoader->AssociateRequestToFrame(newShapeImage, this,
-        ImageLoader::REQUEST_REQUIRES_REFLOW);
+      imageLoader->AssociateRequestToFrame(newBorderImage, this);
     }
   }
 
@@ -5238,8 +5220,7 @@ nsIFrame::ContentOffsets nsFrame::CalcContentOffsetsFromFramePoint(const nsPoint
 }
 
 void
-nsIFrame::AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext,
-                         uint32_t aImageLoaderFlags)
+nsIFrame::AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext)
 {
   if (aImage.GetType() != eStyleImageType_Image) {
     return;
@@ -5249,11 +5230,12 @@ nsIFrame::AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext
   if (!req) {
     return;
   }
+
   mozilla::css::ImageLoader* loader =
     aPresContext->Document()->StyleImageLoader();
 
   // If this fails there's not much we can do ...
-  loader->AssociateRequestToFrame(req, this, aImageLoaderFlags);
+  loader->AssociateRequestToFrame(req, this);
 }
 
 nsresult

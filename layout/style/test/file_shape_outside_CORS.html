@@ -33,6 +33,7 @@ function sendResults() {
   window.parent.postMessage({
     "result": (divAllowSib.getBoundingClientRect().left == divAllow.getBoundingClientRect().left),
     "message": "Test 1: Sibling is at same left offset as div (shape-outside was allowed).",
+    "todo": true,
     },
     DOMAIN);
 
