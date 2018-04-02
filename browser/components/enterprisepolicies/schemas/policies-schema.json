@@ -449,6 +449,7 @@
     "SearchBar": {
       "description": "Sets the default location of the search bar. Only applies on firtrun, but can be changed.",
       "first_available": "60.0",
+      "enterprise_only": true,
 
       "type": "string",
       "enum": ["unified", "separate"]
