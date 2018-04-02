@@ -15,6 +15,7 @@ addons:
   jwt:
     secure: N9lvgkqUPtFlz6Vpa6qTPFhymEsDCsbaCsT64/hj3vlHRxK94r5+ugVJ3zm99zC0q2j1ish8yJC7mN/W4wRfBE4sAwmdxrlowxF1DDGCkaLE9i/GWW92s0fBVGJmXLh8kwNkQ31hMOsaGfHIMpeLFS7Se741te7YqsHIzmBCdQs=
 before_install:
+  # This needs be sourced as it sets various env vars
   - . ./tools/ci/before_install.sh
 install:
   - ./tools/ci/install.sh
@@ -88,6 +89,15 @@ matrix:
           packages:
             - libnss3-tools
       env: JOB=wpt_integration TOXENV=py27,py27-flake8 SCRIPT=tools/ci/ci_wpt.sh
+    - os: linux
+      python: "2.7"
+      env: JOB=wptrunner_infrastructure SCRIPT=tools/ci/ci_wptrunner_infrastructure.sh
+      addons:
+        apt:
+          packages:
+            - libnss3-tools
+            - libappindicator1
+            - fonts-liberation
   exclude:
     - env:  # exclude empty env from the top-level above
   allow_failures:

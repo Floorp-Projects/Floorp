@@ -85,7 +85,7 @@ treechildren::-moz-tree-image(noicon) {
   fill: currentColor;
 }
 treechildren::-moz-tree-image(container, noicon) {
-  list-style-image: url("chrome://browser/skin/aboutSessionRestore-window-icon.png");
+  list-style-image: url("chrome://browser/skin/window.svg");
 }
 
 treechildren::-moz-tree-image(checked) {

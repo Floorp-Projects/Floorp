@@ -31,7 +31,7 @@ function showHiddenTabs(id) {
 
     for (let tab of win.gBrowser.tabs) {
       if (tab.hidden && tab.ownerGlobal &&
-          SessionStore.getTabValue(tab, "hiddenBy") === id) {
+          SessionStore.getCustomTabValue(tab, "hiddenBy") === id) {
         win.gBrowser.showTab(tab);
       }
     }
