@@ -23,6 +23,7 @@ var ChromeUtils = require("ChromeUtils");
 var {gDevTools} = require("devtools/client/framework/devtools");
 var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
+const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 var { attachThread, detachThread } = require("./attach-thread");
 var Menu = require("devtools/client/framework/menu");
 var MenuItem = require("devtools/client/framework/menu-item");
@@ -2057,11 +2058,13 @@ Toolbox.prototype = {
     let title;
     if (this.target.name && this.target.name != this.target.url) {
       const url = this.target.isWebExtension ?
-                  this.target.getExtensionPathName(this.target.url) : this.target.url;
+                    this.target.getExtensionPathName(this.target.url) :
+                    getUnicodeUrl(this.target.url);
       title = L10N.getFormatStr("toolbox.titleTemplate2", this.target.name,
                                                           url);
     } else {
-      title = L10N.getFormatStr("toolbox.titleTemplate1", this.target.url);
+      title = L10N.getFormatStr("toolbox.titleTemplate1",
+                                getUnicodeUrl(this.target.url));
     }
     this.postMessage({
       name: "set-host-title",
@@ -2148,11 +2151,12 @@ Toolbox.prototype = {
       // A frame is checked if it's the selected one.
       let checked = frame.id == this.selectedFrameId;
 
-      let label = frame.url;
-
+      let label;
       if (this.target.isWebExtension) {
         // Show a shorter url for extensions page.
         label = this.target.getExtensionPathName(frame.url);
+      } else {
+        label = getUnicodeUrl(frame.url);
       }
 
       // Create menu item.
