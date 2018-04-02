@@ -1798,15 +1798,13 @@ PresShell::Initialize()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  Element *root = mDocument->GetRootElement();
-
-  if (root) {
+  if (Element* root = mDocument->GetRootElement()) {
     {
       nsAutoCauseReflowNotifier reflowNotifier(this);
       // Have the style sheet processor construct frame for the root
       // content object down
       mFrameConstructor->ContentInserted(
-          nullptr, root, nullptr, nsCSSFrameConstructor::InsertionKind::Sync);
+          root, nullptr, nsCSSFrameConstructor::InsertionKind::Sync);
 
       // Something in mFrameConstructor->ContentInserted may have caused
       // Destroy() to get called, bug 337586.
@@ -4488,10 +4486,11 @@ PresShell::ContentAppended(nsIContent* aFirstNewContent)
                   "Unexpected document");
 
   // We never call ContentAppended with a document as the container, so we can
-  // assert that we have an nsIContent container.
-  nsIContent* container = aFirstNewContent->GetParent();
-  MOZ_ASSERT(container);
-  MOZ_ASSERT(container->IsElement() || container->IsShadowRoot());
+  // assert that we have an nsIContent parent.
+  MOZ_ASSERT(aFirstNewContent->GetParent());
+  MOZ_ASSERT(aFirstNewContent->GetParent()->IsElement() ||
+             aFirstNewContent->GetParent()->IsShadowRoot());
+
   if (!mDidInitialize) {
     return;
   }
@@ -4501,10 +4500,9 @@ PresShell::ContentAppended(nsIContent* aFirstNewContent)
   // Call this here so it only happens for real content mutations and
   // not cases when the frame constructor calls its own methods to force
   // frame reconstruction.
-  mPresContext->RestyleManager()->ContentAppended(container, aFirstNewContent);
+  mPresContext->RestyleManager()->ContentAppended(aFirstNewContent);
 
   mFrameConstructor->ContentAppended(
-      container,
       aFirstNewContent,
       nsCSSFrameConstructor::InsertionKind::Async);
 }
@@ -4514,7 +4512,6 @@ PresShell::ContentInserted(nsIContent* aChild)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentInserted");
   NS_PRECONDITION(aChild->OwnerDoc() == mDocument, "Unexpected document");
-  nsINode* container = aChild->GetParentNode();
 
   if (!mDidInitialize) {
     return;
@@ -4525,10 +4522,9 @@ PresShell::ContentInserted(nsIContent* aChild)
   // Call this here so it only happens for real content mutations and
   // not cases when the frame constructor calls its own methods to force
   // frame reconstruction.
-  mPresContext->RestyleManager()->ContentInserted(container, aChild);
+  mPresContext->RestyleManager()->ContentInserted(aChild);
 
   mFrameConstructor->ContentInserted(
-      aChild->GetParent(),
       aChild,
       nullptr,
       nsCSSFrameConstructor::InsertionKind::Async);
@@ -4568,15 +4564,15 @@ PresShell::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
     mPointerEventTarget = aChild->GetParent();
   }
 
-  mFrameConstructor->ContentRemoved(
-      aChild->GetParent(), aChild, oldNextSibling,
-      nsCSSFrameConstructor::REMOVE_CONTENT);
+  mFrameConstructor->ContentRemoved(aChild,
+                                    oldNextSibling,
+                                    nsCSSFrameConstructor::REMOVE_CONTENT);
 
   // NOTE(emilio): It's important that this goes after the frame constructor
   // stuff, otherwise the frame constructor can't see elements which are
   // display: contents / display: none, because we'd have cleared all the style
   // data from there.
-  mPresContext->RestyleManager()->ContentRemoved(container, aChild, oldNextSibling);
+  mPresContext->RestyleManager()->ContentRemoved(aChild, oldNextSibling);
 }
 
 void

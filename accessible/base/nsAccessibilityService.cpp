@@ -631,7 +631,6 @@ nsAccessibilityService::DeckPanelSwitched(nsIPresShell* aPresShell,
 
 void
 nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
-                                             nsIContent* aContainer,
                                              nsIContent* aStartChild,
                                              nsIContent* aEndChild)
 {
@@ -639,7 +638,7 @@ nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eTree)) {
     logging::MsgBegin("TREE", "content inserted; doc: %p", document);
-    logging::Node("container", aContainer);
+    logging::Node("container", aStartChild->GetParent());
     for (nsIContent* child = aStartChild; child != aEndChild;
          child = child->GetNextSibling()) {
       logging::Node("content", child);
@@ -650,7 +649,7 @@ nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
 #endif
 
   if (document) {
-    document->ContentInserted(aContainer, aStartChild, aEndChild);
+    document->ContentInserted(aStartChild->GetParent(), aStartChild, aEndChild);
   }
 }
 
