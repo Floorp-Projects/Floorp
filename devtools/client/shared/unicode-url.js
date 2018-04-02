@@ -3,6 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+// This file is a chrome-API-dependent version of the module
+// devtools/client/shared/webpack/shims/unicode-url-stub.js, so that it can
+// take advantage of utilizing chrome APIs. But because of this, it isn't
+// intended to be used in Chrome-API-free applications, such as the Launchpad.
+//
+// Please keep in mind that if the feature in this file has changed, don't
+// forget to also change that accordingly in
+// devtools/client/shared/webpack/shims/unicode-url-stub.js.
+
 const { Cc, Ci } = require("chrome");
 const idnService =
         Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);

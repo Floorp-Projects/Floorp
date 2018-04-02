@@ -7,6 +7,8 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { getUnicodeUrl, getUnicodeUrlPath, getUnicodeHostname } =
+  require("devtools/client/shared/unicode-url");
 const { getSourceNames, parseURL, isScratchpadScheme, getSourceMappedFile } =
   require("devtools/client/shared/source-utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
@@ -133,6 +135,10 @@ class Frame extends Component {
     let column = frame.column != void 0 ? Number(frame.column) : null;
 
     const { short, long, host } = getSourceNames(source);
+    const unicodeShort = getUnicodeUrlPath(short);
+    const unicodeLong  = getUnicodeUrl(long);
+    const unicodeHost  = host ? getUnicodeHostname(host) : "";
+
     // Reparse the URL to determine if we should link this; `getSourceNames`
     // has already cached this indirectly. We don't want to attempt to
     // link to "self-hosted" and "(unknown)". However, we do want to link
@@ -144,7 +150,7 @@ class Frame extends Component {
     const elements = [];
     const sourceElements = [];
     let sourceEl;
-    let tooltip = long;
+    let tooltip = unicodeLong;
 
     // Exclude all falsy values, including `0`, as line numbers start with 1.
     if (line) {
@@ -177,7 +183,7 @@ class Frame extends Component {
       }
     }
 
-    let displaySource = showFullSourceUrl ? long : short;
+    let displaySource = showFullSourceUrl ? unicodeLong : unicodeShort;
     if (isSourceMapped) {
       displaySource = getSourceMappedFile(displaySource);
     } else if (showEmptyPathAsHost && (displaySource === "" || displaySource === "/")) {
@@ -238,12 +244,12 @@ class Frame extends Component {
     }
     elements.push(sourceEl);
 
-    if (showHost && host) {
+    if (showHost && unicodeHost) {
       elements.push(" ");
       elements.push(dom.span({
         key: "host",
         className: "frame-link-host",
-      }, host));
+      }, unicodeHost));
     }
 
     return dom.span(attributes, ...elements);
