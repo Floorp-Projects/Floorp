@@ -10,6 +10,7 @@ const {LocalizationHelper, ELLIPSIS} = require("devtools/shared/l10n");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const JSOL = require("devtools/client/shared/vendor/jsol");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
+const { getUnicodeHostname } = require("devtools/client/shared/unicode-url");
 
 // GUID to be used as a separator in compound keys. This must match the same
 // constant in devtools/server/actors/storage.js,
@@ -455,7 +456,8 @@ class StorageUI {
   async handleAddedItems(added) {
     for (let type in added) {
       for (let host in added[type]) {
-        this.tree.add([type, {id: host, type: "url"}]);
+        const label = this.getReadableLabelFromHostname(host);
+        this.tree.add([type, {id: host, label: label, type: "url"}]);
         for (let name of added[type][host]) {
           try {
             name = JSON.parse(name);
@@ -672,7 +674,8 @@ class StorageUI {
       }
       this.storageTypes[type] = storageTypes[type];
       for (let host in storageTypes[type].hosts) {
-        this.tree.add([type, {id: host, type: "url"}]);
+        const label = this.getReadableLabelFromHostname(host);
+        this.tree.add([type, {id: host, label: label, type: "url"}]);
         for (let name of storageTypes[type].hosts[host]) {
           try {
             let names = JSON.parse(name);
@@ -773,13 +776,42 @@ class StorageUI {
   }
 
   /**
+   * Gets a readable label from the hostname. If the hostname is a Punycode
+   * domain(I.e. an ASCII domain name representing a Unicode domain name), then
+   * this function decodes it to the readable Unicode domain name, and label
+   * the Unicode domain name toggether with the original domian name, and then
+   * return the label; if the hostname isn't a Punycode domain(I.e. it isn't
+   * encoded and is readable on its own), then this function simply returns the
+   * original hostname.
+   *
+   * @param {string} host
+   *        The string representing a host, e.g, example.com, example.com:8000
+   */
+  getReadableLabelFromHostname(host) {
+    try {
+      const { hostname } = new URL(host);
+      const unicodeHostname = getUnicodeHostname(hostname);
+      if (hostname !== unicodeHostname) {
+        // If the hostname is a Punycode domain representing a Unicode domain,
+        // we decode it to the Unicode domain name, and then label the Unicode
+        // domain name together with the original domain name.
+        return host.replace(hostname, unicodeHostname) + " [ " + host + " ]";
+      }
+    } catch (_) {
+      // Skip decoding for a host which doesn't include a domain name, simply
+      // consider them to be readable.
+    }
+    return host;
+  }
+
+  /**
    * Tries to parse a string value into either a json or a key-value separated
    * object and populates the sidebar with the parsed value. The value can also
    * be a key separated array.
    *
    * @param {string} name
    *        The key corresponding to the `value` string in the object
-   * @param {string} value
+   * @param {string} originalValue
    *        The string to be parsed into an object
    */
   parseItemValue(name, originalValue) {
@@ -881,8 +913,6 @@ class StorageUI {
    * Select handler for the storage tree. Fetches details of the selected item
    * from the storage details and populates the storage tree.
    *
-   * @param {string} event
-   *        The name of the event fired
    * @param {array} item
    *        An array of ids which represent the location of the selected item in
    *        the storage tree
