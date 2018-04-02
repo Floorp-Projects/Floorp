@@ -10,6 +10,9 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'test_necko'
 
+# Don't add our test-only .xpt files to the normal manifests
+XPIDL_NO_MANIFEST = True
+
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
 EXTRA_COMPONENTS += [

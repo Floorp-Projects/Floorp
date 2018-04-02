@@ -17,7 +17,8 @@
 
 template<typename T> class nsCOMArray;
 class nsIMemoryReporter;
-struct XPTInterfaceDescriptor;
+struct XPTHeader;
+struct XPTInterfaceDirectoryEntry;
 class xptiInterfaceEntry;
 class xptiInterfaceInfo;
 class xptiTypelibGuts;
@@ -39,6 +40,8 @@ public:
 
     void GetScriptableInterfaces(nsCOMArray<nsIInterfaceInfo>& aInterfaces);
 
+    void RegisterBuffer(char *buf, uint32_t length);
+
     static Mutex& GetResolveLock()
     {
         return GetSingleton()->mResolveLock;
@@ -54,8 +57,10 @@ private:
 
     void InitMemoryReporter();
 
+    void RegisterXPTHeader(const XPTHeader* aHeader);
+
     // idx is the index of this interface in the XPTHeader
-    void VerifyAndAddEntryIfNew(const XPTInterfaceDescriptor* iface,
+    void VerifyAndAddEntryIfNew(const XPTInterfaceDirectoryEntry* iface,
                                 uint16_t idx,
                                 xptiTypelibGuts* typelib);
 

@@ -194,11 +194,11 @@ public:
     bool IsHidden() const { return !!(mFlags & kHiddenMask); }
     bool WantsOptArgc() const { return !!(mFlags & kOptArgcMask); }
     bool WantsContext() const { return !!(mFlags & kContextMask); }
-    const char* GetName() const { return Name(); }
+    const char* GetName() const { return mName; }
     uint8_t GetParamCount() const { return mNumArgs; }
     const nsXPTParamInfo GetParam(uint8_t idx) const {
         MOZ_ASSERT(idx < GetParamCount(), "bad arg");
-        return Param(idx);
+        return mParams[idx];
     }
 
 private:

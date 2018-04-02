@@ -81,12 +81,6 @@ XPTInterfaceInfoManager::XPTInterfaceInfoManager()
     :   mWorkingSet(),
         mResolveLock("XPTInterfaceInfoManager.mResolveLock")
 {
-    xptiTypelibGuts* typelib = xptiTypelibGuts::Create();
-
-    ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
-    for (uint16_t k = 0; k < XPTHeader::kNumInterfaces; k++) {
-        VerifyAndAddEntryIfNew(XPTHeader::kInterfaces + k, k, typelib);
-    }
 }
 
 XPTInterfaceInfoManager::~XPTInterfaceInfoManager()
@@ -104,23 +98,52 @@ XPTInterfaceInfoManager::InitMemoryReporter()
 }
 
 void
-XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(const XPTInterfaceDescriptor* iface,
+XPTInterfaceInfoManager::RegisterBuffer(char *buf, uint32_t length)
+{
+    XPTState state;
+    XPT_InitXDRState(&state, buf, length);
+
+    XPTCursor curs;
+    NotNull<XPTCursor*> cursor = WrapNotNull(&curs);
+    if (!XPT_MakeCursor(&state, XPT_HEADER, 0, cursor)) {
+        return;
+    }
+
+    XPTHeader *header = nullptr;
+    if (XPT_DoHeader(gXPTIStructArena, cursor, &header)) {
+        RegisterXPTHeader(header);
+    }
+}
+
+void
+XPTInterfaceInfoManager::RegisterXPTHeader(const XPTHeader* aHeader)
+{
+    if (aHeader->mMajorVersion >= XPT_MAJOR_INCOMPATIBLE_VERSION) {
+        MOZ_ASSERT(!aHeader->mNumInterfaces, "bad libxpt");
+    }
+
+    xptiTypelibGuts* typelib = xptiTypelibGuts::Create(aHeader);
+
+    ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
+    for(uint16_t k = 0; k < aHeader->mNumInterfaces; k++)
+        VerifyAndAddEntryIfNew(aHeader->mInterfaceDirectory + k, k, typelib);
+}
+
+void
+XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(const XPTInterfaceDirectoryEntry* iface,
                                                 uint16_t idx,
                                                 xptiTypelibGuts* typelib)
 {
-    static const nsID zeroIID =
-        { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } };
-
-    if (iface->mIID.Equals(zeroIID)) {
+    if (!iface->mInterfaceDescriptor)
         return;
-    }
 
     // The number of maximum methods is not arbitrary. It is the same value as
     // in xpcom/reflect/xptcall/genstubs.pl; do not change this value
     // without changing that one or you WILL see problems.
-    if (iface->mNumMethods > 250 && !iface->IsBuiltinClass()) {
+    if (iface->mInterfaceDescriptor->mNumMethods > 250 &&
+            !iface->mInterfaceDescriptor->IsBuiltinClass()) {
         NS_ASSERTION(0, "Too many methods to handle for the stub, cannot load");
-        fprintf(stderr, "ignoring too large interface: %s\n", iface->Name());
+        fprintf(stderr, "ignoring too large interface: %s\n", iface->mName);
         return;
     }
 

@@ -16,32 +16,32 @@
 using namespace mozilla;
 
 /* static */ xptiInterfaceEntry*
-xptiInterfaceEntry::Create(const XPTInterfaceDescriptor* aIface,
+xptiInterfaceEntry::Create(const XPTInterfaceDirectoryEntry* aEntry,
                            xptiTypelibGuts* aTypelib)
 {
     void* place = XPT_CALLOC8(gXPTIStructArena, sizeof(xptiInterfaceEntry));
     if (!place) {
         return nullptr;
     }
-    return new (place) xptiInterfaceEntry(aIface, aTypelib);
+    return new (place) xptiInterfaceEntry(aEntry, aTypelib);
 }
 
-xptiInterfaceEntry::xptiInterfaceEntry(const XPTInterfaceDescriptor* aIface,
+xptiInterfaceEntry::xptiInterfaceEntry(const XPTInterfaceDirectoryEntry* aEntry,
                                        xptiTypelibGuts* aTypelib)
-    : mIID(aIface->mIID)
-    , mDescriptor(aIface)
+    : mIID(aEntry->mIID)
+    , mDescriptor(aEntry->mInterfaceDescriptor)
     , mTypelib(aTypelib)
     , mParent(nullptr)
     , mInfo(nullptr)
     , mMethodBaseIndex(0)
     , mConstantBaseIndex(0)
     , mFlags(0)
-    , mName(aIface->Name())
+    , mName(aEntry->mName)
 {
     SetResolvedState(PARTIALLY_RESOLVED);
-    SetScriptableFlag(aIface->IsScriptable());
-    SetBuiltinClassFlag(aIface->IsBuiltinClass());
-    SetMainProcessScriptableOnlyFlag(aIface->IsMainProcessScriptableOnly());
+    SetScriptableFlag(mDescriptor->IsScriptable());
+    SetBuiltinClassFlag(mDescriptor->IsBuiltinClass());
+    SetMainProcessScriptableOnlyFlag(mDescriptor->IsMainProcessScriptableOnly());
 }
 
 bool
@@ -85,7 +85,7 @@ xptiInterfaceEntry::ResolveLocked()
         } else {
             for (uint16_t idx = 0; idx < mDescriptor->mNumMethods; ++idx) {
                 const nsXPTMethodInfo* method = static_cast<const nsXPTMethodInfo*>(
-                    &mDescriptor->Method(idx));
+                    mDescriptor->mMethodDescriptors + idx);
                 if (method->IsNotXPCOM()) {
                     SetHasNotXPCOMFlag();
                     break;
@@ -189,7 +189,7 @@ xptiInterfaceEntry::GetMethodInfo(uint16_t index, const nsXPTMethodInfo** info)
 
     // else...
     *info = static_cast<const nsXPTMethodInfo*>
-        (&mDescriptor->Method(index - mMethodBaseIndex));
+        (&mDescriptor->mMethodDescriptors[index - mMethodBaseIndex]);
     return NS_OK;
 }
 
@@ -204,7 +204,7 @@ xptiInterfaceEntry::GetMethodInfoForName(const char* methodName, uint16_t *index
     for(uint16_t i = 0; i < mDescriptor->mNumMethods; ++i)
     {
         const nsXPTMethodInfo* info;
-        info = static_cast<const nsXPTMethodInfo*>(&mDescriptor->Method(i));
+        info = static_cast<const nsXPTMethodInfo*>(&mDescriptor->mMethodDescriptors[i]);
         if (PL_strcmp(methodName, info->GetName()) == 0) {
             *index = i + mMethodBaseIndex;
             *result = info;
@@ -239,7 +239,7 @@ xptiInterfaceEntry::GetConstant(uint16_t index, JS::MutableHandleValue constant,
         return NS_ERROR_INVALID_ARG;
     }
 
-    const auto& c = mDescriptor->Const(index - mConstantBaseIndex);
+    const auto& c = mDescriptor->mConstDescriptors[index - mConstantBaseIndex];
     AutoJSContext cx;
     JS::Rooted<JS::Value> v(cx);
     v.setUndefined();
@@ -272,7 +272,7 @@ xptiInterfaceEntry::GetConstant(uint16_t index, JS::MutableHandleValue constant,
     }
 
     constant.set(v);
-    *name = ToNewCString(nsDependentCString(c.Name()));
+    *name = ToNewCString(nsDependentCString(c.mName));
 
     return NS_OK;
 }
@@ -301,7 +301,7 @@ xptiInterfaceEntry::GetInterfaceIndexForParam(uint16_t methodIndex,
     const XPTTypeDescriptor *td = &param->mType;
 
     while (td->Tag() == TD_ARRAY) {
-        td = td->ArrayElementType();
+        td = td->ArrayElementType(mDescriptor);
     }
 
     if (td->Tag() != TD_INTERFACE_TYPE) {
@@ -441,7 +441,7 @@ xptiInterfaceEntry::GetTypeInArray(const nsXPTParamInfo* param,
             NS_ERROR("bad dimension");
             return NS_ERROR_INVALID_ARG;
         }
-        td = td->ArrayElementType();
+        td = td->ArrayElementType(mDescriptor);
     }
 
     *type = td;
@@ -549,7 +549,7 @@ xptiInterfaceEntry::GetInterfaceIsArgNumberForParam(uint16_t methodIndex,
     const XPTTypeDescriptor *td = &param->mType;
 
     while (td->Tag() == TD_ARRAY) {
-        td = td->ArrayElementType();
+        td = td->ArrayElementType(mDescriptor);
     }
 
     if (td->Tag() != TD_INTERFACE_IS_TYPE) {

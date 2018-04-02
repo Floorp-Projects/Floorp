@@ -89,7 +89,165 @@
 @BINPATH@/blocklist.xml
 
 ; [Components]
+#ifdef MOZ_ARTIFACT_BUILDS
+@BINPATH@/components/interfaces.xpt
+@BINPATH@/components/prebuilt-interfaces.manifest
+#endif
 @BINPATH@/components/components.manifest
+@BINPATH@/components/alerts.xpt
+#ifdef ACCESSIBILITY
+@BINPATH@/components/accessibility.xpt
+#endif
+@BINPATH@/components/appshell.xpt
+@BINPATH@/components/appstartup.xpt
+@BINPATH@/components/autocomplete.xpt
+@BINPATH@/components/autoconfig.xpt
+@BINPATH@/components/browser-element.xpt
+@BINPATH@/components/caps.xpt
+@BINPATH@/components/chrome.xpt
+@BINPATH@/components/commandhandler.xpt
+@BINPATH@/components/commandlines.xpt
+@BINPATH@/components/composer.xpt
+@BINPATH@/components/content_events.xpt
+@BINPATH@/components/content_geckomediaplugins.xpt
+@BINPATH@/components/content_html.xpt
+@BINPATH@/components/content_webrtc.xpt
+@BINPATH@/components/content_xslt.xpt
+@BINPATH@/components/directory.xpt
+@BINPATH@/components/docshell.xpt
+@BINPATH@/components/dom.xpt
+@BINPATH@/components/dom_base.xpt
+@BINPATH@/components/dom_bindings.xpt
+#ifdef MOZ_DEBUG
+@BINPATH@/components/dom_bindings_test.xpt
+#endif
+@BINPATH@/components/dom_core.xpt
+@BINPATH@/components/dom_events.xpt
+@BINPATH@/components/dom_file.xpt
+@BINPATH@/components/dom_geolocation.xpt
+@BINPATH@/components/dom_media.xpt
+@BINPATH@/components/dom_network.xpt
+@BINPATH@/components/dom_notification.xpt
+@BINPATH@/components/dom_html.xpt
+@BINPATH@/components/dom_offline.xpt
+@BINPATH@/components/dom_payments.xpt
+@BINPATH@/components/dom_power.xpt
+#ifdef MOZ_ANDROID_GCM
+@BINPATH@/components/dom_push.xpt
+#endif
+@BINPATH@/components/dom_quota.xpt
+@BINPATH@/components/dom_range.xpt
+@BINPATH@/components/dom_security.xpt
+@BINPATH@/components/dom_sidebar.xpt
+@BINPATH@/components/dom_storage.xpt
+@BINPATH@/components/dom_system.xpt
+#ifdef MOZ_WEBSPEECH
+@BINPATH@/components/dom_webspeechrecognition.xpt
+#endif
+@BINPATH@/components/dom_workers.xpt
+@BINPATH@/components/dom_xhr.xpt
+@BINPATH@/components/dom_xul.xpt
+@BINPATH@/components/dom_presentation.xpt
+@BINPATH@/components/downloads.xpt
+@BINPATH@/components/editor.xpt
+@BINPATH@/components/extensions.xpt
+@BINPATH@/components/exthandler.xpt
+@BINPATH@/components/fastfind.xpt
+@BINPATH@/components/feeds.xpt
+@BINPATH@/components/gfx.xpt
+@BINPATH@/components/html5.xpt
+@BINPATH@/components/htmlparser.xpt
+@BINPATH@/components/imglib2.xpt
+@BINPATH@/components/inspector.xpt
+@BINPATH@/components/intl.xpt
+@BINPATH@/components/jar.xpt
+@BINPATH@/components/jsdebugger.xpt
+@BINPATH@/components/jsinspector.xpt
+@BINPATH@/components/layout_base.xpt
+#ifdef NS_PRINTING
+@BINPATH@/components/layout_printing.xpt
+#endif
+@BINPATH@/components/layout_xul_tree.xpt
+@BINPATH@/components/layout_xul.xpt
+@BINPATH@/components/locale.xpt
+@BINPATH@/components/mimetype.xpt
+@BINPATH@/components/mozfind.xpt
+@BINPATH@/components/mozintl.xpt
+@BINPATH@/components/necko_about.xpt
+@BINPATH@/components/necko_cache.xpt
+@BINPATH@/components/necko_cache2.xpt
+@BINPATH@/components/necko_cookie.xpt
+@BINPATH@/components/necko_dns.xpt
+@BINPATH@/components/necko_file.xpt
+@BINPATH@/components/necko_ftp.xpt
+@BINPATH@/components/necko_http.xpt
+@BINPATH@/components/necko_mdns.xpt
+@BINPATH@/components/necko_res.xpt
+@BINPATH@/components/necko_socket.xpt
+@BINPATH@/components/necko_strconv.xpt
+@BINPATH@/components/necko_viewsource.xpt
+@BINPATH@/components/necko_websocket.xpt
+#ifdef NECKO_WIFI
+@BINPATH@/components/necko_wifi.xpt
+#endif
+@BINPATH@/components/necko_wyciwyg.xpt
+@BINPATH@/components/necko.xpt
+@BINPATH@/components/loginmgr.xpt
+@BINPATH@/components/parentalcontrols.xpt
+#ifdef MOZ_WEBRTC
+@BINPATH@/components/peerconnection.xpt
+#endif
+@BINPATH@/components/plugin.xpt
+@BINPATH@/components/pref.xpt
+@BINPATH@/components/prefetch.xpt
+#ifdef MOZ_GECKO_PROFILER
+@BINPATH@/components/profiler.xpt
+#endif
+@BINPATH@/components/rdf.xpt
+@BINPATH@/components/reputationservice.xpt
+@BINPATH@/components/satchel.xpt
+@BINPATH@/components/saxparser.xpt
+@BINPATH@/components/services-crypto-component.xpt
+@BINPATH@/components/captivedetect.xpt
+@BINPATH@/components/shistory.xpt
+@BINPATH@/components/spellchecker.xpt
+@BINPATH@/components/storage.xpt
+@BINPATH@/components/telemetry.xpt
+@BINPATH@/components/toolkit_asyncshutdown.xpt
+@BINPATH@/components/toolkit_filewatcher.xpt
+@BINPATH@/components/toolkit_finalizationwitness.xpt
+@BINPATH@/components/toolkit_osfile.xpt
+@BINPATH@/components/toolkit_securityreporter.xpt
+@BINPATH@/components/toolkit_perfmonitoring.xpt
+@BINPATH@/components/toolkit_xulstore.xpt
+@BINPATH@/components/toolkitprofile.xpt
+#ifdef MOZ_ENABLE_XREMOTE
+@BINPATH@/components/toolkitremote.xpt
+#endif
+@BINPATH@/components/txtsvc.xpt
+@BINPATH@/components/txmgr.xpt
+@BINPATH@/components/uconv.xpt
+@BINPATH@/components/update.xpt
+@BINPATH@/components/uriloader.xpt
+@BINPATH@/components/urlformatter.xpt
+@BINPATH@/components/webBrowser_core.xpt
+@BINPATH@/components/webbrowserpersist.xpt
+@BINPATH@/components/webextensions.xpt
+@BINPATH@/components/widget.xpt
+@BINPATH@/components/widget_android.xpt
+@BINPATH@/components/windowcreator.xpt
+@BINPATH@/components/windowwatcher.xpt
+@BINPATH@/components/xpcom_base.xpt
+@BINPATH@/components/xpcom_system.xpt
+@BINPATH@/components/xpcom_components.xpt
+@BINPATH@/components/xpcom_ds.xpt
+@BINPATH@/components/xpcom_io.xpt
+@BINPATH@/components/xpcom_threads.xpt
+@BINPATH@/components/xpcom_xpti.xpt
+@BINPATH@/components/xpconnect.xpt
+@BINPATH@/components/xulapp.xpt
+@BINPATH@/components/xul.xpt
+@BINPATH@/components/zipwriter.xpt
 
 ; JavaScript components
 @BINPATH@/components/ConsoleAPI.manifest
@@ -146,6 +304,7 @@
 #endif
 #endif
 
+@BINPATH@/components/webvtt.xpt
 @BINPATH@/components/WebVTT.manifest
 @BINPATH@/components/WebVTTParserWrapper.js
 
@@ -207,6 +366,10 @@
 @BINPATH@/components/CaptivePortalDetectComponents.manifest
 @BINPATH@/components/captivedetect.js
 
+#ifdef MOZ_WEBSPEECH
+@BINPATH@/components/dom_webspeechsynth.xpt
+#endif
+
 #if defined(ENABLE_TESTS) && defined(MOZ_DEBUG)
 @BINPATH@/components/TestInterfaceJS.js
 @BINPATH@/components/TestInterfaceJS.manifest
@@ -241,8 +404,10 @@
 @BINPATH@/components/nsUrlClassifierHashCompleter.js
 @BINPATH@/components/nsUrlClassifierListManager.js
 @BINPATH@/components/nsUrlClassifierLib.js
+@BINPATH@/components/url-classifier.xpt
 
 ; Private Browsing
+@BINPATH@/components/privatebrowsing.xpt
 @BINPATH@/components/PrivateBrowsing.manifest
 @BINPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
 
@@ -317,6 +482,10 @@
 ; svg
 @BINPATH@/res/svg.css
 
+; [Personal Security Manager]
+;
+@BINPATH@/components/pipnss.xpt
+
 ; For process sandboxing
 #if defined(MOZ_SANDBOX)
 @BINPATH@/@DLL_PREFIX@mozsandbox@DLL_SUFFIX@
@@ -329,6 +498,8 @@
 @BINPATH@/crashreporter.ini
 @BINPATH@/crashreporter-override.ini
 #endif
+
+@BINPATH@/components/dom_audiochannel.xpt
 
 @BINPATH@/components/RemoteWebNavigation.js
 @BINPATH@/components/remotebrowserutils.manifest
@@ -360,6 +531,7 @@
 @BINPATH@/components/HelperAppDialog.js
 @BINPATH@/components/LoginManagerPrompter.js
 @BINPATH@/components/MobileComponents.manifest
+@BINPATH@/components/MobileComponents.xpt
 @BINPATH@/components/NSSDialogService.js
 @BINPATH@/components/PersistentNotificationHandler.js
 @BINPATH@/components/PresentationDevicePrompt.js
@@ -380,6 +552,9 @@
 #ifdef PKG_LOCALE_MANIFEST
 #include @PKG_LOCALE_MANIFEST@
 #endif
+
+; Background Hang Monitor
+@BINPATH@/components/backgroundhangmonitor.xpt
 
 ; NOTE: This must match the config checks in
 ; /toolkit/components/backgroundhangmonitor/moz.build.
