@@ -27,3 +27,5 @@ win64.patch: SSE2 optimization for Microsoft Visual C++ x64 version
 TypeFromSize.patch: Bug 656185 - Add a method to detect YUVType from plane sizes.
 
 QuellGccWarnings.patch: Bug 711895 - Avoid some GCC compilation warnings.
+
+clang-cl-workaround.patch: Bug 1422368 - Work around a clang-cl unresolved symbol bug.
