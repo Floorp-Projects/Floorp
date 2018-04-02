@@ -121,10 +121,9 @@ private:
   void CheckBitsForLazyFrameConstruction(nsIContent*) {}
 #endif
 
-  // Issues a single ContentInserted for each child of aContainer in the range
+  // Issues a single ContentInserted for each child in the range
   // [aStartChild, aEndChild).
-  void IssueSingleInsertNofications(nsIContent* aContainer,
-                                    nsIContent* aStartChild,
+  void IssueSingleInsertNofications(nsIContent* aStartChild,
                                     nsIContent* aEndChild,
                                     InsertionKind);
 
@@ -166,14 +165,16 @@ private:
   };
 
   /**
-   * Checks if the children of aContainer in the range [aStartChild, aEndChild)
-   * can be inserted/appended to one insertion point together. If so, returns
-   * that insertion point. If not, returns with InsertionPoint.mFrame == nullptr
-   * and issues single ContentInserted calls for each child.
+   * Checks if the children in the range [aStartChild, aEndChild) can be
+   * inserted/appended to one insertion point together.
+   *
+   * If so, returns that insertion point. If not, returns with
+   * InsertionPoint.mFrame == nullptr and issues single ContentInserted calls
+   * for each child.
+   *
    * aEndChild = nullptr indicates that we are dealing with an append.
    */
-  InsertionPoint GetRangeInsertionPoint(nsIContent* aContainer,
-                                        nsIContent* aStartChild,
+  InsertionPoint GetRangeInsertionPoint(nsIContent* aStartChild,
                                         nsIContent* aEndChild,
                                         InsertionKind);
 
@@ -249,27 +250,22 @@ public:
 
   // If aInsertionKind is Async then frame construction of the new children can
   // be done lazily.
-  void ContentAppended(nsIContent* aContainer,
-                       nsIContent* aFirstNewContent,
-                       InsertionKind aInsertionKind);
+  void ContentAppended(nsIContent* aFirstNewContent, InsertionKind);
 
   // If aInsertionkind is Async then frame construction of the new child
   // can be done lazily.
-  void ContentInserted(nsIContent* aContainer,
-                       nsIContent* aChild,
+  void ContentInserted(nsIContent* aChild,
                        nsILayoutHistoryState* aFrameState,
                        InsertionKind aInsertionKind);
 
-  // Like ContentInserted but handles inserting the children of aContainer in
-  // the range [aStartChild, aEndChild).  aStartChild must be non-null.
-  // aEndChild may be null to indicate the range includes all kids after
-  // aStartChild.
+  // Like ContentInserted but handles inserting the children in the range
+  // [aStartChild, aEndChild).  aStartChild must be non-null.  aEndChild may be
+  // null to indicate the range includes all kids after aStartChild.
   //
   // If aInsertionKind is Async then frame construction of the new children can
   // be done lazily. It is only allowed to be Async when inserting a single
   // node.
-  void ContentRangeInserted(nsIContent* aContainer,
-                            nsIContent* aStartChild,
+  void ContentRangeInserted(nsIContent* aStartChild,
                             nsIContent* aEndChild,
                             nsILayoutHistoryState* aFrameState,
                             InsertionKind aInsertionKind);
@@ -280,7 +276,7 @@ public:
   };
 
   /**
-   * Recreate or destroy frames for aChild in aContainer.
+   * Recreate or destroy frames for aChild.
    *
    * aFlags == REMOVE_CONTENT means aChild has been removed from the document.
    * aFlags == REMOVE_FOR_RECONSTRUCTION means the caller will reconstruct the
@@ -295,8 +291,7 @@ public:
    * at some ancestor of aChild's frame was destroyed and will be reconstructed
    * async.
    */
-  bool ContentRemoved(nsIContent* aContainer,
-                      nsIContent* aChild,
+  bool ContentRemoved(nsIContent* aChild,
                       nsIContent* aOldNextSibling,
                       RemoveFlags aFlags);
 
@@ -1443,10 +1438,9 @@ private:
                            nsIContent* aPossibleTextContent,
                            FrameConstructionItemList& aItems);
 
-  // If aParentContent's child aContent is a text node and
-  // doesn't have a frame, try to create a frame for it.
-  void ReframeTextIfNeeded(nsIContent* aParentContent,
-                           nsIContent* aContent);
+  // If aContent is a text node and doesn't have a frame, try to create a frame
+  // for it.
+  void ReframeTextIfNeeded(nsIContent* aContent);
 
   void AddPageBreakItem(nsIContent* aContent,
                         FrameConstructionItemList& aItems);

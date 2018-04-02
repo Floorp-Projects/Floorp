@@ -752,8 +752,8 @@ SendA11yNotifications(nsPresContext* aPresContext,
   if (needsNotify) {
     nsIPresShell* presShell = aPresContext->PresShell();
     if (isVisible) {
-      accService->ContentRangeInserted(presShell, aElement->GetParent(),
-                                       aElement, aElement->GetNextSibling());
+      accService->ContentRangeInserted(
+        presShell, aElement, aElement->GetNextSibling());
       // We are adding the subtree. Accessibility service would handle
       // descendants, so we should just skip them from notifying.
       return Flags::SkipA11yNotifications;
