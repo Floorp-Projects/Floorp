@@ -245,6 +245,7 @@ class AndroidArtifactJob(ArtifactJob):
         'application.ini',
         'platform.ini',
         '**/*.so',
+        '**/interfaces.xpt',
     }
 
     def process_package_artifact(self, filename, processed_filename):
@@ -282,6 +283,7 @@ class LinuxArtifactJob(ArtifactJob):
         'firefox/plugin-container',
         'firefox/updater',
         'firefox/**/*.so',
+        'firefox/**/interfaces.xpt',
     }
 
     def process_package_artifact(self, filename, processed_filename):
@@ -380,6 +382,7 @@ class MacArtifactJob(ArtifactJob):
                     'gmp-clearkey/0.1/libclearkey.dylib',
                     # 'gmp-fake/1.0/libfake.dylib',
                     # 'gmp-fakeopenh264/1.0/libfakeopenh264.dylib',
+                    '**/interfaces.xpt',
                 ]),
             ]
 
@@ -422,6 +425,7 @@ class WinArtifactJob(ArtifactJob):
         'firefox/application.ini',
         'firefox/**/*.dll',
         'firefox/*.exe',
+        'firefox/**/interfaces.xpt',
         'firefox/*.tlb',
     }
 

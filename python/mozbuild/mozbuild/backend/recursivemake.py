@@ -1063,6 +1063,8 @@ class RecursiveMakeBackend(CommonBackend):
 
         modules = manager.modules
         xpt_modules = sorted(modules.keys())
+        xpt_files = set()
+        registered_xpt_files = set()
 
         mk = Makefile()
 
@@ -1080,12 +1082,36 @@ class RecursiveMakeBackend(CommonBackend):
             # listing the .idls here, we ensure the make file has a
             # reference to the new .idl. Since the new .idl presumably has
             # an mtime newer than the .xpt, it will trigger xpt generation.
+            xpt_path = '$(DEPTH)/%s/components/%s.xpt' % (install_target, module)
+            xpt_files.add(xpt_path)
             mk.add_statement('%s_deps = %s' % (module, ' '.join(deps)))
 
-            build_files.add_optional_exists('%s.xpt' % module)
+            if install_target.startswith('dist/'):
+                path = mozpath.relpath(xpt_path, '$(DEPTH)/dist')
+                prefix, subpath = path.split('/', 1)
+                key = 'dist_%s' % prefix
+
+                self._install_manifests[key].add_optional_exists(subpath)
 
         rules = StringIO()
         mk.dump(rules, removal_guard=False)
+
+        interfaces_manifests = []
+        dist_dir = mozpath.join(self.environment.topobjdir, 'dist')
+        for manifest, entries in manager.interface_manifests.items():
+            interfaces_manifests.append(mozpath.join('$(DEPTH)', manifest))
+            for xpt in sorted(entries):
+                registered_xpt_files.add(mozpath.join(
+                    '$(DEPTH)', mozpath.dirname(manifest), xpt))
+
+            if install_target.startswith('dist/'):
+                path = mozpath.join(self.environment.topobjdir, manifest)
+                path = mozpath.relpath(path, dist_dir)
+                prefix, subpath = path.split('/', 1)
+                key = 'dist_%s' % prefix
+                self._install_manifests[key].add_optional_exists(subpath)
+
+        chrome_manifests = [mozpath.join('$(DEPTH)', m) for m in sorted(manager.chrome_manifests)]
 
         # Create dependency for output header so we force regeneration if the
         # header was deleted. This ideally should not be necessary. However,
@@ -1101,8 +1127,12 @@ class RecursiveMakeBackend(CommonBackend):
         obj.topobjdir = self.environment.topobjdir
         obj.config = self.environment
         self._create_makefile(obj, extra=dict(
+            chrome_manifests = ' '.join(chrome_manifests),
+            interfaces_manifests = ' '.join(interfaces_manifests),
             xpidl_rules=rules.getvalue(),
             xpidl_modules=' '.join(xpt_modules),
+            xpt_files=' '.join(sorted(xpt_files - registered_xpt_files)),
+            registered_xpt_files=' '.join(sorted(registered_xpt_files)),
         ))
 
     def _process_program(self, obj, backend_file):
