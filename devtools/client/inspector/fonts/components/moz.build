@@ -6,6 +6,7 @@
 
 DevToolsModules(
     'Font.js',
+    'FontAxis.js',
     'FontEditor.js',
     'FontList.js',
     'FontOverview.js',

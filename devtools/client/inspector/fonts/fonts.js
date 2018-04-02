@@ -19,9 +19,18 @@ const INSPECTOR_L10N =
 
 const { updateFonts } = require("./actions/fonts");
 const { updatePreviewText } = require("./actions/font-options");
-const { toggleFontEditor } = require("./actions/font-editor");
+const { resetFontEditor, toggleFontEditor, updateAxis, updateFontEditor } =
+  require("./actions/font-editor");
 
 const FONT_EDITOR_ID = "fonteditor";
+const FONT_PROPERTIES = [
+  "font-optical-sizing",
+  "font-size",
+  "font-stretch",
+  "font-style",
+  "font-variation-settings",
+  "font-weight",
+];
 
 class FontInspector {
   constructor(inspector, window) {
@@ -33,6 +42,7 @@ class FontInspector {
     this.store = this.inspector.store;
 
     this.update = this.update.bind(this);
+    this.onAxisUpdate = this.onAxisUpdate.bind(this);
     this.onNewNode = this.onNewNode.bind(this);
     this.onPreviewFonts = this.onPreviewFonts.bind(this);
     this.onRuleSelected = this.onRuleSelected.bind(this);
@@ -49,6 +59,7 @@ class FontInspector {
 
     let fontsApp = FontsApp({
       onPreviewFonts: this.onPreviewFonts,
+      onAxisUpdate: this.onAxisUpdate,
     });
 
     let provider = createElement(Provider, {
@@ -146,6 +157,19 @@ class FontInspector {
   }
 
   /**
+   * Handler for changes of font axis value. Updates the value in the store and previews
+   * the change on the page.
+   *
+   * @param {String} tag
+   *        Tag name of the font axis.
+   * @param {String} value
+   *        Value of the font axis.
+   */
+  onAxisUpdate(tag, value) {
+    this.store.dispatch(updateAxis(tag, value));
+  }
+
+  /**
    * Selection 'new-node' event handler.
    */
   onNewNode() {
@@ -173,11 +197,13 @@ class FontInspector {
    *        - {String} editorId - id of the editor for which the rule was selected
    *        - {Rule} rule - reference to rule that was selected
    */
-  onRuleSelected(eventData) {
+  async onRuleSelected(eventData) {
     const { editorId, rule } = eventData;
     if (editorId === FONT_EDITOR_ID) {
       const selector = rule.matchedSelectors[0];
       this.selectedRule = rule;
+
+      await this.refreshFontEditor();
       this.store.dispatch(toggleFontEditor(true, selector));
     }
   }
@@ -198,6 +224,7 @@ class FontInspector {
     if (editorId === FONT_EDITOR_ID && rule == this.selectedRule) {
       this.selectedRule = null;
       this.store.dispatch(toggleFontEditor(false));
+      this.store.dispatch(resetFontEditor());
     }
   }
 
@@ -207,6 +234,46 @@ class FontInspector {
   onThemeChanged(frame) {
     if (frame === this.document.defaultView) {
       this.update();
+    }
+  }
+
+  /**
+   * Update the state of the font editor with:
+   * - the fonts which apply to the current node;
+   * - the CSS font properties declared on the selected rule.
+   *
+   * This method is called during initial setup and as a result of any property
+   * values change in the Rule view. For the latter case, we do a deep compare between the
+   * font properties on the selected rule and the ones already store to decide if to
+   * update the font edtior to reflect a new external state.
+   */
+  async refreshFontEditor() {
+    if (!this.selectedRule || !this.inspector || !this.store) {
+      return;
+    }
+
+    const options = {};
+    if (this.pageStyle.supportsFontVariations) {
+      options.includeVariations = true;
+    }
+
+    const node = this.inspector.selection.nodeFront;
+    const fonts = await this.getFontsForNode(node, options);
+    // Collect any expected font properties and their values from the selected rule.
+    const properties = this.selectedRule.textProps.reduce((acc, prop) => {
+      if (FONT_PROPERTIES.includes(prop.name)) {
+        acc[prop.name] = prop.value;
+      }
+
+      return acc;
+    }, {});
+
+    const fontEditor = this.store.getState().fontEditor;
+
+    // Update the font editor state only if property values in rule differ from store.
+    // This can happen when a user makes manual edits to the values in the rule view.
+    if (JSON.stringify(properties) !== JSON.stringify(fontEditor.properties)) {
+      this.store.dispatch(updateFontEditor(fonts, properties));
     }
   }
 
