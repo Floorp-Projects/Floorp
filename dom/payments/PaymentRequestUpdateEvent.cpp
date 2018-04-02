@@ -64,6 +64,8 @@ PaymentRequestUpdateEvent::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value
   // Converting value to a PaymentDetailsUpdate dictionary
   PaymentDetailsUpdate details;
   if (!details.Init(aCx, aValue)) {
+    mRequest->AbortUpdate(NS_ERROR_TYPE_ERR);
+    JS_ClearPendingException(aCx);
     return;
   }
 
