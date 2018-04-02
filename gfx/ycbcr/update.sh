@@ -10,4 +10,3 @@ patch -p3 <convert.patch
 patch -p3 <win64.patch
 patch -p3 <TypeFromSize.patch
 patch -p3 <QuellGccWarnings.patch
-patch -p3 <clang-cl-workaround.patch
