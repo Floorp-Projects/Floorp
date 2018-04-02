@@ -34,6 +34,7 @@ function gInit(perfFront) {
           throw new Error("No browser window");
         }
         browser = win.gBrowser;
+        Services.focus.activeWindow = win;
       }
       const tab = browser.addTab("https://perf-html.io/from-addon");
       browser.selectedTab = tab;

@@ -7,6 +7,8 @@
 
 #include "mac_utils.h"
 #include "nsXPCOM.h"
+#include "mozilla/MacStringHelpers.h"
+#include "mozilla/Unused.h"
 
 void GetObjCExceptionInfo(void* inException, nsACString& outString)
 {
@@ -14,28 +16,15 @@ void GetObjCExceptionInfo(void* inException, nsACString& outString)
 
   NSString* name = [e name];
   NSString* reason = [e reason];
-  unsigned int nameLength = [name length];
-  unsigned int reasonLength = [reason length];
 
-  unichar* nameBuffer = (unichar*)moz_xmalloc(sizeof(unichar) * (nameLength + 1));
-  if (!nameBuffer)
-    return;
-  unichar* reasonBuffer = (unichar*)moz_xmalloc(sizeof(unichar) * (reasonLength + 1));
-  if (!reasonBuffer) {
-    free(nameBuffer);
-    return;
-  }
+  nsAutoString nameStr;
+  nsAutoString reasonStr;
 
-  [name getCharacters:nameBuffer];
-  [reason getCharacters:reasonBuffer];
-  nameBuffer[nameLength] = '\0';
-  reasonBuffer[reasonLength] = '\0';
+  mozilla::Unused << mozilla::CopyCocoaStringToXPCOMString(name, nameStr);
+  mozilla::Unused << mozilla::CopyCocoaStringToXPCOMString(reason, reasonStr);
 
   outString.AssignLiteral("\nObj-C Exception data:\n");
-  AppendUTF16toUTF8(reinterpret_cast<const char16_t*>(nameBuffer), outString);
+  AppendUTF16toUTF8(nameStr, outString);
   outString.AppendLiteral(": ");
-  AppendUTF16toUTF8(reinterpret_cast<const char16_t*>(reasonBuffer), outString);
-
-  free(nameBuffer);
-  free(reasonBuffer);
+  AppendUTF16toUTF8(reasonStr, outString);
 }
