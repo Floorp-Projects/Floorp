@@ -338,11 +338,63 @@ public class GeckoSession extends LayerSession
             }
         };
 
+    private final GeckoSessionHandler<SelectionActionDelegate> mSelectionActionDelegate =
+        new GeckoSessionHandler<SelectionActionDelegate>(
+            "GeckoViewSelectionAction", this,
+            new String[] {
+                "GeckoView:HideSelectionAction",
+                "GeckoView:ShowSelectionAction",
+            }
+        ) {
+            @Override
+            public void handleMessage(final SelectionActionDelegate delegate,
+                                      final String event,
+                                      final GeckoBundle message,
+                                      final EventCallback callback) {
+                if ("GeckoView:ShowSelectionAction".equals(event)) {
+                    final SelectionActionDelegate.Selection selection =
+                            new SelectionActionDelegate.Selection(message);
+
+                    final String[] actions = message.getStringArray("actions");
+                    final int seqNo = message.getInt("seqNo");
+                    final Response<String> response = new Response<String>() {
+                        @Override
+                        public void respond(final String action) {
+                            final GeckoBundle response = new GeckoBundle(2);
+                            response.putString("id", action);
+                            response.putInt("seqNo", seqNo);
+                            callback.sendSuccess(response);
+                        }
+                    };
+
+                    delegate.onShowActionRequest(GeckoSession.this, selection,
+                                                 actions, response);
+
+                } else if ("GeckoView:HideSelectionAction".equals(event)) {
+                    final String reasonString = message.getString("reason");
+                    final int reason;
+                    if ("invisibleselection".equals(reasonString)) {
+                        reason = SelectionActionDelegate.HIDE_REASON_INVISIBLE_SELECTION;
+                    } else if ("presscaret".equals(reasonString)) {
+                        reason = SelectionActionDelegate.HIDE_REASON_ACTIVE_SELECTION;
+                    } else if ("scroll".equals(reasonString)) {
+                        reason = SelectionActionDelegate.HIDE_REASON_ACTIVE_SCROLL;
+                    } else if ("visibilitychange".equals(reasonString)) {
+                        reason = SelectionActionDelegate.HIDE_REASON_NO_SELECTION;
+                    } else {
+                        throw new IllegalArgumentException();
+                    }
+
+                    delegate.onHideAction(GeckoSession.this, reason);
+                }
+            }
+        };
+
     /* package */ int handlersCount;
 
     private final GeckoSessionHandler<?>[] mSessionHandlers = new GeckoSessionHandler<?>[] {
         mContentHandler, mNavigationHandler, mProgressHandler, mScrollHandler,
-        mTrackingProtectionHandler, mPermissionHandler
+        mTrackingProtectionHandler, mPermissionHandler, mSelectionActionDelegate
     };
 
     private static class PermissionCallback implements
@@ -1133,6 +1185,24 @@ public class GeckoSession extends LayerSession
      */
     public PromptDelegate getPromptDelegate() {
         return mPromptDelegate;
+    }
+
+    /**
+     * Set the current selection action delegate for this GeckoSession.
+     *
+     * @param delegate SelectionActionDelegate instance or null to unset.
+     */
+    public void setSelectionActionDelegate(@Nullable SelectionActionDelegate delegate) {
+        mSelectionActionDelegate.setDelegate(delegate, this);
+    }
+
+    /**
+     * Get the current selection action delegate for this GeckoSession.
+     *
+     * @return SelectionActionDelegate instance or null if not set.
+     */
+    public @Nullable SelectionActionDelegate getSelectionActionDelegate() {
+        return mSelectionActionDelegate.getDelegate();
     }
 
     private static class PromptCallback implements
