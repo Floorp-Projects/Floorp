@@ -24,12 +24,12 @@ class FontEditor extends PureComponent {
    * Naive implementation to get increment step for variable font axis that ensures
    * a wide spectrum of precision based on range of values between min and max.
    *
-   * @param {Number|String} min
-   *        Minumum value for range.
-   * @param {Number|String} max
-   *        Maximum value for range.
+   * @param  {Number|String} min
+   *         Minumum value for range.
+   * @param  {Number|String} max
+   *         Maximum value for range.
    * @return {String}
-   *        Step value used in range input for font axis.
+   *         Step value used in range input for font axis.
    */
   getAxisStep(min, max) {
     let step = 1;
@@ -50,11 +50,11 @@ class FontEditor extends PureComponent {
    * Get an array of FontAxis components for of the given variable font axis instances.
    * If an axis is defined in the fontEditor store, use its value, else use the default.
    *
-   * @param {Array} fontAxes
-   *        Array of font axis instances
-   * @param {Object} editedAxes
-   *        Object with axes and values edited by the user or predefined in the CSS
-   *        declaration for font-variation-settings.
+   * @param  {Array} fontAxes
+   *         Array of font axis instances
+   * @param  {Object} editedAxes
+   *         Object with axes and values edited by the user or predefined in the CSS
+   *         declaration for font-variation-settings.
    * @return {Array}
   *          Array of FontAxis components
    */
