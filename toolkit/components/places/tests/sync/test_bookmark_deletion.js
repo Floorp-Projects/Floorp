@@ -114,7 +114,7 @@ add_task(async function test_complex_orphaning() {
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
   deepEqual(mergeTelemetryEvents, [{
     value: "structure",
-    extra: { new: "2", localFolderDel: "1", remoteFolderDel: "1" },
+    extra: { new: "2", localDeletes: "1", remoteDeletes: "1" },
   }], "Should record telemetry with structure change counts");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
@@ -306,7 +306,7 @@ add_task(async function test_locally_modified_remotely_deleted() {
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
   deepEqual(mergeTelemetryEvents, [{
     value: "structure",
-    extra: { new: "1", localItemDel: "1", remoteFolderDel: "2" },
+    extra: { new: "1", localRevives: "1", remoteDeletes: "2" },
   }], "Should record telemetry for local item and remote folder deletions");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
@@ -453,7 +453,7 @@ add_task(async function test_locally_deleted_remotely_modified() {
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
   deepEqual(mergeTelemetryEvents, [{
     value: "structure",
-    extra: { new: "1", remoteItemDel: "1", localFolderDel: "2" },
+    extra: { new: "1", remoteRevives: "1", localDeletes: "2" },
   }], "Should record telemetry for remote item and local folder deletions");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
