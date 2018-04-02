@@ -2998,12 +2998,16 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsAtom* aOrig
   }
 }
 
-static int32_t
+static Maybe<int32_t>
 MaxZIndexInList(nsDisplayList* aList, nsDisplayListBuilder* aBuilder)
 {
-  int32_t maxZIndex = -1;
+  Maybe<int32_t> maxZIndex = Nothing();
   for (nsDisplayItem* item = aList->GetBottom(); item; item = item->GetAbove()) {
-    maxZIndex = std::max(maxZIndex, item->ZIndex());
+    if (!maxZIndex) {
+      maxZIndex = Some(item->ZIndex());
+    } else {
+      maxZIndex = Some(std::max(maxZIndex.value(), item->ZIndex()));
+    }
   }
   return maxZIndex;
 }
@@ -3012,10 +3016,10 @@ template<class T>
 static void
 AppendInternalItemToTop(const nsDisplayListSet& aLists,
                         T* aItem,
-                        int32_t aZIndex)
+                        const Maybe<int32_t>& aZIndex)
 {
-  if (aZIndex >= 0) {
-    aItem->SetOverrideZIndex(aZIndex);
+  if (aZIndex) {
+    aItem->SetOverrideZIndex(aZIndex.value());
     aLists.PositionedDescendants()->AppendToTop(aItem);
   } else {
     aLists.Content()->AppendToTop(aItem);
@@ -3060,9 +3064,12 @@ AppendToTop(nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists,
     // We want overlay scrollbars to always be on top of the scrolled content,
     // but we don't want them to unnecessarily cover overlapping elements from
     // outside our scroll frame.
-    int32_t zIndex = -1;
+    Maybe<int32_t> zIndex = Nothing();
     if (aFlags & APPEND_OVERLAY) {
       zIndex = MaxZIndexInList(aLists.PositionedDescendants(), aBuilder);
+    } else if (aSourceFrame->StylePosition()->mZIndex.GetUnit() == eStyleUnit_Integer) {
+      zIndex = Some(aSourceFrame->StylePosition()->mZIndex.GetIntValue());
+
     }
     AppendInternalItemToTop(aLists, newItem, zIndex);
   } else {
@@ -3705,13 +3712,13 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         nsDisplayCompositorHitTestInfo* hitInfo =
             MakeDisplayItem<nsDisplayCompositorHitTestInfo>(aBuilder, mScrolledFrame, info, 1,
                 Some(mScrollPort + aBuilder->ToReferenceFrame(mOuter)));
-        AppendInternalItemToTop(scrolledContent, hitInfo, INT32_MAX);
+        AppendInternalItemToTop(scrolledContent, hitInfo, Some(INT32_MAX));
       }
       if (aBuilder->IsBuildingLayerEventRegions()) {
         nsDisplayLayerEventRegions* inactiveRegionItem =
             MakeDisplayItem<nsDisplayLayerEventRegions>(aBuilder, mScrolledFrame, 1);
         inactiveRegionItem->AddInactiveScrollPort(mScrolledFrame, mScrollPort + aBuilder->ToReferenceFrame(mOuter));
-        AppendInternalItemToTop(scrolledContent, inactiveRegionItem, INT32_MAX);
+        AppendInternalItemToTop(scrolledContent, inactiveRegionItem, Some(INT32_MAX));
       }
     }
 
