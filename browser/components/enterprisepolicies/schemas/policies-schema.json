@@ -98,6 +98,18 @@
       }
     },
 
+    "Certificates": {
+      "description": "Whether or not to use built in certs.",
+      "first_available": "60.0",
+
+      "type": "object",
+      "properties": {
+        "ImportEnterpriseRoots": {
+          "type": "boolean"
+        }
+      }
+    },
+
     "Cookies": {
       "description": "Allow or deny websites to set cookies.",
       "first_available": "60.0",
