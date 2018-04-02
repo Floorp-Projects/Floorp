@@ -14,6 +14,7 @@ const {
   SHOW_OBJECT_IN_SIDEBAR,
   TIMESTAMPS_TOGGLE,
   MESSAGES_CLEAR,
+  SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
 } = require("devtools/client/webconsole/constants");
 
 const {
@@ -27,7 +28,8 @@ const UiState = (overrides) => Object.freeze(Object.assign({
   persistLogs: false,
   sidebarVisible: false,
   timestampsVisible: true,
-  gripInSidebar: null
+  gripInSidebar: null,
+  closeButtonVisible: false,
 }, overrides));
 
 function ui(state = UiState(), action) {
@@ -54,6 +56,8 @@ function ui(state = UiState(), action) {
         return state;
       }
       return Object.assign({}, state, {sidebarVisible: true, gripInSidebar: action.grip});
+    case SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE:
+      return Object.assign({}, state, {closeButtonVisible: action.shouldDisplayButton});
   }
 
   return state;
