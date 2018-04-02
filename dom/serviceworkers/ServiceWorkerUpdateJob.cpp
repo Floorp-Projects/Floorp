@@ -548,14 +548,6 @@ ServiceWorkerUpdateJob::Install(ServiceWorkerManager* aSWM)
       mRegistration);
   NS_DispatchToMainThread(upr);
 
-  // Call ContinueAfterInstallEvent(false) on main thread if the SW
-  // script fails to load.
-  nsCOMPtr<nsIRunnable> failRunnable = NewRunnableMethod<bool>(
-    "dom::ServiceWorkerUpdateJob::ContinueAfterInstallEvent",
-    this,
-    &ServiceWorkerUpdateJob::ContinueAfterInstallEvent,
-    false);
-
   nsMainThreadPtrHandle<ServiceWorkerUpdateJob> handle(
     new nsMainThreadPtrHolder<ServiceWorkerUpdateJob>(
       "ServiceWorkerUpdateJob", this));
@@ -565,7 +557,7 @@ ServiceWorkerUpdateJob::Install(ServiceWorkerManager* aSWM)
   ServiceWorkerPrivate* workerPrivate =
     mRegistration->GetInstalling()->WorkerPrivate();
   nsresult rv = workerPrivate->SendLifeCycleEvent(NS_LITERAL_STRING("install"),
-                                                  callback, failRunnable);
+                                                  callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ContinueAfterInstallEvent(false /* aSuccess */);
   }
