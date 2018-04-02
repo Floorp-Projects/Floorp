@@ -12,7 +12,9 @@ import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.gfx.GeckoDisplay;
 import org.mozilla.gecko.InputMethods;
+import org.mozilla.gecko.util.ActivityUtils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -50,6 +52,8 @@ public class GeckoView extends FrameLayout {
     protected SurfaceView mSurfaceView;
 
     private boolean mIsResettingFocus;
+
+    private GeckoSession.SelectionActionDelegate mSelectionActionDelegate;
 
     private static class SavedState extends BaseSavedState {
         public final GeckoSession session;
@@ -177,6 +181,11 @@ public class GeckoView extends FrameLayout {
                                            ViewGroup.LayoutParams.MATCH_PARENT));
 
         mSurfaceView.getHolder().addCallback(mDisplay);
+
+        final Activity activity = ActivityUtils.getActivityFromContext(getContext());
+        if (activity != null) {
+            mSelectionActionDelegate = new BasicSelectionActionDelegate(activity);
+        }
     }
 
     /**
@@ -201,6 +210,9 @@ public class GeckoView extends FrameLayout {
         mSession.releaseDisplay(mDisplay.release());
         mSession.getOverscrollEdgeEffect().setInvalidationCallback(null);
         mSession.getCompositorController().setFirstPaintCallback(null);
+        if (session.getSelectionActionDelegate() == mSelectionActionDelegate) {
+            mSession.setSelectionActionDelegate(null);
+        }
         mSession = null;
         return session;
     }
@@ -217,6 +229,7 @@ public class GeckoView extends FrameLayout {
         }
 
         mDisplay.acquire(session.acquireDisplay());
+
         final Context context = getContext();
         session.getOverscrollEdgeEffect().setTheme(context);
         session.getOverscrollEdgeEffect().setInvalidationCallback(new Runnable() {
@@ -245,6 +258,10 @@ public class GeckoView extends FrameLayout {
                 coverUntilFirstPaint(Color.TRANSPARENT);
             }
         });
+
+        if (session.getSelectionActionDelegate() == null && mSelectionActionDelegate != null) {
+            session.setSelectionActionDelegate(mSelectionActionDelegate);
+        }
     }
 
     public GeckoSession getSession() {
