@@ -3306,19 +3306,6 @@ WorkerPrivate::AfterProcessNextEvent()
   MOZ_ASSERT(CycleCollectedJSContext::Get()->RecursionDepth());
 }
 
-void
-WorkerPrivate::MaybeDispatchLoadFailedRunnable()
-{
-  AssertIsOnWorkerThread();
-
-  nsCOMPtr<nsIRunnable> runnable = StealLoadFailedAsyncRunnable();
-  if (!runnable) {
-    return;
-  }
-
-  MOZ_ALWAYS_SUCCEEDS(DispatchToMainThread(runnable.forget()));
-}
-
 nsIEventTarget*
 WorkerPrivate::MainThreadEventTarget()
 {
