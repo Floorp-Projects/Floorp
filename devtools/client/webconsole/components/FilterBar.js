@@ -33,6 +33,8 @@ class FilterBar extends Component {
       persistLogs: PropTypes.bool.isRequired,
       hidePersistLogsCheckbox: PropTypes.bool.isRequired,
       filteredMessagesCount: PropTypes.object.isRequired,
+      closeButtonVisible: PropTypes.bool,
+      closeSplitConsole: PropTypes.func,
     };
   }
 
@@ -62,22 +64,34 @@ class FilterBar extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    if (nextProps.filter !== this.props.filter) {
+    const {
+      filter,
+      filterBarVisible,
+      persistLogs,
+      filteredMessagesCount,
+      closeButtonVisible,
+    } = this.props;
+
+    if (nextProps.filter !== filter) {
       return true;
     }
 
-    if (nextProps.filterBarVisible !== this.props.filterBarVisible) {
+    if (nextProps.filterBarVisible !== filterBarVisible) {
       return true;
     }
 
-    if (nextProps.persistLogs !== this.props.persistLogs) {
+    if (nextProps.persistLogs !== persistLogs) {
       return true;
     }
 
     if (
-      JSON.stringify(nextProps.filteredMessagesCount)
-      !== JSON.stringify(this.props.filteredMessagesCount)
+      JSON.stringify(nextProps.filteredMessagesCount) !==
+        JSON.stringify(filteredMessagesCount)
     ) {
+      return true;
+    }
+
+    if (nextProps.closeButtonVisible != closeButtonVisible) {
       return true;
     }
 
@@ -228,6 +242,7 @@ class FilterBar extends Component {
       persistLogs,
       filteredMessagesCount,
       hidePersistLogsCheckbox,
+      closeSplitConsole,
     } = this.props;
 
     let children = [
@@ -269,6 +284,21 @@ class FilterBar extends Component {
       children.push(this.renderFilteredMessagesBar());
     }
 
+    if (this.props.closeButtonVisible) {
+      children.push(dom.div(
+        {
+          className: "devtools-toolbar split-console-close-button-wrapper"
+        },
+        dom.button({
+          id: "split-console-close-button",
+          className: "devtools-button",
+          onClick: () => {
+            closeSplitConsole();
+          },
+        })
+      ));
+    }
+
     if (filterBarVisible) {
       children.push(this.renderFiltersConfigBar());
     }
@@ -292,6 +322,7 @@ function mapStateToProps(state) {
     filterBarVisible: uiState.filterBarVisible,
     persistLogs: uiState.persistLogs,
     filteredMessagesCount: getFilteredMessagesCount(state),
+    closeButtonVisible: uiState.closeButtonVisible,
   };
 }
 

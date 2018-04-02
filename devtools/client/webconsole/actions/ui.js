@@ -18,6 +18,7 @@ const {
   SIDEBAR_CLOSE,
   SHOW_OBJECT_IN_SIDEBAR,
   TIMESTAMPS_TOGGLE,
+  SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
 } = require("devtools/client/webconsole/constants");
 
 function filterBarToggle(show) {
@@ -66,6 +67,13 @@ function sidebarClose(show) {
   };
 }
 
+function splitConsoleCloseButtonToggle(shouldDisplayButton) {
+  return {
+    type: SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
+    shouldDisplayButton,
+  };
+}
+
 function showObjectInSidebar(actorId, messageId) {
   return (dispatch, getState) => {
     let { parameters } = getMessage(getState(), messageId);
@@ -91,4 +99,5 @@ module.exports = {
   sidebarClose,
   showObjectInSidebar,
   timestampsToggle,
+  splitConsoleCloseButtonToggle,
 };
