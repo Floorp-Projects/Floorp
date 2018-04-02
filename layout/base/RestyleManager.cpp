@@ -44,19 +44,22 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
 }
 
 void
-RestyleManager::ContentInserted(nsINode* aContainer, nsIContent* aChild)
+RestyleManager::ContentInserted(nsIContent* aChild)
 {
-  RestyleForInsertOrChange(aContainer, aChild);
+  MOZ_ASSERT(aChild->GetParentNode());
+  RestyleForInsertOrChange(aChild);
 }
 
 void
-RestyleManager::ContentAppended(nsIContent* aContainer, nsIContent* aFirstNewContent)
+RestyleManager::ContentAppended(nsIContent* aFirstNewContent)
 {
+  MOZ_ASSERT(aFirstNewContent->GetParent());
+
   // The container cannot be a document, but might be a ShadowRoot.
-  if (!aContainer->IsElement()) {
+  if (!aFirstNewContent->GetParentNode()->IsElement()) {
     return;
   }
-  Element* container = aContainer->AsElement();
+  Element* container = aFirstNewContent->GetParentNode()->AsElement();
 
 #ifdef DEBUG
   {
@@ -281,7 +284,7 @@ RestyleManager::CharacterDataChanged(nsIContent* aContent,
     // nodes and this not being an append.
     //
     // See the testcase in bug 1427625 for a test-case that triggers this.
-    RestyleForInsertOrChange(parent->AsElement(), aContent);
+    RestyleForInsertOrChange(aContent);
     return;
   }
 
@@ -320,14 +323,16 @@ RestyleManager::CharacterDataChanged(nsIContent* aContent,
 // The comments are written and variables are named in terms of it being
 // a ContentInserted notification.
 void
-RestyleManager::RestyleForInsertOrChange(nsINode* aContainer,
-                                         nsIContent* aChild)
+RestyleManager::RestyleForInsertOrChange(nsIContent* aChild)
 {
+  nsINode* parentNode = aChild->GetParentNode();
+
+  MOZ_ASSERT(parentNode);
   // The container might be a document or a ShadowRoot.
-  if (!aContainer->IsElement()) {
+  if (!parentNode->IsElement()) {
     return;
   }
-  Element* container = aContainer->AsElement();
+  Element* container = parentNode->AsElement();
 
   NS_ASSERTION(!aChild->IsRootOfAnonymousSubtree(),
                "anonymous nodes should not be in child lists");
@@ -365,10 +370,11 @@ RestyleManager::RestyleForInsertOrChange(nsINode* aContainer,
 }
 
 void
-RestyleManager::ContentRemoved(nsINode* aContainer,
-                               nsIContent* aOldChild,
+RestyleManager::ContentRemoved(nsIContent* aOldChild,
                                nsIContent* aFollowingSibling)
 {
+  MOZ_ASSERT(aOldChild->GetParentNode());
+
   // Computed style data isn't useful for detached nodes, and we'll need to
   // recompute it anyway if we ever insert the nodes back into a document.
   if (aOldChild->IsElement()) {
@@ -376,10 +382,10 @@ RestyleManager::ContentRemoved(nsINode* aContainer,
   }
 
   // The container might be a document or a ShadowRoot.
-  if (!aContainer->IsElement()) {
+  if (!aOldChild->GetParentNode()->IsElement()) {
     return;
   }
-  Element* container = aContainer->AsElement();
+  Element* container = aOldChild->GetParentNode()->AsElement();
 
   if (aOldChild->IsRootOfAnonymousSubtree()) {
     // This should be an assert, but this is called incorrectly in
@@ -1371,16 +1377,12 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
     if (i != lazyRangeStart) {
       nsIContent* start = aChangeList[lazyRangeStart].mContent;
       nsIContent* end = NextSiblingWhichMayHaveFrame(aChangeList[i-1].mContent);
-      nsIContent* container = start->GetParent();
-      MOZ_ASSERT(container);
       if (!end) {
         frameConstructor->ContentAppended(
-            container,
             start,
             nsCSSFrameConstructor::InsertionKind::Sync);
       } else {
         frameConstructor->ContentRangeInserted(
-            container,
             start,
             end,
             nullptr,
@@ -1425,7 +1427,8 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           frame->IsFieldSetFrame() ||
           frame->GetContentInsertionFrame() != frame) {
         // The frame has positioned children that need to be reparented, or
-        // it can't easily be converted to/from being an abs-pos container correctly.
+        // it can't easily be converted to/from being an abs-pos container
+        // correctly.
         hint |= nsChangeHint_ReconstructFrame;
       } else {
         for (nsIFrame* cont = frame; cont;
