@@ -6,6 +6,8 @@
 
 package org.mozilla.geckoview;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +31,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.RectF;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
@@ -40,6 +43,7 @@ import android.os.SystemClock;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringDef;
 import android.util.Base64;
 import android.util.Log;
 
@@ -1722,6 +1726,176 @@ public class GeckoSession extends LayerSession
          * @param response the WebResponseInfo for the external response
          */
         void onExternalResponse(GeckoSession session, WebResponseInfo response);
+    }
+
+    public interface SelectionActionDelegate {
+        @IntDef(flag = true, value = {FLAG_IS_COLLAPSED,
+                                      FLAG_IS_EDITABLE})
+        @interface Flag {}
+
+        /**
+         * The selection is collapsed at a single position.
+         */
+        final int FLAG_IS_COLLAPSED = 1;
+        /**
+         * The selection is inside editable content such as an input element or
+         * contentEditable node.
+         */
+        final int FLAG_IS_EDITABLE = 2;
+
+        @StringDef({ACTION_CUT,
+                    ACTION_COPY,
+                    ACTION_DELETE,
+                    ACTION_PASTE,
+                    ACTION_SELECT_ALL,
+                    ACTION_UNSELECT,
+                    ACTION_COLLAPSE_TO_START,
+                    ACTION_COLLAPSE_TO_END})
+        @interface Action {}
+
+        /**
+         * Copy onto the clipboard then delete the selected content. Selection
+         * must be editable.
+         */
+        final String ACTION_CUT = "org.mozilla.geckoview.CUT";
+        /**
+         * Copy the selected content onto the clipboard.
+         */
+        final String ACTION_COPY = "org.mozilla.geckoview.COPY";
+        /**
+         * Delete the selected content. Selection must be editable.
+         */
+        final String ACTION_DELETE = "org.mozilla.geckoview.DELETE";
+        /**
+         * Replace the selected content with the clipboard content. Selection
+         * must be editable.
+         */
+        final String ACTION_PASTE = "org.mozilla.geckoview.PASTE";
+        /**
+         * Select the entire content of the document or editor.
+         */
+        final String ACTION_SELECT_ALL = "org.mozilla.geckoview.SELECT_ALL";
+        /**
+         * Clear the current selection. Selection must not be editable.
+         */
+        final String ACTION_UNSELECT = "org.mozilla.geckoview.UNSELECT";
+        /**
+         * Collapse the current selection to its start position.
+         * Selection must be editable.
+         */
+        final String ACTION_COLLAPSE_TO_START = "org.mozilla.geckoview.COLLAPSE_TO_START";
+        /**
+         * Collapse the current selection to its end position.
+         * Selection must be editable.
+         */
+        final String ACTION_COLLAPSE_TO_END = "org.mozilla.geckoview.COLLAPSE_TO_END";
+
+        /**
+         * Represents attributes of a selection.
+         */
+        class Selection {
+            /**
+             * Flags describing the current selection, as a bitwise combination
+             * of the {@link #FLAG_IS_COLLAPSED FLAG_*} constants.
+             */
+            public final @Flag int flags;
+
+            /**
+             * Text content of the current selection. An empty string indicates the selection
+             * is collapsed or the selection cannot be represented as plain text.
+             */
+            public final String text;
+
+            /**
+             * The bounds of the current selection in client coordinates. Use {@link
+             * GeckoSession#getClientToScreenMatrix} to perform transformation to screen
+             * coordinates.
+             */
+            public final RectF clientRect;
+
+            /* package */ Selection(final GeckoBundle bundle) {
+                flags = (bundle.getBoolean("collapsed") ?
+                         SelectionActionDelegate.FLAG_IS_COLLAPSED : 0) |
+                        (bundle.getBoolean("editable") ?
+                         SelectionActionDelegate.FLAG_IS_EDITABLE : 0);
+                text = bundle.getString("selection");
+
+                final GeckoBundle rectBundle = bundle.getBundle("clientRect");
+                if (rectBundle == null) {
+                    clientRect = null;
+                } else {
+                    clientRect = new RectF((float) rectBundle.getDouble("left"),
+                                           (float) rectBundle.getDouble("top"),
+                                           (float) rectBundle.getDouble("right"),
+                                           (float) rectBundle.getDouble("bottom"));
+                }
+            }
+        }
+
+        /**
+         * Selection actions are available. Selection actions become available when the
+         * user selects some content in the document or editor. Inside an editor,
+         * selection actions can also become available when the user explicitly requests
+         * editor action UI, for example by tapping on the caret handle.
+         *
+         * In response to this callback, applications typically display a toolbar
+         * containing the selection actions. To perform a certain action, pass the Action
+         * object back through the response parameter, which may be used multiple times to
+         * perform multiple actions at once.
+         *
+         * Once a {@link #onHideAction} call (with particular reasons) or another {@link
+         * #onShowActionRequest} call is received, any previously received actions are no
+         * longer unavailable.
+         *
+         * @param session The GeckoSession that initiated the callback.
+         * @param selection Current selection attributes.
+         * @param actions List of built-in actions available.
+         * @param response Callback object for performing built-in actions. For example,
+         * {@code response.respond(actions[0])} performs the first action. May be used
+         * multiple times to perform multiple actions at once.
+         */
+        void onShowActionRequest(GeckoSession session, Selection selection,
+                                 @Action String[] actions, Response<String> response);
+
+        @IntDef({HIDE_REASON_NO_SELECTION,
+                 HIDE_REASON_INVISIBLE_SELECTION,
+                 HIDE_REASON_ACTIVE_SELECTION,
+                 HIDE_REASON_ACTIVE_SCROLL})
+        @interface HideReason {}
+
+        /**
+         * Actions are no longer available due to the user clearing the selection.
+         */
+        final int HIDE_REASON_NO_SELECTION = 0;
+        /**
+         * Actions are no longer available due to the user moving the selection becoming
+         * out of view. Previous actions are still available after a callback with this
+         * reason.
+         */
+        final int HIDE_REASON_INVISIBLE_SELECTION = 1;
+        /**
+         * Actions are no longer available due to the user actively changing the
+         * selection. {@link #onShowActionRequest} may be called again once the user has
+         * set a selection, if the new selection has available actions.
+         */
+        final int HIDE_REASON_ACTIVE_SELECTION = 2;
+        /**
+         * Actions are no longer available due to the user actively scrolling the page.
+         * {@link #onShowActionRequest} may be called again once the user has stopped
+         * scrolling the page, if the selection is still visible. Until then, previous
+         * actions are still available after a callback with this reason.
+         */
+        final int HIDE_REASON_ACTIVE_SCROLL = 3;
+
+        /**
+         * Previous actions are no longer available due to the user interacting with the
+         * page. Applications typically hide the action toolbar in response.
+         *
+         * @param session The GeckoSession that initiated the callback.
+         * @param reason The reason that actions are no longer available, as one of the
+         * {@link #HIDE_REASON_NO_SELECTION HIDE_REASON_*} constants.
+         */
+        void onHideAction(GeckoSession session, @HideReason int reason);
     }
 
     /**

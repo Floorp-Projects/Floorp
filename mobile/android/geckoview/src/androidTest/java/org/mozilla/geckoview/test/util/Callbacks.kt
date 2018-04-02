@@ -10,7 +10,8 @@ class Callbacks private constructor() {
     }
 
     interface All : ContentDelegate, NavigationDelegate, PermissionDelegate, ProgressDelegate,
-                    PromptDelegate, ScrollDelegate, TrackingProtectionDelegate {
+                    PromptDelegate, ScrollDelegate, SelectionActionDelegate,
+                    TrackingProtectionDelegate {
     }
 
     interface ContentDelegate : GeckoSession.ContentDelegate {
@@ -118,6 +119,14 @@ class Callbacks private constructor() {
 
     interface TrackingProtectionDelegate : GeckoSession.TrackingProtectionDelegate {
         override fun onTrackerBlocked(session: GeckoSession, uri: String, categories: Int) {
+        }
+    }
+
+    interface SelectionActionDelegate : GeckoSession.SelectionActionDelegate {
+        override fun onShowActionRequest(session: GeckoSession, selection: GeckoSession.SelectionActionDelegate.Selection, actions: Array<out String>, response: GeckoSession.Response<String>) {
+        }
+
+        override fun onHideAction(session: GeckoSession, reason: Int) {
         }
     }
 }
