@@ -20,14 +20,15 @@ CheckNoVTable<xptiTypelibGuts> gChecker;
 
 // static
 xptiTypelibGuts*
-xptiTypelibGuts::Create()
+xptiTypelibGuts::Create(const XPTHeader* aHeader)
 {
+    NS_ASSERTION(aHeader, "bad param");
     size_t n = sizeof(xptiTypelibGuts) +
-               sizeof(xptiInterfaceEntry*) * (XPTHeader::kNumInterfaces - 1);
+               sizeof(xptiInterfaceEntry*) * (aHeader->mNumInterfaces - 1);
     void* place = XPT_CALLOC8(gXPTIStructArena, n);
     if (!place)
         return nullptr;
-    return new(place) xptiTypelibGuts();
+    return new(place) xptiTypelibGuts(aHeader);
 }
 
 xptiInterfaceEntry*
@@ -36,13 +37,14 @@ xptiTypelibGuts::GetEntryAt(uint16_t i)
     static const nsID zeroIID =
         { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } };
 
+    NS_ASSERTION(mHeader, "bad state");
     NS_ASSERTION(i < GetEntryCount(), "bad index");
 
     xptiInterfaceEntry* r = mEntryArray[i];
     if (r)
         return r;
 
-    const XPTInterfaceDescriptor* iface = XPTHeader::kInterfaces + i;
+    const XPTInterfaceDirectoryEntry* iface = mHeader->mInterfaceDirectory + i;
 
     XPTInterfaceInfoManager::xptiWorkingSet& set =
         XPTInterfaceInfoManager::GetSingleton()->mWorkingSet;
@@ -50,7 +52,7 @@ xptiTypelibGuts::GetEntryAt(uint16_t i)
     {
         ReentrantMonitorAutoEnter monitor(set.mTableReentrantMonitor);
         if (iface->mIID.Equals(zeroIID))
-            r = set.mNameTable.Get(iface->Name());
+            r = set.mNameTable.Get(iface->mName);
         else
             r = set.mIIDTable.Get(iface->mIID);
     }
@@ -64,9 +66,10 @@ xptiTypelibGuts::GetEntryAt(uint16_t i)
 const char*
 xptiTypelibGuts::GetEntryNameAt(uint16_t i)
 {
+    NS_ASSERTION(mHeader, "bad state");
     NS_ASSERTION(i < GetEntryCount(), "bad index");
 
-    const XPTInterfaceDescriptor* iface = XPTHeader::kInterfaces + i;
+    const XPTInterfaceDirectoryEntry* iface = mHeader->mInterfaceDirectory + i;
 
-    return iface->Name();
+    return iface->mName;
 }

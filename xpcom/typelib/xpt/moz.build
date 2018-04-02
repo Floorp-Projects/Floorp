@@ -10,15 +10,14 @@ DIRS += ['tools']
 
 UNIFIED_SOURCES += [
     'xpt_arena.cpp',
-]
-
-SOURCES += [
-    '!XPTInfo.cpp',
+    'xpt_struct.cpp',
+    'xpt_xdr.cpp',
 ]
 
 EXPORTS += [
     'xpt_arena.h',
     'xpt_struct.h',
+    'xpt_xdr.h',
 ]
 
 FINAL_LIBRARY = 'xul'
