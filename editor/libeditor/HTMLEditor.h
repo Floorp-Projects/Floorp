@@ -221,6 +221,32 @@ public:
    */
   nsresult OnMouseMove(dom::MouseEvent* aMouseEvent);
 
+  /**
+   * Enable/disable object resizers for <img> elements, <table> elements,
+   * absolute positioned elements (required absolute position editor enabled).
+   */
+  void EnableObjectResizer(bool aEnable)
+  {
+    mIsObjectResizingEnabled = aEnable;
+  }
+  bool IsObjectResizerEnabled() const
+  {
+    return mIsObjectResizingEnabled;
+  }
+
+  /**
+   * Enable/disable inline table editor, e.g., adding new row or column,
+   * removing existing row or column.
+   */
+  void EnableInlineTableEditor(bool aEnable)
+  {
+    mIsInlineTableEditingEnabled = aEnable;
+  }
+  bool IsInlineTableEditorEnabled() const
+  {
+    return mIsInlineTableEditingEnabled;
+  }
+
   // non-virtual methods of interface methods
   bool AbsolutePositioningEnabled() const
   {
