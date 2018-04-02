@@ -289,18 +289,14 @@ nsColumnSetFrame::GetAvailableContentBSize(const ReflowInput& aReflowInput)
 
 static nscoord
 GetColumnGap(nsColumnSetFrame*    aFrame,
-             const nsStyleColumn* aColStyle)
+             const nsStyleColumn* aColStyle,
+             nscoord              aPercentageBasis)
 {
-  if (eStyleUnit_Normal == aColStyle->mColumnGap.GetUnit())
+  const auto& columnGap = aColStyle->mColumnGap;
+  if (columnGap.GetUnit() == eStyleUnit_Normal) {
     return aFrame->StyleFont()->mFont.size;
-  if (eStyleUnit_Coord == aColStyle->mColumnGap.GetUnit()) {
-    nscoord colGap = aColStyle->mColumnGap.GetCoordValue();
-    NS_ASSERTION(colGap >= 0, "negative column gap");
-    return colGap;
   }
-
-  NS_NOTREACHED("Unknown gap type");
-  return 0;
+  return nsLayoutUtils::ResolveGapToLength(columnGap, aPercentageBasis);
 }
 
 nsColumnSetFrame::ReflowConfig
@@ -334,7 +330,7 @@ nsColumnSetFrame::ChooseColumnStrategy(const ReflowInput& aReflowInput,
     colBSize = std::min(colBSize, aReflowInput.ComputedMaxBSize());
   }
 
-  nscoord colGap = GetColumnGap(this, colStyle);
+  nscoord colGap = GetColumnGap(this, colStyle, aReflowInput.ComputedISize());
   int32_t numColumns = colStyle->mColumnCount;
 
   // If column-fill is set to 'balance', then we want to balance the columns.
@@ -518,7 +514,7 @@ nsColumnSetFrame::GetMinISize(gfxContext *aRenderingContext)
     // include n-1 column gaps.
     colISize = iSize;
     iSize *= colStyle->mColumnCount;
-    nscoord colGap = GetColumnGap(this, colStyle);
+    nscoord colGap = GetColumnGap(this, colStyle, NS_UNCONSTRAINEDSIZE);
     iSize += colGap * (colStyle->mColumnCount - 1);
     // The multiplication above can make 'width' negative (integer overflow),
     // so use std::max to protect against that.
@@ -539,7 +535,7 @@ nsColumnSetFrame::GetPrefISize(gfxContext *aRenderingContext)
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);
   const nsStyleColumn* colStyle = StyleColumn();
-  nscoord colGap = GetColumnGap(this, colStyle);
+  nscoord colGap = GetColumnGap(this, colStyle, NS_UNCONSTRAINEDSIZE);
 
   nscoord colISize;
   if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
