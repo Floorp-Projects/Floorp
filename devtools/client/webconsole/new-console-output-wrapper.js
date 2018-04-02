@@ -220,7 +220,8 @@ NewConsoleOutputWrapper.prototype = {
             hidePersistLogsCheckbox: this.hud.isBrowserConsole,
             serviceContainer: {
               attachRefToHud
-            }
+            },
+            closeSplitConsole: this.closeSplitConsole.bind(this)
           }),
           ConsoleOutput({
             serviceContainer,
@@ -361,6 +362,11 @@ NewConsoleOutputWrapper.prototype = {
     store.dispatch(actions.sidebarClose());
   },
 
+  dispatchSplitConsoleCloseButtonToggle: function() {
+    store.dispatch(actions.splitConsoleCloseButtonToggle(
+      this.toolbox && this.toolbox.currentToolId !== "webconsole"));
+  },
+
   batchedMessageUpdates: function(info) {
     this.queuedMessageUpdates.push(info);
     this.setTimeoutIfNeeded();
@@ -433,6 +439,11 @@ NewConsoleOutputWrapper.prototype = {
   // Should be used for test purpose only.
   getStore: function() {
     return store;
+  },
+
+  // Called by pushing close button.
+  closeSplitConsole() {
+    this.toolbox.closeSplitConsole();
   }
 };
 
