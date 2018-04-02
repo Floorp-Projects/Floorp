@@ -2745,7 +2745,7 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
     NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT_WITH_RANGE(i, layers, startLayer,
                                                          count) {
       aParams.frame->AssociateImage(layers.mLayers[i].mImage,
-                                    &aParams.presCtx, 0);
+                                    &aParams.presCtx);
     }
   }
 

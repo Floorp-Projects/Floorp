@@ -423,7 +423,7 @@ nsSVGMaskProperty::ResolveImage(uint32_t aIndex)
     mozilla::css::ImageLoader* imageLoader =
       mFrame->PresContext()->Document()->StyleImageLoader();
     if (imgRequestProxy* req = image.GetImageData()) {
-      imageLoader->AssociateRequestToFrame(req, mFrame, 0);
+      imageLoader->AssociateRequestToFrame(req, mFrame);
     }
   }
 }

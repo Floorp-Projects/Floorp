@@ -254,14 +254,6 @@ public:
                            const mozilla::Maybe<nsSize>& aSVGViewportSize,
                            const bool           aHasIntrinsicRatio);
 
-  /**
-   * Draw the image to aRenderingContext which can be used to define the
-   * float area in the presence of "shape-outside: <image>".
-   */
-  ImgDrawResult
-  DrawShapeImage(nsPresContext* aPresContext,
-                 gfxContext& aRenderingContext);
-
   bool IsRasterImage();
   bool IsAnimatedImage();
 
