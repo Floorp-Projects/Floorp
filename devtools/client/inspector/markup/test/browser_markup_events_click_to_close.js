@@ -53,20 +53,15 @@ add_task(async function() {
   await onShown;
   info("event tooltip for the second div is shown");
 
-  info("Click on the animation inspector tab");
+  info("Click on the computed view tab");
   let onHighlighterHidden = toolbox.once("node-unhighlight");
-  let onTabInspectorSelected = inspector.sidebar.once("newanimationinspector-selected");
-  let onInspectorUpdated = inspector.once("inspector-updated");
-  let animationInspectorTab =
-    inspector.panelDoc.querySelector("#newanimationinspector-tab");
-  EventUtils.synthesizeMouseAtCenter(animationInspectorTab, {},
+  let onTabComputedViewSelected = inspector.sidebar.once("computedview-selected");
+  let computedViewTab = inspector.panelDoc.querySelector("#computedview-tab");
+  EventUtils.synthesizeMouseAtCenter(computedViewTab, {},
     inspector.panelDoc.defaultView);
 
-  await onTabInspectorSelected;
-  info("animation inspector was selected");
-
-  await onInspectorUpdated;
-  info("animation inspector was updated");
+  await onTabComputedViewSelected;
+  info("computed view was selected");
 
   await onHighlighterHidden;
   info("box model highlighter hidden after moving the mouse out of the markup view");
