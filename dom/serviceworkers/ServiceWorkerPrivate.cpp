@@ -198,7 +198,7 @@ private:
 nsresult
 ServiceWorkerPrivate::CheckScriptEvaluation(LifeCycleEventCallback* aScriptEvaluationCallback)
 {
-  nsresult rv = SpawnWorkerIfNeeded(LifeCycleEvent, nullptr);
+  nsresult rv = SpawnWorkerIfNeeded(LifeCycleEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
@@ -571,7 +571,7 @@ ServiceWorkerPrivate::SendMessageEvent(JSContext* aCx,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  ErrorResult rv(SpawnWorkerIfNeeded(MessageEvent, nullptr));
+  ErrorResult rv(SpawnWorkerIfNeeded(MessageEvent));
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
@@ -834,10 +834,9 @@ LifecycleEventWorkerRunnable::DispatchLifecycleEvent(JSContext* aCx,
 
 nsresult
 ServiceWorkerPrivate::SendLifeCycleEvent(const nsAString& aEventType,
-                                         LifeCycleEventCallback* aCallback,
-                                         nsIRunnable* aLoadFailure)
+                                         LifeCycleEventCallback* aCallback)
 {
-  nsresult rv = SpawnWorkerIfNeeded(LifeCycleEvent, aLoadFailure);
+  nsresult rv = SpawnWorkerIfNeeded(LifeCycleEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
@@ -1023,7 +1022,7 @@ ServiceWorkerPrivate::SendPushEvent(const nsAString& aMessageId,
                                     const Maybe<nsTArray<uint8_t>>& aData,
                                     ServiceWorkerRegistrationInfo* aRegistration)
 {
-  nsresult rv = SpawnWorkerIfNeeded(PushEvent, nullptr);
+  nsresult rv = SpawnWorkerIfNeeded(PushEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
@@ -1055,7 +1054,7 @@ ServiceWorkerPrivate::SendPushEvent(const nsAString& aMessageId,
 nsresult
 ServiceWorkerPrivate::SendPushSubscriptionChangeEvent()
 {
-  nsresult rv = SpawnWorkerIfNeeded(PushSubscriptionChangeEvent, nullptr);
+  nsresult rv = SpawnWorkerIfNeeded(PushSubscriptionChangeEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
@@ -1314,7 +1313,7 @@ ServiceWorkerPrivate::SendNotificationEvent(const nsAString& aEventName,
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = SpawnWorkerIfNeeded(why, nullptr);
+  nsresult rv = SpawnWorkerIfNeeded(why);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
@@ -1751,19 +1750,11 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
     return NS_OK;
   }
 
-  // if the ServiceWorker script fails to load for some reason, just resume
-  // the original channel.
-  nsCOMPtr<nsIRunnable> failRunnable =
-    NewRunnableMethod("nsIInterceptedChannel::ResetInterception",
-                      aChannel,
-                      &nsIInterceptedChannel::ResetInterception);
-
   aChannel->SetLaunchServiceWorkerStart(TimeStamp::Now());
   aChannel->SetDispatchFetchEventStart(TimeStamp::Now());
 
   bool newWorkerCreated = false;
   nsresult rv = SpawnWorkerIfNeeded(FetchEvent,
-                                    failRunnable,
                                     &newWorkerCreated,
                                     aLoadGroup);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1808,7 +1799,6 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
 
 nsresult
 ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
-                                          nsIRunnable* aLoadFailedRunnable,
                                           bool* aNewWorkerCreated,
                                           nsILoadGroup* aLoadGroup)
 {
@@ -1872,7 +1862,6 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   info.mServiceWorkerRegistrationDescriptor.emplace(reg->Descriptor());
 
   info.mLoadGroup = aLoadGroup;
-  info.mLoadFailedAsyncRunnable = aLoadFailedRunnable;
 
   // If we are loading a script for a ServiceWorker then we must not
   // try to intercept it.  If the interception matches the current
@@ -2095,7 +2084,7 @@ ServiceWorkerPrivate::AttachDebugger()
   // and cancel the idle timeout. The idle timeout should not be reset until
   // the last debugger detached from the worker.
   if (!mDebuggerCount) {
-    nsresult rv = SpawnWorkerIfNeeded(AttachEvent, nullptr);
+    nsresult rv = SpawnWorkerIfNeeded(AttachEvent);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mIdleWorkerTimer->Cancel();

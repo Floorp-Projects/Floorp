@@ -23,7 +23,8 @@ namespace dom {
 MediaQueryList::MediaQueryList(nsIDocument* aDocument,
                                const nsAString& aMediaQueryList,
                                CallerType aCallerType)
-  : mDocument(aDocument)
+  : DOMEventTargetHelper(aDocument->GetInnerWindow())
+  , mDocument(aDocument)
   , mMatches(false)
   , mMatchesValid(false)
 {
