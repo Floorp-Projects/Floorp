@@ -34,9 +34,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
     EXPORTS.mozilla += [
         'MacHelpers.h',
+        'MacStringHelpers.h',
     ]
     UNIFIED_SOURCES += [
         'MacHelpers.mm',
+        'MacStringHelpers.mm',
     ]
 
 XPIDL_MODULE = 'xpcom_base'

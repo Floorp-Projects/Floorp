@@ -768,9 +768,9 @@ Dashboard::GetDNSCacheEntries(DnsData *dnsData)
         }
 
         if (dnsData->mData[i].family == PR_AF_INET6) {
-            CopyASCIItoUTF16("ipv6", entry.mFamily);
+            entry.mFamily.AssignLiteral(u"ipv6");
         } else {
-            CopyASCIItoUTF16("ipv4", entry.mFamily);
+            entry.mFamily.AssignLiteral(u"ipv4");
         }
     }
 

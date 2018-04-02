@@ -118,9 +118,12 @@ def migrate(ctx):
                     ),
                     FTL.Attribute(
                         FTL.Identifier('style'),
-                        COPY(
-                            'browser/chrome/browser/preferences/containers.dtd',
-                            'window.width',
+                        CONCAT(
+                            FTL.TextElement('width: '),
+                            COPY(
+                                'browser/chrome/browser/preferences/containers.dtd',
+                                'window.width',
+                            ),
                         ),
                     ),
                 ],
