@@ -75,6 +75,22 @@ const POLICIES_TESTS = [
     policies: { "OverrideFirstRunPage": "https://www.example.com/" },
     lockedPrefs: { "startup.homepage_welcome_url": "https://www.example.com/" },
   },
+
+  // POLICY: Authentication
+  {
+    policies: {
+      "Authentication": {
+        "SPNEGO": ["a.com", "b.com"],
+        "Delegated": ["a.com", "b.com"],
+        "NTLM": ["a.com", "b.com"],
+      }
+    },
+    lockedPrefs: {
+      "network.negotiate-auth.trusted-uris": "a.com, b.com",
+      "network.negotiate-auth.delegation-uris": "a.com, b.com",
+      "network.automatic-ntlm-auth.trusted-uris": "a.com, b.com",
+    }
+  },
 ];
 
 add_task(async function test_policy_remember_passwords() {

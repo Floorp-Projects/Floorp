@@ -61,6 +61,20 @@ var EXPORTED_SYMBOLS = ["Policies"];
  * The callbacks will be bound to their parent policy object.
  */
 var Policies = {
+  "Authentication": {
+    onBeforeAddons(manager, param) {
+      if ("SPNEGO" in param) {
+        setAndLockPref("network.negotiate-auth.trusted-uris", param.SPNEGO.join(", "));
+      }
+      if ("Delegated" in param) {
+        setAndLockPref("network.negotiate-auth.delegation-uris", param.Delegated.join(", "));
+      }
+      if ("NTLM" in param) {
+        setAndLockPref("network.automatic-ntlm-auth.trusted-uris", param.NTLM.join(", "));
+      }
+    }
+  },
+
   "BlockAboutAddons": {
     onBeforeUIStartup(manager, param) {
       if (param) {
