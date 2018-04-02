@@ -52,9 +52,9 @@ div {
 <script>
 'use strict';
 
-function getDocShellForObservingRestyles() {
+function getDocShellForObservingRestylesForWindow(aWindow) {
   const docShell =
-    SpecialPowers.wrap(window)
+    SpecialPowers.wrap(aWindow)
                  .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
                  .getInterface(SpecialPowers.Ci.nsIWebNavigation)
                  .QueryInterface(SpecialPowers.Ci.nsIDocShell);
@@ -66,16 +66,22 @@ function getDocShellForObservingRestyles() {
 }
 
 // Returns the animation restyle markers observed during |frameCount| refresh
-// driver ticks.  This function is typically used to count the number of
-// restyles that take place as part of the style update that happens on each
-// refresh driver tick, as opposed to synchronous restyles triggered by script.
+// driver ticks in this `window`.  This function is typically used to count the
+// number of restyles that take place as part of the style update that happens
+// on each refresh driver tick, as opposed to synchronous restyles triggered by
+// script.
 //
 // For the latter observeAnimSyncStyling (below) should be used.
 function observeStyling(frameCount, onFrame) {
-  let docShell = getDocShellForObservingRestyles();
+  return observeStylingInTargetWindow(window, frameCount, onFrame);
+}
+
+// As with observeStyling but applied to target window |aWindow|.
+function observeStylingInTargetWindow(aWindow, aFrameCount, aOnFrame) {
+  let docShell = getDocShellForObservingRestylesForWindow(aWindow);
 
   return new Promise(resolve => {
-    return waitForAnimationFrames(frameCount, onFrame).then(() => {
+    return waitForAnimationFrames(aFrameCount, aOnFrame).then(() => {
       var markers = docShell.popProfileTimelineMarkers();
       docShell.recordProfileTimelineMarkers = false;
       var stylingMarkers = markers.filter((marker, index) => {
@@ -93,7 +99,7 @@ function observeStyling(frameCount, onFrame) {
 // |funcToMakeRestyleHappen|, which may be expected to trigger a synchronous
 // restyles, and returns any restyle markers produced by calling that function.
 function observeAnimSyncStyling(funcToMakeRestyleHappen) {
-  let docShell = getDocShellForObservingRestyles();
+  let docShell = getDocShellForObservingRestylesForWindow(window);
 
   funcToMakeRestyleHappen();
 
@@ -1636,6 +1642,78 @@ waitForAllPaints(() => {
          'throttled');
 
       await ensureElementRemoval(div);
+    }
+  );
+
+  add_task(
+    async function throttling_position_absolute_animations_in_collapsed_iframe() {
+      var iframe = document.createElement('iframe');
+      iframe.setAttribute('srcdoc', '<div id="target"></div>');
+      iframe.style.height = '0px';
+      document.documentElement.appendChild(iframe);
+
+      await new Promise(resolve => {
+        iframe.addEventListener('load', () => {
+          resolve();
+        });
+      });
+
+      const target = iframe.contentDocument.getElementById("target");
+      target.style= 'position: absolute; top: 50%; width: 100px; height: 100px';
+
+      var animation = target.animate({ opacity: [0, 1] },
+                                     { duration: 100 * MS_PER_SEC,
+                                       iterations: Infinity });
+      await animation.ready;
+
+      var markers = await observeStylingInTargetWindow(iframe.contentWindow, 5);
+      is(markers.length, 0,
+         'Animation on position:absolute element in collapsed iframe should ' +
+         'be throttled');
+
+      await ensureElementRemoval(iframe);
+    }
+  );
+
+  add_task(
+    async function position_absolute_animations_in_collapsed_element() {
+      var parent = addDiv(null, { style: 'overflow: scroll; height: 0px;' });
+      var target = addDiv(null,
+                          { style: 'animation: background-color 100s infinite;' +
+                                   'position: absolute; top: 50%;' +
+                                   'width: 100px; height: 100px;' });
+      parent.appendChild(target);
+
+      var animation = target.getAnimations()[0];
+      await animation.ready;
+
+      const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
+      var markers = await observeStyling(5);
+      is(markers.length, expectedRestyleCount,
+         'Animation on position:absolute element in collapsed element ' +
+         'should not be throttled');
+
+      await ensureElementRemoval(parent);
+    }
+  );
+
+  add_task(
+    async function throttling_position_absolute_animations_in_collapsed_element() {
+      var parent = addDiv(null, { style: 'overflow: scroll; height: 0px;' });
+      var target = addDiv(null,
+                          { style: 'animation: background-color 100s infinite;' +
+                                   'position: absolute; top: 50%;' });
+      parent.appendChild(target);
+
+      var animation = target.getAnimations()[0];
+      await animation.ready;
+
+      var markers = await observeStyling(5);
+      todo_is(markers.length, 0,
+              'Animation on collapsed position:absolute element in collapsed ' +
+              'element should be throttled');
+
+      await ensureElementRemoval(parent);
     }
   );
 

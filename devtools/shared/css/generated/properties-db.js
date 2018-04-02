@@ -729,7 +729,8 @@ exports.CSS_PROPERTIES = {
       "column-gap"
     ],
     "supports": [
-      6
+      6,
+      8
     ],
     "values": [
       "calc",
@@ -2081,6 +2082,7 @@ exports.CSS_PROPERTIES = {
       "-moz-min-content",
       "auto",
       "calc",
+      "content",
       "inherit",
       "initial",
       "unset"
@@ -2102,6 +2104,7 @@ exports.CSS_PROPERTIES = {
       "-moz-min-content",
       "auto",
       "calc",
+      "content",
       "inherit",
       "initial",
       "unset"
@@ -5118,7 +5121,8 @@ exports.CSS_PROPERTIES = {
       "column-gap"
     ],
     "supports": [
-      6
+      6,
+      8
     ],
     "values": [
       "calc",
@@ -5547,6 +5551,7 @@ exports.CSS_PROPERTIES = {
       "-moz-min-content",
       "auto",
       "calc",
+      "content",
       "inherit",
       "initial",
       "unset"
@@ -5568,6 +5573,7 @@ exports.CSS_PROPERTIES = {
       "-moz-min-content",
       "auto",
       "calc",
+      "content",
       "inherit",
       "initial",
       "unset"

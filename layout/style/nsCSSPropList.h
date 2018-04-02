@@ -1186,7 +1186,7 @@ CSS_PROP_COLUMN(
     ColumnGap,
     0,
     "",
-    VARIANT_HL | VARIANT_NORMAL | VARIANT_CALC,
+    VARIANT_HLP | VARIANT_NORMAL | VARIANT_CALC,
     nullptr,
     eStyleAnimType_Coord)
 CSS_PROP_SHORTHAND(
@@ -1406,7 +1406,7 @@ CSS_PROP_POSITION(
     // its own code to parse each subproperty. It does not depend on the
     // longhand parsing defined here.
     VARIANT_AHKLP | VARIANT_CALC,
-    kWidthKTable,
+    kFlexBasisKTable,
     eStyleAnimType_Coord)
 CSS_PROP_POSITION(
     flex-direction,

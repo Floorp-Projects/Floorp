@@ -680,6 +680,7 @@ public:
   static const KTableEntry kVolumeKTable[];
   static const KTableEntry kWhitespaceKTable[];
   static const KTableEntry kWidthKTable[]; // also min-width, max-width
+  static const KTableEntry kFlexBasisKTable[];
   static const KTableEntry kWindowDraggingKTable[];
   static const KTableEntry kWindowShadowKTable[];
   static const KTableEntry kWordBreakKTable[];

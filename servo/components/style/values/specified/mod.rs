@@ -55,7 +55,7 @@ pub use self::length::{FontRelativeLength, Length, LengthOrNumber};
 pub use self::length::{LengthOrPercentage, LengthOrPercentageOrAuto};
 pub use self::length::{LengthOrPercentageOrNone, MaxLength, MozLength};
 pub use self::length::{NoCalcLength, ViewportPercentageLength};
-pub use self::length::NonNegativeLengthOrPercentage;
+pub use self::length::{NonNegativeLengthOrPercentage, NonNegativeLengthOrPercentageOrAuto};
 pub use self::list::{ListStyleImage, Quotes};
 #[cfg(feature = "gecko")]
 pub use self::list::ListStyleType;
@@ -71,7 +71,8 @@ pub use self::svg::{SVGLength, SVGOpacity, SVGPaint, SVGPaintKind};
 pub use self::svg::{SVGPaintOrder, SVGStrokeDashArray, SVGWidth};
 pub use self::svg::MozContextProperties;
 pub use self::table::XSpan;
-pub use self::text::{InitialLetter, LetterSpacing, LineHeight, MozTabSize, TextAlign, TextEmphasisStyle};
+pub use self::text::{InitialLetter, LetterSpacing, LineHeight, MozTabSize, TextAlign};
+pub use self::text::{TextEmphasisStyle, TextEmphasisPosition};
 pub use self::text::{TextAlignKeyword, TextDecorationLine, TextOverflow, WordSpacing};
 pub use self::time::Time;
 pub use self::transform::{Rotate, Scale, TimingFunction, Transform};
