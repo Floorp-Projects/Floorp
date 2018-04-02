@@ -122,6 +122,14 @@ var Policies = {
     }
   },
 
+  "Certificates": {
+    onBeforeAddons(manager, param) {
+      if ("ImportEnterpriseRoots" in param) {
+        setAndLockPref("security.enterprise_roots.enabled", true);
+      }
+    }
+  },
+
   "Cookies": {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("cookie", param.Allow, param.Block);
