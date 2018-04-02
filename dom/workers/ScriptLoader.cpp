@@ -64,6 +64,7 @@
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SRILogHelper.h"
+#include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/UniquePtr.h"
 #include "Principal.h"
 #include "WorkerHolder.h"
@@ -179,6 +180,17 @@ ChannelFromScriptURL(nsIPrincipal* principal,
   nsContentPolicyType contentPolicyType =
     aIsMainScript ? aMainScriptContentPolicyType
                   : nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS;
+
+  // The main service worker script should never be loaded over the network
+  // in this path.  It should always be offlined by ServiceWorkerScriptCache.
+  // We assert here since this error should also be caught by the runtime
+  // check in CacheScriptLoader.
+  //
+  // Note, if we ever allow service worker scripts to be loaded from network
+  // here we need to configure the channel properly.  For example, it must
+  // not allow redirects.
+  MOZ_DIAGNOSTIC_ASSERT(contentPolicyType !=
+                        nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER);
 
   nsCOMPtr<nsIChannel> channel;
   // If we have the document, use it. Unfortunately, for dedicated workers
@@ -464,6 +476,7 @@ public:
     , mRunnable(aRunnable)
     , mIsWorkerScript(aIsWorkerScript)
     , mFailed(false)
+    , mState(aWorkerPrivate->GetServiceWorkerDescriptor().State())
   {
     MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
@@ -496,6 +509,7 @@ private:
   RefPtr<ScriptLoaderRunnable> mRunnable;
   bool mIsWorkerScript;
   bool mFailed;
+  const ServiceWorkerState mState;
   nsCOMPtr<nsIInputStreamPump> mPump;
   nsCOMPtr<nsIURI> mBaseURI;
   mozilla::dom::ChannelInfo mChannelInfo;
@@ -1757,7 +1771,20 @@ CacheScriptLoader::ResolvedCallback(JSContext* aCx,
 
   nsresult rv;
 
+  // The ServiceWorkerScriptCache will store data for any scripts it
+  // it knows about.  This is always at least the top level script.
+  // Depending on if a previous version of the service worker has
+  // been installed or not it may also know about importScripts().  We
+  // must handle loading and offlining new importScripts() here, however.
   if (aValue.isUndefined()) {
+    // If this is the main script or we're not loading a new service worker
+    // then this is an error.  The storage was probably wiped without
+    // removing the service worker registration.
+    if (NS_WARN_IF(mIsWorkerScript || mState != ServiceWorkerState::Parsed)) {
+      Fail(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return;
+    }
+
     mLoadInfo.mCacheStatus = ScriptLoadInfo::ToBeCached;
     rv = mRunnable->LoadScript(mIndex);
     if (NS_WARN_IF(NS_FAILED(rv))) {
