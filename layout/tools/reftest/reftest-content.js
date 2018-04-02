@@ -470,6 +470,11 @@ function getAssignedLayerMap(contentRootElement) {
     return layerNameToElementsMap;
 }
 
+const FlushMode = {
+  ALL: 0,
+  IGNORE_THROTTLED_ANIMATIONS: 1
+};
+
 // Initial state. When the document has loaded and all MozAfterPaint events and
 // all explicit paint waits are flushed, we can fire the MozReftestInvalidate
 // event and move to the next state.
@@ -488,7 +493,7 @@ const STATE_WAITING_FOR_APZ_FLUSH = 3;
 const STATE_WAITING_TO_FINISH = 4;
 const STATE_COMPLETED = 5;
 
-function FlushRendering() {
+function FlushRendering(aFlushMode) {
     var anyPendingPaintsGeneratedInDescendants = false;
 
     function flushWindow(win) {
@@ -499,8 +504,11 @@ function FlushRendering() {
         var root = win.document.documentElement;
         if (root && !root.classList.contains("reftest-no-flush")) {
             try {
-                // Flush pending restyles and reflows for this window
-                root.getBoundingClientRect();
+                if (aFlushMode === FlushMode.IGNORE_THROTTLED_ANIMATIONS) {
+                    utils.flushLayoutWithoutThrottledAnimations();
+                } else {
+                    root.getBoundingClientRect();
+                }
             } catch (e) {
                 LogWarning("flushWindow failed: " + e + "\n");
             }
@@ -585,7 +593,17 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
         // We don't need to flush styles any more when we are in the state
         // after reftest-wait has removed.
         if (state != STATE_WAITING_TO_FINISH) {
-          FlushRendering();
+          // If we are waiting for the MozReftestInvalidate event we don't want
+          // to flush throttled animations. Flushing throttled animations can
+          // continue to cause new MozAfterPaint events even when all the
+          // rendering we're concerned about should have ceased. Since
+          // MozReftestInvalidate won't be sent until we finish waiting for all
+          // MozAfterPaint events, we should avoid flushing throttled animations
+          // here or else we'll never leave this state.
+          flushMode = (state === STATE_WAITING_TO_FIRE_INVALIDATE_EVENT)
+                    ? FlushMode.IGNORE_THROTTLED_ANIMATIONS
+                    : FlushMode.ALL;
+          FlushRendering(flushMode);
         }
 
         switch (state) {
@@ -634,7 +652,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
             if (hasReftestWait && !shouldWaitForReftestWaitRemoval(contentRootElement)) {
                 // MozReftestInvalidate handler removed reftest-wait.
                 // We expect something to have been invalidated...
-                FlushRendering();
+                FlushRendering(FlushMode.ALL);
                 if (!shouldWaitForPendingPaints() && !shouldWaitForExplicitPaintWaiters()) {
                     LogWarning("MozInvalidateEvent didn't invalidate");
                 }
@@ -834,7 +852,7 @@ function OnDocumentLoad(event)
           content.document ? content.document.documentElement : null;
 
         // Flush the document in case it got modified in a load event handler.
-        FlushRendering();
+        FlushRendering(FlushMode.ALL);
 
         // Take a snapshot now. We need to do this before we check whether
         // we should wait, since this might trigger dispatching of
