@@ -112,7 +112,7 @@ private:
   // should always be in sync.
 
   struct FrameWithFlags {
-    FrameWithFlags(nsIFrame* aFrame)
+    explicit FrameWithFlags(nsIFrame* aFrame)
     : mFrame(aFrame),
       mFlags(0)
     {
