@@ -9355,17 +9355,7 @@ nsCSSFrameConstructor::ShouldHaveFirstLineStyle(nsIContent* aContent,
     nsLayoutUtils::HasPseudoStyle(aContent, aComputedStyle,
                                   CSSPseudoElementType::firstLine,
                                   mPresShell->GetPresContext());
-  if (hasFirstLine) {
-    // But disable for fieldsets
-    int32_t namespaceID;
-    nsAtom* tag = mDocument->BindingManager()->ResolveTag(aContent,
-                                                           &namespaceID);
-    // This check must match the one in FindHTMLData.
-    hasFirstLine = tag != nsGkAtoms::fieldset ||
-      namespaceID != kNameSpaceID_XHTML;
-  }
-
-  return hasFirstLine;
+  return hasFirstLine && !aContent->IsHTMLElement(nsGkAtoms::fieldset);
 }
 
 void
