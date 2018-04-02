@@ -368,7 +368,13 @@ PaymentRequestService::RequestPayment(nsIPaymentActionRequest* aRequest)
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-      rv = LaunchUIAction(requestId, type);
+      if (mShowingRequest) {
+        MOZ_ASSERT(mShowingRequest == payment);
+        rv = LaunchUIAction(requestId, type);
+      } else {
+        mShowingRequest = payment;
+        rv = LaunchUIAction(requestId, nsIPaymentActionRequest::SHOW_ACTION);
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return NS_ERROR_FAILURE;
       }
@@ -420,8 +426,8 @@ PaymentRequestService::RespondPayment(nsIPaymentActionResponse* aResponse)
       bool isSucceeded;
       rv = response->IsSucceeded(&isSucceeded);
       NS_ENSURE_SUCCESS(rv, rv);
+      mShowingRequest = nullptr;
       if (isSucceeded) {
-        mShowingRequest = nullptr;
         mRequestQueue.RemoveElement(request);
       }
       break;
