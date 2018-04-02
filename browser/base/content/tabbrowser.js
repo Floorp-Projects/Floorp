@@ -3288,7 +3288,7 @@ window._gBrowser = {
       let event = document.createEvent("Events");
       event.initEvent("TabShow", true, false);
       aTab.dispatchEvent(event);
-      SessionStore.deleteTabValue(aTab, "hiddenBy");
+      SessionStore.deleteCustomTabValue(aTab, "hiddenBy");
     }
   },
 
@@ -3306,7 +3306,7 @@ window._gBrowser = {
       event.initEvent("TabHide", true, false);
       aTab.dispatchEvent(event);
       if (aSource) {
-        SessionStore.setTabValue(aTab, "hiddenBy", aSource);
+        SessionStore.setCustomTabValue(aTab, "hiddenBy", aSource);
       }
     }
   },

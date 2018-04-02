@@ -145,6 +145,8 @@ scheme host and port.""")
                               help="Path to root directory containing test metadata"),
     config_group.add_argument("--tests", action="store", type=abs_path, dest="tests_root",
                               help="Path to root directory containing test files"),
+    config_group.add_argument("--manifest", action="store", type=abs_path, dest="manifest_path",
+                              help="Path to test manifest (default is ${metadata_root}/MANIFEST.json)")
     config_group.add_argument("--run-info", action="store", type=abs_path,
                               help="Path to directory containing extra json files to add to run info")
     config_group.add_argument("--product", action="store", choices=product_choices,
@@ -245,6 +247,10 @@ scheme host and port.""")
                              dest="sauce_connect_binary",
                              help="Path to Sauce Connect binary")
 
+    webkit_group = parser.add_argument_group("WebKit-specific")
+    webkit_group.add_argument("--webkit-port", dest="webkit_port",
+                             help="WebKit port")
+
     parser.add_argument("test_list", nargs="*",
                         help="List of URLs for tests to run, or paths including tests to run. "
                              "(equivalent to --include)")
@@ -297,8 +303,15 @@ def set_from_config(kwargs):
             kwargs["test_paths"]["/"] = {}
         kwargs["test_paths"]["/"]["metadata_path"] = kwargs["metadata_root"]
 
+    if kwargs.get("manifest_path"):
+        if "/" not in kwargs["test_paths"]:
+            kwargs["test_paths"]["/"] = {}
+        kwargs["test_paths"]["/"]["manifest_path"] = kwargs["manifest_path"]
+
     kwargs["suite_name"] = kwargs["config"].get("web-platform-tests", {}).get("name", "web-platform-tests")
 
+
+    check_paths(kwargs)
 
 def get_test_paths(config):
     # Set up test_paths
@@ -310,7 +323,10 @@ def get_test_paths(config):
             url_base = manifest_opts.get("url_base", "/")
             test_paths[url_base] = {
                 "tests_path": manifest_opts.get_path("tests"),
-                "metadata_path": manifest_opts.get_path("metadata")}
+                "metadata_path": manifest_opts.get_path("metadata"),
+            }
+            if "manifest" in manifest_opts:
+                test_paths[url_base]["manifest_path"] = manifest_opts.get_path("manifest")
 
     return test_paths
 
@@ -326,16 +342,22 @@ def exe_path(name):
         return None
 
 
-def check_args(kwargs):
-    set_from_config(kwargs)
-
+def check_paths(kwargs):
     for test_paths in kwargs["test_paths"].itervalues():
         if not ("tests_path" in test_paths and
                 "metadata_path" in test_paths):
             print "Fatal: must specify both a test path and metadata path"
             sys.exit(1)
+        if "manifest_path" not in test_paths:
+            test_paths["manifest_path"] = os.path.join(test_paths["metadata_path"],
+                                                       "MANIFEST.json")
         for key, path in test_paths.iteritems():
             name = key.split("_", 1)[0]
+
+            if name == "manifest":
+                # For the manifest we can create it later, so just check the path
+                # actually exists
+                path = os.path.dirname(path)
 
             if not os.path.exists(path):
                 print "Fatal: %s path %s does not exist" % (name, path)
@@ -344,6 +366,10 @@ def check_args(kwargs):
             if not os.path.isdir(path):
                 print "Fatal: %s path %s is not a directory" % (name, path)
                 sys.exit(1)
+
+
+def check_args(kwargs):
+    set_from_config(kwargs)
 
     if kwargs["product"] is None:
         kwargs["product"] = "firefox"
@@ -467,6 +493,8 @@ def create_parser_update(product_choices=None):
                         help="Path to the folder containing test metadata"),
     parser.add_argument("--tests", action="store", type=abs_path, dest="tests_root",
                         help="Path to web-platform-tests"),
+    parser.add_argument("--manifest", action="store", type=abs_path, dest="manifest_path",
+                        help="Path to test manifest (default is ${metadata_root}/MANIFEST.json)")
     parser.add_argument("--sync-path", action="store", type=abs_path,
                         help="Path to store git checkout of web-platform-tests during update"),
     parser.add_argument("--remote_url", action="store",
@@ -491,6 +519,8 @@ def create_parser_update(product_choices=None):
                         help="List of glob-style paths to exclude when syncing tests")
     parser.add_argument("--include", action="store", nargs="*",
                         help="List of glob-style paths to include which would otherwise be excluded when syncing tests")
+    parser.add_argument("--extra-property", action="append", default=[],
+                        help="Extra property from run_info.json to use in metadata update")
     # Should make this required iff run=logfile
     parser.add_argument("run_log", nargs="*", type=abs_path,
                         help="Log file from run of tests")

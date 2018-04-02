@@ -6,7 +6,6 @@ browser.jar:
 % skin browser classic/1.0 %skin/classic/browser/
 #include ../shared/jar.inc.mn
   skin/classic/browser/sanitizeDialog.css
-  skin/classic/browser/aboutSessionRestore-window-icon.png
 * skin/classic/browser/syncedtabs/sidebar.css     (syncedtabs/sidebar.css)
 * skin/classic/browser/browser.css
 * skin/classic/browser/compacttheme.css

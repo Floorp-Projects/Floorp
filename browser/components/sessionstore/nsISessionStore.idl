@@ -179,20 +179,20 @@ interface nsISessionStore : nsISupports
    *
    * @returns A string value or an empty string if none is set.
    */
-  AString getTabValue(in nsIDOMNode aTab, in AString aKey);
+  AString getCustomTabValue(in nsIDOMNode aTab, in AString aKey);
 
   /**
    * @param aTab         is the tabbrowser tab to set the value for.
    * @param aKey         is the value's name.
    * @param aStringValue is the value itself (use JSON.stringify/parse before setting JS objects).
    */
-  void setTabValue(in nsIDOMNode aTab, in AString aKey, in jsval aStringValue);
+  void setCustomTabValue(in nsIDOMNode aTab, in AString aKey, in jsval aStringValue);
 
   /**
    * @param aTab is the tabbrowser tab to get the value for.
    * @param aKey is the value's name.
    */
-  void deleteTabValue(in nsIDOMNode aTab, in AString aKey);
+  void deleteCustomTabValue(in nsIDOMNode aTab, in AString aKey);
 
    /**
    * @param aKey is the value's name.

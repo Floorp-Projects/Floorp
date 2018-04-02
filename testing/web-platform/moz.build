@@ -311,9 +311,6 @@ with Files("tests/gamepad/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
 # Bug 1359076 - Deleting this feature due to security
-with Files("tests/generic-sensor/**"):
-    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
-
 with Files("tests/geolocation-API/**"):
     BUG_COMPONENT = ("Core", "Geolocation")
 

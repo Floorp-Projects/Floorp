@@ -144,7 +144,7 @@ function test() {
             let tab_C = win.gBrowser.duplicateTab(tab_B);
             promiseTabRestored(tab_C).then(() => {
               // verify the correctness of the duplicated tab
-              is(ss.getTabValue(tab_C, key1), value1,
+              is(ss.getCustomTabValue(tab_C, key1), value1,
                 "tab successfully duplicated - correct state");
 
               for (let item in fieldList)

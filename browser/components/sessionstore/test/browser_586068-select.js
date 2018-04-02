@@ -48,7 +48,7 @@ add_task(async function test() {
             tab = window.gBrowser.tabs[i];
         }
 
-        is(ss.getTabValue(tab, "uniq"), expectedData,
+        is(ss.getCustomTabValue(tab, "uniq"), expectedData,
           "load " + loadCount + " - correct tab was restored");
 
         // select the next tab

@@ -1,31 +1,31 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>CSSUnparsedValue</title>
-<link rel="help" href="https://drafts.css-houdini.org/css-typed-om-1/#unparsedvalue-objects">
-<meta name="assert" content="Test CSSUnparsedValue constructor and members">
+<title>CSSUnparsedValue Constructor</title>
+<link rel="help" href="https://drafts.css-houdini.org/css-typed-om-1/#dom-cssunparsedvalue-cssunparsedvalue">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="../resources/testhelper.js"></script>
 <body>
-<div id="log">
+<div id="log"></div>
 <script>
 'use strict';
 
 const gTestArguments = [
   {
     description: 'no arguments',
-    args: [],
+    fragments: [],
   },
   {
-    description: 'an empty string',
-    args: [''],
+    description: 'a single empty string',
+    fragments: [''],
   },
   {
-    description: 'a CSSVariableReferenceValue',
-    args: [new CSSVariableReferenceValue('--foo')],
+    description: 'a single CSSVariableReferenceValue',
+    fragments: [new CSSVariableReferenceValue('--foo')],
   },
   {
-    description: 'mix of strings and CSSVariableReferenceValues',
-    args: [
+    description: 'a mix of strings and CSSVariableReferenceValues',
+    fragments: [
       'foo',
       'bar',
       new CSSVariableReferenceValue('--A'),
@@ -35,16 +35,13 @@ const gTestArguments = [
   },
 ];
 
-for (const {args, description} of gTestArguments) {
+for (const args of gTestArguments) {
   test(() => {
-    const result = new CSSUnparsedValue(args);
-
-    assert_not_equals(result, null,
-        'A CSSUnparsedValue should be created');
-    assert_array_equals(result, args,
-        'Content of CSSUnparsedValue should be same as the arguments ' +
-        'passed in the constructor');
-  }, 'CSSUnparsedValue can be constructed from ' + description);
+    const result = new CSSUnparsedValue(args.fragments);
+    assert_not_equals(result, null, 'a CSSUnparsedValue is created');
+    assert_style_value_array_equals(result, args.fragments,
+                                    'fragments are same as given by constructor');
+  }, `CSSUnparsedValue can be constructed from ${args.description}`);
 }
 
 </script>

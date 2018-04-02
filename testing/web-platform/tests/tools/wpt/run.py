@@ -11,6 +11,8 @@ wpt_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os
 sys.path.insert(0, os.path.abspath(os.path.join(wpt_root, "tools")))
 
 from . import browser, utils, virtualenv
+from ..serve import serve
+
 logger = None
 
 
@@ -94,13 +96,10 @@ otherwise install OpenSSL and ensure that it's on your $PATH.""")
 
 def check_environ(product):
     if product not in ("firefox", "servo"):
-        expected_hosts = ["web-platform.test",
-                          "www.web-platform.test",
-                          "www1.web-platform.test",
-                          "www2.web-platform.test",
-                          "xn--n8j6ds53lwwkrqhv28a.web-platform.test",
-                          "xn--lve-6lad.web-platform.test",
-                          "nonexistent-origin.web-platform.test"]
+        expected_hosts = {".".join(x)
+                          for x in serve.get_subdomains("web-platform.test").values()}
+        expected_hosts |= {".".join(x)
+                           for x in serve.get_not_subdomains("web-platform.test").values()}
         missing_hosts = set(expected_hosts)
         if platform.uname()[0] != "Windows":
             hosts_path = "/etc/hosts"
@@ -114,13 +113,17 @@ def check_environ(product):
                 for host in hosts:
                     missing_hosts.discard(host)
             if missing_hosts:
-                raise WptrunError("""Missing hosts file configuration. Expected entries like:
+                if platform.uname()[0] != "Windows":
+                    message = """Missing hosts file configuration. Run
 
-%s
+python wpt make-hosts-file >> %s
 
-See README.md for more details.""" % "\n".join("%s\t%s" %
-                                               ("127.0.0.1" if "nonexistent" not in host else "0.0.0.0", host)
-                                               for host in expected_hosts))
+from a shell with Administrator privileges.""" % hosts_path
+                else:
+                    message = """Missing hosts file configuration. Run
+
+./wpt make-hosts-file | sudo tee -a %s""" % hosts_path
+                raise WptrunError(message)
 
 
 class BrowserSetup(object):
@@ -147,8 +150,10 @@ class BrowserSetup(object):
         if self.prompt_install(self.name):
             return self.browser.install(venv.path)
 
-    def setup(self, kwargs):
+    def install_requirements(self):
         self.venv.install_requirements(os.path.join(wpt_root, "tools", "wptrunner", self.browser.requirements))
+
+    def setup(self, kwargs):
         self.setup_kwargs(kwargs)
 
 
@@ -222,6 +227,7 @@ class Chrome(BrowserSetup):
                 kwargs["webdriver_binary"] = webdriver_binary
             else:
                 raise WptrunError("Unable to locate or install chromedriver binary")
+
 
 class ChromeAndroid(BrowserSetup):
     name = "chrome_android"
@@ -311,6 +317,23 @@ https://selenium-release.storage.googleapis.com/index.html
             kwargs["webdriver_binary"] = webdriver_binary
 
 
+class Safari(BrowserSetup):
+    name = "safari"
+    browser_cls = browser.Safari
+
+    def install(self, venv):
+        raise NotImplementedError
+
+    def setup_kwargs(self, kwargs):
+        if kwargs["webdriver_binary"] is None:
+            webdriver_binary = self.browser.find_webdriver()
+
+            if webdriver_binary is None:
+                raise WptrunError("Unable to locate safaridriver binary")
+
+            kwargs["webdriver_binary"] = webdriver_binary
+
+
 class Sauce(BrowserSetup):
     name = "sauce"
     browser_cls = browser.Sauce
@@ -340,15 +363,28 @@ class Servo(BrowserSetup):
             kwargs["binary"] = binary
 
 
+class WebKit(BrowserSetup):
+    name = "webkit"
+    browser_cls = browser.WebKit
+
+    def install(self, venv):
+        raise NotImplementedError
+
+    def setup_kwargs(self, kwargs):
+        pass
+
+
 product_setup = {
     "firefox": Firefox,
     "chrome": Chrome,
     "chrome_android": ChromeAndroid,
     "edge": Edge,
     "ie": InternetExplorer,
+    "safari": Safari,
     "servo": Servo,
     "sauce": Sauce,
     "opera": Opera,
+    "webkit": WebKit,
 }
 
 
@@ -373,6 +409,7 @@ def setup_wptrunner(venv, prompt=True, install=False, **kwargs):
         raise WptrunError("Unsupported product %s" % kwargs["product"])
 
     setup_cls = product_setup[kwargs["product"]](venv, prompt, sub_product)
+    setup_cls.install_requirements()
 
     if install:
         logger.info("Installing browser")

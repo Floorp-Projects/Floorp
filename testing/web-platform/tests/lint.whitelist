@@ -90,7 +90,7 @@ PRINT STATEMENT: */tools/*
 AHEM COPY: fonts/Ahem.ttf
 
 # None of these are actually Ahem
-AHEM COPY: css/fonts/ahem-extra/AHEM_*.TTF
+AHEM COPY: fonts/ahem-extra/AHEM_*.TTF
 
 # https://github.com/w3c/web-platform-tests/issues/7437
 AHEM COPY: css/vendor-imports/mozilla/mozilla-central-reftests/*/Ahem.ttf
@@ -380,7 +380,7 @@ SUPPORT-WRONG-DIR: css/*/LICENSE-*
 SUPPORT-WRONG-DIR: css/*/COPYING
 SUPPORT-WRONG-DIR: css/*/Makefile
 SUPPORT-WRONG-DIR: css/*/OWNERS
-SUPPORT-WRONG-DIR: css/fonts/*
+SUPPORT-WRONG-DIR: fonts/*
 
 # The selectors-3 testsuite has a weird build system
 SUPPORT-WRONG-DIR: css/selectors/*
@@ -453,7 +453,7 @@ INDENT TABS: css/css-values/*
 INDENT TABS: css/css-variables/*
 INDENT TABS: css/css-writing-modes/*
 INDENT TABS: css/filter-effects/*
-INDENT TABS: css/fonts/*
+INDENT TABS: fonts/*
 INDENT TABS: css/mediaqueries/*
 INDENT TABS: css/selectors/*
 INDENT TABS: css/vendor-imports/*
@@ -795,6 +795,8 @@ CSS-COLLIDING-REF-NAME: css/CSS2/visufx/overflow-applies-to-001-ref.xht
 CSS-COLLIDING-REF-NAME: css/CSS2/ui/overflow-applies-to-001-ref.xht
 CSS-COLLIDING-REF-NAME: css/CSS2/visuren/inline-formatting-context-001-ref.xht
 CSS-COLLIDING-REF-NAME: css/CSS2/linebox/inline-formatting-context-001-ref.xht
+CSS-COLLIDING-REF-NAME: css/css-transforms/individual-transform/individual-transform-1-ref.html
+CSS-COLLIDING-REF-NAME: css/vendor-imports/mozilla/mozilla-central-reftests/transforms/individual-transform-1-ref.html
 CSS-COLLIDING-SUPPORT-NAME: css/css-backgrounds/support/red.png
 CSS-COLLIDING-SUPPORT-NAME: css/compositing/mix-blend-mode/support/red.png
 CSS-COLLIDING-SUPPORT-NAME: css/compositing/background-blending/support/red.png
