@@ -1514,8 +1514,6 @@ pref("toolkit.telemetry.hybridContent.enabled", true);
 pref("experiments.enabled", true);
 pref("experiments.manifest.fetchIntervalSeconds", 86400);
 pref("experiments.manifest.uri", "https://telemetry-experiment.cdn.mozilla.net/manifest/v1/firefox/%VERSION%/%CHANNEL%");
-// Whether experiments are supported by the current application profile.
-pref("experiments.supported", true);
 
 // Ping Centre Telemetry settings.
 pref("browser.ping-centre.telemetry", true);
