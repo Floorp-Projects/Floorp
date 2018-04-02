@@ -11,7 +11,7 @@ add_task(async function() {
      "we will be removing an about:blank tab");
 
   let r = `rand-${Math.random()}`;
-  ss.setTabValue(tab, "foobar", r);
+  ss.setCustomTabValue(tab, "foobar", r);
 
   await promiseRemoveTabAndSessionState(tab);
   let closedTabData = ss.getClosedTabData(window);
