@@ -1052,6 +1052,9 @@ public:
     nsresult rv = NS_ReadInputStreamToString(mMsg.pStream, *temp, mLength);
 
     NS_ENSURE_SUCCESS(rv, rv);
+    if (temp->Length() != mLength) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
     mMsg.pStream->Close();
     mMsg.pStream->Release();
