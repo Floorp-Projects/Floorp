@@ -11034,14 +11034,19 @@ IsFrameScrolledOutOfView(nsIFrame* aTarget,
   }
 
   nsIFrame *scrollableParent = do_QueryFrame(scrollableFrame);
+  nsRect scrollableRect =
+    scrollableParent->GetVisualOverflowRectRelativeToSelf();
+  // We consider that the target is scrolled out if the scrollable frame is
+  // empty.
+  if (scrollableRect.IsEmpty()) {
+    return true;
+  }
 
   nsRect transformedRect =
     nsLayoutUtils::TransformFrameRectToAncestor(aTarget,
                                                 aTargetRect,
                                                 scrollableParent);
 
-  nsRect scrollableRect =
-    scrollableParent->GetVisualOverflowRectRelativeToSelf();
   if (transformedRect.IsEmpty()) {
     // If the transformed rect is empty it represents a line or a point that we
     // should check is outside the the scrollable rect.

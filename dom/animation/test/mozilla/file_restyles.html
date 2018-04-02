@@ -1645,6 +1645,78 @@ waitForAllPaints(() => {
     }
   );
 
+  add_task(
+    async function throttling_position_absolute_animations_in_collapsed_iframe() {
+      var iframe = document.createElement('iframe');
+      iframe.setAttribute('srcdoc', '<div id="target"></div>');
+      iframe.style.height = '0px';
+      document.documentElement.appendChild(iframe);
+
+      await new Promise(resolve => {
+        iframe.addEventListener('load', () => {
+          resolve();
+        });
+      });
+
+      const target = iframe.contentDocument.getElementById("target");
+      target.style= 'position: absolute; top: 50%; width: 100px; height: 100px';
+
+      var animation = target.animate({ opacity: [0, 1] },
+                                     { duration: 100 * MS_PER_SEC,
+                                       iterations: Infinity });
+      await animation.ready;
+
+      var markers = await observeStylingInTargetWindow(iframe.contentWindow, 5);
+      is(markers.length, 0,
+         'Animation on position:absolute element in collapsed iframe should ' +
+         'be throttled');
+
+      await ensureElementRemoval(iframe);
+    }
+  );
+
+  add_task(
+    async function position_absolute_animations_in_collapsed_element() {
+      var parent = addDiv(null, { style: 'overflow: scroll; height: 0px;' });
+      var target = addDiv(null,
+                          { style: 'animation: background-color 100s infinite;' +
+                                   'position: absolute; top: 50%;' +
+                                   'width: 100px; height: 100px;' });
+      parent.appendChild(target);
+
+      var animation = target.getAnimations()[0];
+      await animation.ready;
+
+      const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
+      var markers = await observeStyling(5);
+      is(markers.length, expectedRestyleCount,
+         'Animation on position:absolute element in collapsed element ' +
+         'should not be throttled');
+
+      await ensureElementRemoval(parent);
+    }
+  );
+
+  add_task(
+    async function throttling_position_absolute_animations_in_collapsed_element() {
+      var parent = addDiv(null, { style: 'overflow: scroll; height: 0px;' });
+      var target = addDiv(null,
+                          { style: 'animation: background-color 100s infinite;' +
+                                   'position: absolute; top: 50%;' });
+      parent.appendChild(target);
+
+      var animation = target.getAnimations()[0];
+      await animation.ready;
+
+      var markers = await observeStyling(5);
+      todo_is(markers.length, 0,
+              'Animation on collapsed position:absolute element in collapsed ' +
+              'element should be throttled');
+
+      await ensureElementRemoval(parent);
+    }
+  );
+
   add_task_if_omta_enabled(
     async function no_restyling_for_compositor_animation_on_unrelated_style_change() {
       var div = addDiv(null);
