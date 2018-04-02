@@ -72,8 +72,6 @@ user_pref("font.size.inflation.minTwips", 0);
 // Disable the caret blinking so we get stable snapshot
 user_pref("ui.caretBlinkTime", -1);
 
-// AddonManager tests require that the experiments provider be present.
-user_pref("experiments.supported", true);
 // Point the manifest at something local so we don't risk it hitting production
 // data and installing experiments that may vary over time.
 user_pref("experiments.manifest.uri", "http://%(server)s/experiments-dummy/manifest");

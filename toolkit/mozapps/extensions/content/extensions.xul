@@ -104,8 +104,6 @@
     <command id="cmd_enableUpdateSecurity"/>
     <command id="cmd_toggleAutoUpdateDefault"/>
     <command id="cmd_resetAddonAutoUpdate"/>
-    <command id="cmd_experimentsLearnMore"/>
-    <command id="cmd_experimentsOpenTelemetryPreferences"/>
     <command id="cmd_showUnsignedExtensions"/>
     <command id="cmd_showAllExtensions"/>
   </commandset>
@@ -324,25 +322,6 @@
                   <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
                 </hbox>
               </hbox>
-              <vbox class="alert-container experiment-info-container">
-                <vbox class="alert">
-                  <description>
-                    &experiment.info.label;
-                    <hbox>
-                      <button id="experiments-learn-more"
-                              label="&experiment.info.learnmore;"
-                              tooltiptext="&experiment.info.learnmore;"
-                              accesskey="&experiment.info.learnmore.accesskey;"
-                              command="cmd_experimentsLearnMore"/>
-                      <button id="experiments-change-telemetry"
-                              label="&experiment.info.changetelemetry;"
-                              tooltiptext="&experiment.info.changetelemetry;"
-                              accesskey="&experiment.info.changetelemetry.accesskey;"
-                              command="cmd_experimentsOpenTelemetryPreferences"/>
-                    </hbox>
-                  </description>
-                </vbox>
-              </vbox>
               <vbox id="addon-list-empty" class="alert-container"
                     flex="1" hidden="true">
                 <spacer class="alert-spacer-before"/>
@@ -515,15 +494,6 @@
                         </hbox>
                         <label id="detail-creator" class="creator"/>
                       </vbox>
-                      <hbox id="detail-experiment-container">
-                        <svg width="8" height="8" viewBox="0 0 8 8" version="1.1"
-                             xmlns="http://www.w3.org/2000/svg"
-                             id="detail-experiment-bullet-container">
-                          <circle cx="4" cy="4" r="4" id="detail-experiment-bullet"/>
-                        </svg>
-                        <label id="detail-experiment-state"/>
-                        <label id="detail-experiment-time"/>
-                      </hbox>
                       <hbox id="detail-desc-container" align="start">
                         <vbox id="detail-screenshot-box" pack="center" hidden="true"> <!-- Necessary to work around bug 394738 -->
                           <image id="detail-screenshot"/>
