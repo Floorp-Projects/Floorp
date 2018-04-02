@@ -621,18 +621,6 @@ RestyleManager::ChangeHintToString(nsChangeHint aHint)
 static bool gInApplyRenderingChangeToTree = false;
 #endif
 
-#ifdef DEBUG
-
-void
-RestyleManager::DebugVerifyStyleTree(nsIFrame* aFrame)
-{
-  // XXXheycam For now, we know that we don't use the same inheritance
-  // hierarchy for certain cases, so just skip these assertions until
-  // we work out what we want to assert (bug 1322570).
-}
-
-#endif // DEBUG
-
 /**
  * Sync views on aFrame and all of aFrame's descendants (following placeholders),
  * if aChange has nsChangeHint_SyncFrameView.
@@ -1708,24 +1696,6 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       }
     }
   }
-
-#ifdef DEBUG
-  // Verify the style tree.  Note that this needs to happen once we've
-  // processed the whole list, since until then the tree is not in fact in a
-  // consistent state.
-  for (const nsStyleChangeData& data : aChangeList) {
-    // reget frame from content since it may have been regenerated...
-    if (data.mContent) {
-      nsIFrame* frame = data.mContent->GetPrimaryFrame();
-      if (frame) {
-        DebugVerifyStyleTree(frame);
-      }
-    } else if (!data.mFrame || !data.mFrame->IsViewportFrame()) {
-      NS_WARNING("Unable to test style tree integrity -- no content node "
-                 "(and not a viewport frame)");
-    }
-  }
-#endif
 
   aChangeList.Clear();
 }
