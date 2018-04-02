@@ -7,7 +7,7 @@ async function createTabWithRandomValue(url) {
 
   // Set a random value.
   let r = `rand-${Math.random()}`;
-  ss.setTabValue(tab, "foobar", r);
+  ss.setCustomTabValue(tab, "foobar", r);
 
   // Flush to ensure there are no scheduled messages.
   await TabStateFlusher.flush(browser);
