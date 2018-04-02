@@ -4,32 +4,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsString.h"
-#include "MacHelpers.h"
 #include "MacStringHelpers.h"
 #include "nsObjCExceptions.h"
 
-#import <Foundation/Foundation.h>
+#include "mozilla/IntegerTypeTraits.h"
 
 namespace mozilla {
 
 nsresult
-GetSelectedCityInfo(nsAString& aCountryCode)
+CopyCocoaStringToXPCOMString(NSString* aFrom, nsAString& aTo)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  // Can be replaced with [[NSLocale currentLocale] countryCode] once we build
-  // with the 10.12 SDK.
-  id countryCode = [[NSLocale currentLocale] objectForKey:NSLocaleCountryCode];
-
-  if (![countryCode isKindOfClass:[NSString class]]) {
-    return NS_ERROR_FAILURE;
+  NSUInteger len = [aFrom length];
+  if (len > MaxValue<nsAString::size_type>::value) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return mozilla::CopyCocoaStringToXPCOMString((NSString*)countryCode, aCountryCode);
+  if (!aTo.SetLength(len, mozilla::fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  [aFrom getCharacters:reinterpret_cast<unichar*>(aTo.BeginWriting()) range:NSMakeRange(0, len)];
+
+  return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 } // namespace Mozilla
-
