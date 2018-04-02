@@ -698,6 +698,11 @@ SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel)
     delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_MEDIUM;
   }
 
+#ifndef NIGHTLY_BUILD
+  // We are experimenting with using restricting SIDs in the nightly builds
+  mPolicy->SetDoNotUseRestrictingSIDs();
+#endif
+
   sandbox::ResultCode result = SetJobLevel(mPolicy, jobLevel,
                                            0 /* ui_exceptions */);
   SANDBOX_ENSURE_SUCCESS(result,
