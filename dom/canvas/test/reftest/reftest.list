@@ -141,8 +141,7 @@ fuzzy(9,40000) skip pref(webgl.prefer-16bpp,true)                               
 fuzzy(9,40000) skip pref(webgl.prefer-16bpp,true) pref(webgl.force-layers-readback,true)  == webgl-color-test.html?16bpp&readback&premult&alpha  wrapper.html?colors-premult.png
 
 # Force native GL (Windows):
-skip-if(!winWidget) pref(webgl.disable-angle,true) == webgl-color-test.html?native-gl  wrapper.html?colors-no-alpha.png
-
+skip-if(true) pref(webgl.disable-angle,true) == webgl-color-test.html?native-gl  wrapper.html?colors-no-alpha.png
 
 # Non-WebGL Reftests!
 

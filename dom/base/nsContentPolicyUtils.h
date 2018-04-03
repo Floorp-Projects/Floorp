@@ -114,7 +114,6 @@ NS_CP_ContentTypeName(uint32_t contentType)
     CASE_RETURN( TYPE_FETCH                       );
     CASE_RETURN( TYPE_IMAGESET                    );
     CASE_RETURN( TYPE_WEB_MANIFEST                );
-    CASE_RETURN( TYPE_SAVEAS_DOWNLOAD             );
     CASE_RETURN( TYPE_INTERNAL_SCRIPT             );
     CASE_RETURN( TYPE_INTERNAL_WORKER             );
     CASE_RETURN( TYPE_INTERNAL_SHARED_WORKER      );
@@ -135,6 +134,8 @@ NS_CP_ContentTypeName(uint32_t contentType)
     CASE_RETURN( TYPE_INTERNAL_STYLESHEET         );
     CASE_RETURN( TYPE_INTERNAL_STYLESHEET_PRELOAD );
     CASE_RETURN( TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS );
+    CASE_RETURN( TYPE_SAVEAS_DOWNLOAD             );
+    CASE_RETURN( TYPE_SPECULATIVE                 );
    default:
     return "<Unknown Type>";
   }

@@ -30,7 +30,6 @@ function testRightClick(aCategory, hudBox, aHud) {
   let deferred = defer();
   let selector = ".webconsole-filter-button[category=\"" + aCategory + "\"]";
   let button = hudBox.querySelector(selector);
-  let mainButton = getMainButton(button, aHud);
   let origCheckedState = button.getAttribute("aria-pressed");
   let contextMenu = aHud.iframeWindow.document.getElementById(aCategory + "-contextmenu");
 
@@ -63,8 +62,8 @@ function testRightClick(aCategory, hudBox, aHud) {
   }
 
   function leftClickToChangeCheckedState() {
-    info("left click the mainbutton to change checked state");
-    EventUtils.sendMouseEvent({type: "click"}, mainButton);
+    info("shift click the button to change checked state");
+    EventUtils.sendMouseEvent({type: "click", shiftKey: true}, button);
     executeSoon(() => {
       verifyContextMenuIsClosed();
       verifyNewCheckedState();
@@ -74,22 +73,7 @@ function testRightClick(aCategory, hudBox, aHud) {
 
   verifyContextMenuIsClosed();
   info("right click the button to open the context menu");
-  waitForContextMenu(contextMenu, mainButton, verifyOriginalCheckedState,
+  waitForContextMenu(contextMenu, button, verifyOriginalCheckedState,
                      leftClickToClose);
   return deferred.promise;
-}
-
-function getMainButton(aTargetButton, aHud) {
-  let anonymousNodes = aHud.ui.document.getAnonymousNodes(aTargetButton);
-  let subbutton;
-
-  for (let i = 0; i < anonymousNodes.length; i++) {
-    let node = anonymousNodes[i];
-    if (node.classList.contains("toolbarbutton-menubutton-button")) {
-      subbutton = node;
-      break;
-    }
-  }
-
-  return subbutton;
 }

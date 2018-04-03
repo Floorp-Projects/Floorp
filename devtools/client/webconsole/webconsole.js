@@ -812,11 +812,10 @@ WebConsoleFrame.prototype = {
           break;
         }
 
-        if (!classes.contains("toolbarbutton-menubutton-button") &&
-            originalTarget.getAttribute("type") === "menu-button") {
-          // This is a filter button with a drop-down. The user clicked the
-          // drop-down, so do nothing. (The menu will automatically appear
-          // without our intervention.)
+        if (!event.getModifierState("Alt") &&
+            !event.getModifierState("Shift")) {
+          // Do nothing unless the click is modified. (The menu will
+          // automatically appear without our intervention.)
           break;
         }
 
