@@ -9,14 +9,14 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-  const { animationInspector, inspector, panel } = await openAnimationInspector();
+  await removeAnimatedElementsExcept([".keyframes-easing-step"]);
+  const { animationInspector, panel } = await openAnimationInspector();
 
   info("Checking current time label existence");
   const labelEl = panel.querySelector(".current-time-label");
   ok(labelEl, "current time label should exist");
 
   info("Checking current time label content");
-  await selectNodeAndWaitForAnimations(".keyframes-easing-step", inspector);
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
   assertLabelContent(labelEl, animationInspector.state.animations[0].state.currentTime);
   await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.2);

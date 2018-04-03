@@ -10,6 +10,8 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
+  await removeAnimatedElementsExcept(
+    [".compositor-all", ".compositor-notall", ".no-compositor", ".still"]);
   const { animationInspector, inspector, panel } = await openAnimationInspector();
 
   info("Checking the mutation for add an animation");

@@ -7,7 +7,7 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-
+  await removeAnimatedElementsExcept([".animated", ".long"]);
   const { animationInspector, inspector, panel } = await openAnimationInspector();
 
   info("Checking animation list and items existence");
@@ -27,8 +27,7 @@ add_task(async function() {
     "Background color of an even animation should be different from odd");
 
   info("Checking list and items existence after select a element which has an animation");
-  const animatedNode = await getNodeFront(".animated", inspector);
-  await selectNodeAndWaitForAnimations(animatedNode, inspector);
+  await selectNodeAndWaitForAnimations(".animated", inspector);
   is(panel.querySelectorAll(".animation-list .animation-item").length, 1,
     "The number of animations displayed should be 1 for .animated element");
 });
