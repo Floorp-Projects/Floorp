@@ -64,48 +64,6 @@
       }
     }
 
-    function openMenuButton(aButtonID)
-    {
-      this.buttonNode = getNode(aButtonID);
-      this.menupoupNode = this.buttonNode.firstChild;
-
-      this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, this.menupoupNode)
-      ];
-
-      this.invoke = function openMenu_invoke()
-      {
-        var tree =
-          { PUSHBUTTON: [
-            { MENUPOPUP: [ ] },
-            { PUSHBUTTON: [ ] }
-          ] };
-        testAccessibleTree(this.buttonNode, tree);
-
-        this.buttonNode.open = true;
-      }
-
-      this.finalCheck = function openMenu_finalCheck()
-      {
-        var tree =
-          { PUSHBUTTON: [
-            { MENUPOPUP: [
-              { MENUITEM: [ ] },
-              { MENUITEM: [ ] }
-            ] },
-            { PUSHBUTTON: [ ] }
-          ] };
-        testAccessibleTree(this.buttonNode, tree);
-
-        this.buttonNode.open = false;
-      }
-
-      this.getID = function openMenu_getID()
-      {
-        return "open menu for menu button " + prettyName(aButtonID);
-      }
-    }
-
     ////////////////////////////////////////////////////////////////////////////
     // Do test
 
@@ -118,9 +76,7 @@
       gQueue = new eventQueue();
 
       gQueue.push(new openMenu("button1"));
-      gQueue.push(new openMenuButton("button2"));
       gQueue.push(new openMenu("button3"));
-      gQueue.push(new openMenuButton("button4"));
 
       var columnPickerBtn = getAccessible("tree").firstChild.lastChild;
       gQueue.push(new openMenu(columnPickerBtn, ROLE_CHECK_MENU_ITEM));
@@ -136,7 +92,7 @@
     <body xmlns="http://www.w3.org/1999/xhtml">
       <a target="_blank"
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=249292"
-         title="Ensure accessible children for toolbarbutton types 'menu' and 'menu-button'">
+         title="Ensure accessible children for toolbarbutton types 'menu'">
         Bug 249292
       </a>
       <a target="_blank"
@@ -164,20 +120,8 @@
           <menuitem label="menuitem"/>
         </menupopup>
       </button>
-      <button id="button2" type="menu-button" label="menu button">
-        <menupopup>
-          <menuitem label="menuitem"/>
-          <menuitem label="menuitem"/>
-        </menupopup>
-      </button>
 
       <toolbarbutton id="button3" type="menu" label="toolbarbutton">
-        <menupopup>
-          <menuitem label="menuitem"/>
-          <menuitem label="menuitem"/>
-        </menupopup>
-      </toolbarbutton>
-      <toolbarbutton id="button4" type="menu-button" label="menu toolbarbutton">
         <menupopup>
           <menuitem label="menuitem"/>
           <menuitem label="menuitem"/>
