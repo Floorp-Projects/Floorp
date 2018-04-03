@@ -2340,7 +2340,8 @@ PeerConnectionImpl::CreateReceiveTrack(SdpMediaSection::MediaType type)
       audio ?
         MediaStreamGraph::AUDIO_THREAD_DRIVER :
         MediaStreamGraph::SYSTEM_THREAD_DRIVER,
-      GetWindow());
+      GetWindow(),
+      MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE);
 
   RefPtr<DOMMediaStream> stream =
     DOMMediaStream::CreateSourceStreamAsInput(GetWindow(), graph);
