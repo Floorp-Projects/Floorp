@@ -257,6 +257,14 @@ var Policies = {
     }
   },
 
+  "DisableForgetButton": {
+    onProfileAfterChange(manager, param) {
+      if (param) {
+        setAndLockPref("privacy.panicButton.enabled", false);
+      }
+    }
+  },
+
   "DisableFormHistory": {
     onBeforeUIStartup(manager, param) {
       if (param) {
