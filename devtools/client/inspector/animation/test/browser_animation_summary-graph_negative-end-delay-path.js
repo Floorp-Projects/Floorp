@@ -7,12 +7,12 @@
 // * element existance
 // * path
 
-const TEST_CASES = [
+const TEST_DATA = [
   {
-    targetClassName: "enddelay-positive",
+    targetClass: "enddelay-positive",
   },
   {
-    targetClassName: "enddelay-negative",
+    targetClass: "enddelay-negative",
     expectedPath: [
       { x: 500000, y: 0 },
       { x: 500000, y: 50 },
@@ -28,27 +28,22 @@ add_task(async function() {
 
   const { panel } = await openAnimationInspector();
 
-  for (const testCase of TEST_CASES) {
-    const {
-      expectedPath,
-      targetClassName,
-    } = testCase;
-
+  for (const { targetClass, expectedPath } of TEST_DATA) {
     const animationItemEl =
-      findAnimationItemElementsByTargetClassName(panel, targetClassName);
+      findAnimationItemElementsByTargetClassName(panel, targetClass);
 
-    info(`Checking negative endDelay path existance for ${ targetClassName }`);
+    info(`Checking negative endDelay path existance for ${ targetClass }`);
     const negativeEndDelayPathEl =
       animationItemEl.querySelector(".animation-negative-end-delay-path");
 
     if (expectedPath) {
       ok(negativeEndDelayPathEl,
-         "The negative endDelay path element should be in animation item element");
+        "The negative endDelay path element should be in animation item element");
       const pathEl = negativeEndDelayPathEl.querySelector("path");
       assertPathSegments(pathEl, true, expectedPath);
     } else {
       ok(!negativeEndDelayPathEl,
-         "The negative endDelay path element should not be in animation item element");
+        "The negative endDelay path element should not be in animation item element");
     }
   }
 });

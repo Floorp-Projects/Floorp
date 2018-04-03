@@ -20,12 +20,12 @@ add_task(async function() {
 
   info("Checking added animation existence even the animation name is duplicated");
   is(getAnimationNameCount(panel, "no-compositor"), 2,
-   "Count of animation should be plus one to original count");
+    "Count of animation should be plus one to original count");
 
   info("Checking the mutation for remove an animation");
   await setClassAttribute(animationInspector, ".compositor-notall", "ball still");
   is(animationInspector.state.animations.length, originalAnimationCount,
-   "Count of animation should be same to original count since we remove an animation");
+    "Count of animation should be same to original count since we remove an animation");
 
   info("Checking the mutation for modify an animation");
   await selectNodeAndWaitForAnimations(".compositor-all", inspector);
@@ -33,8 +33,8 @@ add_task(async function() {
   await setStyle(animationInspector, ".compositor-all", "animationIterationCount", 1);
   const summaryGraphPathEl = getSummaryGraphPathElement(panel, "compositor-all");
   is(summaryGraphPathEl.viewBox.baseVal.width, 100000,
-    "Width of summary graph path should be 100000 " +
-    "after modifing the duration and iteration count");
+     "Width of summary graph path should be 100000 " +
+     "after modifing the duration and iteration count");
   await setStyle(animationInspector, ".compositor-all", "animationDelay", "100s");
   is(summaryGraphPathEl.viewBox.baseVal.width, 200000,
     "Width of summary graph path should be 200000 after modifing the delay");

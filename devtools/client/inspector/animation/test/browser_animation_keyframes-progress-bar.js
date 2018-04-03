@@ -11,44 +11,44 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 requestLongerTimeout(5);
 
-const POSITION_TESTCASES = [
+const TEST_DATA = [
   {
-    targetClassName: "cssanimation-linear",
+    targetClass: "cssanimation-linear",
     scrubberPositions: [0, 0.25, 0.5, 0.75, 1],
     expectedPositions: [0, 0.25, 0.5, 0.75, 0],
   },
   {
-    targetClassName: "easing-step",
+    targetClass: "easing-step",
     scrubberPositions: [0, 0.49, 0.5, 0.99],
     expectedPositions: [0, 0, 0.5, 0.5],
   },
   {
-    targetClassName: "delay-positive",
+    targetClass: "delay-positive",
     scrubberPositions: [0, 0.33, 0.5],
     expectedPositions: [0, 0, 0.25],
   },
   {
-    targetClassName: "delay-negative",
+    targetClass: "delay-negative",
     scrubberPositions: [0, 0.49, 0.5, 0.75],
     expectedPositions: [0, 0, 0.5, 0.75],
   },
   {
-    targetClassName: "enddelay-positive",
+    targetClass: "enddelay-positive",
     scrubberPositions: [0, 0.66, 0.67, 0.99],
     expectedPositions: [0, 0.99, 0, 0],
   },
   {
-    targetClassName: "enddelay-negative",
+    targetClass: "enddelay-negative",
     scrubberPositions: [0, 0.49, 0.5, 0.99],
     expectedPositions: [0, 0.49, 0, 0],
   },
   {
-    targetClassName: "direction-reverse-with-iterations-infinity",
+    targetClass: "direction-reverse-with-iterations-infinity",
     scrubberPositions: [0, 0.25, 0.5, 0.75, 1],
     expectedPositions: [1, 0.75, 0.5, 0.25, 1],
   },
   {
-    targetClassName: "fill-both-width-delay-iterationstart",
+    targetClass: "fill-both-width-delay-iterationstart",
     scrubberPositions: [0, 0.33, 0.66, 0.833, 1],
     expectedPositions: [0.5, 0.5, 0.99, 0.25, 0.5],
   },
@@ -60,18 +60,21 @@ add_task(async function() {
 
   info("Checking progress bar position in multi effect timings");
 
-  for (const testcase of POSITION_TESTCASES) {
-    info(`Checking progress bar position for ${ testcase.targetClassName }`);
-    await selectNodeAndWaitForAnimations(`.${ testcase.targetClassName }`, inspector);
+  for (const testdata of TEST_DATA) {
+    const {
+      targetClass,
+      scrubberPositions,
+      expectedPositions,
+    } = testdata;
+
+    info(`Checking progress bar position for ${ targetClass }`);
+    await selectNodeAndWaitForAnimations(`.${ targetClass }`, inspector);
 
     info("Checking progress bar existence");
     const areaEl = panel.querySelector(".keyframes-progress-bar-area");
     ok(areaEl, "progress bar area should exist");
     const barEl = areaEl.querySelector(".keyframes-progress-bar");
     ok(barEl, "progress bar should exist");
-
-    const scrubberPositions = testcase.scrubberPositions;
-    const expectedPositions = testcase.expectedPositions;
 
     for (let i = 0; i < scrubberPositions.length; i++) {
       info(`Scrubber position is ${ scrubberPositions[i] }`);

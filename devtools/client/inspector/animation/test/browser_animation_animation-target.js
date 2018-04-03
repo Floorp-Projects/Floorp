@@ -15,13 +15,13 @@ add_task(async function() {
   info("Checking the animation target elements existance");
   const animationItemEls = panel.querySelectorAll(".animation-list .animation-item");
   is(animationItemEls.length, animationInspector.state.animations.length,
-     "Number of animation target element should be same to number of animations "
-     + "that displays");
+     "Number of animation target element should be same to number of animations " +
+     "that displays");
 
   for (const animationItemEl of animationItemEls) {
     const animationTargetEl = animationItemEl.querySelector(".animation-target");
     ok(animationTargetEl,
-       "The animation target element should be in each animation item element");
+      "The animation target element should be in each animation item element");
   }
 
   info("Checking the content of animation target");
@@ -29,7 +29,6 @@ add_task(async function() {
   const animationTargetEl =
     panel.querySelector(".animation-list .animation-item .animation-target");
   is(animationTargetEl.textContent, "div.ball.animated",
-     "The target element's content is correct");
-  ok(animationTargetEl.querySelector(".objectBox"),
-     "objectBox is in the page exists");
+    "The target element's content is correct");
+  ok(animationTargetEl.querySelector(".objectBox"), "objectBox is in the page exists");
 });
