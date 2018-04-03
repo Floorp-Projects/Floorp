@@ -90,7 +90,7 @@ XULMAP(
   panel,
   [](Element* aElement, Accessible* aContext) -> Accessible* {
     static const Element::AttrValuesArray sIgnoreTypeVals[] =
-      { &nsGkAtoms::autocomplete_richlistbox, &nsGkAtoms::autocomplete, nullptr };
+      { nsGkAtoms::autocomplete_richlistbox, nsGkAtoms::autocomplete, nullptr };
 
     if (aElement->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
                                   sIgnoreTypeVals, eIgnoreCase) >= 0) {
