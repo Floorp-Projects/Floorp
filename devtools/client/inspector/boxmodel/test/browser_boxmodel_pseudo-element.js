@@ -53,7 +53,7 @@ const res1 = [
   },
   {
     selector: ".boxmodel-margin.boxmodel-left > span",
-    value: 0
+    value: 4 // (100 - (10 * 2) - (20 * 2) - 32) / 2
   },
   {
     selector: ".boxmodel-margin.boxmodel-bottom > span",
@@ -61,7 +61,7 @@ const res1 = [
   },
   {
     selector: ".boxmodel-margin.boxmodel-right > span",
-    value: 0
+    value: 4 // (100 - (10 * 2) - (20 * 2) - 32) / 2
   },
   {
     selector: ".boxmodel-padding.boxmodel-top > span",
