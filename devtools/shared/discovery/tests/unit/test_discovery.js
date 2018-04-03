@@ -8,7 +8,7 @@ const { require } =
   ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const discovery = require("devtools/shared/discovery/discovery");
 const { setTimeout, clearTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
 
