@@ -2963,7 +2963,7 @@ NodeAllowsClickThrough(nsINode* aNode)
     if (aNode->IsXULElement()) {
       mozilla::dom::Element* element = aNode->AsElement();
       static Element::AttrValuesArray strings[] =
-        {&nsGkAtoms::always, &nsGkAtoms::never, nullptr};
+        {nsGkAtoms::always, nsGkAtoms::never, nullptr};
       switch (element->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::clickthrough,
                                        strings, eCaseMatters)) {
         case 0:

@@ -921,7 +921,7 @@ protected:
   ContentEditableTristate GetContentEditableValue() const
   {
     static const Element::AttrValuesArray values[] =
-      { &nsGkAtoms::_false, &nsGkAtoms::_true, &nsGkAtoms::_empty, nullptr };
+      { nsGkAtoms::_false, nsGkAtoms::_true, nsGkAtoms::_empty, nullptr };
 
     if (!MayHaveContentEditableAttr())
       return eInherit;
