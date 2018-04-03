@@ -148,7 +148,8 @@ var supported_properties = {
                        test_float_zeroToOne_clamped ],
     "filter" : [ test_filter_transition ],
     "flex-basis": [ test_length_transition, test_percent_transition,
-                    test_length_clamped, test_percent_clamped ],
+                    test_length_clamped, test_percent_clamped,
+                    test_flex_basis_content_transition ],
     "flex-grow": [ test_float_zeroToOne_transition,
                    test_float_aboveOne_transition ],
     "flex-shrink": [ test_float_zeroToOne_transition,
@@ -1167,6 +1168,31 @@ function test_length_clamped_or_unclamped(prop, is_clamped, numbers_are_pixels) 
      numbers_are_pixels ? "0" : "0px",
      "length-valued property " + prop + ": clamping of negatives");
   div.style.setProperty("transition-timing-function", "linear", "");
+}
+
+// Test transition to/from the special 'flex-basis: content' keyword.
+function test_flex_basis_content_transition(prop) {
+  is(prop, "flex-basis", "this test function should only be called for 'flex-basis'");
+
+  // Test transition from length to 'content':
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "8px", "");
+  is(cs.getPropertyValue(prop), "8px",
+     "property " + prop + ": computed value before transition to 'content'");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "content", "");
+  is(cs.getPropertyValue(prop), "content",
+     "property " + prop + ": transition to 'content' (should be discrete)");
+
+  // Test transition from 'content' to length:
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "content", "");
+  is(cs.getPropertyValue(prop), "content",
+     "property " + prop + ": computed value before transition from 'content'");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "6px", "");
+  is(cs.getPropertyValue(prop), "6px",
+     "property " + prop + ": transition from 'content' (should be discrete)");
 }
 
 // Test using float values in the range [0, 1] (e.g. opacity)
