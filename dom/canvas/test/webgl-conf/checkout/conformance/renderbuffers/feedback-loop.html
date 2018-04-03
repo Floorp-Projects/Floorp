@@ -81,7 +81,7 @@
     assertMsg(gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE,
         "framebuffer should be FRAMEBUFFER_COMPLETE.");
 
-    var program = wtu.setupProgram(gl, ["vs", "fs"], ["vPosition", "vTexCoord"]);
+    var program = wtu.setupProgram(gl, ["vs", "fs"], ["a_position", "a_texCoord"]);
     gl.uniform1i(gl.getUniformLocation(program, "u_texture"), 0);
     gl.disable(gl.BLEND);
     gl.disable(gl.DEPTH_TEST);
