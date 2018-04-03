@@ -2583,23 +2583,6 @@ Gecko_AddPropertyToSet(nsCSSPropertyIDSetBorrowedMut aPropertySet,
   aPropertySet->AddProperty(aProperty);
 }
 
-int32_t
-Gecko_RegisterNamespace(nsAtom* aNamespace)
-{
-  int32_t id;
-
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsAutoString str;
-  aNamespace->ToString(str);
-  nsresult rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(str, id);
-
-  if (NS_FAILED(rv)) {
-    return -1;
-  }
-  return id;
-}
-
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 
 #define STYLE_STRUCT(name)                                                    \
