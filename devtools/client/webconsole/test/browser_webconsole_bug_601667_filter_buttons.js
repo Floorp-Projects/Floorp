@@ -105,11 +105,8 @@ function testMenuFilterButton(category) {
   ok(isChecked(button), "the button for category " + category + " is still " +
      "checked after turning off its first menu item");
 
-  // Turn all the filters off by clicking the main part of the button.
-  let subbutton = getMainButton(button);
-  ok(subbutton, "we have the subbutton for category " + category);
-
-  clickButton(subbutton);
+  // Turn all the filters off by shift clicking the button.
+  shiftClickButton(button);
   ok(!isChecked(button), "the button for category " + category + " is " +
      "no longer checked after clicking its main part");
 
@@ -125,8 +122,8 @@ function testMenuFilterButton(category) {
     menuItem = menuItem.nextSibling;
   }
 
-  // Turn all the filters on by clicking the main part of the button.
-  clickButton(subbutton);
+  // Turn all the filters on by shift clicking the button.
+  shiftClickButton(button);
 
   ok(isChecked(button), "the button for category " + category + " is " +
      "checked after clicking its main part");
@@ -166,8 +163,8 @@ function testMenuFilterButton(category) {
   ok(!isChecked(button), "the button for category " + category + " is " +
      "unchecked after unchecking all its filters");
 
-  // Turn all the filters on again by clicking the button.
-  clickButton(subbutton);
+  // Turn all the filters on again by shift clicking the button.
+  shiftClickButton(button);
 }
 
 function testIsolateFilterButton(category) {
@@ -175,12 +172,8 @@ function testIsolateFilterButton(category) {
   let targetButton = hudBox.querySelector(selector);
   ok(targetButton, "we have the \"" + category + "\" button");
 
-  // Get the main part of the filter button.
-  let subbutton = getMainButton(targetButton);
-  ok(subbutton, "we have the subbutton for category " + category);
-
-  // Turn on all the filters by alt clicking the main part of the button.
-  altClickButton(subbutton);
+  // Turn on all the filters by alt clicking the button.
+  altClickButton(targetButton);
   ok(isChecked(targetButton), "the button for category " + category +
      " is checked after isolating for filter");
 
@@ -222,9 +215,8 @@ function testIsolateFilterButton(category) {
         }
       });
 
-      // Turn all the filters on again by clicking the button.
-      let mainButton = getMainButton(filterButton);
-      clickButton(mainButton);
+      // Turn all the filters on again by shift clicking the button.
+      shiftClickButton(targetButton);
     }
   });
 }
@@ -253,6 +245,10 @@ function clickButton(node) {
 
 function altClickButton(node) {
   EventUtils.sendMouseEvent({ type: "click", altKey: true }, node);
+}
+
+function shiftClickButton(node) {
+  EventUtils.sendMouseEvent({ type: "click", shiftKey: true }, node);
 }
 
 function chooseMenuItem(node) {
