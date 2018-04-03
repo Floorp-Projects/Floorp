@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 import os
 import re
+from pathlib import *
 
 # All paths in this file are based where this file is run.
 WRAPPER_TEMPLATE_FILE = 'mochi-wrapper.html.template'
@@ -97,7 +98,7 @@ def AccumTests(pathStr, listFile, allowWebGL1, allowWebGL2, out_testList):
     listPath = listPathStr.replace('/', os.sep)
     assert os.path.exists(listPath), 'Bad `listPath`: ' + listPath
 
-    with open(listPath, 'rb') as fIn:
+    with open(listPath, 'r') as fIn:
         lineNum = 0
         for line in fIn:
             lineNum += 1
@@ -170,14 +171,14 @@ def FillTemplate(inFilePath, templateDict, outFilePath):
 
 
 def ImportTemplate(inFilePath):
-    with open(inFilePath, 'rb') as f:
+    with open(inFilePath, 'r') as f:
         return TemplateShell(f)
 
 
 def OutputFilledTemplate(templateShell, templateDict, outFilePath):
     spanStrList = templateShell.Fill(templateDict)
 
-    with open(outFilePath, 'wb') as f:
+    with open(outFilePath, 'w', newline='\n') as f:
         f.writelines(spanStrList)
     return
 
@@ -350,7 +351,7 @@ def ManifestPathStr(pathStr):
 
 def WriteManifest(wrapperPathStrList, supportPathStrList):
     destPathStr = DEST_MANIFEST_PATHSTR
-    print 'Generating manifest: ' + destPathStr
+    print('Generating manifest: ' + destPathStr)
 
     errataMap = LoadErrata()
 
@@ -373,7 +374,7 @@ def WriteManifest(wrapperPathStrList, supportPathStrList):
     manifestTestLineList = []
     wrapperPathStrList = sorted(wrapperPathStrList)
     for wrapperPathStr in wrapperPathStrList:
-        #print 'wrapperPathStr: ' + wrapperPathStr
+        #print('wrapperPathStr: ' + wrapperPathStr)
 
         wrapperManifestPathStr = ManifestPathStr(wrapperPathStr)
         sectionName = '[' + wrapperManifestPathStr + ']'
@@ -399,9 +400,9 @@ def WriteManifest(wrapperPathStrList, supportPathStrList):
         continue
 
     if errataMap:
-        print 'Errata left in map:'
+        print('Errata left in map:')
         for x in errataMap.keys():
-            print ' '*4 + x
+            print(' '*4 + x)
         assert False
 
     manifestTestsStr = '\n'.join(manifestTestLineList)
@@ -431,7 +432,7 @@ def LoadINI(path):
     ret = {}
     ret[curSectionName] = (lineNum, curSectionMap)
 
-    with open(path, 'rb') as f:
+    with open(path, 'r') as f:
         for line in f:
             lineNum += 1
 
@@ -469,7 +470,7 @@ def LoadErrata():
 
     ret = {}
 
-    for (sectionName, (sectionLineNum, sectionMap)) in iniMap.iteritems():
+    for (sectionName, (sectionLineNum, sectionMap)) in iniMap.items():
         curLines = []
 
         if sectionName == None:
@@ -478,7 +479,7 @@ def LoadErrata():
             path = sectionName.replace('/', os.sep)
             assert os.path.exists(path), 'Errata line {}: Invalid file: {}'.format(sectionLineNum, sectionName)
 
-        for (key, (lineNum, val)) in sectionMap.iteritems():
+        for (key, (lineNum, val)) in sectionMap.items():
             assert key in ACCEPTABLE_ERRATA_KEYS, 'Line {}: {}'.format(lineNum, key)
 
             curLine = '{} = {}'.format(key, val)
@@ -519,8 +520,9 @@ def GetFilePathListForDir(baseDir):
 
 
 if __name__ == '__main__':
-    fileDir = os.path.dirname(__file__)
-    assert not fileDir, 'Run this file from its directory, not ' + fileDir
+    file_dir = Path(__file__).parent
+    cwd = Path.cwd()
+    assert cwd.samefile(file_dir), 'Run this file from its directory.'
 
     testEntryList = GetTestList()
     wrapperPathStrList = WriteWrappers(testEntryList)
