@@ -122,12 +122,16 @@ add_task(async function test_pref_tracker() {
 
   setAndLockPref("test1.pref1", 20);
   setDefaultPref("test1.pref2", "NEW VALUE");
+  setAndLockPref("test1.pref3", "NEW VALUE");
+  setDefaultPref("test1.pref4", 20);
 
   PoliciesPrefTracker.restoreDefaultValues();
 
   is(Services.prefs.getIntPref("test1.pref1"), 10, "Expected value for test1.pref1");
   is(Services.prefs.getStringPref("test1.pref2"), "test", "Expected value for test1.pref2");
   is(Services.prefs.prefIsLocked("test1.pref1"), false, "test1.pref1 got unlocked");
+  is(Services.prefs.getStringPref("test1.pref3", undefined), undefined, "test1.pref3 should have had its value unset");
+  is(Services.prefs.getIntPref("test1.pref4", -1), -1, "test1.pref4 should have had its value unset");
 
   // Test a pref that had a default value and a user value
   defaults.setIntPref("test2.pref1", 10);
