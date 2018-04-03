@@ -9,7 +9,6 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "nsCSSAnonBoxes.h"
-#include "nsStaticAtom.h"
 
 using namespace mozilla;
 
@@ -22,40 +21,39 @@ extern constexpr CSSAnonBoxAtoms gCSSAnonBoxAtoms = {
     NS_STATIC_ATOM_INIT_STRING(value_)
   #include "nsCSSAnonBoxList.h"
   #undef CSS_ANON_BOX
-
-  #define CSS_ANON_BOX(name_, value_) \
-    NS_STATIC_ATOM_INIT_ATOM(CSSAnonBoxAtoms, name_, value_)
-  #include "nsCSSAnonBoxList.h"
-  #undef CSS_ANON_BOX
+  {
+    #define CSS_ANON_BOX(name_, value_) \
+      NS_STATIC_ATOM_INIT_ATOM( \
+        nsICSSAnonBoxPseudo, CSSAnonBoxAtoms, name_, value_)
+    #include "nsCSSAnonBoxList.h"
+    #undef CSS_ANON_BOX
+  }
 };
 MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
 
 } // namespace detail
 } // namespace mozilla
 
+// Non-inheriting boxes must come first in nsCSSAnonBoxList.h so that
+// `NonInheriting` values can index into this array and other similar arrays.
+const nsStaticAtom* const nsCSSAnonBoxes::sAtoms =
+  mozilla::detail::gCSSAnonBoxAtoms.mAtoms;
+
 #define CSS_ANON_BOX(name_, value_) \
-  NS_STATIC_ATOM_SUBCLASS_DEFN_PTR(nsICSSAnonBoxPseudo, nsCSSAnonBoxes, name_)
+  NS_STATIC_ATOM_DEFN_PTR( \
+    nsICSSAnonBoxPseudo, mozilla::detail::CSSAnonBoxAtoms, \
+    mozilla::detail::gCSSAnonBoxAtoms, nsCSSAnonBoxes, name_)
 #include "nsCSSAnonBoxList.h"
 #undef CSS_ANON_BOX
 
-static const nsStaticAtomSetup sCSSAnonBoxAtomSetup[] = {
-  // Non-inheriting boxes must come first in nsCSSAnonBoxList.h so that
-  // `NonInheriting` values can index into this array and other similar arrays.
-  #define CSS_ANON_BOX(name_, value_) \
-    NS_STATIC_ATOM_SUBCLASS_SETUP( \
-      mozilla::detail::gCSSAnonBoxAtoms, nsCSSAnonBoxes, name_)
-  #include "nsCSSAnonBoxList.h"
-  #undef CSS_ANON_BOX
-};
-
 void nsCSSAnonBoxes::RegisterStaticAtoms()
 {
-  NS_RegisterStaticAtoms(sCSSAnonBoxAtomSetup);
+  NS_RegisterStaticAtoms(sAtoms, sAtomsLen);
 }
 
 bool nsCSSAnonBoxes::IsAnonBox(nsAtom *aAtom)
 {
-  return nsStaticAtomUtils::IsMember(aAtom, sCSSAnonBoxAtomSetup);
+  return nsStaticAtomUtils::IsMember(aAtom, sAtoms, sAtomsLen);
 }
 
 #ifdef MOZ_XUL
@@ -72,8 +70,7 @@ nsCSSAnonBoxes::IsTreePseudoElement(nsAtom* aPseudo)
 nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(nsAtom* aPseudo)
 {
   MOZ_ASSERT(IsNonInheritingAnonBox(aPseudo));
-  Maybe<uint32_t> index =
-    nsStaticAtomUtils::Lookup(aPseudo, sCSSAnonBoxAtomSetup);
+  Maybe<uint32_t> index = nsStaticAtomUtils::Lookup(aPseudo, sAtoms, sAtomsLen);
   MOZ_RELEASE_ASSERT(index.isSome());
   return static_cast<NonInheriting>(*index);
 }
