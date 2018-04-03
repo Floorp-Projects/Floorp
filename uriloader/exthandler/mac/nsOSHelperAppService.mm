@@ -14,6 +14,7 @@
 #include "nsTArray.h"
 #include "nsIURL.h"
 #include "nsIFile.h"
+#include "nsIHandlerService.h"
 #include "nsILocalFileMac.h"
 #include "nsMimeTypes.h"
 #include "nsIStringBundle.h"
@@ -573,3 +574,34 @@ nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
   return NS_OK;
 }
 
+/*
+ * Override GetMIMETypeFromOSForExtension() so that we can proxy requests for
+ * the MIME type to the parent when we're executing in the child process. If
+ * we're in the parent process, query the OS directly.
+ */
+bool
+nsOSHelperAppService::GetMIMETypeFromOSForExtension(const nsACString& aExtension,
+                                                    nsACString& aMIMEType)
+{
+  if (XRE_IsParentProcess()) {
+    return nsExternalHelperAppService::GetMIMETypeFromOSForExtension(aExtension,
+                                                                     aMIMEType);
+  }
+
+  nsCOMPtr<nsIHandlerService> handlerSvc =
+    do_GetService(NS_HANDLERSERVICE_CONTRACTID);
+  if (NS_WARN_IF(!handlerSvc)) {
+    return false;
+  }
+
+  nsresult rv = handlerSvc->GetTypeFromExtension(aExtension, aMIMEType);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  if (aMIMEType.IsEmpty()) {
+    return false;
+  }
+
+  return true;
+}
