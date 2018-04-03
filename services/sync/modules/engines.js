@@ -467,6 +467,8 @@ function EngineManager(service) {
 
   this._engines = {};
 
+  this._altEngineInfo = {};
+
   // This will be populated by Service on startup.
   this._declined = new Set();
   this._log = Log.repository.getLogger("Sync.EngineManager");
@@ -505,6 +507,56 @@ EngineManager.prototype = {
       engines.push(engine);
     }
     return engines;
+  },
+
+  /**
+   * If a user has changed a pref that controls which variant of a sync engine
+   * for a given collection we use, unregister the old engine and register the
+   * new one.
+   *
+   * This is called by EngineSynchronizer before every sync.
+   */
+  async switchAlternatives() {
+    for (let [name, info] of Object.entries(this._altEngineInfo)) {
+      let prefValue = info.prefValue;
+      if (prefValue === info.lastValue) {
+        this._log.trace(`No change for engine ${name} (${info.pref} is still ${
+                        prefValue})`);
+        continue;
+      }
+      // Unregister the old engine, register the new one.
+      this._log.info(`Switching ${name} engine ("${info.pref}" went from ${
+                     info.lastValue} => ${prefValue})`);
+      try {
+        await this._removeAndFinalize(name);
+      } catch (e) {
+        this._log.warn(`Failed to remove previous ${name} engine...`, e);
+      }
+      let engineType = prefValue ? info.whenTrue : info.whenFalse;
+      try {
+        // If register throws, we'll try again next sync, but until then there
+        // won't be an engine registered for this collection.
+        await this.register(engineType);
+        info.lastValue = prefValue;
+        // Note: engineType.name is using Function.prototype.name.
+        this._log.info(`Switched the ${name} engine to use ${engineType.name}`);
+      } catch (e) {
+        this._log.warn(`Switching the ${name} engine to use ${
+                       engineType.name} failed (couldn't register)`, e);
+      }
+    }
+  },
+
+  async registerAlternatives(name, pref, whenTrue, whenFalse) {
+    let info = { name, pref, whenTrue, whenFalse };
+
+    XPCOMUtils.defineLazyPreferenceGetter(info, "prefValue", pref, false);
+
+    let chosen = info.prefValue ? info.whenTrue : info.whenFalse;
+    info.lastValue = info.prefValue;
+    this._altEngineInfo[name] = info;
+
+    await this.register(chosen);
   },
 
   /**
@@ -613,6 +665,14 @@ EngineManager.prototype = {
     if (val instanceof SyncEngine) {
       name = val.name;
     }
+    await this._removeAndFinalize(name);
+    delete this._altEngineInfo[name];
+  },
+
+  // Common code for disabling an engine by name, that doesn't complain if the
+  // engine doesn't exist. Doesn't touch the engine's alternative info (if any
+  // exists).
+  async _removeAndFinalize(name) {
     if (name in this._engines) {
       let engine = this._engines[name];
       delete this._engines[name];
@@ -626,6 +686,7 @@ EngineManager.prototype = {
       delete this._engines[name];
       await engine.finalize();
     }
+    this._altEngineInfo = {};
   },
 };
 

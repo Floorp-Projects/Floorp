@@ -137,6 +137,8 @@ EngineSynchronizer.prototype = {
       throw ex;
     }
 
+    await this.service.engineManager.switchAlternatives();
+
     // If the engines to sync has been specified, we sync in the order specified.
     let enginesToSync;
     if (allowEnginesHint && engineNamesToSync) {
