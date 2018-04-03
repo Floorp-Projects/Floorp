@@ -111,8 +111,8 @@ NS_IMETHODIMP_(bool)
 HTMLVideoElement::IsAttributeMapped(const nsAtom* aAttribute) const
 {
   static const MappedAttributeEntry attributes[] = {
-    { &nsGkAtoms::width },
-    { &nsGkAtoms::height },
+    { nsGkAtoms::width },
+    { nsGkAtoms::height },
     { nullptr }
   };
 

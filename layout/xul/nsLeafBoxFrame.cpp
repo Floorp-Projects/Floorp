@@ -84,7 +84,7 @@ nsLeafBoxFrame::AttributeChanged(int32_t aNameSpaceID,
 void nsLeafBoxFrame::UpdateMouseThrough()
 {
   static Element::AttrValuesArray strings[] =
-    {&nsGkAtoms::never, &nsGkAtoms::always, nullptr};
+    {nsGkAtoms::never, nsGkAtoms::always, nullptr};
   switch (mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
                                                  nsGkAtoms::mousethrough,
                                                  strings, eCaseMatters)) {
