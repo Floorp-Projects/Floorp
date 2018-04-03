@@ -9,8 +9,6 @@
 // * fill color by animation type
 // * stop color if the animation type is color
 
-requestLongerTimeout(2);
-
 const TEST_DATA = [
   {
     targetClass: "multi-types",
