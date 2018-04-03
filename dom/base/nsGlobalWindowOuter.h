@@ -636,7 +636,7 @@ public:
   already_AddRefed<mozilla::dom::MediaQueryList> MatchMediaOuter(
     const nsAString& aQuery,
     mozilla::dom::CallerType aCallerType);
-  nsIDOMScreen* GetScreen() override;
+  nsScreen* GetScreen();
   void MoveToOuter(int32_t aXPos, int32_t aYPos,
                    mozilla::dom::CallerType aCallerType,
                    mozilla::ErrorResult& aError);
