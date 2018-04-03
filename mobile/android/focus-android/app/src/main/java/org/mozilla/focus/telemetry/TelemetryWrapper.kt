@@ -226,9 +226,7 @@ object TelemetryWrapper {
 
     private fun createDefaultSearchProvider(context: Context): DefaultSearchMeasurement.DefaultSearchEngineProvider {
         return DefaultSearchMeasurement.DefaultSearchEngineProvider {
-            SearchEngineManager.getInstance()
-                    .getDefaultSearchEngine(context)
-                    .identifier
+            getDefaultSearchEngineIdentifierForTelemetry(context)
         }
     }
 
@@ -380,10 +378,9 @@ object TelemetryWrapper {
 
         TelemetryEvent.create(Category.ACTION, Method.TYPE_QUERY, Object.SEARCH_BAR).queue()
 
-        val searchEngine = SearchEngineManager.getInstance().getDefaultSearchEngine(
-                telemetry.configuration.context)
+        val searchEngine = getDefaultSearchEngineIdentifierForTelemetry(telemetry.configuration.context)
 
-        telemetry.recordSearch(SearchesMeasurement.LOCATION_ACTIONBAR, searchEngine.identifier)
+        telemetry.recordSearch(SearchesMeasurement.LOCATION_ACTIONBAR, searchEngine)
     }
 
     @JvmStatic
@@ -392,10 +389,20 @@ object TelemetryWrapper {
 
         TelemetryEvent.create(Category.ACTION, Method.TYPE_SELECT_QUERY, Object.SEARCH_BAR).queue()
 
-        val searchEngine = SearchEngineManager.getInstance().getDefaultSearchEngine(
-                telemetry.configuration.context)
+        val searchEngineIdentifier = getDefaultSearchEngineIdentifierForTelemetry(telemetry.configuration.context)
 
-        telemetry.recordSearch(SearchesMeasurement.LOCATION_SUGGESTION, searchEngine.identifier)
+        telemetry.recordSearch(SearchesMeasurement.LOCATION_SUGGESTION, searchEngineIdentifier)
+    }
+
+    private fun getDefaultSearchEngineIdentifierForTelemetry(context: Context): String {
+        val searchEngine = SearchEngineManager.getInstance()
+                    .getDefaultSearchEngine(context).identifier
+            if (SearchEngineManager.getInstance().isCustomSearchEngine(searchEngine, context)) {
+                // Don't collect possibly sensitive info for custom search engines, send "custom" instead
+                return SearchEngineManager.ENGINE_TYPE_CUSTOM
+            } else {
+                return searchEngine
+            }
     }
 
     @JvmStatic
