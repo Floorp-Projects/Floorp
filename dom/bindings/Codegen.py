@@ -2189,6 +2189,7 @@ class PropertyDefiner:
 
         disablersTemplate = dedent(
             """
+            // Can't be const because the pref-enabled boolean needs to be writable
             static PrefableDisablers %s_disablers%d = {
               true, %s, %s, %s
             };
@@ -2257,8 +2258,7 @@ class PropertyDefiner:
             #endif
 
             ${disablers}
-            // Can't be const because the pref-enabled boolean needs to be writable
-            static Prefable<${specType}> ${name}[] = {
+            static const Prefable<${specType}> ${name}[] = {
             ${prefableSpecs}
             };
 

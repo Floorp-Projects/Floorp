@@ -30,9 +30,14 @@ struct DirectoryAtoms
   #include "nsDirectoryServiceAtomList.h"
   #undef DIR_ATOM
 
-  #define DIR_ATOM(name_, value_) NS_STATIC_ATOM_DECL_ATOM(name_)
-  #include "nsDirectoryServiceAtomList.h"
-  #undef DIR_ATOM
+  enum class Atoms {
+    #define DIR_ATOM(name_, value_) NS_STATIC_ATOM_ENUM(name_)
+    #include "nsDirectoryServiceAtomList.h"
+    #undef DIR_ATOM
+    AtomsCount
+  };
+
+  const nsStaticAtom mAtoms[static_cast<size_t>(Atoms::AtomsCount)];
 };
 
 extern const DirectoryAtoms gDirectoryAtoms;
@@ -74,8 +79,12 @@ private:
   nsInterfaceHashtable<nsCStringHashKey, nsIFile> mHashtable;
   nsTArray<nsCOMPtr<nsIDirectoryServiceProvider>> mProviders;
 
+  static const nsStaticAtom* const sAtoms;
+  static constexpr size_t sAtomsLen =
+    mozilla::ArrayLength(mozilla::detail::gDirectoryAtoms.mAtoms);
+
 public:
-  #define DIR_ATOM(name_, value_) NS_STATIC_ATOM_DECL_PTR(name_)
+  #define DIR_ATOM(name_, value_) NS_STATIC_ATOM_DECL_PTR(nsStaticAtom, name_)
   #include "nsDirectoryServiceAtomList.h"
   #undef DIR_ATOM
 };

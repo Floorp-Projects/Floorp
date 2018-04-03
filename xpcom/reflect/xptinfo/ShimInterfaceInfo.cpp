@@ -25,7 +25,6 @@
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMParser.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMScreen.h"
 #include "nsIDOMSerializer.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMXULElement.h"
@@ -69,7 +68,6 @@
 #ifdef MOZ_WEBRTC
 #include "mozilla/dom/RTCDataChannelBinding.h"
 #endif
-#include "mozilla/dom/ScreenBinding.h"
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/StyleSheetBinding.h"
@@ -158,7 +156,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
 #ifdef MOZ_WEBRTC
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMDataChannel, RTCDataChannel),
 #endif
-  DEFINE_SHIM(Screen),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMSerializer, XMLSerializer),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsITreeBoxObject, TreeBoxObject),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIWebBrowserPersistable, FrameLoader),

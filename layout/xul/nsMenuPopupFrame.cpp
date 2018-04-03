@@ -19,7 +19,6 @@
 #include "nsPopupSetFrame.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMScreen.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIPresShell.h"
 #include "nsFrameManager.h"

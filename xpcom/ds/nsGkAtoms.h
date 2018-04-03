@@ -19,9 +19,14 @@ struct GkAtoms
   #include "nsGkAtomList.h"
   #undef GK_ATOM
 
-  #define GK_ATOM(name_, value_) NS_STATIC_ATOM_DECL_ATOM(name_)
-  #include "nsGkAtomList.h"
-  #undef GK_ATOM
+  enum class Atoms {
+    #define GK_ATOM(name_, value_) NS_STATIC_ATOM_ENUM(name_)
+    #include "nsGkAtomList.h"
+    #undef GK_ATOM
+    AtomsCount
+  };
+
+  const nsStaticAtom mAtoms[static_cast<size_t>(Atoms::AtomsCount)];
 };
 
 extern const GkAtoms gGkAtoms;
@@ -31,10 +36,15 @@ extern const GkAtoms gGkAtoms;
 
 class nsGkAtoms
 {
+private:
+  static const nsStaticAtom* const sAtoms;
+  static constexpr size_t sAtomsLen =
+    mozilla::ArrayLength(mozilla::detail::gGkAtoms.mAtoms);
+
 public:
   static void RegisterStaticAtoms();
 
-  #define GK_ATOM(name_, value_) NS_STATIC_ATOM_DECL_PTR(name_)
+  #define GK_ATOM(name_, value_) NS_STATIC_ATOM_DECL_PTR(nsStaticAtom, name_)
   #include "nsGkAtomList.h"
   #undef GK_ATOM
 };

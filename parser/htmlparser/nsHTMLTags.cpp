@@ -8,7 +8,6 @@
 #include "nsDataHashtable.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
-#include "nsStaticAtom.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/HashFunctions.h"
 #include <algorithm>
