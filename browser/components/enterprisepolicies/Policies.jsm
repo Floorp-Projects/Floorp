@@ -573,6 +573,22 @@ var Policies = {
     }
   },
 
+  "SanitizeOnShutdown": {
+    onBeforeUIStartup(manager, param) {
+      setAndLockPref("privacy.sanitize.sanitizeOnShutdown", param);
+      if (param) {
+        setAndLockPref("privacy.clearOnShutdown.cache", true);
+        setAndLockPref("privacy.clearOnShutdown.cookies", true);
+        setAndLockPref("privacy.clearOnShutdown.downloads", true);
+        setAndLockPref("privacy.clearOnShutdown.formdata", true);
+        setAndLockPref("privacy.clearOnShutdown.history", true);
+        setAndLockPref("privacy.clearOnShutdown.sessions", true);
+        setAndLockPref("privacy.clearOnShutdown.siteSettings", true);
+        setAndLockPref("privacy.clearOnShutdown.offlineApps", true);
+      }
+    }
+  },
+
   "SearchBar": {
     onAllWindowsRestored(manager, param) {
       // This policy is meant to change the default behavior, not to force it.
