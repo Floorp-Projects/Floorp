@@ -306,9 +306,10 @@ struct SCOutput {
   public:
     using Iter = BufferIterator<uint64_t, SystemAllocPolicy>;
 
-    explicit SCOutput(JSContext* cx);
+    SCOutput(JSContext* cx, JS::StructuredCloneScope scope);
 
     JSContext* context() const { return cx; }
+    JS::StructuredCloneScope scope() const { return buf.scope(); }
 
     MOZ_MUST_USE bool write(uint64_t u);
     MOZ_MUST_USE bool writePair(uint32_t tag, uint32_t data);
@@ -463,7 +464,7 @@ struct JSStructuredCloneWriter {
                                      const JSStructuredCloneCallbacks* cb,
                                      void* cbClosure,
                                      const Value& tVal)
-        : out(cx), scope(scope), objs(out.context()),
+        : out(cx, scope), objs(out.context()),
           counts(out.context()), entries(out.context()),
           memory(out.context()),
           transferable(out.context(), tVal),
@@ -490,8 +491,6 @@ struct JSStructuredCloneWriter {
     void extractBuffer(JSStructuredCloneData* newData) {
         out.extractBuffer(newData);
     }
-
-    JS::StructuredCloneScope cloneScope() const { return scope; }
 
   private:
     JSStructuredCloneWriter() = delete;
@@ -523,9 +522,6 @@ struct JSStructuredCloneWriter {
     inline void checkStack();
 
     SCOutput out;
-
-    // The (address space, thread) scope within which this clone is valid.
-    JS::StructuredCloneScope scope;
 
     // Vector of objects with properties remaining to be written.
     //
@@ -897,8 +893,8 @@ SCInput::readPtr(void** p)
     return true;
 }
 
-SCOutput::SCOutput(JSContext* cx)
-    : cx(cx)
+SCOutput::SCOutput(JSContext* cx, JS::StructuredCloneScope scope)
+  : cx(cx), buf(scope)
 {
 }
 
@@ -1260,7 +1256,7 @@ JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj)
     // cross-process.  The cloneDataPolicy should have guarded against this;
     // since it did not then throw, with a very explicit message.
 
-    if (scope > JS::StructuredCloneScope::SameProcessDifferentThread) {
+    if (output().scope() > JS::StructuredCloneScope::SameProcessDifferentThread) {
         JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_SHMEM_POLICY);
         return false;
     }
@@ -1605,7 +1601,7 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
 bool
 JSStructuredCloneWriter::writeHeader()
 {
-    return out.writePair(SCTAG_HEADER, (uint32_t)scope);
+    return out.writePair(SCTAG_HEADER, (uint32_t)output().scope());
 }
 
 bool
@@ -1663,6 +1659,7 @@ JSStructuredCloneWriter::transferOwnership()
 
     JSContext* cx = context();
     RootedObject obj(cx);
+    JS::StructuredCloneScope scope = output().scope();
     for (auto tr = transferableObjects.all(); !tr.empty(); tr.popFront()) {
         obj = tr.front();
 
@@ -2809,7 +2806,7 @@ JS_StructuredClone(JSContext* cx, HandleValue value, MutableHandleValue vp,
 }
 
 JSAutoStructuredCloneBuffer::JSAutoStructuredCloneBuffer(JSAutoStructuredCloneBuffer&& other)
-    : scope_(other.scope_)
+  : scope_(other.scope()), data_(other.scope())
 {
     data_.ownTransferables_ = other.data_.ownTransferables_;
     other.steal(&data_, &version_, &data_.callbacks_, &data_.closure_);
@@ -2975,5 +2972,5 @@ JS_ObjectNotWritten(JSStructuredCloneWriter* w, HandleObject obj)
 JS_PUBLIC_API(JS::StructuredCloneScope)
 JS_GetStructuredCloneScope(JSStructuredCloneWriter* w)
 {
-    return w->cloneScope();
+    return w->output().scope();
 }
