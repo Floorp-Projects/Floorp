@@ -206,6 +206,13 @@
       "type": "boolean"
     },
 
+    "DisableForgetButton": {
+      "description": "Prevents access to the \"Forget\" button.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
     "DisableFormHistory": {
       "description": "Don't remember search and form history.",
       "first_available": "60.0",
