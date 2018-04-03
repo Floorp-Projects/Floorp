@@ -26,7 +26,6 @@
 #include "prmon.h"
 #include "prio.h"
 #include "plstr.h"
-#include "nsIOService.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsNetAddr.h"
 #include "nsProxyRelease.h"
@@ -56,6 +55,7 @@ static const char kPrefDnsLocalDomains[]     = "network.dns.localDomains";
 static const char kPrefDnsForceResolve[]     = "network.dns.forceResolve";
 static const char kPrefDnsOfflineLocalhost[] = "network.dns.offline-localhost";
 static const char kPrefDnsNotifyResolution[] = "network.dns.notifyResolution";
+static const char kPrefNetworkProxyType[]    = "network.proxy.type";
 
 //-----------------------------------------------------------------------------
 
@@ -495,7 +495,6 @@ nsDNSService::nsDNSService()
     : mLock("nsDNSServer.mLock")
     , mDisableIPv6(false)
     , mDisablePrefetch(false)
-    , mFirstTime(true)
     , mNotifyResolution(false)
     , mOfflineLocalhost(false)
     , mForceResolveOn(false)
@@ -541,115 +540,148 @@ nsDNSService::GetSingleton()
     return do_AddRef(gDNSService);
 }
 
+nsresult
+nsDNSService::ReadPrefs(const char *name)
+{
+    bool tmpbool;
+    uint32_t tmpint;
+    mResolverPrefsUpdated = false;
+
+    // resolver-specific prefs first
+    if(!name || !strcmp(name, kPrefDnsCacheEntries)) {
+        if (NS_SUCCEEDED(Preferences::GetUint(kPrefDnsCacheEntries, &tmpint))) {
+            if (!name || (tmpint != mResCacheEntries)) {
+                mResCacheEntries = tmpint;
+                mResolverPrefsUpdated = true;
+            }
+        }
+
+    }
+    if(!name || !strcmp(name, kPrefDnsCacheExpiration)) {
+        if (NS_SUCCEEDED(Preferences::GetUint(kPrefDnsCacheExpiration, &tmpint))) {
+            if (!name || (tmpint != mResCacheExpiration)) {
+                mResCacheExpiration = tmpint;
+                mResolverPrefsUpdated = true;
+            }
+        }
+
+    }
+    if(!name || !strcmp(name, kPrefDnsCacheGrace)) {
+        if (NS_SUCCEEDED(Preferences::GetUint(kPrefDnsCacheGrace, &tmpint))) {
+            if (!name || (tmpint != mResCacheGrace)) {
+                mResCacheGrace = tmpint;
+                mResolverPrefsUpdated = true;
+            }
+        }
+    }
+
+    // DNSservice prefs
+    if (!name || !strcmp(name, kPrefDisableIPv6)) {
+        if (NS_SUCCEEDED(Preferences::GetBool(kPrefDisableIPv6, &tmpbool))) {
+            mDisableIPv6 = tmpbool;
+        }
+    }
+    if (!name || !strcmp(name, kPrefDnsOfflineLocalhost)) {
+        if (NS_SUCCEEDED(Preferences::GetBool(kPrefDnsOfflineLocalhost, &tmpbool))) {
+            mOfflineLocalhost = tmpbool;
+        }
+    }
+    if (!name || !strcmp(name, kPrefDisablePrefetch)) {
+        if (NS_SUCCEEDED(Preferences::GetBool(kPrefDisablePrefetch, &tmpbool))) {
+            mDisablePrefetch = tmpbool;
+        }
+    }
+    if (!name || !strcmp(name, kPrefBlockDotOnion)) {
+        if (NS_SUCCEEDED(Preferences::GetBool(kPrefBlockDotOnion, &tmpbool))) {
+            mBlockDotOnion = tmpbool;
+        }
+    }
+    if (!name || !strcmp(name, kPrefDnsNotifyResolution)) {
+        if (NS_SUCCEEDED(Preferences::GetBool(kPrefDnsNotifyResolution, &tmpbool))) {
+            mNotifyResolution = tmpbool;
+        }
+    }
+    if (!name || !strcmp(name, kPrefNetworkProxyType)) {
+        if (NS_SUCCEEDED(Preferences::GetUint(kPrefNetworkProxyType, &tmpint))) {
+            mProxyType = tmpint;
+        }
+    }
+    if (!name || !strcmp(name, kPrefIPv4OnlyDomains)) {
+        Preferences::GetCString(kPrefIPv4OnlyDomains, mIPv4OnlyDomains);
+    }
+    if (!name || !strcmp(name, kPrefDnsLocalDomains)) {
+        nsCString localDomains;
+        Preferences::GetCString(kPrefDnsLocalDomains, localDomains);
+        mLocalDomains.Clear();
+        if (!localDomains.IsEmpty()) {
+            nsCCharSeparatedTokenizer tokenizer(localDomains, ',',
+                                                nsCCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+            while (tokenizer.hasMoreTokens()) {
+                mLocalDomains.PutEntry(tokenizer.nextToken());
+            }
+        }
+    }
+    if (!name || !strcmp(name, kPrefDnsForceResolve)) {
+        Preferences::GetCString(kPrefDnsForceResolve, mForceResolve);
+        mForceResolveOn = !mForceResolve.IsEmpty();
+    }
+
+    if (mProxyType == nsIProtocolProxyService::PROXYCONFIG_MANUAL) {
+        // Disable prefetching either by explicit preference or if a
+        // manual proxy is configured
+        mDisablePrefetch = true;
+    }
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDNSService::Init()
 {
-    if (mResolver)
-        return NS_OK;
-    NS_ENSURE_TRUE(!mResolver, NS_ERROR_ALREADY_INITIALIZED);
-    // prefs
-    uint32_t maxCacheEntries  = 400;
-    uint32_t defaultCacheLifetime = 120; // seconds
-    uint32_t defaultGracePeriod = 60; // seconds
-    bool     disableIPv6      = false;
-    bool     offlineLocalhost = true;
-    bool     disablePrefetch  = false;
-    bool     blockDotOnion    = true;
-    int      proxyType        = nsIProtocolProxyService::PROXYCONFIG_DIRECT;
-    bool     notifyResolution = false;
+    MOZ_ASSERT(!mResolver);
+    MOZ_ASSERT(NS_IsMainThread());
 
-    nsAutoCString ipv4OnlyDomains;
-    nsAutoCString localDomains;
-    nsAutoCString forceResolve;
-
-    // read prefs
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefs) {
-        int32_t val;
-        if (NS_SUCCEEDED(prefs->GetIntPref(kPrefDnsCacheEntries, &val)))
-            maxCacheEntries = (uint32_t) val;
-        if (NS_SUCCEEDED(prefs->GetIntPref(kPrefDnsCacheExpiration, &val)))
-            defaultCacheLifetime = val;
-        if (NS_SUCCEEDED(prefs->GetIntPref(kPrefDnsCacheGrace, &val)))
-            defaultGracePeriod = val;
-
-        // ASSUMPTION: pref branch does not modify out params on failure
-        prefs->GetBoolPref(kPrefDisableIPv6, &disableIPv6);
-        prefs->GetCharPref(kPrefIPv4OnlyDomains, ipv4OnlyDomains);
-        prefs->GetCharPref(kPrefDnsLocalDomains, localDomains);
-        prefs->GetCharPref(kPrefDnsForceResolve, forceResolve);
-        prefs->GetBoolPref(kPrefDnsOfflineLocalhost, &offlineLocalhost);
-        prefs->GetBoolPref(kPrefDisablePrefetch, &disablePrefetch);
-        prefs->GetBoolPref(kPrefBlockDotOnion, &blockDotOnion);
-
-        // If a manual proxy is in use, disable prefetch implicitly
-        prefs->GetIntPref("network.proxy.type", &proxyType);
-        prefs->GetBoolPref(kPrefDnsNotifyResolution, &notifyResolution);
-
-        if (mFirstTime) {
-            mFirstTime = false;
-
-            // register as prefs observer
-            prefs->AddObserver(kPrefDnsCacheEntries, this, false);
-            prefs->AddObserver(kPrefDnsCacheExpiration, this, false);
-            prefs->AddObserver(kPrefDnsCacheGrace, this, false);
-            prefs->AddObserver(kPrefIPv4OnlyDomains, this, false);
-            prefs->AddObserver(kPrefDnsLocalDomains, this, false);
-            prefs->AddObserver(kPrefDnsForceResolve, this, false);
-            prefs->AddObserver(kPrefDisableIPv6, this, false);
-            prefs->AddObserver(kPrefDnsOfflineLocalhost, this, false);
-            prefs->AddObserver(kPrefDisablePrefetch, this, false);
-            prefs->AddObserver(kPrefBlockDotOnion, this, false);
-            prefs->AddObserver(kPrefDnsNotifyResolution, this, false);
-
-            // Monitor these to see if there is a change in proxy configuration
-            // If a manual proxy is in use, disable prefetch implicitly
-            prefs->AddObserver("network.proxy.type", this, false);
-        }
-    }
+    ReadPrefs(nullptr);
 
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
     if (observerService) {
         observerService->AddObserver(this, "last-pb-context-exited", false);
         observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
+        observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
     }
 
-    nsDNSPrefetch::Initialize(this);
-
-    nsCOMPtr<nsIIDNService> idn = do_GetService(NS_IDNSERVICE_CONTRACTID);
-
     RefPtr<nsHostResolver> res;
-    nsresult rv = nsHostResolver::Create(maxCacheEntries,
-                                         defaultCacheLifetime,
-                                         defaultGracePeriod,
+    nsresult rv = nsHostResolver::Create(mResCacheEntries,
+                                         mResCacheExpiration,
+                                         mResCacheGrace,
                                          getter_AddRefs(res));
     if (NS_SUCCEEDED(rv)) {
         // now, set all of our member variables while holding the lock
         MutexAutoLock lock(mLock);
         mResolver = res;
-        mIDN = idn;
-        mIPv4OnlyDomains = ipv4OnlyDomains;
-        mOfflineLocalhost = offlineLocalhost;
-        mDisableIPv6 = disableIPv6;
-        mBlockDotOnion = blockDotOnion;
-        mForceResolve = forceResolve;
-        mForceResolveOn = !mForceResolve.IsEmpty();
-
-        // Disable prefetching either by explicit preference or if a manual proxy is configured
-        mDisablePrefetch = disablePrefetch || (proxyType == nsIProtocolProxyService::PROXYCONFIG_MANUAL);
-
-        mLocalDomains.Clear();
-        if (!localDomains.IsVoid()) {
-            nsCCharSeparatedTokenizer tokenizer(localDomains, ',',
-                                                nsCCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
-
-            while (tokenizer.hasMoreTokens()) {
-                mLocalDomains.PutEntry(tokenizer.nextToken());
-            }
-        }
-        mNotifyResolution = notifyResolution;
     }
+
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefs) {
+        // register as prefs observer
+        prefs->AddObserver(kPrefDnsCacheEntries, this, false);
+        prefs->AddObserver(kPrefDnsCacheExpiration, this, false);
+        prefs->AddObserver(kPrefDnsCacheGrace, this, false);
+        prefs->AddObserver(kPrefIPv4OnlyDomains, this, false);
+        prefs->AddObserver(kPrefDnsLocalDomains, this, false);
+        prefs->AddObserver(kPrefDnsForceResolve, this, false);
+        prefs->AddObserver(kPrefDisableIPv6, this, false);
+        prefs->AddObserver(kPrefDnsOfflineLocalhost, this, false);
+        prefs->AddObserver(kPrefDisablePrefetch, this, false);
+        prefs->AddObserver(kPrefBlockDotOnion, this, false);
+        prefs->AddObserver(kPrefDnsNotifyResolution, this, false);
+
+        // Monitor these to see if there is a change in proxy configuration
+        // If a manual proxy is in use, disable prefetch implicitly
+        prefs->AddObserver("network.proxy.type", this, false);
+    }
+
+    nsDNSPrefetch::Initialize(this);
 
     RegisterWeakMemoryReporter(this);
 
@@ -658,7 +690,10 @@ nsDNSService::Init()
         mTrrService = nullptr;
     }
 
-    return rv;
+    nsCOMPtr<nsIIDNService> idn = do_GetService(NS_IDNSERVICE_CONTRACTID);
+    mIDN = idn;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -681,6 +716,7 @@ nsDNSService::Shutdown()
     if (observerService) {
         observerService->RemoveObserver(this, NS_NETWORK_LINK_TOPIC);
         observerService->RemoveObserver(this, "last-pb-context-exited");
+        observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     }
 
     return NS_OK;
@@ -1113,13 +1149,6 @@ nsDNSService::GetMyHostName(nsACString &result)
 NS_IMETHODIMP
 nsDNSService::Observe(nsISupports *subject, const char *topic, const char16_t *data)
 {
-    // We are only getting called if a preference has changed or there's a
-    // network link event.
-    NS_ASSERTION(strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0 ||
-                 strcmp(topic, "last-pb-context-exited") == 0 ||
-                 strcmp(topic, NS_NETWORK_LINK_TOPIC) == 0,
-                 "unexpected observe call");
-
     bool flushCache = false;
     if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
         nsAutoCString converted = NS_ConvertUTF16toUTF8(data);
@@ -1128,25 +1157,22 @@ nsDNSService::Observe(nsISupports *subject, const char *topic, const char16_t *d
         }
     } else if (!strcmp(topic, "last-pb-context-exited")) {
         flushCache = true;
+    } else if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+        ReadPrefs(NS_ConvertUTF16toUTF8(data).get());
+        NS_ENSURE_TRUE(mResolver, NS_ERROR_NOT_INITIALIZED);
+        if (mResolverPrefsUpdated && mResolver) {
+            mResolver->SetCacheLimits(mResCacheEntries, mResCacheExpiration,
+                                      mResCacheGrace);
+        }
+    } else if (!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+        Shutdown();
     }
+
     if (flushCache) {
         mResolver->FlushCache();
         return NS_OK;
     }
 
-    //
-    // Shutdown and this function are both only called on the UI thread, so we don't
-    // have to worry about mResolver being cleared out from under us.
-    //
-    // NOTE Shutting down and reinitializing the service like this is obviously
-    // suboptimal if Observe gets called several times in a row, but we don't
-    // expect that to be the case.
-    //
-
-    if (mResolver) {
-        Shutdown();
-    }
-    Init();
     return NS_OK;
 }
 
@@ -1244,4 +1270,3 @@ nsDNSService::CollectReports(nsIHandleReportCallback* aHandleReport,
 
     return NS_OK;
 }
-

@@ -7,47 +7,48 @@
 // 1. Existence for animated property list.
 // 2. Number of animated property item.
 
-const TEST_CASES = [
+const TEST_DATA = [
   {
-    target: ".animated",
+    targetClass: "animated",
     expectedNumber: 1,
   },
   {
-    target: ".compositor-notall",
+    targetClass: "compositor-notall",
     expectedNumber: 3,
   },
 ];
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  const { inspector, panel } = await openAnimationInspector();
+  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
+  const { animationInspector, panel } = await openAnimationInspector();
 
   info("Checking animated property list and items existence at initial");
   ok(!panel.querySelector(".animated-property-list"),
      "The animated-property-list should not be in the DOM at initial");
 
-  for (const testCase of TEST_CASES) {
-    info(`Checking animated-property-list and items existence at ${ testCase.target }`);
-    const animatedNode = await getNodeFront(testCase.target, inspector);
-    await selectNodeAndWaitForAnimations(animatedNode, inspector);
+  for (const { targetClass, expectedNumber } of TEST_DATA) {
+    info(`Checking animated-property-list and items existence at ${ targetClass }`);
+    await clickOnAnimationByTargetSelector(animationInspector,
+                                           panel, `.${ targetClass }`);
     ok(panel.querySelector(".animated-property-list"),
-       `The animated-property-list should be in the DOM at ${ testCase.target }`);
+      `The animated-property-list should be in the DOM at ${ targetClass }`);
     const itemEls =
       panel.querySelectorAll(".animated-property-list .animated-property-item");
-    is(itemEls.length, testCase.expectedNumber,
-       `The number of animated-property-list should be ${ testCase.expectedNumber } `
-       + `at ${ testCase.target }`);
+    is(itemEls.length, expectedNumber,
+       `The number of animated-property-list should be ${ expectedNumber } ` +
+       `at ${ targetClass }`);
 
     if (itemEls.length < 2) {
       continue;
     }
 
-    info(`Checking the background color for `
-         + `the animated property item at ${ testCase.target }`);
+    info("Checking the background color for " +
+         `the animated property item at ${ targetClass }`);
     const evenColor = panel.ownerGlobal.getComputedStyle(itemEls[0]).backgroundColor;
     const oddColor = panel.ownerGlobal.getComputedStyle(itemEls[1]).backgroundColor;
     isnot(evenColor, oddColor,
-          "Background color of an even animated property item "
-          + "should be different from odd");
+          "Background color of an even animated property item " +
+          "should be different from odd");
   }
 });

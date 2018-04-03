@@ -192,9 +192,7 @@ function search(aQuery, aAttribute) {
   let elements = mainPrefPane.children;
   for (let element of elements) {
     // If the "data-hidden-from-search" is "true", the
-    // element will not get considered during search. This
-    // should only be used when an element is still under
-    // development and should not be shown for any reason.
+    // element will not get considered during search.
     if (element.getAttribute("data-hidden-from-search") != "true" ||
         element.getAttribute("data-subpanel") == "true") {
       let attributeValue = element.getAttribute(aAttribute);
@@ -203,6 +201,9 @@ function search(aQuery, aAttribute) {
       } else {
         element.hidden = true;
       }
+    } else if (element.getAttribute("data-hidden-from-search") == "true" &&
+               !element.hidden) {
+      element.hidden = true;
     }
     element.classList.remove("visually-hidden");
   }

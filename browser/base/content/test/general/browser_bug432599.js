@@ -1,4 +1,6 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 function invokeUsingCtrlD(phase) {
   switch (phase) {
   case 1:
@@ -31,96 +33,58 @@ function invokeUsingStarButton(phase) {
   }
 }
 
-var testURL = "data:text/plain,Content";
-var bookmarkId;
+add_task(async function() {
+  const TEST_URL = "data:text/plain,Content";
 
-function add_bookmark(aURI, aTitle) {
-  return PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                              aURI, PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                              aTitle);
-}
-
-// test bug 432599
-function test() {
-  waitForExplicitFinish();
-
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
-    waitForStarChange(false, initTest);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+  registerCleanupFunction(async () => {
+    await BrowserTestUtils.removeTab(tab);
+    await PlacesUtils.bookmarks.eraseEverything();
   });
 
-  gBrowser.loadURI(testURL);
-}
+  // Changing the location causes the star to asynchronously update, thus wait
+  // for it to be in a stable state before proceeding.
+  await TestUtils.waitForCondition(
+    () => BookmarkingUI.status == BookmarkingUI.STATUS_UNSTARRED
+  );
 
-function initTest() {
-  // First, bookmark the page.
-  bookmarkId = add_bookmark(makeURI(testURL), "Bug 432599 Test");
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: TEST_URL,
+    title: "Bug 432599 Test"
+  });
+  Assert.equal(BookmarkingUI.status, BookmarkingUI.STATUS_STARRED,
+               "The star state should be starred");
 
-  checkBookmarksPanel(invokers[currentInvoker], 1);
-}
-
-function waitForStarChange(aValue, aCallback) {
-  let expectedStatus = aValue ? BookmarkingUI.STATUS_STARRED
-                              : BookmarkingUI.STATUS_UNSTARRED;
-  if (BookmarkingUI.status == BookmarkingUI.STATUS_UPDATING ||
-      BookmarkingUI.status != expectedStatus) {
-    info("Waiting for star button change.");
-    setTimeout(waitForStarChange, 50, aValue, aCallback);
-    return;
+  for (let invoker of [invokeUsingStarButton, invokeUsingCtrlD]) {
+    for (let phase = 1; phase < 5; ++phase) {
+      let promise = checkBookmarksPanel(phase);
+      invoker(phase);
+      await promise;
+      Assert.equal(BookmarkingUI.status, BookmarkingUI.STATUS_STARRED,
+                   "The star state shouldn't change");
+    }
   }
-  aCallback();
-}
-
-var invokers = [invokeUsingStarButton, invokeUsingCtrlD];
-var currentInvoker = 0;
+});
 
 var initialValue;
 var initialRemoveHidden;
-
-var popupElement = document.getElementById("editBookmarkPanel");
-var titleElement = document.getElementById("editBookmarkPanelTitle");
-var removeElement = document.getElementById("editBookmarkPanelRemoveButton");
-
-function checkBookmarksPanel(invoker, phase) {
-  let onPopupShown = function popupShownListener(aEvent) {
-    if (aEvent.originalTarget == popupElement) {
-      popupElement.removeEventListener("popupshown", popupShownListener);
-      checkBookmarksPanel(invoker, phase + 1);
-    }
-  };
-  let onPopupHidden = function listener(aEvent) {
-    if (aEvent.originalTarget == popupElement) {
-      popupElement.removeEventListener("popuphidden", listener);
-      if (phase < 4) {
-        checkBookmarksPanel(invoker, phase + 1);
-      } else {
-        ++currentInvoker;
-        if (currentInvoker < invokers.length) {
-          checkBookmarksPanel(invokers[currentInvoker], 1);
-        } else {
-          gBrowser.removeTab(gBrowser.selectedTab, {skipPermitUnload: true});
-          PlacesUtils.bookmarks.removeItem(bookmarkId);
-          executeSoon(finish);
-        }
-      }
-    }
-  };
-
+function checkBookmarksPanel(phase) {
+  let popupElement = document.getElementById("editBookmarkPanel");
+  let titleElement = document.getElementById("editBookmarkPanelTitle");
+  let removeElement = document.getElementById("editBookmarkPanelRemoveButton");
   switch (phase) {
   case 1:
   case 3:
-    popupElement.addEventListener("popupshown", onPopupShown);
-    break;
+    return promisePopupEvent(popupElement, "shown");
   case 2:
-    popupElement.addEventListener("popuphidden", onPopupHidden);
     initialValue = titleElement.value;
     initialRemoveHidden = removeElement.hidden;
-    break;
+    return promisePopupEvent(popupElement, "hidden");
   case 4:
-    popupElement.addEventListener("popuphidden", onPopupHidden);
-    is(titleElement.value, initialValue, "The bookmark panel's title should be the same");
-    is(removeElement.hidden, initialRemoveHidden, "The bookmark panel's visibility should not change");
-    break;
+    Assert.equal(titleElement.value, initialValue, "The bookmark panel's title should be the same");
+    Assert.equal(removeElement.hidden, initialRemoveHidden, "The bookmark panel's visibility should not change");
+    return promisePopupEvent(popupElement, "hidden");
   }
-  invoker(phase);
+  return Promise.reject(new Error("Unknown phase"));
 }

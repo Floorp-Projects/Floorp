@@ -633,7 +633,7 @@ public class BrowserApp extends GeckoApp
                     return true;
 
                 case KeyEvent.KEYCODE_R:
-                    tab.doReload(event.isShiftPressed() ? true : false);
+                    tab.doReload(event.isShiftPressed());
                     return true;
 
                 case KeyEvent.KEYCODE_PERIOD:
@@ -641,8 +641,23 @@ public class BrowserApp extends GeckoApp
                     return true;
 
                 case KeyEvent.KEYCODE_T:
-                    addTab();
+                    int flags = Tabs.LOADURL_START_EDITING;
+                    if (tab.isPrivate()) {
+                        flags |= Tabs.LOADURL_PRIVATE;
+                    }
+                    addTab(flags);
                     return true;
+
+                case KeyEvent.KEYCODE_N:
+                    addTab(Tabs.LOADURL_START_EDITING);
+                    return true;
+
+                case KeyEvent.KEYCODE_P:
+                    if (event.isShiftPressed()) {
+                        addTab(Tabs.LOADURL_PRIVATE | Tabs.LOADURL_START_EDITING);
+                        return true;
+                    }
+                    break;
 
                 case KeyEvent.KEYCODE_W:
                     Tabs.getInstance().closeTab(tab);
@@ -2323,9 +2338,16 @@ public class BrowserApp extends GeckoApp
     }
 
     @Override
+    public void addTab(final int flags) {
+        if ((flags & Tabs.LOADURL_PRIVATE) == 0) {
+            MmaDelegate.track(NEW_TAB);
+        }
+        Tabs.getInstance().addTab(flags);
+    }
+
+    @Override
     public void addTab() {
-        MmaDelegate.track(NEW_TAB);
-        Tabs.getInstance().addTab();
+        addTab(Tabs.LOADURL_NONE);
     }
 
     @Override

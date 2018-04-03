@@ -10,9 +10,9 @@
 // * fill: path
 // * endDelay: path
 
-const TEST_CASES = [
+const TEST_DATA = [
   {
-    targetClassName: "cssanimation-normal",
+    targetClass: "cssanimation-normal",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -25,7 +25,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "cssanimation-linear",
+    targetClass: "cssanimation-linear",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -38,7 +38,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "delay-positive",
+    targetClass: "delay-positive",
     expectedDelayPath: [
       { x: 0, y: 0 },
       { x: 500000, y: 0 },
@@ -55,7 +55,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "delay-negative",
+    targetClass: "delay-negative",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -67,7 +67,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "easing-step",
+    targetClass: "easing-step",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -79,7 +79,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "enddelay-positive",
+    targetClass: "enddelay-positive",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -96,7 +96,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "enddelay-negative",
+    targetClass: "enddelay-negative",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -107,7 +107,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "enddelay-with-fill-forwards",
+    targetClass: "enddelay-with-fill-forwards",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -132,7 +132,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "enddelay-with-iterations-infinity",
+    targetClass: "enddelay-with-iterations-infinity",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -154,7 +154,7 @@ const TEST_CASES = [
     isInfinity: true,
   },
   {
-    targetClassName: "direction-alternate-with-iterations-infinity",
+    targetClass: "direction-alternate-with-iterations-infinity",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -176,7 +176,7 @@ const TEST_CASES = [
     isInfinity: true,
   },
   {
-    targetClassName: "direction-alternate-reverse-with-iterations-infinity",
+    targetClass: "direction-alternate-reverse-with-iterations-infinity",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -198,7 +198,7 @@ const TEST_CASES = [
     isInfinity: true,
   },
   {
-    targetClassName: "direction-reverse-with-iterations-infinity",
+    targetClass: "direction-reverse-with-iterations-infinity",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -220,7 +220,7 @@ const TEST_CASES = [
     isInfinity: true,
   },
   {
-    targetClassName: "fill-backwards",
+    targetClass: "fill-backwards",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -233,7 +233,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "fill-backwards-with-delay-iterationstart",
+    targetClass: "fill-backwards-with-delay-iterationstart",
     expectedDelayPath: [
       { x: 0, y: 0 },
       { x: 0, y: 50 },
@@ -256,7 +256,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "fill-both",
+    targetClass: "fill-both",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -275,7 +275,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "fill-both-width-delay-iterationstart",
+    targetClass: "fill-both-width-delay-iterationstart",
     expectedDelayPath: [
       { x: 0, y: 0 },
       { x: 0, y: 50 },
@@ -302,7 +302,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "fill-forwards",
+    targetClass: "fill-forwards",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -321,7 +321,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "iterationstart",
+    targetClass: "iterationstart",
     expectedIterationPathList: [
       [
         { x: 0, y: 50 },
@@ -338,7 +338,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "no-compositor",
+    targetClass: "no-compositor",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -351,7 +351,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "keyframes-easing-step",
+    targetClass: "keyframes-easing-step",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -363,7 +363,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "narrow-keyframes",
+    targetClass: "narrow-keyframes",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -377,7 +377,7 @@ const TEST_CASES = [
     ],
   },
   {
-    targetClassName: "duplicate-offsets",
+    targetClass: "duplicate-offsets",
     expectedIterationPathList: [
       [
         { x: 0, y: 0 },
@@ -391,29 +391,28 @@ const TEST_CASES = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-
   const { panel } = await openAnimationInspector();
 
-  for (const testCase of TEST_CASES) {
+  for (const testData of TEST_DATA) {
     const {
       expectedDelayPath,
       expectedEndDelayPath,
       expectedForwardsPath,
       expectedIterationPathList,
       isInfinity,
-      targetClassName,
-    } = testCase;
+      targetClass,
+    } = testData;
 
     const animationItemEl =
-      findAnimationItemElementsByTargetClassName(panel, targetClassName);
+      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
 
-    info(`Checking computed timing path existance for ${ targetClassName }`);
+    info(`Checking computed timing path existance for ${ targetClass }`);
     const computedTimingPathEl =
       animationItemEl.querySelector(".animation-computed-timing-path");
     ok(computedTimingPathEl,
        "The computed timing path element should be in each animation item element");
 
-    info(`Checking delay path for ${ targetClassName }`);
+    info(`Checking delay path for ${ targetClass }`);
     const delayPathEl = computedTimingPathEl.querySelector(".animation-delay-path");
 
     if (expectedDelayPath) {
@@ -423,7 +422,7 @@ add_task(async function() {
       ok(!delayPathEl, "delay path should not be existance");
     }
 
-    info(`Checking iteration path list for ${ targetClassName }`);
+    info(`Checking iteration path list for ${ targetClass }`);
     const iterationPathEls =
       computedTimingPathEl.querySelectorAll(".animation-iteration-path");
     is(iterationPathEls.length, expectedIterationPathList.length,
@@ -432,7 +431,7 @@ add_task(async function() {
     for (const [j, iterationPathEl] of iterationPathEls.entries()) {
       assertPathSegments(iterationPathEl, true, expectedIterationPathList[j]);
 
-      info(`Checking infinity ${ targetClassName }`);
+      info(`Checking infinity ${ targetClass }`);
       if (isInfinity && j >= 1) {
         ok(iterationPathEl.classList.contains("infinity"),
            "iteration path should have 'infinity' class");
@@ -442,7 +441,7 @@ add_task(async function() {
       }
     }
 
-    info(`Checking endDelay path for ${ targetClassName }`);
+    info(`Checking endDelay path for ${ targetClass }`);
     const endDelayPathEl = computedTimingPathEl.querySelector(".animation-enddelay-path");
 
     if (expectedEndDelayPath) {
@@ -452,7 +451,7 @@ add_task(async function() {
       ok(!endDelayPathEl, "endDelay path should not be existance");
     }
 
-    info(`Checking forwards fill path for ${ targetClassName }`);
+    info(`Checking forwards fill path for ${ targetClass }`);
     const forwardsPathEl =
       computedTimingPathEl.querySelector(".animation-fill-forwards-path");
 
