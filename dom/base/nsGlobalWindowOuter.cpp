@@ -4187,6 +4187,7 @@ FullscreenTransitionTask::Run()
                                          this);
   } else if (stage == eEnd) {
     PROFILER_ADD_MARKER("Fullscreen transition end");
+    mWidget->CleanupFullscreenTransition();
   }
   return NS_OK;
 }
