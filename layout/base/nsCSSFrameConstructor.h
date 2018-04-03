@@ -743,7 +743,7 @@ private:
     FrameFullConstructor mFullConstructor;
     // For cases when FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS is set, the
     // anonymous box type to use for that wrapper.
-    nsICSSAnonBoxPseudo * const * const mAnonBoxPseudo;
+    nsICSSAnonBoxPseudo* const mAnonBoxPseudo;
   };
 
   /* Structure representing a mapping of an atom to a FrameConstructionData.
@@ -753,7 +753,7 @@ private:
   struct FrameConstructionDataByTag {
     // Pointer to nsStaticAtom* is used because we want to initialize this
     // statically, so before our atom tables are set up.
-    const nsStaticAtom * const * const mTag;
+    const nsStaticAtom* const* mTag;
     const FrameConstructionData mData;
   };
 
@@ -784,7 +784,7 @@ private:
      for a table pseudo-frame */
   struct PseudoParentData {
     const FrameConstructionData mFCData;
-    nsICSSAnonBoxPseudo * const * const mPseudoType;
+    nsICSSAnonBoxPseudo* const* mPseudoType;
   };
   /* Array of such structures that we use to properly construct table
      pseudo-frames as needed */
