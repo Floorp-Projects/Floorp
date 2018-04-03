@@ -39,6 +39,13 @@ public class AboutPages {
                PRIVATEBROWSING.equals(url);
     }
 
+    public static final boolean isDefaultHomePage(final String url) {
+        if (url == null) {
+            return false;
+        }
+        return HOME.equals(url);
+    }
+
     public static final boolean isAboutHome(final String url) {
         if (url == null || !url.startsWith(HOME)) {
             return false;
