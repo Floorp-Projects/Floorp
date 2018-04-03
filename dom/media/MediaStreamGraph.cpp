@@ -3641,21 +3641,25 @@ MediaStreamGraphImpl::Destroy()
 }
 
 static
-uint32_t WindowToHash(nsPIDOMWindowInner* aWindow)
+uint32_t WindowToHash(nsPIDOMWindowInner* aWindow,
+                      TrackRate aSampleRate)
 {
   uint32_t hashkey = 0;
 
   hashkey = AddToHash(hashkey, aWindow);
+  hashkey = AddToHash(hashkey, aSampleRate);
 
   return hashkey;
 }
 
 MediaStreamGraph*
-MediaStreamGraph::GetInstanceIfExists(nsPIDOMWindowInner* aWindow)
+MediaStreamGraph::GetInstanceIfExists(nsPIDOMWindowInner* aWindow,
+                                      TrackRate aSampleRate)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 
-  uint32_t hashkey = WindowToHash(aWindow);
+  TrackRate sampleRate = aSampleRate ? aSampleRate : CubebUtils::PreferredSampleRate();
+  uint32_t hashkey = WindowToHash(aWindow, sampleRate);
 
   MediaStreamGraphImpl* graph = nullptr;
   gGraphs.Get(hashkey, &graph);
@@ -3664,12 +3668,14 @@ MediaStreamGraph::GetInstanceIfExists(nsPIDOMWindowInner* aWindow)
 
 MediaStreamGraph*
 MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequested,
-                              nsPIDOMWindowInner* aWindow)
+                              nsPIDOMWindowInner* aWindow,
+                              TrackRate aSampleRate)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 
+  TrackRate sampleRate = aSampleRate ? aSampleRate : CubebUtils::PreferredSampleRate();
   MediaStreamGraphImpl* graph =
-    static_cast<MediaStreamGraphImpl*>(GetInstanceIfExists(aWindow));
+    static_cast<MediaStreamGraphImpl*>(GetInstanceIfExists(aWindow, sampleRate));
 
   if (!graph) {
     if (!gMediaStreamGraphShutdownBlocker) {
@@ -3715,14 +3721,14 @@ MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequ
       mainThread = AbstractThread::MainThread();
     }
     graph = new MediaStreamGraphImpl(aGraphDriverRequested,
-                                     CubebUtils::PreferredSampleRate(),
+                                     sampleRate,
                                      mainThread);
 
-    uint32_t hashkey = WindowToHash(aWindow);
+    uint32_t hashkey = WindowToHash(aWindow, sampleRate);
     gGraphs.Put(hashkey, graph);
 
     LOG(LogLevel::Debug,
-        ("Starting up MediaStreamGraph %p for window %p", graph, aWindow));
+        ("Starting up MediaStreamGraph %p for window %p for sample rate %d", graph, aWindow, sampleRate));
   }
 
   return graph;
