@@ -21,6 +21,9 @@ project(':browser-session').projectDir = new File(rootDir, 'components/browser/s
 include ':browser-toolbar'
 project(':browser-toolbar').projectDir = new File(rootDir, 'components/browser/toolbar')
 
+include ':browser-domains'
+project(':browser-domains').projectDir = new File(rootDir, 'components/browser/domains')
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // UI components
 ////////////////////////////////////////////////////////////////////////////////////////////////////

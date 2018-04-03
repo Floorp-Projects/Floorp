@@ -4,7 +4,8 @@ buildscript {
     // Synchronized version numbers for dependencies used by (some) modules
     ext.dependencies = [
         kotlin: '1.2.30',
-        supportLibraries: '27.1.0',
+        coroutines: '0.19.3',
+        supportLibraries: '27.1.1',
         junit: '4.12',
         robolectric: '3.7.1',
         mockito: '2.12.0'

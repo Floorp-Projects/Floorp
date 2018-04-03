@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
   <Blacklist timestamp="1521663963552"></Blacklist>
-  <Whitelist timestamp="1522100300281">
+  <Whitelist timestamp="1522961299960">
     <ID>ComplexCondition:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$settingAutoComplete || start &lt; 0 || start == selStart &amp;&amp; start == selEnd</ID>
     <ID>ComplexCondition:InlineAutocompleteEditText.kt$InlineAutocompleteEditText.&lt;no name provided&gt;$composingStart &gt;= 0 &amp;&amp; composingEnd &gt;= 0 &amp;&amp; composingEnd - composingStart &gt; text.length &amp;&amp; removeAutocomplete(editable)</ID>
     <ID>ComplexMethod:DownloadUtils.kt$DownloadUtils$ @JvmStatic fun guessFileName(contentDisposition: String?, url: String?, mimeType: String?): String</ID>
@@ -35,7 +35,6 @@
     <ID>ReturnCount:SafeIntent.kt$SafeIntent$fun getStringArrayListExtra(name: String): ArrayList&lt;String&gt;?</ID>
     <ID>ReturnCount:SafeIntent.kt$SafeIntent$fun getStringExtra(name: String): String?</ID>
     <ID>ReturnCount:SafeIntent.kt$SafeIntent$fun hasExtra(name: String): Boolean</ID>
-    <ID>TooGenericExceptionCaught:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$e: NullPointerException</ID>
     <ID>TooGenericExceptionCaught:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$ignored: NullPointerException</ID>
     <ID>TooGenericExceptionCaught:SafeBundle.kt$SafeBundle$e: RuntimeException</ID>
     <ID>TooGenericExceptionCaught:SafeIntent.kt$SafeIntent$e: RuntimeException</ID>

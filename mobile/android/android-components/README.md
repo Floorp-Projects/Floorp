@@ -15,6 +15,8 @@ We encourage you to participate in this open source project. We love Pull Reques
 
 High-level components for building browser(-like) apps.
 
+* **Domains** - Localized and customizable domain lists for auto-completion in browsers.
+
 * **Engine** - An abstract layer hiding the actual browser engine implementation.
 
 * **Engine-Gecko** - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView).
