@@ -2,6 +2,34 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
+    "Authentication": {
+      "description": "Sites that support integrated authentication. See https://developer.mozilla.org/en-US/docs/Mozilla/Integrated_authentication",
+      "first_available": "60.0",
+      "enterprise_only": true,
+
+      "type": "object",
+      "properties": {
+        "SPNEGO" : {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Delegated" : {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "NTLM" : {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+
     "BlockAboutAddons": {
       "description": "Block access to the Add-ons Mananger (about:addons).",
       "first_available": "60.0",
@@ -67,6 +95,18 @@
           }
         },
         "required": ["Title", "URL"]
+      }
+    },
+
+    "Certificates": {
+      "description": "Whether or not to use built in certs.",
+      "first_available": "60.0",
+
+      "type": "object",
+      "properties": {
+        "ImportEnterpriseRoots": {
+          "type": "boolean"
+        }
       }
     },
 
