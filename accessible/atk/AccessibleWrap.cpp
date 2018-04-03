@@ -1544,7 +1544,7 @@ MaiAtkObject::FireStateChangeEvent(uint64_t aState, bool aEnabled)
     state >>= 1;
   }
 
-  MOZ_ASSERT(stateIndex >= 0 && stateIndex < gAtkStateMapLen,
+  MOZ_ASSERT(stateIndex >= 0 && stateIndex < static_cast<int32_t>(gAtkStateMapLen),
              "No ATK state for internal state was found");
   if (stateIndex < 0 || stateIndex >= static_cast<int32_t>(gAtkStateMapLen)) {
     return;
