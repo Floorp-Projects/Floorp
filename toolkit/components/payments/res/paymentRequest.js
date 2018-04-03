@@ -131,6 +131,31 @@ var paymentRequest = {
     this.sendMessageToChrome("changeShippingOption", data);
   },
 
+  /**
+   * Add/update an autofill storage record.
+   *
+   * If the the `guid` argument is provided update the record; otherwise, add it.
+   * @param {string} collectionName The autofill collection that record belongs to.
+   * @param {object} record The autofill record to add/update
+   * @param {string} [guid] The guid of the autofill record to update
+   */
+  updateAutofillRecord(collectionName, record, guid, {
+    errorStateChange,
+    preserveOldProperties,
+    selectedStateKey,
+    successStateChange,
+  }) {
+    this.sendMessageToChrome("updateAutofillRecord", {
+      collectionName,
+      guid,
+      record,
+      errorStateChange,
+      preserveOldProperties,
+      selectedStateKey,
+      successStateChange,
+    });
+  },
+
   onPaymentRequestUnload() {
     // remove listeners that may be used multiple times here
     window.removeEventListener("paymentChromeToContent", this);

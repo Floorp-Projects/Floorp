@@ -173,6 +173,17 @@ var PaymentTestUtils = {
     },
   },
 
+  DialogContentUtils: {
+    waitForState: async (content, stateCheckFn, msg) => {
+      const {
+        ContentTaskUtils,
+      } = ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", {});
+      let {requestStore} = Cu.waiveXrays(content.document.querySelector("payment-dialog"));
+      await ContentTaskUtils.waitForCondition(() => stateCheckFn(requestStore.getState()), msg);
+      return requestStore.getState();
+    },
+  },
+
   /**
    * Common PaymentMethodData for testing
    */

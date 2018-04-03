@@ -17,6 +17,7 @@ Test the basic-card-form element
   <script src="PaymentStateSubscriberMixin.js"></script>
   <script src="autofillEditForms.js"></script>
   <script src="basic-card-form.js"></script>
+  <script src="paymentRequest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <link rel="stylesheet" type="text/css" href="paymentRequest.css"/>
 </head>
@@ -85,6 +86,74 @@ add_task(async function test_backButton() {
   form.remove();
 });
 
+add_task(async function test_saveButton() {
+  let form = document.createElement("basic-card-form");
+  form.dataset.saveButtonLabel = "Save";
+  form.dataset.errorGenericSave = "Generic error";
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  form.form.querySelector("#cc-number").focus();
+  sendString("4111111111111111");
+  form.form.querySelector("#cc-name").focus();
+  sendString("J. Smith");
+  form.form.querySelector("#cc-exp-month").focus();
+  sendString("11");
+  form.form.querySelector("#cc-exp-year").focus();
+  let year = (new Date()).getFullYear().toString();
+  sendString(year);
+
+  let messagePromise = promiseContentToChromeMessage("updateAutofillRecord");
+  is(form.saveButton.textContent, "Save", "Check label");
+  synthesizeMouseAtCenter(form.saveButton, {});
+
+  let details = await messagePromise;
+  is(details.collectionName, "creditCards", "Check collectionName");
+  isDeeply(details, {
+    collectionName: "creditCards",
+    errorStateChange: {
+      page: {
+        id: "basic-card-page",
+        error: "Generic error",
+      },
+    },
+    guid: undefined,
+    messageType: "updateAutofillRecord",
+    preserveOldProperties: true,
+    record: {
+      "cc-exp-month": "11",
+      "cc-exp-year": year,
+      "cc-name": "J. Smith",
+      "cc-number": "4111111111111111",
+    },
+    selectedStateKey: "selectedPaymentCard",
+    successStateChange: {
+      page: {
+        id: "payment-summary",
+      },
+    },
+  }, "Check event details for the message to chrome");
+  form.remove();
+});
+
+add_task(async function test_genericError() {
+  let form = document.createElement("basic-card-form");
+  await form.requestStore.setState({
+    page: {
+      id: "test-page",
+      error: "Generic Error",
+    },
+  });
+  await form.promiseReady;
+  display.appendChild(form);
+  await asyncElementRendered();
+
+  ok(!isHidden(form.genericErrorText), "Error message should be visible");
+  is(form.genericErrorText.textContent, "Generic Error", "Check error message");
+  form.remove();
+});
+
 add_task(async function test_record() {
   let form = document.createElement("basic-card-form");
   await form.promiseReady;
@@ -97,7 +166,10 @@ add_task(async function test_record() {
   card1["cc-exp-year"] = 2011;
 
   await form.requestStore.setState({
-    selectedPaymentCard: card1.guid,
+    page: {
+      id: "basic-card-page",
+      guid: card1.guid,
+    },
     savedBasicCards: {
       [card1.guid]: deepClone(card1),
     },
@@ -123,7 +195,10 @@ add_task(async function test_record() {
     guid: "9gnjdhen46",
   };
   await form.requestStore.setState({
-    selectedPaymentCard: minimalCard.guid,
+    page: {
+      id: "basic-card-page",
+      guid: minimalCard.guid,
+    },
     savedBasicCards: {
       [minimalCard.guid]: deepClone(minimalCard),
     },
@@ -133,7 +208,9 @@ add_task(async function test_record() {
 
   info("change to no selected card");
   await form.requestStore.setState({
-    selectedPaymentCard: null,
+    page: {
+      id: "basic-card-page",
+    },
   });
   await asyncElementRendered();
   checkCCForm(form, {});
