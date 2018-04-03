@@ -2026,9 +2026,14 @@ nsNavHistoryQueryResultNode::GetHasChildren(bool* aHasChildren)
   uint16_t resultType = mOptions->ResultType();
 
   // Tags are always populated, otherwise they are removed.
-  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS ||
-      // AllBookmarks also always has children.
-      resultType == nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY ||
+  if (mQuery->Tags().Length() == 1 && mParent &&
+      mParent->mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY) {
+    *aHasChildren = true;
+    return NS_OK;
+  }
+
+  // AllBookmarks and the left pane folder also always have children.
+  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY ||
       resultType == nsINavHistoryQueryOptions::RESULTS_AS_LEFT_PANE_QUERY) {
     *aHasChildren = true;
     return NS_OK;
@@ -2590,8 +2595,7 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
   NS_ConvertUTF16toUTF8 newTitle(aPageTitle);
 
   bool onlyOneEntry =
-    mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI ||
-    mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS;
+    mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI;
 
   // See if our query has any search term matching.
   if (mHasSearchTerms) {
@@ -2685,10 +2689,9 @@ nsNavHistoryQueryResultNode::OnDeleteURI(nsIURI* aURI,
     return NS_OK;
   }
 
-  bool onlyOneEntry = (mOptions->ResultType() ==
-                         nsINavHistoryQueryOptions::RESULTS_AS_URI ||
-                       mOptions->ResultType() ==
-                         nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS);
+  bool onlyOneEntry =
+    mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI;
+
   nsAutoCString spec;
   nsresult rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2748,10 +2751,8 @@ nsNavHistoryQueryResultNode::OnPageChanged(nsIURI* aURI,
 
   switch (aChangedAttribute) {
     case nsINavHistoryObserver::ATTRIBUTE_FAVICON: {
-      bool onlyOneEntry = (mOptions->ResultType() ==
-                             nsINavHistoryQueryOptions::RESULTS_AS_URI ||
-                           mOptions->ResultType() ==
-                             nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS);
+      bool onlyOneEntry =
+        mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI;
       UpdateURIs(true, onlyOneEntry, false, spec, setFaviconCallback,
                  nullptr);
       break;
@@ -2800,11 +2801,8 @@ nsNavHistoryQueryResultNode::NotifyIfTagsChanged(nsIURI* aURI)
   nsAutoCString spec;
   nsresult rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
-  bool onlyOneEntry = (mOptions->ResultType() ==
-                         nsINavHistoryQueryOptions::RESULTS_AS_URI ||
-                       mOptions->ResultType() ==
-                         nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS
-                         );
+  bool onlyOneEntry =
+    mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_URI;
 
   // Find matching URI nodes.
   RefPtr<nsNavHistoryResultNode> node;
