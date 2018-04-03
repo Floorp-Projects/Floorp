@@ -1003,7 +1003,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mBuildingInvisibleItems(false),
       mHitTestIsForVisibility(false),
       mIsBuilding(false),
-      mInInvalidSubtree(false)
+      mInInvalidSubtree(false),
+      mBuiltOverlayScrollbars(false)
 {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
 
