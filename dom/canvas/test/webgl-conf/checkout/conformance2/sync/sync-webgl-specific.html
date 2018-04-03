@@ -51,6 +51,7 @@ var sync = null;
 
 if (!gl) {
   testFailed("context does not exist");
+  finishTest();
 } else {
   testPassed("context exists");
 
@@ -60,13 +61,13 @@ if (!gl) {
   var max = gl.getParameter(gl.MAX_CLIENT_WAIT_TIMEOUT_WEBGL);
   debug("Querying gl.MAX_CLIENT_WAIT_TIMEOUT_WEBGL");
   shouldBe("gl.getError()", "gl.NO_ERROR");
-  debug("gl.MAX_CLIENT_WAIT_TIMEOUT_WEBGL returns " + max);
+  debug("gl.MAX_CLIENT_WAIT_TIMEOUT_WEBGL returns " + max + "ns");
   if (max < 0) {
     testFailed("gl.MAX_CLIENT_WAIT_TIMEOUT_WEBGL < 0");
-  } else if (max > 1000) {
-    // This is not demanded by the WebGL2 spec, but anything larger than 1s
+  } else if (max > 1000 * 1000 * 1000) {
+    // This is not demanded by the WebGL2 spec, but anything larger than 1000ms
     // is bad idea and no implementation should allow it.
-    testFailed("gl.MAX_CLIENT_WAIT_TIMEOUT_WEBGL should not exceed 1s");
+    testFailed("gl.MAX_CLIENT_WAIT_TIMEOUT_WEBGL should not exceed 1000ms");
   } else {
     testPassed("gl.MAX_CLIENT_WAIT_TIMEOUT_WEBGL returns a valid value");
   }
@@ -77,11 +78,101 @@ if (!gl) {
   shouldBe("gl.getError()", "gl.NO_ERROR");
   gl.clientWaitSync(sync, 0, max + 1);
   shouldBe("gl.getError()", "gl.INVALID_OPERATION");
+
+  requestAnimationFrame(runGetSyncParameterTest);
+}
+
+var signaling_retry_ms = 1000;
+
+function runGetSyncParameterTest() {
+  debug("");
+  debug("Verifying sync object isn't signaled too early");
+  sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+  // Verify as best as possible that the implementation doesn't allow a sync
+  // object to become signaled until returning control to the event loop, by
+  // spin-looping for some time.
+  var startTime = Date.now();
+  while (Date.now() - startTime < signaling_retry_ms) {
+    gl.flush();
+    gl.finish();
+    if (gl.getSyncParameter(sync, gl.SYNC_STATUS) == gl.SYNC_SIGNALED) {
+      testFailed("Sync object was signaled too early");
+      finishTest();
+      return;
+    }
+  }
+  testPassed("Sync object wasn't signaled too early");
+  startTimeOfFinish = Date.now();
+  requestAnimationFrame(finishSyncParameterTest);
+}
+
+var startTimeOfFinish = 0;
+
+function finishSyncParameterTest() {
+  if (startTimeOfFinish == 0) {
+    startTimeOfFinish = Date.now();
+  }
+  if (Date.now() - startTimeOfFinish > signaling_retry_ms) {
+    testFailed("Sync object wasn't signaled in a reasonable timeframe (" + (Date.now() - startTimeOfFinish) + " ms)");
+    finishTest();
+    return;
+  }
+  var res = gl.getSyncParameter(sync, gl.SYNC_STATUS);
+  if (res == gl.SIGNALED) {
+    testPassed("Sync object was signaled");
+    requestAnimationFrame(runClientWaitSyncTest);
+    return;
+  }
+  // Try again.
+  requestAnimationFrame(finishSyncParameterTest);
+}
+
+function runClientWaitSyncTest() {
+  debug("");
+  debug("Verifying clientWaitSync doesn't complete too early");
+
+  sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+  // Verify as best as possible that the implementation doesn't allow
+  // clientWaitSync to return CONDITION_SATISFIED or ALREADY_SIGNALED until
+  // returning control to the event loop, by spin-looping for some time.
+  var startTime = Date.now();
+  while (Date.now() - startTime < signaling_retry_ms) {
+    gl.flush();
+    gl.finish();
+    var res = gl.clientWaitSync(sync, 0, 0);
+    if (res == gl.CONDITION_SATISFIED || res == gl.ALREADY_SIGNALED) {
+      testFailed("clientWaitSync completed successfully too early");
+      finishTest();
+      return;
+    }
+  }
+  testPassed("clientWaitSync didn't complete successfully too early");
+  startTimeOfFinish = 0;
+  requestAnimationFrame(finishClientWaitSyncTest);
+}
+
+function finishClientWaitSyncTest() {
+  if (startTimeOfFinish == 0) {
+    startTimeOfFinish = Date.now();
+  }
+  if (Date.now() - startTimeOfFinish > signaling_retry_ms) {
+    testFailed("clientWaitSync didn't complete in a reasonable timeframe");
+    finishTest();
+    return;
+  }
+  var res = gl.clientWaitSync(sync, 0, 0);
+  if (res == gl.CONDITION_SATISFIED || res == gl.ALREADY_SIGNALED) {
+    testPassed("clientWaitSync completed successfully");
+    // This is the last test right now.
+    finishTest();
+    return;
+  }
+  // Try again.
+  requestAnimationFrame(finishClientWaitSyncTest);
 }
 
 debug("");
 var successfullyParsed = true;
 </script>
-<script src="../../js/js-test-post.js"></script>
 </body>
 </html>

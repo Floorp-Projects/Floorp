@@ -1,4 +1,4 @@
-<!--
+﻿<!--
 
 /*
 ** Copyright (c) 2013 The Khronos Group Inc.
@@ -569,25 +569,33 @@ function runBoundDeleteTests() {
       gl.deleteBuffer(colorBuffer);
       gl.deleteBuffer(positionBuffer);
 
-      // The buffers should not be accessible at this point. Deleted objects that are bound
-      // in the current context undergo an automatic unbinding
+      // After the first iteration, deleteBuffer will be a no-op, and will not unbind its matching
+      // bind points on the now-bound VAO like it did on the first iteration.
+      var expectRetained = (ii != 0);
+      var shouldBeStr = (expectRetained ? "retained" : "cleared");
+
       var boundPositionBuffer = gl.getVertexAttrib(0, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING);
-      if(boundPositionBuffer == positionBuffer) {
-        testFailed("Position buffer should be automatically unbound when deleted");
+      if (expectRetained != (boundPositionBuffer == positionBuffer)) {
+        testFailed("Position attrib stored buffer should be " + shouldBeStr + ".");
       }
+
       var boundColorBuffer = gl.getVertexAttrib(1, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING);
-      if(boundColorBuffer == colorBuffer) {
-        testFailed("Color buffer should be automatically unbound when deleted");
+      if (expectRetained != (boundColorBuffer == colorBuffer)) {
+        testFailed("Color attrib stored buffer should be " + shouldBeStr + ".");
       }
 
+      // If retained, everything should still work. If cleared, drawing should now fail.
       gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_BYTE, 0);
-      wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "Draw call should fail with unbound position and color buffers");
+      var expectedError = (expectRetained ? gl.NO_ERROR : gl.INVALID_OPERATION);
+      wtu.glErrorShouldBe(gl, expectedError,
+                          "Draw call should " + (expectRetained ? "not " : "") + "fail.");
 
-      var isPositionBuffer = gl.isBuffer(positionBuffer);
-      var isColorBuffer    = gl.isBuffer(colorBuffer);
-
-      if(isPositionBuffer)  testFailed("Position buffer should no longer exist after last ref removed");
-      if(isColorBuffer)     testFailed("Color buffer should no longer exist after last ref removed");
+      if (!gl.isBuffer(positionBuffer)) {
+        testFailed("References from unbound VAOs keep Position buffer alive.");
+      }
+      if (!gl.isBuffer(colorBuffer)) {
+        testFailed("References from unbound VAOs keep Color buffer alive");
+      }
     }
 }
 

@@ -56,8 +56,10 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
                                       0, 255, 0, 0]),
                                       2, 2);
 
-        runImageBitmapTest(imageData, 0, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, true);
-        finishTest();
+        runImageBitmapTest(imageData, 0, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, true)
+        .then(() => {
+            finishTest();
+        });
     }
 
     return init;

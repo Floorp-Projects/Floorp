@@ -51,8 +51,10 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         var image = new Image();
         image.onload = function() {
             bufferedLogToConsole("Source image has been loaded");
-            runImageBitmapTest(image, 0.5, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, false);
-            finishTest();
+            runImageBitmapTest(image, 0.5, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, false)
+            .then(() => {
+                finishTest();
+            });
         }
         image.src = resourcePath + "red-green-semi-transparent.png";
     }

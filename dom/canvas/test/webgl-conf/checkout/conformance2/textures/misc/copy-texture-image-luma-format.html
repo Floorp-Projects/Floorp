@@ -33,7 +33,6 @@
 <link rel="stylesheet" href="../../../resources/js-test-style.css"/>
 <script src="../../../js/js-test-pre.js"></script>
 <script src="../../../js/webgl-test-utils.js"></script>
-<script src="../../../js/glsl-conformance-test.js"></script>
 </head>
 <body>
 <div id="description"></div>
@@ -121,7 +120,7 @@ function copytexsubimage3D_luma_format() {
             gl.copyTexSubImage3D(gl.TEXTURE_3D, 0, 0, 0, layer, 0, 0,width, height);
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-            var program = wtu.setupProgram(gl, ["vshader", "fshader_luminance_alpha"]);
+            var program = wtu.setupProgram(gl, ["vshader", "fshader_luminance_alpha"], ["a_position", "a_coord"]);
             wtu.setupUnitQuad(gl, 0, 1);
             wtu.drawUnitQuad(gl);
 

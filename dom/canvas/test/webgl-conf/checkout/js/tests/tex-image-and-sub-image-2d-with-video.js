@@ -43,10 +43,10 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
     // Test each format separately because many browsers implement each
     // differently. Some might be GPU accelerated, some might not. Etc...
     var videos = [
-      { src: resourcePath + "red-green.mp4"         , type: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"', },
-      { src: resourcePath + "red-green.webmvp8.webm", type: 'video/webm; codecs="vp8, vorbis"',           },
-      { src: resourcePath + "red-green.webmvp9.webm", type: 'video/webm; codecs="vp9"',                   },
-      { src: resourcePath + "red-green.theora.ogv",   type: 'video/ogg; codecs="theora, vorbis"',         },
+      { src: resourcePath + "red-green.mp4"           , type: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"', },
+      { src: resourcePath + "red-green.webmvp8.webm"  , type: 'video/webm; codecs="vp8, vorbis"',           },
+      { src: resourcePath + "red-green.bt601.vp9.webm", type: 'video/webm; codecs="vp9"',                   },
+      { src: resourcePath + "red-green.theora.ogv"    , type: 'video/ogg; codecs="theora, vorbis"',         },
     ];
 
     function init()
@@ -65,6 +65,15 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         switch (gl[pixelFormat]) {
           case gl.RED:
           case gl.RED_INTEGER:
+            greenColor = [0, 0, 0];
+            break;
+          case gl.LUMINANCE:
+          case gl.LUMINANCE_ALPHA:
+            redColor = [255, 255, 255];
+            greenColor = [0, 0, 0];
+            break;
+          case gl.ALPHA:
+            redColor = [0, 0, 0];
             greenColor = [0, 0, 0];
             break;
           default:
