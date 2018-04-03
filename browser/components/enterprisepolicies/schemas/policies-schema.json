@@ -379,6 +379,9 @@
           "items": {
             "type": "origin"
           }
+        },
+        "Default": {
+          "type": "boolean"
         }
       }
     },
