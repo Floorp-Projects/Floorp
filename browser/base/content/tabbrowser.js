@@ -3273,6 +3273,7 @@ window._gBrowser = {
         this.showTab(tab);
     }
 
+    this.tabContainer._updateHiddenTabsStatus();
     this.tabContainer._handleTabSelect(true);
   },
 
@@ -3282,6 +3283,7 @@ window._gBrowser = {
       this._visibleTabs = null; // invalidate cache
 
       this.tabContainer._updateCloseButtons();
+      this.tabContainer._updateHiddenTabsStatus();
 
       this.tabContainer._setPositionalAttributes();
 
@@ -3299,6 +3301,7 @@ window._gBrowser = {
       this._visibleTabs = null; // invalidate cache
 
       this.tabContainer._updateCloseButtons();
+      this.tabContainer._updateHiddenTabsStatus();
 
       this.tabContainer._setPositionalAttributes();
 
