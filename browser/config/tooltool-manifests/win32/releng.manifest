@@ -21,5 +21,12 @@
     "unpack": true,
     "digest": "196ac6a567c85559957dfe511c3d8654d23c94d5603259e19ccafe9d71e0e4ccee63ccc9a778f2699654b786cda54266108b7d4db543d01bb0b42545b4e6ec75",
     "size": 297118
+  },
+  {
+    "size": 1516544,
+    "visibility": "public",
+    "digest": "cf84f9592059f1e0756370f44e0ad289b71569c235d2ec8c5958695cc57352d3b99b584fd119e73fc9593d1c4cca414985e71f567f777162471b6040ebc59d13",
+    "algorithm": "sha512",
+    "filename": "win32-minidump_stackwalk.exe"
   }
 ]
