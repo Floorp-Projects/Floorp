@@ -30,7 +30,7 @@ add_task(async function() {
 
   for (const { targetClass, expectedPath } of TEST_DATA) {
     const animationItemEl =
-      findAnimationItemElementsByTargetClassName(panel, targetClass);
+      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
 
     info(`Checking negative endDelay path existance for ${ targetClass }`);
     const negativeEndDelayPathEl =

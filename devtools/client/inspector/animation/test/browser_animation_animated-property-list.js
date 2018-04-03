@@ -21,7 +21,7 @@ const TEST_DATA = [
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
-  const { inspector, panel } = await openAnimationInspector();
+  const { animationInspector, panel } = await openAnimationInspector();
 
   info("Checking animated property list and items existence at initial");
   ok(!panel.querySelector(".animated-property-list"),
@@ -29,7 +29,8 @@ add_task(async function() {
 
   for (const { targetClass, expectedNumber } of TEST_DATA) {
     info(`Checking animated-property-list and items existence at ${ targetClass }`);
-    await selectNodeAndWaitForAnimations(`.${ targetClass }`, inspector);
+    await clickOnAnimationByTargetSelector(animationInspector,
+                                           panel, `.${ targetClass }`);
     ok(panel.querySelector(".animated-property-list"),
       `The animated-property-list should be in the DOM at ${ targetClass }`);
     const itemEls =

@@ -106,14 +106,24 @@ const removeAnimatedElementsExcept = async function(selectors) {
 const clickOnAnimation = async function(animationInspector, panel, index) {
   info("Click on animation " + index + " in the timeline");
   const summaryGraphEl = panel.querySelectorAll(".animation-summary-graph")[index];
-  // Scroll to show the timeBlock since the element may be out of displayed area.
-  summaryGraphEl.scrollIntoView(false);
-  const bounds = summaryGraphEl.getBoundingClientRect();
-  const x = bounds.width / 2;
-  const y = bounds.height / 2;
-  EventUtils.synthesizeMouse(summaryGraphEl, x, y, {}, summaryGraphEl.ownerGlobal);
+  await clickOnSummaryGraph(animationInspector, panel, summaryGraphEl);
+};
 
-  await waitForAnimationDetail(animationInspector);
+/**
+ * Click on an animation by given selector of node which is target element of animation.
+ *
+ * @param {AnimationInspector} animationInspector.
+ * @param {AnimationsPanel} panel
+ *        The panel instance.
+ * @param {String} selector
+ *        Selector of node which is target element of animation.
+ */
+const clickOnAnimationByTargetSelector = async function(animationInspector,
+                                                        panel, selector) {
+  info(`Click on animation whose selector of target element is '${ selector }'`);
+  const animationItemEl = findAnimationItemElementsByTargetSelector(panel, selector);
+  const summaryGraphEl = animationItemEl.querySelector(".animation-summary-graph");
+  await clickOnSummaryGraph(animationInspector, panel, summaryGraphEl);
 };
 
 /**
@@ -210,6 +220,25 @@ const clickOnPlaybackRateSelector = async function(animationInspector, panel, ra
   EventUtils.synthesizeMouseAtCenter(selectEl, { type: "mousedown" }, win);
   EventUtils.synthesizeMouseAtCenter(optionEl, { type: "mouseup" }, win);
   await waitForSummaryAndDetail(animationInspector);
+};
+
+/**
+ * Click on given summary graph element.
+ *
+ * @param {AnimationInspector} animationInspector
+ * @param {AnimationsPanel} panel
+ * @param {Element} summaryGraphEl
+ */
+const clickOnSummaryGraph = async function(animationInspector, panel, summaryGraphEl) {
+  // Disable pointer-events of the scrubber in order to avoid to click accidently.
+  const scrubberEl = panel.querySelector(".current-time-scrubber");
+  scrubberEl.style.pointerEvents = "none";
+  // Scroll to show the timeBlock since the element may be out of displayed area.
+  summaryGraphEl.scrollIntoView(false);
+  EventUtils.synthesizeMouseAtCenter(summaryGraphEl, {}, summaryGraphEl.ownerGlobal);
+  await waitForAnimationDetail(animationInspector);
+  // Restore the scrubber style.
+  scrubberEl.style.pointerEvents = "unset";
 };
 
 /**
@@ -600,22 +629,21 @@ function isPassingThrough(pathSegList, x, y) {
 }
 
 /**
- * Return animation item element by target node class.
- * This function compares betweem animation-target textContent and given className.
- * Also, this function premises one class name.
+ * Return animation item element by target node selector.
+ * This function compares betweem animation-target textContent and given selector.
+ * Then returns matched first item.
  *
  * @param {Element} panel - root element of animation inspector.
- * @param {String} targetClassName - class name of tested element.
+ * @param {String} selector - selector of tested element.
  * @return {Element} animation item element.
  */
-function findAnimationItemElementsByTargetClassName(panel, targetClassName) {
-  const animationTargetEls = panel.querySelectorAll(".animation-target");
+function findAnimationItemElementsByTargetSelector(panel, selector) {
+  const attrNameEls = panel.querySelectorAll(".animation-target .attrName");
+  const regexp = new RegExp(`\\${ selector }(\\.|$)`, "gi");
 
-  for (const animationTargetEl of animationTargetEls) {
-    const className = animationTargetEl.textContent.split(".")[1];
-
-    if (className === targetClassName) {
-      return animationTargetEl.closest(".animation-item");
+  for (const attrNameEl of attrNameEls) {
+    if (regexp.exec(attrNameEl.textContent)) {
+      return attrNameEl.closest(".animation-item");
     }
   }
 
