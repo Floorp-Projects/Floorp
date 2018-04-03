@@ -62,7 +62,7 @@ bool IsSearchbox() const;
 
 nsAtom* LandmarkRole() const;
 
-nsAtom* ARIARoleAtom() const;
+nsStaticAtom* ARIARoleAtom() const;
 
 int32_t GetLevelInternal();
 void ScrollTo(uint32_t aScrollType);
