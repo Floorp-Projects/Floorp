@@ -751,9 +751,7 @@ private:
      stored somewhere that this struct can point to (that is, a static
      nsAtom*) and that it's allocated before the struct is ever used. */
   struct FrameConstructionDataByTag {
-    // Pointer to nsStaticAtom* is used because we want to initialize this
-    // statically, so before our atom tables are set up.
-    const nsStaticAtom* const* mTag;
+    const nsStaticAtom* const mTag;
     const FrameConstructionData mData;
   };
 
