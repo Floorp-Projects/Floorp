@@ -415,6 +415,16 @@
         ]]></body>
       </method>
 
+      <method name="_updateHiddenTabsStatus">
+        <body><![CDATA[
+          if (gBrowser.visibleTabs.length < gBrowser.tabs.length) {
+            this.setAttribute("hashiddentabs", "true");
+          } else {
+            this.removeAttribute("hashiddentabs");
+          }
+        ]]></body>
+      </method>
+
       <method name="_handleTabSelect">
         <parameter name="aInstant"/>
         <body><![CDATA[
@@ -2151,6 +2161,19 @@
         if (event.target.getAttribute("id") == "alltabs_containersMenuTab") {
           createUserContextMenu(event, {useAccessKeys: false});
           return;
+        } else if (event.target.getAttribute("id") == "alltabs_hiddenTabsMenu") {
+          let fragment = document.createDocumentFragment();
+
+          for (let tab of gBrowser.tabs) {
+            if (tab.hidden) {
+              fragment.appendChild(this._createTabMenuItem(tab));
+            }
+          }
+
+          event.target.textContent = "";
+          event.target.appendChild(fragment);
+
+          return;
         }
 
         let containersEnabled = Services.prefs.getBoolPref("privacy.userContext.enabled");
@@ -2172,6 +2195,10 @@
 
           document.getElementById("alltabs_undoCloseTab").disabled =
             SessionStore.getClosedTabCount(window) == 0;
+
+          let showHiddenTabs = gBrowser.visibleTabs.length < gBrowser.tabs.length;
+          document.getElementById("alltabs_hiddenTabs").hidden = !showHiddenTabs;
+          document.getElementById("alltabs-popup-separator-3").hidden = !showHiddenTabs;
 
           var tabcontainer = gBrowser.tabContainer;
 
@@ -2198,20 +2225,25 @@
           return;
         }
 
+        // This could be the visible or hidden tabs menu container.
+        let container = event.target;
+
         // clear out the menu popup and remove the listeners
-        for (let i = this.childNodes.length - 1; i > 0; i--) {
-          let menuItem = this.childNodes[i];
+        for (let i = container.childNodes.length - 1; i > 0; i--) {
+          let menuItem = container.childNodes[i];
           if (menuItem.tab) {
             menuItem.tab.mCorrespondingMenuitem = null;
-            this.removeChild(menuItem);
+            menuItem.remove();
           }
           if (menuItem.hasAttribute("usercontextid")) {
-            this.removeChild(menuItem);
+            menuItem.remove();
           }
         }
-        var tabcontainer = gBrowser.tabContainer;
-        tabcontainer.removeEventListener("TabAttrModified", this);
-        tabcontainer.removeEventListener("TabClose", this);
+
+        if (container == this) {
+          gBrowser.tabContainer.removeEventListener("TabAttrModified", this);
+          gBrowser.tabContainer.removeEventListener("TabClose", this);
+        }
       ]]></handler>
 
       <handler event="DOMMenuItemActive">
