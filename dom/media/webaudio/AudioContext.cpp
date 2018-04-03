@@ -120,7 +120,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 static float GetSampleRateForAudioContext(bool aIsOffline, float aSampleRate)
 {
-  if (aIsOffline) {
+  if (aIsOffline || aSampleRate != 0.0) {
     return aSampleRate;
   } else {
     return static_cast<float>(CubebUtils::PreferredSampleRate());
@@ -197,6 +197,7 @@ AudioContext::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 /* static */ already_AddRefed<AudioContext>
 AudioContext::Constructor(const GlobalObject& aGlobal,
+                          const AudioContextOptions& aOptions,
                           ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal.GetAsSupports());
@@ -205,10 +206,18 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
+  if (aOptions.mSampleRate > 0 &&
+      (aOptions.mSampleRate - WebAudioUtils::MinSampleRate < 0.0 ||
+      WebAudioUtils::MaxSampleRate - aOptions.mSampleRate < 0.0)) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
   uint32_t maxChannelCount = std::min<uint32_t>(WebAudioUtils::MaxChannelCount,
       CubebUtils::MaxNumberOfChannels());
   RefPtr<AudioContext> object =
-    new AudioContext(window, false,maxChannelCount);
+    new AudioContext(window, false, maxChannelCount,
+                     0, aOptions.mSampleRate);
   aRv = object->Init();
   if (NS_WARN_IF(aRv.Failed())) {
      return nullptr;
