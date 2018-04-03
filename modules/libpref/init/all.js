@@ -5262,11 +5262,6 @@ pref("media.ondevicechange.fakeDeviceChangeEvent.enabled", false);
 // a no-op.
 pref("layout.css.touch_action.enabled", true);
 
-// Enables some assertions in ComputedStyle that are too expensive
-// for general use, but might be useful to enable for specific tests.
-// This only has an effect in DEBUG-builds.
-pref("layout.css.expensive-style-struct-assertions.enabled", false);
-
 #if defined(MOZ_WIDGET_ANDROID)
 // Network Information API
 pref("dom.netinfo.enabled", true);
