@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/storage.h"
+#include "mozilla/dom/URLSearchParams.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsWhitespaceTokenizer.h"
@@ -245,6 +246,31 @@ namespace {
     }
     return nsDependentCString(str, len);
   }
+
+  class MOZ_STACK_CLASS GetQueryParamIterator final :
+    public URLParams::ForEachIterator
+  {
+  public:
+    explicit GetQueryParamIterator(const nsCString& aParamName,
+                                   nsVariant* aResult)
+      : mParamName(aParamName)
+      , mResult(aResult)
+    {}
+
+    bool URLParamsIterator(const nsAString& aName,
+                           const nsAString& aValue) override
+    {
+      NS_ConvertUTF16toUTF8 name(aName);
+      if (!mParamName.Equals(name)) {
+        return true;
+      }
+      mResult->SetAsAString(aValue);
+      return false;
+    }
+  private:
+    const nsCString& mParamName;
+    nsVariant* mResult;
+  };
 
 } // End anonymous namespace
 
@@ -1002,6 +1028,44 @@ namespace places {
     RefPtr<nsVariant> result = new nsVariant();
     rv = result->SetAsInt64(lastInsertedId);
     NS_ENSURE_SUCCESS(rv, rv);
+    result.forget(_result);
+    return NS_OK;
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+//// Get Query Param Function
+
+  /* static */
+  nsresult
+  GetQueryParamFunction::create(mozIStorageConnection *aDBConn)
+  {
+    RefPtr<GetQueryParamFunction> function = new GetQueryParamFunction();
+    return aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("get_query_param"), 2, function
+    );
+  }
+
+  NS_IMPL_ISUPPORTS(
+    GetQueryParamFunction,
+    mozIStorageFunction
+  )
+
+  NS_IMETHODIMP
+  GetQueryParamFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
+                                        nsIVariant **_result)
+  {
+    // Must have non-null function arguments.
+    MOZ_ASSERT(aArguments);
+
+    nsDependentCString queryString = getSharedUTF8String(aArguments, 0);
+    nsDependentCString paramName = getSharedUTF8String(aArguments, 1);
+
+    RefPtr<nsVariant> result = new nsVariant();
+    if (!queryString.IsEmpty() && !paramName.IsEmpty()) {
+      GetQueryParamIterator iterator(paramName, result);
+      URLParams::Parse(queryString, iterator);
+    }
+
     result.forget(_result);
     return NS_OK;
   }
