@@ -782,7 +782,7 @@ private:
      for a table pseudo-frame */
   struct PseudoParentData {
     const FrameConstructionData mFCData;
-    nsICSSAnonBoxPseudo* const* mPseudoType;
+    nsICSSAnonBoxPseudo* const mPseudoType;
   };
   /* Array of such structures that we use to properly construct table
      pseudo-frames as needed */
