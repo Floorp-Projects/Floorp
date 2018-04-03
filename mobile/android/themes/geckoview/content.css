@@ -116,8 +116,10 @@ textarea,
   background-color: var(--form_background);
 }
 
-/* Selects are handled by the form helper, see bug 685197 */
-select option, select optgroup {
+/* These elements are handled by the prompt module. */
+select option, select optgroup,
+input[type="date"] div:-moz-native-anonymous.datetime-input-box-wrapper,
+input[type="time"] div:-moz-native-anonymous.datetime-input-box-wrapper {
   pointer-events: none;
 }
 
