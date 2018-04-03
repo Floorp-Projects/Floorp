@@ -131,9 +131,23 @@ class Rebuild(Template):
         }
 
 
+class ChemspillPrio(Template):
+
+    def add_arguments(self, parser):
+        parser.add_argument('--chemspill-prio', action='store_true',
+                            help='Run at a higher priority than most try jobs (chemspills only).')
+
+    def context(self, chemspill_prio, **kwargs):
+        if chemspill_prio:
+            return {
+                'chemspill-prio': {}
+            }
+
+
 all_templates = {
     'artifact': Artifact,
     'path': Path,
     'env': Environment,
     'rebuild': Rebuild,
+    'chemspill-prio': ChemspillPrio,
 }

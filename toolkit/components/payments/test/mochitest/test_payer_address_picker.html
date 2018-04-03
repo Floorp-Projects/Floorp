@@ -263,7 +263,7 @@ add_task(async function test_filtered_options() {
   let visibleOptions = getVisiblePickerOptions(elPicker);
   let visibleOption = visibleOptions[0];
 
-  is(elPicker.dropdown.popupBox.children.length, 3, "Check dropdown has 3 addresses");
+  is(elPicker.dropdown.popupBox.children.length, 4, "Check dropdown has 3 addresses");
   is(visibleOptions.length, 1, "One option should be visible");
   is(visibleOption.getAttribute("guid"), "a9e830667189", "expected option is visible");
 
@@ -292,12 +292,21 @@ add_task(async function test_no_matches() {
   await setup();
   let requestStore = elPicker.requestStore;
   setPaymentOptions(requestStore, {
-    requestPayerEmail: true,
     requestPayerPhone: true,
   });
 
   requestStore.setState({
-    savedAddresses: DUPED_ADDRESSES,
+    savedAddresses: {
+      "2b4dce0fbc1f": {
+        "email": "rita@foo.com",
+        "guid": "2b4dce0fbc1f",
+        "name": "Rita Foo",
+      },
+      "46b2635a5b26": {
+        "guid": "46b2635a5b26",
+        "name": "Rita Foo",
+      },
+    },
     selectedPayerAddress: "a9e830667189",
   });
 

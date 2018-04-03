@@ -1657,17 +1657,11 @@ async function handleBookmarkItemSpecialData(itemId, item) {
     }
   }
   if ("keyword" in item && item.keyword) {
-    // POST data could be set in 2 ways:
-    // 1. new backups have a postData property
-    // 2. old backups have an item annotation
-    let postDataAnno = item.annos &&
-                       item.annos.find(anno => anno.name == PlacesUtils.POST_DATA_ANNO);
-    let postData = item.postData || (postDataAnno && postDataAnno.value);
     try {
       await PlacesUtils.keywords.insert({
         keyword: item.keyword,
         url: item.url,
-        postData,
+        postData: item.postData,
         source: item.source
       });
     } catch (ex) {

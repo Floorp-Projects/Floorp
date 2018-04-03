@@ -23,10 +23,10 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  const { inspector, panel } = await openAnimationInspector();
+  await removeAnimatedElementsExcept([".longhand"]);
+  const { panel } = await openAnimationInspector();
 
   info("Checking unchanged animated property item");
-  await selectNodeAndWaitForAnimations(".longhand", inspector);
   const itemEls = panel.querySelectorAll(".animated-property-item");
   is(itemEls.length, TEST_DATA.length,
     `Count of animated property item should be ${ TEST_DATA.length }`);

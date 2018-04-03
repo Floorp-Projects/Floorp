@@ -1582,35 +1582,35 @@ MOZ_GTEST_BENCH_F(Strings, PerfIsASCIIExample3, [this] {
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsExample3, [this] {
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < 5000; i++) {
       bool b = HasRTLChars(*BlackBox(&mExample3Utf16));
       BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsDE, [this] {
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < 5000; i++) {
       bool b = HasRTLChars(*BlackBox(&mDeUtf16));
       BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsRU, [this] {
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < 5000; i++) {
       bool b = HasRTLChars(*BlackBox(&mRuUtf16));
       BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsTH, [this] {
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < 5000; i++) {
       bool b = HasRTLChars(*BlackBox(&mThUtf16));
       BlackBox(&b);
     }
 });
 
 MOZ_GTEST_BENCH_F(Strings, PerfHasRTLCharsJA, [this] {
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < 5000; i++) {
       bool b = HasRTLChars(*BlackBox(&mJaUtf16));
       BlackBox(&b);
     }

@@ -17,6 +17,9 @@ let requestStore = new PaymentsStore({
   changesPrevented: false,
   completionState: "initial",
   orderDetailsShowing: false,
+  page: {
+    id: "payment-summary",
+  },
   request: {
     tabId: null,
     topLevelPrincipal: {URI: {displayHost: null}},
