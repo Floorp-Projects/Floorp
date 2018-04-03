@@ -10,7 +10,7 @@
 
 const TEST_DATA = [
   {
-    targetName: "no-easing",
+    targetClass: "no-easing",
     properties: [
       {
         name: "opacity",
@@ -28,7 +28,7 @@ const TEST_DATA = [
     ],
   },
   {
-    targetName: "effect-easing",
+    targetClass: "effect-easing",
     properties: [
       {
         name: "opacity",
@@ -46,7 +46,7 @@ const TEST_DATA = [
     ],
   },
   {
-    targetName: "keyframe-easing",
+    targetClass: "keyframe-easing",
     properties: [
       {
         name: "opacity",
@@ -66,7 +66,7 @@ const TEST_DATA = [
     ],
   },
   {
-    targetName: "both-easing",
+    targetClass: "both-easing",
     properties: [
       {
         name: "margin-left",
@@ -99,7 +99,7 @@ const TEST_DATA = [
     ],
   },
   {
-    targetName: "narrow-keyframes",
+    targetClass: "narrow-keyframes",
     properties: [
       {
         name: "opacity",
@@ -130,7 +130,7 @@ const TEST_DATA = [
     ],
   },
   {
-    targetName: "duplicate-keyframes",
+    targetClass: "duplicate-keyframes",
     properties: [
       {
         name: "opacity",
@@ -162,7 +162,7 @@ const TEST_DATA = [
     ],
   },
   {
-    targetName: "color-keyframes",
+    targetClass: "color-keyframes",
     properties: [
       {
         name: "color",
@@ -194,23 +194,18 @@ add_task(async function() {
 
   const { inspector, panel } = await openAnimationInspector();
 
-  for (const { properties, targetName } of TEST_DATA) {
-    info(`Checking keyframes graph for ${ targetName }`);
-    await selectNodeAndWaitForAnimations(`#${ targetName }`, inspector);
+  for (const { properties, targetClass } of TEST_DATA) {
+    info(`Checking keyframes graph for ${ targetClass }`);
+    await selectNodeAndWaitForAnimations(`.${ targetClass }`, inspector);
 
-    for (const property of properties) {
-      const {
-        name,
-        expectedHints,
-      } = property;
-
-      const testTarget = `${ name } in ${ targetName }`;
+    for (const { name, expectedHints } of properties) {
+      const testTarget = `${ name } in ${ targetClass }`;
       info(`Checking easing hint for ${ testTarget }`);
       info(`Checking easing hint existence for ${ testTarget }`);
       const hintEls = panel.querySelectorAll(`.${ name } .hint`);
       is(hintEls.length, expectedHints.length,
-        `Count of easing hint elements of ${ testTarget } `
-        + `should be ${ expectedHints.length }`);
+        `Count of easing hint elements of ${ testTarget } ` +
+        `should be ${ expectedHints.length }`);
 
       for (let i = 0; i < expectedHints.length; i++) {
         const hintTarget = `hint[${ i }] of ${ testTarget }`;
@@ -248,12 +243,12 @@ add_task(async function() {
         // Mouse out once from pathEl.
         EventUtils.synthesizeMouse(interactionEl, -1, -1, { type: "mouseout" }, win);
         is(win.getComputedStyle(interactionEl).strokeOpacity, 0,
-          `stroke-opacity of hintEl for ${ hintTarget } should be 0`
-          + " while mouse is out from the element");
+          `stroke-opacity of hintEl for ${ hintTarget } should be 0` +
+          " while mouse is out from the element");
         // Mouse over the pathEl.
         ok(isStrokeChangedByMouseOver(interactionEl, win),
-          `stroke-opacity of hintEl for ${ hintTarget } should be 1`
-          + " while mouse is over the element");
+          `stroke-opacity of hintEl for ${ hintTarget } should be 1` +
+          " while mouse is over the element");
       }
     }
   }

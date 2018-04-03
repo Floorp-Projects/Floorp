@@ -13,7 +13,7 @@ requestLongerTimeout(2);
 
 const TEST_DATA = [
   {
-    targetName: "multi-types",
+    targetClass: "multi-types",
     properties: [
       {
         name: "background-color",
@@ -87,7 +87,7 @@ const TEST_DATA = [
     ],
   },
   {
-    targetName: "multi-types-reverse",
+    targetClass: "multi-types-reverse",
     properties: [
       {
         name: "background-color",
@@ -161,7 +161,7 @@ const TEST_DATA = [
     ],
   },
   {
-    targetName: "middle-keyframe",
+    targetClass: "middle-keyframe",
     properties: [
       {
         name: "background-color",
@@ -249,7 +249,7 @@ const TEST_DATA = [
     ],
   },
   {
-    targetName: "steps-keyframe",
+    targetClass: "steps-keyframe",
     properties: [
       {
         name: "background-color",
@@ -335,7 +335,7 @@ const TEST_DATA = [
     ],
   },
   {
-    targetName: "steps-effect",
+    targetClass: "steps-effect",
     properties: [
       {
         name: "opacity",
@@ -351,7 +351,7 @@ const TEST_DATA = [
     ],
   },
   {
-    targetName: "frames-keyframe",
+    targetClass: "frames-keyframe",
     properties: [
       {
         name: "opacity",
@@ -372,7 +372,7 @@ const TEST_DATA = [
     ],
   },
   {
-    targetName: "narrow-offsets",
+    targetClass: "narrow-offsets",
     properties: [
       {
         name: "opacity",
@@ -391,7 +391,7 @@ const TEST_DATA = [
     ],
   },
   {
-    targetName: "duplicate-offsets",
+    targetClass: "duplicate-offsets",
     properties: [
       {
         name: "opacity",
@@ -415,9 +415,9 @@ add_task(async function() {
 
   const { inspector, panel } = await openAnimationInspector();
 
-  for (const { properties, targetName } of TEST_DATA) {
-    info(`Checking keyframes graph for ${ targetName }`);
-    await selectNodeAndWaitForAnimations(`#${ targetName }`, inspector);
+  for (const { properties, targetClass } of TEST_DATA) {
+    info(`Checking keyframes graph for ${ targetClass }`);
+    await selectNodeAndWaitForAnimations(`.${ targetClass }`, inspector);
 
     for (const property of properties) {
       const {
@@ -427,7 +427,7 @@ add_task(async function() {
         expectedStopColors,
       } = property;
 
-      const testTarget = `${ name } in ${ targetName }`;
+      const testTarget = `${ name } in ${ targetClass }`;
       info(`Checking keyframes graph for ${ testTarget }`);
       info(`Checking keyframes graph path existence for ${ testTarget }`);
       const keyframesGraphPathEl = panel.querySelector(`.${ name }`);

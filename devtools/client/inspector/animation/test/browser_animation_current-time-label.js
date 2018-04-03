@@ -50,6 +50,7 @@ function formatStopwatchTime(time) {
     if (nb < max) {
       return new Array((max + "").length - (nb + "").length + 1).join("0") + nb;
     }
+
     return nb;
   };
 

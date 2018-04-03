@@ -15,7 +15,7 @@
 
     function createAnimation(name, keyframes, effectEasing) {
       const div = document.createElement("div");
-      div.id = name;
+      div.classList.add(name);
       document.body.appendChild(div);
 
       const effect = {
