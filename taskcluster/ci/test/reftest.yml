@@ -112,6 +112,7 @@ reftest:
             macosx64.*/debug: 3
             windows.*/opt: 2
             windows.*/debug: 4
+            windows10-64-ccov/debug: 6
             default: 8
     e10s:
         by-test-platform:
@@ -120,6 +121,7 @@ reftest:
     max-run-time:
         by-test-platform:
             android.*: 7200
+            windows10-64-ccov/debug: 5400
             default: 3600
     mozharness:
         chunked:
