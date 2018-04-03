@@ -839,6 +839,9 @@ public:
    */
   bool IsInSubdocument() { return mPresShellStates.Length() > 1; }
 
+  void SetBuiltOverlayScrollbars(bool aOverlayScrollbars) { mBuiltOverlayScrollbars = aOverlayScrollbars; }
+  bool BuiltOverlayScrollbars() { return mBuiltOverlayScrollbars; }
+
   /**
    * Return true if we're currently building a display list for the presshell
    * of a chrome document, or if we're building the display list for a popup.
@@ -2008,6 +2011,7 @@ private:
   bool                           mInInvalidSubtree;
   bool                           mBuildCompositorHitTestInfo;
   bool                           mLessEventRegionItems;
+  bool                           mBuiltOverlayScrollbars;
 };
 
 class nsDisplayItem;

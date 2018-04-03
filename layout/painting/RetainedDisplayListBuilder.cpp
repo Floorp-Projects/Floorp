@@ -1109,7 +1109,15 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(
 
   // Do not allow partial builds if the retained display list is empty, or if
   // ShouldBuildPartial heuristic fails.
-  const bool shouldBuildPartial = !mList.IsEmpty() && ShouldBuildPartial(modifiedFrames.Frames());
+  bool shouldBuildPartial = !List()->IsEmpty() && ShouldBuildPartial(modifiedFrames.Frames());
+
+  // We don't support retaining with overlay scrollbars, since they require
+  // us to look at the display list and pick the highest z-index, which
+  // we can't do during partial building.
+  if (mBuilder.BuiltOverlayScrollbars()) {
+    shouldBuildPartial = false;
+    mBuilder.SetBuiltOverlayScrollbars(false);
+  }
 
   if (mPreviousCaret != mBuilder.GetCaretFrame()) {
     if (mPreviousCaret) {
