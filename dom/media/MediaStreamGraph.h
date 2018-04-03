@@ -1297,11 +1297,14 @@ public:
     OFFLINE_THREAD_DRIVER
   };
   static const uint32_t AUDIO_CALLBACK_DRIVER_SHUTDOWN_TIMEOUT = 20*1000;
+  static const TrackRate REQUEST_DEFAULT_SAMPLE_RATE = 0;
 
   // Main thread only
-  static MediaStreamGraph* GetInstanceIfExists(nsPIDOMWindowInner* aWindow);
+  static MediaStreamGraph* GetInstanceIfExists(nsPIDOMWindowInner* aWindow,
+                                               TrackRate aSampleRate);
   static MediaStreamGraph* GetInstance(GraphDriverType aGraphDriverRequested,
-                                       nsPIDOMWindowInner* aWindow);
+                                       nsPIDOMWindowInner* aWindow,
+                                       TrackRate aSampleRate);
   static MediaStreamGraph* CreateNonRealtimeInstance(
     TrackRate aSampleRate,
     nsPIDOMWindowInner* aWindowId);
