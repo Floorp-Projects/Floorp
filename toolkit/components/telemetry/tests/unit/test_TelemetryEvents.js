@@ -297,7 +297,7 @@ add_task(async function test_unicodeValues() {
   Assert.equal(events[1][5].key1, value, "Should have recorded the right extra value.");
 });
 
-add_task(function* test_dynamicEvents() {
+add_task(async function test_dynamicEvents() {
   Telemetry.clearEvents();
   Telemetry.canRecordExtended = true;
 
@@ -332,6 +332,8 @@ add_task(function* test_dynamicEvents() {
   Telemetry.recordEvent("telemetry.test.dynamic", "test1", "object1");
   Telemetry.recordEvent("telemetry.test.dynamic", "test2", "object1", null,
                         {"key1": "foo", "key2": "bar"});
+  Telemetry.recordEvent("telemetry.test.dynamic", "test2b", "object1", null,
+                        {"key1": "foo", "key2": "bar"});
   Telemetry.recordEvent("telemetry.test.dynamic", "test3", "object1", "some value");
   Telemetry.recordEvent("telemetry.test.dynamic", "test4", "object1", null);
 
@@ -347,6 +349,7 @@ add_task(function* test_dynamicEvents() {
   let expected = [
     ["telemetry.test.dynamic", "test1", "object1"],
     ["telemetry.test.dynamic", "test2", "object1", null, {key1: "foo", key2: "bar"}],
+    ["telemetry.test.dynamic", "test2b", "object1", null, {key1: "foo", key2: "bar"}],
     // "test3" is epxired, so it should not be recorded.
     ["telemetry.test.dynamic", "test4", "object1"],
   ];
