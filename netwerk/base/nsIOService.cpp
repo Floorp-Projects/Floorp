@@ -39,7 +39,6 @@
 #include "nsPISocketTransportService.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsURLHelper.h"
-#include "nsPIDNSService.h"
 #include "nsIProtocolProxyService2.h"
 #include "MainThreadUtils.h"
 #include "nsINode.h"
@@ -204,18 +203,6 @@ nsIOService::nsIOService()
 nsresult
 nsIOService::Init()
 {
-    nsresult rv;
-
-    // We need to get references to the DNS service so that we can shut it
-    // down later. If we wait until the nsIOService is being shut down,
-    // GetService will fail at that point.
-
-    mDNSService = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) {
-        NS_WARNING("failed to get DNS service");
-        return rv;
-    }
-
     // XXX hack until xpidl supports error info directly (bug 13423)
     nsCOMPtr<nsIErrorService> errorService = do_GetService(NS_ERRORSERVICE_CONTRACTID);
     if (errorService) {
@@ -1146,10 +1133,6 @@ nsIOService::SetOffline(bool offline)
         }
         else if (!offline && mOffline) {
             // go online
-            if (mDNSService) {
-                DebugOnly<nsresult> rv = mDNSService->Init();
-                NS_ASSERTION(NS_SUCCEEDED(rv), "DNS service init failed");
-            }
             InitializeSocketTransportService();
             mOffline = false;    // indicate success only AFTER we've
                                     // brought up the services
@@ -1167,12 +1150,6 @@ nsIOService::SetOffline(bool offline)
 
     // Don't notify here, as the above notifications (if used) suffice.
     if ((mShutdown || mOfflineForProfileChange) && mOffline) {
-        // be sure to try and shutdown both (even if the first fails)...
-        // shutdown dns service first, because it has callbacks for socket transport
-        if (mDNSService) {
-            DebugOnly<nsresult> rv = mDNSService->Shutdown();
-            NS_ASSERTION(NS_SUCCEEDED(rv), "DNS service shutdown failed");
-        }
         if (mSocketTransportService) {
             DebugOnly<nsresult> rv = mSocketTransportService->Shutdown(mShutdown);
             NS_ASSERTION(NS_SUCCEEDED(rv), "socket transport service shutdown failed");

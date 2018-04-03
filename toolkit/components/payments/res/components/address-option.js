@@ -21,8 +21,8 @@
 /* global ObservedPropertiesMixin, RichOption */
 
 class AddressOption extends ObservedPropertiesMixin(RichOption) {
-  static get observedAttributes() {
-    return RichOption.observedAttributes.concat([
+  static get recordAttributes() {
+    return [
       "address-level1",
       "address-level2",
       "country",
@@ -32,7 +32,11 @@ class AddressOption extends ObservedPropertiesMixin(RichOption) {
       "postal-code",
       "street-address",
       "tel",
-    ]);
+    ];
+  }
+
+  static get observedAttributes() {
+    return RichOption.observedAttributes.concat(AddressOption.recordAttributes);
   }
 
   constructor() {

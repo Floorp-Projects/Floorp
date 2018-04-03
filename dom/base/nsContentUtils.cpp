@@ -3194,8 +3194,13 @@ nsContentUtils::NewURIWithDocumentCharset(nsIURI** aResult,
 
 // static
 bool
-nsContentUtils::IsCustomElementName(nsAtom* aName)
+nsContentUtils::IsCustomElementName(nsAtom* aName, uint32_t aNameSpaceID)
 {
+  // Allow non-dashed names in XUL for XBL to Custom Element migrations.
+  if (aNameSpaceID == kNameSpaceID_XUL) {
+    return true;
+  }
+
   // A valid custom element name is a sequence of characters name which
   // must match the PotentialCustomElementName production:
   // PotentialCustomElementName ::= [a-z] (PCENChar)* '-' (PCENChar)*
@@ -5091,7 +5096,8 @@ nsContentUtils::ParseFragmentHTML(const nsAString& aSourceBuffer,
   // If this is a chrome-privileged document, create a fragment first, and
   // sanitize it before insertion.
   RefPtr<DocumentFragment> fragment;
-  if (aSanitize != NeverSanitize && !aTargetNode->OwnerDoc()->AllowUnsafeHTML()) {
+  if (aSanitize != NeverSanitize &&
+      IsSystemPrincipal(aTargetNode->NodePrincipal())) {
     fragment = new DocumentFragment(aTargetNode->OwnerDoc()->NodeInfoManager());
     target = fragment;
   }
@@ -5198,7 +5204,8 @@ nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
 
   // If this is a chrome-privileged document, sanitize the fragment before
   // returning.
-  if (aSanitize != NeverSanitize && !aDocument->AllowUnsafeHTML()) {
+  if (aSanitize != NeverSanitize &&
+      IsSystemPrincipal(aDocument->NodePrincipal())) {
     // Don't fire mutation events for nodes removed by the sanitizer.
     nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
 
@@ -9984,9 +9991,9 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
   if (nodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
     tag = nsHTMLTags::CaseSensitiveAtomTagToId(name);
     isCustomElementName = (tag == eHTMLTag_userdefined &&
-                           nsContentUtils::IsCustomElementName(name));
+                           nsContentUtils::IsCustomElementName(name, kNameSpaceID_XHTML));
   } else {
-    isCustomElementName = nsContentUtils::IsCustomElementName(name);
+    isCustomElementName = nsContentUtils::IsCustomElementName(name, kNameSpaceID_XUL);
   }
 
   RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();

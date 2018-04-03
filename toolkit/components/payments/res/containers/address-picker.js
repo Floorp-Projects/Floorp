@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global PaymentStateSubscriberMixin */
+/* import-globals-from ../mixins/PaymentStateSubscriberMixin.js */
+/* import-globals-from ../components/address-option.js */
 
 "use strict";
 
@@ -38,7 +39,8 @@ class AddressPicker extends PaymentStateSubscriberMixin(HTMLElement) {
    * De-dupe and filter addresses for the given set of fields that will be visible
    *
    * @param {object} addresses
-   * @param {array?} fieldNames - optional list of field names that be used when de-duping entries
+   * @param {array?} fieldNames - optional list of field names that be used when
+   *                              de-duping and excluding entries
    * @returns {object} filtered copy of given addresses
    */
   filterAddresses(addresses, fieldNames = [
@@ -53,15 +55,12 @@ class AddressPicker extends PaymentStateSubscriberMixin(HTMLElement) {
     let result = {};
     for (let [guid, address] of Object.entries(addresses)) {
       let addressCopy = {};
-      let isMatch;
-      // exclude addresses that are missing any of the requested fields
+      let isMatch = false;
+      // exclude addresses that are missing all of the requested fields
       for (let name of fieldNames) {
         if (address[name]) {
           isMatch = true;
           addressCopy[name] = address[name];
-        } else {
-          isMatch = false;
-          break;
         }
       }
       if (isMatch) {
@@ -95,9 +94,15 @@ class AddressPicker extends PaymentStateSubscriberMixin(HTMLElement) {
         optionEl.value = guid;
       }
 
-      for (let [key, val] of Object.entries(address)) {
-        optionEl.setAttribute(key, val);
+      for (let key of AddressOption.recordAttributes) {
+        let val = address[key];
+        if (val) {
+          optionEl.setAttribute(key, val);
+        } else {
+          optionEl.removeAttribute(key);
+        }
       }
+
       desiredOptions.push(optionEl);
     }
 

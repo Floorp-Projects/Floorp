@@ -682,8 +682,10 @@ CustomElementRegistry::Define(const nsAString& aName,
    * 2. If name is not a valid custom element name, then throw a "SyntaxError"
    *    DOMException and abort these steps.
    */
+  nsIDocument* doc = mWindow->GetExtantDoc();
+  uint32_t nameSpaceID = doc ? doc->GetDefaultNamespaceID() : kNameSpaceID_XHTML;
   RefPtr<nsAtom> nameAtom(NS_Atomize(aName));
-  if (!nsContentUtils::IsCustomElementName(nameAtom)) {
+  if (!nsContentUtils::IsCustomElementName(nameAtom, nameSpaceID)) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;
   }
@@ -725,7 +727,7 @@ CustomElementRegistry::Define(const nsAString& aName,
   nsAutoString localName(aName);
   if (aOptions.mExtends.WasPassed()) {
     RefPtr<nsAtom> extendsAtom(NS_Atomize(aOptions.mExtends.Value()));
-    if (nsContentUtils::IsCustomElementName(extendsAtom)) {
+    if (nsContentUtils::IsCustomElementName(extendsAtom, nameSpaceID)) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return;
     }
@@ -965,7 +967,9 @@ CustomElementRegistry::WhenDefined(const nsAString& aName, ErrorResult& aRv)
   }
 
   RefPtr<nsAtom> nameAtom(NS_Atomize(aName));
-  if (!nsContentUtils::IsCustomElementName(nameAtom)) {
+  nsIDocument* doc = mWindow->GetExtantDoc();
+  uint32_t nameSpaceID = doc ? doc->GetDefaultNamespaceID() : kNameSpaceID_XHTML;
+  if (!nsContentUtils::IsCustomElementName(nameAtom, nameSpaceID)) {
     promise->MaybeReject(NS_ERROR_DOM_SYNTAX_ERR);
     return promise.forget();
   }
