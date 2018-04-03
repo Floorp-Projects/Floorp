@@ -852,15 +852,13 @@ private:
     FrameConstructionItem* AppendItem(nsCSSFrameConstructor* aFCtor,
                                       const FrameConstructionData* aFCData,
                                       nsIContent* aContent,
-                                      nsAtom* aTag,
-                                      int32_t aNameSpaceID,
                                       PendingBinding* aPendingBinding,
                                       already_AddRefed<ComputedStyle>&& aComputedStyle,
                                       bool aSuppressWhiteSpaceOptimizations,
                                       nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren)
     {
       FrameConstructionItem* item =
-        new (aFCtor) FrameConstructionItem(aFCData, aContent, aTag, aNameSpaceID,
+        new (aFCtor) FrameConstructionItem(aFCData, aContent,
                                            aPendingBinding, aComputedStyle,
                                            aSuppressWhiteSpaceOptimizations,
                                            aAnonChildren);
@@ -874,15 +872,13 @@ private:
     FrameConstructionItem* PrependItem(nsCSSFrameConstructor* aFCtor,
                                        const FrameConstructionData* aFCData,
                                        nsIContent* aContent,
-                                       nsAtom* aTag,
-                                       int32_t aNameSpaceID,
                                        PendingBinding* aPendingBinding,
                                        already_AddRefed<ComputedStyle>&& aComputedStyle,
                                        bool aSuppressWhiteSpaceOptimizations,
                                        nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren)
     {
       FrameConstructionItem* item =
-        new (aFCtor) FrameConstructionItem(aFCData, aContent, aTag, aNameSpaceID,
+        new (aFCtor) FrameConstructionItem(aFCData, aContent,
                                            aPendingBinding, aComputedStyle,
                                            aSuppressWhiteSpaceOptimizations,
                                            aAnonChildren);
@@ -1129,15 +1125,12 @@ private:
     : public mozilla::LinkedListElement<FrameConstructionItem> {
     FrameConstructionItem(const FrameConstructionData* aFCData,
                           nsIContent* aContent,
-                          nsAtom* aTag,
-                          int32_t aNameSpaceID,
                           PendingBinding* aPendingBinding,
                           already_AddRefed<ComputedStyle>& aComputedStyle,
                           bool aSuppressWhiteSpaceOptimizations,
                           nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren) :
-      mFCData(aFCData), mContent(aContent), mTag(aTag),
+      mFCData(aFCData), mContent(aContent),
       mPendingBinding(aPendingBinding), mComputedStyle(aComputedStyle),
-      mNameSpaceID(aNameSpaceID),
       mSuppressWhiteSpaceOptimizations(aSuppressWhiteSpaceOptimizations),
       mIsText(false), mIsGeneratedContent(false),
       mIsAnonymousContentCreatorContent(false),
@@ -1217,8 +1210,6 @@ private:
     const FrameConstructionData* mFCData;
     // The nsIContent node to use when initializing the new frame.
     nsIContent* mContent;
-    // The XBL-resolved tag name to use for frame construction.
-    nsAtom* mTag;
     // The PendingBinding for this frame construction item, if any.  May be
     // null.  We maintain a list of PendingBindings in the frame construction
     // state in the order in which AddToAttachedQueue should be called on them:
@@ -1230,8 +1221,6 @@ private:
     PendingBinding* mPendingBinding;
     // The style to use for creating the new frame.
     RefPtr<ComputedStyle> mComputedStyle;
-    // The XBL-resolved namespace to use for frame construction.
-    int32_t mNameSpaceID;
     // Whether optimizations to skip constructing textframes around
     // this content need to be suppressed.
     bool mSuppressWhiteSpaceOptimizations:1;
