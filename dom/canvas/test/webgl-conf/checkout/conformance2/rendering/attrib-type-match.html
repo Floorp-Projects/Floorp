@@ -1,4 +1,4 @@
-<!--
+﻿<!--
 
 /*
 ** Copyright (c) 2016 The Khronos Group Inc.
@@ -188,10 +188,10 @@ function setupAttribValues(offsetILoc, offsetULoc, colorLoc) {
 function setupAttribPointers(offsetILoc, offsetULoc, colorLoc,
                              offsetIBuffer, offsetUBuffer, colorBuffer) {
     gl.bindBuffer(gl.ARRAY_BUFFER, offsetIBuffer);
-    gl.vertexAttribIPointer(offsetILoc, 2, gl.INT, false, 0, 0);
+    gl.vertexAttribIPointer(offsetILoc, 2, gl.INT, 0, 0);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, offsetUBuffer);
-    gl.vertexAttribIPointer(offsetULoc, 2, gl.UNSIGNED_INT, false, 0, 0);
+    gl.vertexAttribIPointer(offsetULoc, 2, gl.UNSIGNED_INT, 0, 0);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
     gl.vertexAttribPointer(colorLoc, 4, gl.FLOAT, false, 0, 0);
@@ -426,7 +426,7 @@ function runTests() {
     setupAttribPointers(offsetILoc, offsetULoc, colorLoc,
                         offsetIBuffer, offsetUBuffer, colorBuffer);
     gl.bindBuffer(gl.ARRAY_BUFFER, offsetIBuffer);
-    gl.vertexAttribIPointer(offsetULoc, 2, gl.INT, false, 0, 0);
+    gl.vertexAttribIPointer(offsetULoc, 2, gl.INT, 0, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type mismatch");
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, instanceCount);
@@ -446,7 +446,7 @@ function runTests() {
     setupAttribPointers(offsetILoc, offsetULoc, colorLoc,
                         offsetIBuffer, offsetUBuffer, colorBuffer);
     gl.bindBuffer(gl.ARRAY_BUFFER, offsetUBuffer);
-    gl.vertexAttribIPointer(offsetILoc, 2, gl.UNSIGNED_INT, false, 0, 0);
+    gl.vertexAttribIPointer(offsetILoc, 2, gl.UNSIGNED_INT, 0, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type mismatch");
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, instanceCount);
@@ -466,7 +466,7 @@ function runTests() {
     setupAttribPointers(offsetILoc, offsetULoc, colorLoc,
                         offsetIBuffer, offsetUBuffer, colorBuffer);
     gl.bindBuffer(gl.ARRAY_BUFFER, colorUBuffer);
-    gl.vertexAttribIPointer(colorLoc, 4, gl.UNSIGNED_INT, false, 0, 0);
+    gl.vertexAttribIPointer(colorLoc, 4, gl.UNSIGNED_INT, 0, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type mismatch");
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, instanceCount);
@@ -476,7 +476,7 @@ function runTests() {
     setupAttribPointers(offsetILoc, offsetULoc, colorLoc,
                         offsetIBuffer, offsetUBuffer, colorBuffer);
     gl.bindBuffer(gl.ARRAY_BUFFER, colorUBuffer);
-    gl.vertexAttribIPointer(colorLoc, 4, gl.INT, false, 0, 0);
+    gl.vertexAttribIPointer(colorLoc, 4, gl.INT, 0, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type mismatch");
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, instanceCount);
@@ -504,7 +504,7 @@ function runTests() {
     setupAttribPointers(offsetILoc, offsetULoc, colorLoc,
                         offsetIBuffer, offsetUBuffer, colorBuffer);
     gl.bindBuffer(gl.ARRAY_BUFFER, offsetIBuffer);
-    gl.vertexAttribIPointer(offsetULoc, 2, gl.INT, false, 0, 0);
+    gl.vertexAttribIPointer(offsetULoc, 2, gl.INT, 0, 0);
     gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
     wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type mismatch");
     gl.drawRangeElements(gl.TRIANGLES, 0, 5, 6, gl.UNSIGNED_SHORT, 0);
@@ -528,7 +528,7 @@ function runTests() {
     setupAttribPointers(offsetILoc, offsetULoc, colorLoc,
                         offsetIBuffer, offsetUBuffer, colorBuffer);
     gl.bindBuffer(gl.ARRAY_BUFFER, offsetUBuffer);
-    gl.vertexAttribIPointer(offsetILoc, 2, gl.UNSIGNED_INT, false, 0, 0);
+    gl.vertexAttribIPointer(offsetILoc, 2, gl.UNSIGNED_INT, 0, 0);
     gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
     wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type mismatch");
     gl.drawRangeElements(gl.TRIANGLES, 0, 5, 6, gl.UNSIGNED_SHORT, 0);
@@ -552,7 +552,7 @@ function runTests() {
     setupAttribPointers(offsetILoc, offsetULoc, colorLoc,
                         offsetIBuffer, offsetUBuffer, colorBuffer);
     gl.bindBuffer(gl.ARRAY_BUFFER, colorUBuffer);
-    gl.vertexAttribIPointer(colorLoc, 4, gl.UNSIGNED_INT, false, 0, 0);
+    gl.vertexAttribIPointer(colorLoc, 4, gl.UNSIGNED_INT, 0, 0);
     gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
     wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type mismatch");
     gl.drawRangeElements(gl.TRIANGLES, 0, 5, 6, gl.UNSIGNED_SHORT, 0);
@@ -564,7 +564,7 @@ function runTests() {
     setupAttribPointers(offsetILoc, offsetULoc, colorLoc,
                         offsetIBuffer, offsetUBuffer, colorBuffer);
     gl.bindBuffer(gl.ARRAY_BUFFER, colorUBuffer);
-    gl.vertexAttribIPointer(colorLoc, 4, gl.INT, false, 0, 0);
+    gl.vertexAttribIPointer(colorLoc, 4, gl.INT, 0, 0);
     gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
     wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type mismatch");
     gl.drawRangeElements(gl.TRIANGLES, 0, 5, 6, gl.UNSIGNED_SHORT, 0);

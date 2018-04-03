@@ -12,6 +12,7 @@ gl_position_unset.vert.html
 glsl-function-nodes.html
 --min-version 1.0.2 glsl-vertex-branch.html
 glsl-long-variable-names.html
+--min-version 1.0.4 local-variable-shadowing-outer-function.html
 non-ascii-comments.vert.html
 non-ascii.vert.html
 --min-version 1.0.2 re-compile-re-link.html
@@ -112,3 +113,5 @@ struct-nesting-under-maximum.html
 --min-version 1.0.4 ternary-operator-on-arrays.html
 --min-version 1.0.3 ternary-operators-in-global-initializers.html
 --min-version 1.0.3 ternary-operators-in-initializers.html
+--min-version 1.0.4 uninitialized-local-global-variables.html
+--min-version 1.0.4 sampler-operand.html

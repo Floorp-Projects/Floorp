@@ -158,6 +158,11 @@ Console.prototype.trace = function() {};
 Console.prototype.count = function(value) {};
 
 /**
+ * @param {*} value
+ */
+Console.prototype.markTimeline = function(value) {};
+
+/**
  * @param {string=} opt_title
  */
 Console.prototype.profile = function(opt_title) {};

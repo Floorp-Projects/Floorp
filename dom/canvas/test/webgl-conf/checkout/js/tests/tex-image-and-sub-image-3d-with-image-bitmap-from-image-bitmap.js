@@ -56,9 +56,15 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
                                       0, 255, 0, 0]),
                                       2, 2);
 
-        createImageBitmap(imageData, {imageOrientation: "none", premultiplyAlpha: "none"}).then(function(bitmap) {
-            // bitmap is in unpremultiplied form
-            runImageBitmapTest(bitmap, 0, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, true);
+        createImageBitmap(imageData, {imageOrientation: "none", premultiplyAlpha: "none"})
+        .catch( () => {
+            testPassed("createImageBitmap with options may be rejected if it is not supported. Retrying without options.");
+            return createImageBitmap(imageData);
+        }).then( bitmap => {
+            return runImageBitmapTest(bitmap, 0, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, true);
+        }, () => {
+            testFailed("createImageBitmap(imageData) should succeed.");
+        }).then(() => {
             finishTest();
         });
     }
