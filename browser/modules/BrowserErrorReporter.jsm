@@ -59,6 +59,13 @@ const TELEMETRY_REPORTED_PATTERNS = new Set([
   /^chrome:\/\/(?:global|browser|devtools)/,
 ]);
 
+// Mapping of regexes to sample rates; if the regex matches the module an error
+// is thrown from, the matching sample rate is used instead of the default.
+// In case of a conflict, the first matching rate by insertion order is used.
+const MODULE_SAMPLE_RATES = new Map([
+  [/^(?:chrome|resource):\/\/devtools/, 1],
+]);
+
 /**
  * Collects nsIScriptError messages logged to the browser console and reports
  * them to a remotely-hosted error collection service.
@@ -212,7 +219,13 @@ class BrowserErrorReporter {
     }
 
     // Sample the amount of errors we send out
-    const sampleRate = Number.parseFloat(this.sampleRatePref);
+    let sampleRate = Number.parseFloat(this.sampleRatePref);
+    for (const [regex, rate] of MODULE_SAMPLE_RATES) {
+      if (message.sourceName.match(regex)) {
+        sampleRate = rate;
+        break;
+      }
+    }
     if (!Number.isFinite(sampleRate) || (Math.random() >= sampleRate)) {
       return;
     }
