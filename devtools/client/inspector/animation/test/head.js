@@ -85,6 +85,16 @@ addTab = async function(url) {
 };
 
 /**
+ * Remove animated elements from document except given selectors.
+ *
+ * @param {Array} selectors
+ * @return {Promise}
+ */
+const removeAnimatedElementsExcept = async function(selectors) {
+  return executeInContent("Test:RemoveAnimatedElementsExcept", { selectors });
+};
+
+/**
  * Click on an animation in the timeline to select it.
  *
  * @param {AnimationInspector} animationInspector.

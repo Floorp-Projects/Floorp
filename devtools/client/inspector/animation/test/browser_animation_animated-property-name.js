@@ -24,11 +24,10 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-  const { inspector, panel } = await openAnimationInspector();
+  await removeAnimatedElementsExcept([".compositor-notall"]);
+  const { panel } = await openAnimationInspector();
 
   info("Checking animated property name component");
-  await selectNodeAndWaitForAnimations(".compositor-notall", inspector);
-
   const animatedPropertyNameEls = panel.querySelectorAll(".animated-property-name");
   is(animatedPropertyNameEls.length, TEST_DATA.length,
     `Number of animated property name elements should be ${ TEST_DATA.length }`);

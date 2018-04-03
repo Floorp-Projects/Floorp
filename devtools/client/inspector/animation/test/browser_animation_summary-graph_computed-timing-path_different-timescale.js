@@ -7,6 +7,7 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
+  await removeAnimatedElementsExcept([".animated", ".end-delay"]);
   const { inspector, panel } = await openAnimationInspector();
 
   info("Checking the path for different time scale");
