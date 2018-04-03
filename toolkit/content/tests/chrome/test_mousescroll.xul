@@ -79,7 +79,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378028
 /** Test for Bug 378028 **/
 /*   and for Bug 350471 **/
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(runTests);
+SimpleTest.waitForFocus(prepareRunningTests);
 
 const IS_MAC = navigator.platform.indexOf("Mac") == 0;
 
@@ -341,6 +341,21 @@ function runTests()
     winUtils.restoreNormalRefresh();
     SimpleTest.finish();
   }
+}
+
+async function prepareRunningTests()
+{
+  // Before actually running tests, we disable auto-dir scrolling, becasue the
+  // horizontal scrolling tests in this file are mostly meant to ensure that the
+  // tested controls in the default style should only have one scrollbar and it
+  // must always be in the block-flow direction so they are not really meant to
+  // test default actions for wheel events, so we simply disabled auto-dir
+  // scrolling, which are well tested in
+  // dom/events/test/window_wheel_default_action.html.
+  await SpecialPowers.pushPrefEnv({"set": [["mousewheel.autodir.enabled",
+                                            false]]});
+
+  runTests();
 }
 
 function* testBody()
