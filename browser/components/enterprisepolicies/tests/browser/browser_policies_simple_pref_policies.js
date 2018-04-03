@@ -39,6 +39,17 @@ const POLICIES_TESTS = [
     lockedPrefs: { "signon.rememberSignons": true },
   },
 
+  // POLICY: DisableSecurityBypass
+  {
+    policies: {
+      "DisableSecurityBypass": {
+        "SafeBrowsing": true
+      }
+    },
+    lockedPrefs: { "browser.safebrowsing.allowOverride": false },
+  },
+
+
   // POLICY: DisableFormHistory
   {
     policies: { "DisableFormHistory": true },
