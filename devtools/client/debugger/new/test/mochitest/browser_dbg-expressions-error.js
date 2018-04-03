@@ -22,11 +22,11 @@ function getValue(dbg, index) {
 }
 
 async function addExpression(dbg, input) {
-  const evaluation = waitForDispatch(dbg, "EVALUATE_EXPRESSION");
+  info("Adding an expression");
   findElementWithSelector(dbg, expressionSelectors.input).focus();
   type(dbg, input);
   pressKey(dbg, "Enter");
-  await evaluation;
+  await waitForDispatch(dbg, "EVALUATE_EXPRESSION");
 }
 
 async function editExpression(dbg, input) {
@@ -40,16 +40,36 @@ async function editExpression(dbg, input) {
   await evaluation;
 }
 
+/*
+ * When we add a bad expression, we'll pause,
+ * resume, and wait for the expression to finish being evaluated.
+ */
+async function addBadExpression(dbg, input) {
+  const evaluation = waitForDispatch(dbg, "EVALUATE_EXPRESSION");
+
+  findElementWithSelector(dbg, expressionSelectors.input).focus();
+  type(dbg, input);
+  pressKey(dbg, "Enter");
+
+  await waitForPaused(dbg);
+
+  ok(dbg.selectors.isEvaluatingExpression(dbg.getState()));
+  await resume(dbg);
+  await evaluation;
+}
+
 add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
 
-  await togglePauseOnExceptions(dbg, true, false);
+  const onPausedOnException = togglePauseOnExceptions(dbg, true, false);
 
   // add a good expression, 2 bad expressions, and another good one
   await addExpression(dbg, "location");
-  await addExpression(dbg, "foo.bar");
-  await addExpression(dbg, "foo.batt");
+  await addBadExpression(dbg, "foo.bar");
+  await addBadExpression(dbg, "foo.batt");
   await addExpression(dbg, "2");
+
+  await onPausedOnException;
 
   // check the value of
   is(getValue(dbg, 2), "(unavailable)");

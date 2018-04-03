@@ -1536,9 +1536,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.sources.getOriginalLocation(generatedLocation));
     const url = originalSourceActor ? originalSourceActor.url : null;
 
-    // We ignore sources without a url because we do not
-    // want to pause at console evaluations or watch expressions.
-    if (!url || this.sources.isBlackBoxed(url)) {
+    if (this.sources.isBlackBoxed(url)) {
       return undefined;
     }
 
