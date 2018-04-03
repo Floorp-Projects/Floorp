@@ -283,6 +283,11 @@ namespace states {
    */
   const uint64_t CURRENT = ((uint64_t) 0x1) << 48;
 
+  /**
+   * Not a real state, used for static assertions.
+   */
+  const uint64_t LAST_ENTRY = CURRENT;
+
 } // namespace states
 } // namespace a11y
 } // namespace mozilla

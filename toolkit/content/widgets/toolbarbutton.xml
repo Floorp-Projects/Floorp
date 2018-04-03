@@ -40,23 +40,6 @@
     </content>
   </binding>
 
-  <binding id="menu-button" display="xul:menu"
-           extends="chrome://global/content/bindings/button.xml#menu-button-base">
-    <resources>
-      <stylesheet src="chrome://global/skin/toolbarbutton.css"/>
-    </resources>
-
-    <content>
-      <children includes="observes|template|menupopup|panel|tooltip"/>
-      <xul:toolbarbutton class="box-inherit toolbarbutton-menubutton-button"
-                         anonid="button" flex="1" allowevents="true"
-                         xbl:inherits="disabled,crop,image,label,accesskey,command,wrap,badge,
-                                       align,dir,pack,orient,tooltiptext=buttontooltiptext"/>
-      <xul:dropmarker type="menu-button" class="toolbarbutton-menubutton-dropmarker"
-                      anonid="dropmarker" xbl:inherits="align,dir,pack,orient,disabled,label,open,consumeanchor"/>
-    </content>
-  </binding>
-
   <binding id="toolbarbutton-badged"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
     <content>

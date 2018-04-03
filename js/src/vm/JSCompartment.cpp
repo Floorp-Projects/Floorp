@@ -51,7 +51,6 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     isAtomsCompartment_(false),
     isSelfHosting(false),
     marked(true),
-    warnedAboutExprClosure(false),
     warnedAboutStringGenericsMethods(0),
 #ifdef DEBUG
     firedOnNewGlobalObject(false),

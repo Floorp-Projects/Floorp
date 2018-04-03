@@ -1349,8 +1349,11 @@ DXGIYCbCrTextureHostD3D11::PushResourceUpdates(wr::TransactionBuilder& aResource
 
   MOZ_ASSERT(mHandles[0] && mHandles[1] && mHandles[2]);
   MOZ_ASSERT(aImageKeys.length() == 3);
-  MOZ_ASSERT(mSize.width % 2 == 0);
-  MOZ_ASSERT(mSize.height % 2 == 0);
+  // Assume the chroma planes are rounded up if the luma plane is odd sized.
+  MOZ_ASSERT((mSizeCbCr.width == mSize.width ||
+              mSizeCbCr.width == (mSize.width + 1) >> 1) &&
+             (mSizeCbCr.height == mSize.height ||
+              mSizeCbCr.height == (mSize.height + 1) >> 1));
 
   auto method = aOp == TextureHost::ADD_IMAGE ? &wr::TransactionBuilder::AddExternalImage
                                               : &wr::TransactionBuilder::UpdateExternalImage;

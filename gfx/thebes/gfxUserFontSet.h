@@ -63,6 +63,10 @@ struct gfxFontFaceSrc {
     RefPtr<gfxFontSrcPrincipal> mOriginPrincipal; // principal if url
 
     RefPtr<gfxFontFaceBufferSource> mBuffer;
+
+    // The principal that should be used for the load. Should only be used for
+    // URL sources.
+    gfxFontSrcPrincipal* LoadPrincipal(const gfxUserFontSet&) const;
 };
 
 inline bool
@@ -265,19 +269,10 @@ public:
     // Look up names in a fontlist and return true if any are in the set
     bool ContainsUserFontSetFonts(const mozilla::FontFamilyList& aFontList) const;
 
-    // check whether the given source is allowed to be loaded;
-    // returns the Principal (for use in the key when caching the loaded font),
-    // and whether the load should bypass the cache (force-reload).
-    virtual nsresult CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
-                                   gfxFontSrcPrincipal** aPrincipal,
-                                   bool* aBypassCache) = 0;
-
-    virtual gfxFontSrcPrincipal* GetStandardFontLoadPrincipal() = 0;
+    virtual gfxFontSrcPrincipal* GetStandardFontLoadPrincipal() const = 0;
 
     // check whether content policies allow the given URI to load.
-    virtual bool IsFontLoadAllowed(nsIURI* aFontLocation,
-                                   nsIPrincipal* aPrincipal,
-                                   nsTArray<nsCOMPtr<nsIRunnable>>* aViolations) = 0;
+    virtual bool IsFontLoadAllowed(const gfxFontFaceSrc&) = 0;
 
     // Dispatches all of the specified runnables to the font face set's
     // document's event queue.
@@ -320,33 +315,7 @@ public:
         // The aPrivate flag is set for requests coming from private windows,
         // so we can avoid leaking fonts cached in private windows mode out to
         // normal windows.
-        static gfxFontEntry* GetFont(gfxFontSrcURI* aSrcURI,
-                                     gfxFontSrcPrincipal* aPrincipal,
-                                     gfxUserFontEntry* aUserFontEntry,
-                                     bool              aPrivate);
-
-        // Generation number that is incremented whenever an entry is added to
-        // the cache.  (Removals don't increment it.)
-        static uint32_t Generation() { return sGeneration; }
-
-        // For each entry in the user font cache where we haven't recorded
-        // whether the given user font set is allowed to use the entry,
-        // call IsFontLoadAllowed and record it.
-        //
-        // This function should be called just before a Servo restyle, so
-        // that we can determine whether a given font load (using a cached
-        // font) would be allowed without having to call the non-OMT-safe
-        // IsFontLoadAllowed from the style worker threads.
-        static void UpdateAllowedFontSets(gfxUserFontSet* aUserFontSet);
-
-        // Clears all recorded IsFontLoadAllowed results for the given
-        // user font set.
-        //
-        // This function should be called just before the user font set is
-        // going away, or when we detect that a document's node principal
-        // has changed (and thus the already recorded IsFontLoadAllowed
-        // results are no longer valid).
-        static void ClearAllowedFontSets(gfxUserFontSet* aUserFontSet);
+        static gfxFontEntry* GetFont(const gfxFontFaceSrc&, const gfxUserFontEntry&);
 
         // Clear everything so that we don't leak URIs and Principals.
         static void Shutdown();
@@ -415,11 +384,10 @@ public:
             { }
 
             Entry(Entry&& aOther)
-                : mAllowedFontSets(mozilla::Move(aOther.mAllowedFontSets)),
-                  mURI(mozilla::Move(aOther.mURI)),
-                  mPrincipal(mozilla::Move(aOther.mPrincipal)),
-                  mFontEntry(mozilla::Move(aOther.mFontEntry)),
-                  mPrivate(mozilla::Move(aOther.mPrivate))
+                : mURI(mozilla::Move(aOther.mURI))
+                , mPrincipal(mozilla::Move(aOther.mPrincipal))
+                , mFontEntry(mozilla::Move(aOther.mFontEntry))
+                , mPrivate(mozilla::Move(aOther.mPrivate))
             { }
 
             ~Entry() { }
@@ -449,14 +417,6 @@ public:
             gfxFontEntry* GetFontEntry() const { return mFontEntry; }
             bool IsPrivate() const { return mPrivate; }
 
-            bool CheckIsFontSetAllowed(gfxUserFontSet* aUserFontSet) const;
-            bool CheckIsFontSetAllowedAndDispatchViolations(gfxUserFontSet* aUserFontSet) const;
-            bool IsFontSetAllowedKnown(gfxUserFontSet* aUserFontSet) const;
-            void SetIsFontSetAllowed(gfxUserFontSet* aUserFontSet,
-                                     bool aAllowed,
-                                     nsTArray<nsCOMPtr<nsIRunnable>>&& aViolations);
-            void ClearIsFontSetAllowed(gfxUserFontSet* aUserFontSet);
-
             void ReportMemory(nsIHandleReportCallback* aHandleReport,
                               nsISupports* aData, bool aAnonymize);
 
@@ -477,51 +437,6 @@ public:
                                           aVariations.Length() * sizeof(gfxFontVariation));
             }
 
-            // An entry in mAllowedFontSets.
-            class LoadResultEntry : public nsPtrHashKey<gfxUserFontSet>
-            {
-            public:
-                explicit LoadResultEntry(KeyTypePointer aKey)
-                  : nsPtrHashKey(aKey)
-                  , mAllowed(false)
-                {
-                }
-
-                LoadResultEntry(LoadResultEntry&& aOther)
-                  : nsPtrHashKey(aOther.mKey)
-                  , mAllowed(aOther.mAllowed)
-                  , mViolations(mozilla::Move(aOther.mViolations))
-                {
-                }
-
-                ~LoadResultEntry() {}
-
-                // Whether the user font set (the key) is allowed to load this
-                // entry's font.
-                bool mAllowed;
-
-                // If the load is not allowed, the CSP violation reports that
-                // must be dispatched when we attempt to use the entry's font.
-                // (Should be empty if mAllowed is true.)
-                nsTArray<nsCOMPtr<nsIRunnable>> mViolations;
-
-                enum { ALLOW_MEMMOVE = false };
-            };
-
-            // Set of gfxUserFontSets that are allowed to use this cached font
-            // entry.
-            //
-            // This is basically a cache of results of calls to
-            // gfxUserFontSet::IsFontLoadAllowed for each font set to be used
-            // when using the cache from style worker threads (where calling
-            // IsFontLoadAllowed is not possible).  Whenever a new entry is
-            // added to the cache, sGeneration is bumped, and a FontFaceSet
-            // for a document about to be styled can call UpdateAllowedFontSets
-            // to record IsFontLoadAllowed results for the new entries.  When
-            // a FontFaceSet is going away, it calls ClearAllowedFontSets
-            // to remove entries from the mAllowedFontSets tables.
-            nsTHashtable<LoadResultEntry> mAllowedFontSets;
-
             RefPtr<gfxFontSrcURI>  mURI;
             RefPtr<gfxFontSrcPrincipal> mPrincipal; // or nullptr for data: URLs
 
@@ -535,8 +450,6 @@ public:
         };
 
         static nsTHashtable<Entry>* sUserFonts;
-
-        static uint32_t sGeneration;
     };
 
     void SetLocalRulesUsed() {
@@ -560,6 +473,10 @@ protected:
 
     // Return whether the font set is associated with a private-browsing tab.
     virtual bool GetPrivateBrowsing() = 0;
+
+    // Return whether the font set is associated with a document that was
+    // shift-reloaded, for example, and thus should bypass the font cache.
+    virtual bool BypassCache() = 0;
 
     // parse data for a data URL
     virtual nsresult SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
@@ -703,6 +620,11 @@ public:
 #ifdef DEBUG
     gfxUserFontSet* GetUserFontSet() const { return mFontSet; }
 #endif
+
+    const nsTArray<gfxFontFaceSrc>& SourceList() const
+    {
+      return mSrcList;
+    }
 
 protected:
     const uint8_t* SanitizeOpenTypeData(const uint8_t* aData,

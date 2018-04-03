@@ -77,17 +77,4 @@ add_task(async function () {
      "jsterm input is not focused");
   is(hud.ui.filterBox.getAttribute("focused"), "true",
      "filter input is focused");
-
-  if (Services.appinfo.OS == "Darwin") {
-    ok(hud.ui.getFilterState("network"), "network category is enabled");
-    EventUtils.synthesizeKey("t", {ctrlKey: true});
-    ok(!hud.ui.getFilterState("network"), "accesskey for Network works");
-    EventUtils.synthesizeKey("t", {ctrlKey: true});
-    ok(hud.ui.getFilterState("network"), "accesskey for Network works (again)");
-  } else {
-    EventUtils.synthesizeKey("n", {altKey: true});
-    let net = hud.ui.document.querySelector("toolbarbutton[category=net]");
-    is(hud.ui.document.activeElement, net,
-       "accesskey for Network category focuses the Net button");
-  }
 });

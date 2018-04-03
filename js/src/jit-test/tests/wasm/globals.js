@@ -130,11 +130,6 @@ if (typeof WebAssembly.Global === "function")
 else
     assertEq(module.value, 42);
 
-assertEq(wasmEvalText(`(module
-    (global (import "a" "b") (mut i32))
-    (func (export "get") (result i32) get_global 0)
-)`, { a: { b: 42 } }).exports.get(), 42);
-
 // Can only import numbers (no implicit coercions).
 module = new WebAssembly.Module(wasmTextToBinary(`(module
     (global (import "globs" "i32") i32)
@@ -521,6 +516,14 @@ if (typeof WebAssembly.Global === "function") {
         assertEq(i.exports.getter(), 197);
         assertEq(j.exports.getter(), 197);
     }
+
+    // Providing a primitive value to an imported global should internally
+    // promote it to a Webassembly.Global object.
+
+    assertEq(wasmEvalText(`(module
+        (global (import "a" "b") (mut i32))
+        (func (export "get") (result i32) get_global 0)
+    )`, { a: { b: 42 } }).exports.get(), 42);
 
     // TEST THIS LAST
 

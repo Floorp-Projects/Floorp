@@ -858,6 +858,9 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
     nsContentUtils::GetPresShellForContent(mContent);
   if (presShellForContent && presShellForContent->GetDocument() != document) {
     presShellForContent->GetDocument()->FlushPendingNotifications(FlushType::Style);
+    if (presShellForContent->IsDestroying()) {
+      presShellForContent = nullptr;
+    }
   }
 
   mPresShell = document->GetShell();

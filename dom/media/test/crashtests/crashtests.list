@@ -12,7 +12,7 @@ load 497734-1.xhtml
 load 497734-2.html
 load 576612-1.html
 load 752784-1.html
-skip-if(Android||(webrender&&winWidget)) load 789075-1.html # bug 1374405 for android, bug 1426199 for webrender
+skip-if(Android) load 789075-1.html # bug 1374405 for android
 skip-if(Android&&AndroidVersion=='22') HTTP load 795892-1.html # bug 1358718
 load 844563.html
 load 846612.html
