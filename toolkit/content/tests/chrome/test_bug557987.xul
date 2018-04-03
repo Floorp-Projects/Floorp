@@ -9,9 +9,9 @@
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
-  <toolbarbutton id="button" type="menu-button" label="Test bug 557987"
-                                               onclick="eventReceived('click');"
-                                               oncommand="eventReceived('command');">
+  <toolbarbutton id="button" type="menu" label="Test bug 557987"
+                                         onclick="eventReceived('click');"
+                                         oncommand="eventReceived('command');">
     <menupopup onpopupshowing="eventReceived('popupshowing'); return false;" />
   </toolbarbutton>
   <menulist id="menulist" editable="true" value="Test bug 557987" 
@@ -26,7 +26,8 @@ SimpleTest.waitForExplicitFinish();
 
 SimpleTest.waitForFocus(test);
 
-// Tests that mouse events are correctly dispatched to <toolbarbutton type="menu-button"/>
+// Tests that mouse events are correctly dispatched to <toolbarbutton type="menu"/>
+// This used to test menu buttons, and was updated when this button type was removed.
 function test() {
   
   disableNonTestMouseEvents(true);
@@ -52,7 +53,7 @@ function test() {
 }
 
 function finishTest() {
-  is(eventCount.command, 1, "Correct number of command events received");
+  is(eventCount.command, 0, "Correct number of command events received");
   is(eventCount.popupshowing, 1, "Correct number of popupshowing events received");
   is(eventCount.click, 2, "Correct number of click events received");
   is(eventCount.focus, 1, "Correct number of focus events received");
