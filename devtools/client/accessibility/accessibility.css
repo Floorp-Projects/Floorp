@@ -4,7 +4,6 @@
 
 :root {
   --accessibility-font-size: 12px;
-  --accessibility-header-font: message-box;
   --accessibility-toolbar-height: 24px;
   --accessibility-toolbar-height-tall: 35px;
   --accessibility-toolbar-focus: var(--blue-50);
@@ -89,7 +88,7 @@ body {
 /* Description */
 .description {
   color: var(--theme-toolbar-color);
-  font: var(--accessibility-header-font);
+  font: message-box;
   font-size: calc(var(--accessibility-font-size) + 1px);
   margin: auto;
   padding-top: 15vh;
@@ -187,7 +186,7 @@ body {
 .mainFrame .treeTable .treeHeaderCell {
   border-bottom: 1px solid var(--theme-splitter-color);
   background: var(--theme-toolbar-background);
-  font: var(--accessibility-header-font);
+  font: message-box;
   font-size: var(--accessibility-font-size);
   height: var(--accessibility-toolbar-height);
   color: var(--theme-toolbar-color);
@@ -199,7 +198,7 @@ body {
   flex-direction: column;
   flex: 1;
   white-space: nowrap;
-  font: var(--accessibility-header-font);
+  font: message-box;
   font-size: var(--accessibility-font-size);
 }
 
