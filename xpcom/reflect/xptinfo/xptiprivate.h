@@ -15,7 +15,6 @@
 // this after nsISupports, to pick up IID
 // so that xpt stuff doesn't try to define it itself...
 #include "xpt_struct.h"
-#include "xpt_xdr.h"
 
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
@@ -62,6 +61,7 @@ class xptiInterfaceInfo;
 class xptiInterfaceEntry;
 class xptiTypelibGuts;
 
+struct XPTArena;
 extern XPTArena* gXPTIStructArena;
 
 /***************************************************************************/
@@ -75,13 +75,12 @@ extern XPTArena* gXPTIStructArena;
 class xptiTypelibGuts
 {
 public:
-    static xptiTypelibGuts* Create(const XPTHeader* aHeader);
+    static xptiTypelibGuts* Create();
 
-    uint16_t GetEntryCount() const {return mHeader->mNumInterfaces;}
+    uint16_t GetEntryCount() const { return XPTHeader::kNumInterfaces; }
 
     void                SetEntryAt(uint16_t i, xptiInterfaceEntry* ptr)
     {
-        NS_ASSERTION(mHeader,"bad state!");
         NS_ASSERTION(i < GetEntryCount(),"bad param!");
         mEntryArray[i] = ptr;
     }
@@ -90,13 +89,10 @@ public:
     const char* GetEntryNameAt(uint16_t i);
 
 private:
-    explicit xptiTypelibGuts(const XPTHeader* aHeader)
-        : mHeader(aHeader)
-    { }
+    xptiTypelibGuts() = default;
     ~xptiTypelibGuts();
 
 private:
-    const XPTHeader*     mHeader;        // hold pointer into arena
     xptiInterfaceEntry*  mEntryArray[1]; // Always last. Sized to fit.
 };
 
@@ -151,7 +147,7 @@ private:
 class xptiInterfaceEntry
 {
 public:
-    static xptiInterfaceEntry* Create(const XPTInterfaceDirectoryEntry* aEntry,
+    static xptiInterfaceEntry* Create(const XPTInterfaceDescriptor* aIface,
                                       xptiTypelibGuts* aTypelib);
 
     enum {
@@ -247,7 +243,7 @@ public:
     nsresult GetIIDForParamNoAlloc(uint16_t methodIndex, const nsXPTParamInfo * param, nsIID *iid);
 
 private:
-    xptiInterfaceEntry(const XPTInterfaceDirectoryEntry* aDescriptor,
+    xptiInterfaceEntry(const XPTInterfaceDescriptor* aIface,
                        xptiTypelibGuts* aTypelib);
     ~xptiInterfaceEntry();
 

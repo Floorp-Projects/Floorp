@@ -400,8 +400,15 @@ AccessibleCaretEventHub::Init()
     return;
   }
 
-  docShell->AddWeakReflowObserver(this);
-  docShell->AddWeakScrollObserver(this);
+  nsCOMPtr<nsIDocShell> curDocShell = docShell;
+  do {
+    curDocShell->AddWeakReflowObserver(this);
+    curDocShell->AddWeakScrollObserver(this);
+
+    nsCOMPtr<nsIDocShellTreeItem> tmp;
+    curDocShell->GetSameTypeParent(getter_AddRefs(tmp));
+    curDocShell = do_QueryInterface(tmp);
+  } while (curDocShell);
 
   mDocShell = static_cast<nsDocShell*>(docShell);
 
@@ -421,10 +428,14 @@ AccessibleCaretEventHub::Terminate()
     return;
   }
 
-  RefPtr<nsDocShell> docShell(mDocShell.get());
-  if (docShell) {
-    docShell->RemoveWeakReflowObserver(this);
-    docShell->RemoveWeakScrollObserver(this);
+  nsCOMPtr<nsIDocShell> curDocShell = mDocShell.get();
+  while (curDocShell) {
+    curDocShell->RemoveWeakReflowObserver(this);
+    curDocShell->RemoveWeakScrollObserver(this);
+
+    nsCOMPtr<nsIDocShellTreeItem> tmp;
+    curDocShell->GetSameTypeParent(getter_AddRefs(tmp));
+    curDocShell = do_QueryInterface(tmp);
   }
 
   if (mLongTapInjectorTimer) {

@@ -428,10 +428,6 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         remoteFile = posixpath.join(self.remoteComponentsDir, "httpd.manifest")
         self.device.push(local, remoteFile)
 
-        local = os.path.join(self.localBin, "components/test_necko.xpt")
-        remoteFile = posixpath.join(self.remoteComponentsDir, "test_necko.xpt")
-        self.device.push(local, remoteFile)
-
         if self.options['localAPK']:
             remoteFile = posixpath.join(self.remoteBinDir,
                                         os.path.basename(self.options['localAPK']))
