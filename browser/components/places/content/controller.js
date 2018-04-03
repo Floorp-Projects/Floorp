@@ -798,17 +798,7 @@ PlacesController.prototype = {
         let tag = node.parent.title || "";
         if (!tag) {
           // The parent may be the root node, that doesn't have a title.
-          // Until we fix bug 1293445, we have two ways to get tags:
-          if (node.parent.queryOptions.resultType ==
-                Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS) {
-            // Get the tag using the bookmarks API.
-            let tagItemId = PlacesUtils.getConcreteItemId(node.parent);
-            let tagGuid = await PlacesUtils.promiseItemGuid(tagItemId);
-            tag = (await PlacesUtils.bookmarks.fetch(tagGuid)).title;
-          } else {
-            // Extract the tag from the query itself.
-            tag = node.parent.query.tags[0];
-          }
+          tag = node.parent.query.tags[0];
         }
         transactions.push(PlacesTransactions.Untag({ urls: [node.uri], tag }));
       } else if (PlacesUtils.nodeIsTagQuery(node) &&
