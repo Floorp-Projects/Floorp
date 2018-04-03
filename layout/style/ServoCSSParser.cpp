@@ -93,15 +93,6 @@ ServoCSSParser::ParseTransformIntoMatrix(const nsAString& aValue,
 }
 
 /* static */ bool
-ServoCSSParser::ParseFontDescriptor(nsCSSFontDesc aDescID,
-                                    const nsAString& aValue,
-                                    URLExtraData* aUrl,
-                                    nsCSSValue& aResult)
-{
-  return Servo_ParseFontDescriptor(aDescID, &aValue, aUrl, &aResult);
-}
-
-/* static */ bool
 ServoCSSParser::ParseFontShorthandForMatching(const nsAString& aValue,
                                               URLExtraData* aUrl,
                                               RefPtr<SharedFontList>& aList,

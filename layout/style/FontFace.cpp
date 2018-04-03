@@ -13,11 +13,12 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/ServoCSSParser.h"
+#include "mozilla/ServoFontFaceRule.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StaticPrefs.h"
-#include "nsCSSFontFaceRule.h"
 #include "nsCSSParser.h"
 #include "nsIDocument.h"
 #include "nsStyleUtil.h"
@@ -77,7 +78,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(FontFace)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(FontFace)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoaded)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRule)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOtherFontFaceSets)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -85,7 +85,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FontFace)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoaded)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRule)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOtherFontFaceSets)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
@@ -156,7 +155,7 @@ LoadStateToStatus(gfxUserFontEntry::UserFontLoadState aLoadState)
 already_AddRefed<FontFace>
 FontFace::CreateForRule(nsISupports* aGlobal,
                         FontFaceSet* aFontFaceSet,
-                        nsCSSFontFaceRule* aRule)
+                        RawServoFontFaceRule* aRule)
 {
   RefPtr<FontFace> obj = new FontFace(aGlobal, aFontFaceSet);
   obj->mRule = aRule;
@@ -193,9 +192,8 @@ void
 FontFace::InitializeSource(const StringOrArrayBufferOrArrayBufferView& aSource)
 {
   if (aSource.IsString()) {
-    if (!ParseDescriptor(eCSSFontDesc_Src,
-                         aSource.GetAsString(),
-                         mDescriptors->mSrc)) {
+    IgnoredErrorResult rv;
+    if (!SetDescriptor(eCSSFontDesc_Src, aSource.GetAsString(), rv)) {
       Reject(NS_ERROR_DOM_SYNTAX_ERR);
 
       SetStatus(FontFaceLoadStatus::Error);
@@ -255,7 +253,7 @@ void
 FontFace::GetStyle(nsString& aResult)
 {
   mFontFaceSet->FlushUserFontSet();
-  GetDesc(eCSSFontDesc_Style, eCSSProperty_font_style, aResult);
+  GetDesc(eCSSFontDesc_Style, aResult);
 }
 
 void
@@ -269,7 +267,7 @@ void
 FontFace::GetWeight(nsString& aResult)
 {
   mFontFaceSet->FlushUserFontSet();
-  GetDesc(eCSSFontDesc_Weight, eCSSProperty_font_weight, aResult);
+  GetDesc(eCSSFontDesc_Weight, aResult);
 }
 
 void
@@ -283,7 +281,7 @@ void
 FontFace::GetStretch(nsString& aResult)
 {
   mFontFaceSet->FlushUserFontSet();
-  GetDesc(eCSSFontDesc_Stretch, eCSSProperty_font_stretch, aResult);
+  GetDesc(eCSSFontDesc_Stretch, aResult);
 }
 
 void
@@ -301,7 +299,7 @@ FontFace::GetUnicodeRange(nsString& aResult)
   // There is no eCSSProperty_unicode_range for us to pass in to GetDesc
   // to get a serialized (possibly defaulted) value, but that function
   // doesn't use the property ID for this descriptor anyway.
-  GetDesc(eCSSFontDesc_UnicodeRange, eCSSProperty_UNKNOWN, aResult);
+  GetDesc(eCSSFontDesc_UnicodeRange, aResult);
 }
 
 void
@@ -334,8 +332,7 @@ void
 FontFace::GetFeatureSettings(nsString& aResult)
 {
   mFontFaceSet->FlushUserFontSet();
-  GetDesc(eCSSFontDesc_FontFeatureSettings, eCSSProperty_font_feature_settings,
-          aResult);
+  GetDesc(eCSSFontDesc_FontFeatureSettings, aResult);
 }
 
 void
@@ -349,8 +346,7 @@ void
 FontFace::GetVariationSettings(nsString& aResult)
 {
   mFontFaceSet->FlushUserFontSet();
-  GetDesc(eCSSFontDesc_FontVariationSettings, eCSSProperty_font_variation_settings,
-          aResult);
+  GetDesc(eCSSFontDesc_FontVariationSettings, aResult);
 }
 
 void
@@ -364,7 +360,7 @@ void
 FontFace::GetDisplay(nsString& aResult)
 {
   mFontFaceSet->FlushUserFontSet();
-  GetDesc(eCSSFontDesc_Display, eCSSProperty_UNKNOWN, aResult);
+  GetDesc(eCSSFontDesc_Display, aResult);
 }
 
 void
@@ -525,10 +521,8 @@ FontFace::DoReject(nsresult aResult)
   mLoaded->MaybeReject(aResult);
 }
 
-bool
-FontFace::ParseDescriptor(nsCSSFontDesc aDescID,
-                          const nsAString& aString,
-                          nsCSSValue& aResult)
+already_AddRefed<URLExtraData>
+FontFace::GetURLExtraData() const
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
   nsCOMPtr<nsIPrincipal> principal = global->PrincipalOrNull();
@@ -538,27 +532,28 @@ FontFace::ParseDescriptor(nsCSSFontDesc aDescID,
   nsCOMPtr<nsIURI> base = window->GetDocBaseURI();
 
   RefPtr<URLExtraData> url = new URLExtraData(base, docURI, principal);
-  return ServoCSSParser::ParseFontDescriptor(aDescID, aString, url, aResult);
+  return url.forget();
 }
 
-void
+bool
 FontFace::SetDescriptor(nsCSSFontDesc aFontDesc,
                         const nsAString& aValue,
                         ErrorResult& aRv)
 {
+  // FIXME We probably don't need to distinguish between this anymore
+  // since we have common backend now.
   NS_ASSERTION(!HasRule(),
                "we don't handle rule backed FontFace objects yet");
   if (HasRule()) {
-    return;
+    return false;
   }
 
-  nsCSSValue parsedValue;
-  if (!ParseDescriptor(aFontDesc, aValue, parsedValue)) {
+  NS_ConvertUTF16toUTF8 value(aValue);
+  RefPtr<URLExtraData> url = GetURLExtraData();
+  if (!Servo_FontFaceRule_SetDescriptor(GetData(), aFontDesc, &value, url)) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return;
+    return false;
   }
-
-  mDescriptors->Get(aFontDesc) = parsedValue;
 
   if (aFontDesc == eCSSFontDesc_UnicodeRange) {
     mUnicodeRangeDirty = true;
@@ -566,6 +561,7 @@ FontFace::SetDescriptor(nsCSSFontDesc aFontDesc,
 
   // XXX Setting descriptors doesn't actually have any effect on FontFace
   // objects that have started loading or have already been loaded.
+  return true;
 }
 
 bool
@@ -575,41 +571,28 @@ FontFace::SetDescriptors(const nsAString& aFamily,
   MOZ_ASSERT(!HasRule());
   MOZ_ASSERT(!mDescriptors);
 
-  mDescriptors = new CSSFontFaceDescriptors;
+  IgnoredErrorResult rv;
+  mDescriptors = Servo_FontFaceRule_CreateEmpty().Consume();
 
   // Parse all of the mDescriptors in aInitializer, which are the values
   // we got from the JS constructor.
-  if (!ParseDescriptor(eCSSFontDesc_Family,
-                       aFamily,
-                       mDescriptors->mFamily) ||
-      *mDescriptors->mFamily.GetStringBufferValue() == 0 ||
-      !ParseDescriptor(eCSSFontDesc_Style,
-                       aDescriptors.mStyle,
-                       mDescriptors->mStyle) ||
-      !ParseDescriptor(eCSSFontDesc_Weight,
-                       aDescriptors.mWeight,
-                       mDescriptors->mWeight) ||
-      !ParseDescriptor(eCSSFontDesc_Stretch,
-                       aDescriptors.mStretch,
-                       mDescriptors->mStretch) ||
-      !ParseDescriptor(eCSSFontDesc_UnicodeRange,
-                       aDescriptors.mUnicodeRange,
-                       mDescriptors->mUnicodeRange) ||
-      !ParseDescriptor(eCSSFontDesc_FontFeatureSettings,
-                       aDescriptors.mFeatureSettings,
-                       mDescriptors->mFontFeatureSettings) ||
+  if (!SetDescriptor(eCSSFontDesc_Family, aFamily, rv) ||
+      !SetDescriptor(eCSSFontDesc_Style, aDescriptors.mStyle, rv) ||
+      !SetDescriptor(eCSSFontDesc_Weight, aDescriptors.mWeight, rv) ||
+      !SetDescriptor(eCSSFontDesc_Stretch, aDescriptors.mStretch, rv) ||
+      !SetDescriptor(eCSSFontDesc_UnicodeRange,
+                     aDescriptors.mUnicodeRange, rv) ||
+      !SetDescriptor(eCSSFontDesc_FontFeatureSettings,
+                     aDescriptors.mFeatureSettings, rv) ||
       (StaticPrefs::layout_css_font_variations_enabled() &&
-       !ParseDescriptor(eCSSFontDesc_FontVariationSettings,
-                        aDescriptors.mVariationSettings,
-                        mDescriptors->mFontVariationSettings)) ||
-      !ParseDescriptor(eCSSFontDesc_Display,
-                       aDescriptors.mDisplay,
-                       mDescriptors->mDisplay)) {
+       !SetDescriptor(eCSSFontDesc_FontVariationSettings,
+                      aDescriptors.mVariationSettings, rv)) ||
+      !SetDescriptor(eCSSFontDesc_Display, aDescriptors.mDisplay, rv)) {
     // XXX Handle font-variant once we support it (bug 1055385).
 
     // If any of the descriptors failed to parse, none of them should be set
     // on the FontFace.
-    mDescriptors = new CSSFontFaceDescriptors;
+    mDescriptors = Servo_FontFaceRule_CreateEmpty().Consume();
 
     Reject(NS_ERROR_DOM_SYNTAX_ERR);
 
@@ -623,32 +606,18 @@ FontFace::SetDescriptors(const nsAString& aFamily,
 void
 FontFace::GetDesc(nsCSSFontDesc aDescID, nsCSSValue& aResult) const
 {
-  if (HasRule()) {
-    MOZ_ASSERT(mRule);
-    MOZ_ASSERT(!mDescriptors);
-    mRule->GetDesc(aDescID, aResult);
-  } else {
-    aResult = mDescriptors->Get(aDescID);
-  }
+  aResult.Reset();
+  Servo_FontFaceRule_GetDescriptor(GetData(), aDescID, &aResult);
 }
 
 void
-FontFace::GetDesc(nsCSSFontDesc aDescID,
-                  nsCSSPropertyID aPropID,
-                  nsString& aResult) const
+FontFace::GetDesc(nsCSSFontDesc aDescID, nsString& aResult) const
 {
-  MOZ_ASSERT(aDescID == eCSSFontDesc_UnicodeRange ||
-             aDescID == eCSSFontDesc_Display ||
-             aPropID != eCSSProperty_UNKNOWN,
-             "only pass eCSSProperty_UNKNOWN for eCSSFontDesc_UnicodeRange");
-
-  nsCSSValue value;
-  GetDesc(aDescID, value);
-
   aResult.Truncate();
+  Servo_FontFaceRule_GetDescriptorCssText(GetData(), aDescID, &aResult);
 
   // Fill in a default value for missing descriptors.
-  if (value.GetUnit() == eCSSUnit_Null) {
+  if (aResult.IsEmpty()) {
     if (aDescID == eCSSFontDesc_UnicodeRange) {
       aResult.AssignLiteral("U+0-10FFFF");
     } else if (aDescID == eCSSFontDesc_Display) {
@@ -657,19 +626,6 @@ FontFace::GetDesc(nsCSSFontDesc aDescID,
                aDescID != eCSSFontDesc_Src) {
       aResult.AssignLiteral("normal");
     }
-    return;
-  }
-
-  if (aDescID == eCSSFontDesc_UnicodeRange) {
-    // Since there's no unicode-range property, we can't use
-    // nsCSSValue::AppendToString to serialize this descriptor.
-    nsStyleUtil::AppendUnicodeRange(value, aResult);
-  } else if (aDescID == eCSSFontDesc_Display) {
-    AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(value.GetIntValue(),
-                                                  nsCSSProps::kFontDisplayKTable),
-                       aResult);
-  } else {
-    value.AppendToString(aPropID, aResult);
   }
 }
 
@@ -728,8 +684,7 @@ FontFace::DisconnectFromRule()
   MOZ_ASSERT(HasRule());
 
   // Make a copy of the descriptors.
-  mDescriptors = new CSSFontFaceDescriptors;
-  mRule->GetDescriptors(*mDescriptors);
+  mDescriptors = Servo_FontFaceRule_Clone(mRule).Consume();
   mRule = nullptr;
   mInFontFaceSet = false;
 }

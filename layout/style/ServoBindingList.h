@@ -262,11 +262,10 @@ BASIC_RULE_FUNCS(Page)
 GROUP_RULE_FUNCS(Supports)
 GROUP_RULE_FUNCS(Document)
 BASIC_RULE_FUNCS(FontFeatureValues)
+BASIC_RULE_FUNCS(FontFace)
 #undef GROUP_RULE_FUNCS
 #undef BASIC_RULE_FUNCS
 #undef BASIC_RULE_FUNCS_WITHOUT_GETTER
-SERVO_BINDING_FUNC(Servo_CssRules_GetFontFaceRuleAt, nsCSSFontFaceRule*,
-                   ServoCssRulesBorrowed rules, uint32_t index)
 SERVO_BINDING_FUNC(Servo_CssRules_GetCounterStyleRuleAt, nsCSSCounterStyleRule*,
                    ServoCssRulesBorrowed rules, uint32_t index)
 SERVO_BINDING_FUNC(Servo_StyleRule_GetStyle, RawServoDeclarationBlockStrong,
@@ -343,6 +342,31 @@ SERVO_BINDING_FUNC(Servo_FontFeatureValuesRule_GetFontFamily, void,
 SERVO_BINDING_FUNC(Servo_FontFeatureValuesRule_GetValueText, void,
                    RawServoFontFeatureValuesRuleBorrowed rule,
                    nsAString* result)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_CreateEmpty, RawServoFontFaceRuleStrong)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_Clone, RawServoFontFaceRuleStrong,
+                   RawServoFontFaceRuleBorrowed rule)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_GetSourceLocation, void,
+                   RawServoFontFaceRuleBorrowed rule,
+                   uint32_t* line, uint32_t* column)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_Length, uint32_t,
+                   RawServoFontFaceRuleBorrowed rule)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_IndexGetter, nsCSSFontDesc,
+                   RawServoFontFaceRuleBorrowed rule, uint32_t index)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_GetDeclCssText, void,
+                   RawServoFontFaceRuleBorrowed rule, nsAString* result)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_GetDescriptor, void,
+                   RawServoFontFaceRuleBorrowed rule,
+                   nsCSSFontDesc desc, nsCSSValueBorrowedMut result)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_GetDescriptorCssText, void,
+                   RawServoFontFaceRuleBorrowed rule,
+                   nsCSSFontDesc desc, nsAString* result)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_SetDescriptor, bool,
+                   RawServoFontFaceRuleBorrowed rule,
+                   nsCSSFontDesc desc, const nsACString* value,
+                   RawGeckoURLExtraData* data)
+SERVO_BINDING_FUNC(Servo_FontFaceRule_ResetDescriptor, void,
+                   RawServoFontFaceRuleBorrowed rule,
+                   nsCSSFontDesc desc)
 
 // Animations API
 SERVO_BINDING_FUNC(Servo_ParseProperty,
@@ -805,11 +829,6 @@ SERVO_BINDING_FUNC(Servo_ParseCounterStyleDescriptor, bool,
                    const nsACString* aValue,
                    RawGeckoURLExtraData* aURLExtraData,
                    nsCSSValue* aResult);
-SERVO_BINDING_FUNC(Servo_ParseFontDescriptor, bool,
-                   nsCSSFontDesc desc_id,
-                   const nsAString* value,
-                   RawGeckoURLExtraData* data,
-                   nsCSSValueBorrowedMut);
 SERVO_BINDING_FUNC(Servo_ParseFontShorthandForMatching, bool,
                    const nsAString* value,
                    RawGeckoURLExtraData* data,
