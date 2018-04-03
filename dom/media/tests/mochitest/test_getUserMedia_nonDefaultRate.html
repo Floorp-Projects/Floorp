@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({ title: "getUserMedia feed to a graph with non default rate", bug: "1387454" });
+  /**
+   * Run a test to verify that when we use the streem from a gUM to an AudioContext
+   * with non default rate the connection fails. (gUM is always on default rate).
+   */
+   scriptsReady.then(() => runTestWhenReady(async () => {
+    // Since we do not examine the stream we do not need loopback.
+    DISABLE_LOOPBACK_TONE = true;
+    let stream = await getUserMedia({audio: true});
+    const nonDefaultRate = 32000;
+    let ac = new AudioContext({sampleRate: nonDefaultRate});
+    mustThrowWith("Connect stream with graph of different sample rate", "NotSupportedError", () => {
+        let source = ac.createMediaStreamSource(stream);
+    });
+  }))
+  .then(() => finish())
+</script>
+</pre>
+</body>
+</html>
