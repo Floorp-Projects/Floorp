@@ -97,7 +97,8 @@ async def retry_download(*args, **kwargs):  # noqa: E999
     await retry_async(
         download,
         retry_exceptions=(
-            aiohttp.ClientError
+            aiohttp.ClientError,
+            asyncio.TimeoutError
         ),
         args=args,
         kwargs=kwargs
@@ -108,9 +109,8 @@ async def download(url, dest, mode=None):  # noqa: E999
     log.info("Downloading %s to %s", url, dest)
 
     bytes_downloaded = 0
-
     async with aiohttp.ClientSession(raise_for_status=True) as session:
-        async with session.get(url) as resp:
+        async with session.get(url, timeout=60) as resp:
             with open(dest, 'wb') as fd:
                 while True:
                     chunk = await resp.content.read(4096)
@@ -124,7 +124,6 @@ async def download(url, dest, mode=None):  # noqa: E999
                 log.debug('Content-Length: %s bytes', resp.headers['content-length'])
                 if bytes_downloaded != int(resp.headers['content-length']):
                     raise IOError('Unexpected number of bytes downloaded')
-
             if mode:
                 log.debug("chmod %o %s", mode, dest)
                 os.chmod(dest, mode)

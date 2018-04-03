@@ -7,6 +7,8 @@
 #include <atk/atk.h>
 #include "AccessibleWrap.h"
 
+#include <type_traits>
+
 /******************************************************************************
 The following accessible states aren't translated, just ignored:
   STATE_READONLY:        Supported indirectly via EXT_STATE_EDITABLE
@@ -39,7 +41,6 @@ enum EStateMapEntryType {
   kMapDirectly,
   kMapOpposite,   // For example, UNAVAILABLE is the opposite of ENABLED
   kNoStateChange, // Don't fire state change event
-  kNoSuchState
 };
 
 const AtkStateType kNone = ATK_STATE_INVALID;
@@ -47,16 +48,6 @@ const AtkStateType kNone = ATK_STATE_INVALID;
 struct AtkStateMap {
   AtkStateType atkState;
   EStateMapEntryType stateMapEntryType;
-
-  static int32_t GetStateIndexFor(uint64_t aState)
-  {
-    int32_t stateIndex = -1;
-    while (aState > 0) {
-      ++ stateIndex;
-      aState >>= 1;
-    }
-    return stateIndex;  // Returns -1 if not mapped
-  }
 };
 
 
@@ -110,6 +101,10 @@ static const AtkStateMap gAtkStateMap[] = {                     // Cross Platfor
   { ATK_STATE_SENSITIVE,                      kMapDirectly },   // states::SENSITIVE               = 1 << 45
   { ATK_STATE_EXPANDABLE,                     kMapDirectly },   // states::EXPANDABLE              = 1 << 46
   { kNone,                                    kMapDirectly },   // states::PINNED                  = 1 << 47
-  { ATK_STATE_ACTIVE,                         kMapDirectly },   // states::CURRENT                 = 1 << 48
-  { kNone,                                    kNoSuchState },   //                                 = 1 << 49
+  { ATK_STATE_ACTIVE,                         kMapDirectly }    // states::CURRENT                 = 1 << 48
 };
+
+static const auto gAtkStateMapLen = std::extent<decltype(gAtkStateMap)>::value;
+
+static_assert(((uint64_t) 0x1) << (gAtkStateMapLen - 1) == mozilla::a11y::states::LAST_ENTRY,
+              "ATK states map is out of sync with internal states");

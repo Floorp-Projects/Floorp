@@ -128,6 +128,7 @@ static const char* kPreloadPermissions[] = {
   "fetch",
   "image",
   "manifest",
+  "speculative",
 
   // This permission is preloaded to support properly blocking service worker
   // interception when a user has disabled storage for a specific site.  Once

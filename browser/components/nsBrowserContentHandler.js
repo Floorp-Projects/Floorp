@@ -21,31 +21,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
 ChromeUtils.defineModuleGetter(this, "UpdatePing",
                                "resource://gre/modules/UpdatePing.jsm");
 
-const nsISupports            = Ci.nsISupports;
-
-const nsIBrowserDOMWindow    = Ci.nsIBrowserDOMWindow;
-const nsIBrowserHandler      = Ci.nsIBrowserHandler;
-const nsIBrowserHistory      = Ci.nsIBrowserHistory;
-const nsIChannel             = Ci.nsIChannel;
-const nsICommandLine         = Ci.nsICommandLine;
-const nsICommandLineHandler  = Ci.nsICommandLineHandler;
-const nsIContentHandler      = Ci.nsIContentHandler;
-const nsIDocShellTreeItem    = Ci.nsIDocShellTreeItem;
-const nsIDOMChromeWindow     = Ci.nsIDOMChromeWindow;
-const nsIDOMWindow           = Ci.nsIDOMWindow;
-const nsIFileURL             = Ci.nsIFileURL;
-const nsIInterfaceRequestor  = Ci.nsIInterfaceRequestor;
-const nsINetUtil             = Ci.nsINetUtil;
-const nsIPrefLocalizedString = Ci.nsIPrefLocalizedString;
-const nsISupportsString      = Ci.nsISupportsString;
-const nsIWebNavigation       = Ci.nsIWebNavigation;
-const nsIWebNavigationInfo   = Ci.nsIWebNavigationInfo;
-const nsICommandLineValidator = Ci.nsICommandLineValidator;
-
-const NS_BINDING_ABORTED = Cr.NS_BINDING_ABORTED;
-const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
-const NS_ERROR_ABORT = Cr.NS_ERROR_ABORT;
-
 function shouldLoadURI(aURI) {
   if (aURI && !aURI.schemeIs("chrome"))
     return true;
@@ -59,7 +34,7 @@ function resolveURIInternal(aCmdLine, aArgument) {
   var uri = aCmdLine.resolveURI(aArgument);
   var uriFixup = Services.uriFixup;
 
-  if (!(uri instanceof nsIFileURL)) {
+  if (!(uri instanceof Ci.nsIFileURL)) {
     return uriFixup.createFixupURI(aArgument,
                                    uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS);
   }
@@ -209,7 +184,7 @@ function openBrowserWindow(cmdLine, urlOrUrlList, postData = null,
                      .createInstance(Ci.nsIMutableArray);
     urlOrUrlList.forEach(function(uri) {
       var sstring = Cc["@mozilla.org/supports-string;1"]
-                      .createInstance(nsISupportsString);
+                      .createInstance(Ci.nsISupportsString);
       sstring.data = uri;
       uriArray.appendElement(sstring);
     });
@@ -223,7 +198,7 @@ function openBrowserWindow(cmdLine, urlOrUrlList, postData = null,
             postData];
   }
 
-  if (cmdLine.state == nsICommandLine.STATE_INITIAL_LAUNCH) {
+  if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
     let win = Services.wm.getMostRecentWindow("navigator:blank");
     if (win) {
       // Remove the windowtype of our blank window so that we don't close it
@@ -253,7 +228,7 @@ function openBrowserWindow(cmdLine, urlOrUrlList, postData = null,
     // wrap it in an nsISupportsString object.
     let [url] = args;
     args = Cc["@mozilla.org/supports-string;1"]
-             .createInstance(nsISupportsString);
+             .createInstance(Ci.nsISupportsString);
     args.data = url;
   } else {
     // Otherwise, pass an nsIArray.
@@ -284,15 +259,11 @@ function openPreferences(cmdLine, extraArgs) {
   openBrowserWindow(cmdLine, "about:preferences");
 }
 
-function logSystemBasedSearch(engine) {
+function doSearch(searchTerm, cmdLine) {
+  var engine = Services.search.defaultEngine;
   var countId = (engine.identifier || ("other-" + engine.name)) + ".system";
   var count = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
   count.add(countId);
-}
-
-function doSearch(searchTerm, cmdLine) {
-  var engine = Services.search.defaultEngine;
-  logSystemBasedSearch(engine);
 
   var submission = engine.getSubmission(searchTerm, null, "system");
 
@@ -315,10 +286,10 @@ nsBrowserContentHandler.prototype = {
   },
 
   /* nsISupports */
-  QueryInterface: XPCOMUtils.generateQI([nsICommandLineHandler,
-                                         nsIBrowserHandler,
-                                         nsIContentHandler,
-                                         nsICommandLineValidator]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler,
+                                         Ci.nsIBrowserHandler,
+                                         Ci.nsIContentHandler,
+                                         Ci.nsICommandLineValidator]),
 
   /* nsICommandLineHandler */
   handle: function bch_handle(cmdLine) {
@@ -335,7 +306,7 @@ nsBrowserContentHandler.prototype = {
     // scripts or applications handle the situation as if Firefox was not
     // already running.
     if (cmdLine.handleFlag("remote", true)) {
-      throw NS_ERROR_ABORT;
+      throw Cr.NS_ERROR_ABORT;
     }
 
     var uriparam;
@@ -354,7 +325,8 @@ nsBrowserContentHandler.prototype = {
     try {
       while ((uriparam = cmdLine.handleFlagWithParam("new-tab", false))) {
         let uri = resolveURIInternal(cmdLine, uriparam);
-        handURIToExistingBrowser(uri, nsIBrowserDOMWindow.OPEN_NEWTAB, cmdLine, false,
+        handURIToExistingBrowser(uri, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+                                 cmdLine, false,
                                  Services.scriptSecurityManager.getSystemPrincipal());
         cmdLine.preventDefault = true;
       }
@@ -412,7 +384,8 @@ nsBrowserContentHandler.prototype = {
         } else {
           resolvedURI = resolveURIInternal(cmdLine, privateWindowParam);
         }
-        handURIToExistingBrowser(resolvedURI, nsIBrowserDOMWindow.OPEN_NEWTAB, cmdLine, forcePrivate,
+        handURIToExistingBrowser(resolvedURI, Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,
+                                 cmdLine, forcePrivate,
                                  Services.scriptSecurityManager.getSystemPrincipal());
         cmdLine.preventDefault = true;
       }
@@ -438,6 +411,9 @@ nsBrowserContentHandler.prototype = {
     // PB builds.
     if (cmdLine.handleFlag("private", false) && PrivateBrowsingUtils.enabled) {
       PrivateBrowsingUtils.enterTemporaryAutoStartMode();
+    }
+    if (cmdLine.handleFlag("setDefaultBrowser", false)) {
+      ShellService.setDefaultBrowser(true, true);
     }
 
     var fileParam = cmdLine.handleFlagWithParam("file", false);
@@ -477,6 +453,7 @@ nsBrowserContentHandler.prototype = {
     info += "  --screenshot [<path>] Save screenshot to <path> or in working directory.\n";
     info += "  --window-size width[,height] Width and optionally height of screenshot.\n";
     info += "  --search <term>    Search <term> with your default search engine.\n";
+    info += "  --setDefaultBrowser Set this app as the default browser.\n";
     return info;
   },
 
@@ -583,11 +560,11 @@ nsBrowserContentHandler.prototype = {
 
   get startPage() {
     var uri = Services.prefs.getComplexValue("browser.startup.homepage",
-                                             nsIPrefLocalizedString).data;
+                                             Ci.nsIPrefLocalizedString).data;
     if (!uri) {
       Services.prefs.clearUserPref("browser.startup.homepage");
       uri = Services.prefs.getComplexValue("browser.startup.homepage",
-                                           nsIPrefLocalizedString).data;
+                                           Ci.nsIPrefLocalizedString).data;
     }
     return uri;
   },
@@ -627,9 +604,11 @@ nsBrowserContentHandler.prototype = {
   /* nsIContentHandler */
 
   handleContent: function bch_handleContent(contentType, context, request) {
+    const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
+
     try {
       var webNavInfo = Cc["@mozilla.org/webnavigation-info;1"]
-                         .getService(nsIWebNavigationInfo);
+                         .getService(Ci.nsIWebNavigationInfo);
       if (!webNavInfo.isTypeSupported(contentType, null)) {
         throw NS_ERROR_WONT_HANDLE_CONTENT;
       }
@@ -637,10 +616,10 @@ nsBrowserContentHandler.prototype = {
       throw NS_ERROR_WONT_HANDLE_CONTENT;
     }
 
-    request.QueryInterface(nsIChannel);
-    handURIToExistingBrowser(request.URI, nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW, null, false,
-                             request.loadInfo.triggeringPrincipal);
-    request.cancel(NS_BINDING_ABORTED);
+    request.QueryInterface(Ci.nsIChannel);
+    handURIToExistingBrowser(request.URI, Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW,
+                             null, false, request.loadInfo.triggeringPrincipal);
+    request.cancel(Cr.NS_BINDING_ABORTED);
   },
 
   /* nsICommandLineValidator */
@@ -650,10 +629,10 @@ nsBrowserContentHandler.prototype = {
     var osintFlagIdx = cmdLine.findFlag("osint", false);
     var urlFlagIdx = cmdLine.findFlag("url", false);
     if (urlFlagIdx > -1 && (osintFlagIdx > -1 ||
-        cmdLine.state == nsICommandLine.STATE_REMOTE_EXPLICIT)) {
+        cmdLine.state == Ci.nsICommandLine.STATE_REMOTE_EXPLICIT)) {
       var urlParam = cmdLine.getArgument(urlFlagIdx + 1);
       if (cmdLine.length != urlFlagIdx + 2 || /firefoxurl:/i.test(urlParam))
-        throw NS_ERROR_ABORT;
+        throw Cr.NS_ERROR_ABORT;
       var isDefault = false;
       try {
         var url = Services.urlFormatter.formatURLPref("app.support.baseURL") +
@@ -665,7 +644,7 @@ nsBrowserContentHandler.prototype = {
       if (isDefault) {
         // Firefox is already the default HTTP handler.
         // We don't have to show the instruction page.
-        throw NS_ERROR_ABORT;
+        throw Cr.NS_ERROR_ABORT;
       }
       cmdLine.handleFlag("osint", false);
     }
@@ -687,14 +666,14 @@ function handURIToExistingBrowser(uri, location, cmdLine, forcePrivate, triggeri
     return;
   }
 
-  var navNav = navWin.QueryInterface(nsIInterfaceRequestor)
-                     .getInterface(nsIWebNavigation);
-  var rootItem = navNav.QueryInterface(nsIDocShellTreeItem).rootTreeItem;
-  var rootWin = rootItem.QueryInterface(nsIInterfaceRequestor)
-                        .getInterface(nsIDOMWindow);
-  var bwin = rootWin.QueryInterface(nsIDOMChromeWindow).browserDOMWindow;
+  var navNav = navWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation);
+  var rootItem = navNav.QueryInterface(Ci.nsIDocShellTreeItem).rootTreeItem;
+  var rootWin = rootItem.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDOMWindow);
+  var bwin = rootWin.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow;
   bwin.openURI(uri, null, location,
-               nsIBrowserDOMWindow.OPEN_EXTERNAL, triggeringPrincipal);
+               Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL, triggeringPrincipal);
 }
 
 function nsDefaultCommandLineHandler() {
@@ -705,8 +684,8 @@ nsDefaultCommandLineHandler.prototype = {
 
   /* nsISupports */
   QueryInterface: function dch_QI(iid) {
-    if (!iid.equals(nsISupports) &&
-        !iid.equals(nsICommandLineHandler))
+    if (!iid.equals(Ci.nsISupports) &&
+        !iid.equals(Ci.nsICommandLineHandler))
       throw Cr.NS_ERROR_NO_INTERFACE;
 
     return this;
@@ -769,12 +748,13 @@ nsDefaultCommandLineHandler.prototype = {
     }
 
     if (urilist.length) {
-      if (cmdLine.state != nsICommandLine.STATE_INITIAL_LAUNCH &&
+      if (cmdLine.state != Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&
           urilist.length == 1) {
         // Try to find an existing window and load our URI into the
         // current tab, new tab, or new window as prefs determine.
         try {
-          handURIToExistingBrowser(urilist[0], nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW, cmdLine, false,
+          handURIToExistingBrowser(urilist[0], Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW,
+                                   cmdLine, false,
                                    Services.scriptSecurityManager.getSystemPrincipal());
           return;
         } catch (e) {
@@ -788,7 +768,7 @@ nsDefaultCommandLineHandler.prototype = {
 
     } else if (!cmdLine.preventDefault) {
       if (AppConstants.isPlatformAndVersionAtLeast("win", "10") &&
-          cmdLine.state != nsICommandLine.STATE_INITIAL_LAUNCH &&
+          cmdLine.state != Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&
           WindowsUIUtils.inTabletMode) {
         // In windows 10 tablet mode, do not create a new window, but reuse the existing one.
         let win = RecentWindow.getMostRecentBrowserWindow();

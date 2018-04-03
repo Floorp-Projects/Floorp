@@ -28,7 +28,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Tests
 
-    //gA11yEventDumpToConsole = true; // debug
+    gA11yEventDumpToConsole = true; // debug
     //enableLogging("tree,verbose");
 
     var gQueue = null;
