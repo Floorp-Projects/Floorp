@@ -709,18 +709,6 @@ class FullParseHandler
         return new_<CodeNode>(ParseNodeKind::Function, JSOP_LAMBDA_ARROW, pos);
     }
 
-    bool isExpressionClosure(ParseNode* node) const {
-        return node->isKind(ParseNodeKind::Function) &&
-               node->pn_funbox->isExprBody() &&
-               !node->pn_funbox->isArrow();
-    }
-
-    void noteExpressionClosure(Node* funcNode) const {
-        // No need to do anything: |funcNode->pn_funbox| modifications
-        // performed elsewhere in the relevant code path will assure
-        // |isExpressionClosure| above tests true on |*funcNode|.
-    }
-
     ParseNode* newObjectMethodOrPropertyDefinition(ParseNode* key, ParseNode* fn, AccessorType atype) {
         MOZ_ASSERT(isUsableAsObjectPropertyName(key));
 

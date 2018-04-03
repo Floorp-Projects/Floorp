@@ -64,11 +64,7 @@ class SyntaxParseHandler
 
         // A non-arrow function expression with block body, from bog-standard
         // ECMAScript.
-        NodeFunctionExpressionBlockBody,
-
-        // A non-arrow function expression with AssignmentExpression body -- a
-        // proprietary SpiderMonkey extension.
-        NodeFunctionExpressionClosure,
+        NodeFunctionExpression,
 
         NodeFunctionArrow,
         NodeFunctionStatement,
@@ -141,7 +137,7 @@ class SyntaxParseHandler
     };
 
     bool isNonArrowFunctionExpression(Node node) const {
-        return node == NodeFunctionExpressionBlockBody || node == NodeFunctionExpressionClosure;
+        return node == NodeFunctionExpression;
     }
 
     bool isPropertyAccess(Node node) {
@@ -351,18 +347,10 @@ class SyntaxParseHandler
         // All non-arrow function expressions are initially presumed to have
         // block body.  This will be overridden later *if* the function
         // expression permissibly has an AssignmentExpression body.
-        return NodeFunctionExpressionBlockBody;
+        return NodeFunctionExpression;
     }
 
     Node newArrowFunction(const TokenPos& pos) { return NodeFunctionArrow; }
-
-    bool isExpressionClosure(Node node) const {
-        return node == NodeFunctionExpressionClosure;
-    }
-
-    void noteExpressionClosure(Node* funcNode) const {
-        *funcNode = NodeFunctionExpressionClosure;
-    }
 
     void setFunctionFormalParametersAndBody(Node funcNode, Node kid) {}
     void setFunctionBody(Node pn, Node kid) {}

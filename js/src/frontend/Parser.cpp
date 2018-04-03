@@ -8004,9 +8004,6 @@ GeneralParser<ParseHandler, CharT>::orExpr(InHandling inHandling, YieldHandling 
         if (!pn)
             return null();
 
-        if (handler.isExpressionClosure(pn))
-            return pn;
-
         expressionClosureHandling = ExpressionClosure::Forbidden;
 
         // If a binary operator follows, consume it and compute the
@@ -8081,9 +8078,6 @@ GeneralParser<ParseHandler, CharT>::condExpr(InHandling inHandling, YieldHandlin
                             expressionClosureHandling, possibleError, invoked);
     if (!condition)
         return null();
-
-    if (handler.isExpressionClosure(condition))
-        return condition;
 
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Hook))
@@ -8512,9 +8506,6 @@ GeneralParser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
         if (!expr)
             return null();
 
-        if (handler.isExpressionClosure(expr))
-            return expr;
-
         /* Don't look across a newline boundary for a postfix incop. */
         if (!tokenStream.peekTokenSameLine(&tt))
             return null();
@@ -8682,9 +8673,6 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                           possibleError, invoked);
         if (!lhs)
             return null();
-
-        if (handler.isExpressionClosure(lhs))
-            return lhs;
     }
 
     MOZ_ASSERT_IF(handler.isSuperBase(lhs), anyChars.isCurrentTokenType(TokenKind::Super));
