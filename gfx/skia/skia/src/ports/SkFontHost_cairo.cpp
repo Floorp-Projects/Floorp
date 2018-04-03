@@ -642,10 +642,19 @@ void SkScalerContext_CairoFT::generateMetrics(SkGlyph* glyph)
 
     prepareGlyph(face->glyph);
 
+    if (fRec.fFlags & SkScalerContext::kVertical_Flag) {
+        glyph->fAdvanceX = -SkFDot6ToFloat(face->glyph->advance.x);
+        glyph->fAdvanceY = SkFDot6ToFloat(face->glyph->advance.y);
+    } else {
+        glyph->fAdvanceX = SkFDot6ToFloat(face->glyph->advance.x);
+        glyph->fAdvanceY = -SkFDot6ToFloat(face->glyph->advance.y);
+    }
+
+    SkIRect bounds;
     switch (face->glyph->format) {
     case FT_GLYPH_FORMAT_OUTLINE:
         if (!face->glyph->outline.n_contours) {
-            break;
+            return;
         }
 
         FT_BBox bbox;
@@ -654,10 +663,10 @@ void SkScalerContext_CairoFT::generateMetrics(SkGlyph* glyph)
         bbox.yMin &= ~63;
         bbox.xMax = (bbox.xMax + 63) & ~63;
         bbox.yMax = (bbox.yMax + 63) & ~63;
-        glyph->fWidth  = SkToU16(SkFDot6Floor(bbox.xMax - bbox.xMin));
-        glyph->fHeight = SkToU16(SkFDot6Floor(bbox.yMax - bbox.yMin));
-        glyph->fTop    = -SkToS16(SkFDot6Floor(bbox.yMax));
-        glyph->fLeft   = SkToS16(SkFDot6Floor(bbox.xMin));
+        bounds = SkIRect::MakeLTRB(SkFDot6Floor(bbox.xMin),
+                                   -SkFDot6Floor(bbox.yMax),
+                                   SkFDot6Floor(bbox.xMax),
+                                   -SkFDot6Floor(bbox.yMin));
 
         if (isLCD(fRec)) {
             // In FreeType < 2.8.1, LCD filtering, if explicitly used, may
@@ -669,11 +678,9 @@ void SkScalerContext_CairoFT::generateMetrics(SkGlyph* glyph)
             // here. generateGlyphImage will detect if the mask is smaller
             // than the bounds and clip things appropriately.
             if (fRec.fFlags & kLCD_Vertical_Flag) {
-                glyph->fTop -= 1;
-                glyph->fHeight += 2;
+                bounds.outset(0, 1);
             } else {
-                glyph->fLeft -= 1;
-                glyph->fWidth += 2;
+                bounds.outset(1, 0);
             }
         }
         break;
@@ -702,15 +709,15 @@ void SkScalerContext_CairoFT::generateMetrics(SkGlyph* glyph)
             SkRect destRect;
             fShapeMatrix.mapRect(&destRect, srcRect);
             SkIRect glyphRect = destRect.roundOut();
-            glyph->fWidth  = SkToU16(glyphRect.width());
-            glyph->fHeight = SkToU16(glyphRect.height());
-            glyph->fTop    = SkToS16(SkScalarRoundToInt(destRect.fTop));
-            glyph->fLeft   = SkToS16(SkScalarRoundToInt(destRect.fLeft));
+            bounds = SkIRect::MakeXYWH(SkScalarRoundToInt(destRect.fLeft),
+                                       SkScalarRoundToInt(destRect.fTop),
+                                       glyphRect.width(),
+                                       glyphRect.height());
         } else {
-            glyph->fWidth  = SkToU16(face->glyph->bitmap.width);
-            glyph->fHeight = SkToU16(face->glyph->bitmap.rows);
-            glyph->fTop    = -SkToS16(face->glyph->bitmap_top);
-            glyph->fLeft   = SkToS16(face->glyph->bitmap_left);
+            bounds = SkIRect::MakeXYWH(face->glyph->bitmap_left,
+                                       -face->glyph->bitmap_top,
+                                       face->glyph->bitmap.width,
+                                       face->glyph->bitmap.rows);
         }
         break;
     default:
@@ -718,12 +725,11 @@ void SkScalerContext_CairoFT::generateMetrics(SkGlyph* glyph)
         return;
     }
 
-    if (fRec.fFlags & SkScalerContext::kVertical_Flag) {
-        glyph->fAdvanceX = -SkFDot6ToFloat(face->glyph->advance.x);
-        glyph->fAdvanceY = SkFDot6ToFloat(face->glyph->advance.y);
-    } else {
-        glyph->fAdvanceX = SkFDot6ToFloat(face->glyph->advance.x);
-        glyph->fAdvanceY = -SkFDot6ToFloat(face->glyph->advance.y);
+    if (SkIRect::MakeXYWH(SHRT_MIN, SHRT_MIN, USHRT_MAX, USHRT_MAX).contains(bounds)) {
+        glyph->fWidth  = SkToU16(bounds.width());
+        glyph->fHeight = SkToU16(bounds.height());
+        glyph->fLeft   = SkToS16(bounds.left());
+        glyph->fTop    = SkToS16(bounds.top());
     }
 }
 
