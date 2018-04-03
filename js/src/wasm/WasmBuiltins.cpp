@@ -507,8 +507,8 @@ FuncCast(F* funcPtr, ABIFunctionType abiType)
     return pf;
 }
 
-void*
-wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
+static void*
+AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
 {
     switch (imm) {
       case SymbolicAddress::HandleExecutionInterrupt:
