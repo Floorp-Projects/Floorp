@@ -1539,10 +1539,8 @@ private:
   void AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
                                          nsIContent*              aContent,
                                          nsContainerFrame*        aParentFrame,
-                                         nsAtom*                 aTag,
-                                         int32_t                  aNameSpaceID,
                                          bool                     aSuppressWhiteSpaceOptimizations,
-                                         ComputedStyle*          aComputedStyle,
+                                         ComputedStyle*           aComputedStyle,
                                          uint32_t                 aFlags,
                                          nsTArray<nsIAnonymousContentCreator::ContentInfo>* aAnonChildren,
                                          FrameConstructionItemList& aItems);
