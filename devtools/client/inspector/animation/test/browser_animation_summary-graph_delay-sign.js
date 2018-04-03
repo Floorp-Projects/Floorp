@@ -56,7 +56,7 @@ add_task(async function() {
 
   for (const { targetClass, expectedResult } of TEST_DATA) {
     const animationItemEl =
-      findAnimationItemElementsByTargetClassName(panel, targetClass);
+      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
 
     info(`Checking delay sign existance for ${ targetClass }`);
     const delaySignEl = animationItemEl.querySelector(".animation-delay-sign");

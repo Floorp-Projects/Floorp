@@ -36,7 +36,7 @@ add_task(async function() {
 
   for (const { targetClass, expectedPath } of TEST_DATA) {
     const animationItemEl =
-      findAnimationItemElementsByTargetClassName(panel, targetClass);
+      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
 
     info(`Checking effect timing path existance for ${ targetClass }`);
     const effectTimingPathEl =
