@@ -15,6 +15,37 @@ use std::os::raw::{c_long, c_void};
 
 const PULSE_NO_GAIN: f32 = -1.0;
 
+/// Iterator interface to `ChannelLayout`.
+///
+/// Iterates each channel in the set represented by `ChannelLayout`.
+struct ChannelLayoutIter {
+    /// The layout set being iterated
+    layout: ChannelLayout,
+    /// The next flag to test
+    index: u8,
+}
+
+fn channel_layout_iter(layout: ChannelLayout) -> ChannelLayoutIter {
+    let index = 0;
+    ChannelLayoutIter { layout, index }
+}
+
+impl Iterator for ChannelLayoutIter {
+    type Item = ChannelLayout;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while !self.layout.is_empty() {
+            let test = Self::Item::from_bits_truncate(1 << self.index);
+            self.index += 1;
+            if self.layout.contains(test) {
+                self.layout.remove(test);
+                return Some(test);
+            }
+        }
+        None
+    }
+}
+
 fn cubeb_channel_to_pa_channel(channel: ffi::cubeb_channel) -> pa_channel_position_t {
     match channel {
         ffi::CHANNEL_FRONT_LEFT => PA_CHANNEL_POSITION_FRONT_LEFT,
@@ -43,18 +74,9 @@ fn layout_to_channel_map(layout: ChannelLayout) -> pulse::ChannelMap {
     assert_ne!(layout, ChannelLayout::UNDEFINED);
 
     let mut cm = pulse::ChannelMap::init();
-
-    let mut channel_map = layout.bits();
-    let mut i = 0;
-    while channel_map != 0 {
-        let channel = (channel_map & 1) << i;
-        if channel != 0 {
-            cm.map[i] = cubeb_channel_to_pa_channel(channel);
-            i += 1;
-        }
-        channel_map = channel_map >> 1;
+    for (i, channel) in channel_layout_iter(layout).enumerate() {
+        cm.map[i] = cubeb_channel_to_pa_channel(channel.into());
     }
-
     cm.channels = layout.num_channels() as _;
     cm
 }
@@ -918,4 +940,336 @@ fn invalid_format() -> Error {
 
 fn not_supported() -> Error {
     unsafe { Error::from_raw(ffi::CUBEB_ERROR_NOT_SUPPORTED) }
+}
+
+#[cfg(all(test, not(feature = "pulse-dlopen")))]
+mod test {
+    use cubeb_backend::ChannelLayout;
+    use pulse_ffi::*;
+    use super::layout_to_channel_map;
+
+    macro_rules! channel_tests {
+        {$($name: ident, $layout: ident => [ $($channels: ident),* ]),+} => {
+            $(
+            #[test]
+            fn $name() {
+                let layout = ChannelLayout::$layout;
+                let mut iter = super::channel_layout_iter(layout);
+                $(
+                assert_eq!(Some(ChannelLayout::$channels), iter.next());
+                )*
+                assert_eq!(None, iter.next());
+            }
+
+            )*
+        }
+    }
+
+    channel_tests! {
+        channels_unknown, UNDEFINED => [ ],
+        channels_mono, MONO => [
+            FRONT_CENTER
+        ],
+        channels_mono_lfe, MONO_LFE => [
+            FRONT_CENTER,
+            LOW_FREQUENCY
+        ],
+        channels_stereo, STEREO => [
+            FRONT_LEFT,
+            FRONT_RIGHT
+        ],
+        channels_stereo_lfe, STEREO_LFE => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            LOW_FREQUENCY
+        ],
+        channels_3f, _3F => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            FRONT_CENTER
+        ],
+        channels_3f_lfe, _3F_LFE => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            FRONT_CENTER,
+            LOW_FREQUENCY
+        ],
+        channels_2f1, _2F1 => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            BACK_CENTER
+        ],
+        channels_2f1_lfe, _2F1_LFE => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            LOW_FREQUENCY,
+            BACK_CENTER
+        ],
+        channels_3f1, _3F1 => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            FRONT_CENTER,
+            BACK_CENTER
+        ],
+        channels_3f1_lfe, _3F1_LFE => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            FRONT_CENTER,
+            LOW_FREQUENCY,
+            BACK_CENTER
+        ],
+        channels_2f2, _2F2 => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            SIDE_LEFT,
+            SIDE_RIGHT
+        ],
+        channels_2f2_lfe, _2F2_LFE => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            LOW_FREQUENCY,
+            SIDE_LEFT,
+            SIDE_RIGHT
+        ],
+        channels_quad, QUAD => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            BACK_LEFT,
+            BACK_RIGHT
+        ],
+        channels_quad_lfe, QUAD_LFE => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            LOW_FREQUENCY,
+            BACK_LEFT,
+            BACK_RIGHT
+        ],
+        channels_3f2, _3F2 => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            FRONT_CENTER,
+            SIDE_LEFT,
+            SIDE_RIGHT
+        ],
+        channels_3f2_lfe, _3F2_LFE => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            FRONT_CENTER,
+            LOW_FREQUENCY,
+            SIDE_LEFT,
+            SIDE_RIGHT
+        ],
+        channels_3f2_back, _3F2_BACK => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            FRONT_CENTER,
+            BACK_LEFT,
+            BACK_RIGHT
+        ],
+        channels_3f2_lfe_back, _3F2_LFE_BACK => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            FRONT_CENTER,
+            LOW_FREQUENCY,
+            BACK_LEFT,
+            BACK_RIGHT
+        ],
+        channels_3f3r_lfe, _3F3R_LFE => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            FRONT_CENTER,
+            LOW_FREQUENCY,
+            BACK_CENTER,
+            SIDE_LEFT,
+            SIDE_RIGHT
+        ],
+        channels_3f4_lfe, _3F4_LFE => [
+            FRONT_LEFT,
+            FRONT_RIGHT,
+            FRONT_CENTER,
+            LOW_FREQUENCY,
+            BACK_LEFT,
+            BACK_RIGHT,
+            SIDE_LEFT,
+            SIDE_RIGHT
+        ]
+    }
+
+    #[test]
+    fn mono_channels_enumerate() {
+        let layout = ChannelLayout::MONO;
+        let mut iter = super::channel_layout_iter(layout).enumerate();
+        assert_eq!(Some((0, ChannelLayout::FRONT_CENTER)), iter.next());
+        assert_eq!(None, iter.next());
+    }
+
+    #[test]
+    fn stereo_channels_enumerate() {
+        let layout = ChannelLayout::STEREO;
+        let mut iter = super::channel_layout_iter(layout).enumerate();
+        assert_eq!(Some((0, ChannelLayout::FRONT_LEFT)), iter.next());
+        assert_eq!(Some((1, ChannelLayout::FRONT_RIGHT)), iter.next());
+        assert_eq!(None, iter.next());
+    }
+
+    #[test]
+    fn quad_channels_enumerate() {
+        let layout = ChannelLayout::QUAD;
+        let mut iter = super::channel_layout_iter(layout).enumerate();
+        assert_eq!(Some((0, ChannelLayout::FRONT_LEFT)), iter.next());
+        assert_eq!(Some((1, ChannelLayout::FRONT_RIGHT)), iter.next());
+        assert_eq!(Some((2, ChannelLayout::BACK_LEFT)), iter.next());
+        assert_eq!(Some((3, ChannelLayout::BACK_RIGHT)), iter.next());
+        assert_eq!(None, iter.next());
+    }
+
+    macro_rules! map_channel_tests {
+        {$($name: ident, $layout: ident => [ $($channels: ident),* ]),+} => {
+            $(
+            #[test]
+            fn $name() {
+                let map = layout_to_channel_map(ChannelLayout::$layout);
+                assert_eq!(map.channels, map_channel_tests!(__COUNT__ $($channels)*));
+                map_channel_tests!(__EACH__ map, 0, $($channels)*);
+            }
+
+            )*
+        };
+        (__COUNT__) => (0u8);
+        (__COUNT__ $x:ident $($xs: ident)*) => (1u8 + map_channel_tests!(__COUNT__ $($xs)*));
+        (__EACH__ $map:expr, $i:expr, ) => {};
+        (__EACH__ $map:expr, $i:expr, $x:ident $($xs: ident)*) => {
+            assert_eq!($map.map[$i], $x);
+            map_channel_tests!(__EACH__ $map, $i+1, $($xs)* );
+        };
+    }
+
+    map_channel_tests! {
+        map_channel_mono, MONO => [
+            PA_CHANNEL_POSITION_FRONT_CENTER
+        ],
+        map_channel_mono_lfe, MONO_LFE => [
+            PA_CHANNEL_POSITION_FRONT_CENTER,
+            PA_CHANNEL_POSITION_LFE
+        ],
+        map_channel_stereo, STEREO => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT
+        ],
+        map_channel_stereo_lfe, STEREO_LFE => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_LFE
+        ],
+        map_channel_3f, _3F => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_FRONT_CENTER
+        ],
+        map_channel_3f_lfe, _3F_LFE => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_FRONT_CENTER,
+            PA_CHANNEL_POSITION_LFE
+        ],
+        map_channel_2f1, _2F1 => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_REAR_CENTER
+        ],
+        map_channel_2f1_lfe, _2F1_LFE => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_LFE,
+            PA_CHANNEL_POSITION_REAR_CENTER
+        ],
+        map_channel_3f1, _3F1 => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_FRONT_CENTER,
+            PA_CHANNEL_POSITION_REAR_CENTER
+        ],
+        map_channel_3f1_lfe, _3F1_LFE =>[
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_FRONT_CENTER,
+            PA_CHANNEL_POSITION_LFE,
+            PA_CHANNEL_POSITION_REAR_CENTER
+        ],
+        map_channel_2f2, _2F2 => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_SIDE_LEFT,
+            PA_CHANNEL_POSITION_SIDE_RIGHT
+        ],
+        map_channel_2f2_lfe, _2F2_LFE => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_LFE,
+            PA_CHANNEL_POSITION_SIDE_LEFT,
+            PA_CHANNEL_POSITION_SIDE_RIGHT
+        ],
+        map_channel_quad, QUAD => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_REAR_LEFT,
+            PA_CHANNEL_POSITION_REAR_RIGHT
+        ],
+        map_channel_quad_lfe, QUAD_LFE => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_LFE,
+            PA_CHANNEL_POSITION_REAR_LEFT,
+            PA_CHANNEL_POSITION_REAR_RIGHT
+        ],
+        map_channel_3f2, _3F2 => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_FRONT_CENTER,
+            PA_CHANNEL_POSITION_SIDE_LEFT,
+            PA_CHANNEL_POSITION_SIDE_RIGHT
+        ],
+        map_channel_3f2_lfe, _3F2_LFE => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_FRONT_CENTER,
+            PA_CHANNEL_POSITION_LFE,
+            PA_CHANNEL_POSITION_SIDE_LEFT,
+            PA_CHANNEL_POSITION_SIDE_RIGHT
+        ],
+        map_channel_3f2_back, _3F2_BACK => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_FRONT_CENTER,
+            PA_CHANNEL_POSITION_REAR_LEFT,
+            PA_CHANNEL_POSITION_REAR_RIGHT
+        ],
+        map_channel_3f2_lfe_back, _3F2_LFE_BACK => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_FRONT_CENTER,
+            PA_CHANNEL_POSITION_LFE,
+            PA_CHANNEL_POSITION_REAR_LEFT,
+            PA_CHANNEL_POSITION_REAR_RIGHT
+        ],
+        map_channel_3f3r_lfe, _3F3R_LFE => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_FRONT_CENTER,
+            PA_CHANNEL_POSITION_LFE,
+            PA_CHANNEL_POSITION_REAR_CENTER,
+            PA_CHANNEL_POSITION_SIDE_LEFT,
+            PA_CHANNEL_POSITION_SIDE_RIGHT
+        ],
+        map_channel_3f4_lfe, _3F4_LFE => [
+            PA_CHANNEL_POSITION_FRONT_LEFT,
+            PA_CHANNEL_POSITION_FRONT_RIGHT,
+            PA_CHANNEL_POSITION_FRONT_CENTER,
+            PA_CHANNEL_POSITION_LFE,
+            PA_CHANNEL_POSITION_REAR_LEFT,
+            PA_CHANNEL_POSITION_REAR_RIGHT,
+            PA_CHANNEL_POSITION_SIDE_LEFT,
+            PA_CHANNEL_POSITION_SIDE_RIGHT
+        ]
+    }
 }
