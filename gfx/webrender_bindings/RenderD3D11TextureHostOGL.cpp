@@ -251,11 +251,13 @@ RenderDXGIYCbCrTextureHostOGL::RenderDXGIYCbCrTextureHostOGL(WindowsHandle (&aHa
   , mSizeCbCr(aSizeCbCr)
   , mLocked(false)
 {
-    MOZ_COUNT_CTOR_INHERITED(RenderDXGIYCbCrTextureHostOGL, RenderTextureHostOGL);
-    // The size should be even.
-    MOZ_ASSERT(mSize.width % 2 == 0);
-    MOZ_ASSERT(mSize.height % 2 == 0);
-    MOZ_ASSERT(aHandles[0] && aHandles[1] && aHandles[2]);
+  MOZ_COUNT_CTOR_INHERITED(RenderDXGIYCbCrTextureHostOGL, RenderTextureHostOGL);
+  // Assume the chroma planes are rounded up if the luma plane is odd sized.
+  MOZ_ASSERT((mSizeCbCr.width == mSize.width ||
+              mSizeCbCr.width == (mSize.width + 1) >> 1) &&
+             (mSizeCbCr.height == mSize.height ||
+              mSizeCbCr.height == (mSize.height + 1) >> 1));
+  MOZ_ASSERT(aHandles[0] && aHandles[1] && aHandles[2]);
 }
 
 RenderDXGIYCbCrTextureHostOGL::~RenderDXGIYCbCrTextureHostOGL()
