@@ -2912,55 +2912,66 @@ nsNavHistoryQueryResultNode::OnItemChanged(int64_t aItemId,
                                            const nsACString& aOldValue,
                                            uint16_t aSource)
 {
-  // History observers should not get OnItemChanged
-  // but should get the corresponding history notifications instead.
+  if (aItemType != nsINavBookmarksService::TYPE_BOOKMARK) {
+    // No separators or folders in queries.
+    return NS_OK;
+  }
+
+  // Update ourselves first.
+  nsresult rv = nsNavHistoryResultNode::OnItemChanged(aItemId, aProperty,
+                                                      aIsAnnotationProperty,
+                                                      aNewValue, aLastModified,
+                                                      aItemType, aParentId,
+                                                      aGUID, aParentGUID,
+                                                      aOldValue, aSource);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Did our uri change?
+  if (aItemId == mItemId && aProperty.EqualsLiteral("uri")) {
+    nsNavHistory* history = nsNavHistory::GetHistoryService();
+    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+    nsCOMPtr<nsINavHistoryQuery> query;
+    nsCOMPtr<nsINavHistoryQueryOptions> options;
+    rv = history->QueryStringToQuery(mURI, getter_AddRefs(query),
+                                           getter_AddRefs(options));
+    NS_ENSURE_SUCCESS(rv, rv);
+    mQuery = do_QueryObject(query);
+    NS_ENSURE_STATE(mQuery);
+    mOptions = do_QueryObject(options);
+    NS_ENSURE_STATE(mOptions);
+    rv = mOptions->Clone(getter_AddRefs(mOriginalOptions));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // History observers should not get OnItemChanged but should get the
+  // corresponding history notifications instead.
   // For bookmark queries, "all bookmark" observers should get OnItemChanged.
   // For example, when a title of a bookmark changes, we want that to refresh.
-
   if (mLiveUpdate == QUERYUPDATE_COMPLEX_WITH_BOOKMARKS) {
-    switch (aItemType) {
-      case nsINavBookmarksService::TYPE_SEPARATOR:
-        // No separators in queries.
-        return NS_OK;
-      case nsINavBookmarksService::TYPE_FOLDER:
-        // Queries never result as "folders", but the tags-query results as
-        // special "tag" containers, which should follow their corresponding
-        // folders titles.
-        if (mOptions->ResultType() != nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
-          return NS_OK;
-        MOZ_FALLTHROUGH;
-      default:
-        (void)Refresh();
-    }
-  }
-  else {
-    // Some node could observe both bookmarks and history.  But a node observing
-    // only history should never get a bookmark notification.
-    NS_WARNING_ASSERTION(
-      mResult && (mResult->mIsAllBookmarksObserver ||
-                  mResult->mIsBookmarkFolderObserver),
-      "history observers should not get OnItemChanged, but should get the "
-      "corresponding history notifications instead");
-
-    // Tags in history queries are a special case since tags are per uri and
-    // we filter tags based on searchterms.
-    if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK &&
-        aProperty.EqualsLiteral("tags")) {
-      nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-      NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-      nsCOMPtr<nsIURI> uri;
-      nsresult rv = bookmarks->GetBookmarkURI(aItemId, getter_AddRefs(uri));
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = NotifyIfTagsChanged(uri);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    return Refresh();
   }
 
-  return nsNavHistoryResultNode::OnItemChanged(aItemId, aProperty,
-                                               aIsAnnotationProperty,
-                                               aNewValue, aLastModified,
-                                               aItemType, aParentId, aGUID,
-                                               aParentGUID, aOldValue, aSource);
+  // Some node could observe both bookmarks and history.  But a node observing
+  // only history should never get a bookmark notification.
+  NS_WARNING_ASSERTION(
+    mResult && (mResult->mIsAllBookmarksObserver ||
+                mResult->mIsBookmarkFolderObserver),
+    "history observers should not get OnItemChanged, but should get the "
+    "corresponding history notifications instead");
+
+  // Tags in history queries are a special case since tags are per uri and
+  // we filter tags based on searchterms.
+  if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK &&
+      aProperty.EqualsLiteral("tags")) {
+    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = bookmarks->GetBookmarkURI(aItemId, getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = NotifyIfTagsChanged(uri);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

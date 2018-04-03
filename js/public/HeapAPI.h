@@ -483,9 +483,6 @@ GetStringZone(JSString* str)
 extern JS_PUBLIC_API(Zone*)
 GetObjectZone(JSObject* obj);
 
-extern JS_PUBLIC_API(Zone*)
-GetValueZone(const Value& value);
-
 static MOZ_ALWAYS_INLINE bool
 GCThingIsMarkedGray(GCCellPtr thing)
 {

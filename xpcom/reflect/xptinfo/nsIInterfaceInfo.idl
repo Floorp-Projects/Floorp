@@ -27,7 +27,6 @@ class nsXPTType;
 interface nsIInterfaceInfo : nsISupports
 {
     readonly attribute string   name;
-    readonly attribute nsIIDPtr InterfaceIID;
 
     boolean isScriptable();
     boolean isBuiltinClass();
@@ -55,18 +54,6 @@ interface nsIInterfaceInfo : nsISupports
     void getConstant(in uint16_t index,
                      out jsval constant,
                      out string name);
-
-
-    /**
-    * Get the interface information or iid associated with a param of some
-    * method in this interface.
-    */
-
-    nsIInterfaceInfo getInfoForParam(in uint16_t methodIndex,
-                                     [const] in nsXPTParamInfoPtr param);
-
-    nsIIDPtr getIIDForParam(in uint16_t methodIndex,
-                            [const] in nsXPTParamInfoPtr param);
 
 
     /**

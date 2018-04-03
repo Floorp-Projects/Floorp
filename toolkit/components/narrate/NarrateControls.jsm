@@ -27,83 +27,38 @@ function NarrateControls(mm, win, languagePromise) {
   style.href = "chrome://global/skin/narrate.css";
   win.document.head.appendChild(style);
 
-  function localize(pieces, ...substitutions) {
-    let result = pieces[0];
-    for (let i = 0; i < substitutions.length; ++i) {
-      result += gStrings.GetStringFromName(substitutions[i]) + pieces[i + 1];
-    }
-    return result;
-  }
+  let elemL10nMap = {
+    ".narrate-toggle": "narrate",
+    ".narrate-skip-previous": "back",
+    ".narrate-start-stop": "start",
+    ".narrate-skip-next": "forward",
+    ".narrate-rate-input": "speed",
+  };
 
   let dropdown = win.document.createElement("ul");
   dropdown.className = "dropdown narrate-dropdown";
-  // We need inline svg here for the animation to work (bug 908634 & 1190881).
-  // eslint-disable-next-line no-unsanitized/property
   dropdown.innerHTML =
-    localize`<li>
-       <button class="dropdown-toggle button narrate-toggle"
-               title="${"narrate"}" hidden>
-         <svg xmlns="http://www.w3.org/2000/svg"
-              xmlns:xlink="http://www.w3.org/1999/xlink"
-              width="24" height="24" viewBox="0 0 24 24">
-          <style>
-            @keyframes grow {
-              0%   { transform: scaleY(1);   }
-              15%  { transform: scaleY(1.5); }
-              15%  { transform: scaleY(1.5); }
-              30%  { transform: scaleY(1);   }
-              100% { transform: scaleY(1);   }
-            }
-
-            .waveform > rect {
-              fill: #808080;
-            }
-
-            .speaking .waveform > rect {
-              fill: #58bf43;
-              transform-box: fill-box;
-              transform-origin: 50% 50%;
-              animation-name: grow;
-              animation-duration: 1750ms;
-              animation-iteration-count: infinite;
-              animation-timing-function: linear;
-            }
-
-            .waveform > rect:nth-child(2) { animation-delay: 250ms; }
-            .waveform > rect:nth-child(3) { animation-delay: 500ms; }
-            .waveform > rect:nth-child(4) { animation-delay: 750ms; }
-            .waveform > rect:nth-child(5) { animation-delay: 1000ms; }
-            .waveform > rect:nth-child(6) { animation-delay: 1250ms; }
-            .waveform > rect:nth-child(7) { animation-delay: 1500ms; }
-
-          </style>
-          <g class="waveform">
-            <rect x="1"  y="8" width="2" height="8"  rx=".5" ry=".5" />
-            <rect x="4"  y="5" width="2" height="14" rx=".5" ry=".5" />
-            <rect x="7"  y="8" width="2" height="8"  rx=".5" ry=".5" />
-            <rect x="10" y="4" width="2" height="16" rx=".5" ry=".5" />
-            <rect x="13" y="2" width="2" height="20" rx=".5" ry=".5" />
-            <rect x="16" y="4" width="2" height="16" rx=".5" ry=".5" />
-            <rect x="19" y="7" width="2" height="10" rx=".5" ry=".5" />
-          </g>
-         </svg>
-        </button>
+    `<li>
+       <button class="dropdown-toggle button narrate-toggle" hidden></button>
     </li>
     <li class="dropdown-popup">
       <div class="narrate-row narrate-control">
-        <button disabled class="narrate-skip-previous"
-                title="${"back"}"></button>
-        <button class="narrate-start-stop" title="${"start"}"></button>
-        <button disabled class="narrate-skip-next"
-                title="${"forward"}"></button>
+        <button disabled class="narrate-skip-previous"></button>
+        <button class="narrate-start-stop"></button>
+        <button disabled class="narrate-skip-next"></button>
       </div>
       <div class="narrate-row narrate-rate">
-        <input class="narrate-rate-input" value="0" title="${"speed"}"
+        <input class="narrate-rate-input" value="0"
                step="5" max="100" min="-100" type="range">
       </div>
       <div class="narrate-row narrate-voices"></div>
       <div class="dropdown-arrow"></div>
     </li>`;
+
+  for (let [selector, stringID] of Object.entries(elemL10nMap)) {
+    dropdown.querySelector(selector).setAttribute("title",
+      gStrings.GetStringFromName(stringID));
+  }
 
   this.narrator = new Narrator(win, languagePromise);
 

@@ -13,6 +13,11 @@ fuzzy-if(Android,3,7) skip-if(!Android) pref(apz.allow_zooming,true) == async-sc
 fuzzy-if(Android,54,20) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-zoom-1.html async-scrollbar-zoom-1-ref.html
 fuzzy-if(Android,45,22) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-zoom-2.html async-scrollbar-zoom-2-ref.html
 
+# Test scrollbars working properly with pinch-zooming, i.e. different document resolutions.
+# As above, the end of the scrollthumb won't match perfectly, but the bulk of the scrollbar should be present and identical.
+fuzzy-if(Android,54,14) skip-if(!Android) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-1.html scrollbar-zoom-resolution-1-ref.html
+fuzzy-if(Android,51,22) skip-if(!Android) pref(apz.allow_zooming,true) == scrollbar-zoom-resolution-2.html scrollbar-zoom-resolution-2-ref.html
+
 # Meta-viewport tag support
 skip-if(!Android) pref(apz.allow_zooming,true) == initial-scale-1.html initial-scale-1-ref.html
 
