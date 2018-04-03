@@ -45,7 +45,7 @@ case "$(uname -s)" in
 Linux)
     OPENSSL_TARBALL=openssl-1.1.0g.tar.gz
 
-    curl -O https://www.openssl.org/source/$OPENSSL_TARBALL
+    curl -L -O https://www.openssl.org/source/$OPENSSL_TARBALL
 cat >$OPENSSL_TARBALL.sha256sum <<EOF
 de4d501267da39310905cb6dc8c6121f7a2cad45a7707f76df828fe1b85073af  openssl-1.1.0g.tar.gz
 EOF
