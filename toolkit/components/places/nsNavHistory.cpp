@@ -1119,9 +1119,7 @@ static
 bool NeedToFilterResultSet(const RefPtr<nsNavHistoryQuery>& aQuery,
                            nsNavHistoryQueryOptions *aOptions)
 {
-  uint16_t resultType = aOptions->ResultType();
-  return resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS ||
-         aOptions->ExcludeQueries();
+  return aOptions->ExcludeQueries();
 }
 
 // ** Helper class for ConstructQueryString **/
@@ -1230,7 +1228,6 @@ PlacesSQLQueryBuilder::Select()
   switch (mResultType)
   {
     case nsINavHistoryQueryOptions::RESULTS_AS_URI:
-    case nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS:
       rv = SelectAsURI();
       NS_ENSURE_SUCCESS(rv, rv);
       break;
@@ -1299,59 +1296,27 @@ PlacesSQLQueryBuilder::SelectAsURI()
       break;
 
     case nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS:
-      if (mResultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS) {
-        // Order-by clause is hardcoded because we need to discard duplicates
-        // in FilterResultSet. We will retain only the last modified item,
-        // so we are ordering by place id and last modified to do a faster
-        // filtering.
-        mSkipOrderBy = true;
 
-        GetTagsSqlFragment(history->GetTagsFolder(),
-                           NS_LITERAL_CSTRING("b2.fk"),
-                           mHasSearchTerms,
-                           tagsSqlFragment);
-
-        mQueryString = NS_LITERAL_CSTRING(
-          "SELECT b2.fk, h.url, b2.title AS page_title, "
-            "h.rev_host, h.visit_count, h.last_visit_date, null, b2.id, "
-            "b2.dateAdded, b2.lastModified, b2.parent, ") +
-            tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid, "
-            "null, null, null, b2.guid, b2.position, b2.type, b2.fk "
-          "FROM moz_bookmarks b2 "
-          "JOIN (SELECT b.fk "
-                "FROM moz_bookmarks b "
-                // ADDITIONAL_CONDITIONS will filter on parent.
-                "WHERE b.type = 1 {ADDITIONAL_CONDITIONS} "
-                ") AS seed ON b2.fk = seed.fk "
-          "JOIN moz_places h ON h.id = b2.fk "
-          "WHERE NOT EXISTS ( "
-            "SELECT id FROM moz_bookmarks WHERE id = b2.parent AND parent = ") +
+      GetTagsSqlFragment(history->GetTagsFolder(),
+                          NS_LITERAL_CSTRING("b.fk"),
+                          mHasSearchTerms,
+                          tagsSqlFragment);
+      mQueryString = NS_LITERAL_CSTRING(
+        "SELECT b.fk, h.url, b.title AS page_title, "
+          "h.rev_host, h.visit_count, h.last_visit_date, null, b.id, "
+          "b.dateAdded, b.lastModified, b.parent, ") +
+          tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid,"
+          "null, null, null, b.guid, b.position, b.type, b.fk "
+        "FROM moz_bookmarks b "
+        "JOIN moz_places h ON b.fk = h.id "
+        "WHERE NOT EXISTS "
+            "(SELECT id FROM moz_bookmarks "
+              "WHERE id = b.parent AND parent = ") +
                 nsPrintfCString("%" PRId64, history->GetTagsFolder()) +
-          NS_LITERAL_CSTRING(") "
-          "ORDER BY b2.fk DESC, b2.lastModified DESC");
-      }
-      else {
-        GetTagsSqlFragment(history->GetTagsFolder(),
-                           NS_LITERAL_CSTRING("b.fk"),
-                           mHasSearchTerms,
-                           tagsSqlFragment);
-        mQueryString = NS_LITERAL_CSTRING(
-          "SELECT b.fk, h.url, b.title AS page_title, "
-            "h.rev_host, h.visit_count, h.last_visit_date, null, b.id, "
-            "b.dateAdded, b.lastModified, b.parent, ") +
-            tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid,"
-            "null, null, null, b.guid, b.position, b.type, b.fk "
-          "FROM moz_bookmarks b "
-          "JOIN moz_places h ON b.fk = h.id "
-          "WHERE NOT EXISTS "
-              "(SELECT id FROM moz_bookmarks "
-                "WHERE id = b.parent AND parent = ") +
-                  nsPrintfCString("%" PRId64, history->GetTagsFolder()) +
-              NS_LITERAL_CSTRING(") "
-              "AND NOT h.url_hash BETWEEN hash('place', 'prefix_lo') AND "
-                                         "hash('place', 'prefix_hi') "
-            "{ADDITIONAL_CONDITIONS}");
-      }
+            NS_LITERAL_CSTRING(") "
+            "AND NOT h.url_hash BETWEEN hash('place', 'prefix_lo') AND "
+                                        "hash('place', 'prefix_hi') "
+          "{ADDITIONAL_CONDITIONS}");
       break;
 
     default:
@@ -3315,19 +3280,9 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
   nsTArray<nsString> terms;
   ParseSearchTermsFromQuery(aQuery, &terms);
 
-  uint16_t resultType = aOptions->ResultType();
   bool excludeQueries = aOptions->ExcludeQueries();
   for (int32_t nodeIndex = 0; nodeIndex < aSet.Count(); nodeIndex++) {
     if (excludeQueries && aSet[nodeIndex]->IsQuery()) {
-      continue;
-    }
-
-    // RESULTS_AS_TAG_CONTENTS returns a set ordered by place_id and
-    // lastModified. The set may contain duplicate, and to remove them we can
-    // just retain the first result.
-    if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS &&
-        (!aSet[nodeIndex]->IsURI() ||
-         (nodeIndex > 0 && aSet[nodeIndex]->mURI == aSet[nodeIndex-1]->mURI))) {
       continue;
     }
 
@@ -3559,8 +3514,7 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
 
     resultNode.forget(aResult);
     return rv;
-  } else if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_URI ||
-             aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS) {
+  } else if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_URI) {
     RefPtr<nsNavHistoryResultNode> resultNode =
       new nsNavHistoryResultNode(url, title, accessCount, time);
 
@@ -3986,11 +3940,6 @@ GetSimpleBookmarksQueryFolder(const RefPtr<nsNavHistoryQuery>& aQuery,
   if (aQuery->Tags().Length() > 0)
     return 0;
   if (aOptions->MaxResults() > 0)
-    return 0;
-
-  // RESULTS_AS_TAG_CONTENTS is quite similar to a folder shortcut, but it must
-  // not be treated like that, since it needs all query options.
-  if (aOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS)
     return 0;
 
   // Don't care about onlyBookmarked flag, since specifying a bookmark

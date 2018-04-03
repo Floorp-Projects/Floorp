@@ -958,9 +958,8 @@ interface nsINavHistoryQuery : nsISupports
   readonly attribute unsigned long folderCount;
 
   /**
-   * For the special result type RESULTS_AS_TAG_CONTENTS we can define only
-   * one folder that must be a tag folder. This is not recursive so results
-   * will be returned from the first level of that folder.
+   * This is not recursive so results will be returned from the first level of
+   * that folder.
    */
   void setFolders([const,array, size_is(folderCount)] in long long folders,
                   in unsigned long folderCount);
@@ -1059,11 +1058,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short RESULTS_AS_TAG_QUERY = 6;
 
   /**
-   * This is a container with an URI result type that contains the last
-   * modified bookmarks for the given tag.
-   * Tag folder id must be defined in the query.
-   *
-   * @note Setting this resultType will force queryType to QUERY_TYPE_BOOKMARKS.
+   * DEPRECATED: This exists for Sync and also to avoid reusing this number.
    */
   const unsigned short RESULTS_AS_TAG_CONTENTS = 7;
 
