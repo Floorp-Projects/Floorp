@@ -207,6 +207,23 @@ windows-talos:
     - talos-motionmark
     - talos-h1
 
+windows-talos-profiling:
+    - talos-chrome-profiling
+    - talos-dromaeojs-profiling
+    - talos-g1-profiling
+    - talos-g2-profiling
+    - talos-g3-profiling
+    - talos-g4-profiling
+    - talos-g5-profiling
+    - talos-motionmark-profiling
+    - talos-other-profiling
+    - talos-perf-reftest-profiling
+    - talos-perf-reftest-singletons-profiling
+    - talos-speedometer-profiling
+    - talos-svgr-profiling
+    - talos-tp5o-profiling
+    - talos-tp6-profiling
+
 macosx64-tests:
     - cppunit
     - crashtest

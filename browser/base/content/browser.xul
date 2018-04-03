@@ -46,14 +46,12 @@
         titlemodifier_normal="&mainWindow.titlemodifier;"
         titlemodifier_privatebrowsing="&mainWindow.titlemodifier; &mainWindow.titlePrivateBrowsingSuffix;"
 #endif
-#ifdef CAN_DRAW_IN_TITLEBAR
 #ifdef XP_WIN
         chromemargin="0,2,2,2"
 #else
         chromemargin="0,-1,-1,-1"
 #endif
         tabsintitlebar="true"
-#endif
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
         windowtype="navigator:browser"
         macanimationtype="document"
@@ -598,7 +596,6 @@
   </popupset>
   <box id="appMenu-viewCache" hidden="true"/>
 
-#ifdef CAN_DRAW_IN_TITLEBAR
 <vbox id="titlebar">
   <hbox id="titlebar-content">
     <spacer id="titlebar-spacer" flex="1"/>
@@ -620,7 +617,6 @@
 #endif
   </hbox>
 </vbox>
-#endif
 
   <toolbox id="navigator-toolbox">
     <!-- Menu -->
@@ -640,11 +636,9 @@
 #include browser-menubar.inc
       </toolbaritem>
 
-#ifdef CAN_DRAW_IN_TITLEBAR
 #ifndef XP_MACOSX
       <hbox class="titlebar-placeholder" type="caption-buttons" ordinal="1000"
             skipintoolbarset="true"/>
-#endif
 #endif
     </toolbar>
 
@@ -656,11 +650,8 @@
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
              collapsed="true">
-
-#ifdef CAN_DRAW_IN_TITLEBAR
       <hbox class="titlebar-placeholder" type="pre-tabs"
             skipintoolbarset="true"/>
-#endif
 
       <tabs id="tabbrowser-tabs"
             flex="1"
@@ -704,18 +695,15 @@
         </menupopup>
       </toolbarbutton>
 
-#ifdef CAN_DRAW_IN_TITLEBAR
       <hbox class="titlebar-placeholder" type="post-tabs"
             ordinal="1000"
             skipintoolbarset="true"/>
-#endif
 
       <button class="accessibility-indicator" tooltiptext="&accessibilityIndicator.tooltip;"
               ordinal="1000"
               aria-live="polite" skipintoolbarset="true"/>
       <hbox class="private-browsing-indicator" skipintoolbarset="true"
             ordinal="1000"/>
-#ifdef CAN_DRAW_IN_TITLEBAR
       <hbox class="titlebar-placeholder" type="caption-buttons"
 #ifndef XP_MACOSX
             ordinal="1000"
@@ -725,7 +713,6 @@
 #ifdef XP_MACOSX
       <hbox class="titlebar-placeholder" type="fullscreen-button"
             skipintoolbarset="true"/>
-#endif
 #endif
     </toolbar>
 

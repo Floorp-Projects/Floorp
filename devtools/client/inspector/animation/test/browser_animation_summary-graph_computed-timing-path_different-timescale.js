@@ -7,6 +7,7 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
+  await removeAnimatedElementsExcept([".animated", ".end-delay"]);
   const { inspector, panel } = await openAnimationInspector();
 
   info("Checking the path for different time scale");
@@ -14,7 +15,7 @@ add_task(async function() {
   const pathStringA = panel.querySelector(".animation-iteration-path").getAttribute("d");
 
   info("Select animation which has different time scale from no-compositor");
-  await selectNodeAndWaitForAnimations("#endDelayed", inspector);
+  await selectNodeAndWaitForAnimations(".end-delay", inspector);
 
   info("Select no-compositor again");
   await selectNodeAndWaitForAnimations(".animated", inspector);

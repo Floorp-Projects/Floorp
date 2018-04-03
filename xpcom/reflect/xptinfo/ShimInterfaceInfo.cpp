@@ -203,13 +203,6 @@ ShimInterfaceInfo::GetName(char** aName)
 }
 
 NS_IMETHODIMP
-ShimInterfaceInfo::GetInterfaceIID(nsIID** aIID)
-{
-    *aIID = mIID.Clone();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 ShimInterfaceInfo::IsScriptable(bool* aRetVal)
 {
     // This class should pretend that the interface is scriptable because
@@ -328,20 +321,6 @@ ShimInterfaceInfo::GetConstant(uint16_t aIndex, JS::MutableHandleValue aConstant
 
     // aIndex was bigger than the number of constants we have.
     return NS_ERROR_INVALID_ARG;
-}
-
-NS_IMETHODIMP
-ShimInterfaceInfo::GetInfoForParam(uint16_t aIndex, const nsXPTParamInfo* aParam, nsIInterfaceInfo** aRetVal)
-{
-    MOZ_ASSERT(false, "This should never be called");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-ShimInterfaceInfo::GetIIDForParam(uint16_t aIndex, const nsXPTParamInfo* aParam, nsIID** aRetVal)
-{
-    MOZ_ASSERT(false, "This should never be called");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

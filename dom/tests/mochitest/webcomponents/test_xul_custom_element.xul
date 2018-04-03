@@ -26,6 +26,9 @@
 
     customElements.define("test-custom-element", TestCustomElement);
 
+    class TestWithoutDash extends XULElement { }
+    customElements.define("testwithoutdash", TestWithoutDash);
+
     function runTest() {
       const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -53,6 +56,9 @@
          "Parser should have instantiated the custom element.");
       ok(element4 instanceof TestCustomElement, "Should be an instance of TestCustomElement");
 
+      let element5 = document.getElementById("element5");
+      ok(element5 instanceof TestWithoutDash, "Should be an instance of TestWithoutDash");
+
       SimpleTest.finish();
     }
   ]]>
@@ -62,6 +68,7 @@
     <p id="display"></p>
     <div id="content" style="display: none">
       <test-custom-element id="element4" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>
+      <testwithoutdash id="element5" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>
     </div>
     <pre id="test"></pre>
   </body>

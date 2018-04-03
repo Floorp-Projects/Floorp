@@ -7,12 +7,12 @@
 // * element existance
 // * path
 
-const TEST_CASES = [
+const TEST_DATA = [
   {
-    targetClassName: "delay-positive",
+    targetClass: "delay-positive",
   },
   {
-    targetClassName: "delay-negative",
+    targetClass: "delay-negative",
     expectedPath: [
       { x: -500000, y: 0 },
       { x: -250000, y: 25 },
@@ -24,30 +24,25 @@ const TEST_CASES = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-
+  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
   const { panel } = await openAnimationInspector();
 
-  for (const testCase of TEST_CASES) {
-    const {
-      expectedPath,
-      targetClassName,
-    } = testCase;
-
+  for (const { targetClass, expectedPath } of TEST_DATA) {
     const animationItemEl =
-      findAnimationItemElementsByTargetClassName(panel, targetClassName);
+      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
 
-    info(`Checking negative delay path existence for ${ targetClassName }`);
+    info(`Checking negative delay path existence for ${ targetClass }`);
     const negativeDelayPathEl =
       animationItemEl.querySelector(".animation-negative-delay-path");
 
     if (expectedPath) {
       ok(negativeDelayPathEl,
-         "The negative delay path element should be in animation item element");
+        "The negative delay path element should be in animation item element");
       const pathEl = negativeDelayPathEl.querySelector("path");
       assertPathSegments(pathEl, true, expectedPath);
     } else {
       ok(!negativeDelayPathEl,
-         "The negative delay path element should not be in animation item element");
+        "The negative delay path element should not be in animation item element");
     }
   }
 });

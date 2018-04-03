@@ -13,6 +13,10 @@ body {
   overflow: hidden;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 #debugging-console {
   float: right;
   /* Float above the other overlays */

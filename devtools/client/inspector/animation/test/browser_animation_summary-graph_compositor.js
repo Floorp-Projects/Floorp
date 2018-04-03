@@ -8,7 +8,8 @@
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
-
+  await removeAnimatedElementsExcept(
+    [".compositor-all", ".compositor-notall", ".no-compositor"]);
   const { inspector, panel } = await openAnimationInspector();
 
   info("Select a test node we know has an animation running on the compositor");
@@ -16,7 +17,7 @@ add_task(async function() {
 
   const summaryGraphEl = panel.querySelector(".animation-summary-graph");
   ok(summaryGraphEl.classList.contains("compositor"),
-     "The element has the compositor css class");
+    "The element has the compositor css class");
   ok(hasTooltip(summaryGraphEl,
                 ANIMATION_L10N.getStr("player.allPropertiesOnCompositorTooltip")),
      "The element has the right tooltip content");
@@ -25,7 +26,7 @@ add_task(async function() {
   await selectNodeAndWaitForAnimations(".no-compositor", inspector);
 
   ok(!summaryGraphEl.classList.contains("compositor"),
-     "The element does not have the compositor css class");
+    "The element does not have the compositor css class");
   ok(!hasTooltip(summaryGraphEl,
                  ANIMATION_L10N.getStr("player.allPropertiesOnCompositorTooltip")),
      "The element does not have oncompositor tooltip content");
@@ -37,7 +38,7 @@ add_task(async function() {
   await selectNodeAndWaitForAnimations(".compositor-notall", inspector);
 
   ok(summaryGraphEl.classList.contains("compositor"),
-     "The element has the compositor css class");
+    "The element has the compositor css class");
   ok(hasTooltip(summaryGraphEl,
                 ANIMATION_L10N.getStr("player.somePropertiesOnCompositorTooltip")),
      "The element has the right tooltip content");

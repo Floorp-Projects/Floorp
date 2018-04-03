@@ -21,6 +21,9 @@
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+ChromeUtils.defineModuleGetter(this, "FormAutofillUtils",
+                               "resource://formautofill/FormAutofillUtils.jsm");
+
 let PaymentFrameScript = {
   init() {
     XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -58,10 +61,26 @@ let PaymentFrameScript = {
     }
   },
 
+  /**
+   * Expose privileged utility functions to the unprivileged page.
+   */
+  exposeUtilityFunctions() {
+    let PaymentDialogUtils = {
+      isCCNumber(value) {
+        return FormAutofillUtils.isCCNumber(value);
+      },
+    };
+    let waivedContent = Cu.waiveXrays(content);
+    waivedContent.PaymentDialogUtils = Cu.cloneInto(PaymentDialogUtils, waivedContent, {
+      cloneFunctions: true,
+    });
+  },
+
   sendToChrome({detail}) {
     let {messageType} = detail;
     if (messageType == "initializeRequest") {
       this.setupContentConsole();
+      this.exposeUtilityFunctions();
     }
     this.log.debug("sendToChrome:", messageType, detail);
     this.sendMessageToChrome(messageType, detail);
