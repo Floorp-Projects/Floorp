@@ -491,7 +491,6 @@ def check_compiler(compiler, language, target):
     # Note: MSVC, while supporting C++14, still reports 199711L for __cplusplus.
     # Note: this is a strict version check because we used to always add
     # -std=gnu++14.
-    draft_cxx14_version = 201300
     cxx14_version = 201402
     if info.language == 'C++':
         if info.type == 'clang' and info.language_version != cxx14_version:
@@ -500,12 +499,6 @@ def check_compiler(compiler, language, target):
         # with appropriate checks.
         elif info.type == 'clang-cl' and info.language_version != cxx14_version:
             append_flag('-std=c++14')
-        # GCC 4.9 indicates that it implements draft C++14 features
-        # instead of the full language.
-        elif info.type == 'gcc' and \
-                info.language_version not in (draft_cxx14_version,
-                                              cxx14_version):
-            append_flag('-std=gnu++14')
 
     # We force clang-cl to emulate Visual C++ 2017 version 15.6.0
     msvc_version = '19.13.26128'
@@ -904,14 +897,14 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
         # Check the compiler version here instead of in `compiler_version` so
         # that the `checking` message doesn't pretend the compiler can be used
         # to then bail out one line later.
-        if info.type == 'gcc' and info.version < '4.9.0':
-            raise FatalCheckError(
-                'Only GCC 4.9 or newer is supported (found version %s).'
-                % info.version)
-
-        if info.type == 'gcc' and host_or_target.os == 'Android':
-            raise FatalCheckError('GCC is not supported on Android.\n'
-                                  'Please use clang from the Android NDK instead.')
+        if info.type == 'gcc':
+            if host_or_target.os == 'Android':
+                raise FatalCheckError('GCC is not supported on Android.\n'
+                                      'Please use clang from the Android NDK instead.')
+            if info.version < '6.1.0':
+                raise FatalCheckError(
+                    'Only GCC 6.1 or newer is supported (found version %s).'
+                    % info.version)
 
         # If you want to bump the version check here search for
         # cxx_alignof above, and see the associated comment.
@@ -1139,7 +1132,7 @@ def color_cflags(info):
     # value changes to e.g. "<x>=always", exact string match may fail and
     # multiple color flags could be added. So examine downstream consumers
     # before adding flags to return values.
-    if info.type == 'gcc' and info.version >= '4.9.0':
+    if info.type == 'gcc':
         return '-fdiagnostics-color'
     elif info.type == 'clang':
         return '-fcolor-diagnostics'

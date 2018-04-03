@@ -5,14 +5,14 @@
 "use strict";
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const AnimationTarget = createFactory(require("./AnimationTarget"));
 const SummaryGraph = createFactory(require("./graph/SummaryGraph"));
 
-class AnimationItem extends PureComponent {
+class AnimationItem extends Component {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,

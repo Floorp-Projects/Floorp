@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
@@ -13,7 +13,7 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N =
   new LocalizationHelper("devtools/client/locales/animationinspector.properties");
 
-class NoAnimationPanel extends PureComponent {
+class NoAnimationPanel extends Component {
   static get propTypes() {
     return {
       elementPickerEnabled: PropTypes.bool.isRequired,

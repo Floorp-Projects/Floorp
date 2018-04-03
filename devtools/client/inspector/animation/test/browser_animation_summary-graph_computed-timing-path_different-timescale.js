@@ -10,14 +10,14 @@ add_task(async function() {
   const { inspector, panel } = await openAnimationInspector();
 
   info("Checking the path for different time scale");
-  await selectNodeAndWaitForAnimations(".no-compositor", inspector);
+  await selectNodeAndWaitForAnimations(".animated", inspector);
   const pathStringA = panel.querySelector(".animation-iteration-path").getAttribute("d");
 
   info("Select animation which has different time scale from no-compositor");
-  await selectNodeAndWaitForAnimations(".endDelayed", inspector);
+  await selectNodeAndWaitForAnimations("#endDelayed", inspector);
 
   info("Select no-compositor again");
-  await selectNodeAndWaitForAnimations(".no-compositor", inspector);
+  await selectNodeAndWaitForAnimations(".animated", inspector);
   const pathStringB = panel.querySelector(".animation-iteration-path").getAttribute("d");
   is(pathStringA, pathStringB, "Path string should be same even change the time scale");
 });

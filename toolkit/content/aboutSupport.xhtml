@@ -18,8 +18,6 @@
 
     <link rel="icon" type="image/png" id="favicon"
           href="chrome://branding/content/icon32.png"/>
-    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css"
-          type="text/css"/>
     <link rel="stylesheet" href="chrome://global/skin/aboutSupport.css"
           type="text/css"/>
 
@@ -27,10 +25,10 @@
             src="chrome://global/content/aboutSupport.js"/>
   </head>
 
-  <body dir="&locale.dir;">
+  <body dir="&locale.dir;" class="wide-container">
 
 #ifndef ANDROID
-    <div id="action-box">
+    <div id="action-box" class="notice-box">
       <div id="reset-box">
         <h3>&refreshProfile.title;</h3>
         <button id="reset-box-button">
