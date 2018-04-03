@@ -77,6 +77,8 @@
   <link rel="localization" href="branding/brand.ftl"/>
   <link rel="localization" href="browser/branding/sync-brand.ftl"/>
   <link rel="localization" href="browser/preferences/preferences.ftl"/>
+  <link rel="localization" href="browser/preferences/blocklists.ftl"/>
+
   <script type="text/javascript" src="chrome://global/content/l10n.js"></script>
 
   <html:link rel="shortcut icon"

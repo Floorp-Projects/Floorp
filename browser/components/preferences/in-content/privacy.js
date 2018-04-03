@@ -404,10 +404,6 @@ var gPrivacyPane = {
       bundlePrefs.getString("trackingprotectionpermissionstitle"),
       bundlePrefs.getString("trackingprotectionpermissionstext2"),
     ]);
-    appendSearchKeywords("changeBlockList", [
-      bundlePrefs.getString("blockliststitle"),
-      bundlePrefs.getString("blockliststext"),
-    ]);
     appendSearchKeywords("popupPolicyButton", [
       bundlePrefs.getString("popuppermissionstitle2"),
       bundlePrefs.getString("popuppermissionstext"),
@@ -791,16 +787,7 @@ var gPrivacyPane = {
    * Displays the available block lists for tracking protection.
    */
   showBlockLists() {
-    var bundlePreferences = document.getElementById("bundlePreferences");
-    let brandName = document.getElementById("bundleBrand")
-      .getString("brandShortName");
-    var params = {
-      brandShortName: brandName,
-      windowTitle: bundlePreferences.getString("blockliststitle"),
-      introText: bundlePreferences.getString("blockliststext")
-    };
-    gSubDialog.open("chrome://browser/content/preferences/blocklists.xul",
-      null, params);
+    gSubDialog.open("chrome://browser/content/preferences/blocklists.xul", null);
   },
 
   // COOKIES AND SITE DATA

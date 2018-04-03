@@ -347,7 +347,7 @@
                   flex="1"
                   data-l10n-id="tracking-change-block-list"
                   preference="pref.privacy.disable_button.change_blocklist"
-                  searchkeywords="&button.cancel.label; &button.ok.label;"/>
+                  search-l10n-ids="blocklist-window.title, blocklist-desc, blocklist-button-cancel.label, blocklist-button-ok.label"/>
         </hbox>
       </vbox>
     </hbox>
