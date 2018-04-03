@@ -55,7 +55,7 @@ const PLATFORM_NAMES = {
 // Filename URI regexes that we are okay with reporting to Telemetry. URIs not
 // matching these patterns may contain local file paths.
 const TELEMETRY_REPORTED_PATTERNS = new Set([
-  /^resource:\/\/(?:\/|gre)/,
+  /^resource:\/\/(?:\/|gre|devtools)/,
   /^chrome:\/\/(?:global|browser|devtools)/,
 ]);
 
@@ -183,13 +183,19 @@ class BrowserErrorReporter {
     Services.telemetry.scalarSet(TELEMETRY_ERROR_SAMPLE_RATE, newValue);
   }
 
-  shouldReportFilename(filename) {
+  errorCollectedFilenameKey(filename) {
     for (const pattern of TELEMETRY_REPORTED_PATTERNS) {
       if (filename.match(pattern)) {
-        return true;
+        return filename;
       }
     }
-    return false;
+
+    // WebExtensions get grouped separately from other errors
+    if (filename.startsWith("moz-extension://")) {
+        return "MOZEXTENSION";
+    }
+
+    return "FILTERED";
   }
 
   async observe(message) {
@@ -211,11 +217,8 @@ class BrowserErrorReporter {
       Services.telemetry.scalarAdd(TELEMETRY_ERROR_COLLECTED_STACK, 1);
     }
     if (message.sourceName) {
-      let filename = "FILTERED";
-      if (this.shouldReportFilename(message.sourceName)) {
-        filename = message.sourceName;
-      }
-      Services.telemetry.keyedScalarAdd(TELEMETRY_ERROR_COLLECTED_FILENAME, filename.slice(0, 69), 1);
+      const key = this.errorCollectedFilenameKey(message.sourceName);
+      Services.telemetry.keyedScalarAdd(TELEMETRY_ERROR_COLLECTED_FILENAME, key.slice(0, 69), 1);
     }
 
     // Sample the amount of errors we send out
@@ -238,7 +241,6 @@ class BrowserErrorReporter {
       exception: {
         values: [exceptionValue],
       },
-      tags: {},
     };
 
     const transforms = [
