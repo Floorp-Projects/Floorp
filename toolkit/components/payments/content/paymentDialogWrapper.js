@@ -463,6 +463,43 @@ var paymentDialogWrapper = {
     paymentSrv.changeShippingOption(this.request.requestId, optionID);
   },
 
+  async onUpdateAutofillRecord(collectionName, record, guid, {
+    errorStateChange,
+    preserveOldProperties,
+    selectedStateKey,
+    successStateChange,
+  }) {
+    if (collectionName == "creditCards" && !guid) {
+      // We need to be logged in so we can encrypt the credit card number and
+      // that's only supported when we're adding a new record.
+      // TODO: "MasterPassword.ensureLoggedIn" can be removed after the storage
+      // APIs are refactored to be async functions (bug 1399367).
+      if (!await MasterPassword.ensureLoggedIn()) {
+        Cu.reportError("User canceled master password entry");
+        return;
+      }
+    }
+
+    try {
+      if (guid) {
+        await formAutofillStorage[collectionName].update(guid, record, preserveOldProperties);
+      } else {
+        guid = await formAutofillStorage[collectionName].add(record);
+      }
+
+      // Select the new record
+      if (selectedStateKey) {
+        Object.assign(successStateChange, {
+          [selectedStateKey]: guid,
+        });
+      }
+
+      this.sendMessageToContent("updateState", successStateChange);
+    } catch (ex) {
+      this.sendMessageToContent("updateState", errorStateChange);
+    }
+  },
+
   /**
    * @implements {nsIObserver}
    * @param {nsISupports} subject
@@ -507,6 +544,15 @@ var paymentDialogWrapper = {
       }
       case "pay": {
         this.onPay(data);
+        break;
+      }
+      case "updateAutofillRecord": {
+        this.onUpdateAutofillRecord(data.collectionName, data.record, data.guid, {
+          errorStateChange: data.errorStateChange,
+          preserveOldProperties: data.preserveOldProperties,
+          selectedStateKey: data.selectedStateKey,
+          successStateChange: data.successStateChange,
+        });
         break;
       }
     }

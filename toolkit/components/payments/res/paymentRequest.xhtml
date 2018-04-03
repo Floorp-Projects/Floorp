@@ -24,7 +24,9 @@
   <!ENTITY unknownPaymentButton.label    "Unknown">
   <!ENTITY orderDetailsLabel          "Order Details">
   <!ENTITY orderTotalLabel            "Total">
+  <!ENTITY basicCardPage.error.genericSave    "There was an error saving the payment card.">
   <!ENTITY basicCardPage.backButton.label     "Back">
+  <!ENTITY basicCardPage.saveButton.label     "Save">
 ]>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -126,7 +128,9 @@
 
       <basic-card-form id="basic-card-page"
                        class="page"
+                       data-error-generic-save="&basicCardPage.error.genericSave;"
                        data-back-button-label="&basicCardPage.backButton.label;"
+                       data-save-button-label="&basicCardPage.saveButton.label;"
                        hidden="hidden"></basic-card-form>
     </div>
 
