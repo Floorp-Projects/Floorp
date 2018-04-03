@@ -495,6 +495,7 @@ add_task(async function testScalars() {
     createScriptError({message: "Also no name", sourceName: "resource://gre/modules/Foo.jsm"}),
     createScriptError({message: "More no name", sourceName: "resource://gre/modules/Bar.jsm"}),
     createScriptError({message: "Yeah sures", sourceName: "unsafe://gre/modules/Bar.jsm"}),
+    createScriptError({message: "Addon", sourceName: "moz-extension://foo/Bar.jsm"}),
     createScriptError({
       message: "long",
       sourceName: "resource://gre/modules/long/long/long/long/long/long/long/long/long/long/",
@@ -524,7 +525,7 @@ add_task(async function testScalars() {
   const scalars = Services.telemetry.snapshotScalars(optin, false).parent;
   is(
     scalars[TELEMETRY_ERROR_COLLECTED],
-    8,
+    9,
     `${TELEMETRY_ERROR_COLLECTED} is incremented when an error is collected.`,
   );
   is(
@@ -534,7 +535,7 @@ add_task(async function testScalars() {
   );
   is(
     scalars[TELEMETRY_ERROR_REPORTED],
-    6,
+    7,
     `${TELEMETRY_ERROR_REPORTED} is incremented when an error is reported.`,
   );
   is(
@@ -553,6 +554,7 @@ add_task(async function testScalars() {
     keyedScalars[TELEMETRY_ERROR_COLLECTED_FILENAME],
     {
       "FILTERED": 1,
+      "MOZEXTENSION": 1,
       "resource://gre/modules/Foo.jsm": 1,
       "resource://gre/modules/Bar.jsm": 1,
       // Cut off at 70-character limit
