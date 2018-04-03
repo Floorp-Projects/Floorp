@@ -20,6 +20,10 @@ body {
   justify-content: center;
 }
 
+body.wide-container {
+  display: block;
+}
+
 .container {
   min-width: var(--in-content-container-min-width);
   max-width: var(--in-content-container-max-width);
@@ -122,9 +126,51 @@ tree {
   width: 100%;
 }
 
-/* Illustrated Info Pages */
+/* Tables */
+table {
+  background-color: var(--in-content-table-background);
+  color: var(--in-content-text-color);
+  font: message-box;
+  text-align: start;
+  width: 100%;
+  border: 1px solid var(--in-content-border-color);
+  border-spacing: 0px;
+}
 
+th, td {
+  border: 1px solid var(--in-content-border-color);
+  padding: 4px;
+  text-align: start;
+}
+
+thead th {
+  text-align: center;
+}
+
+th {
+  background-color: var(--in-content-table-header-background);
+  color: var(--in-content-selected-text);
+}
+
+th.column {
+  white-space: nowrap;
+  width: 0px;
+}
+
+td {
+  border-color: var(--in-content-table-border-dark-color);
+  unicode-bidi: plaintext; /* Make sure file paths will be LTR */
+}
+
+/* Illustrated Info Pages */
 .illustrated .title {
   margin-inline-start: 0;
   padding-inline-start: 0;
+}
+
+.notice-box {
+  background-color: var(--in-content-table-background);
+  border: 1px solid var(--in-content-border-color);
+  color: var(--in-content-text-color);
+  padding: 16px;
 }
