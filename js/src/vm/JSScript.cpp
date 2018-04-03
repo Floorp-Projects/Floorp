@@ -334,7 +334,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
         IsGenerator,
         IsAsync,
         HasRest,
-        IsExprBody,
         OwnSource,
         ExplicitUseStrict,
         SelfHosted,
@@ -447,8 +446,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
             scriptBits |= (1 << IsAsync);
         if (script->hasRest())
             scriptBits |= (1 << HasRest);
-        if (script->isExprBody())
-            scriptBits |= (1 << IsExprBody);
         if (script->hasSingletons())
             scriptBits |= (1 << HasSingleton);
         if (script->treatAsRunOnce())
@@ -599,8 +596,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
             script->setAsyncKind(FunctionAsyncKind::AsyncFunction);
         if (scriptBits & (1 << HasRest))
             script->setHasRest();
-        if (scriptBits & (1 << IsExprBody))
-            script->setIsExprBody();
     }
 
     JS_STATIC_ASSERT(sizeof(jsbytecode) == 1);
@@ -2917,8 +2912,6 @@ JSScript::initFromFunctionBox(HandleScript script, frontend::FunctionBox* funbox
     script->setAsyncKind(funbox->asyncKind());
     if (funbox->hasRest())
         script->setHasRest();
-    if (funbox->isExprBody())
-        script->setIsExprBody();
 
     PositionalFormalParameterIter fi(script);
     while (fi && !fi.closedOver())
@@ -3572,7 +3565,6 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
     dst->isDefaultClassConstructor_ = src->isDefaultClassConstructor();
     dst->isAsync_ = src->isAsync_;
     dst->hasRest_ = src->hasRest_;
-    dst->isExprBody_ = src->isExprBody_;
     dst->hideScriptFromDebugger_ = src->hideScriptFromDebugger_;
 
     if (nconsts != 0) {
@@ -4299,7 +4291,6 @@ LazyScript::Create(JSContext* cx, HandleFunction fun,
     p.hasThisBinding = false;
     p.isAsync = false;
     p.hasRest = false;
-    p.isExprBody = false;
     p.numClosedOverBindings = closedOverBindings.length();
     p.numInnerFunctions = innerFunctions.length();
     p.isGenerator = false;
