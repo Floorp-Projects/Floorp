@@ -1,0 +1,12 @@
+<script>
+  o0 = document.createElement('iframe');
+  o1 = document.createElement('iframe');
+  document.documentElement.appendChild(o0);
+  o2 = o0.getSVGDocument();
+  o3 = o2.childNodes[0];
+  o3.appendChild(o1);
+  o3.scrollHeight;
+  o3.hidden = true;
+  o4 = window.getComputedStyle(o1.contentDocument.childNodes[0].childNodes[1], ":z");
+  o4.length;
+</script>

@@ -268,6 +268,19 @@ Example:
   // event: [982134, "ui", "completion", "search-bar", "yahoo",
   //           {"qerylen": "7", "results": "23"}]
 
+Data Review
+===========
+
+Adding the ``hc_telemetry`` permission for a new domain in `browser/app/permissions <https://dxr.mozilla.org/mozilla-central/source/browser/app/permissions>`_
+requires `Data Collection Review <https://wiki.mozilla.org/Firefox/Data_Collection#Requesting_Approval>`_ as we are enabling a new method of data collection.
+
+Giving a domain permission to use Hybrid Content Telemetry also gives any Extensions running on this domain permission to use Hybrid Content Telemetry.
+If the domain is already on the `list of restricted domains <https://hg.mozilla.org/integration/mozilla-inbound/file/39e131181d44/modules/libpref/init/all.js#l5120>`_
+(configured by the ``extensions.webextensions.restrictedDomains`` preference), Extensions don't run on this domain and therefore cannot access the Hybrid Content Telemetry API.
+No additional approval is necessary.
+
+If the domain is not on that list, you need additional privacy review. In that case request help from the Telemetry team.
+
 Testing
 =======
 
@@ -299,7 +312,6 @@ Add the code snippet in your ``head.js`` to enable Hybrid Content ContentTelemet
 
   let hostURI = Services.io.newURI("https://example.mozilla.org");
   Services.perms.add(hostURI, "hc_telemetry", Services.perms.ALLOW_ACTION);
-
 
 Version History
 ===============

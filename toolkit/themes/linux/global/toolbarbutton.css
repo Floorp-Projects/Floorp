@@ -79,30 +79,6 @@ toolbarbutton:-moz-lwtheme:not(:hover):not([checked="true"]):not([open="true"]):
   padding: 0 !important;
 }
 
-/* ::::: toolbarbutton menu-button ::::: */
-
-toolbarbutton[type="menu-button"] {
-  -moz-box-align: stretch;
-  -moz-appearance: dualbutton;
-  -moz-box-orient: horizontal !important;
-}
-
-toolbarbutton[type="menu-button"],
-toolbarbutton[type="menu-button"]:hover,
-toolbarbutton[type="menu-button"]:hover:active,
-toolbarbutton[type="menu-button"][open="true"],
-toolbarbutton[type="menu-button"][disabled="true"],
-toolbarbutton[type="menu-button"][disabled="true"]:hover,
-toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
-  padding: 0 !important;
-}
-
-.toolbarbutton-menubutton-button {
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  -moz-box-orient: vertical;
-}
-
 /* ::::: toolbarbutton badged ::::: */
 .toolbarbutton-badge-stack > .toolbarbutton-icon[label]:not([label=""]) {
   margin-inline-end: 0;
@@ -125,13 +101,4 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   line-height: 10px;
   text-align: center;
   -moz-stack-sizing: ignore;
-}
-
-/* .......... dropmarker .......... */
-
-.toolbarbutton-menubutton-dropmarker {
-  margin: 0 3px;
-  -moz-appearance: toolbarbutton-dropdown !important;
-  list-style-image: none;
-  -moz-image-region: auto;
 }

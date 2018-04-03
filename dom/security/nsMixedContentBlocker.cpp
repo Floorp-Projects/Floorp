@@ -565,6 +565,7 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     case TYPE_XMLHTTPREQUEST:
     case TYPE_XSLT:
     case TYPE_OTHER:
+    case TYPE_SPECULATIVE:
       break;
 
 

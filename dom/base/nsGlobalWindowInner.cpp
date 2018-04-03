@@ -867,8 +867,6 @@ public:
 
   void Call()
   {
-    MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
-
     ErrorResult error;
     JS::Rooted<JS::Value> returnVal(RootingCx());
     mCallback->Call(&returnVal, error);

@@ -53,7 +53,7 @@
     <body xmlns="http://www.w3.org/1999/xhtml">
       <a target="_blank"
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=249292"
-         title="Ensure accessible children for toolbarbutton types 'menu' and 'menu-button'">
+         title="Ensure accessible children for toolbarbutton types 'menu'">
         Mozilla Bug 249292
       </a><br/>
       <p id="display"></p>

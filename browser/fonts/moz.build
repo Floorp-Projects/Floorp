@@ -7,5 +7,5 @@
 if CONFIG['OS_ARCH'] in ('WINNT', 'Linux'):
     DIST_SUBDIR = ''
     FINAL_TARGET_FILES.fonts += [
-        'EmojiOneMozilla.ttf'
+        'TwemojiMozilla.ttf'
     ]
