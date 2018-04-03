@@ -81,3 +81,44 @@ add_task(async function () {
   EventUtils.synthesizeKey("KEY_Tab", {shiftKey: true});
   is(doc.activeElement.id, expectedFocusedControl.id, "New control is focused");
 });
+
+// Test that moving the focus of tab button and selecting it.
+add_task(async function () {
+  info("Create a test tab and open the toolbox");
+  let toolbox = await openNewTabAndToolbox(TEST_URL, "inspector");
+  let doc = toolbox.doc;
+
+  let toolbar = doc.querySelector(".toolbox-tabs");
+  let tabButtons = toolbar.querySelectorAll(".devtools-tab, button");
+  let win = tabButtons[0].ownerDocument.defaultView;
+
+  // Put the keyboard focus onto the first tab button.
+  tabButtons[0].focus();
+  ok(containsFocus(doc, toolbar), "Focus is within the toolbox");
+  is(doc.activeElement.id, tabButtons[0].id, "First tab button is focused.");
+
+  // Move the focused tab and select it by using enter key.
+  let onKeyEvent = once(win, "keydown");
+  EventUtils.synthesizeKey("KEY_ArrowRight");
+  await onKeyEvent;
+
+  let onceSelected = toolbox.once("webconsole-selected");
+  EventUtils.synthesizeKey("Enter");
+  await onceSelected;
+  ok(doc.activeElement.id, tabButtons[1].id, "Changed tab button is focused.");
+
+  // Webconsole steal the focus from button after sending "webconsole-selected"
+  // event.
+  tabButtons[1].focus();
+
+  // Return the focused tab with space key.
+  onKeyEvent = once(win, "keydown");
+  EventUtils.synthesizeKey("KEY_ArrowLeft");
+  await onKeyEvent;
+
+  onceSelected = toolbox.once("inspector-selected");
+  EventUtils.synthesizeKey(" ");
+  await onceSelected;
+
+  ok(doc.activeElement.id, tabButtons[0].id, "Changed tab button is focused.");
+});
