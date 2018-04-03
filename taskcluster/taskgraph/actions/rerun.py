@@ -26,7 +26,9 @@ RERUN_STATES = ('exception', 'failed')
     name='rerun',
     symbol='rr',
     description=(
-        'Rerun a task.\n\nThis only works on failed or exception tasks in the original taskgraph, and is CoT friendly.'
+        'Rerun a task.\n\n'
+        'This only works on failed or exception tasks in the original taskgraph,'
+        ' and is CoT friendly.'
     ),
     order=1,
     context=[{}],
