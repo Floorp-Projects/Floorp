@@ -126,6 +126,24 @@ const POLICIES_TESTS = [
       "xpinstall.enabled": false,
     }
   },
+
+  // POLICY: SanitizeOnShutdown
+  {
+    policies: {
+      "SanitizeOnShutdown": true,
+    },
+    lockedPrefs: {
+      "privacy.sanitize.sanitizeOnShutdown": true,
+      "privacy.clearOnShutdown.cache": true,
+      "privacy.clearOnShutdown.cookies": true,
+      "privacy.clearOnShutdown.downloads": true,
+      "privacy.clearOnShutdown.formdata": true,
+      "privacy.clearOnShutdown.history": true,
+      "privacy.clearOnShutdown.sessions": true,
+      "privacy.clearOnShutdown.siteSettings": true,
+      "privacy.clearOnShutdown.offlineApps": true,
+    }
+  },
 ];
 
 add_task(async function test_policy_remember_passwords() {
