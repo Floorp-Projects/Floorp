@@ -61,12 +61,10 @@ tasks:
           - "notify.email.${ownerEmail}.on-failed"
           - "notify.email.${ownerEmail}.on-exception"
         else:
-          $if: 'tasks_for == "action"'
-          then:
-            - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.actions.${ownTaskId}"
-            - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
-          else:
-            - "index.gecko.v2.${repository.project}.latest.firefox.decision-${cron.job_name}"
+          - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
+          - $if: 'tasks_for == "action"'
+            then: "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.actions.${ownTaskId}"
+            else: "index.gecko.v2.${repository.project}.latest.firefox.decision-${cron.job_name}"
 
       scopes:
         $if: 'tasks_for == "hg-push"'
