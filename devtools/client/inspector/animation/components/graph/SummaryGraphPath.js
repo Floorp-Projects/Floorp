@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
@@ -18,7 +18,7 @@ const { DEFAULT_GRAPH_HEIGHT } = require("../../utils/graph-helper");
 // Minimum opacity for semitransparent fill color for keyframes's easing graph.
 const MIN_KEYFRAMES_EASING_OPACITY = 0.5;
 
-class SummaryGraphPath extends PureComponent {
+class SummaryGraphPath extends Component {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,
