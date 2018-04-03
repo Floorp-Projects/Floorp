@@ -11,7 +11,6 @@
 #include "mozilla/dom/FontFaceSetBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "gfxUserFontSet.h"
-#include "nsCSSFontFaceRule.h"
 #include "nsICSSLoaderObserver.h"
 
 struct gfxFontFaceSrc;
@@ -20,6 +19,7 @@ class gfxUserFontEntry;
 class nsFontFaceLoader;
 class nsIPrincipal;
 class nsPIDOMWindowInner;
+struct RawServoFontFaceRule;
 
 namespace mozilla {
 class PostTraversalTask;
@@ -129,7 +129,7 @@ public:
   nsPresContext* GetPresContext();
 
   // search for @font-face rule that matches a platform font entry
-  nsCSSFontFaceRule* FindRuleForEntry(gfxFontEntry* aFontEntry);
+  RawServoFontFaceRule* FindRuleForEntry(gfxFontEntry* aFontEntry);
 
   void IncrementGeneration(bool aIsRebuild = false);
 
@@ -271,7 +271,7 @@ private:
                                                    SheetType aSheetType);
 
   // search for @font-face rule that matches a userfont font entry
-  nsCSSFontFaceRule* FindRuleForUserFontEntry(gfxUserFontEntry* aUserFontEntry);
+  RawServoFontFaceRule* FindRuleForUserFontEntry(gfxUserFontEntry* aUserFontEntry);
 
   nsresult StartLoad(gfxUserFontEntry* aUserFontEntry,
                      const gfxFontFaceSrc* aFontFaceSrc);
