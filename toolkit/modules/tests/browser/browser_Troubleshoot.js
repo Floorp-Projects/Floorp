@@ -675,9 +675,6 @@ const SNAPSHOT_SCHEMA = {
         },
       },
     },
-    experiments: {
-      type: "array",
-    },
     sandbox: {
       required: false,
       type: "object",
