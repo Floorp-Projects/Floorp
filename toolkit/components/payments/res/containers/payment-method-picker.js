@@ -135,10 +135,13 @@ class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTMLElement) {
 
     switch (target) {
       case this.addLink: {
-        nextState.selectedPaymentCard = null;
+        nextState.page.guid = null;
         break;
       }
       case this.editLink: {
+        let state = this.requestStore.getState();
+        let selectedPaymentCardGUID = state[this.selectedStateKey];
+        nextState.page.guid = selectedPaymentCardGUID;
         break;
       }
       default: {
