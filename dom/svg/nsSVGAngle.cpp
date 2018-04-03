@@ -22,13 +22,13 @@ using namespace mozilla::dom;
 using namespace mozilla::dom::SVGAngle_Binding;
 using namespace mozilla::dom::SVGMarkerElement_Binding;
 
-static nsStaticAtom** const unitMap[] =
+static const nsStaticAtom* const unitMap[] =
 {
   nullptr, /* SVG_ANGLETYPE_UNKNOWN */
   nullptr, /* SVG_ANGLETYPE_UNSPECIFIED */
-  &nsGkAtoms::deg,
-  &nsGkAtoms::rad,
-  &nsGkAtoms::grad
+  nsGkAtoms::deg,
+  nsGkAtoms::rad,
+  nsGkAtoms::grad
 };
 
 static nsSVGAttrTearoffTable<nsSVGAngle, SVGAnimatedAngle>
@@ -55,7 +55,7 @@ GetUnitString(nsAString& unit, uint16_t unitType)
 {
   if (IsValidUnitType(unitType)) {
     if (unitMap[unitType]) {
-      (*unitMap[unitType])->ToString(unit);
+      unitMap[unitType]->ToString(unit);
     }
     return;
   }
@@ -73,7 +73,7 @@ GetUnitTypeForString(const nsAString& unitStr)
 
   if (unitAtom) {
     for (uint32_t i = 0 ; i < ArrayLength(unitMap) ; i++) {
-      if (unitMap[i] && *unitMap[i] == unitAtom) {
+      if (unitMap[i] == unitAtom) {
         return i;
       }
     }
