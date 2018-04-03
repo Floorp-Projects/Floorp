@@ -49,7 +49,7 @@ function assertTimelineTickItems(timeScale, listHeaderEl) {
   const animationTimelineTickListEl =
     listHeaderEl.querySelector(".animation-timeline-tick-list");
   ok(animationTimelineTickListEl,
-     "The animation timeline tick list element should be in header");
+    "The animation timeline tick list element should be in header");
 
   const width = animationTimelineTickListEl.offsetWidth;
   const animationDuration = timeScale.getDuration();
@@ -60,14 +60,14 @@ function assertTimelineTickItems(timeScale, listHeaderEl) {
   const timelineTickItemEls =
     listHeaderEl.querySelectorAll(".animation-timeline-tick-item");
   is(timelineTickItemEls.length, expectedTickItem,
-     "The expected number of timeline ticks were found");
+    "The expected number of timeline ticks were found");
 
   info("Make sure graduations are evenly distributed and show the right times");
   for (const [index, tickEl] of timelineTickItemEls.entries()) {
     const left = parseFloat(tickEl.style.left);
     const expectedPos = index * interval * 100 / animationDuration;
     is(Math.round(left), Math.round(expectedPos),
-       `Graduation ${ index } is positioned correctly`);
+      `Graduation ${ index } is positioned correctly`);
 
     // Note that the distancetoRelativeTime and formatTime functions are tested
     // separately in xpcshell test test_timeScale.js, so we assume that they
@@ -75,6 +75,6 @@ function assertTimelineTickItems(timeScale, listHeaderEl) {
     const formattedTime =
       timeScale.formatTime(timeScale.distanceToRelativeTime(expectedPos, width));
     is(tickEl.textContent, formattedTime,
-       `Graduation ${ index } has the right text content`);
+      `Graduation ${ index } has the right text content`);
   }
 }

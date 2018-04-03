@@ -9,16 +9,16 @@
 // * width
 // * additinal class
 
-const TEST_CASES = [
+const TEST_DATA = [
   {
-    targetClassName: "delay-positive",
+    targetClass: "delay-positive",
     expectedResult: {
       left: "25%",
       width: "25%",
     },
   },
   {
-    targetClassName: "delay-negative",
+    targetClass: "delay-negative",
     expectedResult: {
       additionalClass: "negative",
       left: "0%",
@@ -26,7 +26,7 @@ const TEST_CASES = [
     },
   },
   {
-    targetClassName: "fill-backwards-with-delay-iterationstart",
+    targetClass: "fill-backwards-with-delay-iterationstart",
     expectedResult: {
       additionalClass: "fill",
       left: "25%",
@@ -34,10 +34,10 @@ const TEST_CASES = [
     },
   },
   {
-    targetClassName: "fill-both",
+    targetClass: "fill-both",
   },
   {
-    targetClassName: "fill-both-width-delay-iterationstart",
+    targetClass: "fill-both-width-delay-iterationstart",
     expectedResult: {
       additionalClass: "fill",
       left: "25%",
@@ -45,7 +45,7 @@ const TEST_CASES = [
     },
   },
   {
-    targetClassName: "keyframes-easing-step",
+    targetClass: "keyframes-easing-step",
   },
 ];
 
@@ -54,29 +54,24 @@ add_task(async function() {
 
   const { panel } = await openAnimationInspector();
 
-  for (const testCase of TEST_CASES) {
-    const {
-      expectedResult,
-      targetClassName,
-    } = testCase;
-
+  for (const { targetClass, expectedResult } of TEST_DATA) {
     const animationItemEl =
-      findAnimationItemElementsByTargetClassName(panel, targetClassName);
+      findAnimationItemElementsByTargetClassName(panel, targetClass);
 
-    info(`Checking delay sign existance for ${ targetClassName }`);
+    info(`Checking delay sign existance for ${ targetClass }`);
     const delaySignEl = animationItemEl.querySelector(".animation-delay-sign");
 
     if (expectedResult) {
       ok(delaySignEl, "The delay sign element should be in animation item element");
 
       is(delaySignEl.style.left, expectedResult.left,
-         `Left position should be ${ expectedResult.left }`);
+        `Left position should be ${ expectedResult.left }`);
       is(delaySignEl.style.width, expectedResult.width,
-         `Width should be ${ expectedResult.width }`);
+        `Width should be ${ expectedResult.width }`);
 
       if (expectedResult.additionalClass) {
         ok(delaySignEl.classList.contains(expectedResult.additionalClass),
-           `delay sign element should have ${ expectedResult.additionalClass } class`);
+          `delay sign element should have ${ expectedResult.additionalClass } class`);
       } else {
         ok(!delaySignEl.classList.contains(expectedResult.additionalClass),
            "delay sign element should not have " +

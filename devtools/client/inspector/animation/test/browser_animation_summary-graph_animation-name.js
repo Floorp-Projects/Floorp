@@ -7,25 +7,25 @@
 // * element existance
 // * name text
 
-const TEST_CASES = [
+const TEST_DATA = [
   {
-    targetClassName: "cssanimation-normal",
+    targetClass: "cssanimation-normal",
     expectedLabel: "cssanimation",
   },
   {
-    targetClassName: "cssanimation-linear",
+    targetClass: "cssanimation-linear",
     expectedLabel: "cssanimation",
   },
   {
-    targetClassName: "delay-positive",
+    targetClass: "delay-positive",
     expectedLabel: "test-delay-animation",
   },
   {
-    targetClassName: "delay-negative",
+    targetClass: "delay-negative",
     expectedLabel: "test-negative-delay-animation",
   },
   {
-    targetClassName: "easing-step",
+    targetClass: "easing-step",
   },
 ];
 
@@ -34,26 +34,21 @@ add_task(async function() {
 
   const { panel } = await openAnimationInspector();
 
-  for (const testCase of TEST_CASES) {
-    const {
-      expectedLabel,
-      targetClassName,
-    } = testCase;
-
+  for (const { targetClass, expectedLabel } of TEST_DATA) {
     const animationItemEl =
-      findAnimationItemElementsByTargetClassName(panel, targetClassName);
+      findAnimationItemElementsByTargetClassName(panel, targetClass);
 
-    info(`Checking animation name element existance for ${ targetClassName }`);
+    info(`Checking animation name element existance for ${ targetClass }`);
     const animationNameEl = animationItemEl.querySelector(".animation-name");
 
     if (expectedLabel) {
       ok(animationNameEl,
-         "The animation name element should be in animation item element");
+        "The animation name element should be in animation item element");
       is(animationNameEl.textContent, expectedLabel,
-         `The animation name should be ${ expectedLabel }`);
+        `The animation name should be ${ expectedLabel }`);
     } else {
       ok(!animationNameEl,
-         "The animation name element should not be in animation item element");
+        "The animation name element should not be in animation item element");
     }
   }
 });
