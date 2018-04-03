@@ -368,13 +368,14 @@ def shell(value, mozillabuild):
 option(env='PYTHON3', nargs=1, help='Python 3 interpreter (3.5 or later)')
 
 
-@depends('PYTHON3')
+@depends('PYTHON3', 'MOZ_AUTOMATION')
 @checking('for Python 3',
           callback=lambda x: '%s (%s)' % (x.path, x.str_version) if x else 'no')
 @imports(_from='__builtin__', _import='Exception')
+@imports('platform')
 @imports(_from='mozbuild.pythonutil', _import='find_python3_executable')
 @imports(_from='mozbuild.pythonutil', _import='python_executable_version')
-def python3(env_python):
+def python3(env_python, automation):
     python = env_python[0] if env_python else None
 
     # If Python given by environment variable, it must work.
@@ -392,11 +393,22 @@ def python3(env_python):
         # Fall back to the search routine.
         python, version = find_python3_executable(min_version='3.5.0')
 
-        if not python:
+        # The API returns a bytes whereas everything in configure is unicode.
+        if python:
+            python = python.decode('utf-8')
+
+    # Outside of automation, require Python 3.5.
+    # In automation, only require where it is known to be installed.
+    require = not automation or platform.system() == 'Linux'
+
+    if not python:
+        if not require:
             return None
 
-        # The API returns a bytes whereas everything in configure is unicode.
-        python = python.decode('utf-8')
+        raise FatalCheckError('Python 3.5 or newer is required to build. '
+                              'Ensure a `python3.x` executable is in your '
+                              'PATH or define PYTHON3 to point to a Python '
+                              '3.5 executable.')
 
     return namespace(
         path=python,
