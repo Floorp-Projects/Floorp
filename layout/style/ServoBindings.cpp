@@ -14,7 +14,6 @@
 #include "nsAnimationManager.h"
 #include "nsAttrValueInlines.h"
 #include "nsCSSCounterStyleRule.h"
-#include "nsCSSFontFaceRule.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSProps.h"
 #include "nsCSSParser.h"
@@ -2578,33 +2577,6 @@ Gecko_CSSKeywordString(nsCSSKeyword aKeyword, uint32_t* aLength)
   return value.get();
 }
 
-nsCSSFontFaceRule*
-Gecko_CSSFontFaceRule_Create(uint32_t aLine, uint32_t aColumn)
-{
-  RefPtr<nsCSSFontFaceRule> rule = new nsCSSFontFaceRule(aLine, aColumn);
-  return rule.forget().take();
-}
-
-nsCSSFontFaceRule*
-Gecko_CSSFontFaceRule_Clone(const nsCSSFontFaceRule* aRule)
-{
-  RefPtr<css::Rule> rule = aRule->Clone();
-  return static_cast<nsCSSFontFaceRule*>(rule.forget().take());
-}
-
-void
-Gecko_CSSFontFaceRule_GetCssText(const nsCSSFontFaceRule* aRule,
-                                 nsAString* aResult)
-{
-  // GetCSSText serializes nsCSSValues, which have a heap write
-  // hazard when dealing with color values (nsCSSKeywords::AddRefTable)
-  // We only serialize on the main thread; assert to convince the analysis
-  // and prevent accidentally calling this elsewhere
-  MOZ_ASSERT(NS_IsMainThread());
-
-  aRule->GetCssText(*aResult);
-}
-
 void
 Gecko_AddPropertyToSet(nsCSSPropertyIDSetBorrowedMut aPropertySet,
                        nsCSSPropertyID aProperty)
@@ -2628,8 +2600,6 @@ Gecko_RegisterNamespace(nsAtom* aNamespace)
   }
   return id;
 }
-
-NS_IMPL_FFI_REFCOUNTING(nsCSSFontFaceRule, CSSFontFaceRule);
 
 nsCSSCounterStyleRule*
 Gecko_CSSCounterStyle_Create(nsAtom* aName)
