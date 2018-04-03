@@ -25,7 +25,7 @@
             data-l10n-id="home-restore-defaults"
             preference="pref.browser.homepage.disable_button.restore_default"/>
   </hbox>
-  <description data-l10n-id="home-new-windows-tabs-description" />
+  <description data-l10n-id="home-new-windows-tabs-description2" />
 
   <groupbox>
     <hbox id="homepageAndNewWindowsOption">
