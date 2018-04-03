@@ -6,6 +6,7 @@
 #include "Image.h"
 #include "Layers.h"               // for LayerManager
 #include "nsRefreshDriver.h"
+#include "nsContentUtils.h"
 #include "mozilla/SizeOfState.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tuple.h"        // for Tie
@@ -403,14 +404,17 @@ ImageResource::NotifyDrawingObservers()
   }
 
   // Record the image drawing for startup performance testing.
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  NS_WARNING_ASSERTION(obs, "Can't get an observer service handle");
-  if (obs) {
-    nsCOMPtr<nsIURI> imageURI = mURI->ToIURI();
-    nsAutoCString spec;
-    imageURI->GetSpec(spec);
-    obs->NotifyObservers(nullptr, "image-drawing", NS_ConvertUTF8toUTF16(spec).get());
-  }
+  nsCOMPtr<nsIURI> uri = mURI->ToIURI();
+  nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+    "image::ImageResource::NotifyDrawingObservers", [uri]() {
+      nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+      NS_WARNING_ASSERTION(obs, "Can't get an observer service handle");
+      if (obs) {
+        nsAutoCString spec;
+        uri->GetSpec(spec);
+        obs->NotifyObservers(nullptr, "image-drawing", NS_ConvertUTF8toUTF16(spec).get());
+      }
+    }));
 }
 #endif
 
