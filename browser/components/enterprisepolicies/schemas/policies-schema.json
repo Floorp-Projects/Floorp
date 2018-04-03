@@ -234,6 +234,18 @@
       "type": "boolean"
     },
 
+    "DisableSecurityBypass": {
+      "description": "Prevents the user from bypassing certain security warnings.",
+      "first_available": "60.0",
+
+      "type": "object",
+      "properties": {
+        "SafeBrowsing": {
+          "type": "boolean"
+        }
+      }
+    },
+
     "DisableSysAddonUpdate": {
       "description": "Prevent the browser from installing and updating system addons.",
       "first_available": "60.0",
