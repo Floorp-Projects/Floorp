@@ -197,28 +197,11 @@ a {
   overflow: hidden;
 }
 
-/* WebConsole colored drops */
-
 .webconsole-filter-button {
   -moz-user-focus: normal;
 }
 
-.webconsole-filter-button > .toolbarbutton-menubutton-button:before {
-  content: "";
-  display: inline-block;
-  height: 8px;
-  width: 8px;
-  border-radius: 50%;
-  margin-inline-start: 5px;
-  border-width: 1px;
-  border-style: solid;
-}
-
 /* Network styles */
-.webconsole-filter-button[category="net"] > .toolbarbutton-menubutton-button:before {
-  background-image: linear-gradient(#444444, #000000);
-  border-color: #777;
-}
 
 .theme-dark .message[severity=error],
 .theme-dark .message.error {
@@ -297,10 +280,6 @@ a {
 }
 
 /* CSS styles */
-.webconsole-filter-button[category="css"] > .toolbarbutton-menubutton-button:before {
-  background-image: linear-gradient(#2DC3F3, #00B6F0);
-  border-color: #1BA2CC;
-}
 
 .message[category=cssparser] > .indent,
 .message.cssparser > .indent  {
@@ -318,10 +297,6 @@ a {
 }
 
 /* JS styles */
-.webconsole-filter-button[category="js"] > .toolbarbutton-menubutton-button:before {
-  background-image: linear-gradient(#FCB142, #FB9500);
-  border-color: #E98A00;
-}
 
 .message[category=exception] > .indent,
 .message.exception > .indent {
@@ -339,10 +314,6 @@ a {
 }
 
 /* Web Developer styles */
-.webconsole-filter-button[category="logging"] > .toolbarbutton-menubutton-button:before {
-  background-image: linear-gradient(#B9B9B9, #AAAAAA);
-  border-color: #929292;
-}
 
 .message[category=console] > .indent,
 .message.console-api > .indent {
@@ -366,11 +337,6 @@ a {
 }
 
 /* Server Logging Styles */
-
-.webconsole-filter-button[category="server"] > .toolbarbutton-menubutton-button:before {
-  background-image: linear-gradient(rgb(144, 176, 144), rgb(99, 151, 99));
-  border-color: rgb(76, 143, 76);
-}
 
 .message[category=server] > .indent,
 .message.server > .indent {
@@ -537,11 +503,6 @@ textbox.jsterm-input-node[focused="true"] {
   border-inline-end: solid red 6px;
 }
 
-.webconsole-filter-button[category="security"] > .toolbarbutton-menubutton-button:before {
-  background-image: linear-gradient(#FF3030, #FF7D7D);
-  border-color: #D12C2C;
-}
-
 .message[category=security][severity=error] > .icon::before,
 .message.security.error > .icon::before {
   background-position: -12px -48px;
@@ -654,24 +615,6 @@ a.learn-more-link.webconsole-learn-more-link {
 
 
 /* Old console frontend filters */
-.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
-  -moz-appearance: none;
-  color: inherit;
-  border-width: 0;
-  -moz-box-orient: horizontal;
-  padding: 0;
-}
-
-.devtools-toolbarbutton[type=menu-button] {
-  padding: 0 1px;
-  -moz-box-align: stretch;
-  --toolbarbutton-checked-color: var(--theme-body-color);
-  --toolbarbutton-checked-background: var(--theme-selection-background-hover);
-}
-
-.devtools-toolbarbutton > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-  margin-inline-end: 4px;
-}
 
 .devtools-menulist > .menulist-dropmarker {
   -moz-appearance: none;
@@ -681,8 +624,7 @@ a.learn-more-link.webconsole-learn-more-link {
   min-width: 16px;
 }
 
-.devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker,
-.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-dropmarker {
+.devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker {
   -moz-appearance: none !important;
   list-style-image: url("chrome://devtools/skin/images/dropmarker.svg");
   -moz-box-align: center;
@@ -693,22 +635,8 @@ a.learn-more-link.webconsole-learn-more-link {
   .message > .timestamp {
     display: none;
   }
-  .hud-console-filter-toolbar .webconsole-filter-button .toolbarbutton-text {
-    display: none;
-  }
-  .hud-console-filter-toolbar .webconsole-filter-button {
-    min-width: 40px;
-  }
   .hud-console-filter-toolbar .webconsole-clear-console-button {
     min-width: 25px;
-  }
-  .webconsole-filter-button > .toolbarbutton-menubutton-button:before {
-    width: 12px;
-    height: 12px;
-    margin-inline-start: 1px;
-  }
-  .toolbarbutton-menubutton-dropmarker {
-    margin: 0px;
   }
 }
 

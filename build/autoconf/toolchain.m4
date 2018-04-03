@@ -97,11 +97,8 @@ if test "$GNU_CXX"; then
         ac_cv_needs_atomic,
         dnl x86 with clang is a little peculiar.  std::atomic does not require
         dnl linking with libatomic, but using atomic intrinsics does, so we
-        dnl force the setting on for such systems.  (This setting is probably
-        dnl applicable to all x86 systems using clang, but Android is currently
-        dnl the one we care most about, and nobody has reported problems on
-        dnl other platforms before this point.)
-        if test "$CC_TYPE" = "clang" -a "$CPU_ARCH" = "x86" -a "$OS_TARGET" = "Android"; then
+        dnl force the setting on for such systems.
+        if test "$CC_TYPE" = "clang" -a "$CPU_ARCH" = "x86"; then
             ac_cv_needs_atomic=yes
         else
             AC_TRY_LINK(

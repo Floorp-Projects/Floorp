@@ -62,6 +62,9 @@ if CONFIG['OS_ARCH'] == 'SunOS':
         'socket',
     ]
 
+if CONFIG['MOZ_NEEDS_LIBATOMIC']:
+    OS_LIBS += ['atomic']
+
 OS_LIBS += CONFIG['REALTIME_LIBS']
 
 NO_EXPAND_LIBS = True

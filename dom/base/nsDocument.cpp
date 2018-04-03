@@ -1429,7 +1429,6 @@ nsIDocument::nsIDocument()
     mIsTopLevelContentDocument(false),
     mIsContentDocument(false),
     mDidCallBeginLoad(false),
-    mBufferingCSPViolations(false),
     mAllowPaymentRequest(false),
     mEncodingMenuDisabled(false),
     mIsShadowDOMEnabled(false),
@@ -2367,6 +2366,10 @@ nsIDocument::ResetToURI(nsIURI* aURI,
         SetPrincipal(principal);
       }
     }
+  }
+
+  if (mFontFaceSet) {
+    mFontFaceSet->RefreshStandardFontLoadPrincipal();
   }
 
   // Refresh the principal on the compartment.

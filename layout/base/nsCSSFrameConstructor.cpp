@@ -7122,20 +7122,6 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
   }
 #endif
 
-#ifdef MOZ_XUL
-  if (aContainer) {
-    int32_t namespaceID;
-    nsAtom* tag =
-      mDocument->BindingManager()->ResolveTag(aContainer, &namespaceID);
-
-    // Just ignore tree tags, anyway we don't create any frames for them.
-    if (tag == nsGkAtoms::treechildren ||
-        tag == nsGkAtoms::treeitem ||
-        tag == nsGkAtoms::treerow)
-      return;
-  }
-#endif // MOZ_XUL
-
   // See comment in ContentRangeInserted for why this is necessary.
   if (!GetContentInsertionFrameFor(aContainer) &&
       !aContainer->IsActiveChildrenElement()) {

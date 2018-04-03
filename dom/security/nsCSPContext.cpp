@@ -1384,14 +1384,6 @@ nsCSPContext::AsyncReportViolation(nsISupports* aBlockedContentSource,
                                 aLineNum,
                                 this);
 
-  // If the document is currently buffering up CSP violation reports, send the
-  // runnable to it instead of dispatching it immediately.
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mLoadingContext);
-  if (doc && doc->ShouldBufferCSPViolations()) {
-    doc->BufferCSPViolation(task);
-    return NS_OK;
-  }
-
   if (XRE_IsContentProcess()) {
     if (mEventTarget) {
       mEventTarget->Dispatch(task.forget(), NS_DISPATCH_NORMAL);

@@ -51,6 +51,9 @@ define(function(require, exports, module) {
         showAllTabsMenu: PropTypes.bool,
         onAllTabsMenuClick: PropTypes.func,
 
+        // To render a sidebar toggle button before the tab menu provide a function that
+        // returns a React component for the button.
+        renderSidebarToggle: PropTypes.func,
         // Set true will only render selected panel on DOM. It's complete
         // opposite of the created array, and it's useful if panels content
         // is unpredictable and update frequently.
@@ -328,8 +331,13 @@ define(function(require, exports, module) {
         })
       ) : null;
 
+      // Get the sidebar toggle button if a renderSidebarToggle function is provided.
+      let sidebarToggle =  this.props.renderSidebarToggle ?
+        this.props.renderSidebarToggle() : null;
+
       return (
         dom.nav({className: "tabs-navigation"},
+          sidebarToggle,
           dom.ul({className: "tabs-menu", role: "tablist"},
             tabs
           ),
