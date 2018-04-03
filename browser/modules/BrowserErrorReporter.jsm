@@ -241,7 +241,6 @@ class BrowserErrorReporter {
       exception: {
         values: [exceptionValue],
       },
-      tags: {},
     };
 
     const transforms = [

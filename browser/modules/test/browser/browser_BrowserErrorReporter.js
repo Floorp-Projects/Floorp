@@ -4,6 +4,7 @@
 
 ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm", this);
 ChromeUtils.import("resource:///modules/BrowserErrorReporter.jsm", this);
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);
 
 /* global sinon */
 Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
@@ -341,6 +342,11 @@ add_task(async function testFetchArguments() {
     is(url.searchParams.get("sentry_version"), "7", "Reporter is compatible with Sentry 7.");
     is(url.searchParams.get("sentry_key"), "foobar", "Reporter pulls API key from DSN pref.");
     is(body.project, "123", "Reporter pulls project ID from DSN pref.");
+    is(
+      body.tags.changeset,
+      AppConstants.SOURCE_REVISION_URL,
+      "Reporter pulls changeset tag from AppConstants",
+    );
     is(call.args[1].referrer, "https://fake.mozilla.org", "Reporter uses a fake referer.");
 
     const response = await fetch(testPageUrl);
