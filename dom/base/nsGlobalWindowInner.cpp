@@ -2332,15 +2332,6 @@ nsGlobalWindowInner::GetScreen(ErrorResult& aError)
   return mScreen;
 }
 
-nsIDOMScreen*
-nsGlobalWindowInner::GetScreen()
-{
-  ErrorResult dummy;
-  nsIDOMScreen* screen = GetScreen(dummy);
-  dummy.SuppressException();
-  return screen;
-}
-
 nsHistory*
 nsGlobalWindowInner::GetHistory(ErrorResult& aError)
 {

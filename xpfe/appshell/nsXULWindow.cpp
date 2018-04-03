@@ -20,6 +20,7 @@
 #include "mozilla/Sprintf.h"
 
 //Interfaces needed to be included
+#include "nsGlobalWindowOuter.h"
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
 #include "nsIServiceManager.h"
@@ -29,7 +30,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMScreen.h"
+#include "nsScreen.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -1028,23 +1029,25 @@ NS_IMETHODIMP nsXULWindow::EnsureAuthPrompter()
 
 NS_IMETHODIMP nsXULWindow::GetAvailScreenSize(int32_t* aAvailWidth, int32_t* aAvailHeight)
 {
-  nsresult rv;
-
   nsCOMPtr<mozIDOMWindowProxy> domWindow;
   GetWindowDOMWindow(getter_AddRefs(domWindow));
   NS_ENSURE_STATE(domWindow);
 
-  auto* window = nsPIDOMWindowOuter::From(domWindow);
-  NS_ENSURE_STATE(window);
+  auto* window = nsGlobalWindowOuter::Cast(domWindow);
 
-  nsCOMPtr<nsIDOMScreen> screen = window->GetScreen();
+  RefPtr<nsScreen> screen = window->GetScreen();
   NS_ENSURE_STATE(screen);
 
-  rv = screen->GetAvailWidth(aAvailWidth);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ErrorResult rv;
+  *aAvailWidth = screen->GetAvailWidth(rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
 
-  rv = screen->GetAvailHeight(aAvailHeight);
-  NS_ENSURE_SUCCESS(rv, rv);
+  *aAvailHeight = screen->GetAvailHeight(rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
 
   return NS_OK;
 }
