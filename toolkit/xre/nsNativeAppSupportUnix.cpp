@@ -568,7 +568,7 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
     return NS_OK;
   }
 
-  LogModule::Init();  // need to make sure initialized before SetClientState
+  LogModule::Init(gArgc, gArgv);  // need to make sure initialized before SetClientState
   if (prev_client_id.IsEmpty() ||
       (client_id && !prev_client_id.Equals(client_id))) {
     SetClientState(STATE_REGISTERING);

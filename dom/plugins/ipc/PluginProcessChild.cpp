@@ -126,7 +126,7 @@ PluginProcessChild::Init(int aArgc, char* aArgv[])
     NS_SetMainThread();
     mozilla::TimeStamp::Startup();
     NS_LogInit();
-    mozilla::LogModule::Init();
+    mozilla::LogModule::Init(aArgc, aArgv);
     nsThreadManager::get().Init();
 
 #if defined(MOZ_SANDBOX)
