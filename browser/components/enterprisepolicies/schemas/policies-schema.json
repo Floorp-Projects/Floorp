@@ -401,6 +401,14 @@
       "type": "URLorEmpty"
     },
 
+    "OverridePostUpdatePage": {
+      "description": "Override the post-update \"What's New\" page. Set this policy to blank if you want to disable the post-update page.",
+      "first_available": "60.0",
+      "enterprise_only": true,
+
+      "type": "URLorEmpty"
+    },
+
     "PopupBlocking": {
       "description": "Allow or deny popup usage.",
       "first_available": "60.0",
