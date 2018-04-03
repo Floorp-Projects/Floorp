@@ -590,7 +590,6 @@ public:
     return mMarkedCCGeneration;
   }
 
-  virtual nsIDOMScreen* GetScreen() = 0;
   mozilla::dom::Navigator* Navigator();
   virtual mozilla::dom::Location* GetLocation() = 0;
 
@@ -1094,7 +1093,6 @@ public:
 
   // XXX(nika): These feel like they should be inner window only, but they're
   // called on the outer window.
-  virtual nsIDOMScreen* GetScreen() = 0;
   virtual mozilla::dom::Navigator* GetNavigator() = 0;
   virtual mozilla::dom::Location* GetLocation() = 0;
 
