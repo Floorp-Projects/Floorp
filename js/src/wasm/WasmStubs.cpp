@@ -471,9 +471,8 @@ static const Register ScratchIonEntry = ABINonArgReg2;
 static void
 CallSymbolicAddress(MacroAssembler& masm, bool isAbsolute, SymbolicAddress sym)
 {
-    ABIFunctionType _;
     if (isAbsolute)
-        masm.call(ImmPtr(AddressOf(sym, &_), ImmPtr::NoCheckToken()));
+        masm.call(ImmPtr(SymbolicAddressTarget(sym), ImmPtr::NoCheckToken()));
     else
         masm.call(sym);
 }
