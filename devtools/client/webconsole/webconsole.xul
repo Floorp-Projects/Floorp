@@ -80,7 +80,7 @@ function goUpdateConsoleCommands() {
                        accesskey="&btnClear.accesskey;"
                        tabindex="3"/>
         <hbox class="devtools-toolbarbutton-group">
-          <toolbarbutton label="&btnPageNet.label;" type="menu-button"
+          <toolbarbutton label="&btnPageNet.label;" type="menu"
                          category="net" class="devtools-toolbarbutton webconsole-filter-button"
                          tooltiptext="&btnPageNet.tooltip;"
                          accesskeyMacOSX="&btnPageNet.accesskeyMacOSX;"
@@ -97,7 +97,7 @@ function goUpdateConsoleCommands() {
                         prefKey="networkinfo"/>
             </menupopup>
           </toolbarbutton>
-          <toolbarbutton label="&btnPageCSS.label;" type="menu-button"
+          <toolbarbutton label="&btnPageCSS.label;" type="menu"
                          category="css" class="devtools-toolbarbutton webconsole-filter-button"
                          tooltiptext="&btnPageCSS.tooltip2;"
                          accesskey="&btnPageCSS.accesskey;"
@@ -111,7 +111,7 @@ function goUpdateConsoleCommands() {
                         autocheck="false" prefKey="csslog"/>
             </menupopup>
           </toolbarbutton>
-          <toolbarbutton label="&btnPageJS.label;" type="menu-button"
+          <toolbarbutton label="&btnPageJS.label;" type="menu"
                          category="js" class="devtools-toolbarbutton webconsole-filter-button"
                          tooltiptext="&btnPageJS.tooltip;"
                          accesskey="&btnPageJS.accesskey;"
@@ -125,7 +125,7 @@ function goUpdateConsoleCommands() {
                         autocheck="false" prefKey="jslog"/>
             </menupopup>
           </toolbarbutton>
-          <toolbarbutton label="&btnPageSecurity.label;" type="menu-button"
+          <toolbarbutton label="&btnPageSecurity.label;" type="menu"
                          category="security" class="devtools-toolbarbutton webconsole-filter-button"
                          tooltiptext="&btnPageSecurity.tooltip;"
                          accesskey="&btnPageSecurity.accesskey;"
@@ -137,7 +137,7 @@ function goUpdateConsoleCommands() {
                         autocheck="false" prefKey="secwarn"/>
             </menupopup>
           </toolbarbutton>
-          <toolbarbutton label="&btnPageLogging.label;" type="menu-button"
+          <toolbarbutton label="&btnPageLogging.label;" type="menu"
                          category="logging" class="devtools-toolbarbutton webconsole-filter-button"
                          tooltiptext="&btnPageLogging.tooltip;"
                          accesskey="&btnPageLogging.accesskey3;"
@@ -160,7 +160,7 @@ function goUpdateConsoleCommands() {
                         autocheck="false" prefKey="windowlessworkers"/>
             </menupopup>
           </toolbarbutton>
-          <toolbarbutton label="&btnServerLogging.label;" type="menu-button"
+          <toolbarbutton label="&btnServerLogging.label;" type="menu"
                          category="server" class="devtools-toolbarbutton webconsole-filter-button"
                          tooltiptext="&btnServerLogging.tooltip;"
                          accesskey="&btnServerLogging.accesskey;"
