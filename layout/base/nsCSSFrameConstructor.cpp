@@ -1906,8 +1906,7 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
     }
   }
 
-  AddFrameConstructionItemsInternal(aState, container, aParentFrame, elemName,
-                                    kNameSpaceID_None, true,
+  AddFrameConstructionItemsInternal(aState, container, aParentFrame, true,
                                     pseudoComputedStyle,
                                     ITEM_IS_GENERATED_CONTENT, nullptr,
                                     aItems);
@@ -5590,8 +5589,6 @@ nsCSSFrameConstructor::DoAddFrameConstructionItems(nsFrameConstructorState& aSta
     }
   }
   AddFrameConstructionItemsInternal(aState, aContent, aParentFrame,
-                                    aContent->NodeInfo()->NameAtom(),
-                                    aContent->GetNameSpaceID(),
                                     aSuppressWhiteSpaceOptimizations,
                                     aComputedStyle,
                                     flags, aAnonChildren,
@@ -5642,8 +5639,6 @@ void
 nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState& aState,
                                                          nsIContent* aContent,
                                                          nsContainerFrame* aParentFrame,
-                                                         nsAtom* aTag,
-                                                         int32_t aNameSpaceID,
                                                          bool aSuppressWhiteSpaceOptimizations,
                                                          ComputedStyle* aComputedStyle,
                                                          uint32_t aFlags,
@@ -5663,6 +5658,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
   const nsStyleDisplay* display = aComputedStyle->StyleDisplay();
   RefPtr<ComputedStyle> computedStyle(aComputedStyle);
   PendingBinding* pendingBinding = nullptr;
+  nsAtom* tag = aContent->NodeInfo()->NameAtom();
+  int32_t namespaceId = aContent->GetNameSpaceID();
   if (aFlags & ITEM_ALLOW_XBL_BASE) {
     if (display->mBinding) {
       // Ensure that our XBL bindings are installed.
@@ -5695,7 +5692,15 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 
       display = computedStyle->StyleDisplay();
       aComputedStyle = computedStyle;
-      aTag = mDocument->BindingManager()->ResolveTag(aContent, &aNameSpaceID);
+      if (namespaceId == kNameSpaceID_XUL) {
+        // Only allow overriding from & to XUL.
+        int32_t overridenNamespace;
+        nsAtom* overridenTag =
+          mDocument->BindingManager()->ResolveTag(aContent, &overridenNamespace);
+        if (overridenNamespace == kNameSpaceID_XUL) {
+          tag = overridenTag;
+        }
+      }
     }
   }
 
@@ -5766,7 +5771,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     Element* element = aContent->AsElement();
 
     // Don't create frames for non-SVG element children of SVG elements.
-    if (aNameSpaceID != kNameSpaceID_SVG &&
+    if (namespaceId != kNameSpaceID_SVG &&
         ((aParentFrame &&
           IsFrameForSVG(aParentFrame) &&
           !aParentFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)) ||
@@ -5776,17 +5781,17 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       return;
     }
 
-    data = FindHTMLData(element, aTag, aNameSpaceID, aParentFrame,
+    data = FindHTMLData(element, tag, namespaceId, aParentFrame,
                         computedStyle);
     if (!data) {
-      data = FindXULTagData(element, aTag, aNameSpaceID, computedStyle);
+      data = FindXULTagData(element, tag, namespaceId, computedStyle);
     }
     if (!data) {
-      data = FindMathMLData(element, aTag, aNameSpaceID, computedStyle);
+      data = FindMathMLData(element, tag, namespaceId, computedStyle);
       foundMathMLData = !!data;
     }
     if (!data) {
-      data = FindSVGData(element, aTag, aNameSpaceID, aParentFrame,
+      data = FindSVGData(element, tag, namespaceId, aParentFrame,
                          aFlags & ITEM_IS_WITHIN_SVG_TEXT,
                          aFlags & ITEM_ALLOWS_TEXT_PATH_CHILD,
                          computedStyle);
@@ -5895,14 +5900,14 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     if (summary && summary->IsMainSummary()) {
       // If details is open, the main summary needs to be rendered as if it is
       // the first child, so add the item to the front of the item list.
-      item = aItems.PrependItem(this, data, aContent, aTag, aNameSpaceID,
+      item = aItems.PrependItem(this, data, aContent, tag, namespaceId,
                                 pendingBinding, computedStyle.forget(),
                                 aSuppressWhiteSpaceOptimizations, aAnonChildren);
     }
   }
 
   if (!item) {
-    item = aItems.AppendItem(this, data, aContent, aTag, aNameSpaceID,
+    item = aItems.AppendItem(this, data, aContent, tag, namespaceId,
                              pendingBinding, computedStyle.forget(),
                              aSuppressWhiteSpaceOptimizations, aAnonChildren);
   }
@@ -5916,14 +5921,14 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     item->mContent->AddRef();
   }
   item->mIsRootPopupgroup =
-    aNameSpaceID == kNameSpaceID_XUL && aTag == nsGkAtoms::popupgroup &&
+    namespaceId == kNameSpaceID_XUL && tag == nsGkAtoms::popupgroup &&
     aContent->IsRootOfNativeAnonymousSubtree();
   if (item->mIsRootPopupgroup) {
     aState.mHavePendingPopupgroup = true;
   }
   item->mIsPopup = isPopup;
-  item->mIsForSVGAElement = aNameSpaceID == kNameSpaceID_SVG &&
-                            aTag == nsGkAtoms::a;
+  item->mIsForSVGAElement = namespaceId == kNameSpaceID_SVG &&
+                            tag == nsGkAtoms::a;
 
   if (canHavePageBreak && display->mBreakAfter) {
     AddPageBreakItem(aContent, aItems);
@@ -8822,8 +8827,6 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
         nsLayoutUtils::GetStyleFrame(content)->Style();
       AutoFrameConstructionItemList items(this);
       AddFrameConstructionItemsInternal(state, content, canvasFrame,
-                                        content->NodeInfo()->NameAtom(),
-                                        content->GetNameSpaceID(),
                                         true,
                                         computedStyle,
                                         ITEM_ALLOW_XBL_BASE |
@@ -10271,8 +10274,6 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
                      ITEM_IS_ANONYMOUSCONTENTCREATOR_CONTENT | aExtraFlags;
 
     AddFrameConstructionItemsInternal(aState, content, aFrame,
-                                      content->NodeInfo()->NameAtom(),
-                                      content->GetNameSpaceID(),
                                       true, computedStyle, flags,
                                       anonChildren, aItemsToConstruct);
   }
@@ -11243,8 +11244,6 @@ nsCSSFrameConstructor::CreateListBoxContent(nsContainerFrame*      aParentFrame,
 
     AutoFrameConstructionItemList items(this);
     AddFrameConstructionItemsInternal(state, aChild, aParentFrame,
-                                      aChild->NodeInfo()->NameAtom(),
-                                      aChild->GetNameSpaceID(),
                                       true, computedStyle,
                                       ITEM_ALLOW_XBL_BASE, nullptr, items);
     ConstructFramesFromItemList(state, items, aParentFrame,
@@ -11606,8 +11605,6 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
 
       RefPtr<ComputedStyle> childContext = ResolveComputedStyle(content);
       AddFrameConstructionItemsInternal(aState, content, nullptr,
-                                        content->NodeInfo()->NameAtom(),
-                                        content->GetNameSpaceID(),
                                         iter.XBLInvolved(), childContext,
                                         flags, nullptr,
                                         aParentItem.mChildItems);
