@@ -85,7 +85,7 @@ add_task(async function test_update() {
       "48bnds6854t": {
         // Same GUID, different values to trigger an update
         "address-level1": "MI-edit",
-        "address-level2": "Some City-edit",
+        // address-level2 was cleared which means it's not returned
         "country": "CA",
         "guid": "48bnds6854t",
         "name": "Mr. Foo-edit",
@@ -109,7 +109,7 @@ add_task(async function test_update() {
   let options = picker1.dropdown.popupBox.children;
   is(options.length, 2, "Check dropdown still has both addresses");
   ok(options[0].textContent.includes("MI-edit"), "Check updated first address-level1");
-  ok(options[0].textContent.includes("Some City-edit"), "Check updated first address-level2");
+  ok(!options[0].textContent.includes("Some City"), "Check removed first address-level2");
   ok(options[0].textContent.includes("new-edit"), "Check updated first address");
 
   ok(options[1].textContent.includes("P.O. Box 123"), "Check second address is the same");

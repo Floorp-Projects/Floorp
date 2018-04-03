@@ -87,6 +87,7 @@ add_task(async function test_initialState() {
 
   is(initialState.orderDetailsShowing, false, "orderDetailsShowing is initially false");
   ok(elDetails.hasAttribute("hidden"), "Check details are hidden");
+  is(initialState.page.id, "payment-summary", "Check initial page");
 });
 
 add_task(async function test_viewAllButton() {

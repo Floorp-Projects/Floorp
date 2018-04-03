@@ -37,11 +37,11 @@ add_task(async function() {
     "Should not update after selecting another tool");
   await selectAnimationInspector(inspector);
   is(animationInspector.state.animations.length, 1,
-     "Should update after selecting animation inspector");
+    "Should update after selecting animation inspector");
   await assertCurrentTimeUpdated(animationInspector, panel, true);
   await inspector.toolbox.selectTool("webconsole");
   is(animationInspector.state.animations.length, 1,
-     "Should not update after selecting another tool again");
+    "Should not update after selecting another tool again");
   await assertCurrentTimeUpdated(animationInspector, panel, false);
 });
 

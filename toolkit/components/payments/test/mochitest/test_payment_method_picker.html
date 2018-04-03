@@ -83,7 +83,7 @@ add_task(async function test_update() {
         "cc-exp": "2017-09",
         "cc-exp-month": 9,
         "cc-exp-year": 2017,
-        "cc-name": "John Edit Doe",
+        // cc-name was cleared which means it's not returned
         "cc-number": "************9876",
         "guid": "48bnds6854t",
       },
@@ -100,7 +100,7 @@ add_task(async function test_update() {
   await asyncElementRendered();
   let options = picker1.dropdown.popupBox.children;
   is(options.length, 2, "Check dropdown still has both cards");
-  ok(options[0].textContent.includes("John Edit Doe"), "Check updated first cc-name");
+  ok(!options[0].textContent.includes("John Doe"), "Check cleared first cc-name");
   ok(options[0].textContent.includes("9876"), "Check updated first cc-number");
   ok(options[0].textContent.includes("09"), "Check updated first exp-month");
 

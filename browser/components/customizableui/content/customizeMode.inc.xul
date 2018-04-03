@@ -28,7 +28,6 @@
     </vbox>
   </box>
   <hbox id="customization-footer">
-#ifdef CAN_DRAW_IN_TITLEBAR
     <checkbox id="customization-titlebar-visibility-checkbox" class="customizationmode-checkbox"
               label="&customizeMode.titlebar;"
 #NB: because oncommand fires after click, by the time we've fired, the checkbox binding
@@ -37,7 +36,6 @@
     <checkbox id="customization-extra-drag-space-checkbox" class="customizationmode-checkbox"
               label="&customizeMode.extraDragSpace;"
               oncommand="gCustomizeMode.toggleDragSpace(this.checked)"/>
-#endif
     <button id="customization-toolbar-visibility-button" label="&customizeMode.toolbars2;" class="customizationmode-button" type="menu">
       <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
     </button>

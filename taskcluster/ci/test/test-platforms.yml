@@ -199,6 +199,7 @@ windows10-64-nightly/opt:
         - desktop-screenshot-capture
         - desktop-instrumentation
         - windows-tests
+        - windows-talos-profiling
 
 windows10-64-devedition/opt:
     build-platform: win64-devedition-nightly/opt

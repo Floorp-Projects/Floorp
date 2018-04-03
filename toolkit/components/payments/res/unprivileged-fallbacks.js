@@ -3,13 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * This file defines a fallback log object to be used during development outside
+ * This file defines fallback objects to be used during development outside
  * of the paymentDialogWrapper. When loaded in the wrapper, a frame script
- * providing pref-controlled logging overwrites these methods.
+ * overwrites these methods.
  */
 
 /* eslint-disable no-console */
-/* exported log */
+/* exported log, PaymentDialogUtils */
 
 "use strict";
 
@@ -25,5 +25,11 @@ var log = {
   },
   debug(...args) {
     console.debug("log.js", ...args);
+  },
+};
+
+var PaymentDialogUtils = {
+  isCCNumber(str) {
+    return str.length > 0;
   },
 };
