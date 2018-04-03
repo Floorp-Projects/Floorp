@@ -1071,7 +1071,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
 
     NS_LogInit();
 
-    mozilla::LogModule::Init();
+    mozilla::LogModule::Init(argc, argv);
 
 #ifdef MOZ_GECKO_PROFILER
     char aLocal;
