@@ -56,7 +56,45 @@ function checkEventSummary(summaries, clearScalars) {
   }
 }
 
+add_task(async function test_event_summary_limit() {
+  if (AppConstants.DEBUG) {
+    // This test will intentionally assert in DEBUG builds
+    return;
+  }
+  Telemetry.clearEvents();
+  Telemetry.clearScalars();
+
+  const limit = 50;
+  Services.prefs.setIntPref("toolkit.telemetry.maxEventSummaryKeys", limit);
+  let objects = [];
+  for (let i = 0; i < limit + 1; i++) {
+    objects.push("object" + i);
+  }
+  // Using "telemetry.test.dynamic" as using "telemetry.test" will enable
+  // the "telemetry.test" category.
+  Telemetry.registerEvents("telemetry.test.dynamic", {
+    test_method: {
+      methods: ["testMethod"],
+      objects,
+      record_on_release: true,
+    }
+  });
+  for (let object of objects) {
+    Telemetry.recordEvent("telemetry.test.dynamic", "testMethod", object);
+  }
+
+  let snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  Assert.equal(snapshot.dynamic.length, limit + 1, "Should have recorded all events");
+  let scalarSnapshot = Telemetry.snapshotKeyedScalars(OPTOUT, true);
+  Assert.equal(Object.keys(scalarSnapshot.dynamic["telemetry.dynamic_event_counts"]).length,
+               limit, "Should not have recorded more than `limit` events");
+
+});
+
 add_task(async function test_recording_state() {
+  Telemetry.clearEvents();
+  Telemetry.clearScalars();
+
   const events = [
     ["telemetry.test", "test1", "object1"],
     ["telemetry.test.second", "test", "object1"],
