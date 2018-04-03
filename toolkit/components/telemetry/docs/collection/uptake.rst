@@ -24,7 +24,7 @@ Usage
 
 .. code-block:: js
 
-   const { UptakeTelemetry } = Cu.import("resource://services-common/uptake-telemetry.js", {});
+   const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js", {});
 
    UptakeTelemetry.report(source, status);
 
@@ -87,9 +87,9 @@ The following remote data sources are already using this unified histogram.
 * plugins blocklist
 * certificate revocation
 * certificate pinning
+* :ref:`Shield Recipe client <components/normandy>`
 
 Obviously, the goal is to eventually converge and avoid ad-hoc Telemetry probes for measuring uptake of remote content. Some notable potential use-cases are:
 
 * nsUpdateService
 * mozapps extensions update
-* Shield recipe client
