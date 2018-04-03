@@ -37,13 +37,13 @@ const TEST_DATA = [
     targetClass: "enddelay-with-iterations-infinity",
   },
   {
-    targetClass: "keyframes-easing-step",
+    targetClass: "delay-negative",
   },
 ];
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
-
+  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
   const { panel } = await openAnimationInspector();
 
   for (const { targetClass, expectedResult } of TEST_DATA) {

@@ -56,6 +56,7 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_timings.html");
+  await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
   const { animationInspector, inspector, panel } = await openAnimationInspector();
 
   info("Checking progress bar position in multi effect timings");

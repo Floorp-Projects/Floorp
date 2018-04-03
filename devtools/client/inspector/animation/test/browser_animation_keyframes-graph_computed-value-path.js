@@ -412,7 +412,6 @@ const TEST_DATA = [
 
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_keyframes.html");
-
   const { inspector, panel } = await openAnimationInspector();
 
   for (const { properties, targetClass } of TEST_DATA) {
