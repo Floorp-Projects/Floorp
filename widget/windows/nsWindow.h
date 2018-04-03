@@ -156,6 +156,7 @@ public:
                                            uint16_t aDuration,
                                            nsISupports* aData,
                                            nsIRunnable* aCallback) override;
+  virtual void CleanupFullscreenTransition() override;
   virtual nsresult        MakeFullScreen(bool aFullScreen,
                                          nsIScreen* aScreen = nullptr) override;
   virtual void            HideWindowChrome(bool aShouldHide) override;
@@ -493,6 +494,7 @@ protected:
    * Misc.
    */
   void                    StopFlashing();
+  static HWND             WindowAtMouse();
   static bool             IsTopLevelMouseExit(HWND aWnd);
   virtual nsresult        SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
                                               bool aIntersectWithExisting) override;
@@ -671,13 +673,6 @@ protected:
   static void InitMouseWheelScrollData();
 
   double mSizeConstraintsScale; // scale in effect when setting constraints
-
-  // Used to remember the wParam (i.e. currently pressed modifier keys)
-  // and lParam (i.e. last mouse position) in screen coordinates from
-  // the previous mouse-exit.  Static since it is not
-  // associated with a particular widget (since we exited the widget).
-  static WPARAM sMouseExitwParam;
-  static LPARAM sMouseExitlParamScreen;
 
   // Pointer events processing and management
   WinPointerEvents mPointerEvents;
