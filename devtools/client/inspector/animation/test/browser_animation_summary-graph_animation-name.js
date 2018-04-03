@@ -36,7 +36,7 @@ add_task(async function() {
 
   for (const { targetClass, expectedLabel } of TEST_DATA) {
     const animationItemEl =
-      findAnimationItemElementsByTargetClassName(panel, targetClass);
+      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
 
     info(`Checking animation name element existance for ${ targetClass }`);
     const animationNameEl = animationItemEl.querySelector(".animation-name");

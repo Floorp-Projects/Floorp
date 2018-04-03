@@ -136,11 +136,12 @@ const TEST_DATA = [
 add_task(async function() {
   await addTab(URL_ROOT + "doc_multi_keyframes.html");
   await removeAnimatedElementsExcept(TEST_DATA.map(t => `.${ t.targetClass }`));
-  const { inspector, panel } = await openAnimationInspector();
+  const { animationInspector, panel } = await openAnimationInspector();
 
   for (const { properties, targetClass } of TEST_DATA) {
     info(`Checking keyframe marker for ${ targetClass }`);
-    await selectNodeAndWaitForAnimations(`.${ targetClass }`, inspector);
+    await clickOnAnimationByTargetSelector(animationInspector,
+                                           panel, `.${ targetClass }`);
 
     for (const { name, expectedValues } of properties) {
       const testTarget = `${ name } in ${ targetClass }`;

@@ -404,7 +404,7 @@ add_task(async function() {
     } = testData;
 
     const animationItemEl =
-      findAnimationItemElementsByTargetClassName(panel, targetClass);
+      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
 
     info(`Checking computed timing path existance for ${ targetClass }`);
     const computedTimingPathEl =

@@ -181,7 +181,7 @@ add_task(async function() {
 
   for (const { targetClass, expectedResult } of TEST_DATA) {
     const animationItemEl =
-      findAnimationItemElementsByTargetClassName(panel, targetClass);
+      findAnimationItemElementsByTargetSelector(panel, `.${ targetClass }`);
     const summaryGraphEl = animationItemEl.querySelector(".animation-summary-graph");
 
     info(`Checking tooltip for ${ targetClass }`);
