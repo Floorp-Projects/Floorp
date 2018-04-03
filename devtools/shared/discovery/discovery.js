@@ -32,7 +32,7 @@
  */
 
 const { Cu, CC, Cc, Ci } = require("chrome");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const Services = require("Services");
 
 const UDPSocket = CC("@mozilla.org/network/udp-socket;1",
@@ -359,7 +359,7 @@ Discovery.prototype = {
     this._sendStatusTo(UPDATE_PORT);
   },
 
-  _onRemoteUpdate: function(e, update) {
+  _onRemoteUpdate: function(update) {
     log("GOT REMOTE UPDATE");
 
     let remoteDevice = update.device;
