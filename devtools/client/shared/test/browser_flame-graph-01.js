@@ -42,9 +42,9 @@ function testGraph(host, graph) {
 
   let bounds = host.frame.getBoundingClientRect();
 
-  is(graph.width, bounds.width * window.devicePixelRatio,
+  is(graph.width, Math.round(bounds.width * window.devicePixelRatio),
     "The graph has the correct width.");
-  is(graph.height, bounds.height * window.devicePixelRatio,
+  is(graph.height, Math.round(bounds.height * window.devicePixelRatio),
     "The graph has the correct height.");
 
   ok(graph._selection.start === null,
