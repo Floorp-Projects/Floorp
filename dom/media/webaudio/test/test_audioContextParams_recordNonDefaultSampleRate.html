@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+function startTest() {
+  let ctx = new AudioContext({sampleRate: 32000});
+  oscillator = ctx.createOscillator();
+  let dest = ctx.createMediaStreamDestination();
+  oscillator.connect(dest);
+  oscillator.start();
+  let stream = dest.stream;
+
+  recorder = new MediaRecorder(stream);
+  recorder.ondataavailable = (e) => {
+      ok(true, 'recorder ondataavailable event');
+      if (recorder.state == 'recording') {
+        ok(e.data.size > 0, 'check blob has data');
+        recorder.stop();
+      }
+  }
+
+  recorder.onstop = () => {
+      ok(true, 'recorder stop event');
+      SimpleTest.finish();
+  }
+
+  try {
+    recorder.start(1000);
+    ok(true, 'recorder started');
+    is('recording', recorder.state, 'check record state recording');
+  } catch (e) {
+    ok(false, 'Can t record audio context');
+  }
+}
+
+startTest();
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
