@@ -100,7 +100,22 @@ class DebianBootstrapper(StyloInstall, BaseBootstrapper):
             self.MOBILE_ANDROID_DISTRO_PACKAGES
 
     def install_system_packages(self):
-        self.apt_install(*self.packages)
+        # Python 3 may not be present on all distros. Search for it and
+        # install if found.
+        packages = list(self.packages)
+
+        have_python3 = any([self.which('python3'), self.which('python3.6'),
+                            self.which('python3.5')])
+
+        if not have_python3:
+            python3_packages = self.check_output([
+                'apt-cache', 'pkgnames', 'python3'])
+            python3_packages = python3_packages.splitlines()
+
+            if 'python3' in python3_packages:
+                packages.extend(['python3', 'python3-dev'])
+
+        self.apt_install(*packages)
 
     def install_browser_packages(self):
         self.ensure_browser_packages()
