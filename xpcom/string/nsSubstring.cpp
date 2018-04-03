@@ -23,7 +23,6 @@
 #include "nsPrintfCString.h"
 #include "nsMemory.h"
 #include "prprf.h"
-#include "nsStaticAtom.h"
 #include "nsCOMPtr.h"
 
 #include "mozilla/IntegerPrintfMacros.h"

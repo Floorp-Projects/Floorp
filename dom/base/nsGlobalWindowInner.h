@@ -779,7 +779,6 @@ public:
     mozilla::dom::CallerType aCallerType,
     mozilla::ErrorResult& aError);
   nsScreen* GetScreen(mozilla::ErrorResult& aError);
-  nsIDOMScreen* GetScreen() override;
   void MoveTo(int32_t aXPos, int32_t aYPos,
               mozilla::dom::CallerType aCallerType,
               mozilla::ErrorResult& aError);
