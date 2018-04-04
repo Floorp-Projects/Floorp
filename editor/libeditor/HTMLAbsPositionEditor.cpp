@@ -224,18 +224,21 @@ ManualNACPtr
 HTMLEditor::CreateGrabber(nsIContent& aParentContent)
 {
   // let's create a grabber through the element factory
-  ManualNACPtr ret =
+  ManualNACPtr grabber =
     CreateAnonymousElement(nsGkAtoms::span, aParentContent,
                            NS_LITERAL_STRING("mozGrabber"), false);
-  if (NS_WARN_IF(!ret)) {
+  if (NS_WARN_IF(!grabber)) {
     return nullptr;
   }
 
   // add the mouse listener so we can detect a click on a resizer
-  ret->AddEventListener(NS_LITERAL_STRING("mousedown"),
-			mEventListener, false);
-
-  return ret;
+  EventListenerManager* eventListenerManager =
+    grabber->GetOrCreateListenerManager();
+  eventListenerManager->AddEventListenerByType(
+                          mEventListener,
+                          NS_LITERAL_STRING("mousedown"),
+                          TrustedEventsAtSystemGroupBubble());
+  return grabber;
 }
 
 NS_IMETHODIMP
@@ -370,17 +373,17 @@ HTMLEditor::GrabberClicked()
   // add a mouse move listener to the editor
   nsresult rv = NS_OK;
   if (!mMouseMotionListenerP) {
+    EventTarget* eventTarget = GetDOMEventTarget();
+    if (NS_WARN_IF(!eventTarget)) {
+      return NS_ERROR_FAILURE;
+    }
     mMouseMotionListenerP = new ResizerMouseMotionListener(*this);
-    if (!mMouseMotionListenerP) {return NS_ERROR_NULL_POINTER;}
-
-    EventTarget* piTarget = GetDOMEventTarget();
-    NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
-
-    rv = piTarget->AddEventListener(NS_LITERAL_STRING("mousemove"),
-				    mMouseMotionListenerP,
-				    false, false);
-    NS_ASSERTION(NS_SUCCEEDED(rv),
-                 "failed to register mouse motion listener");
+    EventListenerManager* eventListenerManager =
+      eventTarget->GetOrCreateListenerManager();
+    eventListenerManager->AddEventListenerByType(
+                            mMouseMotionListenerP,
+                            NS_LITERAL_STRING("mousemove"),
+                            TrustedEventsAtSystemGroupBubble());
   }
   mGrabberClicked = true;
   return rv;
@@ -397,12 +400,15 @@ HTMLEditor::EndMoving()
 
     mPositioningShadow = nullptr;
   }
-  RefPtr<EventTarget> piTarget = GetDOMEventTarget();
 
-  if (piTarget && mMouseMotionListenerP) {
-    piTarget->RemoveEventListener(NS_LITERAL_STRING("mousemove"),
-				  mMouseMotionListenerP,
-				  false);
+  EventTarget* eventTarget = GetDOMEventTarget();
+  if (eventTarget && mMouseMotionListenerP) {
+    EventListenerManager* eventListenerManager =
+      eventTarget->GetOrCreateListenerManager();
+    eventListenerManager->RemoveEventListenerByType(
+                            mMouseMotionListenerP,
+                            NS_LITERAL_STRING("mousemove"),
+                            TrustedEventsAtSystemGroupBubble());
   }
   mMouseMotionListenerP = nullptr;
 
