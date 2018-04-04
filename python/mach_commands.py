@@ -86,7 +86,7 @@ class MachCommands(MachCommandBase):
             mozfile.remove(tempdir)
 
     def run_python_tests(self,
-                         tests=[],
+                         tests=None,
                          test_objects=None,
                          subsuite=None,
                          verbose=False,
@@ -94,22 +94,16 @@ class MachCommands(MachCommandBase):
                          **kwargs):
         self._activate_virtualenv()
 
-        # Python's unittest, and in particular discover, has problems with
-        # clashing namespaces when importing multiple test modules. What follows
-        # is a simple way to keep environments separate, at the price of
-        # launching Python multiple times. Most tests are run via mozunit,
-        # which produces output in the format Mozilla infrastructure expects.
-        # Some tests are run via pytest.
         if test_objects is None:
             from moztest.resolve import TestResolver
             resolver = self._spawn(TestResolver)
-            if tests:
-                # If we were given test paths, try to find tests matching them.
-                test_objects = resolver.resolve_tests(paths=tests,
-                                                      flavor='python')
-            else:
-                # Otherwise just run everything in PYTHON_UNITTEST_MANIFESTS
-                test_objects = resolver.resolve_tests(flavor='python')
+            # If we were given test paths, try to find tests matching them.
+            test_objects = resolver.resolve_tests(paths=tests, flavor='python')
+        else:
+            # We've received test_objects from |mach test|. We need to ignore
+            # the subsuite because python-tests don't use this key like other
+            # harnesses do and |mach test| doesn't realize this.
+            subsuite = None
 
         mp = TestManifest()
         mp.tests.extend(test_objects)
