@@ -84,6 +84,7 @@ const ErrorDocs = {
   JSMSG_INCOMPATIBLE_PROTO: "Called_on_incompatible_type",
   JSMSG_INCOMPATIBLE_METHOD: "Called_on_incompatible_type",
   JSMSG_BAD_INSTANCEOF_RHS: "invalid_right_hand_side_instanceof_operand",
+  JSMSG_EMPTY_ARRAY_REDUCE: "Reduce_of_empty_array_with_no_initial_value",
 };
 
 const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Mixed_content";
