@@ -23,8 +23,7 @@ class BrowserAction extends EventEmitter {
       popup: options.default_popup,
     };
 
-    this.tabContext = new TabContext(tab => Object.create(this.defaults),
-                                     extension);
+    this.tabContext = new TabContext(tabId => this.defaults);
 
     this.tabManager = extension.tabManager;
 
