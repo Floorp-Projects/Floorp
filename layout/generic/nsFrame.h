@@ -706,8 +706,9 @@ private:
   // Returns true if this frame has any kind of CSS transitions.
   bool HasCSSTransitions();
 
-#ifdef DEBUG_FRAME_DUMP
 public:
+
+#ifdef DEBUG_FRAME_DUMP
   /**
    * Get a printable from of the name of the frame type.
    * XXX This should be eliminated and we use GetType() instead...
@@ -720,20 +721,6 @@ public:
 #endif
 
 #ifdef DEBUG
-public:
-  /**
-   * See if style tree verification is enabled. To enable style tree
-   * verification add "styleverifytree:1" to your MOZ_LOG
-   * environment variable (any non-zero debug level will work). Or,
-   * call SetVerifyStyleTreeEnable with true.
-   */
-  static bool GetVerifyStyleTreeEnable();
-
-  /**
-   * Set the verify-style-tree enable flag.
-   */
-  static void SetVerifyStyleTreeEnable(bool aEnabled);
-
   static mozilla::LazyLogModule sFrameLogModule;
 
   // Show frame borders when rendering
@@ -743,10 +730,7 @@ public:
   // Show frame border of event target
   static void ShowEventTargetFrameBorder(bool aEnable);
   static bool GetShowEventTargetFrameBorder();
-
 #endif
-
-public:
 
   static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
                                const nsDisplayList& aList,

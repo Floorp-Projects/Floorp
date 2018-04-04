@@ -1,5 +1,8 @@
 "use strict";
 
+ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
+let gCUITestUtils = new CustomizableUITestUtils(window);
+
 var gTestTab;
 var gContentAPI;
 var gContentWindow;
@@ -135,7 +138,7 @@ add_UITour_task(async function test_info_target_callback() {
 
   await showInfoPromise("appMenu", "I want to know when the target is clicked", "*click*", null, null, "makeInfoOptions");
 
-  await PanelUI.show();
+  await gCUITestUtils.openMainMenu();
 
   let returnValue = await waitForCallbackResultPromise();
 
