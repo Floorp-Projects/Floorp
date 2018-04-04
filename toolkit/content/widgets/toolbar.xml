@@ -169,7 +169,7 @@
     </handlers>
   </binding>
 
-  <binding id="toolbarpaletteitem">
+  <binding id="toolbarpaletteitem" extends="xul:button">
     <content>
       <xul:hbox class="toolbarpaletteitem-box" flex="1" xbl:inherits="type,place">
         <children/>
