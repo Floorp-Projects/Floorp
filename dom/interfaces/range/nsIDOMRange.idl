@@ -12,7 +12,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Traversal-Range/
  */
 
-[builtinclass, uuid(1f94055c-42e7-4a30-96a1-6a804f1c2d1e)]
+[shim(Range), uuid(1f94055c-42e7-4a30-96a1-6a804f1c2d1e)]
 interface nsIDOMRange : nsISupports
 {
 };

@@ -18,7 +18,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[uuid(b15fa0f4-97c1-4388-af62-2ceff7a89bdf)]
+[shim(Document), uuid(b15fa0f4-97c1-4388-af62-2ceff7a89bdf)]
 interface nsIDOMDocument : nsIDOMNode
 {
 };
