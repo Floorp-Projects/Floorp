@@ -14,7 +14,14 @@ add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneHome", {leaveOpen: true});
 
   // Set custom URL so bookmark button will be shown on the page (otherwise it is hidden)
-  await SpecialPowers.pushPrefEnv({"set": [["browser.startup.homepage", "about:robots"]]});
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["browser.startup.homepage", "about:robots"],
+    ["browser.startup.page", 1]
+  ]});
+
+  // Wait for Activity Stream to add its panels
+  await BrowserTestUtils.waitForCondition(() => ContentTask.spawn(gBrowser.selectedTab.linkedBrowser, {},
+    async () => content.document.getElementById("homeContentsGroup")));
 
   await evaluateSearchResults("Set Home Page", "homepageGroup");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
