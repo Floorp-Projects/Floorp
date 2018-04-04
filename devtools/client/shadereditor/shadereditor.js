@@ -3,13 +3,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+/* exported startupShaderEditor, shutdownShaderEditor */
+
 const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const {SideMenuWidget} = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
-const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const Tooltip = require("devtools/client/shared/widgets/tooltip/Tooltip");
 const Editor = require("devtools/client/sourceeditor/editor");
@@ -20,6 +21,7 @@ const {WidgetMethods, setNamedTimeout} =
 
 // Use privileged promise in panel documents to prevent having them to freeze
 // during toolbox destruction. See bug 1402779.
+// eslint-disable-next-line no-unused-vars
 const Promise = require("Promise");
 
 // The panel's window global is an EventEmitter firing the following events:

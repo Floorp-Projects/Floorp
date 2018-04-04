@@ -367,9 +367,8 @@ var CallsListView = extend(WidgetMethods, {
     let functionCall = callItem.attachment.actor;
     if (functionCall.isLoadedFromDisk) {
       display(functionCall.stack);
-    }
-    // ..otherwise we need to request the function call stack from the backend.
-    else {
+    } else {
+      // ..otherwise we need to request the function call stack from the backend.
       callItem.attachment.actor.getDetails().then(fn => display(fn.stack));
     }
   },

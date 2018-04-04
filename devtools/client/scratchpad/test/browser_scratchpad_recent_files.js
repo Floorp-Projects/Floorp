@@ -27,7 +27,6 @@ var gFileName03 = "file03_ForBug651942.tmp";
 var gFileName04 = "file04_ForBug651942.tmp";
 
 // Content for the temporary files.
-var gFileContent;
 var gFileContent01 = "hello.world.01('bug651942');";
 var gFileContent02 = "hello.world.02('bug651942');";
 var gFileContent03 = "hello.world.03('bug651942');";

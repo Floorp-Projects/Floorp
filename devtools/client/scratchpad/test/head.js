@@ -86,6 +86,7 @@ function openScratchpad(aReadyCallback, aOptions = {}) {
  */
 function openTabAndScratchpad(aOptions = {}) {
   waitForExplicitFinish();
+  // eslint-disable-next-line new-cap
   return new promise(resolve => {
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
     let {selectedBrowser} = gBrowser;

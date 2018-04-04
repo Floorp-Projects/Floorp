@@ -42,7 +42,9 @@ async function ifTestingSupported() {
   await removeTab(target.tab);
 
   info("Start to estimate WebGL drawElements function.");
-  var { target, front } = await initCanvasDebuggerBackend(WEBGL_DRAW_ELEMENTS);
+  let result = await initCanvasDebuggerBackend(WEBGL_DRAW_ELEMENTS);
+  target = result.target;
+  front = result.front;
 
   navigated = once(target, "navigate");
 

@@ -108,6 +108,8 @@ add_task(async function runTest() {
         return Promise.resolve(true);
       }
       return new Promise(resolve => {
+        // TODO: fixme.
+        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
         setTimeout(function() {
           waitUntil(predicate, interval).then(() => resolve(true));
         }, interval);

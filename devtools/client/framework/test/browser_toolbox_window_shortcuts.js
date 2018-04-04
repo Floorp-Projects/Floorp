@@ -23,12 +23,8 @@ function test() {
       toolShortcuts.push(shortcut);
 
       // Enable disabled tools
-      let pref = definition.visibilityswitch, prefValue;
-      try {
-        prefValue = Services.prefs.getBoolPref(pref);
-      } catch (e) {
-        continue;
-      }
+      let pref = definition.visibilityswitch;
+      let prefValue = Services.prefs.getBoolPref(pref, false);
       if (!prefValue) {
         modifiedPrefs.push(pref);
         Services.prefs.setBoolPref(pref, true);

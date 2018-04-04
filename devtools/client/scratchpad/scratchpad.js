@@ -56,12 +56,12 @@ const { extend } = require("devtools/shared/extend");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
 const {ScratchpadManager} = require("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
-const {addDebuggerToGlobal} = require("resource://gre/modules/jsdebugger.jsm");
 const {OS} = require("resource://gre/modules/osfile.jsm");
 const {Reflect} = require("resource://gre/modules/reflect.jsm");
 
 // Use privileged promise in panel documents to prevent having them to freeze
 // during toolbox destruction. See bug 1402779.
+// eslint-disable-next-line no-unused-vars
 const Promise = require("Promise");
 
 XPCOMUtils.defineConstant(this, "SCRATCHPAD_CONTEXT_CONTENT", SCRATCHPAD_CONTEXT_CONTENT);
@@ -1079,22 +1079,22 @@ var Scratchpad = {
    */
   _getUnicodeContent: function SP__getUnicodeContent(aContent, aCharsetArray) {
     let content = null,
-      converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter),
-      success = aCharsetArray.some(charset => {
-        try {
-          converter.charset = charset;
-          content = converter.ConvertToUnicode(aContent);
-          return true;
-        } catch (e) {
-          this.notificationBox.appendNotification(
-              this.strings.formatStringFromName("importFromFile.convert.failed",
-                                                [ charset ], 1),
-              "file-import-convert-failed",
-              null,
-              this.notificationBox.PRIORITY_WARNING_HIGH,
-              null);
-        }
-      });
+      converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
+    aCharsetArray.some(charset => {
+      try {
+        converter.charset = charset;
+        content = converter.ConvertToUnicode(aContent);
+        return true;
+      } catch (e) {
+        this.notificationBox.appendNotification(
+            this.strings.formatStringFromName("importFromFile.convert.failed",
+                                              [ charset ], 1),
+            "file-import-convert-failed",
+            null,
+            this.notificationBox.PRIORITY_WARNING_HIGH,
+            null);
+      }
+    });
     return content;
   },
 
@@ -1281,10 +1281,9 @@ var Scratchpad = {
       // It is not the most recent file. Remove it from the list, we add it as
       // the most recent farther down.
       filePaths.splice(pathIndex, 1);
-    }
-    // If we are not storing the file and the 'recent files'-list is full,
-    // remove the oldest file from the list.
-    else if (filesCount === maxRecent) {
+    } else if (filesCount === maxRecent) {
+      // If we are not storing the file and the 'recent files'-list is full,
+      // remove the oldest file from the list.
       filePaths.shift();
     }
 
