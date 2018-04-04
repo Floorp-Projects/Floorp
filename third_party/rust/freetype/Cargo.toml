@@ -12,7 +12,7 @@
 
 [package]
 name = "freetype"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["The Servo Project Developers"]
 description = "Bindings for Freetype used by Servo"
 documentation = "http://doc.servo.org/freetype/"
@@ -22,12 +22,12 @@ repository = "https://github.com/servo/rust-freetype"
 [lib]
 name = "freetype"
 crate-type = ["rlib"]
+[dependencies.libc]
+version = "0.2"
+
 [dependencies.servo-freetype-sys]
 version = "4.0.2"
 optional = true
-
-[dependencies.libc]
-version = "0.2"
 
 [features]
 default = ["servo-freetype-sys"]
