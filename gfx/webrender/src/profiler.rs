@@ -2,21 +2,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, ColorU};
-use debug_render::DebugRenderer;
-use euclid::{Point2D, Rect, Size2D, vec2};
-use query::{GpuSampler, GpuTimer, NamedTag};
+use api::ColorF;
+use query::{GpuTimer, NamedTag};
 use std::collections::vec_deque::VecDeque;
-use internal_types::FastHashMap;
-use renderer::MAX_VERTEX_TEXTURE_WIDTH;
-use std::{f32, mem};
+use std::f32;
 use time::precise_time_ns;
 
-const GRAPH_WIDTH: f32 = 1024.0;
-const GRAPH_HEIGHT: f32 = 320.0;
-const GRAPH_PADDING: f32 = 8.0;
-const GRAPH_FRAME_HEIGHT: f32 = 16.0;
-const PROFILE_PADDING: f32 = 10.0;
+cfg_if! {
+    if #[cfg(feature = "debug_renderer")] {
+        use api::ColorU;
+        use debug_render::DebugRenderer;
+        use euclid::{Point2D, Rect, Size2D, vec2};
+        use query::GpuSampler;
+        use internal_types::FastHashMap;
+        use renderer::MAX_VERTEX_TEXTURE_WIDTH;
+        use std::mem;
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "debug_renderer")] {
+        const GRAPH_WIDTH: f32 = 1024.0;
+        const GRAPH_HEIGHT: f32 = 320.0;
+        const GRAPH_PADDING: f32 = 8.0;
+        const GRAPH_FRAME_HEIGHT: f32 = 16.0;
+        const PROFILE_PADDING: f32 = 10.0;
+    }
+}
 
 const ONE_SECOND_NS: u64 = 1000000000;
 
@@ -25,7 +37,7 @@ pub struct GpuProfileTag {
     pub label: &'static str,
     pub color: ColorF,
 }
-
+ 
 impl NamedTag for GpuProfileTag {
     fn get_label(&self) -> &str {
         self.label
@@ -85,11 +97,13 @@ impl ProfileCounter for IntProfileCounter {
     }
 }
 
+#[cfg(feature = "debug_renderer")]
 pub struct FloatProfileCounter {
     description: &'static str,
     value: f32,
 }
 
+#[cfg(feature = "debug_renderer")]
 impl ProfileCounter for FloatProfileCounter {
     fn description(&self) -> &'static str {
         self.description
@@ -489,12 +503,14 @@ struct GraphStats {
 }
 
 struct ProfileGraph {
+    #[cfg(feature = "debug_renderer")]
     max_samples: usize,
     values: VecDeque<f32>,
     short_description: &'static str,
 }
 
 impl ProfileGraph {
+    #[cfg(feature = "debug_renderer")]
     fn new(
         max_samples: usize,
         short_description: &'static str,
@@ -506,6 +522,7 @@ impl ProfileGraph {
         }
     }
 
+    #[cfg(feature = "debug_renderer")]
     fn push(&mut self, ns: u64) {
         let ms = ns as f64 / 1000000.0;
         if self.values.len() == self.max_samples {
@@ -534,6 +551,7 @@ impl ProfileGraph {
         stats
     }
 
+    #[cfg(feature = "debug_renderer")]
     fn draw_graph(
         &self,
         x: f32,
@@ -633,15 +651,18 @@ impl ProfileCounter for ProfileGraph {
     }
 }
 
+#[cfg(feature = "debug_renderer")]
 struct GpuFrame {
     total_time: u64,
     samples: Vec<GpuTimer<GpuProfileTag>>,
 }
 
+#[cfg(feature = "debug_renderer")]
 struct GpuFrameCollection {
     frames: VecDeque<GpuFrame>,
 }
 
+#[cfg(feature = "debug_renderer")]
 impl GpuFrameCollection {
     fn new() -> Self {
         GpuFrameCollection {
@@ -660,6 +681,7 @@ impl GpuFrameCollection {
     }
 }
 
+#[cfg(feature = "debug_renderer")]
 impl GpuFrameCollection {
     fn draw(&self, x: f32, y: f32, debug_renderer: &mut DebugRenderer) -> Rect<f32> {
         let graph_rect = Rect::new(
@@ -750,6 +772,7 @@ impl GpuFrameCollection {
     }
 }
 
+#[cfg(feature = "debug_renderer")]
 struct DrawState {
     x_left: f32,
     y_left: f32,
@@ -757,6 +780,7 @@ struct DrawState {
     y_right: f32,
 }
 
+#[cfg(feature = "debug_renderer")]
 pub struct Profiler {
     draw_state: DrawState,
     backend_time: ProfileGraph,
@@ -766,7 +790,9 @@ pub struct Profiler {
     ipc_time: ProfileGraph,
 }
 
+#[cfg(feature = "debug_renderer")]
 impl Profiler {
+
     pub fn new() -> Self {
         Profiler {
             draw_state: DrawState {

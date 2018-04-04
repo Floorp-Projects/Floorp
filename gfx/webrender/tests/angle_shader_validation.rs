@@ -59,10 +59,6 @@ const SHADERS: &[Shader] = &[
         features: PRIM_FEATURES,
     },
     Shader {
-        name: "ps_hardware_composite",
-        features: PRIM_FEATURES,
-    },
-    Shader {
         name: "ps_split_composite",
         features: PRIM_FEATURES,
     },
@@ -80,19 +76,19 @@ const SHADERS: &[Shader] = &[
         features: &["", "YUV_NV12", "YUV_PLANAR", "YUV_INTERLEAVED", "YUV_NV12,TEXTURE_RECT"],
     },
     Shader {
-        name: "brush_mask",
+        name: "brush_solid",
         features: &[],
     },
     Shader {
-        name: "brush_solid",
-        features: &[],
+        name: "brush_image",
+        features: &["", "ALPHA_PASS"],
     },
     Shader {
         name: "brush_blend",
         features: &[],
     },
     Shader {
-        name: "brush_composite",
+        name: "brush_mix_blend",
         features: &[],
     },
     Shader {

@@ -103,7 +103,7 @@ pub enum SubpixelDirection {
 }
 
 impl FontRenderMode {
-    // Skia quantizes subpixel offets into 1/4 increments.
+    // Skia quantizes subpixel offsets into 1/4 increments.
     // Given the absolute position, return the quantized increment
     fn subpixel_quantize_offset(&self, pos: f32) -> SubpixelOffset {
         // Following the conventions of Gecko and Skia, we want

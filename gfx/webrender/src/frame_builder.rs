@@ -4,7 +4,7 @@
 
 use api::{BuiltDisplayList, ColorF, DeviceIntPoint, DeviceIntRect, DevicePixelScale};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentLayer, FontRenderMode};
-use api::{LayerRect, LayerSize, PipelineId, PremultipliedColorF, WorldPoint};
+use api::{LayerRect, LayerSize, PipelineId, WorldPoint};
 use clip::{ClipChain, ClipStore};
 use clip_scroll_node::{ClipScrollNode};
 use clip_scroll_tree::{ClipScrollNodeIndex, ClipScrollTree};
@@ -16,13 +16,13 @@ use internal_types::{FastHashMap};
 use prim_store::{CachedGradient, PrimitiveIndex, PrimitiveRun, PrimitiveStore};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_backend::FrameId;
-use render_task::{ClearMode, RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree};
+use render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree};
 use resource_cache::{ResourceCache};
 use scene::{ScenePipeline, SceneProperties};
 use std::{mem, f32};
 use std::sync::Arc;
-use tiling::{Frame, RenderPass, RenderPassKind, RenderTargetContext, RenderTargetKind};
-use tiling::ScrollbarPrimitive;
+use tiling::{Frame, RenderPass, RenderPassKind, RenderTargetContext};
+use tiling::{ScrollbarPrimitive, SpecialRenderPasses};
 use util::{self, MaxRect, WorldToLayerFastTransform};
 
 #[derive(Clone, Copy)]
@@ -65,6 +65,7 @@ pub struct FrameBuildingState<'a> {
     pub resource_cache: &'a mut ResourceCache,
     pub gpu_cache: &'a mut GpuCache,
     pub cached_gradients: &'a mut [CachedGradient],
+    pub special_render_passes: &'a mut SpecialRenderPasses,
 }
 
 pub struct PictureContext<'a> {
@@ -157,6 +158,7 @@ impl FrameBuilder {
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
+        special_render_passes: &mut SpecialRenderPasses,
         profile_counters: &mut FrameProfileCounters,
         device_pixel_scale: DevicePixelScale,
         scene_properties: &SceneProperties,
@@ -194,6 +196,7 @@ impl FrameBuilder {
             local_clip_rects,
             resource_cache,
             gpu_cache,
+            special_render_passes,
             cached_gradients: &mut self.cached_gradients,
         };
 
@@ -223,10 +226,7 @@ impl FrameBuilder {
         let root_render_task = RenderTask::new_picture(
             RenderTaskLocation::Fixed(frame_context.screen_rect),
             PrimitiveIndex(0),
-            RenderTargetKind::Color,
             DeviceIntPoint::zero(),
-            PremultipliedColorF::TRANSPARENT,
-            ClearMode::Transparent,
             pic_state.tasks,
         );
 
@@ -313,12 +313,16 @@ impl FrameBuilder {
 
         let mut render_tasks = RenderTaskTree::new(frame_id);
 
+        let screen_size = self.screen_rect.size.to_i32();
+        let mut special_render_passes = SpecialRenderPasses::new(&screen_size);
+
         let main_render_task_id = self.build_layer_screen_rects_and_cull_layers(
             clip_scroll_tree,
             pipelines,
             resource_cache,
             gpu_cache,
             &mut render_tasks,
+            &mut special_render_passes,
             &mut profile_counters,
             device_pixel_scale,
             scene_properties,
@@ -326,8 +330,14 @@ impl FrameBuilder {
             &node_data,
         );
 
-        let mut passes = Vec::new();
-        resource_cache.block_until_all_resources_added(gpu_cache, texture_cache_profile);
+        resource_cache.block_until_all_resources_added(gpu_cache,
+                                                       &mut render_tasks,
+                                                       texture_cache_profile);
+
+        let mut passes = vec![
+            special_render_passes.alpha_glyph_pass,
+            special_render_passes.color_glyph_pass,
+        ];
 
         if let Some(main_render_task_id) = main_render_task_id {
             let mut required_pass_count = 0;
@@ -337,14 +347,14 @@ impl FrameBuilder {
             // Do the allocations now, assigning each tile's tasks to a render
             // pass and target as required.
             for _ in 0 .. required_pass_count - 1 {
-                passes.push(RenderPass::new_off_screen(self.screen_rect.size.to_i32()));
+                passes.push(RenderPass::new_off_screen(screen_size));
             }
-            passes.push(RenderPass::new_main_framebuffer(self.screen_rect.size.to_i32()));
+            passes.push(RenderPass::new_main_framebuffer(screen_size));
 
             render_tasks.assign_to_passes(
                 main_render_task_id,
                 required_pass_count - 1,
-                &mut passes,
+                &mut passes[2..],
             );
         }
 
@@ -354,7 +364,7 @@ impl FrameBuilder {
                                        self.config.dual_source_blending_is_supported;
 
         for pass in &mut passes {
-            let ctx = RenderTargetContext {
+            let mut ctx = RenderTargetContext {
                 device_pixel_scale,
                 prim_store: &self.prim_store,
                 resource_cache,
@@ -365,7 +375,7 @@ impl FrameBuilder {
             };
 
             pass.build(
-                &ctx,
+                &mut ctx,
                 gpu_cache,
                 &mut render_tasks,
                 &mut deferred_resolves,

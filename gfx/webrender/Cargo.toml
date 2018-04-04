@@ -1,6 +1,6 @@
 [package]
 name = "webrender"
-version = "0.57.0"
+version = "0.57.2"
 authors = ["Glenn Watson <gw@intuitionlibrary.com>"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/webrender"
@@ -9,10 +9,12 @@ build = "build.rs"
 [features]
 default = ["freetype-lib"]
 freetype-lib = ["freetype/servo-freetype-sys"]
-profiler = ["thread_profiler/thread_profiler"]
-debugger = ["ws", "serde_json", "serde", "image", "base64"]
-capture = ["webrender_api/serialize", "ron", "serde"]
+profiler = ["thread_profiler/thread_profiler", "debug_renderer"]
+debugger = ["ws", "serde_json", "serde", "image", "base64", "debug_renderer"]
+capture = ["webrender_api/serialize", "ron", "serde", "debug_renderer"]
 replay = ["webrender_api/deserialize", "ron", "serde"]
+debug_renderer = []
+pathfinder = ["pathfinder_font_renderer", "pathfinder_gfx_utils", "pathfinder_partitioner", "pathfinder_path_utils"]
 
 [dependencies]
 app_units = "0.6"
@@ -23,7 +25,7 @@ fxhash = "0.2.1"
 gleam = "0.4.20"
 lazy_static = "1"
 log = "0.4"
-num-traits = "0.1.32"
+num-traits = "0.1.43"
 time = "0.1"
 rayon = "1"
 webrender_api = {path = "../webrender_api"}
@@ -38,15 +40,34 @@ serde = { optional = true, version = "1.0", features = ["serde_derive"] }
 image = { optional = true, version = "0.18" }
 base64 = { optional = true, version = "0.6" }
 ron = { optional = true, version = "0.1.7" }
+cfg-if = "0.1.2"
+
+[dependencies.pathfinder_font_renderer]
+git = "https://github.com/pcwalton/pathfinder"
+optional = true
+# Uncomment to test FreeType on macOS:
+# features = ["freetype"]
+
+[dependencies.pathfinder_gfx_utils]
+git = "https://github.com/pcwalton/pathfinder"
+optional = true
+
+[dependencies.pathfinder_partitioner]
+git = "https://github.com/pcwalton/pathfinder"
+optional = true
+
+[dependencies.pathfinder_path_utils]
+git = "https://github.com/pcwalton/pathfinder"
+optional = true
 
 [dev-dependencies]
 mozangle = "0.1"
 env_logger = "0.5"
 rand = "0.3"                # for the benchmarks
-glutin = "0.12"             # for the example apps
+glutin = "0.13"             # for the example apps
 
 [target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]
-freetype = { version = "0.3", default-features = false }
+freetype = { version = "0.4", default-features = false }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.4.1"
