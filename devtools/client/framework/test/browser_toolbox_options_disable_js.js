@@ -19,7 +19,7 @@ function testSelectTool(toolbox) {
   toolbox.selectTool("options");
 }
 
-let testToggleJS = async function (toolbox) {
+let testToggleJS = async function(toolbox) {
   ok(true, "Toolbox selected via selectTool method");
 
   await testJSEnabled();
@@ -47,7 +47,7 @@ async function testJSEnabled() {
   // takes a while to become live.
   await waitForTick();
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     let doc = content.document;
     let output = doc.getElementById("output");
     doc.querySelector("#logJSEnabled").click();
@@ -58,7 +58,7 @@ async function testJSEnabled() {
 async function testJSEnabledIframe() {
   info("Testing that JS is enabled in the iframe");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     let doc = content.document;
     let iframe = doc.querySelector("iframe");
     let iframeDoc = iframe.contentDocument;
@@ -87,7 +87,7 @@ async function toggleJS(toolbox) {
 async function testJSDisabled() {
   info("Testing that JS is disabled");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     let doc = content.document;
     let output = doc.getElementById("output");
     doc.querySelector("#logJSDisabled").click();
@@ -100,7 +100,7 @@ async function testJSDisabled() {
 async function testJSDisabledIframe() {
   info("Testing that JS is disabled in the iframe");
 
-  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     let doc = content.document;
     let iframe = doc.querySelector("iframe");
     let iframeDoc = iframe.contentDocument;
@@ -112,7 +112,7 @@ async function testJSDisabledIframe() {
 }
 
 function finishUp(toolbox) {
-  toolbox.destroy().then(function () {
+  toolbox.destroy().then(function() {
     gBrowser.removeCurrentTab();
     finish();
   });

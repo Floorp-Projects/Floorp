@@ -13,7 +13,7 @@ const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 const {PrefObserver} = require("devtools/client/shared/prefs");
 
-add_task(async function () {
+add_task(async function() {
   const URL = "data:text/html;charset=utf8,test for dynamically registering " +
               "and unregistering tools";
   registerNewTool();
@@ -180,7 +180,7 @@ async function testMouseClick(node, prefValue) {
 
   // We use executeSoon here to ensure that the element is in view and
   // clickable.
-  executeSoon(function () {
+  executeSoon(function() {
     info("Click event synthesized for pref " + pref);
     EventUtils.synthesizeMouseAtCenter(node, {}, panelWin);
   });
@@ -203,7 +203,6 @@ async function testToggleTools() {
                                  })
                                  .concat(gDevTools.getAdditionalTools())
                                  .concat(toolbox.getAdditionalTools());
-
 
   for (let node of toolNodes) {
     let id = node.getAttribute("id");
