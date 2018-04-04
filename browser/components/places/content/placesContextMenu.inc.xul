@@ -125,7 +125,7 @@
             label="&cmd.reloadLivebookmark.label;"
             accesskey="&cmd.reloadLivebookmark.accesskey;"
             closemenu="single"
-            selection="livemark/feedURI"/>
+            selection="livemark"/>
   <menuseparator id="placesContext_sortSeparator"/>
   <menuitem id="placesContext_show:info"
             command="placesCmd_show:info"

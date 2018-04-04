@@ -92,15 +92,12 @@ add_task(async function() {
         info("Test emphasis path");
         // Scroll to show the hintEl since the element may be out of displayed area.
         hintEl.scrollIntoView(false);
+        const win = hintEl.ownerGlobal;
 
-        const win = hintEl.ownerDocument.defaultView;
-        // Mouse out once from hintEl.
-        EventUtils.synthesizeMouse(hintEl, -1, -1, {type: "mouseout"}, win);
-        is(win.getComputedStyle(hintEl).strokeOpacity, 0,
-           `stroke-opacity of hintEl for ${ testIdentity } should be 0 ` +
-           `while mouse is out from the element`);
-        // Mouse is over the hintEl.
-        EventUtils.synthesizeMouseAtCenter(hintEl, {type: "mouseover"}, win);
+        // Mouse is over the hintEl. Ideally this would use EventUtils, but mouseover
+        // on the path element is flaky, so let's trust that hovering works and force
+        // on a hover class to get the same styles.
+        hintEl.classList.add("hover");
         if (testdata.noEmphasisPath) {
           is(win.getComputedStyle(hintEl).strokeOpacity, 0,
              `stroke-opacity of hintEl for ${ testIdentity } should be 0 ` +
@@ -110,6 +107,11 @@ add_task(async function() {
              `stroke-opacity of hintEl for ${ testIdentity } should be 1 ` +
              `while mouse is over the element`);
         }
+        // Mouse out once from hintEl.
+        hintEl.classList.remove("hover");
+        is(win.getComputedStyle(hintEl).strokeOpacity, 0,
+           `stroke-opacity of hintEl for ${ testIdentity } should be 0 ` +
+           `while mouse is out from the element`);
       }
     }
   }

@@ -38,22 +38,16 @@ function test_removed_mapping(chromeURL, target) {
 }
 
 /*
- * Checks if any overlay was added after loading
+ * Checks if any style overlays were added after loading
  * the manifest files
- *
- * @param type The type of overlay: overlay|style
  */
-function test_no_overlays(chromeURL, target, type = "overlay") {
+function test_no_overlays(chromeURL, target) {
   var uri = Services.io.newURI(chromeURL);
-  var overlays = (type == "overlay") ?
-      gCR.getXULOverlays(uri) : gCR.getStyleOverlays(uri);
+  var overlays = gCR.getStyleOverlays(uri);
 
-  // We shouldn't be allowed to register overlays nor styles
+  // We shouldn't be allowed to register styles
   if (overlays.hasMoreElements()) {
-    if (type == "styles")
-      do_throw("Style Registered: " + chromeURL);
-    else
-      do_throw("Overlay Registered: " + chromeURL);
+    do_throw("Style Registered: " + chromeURL);
   }
 }
 
@@ -78,14 +72,9 @@ function testManifest(manifestPath, baseURI) {
   // Test Adding Override
   test_mapping("chrome://testOverride/content", "file:///test1/override");
 
-  // Test Not-Adding Overlays
-  test_no_overlays("chrome://test1/content/overlay.xul",
-                   "chrome://test1/content/test1.xul");
-
   // Test Not-Adding Styles
   test_no_overlays("chrome://test1/content/style.xul",
                    "chrome://test1/content/test1.css", "styles");
-
 
   // ------------------  Remove manifest file ------------------------
   Components.manager.removeBootstrappedManifestLocation(manifestPath);

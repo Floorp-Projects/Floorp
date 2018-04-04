@@ -400,7 +400,6 @@ PlacesController.prototype = {
       var nodeData = {};
       var node = nodes[i];
       var nodeType = node.type;
-      var uri = null;
 
       // We don't use the nodeIs* methods here to avoid going through the type
       // property way too often
@@ -422,13 +421,15 @@ PlacesController.prototype = {
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT:
           nodeData.folder = true;
+          if (this.hasCachedLivemarkInfo(node)) {
+            nodeData.livemark = true;
+          }
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR:
           nodeData.separator = true;
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_URI:
           nodeData.link = true;
-          uri = Services.io.newURI(node.uri);
           if (PlacesUtils.nodeIsBookmark(node)) {
             nodeData.bookmark = true;
             var parentNode = node.parent;
@@ -442,20 +443,6 @@ PlacesController.prototype = {
           break;
       }
 
-      // annotations
-      if (uri) {
-        let names = PlacesUtils.annotations.getPageAnnotationNames(uri);
-        for (let j = 0; j < names.length; ++j)
-          nodeData[names[j]] = true;
-      }
-
-      // For items also include the item-specific annotations
-      if (node.itemId != -1) {
-        let names = PlacesUtils.annotations
-                               .getItemAnnotationNames(node.itemId);
-        for (let j = 0; j < names.length; ++j)
-          nodeData[names[j]] = true;
-      }
       metadata.push(nodeData);
     }
 
