@@ -874,10 +874,6 @@ nsTableWrapperFrame::Reflow(nsPresContext*           aPresContext,
   Maybe<ReflowInput> captionRI;
   Maybe<ReflowInput> innerRI;
 
-  nsRect origInnerRect = InnerTableFrame()->GetRect();
-  nsRect origInnerVisualOverflow = InnerTableFrame()->GetVisualOverflowRect();
-  bool innerFirstReflow =
-    InnerTableFrame()->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
   nsRect origCaptionRect;
   nsRect origCaptionVisualOverflow;
   bool captionFirstReflow = false;
@@ -1040,12 +1036,6 @@ nsTableWrapperFrame::Reflow(nsPresContext*           aPresContext,
   FinishReflowChild(InnerTableFrame(), aPresContext, innerMet, innerRI.ptr(),
                     wm, innerOrigin, containerSize, 0);
   innerRI.reset();
-
-  if (InnerTableFrame()->IsBorderCollapse()) {
-    nsTableFrame::InvalidateTableFrame(InnerTableFrame(), origInnerRect,
-                                       origInnerVisualOverflow,
-                                       innerFirstReflow);
-  }
 
   if (mCaptionFrames.NotEmpty()) {
     nsTableFrame::InvalidateTableFrame(mCaptionFrames.FirstChild(),
