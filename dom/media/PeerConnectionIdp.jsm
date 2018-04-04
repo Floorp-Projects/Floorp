@@ -43,12 +43,11 @@ PeerConnectionIdp.prototype = {
     this.idpLoginUrl = null;
   },
 
-  setIdentityProvider(provider, protocol, usernameHint, peerIdentity) {
+  setIdentityProvider(provider, protocol, username) {
     this._resetAssertion();
     this.provider = provider;
-    this.protocol = protocol;
-    this.username = usernameHint;
-    this.peeridentity = peerIdentity;
+    this.protocol = protocol || "default";
+    this.username = username;
     if (this._idp) {
       if (this._idp.isSame(provider, protocol)) {
         return; // noop
@@ -70,8 +69,6 @@ PeerConnectionIdp.prototype = {
     this._resetAssertion();
     this.provider = null;
     this.protocol = null;
-    this.username = null;
-    this.peeridentity = null;
     if (this._idp) {
       this._idp.stop();
       this._idp = null;
@@ -285,15 +282,9 @@ PeerConnectionIdp.prototype = {
 
     this._resetAssertion();
     let p = this.start()
-        .then(idp => {
-          let options = { protocol: this.protocol,
-                          usernameHint: this.username,
-                          peerIdentity: this.peeridentity };
-          return this._wrapCrossCompartmentPromise(
-            idp.generateAssertion(JSON.stringify(content),
-                                  origin,
-                                  options));
-        })
+        .then(idp => this._wrapCrossCompartmentPromise(
+          idp.generateAssertion(JSON.stringify(content),
+                                origin, this.username)))
         .then(assertion => {
           if (!this._isValidAssertion(assertion)) {
             throw new this._win.DOMException("IdP generated invalid assertion",

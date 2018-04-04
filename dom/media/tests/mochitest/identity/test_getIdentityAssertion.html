@@ -21,11 +21,8 @@ function checkIdentity(assertion, identity) {
 }
 
 function getAssertion(t, instructions, userHint) {
-  dump('instructions: ' + instructions + '\n');
-  dump('userHint: ' + userHint + '\n');
-  t.pcLocal.setIdentityProvider('example.com',
-                                { protocol: 'idp.js' + instructions,
-                                  usernameHint: userHint });
+  t.pcLocal.setIdentityProvider('example.com', 'idp.js' + instructions,
+                                userHint);
   return t.pcLocal._pc.getIdentityAssertion();
 }
 
@@ -42,9 +39,7 @@ function theTest() {
     },
 
     function PC_LOCAL_IDENTITY_ASSERTION_FAILS_WITH_BAD_PROVIDER(t) {
-      t.pcLocal._pc.setIdentityProvider('example.com',
-                                        { protocol: 'idp-bad.js',
-                                          usernameHint: '' });
+      t.pcLocal._pc.setIdentityProvider('example.com', 'idp-bad.js', '');
       return t.pcLocal._pc.getIdentityAssertion()
         .then(a => ok(false, 'should fail with bad provider'),
               e => {
