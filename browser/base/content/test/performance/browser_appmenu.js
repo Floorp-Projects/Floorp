@@ -1,6 +1,9 @@
 "use strict";
 /* global PanelUI */
 
+ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
+let gCUITestUtils = new CustomizableUITestUtils(window);
+
 /**
  * WHOA THERE: We should never be adding new things to
  * EXPECTED_APPMENU_OPEN_REFLOWS. This is a whitelist that should slowly go
@@ -71,13 +74,10 @@ add_task(async function() {
   };
 
   // First, open the appmenu.
-  await withPerfObserver(async function() {
-    let popupShown =
-      BrowserTestUtils.waitForEvent(PanelUI.panel, "popupshown");
-    await PanelUI.show();
-    await popupShown;
-  }, {expectedReflows: EXPECTED_APPMENU_OPEN_REFLOWS,
-      frames: frameExpectations});
+  await withPerfObserver(() => gCUITestUtils.openMainMenu(), {
+    expectedReflows: EXPECTED_APPMENU_OPEN_REFLOWS,
+    frames: frameExpectations,
+  });
 
   // Now open a series of subviews, and then close the appmenu. We
   // should not reflow during any of this.
@@ -122,8 +122,6 @@ add_task(async function() {
 
     await openSubViewsRecursively(PanelUI.mainView);
 
-    let hidden = BrowserTestUtils.waitForEvent(PanelUI.panel, "popuphidden");
-    PanelUI.hide();
-    await hidden;
+    await gCUITestUtils.hideMainMenu();
   }, {expectedReflows: [], frames: frameExpectations});
 });

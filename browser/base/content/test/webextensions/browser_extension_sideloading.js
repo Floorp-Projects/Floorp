@@ -119,7 +119,7 @@ add_task(async function() {
   is(menuButton.getAttribute("badge-status"), "addon-alert", "Should have addon alert badge");
 
   // Find the menu entries for sideloaded extensions
-  await PanelUI.show();
+  await gCUITestUtils.openMainMenu();
 
   let addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 4, "Have 4 menu entries for sideloaded extensions");
@@ -159,7 +159,7 @@ add_task(async function() {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   // Should still have 3 entries in the hamburger menu
-  await PanelUI.show();
+  await gCUITestUtils.openMainMenu();
 
   addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 3, "Have 3 menu entries for sideloaded extensions");
@@ -189,13 +189,13 @@ add_task(async function() {
   is(addon4.userDisabled, true, "Addon 4 should still be disabled");
 
   // Should still have 2 entries in the hamburger menu
-  await PanelUI.show();
+  await gCUITestUtils.openMainMenu();
 
   addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 2, "Have 2 menu entries for sideloaded extensions");
 
   // Close the hamburger menu and go directly to the addons manager
-  await PanelUI.hide();
+  await gCUITestUtils.hideMainMenu();
 
   win = await BrowserOpenAddonsMgr(VIEW);
 
@@ -225,13 +225,13 @@ add_task(async function() {
   is(addon3.userDisabled, false, "Addon 3 should be enabled");
 
   // Should still have 1 entry in the hamburger menu
-  await PanelUI.show();
+  await gCUITestUtils.openMainMenu();
 
   addons = PanelUI.addonNotificationContainer;
   is(addons.children.length, 1, "Have 1 menu entry for sideloaded extensions");
 
   // Close the hamburger menu and go to the detail page for this addon
-  await PanelUI.hide();
+  await gCUITestUtils.hideMainMenu();
 
   win = await BrowserOpenAddonsMgr(`addons://detail/${encodeURIComponent(ID4)}`);
   let button = win.document.getElementById("detail-enable-btn");
