@@ -189,6 +189,10 @@ var PlacesOrganizer = {
     document.getElementById("placesContext")
             .removeChild(document.getElementById("placesContext_show:info"));
 
+    if (!Services.policies.isAllowed("profileImport")) {
+      document.getElementById("OrganizerCommand_browserImport").setAttribute("disabled", true);
+    }
+
     ContentArea.focus();
   },
 
