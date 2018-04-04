@@ -53,7 +53,6 @@ async function doTest(aInsertRelatedAfterCurrent, aInsertAfterCurrent) {
     ["browser.tabs.loadBookmarksInBackground", false],
     ["browser.tabs.insertRelatedAfterCurrent", aInsertRelatedAfterCurrent],
     ["browser.tabs.insertAfterCurrent", aInsertAfterCurrent],
-    ["browser.sessionstore.restore_tabs_lazily", false],
   ]});
 
   let oldState = SessionStore.getBrowserState();
