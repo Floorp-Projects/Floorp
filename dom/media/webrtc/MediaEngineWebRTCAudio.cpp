@@ -17,7 +17,6 @@
 #include "mozilla/ErrorNames.h"
 #include "mtransport/runnable_utils.h"
 #include "nsAutoPtr.h"
-#include "Tracing.h"
 
 // scoped_ptr.h uses FF
 #ifdef FF
@@ -1192,7 +1191,6 @@ MediaEngineWebRTCMicrophoneSource::NotifyInputData(MediaStreamGraph* aGraph,
                                                    TrackRate aRate,
                                                    uint32_t aChannels)
 {
-  TRACE_AUDIO_CALLBACK(static_cast<MediaStreamGraphImpl*>(aGraph)->TraceLogger());
   // If some processing is necessary, packetize and insert in the WebRTC.org
   // code. Otherwise, directly insert the mic data in the MSG, bypassing all processing.
   if (PassThrough()) {
