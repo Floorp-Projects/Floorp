@@ -70,13 +70,6 @@ var UITelemetry = {
   },
 
   /**
-   * Holds the functions that provide UITelemetry's simple
-   * measurements. Those functions are mapped to unique names,
-   * and should be registered with addSimpleMeasureFunction.
-   */
-  _simpleMeasureFunctions: {},
-
-  /**
    * A hack to generate the relative timestamp from start when we don't have
    * access to the Java timer.
    * XXX: Bug 1007647 - Support realtime and/or uptime in JavaScript.
@@ -158,53 +151,6 @@ var UITelemetry = {
 
   _recordEvent(aEvent) {
     this._measurements.push(aEvent);
-  },
-
-  /**
-   * Called by TelemetrySession to populate the simple measurement
-   * blob. This function will iterate over all functions added
-   * via addSimpleMeasureFunction and return an object with the
-   * results of those functions.
-   */
-  getSimpleMeasures() {
-    if (!this.enabled) {
-      return {};
-    }
-
-    let result = {};
-    for (let name in this._simpleMeasureFunctions) {
-      result[name] = this._simpleMeasureFunctions[name]();
-    }
-    return result;
-  },
-
-  /**
-   * Allows the caller to register functions that will get called
-   * for simple measures during a Telemetry ping. aName is a unique
-   * identifier used as they key for the simple measurement in the
-   * object that getSimpleMeasures returns.
-   *
-   * This function throws an exception if aName already has a function
-   * registered for it.
-   */
-  addSimpleMeasureFunction(aName, aFunction) {
-    if (!this.enabled) {
-      return;
-    }
-
-    if (aName in this._simpleMeasureFunctions) {
-      throw new Error("A simple measurement function is already registered for " + aName);
-    }
-
-    if (!aFunction || typeof aFunction !== "function") {
-      throw new Error("addSimpleMeasureFunction called with non-function argument.");
-    }
-
-    this._simpleMeasureFunctions[aName] = aFunction;
-  },
-
-  removeSimpleMeasureFunction(aName) {
-    delete this._simpleMeasureFunctions[aName];
   },
 
   /**
