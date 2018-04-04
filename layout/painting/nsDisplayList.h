@@ -3840,7 +3840,7 @@ public:
   struct InitData {
     nsDisplayListBuilder* builder;
     nsIFrame* frame;
-    const nsStyleBackground* backgroundStyle;
+    mozilla::ComputedStyle* backgroundStyle;
     nsCOMPtr<imgIContainer> image;
     nsRect backgroundRect;
     nsRect fillArea;
@@ -3861,7 +3861,7 @@ public:
                               nsIFrame* aFrame,
                               uint32_t aLayer,
                               const nsRect& aBackgroundRect,
-                              const nsStyleBackground* aBackgroundStyle);
+                              mozilla::ComputedStyle* aBackgroundStyle);
 
   explicit nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilder,
                                     const InitData& aInitData,
@@ -4007,7 +4007,7 @@ protected:
 
   // Cache the result of nsCSSRendering::FindBackground. Always null if
   // mIsThemed is true or if FindBackground returned false.
-  const nsStyleBackground* mBackgroundStyle;
+  RefPtr<mozilla::ComputedStyle> mBackgroundStyle;
   nsCOMPtr<imgIContainer> mImage;
   nsIFrame* mDependentFrame;
   nsRect mBackgroundRect; // relative to the reference frame
@@ -4179,7 +4179,7 @@ class nsDisplayBackgroundColor : public nsDisplayItem
 public:
   nsDisplayBackgroundColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                            const nsRect& aBackgroundRect,
-                           const nsStyleBackground* aBackgroundStyle,
+                           mozilla::ComputedStyle* aBackgroundStyle,
                            nscolor aColor)
     : nsDisplayItem(aBuilder, aFrame)
     , mBackgroundRect(aBackgroundRect)
@@ -4279,7 +4279,7 @@ public:
 
 protected:
   const nsRect mBackgroundRect;
-  const nsStyleBackground* mBackgroundStyle;
+  RefPtr<mozilla::ComputedStyle> mBackgroundStyle;
   nsIFrame* mDependentFrame;
   mozilla::gfx::Color mColor;
 
@@ -4293,7 +4293,7 @@ class nsDisplayTableBackgroundColor : public nsDisplayBackgroundColor
 public:
   nsDisplayTableBackgroundColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                                 const nsRect& aBackgroundRect,
-                                const nsStyleBackground* aBackgroundStyle,
+                                mozilla::ComputedStyle* aBackgroundStyle,
                                 nscolor aColor,
                                 nsIFrame* aAncestorFrame)
     : nsDisplayBackgroundColor(aBuilder, aFrame, aBackgroundRect, aBackgroundStyle, aColor)

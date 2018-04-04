@@ -172,7 +172,7 @@ public:
                               uint32_t aLineNumber,
                               uint32_t aIndex)
     : nsDisplayItem(aBuilder, aFrame), mRect(aRect),
-      mStyle(aStyle), mAscent(aAscent), mIndex((aLineNumber << 1) + aIndex) {
+      mStyle(*aStyle), mAscent(aAscent), mIndex((aLineNumber << 1) + aIndex) {
     MOZ_COUNT_CTOR(nsDisplayTextOverflowMarker);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -221,7 +221,7 @@ public:
   NS_DISPLAY_DECL_NAME("TextOverflow", TYPE_TEXT_OVERFLOW)
 private:
   nsRect          mRect;   // in reference frame coordinates
-  const nsStyleTextOverflowSide* mStyle;
+  const nsStyleTextOverflowSide mStyle;
   nscoord         mAscent; // baseline for the marker text in mRect
   uint32_t        mIndex;
 };
@@ -274,7 +274,7 @@ nsDisplayTextOverflowMarker::PaintTextToContext(gfxContext* aCtx,
   }
   pt += aOffsetFromRect;
 
-  if (mStyle->mType == NS_STYLE_TEXT_OVERFLOW_ELLIPSIS) {
+  if (mStyle.mType == NS_STYLE_TEXT_OVERFLOW_ELLIPSIS) {
     gfxTextRun* textRun = GetEllipsisTextRun(mFrame);
     if (textRun) {
       NS_ASSERTION(!textRun->IsRightToLeft(),
@@ -286,8 +286,8 @@ nsDisplayTextOverflowMarker::PaintTextToContext(gfxContext* aCtx,
   } else {
     RefPtr<nsFontMetrics> fm =
       nsLayoutUtils::GetInflatedFontMetricsForFrame(mFrame);
-    nsLayoutUtils::DrawString(mFrame, *fm, aCtx, mStyle->mString.get(),
-                              mStyle->mString.Length(), pt);
+    nsLayoutUtils::DrawString(mFrame, *fm, aCtx, mStyle.mString.get(),
+                              mStyle.mString.Length(), pt);
   }
 }
 
