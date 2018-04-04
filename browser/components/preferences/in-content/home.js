@@ -4,6 +4,7 @@
 
  /* import-globals-from extensionControlled.js */
  /* import-globals-from preferences.js */
+ /* import-globals-from main.js */
 
  // HOME PAGE
 
@@ -67,38 +68,67 @@ let gHomePane = {
   /**
    * _renderCustomSettings: Hides or shows the UI for setting a custom
    * homepage URL
-   * @param {bool} shouldShow Should the custom UI be shown?
+   * @param {obj} options
+   * @param {bool} options.shouldShow Should the custom UI be shown?
+   * @param {bool} options.isControlled Is an extension controlling the home page?
    */
-  _renderCustomSettings(shouldShow) {
+  _renderCustomSettings(options = {}) {
+    let {shouldShow, isControlled} = options;
     const customSettingsContainerEl = document.getElementById("customSettings");
     const customUrlEl = document.getElementById("homePageUrl");
-    const isHomepageCustom = !this._isHomePageDefaultValue() && !this._isHomePageBlank();
-    if (typeof shouldShow === "undefined") shouldShow = isHomepageCustom;
+    const homePref = Preferences.get("browser.startup.homepage");
 
+    const isHomePageCustom = isControlled || (!this._isHomePageDefaultValue() && !this.isHomePageBlank());
+    if (typeof shouldShow === "undefined") {
+      shouldShow = isHomePageCustom;
+    }
     customSettingsContainerEl.hidden = !shouldShow;
-    if (isHomepageCustom) {
-      customUrlEl.value = Preferences.get("browser.startup.homepage").value;
+
+    // We can't use isHomePageDefaultValue and isHomePageBlank here because we want to disregard the blank
+    // possibility triggered by the browser.startup.page being 0.
+    let newValue;
+    if (homePref.value !== homePref.defaultValue && homePref.value !== "about:blank") {
+      newValue = homePref.value;
     } else {
-      customUrlEl.value = "";
+      newValue = "";
+    }
+    if (customUrlEl.value !== newValue) {
+      customUrlEl.value = newValue;
     }
   },
 
   /**
    * _isHomePageDefaultValue
+   * @param {bool} isControlled Is an extension controlling the home page?
    * @returns {bool} Is the homepage set to the default pref value?
    */
   _isHomePageDefaultValue() {
+    const startupPref = Preferences.get("browser.startup.page");
     const homePref = Preferences.get("browser.startup.homepage");
-    return homePref.value === homePref.defaultValue;
+    return startupPref.value !== gMainPane.STARTUP_PREF_BLANK && homePref.value === homePref.defaultValue;
   },
 
   /**
-   * _isHomePageBlank
+   * isHomePageBlank
    * @returns {bool} Is the homepage set to about:blank?
    */
-  _isHomePageBlank() {
+  isHomePageBlank() {
+    const startupPref = Preferences.get("browser.startup.page");
     const homePref = Preferences.get("browser.startup.homepage");
-    return homePref.value === "about:blank" || homePref.value === "";
+    return homePref.value === "about:blank" || homePref.value === "" || startupPref.value === gMainPane.STARTUP_PREF_BLANK;
+  },
+  /**
+   * isHomePageControlled
+   * @resolves {bool} Is the homepage being controlled by an extension?
+   * @returns {Promise}
+   */
+  isHomePageControlled() {
+    const homePref = Preferences.get("browser.startup.homepage");
+    if (homePref.locked) {
+      return Promise.resolve(false);
+    }
+    return handleControllingExtension(
+      PREF_SETTING_TYPE, HOMEPAGE_OVERRIDE_KEY, "extensionControlled.homepage_override2");
   },
 
   /**
@@ -129,17 +159,23 @@ let gHomePane = {
     return tabs;
   },
 
-  _renderHomepageMode() {
+  _renderHomepageMode(isControlled) {
     const isDefault = this._isHomePageDefaultValue();
-    const isBlank = this._isHomePageBlank();
+    const isBlank = this.isHomePageBlank();
     const el = document.getElementById("homeMode");
+    let newValue;
 
-    if (isDefault) {
-      el.value = this.HOME_MODE_FIREFOX_HOME;
+    if (isControlled) {
+      newValue = this.HOME_MODE_CUSTOM;
+    } else if (isDefault) {
+      newValue = this.HOME_MODE_FIREFOX_HOME;
     } else if (isBlank) {
-      el.value = this.HOME_MODE_BLANK;
+      newValue = this.HOME_MODE_BLANK;
     } else {
-      el.value = this.HOME_MODE_CUSTOM;
+      newValue = this.HOME_MODE_CUSTOM;
+    }
+    if (el.value !== newValue) {
+      el.value = newValue;
     }
   },
 
@@ -172,15 +208,14 @@ let gHomePane = {
       hideControllingExtension(HOMEPAGE_OVERRIDE_KEY);
       this._setInputDisabledStates(false);
     } else {
-      // Asynchronously update the extension controlled UI.
-      const isHomePageControlled = await handleControllingExtension(
-        PREF_SETTING_TYPE, HOMEPAGE_OVERRIDE_KEY, "extensionControlled.homepage_override2");
-      this._setInputDisabledStates(isHomePageControlled);
+      const isControlled = await this.isHomePageControlled();
+      this._setInputDisabledStates(isControlled);
+      this._renderCustomSettings({isControlled});
+      this._renderHomepageMode(isControlled);
     }
   },
 
   syncFromHomePref() {
-    // Set the "Use Current Page(s)" button's text and enabled state.
     this._updateUseCurrentButton();
     this._renderCustomSettings();
     this._renderHomepageMode();
@@ -198,24 +233,29 @@ let gHomePane = {
 
   onMenuChange(event) {
     const {value} = event.target;
+    const startupPref = Preferences.get("browser.startup.page");
     const homePref = Preferences.get("browser.startup.homepage");
+
     switch (value) {
       case this.HOME_MODE_FIREFOX_HOME:
+        if (startupPref.value === gMainPane.STARTUP_PREF_BLANK) {
+          startupPref.value = gMainPane.STARTUP_PREF_HOMEPAGE;
+        }
         if (homePref.value !== homePref.defaultValue) {
           homePref.value = homePref.defaultValue;
         } else {
-          this._renderCustomSettings(false);
+          this._renderCustomSettings({shouldShow: false});
         }
         break;
       case this.HOME_MODE_BLANK:
         if (homePref.value !== "about:blank") {
           homePref.value = "about:blank";
         } else {
-          this._renderCustomSettings(false);
+          this._renderCustomSettings({shouldShow: false});
         }
         break;
       case this.HOME_MODE_CUSTOM:
-        this._renderCustomSettings(true);
+        this._renderCustomSettings({shouldShow: true});
         break;
     }
   },
@@ -237,8 +277,9 @@ let gHomePane = {
 
     // In this case, the button's disabled state is set by preferences.xml.
     let prefName = "pref.browser.homepage.disable_button.current_page";
-    if (Preferences.get(prefName).locked)
+    if (Preferences.get(prefName).locked) {
       return;
+    }
 
     useCurrent.disabled = tabCount < 1;
   },
