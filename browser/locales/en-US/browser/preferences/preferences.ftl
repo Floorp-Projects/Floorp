@@ -112,15 +112,9 @@ set-as-my-default-browser =
     .label = Make Default…
     .accesskey = D
 
-startup-page = When { -brand-short-name } starts
+startup-restore-previous-session =
+    .label = Restore previous session
     .accesskey = s
-
-startup-user-homepage =
-    .label = Show your home page
-startup-blank-page =
-    .label = Show a blank page
-startup-prev-session =
-    .label = Show your windows and tabs from last time
 
 disable-extension =
     .label = Disable Extension

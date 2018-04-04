@@ -43,6 +43,11 @@
   </vbox>
 #endif
 
+  <vbox id="startupPageBox">
+    <checkbox id="browserRestoreSession"
+              data-l10n-id="startup-restore-previous-session"/>
+  </vbox>
+
 #ifdef HAVE_SHELL_SERVICE
   <vbox id="defaultBrowserBox">
     <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
@@ -64,23 +69,6 @@
   </vbox>
 #endif
 
-  <vbox id="startupPageBox">
-    <label data-l10n-id="startup-page"
-           control="browserStartupPage"/>
-    <radiogroup id="browserStartupPage"
-                preference="browser.startup.page">
-      <radio data-l10n-id="startup-user-homepage"
-             value="1"
-             id="browserStartupHomePage"/>
-      <radio data-l10n-id="startup-blank-page"
-             value="0"
-             id="browserStartupBlank"/>
-      <radio data-l10n-id="startup-prev-session"
-             value="3"
-             id="browserStartupLastSession"/>
-    </radiogroup>
-
-  </vbox>
 </groupbox>
 
 <!-- Tab preferences -->
