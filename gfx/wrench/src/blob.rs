@@ -9,7 +9,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use webrender::api::*;
 
-// Serialize/deserialze the blob.
+// Serialize/deserialize the blob.
 
 pub fn serialize_blob(color: ColorU) -> Vec<u8> {
     vec![color.r, color.g, color.b, color.a]
@@ -55,7 +55,7 @@ fn render_blob(
             } else {
                 0
             };
-            // ..nested in the per-tile cherkerboard pattern
+            // ..nested in the per-tile checkerboard pattern
             let tc = if tile_checker { 0 } else { (1 - checker) * 40 };
 
             match descriptor.format {
@@ -70,7 +70,7 @@ fn render_blob(
                 }
                 _ => {
                     return Err(BlobImageError::Other(
-                        format!("Usupported image format {:?}", descriptor.format),
+                        format!("Unsupported image format {:?}", descriptor.format),
                     ));
                 }
             }

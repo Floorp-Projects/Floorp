@@ -172,7 +172,7 @@ type WeakCacheEntryHandle = WeakFreeListHandle<CacheEntry>;
 // In this case, the cache handle needs to re-upload this item
 // to the texture cache (see request() below).
 #[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Clone, Serialize))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct TextureCacheHandle {
     entry: Option<WeakCacheEntryHandle>,
@@ -497,7 +497,7 @@ impl TextureCache {
     // Retrieve the details of an item in the cache. This is used
     // during batch creation to provide the resource rect address
     // to the shaders and texture ID to the batching logic.
-    // This function will asssert in debug modes if the caller
+    // This function will assert in debug modes if the caller
     // tries to get a handle that was not requested this frame.
     pub fn get(&self, handle: &TextureCacheHandle) -> CacheItem {
         match handle.entry {

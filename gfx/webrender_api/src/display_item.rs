@@ -627,7 +627,7 @@ impl LocalClip {
     pub fn clip_rect(&self) -> &LayoutRect {
         match *self {
             LocalClip::Rect(ref rect) => rect,
-            LocalClip::RoundedRect(ref rect, _) => &rect,
+            LocalClip::RoundedRect(ref rect, _) => rect,
         }
     }
 
