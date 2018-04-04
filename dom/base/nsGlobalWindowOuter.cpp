@@ -1054,11 +1054,6 @@ nsGlobalWindowOuter::CleanUp()
   mChromeEventHandler = nullptr; // Forces Release
   mParentTarget = nullptr;
 
-  nsGlobalWindowInner* inner = GetCurrentInnerWindowInternal();
-  if (inner) {
-    inner->CleanUp();
-  }
-
   mArguments = nullptr;
 
   if (mIdleTimer) {
