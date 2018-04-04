@@ -15,13 +15,12 @@ import sys
 
 from io import BytesIO
 
+from xpidl import jsonxpt
 from buildconfig import topsrcdir
 from xpidl.header import print_header
 from xpidl.rust import print_rust_bindings
 from xpidl.rust_macros import print_rust_macros_bindings
-from xpidl.typelib import write_typelib
 from xpidl.xpidl import IDLParser
-from xpt import xpt_link
 
 from mozbuild.makeutil import Makefile
 from mozbuild.pythonutil import iter_modules_in_path
@@ -32,7 +31,7 @@ def process(input_dir, inc_paths, cache_dir, header_dir, xpcrs_dir,
             xpt_dir, deps_dir, module, stems):
     p = IDLParser(outputdir=cache_dir)
 
-    xpts = {}
+    xpts = []
     mk = Makefile()
     rule = mk.create_rule()
 
@@ -51,10 +50,7 @@ def process(input_dir, inc_paths, cache_dir, header_dir, xpcrs_dir,
         rs_rt_path = os.path.join(xpcrs_dir, 'rt', '%s.rs' % stem)
         rs_bt_path = os.path.join(xpcrs_dir, 'bt', '%s.rs' % stem)
 
-        xpt = BytesIO()
-        write_typelib(idl, xpt, path)
-        xpt.seek(0)
-        xpts[stem] = xpt
+        xpts.append(jsonxpt.build_typelib(idl))
 
         rule.add_dependencies(idl.deps)
 
@@ -67,9 +63,9 @@ def process(input_dir, inc_paths, cache_dir, header_dir, xpcrs_dir,
         with FileAvoidWrite(rs_bt_path) as fh:
             print_rust_macros_bindings(idl, fh, path)
 
-    # TODO use FileAvoidWrite once it supports binary mode.
     xpt_path = os.path.join(xpt_dir, '%s.xpt' % module)
-    xpt_link(xpts.values()).write(xpt_path)
+    with FileAvoidWrite(xpt_path) as fh:
+        jsonxpt.write(jsonxpt.link(xpts), fh)
 
     rule.add_targets([xpt_path])
     if deps_dir:
