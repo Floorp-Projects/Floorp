@@ -185,7 +185,6 @@ def build_interface(iface):
             methods.append(mk_method(a.name, [param], setter=1, hidden=a.noscript,
                                      context=a.implicit_jscontext))
 
-    implicit_builtinclass = False
     for member in iface.members:
         if isinstance(member, xpidl.ConstMember):
             build_const(member)
@@ -193,13 +192,6 @@ def build_interface(iface):
             build_attr(member)
         elif isinstance(member, xpidl.Method):
             build_method(member)
-
-            # XXX(hacky): If we have a notxpcom method (other than
-            # nsISupports::{AddRef,Release}), we need to implicitly mark
-            # ourselves as builtinclass, as we cannot be implemented in JS.
-            if member.notxpcom and iface.name != "nsISupports":
-                implicit_builtinclass = True
-
         elif isinstance(member, xpidl.CDATA):
             pass
         else:
@@ -218,7 +210,7 @@ def build_interface(iface):
         'flags': flags(
             ('scriptable', iface.attributes.scriptable),
             ('function', iface.attributes.function),
-            ('builtinclass', iface.attributes.builtinclass or implicit_builtinclass),
+            ('builtinclass', iface.attributes.builtinclass or iface.implicit_builtinclass),
             ('main_process_only', iface.attributes.main_process_scriptable_only),
         )
     }
