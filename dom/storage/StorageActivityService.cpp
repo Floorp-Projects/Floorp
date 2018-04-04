@@ -296,6 +296,13 @@ StorageActivityService::MoveOriginInTime(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+StorageActivityService::TestOnlyReset()
+{
+  mActivities.Clear();
+  return NS_OK;
+}
+
 NS_INTERFACE_MAP_BEGIN(StorageActivityService)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStorageActivityService)
   NS_INTERFACE_MAP_ENTRY(nsIStorageActivityService)
