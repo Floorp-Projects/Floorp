@@ -36,7 +36,7 @@ PrepareAndDispatch(nsXPTCStubBase* self,
 {
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
     nsXPTCMiniVariant* dispatchParams = nullptr;
-    nsIInterfaceInfo* iface_info = nullptr;
+    const nsXPTInterfaceInfo* iface_info = nullptr;
     const nsXPTMethodInfo* info;
     uint32_t paramCount;
     uint32_t i;
@@ -148,8 +148,6 @@ PrepareAndDispatch(nsXPTCStubBase* self,
     }
 
     result = self->CallMethod((uint16_t) methodIndex, info, dispatchParams);
-
-    NS_RELEASE(iface_info);
 
     if (dispatchParams != paramBuffer)
         delete [] dispatchParams;

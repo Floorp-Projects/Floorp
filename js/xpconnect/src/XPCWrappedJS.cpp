@@ -585,7 +585,7 @@ nsXPCWrappedJS::FindInherited(REFNSIID aIID)
 }
 
 NS_IMETHODIMP
-nsXPCWrappedJS::GetInterfaceInfo(nsIInterfaceInfo** infoResult)
+nsXPCWrappedJS::GetInterfaceInfo(const nsXPTInterfaceInfo** infoResult)
 {
     MOZ_ASSERT(GetClass(), "wrapper without class");
     MOZ_ASSERT(GetClass()->GetInterfaceInfo(), "wrapper class without interface");
@@ -593,11 +593,8 @@ nsXPCWrappedJS::GetInterfaceInfo(nsIInterfaceInfo** infoResult)
     // Since failing to get this info will crash some platforms(!), we keep
     // mClass valid at shutdown time.
 
-    nsCOMPtr<nsIInterfaceInfo> info = GetClass()->GetInterfaceInfo();
-    if (!info)
-        return NS_ERROR_UNEXPECTED;
-    info.forget(infoResult);
-    return NS_OK;
+    *infoResult = GetClass()->GetInterfaceInfo();
+    return *infoResult ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP

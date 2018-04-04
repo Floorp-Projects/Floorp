@@ -77,8 +77,8 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
             return false;
 
         // Note: ASSUMES that retval is last arg.
-        argc = (int) info->GetParamCount();
-        if (argc && info->GetParam((uint8_t)(argc-1)).IsRetval())
+        argc = (int) info->ParamCount();
+        if (info->HasRetval())
             argc-- ;
 
         callback = XPC_WN_CallMethod;
@@ -129,8 +129,7 @@ XPCNativeInterface::GetNewOrUsed(const nsIID* iid)
     if (iface)
         return iface.forget();
 
-    nsCOMPtr<nsIInterfaceInfo> info;
-    XPTInterfaceInfoManager::GetSingleton()->GetInfoForIID(iid, getter_AddRefs(info));
+    const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByIID(*iid);
     if (!info)
         return nullptr;
 
@@ -151,7 +150,7 @@ XPCNativeInterface::GetNewOrUsed(const nsIID* iid)
 
 // static
 already_AddRefed<XPCNativeInterface>
-XPCNativeInterface::GetNewOrUsed(nsIInterfaceInfo* info)
+XPCNativeInterface::GetNewOrUsed(const nsXPTInterfaceInfo* info)
 {
     RefPtr<XPCNativeInterface> iface;
 
@@ -189,8 +188,7 @@ XPCNativeInterface::GetNewOrUsed(nsIInterfaceInfo* info)
 already_AddRefed<XPCNativeInterface>
 XPCNativeInterface::GetNewOrUsed(const char* name)
 {
-    nsCOMPtr<nsIInterfaceInfo> info;
-    XPTInterfaceInfoManager::GetSingleton()->GetInfoForName(name, getter_AddRefs(info));
+    const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByName(name);
     return info ? GetNewOrUsed(info) : nullptr;
 }
 
@@ -204,7 +202,7 @@ XPCNativeInterface::GetISupports()
 
 // static
 already_AddRefed<XPCNativeInterface>
-XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
+XPCNativeInterface::NewInstance(const nsXPTInterfaceInfo* aInfo)
 {
     AutoJSContext cx;
     static const uint16_t MAX_LOCAL_MEMBER_COUNT = 16;
@@ -419,7 +417,7 @@ XPCNativeInterface::DebugDump(int16_t depth)
         XPC_LOG_INDENT();
         XPC_LOG_ALWAYS(("name is %s", GetNameString()));
         XPC_LOG_ALWAYS(("mMemberCount is %d", mMemberCount));
-        XPC_LOG_ALWAYS(("mInfo @ %p", mInfo.get()));
+        XPC_LOG_ALWAYS(("mInfo @ %p", mInfo));
         XPC_LOG_OUTDENT();
 #endif
 }
