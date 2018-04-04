@@ -5,5 +5,5 @@
 
 add_task(async function test_policy_disable_forget_button() {
   let widget = CustomizableUI.getWidget("panic-button");
-  is(widget.disabled, true, "Forget Button is disabled");
+  isnot(widget.type, "view", "Forget Button was not created");
 });
