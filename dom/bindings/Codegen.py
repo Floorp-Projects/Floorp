@@ -686,11 +686,6 @@ class CGPrototypeJSClass(CGThing):
             protoGetter=protoGetter)
 
 
-def NeedsGeneratedHasInstance(descriptor):
-    assert descriptor.interface.hasInterfaceObject()
-    return descriptor.hasXPConnectImpls
-
-
 def InterfaceObjectProtoGetter(descriptor, forXrays=False):
     """
     Returns a tuple with two elements:
@@ -741,9 +736,7 @@ class CGInterfaceObjectJSClass(CGThing):
             ctorname = "nullptr"
         else:
             ctorname = "ThrowingConstructor"
-        needsHasInstance = (
-            not NeedsGeneratedHasInstance(self.descriptor) and
-            self.descriptor.interface.hasInterfacePrototypeObject())
+        needsHasInstance = self.descriptor.interface.hasInterfacePrototypeObject()
 
         prototypeID, depth = PrototypeIDAndDepth(self.descriptor)
         slotCount = "DOM_INTERFACE_SLOTS_BASE"
@@ -1106,15 +1099,6 @@ class CGHeaders(CGWrapper):
         implementationIncludes |= set(self.getDeclarationFilename(i) for i in
                                       interfacesImplementingSelf)
 
-        # Grab the includes for the things that involve XPCOM interfaces
-        hasInstanceIncludes = set(self.getDeclarationFilename(d.interface) for d
-                                  in descriptors if
-                                  d.interface.hasInterfaceObject() and
-                                  NeedsGeneratedHasInstance(d) and
-                                  d.interface.hasInterfacePrototypeObject())
-        if len(hasInstanceIncludes) > 0:
-            hasInstanceIncludes.add("nsContentUtils.h")
-
         # Now find all the things we'll need as arguments because we
         # need to wrap or unwrap them.
         bindingHeaders = set()
@@ -1298,7 +1282,6 @@ class CGHeaders(CGWrapper):
                            definePre=_includeString(sorted(set(defineIncludes) |
                                                            bindingIncludes |
                                                            bindingHeaders |
-                                                           hasInstanceIncludes |
                                                            implementationIncludes)))
 
     @staticmethod
@@ -1980,52 +1963,6 @@ class CGNamedConstructors(CGThing):
             namedConstructors=namedConstructors)
 
 
-class CGHasInstanceHook(CGAbstractStaticMethod):
-    def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('unsigned', 'argc'),
-                Argument('JS::Value*', 'vp')]
-        assert descriptor.interface.hasInterfaceObject()
-        assert NeedsGeneratedHasInstance(descriptor)
-        CGAbstractStaticMethod.__init__(self, descriptor, HASINSTANCE_HOOK_NAME,
-                                        'bool', args)
-
-    def define(self):
-        return CGAbstractStaticMethod.define(self)
-
-    def definition_body(self):
-        return self.generate_code()
-
-    def generate_code(self):
-        return fill(
-            """
-            JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-            if (!args.get(0).isObject()) {
-              args.rval().setBoolean(false);
-              return true;
-            }
-
-            JS::Rooted<JSObject*> instance(cx, &args[0].toObject());
-
-            static_assert(IsBaseOf<nsISupports, ${nativeType}>::value,
-                          "HasInstance only works for nsISupports-based classes.");
-
-            bool ok = InterfaceHasInstance(cx, argc, vp);
-            if (!ok || args.rval().toBoolean()) {
-              return ok;
-            }
-
-            // FIXME Limit this to chrome by checking xpc::AccessCheck::isChrome(obj).
-            nsCOMPtr<nsISupports> native =
-              xpc::UnwrapReflectorToISupports(js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false));
-            nsCOMPtr<nsIDOM${name}> qiResult = do_QueryInterface(native);
-            args.rval().setBoolean(!!qiResult);
-            return true;
-            """,
-            nativeType=self.descriptor.nativeType,
-            name=self.descriptor.interface.identifier.name)
-
-
 def isChromeOnly(m):
     return m.getExtendedAttribute("ChromeOnly")
 
@@ -2439,20 +2376,6 @@ class MethodDefiner(PropertyDefiner):
                 "selfHostedName": "ArrayValues",
                 "length": 0,
                 "flags": "0", # Not enumerable, per spec.
-                "condition": MemberCondition()
-            })
-
-        if (static and
-            not unforgeable and
-            descriptor.interface.hasInterfaceObject() and
-            NeedsGeneratedHasInstance(descriptor)):
-            self.regular.append({
-                "name": "@@hasInstance",
-                "methodInfo": False,
-                "nativeName": HASINSTANCE_HOOK_NAME,
-                "length": 1,
-                # Flags match those of Function[Symbol.hasInstance]
-                "flags": "JSPROP_READONLY | JSPROP_PERMANENT",
                 "condition": MemberCondition()
             })
 
@@ -4340,14 +4263,6 @@ class CastableObjectUnwrapper():
             "target": target,
             "codeOnFailure": codeOnFailure,
         }
-        # Supporting both the "cross origin object" case and the "has
-        # XPConnect impls" case at the same time is a pain, so let's
-        # not do that.  That allows us to assume that our source is
-        # always a Handle or MutableHandle.
-        if allowCrossOriginObj and descriptor.hasXPConnectImpls:
-            raise TypeError("Interface %s both allows a cross-origin 'this' "
-                            "and has XPConnect impls.  We don't support that" %
-                            descriptor.name)
         if allowCrossOriginObj:
             self.substitution["uncheckedObjDecl"] = fill(
                 """
@@ -4368,30 +4283,14 @@ class CastableObjectUnwrapper():
                 codeOnFailure=(codeOnFailure % { 'securityError': 'true'}))
             self.substitution["source"] = "maybeUncheckedObj"
             self.substitution["mutableSource"] = "&maybeUncheckedObj"
-            # No need to set up xpconnectUnwrap, since it won't be
-            # used in the allowCrossOriginObj case.
         else:
             self.substitution["uncheckedObjDecl"] = ""
             self.substitution["uncheckedObjGet"] = ""
             self.substitution["source"] = source
             self.substitution["mutableSource"] = mutableSource
-            xpconnectUnwrap = (
-                "nsresult rv = UnwrapXPConnect<${type}>(cx, ${mutableSource}, getter_AddRefs(objPtr));\n")
 
-        if descriptor.hasXPConnectImpls:
-            self.substitution["codeOnFailure"] = string.Template(
-                "RefPtr<${type}> objPtr;\n" +
-                xpconnectUnwrap +
-                "if (NS_FAILED(rv)) {\n"
-                "${indentedCodeOnFailure}"
-                "}\n"
-                "// We should have an object\n"
-                "MOZ_ASSERT(objPtr);\n"
-                "${target} = objPtr;\n"
-            ).substitute(self.substitution,
-                         indentedCodeOnFailure=indent(codeOnFailure))
-        elif (isCallbackReturnValue == "JSImpl" and
-              descriptor.interface.isJSImplemented()):
+        if (isCallbackReturnValue == "JSImpl" and
+            descriptor.interface.isJSImplemented()):
             exceptionCode = exceptionCode or codeOnFailure
             self.substitution["codeOnFailure"] = fill(
                 """
@@ -6835,18 +6734,10 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             if isConstructorRetval:
                 wrapArgs += ", desiredProto"
             wrap = "%s(%s)" % (wrapMethod, wrapArgs)
-            if not descriptor.hasXPConnectImpls:
-                # Can only fail to wrap as a new-binding object
-                # if they already threw an exception.
-                failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
-                          exceptionCode)
-            else:
-                if descriptor.notflattened:
-                    raise TypeError("%s has XPConnect impls but not flattened; "
-                                    "fallback won't work correctly" %
-                                    descriptor.interface.identifier.name)
-                # Try old-style wrapping for bindings which might be XPConnect impls.
-                failed = wrapAndSetPtr("HandleNewBindingWrappingFailure(cx, ${obj}, %s, ${jsvalHandle})" % result)
+            # Can only fail to wrap as a new-binding object
+            # if they already threw an exception.
+            failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
+                      exceptionCode)
         else:
             if descriptor.notflattened:
                 getIID = "&NS_GET_IID(%s), " % descriptor.nativeType
@@ -9226,12 +9117,6 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         nativeName = CGSpecializedGetter.makeNativeName(self.descriptor,
                                                         self.attr)
         if self.attr.slotIndices is not None:
-            if self.descriptor.hasXPConnectImpls:
-                raise TypeError("Interface '%s' has XPConnect impls, so we "
-                                "can't use our slot for property '%s'!" %
-                                (self.descriptor.interface.identifier.name,
-                                 self.attr.identifier.name))
-
             # We're going to store this return value in a slot on some object,
             # to cache it.  The question is, which object?  For dictionary and
             # sequence return values, we want to use a slot on the Xray expando
@@ -12862,12 +12747,6 @@ class CGDescriptor(CGThing):
         if descriptor.interface.isJSImplemented():
             for m in clearableCachedAttrs(descriptor):
                 cgThings.append(CGJSImplClearCachedValueMethod(descriptor, m))
-
-        # Need to output our generated hasinstance bits before
-        # PropertyArrays tries to use them.
-        if (descriptor.interface.hasInterfaceObject() and
-            NeedsGeneratedHasInstance(descriptor)):
-            cgThings.append(CGHasInstanceHook(descriptor))
 
         properties = PropertyArrays(descriptor)
         cgThings.append(CGGeneric(define=str(properties)))

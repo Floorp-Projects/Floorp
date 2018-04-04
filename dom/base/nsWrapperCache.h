@@ -343,7 +343,9 @@ protected:
 private:
   // Friend declarations for things that need to be able to call
   // SetIsNotDOMBinding().  The goal is to get rid of all of these, and
-  // SetIsNotDOMBinding() too.
+  // SetIsNotDOMBinding() too.  Once that's done, we can remove the
+  // couldBeDOMBinding bits in DoGetOrCreateDOMReflector, as well as any ither
+  // consumers of IsDOMBinding().
   friend class SandboxPrivate;
   void SetIsNotDOMBinding()
   {
