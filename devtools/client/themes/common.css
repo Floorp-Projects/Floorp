@@ -101,6 +101,12 @@ html|button, html|select {
 .devtools-autocomplete-listbox .autocomplete-item > .autocomplete-value {
   margin: 0;
   padding: 0;
+  float: left;
+}
+
+.devtools-autocomplete-listbox .autocomplete-item > .autocomplete-postlabel {
+  font-style: italic;
+  float: right;
 }
 
 .devtools-autocomplete-listbox .autocomplete-item > .autocomplete-count {

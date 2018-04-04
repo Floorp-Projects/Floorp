@@ -72,10 +72,11 @@ function createSpan(doc) {
  *        - {String} completion, the expected value of the auto-completion
  *        - {Number} index, the index of the selected suggestion in the popup
  *        - {Number} total, the total number of suggestions in the popup
+ *        - {String} postLabel, the expected post label for the selected suggestion
  * @param {InplaceEditor} editor
  *        The InplaceEditor instance being tested
  */
-async function testCompletion([key, completion, index, total], editor) {
+async function testCompletion([key, completion, index, total, postLabel], editor) {
   info("Pressing key " + key);
   info("Expecting " + completion);
 
@@ -105,6 +106,14 @@ async function testCompletion([key, completion, index, total], editor) {
   if (completion !== null) {
     is(editor.input.value, completion, "Correct value is autocompleted");
   }
+
+  if (postLabel) {
+    let selectedItem = editor.popup.getItems()[index];
+    let selectedElement = editor.popup.elements.get(selectedItem);
+    ok(selectedElement.textContent.includes(postLabel),
+      "Selected popup element contains the expected post-label");
+  }
+
   if (total === 0) {
     ok(!(editor.popup && editor.popup.isOpen), "Popup is closed");
   } else {
