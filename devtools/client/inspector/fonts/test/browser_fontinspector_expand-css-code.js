@@ -20,10 +20,10 @@ add_task(async function() {
   info("Expanding the rule by clicking on the expander icon");
   let onExpanded = BrowserTestUtils.waitForCondition(() => {
     return codeEl.textContent === `@font-face {
-  font-family: "bar";
+  font-family: bar;
   src: url("bad/font/name.ttf"), url("ostrich-regular.ttf") format("truetype");
 }`;
-  }, "Waiting for the font-face rule");
+  }, "Waiting for the font-face rule 1");
 
   let expander = fontEl.querySelector(".font-css-code .theme-twisty");
   expander.click();
@@ -37,11 +37,11 @@ add_task(async function() {
 
   onExpanded = BrowserTestUtils.waitForCondition(() => {
     return codeEl.textContent === `@font-face {
-  font-family: "bar";
-  font-weight: bold;
+  font-family: bar;
   src: url("ostrich-black.ttf");
+  font-weight: bold;
 }`;
-  }, "Waiting for the font-face rule");
+  }, "Waiting for the font-face rule 2");
 
   expander = fontEl.querySelector(".font-css-code .font-css-code-expander");
   expander.click();

@@ -274,6 +274,8 @@ WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall,
   , mCall(aCall) // refcounted store of the call object
   , mSendStreamConfig(this) // 'this' is stored but not  dereferenced in the constructor.
   , mRecvStreamConfig(this) // 'this' is stored but not  dereferenced in the constructor.
+  , mAllowSsrcChange(true)
+  , mWaitingForInitialSsrc(true)
   , mRecvSSRC(0)
   , mRecvSSRCSetInProgress(false)
   , mSendCodecPlugin(nullptr)
@@ -878,9 +880,6 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
 bool
 WebrtcVideoConduit::SetRemoteSSRC(unsigned int ssrc)
 {
-  CSFLogDebug(LOGTAG, "%s: SSRC %u (0x%x)", __FUNCTION__, ssrc, ssrc);
-  mRecvStreamConfig.rtp.remote_ssrc = ssrc;
-
   unsigned int current_ssrc;
   if (!GetRemoteSSRC(&current_ssrc)) {
     return false;
@@ -894,6 +893,10 @@ WebrtcVideoConduit::SetRemoteSSRC(unsigned int ssrc)
   if (StopReceiving() != kMediaConduitNoError) {
     return false;
   }
+
+  CSFLogDebug(LOGTAG, "%s: SSRC %u (0x%x)", __FUNCTION__, ssrc, ssrc);
+  mRecvStreamConfig.rtp.remote_ssrc = ssrc;
+  mWaitingForInitialSsrc = false;
 
   // This will destroy mRecvStream and create a new one (argh, why can't we change
   // it without a full destroy?)
@@ -1969,76 +1972,78 @@ WebrtcVideoConduit::DeliverPacket(const void* data, int len)
 MediaConduitErrorCode
 WebrtcVideoConduit::ReceivedRTPPacket(const void* data, int len, uint32_t ssrc)
 {
-  // Handle the unknown ssrc (and ssrc-not-signaled case).
-  // We can't just do this here; it has to happen on MainThread :-(
-  // We also don't want to drop the packet, nor stall this thread, so we hold
-  // the packet (and any following) for inserting once the SSRC is set.
-  bool queue = mRecvSSRCSetInProgress;
-  if (queue || mRecvSSRC != ssrc) {
-    // capture packet for insertion after ssrc is set -- do this before
-    // sending the runnable, since it may pull from this.  Since it
-    // dispatches back to us, it's less critial to do this here, but doesn't
-    // hurt.
-    UniquePtr<QueuedPacket> packet((QueuedPacket*) malloc(sizeof(QueuedPacket) + len-1));
-    packet->mLen = len;
-    memcpy(packet->mData, data, len);
-    CSFLogDebug(LOGTAG, "queuing packet: seq# %u, Len %d ",
-                (uint16_t)ntohs(((uint16_t*) packet->mData)[1]), packet->mLen);
-    if (queue) {
+  if (mAllowSsrcChange || mWaitingForInitialSsrc) {
+    // Handle the unknown ssrc (and ssrc-not-signaled case).
+    // We can't just do this here; it has to happen on MainThread :-(
+    // We also don't want to drop the packet, nor stall this thread, so we hold
+    // the packet (and any following) for inserting once the SSRC is set.
+    bool queue = mRecvSSRCSetInProgress;
+    if (queue || mRecvSSRC != ssrc) {
+      // capture packet for insertion after ssrc is set -- do this before
+      // sending the runnable, since it may pull from this.  Since it
+      // dispatches back to us, it's less critial to do this here, but doesn't
+      // hurt.
+      UniquePtr<QueuedPacket> packet((QueuedPacket*) malloc(sizeof(QueuedPacket) + len-1));
+      packet->mLen = len;
+      memcpy(packet->mData, data, len);
+      CSFLogDebug(LOGTAG, "queuing packet: seq# %u, Len %d ",
+                  (uint16_t)ntohs(((uint16_t*) packet->mData)[1]), packet->mLen);
+      if (queue) {
+        mQueuedPackets.AppendElement(Move(packet));
+        return kMediaConduitNoError;
+      }
+      // a new switch needs to be done
+      // any queued packets are from a previous switch that hasn't completed
+      // yet; drop them and only process the latest SSRC
+      mQueuedPackets.Clear();
       mQueuedPackets.AppendElement(Move(packet));
+
+      CSFLogDebug(LOGTAG, "%s: switching from SSRC %u to %u", __FUNCTION__,
+                  mRecvSSRC, ssrc);
+      // we "switch" here immediately, but buffer until the queue is released
+      mRecvSSRC = ssrc;
+      mRecvSSRCSetInProgress = true;
+      queue = true;
+
+      // Ensure lamba captures refs
+      RefPtr<WebrtcVideoConduit> self = this;
+      nsCOMPtr<nsIThread> thread;
+      if (NS_WARN_IF(NS_FAILED(NS_GetCurrentThread(getter_AddRefs(thread))))) {
+        return kMediaConduitRTPProcessingFailed;
+      }
+      NS_DispatchToMainThread(media::NewRunnableFrom([self, thread, ssrc]() mutable {
+            // Normally this is done in CreateOrUpdateMediaPipeline() for
+            // initial creation and renegotiation, but here we're rebuilding the
+            // Receive channel at a lower level.  This is needed whenever we're
+            // creating a GMPVideoCodec (in particular, H264) so it can communicate
+            // errors to the PC.
+            WebrtcGmpPCHandleSetter setter(self->mPCHandle);
+            self->SetRemoteSSRC(ssrc); // this will likely re-create the VideoReceiveStream
+            // We want to unblock the queued packets on the original thread
+            thread->Dispatch(media::NewRunnableFrom([self, ssrc]() mutable {
+                  if (ssrc == self->mRecvSSRC) {
+                    // SSRC is set; insert queued packets
+                    for (auto& packet : self->mQueuedPackets) {
+                      CSFLogDebug(LOGTAG, "Inserting queued packets: seq# %u, Len %d ",
+                                  (uint16_t)ntohs(((uint16_t*) packet->mData)[1]), packet->mLen);
+
+                      if (self->DeliverPacket(packet->mData, packet->mLen) != kMediaConduitNoError) {
+                        CSFLogError(LOGTAG, "%s RTP Processing Failed", __FUNCTION__);
+                        // Keep delivering and then clear the queue
+                      }
+                    }
+                    self->mQueuedPackets.Clear();
+                    // we don't leave inprogress until there are no changes in-flight
+                    self->mRecvSSRCSetInProgress = false;
+                  }
+                  // else this is an intermediate switch; another is in-flight
+
+                  return NS_OK;
+                }), NS_DISPATCH_NORMAL);
+            return NS_OK;
+          }));
       return kMediaConduitNoError;
     }
-    // a new switch needs to be done
-    // any queued packets are from a previous switch that hasn't completed
-    // yet; drop them and only process the latest SSRC
-    mQueuedPackets.Clear();
-    mQueuedPackets.AppendElement(Move(packet));
-
-    CSFLogDebug(LOGTAG, "%s: switching from SSRC %u to %u", __FUNCTION__,
-                mRecvSSRC, ssrc);
-    // we "switch" here immediately, but buffer until the queue is released
-    mRecvSSRC = ssrc;
-    mRecvSSRCSetInProgress = true;
-    queue = true;
-
-    // Ensure lamba captures refs
-    RefPtr<WebrtcVideoConduit> self = this;
-    nsCOMPtr<nsIThread> thread;
-    if (NS_WARN_IF(NS_FAILED(NS_GetCurrentThread(getter_AddRefs(thread))))) {
-      return kMediaConduitRTPProcessingFailed;
-    }
-    NS_DispatchToMainThread(media::NewRunnableFrom([self, thread, ssrc]() mutable {
-          // Normally this is done in CreateOrUpdateMediaPipeline() for
-          // initial creation and renegotiation, but here we're rebuilding the
-          // Receive channel at a lower level.  This is needed whenever we're
-          // creating a GMPVideoCodec (in particular, H264) so it can communicate
-          // errors to the PC.
-          WebrtcGmpPCHandleSetter setter(self->mPCHandle);
-          self->SetRemoteSSRC(ssrc); // this will likely re-create the VideoReceiveStream
-          // We want to unblock the queued packets on the original thread
-          thread->Dispatch(media::NewRunnableFrom([self, ssrc]() mutable {
-                if (ssrc == self->mRecvSSRC) {
-                  // SSRC is set; insert queued packets
-                  for (auto& packet : self->mQueuedPackets) {
-                    CSFLogDebug(LOGTAG, "Inserting queued packets: seq# %u, Len %d ",
-                                (uint16_t)ntohs(((uint16_t*) packet->mData)[1]), packet->mLen);
-
-                    if (self->DeliverPacket(packet->mData, packet->mLen) != kMediaConduitNoError) {
-                      CSFLogError(LOGTAG, "%s RTP Processing Failed", __FUNCTION__);
-                      // Keep delivering and then clear the queue
-                    }
-                  }
-                  self->mQueuedPackets.Clear();
-                  // we don't leave inprogress until there are no changes in-flight
-                  self->mRecvSSRCSetInProgress = false;
-                }
-                // else this is an intermediate switch; another is in-flight
-
-                return NS_OK;
-              }), NS_DISPATCH_NORMAL);
-          return NS_OK;
-        }));
-    return kMediaConduitNoError;
   }
 
   CSFLogVerbose(LOGTAG, "%s: seq# %u, Len %d, SSRC %u (0x%x) ", __FUNCTION__,

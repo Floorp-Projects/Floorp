@@ -535,7 +535,10 @@ struct DIGroup
       }
     }
 
+    // Round the bounds in a way that matches the existing fallback code
     LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(mGroupBounds, aGrouper->mAppUnitsPerDevPixel);
+    bounds = LayoutDeviceRect(RoundedToInt(bounds));
+
     IntSize size = mGroupBounds.Size().ScaleToNearestPixels(mScale.width, mScale.height, aGrouper->mAppUnitsPerDevPixel);
 
     if (mInvalidRect.IsEmpty()) {
@@ -581,12 +584,13 @@ struct DIGroup
 
     PaintItemRange(aGrouper, aStartItem, aEndItem, context, recorder);
 
-    if (!mKey) {
-#if 0
+    if (aStartItem->Frame()->PresContext()->GetPaintFlashing()) {
       context->SetMatrix(Matrix());
-      dt->FillRect(gfx::Rect(0, 0, size.width, size.height), gfx::ColorPattern(gfx::Color(0., 1., 0., 0.5)));
+      float r = float(rand()) / RAND_MAX;
+      float g = float(rand()) / RAND_MAX;
+      float b = float(rand()) / RAND_MAX;
+      dt->FillRect(gfx::Rect(0, 0, size.width, size.height), gfx::ColorPattern(gfx::Color(r, g, b, 0.5)));
       dt->FlushItem(IntRect(IntPoint(0, 0), size));
-#endif
     }
 
     // XXX: set this correctly perhaps using aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped).Contains(paintBounds);?

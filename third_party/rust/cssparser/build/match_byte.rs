@@ -2,83 +2,63 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use quote::{ToTokens, Tokens};
+use quote::ToTokens;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
-use std::vec;
-use std::iter;
 use syn;
+use syn::fold::Fold;
+
+use proc_macro2::TokenStream;
+
+struct MatchByteParser {
+}
 
 pub fn expand(from: &Path, to: &Path) {
     let mut source = String::new();
     File::open(from).unwrap().read_to_string(&mut source).unwrap();
-    let tts = syn::parse_token_trees(&source).expect("Parsing rules.rs module");
-    let mut tokens = Tokens::new();
-    tokens.append_all(expand_tts(tts));
+    let ast = syn::parse_file(&source).expect("Parsing rules.rs module");
+    let mut m = MatchByteParser {};
+    let ast = m.fold_file(ast);
 
-    let code = tokens.to_string().replace("{ ", "{\n").replace(" }", "\n}");
+    let code = ast.into_tokens().to_string().replace("{ ", "{\n").replace(" }", "\n}");
     File::create(to).unwrap().write_all(code.as_bytes()).unwrap();
 }
 
-fn expand_tts(tts: Vec<syn::TokenTree>) -> Vec<syn::TokenTree> {
-    use syn::*;
-    let mut expanded = Vec::new();
-    let mut tts = tts.into_iter();
-    while let Some(tt) = tts.next() {
-        match tt {
-            TokenTree::Token(Token::Ident(ident)) => {
-                if ident != "match_byte" {
-                    expanded.push(TokenTree::Token(Token::Ident(ident)));
-                    continue;
-                }
-
-                match tts.next() {
-                    Some(TokenTree::Token(Token::Not)) => {},
-                    other => {
-                        expanded.push(TokenTree::Token(Token::Ident(ident)));
-                        if let Some(other) = other {
-                            expanded.push(other);
-                        }
-                        continue;
-                    }
-                }
-
-                let tts = match tts.next() {
-                    Some(TokenTree::Delimited(Delimited { tts, .. })) => tts,
-                    other => {
-                        expanded.push(TokenTree::Token(Token::Ident(ident)));
-                        expanded.push(TokenTree::Token(Token::Not));
-                        if let Some(other) = other {
-                            expanded.push(other);
-                        }
-                        continue;
-                    }
-                };
-
-                let (to_be_matched, table, cases, wildcard_binding) = parse_match_bytes_macro(tts);
-                let expr = expand_match_bytes_macro(to_be_matched,
-                                                    &table,
-                                                    cases,
-                                                    wildcard_binding);
-
-                let tts = syn::parse_token_trees(&expr)
-                    .expect("parsing macro expansion as token trees");
-                expanded.extend(expand_tts(tts));
-            }
-            TokenTree::Delimited(Delimited { delim, tts }) => {
-                expanded.push(TokenTree::Delimited(Delimited {
-                    delim: delim,
-                    tts: expand_tts(tts),
-                }))
-            }
-            other => expanded.push(other),
-        }
-    }
-    expanded
+struct MatchByte {
+    expr: syn::Expr,
+    arms: Vec<syn::Arm>,
 }
 
-/// Parses a token tree corresponding to the `match_byte` macro.
+impl syn::synom::Synom for MatchByte {
+    named!(parse -> Self, do_parse!(
+        expr: syn!(syn::Expr) >>
+        punct!(,) >>
+        arms: many0!(syn!(syn::Arm)) >> (
+            MatchByte {
+                expr,
+                arms
+            }
+        )
+    ));
+}
+
+fn get_byte_from_expr_lit(expr: &Box<syn::Expr>) -> u8 {
+    match **expr {
+        syn::Expr::Lit(syn::ExprLit { ref lit, .. }) => {
+            if let syn::Lit::Byte(ref byte) = *lit {
+                byte.value()
+            }
+            else {
+                panic!("Found a pattern that wasn't a byte")
+            }
+        },
+        _ => unreachable!(),
+    }
+}
+
+
+/// Expand a TokenStream corresponding to the `match_byte` macro.
 ///
 /// ## Example
 ///
@@ -88,184 +68,111 @@ fn expand_tts(tts: Vec<syn::TokenTree>) -> Vec<syn::TokenTree> {
 ///     b'0'..b'9' => { ... }
 ///     b'\n' | b'\\' => { ... }
 ///     foo => { ... }
-/// }
+///  }
+///  ```
 ///
-/// Returns:
-///  * The token tree that contains the expression to be matched (in this case
-///    `tokenizer.next_byte_unchecked()`.
-///
-///  * The table with the different cases per byte, each entry in the table
-///    contains a non-zero integer representing a different arm of the
-///    match expression.
-///
-///  * The list of cases containing the expansion of the arms of the match
-///    expression.
-///
-///  * An optional identifier to which the wildcard pattern is matched (`foo` in
-///    this case).
-///
-fn parse_match_bytes_macro(tts: Vec<syn::TokenTree>) -> (Vec<syn::TokenTree>, [u8; 256], Vec<Case>, Option<syn::Ident>) {
-    let mut tts = tts.into_iter();
-
-    // Grab the thing we're matching, until we find a comma.
-    let mut left_hand_side = vec![];
-    loop {
-        match tts.next() {
-            Some(syn::TokenTree::Token(syn::Token::Comma)) => break,
-            Some(other) => left_hand_side.push(other),
-            None => panic!("Expected not to run out of tokens looking for a comma"),
-        }
-    }
-
-    let mut cases = vec![];
+fn expand_match_byte(body: &TokenStream) -> syn::Expr {
+    let match_byte: MatchByte = syn::parse2(body.clone()).unwrap();
+    let expr = match_byte.expr;
+    let mut cases = Vec::new();
     let mut table = [0u8; 256];
+    let mut match_body = Vec::new();
+    let mut wildcard = None;
 
-    let mut tts = tts.peekable();
-    let mut case_id: u8 = 1;
-    let mut binding = None;
-    while tts.len() > 0 {
-        cases.push(parse_case(&mut tts, &mut table, &mut binding, case_id));
+    for (i, ref arm) in match_byte.arms.iter().enumerate() {
+        let case_id = i + 1;
+        let index = case_id as isize;
+        let name = syn::Ident::from(format!("Case{}", case_id));
 
-        // Allow an optional comma between cases.
-        match tts.peek() {
-            Some(&syn::TokenTree::Token(syn::Token::Comma)) => {
-                tts.next();
-            },
-            _ => {},
-        }
-
-        case_id += 1;
-    }
-
-    (left_hand_side, table, cases, binding)
-}
-
-#[derive(Debug)]
-struct Case(Vec<syn::TokenTree>);
-
-/// Parses a single pattern => expression, and returns the case, filling in the
-/// table with the case id for every byte that matched.
-///
-/// The `binding` parameter is the identifier that is used by the wildcard
-/// pattern.
-fn parse_case(tts: &mut iter::Peekable<vec::IntoIter<syn::TokenTree>>,
-              table: &mut [u8; 256],
-              binding: &mut Option<syn::Ident>,
-              case_id: u8)
-              -> Case {
-    // The last byte checked, as part of this pattern, to properly detect
-    // ranges.
-    let mut last_byte: Option<u8> = None;
-
-    // Loop through the pattern filling with bytes the table.
-    loop {
-        match tts.next() {
-            Some(syn::TokenTree::Token(syn::Token::Literal(syn::Lit::Byte(byte)))) => {
-                table[byte as usize] = case_id;
-                last_byte = Some(byte);
-            }
-            Some(syn::TokenTree::Token(syn::Token::BinOp(syn::BinOpToken::Or))) => {
-                last_byte = None; // This pattern is over.
-            },
-            Some(syn::TokenTree::Token(syn::Token::DotDotDot)) => {
-                assert!(last_byte.is_some(), "Expected closed range!");
-                match tts.next() {
-                    Some(syn::TokenTree::Token(syn::Token::Literal(syn::Lit::Byte(byte)))) => {
-                        for b in last_byte.take().unwrap()..byte {
-                            if table[b as usize] == 0 {
-                                table[b as usize] = case_id;
-                            }
-                        }
-                        if table[byte as usize] == 0 {
-                            table[byte as usize] = case_id;
+        for pat in &arm.pats {
+            match pat {
+                &syn::Pat::Lit(syn::PatLit{ref expr}) => {
+                    let value = get_byte_from_expr_lit(expr);
+                    if table[value as usize] == 0 {
+                        table[value as usize] = case_id as u8;
+                    }
+                },
+                &syn::Pat::Range(syn::PatRange { ref lo, ref hi, .. }) => {
+                    let lo = get_byte_from_expr_lit(lo);
+                    let hi = get_byte_from_expr_lit(hi);
+                    for value in lo..hi {
+                        if table[value as usize] == 0 {
+                            table[value as usize] = case_id as u8;
                         }
                     }
-                    other => panic!("Expected closed range, got: {:?}", other),
-                }
-            },
-            Some(syn::TokenTree::Token(syn::Token::FatArrow)) => break,
-            Some(syn::TokenTree::Token(syn::Token::Ident(ident))) => {
-                assert_eq!(last_byte, None, "I don't support ranges with identifiers!");
-                assert_eq!(*binding, None);
-                for byte in table.iter_mut() {
-                    if *byte == 0 {
-                        *byte = case_id;
+                    if table[hi as usize] == 0 {
+                        table[hi as usize] = case_id as u8;
                     }
+                },
+                &syn::Pat::Wild(_) => {
+                    for byte in table.iter_mut() {
+                        if *byte == 0 {
+                            *byte = case_id as u8;
+                        }
+                    }
+                },
+                &syn::Pat::Ident(syn::PatIdent { ident, .. }) => {
+                    assert_eq!(wildcard, None);
+                    wildcard = Some(ident);
+                    for byte in table.iter_mut() {
+                        if *byte == 0 {
+                            *byte = case_id as u8;
+                        }
+                    }
+                },
+                _ => {
+                    panic!("Unexpected pattern: {:?}. Buggy code ?", pat);
                 }
-                *binding = Some(ident)
             }
-            Some(syn::TokenTree::Token(syn::Token::Underscore)) => {
-                assert_eq!(last_byte, None);
-                for byte in table.iter_mut() {
-                    if *byte == 0 {
-                        *byte = case_id;
-                    }
-                }
-            },
-            other => panic!("Expected literal byte, got: {:?}", other),
         }
+        cases.push(quote!(#name = #index));
+        let body = &arm.body;
+        match_body.push(quote!(Case::#name => { #body }))
     }
+    let en = quote!(enum Case {
+        #(#cases),*
+    });
 
-    match tts.next() {
-        Some(syn::TokenTree::Delimited(syn::Delimited { delim: syn::DelimToken::Brace, tts })) => {
-            Case(tts)
-        }
-        other => panic!("Expected case with braces after fat arrow, got: {:?}", other),
+    let mut table_content = Vec::new();
+    for entry in table.iter() {
+        let name: syn::Path = syn::parse_str(&format!("Case::Case{}", entry)).unwrap();
+        table_content.push(name);
     }
-}
+    let table = quote!(static __CASES: [Case; 256] = [#(#table_content),*];);
 
-fn expand_match_bytes_macro(to_be_matched: Vec<syn::TokenTree>,
-                            table: &[u8; 256],
-                            cases: Vec<Case>,
-                            binding: Option<syn::Ident>)
-                            -> String {
-    use std::fmt::Write;
-
-    assert!(!to_be_matched.is_empty());
-    assert!(table.iter().all(|b| *b != 0), "Incomplete pattern? Bogus code!");
-
-    // We build the expression with text since it's easier.
-    let mut expr = "{\n".to_owned();
-    expr.push_str("enum Case {\n");
-    for (i, _) in cases.iter().enumerate() {
-        write!(&mut expr, "Case{} = {},", i + 1, i + 1).unwrap();
-    }
-    expr.push_str("}\n"); // enum Case
-
-    expr.push_str("static __CASES: [Case; 256] = [");
-    for byte in table.iter() {
-        write!(&mut expr, "Case::Case{}, ", *byte).unwrap();
-    }
-    expr.push_str("];\n");
-
-    let mut tokens = Tokens::new();
-    let to_be_matched = syn::Delimited {
-        delim: if binding.is_some() { syn::DelimToken::Brace } else { syn::DelimToken::Paren },
-        tts: to_be_matched
+    let expr = if let Some(binding) = wildcard {
+        quote!({ #en #table let #binding = #expr; match __CASES[#binding as usize] { #(#match_body),* }})
+    } else {
+        quote!({ #en #table match __CASES[#expr as usize] { #(#match_body),* }})
     };
-    to_be_matched.to_tokens(&mut tokens);
 
-    if let Some(ref binding) = binding {
-        write!(&mut expr, "let {} = {};\n", binding.to_string(), tokens.as_str()).unwrap();
+    syn::parse2(expr.into()).unwrap()
+}
+
+impl Fold for MatchByteParser {
+    fn fold_stmt(&mut self, stmt: syn::Stmt) -> syn::Stmt {
+        match stmt {
+            syn::Stmt::Item(syn::Item::Macro(syn::ItemMacro{ ref mac, .. })) => {
+                if mac.path == parse_quote!(match_byte) {
+                    return syn::fold::fold_stmt(self, syn::Stmt::Expr(expand_match_byte(&mac.tts)))
+                }
+            },
+            _ => {}
+        }
+
+        syn::fold::fold_stmt(self, stmt)
     }
 
-    write!(&mut expr, "match __CASES[{} as usize] {{", match binding {
-        Some(binding) => binding.to_string(),
-        None => tokens.to_string(),
-    }).unwrap();
+    fn fold_expr(&mut self, expr: syn::Expr) -> syn::Expr {
+        match expr {
+            syn::Expr::Macro(syn::ExprMacro{ ref mac, .. }) => {
+                if mac.path == parse_quote!(match_byte) {
+                    return syn::fold::fold_expr(self, expand_match_byte(&mac.tts))
+                }
+            },
+            _ => {}
+        }
 
-    for (i, case) in cases.into_iter().enumerate() {
-        let mut case_tokens = Tokens::new();
-        let case = syn::Delimited {
-            delim: syn::DelimToken::Brace,
-            tts: case.0
-        };
-        case.to_tokens(&mut case_tokens);
-        write!(&mut expr, "Case::Case{} => {},\n", i + 1, case_tokens.as_str()).unwrap();
+        syn::fold::fold_expr(self, expr)
     }
-    expr.push_str("}\n"); // match
-
-    expr.push_str("}\n"); // top
-
-    expr
 }

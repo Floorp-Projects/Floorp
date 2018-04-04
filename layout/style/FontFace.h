@@ -15,11 +15,12 @@
 #include "nsWrapperCache.h"
 
 class gfxFontFaceBufferSource;
-class nsCSSFontFaceRule;
+struct RawServoFontFaceRule;
 
 namespace mozilla {
 struct CSSFontFaceDescriptors;
 class PostTraversalTask;
+class ServoFontFaceRule;
 namespace dom {
 class FontFaceBufferSource;
 struct FontFaceDescriptors;
@@ -79,9 +80,9 @@ public:
 
   static already_AddRefed<FontFace>
   CreateForRule(nsISupports* aGlobal, FontFaceSet* aFontFaceSet,
-                nsCSSFontFaceRule* aRule);
+                RawServoFontFaceRule* aRule);
 
-  nsCSSFontFaceRule* GetRule() { return mRule; }
+  RawServoFontFaceRule* GetRule() { return mRule; }
 
   void GetDesc(nsCSSFontDesc aDescID, nsCSSValue& aResult) const;
 
@@ -180,15 +181,9 @@ private:
   // Helper function for Load.
   void DoLoad();
 
-  /**
-   * Parses a @font-face descriptor value, storing the result in aResult.
-   * Returns whether the parsing was successful.
-   */
-  bool ParseDescriptor(nsCSSFontDesc aDescID, const nsAString& aString,
-                       nsCSSValue& aResult);
-
   // Helper function for the descriptor setter methods.
-  void SetDescriptor(nsCSSFontDesc aFontDesc,
+  // Returns whether it successfully sets the descriptor.
+  bool SetDescriptor(nsCSSFontDesc aFontDesc,
                      const nsAString& aValue,
                      mozilla::ErrorResult& aRv);
 
@@ -204,9 +199,12 @@ private:
    */
   void SetStatus(mozilla::dom::FontFaceLoadStatus aStatus);
 
-  void GetDesc(nsCSSFontDesc aDescID,
-               nsCSSPropertyID aPropID,
-               nsString& aResult) const;
+  void GetDesc(nsCSSFontDesc aDescID, nsString& aResult) const;
+
+  already_AddRefed<URLExtraData> GetURLExtraData() const;
+
+  RawServoFontFaceRule* GetData() const
+    { return HasRule() ? mRule : mDescriptors; }
 
   /**
    * Returns and takes ownership of the buffer storing the font data.
@@ -236,7 +234,7 @@ private:
 
   // The @font-face rule this FontFace object is reflecting, if it is a
   // rule backed FontFace.
-  RefPtr<nsCSSFontFaceRule> mRule;
+  RefPtr<RawServoFontFaceRule> mRule;
 
   // The FontFace object's user font entry.  This is initially null, but is set
   // during FontFaceSet::UpdateRules and when a FontFace is explicitly loaded.
@@ -266,7 +264,10 @@ private:
   // The values corresponding to the font face descriptors, if we are not
   // a rule backed FontFace object.  For rule backed objects, we use
   // the descriptors stored in mRule.
-  nsAutoPtr<mozilla::CSSFontFaceDescriptors> mDescriptors;
+  // FIXME This should hold a unique ptr to just the descriptors inside,
+  // so that we don't need to create a rule for it and don't need to
+  // assign a fake line number and column number. See bug 1450904.
+  RefPtr<RawServoFontFaceRule> mDescriptors;
 
   // The value of the unicode-range descriptor as a gfxCharacterMap.  Valid
   // only when mUnicodeRangeDirty is false.

@@ -28,7 +28,7 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
             ACTION_CUT, ACTION_COPY, ACTION_PASTE, ACTION_SELECT_ALL
     };
     private static final String[] FIXED_TOOLBAR_ACTIONS = new String[] {
-            ACTION_PASTE, ACTION_COPY, ACTION_CUT, ACTION_SELECT_ALL
+            ACTION_SELECT_ALL, ACTION_CUT, ACTION_COPY, ACTION_PASTE
     };
 
     protected final Activity mActivity;
@@ -137,13 +137,23 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
 
         // Android behavior is to clear selection on copy.
         if (ACTION_COPY.equals(id)) {
+            if (mUseFloatingToolbar) {
+                clearSelection();
+            } else {
+                mActionMode.finish();
+            }
+        }
+        return true;
+    }
+
+    protected void clearSelection() {
+        if (mResponse != null) {
             if (isActionAvailable(ACTION_COLLAPSE_TO_END)) {
                 mResponse.respond(ACTION_COLLAPSE_TO_END);
             } else {
                 mResponse.respond(ACTION_UNSELECT);
             }
         }
-        return true;
     }
 
     @Override
@@ -151,6 +161,11 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
         final String[] allActions = getAllActions();
         for (final String actionId : allActions) {
             if (isActionAvailable(actionId)) {
+                if (!mUseFloatingToolbar && (
+                        Build.VERSION.SDK_INT == 22 || Build.VERSION.SDK_INT == 23)) {
+                    // Android bug where onPrepareActionMode is not called initially.
+                    onPrepareActionMode(actionMode, menu);
+                }
                 return true;
             }
         }
@@ -188,6 +203,9 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
 
     @Override
     public void onDestroyActionMode(final ActionMode actionMode) {
+        if (!mUseFloatingToolbar) {
+            clearSelection();
+        }
         mSession = null;
         mSelection = null;
         mActions = null;

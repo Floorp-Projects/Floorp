@@ -66,7 +66,7 @@ function onZoomChange(event) {
  */
 function updateZoomUI(aBrowser, aAnimate = false) {
   let win = aBrowser.ownerGlobal;
-  if (aBrowser != win.gBrowser.selectedBrowser) {
+  if (!win.gBrowser || win.gBrowser.selectedBrowser != aBrowser) {
     return;
   }
 

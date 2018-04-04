@@ -20,6 +20,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ServoCSSParser.h"
+#include "mozilla/ServoFontFaceRule.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/Sprintf.h"
@@ -681,7 +682,7 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
   mNonRuleFacesDirty = false;
 
   // reuse existing FontFace objects mapped to rules already
-  nsDataHashtable<nsPtrHashKey<nsCSSFontFaceRule>, FontFace*> ruleFaceMap;
+  nsDataHashtable<nsPtrHashKey<RawServoFontFaceRule>, FontFace*> ruleFaceMap;
   for (size_t i = 0, i_end = mRuleFaces.Length(); i < i_end; ++i) {
     FontFace* f = mRuleFaces[i].mFontFace;
     if (!f) {
@@ -712,14 +713,14 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
   // that not happen, but in the meantime, don't try to insert the same
   // FontFace object more than once into mRuleFaces.  We track which
   // ones we've handled in this table.
-  nsTHashtable<nsPtrHashKey<nsCSSFontFaceRule>> handledRules;
+  nsTHashtable<nsPtrHashKey<RawServoFontFaceRule>> handledRules;
 
   for (size_t i = 0, i_end = aRules.Length(); i < i_end; ++i) {
     // Insert each FontFace objects for each rule into our list, migrating old
     // font entries if possible rather than creating new ones; set  modified  to
     // true if we detect that rule ordering has changed, or if a new entry is
     // created.
-    nsCSSFontFaceRule* rule = aRules[i].mRule;
+    RawServoFontFaceRule* rule = aRules[i].mRule;
     if (!handledRules.EnsureInserted(rule)) {
       // rule was already present in the hashtable
       continue;
@@ -1084,7 +1085,9 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
     aFontFace->GetDesc(eCSSFontDesc_Src, val);
     unit = val.GetUnit();
     if (unit == eCSSUnit_Array) {
-      nsCSSValue::Array* srcArr = val.GetArrayValue();
+      // Hold a strong reference because content of val is going away
+      // in the loop below.
+      RefPtr<nsCSSValue::Array> srcArr = val.GetArrayValue();
       size_t numSrc = srcArr->Count();
 
       for (size_t i = 0; i < numSrc; i++) {
@@ -1198,7 +1201,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   return entry.forget();
 }
 
-nsCSSFontFaceRule*
+RawServoFontFaceRule*
 FontFaceSet::FindRuleForEntry(gfxFontEntry* aFontEntry)
 {
   NS_ASSERTION(!aFontEntry->mIsUserFontContainer, "only platform font entries");
@@ -1212,7 +1215,7 @@ FontFaceSet::FindRuleForEntry(gfxFontEntry* aFontEntry)
   return nullptr;
 }
 
-nsCSSFontFaceRule*
+RawServoFontFaceRule*
 FontFaceSet::FindRuleForUserFontEntry(gfxUserFontEntry* aUserFontEntry)
 {
   for (uint32_t i = 0; i < mRuleFaces.Length(); ++i) {
@@ -1286,13 +1289,17 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
   }
 
   // try to give the user an indication of where the rule came from
-  nsCSSFontFaceRule* rule = FindRuleForUserFontEntry(aUserFontEntry);
+  RawServoFontFaceRule* rule = FindRuleForUserFontEntry(aUserFontEntry);
   nsString href;
   nsString text;
   uint32_t line = 0;
   uint32_t column = 0;
   if (rule) {
-    rule->GetCssText(text);
+    Servo_FontFaceRule_GetCssText(rule, &text);
+    Servo_FontFaceRule_GetSourceLocation(rule, &line, &column);
+    // FIXME We need to figure out an approach to get the style sheet
+    // of this raw rule. See bug 1450903.
+#if 0
     StyleSheet* sheet = rule->GetStyleSheet();
     // if the style sheet is removed while the font is loading can be null
     if (sheet) {
@@ -1302,8 +1309,8 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
       NS_WARNING("null parent stylesheet for @font-face rule");
       href.AssignLiteral("unknown");
     }
-    line = rule->GetLineNumber();
-    column = rule->GetColumnNumber();
+#endif
+    href.AssignLiteral("unknown");
   }
 
   nsresult rv;

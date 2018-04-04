@@ -7,13 +7,13 @@
 #ifndef mozilla_InspectorFontFace_h
 #define mozilla_InspectorFontFace_h
 
+#include "mozilla/ServoFontFaceRule.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "nsRange.h"
 
 class gfxFontEntry;
 class gfxFontGroup;
-class nsCSSFontFaceRule;
 
 namespace mozilla {
 namespace dom {
@@ -54,7 +54,7 @@ public:
   bool FromSystemFallback();
   void GetName(nsAString& aName);
   void GetCSSFamilyName(nsAString& aCSSFamilyName);
-  nsCSSFontFaceRule* GetRule();
+  ServoFontFaceRule* GetRule();
   int32_t SrcIndex();
   void GetURI(nsAString& aURI);
   void GetLocalName(nsAString& aLocalName);
@@ -80,6 +80,7 @@ public:
 protected:
   RefPtr<gfxFontEntry> mFontEntry;
   RefPtr<gfxFontGroup> mFontGroup;
+  RefPtr<ServoFontFaceRule> mRule;
   uint8_t mMatchType;
 
   nsTArray<RefPtr<nsRange>> mRanges;

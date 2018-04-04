@@ -1919,7 +1919,8 @@ public class GeckoSession extends LayerSession
          *
          * @param session The GeckoSession that initiated the callback.
          * @param selection Current selection attributes.
-         * @param actions List of built-in actions available.
+         * @param actions Array of built-in actions available; possible values
+         * come from the {@link #ACTION_CUT ACTION_*} constants.
          * @param response Callback object for performing built-in actions. For example,
          * {@code response.respond(actions[0])} performs the first action. May be used
          * multiple times to perform multiple actions at once.
