@@ -23,8 +23,8 @@
 #include "jit/CodeGenerator.h"
 
 #include "wasm/WasmBaselineCompile.h"
-#include "wasm/WasmBinaryIterator.h"
 #include "wasm/WasmGenerator.h"
+#include "wasm/WasmOpIter.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmValidate.h"
 
