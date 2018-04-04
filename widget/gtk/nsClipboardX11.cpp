@@ -37,6 +37,13 @@
 
 using namespace mozilla;
 
+bool
+nsRetrievalContextX11::HasSelectionSupport(void)
+{
+  // yeah, unix supports the selection clipboard on X11.
+  return true;
+}
+
 static GdkFilterReturn
 selection_request_filter(GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
 {
