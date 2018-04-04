@@ -260,7 +260,7 @@ var Policies = {
   "DisableForgetButton": {
     onProfileAfterChange(manager, param) {
       if (param) {
-        manager.disallowFeature("panicButton");
+        setAndLockPref("privacy.panicButton.enabled", false);
       }
     }
   },
