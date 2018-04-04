@@ -23,7 +23,7 @@
 
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
-#include "wasm/WasmBinaryIterator.h"
+#include "wasm/WasmOpIter.h"
 #include "wasm/WasmValidate.h"
 
 using namespace js;
