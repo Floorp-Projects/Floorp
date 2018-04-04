@@ -16,7 +16,6 @@
 
 #include <stddef.h>
 
-#include "frontend/LanguageExtensions.h"
 #include "gc/Barrier.h"
 #include "gc/NurseryAwareHashMap.h"
 #include "gc/Zone.h"
@@ -1186,16 +1185,6 @@ struct JSCompartment
     static const size_t IterResultObjectDoneSlot = 1;
     js::NativeObject* getOrCreateIterResultTemplateObject(JSContext* cx);
 
-  private:
-    // Used for collecting telemetry on SpiderMonkey's deprecated language extensions.
-    bool sawDeprecatedLanguageExtension[size_t(js::DeprecatedLanguageExtension::Count)];
-
-    void reportTelemetry();
-
-  public:
-    void addTelemetry(const char* filename, js::DeprecatedLanguageExtension e);
-
-  public:
     // Aggregated output used to collect JSScript hit counts when code coverage
     // is enabled.
     js::coverage::LCovCompartment lcovOutput;
