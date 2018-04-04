@@ -50,6 +50,7 @@ interface XULControllers;
   [Throws] void stop();
   [Throws, CrossOriginCallable] void focus();
   [Throws, CrossOriginCallable] void blur();
+  [Replaceable] readonly attribute any event;
 
   // other browsing contexts
   [Replaceable, Throws, CrossOriginReadable] readonly attribute WindowProxy frames;
