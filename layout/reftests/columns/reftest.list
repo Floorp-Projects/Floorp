@@ -34,7 +34,7 @@ fuzzy-if(OSX,32,1000) == columnfill-auto.html columnfill-auto-ref.html
 == columnrule-overflow.html columnrule-overflow-ref.html
 == columns-table-caption-000.html columns-table-caption-000-ref.html
 == positioning-transforms-bug1112501.html positioning-transforms-bug1112501-ref.html
-fuzzy-if(webrender,47-47,2344-2344) fuzzy-if(browserIsRemote&&winWidget,142,276) == fieldset-columns-001.html fieldset-columns-001-ref.html
+fuzzy-if(browserIsRemote&&winWidget,142,276) == fieldset-columns-001.html fieldset-columns-001-ref.html
 == dynamic-change-with-overflow-1.html dynamic-change-with-overflow-1-ref.html
 == dynamic-text-indent-1.html dynamic-text-indent-1-ref.html
 == dynamic-text-indent-2.html dynamic-text-indent-2-ref.html
