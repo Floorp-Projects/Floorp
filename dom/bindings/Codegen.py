@@ -15301,13 +15301,6 @@ class CGJSImplMethod(CGJSImplMember):
     interface.
     """
     def __init__(self, descriptor, method, signature, isConstructor, breakAfter=True):
-        virtual = False
-        override = False
-        if (method.identifier.name == "eventListenerWasAdded" or
-            method.identifier.name == "eventListenerWasRemoved"):
-            virtual = True
-            override = True
-
         self.signature = signature
         self.descriptor = descriptor
         self.isConstructor = isConstructor
@@ -15318,9 +15311,7 @@ class CGJSImplMethod(CGJSImplMember):
                                 descriptor.getExtendedAttributes(method),
                                 breakAfter=breakAfter,
                                 variadicIsSequence=True,
-                                passJSBitsAsNeeded=False,
-                                virtual=virtual,
-                                override=override)
+                                passJSBitsAsNeeded=False)
 
     def getArgs(self, returnType, argList):
         if self.isConstructor:
@@ -15540,6 +15531,15 @@ class CGJSImplClass(CGBindingImplClass):
             ccDecl=ccDecl,
             jsImplName=jsImplName(descriptor.name))
 
+        if descriptor.interface.getExtendedAttribute("WantsEventListenerHooks"):
+            # No need to do too much sanity checking here; the
+            # generated code will fail to compile if the methods we
+            # try to overrid aren't on a superclass.
+            self.methodDecls.extend(
+                self.getEventHookMethod(parentClass, "EventListenerAdded"))
+            self.methodDecls.extend(
+                self.getEventHookMethod(parentClass, "EventListenerRemoved"))
+
         if descriptor.interface.hasChildInterfaces():
             decorators = ""
             # We need a protected virtual destructor our subclasses can use
@@ -15667,6 +15667,22 @@ class CGJSImplClass(CGBindingImplClass):
             """,
             ifaceName=self.descriptor.interface.identifier.name,
             implName=self.descriptor.name)
+
+    def getEventHookMethod(self, parentClass, methodName):
+        body = fill(
+            """
+            ${parentClass}::${methodName}(aType);
+            mImpl->${methodName}(Substring(nsDependentAtomString(aType), 2), IgnoreErrors());
+            """,
+            parentClass=parentClass,
+            methodName=methodName)
+        return [ClassMethod(methodName,
+                            "void",
+                            [Argument("nsAtom*", "aType")],
+                            virtual=True,
+                            override=True,
+                            body=body),
+                ClassUsingDeclaration(parentClass, methodName)]
 
 
 def isJSImplementedDescriptor(descriptorProvider):
@@ -15980,6 +15996,16 @@ class CGCallbackInterface(CGCallback):
             idlist.append("__init")
         if needOnGetId:
             idlist.append("__onget")
+
+        if (iface.isJSImplemented() and
+            iface.getExtendedAttribute("WantsEventListenerHooks")):
+            methods.append(CGJSImplEventHookOperation(descriptor,
+                                                      "eventListenerAdded"))
+            methods.append(CGJSImplEventHookOperation(descriptor,
+                                                      "eventListenerRemoved"))
+            idlist.append("eventListenerAdded")
+            idlist.append("eventListenerRemoved")
+
         if len(idlist) != 0:
             methods.append(initIdsClassMethod(idlist,
                                               iface.identifier.name + "Atoms"))
@@ -16525,6 +16551,27 @@ class CGJSImplOnGetOperation(CallbackOperationBase):
     def getPrettyName(self):
         return "__onget"
 
+class CGJSImplEventHookOperation(CallbackOperationBase):
+    """
+    Codegen the hooks on a JS impl for adding/removing event listeners.
+    """
+    def __init__(self, descriptor, name):
+        self.name = name
+
+        CallbackOperationBase.__init__(
+            self,
+            (BuiltinTypes[IDLBuiltinType.Types.void],
+             [FakeArgument(BuiltinTypes[IDLBuiltinType.Types.domstring],
+                           None,
+                           "aType")]),
+            name, MakeNativeName(name),
+            descriptor,
+            singleOperation=False,
+            rethrowContentException=False,
+            spiderMonkeyInterfacesAreStructs=True)
+
+    def getPrettyName(self):
+        return self.name
 
 def getMaplikeOrSetlikeErrorReturn(helperImpl):
     """
@@ -17127,6 +17174,10 @@ class GlobalGenRoots():
                 d.interface.maplikeOrSetlikeOrIterable.isMaplike()):
                 # We'll have an __onget() method.
                 members.append(FakeMember('__onget'))
+            if (d.interface.isJSImplemented() and
+                d.interface.getExtendedAttribute("WantsEventListenerHooks")):
+                members.append(FakeMember('eventListenerAdded'))
+                members.append(FakeMember('eventListenerRemoved'))
             if len(members) == 0:
                 continue
 
