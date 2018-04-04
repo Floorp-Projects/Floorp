@@ -281,6 +281,32 @@ add_task(async function checkAdvancedDetails() {
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
+
+add_task(async function checkhideAddExceptionButton() {
+  info("Loading a bad cert page and verifying the exception button can be hidden  by a pref");
+  Services.prefs.setBoolPref("security.certerror.hideAddException", true);
+
+  let browser;
+  let certErrorLoaded;
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, BAD_CERT);
+    browser = gBrowser.selectedBrowser;
+    certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
+  }, false);
+
+  info("Loading and waiting for the cert error");
+  await certErrorLoaded;
+
+  await ContentTask.spawn(browser, null, async function() {
+    let doc = content.document;
+    let exceptionButton = doc.querySelector(".exceptionDialogButtonContainer");
+    ok(exceptionButton.hidden, "Exception button is hidden.");
+  });
+
+  Services.prefs.clearUserPref("security.certerror.hideAddException");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
 add_task(async function checkAdvancedDetailsForHSTS() {
   info("Loading a bad STS cert page and verifying the advanced details section");
   let browser;
