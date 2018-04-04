@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef wasm_binary_iterator_h
-#define wasm_binary_iterator_h
+#ifndef wasm_op_iter_h
+#define wasm_op_iter_h
 
 #include "mozilla/Poison.h"
 
@@ -2244,4 +2244,4 @@ template<> struct IsPod<js::wasm::ControlStackEntry<Nothing>> : TrueType {};
 
 } // namespace mozilla
 
-#endif // wasm_iterator_h
+#endif // wasm_op_iter_h

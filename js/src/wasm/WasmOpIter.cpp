@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "wasm/WasmBinaryIterator.h"
+#include "wasm/WasmOpIter.h"
 
 using namespace js;
 using namespace js::jit;
