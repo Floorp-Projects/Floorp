@@ -34,9 +34,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WorkletGlobalScope)
   NS_INTERFACE_MAP_ENTRY(WorkletGlobalScope)
 NS_INTERFACE_MAP_END
 
-WorkletGlobalScope::WorkletGlobalScope()
-{
-}
+WorkletGlobalScope::WorkletGlobalScope() = default;
 
 JSObject*
 WorkletGlobalScope::WrapObject(JSContext* aCx,
