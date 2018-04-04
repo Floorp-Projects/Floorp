@@ -2572,8 +2572,6 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
 nsCSSKeyword
 Gecko_LookupCSSKeyword(const uint8_t* aString, uint32_t aLength)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsDependentCSubstring keyword(reinterpret_cast<const char*>(aString), aLength);
   return nsCSSKeywords::LookupKeyword(keyword);
 }
