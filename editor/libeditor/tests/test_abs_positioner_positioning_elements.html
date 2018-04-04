@@ -28,7 +28,7 @@ SimpleTest.waitForFocus(async function() {
 
   let outOfEditor = document.getElementById("clickaway");
 
-  function cancel(e) { /* TODO: e.stopPropagation(); */ }
+  function cancel(e) { e.stopPropagation(); }
   let content = document.getElementById("content");
   content.addEventListener("mousedown", cancel);
   content.addEventListener("mousemove", cancel);
