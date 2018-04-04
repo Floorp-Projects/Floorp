@@ -22,24 +22,6 @@
   --command-measure-image: url(images/command-measure.svg);
 }
 
-.theme-firebug {
-  --close-button-image: url(chrome://devtools/skin/images/firebug/close.svg);
-  --dock-bottom-image: url(chrome://devtools/skin/images/firebug/dock-bottom.svg);
-  --dock-side-image: url(chrome://devtools/skin/images/firebug/dock-side.svg);
-  --dock-undock-image: url(chrome://devtools/skin/images/firebug/dock-undock.svg);
-
-  --command-paintflashing-image: url(images/firebug/command-paintflashing.svg);
-  --command-screenshot-image: url(images/firebug/command-screenshot.svg);
-  --command-responsive-image: url(images/firebug/command-responsivemode.svg);
-  --command-scratchpad-image: url(images/firebug/command-scratchpad.svg);
-  --command-pick-image: url(images/firebug/command-pick.svg);
-  --command-frames-image: url(images/firebug/command-frames.svg);
-  --command-splitconsole-image: url(images/firebug/command-console.svg);
-  --command-noautohide-image: url(images/firebug/command-noautohide.svg);
-  --command-rulers-image: url(images/firebug/command-rulers.svg);
-  --command-measure-image: url(images/firebug/command-measure.svg);
-}
-
 /* Toolbox tabbar */
 
 .devtools-tabbar {

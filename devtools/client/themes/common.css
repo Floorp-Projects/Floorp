@@ -27,13 +27,8 @@
   --monospace-font-family: Consolas, monospace;
 }
 
-:root[platform="linux"],
-:root.theme-firebug {
+:root[platform="linux"] {
   --monospace-font-family: monospace;
-}
-
-:root.theme-firebug {
-  --proportional-font-family: Lucida Grande, Tahoma, sans-serif;
 }
 
 .devtools-monospace {

@@ -20,9 +20,6 @@ add_task(async function() {
   SpecialPowers.setCharPref("devtools.theme", "dark");
   is(await getTheme(), "theme-dark", "Theme changed to dark");
 
-  SpecialPowers.setCharPref("devtools.theme", "firebug");
-  is(await getTheme(), "theme-firebug", "Theme changed to firebug");
-
   SpecialPowers.setCharPref("devtools.theme", "light");
   is(await getTheme(), "theme-light", "Theme changed to light");
 

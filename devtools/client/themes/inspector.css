@@ -7,10 +7,6 @@
   --eyedropper-image: url(images/command-eyedropper.svg);
 }
 
-.theme-firebug {
-  --eyedropper-image: url(images/firebug/command-eyedropper.svg);
-}
-
 * {
   box-sizing: border-box;
 }

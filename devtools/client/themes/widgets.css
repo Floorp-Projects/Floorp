@@ -23,15 +23,6 @@
   --delete-icon-2x: url(chrome://devtools/skin/images/vview-delete@2x.png);
 }
 
-.theme-firebug {
-  --table-splitter-color: rgba(0,0,0,0.15);
-  --table-zebra-background: rgba(0,0,0,0.05);
-  --sidemenu-selected-arrow: url(images/item-arrow-ltr.svg);
-  --sidemenu-selected-arrow-rtl: url(images/item-arrow-rtl.svg);
-  --delete-icon: url(chrome://devtools/skin/images/firebug/close.svg);
-  --delete-icon-2x: url(chrome://devtools/skin/images/firebug/close.svg);
-}
-
 /* Generic pane helpers */
 
 .generic-toggled-pane {

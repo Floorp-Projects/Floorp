@@ -30,13 +30,6 @@
   --keyframe-marker-shadow-color: #818181;
 }
 
-:root.theme-firebug {
-  --command-pick-image: url(chrome://devtools/skin/images/firebug/command-pick.svg);
-  --pause-image: url(chrome://devtools/skin/images/firebug/pause.svg);
-  --resume-image: url(chrome://devtools/skin/images/firebug/play.svg);
-  --rewind-image: url(chrome://devtools/skin/images/firebug/rewind.svg);
-}
-
 /* Root element of animation inspector */
 #animation-container {
   display: flex;
