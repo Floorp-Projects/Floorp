@@ -9,10 +9,16 @@ var tmp = {};
 ChromeUtils.import("resource://gre/modules/Promise.jsm", tmp);
 ChromeUtils.import("resource:///modules/CustomizableUI.jsm", tmp);
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm", tmp);
-var {Promise, CustomizableUI, AppConstants} = tmp;
+ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", tmp);
+var {Promise, CustomizableUI, AppConstants, CustomizableUITestUtils} = tmp;
 
 var EventUtils = {};
 Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
+
+/**
+ * Instance of CustomizableUITestUtils for the current browser window.
+ */
+var gCUITestUtils = new CustomizableUITestUtils(window);
 
 Services.prefs.setBoolPref("browser.uiCustomization.skipSourceNodeCheck", true);
 registerCleanupFunction(() => Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck"));
@@ -254,11 +260,6 @@ function promiseWindowClosed(win) {
   });
 }
 
-function promisePanelShown(win) {
-  let panelEl = win.PanelUI.panel;
-  return promisePanelElementShown(win, panelEl);
-}
-
 function promiseOverflowShown(win) {
   let panelEl = win.document.getElementById("widget-overflow");
   return promisePanelElementShown(win, panelEl);
@@ -276,11 +277,6 @@ function promisePanelElementShown(win, aPanel) {
     }
     aPanel.addEventListener("popupshown", onPanelOpen);
   });
-}
-
-function promisePanelHidden(win) {
-  let panelEl = win.PanelUI.panel;
-  return promisePanelElementHidden(win, panelEl);
 }
 
 function promiseOverflowHidden(win) {

@@ -272,14 +272,9 @@
         },
       }],
       [ 'cc_use_gnu_ld==1 and OS=="win" and target_arch=="x64"', {
+        # mingw x64
         'defines': [
           'MP_IS_LITTLE_ENDIAN',
-          'NSS_BEVAND_ARCFOUR',
-          'MPI_AMD64',
-          'MP_ASSEMBLY_MULTIPLY',
-          'NSS_USE_COMBA',
-          'USE_HW_AES',
-          'INTEL_GCM',
          ],
       }],
       [ 'OS!="win"', {

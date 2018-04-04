@@ -320,7 +320,6 @@ public:
   void ListComputedStyles(FILE *out, int32_t aIndent = 0) override;
 
   void ListStyleSheets(FILE *out, int32_t aIndent = 0) override;
-  void VerifyStyleTree() override;
 #endif
 
   static LazyLogModule gLog;

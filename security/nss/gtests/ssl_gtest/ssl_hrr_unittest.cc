@@ -1000,6 +1000,39 @@ TEST_P(HelloRetryRequestAgentTest, HandleNoopHelloRetryRequest) {
                  SSL_ERROR_RX_MALFORMED_HELLO_RETRY_REQUEST);
 }
 
+class ReplaceRandom : public TlsHandshakeFilter {
+ public:
+  ReplaceRandom(const std::shared_ptr<TlsAgent>& a, const DataBuffer& r)
+      : TlsHandshakeFilter(a, {kTlsHandshakeServerHello}), random_(r) {}
+
+  PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                       const DataBuffer& input,
+                                       DataBuffer* output) override {
+    output->Assign(input);
+    output->Write(2, random_);
+    return CHANGE;
+  }
+
+ private:
+  DataBuffer random_;
+};
+
+// Make sure that the TLS 1.3 special value for the ServerHello.random
+// is rejected by earlier versions.
+TEST_P(TlsConnectStreamPre13, HrrRandomOnTls10) {
+  static const uint8_t hrr_random[] = {
+      0xCF, 0x21, 0xAD, 0x74, 0xE5, 0x9A, 0x61, 0x11, 0xBE, 0x1D, 0x8C,
+      0x02, 0x1E, 0x65, 0xB8, 0x91, 0xC2, 0xA2, 0x11, 0x16, 0x7A, 0xBB,
+      0x8C, 0x5E, 0x07, 0x9E, 0x09, 0xE2, 0xC8, 0xA8, 0x33, 0x9C};
+
+  EnsureTlsSetup();
+  MakeTlsFilter<ReplaceRandom>(server_,
+                               DataBuffer(hrr_random, sizeof(hrr_random)));
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
+  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+}
+
 INSTANTIATE_TEST_CASE_P(HelloRetryRequestAgentTests, HelloRetryRequestAgentTest,
                         ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                            TlsConnectTestBase::kTlsV13));

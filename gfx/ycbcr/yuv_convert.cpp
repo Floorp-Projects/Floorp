@@ -487,7 +487,7 @@ void ScaleYCbCrToRGB32_deprecated(const uint8* y_buf,
                                  dest_pixel, width, source_dx);
     } else {
 // Specialized scalers and rotation.
-#if defined(MOZILLA_MAY_SUPPORT_SSE) && defined(_MSC_VER) && defined(_M_IX86)
+#if defined(MOZILLA_MAY_SUPPORT_SSE) && defined(_MSC_VER) && defined(_M_IX86) && !defined(__clang__)
       if(mozilla::supports_sse()) {
         if (width == (source_width * 2)) {
           DoubleYUVToRGB32Row_SSE(y_ptr, u_ptr, v_ptr,

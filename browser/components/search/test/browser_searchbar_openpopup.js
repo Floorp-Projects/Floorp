@@ -1,6 +1,9 @@
 // Tests that the suggestion popup appears at the right times in response to
 // focus and user events (mouse, keyboard, drop).
 
+ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
+let gCUITestUtils = new CustomizableUITestUtils(window);
+
 // Instead of loading EventUtils.js into the test scope in browser-test.js for all tests,
 // we only need EventUtils.js for a few files which is why we are using loadSubScript.
 var EventUtils = {};
@@ -570,7 +573,7 @@ add_task(async function dont_open_in_customization() {
     sawPopup = true;
   }
   searchPopup.addEventListener("popupshowing", listener);
-  await PanelUI.show();
+  await gCUITestUtils.openMainMenu();
   promise =  promiseEvent(searchPopup, "popuphidden");
   await startCustomizing();
   await promise;

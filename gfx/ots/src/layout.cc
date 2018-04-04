@@ -7,6 +7,9 @@
 #include <limits>
 #include <vector>
 
+#ifdef OTS_VARIATIONS
+#include "fvar.h"
+#endif
 #include "gdef.h"
 
 // OpenType Layout Common Table Formats
@@ -24,6 +27,9 @@ const uint16_t kNoRequiredFeatureIndexDefined = 0xFFFF;
 const uint16_t kUseMarkFilteringSetBit = 0x0010;
 // The maximum type number of format for device tables.
 const uint16_t kMaxDeltaFormatType = 3;
+// In variation fonts, Device Tables are replaced by VariationIndex tables,
+// indicated by this flag in the deltaFormat field.
+const uint16_t kVariationIndex = 0x8000;
 // The maximum number of class value.
 const uint16_t kMaxClassDefValue = 0xFFFF;
 
@@ -1380,6 +1386,12 @@ bool ParseDeviceTable(const ots::Font *font,
       !subtable.ReadU16(&delta_format)) {
     return OTS_FAILURE_MSG("Failed to read device table header");
   }
+  if (delta_format == kVariationIndex) {
+    // start_size and end_size are replaced by deltaSetOuterIndex
+    // and deltaSetInnerIndex respectively, but we don't attempt to
+    // check them here, so nothing more to do.
+    return true;
+  }
   if (start_size > end_size) {
     return OTS_FAILURE_MSG("bad size range: %u > %u", start_size, end_size);
   }
@@ -1491,6 +1503,179 @@ bool ParseExtensionSubtable(const Font *font,
   if (!parser->Parse(font, data + offset_extension, length - offset_extension,
                      lookup_type)) {
     return OTS_FAILURE_MSG("Failed to parse lookup from extension lookup");
+  }
+
+  return true;
+}
+
+bool ParseConditionTable(const Font *font,
+                         const uint8_t *data, const size_t length,
+                         const uint16_t axis_count) {
+  Buffer subtable(data, length);
+
+  uint16_t format = 0;
+  if (!subtable.ReadU16(&format)) {
+    return OTS_FAILURE_MSG("Failed to read condition table format");
+  }
+
+  if (format != 1) {
+    // An unknown format is not an error, but should be ignored per spec.
+    return true;
+  }
+
+  uint16_t axis_index = 0;
+  int16_t filter_range_min_value = 0;
+  int16_t filter_range_max_value = 0;
+  if (!subtable.ReadU16(&axis_index) ||
+      !subtable.ReadS16(&filter_range_min_value) ||
+      !subtable.ReadS16(&filter_range_max_value)) {
+    return OTS_FAILURE_MSG("Failed to read condition table (format 1)");
+  }
+
+#ifdef OTS_VARIATIONS // we can't check this if we're not parsing variation tables
+  if (axis_index >= axis_count) {
+    return OTS_FAILURE_MSG("Axis index out of range in condition");
+  }
+#endif
+
+  // Check min/max values are within range -1.0 .. 1.0 and properly ordered
+  if (filter_range_min_value < -0x4000 || // -1.0 in F2DOT14 format
+      filter_range_max_value > 0x4000 || // +1.0 in F2DOT14 format
+      filter_range_min_value > filter_range_max_value) {
+    return OTS_FAILURE_MSG("Invalid filter range in condition");
+  }
+
+  return true;
+}
+
+bool ParseConditionSetTable(const Font *font,
+                            const uint8_t *data, const size_t length,
+                            const uint16_t axis_count) {
+  Buffer subtable(data, length);
+
+  uint16_t condition_count = 0;
+  if (!subtable.ReadU16(&condition_count)) {
+    return OTS_FAILURE_MSG("Failed to read condition count");
+  }
+
+  for (uint16_t i = 0; i < condition_count; i++) {
+    uint32_t condition_offset = 0;
+    if (!subtable.ReadU32(&condition_offset)) {
+      return OTS_FAILURE_MSG("Failed to read condition offset");
+    }
+    if (condition_offset < subtable.offset() || condition_offset >= length) {
+      return OTS_FAILURE_MSG("Offset out of range");
+    }
+    if (!ParseConditionTable(font, data + condition_offset, length - condition_offset,
+                             axis_count)) {
+      return OTS_FAILURE_MSG("Failed to parse condition table");
+    }
+  }
+
+  return true;
+}
+
+bool ParseFeatureTableSubstitutionTable(const Font *font,
+                                        const uint8_t *data, const size_t length,
+                                        const uint16_t num_lookups) {
+  Buffer subtable(data, length);
+
+  uint16_t version_major = 0;
+  uint16_t version_minor = 0;
+  uint16_t substitution_count = 0;
+  const size_t kFeatureTableSubstitutionHeaderSize = 3 * sizeof(uint16_t);
+
+  if (!subtable.ReadU16(&version_major) ||
+      !subtable.ReadU16(&version_minor) ||
+      !subtable.ReadU16(&substitution_count)) {
+    return OTS_FAILURE_MSG("Failed to read feature table substitution table header");
+  }
+
+  for (uint16_t i = 0; i < substitution_count; i++) {
+    uint16_t feature_index = 0;
+    uint32_t alternate_feature_table_offset = 0;
+    const size_t kFeatureTableSubstitutionRecordSize = sizeof(uint16_t) + sizeof(uint32_t);
+
+    if (!subtable.ReadU16(&feature_index) ||
+        !subtable.ReadU32(&alternate_feature_table_offset)) {
+      return OTS_FAILURE_MSG("Failed to read feature table substitution record");
+    }
+
+    if (alternate_feature_table_offset < kFeatureTableSubstitutionHeaderSize +
+                                         kFeatureTableSubstitutionRecordSize * substitution_count ||
+        alternate_feature_table_offset >= length) {
+      return OTS_FAILURE_MSG("Invalid alternate feature table offset");
+    }
+
+    if (!ParseFeatureTable(font, data + alternate_feature_table_offset,
+                           length - alternate_feature_table_offset, num_lookups)) {
+      return OTS_FAILURE_MSG("Failed to parse alternate feature table");
+    }
+  }
+
+  return true;
+}
+
+bool ParseFeatureVariationsTable(const Font *font,
+                                 const uint8_t *data, const size_t length,
+                                 const uint16_t num_lookups) {
+  Buffer subtable(data, length);
+
+  uint16_t version_major = 0;
+  uint16_t version_minor = 0;
+  uint32_t feature_variation_record_count = 0;
+
+  if (!subtable.ReadU16(&version_major) ||
+      !subtable.ReadU16(&version_minor) ||
+      !subtable.ReadU32(&feature_variation_record_count)) {
+    return OTS_FAILURE_MSG("Failed to read feature variations table header");
+  }
+
+#ifdef OTS_VARIATIONS
+  OpenTypeFVAR* fvar = static_cast<OpenTypeFVAR*>(font->GetTypedTable(OTS_TAG_FVAR));
+  if (!fvar) {
+    return OTS_FAILURE_MSG("Not a variation font");
+  }
+  const uint16_t axis_count = fvar->AxisCount();
+#else
+  const uint16_t axis_count = 0;
+#endif
+
+  const size_t kEndOfFeatureVariationRecords =
+    2 * sizeof(uint16_t) + sizeof(uint32_t) +
+    feature_variation_record_count * 2 * sizeof(uint32_t);
+
+  for (uint32_t i = 0; i < feature_variation_record_count; i++) {
+    uint32_t condition_set_offset = 0;
+    uint32_t feature_table_substitution_offset = 0;
+    if (!subtable.ReadU32(&condition_set_offset) ||
+        !subtable.ReadU32(&feature_table_substitution_offset)) {
+      return OTS_FAILURE_MSG("Failed to read feature variation record");
+    }
+
+    if (condition_set_offset) {
+      if (condition_set_offset < kEndOfFeatureVariationRecords ||
+          condition_set_offset >= length) {
+        return OTS_FAILURE_MSG("Condition set offset out of range");
+      }
+      if (!ParseConditionSetTable(font, data + condition_set_offset,
+                                  length - condition_set_offset,
+                                  axis_count)) {
+        return OTS_FAILURE_MSG("Failed to parse condition set table");
+      }
+    }
+
+    if (feature_table_substitution_offset) {
+      if (feature_table_substitution_offset < kEndOfFeatureVariationRecords ||
+          feature_table_substitution_offset >= length) {
+        return OTS_FAILURE_MSG("Feature table substitution offset out of range");
+      }
+      if (!ParseFeatureTableSubstitutionTable(font, data + feature_table_substitution_offset,
+                                              length - feature_table_substitution_offset,
+                                              num_lookups)) {
+        return OTS_FAILURE_MSG("Failed to parse feature table substitution table");
+      }
+    }
   }
 
   return true;

@@ -597,19 +597,6 @@ mozilla::TimeStamp PresShell::sLastInputProcessed;
 
 bool PresShell::sProcessInteractable = false;
 
-#ifdef DEBUG
-static void
-VerifyStyleTree(nsPresContext* aPresContext, nsFrameManager* aFrameManager)
-{
-  if (nsFrame::GetVerifyStyleTreeEnable()) {
-    NS_ERROR("stylo: cannot verify style tree with a ServoRestyleManager");
-  }
-}
-#define VERIFY_STYLE_TREE ::VerifyStyleTree(mPresContext, mFrameConstructor)
-#else
-#define VERIFY_STYLE_TREE
-#endif
-
 static bool gVerifyReflowEnabled;
 
 bool
@@ -1820,7 +1807,6 @@ PresShell::Initialize()
       // content object down
       mFrameConstructor->ContentInserted(
           nullptr, root, nullptr, nsCSSFrameConstructor::InsertionKind::Sync);
-      VERIFY_STYLE_TREE;
 
       // Something in mFrameConstructor->ContentInserted may have caused
       // Destroy() to get called, bug 337586.
@@ -4383,7 +4369,6 @@ PresShell::CharacterDataChanged(nsIContent* aContent,
 
   mPresContext->RestyleManager()->CharacterDataChanged(aContent, aInfo);
   mFrameConstructor->CharacterDataChanged(aContent, aInfo);
-  VERIFY_STYLE_TREE;
 }
 
 void
@@ -4397,7 +4382,6 @@ PresShell::ContentStateChanged(nsIDocument* aDocument,
   if (mDidInitialize) {
     nsAutoCauseReflowNotifier crNotifier(this);
     mPresContext->RestyleManager()->ContentStateChanged(aContent, aStateMask);
-    VERIFY_STYLE_TREE;
   }
 }
 
@@ -4437,7 +4421,6 @@ PresShell::AttributeWillChange(Element* aElement,
     mPresContext->RestyleManager()->AttributeWillChange(aElement, aNameSpaceID,
                                                         aAttribute, aModType,
                                                         aNewValue);
-    VERIFY_STYLE_TREE;
   }
 }
 
@@ -4459,7 +4442,6 @@ PresShell::AttributeChanged(Element* aElement,
     mPresContext->RestyleManager()->AttributeChanged(aElement, aNameSpaceID,
                                                      aAttribute, aModType,
                                                      aOldValue);
-    VERIFY_STYLE_TREE;
   }
 }
 
@@ -4490,8 +4472,6 @@ PresShell::ContentAppended(nsIContent* aFirstNewContent)
       container,
       aFirstNewContent,
       nsCSSFrameConstructor::InsertionKind::Async);
-
-  VERIFY_STYLE_TREE;
 }
 
 void
@@ -4517,8 +4497,6 @@ PresShell::ContentInserted(nsIContent* aChild)
       aChild,
       nullptr,
       nsCSSFrameConstructor::InsertionKind::Async);
-
-  VERIFY_STYLE_TREE;
 }
 
 void
@@ -4560,8 +4538,6 @@ PresShell::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling)
   mFrameConstructor->ContentRemoved(
       aChild->GetParent(), aChild, oldNextSibling,
       nsCSSFrameConstructor::REMOVE_CONTENT);
-
-  VERIFY_STYLE_TREE;
 }
 
 void
@@ -4596,7 +4572,6 @@ PresShell::ReconstructFrames()
 
   nsAutoCauseReflowNotifier crNotifier(this);
   mFrameConstructor->ReconstructDocElementHierarchy(nsCSSFrameConstructor::InsertionKind::Sync);
-  VERIFY_STYLE_TREE;
 }
 
 void
@@ -9747,12 +9722,6 @@ PresShell::ListStyleSheets(FILE *out, int32_t aIndent)
     mStyleSet->StyleSheetAt(SheetType::Doc, i)->List(out, aIndent);
     fputs("\n", out);
   }
-}
-
-void
-PresShell::VerifyStyleTree()
-{
-  VERIFY_STYLE_TREE;
 }
 #endif
 
