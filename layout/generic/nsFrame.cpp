@@ -309,25 +309,6 @@ bool nsFrame::GetShowEventTargetFrameBorder()
  */
 mozilla::LazyLogModule nsFrame::sFrameLogModule("frame");
 
-static mozilla::LazyLogModule sStyleVerifyTreeLogModuleInfo("styleverifytree");
-
-static uint32_t gStyleVerifyTreeEnable = 0x55;
-
-bool
-nsFrame::GetVerifyStyleTreeEnable()
-{
-  if (gStyleVerifyTreeEnable == 0x55) {
-      gStyleVerifyTreeEnable = 0 != (int)((mozilla::LogModule*)sStyleVerifyTreeLogModuleInfo)->Level();
-  }
-  return gStyleVerifyTreeEnable;
-}
-
-void
-nsFrame::SetVerifyStyleTreeEnable(bool aEnabled)
-{
-  gStyleVerifyTreeEnable = aEnabled;
-}
-
 #endif
 
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(AbsoluteContainingBlockProperty,

@@ -164,6 +164,8 @@ Only available in the extended set of measures, it contains a set of counters re
 
 UITelemetry
 ~~~~~~~~~~~
+As of Firefox 61 this section is no longer present.
+
 Only available in the extended set of measures. For more see :ref:`uitelemetry`.
 
 startupInterrupted
@@ -632,10 +634,6 @@ Structure:
       ...
     }
 
-UITelemetry
------------
-See the ``UITelemetry data format`` documentation.
-
 slowSQL
 -------
 This section contains the information about the slow SQL queries for both the main and other threads. The execution of an SQL statement is considered slow if it takes 50ms or more on the main thread or 100ms or more on other threads. Slow SQL statements will be automatically trimmed to 1000 characters. This limit doesn't include the ellipsis and database name, that are appended at the end of the stored statement.
@@ -699,3 +697,4 @@ Version History
 
   - Stopped reporting ``childPayloads`` (`bug 1443599 <https://bugzilla.mozilla.org/show_bug.cgi?id=1443599>`_).
   - Stopped reporting ``saved-session`` pings on Firefox Desktop (`bug 1443603 <https://bugzilla.mozilla.org/show_bug.cgi?id=1443603>`_).
+  - Stopped reporting ``UITelemetry`` (`bug 1443605 <https://bugzilla.mozilla.org/show_bug.cgi?id=1443605>`_)
