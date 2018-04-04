@@ -78,7 +78,6 @@ headers = [
     "mozilla/ServoDeclarationBlock.h",
     "mozilla/ServoTraversalStatistics.h",
     "mozilla/SizeOfState.h",
-    "nsCSSCounterStyleRule.h",
     "nsContentUtils.h",
     "nsNameSpaceManager.h",
     "nsMediaFeatures.h",
@@ -278,7 +277,6 @@ whitelist-types = [
     "nscolor",
     "nsChangeHint",
     "nsCSSCounterDesc",
-    "nsCSSCounterStyleRule",
     "nsCSSFontDesc",
     "nsCSSKeyword",
     "nsCSSPropertyID",
@@ -426,7 +424,6 @@ opaque-types = [
     "mozilla::dom::.*Callback", # Pulls in ErrorResult and other things that
                                 # don't align properly on Linux 32-bit
     "mozilla::SchedulerGroup", # Non-standard-layout packing of field into superclass
-    "nsCSSCounterStyleRule_Getter", # thiscall function pointer
 ]
 mapped-generic-types = [
     { generic = true, gecko = "mozilla::ServoUnsafeCell", servo = "::std::cell::UnsafeCell" },
@@ -533,7 +530,6 @@ structs-types = [
     "StyleTransition",
     "gfxFontFeatureValueSet",
     "nsCSSCounterDesc",
-    "nsCSSCounterStyleRule",
     "nsCSSFontDesc",
     "nsCSSKeyword",
     "nsCSSPropertyID",
