@@ -918,8 +918,9 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
     mCanSkipCCGeneration(0),
     mBeforeUnloadListenerCount(0)
 {
-  AssertIsOnMainThread();
+  mIsInnerWindow = true;
 
+  AssertIsOnMainThread();
   nsLayoutStatics::AddRef();
 
   // Initialize the PRCList (this).
@@ -3285,6 +3286,16 @@ nsGlobalWindowInner::SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
   }
 
   SetOpenerWindow(outer, false);
+}
+
+void
+nsGlobalWindowInner::GetEvent(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval)
+{
+  if (mEvent) {
+    Unused << nsContentUtils::WrapNative(aCx, mEvent, aRetval);
+  } else {
+    aRetval.setUndefined();
+  }
 }
 
 void
@@ -8207,7 +8218,8 @@ nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter *aOuterWindow)
   mMarkedCCGeneration(0),
   mHasTriedToCacheTopInnerWindow(false),
   mNumOfIndexedDBDatabases(0),
-  mNumOfOpenWebSockets(0)
+  mNumOfOpenWebSockets(0),
+  mEvent(nullptr)
 {
   MOZ_ASSERT(aOuterWindow);
 }

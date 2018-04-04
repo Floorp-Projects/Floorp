@@ -671,6 +671,7 @@ public:
                  mozilla::ErrorResult& aError);
   void SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
                  mozilla::ErrorResult& aError);
+  void GetEvent(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
   already_AddRefed<nsPIDOMWindowOuter> GetParent(mozilla::ErrorResult& aError);
   nsPIDOMWindowOuter* GetScriptableParent() override;
   nsPIDOMWindowOuter* GetScriptableParentOrNull() override;
