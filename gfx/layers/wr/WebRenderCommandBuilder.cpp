@@ -1609,9 +1609,9 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
 
   // Some display item may draw exceed the paintSize, we need prepare a larger
   // draw target to contain the result.
-  auto scaledPaintSize = bounds.Size() * LayoutDeviceToLayerScale(1);
-  scaledPaintSize.Scale(scale.width, scale.height);
-  LayerIntSize dtSize = RoundedToInt(scaledPaintSize);
+  auto scaledBounds = bounds * LayoutDeviceToLayerScale(1);
+  scaledBounds.Scale(scale.width, scale.height);
+  LayerIntSize dtSize = RoundedToInt(scaledBounds).Size();
 
   bool needPaint = true;
   LayoutDeviceIntPoint offset = RoundedToInt(bounds.TopLeft());
