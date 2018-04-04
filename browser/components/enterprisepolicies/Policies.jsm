@@ -291,6 +291,15 @@ var Policies = {
     }
   },
 
+  "DisableProfileImport": {
+    onBeforeUIStartup(manager, param) {
+      if (param) {
+        manager.disallowFeature("profileImport");
+        setAndLockPref("browser.newtabpage.activity-stream.migrationExpired", true);
+      }
+    }
+  },
+
   "DisableProfileRefresh": {
     onBeforeUIStartup(manager, param) {
       if (param) {
