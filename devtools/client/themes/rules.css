@@ -19,14 +19,6 @@
   --rule-shape-toggle-color: var(--grey-10);
 }
 
-:root.theme-firebug {
-  --rule-highlight-background-color: var(--theme-highlight-yellow);
-  --rule-property-name: darkgreen;
-  --rule-property-value: darkblue;
-  --rule-overridden-item-border-color: var(--theme-content-color2);
-  --rule-header-background-color: var(--theme-header-background);
-}
-
 /* Rule View Tabpanel */
 
 #sidebar-panel-ruleview {

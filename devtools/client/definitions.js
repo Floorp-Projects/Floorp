@@ -501,18 +501,9 @@ Tools.lightTheme = {
   classList: ["theme-light"],
 };
 
-Tools.firebugTheme = {
-  id: "firebug",
-  label: l10n("options.firebugTheme.label2"),
-  ordinal: 3,
-  stylesheets: ["chrome://devtools/skin/firebug-theme.css"],
-  classList: ["theme-light", "theme-firebug"],
-};
-
 exports.defaultThemes = [
   Tools.darkTheme,
   Tools.lightTheme,
-  Tools.firebugTheme,
 ];
 
 // White-list buttons that can be toggled to prevent adding prefs for

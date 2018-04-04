@@ -9,7 +9,6 @@
 /* TreeView Colors */
 
 :root {
-  --tree-link-color: blue;
   --tree-header-background: #C8D2DC;
   --tree-header-sorted-background: #AAC3DC;
 }
@@ -160,11 +159,11 @@
 }
 
 .treeTable .treeHeaderSorted > .treeHeaderCellBox {
-  background: url(chrome://devtools/skin/images/firebug/arrow-down.svg) no-repeat calc(100% - 4px);
+  background: url(chrome://devtools/skin/images/sort-descending-arrow.svg) no-repeat calc(100% - 4px);
 }
 
 .treeTable .treeHeaderSorted.sortedAscending > .treeHeaderCellBox {
-  background-image: url(chrome://devtools/skin/images/firebug/arrow-up.svg);
+  background-image: url(chrome://devtools/skin/images/sort-ascending-arrow.svg);
 }
 
 .treeTable .treeHeaderCell:hover:active {

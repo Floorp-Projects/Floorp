@@ -30,12 +30,6 @@
   --separator-border-image: linear-gradient(transparent 4px, rgba(100%,100%,100%,.2) 4px, rgba(100%,100%,100%,.2) calc(100% - 4px), transparent calc(100% - 4px));
 }
 
-.theme-firebug {
-  --magnifying-glass-image: url(chrome://devtools/skin/images/search.svg);
-  --tool-options-image: url(chrome://devtools/skin/images/firebug/tool-options.svg);
-}
-
-
 /* Toolbars */
 .devtools-toolbar,
 .devtools-sidebar-tabs tabs {

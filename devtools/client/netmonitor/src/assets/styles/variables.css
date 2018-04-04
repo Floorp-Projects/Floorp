@@ -34,11 +34,6 @@
   --sort-descending-image: url(chrome://devtools/skin/images/sort-descending-arrow.svg);
 }
 
-:root.theme-firebug {
-  --sort-ascending-image: url(chrome://devtools/skin/images/firebug/arrow-up.svg);
-  --sort-descending-image: url(chrome://devtools/skin/images/firebug/arrow-down.svg);
-}
-
 :root {
   /* Icons */
   --play-icon-url: url("chrome://devtools/content/netmonitor/src/assets/icons/play.svg");
