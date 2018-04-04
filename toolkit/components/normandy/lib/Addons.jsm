@@ -47,16 +47,6 @@ var Addons = {
   },
 
   /**
-   * Get information about all installed add-ons.
-   * @async
-   * @returns {Array<SafeAddon>}
-   */
-  async getAll(addonId) {
-    const addons = await AddonManager.getAllAddons();
-    return addons.map(this.serializeForSandbox.bind(this));
-  },
-
-  /**
    * Installs an add-on
    *
    * @param {string} addonUrl

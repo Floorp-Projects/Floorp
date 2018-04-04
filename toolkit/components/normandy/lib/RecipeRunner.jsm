@@ -51,6 +51,21 @@ const PREFS_TO_WATCH = [
   API_URL_PREF,
 ];
 
+/**
+ * cacheProxy returns an object Proxy that will memoize properties of the target.
+ */
+function cacheProxy(target) {
+  const cache = new Map();
+  return new Proxy(target, {
+    get(target, prop, receiver) {
+      if (!cache.has(prop)) {
+        cache.set(prop, target[prop]);
+      }
+      return cache.get(prop);
+    }
+  });
+}
+
 var RecipeRunner = {
   async init() {
     this.enabled = null;
@@ -235,13 +250,13 @@ var RecipeRunner = {
   },
 
   getFilterContext(recipe) {
+    const environment = cacheProxy(ClientEnvironment);
+    environment.recipe = {
+      id: recipe.id,
+      arguments: recipe.arguments,
+    };
     return {
-      normandy: Object.assign(ClientEnvironment.getEnvironment(), {
-        recipe: {
-          id: recipe.id,
-          arguments: recipe.arguments,
-        },
-      }),
+      normandy: environment
     };
   },
 
