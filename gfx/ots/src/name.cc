@@ -169,6 +169,14 @@ bool OpenTypeNAME::Parse(const uint8_t* data, size_t length) {
       if (tag_end > length) {
         return Error("bad end of tag %d > %ld for langTagRecord %d", tag_end, length, i);
       }
+      // Lang tag is BCP 47 tag per the spec, the recommonded BCP 47 max tag
+      // length is 35:
+      // https://tools.ietf.org/html/bcp47#section-4.4.1
+      // We are being too generous and allowing for 100 (multiplied by 2 since
+      // this is UTF-16 string).
+      if (tag_length > 100 * 2) {
+        return Error("Too long language tag for LangTagRecord %d: %d", i, tag_length);
+      }
       std::string tag(string_base + tag_offset, tag_length);
       this->lang_tags.push_back(tag);
     }
