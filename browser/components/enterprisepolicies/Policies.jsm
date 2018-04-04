@@ -301,6 +301,10 @@ var Policies = {
 
   "DisableSecurityBypass": {
     onBeforeUIStartup(manager, param) {
+      if ("InvalidCertificate" in param) {
+        setAndLockPref("security.certerror.hideAddException", param.InvalidCertificate);
+      }
+
       if ("SafeBrowsing" in param) {
         setAndLockPref("browser.safebrowsing.allowOverride", !param.SafeBrowsing);
       }
