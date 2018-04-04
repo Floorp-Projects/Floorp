@@ -186,19 +186,7 @@
   background-color: var(--theme-selection-background-hover) !important;
 }
 
-.theme-firebug .treeTable .treeRow:not(.selected):hover {
-  background-color: var(--theme-body-background);
-}
-
 .theme-light .treeTable,
 .theme-dark .treeTable {
   color: var(--theme-highlight-blue);
-}
-
-.theme-firebug .treeTable {
-  color: var(--theme-body-color);
-}
-
-.theme-firebug .treeTable .treeRow.hasChildren:not(.selected) > .treeLabelCell > .treeLabel:hover {
-  color: var(--tree-link-color);
 }

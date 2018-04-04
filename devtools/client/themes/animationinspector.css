@@ -42,7 +42,7 @@
   --close-button-image: url(chrome://devtools/skin/images/firebug/close.svg);
 }
 
-.theme-light, .theme-firebug {
+.theme-light {
   /* The color for animation type 'opacity' */
   --opacity-border-color: var(--theme-highlight-pink);
   --opacity-background-color: #b82ee580;

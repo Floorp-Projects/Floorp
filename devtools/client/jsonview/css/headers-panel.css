@@ -65,14 +65,3 @@
 .theme-dark .netInfoParamValue {
   color: var(--theme-highlight-gray);
 }
-
-/* Firebug Theme */
-.theme-firebug .netInfoHeadersTable {
-  font-family: Lucida Grande, Tahoma, sans-serif;
-  font-size: 11px;
-  line-height: 12px;
-}
-
-.theme-firebug .netInfoParamValue {
-  font-family: var(--monospace-font-family);
-}

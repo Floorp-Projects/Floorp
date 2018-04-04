@@ -140,48 +140,6 @@
   flex-direction: column;
 }
 
-/* Firebug theme support for statistics panel charts */
-
-.theme-firebug .chart-colored-blob[name=html] {
-  fill: rgba(94, 136, 176, 0.8); /* Blue-Grey highlight */
-  background: rgba(94, 136, 176, 0.8);
-}
-
-.theme-firebug .chart-colored-blob[name=css] {
-  fill: rgba(70, 175, 227, 0.8); /* light blue */
-  background: rgba(70, 175, 227, 0.8);
-}
-
-.theme-firebug .chart-colored-blob[name=js] {
-  fill: rgba(235, 83, 104, 0.8); /* red */
-  background: rgba(235, 83, 104, 0.8);
-}
-
-.theme-firebug .chart-colored-blob[name=xhr] {
-  fill: rgba(217, 102, 41, 0.8); /* orange  */
-  background: rgba(217, 102, 41, 0.8);
-}
-
-.theme-firebug .chart-colored-blob[name=fonts] {
-  fill: rgba(223, 128, 255, 0.8); /* pink */
-  background: rgba(223, 128, 255, 0.8);
-}
-
-.theme-firebug .chart-colored-blob[name=images] {
-  fill: rgba(112, 191, 83, 0.8); /* pink */
-  background: rgba(112, 191, 83, 0.8);
-}
-
-.theme-firebug .chart-colored-blob[name=media] {
-  fill: rgba(235, 235, 84, 0.8); /* yellow */
-  background: rgba(235, 235, 84, 0.8);
-}
-
-.theme-firebug .chart-colored-blob[name=flash] {
-  fill: rgba(84, 235, 159, 0.8); /* cyan */
-  background: rgba(84, 235, 159, 0.8);
-}
-
 /* Responsive web design support */
 
 @media (max-width: 700px) {

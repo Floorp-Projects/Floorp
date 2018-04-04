@@ -325,10 +325,6 @@
   transition: width 0.2s ease-out;
 }
 
-.theme-firebug .network-monitor .requests-list-timings-total {
-  color: var(--theme-body-color);
-}
-
 /* Stack trace panel */
 
 .network-monitor .stack-trace {
