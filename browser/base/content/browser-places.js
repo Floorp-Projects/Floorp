@@ -1250,16 +1250,6 @@ var BookmarkingUI = {
     return BrowserPageActions.panelAnchorNodeForAction(action);
   },
 
-  get notifier() {
-    delete this.notifier;
-    return this.notifier = document.getElementById("bookmarked-notification-anchor");
-  },
-
-  get dropmarkerNotifier() {
-    delete this.dropmarkerNotifier;
-    return this.dropmarkerNotifier = document.getElementById("bookmarked-notification-dropmarker-anchor");
-  },
-
   get broadcaster() {
     delete this.broadcaster;
     let broadcaster = document.getElementById("bookmarkThisPageBroadcaster");

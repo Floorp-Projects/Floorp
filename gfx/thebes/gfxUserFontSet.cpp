@@ -183,7 +183,7 @@ public:
         // Whether to apply OTS validation to OpenType Layout tables
         mCheckOTLTables = gfxPrefs::ValidateOTLTables();
         // Whether to preserve Variation tables in downloaded fonts
-        mKeepVariationTables = gfxPrefs::KeepVariationTables();
+        mCheckVariationTables = gfxPrefs::ValidateVariationTables();
         // Whether to preserve color bitmap glyphs
         mKeepColorBitmaps = gfxPrefs::KeepColorBitmaps();
     }
@@ -195,7 +195,7 @@ public:
              (aTag == TRUETYPE_TAG('G', 'D', 'E', 'F') ||
               aTag == TRUETYPE_TAG('G', 'P', 'O', 'S') ||
               aTag == TRUETYPE_TAG('G', 'S', 'U', 'B'))) ||
-            (mKeepVariationTables &&
+            (!mCheckVariationTables &&
              (aTag == TRUETYPE_TAG('a', 'v', 'a', 'r') ||
               aTag == TRUETYPE_TAG('c', 'v', 'a', 'r') ||
               aTag == TRUETYPE_TAG('f', 'v', 'a', 'r') ||
@@ -242,7 +242,7 @@ private:
     gfxUserFontEntry* mUserFontEntry;
     nsTHashtable<nsCStringHashKey> mWarningsIssued;
     bool mCheckOTLTables;
-    bool mKeepVariationTables;
+    bool mCheckVariationTables;
     bool mKeepColorBitmaps;
 };
 

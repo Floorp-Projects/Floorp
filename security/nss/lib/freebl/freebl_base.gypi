@@ -123,6 +123,11 @@
             'intel-gcm-x86-masm.asm',
           ],
         }],
+        [ 'cc_use_gnu_ld==1', {
+          # mingw
+          'sources': [
+          ],
+        }],
         [ 'cc_is_clang!=1', {
           # MSVC
           'sources': [
