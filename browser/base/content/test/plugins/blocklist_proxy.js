@@ -44,10 +44,6 @@ var BlocklistProxy = {
   observe(aSubject, aTopic, aData) {
   },
 
-  isAddonBlocklisted(aAddon, aAppVersion, aToolkitVersion) {
-    return false;
-  },
-
   getAddonBlocklistState(aAddon, aAppVersion, aToolkitVersion) {
     return 0; // STATE_NOT_BLOCKED
   },
