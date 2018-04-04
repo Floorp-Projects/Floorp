@@ -287,7 +287,7 @@ NS_IMPL_CI_INTERFACE_GETTER(nsJSIID, nsIJSID, nsIJSIID)
 #include "xpc_map_end.h" /* This will #undef the above */
 
 
-nsJSIID::nsJSIID(nsIInterfaceInfo* aInfo)
+nsJSIID::nsJSIID(const nsXPTInterfaceInfo* aInfo)
     : mInfo(aInfo)
 {
 }
@@ -350,15 +350,14 @@ NS_IMETHODIMP nsJSIID::ToString(char** _retval)
 
 // static
 already_AddRefed<nsJSIID>
-nsJSIID::NewID(nsIInterfaceInfo* aInfo)
+nsJSIID::NewID(const nsXPTInterfaceInfo* aInfo)
 {
     if (!aInfo) {
         NS_ERROR("no info");
         return nullptr;
     }
 
-    bool canScript;
-    if (NS_FAILED(aInfo->IsScriptable(&canScript)) || !canScript)
+    if (!aInfo->IsScriptable())
         return nullptr;
 
     RefPtr<nsJSIID> idObj = new nsJSIID(aInfo);

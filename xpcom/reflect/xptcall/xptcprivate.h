@@ -44,11 +44,11 @@ public:
 
 #include "xptcstubsdef.inc"
 
-    nsXPTCStubBase(nsIXPTCProxy* aOuter, xptiInterfaceEntry *aEntry)
+    nsXPTCStubBase(nsIXPTCProxy* aOuter, const nsXPTInterfaceInfo *aEntry)
         : mOuter(aOuter), mEntry(aEntry) {}
 
-    nsIXPTCProxy*          mOuter;
-    xptiInterfaceEntry*    mEntry;
+    nsIXPTCProxy*             mOuter;
+    const nsXPTInterfaceInfo* mEntry;
 
     ~nsXPTCStubBase() {}
 };

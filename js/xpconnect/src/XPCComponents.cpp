@@ -199,39 +199,33 @@ nsXPCComponents_Interfaces::NewEnumerate(nsIXPConnectWrappedNative* wrapper,
                                          bool* _retval)
 {
 
-    // Lazily init the list of interfaces when someone tries to
-    // enumerate them.
-    if (mInterfaces.IsEmpty()) {
-        XPTInterfaceInfoManager::GetSingleton()->
-            GetScriptableInterfaces(mInterfaces);
-    }
-
-    if (!properties.reserve(mInterfaces.Length())) {
+    if (!properties.reserve(nsXPTInterfaceInfo::InterfaceCount())) {
         *_retval = false;
         return NS_OK;
     }
 
-    for (uint32_t index = 0; index < mInterfaces.Length(); index++) {
-        nsIInterfaceInfo* interface = mInterfaces.SafeElementAt(index);
+    for (uint32_t index = 0; index < nsXPTInterfaceInfo::InterfaceCount(); index++) {
+        const nsXPTInterfaceInfo* interface = nsXPTInterfaceInfo::ByIndex(index);
         if (!interface)
             continue;
 
-        const char* name;
-        if (NS_SUCCEEDED(interface->GetNameShared(&name)) && name) {
-            RootedString idstr(cx, JS_NewStringCopyZ(cx, name));
-            if (!idstr) {
-                *_retval = false;
-                return NS_OK;
-            }
+        const char* name = interface->Name();
+        if (!name)
+            continue;
 
-            RootedId id(cx);
-            if (!JS_StringToId(cx, idstr, &id)) {
-                *_retval = false;
-                return NS_OK;
-            }
-
-            properties.infallibleAppend(id);
+        RootedString idstr(cx, JS_NewStringCopyZ(cx, name));
+        if (!idstr) {
+            *_retval = false;
+            return NS_OK;
         }
+
+        RootedId id(cx);
+        if (!JS_StringToId(cx, idstr, &id)) {
+            *_retval = false;
+            return NS_OK;
+        }
+
+        properties.infallibleAppend(id);
     }
 
     return NS_OK;
@@ -254,12 +248,7 @@ nsXPCComponents_Interfaces::Resolve(nsIXPConnectWrappedNative* wrapper,
 
     // we only allow interfaces by name here
     if (name.encodeLatin1(cx, str) && name.ptr()[0] != '{') {
-        nsCOMPtr<nsIInterfaceInfo> info =
-            ShimInterfaceInfo::MaybeConstruct(name.ptr(), cx);
-        if (!info) {
-            XPTInterfaceInfoManager::GetSingleton()->
-                GetInfoForName(name.ptr(), getter_AddRefs(info));
-        }
+        const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByName(name.ptr());
         if (!info)
             return NS_OK;
 
@@ -393,39 +382,31 @@ nsXPCComponents_InterfacesByID::NewEnumerate(nsIXPConnectWrappedNative* wrapper,
                                              bool* _retval)
 {
 
-    if (mInterfaces.IsEmpty()) {
-        XPTInterfaceInfoManager::GetSingleton()->
-            GetScriptableInterfaces(mInterfaces);
-    }
-
-    if (!properties.reserve(mInterfaces.Length())) {
+    if (!properties.reserve(nsXPTInterfaceInfo::InterfaceCount())) {
         *_retval = false;
         return NS_OK;
     }
 
-    for (uint32_t index = 0; index < mInterfaces.Length(); index++) {
-        nsIInterfaceInfo* interface = mInterfaces.SafeElementAt(index);
+    for (uint32_t index = 0; index < nsXPTInterfaceInfo::InterfaceCount(); index++) {
+        const nsXPTInterfaceInfo* interface = nsXPTInterfaceInfo::ByIndex(index);
         if (!interface)
             continue;
 
-        nsIID const* iid;
-        if (NS_SUCCEEDED(interface->GetIIDShared(&iid))) {
-            char idstr[NSID_LENGTH];
-            iid->ToProvidedString(idstr);
-            RootedString jsstr(cx, JS_NewStringCopyZ(cx, idstr));
-            if (!jsstr) {
-                *_retval = false;
-                return NS_OK;
-            }
-
-            RootedId id(cx);
-            if (!JS_StringToId(cx, jsstr, &id)) {
-                *_retval = false;
-                return NS_OK;
-            }
-
-            properties.infallibleAppend(id);
+        char idstr[NSID_LENGTH];
+        interface->IID().ToProvidedString(idstr);
+        RootedString jsstr(cx, JS_NewStringCopyZ(cx, idstr));
+        if (!jsstr) {
+            *_retval = false;
+            return NS_OK;
         }
+
+        RootedId id(cx);
+        if (!JS_StringToId(cx, jsstr, &id)) {
+            *_retval = false;
+            return NS_OK;
+        }
+
+        properties.infallibleAppend(id);
     }
 
     return NS_OK;
@@ -453,9 +434,7 @@ nsXPCComponents_InterfacesByID::Resolve(nsIXPConnectWrappedNative* wrapper,
         if (!iid.Parse(utf8str.ptr()))
             return NS_OK;
 
-        nsCOMPtr<nsIInterfaceInfo> info;
-        XPTInterfaceInfoManager::GetSingleton()->
-            GetInfoForIID(&iid, getter_AddRefs(info));
+        const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByIID(iid);
         if (!info)
             return NS_OK;
 
@@ -1932,8 +1911,8 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative* wrapper,
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
         }
     } else {
-        nsCOMPtr<nsIInterfaceInfo> info;
-        xpc->GetInfoForIID(&NS_GET_IID(nsISupports), getter_AddRefs(info));
+        const nsXPTInterfaceInfo* info =
+            nsXPTInterfaceInfo::ByIID(NS_GET_IID(nsISupports));
 
         if (info) {
             cInterfaceID = nsJSIID::NewID(info);
