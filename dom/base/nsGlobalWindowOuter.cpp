@@ -1850,6 +1850,15 @@ nsGlobalWindowOuter::SetNewDocument(nsIDocument* aDocument,
                                              currentInner->mPerformance->GetDOMTiming(),
                                              currentInner->mPerformance->GetChannel());
         }
+
+        // Rebind DETH objects to the new global created by document.open().
+        // XXX: Is this correct?  We should consider if the spec and our
+        //      implementation should change to match other browsers by
+        //      just reusing the current window.  (Bug 1449992)
+        currentInner->ForEachEventTargetObject(
+          [&] (DOMEventTargetHelper* aDETH, bool* aDoneOut) {
+            aDETH->BindToOwner(newInnerWindow->AsGlobal());
+          });
       }
 
       // Don't free objects on our current inner window if it's going to be
