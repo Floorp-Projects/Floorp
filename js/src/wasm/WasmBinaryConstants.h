@@ -592,14 +592,14 @@ struct OpBytes
     OpBytes() = default;
 };
 
-static const char NameSectionName[]      = "name";
+static const char NameSectionName[]             = "name";
 static const char SourceMappingURLSectionName[] = "sourceMappingURL";
 
 enum class NameType
 {
-    Module                               = 0,
-    Function                             = 1,
-    Local                                = 2
+    Module   = 0,
+    Function = 1,
+    Local    = 2
 };
 
 // These limits are agreed upon with other engines for consistency.

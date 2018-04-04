@@ -337,7 +337,8 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
         return false;
 
     UniqueChars error;
-    SharedModule module = CompileBuffer(*compileArgs, *bytecode, &error);
+    UniqueCharsVector warnings;
+    SharedModule module = CompileBuffer(*compileArgs, *bytecode, &error, &warnings);
     if (!module) {
         if (error) {
             JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
@@ -871,6 +872,27 @@ InitCompileArgs(JSContext* cx)
     return compileArgs;
 }
 
+static bool
+ReportCompileWarnings(JSContext* cx, const UniqueCharsVector& warnings)
+{
+    // Avoid spamming the console.
+    size_t numWarnings = Min<size_t>(warnings.length(), 3);
+
+    for (size_t i = 0; i < numWarnings; i++) {
+        if (!JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
+                                               JSMSG_WASM_COMPILE_WARNING, warnings[i].get()))
+            return false;
+    }
+
+    if (warnings.length() > numWarnings) {
+        if (!JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
+                                               JSMSG_WASM_COMPILE_WARNING, "other warnings suppressed"))
+            return false;
+    }
+
+    return true;
+}
+
 /* static */ bool
 WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -896,7 +918,8 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     UniqueChars error;
-    SharedModule module = CompileBuffer(*compileArgs, *bytecode, &error);
+    UniqueCharsVector warnings;
+    SharedModule module = CompileBuffer(*compileArgs, *bytecode, &error, &warnings);
     if (!module) {
         if (error) {
             JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
@@ -906,6 +929,9 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
         ReportOutOfMemory(cx);
         return false;
     }
+
+    if (!ReportCompileWarnings(cx, warnings))
+        return false;
 
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
     RootedObject moduleObj(cx, WasmModuleObject::create(cx, *module, proto));
@@ -2334,7 +2360,8 @@ RejectWithPendingException(JSContext* cx, Handle<PromiseObject*> promise)
 }
 
 static bool
-Reject(JSContext* cx, const CompileArgs& args, UniqueChars error, Handle<PromiseObject*> promise)
+Reject(JSContext* cx, const CompileArgs& args, Handle<PromiseObject*> promise,
+       const UniqueChars& error)
 {
     if (!error) {
         ReportOutOfMemory(cx);
@@ -2371,8 +2398,11 @@ Reject(JSContext* cx, const CompileArgs& args, UniqueChars error, Handle<Promise
 
 static bool
 Resolve(JSContext* cx, Module& module, Handle<PromiseObject*> promise, bool instantiate,
-        HandleObject importObj)
+        HandleObject importObj, const UniqueCharsVector& warnings)
 {
+    if (!ReportCompileWarnings(cx, warnings))
+        return false;
+
     RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmModule).toObject());
     RootedObject moduleObj(cx, WasmModuleObject::create(cx, module, proto));
     if (!moduleObj)
@@ -2413,6 +2443,7 @@ struct CompileBufferTask : PromiseHelperTask
     MutableBytes           bytecode;
     SharedCompileArgs      compileArgs;
     UniqueChars            error;
+    UniqueCharsVector      warnings;
     SharedModule           module;
     bool                   instantiate;
     PersistentRootedObject importObj;
@@ -2436,13 +2467,13 @@ struct CompileBufferTask : PromiseHelperTask
     }
 
     void execute() override {
-        module = CompileBuffer(*compileArgs, *bytecode, &error);
+        module = CompileBuffer(*compileArgs, *bytecode, &error, &warnings);
     }
 
     bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
         return module
-               ? Resolve(cx, *module, promise, instantiate, importObj)
-               : Reject(cx, *compileArgs, Move(error), promise);
+               ? Resolve(cx, *module, promise, instantiate, importObj, warnings)
+               : Reject(cx, *compileArgs, promise, error);
     }
 };
 
@@ -2640,6 +2671,7 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
     // Mutated on helper thread (execute()):
     SharedModule                 module_;
     UniqueChars                  compileError_;
+    UniqueCharsVector            warnings_;
 
     // Called on some thread before consumeChunk() or streamClosed():
 
@@ -2773,7 +2805,7 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
                     rejectAndDestroyBeforeHelperThreadStarted(JSMSG_OUT_OF_MEMORY);
                     return;
                 }
-                module_ = CompileBuffer(*compileArgs_, *bytecode, &compileError_);
+                module_ = CompileBuffer(*compileArgs_, *bytecode, &compileError_, &warnings_);
                 setClosedAndDestroyBeforeHelperThreadStarted();
                 return;
               }
@@ -2810,8 +2842,14 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
     // Called on a helper thread:
 
     void execute() override {
-        module_ = CompileStreaming(*compileArgs_, envBytes_, codeBytes_, exclusiveCodeStreamEnd_,
-                                   exclusiveTailBytes_, streamFailed_, &compileError_);
+        module_ = CompileStreaming(*compileArgs_,
+                                   envBytes_,
+                                   codeBytes_,
+                                   exclusiveCodeStreamEnd_,
+                                   exclusiveTailBytes_,
+                                   streamFailed_,
+                                   &compileError_,
+                                   &warnings_);
 
         // When execute() returns, the CompileStreamTask will be dispatched
         // back to its JS thread to call resolve() and then be destroyed. We
@@ -2828,10 +2866,10 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer
         MOZ_ASSERT(streamState_.lock() == Closed);
         MOZ_ASSERT_IF(module_, !streamFailed_ && !streamError_ && !compileError_);
         return module_
-               ? Resolve(cx, *module_, promise, instantiate_, importObj_)
+               ? Resolve(cx, *module_, promise, instantiate_, importObj_, warnings_)
                : streamError_
                  ? RejectWithErrorNumber(cx, *streamError_, promise)
-                 : Reject(cx, *compileArgs_, Move(compileError_), promise);
+                 : Reject(cx, *compileArgs_, promise, compileError_);
     }
 
   public:
