@@ -118,7 +118,7 @@ getUpdateRequirements(const RefPtr<nsNavHistoryQuery>& aQuery,
     domainBasedItems = true;
 
   if (aOptions->ResultType() ==
-        nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
+        nsINavHistoryQueryOptions::RESULTS_AS_TAGS_ROOT)
       return QUERYUPDATE_COMPLEX_WITH_BOOKMARKS;
 
   if (aOptions->ResultType() ==
@@ -1952,7 +1952,7 @@ nsNavHistoryQueryResultNode::IsContainersQuery()
   uint16_t resultType = Options()->ResultType();
   return resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_SITE_QUERY ||
-         resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY ||
+         resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAGS_ROOT ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_ROOTS_QUERY ||
          resultType == nsINavHistoryQueryOptions::RESULTS_AS_LEFT_PANE_QUERY;
@@ -2027,7 +2027,7 @@ nsNavHistoryQueryResultNode::GetHasChildren(bool* aHasChildren)
 
   // Tags are always populated, otherwise they are removed.
   if (mQuery->Tags().Length() == 1 && mParent &&
-      mParent->mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY) {
+      mParent->mOptions->ResultType() == nsINavHistoryQueryOptions::RESULTS_AS_TAGS_ROOT) {
     *aHasChildren = true;
     return NS_OK;
   }
@@ -2040,7 +2040,7 @@ nsNavHistoryQueryResultNode::GetHasChildren(bool* aHasChildren)
   }
 
   // For tag containers query we must check if we have any tag
-  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY) {
+  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAGS_ROOT) {
     nsCOMPtr<nsITaggingService> tagging =
       do_GetService(NS_TAGGINGSERVICE_CONTRACTID);
     if (tagging) {
@@ -2283,7 +2283,7 @@ nsNavHistoryQueryResultNode::Refresh()
   // query could cause a major slowdown.  We should not refresh nested
   // queries, since we will already refresh the parent one.
   // The only exception to this, is if the parent query is of QUERYUPDATE_NONE,
-  // this can be the case for the RESULTS_AS_TAG_QUERY
+  // this can be the case for the RESULTS_AS_TAGS_ROOT
   // under RESULTS_AS_LEFT_PANE_QUERY.
   if (!mExpanded) {
     ClearChildren(true);

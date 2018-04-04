@@ -2396,7 +2396,7 @@ BrowserGlue.prototype = {
         },
         RecentTags: {
           title: bundle.GetStringFromName("recentTagsTitle"),
-          url: "place:type=" + queryOptions.RESULTS_AS_TAG_QUERY +
+          url: "place:type=" + queryOptions.RESULTS_AS_TAGS_ROOT +
                     "&sort=" + queryOptions.SORT_BY_LASTMODIFIED_DESCENDING +
                     "&maxResults=" + MAX_RESULTS,
           parentGuid: PlacesUtils.bookmarks.menuGuid,
