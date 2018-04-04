@@ -249,9 +249,13 @@ release-binary-transparency
 Binary transparency creates a publicly verifiable log of binary shas for downstream
 release auditing. https://wiki.mozilla.org/Security/Binary_Transparency
 
-release-snap
-------------
+release-snap-repackage
+----------------------
 Generate an installer using Ubuntu's Snap format.
+
+release-snap-push
+----------------------
+Pushes Snap repackage on Snap store.
 
 release-notify-push
 ----------------------

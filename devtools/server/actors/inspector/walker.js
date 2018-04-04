@@ -706,33 +706,28 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
 
     if (isShadowHost) {
-      let {before, after} = this._getBeforeAfterElements(node.rawNode);
+      // Use anonymous walkers to fetch ::before / ::after pseudo elements
+      let firstChildWalker = this.getDocumentWalker(node.rawNode);
+      let first = firstChildWalker.firstChild();
+      let hasBefore = first && this._ref(first).isBeforePseudoElement;
+
+      let lastChildWalker = this.getDocumentWalker(node.rawNode);
+      let last = lastChildWalker.lastChild();
+      let hasAfter = last && this._ref(last).isAfterPseudoElement;
+
       nodes = [
         // #shadow-root
         this._ref(node.rawNode.shadowRoot),
         // ::before
-        ...(before ? [before] : []),
+        ...(hasBefore ? [this._ref(first)] : []),
         // shadow host direct children
         ...nodes,
         // ::after
-        ...(after ? [after] : []),
+        ...(hasAfter ? [this._ref(last)] : []),
       ];
     }
 
     return { hasFirst, hasLast, nodes };
-  },
-
-  _getBeforeAfterElements: function(node) {
-    let firstChildWalker = this.getDocumentWalker(node);
-    let before = this._ref(firstChildWalker.firstChild());
-
-    let lastChildWalker = this.getDocumentWalker(node);
-    let after = this._ref(lastChildWalker.lastChild());
-
-    return {
-      before: before.isBeforePseudoElement ? before : undefined,
-      after: after.isAfterPseudoElement ? after : undefined,
-    };
   },
 
   /**
