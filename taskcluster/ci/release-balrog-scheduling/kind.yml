@@ -6,7 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 transforms:
    - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.worker_type:transforms
+   - taskgraph.transforms.scriptworker:add_balrog_scopes
    - taskgraph.transforms.release_notifications:transforms
    - taskgraph.transforms.task:transforms
 
@@ -14,13 +14,6 @@ kind-dependencies:
    - release-bouncer-check
 
 job-defaults:
-   worker-type:
-      by-project:
-         maple: scriptworker-prov-v1/balrog-dev
-         birch: scriptworker-prov-v1/balrog-dev
-         mozilla-beta: scriptworker-prov-v1/balrogworker-v1
-         mozilla-release: scriptworker-prov-v1/balrogworker-v1
-         default: invalid/invalid
    run-on-projects: []
    shipping-phase: ship
    worker:
