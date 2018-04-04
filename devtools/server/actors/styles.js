@@ -1129,6 +1129,8 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         // Use the 1-arg CSS.supports() call so that we also accept !important
         // in the value.
         decl.isValid = CSS.supports(`${decl.name}:${decl.value}`);
+        // Check property name. All valid CSS properties support "initial" as a value.
+        decl.isNameValid = CSS.supports(decl.name, "initial");
         return decl;
       });
     }
