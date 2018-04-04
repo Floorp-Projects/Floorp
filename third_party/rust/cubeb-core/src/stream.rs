@@ -93,9 +93,14 @@ impl StreamParamsRef {
     }
 }
 
+unsafe fn wrapped_cubeb_stream_destroy(stream: *mut ffi::cubeb_stream) {
+    ffi::cubeb_stream_stop(stream);
+    ffi::cubeb_stream_destroy(stream);
+}
+
 ffi_type_heap! {
     type CType = ffi::cubeb_stream;
-    fn drop = ffi::cubeb_stream_destroy;
+    fn drop = wrapped_cubeb_stream_destroy;
     pub struct Stream;
     pub struct StreamRef;
 }
