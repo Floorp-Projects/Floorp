@@ -51,7 +51,7 @@ pref("devtools.debugger.features.shortcuts", true);
 pref("devtools.debugger.features.root", true);
 pref("devtools.debugger.features.column-breakpoints", false);
 pref("devtools.debugger.features.chrome-scopes", false);
-pref("devtools.debugger.features.map-scopes", false);
+pref("devtools.debugger.features.map-scopes", true);
 pref("devtools.debugger.features.breakpoints-dropdown", false);
 pref("devtools.debugger.features.remove-command-bar-options", false);
 pref("devtools.debugger.features.workers", true);
