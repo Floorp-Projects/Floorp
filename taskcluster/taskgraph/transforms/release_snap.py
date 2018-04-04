@@ -33,4 +33,6 @@ def format(config, tasks):
             resolve_keyed_by(env, k, 'snap envs', project=config.params['project'])
             task['worker']['env'][k] = env[k].format(**format_params)
 
+        resolve_keyed_by(task, 'scopes', 'snap scopes', project=config.params['project'])
+
         yield task
