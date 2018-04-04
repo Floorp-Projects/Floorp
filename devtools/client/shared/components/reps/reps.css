@@ -15,7 +15,6 @@
   --node-color: var(--theme-highlight-purple);
   --reference-color: var(--theme-highlight-blue);
   --comment-node-color: var(--theme-comment);
-  --stack-function-color: var(--theme-highlight-red);
 }
 
 /******************************************************************************/
@@ -65,9 +64,12 @@
 }
 
 .objectBox-function,
-.objectBox-stackTrace,
 .objectBox-profile {
   color: var(--object-color);
+}
+
+.objectBox-stackTrace {
+  color: var(--error-color);
 }
 
 .objectBox-stackTrace-grid {
@@ -78,14 +80,34 @@
 
 .objectBox-stackTrace-fn::before {
   content: "\3BB"; /* The "lambda" symbol */
-  color: var(--theme-body-color);
   display: inline-block;
   margin: 0 0.3em;
 }
 
 .objectBox-stackTrace-fn {
-  color: var(--stack-function-color);
+  color: var(--console-output-color);
   padding-inline-start: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-inline-end: 5px;
+}
+
+.objectBox-stackTrace-location {
+  color: var(--frame-link-source, currentColor);
+  direction: rtl;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: end;
+}
+
+.objectBox-stackTrace-location:hover {
+  text-decoration: underline;
+}
+
+.objectBox-stackTrace-location {
+  cursor: pointer;
 }
 
 .objectBox-Location,
