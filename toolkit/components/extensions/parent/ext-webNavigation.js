@@ -1,6 +1,6 @@
 "use strict";
 
-// This file expectes tabTracker to be defined in the global scope (e.g.
+// This file expects tabTracker to be defined in the global scope (e.g.
 // by ext-utils.js).
 /* global tabTracker */
 

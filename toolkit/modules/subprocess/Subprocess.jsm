@@ -55,7 +55,7 @@ var Subprocess = {
    * An object describing the process to launch.
    *
    * @param {string} options.command
-   * The full path of the execuable to launch. Relative paths are not
+   * The full path of the executable to launch. Relative paths are not
    * accepted, and `$PATH` is not searched.
    *
    * If a path search is necessary, the {@link Subprocess.pathSearch} method may
