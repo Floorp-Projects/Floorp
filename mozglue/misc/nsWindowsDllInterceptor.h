@@ -236,6 +236,11 @@ private:
 
 using WindowsDllInterceptor = interceptor::WindowsDllInterceptor<>;
 
+using CrossProcessDllInterceptor = interceptor::WindowsDllInterceptor<
+  mozilla::interceptor::VMSharingPolicyUnique<
+    mozilla::interceptor::MMPolicyOutOfProcess,
+    mozilla::interceptor::kDefaultTrampolineSize>>;
+
 } // namespace mozilla
 
 #endif /* NS_WINDOWS_DLL_INTERCEPTOR_H_ */
