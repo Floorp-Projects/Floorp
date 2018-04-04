@@ -1868,13 +1868,13 @@ window._gBrowser = {
     let browserContainer = document.createElementNS(this._XUL_NS, "vbox");
     browserContainer.className = "browserContainer";
     browserContainer.appendChild(stack);
-    browserContainer.setAttribute("flex", "1");
+    browserContainer.setAttribute("flex", "10000");
 
     // Create the sidebar container
     let browserSidebarContainer = document.createElementNS(this._XUL_NS, "hbox");
     browserSidebarContainer.className = "browserSidebarContainer";
     browserSidebarContainer.appendChild(browserContainer);
-    browserSidebarContainer.setAttribute("flex", "1");
+    browserSidebarContainer.setAttribute("flex", "10000");
 
     // Add the Message and the Browser to the box
     let notificationbox = document.createElementNS(this._XUL_NS, "notificationbox");

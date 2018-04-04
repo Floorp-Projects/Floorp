@@ -261,6 +261,8 @@ JSTerm.prototype = {
     let inputContainer = doc.querySelector(".jsterm-input-container");
     this.completeNode = doc.querySelector(".jsterm-complete-node");
     this.inputNode = doc.querySelector(".jsterm-input-node");
+    this.inputBorderSize = this.inputNode.getBoundingClientRect().height -
+                           this.inputNode.clientHeight;
     // Update the character width and height needed for the popup offset
     // calculations.
     this._updateCharSize();
@@ -1038,7 +1040,7 @@ JSTerm.prototype = {
       inputNode.inputField.scrollHeight : inputNode.scrollHeight;
 
     if (scrollHeight > 0) {
-      inputNode.style.height = scrollHeight + "px";
+      inputNode.style.height = (scrollHeight + this.inputBorderSize) + "px";
     }
   },
 

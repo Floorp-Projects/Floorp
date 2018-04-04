@@ -274,7 +274,6 @@ var gMenuBuilder = {
         item.tabManager.addActiveTabPermission();
       }
 
-      let tab = contextData.tab && item.tabManager.convert(contextData.tab);
       let info = item.getClickInfo(contextData, wasChecked);
 
       const map = {shiftKey: "Shift", altKey: "Alt", metaKey: "Command", ctrlKey: "Ctrl"};
@@ -295,7 +294,7 @@ var gMenuBuilder = {
         actionFor(item.extension).triggerAction(win);
       }
 
-      item.extension.emit("webext-menu-menuitem-click", info, tab);
+      item.extension.emit("webext-menu-menuitem-click", info, contextData.tab);
     });
 
     // Don't publish the ID of the root because the root element is
@@ -885,8 +884,9 @@ this.menusInternal = class extends ExtensionAPI {
         },
 
         onClicked: new EventManager(context, "menusInternal.onClicked", fire => {
-          let listener = (event, info, tab) => {
-            let {linkedBrowser} = tab || tabTracker.activeTab;
+          let listener = (event, info, nativeTab) => {
+            let {linkedBrowser} = nativeTab || tabTracker.activeTab;
+            let tab = nativeTab && extension.tabManager.convert(nativeTab);
             context.withPendingBrowser(linkedBrowser,
                                        () => fire.sync(info, tab));
           };

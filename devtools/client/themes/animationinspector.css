@@ -702,7 +702,10 @@ body {
   fill: none;
 }
 
-.keyframes svg path.hint:hover {
+/* Note: We only use the hover class in a mochitest due to flakiness
+   when simulating mouseover (Bug 1448555). */
+.keyframes svg path.hint:hover,
+.keyframes svg path.hint.hover {
   stroke-opacity: 1;
 }
 

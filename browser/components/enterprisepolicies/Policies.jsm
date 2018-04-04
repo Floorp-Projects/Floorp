@@ -291,6 +291,15 @@ var Policies = {
     }
   },
 
+  "DisableProfileRefresh": {
+    onBeforeUIStartup(manager, param) {
+      if (param) {
+        manager.disallowFeature("profileRefresh");
+        setAndLockPref("browser.disableResetPrompt", true);
+      }
+    }
+  },
+
   "DisableSafeMode": {
     onBeforeUIStartup(manager, param) {
       if (param) {
