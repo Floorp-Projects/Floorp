@@ -31,7 +31,6 @@ class VLPrefixSet
 {
 public:
   explicit VLPrefixSet(const PrefixStringMap& aMap);
-  explicit VLPrefixSet(const TableUpdateV4::PrefixStdStringMap& aMap);
 
   // This function will merge the prefix map in VLPrefixSet to aPrefixMap.
   void Merge(PrefixStringMap& aPrefixMap);
@@ -609,18 +608,6 @@ VLPrefixSet::VLPrefixSet(const PrefixStringMap& aMap)
                "PrefixString must be a multiple of the prefix size.");
     mMap.Put(size, new PrefixString(*iter.Data(), size));
     mCount += iter.Data()->Length() / size;
-  }
-}
-
-VLPrefixSet::VLPrefixSet(const TableUpdateV4::PrefixStdStringMap& aMap)
-  : mCount(0)
-{
-  for (auto iter = aMap.ConstIter(); !iter.Done(); iter.Next()) {
-    uint32_t size = iter.Key();
-    MOZ_ASSERT(iter.Data()->GetPrefixString().Length() % size == 0,
-               "PrefixString must be a multiple of the prefix size.");
-    mMap.Put(size, new PrefixString(iter.Data()->GetPrefixString(), size));
-    mCount += iter.Data()->GetPrefixString().Length() / size;
   }
 }
 
