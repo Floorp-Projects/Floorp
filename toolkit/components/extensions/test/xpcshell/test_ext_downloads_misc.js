@@ -768,7 +768,7 @@ add_task(async function test_erase() {
   ids.dl3 = await download();
 
   let msg = await runInExtension("search", {});
-  equal(msg.status, "success", "search succeded");
+  equal(msg.status, "success", "search succeeded");
   equal(msg.result.length, 3, "search found 3 downloads");
 
   msg = await runInExtension("clearEvents");
@@ -782,7 +782,7 @@ add_task(async function test_erase() {
   equal(msg.status, "success", "received onErased event");
 
   msg = await runInExtension("search", {});
-  equal(msg.status, "success", "search succeded");
+  equal(msg.status, "success", "search succeeded");
   equal(msg.result.length, 2, "search found 2 downloads");
 
   msg = await runInExtension("erase", {});
@@ -795,7 +795,7 @@ add_task(async function test_erase() {
   equal(msg.status, "success", "received 2 onErased events");
 
   msg = await runInExtension("search", {});
-  equal(msg.status, "success", "search succeded");
+  equal(msg.status, "success", "search succeeded");
   equal(msg.result.length, 0, "search found 0 downloads");
 });
 

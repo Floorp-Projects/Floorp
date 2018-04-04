@@ -191,7 +191,7 @@ var logger = Log.repository.getLogger(LOGGER_ID);
  * @param  aFile
  *         The file or directory to operate on.
  * @param  aPermissions
- *         The permisions to set
+ *         The permissions to set
  */
 function setFilePermissions(aFile, aPermissions) {
   try {
@@ -1535,7 +1535,7 @@ class AddonInstall {
       if (isWebExtension(this.existingAddon.type) && !isWebExtension(this.addon.type)) {
         zipreader.close();
         return Promise.reject([AddonManager.ERROR_UNEXPECTED_ADDON_TYPE,
-                               "WebExtensions may not be upated to other extension types"]);
+                               "WebExtensions may not be updated to other extension types"]);
       }
     }
 
@@ -2017,7 +2017,7 @@ var LocalAddonInstall = class extends AddonInstall {
       // file failed (e.g., the hash or signature or manifest contents
       // were invalid).  It doesn't make sense to retry anything in this
       // case but we have callers who don't know if their AddonInstall
-      // object is a local file or a download so accomodate them here.
+      // object is a local file or a download so accommodate them here.
       AddonManagerPrivate.callInstallListeners("onDownloadFailed",
                                                this.listeners, this.wrapper);
       return;

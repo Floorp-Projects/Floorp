@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// This verifies that add-on update check failures are propogated correctly
+// This verifies that add-on update check failures are propagated correctly
 
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);

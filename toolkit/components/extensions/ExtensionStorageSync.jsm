@@ -346,7 +346,7 @@ async function storageSyncInit() {
   return storageSyncInit.promise;
 }
 
-// Kinto record IDs have two condtions:
+// Kinto record IDs have two conditions:
 //
 // - They must contain only ASCII alphanumerics plus - and _. To fix
 // this, we encode all non-letters using _C_, where C is the
@@ -1043,7 +1043,7 @@ class ExtensionStorageSync {
         }
 
         if (keyResolution.accepted.uuid != cryptoKeyRecord.uuid) {
-          log.info(`Detected a new UUID (${keyResolution.accepted.uuid}, was ${cryptoKeyRecord.uuid}). Reseting sync status for everything.`);
+          log.info(`Detected a new UUID (${keyResolution.accepted.uuid}, was ${cryptoKeyRecord.uuid}). Resetting sync status for everything.`);
           await this.cryptoCollection.resetSyncStatus();
 
           // Server version is now correct. Return that result.

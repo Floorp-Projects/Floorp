@@ -310,7 +310,7 @@ function run_test_1() {
       Assert.ok(Services.blocklist.isAddonBlocklisted(a10, "2", "1.9"));
       Assert.ok(Services.blocklist.isAddonBlocklisted(a11, "2", "1.9"));
 
-      // Doesnt match both os and abi so not blocked
+      // Doesn't match both os and abi so not blocked
       Assert.ok(!Services.blocklist.isAddonBlocklisted(a12, "2", "1.9"));
       Assert.ok(!Services.blocklist.isAddonBlocklisted(a13, "2", "1.9"));
       Assert.ok(!Services.blocklist.isAddonBlocklisted(a14, "2", "1.9"));

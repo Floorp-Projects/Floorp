@@ -75,7 +75,7 @@ class TabBase {
    * @param {BaseContext} context
    *        The context through which to send the message.
    * @param {string} messageName
-   *        The name of the messge to send.
+   *        The name of the message to send.
    * @param {object} [data = {}]
    *        Arbitrary, structured-clonable message data to send.
    * @param {object} [options]
@@ -567,7 +567,7 @@ class TabBase {
   /**
    * Converts this tab object to a JSON-compatible object containing the values
    * of its properties which the extension is permitted to access, in the format
-   * requried to be returned by WebExtension APIs.
+   * required to be returned by WebExtension APIs.
    *
    * @param {Tab} [fallbackTab]
    *        A tab to retrieve geometry data from if the lazy geometry data for
@@ -824,7 +824,7 @@ class WindowBase {
 
   /**
    * Converts this window object to a JSON-compatible object which may be
-   * returned to an extension, in the format requried to be returned by
+   * returned to an extension, in the format required to be returned by
    * WebExtension APIs.
    *
    * @param {object} [getInfo]
@@ -1134,7 +1134,7 @@ Object.assign(WindowBase, {WINDOW_ID_NONE, WINDOW_ID_CURRENT});
  */
 
 /**
- * An object containg basic, extension-independent information about the window
+ * An object containing basic, extension-independent information about the window
  * and tab that a XUL <browser> belongs to.
  *
  * @typedef {Object} BrowserData
@@ -1561,7 +1561,7 @@ class WindowTrackerBase extends EventEmitter {
   }
 
   /**
-   * Add an event listener to be called whenever the given DOM event is recieved
+   * Add an event listener to be called whenever the given DOM event is received
    * at the top level of any browser window.
    *
    * @param {string} type
@@ -1797,7 +1797,7 @@ class TabManagerBase {
 
   /**
    * Converts the given native tab to a JSON-compatible object, in the format
-   * requried to be returned by WebExtension APIs, which may be safely passed to
+   * required to be returned by WebExtension APIs, which may be safely passed to
    * extension code.
    *
    * @param {NativeTab} nativeTab
@@ -1903,7 +1903,7 @@ class WindowManagerBase {
 
   /**
    * Converts the given browser window to a JSON-compatible object, in the
-   * format requried to be returned by WebExtension APIs, which may be safely
+   * format required to be returned by WebExtension APIs, which may be safely
    * passed to extension code.
    *
    * @param {DOMWindow} window

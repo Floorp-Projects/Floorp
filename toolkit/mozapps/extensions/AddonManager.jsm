@@ -490,7 +490,7 @@ AddonScreenshot.prototype = {
  * This represents a compatibility override for an addon.
  *
  * @param  aType
- *         Overrride type - "compatible" or "incompatible"
+ *         Override type - "compatible" or "incompatible"
  * @param  aMinVersion
  *         Minimum version of the addon to match
  * @param  aMaxVersion
@@ -731,7 +731,7 @@ var AddonManagerInternal = {
       let AMProviderShutdown = () => {
         // If the provider has been unregistered, it will have been removed from
         // this.providers. If it hasn't been unregistered, then this is a normal
-        // shutdown - and we move it to this.pendingProviders incase we're
+        // shutdown - and we move it to this.pendingProviders in case we're
         // running in a test that will start AddonManager again.
         if (this.providers.has(aProvider)) {
           this.providers.delete(aProvider);
@@ -3191,7 +3191,7 @@ var AddonManager = {
     ["ERROR_INCORRECT_HASH", -2],
     // The downloaded file seems to be corrupted in some way.
     ["ERROR_CORRUPT_FILE", -3],
-    // An error occured trying to write to the filesystem.
+    // An error occurred trying to write to the filesystem.
     ["ERROR_FILE_ACCESS", -4],
     // The add-on must be signed and isn't.
     ["ERROR_SIGNEDSTATE_REQUIRED", -5],

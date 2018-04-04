@@ -37,7 +37,7 @@ add_task(async function test_webRequest_serviceworker_events() {
       ]);
 
       function listener(name, details) {
-        browser.test.assertTrue(eventNames.has(name), `recieved ${name}`);
+        browser.test.assertTrue(eventNames.has(name), `received ${name}`);
         eventNames.delete(name);
         if (name == "onCompleted") {
           eventNames.delete("onErrorOccurred");
@@ -85,12 +85,12 @@ add_task(async function test_webRequest_background_events() {
       ]);
 
       function listener(name, details) {
-        browser.test.assertTrue(eventNames.has(name), `recieved ${name}`);
+        browser.test.assertTrue(eventNames.has(name), `received ${name}`);
         eventNames.delete(name);
 
         if (eventNames.size === 0) {
           browser.test.assertEq("xmlhttprequest", details.type, "correct type for fetch [see bug 1366710]");
-          browser.test.assertEq(0, eventNames.size, "messages recieved");
+          browser.test.assertEq(0, eventNames.size, "messages received");
           browser.test.sendMessage("done");
         }
       }
@@ -105,7 +105,7 @@ add_task(async function test_webRequest_background_events() {
       fetch("https://example.com/example.txt").then(() => {
         browser.test.succeed("Fetch succeeded.");
       }, () => {
-        browser.test.fail("fetch recieved");
+        browser.test.fail("fetch received");
         browser.test.sendMessage("done");
       });
     },

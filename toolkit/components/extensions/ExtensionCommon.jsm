@@ -1763,7 +1763,7 @@ defineLazyGetter(LocaleData.prototype, "availableLocales", function() {
  *        An object representing the extension instance using this event.
  * @param {string} name
  *        A name used only for debugging.
- * @param {functon} register
+ * @param {function} register
  *        A function called whenever a new listener is added.
  */
 function EventManager(context, name, register) {
