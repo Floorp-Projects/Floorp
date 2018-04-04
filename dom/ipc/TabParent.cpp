@@ -2566,7 +2566,8 @@ TabParent::ReceiveMessage(const nsString& aMessage,
                             aData,
                             aCpows,
                             aPrincipal,
-                            aRetVal);
+                            aRetVal,
+                            IgnoreErrors());
   }
   return true;
 }

@@ -148,8 +148,8 @@ public:
                nsIFrame::eBlockFrame));
   }
 
-  void InvalidateFrame(uint32_t aDisplayItemKey = 0) override;
-  void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0) override;
+  void InvalidateFrame(uint32_t aDisplayItemKey = 0, bool aRebuildDisplayItems = true) override;
+  void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0, bool aRebuildDisplayItems = true) override;
 
 #ifdef DEBUG_FRAME_DUMP
   void List(FILE* out = stderr, const char* aPrefix = "", uint32_t aFlags = 0) const override;

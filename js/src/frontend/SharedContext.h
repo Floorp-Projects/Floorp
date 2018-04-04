@@ -342,9 +342,9 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool            usesThis:1;             /* contains 'this' */
     bool            usesReturn:1;           /* contains a 'return' statement */
     bool            hasRest_:1;             /* has rest parameter */
-    bool            isExprBody_:1;          /* arrow function with expression
-                                             * body or expression closure:
-                                             * function(x) x*x */
+    bool            hasExprBody_:1;         /* arrow function with expression
+                                             * body like: () => 1
+                                             * Only used by Reflect.parse */
 
     // This function does something that can extend the set of bindings in its
     // call objects --- it does a direct eval in non-strict code, or includes a
@@ -483,9 +483,10 @@ class FunctionBox : public ObjectBox, public SharedContext
         hasRest_ = true;
     }
 
-    bool isExprBody() const { return isExprBody_; }
-    void setIsExprBody() {
-        isExprBody_ = true;
+    bool hasExprBody() const { return hasExprBody_; }
+    void setHasExprBody() {
+        MOZ_ASSERT(isArrow());
+        hasExprBody_ = true;
     }
 
     bool hasExtensibleScope()        const { return hasExtensibleScope_; }

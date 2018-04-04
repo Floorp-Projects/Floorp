@@ -22,12 +22,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MessageListenerManager,
                                                          nsFrameMessageManager)
 
-  nsISupports* GetParentObject()
+  ChromeMessageBroadcaster* GetParentObject()
   {
-    return ToSupports(mParentManager.get());
+    return mParentManager;
   }
 
-  virtual nsFrameMessageManager* GetParentManager() override
+  virtual ChromeMessageBroadcaster* GetParentManager() override
   {
     return mParentManager;
   }
@@ -40,11 +40,11 @@ public:
 
 protected:
   MessageListenerManager(ipc::MessageManagerCallback* aCallback,
-                         nsFrameMessageManager* aParentManager,
+                         ChromeMessageBroadcaster* aParentManager,
                          MessageManagerFlags aFlags);
   virtual ~MessageListenerManager();
 
-  RefPtr<nsFrameMessageManager> mParentManager;
+  RefPtr<ChromeMessageBroadcaster> mParentManager;
 };
 
 } // namespace dom

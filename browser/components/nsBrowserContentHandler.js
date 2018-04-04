@@ -145,6 +145,13 @@ function getPostUpdateOverridePage(defaultOverridePage) {
   if (actions.includes("silent") || !actions.includes("showURL"))
     return "";
 
+  // If a policy was set to not allow the update.xml-provided
+  // URL to be used, use the default fallback (which will also
+  // be provided by the policy).
+  if (!Services.policies.isAllowed("postUpdateCustomPage")) {
+    return defaultOverridePage;
+  }
+
   return update.getProperty("openURL") || defaultOverridePage;
 }
 

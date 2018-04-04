@@ -632,12 +632,8 @@ HTMLImageElement::UnbindFromTree(bool aDeep, bool aNullParent)
   }
 
   if (mInDocResponsiveContent) {
-    nsIDocument* doc = GetOurOwnerDoc();
-    MOZ_ASSERT(doc);
-    if (doc) {
-      doc->RemoveResponsiveContent(this);
-      mInDocResponsiveContent = false;
-    }
+    OwnerDoc()->RemoveResponsiveContent(this);
+    mInDocResponsiveContent = false;
   }
 
   nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
@@ -1050,11 +1046,8 @@ HTMLImageElement::PictureSourceSrcsetChanged(nsIContent *aSourceNode,
   }
 
   if (!mInDocResponsiveContent && IsInComposedDoc()) {
-    nsIDocument* doc = GetOurOwnerDoc();
-    if (doc) {
-      doc->AddResponsiveContent(this);
-      mInDocResponsiveContent = true;
-    }
+    OwnerDoc()->AddResponsiveContent(this);
+    mInDocResponsiveContent = true;
   }
 
   // This always triggers the image update steps per the spec, even if

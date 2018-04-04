@@ -6,6 +6,7 @@
 
 package org.mozilla.gecko.telemetry.pingbuilders;
 
+import android.accessibilityservice.AccessibilityServiceInfo;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -31,8 +32,12 @@ import org.mozilla.gecko.util.StringUtils;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -71,6 +76,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     private static final String TIMEZONE_OFFSET = "tz";
     private static final String VERSION_ATTR = "v";
     private static final String FLASH_USAGE = "flashUsage";
+    private static final String ACCESSIBILITY_SERVICES = "accessibilityServices";
 
     public TelemetryCorePingBuilder(final Context context) {
         initPayloadConstants(context);
@@ -166,6 +172,21 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
         }
 
         payload.put(SEARCH_COUNTS, searchCounts);
+        return this;
+    }
+
+    /**
+     * Get enabled accessibility services that might start gecko accessibility.
+     */
+    public TelemetryCorePingBuilder setOptAccessibility(@NonNull final List<AccessibilityServiceInfo> enabledServices) {
+        // Some services, like TalkBack, register themselves several times. We
+        // only record unique services.
+        final Set<String> services = new HashSet<String>();
+        for (AccessibilityServiceInfo service : enabledServices) {
+            services.add(service.getId());
+        }
+
+        payload.putArray(ACCESSIBILITY_SERVICES, new ArrayList<String>(services));
         return this;
     }
 
