@@ -348,7 +348,7 @@ diff --git a/gfx/ycbcr/yuv_convert.cpp b/gfx/ycbcr/yuv_convert.cpp
      } else {
  // Specialized scalers and rotation.
 -#if USE_MMX && defined(_MSC_VER)
-+#if defined(MOZILLA_MAY_SUPPORT_SSE) && defined(_MSC_VER) && defined(_M_IX86)
++#if defined(MOZILLA_MAY_SUPPORT_SSE) && defined(_MSC_VER) && defined(_M_IX86) && !defined(__clang__)
 +      if(mozilla::supports_sse()) {
          if (width == (source_width * 2)) {
 -          DoubleYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
