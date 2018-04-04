@@ -31,6 +31,8 @@ public:
     virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
                                 int* aTargetNums) override;
 
+    virtual bool HasSelectionSupport(void) override;
+
     // Call this when data or text has been retrieved.
     void Complete(ClipboardDataType aDataType,
                   const void* aData,
