@@ -28,7 +28,7 @@ const ORIGINAL_URL = "webpack:///code_no_race.js";
 const GENERATED_LINE = 84;
 const ORIGINAL_LINE = 11;
 
-add_task(async function () {
+add_task(async function() {
   // Opening the debugger causes the source actors to be created.
   const toolbox = await openNewTabAndToolbox(PAGE_URL, "jsdebugger");
   // In bug 1391768, when the sourceMapURLService was created, it was

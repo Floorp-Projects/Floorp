@@ -48,7 +48,7 @@ function attachThread(toolbox) {
   let autoBlackBox = false;
   let ignoreFrameEnvironment = false;
   const newDebuggerEnabled = Services.prefs.getBoolPref("devtools.debugger.new-debugger-frontend");
-  if(!newDebuggerEnabled) {
+  if (!newDebuggerEnabled) {
     useSourceMaps = Services.prefs.getBoolPref("devtools.debugger.source-maps-enabled");
     autoBlackBox = Services.prefs.getBoolPref("devtools.debugger.auto-black-box");
   } else {
@@ -103,7 +103,7 @@ function attachThread(toolbox) {
     target.client.attachAddon(actor, res => {
       target.client.attachThread(res.threadActor, handleResponse);
     });
-  }  else {
+  } else {
     // Attaching an old browser debugger or a content process.
     target.client.attachThread(chromeDebugger, handleResponse);
   }

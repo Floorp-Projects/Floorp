@@ -9,7 +9,7 @@
 // Can probably make this a shared test that tests all of the tools global keybindings
 const TEST_URL = "data:text/html,<html><head><title>Test for the " +
                  "highlighter keybindings</title></head><body>" +
-                 "<h1>Keybindings!</h1></body></html>"
+                 "<h1>Keybindings!</h1></body></html>";
 
 const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
 let keysetMap = { };
@@ -17,7 +17,7 @@ let keysetMap = { };
 function buildDevtoolsKeysetMap(keyset) {
   [].forEach.call(
     keyset.querySelectorAll("key"),
-    function (key) {
+    function(key) {
       if (!key.getAttribute("key")) {
         return;
       }
@@ -34,7 +34,7 @@ function buildDevtoolsKeysetMap(keyset) {
           metaKey: modifiers.match("meta"),
           accelKey: modifiers.match("accel")
         },
-        synthesizeKey: function () {
+        synthesizeKey: function() {
           EventUtils.synthesizeKey(this.key, this.modifierOpt);
         }
       };
@@ -47,7 +47,7 @@ function setupKeyBindingsTest() {
   }
 }
 
-add_task(async function () {
+add_task(async function() {
   // Use the new debugger frontend because the old one swallows the netmonitor shortcut:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1370442#c7
   await SpecialPowers.pushPrefEnv({set: [

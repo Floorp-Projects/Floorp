@@ -26,7 +26,7 @@ const testToolDefinition = {
   }
 };
 
-add_task(async function () {
+add_task(async function() {
   let tab = await addTab("about:blank");
   let target = TargetFactory.forTab(tab);
 

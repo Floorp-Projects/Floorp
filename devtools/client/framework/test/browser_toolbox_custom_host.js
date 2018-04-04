@@ -15,7 +15,7 @@ function test() {
   iframe = document.createElement("iframe");
   document.documentElement.appendChild(iframe);
 
-  addTab(TEST_URL).then(function (tab) {
+  addTab(TEST_URL).then(function(tab) {
     target = TargetFactory.forTab(tab);
     let options = {customIframe: iframe};
     gDevTools.showToolbox(target, null, Toolbox.HostType.CUSTOM, options)
@@ -24,7 +24,7 @@ function test() {
   });
 
   function onMessage(event) {
-    if (typeof(event.data) !== "string") {
+    if (typeof (event.data) !== "string") {
       return;
     }
     info("onMessage: " + event.data);
