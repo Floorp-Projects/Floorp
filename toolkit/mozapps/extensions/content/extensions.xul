@@ -64,9 +64,6 @@
       <menuitem id="menuitem_findUpdates" command="cmd_findItemUpdates"
                 label="&cmd.findUpdates.label;"
                 accesskey="&cmd.findUpdates.accesskey;"/>
-      <menuitem id="menuitem_about" command="cmd_showItemAbout"
-                label="&cmd.about.label;"
-                accesskey="&cmd.about.accesskey;"/>
     </menupopup>
 
     <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
@@ -119,7 +116,6 @@
     <command id="cmd_showItemDetails"/>
     <command id="cmd_findItemUpdates"/>
     <command id="cmd_showItemPreferences"/>
-    <command id="cmd_showItemAbout"/>
     <command id="cmd_enableItem"/>
     <command id="cmd_disableItem"/>
     <command id="cmd_installItem"/>

@@ -15,7 +15,7 @@ test "$L10N_CHANGESETS"
 
 SCRIPT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-TARGET="firefox-${VERSION}.snap"
+TARGET="target.snap"
 TARGET_FULL_PATH="$ARTIFACTS_DIR/$TARGET"
 SOURCE_DEST="${WORKSPACE}/source"
 
@@ -89,14 +89,3 @@ EOF
 find . -ls
 cat "$TARGET.checksums"
 cat signing_manifest.json
-
-
-# Upload snaps to Ubuntu Snap Store
-# TODO: Make this part an independent task
-if [[ "$PUSH_TO_CHANNEL" =~ (^(edge|candidate)$)  ]]; then
-  echo "Uploading to Ubuntu Store on channel $PUSH_TO_CHANNEL"
-  bash "$SCRIPT_DIRECTORY/fetch_macaroons.sh" "http://taskcluster/secrets/v1/secret/project/releng/snapcraft/firefox/$PUSH_TO_CHANNEL"
-  snapcraft push --release "$PUSH_TO_CHANNEL" "$TARGET_FULL_PATH"
-else
-  echo "No upload done: PUSH_TO_CHANNEL value \"$PUSH_TO_CHANNEL\" doesn't match a known channel."
-fi

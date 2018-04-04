@@ -322,10 +322,6 @@ interface nsIAnnotationService : nsISupports
      * example JS:
      *   var annotations = annotator.getPageAnnotations(myURI, {});
      */
-    void getPageAnnotationNames(
-      in nsIURI aURI,
-      [optional] out unsigned long count,
-      [retval, array, size_is(count)] out nsIVariant result);
     void getItemAnnotationNames(
       in long long aItemId,
       [optional] out unsigned long count,

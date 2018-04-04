@@ -202,3 +202,30 @@ add_task(async function() {
   let {inspector} = await openInspectorForURL(TEST_URL);
   await checkTreeFromRootSelector(EXPECTED_TREE, "test-component", inspector);
 });
+
+add_task(async function() {
+  await enableWebComponents();
+
+  // Test empty web components are still displayed correctly.
+
+  const TEST_URL = `data:text/html;charset=utf-8,
+    <test-component></test-component>
+
+    <script>
+      "use strict";
+      customElements.define("test-component", class extends HTMLElement {
+        constructor() {
+          super();
+          let shadowRoot = this.attachShadow({mode: "open"});
+          shadowRoot.innerHTML = "";
+        }
+      });
+    </script>`;
+
+  const EXPECTED_TREE = `
+    test-component
+      #shadow-root`;
+
+  let {inspector} = await openInspectorForURL(TEST_URL);
+  await checkTreeFromRootSelector(EXPECTED_TREE, "test-component", inspector);
+});
