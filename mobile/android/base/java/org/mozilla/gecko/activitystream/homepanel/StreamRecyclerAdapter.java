@@ -211,9 +211,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             setViewVisible(bookmarksEnabled || visitedEnabled, holder.itemView);
         } else if (type == RowItemType.TOP_STORIES_TITLE.getViewType()) {
             final Context context = holder.itemView.getContext();
-            final boolean pocketEnabled = ActivityStreamConfiguration.isPocketEnabledByLocale(context) &&
-                    GeckoSharedPrefs.forProfile(context).getBoolean(ActivityStreamPanel.PREF_POCKET_ENABLED,
-                    context.getResources().getBoolean(R.bool.pref_activitystream_pocket_enabled_default));
+            final boolean pocketEnabled = ActivityStreamPanel.isPocketRecommendingTopSites(context);
             setViewVisible(pocketEnabled, holder.itemView);
         }
     }
