@@ -150,7 +150,7 @@ struct PerformanceInfo
   // Host of the document, if any
   nsCString host;
   // process id
-  uint16_t pid;
+  uint32_t pid;
   // window id
   uint64_t wid;
   // "parent" window id

@@ -12,6 +12,9 @@
 #include "mozilla/Base64.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
+#ifndef RELEASE_OR_BETA
+#include "mozilla/PerformanceUtils.h"
+#endif
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/IdleDeadline.h"
@@ -659,11 +662,25 @@ ChromeUtils::ClearRecentJSDevError(GlobalObject&)
 ChromeUtils::RequestPerformanceMetrics(GlobalObject&)
 {
   MOZ_ASSERT(XRE_IsParentProcess());
+
+  // calling all content processes via IPDL (async)
   nsTArray<ContentParent*> children;
   ContentParent::GetAll(children);
   for (uint32_t i = 0; i < children.Length(); i++) {
     mozilla::Unused << children[i]->SendRequestPerformanceMetrics();
   }
+
+
+  // collecting the current process counters and notifying them
+  nsTArray<PerformanceInfo> info;
+  CollectPerformanceInfo(info);
+  SystemGroup::Dispatch(TaskCategory::Performance,
+    NS_NewRunnableFunction(
+      "RequestPerformanceMetrics",
+      [info]() { mozilla::Unused << NS_WARN_IF(NS_FAILED(NotifyPerformanceInfo(info))); }
+    )
+  );
+
 }
 #endif
 
