@@ -1150,7 +1150,6 @@ class JSScript : public js::gc::TenuredCell
     bool isAsync_:1;
 
     bool hasRest_:1;
-    bool isExprBody_:1;
 
     // True if the debugger's onNewScript hook has not yet been called.
     bool hideScriptFromDebugger_:1;
@@ -1467,13 +1466,6 @@ class JSScript : public js::gc::TenuredCell
     }
     void setHasRest() {
         hasRest_ = true;
-    }
-
-    bool isExprBody() const {
-        return isExprBody_;
-    }
-    void setIsExprBody() {
-        isExprBody_ = true;
     }
 
     bool hideScriptFromDebugger() const {
@@ -2123,7 +2115,6 @@ class LazyScript : public gc::TenuredCell
         uint32_t shouldDeclareArguments : 1;
         uint32_t hasThisBinding : 1;
         uint32_t isAsync : 1;
-        uint32_t isExprBody : 1;
 
         uint32_t numClosedOverBindings : NumClosedOverBindingsBits;
 
@@ -2279,13 +2270,6 @@ class LazyScript : public gc::TenuredCell
     }
     void setHasRest() {
         p_.hasRest = true;
-    }
-
-    bool isExprBody() const {
-        return p_.isExprBody;
-    }
-    void setIsExprBody() {
-        p_.isExprBody = true;
     }
 
     bool strict() const {

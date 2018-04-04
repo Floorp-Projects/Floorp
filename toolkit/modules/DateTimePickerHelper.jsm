@@ -46,7 +46,7 @@ var DateTimePickerHelper = {
     }
   },
 
-  // nsIMessageListener
+  // MessageListener
   receiveMessage(aMessage) {
     debug("receiveMessage: " + aMessage.name);
     switch (aMessage.name) {

@@ -11,7 +11,7 @@ namespace mozilla {
 namespace dom {
 
 ChromeMessageSender::ChromeMessageSender(ipc::MessageManagerCallback* aCallback,
-                                         nsFrameMessageManager* aParentManager,
+                                         ChromeMessageBroadcaster* aParentManager,
                                          MessageManagerFlags aFlags)
   : MessageSender(aCallback, aParentManager, aFlags | MessageManagerFlags::MM_CHROME)
 {

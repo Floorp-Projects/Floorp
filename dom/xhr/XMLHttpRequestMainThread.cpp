@@ -1325,6 +1325,10 @@ XMLHttpRequestMainThread::DispatchOrStoreEvent(DOMEventTargetHelper* aTarget,
   MOZ_ASSERT(aTarget);
   MOZ_ASSERT(aEvent);
 
+  if (NS_FAILED(CheckInnerWindowCorrectness())) {
+    return;
+  }
+
   if (mEventDispatchingSuspended) {
     PendingEvent* event = mPendingEvents.AppendElement();
     event->mTarget = aTarget;
@@ -1351,6 +1355,10 @@ XMLHttpRequestMainThread::ResumeEventDispatching()
 
   nsTArray<PendingEvent> pendingEvents;
   pendingEvents.SwapElements(mPendingEvents);
+
+  if (NS_FAILED(CheckInnerWindowCorrectness())) {
+    return;
+  }
 
   for (uint32_t i = 0; i < pendingEvents.Length(); ++i) {
     bool dummy;

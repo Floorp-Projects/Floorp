@@ -24,6 +24,7 @@ loader.lazyGetter(this, "NetMonitorPanel", () => require("devtools/client/netmon
 loader.lazyGetter(this, "StoragePanel", () => require("devtools/client/storage/panel").StoragePanel);
 loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/client/scratchpad/scratchpad-panel").ScratchpadPanel);
 loader.lazyGetter(this, "DomPanel", () => require("devtools/client/dom/dom-panel").DomPanel);
+loader.lazyGetter(this, "AccessibilityPanel", () => require("devtools/client/accessibility/accessibility-panel").AccessibilityPanel);
 
 // Other dependencies
 loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
@@ -438,6 +439,32 @@ Tools.dom = {
   }
 };
 
+Tools.accessibility = {
+  id: "accessibility",
+  accesskey: l10n("accessibility.accesskey"),
+  ordinal: 14,
+  modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
+  visibilityswitch: "devtools.accessibility.enabled",
+  icon: "chrome://devtools/skin/images/tool-accessibility.svg",
+  url: "chrome://devtools/content/accessibility/accessibility.html",
+  label: l10n("accessibility.label"),
+  panelLabel: l10n("accessibility.panelLabel"),
+  get tooltip() {
+    return l10n("accessibility.tooltip",
+      (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") +
+      l10n("accessibility.commandkey"));
+  },
+  inMenu: true,
+
+  isTargetSupported(target) {
+    return target.hasActor("accessibility");
+  },
+
+  build(iframeWindow, toolbox) {
+    return new AccessibilityPanel(iframeWindow, toolbox);
+  }
+};
+
 var defaultTools = [
   Tools.options,
   Tools.webConsole,
@@ -453,6 +480,7 @@ var defaultTools = [
   Tools.scratchpad,
   Tools.memory,
   Tools.dom,
+  Tools.accessibility,
 ];
 
 exports.defaultTools = defaultTools;

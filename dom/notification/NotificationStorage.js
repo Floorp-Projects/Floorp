@@ -256,8 +256,7 @@ NotificationStorage.prototype = {
 
   classID : Components.ID(NOTIFICATIONSTORAGE_CID),
   contractID : NOTIFICATIONSTORAGE_CONTRACTID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsINotificationStorage,
-                                         Ci.nsIMessageListener]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsINotificationStorage]),
 };
 
 

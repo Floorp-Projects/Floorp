@@ -450,7 +450,7 @@ nsBlockFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 void
-nsBlockFrame::InvalidateFrame(uint32_t aDisplayItemKey)
+nsBlockFrame::InvalidateFrame(uint32_t aDisplayItemKey, bool aRebuildDisplayItems)
 {
   if (nsSVGUtils::IsInSVGTextSubtree(this)) {
     NS_ASSERTION(GetParent()->IsSVGTextFrame(),
@@ -458,11 +458,11 @@ nsBlockFrame::InvalidateFrame(uint32_t aDisplayItemKey)
     GetParent()->InvalidateFrame();
     return;
   }
-  nsContainerFrame::InvalidateFrame(aDisplayItemKey);
+  nsContainerFrame::InvalidateFrame(aDisplayItemKey, aRebuildDisplayItems);
 }
 
 void
-nsBlockFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
+nsBlockFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey, bool aRebuildDisplayItems)
 {
   if (nsSVGUtils::IsInSVGTextSubtree(this)) {
     NS_ASSERTION(GetParent()->IsSVGTextFrame(),
@@ -470,7 +470,7 @@ nsBlockFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItem
     GetParent()->InvalidateFrame();
     return;
   }
-  nsContainerFrame::InvalidateFrameWithRect(aRect, aDisplayItemKey);
+  nsContainerFrame::InvalidateFrameWithRect(aRect, aDisplayItemKey, aRebuildDisplayItems);
 }
 
 nscoord

@@ -265,6 +265,9 @@ public:
   // nsIDOMChromeWindow (only implemented on chrome windows)
   NS_DECL_NSIDOMCHROMEWINDOW
 
+  mozilla::dom::ChromeMessageBroadcaster* GetMessageManager();
+  mozilla::dom::ChromeMessageBroadcaster* GetGroupMessageManager(const nsAString& aGroup);
+
   nsresult
   OpenJS(const nsAString& aUrl, const nsAString& aName,
          const nsAString& aOptions, nsPIDOMWindowOuter **_retval);

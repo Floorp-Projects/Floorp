@@ -217,7 +217,7 @@
                        oncommand="close();"/>
     </content>
 
-    <implementation implements="nsIMessageListener, nsIEditActionListener">
+    <implementation implements="nsIEditActionListener">
       <!-- Please keep in sync with toolkit/content/browser-content.js -->
       <field name="FIND_NORMAL">0</field>
       <field name="FIND_TYPEAHEAD">1</field>
@@ -894,7 +894,7 @@
         ]]></body>
       </method>
 
-      <!-- See nsIMessageListener -->
+      <!-- See MessageListener -->
       <method name="receiveMessage">
         <parameter name="aMessage"/>
         <body><![CDATA[
