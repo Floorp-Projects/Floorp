@@ -27,7 +27,7 @@ class PeerConnectionImpl;
 }
 
 class nsIDOMWindow;
-class nsIDOMDataChannel;
+class nsDOMDataChannel;
 
 namespace test {
 
@@ -83,7 +83,7 @@ public:
   NS_IMETHOD OnSetRemoteDescriptionSuccess(ER&) = 0;
   NS_IMETHOD OnSetLocalDescriptionError(uint32_t code, const char *msg, ER&) = 0;
   NS_IMETHOD OnSetRemoteDescriptionError(uint32_t code, const char *msg, ER&) = 0;
-  NS_IMETHOD NotifyDataChannel(nsIDOMDataChannel *channel, ER&) = 0;
+  NS_IMETHOD NotifyDataChannel(nsDataChannel *channel, ER&) = 0;
   NS_IMETHOD OnStateChange(mozilla::dom::PCObserverStateType state_type, ER&,
                                       void* = nullptr) = 0;
   NS_IMETHOD OnAddStream(mozilla::DOMMediaStream &stream, ER&) = 0;
