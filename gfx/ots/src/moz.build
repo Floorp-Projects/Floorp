@@ -15,22 +15,27 @@ SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    'avar.cc',
     'cff.cc',
     'cff_type2_charstring.cc',
     'cmap.cc',
+    'cvar.cc',
     'cvt.cc',
     'feat.cc',
     'fpgm.cc',
+    'fvar.cc',
     'gasp.cc',
     'glat.cc',
     'gloc.cc',
     'glyf.cc',
     'gpos.cc',
     'gsub.cc',
+    'gvar.cc',
     'hdmx.cc',
     'head.cc',
     'hhea.cc',
     'hmtx.cc',
+    'hvar.cc',
     'kern.cc',
     'layout.cc',
     'loca.cc',
@@ -38,6 +43,7 @@ UNIFIED_SOURCES += [
     'math.cc',
     'maxp.cc',
     'metrics.cc',
+    'mvar.cc',
     'name.cc',
     'os2.cc',
     'ots.cc',
@@ -46,10 +52,13 @@ UNIFIED_SOURCES += [
     'sile.cc',
     'silf.cc',
     'sill.cc',
+    'stat.cc',
+    'variations.cc',
     'vdmx.cc',
     'vhea.cc',
     'vmtx.cc',
     'vorg.cc',
+    'vvar.cc',
 ]
 
 # We allow warnings for third-party code that can be updated from upstream.
@@ -60,6 +69,7 @@ FINAL_LIBRARY = 'gkmedias'
 DEFINES['PACKAGE_VERSION'] = '"moz"'
 DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
 DEFINES['OTS_GRAPHITE'] = 1
+DEFINES['OTS_VARIATIONS'] = 1
 
 USE_LIBS += [
     'brotli',
