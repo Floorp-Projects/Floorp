@@ -141,12 +141,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._onBrowserMessage = this._onBrowserMessage.bind(this);
   this._showDevEditionPromo = this._showDevEditionPromo.bind(this);
   this._updateTextBoxMenuItems = this._updateTextBoxMenuItems.bind(this);
-  this._onBottomHostMinimized = this._onBottomHostMinimized.bind(this);
-  this._onBottomHostMaximized = this._onBottomHostMaximized.bind(this);
-  this._onToolSelectWhileMinimized = this._onToolSelectWhileMinimized.bind(this);
   this._onPerformanceFrontEvent = this._onPerformanceFrontEvent.bind(this);
-  this._onBottomHostWillChange = this._onBottomHostWillChange.bind(this);
-  this._toggleMinimizeMode = this._toggleMinimizeMode.bind(this);
   this._onToolbarFocus = this._onToolbarFocus.bind(this);
   this._onToolbarArrowKeypress = this._onToolbarArrowKeypress.bind(this);
   this._onPickerClick = this._onPickerClick.bind(this);
@@ -891,11 +886,6 @@ Toolbox.prototype = {
                    this.selectPreviousTool();
                    event.preventDefault();
                  });
-    this.shortcuts.on(L10N.getStr("toolbox.minimize.key"),
-                 event => {
-                   this._toggleMinimizeMode();
-                   event.preventDefault();
-                 });
     this.shortcuts.on(L10N.getStr("toolbox.toggleHost.key"),
                  event => {
                    this.switchToPreviousHost();
@@ -920,23 +910,8 @@ Toolbox.prototype = {
 
   // Called whenever the chrome send a message
   _onBrowserMessage: function(event) {
-    if (!event.data) {
-      return;
-    }
-    switch (event.data.name) {
-      case "switched-host":
-        this._onSwitchedHost(event.data);
-        break;
-      case "host-minimized":
-        if (this.hostType == Toolbox.HostType.BOTTOM) {
-          this._onBottomHostMinimized();
-        }
-        break;
-      case "host-maximized":
-        if (this.hostType == Toolbox.HostType.BOTTOM) {
-          this._onBottomHostMaximized();
-        }
-        break;
+    if (event.data && event.data.name === "switched-host") {
+      this._onSwitchedHost(event.data);
     }
   },
 
@@ -1082,16 +1057,6 @@ Toolbox.prototype = {
       return;
     }
 
-    // Bottom-type host can be minimized, add a button for this.
-    if (this.hostType == Toolbox.HostType.BOTTOM) {
-      this.component.setCanMinimize(true);
-
-      // Maximize again when a tool gets selected.
-      this.on("before-select", this._onToolSelectWhileMinimized);
-      // Maximize and stop listening before the host type changes.
-      this.once("host-will-change", this._onBottomHostWillChange);
-    }
-
     this.component.setDockButtonsEnabled(true);
     this.component.setCanCloseToolbox(this.hostType !== Toolbox.HostType.WINDOW);
 
@@ -1115,20 +1080,6 @@ Toolbox.prototype = {
     this.component.setHostTypes(hostTypes);
   },
 
-  _onBottomHostMinimized: function() {
-    this.component.setMinimizeState("minimized");
-  },
-
-  _onBottomHostMaximized: function() {
-    this.component.setMinimizeState("maximized");
-  },
-
-  _onToolSelectWhileMinimized: function() {
-    this.postMessage({
-      name: "maximize-host"
-    });
-  },
-
   postMessage: function(msg) {
     // We sometime try to send messages in middle of destroy(), where the
     // toolbox iframe may already be detached and no longer have a parent.
@@ -1138,29 +1089,6 @@ Toolbox.prototype = {
       msg.frameId = this.frameId;
       this.win.parent.postMessage(msg, "*");
     }
-  },
-
-  _onBottomHostWillChange: function() {
-    this.postMessage({
-      name: "maximize-host"
-    });
-
-    this.off("before-select", this._onToolSelectWhileMinimized);
-  },
-
-  _toggleMinimizeMode: function() {
-    if (this.hostType !== Toolbox.HostType.BOTTOM) {
-      return;
-    }
-
-    // Calculate the height to which the host should be minimized so the
-    // tabbar is still visible.
-    let toolbarHeight = this._componentMount.getBoxQuads({box: "content"})[0].bounds
-                                                                             .height;
-    this.postMessage({
-      name: "toggle-minimize-mode",
-      toolbarHeight
-    });
   },
 
   /**
@@ -1189,7 +1117,6 @@ Toolbox.prototype = {
       selectTool: this.selectTool,
       closeToolbox: this.destroy,
       focusButton: this._onToolbarFocus,
-      toggleMinimizeMode: this._toggleMinimizeMode,
       toolbox: this
     });
 
@@ -1871,8 +1798,6 @@ Toolbox.prototype = {
    *        The id of the tool to switch to
    */
   selectTool: function(id) {
-    this.emit("before-select", id);
-
     if (this.currentToolId == id) {
       let panel = this._toolPanels.get(id);
       if (panel) {
