@@ -1,0 +1,41 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
+</head>
+<body>
+  <script>
+
+// indexedDB
+let p = new Promise(resolve => {
+  let request = indexedDB.open("sanitizer_test", 1);
+  request.onupgradeneeded = event => {
+    let db = event.target.result;
+    event.target.onsuccess = resolve;
+    db.createObjectStore("foo", { autoIncrement: true });
+    db.createObjectStore("bar", { autoIncrement: true });
+  };
+});
+
+// ServiceWorker
+p.then(() => {
+  return navigator.serviceWorker.register("dummy.js")
+                .then(r => {
+    return new Promise(resolve => {
+      let worker = r.installing;
+      worker.addEventListener("statechange", () => {
+        if (worker.state === "installed") {
+          resolve(true);
+        }
+      });
+    });
+  });
+})
+
+// localStorage
+.then(() => {
+  localStorage.foobar = "hello world!";
+});
+
+  </script>
+</body>
+</html>
