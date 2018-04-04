@@ -1,7 +1,6 @@
-
 // -*- Mode: js; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 
-/* globals APP_SHUTDOWN */
+/* globals APP_SHUTDOWN, ExtensionAPI */
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Promise.jsm");
@@ -472,31 +471,7 @@ function loadIntoWindow(window) {
   toolsMenu.appendChild(item);
 }
 
-function install(aData, aReason) {}
-function uninstall(aData, aReason) {}
-
-function shutdown(aData, aReason) {
-  // When the application is shutting down we normally don't have to clean
-  // up any UI changes made
-  if (aReason == APP_SHUTDOWN) {
-    return;
-  }
-
-  Services.wm.removeListener(windowListener);
-
-  // Unload from any existing windows
-  let list = Services.wm.getEnumerator("navigator:browser");
-  while (list.hasMoreElements()) {
-    let window = list.getNext().QueryInterface(Ci.nsIDOMWindow);
-    unloadFromWindow(window);
-  }
-  Services.obs.removeObserver(observer, "tabswitch-urlfile");
-
-  remotePage.destroy();
-}
-
 function handleFile(win, file) {
-
   let localFile = Cc["@mozilla.org/file/local;1"]
     .createInstance(Ci.nsIFile);
   localFile.initWithPath(file);
@@ -504,7 +479,6 @@ function handleFile(win, file) {
   let req = new win.XMLHttpRequest();
   req.open("get", localURI.spec, false);
   req.send(null);
-
 
   let testURLs = [];
   let server = Services.prefs.getCharPref("addon.test.tabswitch.webserver");
@@ -534,24 +508,44 @@ var observer = {
 
 var remotePage;
 
-function startup(aData, aReason) {
-  // Load into any existing windows
-  let list = Services.wm.getEnumerator("navigator:browser");
-  let window;
-  while (list.hasMoreElements()) {
-    window = list.getNext().QueryInterface(Ci.nsIDOMWindow);
-    loadIntoWindow(window);
+this.tps = class extends ExtensionAPI {
+  getAPI(context) {
+    return {
+      tps: {
+        setup({ frameScriptPath }) {
+          let list = Services.wm.getEnumerator("navigator:browser");
+          let window;
+          while (list.hasMoreElements()) {
+            window = list.getNext().QueryInterface(Ci.nsIDOMWindow);
+            loadIntoWindow(window);
+          }
+          // Load into any new windows
+          Services.wm.addListener(windowListener);
+          Services.obs.addObserver(observer, "tabswitch-urlfile");
+
+          const frameScriptURL = context.extension.baseURI.resolve(frameScriptPath);
+          Services.ppmm.loadFrameScript(frameScriptURL, true);
+          remotePage = new RemotePages("about:tabswitch");
+          remotePage.addMessageListener("tabswitch-do-test", function doTest(msg) {
+            test(msg.target.browser.ownerGlobal);
+          });
+
+          return () => {
+            Services.ppmm.sendAsyncMessage("TPS:Teardown");
+
+            Services.wm.removeListener(windowListener);
+
+            // Unload from any existing windows
+            let list = Services.wm.getEnumerator("navigator:browser");
+            while (list.hasMoreElements()) {
+              let window = list.getNext().QueryInterface(Ci.nsIDOMWindow);
+              unloadFromWindow(window);
+            }
+            Services.obs.removeObserver(observer, "tabswitch-urlfile");
+            remotePage.destroy();
+          };
+        }
+      }
+    };
   }
-
-  // Load into any new windows
-  Services.wm.addListener(windowListener);
-
-  Services.obs.addObserver(observer, "tabswitch-urlfile");
-
-  Services.ppmm.loadProcessScript("chrome://tabswitch/content/tabswitch-content-process.js", true);
-
-  remotePage = new RemotePages("about:tabswitch");
-  remotePage.addMessageListener("tabswitch-do-test", function doTest(msg) {
-    test(msg.target.browser.ownerGlobal);
-  });
-}
+};
