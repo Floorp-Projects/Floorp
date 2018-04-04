@@ -85,7 +85,7 @@ return /******/ (function(modules) { // webpackBootstrap
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Dependencies
-const validProtocols = /^(http|https|ftp|data|javascript|resource|chrome):/i;
+const validProtocols = /^(http|https|ftp|data|resource|chrome):/i;
 const tokenSplitRegex = /(\s|\'|\"|\\)+/;
 const ELLIPSIS = "\u2026";
 const dom = __webpack_require__(1);
