@@ -138,7 +138,7 @@ PlacesTreeView.prototype = {
       case Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY:
       case Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY:
       case Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY:
-      case Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY:
+      case Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAGS_ROOT:
       case Ci.nsINavHistoryQueryOptions.RESULTS_AS_ROOTS_QUERY:
       case Ci.nsINavHistoryQueryOptions.RESULTS_AS_LEFT_PANE_QUERY:
         return false;

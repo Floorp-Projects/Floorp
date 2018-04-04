@@ -71,7 +71,7 @@ add_task(async function test_removing_folder_containing_tagged_bookmark_removes_
 function ensureTagsExist(aTags) {
   var query = histsvc.getNewQuery();
   var opts = histsvc.getNewQueryOptions();
-  opts.resultType = opts.RESULTS_AS_TAG_QUERY;
+  opts.resultType = opts.RESULTS_AS_TAGS_ROOT;
   var resultRoot = histsvc.executeQuery(query, opts).root;
 
   // Dupe aTags.

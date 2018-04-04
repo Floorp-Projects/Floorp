@@ -19,7 +19,7 @@ for (const [uri, tagArray] of Object.entries(testData)) {
   });
 }
 
-add_task(async function test_results_as_tag_query() {
+add_task(async function test_results_as_tags_root() {
   await task_populateDB(formattedTestData);
 
   // Construct URL - tag mapping from tag query.
@@ -31,7 +31,7 @@ add_task(async function test_results_as_tag_query() {
   }
 
   const options = PlacesUtils.history.getNewQueryOptions();
-  options.resultType = options.RESULTS_AS_TAG_QUERY;
+  options.resultType = options.RESULTS_AS_TAGS_ROOT;
   const query = PlacesUtils.history.getNewQuery();
   const root = PlacesUtils.history.executeQuery(query, options).root;
 

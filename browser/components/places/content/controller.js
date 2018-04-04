@@ -805,7 +805,7 @@ PlacesController.prototype = {
                  node.parent &&
                  PlacesUtils.nodeIsQuery(node.parent) &&
                  PlacesUtils.asQuery(node.parent).queryOptions.resultType ==
-                   Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY) {
+                   Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAGS_ROOT) {
         // This is a tag container.
         // Untag all URIs tagged with this tag only if the tag container is
         // child of the "Tags" query in the library, in all other places we
