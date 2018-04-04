@@ -148,7 +148,6 @@ windows-qr-talos:
     - talos-g4
     - talos-perf-reftest
     - talos-perf-reftest-singletons
-    - talos-svgr
     - talos-tp5o
     - talos-speedometer
     - talos-motionmark
