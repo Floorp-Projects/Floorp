@@ -65,7 +65,17 @@ audio > xul|videocontrols {
   --volumeStack-width: 64px;
 }
 
-.controlsContainer [hidden="true"],
+/*
+  XXX this is needed because of bug 1354501.
+  Can be removed when the bug is fixed, or when we move away from
+  the finish event to the finished promise.
+  (currently behind dom.animations-api.core.enabled)
+*/
+.fadeout {
+  opacity: 0;
+}
+
+.controlsContainer [hidden],
 .controlBar[hidden] {
   display: none;
 }
@@ -443,45 +453,15 @@ audio > xul|videocontrols {
 
 .controlsSpacerStack:hover > .clickToPlay[fadeout] {
   opacity: 0;
-  visibility: hidden;
 }
 
 .controlBar[fullscreen-unavailable] .fullscreenButton {
   display: none;
 }
 
-/* CSS Transitions */
-.clickToPlay:not([immediate]) {
-  transition-property: transform, opacity, visibility;
-  transition-duration: 400ms, 400ms, 400ms;
-}
-
-.clickToPlay[fadeout] {
-  transform: scale(3);
-  opacity: 0;
-  visibility: hidden;
-}
-
-.controlBar:not([immediate]) {
-  transition-property: opacity, visibility;
-  transition-duration: 200ms, 200ms;
-}
-
-.controlBar[fadeout] {
-  opacity: 0;
-  visibility: hidden;
-}
-
-.statusOverlay:not([immediate]) {
-  transition-property: opacity, visibility;
-  transition-duration: 300ms, 300ms;
-  transition-delay: 750ms, 750ms;
-}
-
 .statusOverlay[fadeout],
 .statusOverlay[error] + .controlsOverlay > .controlsSpacerStack {
   opacity: 0;
-  visibility: hidden;
 }
 
 /* Error description formatting */

@@ -7,7 +7,8 @@
 const protocol = require("devtools/shared/protocol");
 const { promisesSpec } = require("devtools/shared/specs/promises");
 const { expectState, ActorPool } = require("devtools/server/actors/common");
-const { ObjectActor, createValueGrip } = require("devtools/server/actors/object");
+const { ObjectActor } = require("devtools/server/actors/object");
+const { createValueGrip } = require("devtools/server/actors/object/utils");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const EventEmitter = require("devtools/shared/event-emitter");
 

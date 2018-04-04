@@ -7,7 +7,9 @@
 #ifndef nsPerformanceMetrics_h___
 #define nsPerformanceMetrics_h___
 
+#include "nsCOMArray.h"
 #include "nsIPerformanceMetrics.h"
+#include "nsString.h"
 
 
 class PerformanceMetricsDispatchCategory final : public nsIPerformanceMetricsDispatchCategory

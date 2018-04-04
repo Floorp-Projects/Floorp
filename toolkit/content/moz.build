@@ -182,8 +182,6 @@ with Files('tests/unit/**'):
 
 with Files('tests/widgets/*audiocontrols*'):
     BUG_COMPONENT = ('Toolkit', 'Video/Audio Controls')
-with Files('tests/widgets/*1319301*'):
-    BUG_COMPONENT = ('Toolkit', 'Video/Audio Controls')
 with Files('tests/widgets/*898940*'):
     BUG_COMPONENT = ('Toolkit', 'Video/Audio Controls')
 

@@ -32,7 +32,9 @@
       video.addEventListener("loadedmetadata", () => SimpleTest.executeSoon(resolve));
     });
 
-    await SimpleTest.promiseWaitForCondition(() => statusOverlay.hasAttribute("fadeout") || statusOverlay.hidden,
+    // Wait for the fade out transition to complete in case the throbber
+    // shows up on slower platforms.
+    await SimpleTest.promiseWaitForCondition(() => statusOverlay.hidden,
       "statusOverlay should not present without error");
 
     ok(!statusOverlay.hasAttribute("error"), "statusOverlay should not in error state");
@@ -47,7 +49,7 @@
       video.addEventListener("error", () => SimpleTest.executeSoon(resolve));
     });
 
-    ok(!statusOverlay.hidden && !statusOverlay.hasAttribute("fadeout"), `statusOverlay should show when ${errorType}`);
+    ok(!statusOverlay.hidden, `statusOverlay should show when ${errorType}`);
     is(statusOverlay.getAttribute("error"), errorType, `statusOverlay should have correct error state: ${errorType}`);
     is(statusIcon.getAttribute("type"), "error", `should show error icon when ${errorType}`);
   });

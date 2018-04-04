@@ -40,8 +40,11 @@ public:
   Image* GetImage() const { return mImage; }
   void SetForceBlack(bool aForceBlack) { mForceBlack = aForceBlack; }
   bool GetForceBlack() const { return mForceBlack; }
-  void SetPrincipalHandle(const PrincipalHandle& aPrincipalHandle) { mPrincipalHandle = aPrincipalHandle; }
-  PrincipalHandle GetPrincipalHandle() const { return mPrincipalHandle; }
+  void SetPrincipalHandle(PrincipalHandle aPrincipalHandle)
+  {
+    mPrincipalHandle = Forward<PrincipalHandle>(aPrincipalHandle);
+  }
+  const PrincipalHandle& GetPrincipalHandle() const { return mPrincipalHandle; }
   const gfx::IntSize& GetIntrinsicSize() const { return mIntrinsicSize; }
   void SetNull();
   void TakeFrom(VideoFrame* aFrame);
@@ -89,7 +92,7 @@ struct VideoChunk {
     return 0;
   }
 
-  PrincipalHandle GetPrincipalHandle() const { return mFrame.GetPrincipalHandle(); }
+  const PrincipalHandle& GetPrincipalHandle() const { return mFrame.GetPrincipalHandle(); }
 
   StreamTime mDuration;
   VideoFrame mFrame;

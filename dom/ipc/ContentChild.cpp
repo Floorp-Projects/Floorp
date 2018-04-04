@@ -69,6 +69,9 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/CaptivePortalService.h"
+#ifndef RELEASE_OR_BETA
+#include "mozilla/PerformanceUtils.h"
+#endif
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/widget/ScreenManager.h"
@@ -81,7 +84,6 @@
 #include "imgLoader.h"
 #include "GMPServiceChild.h"
 #include "NullPrincipal.h"
-#include "nsIPerformanceMetrics.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIWorkerDebuggerManager.h"
 
@@ -1388,27 +1390,9 @@ mozilla::ipc::IPCResult
 ContentChild::RecvRequestPerformanceMetrics()
 {
 #ifndef RELEASE_OR_BETA
-  // iterate on all WorkerDebugger
-  RefPtr<WorkerDebuggerManager> wdm = WorkerDebuggerManager::GetOrCreate();
-  if (NS_WARN_IF(!wdm)) {
-    return IPC_OK();
-  }
-
-  for (uint32_t index = 0; index < wdm->GetDebuggersLength(); index++) {
-    WorkerDebugger* debugger = wdm->GetDebuggerAt(index);
-    MOZ_ASSERT(debugger);
-    SendAddPerformanceMetrics(debugger->ReportPerformanceInfo());
-  }
-
-  // iterate on all DocGroup
-  nsTArray<RefPtr<TabChild>> tabs = TabChild::GetAll();
-  for (const auto& tabChild : tabs) {
-    TabGroup* tabGroup = tabChild->TabGroup();
-    for (auto iter = tabGroup->Iter(); !iter.Done(); iter.Next()) {
-        RefPtr<DocGroup> docGroup = iter.Get()->mDocGroup;
-        SendAddPerformanceMetrics(docGroup->ReportPerformanceInfo());
-    }
-  }
+  nsTArray<PerformanceInfo> info;
+  CollectPerformanceInfo(info);
+  SendAddPerformanceMetrics(info);
   return IPC_OK();
 #endif
 #ifdef RELEASE_OR_BETA

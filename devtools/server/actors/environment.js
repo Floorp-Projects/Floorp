@@ -8,7 +8,7 @@
 /* global Debugger */
 
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
-const { createValueGrip } = require("devtools/server/actors/object");
+const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { environmentSpec } = require("devtools/shared/specs/environment");
 
 /**

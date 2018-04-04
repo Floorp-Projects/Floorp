@@ -18,8 +18,19 @@
 
 namespace mozilla {
   struct AudioChunk;
+  class AudioSegment;
 }
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::AudioChunk)
+
+/**
+ * This allows compilation of nsTArray<AudioSegment> and
+ * AutoTArray<AudioSegment> since without it, static analysis fails on the
+ * mChunks member being a non-memmovable AutoTArray.
+ *
+ * Note that AudioSegment(const AudioSegment&) is deleted, so this should
+ * never come into effect.
+ */
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::AudioSegment)
 
 namespace mozilla {
 
@@ -245,7 +256,7 @@ struct AudioChunk {
     return static_cast<T*>(const_cast<void*>(mChannelData[aChannel]));
   }
 
-  PrincipalHandle GetPrincipalHandle() const { return mPrincipalHandle; }
+  const PrincipalHandle& GetPrincipalHandle() const { return mPrincipalHandle; }
 
   StreamTime mDuration = 0; // in frames within the buffer
   RefPtr<ThreadSharedObject> mBuffer; // the buffer object whose lifetime is managed; null means data is all zeroes

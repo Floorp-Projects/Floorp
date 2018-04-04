@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <script type="text/javascript">
+
+  var myWorker;
+  function init() {
+   myWorker = new Worker('ping_worker.js');
+   myWorker.postMessage("ping");
+  }
+
+  </script>
+</head>
+<body onload="init()">
+  <h1>A page with a worker</h1>
+</body>
+</html>

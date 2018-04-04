@@ -14,6 +14,7 @@
 #include "mozilla/SandboxSettings.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "mozilla/SandboxLaunch.h"
 #include "mozilla/dom/ContentChild.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
@@ -51,6 +52,7 @@ static const int rdonly = SandboxBroker::MAY_READ;
 static const int wronly = SandboxBroker::MAY_WRITE;
 static const int rdwr = rdonly | wronly;
 static const int rdwrcr = rdwr | SandboxBroker::MAY_CREATE;
+static const int access = SandboxBroker::MAY_ACCESS;
 }
 #endif
 
@@ -526,6 +528,15 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
     // bug 1384986 comment #1), but that's already allowed for hybrid
     // GPU drivers (see above).
     policy->AddPath(rdonly, "/var/lib/dbus/machine-id");
+  }
+
+  // Bug 1434711 - AMDGPU-PRO crashes if it can't read it's marketing ids
+  // and various other things
+  if (HasAtiDrivers()) {
+    policy->AddDir(rdonly, "/opt/amdgpu/share");
+    policy->AddPath(rdonly, "/sys/module/amdgpu");
+    // AMDGPU-PRO's MESA version likes to readlink a lot of things here
+    policy->AddDir(access, "/sys");
   }
 
   // Return the common policy.

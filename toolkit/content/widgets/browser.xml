@@ -8,7 +8,7 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="browser" extends="xul:browser">
+  <binding id="browser">
     <content clickthrough="never">
       <children/>
     </content>

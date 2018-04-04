@@ -61,6 +61,9 @@ add_task(function* () {
   for (let test of SHOULD_EXECUTE) {
     hud.jsterm.setInputValue(test.input);
     EventUtils.synthesizeKey("VK_RETURN", { shiftKey: test.shiftKey });
+
+    yield waitFor(() => !hud.jsterm.getInputValue());
+
     let inputValue = hud.jsterm.getInputValue();
     is(inputNode.selectionStart, 0, "selection starts/ends at 0");
     is(inputNode.selectionEnd, 0, "selection starts/ends at 0");
