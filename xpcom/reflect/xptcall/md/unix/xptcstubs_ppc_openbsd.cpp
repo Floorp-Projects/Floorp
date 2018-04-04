@@ -6,7 +6,6 @@
 // Implement shared vtbl methods.
 
 #include "xptcprivate.h"
-#include "xptiprivate.h"
 
 // The Linux/PPC ABI (aka PPC/SYSV ABI) passes the first 8 integral
 // parameters and the first 8 floating point parameters in registers

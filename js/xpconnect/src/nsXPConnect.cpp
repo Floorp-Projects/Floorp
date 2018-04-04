@@ -30,7 +30,6 @@
 
 #include "nsDOMMutationObserver.h"
 #include "nsICycleCollectorListener.h"
-#include "mozilla/XPTInterfaceInfoManager.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsScriptSecurityManager.h"

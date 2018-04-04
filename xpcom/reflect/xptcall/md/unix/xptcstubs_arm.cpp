@@ -6,7 +6,6 @@
 /* Implement shared vtbl methods. */
 
 #include "xptcprivate.h"
-#include "xptiprivate.h"
 
 #if !defined(__arm__) && !(defined(LINUX) || defined(ANDROID) || defined(XP_DARWIN))
 #error "This code is for Linux/iOS ARM only. Please check if it works for you, too.\nDepends strongly on gcc behaviour."

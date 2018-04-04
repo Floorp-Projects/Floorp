@@ -5,33 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'ShimInterfaceInfo.cpp',
-    'xptiInterfaceInfo.cpp',
-    'xptiInterfaceInfoManager.cpp',
-    'xptiTypelibGuts.cpp',
-    'xptiWorkingSet.cpp',
 ]
 
-XPIDL_SOURCES += [
-    'nsIInterfaceInfo.idl',
-    'nsIInterfaceInfoManager.idl',
-]
-
-XPIDL_MODULE = 'xpcom_xpti'
 
 EXPORTS += [
     'xptinfo.h',
 ]
 
-EXPORTS.mozilla += [
-    'XPTInterfaceInfoManager.h',
-]
-
-LOCAL_INCLUDES += [
-    '/dom/base',
-]
-
 FINAL_LIBRARY = 'xul'
-
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-error=shadow']

@@ -36,7 +36,6 @@ TEST_DIRS += [
 
 #  Can't build internal xptcall tests that use symbols which are not exported.
 #TEST_DIRS += [
-#    'reflect/xptinfo/tests',
 #    'reflect/xptcall/tests,
 #]
 

@@ -23,7 +23,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/URLPreloader.h"
-#include "mozilla/XPTInterfaceInfoManager.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -32,7 +31,6 @@
 #include "mozilla/Scheduler.h"
 #include "nsZipArchive.h"
 #include "nsWindowMemoryReporter.h"
-#include "ShimInterfaceInfo.h"
 #include "nsIException.h"
 #include "nsIScriptError.h"
 #include "nsISimpleEnumerator.h"
@@ -115,8 +113,6 @@ public:
 
 private:
     virtual ~nsXPCComponents_Interfaces();
-
-    nsCOMArray<nsIInterfaceInfo> mInterfaces;
 };
 
 NS_IMETHODIMP
@@ -311,8 +307,6 @@ public:
 
 private:
     virtual ~nsXPCComponents_InterfacesByID();
-
-    nsCOMArray<nsIInterfaceInfo> mInterfaces;
 };
 
 /***************************************************************************/

@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "xptcprivate.h"
-#include "xptiprivate.h"
 
 /*
  * This is for Windows 64 bit (x86_64) using GCC syntax

@@ -108,7 +108,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsMemory.h"
 #include "nsIXPConnect.h"
-#include "nsIInterfaceInfo.h"
 #include "nsIXPCScriptable.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
