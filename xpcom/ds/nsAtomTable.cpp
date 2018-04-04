@@ -842,3 +842,25 @@ NS_SetStaticAtomsDone()
   MOZ_ASSERT(NS_IsMainThread());
   gStaticAtomsDone = true;
 }
+
+void ToLowerCaseASCII(RefPtr<nsAtom>& aAtom)
+{
+  // Assume the common case is that the atom is already ASCII lowercase.
+  bool reAtomize = false;
+  const nsDependentString existing(aAtom->GetUTF16String(), aAtom->GetLength());
+  for (size_t i = 0; i < existing.Length(); ++i) {
+    if (IS_ASCII_UPPER(existing[i])) {
+      reAtomize = true;
+      break;
+    }
+  }
+
+  // If the string was already lowercase, we're done.
+  if (!reAtomize) {
+    return;
+  }
+
+  nsAutoString lowercased;
+  ToLowerCaseASCII(existing, lowercased);
+  aAtom = NS_Atomize(lowercased);
+}
