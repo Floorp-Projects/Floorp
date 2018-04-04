@@ -1200,9 +1200,7 @@ nsGlobalWindowInner::FreeInnerObjects()
     mNavigator = nullptr;
   }
 
-  if (mScreen) {
-    mScreen = nullptr;
-  }
+  mScreen = nullptr;
 
 #if defined(MOZ_WIDGET_ANDROID)
   mOrientationChangeObserver = nullptr;
@@ -1296,22 +1294,12 @@ nsGlobalWindowInner::FreeInnerObjects()
     mObserver->Forget();
   }
 
-  if (mNavigator) {
-    mNavigator->Invalidate();
-    mNavigator = nullptr;
-  }
-
-  mScreen = nullptr;
   mMenubar = nullptr;
   mToolbar = nullptr;
   mLocationbar = nullptr;
   mPersonalbar = nullptr;
   mStatusbar = nullptr;
   mScrollbars = nullptr;
-  mHistory = nullptr;
-  mCustomElements = nullptr;
-  mApplicationCache = nullptr;
-  mIndexedDB = nullptr;
 
   mConsole = nullptr;
 
@@ -1327,37 +1315,13 @@ nsGlobalWindowInner::FreeInnerObjects()
   mSpeechSynthesis = nullptr;
 #endif
 
-#if defined(MOZ_WIDGET_ANDROID)
-  mOrientationChangeObserver = nullptr;
-#endif
-
-  mChromeEventHandler = nullptr; // Forces Release
   mParentTarget = nullptr;
-
-  DisableGamepadUpdates();
-  mHasGamepad = false;
-  DisableVRUpdates();
-  mHasVREvents = false;
-  mHasVRDisplayActivateEvents = false;
-  DisableIdleCallbackRequests();
 
   if (mCleanMessageManager) {
     MOZ_ASSERT(mIsChrome, "only chrome should have msg manager cleaned");
     if (mChromeFields.mMessageManager) {
       mChromeFields.mMessageManager->Disconnect();
     }
-  }
-
-  CleanupCachedXBLHandlers();
-
-  for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
-    mAudioContexts[i]->Shutdown();
-  }
-  mAudioContexts.Clear();
-
-  if (mIdleTimer) {
-    mIdleTimer->Cancel();
-    mIdleTimer = nullptr;
   }
 
   mIntlUtils = nullptr;
