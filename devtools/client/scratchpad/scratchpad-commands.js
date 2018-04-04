@@ -5,7 +5,6 @@
 "use strict";
 
 const l10n = require("gcli/l10n");
-const {Cu} = require("chrome");
 
 exports.items = [{
   item: "command",

@@ -68,9 +68,10 @@ function ToolSidebar(tabbox, panel, uid, options = {}) {
   this._onTabBoxOverflow = this._onTabBoxOverflow.bind(this);
   this._onTabBoxUnderflow = this._onTabBoxUnderflow.bind(this);
 
-  try {
-    this._width = Services.prefs.getIntPref("devtools.toolsidebar-width." + this._uid);
-  } catch (e) {}
+  let width = Services.prefs.getIntPref("devtools.toolsidebar-width." + this._uid, undefined);
+  if (width) {
+    this._width = width;
+  }
 
   if (!options.disableTelemetry) {
     this._telemetry = new Telemetry();

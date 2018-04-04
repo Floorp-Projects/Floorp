@@ -71,7 +71,7 @@ function testOpenInvalidState() {
 }
 
 function testOpenTestFile() {
-  let win = openScratchpad(function(win) {
+  openScratchpad(function(win) {
     ok(win, "scratchpad opened for file open");
     try {
       win.Scratchpad.importFromFile(

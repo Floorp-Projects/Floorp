@@ -15,7 +15,6 @@ var gFileName = "testFileForBug751744.tmp";
 // Content for the temporary file.
 var gFileContent = "/* this file is already saved */\n" +
                    "function foo() { alert('bar') }";
-var gLength = gFileContent.length;
 
 // Reference to the menu entry.
 var menu;
