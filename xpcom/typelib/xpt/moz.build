@@ -4,31 +4,4 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('xpt')
-
 DIRS += ['tools']
-
-UNIFIED_SOURCES += [
-    'xpt_arena.cpp',
-]
-
-SOURCES += [
-    '!XPTInfo.cpp',
-]
-
-EXPORTS += [
-    'xpt_arena.h',
-    'xpt_struct.h',
-]
-
-FINAL_LIBRARY = 'xul'
-
-LOCAL_INCLUDES += [
-    '!/xpcom/base',
-    '/xpcom/base',
-]
-
-if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
-    CFLAGS += ['-Zl']
-
-DIST_INSTALL = True

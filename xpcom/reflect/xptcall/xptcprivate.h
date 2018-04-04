@@ -12,8 +12,6 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 
-class xptiInterfaceEntry;
-
 #if !defined(__ia64) || (!defined(__hpux) && !defined(__linux__) && !defined(__FreeBSD__))
 #define STUB_ENTRY(n) NS_IMETHOD Stub##n() = 0;
 #else

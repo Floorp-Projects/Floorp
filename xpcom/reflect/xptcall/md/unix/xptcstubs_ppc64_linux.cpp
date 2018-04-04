@@ -6,7 +6,6 @@
 // Implement shared vtbl methods.
 
 #include "xptcprivate.h"
-#include "xptiprivate.h"
 
 // The Linux/PPC64 ABI passes the first 8 integral
 // parameters and the first 13 floating point parameters in registers
