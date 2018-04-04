@@ -247,6 +247,10 @@
 
       "type": "object",
       "properties": {
+        "InvalidCertificate": {
+          "type": "boolean"
+        },
+
         "SafeBrowsing": {
           "type": "boolean"
         }

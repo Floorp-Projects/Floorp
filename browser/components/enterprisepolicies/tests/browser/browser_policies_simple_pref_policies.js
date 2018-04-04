@@ -43,10 +43,14 @@ const POLICIES_TESTS = [
   {
     policies: {
       "DisableSecurityBypass": {
+        "InvalidCertificate": true,
         "SafeBrowsing": true
       }
     },
-    lockedPrefs: { "browser.safebrowsing.allowOverride": false },
+    lockedPrefs: {
+      "security.certerror.hideAddException": true,
+      "browser.safebrowsing.allowOverride": false,
+    },
   },
 
 
