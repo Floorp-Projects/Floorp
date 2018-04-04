@@ -1016,11 +1016,14 @@ AudioStreamHelper.prototype = {
 }
 
 class VideoFrameEmitter {
-  constructor(color1, color2, size) {
-    if (!size) {
-      size = 50;
+  constructor(color1, color2, width, height) {
+    if (!width) {
+      width = 50;
     }
-    this._helper = new CaptureStreamTestHelper2D(size, size);
+    if (!height) {
+      height = width;
+    }
+    this._helper = new CaptureStreamTestHelper2D(width, height);
     this._canvas = this._helper.createAndAppendElement('canvas', 'source_canvas');
     this._color1 = color1 ? color1 : this._helper.green;
     this._color2 = color2 ? color2 : this._helper.red;
