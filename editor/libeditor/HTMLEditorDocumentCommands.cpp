@@ -362,6 +362,21 @@ SetDocumentStateCommand::DoCommandParams(const char* aCommandName,
     return NS_OK;
   }
 
+  if (!nsCRT::strcmp(aCommandName, "cmd_enableAbsolutePositionEditing")) {
+    NS_ENSURE_ARG_POINTER(aParams);
+    HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
+    if (NS_WARN_IF(!htmlEditor)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    ErrorResult error;
+    bool enabled = params->GetBool(STATE_ATTRIBUTE, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+    htmlEditor->EnableAbsolutePositionEditor(enabled);
+    return NS_OK;
+  }
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -522,6 +537,18 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
       return rv;
     }
     return NS_OK;
+  }
+
+  // cmd_enableAbsolutePositionEditing is a Gecko specific command,
+  // "cenableAbsolutePositionEditing".
+  if (!nsCRT::strcmp(aCommandName, "cmd_enableAbsolutePositionEditing")) {
+    NS_ENSURE_ARG_POINTER(aParams);
+    HTMLEditor* htmlEditor = textEditor->AsHTMLEditor();
+    if (NS_WARN_IF(!htmlEditor)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    return params->SetBool(STATE_ALL,
+                           htmlEditor->IsAbsolutePositionEditorEnabled());
   }
 
   return NS_ERROR_NOT_IMPLEMENTED;

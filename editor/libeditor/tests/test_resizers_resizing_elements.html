@@ -47,6 +47,9 @@ SimpleTest.waitForFocus(async function() {
     if (SpecialPowers.getBoolPref("editor.resizing.preserve_ratio")) {
       description += " (preserve ratio pref is true)";
     }
+    if (document.queryCommandState("enableAbsolutePositionEditing")) {
+      description += " (absolute position editor is enabled)";
+    }
     description += ": ";
     content.innerHTML = aInnerHTML;
     let target = document.getElementById("target");
@@ -202,23 +205,31 @@ SimpleTest.waitForFocus(async function() {
     { description: "Resiziers for <img>",
       innerHTML: "<img id=\"target\" src=\"green.png\">",
       mayPreserveRatio: true,
+      isAbsolutePosition: false,
     },
     { description: "Resiziers for <table>",
       innerHTML: "<table id=\"target\" border><tr><td>cell</td><td>cell</td></tr></table>",
       mayPreserveRatio: false,
+      isAbsolutePosition: false,
     },
     { description: "Resiziers for absolute positioned <div>",
       innerHTML: "<div id=\"target\" style=\"position: absolute; top: 50px; left: 50px;\">positioned</div>",
       mayPreserveRatio: false,
+      isAbsolutePosition: true,
     },
   ];
 
+  // Resizers for absolute positioned element are available only when
+  // enableAbsolutePositionEditing is enabled.  So, let's enable it
+  // during testing resizers for absolute positioned elements.
   await SpecialPowers.pushPrefEnv({"set": [["editor.resizing.preserve_ratio", false]]});
   for (const kTest of kTests) {
+    document.execCommand("enableAbsolutePositionEditing", false, kTests.isAbsolutePosition);
     await doTest(kTest.description, false, kTest.innerHTML);
   }
   await SpecialPowers.pushPrefEnv({"set": [["editor.resizing.preserve_ratio", true]]});
   for (const kTest of kTests) {
+    document.execCommand("enableAbsolutePositionEditing", false, kTests.isAbsolutePosition);
     await doTest(kTest.description, kTest.mayPreserveRatio, kTest.innerHTML);
   }
   content.innerHTML = "";

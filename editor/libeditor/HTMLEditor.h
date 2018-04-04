@@ -247,11 +247,21 @@ public:
     return mIsInlineTableEditingEnabled;
   }
 
-  // non-virtual methods of interface methods
-  bool AbsolutePositioningEnabled() const
+  /**
+   * Enable/disable absolute position editor, resizing absolute positioned
+   * elements (required object resizers enabled) or positioning them with
+   * dragging grabber.
+   */
+  void EnableAbsolutePositionEditor(bool aEnable)
+  {
+    mIsAbsolutelyPositioningEnabled = aEnable;
+  }
+  bool IsAbsolutePositionEditorEnabled() const
   {
     return mIsAbsolutelyPositioningEnabled;
   }
+
+  // non-virtual methods of interface methods
 
   /**
    * returns the deepest absolutely positioned container of the selection

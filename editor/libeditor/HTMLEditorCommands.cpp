@@ -1084,9 +1084,9 @@ AbsolutePositioningCommand::AbsolutePositioningCommand()
 NS_IMETHODIMP
 AbsolutePositioningCommand::IsCommandEnabled(const char* aCommandName,
                                              nsISupports* aCommandRefCon,
-                                             bool* outCmdEnabled)
+                                             bool* aOutCmdEnabled)
 {
-  *outCmdEnabled = false;
+  *aOutCmdEnabled = false;
 
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
   if (!editor) {
@@ -1099,7 +1099,7 @@ AbsolutePositioningCommand::IsCommandEnabled(const char* aCommandName,
   if (!htmlEditor->IsSelectionEditable()) {
     return NS_OK;
   }
-  *outCmdEnabled = htmlEditor->AbsolutePositioningEnabled();
+  *aOutCmdEnabled = htmlEditor->IsAbsolutePositionEditorEnabled();
   return NS_OK;
 }
 
@@ -1112,8 +1112,7 @@ AbsolutePositioningCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
   }
 
   nsCommandParams* params = aParams->AsCommandParams();
-  bool isEnabled = aHTMLEditor->AbsolutePositioningEnabled();
-  if (!isEnabled) {
+  if (!aHTMLEditor->IsAbsolutePositionEditorEnabled()) {
     params->SetBool(STATE_MIXED, false);
     params->SetCString(STATE_ATTRIBUTE, EmptyCString());
     return NS_OK;
@@ -1143,10 +1142,10 @@ AbsolutePositioningCommand::ToggleState(HTMLEditor* aHTMLEditor)
 
 NS_IMETHODIMP
 DecreaseZIndexCommand::IsCommandEnabled(const char* aCommandName,
-                                        nsISupports* refCon,
-                                        bool* outCmdEnabled)
+                                        nsISupports* aRefCon,
+                                        bool* aOutCmdEnabled)
 {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aRefCon);
   if (NS_WARN_IF(!editor)) {
     return NS_ERROR_FAILURE;
   }
@@ -1155,18 +1154,19 @@ DecreaseZIndexCommand::IsCommandEnabled(const char* aCommandName,
     return NS_ERROR_FAILURE;
   }
 
-  *outCmdEnabled = htmlEditor->AbsolutePositioningEnabled();
-  if (!(*outCmdEnabled))
+  if (!htmlEditor->IsAbsolutePositionEditorEnabled()) {
+    *aOutCmdEnabled = false;
     return NS_OK;
+  }
 
   RefPtr<Element> positionedElement = htmlEditor->GetPositionedElement();
-  *outCmdEnabled = false;
   if (!positionedElement) {
+    *aOutCmdEnabled = false;
     return NS_OK;
   }
 
   int32_t z = htmlEditor->GetZIndex(*positionedElement);
-  *outCmdEnabled = (z > 0);
+  *aOutCmdEnabled = (z > 0);
   return NS_OK;
 }
 
@@ -1209,10 +1209,10 @@ DecreaseZIndexCommand::GetCommandStateParams(const char* aCommandName,
 
 NS_IMETHODIMP
 IncreaseZIndexCommand::IsCommandEnabled(const char* aCommandName,
-                                        nsISupports* refCon,
-                                        bool* outCmdEnabled)
+                                        nsISupports* aRefCon,
+                                        bool* aOutCmdEnabled)
 {
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aRefCon);
   if (NS_WARN_IF(!editor)) {
     return NS_ERROR_FAILURE;
   }
@@ -1221,12 +1221,12 @@ IncreaseZIndexCommand::IsCommandEnabled(const char* aCommandName,
     return NS_ERROR_FAILURE;
   }
 
-  *outCmdEnabled = htmlEditor->AbsolutePositioningEnabled();
-  if (!(*outCmdEnabled))
+  if (!htmlEditor->IsAbsolutePositionEditorEnabled()) {
+    *aOutCmdEnabled = false;
     return NS_OK;
+  }
 
-  Element* positionedElement = htmlEditor->GetPositionedElement();
-  *outCmdEnabled = (nullptr != positionedElement);
+  *aOutCmdEnabled = !!htmlEditor->GetPositionedElement();
   return NS_OK;
 }
 
