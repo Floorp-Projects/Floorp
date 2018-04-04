@@ -1,0 +1,16 @@
+[package]
+name = "yaml-rust"
+version = "0.4.0"
+authors = ["Yuheng Chen <yuhengchen@sensetime.com>"]
+homepage = "http://chyh1990.github.io/yaml-rust/"
+documentation = "http://chyh1990.github.io/yaml-rust/doc/yaml_rust/"
+license = "MIT/Apache-2.0"
+description = "The missing YAML 1.2 parser for rust"
+repository = "https://github.com/chyh1990/yaml-rust"
+# publish = false # this branch contains breaking changes
+
+[dependencies]
+linked-hash-map = ">=0.0.9, <0.6"
+
+[dev-dependencies]
+quickcheck = "0.4"

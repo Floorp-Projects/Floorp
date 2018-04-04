@@ -1,0 +1,11 @@
+[package]
+
+name = "string_cache_shared"
+version = "0.3.0"
+authors = [ "The Servo Project Developers" ]
+description = "Code share between string_cache and string_cache_codegen."
+license = "MIT / Apache-2.0"
+repository = "https://github.com/servo/string-cache"
+
+[lib]
+path = "lib.rs"
