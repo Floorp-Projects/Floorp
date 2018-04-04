@@ -399,7 +399,6 @@ nsHtml5TreeBuilder::characters(const char16_t* buf,
                 continue;
               }
             }
-            MOZ_FALLTHROUGH_ASSERT();
           }
           default: {
             switch (mode) {
