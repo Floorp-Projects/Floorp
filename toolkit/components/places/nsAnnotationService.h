@@ -164,9 +164,8 @@ public:
                                           nsCOMArray<nsIURI>* _results);
   nsresult GetItemsWithAnnotationTArray(const nsACString& aName,
                                         nsTArray<int64_t>* _result);
-  nsresult GetAnnotationNamesTArray(nsIURI* aURI,
-                                    int64_t aItemId,
-                                    nsTArray<nsCString>* _result);
+  nsresult GetItemAnnotationNamesTArray(int64_t aItemId,
+                                        nsTArray<nsCString>* _result);
   nsresult RemoveItemAnnotationsWithoutNotifying(int64_t aItemId);
 };
 

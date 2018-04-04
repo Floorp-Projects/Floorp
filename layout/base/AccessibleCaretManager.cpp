@@ -78,8 +78,6 @@ AccessibleCaretManager::sCaretShownWhenLongTappingOnEmptyContent = false;
 /* static */ bool
 AccessibleCaretManager::sCaretsAlwaysTilt = false;
 /* static */ bool
-AccessibleCaretManager::sCaretsAlwaysShowWhenScrolling = true;
-/* static */ bool
 AccessibleCaretManager::sCaretsScriptUpdates = false;
 /* static */ bool
 AccessibleCaretManager::sCaretsAllowDraggingAcrossOtherCaret = true;
@@ -108,8 +106,6 @@ AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
       "layout.accessiblecaret.caret_shown_when_long_tapping_on_empty_content");
     Preferences::AddBoolVarCache(&sCaretsAlwaysTilt,
                                  "layout.accessiblecaret.always_tilt");
-    Preferences::AddBoolVarCache(&sCaretsAlwaysShowWhenScrolling,
-      "layout.accessiblecaret.always_show_when_scrolling", true);
     Preferences::AddBoolVarCache(&sCaretsScriptUpdates,
       "layout.accessiblecaret.allow_script_change_updates");
     Preferences::AddBoolVarCache(&sCaretsAllowDraggingAcrossOtherCaret,
@@ -652,15 +648,6 @@ AccessibleCaretManager::OnScrollStart()
 
   mIsScrollStarted = true;
 
-  if (!sCaretsAlwaysShowWhenScrolling) {
-    // Backup the appearance so that we can restore them after the scrolling
-    // ends.
-    mFirstCaretAppearanceOnScrollStart = mFirstCaret->GetAppearance();
-    mSecondCaretAppearanceOnScrollStart = mSecondCaret->GetAppearance();
-    HideCarets();
-    return;
-  }
-
   if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
     // Dispatch the event only if one of the carets is logically visible like in
     // HideCarets().
@@ -676,12 +663,6 @@ AccessibleCaretManager::OnScrollEnd()
   }
 
   mIsScrollStarted = false;
-
-  if (!sCaretsAlwaysShowWhenScrolling) {
-    // Restore the appearance which is saved before the scrolling is started.
-    mFirstCaret->SetAppearance(mFirstCaretAppearanceOnScrollStart);
-    mSecondCaret->SetAppearance(mSecondCaretAppearanceOnScrollStart);
-  }
 
   if (GetCaretMode() == CaretMode::Cursor) {
     if (!mFirstCaret->IsLogicallyVisible()) {

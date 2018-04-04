@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<!--
-Any copyright is dedicated to the Public Domain.
-http://creativecommons.org/licenses/publicdomain/
--->
-<?xul-overlay href="test001-overlay.xul" ?>
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        style="background-color: red"/>
