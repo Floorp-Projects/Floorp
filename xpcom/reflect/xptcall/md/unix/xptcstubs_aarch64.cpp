@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "xptcprivate.h"
-#include "xptiprivate.h"
 
 #ifndef __AARCH64EL__
 #error "Only little endian compatibility was tested"

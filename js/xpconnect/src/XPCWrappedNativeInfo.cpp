@@ -10,7 +10,6 @@
 #include "js/Wrapper.h"
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/XPTInterfaceInfoManager.h"
 #include "nsIScriptError.h"
 #include "nsPrintfCString.h"
 #include "nsPointerHashKeys.h"

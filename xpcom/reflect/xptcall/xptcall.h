@@ -10,7 +10,6 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
-#include "xpt_struct.h"
 #include "xptinfo.h"
 #include "js/Value.h"
 #include "mozilla/MemoryReporting.h"

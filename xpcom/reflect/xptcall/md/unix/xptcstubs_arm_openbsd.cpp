@@ -6,7 +6,6 @@
 /* Implement shared vtbl methods. */
 
 #include "xptcprivate.h"
-#include "xptiprivate.h"
 
 #ifdef __GNUC__
 /* This tells gcc3.4+ not to optimize away symbols.

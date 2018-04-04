@@ -9,7 +9,6 @@
 // Keep this in sync with the darwin version.
 
 #include "xptcprivate.h"
-#include "xptiprivate.h"
 
 // The Linux/x86-64 ABI passes the first 6 integer parameters and the
 // first 8 floating point parameters in registers (rdi, rsi, rdx, rcx,

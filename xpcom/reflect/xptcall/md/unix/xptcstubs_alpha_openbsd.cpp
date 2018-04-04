@@ -6,7 +6,6 @@
 /* Implement shared vtbl methods. */
 
 #include "xptcprivate.h"
-#include "xptiprivate.h"
 
 /* Prototype specifies unmangled function name and disables unused warning */
 static nsresult

@@ -54,9 +54,6 @@
 #include "nsThreadPool.h"
 
 #include "xptinfo.h"
-#include "nsIInterfaceInfoManager.h"
-#include "xptiprivate.h"
-#include "mozilla/XPTInterfaceInfoManager.h"
 
 #include "nsTimerImpl.h"
 #include "TimerThread.h"
