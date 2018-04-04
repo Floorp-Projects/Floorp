@@ -152,20 +152,6 @@ public:
                                        RawGeckoGfxMatrix4x4& aResult);
 
   /**
-   * Parse a font descriptor.
-   *
-   * @param aDescID The font descriptor id.
-   * @param aValue The specified value.
-   * @param aUrl The parser url extra data.
-   * @param aResult The parsed result. (output)
-   * @return Whether the value was successfully parsed.
-   */
-  static bool ParseFontDescriptor(nsCSSFontDesc aDescID,
-                                  const nsAString& aValue,
-                                  URLExtraData* aUrl,
-                                  nsCSSValue& aResult);
-
-  /**
    * Parse a font shorthand for FontFaceSet matching, so we only care about
    * FontFamily, FontStyle, FontStretch, and FontWeight.
    *

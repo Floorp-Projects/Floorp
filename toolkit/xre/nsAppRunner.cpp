@@ -1715,7 +1715,12 @@ DumpHelp()
          "                     --new-instance.\n"
          "  --new-instance     Open new instance, not a new window in running instance.\n"
          "  --UILocale <locale> Start with <locale> resources as UI Locale.\n"
-         "  --safe-mode        Disables extensions and themes for this session.\n", (const char*) gAppData->name);
+         "  --safe-mode        Disables extensions and themes for this session.\n"
+         "  -MOZ_LOG <modules> Treated as MOZ_LOG=<modules> environment variable, overrides it.\n"
+         "  -MOZ_LOG_FILE <file> Treated as MOZ_LOG_FILE=<file> environment variable, overrides it.\n"
+         "                     If MOZ_LOG_FILE is not specified as an argument or as an environment variable,\n"
+         "                     logging will be written to stdout.\n"
+         , (const char*)gAppData->name);
 
 #if defined(XP_WIN)
   printf("  --console          Start %s with a debugging console.\n", (const char*) gAppData->name);
@@ -4783,7 +4788,7 @@ XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
 {
   ScopedLogging log;
 
-  mozilla::LogModule::Init();
+  mozilla::LogModule::Init(argc, argv);
 
 #ifdef MOZ_CODE_COVERAGE
   CodeCoverageHandler::Init();

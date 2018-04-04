@@ -5,7 +5,8 @@ itoa
 [![Latest Version](https://img.shields.io/crates/v/itoa.svg)](https://crates.io/crates/itoa)
 
 This crate provides fast functions for printing integer primitives to an
-[`io::Write`](https://doc.rust-lang.org/std/io/trait.Write.html). The
+[`io::Write`](https://doc.rust-lang.org/std/io/trait.Write.html) or a
+[`fmt::Write`](https://doc.rust-lang.org/core/fmt/trait.Write.html). The
 implementation comes straight from
 [libcore](https://github.com/rust-lang/rust/blob/b8214dc6c6fc20d0a660fb5700dca9ebf51ebe89/src/libcore/fmt/num.rs#L201-L254)
 but avoids the performance penalty of going through
@@ -14,7 +15,7 @@ but avoids the performance penalty of going through
 See also [`dtoa`](https://github.com/dtolnay/dtoa) for printing floating point
 primitives.
 
-## Performance
+## Performance (lower is better)
 
 ![performance](https://raw.githubusercontent.com/dtolnay/itoa/master/performance.png)
 
@@ -32,17 +33,28 @@ println!("{:?}", buf);
 let mut bytes = [b'\0'; 20];
 let n = itoa::write(&mut bytes[..], 128u64)?;
 println!("{:?}", &bytes[..n]);
+
+// write to a String
+let mut s = String::new();
+itoa::fmt(&mut s, 128u64)?;
+println!("{}", s);
 ```
 
-The function signature is:
+The function signatures are:
 
 ```rust
-fn write<W: io::Write, V: itoa::Integer>(writer: W, value: V) -> io::Result<usize>
+fn write<W: io::Write, V: itoa::Integer>(writer: W, value: V) -> io::Result<usize>;
+
+fn fmt<W: fmt::Write, V: itoa::Integer>(writer: W, value: V) -> fmt::Result;
 ```
 
 where `itoa::Integer` is implemented for `i8`, `u8`, `i16`, `u16`, `i32`, `u32`,
-`i64`, `u64`, `isize` and `usize`. The return value gives the number of bytes
-written.
+`i64`, `u64`, `i128`, `u128`, `isize` and `usize`. 128-bit integer support is
+only available with the nightly compiler when the `i128` feature is enabled for
+this crate. The return value gives the number of bytes written.
+
+The `write` function is only available when the `std` feature is enabled
+(default is enabled).
 
 ## Dependency
 
@@ -51,7 +63,7 @@ following in `Cargo.toml`:
 
 ```toml
 [dependencies]
-itoa = "0.3"
+itoa = "0.4"
 ```
 
 ## License

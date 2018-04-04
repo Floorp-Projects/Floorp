@@ -468,7 +468,10 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
   NS_InitAtomTable();
 
-  mozilla::LogModule::Init();
+  // We don't have the arguments by hand here.  If logging has already been
+  // initialized by a previous call to LogModule::Init with the arguments
+  // passed, passing (0, nullptr) is alright here.
+  mozilla::LogModule::Init(0, nullptr);
 
   nsresult rv = NS_OK;
 
@@ -728,7 +731,11 @@ NS_InitMinimalXPCOM()
   mozilla::TimeStamp::Startup();
   NS_LogInit();
   NS_InitAtomTable();
-  mozilla::LogModule::Init();
+
+  // We don't have the arguments by hand here.  If logging has already been
+  // initialized by a previous call to LogModule::Init with the arguments
+  // passed, passing (0, nullptr) is alright here.
+  mozilla::LogModule::Init(0, nullptr);
 
   nsresult rv = nsThreadManager::get().Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
