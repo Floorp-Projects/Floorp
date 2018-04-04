@@ -10,6 +10,8 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoBindings.h"
 
+namespace mozilla {
+
 nscoord
 ServoStyleSet::EvaluateSourceSizeList(
   const RawServoSourceSizeList* aSourceSizeList) const
@@ -22,5 +24,7 @@ ServoStyleSet::ResolveServoStyle(dom::Element* aElement)
 {
   return Servo_ResolveStyle(aElement, mRawSet.get()).Consume();
 }
+
+} // namespace mozilla
 
 #endif // mozilla_ServoStyleSetInlines_h
