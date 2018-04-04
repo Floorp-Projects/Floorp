@@ -734,6 +734,59 @@ TEST_F(VideoConduitTest, TestOnSinkWantsChanged)
   ASSERT_EQ(mAdapter->mMaxPixelCount, 64000);
 }
 
+TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastOddScreen)
+{
+  std::vector<unsigned int> ssrcs = {42, 43, 44};
+  mVideoConduit->SetLocalSSRCs(ssrcs);
+
+  MediaConduitErrorCode ec;
+  EncodingConstraints constraints;
+  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::SimulcastEncoding encoding2;
+  VideoCodecConfig::SimulcastEncoding encoding3;
+  encoding2.constraints.scaleDownBy = 2;
+  encoding3.constraints.scaleDownBy = 4;
+
+  VideoCodecConfig codecConfig(120, "VP8", constraints);
+  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mSimulcastEncodings.push_back(encoding2);
+  codecConfig.mSimulcastEncodings.push_back(encoding3);
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+  mVideoConduit->StartTransmitting();
+  std::vector<webrtc::VideoStream> videoStreams;
+  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(26, 24, mCall->mEncoderConfig);
+  ASSERT_EQ(videoStreams.size(), 2U);
+  mVideoConduit->StopTransmitting();
+}
+
+TEST_F(VideoConduitTest, TestConfigureSendMediaCodecSimulcastScreenshare)
+{
+  std::vector<unsigned int> ssrcs = {42, 43, 44};
+  mVideoConduit->SetLocalSSRCs(ssrcs);
+
+  MediaConduitErrorCode ec;
+  EncodingConstraints constraints;
+  VideoCodecConfig::SimulcastEncoding encoding;
+  VideoCodecConfig::SimulcastEncoding encoding2;
+  VideoCodecConfig::SimulcastEncoding encoding3;
+  encoding2.constraints.scaleDownBy = 2;
+  encoding3.constraints.scaleDownBy = 4;
+
+  VideoCodecConfig codecConfig(120, "VP8", constraints);
+  codecConfig.mSimulcastEncodings.push_back(encoding);
+  codecConfig.mSimulcastEncodings.push_back(encoding2);
+  codecConfig.mSimulcastEncodings.push_back(encoding3);
+  ec = mVideoConduit->ConfigureCodecMode(webrtc::VideoCodecMode::kScreensharing);
+  ec = mVideoConduit->ConfigureSendMediaCodec(&codecConfig);
+  ASSERT_EQ(ec, kMediaConduitNoError);
+  mVideoConduit->StartTransmitting();
+  std::vector<webrtc::VideoStream> videoStreams;
+  videoStreams = mCall->mEncoderConfig.video_stream_factory->CreateEncoderStreams(640, 480, mCall->mEncoderConfig);
+  ASSERT_EQ(videoStreams.size(), 1U);
+  mVideoConduit->StopTransmitting();
+}
+
 TEST_F(VideoConduitTest, TestReconfigureReceiveMediaCodecs)
 {
   MediaConduitErrorCode ec;
