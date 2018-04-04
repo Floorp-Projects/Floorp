@@ -42,10 +42,12 @@
           }, false);
 
           var noise = Math.floor(Math.random() * 100000000);
+          // Note: request redirect before the end of metadata, otherwise we won't
+          // error before metadata has loaded if mixed origins are allowed.
           element.src = "midflight-redirect.sjs?resource=" + test.name
                       + (useCors ? "&cors" : "")
                       + "&type=" + test.type
-                      + "&noise=" + noise;
+                      + "&redirectAt=200";
           element.preload = "metadata";
           document.body.appendChild(element);
           element.load()
