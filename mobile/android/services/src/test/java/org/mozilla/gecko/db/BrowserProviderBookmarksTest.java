@@ -17,10 +17,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.db.DelegatingTestContentProvider;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowContentResolver;
 
 import java.util.ArrayList;
@@ -51,7 +51,7 @@ import static org.mozilla.gecko.db.BrowserProviderGeneralTest.withSync;
 /**
  * Testing direct interactions with bookmarks through BrowserProvider
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class BrowserProviderBookmarksTest {
     private ContentProviderClient bookmarksClient;
     private ContentProvider provider;

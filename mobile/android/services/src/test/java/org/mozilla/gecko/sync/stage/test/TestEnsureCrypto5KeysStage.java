@@ -12,7 +12,6 @@ import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockGlobalSessionCallback;
 import org.mozilla.android.sync.test.helpers.MockServer;
 import org.mozilla.gecko.background.testhelpers.MockGlobalSession;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.AlreadySyncingException;
 import org.mozilla.gecko.sync.CollectionKeys;
@@ -23,6 +22,7 @@ import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.stage.EnsureCrypto5KeysStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
+import org.robolectric.RobolectricTestRunner;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestEnsureCrypto5KeysStage {
   private int          TEST_PORT                = HTTPServerTestHelper.getTestPort();
   private final String TEST_CLUSTER_URL         = "http://localhost:" + TEST_PORT;

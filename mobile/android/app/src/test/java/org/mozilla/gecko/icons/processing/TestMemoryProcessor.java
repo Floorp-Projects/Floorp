@@ -10,17 +10,17 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.icons.IconDescriptor;
 import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.icons.storage.MemoryStorage;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import static org.mockito.Mockito.mock;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestMemoryProcessor {
     private static final String PAGE_URL = "https://www.mozilla.org";
     private static final String ICON_URL = "https://www.mozilla.org/favicon.ico";

@@ -12,16 +12,16 @@ import android.os.RemoteException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.db.DelegatingTestContentProvider;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.PageMetadata;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.LocalBrowserDB;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.shadows.ShadowContentResolver;
 
 import static org.junit.Assert.*;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class GlobalPageMetadataTest {
     @Test
     public void testQueueing() throws Exception {

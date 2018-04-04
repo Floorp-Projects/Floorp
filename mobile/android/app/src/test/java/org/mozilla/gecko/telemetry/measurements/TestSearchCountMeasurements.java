@@ -8,8 +8,8 @@ import android.content.SharedPreferences;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.util.Arrays;
@@ -22,7 +22,7 @@ import static org.junit.Assert.*;
 /**
  * Tests for the class that stores search count measurements.
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestSearchCountMeasurements {
 
     private SharedPreferences sharedPrefs;

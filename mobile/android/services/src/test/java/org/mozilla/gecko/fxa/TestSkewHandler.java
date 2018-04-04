@@ -8,13 +8,13 @@ import ch.boye.httpclientandroidlib.impl.cookie.DateUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.fxa.SkewHandler;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.net.BaseResource;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestSkewHandler {
   public TestSkewHandler() {
   }

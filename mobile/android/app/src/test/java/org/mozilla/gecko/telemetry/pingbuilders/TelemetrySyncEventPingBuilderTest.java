@@ -9,10 +9,10 @@ import org.json.simple.JSONArray;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.telemetry.TelemetryContract;
+import org.robolectric.RobolectricTestRunner;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TelemetrySyncEventPingBuilderTest {
 
     @Test

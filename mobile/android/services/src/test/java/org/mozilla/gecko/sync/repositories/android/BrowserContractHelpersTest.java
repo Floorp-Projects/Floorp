@@ -5,11 +5,11 @@ package org.mozilla.gecko.sync.repositories.android;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.*;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class BrowserContractHelpersTest {
     @Test
     public void testBookmarkCodes() {

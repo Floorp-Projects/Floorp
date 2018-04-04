@@ -5,16 +5,16 @@ package org.mozilla.gecko.sync.repositories.domain.test;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.domain.FormHistoryRecord;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestFormHistoryRecord {
   public static FormHistoryRecord withIdFieldNameAndValue(long id, String fieldName, String value) {
     FormHistoryRecord fr = new FormHistoryRecord();
