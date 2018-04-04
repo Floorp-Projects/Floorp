@@ -418,7 +418,7 @@ TimeoutManager::TimeoutManager(nsGlobalWindowInner& aWindow)
 
 TimeoutManager::~TimeoutManager()
 {
-  MOZ_DIAGNOSTIC_ASSERT(mWindow.AsInner()->InnerObjectsFreed());
+  MOZ_DIAGNOSTIC_ASSERT(mWindow.IsDying());
   MOZ_DIAGNOSTIC_ASSERT(!mThrottleTimeoutsTimer);
 
   mExecutor->Shutdown();
@@ -1297,7 +1297,7 @@ void
 TimeoutManager::MaybeStartThrottleTimeout()
 {
   if (gTimeoutThrottlingDelay <= 0 ||
-      mWindow.AsInner()->InnerObjectsFreed() || mWindow.IsSuspended()) {
+      mWindow.IsDying() || mWindow.IsSuspended()) {
     return;
   }
 
