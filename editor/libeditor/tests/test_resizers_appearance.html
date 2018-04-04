@@ -44,7 +44,7 @@ SimpleTest.waitForFocus(async function() {
     },
     { description: "absolute positioned <div>",
       innerHTML: "<div id=\"target\" style=\"position: absolute; top: 50px; left: 50px;\">positioned</div>",
-      resizable: true,
+      resizable: function () { return document.queryCommandState("enableAbsolutePositionEditing"); },
     },
     { description: "fixed positioned <div>",
       innerHTML: "<div id=\"target\" style=\"position: fixed; top: 50px; left: 50px;\">positioned</div>",
@@ -56,35 +56,40 @@ SimpleTest.waitForFocus(async function() {
     },
   ];
 
-  for (const kTest of kTests) {
-    const kDescription = kTest.description + ": ";
-    editor.innerHTML = kTest.innerHTML;
-    let target = document.getElementById("target");
+  for (let kEnableAbsolutePositionEditor of [true, false]) {
+    document.execCommand("enableAbsolutePositionEditing", false, kEnableAbsolutePositionEditor);
+    for (const kTest of kTests) {
+      const kDescription = kTest.description +
+        (kEnableAbsolutePositionEditor ? " (enabled absolute position editor)" : "") + ": ";
+      editor.innerHTML = kTest.innerHTML;
+      let target = document.getElementById("target");
 
-    document.execCommand("enableObjectResizing", false, false);
-    ok(!document.queryCommandState("enableObjectResizing"),
-       kDescription + "Object resizer should be disabled by the call of execCommand");
+      document.execCommand("enableObjectResizing", false, false);
+      ok(!document.queryCommandState("enableObjectResizing"),
+         kDescription + "Object resizer should be disabled by the call of execCommand");
 
-    synthesizeMouseAtCenter(outOfEditor, {});
-    let promiseSelectionChangeEvent1 = waitForSelectionChange();
-    synthesizeMouseAtCenter(target, {});
-    await promiseSelectionChangeEvent1;
+      synthesizeMouseAtCenter(outOfEditor, {});
+      let promiseSelectionChangeEvent1 = waitForSelectionChange();
+      synthesizeMouseAtCenter(target, {});
+      await promiseSelectionChangeEvent1;
 
-    ok(!target.hasAttribute("_moz_resizing"),
-       kDescription + ": While enableObjectResizing is disabled, resizers shouldn't appear");
+      ok(!target.hasAttribute("_moz_resizing"),
+         kDescription + ": While enableObjectResizing is disabled, resizers shouldn't appear");
 
-    document.execCommand("enableObjectResizing", false, true);
-    ok(document.queryCommandState("enableObjectResizing"),
-       kDescription + "Object resizer should be enabled by the call of execCommand");
+      document.execCommand("enableObjectResizing", false, true);
+      ok(document.queryCommandState("enableObjectResizing"),
+         kDescription + "Object resizer should be enabled by the call of execCommand");
 
-    synthesizeMouseAtCenter(outOfEditor, {});
-    let promiseSelectionChangeEvent2 = waitForSelectionChange();
-    synthesizeMouseAtCenter(target, {});
-    await promiseSelectionChangeEvent2;
+      synthesizeMouseAtCenter(outOfEditor, {});
+      let promiseSelectionChangeEvent2 = waitForSelectionChange();
+      synthesizeMouseAtCenter(target, {});
+      await promiseSelectionChangeEvent2;
 
-    is(target.hasAttribute("_moz_resizing"), kTest.resizable,
-       kDescription + (kTest.resizable ? "While enableObjectResizing is enabled, resizers should appear" :
-                                         "Even while enableObjectResizing is enabled, resizers shouldn't appear"));
+      const kResizable = typeof kTest.resizable === "function" ? kTest.resizable() : kTest.resizable;
+      is(target.hasAttribute("_moz_resizing"), kResizable,
+         kDescription + (kResizable ? "While enableObjectResizing is enabled, resizers should appear" :
+                                      "Even while enableObjectResizing is enabled, resizers shouldn't appear"));
+    }
   }
 
   SimpleTest.finish();

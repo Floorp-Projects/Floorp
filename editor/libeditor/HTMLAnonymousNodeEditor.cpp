@@ -295,7 +295,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
 
   // early way out if all contextual UI extensions are disabled
   if (NS_WARN_IF(!IsObjectResizerEnabled() &&
-                 !mIsAbsolutelyPositioningEnabled &&
+                 !IsAbsolutePositionEditorEnabled() &&
                  !IsInlineTableEditorEnabled())) {
     return NS_OK;
   }
@@ -320,7 +320,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
   nsAtom* focusTagAtom = focusElement->NodeInfo()->NameAtom();
 
   RefPtr<Element> absPosElement;
-  if (mIsAbsolutelyPositioningEnabled) {
+  if (IsAbsolutePositionEditorEnabled()) {
     // Absolute Positioning support is enabled, is the selection contained
     // in an absolutely positioned element ?
     absPosElement = GetAbsolutelyPositionedSelectionContainer();
@@ -361,7 +361,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
   // content which means a DOMAttrModified handler may cause arbitrary
   // side effects while this code runs (bug 420439).
 
-  if (mIsAbsolutelyPositioningEnabled && mAbsolutelyPositionedObject &&
+  if (IsAbsolutePositionEditorEnabled() && mAbsolutelyPositionedObject &&
       absPosElement != mAbsolutelyPositionedObject) {
     HideGrabber();
     NS_ASSERTION(!mAbsolutelyPositionedObject, "HideGrabber failed");
@@ -402,7 +402,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(Selection* aSelection)
     }
   }
 
-  if (mIsAbsolutelyPositioningEnabled && absPosElement &&
+  if (IsAbsolutePositionEditorEnabled() && absPosElement &&
       IsModifiableNode(*absPosElement) && absPosElement != hostContent) {
     if (mAbsolutelyPositionedObject) {
       nsresult rv = RefreshGrabber();

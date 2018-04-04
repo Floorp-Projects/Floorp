@@ -109,14 +109,14 @@ HTMLEditor::GetAbsolutelyPositionedSelectionContainer()
 NS_IMETHODIMP
 HTMLEditor::GetAbsolutePositioningEnabled(bool* aIsEnabled)
 {
-  *aIsEnabled = AbsolutePositioningEnabled();
+  *aIsEnabled = IsAbsolutePositionEditorEnabled();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLEditor::SetAbsolutePositioningEnabled(bool aIsEnabled)
 {
-  mIsAbsolutelyPositioningEnabled = aIsEnabled;
+  EnableAbsolutePositionEditor(aIsEnabled);
   return NS_OK;
 }
 
