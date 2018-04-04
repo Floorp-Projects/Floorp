@@ -30,6 +30,8 @@ function cleanUp(toolbox) {
   off(DebuggerClient, "connect", onDebuggerClientConnect);
 
   toolbox.destroy().then(function() {
+    // TODO: fixme.
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     setTimeout(() => {
       gBrowser.removeCurrentTab();
       executeSoon(function() {

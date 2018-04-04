@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Cu} = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");

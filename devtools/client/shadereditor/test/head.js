@@ -73,7 +73,7 @@ async function test() {
   try {
     await generator();
   } catch (e) {
-    handlError(e);
+    handleError(e);
   }
 }
 
@@ -115,7 +115,8 @@ function ensurePixelIs(aFront, aPosition, aColor, aWaitFlag = false, aSelector =
 
     if (aWaitFlag) {
       await aFront.waitForFrame();
-      return ensurePixelIs(aFront, aPosition, aColor, aWaitFlag, aSelector);
+      await ensurePixelIs(aFront, aPosition, aColor, aWaitFlag, aSelector);
+      return;
     }
 
     ok(false, "Expected pixel was not already shown at: " + aPosition.toSource());
