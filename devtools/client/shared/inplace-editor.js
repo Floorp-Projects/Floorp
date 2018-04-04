@@ -51,6 +51,14 @@ const isWordChar = function(str) {
   return str && WORD_REGEXP.test(str);
 };
 
+const GRID_PROPERTY_NAMES = ["grid-area", "grid-row", "grid-row-start",
+                             "grid-row-end", "grid-column", "grid-column-start",
+                             "grid-column-end"];
+const GRID_ROW_PROPERTY_NAMES = ["grid-area", "grid-row", "grid-row-start",
+                                 "grid-row-end"];
+const GRID_COL_PROPERTY_NAMES = ["grid-area", "grid-column", "grid-column-start",
+                                 "grid-column-end"];
+
 /**
  * Helper to check if the provided key matches one of the expected keys.
  * Keys will be prefixed with DOM_VK_ and should match a key in KeyCodes.
@@ -131,6 +139,9 @@ function isKeyIn(key, ...keys) {
  *    {Object} cssVariables: A Map object containing all CSS variables.
  *    {Number} defaultIncrement: The value by which the input is incremented
  *      or decremented by default (0.1 for properties like opacity and 1 by default)
+ *    {Function} getGridLineNames:
+ *       Will be called before offering autocomplete sugestions, if the property is
+ *       a member of GRID_PROPERTY_NAMES.
  */
 function editableField(options) {
   return editableItem(options, function(element, event) {
@@ -295,10 +306,6 @@ function InplaceEditor(options, event) {
     this.input.select();
   }
 
-  if (this.contentType == CONTENT_TYPES.CSS_VALUE && this.input.value == "") {
-    this._maybeSuggestCompletion(false);
-  }
-
   this.input.addEventListener("blur", this._onBlur);
   this.input.addEventListener("keypress", this._onKeyPress);
   this.input.addEventListener("input", this._onInput);
@@ -321,6 +328,8 @@ function InplaceEditor(options, event) {
   if (options.start) {
     options.start(this, event);
   }
+
+  this._getGridNamesBeforeCompletion(options.getGridLineNames);
 }
 
 exports.InplaceEditor = InplaceEditor;
@@ -993,6 +1002,25 @@ InplaceEditor.prototype = {
   },
 
   /**
+   * Before offering autocomplete, set this.gridLineNames as the line names
+   * of the current grid, if they exist.
+   *
+   * @param {Function} getGridLineNames
+   *        A function which gets the line names of the current grid.
+   */
+  _getGridNamesBeforeCompletion: async function(getGridLineNames) {
+    if (getGridLineNames && this.property &&
+        GRID_PROPERTY_NAMES.includes(this.property.name)) {
+      this.gridLineNames = await getGridLineNames();
+    }
+
+    if (this.contentType == CONTENT_TYPES.CSS_VALUE && this.input &&
+        this.input.value == "") {
+      this._maybeSuggestCompletion(false);
+    }
+  },
+
+  /**
    * Event handler called by the autocomplete popup when receiving a click
    * event.
    */
@@ -1567,7 +1595,18 @@ InplaceEditor.prototype = {
    * @return {Array} array of CSS property values (Strings)
    */
   _getCSSValuesForPropertyName: function(propertyName) {
-    return this.cssProperties.getValues(propertyName);
+    let gridLineList = [];
+    if (this.gridLineNames) {
+      if (GRID_ROW_PROPERTY_NAMES.includes(this.property.name)) {
+        gridLineList.push(...this.gridLineNames.rows);
+      }
+      if (GRID_COL_PROPERTY_NAMES.includes(this.property.name)) {
+        gridLineList.push(...this.gridLineNames.cols);
+      }
+    }
+    // Must be alphabetically sorted before comparing the results with
+    // the user input, otherwise we will lose some results.
+    return gridLineList.concat(this.cssProperties.getValues(propertyName)).sort();
   },
 
   /**
