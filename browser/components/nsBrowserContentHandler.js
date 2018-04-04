@@ -415,7 +415,7 @@ nsBrowserContentHandler.prototype = {
     // PB builds.
     if (cmdLine.handleFlag("private", false) && PrivateBrowsingUtils.enabled) {
       PrivateBrowsingUtils.enterTemporaryAutoStartMode();
-      if (cmdLine.state == nsICommandLine.STATE_INITIAL_LAUNCH) {
+      if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
         let win = Services.wm.getMostRecentWindow("navigator:blank");
         if (win) {
           win.QueryInterface(Ci.nsIInterfaceRequestor)
