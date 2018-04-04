@@ -78,3 +78,17 @@ skip == treecell-image-svg-1b.xul treecell-image-svg-1-ref.xul # bug 1218954
 
 != treetwisty-svg-context-paint-1-not-ref.xul treetwisty-svg-context-paint-1-ref.xul
 test-pref(svg.context-properties.content.enabled,true) == treetwisty-svg-context-paint-1.xul treetwisty-svg-context-paint-1-ref.xul
+
+# resizer (non-native-themed)
+!= resizer-bottomend.xul blank-window.xul
+== resizer-bottomend.xul resizer-bottomright.xul
+!= resizer-bottomend.xul resizer-bottomend-rtl.xul
+!= resizer-bottomend-rtl.xul blank-window.xul
+== resizer-bottomend-rtl.xul resizer-bottomend-flipped.xul
+
+!= resizer-bottomstart.xul blank-window.xul
+== resizer-bottomstart.xul resizer-bottomleft.xul
+== resizer-bottomstart.xul resizer-left.xul
+!= resizer-bottomstart.xul resizer-bottomstart-rtl.xul
+!= resizer-bottomstart-rtl.xul blank-window.xul
+== resizer-bottomstart-rtl.xul resizer-bottomend.xul
