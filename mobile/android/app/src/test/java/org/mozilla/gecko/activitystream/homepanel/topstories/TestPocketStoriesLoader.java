@@ -11,11 +11,11 @@ import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.activitystream.homepanel.model.TopStory;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.List;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestPocketStoriesLoader {
     private static final String KEY_STATUS = "status";
     private static final String KEY_LIST = "list";

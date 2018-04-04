@@ -6,12 +6,12 @@ package org.mozilla.android.sync.net.test;
 import ch.boye.httpclientandroidlib.Header;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.net.BrowserIDAuthHeaderProvider;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestBrowserIDAuthHeaderProvider {
   @Test
   public void testHeader() {

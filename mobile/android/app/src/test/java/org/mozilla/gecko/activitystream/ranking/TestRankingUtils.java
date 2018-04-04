@@ -9,7 +9,7 @@ import android.database.MatrixCursor;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +20,7 @@ import static org.mozilla.gecko.activitystream.ranking.RankingUtils.Action2;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.Func1;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.Func2;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestRankingUtils {
     @Test
     public void testFilter() {

@@ -7,17 +7,16 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.util.TreeSet;
 
-import static org.hamcrest.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestIconRequest {
     private static final String TEST_PAGE_URL = "http://www.mozilla.org";
     private static final String TEST_ICON_URL_1 = "http://www.mozilla.org/favicon.ico";

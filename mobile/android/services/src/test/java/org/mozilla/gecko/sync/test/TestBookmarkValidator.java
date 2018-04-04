@@ -5,17 +5,17 @@ package org.mozilla.gecko.sync.test;
 import org.json.simple.JSONArray;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.validation.BookmarkValidationResults;
 import org.mozilla.gecko.sync.validation.BookmarkValidator;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestBookmarkValidator {
 
     private List<BookmarkRecord> getDummyRecords() {

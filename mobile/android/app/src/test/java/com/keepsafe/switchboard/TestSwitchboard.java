@@ -7,12 +7,12 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.switchboard.DeviceUuidFactory;
 import org.mozilla.gecko.switchboard.Preferences;
 import org.mozilla.gecko.switchboard.SwitchBoard;
 import org.mozilla.gecko.util.IOUtils;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.BufferedInputStream;
@@ -29,7 +29,7 @@ import java.util.UUID;
 
 import static org.junit.Assert.*;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestSwitchboard {
 
     /**
