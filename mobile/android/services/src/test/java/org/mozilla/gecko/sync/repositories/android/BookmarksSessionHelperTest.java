@@ -5,13 +5,13 @@ package org.mozilla.gecko.sync.repositories.android;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.*;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class BookmarksSessionHelperTest {
     /**
      * Trivial test that forbidden records such as pinned items

@@ -6,13 +6,13 @@ package org.mozilla.gecko.push;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.File;
 import java.io.FileOutputStream;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestPushState {
     @Test
     public void testRoundTrip() throws Exception {

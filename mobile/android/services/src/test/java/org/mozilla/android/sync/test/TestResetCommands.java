@@ -11,7 +11,6 @@ import org.mozilla.gecko.background.testhelpers.DefaultGlobalSessionCallback;
 import org.mozilla.gecko.background.testhelpers.MockPrefsGlobalSession;
 import org.mozilla.gecko.background.testhelpers.MockServerSyncStage;
 import org.mozilla.gecko.background.testhelpers.MockSharedPreferences;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.CommandProcessor;
 import org.mozilla.gecko.sync.EngineSettings;
@@ -27,6 +26,7 @@ import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
+import org.robolectric.RobolectricTestRunner;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test that reset commands properly invoke the reset methods on the correct stage.
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestResetCommands {
   private static final String TEST_USERNAME    = "johndoe";
   private static final String TEST_PASSWORD    = "password";

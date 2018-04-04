@@ -12,9 +12,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.telemetry.TelemetryUploadService;
 import org.mozilla.gecko.telemetry.stores.TelemetryPingStore;
+import org.robolectric.RobolectricTestRunner;
 
 import static junit.framework.Assert.*;
 import static org.mockito.Mockito.*;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
  * When we add more schedulers, we'll likely change the interface
  * (e.g. pass in current time) and these tests will be more useful.
  */
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestTelemetryUploadAllPingsImmediatelyScheduler {
 
     private TelemetryUploadAllPingsImmediatelyScheduler testScheduler;

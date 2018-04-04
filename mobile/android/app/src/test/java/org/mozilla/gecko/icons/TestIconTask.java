@@ -8,10 +8,10 @@ import android.graphics.Bitmap;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.icons.loader.IconLoader;
 import org.mozilla.gecko.icons.preparation.Preparer;
 import org.mozilla.gecko.icons.processing.Processor;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import java.util.Arrays;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
-@RunWith(TestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class TestIconTask {
     @Test
     public void testGeneratorIsInvokedIfAllLoadersFail() {
