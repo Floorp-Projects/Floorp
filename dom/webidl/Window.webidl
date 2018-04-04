@@ -430,14 +430,14 @@ partial interface Window {
   [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   void notifyDefaultButtonLoaded(Element defaultButton);
 
-  [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   readonly attribute ChromeMessageBroadcaster messageManager;
 
   /**
    * Returns the message manager identified by the given group name that
    * manages all frame loaders belonging to that group.
    */
-  [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
+  [Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   ChromeMessageBroadcaster getGroupMessageManager(DOMString aGroup);
 
   /**

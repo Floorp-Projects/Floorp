@@ -767,7 +767,7 @@ protected:
 
   void GetHTMLAttr(nsAtom* aName, nsAString& aResult) const
   {
-    GetAttr(kNameSpaceID_None, aName, aResult);
+    GetAttr(aName, aResult);
   }
   void GetHTMLAttr(nsAtom* aName, mozilla::dom::DOMString& aResult) const
   {
@@ -788,15 +788,15 @@ protected:
   }
   void SetHTMLAttr(nsAtom* aName, const nsAString& aValue, mozilla::ErrorResult& aError)
   {
-    mozilla::dom::Element::SetAttr(aName, aValue, aError);
+    SetAttr(aName, aValue, aError);
   }
   void SetHTMLAttr(nsAtom* aName, const nsAString& aValue, nsIPrincipal* aTriggeringPrincipal, mozilla::ErrorResult& aError)
   {
-    mozilla::dom::Element::SetAttr(aName, aValue, aTriggeringPrincipal, aError);
+    SetAttr(aName, aValue, aTriggeringPrincipal, aError);
   }
   void UnsetHTMLAttr(nsAtom* aName, mozilla::ErrorResult& aError)
   {
-    mozilla::dom::Element::UnsetAttr(aName, aError);
+    UnsetAttr(aName, aError);
   }
   void SetHTMLBoolAttr(nsAtom* aName, bool aValue, mozilla::ErrorResult& aError)
   {

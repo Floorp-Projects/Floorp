@@ -79,17 +79,6 @@ if (!Services.prefs.getBoolPref("full-screen-api.unprefix.enabled")) {
   });
 }
 
-// Platform can be "linux", "macosx" or "win". If omitted, the exception applies to all platforms.
-let allowedImageReferences = [
-  // Bug 1302691
-  {file: "chrome://devtools/skin/images/dock-bottom-minimize@2x.png",
-   from: "chrome://devtools/skin/toolbox.css",
-   isFromDevTools: true},
-  {file: "chrome://devtools/skin/images/dock-bottom-maximize@2x.png",
-   from: "chrome://devtools/skin/toolbox.css",
-   isFromDevTools: true},
-];
-
 let propNameWhitelist = [
   // These are CSS custom properties that we found a definition of but
   // no reference to.
@@ -419,18 +408,7 @@ add_task(async function checkAllTheCSS() {
   for (let [image, references] of imageURIsToReferencesMap) {
     if (!chromeFileExists(image)) {
       for (let ref of references) {
-        let ignored = false;
-        for (let item of allowedImageReferences) {
-          if (image.endsWith(item.file) && ref.endsWith(item.from) &&
-              isDevtools == item.isFromDevTools &&
-              (!item.platforms || item.platforms.includes(AppConstants.platform))) {
-            item.used = true;
-            ignored = true;
-            break;
-          }
-        }
-        if (!ignored)
-          ok(false, "missing " + image + " referenced from " + ref);
+        ok(false, "missing " + image + " referenced from " + ref);
       }
     }
   }
@@ -472,7 +450,6 @@ add_task(async function checkAllTheCSS() {
     }
   }
   checkWhitelist(whitelist);
-  checkWhitelist(allowedImageReferences);
   checkWhitelist(propNameWhitelist);
 
   // Clean up to avoid leaks:

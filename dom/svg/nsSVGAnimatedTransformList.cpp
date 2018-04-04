@@ -189,7 +189,7 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::ValueFromString(
   MOZ_ASSERT(aValue.IsNull(),
              "aValue should have been cleared before calling ValueFromString");
 
-  const nsAttrValue* typeAttr = aSrcElement->GetAnimAttr(nsGkAtoms::type);
+  const nsAttrValue* typeAttr = aSrcElement->GetParsedAttr(nsGkAtoms::type);
   const nsAtom* transformType = nsGkAtoms::translate; // default val
   if (typeAttr) {
     if (typeAttr->Type() != nsAttrValue::eAtom) {

@@ -1332,7 +1332,10 @@ InplaceEditor.prototype = {
           return;
         }
       }
+
       let list = [];
+      let postLabelValues = [];
+
       if (this.contentType == CONTENT_TYPES.CSS_PROPERTY) {
         list = this._getCSSPropertyList();
       } else if (this.contentType == CONTENT_TYPES.CSS_VALUE) {
@@ -1350,6 +1353,7 @@ InplaceEditor.prototype = {
         if (varMatch && varMatch.length == 2) {
           startCheckQuery = varMatch[1];
           list = this._getCSSVariableNames();
+          postLabelValues = list.map(varName => this._getCSSVariableValue(varName));
         } else {
           list = ["!important",
                   ...this._getCSSValuesForPropertyName(this.property.name)];
@@ -1415,7 +1419,8 @@ InplaceEditor.prototype = {
           count++;
           finalList.push({
             preLabel: startCheckQuery,
-            label: list[i]
+            label: list[i],
+            postLabel: postLabelValues[i] ? postLabelValues[i] : ""
           });
         } else if (count > 0) {
           // Since count was incremented, we had already crossed the entries
@@ -1517,6 +1522,17 @@ InplaceEditor.prototype = {
    */
   _getCSSVariableNames: function() {
     return Array.from(this.cssVariables.keys()).sort();
+  },
+
+  /**
+  * Returns the variable's value for the given CSS variable name.
+  *
+  * @param {String} varName
+  *        The variable name to retrieve the value of
+  * @return {String} the variable value to the given CSS variable name
+  */
+  _getCSSVariableValue: function(varName) {
+    return this.cssVariables.get(varName);
   },
 };
 

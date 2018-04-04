@@ -707,19 +707,19 @@ nsSMILAnimationFunction::ScaleIntervalProgress(double aProgress,
 bool
 nsSMILAnimationFunction::HasAttr(nsAtom* aAttName) const
 {
-  return mAnimationElement->HasAnimAttr(aAttName);
+  return mAnimationElement->HasAttr(aAttName);
 }
 
 const nsAttrValue*
 nsSMILAnimationFunction::GetAttr(nsAtom* aAttName) const
 {
-  return mAnimationElement->GetAnimAttr(aAttName);
+  return mAnimationElement->GetParsedAttr(aAttName);
 }
 
 bool
 nsSMILAnimationFunction::GetAttr(nsAtom* aAttName, nsAString& aResult) const
 {
-  return mAnimationElement->GetAnimAttr(aAttName, aResult);
+  return mAnimationElement->GetAttr(aAttName, aResult);
 }
 
 /*

@@ -497,8 +497,6 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
     nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
     mIsANGLE = IsExtensionSupported(ANGLE_platform_angle);
 
-    EGLDisplay chosenDisplay = nullptr;
-
     // Client exts are ready. (But not display exts!)
 
     if (mIsANGLE) {
@@ -523,64 +521,10 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
         }
     }
 
-    if (IsExtensionSupported(ANGLE_platform_angle_d3d)) {
-        nsCString accelAngleFailureId;
-        bool accelAngleSupport = IsAccelAngleSupported(gfxInfo, &accelAngleFailureId);
-        bool shouldTryAccel = forceAccel || accelAngleSupport;
-        bool shouldTryWARP = !forceAccel; // Only if ANGLE not supported or fails
-
-        // If WARP preferred, will override ANGLE support
-        if (gfxPrefs::WebGLANGLEForceWARP()) {
-            shouldTryWARP = true;
-            shouldTryAccel = false;
-            if (accelAngleFailureId.IsEmpty()) {
-                accelAngleFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_FORCE_WARP");
-            }
-        }
-
-        // Hardware accelerated ANGLE path (supported or force accel)
-        if (shouldTryAccel) {
-            chosenDisplay = GetAndInitDisplayForAccelANGLE(*this, out_failureId);
-        }
-
-        // Report the acceleration status to telemetry
-        if (!chosenDisplay) {
-            if (accelAngleFailureId.IsEmpty()) {
-                Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_ACCL_FAILURE_ID,
-                                      NS_LITERAL_CSTRING("FEATURE_FAILURE_ACCL_ANGLE_UNKNOWN"));
-            } else {
-                Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_ACCL_FAILURE_ID,
-                                      accelAngleFailureId);
-            }
-        } else {
-            Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_ACCL_FAILURE_ID,
-                                  NS_LITERAL_CSTRING("SUCCESS"));
-        }
-
-        // Fallback to a WARP display if ANGLE fails, or if WARP is forced
-        if (!chosenDisplay && shouldTryWARP) {
-            chosenDisplay = GetAndInitWARPDisplay(*this, EGL_DEFAULT_DISPLAY);
-            if (!chosenDisplay) {
-                if (out_failureId->IsEmpty()) {
-                    *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WARP_FALLBACK");
-                }
-                NS_ERROR("Fallback WARP context failed to initialize.");
-                return false;
-            }
-            mIsWARP = true;
-        }
-    } else {
-        chosenDisplay = GetAndInitDisplay(*this, EGL_DEFAULT_DISPLAY);
-    }
-
-    if (!chosenDisplay) {
-        if (out_failureId->IsEmpty()) {
-            *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_DISPLAY");
-        }
-        NS_WARNING("Failed to initialize a display.");
+    mEGLDisplay = CreateDisplay(forceAccel, gfxInfo, out_failureId);
+    if (!mEGLDisplay) {
         return false;
     }
-    mEGLDisplay = chosenDisplay;
 
     InitDisplayExtensions();
 
@@ -719,6 +663,73 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
 
 #undef SYMBOL
 #undef END_OF_SYMBOLS
+
+EGLDisplay
+GLLibraryEGL::CreateDisplay(bool forceAccel, const nsCOMPtr<nsIGfxInfo>& gfxInfo, nsACString* const out_failureId)
+{
+    MOZ_ASSERT(!mInitialized);
+
+    EGLDisplay chosenDisplay = nullptr;
+
+    if (IsExtensionSupported(ANGLE_platform_angle_d3d)) {
+        nsCString accelAngleFailureId;
+        bool accelAngleSupport = IsAccelAngleSupported(gfxInfo, &accelAngleFailureId);
+        bool shouldTryAccel = forceAccel || accelAngleSupport;
+        bool shouldTryWARP = !forceAccel; // Only if ANGLE not supported or fails
+
+        // If WARP preferred, will override ANGLE support
+        if (gfxPrefs::WebGLANGLEForceWARP()) {
+            shouldTryWARP = true;
+            shouldTryAccel = false;
+            if (accelAngleFailureId.IsEmpty()) {
+                accelAngleFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_FORCE_WARP");
+            }
+        }
+
+        // Hardware accelerated ANGLE path (supported or force accel)
+        if (shouldTryAccel) {
+            chosenDisplay = GetAndInitDisplayForAccelANGLE(*this, out_failureId);
+        }
+
+        // Report the acceleration status to telemetry
+        if (!chosenDisplay) {
+            if (accelAngleFailureId.IsEmpty()) {
+                Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_ACCL_FAILURE_ID,
+                                      NS_LITERAL_CSTRING("FEATURE_FAILURE_ACCL_ANGLE_UNKNOWN"));
+            } else {
+                Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_ACCL_FAILURE_ID,
+                                      accelAngleFailureId);
+            }
+        } else {
+            Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_ACCL_FAILURE_ID,
+                                  NS_LITERAL_CSTRING("SUCCESS"));
+        }
+
+        // Fallback to a WARP display if ANGLE fails, or if WARP is forced
+        if (!chosenDisplay && shouldTryWARP) {
+            chosenDisplay = GetAndInitWARPDisplay(*this, EGL_DEFAULT_DISPLAY);
+            if (!chosenDisplay) {
+                if (out_failureId->IsEmpty()) {
+                    *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WARP_FALLBACK");
+                }
+                NS_ERROR("Fallback WARP context failed to initialize.");
+                return nullptr;
+            }
+            mIsWARP = true;
+        }
+    } else {
+        chosenDisplay = GetAndInitDisplay(*this, EGL_DEFAULT_DISPLAY);
+    }
+
+    if (!chosenDisplay) {
+        if (out_failureId->IsEmpty()) {
+            *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_DISPLAY");
+        }
+        NS_WARNING("Failed to initialize a display.");
+        return nullptr;
+    }
+    return chosenDisplay;
+}
 
 template<size_t N>
 static void

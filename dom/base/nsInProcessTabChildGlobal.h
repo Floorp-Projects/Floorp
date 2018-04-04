@@ -38,14 +38,14 @@ class nsInProcessTabChildGlobal : public mozilla::dom::ContentFrameMessageManage
 {
   typedef mozilla::dom::ipc::StructuredCloneData StructuredCloneData;
 
-  using mozilla::dom::ipc::MessageManagerCallback::GetProcessMessageManager;
-
 public:
   nsInProcessTabChildGlobal(nsIDocShell* aShell, nsIContent* aOwner,
                             nsFrameMessageManager* aChrome);
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsInProcessTabChildGlobal,
                                                          mozilla::DOMEventTargetHelper)
+
+  void MarkForCC();
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override
@@ -66,13 +66,12 @@ public:
   }
   virtual already_AddRefed<nsIEventTarget> GetTabEventTarget() override;
 
-  NS_FORWARD_SAFE_NSIMESSAGELISTENERMANAGER(mMessageManager)
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
-  NS_FORWARD_SAFE_NSISYNCMESSAGESENDER(mMessageManager);
-  NS_FORWARD_SAFE_NSIMESSAGEMANAGERGLOBAL(mMessageManager)
   NS_DECL_NSICONTENTFRAMEMESSAGEMANAGER
 
   NS_DECL_NSIINPROCESSCONTENTFRAMEMESSAGEMANAGER
+
+  void CacheFrameLoader(nsFrameLoader* aFrameLoader);
 
   /**
    * MessageManagerCallback methods that we override.

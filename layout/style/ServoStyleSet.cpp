@@ -170,33 +170,19 @@ ServoStyleSet::Init(nsPresContext* aPresContext)
 
 template<typename Functor>
 void
-EnumerateShadowRootsInSubtree(const nsINode& aRoot, const Functor& aCb)
-{
-  for (const nsINode* cur = &aRoot; cur; cur = cur->GetNextNode()) {
-    if (!cur->IsElement()) {
-      continue;
-    }
-
-    auto* shadowRoot = cur->AsElement()->GetShadowRoot();
-    if (!shadowRoot) {
-      continue;
-    }
-
-    aCb(*shadowRoot);
-    EnumerateShadowRootsInSubtree(*shadowRoot, aCb);
-  }
-}
-
-// FIXME(emilio): We may want a faster way to do this.
-template<typename Functor>
-void
 EnumerateShadowRoots(const nsIDocument& aDoc, const Functor& aCb)
 {
   if (!aDoc.IsShadowDOMEnabled()) {
     return;
   }
 
-  EnumerateShadowRootsInSubtree(aDoc, aCb);
+  const nsIDocument::ShadowRootSet& shadowRoots = aDoc.ComposedShadowRoots();
+  for (auto iter = shadowRoots.ConstIter(); !iter.Done(); iter.Next()) {
+    ShadowRoot* root = iter.Get()->GetKey();
+    MOZ_ASSERT(root);
+    MOZ_DIAGNOSTIC_ASSERT(root->IsComposedDocParticipant());
+    aCb(*root);
+  }
 }
 
 void

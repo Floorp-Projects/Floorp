@@ -215,6 +215,7 @@ WebGLContext::DestroyResourcesAndContext()
     mBoundCopyWriteBuffer = nullptr;
     mBoundPixelPackBuffer = nullptr;
     mBoundPixelUnpackBuffer = nullptr;
+    mBoundTransformFeedbackBuffer = nullptr;
     mBoundUniformBuffer = nullptr;
     mCurrentProgram = nullptr;
     mActiveProgramLinkInfo = nullptr;
@@ -2542,6 +2543,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLContext,
   mBoundPixelPackBuffer,
   mBoundPixelUnpackBuffer,
   mBoundTransformFeedback,
+  mBoundTransformFeedbackBuffer,
   mBoundUniformBuffer,
   mCurrentProgram,
   mBoundDrawFramebuffer,

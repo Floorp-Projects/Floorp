@@ -2883,7 +2883,7 @@ nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
   return NS_ERROR_UNEXPECTED;
 }
 
-already_AddRefed<nsIMessageSender>
+already_AddRefed<MessageSender>
 nsFrameLoader::GetMessageManager()
 {
   EnsureMessageManager();
@@ -2909,28 +2909,27 @@ nsFrameLoader::EnsureMessageManager()
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMChromeWindow> chromeWindow =
-    do_QueryInterface(GetOwnerDoc()->GetWindow());
-  nsCOMPtr<nsIMessageBroadcaster> parentManager;
+  RefPtr<nsGlobalWindowOuter> window =
+    nsGlobalWindowOuter::Cast(GetOwnerDoc()->GetWindow());
+  RefPtr<ChromeMessageBroadcaster> parentManager;
 
-  if (chromeWindow) {
+  if (window && window->IsChromeWindow()) {
     nsAutoString messagemanagergroup;
     if (mOwnerContent->IsXULElement() &&
         mOwnerContent->GetAttr(kNameSpaceID_None,
                                nsGkAtoms::messagemanagergroup,
                                messagemanagergroup)) {
-      chromeWindow->GetGroupMessageManager(messagemanagergroup, getter_AddRefs(parentManager));
+      parentManager = window->GetGroupMessageManager(messagemanagergroup);
     }
 
     if (!parentManager) {
-      chromeWindow->GetMessageManager(getter_AddRefs(parentManager));
+      parentManager = window->GetMessageManager();
     }
   } else {
-    parentManager = do_GetService("@mozilla.org/globalmessagemanager;1");
+    parentManager = nsFrameMessageManager::GetGlobalMessageManager();
   }
 
-  mMessageManager = new ChromeMessageSender(nullptr,
-                                            static_cast<nsFrameMessageManager*>(parentManager.get()));
+  mMessageManager = new ChromeMessageSender(nullptr, parentManager);
   if (!IsRemoteFrame()) {
     nsresult rv = MaybeCreateDocShell();
     if (NS_FAILED(rv)) {
@@ -3206,7 +3205,8 @@ nsFrameLoader::InitializeBrowserAPI()
       mMessageManager->LoadFrameScript(
         NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js"),
         /* allowDelayedLoad = */ true,
-        /* aRunInGlobalScope */ true);
+        /* aRunInGlobalScope */ true,
+        IgnoreErrors());
     }
   }
   nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
@@ -3381,7 +3381,7 @@ nsFrameLoader::PopulateUserContextIdFromAttribute(OriginAttributes& aAttr)
   return NS_OK;
 }
 
-nsIMessageSender*
+ChromeMessageSender*
 nsFrameLoader::GetProcessMessageManager() const
 {
   return mRemoteBrowser ? mRemoteBrowser->Manager()->GetMessageManager()

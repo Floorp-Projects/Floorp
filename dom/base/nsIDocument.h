@@ -2967,6 +2967,33 @@ public:
     mResponsiveContent.RemoveEntry(aContent);
   }
 
+  void AddComposedDocShadowRoot(mozilla::dom::ShadowRoot& aShadowRoot)
+  {
+    MOZ_ASSERT(IsShadowDOMEnabled());
+    mComposedShadowRoots.PutEntry(&aShadowRoot);
+  }
+
+  using ShadowRootSet = nsTHashtable<nsPtrHashKey<mozilla::dom::ShadowRoot>>;
+
+  void RemoveComposedDocShadowRoot(mozilla::dom::ShadowRoot& aShadowRoot)
+  {
+    MOZ_ASSERT(IsShadowDOMEnabled());
+    mComposedShadowRoots.RemoveEntry(&aShadowRoot);
+  }
+
+  // If you're considering using this, you probably want to use
+  // ShadowRoot::IsComposedDocParticipant instead. This is just for
+  // sanity-checking.
+  bool IsComposedDocShadowRoot(mozilla::dom::ShadowRoot& aShadowRoot)
+  {
+    return mComposedShadowRoots.Contains(&aShadowRoot);
+  }
+
+  const ShadowRootSet& ComposedShadowRoots() const
+  {
+    return mComposedShadowRoots;
+  }
+
   // Notifies any responsive content added by AddResponsiveContent upon media
   // features values changing.
   void NotifyMediaFeatureValuesChanged();
@@ -3757,6 +3784,11 @@ protected:
 
   // Tracking for images in the document.
   RefPtr<mozilla::dom::ImageTracker> mImageTracker;
+
+  // A hashtable of ShadowRoots belonging to the composed doc.
+  //
+  // See ShadowRoot::SetIsComposedDocParticipant.
+  ShadowRootSet mComposedShadowRoots;
 
   // The set of all object, embed, video/audio elements or
   // nsIObjectLoadingContent or nsIDocumentActivity for which this is the owner
