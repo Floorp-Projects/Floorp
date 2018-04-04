@@ -1055,7 +1055,7 @@ interface nsINavHistoryQueryOptions : nsISupports
    *
    * @note Setting this resultType will force queryType to QUERY_TYPE_BOOKMARKS.
    */
-  const unsigned short RESULTS_AS_TAG_QUERY = 6;
+  const unsigned short RESULTS_AS_TAGS_ROOT = 6;
 
   /**
    * DEPRECATED: This exists for Sync and also to avoid reusing this number.
