@@ -119,6 +119,31 @@ IsDisplayLocal()
   return true;
 }
 
+bool HasAtiDrivers()
+{
+  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+  nsAutoString vendorID;
+  static const Array<nsresult (nsIGfxInfo::*)(nsAString&), 2> kMethods = {
+    &nsIGfxInfo::GetAdapterVendorID,
+    &nsIGfxInfo::GetAdapterVendorID2,
+  };
+  for (const auto method : kMethods) {
+    if (NS_SUCCEEDED((gfxInfo->*method)(vendorID))) {
+      // This test is based on telemetry data.  The proprietary ATI
+      // drivers seem to use this vendor string, including for some
+      // newer devices that have AMD branding in the device name, such
+      // as those using AMDGPU-PRO drivers.
+      // The open-source drivers integrated into Mesa appear to use
+      // the vendor ID "X.Org" instead.
+      if (vendorID.EqualsLiteral("ATI Technologies Inc.")) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 // Content processes may need direct access to SysV IPC in certain
 // uncommon use cases.
 static bool
@@ -138,24 +163,10 @@ ContentNeedsSysVIPC()
   }
 
   // The fglrx (ATI Catalyst) GPU drivers use SysV IPC.
-  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-  nsAutoString vendorID;
-  static const Array<nsresult (nsIGfxInfo::*)(nsAString&), 2> kMethods = {
-    &nsIGfxInfo::GetAdapterVendorID,
-    &nsIGfxInfo::GetAdapterVendorID2,
-  };
-  for (const auto method : kMethods) {
-    if (NS_SUCCEEDED((gfxInfo->*method)(vendorID))) {
-      // This test is based on telemetry data.  The proprietary ATI
-      // drivers seem to use this vendor string, including for some
-      // newer devices that have AMD branding in the device name.
-      // The open-source drivers integrated into Mesa appear to use
-      // the vendor ID "X.Org" instead.
-      if (vendorID.EqualsLiteral("ATI Technologies Inc.")) {
-        return true;
-      }
-    }
+  if (HasAtiDrivers()) {
+    return true;
   }
+
   return false;
 }
 

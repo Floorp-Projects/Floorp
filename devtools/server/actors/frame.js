@@ -7,7 +7,7 @@
 "use strict";
 
 const { ActorPool } = require("devtools/server/actors/common");
-const { createValueGrip } = require("devtools/server/actors/object");
+const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const { frameSpec } = require("devtools/shared/specs/frame");
 

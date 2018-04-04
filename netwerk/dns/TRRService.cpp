@@ -286,25 +286,30 @@ TRRService::Observe(nsISupports *aSubject,
   } else if (!strcmp(aTopic, NS_CAPTIVE_PORTAL_CONNECTIVITY)) {
     nsAutoCString data = NS_ConvertUTF16toUTF8(aData);
     LOG(("TRRservice captive portal was %s\n", data.get()));
-    if (!mTRRBLStorage) {
-      mTRRBLStorage = DataStorage::Get(DataStorageClass::TRRBlacklist);
-      if (mTRRBLStorage) {
-        bool storageWillPersist = true;
-        if (NS_FAILED(mTRRBLStorage->Init(storageWillPersist))) {
-          mTRRBLStorage = nullptr;
-        }
-        if (mClearTRRBLStorage) {
-          if (mTRRBLStorage) {
-            mTRRBLStorage->Clear();
+    if (data.Equals("clear")) {
+      if (!mTRRBLStorage) {
+        mTRRBLStorage = DataStorage::Get(DataStorageClass::TRRBlacklist);
+        if (mTRRBLStorage) {
+          bool storageWillPersist = true;
+          if (NS_FAILED(mTRRBLStorage->Init(storageWillPersist))) {
+            mTRRBLStorage = nullptr;
           }
-          mClearTRRBLStorage = false;
+          if (mClearTRRBLStorage) {
+            if (mTRRBLStorage) {
+              mTRRBLStorage->Clear();
+            }
+            mClearTRRBLStorage = false;
+          }
         }
       }
+      if (mConfirmationState != CONFIRM_OK) {
+        mConfirmationState = CONFIRM_TRYING;
+        MaybeConfirm();
+      } else {
+        LOG(("TRRservice CP clear when already up!\n"));
+      }
+      mCaptiveIsPassed = true;
     }
-
-    mConfirmationState = CONFIRM_TRYING;
-    MaybeConfirm();
-    mCaptiveIsPassed = true;
 
   } else if (!strcmp(aTopic, kClearPrivateData) ||
              !strcmp(aTopic, kPurge)) {

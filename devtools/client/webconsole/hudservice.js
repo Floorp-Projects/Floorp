@@ -482,6 +482,20 @@ WebConsole.prototype = {
     return panel.getFrames();
   },
 
+  async getMappedExpression(expression) {
+    let toolbox = gDevTools.getToolbox(this.target);
+    if (!toolbox) {
+      return expression;
+    }
+    let panel = toolbox.getPanel("jsdebugger");
+
+    if (!panel) {
+      return expression;
+    }
+
+    return panel.getMappedExpression(expression);
+  },
+
   /**
    * Retrieves the current selection from the Inspector, if such a selection
    * exists. This is used to pass the ID of the selected actor to the Web

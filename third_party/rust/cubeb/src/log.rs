@@ -9,22 +9,22 @@ macro_rules! cubeb_log_internal {
         #[allow(unused_unsafe)]
         unsafe {
             if $level <= $crate::ffi::g_cubeb_log_level.into() {
-                if let Some(log_callback) = $crate::ffi::g_cubeb_log_callback {
-                    let cstr = ::std::ffi::CString::new(concat!("%s:%d: ", $msg, "\n")).unwrap();
-                    log_callback(cstr.as_ptr(), file!(), line!());
-                }
+                cubeb_log_internal!(__INTERNAL__ $msg);
             }
         }
     };
-    ($level: expr, $fmt: expr, $($arg:tt)+) => {
+    ($level: expr, $fmt: expr, $($arg: expr),+) => {
         #[allow(unused_unsafe)]
         unsafe {
             if $level <= $crate::ffi::g_cubeb_log_level.into() {
-                if let Some(log_callback) = $crate::ffi::g_cubeb_log_callback {
-                    let cstr = ::std::ffi::CString::new(concat!("%s:%d: ", $fmt, "\n")).unwrap();
-                    log_callback(cstr.as_ptr(), file!(), line!(), $($arg)+);
-                }
+                cubeb_log_internal!(__INTERNAL__ format!($fmt, $($arg),*));
             }
+        }
+    };
+    (__INTERNAL__ $msg: expr) => {
+        if let Some(log_callback) = $crate::ffi::g_cubeb_log_callback {
+            let cstr = ::std::ffi::CString::new(format!("{}:{}: {}\n", file!(), line!(), $msg)).unwrap();
+            log_callback(cstr.as_ptr());
         }
     }
 }
@@ -32,13 +32,13 @@ macro_rules! cubeb_log_internal {
 #[macro_export]
 macro_rules! cubeb_logv {
     ($msg: expr) => (cubeb_log_internal!($crate::LogLevel::Verbose, $msg));
-    ($fmt: expr, $($arg: tt)+) => (cubeb_log_internal!($crate::LogLevel::Verbose, $fmt, $($arg)*));
+    ($fmt: expr, $($arg: expr),+) => (cubeb_log_internal!($crate::LogLevel::Verbose, $fmt, $($arg),*));
 }
 
 #[macro_export]
 macro_rules! cubeb_log {
     ($msg: expr) => (cubeb_log_internal!($crate::LogLevel::Normal, $msg));
-    ($fmt: expr, $($arg: tt)+) => (cubeb_log_internal!($crate::LogLevel::Normal, $fmt, $($arg)*));
+    ($fmt: expr, $($arg: expr),+) => (cubeb_log_internal!($crate::LogLevel::Normal, $fmt, $($arg),*));
 }
 
 #[cfg(test)]
@@ -46,12 +46,14 @@ mod tests {
     #[test]
     fn test_normal_logging() {
         cubeb_log!("This is log at normal level");
-        cubeb_log!("Formatted log %d", 1);
+        cubeb_log!("{} Formatted log", 1);
+        cubeb_log!("{} Formatted {} log {}", 1, 2, 3);
     }
 
     #[test]
     fn test_verbose_logging() {
         cubeb_logv!("This is a log at verbose level");
-        cubeb_logv!("Formatted log %d", 1);
+        cubeb_logv!("{} Formatted log", 1);
+        cubeb_logv!("{} Formatted {} log {}", 1, 2, 3);
     }
 }

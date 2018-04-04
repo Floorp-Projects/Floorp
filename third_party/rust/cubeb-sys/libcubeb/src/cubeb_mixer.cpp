@@ -64,6 +64,18 @@
 #define C_45DB  0.594603558
 #define C_60DB  0.5
 
+static cubeb_channel_layout
+cubeb_channel_layout_check(cubeb_channel_layout l, uint32_t c)
+{
+    if (l == CUBEB_LAYOUT_UNDEFINED) {
+      switch (c) {
+        case 1: return CUBEB_LAYOUT_MONO;
+        case 2: return CUBEB_LAYOUT_STEREO;
+      }
+    }
+    return l;
+}
+
 unsigned int cubeb_channel_layout_nb_channels(cubeb_channel_layout x)
 {
 #if __GNUC__ || __clang__
@@ -85,18 +97,8 @@ struct MixerContext {
                uint32_t out_channels,
                cubeb_channel_layout out)
     : _format(f)
-    , _in_ch_layout(in == CUBEB_LAYOUT_UNDEFINED
-                      ? (in_channels == 1
-                           ? CUBEB_LAYOUT_MONO
-                           : (in_channels == 2 ? CUBEB_LAYOUT_STEREO
-                                               : CUBEB_LAYOUT_UNDEFINED))
-                      : in)
-    , _out_ch_layout(
-        (out == CUBEB_LAYOUT_UNDEFINED
-           ? (out_channels == 1 ? CUBEB_LAYOUT_MONO
-                                : (out_channels == 2 ? CUBEB_LAYOUT_STEREO
-                                                     : CUBEB_LAYOUT_UNDEFINED))
-           : out))
+    , _in_ch_layout(cubeb_channel_layout_check(in, in_channels))
+    , _out_ch_layout(cubeb_channel_layout_check(out, out_channels))
     , _in_ch_count(in_channels)
     , _out_ch_count(out_channels)
   {
@@ -544,7 +546,7 @@ struct cubeb_mixer
   }
 
   int mix(size_t frames,
-          void * input_buffer,
+          const void * input_buffer,
           size_t input_buffer_size,
           void * output_buffer,
           size_t output_buffer_size) const
@@ -575,7 +577,7 @@ struct cubeb_mixer
       } else {
         assert(_context._format == CUBEB_SAMPLE_S16NE);
         copy_and_trunc(frames,
-                       static_cast<int16_t*>(input_buffer),
+                       static_cast<const int16_t*>(input_buffer),
                        reinterpret_cast<int16_t*>(output_buffer));
       }
       return 0;
@@ -651,9 +653,9 @@ void cubeb_mixer_destroy(cubeb_mixer * mixer)
 
 int cubeb_mixer_mix(cubeb_mixer * mixer,
                     size_t frames,
-                    void* input_buffer,
+                    const void * input_buffer,
                     size_t input_buffer_size,
-                    void* output_buffer,
+                    void * output_buffer,
                     size_t output_buffer_size)
 {
   return mixer->mix(

@@ -40,7 +40,7 @@ function test() {
     yield toolbox.selectTool("webconsole");
 
     // This is the meat of the test: evaluate the optimized out variable.
-    hud.jsterm.execute("upvar");
+    yield hud.jsterm.execute("upvar");
     yield waitForMessages({
       webconsole: hud,
       messages: [{

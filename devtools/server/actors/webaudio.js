@@ -9,7 +9,7 @@ const { Cu } = require("chrome");
 
 const protocol = require("devtools/shared/protocol");
 const { CallWatcherActor } = require("devtools/server/actors/call-watcher");
-const { createValueGrip } = require("devtools/server/actors/object");
+const { createValueGrip } = require("devtools/server/actors/object/utils");
 const AutomationTimeline = require("./utils/automation-timeline");
 const {
   audionodeSpec,

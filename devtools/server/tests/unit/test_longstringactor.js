@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { LongStringActor } = require("devtools/server/actors/object");
+const { LongStringActor } = require("devtools/server/actors/object/long-string");
 
 function run_test() {
   test_LSA_destroy();

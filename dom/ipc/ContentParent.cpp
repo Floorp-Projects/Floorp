@@ -184,6 +184,9 @@
 #include "private/pprio.h"
 #include "ContentProcessManager.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#ifndef RELEASE_OR_BETA
+#include "mozilla/PerformanceUtils.h"
+#endif
 #include "mozilla/psm/PSMContentListener.h"
 #include "nsPluginHost.h"
 #include "nsPluginTags.h"
@@ -193,10 +196,7 @@
 #include "nsHostObjectProtocolHandler.h"
 #include "nsICaptivePortalService.h"
 #include "nsIObjectLoadingContent.h"
-#include "nsPerformanceMetrics.h"
-
 #include "nsIBidiKeyboard.h"
-
 #include "nsLayoutStylesheetCache.h"
 
 #include "mozilla/Sprintf.h"
@@ -3322,41 +3322,12 @@ ContentParent::RecvFinishMemoryReport(const uint32_t& aGeneration)
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvAddPerformanceMetrics(const PerformanceInfo& aMetrics)
+ContentParent::RecvAddPerformanceMetrics(nsTArray<PerformanceInfo>&& aMetrics)
 {
 #ifndef RELEASE_OR_BETA
-  // converting the data we get from a child as a notification
-  if (aMetrics.items().IsEmpty()) {
-      return IPC_OK();
-  }
-
-  nsCOMPtr<nsIMutableArray> xpItems = do_CreateInstance(NS_ARRAY_CONTRACTID);
-  if (NS_WARN_IF(!xpItems)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  for (uint32_t i = 0; i<aMetrics.items().Length(); i++) {
-       const CategoryDispatch& entry = aMetrics.items()[i];
-       nsCOMPtr<nsIPerformanceMetricsDispatchCategory> item =
-           new PerformanceMetricsDispatchCategory(entry.category(),
-                                                  entry.count());
-       xpItems->AppendElement(item);
-  }
-
-  nsCOMPtr<nsIPerformanceMetricsData> data =
-      new PerformanceMetricsData(aMetrics.pid(), aMetrics.wid(), aMetrics.pwid(),
-                                 aMetrics.host(), aMetrics.duration(),
-                                 aMetrics.worker(), xpItems);
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (!obs) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  obs->NotifyObservers(data, "performance-metrics", nullptr);
-  return IPC_OK();
+  Unused << NS_WARN_IF(NS_FAILED(mozilla::NotifyPerformanceInfo(aMetrics)));
 #endif
-#ifdef RELEASE_OR_BETA
   return IPC_OK();
-#endif
 }
 
 PCycleCollectWithLogsParent*

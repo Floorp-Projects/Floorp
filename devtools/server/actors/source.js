@@ -10,7 +10,7 @@ const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 const { BreakpointActor, setBreakpointAtEntryPoints } = require("devtools/server/actors/breakpoint");
 const { OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
-const { createValueGrip, arrayBufferGrip } = require("devtools/server/actors/object");
+const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, fetch } = DevToolsUtils;
@@ -20,6 +20,7 @@ const { sourceSpec } = require("devtools/shared/specs/source");
 loader.lazyRequireGetter(this, "SourceMapConsumer", "source-map", true);
 loader.lazyRequireGetter(this, "SourceMapGenerator", "source-map", true);
 loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
+loader.lazyRequireGetter(this, "arrayBufferGrip", "devtools/server/actors/array-buffer", true);
 
 function isEvalSource(source) {
   let introType = source.introductionType;

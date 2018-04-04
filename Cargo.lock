@@ -54,7 +54,7 @@ version = "0.2.3"
 dependencies = [
  "bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bytes 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "cubeb 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cubeb 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "error-chain 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "iovec 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -90,7 +90,7 @@ version = "0.2.2"
 dependencies = [
  "audioipc 0.2.3",
  "bytes 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "cubeb 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cubeb 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "error-chain 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazycell 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -407,10 +407,10 @@ dependencies = [
 
 [[package]]
 name = "cubeb"
-version = "0.5.0"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "cubeb-core 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cubeb-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -418,16 +418,16 @@ name = "cubeb-backend"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "cubeb-core 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cubeb-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "cubeb-core"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "cubeb-sys 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cubeb-sys 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -442,7 +442,7 @@ dependencies = [
 
 [[package]]
 name = "cubeb-sys"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cmake 0.1.29 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -740,7 +740,7 @@ dependencies = [
  "audioipc-server 0.2.2",
  "cose-c 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "cubeb-pulse 0.2.0",
- "cubeb-sys 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cubeb-sys 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "encoding_c 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "encoding_glue 0.1.0",
  "geckoservo 0.0.1",
@@ -2264,10 +2264,10 @@ dependencies = [
 "checksum cssparser-macros 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "079adec4af52bb5275eadd004292028c79eb3c5f5b4ee8086a36d4197032f6df"
 "checksum cstr 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)" = "b6557bdb1dc9647eae1cf7f5601b14cd45fc3c7ccf2df618387416fe542da6ea"
 "checksum cstr-macros 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f9f316203d1ea36f4f18316822806f6999aa3dc5ed1adf51e35b77e3b3933d78"
-"checksum cubeb 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7923bed2d5a1a64ba0c3e8b6badc360508ba488d1f2f59f16a688802e755bb85"
+"checksum cubeb 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "8a3502aafa1bf95c524f65d2ba46d8741700c6a8a9543ea52c6da3d8b69a2896"
 "checksum cubeb-backend 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fdcac95519416d9ec814db2dc40e6293e7da25b906023d93f48b87f0587ab138"
-"checksum cubeb-core 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "169d9a36f5daa60f9c4597905132aef056cf62693addd4a3421492853ccad565"
-"checksum cubeb-sys 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e405ad4dff2c1a7cbfa6998e5925e8ceafe900feeacfcad35a3e3790bea0f2aa"
+"checksum cubeb-core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "37f7b20f757a4e4b6aa28863236551bff77682dc6db192eba15af615492b5445"
+"checksum cubeb-sys 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "653b9e245d35dbe2a2da7c4586275cee75ff656ddeb02d4a73b4afdfa6d67502"
 "checksum darling 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d3effd06d4057f275cb7858889f4952920bab78dd8ff0f6e7dfe0c8d2e67ed89"
 "checksum darling_core 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "167dd3e235c2f1da16a635c282630452cdf49191eb05711de1bcd1d3d5068c00"
 "checksum darling_macro 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c53edaba455f6073a10c27c72440860eb3f60444f8c8660a391032eeae744d82"

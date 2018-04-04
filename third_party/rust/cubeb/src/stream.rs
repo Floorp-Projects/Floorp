@@ -64,6 +64,7 @@ use ffi;
 use std::{ops, panic, ptr};
 use std::ffi::CString;
 use std::marker::PhantomData;
+use std::mem::ManuallyDrop;
 use std::os::raw::{c_long, c_void};
 use std::slice::{from_raw_parts, from_raw_parts_mut};
 
@@ -77,17 +78,20 @@ pub struct StreamCallbacks<F> {
     pub(crate) device_changed: Option<Box<DeviceChangedCallback>>,
 }
 
-pub struct Stream<F>(cubeb_core::Stream, PhantomData<*const F>);
+pub struct Stream<F>(ManuallyDrop<cubeb_core::Stream>,
+                     PhantomData<*const F>);
 
 impl<F> Stream<F> {
     fn new(s: cubeb_core::Stream) -> Stream<F> {
-        Stream(s, PhantomData)
+        Stream(ManuallyDrop::new(s), PhantomData)
     }
 }
 
 impl<F> Drop for Stream<F> {
     fn drop(&mut self) {
-        let _ = unsafe { Box::from_raw(self.user_ptr() as *mut StreamCallbacks<F>) };
+        let user_ptr = self.user_ptr();
+        unsafe { ManuallyDrop::drop(&mut self.0) };
+        let _ = unsafe { Box::from_raw(user_ptr as *mut StreamCallbacks<F>) };
     }
 }
 
