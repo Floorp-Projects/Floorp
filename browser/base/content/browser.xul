@@ -1217,8 +1217,12 @@
                     onselect="if (event.target.localName == 'tabpanels') gBrowser.updateCurrentBrowser();">
           <tabpanels flex="1" class="plain" selectedIndex="0" id="tabbrowser-tabpanels">
             <notificationbox flex="1" notificationside="top">
-              <hbox flex="1" class="browserSidebarContainer">
-                <vbox flex="1" class="browserContainer">
+              <!-- Set large flex to allow the devtools toolbox to set a flex attribute.
+                   We don't want the toolbox to actually take up free space, but we do want it to collapse when the window shrinks, and with flex=0 it can't.
+                   When the toolbox is on the bottom it's a sibling of browserSidebarContainer,
+                   and when it's on the side it's a sibling of browserContainer.  -->
+              <hbox flex="10000" class="browserSidebarContainer">
+                <vbox flex="10000" class="browserContainer">
                   <stack flex="1" class="browserStack">
                     <browser id="tabbrowser-initialBrowser" type="content"
                              message="true" messagemanagergroup="browsers"

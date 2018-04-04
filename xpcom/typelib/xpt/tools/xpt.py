@@ -436,7 +436,7 @@ class SimpleType(Type):
         return s
 
     def code_gen(self, typelib, cd):
-        return "{%s, 0, 0}" % self.typeDescriptorPrefixString()
+        return "XPTTypeDescriptor(%s)" % self.typeDescriptorPrefixString()
 
 
 class InterfaceType(Type):
@@ -497,7 +497,7 @@ class InterfaceType(Type):
         index = typelib.interfaces.index(self.iface) + 1
         hi = int(index / 256)
         lo = index - (hi * 256)
-        return "{%s, %d, %d}" % (self.typeDescriptorPrefixString(), hi, lo)
+        return "XPTTypeDescriptor(%s, %d, %d)" % (self.typeDescriptorPrefixString(), hi, lo)
 
     def __str__(self):
         if self.iface:
@@ -559,8 +559,8 @@ class InterfaceIsType(Type):
         file.write(InterfaceIsType._descriptor.pack(self.param_index))
 
     def code_gen(self, typelib, cd):
-        return "{%s, %d, 0}" % (self.typeDescriptorPrefixString(),
-                                self.param_index)
+        return "XPTTypeDescriptor(%s, %d)" % (self.typeDescriptorPrefixString(),
+                                              self.param_index)
 
     def __str__(self):
         return "InterfaceIs *"
@@ -624,9 +624,9 @@ class ArrayType(Type):
 
     def code_gen(self, typelib, cd):
         element_type_index = cd.add_type(self.element_type.code_gen(typelib, cd))
-        return "{%s, %d, %d}" % (self.typeDescriptorPrefixString(),
-                                 self.size_is_arg_num,
-                                 element_type_index)
+        return "XPTTypeDescriptor(%s, %d, %d)" % (self.typeDescriptorPrefixString(),
+                                                  self.size_is_arg_num,
+                                                  element_type_index)
 
     def __str__(self):
         return "%s []" % str(self.element_type)
@@ -685,8 +685,8 @@ class StringWithSizeType(Type):
                                                        self.length_is_arg_num))
 
     def code_gen(self, typelib, cd):
-        return "{%s, %d, 0}" % (self.typeDescriptorPrefixString(),
-                                self.size_is_arg_num)
+        return "XPTTypeDescriptor(%s, %d)" % (self.typeDescriptorPrefixString(),
+                                              self.size_is_arg_num)
 
     def __str__(self):
         return "string_s"
@@ -745,8 +745,8 @@ class WideStringWithSizeType(Type):
                                                            self.length_is_arg_num))
 
     def code_gen(self, typelib, cd):
-        return "{%s, %d, 0}" % (self.typeDescriptorPrefixString(),
-                                self.size_is_arg_num)
+        return "XPTTypeDescriptor(%s, %d)" % (self.typeDescriptorPrefixString(),
+                                              self.size_is_arg_num)
 
     def __str__(self):
         return "wstring_s"
@@ -877,7 +877,7 @@ class Param(object):
         self.type.write(typelib, file)
 
     def code_gen(self, typelib, cd):
-        return "{0x%x, %s}" % (self.encodeflags(), self.type.code_gen(typelib, cd))
+        return "XPTParamDescriptor(0x%x, %s)" % (self.encodeflags(), self.type.code_gen(typelib, cd))
 
     def prefix(self):
         """
@@ -1070,10 +1070,10 @@ class Method(object):
             param_index = cd.add_params([p.code_gen(typelib, cd) for p in self.params])
             num_params = len(self.params)
 
-        return "{%d, %d, 0x%x, %d}" % (string_index,
-                                       param_index,
-                                       self.encodeflags(),
-                                       num_params)
+        return "XPTMethodDescriptor(%d, %d, 0x%x, %d)" % (string_index,
+                                                          param_index,
+                                                          self.encodeflags(),
+                                                          num_params)
 
 class Constant(object):
     """
@@ -1153,10 +1153,10 @@ class Constant(object):
         string_index = cd.add_string(self.name)
 
         # The static cast is needed for disambiguation.
-        return "{%d, %s, XPTConstValue(static_cast<%s>(%d))}" % (string_index,
-                                                                 self.type.code_gen(typelib, cd),
-                                                                 Constant.memberTypeMap[self.type.tag],
-                                                                 self.value)
+        return "XPTConstDescriptor(%d, %s, XPTConstValue(static_cast<%s>(%d)))" % (string_index,
+                                                                                   self.type.code_gen(typelib, cd),
+                                                                                   Constant.memberTypeMap[self.type.tag],
+                                                                                   self.value)
 
     def __repr__(self):
         return "Constant(%s, %s, %d)" % (self.name, str(self.type), self.value)
@@ -1371,7 +1371,7 @@ class Interface(object):
             assert len(self.constants) == 0
             assert self.encodeflags() == 0
 
-        return "{%s, %s, %d, %d, %d, %d, %d, 0x%x} /* %s */" % (
+        return "XPTInterfaceDescriptor(%s, %s, %d, %d, %d, %d, %d, 0x%x) /* %s */" % (
             iid,
             string_index,
             methods_index,

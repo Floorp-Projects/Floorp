@@ -412,7 +412,7 @@ html .jsterm-stack-node {
 textarea.jsterm-input-node,
 textarea.jsterm-complete-node {
   width: 100%;
-  border: none;
+  border: 1px solid transparent;
   margin: 0;
   background-color: transparent;
   resize: none;
@@ -436,6 +436,14 @@ textarea.jsterm-complete-node {
 textarea.jsterm-input-node:focus {
   background-image: var(--theme-command-line-image-focus);
   box-shadow: none;
+  border: 1px solid var(--blue-50);
+  transition: border-color 0.2s ease-in-out;
+  outline: none;
+}
+
+:root[platform="mac"] textarea.jsterm-input-node,
+:root[platform="mac"] textarea.jsterm-complete-node {
+  border-radius: 0 0 4px 4px;
 }
 
 
