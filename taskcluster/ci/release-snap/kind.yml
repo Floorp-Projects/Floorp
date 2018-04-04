@@ -25,7 +25,7 @@ job-defaults:
    treeherder:
       platform: linux64/opt
       kind: build
-      tier: 3
+      tier: 2
    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
    worker:
       implementation: docker-worker
