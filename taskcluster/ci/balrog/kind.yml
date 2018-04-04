@@ -7,6 +7,7 @@ loader: taskgraph.loader.single_dep:loader
 transforms:
    - taskgraph.transforms.name_sanity:transforms
    - taskgraph.transforms.balrog_submit:transforms
+   - taskgraph.transforms.scriptworker:add_balrog_scopes
    - taskgraph.transforms.release_notifications:transforms
    - taskgraph.transforms.task:transforms
 
