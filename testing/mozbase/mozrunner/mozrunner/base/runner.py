@@ -17,6 +17,7 @@ try:
     import mozcrash
 except ImportError:
     mozcrash = None
+from six import reraise
 
 from ..application import DefaultContext
 from ..errors import RunnerNotStartedError
@@ -97,6 +98,8 @@ class BaseRunner(object):
         :param timeout: see process_handler.run()
         :param outputTimeout: see process_handler.run()
         :returns: the process id
+
+        :raises: RunnerNotStartedError
         """
         self.timeout = timeout
         self.output_timeout = outputTimeout
@@ -126,8 +129,14 @@ class BaseRunner(object):
             # TODO: other arguments
         else:
             # this run uses the managed processhandler
-            self.process_handler = self.process_class(cmd, env=encoded_env, **self.process_args)
-            self.process_handler.run(self.timeout, self.output_timeout)
+            try:
+                process = self.process_class(cmd, env=encoded_env, **self.process_args)
+                process.run(self.timeout, self.output_timeout)
+
+                self.process_handler = process
+            except Exception:
+                _, value, tb = sys.exc_info()
+                reraise(RunnerNotStartedError, "Failed to start the process: %s" % value, tb)
 
         self.crashed = 0
         return self.process_handler.pid
