@@ -112,7 +112,6 @@
 #include "nsIPromptFactory.h"
 #include "nsIReflowObserver.h"
 #include "nsIScriptChannel.h"
-#include "nsIScriptError.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollableFrame.h"
@@ -1732,12 +1731,6 @@ nsDocShell::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing)
 NS_IMETHODIMP
 nsDocShell::SetUsePrivateBrowsing(bool aUsePrivateBrowsing)
 {
-  nsContentUtils::ReportToConsoleNonLocalized(
-    NS_LITERAL_STRING("Only internal code is allowed to set the usePrivateBrowsing attribute"),
-    nsIScriptError::warningFlag,
-    NS_LITERAL_CSTRING("Internal API Used"),
-    mContentViewer ? mContentViewer->GetDocument() : nullptr);
-
   if (!CanSetOriginAttributes()) {
     bool changed = aUsePrivateBrowsing != (mPrivateBrowsingId > 0);
 
