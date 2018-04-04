@@ -426,7 +426,7 @@ const WaitOnType = {
 };
 function waitOnEventOrTimeout({ target, name, delay = 0 }) {
   if (typeof target !== 'object' || !(name && typeof name === 'string') || !(Number.isInteger(delay) && delay >= 0)) {
-    return Promise.reject(new Error('waitOnEventOrTimeout - invalid paramaters.'));
+    return Promise.reject(new Error('waitOnEventOrTimeout - invalid parameters.'));
   }
   let capability = (0, _pdfjsLib.createPromiseCapability)();
   function handler(type) {
