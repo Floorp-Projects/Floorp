@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// This file assumes head.js is loaded in the global scope.
+/* import-globals-from head.js */
+
 /* exported openTabAndSetupStorage, clearStorage */
 
 "use strict";

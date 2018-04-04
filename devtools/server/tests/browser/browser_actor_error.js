@@ -26,12 +26,11 @@ async function test() {
   let { errorActor } = await gClient.listTabs();
   ok(errorActor, "Found the error actor.");
 
-  try {
-    await gClient.request({ to: globalActor, type: "error" });
-    ok(false, "The request is expected to fail.");
-  } catch (e) {
-    ok(true, "The request failed as expected, and was caught by the client");
-  }
+  await Assert.rejects(gClient.request({ to: errorActor, type: "error" }),
+    err => err.error == "unknownError" &&
+           /error occurred while processing 'error/.test(err.message),
+    "The request should be rejected");
+
   await gClient.close();
 
   finish();

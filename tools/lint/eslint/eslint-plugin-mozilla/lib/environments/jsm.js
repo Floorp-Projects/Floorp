@@ -35,7 +35,6 @@ module.exports = {
     "DOMException": false,
     "DOMRequest": false,
     "DOMStringList": false,
-    "DominatorTree": false,
     "ErrorEvent": false,
     "Event": false,
     "EventTarget": false,
