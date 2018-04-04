@@ -21,7 +21,7 @@ extern "C" {
     pub fn cubeb_mixer_mix(
         mixer: *mut cubeb_mixer,
         frames: usize,
-        input_buffer: *mut c_void,
+        input_buffer: *const c_void,
         input_buffer_length: usize,
         output_buffer: *mut c_void,
         output_buffer_length: usize,
