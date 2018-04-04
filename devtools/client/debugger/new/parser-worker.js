@@ -1353,6 +1353,7 @@ exports.isFunction = isFunction;
 exports.isAwaitExpression = isAwaitExpression;
 exports.isYieldExpression = isYieldExpression;
 exports.isVariable = isVariable;
+exports.isComputedExpression = isComputedExpression;
 exports.getMemberExpression = getMemberExpression;
 exports.getVariables = getVariables;
 
@@ -1381,6 +1382,11 @@ function isYieldExpression(path) {
 function isVariable(path) {
   const node = path.node;
   return t.isVariableDeclaration(node) || isFunction(path) && path.node.params != null && path.node.params.length || t.isObjectProperty(node) && !isFunction(path.node.value);
+}
+
+function isComputedExpression(expression) {
+  return (/^\[/m.test(expression)
+  );
 }
 
 function getMemberExpression(root) {
@@ -1708,6 +1714,10 @@ function extractSymbol(path, symbols) {
     symbols.hasJsx = true;
   }
 
+  if (t.isGenericTypeAnnotation(path)) {
+    symbols.hasTypes = true;
+  }
+
   if (t.isClassDeclaration(path)) {
     symbols.classes.push({
       name: path.node.id.name,
@@ -1808,7 +1818,8 @@ function extractSymbols(sourceId) {
     identifiers: [],
     classes: [],
     imports: [],
-    hasJsx: false
+    hasJsx: false,
+    hasTypes: false
   };
 
   const ast = (0, _ast.traverseAst)(sourceId, {
@@ -1835,10 +1846,11 @@ function extendSnippet(name, expression, path = null, prevPath = null) {
   const prevComputed = prevPath && prevPath.node.computed;
   const prevArray = t.isArrayExpression(prevPath);
   const array = t.isArrayExpression(path);
+  const value = path && path.node.property && path.node.property.extra && path.node.property.extra.raw || "";
 
   if (expression === "") {
     if (computed) {
-      return `[${name}]`;
+      return name === undefined ? `[${value}]` : `[${name}]`;
     }
     return name;
   }
@@ -1847,10 +1859,14 @@ function extendSnippet(name, expression, path = null, prevPath = null) {
     if (prevComputed || prevArray) {
       return `[${name}]${expression}`;
     }
-    return `[${name}].${expression}`;
+    return `[${name === undefined ? value : name}].${expression}`;
   }
 
   if (prevComputed || prevArray) {
+    return `${name}${expression}`;
+  }
+
+  if ((0, _helpers.isComputedExpression)(expression) && name !== undefined) {
     return `${name}${expression}`;
   }
 
@@ -1860,8 +1876,8 @@ function extendSnippet(name, expression, path = null, prevPath = null) {
 function getMemberSnippet(node, expression = "") {
   if (t.isMemberExpression(node)) {
     const name = node.property.name;
-
-    return getMemberSnippet(node.object, extendSnippet(name, expression));
+    const snippet = getMemberSnippet(node.object, extendSnippet(name, expression, { node }));
+    return snippet;
   }
 
   if (t.isCallExpression(node)) {
@@ -1873,6 +1889,9 @@ function getMemberSnippet(node, expression = "") {
   }
 
   if (t.isIdentifier(node)) {
+    if ((0, _helpers.isComputedExpression)(expression)) {
+      return `${node.name}${expression}`;
+    }
     return `${node.name}.${expression}`;
   }
 

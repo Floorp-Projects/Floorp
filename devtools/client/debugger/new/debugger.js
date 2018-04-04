@@ -3648,7 +3648,7 @@ function isObjectLike(value) {
       var array = this._array;
       var maxIndex = array.length - 1;
       var ii = 0;
-      return new Iterator(function()
+      return new Iterator(function() 
         {return ii > maxIndex ?
           iteratorDone() :
           iteratorValue(type, ii, array[reverse ? maxIndex - ii++ : ii++])}
@@ -4119,7 +4119,7 @@ function isObjectLike(value) {
 
     Repeat.prototype.__iterator = function(type, reverse) {var this$0 = this;
       var ii = 0;
-      return new Iterator(function()
+      return new Iterator(function() 
         {return ii < this$0.size ? iteratorValue(type, ii++, this$0._value) : iteratorDone()}
       );
     };
@@ -6317,7 +6317,7 @@ function isObjectLike(value) {
         return flipSequence;
       };
     }
-    reversedSequence.get = function(key, notSetValue)
+    reversedSequence.get = function(key, notSetValue) 
       {return iterable.get(useKeys ? key : -1 - key, notSetValue)};
     reversedSequence.has = function(key )
       {return iterable.has(useKeys ? key : -1 - key)};
@@ -6516,7 +6516,7 @@ function isObjectLike(value) {
         return this.cacheResult().__iterate(fn, reverse);
       }
       var iterations = 0;
-      iterable.__iterate(function(v, k, c)
+      iterable.__iterate(function(v, k, c) 
         {return predicate.call(context, v, k, c) && ++iterations && fn(v, k, this$0)}
       );
       return iterations;
@@ -6707,7 +6707,7 @@ function isObjectLike(value) {
     interposedSequence.size = iterable.size && iterable.size * 2 -1;
     interposedSequence.__iterateUncached = function(fn, reverse) {var this$0 = this;
       var iterations = 0;
-      iterable.__iterate(function(v, k)
+      iterable.__iterate(function(v, k) 
         {return (!iterations || fn(separator, iterations++, this$0) !== false) &&
         fn(v, iterations++, this$0) !== false},
         reverse
@@ -9865,7 +9865,7 @@ module.exports = function() {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- *
+ * 
  */
 
 function makeEmptyFunction(arg) {
@@ -14947,7 +14947,7 @@ function wrapMapToPropsConstant(getConstant) {
 // dependsOnOwnProps is used by createMapToPropsProxy to determine whether to pass props as args
 // to the mapToProps function being wrapped. It is also used by makePurePropsSelector to determine
 // whether mapToProps needs to be invoked when props have changed.
-//
+// 
 // A length of one signals that mapToProps does not depend on props from the parent component.
 // A length of zero is assumed to mean mapToProps is getting args via arguments or ...args and
 // therefore not reporting its length accurately..
@@ -14957,16 +14957,16 @@ function getDependsOnOwnProps(mapToProps) {
 
 // Used by whenMapStateToPropsIsFunction and whenMapDispatchToPropsIsFunction,
 // this function wraps mapToProps in a proxy function which does several things:
-//
+// 
 //  * Detects whether the mapToProps function being called depends on props, which
 //    is used by selectorFactory to decide if it should reinvoke on props changes.
-//
+//    
 //  * On first call, handles mapToProps if returns another function, and treats that
 //    new function as the true mapToProps for subsequent calls.
-//
+//    
 //  * On first call, verifies the first result is a plain object, in order to warn
 //    the developer that their mapToProps function is not returning a valid result.
-//
+//    
 function wrapMapToPropsFunc(mapToProps, methodName) {
   return function initProxySelector(dispatch, _ref) {
     var displayName = _ref.displayName;
@@ -15299,7 +15299,7 @@ function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in ob
   selectorFactory, which has the signature:
 
     (dispatch, options) => (nextState, nextOwnProps) => nextFinalProps
-
+  
   connect passes its args to connectAdvanced as options, which will in turn pass them to
   selectorFactory each time a Connect component instance is instantiated or hot reloaded.
 
@@ -17077,7 +17077,18 @@ function getMode(source, symbols) {
   }
 
   if (url && url.match(/\.jsx$/i) || symbols && symbols.hasJsx) {
+    if (symbols && symbols.hasTypes) {
+      return { name: "text/typescript-jsx" };
+    }
     return { name: "jsx" };
+  }
+
+  if (symbols && symbols.hasTypes) {
+    if (symbols.hasJsx) {
+      return { name: "text/typescript-jsx" };
+    }
+
+    return { name: "text/typescript" };
   }
 
   const languageMimeMap = [{ ext: ".c", mode: "text/x-csrc" }, { ext: ".kt", mode: "text/x-kotlin" }, { ext: ".cpp", mode: "text/x-c++src" }, { ext: ".m", mode: "text/x-objectivec" }, { ext: ".rs", mode: "text/x-rustsrc" }];
@@ -29390,22 +29401,18 @@ var _prefs = __webpack_require__(226);
 
 var _dbg = __webpack_require__(2246);
 
-var _devtoolsConfig = __webpack_require__(1355);
-
 var _bootstrap = __webpack_require__(1430);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function loadFromPrefs(actions) {
   const { pauseOnExceptions, ignoreCaughtExceptions } = _prefs.prefs;
   if (pauseOnExceptions || ignoreCaughtExceptions) {
     return actions.pauseOnExceptions(pauseOnExceptions, ignoreCaughtExceptions);
   }
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function getClient(connection) {
   const { tab: { clientType } } = connection;
@@ -29429,14 +29436,12 @@ async function onConnect(connection, { services, toolboxActions }) {
   await client.onConnect(connection, actions);
   await loadFromPrefs(actions);
 
-  if (!(0, _devtoolsConfig.isFirefoxPanel)()) {
-    (0, _dbg.setupHelper)({
-      store,
-      actions,
-      selectors,
-      client: client.clientCommands
-    });
-  }
+  (0, _dbg.setupHelper)({
+    store,
+    actions,
+    selectors,
+    client: client.clientCommands
+  });
 
   (0, _bootstrap.bootstrapApp)(connection, { store, actions });
 
@@ -42283,7 +42288,7 @@ exports.default = (0, _reactRedux.connect)(state => {
   const selectedFrame = (0, _selectors.getSelectedFrame)(state);
   const selectedSource = (0, _selectors.getSelectedSource)(state);
 
-  const { scope: frameScopes, pending } = (0, _selectors.getFrameScope)(state, selectedSource && selectedSource.get("id"), selectedFrame.id) || { scope: null, pending: false };
+  const { scope: frameScopes, pending } = (0, _selectors.getFrameScope)(state, selectedSource && selectedSource.get("id"), selectedFrame && selectedFrame.id) || { scope: null, pending: false };
 
   return {
     selectedFrame,
@@ -43359,7 +43364,13 @@ function hasAwait(source, pauseLocation) {
     return false;
   }
 
-  const snippet = source.text.split("\n")[line - 1].slice(column - 50, column + 50);
+  const lineText = source.text.split("\n")[line - 1];
+
+  if (!lineText) {
+    return false;
+  }
+
+  const snippet = lineText.slice(column - 50, column + 50);
 
   return !!snippet.match(/(yield|await)/);
 }
@@ -43379,7 +43390,8 @@ function astCommand(stepType) {
     if (stepType == "stepOver") {
       // This type definition is ambiguous:
       const frame = (0, _selectors.getTopFrame)(getState());
-      const source = (0, _selectors.getSelectedSource)(getState()).toJS();
+      const selectedSource = (0, _selectors.getSelectedSource)(getState());
+      const source = selectedSource ? selectedSource.toJS() : null;
 
       if (source && hasAwait(source, frame.location)) {
         const nextLocation = await (0, _parser.getNextStep)(source.id, frame.location);
@@ -51334,6 +51346,8 @@ var timings = _interopRequireWildcard(_timings);
 
 var _prefs = __webpack_require__(226);
 
+var _devtoolsConfig = __webpack_require__(1355);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function findSource(dbg, url) {
@@ -51386,12 +51400,14 @@ function setupHelper(obj) {
 
   window.dbg = dbg;
 
-  console.group("Development Notes");
-  const baseUrl = "https://devtools-html.github.io/debugger.html";
-  const localDevelopmentUrl = `${baseUrl}/docs/dbg.html`;
-  console.log("Debugging Tips", localDevelopmentUrl);
-  console.log("dbg", window.dbg);
-  console.groupEnd();
+  if ((0, _devtoolsConfig.isDevelopment)()) {
+    console.group("Development Notes");
+    const baseUrl = "https://devtools-html.github.io/debugger.html";
+    const localDevelopmentUrl = `${baseUrl}/docs/dbg.html`;
+    console.log("Debugging Tips", localDevelopmentUrl);
+    console.log("dbg", window.dbg);
+    console.groupEnd();
+  }
 }
 
 /***/ }),
@@ -51659,26 +51675,27 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 exports.initialState = initialState;
 exports.getHistory = getHistory;
 exports.getHistoryFrame = getHistoryFrame;
 exports.getHistoryPosition = getHistoryPosition;
-function initialState() {
-  return {
-    history: [],
-    position: -1
-  };
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+var _prefs = __webpack_require__(226);
 
 /**
  * Breakpoints reducer
  * @module reducers/replay
  */
-
+function initialState() {
+  return {
+    history: [],
+    position: -1
+  };
+}
 
 const defaultFrameScopes = {
   original: {},
@@ -51686,6 +51703,10 @@ const defaultFrameScopes = {
 };
 
 function update(state = initialState(), action) {
+  if (!_prefs.features.replay) {
+    return state;
+  }
+
   switch (action.type) {
     case "TRAVEL_TO":
       {
@@ -51725,6 +51746,11 @@ function addScopes(state, action) {
   const { frame, status, value } = action;
   const selectedFrameId = frame.id;
   const instance = state.history[state.position];
+
+  if (!instance) {
+    return state;
+  }
+
   const pausedInst = instance.paused;
 
   const generated = _extends({}, pausedInst.frameScopes.generated, {
@@ -51749,6 +51775,11 @@ function mapScopes(state, action) {
   const { frame, status, value } = action;
   const selectedFrameId = frame.id;
   const instance = state.history[state.position];
+
+  if (!instance) {
+    return state;
+  }
+
   const pausedInst = instance.paused;
 
   const original = _extends({}, pausedInst.frameScopes.original, {
@@ -51775,6 +51806,7 @@ function evaluateExpression(state, action) {
   if (!instance) {
     return state;
   }
+
   const prevExpressions = instance.expressions || [];
   const expression = { input, value };
   const expressions = [...prevExpressions, expression];
