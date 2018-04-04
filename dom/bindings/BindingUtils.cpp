@@ -1233,8 +1233,7 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
 
   // Switch this to UnwrapDOMObjectToISupports once our global objects are
   // using new bindings.
-  nsCOMPtr<nsISupports> native;
-  UnwrapArg<nsISupports>(cx, obj, getter_AddRefs(native));
+  nsCOMPtr<nsISupports> native = UnwrapDOMObjectToISupports(obj);
   if (!native) {
     return Throw(cx, NS_ERROR_FAILURE);
   }
@@ -3263,40 +3262,6 @@ UnwrapArgImpl(JSContext* cx,
   // nsIPropertyBag. We must use AggregatedQueryInterface in cases where
   // there is an outer to avoid nasty recursion.
   return wrappedJS->QueryInterface(iid, ppArg);
-}
-
-nsresult
-UnwrapXPConnectImpl(JSContext* cx,
-                    JS::MutableHandle<JS::Value> src,
-                    const nsIID &iid,
-                    void **ppArg)
-{
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  MOZ_ASSERT(src.isObject());
-  // Unwrap ourselves, because we're going to want access to the unwrapped
-  // object.
-  JS::Rooted<JSObject*> obj(cx,
-                            js::CheckedUnwrap(&src.toObject(),
-                                              /* stopAtWindowProxy = */ false));
-  if (!obj) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsCOMPtr<nsISupports> iface = xpc::UnwrapReflectorToISupports(obj);
-  if (!iface) {
-    return NS_ERROR_XPC_BAD_CONVERT_JS;
-  }
-
-  if (NS_FAILED(iface->QueryInterface(iid, ppArg))) {
-    return NS_ERROR_XPC_BAD_CONVERT_JS;
-  }
-
-  // Now update our source to keep rooting our object.
-  src.setObject(*obj);
-  return NS_OK;
 }
 
 nsresult
