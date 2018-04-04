@@ -84,7 +84,7 @@ function run_test() {
   run_next_test();
 }
 
-// On first run whataver is in the app dir should get copied to the profile
+// On first run whatever is in the app dir should get copied to the profile
 add_test(function test_copy() {
   clearBlocklists();
   copyToApp(OLD);

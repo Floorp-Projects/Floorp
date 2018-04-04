@@ -240,7 +240,7 @@ add_task(async function test_search() {
   await checkSearch({url: TXT_URL}, ["txt1", "txt2"], "url");
 
   // Check that regexp on url works.
-  const HTML_REGEX = "[downlad]{8}\.html+$";
+  const HTML_REGEX = "[download]{8}\.html+$";
   await checkSearch({urlRegex: HTML_REGEX}, ["html1", "html2"], "url regexp");
 
   // Check that compatible url+regexp works
@@ -273,7 +273,7 @@ add_task(async function test_search() {
   await checkSearch({query: ["-txt"]}, ["html1", "html2"], "term -txt");
 
   // Check that positive and negative search terms together work.
-  await checkSearch({query: ["html", "-renamed"]}, ["html1"], "postive and negative terms");
+  await checkSearch({query: ["html", "-renamed"]}, ["html1"], "positive and negative terms");
 
   async function checkSearchWithDate(query, expected, description) {
     const fields = Object.keys(query);

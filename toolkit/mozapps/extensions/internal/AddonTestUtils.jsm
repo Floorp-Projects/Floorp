@@ -104,7 +104,7 @@ AMscope.AsyncShutdown = MockAsyncShutdown;
 
 
 /**
- * Escapes any occurances of &, ", < or > with XML entities.
+ * Escapes any occurrences of &, ", < or > with XML entities.
  *
  * @param {string} str
  *        The string to escape.
@@ -858,7 +858,7 @@ var AddonTestUtils = {
   },
 
   /**
-   * Recursively create all directories upto and including the given
+   * Recursively create all directories up to and including the given
    * path, if they do not exist.
    *
    * @param {string} path The path of the directory to create.

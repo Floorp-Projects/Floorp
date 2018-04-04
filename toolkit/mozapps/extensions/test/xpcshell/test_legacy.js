@@ -81,7 +81,7 @@ add_task(async function test_disable() {
   // Yuck, the AddonInstall API is atrocious.  Installs of incompatible
   // extensions are detected when the install reaches the DOWNLOADED state
   // and the install is abandoned at that point.  Since this is a local file
-  // install we just start out in the DONWLOADED state.
+  // install we just start out in the DOWNLOADED state.
   for (let install of installs) {
     Assert.equal(install.state, AddonManager.STATE_DOWNLOADED);
     Assert.equal(install.addon.appDisabled, true);
