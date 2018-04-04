@@ -1,0 +1,18 @@
+language: rust
+sudo: false
+matrix:
+  include:
+    - rust: 1.12.0
+    - rust: stable
+    - rust: beta
+    - rust: nightly
+      env:
+       - BENCH=1
+branches:
+  only:
+    - master
+script:
+  - |
+      cargo build --verbose --features "$FEATURES" &&
+      cargo test --verbose --features "$FEATURES" &&
+      ([ "$BENCH" != 1 ] || cargo bench --verbose --features "$FEATURES")

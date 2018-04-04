@@ -1,0 +1,10 @@
+[package]
+name = "ascii-canvas"
+version = "1.0.0"
+authors = ["Niko Matsakis <niko@alum.mit.edu>"]
+description = "simple canvas for drawing lines and styled text and emitting to the terminal"
+repository = "https://github.com/nikomatsakis/ascii-canvas"
+license = "Apache-2.0/MIT"
+
+[dependencies]
+term = "0.4.5"
