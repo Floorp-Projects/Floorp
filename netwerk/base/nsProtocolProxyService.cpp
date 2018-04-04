@@ -709,8 +709,6 @@ NS_IMPL_ISUPPORTS(AsyncGetPACURIRequest, nsIRunnable)
 
 //----------------------------------------------------------------------------
 
-#define IS_ASCII_SPACE(_c) ((_c) == ' ' || (_c) == '\t')
-
 //
 // apply mask to address (zeros out excluded bits).
 //
