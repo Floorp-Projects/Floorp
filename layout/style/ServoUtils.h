@@ -41,12 +41,6 @@ inline bool IsInServoTraversal()
   inline servotype_* GetAsServo();                      \
   inline const servotype_* GetAsServo() const;
 
-#define MOZ_DECL_STYLO_CONVERT_METHODS_GECKO(geckotype_) \
-  inline geckotype_* AsGecko();                         \
-  inline const geckotype_* AsGecko() const;             \
-  inline geckotype_* GetAsGecko();                      \
-  inline const geckotype_* GetAsGecko() const;
-
 #define MOZ_DECL_STYLO_CONVERT_METHODS(geckotype_, servotype_) \
   MOZ_DECL_STYLO_CONVERT_METHODS_SERVO(servotype_)
 
@@ -56,20 +50,6 @@ inline bool IsInServoTraversal()
  */
 #define MOZ_DECL_STYLO_METHODS(geckotype_, servotype_)  \
   MOZ_DECL_STYLO_CONVERT_METHODS(geckotype_, servotype_)
-
-#define MOZ_DEFINE_STYLO_METHODS_GECKO(type_, geckotype_) \
-  geckotype_* type_::AsGecko() {                                \
-    return static_cast<geckotype_*>(this);                      \
-  }                                                             \
-  const geckotype_* type_::AsGecko() const {                    \
-    return static_cast<const geckotype_*>(this);                \
-  }                                                             \
-  geckotype_* type_::GetAsGecko() {                             \
-    return nullptr;                                             \
-  }                                                             \
-  const geckotype_* type_::GetAsGecko() const {                 \
-    return nullptr;                                             \
-  }
 
 #define MOZ_DEFINE_STYLO_METHODS_SERVO(type_, servotype_) \
   servotype_* type_::AsServo() {                                \
@@ -95,7 +75,6 @@ inline bool IsInServoTraversal()
   MOZ_DEFINE_STYLO_METHODS_SERVO(type_, servotype_)
 
 #define MOZ_STYLO_THIS_TYPE  mozilla::RemovePointer<decltype(this)>::Type
-#define MOZ_STYLO_GECKO_TYPE mozilla::RemovePointer<decltype(AsGecko())>::Type
 #define MOZ_STYLO_SERVO_TYPE mozilla::RemovePointer<decltype(AsServo())>::Type
 
 /**
