@@ -242,7 +242,7 @@ public:
   NS_IMETHOD OnSetRemoteDescriptionSuccess(ER&) override;
   NS_IMETHOD OnSetLocalDescriptionError(uint32_t code, const char *msg, ER&) override;
   NS_IMETHOD OnSetRemoteDescriptionError(uint32_t code, const char *msg, ER&) override;
-  NS_IMETHOD NotifyDataChannel(nsIDOMDataChannel *channel, ER&) override;
+  NS_IMETHOD NotifyDataChannel(nsDataChannel *channel, ER&) override;
   NS_IMETHOD OnStateChange(PCObserverStateType state_type, ER&, void*) override;
   NS_IMETHOD OnAddStream(DOMMediaStream &stream, ER&) override;
   NS_IMETHOD OnRemoveStream(DOMMediaStream &stream, ER&) override;
@@ -345,7 +345,7 @@ TestObserver::OnSetRemoteDescriptionError(uint32_t code, const char *message, ER
 }
 
 NS_IMETHODIMP
-TestObserver::NotifyDataChannel(nsIDOMDataChannel *channel, ER&)
+TestObserver::NotifyDataChannel(nsDataChannel *channel, ER&)
 {
   std::cout << name << ": NotifyDataChannel" << std::endl;
   return NS_OK;
