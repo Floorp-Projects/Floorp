@@ -604,6 +604,34 @@ DevTools.prototype = {
   },
 
   /**
+   * Evaluate the cross iframes query selectors
+   * @oaram {Object} walker
+   * @param {Array} selectors
+   *        An array of CSS selectors to find the target accessible object.
+   *        Several selectors can be needed if the element is nested in frames
+   *        and not directly in the root document.
+   * @return {Promise} a promise that resolves when the node front is found for
+   *                   selection using inspector tools.
+   */
+  async findNodeFront(walker, nodeSelectors) {
+    async function querySelectors(nodeFront) {
+      let selector = nodeSelectors.shift();
+      if (!selector) {
+        return nodeFront;
+      }
+      nodeFront = await walker.querySelector(nodeFront, selector);
+      if (nodeSelectors.length > 0) {
+        let { nodes } = await walker.children(nodeFront);
+        // This is the NodeFront for the document node inside the iframe
+        nodeFront = nodes[0];
+      }
+      return querySelectors(nodeFront);
+    }
+    let nodeFront = await walker.getRootNode();
+    return querySelectors(nodeFront);
+  },
+
+  /**
    * Called from the DevToolsShim, used by nsContextMenu.js.
    *
    * @param {XULTab} tab
@@ -633,22 +661,7 @@ DevTools.prototype = {
     // browser is remote or not.
     let onNewNode = inspector.selection.once("new-node-front");
 
-    // Evaluate the cross iframes query selectors
-    async function querySelectors(nodeFront) {
-      let selector = nodeSelectors.shift();
-      if (!selector) {
-        return nodeFront;
-      }
-      nodeFront = await inspector.walker.querySelector(nodeFront, selector);
-      if (nodeSelectors.length > 0) {
-        let { nodes } = await inspector.walker.children(nodeFront);
-        // This is the NodeFront for the document node inside the iframe
-        nodeFront = nodes[0];
-      }
-      return querySelectors(nodeFront);
-    }
-    let nodeFront = await inspector.walker.getRootNode();
-    nodeFront = await querySelectors(nodeFront);
+    let nodeFront = await this.findNodeFront(inspector.walker, nodeSelectors);
     // Select the final node
     inspector.selection.setNodeFront(nodeFront, { reason: "browser-context-menu" });
 
@@ -659,8 +672,36 @@ DevTools.prototype = {
   },
 
   /**
-   * Either the DevTools Loader has been destroyed or firefox is shutting down.
+   * Called from the DevToolsShim, used by nsContextMenu.js.
+   *
+   * @param {XULTab} tab
+   *        The browser tab on which inspect accessibility was used.
+   * @param {Array} selectors
+   *        An array of CSS selectors to find the target accessible object.
+   *        Several selectors can be needed if the element is nested in frames
+   *        and not directly in the root document.
+   * @param {Number} startTime
+   *        Optional, indicates the time at which the user event related to this
+   *        node inspection started. This is a `performance.now()` timing.
+   * @return {Promise} a promise that resolves when the accessible object is
+   *         selected in the accessibility inspector.
+   */
+  async inspectA11Y(tab, nodeSelectors, startTime) {
+    let target = TargetFactory.forTab(tab);
 
+    let toolbox = await gDevTools.showToolbox(
+      target, "accessibility", null, null, startTime);
+    let nodeFront = await this.findNodeFront(toolbox.walker, nodeSelectors);
+    // Select the accessible object in the panel and wait for the event that
+    // tells us it has been done.
+    let a11yPanel = toolbox.getCurrentPanel();
+    let onSelected = a11yPanel.once("new-accessible-front-selected");
+    a11yPanel.selectAccessibleForNode(nodeFront);
+    await onSelected;
+  },
+
+  /**
+   * Either the DevTools Loader has been destroyed or firefox is shutting down.
    * @param {boolean} shuttingDown
    *        True if firefox is currently shutting down. We may prevent doing
    *        some cleanups to speed it up. Otherwise everything need to be
