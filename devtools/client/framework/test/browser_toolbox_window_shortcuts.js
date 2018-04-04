@@ -12,7 +12,7 @@ var {Toolbox} = require("devtools/client/framework/toolbox");
 var toolbox, toolIDs, toolShortcuts = [], idIndex, modifiedPrefs = [];
 
 function test() {
-  addTab("about:blank").then(function () {
+  addTab("about:blank").then(function() {
     toolIDs = [];
     for (let [id, definition] of gDevTools._tools) {
       let shortcut = Startup.KeyShortcuts.filter(s => s.toolId == id)[0];
@@ -78,7 +78,7 @@ function selectCB(id) {
 }
 
 function tidyUp() {
-  toolbox.destroy().then(function () {
+  toolbox.destroy().then(function() {
     gBrowser.removeCurrentTab();
 
     for (let pref of modifiedPrefs) {

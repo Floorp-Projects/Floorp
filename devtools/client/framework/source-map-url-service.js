@@ -51,7 +51,7 @@ function SourceMapURLService(toolbox, sourceMapService) {
  * Lazy initialization.  Returns a promise that will resolve when all
  * the relevant URLs have been registered.
  */
-SourceMapURLService.prototype._getLoadingPromise = function () {
+SourceMapURLService.prototype._getLoadingPromise = function() {
   if (!this._loadingPromise) {
     let styleSheetsLoadingPromise = null;
     this._stylesheetsFront = this._toolbox.initStyleSheetsFront();
@@ -84,7 +84,7 @@ SourceMapURLService.prototype._getLoadingPromise = function () {
 /**
  * Reset the service.  This flushes the internal cache.
  */
-SourceMapURLService.prototype.reset = function () {
+SourceMapURLService.prototype.reset = function() {
   this._sourceMapService.clearSourceMaps();
   this._urls.clear();
   this._subscriptions.clear();
@@ -96,7 +96,7 @@ SourceMapURLService.prototype.reset = function () {
  * flushing the cache.  After this call the service will no longer
  * function.
  */
-SourceMapURLService.prototype.destroy = function () {
+SourceMapURLService.prototype.destroy = function() {
   this.reset();
   this._target.off("source-updated", this._onSourceUpdated);
   this._target.off("will-navigate", this.reset);
@@ -110,7 +110,7 @@ SourceMapURLService.prototype.destroy = function () {
 /**
  * A helper function that is called when a new source is available.
  */
-SourceMapURLService.prototype._onSourceUpdated = function (sourceEvent) {
+SourceMapURLService.prototype._onSourceUpdated = function(sourceEvent) {
   // Maybe we were shut down while waiting.
   if (!this._urls) {
     return;
@@ -132,7 +132,7 @@ SourceMapURLService.prototype._onSourceUpdated = function (sourceEvent) {
  * @param {StyleSheetActor} sheet
  *        The new style sheet's actor.
  */
-SourceMapURLService.prototype._onNewStyleSheet = function (sheet) {
+SourceMapURLService.prototype._onNewStyleSheet = function(sheet) {
   // Maybe we were shut down while waiting.
   if (!this._urls) {
     return;
@@ -154,7 +154,7 @@ SourceMapURLService.prototype._onNewStyleSheet = function (sheet) {
  * @param {String} newUrl
  *        The URL of the pretty-printed source
  */
-SourceMapURLService.prototype.sourceMapChanged = function (id, newUrl) {
+SourceMapURLService.prototype.sourceMapChanged = function(id, newUrl) {
   if (!this._urls) {
     return;
   }
@@ -195,7 +195,7 @@ SourceMapURLService.prototype.sourceMapChanged = function (id, newUrl) {
  * @return Promise
  *        A promise resolving either to the original location, or null.
  */
-SourceMapURLService.prototype.originalPositionFor = async function (url, line, column) {
+SourceMapURLService.prototype.originalPositionFor = async function(url, line, column) {
   // Ensure the sources are loaded before replying.
   await this._getLoadingPromise();
 
@@ -230,7 +230,7 @@ SourceMapURLService.prototype.originalPositionFor = async function (url, line, c
  * @param {Function} callback
  *                 The callback to call; @see subscribe
  */
-SourceMapURLService.prototype._callOneCallback = async function (subscriptionEntry,
+SourceMapURLService.prototype._callOneCallback = async function(subscriptionEntry,
                                                                  callback) {
   // If source maps are disabled, immediately call with just "false".
   if (!this._prefValue) {
@@ -275,7 +275,7 @@ SourceMapURLService.prototype._callOneCallback = async function (subscriptionEnt
  *                 and the generated location should be used; in this
  *                 case the remaining arguments should be ignored.
  */
-SourceMapURLService.prototype.subscribe = function (url, line, column, callback) {
+SourceMapURLService.prototype.subscribe = function(url, line, column, callback) {
   if (!this._subscriptions) {
     return;
   }
@@ -312,7 +312,7 @@ SourceMapURLService.prototype.subscribe = function (url, line, column, callback)
  * @param {Function} callback
  *                 The callback.
  */
-SourceMapURLService.prototype.unsubscribe = function (url, line, column, callback) {
+SourceMapURLService.prototype.unsubscribe = function(url, line, column, callback) {
   if (!this._subscriptions) {
     return;
   }
@@ -334,7 +334,7 @@ SourceMapURLService.prototype.unsubscribe = function (url, line, column, callbac
  * A helper function that is called when the source map pref changes.
  * This function notifies all subscribers of the state change.
  */
-SourceMapURLService.prototype._onPrefChanged = function () {
+SourceMapURLService.prototype._onPrefChanged = function() {
   if (!this._subscriptions) {
     return;
   }

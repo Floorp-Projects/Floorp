@@ -17,7 +17,7 @@ const IFRAME_URL = URL_ROOT + "browser_toolbox_window_title_changes_page.html";
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
-add_task(async function () {
+add_task(async function() {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
 
   await addTab(URL);

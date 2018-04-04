@@ -147,7 +147,7 @@ function getBoolPref(key) {
 }
 
 function cleanup() {
-  toolbox.destroy().then(function () {
+  toolbox.destroy().then(function() {
     gBrowser.removeCurrentTab();
     for (let pref of modifiedPrefs) {
       Services.prefs.clearUserPref(pref);

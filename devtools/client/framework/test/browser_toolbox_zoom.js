@@ -58,7 +58,7 @@ function getCurrentZoom() {
 }
 
 function tidyUp() {
-  toolbox.destroy().then(function () {
+  toolbox.destroy().then(function() {
     gBrowser.removeCurrentTab();
 
     toolbox = null;
