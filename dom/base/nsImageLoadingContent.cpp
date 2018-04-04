@@ -927,6 +927,11 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
 
   // Data documents, or documents from DOMParser shouldn't perform image loading.
   if (aDocument->IsLoadedAsData()) {
+    // This is the only codepath on which we can reach SetBlockedRequest while
+    // our pending request exists.  Just clear it out here if we do have one.
+    ClearPendingRequest(NS_BINDING_ABORTED,
+                        Some(OnNonvisible::DISCARD_IMAGES));
+
     SetBlockedRequest(nsIContentPolicy::REJECT_REQUEST);
 
     FireEvent(NS_LITERAL_STRING("error"));
