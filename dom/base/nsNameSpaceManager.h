@@ -38,6 +38,8 @@ public:
   NS_DECL_NSIOBSERVER
   virtual nsresult RegisterNameSpace(const nsAString& aURI,
                                      int32_t& aNameSpaceID);
+  nsresult RegisterNameSpace(already_AddRefed<nsAtom> aURI,
+                             int32_t& aNameSpaceID);
 
   virtual nsresult GetNameSpaceURI(int32_t aNameSpaceID, nsAString& aURI);
 
