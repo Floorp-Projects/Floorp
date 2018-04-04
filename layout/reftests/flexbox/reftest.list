@@ -110,7 +110,7 @@ fails == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.
 == flexbox-invalidation-1.html flexbox-invalidation-1-ref.html
 
 # Tests for flexbox in an iframe that gets resized.
-fuzzy-if(skiaContent,1,5) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,16) fuzzy-if(skiaContent,1,5) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml
 fuzzy-if(skiaContent,1,5) == flexbox-resizeviewport-2.xhtml flexbox-resizeviewport-2-ref.xhtml
 
 # Tests for flexbox styling on things that don't support it
