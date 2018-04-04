@@ -2944,8 +2944,12 @@ public:
    * @param aDisplayItemKey If specified, only issues an invalidate
    * if this frame painted a display item of that type during the
    * previous paint. SVG rendering observers are always notified.
+   * @param aRebuildDisplayItems If true, then adds this frame to the
+   * list of modified frames for display list building. Only pass false
+   * if you're sure that the relevant display items will be rebuilt
+   * already (possibly by an ancestor being in the modified list).
    */
-  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0);
+  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0, bool aRebuildDisplayItems = true);
 
   /**
    * Same as InvalidateFrame(), but only mark a fixed rect as needing
@@ -2956,8 +2960,12 @@ public:
    * @param aDisplayItemKey If specified, only issues an invalidate
    * if this frame painted a display item of that type during the
    * previous paint. SVG rendering observers are always notified.
+   * @param aRebuildDisplayItems If true, then adds this frame to the
+   * list of modified frames for display list building. Only pass false
+   * if you're sure that the relevant display items will be rebuilt
+   * already (possibly by an ancestor being in the modified list).
    */
-  virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0);
+  virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0, bool aRebuildDisplayItems = true);
 
   /**
    * Calls InvalidateFrame() on all frames descendant frames (including
@@ -2966,11 +2974,12 @@ public:
    * This function doesn't walk through placeholder frames to invalidate
    * the out-of-flow frames.
    *
-   * @param aDisplayItemKey If specified, only issues an invalidate
-   * if this frame painted a display item of that type during the
-   * previous paint. SVG rendering observers are always notified.
+   * @param aRebuildDisplayItems If true, then adds this frame to the
+   * list of modified frames for display list building. Only pass false
+   * if you're sure that the relevant display items will be rebuilt
+   * already (possibly by an ancestor being in the modified list).
    */
-  void InvalidateFrameSubtree(uint32_t aDisplayItemKey = 0);
+  void InvalidateFrameSubtree(bool aRebuildDisplayItems = true);
 
   /**
    * Called when a frame is about to be removed and needs to be invalidated.

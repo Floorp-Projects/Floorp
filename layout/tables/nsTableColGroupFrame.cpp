@@ -449,23 +449,24 @@ NS_NewTableColGroupFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle)
 NS_IMPL_FRAMEARENA_HELPERS(nsTableColGroupFrame)
 
 void
-nsTableColGroupFrame::InvalidateFrame(uint32_t aDisplayItemKey)
+nsTableColGroupFrame::InvalidateFrame(uint32_t aDisplayItemKey, bool aRebuildDisplayItems)
 {
-  nsIFrame::InvalidateFrame(aDisplayItemKey);
+  nsIFrame::InvalidateFrame(aDisplayItemKey, aRebuildDisplayItems);
   if (GetTableFrame()->IsBorderCollapse() && StyleBorder()->HasBorder()) {
-    GetParent()->InvalidateFrameWithRect(GetVisualOverflowRect() + GetPosition(), aDisplayItemKey);
+    GetParent()->InvalidateFrameWithRect(GetVisualOverflowRect() + GetPosition(), aDisplayItemKey, false);
   }
 }
 
 void
 nsTableColGroupFrame::InvalidateFrameWithRect(const nsRect& aRect,
-                                              uint32_t aDisplayItemKey)
+                                              uint32_t aDisplayItemKey,
+                                              bool aRebuildDisplayItems)
 {
-  nsIFrame::InvalidateFrameWithRect(aRect, aDisplayItemKey);
+  nsIFrame::InvalidateFrameWithRect(aRect, aDisplayItemKey, aRebuildDisplayItems);
   // If we have filters applied that would affects our bounds, then
   // we get an inactive layer created and this is computed
   // within FrameLayerBuilder
-  GetParent()->InvalidateFrameWithRect(aRect + GetPosition(), aDisplayItemKey);
+  GetParent()->InvalidateFrameWithRect(aRect + GetPosition(), aDisplayItemKey, false);
 }
 
 #ifdef DEBUG_FRAME_DUMP
