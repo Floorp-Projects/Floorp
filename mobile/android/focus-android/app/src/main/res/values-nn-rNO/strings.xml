@@ -104,12 +104,12 @@
   <string name="search_add_error_empty_search">Skriv inn søkjestreng</string>
   <string name="search_add_error_format">Kontroller at søkjestrengen passar med dømeformatet</string>
   <string name="content_description_clear_input">Tøm skrivefeltet</string>
-  <string name="content_description_dismiss_input">Lukk</string>
+  <string name="content_description_dismiss_input">Lat att</string>
   <string name="content_description_erase">Slett nettlesarhistorikk</string>
   <string name="content_description_fab_expand">Fald ut</string>
   <string name="content_description_tab_counter">Opne faner: %1$s</string>
   <string name="content_description_open_tab">Opne fane</string>
-  <string name="content_description_close_tab">Lukk fane</string>
+  <string name="content_description_close_tab">Lat att fane</string>
   <string name="content_description_lock">Sikker tilkopling</string>
   <string name="accessibility_announcement_loading">Lastar</string>
   <string name="accessibility_announcement_loading_finished">Nettside lasta</string>
