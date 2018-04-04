@@ -607,7 +607,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "freetype"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.2.39 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1581,6 +1581,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_bytes"
+version = "0.10.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "serde 1.0.35 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "serde_derive"
 version = "1.0.35"
 source = "git+https://github.com/servo/serde?branch=deserialize_from_enums5#de4534b21f263752ed3b641c3c07e012574985bf"
@@ -2050,18 +2058,19 @@ dependencies = [
 
 [[package]]
 name = "webrender"
-version = "0.57.0"
+version = "0.57.2"
 dependencies = [
  "app_units 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-foundation 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-graphics 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "core-text 9.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "dwrote 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.17.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "freetype 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "freetype 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "fxhash 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "gleam 0.4.20 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2074,12 +2083,12 @@ dependencies = [
  "smallvec 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "thread_profiler 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender_api 0.57.0",
+ "webrender_api 0.57.2",
 ]
 
 [[package]]
 name = "webrender_api"
-version = "0.57.0"
+version = "0.57.2"
 dependencies = [
  "app_units 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2090,6 +2099,7 @@ dependencies = [
  "dwrote 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "euclid 0.17.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.35 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_bytes 0.10.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.35 (git+https://github.com/servo/serde?branch=deserialize_from_enums5)",
  "time 0.1.38 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -2108,7 +2118,7 @@ dependencies = [
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rayon 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "thread_profiler 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender 0.57.0",
+ "webrender 0.57.2",
 ]
 
 [[package]]
@@ -2285,7 +2295,7 @@ dependencies = [
 "checksum flate2 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "9fac2277e84e5e858483756647a9d0aa8d9a2b7cba517fd84325a0aaa69a0909"
 "checksum fnv 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)" = "6cc484842f1e2884faf56f529f960cc12ad8c71ce96cc7abba0a067c98fee344"
 "checksum foreign-types 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5ebc04f19019fff1f2d627b5581574ead502f80c48c88900575a46e0840fe5d0"
-"checksum freetype 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "398b8a11884898184d55aca9806f002b3cf68f0e860e0cbb4586f834ee39b0e7"
+"checksum freetype 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b659e75b7a7338fe75afd7f909fc2b71937845cffb6ebe54ba2e50f13d8e903d"
 "checksum fs2 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "9ab76cfd2aaa59b7bf6688ad9ba15bbae64bff97f04ea02144cfd3443e5c2866"
 "checksum fuchsia-zircon 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f6c0581a4e363262e52b87f59ee2afe3415361c6ec35e665924eb08afe8ff159"
 "checksum fuchsia-zircon-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "43f3795b4bae048dc6123a6b972cadde2e676f9ded08aef6bb77f5f157684a82"
@@ -2375,6 +2385,7 @@ dependencies = [
 "checksum semver 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7a3186ec9e65071a2095434b1f5bb24838d4e8e130f584c790f6033c79943537"
 "checksum semver-parser 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 "checksum serde 1.0.35 (registry+https://github.com/rust-lang/crates.io-index)" = "800fdb0a894572994f3970035a8a5f65d8ec2cd40e6cdf7d8cd9001d7b30648e"
+"checksum serde_bytes 0.10.4 (registry+https://github.com/rust-lang/crates.io-index)" = "adb6e51a6b3696b301bc221d785f898b4457c619b51d7ce195a6d20baecb37b3"
 "checksum serde_derive 1.0.35 (git+https://github.com/servo/serde?branch=deserialize_from_enums5)" = "<none>"
 "checksum serde_derive_internals 0.22.1 (git+https://github.com/servo/serde?branch=deserialize_from_enums5)" = "<none>"
 "checksum simd 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3dd0805c7363ab51a829a1511ad24b6ed0349feaa756c4bc2f977f9f496e6673"
