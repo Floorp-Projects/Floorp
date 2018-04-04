@@ -1810,6 +1810,13 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
     *aNewWorkerCreated = false;
   }
 
+  // If the worker started shutting down on itself we may have a stale
+  // reference here.  Invoke our termination code to clean it out.
+  if (mWorkerPrivate && mWorkerPrivate->ParentStatusProtected() > Running) {
+    TerminateWorker();
+    MOZ_DIAGNOSTIC_ASSERT(!mWorkerPrivate);
+  }
+
   if (mWorkerPrivate) {
     // If we have a load group here then use it to update the service worker
     // load group.  This was added when we needed the load group's tab child
