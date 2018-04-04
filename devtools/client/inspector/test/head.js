@@ -750,26 +750,6 @@ async function assertTooltipHiddenOnMouseOut(tooltip, target) {
 }
 
 /**
- * Open the inspector menu and return all of it's items in a flat array
- * @param {InspectorPanel} inspector
- * @param {Object} options to pass into openMenu
- * @return An array of MenuItems
- */
-function openContextMenuAndGetAllItems(inspector, options) {
-  let menu = inspector._openMenu(options);
-
-  // Flatten all menu items into a single array to make searching through it easier
-  let allItems = [].concat.apply([], menu.items.map(function addItem(item) {
-    if (item.submenu) {
-      return addItem(item.submenu.items);
-    }
-    return item;
-  }));
-
-  return allItems;
-}
-
-/**
  * Get the rule editor from the rule-view given its index
  *
  * @param {CssRuleView} view
