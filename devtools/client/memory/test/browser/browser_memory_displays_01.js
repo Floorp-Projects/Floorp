@@ -7,7 +7,7 @@
  */
 
 const TEST_URL = "http://example.com/browser/devtools/client/memory/test/browser/doc_steady_allocation.html";
-const { viewState, censusState } = require("devtools/client/memory/constants");
+const { viewState } = require("devtools/client/memory/constants");
 const { changeView } = require("devtools/client/memory/actions/view");
 
 this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {

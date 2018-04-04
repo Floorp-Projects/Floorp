@@ -8,7 +8,6 @@
 const {
   dominatorTreeState,
   viewState,
-  censusState,
 } = require("devtools/client/memory/constants");
 const { changeViewAndRefresh, changeView } = require("devtools/client/memory/actions/view");
 
