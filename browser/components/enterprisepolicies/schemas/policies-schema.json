@@ -234,6 +234,13 @@
       "type": "boolean"
     },
 
+    "DisableProfileImport": {
+      "description": "Disables the Firefox \"Import data from another browser\" button",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
     "DisableProfileRefresh": {
       "description": "Disables the \"Refresh Firefox\" button in about:support",
       "first_available": "60.0",
