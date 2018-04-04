@@ -184,6 +184,9 @@ template<typename T> T Round2(T value) {
   return (value + 1) & ~1;
 }
 
+// Check that a tag consists entirely of printable ASCII characters
+bool CheckTag(uint32_t tag_value);
+
 bool IsValidVersionTag(uint32_t tag);
 
 #define OTS_TAG_CFF  OTS_TAG('C','F','F',' ')
@@ -219,6 +222,15 @@ bool IsValidVersionTag(uint32_t tag);
 #define OTS_TAG_VMTX OTS_TAG('v','m','t','x')
 #define OTS_TAG_VORG OTS_TAG('V','O','R','G')
 
+#define OTS_TAG_AVAR OTS_TAG('a','v','a','r')
+#define OTS_TAG_CVAR OTS_TAG('c','v','a','r')
+#define OTS_TAG_FVAR OTS_TAG('f','v','a','r')
+#define OTS_TAG_GVAR OTS_TAG('g','v','a','r')
+#define OTS_TAG_HVAR OTS_TAG('H','V','A','R')
+#define OTS_TAG_MVAR OTS_TAG('M','V','A','R')
+#define OTS_TAG_VVAR OTS_TAG('V','V','A','R')
+#define OTS_TAG_STAT OTS_TAG('S','T','A','T')
+
 struct Font;
 struct FontFile;
 struct TableEntry;
@@ -252,6 +264,7 @@ class Table {
   bool Warning(const char *format, ...);
   bool Drop(const char *format, ...);
   bool DropGraphite(const char *format, ...);
+  bool DropVariations(const char *format, ...);
 
  private:
   void Message(int level, const char *format, va_list va);
@@ -286,7 +299,8 @@ struct Font {
         search_range(0),
         entry_selector(0),
         range_shift(0),
-        dropped_graphite(false) {
+        dropped_graphite(false),
+        dropped_variations(false) {
   }
 
   bool ParseTable(const TableEntry& tableinfo, const uint8_t* data,
@@ -301,6 +315,9 @@ struct Font {
   // Drop all Graphite tables and don't parse new ones.
   void DropGraphite();
 
+  // Drop all Variations tables and don't parse new ones.
+  void DropVariations();
+
   FontFile *file;
 
   uint32_t version;
@@ -309,6 +326,7 @@ struct Font {
   uint16_t entry_selector;
   uint16_t range_shift;
   bool dropped_graphite;
+  bool dropped_variations;
 
  private:
   std::map<uint32_t, Table*> m_tables;

@@ -3,6 +3,9 @@
 
 "use strict";
 
+ChromeUtils.import("resource://testing-common/CustomizableUITestUtils.jsm", this);
+let gCUITestUtils = new CustomizableUITestUtils(window);
+
 const TEST_URL = "https://www.example.com/";
 
 /**
@@ -15,13 +18,10 @@ add_task(async function test_panelview_bookmarks_delete() {
     title: TEST_URL,
   });
 
-  let mainView = document.getElementById("appMenu-mainView");
-  let promise = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
-  PanelUI.show();
-  await promise;
+  await gCUITestUtils.openMainMenu();
 
   let libraryView = document.getElementById("appMenu-libraryView");
-  promise = BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
+  let promise = BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
   document.getElementById("appMenu-library-button").click();
   await promise;
 
@@ -55,7 +55,5 @@ add_task(async function test_panelview_bookmarks_delete() {
   EventUtils.synthesizeMouseAtCenter(placesContextDelete, {});
   await promise;
 
-  promise = BrowserTestUtils.waitForEvent(PanelUI.panel, "popuphidden");
-  PanelUI.hide();
-  await promise;
+  await gCUITestUtils.hideMainMenu();
 });

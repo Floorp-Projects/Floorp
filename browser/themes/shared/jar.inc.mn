@@ -216,8 +216,6 @@
   skin/classic/browser/panic-panel/header@2x.png               (../shared/panic-panel/header@2x.png)
   skin/classic/browser/panic-panel/icons.png                   (../shared/panic-panel/icons.png)
   skin/classic/browser/panic-panel/icons@2x.png                (../shared/panic-panel/icons@2x.png)
-  skin/classic/browser/places/bookmarks-notification-finish.png (../shared/places/bookmarks-notification-finish.png)
-  skin/classic/browser/places/bookmarks-notification-finish@2x.png (../shared/places/bookmarks-notification-finish@2x.png)
   skin/classic/browser/places/bookmarksMenu.svg                (../shared/places/bookmarksMenu.svg)
   skin/classic/browser/places/bookmarksToolbar.svg             (../shared/places/bookmarksToolbar.svg)
   skin/classic/browser/places/folder.svg                       (../shared/places/folder.svg)
