@@ -519,6 +519,9 @@ var Policies = {
       }
       if ("Default" in param) {
         setAndLockPref("xpinstall.enabled", param.Default);
+        if (!param.Default) {
+          manager.disallowFeature("about:debugging");
+        }
       }
     }
   },
