@@ -91,22 +91,3 @@
   border-bottom: 1px solid var(--net-border);
   background-color: var(--theme-body-background);
 }
-
-
-/******************************************************************************/
-/* Themes */
-
-.theme-firebug .netInfoBody > .tabs .tab-panel {
-  border-color: var(--net-border);
-}
-
-.theme-firebug .netInfoBody > .tabs .tabs-menu-item.is-active a,
-.theme-firebug .netInfoBody > .tabs .tabs-menu-item.is-active:hover a,
-.theme-firebug .netInfoBody > .tabs .tabs-menu-item.is-active a:focus {
-  border: 1px solid var(--net-border);
-  border-bottom-color: transparent;
-}
-
-.theme-firebug .netInfoBody > .tabs .tabs-menu-item:hover a {
-  border-bottom-color: transparent;
-}

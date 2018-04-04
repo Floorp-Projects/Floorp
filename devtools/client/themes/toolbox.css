@@ -136,11 +136,6 @@
   min-width: 24px;
 }
 
-/* Save space on the tab-strip in Firebug theme */
-.theme-firebug .devtools-tab {
-  -moz-box-flex: initial;
-}
-
 .devtools-tab {
   color: var(--theme-toolbar-color);
 }
@@ -155,16 +150,6 @@
 
 .devtools-tab.selected {
   color: var(--theme-toolbar-selected-color);
-}
-
-/* Display execution pointer in the Debugger tab to indicate
-   that the debugger is paused. */
-.theme-firebug #toolbox-tab-jsdebugger.devtools-tab:not(.selected).highlighted {
-  background-color: rgba(89, 178, 234, .2);
-  background-image: url(chrome://devtools/skin/images/firebug/tool-debugger-paused.svg);
-  background-repeat: no-repeat;
-  padding-left: 13px !important;
-  background-position: 3px 6px;
 }
 
 .devtools-tab > img {
@@ -209,12 +194,6 @@
 
 /* Toolbox controls */
 
-/* Save space in Firebug theme */
-.theme-firebug #toolbox-controls button {
-  margin-inline-start: 0 !important;
-  min-width: 12px;
-  margin: 0 1px;
-}
 
 #toolbox-close::before {
   background-image: var(--close-button-image);
