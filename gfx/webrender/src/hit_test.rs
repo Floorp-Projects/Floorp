@@ -57,6 +57,7 @@ pub struct HitTestingItem {
     rect: LayerRect,
     clip_rect: LayerRect,
     tag: ItemTag,
+    is_backface_visible: bool,
 }
 
 impl HitTestingItem {
@@ -65,6 +66,7 @@ impl HitTestingItem {
             rect: info.rect,
             clip_rect: info.clip_rect,
             tag: tag,
+            is_backface_visible: info.is_backface_visible,
         }
     }
 }
@@ -232,6 +234,7 @@ impl HitTester {
             }
 
             let transform = scroll_node.world_content_transform;
+            let mut facing_backwards: Option<bool> = None;  // will be computed on first use
             let point_in_layer = match transform.inverse() {
                 Some(inverted) => inverted.transform_point2d(&point),
                 None => continue,
@@ -264,6 +267,13 @@ impl HitTester {
                     Some(point) => point,
                     None => continue,
                 };
+
+                // Don't hit items with backface-visibility:hidden if they are facing the back.
+                if !item.is_backface_visible {
+                    if *facing_backwards.get_or_insert_with(|| transform.is_backface_visible()) {
+                        continue;
+                    }
+                }
 
                 result.items.push(HitTestItem {
                     pipeline: pipeline_id,

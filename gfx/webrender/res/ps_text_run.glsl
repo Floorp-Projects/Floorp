@@ -50,7 +50,11 @@ VertexInfo write_text_vertex(vec2 clamped_local_pos,
     final_pos += floor(world_snap_p0 + 0.5) - world_snap_p0;
 #elif !defined(WR_FEATURE_TRANSFORM)
     // Compute the snapping offset only if the scroll node transform is axis-aligned.
-    final_pos += compute_snap_offset(clamped_local_pos, scroll_node, snap_rect);
+    final_pos += compute_snap_offset(
+        clamped_local_pos,
+        scroll_node.transform,
+        snap_rect
+    );
 #endif
 
     gl_Position = uTransform * vec4(final_pos, z, 1.0);

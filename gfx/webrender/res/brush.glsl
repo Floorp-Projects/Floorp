@@ -9,6 +9,7 @@ void brush_vs(
     int prim_address,
     RectWithSize local_rect,
     ivec3 user_data,
+    mat4 transform,
     PictureTask pic_task
 );
 
@@ -146,6 +147,7 @@ void main(void) {
         brush.prim_address + VECS_PER_BRUSH_PRIM,
         brush_prim.local_rect,
         brush.user_data,
+        scroll_node.transform,
         pic_task
     );
 }

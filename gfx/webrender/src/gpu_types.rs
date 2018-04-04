@@ -195,7 +195,7 @@ bitflags! {
     }
 }
 
-// TODO(gw): While we are comverting things over, we
+// TODO(gw): While we are converting things over, we
 //           need to have the instance be the same
 //           size as an old PrimitiveInstance. In the
 //           future, we can compress this vertex

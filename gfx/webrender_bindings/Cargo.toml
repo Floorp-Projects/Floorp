@@ -14,7 +14,7 @@ log = "0.4"
 
 [dependencies.webrender]
 path = "../webrender"
-version = "0.57.0"
+version = "0.57.2"
 default-features = false
 features = ["capture"]
 

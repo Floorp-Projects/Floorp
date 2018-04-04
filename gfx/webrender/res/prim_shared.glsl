@@ -489,7 +489,7 @@ vec4 get_node_pos(vec2 pos, ClipScrollNode node) {
 // Compute a snapping offset in world space (adjusted to pixel ratio),
 // given local position on the scroll_node and a snap rectangle.
 vec2 compute_snap_offset(vec2 local_pos,
-                         ClipScrollNode scroll_node,
+                         mat4 transform,
                          RectWithSize snap_rect) {
     // Ensure that the snap rect is at *least* one device pixel in size.
     // TODO(gw): It's not clear to me that this is "correct". Specifically,
@@ -500,8 +500,8 @@ vec2 compute_snap_offset(vec2 local_pos,
     snap_rect.size = max(snap_rect.size, vec2(1.0 / uDevicePixelRatio));
 
     // Transform the snap corners to the world space.
-    vec4 world_snap_p0 = scroll_node.transform * vec4(snap_rect.p0, 0.0, 1.0);
-    vec4 world_snap_p1 = scroll_node.transform * vec4(snap_rect.p0 + snap_rect.size, 0.0, 1.0);
+    vec4 world_snap_p0 = transform * vec4(snap_rect.p0, 0.0, 1.0);
+    vec4 world_snap_p1 = transform * vec4(snap_rect.p0 + snap_rect.size, 0.0, 1.0);
     // Snap bounds in world coordinates, adjusted for pixel ratio. XY = top left, ZW = bottom right
     vec4 world_snap = uDevicePixelRatio * vec4(world_snap_p0.xy, world_snap_p1.xy) /
                                           vec4(world_snap_p0.ww, world_snap_p1.ww);
@@ -535,7 +535,11 @@ VertexInfo write_vertex(RectWithSize instance_rect,
     vec2 clamped_local_pos = clamp_rect(local_pos, local_clip_rect);
 
     /// Compute the snapping offset.
-    vec2 snap_offset = compute_snap_offset(clamped_local_pos, scroll_node, snap_rect);
+    vec2 snap_offset = compute_snap_offset(
+        clamped_local_pos,
+        scroll_node.transform,
+        snap_rect
+    );
 
     // Transform the current vertex to world space.
     vec4 world_pos = scroll_node.transform * vec4(clamped_local_pos, 0.0, 1.0);

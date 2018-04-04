@@ -19,7 +19,9 @@ use capture::PlainExternalImage;
 #[cfg(any(feature = "replay", feature = "png"))]
 use capture::CaptureConfig;
 use device::TextureFilter;
-use glyph_cache::{GlyphCache, GlyphCacheEntry};
+use glyph_cache::GlyphCache;
+#[cfg(not(feature = "pathfinder"))]
+use glyph_cache::GlyphCacheEntry;
 use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphRasterizer, GlyphRequest};
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use internal_types::{FastHashMap, FastHashSet, SourceTexture, TextureUpdateList};
@@ -35,7 +37,7 @@ use std::mem;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use texture_cache::{TextureCache, TextureCacheHandle};
-
+use tiling::SpecialRenderPasses;
 
 const DEFAULT_TILE_SIZE: TileSize = 512;
 
@@ -320,15 +322,17 @@ impl ResourceCache {
         key: RenderTaskCacheKey,
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskTree,
-        f: F,
+        user_data: Option<[f32; 3]>,
+        mut f: F,
     ) -> CacheItem where F: FnMut(&mut RenderTaskTree) -> (RenderTaskId, bool) {
         self.cached_render_tasks.request_render_task(
             key,
             &mut self.texture_cache,
             gpu_cache,
             render_tasks,
-            f
-        )
+            user_data,
+            |render_task_tree| Ok(f(render_task_tree))
+        ).expect("Failed to request a render task from the resource cache!")
     }
 
     pub fn update_resources(
@@ -646,6 +650,8 @@ impl ResourceCache {
         mut font: FontInstance,
         glyph_keys: &[GlyphKey],
         gpu_cache: &mut GpuCache,
+        render_task_tree: &mut RenderTaskTree,
+        render_passes: &mut SpecialRenderPasses,
     ) {
         debug_assert_eq!(self.state, State::AddResources);
 
@@ -656,6 +662,9 @@ impl ResourceCache {
             glyph_keys,
             &mut self.texture_cache,
             gpu_cache,
+            &mut self.cached_render_tasks,
+            render_task_tree,
+            render_passes,
         );
     }
 
@@ -663,12 +672,63 @@ impl ResourceCache {
         self.texture_cache.pending_updates()
     }
 
+    #[cfg(feature = "pathfinder")]
     pub fn fetch_glyphs<F>(
         &self,
         mut font: FontInstance,
         glyph_keys: &[GlyphKey],
         fetch_buffer: &mut Vec<GlyphFetchResult>,
-        gpu_cache: &GpuCache,
+        gpu_cache: &mut GpuCache,
+        mut f: F,
+    ) where
+        F: FnMut(SourceTexture, GlyphFormat, &[GlyphFetchResult]),
+    {
+        debug_assert_eq!(self.state, State::QueryResources);
+
+        self.glyph_rasterizer.prepare_font(&mut font);
+
+        let mut current_texture_id = SourceTexture::Invalid;
+        let mut current_glyph_format = GlyphFormat::Subpixel;
+        debug_assert!(fetch_buffer.is_empty());
+
+        for (loop_index, key) in glyph_keys.iter().enumerate() {
+           let (cache_item, glyph_format) =
+                match self.glyph_rasterizer.get_cache_item_for_glyph(key,
+                                                                     &font,
+                                                                     &self.cached_glyphs,
+                                                                     &self.texture_cache,
+                                                                     &self.cached_render_tasks) {
+                    None => continue,
+                    Some(result) => result,
+                };
+            if current_texture_id != cache_item.texture_id ||
+                current_glyph_format != glyph_format {
+                if !fetch_buffer.is_empty() {
+                    f(current_texture_id, current_glyph_format, fetch_buffer);
+                    fetch_buffer.clear();
+                }
+                current_texture_id = cache_item.texture_id;
+                current_glyph_format = glyph_format;
+            }
+            fetch_buffer.push(GlyphFetchResult {
+                index_in_text_run: loop_index as i32,
+                uv_rect_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
+            });
+        }
+
+        if !fetch_buffer.is_empty() {
+            f(current_texture_id, current_glyph_format, fetch_buffer);
+            fetch_buffer.clear();
+        }
+    }
+
+    #[cfg(not(feature = "pathfinder"))]
+    pub fn fetch_glyphs<F>(
+        &self,
+        mut font: FontInstance,
+        glyph_keys: &[GlyphKey],
+        fetch_buffer: &mut Vec<GlyphFetchResult>,
+        gpu_cache: &mut GpuCache,
         mut f: F,
     ) where
         F: FnMut(SourceTexture, GlyphFormat, &[GlyphFetchResult]),
@@ -683,22 +743,25 @@ impl ResourceCache {
         debug_assert!(fetch_buffer.is_empty());
 
         for (loop_index, key) in glyph_keys.iter().enumerate() {
-            if let GlyphCacheEntry::Cached(ref glyph) = *glyph_key_cache.get(key) {
-                let cache_item = self.texture_cache.get(&glyph.texture_cache_handle);
-                if current_texture_id != cache_item.texture_id ||
-                   current_glyph_format != glyph.format {
-                    if !fetch_buffer.is_empty() {
-                        f(current_texture_id, current_glyph_format, fetch_buffer);
-                        fetch_buffer.clear();
-                    }
-                    current_texture_id = cache_item.texture_id;
-                    current_glyph_format = glyph.format;
+            let (cache_item, glyph_format) = match *glyph_key_cache.get(key) {
+                GlyphCacheEntry::Cached(ref glyph) => {
+                    (self.texture_cache.get(&glyph.texture_cache_handle), glyph.format)
                 }
-                fetch_buffer.push(GlyphFetchResult {
-                    index_in_text_run: loop_index as i32,
-                    uv_rect_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
-                });
+                GlyphCacheEntry::Blank | GlyphCacheEntry::Pending => continue,
+            };
+            if current_texture_id != cache_item.texture_id ||
+                current_glyph_format != glyph_format {
+                if !fetch_buffer.is_empty() {
+                    f(current_texture_id, current_glyph_format, fetch_buffer);
+                    fetch_buffer.clear();
+                }
+                current_texture_id = cache_item.texture_id;
+                current_glyph_format = glyph_format;
             }
+            fetch_buffer.push(GlyphFetchResult {
+                index_in_text_run: loop_index as i32,
+                uv_rect_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
+            });
         }
 
         if !fetch_buffer.is_empty() {
@@ -795,7 +858,7 @@ impl ResourceCache {
         debug_assert_eq!(self.state, State::Idle);
         self.state = State::AddResources;
         self.texture_cache.begin_frame(frame_id);
-        self.cached_glyphs.begin_frame(&mut self.texture_cache);
+        self.cached_glyphs.begin_frame(&mut self.texture_cache, &self.cached_render_tasks);
         self.cached_render_tasks.begin_frame(&mut self.texture_cache);
         self.current_frame_id = frame_id;
     }
@@ -803,6 +866,7 @@ impl ResourceCache {
     pub fn block_until_all_resources_added(
         &mut self,
         gpu_cache: &mut GpuCache,
+        render_tasks: &mut RenderTaskTree,
         texture_cache_profile: &mut TextureCacheProfileCounters,
     ) {
         profile_scope!("block_until_all_resources_added");
@@ -814,6 +878,8 @@ impl ResourceCache {
             &mut self.cached_glyphs,
             &mut self.texture_cache,
             gpu_cache,
+            &mut self.cached_render_tasks,
+            render_tasks,
             texture_cache_profile,
         );
 
@@ -1322,11 +1388,7 @@ impl ResourceCache {
         for (key, template) in resources.image_templates {
             let data = match CaptureConfig::deserialize::<PlainExternalImage, _>(root, &template.data) {
                 Some(plain) => {
-                    let ext_data = ExternalImageData {
-                        id: plain.id,
-                        channel_index: plain.channel_index,
-                        image_type: ExternalImageType::Buffer,
-                    };
+                    let ext_data = plain.external;
                     external_images.push(plain);
                     ImageData::External(ext_data)
                 }

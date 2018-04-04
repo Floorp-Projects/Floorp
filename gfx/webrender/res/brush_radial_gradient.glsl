@@ -36,6 +36,7 @@ void brush_vs(
     int prim_address,
     RectWithSize local_rect,
     ivec3 user_data,
+    mat4 transform,
     PictureTask pic_task
 ) {
     RadialGradient gradient = fetch_radial_gradient(prim_address);

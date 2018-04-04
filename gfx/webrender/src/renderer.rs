@@ -9,24 +9,17 @@
 //!
 //! [renderer]: struct.Renderer.html
 
-use api::{BlobImageRenderer, ColorF, ColorU, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use api::{BlobImageRenderer, ColorF, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentId, Epoch, ExternalImageId};
 use api::{ExternalImageType, FontRenderMode, ImageFormat, PipelineId};
 use api::{RenderApiSender, RenderNotifier, TexelRect, TextureTarget};
 use api::{channel};
-#[cfg(not(feature = "debugger"))]
-use api::ApiMsg;
 use api::DebugCommand;
-#[cfg(not(feature = "debugger"))]
-use api::channel::MsgSender;
 use api::channel::PayloadReceiverHelperMethods;
 use batch::{BatchKey, BatchKind, BatchTextures, BrushBatchKind, TransformBatchKind};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use debug_colors;
-use debug_render::DebugRenderer;
-#[cfg(feature = "debugger")]
-use debug_server::{self, DebugServer};
 use device::{DepthFunction, Device, FrameId, Program, UploadMethod, Texture, PBO};
 use device::{ExternalTexture, FBOId, TextureSlot};
 use device::{FileWatcherHandler, ShaderError, TextureFilter,
@@ -37,15 +30,17 @@ use frame_builder::FrameBuilderConfig;
 use gleam::gl;
 use glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
 use gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
+#[cfg(feature = "pathfinder")]
+use gpu_glyph_renderer::GpuGlyphRenderer;
 use gpu_types::PrimitiveInstance;
 use internal_types::{SourceTexture, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
 use internal_types::{CacheTextureId, DebugOutput, FastHashMap, RenderedDocument, ResultMsg};
 use internal_types::{TextureUpdateList, TextureUpdateOp, TextureUpdateSource};
 use internal_types::{RenderTargetInfo, SavedTargetIndex};
 use prim_store::DeferredResolve;
-use profiler::{BackendProfileCounters, FrameProfileCounters, Profiler};
-use profiler::{GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
-use query::{GpuProfiler, GpuTimer};
+use profiler::{BackendProfileCounters, FrameProfileCounters,
+               GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
+use query::GpuProfiler;
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use record::ApiRecordingReceiver;
 use render_backend::RenderBackend;
@@ -54,8 +49,6 @@ use shade::Shaders;
 use render_task::{RenderTask, RenderTaskKind, RenderTaskTree};
 use resource_cache::ResourceCache;
 
-#[cfg(feature = "debugger")]
-use serde_json;
 use std;
 use std::cmp;
 use std::collections::VecDeque;
@@ -72,8 +65,28 @@ use thread_profiler::{register_thread_with_profiler, write_profile};
 use tiling::{AlphaRenderTarget, ColorRenderTarget};
 use tiling::{BlitJob, BlitJobSource, RenderPass, RenderPassKind, RenderTargetList};
 use tiling::{Frame, RenderTarget, ScalingInfo, TextureCacheRenderTarget};
+#[cfg(not(feature = "pathfinder"))]
+use tiling::GlyphJob;
 use time::precise_time_ns;
 
+cfg_if! {
+    if #[cfg(feature = "debugger")] {
+        use serde_json;
+        use debug_server::{self, DebugServer};
+    } else {
+        use api::ApiMsg;
+        use api::channel::MsgSender;
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "debug_renderer")] {
+        use api::ColorU;
+        use debug_render::DebugRenderer;
+        use profiler::Profiler;
+        use query::GpuTimer;
+    }
+}
 
 pub const MAX_VERTEX_TEXTURE_WIDTH: usize = 1024;
 /// Enabling this toggle would force the GPU cache scattered texture to
@@ -127,10 +140,6 @@ const GPU_TAG_SETUP_DATA: GpuProfileTag = GpuProfileTag {
 const GPU_TAG_PRIM_IMAGE: GpuProfileTag = GpuProfileTag {
     label: "Image",
     color: debug_colors::GREEN,
-};
-const GPU_TAG_PRIM_HW_COMPOSITE: GpuProfileTag = GpuProfileTag {
-    label: "HwComposite",
-    color: debug_colors::DODGERBLUE,
 };
 const GPU_TAG_PRIM_SPLIT_COMPOSITE: GpuProfileTag = GpuProfileTag {
     label: "SplitComposite",
@@ -200,7 +209,6 @@ impl BatchKind {
     #[cfg(feature = "debugger")]
     fn debug_name(&self) -> &'static str {
         match *self {
-            BatchKind::HardwareComposite => "HardwareComposite",
             BatchKind::SplitComposite => "SplitComposite",
             BatchKind::Brush(kind) => {
                 match kind {
@@ -219,7 +227,6 @@ impl BatchKind {
 
     fn sampler_tag(&self) -> GpuProfileTag {
         match *self {
-            BatchKind::HardwareComposite => GPU_TAG_PRIM_HW_COMPOSITE,
             BatchKind::SplitComposite => GPU_TAG_PRIM_SPLIT_COMPOSITE,
             BatchKind::Brush(kind) => {
                 match kind {
@@ -305,7 +312,7 @@ pub(crate) enum TextureSampler {
 }
 
 impl TextureSampler {
-    fn color(n: usize) -> TextureSampler {
+    pub(crate) fn color(n: usize) -> TextureSampler {
         match n {
             0 => TextureSampler::Color0,
             1 => TextureSampler::Color1,
@@ -440,6 +447,90 @@ pub(crate) mod desc {
         ],
         instance_attributes: &[],
     };
+
+    pub const VECTOR_STENCIL: VertexDescriptor = VertexDescriptor {
+        vertex_attributes: &[
+            VertexAttribute {
+                name: "aPosition",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+        instance_attributes: &[
+            VertexAttribute {
+                name: "aFromPosition",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aCtrlPosition",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aToPosition",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aFromNormal",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aCtrlNormal",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aToNormal",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aPathID",
+                count: 1,
+                kind: VertexAttributeKind::U16,
+            },
+            VertexAttribute {
+                name: "aPad",
+                count: 1,
+                kind: VertexAttributeKind::U16,
+            },
+        ],
+    };
+
+    pub const VECTOR_COVER: VertexDescriptor = VertexDescriptor {
+        vertex_attributes: &[
+            VertexAttribute {
+                name: "aPosition",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+        instance_attributes: &[
+            VertexAttribute {
+                name: "aTargetRect",
+                count: 4,
+                kind: VertexAttributeKind::I32,
+            },
+            VertexAttribute {
+                name: "aStencilOrigin",
+                count: 2,
+                kind: VertexAttributeKind::I32,
+            },
+            VertexAttribute {
+                name: "aSubpixel",
+                count: 1,
+                kind: VertexAttributeKind::U16,
+            },
+            VertexAttribute {
+                name: "aPad",
+                count: 1,
+                kind: VertexAttributeKind::U16,
+            },
+        ],
+    };
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -447,6 +538,8 @@ pub(crate) enum VertexArrayKind {
     Primitive,
     Blur,
     Clip,
+    VectorStencil,
+    VectorCover,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -496,6 +589,7 @@ pub struct GpuProfile {
 }
 
 impl GpuProfile {
+    #[cfg(feature = "debug_renderer")]
     fn new<T>(frame_id: FrameId, timers: &[GpuTimer<T>]) -> GpuProfile {
         let mut paint_time_ns = 0;
         for timer in timers {
@@ -531,6 +625,19 @@ impl CpuProfile {
         }
     }
 }
+
+#[cfg(not(feature = "pathfinder"))]
+pub struct GpuGlyphRenderer;
+
+#[cfg(not(feature = "pathfinder"))]
+impl GpuGlyphRenderer {
+    fn new(_: &mut Device, _: &VAO, _: bool) -> Result<GpuGlyphRenderer, RendererError> {
+        Ok(GpuGlyphRenderer)
+    }
+}
+
+#[cfg(not(feature = "pathfinder"))]
+struct StenciledGlyphPage;
 
 struct ActiveTexture {
     texture: Texture,
@@ -576,7 +683,7 @@ impl SourceTextureResolver {
     fn new(device: &mut Device) -> SourceTextureResolver {
         let mut dummy_cache_texture = device
             .create_texture(TextureTarget::Array, ImageFormat::BGRA8);
-        device.init_texture(
+        device.init_texture::<u8>(
             &mut dummy_cache_texture,
             1,
             1,
@@ -860,7 +967,7 @@ impl CacheTexture {
                 if max_height > old_size.height {
                     // Create a f32 texture that can be used for the vertex shader
                     // to fetch data from.
-                    device.init_texture(
+                    device.init_texture::<u8>(
                         &mut self.texture,
                         new_size.width,
                         new_size.height,
@@ -894,7 +1001,7 @@ impl CacheTexture {
                     if old_size.height > 0 {
                         device.resize_renderable_texture(&mut self.texture, new_size);
                     } else {
-                        device.init_texture(
+                        device.init_texture::<u8>(
                             &mut self.texture,
                             new_size.width,
                             new_size.height,
@@ -1076,7 +1183,7 @@ impl VertexDataTexture {
         if needed_height > texture_size.height {
             let new_height = (needed_height + 127) & !127;
 
-            device.init_texture(
+            device.init_texture::<u8>(
                 &mut self.texture,
                 width,
                 new_height,
@@ -1126,13 +1233,36 @@ struct TargetSelector {
     format: ImageFormat,
 }
 
+#[cfg(feature = "debug_renderer")]
+struct LazyInitializedDebugRenderer {
+    debug_renderer: Option<DebugRenderer>,
+}
+
+#[cfg(feature = "debug_renderer")]
+impl LazyInitializedDebugRenderer {
+    pub fn new() -> Self {
+        Self {
+            debug_renderer: None,
+        }
+    }
+
+    pub fn get_mut<'a>(&'a mut self, device: &mut Device) -> &'a mut DebugRenderer {
+        self.debug_renderer.get_or_insert_with(|| DebugRenderer::new(device))
+    }
+
+    pub fn deinit(self, device: &mut Device) {
+        if let Some(debug_renderer) = self.debug_renderer {
+            debug_renderer.deinit(device);
+        }
+    }
+}
 
 /// The renderer is responsible for submitting to the GPU the work prepared by the
 /// RenderBackend.
 pub struct Renderer {
     result_rx: Receiver<ResultMsg>,
     debug_server: DebugServer,
-    device: Device,
+    pub device: Device,
     pending_texture_updates: Vec<TextureUpdateList>,
     pending_gpu_cache_updates: Vec<GpuCacheUpdateList>,
     pending_shader_updates: Vec<PathBuf>,
@@ -1140,19 +1270,23 @@ pub struct Renderer {
 
     shaders: Shaders,
 
+    pub gpu_glyph_renderer: GpuGlyphRenderer,
+
     max_texture_size: u32,
     max_recorded_profiles: usize,
 
     clear_color: Option<ColorF>,
     enable_clear_scissor: bool,
-    debug: DebugRenderer,
+    #[cfg(feature = "debug_renderer")]
+    debug: LazyInitializedDebugRenderer,
     debug_flags: DebugFlags,
     backend_profile_counters: BackendProfileCounters,
     profile_counters: RendererProfileCounters,
+    #[cfg(feature = "debug_renderer")]
     profiler: Profiler,
     last_time: u64,
 
-    gpu_profile: GpuProfiler<GpuProfileTag>,
+    pub gpu_profile: GpuProfiler<GpuProfileTag>,
     prim_vao: VAO,
     blur_vao: VAO,
     clip_vao: VAO,
@@ -1187,7 +1321,7 @@ pub struct Renderer {
     // Currently allocated FBOs for output frames.
     output_targets: FastHashMap<u32, FrameOutput>,
 
-    renderer_errors: Vec<RendererError>,
+    pub renderer_errors: Vec<RendererError>,
 
     /// List of profile results from previous frames. Can be retrieved
     /// via get_frame_profiles().
@@ -1385,8 +1519,6 @@ impl Renderer {
             None
         };
 
-        let debug_renderer = DebugRenderer::new(&mut device);
-
         let x0 = 0.0;
         let y0 = 0.0;
         let x1 = 1.0;
@@ -1405,9 +1537,12 @@ impl Renderer {
         device.update_vao_indices(&prim_vao, &quad_indices, VertexUsageHint::Static);
         device.update_vao_main_vertices(&prim_vao, &quad_vertices, VertexUsageHint::Static);
 
+        let gpu_glyph_renderer = try!(GpuGlyphRenderer::new(&mut device,
+                                                            &prim_vao,
+                                                            options.precache_shaders));
+
         let blur_vao = device.create_vao_with_new_instances(&desc::BLUR, &prim_vao);
         let clip_vao = device.create_vao_with_new_instances(&desc::CLIP, &prim_vao);
-
         let texture_cache_upload_pbo = device.create_pbo();
 
         let texture_resolver = SourceTextureResolver::new(&mut device);
@@ -1538,10 +1673,12 @@ impl Renderer {
             pending_gpu_cache_updates: Vec::new(),
             pending_shader_updates: Vec::new(),
             shaders,
-            debug: debug_renderer,
+            #[cfg(feature = "debug_renderer")]
+            debug: LazyInitializedDebugRenderer::new(),
             debug_flags,
             backend_profile_counters: BackendProfileCounters::new(),
             profile_counters: RendererProfileCounters::new(),
+            #[cfg(feature = "debug_renderer")]
             profiler: Profiler::new(),
             max_texture_size: max_device_size,
             max_recorded_profiles: options.max_recorded_profiles,
@@ -1549,6 +1686,7 @@ impl Renderer {
             enable_clear_scissor: options.enable_clear_scissor,
             last_time: 0,
             gpu_profile,
+            gpu_glyph_renderer,
             prim_vao,
             blur_vao,
             clip_vao,
@@ -2023,6 +2161,7 @@ impl Renderer {
         let mut frame_profiles = Vec::new();
         let mut profile_timers = RendererProfileTimers::new();
 
+        #[cfg(feature = "debug_renderer")]
         let profile_samplers = {
             let _gm = self.gpu_profile.start_marker("build samples");
             // Block CPU waiting for last frame's GPU profiles to arrive.
@@ -2137,20 +2276,23 @@ impl Renderer {
             self.cpu_profiles.push_back(cpu_profile);
         }
 
-        if self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
-            if let Some(framebuffer_size) = framebuffer_size {
-                //TODO: take device/pixel ratio into equation?
-                let screen_fraction = 1.0 / framebuffer_size.to_f32().area();
-                self.profiler.draw_profile(
-                    &frame_profiles,
-                    &self.backend_profile_counters,
-                    &self.profile_counters,
-                    &mut profile_timers,
-                    &profile_samplers,
-                    screen_fraction,
-                    &mut self.debug,
-                    self.debug_flags.contains(DebugFlags::COMPACT_PROFILER),
-                );
+        #[cfg(feature = "debug_renderer")]
+        {
+            if self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
+                if let Some(framebuffer_size) = framebuffer_size {
+                    //TODO: take device/pixel ratio into equation?
+                    let screen_fraction = 1.0 / framebuffer_size.to_f32().area();
+                    self.profiler.draw_profile(
+                        &frame_profiles,
+                        &self.backend_profile_counters,
+                        &self.profile_counters,
+                        &mut profile_timers,
+                        &profile_samplers,
+                        screen_fraction,
+                        self.debug.get_mut(&mut self.device),
+                        self.debug_flags.contains(DebugFlags::COMPACT_PROFILER),
+                    );
+                }
             }
         }
 
@@ -2161,7 +2303,11 @@ impl Renderer {
         profile_timers.cpu_time.profile(|| {
             let _gm = self.gpu_profile.start_marker("end frame");
             self.gpu_profile.end_frame();
-            self.debug.render(&mut self.device, framebuffer_size);
+            #[cfg(feature = "debug_renderer")]
+            {
+                self.debug.get_mut(&mut self.device)
+                          .render(&mut self.device, framebuffer_size);
+            }
             self.device.end_frame();
         });
         self.last_time = current_time;
@@ -2185,7 +2331,7 @@ impl Renderer {
         // For an artificial stress test of GPU cache resizing,
         // always pass an extra update list with at least one block in it.
         let gpu_cache_height = self.gpu_cache_texture.get_height();
-        if gpu_cache_height != 0 &&  GPU_CACHE_RESIZE_TEST {
+        if gpu_cache_height != 0 && GPU_CACHE_RESIZE_TEST {
             self.pending_gpu_cache_updates.push(GpuCacheUpdateList {
                 frame_id: FrameId::new(0),
                 height: gpu_cache_height,
@@ -2206,7 +2352,7 @@ impl Renderer {
             self.renderer_errors.push(RendererError::MaxTextureSize);
         }
 
-        //Note: if we decide to switch to scatter-style GPU cache update
+        // Note: if we decide to switch to scatter-style GPU cache update
         // permanently, we can have this code nicer with `BufferUploader` kind
         // of helper, similarly to how `TextureUploader` API is used.
         self.gpu_cache_texture.prepare_for_updates(
@@ -2272,7 +2418,7 @@ impl Renderer {
 
                         // Ensure no PBO is bound when creating the texture storage,
                         // or GL will attempt to read data from there.
-                        self.device.init_texture(
+                        self.device.init_texture::<u8>(
                             texture,
                             width,
                             height,
@@ -2324,7 +2470,9 @@ impl Renderer {
                                         let dummy_data: Vec<u8> = vec![255; total_size as usize];
                                         uploader.upload(rect, layer_index, stride, &dummy_data);
                                     }
-                                    _ => panic!("No external buffer found"),
+                                    ExternalImageSource::NativeTexture(eid) => {
+                                        panic!("Unexpected external texture {:?} for the texture cache update of {:?}", eid, id);
+                                    }
                                 };
                                 handler.unlock(id, channel_index);
                             }
@@ -2339,7 +2487,7 @@ impl Renderer {
         }
     }
 
-    fn draw_instanced_batch<T>(
+    pub(crate) fn draw_instanced_batch<T>(
         &mut self,
         data: &[T],
         vertex_array_kind: VertexArrayKind,
@@ -2359,11 +2507,20 @@ impl Renderer {
             self.device.bind_texture(TextureSampler::Dither, texture);
         }
 
-        let vao = match vertex_array_kind {
-            VertexArrayKind::Primitive => &self.prim_vao,
-            VertexArrayKind::Clip => &self.clip_vao,
-            VertexArrayKind::Blur => &self.blur_vao,
-        };
+        self.draw_instanced_batch_with_previously_bound_textures(data, vertex_array_kind, stats)
+    }
+
+    pub(crate) fn draw_instanced_batch_with_previously_bound_textures<T>(
+        &mut self,
+        data: &[T],
+        vertex_array_kind: VertexArrayKind,
+        stats: &mut RendererStats,
+    ) {
+        let vao = get_vao(vertex_array_kind,
+                          &self.prim_vao,
+                          &self.clip_vao,
+                          &self.blur_vao,
+                          &self.gpu_glyph_renderer);
 
         self.device.bind_vao(vao);
 
@@ -3132,27 +3289,41 @@ impl Renderer {
         render_tasks: &RenderTaskTree,
         stats: &mut RendererStats,
     ) {
-        let projection = {
+        let (target_size, projection) = {
             let texture = self.texture_resolver
                 .resolve(texture)
                 .expect("BUG: invalid target texture");
             let target_size = texture.get_dimensions();
-
-            self.device
-                .bind_draw_target(Some((texture, layer)), Some(target_size));
-            self.device.disable_depth();
-            self.device.disable_depth_write();
-            self.device.set_blend(false);
-
-            Transform3D::ortho(
+            let projection = Transform3D::ortho(
                 0.0,
                 target_size.width as f32,
                 0.0,
                 target_size.height as f32,
                 ORTHO_NEAR_PLANE,
                 ORTHO_FAR_PLANE,
-            )
+            );
+            (target_size, projection)
         };
+
+        self.device.disable_depth();
+        self.device.disable_depth_write();
+
+        self.device.set_blend(false);
+
+        // Handle any Pathfinder glyphs.
+        let stencil_page = self.stencil_glyphs(&target.glyphs, &projection, &target_size, stats);
+
+        {
+            let texture = self.texture_resolver
+                .resolve(texture)
+                .expect("BUG: invalid target texture");
+            self.device
+                .bind_draw_target(Some((texture, layer)), Some(target_size));
+        }
+
+        self.device.disable_depth();
+        self.device.disable_depth_write();
+        self.device.set_blend(false);
 
         // Handle any blits to this texture from child tasks.
         self.handle_blits(&target.blits, render_tasks);
@@ -3171,7 +3342,28 @@ impl Renderer {
                 stats,
             );
         }
+
+        // Blit any Pathfinder glyphs to the cache texture.
+        if let Some(stencil_page) = stencil_page {
+            self.cover_glyphs(stencil_page, &projection, stats);
+        }
     }
+
+    #[cfg(not(feature = "pathfinder"))]
+    fn stencil_glyphs(&mut self,
+                      _: &[GlyphJob],
+                      _: &Transform3D<f32>,
+                      _: &DeviceUintSize,
+                      _: &mut RendererStats)
+                      -> Option<StenciledGlyphPage> {
+        None
+    }
+
+    #[cfg(not(feature = "pathfinder"))]
+    fn cover_glyphs(&mut self,
+                    _: StenciledGlyphPage,
+                    _: &Transform3D<f32>,
+                    _: &mut RendererStats) {}
 
     fn update_deferred_resolves(&mut self, deferred_resolves: &[DeferredResolve]) -> Option<GpuCacheUpdateList> {
         // The first thing we do is run through any pending deferred
@@ -3307,7 +3499,7 @@ impl Renderer {
             }
         };
 
-        self.device.init_texture(
+        self.device.init_texture::<u8>(
             &mut texture,
             list.max_size.width,
             list.max_size.height,
@@ -3509,6 +3701,8 @@ impl Renderer {
             self.draw_render_target_debug(framebuffer_size);
             self.draw_texture_cache_debug(framebuffer_size);
         }
+
+        #[cfg(feature = "debug_renderer")]
         self.draw_epoch_debug();
 
         // Garbage collect any frame outputs that weren't used this frame.
@@ -3524,8 +3718,9 @@ impl Renderer {
         frame.has_been_rendered = true;
     }
 
+    #[cfg(feature = "debug_renderer")]
     pub fn debug_renderer<'b>(&'b mut self) -> &'b mut DebugRenderer {
-        &mut self.debug
+        self.debug.get_mut(&mut self.device)
     }
 
     pub fn get_debug_flags(&self) -> DebugFlags {
@@ -3656,19 +3851,22 @@ impl Renderer {
         }
     }
 
+    #[cfg(feature = "debug_renderer")]
     fn draw_epoch_debug(&mut self) {
         if !self.debug_flags.contains(DebugFlags::EPOCHS) {
             return;
         }
 
-        let dy = self.debug.line_height();
+        let debug_renderer = self.debug.get_mut(&mut self.device);
+
+        let dy = debug_renderer.line_height();
         let x0: f32 = 30.0;
         let y0: f32 = 30.0;
         let mut y = y0;
         let mut text_width = 0.0;
         for (pipeline, epoch) in  &self.pipeline_info.epochs {
             y += dy;
-            let w = self.debug.add_text(
+            let w = debug_renderer.add_text(
                 x0, y,
                 &format!("{:?}: {:?}", pipeline, epoch),
                 ColorU::new(255, 255, 0, 255),
@@ -3677,7 +3875,7 @@ impl Renderer {
         }
 
         let margin = 10.0;
-        self.debug.add_quad(
+        debug_renderer.add_quad(
             &x0 - margin,
             y0 - margin,
             x0 + text_width + margin,
@@ -3729,7 +3927,12 @@ impl Renderer {
         self.device.delete_vao(self.prim_vao);
         self.device.delete_vao(self.clip_vao);
         self.device.delete_vao(self.blur_vao);
-        self.debug.deinit(&mut self.device);
+
+        #[cfg(feature = "debug_renderer")]
+        {
+            self.debug.deinit(&mut self.device);
+        }
+
         for (_, target) in self.output_targets {
             self.device.delete_fbo(target.fbo_id);
         }
@@ -4103,8 +4306,7 @@ impl Renderer {
                 }
                 let plain = PlainExternalImage {
                     data: short_path,
-                    id: def.external.id,
-                    channel_index: def.external.channel_index,
+                    external: def.external,
                     uv: ext_image.uv,
                 };
                 config.serialize(&plain, &def.short_path);
@@ -4178,9 +4380,9 @@ impl Renderer {
                     e.insert(Arc::new(buffer)).clone()
                 }
             };
-            let key = (plain_ext.id, plain_ext.channel_index);
+            let ext = plain_ext.external;
             let value = (CapturedExternalImageData::Buffer(data), plain_ext.uv);
-            image_handler.data.insert(key, value);
+            image_handler.data.insert((ext.id, ext.channel_index), value);
         }
 
         if let Some(renderer) = CaptureConfig::deserialize::<PlainRenderer, _>(&root, "renderer") {
@@ -4264,5 +4466,38 @@ impl Renderer {
         self.output_image_handler = Some(Box::new(()) as Box<_>);
         self.external_image_handler = Some(Box::new(image_handler) as Box<_>);
         info!("done.");
+    }
+}
+
+// FIXME(pcwalton): We should really gather up all the VAOs into a separate structure so that they
+// don't have to be passed in as parameters here.
+#[cfg(feature = "pathfinder")]
+fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
+               prim_vao: &'a VAO,
+               clip_vao: &'a VAO,
+               blur_vao: &'a VAO,
+               gpu_glyph_renderer: &'a GpuGlyphRenderer)
+               -> &'a VAO {
+    match vertex_array_kind {
+        VertexArrayKind::Primitive => prim_vao,
+        VertexArrayKind::Clip => clip_vao,
+        VertexArrayKind::Blur => blur_vao,
+        VertexArrayKind::VectorStencil => &gpu_glyph_renderer.vector_stencil_vao,
+        VertexArrayKind::VectorCover => &gpu_glyph_renderer.vector_cover_vao,
+    }
+}
+
+#[cfg(not(feature = "pathfinder"))]
+fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
+               prim_vao: &'a VAO,
+               clip_vao: &'a VAO,
+               blur_vao: &'a VAO,
+               _: &'a GpuGlyphRenderer)
+               -> &'a VAO {
+    match vertex_array_kind {
+        VertexArrayKind::Primitive => prim_vao,
+        VertexArrayKind::Clip => clip_vao,
+        VertexArrayKind::Blur => blur_vao,
+        VertexArrayKind::VectorStencil | VertexArrayKind::VectorCover => unreachable!(),
     }
 }
