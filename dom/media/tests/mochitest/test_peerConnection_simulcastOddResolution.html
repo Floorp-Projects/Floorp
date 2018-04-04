@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1432793",
+    title: "Simulcast with odd resolution",
+    visible: true
+  });
+
+  function addRIDExtension(pc, extensionId) {
+    const receivers = pc._pc.getReceivers();
+    is(receivers.length, 1, "We have exactly one RTP receiver");
+    const receiver = receivers[0];
+
+    SpecialPowers.wrap(pc._pc).mozAddRIDExtension(receiver, extensionId);
+  }
+
+  function selectRecvRID(pc, rid) {
+    const receivers = pc._pc.getReceivers();
+    is(receivers.length, 1, "We have exactly one RTP receiver");
+    const receiver = receivers[0];
+
+    SpecialPowers.wrap(pc._pc).mozAddRIDFilter(receiver, rid);
+  }
+
+  runNetworkTest(() =>
+    pushPrefs(['media.peerconnection.simulcast', true],
+              // 180Kbps was determined empirically, set well-higher than
+              // the 80Kbps+overhead needed for the two simulcast streams.
+              // 100Kbps was apparently too low.
+              ['media.peerconnection.video.min_bitrate_estimate', 180*1000]).then(() => {
+      let emitter, helper;
+
+      test = new PeerConnectionTest({bundle: false});
+      test.setMediaConstraints([{video: true}], [{video: true}]);
+
+      test.chain.replace("PC_REMOTE_GUM", [
+        function PC_REMOTE_CANVAS_CAPTURESTREAM(test) {
+          helper = new VideoStreamHelper();
+          emitter = new VideoFrameEmitter(helper.green, helper.red, 49, 37);
+          test.pcRemote.attachLocalStream(emitter.stream());
+          emitter.start();
+        }
+      ]);
+
+      test.chain.insertAfter('PC_REMOTE_GET_OFFER', [
+        function PC_REMOTE_SET_RIDS(test) {
+          const senders = test.pcRemote._pc.getSenders();
+          is(senders.length, 1, "We have exactly one RTP sender");
+          const sender = senders[0];
+          ok(sender.track, "Sender has a track");
+
+          return sender.setParameters({
+            encodings: [{ rid: "foo", maxBitrate: 40000 },
+                        { rid: "bar", maxBitrate: 40000, scaleResolutionDownBy: 2 }]
+          });
+        },
+        function PC_LOCAL_ADD_RIDS_TO_OFFER(test) {
+          // Create a dummy offer, and use it to set simulcast stuff on the
+          // offer we will actually be using.
+          return test.createOffer(test.pcRemote).then(offer => {
+            test._local_offer.sdp = sdputils.transferSimulcastProperties(
+                offer.sdp, test._local_offer.sdp);
+            info("Offer with RIDs: " + JSON.stringify(test._local_offer));
+            ok(test._local_offer.sdp.match(/a=simulcast:/), "Modified offer has simulcast");
+            ok(test._local_offer.sdp.match(/a=rid:foo/), "Modified offer has rid foo");
+            ok(test._local_offer.sdp.match(/a=rid:bar/), "Modified offer has rid bar");
+            ok(test._local_offer.sdp.match(/urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id/), "Modified offer has RID");
+          });
+        }
+      ]);
+
+      test.chain.insertAfter('PC_LOCAL_GET_ANSWER',[
+        function PC_LOCAL_REMOVE_SIMULCAST_ATTRS_FROM_ANSWER(test) {
+          test._remote_answer.sdp =
+            sdputils.removeSimulcastProperties(test._remote_answer.sdp);
+        }
+      ]);
+      return test.run();
+  })
+  .catch(e => ok(false, "unexpected failure: " + e)));
+</script>
+</pre>
+</body>
+</html>
