@@ -6,12 +6,12 @@
 
 XPI_NAME = 'quitter'
 
-JAR_MANIFESTS += ['jar.mn']
-
 USE_EXTENSION_MANIFEST = True
 
 FINAL_TARGET_FILES += [
-    'bootstrap.js',
-    'chrome.manifest',
-    'install.rdf',
+    'background.js',
+    'contentscript.js',
+    'manifest.json',
+    'parent.js',
+    'schema.json',
 ]
