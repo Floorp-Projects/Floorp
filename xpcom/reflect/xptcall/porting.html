@@ -98,7 +98,7 @@ public:
 
     // return a refcounted pointer to the InterfaceInfo for this object
     // NOTE: on some platforms this MUST not fail or we crash!
-    NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info) = 0;
+    NS_IMETHOD GetInterfaceInfo(const nsXPTInterfaceInfo** info) = 0;
 
     // call this method and return result
     NS_IMETHOD CallMethod(uint16_t methodIndex,

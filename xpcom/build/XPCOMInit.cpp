@@ -242,24 +242,6 @@ nsThreadManagerGetSingleton(nsISupports* aOuter,
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThreadPool)
 
-static nsresult
-nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* aOuter,
-                                       const nsIID& aIID,
-                                       void** aInstancePtr)
-{
-  NS_ASSERTION(aInstancePtr, "null outptr");
-  if (NS_WARN_IF(aOuter)) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
-  nsCOMPtr<nsIInterfaceInfoManager> iim(XPTInterfaceInfoManager::GetSingleton());
-  if (!iim) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return iim->QueryInterface(aIID, aInstancePtr);
-}
-
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = nullptr;
 bool gXPCOMShuttingDown = false;
 bool gXPCOMThreadsShutDown = false;
@@ -668,10 +650,6 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
     NS_ADDREF(*aResult = nsComponentManagerImpl::gComponentManager);
   }
 
-  // The iimanager constructor searches and registers XPT files.
-  // (We trigger the singleton's lazy construction here to make that happen.)
-  (void)XPTInterfaceInfoManager::GetSingleton();
-
   // After autoreg, but before we actually instantiate any components,
   // add any services listed in the "xpcom-directory-providers" category
   // to the directory service.
@@ -1007,12 +985,6 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
 #endif
     }
   }
-
-  // Release our own singletons
-  // Do this _after_ shutting down the component manager, because the
-  // JS component loader will use XPConnect to call nsIModule::canUnload,
-  // and that will spin up the InterfaceInfoManager again -- bad mojo
-  XPTInterfaceInfoManager::FreeInterfaceInfoManager();
 
   // Finally, release the component manager last because it unloads the
   // libraries:
