@@ -10,9 +10,11 @@
 #ifndef mozilla_css_ImageLoader_h___
 #define mozilla_css_ImageLoader_h___
 
-#include "CORSMode.h"
+#include "mozilla/CORSMode.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
+#include "nsIFrame.h"
+#include "nsIReflowCallback.h"
 #include "nsTArray.h"
 #include "imgIRequest.h"
 #include "imgINotificationObserver.h"
@@ -33,6 +35,15 @@ struct ImageValue;
 class ImageLoader final : public imgINotificationObserver
 {
 public:
+  // We also associate flags alongside frames in the request-to-frames hashmap.
+  // These are used for special handling of events for requests.
+  typedef uint32_t FrameFlags;
+  enum {
+    REQUEST_REQUIRES_REFLOW      = 1u << 0,
+    REQUEST_HAS_REQUESTED_REFLOW = 1u << 1,
+    REQUEST_HAS_BLOCKED_ONLOAD   = 1u << 2
+  };
+
   typedef mozilla::css::ImageValue Image;
 
   explicit ImageLoader(nsIDocument* aDocument)
@@ -51,7 +62,8 @@ public:
   void DeregisterCSSImage(Image* aImage);
 
   void AssociateRequestToFrame(imgIRequest* aRequest,
-                               nsIFrame* aFrame);
+                               nsIFrame* aFrame,
+                               FrameFlags aFlags);
 
   void DisassociateRequestFromFrame(imgIRequest* aRequest,
                                     nsIFrame* aFrame);
@@ -73,6 +85,26 @@ public:
   void FlushUseCounters();
 
 private:
+  // This callback is used to unblock document onload after a reflow
+  // triggered from an image load.
+  struct ImageReflowCallback final : public nsIReflowCallback
+  {
+    RefPtr<ImageLoader> mLoader;
+    WeakFrame mFrame;
+    nsCOMPtr<imgIRequest> const mRequest;
+
+    ImageReflowCallback(ImageLoader* aLoader,
+                        nsIFrame* aFrame,
+                        imgIRequest* aRequest)
+    : mLoader(aLoader)
+    , mFrame(aFrame)
+    , mRequest(aRequest)
+    {}
+
+    bool ReflowFinished() override;
+    void ReflowCallbackCanceled() override;
+  };
+
   ~ImageLoader() {}
 
   // We need to be able to look up the frames associated with a request (for
@@ -80,7 +112,31 @@ private:
   // the frame goes away). Thus we maintain hashtables going both ways.  These
   // should always be in sync.
 
-  typedef nsTArray<nsIFrame*> FrameSet;
+  struct FrameWithFlags {
+    explicit FrameWithFlags(nsIFrame* aFrame)
+    : mFrame(aFrame),
+      mFlags(0)
+    {
+      MOZ_ASSERT(mFrame);
+    }
+    nsIFrame* const mFrame;
+    FrameFlags mFlags;
+  };
+
+  // A helper class to compare FrameWithFlags by comparing mFrame and
+  // ignoring mFlags.
+  class FrameOnlyComparator {
+    public:
+      bool Equals(const FrameWithFlags& aElem1,
+                  const FrameWithFlags& aElem2) const
+      { return aElem1.mFrame == aElem2.mFrame; }
+
+      bool LessThan(const FrameWithFlags& aElem1,
+                    const FrameWithFlags& aElem2) const
+      { return aElem1.mFrame < aElem2.mFrame; }
+  };
+
+  typedef nsTArray<FrameWithFlags> FrameSet;
   typedef nsTArray<nsCOMPtr<imgIRequest> > RequestSet;
   typedef nsTHashtable<nsPtrHashKey<Image> > ImageHashSet;
   typedef nsClassHashtable<nsISupportsHashKey,
@@ -94,11 +150,15 @@ private:
   nsPresContext* GetPresContext();
 
   void DoRedraw(FrameSet* aFrameSet, bool aForcePaint);
+  void UnblockOnloadIfNeeded(nsIFrame* aFrame, imgIRequest* aRequest);
+  void RequestReflowIfNeeded(FrameSet* aFrameSet, imgIRequest* aRequest);
+  void RequestReflowOnFrame(FrameWithFlags* aFwf, imgIRequest* aRequest);
 
   nsresult OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
   nsresult OnFrameComplete(imgIRequest* aRequest);
   nsresult OnImageIsAnimated(imgIRequest* aRequest);
   nsresult OnFrameUpdate(imgIRequest* aRequest);
+  nsresult OnLoadComplete(imgIRequest* aRequest);
 
   // Helpers for DropRequestsForFrame / DisassociateRequestFromFrame above.
   void RemoveRequestToFrameMapping(imgIRequest* aRequest, nsIFrame* aFrame);

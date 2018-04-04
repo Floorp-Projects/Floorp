@@ -1989,20 +1989,20 @@ nsTableRowGroupFrame::FrameCursorData::AppendFrame(nsIFrame* aFrame)
 }
 
 void
-nsTableRowGroupFrame::InvalidateFrame(uint32_t aDisplayItemKey)
+nsTableRowGroupFrame::InvalidateFrame(uint32_t aDisplayItemKey, bool aRebuildDisplayItems)
 {
-  nsIFrame::InvalidateFrame(aDisplayItemKey);
+  nsIFrame::InvalidateFrame(aDisplayItemKey, aRebuildDisplayItems);
   if (GetTableFrame()->IsBorderCollapse() && StyleBorder()->HasBorder()) {
-    GetParent()->InvalidateFrameWithRect(GetVisualOverflowRect() + GetPosition(), aDisplayItemKey);
+    GetParent()->InvalidateFrameWithRect(GetVisualOverflowRect() + GetPosition(), aDisplayItemKey, false);
   }
 }
 
 void
-nsTableRowGroupFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
+nsTableRowGroupFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey, bool aRebuildDisplayItems)
 {
-  nsIFrame::InvalidateFrameWithRect(aRect, aDisplayItemKey);
+  nsIFrame::InvalidateFrameWithRect(aRect, aDisplayItemKey, aRebuildDisplayItems);
   // If we have filters applied that would affects our bounds, then
   // we get an inactive layer created and this is computed
   // within FrameLayerBuilder
-  GetParent()->InvalidateFrameWithRect(aRect + GetPosition(), aDisplayItemKey);
+  GetParent()->InvalidateFrameWithRect(aRect + GetPosition(), aDisplayItemKey, false);
 }

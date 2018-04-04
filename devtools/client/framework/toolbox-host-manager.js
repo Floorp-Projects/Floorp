@@ -23,23 +23,12 @@ loader.lazyRequireGetter(this, "Hosts", "devtools/client/framework/toolbox-hosts
  * - switch-host:
  *   Order to display the toolbox in another host (side, bottom, window, or the
  *   previously used one)
- * - toggle-minimize-mode:
- *   When using the bottom host, the toolbox can be miximized to only display
- *   the tool titles
- * - maximize-host:
- *   When using the bottom host in minimized mode, revert back to regular mode
- *   in order to see tool titles and the tools
  * - raise-host:
  *   Focus the tools
  * - set-host-title:
  *   When using the window host, update the window title
  *
  * Messages sent by the chrome to the toolbox:
- * - host-minimized:
- *   The bottom host is done minimizing (after animation end)
- * - host-maximized:
- *   The bottom host is done switching back to regular mode (after animation
- *   end)
  * - switched-host:
  *   The `switch-host` command sent by the toolbox is done
  */
@@ -56,8 +45,6 @@ function ToolboxHostManager(target, hostType, hostOptions) {
   if (!hostType) {
     hostType = Services.prefs.getCharPref(LAST_HOST);
   }
-  this.onHostMinimized = this.onHostMinimized.bind(this);
-  this.onHostMaximized = this.onHostMaximized.bind(this);
   this.host = this.createHost(hostType, hostOptions);
   this.hostType = hostType;
 }
@@ -121,14 +108,8 @@ ToolboxHostManager.prototype = {
       case "switch-host":
         this.switchHost(event.data.hostType);
         break;
-      case "maximize-host":
-        this.host.maximize();
-        break;
       case "raise-host":
         this.host.raise();
-        break;
-      case "toggle-minimize-mode":
-        this.host.toggleMinimizeMode(event.data.toolbarHeight);
         break;
       case "set-host-title":
         this.host.setTitle(event.data.title);
@@ -167,22 +148,7 @@ ToolboxHostManager.prototype = {
     }
 
     let newHost = new Hosts[hostType](this.target.tab, options);
-    // Update the label and icon when the state changes.
-    newHost.on("minimized", this.onHostMinimized);
-    newHost.on("maximized", this.onHostMaximized);
     return newHost;
-  },
-
-  onHostMinimized() {
-    this.postMessage({
-      name: "host-minimized"
-    });
-  },
-
-  onHostMaximized() {
-    this.postMessage({
-      name: "host-maximized"
-    });
   },
 
   async switchHost(hostType) {
@@ -243,8 +209,6 @@ ToolboxHostManager.prototype = {
     }
     this.host.frame.removeEventListener("unload", this, true);
 
-    this.host.off("minimized", this.onHostMinimized);
-    this.host.off("maximized", this.onHostMaximized);
     return this.host.destroy();
   }
 };

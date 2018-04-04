@@ -257,6 +257,14 @@ var Policies = {
     }
   },
 
+  "DisableForgetButton": {
+    onProfileAfterChange(manager, param) {
+      if (param) {
+        manager.disallowFeature("panicButton");
+      }
+    }
+  },
+
   "DisableFormHistory": {
     onBeforeUIStartup(manager, param) {
       if (param) {
@@ -287,6 +295,14 @@ var Policies = {
     onBeforeUIStartup(manager, param) {
       if (param) {
         manager.disallowFeature("safeMode");
+      }
+    }
+  },
+
+  "DisableSecurityBypass": {
+    onBeforeUIStartup(manager, param) {
+      if ("SafeBrowsing" in param) {
+        setAndLockPref("browser.safebrowsing.allowOverride", !param.SafeBrowsing);
       }
     }
   },
@@ -489,7 +505,12 @@ var Policies = {
 
   "InstallAddons": {
     onBeforeUIStartup(manager, param) {
-      addAllowDenyPermissions("install", param.Allow, null);
+      if ("Allow" in param) {
+        addAllowDenyPermissions("install", param.Allow, null);
+      }
+      if ("Default" in param) {
+        setAndLockPref("xpinstall.enabled", param.Default);
+      }
     }
   },
 
@@ -505,6 +526,17 @@ var Policies = {
     onProfileAfterChange(manager, param) {
       let url = param ? param.spec : "";
       setAndLockPref("startup.homepage_welcome_url", url);
+    }
+  },
+
+  "OverridePostUpdatePage": {
+    onProfileAfterChange(manager, param) {
+      let url = param ? param.spec : "";
+      setAndLockPref("startup.homepage_override_url", url);
+      // The pref startup.homepage_override_url is only used
+      // as a fallback when the update.xml file hasn't provided
+      // a specific post-update URL.
+      manager.disallowFeature("postUpdateCustomPage");
     }
   },
 

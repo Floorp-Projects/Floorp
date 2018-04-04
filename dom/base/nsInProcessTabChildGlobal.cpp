@@ -41,7 +41,7 @@ nsInProcessTabChildGlobal::DoSendBlockingMessage(JSContext* aCx,
     RefPtr<nsFrameMessageManager> mm = mChromeMessageManager;
     RefPtr<nsFrameLoader> fl = GetFrameLoader();
     mm->ReceiveMessage(mOwner, fl, aMessage, true, &aData, &cpows, aPrincipal,
-                       aRetVal);
+                       aRetVal, IgnoreErrors());
   }
   return true;
 }
@@ -116,11 +116,11 @@ nsInProcessTabChildGlobal::~nsInProcessTabChildGlobal()
 
 // This method isn't automatically forwarded safely because it's notxpcom, so
 // the IDL binding doesn't know what value to return.
-NS_IMETHODIMP_(bool)
+void
 nsInProcessTabChildGlobal::MarkForCC()
 {
   MarkScopesForCC();
-  return MessageManagerGlobal::MarkForCC();
+  MessageManagerGlobal::MarkForCC();
 }
 
 nsresult
@@ -160,9 +160,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsInProcessTabChildGlobal,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsInProcessTabChildGlobal)
-  NS_INTERFACE_MAP_ENTRY(nsIMessageListenerManager)
   NS_INTERFACE_MAP_ENTRY(nsIMessageSender)
-  NS_INTERFACE_MAP_ENTRY(nsISyncMessageSender)
   NS_INTERFACE_MAP_ENTRY(nsIContentFrameMessageManager)
   NS_INTERFACE_MAP_ENTRY(nsIInProcessContentFrameMessageManager)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
@@ -204,34 +202,11 @@ nsInProcessTabChildGlobal::GetContent(ErrorResult& aError)
   return content.forget();
 }
 
-NS_IMETHODIMP
-nsInProcessTabChildGlobal::GetContent(mozIDOMWindowProxy** aContent)
-{
-  ErrorResult rv;
-  *aContent = GetContent(rv).take();
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-nsInProcessTabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
-{
-  ErrorResult rv;
-  *aDocShell = GetDocShell(rv).take();
-  return rv.StealNSResult();
-}
-
 already_AddRefed<nsIEventTarget>
 nsInProcessTabChildGlobal::GetTabEventTarget()
 {
   nsCOMPtr<nsIEventTarget> target = GetMainThreadEventTarget();
   return target.forget();
-}
-
-NS_IMETHODIMP
-nsInProcessTabChildGlobal::GetTabEventTarget(nsIEventTarget** aTarget)
-{
-  *aTarget = GetTabEventTarget().take();
-  return NS_OK;
 }
 
 void

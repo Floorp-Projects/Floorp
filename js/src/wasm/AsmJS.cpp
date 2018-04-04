@@ -3345,10 +3345,10 @@ CheckModuleLevelName(ModuleValidator& m, ParseNode* usepn, PropertyName* name)
 static bool
 CheckFunctionHead(ModuleValidator& m, ParseNode* fn)
 {
+    MOZ_ASSERT(!fn->pn_funbox->hasExprBody());
+
     if (fn->pn_funbox->hasRest())
         return m.fail(fn, "rest args not allowed");
-    if (fn->pn_funbox->isExprBody())
-        return m.fail(fn, "expression closures not allowed");
     if (fn->pn_funbox->hasDestructuringArgs)
         return m.fail(fn, "destructuring args not allowed");
     return true;

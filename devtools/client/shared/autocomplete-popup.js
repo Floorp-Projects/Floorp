@@ -254,10 +254,16 @@ AutocompletePopup.prototype = {
     }
 
     let max = 0;
-    for (let {label, count} of this.items) {
+
+    for (let {label, postLabel, count} of this.items) {
       if (count) {
         label += count + "";
       }
+
+      if (postLabel) {
+        label += postLabel;
+      }
+
       max = Math.max(label.length, max);
     }
 
@@ -422,6 +428,9 @@ AutocompletePopup.prototype = {
    *                   that will be auto completed. When this property is
    *                   present, |preLabel.length| starting characters will be
    *                   removed from label.
+   *        - postLabel {String} [Optional] The string that will be displayed
+   *                  after the label. Currently used to display the value of
+   *                  a desired variable.
    *        - count {Number} [Optional] The number to represent the count of
    *                autocompleted label.
    */
@@ -431,12 +440,15 @@ AutocompletePopup.prototype = {
     listItem.setAttribute("id", "autocomplete-item-" + itemIdCounter++);
     listItem.className = "autocomplete-item";
     listItem.setAttribute("data-index", this.items.length);
+
     if (this.direction) {
       listItem.setAttribute("dir", this.direction);
     }
+
     let label = this._document.createElementNS(HTML_NS, "span");
     label.textContent = item.label;
     label.className = "autocomplete-value";
+
     if (item.preLabel) {
       let preDesc = this._document.createElementNS(HTML_NS, "span");
       preDesc.textContent = item.preLabel;
@@ -444,7 +456,16 @@ AutocompletePopup.prototype = {
       listItem.appendChild(preDesc);
       label.textContent = item.label.slice(item.preLabel.length);
     }
+
     listItem.appendChild(label);
+
+    if (item.postLabel) {
+      let postDesc = this._document.createElementNS(HTML_NS, "span");
+      postDesc.textContent = item.postLabel;
+      postDesc.className = "autocomplete-postlabel";
+      listItem.appendChild(postDesc);
+    }
+
     if (item.count && item.count > 1) {
       let countDesc = this._document.createElementNS(HTML_NS, "span");
       countDesc.textContent = item.count;

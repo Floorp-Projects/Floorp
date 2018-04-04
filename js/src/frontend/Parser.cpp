@@ -485,7 +485,7 @@ FunctionBox::FunctionBox(JSContext* cx, ObjectBox* traceListHead,
     usesThis(false),
     usesReturn(false),
     hasRest_(false),
-    isExprBody_(false),
+    hasExprBody_(false),
     hasExtensibleScope_(false),
     argumentsHasLocalBinding_(false),
     definitelyNeedsArgsObj_(false),
@@ -2501,8 +2501,6 @@ PerHandlerParser<SyntaxParseHandler>::finishFunction(bool isStandaloneFunction /
     lazy->setAsyncKind(funbox->asyncKind());
     if (funbox->hasRest())
         lazy->setHasRest();
-    if (funbox->isExprBody())
-        lazy->setIsExprBody();
     if (funbox->isLikelyConstructorWrapper())
         lazy->setLikelyConstructorWrapper();
     if (funbox->isDerivedClassConstructor())
@@ -3254,8 +3252,6 @@ Parser<FullParseHandler, CharT>::skipLazyInnerFunction(ParseNode* funcNode, uint
     LazyScript* lazy = fun->lazyScript();
     if (lazy->needsHomeObject())
         funbox->setNeedsHomeObject();
-    if (lazy->isExprBody())
-        funbox->setIsExprBody();
 
     PropagateTransitiveParseFlags(lazy, pc->sc());
 
@@ -3781,7 +3777,7 @@ GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling i
 
         anyChars.ungetToken();
         bodyType = ExpressionBody;
-        funbox->setIsExprBody();
+        funbox->setHasExprBody();
     } else {
         openedPos = pos().begin;
     }
@@ -8004,9 +8000,6 @@ GeneralParser<ParseHandler, CharT>::orExpr(InHandling inHandling, YieldHandling 
         if (!pn)
             return null();
 
-        if (handler.isExpressionClosure(pn))
-            return pn;
-
         expressionClosureHandling = ExpressionClosure::Forbidden;
 
         // If a binary operator follows, consume it and compute the
@@ -8081,9 +8074,6 @@ GeneralParser<ParseHandler, CharT>::condExpr(InHandling inHandling, YieldHandlin
                             expressionClosureHandling, possibleError, invoked);
     if (!condition)
         return null();
-
-    if (handler.isExpressionClosure(condition))
-        return condition;
 
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Hook))
@@ -8512,9 +8502,6 @@ GeneralParser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
         if (!expr)
             return null();
 
-        if (handler.isExpressionClosure(expr))
-            return expr;
-
         /* Don't look across a newline boundary for a postfix incop. */
         if (!tokenStream.peekTokenSameLine(&tt))
             return null();
@@ -8682,9 +8669,6 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
                           possibleError, invoked);
         if (!lhs)
             return null();
-
-        if (handler.isExpressionClosure(lhs))
-            return lhs;
     }
 
     MOZ_ASSERT_IF(handler.isSuperBase(lhs), anyChars.isCurrentTokenType(TokenKind::Super));

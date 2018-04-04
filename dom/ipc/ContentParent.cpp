@@ -157,6 +157,7 @@
 #include "nsThread.h"
 #include "nsWindowWatcher.h"
 #include "nsIXULRuntime.h"
+#include "mozilla/dom/ChromeMessageBroadcaster.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "nsMemoryInfoDumper.h"
 #include "nsMemoryReporterManager.h"
@@ -535,7 +536,7 @@ ScriptableCPInfo::GetMessageManager(nsISupports** aMessenger)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsCOMPtr<nsIMessageSender> manager = mContentParent->GetMessageManager();
+  RefPtr<ChromeMessageSender> manager = mContentParent->GetMessageManager();
   manager.forget(aMessenger);
   return NS_OK;
 }
@@ -1451,10 +1452,9 @@ ContentParent::ShutDownMessageManager()
   return;
   }
 
-  mMessageManager->ReceiveMessage(
-      static_cast<nsIContentFrameMessageManager*>(mMessageManager.get()), nullptr,
+  mMessageManager->ReceiveMessage(mMessageManager, nullptr,
       CHILD_PROCESS_SHUTDOWN_MESSAGE, false,
-      nullptr, nullptr, nullptr, nullptr);
+      nullptr, nullptr, nullptr, nullptr, IgnoreErrors());
 
   mMessageManager->Disconnect();
   mMessageManager = nullptr;
@@ -2270,21 +2270,22 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
   if (ssm) {
     ssm->CloneDomainPolicy(&xpcomInit.domainPolicy());
 
-    if (nsFrameMessageManager* mm = nsFrameMessageManager::sParentProcessManager) {
+    if (ChromeMessageBroadcaster* mm = nsFrameMessageManager::sParentProcessManager) {
       AutoJSAPI jsapi;
       if (NS_WARN_IF(!jsapi.Init(xpc::PrivilegedJunkScope()))) {
         MOZ_CRASH();
       }
       JS::RootedValue init(jsapi.cx());
-      nsresult result = mm->GetInitialProcessData(jsapi.cx(), &init);
-      if (NS_FAILED(result)) {
+      // We'll crash on failure, so use a IgnoredErrorResult (which also auto-suppresses
+      // exceptions).
+      IgnoredErrorResult rv;
+      mm->GetInitialProcessData(jsapi.cx(), &init, rv);
+      if (NS_WARN_IF(rv.Failed())) {
         MOZ_CRASH();
       }
 
-      ErrorResult rv;
       initialData.Write(jsapi.cx(), init, rv);
       if (NS_WARN_IF(rv.Failed())) {
-        rv.SuppressException();
         MOZ_CRASH();
       }
     }
