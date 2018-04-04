@@ -1024,8 +1024,13 @@ public:
    * reset the overflow rect if it was previously stored as deltas.
    * (If it is currently a "large" overflow and could be re-packed as deltas,
    * we don't bother as the cost of the allocation has already been paid.)
+   * @param aRebuildDisplayItems If true, then adds this frame to the
+   * list of modified frames for display list building if the rect has changed.
+   * Only pass false if you're sure that the relevant display items will be rebuilt
+   * already (possibly by an ancestor being in the modified list), or if this is
+   * a temporary change.
    */
-  void SetRect(const nsRect& aRect) {
+  void SetRect(const nsRect& aRect, bool aRebuildDisplayItems = true) {
     if (aRect == mRect) {
       return;
     }
@@ -1037,7 +1042,9 @@ public:
     } else {
       mRect = aRect;
     }
-    MarkNeedsDisplayItemRebuild();
+    if (aRebuildDisplayItems) {
+      MarkNeedsDisplayItemRebuild();
+    }
   }
   /**
    * Set this frame's rect from a logical rect in its own writing direction
@@ -1085,9 +1092,14 @@ public:
   /**
    * Set this frame's physical size. This leaves the frame's physical position
    * (topLeft) unchanged.
+   * @param aRebuildDisplayItems If true, then adds this frame to the
+   * list of modified frames for display list building if the size has changed.
+   * Only pass false if you're sure that the relevant display items will be rebuilt
+   * already (possibly by an ancestor being in the modified list), or if this is
+   * a temporary change.
    */
-  void SetSize(const nsSize& aSize) {
-    SetRect(nsRect(mRect.TopLeft(), aSize));
+  void SetSize(const nsSize& aSize, bool aRebuildDisplayItems = true) {
+    SetRect(nsRect(mRect.TopLeft(), aSize), aRebuildDisplayItems);
   }
 
   void SetPosition(const nsPoint& aPt) {
