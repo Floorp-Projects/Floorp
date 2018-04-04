@@ -31,13 +31,13 @@
 
       let canvas, gl, shaderProgram;
       let triangleVertexPositionBuffer, squareVertexPositionBuffer;
-     
+
       window.onload = function() {
         canvas = document.querySelector("canvas");
         gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
         gl.viewportWidth = canvas.width;
         gl.viewportHeight = canvas.height;
-       
+      
         initShaders();
         initBuffers();
 
@@ -45,38 +45,38 @@
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.disable(gl.DEPTH_TEST);
         drawScene();
-      }
+      };
 
       function getShader(gl, id) {
         var shaderScript = document.getElementById(id);
         if (!shaderScript) {
-            return null;
+          return null;
         }
 
         var str = "";
         var k = shaderScript.firstChild;
         while (k) {
-            if (k.nodeType == 3) {
-                str += k.textContent;
-            }
-            k = k.nextSibling;
+          if (k.nodeType == 3) {
+            str += k.textContent;
+          }
+          k = k.nextSibling;
         }
 
         var shader;
         if (shaderScript.type == "x-shader/x-fragment") {
-            shader = gl.createShader(gl.FRAGMENT_SHADER);
+          shader = gl.createShader(gl.FRAGMENT_SHADER);
         } else if (shaderScript.type == "x-shader/x-vertex") {
-            shader = gl.createShader(gl.VERTEX_SHADER);
+          shader = gl.createShader(gl.VERTEX_SHADER);
         } else {
-            return null;
+          return null;
         }
 
         gl.shaderSource(shader, str);
         gl.compileShader(shader);
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            alert(gl.getShaderInfoLog(shader));
-            return null;
+          alert(gl.getShaderInfoLog(shader));
+          return null;
         }
 
         return shader;
@@ -92,7 +92,7 @@
         gl.linkProgram(shaderProgram);
 
         if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-            alert("Could not initialise shaders");
+          alert("Could not initialise shaders");
         }
 
         gl.useProgram(shaderProgram);
@@ -104,32 +104,32 @@
 
       function initBuffers() {
           // Create triangle vertex/index buffer
-          triangleVertexPositionBuffer = gl.createBuffer();
-          gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
-          var vertices = [
+        triangleVertexPositionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
+        var vertices = [
                0.0,  0.5,  0.0,
-              -0.5, -0.5,  0.0,
+               -0.5, -0.5,  0.0,
                0.5, -0.5,  0.0
-          ];
-          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-          triangleVertexPositionBuffer.itemSize = 3;
-          triangleVertexPositionBuffer.numItems = 3;
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        triangleVertexPositionBuffer.itemSize = 3;
+        triangleVertexPositionBuffer.numItems = 3;
 
           // Create square vertex/index buffer
-          squareVertexPositionBuffer = gl.createBuffer();
-          gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-          vertices = [
+        squareVertexPositionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+        vertices = [
                0.8,  0.8,  0.0,
-              -0.8,  0.8,  0.0,
+               -0.8,  0.8,  0.0,
                0.8, -0.8,  0.0,
-              -0.8, -0.8,  0.0
-          ];
-          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-          squareVertexPositionBuffer.itemSize = 3;
-          squareVertexPositionBuffer.numItems = 4;
+               -0.8, -0.8,  0.0
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        squareVertexPositionBuffer.itemSize = 3;
+        squareVertexPositionBuffer.numItems = 4;
       }
 
-      function drawScene() {        
+      function drawScene() {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 
         // DrawArrays
