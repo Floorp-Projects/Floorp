@@ -28,12 +28,9 @@ public:
     virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
                                 int* aTargetNum) = 0;
 
-    nsRetrievalContext() {};
-    virtual ~nsRetrievalContext() {};
+    virtual bool HasSelectionSupport(void) = 0;
 
-protected:
-    // Idle timeout for receiving selection and property notify events (microsec)
-    static const int kClipboardTimeout;
+    virtual ~nsRetrievalContext() {};
 };
 
 class nsClipboard : public nsIClipboard,
@@ -79,6 +76,8 @@ private:
     nsCOMPtr<nsITransferable>      mGlobalTransferable;
     nsAutoPtr<nsRetrievalContext>  mContext;
 };
+
+extern const int kClipboardTimeout;
 
 GdkAtom GetSelectionAtom(int32_t aWhichClipboard);
 
