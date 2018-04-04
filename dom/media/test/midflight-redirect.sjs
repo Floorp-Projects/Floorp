@@ -48,16 +48,21 @@ function handleRequest(request, response)
     return;
   }
 
-  if (from == 0 && !redirected) {
-    to = Math.min(bytes.length / 4, 200);
-  } else {
-    to = to || Math.max(from, bytes.length - 1);
+  if (isNaN(to)) {
+    to = bytes.length - 1;
   }
 
+  if (from == 0 && !redirected) {
+    to = parseInt(parseQuery(query, "redirectAt")) || Math.floor(bytes.length / 4);
+  }
+  to = Math.min(to, bytes.length - 1);
+
+  // Note: 'to' is the first index *excluded*, so we need (to + 1)
+  // in the substring end here.
   byterange = bytes.substring(from, to + 1);
 
-  let contentRange = "bytes "+ from +"-"+ to +"/"+ bytes.length;
-  let contentLength = (to - from + 1).toString();
+  let contentRange = "bytes " + from + "-" + to + "/" + bytes.length;
+  let contentLength = byterange.length.toString();
 
   response.setStatusLine(request.httpVersion, 206, "Partial Content");
   response.setHeader("Content-Range", contentRange);

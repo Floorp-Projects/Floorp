@@ -43,13 +43,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=489415
       return new Promise(function (resolve, reject) {
         // Load will redirect mid-flight, which will be detected and should error,
         // and we should no longer be able to readback.
-        var noise = Math.floor(Math.random() * 100000000);
         var video = document.createElement("video");
         video.preload = "metadata";
         video.controls = true;
-        var url = "http://" + origin + "/tests/dom/media/test/midflight-redirect.sjs?key="
-                  + noise + "&resource=pixel_aspect_ratio.mp4"
-                  + "&type=video/mp4";
+        var url = "http://" + origin + "/tests/dom/media/test/midflight-redirect.sjs"
+                  + "?resource=pixel_aspect_ratio.mp4&type=video/mp4";
         SimpleTest.info("Loading from " + url);
         video.src = url;
         document.body.appendChild(video);
