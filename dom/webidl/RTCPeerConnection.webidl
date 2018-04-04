@@ -83,7 +83,8 @@ interface RTCPeerConnection : EventTarget  {
 
   [Pref="media.peerconnection.identity.enabled"]
   void setIdentityProvider (DOMString provider,
-                            optional RTCIdentityProviderOptions options);
+                            optional DOMString protocol,
+                            optional DOMString username);
   [Pref="media.peerconnection.identity.enabled"]
   Promise<DOMString> getIdentityAssertion();
   Promise<RTCSessionDescriptionInit> createOffer (optional RTCOfferOptions options);
