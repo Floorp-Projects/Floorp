@@ -3770,7 +3770,11 @@ nsNavHistoryResultNode::OnItemChanged(int64_t aItemId,
   if (aItemId != mItemId)
     return NS_OK;
 
-  mLastModified = aLastModified;
+  // Last modified isn't changed for favicon updates and it is notified as `0`,
+  // so don't reset it here.
+  if (!aProperty.EqualsLiteral("favicon")) {
+    mLastModified = aLastModified;
+  }
 
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_STATE(result);
