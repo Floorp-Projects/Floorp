@@ -292,12 +292,6 @@ Blocklist.prototype = {
   },
 
   /* See nsIBlocklistService */
-  isAddonBlocklisted(addon, appVersion, toolkitVersion) {
-    return this.getAddonBlocklistState(addon, appVersion, toolkitVersion) ==
-                   Ci.nsIBlocklistService.STATE_BLOCKED;
-  },
-
-  /* See nsIBlocklistService */
   getAddonBlocklistState(addon, appVersion, toolkitVersion) {
     if (!this.isLoaded)
       this._loadBlocklist();

@@ -28,25 +28,6 @@ interface nsIBlocklistService : nsISupports
   const unsigned long STATE_VULNERABLE_NO_UPDATE = 5;
 
   /**
-   * Determine if an item is blocklisted
-   * @param   addon
-   *          The addon item to be checked.
-   * @param   appVersion
-   *          The version of the application we are checking in the blocklist.
-   *          If this parameter is null, the version of the running application
-   *          is used.
-   * @param   toolkitVersion
-   *          The version of the toolkit we are checking in the blocklist.
-   *          If this parameter is null, the version of the running toolkit
-   *          is used.
-   * @returns true if the item is compatible with this version of the
-   *          application or this version of the toolkit, false, otherwise.
-   */
-  boolean isAddonBlocklisted(in jsval addon,
-                             [optional] in AString appVersion,
-                             [optional] in AString toolkitVersion);
-
-  /**
    * Determine the blocklist state of an add-on
    * @param   id
    *          The addon item to be checked.
