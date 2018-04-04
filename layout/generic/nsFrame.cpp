@@ -7141,6 +7141,9 @@ nsIFrame::InvalidateFrame(uint32_t aDisplayItemKey, bool aRebuildDisplayItems /*
 void
 nsIFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey, bool aRebuildDisplayItems /* = true */)
 {
+  if (aRect.IsEmpty()) {
+    return;
+  }
   bool hasDisplayItem =
     !aDisplayItemKey || FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
   bool alreadyInvalid = false;
