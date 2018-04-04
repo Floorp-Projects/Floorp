@@ -576,10 +576,19 @@ class Interface(object):
         self.namemap = NameMap()
         self.doccomments = doccomments
         self.nativename = name
+        self.implicit_builtinclass = False
 
         for m in members:
             if not isinstance(m, CDATA):
                 self.namemap.set(m)
+
+            if m.kind == 'method' and m.notxpcom and name != 'nsISupports':
+                # An interface cannot be implemented by JS if it has a
+                # notxpcom method. Such a type is an "implicit builtinclass".
+                #
+                # XXX(nika): Why does nostdcall not imply builtinclass?
+                # It could screw up the shims as well...
+                self.implicit_builtinclass = True
 
     def __eq__(self, other):
         return self.name == other.name and self.location == other.location
@@ -616,6 +625,9 @@ class Interface(object):
 
             if self.attributes.scriptable and realbase.attributes.builtinclass and not self.attributes.builtinclass:
                 raise IDLError("interface '%s' is not builtinclass but derives from builtinclass '%s'" % (self.name, self.base), self.location)
+
+            if realbase.implicit_builtinclass:
+                self.implicit_builtinclass = True # Inherit implicit builtinclass from base
 
         for member in self.members:
             member.resolve(self)
