@@ -3313,7 +3313,7 @@ template<class T, class S>
 inline RefPtr<T>
 StrongOrRawPtr(already_AddRefed<S>&& aPtr)
 {
-  return aPtr.template downcast<T>();
+  return Move(aPtr);
 }
 
 template<class T,
