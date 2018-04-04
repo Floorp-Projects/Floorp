@@ -374,7 +374,6 @@ menuitem.bookmark-item {
 }
 
 
-%include ../shared/bookmarked-notification.inc.css
 %include ../shared/toolbarbuttons.inc.css
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
