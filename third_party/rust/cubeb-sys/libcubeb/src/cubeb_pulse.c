@@ -579,6 +579,8 @@ static void pulse_destroy(cubeb * ctx);
 static int
 pulse_context_init(cubeb * ctx)
 {
+  int r;
+
   if (ctx->context) {
     assert(ctx->error == 1);
     pulse_context_destroy(ctx);
@@ -592,9 +594,9 @@ pulse_context_init(cubeb * ctx)
   WRAP(pa_context_set_state_callback)(ctx->context, context_state_callback, ctx);
 
   WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
-  WRAP(pa_context_connect)(ctx->context, NULL, 0, NULL);
+  r = WRAP(pa_context_connect)(ctx->context, NULL, 0, NULL);
 
-  if (wait_until_context_ready(ctx) != 0) {
+  if (r < 0 || wait_until_context_ready(ctx) != 0) {
     WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
     pulse_context_destroy(ctx);
     ctx->context = NULL;

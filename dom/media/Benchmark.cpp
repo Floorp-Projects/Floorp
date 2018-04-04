@@ -131,12 +131,19 @@ Benchmark::ReturnResult(uint32_t aDecodeFps)
 }
 
 void
+Benchmark::ReturnError(const MediaResult& aError)
+{
+  MOZ_ASSERT(OnThread());
+
+  mPromise.RejectIfExists(aError, __func__);
+}
+
+void
 Benchmark::Dispose()
 {
   MOZ_ASSERT(OnThread());
 
   mKeepAliveUntilComplete = nullptr;
-  mPromise.RejectIfExists(false, __func__);
 }
 
 void
@@ -184,12 +191,12 @@ BenchmarkPlayback::DemuxSamples()
           mDemuxer->GetTrackDemuxer(TrackInfo::kAudioTrack, 0);
       }
       if (!mTrackDemuxer) {
-        MainThreadShutdown();
+        Error(MediaResult(NS_ERROR_FAILURE, "Can't create track demuxer"));
         return;
       }
       DemuxNextSample();
     },
-    [this, ref](const MediaResult& aError) { MainThreadShutdown(); });
+    [this, ref](const MediaResult& aError) { Error(aError); });
 }
 
 void
@@ -217,7 +224,8 @@ BenchmarkPlayback::DemuxNextSample()
           InitDecoder(Move(*mTrackDemuxer->GetInfo()));
           break;
         default:
-          MainThreadShutdown();
+          Error(aError);
+          break;
       }
     });
 }
@@ -230,18 +238,38 @@ BenchmarkPlayback::InitDecoder(TrackInfo&& aInfo)
   RefPtr<PDMFactory> platform = new PDMFactory();
   mDecoder = platform->CreateDecoder({ aInfo, mDecoderTaskQueue });
   if (!mDecoder) {
-    MainThreadShutdown();
+    Error(MediaResult(NS_ERROR_FAILURE, "Failed to create decoder"));
     return;
   }
   RefPtr<Benchmark> ref(mMainThreadState);
   mDecoder->Init()->Then(
     Thread(), __func__,
-    [this, ref](TrackInfo::TrackType aTrackType) {
-      InputExhausted();
-    },
-    [this, ref](const MediaResult& aError) {
-      MainThreadShutdown();
-    });
+    [this, ref](TrackInfo::TrackType aTrackType) { InputExhausted(); },
+    [this, ref](const MediaResult& aError) { Error(aError); });
+}
+
+void
+BenchmarkPlayback::FinalizeShutdown()
+{
+  MOZ_ASSERT(OnThread());
+
+  MOZ_ASSERT(!mDecoder, "mDecoder must have been shutdown already");
+  mDecoderTaskQueue->BeginShutdown();
+  mDecoderTaskQueue->AwaitShutdownAndIdle();
+  mDecoderTaskQueue = nullptr;
+
+  if (mTrackDemuxer) {
+    mTrackDemuxer->Reset();
+    mTrackDemuxer->BreakCycles();
+    mTrackDemuxer = nullptr;
+  }
+  mDemuxer = nullptr;
+
+  RefPtr<Benchmark> ref(mMainThreadState);
+  Thread()->AsTaskQueue()->BeginShutdown()->Then(
+    ref->Thread(), __func__,
+    [ref]() { ref->Dispose(); },
+    []() { MOZ_CRASH("not reached"); });
 }
 
 void
@@ -249,10 +277,8 @@ BenchmarkPlayback::MainThreadShutdown()
 {
   MOZ_ASSERT(OnThread());
 
-  if (mFinished) {
-    // Nothing more to do.
-    return;
-  }
+  MOZ_ASSERT(!mFinished, "We've already shutdown");
+
   mFinished = true;
 
   if (mDecoder) {
@@ -263,25 +289,14 @@ BenchmarkPlayback::MainThreadShutdown()
         mDecoder->Shutdown()->Then(
           Thread(), __func__,
           [ref, this]() {
-            mDecoderTaskQueue->BeginShutdown();
-            mDecoderTaskQueue->AwaitShutdownAndIdle();
-            mDecoderTaskQueue = nullptr;
-
-            if (mTrackDemuxer) {
-              mTrackDemuxer->Reset();
-              mTrackDemuxer->BreakCycles();
-              mTrackDemuxer = nullptr;
-            }
-
-            Thread()->AsTaskQueue()->BeginShutdown()->Then(
-              ref->Thread(), __func__,
-              [ref]() { ref->Dispose(); },
-              []() { MOZ_CRASH("not reached"); });
+            FinalizeShutdown();
           },
           []() { MOZ_CRASH("not reached"); });
         mDecoder = nullptr;
       },
       []() { MOZ_CRASH("not reached"); });
+  } else {
+    FinalizeShutdown();
   }
 }
 
@@ -289,6 +304,8 @@ void
 BenchmarkPlayback::Output(const MediaDataDecoder::DecodedData& aResults)
 {
   MOZ_ASSERT(OnThread());
+  MOZ_ASSERT(!mFinished);
+
   RefPtr<Benchmark> ref(mMainThreadState);
   mFrameCount += aResults.Length();
   if (!mDecodeStartTime && mFrameCount >= ref->mParameters.mStartupFrame) {
@@ -297,9 +314,8 @@ BenchmarkPlayback::Output(const MediaDataDecoder::DecodedData& aResults)
   TimeStamp now = TimeStamp::Now();
   int32_t frames = mFrameCount - ref->mParameters.mStartupFrame;
   TimeDuration elapsedTime = now - mDecodeStartTime.refOr(now);
-  if (!mFinished &&
-      (((frames == ref->mParameters.mFramesToMeasure) && frames > 0) ||
-       elapsedTime >= ref->mParameters.mTimeout || mDrained)) {
+  if (((frames == ref->mParameters.mFramesToMeasure) && frames > 0) ||
+      elapsedTime >= ref->mParameters.mTimeout || mDrained) {
     uint32_t decodeFps = frames / elapsedTime.ToSeconds();
     MainThreadShutdown();
     ref->Dispatch(
@@ -310,33 +326,63 @@ BenchmarkPlayback::Output(const MediaDataDecoder::DecodedData& aResults)
 }
 
 void
+BenchmarkPlayback::Error(const MediaResult& aError)
+{
+  MOZ_ASSERT(OnThread());
+
+  RefPtr<Benchmark> ref(mMainThreadState);
+  MainThreadShutdown();
+  ref->Dispatch(NS_NewRunnableFunction(
+    "BenchmarkPlayback::Error",
+    [ref, aError]() { ref->ReturnError(aError); }));
+}
+
+void
 BenchmarkPlayback::InputExhausted()
 {
   MOZ_ASSERT(OnThread());
-  if (mFinished || mSampleIndex >= mSamples.Length()) {
+  MOZ_ASSERT(!mFinished);
+
+  if (mSampleIndex >= mSamples.Length()) {
+    Error(MediaResult(NS_ERROR_FAILURE, "Nothing left to decode"));
     return;
   }
+
+  RefPtr<MediaRawData> sample = mSamples[mSampleIndex];
   RefPtr<Benchmark> ref(mMainThreadState);
-  mDecoder->Decode(mSamples[mSampleIndex])
-    ->Then(Thread(), __func__,
-           [ref, this](const MediaDataDecoder::DecodedData& aResults) {
-             Output(aResults);
-             InputExhausted();
-           },
-           [ref, this](const MediaResult& aError) { MainThreadShutdown(); });
+  RefPtr<MediaDataDecoder::DecodePromise> p = mDecoder->Decode(sample);
+
   mSampleIndex++;
-  if (mSampleIndex == mSamples.Length()) {
-    if (ref->mParameters.mStopAtFrame) {
+  if (mSampleIndex == mSamples.Length() && !ref->mParameters.mStopAtFrame) {
+    // Complete current frame decode then drain if still necessary.
+    p->Then(Thread(), __func__,
+            [ref, this](const MediaDataDecoder::DecodedData& aResults) {
+              Output(aResults);
+              if (!mFinished) {
+                mDecoder->Drain()->Then(
+                  Thread(), __func__,
+                  [ref, this](const MediaDataDecoder::DecodedData& aResults) {
+                    mDrained = true;
+                    Output(aResults);
+                    MOZ_ASSERT(mFinished, "We must be done now");
+                  },
+                  [ref, this](const MediaResult& aError) { Error(aError); });
+              }
+            },
+            [ref, this](const MediaResult& aError) { Error(aError); });
+  } else {
+    if (mSampleIndex == mSamples.Length() && ref->mParameters.mStopAtFrame) {
       mSampleIndex = 0;
-    } else {
-      mDecoder->Drain()->Then(
-        Thread(), __func__,
-        [ref, this](const MediaDataDecoder::DecodedData& aResults) {
-          mDrained = true;
-          Output(aResults);
-        },
-        [ref, this](const MediaResult& aError) { MainThreadShutdown(); });
     }
+    // Continue decoding
+    p->Then(Thread(), __func__,
+            [ref, this](const MediaDataDecoder::DecodedData& aResults) {
+              Output(aResults);
+              if (!mFinished) {
+                InputExhausted();
+              }
+            },
+            [ref, this](const MediaResult& aError) { Error(aError); });
   }
 }
 

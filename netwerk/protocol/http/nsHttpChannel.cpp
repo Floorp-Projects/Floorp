@@ -7326,7 +7326,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         }
         // shift http to https disposition enums
         chanDisposition = static_cast<ChannelDisposition>(chanDisposition + kHttpsCanceled);
-    } else if (mLoadInfo->GetBrowserWouldUpgradeInsecureRequests()) {
+    } else if (mLoadInfo && mLoadInfo->GetBrowserWouldUpgradeInsecureRequests()) {
         // HTTP content the browser would upgrade to HTTPS if upgrading was enabled
         upgradeKey = NS_LITERAL_CSTRING("disabledUpgrade");
     } else {

@@ -12,7 +12,9 @@ const Services = require("Services");
 const { Cc, Ci, Cu } = require("chrome");
 const { DebuggerServer, ActorPool } = require("devtools/server/main");
 const { ThreadActor } = require("devtools/server/actors/thread");
-const { ObjectActor, LongStringActor, createValueGrip, stringIsLong } = require("devtools/server/actors/object");
+const { ObjectActor } = require("devtools/server/actors/object");
+const { LongStringActor } = require("devtools/server/actors/object/long-string");
+const { createValueGrip, stringIsLong } = require("devtools/server/actors/object/utils");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const ErrorDocs = require("devtools/server/actors/errordocs");
 

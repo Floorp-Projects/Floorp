@@ -53,7 +53,7 @@ add_task(function* () {
   // Set input value separately from execute so UP arrow accurately navigates
   // history.
   hud3.jsterm.setInputValue('"hello from third tab"');
-  hud3.jsterm.execute();
+  yield hud3.jsterm.execute();
 
   is(JSON.stringify(hud1.jsterm.history),
      '["0","1","2","3","4","5","6","7","8","9"]',
@@ -98,7 +98,7 @@ function* populateInputHistory(hud) {
     // Set input value separately from execute so UP arrow accurately navigates
     // history.
     jsterm.setInputValue(i);
-    jsterm.execute();
+    yield jsterm.execute();
   }
 }
 
