@@ -8638,6 +8638,8 @@ nsIDocument::DestroyElementMaps()
 #endif
   mStyledLinks.Clear();
   mIdentifierMap.Clear();
+  mComposedShadowRoots.Clear();
+  mResponsiveContent.Clear();
   IncrementExpandoGeneration(*this);
 }
 

@@ -11,10 +11,12 @@
 #include <algorithm>
 #include <initializer_list>
 
+#include "gfxContext.h"
 #include "mozilla/ReflowInput.h"
 #include "mozilla/ShapeUtils.h"
 #include "nsBlockFrame.h"
 #include "nsError.h"
+#include "nsImageRenderer.h"
 #include "nsIPresShell.h"
 #include "nsMemory.h"
 
@@ -175,9 +177,8 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
       break;
     }
     if (fi.IsEmpty(aShapeType)) {
-      // For compatibility, ignore floats with empty rects, even though it
-      // disagrees with the spec.  (We might want to fix this in the
-      // future, though.)
+      // Ignore empty float areas.
+      // https://drafts.csswg.org/css-shapes/#relation-to-box-model-and-float-behavior
       continue;
     }
 
@@ -580,6 +581,13 @@ public:
     WritingMode aWM,
     const nsSize& aContainerSize);
 
+  static UniquePtr<ShapeInfo> CreateImageShape(
+    const UniquePtr<nsStyleImage>& aShapeImage,
+    float aShapeImageThreshold,
+    nsIFrame* const aFrame,
+    WritingMode aWM,
+    const nsSize& aContainerSize);
+
 protected:
   // Compute the minimum line-axis difference between the bounding shape
   // box and its rounded corner within the given band (block-axis region).
@@ -615,6 +623,7 @@ protected:
 // RoundedBoxShapeInfo
 //
 // Implements shape-outside: <shape-box> and shape-outside: inset().
+//
 class nsFloatManager::RoundedBoxShapeInfo final : public nsFloatManager::ShapeInfo
 {
 public:
@@ -953,6 +962,246 @@ nsFloatManager::PolygonShapeInfo::XInterceptAtY(const nscoord aY,
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// ImageShapeInfo
+//
+// Implements shape-outside: <image>
+//
+class nsFloatManager::ImageShapeInfo final : public nsFloatManager::ShapeInfo
+{
+public:
+  ImageShapeInfo(uint8_t* aAlphaPixels,
+                 int32_t aStride,
+                 const LayoutDeviceIntSize& aImageSize,
+                 int32_t aAppUnitsPerDevPixel,
+                 float aShapeImageThreshold,
+                 const nsRect& aContentRect,
+                 WritingMode aWM,
+                 const nsSize& aContainerSize);
+
+  nscoord LineLeft(const nscoord aBStart,
+                   const nscoord aBEnd) const override;
+  nscoord LineRight(const nscoord aBStart,
+                    const nscoord aBEnd) const override;
+  nscoord BStart() const override { return mBStart; }
+  nscoord BEnd() const override { return mBEnd; }
+  bool IsEmpty() const override { return mIntervals.IsEmpty(); }
+
+  void Translate(nscoord aLineLeft, nscoord aBlockStart) override;
+
+private:
+  size_t MinIntervalIndexContainingY(const nscoord aTargetY) const;
+  nscoord LineEdge(const nscoord aBStart,
+                   const nscoord aBEnd,
+                   bool aLeft) const;
+
+  // An interval is slice of the float area defined by this ImageShapeInfo.
+  // Each interval is a rectangle that is one pixel deep in the block
+  // axis. The values are stored as block edges in the y coordinates,
+  // and inline edges as the x coordinates.
+
+  // The intervals are stored in ascending order on y.
+  nsTArray<nsRect> mIntervals;
+
+  nscoord mBStart = nscoord_MAX;
+  nscoord mBEnd = nscoord_MIN;
+};
+
+nsFloatManager::ImageShapeInfo::ImageShapeInfo(
+  uint8_t* aAlphaPixels,
+  int32_t aStride,
+  const LayoutDeviceIntSize& aImageSize,
+  int32_t aAppUnitsPerDevPixel,
+  float aShapeImageThreshold,
+  const nsRect& aContentRect,
+  WritingMode aWM,
+  const nsSize& aContainerSize)
+{
+  MOZ_ASSERT(aShapeImageThreshold >=0.0 && aShapeImageThreshold <=1.0,
+             "The computed value of shape-image-threshold is wrong!");
+
+  const uint8_t threshold = NSToIntFloor(aShapeImageThreshold * 255);
+  const int32_t w = aImageSize.width;
+  const int32_t h = aImageSize.height;
+
+  // Scan the pixels in a double loop. For horizontal writing modes, we do
+  // this row by row, from top to bottom. For vertical writing modes, we do
+  // column by column, from left to right. We define the two loops
+  // generically, then figure out the rows and cols within the i loop.
+  const int32_t bSize = aWM.IsVertical() ? w : h;
+  const int32_t iSize = aWM.IsVertical() ? h : w;
+  for (int32_t b = 0; b < bSize; ++b) {
+    // iMin and iMax store the start and end of the float area for the row
+    // or column represented by this iteration of the b loop.
+    int32_t iMin = -1;
+    int32_t iMax = -1;
+
+    for (int32_t i = 0; i < iSize; ++i) {
+      const int32_t col = aWM.IsVertical() ? b : i;
+      const int32_t row = aWM.IsVertical() ? i : b;
+
+      // Determine if the alpha pixel at this row and column has a value
+      // greater than the threshold. If it does, update our iMin and iMax values
+      // to track the edges of the float area for this row or column.
+      // https://drafts.csswg.org/css-shapes-1/#valdef-shape-image-threshold-number
+      const uint8_t alpha = aAlphaPixels[col + row * aStride];
+      if (alpha > threshold) {
+        if (iMin == -1) {
+          iMin = i;
+        }
+        MOZ_ASSERT(iMax < i);
+        iMax = i;
+      }
+    }
+
+    // At the end of a row or column; did we find something?
+    if (iMin != -1) {
+      // Store an interval as an nsRect with our inline axis values stored in x
+      // and our block axis values stored in y. The position is dependent on
+      // the writing mode, but the size is the same for all writing modes.
+
+      // Size is the difference in inline axis edges stored as x, and one
+      // block axis pixel stored as y. For the inline axis, we add 1 to iMax
+      // because we want to capture the far edge of the last pixel.
+      nsSize size(((iMax + 1) - iMin) * aAppUnitsPerDevPixel,
+                  aAppUnitsPerDevPixel);
+
+      // Since we started our scanning of the image pixels from the top left,
+      // the interval position starts from the origin of the content rect,
+      // converted to logical coordinates.
+      nsPoint origin = ConvertToFloatLogical(aContentRect.TopLeft(), aWM,
+                                             aContainerSize);
+
+      // Depending on the writing mode, we now move the origin.
+      if (aWM.IsVerticalRL()) {
+        // vertical-rl or sideways-rl.
+        // These writing modes proceed from the top right, and each interval
+        // moves in a positive inline direction and negative block direction.
+        // That means that the intervals will be reversed after all have been
+        // constructed. We add 1 to b to capture the end of the block axis pixel.
+        origin.MoveBy(iMin * aAppUnitsPerDevPixel, (b + 1) * -aAppUnitsPerDevPixel);
+      } else if (aWM.IsVerticalLR() && aWM.IsSideways()) {
+        // sideways-lr.
+        // These writing modes proceed from the bottom left, and each interval
+        // moves in a negative inline direction and a positive block direction.
+        // We add 1 to iMax to capture the end of the inline axis pixel.
+        origin.MoveBy((iMax + 1) * -aAppUnitsPerDevPixel, b * aAppUnitsPerDevPixel);
+      } else {
+        // horizontal-tb or vertical-lr.
+        // These writing modes proceed from the top left and each interval
+        // moves in a positive step in both inline and block directions.
+        origin.MoveBy(iMin * aAppUnitsPerDevPixel, b * aAppUnitsPerDevPixel);
+      }
+
+      mIntervals.AppendElement(nsRect(origin, size));
+    }
+  }
+
+  if (aWM.IsVerticalRL()) {
+    // vertical-rl or sideways-rl.
+    // Because we scan the columns from left to right, we need to reverse
+    // the array so that it's sorted (in ascending order) on the block
+    // direction.
+    mIntervals.Reverse();
+  }
+
+  if (!mIntervals.IsEmpty()) {
+    mBStart = mIntervals[0].Y();
+    mBEnd = mIntervals.LastElement().YMost();
+  }
+}
+
+size_t
+nsFloatManager::ImageShapeInfo::MinIntervalIndexContainingY(
+  const nscoord aTargetY) const
+{
+  // Perform a binary search to find the minimum index of an interval
+  // that contains aTargetY. If no such interval exists, return a value
+  // equal to the number of intervals.
+  size_t startIdx = 0;
+  size_t endIdx = mIntervals.Length();
+  while (startIdx < endIdx) {
+    size_t midIdx = startIdx + (endIdx - startIdx) / 2;
+    if (mIntervals[midIdx].ContainsY(aTargetY)) {
+      return midIdx;
+    }
+    nscoord midY = mIntervals[midIdx].Y();
+    if (midY < aTargetY) {
+      startIdx = midIdx + 1;
+    } else {
+      endIdx = midIdx;
+    }
+  }
+
+  return endIdx;
+}
+
+nscoord
+nsFloatManager::ImageShapeInfo::LineEdge(const nscoord aBStart,
+                                         const nscoord aBEnd,
+                                         bool aLeft) const
+{
+  MOZ_ASSERT(aBStart <= aBEnd,
+             "The band's block start is greater than its block end?");
+
+  // Find all the intervals whose rects overlap the aBStart to
+  // aBEnd range, and find the most constraining inline edge
+  // depending on the value of aLeft.
+
+  // Since the intervals are stored in block-axis order, we need
+  // to find the first interval that overlaps aBStart and check
+  // succeeding intervals until we get past aBEnd.
+
+  nscoord lineEdge = aLeft ? nscoord_MAX : nscoord_MIN;
+
+  size_t intervalCount = mIntervals.Length();
+  for (size_t i = MinIntervalIndexContainingY(aBStart);
+	   i < intervalCount; ++i) {
+    // We can always get the bCoord from the intervals' mLineLeft,
+    // since the y() coordinate is duplicated in both points in the
+    // interval.
+    auto& interval = mIntervals[i];
+    nscoord bCoord = interval.Y();
+    if (bCoord > aBEnd) {
+      break;
+    }
+    // Get the edge from the interval point indicated by aLeft.
+    if (aLeft) {
+      lineEdge = std::min(lineEdge, interval.X());
+    } else {
+      lineEdge = std::max(lineEdge, interval.XMost());
+    }
+  }
+
+  return lineEdge;
+}
+
+nscoord
+nsFloatManager::ImageShapeInfo::LineLeft(const nscoord aBStart,
+                                         const nscoord aBEnd) const
+{
+  return LineEdge(aBStart, aBEnd, true);
+}
+
+nscoord
+nsFloatManager::ImageShapeInfo::LineRight(const nscoord aBStart,
+                                          const nscoord aBEnd) const
+{
+  return LineEdge(aBStart, aBEnd, false);
+}
+
+void
+nsFloatManager::ImageShapeInfo::Translate(nscoord aLineLeft,
+                                          nscoord aBlockStart)
+{
+  for (nsRect& interval : mIntervals) {
+    interval.MoveBy(aLineLeft, aBlockStart);
+  }
+
+  mBStart += aBlockStart;
+  mBEnd += aBlockStart;
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // FloatInfo
 
 nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
@@ -966,6 +1215,16 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
 {
   MOZ_COUNT_CTOR(nsFloatManager::FloatInfo);
 
+  if (IsEmpty()) {
+    // Per spec, a float area defined by a shape is clipped to the float’s
+    // margin box. Therefore, no need to create a shape info if the float's
+    // margin box is empty, since a float area can only be smaller than the
+    // margin box.
+
+    // https://drafts.csswg.org/css-shapes/#relation-to-box-model-and-float-behavior
+    return;
+  }
+
   const StyleShapeSource& shapeOutside = mFrame->StyleDisplay()->mShapeOutside;
 
   switch (shapeOutside.GetType()) {
@@ -977,10 +1236,20 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
       MOZ_ASSERT_UNREACHABLE("shape-outside doesn't have URL source type!");
       return;
 
-    case StyleShapeSourceType::Image:
-      // Bug 1265343: Implement 'shape-image-threshold'
-      // Bug 1404222: Support shape-outside: <image>
-      return;
+    case StyleShapeSourceType::Image: {
+      float shapeImageThreshold = mFrame->StyleDisplay()->mShapeImageThreshold;
+      mShapeInfo = ShapeInfo::CreateImageShape(shapeOutside.GetShapeImage(),
+                                               shapeImageThreshold,
+                                               mFrame,
+                                               aWM,
+                                               aContainerSize);
+      if (!mShapeInfo) {
+        // Image is not ready, or fails to load, etc.
+        return;
+      }
+
+      break;
+    }
 
     case StyleShapeSourceType::Box: {
       // Initialize <shape-box>'s reference rect.
@@ -1275,6 +1544,84 @@ nsFloatManager::ShapeInfo::CreatePolygon(
   }
 
   return MakeUnique<PolygonShapeInfo>(Move(vertices));
+}
+
+/* static */ UniquePtr<nsFloatManager::ShapeInfo>
+nsFloatManager::ShapeInfo::CreateImageShape(
+  const UniquePtr<nsStyleImage>& aShapeImage,
+  float aShapeImageThreshold,
+  nsIFrame* const aFrame,
+  WritingMode aWM,
+  const nsSize& aContainerSize)
+{
+  MOZ_ASSERT(aShapeImage ==
+             aFrame->StyleDisplay()->mShapeOutside.GetShapeImage(),
+             "aFrame should be the frame that we got aShapeImage from");
+
+  nsImageRenderer imageRenderer(aFrame, aShapeImage.get(),
+                                nsImageRenderer::FLAG_SYNC_DECODE_IMAGES);
+
+  if (!imageRenderer.PrepareImage()) {
+    // The image is not ready yet.
+    return nullptr;
+  }
+
+  nsRect contentRect = aFrame->GetContentRect();
+
+  // Create a draw target and draw shape image on it.
+  nsDeviceContext* dc = aFrame->PresContext()->DeviceContext();
+  int32_t appUnitsPerDevPixel = dc->AppUnitsPerDevPixel();
+  LayoutDeviceIntSize contentSizeInDevPixels =
+    LayoutDeviceIntSize::FromAppUnitsRounded(contentRect.Size(),
+                                             appUnitsPerDevPixel);
+
+  // Use empty CSSSizeOrRatio to force set the preferred size as the frame's
+  // content box size.
+  imageRenderer.SetPreferredSize(CSSSizeOrRatio(), contentRect.Size());
+
+  RefPtr<gfx::DrawTarget> drawTarget =
+    gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(
+      contentSizeInDevPixels.ToUnknownSize(),
+      gfx::SurfaceFormat::A8);
+  if (!drawTarget) {
+    return nullptr;
+  }
+
+  RefPtr<gfxContext> context = gfxContext::CreateOrNull(drawTarget);
+  MOZ_ASSERT(context); // already checked the target above
+
+  ImgDrawResult result =
+    imageRenderer.DrawShapeImage(aFrame->PresContext(), *context);
+
+  if (result != ImgDrawResult::SUCCESS) {
+    return nullptr;
+  }
+
+  // Retrieve the pixel image buffer to create the image shape info.
+  RefPtr<SourceSurface> sourceSurface = drawTarget->Snapshot();
+  RefPtr<DataSourceSurface> dataSourceSurface = sourceSurface->GetDataSurface();
+  DataSourceSurface::ScopedMap map(dataSourceSurface, DataSourceSurface::READ);
+
+  if (!map.IsMapped()) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(sourceSurface->GetSize() == contentSizeInDevPixels.ToUnknownSize(),
+             "Who changes the size?");
+
+  uint8_t* alphaPixels = map.GetData();
+  int32_t stride = map.GetStride();
+
+  // NOTE: ImageShapeInfo constructor does not keep a persistent copy of
+  // alphaPixels; it's only used during the constructor to compute pixel ranges.
+  return MakeUnique<ImageShapeInfo>(alphaPixels,
+                                    stride,
+                                    contentSizeInDevPixels,
+                                    appUnitsPerDevPixel,
+                                    aShapeImageThreshold,
+                                    contentRect,
+                                    aWM,
+                                    aContainerSize);
 }
 
 /* static */ nscoord

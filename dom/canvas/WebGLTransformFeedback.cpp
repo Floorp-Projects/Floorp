@@ -198,7 +198,6 @@ void
 WebGLTransformFeedback::AddBufferBindCounts(int8_t addVal) const
 {
     const GLenum target = LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER;
-    WebGLBuffer::AddBindCount(target, mGenericBufferBinding.get(), addVal);
     for (const auto& binding : mIndexedBindings) {
         WebGLBuffer::AddBindCount(target, binding.mBufferBinding.get(), addVal);
     }
@@ -215,7 +214,6 @@ WebGLTransformFeedback::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenPro
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLTransformFeedback, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLTransformFeedback, Release)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLTransformFeedback,
-                                      mGenericBufferBinding,
                                       mIndexedBindings,
                                       mActive_Program)
 

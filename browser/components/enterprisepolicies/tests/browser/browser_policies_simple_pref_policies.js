@@ -39,6 +39,17 @@ const POLICIES_TESTS = [
     lockedPrefs: { "signon.rememberSignons": true },
   },
 
+  // POLICY: DisableSecurityBypass
+  {
+    policies: {
+      "DisableSecurityBypass": {
+        "SafeBrowsing": true
+      }
+    },
+    lockedPrefs: { "browser.safebrowsing.allowOverride": false },
+  },
+
+
   // POLICY: DisableFormHistory
   {
     policies: { "DisableFormHistory": true },
@@ -91,6 +102,8 @@ const POLICIES_TESTS = [
       "network.automatic-ntlm-auth.trusted-uris": "a.com, b.com",
     }
   },
+
+  // POLICY: Certificates
   {
     policies: {
       "Certificates": {
@@ -99,6 +112,18 @@ const POLICIES_TESTS = [
     },
     lockedPrefs: {
       "security.enterprise_roots.enabled": true,
+    }
+  },
+
+  // POLICY: InstallAddons.Default (block addon installs)
+  {
+    policies: {
+      "InstallAddons": {
+        "Default": false,
+      }
+    },
+    lockedPrefs: {
+      "xpinstall.enabled": false,
     }
   },
 ];

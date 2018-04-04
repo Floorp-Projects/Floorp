@@ -22,14 +22,21 @@ public:
                             MessageManagerFlags::MM_PROCESSMANAGER |
                             MessageManagerFlags::MM_OWNSCALLBACK)));
   }
-  explicit ChromeMessageBroadcaster(nsFrameMessageManager* aParentManager)
+  explicit ChromeMessageBroadcaster(ChromeMessageBroadcaster* aParentManager)
     : ChromeMessageBroadcaster(aParentManager, MessageManagerFlags::MM_NONE)
   {}
+
+  static ChromeMessageBroadcaster* From(nsFrameMessageManager* aManager)
+  {
+    if (aManager->IsBroadcaster() && aManager->IsChrome()) {
+      return static_cast<ChromeMessageBroadcaster*>(aManager);
+    }
+    return nullptr;
+  }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  using nsFrameMessageManager::BroadcastAsyncMessage;
   void BroadcastAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
                              JS::Handle<JS::Value> aObj,
                              JS::Handle<JSObject*> aObjects,
@@ -42,22 +49,22 @@ public:
   {
     return mChildManagers.Length();
   }
-  using nsFrameMessageManager::GetChildAt;
   MessageListenerManager* GetChildAt(uint32_t aIndex)
   {
     return mChildManagers.SafeElementAt(aIndex);
   }
-  // XPCOM ReleaseCachedProcesses is OK
+  void ReleaseCachedProcesses();
 
   // ProcessScriptLoader
-  using nsFrameMessageManager::LoadProcessScript;
   void LoadProcessScript(const nsAString& aUrl, bool aAllowDelayedLoad,
                          mozilla::ErrorResult& aError)
   {
     LoadScript(aUrl, aAllowDelayedLoad, false, aError);
   }
-  // XPCOM RemoveDelayedProcessScript is OK
-  using nsFrameMessageManager::GetDelayedProcessScripts;
+  void RemoveDelayedProcessScript(const nsAString& aURL)
+  {
+    RemoveDelayedScript(aURL);
+  }
   void GetDelayedProcessScripts(JSContext* aCx,
                                 nsTArray<nsTArray<JS::Value>>& aScripts,
                                 mozilla::ErrorResult& aError)
@@ -66,16 +73,18 @@ public:
   }
 
   // GlobalProcessScriptLoader
-  // XPCOM GetInitialProcessData is OK
+  using nsFrameMessageManager::GetInitialProcessData;
 
   // FrameScriptLoader
-  using nsFrameMessageManager::LoadFrameScript;
   void LoadFrameScript(const nsAString& aUrl, bool aAllowDelayedLoad,
                        bool aRunInGlobalScope, mozilla::ErrorResult& aError)
   {
     LoadScript(aUrl, aAllowDelayedLoad, aRunInGlobalScope, aError);
   }
-  using nsFrameMessageManager::GetDelayedFrameScripts;
+  void RemoveDelayedFrameScript(const nsAString& aURL)
+  {
+    RemoveDelayedScript(aURL);
+  }
   void GetDelayedFrameScripts(JSContext* aCx,
                               nsTArray<nsTArray<JS::Value>>& aScripts,
                               mozilla::ErrorResult& aError)
@@ -83,8 +92,11 @@ public:
     GetDelayedScripts(aCx, aScripts, aError);
   }
 
+  void AddChildManager(MessageListenerManager* aManager);
+  void RemoveChildManager(MessageListenerManager* aManager);
+
 private:
-  ChromeMessageBroadcaster(nsFrameMessageManager* aParentManager,
+  ChromeMessageBroadcaster(ChromeMessageBroadcaster* aParentManager,
                            MessageManagerFlags aFlags);
   virtual ~ChromeMessageBroadcaster();
 };

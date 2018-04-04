@@ -26,7 +26,7 @@ namespace mozilla {
 namespace dom {
 
 class ProcessGlobal :
-  public nsIContentProcessMessageManager,
+  public nsIMessageSender,
   public nsMessageManagerScriptExecutor,
   public nsIGlobalObject,
   public nsIScriptObjectPrincipal,
@@ -46,13 +46,16 @@ public:
                            bool aEnumerableOnly, ErrorResult& aRv);
 
   using ipc::MessageManagerCallback::GetProcessMessageManager;
+  using MessageManagerGlobal::GetProcessMessageManager;
 
   bool Init();
 
   static ProcessGlobal* Get();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ProcessGlobal, nsIContentProcessMessageManager)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ProcessGlobal, nsIMessageSender)
+
+  void MarkForCC();
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override
@@ -67,15 +70,6 @@ public:
   using MessageManagerGlobal::RemoveMessageListener;
   using MessageManagerGlobal::AddWeakMessageListener;
   using MessageManagerGlobal::RemoveWeakMessageListener;
-  using MessageManagerGlobal::SendAsyncMessage;
-  using MessageManagerGlobal::GetProcessMessageManager;
-  using MessageManagerGlobal::GetRemoteType;
-  using MessageManagerGlobal::SendSyncMessage;
-  using MessageManagerGlobal::SendRpcMessage;
-  using MessageManagerGlobal::Dump;
-  using MessageManagerGlobal::PrivateNoteIntentionalCrash;
-  using MessageManagerGlobal::Atob;
-  using MessageManagerGlobal::Btoa;
 
   // ContentProcessMessageManager
   void GetInitialProcessData(JSContext* aCx,
@@ -89,11 +83,7 @@ public:
     mMessageManager->GetInitialProcessData(aCx, aInitialProcessData, aError);
   }
 
-  NS_FORWARD_SAFE_NSIMESSAGELISTENERMANAGER(mMessageManager)
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
-  NS_FORWARD_SAFE_NSISYNCMESSAGESENDER(mMessageManager)
-  NS_FORWARD_SAFE_NSIMESSAGEMANAGERGLOBAL(mMessageManager)
-  NS_FORWARD_SAFE_NSICONTENTPROCESSMESSAGEMANAGER(mMessageManager)
 
   virtual void LoadScript(const nsAString& aURL);
 

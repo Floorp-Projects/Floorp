@@ -180,37 +180,37 @@ SVGStyleElement::SetXmlspace(const nsAString & aXmlspace, ErrorResult& rv)
 void
 SVGStyleElement::GetMedia(nsAString & aMedia)
 {
-  GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
+  GetAttr(nsGkAtoms::media, aMedia);
 }
 
 void
 SVGStyleElement::SetMedia(const nsAString& aMedia, ErrorResult& rv)
 {
-  rv = SetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia, true);
+  SetAttr(nsGkAtoms::media, aMedia, rv);
 }
 
 void
 SVGStyleElement::GetType(nsAString & aType)
 {
-  GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
+  GetAttr(nsGkAtoms::type, aType);
 }
 
 void
 SVGStyleElement::SetType(const nsAString& aType, ErrorResult& rv)
 {
-  rv = SetAttr(kNameSpaceID_None, nsGkAtoms::type, aType, true);
+  SetAttr(nsGkAtoms::type, aType, rv);
 }
 
 void
 SVGStyleElement::GetTitle(nsAString & aTitle)
 {
-  GetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle);
+  GetAttr(nsGkAtoms::title, aTitle);
 }
 
 void
 SVGStyleElement::SetTitle(const nsAString& aTitle, ErrorResult& rv)
 {
-  rv = SetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle, true);
+  SetAttr(nsGkAtoms::title, aTitle, rv);
 }
 
 //----------------------------------------------------------------------

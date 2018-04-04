@@ -1108,16 +1108,12 @@ WebGLTexture::TexStorage(const char* funcName, TexTarget target, GLsizei levels,
     const TexImageTarget testTarget = IsCubeMap() ? LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X
                                                   : target.get();
     WebGLTexture::ImageInfo* baseImageInfo;
-    WebGLTexture::ImageInfo* lastImageInfo;
     if (!ValidateTexImageSpecification(funcName, testTarget, 0, width, height, depth,
-                                       &baseImageInfo) ||
-        !ValidateTexImageSpecification(funcName, testTarget, levels-1, 1, 1, 1,
-                                       &lastImageInfo))
+                                       &baseImageInfo))
     {
         return;
     }
     MOZ_ALWAYS_TRUE(baseImageInfo);
-    MOZ_ALWAYS_TRUE(lastImageInfo);
 
     auto dstUsage = mContext->mFormatUsage->GetSizedTexUsage(sizedFormat);
     if (!dstUsage) {
@@ -1140,15 +1136,24 @@ WebGLTexture::TexStorage(const char* funcName, TexTarget target, GLsizei levels,
 
     ////////////////////////////////////
 
-    const auto lastLevel = levels - 1;
-    MOZ_ASSERT(lastLevel <= 31, "Right-shift is only defined for bits-1.");
+    const bool levelsOk = [&]() {
+        // Right-shift is only defined for bits-1, which is too large anyways.
+        const auto lastLevel = uint32_t(levels - 1);
+        if (lastLevel > 31)
+            return false;
 
-    const uint32_t lastLevelWidth = uint32_t(width) >> lastLevel;
-    const uint32_t lastLevelHeight = uint32_t(height) >> lastLevel;
-    const uint32_t lastLevelDepth = uint32_t(depth) >> lastLevel;
+        const auto lastLevelWidth = uint32_t(width) >> lastLevel;
+        const auto lastLevelHeight = uint32_t(height) >> lastLevel;
 
-    // If these are all zero, then some earlier level was the final 1x1x1 level.
-    if (!lastLevelWidth && !lastLevelHeight && !lastLevelDepth) {
+        // If these are all zero, then some earlier level was the final 1x1(x1) level.
+        bool ok = lastLevelWidth && lastLevelHeight;
+        if (target == LOCAL_GL_TEXTURE_3D) {
+            const auto lastLevelDepth = uint32_t(depth) >> lastLevel;
+            ok &= bool(lastLevelDepth);
+        }
+        return ok;
+    }();
+    if (!levelsOk) {
         mContext->ErrorInvalidOperation("%s: Too many levels requested for the given"
                                         " dimensions. (levels: %u, width: %u, height: %u,"
                                         " depth: %u)",
