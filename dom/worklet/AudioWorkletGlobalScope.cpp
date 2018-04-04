@@ -12,9 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-AudioWorkletGlobalScope::AudioWorkletGlobalScope()
-{
-}
+AudioWorkletGlobalScope::AudioWorkletGlobalScope() = default;
 
 bool
 AudioWorkletGlobalScope::WrapGlobalObject(JSContext* aCx,
