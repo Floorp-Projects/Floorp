@@ -1800,7 +1800,8 @@ ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest)
       return NS_ERROR_FAILURE;
     }
   } else {
-    if (!JS::CanDecodeOffThread(cx, options, aRequest->mScriptBytecode.length())) {
+    size_t length = aRequest->mScriptBytecode.length() - aRequest->mBytecodeOffset;
+    if (!JS::CanDecodeOffThread(cx, options, length)) {
       return NS_ERROR_FAILURE;
     }
   }
