@@ -32,7 +32,6 @@
 #include "mozilla/Unused.h"
 #include "mtransport/runnable_utils.h"
 #include "VideoUtils.h"
-#include "Tracing.h"
 
 #include "webaudio/blink/DenormalDisabler.h"
 #include "webaudio/blink/HRTFDatabaseLoader.h"
@@ -69,8 +68,6 @@ MediaStreamGraphImpl::~MediaStreamGraphImpl()
              "All streams should have been destroyed by messages from the main thread");
   LOG(LogLevel::Debug, ("MediaStreamGraph %p destroyed", this));
   LOG(LogLevel::Debug, ("MediaStreamGraphImpl::~MediaStreamGraphImpl"));
-
-  mTraceLogger.Stop();
 }
 
 void
@@ -1129,7 +1126,6 @@ MediaStreamGraphImpl::RunMessageAfterProcessing(UniquePtr<ControlMessage> aMessa
 void
 MediaStreamGraphImpl::RunMessagesInQueue()
 {
-  TRACE_AUDIO_CALLBACK(mTraceLogger);
   MOZ_ASSERT(OnGraphThread());
   // Calculate independent action times for each batch of messages (each
   // batch corresponding to an event loop task). This isolates the performance
@@ -1147,7 +1143,6 @@ MediaStreamGraphImpl::RunMessagesInQueue()
 void
 MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
 {
-  TRACE_AUDIO_CALLBACK(mTraceLogger);
   MOZ_ASSERT(OnGraphThread());
   MOZ_ASSERT(aEndBlockingDecisions >= mProcessedTime);
   // The next state computed time can be the same as the previous: it
@@ -1243,7 +1238,6 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
 void
 MediaStreamGraphImpl::Process()
 {
-  TRACE_AUDIO_CALLBACK(mTraceLogger);
   MOZ_ASSERT(OnGraphThread());
   // Play stream contents.
   bool allBlockedForever = true;
@@ -1348,7 +1342,6 @@ MediaStreamGraphImpl::UpdateMainThreadState()
 bool
 MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
 {
-  TRACE_AUDIO_CALLBACK(mTraceLogger);
   // Changes to LIFECYCLE_RUNNING occur before starting or reviving the graph
   // thread, and so the monitor need not be held to check mLifecycleState.
   // LIFECYCLE_THREAD_NOT_STARTED is possible when shutting down offline
@@ -1555,7 +1548,6 @@ public:
   }
   NS_IMETHOD Run() override
   {
-    TRACE(static_cast<MediaStreamGraphImpl*>(mGraph)->TraceLogger());
     if (mGraph) {
       mGraph->RunInStableState(mSourceIsMSG);
     }
@@ -2777,7 +2769,6 @@ SourceMediaStream::PullNewData(
   StreamTime aDesiredUpToTime,
   nsTArray<RefPtr<SourceMediaStream::NotifyPullPromise>>& aPromises)
 {
-  TRACE_AUDIO_CALLBACK(GraphImpl()->TraceLogger());
   MutexAutoLock lock(mMutex);
   if (!mPullEnabled || mFinished) {
     return false;
@@ -3614,7 +3605,6 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
   , mLatencyLog(AsyncLatencyLogger::Get())
   , mAbstractMainThread(aMainThread)
   , mThreadPool(GetMediaThreadPool(MediaThreadType::MSG_CONTROL))
-  , mTraceLogger("MSGTracing")
   , mSelfRef(this)
   , mOutputChannels(std::min<uint32_t>(8, CubebUtils::MaxNumberOfChannels()))
 #ifdef DEBUG
@@ -3628,10 +3618,6 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
     } else {
       mDriver = new SystemClockDriver(this);
     }
-
-    // This is a noop if the logger has not been enabled.
-    mTraceLogger.Start();
-    mTraceLogger.Log("[");
   } else {
     mDriver = new OfflineClockDriver(this, MEDIA_GRAPH_TARGET_PERIOD_MS);
   }
