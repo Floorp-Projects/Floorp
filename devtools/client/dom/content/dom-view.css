@@ -42,7 +42,7 @@ body {
 
 /* Read only properties have a padlock icon */
 .treeTable tr:not(.writable) td.treeValueCell {
-  background: url("chrome://devtools/skin/images/firebug/read-only.svg") no-repeat;
+  background: url("chrome://devtools/skin/images/read-only.svg") no-repeat;
   background-position: 1px 5px;
   background-size: 10px 10px;
 }
