@@ -23,7 +23,6 @@ FINALIZE_HOOK_NAME = '_finalize'
 OBJECT_MOVED_HOOK_NAME = '_objectMoved'
 CONSTRUCT_HOOK_NAME = '_constructor'
 LEGACYCALLER_HOOK_NAME = '_legacycaller'
-HASINSTANCE_HOOK_NAME = '_hasInstance'
 RESOLVE_HOOK_NAME = '_resolve'
 MAY_RESOLVE_HOOK_NAME = '_mayResolve'
 NEW_ENUMERATE_HOOK_NAME = '_newEnumerate'
@@ -6734,8 +6733,8 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             if isConstructorRetval:
                 wrapArgs += ", desiredProto"
             wrap = "%s(%s)" % (wrapMethod, wrapArgs)
-            # Can only fail to wrap as a new-binding object
-            # if they already threw an exception.
+            # Can only fail to wrap as a new-binding object if they already
+            # threw an exception.
             failed = ("MOZ_ASSERT(JS_IsExceptionPending(cx));\n" +
                       exceptionCode)
         else:
