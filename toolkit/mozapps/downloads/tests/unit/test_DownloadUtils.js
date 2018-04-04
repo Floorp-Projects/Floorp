@@ -155,7 +155,7 @@ function run_test() {
   testStatus(statusFunc, 6, 9, 1, ["1d 13h left -- 1.4 KB of 12.9 MB (100 bytes/sec)", 134981.320]);
   testStatus(statusFunc, 3, 8, 3, ["2d 1h left -- 54.3 KB of 9.2 GB (54.3 KB/sec)", 178596.872]);
   testStatus(statusFunc, 1, 8, 6, ["77d 11h left -- 100 bytes of 9.2 GB (1.4 KB/sec)", 6694972.470]);
-  testStatus(statusFunc, 6, 8, 7, ["1979d 22h left -- 1.4 KB of 9.2 GB (58 bytes/sec)", 171068089.672]);
+  testStatus(statusFunc, 6, 8, 7, ["1,979d 22h left -- 1.4 KB of 9.2 GB (58 bytes/sec)", 171068089.672]);
 
   testStatus(statusFunc, 0, 0, 5, ["Unknown time left -- 0 of 0 bytes (22.1 MB/sec)", Infinity]);
   testStatus(statusFunc, 0, 6, 0, ["Unknown time left -- 0 bytes of 1.4 KB (0 bytes/sec)", Infinity]);
@@ -192,7 +192,7 @@ function run_test() {
   testStatus(statusFunc, 6, 9, 1, ["1d 13h left -- 1.4 KB of 12.9 MB", 134981.320]);
   testStatus(statusFunc, 3, 8, 3, ["2d 1h left -- 54.3 KB of 9.2 GB", 178596.872]);
   testStatus(statusFunc, 1, 8, 6, ["77d 11h left -- 100 bytes of 9.2 GB", 6694972.470]);
-  testStatus(statusFunc, 6, 8, 7, ["1979d 22h left -- 1.4 KB of 9.2 GB", 171068089.672]);
+  testStatus(statusFunc, 6, 8, 7, ["1,979d 22h left -- 1.4 KB of 9.2 GB", 171068089.672]);
 
   testStatus(statusFunc, 0, 0, 5, ["Unknown time left -- 0 of 0 bytes", Infinity]);
   testStatus(statusFunc, 0, 6, 0, ["Unknown time left -- 0 bytes of 1.4 KB", Infinity]);

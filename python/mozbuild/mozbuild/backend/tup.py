@@ -637,8 +637,9 @@ class TupOnly(CommonBackend, PartialBackend):
         backend_file = self._get_backend_file('xpcom/xpidl')
         backend_file.export_shell()
 
+        all_xpts = []
         for module, data in sorted(manager.modules.iteritems()):
-            dest, idls = data
+            _, idls = data
             cmd = [
                 '$(PYTHON_PATH)',
                 '$(PLY_INCLUDE)',
@@ -649,12 +650,13 @@ class TupOnly(CommonBackend, PartialBackend):
                 '$(DIST)/idl',
                 '$(DIST)/include',
                 '$(DIST)/xpcrs',
-                '$(MOZ_OBJ_ROOT)/%s/components' % dest,
+                '.',
                 module,
             ]
             cmd.extend(sorted(idls))
 
-            outputs = ['$(MOZ_OBJ_ROOT)/%s/components/%s.xpt' % (dest, module)]
+            all_xpts.append('$(MOZ_OBJ_ROOT)/%s/%s.xpt' % (backend_file.relobjdir, module))
+            outputs = ['%s.xpt' % module]
             outputs.extend(['$(MOZ_OBJ_ROOT)/dist/include/%s.h' % f for f in sorted(idls)])
             outputs.extend(['$(MOZ_OBJ_ROOT)/dist/xpcrs/rt/%s.rs' % f for f in sorted(idls)])
             outputs.extend(['$(MOZ_OBJ_ROOT)/dist/xpcrs/bt/%s.rs' % f for f in sorted(idls)])
@@ -670,12 +672,21 @@ class TupOnly(CommonBackend, PartialBackend):
                 extra_outputs=[self._installed_files],
             )
 
-        for manifest, entries in manager.interface_manifests.items():
-            for xpt in entries:
-                self._manifest_entries[manifest].add('interfaces %s' % xpt)
-
-        for m in manager.chrome_manifests:
-            self._manifest_entries[m].add('manifest components/interfaces.manifest')
+        cpp_backend_file = self._get_backend_file('xpcom/typelib/xpt')
+        cpp_backend_file.export_shell()
+        cpp_backend_file.rule(
+            inputs=all_xpts,
+            display='XPIDL linkgen %o',
+            cmd=[
+                '$(PYTHON_PATH)',
+                '$(PLY_INCLUDE)',
+                '$(topsrcdir)/xpcom/typelib/xpt/tools/xpt.py',
+                'linkgen',
+                'XPTInfo.cpp',
+                '%f',
+            ],
+            outputs=['XPTInfo.cpp'],
+        )
 
     def _preprocess(self, backend_file, input_file, destdir=None, target=None):
         if target is None:

@@ -483,7 +483,7 @@ function PC_LOCAL_REMOVE_SSRC_FROM_OFFER(test) {
 
 function PC_REMOTE_REMOVE_SSRC_FROM_ANSWER(test) {
   test.originalAnswer.sdp = sdputils.removeSSRCs(test.originalAnswer.sdp);
-  info("Updated no SSRCs answer: " + JSON.stringify(test.originalAnswerr));
+  info("Updated no SSRCs answer: " + JSON.stringify(test.originalAnswer));
 };
 
 var addRenegotiation = (chain, commands, checks) => {

@@ -430,7 +430,12 @@ var Policies = {
           AddonManager.getAddonsByIDs(param.Uninstall, (addons) => {
             for (let addon of addons) {
               if (addon) {
-                addon.uninstall();
+                try {
+                  addon.uninstall();
+                } catch (e) {
+                  // This can fail for add-ons that can't be uninstalled.
+                  // Just ignore.
+                }
               }
             }
           });
