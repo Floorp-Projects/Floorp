@@ -256,4 +256,10 @@ public:
   {}
 };
 
+// Checks if the ascii chars in a given atom are already lowercase.
+// If they are, no-op. Otherwise, converts all the ascii uppercase
+// chars to lowercase and atomizes, storing the result in the inout
+// param.
+void ToLowerCaseASCII(RefPtr<nsAtom>& aAtom);
+
 #endif  // nsAtom_h
