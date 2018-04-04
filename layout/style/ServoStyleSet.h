@@ -42,7 +42,6 @@ class ServoStyleRuleMap;
 class StyleSheet;
 } // namespace mozilla
 class gfxFontFeatureValueSet;
-class nsCSSCounterStyleRule;
 class nsIContent;
 class nsIDocument;
 class nsPresContext;
@@ -360,7 +359,7 @@ public:
 
   bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
 
-  nsCSSCounterStyleRule* CounterStyleRuleForName(nsAtom* aName);
+  const RawServoCounterStyleRule* CounterStyleRuleForName(nsAtom* aName);
 
   // Get all the currently-active font feature values set.
   already_AddRefed<gfxFontFeatureValueSet> BuildFontFeatureValueSet();
