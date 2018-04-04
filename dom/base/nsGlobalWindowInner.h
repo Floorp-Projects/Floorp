@@ -504,16 +504,6 @@ public:
   virtual void DisableOrientationChangeListener() override;
 #endif
 
-  bool IsClosedOrClosing() {
-    return mCleanedUp;
-  }
-
-  bool
-  IsCleanedUp() const
-  {
-    return mCleanedUp;
-  }
-
   virtual uint32_t GetSerial() override {
     return mSerial;
   }
@@ -1089,7 +1079,6 @@ protected:
 
   // Object Management
   virtual ~nsGlobalWindowInner();
-  void CleanUp();
 
   void FreeInnerObjects();
   nsGlobalWindowInner *CallerInnerWindow();
@@ -1420,8 +1409,6 @@ protected:
 #ifdef DEBUG
   nsCOMPtr<nsIURI> mLastOpenedURI;
 #endif
-
-  bool mCleanedUp;
 
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
 
