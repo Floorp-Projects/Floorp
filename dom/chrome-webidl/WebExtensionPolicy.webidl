@@ -158,11 +158,6 @@ interface WebExtensionPolicy {
    * for it.
    */
   static WebExtensionPolicy? getByURI(URI uri);
-
-  /**
-   * Returns true if the URI is restricted for any extension.
-   */
-  static boolean isRestrictedURI(URI uri);
 };
 
 dictionary WebExtensionInit {
