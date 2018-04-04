@@ -302,8 +302,7 @@ private:
 class ConsoleRunnable : public StructuredCloneHolderBase
 {
 public:
-  virtual
-  ~ConsoleRunnable()
+  ~ConsoleRunnable() override
   {
     // Clear the StructuredCloneHolderBase class.
     Clear();
@@ -546,8 +545,7 @@ protected:
     MOZ_ASSERT(mWorkletThread);
   }
 
-  virtual
-  ~ConsoleWorkletRunnable() = default;
+  ~ConsoleWorkletRunnable() override = default;
 
   NS_IMETHOD
   Run() override
@@ -623,12 +621,12 @@ private:
     mCallData->mStatus = ConsoleCallData::eInUse;
   }
 
-  ~ConsoleCallDataWorkletRunnable()
+  ~ConsoleCallDataWorkletRunnable() override
   {
     MOZ_ASSERT(!mCallData);
   }
 
-  virtual void
+  void
   RunOnMainThread() override
   {
     AutoSafeJSContext cx;
@@ -672,8 +670,7 @@ public:
     , mConsole(aConsole)
   {}
 
-  virtual
-  ~ConsoleWorkerRunnable() = default;
+  ~ConsoleWorkerRunnable() override = default;
 
   bool
   Dispatch(JSContext* aCx)
@@ -812,7 +809,7 @@ public:
   }
 
 private:
-  ~ConsoleCallDataWorkerRunnable()
+  ~ConsoleCallDataWorkerRunnable() override
   {
     MOZ_ASSERT(!mCallData);
   }
