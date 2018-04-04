@@ -982,7 +982,7 @@ BinASTParser::parseFunctionAux(const BinKind kind, const BinFields& fields)
         syntax = Statement;
         break;
       case BinKind::FunctionExpression:
-        syntax = PrimaryExpression; // FIXME: Probably doesn't work.
+        syntax = Expression; // FIXME: Probably doesn't work.
         break;
       case BinKind::ObjectMethod:
         syntax = Method;
