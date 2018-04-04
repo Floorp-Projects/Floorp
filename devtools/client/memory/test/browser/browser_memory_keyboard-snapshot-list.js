@@ -6,8 +6,7 @@
 "use strict";
 
 const {
-  viewState,
-  censusState
+  viewState
 } = require("devtools/client/memory/constants");
 const {
   takeSnapshotAndCensus
