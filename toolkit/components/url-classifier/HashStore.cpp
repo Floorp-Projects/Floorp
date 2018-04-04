@@ -158,13 +158,13 @@ TableUpdateV2::NewMissPrefix(const Prefix& aPrefix)
 }
 
 void
-TableUpdateV4::NewPrefixes(int32_t aSize, std::string& aPrefixes)
+TableUpdateV4::NewPrefixes(int32_t aSize, const nsACString& aPrefixes)
 {
   NS_ENSURE_TRUE_VOID(aSize >= 4 && aSize <= COMPLETE_SIZE);
-  NS_ENSURE_TRUE_VOID(aPrefixes.size() % aSize == 0);
+  NS_ENSURE_TRUE_VOID(aPrefixes.Length() % aSize == 0);
   NS_ENSURE_TRUE_VOID(!mPrefixesMap.Get(aSize));
 
-  int numOfPrefixes = aPrefixes.size() / aSize;
+  int numOfPrefixes = aPrefixes.Length() / aSize;
 
   if (aSize > 4) {
     // TODO Bug 1364043 we may have a better API to record multiple samples into
@@ -175,26 +175,26 @@ TableUpdateV4::NewPrefixes(int32_t aSize, std::string& aPrefixes)
     }
 #endif
   } else if (LOG_ENABLED()) {
-    uint32_t* p = (uint32_t*)aPrefixes.c_str();
+    const uint32_t* p =
+      reinterpret_cast<const uint32_t*>(ToNewCString(aPrefixes));
 
     // Dump the first/last 10 fixed-length prefixes for debugging.
     LOG(("* The first 10 (maximum) fixed-length prefixes: "));
     for (int i = 0; i < std::min(10, numOfPrefixes); i++) {
-      uint8_t* c = (uint8_t*)&p[i];
+      const uint8_t* c = reinterpret_cast<const uint8_t*>(&p[i]);
       LOG(("%.2X%.2X%.2X%.2X", c[0], c[1], c[2], c[3]));
     }
 
     LOG(("* The last 10 (maximum) fixed-length prefixes: "));
     for (int i = std::max(0, numOfPrefixes - 10); i < numOfPrefixes; i++) {
-      uint8_t* c = (uint8_t*)&p[i];
+      const uint8_t* c = reinterpret_cast<const uint8_t*>(&p[i]);
       LOG(("%.2X%.2X%.2X%.2X", c[0], c[1], c[2], c[3]));
     }
 
-    LOG(("---- %zu fixed-length prefixes in total.", aPrefixes.size() / aSize));
+    LOG(("---- %u fixed-length prefixes in total.", aPrefixes.Length() / aSize));
   }
 
-  PrefixStdString* prefix = new PrefixStdString(aPrefixes);
-  mPrefixesMap.Put(aSize, prefix);
+  mPrefixesMap.Put(aSize, new nsCString(aPrefixes));
 }
 
 nsresult
