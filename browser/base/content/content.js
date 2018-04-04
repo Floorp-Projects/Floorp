@@ -739,7 +739,7 @@ var ClickEventHandler = {
     }
 
     // Handle click events from about pages
-    if (event.button == 0 && !originalTarget.disabled) {
+    if (event.button == 0) {
       if (AboutNetAndCertErrorListener.isAboutCertError(ownerDoc)) {
         this.onCertError(originalTarget, ownerDoc.defaultView);
         return;
