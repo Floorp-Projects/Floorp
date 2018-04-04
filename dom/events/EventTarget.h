@@ -76,10 +76,19 @@ public:
   void SetEventHandler(const nsAString& aType, EventHandlerNonNull* aHandler,
                        ErrorResult& rv);
 
-  // Note, for an event 'foo' aType will be 'onfoo'.
+  // The nsAtom version of EventListenerAdded is called on the main
+  // thread.  The string version is called on workers.
+  //
+  // For an event 'foo' aType will be 'onfoo' when it's an atom and
+  // 'foo' when it's a string..
   virtual void EventListenerAdded(nsAtom* aType) {}
   virtual void EventListenerAdded(const nsAString& aType) {}
 
+  // The nsAtom version of EventListenerRemoved is called on the main
+  // thread.  The string version is called on workers.
+  //
+  // For an event 'foo' aType will be 'onfoo' when it's an atom and
+  // 'foo' when it's a string..
   virtual void EventListenerRemoved(nsAtom* aType) {}
   virtual void EventListenerRemoved(const nsAString& aType) {}
 
