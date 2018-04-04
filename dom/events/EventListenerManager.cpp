@@ -1162,6 +1162,32 @@ EventListenerManager::GetLegacyEventMessage(EventMessage aEventMessage) const
   }
 }
 
+already_AddRefed<nsPIDOMWindowInner>
+EventListenerManager::WindowFromListener(Listener* aListener,
+                                         bool aItemInShadowTree)
+{
+  nsCOMPtr<nsPIDOMWindowInner> innerWindow;
+  if (!aItemInShadowTree) {
+    if (aListener->mListener.HasWebIDLCallback()) {
+      CallbackObject* callback = aListener->mListener.GetWebIDLCallback();
+      nsIGlobalObject* global = nullptr;
+      if (callback) {
+        global = callback->IncumbentGlobalOrNull();
+      }
+      if (global) {
+        innerWindow = global->AsInnerWindow(); // Can be nullptr
+      }
+    } else {
+      // Can't get the global from
+      // listener->mListener.GetXPCOMCallback().
+      // In most cases, it would be the same as for
+      // the target, so let's do that.
+      innerWindow = GetInnerWindowForTarget(); // Can be nullptr
+    }
+  }
+  return innerWindow.forget();
+}
+
 /**
 * Causes a check for event listeners and processing by them if they exist.
 * @param an event listener
@@ -1172,7 +1198,8 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                                           WidgetEvent* aEvent,
                                           Event** aDOMEvent,
                                           EventTarget* aCurrentTarget,
-                                          nsEventStatus* aEventStatus)
+                                          nsEventStatus* aEventStatus,
+                                          bool aItemInShadowTree)
 {
   //Set the value of the internal PreventDefault flag properly based on aEventStatus
   if (!aEvent->DefaultPrevented() &&
@@ -1265,6 +1292,12 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
             }
 
             nsresult rv = NS_OK;
+            nsCOMPtr<nsPIDOMWindowInner> innerWindow =
+              WindowFromListener(listener, aItemInShadowTree);
+            mozilla::dom::Event* oldWindowEvent = nullptr;
+            if (innerWindow) {
+              oldWindowEvent = innerWindow->SetEvent(*aDOMEvent);
+            }
 #ifdef MOZ_GECKO_PROFILER
             if (profiler_is_active()) {
               // Add a profiler label and a profiler marker for the actual
@@ -1297,6 +1330,9 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
 #endif
             {
               rv = HandleEventSubType(listener, *aDOMEvent, aCurrentTarget);
+            }
+            if (innerWindow) {
+              Unused << innerWindow->SetEvent(oldWindowEvent);
             }
 
             if (NS_FAILED(rv)) {
