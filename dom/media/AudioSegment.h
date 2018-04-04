@@ -18,8 +18,19 @@
 
 namespace mozilla {
   struct AudioChunk;
+  class AudioSegment;
 }
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::AudioChunk)
+
+/**
+ * This allows compilation of nsTArray<AudioSegment> and
+ * AutoTArray<AudioSegment> since without it, static analysis fails on the
+ * mChunks member being a non-memmovable AutoTArray.
+ *
+ * Note that AudioSegment(const AudioSegment&) is deleted, so this should
+ * never come into effect.
+ */
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::AudioSegment)
 
 namespace mozilla {
 
