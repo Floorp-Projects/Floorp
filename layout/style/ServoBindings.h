@@ -62,7 +62,6 @@ using mozilla::FontFamilyName;
 using mozilla::FontFamilyType;
 using mozilla::ServoElementSnapshot;
 using mozilla::SharedFontList;
-class nsCSSCounterStyleRule;
 struct nsMediaFeature;
 class nsSimpleContentList;
 struct nsStyleList;
@@ -627,13 +626,6 @@ void Gecko_StyleSheet_Release(const mozilla::ServoStyleSheet* aSheet);
 
 nsCSSKeyword Gecko_LookupCSSKeyword(const uint8_t* string, uint32_t len);
 const char* Gecko_CSSKeywordString(nsCSSKeyword keyword, uint32_t* len);
-
-// Counter style rule
-// Creates and returns a new (already-addrefed) nsCSSCounterStyleRule object.
-nsCSSCounterStyleRule* Gecko_CSSCounterStyle_Create(nsAtom* name);
-nsCSSCounterStyleRule* Gecko_CSSCounterStyle_Clone(const nsCSSCounterStyleRule* rule);
-void Gecko_CSSCounterStyle_GetCssText(const nsCSSCounterStyleRule* rule, nsAString* result);
-NS_DECL_FFI_REFCOUNTING(nsCSSCounterStyleRule, CSSCounterStyleRule);
 
 bool Gecko_IsDocumentBody(RawGeckoElementBorrowed element);
 
