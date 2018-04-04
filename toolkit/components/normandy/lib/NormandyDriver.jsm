@@ -50,7 +50,7 @@ var NormandyDriver = function(sandboxManager) {
     },
 
     get userId() {
-      return ClientEnvironment.getEnvironment().userId;
+      return ClientEnvironment.userId;
     },
 
     log(message, level = "debug") {
