@@ -105,20 +105,6 @@
   background-color: var(--contentbox-color);
 }
 
-.theme-firebug .boxmodel-main,
-.theme-firebug .boxmodel-header {
-  font-family: var(--proportional-font-family);
-}
-
-.theme-firebug .boxmodel-main {
-  color: var(--theme-body-color);
-  font-size: var(--theme-toolbar-font-size);
-}
-
-.theme-firebug .boxmodel-header {
-  font-size: var(--theme-toolbar-font-size);
-}
-
 /* Editable region sizes are contained in absolutely positioned <p> */
 
 .boxmodel-main > p,

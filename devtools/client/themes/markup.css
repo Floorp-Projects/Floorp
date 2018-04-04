@@ -365,34 +365,6 @@ ul.children + .tag-line::before {
   color: var(--markup-hidden-tag-color);
 }
 
-/* Firebug Theme */
-
-.theme-firebug .theme-fg-color3 {
-  color: var(--theme-graphs-full-blue);
-  font-weight: normal;
-}
-
-.theme-firebug .open,
-.theme-firebug .close,
-.theme-firebug .attr-name.theme-fg-color2 {
-  color: var(--theme-highlight-purple);
-}
-
-.theme-firebug .attr-value.theme-fg-color6 {
-  color: var(--theme-highlight-red);
-}
-
-.theme-firebug .markupview-display,
-.theme-firebug .markupview-events {
-  font-size: var(--theme-toolbar-font-size);
-}
-
-/* In case a node isn't displayed in the page, we fade the syntax highlighting */
-.theme-firebug .not-displayed .open,
-.theme-firebug .not-displayed .close {
-  opacity: .5;
-}
-
 /* Selected nodes in the tree should have light selected text.
    theme-selected doesn't work in this case since the text is a
    sibling of the class, not a child. */
@@ -409,19 +381,9 @@ ul.children + .tag-line::before {
   color: var(--theme-selection-color);
 }
 
-/* Make sure even text nodes are white when selected in the Inspector panel. */
-.theme-firebug .theme-selected ~ .editor .open,
-.theme-firebug .theme-selected ~ .editor .close {
-  color: var(--theme-selection-color);
-}
-
 /* Applicable to the DOCTYPE */
 .doctype {
   font-style: italic;
-}
-
-.theme-firebug .doctype {
-  color: #787878;
 }
 
 /* Display and Events Bubble */
