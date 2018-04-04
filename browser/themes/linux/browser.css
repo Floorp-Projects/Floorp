@@ -142,7 +142,6 @@ menuitem.bookmark-item {
   opacity: 0.7;
 }
 
-%include ../shared/bookmarked-notification.inc.css
 %include ../shared/toolbarbuttons.inc.css
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
