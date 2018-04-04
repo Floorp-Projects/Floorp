@@ -11,7 +11,7 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - release-generate-checksums
+   - release-generate-checksums-beetmover
 
 job-defaults:
    run-on-projects: []
