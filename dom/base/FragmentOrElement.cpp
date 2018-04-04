@@ -878,6 +878,10 @@ nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   aVisitor.mCanHandle = true;
   aVisitor.mMayHaveListenerManager = HasListenerManager();
 
+  if (IsInShadowTree()) {
+    aVisitor.mItemInShadowTree = true;
+  }
+
   // Don't propagate mouseover and mouseout events when mouse is moving
   // inside chrome access only content.
   bool isAnonForEvents = IsRootOfChromeAccessOnlySubtree();
