@@ -15,6 +15,7 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
+#include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "gc/Nursery.h"
 #include "js/UbiNode.h"
@@ -215,6 +216,7 @@ JSString::dumpRepresentationHeader(js::GenericPrinter& out, const char* subclass
     if (flags & HAS_BASE_BIT)           out.put(" HAS_BASE");
     if (flags & INLINE_CHARS_BIT)       out.put(" INLINE_CHARS");
     if (flags & NON_ATOM_BIT)           out.put(" NON_ATOM");
+    else                                out.put(" (ATOM)");
     if (isPermanentAtom())              out.put(" PERMANENT");
     if (flags & LATIN1_CHARS_BIT)       out.put(" LATIN1");
     if (flags & INDEX_VALUE_BIT)        out.printf(" INDEX_VALUE(%u)", getIndexValue());
@@ -1921,7 +1923,33 @@ JSString::fillWithRepresentatives(JSContext* cx, HandleArrayObject array)
         return false;
     }
 
-    MOZ_ASSERT(index == 22);
+    // Now create forcibly-tenured versions of each of these string types. Note
+    // that this is best-effort; if nursery strings are disabled, or we GC
+    // midway through here, then we may end up with fewer nursery strings than
+    // desired. Also, some types of strings are not nursery-allocatable, so
+    // this will always produce some number of redundant strings.
+    gc::AutoSuppressNurseryCellAlloc suppress(cx);
+
+    // Append TwoByte strings.
+    if (!FillWithRepresentatives(cx, array, &index,
+                                 twoByteChars, mozilla::ArrayLength(twoByteChars) - 1,
+                                 JSFatInlineString::MAX_LENGTH_TWO_BYTE,
+                                 CheckTwoByte))
+    {
+        return false;
+    }
+
+    // Append Latin1 strings.
+    if (!FillWithRepresentatives(cx, array, &index,
+                                 latin1Chars, mozilla::ArrayLength(latin1Chars) - 1,
+                                 JSFatInlineString::MAX_LENGTH_LATIN1,
+                                 CheckLatin1))
+    {
+        return false;
+    }
+
+    MOZ_ASSERT(index == 44);
+
     return true;
 }
 
