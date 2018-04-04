@@ -104,9 +104,7 @@
                           label="&quitApplicationCmd.label;"
                           accesskey="&quitApplicationCmd.accesskey;"
 #endif
-#ifdef XP_UNIX
                           key="key_quitApplication"
-#endif
 #endif
                           command="cmd_quitApplication"/>
               </menupopup>

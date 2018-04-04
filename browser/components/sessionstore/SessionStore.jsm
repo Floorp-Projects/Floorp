@@ -3427,7 +3427,7 @@ var SessionStoreInternal = {
                                   noInitialLabel: true,
                                   userContextId,
                                   skipBackgroundNotify: true,
-                                  bulkOrderedOpen: this._browserSetState });
+                                  bulkOrderedOpen: true });
 
         if (select) {
           let leftoverTab = tabbrowser.selectedTab;
