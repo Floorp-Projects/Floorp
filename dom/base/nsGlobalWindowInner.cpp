@@ -469,7 +469,7 @@ public:
   nsresult Cancel() override;
   void SetDeadline(TimeStamp aDeadline) override;
 
-  bool IsCancelled() const { return !mWindow || mWindow->InnerObjectsFreed(); }
+  bool IsCancelled() const { return !mWindow || mWindow->IsDying(); }
   // Checks if aRequest shouldn't execute in the current idle period
   // since it has been queued from a chained call to
   // requestIdleCallback from within a running idle callback.
@@ -790,7 +790,7 @@ nsGlobalWindowInner::RequestIdleCallback(JSContext* aCx,
 {
   AssertIsOnMainThread();
 
-  if (mInnerObjectsFreed) {
+  if (IsDying()) {
    return 0;
   }
 
@@ -1165,8 +1165,6 @@ nsGlobalWindowInner::FreeInnerObjects()
   if (auto* reporter = nsWindowMemoryReporter::Get()) {
     reporter->ObserveDOMWindowDetached(this);
   }
-
-  mInnerObjectsFreed = true;
 
   // Kill all of the workers for this window.
   CancelWorkersForWindow(this);
@@ -2572,11 +2570,11 @@ nsPIDOMWindowInner::TryToCacheTopInnerWindow()
     return;
   }
 
-  MOZ_ASSERT(!mInnerObjectsFreed);
+  nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(this);
+
+  MOZ_ASSERT(!window->IsDying());
 
   mHasTriedToCacheTopInnerWindow = true;
-
-  nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(this);
 
   MOZ_ASSERT(window);
 
@@ -4727,7 +4725,7 @@ nsGlobalWindowInner::SetFocusedNode(nsIContent* aNode,
     return;
   }
 
-  if (mInnerObjectsFreed) {
+  if (IsDying()) {
     NS_ASSERTION(!aNode, "Trying to focus cleaned up window!");
     aNode = nullptr;
     aNeedsFocus = false;
@@ -4782,7 +4780,7 @@ nsGlobalWindowInner::ShouldShowFocusRing()
 bool
 nsGlobalWindowInner::TakeFocus(bool aFocus, uint32_t aFocusMethod)
 {
-  if (mInnerObjectsFreed) {
+  if (IsDying()) {
     return false;
   }
 
@@ -8229,7 +8227,6 @@ nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter *aOuterWindow)
   mMayHaveSelectionChangeEventListener(false),
   mMayHaveMouseEnterLeaveEventListener(false),
   mMayHavePointerEnterLeaveEventListener(false),
-  mInnerObjectsFreed(false),
   mAudioCaptured(false),
   mOuterWindow(aOuterWindow),
   // Make sure no actual window ends up with mWindowID == 0
