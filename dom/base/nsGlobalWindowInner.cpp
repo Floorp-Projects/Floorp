@@ -408,7 +408,7 @@ private:
   ~nsGlobalWindowObserver() = default;
 
   // This reference is non-owning and safe because it's cleared by
-  // nsGlobalWindowInner::CleanUp().
+  // nsGlobalWindowInner::FreeInnerObjects().
   nsGlobalWindowInner* MOZ_NON_OWNING_REF mWindow;
 };
 
@@ -469,7 +469,7 @@ public:
   nsresult Cancel() override;
   void SetDeadline(TimeStamp aDeadline) override;
 
-  bool IsCancelled() const { return !mWindow || mWindow->InnerObjectsFreed(); }
+  bool IsCancelled() const { return !mWindow || mWindow->IsDying(); }
   // Checks if aRequest shouldn't execute in the current idle period
   // since it has been queued from a chained call to
   // requestIdleCallback from within a running idle callback.
@@ -790,7 +790,7 @@ nsGlobalWindowInner::RequestIdleCallback(JSContext* aCx,
 {
   AssertIsOnMainThread();
 
-  if (mInnerObjectsFreed) {
+  if (IsDying()) {
    return 0;
   }
 
@@ -917,7 +917,6 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter *aOuterWindow)
     mSerial(0),
     mIdleRequestCallbackCounter(1),
     mIdleRequestExecutor(nullptr),
-    mCleanedUp(false),
     mDialogAbuseCount(0),
     mAreDialogsEnabled(true),
     mObservingDidRefresh(false),
@@ -1064,7 +1063,9 @@ nsGlobalWindowInner::~nsGlobalWindowInner()
     mCleanMessageManager = false;
   }
 
-  DisconnectEventTargetObjects();
+  // In most cases this should already have been called, but call it again
+  // here to catch any corner cases.
+  FreeInnerObjects();
 
   if (sInnerWindowsById) {
     MOZ_ASSERT(sInnerWindowsById->Get(mWindowID),
@@ -1103,11 +1104,6 @@ nsGlobalWindowInner::~nsGlobalWindowInner()
   Telemetry::Accumulate(Telemetry::INNERWINDOWS_WITH_MUTATION_LISTENERS,
                         mMutationBits ? 1 : 0);
 
-  if (mListenerManager) {
-    mListenerManager->Disconnect();
-    mListenerManager = nullptr;
-  }
-
   // An inner window is destroyed, pull it out of the outer window's
   // list if inner windows.
 
@@ -1121,12 +1117,6 @@ nsGlobalWindowInner::~nsGlobalWindowInner()
   }
 
   // We don't have to leave the tab group if we are an inner window.
-
-  // While CleanUp generally seems to be intended to clean up outers, we've
-  // historically called it for both. Changing this would probably involve
-  // auditing all of the references that inners and outers can have, and
-  // separating the handling into CleanUp() and FreeInnerObjects.
-  CleanUp();
 
   nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
   if (ac)
@@ -1161,110 +1151,13 @@ nsGlobalWindowInner::CleanupCachedXBLHandlers()
 }
 
 void
-nsGlobalWindowInner::CleanUp()
-{
-  // Guarantee idempotence.
-  if (mCleanedUp)
-    return;
-  mCleanedUp = true;
-
-  StartDying();
-
-  DisconnectEventTargetObjects();
-
-  if (mObserver) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os) {
-      os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
-      os->RemoveObserver(mObserver, MEMORY_PRESSURE_OBSERVER_TOPIC);
-    }
-
-    RefPtr<StorageNotifierService> sns = StorageNotifierService::GetOrCreate();
-    if (sns) {
-     sns->Unregister(mObserver);
-    }
-
-    if (mIdleService) {
-      mIdleService->RemoveIdleObserver(mObserver, MIN_IDLE_NOTIFICATION_TIME_S);
-    }
-
-    Preferences::RemoveObserver(mObserver, "intl.accept_languages");
-
-    // Drop its reference to this dying window, in case for some bogus reason
-    // the object stays around.
-    mObserver->Forget();
-  }
-
-  if (mNavigator) {
-    mNavigator->Invalidate();
-    mNavigator = nullptr;
-  }
-
-  mScreen = nullptr;
-  mMenubar = nullptr;
-  mToolbar = nullptr;
-  mLocationbar = nullptr;
-  mPersonalbar = nullptr;
-  mStatusbar = nullptr;
-  mScrollbars = nullptr;
-  mHistory = nullptr;
-  mCustomElements = nullptr;
-  mApplicationCache = nullptr;
-  mIndexedDB = nullptr;
-
-  mConsole = nullptr;
-
-  mAudioWorklet = nullptr;
-  mPaintWorklet = nullptr;
-
-  mExternal = nullptr;
-  mInstallTrigger = nullptr;
-
-  mPerformance = nullptr;
-
-#ifdef MOZ_WEBSPEECH
-  mSpeechSynthesis = nullptr;
-#endif
-
-#if defined(MOZ_WIDGET_ANDROID)
-  mOrientationChangeObserver = nullptr;
-#endif
-
-  mChromeEventHandler = nullptr; // Forces Release
-  mParentTarget = nullptr;
-
-  DisableGamepadUpdates();
-  mHasGamepad = false;
-  DisableVRUpdates();
-  mHasVREvents = false;
-  mHasVRDisplayActivateEvents = false;
-  DisableIdleCallbackRequests();
-
-  if (mCleanMessageManager) {
-    MOZ_ASSERT(mIsChrome, "only chrome should have msg manager cleaned");
-    if (mChromeFields.mMessageManager) {
-      mChromeFields.mMessageManager->Disconnect();
-    }
-  }
-
-  CleanupCachedXBLHandlers();
-
-  for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
-    mAudioContexts[i]->Shutdown();
-  }
-  mAudioContexts.Clear();
-
-  if (mIdleTimer) {
-    mIdleTimer->Cancel();
-    mIdleTimer = nullptr;
-  }
-
-  mIntlUtils = nullptr;
-}
-
-void
 nsGlobalWindowInner::FreeInnerObjects()
 {
+  if (IsDying()) {
+    return;
+  }
+  StartDying();
+
   // Make sure that this is called before we null out the document and
   // other members that the window destroyed observers could
   // re-create.
@@ -1272,8 +1165,6 @@ nsGlobalWindowInner::FreeInnerObjects()
   if (auto* reporter = nsWindowMemoryReporter::Get()) {
     reporter->ObserveDOMWindowDetached(this);
   }
-
-  mInnerObjectsFreed = true;
 
   // Kill all of the workers for this window.
   CancelWorkersForWindow(this);
@@ -1307,9 +1198,7 @@ nsGlobalWindowInner::FreeInnerObjects()
     mNavigator = nullptr;
   }
 
-  if (mScreen) {
-    mScreen = nullptr;
-  }
+  mScreen = nullptr;
 
 #if defined(MOZ_WIDGET_ANDROID)
   mOrientationChangeObserver = nullptr;
@@ -1378,22 +1267,62 @@ nsGlobalWindowInner::FreeInnerObjects()
   CallDocumentFlushedResolvers();
   mObservingDidRefresh = false;
 
-  // Disconnect service worker objects in FreeInnerObjects().  This is normally
-  // done from CleanUp().  In the future we plan to unify CleanUp() and
-  // FreeInnerObjects().  See bug 1450266.
-  ForEachEventTargetObject([&] (DOMEventTargetHelper* aTarget, bool* aDoneOut) {
-    RefPtr<ServiceWorkerRegistration> swr = do_QueryObject(aTarget);
-    if (swr) {
-      aTarget->DisconnectFromOwner();
-      return;
+  DisconnectEventTargetObjects();
+
+  if (mObserver) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
+      os->RemoveObserver(mObserver, MEMORY_PRESSURE_OBSERVER_TOPIC);
     }
 
-    RefPtr<ServiceWorker> sw = do_QueryObject(aTarget);
-    if (sw) {
-      aTarget->DisconnectFromOwner();
-      return;
+    RefPtr<StorageNotifierService> sns = StorageNotifierService::GetOrCreate();
+    if (sns) {
+     sns->Unregister(mObserver);
     }
-  });
+
+    if (mIdleService) {
+      mIdleService->RemoveIdleObserver(mObserver, MIN_IDLE_NOTIFICATION_TIME_S);
+    }
+
+    Preferences::RemoveObserver(mObserver, "intl.accept_languages");
+
+    // Drop its reference to this dying window, in case for some bogus reason
+    // the object stays around.
+    mObserver->Forget();
+  }
+
+  mMenubar = nullptr;
+  mToolbar = nullptr;
+  mLocationbar = nullptr;
+  mPersonalbar = nullptr;
+  mStatusbar = nullptr;
+  mScrollbars = nullptr;
+
+  mConsole = nullptr;
+
+  mAudioWorklet = nullptr;
+  mPaintWorklet = nullptr;
+
+  mExternal = nullptr;
+  mInstallTrigger = nullptr;
+
+  mPerformance = nullptr;
+
+#ifdef MOZ_WEBSPEECH
+  mSpeechSynthesis = nullptr;
+#endif
+
+  mParentTarget = nullptr;
+
+  if (mCleanMessageManager) {
+    MOZ_ASSERT(mIsChrome, "only chrome should have msg manager cleaned");
+    if (mChromeFields.mMessageManager) {
+      mChromeFields.mMessageManager->Disconnect();
+    }
+  }
+
+  mIntlUtils = nullptr;
 }
 
 //*****************************************************************************
@@ -2641,11 +2570,11 @@ nsPIDOMWindowInner::TryToCacheTopInnerWindow()
     return;
   }
 
-  MOZ_ASSERT(!mInnerObjectsFreed);
+  nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(this);
+
+  MOZ_ASSERT(!window->IsDying());
 
   mHasTriedToCacheTopInnerWindow = true;
-
-  nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(this);
 
   MOZ_ASSERT(window);
 
@@ -4796,7 +4725,7 @@ nsGlobalWindowInner::SetFocusedNode(nsIContent* aNode,
     return;
   }
 
-  if (mCleanedUp) {
+  if (IsDying()) {
     NS_ASSERTION(!aNode, "Trying to focus cleaned up window!");
     aNode = nullptr;
     aNeedsFocus = false;
@@ -4851,7 +4780,7 @@ nsGlobalWindowInner::ShouldShowFocusRing()
 bool
 nsGlobalWindowInner::TakeFocus(bool aFocus, uint32_t aFocusMethod)
 {
-  if (mCleanedUp) {
+  if (IsDying()) {
     return false;
   }
 
@@ -7768,49 +7697,27 @@ nsGlobalWindowInner::NotifyDefaultButtonLoaded(Element& aDefaultButton,
 #endif
 }
 
-NS_IMETHODIMP
-nsGlobalWindowInner::GetMessageManager(nsIMessageBroadcaster** aManager)
-{
-  ErrorResult rv;
-  NS_IF_ADDREF(*aManager = GetMessageManager(rv));
-  return rv.StealNSResult();
-}
-
 ChromeMessageBroadcaster*
-nsGlobalWindowInner::GetMessageManager(ErrorResult& aError)
+nsGlobalWindowInner::MessageManager()
 {
   MOZ_ASSERT(IsChromeWindow());
   if (!mChromeFields.mMessageManager) {
-    nsCOMPtr<nsIMessageBroadcaster> globalMM =
-      do_GetService("@mozilla.org/globalmessagemanager;1");
-    mChromeFields.mMessageManager =
-      new ChromeMessageBroadcaster(static_cast<nsFrameMessageManager*>(globalMM.get()));
+    RefPtr<ChromeMessageBroadcaster> globalMM =
+      nsFrameMessageManager::GetGlobalMessageManager();
+    mChromeFields.mMessageManager = new ChromeMessageBroadcaster(globalMM);
   }
   return mChromeFields.mMessageManager;
 }
 
-NS_IMETHODIMP
-nsGlobalWindowInner::GetGroupMessageManager(const nsAString& aGroup,
-                                            nsIMessageBroadcaster** aManager)
-{
-  MOZ_RELEASE_ASSERT(IsChromeWindow());
-  ErrorResult rv;
-  NS_IF_ADDREF(*aManager = GetGroupMessageManager(aGroup, rv));
-  return rv.StealNSResult();
-}
-
 ChromeMessageBroadcaster*
-nsGlobalWindowInner::GetGroupMessageManager(const nsAString& aGroup,
-                                            ErrorResult& aError)
+nsGlobalWindowInner::GetGroupMessageManager(const nsAString& aGroup)
 {
   MOZ_ASSERT(IsChromeWindow());
 
   RefPtr<ChromeMessageBroadcaster> messageManager =
     mChromeFields.mGroupMessageManagers.LookupForAdd(aGroup).OrInsert(
-      [this, &aError] () {
-        nsFrameMessageManager* parent = GetMessageManager(aError);
-
-        return new ChromeMessageBroadcaster(parent);
+      [this] () {
+        return new ChromeMessageBroadcaster(MessageManager());
       });
   return messageManager;
 }
@@ -8320,7 +8227,6 @@ nsPIDOMWindowInner::nsPIDOMWindowInner(nsPIDOMWindowOuter *aOuterWindow)
   mMayHaveSelectionChangeEventListener(false),
   mMayHaveMouseEnterLeaveEventListener(false),
   mMayHavePointerEnterLeaveEventListener(false),
-  mInnerObjectsFreed(false),
   mAudioCaptured(false),
   mOuterWindow(aOuterWindow),
   // Make sure no actual window ends up with mWindowID == 0

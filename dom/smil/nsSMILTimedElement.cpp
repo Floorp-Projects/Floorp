@@ -1480,15 +1480,15 @@ nsSMILTimedElement::RebuildTimingState(RemovalTestFunction aRemove)
   MOZ_ASSERT(mElementState == STATE_STARTUP,
              "Rebuilding timing state from non-startup state");
 
-  if (mAnimationElement->HasAnimAttr(nsGkAtoms::begin)) {
+  if (mAnimationElement->HasAttr(nsGkAtoms::begin)) {
     nsAutoString attValue;
-    mAnimationElement->GetAnimAttr(nsGkAtoms::begin, attValue);
+    mAnimationElement->GetAttr(nsGkAtoms::begin, attValue);
     SetBeginSpec(attValue, mAnimationElement, aRemove);
   }
 
-  if (mAnimationElement->HasAnimAttr(nsGkAtoms::end)) {
+  if (mAnimationElement->HasAttr(nsGkAtoms::end)) {
     nsAutoString attValue;
-    mAnimationElement->GetAnimAttr(nsGkAtoms::end, attValue);
+    mAnimationElement->GetAttr(nsGkAtoms::end, attValue);
     SetEndSpec(attValue, mAnimationElement, aRemove);
   }
 
@@ -1738,7 +1738,7 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
       // our ref-counting is not const-correct
       tempBegin = const_cast<nsSMILInstanceTime*>(aFixedBeginTime);
     } else if ((!mAnimationElement ||
-                !mAnimationElement->HasAnimAttr(nsGkAtoms::begin)) &&
+                !mAnimationElement->HasAttr(nsGkAtoms::begin)) &&
                beginAfter <= zeroTime) {
       tempBegin = new nsSMILInstanceTime(nsSMILTimeValue(0));
     } else {

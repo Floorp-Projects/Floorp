@@ -36,6 +36,8 @@
 #define EGL_DEFAULT_DISPLAY  ((EGLNativeDisplayType)0)
 #endif
 
+class nsIGfxInfo;
+
 namespace angle {
 class Platform;
 }
@@ -486,6 +488,10 @@ private:
     } mSymbols;
 
 private:
+    EGLDisplay CreateDisplay(bool forceAccel,
+                             const nsCOMPtr<nsIGfxInfo>& gfxInfo,
+                             nsACString* const out_failureId);
+
     bool mInitialized;
     PRLibrary* mEGLLibrary;
     EGLDisplay mEGLDisplay;

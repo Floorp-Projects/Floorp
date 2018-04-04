@@ -270,7 +270,6 @@ Object.defineProperty(GeckoDriver.prototype, "chromeWindowHandles", {
 });
 
 GeckoDriver.prototype.QueryInterface = XPCOMUtils.generateQI([
-  Ci.nsIMessageListener,
   Ci.nsIObserver,
   Ci.nsISupportsWeakReference,
 ]);

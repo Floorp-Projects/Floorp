@@ -366,14 +366,14 @@ nsDisplayCanvasBackgroundImage::IsSingleFixedPositionImage(nsDisplayListBuilder*
   if (!mBackgroundStyle)
     return false;
 
-  if (mBackgroundStyle->mImage.mLayers.Length() != 1)
+  if (mBackgroundStyle->StyleBackground()->mImage.mLayers.Length() != 1)
     return false;
 
 
   nsPresContext* presContext = mFrame->PresContext();
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  const nsStyleImageLayers::Layer &layer = mBackgroundStyle->mImage.mLayers[mLayer];
+  const nsStyleImageLayers::Layer &layer = mBackgroundStyle->StyleBackground()->mImage.mLayers[mLayer];
 
   if (layer.mAttachment != NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED)
     return false;
@@ -456,11 +456,11 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // the overflow area, so just add nsDisplayCanvasBackground instead of
   // calling DisplayBorderBackgroundOutline.
   if (IsVisibleForPainting(aBuilder)) {
-    const nsStyleBackground* bg = nullptr;
+    ComputedStyle* bg = nullptr;
     nsIFrame* dependentFrame = nullptr;
     bool isThemed = IsThemed();
     if (!isThemed && nsCSSRendering::FindBackgroundFrame(this, &dependentFrame)) {
-      bg = dependentFrame->Style()->StyleBackground();
+      bg = dependentFrame->Style();
       if (dependentFrame == this) {
         dependentFrame = nullptr;
       }
@@ -485,7 +485,7 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
 
     // Create separate items for each background layer.
-    const nsStyleImageLayers& layers = bg->mImage;
+    const nsStyleImageLayers& layers = bg->StyleBackground()->mImage;
     NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, layers) {
       if (layers.mLayers[i].mImage.IsEmpty()) {
         continue;

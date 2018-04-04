@@ -48,7 +48,6 @@ class ToolboxController extends Component {
     this.setCanCloseToolbox = this.setCanCloseToolbox.bind(this);
     this.setPanelDefinitions = this.setPanelDefinitions.bind(this);
     this.setToolboxButtons = this.setToolboxButtons.bind(this);
-    this.setCanMinimize = this.setCanMinimize.bind(this);
   }
 
   shouldComponentUpdate() {
@@ -160,13 +159,6 @@ class ToolboxController extends Component {
     });
 
     this.setState({ toolboxButtons }, this.updateButtonIds);
-  }
-
-  setCanMinimize(canMinimize) {
-    /* Bug 1177463 - The minimize button is currently hidden until we agree on
-       the UI for it, and until bug 1173849 is fixed too. */
-
-    // this.setState({ canMinimize });
   }
 
   render() {

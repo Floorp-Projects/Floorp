@@ -1024,8 +1024,13 @@ public:
    * reset the overflow rect if it was previously stored as deltas.
    * (If it is currently a "large" overflow and could be re-packed as deltas,
    * we don't bother as the cost of the allocation has already been paid.)
+   * @param aRebuildDisplayItems If true, then adds this frame to the
+   * list of modified frames for display list building if the rect has changed.
+   * Only pass false if you're sure that the relevant display items will be rebuilt
+   * already (possibly by an ancestor being in the modified list), or if this is
+   * a temporary change.
    */
-  void SetRect(const nsRect& aRect) {
+  void SetRect(const nsRect& aRect, bool aRebuildDisplayItems = true) {
     if (aRect == mRect) {
       return;
     }
@@ -1037,7 +1042,9 @@ public:
     } else {
       mRect = aRect;
     }
-    MarkNeedsDisplayItemRebuild();
+    if (aRebuildDisplayItems) {
+      MarkNeedsDisplayItemRebuild();
+    }
   }
   /**
    * Set this frame's rect from a logical rect in its own writing direction
@@ -1085,9 +1092,14 @@ public:
   /**
    * Set this frame's physical size. This leaves the frame's physical position
    * (topLeft) unchanged.
+   * @param aRebuildDisplayItems If true, then adds this frame to the
+   * list of modified frames for display list building if the size has changed.
+   * Only pass false if you're sure that the relevant display items will be rebuilt
+   * already (possibly by an ancestor being in the modified list), or if this is
+   * a temporary change.
    */
-  void SetSize(const nsSize& aSize) {
-    SetRect(nsRect(mRect.TopLeft(), aSize));
+  void SetSize(const nsSize& aSize, bool aRebuildDisplayItems = true) {
+    SetRect(nsRect(mRect.TopLeft(), aSize), aRebuildDisplayItems);
   }
 
   void SetPosition(const nsPoint& aPt) {
@@ -1955,7 +1967,8 @@ public:
    * Ensure that aImage gets notifed when the underlying image request loads
    * or animates.
    */
-  void AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext);
+  void AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext,
+                      uint32_t aImageLoaderFlags);
 
   /**
    * This structure holds information about a cursor. mContainer represents a
@@ -2943,8 +2956,12 @@ public:
    * @param aDisplayItemKey If specified, only issues an invalidate
    * if this frame painted a display item of that type during the
    * previous paint. SVG rendering observers are always notified.
+   * @param aRebuildDisplayItems If true, then adds this frame to the
+   * list of modified frames for display list building. Only pass false
+   * if you're sure that the relevant display items will be rebuilt
+   * already (possibly by an ancestor being in the modified list).
    */
-  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0);
+  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0, bool aRebuildDisplayItems = true);
 
   /**
    * Same as InvalidateFrame(), but only mark a fixed rect as needing
@@ -2955,8 +2972,12 @@ public:
    * @param aDisplayItemKey If specified, only issues an invalidate
    * if this frame painted a display item of that type during the
    * previous paint. SVG rendering observers are always notified.
+   * @param aRebuildDisplayItems If true, then adds this frame to the
+   * list of modified frames for display list building. Only pass false
+   * if you're sure that the relevant display items will be rebuilt
+   * already (possibly by an ancestor being in the modified list).
    */
-  virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0);
+  virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0, bool aRebuildDisplayItems = true);
 
   /**
    * Calls InvalidateFrame() on all frames descendant frames (including
@@ -2965,11 +2986,12 @@ public:
    * This function doesn't walk through placeholder frames to invalidate
    * the out-of-flow frames.
    *
-   * @param aDisplayItemKey If specified, only issues an invalidate
-   * if this frame painted a display item of that type during the
-   * previous paint. SVG rendering observers are always notified.
+   * @param aRebuildDisplayItems If true, then adds this frame to the
+   * list of modified frames for display list building. Only pass false
+   * if you're sure that the relevant display items will be rebuilt
+   * already (possibly by an ancestor being in the modified list).
    */
-  void InvalidateFrameSubtree(uint32_t aDisplayItemKey = 0);
+  void InvalidateFrameSubtree(bool aRebuildDisplayItems = true);
 
   /**
    * Called when a frame is about to be removed and needs to be invalidated.

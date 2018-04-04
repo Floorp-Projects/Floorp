@@ -2551,9 +2551,8 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg,
   if (cpm) {
     StructuredCloneData data;
     ipc::UnpackClonedMessageDataForChild(aData, data);
-    cpm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(cpm.get()),
-                        nullptr, aMsg, false, &data, &cpows, aPrincipal,
-                        nullptr);
+    cpm->ReceiveMessage(cpm, nullptr, aMsg, false, &data, &cpows, aPrincipal, nullptr,
+                        IgnoreErrors());
   }
   return IPC_OK();
 }

@@ -186,10 +186,7 @@ public:
     return mIsComposedDocParticipant;
   }
 
-  void SetIsComposedDocParticipant(bool aIsComposedDocParticipant)
-  {
-    mIsComposedDocParticipant = aIsComposedDocParticipant;
-  }
+  void SetIsComposedDocParticipant(bool aIsComposedDocParticipant);
 
   nsresult GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 

@@ -106,13 +106,14 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/ServoStyleSet.h"
-#include "mozilla/css/ImageLoader.h"
 #include "mozilla/gfx/Tools.h"
 #include "nsPrintfCString.h"
 #include "ActiveLayerTracker.h"
 
 #include "nsITheme.h"
 #include "nsThemeConstants.h"
+
+#include "ImageLoader.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -907,7 +908,7 @@ AddAndRemoveImageAssociations(nsFrame* aFrame,
 
   CompareLayers(aNewLayers, aOldLayers,
     [&imageLoader, aFrame](imgRequestProxy* aReq)
-    { imageLoader->AssociateRequestToFrame(aReq, aFrame); }
+    { imageLoader->AssociateRequestToFrame(aReq, aFrame, 0); }
   );
 }
 
@@ -1175,7 +1176,24 @@ nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
       imageLoader->DisassociateRequestFromFrame(oldBorderImage, this);
     }
     if (newBorderImage) {
-      imageLoader->AssociateRequestToFrame(newBorderImage, this);
+      imageLoader->AssociateRequestToFrame(newBorderImage, this, 0);
+    }
+  }
+
+  imgIRequest* oldShapeImage =
+      aOldComputedStyle
+    ? aOldComputedStyle->StyleDisplay()->mShapeOutside.GetShapeImageData()
+    : nullptr;
+  imgIRequest* newShapeImage =
+    StyleDisplay()->mShapeOutside.GetShapeImageData();
+
+  if (oldShapeImage != newShapeImage) {
+    if (oldShapeImage && HasImageRequest()) {
+      imageLoader->DisassociateRequestFromFrame(oldShapeImage, this);
+    }
+    if (newShapeImage) {
+      imageLoader->AssociateRequestToFrame(newShapeImage, this,
+        ImageLoader::REQUEST_REQUIRES_REFLOW);
     }
   }
 
@@ -1189,7 +1207,6 @@ nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle)
 
   RemoveStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS |
                   NS_FRAME_SIMPLE_DISPLAYLIST);
-  this->MarkNeedsDisplayItemRebuild();
 
   mMayHaveRoundedCorners = true;
 }
@@ -5219,7 +5236,8 @@ nsIFrame::ContentOffsets nsFrame::CalcContentOffsetsFromFramePoint(const nsPoint
 }
 
 void
-nsIFrame::AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext)
+nsIFrame::AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext,
+                         uint32_t aImageLoaderFlags)
 {
   if (aImage.GetType() != eStyleImageType_Image) {
     return;
@@ -5229,12 +5247,11 @@ nsIFrame::AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext
   if (!req) {
     return;
   }
-
   mozilla::css::ImageLoader* loader =
     aPresContext->Document()->StyleImageLoader();
 
   // If this fails there's not much we can do ...
-  loader->AssociateRequestToFrame(req, this);
+  loader->AssociateRequestToFrame(req, this, aImageLoaderFlags);
 }
 
 nsresult
@@ -7018,13 +7035,15 @@ SchedulePaintInternal(nsIFrame* aDisplayRoot, nsIFrame* aFrame,
   }
 }
 
-static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = true)
+static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem, bool aRebuildDisplayItems)
 {
   if (aHasDisplayItem) {
     aFrame->AddStateBits(NS_FRAME_NEEDS_PAINT);
   }
 
-  aFrame->MarkNeedsDisplayItemRebuild();
+  if (aRebuildDisplayItems) {
+    aFrame->MarkNeedsDisplayItemRebuild();
+  }
   SVGObserverUtils::InvalidateDirectRenderingObservers(aFrame);
   bool needsSchedulePaint = false;
   if (nsLayoutUtils::IsPopup(aFrame)) {
@@ -7064,13 +7083,11 @@ static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = tru
 }
 
 void
-nsIFrame::InvalidateFrameSubtree(uint32_t aDisplayItemKey)
+nsIFrame::InvalidateFrameSubtree(bool aRebuildDisplayItems /* = true */)
 {
-  bool hasDisplayItem =
-    !aDisplayItemKey || FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
-  InvalidateFrame(aDisplayItemKey);
+  InvalidateFrame(0, aRebuildDisplayItems);
 
-  if (HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT) || !hasDisplayItem) {
+  if (HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT)) {
     return;
   }
 
@@ -7083,7 +7100,10 @@ nsIFrame::InvalidateFrameSubtree(uint32_t aDisplayItemKey)
   for (; !lists.IsDone(); lists.Next()) {
     nsFrameList::Enumerator childFrames(lists.CurrentList());
     for (; !childFrames.AtEnd(); childFrames.Next()) {
-      childFrames.get()->InvalidateFrameSubtree();
+      // Don't explicitly rebuild display items for our descendants,
+      // since we should be marked and it implicitly includes all
+      // descendants.
+      childFrames.get()->InvalidateFrameSubtree(false);
     }
   }
 }
@@ -7110,21 +7130,24 @@ nsIFrame::ClearInvalidationStateBits()
 }
 
 void
-nsIFrame::InvalidateFrame(uint32_t aDisplayItemKey)
+nsIFrame::InvalidateFrame(uint32_t aDisplayItemKey, bool aRebuildDisplayItems /* = true */)
 {
   bool hasDisplayItem =
     !aDisplayItemKey || FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
-  InvalidateFrameInternal(this, hasDisplayItem);
+  InvalidateFrameInternal(this, hasDisplayItem, aRebuildDisplayItems);
 }
 
 void
-nsIFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
+nsIFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey, bool aRebuildDisplayItems /* = true */)
 {
+  if (aRect.IsEmpty()) {
+    return;
+  }
   bool hasDisplayItem =
     !aDisplayItemKey || FrameLayerBuilder::HasRetainedDataFor(this, aDisplayItemKey);
   bool alreadyInvalid = false;
   if (!HasAnyStateBits(NS_FRAME_NEEDS_PAINT)) {
-    InvalidateFrameInternal(this, hasDisplayItem);
+    InvalidateFrameInternal(this, hasDisplayItem, aRebuildDisplayItems);
   } else {
     alreadyInvalid = true;
   }
@@ -9542,7 +9565,13 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   //
   // XXX Someone should document here why we revert the frame size before we
   // return rather than just leaving it set.
-  SetSize(aNewSize);
+  //
+  // We pass false here to avoid invalidating display items for this temporary
+  // change. We sometimes reflow frames multiple times, with the final size being
+  // the same as the initial. The single call to SetSize after reflow is done
+  // will take care of invalidating display items if the size has actually
+  // changed.
+  SetSize(aNewSize, false);
 
   // Nothing in here should affect scrollable overflow.
   aOverflowAreas.VisualOverflow() =
@@ -9596,7 +9625,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   }
 
   /* Revert the size change in case some caller is depending on this. */
-  SetSize(oldSize);
+  SetSize(oldSize, false);
 
   bool anyOverflowChanged;
   if (aOverflowAreas != nsOverflowAreas(bounds, bounds)) {

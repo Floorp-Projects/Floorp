@@ -249,14 +249,6 @@ public:
   }
 
   /**
-   * Check whether this has had inner objects freed.
-   */
-  bool InnerObjectsFreed() const
-  {
-    return mInnerObjectsFreed;
-  }
-
-  /**
    * Check whether this window is a secure context.
    */
   bool IsSecureContext() const;
@@ -660,10 +652,6 @@ protected:
   bool mMayHaveSelectionChangeEventListener;
   bool mMayHaveMouseEnterLeaveEventListener;
   bool mMayHavePointerEnterLeaveEventListener;
-
-  // Used to detect whether we have called FreeInnerObjects() (e.g. to ensure
-  // that a call to ResumeTimeouts() after FreeInnerObjects() does nothing).
-  bool mInnerObjectsFreed;
 
   bool mAudioCaptured;
 

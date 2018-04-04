@@ -2218,11 +2218,6 @@ nsTableFrame::Reflow(nsPresContext*           aPresContext,
   }
   aDesiredSize.mOverflowAreas.UnionAllWith(tableRect);
 
-  if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW) ||
-      nsSize(aDesiredSize.Width(), aDesiredSize.Height()) != mRect.Size()) {
-      nsIFrame::InvalidateFrame();
-  }
-
   FinishAndStoreOverflow(&aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
@@ -8153,8 +8148,6 @@ nsTableFrame::InvalidateTableFrame(nsIFrame* aFrame,
              aOrigVisualOverflow.Size() != visualOverflow.Size()){
     aFrame->InvalidateFrameWithRect(aOrigVisualOverflow);
     aFrame->InvalidateFrame();
-    parent->InvalidateFrameWithRect(aOrigRect);
-    parent->InvalidateFrame();
   }
 }
 

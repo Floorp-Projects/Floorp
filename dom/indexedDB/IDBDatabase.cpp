@@ -1198,6 +1198,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBDatabase, IDBWrapperCache)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 void
+IDBDatabase::DisconnectFromOwner()
+{
+  InvalidateInternal();
+  IDBWrapperCache::DisconnectFromOwner();
+}
+
+void
 IDBDatabase::LastRelease()
 {
   AssertIsOnOwningThread();

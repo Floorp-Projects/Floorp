@@ -21,34 +21,37 @@ loadHelperScript("helper_inplace_editor.js");
 //    expected input box value after keypress,
 //    selected suggestion index (-1 if popup is hidden),
 //    number of suggestions in the popup (0 if popup is hidden),
+//    expected post label corresponding with the input box value,
 //  ]
 const testData = [
-  ["v", "v", -1, 0],
-  ["a", "va", -1, 0],
-  ["r", "var", -1, 0],
-  ["(", "var(", -1, 0],
-  ["-", "var(--abc", 0, 2],
-  ["VK_BACK_SPACE", "var(-", -1, 0],
-  ["-", "var(--abc", 0, 2],
-  ["VK_DOWN", "var(--def", 1, 2],
-  ["VK_DOWN", "var(--abc", 0, 2],
-  ["VK_LEFT", "var(--abc", -1, 0],
+  ["v", "v", -1, 0, null],
+  ["a", "va", -1, 0, null],
+  ["r", "var", -1, 0, null],
+  ["(", "var(", -1, 0, null],
+  ["-", "var(--abc", 0, 4, "blue"],
+  ["VK_BACK_SPACE", "var(-", -1, 0, null],
+  ["-", "var(--abc", 0, 4, "blue"],
+  ["VK_DOWN", "var(--def", 1, 4, "red"],
+  ["VK_DOWN", "var(--ghi", 2, 4, "green"],
+  ["VK_DOWN", "var(--jkl", 3, 4, "yellow"],
+  ["VK_DOWN", "var(--abc", 0, 4, "blue"],
+  ["VK_DOWN", "var(--def", 1, 4, "red"],
+  ["VK_LEFT", "var(--def", -1, 0, null],
+];
+
+const CSS_VARIABLES = [
+  ["--abc", "blue"],
+  ["--def", "red"],
+  ["--ghi", "green"],
+  ["--jkl", "yellow"]
 ];
 
 const mockGetCSSValuesForPropertyName = function(propertyName) {
   return [];
 };
 
-const mockGetCSSVariableNames = function() {
-  return [
-    "--abc",
-    "--def",
-  ];
-};
-
 add_task(async function() {
-  await addTab("data:text/html;charset=utf-8," +
-    "inplace editor CSS variable autocomplete");
+  await addTab("data:text/html;charset=utf-8,inplace editor CSS variable autocomplete");
   let [host, win, doc] = await createHost();
 
   let xulDocument = win.top.document;
@@ -61,6 +64,7 @@ add_task(async function() {
       property: {
         name: "color"
       },
+      cssVariables: new Map(CSS_VARIABLES),
       done: resolve,
       popup: popup
     }, doc);
@@ -74,7 +78,6 @@ add_task(async function() {
 let runAutocompletionTest = async function(editor) {
   info("Starting to test for css variable completion");
   editor._getCSSValuesForPropertyName = mockGetCSSValuesForPropertyName;
-  editor._getCSSVariableNames = mockGetCSSVariableNames;
 
   for (let data of testData) {
     await testCompletion(data, editor);

@@ -25,7 +25,7 @@ MessageSender::InitWithCallback(ipc::MessageManagerCallback* aCallback)
   }
 
   for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
-    LoadFrameScript(mPendingScripts[i], false, mPendingScriptsGlobalStates[i]);
+    LoadScript(mPendingScripts[i], false, mPendingScriptsGlobalStates[i], IgnoreErrors());
   }
 }
 

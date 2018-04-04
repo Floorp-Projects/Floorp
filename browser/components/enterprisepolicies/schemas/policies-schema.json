@@ -206,6 +206,13 @@
       "type": "boolean"
     },
 
+    "DisableForgetButton": {
+      "description": "Prevents access to the \"Forget\" button.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
     "DisableFormHistory": {
       "description": "Don't remember search and form history.",
       "first_available": "60.0",
@@ -232,6 +239,18 @@
       "first_available": "60.0",
 
       "type": "boolean"
+    },
+
+    "DisableSecurityBypass": {
+      "description": "Prevents the user from bypassing certain security warnings.",
+      "first_available": "60.0",
+
+      "type": "object",
+      "properties": {
+        "SafeBrowsing": {
+          "type": "boolean"
+        }
+      }
     },
 
     "DisableSysAddonUpdate": {
@@ -379,6 +398,9 @@
           "items": {
             "type": "origin"
           }
+        },
+        "Default": {
+          "type": "boolean"
         }
       }
     },
@@ -392,6 +414,14 @@
 
     "OverrideFirstRunPage": {
       "description": "Override the first run page. Set this policy to blank if you want to disable the first run page.",
+      "first_available": "60.0",
+      "enterprise_only": true,
+
+      "type": "URLorEmpty"
+    },
+
+    "OverridePostUpdatePage": {
+      "description": "Override the post-update \"What's New\" page. Set this policy to blank if you want to disable the post-update page.",
       "first_available": "60.0",
       "enterprise_only": true,
 

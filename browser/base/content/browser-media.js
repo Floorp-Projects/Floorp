@@ -172,7 +172,6 @@ var gEMEHandler = {
     };
     PopupNotifications.show(browser, "drmContentPlaying", message, anchorId, mainAction, null, options);
   },
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIMessageListener])
 };
 
 XPCOMUtils.defineLazyGetter(gEMEHandler, "_brandShortName", function() {

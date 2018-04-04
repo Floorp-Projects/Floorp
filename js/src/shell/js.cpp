@@ -2883,10 +2883,6 @@ DisassembleScript(JSContext* cx, HandleScript script, HandleFunction fun,
             if (!sp->put(" CONSTRUCTOR"))
                 return false;
         }
-        if (script->isExprBody()) {
-            if (!sp->put(" EXPRESSION_CLOSURE"))
-                return false;
-        }
         if (fun->isSelfHostedBuiltin()) {
             if (!sp->put(" SELF_HOSTED"))
                 return false;

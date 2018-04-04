@@ -33,6 +33,8 @@
 #include "nsComputedDOMStyle.h"
 #include "mozilla/dom/Element.h"
 
+using namespace mozilla;
+
 static const int32_t kLongLineLen = 128;
 
 #define kXMLNS "xmlns"
@@ -58,7 +60,7 @@ nsXHTMLContentSerializer::~nsXHTMLContentSerializer()
 NS_IMETHODIMP
 nsXHTMLContentSerializer::Init(uint32_t aFlags,
                                uint32_t aWrapColumn,
-                               const mozilla::Encoding* aEncoding,
+                               const Encoding* aEncoding,
                                bool aIsCopying,
                                bool aRewriteEncodingDeclaration,
                                bool* aNeedsPreformatScanning)
@@ -238,7 +240,7 @@ nsXHTMLContentSerializer::SerializeAttributes(Element* aElement,
         continue;
     }
 
-    mozilla::dom::BorrowedAttrInfo info = aElement->GetAttrInfoAt(index);
+    dom::BorrowedAttrInfo info = aElement->GetAttrInfoAt(index);
     const nsAttrName* name = info.mName;
 
     int32_t namespaceID = name->NamespaceID();
@@ -441,7 +443,7 @@ nsXHTMLContentSerializer::CheckElementStart(Element* aElement,
 }
 
 bool
-nsXHTMLContentSerializer::CheckElementEnd(mozilla::dom::Element* aElement,
+nsXHTMLContentSerializer::CheckElementEnd(dom::Element* aElement,
                                           bool& aForceFormat,
                                           nsAString& aStr)
 {
@@ -472,7 +474,7 @@ nsXHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
   }
 
   if (mDisableEntityEncoding) {
-    return aOutputStr.Append(aStr, mozilla::fallible);
+    return aOutputStr.Append(aStr, fallible);
   }
 
   return nsXMLContentSerializer::AppendAndTranslateEntities(aStr, aOutputStr);
