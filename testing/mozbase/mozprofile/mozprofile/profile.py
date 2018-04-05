@@ -45,13 +45,11 @@ class Profile(object):
       # profile.cleanup() has been called here
     """
 
-    def __init__(self, profile=None, addons=None, addon_manifests=None,
-                 preferences=None, locations=None, proxy=None, restore=True,
-                 whitelistpaths=None):
+    def __init__(self, profile=None, addons=None, preferences=None, locations=None,
+                 proxy=None, restore=True, whitelistpaths=None):
         """
         :param profile: Path to the profile
         :param addons: String of one or list of addons to install
-        :param addon_manifests: Manifest for addons (see http://bit.ly/17jQ7i6)
         :param preferences: Dictionary or class of preferences
         :param locations: ServerLocations object
         :param proxy: Setup a proxy
@@ -60,7 +58,6 @@ class Profile(object):
             access to from the content process sandbox.
         """
         self._addons = addons
-        self._addon_manifests = addon_manifests
         self._locations = locations
         self._proxy = proxy
 
@@ -136,7 +133,7 @@ class Profile(object):
 
         # handle add-on installation
         self.addon_manager = AddonManager(self.profile, restore=self.restore)
-        self.addon_manager.install_addons(self._addons, self._addon_manifests)
+        self.addon_manager.install_addons(self._addons)
 
     def __enter__(self):
         return self
