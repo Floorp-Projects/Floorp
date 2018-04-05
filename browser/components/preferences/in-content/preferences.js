@@ -98,7 +98,6 @@ function telemetryBucketForCategory(category) {
   switch (category) {
     case "containers":
     case "general":
-    case "home":
     case "privacy":
     case "search":
     case "sync":
