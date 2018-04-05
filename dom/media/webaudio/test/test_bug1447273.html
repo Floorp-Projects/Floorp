@@ -1,0 +1,175 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test bug 1447273 - GainNode with a stereo input and changing volume</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/**
+ * Sets up a stereo BufferSource and plumbs it through different gain node
+ * configurations. A control gain path with no changes to gain is used along
+ * with 2 other paths which should increase their gain. The result should be
+ * that audio travelling along the increased gain paths is louder than the
+ * control path.
+ */
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout(
+  "This test uses a live audio context and uses a setTimeout to schedule a " +
+  "change to the graph.");
+addLoadEvent(function() {
+  let context = new AudioContext();
+
+  let numChannels = 2;
+  let sampleRate = context.sampleRate;
+  // 60 seconds to mitigate timing issues on slow test machines
+  let recordingLength = 60;
+  let bufferLength = sampleRate * recordingLength;
+  let gainExplicitlyIncreased = false;
+  let sourceFinished = false;
+
+  // Create source buffer
+  let sourceBuffer = context.createBuffer(numChannels, bufferLength, sampleRate);
+  for (let i = 0; i < bufferLength; ++i) {
+    sourceBuffer.getChannelData(0)[i] = 1;
+    sourceBuffer.getChannelData(1)[i] = 1;
+  }
+  let source = context.createBufferSource();
+  source.buffer = sourceBuffer;
+
+  let gainNoChange = context.createGain();
+  let gainExplicitAssignment = context.createGain();
+  let gainSetValueAtTime = context.createGain();
+
+  // All gain nodes start of with the same gain
+  gainNoChange.gain.value = 0.25;
+  gainExplicitAssignment.gain.value = 0.25;
+  gainSetValueAtTime.gain.value = 0.25;
+
+  // Connect source to gain nodes:
+  // source--> gainNoChange
+  //       |-> gainExplicitAssignment
+  //       \-> gainSetValueAtTime
+  source.connect(gainNoChange);
+  source.connect(gainExplicitAssignment);
+  source.connect(gainSetValueAtTime);
+
+  // Create intermediate media streams (required to repro bug 1447273)
+  let destNoChange = context.createMediaStreamDestination();
+  let destExplicitAssignement = context.createMediaStreamDestination();
+  let destSetValueAtTime = context.createMediaStreamDestination();
+
+  let sourceNoChange = context.createMediaStreamSource(destNoChange.stream);
+  let sourceExplicitAssignement = context.createMediaStreamSource(destExplicitAssignement.stream);
+  let sourceSetValueAtTime = context.createMediaStreamSource(destSetValueAtTime.stream);
+
+  // Connect gain nodes to our intermediate streams:
+  // source--> gainNoChange           -> destNoChange            -> sourceNoChange
+  //       |-> gainExplicitAssignment -> destExplicitAssignement -> sourceExplicitAssignement
+  //       \-> gainSetValueAtTime     -> destSetValueAtTime      -> sourceSetValueAtTime
+  gainNoChange.connect(destNoChange);
+  gainExplicitAssignment.connect(destExplicitAssignement);
+  gainSetValueAtTime.connect(destSetValueAtTime);
+
+  // Create analysers for each path
+  let analyserNoChange = context.createAnalyser();
+  let analyserExplicitAssignment = context.createAnalyser();
+  let analyserSetValueAtTime = context.createAnalyser();
+
+  // Connect our intermediate media streams to analysers:
+  // source--> gainNoChange           -> destNoChange            -> sourceNoChange            -> analyserNoChange
+  //       |-> gainExplicitAssignment -> destExplicitAssignement -> sourceExplicitAssignement -> analyserExplicitAssignment
+  //       \-> gainSetValueAtTime     -> destSetValueAtTime      -> sourceSetValueAtTime      -> analyserSetValueAtTime
+  sourceNoChange.connect(analyserNoChange);
+  sourceExplicitAssignement.connect(analyserExplicitAssignment);
+  sourceSetValueAtTime.connect(analyserSetValueAtTime);
+
+  // Two seconds in, increase gain for setValueAt path
+  gainSetValueAtTime.gain.setValueAtTime(0.5, 2);
+
+  // Maximum values seen at each analyser node, will be updated by
+  // checkAnalysersForMaxValues() during test.
+  let maxNoGainChange = 0;
+  let maxExplicitAssignment = 0;
+  let maxSetValueAtTime = 0;
+
+  // Poll analysers and check for max values
+  function checkAnalysersForMaxValues() {
+    let findMaxValue =
+      (array) => array.reduce((a, b) => Math.max(Math.abs(a), Math.abs(b)));
+
+    let dataArray = new Float32Array(analyserNoChange.fftSize);
+    analyserNoChange.getFloatTimeDomainData(dataArray);
+    maxNoGainChange = Math.max(maxNoGainChange, findMaxValue(dataArray));
+
+    analyserExplicitAssignment.getFloatTimeDomainData(dataArray);
+    maxExplicitAssignment = Math.max(maxExplicitAssignment, findMaxValue(dataArray));
+
+    analyserSetValueAtTime.getFloatTimeDomainData(dataArray);
+    maxSetValueAtTime = Math.max(maxSetValueAtTime, findMaxValue(dataArray));
+
+    // End test if we've met our conditions
+    // Add a small amount to initial gain to make sure we're not getting
+    // passes due to rounding errors.
+    let epsilon = 0.01;
+    if (maxExplicitAssignment > (maxNoGainChange + epsilon) &&
+        maxSetValueAtTime > (maxNoGainChange + epsilon)) {
+      source.stop();
+    }
+  }
+
+  source.onended = () => {
+    sourceFinished = true;
+    info(`maxNoGainChange: ${maxNoGainChange}`);
+    info(`maxExplicitAssignment: ${maxExplicitAssignment}`);
+    info(`maxSetValueAtTime: ${maxSetValueAtTime}`);
+    ok(gainExplicitlyIncreased,
+       "Gain should be explicitly assinged during test!");
+    // Add a small amount to initial gain to make sure we're not getting
+    // passes due to rounding errors.
+    let epsilon = 0.01;
+    ok(maxExplicitAssignment > (maxNoGainChange + epsilon),
+       "Volume should increase due to explicit assignment to gain.value");
+    ok(maxSetValueAtTime > (maxNoGainChange + epsilon),
+       "Volume should increase due to setValueAtTime on gain.value");
+    SimpleTest.finish();
+  };
+
+  // Start the graph
+  source.start(0);
+
+  // We'll use this callback to check our analysers for gain
+  function animationFrameCb() {
+    if (sourceFinished) {
+      return;
+    }
+    requestAnimationFrame(animationFrameCb);
+    checkAnalysersForMaxValues();
+  }
+
+  // Using timers is gross, but as of writing there doesn't appear to be a
+  // nicer way to perform gain.value = 0.5 on our node. When/if we support
+  // suspend(time) on offline contexts we could potentially use that instead.
+
+  // Roughly 2 seconds through our source buffer (setTimeout flakiness) increase
+  // our gain on gainExplicitAssignment path.
+  window.setTimeout(() => {
+    gainExplicitAssignment.gain.value = 0.5;
+    // Make debugging flaky timeouts in test easier
+    info("Gain explicitly set!")
+    gainExplicitlyIncreased = true;
+    // Start checking analysers, we do this only after changing volume to avoid
+    // possible starvation of this timeout from requestAnimationFrame calls.
+    animationFrameCb();
+  }, 2000);
+});
+
+</script>
+</pre>
+</body>
+</html>
