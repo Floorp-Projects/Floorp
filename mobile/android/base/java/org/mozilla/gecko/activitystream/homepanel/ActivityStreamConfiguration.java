@@ -7,7 +7,9 @@ package org.mozilla.gecko.activitystream.homepanel;
 import android.content.Context;
 import android.support.annotation.VisibleForTesting;
 import org.mozilla.gecko.BrowserLocaleManager;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
+import org.mozilla.gecko.R;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -63,6 +65,12 @@ public class ActivityStreamConfiguration {
         }
 
         return isPocketEnabledByLocaleInner(currentLocale);
+    }
+
+    public static boolean isPocketRecommendingTopSites(final Context context) {
+        return isPocketEnabledByLocale(context) &&
+                GeckoSharedPrefs.forProfile(context).getBoolean(ActivityStreamPanel.PREF_POCKET_ENABLED,
+                        context.getResources().getBoolean(R.bool.pref_activitystream_pocket_enabled_default));
     }
 
     @VisibleForTesting static boolean isPocketEnabledByLocaleInner(final Locale locale) {
