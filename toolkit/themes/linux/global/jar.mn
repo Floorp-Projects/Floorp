@@ -45,6 +45,5 @@ toolkit.jar:
 
 *  skin/classic/global/in-content/common.css                   (in-content/common.css)
 *  skin/classic/global/in-content/info-pages.css               (in-content/info-pages.css)
-   skin/classic/global/toolbar/spring.png                      (toolbar/spring.png)
    skin/classic/global/tree/twisty-clsd.png                    (tree/twisty-clsd.png)
    skin/classic/global/tree/twisty-open.png                    (tree/twisty-open.png)
