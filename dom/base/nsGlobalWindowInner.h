@@ -324,20 +324,8 @@ public:
   virtual mozilla::EventListenerManager*
     GetOrCreateListenerManager() override;
 
-  using mozilla::dom::EventTarget::AddEventListener;
-  virtual void AddEventListener(const nsAString& aType,
-                                mozilla::dom::EventListener* aListener,
-                                const mozilla::dom::AddEventListenerOptionsOrBoolean& aOptions,
-                                const mozilla::dom::Nullable<bool>& aWantsUntrusted,
-                                mozilla::ErrorResult& aRv) override;
-  virtual nsresult AddEventListener(const nsAString& aType,
-                                    nsIDOMEventListener* aListener,
-                                    bool aUseCapture,
-                                    const Nullable<bool>& aWantsUntrusted) override;
-  /**
-   * A helper to determine the wantsUntrusted value from the given Nullable<bool>.
-   */
-  bool ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted);
+  bool ComputeDefaultWantsUntrusted(mozilla::ErrorResult& aRv) final;
+
   virtual nsPIDOMWindowOuter* GetOwnerGlobalForBindings() override;
 
   virtual nsIGlobalObject* GetOwnerGlobal() const override;

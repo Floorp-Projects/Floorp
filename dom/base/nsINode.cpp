@@ -1017,47 +1017,9 @@ nsINode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
 }
 
 bool
-nsINode::ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted)
+nsINode::ComputeDefaultWantsUntrusted(ErrorResult& aRv)
 {
-  if (!aWantsUntrusted.IsNull()) {
-    return aWantsUntrusted.Value();
-  }
-
   return !nsContentUtils::IsChromeDoc(OwnerDoc());
-}
-
-nsresult
-nsINode::AddEventListener(const nsAString& aType,
-                          nsIDOMEventListener *aListener,
-                          bool aUseCapture,
-                          const Nullable<bool>& aWantsUntrusted)
-{
-  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted);
-
-  EventListenerManager* listener_manager = GetOrCreateListenerManager();
-  NS_ENSURE_STATE(listener_manager);
-  listener_manager->AddEventListener(aType, aListener, aUseCapture,
-                                     wantsUntrusted);
-  return NS_OK;
-}
-
-void
-nsINode::AddEventListener(const nsAString& aType,
-                          EventListener* aListener,
-                          const AddEventListenerOptionsOrBoolean& aOptions,
-                          const Nullable<bool>& aWantsUntrusted,
-                          ErrorResult& aRv)
-{
-  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted);
-
-  EventListenerManager* listener_manager = GetOrCreateListenerManager();
-  if (!listener_manager) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  listener_manager->AddEventListener(aType, aListener, aOptions,
-                                     wantsUntrusted);
 }
 
 NS_IMETHODIMP

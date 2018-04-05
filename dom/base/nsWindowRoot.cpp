@@ -85,41 +85,10 @@ nsWindowRoot::DispatchEvent(Event& aEvent, CallerType aCallerType,
 }
 
 bool
-nsWindowRoot::ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted)
+nsWindowRoot::ComputeDefaultWantsUntrusted(ErrorResult& aRv)
 {
-  return !aWantsUntrusted.IsNull() && aWantsUntrusted.Value();
+  return false;
 }
-
-nsresult
-nsWindowRoot::AddEventListener(const nsAString& aType,
-                               nsIDOMEventListener *aListener,
-                               bool aUseCapture,
-                               const Nullable<bool>& aWantsUntrusted)
-{
-  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted);
-
-  EventListenerManager* elm = GetOrCreateListenerManager();
-  NS_ENSURE_STATE(elm);
-  elm->AddEventListener(aType, aListener, aUseCapture, wantsUntrusted);
-  return NS_OK;
-}
-
-void
-nsWindowRoot::AddEventListener(const nsAString& aType,
-                                EventListener* aListener,
-                                const AddEventListenerOptionsOrBoolean& aOptions,
-                                const Nullable<bool>& aWantsUntrusted,
-                                ErrorResult& aRv)
-{
-  bool wantsUntrusted = ComputeWantsUntrusted(aWantsUntrusted);
-  EventListenerManager* elm = GetOrCreateListenerManager();
-  if (!elm) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-  elm->AddEventListener(aType, aListener, aOptions, wantsUntrusted);
-}
-
 
 NS_IMETHODIMP
 nsWindowRoot::AddSystemEventListener(const nsAString& aType,

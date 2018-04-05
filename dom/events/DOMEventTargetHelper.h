@@ -73,21 +73,7 @@ public:
   virtual EventListenerManager* GetExistingListenerManager() const override;
   virtual EventListenerManager* GetOrCreateListenerManager() override;
 
-  using EventTarget::AddEventListener;
-  virtual void AddEventListener(const nsAString& aType,
-                                dom::EventListener* aListener,
-                                const dom::AddEventListenerOptionsOrBoolean& aOptions,
-                                const dom::Nullable<bool>& aWantsUntrusted,
-                                ErrorResult& aRv) override;
-  virtual nsresult AddEventListener(const nsAString& aType,
-                                    nsIDOMEventListener* aListener,
-                                    bool aUseCapture,
-                                    const Nullable<bool>& aWantsUntrusted) override;
-  /**
-   * A helper to determine the wantsUntrusted value from the given Nullable<bool>.
-   */
-  bool ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted,
-                             ErrorResult& aRv);
+  bool ComputeDefaultWantsUntrusted(ErrorResult& aRv) override;
 
   using EventTarget::DispatchEvent;
   bool DispatchEvent(dom::Event& aEvent, dom::CallerType aCallerType,

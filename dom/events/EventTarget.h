@@ -54,11 +54,11 @@ public:
   // WebIDL API
   static already_AddRefed<EventTarget> Constructor(const GlobalObject& aGlobal,
                                                    ErrorResult& aRv);
-  virtual void AddEventListener(const nsAString& aType,
-                                EventListener* aCallback,
-                                const AddEventListenerOptionsOrBoolean& aOptions,
-                                const Nullable<bool>& aWantsUntrusted,
-                                ErrorResult& aRv) = 0;
+  void AddEventListener(const nsAString& aType,
+                        EventListener* aCallback,
+                        const AddEventListenerOptionsOrBoolean& aOptions,
+                        const Nullable<bool>& aWantsUntrusted,
+                        ErrorResult& aRv);
   void RemoveEventListener(const nsAString& aType,
                            EventListener* aCallback,
                            const EventListenerOptionsOrBoolean& aOptions,
@@ -71,10 +71,10 @@ protected:
    * standard AddEventListener.  The one difference is that it just
    * has a "use capture" boolean, not an EventListenerOptions.
    */
-  virtual nsresult AddEventListener(const nsAString& aType,
-                                    nsIDOMEventListener* aListener,
-                                    bool aUseCapture,
-                                    const Nullable<bool>& aWantsUntrusted) = 0;
+  nsresult AddEventListener(const nsAString& aType,
+                            nsIDOMEventListener* aListener,
+                            bool aUseCapture,
+                            const Nullable<bool>& aWantsUntrusted);
 
 public:
   /**
@@ -268,6 +268,25 @@ protected:
                                        const nsAString& aTypeString);
   void SetEventHandler(nsAtom* aType, const nsAString& aTypeString,
                        EventHandlerNonNull* aHandler);
+
+  /**
+   * Hook for AddEventListener that allows it to compute the right
+   * wantsUntrusted boolean when one is not provided.  If this returns failure,
+   * the listener will not be added.
+   *
+   * This hook will NOT be called unless aWantsUntrusted is null in
+   * AddEventListener.  If you need to take action when event listeners are
+   * added, use EventListenerAdded.  Especially because not all event listener
+   * additions go through AddEventListener!
+   */
+  virtual bool ComputeDefaultWantsUntrusted(ErrorResult& aRv) = 0;
+
+  /**
+   * A method to compute the right wantsUntrusted value for AddEventListener.
+   * This will call the above hook as needed.
+   */
+  bool ComputeWantsUntrusted(const Nullable<bool>& aWantsUntrusted,
+                             ErrorResult& aRv);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(EventTarget, NS_EVENTTARGET_IID)
