@@ -69,13 +69,6 @@ GeckoViewStartup.prototype = {
             "ContentPrefs:RemoveObserverForName",
           ],
         });
-
-        GeckoViewUtils.addLazyGetter(this, "GeckoViewPrompt", {
-          service: "@mozilla.org/prompter;1",
-          mm: [
-            "GeckoView:Prompt",
-          ],
-        });
         break;
       }
     }
