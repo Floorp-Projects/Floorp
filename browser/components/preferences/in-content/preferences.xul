@@ -27,14 +27,12 @@
 <!ENTITY % historyDTD SYSTEM "chrome://mozapps/locale/update/history.dtd">
 <!ENTITY % certManagerDTD SYSTEM "chrome://pippki/locale/certManager.dtd">
 <!ENTITY % deviceManangerDTD SYSTEM "chrome://pippki/locale/deviceManager.dtd">
-<!ENTITY % connectionDTD SYSTEM "chrome://browser/locale/preferences/connection.dtd">
 <!ENTITY % siteDataSettingsDTD SYSTEM
   "chrome://browser/locale/preferences/siteDataSettings.dtd" >
 <!ENTITY % privacyDTD SYSTEM "chrome://browser/locale/preferences/privacy.dtd">
 <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
 <!ENTITY % syncDTD SYSTEM "chrome://browser/locale/preferences/sync.dtd">
 <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
-<!ENTITY % mainDTD SYSTEM "chrome://browser/locale/preferences/main.dtd">
 <!ENTITY % aboutHomeDTD SYSTEM "chrome://browser/locale/aboutHome.dtd">
 <!ENTITY % contentDTD SYSTEM "chrome://browser/locale/preferences/content.dtd">
 <!ENTITY % aboutDialogDTD SYSTEM "chrome://browser/locale/aboutDialog.dtd" >
@@ -48,13 +46,11 @@
 %historyDTD;
 %certManagerDTD;
 %deviceManangerDTD;
-%connectionDTD;
 %siteDataSettingsDTD;
 %privacyDTD;
 %syncBrandDTD;
 %syncDTD;
 %sanitizeDTD;
-%mainDTD;
 %aboutHomeDTD;
 %contentDTD;
 ]>
@@ -77,6 +73,7 @@
   <link rel="localization" href="browser/preferences/blocklists.ftl"/>
   <link rel="localization" href="browser/preferences/clearSiteData.ftl"/>
   <link rel="localization" href="browser/preferences/colors.ftl"/>
+  <link rel="localization" href="browser/preferences/connection.ftl"/>
 
   <script type="text/javascript" src="chrome://global/content/l10n.js"></script>
 
