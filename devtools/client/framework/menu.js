@@ -117,6 +117,9 @@ Menu.prototype._createMenuItems = function(parent) {
       if (item.disabled) {
         menu.setAttribute("disabled", "true");
       }
+      if (item.accelerator) {
+        menu.setAttribute("acceltext", item.accelerator);
+      }
       if (item.accesskey) {
         menu.setAttribute("accesskey", item.accesskey);
       }
@@ -148,6 +151,9 @@ Menu.prototype._createMenuItems = function(parent) {
       }
       if (item.checked) {
         menuitem.setAttribute("checked", "true");
+      }
+      if (item.accelerator) {
+        menuitem.setAttribute("acceltext", item.accelerator);
       }
       if (item.accesskey) {
         menuitem.setAttribute("accesskey", item.accesskey);
